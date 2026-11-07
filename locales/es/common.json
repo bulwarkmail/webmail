@@ -6785,6 +6785,10 @@
         "title": "Cerrar tu sesión",
         "body": "Cerrar tu sesión en el webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Devolverte a tu propia cuenta",
+        "body": "Cuando un administrador ha abierto un buzón mediante suplantación, cerrar esa sesión y volver a iniciar sesión en la cuenta desde la que empezó."
+      },
       "account_read": {
         "title": "Ver tus cuentas",
         "body": "Ver las cuentas que añadiste, con sus direcciones y servidores, y qué cuentas de correo son buzones de equipo."

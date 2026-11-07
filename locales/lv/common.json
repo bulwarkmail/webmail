@@ -6785,6 +6785,10 @@
         "title": "Izrakstīt jūs",
         "body": "Izrakstīt jūs no webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Atgriezt jūs jūsu kontā",
+        "body": "Kad administrators ir atvēris pastkasti, uzdodoties par lietotāju, beigt šo sesiju un atkal pierakstīties kontā, no kura tā sākās."
+      },
       "account_read": {
         "title": "Redzēt jūsu kontus",
         "body": "Redzēt jūsu pievienotos kontus ar to adresēm un serveriem, kā arī to, kuri pasta konti ir komandu pastkastes."

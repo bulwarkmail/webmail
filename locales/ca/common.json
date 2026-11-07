@@ -6785,6 +6785,10 @@
         "title": "Tancar la vostra sessió",
         "body": "Tancar la vostra sessió al webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Tornar-te al teu compte",
+        "body": "Quan un administrador ha obert una bústia per suplantació, tancar aquesta sessió i tornar a iniciar la sessió al compte des del qual va començar."
+      },
       "account_read": {
         "title": "Veure els vostres comptes",
         "body": "Veure els comptes que heu afegit, amb les seves adreces i servidors, i quins comptes de correu són bústies d'equip."

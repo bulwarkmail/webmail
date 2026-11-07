@@ -1679,6 +1679,12 @@ export const ALL_PERMISSIONS = [
   'security:read',
   'auth:observe',
   'auth:emit',
+  // End an impersonation handoff and sign back in to the account that
+  // started it (api.user.returnToOwnAccount, the app-top-banner slot's
+  // `canReturn`). A plugin with it and an app-top-banner banner draws the
+  // button, and the core strip steps back. Declare it in
+  // optionalPermissions: older webmails don't know it.
+  'auth:impersonation-return',
   'account:read',
   // Look people up in the server's directory (api.user.findPeople).
   'directory:read',

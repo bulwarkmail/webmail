@@ -6797,6 +6797,10 @@
         "title": "Đăng xuất bạn",
         "body": "Đăng xuất bạn khỏi webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Đưa bạn về tài khoản của mình",
+        "body": "Sau khi quản trị viên mở một hộp thư bằng cách mạo danh, kết thúc phiên đó và đăng nhập lại vào tài khoản đã bắt đầu nó."
+      },
       "account_read": {
         "title": "Xem tài khoản của bạn",
         "body": "Xem các tài khoản bạn đã thêm cùng với địa chỉ và máy chủ của họ cũng như tài khoản thư nào là hộp thư của nhóm."

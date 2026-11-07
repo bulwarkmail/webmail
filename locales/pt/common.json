@@ -6785,6 +6785,10 @@
         "title": "Encerrar sua sessão",
         "body": "Encerrar sua sessão no webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Levá-lo de volta à sua conta",
+        "body": "Depois de um administrador abrir uma caixa de correio através de representação, terminar essa sessão e voltar a iniciar sessão na conta de onde partiu."
+      },
       "account_read": {
         "title": "Ver suas contas",
         "body": "Ver as contas que você adicionou, com os endereços e servidores delas, e quais contas de e-mail são caixas de equipe."

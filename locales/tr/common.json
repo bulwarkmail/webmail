@@ -6785,6 +6785,10 @@
         "title": "Oturumunuzu kapatma",
         "body": "Webmail'den çıkış yapmanızı sağlama."
       },
+      "auth_impersonation_return": {
+        "title": "Sizi kendi hesabınıza geri götürmek",
+        "body": "Bir yönetici bir posta kutusunu kimliğe bürünerek açtıktan sonra o oturumu kapatıp başladığı hesaba yeniden giriş yapmak."
+      },
       "account_read": {
         "title": "Hesaplarınızı görme",
         "body": "Eklediğiniz hesapları adresleri ve sunucularıyla birlikte ve hangi posta hesaplarının ekip posta kutusu olduğunu görme."

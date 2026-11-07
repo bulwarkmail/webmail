@@ -590,6 +590,13 @@ function buildCoreApi(manifest: PluginManifest) {
       /** The IANA time zone the app shows times in (the user's setting, else the browser's). */
       getTimeZone: () => callApi('user.getTimeZone', []) as Promise<string>,
       logout: () => callApi('user.logout', []),
+      /**
+       * End the impersonation and sign back in to the account that started
+       * it; signs out when the server holds nothing to return to. Only in an
+       * impersonated session (the app-top-banner slot's `canReturn` says
+       * whether a return is waiting). Needs auth:impersonation-return.
+       */
+      returnToOwnAccount: () => callApi('user.returnToOwnAccount', []) as Promise<void>,
     },
     http: {
       // A Blob/File body is sent as a binary request; options.headers may then

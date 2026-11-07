@@ -6785,6 +6785,10 @@
         "title": "Je afmelden",
         "body": "Je afmelden bij de webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Je terugbrengen naar je eigen account",
+        "body": "Nadat een beheerder een mailbox via impersonatie heeft geopend, die sessie beëindigen en opnieuw inloggen op het account waar die begon."
+      },
       "account_read": {
         "title": "Je accounts zien",
         "body": "De accounts zien die je hebt toegevoegd, met hun adressen en servers, en welke e-mailaccounts teampostvakken zijn."

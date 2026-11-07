@@ -6785,6 +6785,10 @@
         "title": "Vous déconnecter",
         "body": "Vous déconnecter du webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Vous ramener à votre compte",
+        "body": "Quand un administrateur a ouvert une boîte aux lettres par usurpation d'identité, fermer cette session et vous reconnecter au compte d'où elle est partie."
+      },
       "account_read": {
         "title": "Voir vos comptes",
         "body": "Voir les comptes que vous avez ajoutés, avec leurs adresses et leurs serveurs, et savoir quels comptes de messagerie sont des boîtes aux lettres d'équipe."

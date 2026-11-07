@@ -23,6 +23,8 @@ import { checkPages, setPluginPages } from './pages';
 import { dismissPluginToast, showPluginProgressToast, showPluginToast } from './host-api-toasts';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
+import { returnToOwnAccount } from '@/lib/impersonation/return-client';
+import { isPopoutWindow } from '@/lib/popout/window-role';
 import { claimLegacyPluginStorage, pluginStoragePrefix } from './storage-scope';
 import { useIdentityStore } from '@/stores/identity-store';
 import { resolveEmailBlobContext, useEmailStore } from '@/stores/email-store';
@@ -201,6 +203,8 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   // The user's preferences (layout, formats, reading and sending behaviour).
   'app.getSettings': 'settings:read',
   'user.logout': 'auth:emit',
+  // Only in an impersonated session; see doUserReturnToOwnAccount.
+  'user.returnToOwnAccount': 'auth:impersonation-return',
   // admin
   'admin.getConfig': 'admin:config',
   'admin.getAllConfig': 'admin:config',
@@ -493,6 +497,23 @@ function doUserGetIdentities(): Identity[] {
 
 async function doUserLogout(): Promise<void>{
   return useAuthStore.getState().logout();
+}
+
+/**
+ * "Return to my account" for a plugin's impersonation banner (#1538): the
+ * same POST /api/auth/impersonate/return as the core strip, falling back to
+ * signing out when the server has nothing to return to. The plugin learns
+ * nothing from it; the session it returns to stays on the server. Refused
+ * outside an impersonated session, so the permission is no way to sign the
+ * user out, and in a pop-out, which doesn't own the account list.
+ */
+async function doUserReturnToOwnAccount(): Promise<void> {
+  if (isPopoutWindow()) throw new Error('user.returnToOwnAccount: not available in a pop-out window');
+  const accounts = useAccountStore.getState();
+  if (!accounts.getActiveAccount()?.impersonated) {
+    throw new Error('user.returnToOwnAccount: the session is not an impersonation');
+  }
+  await returnToOwnAccount();
 }
 
 // ─── http.post (same-origin /api/*) ───────────────────────────
@@ -2197,6 +2218,7 @@ export async function dispatchApiCall(
     case 'app.searchSettings': return doAppSearchSettings(args[0], args[1]);
     case 'app.getSettings': return doAppGetSettings();
     case 'user.logout' : return doUserLogout();
+    case 'user.returnToOwnAccount': return doUserReturnToOwnAccount();
 
     case 'admin.getConfig':    return adminGet(plugin.id, args[0] as string);
     case 'admin.getAllConfig': return adminGetAll(plugin.id);

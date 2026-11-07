@@ -6785,6 +6785,10 @@
         "title": "Disconnetterti",
         "body": "Disconnetterti dalla webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Riportarti al tuo account",
+        "body": "Dopo che un amministratore ha aperto una casella tramite impersonificazione, chiudere quella sessione e accedere di nuovo all'account da cui era partita."
+      },
       "account_read": {
         "title": "Vedere i tuoi account",
         "body": "Vedere gli account che hai aggiunto, con i relativi indirizzi e server, e quali account di posta sono caselle di team."

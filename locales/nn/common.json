@@ -6793,6 +6793,10 @@
         "title": "Logg deg ut",
         "body": "Logg deg ut av webmailen."
       },
+      "auth_impersonation_return": {
+        "title": "Sende deg tilbake til din eigen konto",
+        "body": "Når ein administrator har opna ein postkasse via imitering, avslutte den økta og logge inn att på kontoen ho starta frå."
+      },
       "account_read": {
         "title": "Sjå kontoane dine",
         "body": "Sjå kontoane du la til med adressene og tenarane, og kva postkontoar som er team-postkassar."

@@ -6785,6 +6785,10 @@
         "title": "Odhlásit vás",
         "body": "Může vás odhlásit z webmailu."
       },
+      "auth_impersonation_return": {
+        "title": "Vrátit vás do vašeho účtu",
+        "body": "Když správce otevře schránku přes zosobnění, ukončit tuto relaci a znovu vás přihlásit k účtu, ze kterého začala."
+      },
       "account_read": {
         "title": "Vidět vaše účty",
         "body": "Vidí účty, které jste přidali, včetně jejich adres a serverů, a které poštovní účty jsou týmové schránky."

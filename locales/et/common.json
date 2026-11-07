@@ -6785,6 +6785,10 @@
         "title": "Logi sind välja",
         "body": "Logida sind veebimeilist välja."
       },
+      "auth_impersonation_return": {
+        "title": "Viia sind tagasi oma kontole",
+        "body": "Kui administraator on postkasti kasutaja asendamise kaudu avanud, lõpetada see seanss ja logida uuesti sisse kontole, millest see algas."
+      },
       "account_read": {
         "title": "Vaata sinu kontosid",
         "body": "Näha sinu lisatud kontosid koos nende aadresside ja serveritega ning seda, millised meilikontod on meeskonnapostkastid."

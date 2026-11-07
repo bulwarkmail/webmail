@@ -6785,6 +6785,10 @@
         "title": "Sie abmelden",
         "body": "Sie vom Webmail abmelden."
       },
+      "auth_impersonation_return": {
+        "title": "Sie zu Ihrem Konto zurückbringen",
+        "body": "Wenn ein Administrator ein Postfach per Impersonation geöffnet hat, diese Sitzung beenden und Sie wieder bei dem Konto anmelden, von dem sie ausging."
+      },
       "account_read": {
         "title": "Ihre Konten sehen",
         "body": "Die von Ihnen hinzugefügten Konten mit ihren Adressen und Servern sehen und erkennen, welche Postfächer Team-Postfächer sind."

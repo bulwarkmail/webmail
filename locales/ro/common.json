@@ -6785,6 +6785,10 @@
         "title": "Deconectarea dvs.",
         "body": "Vă deconectează din webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Să vă readucă în contul dvs.",
+        "body": "După ce un administrator a deschis o cutie poștală prin impersonare, să închidă acea sesiune și să vă reconecteze la contul din care a pornit."
+      },
       "account_read": {
         "title": "Vizualizarea conturilor",
         "body": "Vede conturile pe care le-ați adăugat, cu adresele și serverele lor, și care conturi de e-mail sunt căsuțe de echipă."

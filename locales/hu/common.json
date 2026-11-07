@@ -6785,6 +6785,10 @@
         "title": "Kijelentkeztetés",
         "body": "Kijelentkeztethet a webmailből."
       },
+      "auth_impersonation_return": {
+        "title": "Visszavinni a saját fiókjába",
+        "body": "Miután egy rendszergazda megszemélyesítéssel megnyitott egy postafiókot, lezárni ezt a munkamenetet, és újra bejelentkezni abba a fiókba, amelyből indult."
+      },
       "account_read": {
         "title": "Fiókjaid megtekintése",
         "body": "Látja a hozzáadott fiókjaidat a címükkel és szerverükkel együtt, és azt, hogy mely levelezőfiókok csapat-postafiókok."

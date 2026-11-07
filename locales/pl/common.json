@@ -6785,6 +6785,10 @@
         "title": "Wylogowywanie",
         "body": "Może wylogować Cię z webmaila."
       },
+      "auth_impersonation_return": {
+        "title": "Przywrócić cię na twoje konto",
+        "body": "Gdy administrator otworzył skrzynkę przez podszywanie się, zakończyć tę sesję i ponownie zalogować na konto, z którego się zaczęła."
+      },
       "account_read": {
         "title": "Podgląd kont",
         "body": "Widzi dodane przez Ciebie konta wraz z ich adresami i serwerami oraz to, które konta pocztowe są skrzynkami zespołu."

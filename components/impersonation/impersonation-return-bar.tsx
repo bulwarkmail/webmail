@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Eye, Loader2, Undo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { IS_LITE } from '@/lib/lite';
-import { canReturnToOwnAccount, returnToOwnAccount } from '@/lib/impersonation/return-client';
-import { useAccountStore } from '@/stores/account-store';
+import { returnToOwnAccount } from '@/lib/impersonation/return-client';
+import { useImpersonationReturn, usePluginDrawsImpersonationReturn } from '@/hooks/use-impersonation-return';
 
 /**
  * A strip across the top of the apps while an impersonation handoff is
@@ -14,29 +13,16 @@ import { useAccountStore } from '@/stores/account-store';
  * to my account" ends the impersonation and signs back in as that account.
  * Hidden when there is nothing to return to (no session before the
  * handoff, the handle expired or was used, Lite), where signing out stays
- * the way back.
+ * the way back, and when an enabled plugin draws the button in its own
+ * banner (usePluginDrawsImpersonationReturn).
  */
 export function ImpersonationReturnBar() {
   const t = useTranslations('impersonation');
-  const mailbox = useAccountStore((s) => {
-    const active = s.accounts.find((a) => a.id === s.activeAccountId);
-    return active?.impersonated ? (active.email || active.username) : null;
-  });
-  const [available, setAvailable] = useState(false);
+  const { mailbox, available } = useImpersonationReturn();
+  const pluginDrawsIt = usePluginDrawsImpersonationReturn();
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (IS_LITE || !mailbox) return;
-    let cancelled = false;
-    void canReturnToOwnAccount().then((yes) => {
-      if (!cancelled) setAvailable(yes);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [mailbox]);
-
-  if (IS_LITE || !mailbox || !available) return null;
+  if (!mailbox || !available || pluginDrawsIt) return null;
 
   const onReturn = async () => {
     if (busy) return;

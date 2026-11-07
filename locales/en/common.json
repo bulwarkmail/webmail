@@ -6785,6 +6785,10 @@
         "title": "Sign you out",
         "body": "Sign you out of the webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Take you back to your own account",
+        "body": "After an administrator opened a mailbox through impersonation, end that session and sign back in to the account it started from."
+      },
       "account_read": {
         "title": "See your accounts",
         "body": "See the accounts you added with their addresses and servers, and which mail accounts are team mailboxes."
