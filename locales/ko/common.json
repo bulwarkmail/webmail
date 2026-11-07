@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "모든 창을 즉시 잠급니다.",
     "app_lock_protects_toggle": "무엇으로부터 보호하나요?",
     "app_lock_timeout_hours": "{count, plural, other {#시간}}",
+    "app_lock_until_screen": "화면이 잠길 때",
+    "app_lock_until_session": "로그아웃하거나 다시 시작할 때",
     "desktop_attention_title": "이 컴퓨터에서"
   },
   "uxs2_ident": {

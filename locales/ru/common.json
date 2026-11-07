@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Сразу блокирует все окна.",
     "app_lock_protects_toggle": "От чего это защищает?",
     "app_lock_timeout_hours": "{count, plural, one {# час} few {# часа} many {# часов} other {# часа}}",
+    "app_lock_until_screen": "При блокировке экрана",
+    "app_lock_until_session": "При выходе из системы или перезагрузке",
     "desktop_attention_title": "На этом компьютере"
   },
   "uxs2_ident": {

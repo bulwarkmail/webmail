@@ -41,6 +41,7 @@ import {
   APP_LOCK_CHANNEL,
   APP_LOCK_HOLDER,
   APP_LOCK_KEY,
+  DEFAULT_TIMEOUT_MINUTES,
   headScriptFoundNoVault,
   isAppLockedNow,
   postAppLockMessage,
@@ -49,6 +50,7 @@ import {
   writeAppLockFile,
   type AppLockFile,
   type AppLockMessage,
+  type AppLockUntil,
 } from './state';
 import {
   addVaultHello,
@@ -337,8 +339,11 @@ function startIdle(): void {
   });
 }
 
+/** Read on every check, so a change in settings reaches every window's watcher. */
 function timeoutMsNow(): number {
-  return effectiveTimeout(readAppLockFile().timeoutMinutes).minutes * 60_000;
+  const file = readAppLockFile();
+  const timeout = effectiveTimeout(file.timeoutMinutes, file.until);
+  return timeout.until ? Infinity : timeout.minutes * 60_000;
 }
 
 /**
@@ -417,7 +422,10 @@ function noteUnlocked(): void {
  */
 function lockOnItsOwn(cause: string): void {
   const since = Date.now() - unlockedAt;
-  if (unlockedAt > 0 && since < timeoutMsNow()) {
+  // With no timeout, the default's worth of time.
+  const timeout = timeoutMsNow();
+  const grace = Number.isFinite(timeout) ? timeout : DEFAULT_TIMEOUT_MINUTES * 60_000;
+  if (unlockedAt > 0 && since < grace) {
     console.error(`[app-lock] Not locking again ${since} ms after an unlock: ${cause}`);
     return;
   }
@@ -1030,8 +1038,21 @@ export async function changeAppLockPin(currentPin: string, newPin: string): Prom
   }
 }
 
-export function setAppLockTimeout(minutes: number): void {
-  writeAppLockFile({ ...readAppLockFile(), timeoutMinutes: minutes });
+/** Minutes without use, or a desktop event instead. */
+export function setAppLockTimeout(choice: number | AppLockUntil): void {
+  const { until: _until, ...file } = readAppLockFile();
+  writeAppLockFile(typeof choice === 'number' ? { ...file, timeoutMinutes: choice } : { ...file, until: choice });
+  // Main locks on the screen lock by itself. A shell that can't be told keeps doing that.
+  void desktopControls()?.setScreenLock?.(choice !== 'session').catch(() => {});
+}
+
+/** The desktop events this shell can lock on instead of a timeout. None in a browser. */
+export function appLockUntilChoices(): AppLockUntil[] {
+  const bridge = getDesktopBridge();
+  if (!bridge?.appLock) return [];
+  // Linux tells Electron nothing when the screen locks, so main never locks on it there.
+  if (bridge.platform === 'linux') return ['session'];
+  return desktopControls()?.setScreenLock ? ['screen', 'session'] : ['screen'];
 }
 
 export async function addPasskey(pin: string, appName: string): Promise<void> {

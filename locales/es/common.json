@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Bloquea todas las ventanas a la vez.",
     "app_lock_protects_toggle": "¿De qué protege esto?",
     "app_lock_timeout_hours": "{count, plural, one {# hora} other {# horas}}",
+    "app_lock_until_screen": "Al bloquear la pantalla",
+    "app_lock_until_session": "Al cerrar sesión o reiniciar",
     "desktop_attention_title": "En este ordenador"
   },
   "uxs2_ident": {

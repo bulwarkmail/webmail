@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Sperrt alle Fenster sofort.",
     "app_lock_protects_toggle": "Wovor schützt das?",
     "app_lock_timeout_hours": "{count, plural, one {# Stunde} other {# Stunden}}",
+    "app_lock_until_screen": "Wenn der Bildschirm gesperrt wird",
+    "app_lock_until_session": "Beim Abmelden oder Neustart",
     "desktop_attention_title": "Auf diesem Computer"
   },
   "uxs2_ident": {

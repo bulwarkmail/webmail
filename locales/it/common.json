@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Blocca subito tutte le finestre.",
     "app_lock_protects_toggle": "Da cosa protegge?",
     "app_lock_timeout_hours": "{count, plural, one {# ora} other {# ore}}",
+    "app_lock_until_screen": "Quando lo schermo si blocca",
+    "app_lock_until_session": "Quando esco o riavvio",
     "desktop_attention_title": "Su questo computer"
   },
   "uxs2_ident": {

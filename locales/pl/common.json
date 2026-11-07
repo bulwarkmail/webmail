@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Blokuje od razu wszystkie okna.",
     "app_lock_protects_toggle": "Przed czym to chroni?",
     "app_lock_timeout_hours": "{count, plural, one {# godzina} few {# godziny} many {# godzin} other {# godziny}}",
+    "app_lock_until_screen": "Gdy ekran się zablokuje",
+    "app_lock_until_session": "Po wylogowaniu lub ponownym uruchomieniu",
     "desktop_attention_title": "Na tym komputerze"
   },
   "uxs2_ident": {

@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Azonnal zárolja az összes ablakot.",
     "app_lock_protects_toggle": "Mi ellen véd ez?",
     "app_lock_timeout_hours": "{count, plural, one {# óra} other {# óra}}",
+    "app_lock_until_screen": "Amikor zárolódik a képernyő",
+    "app_lock_until_session": "Kijelentkezéskor vagy újraindításkor",
     "desktop_attention_title": "Ezen a számítógépen"
   },
   "uxs2_ident": {

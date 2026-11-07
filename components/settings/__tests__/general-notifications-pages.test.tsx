@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import enCommon from '@/locales/en/common.json';
 import enPlain from '@/locales/en/plain.json';
 import { withPlainLanguage } from '@/i18n/plain-language';
@@ -149,6 +149,38 @@ describe('App lock', () => {
       expect(byValue['60']).toBe('app_lock_timeout_hours');
       expect(byValue['240']).toBe('app_lock_timeout_hours');
       expect(byValue['30']).toBe('timeout_option');
+    } finally {
+      localStorage.removeItem(APP_LOCK_KEY);
+    }
+  });
+
+  it('offers the desktop events instead of a timeout only in the desktop app, and keeps the choice', async () => {
+    const { APP_LOCK_KEY } = await import('@/lib/app-lock/state');
+    localStorage.setItem(APP_LOCK_KEY, JSON.stringify({ on: true, locked: false, timeoutMinutes: 15 }));
+    try {
+      const { unmount } = render(<AppLockSettings />);
+      await settle();
+      const values = () => Array.from(screen.getByTestId('app-lock-timeout').querySelectorAll('option')).map((o) => o.value);
+      expect(values()).not.toContain('screen');
+      unmount();
+
+      installBridge();
+      const setScreenLock = vi.fn(async () => true);
+      (window as unknown as { bulwarkDesktop: Record<string, unknown> }).bulwarkDesktop.appLock = {
+        status: vi.fn(async () => ({ locked: false, enrolled: true, os: null, osEnrolled: false })),
+        claim: vi.fn(() => ({ lock: vi.fn(), osUnlock: vi.fn(), setScreenLock })),
+        onLockRequest: vi.fn(() => () => {}),
+      };
+      render(<AppLockSettings />);
+      await settle();
+      const select = screen.getByTestId('app-lock-timeout') as HTMLSelectElement;
+      expect(values().slice(-2)).toEqual(['screen', 'session']);
+      expect(screen.getByText('app_lock_until_session')).toBeTruthy();
+      fireEvent.change(select, { target: { value: 'session' } });
+      await settle();
+      expect(setScreenLock).toHaveBeenLastCalledWith(false);
+      expect(JSON.parse(localStorage.getItem(APP_LOCK_KEY)!).until).toBe('session');
+      expect((screen.getByTestId('app-lock-timeout') as HTMLSelectElement).value).toBe('session');
     } finally {
       localStorage.removeItem(APP_LOCK_KEY);
     }

@@ -7,6 +7,7 @@ import { deleteKeyDatabase, getAccountRecord, openAccountKey } from '@/lib/store
 import {
   addOsUnlock,
   appLockHold,
+  appLockUntilChoices,
   changeAppLockPin,
   appLockKeyLayers,
   bootAppLock,
@@ -20,6 +21,7 @@ import {
   lockEverywhere,
   onStoreKeyMissing,
   resetAppLockForTests,
+  setAppLockTimeout,
   setReloadForTests,
   startAppLock,
   STAY_RETRY_MS,
@@ -657,6 +659,51 @@ describe('the desktop app', () => {
     expect(readAppLockFile().locked).toBe(true);
   });
 
+  it('"when I sign out or restart" has no timeout and tells main to skip the screen lock; a timeout again undoes both', async () => {
+    const setScreenLock = vi.fn(async () => true);
+    const appLock = bridge();
+    appLock.claim = vi.fn(() => ({ lock: appLock.lock, osUnlock: appLock.osUnlock, setScreenLock })) as never;
+    expect(appLockUntilChoices()).toEqual(['screen', 'session']);
+    // Before the lock goes on: the idle watcher keeps the clock it started with.
+    const now = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now);
+    try {
+      await enableAppLock(PIN);
+      setAppLockTimeout('session');
+      expect(setScreenLock).toHaveBeenLastCalledWith(false);
+      expect(readAppLockFile().until).toBe('session');
+      clock.mockReturnValue(now + 24 * 60 * 60_000);
+      window.dispatchEvent(new Event('pointerdown'));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(reloads).toBe(0);
+      expect(readAppLockFile().locked).toBe(false);
+
+      setAppLockTimeout(5);
+      expect(setScreenLock).toHaveBeenLastCalledWith(true);
+      expect(readAppLockFile().until).toBeUndefined();
+      clock.mockReturnValue(now + 24 * 60 * 60_000 + 6 * 60_000);
+      window.dispatchEvent(new Event('pointerdown'));
+      await vi.waitFor(() => expect(reloads).toBe(1));
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it('"when the screen locks" leaves main locking on it and needs no new shell; Linux has only the other', () => {
+    const setScreenLock = vi.fn(async () => true);
+    const appLock = bridge();
+    appLock.claim = vi.fn(() => ({ lock: appLock.lock, osUnlock: appLock.osUnlock, setScreenLock })) as never;
+    setAppLockTimeout('screen');
+    expect(setScreenLock).toHaveBeenLastCalledWith(true);
+    // An older shell can't be told to skip it.
+    bridge();
+    expect(appLockUntilChoices()).toEqual(['screen']);
+    (window as unknown as { bulwarkDesktop: { platform: string } }).bulwarkDesktop.platform = 'linux';
+    expect(appLockUntilChoices()).toEqual(['session']);
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    expect(appLockUntilChoices()).toEqual([]);
+  });
+
   it('a page in a tab can\'t lift a lock main still holds', async () => {
     const appLock = bridge({ status: vi.fn(async () => ({ locked: true, enrolled: true, os: null, osEnrolled: false })) });
     await enableAppLock(PIN);
@@ -966,11 +1013,14 @@ describe('policy', () => {
   it('a forced timeout wins over the user\'s choice, a recommended one only over no choice', () => {
     withPolicy({ value: false, locked: false }, { value: 3, locked: true });
     expect(effectiveTimeout(60)).toEqual({ minutes: 3, locked: true });
+    // No way around a forced timeout with a desktop event either.
+    expect(effectiveTimeout(60, 'session')).toEqual({ minutes: 3, locked: true });
     // A value nobody could read: the user's choice was never what the admin meant.
     (window.bulwarkDesktop as unknown as { policy: { get(): unknown } }).policy.get = () => ({ AppLockTimeoutMinutes: { value: null, locked: true, source: 'forced-machine', invalid: 'out_of_range' } });
     expect(effectiveTimeout(60)).toEqual({ minutes: 1, locked: true });
     withPolicy({ value: false, locked: false }, { value: 3, locked: false });
     expect(effectiveTimeout(60)).toEqual({ minutes: 60, locked: false });
+    expect(effectiveTimeout(60, 'screen')).toEqual({ minutes: 60, locked: false, until: 'screen' });
     expect(effectiveTimeout(undefined)).toEqual({ minutes: 3, locked: false });
     delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
     expect(effectiveTimeout(undefined)).toEqual({ minutes: 10, locked: false });

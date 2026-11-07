@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Vergrendelt alle vensters meteen.",
     "app_lock_protects_toggle": "Waartegen beschermt dit?",
     "app_lock_timeout_hours": "{count, plural, one {# uur} other {# uur}}",
+    "app_lock_until_screen": "Als het scherm vergrendelt",
+    "app_lock_until_session": "Bij afmelden of opnieuw opstarten",
     "desktop_attention_title": "Op deze computer"
   },
   "uxs2_ident": {

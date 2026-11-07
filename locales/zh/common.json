@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "立即锁定所有窗口。",
     "app_lock_protects_toggle": "这能防范什么？",
     "app_lock_timeout_hours": "{count, plural, other {# 小时}}",
+    "app_lock_until_screen": "屏幕锁定时",
+    "app_lock_until_session": "注销或重启时",
     "desktop_attention_title": "在这台电脑上"
   },
   "uxs2_ident": {

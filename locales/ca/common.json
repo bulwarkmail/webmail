@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Bloqueja totes les finestres de cop.",
     "app_lock_protects_toggle": "De què protegeix això?",
     "app_lock_timeout_hours": "{count, plural, one {# hora} other {# hores}}",
+    "app_lock_until_screen": "Quan es bloqueja la pantalla",
+    "app_lock_until_session": "Quan tanco la sessió o reinicio",
     "desktop_attention_title": "En aquest ordinador"
   },
   "uxs2_ident": {

@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "همه پنجره‌ها را فوراً قفل می‌کند.",
     "app_lock_protects_toggle": "این از چه چیزی محافظت می‌کند؟",
     "app_lock_timeout_hours": "{count, plural, one {# ساعت} other {# ساعت}}",
+    "app_lock_until_screen": "وقتی صفحه قفل می‌شود",
+    "app_lock_until_session": "هنگام خروج از حساب یا راه‌اندازی دوباره",
     "desktop_attention_title": "روی این رایانه"
   },
   "uxs2_ident": {

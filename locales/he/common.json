@@ -7533,6 +7533,8 @@
     "app_lock_now_desc_desktop": "נועל מיד את כל החלונות.",
     "app_lock_protects_toggle": "ממה זה מגן?",
     "app_lock_timeout_hours": "{count, plural, one {שעה אחת} two {שעתיים} other {# שעות}}",
+    "app_lock_until_screen": "כשהמסך ננעל",
+    "app_lock_until_session": "בהתנתקות או בהפעלה מחדש",
     "desktop_attention_title": "במחשב הזה"
   },
   "uxs2_ident": {
