@@ -70,6 +70,12 @@ interface PolicyState {
    * sign-in or a change go through fetchPolicy.
    */
   fetchStartupPolicy: () => Promise<void>;
+  /**
+   * For a check that only needs a current policy, not a new one: the fetch on
+   * its way, or the full policy the server sent less than maxAgeMs ago; else a
+   * fetch.
+   */
+  fetchPolicyIfOlder: (maxAgeMs: number) => Promise<void>;
   /** Resolve the policy for this account (the active one); null for none. */
   setPolicySubject: (subject: PolicySubject | null) => void;
   /** The effective policy of another account, without making it the active one. */
@@ -101,6 +107,10 @@ interface PolicyState {
 let policyRequest = 0;
 /** The page's first fetch (fetchStartupPolicy), once started. */
 let startupPolicy: Promise<void> | null = null;
+/** The fetch on its way, settled when it is done. */
+let inFlight: Promise<void> | null = null;
+/** When the server's last answer landed (Date.now()). */
+let lastServerAt = -Infinity;
 /** The body of the last server answer that landed. */
 let lastServerJson: string | null = null;
 
@@ -192,6 +202,9 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
     // after it; only the latest may land.
     const request = ++policyRequest;
     set({ fetching: true });
+    let settle!: () => void;
+    const settled = new Promise<void>((resolve) => { settle = resolve; });
+    inFlight = settled;
     // Static Lite build: an optional policy.json next to index.html stands in
     // for the admin server; missing means defaults, and the gates that need
     // the server stay pinned off either way (lib/lite-config.ts).
@@ -227,6 +240,7 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
         const scopeDomains = typeof domainsHeader === 'string' ? domainsHeader.split(',').filter(Boolean) : null;
         // Lite has no /api/config: error reporting is set in policy.json.
         if (IS_LITE) configureErrorReporting(liteErrorReporting(data));
+        lastServerAt = Date.now();
         // A refetch that brings nothing new (the periodic one, hooks/use-policy-refresh.ts)
         // keeps the resolved objects, so nothing that reads the policy re-runs.
         const json = JSON.stringify(data);
@@ -259,6 +273,8 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
       if (request === policyRequest) settleWithoutServer();
     } finally {
       if (request === policyRequest) set({ fetching: false });
+      settle();
+      if (inFlight === settled) inFlight = null;
     }
   },
 
@@ -267,6 +283,13 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
   fetchStartupPolicy: () => {
     startupPolicy ??= get().fetchPolicy();
     return startupPolicy;
+  },
+
+  fetchPolicyIfOlder: (maxAgeMs) => {
+    if (inFlight) return inFlight;
+    const { source, partial } = get();
+    if (source === 'server' && !partial && Date.now() - lastServerAt < maxAgeMs) return Promise.resolve();
+    return get().fetchPolicy();
   },
 
   setPolicySubject: (subject) => {

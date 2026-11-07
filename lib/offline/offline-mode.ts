@@ -188,6 +188,12 @@ function withoutSession(client: object): boolean {
 /** How long a tab that took over the store waits for the policy before going on as if it hadn't heard. */
 const OWNER_POLICY_WAIT_MS = 5_000;
 
+/**
+ * A policy the server sent this recently is the one this start fetched, and current for a
+ * tab taking over the store. A takeover later on (a tab that sat in the background) fetches.
+ */
+const OWNER_POLICY_FRESH_MS = 10_000;
+
 /** A full disk stays full: once in a while is enough to say so. */
 const STORAGE_NOTICE_MS = 30 * 60_000;
 let lastStorageNotice = 0;
@@ -233,9 +239,11 @@ const storeHooks: StorePageHooks = {
     return client.getAuthHeader();
   },
   async ownerTaken() {
-    // This tab may have sat in the background: its policy can be old.
+    // This tab may have sat in the background: its policy can be old. Not at a
+    // start, where the store usually changes hands while the page's first
+    // fetch is on its way or has just answered: that one is current.
     await Promise.race([
-      usePolicyStore.getState().fetchPolicy(),
+      usePolicyStore.getState().fetchPolicyIfOlder(OWNER_POLICY_FRESH_MS),
       new Promise((resolve) => setTimeout(resolve, OWNER_POLICY_WAIT_MS)),
     ]);
   },
