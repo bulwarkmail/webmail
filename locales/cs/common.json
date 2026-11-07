@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Jednotné přihlášení (OAuth/OIDC)",
       "auth_method_basic": "Heslo",
       "auth_method_token": "Přístupový token",
+      "account_management_link": "Spravovat zabezpečení účtu (2FA, hesla aplikací)",
       "demo_account": "Demo účet",
       "email": {
         "label": "E-mailová adresa",
@@ -7617,6 +7618,10 @@
     "trouble": "Nedaří se to?",
     "trouble_cors": "Váš poštovní server musí povolit přihlašování z tohoto webu. Pokud přihlášení selže, požádejte správce poštovního serveru, aby to povolil.",
     "provider_unsupported": "{provider} nenabízí JMAP, způsob, jakým Bulwark komunikuje s poštovními servery, takže se k němu Bulwark zatím nemůže připojit přímo."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock je zapnutý",
+    "language_button": "Jazyk: {language}"
   },
   "ux_p3_settings": {
     "connection": {

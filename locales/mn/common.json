@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Нэг удаа нэвтрэх (OAuth/OIDC)",
       "auth_method_basic": "Нууц үг",
       "auth_method_token": "Хандалтын токен",
+      "account_management_link": "Бүртгэлийн аюулгүй байдлыг удирдах (2FA, аппын нууц үг)",
       "demo_account": "Демо данс",
       "email": {
         "label": "Имэйл хаяг",
@@ -7617,6 +7618,10 @@
     "trouble": "Асуудал гарч байна уу?",
     "trouble_cors": "Таны шуудангийн сервер энэ вэб сайтаас нэвтрэхийг зөвшөөрөх ёстой. Нэвтэрч чадахгүй бол шуудангийн серверээ хариуцдаг хүнээс зөвшөөрөхийг хүснэ үү.",
     "provider_unsupported": "{provider} нь Bulwark шуудангийн сервертэй харилцдаг JMAP-ыг санал болгодоггүй тул Bulwark одоогоор түүнтэй шууд холбогдож чадахгүй."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock асаалттай байна",
+    "language_button": "Хэл: {language}"
   },
   "ux_p3_settings": {
     "connection": {

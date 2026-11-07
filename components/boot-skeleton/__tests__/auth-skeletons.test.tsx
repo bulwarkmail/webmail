@@ -29,8 +29,9 @@ describe('signed-in pages for a signed-out visitor', () => {
     expect(login).not.toBeNull();
     // Hidden unless the page is marked signed out.
     expect(login!.parentElement!.className.split(' ')).toEqual(expect.arrayContaining(['hidden', 'boot-out:block']));
-    // The card itself: logo, fields, button.
-    expect(login!.querySelectorAll('.h-11').length).toBeGreaterThanOrEqual(3);
+    // The card itself, in the login page's frame: two fields and the button.
+    expect(login!.querySelector('.login-frame .login-card')).not.toBeNull();
+    expect(login!.querySelectorAll('.login-card .h-10').length).toBeGreaterThanOrEqual(3);
     // And the accessibility button the login page will have in its corner.
     expect(login!.querySelector('.fixed.bottom-4.end-4')).not.toBeNull();
     // And the app's own frame goes away then.

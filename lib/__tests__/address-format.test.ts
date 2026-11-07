@@ -24,6 +24,7 @@ describe('address-format', () => {
     expect(countryCodeFromName('Germany')).toBe('DE');
     expect(countryCodeFromName('Deutschland')).toBe('DE');
     expect(countryCodeFromName('Schweiz')).toBe('CH');
+    expect(countryCodeFromName('Noreg')).toBe('NO');
     expect(countryCodeFromName('de')).toBe('DE');
     expect(countryCodeFromName('USA')).toBe('US');
     expect(countryCodeFromName('United Kingdom')).toBe('GB');

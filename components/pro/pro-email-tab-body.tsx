@@ -103,6 +103,8 @@ interface ProEmailViewProps {
    * folder tab's selection).
    */
   onClose: () => void;
+  /** A folder host archives its own rows, outside the Mail tab's global list. */
+  onArchiveEmail?: (email: Email) => Promise<void>;
   className?: string;
 }
 
@@ -163,7 +165,7 @@ export function buildReplyContext(email: Email, source: EmailWriteSource): ProRe
  * Hosted by `ProEmailTabBody` (a dedicated email tab) and by the folder tab's
  * reading pane.
  */
-export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, noAutomaticActions, conversation, onClose, className }: ProEmailViewProps) {
+export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, noAutomaticActions, conversation, onClose, onArchiveEmail, className }: ProEmailViewProps) {
   const t = useTranslations();
   const tNotifications = useTranslations('notifications');
   const tRemove = useTranslations('email_list.confirm_remove');
@@ -451,6 +453,10 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;
+    if (onArchiveEmail) {
+      await onArchiveEmail(email);
+      return;
+    }
     // In Archive the same action brings it back to the Inbox (mail-p3-4).
     const { selectedMailbox } = useEmailStore.getState();
     const current = mailboxes.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
@@ -478,7 +484,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     } catch (err) {
       console.error('Archive failed:', err);
     }
-  }, [client, email, mailboxes, moveToMailbox, onClose, t, confirmDialog, tRemove]);
+  }, [client, email, mailboxes, moveToMailbox, onClose, onArchiveEmail, t, confirmDialog, tRemove]);
 
   const handleToggleStar = useCallback(async () => {
     if (!client || !email) return;

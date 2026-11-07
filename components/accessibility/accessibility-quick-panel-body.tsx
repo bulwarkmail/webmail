@@ -10,6 +10,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { FONT_SIZES, type FontSize } from '@/lib/accessibility-settings';
 import { ACCESSIBILITY_PRESET_IDS, presetChanges, type AccessibilityPresetId, type PresetChange } from '@/lib/accessibility-presets';
+import { noteSignedOutChoice } from '@/lib/signed-out-choices';
 
 type SettingKey = Parameters<ReturnType<typeof useSettingsStore.getState>['updateSetting']>[0];
 
@@ -20,7 +21,22 @@ export function QuickPanel({ isOpen, onClose, signedIn }: { isOpen: boolean; onC
   const settings = useSettingsStore();
   const { isSettingLocked } = usePolicyStore();
   const [applied, setApplied] = useState<{ id: AccessibilityPresetId; changes: PresetChange[] } | null>(null);
-  const set = (key: string, value: unknown) => settings.updateSetting(key as SettingKey, value as never);
+  const set = (key: string, value: unknown) => {
+    settings.updateSetting(key as SettingKey, value as never);
+    // Chosen on the sign-in page: still there once signed in (lib/signed-out-choices.ts).
+    if (!signedIn) noteSignedOutChoice(key);
+  };
+  const systemToggle = (key: 'reduceMotion' | 'largeTargets') => (
+    <RadioGroup
+      value={settings[key]}
+      onChange={(value) => set(key, value)}
+      options={[
+        { value: 'system', label: tA('system') },
+        { value: 'on', label: tA('on') },
+        { value: 'off', label: tA('off') },
+      ]}
+    />
+  );
 
   const applyPreset = (id: AccessibilityPresetId) => {
     const changes = presetChanges(id, useSettingsStore.getState() as unknown as Record<string, unknown>, isSettingLocked);
@@ -37,14 +53,28 @@ export function QuickPanel({ isOpen, onClose, signedIn }: { isOpen: boolean; onC
   return (
     <Dialog isOpen={isOpen} onClose={onClose} title={t('title')} description={t('description')} size="md" testId="accessibility-panel">
       <div className="space-y-1">
-        <SettingItem label={tA('text_size.label')}>
+        {/* What changes how a page looks or is used, the sign-in page included.
+            The rest is on Settings > Accessibility. */}
+        <SettingItem label={tA('text_size.label')} locked={isSettingLocked('fontSize')}>
           <Select
             value={settings.fontSize}
             onChange={(value) => set('fontSize', value as FontSize)}
             options={FONT_SIZES.map((size) => ({ value: size, label: tA(`text_size.${size}`) }))}
           />
         </SettingItem>
-        <SettingItem label={tA('contrast.label')}>
+        <SettingItem label={tA('font.label')} locked={isSettingLocked('appFont')}>
+          <Select
+            value={settings.appFont}
+            onChange={(value) => set('appFont', value)}
+            options={[
+              { value: 'default', label: tA('font.default') },
+              { value: 'atkinson', label: 'Atkinson Hyperlegible' },
+              { value: 'lexend', label: 'Lexend' },
+              { value: 'opendyslexic', label: 'OpenDyslexic' },
+            ]}
+          />
+        </SettingItem>
+        <SettingItem label={tA('contrast.label')} locked={isSettingLocked('contrast')}>
           <RadioGroup
             value={settings.contrast}
             onChange={(value) => set('contrast', value)}
@@ -55,16 +85,25 @@ export function QuickPanel({ isOpen, onClose, signedIn }: { isOpen: boolean; onC
             ]}
           />
         </SettingItem>
-        <SettingItem label={tA('reduce_motion.label')}>
+        <SettingItem label={tA('underline_links.label')} locked={isSettingLocked('underlineLinks')}>
+          <ToggleSwitch checked={settings.underlineLinks} onChange={(checked) => set('underlineLinks', checked)} />
+        </SettingItem>
+        <SettingItem label={tA('focus_ring.label')} locked={isSettingLocked('focusRing')}>
           <RadioGroup
-            value={settings.reduceMotion}
-            onChange={(value) => set('reduceMotion', value)}
+            value={settings.focusRing}
+            onChange={(value) => set('focusRing', value)}
             options={[
-              { value: 'system', label: tA('system') },
-              { value: 'on', label: tA('on') },
-              { value: 'off', label: tA('off') },
+              { value: 'normal', label: tA('focus_ring.normal') },
+              { value: 'thick', label: tA('focus_ring.thick') },
+              { value: 'extra', label: tA('focus_ring.extra') },
             ]}
           />
+        </SettingItem>
+        <SettingItem label={tA('large_targets.label')} locked={isSettingLocked('largeTargets')}>
+          {systemToggle('largeTargets')}
+        </SettingItem>
+        <SettingItem label={tA('reduce_motion.label')} locked={isSettingLocked('reduceMotion')}>
+          {systemToggle('reduceMotion')}
         </SettingItem>
         {signedIn && (
           <SettingItem label={tA('single_key_shortcuts.label')} locked={isSettingLocked('singleKeyShortcuts')}>

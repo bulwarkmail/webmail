@@ -298,6 +298,11 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   helpUrl: { envVar: 'HELP_URL', type: 'url', defaultValue: '' },
   easyReadUrl: { envVar: 'EASY_READ_URL', type: 'url', defaultValue: '' },
   signLanguageUrl: { envVar: 'SIGN_LANGUAGE_URL', type: 'url', defaultValue: '' },
+  // A link under Authentication in Settings > Account to the mail server's
+  // own account page, for 2FA and app passwords (#1570). An http(s) URL or a
+  // path on the page's host (/account/). Empty hides it.
+  accountManagementUrl: { envVar: 'ACCOUNT_MANAGEMENT_URL', type: 'string', defaultValue: '' },
+  accountManagementLabel: { envVar: 'ACCOUNT_MANAGEMENT_LABEL', type: 'string', defaultValue: '' },
   // Login header customization. The logo box is otherwise a fixed 64×64
   // (w-16/h-16), which fits a wide wordmark to ~13px tall; set a max height
   // and/or width (any CSS length, e.g. "230px" or "3rem") to size it. The
@@ -305,6 +310,15 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // reads as the brand (e.g. a wordmark) and they'd be redundant.
   loginLogoMaxHeight: { envVar: 'LOGIN_LOGO_MAX_HEIGHT', type: 'string', defaultValue: '' },
   loginLogoMaxWidth: { envVar: 'LOGIN_LOGO_MAX_WIDTH', type: 'string', defaultValue: '' },
+  // The login page's layout and background (lib/login-backdrop.ts): the form
+  // in a card in the middle, or in a panel at the side with the background
+  // filling the rest. The dark image falls back to the light one. Dim is a
+  // percentage (0-80), blur a radius in px (0-24).
+  loginLayout: { envVar: 'LOGIN_LAYOUT', type: 'enum', defaultValue: 'centered', enumValues: ['centered', 'split'] },
+  loginBackgroundLightUrl: { envVar: 'LOGIN_BACKGROUND_LIGHT_URL', type: 'url', defaultValue: '' },
+  loginBackgroundDarkUrl: { envVar: 'LOGIN_BACKGROUND_DARK_URL', type: 'url', defaultValue: '' },
+  loginBackgroundDim: { envVar: 'LOGIN_BACKGROUND_DIM', type: 'string', defaultValue: '' },
+  loginBackgroundBlur: { envVar: 'LOGIN_BACKGROUND_BLUR', type: 'string', defaultValue: '' },
   loginShowHeading: { envVar: 'LOGIN_SHOW_HEADING', type: 'boolean', defaultValue: true },
   loginShowSubtitle: { envVar: 'LOGIN_SHOW_SUBTITLE', type: 'boolean', defaultValue: true },
   // Hide the manual "I have a 2FA code" toggle on the login form. Deployments

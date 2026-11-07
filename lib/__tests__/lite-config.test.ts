@@ -77,6 +77,17 @@ describe('applyLiteConfig (config.json for the static build)', () => {
     expect(applyLiteConfig({ sourceCodeUrl: 'javascript:alert(1)' }).sourceCodeUrl).toBe('');
   });
 
+  it('keeps an account page link as an http(s) URL or a path on this host (#1570)', () => {
+    expect(applyLiteConfig({}).accountManagementUrl).toBe('');
+    expect(applyLiteConfig({ accountManagementUrl: '/account/' }).accountManagementUrl).toBe('/account/');
+    expect(applyLiteConfig({ accountManagementUrl: 'https://mail.example.com/account/' }).accountManagementUrl)
+      .toBe('https://mail.example.com/account/');
+    for (const value of ['javascript:alert(1)', '//evil.example/account', '/\\evil.example', 'account/', 42]) {
+      expect(applyLiteConfig({ accountManagementUrl: value }).accountManagementUrl).toBe('');
+    }
+    expect(applyLiteConfig({ accountManagementLabel: 'Security' }).accountManagementLabel).toBe('Security');
+  });
+
   it('reads the accessibility and help links and drops other schemes', () => {
     const config = applyLiteConfig({
       accessibilityStatementUrl: 'https://acme.example/accessibility',

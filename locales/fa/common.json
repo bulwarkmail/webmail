@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "SSO",
       "auth_method_basic": "رمز عبور",
       "auth_method_token": "توکن دسترسی",
+      "account_management_link": "مدیریت امنیت حساب (2FA، رمزهای عبور برنامه)",
       "demo_account": "حساب آزمایشی",
       "email": {
         "label": "آدرس ایمیل",
@@ -7617,6 +7618,10 @@
     "trouble": "مشکل دارید؟",
     "trouble_cors": "سرور ایمیل شما باید ورود از این وب‌سایت را مجاز کند. اگر ورود انجام نشد، از مسئول سرور ایمیل بخواهید آن را مجاز کند.",
     "provider_unsupported": "{provider} از JMAP، روشی که Bulwark با سرورهای ایمیل صحبت می‌کند، پشتیبانی نمی‌کند؛ پس Bulwark هنوز نمی‌تواند مستقیم به آن وصل شود."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock روشن است",
+    "language_button": "زبان: {language}"
   },
   "ux_p3_settings": {
     "connection": {

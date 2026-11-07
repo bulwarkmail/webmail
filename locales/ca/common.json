@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Inici de sessió únic (OAuth/OIDC)",
       "auth_method_basic": "Contrasenya",
       "auth_method_token": "Token d'accés",
+      "account_management_link": "Gestiona la seguretat del compte (2FA, contrasenyes d'aplicació)",
       "demo_account": "Compte de demostració",
       "email": {
         "label": "Adreça electrònica",
@@ -7617,6 +7618,10 @@
     "trouble": "Tens problemes?",
     "trouble_cors": "El teu servidor de correu ha de permetre iniciar sessió des d'aquest lloc web. Si no funciona, demana a qui gestiona el servidor que ho permeti.",
     "provider_unsupported": "{provider} no ofereix JMAP, la manera com Bulwark parla amb els servidors de correu, així que Bulwark encara no s'hi pot connectar directament."
+  },
+  "login_a11y": {
+    "caps_lock_on": "El bloqueig de majúscules està activat",
+    "language_button": "Llengua: {language}"
   },
   "ux_p3_settings": {
     "connection": {

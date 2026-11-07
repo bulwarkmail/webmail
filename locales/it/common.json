@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Password",
       "auth_method_token": "Token di accesso",
+      "account_management_link": "Gestisci la sicurezza dell'account (2FA, password per le app)",
       "demo_account": "Account dimostrativo",
       "email": {
         "label": "Indirizzo email",
@@ -7617,6 +7618,10 @@
     "trouble": "Problemi?",
     "trouble_cors": "Il tuo server di posta deve consentire l'accesso da questo sito. Se l'accesso non riesce, chiedi a chi gestisce il server di posta di consentirlo.",
     "provider_unsupported": "{provider} non offre JMAP, il modo in cui Bulwark parla con i server di posta, quindi Bulwark non può ancora collegarsi direttamente."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Bloc Maiusc è attivo",
+    "language_button": "Lingua: {language}"
   },
   "ux_p3_settings": {
     "connection": {

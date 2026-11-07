@@ -42,6 +42,7 @@ import {
   type LocalSettingStamps,
 } from '@/lib/settings-sync-stamps';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { forgetSignedOutChoices, signedOutChoices } from '@/lib/signed-out-choices';
 
 // Use console directly to avoid circular dependency with lib/debug.ts
 // (debug.ts imports useSettingsStore for debugMode check)
@@ -1497,6 +1498,10 @@ export const useSettingsStore = create<SettingsState>()(
         const defaults: Record<string, unknown> = { ...DEFAULT_SETTINGS };
         for (const key of DEVICE_LOCAL_SETTING_KEYS) delete defaults[key];
         if (opts?.keepCrossAccountViews) for (const key of CROSS_ACCOUNT_VIEW_KEYS) delete defaults[key];
+        // What the visitor set on the sign-in page stays, and counts as a
+        // change made here, newer than the server copy (lib/signed-out-choices.ts).
+        const keptChoices = signedOutChoices();
+        for (const key of keptChoices) delete defaults[key];
         // Settings left as they are keep their "chosen by the user" mark.
         defaults.explicitSettings = get().explicitSettings.filter((key) => !hasOwn(defaults, key));
         const wasLoading = isLoadingFromServer;
@@ -1511,6 +1516,7 @@ export const useSettingsStore = create<SettingsState>()(
         }
         // The change times were this state's; the next one starts without any.
         clearLocalStamps();
+        if (keptChoices.length > 0) markLocalChange(keptChoices);
         applyVisualSettings();
       };
 
@@ -2207,6 +2213,7 @@ export const useSettingsStore = create<SettingsState>()(
             writeSettingsOwner(null);
             blockedSyncAccountId = accountId;
           }
+          forgetSignedOutChoices();
           return false;
         };
         blockedSyncAccountId = null;
@@ -2235,6 +2242,7 @@ export const useSettingsStore = create<SettingsState>()(
             // previous account left in this browser (#1185).
             if (heldByOther) resetSyncedState({ keepCrossAccountViews });
             writeSettingsOwner(accountId);
+            forgetSignedOutChoices();
             pushAfterLoad = localTemplatesAhead(null, accountId) || hasUnsyncedChanges();
             return false;
           }
@@ -2253,6 +2261,7 @@ export const useSettingsStore = create<SettingsState>()(
             });
             isLoadingFromServer = false;
             writeSettingsOwner(accountId);
+            forgetSignedOutChoices();
             // Changes kept over the server copy go up now.
             pushAfterLoad = localTemplatesAhead(settings, accountId) || hasUnsyncedChanges();
             syncLog('Settings loaded from server successfully');

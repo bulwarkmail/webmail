@@ -63,7 +63,7 @@ export const LoginServerField = forwardRef<HTMLInputElement, LoginServerFieldPro
   const notFound = lookup === "failed" && !provider && !changing && !value.trim();
 
   const providerNote = provider && (
-    <div role="status" data-testid="login-provider-unsupported" className="p-3 rounded-xl border border-warning/30 bg-warning/5 flex items-start gap-2.5 text-sm text-foreground leading-relaxed">
+    <div role="status" data-testid="login-provider-unsupported" className="p-3 rounded-md border border-warning/30 bg-warning/5 flex items-start gap-2.5 text-sm text-foreground leading-relaxed">
       <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-warning" aria-hidden="true" />
       <span>{t("provider_unsupported", { provider })}</span>
     </div>
@@ -117,7 +117,7 @@ export const LoginServerField = forwardRef<HTMLInputElement, LoginServerFieldPro
           spellCheck={false}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
+          className="aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
           placeholder={t("server_placeholder")}
           aria-invalid={error ? true : undefined}
           aria-describedby={[error ? errorId : null, notFound || changing ? hintId : null].filter(Boolean).join(" ") || undefined}

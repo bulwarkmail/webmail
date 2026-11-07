@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, GripVertical, Plus, Star, AlertCircle, ChevronRight, ChevronUp, ChevronDown, X } from '@/components/icons';
+import { Check, GripVertical, Plus, Star, AlertCircle, ChevronRight, ChevronUp, ChevronDown, X, ExternalLink } from '@/components/icons';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useAccountStore, type AccountEntry } from '@/stores/account-store';
@@ -24,6 +24,7 @@ import { EmailAddressesSection } from './identity-settings';
 import { MultipleAccountsSection } from './layout-settings';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { useConfig } from '@/hooks/use-config';
 
 function hostnameOf(serverUrl: string): string {
   try { return toUnicodeDomain(new URL(serverUrl).hostname); } catch { return serverUrl; }
@@ -47,6 +48,7 @@ export function AccountSettings() {
   const removeAccount = useAuthStore((s) => s.removeAccount);
   const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
   const { username, serverUrl, isDemoMode, primaryIdentity, authMode, client } = useAuthStore();
+  const { accountManagementUrl, accountManagementLabel } = useConfig();
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const switchAccount = useAuthStore((s) => s.switchAccount);
   const setManagedAccount = useManagedAccountStore((s) => s.setManagedAccount);
@@ -161,11 +163,25 @@ export function AccountSettings() {
 
         {/* Authentication Method */}
         <SettingItem label={t('auth_method_label')}>
-          <span className="text-sm text-foreground">
-            {authMode === 'oauth'
-              ? t('auth_method_oauth')
-              : authMode === 'token' ? t('auth_method_token') : t('auth_method_basic')}
-          </span>
+          <div className="flex flex-col items-end gap-1 text-end">
+            <span className="text-sm text-foreground">
+              {authMode === 'oauth'
+                ? t('auth_method_oauth')
+                : authMode === 'token' ? t('auth_method_token') : t('auth_method_basic')}
+            </span>
+            {/* The server's own page for 2FA and app passwords (#1570). */}
+            {accountManagementUrl && (
+              <a
+                href={accountManagementUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+              >
+                {accountManagementLabel || t('account_management_link')}
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              </a>
+            )}
+          </div>
         </SettingItem>
 
         {/* Server */}

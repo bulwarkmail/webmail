@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Wachtwoord",
       "auth_method_token": "Toegangstoken",
+      "account_management_link": "Accountbeveiliging beheren (2FA, app-wachtwoorden)",
       "demo_account": "Demoaccount",
       "email": {
         "label": "E-mailadres",
@@ -7617,6 +7618,10 @@
     "trouble": "Lukt het niet?",
     "trouble_cors": "Je mailserver moet aanmelden vanaf deze website toestaan. Lukt aanmelden niet, vraag dan wie je mailserver beheert om het toe te staan.",
     "provider_unsupported": "{provider} biedt geen JMAP, de manier waarop Bulwark met mailservers praat, dus Bulwark kan er nog niet rechtstreeks mee verbinden."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock staat aan",
+    "language_button": "Taal: {language}"
   },
   "ux_p3_settings": {
     "connection": {

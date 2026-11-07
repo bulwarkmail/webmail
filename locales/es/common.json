@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Inicio de sesión único (OAuth/OIDC)",
       "auth_method_basic": "Contraseña",
       "auth_method_token": "Token de acceso",
+      "account_management_link": "Gestionar la seguridad de la cuenta (2FA, contraseñas de aplicación)",
       "demo_account": "Cuenta de demostración",
       "email": {
         "label": "Dirección de Correo",
@@ -7617,6 +7618,10 @@
     "trouble": "¿Tienes problemas?",
     "trouble_cors": "Tu servidor de correo tiene que permitir iniciar sesión desde este sitio web. Si no funciona, pide a quien gestiona tu servidor de correo que lo permita.",
     "provider_unsupported": "{provider} no ofrece JMAP, la forma en que Bulwark habla con los servidores de correo, así que Bulwark todavía no puede conectarse directamente."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Bloq Mayús está activado",
+    "language_button": "Idioma: {language}"
   },
   "ux_p3_settings": {
     "connection": {

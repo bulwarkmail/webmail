@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Tekil Oturum Açma (OAuth/OIDC)",
       "auth_method_basic": "Parola",
       "auth_method_token": "Erişim belirteci",
+      "account_management_link": "Hesap güvenliğini yönet (2FA, uygulama parolaları)",
       "demo_account": "Demo Hesabı",
       "email": {
         "label": "E-posta Adresi",
@@ -7617,6 +7618,10 @@
     "trouble": "Sorun mu var?",
     "trouble_cors": "Posta sunucunuzun bu web sitesinden oturum açmaya izin vermesi gerekir. Oturum açılamazsa posta sunucunuzu yöneten kişiden buna izin vermesini isteyin.",
     "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock açık",
+    "language_button": "Dil: {language}"
   },
   "ux_p3_settings": {
     "connection": {

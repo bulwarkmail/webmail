@@ -2300,6 +2300,7 @@
       "auth_method_oauth": "Đăng nhập một lần (OAuth/OIDC)",
       "auth_method_basic": "Mật khẩu",
       "auth_method_token": "Mã truy cập",
+      "account_management_link": "Quản lý bảo mật tài khoản (2FA, mật khẩu ứng dụng)",
       "demo_account": "Tài khoản dùng thử",
       "email": {
         "label": "Địa chỉ email",
@@ -7629,6 +7630,10 @@
     "trouble": "Gặp sự cố?",
     "trouble_cors": "Máy chủ thư của bạn phải cho phép đăng nhập từ trang web này. Nếu đăng nhập không được, hãy nhờ người quản lý máy chủ thư cho phép.",
     "provider_unsupported": "{provider} không hỗ trợ JMAP, cách Bulwark trao đổi với máy chủ thư, nên Bulwark chưa thể kết nối trực tiếp."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock đang bật",
+    "language_button": "Ngôn ngữ: {language}"
   },
   "ux_p3_settings": {
     "connection": {

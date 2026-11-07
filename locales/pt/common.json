@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Login único (OAuth/OIDC)",
       "auth_method_basic": "Senha",
       "auth_method_token": "Token de acesso",
+      "account_management_link": "Gerir a segurança da conta (2FA, palavras-passe de aplicações)",
       "demo_account": "Conta de demonstração",
       "email": {
         "label": "Endereço de E-mail",
@@ -7617,6 +7618,10 @@
     "trouble": "Tem problemas?",
     "trouble_cors": "O seu servidor de e-mail tem de permitir inícios de sessão a partir deste site. Se não conseguir entrar, peça a quem gere o servidor de e-mail que o permita.",
     "provider_unsupported": "{provider} não oferece JMAP, a forma como o Bulwark fala com os servidores de e-mail, por isso o Bulwark ainda não se consegue ligar diretamente."
+  },
+  "login_a11y": {
+    "caps_lock_on": "O Caps Lock está ativado",
+    "language_button": "Idioma: {language}"
   },
   "ux_p3_settings": {
     "connection": {

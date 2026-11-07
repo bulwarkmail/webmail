@@ -18,6 +18,9 @@ import { announceChange } from '@/lib/shared-store/changes';
 // Uploads live in C/branding, or the shared store in shared mode (#1066),
 // and are served by /api/admin/branding/<file> from there.
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+// The login background is a photo more often than not.
+const MAX_BACKGROUND_SIZE = 5 * 1024 * 1024; // 5 MB
+const BACKGROUND_SLOTS = new Set<string>(['loginBackgroundLightUrl', 'loginBackgroundDarkUrl']);
 const ALLOWED_MIME_TYPES = new Set([
   'image/svg+xml',
   'image/png',
@@ -37,6 +40,8 @@ const VALID_SLOTS = new Set<UploadSlot>([
   'appLogoDarkUrl',
   'loginLogoLightUrl',
   'loginLogoDarkUrl',
+  'loginBackgroundLightUrl',
+  'loginBackgroundDarkUrl',
   'pwaScreenshotMobileUrl',
   'pwaScreenshotDesktopUrl',
 ]);
@@ -155,8 +160,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File too large (max 2 MB)' }, { status: 400 });
+    const background = BACKGROUND_SLOTS.has(slot);
+    if (file.size > (background ? MAX_BACKGROUND_SIZE : MAX_FILE_SIZE)) {
+      return NextResponse.json({ error: `File too large (max ${background ? 5 : 2} MB)` }, { status: 400 });
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {

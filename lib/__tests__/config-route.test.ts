@@ -172,6 +172,17 @@ describe('config API route', () => {
     expect((await getConfig()).loginUsernamePlaceholder).toBe('max.mustermann@acme.example');
   });
 
+  it('publishes the account page link, as a URL or a path, and drops other values (#1570)', async () => {
+    expect((await getConfig()).accountManagementUrl).toBe('');
+    vi.stubEnv('ACCOUNT_MANAGEMENT_URL', '/account/');
+    vi.stubEnv('ACCOUNT_MANAGEMENT_LABEL', 'Security');
+    const config = await getConfig();
+    expect(config.accountManagementUrl).toBe('/account/');
+    expect(config.accountManagementLabel).toBe('Security');
+    vi.stubEnv('ACCOUNT_MANAGEMENT_URL', 'javascript:alert(1)');
+    expect((await getConfig()).accountManagementUrl).toBe('');
+  });
+
   it('publishes the source code URL for the About card (#1161)', async () => {
     vi.stubEnv('SOURCE_CODE_URL', 'https://git.example.com/acme/webmail/tree/v1.2.3');
 

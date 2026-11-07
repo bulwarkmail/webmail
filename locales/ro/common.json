@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Autentificare unică (OAuth /OIDC)",
       "auth_method_basic": "Parolă",
       "auth_method_token": "Token de acces",
+      "account_management_link": "Gestionează securitatea contului (2FA, parole pentru aplicații)",
       "demo_account": "Cont demo",
       "email": {
         "label": "Adresă de e-mail",
@@ -7617,6 +7618,10 @@
     "trouble": "Ai probleme?",
     "trouble_cors": "Serverul tău de e-mail trebuie să permită autentificarea de pe acest site. Dacă autentificarea nu reușește, cere celui care administrează serverul să o permită.",
     "provider_unsupported": "{provider} nu oferă JMAP, modul în care Bulwark comunică cu serverele de e-mail, așa că Bulwark nu se poate conecta încă direct la el."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock este activat",
+    "language_button": "Limbă: {language}"
   },
   "ux_p3_settings": {
     "connection": {

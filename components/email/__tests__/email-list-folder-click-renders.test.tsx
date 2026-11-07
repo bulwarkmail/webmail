@@ -202,4 +202,46 @@ describe('rows drawn again for another folder', () => {
     expect(screen.getByText('Mail d')).toBeInTheDocument();
     expect(tops()).toEqual([0, 100, 200]);
   });
+
+  // A kept row stays filed under the message it showed before. When that
+  // message came back in another row, the virtualizer stopped watching the
+  // kept one, so it never grew with its content (a code chip, a loaded
+  // attachment) and the row below covered it.
+  it('keep growing with their content after their old message comes back elsewhere', async () => {
+    const observed = new Set<Element>();
+    let notify: ((entries: ResizeObserverEntry[]) => void) | null = null;
+    class FakeResizeObserver {
+      constructor(callback: (entries: ResizeObserverEntry[]) => void) { notify = callback; }
+      observe(el: Element) { observed.add(el); }
+      unobserve(el: Element) { observed.delete(el); }
+      disconnect() { observed.clear(); }
+    }
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+    try {
+      const heights = new WeakMap<Element, number>();
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+        const height = this.hasAttribute('data-index') ? (heights.get(this) ?? 100) : 600;
+        return { x: 0, y: 0, width: 600, height, top: 0, left: 0, right: 600, bottom: height, toJSON: () => ({}) } as DOMRect;
+      });
+      const newer = (email: Email): Email => ({ ...email, receivedAt: '2026-10-01T10:00:00Z' });
+      const { rerender, container } = render(<List emails={[newer(makeEmail('a', 'inbox')), makeEmail('b', 'inbox')]} />);
+      await act(async () => { await new Promise((r) => setTimeout(r, 400)); });
+      // Sent's c takes a's row; then a list with a first and c after it.
+      act(() => { rerender(<List emails={[makeEmail('c', 'sent')]} />); });
+      await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+      act(() => { rerender(<List emails={[newer(makeEmail('a', 'inbox')), makeEmail('c', 'sent')]} />); });
+      await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+
+      const rowOf = (id: string) => container.querySelector(`[data-email-id="${id}"]`)!.closest<HTMLElement>('[data-index]')!;
+      expect(rowOf('a').dataset.index).toBe('0');
+      const rowA = rowOf('a');
+      // Row a grows by a chip line; the observer reports it if it still watches the row.
+      heights.set(rowA, 124);
+      const entry = { target: rowA, borderBoxSize: [{ blockSize: 124, inlineSize: 600 }] } as unknown as ResizeObserverEntry;
+      act(() => { if (observed.has(rowA)) notify?.([entry]); });
+      expect(parseFloat(rowOf('c').style.top)).toBe(124);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

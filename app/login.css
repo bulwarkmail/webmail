@@ -1,0 +1,203 @@
+/*
+ * The login page's frame (components/auth/login-frame.tsx), shared by the
+ * page and its loading skeleton.
+ *
+ * Without an admin background the page sits on the app's sidebar colour with
+ * a faint wash of the brand colour, and the form in a card drawn like the
+ * app's dialogs. The admin's choices arrive from the root layout before the
+ * first paint (lib/login-backdrop.ts):
+ *   html[data-login-bg="image"]     --login-bg-image, --login-bg-dim, --login-bg-blur
+ *   html[data-login-layout="split"] the form in a panel at the side from 1024px up
+ *
+ * Plain CSS outside Tailwind's layers, so these rules win over utilities.
+ */
+
+.login-frame {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.login-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-primary) 8%, var(--color-sidebar)) 0%,
+      var(--color-sidebar) 65%
+    );
+}
+
+html[data-login-bg] .login-backdrop {
+  background: var(--color-sidebar);
+}
+
+/* The image, blurred past the edges so the blur doesn't fade them in. */
+html[data-login-bg] .login-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--login-bg-blur, 0px) * -2);
+  background: var(--login-bg-image) center / cover no-repeat;
+  filter: blur(var(--login-bg-blur, 0px));
+}
+
+html[data-login-bg] .login-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / var(--login-bg-dim, 0));
+}
+
+/*
+ * More contrast (Settings > Accessibility, or the system's when that is left
+ * on System) and Windows high contrast: no picture and no tint behind the
+ * form, only the plain surface.
+ */
+:root[data-contrast="more"] .login-backdrop {
+  background: var(--color-sidebar);
+}
+
+:root[data-contrast="more"] .login-backdrop::before,
+:root[data-contrast="more"] .login-backdrop::after {
+  display: none;
+}
+
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) .login-backdrop {
+    background: var(--color-sidebar);
+  }
+
+  :root:not([data-contrast="normal"]) .login-backdrop::before,
+  :root:not([data-contrast="normal"]) .login-backdrop::after {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .login-backdrop::before,
+  .login-backdrop::after {
+    display: none;
+  }
+}
+
+.login-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.login-panel[data-size="wide"] {
+  max-width: 440px;
+}
+
+.login-card {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 0.5rem);
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  box-shadow: 0 10px 30px -12px rgb(15 23 42 / 0.18), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+}
+
+:root.dark .login-card {
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+}
+
+.login-footer {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/*
+ * On a photo the footer's small text would be hard to read, so it becomes the
+ * card's bottom strip: one shadow and one outline around both.
+ */
+html[data-login-bg] .login-panel {
+  border-radius: var(--radius-lg, 0.5rem);
+  box-shadow: 0 10px 30px -12px rgb(15 23 42 / 0.18), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+}
+
+:root.dark[data-login-bg] .login-panel {
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+}
+
+html[data-login-bg] .login-card {
+  box-shadow: none;
+}
+
+html[data-login-bg] .login-card:has(+ .login-footer:not(:empty)) {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+html[data-login-bg] .login-footer {
+  margin-top: 0;
+  padding: 0.875rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-top: 0;
+  border-end-start-radius: var(--radius-lg, 0.5rem);
+  border-end-end-radius: var(--radius-lg, 0.5rem);
+  background: var(--color-sidebar);
+}
+
+html[data-login-bg] .login-footer:empty {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  html[data-login-layout="split"] .login-stage {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0;
+  }
+
+  html[data-login-layout="split"] .login-panel,
+  html[data-login-layout="split"] .login-panel[data-size="wide"] {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 30rem;
+    max-width: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 3rem 2rem;
+    background: var(--color-background);
+    border-inline-end: 1px solid var(--color-border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  html[data-login-layout="split"] .login-card {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  html[data-login-layout="split"] .login-footer {
+    margin-top: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+}

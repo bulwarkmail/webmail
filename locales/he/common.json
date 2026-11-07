@@ -2229,6 +2229,7 @@
       "auth_method_oauth": "כניסה יחידה (OAuth/OIDC)",
       "auth_method_basic": "סִיסמָה",
       "auth_method_token": "אסימון גישה",
+      "account_management_link": "ניהול אבטחת החשבון (2FA, סיסמאות לאפליקציות)",
       "demo_account": "חשבון הדגמה",
       "email": {
         "label": "כתובת אימייל",
@@ -7618,6 +7619,10 @@
     "trouble": "נתקלתם בבעיה?",
     "trouble_cors": "שרת הדואר שלכם צריך לאפשר כניסה מהאתר הזה. אם הכניסה נכשלת, בקשו ממי שמפעיל את שרת הדואר לאפשר זאת.",
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock פועל",
+    "language_button": "שפה: {language}"
   },
   "ux_p3_settings": {
     "connection": {

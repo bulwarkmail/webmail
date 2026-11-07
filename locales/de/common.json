@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Passwort",
       "auth_method_token": "Zugriffstoken",
+      "account_management_link": "Kontosicherheit verwalten (2FA, App-Passwörter)",
       "demo_account": "Demokonto",
       "email": {
         "label": "E-Mail-Adresse",
@@ -7617,6 +7618,10 @@
     "trouble": "Probleme?",
     "trouble_cors": "Ihr Mailserver muss Anmeldungen von dieser Website erlauben. Wenn die Anmeldung nicht klappt, bitten Sie die Betreiber Ihres Mailservers, das zu erlauben.",
     "provider_unsupported": "{provider} bietet kein JMAP an, die Art, wie Bulwark mit Mailservern spricht. Deshalb kann sich Bulwark noch nicht direkt damit verbinden."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Die Feststelltaste ist aktiviert",
+    "language_button": "Sprache: {language}"
   },
   "ux_p3_settings": {
     "connection": {

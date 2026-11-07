@@ -65,14 +65,14 @@ function FlagIcon({ locale }: { locale: string }) {
   return <Flag />;
 }
 
-export function LanguageSwitcher({ className }: { className?: string }) {
-  const t = useTranslations();
-  const setLocale = useLocaleStore((state) => state.setLocale);
+/**
+ * The languages as options for a SearchableSelect: each also carries its name
+ * in the UI language (and in English), so "German" and "Deutsch" both find it
+ * and unfamiliar scripts stay readable.
+ */
+export function useLanguageOptions() {
   const choice = useLocaleStore((state) => state.locale) || 'auto';
-
-  // Each language also gets its name in the UI language (and in English), so
-  // "German" and "Deutsch" both find it and unfamiliar scripts stay readable.
-  const options = useMemo(() => {
+  return useMemo(() => {
     void choice;
     const local = displayNames(getEffectiveLocale());
     const english = displayNames('en');
@@ -83,6 +83,13 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       return { value: lang.value, label: lang.label, hint, keywords, icon: <FlagIcon locale={lang.value} /> };
     });
   }, [choice]);
+}
+
+export function LanguageSwitcher({ className }: { className?: string }) {
+  const t = useTranslations();
+  const setLocale = useLocaleStore((state) => state.setLocale);
+  const choice = useLocaleStore((state) => state.locale) || 'auto';
+  const options = useLanguageOptions();
 
   return (
     <SearchableSelect

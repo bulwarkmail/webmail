@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Єдиний вхід (OAuth/OIDC)",
       "auth_method_basic": "Пароль",
       "auth_method_token": "Токен доступу",
+      "account_management_link": "Керувати безпекою облікового запису (2FA, паролі застосунків)",
       "demo_account": "Демо-рахунок",
       "email": {
         "label": "Адреса електронної пошти",
@@ -7617,6 +7618,10 @@
     "trouble": "Не виходить?",
     "trouble_cors": "Ваш поштовий сервер має дозволяти вхід із цього сайту. Якщо увійти не вдається, попросіть того, хто обслуговує поштовий сервер, дозволити це.",
     "provider_unsupported": "{provider} не підтримує JMAP, спосіб, у який Bulwark спілкується з поштовими серверами, тому Bulwark поки не може підключитися до нього напряму."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Увімкнено Caps Lock",
+    "language_button": "Мова: {language}"
   },
   "ux_p3_settings": {
     "connection": {

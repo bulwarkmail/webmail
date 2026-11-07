@@ -14,6 +14,7 @@
  * sign them back in (AppShellSkeleton, data-boot-auth="out").
  */
 import { cn } from "@/lib/cn";
+import { LoginFrame } from "@/components/auth/login-frame";
 import { Bar, Block, SkeletonRegion } from "./kit";
 
 /**
@@ -37,7 +38,7 @@ function Field({ label }: { label: string }) {
   return (
     <div className="space-y-1.5">
       <TextLine className="text-sm font-medium" w={label} />
-      <span aria-hidden="true" className="block h-11 rounded-xl border border-border/60 bg-muted/40" />
+      <span aria-hidden="true" className="block h-10 rounded-md border border-input bg-background" />
     </div>
   );
 }
@@ -56,64 +57,59 @@ export interface LoginSkeletonProps {
 
 export function LoginSkeleton({ label, accessibilityButton = false, className }: LoginSkeletonProps) {
   return (
-    <SkeletonRegion
-      surface="login"
-      label={label}
-      className={cn(
-        "min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4",
-        className,
-      )}
-    >
-      {/* The theme menu button: its icon, and the theme's name from sm up. */}
-      <div aria-hidden="true" data-window-beside-controls="" className="absolute top-5 end-5">
-        <span className="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm bg-background/60 border-border/50">
-          <Block className="w-4 h-4 rounded" />
-          <TextLine className="hidden sm:block w-11" w="100%" />
-        </span>
-      </div>
-
-      {accessibilityButton ? (
-        <span
-          aria-hidden="true"
-          className="fixed bottom-4 end-4 z-40 inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm"
-          style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
-        >
-          <Block className="w-4 h-4 rounded" />
-          <TextLine className="w-[4.625rem]" w="100%" />
-        </span>
-      ) : null}
-
-      <div className="w-full max-w-[400px] mx-auto">
-        <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
-          <div className="px-8 pt-10 pb-6 text-center">
-            <div aria-hidden="true" className="inline-flex items-center justify-center mb-5 w-16 h-16">
-              <Block className="w-16 h-16 rounded-2xl" />
+    <SkeletonRegion surface="login" label={label} className={className}>
+      <LoginFrame
+        before={
+          <>
+            {/* The corner: the language picker (its name from sm up) and the theme menu button. */}
+            <div aria-hidden="true" data-window-beside-controls="" className="absolute top-5 end-5 flex items-center gap-2">
+              <span className="flex items-center gap-2 h-9 px-2.5 sm:px-3 rounded-md border border-border bg-background">
+                <Block className="w-4 h-4 rounded" />
+                <TextLine className="hidden sm:block text-sm w-12" w="100%" />
+                <Block className="w-3.5 h-3.5 rounded" />
+              </span>
+              <span className="flex items-center justify-center w-9 h-9 rounded-md border border-border bg-background">
+                <Block className="w-4 h-4 rounded" />
+              </span>
             </div>
-            <TextLine className="text-2xl font-semibold tracking-tight" w="9rem" bar={cn("h-6", CENTERED)} />
-            <TextLine className="text-sm mt-1.5" w="11rem" bar={CENTERED} />
-          </div>
 
-          <div className="px-8 pb-8">
-            <div className="space-y-5">
-              <div className="space-y-4">
-                <Field label="3rem" />
-                <Field label="4.5rem" />
-                {/* "I have a 2FA code": its icon and a line of small text. */}
-                <span aria-hidden="true" className="flex items-center gap-1.5 text-xs">
-                  <Block className="w-3.5 h-3.5 rounded" />
-                  <TextLine className="w-24" w="100%" />
-                </span>
-              </div>
-              <Block className="w-full h-11 rounded-xl" />
-            </div>
+            {accessibilityButton ? (
+              <span
+                aria-hidden="true"
+                className="fixed bottom-4 end-4 z-40 inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm"
+                style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
+              >
+                <Block className="w-4 h-4 rounded" />
+                <TextLine className="w-[4.625rem]" w="100%" />
+              </span>
+            ) : null}
+          </>
+        }
+        footer={<TextLine className="text-xs w-12" w="100%" />}
+      >
+        <div className="px-8 pt-10 pb-6 text-center">
+          <div aria-hidden="true" className="inline-flex items-center justify-center mb-5 w-16 h-16">
+            <Block className="w-16 h-16 rounded-lg" />
           </div>
+          <TextLine className="text-2xl font-semibold tracking-tight" w="9rem" bar={cn("h-6", CENTERED)} />
+          <TextLine className="text-sm mt-1.5" w="11rem" bar={CENTERED} />
         </div>
 
-        {/* The version line under the card. */}
-        <div className="mt-6 flex flex-col items-center gap-2">
-          <TextLine className="text-xs w-12" w="100%" />
+        <div className="px-8 pb-8">
+          <div className="space-y-5">
+            <div className="space-y-4">
+              <Field label="3rem" />
+              <Field label="4.5rem" />
+              {/* "I have a 2FA code": its icon and a line of small text. */}
+              <span aria-hidden="true" className="flex items-center gap-1.5 text-xs">
+                <Block className="w-3.5 h-3.5 rounded" />
+                <TextLine className="w-24" w="100%" />
+              </span>
+            </div>
+            <Block className="w-full h-10 rounded-md" />
+          </div>
         </div>
-      </div>
+      </LoginFrame>
     </SkeletonRegion>
   );
 }

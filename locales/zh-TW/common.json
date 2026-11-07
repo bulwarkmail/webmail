@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "單一登入（OAuth/OIDC）",
       "auth_method_basic": "密碼",
       "auth_method_token": "存取權杖",
+      "account_management_link": "管理帳號安全性（雙重驗證、應用程式密碼）",
       "demo_account": "示範帳號",
       "email": {
         "label": "電子郵件地址",
@@ -7617,6 +7618,10 @@
     "trouble": "遇到問題？",
     "trouble_cors": "你的郵件伺服器必須允許從這個網站登入。如果無法登入，請負責郵件伺服器的人允許。",
     "provider_unsupported": "{provider} 不支援 JMAP（Bulwark 與郵件伺服器溝通的方式），所以 Bulwark 目前還無法直接連線。"
+  },
+  "login_a11y": {
+    "caps_lock_on": "大寫鎖定已開啟",
+    "language_button": "語言：{language}"
   },
   "ux_p3_settings": {
     "connection": {

@@ -48,6 +48,8 @@ export function createConfig(overrides: Partial<ConfigData> = {}): ConfigData {
     accessibilityFeedbackUrl: '',
     helpUrl: '',
     easyReadUrl: '',
+    accountManagementUrl: '',
+    accountManagementLabel: '',
     signLanguageUrl: '',
     noThirdPartyTraffic: false,
     ...overrides,
