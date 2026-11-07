@@ -175,17 +175,24 @@ export async function attachRestoreRegistry(
 }
 
 /**
- * Spend this browser's restore handle. Returns the record only when it is
- * live and bound to the impersonation the browser is in now; any attempt
- * uses the handle up.
+ * Spend this browser's restore handle. Returns the record, and removes it in
+ * the same step, only when it is live and bound to the impersonation the
+ * browser is in now. Anything else leaves it alone: a copy of the handle
+ * tried in another browser must not use up the admin's way back.
  */
 export async function takeRestore(cookieStore: CookieStore, now = Date.now()): Promise<RestoreRecord | null> {
   const handle = handleFrom(cookieStore);
-  if (!handle) return null;
-  const record = open(await getStore().kv.take(storeKey(handle)), now);
   const grant = activeImpersonationGrant(cookieStore);
-  if (!record || !grant || record.credentialId !== grant.credentialId) return null;
-  return record;
+  if (!handle || !grant) return null;
+  let taken: RestoreRecord | null = null;
+  await getStore().kv.update(storeKey(handle), (sealed) => {
+    taken = null;
+    const record = open(sealed, now);
+    if (!record || record.credentialId !== grant.credentialId) return undefined;
+    taken = record;
+    return null;
+  });
+  return taken;
 }
 
 /** Forget this browser's restore handle and what it points to (sign-out). Best effort. */

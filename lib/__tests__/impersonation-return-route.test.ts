@@ -233,6 +233,7 @@ describe('returning to the own account after an impersonation handoff', () => {
     await signedInAsAdmin();
     await impersonate();
     const handle = jar.get('jmap_impersonation_restore')!;
+    const adminBrowser = jar;
 
     // Another browser in an impersonation of its own, with the copied handle.
     jar = new Map();
@@ -243,6 +244,11 @@ describe('returning to the own account after an impersonation handoff', () => {
     expect(res.status).toBe(410);
     expect(await sessionUsername()).toBe('bob@example.org');
     expect(destroyed).toEqual([]);
+
+    // The copy did not use up the admin's own way back.
+    jar = adminBrowser;
+    expect(await available()).toBe(true);
+    expect((await returnToOwnAccount()).status).toBe(200);
   });
 
   it('offers nothing when the handoff started without a session of its own', async () => {
