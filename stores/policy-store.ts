@@ -65,12 +65,6 @@ interface PolicyState {
   setDemoFeatureOverrides: (overrides: Partial<FeatureGates>) => void;
   fetchPolicy: () => Promise<void>;
   /**
-   * The page's first fetch: started once, and whoever asks for it again (the
-   * config load, the module start) gets the same request. Refetches after a
-   * sign-in or a change go through fetchPolicy.
-   */
-  fetchStartupPolicy: () => Promise<void>;
-  /**
    * For a check that only needs a current policy, not a new one: the fetch on
    * its way, or the full policy the server sent less than maxAgeMs ago; else a
    * fetch.
@@ -105,8 +99,6 @@ interface PolicyState {
 }
 
 let policyRequest = 0;
-/** The page's first fetch (fetchStartupPolicy), once started. */
-let startupPolicy: Promise<void> | null = null;
 /** The fetch on its way, settled when it is done. */
 let inFlight: Promise<void> | null = null;
 /** When the server's last answer landed (Date.now()). */
@@ -280,11 +272,6 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
 
   setSubjectPending: (pending) => { if (get().subjectPending !== pending) set({ subjectPending: pending }); },
 
-  fetchStartupPolicy: () => {
-    startupPolicy ??= get().fetchPolicy();
-    return startupPolicy;
-  },
-
   fetchPolicyIfOlder: (maxAgeMs) => {
     if (inFlight) return inFlight;
     const { source, partial } = get();
@@ -378,11 +365,3 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
     return (get().policy.forceEnabledThemes || []).includes(themeId);
   },
 }));
-
-// Every start reads the policy (fetchConfig asks for it once the config is in),
-// and the offline start and the sign-in wait for it. Asked for as soon as this
-// module runs, it is on its way while the page's other modules run, instead of
-// after the config's round trip. Not in tests, which set up fetch per case.
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  void usePolicyStore.getState().fetchStartupPolicy();
-}
