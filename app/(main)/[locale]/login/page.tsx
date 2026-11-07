@@ -44,7 +44,7 @@ import {
   type LiteOAuthDiscovery,
 } from "@/lib/auth/lite-oauth";
 import { toAsciiDomain } from "@/lib/idn";
-import { usePrefetchMailView, warmMailView } from "@/hooks/use-prefetch-mail-view";
+import { usePrefetchMailView, useWarmMailViewWhenIdle, warmMailView } from "@/hooks/use-prefetch-mail-view";
 import { buildMobileHandoffCodeUrl, buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
 import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
@@ -911,6 +911,7 @@ function LoginPageContent() {
   // page's Suspense boundary hydrates after the app around it, which may have
   // fetched the config by then, and drawing the form would throw the HTML away.
   const hydrating = useSyncExternalStore(neverChanges, notHydrating, isHydrating);
+  useWarmMailViewWhenIdle(!isMobileHandoff && !configLoading && !hydrating);
   if (configLoading || hydrating) {
     return <LoginSkeleton label={t("loading")} />;
   }
