@@ -88,11 +88,14 @@ COPY --from=builder /app/scripts/healthcheck.mjs ./healthcheck.mjs
 # Every data dir exists up front and belongs to the runtime user, so a fresh
 # volume on /app/data (Docker copies these into it) or on any one of them is
 # writable. plugin-secrets holds users' plugin credentials, version-check the
-# result of the last update check.
+# result of the last update check. They are also group 0's with the owner's
+# rights, so the image runs as any uid in group 0 (`user: "<uid>:0"` in
+# compose, OpenShift's random uids) without giving anyone else write access.
 RUN mkdir -p /app/.next/cache /app/data/settings /app/data/admin /app/data/admin-state \
       /app/data/telemetry /app/data/plugin-secrets /app/data/version-check && \
     chmod 700 /app/data/plugin-secrets && \
-    chown -R nextjs:nodejs /app/.next/cache /app/data
+    chown -R nextjs:0 /app/.next/cache /app/data && \
+    chmod -R g=u /app/.next/cache /app/data
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000

@@ -39,10 +39,16 @@ describe('docker data dirs', () => {
 
   it('creates every data dir in the image for the app user', () => {
     const dockerfile = readFileSync(path.join(ROOT, 'Dockerfile'), 'utf8');
-    const run = dockerfile.match(/RUN mkdir -p ([^&]+)&&[\s\S]*?chown -R nextjs:nodejs[^\n]*\/app\/data/);
+    const run = dockerfile.match(/RUN mkdir -p ([^&]+)&&[\s\S]*?chown -R nextjs:0[^\n]*\/app\/data/);
     expect(run).not.toBeNull();
     const created = run![1].split(/[\s\\]+/).filter(Boolean);
     for (const dir of defaultDataDirs()) expect(created).toContain(`/app/data/${dir}`);
+  });
+
+  it('lets any uid in group 0 write the data dirs and the cache (#1569)', () => {
+    const dockerfile = readFileSync(path.join(ROOT, 'Dockerfile'), 'utf8');
+    expect(dockerfile).toMatch(/chown -R nextjs:0 \/app\/\.next\/cache \/app\/data/);
+    expect(dockerfile).toMatch(/chmod -R g=u \/app\/\.next\/cache \/app\/data/);
   });
 
   it('persists every data dir in docker-compose.yml, by its own volume or one on /app/data', () => {
