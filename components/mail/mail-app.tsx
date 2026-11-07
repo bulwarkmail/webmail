@@ -5908,8 +5908,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     >
       <EmailComposer
         key={`${composerSessionId}:${composerRemount}`}
-        // Loaded with ssr: false, so never rendered on the server.
-        editorRendersAtOnce
         mode={pendingDraft?.mode ?? composerMode}
         composeFromAccountEmail={resolveComposeAccountEmail(
           mailboxes,

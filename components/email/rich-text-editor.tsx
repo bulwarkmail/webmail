@@ -151,12 +151,6 @@ const StyledHeading = Heading.extend({
 });
 
 interface RichTextEditorProps {
-  /**
-   * Build the editor in the first render, so it is drawn with the component
-   * instead of one render later. Only where the editor is never rendered on
-   * the server (it would not match the server's markup).
-   */
-  renderAtOnce?: boolean;
   content: string;
   onChange: (html: string) => void;
   onImageUpload?: (file: File) => Promise<InlineImageUpload | null>;
@@ -483,7 +477,6 @@ function findAltTarget(editor: Editor, request: AltRequest | undefined): { pos: 
 }
 
 export function RichTextEditor({
-  renderAtOnce = false,
   content,
   onChange,
   onImageUpload,
@@ -698,7 +691,7 @@ export function RichTextEditor({
       // HTML held in the QuotedHtml atom node is emitted intact.
       onChange(serializeEditorContent(editor));
     },
-    immediatelyRender: renderAtOnce,
+    immediatelyRender: false,
   });
 
   // Sync external content changes (e.g. template application). Compare against
