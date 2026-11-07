@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Blochează imediat toate ferestrele.",
     "app_lock_protects_toggle": "De ce protejează?",
     "app_lock_timeout_hours": "{count, plural, one {# oră} few {# ore} other {# de ore}}",
+    "app_lock_until_screen": "Când se blochează ecranul",
+    "app_lock_until_session": "La deconectare sau repornire",
     "desktop_attention_title": "Pe acest computer"
   },
   "uxs2_ident": {

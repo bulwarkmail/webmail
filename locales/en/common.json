@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Locks all windows at once.",
     "app_lock_protects_toggle": "What does this protect?",
     "app_lock_timeout_hours": "{count, plural, one {# hour} other {# hours}}",
+    "app_lock_until_screen": "When the screen locks",
+    "app_lock_until_session": "When I sign out or restart",
     "desktop_attention_title": "On this computer"
   },
   "uxs2_ident": {

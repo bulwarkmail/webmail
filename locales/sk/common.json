@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Zamkne hneď všetky okná.",
     "app_lock_protects_toggle": "Pred čím to chráni?",
     "app_lock_timeout_hours": "{count, plural, one {# hodina} few {# hodiny} many {# hodiny} other {# hodín}}",
+    "app_lock_until_screen": "Pri zamknutí obrazovky",
+    "app_lock_until_session": "Pri odhlásení alebo reštarte",
     "desktop_attention_title": "Na tomto počítači"
   },
   "uxs2_ident": {

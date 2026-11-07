@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Verrouille toutes les fenêtres immédiatement.",
     "app_lock_protects_toggle": "Contre quoi cela protège-t-il ?",
     "app_lock_timeout_hours": "{count, plural, one {# heure} other {# heures}}",
+    "app_lock_until_screen": "Quand l'écran se verrouille",
+    "app_lock_until_session": "À la déconnexion ou au redémarrage",
     "desktop_attention_title": "Sur cet ordinateur"
   },
   "uxs2_ident": {

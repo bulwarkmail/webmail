@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Uzreiz bloķē visus logus.",
     "app_lock_protects_toggle": "No kā tas aizsargā?",
     "app_lock_timeout_hours": "{count, plural, zero {# stundu} one {# stunda} other {# stundas}}",
+    "app_lock_until_screen": "Kad ekrāns tiek bloķēts",
+    "app_lock_until_session": "Izrakstoties vai restartējot",
     "desktop_attention_title": "Šajā datorā"
   },
   "uxs2_ident": {

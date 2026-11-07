@@ -7544,6 +7544,8 @@
     "app_lock_now_desc_desktop": "Khóa ngay mọi cửa sổ.",
     "app_lock_protects_toggle": "Điều này bảo vệ khỏi gì?",
     "app_lock_timeout_hours": "{count, plural, other {# giờ}}",
+    "app_lock_until_screen": "Khi màn hình khóa",
+    "app_lock_until_session": "Khi tôi đăng xuất hoặc khởi động lại",
     "desktop_attention_title": "Trên máy tính này"
   },
   "uxs2_ident": {

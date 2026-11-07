@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "すべてのウィンドウをすぐにロックします。",
     "app_lock_protects_toggle": "何から守るのですか？",
     "app_lock_timeout_hours": "{count, plural, other {#時間}}",
+    "app_lock_until_screen": "画面がロックされたとき",
+    "app_lock_until_session": "サインアウトまたは再起動したとき",
     "desktop_attention_title": "このコンピューター"
   },
   "uxs2_ident": {

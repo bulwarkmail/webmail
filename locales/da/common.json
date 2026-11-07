@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Låser alle vinduer med det samme.",
     "app_lock_protects_toggle": "Hvad beskytter det mod?",
     "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
+    "app_lock_until_screen": "Når skærmen låses",
+    "app_lock_until_session": "Når jeg logger ud eller genstarter",
     "desktop_attention_title": "På denne computer"
   },
   "uxs2_ident": {

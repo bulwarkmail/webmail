@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Одразу блокує всі вікна.",
     "app_lock_protects_toggle": "Від чого це захищає?",
     "app_lock_timeout_hours": "{count, plural, one {# година} few {# години} many {# годин} other {# години}}",
+    "app_lock_until_screen": "Коли екран блокується",
+    "app_lock_until_session": "Під час виходу із системи або перезапуску",
     "desktop_attention_title": "На цьому комп'ютері"
   },
   "uxs2_ident": {

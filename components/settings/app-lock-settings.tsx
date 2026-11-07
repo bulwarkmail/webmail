@@ -9,6 +9,7 @@ import { useConfig } from "@/hooks/use-config";
 import {
   addOsUnlock,
   addPasskey,
+  appLockUntilChoices,
   changeAppLockPin,
   disableAppLock,
   disableHello,
@@ -23,7 +24,7 @@ import {
 } from "@/lib/app-lock/controller";
 import { passkeysPossible } from "@/lib/app-lock/passkey";
 import { appLockRequired, effectiveTimeout, onLockPolicyChange } from "@/lib/app-lock/policy";
-import { readAppLockFile, TIMEOUT_CHOICES } from "@/lib/app-lock/state";
+import { readAppLockFile, TIMEOUT_CHOICES, type AppLockUntil } from "@/lib/app-lock/state";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { useIsDesktopApp } from "@/hooks/use-is-desktop-app";
 import type { DesktopOsUnlockKind } from "@/lib/desktop/types";
@@ -39,7 +40,7 @@ function useLockFacts() {
   const update = useCallback(() => refresh((n) => n + 1), []);
   useEffect(() => onLockPolicyChange(update), [update]);
   const file = readAppLockFile();
-  return { on: file.on, required: appLockRequired(), timeout: effectiveTimeout(file.timeoutMinutes), update };
+  return { on: file.on, required: appLockRequired(), timeout: effectiveTimeout(file.timeoutMinutes, file.until), update };
 }
 
 /** The app lock's section on the General page: it has to exist on any server. */
@@ -184,15 +185,21 @@ export function AppLockSettings() {
             <select
               data-testid="app-lock-timeout"
               className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-              value={timeout.minutes}
+              value={timeout.until ?? timeout.minutes}
               onChange={(event) => {
-                setAppLockTimeout(Number(event.target.value));
+                const { value } = event.target;
+                setAppLockTimeout(value === "screen" || value === "session" ? value : Number(value));
                 update();
               }}
             >
               {[...new Set([...TIMEOUT_CHOICES, timeout.minutes])].sort((a, b) => a - b).map((minutes) => (
                 <option key={minutes} value={minutes}>
                   {minutes >= 60 && minutes % 60 === 0 ? tGeneral("app_lock_timeout_hours", { count: minutes / 60 }) : t("timeout_option", { count: minutes })}
+                </option>
+              ))}
+              {!timeout.locked && [...new Set<AppLockUntil>([...appLockUntilChoices(), ...(timeout.until ? [timeout.until] : [])])].map((until) => (
+                <option key={until} value={until}>
+                  {tGeneral(until === "screen" ? "app_lock_until_screen" : "app_lock_until_session")}
                 </option>
               ))}
             </select>

@@ -560,6 +560,8 @@ export interface DesktopAppLockControls {
   pinStep?: (data: Uint8Array) => Promise<DesktopPinStepAnswer>;
   /** Ends this page's renderer and loads the page in a new one. Only while main says locked. */
   replaceRenderer?: () => void;
+  /** Whether the screen locking locks the app. Only while unlocked. Absent on an older shell. */
+  setScreenLock?: (on: boolean) => Promise<boolean>;
   /**
    * Windows Hello: a new key credential and its signature for this salt. Unlocked, with the proof.
    * Absent on an older shell.

@@ -7,7 +7,7 @@
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { POLICY_SCHEMA } from '@/lib/desktop/policy-schema';
 import { MIN_PIN_LENGTH } from './crypto';
-import { DEFAULT_TIMEOUT_MINUTES } from './state';
+import { DEFAULT_TIMEOUT_MINUTES, type AppLockUntil } from './state';
 
 const timeoutDefinition = POLICY_SCHEMA.AppLockTimeoutMinutes;
 const SHORTEST_MINUTES = timeoutDefinition.type === 'integer' ? timeoutDefinition.min : 1;
@@ -71,16 +71,18 @@ export interface EffectiveTimeout {
   minutes: number;
   /** Set by the organisation: the user's choice doesn't apply. */
   locked: boolean;
+  /** No timeout: the user chose to lock on a desktop event instead. Never with a forced timeout. */
+  until?: AppLockUntil;
 }
 
 /** Forced, then the user's choice, then recommended, then the default. */
-export function effectiveTimeout(choice: number | undefined): EffectiveTimeout {
+export function effectiveTimeout(choice: number | undefined, until?: AppLockUntil): EffectiveTimeout {
   const entry = read().AppLockTimeoutMinutes;
   const value = typeof entry?.value === 'number' && entry.value > 0 ? entry.value : null;
   // Forced to something nobody can read, by a shell that hands that on as nothing: the
   // tightest there is, since the user's choice was never meant to apply.
   if (entry?.locked) return { minutes: value ?? SHORTEST_MINUTES, locked: true };
-  return { minutes: choice ?? value ?? DEFAULT_TIMEOUT_MINUTES, locked: false };
+  return { minutes: choice ?? value ?? DEFAULT_TIMEOUT_MINUTES, locked: false, ...(until ? { until } : {}) };
 }
 
 export function onLockPolicyChange(listener: () => void): () => void {

@@ -7540,6 +7540,8 @@
     "app_lock_now_desc_desktop": "ล็อกทุกหน้าต่างทันที",
     "app_lock_protects_toggle": "สิ่งนี้ป้องกันอะไร",
     "app_lock_timeout_hours": "{count, plural, other {# ชั่วโมง}}",
+    "app_lock_until_screen": "เมื่อหน้าจอล็อก",
+    "app_lock_until_session": "เมื่อออกจากระบบหรือรีสตาร์ต",
     "desktop_attention_title": "บนคอมพิวเตอร์เครื่องนี้"
   },
   "uxs2_ident": {

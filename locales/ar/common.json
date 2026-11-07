@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "يقفل كل النوافذ فورًا.",
     "app_lock_protects_toggle": "مما يحمي هذا؟",
     "app_lock_timeout_hours": "{count, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}",
+    "app_lock_until_screen": "عند قفل الشاشة",
+    "app_lock_until_session": "عند تسجيل الخروج أو إعادة التشغيل",
     "desktop_attention_title": "على هذا الكمبيوتر"
   },
   "uxs2_ident": {

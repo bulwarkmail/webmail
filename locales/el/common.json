@@ -7544,6 +7544,8 @@
     "app_lock_now_desc_desktop": "Κλειδώνει όλα τα παράθυρα ταυτόχρονα.",
     "app_lock_protects_toggle": "Τι προστατεύει αυτό;",
     "app_lock_timeout_hours": "{count, plural, one {# ώρα} other {# ώρες}}",
+    "app_lock_until_screen": "Όταν κλειδώνει η οθόνη",
+    "app_lock_until_session": "Όταν αποσυνδέομαι ή κάνω επανεκκίνηση",
     "desktop_attention_title": "Σε αυτόν τον υπολογιστή"
   },
   "uxs2_ident": {

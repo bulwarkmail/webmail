@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "立即鎖定所有視窗。",
     "app_lock_protects_toggle": "這能防範什麼？",
     "app_lock_timeout_hours": "{count, plural, other {# 小時}}",
+    "app_lock_until_screen": "螢幕鎖定時",
+    "app_lock_until_session": "登出或重新啟動時",
     "desktop_attention_title": "在這台電腦上"
   },
   "uxs2_ident": {

@@ -7540,6 +7540,8 @@
     "app_lock_now_desc_desktop": "Låser alle vindauge samtidig.",
     "app_lock_protects_toggle": "Kva vernar dette?",
     "app_lock_timeout_hours": "{count, plural, one {# time} other {# timar}}",
+    "app_lock_until_screen": "Når skjermen blir låst",
+    "app_lock_until_session": "Når eg loggar av eller startar på nytt",
     "desktop_attention_title": "På denne datamaskina"
   },
   "uxs2_ident": {

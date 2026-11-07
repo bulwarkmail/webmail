@@ -24,11 +24,19 @@ export const APP_LOCK_HOLDER = 'bulwark-app-lock-holder';
 export const DEFAULT_TIMEOUT_MINUTES = 10;
 export const TIMEOUT_CHOICES = [1, 5, 10, 15, 30, 60, 240] as const;
 
+/**
+ * Desktop app only: no timeout. `screen` locks when the computer's screen locks, `session` only
+ * when the app ends, which signing out of the computer or restarting it does.
+ */
+export type AppLockUntil = 'screen' | 'session';
+
 export interface AppLockFile {
   on: boolean;
   locked: boolean;
   /** The user's choice. Absent until they make one. */
   timeoutMinutes?: number;
+  /** Set instead of a timeout. */
+  until?: AppLockUntil;
 }
 
 const OFF: AppLockFile = { on: false, locked: false };
@@ -42,6 +50,7 @@ export function readAppLockFile(): AppLockFile {
       // Anything but a clear "no" counts as locked.
       locked: parsed.locked !== false,
       ...(typeof parsed.timeoutMinutes === 'number' ? { timeoutMinutes: parsed.timeoutMinutes } : {}),
+      ...(parsed.until === 'screen' || parsed.until === 'session' ? { until: parsed.until } : {}),
     };
   } catch {
     return OFF;

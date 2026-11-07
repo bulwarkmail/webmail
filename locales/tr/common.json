@@ -7532,6 +7532,8 @@
     "app_lock_now_desc_desktop": "Tüm pencereleri hemen kilitler.",
     "app_lock_protects_toggle": "Bu neye karşı korur?",
     "app_lock_timeout_hours": "{count, plural, one {# saat} other {# saat}}",
+    "app_lock_until_screen": "Ekran kilitlendiğinde",
+    "app_lock_until_session": "Oturumu kapattığımda veya yeniden başlattığımda",
     "desktop_attention_title": "Bu bilgisayarda"
   },
   "uxs2_ident": {
