@@ -28,6 +28,7 @@ import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, re
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
+import { createFrameSizer } from "@/lib/email-frame-sizer";
 import { forwardFrameKeys } from "@/lib/email-frame-keys";
 import { addAddressToContacts } from "@/lib/contacts/add-from-address";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
@@ -3904,35 +3905,27 @@ export function EmailViewer({
         // Auto-resize iframe to fit content
         // measureEmailFrameHeight reads the content, not the frame: the root's
         // scrollHeight alone never shrinks below the frame's height (#1474).
-        // The document as last measured. Re-measuring is not free: the fit
-        // first clears its own transform and width, which dirties the layout,
-        // so the read after it lays the whole mail out again. Reading the
-        // scroll sizes of an untouched document costs nothing, so the poll and
-        // the observers only pay for the full pass when something changed.
-        const sizes = () => ({
-          width: Math.max(doc.body.scrollWidth, doc.documentElement.scrollWidth),
-          height: Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight),
-          viewport: doc.documentElement.clientWidth,
+        // Re-measuring is not free: the fit first clears its own transform and
+        // width, which dirties the layout, so the read after it lays the whole
+        // mail out again. createFrameSizer reads the cheap scroll sizes first
+        // and only pays for the full pass when something changed.
+        const sizeFrame = createFrameSizer({
+          sizes: () => ({
+            width: Math.max(doc.body.scrollWidth, doc.documentElement.scrollWidth),
+            height: Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight),
+            viewport: doc.documentElement.clientWidth,
+          }),
+          fit: () => fitEmailBodyWidth(doc, fitBodyToWidthRef.current),
+          measure: () => measureEmailFrameHeight(doc),
+          write: (height) => {
+            iframe.style.height = height + 'px';
+            lastBodyHeightRef.current = height;
+          },
+          fitEnabled: () => fitBodyToWidthRef.current.enabled !== false,
         });
-        let measured = { width: -1, height: -1, viewport: -1 };
         const applyHeight = (force = false) => {
           if (iframe.contentDocument !== doc) return; // navigated away; stale
-          const now = sizes();
-          if (!force && now.width === measured.width && now.height === measured.height && now.viewport === measured.viewport) return;
-          // Shrink desktop-width mail to fit a phone screen first: it changes
-          // the layout height, and the transform doesn't shrink the measured
-          // (layout) height, so the iframe box has to be scaled by hand.
-          const scale = fitEmailBodyWidth(doc, fitBodyToWidthRef.current);
-          const height = Math.ceil(measureEmailFrameHeight(doc) * scale);
-          iframe.style.height = height + 'px';
-          lastBodyHeightRef.current = height;
-          // Reading the sizes again right after the height write laid the whole
-          // mail out a second time (its viewport just changed), which on a
-          // large newsletter was most of the open. The height write leaves the
-          // scroll sizes as they were; if a released table changed them, the
-          // next poll finds that and measures again, by then for free. A fit
-          // (phones) changes them itself, so it is read back.
-          measured = fitBodyToWidthRef.current.enabled !== false ? sizes() : now;
+          sizeFrame(force);
         };
         const resizeObserver = new ResizeObserver(() => applyHeight());
         resizeObserver.observe(doc.body);
