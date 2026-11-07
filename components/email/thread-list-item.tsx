@@ -27,7 +27,7 @@ import { useAccountStore, type AccountEntry } from "@/stores/account-store";
 import { emailKeyFor, getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
-import { useTagDisplay } from "@/hooks/use-tag-display";
+import { useRowTagDisplay, useTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge, TAG_LOZENGE_CLASS } from "./tag-badge";
 import { ROW_TAG_GROUP_CLASS } from "./row-tag-classes";
 import { useEmailDrag } from "@/hooks/use-email-drag";
@@ -518,7 +518,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const formatAddress = useOwnDomainAddress();
     const tagScope = useEmailTagScope(email);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
+    // Only a row with tags or a folder chip follows the list's width class.
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useRowTagDisplay(getEmailTagIds(email.keywords).length > 0 || !!email.sourceFolder);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
     const showAccountDot = useShowAccountDot(tintListRowsByAccount);
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;

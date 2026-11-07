@@ -63,7 +63,7 @@ import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionStarredWithUndo, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { measureVisibleRow } from "@/lib/virtual-row-measure";
-import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
+import { TagDisplaySourceContext, useMeasuredTagDisplaySource } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
 import { getRuleAccountAddresses, resolveQuickRuleTarget } from "@/lib/filters/quick-rule-target";
@@ -481,7 +481,7 @@ export function EmailList({
     return () => observer.disconnect();
   }, []);
   // One tag treatment for the whole list, measured from the scroll container.
-  const tagDisplay = useMeasuredTagDisplay(parentRef);
+  const tagDisplay = useMeasuredTagDisplaySource(parentRef);
   const density = useSettingsStore((state) => state.density);
   const showPreview = useSettingsStore((state) => state.showPreview);
   const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
@@ -1247,7 +1247,7 @@ export function EmailList({
 
   return (
     <RowTranslatorsProvider>
-    <TagDisplayContext.Provider value={tagDisplay}>
+    <TagDisplaySourceContext.Provider value={tagDisplay}>
     <div className={cn("flex flex-col min-h-0", className)}>
       {/* Batch Actions Toolbar */}
       <div
@@ -1716,7 +1716,7 @@ export function EmailList({
         );
       })()}
     </div>
-    </TagDisplayContext.Provider>
+    </TagDisplaySourceContext.Provider>
     </RowTranslatorsProvider>
   );
 }
