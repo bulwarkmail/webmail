@@ -31,7 +31,9 @@ export function metaGet(db: StorageAdapter, key: string): string | null {
   return db.get<{ v: string | null }>('SELECT v FROM meta WHERE k = ?', [key])?.v ?? null;
 }
 
+/** Writes only a change: the same value again would still cost a commit, and opening a store sets several. */
 export function metaSet(db: StorageAdapter, key: string, value: string | null): void {
+  if (metaGet(db, key) === value) return;
   db.run('INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v', [key, value]);
 }
 

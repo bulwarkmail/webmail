@@ -9,7 +9,7 @@ import { listObjects } from '../engine/core-schema';
 import type { SqlValue } from '../storage';
 import { headerValue, parseHeaderProperty, type RawHeader } from './headers';
 import { keywordKey } from './records';
-import { limitTextConditions, searchSnippetGet, textCondition, TEXT_FIELDS, type TextField } from './search';
+import { limitTextConditions, searchSnippetGet, tempTermSets, textCondition, TEXT_FIELDS, type TermSets, type TextField } from './search';
 
 type Filter = Record<string, unknown>;
 
@@ -33,12 +33,12 @@ function likeTerm(value: unknown): string {
  * (`d`) at hand, conditions read it instead of the message's own row, which
  * saves reading the message at all when nothing else needs it.
  */
-function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null, folderRow = drivenBy !== null): Sql {
+function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null, folderRow = drivenBy !== null, sets?: TermSets): Sql {
   const rowid = folderRow ? 'd.email_rowid' : 'e.rowid';
   const receivedAt = folderRow ? 'd.received_at' : 'e.received_at';
   if (typeof filter.operator === 'string') {
     const conditions = Array.isArray(filter.conditions) ? filter.conditions as Filter[] : [];
-    const parts = conditions.map((c) => filterSql(c, jmap, filter.operator === 'AND' ? drivenBy : null, folderRow));
+    const parts = conditions.map((c) => filterSql(c, jmap, filter.operator === 'AND' ? drivenBy : null, folderRow, sets));
     const params = parts.flatMap((p) => p.params);
     const joined = (joiner: string) => parts.map((p) => `(${p.sql})`).join(joiner);
     if (filter.operator === 'AND') return { sql: parts.length ? joined(' AND ') : '1', params };
@@ -104,7 +104,7 @@ function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null,
       }
       default:
         if ((TEXT_FIELDS as readonly string[]).includes(key)) {
-          const text = textCondition(key as TextField, String(value));
+          const text = textCondition(key as TextField, String(value), rowid, sets);
           conditions.push(text.sql);
           params.push(...text.params);
           break;
@@ -286,11 +286,21 @@ function keywordOrderedPage(
 }
 
 const emailQuery: MethodHandler = (ctx, args) => {
+  const terms = tempTermSets(ctx.db);
+  try {
+    return queryEmails(ctx, args, terms.sets);
+  } finally {
+    terms.clear();
+  }
+};
+
+function queryEmails(ctx: MethodContext, args: Record<string, unknown>, sets: TermSets): MethodResult {
   const jmap = jmapOf(ctx, args);
   const filter = limitTextConditions((args.filter ?? undefined) as Filter | undefined);
   if (args.anchor !== undefined) throw new MethodError('unsupportedFilter', 'anchor needs the server');
   const box = drivingMailbox(filter);
-  const where = filter ? filterSql(filter, jmap, box) : { sql: '1', params: [] };
+  // Each text term is read off the index once, for the page and its total.
+  const where = filter ? filterSql(filter, jmap, box, box !== null, sets) : { sql: '1', params: [] };
   const sort = (args.sort as Comparator[]) ?? [];
   const collapse = Boolean(args.collapseThreads);
   const levels = collapse ? null : keywordLevels(ctx, sort);
@@ -309,8 +319,19 @@ const emailQuery: MethodHandler = (ctx, args) => {
   const position = Math.max(0, Number(args.position ?? 0));
   const limit = typeof args.limit === 'number' && args.limit > 0 ? args.limit : -1;
   const group = collapse ? 'GROUP BY COALESCE(e.thread_id, e.id)' : '';
+  // Newest first in a folder, with nothing that needs the message: the page is
+  // picked off the folder's index alone, and only its rows are read. A join
+  // would read every message it skips on the way to a deep position.
+  const folderOnly = box !== null && !collapse && !levels && isNewestFirst(sort) && !/\be\./.test(where.sql);
   const ids = levels
     ? keywordOrderedPage(ctx, jmap, box, where, levels, position, limit)
+    : folderOnly
+    ? ctx.db.all<{ id: string }>(
+      `SELECT e.id FROM (SELECT d.email_rowid AS r, d.received_at AS t FROM email_mailbox d INDEXED BY email_mailbox_list
+         WHERE ${base.sql} AND (${where.sql}) ORDER BY d.received_at DESC, d.email_rowid DESC LIMIT ? OFFSET ?) p
+       CROSS JOIN email e ON e.rowid = p.r ORDER BY p.t DESC, p.r DESC`,
+      [...base.params, ...where.params, limit, position],
+    ).map((row) => String(row.id))
     : ctx.db.all<{ id: string }>(
       `SELECT e.id FROM ${from} WHERE ${base.sql} AND (${where.sql}) ${group} ORDER BY ${order.sql} LIMIT ? OFFSET ?`,
       [...base.params, ...where.params, ...order.params, limit, position],
@@ -338,7 +359,7 @@ const emailQuery: MethodHandler = (ctx, args) => {
     )?.n ?? 0);
   }
   return result;
-};
+}
 
 /** What only the stored body has, past what the list keeps. */
 const BODY_PROPERTIES = new Set(['bodyValues', 'textBody', 'htmlBody', 'bodyStructure', 'headers', 'attachments', 'bcc', 'replyTo', 'messageId', 'inReplyTo', 'references', 'sender']);
@@ -402,7 +423,9 @@ const emailGet: MethodHandler = (ctx, args) => {
   if (!Array.isArray(args.ids)) throw new MethodError('requestTooLarge', 'ids: null needs the server');
   const properties = args.properties as string[] | undefined;
   const wantsValues = Boolean(args.fetchTextBodyValues || args.fetchHTMLBodyValues || args.fetchAllBodyValues) || Boolean(properties?.includes('bodyValues'));
-  const wantsBody = wantsValues || !properties || properties.some((p) => BODY_PROPERTIES.has(p) || p.startsWith('header:'));
+  // What only the body may hold. The list keeps some of it already, such as the
+  // Authentication-Results header the list asks for: then the body isn't read.
+  const fromBody = properties ? properties.filter((p) => BODY_PROPERTIES.has(p) || p.startsWith('header:')) : null;
   const list: Record<string, unknown>[] = [];
   const notFound: string[] = [];
   for (const id of args.ids as string[]) {
@@ -415,7 +438,7 @@ const emailGet: MethodHandler = (ctx, args) => {
       continue;
     }
     const email = JSON.parse(row.json) as Record<string, unknown>;
-    if (!wantsBody) {
+    if (!wantsValues && fromBody && fromBody.every((p) => p in email)) {
       list.push(shapeEmail(email, null, args));
       continue;
     }

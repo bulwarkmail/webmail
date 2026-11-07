@@ -202,12 +202,25 @@ export class AccountEngine {
   }
 
   private setSyncState(jmap: string, type: string, patch: Partial<SyncStateRow>): void {
-    const row = { ...this.syncState(jmap, type), ...patch };
+    const stored = this.db.get<{ state: string | null; target: string | null; phase: string | null; cursor: string | null }>(
+      'SELECT state, target, phase, cursor FROM sync_state WHERE jmap = ? AND type = ?',
+      [jmap, type],
+    );
+    const before: SyncStateRow = {
+      state: stored?.state ?? null,
+      target: stored?.target ?? null,
+      phase: stored?.phase ?? null,
+      cursor: stored?.cursor ? JSON.parse(stored.cursor) as Record<string, unknown> : null,
+    };
+    const row = { ...before, ...patch };
+    const cursor = row.cursor ? JSON.stringify(row.cursor) : null;
+    // A pass that found nothing new leaves the row as it was: a write would cost a commit for nothing.
+    if (stored && stored.state === row.state && stored.target === row.target && stored.phase === row.phase && stored.cursor === cursor) return;
     this.db.run(
       `INSERT INTO sync_state (jmap, type, state, target, phase, cursor, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (jmap, type) DO UPDATE SET state = excluded.state, target = excluded.target, phase = excluded.phase,
          cursor = excluded.cursor, updated_at = excluded.updated_at`,
-      [jmap, type, row.state, row.target, row.phase, row.cursor ? JSON.stringify(row.cursor) : null, this.now()],
+      [jmap, type, row.state, row.target, row.phase, cursor, this.now()],
     );
   }
 
