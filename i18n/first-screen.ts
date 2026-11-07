@@ -19,12 +19,15 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
   'confirm_dialog', 'context_menu', 'desktopReminders', 'email_list', 'fileDrop', 'login',
   'mail_list_extra', 'mail_p2_list', 'notification_center', 'protocol_handlers', 'pwaNotify', 'shell',
   'shortcuts', 'sidebar', 'sidebar_apps', 'threads', 'top_bar', 'totp_reauth', 'uxs_login', 'welcome',
+  // The sign-in page's notices: why the session ended, a wipe, mail the outbox lost.
+  'offlineWipe', 'session_limits',
   // The keys the first screen draws from the big ones.
   'calendar.notifications.alert_title',
   'email_viewer.frame_title_from', 'email_viewer.no_conversation_description', 'email_viewer.no_conversation_selected',
   'email_viewer.no_subject', 'email_viewer.quick_reply_placeholder', 'email_viewer.unknown_sender', 'email_viewer.unread',
   'mail_import.menu_import',
   'mailbox_context_menu.placeholder_folder_name', 'mailbox_context_menu.prompt_new_folder',
+  'offline.signout.lost', 'offline.outbox.no_subject',
   'notifications.undo', 'notifications.undo_done', 'notifications.undo_failed', 'notifications.undo_hint', 'notifications.undone',
   'proofreading.shortcuts',
   'settings.appearance.theme',
