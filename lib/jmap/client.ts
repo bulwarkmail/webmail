@@ -2950,11 +2950,17 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private async probeKeywordSortPolarity(accountId: string): Promise<KeywordSortPolarity | null> {
+    const response = await this.request(this.keywordSortProbeCalls(accountId));
+    return this.readKeywordSortProbe(accountId, response.methodResponses ?? []);
+  }
+
+  /** The probe's three calls (see resolveKeywordSortPolarity). */
+  private keywordSortProbeCalls(accountId: string): JMAPMethodCall[] {
     const sortFor = (isAscending: boolean) => [
       { property: "hasKeyword", keyword: "$seen", isAscending },
       { property: "receivedAt", isAscending: false },
     ];
-    const response = await this.request([
+    return [
       ["Email/query", { accountId, sort: sortFor(true), limit: 1 }, "asc"],
       ["Email/query", { accountId, sort: sortFor(false), limit: 1 }, "desc"],
       ["Email/get", {
@@ -2962,7 +2968,15 @@ export class JMAPClient implements IJMAPClient {
         "#ids": { resultOf: "asc", name: "Email/query", path: "/ids" },
         properties: ["id", "keywords"],
       }, "get"],
-    ]);
+    ];
+  }
+
+  /**
+   * The probe's verdict from the responses to its three calls; null when it
+   * was inconclusive. Throws when the probe failed.
+   */
+  private readKeywordSortProbe(accountId: string, responses: unknown[][]): KeywordSortPolarity | null {
+    const response = { methodResponses: responses as [string, Record<string, unknown>, string][] };
     const [ascMethod, ascResult] = response.methodResponses?.[0] ?? [];
     if (ascMethod === "error") {
       if ((ascResult as { type?: string })?.type === "unsupportedSort") {
@@ -2979,6 +2993,49 @@ export class JMAPClient implements IJMAPClient {
     // Ascending put a $seen message first: the server sorts has-keyword first
     // on isAscending: true, the inverse of the RFC's false < true reading.
     return first.keywords?.$seen ? "inverted" : "rfc";
+  }
+
+  /**
+   * The probe for the first list request of an account, riding on it: while
+   * the polarity is unknown and no probe runs, the first list used to wait a
+   * round trip for the probe before it could be asked for. The list is sorted
+   * by a guess (Stalwart reads keyword sorts inverted, see
+   * KeywordSortPolarity) and asked again only when the verdict differs.
+   * `settle` records the verdict from the probe's responses and returns the
+   * polarity the list must use; `abandon` frees a probe whose request failed.
+   */
+  private keywordSortProbeRider(accountId: string): {
+    guess: KeywordSortPolarity;
+    calls: JMAPMethodCall[];
+    settle: (responses: unknown[][]) => KeywordSortPolarity;
+    abandon: () => void;
+  } | null {
+    if (this.keywordSortPolarity.has(accountId) || this.keywordSortProbes.has(accountId)) return null;
+    // The list's three calls and the probe's three.
+    if (this.getMaxCallsInRequest() < 6) return null;
+    let finish: (value: KeywordSortPolarity) => void = () => {};
+    this.keywordSortProbes.set(accountId, new Promise<KeywordSortPolarity>((resolve) => { finish = resolve; }));
+    const done = (value: KeywordSortPolarity) => {
+      this.keywordSortProbes.delete(accountId);
+      finish(value);
+    };
+    return {
+      guess: this.hasAccountCapability("urn:stalwart:jmap", accountId) ? "inverted" : "rfc",
+      calls: this.keywordSortProbeCalls(accountId),
+      settle: (responses) => {
+        let value: KeywordSortPolarity | null;
+        try {
+          value = this.readKeywordSortProbe(accountId, responses);
+        } catch (error) {
+          debug.warn("jmap", "Keyword sort polarity probe failed:", error);
+          value = null;
+        }
+        this.keywordSortPolarity.set(accountId, { value, at: Date.now() });
+        done(value ?? "rfc");
+        return value ?? "rfc";
+      },
+      abandon: () => done("rfc"),
+    };
   }
 
   /** The Email/query sort for a folder view, with the server's polarity applied. */
@@ -3020,8 +3077,13 @@ export class JMAPClient implements IJMAPClient {
     // sort comparator (RFC 8621 §4.4.2); every page of a view must use the
     // same sort or pagination tears, so the sort is built from settings the
     // same way on the first page, load-more and the push refresh.
-    const built = await this.buildListSort(targetAccountId, pinnedFirst === true, order);
-    const query = (sort: ReturnType<typeof buildEmailSort>) => this.request([
+    const rider = hasKeywordLevels(order, pinnedFirst === true) && this.keywordSortSupported(targetAccountId)
+      ? this.keywordSortProbeRider(targetAccountId)
+      : null;
+    const built = rider
+      ? { sort: buildEmailSort(order, { pinnedFirst, polarity: rider.guess }), keywordSortSupported: true }
+      : await this.buildListSort(targetAccountId, pinnedFirst === true, order);
+    const query = (sort: ReturnType<typeof buildEmailSort>, extra: JMAPMethodCall[] = []) => this.request([
       ["Email/query", {
         accountId: targetAccountId,
         filter,
@@ -3042,9 +3104,26 @@ export class JMAPClient implements IJMAPClient {
         accountId: targetAccountId,
         "#ids": { resultOf: "1", name: "Email/get", path: "/list/*/threadId" },
       }, "2"],
+      ...extra,
     ]);
 
-    let response = await query(built.sort);
+    let response: Awaited<ReturnType<typeof query>>;
+    if (rider) {
+      try {
+        response = await query(built.sort, rider.calls);
+      } catch (error) {
+        rider.abandon();
+        throw error;
+      }
+      // By call id: the probe's answers follow the list's three.
+      const probeIds = new Set(rider.calls.map((call) => call[2]));
+      const polarity = rider.settle((response.methodResponses ?? []).filter((r) => probeIds.has(r[2])));
+      if (polarity !== rider.guess && !this.keywordSortUnsupported.has(targetAccountId)) {
+        response = await query(buildEmailSort(order, { pinnedFirst, polarity }));
+      }
+    } else {
+      response = await query(built.sort);
+    }
     // A server that advertises nothing but refuses hasKeyword fails the whole
     // query. Remember that and retry once without the keyword comparators
     // rather than showing an empty folder.

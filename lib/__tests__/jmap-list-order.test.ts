@@ -32,33 +32,37 @@ const seenEmail = { id: 'read-1', keywords: { $seen: true }, receivedAt: '2026-0
 const unseenEmail = { id: 'unread-1', keywords: {}, receivedAt: '2026-01-01T00:00:00Z', mailboxIds: {}, threadId: 't', size: 1, hasAttachment: false };
 
 /**
- * Answers the polarity probe (call ids asc/desc/get) per `server`, and every
+ * Answers the polarity probe (call ids asc/desc/get) per `server`, wherever in
+ * a request it sits (alone, or riding on the first folder query), and every
  * folder query (call ids 0/1) with a fixed page, optionally refusing keyword
  * comparators with unsupportedSort.
  */
 function replyFor(server: 'rfc' | 'inverted' | 'homogeneous', opts: { refuseKeywordSort?: boolean } = {}) {
   return (methodCalls: MethodCall[]) => {
-    if (methodCalls[0][2] === 'asc') {
-      const ascFirst = server === 'inverted' ? seenEmail : unseenEmail;
-      const descFirst = server === 'homogeneous' ? ascFirst : (server === 'inverted' ? unseenEmail : seenEmail);
-      return {
-        methodResponses: [
-          ['Email/query', { ids: [ascFirst.id] }, 'asc'],
-          ['Email/query', { ids: [descFirst.id] }, 'desc'],
-          ['Email/get', { list: [{ id: ascFirst.id, keywords: ascFirst.keywords }] }, 'get'],
-        ],
-      };
+    const methodResponses: unknown[] = [];
+    const ascFirst = server === 'inverted' ? seenEmail : unseenEmail;
+    const descFirst = server === 'homogeneous' ? ascFirst : (server === 'inverted' ? unseenEmail : seenEmail);
+    for (const [, args, id] of methodCalls) {
+      if (id === 'asc') methodResponses.push(['Email/query', { ids: [ascFirst.id] }, 'asc']);
+      else if (id === 'desc') methodResponses.push(['Email/query', { ids: [descFirst.id] }, 'desc']);
+      else if (id === 'get') methodResponses.push(['Email/get', { list: [{ id: ascFirst.id, keywords: ascFirst.keywords }] }, 'get']);
+      else if (id === '0') {
+        const sort = args.sort as Array<{ property: string }>;
+        if (opts.refuseKeywordSort && sort.some(s => s.property === 'hasKeyword')) {
+          methodResponses.push(['error', { type: 'unsupportedSort' }, '0'], ['error', { type: 'invalidResultReference' }, '1']);
+        } else {
+          methodResponses.push(['Email/query', { ids: [seenEmail.id, unseenEmail.id], total: 2 }, '0'], ['Email/get', { list: [seenEmail, unseenEmail] }, '1']);
+        }
+      }
     }
-    const sort = methodCalls[0][1].sort as Array<{ property: string }>;
-    if (opts.refuseKeywordSort && sort.some(s => s.property === 'hasKeyword')) {
-      return { methodResponses: [['error', { type: 'unsupportedSort' }, '0'], ['error', { type: 'invalidResultReference' }, '1']] };
+    // A refused probe: the whole thing errors like the folder query does.
+    if (opts.refuseKeywordSort) {
+      for (let i = 0; i < methodResponses.length; i++) {
+        const r = methodResponses[i] as [string, unknown, string];
+        if (r[2] === 'asc') methodResponses[i] = ['error', { type: 'unsupportedSort' }, 'asc'];
+      }
     }
-    return {
-      methodResponses: [
-        ['Email/query', { ids: [seenEmail.id, unseenEmail.id], total: 2 }, '0'],
-        ['Email/get', { list: [seenEmail, unseenEmail] }, '1'],
-      ],
-    };
+    return { methodResponses };
   };
 }
 
@@ -94,7 +98,7 @@ describe('JMAPClient list ordering', () => {
   }
 
   const folderQueries = (sent: MethodCall[][]) => sent.filter(calls => calls[0][2] === '0').map(calls => calls[0][1].sort);
-  const probes = (sent: MethodCall[][]) => sent.filter(calls => calls[0][2] === 'asc');
+  const probes = (sent: MethodCall[][]) => sent.filter(calls => calls.some(call => call[2] === 'asc'));
 
   it('sends the RFC polarity to a server that follows RFC 8621', async () => {
     const client = await connectedClient();
@@ -111,14 +115,16 @@ describe('JMAPClient list ordering', () => {
   });
 
   it('flips the keyword comparators for a server with inverted polarity (Stalwart 0.16.8)', async () => {
-    const client = await connectedClient();
+    const client = await connectedClient(undefined, { 'urn:stalwart:jmap': {} });
     const sent = recordRequests(replyFor('inverted'));
 
     const { emails } = await client.getEmails('inbox', undefined, 50, 0, undefined, true, undefined, UNREAD_FIRST);
     await client.getEmails('inbox', undefined, 50, 50, undefined, true, undefined, UNREAD_FIRST);
 
-    // One probe per account and session, not per page.
+    // One probe per account and session, not per page, and on Stalwart it
+    // rides on the first page, sorted the inverted way from the start.
     expect(probes(sent)).toHaveLength(1);
+    expect(sent).toHaveLength(2);
     expect(folderQueries(sent)).toEqual([
       [
         { property: 'hasKeyword', keyword: '$pinned', isAscending: true },
@@ -133,6 +139,65 @@ describe('JMAPClient list ordering', () => {
     ]);
     // The within-page safety sort mirrors the requested order.
     expect(emails.map(e => e.id)).toEqual(['unread-1', 'read-1']);
+  });
+
+  it('asks for the first page once more when another server turns out inverted', async () => {
+    const client = await connectedClient();
+    const sent = recordRequests(replyFor('inverted'));
+
+    await client.getEmails('inbox', undefined, 50, 0, undefined, true, undefined, UNREAD_FIRST);
+    await client.getEmails('inbox', undefined, 50, 50, undefined, true, undefined, UNREAD_FIRST);
+
+    expect(probes(sent)).toHaveLength(1);
+    expect(folderQueries(sent)).toEqual([
+      [
+        { property: 'hasKeyword', keyword: '$pinned', isAscending: false },
+        { property: 'hasKeyword', keyword: '$seen', isAscending: true },
+        { property: 'receivedAt', isAscending: false },
+      ],
+      [
+        { property: 'hasKeyword', keyword: '$pinned', isAscending: true },
+        { property: 'hasKeyword', keyword: '$seen', isAscending: false },
+        { property: 'receivedAt', isAscending: false },
+      ],
+      [
+        { property: 'hasKeyword', keyword: '$pinned', isAscending: true },
+        { property: 'hasKeyword', keyword: '$seen', isAscending: false },
+        { property: 'receivedAt', isAscending: false },
+      ],
+    ]);
+  });
+
+  it('sends the first page with the probe in one request when the guess holds', async () => {
+    const client = await connectedClient();
+    const sent = recordRequests(replyFor('rfc'));
+
+    await client.getEmails('inbox', undefined, 50, 0, undefined, true, undefined, UNREAD_FIRST);
+
+    // The first list used to wait a round trip for the probe.
+    expect(sent).toHaveLength(1);
+    expect(sent[0].map(call => call[2])).toEqual(['0', '1', '2', 'asc', 'desc', 'get']);
+  });
+
+  it('probes on its own when the server takes too few calls per request', async () => {
+    const client = await connectedClient();
+    (client as unknown as { capabilities: Record<string, unknown> }).capabilities['urn:ietf:params:jmap:core'] = { maxCallsInRequest: 4 };
+    const sent = recordRequests(replyFor('rfc'));
+
+    await client.getEmails('inbox', undefined, 50, 0, undefined, true, undefined, UNREAD_FIRST);
+
+    expect(sent.map(calls => calls[0][2])).toEqual(['asc', '0']);
+  });
+
+  it('lets a failed first page probe again', async () => {
+    const client = await connectedClient();
+    fetchSpy.mockRejectedValueOnce(new Error('offline'));
+    await expect(client.getEmails('inbox', undefined, 50, 0, undefined, true, undefined, UNREAD_FIRST)).rejects.toThrow();
+    const sent = recordRequests(replyFor('rfc'));
+
+    await client.getEmails('inbox', undefined, 50, 0, undefined, true, undefined, UNREAD_FIRST);
+
+    expect(probes(sent)).toHaveLength(1);
   });
 
   it('falls back to the RFC polarity when every message is in the same read state', async () => {
