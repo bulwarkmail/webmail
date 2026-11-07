@@ -50,16 +50,24 @@ export function tagScopeOf(email: Pick<Email, "sourceClientAccountId" | "sourceA
 /**
  * tagScopeOf for a message on screen, kept stable between renders and
  * worked out again when the view changes (an unstamped message belongs to
- * the account of the folder on screen).
+ * the account of the folder on screen). The component draws again only when
+ * the scope itself changes: following the selected folder instead drew every
+ * list row again on each folder click, though nearly every folder is the
+ * login's own.
  */
 export function useEmailTagScope(email: Pick<Email, "sourceClientAccountId" | "sourceAccountId"> | null | undefined): TagScope | null {
-  useEmailStore((state) => state.selectedMailbox);
-  useEmailStore((state) => state.viewingAccountId);
   useAuthStore((state) => state.activeAccountId);
-  const scope = tagScopeOf(email);
-  const loginId = scope?.loginId;
-  const accountId = scope?.accountId;
-  return useMemo(() => (loginId && accountId ? { loginId, accountId } : null), [loginId, accountId]);
+  // Worked out against the store's state: the folder on screen and the
+  // account viewed decide it.
+  const key = useEmailStore(() => {
+    const scope = tagScopeOf(email);
+    return scope ? `${scope.loginId}\n${scope.accountId}` : "";
+  });
+  return useMemo(() => {
+    if (!key) return null;
+    const [loginId, accountId] = key.split("\n");
+    return { loginId, accountId };
+  }, [key]);
 }
 
 /** The scope shared by every message given, or null when they differ. */

@@ -2,7 +2,7 @@
 
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
-import { MemoizedThreadListItem, listMailboxRole } from "./thread-list-item";
+import { MemoizedThreadListItem, type ListFolder } from "./thread-list-item";
 import { ListColumnsHeader } from "./list-columns";
 import { useListboxFocus } from "./list-a11y";
 import { useStableHandlers } from "@/hooks/use-stable-handlers";
@@ -305,6 +305,17 @@ export function EmailList({
   // Spam is pointless on your own outgoing mail, as in the context menu.
   const spamApplicable = spamApplicableIn(effectiveMailboxRole);
 
+  // The folder the rows on screen were fetched for, taken when the rows
+  // change. A click on another folder changes the selection at once while
+  // the old rows stay until the new ones come: with the selected folder the
+  // rows re-rendered then, in the click's own render pass, and drew their
+  // senders as the new folder's recipients (or the other way round).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- taken with the rows, on purpose
+  const rowsView = useMemo(() => ({ mailboxId: selectedMailbox, isUnifiedView, unifiedRole }), [emails]);
+  const rowsRole = mailboxes.find((m) => m.id === rowsView.mailboxId)?.role
+    ?? (rowsView.isUnifiedView ? (rowsView.unifiedRole ?? undefined) : undefined);
+  const listFolder = useMemo<ListFolder>(() => ({ mailboxId: rowsView.mailboxId, role: rowsRole }), [rowsView, rowsRole]);
+
   const disableThreading = useSettingsStore((state) => state.disableThreading);
   // The order the current folder view was fetched in (#718), so thread
   // grouping mirrors the server order instead of re-sorting the page by date.
@@ -474,10 +485,7 @@ export function EmailList({
   const showPreview = useSettingsStore((state) => state.showPreview);
   const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
   const { oneLine: isFocusedMailLayout, columns: listColumns } = useListRowShape();
-  const showRecipientColumn = useEmailStore((state) => {
-    const role = listMailboxRole(state);
-    return role === 'sent' || role === 'drafts';
-  });
+  const showRecipientColumn = listFolder.role === 'sent' || listFolder.role === 'drafts';
   const footerHasMore = hasMore ?? hasMoreEmails;
   const footerIsLoadingMore = isLoadingMoreItems ?? isLoadingMore;
   const isMobile = useUIStore((state) => state.isMobile);
@@ -1179,6 +1187,7 @@ export function EmailList({
           onUndoSpam={rowHandlers.onUndoSpam}
           onOpenAttachment={rowHandlers.onOpenAttachment}
           loadAttachments={loadAttachments}
+          listFolder={listFolder}
         />}
       </>
     );
