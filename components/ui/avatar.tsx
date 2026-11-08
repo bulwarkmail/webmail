@@ -102,13 +102,22 @@ const COMPOUND_SURNAMES = new Set([
 ]);
 
 /**
- * The given-name initials of a Han-script name: Chinese and Korean names are
- * written without spaces, so the Western "first letters of the words" rule
+ * The given-name initials of a Han-script name: Chinese names are written
+ * without spaces, so the Western "first letters of the words" rule
  * degenerates to the first two characters of the whole string - the surname
  * plus one character of the given name (王阳明 showed 王阳). What reads
  * naturally there is the given name instead: 王阳明 → 阳明, 陈阳 → 陈阳,
  * 司马光 → 光. Only a name made entirely of Han characters takes this path;
  * anything mixed, Latin, or kana keeps the Western rule.
+ *
+ * Accepted lengths: 2 (the whole name), 3 (surname + 2-char given name),
+ * and 4 only with a known compound surname. Anything longer falls back to
+ * the Western rule: the surname/given-name split of a 4+ character Han
+ * string is not guessable (Japanese 山田太郎 is 1+3, 高桥和也 is 2+2), so
+ * slicing at any fixed point produces a cross-boundary pair that is
+ * neither a name nor a surname - worse than the plain leading characters.
+ * Korean names in Hangul are NOT Han script (김 is \p{Script=Hangul}) and
+ * never take this path; they keep the Western rule.
  */
 function hanGivenName(name: string): string | null {
   const compact = name.replace(/\s+/g, "");
@@ -118,7 +127,9 @@ function hanGivenName(name: string): string | null {
   }
   if (compact.length === 2) return compact;
   const compound = COMPOUND_SURNAMES.has(compact.slice(0, 2));
-  return compact.slice(compound ? 2 : 1, (compound ? 2 : 1) + 2);
+  if (compact.length === 3) return compound ? compact.slice(2, 3) : compact.slice(1, 3);
+  if (compact.length === 4 && compound) return compact.slice(2, 4);
+  return null;
 }
 
 // Dev-only: common first names to infer gender for demo portrait selection

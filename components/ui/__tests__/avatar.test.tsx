@@ -54,6 +54,23 @@ describe('Avatar', () => {
       const { container: mixed } = render(<Avatar name="Kevin 王" />);
       expect(mixed.textContent).toBe('K王');
     });
+
+    it('falls back to the Western rule for 4+ characters without a compound surname', () => {
+      // A 4-character Han string's surname/given-name split is not guessable
+      // (Japanese kanji names are 1+3 or 2+2), so slicing at a fixed point
+      // would produce a cross-boundary pair like 田太 - neither 山田 the
+      // surname nor 太郎 the given name. The plain leading characters are
+      // the safer display.
+      const { container } = render(<Avatar name="山田太郎" />);
+      expect(container.textContent).toBe('山田');
+      const { container: longer } = render(<Avatar name="亚历山大大帝" />);
+      expect(longer.textContent).toBe('亚历');
+    });
+
+    it('keeps the Han path for a 4-character name with a compound surname', () => {
+      const { container } = render(<Avatar name="欧阳阳明" />);
+      expect(container.textContent).toBe('阳明');
+    });
   });
 
   it('renders single letter from email when no name', () => {
