@@ -114,7 +114,50 @@ export async function createAppPassword(opts: {
     const failed = (result.notCreated as Record<string, { type?: string; description?: string }> | undefined)?.imp;
     throw new ImpersonationCredentialError(failed?.description || failed?.type || 'App password was not created');
   }
+  if (opts.permissions) await keepOnlyIfLimited({ ...opts, id: created.id, permissions: opts.permissions });
   return { id: created.id, secret: created.secret };
+}
+
+/**
+ * Read back what Stalwart made, and delete it again unless it is limited to
+ * the permissions asked for. A server that ignored `permissions` (an older
+ * release) would otherwise hand out the account's full rights unnoticed.
+ */
+async function keepOnlyIfLimited(opts: {
+  serverUrl: string;
+  authHeader: string;
+  id: string;
+  permissions: Record<string, true>;
+  trusted?: boolean;
+}): Promise<void> {
+  let limited = false;
+  try {
+    const result = await callStalwart(
+      opts.serverUrl,
+      opts.authHeader,
+      ['x:AppPassword/get', { ids: [opts.id], properties: ['permissions'] }, '0'],
+      opts.trusted ?? true,
+    );
+    const item = (result.list as { id?: string; permissions?: unknown }[] | undefined)?.find((p) => p.id === opts.id);
+    limited = isLimitedTo(item?.permissions, opts.permissions);
+  } catch {
+    // Not readable is not known to be limited.
+  }
+  if (limited) return;
+  try {
+    await deleteAppPassword({ serverUrl: opts.serverUrl, authHeader: opts.authHeader, id: opts.id, trusted: opts.trusted });
+  } catch {
+    // Reported below; the user can still delete it under Settings → Security.
+  }
+  throw new ImpersonationCredentialError('The mail server did not limit the app password to the permissions asked for');
+}
+
+/** `Replace` with no permission beyond those asked for (Stalwart may grant fewer, never more). */
+function isLimitedTo(stored: unknown, asked: Record<string, true>): boolean {
+  if (!stored || typeof stored !== 'object') return false;
+  const { '@type': type, permissions } = stored as { '@type'?: unknown; permissions?: unknown };
+  if (type !== 'Replace' || !permissions || typeof permissions !== 'object') return false;
+  return Object.entries(permissions).every(([name, on]) => on !== true || asked[name] === true);
 }
 
 /** Delete an app password on the mailbox `authHeader` opens. */
