@@ -274,6 +274,53 @@ export interface TaskInput {
   checklist?: { id?: string; text: string; done?: boolean }[];
 }
 
+/** Step 125: what a chart groups by and measures. */
+export type GroupBy = "status" | "owner" | "created" | "due" | "field";
+export type Period = "day" | "week" | "month" | "quarter" | "year";
+export interface GroupSpec {
+  by: GroupBy;
+  field?: string;
+  period?: Period;
+}
+export interface Measure {
+  op: "count" | "sum" | "avg" | "min" | "max";
+  field?: string;
+}
+export interface AggregateGroup {
+  key: string | null;
+  label?: string;
+  value: number;
+  count: number;
+  split?: AggregateGroup[];
+}
+export interface AggregateResult {
+  type: string;
+  measure: Measure;
+  kind: "count" | "number" | "money";
+  currency: string | null;
+  groups: AggregateGroup[];
+  other: { value: number; count: number } | null;
+  total: { value: number; count: number };
+}
+export type ChartKind = "bar" | "barH" | "stacked" | "line" | "donut" | "number";
+export interface ChartConfig {
+  kind: "chart";
+  chart: ChartKind;
+  groupBy: GroupSpec;
+  splitBy?: GroupSpec;
+  measure: Measure;
+  filters?: FieldFilter[];
+}
+export interface ObjectView {
+  id: string;
+  type: string;
+  name: string;
+  shared: boolean;
+  config: ChartConfig;
+  can: { edit: boolean };
+}
+export type TaskGroupBy = "column" | "assignee" | "priority" | "label" | "done";
+
 async function call<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
@@ -316,6 +363,13 @@ export const projectsApi = {
   importRows: (type: string, rows: { title: string; status?: string; dueOn?: string | null; fields?: Record<string, unknown> }[]) =>
     call<{ added: number; skipped: { row: number; error: string; field?: string }[] }>("POST", `${OBJECTS}/import`, { type, rows }),
   menu: () => call<{ items: MenuItem[] }>("GET", `${OBJECTS}/menu`),
+  aggregate: (body: { type: string; status?: string; archived?: boolean; mine?: boolean; filters?: FieldFilter[]; groupBy: GroupSpec; splitBy?: GroupSpec; measure: Measure }) =>
+    call<AggregateResult>("POST", `${OBJECTS}/aggregate`, body),
+  views: (type: string) => call<{ views: ObjectView[] }>("GET", `${OBJECTS}/views${query({ type })}`),
+  saveView: (body: { id?: string; type: string; name: string; shared: boolean; config: ChartConfig }) =>
+    body.id ? call<ObjectView>("PUT", `${OBJECTS}/views/${seg(body.id)}`, { type: body.type, name: body.name, shared: body.shared, config: body.config }) : call<ObjectView>("POST", `${OBJECTS}/views`, body),
+  deleteView: (id: string) => call<Record<string, never>>("DELETE", `${OBJECTS}/views/${seg(id)}`),
+  taskSummary: (id: string, by: TaskGroupBy) => call<{ groups: AggregateGroup[]; total: number }>("GET", `${one(id)}/tasks/summary${query({ by })}`),
   setMenu: (prefs: { order?: string[]; hidden?: string[] }) => call<{ items: MenuItem[] }>("PUT", MY_MENU, prefs),
   list: (opts: { type?: string; status?: string; archived?: boolean; q?: string; mine?: boolean } = {}) =>
     call<{ objects: ObjectSummary[] }>("GET", `${OBJECTS}${query({ type: opts.type ?? "project", status: opts.status, archived: opts.archived ? "1" : undefined, q: opts.q, mine: opts.mine ? "1" : undefined })}`),

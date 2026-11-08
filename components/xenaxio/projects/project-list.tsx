@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { errorText } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
+import { useViewPrefs } from "@/lib/xenaxio/view-prefs";
 import { dayText, type FieldFilter, isOverdue, local, type MyTask, type ObjectSummary, type ObjectType, type Place, type ProjectTemplate, projectsApi, type Visibility } from "@/lib/xenaxio/projects";
 import { usePeopleStore } from "@/lib/xenaxio/people";
 import { FieldInput, fieldText, PlaceMenu } from "./fields";
@@ -24,15 +25,24 @@ import { Modal, PeoplePicker, PersonBadge, selectClass, StatusChip } from "./bit
 
 type View = "board" | "list" | "tasks";
 const VIEW_KEY = "xenaxio.projects.view";
-const GROUP_KEY = "xenaxio.objects.groupBy";
 
-function readView(): View {
-  try {
-    const v = window.localStorage.getItem(VIEW_KEY);
-    return v === "list" || v === "tasks" ? v : "board";
-  } catch {
-    return "board";
-  }
+interface ListPrefs extends Record<string, unknown> {
+  view: View;
+  groupBy: string;
+  mine: boolean;
+  filter: { field: string; value: string } | null;
+}
+
+/** Step 125: the person's view of a type's page, the same on every device. */
+function parseListPrefs(v: Record<string, unknown>): ListPrefs {
+  const view = v.view ?? v.value;
+  const f = v.filter as { field?: unknown; value?: unknown } | null | undefined;
+  return {
+    view: view === "list" || view === "tasks" ? view : "board",
+    groupBy: typeof v.groupBy === "string" ? v.groupBy : "",
+    mine: v.mine === true,
+    filter: f && typeof f.field === "string" && typeof f.value === "string" ? { field: f.field, value: f.value } : null,
+  };
 }
 
 export function NewProjectDialog({ open, onClose, onCreated, parentId, type }: { open: boolean; onClose: () => void; onCreated: (id: string) => void; parentId?: string | null; type?: ObjectType }) {
@@ -227,35 +237,29 @@ function ProjectCard({ p, type, locale, onOpen, showStatus = true }: { p: Object
 export function ProjectList({ onOpen, typeKey = "project" }: { onOpen: (id: string, task?: string) => void; typeKey?: string }) {
   const t = useXT();
   const locale = useLocale();
-  const [view, setViewState] = useState<View>("board");
+  const [prefs, setPrefs] = useViewPrefs(`objects.${typeKey}`, parseListPrefs, typeKey === "project" ? VIEW_KEY : undefined);
+  const view = prefs.view;
+  const setView = (v: View) => setPrefs({ view: v });
   const [type, setType] = useState<ObjectType | undefined>();
   const [mayCreate, setMayCreate] = useState(false);
   const [projects, setProjects] = useState<ObjectSummary[] | null>(null);
   const [tasks, setTasks] = useState<MyTask[] | null>(null);
-  const [mine, setMine] = useState(false);
+  const mine = prefs.mine;
+  const setMine = (v: boolean) => setPrefs({ mine: v });
   const [archived, setArchived] = useState(false);
   const [q, setQ] = useState("");
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Step 119: a filter by one choice field of the type (e.g. source = fair).
-  const [filter, setFilter] = useState<{ field: string; value: string } | null>(null);
+  const filter = prefs.filter;
+  const setFilter = (v: { field: string; value: string } | null) => setPrefs({ filter: v });
   const people = usePeopleStore((s) => s.people);
   const isProject = typeKey === "project";
   // Lanes by a person field need the company's people.
   useEffect(() => {
     void usePeopleStore.getState().load();
   }, []);
-
-  useEffect(() => setViewState(readView()), []);
-  const setView = (v: View) => {
-    setViewState(v);
-    try {
-      window.localStorage.setItem(VIEW_KEY, v);
-    } catch {
-      // Private window: the view is not remembered.
-    }
-  };
 
   useEffect(() => {
     projectsApi
@@ -301,25 +305,8 @@ export function ProjectList({ onOpen, typeKey = "project" }: { onOpen: (id: stri
     for (const f of type?.fields ?? []) if ((f.type === "select" || f.type === "user") && !f.sensitive) out.push({ key: f.key, label: local(f.label, locale) });
     return out;
   }, [type, locale, t]);
-  const [groupBy, setGroupByState] = useState<string>("");
-  useEffect(() => {
-    if (!type) return;
-    let saved = "";
-    try {
-      saved = window.localStorage.getItem(`${GROUP_KEY}.${type.key}`) ?? "";
-    } catch {
-      // Private window: the first option.
-    }
-    setGroupByState(groupOptions.some((o) => o.key === saved) ? saved : (groupOptions[0]?.key ?? ""));
-  }, [type, groupOptions]);
-  const setGroupBy = (key: string) => {
-    setGroupByState(key);
-    try {
-      if (type) window.localStorage.setItem(`${GROUP_KEY}.${type.key}`, key);
-    } catch {
-      // Not remembered.
-    }
-  };
+  const groupBy = groupOptions.some((o) => o.key === prefs.groupBy) ? prefs.groupBy : (groupOptions[0]?.key ?? "");
+  const setGroupBy = (key: string) => setPrefs({ groupBy: key });
   const groupField = type?.fields.find((f) => f.key === groupBy);
   const NONE = "__none";
   const lanes = useMemo(() => {

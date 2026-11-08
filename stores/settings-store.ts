@@ -512,6 +512,9 @@ interface SettingsState {
   filesDetailsWidth: number | null;
   // xenaxio (step 114): the width of the Files folder column in px, 180–400 (null: the default).
   filesSidebarWidth: number | null;
+  // xenaxio (step 125): how a person last viewed boards and lists of projects and object types
+  // (board or list, sub-projects, swimlanes, grouping, open chart, ...), per place key.
+  xenaxioViews: Record<string, Record<string, unknown>>;
   listColumns: boolean; // One-line list rows as a table: From, Subject, Date and Size columns under a header (#262)
   emailsPerPage: number;
   externalContentPolicy: ExternalContentPolicy;
@@ -819,6 +822,7 @@ const DEFAULT_SETTINGS = {
   mailLayout: 'split' as MailLayout,
   filesDetailsWidth: null as number | null,
   filesSidebarWidth: null as number | null,
+  xenaxioViews: {} as Record<string, Record<string, unknown>>,
   listColumns: false,
   emailsPerPage: 50,
   externalContentPolicy: 'ask' as ExternalContentPolicy,
@@ -1187,6 +1191,7 @@ export const useSettingsStore = create<SettingsState>()(
           mailLayout: state.mailLayout,
           filesDetailsWidth: state.filesDetailsWidth,
           filesSidebarWidth: state.filesSidebarWidth,
+          xenaxioViews: state.xenaxioViews,
           listColumns: state.listColumns,
           emailsPerPage: state.emailsPerPage,
           externalContentPolicy: state.externalContentPolicy,
@@ -1397,6 +1402,10 @@ export const useSettingsStore = create<SettingsState>()(
               }
               // xenaxio (step 114): Files' Details panel 20–80 %, its folder column 180–400 px, or none.
               if (key === 'filesDetailsWidth' && settings[key] !== null && (typeof settings[key] !== 'number' || settings[key] < 20 || settings[key] > 80)) {
+                return;
+              }
+              // xenaxio (step 125): a map of small objects, at most 500 places.
+              if (key === 'xenaxioViews' && (typeof settings[key] !== 'object' || settings[key] === null || Array.isArray(settings[key]) || Object.keys(settings[key]).length > 500)) {
                 return;
               }
               if (key === 'filesSidebarWidth' && settings[key] !== null && (typeof settings[key] !== 'number' || settings[key] < 180 || settings[key] > 400)) {

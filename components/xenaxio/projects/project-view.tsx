@@ -21,6 +21,7 @@ import { errorText, XenaxioApiError } from "@/lib/xenaxio/api";
 import { useChatStore } from "@/lib/xenaxio/chat/store";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
+import { useViewPrefs } from "@/lib/xenaxio/view-prefs";
 import { usePeopleStore } from "@/lib/xenaxio/people";
 import {
   type BoardColumn,
@@ -209,29 +210,25 @@ type LanesBy = "none" | "assignee" | "project" | "priority" | "label";
 type Merge = "done" | "names";
 const SEP = "\u0001";
 
-/** Step 124 H, I: the person's view of a board (sub-projects, columns, swimlanes), kept in this browser. */
-function useBoardPrefs(projectId: string) {
-  const key = `xenaxio.board.${projectId}`;
-  const read = (): { subs: boolean; merge: Merge; lanes: LanesBy } => {
-    try {
-      const v = JSON.parse(localStorage.getItem(key) ?? "{}") as Partial<{ subs: boolean; merge: Merge; lanes: LanesBy }>;
-      return { subs: v.subs === true, merge: v.merge === "names" ? "names" : "done", lanes: (["assignee", "project", "priority", "label"] as const).includes(v.lanes as never) ? (v.lanes as LanesBy) : "none" };
-    } catch {
-      return { subs: false, merge: "done", lanes: "none" };
-    }
+interface BoardPrefs extends Record<string, unknown> {
+  mode: "board" | "list";
+  subs: boolean;
+  merge: Merge;
+  lanes: LanesBy;
+  filter: Omit<TaskFilter, "text">;
+}
+
+/** Valid board view values from what is stored (old or unknown values fall back to defaults). */
+function parseBoardPrefs(v: Record<string, unknown>): BoardPrefs {
+  const f = (v.filter && typeof v.filter === "object" ? v.filter : {}) as Record<string, unknown>;
+  const str = (x: unknown) => (typeof x === "string" && x.length <= 80 ? x : null);
+  return {
+    mode: v.mode === "list" ? "list" : "board",
+    subs: v.subs === true,
+    merge: v.merge === "names" ? "names" : "done",
+    lanes: (["assignee", "project", "priority", "label"] as const).includes(v.lanes as never) ? (v.lanes as LanesBy) : "none",
+    filter: { assignee: str(f.assignee), due: f.due === "overdue" || f.due === "week" ? f.due : null, label: str(f.label) },
   };
-  const [prefs, setPrefs] = useState(read);
-  const update = (change: Partial<{ subs: boolean; merge: Merge; lanes: LanesBy }>) =>
-    setPrefs((cur) => {
-      const next = { ...cur, ...change };
-      try {
-        localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        // Private mode: the choice lasts until the page closes.
-      }
-      return next;
-    });
-  return [prefs, update] as const;
 }
 
 function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; onOpenTask: (id: string) => void; reloadKey: number }) {
@@ -240,11 +237,21 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
   const [columns, setColumns] = useState<BoardColumn[]>(project.columns);
   const [tasks, setTasks] = useState<(TaskSummary | RollupTask)[] | null>(null);
   const [subProjects, setSubProjects] = useState<RollupProject[]>([]);
-  const [mode, setMode] = useState<"board" | "list">("board");
-  const [filter, setFilter] = useState<TaskFilter>({});
   const [addingColumn, setAddingColumn] = useState(false);
   const [foreign, setForeign] = useState<{ project: ObjectDetail; taskId: string } | null>(null);
-  const [prefs, setPrefs] = useBoardPrefs(project.id);
+  // Step 124 H, I + 125: the person's view of the board (mode, sub-projects, columns, swimlanes,
+  // filters), the same on every device; the search text stays with the page.
+  const [prefs, setPrefs] = useViewPrefs(`board.${project.id}`, parseBoardPrefs, `xenaxio.board.${project.id}`);
+  const mode = prefs.mode;
+  const setMode = (m: "board" | "list") => setPrefs({ mode: m });
+  const [text, setText] = useState("");
+  const filter: TaskFilter = useMemo(() => ({ ...prefs.filter, ...(text ? { text } : {}) }), [prefs.filter, text]);
+  const setFilter = (u: TaskFilter | ((f: TaskFilter) => TaskFilter)) => {
+    const next = typeof u === "function" ? u(filter) : u;
+    setText(next.text ?? "");
+    const rest = { assignee: next.assignee ?? null, due: next.due ?? null, label: next.label ?? null };
+    if (JSON.stringify(rest) !== JSON.stringify(prefs.filter)) setPrefs({ filter: rest });
+  };
   const canEdit = project.can.edit;
   const hasChildren = project.children.length > 0;
   const subs = hasChildren && prefs.subs;
