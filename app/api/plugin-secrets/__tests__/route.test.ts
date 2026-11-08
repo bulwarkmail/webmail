@@ -30,10 +30,12 @@ vi.mock('@/lib/impersonation/grant-cookie', () => ({
 }));
 // The app passwords the server made on the mail server, by id.
 const made = new Map<string, string>();
+const madeWith: unknown[] = [];
 let refuseAppPassword: string | null = null;
 vi.mock('@/lib/plugin-secrets/app-password', () => ({
-  makePluginAppPassword: vi.fn(async (_session: unknown, description: string) => {
+  makePluginAppPassword: vi.fn(async (_session: unknown, description: string, permissions: unknown) => {
     if (refuseAppPassword) throw new Error(refuseAppPassword);
+    madeWith.push(permissions);
     const id = `ap${made.size + 1}`;
     made.set(id, description);
     return { id, secret: `secret-of-${id}`, username: 'alice@login.example.org' };
@@ -59,11 +61,14 @@ vi.mock('@/lib/plugin-secrets/vault', () => ({
   }),
 }));
 // What the server knows the plugins declare (lib/plugin-secrets/known-plugins).
-const declared: Record<string, { scope: 'user'; label: string; inject: { type: string }; origin?: string; appPassword?: true }> = {
+const CALENDAR = { permissions: ['jmapCalendarEventGet', 'jmapCalendarEventQuery'] };
+const declared: Record<string, { scope: 'user'; label: string; inject: { type: string }; origin?: string; appPassword?: unknown }> = {
   'nextcloud/cloud': { scope: 'user', label: 'Nextcloud', inject: { type: 'basic' } },
   'paperless/docs': { scope: 'user', label: 'Paperless', inject: { type: 'bearer' }, origin: 'https://paperless.example.com' },
-  'team-calendar/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: true },
-  'elsewhere/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: true, origin: 'https://other.example.org' },
+  'team-calendar/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: CALENDAR },
+  'elsewhere/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: CALENDAR, origin: 'https://other.example.org' },
+  // A manifest stored before app passwords took a permission list.
+  'older/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: true },
 };
 vi.mock('@/lib/plugin-secrets/known-plugins', () => ({
   declaringPlugin: async (pluginId: string, credentialId: string) => {
@@ -112,6 +117,7 @@ beforeEach(() => {
   refuseAppPassword = null;
   store.clear();
   made.clear();
+  madeWith.length = 0;
   vi.mocked(revokePluginAppPassword).mockClear();
   proxied.length = 0;
 });
@@ -187,6 +193,7 @@ describe('POST /api/plugin-secrets with appPassword', () => {
     expect(res.status).toBe(200);
     expect(JSON.stringify(await res.json())).not.toContain('secret-of');
     expect([...made]).toEqual([['ap1', 'Plugin: Teamkalender']]);
+    expect(madeWith).toEqual([CALENDAR.permissions]);
     expect(store.get('team-calendar/stalwart')).toEqual({
       origin: 'https://mail.example.org', inject: { type: 'basic' }, label: 'Stalwart',
       username: 'alice@login.example.org', secret: 'secret-of-ap1', appPasswordId: 'ap1',
@@ -206,6 +213,7 @@ describe('POST /api/plugin-secrets with appPassword', () => {
     ['it for a credential that takes a typed password', { ...TEAM, pluginId: 'nextcloud', credentialId: 'cloud' }],
     ['anything sent along', { ...TEAM, secret: 'mine' }],
     ['another server than the one the plugin names', { ...TEAM, pluginId: 'elsewhere' }],
+    ['a manifest that lists no permissions', { ...TEAM, pluginId: 'older' }],
   ])('refuses %s', async (_name, body) => {
     expect((await save(body)).status).toBe(400);
     expect(made.size).toBe(0);

@@ -23,14 +23,15 @@ describe('plugin app passwords', () => {
   it("are made with the user's own session and stored with the account's login name", async () => {
     session.value = { username: 'alice@example.org' };
 
-    expect(await makePluginAppPassword(SIGNED_IN, 'Plugin: Team')).toEqual({ id: 'ap1', secret: 'made', username: 'alice@example.org' });
+    expect(await makePluginAppPassword(SIGNED_IN, 'Plugin: Team', ['jmapCalendarGet'])).toEqual({ id: 'ap1', secret: 'made', username: 'alice@example.org' });
     expect(createAppPassword).toHaveBeenCalledWith({
       serverUrl: 'https://mail.example.org', authHeader: 'Bearer token', description: 'Plugin: Team', trusted: true,
+      permissions: { authenticate: true, jmapCalendarGet: true },
     });
   });
 
   it('fall back to the account the sign-in resolved to when the session names none', async () => {
-    expect((await makePluginAppPassword(SIGNED_IN, 'Plugin: Team')).username).toBe('alice@b.example');
+    expect((await makePluginAppPassword(SIGNED_IN, 'Plugin: Team', ['jmapCalendarGet'])).username).toBe('alice@b.example');
   });
 
   it('are revoked on a best-effort basis', async () => {

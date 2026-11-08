@@ -78,14 +78,17 @@ async function callStalwart(
 
 /**
  * Create an app password on the mailbox `authHeader` opens. Without
- * `expiresAt` it lives until the user deletes it. `trusted` is false for a
- * user-chosen server, which must be reached through the rebinding-safe fetch.
+ * `expiresAt` it lives until the user deletes it. Without `permissions` it
+ * has the account's rights; with them only those (Stalwart's `Replace`; it
+ * refuses any the account lacks). `trusted` is false for a user-chosen
+ * server, which must be reached through the rebinding-safe fetch.
  */
 export async function createAppPassword(opts: {
   serverUrl: string;
   authHeader: string;
   description: string;
   expiresAt?: string;
+  permissions?: Record<string, true>;
   trusted?: boolean;
 }): Promise<{ id: string; secret: string }> {
   const result = await callStalwart(
@@ -93,7 +96,15 @@ export async function createAppPassword(opts: {
     opts.authHeader,
     [
       'x:AppPassword/set',
-      { create: { imp: { description: opts.description, ...(opts.expiresAt ? { expiresAt: opts.expiresAt } : {}) } } },
+      {
+        create: {
+          imp: {
+            description: opts.description,
+            ...(opts.expiresAt ? { expiresAt: opts.expiresAt } : {}),
+            ...(opts.permissions ? { permissions: { '@type': 'Replace', permissions: opts.permissions } } : {}),
+          },
+        },
+      },
       '0',
     ],
     opts.trusted ?? true,

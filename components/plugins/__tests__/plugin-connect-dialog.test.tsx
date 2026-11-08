@@ -73,13 +73,19 @@ describe('connect dialog', () => {
     act(() => {
       result = requestConnect({
         pluginId: 'team-calendar', pluginName: 'Teamkalender', credentialId: 'stalwart', mode: 'appPassword',
-        spec: { label: 'Stalwart', scope: 'user', inject: { type: 'basic' }, appPassword: true },
+        spec: {
+          label: 'Stalwart', scope: 'user', inject: { type: 'basic' },
+          appPassword: { permissions: ['authenticate', 'jmapCalendarEventGet', 'jmapCalendarEventUpdate', 'jmapPrincipalGetAvailability', 'jmapQuotaGet'] },
+        },
       });
     });
 
     expect(screen.queryByRole('textbox')).toBeNull();
     expect(document.querySelector('input')).toBeNull();
     expect(screen.getByText(/intro_app_password /)).toHaveTextContent('"account":"alice@example.org","description":"Plugin: Teamkalender"');
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'right_calendars_change', 'right_directory', 'right_other {"names":"jmapQuotaGet"}',
+    ]);
     fireEvent.click(screen.getByRole('button', { name: 'connect' }));
 
     await expect(result!).resolves.toEqual({ connected: true, origin: 'https://mail.example.org' });

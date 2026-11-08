@@ -121,13 +121,25 @@ describe('credential specs in the manifest', () => {
 
   it('takes appPassword only on a user credential with basic auth', () => {
     const user = { label: 'Stalwart', scope: 'user', inject: { type: 'basic' } };
-    expect(checkCredentials({ stalwart: { ...user, appPassword: true } }, undefined))
-      .toEqual({ credentials: { stalwart: { ...user, appPassword: true } }, errors: [] });
-    expect(checkCredentials({ stalwart: { ...user, inject: { type: 'bearer' }, appPassword: true } }, undefined).errors.join())
+    const appPassword = { permissions: ['jmapCalendarEventGet', 'jmapCalendarEventQuery'] };
+    expect(checkCredentials({ stalwart: { ...user, appPassword } }, undefined))
+      .toEqual({ credentials: { stalwart: { ...user, appPassword } }, errors: [] });
+    expect(checkCredentials({ stalwart: { ...user, inject: { type: 'bearer' }, appPassword } }, undefined).errors.join())
       .toMatch(/needs inject "basic"/);
-    expect(checkCredentials({ stalwart: { ...user, appPassword: 'yes' } }, undefined).errors.join()).toMatch(/must be true/);
-    expect(checkCredentials({ ai: { label: 'AI', scope: 'admin', inject: { type: 'basic' }, secretKey: 'key', origin: 'https://a.example', appPassword: true } },
+    expect(checkCredentials({ ai: { label: 'AI', scope: 'admin', inject: { type: 'basic' }, secretKey: 'key', origin: 'https://a.example', appPassword } },
       { key: { type: 'secret' } }).errors.join()).toMatch(/only for scope "user"/);
+  });
+
+  it('takes appPassword only with the permissions the plugin needs, none of the administration', () => {
+    const user = { label: 'Stalwart', scope: 'user', inject: { type: 'basic' } };
+    const errorFor = (appPassword: unknown) => checkCredentials({ stalwart: { ...user, appPassword } }, undefined).errors.join();
+    expect(errorFor(true)).toMatch(/must be an object with a "permissions" list/);
+    expect(errorFor({ permissions: [] })).toMatch(/must list what the plugin needs/);
+    for (const name of ['sysAppPasswordCreate', 'sysAccountGet', 'impersonate', 'fetchAnyBlob', 'unlimitedRequests', 'jmap', 7]) {
+      expect(errorFor({ permissions: ['jmapCalendarGet', name] })).toMatch(/is not a permission a plugin may have/);
+    }
+    expect(checkCredentials({ stalwart: { ...user, appPassword: { permissions: ['emailSend', 'jmapEmailGet', 'emailSend'] } } }, undefined)
+      .credentials?.stalwart).toMatchObject({ appPassword: { permissions: ['emailSend', 'jmapEmailGet'] } });
   });
 
   it('builds the auth header', () => {

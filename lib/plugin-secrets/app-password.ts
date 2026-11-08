@@ -1,11 +1,12 @@
 // The app password the server makes when a user connects a credential that
-// declares `appPassword: true`: on the mail server the user is signed in to,
-// made with their own session, stored with the account's login name. The
-// user types nothing, sees it named in their security settings, and the
-// secret never reaches the browser.
+// declares `appPassword`: on the mail server the user is signed in to, made
+// with their own session and only the permissions the manifest lists, stored
+// with the account's login name. The user types nothing, sees it named in
+// their security settings, and the secret never reaches the browser.
 
 import { createAppPassword, deleteAppPassword } from '@/lib/impersonation/app-password';
 import { logger } from '@/lib/logger';
+import { appPasswordPermissions } from '@/lib/plugin-secrets/app-password-permissions';
 import { fetchJmapSession } from '@/lib/stalwart/jmap-api';
 import type { StalwartCredentials } from '@/lib/stalwart/credentials';
 
@@ -14,6 +15,7 @@ type Session = Pick<StalwartCredentials, 'serverUrl' | 'authHeader' | 'accountNa
 export async function makePluginAppPassword(
   session: Session,
   description: string,
+  permissions: readonly string[],
 ): Promise<{ id: string; secret: string; username: string }> {
   // Stalwart takes an app password only together with the account's login
   // name. After an OAuth sign-in that is the JMAP session's `username`, which
@@ -25,6 +27,7 @@ export async function makePluginAppPassword(
     serverUrl: session.serverUrl,
     authHeader: session.authHeader,
     description,
+    permissions: appPasswordPermissions(permissions),
     trusted: session.trusted,
   });
   return { ...created, username };

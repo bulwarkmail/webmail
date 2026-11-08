@@ -8,6 +8,7 @@ import { useConfig } from '@/hooks/use-config';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { productName } from '@/lib/product-name';
 import { appPasswordDescription } from '@/lib/plugin-secrets/credentials';
+import { appPasswordRights, type RightArea } from '@/lib/plugin-secrets/app-password-permissions';
 import { useAuthStore } from '@/stores/auth-store';
 import {
   currentConnect,
@@ -102,6 +103,19 @@ export function PluginConnectDialog() {
     request.resolve({ connected: mode !== 'signin', ...(origin ? { origin } : {}) });
   };
 
+  // What the app password may do, as the manifest lists it: the user agrees
+  // to exactly that.
+  const rights = appPassword && Array.isArray(spec.appPassword?.permissions) ? appPasswordRights(spec.appPassword.permissions) : null;
+  const rightText = (area: RightArea, access: 'read' | 'change'): string => {
+    switch (area) {
+      case 'mail': return access === 'read' ? t('right_mail_read') : t('right_mail_change');
+      case 'send': return t('right_send');
+      case 'calendars': return access === 'read' ? t('right_calendars_read') : t('right_calendars_change');
+      case 'contacts': return access === 'read' ? t('right_contacts_read') : t('right_contacts_change');
+      case 'files': return access === 'read' ? t('right_files_read') : t('right_files_change');
+      case 'directory': return t('right_directory');
+    }
+  };
   const host = origin ? new URL(origin).host : null;
   const intro = appPassword
     ? t('intro_app_password', { name: pluginName, account, description: appPasswordDescription(pluginName), appName })
@@ -136,6 +150,15 @@ export function PluginConnectDialog() {
               <h2 id={titleId} className="text-lg font-semibold text-foreground">{t('title', { label: spec.label })}</h2>
             </div>
             <p className="mb-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{intro}</p>
+            {rights && (
+              <div className="mb-4 text-sm">
+                <p className="mb-1 font-medium text-foreground">{t('rights_heading')}</p>
+                <ul className="list-disc space-y-0.5 ps-5 text-muted-foreground [overflow-wrap:anywhere]">
+                  {rights.areas.map(({ area, access }) => <li key={area}>{rightText(area, access)}</li>)}
+                  {rights.other.length > 0 && <li>{t('right_other', { names: rights.other.join(', ') })}</li>}
+                </ul>
+              </div>
+            )}
             <div className="mb-4 flex flex-col gap-3">
               {!fixedOrigin && !appPassword && (
                 <label className="flex flex-col gap-1">

@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
  * later through the proxy.
  *
  * Body: { pluginId, credentialId, label, appPassword: true } for a credential
- * whose manifest says `appPassword`: the server makes the secret itself.
+ * whose manifest says `appPassword`: the server makes the secret itself, with
+ * only the permissions that manifest lists.
  */
 export async function POST(request: NextRequest) {
   const crossOrigin = rejectCrossOriginRequest(request);
@@ -152,6 +153,11 @@ async function connectAppPassword(current: CurrentUser, pluginId: string, creden
   if (!plugin) return NextResponse.json({ error: 'No such plugin credential' }, { status: 404 });
   const { spec } = plugin;
   if (!spec.appPassword) return bad('This credential takes a password the user enters');
+  // A manifest stored before app passwords took a permission list has none:
+  // never make one with the account's full rights.
+  if (!Array.isArray(spec.appPassword.permissions) || spec.appPassword.permissions.length === 0) {
+    return bad('The plugin lists no permissions for its app password');
+  }
   if (!appPasswordsOn()) return NextResponse.json({ error: 'App passwords are not available on this server' }, { status: 403 });
   // A support session opens the mailbox with a short-lived app password; it
   // must not leave a lasting one behind.
@@ -172,7 +178,7 @@ async function connectAppPassword(current: CurrentUser, pluginId: string, creden
   }
   let made: { id: string; secret: string; username: string };
   try {
-    made = await makePluginAppPassword(creds, appPasswordDescription(plugin.name));
+    made = await makePluginAppPassword(creds, appPasswordDescription(plugin.name), spec.appPassword.permissions);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     logger.warn('Plugin app password was not created', { error: message });
