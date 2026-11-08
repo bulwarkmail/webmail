@@ -11,7 +11,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { useToastStore } from '@/stores/toast-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { clearAllHooks } from '@/lib/plugin-hooks';
-import { resetAnnouncedSends } from '@/lib/plugin-after-send';
+import { resetHeldSends } from '@/lib/send-settled';
 
 // Settings > Composing > "Archive after replying": a reply to or forward of
 // an Inbox message archives that message once the reply has gone.
@@ -91,7 +91,7 @@ beforeEach(() => {
   useThemeStore.setState({ syncServerThemes: vi.fn().mockResolvedValue(undefined) });
   useToastStore.setState({ toasts: [] });
   clearAllHooks();
-  resetAnnouncedSends();
+  resetHeldSends();
   const client = {
     getAccountId: () => 'acc', getUsername: () => 'me@example.com',
     getSieveAccountId: () => null, hasDelayedSend: () => true, getSession: () => null,
@@ -147,6 +147,14 @@ describe('Archive after replying', () => {
   it('archives the Inbox message once the reply is sent', async () => {
     await replyAndSend();
     await waitFor(() => expect(archivedIds()).toEqual(['m1']));
+  });
+
+  it('archives without asking, even with "Confirm before archiving" on', async () => {
+    useSettingsStore.setState({ confirmArchive: true } as never);
+    await replyAndSend();
+    await waitFor(() => expect(archivedIds()).toEqual(['m1']));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('archives after a forward too', async () => {

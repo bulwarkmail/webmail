@@ -154,7 +154,8 @@ import { prefetchEmailContent, requestEmailContent } from "@/lib/email-prefetch"
 import { createMailboxWithHooks } from "@/lib/plugin-mail-hooks";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
-import { announceSent, cancelAnnouncedSend, releaseAnnouncedSend, whenSent } from "@/lib/plugin-after-send";
+import { announceSent } from "@/lib/plugin-after-send";
+import { cancelHeldSend, releaseHeldSend, whenSent } from "@/lib/send-settled";
 import { composeOptionsFor, runBeforeCompose, type ComposePrefill, type ComposerOpenMode } from "@/lib/plugin-compose-gate";
 import { formatMailto } from "@/lib/protocol-handlers/mailto";
 import { buildQuoteHeader } from "@/lib/quote-header";
@@ -2280,10 +2281,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           // Kept in the offline outbox: the reply has not gone yet, so the
           // original stays where it is. A send held for Undo archives once
           // the hold is over, and not at all when it is undone. Through the
-          // ref: by then the open message and folder may have changed.
+          // ref: by then the open message and folder may have changed. No
+          // "Confirm before archiving" dialog: the user asked for this when
+          // turning the setting on, and after a hold it would pop up in the
+          // middle of whatever they are doing by then.
           const original = composerSourceEmail;
           if (result.queued) toast.info(t('email_composer.archive_after_reply_queued'));
-          else whenSent(result, () => { void handleArchiveRef.current?.(original); });
+          else whenSent(result, () => { void handleArchiveRef.current?.(original, { confirm: false }); }, { scheduledByUser: !!data.delayedUntil });
         }
       }
 
@@ -2682,7 +2686,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   // The recipients are checked again for the release.
                   const refused = partlyRefusedWarning(result, tComposer);
                   if (refused) toast.warning(refused);
-                  releaseAnnouncedSend(pending.submissionId);
+                  releaseHeldSend(pending.submissionId);
                   if (isScheduledView) await fetchScheduledEmails(client);
                 } catch (error) {
                   console.error('Failed to send now:', error);
@@ -2718,7 +2722,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             // failing is no reason to say otherwise.
             try {
               // Never left the server: plugins don't hear about it.
-              cancelAnnouncedSend(pending.submissionId);
+              cancelHeldSend(pending.submissionId);
               if (restored && !pending.isSmime) {
                 // Back in the Drafts of the account it was sent from, through
                 // the login that sent it.
@@ -2799,7 +2803,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // opens the message in an email tab instead (pro/page.tsx).
   const pluginOpenEmailRef = useRef<OpenEmailHandler | null>(null);
   // The latest Archive action, for "archive after replying" once an undo hold is over.
-  const handleArchiveRef = useRef<((email: Email) => Promise<void>) | null>(null);
+  const handleArchiveRef = useRef<((email: Email, options?: { confirm?: boolean }) => Promise<void>) | null>(null);
   useEffect(() => {
     if (isEmbedded) return;
     return onOpenEmail(async (email) => (
@@ -3073,9 +3077,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
-  const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
+  const handleArchive = async (
+    emailToArchive: Email | null = selectedEmail,
+    { confirm = true }: { confirm?: boolean } = {},
+  ) => {
     if (!client || !emailToArchive || !isArchiveActionEnabled()) return;
-    if (!(await confirmMailRemoval('archive', 1, confirmDialog, tRemove))) return;
+    if (confirm && !(await confirmMailRemoval('archive', 1, confirmDialog, tRemove))) return;
 
     // In a list that mixes accounts (the unified views, a tag view) the archive
     // folder (and any year/month subfolders we create) must live in the email's

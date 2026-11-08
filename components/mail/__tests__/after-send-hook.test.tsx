@@ -10,7 +10,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { useToastStore } from '@/stores/toast-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { emailHooks, clearAllHooks } from '@/lib/plugin-hooks';
-import { resetAnnouncedSends } from '@/lib/plugin-after-send';
+import { resetHeldSends } from '@/lib/send-settled';
 
 // onAfterEmailSend: once the server accepted the message, never for a failed
 // send or one taken back with Undo.
@@ -82,7 +82,7 @@ beforeEach(() => {
   cancelUndoSend.mockReset();
   sendEmail.mockReset();
   clearAllHooks();
-  resetAnnouncedSends();
+  resetHeldSends();
   sendData.delayedUntil = undefined;
   sendData.error = null;
   refreshScheduledMetadata.mockReset().mockResolvedValue(undefined);
