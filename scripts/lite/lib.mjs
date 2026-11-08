@@ -123,6 +123,9 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/auth/desktop-handoff/discard",
   "/api/auth/desktop-handoff/park",
   "/api/auth/desktop-handoff/redeem",
+  // Return from an impersonation (#1538): lib/impersonation/return-client.ts
+  // skips every call in Lite, which has no impersonation.
+  "/api/auth/impersonate/return",
   "/api/auth/totp-token-exchange",
   "/api/auth/session",
   "/api/auth/verify",
