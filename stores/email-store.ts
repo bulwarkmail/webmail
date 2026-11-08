@@ -154,6 +154,17 @@ function receiptPoint(receipt: CrossAccountMoveReceipt, batches: EmailRestoreBat
   return undefined;
 }
 
+/** All original memberships and read state, with the owning server's folder ids. */
+export function emailRestorePoint(email: Email, accountId?: string): EmailRestorePoint {
+  const prefix = accountId ? `${accountId}:` : null;
+  return {
+    id: email.id,
+    mailboxIds: Object.fromEntries(Object.entries(email.mailboxIds ?? {}).filter(([, inIt]) => inIt)
+      .map(([id]) => [prefix && id.startsWith(prefix) ? id.slice(prefix.length) : id, true])),
+    seen: !!email.keywords?.$seen,
+  };
+}
+
 /**
  * Where `emails` are now, so the toast's Undo can put them back after a
  * delete to Trash, an archive, a move or "remove from folder". Taken before
@@ -169,20 +180,14 @@ export function restoreBatchesFor(emails: Email[], client: IJMAPClient): EmailRe
     } catch {
       continue;
     }
-    const prefix = context.accountId ? `${context.accountId}:` : null;
-    const mailboxIds: Record<string, boolean> = {};
-    for (const [id, inIt] of Object.entries(email.mailboxIds)) {
-      if (inIt) mailboxIds[prefix && id.startsWith(prefix) ? id.slice(prefix.length) : id] = true;
-    }
-    if (Object.keys(mailboxIds).length === 0) continue;
+    const point = emailRestorePoint(email, context.accountId);
+    if (Object.keys(point.mailboxIds).length === 0) continue;
     let batch = batches.find(b => b.client === context.client && b.accountId === context.accountId);
     if (!batch) {
       batch = { client: context.client, accountId: context.accountId, points: [] };
       batches.push(batch);
     }
-    if (!batch.points.some(p => p.id === email.id)) {
-      batch.points.push({ id: email.id, mailboxIds, seen: !!email.keywords?.$seen });
-    }
+    if (!batch.points.some(p => p.id === email.id)) batch.points.push(point);
   }
   return batches;
 }
@@ -3023,11 +3028,11 @@ function movedEmailState(
 }
 
 /**
- * Preserve Archive's existing global-list completion only for a message
+ * Preserve the existing global-list move completion only for a message
  * already listed in this login and owner account. This never dispatches a
  * mutation or hooks; the folder owns those, and its Undo, exactly once.
  */
-export function captureListedArchive(
+export function captureListedMove(
   emailId: string,
   source: { client: IJMAPClient; clientAccountId?: string; accountId: string },
   destinationMailboxId: string,
@@ -3373,7 +3378,7 @@ function projectUnifiedCounts(
 // Find the trash mailbox for a given account scope. Prefers JMAP role, but
 // falls back to name matching ("trash" / "deleted") so users with custom or
 // pre-existing folders (e.g. "Deleted Items") aren't silently destroyed.
-function findTrashMailbox(
+export function findTrashMailbox(
   mailboxes: Mailbox[],
   scope: { accountId?: string; isShared?: boolean }
 ): Mailbox | undefined {

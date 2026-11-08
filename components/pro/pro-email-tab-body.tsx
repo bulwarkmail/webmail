@@ -105,6 +105,8 @@ interface ProEmailViewProps {
   onClose: () => void;
   /** A folder host archives its own rows, outside the Mail tab's global list. */
   onArchiveEmail?: (email: Email) => Promise<void>;
+  /** Ordinary Trash is owned by a folder host, independently of the Mail list. */
+  onTrashEmail?: (email: Email) => Promise<void>;
   className?: string;
 }
 
@@ -165,7 +167,7 @@ export function buildReplyContext(email: Email, source: EmailWriteSource): ProRe
  * Hosted by `ProEmailTabBody` (a dedicated email tab) and by the folder tab's
  * reading pane.
  */
-export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, noAutomaticActions, conversation, onClose, onArchiveEmail, className }: ProEmailViewProps) {
+export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, noAutomaticActions, conversation, onClose, onArchiveEmail, onTrashEmail, className }: ProEmailViewProps) {
   const t = useTranslations();
   const tNotifications = useTranslations('notifications');
   const tRemove = useTranslations('email_list.confirm_remove');
@@ -417,6 +419,10 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
 
   const handleDelete = useCallback(async () => {
     if (!client || !email) return;
+    if (onTrashEmail) {
+      await onTrashEmail(email);
+      return;
+    }
     // The folder the message is in: the one browsed when it is there, else
     // its own (a message window has no list, mail-p3-1).
     const { selectedMailbox } = useEmailStore.getState();
@@ -449,7 +455,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       console.error('Delete failed:', err);
       toast.error(tNotifications('error_deleting'));
     }
-  }, [client, email, mailboxes, deleteEmail, onClose, t, tNotifications, tP3, tActions, confirmDialog, tRemove]);
+  }, [client, email, mailboxes, deleteEmail, onClose, onTrashEmail, t, tNotifications, tP3, tActions, confirmDialog, tRemove]);
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;

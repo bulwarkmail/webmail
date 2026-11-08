@@ -10,12 +10,15 @@ import { EmailViewer } from "@/components/email/email-viewer";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
 import { RetentionNotice } from "@/components/email/retention-notice";
 import { useAuthStore } from "@/stores/auth-store";
-import { captureListedArchive, ensureArchiveMailbox, findArchiveMailbox, useEmailStore, type EmailRestoreBatch } from "@/stores/email-store";
+import { bulkDeleteIsPermanent, captureListedMove, emailRestorePoint, ensureArchiveMailbox, findArchiveMailbox, findTrashMailbox, TrashMailboxNotFoundError, useEmailStore, type EmailRestoreBatch } from "@/stores/email-store";
 import { getMessageListOrderFor, useSettingsStore } from "@/stores/settings-store";
 import { useProTabStore, type ProFolderTabData } from "@/stores/pro-tab-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneId } from "@/hooks/use-pane-context";
 import type { Email, Mailbox } from "@/lib/jmap/types";
+import { toast } from "@/stores/toast-store";
+import { toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
+import { rememberTrashOrigins } from "@/lib/trash-origin";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { scheduleAutoMarkAsRead } from "@/lib/mark-as-read-delay";
 import { isArchiveActionEnabled } from "@/lib/archive-gate";
@@ -51,6 +54,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   const tList = useTranslations('email_list');
   const tSidebar = useTranslations('sidebar');
   const tRemove = useTranslations('email_list.confirm_remove');
+  const tNotifications = useTranslations('notifications');
   const { confirm, dialogProps } = useConfirmDialog();
 
   const activeClient = useAuthStore((s) => s.client);
@@ -83,6 +87,8 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   const mailbox: Mailbox | undefined = folderMailboxes.find((m) => m.id === data.mailboxId);
   const jmapMailboxId = mailbox?.originalId || data.mailboxId;
   const jmapAccountId = mailbox?.isShared ? mailbox.accountId : undefined;
+  const ordinaryTrash = useSettingsStore((s) => s.deleteAction === 'trash'
+    && mailbox?.role !== 'trash' && !(mailbox?.role === 'junk' && s.permanentlyDeleteJunk));
 
   const [emails, setEmails] = useState<Email[]>([]);
   const [total, setTotal] = useState(0);
@@ -97,6 +103,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     active: false,
     pending: new Set<string>(),
     archiving: new Set<string>(),
+    trashing: new Set<string>(),
     selected: null as RowReadIntent | null,
     // A context change starts a fresh scope even though its values are not stored here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -252,6 +259,73 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     });
   }, []);
 
+  // Delete's list action deliberately refuses unknown rows. This folder owns
+  // an ordinary Trash attempt: its full reader message, reaching login and owner.
+  const handleTrashEmail = useCallback(async (email: Email) => {
+    const intent = rowReads.selected;
+    if (!client || !mailbox || !intent || intent.email.id !== email.id || rowReads.trashing.has(email.id)) return;
+    const accountId = jmapAccountId ?? client.getAccountId();
+    const readFolders = () => {
+      const state = useEmailStore.getState();
+      return (data.accountId ? state.accountMailboxes[data.accountId] ?? [] : state.mailboxes)
+        .filter((m) => m.accountId ? m.accountId === accountId : !m.isShared && accountId === client.getAccountId());
+    };
+    const isCurrent = () => {
+      const auth = useAuthStore.getState();
+      return rowReads.active && rowReads.selected === intent && auth.client === activeClient
+        && auth.activeAccountId === activeAccountId
+        && (!clientLogin || auth.getClientForAccount(clientLogin) === client);
+    };
+    const eligible = () => {
+      const source = readFolders().find((m) => m.id === mailbox.id);
+      return !!source && useSettingsStore.getState().deleteAction === 'trash'
+        && !bulkDeleteIsPermanent(source) && source.myRights?.mayRemoveItems !== false;
+    };
+    const trashFolder = () => findTrashMailbox(readFolders(), jmapAccountId ? { accountId } : {});
+    if (!isCurrent() || !eligible() || trashFolder()?.myRights?.mayAddItems === false) return;
+    rowReads.trashing.add(email.id);
+    try {
+      if (!(await confirmMailRemoval('delete', 1, confirm, tRemove)) || !isCurrent() || !eligible()) return;
+      const event = { emailIds: [email.id], permanent: false };
+      if (emailHooks.onBeforeEmailDelete.size > 0 && !(await emailHooks.onBeforeEmailDelete.intercept(event))) return;
+      if (!isCurrent() || !eligible()) return;
+      const folders = readFolders();
+      const trash = trashFolder();
+      if (!trash) throw new TrashMailboxNotFoundError();
+      if (trash.myRights?.mayAddItems === false) return;
+      const restore: EmailRestoreBatch[] = [{ client, accountId, points: [emailRestorePoint(email, accountId)] }];
+      const completeListedTrash = captureListedMove(email.id, { client, clientAccountId: clientLogin, accountId }, trash.id);
+      rememberTrashOrigins([email], folders);
+      await client.moveToTrash(email.id, trash.originalId || trash.id, accountId, false);
+      completeListedTrash();
+      if (isCurrent()) {
+        // Revoke a waiting before-read hook as well as its timer. A dispatched
+        // read completes independently, just as it does after Archive.
+        cancelRowReadRef.current?.();
+        rowReads.selected = null;
+        ++fetchSeqRef.current;
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        setEmails((prev) => prev.filter((e) => e.id !== email.id));
+        setSelectedEmailId(null);
+      }
+      void emailHooks.onAfterEmailDelete.emit(event);
+      const labels = undoLabels((key, values) => t(`notifications.${key}`, values));
+      toastWithUndo(t('mail_list_extra.moved_to_trash'), {
+        label: labels.undo,
+        hint: labels.hint,
+        // The batches keep the original reaching client/owner for restoration.
+        // Only the global refresh follows the active login when Undo is clicked.
+        onClick: () => undoMoveAction(useAuthStore.getState().client ?? client, restore, labels)?.onClick(),
+      });
+    } catch (error) {
+      console.error('Delete failed:', error);
+      if (isCurrent()) toast.error(tNotifications('error_deleting'));
+    } finally {
+      rowReads.trashing.delete(email.id);
+    }
+  }, [client, clientLogin, activeClient, activeAccountId, mailbox, jmapAccountId, rowReads, data.accountId, confirm, tRemove, tNotifications, t]);
+
   // The folder owns these rows. The list-based moveToMailbox deliberately
   // refuses a message absent from the global list, and may name another
   // login's colliding id there. Keep this Archive bound to the reader and
@@ -297,7 +371,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
       if (!(await allowEmailMove(move, hookMailboxes)) || !isCurrent() || !isArchiveActionEnabled()) return;
       // A year or month folder isn't known yet, so only the plain Archive's
       // counter is bumped here; the folder refresh below settles the rest.
-      const completeListedArchive = captureListedArchive(email.id, { client, clientAccountId: clientLogin, accountId }, mode === 'single' ? archive.id : '');
+      const completeListedArchive = captureListedMove(email.id, { client, clientAccountId: clientLogin, accountId }, mode === 'single' ? archive.id : '');
       if (mode === 'single') {
         await client.moveEmail(email.id, archive.originalId || archive.id, accountId);
       } else {
@@ -452,6 +526,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
           clientAccountId={clientLogin}
           accountId={jmapAccountId}
           onClose={handleViewerClose}
+          onTrashEmail={ordinaryTrash ? handleTrashEmail : undefined}
           onArchiveEmail={archiveInboxTarget(folderMailboxes, mailbox?.id) ? undefined : handleArchiveEmail}
           className="min-w-0 flex-1"
         />
