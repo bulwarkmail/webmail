@@ -1054,7 +1054,13 @@
     "tool_link_to_object": "Verknüpfe mit dem Projekt…",
     "tool_list_project_tasks": "Prüfe Projektaufgaben…",
     "tool_create_project_task": "Bereite eine Projektaufgabe vor…",
-    "tool_update_project_task": "Bereite eine Aufgabenänderung vor…"
+    "tool_update_project_task": "Bereite eine Aufgabenänderung vor…",
+    "helper_working": "{helper} arbeitet …",
+    "helpers": {
+      "mail_research": "Mail-Recherche",
+      "file_research": "Datei-Recherche",
+      "calendar": "Kalender"
+    }
   },
   "mcp": {
     "title": "KI-Chats verbinden",
@@ -3319,7 +3325,8 @@
       "link_to_object": "E-Mails, Dateien und Termine mit Projekten verknüpfen",
       "list_project_tasks": "Aufgaben auf Projekt-Boards sehen",
       "create_project_task": "Aufgaben auf Projekt-Boards anlegen",
-      "update_project_task": "Aufgaben auf Projekt-Boards ändern und verschieben"
+      "update_project_task": "Aufgaben auf Projekt-Boards ändern und verschieben",
+      "delegate": "Hilfsagenten"
     },
     "admin_title": "KI-Berechtigungen der Firma",
     "admin_intro": "Obergrenze für alle in der Firma. Mitarbeitende können für sich nur strenger einstellen. Lesende Werkzeuge bleiben bei „Höchstens nachfragen“ erlaubt.",

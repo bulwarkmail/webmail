@@ -29,6 +29,24 @@ describe("ActionReportView", () => {
     expect(screen.getByText("Signatur ändern: von Ihnen bestätigt und ausgeführt")).toBeTruthy();
   });
 
+  it("step 120: a helper's work shows as one line with its name", () => {
+    render(
+      <ActionReportView
+        report={{
+          steps: [
+            { tool: "search_files", kind: "read", status: "ok", args: { query: "Müller" }, count: 2, agent: "file_research" },
+            { tool: "delegate", kind: "read", status: "ok", agent: "file_research", args: { what: "Datei-Recherche" } },
+          ],
+          changed: false,
+          claimMismatch: false,
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Was ich getan habe/ }));
+    expect(screen.getByText("Hilfsagenten: „Datei-Recherche“")).toBeTruthy();
+    expect(screen.getAllByText("Nichts geändert").length).toBeGreaterThan(0);
+  });
+
   it("says plainly that nothing changed, and opens with a warning when the answer claims otherwise", () => {
     render(<ActionReportView report={{ steps: [{ tool: "set_display_name", kind: "unknown", status: "error" }], changed: false, claimMismatch: true }} />);
     expect(screen.getByRole("button", { name: /Was ich getan habe/ }).getAttribute("aria-expanded")).toBe("true");

@@ -110,7 +110,10 @@ export interface ActionResult {
 export type AssistantEvent =
   | { type: "start"; conversationId?: string }
   | { type: "text"; text: string }
-  | { type: "tool"; name: string; status: "start" | "done" | "error" }
+  /** `agent` (step 120): the call was made by one of the assistant's helpers. */
+  | { type: "tool"; name: string; status: "start" | "done" | "error"; agent?: string }
+  /** Step 120: a helper started or finished its part of the work. */
+  | { type: "delegate"; agent: string; status: "start" | "done" | "error" }
   | { type: "sources"; emails: SourceEmail[] }
   | { type: "proposal"; id: string; tool: string; summary: ProposalSummary }
   | { type: "done"; inputTokens: number; outputTokens: number }
@@ -141,6 +144,8 @@ export interface ActionStep {
   proposalId?: string;
   /** A chat opened later: how the user answered the proposal. */
   outcome?: "pending" | "done" | "failed" | "rejected" | "expired";
+  /** Step 120: the helper that made this call. */
+  agent?: string;
 }
 
 /** Step 101: the report under an answer. */
