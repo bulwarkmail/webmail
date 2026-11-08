@@ -76,4 +76,32 @@ describe('readDialogTheme', () => {
     expect(theme.colours?.foreground).toBeUndefined();
     expect(theme.dark).toBe(false);
   });
+
+  it('reads each colour on its own, where an element keeps its first computed colour', () => {
+    // Electron 45 on Windows: getComputedStyle(element).color stays the first one it computed.
+    const real = window.getComputedStyle.bind(window);
+    const first = new WeakMap<Element, string>();
+    const spy = vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+      const style = real(element, pseudo);
+      if (!first.has(element)) first.set(element, style.color);
+      return new Proxy(style, {
+        get: (target, key) => {
+          if (key === 'color') return first.get(element);
+          const value = Reflect.get(target, key, target);
+          return typeof value === 'function' ? value.bind(target) : value;
+        },
+      });
+    });
+    try {
+      document.documentElement.style.setProperty('--color-background', '#ffffff');
+      document.documentElement.style.setProperty('--color-foreground', '#0f172a');
+      document.documentElement.style.setProperty('--color-primary', '#185aea');
+      const { colours } = readDialogTheme();
+      expect(colours?.background).toBe('rgb(255, 255, 255)');
+      expect(colours?.foreground).toBe('rgb(15, 23, 42)');
+      expect(colours?.primary).toBe('rgb(24, 90, 234)');
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });
