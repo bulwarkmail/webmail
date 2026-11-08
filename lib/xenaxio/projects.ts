@@ -83,6 +83,8 @@ export interface ObjectType {
   card: string[];
   parentTypes: string[];
   hasTasks: boolean;
+  /** Step 119: comments on records of this type. */
+  comments: boolean;
   access: TypeAccess;
   menu: TypeMenu;
   archivedAt: string | null;
@@ -170,6 +172,15 @@ export interface TaskDetail extends TaskSummary {
   commentList: { id: string; author: PersonRef | null; body: string; createdAt: string }[];
 }
 
+export interface ObjectComment {
+  id: string;
+  author: PersonRef | null;
+  body: string;
+  createdAt: string;
+  editedAt: string | null;
+  can: { edit: boolean; delete: boolean };
+}
+
 export interface MyTask extends TaskSummary {
   object: { id: string; ref: string; title: string };
   column: string;
@@ -255,11 +266,16 @@ export const projectsApi = {
   moveTask: (id: string, taskId: string, columnId: string, index: number) => call<TaskSummary>("POST", `${one(id)}/tasks/${seg(taskId)}/move`, { columnId, index }),
   deleteTask: (id: string, taskId: string) => call<Record<string, never>>("DELETE", `${one(id)}/tasks/${seg(taskId)}`),
   comment: (id: string, taskId: string, body: string) => call<TaskDetail>("POST", `${one(id)}/tasks/${seg(taskId)}/comments`, { body }),
+  // Step 119: comments on the record itself.
+  comments: (id: string) => call<{ comments: ObjectComment[] }>("GET", `${one(id)}/comments`),
+  addComment: (id: string, body: string) => call<{ comments: ObjectComment[] }>("POST", `${one(id)}/comments`, { body }),
+  editComment: (id: string, commentId: string, body: string) => call<{ comments: ObjectComment[] }>("PATCH", `${one(id)}/comments/${seg(commentId)}`, { body }),
+  deleteComment: (id: string, commentId: string) => call<{ comments: ObjectComment[] }>("DELETE", `${one(id)}/comments/${seg(commentId)}`),
   creators: () => call<{ creators: "all" | "admins" }>("GET", ADMIN_PROJECTS),
   // Step 119: the admin's editor of object types.
   adminTypes: () => call<{ types: ObjectType[] }>("GET", OBJECT_TYPES),
   createType: (body: { name: Text; plural: Text; prefix?: string; hasTasks?: boolean; menu?: TypeMenu; access?: TypeAccess }) => call<ObjectType>("POST", OBJECT_TYPES, body),
-  updateType: (key: string, body: { name?: Text; plural?: Text; prefix?: string; hasTasks?: boolean; parentTypes?: string[]; card?: string[]; menu?: TypeMenu; access?: TypeAccess }) =>
+  updateType: (key: string, body: { name?: Text; plural?: Text; prefix?: string; hasTasks?: boolean; comments?: boolean; parentTypes?: string[]; card?: string[]; menu?: TypeMenu; access?: TypeAccess }) =>
     call<ObjectType>("PATCH", `${OBJECT_TYPES}/${seg(key)}`, body),
   archiveType: (key: string, archived: boolean) => call<ObjectType>("POST", `${OBJECT_TYPES}/${seg(key)}/archive`, { archived }),
   removeType: (key: string) => call<Record<string, never>>("DELETE", `${OBJECT_TYPES}/${seg(key)}`),

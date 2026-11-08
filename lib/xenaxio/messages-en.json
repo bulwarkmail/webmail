@@ -297,7 +297,10 @@
     "object_type_not_found": "This type does not exist.",
     "object_field_not_found": "This field does not exist.",
     "object_type_no_stages": "This type has no stages.",
-    "object_stages_required": "Projects always have stages."
+    "object_stages_required": "Projects always have stages.",
+    "object_comments_off": "Comments are off for this type.",
+    "object_comments_limit": "This record has too many comments.",
+    "object_comment_not_found": "This comment does not exist."
   },
   "login": {
     "title": "Sign in",
@@ -1099,7 +1102,8 @@
     "tool_create_project_task": "Preparing a project task…",
     "tool_update_project_task": "Preparing a change to the task…",
     "tool_list_object_types": "Checking the object types…",
-    "tool_set_menu_items": "Preparing a change to your menu…"
+    "tool_set_menu_items": "Preparing a change to your menu…",
+    "tool_add_object_comment": "Preparing a comment…"
   },
   "mcp": {
     "title": "Connect AI chats",
@@ -3355,7 +3359,8 @@
       "create_project_task": "Add tasks to project boards",
       "update_project_task": "Change and move tasks on project boards",
       "list_object_types": "See the company's object types, fields and stages",
-      "set_menu_items": "Order and hide entries in my menu"
+      "set_menu_items": "Order and hide entries in my menu",
+      "add_object_comment": "Comment on records"
     },
     "admin_title": "Company AI permissions",
     "admin_intro": "A limit for everyone in the company. Employees can only be stricter for themselves. Reading tools stay allowed under \"Ask at most\".",
@@ -3774,7 +3779,9 @@
     "import_row": "Row {n}",
     "visibility_company": "Everyone in the company sees this record",
     "group_by": "Group by",
-    "lane_empty": "No records"
+    "lane_empty": "No records",
+    "comments_none": "No comments yet.",
+    "comment_edited": "edited"
   },
   "typeeditor": {
     "title": "Object types",
@@ -3870,7 +3877,8 @@
     },
     "use_stages": "Use stages",
     "use_stages_hint": "For records that go through steps (requests, deals, candidates). Without stages a record is never “done”; it leaves through the archive.",
-    "stages_off_text": "Turn stages off? The {n} records lose their stage."
+    "stages_off_text": "Turn stages off? The {n} records lose their stage.",
+    "comments": "Comments on records"
   },
   "groups_page": {
     "title": "Groups",

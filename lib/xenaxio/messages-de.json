@@ -297,7 +297,10 @@
     "object_type_not_found": "Diesen Typ gibt es nicht.",
     "object_field_not_found": "Dieses Feld gibt es nicht.",
     "object_type_no_stages": "Dieser Typ hat keine Phasen.",
-    "object_stages_required": "Projekte haben immer Phasen."
+    "object_stages_required": "Projekte haben immer Phasen.",
+    "object_comments_off": "Kommentare sind für diesen Typ aus.",
+    "object_comments_limit": "Dieser Eintrag hat zu viele Kommentare.",
+    "object_comment_not_found": "Diesen Kommentar gibt es nicht."
   },
   "login": {
     "title": "Anmelden",
@@ -1099,7 +1102,8 @@
     "tool_create_project_task": "Bereite eine Projektaufgabe vor…",
     "tool_update_project_task": "Bereite eine Aufgabenänderung vor…",
     "tool_list_object_types": "Prüfe die Objekttypen…",
-    "tool_set_menu_items": "Bereite eine Änderung deines Menüs vor…"
+    "tool_set_menu_items": "Bereite eine Änderung deines Menüs vor…",
+    "tool_add_object_comment": "Bereite einen Kommentar vor…"
   },
   "mcp": {
     "title": "KI-Chats verbinden",
@@ -3355,7 +3359,8 @@
       "create_project_task": "Aufgaben auf Projekt-Boards anlegen",
       "update_project_task": "Aufgaben auf Projekt-Boards ändern und verschieben",
       "list_object_types": "Objekttypen, Felder und Phasen der Firma sehen",
-      "set_menu_items": "Einträge in meinem Menü ordnen und ausblenden"
+      "set_menu_items": "Einträge in meinem Menü ordnen und ausblenden",
+      "add_object_comment": "Einträge kommentieren"
     },
     "admin_title": "KI-Berechtigungen der Firma",
     "admin_intro": "Obergrenze für alle in der Firma. Mitarbeitende können für sich nur strenger einstellen. Lesende Werkzeuge bleiben bei „Höchstens nachfragen“ erlaubt.",
@@ -3774,7 +3779,9 @@
     "import_row": "Zeile {n}",
     "visibility_company": "Alle in der Firma sehen diesen Eintrag",
     "group_by": "Gruppieren nach",
-    "lane_empty": "Keine Einträge"
+    "lane_empty": "Keine Einträge",
+    "comments_none": "Noch keine Kommentare.",
+    "comment_edited": "bearbeitet"
   },
   "typeeditor": {
     "title": "Objekttypen",
@@ -3870,7 +3877,8 @@
     },
     "use_stages": "Phasen verwenden",
     "use_stages_hint": "Für Einträge, die Schritte durchlaufen (Anfragen, Deals, Bewerber). Ohne Phasen ist ein Eintrag nie „erledigt“; er verlässt die Liste über das Archiv.",
-    "stages_off_text": "Phasen ausschalten? Die {n} Einträge verlieren ihre Phase."
+    "stages_off_text": "Phasen ausschalten? Die {n} Einträge verlieren ihre Phase.",
+    "comments": "Kommentare zu Einträgen"
   },
   "groups_page": {
     "title": "Gruppen",

@@ -40,6 +40,7 @@ import { Board } from "./board";
 import { Modal, PeoplePicker, PersonBadge, selectClass, StatusChip } from "./bits";
 import { NewProjectDialog } from "./project-list";
 import { FieldInput } from "./fields";
+import { RecordComments } from "./record-comments";
 import { Lock } from "@/components/icons";
 import { typeHref } from "@/lib/xenaxio/projects";
 import { TaskPanel } from "./task-panel";
@@ -528,6 +529,7 @@ function Overview({ project, type, allTypes, onChanged, onOpenProject }: { proje
             </ul>
           </div>
         ))}
+        {type?.comments && <RecordComments objectId={project.id} archived={!!project.archivedAt} />}
         {nests && <div className="space-y-1.5 text-sm sm:col-span-2">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{t("projects.sub")}</span>

@@ -337,6 +337,10 @@ function TypeForm({ type, types, groups, onChanged, onGone }: { type: ObjectType
           </label>
         </div>
         <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={type.comments} onChange={(e) => void act(() => projectsApi.updateType(type.key, { comments: e.target.checked }))} />
+          {t("typeeditor.comments")}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={type.parentTypes.includes(type.key)}
