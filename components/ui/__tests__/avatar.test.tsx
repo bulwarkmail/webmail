@@ -71,6 +71,16 @@ describe('Avatar', () => {
       const { container } = render(<Avatar name="欧阳阳明" />);
       expect(container.textContent).toBe('阳明');
     });
+
+    it('pins the known 3-character trade-off: a 2+1 Japanese name slices cross-boundary', () => {
+      // Chinese 1+2 is the dominant 3-character shape (this rule's reason to
+      // exist) and Japanese 1+2 (林太郎 → 太郎) cuts the same way, but
+      // Japanese 2+1 (田中実) cannot be told apart from Chinese 1+2 without a
+      // surname dictionary. The majority case wins; this test documents the
+      // accepted output rather than blessing it.
+      const { container } = render(<Avatar name="田中実" />);
+      expect(container.textContent).toBe('中実');
+    });
   });
 
   it('renders single letter from email when no name', () => {

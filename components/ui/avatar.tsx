@@ -116,6 +116,12 @@ const COMPOUND_SURNAMES = new Set([
  * string is not guessable (Japanese 山田太郎 is 1+3, 高桥和也 is 2+2), so
  * slicing at any fixed point produces a cross-boundary pair that is
  * neither a name nor a surname - worse than the plain leading characters.
+ *
+ * Known trade-off at 3 characters: Chinese 1+2 is the dominant shape this
+ * rule exists for, and Japanese 1+2 (林太郎 → 太郎) cuts the same way, but
+ * a Japanese 2+1 name (田中実) slices to 中実, a cross-boundary pair.
+ * Script alone cannot tell the languages apart, and a surname dictionary
+ * is out of scope, so the majority case wins.
  * Korean names in Hangul are NOT Han script (김 is \p{Script=Hangul}) and
  * never take this path; they keep the Western rule.
  */
