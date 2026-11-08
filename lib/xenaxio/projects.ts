@@ -11,6 +11,8 @@ const ADMIN_PROJECTS = "/api/admin/projects";
 // Step 119: the admin's editor of object types and the person's own menu.
 const OBJECT_TYPES = "/api/object-types";
 const MY_MENU = "/api/me/menu";
+// Step 127 D: how long the history of records is kept.
+const ADMIN_OBJECT_HISTORY = "/api/admin/object-history";
 
 export type Visibility = "members" | "company";
 export type Priority = "high" | "medium" | "low";
@@ -18,7 +20,7 @@ export type LinkKind = "email" | "file" | "channel" | "event" | "flow_run" | "ob
 export type Text = { de: string; en: string };
 
 /** Step 119: kinds of fields a company's admin can add to a type. */
-export const FIELD_KINDS = ["text", "textarea", "number", "money", "date", "select", "multiselect", "user", "checkbox", "url", "email", "phone", "ref", "refs"] as const;
+export const FIELD_KINDS = ["text", "textarea", "number", "money", "date", "select", "multiselect", "user", "checkbox", "url", "email", "phone", "ref", "refs", "file", "image", "location"] as const;
 export type FieldKind = (typeof FIELD_KINDS)[number] | "external";
 export const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "PLN", "CZK", "SEK", "DKK", "NOK", "UAH"] as const;
 export const STATUS_COLORS = ["blue", "amber", "green", "red", "gray", "violet", "teal", "pink"] as const;
@@ -336,6 +338,10 @@ export const projectsApi = {
   removePerson: (id: string, userId: string) => call<ObjectDetail | Record<string, never>>("DELETE", `${one(id)}/people/${seg(userId)}`),
   join: (id: string) => call<ObjectDetail>("POST", `${one(id)}/join`, {}),
   // Step 127 A, 124 B: files of a record or a task.
+  // Step 127 D: the history of a record; the admin's retention.
+  history: (id: string) => call<{ events: import("@/components/xenaxio/projects/record-history").ObjectEvent[] }>("GET", `${one(id)}/history`),
+  historyDays: () => call<{ days: number | null }>("GET", ADMIN_OBJECT_HISTORY),
+  setHistoryDays: (days: number | null) => call<{ days: number | null }>("PUT", ADMIN_OBJECT_HISTORY, { days }),
   files: (id: string, taskId?: string | null) => call<{ files: ObjectFile[] }>("GET", `${one(id)}/files${query({ taskId: taskId ?? undefined })}`),
   deleteFile: (id: string, fileId: string) => call<Record<string, never>>("DELETE", `${one(id)}/files/${seg(fileId)}`),
   addLink: (id: string, link: { kind: LinkKind; ref: string; account?: string | null; title?: string | null; taskId?: string | null }) => call<ObjectLink>("POST", `${one(id)}/links`, link),
@@ -459,4 +465,18 @@ export async function uploadObjectFile(objectId: string, file: File, taskId?: st
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) throw new XenaxioApiError(res.status, typeof data.error === "string" ? data.error : res.status === 413 ? "object_file_too_large" : "internal");
   return data as unknown as ObjectFile;
+}
+
+/** Step 127 C: a place — an address, coordinates, or both. */
+export interface Place {
+  address?: string;
+  lat?: number;
+  lng?: number;
+}
+
+/** The place on OpenStreetMap (a link; no map is loaded from another server here). */
+export function osmHref(p: Place): string | null {
+  if (typeof p.lat === "number" && typeof p.lng === "number") return `https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=16/${p.lat}/${p.lng}`;
+  if (p.address) return `https://www.openstreetmap.org/search?query=${encodeURIComponent(p.address)}`;
+  return null;
 }

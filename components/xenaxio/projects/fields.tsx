@@ -10,7 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { usePeopleStore } from "@/lib/xenaxio/people";
-import { CURRENCIES, dayText, local, type ObjectSummary, projectsApi, type TypeField, typeHref } from "@/lib/xenaxio/projects";
+import { CURRENCIES, dayText, local, type ObjectFile, type ObjectSummary, objectFileUrl as objectFileHref, osmHref, type Place, projectsApi, type TypeField, typeHref } from "@/lib/xenaxio/projects";
 import { selectClass } from "./bits";
 
 type Money = { amount: number; currency: string };
@@ -45,6 +45,14 @@ export function fieldText(field: TypeField, value: unknown, locale: string, peop
     case "ref":
     case "refs":
       return Array.isArray(value) ? `${value.length}` : "1";
+    // Step 127 B, C.
+    case "file":
+    case "image":
+      return Array.isArray(value) && value.length ? `📎 ${value.length}` : "";
+    case "location": {
+      const p = value as Place;
+      return p.address ?? (typeof p.lat === "number" ? `${p.lat}, ${p.lng}` : "");
+    }
     default:
       return String(value);
   }
@@ -124,7 +132,7 @@ function RecordPicker({ type, value, multiple, onChange, disabled }: { type: str
  * Edits one field. Text-like fields save when the input loses focus; the
  * others right away. `onSave(null)` clears the value.
  */
-export function FieldInput({ field, value, onSave, disabled, id }: { field: TypeField; value: unknown; onSave: (v: unknown) => void; disabled?: boolean; id?: string }) {
+export function FieldInput({ field, value, onSave, disabled, id, objectId }: { field: TypeField; value: unknown; onSave: (v: unknown) => void; disabled?: boolean; id?: string; objectId?: string }) {
   const t = useXT();
   const locale = useLocale();
   const people = usePeopleStore((s) => s.people);
@@ -270,7 +278,118 @@ export function FieldInput({ field, value, onSave, disabled, id }: { field: Type
         />
       );
     }
+    case "location":
+      return <PlaceInput id={id} value={(value as Place | null) ?? null} onSave={onSave} disabled={disabled} />;
+    case "file":
+    case "image":
+      return objectId ? (
+        <FilePicker objectId={objectId} images={field.type === "image"} value={Array.isArray(value) ? (value as string[]) : []} onSave={onSave} disabled={disabled} />
+      ) : (
+        <span className="text-sm text-muted-foreground">{t("projects.file_field_after")}</span>
+      );
     default:
       return <span className="text-sm text-muted-foreground">{String(value ?? "—")}</span>;
   }
+}
+
+/** Step 127 C: an address and/or coordinates; "My location" asks the browser (on phones). */
+function PlaceInput({ value, onSave, disabled, id }: { value: Place | null; onSave: (v: unknown) => void; disabled?: boolean; id?: string }) {
+  const t = useXT();
+  const [address, setAddress] = useState(value?.address ?? "");
+  const [coords, setCoords] = useState(typeof value?.lat === "number" ? `${value.lat}, ${value.lng}` : "");
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    setAddress(value?.address ?? "");
+    setCoords(typeof value?.lat === "number" ? `${value.lat}, ${value.lng}` : "");
+  }, [value]);
+  const commit = (nextAddress = address, nextCoords = coords) => {
+    const m = /^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/.exec(nextCoords);
+    const lat = m ? Number(m[1]!.replace(",", ".")) : null;
+    const lng = m ? Number(m[2]!.replace(",", ".")) : null;
+    const bad = nextCoords.trim() !== "" && (!m || Math.abs(lat!) > 90 || Math.abs(lng!) > 180);
+    setError(bad);
+    if (bad) return;
+    const next: Place = { ...(nextAddress.trim() ? { address: nextAddress.trim() } : {}), ...(lat !== null && lng !== null ? { lat, lng } : {}) };
+    const empty = !next.address && next.lat === undefined;
+    if (JSON.stringify(empty ? null : next) !== JSON.stringify(value)) onSave(empty ? null : next);
+  };
+  const here = () => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        const c = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+        setCoords(c);
+        commit(address, c);
+      },
+      () => setError(true),
+      { enableHighAccuracy: true, timeout: 10_000 },
+    );
+  };
+  const href = value ? osmHref(value) : null;
+  return (
+    <div className="space-y-1.5">
+      <Input id={id} value={address} disabled={disabled} maxLength={300} placeholder={t("projects.place_address")} aria-label={t("projects.place_address")} onChange={(e) => setAddress(e.target.value)} onBlur={() => commit()} />
+      <div className="flex gap-2">
+        <Input value={coords} disabled={disabled} placeholder="52.520008, 13.404954" aria-label={t("projects.place_coords")} aria-invalid={error} onChange={(e) => setCoords(e.target.value)} onBlur={() => commit()} className={cn(error && "border-destructive")} />
+        {!disabled && typeof navigator !== "undefined" && "geolocation" in navigator && (
+          <button type="button" onClick={here} className="shrink-0 rounded-md border border-input px-2 text-xs hover:bg-muted">
+            {t("projects.place_here")}
+          </button>
+        )}
+      </div>
+      {href && (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+          {t("projects.place_map")}
+        </a>
+      )}
+    </div>
+  );
+}
+
+/** Step 127 B: files of the record chosen for a file or image field. */
+function FilePicker({ objectId, images, value, onSave, disabled }: { objectId: string; images: boolean; value: string[]; onSave: (v: unknown) => void; disabled?: boolean }) {
+  const t = useXT();
+  const [files, setFiles] = useState<ObjectFile[]>([]);
+  useEffect(() => {
+    projectsApi
+      .files(objectId)
+      .then((r) => setFiles(r.files))
+      .catch(() => setFiles([]));
+  }, [objectId, value.length]);
+  const fitting = files.filter((f) => !images || f.type.startsWith("image/"));
+  const chosen = value.map((v) => files.find((f) => f.id === v)).filter((f): f is ObjectFile => !!f);
+  return (
+    <div className="space-y-1.5">
+      {chosen.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {chosen.map((f) => (
+            <li key={f.id} className="flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-xs">
+              {images ? <img src={objectFileHref(objectId, f.id)} alt={f.name} className="h-12 w-12 rounded object-cover" loading="lazy" /> : <span className="max-w-40 truncate">{f.name}</span>}
+              {!disabled && (
+                <button type="button" aria-label={`${t("projects.ref_remove")}: ${f.name}`} onClick={() => onSave(value.filter((v) => v !== f.id).length ? value.filter((v) => v !== f.id) : null)} className="text-muted-foreground hover:text-destructive">
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {!disabled && (
+        <select
+          className={selectClass}
+          value=""
+          aria-label={t("projects.file_field_pick")}
+          onChange={(e) => e.target.value && onSave([...value, e.target.value])}
+        >
+          <option value="">{fitting.length ? t("projects.file_field_pick") : t("projects.file_field_none")}</option>
+          {fitting
+            .filter((f) => !value.includes(f.id))
+            .map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+        </select>
+      )}
+    </div>
+  );
 }

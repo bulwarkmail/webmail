@@ -3707,7 +3707,8 @@
     "tab": {
       "board": "Board",
       "overview": "Overview",
-      "linked": "Linked"
+      "linked": "Linked",
+      "history": "History"
     },
     "back": "All projects",
     "menu": "Project menu",
@@ -3871,7 +3872,16 @@
     "file_saved": "\"{name}\" saved in your Files",
     "task_links": "Linked",
     "attachments_count": "{count} attachments",
-    "add_to_task": "To a task"
+    "add_to_task": "To a task",
+    "file_field_after": "Files can be chosen after saving.",
+    "file_field_pick": "Choose from the record's files",
+    "file_field_none": "Add files to the record first",
+    "place_address": "Address",
+    "place_coords": "Coordinates (latitude, longitude)",
+    "place_here": "My location",
+    "place_map": "Open on map (OpenStreetMap)",
+    "history_tab": "History",
+    "history_with_comments": "Also show changes"
   },
   "objects": {
     "title": "Records",
@@ -3901,7 +3911,27 @@
     "group_by": "Group by",
     "lane_empty": "No records",
     "comments_none": "No comments yet.",
-    "comment_edited": "edited"
+    "comment_edited": "edited",
+    "history": {
+      "created": "created the record",
+      "title": "renamed it: {from} → {to}",
+      "status": "changed the stage: {from} → {to}",
+      "due": "changed the due date: {from} → {to}",
+      "description": "changed the description",
+      "owner": "changed who is responsible: {from} → {to}",
+      "visibility": "changed who sees it: {from} → {to}",
+      "role": "changed a role: {from} → {to}",
+      "field": "changed {field}: {from} → {to}",
+      "masked": "changed {field}",
+      "person_add": "added {name}",
+      "person_remove": "removed {name}",
+      "link_add": "linked {name}",
+      "link_remove": "removed the link {name}",
+      "file_add": "added the file {name}",
+      "file_remove": "deleted the file {name}",
+      "archived": "archived it",
+      "restored": "restored it"
+    }
   },
   "typeeditor": {
     "title": "Object types",
@@ -3983,7 +4013,10 @@
       "phone": "Phone",
       "ref": "Link to a record",
       "refs": "Links to records",
-      "external": "From a service"
+      "external": "From a service",
+      "file": "File",
+      "image": "Picture",
+      "location": "Place"
     },
     "colors": {
       "blue": "Blue",
@@ -4000,7 +4033,12 @@
     "stages_off_text": "Turn stages off? The {n} records lose their stage.",
     "comments": "Comments on records",
     "attachments": "Files",
-    "attachments_hint": "People can attach files to records of this type."
+    "attachments_hint": "People can attach files to records of this type.",
+    "history_keep": "Keep the history of records",
+    "history_forever": "As long as the record",
+    "history_1": "1 year",
+    "history_3": "3 years",
+    "history_10": "10 years"
   },
   "groups_page": {
     "title": "Groups",

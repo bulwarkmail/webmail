@@ -3707,7 +3707,8 @@
     "tab": {
       "board": "Board",
       "overview": "Übersicht",
-      "linked": "Verknüpft"
+      "linked": "Verknüpft",
+      "history": "Verlauf"
     },
     "back": "Alle Projekte",
     "menu": "Projektmenü",
@@ -3871,7 +3872,16 @@
     "file_saved": "„{name}“ in Ihren Dateien gespeichert",
     "task_links": "Verknüpft",
     "attachments_count": "{count} Anhänge",
-    "add_to_task": "Zu Aufgabe"
+    "add_to_task": "Zu Aufgabe",
+    "file_field_after": "Dateien lassen sich nach dem Speichern wählen.",
+    "file_field_pick": "Aus den Dateien des Eintrags wählen",
+    "file_field_none": "Zuerst Dateien zum Eintrag hinzufügen",
+    "place_address": "Adresse",
+    "place_coords": "Koordinaten (Breite, Länge)",
+    "place_here": "Mein Standort",
+    "place_map": "Auf Karte öffnen (OpenStreetMap)",
+    "history_tab": "Verlauf",
+    "history_with_comments": "Auch Änderungen zeigen"
   },
   "objects": {
     "title": "Einträge",
@@ -3901,7 +3911,27 @@
     "group_by": "Gruppieren nach",
     "lane_empty": "Keine Einträge",
     "comments_none": "Noch keine Kommentare.",
-    "comment_edited": "bearbeitet"
+    "comment_edited": "bearbeitet",
+    "history": {
+      "created": "hat den Eintrag angelegt",
+      "title": "hat ihn umbenannt: {from} → {to}",
+      "status": "hat die Phase geändert: {from} → {to}",
+      "due": "hat die Fälligkeit geändert: {from} → {to}",
+      "description": "hat die Beschreibung geändert",
+      "owner": "hat die Verantwortung geändert: {from} → {to}",
+      "visibility": "hat die Sichtbarkeit geändert: {from} → {to}",
+      "role": "hat eine Rolle geändert: {from} → {to}",
+      "field": "hat {field} geändert: {from} → {to}",
+      "masked": "hat {field} geändert",
+      "person_add": "hat {name} hinzugefügt",
+      "person_remove": "hat {name} entfernt",
+      "link_add": "hat {name} verknüpft",
+      "link_remove": "hat die Verknüpfung {name} entfernt",
+      "file_add": "hat die Datei {name} hinzugefügt",
+      "file_remove": "hat die Datei {name} gelöscht",
+      "archived": "hat ihn archiviert",
+      "restored": "hat ihn wiederhergestellt"
+    }
   },
   "typeeditor": {
     "title": "Objekttypen",
@@ -3983,7 +4013,10 @@
       "phone": "Telefon",
       "ref": "Verknüpfung zu einem Eintrag",
       "refs": "Verknüpfungen zu Einträgen",
-      "external": "Aus einem Dienst"
+      "external": "Aus einem Dienst",
+      "file": "Datei",
+      "image": "Bild",
+      "location": "Ort"
     },
     "colors": {
       "blue": "Blau",
@@ -4000,7 +4033,12 @@
     "stages_off_text": "Phasen ausschalten? Die {n} Einträge verlieren ihre Phase.",
     "comments": "Kommentare zu Einträgen",
     "attachments": "Dateien",
-    "attachments_hint": "An Einträge dieses Typs können Dateien angehängt werden."
+    "attachments_hint": "An Einträge dieses Typs können Dateien angehängt werden.",
+    "history_keep": "Verlauf von Einträgen aufbewahren",
+    "history_forever": "So lange wie der Eintrag",
+    "history_1": "1 Jahr",
+    "history_3": "3 Jahre",
+    "history_10": "10 Jahre"
   },
   "groups_page": {
     "title": "Gruppen",

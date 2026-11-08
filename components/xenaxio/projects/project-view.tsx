@@ -45,11 +45,12 @@ import { NewProjectDialog } from "./project-list";
 import { FieldInput } from "./fields";
 import { RecordComments } from "./record-comments";
 import { Attachments } from "./attachments";
+import { RecordHistory } from "./record-history";
 import { Lock } from "@/components/icons";
 import { typeHref } from "@/lib/xenaxio/projects";
 import { TaskPanel } from "./task-panel";
 
-type Tab = "board" | "overview" | "linked";
+type Tab = "board" | "overview" | "linked" | "history";
 
 /** Where a linked thing opens in the app. */
 export function linkHref(l: Pick<ObjectLink, "kind" | "ref" | "account">): string | null {
@@ -666,7 +667,7 @@ function Overview({ project, type, allTypes, onChanged, onOpenProject }: { proje
           {f.required ? " *" : ""}
           {f.sensitive && <Lock className="h-3 w-3" aria-label={t("objects.sensitive")} />}
         </label>
-        <FieldInput id={`f-${f.key}`} field={f} value={project.fields?.[f.key] ?? null} disabled={!canEdit} onSave={(v) => void save({ fields: { [f.key]: v } })} />
+        <FieldInput id={`f-${f.key}`} field={f} objectId={project.id} value={project.fields?.[f.key] ?? null} disabled={!canEdit} onSave={(v) => void save({ fields: { [f.key]: v } })} />
       </div>
     );
   }
@@ -693,7 +694,7 @@ function Overview({ project, type, allTypes, onChanged, onOpenProject }: { proje
           </div>
         ))}
         {(type?.attachments ?? false) && <Attachments objectId={project.id} canEdit={project.can.edit && !project.archivedAt} />}
-        {type?.comments && <RecordComments objectId={project.id} archived={!!project.archivedAt} />}
+        {type?.comments && <RecordComments objectId={project.id} archived={!!project.archivedAt} type={type} />}
         {nests && <div className="space-y-1.5 text-sm sm:col-span-2">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{t("projects.sub")}</span>
@@ -953,7 +954,7 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
         </div>
         <h1 className="mt-1 truncate text-lg font-semibold">{project.title}</h1>
         <nav role="tablist" aria-label={project.title} className="mt-1 flex gap-4 text-sm">
-          {(["board", "overview", "linked"] as const)
+          {(["board", "overview", "linked", "history"] as const)
             .filter((k) => k !== "board" || (type?.hasTasks ?? project.type === "project"))
             .map((k) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={cn("-mb-px border-b-2 px-0.5 py-2", tab === k ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
@@ -967,6 +968,7 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
       {tab === "board" && (type?.hasTasks ?? project.type === "project") && <TaskBoard project={project} onOpenTask={(task) => onOpenTask(task)} reloadKey={reloadKey} />}
       {tab === "overview" && <Overview project={project} type={type} allTypes={allTypes} onChanged={setProject} onOpenProject={onOpenProject} />}
       {tab === "linked" && <Linked project={project} onChanged={setProject} />}
+      {tab === "history" && <RecordHistory objectId={project.id} type={type} reloadKey={reloadKey} />}
 
       {taskId && (
         <TaskPanel

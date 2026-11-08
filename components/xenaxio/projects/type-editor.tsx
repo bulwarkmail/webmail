@@ -613,6 +613,7 @@ export function TypeEditorPage() {
         <Plus className="mr-1 h-4 w-4" />
         {t("typeeditor.new")}
       </Button>
+      <HistoryRetention />
       <Modal open={creating} onClose={() => setCreating(false)} title={t("typeeditor.new")}>
         <div className="space-y-3">
           <TextPair label={t("typeeditor.name")} value={newName.name} onChange={(name) => setNewName((n) => ({ ...n, name }))} />
@@ -643,5 +644,41 @@ export function TypeEditorPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+/** Step 127 D: how long the history of records is kept (the company's admin; catalog "object_history"). */
+function HistoryRetention() {
+  const t = useXT();
+  const [days, setDays] = useState<number | null | undefined>(undefined);
+  useEffect(() => {
+    projectsApi
+      .historyDays()
+      .then((r) => setDays(r.days))
+      .catch(() => setDays(undefined));
+  }, []);
+  if (days === undefined) return null;
+  return (
+    <label className="flex flex-wrap items-center gap-2 border-t border-border pt-4 text-sm">
+      <span>{t("typeeditor.history_keep")}</span>
+      <select
+        className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+        value={days === null ? "" : String(days)}
+        onChange={(e) => {
+          const next = e.target.value ? Number(e.target.value) : null;
+          projectsApi
+            .setHistoryDays(next)
+            .then((r) => setDays(r.days))
+            .catch(() => undefined);
+        }}
+      >
+        <option value="">{t("typeeditor.history_forever")}</option>
+        {[365, 1095, 3650].map((d) => (
+          <option key={d} value={d}>
+            {t(`typeeditor.history_${Math.round(d / 365)}`)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
