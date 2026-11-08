@@ -363,6 +363,12 @@ export interface DesktopBrowserSignInControls {
   nextPassword: (flowId: string) => Promise<DesktopPasswordSignInAttempt>;
   answerPassword: (flowId: string, answer: DesktopPasswordSignInAnswer) => void;
   outcome: (flowId: string) => Promise<DesktopBrowserSignInResult>;
+  /**
+   * Instance mode: a plugin's OAuth request whose redirect_uri is this instance's plugin
+   * callback, in an app window on the app's session. Only from a click. False: open it as a
+   * link. Absent on older shells.
+   */
+  pluginSignIn?: (url: string) => Promise<boolean>;
 }
 
 export interface DesktopAuthBridge {
