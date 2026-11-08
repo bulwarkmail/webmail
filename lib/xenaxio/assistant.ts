@@ -110,7 +110,10 @@ export interface ActionResult {
 export type AssistantEvent =
   | { type: "start"; conversationId?: string }
   | { type: "text"; text: string }
-  | { type: "tool"; name: string; status: "start" | "done" | "error" }
+  /** `agent` (step 120): the call was made by one of the assistant's helpers. */
+  | { type: "tool"; name: string; status: "start" | "done" | "error"; agent?: string }
+  /** Step 120: a helper started or finished its part of the work. */
+  | { type: "delegate"; agent: string; status: "start" | "done" | "error" }
   | { type: "sources"; emails: SourceEmail[] }
   | { type: "proposal"; id: string; tool: string; summary: ProposalSummary }
   | { type: "done"; inputTokens: number; outputTokens: number }
@@ -141,6 +144,8 @@ export interface ActionStep {
   proposalId?: string;
   /** A chat opened later: how the user answered the proposal. */
   outcome?: "pending" | "done" | "failed" | "rejected" | "expired";
+  /** Step 120: the helper that made this call. */
+  agent?: string;
 }
 
 /** Step 101: the report under an answer. */
@@ -338,8 +343,20 @@ export const assistant = {
   async confirm(actionId: string): Promise<ActionResult> {
     return (await post(`/api/ai/actions/${encodeURIComponent(actionId)}/confirm`, {})).json();
   },
-  async reject(actionId: string): Promise<void> {
-    await post(`/api/ai/actions/${encodeURIComponent(actionId)}/reject`, {});
+  /** Step 121: with a reason, the assistant learns from it; returns the lessons it kept. */
+  async reject(actionId: string, reason?: string): Promise<{ id: string; text: string }[]> {
+    const res = (await (await post(`/api/ai/actions/${encodeURIComponent(actionId)}/reject`, reason ? { reason } : {})).json()) as { learned?: { id: string; text: string }[] };
+    return res.learned ?? [];
+  },
+  /** Step 121: why the person declined a proposal, asked right after the click; it becomes a lesson. */
+  async reason(actionId: string, reason: string): Promise<{ id: string; text: string }[]> {
+    const res = (await (await post(`/api/ai/actions/${encodeURIComponent(actionId)}/reason`, { reason })).json()) as { learned?: { id: string; text: string }[] };
+    return res.learned ?? [];
+  },
+  /** Step 121: the person marks an answer as bad; a comment becomes a lesson. */
+  async feedback(input: { question: string; answer: string; comment?: string; conversationId?: string }): Promise<{ id: string; text: string }[]> {
+    const res = (await (await post("/api/ai/feedback", input)).json()) as { learned?: { id: string; text: string }[] };
+    return res.learned ?? [];
   },
   /** Step 85: what connected AI chats wait for. */
   async waiting(): Promise<WaitingAction[]> {

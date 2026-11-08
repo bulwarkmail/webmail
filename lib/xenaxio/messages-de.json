@@ -1103,7 +1103,21 @@
     "tool_update_project_task": "Bereite eine Aufgabenänderung vor…",
     "tool_list_object_types": "Prüfe die Objekttypen…",
     "tool_set_menu_items": "Bereite eine Änderung deines Menüs vor…",
-    "tool_add_object_comment": "Bereite einen Kommentar vor…"
+    "tool_add_object_comment": "Bereite einen Kommentar vor…",
+    "helper_working": "{helper} arbeitet …",
+    "helpers": {
+      "mail_research": "Mail-Recherche",
+      "file_research": "Datei-Recherche",
+      "calendar": "Kalender"
+    },
+    "bad_answer": "Nicht hilfreich",
+    "bad_answer_title": "Was war falsch? (optional)",
+    "bad_answer_send": "Senden",
+    "bad_answer_thanks": "Danke für die Rückmeldung.",
+    "learned": "Gelernt",
+    "reject_reason": "Warum? (optional)",
+    "reject_confirm": "Ablehnen",
+    "cancel": "Abbrechen"
   },
   "mcp": {
     "title": "KI-Chats verbinden",
@@ -1620,7 +1634,14 @@
     "company_intro": "Fakten, die der Assistent aller Mitarbeitenden kennt: wohin Rechnungen gehen, wer wofür zuständig ist, wichtige Termine. Der Assistent ergänzt sie nur, wenn jemand ausdrücklich „für alle“ sagt.",
     "company_count": "Fakten ({count} von {max})",
     "company_none": "Noch kein Firmenwissen.",
-    "company_privacy": "Verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn ein Mitarbeitender den Assistenten nutzt. Im Protokoll steht nur, dass sich etwas geändert hat."
+    "company_privacy": "Verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn ein Mitarbeitender den Assistenten nutzt. Im Protokoll steht nur, dass sich etwas geändert hat.",
+    "lessons": "Lektionen aus Ihren Korrekturen",
+    "lessons_none": "Noch keine Lektionen. Der Assistent lernt, wenn Sie seine Entwürfe vor dem Senden ändern, einen Vorschlag mit Grund ablehnen oder eine Antwort als schlecht markieren.",
+    "learn_title": "Aus meinen Korrekturen lernen",
+    "learn_on": "An: Der Assistent lernt aus Entwürfen, die Sie vor dem Senden ändern, aus Ihrem Grund für eine Ablehnung und aus Ihrem Kommentar zu einer schlechten Antwort. Der Text eines Entwurfs wird höchstens 14 Tage verschlüsselt aufbewahrt und gleich nach dem Vergleich gelöscht.",
+    "learn_off": "Aus: Der Assistent lernt nicht aus Ihren Korrekturen.",
+    "learn_switch_on": "Einschalten",
+    "learn_switch_off": "Ausschalten"
   },
   "schedules": {
     "title": "Geplante Aufgaben ({count} von {max} aktiv)",
@@ -1646,6 +1667,17 @@
     "run_now": "Jetzt ausführen",
     "run_started": "Läuft – das Ergebnis erscheint gleich im Chat der Aufgabe.",
     "open_chat": "Im Chat öffnen",
+    "history": "Verlauf",
+    "history_hide": "Verlauf ausblenden",
+    "history_none": "Noch keine Läufe im Verlauf.",
+    "run_status_running": "läuft",
+    "run_status_waiting": "wartet auf Sie",
+    "run_status_done": "erledigt",
+    "run_status_failed": "fehlgeschlagen",
+    "run_waiting_for": "Wartet auf Ihre Bestätigung: {tool}",
+    "run_tools": "Werkzeuge: {tools}",
+    "run_confirmed": "{count} bestätigt",
+    "run_declined": "{count} nicht ausgeführt",
     "delete": "Löschen",
     "delete_confirm": "„{title}“ löschen? Der Eintrag im Kalender wird entfernt, der Chat bleibt.",
     "company_off": "Ihre Firma hat geplante Aufgaben ausgeschaltet. Ihre Aufgaben sind pausiert; Sie können sie ansehen und löschen.",
@@ -3360,7 +3392,8 @@
       "update_project_task": "Aufgaben auf Projekt-Boards ändern und verschieben",
       "list_object_types": "Objekttypen, Felder und Phasen der Firma sehen",
       "set_menu_items": "Einträge in meinem Menü ordnen und ausblenden",
-      "add_object_comment": "Einträge kommentieren"
+      "add_object_comment": "Einträge kommentieren",
+      "delegate": "Hilfsagenten"
     },
     "admin_title": "KI-Berechtigungen der Firma",
     "admin_intro": "Obergrenze für alle in der Firma. Mitarbeitende können für sich nur strenger einstellen. Lesende Werkzeuge bleiben bei „Höchstens nachfragen“ erlaubt.",

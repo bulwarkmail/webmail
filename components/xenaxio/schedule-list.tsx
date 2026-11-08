@@ -11,7 +11,7 @@ import { CalendarClock, Mail, Send } from "@/components/icons";
 import { Notice, Spinner } from "@/components/xenaxio/ui";
 import { formatRun } from "@/components/xenaxio/schedule-card";
 import { intervalLabel } from "@/components/xenaxio/schedule-settings";
-import { errorText, type ScheduleInfo, type ScheduleList as ScheduleData, xenaxio } from "@/lib/xenaxio/api";
+import { errorText, type ScheduleInfo, type ScheduleList as ScheduleData, type ScheduleRun, xenaxio } from "@/lib/xenaxio/api";
 import { ASSISTANT_OPEN_PARAM } from "@/lib/xenaxio/assistant";
 import { useXT } from "@/lib/xenaxio/i18n";
 
@@ -22,6 +22,44 @@ export function scheduleState(s: ScheduleInfo, t: (key: string, values?: Record<
   return s.nextRun ? t("schedules.next", { when: formatRun(s.nextRun, locale) }) : "";
 }
 
+/** Step 100: one line per run — when, outcome, what waits for the person, which tools it used. */
+export function runLine(r: ScheduleRun, t: (key: string, values?: Record<string, string | number>) => string, locale: string): string {
+  return [
+    `${new Intl.DateTimeFormat(locale, { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(r.startedAt))} · ${t(`schedules.run_status_${r.status}`)}`,
+    r.waitingFor ? t("schedules.run_waiting_for", { tool: r.waitingFor }) : "",
+    r.tools.length ? t("schedules.run_tools", { tools: r.tools.join(", ") }) : "",
+    r.confirmed ? t("schedules.run_confirmed", { count: r.confirmed }) : "",
+    r.declined ? t("schedules.run_declined", { count: r.declined }) : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function ScheduleRuns({ id }: { id: string }) {
+  const t = useXT();
+  const locale = useLocale();
+  const [runs, setRuns] = useState<ScheduleRun[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    xenaxio
+      .scheduleRuns(id)
+      .then((r) => setRuns(r.runs))
+      .catch((err: unknown) => setError(errorText(t, err)));
+  }, [id, t]);
+  if (error) return <Notice kind="error">{error}</Notice>;
+  if (!runs) return <Spinner label={t("common.loading")} />;
+  if (runs.length === 0) return <p className="text-xs text-muted-foreground">{t("schedules.history_none")}</p>;
+  return (
+    <ul className="space-y-1 text-xs text-muted-foreground">
+      {runs.map((r) => (
+        <li key={r.startedAt} className="break-words">
+          {runLine(r, t, locale)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function ScheduleList() {
   const t = useXT();
   const locale = useLocale();
@@ -30,6 +68,7 @@ export function ScheduleList() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [history, setHistory] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -133,6 +172,9 @@ export function ScheduleList() {
                     {t("schedules.open_chat")}
                   </Button>
                 )}
+                <Button size="sm" variant="outline" aria-expanded={history === s.id} onClick={() => setHistory(history === s.id ? null : s.id)}>
+                  {history === s.id ? t("schedules.history_hide") : t("schedules.history")}
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -145,6 +187,7 @@ export function ScheduleList() {
                   {t("schedules.delete")}
                 </Button>
               </div>
+              {history === s.id && <ScheduleRuns id={s.id} />}
             </li>
           ))}
         </ul>

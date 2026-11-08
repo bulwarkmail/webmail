@@ -1103,7 +1103,21 @@
     "tool_update_project_task": "Preparing a change to the task…",
     "tool_list_object_types": "Checking the object types…",
     "tool_set_menu_items": "Preparing a change to your menu…",
-    "tool_add_object_comment": "Preparing a comment…"
+    "tool_add_object_comment": "Preparing a comment…",
+    "helper_working": "{helper} is working …",
+    "helpers": {
+      "mail_research": "Mail research",
+      "file_research": "File research",
+      "calendar": "Calendar"
+    },
+    "bad_answer": "Not helpful",
+    "bad_answer_title": "What was wrong? (optional)",
+    "bad_answer_send": "Send",
+    "bad_answer_thanks": "Thanks for the feedback.",
+    "learned": "Learned",
+    "reject_reason": "Why? (optional)",
+    "reject_confirm": "Decline",
+    "cancel": "Cancel"
   },
   "mcp": {
     "title": "Connect AI chats",
@@ -1620,7 +1634,14 @@
     "company_intro": "Facts every employee's assistant knows: where invoices go, who is responsible for what, important dates. The assistant adds to them only when someone explicitly says “for everyone”.",
     "company_count": "Facts ({count} of {max})",
     "company_none": "No company knowledge yet.",
-    "company_privacy": "Stored encrypted in Germany and sent to the AI only when an employee uses the assistant. The audit log only records that something changed."
+    "company_privacy": "Stored encrypted in Germany and sent to the AI only when an employee uses the assistant. The audit log only records that something changed.",
+    "lessons": "Lessons from your corrections",
+    "lessons_none": "No lessons yet. The assistant learns when you rewrite its drafts before sending, tell it why you declined a proposal, or mark an answer as bad.",
+    "learn_title": "Learn from my corrections",
+    "learn_on": "On: the assistant learns from drafts you change before sending, from your reason for declining a proposal and from your comment on a bad answer. A draft’s text is kept encrypted for at most 14 days and deleted right after the comparison.",
+    "learn_off": "Off: the assistant does not learn from your corrections.",
+    "learn_switch_on": "Turn on",
+    "learn_switch_off": "Turn off"
   },
   "schedules": {
     "title": "Scheduled tasks ({count} of {max} active)",
@@ -1646,6 +1667,17 @@
     "run_now": "Run now",
     "run_started": "Running – the result will appear in the task's chat shortly.",
     "open_chat": "Open in chat",
+    "history": "History",
+    "history_hide": "Hide history",
+    "history_none": "No runs in the history yet.",
+    "run_status_running": "running",
+    "run_status_waiting": "waiting for you",
+    "run_status_done": "done",
+    "run_status_failed": "failed",
+    "run_waiting_for": "Waiting for your confirmation: {tool}",
+    "run_tools": "Tools: {tools}",
+    "run_confirmed": "{count} confirmed",
+    "run_declined": "{count} not done",
     "delete": "Delete",
     "delete_confirm": "Delete “{title}”? The calendar entry goes, the chat stays.",
     "company_off": "Your company has switched scheduled tasks off. Your tasks are paused; you can see and delete them.",
@@ -3360,7 +3392,8 @@
       "update_project_task": "Change and move tasks on project boards",
       "list_object_types": "See the company's object types, fields and stages",
       "set_menu_items": "Order and hide entries in my menu",
-      "add_object_comment": "Comment on records"
+      "add_object_comment": "Comment on records",
+      "delegate": "Helpers"
     },
     "admin_title": "Company AI permissions",
     "admin_intro": "A limit for everyone in the company. Employees can only be stricter for themselves. Reading tools stay allowed under \"Ask at most\".",
