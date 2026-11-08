@@ -62,7 +62,7 @@ export const ROOMS_WORDMARK = "/xenrooms/wordmark.png";
  * of settings (settings-catalog.ts, ROOMS_PAGE) keeps to the same list.
  */
 export function isRoomsPath(pathname: string): boolean {
-  return /^\/[a-z]{2}\/(chat|login|auth|start|connect|settings|rooms\/start|workspace\/?$|workspace\/(password|rooms|chat|mcp|appearance|meetings|ai|audit|assistant|permissions))(\/|$)/.test(pathname);
+  return /^\/[a-z]{2}\/(chat|login|auth|start|connect|settings|rooms\/start|workspace\/?$|workspace\/(password|rooms|chat|groups|mcp|appearance|meetings|ai|audit|assistant|permissions))(\/|$)/.test(pathname);
 }
 
 /** The chat's start page in a language. */

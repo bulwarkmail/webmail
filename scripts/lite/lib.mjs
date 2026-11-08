@@ -153,6 +153,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   // Step 118: projects with boards (lib/xenaxio/projects.ts) and the admin's "who creates projects".
   "/api/objects",
   "/api/admin/projects",
+  // Step 119: the admin's editor of object types (lib/xenaxio/projects.ts).
+  "/api/object-types",
   // Step 86: transcripts of audio files (lib/xenaxio/transcripts.ts).
   "/api/files/transcripts",
   // Step 108, part C3: the admin's switch for the automatic check of chat pictures (components/xenaxio/chat/image-check-admin.tsx).

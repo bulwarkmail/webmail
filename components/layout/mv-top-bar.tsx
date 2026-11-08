@@ -20,7 +20,7 @@ import {
   iconForName,
 } from "@/components/icons";
 import type { AppIcon as AppIconType } from "@/components/icons";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useShallow } from "zustand/react/shallow";
@@ -45,7 +45,8 @@ import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useChatNavItem } from "@/lib/xenaxio/chat/nav";
 import { useMeetNavItem } from "@/lib/xenaxio/meet-nav";
 import { useFlowsNavItem } from "@/lib/xenaxio/flows-nav";
-import { useProjectsNavItem } from "@/lib/xenaxio/projects-nav";
+import { useObjectMenu } from "@/lib/xenaxio/projects-nav";
+import { local as localText } from "@/lib/xenaxio/projects";
 import { WorkspaceNavLink } from "@/components/xenaxio/workspace-nav-link";
 
 /** The top bar is not about any one item: plugin clicks carry no context. */
@@ -160,7 +161,8 @@ export function MvTopBar({
   const chatNav = useChatNavItem();
   const meetNav = useMeetNavItem();
   const flowsNav = useFlowsNavItem();
-  const projectsNav = useProjectsNavItem();
+  const objectMenu = useObjectMenu();
+  const menuLocale = useLocale();
   const apps: Array<{ id: string; icon: AppIconType; label: string; href: string }> = [
     { id: "mail", icon: Mail, label: t("mail"), href: "/" },
     ...(supportsCalendar && calendarEnabled
@@ -175,7 +177,8 @@ export function MvTopBar({
     // xenaxio (step 43): the team chat, when the company has it on.
     ...(chatNav.visible ? [{ id: "chat", icon: MessagesSquare, label: chatNav.label, href: "/chat" }] : []),
     ...(meetNav.visible ? [{ id: "meetings", icon: Video, label: meetNav.label, href: "/meetings" }] : []),
-    ...(projectsNav.visible ? [{ id: "projects", icon: LayoutGrid, label: projectsNav.label, href: "/projects" }] : []),
+    // xenaxio (steps 118–119): Projects and the company's own object types.
+    ...objectMenu.map((m) => ({ id: `objects:${m.key}`, icon: iconForName(m.icon) ?? LayoutGrid, label: localText(m.plural, menuLocale), href: m.href })),
     ...(flowsNav.visible ? [{ id: "flows", icon: Share2, label: flowsNav.label, href: "/flows" }] : []),
     { id: "settings", icon: Settings, label: t("settings"), href: "/settings" },
   ];

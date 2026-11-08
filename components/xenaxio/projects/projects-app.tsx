@@ -27,6 +27,12 @@ interface Place {
   task: string | null;
 }
 
+/** Step 119: the type on /objects?type=… (projects have their own page). */
+function readType(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("type");
+}
+
 function readPlace(): Place {
   if (typeof window === "undefined") return { id: null, task: null };
   const q = new URLSearchParams(window.location.search);
@@ -36,6 +42,8 @@ function readPlace(): Place {
 /** Moves within the section without reloading: the address bar follows, Back works. */
 function writePlace(place: Place, replace = false): void {
   const q = new URLSearchParams();
+  const type = readType();
+  if (type) q.set("type", type);
   if (place.id) q.set("id", place.id);
   if (place.id && place.task) q.set("task", place.task);
   const s = q.toString();
@@ -45,7 +53,7 @@ function writePlace(place: Place, replace = false): void {
   else window.history.pushState(window.history.state, "", url);
 }
 
-function ProjectsSection() {
+function ProjectsSection({ typeKey }: { typeKey: string }) {
   const [place, setPlace] = useState<Place>(readPlace);
 
   useEffect(() => {
@@ -71,12 +79,13 @@ function ProjectsSection() {
       />
     );
   }
-  return <ProjectList onOpen={(id) => go({ id, task: null })} />;
+  return <ProjectList typeKey={typeKey} onOpen={(id, task) => go({ id, task: task ?? null })} />;
 }
 
-export function ProjectsApp() {
+export function ProjectsApp({ objects = false }: { objects?: boolean } = {}) {
   const t = useXT();
-  useDocumentTitle(t("projects.title"));
+  const [typeKey] = useState(() => (objects ? (readType() ?? "") : "project"));
+  useDocumentTitle(objects ? t("objects.title") : t("projects.title"));
   const { logout, checkAuth } = useAuthStore();
   const { quota, isPushConnected } = useEmailStore();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
@@ -117,7 +126,7 @@ export function ProjectsApp() {
         <div className="flex min-w-0 flex-1 flex-col">
           {inlineApp && <InlineAppView apps={loadedApps} activeAppId={inlineApp.id} onClose={closeInlineApp} />}
           <div className={cn("flex min-h-0 flex-1", inlineApp && "hidden")}>
-            <ProjectsSection />
+            {typeKey ? <ProjectsSection typeKey={typeKey} /> : <p className="p-4 text-sm text-muted-foreground">{t("objects.type_missing")}</p>}
           </div>
           {isMobile && !isEmbedded && <NavigationRail orientation="horizontal" onManageApps={handleManageApps} onInlineApp={handleInlineApp} onCloseInlineApp={closeInlineApp} activeAppId={inlineApp?.id ?? null} />}
         </div>
