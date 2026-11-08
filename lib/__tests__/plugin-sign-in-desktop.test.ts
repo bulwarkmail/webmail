@@ -20,6 +20,15 @@ afterEach(() => {
 });
 
 describe('isPluginSignIn', () => {
+  it('takes the base path oauth.getRedirectUri puts in front, and only that one', async () => {
+    const { createOAuthState, isPluginSignIn } = await import('../plugin-oauth');
+    const state = createOAuthState('crm-banner');
+    expect(isPluginSignIn(signInUrl(state, `${ORIGIN}/webmail/en/plugins/oauth/callback`), 'crm-banner', ORIGIN, '/webmail')).toBe(true);
+    expect(isPluginSignIn(signInUrl(state, `${ORIGIN}/webmail/plugins/oauth/callback`), 'crm-banner', ORIGIN, '/webmail')).toBe(true);
+    expect(isPluginSignIn(signInUrl(state, `${ORIGIN}/other/en/plugins/oauth/callback`), 'crm-banner', ORIGIN, '/webmail')).toBe(false);
+    expect(isPluginSignIn(signInUrl(state, `${ORIGIN}/webmail/en/plugins/oauth/callback`), 'crm-banner', ORIGIN, '')).toBe(false);
+  });
+
   it('is the plugin\'s own sign-in: its state, back to this origin\'s plugin callback', async () => {
     const { createOAuthState, isPluginSignIn } = await import('../plugin-oauth');
     const state = createOAuthState('crm-banner');

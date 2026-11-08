@@ -78,14 +78,17 @@ const CALLBACK_PATH = /^(?:\/[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*)?\/plugins\/oau
 /**
  * Whether `url` starts this plugin's own OAuth sign-in: its one redirect_uri is this origin's
  * plugin callback, and its `state` is one the plugin got from `oauth.createState`. A link in a
- * message can't carry such a state. Nothing is consumed.
+ * message can't carry such a state. Nothing is consumed. `prefix`: the base path the host
+ * runs under (getPathPrefix()), which oauth.getRedirectUri puts in front of the callback.
  */
-export function isPluginSignIn(url: URL, pluginId: string, origin: string = window.location.origin): boolean {
+export function isPluginSignIn(url: URL, pluginId: string, origin: string = window.location.origin, prefix = ""): boolean {
   const redirects = url.searchParams.getAll("redirect_uri");
   if (redirects.length !== 1) return false;
   let target: URL;
   try { target = new URL(redirects[0]); } catch { return false; }
-  if (target.origin !== origin || !CALLBACK_PATH.test(target.pathname)) return false;
+  if (target.origin !== origin) return false;
+  const path = prefix && target.pathname.startsWith(`${prefix}/`) ? target.pathname.slice(prefix.length) : target.pathname;
+  if (!CALLBACK_PATH.test(path)) return false;
   const state = url.searchParams.get("state");
   return !!state && readStates()[state]?.pluginId === pluginId;
 }

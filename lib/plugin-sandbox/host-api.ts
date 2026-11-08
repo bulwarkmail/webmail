@@ -2320,7 +2320,7 @@ export async function dispatchApiCall(
       }
       // The plugin's own OAuth sign-in, in the desktop app: in the system browser its
       // callback page would park the code where this page can't read it.
-      if (isPluginSignIn(parsed, plugin.id) && await openPluginSignInInApp(parsed.toString())) return undefined;
+      if (isPluginSignIn(parsed, plugin.id, window.location.origin, getPathPrefix()) && await openPluginSignInInApp(parsed.toString())) return undefined;
       // Other plugins' link checks (onBeforeExternalLink) see it like a
       // click in a message; the plugin's own handler isn't asked again, so a
       // link check opens the link after its dialog.
