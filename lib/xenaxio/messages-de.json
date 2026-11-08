@@ -295,7 +295,9 @@
     "object_title_invalid": "Der Name ist leer oder zu lang.",
     "object_status_unknown": "Unbekannte Phase.",
     "object_type_not_found": "Diesen Typ gibt es nicht.",
-    "object_field_not_found": "Dieses Feld gibt es nicht."
+    "object_field_not_found": "Dieses Feld gibt es nicht.",
+    "object_type_no_stages": "Dieser Typ hat keine Phasen.",
+    "object_stages_required": "Projekte haben immer Phasen."
   },
   "login": {
     "title": "Anmelden",
@@ -3770,7 +3772,9 @@
     "import_need_title": "Wählen Sie die Spalte mit dem Namen (Titel).",
     "import_result": "{added} hinzugefügt, {skipped} übersprungen.",
     "import_row": "Zeile {n}",
-    "visibility_company": "Alle in der Firma sehen diesen Eintrag"
+    "visibility_company": "Alle in der Firma sehen diesen Eintrag",
+    "group_by": "Gruppieren nach",
+    "lane_empty": "Keine Einträge"
   },
   "typeeditor": {
     "title": "Objekttypen",
@@ -3863,7 +3867,10 @@
       "violet": "Violett",
       "teal": "Türkis",
       "pink": "Rosa"
-    }
+    },
+    "use_stages": "Phasen verwenden",
+    "use_stages_hint": "Für Einträge, die Schritte durchlaufen (Anfragen, Deals, Bewerber). Ohne Phasen ist ein Eintrag nie „erledigt“; er verlässt die Liste über das Archiv.",
+    "stages_off_text": "Phasen ausschalten? Die {n} Einträge verlieren ihre Phase."
   },
   "groups_page": {
     "title": "Gruppen",

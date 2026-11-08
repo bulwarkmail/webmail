@@ -24,6 +24,11 @@ import { Modal, selectClass, StatusChip } from "./bits";
 type Group = { id: string; name: string };
 type Msg = { kind: "error" | "success"; text: string } | null;
 
+const DEFAULT_STAGES: TypeStatus[] = [
+  { key: "open", name: { de: "Offen", en: "Open" }, color: "blue", closed: false },
+  { key: "done", name: { de: "Erledigt", en: "Done" }, color: "green", closed: true },
+];
+
 const slug = (s: string) =>
   s
     .toLowerCase()
@@ -290,6 +295,7 @@ function TypeForm({ type, types, groups, onChanged, onGone }: { type: ObjectType
   const [field, setField] = useState<TypeField | null | "new">(null);
   const [removing, setRemoving] = useState<{ field: TypeField; records: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [stagesOff, setStagesOff] = useState(false);
   const access: TypeAccess = type.access;
 
   const act = async (fn: () => Promise<ObjectType>, ok?: string) => {
@@ -387,12 +393,31 @@ function TypeForm({ type, types, groups, onChanged, onGone }: { type: ObjectType
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t("typeeditor.stages")}</h2>
+        {/* Variant B (owner 07.11.2026): stages only where records go through them; projects always have them. */}
+        {type.key !== "project" && (
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={type.statuses.length > 0}
+              onChange={(e) => (e.target.checked ? void act(() => projectsApi.setStatuses(type.key, DEFAULT_STAGES)) : setStagesOff(true))}
+            />
+            <span>
+              {t("typeeditor.use_stages")}
+              <span className="block text-xs text-muted-foreground">{t("typeeditor.use_stages_hint")}</span>
+            </span>
+          </label>
+        )}
+        {type.statuses.length > 0 && (
+        <>
         <div className="flex flex-wrap gap-1">
           {type.statuses.map((s) => (
             <StatusChip key={s.key} text={local(s.name, locale)} color={s.color} />
           ))}
         </div>
         <StagesEditor type={type} onSaved={(next) => (onChanged(next), setMsg({ kind: "success", text: t("typeeditor.saved") }))} />
+        </>
+        )}
       </section>
 
       <section className="space-y-3">
@@ -466,6 +491,17 @@ function TypeForm({ type, types, groups, onChanged, onGone }: { type: ObjectType
           const f = removing!.field;
           setRemoving(null);
           void act(async () => (await projectsApi.removeField(type.key, f.key)).type);
+        }}
+      />
+      <ConfirmDialog
+        isOpen={stagesOff}
+        onClose={() => setStagesOff(false)}
+        title={t("typeeditor.use_stages")}
+        message={t("typeeditor.stages_off_text", { n: type.records ?? 0 })}
+        variant="destructive"
+        onConfirm={() => {
+          setStagesOff(false);
+          void act(() => projectsApi.setStatuses(type.key, []));
         }}
       />
       <ConfirmDialog

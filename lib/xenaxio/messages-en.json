@@ -295,7 +295,9 @@
     "object_title_invalid": "The name is empty or too long.",
     "object_status_unknown": "Unknown stage.",
     "object_type_not_found": "This type does not exist.",
-    "object_field_not_found": "This field does not exist."
+    "object_field_not_found": "This field does not exist.",
+    "object_type_no_stages": "This type has no stages.",
+    "object_stages_required": "Projects always have stages."
   },
   "login": {
     "title": "Sign in",
@@ -3770,7 +3772,9 @@
     "import_need_title": "Choose the column with the name (title).",
     "import_result": "{added} added, {skipped} skipped.",
     "import_row": "Row {n}",
-    "visibility_company": "Everyone in the company sees this record"
+    "visibility_company": "Everyone in the company sees this record",
+    "group_by": "Group by",
+    "lane_empty": "No records"
   },
   "typeeditor": {
     "title": "Object types",
@@ -3863,7 +3867,10 @@
       "violet": "Violet",
       "teal": "Teal",
       "pink": "Pink"
-    }
+    },
+    "use_stages": "Use stages",
+    "use_stages_hint": "For records that go through steps (requests, deals, candidates). Without stages a record is never “done”; it leaves through the archive.",
+    "stages_off_text": "Turn stages off? The {n} records lose their stage."
   },
   "groups_page": {
     "title": "Groups",
