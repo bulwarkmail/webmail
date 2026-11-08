@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
+import { TaskNotifySettings } from '@/components/xenaxio/task-notify-settings';
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { Button } from '@/components/ui/button';
@@ -481,6 +482,9 @@ export function NotificationSettings() {
           )}
         </SettingsSection>
       )}
+
+      {/* xenaxio (step 124): notifications about project tasks, kept on the platform */}
+      <TaskNotifySettings />
 
       <ConfirmDialog {...confirmDialogProps} />
     </div>

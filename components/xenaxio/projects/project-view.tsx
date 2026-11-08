@@ -31,7 +31,10 @@ import {
   type ObjectDetail,
   type ObjectLink,
   type ObjectType,
+  type Priority,
   projectsApi,
+  type RollupProject,
+  type RollupTask,
   type TaskFilter,
   type TaskSummary,
 } from "@/lib/xenaxio/projects";
@@ -59,7 +62,7 @@ export function linkHref(l: Pick<ObjectLink, "kind" | "ref" | "account">): strin
 
 const LINK_ICONS = { email: Mail, file: FileText, channel: MessagesSquare, event: Calendar, flow_run: Folder, object: LinkIcon } as const;
 
-function TaskCard({ task, locale, onOpen }: { task: TaskSummary; locale: string; onOpen: () => void }) {
+function TaskCard({ task, locale, onOpen, project }: { task: TaskSummary; locale: string; onOpen: () => void; project?: string }) {
   const t = useXT();
   return (
     <button type="button" onClick={onOpen} className={cn("block w-full rounded-md border border-border bg-background p-2.5 text-left shadow-sm hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", task.done && "opacity-70")}>
@@ -72,10 +75,17 @@ function TaskCard({ task, locale, onOpen }: { task: TaskSummary; locale: string;
           ))}
         </div>
       )}
+      {project && <p className="mb-0.5 truncate text-[11px] text-muted-foreground">{project}</p>}
       <p className={cn("text-sm", task.done && "line-through")}>{task.title}</p>
       <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="tabular-nums">{task.ref}</span>
         {task.priority === "high" && <span className="font-medium text-destructive">{t("projects.priority.high")}</span>}
         {task.dueOn && <span className={cn(isOverdue(task.dueOn, task.done) && "font-medium text-destructive")}>{dayText(task.dueOn, locale)}</span>}
+        {task.checklist.total > 0 && (
+          <span className={cn("tabular-nums", task.checklist.done === task.checklist.total && "text-green-600 dark:text-green-500")} title={t("projects.checklist_count", { done: task.checklist.done, total: task.checklist.total })}>
+            ☑ {task.checklist.done}/{task.checklist.total}
+          </span>
+        )}
         {task.comments > 0 && <span>💬 {task.comments}</span>}
         <span className="ml-auto">{task.assignee && <PersonBadge name={task.assignee.name} email={task.assignee.email} />}</span>
       </div>
@@ -192,25 +202,64 @@ function useProjectId(): string {
   return currentProjectId;
 }
 
+type LanesBy = "none" | "assignee" | "project" | "priority" | "label";
+type Merge = "done" | "names";
+const SEP = "\u0001";
+
+/** Step 124 H, I: the person's view of a board (sub-projects, columns, swimlanes), kept in this browser. */
+function useBoardPrefs(projectId: string) {
+  const key = `xenaxio.board.${projectId}`;
+  const read = (): { subs: boolean; merge: Merge; lanes: LanesBy } => {
+    try {
+      const v = JSON.parse(localStorage.getItem(key) ?? "{}") as Partial<{ subs: boolean; merge: Merge; lanes: LanesBy }>;
+      return { subs: v.subs === true, merge: v.merge === "names" ? "names" : "done", lanes: (["assignee", "project", "priority", "label"] as const).includes(v.lanes as never) ? (v.lanes as LanesBy) : "none" };
+    } catch {
+      return { subs: false, merge: "done", lanes: "none" };
+    }
+  };
+  const [prefs, setPrefs] = useState(read);
+  const update = (change: Partial<{ subs: boolean; merge: Merge; lanes: LanesBy }>) =>
+    setPrefs((cur) => {
+      const next = { ...cur, ...change };
+      try {
+        localStorage.setItem(key, JSON.stringify(next));
+      } catch {
+        // Private mode: the choice lasts until the page closes.
+      }
+      return next;
+    });
+  return [prefs, update] as const;
+}
+
 function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; onOpenTask: (id: string) => void; reloadKey: number }) {
   const t = useXT();
   const locale = useLocale();
   const [columns, setColumns] = useState<BoardColumn[]>(project.columns);
-  const [tasks, setTasks] = useState<TaskSummary[] | null>(null);
+  const [tasks, setTasks] = useState<(TaskSummary | RollupTask)[] | null>(null);
+  const [subProjects, setSubProjects] = useState<RollupProject[]>([]);
   const [mode, setMode] = useState<"board" | "list">("board");
   const [filter, setFilter] = useState<TaskFilter>({});
   const [addingColumn, setAddingColumn] = useState(false);
+  const [foreign, setForeign] = useState<{ project: ObjectDetail; taskId: string } | null>(null);
+  const [prefs, setPrefs] = useBoardPrefs(project.id);
   const canEdit = project.can.edit;
+  const hasChildren = project.children.length > 0;
+  const subs = hasChildren && prefs.subs;
+  const lanesBy: LanesBy = prefs.lanes === "project" && !subs ? "none" : prefs.lanes;
 
   const load = useCallback(() => {
-    projectsApi
-      .tasks(project.id)
-      .then((r) => {
-        setColumns(r.columns);
-        setTasks(r.tasks);
-      })
-      .catch((err: unknown) => toast.error(errorText(t, err)));
-  }, [project.id, t]);
+    const req = subs
+      ? projectsApi.rollup(project.id).then((r) => {
+          setSubProjects(r.projects);
+          setColumns(r.projects.find((p) => p.id === project.id)?.columns ?? []);
+          setTasks(r.tasks);
+        })
+      : projectsApi.tasks(project.id).then((r) => {
+          setColumns(r.columns);
+          setTasks(r.tasks);
+        });
+    req.catch((err: unknown) => toast.error(errorText(t, err)));
+  }, [project.id, subs, t]);
 
   useEffect(load, [load, reloadKey]);
   // Colleagues' changes: read again when the tab comes back (no live updates yet, C1).
@@ -224,13 +273,84 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
   const byId = useMemo(() => new Map((tasks ?? []).map((x) => [x.id, x])), [tasks]);
   const labels = useMemo(() => [...new Set((tasks ?? []).flatMap((x) => x.labels))].sort(), [tasks]);
   const filtering = !!(filter.assignee || filter.due || filter.label || filter.text);
+  const projectOf = (x: TaskSummary | RollupTask) => ("project" in x ? x.project : null);
 
-  const move = async (id: string, columnId: string, index: number) => {
+  // The columns shown: the project's own, or with sub-projects merged by "done" or by name.
+  const shownColumns = useMemo((): { key: string; name: string; done: boolean; column?: BoardColumn }[] => {
+    if (!subs) return columns.map((c) => ({ key: c.id, name: c.name, done: c.done, column: c }));
+    if (prefs.merge === "done") return [{ key: "open", name: t("projects.subprojects_open"), done: false }, { key: "done", name: t("projects.subprojects_done"), done: true }];
+    const out = new Map<string, { key: string; name: string; done: boolean }>();
+    for (const p of subProjects) for (const c of p.columns) {
+      const key = `name:${c.name.trim().toLowerCase()}`;
+      const had = out.get(key);
+      out.set(key, { key, name: had?.name ?? c.name, done: (had?.done ?? false) || c.done });
+    }
+    return [...out.values()];
+  }, [subs, prefs.merge, columns, subProjects, t]);
+
+  const colKey = (x: TaskSummary | RollupTask): string => {
+    if (!subs) return x.columnId;
+    if (prefs.merge === "done") return x.done ? "done" : "open";
+    return `name:${("column" in x ? x.column : "").trim().toLowerCase()}`;
+  };
+
+  // Step 124 I: swimlanes.
+  const rowsOf = useMemo((): { key: string; title: string }[] => {
+    if (lanesBy === "assignee") return [...project.people.map((p) => ({ key: p.id, title: p.name })), { key: "none", title: t("projects.lane_nobody") }];
+    if (lanesBy === "project") return subProjects.map((p) => ({ key: p.id, title: `${p.ref} · ${p.title}` }));
+    if (lanesBy === "priority") return [...(["high", "medium", "low"] as const).map((p) => ({ key: p, title: t(`projects.priority.${p}`) })), { key: "none", title: t("projects.lane_no_priority") }];
+    if (lanesBy === "label") return [...labels.map((l) => ({ key: `l:${l}`, title: l })), { key: "none", title: t("projects.lane_no_label") }];
+    return [];
+  }, [lanesBy, project.people, subProjects, labels, t]);
+
+  const rowKey = (x: TaskSummary | RollupTask): string => {
+    if (lanesBy === "assignee") return x.assignee?.id ?? "none";
+    if (lanesBy === "project") return projectOf(x)?.id ?? project.id;
+    if (lanesBy === "priority") return x.priority ?? "none";
+    if (lanesBy === "label") return x.labels[0] ? `l:${x.labels[0]}` : "none";
+    return "";
+  };
+  const laneId = (row: string, col: string) => (lanesBy === "none" ? col : `${row}${SEP}${col}`);
+
+  const fail = (err: unknown) => toast.error(errorText(t, err));
+
+  const move = async (id: string, lane: string, index: number) => {
+    const task = byId.get(id);
+    if (!task) return;
+    const [row, col] = lanesBy === "none" ? ["", lane] : (lane.split(SEP) as [string, string]);
+    const owner = projectOf(task)?.id ?? project.id;
     try {
-      const moved = await projectsApi.moveTask(project.id, id, columnId, index);
-      setTasks((cur) => cur?.map((x) => (x.id === id ? moved : x)) ?? cur);
+      // A new swimlane changes the field it groups by.
+      if (lanesBy !== "none" && row !== rowKey(task)) {
+        if (lanesBy === "project") {
+          toast.error(t("projects.lane_project_move"));
+          load();
+          return;
+        }
+        const change =
+          lanesBy === "assignee"
+            ? { assigneeId: row === "none" ? null : row }
+            : lanesBy === "priority"
+              ? { priority: row === "none" ? null : (row as Priority) }
+              : { labels: row === "none" ? task.labels.slice(1) : [row.slice(2), ...task.labels.filter((l, i) => i > 0 && l !== row.slice(2))] };
+        await projectsApi.updateTask(owner, id, change);
+      }
+      if (col !== colKey(task) || (lanesBy === "none" && !subs)) {
+        if (!subs) {
+          // In swimlanes the place inside the column is not shown as such: a new column puts the card at its end.
+          const at = lanesBy === "none" ? index : (tasks ?? []).filter((x) => x.columnId === col && x.id !== id).length;
+          await projectsApi.moveTask(project.id, id, col, at);
+        } else if (prefs.merge === "done") {
+          await projectsApi.updateTask(owner, id, { done: col === "done" });
+        } else {
+          const name = shownColumns.find((c) => c.key === col)?.name ?? "";
+          const target = subProjects.find((p) => p.id === owner)?.columns.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase());
+          if (!target) toast.error(t("projects.subprojects_no_column", { ref: projectOf(task)?.ref ?? "", name }));
+          else await projectsApi.moveTask(owner, id, target.id, (tasks ?? []).filter((x) => x.columnId === target.id && x.id !== id).length);
+        }
+      }
     } catch (err) {
-      toast.error(errorText(t, err));
+      fail(err);
     }
     load();
   };
@@ -240,11 +360,31 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
       await projectsApi.createTask(project.id, { title, columnId });
       load();
     } catch (err) {
-      toast.error(errorText(t, err));
+      fail(err);
     }
   };
 
+  const open = (x: TaskSummary | RollupTask) => {
+    const p = projectOf(x);
+    if (!p || p.id === project.id) return onOpenTask(x.id);
+    projectsApi
+      .get(p.id)
+      .then((d) => setForeign({ project: d, taskId: x.id }))
+      .catch(fail);
+  };
+
   if (!tasks) return <p className="p-4 text-sm text-muted-foreground">{t("common.loading")}</p>;
+
+  const plain = !subs && lanesBy === "none";
+  const lanes = (lanesBy === "none" ? [{ key: "", title: "" }] : rowsOf).flatMap((r) =>
+    shownColumns.map((c) => ({
+      id: laneId(r.key, c.key),
+      title: c.name,
+      done: c.done,
+      ...(plain && c.column ? { header: <ColumnMenu column={c.column} columns={columns} canEdit={canEdit} onChanged={(next) => (setColumns(next), load())} /> } : {}),
+      ...(canEdit && !subs && c.column && lanesBy === "none" ? { footer: <AddTask onAdd={(title) => add(c.column!.id, title)} /> } : {}),
+    })),
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -256,6 +396,27 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
             </button>
           ))}
         </div>
+        {hasChildren && (
+          <label className="flex items-center gap-1.5 text-sm">
+            <input type="checkbox" className="h-4 w-4" checked={subs} onChange={(e) => setPrefs({ subs: e.target.checked })} />
+            {t("projects.subprojects")}
+          </label>
+        )}
+        {subs && mode === "board" && (
+          <select className={cn(selectClass, "h-8 w-auto")} value={prefs.merge} onChange={(e) => setPrefs({ merge: e.target.value as Merge })} aria-label={t("projects.subprojects_merge")}>
+            <option value="done">{t("projects.subprojects_merge_done")}</option>
+            <option value="names">{t("projects.subprojects_merge_names")}</option>
+          </select>
+        )}
+        {mode === "board" && (
+          <select className={cn(selectClass, "h-8 w-auto")} value={lanesBy} onChange={(e) => setPrefs({ lanes: e.target.value as LanesBy })} aria-label={t("projects.lanes")}>
+            <option value="none">{t("projects.lanes_none")}</option>
+            <option value="assignee">{t("projects.lanes_assignee")}</option>
+            {subs && <option value="project">{t("projects.lanes_project")}</option>}
+            <option value="priority">{t("projects.lanes_priority")}</option>
+            <option value="label">{t("projects.lanes_label")}</option>
+          </select>
+        )}
         <Input className="h-8 w-full min-w-0 sm:w-48" value={filter.text ?? ""} onChange={(e) => setFilter((f) => ({ ...f, text: e.target.value }))} placeholder={t("projects.filter_text")} aria-label={t("projects.filter_text")} />
         <select className={cn(selectClass, "h-8 w-auto")} value={filter.assignee ?? ""} onChange={(e) => setFilter((f) => ({ ...f, assignee: e.target.value || null }))} aria-label={t("projects.filter_assignee")}>
           <option value="">{t("projects.filter_anyone")}</option>
@@ -291,24 +452,20 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
       {mode === "board" ? (
         <Board
           label={t("projects.view.board")}
-          lanes={columns.map((c) => ({
-            id: c.id,
-            title: c.name,
-            done: c.done,
-            header: <ColumnMenu column={c} columns={columns} canEdit={canEdit} onChanged={(next) => (setColumns(next), load())} />,
-            ...(canEdit ? { footer: <AddTask onAdd={(title) => add(c.id, title)} /> } : {}),
-          }))}
-          items={shown.map((x) => ({ id: x.id, laneId: x.columnId }))}
+          lanes={lanes}
+          items={shown.map((x) => ({ id: x.id, laneId: laneId(rowKey(x), colKey(x)) }))}
+          {...(lanesBy !== "none" ? { rows: rowsOf.map((r) => ({ id: r.key, title: r.title, laneIds: shownColumns.map((c) => laneId(r.key, c.key)) })) } : {})}
           // Moving while filtered would place cards among hidden ones: only without filters.
           disabled={!canEdit || filtering}
           emptyText={t("projects.lane_empty_tasks")}
           onMove={(id, lane, index) => void move(id, lane, index)}
           render={(id) => {
             const task = byId.get(id);
-            return task ? <TaskCard task={task} locale={locale} onOpen={() => onOpenTask(task.id)} /> : null;
+            const p = task ? projectOf(task) : null;
+            return task ? <TaskCard task={task} locale={locale} onOpen={() => open(task)} {...(p && p.id !== project.id ? { project: `${p.ref} · ${p.title}` } : {})} /> : null;
           }}
           after={
-            canEdit && columns.length < 20 ? (
+            plain && canEdit && columns.length < 20 ? (
               <button type="button" onClick={() => setAddingColumn(true)} className="flex h-10 w-48 shrink-0 items-center gap-1 rounded-lg border border-dashed border-border px-3 text-sm text-muted-foreground hover:text-foreground">
                 <Plus className="h-4 w-4" />
                 {t("projects.column_add")}
@@ -322,6 +479,7 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
             <thead className="sticky top-0 bg-background text-left text-xs text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="px-4 py-2 font-medium">{t("projects.task")}</th>
+                {subs && <th className="px-2 py-2 font-medium">{t("projects.sub")}</th>}
                 <th className="px-2 py-2 font-medium">{t("projects.column")}</th>
                 <th className="px-2 py-2 font-medium">{t("projects.assignee")}</th>
                 <th className="px-2 py-2 font-medium">{t("projects.field.due")}</th>
@@ -329,13 +487,15 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
             </thead>
             <tbody>
               {shown.map((x) => (
-                <tr key={x.id} className="cursor-pointer border-b border-border hover:bg-muted/50" onClick={() => onOpenTask(x.id)}>
+                <tr key={x.id} className="cursor-pointer border-b border-border hover:bg-muted/50" onClick={() => open(x)}>
                   <td className={cn("px-4 py-2", x.done && "text-muted-foreground line-through")}>
-                    <button type="button" className="text-left hover:underline" onClick={() => onOpenTask(x.id)}>
+                    <span className="mr-2 text-xs tabular-nums text-muted-foreground no-underline">{x.ref}</span>
+                    <button type="button" className="text-left hover:underline" onClick={() => open(x)}>
                       {x.title}
                     </button>
                   </td>
-                  <td className="px-2 py-2">{columns.find((c) => c.id === x.columnId)?.name}</td>
+                  {subs && <td className="px-2 py-2">{projectOf(x)?.ref ?? project.ref}</td>}
+                  <td className="px-2 py-2">{"column" in x ? x.column : columns.find((c) => c.id === x.columnId)?.name}</td>
                   <td className="px-2 py-2">{x.assignee?.name ?? "—"}</td>
                   <td className={cn("px-2 py-2", isOverdue(x.dueOn, x.done) && "font-medium text-destructive")}>{x.dueOn ? dayText(x.dueOn, locale) : "—"}</td>
                 </tr>
@@ -355,9 +515,10 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
           projectsApi
             .addColumn(project.id, { name: name.trim() })
             .then((r) => setColumns(r.columns))
-            .catch((err: unknown) => toast.error(errorText(t, err)));
+            .catch(fail);
         }}
       />
+      {foreign && <TaskPanel project={foreign.project} taskId={foreign.taskId} onClose={() => setForeign(null)} onChanged={load} />}
     </div>
   );
 }
@@ -681,6 +842,7 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
   const [error, setError] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
   const [confirm, setConfirm] = useState<null | "delete" | "leave">(null);
   const [reloadKey, setReloadKey] = useState(0);
   const myId = useXenaxioMe()?.user.id ?? null;
@@ -758,6 +920,11 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
                     {t("projects.rename")}
                   </button>
                 )}
+                {project.can.edit && (type?.hasTasks ?? project.type === "project") && (
+                  <button type="button" className="block w-full px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setMenu(false), setSavingTemplate(true))}>
+                    {t("projects.template_save")}
+                  </button>
+                )}
                 {project.can.manage && (
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setMenu(false), void act(() => projectsApi.archive(project.id, !project.archivedAt)))}>
                     <Archive className="h-4 w-4" />
@@ -816,6 +983,20 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
         onSubmit={(title) => {
           setRenaming(false);
           if (title.trim()) void act(() => projectsApi.update(project.id, { title: title.trim() }));
+        }}
+      />
+      <PromptDialog
+        isOpen={savingTemplate}
+        onClose={() => setSavingTemplate(false)}
+        title={t("projects.template_save")}
+        defaultValue={project.title}
+        onSubmit={(name) => {
+          setSavingTemplate(false);
+          if (!name.trim()) return;
+          projectsApi
+            .saveTemplate(project.id, name.trim().slice(0, 80))
+            .then((tpl) => toast.success(t("projects.template_saved", { name: tpl.name })))
+            .catch((err: unknown) => toast.error(errorText(t, err)));
         }}
       />
       <ConfirmDialog

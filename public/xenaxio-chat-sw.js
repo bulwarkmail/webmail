@@ -70,6 +70,8 @@ async function handlePush(event) {
   }
   // Step 49: the result of a scheduled task of the assistant.
   if (data && data.kind === "xenaxio-assistant") return showAssistant(data);
+  // Step 124 C: a notice of Xenaxio (a task assigned, a mention, a due date).
+  if (data && data.kind === "xenaxio-notice") return showNotice(data);
   if (!data || data.kind !== "xenaxio-chat") return;
 
   const open = await windows();
@@ -119,8 +121,37 @@ async function showAssistant(data) {
   });
 }
 
+/** Step 124 C: a click opens the notice's page (a path inside the app, e.g. a task). */
+async function showNotice(data) {
+  const link = typeof data.link === "string" && /^\/[a-z][a-z0-9/_-]*\/?(\?[A-Za-z0-9=&%._~-]*)?$/.test(data.link) ? data.link : "";
+  if (!link) return;
+  await self.registration.showNotification(typeof data.title === "string" && data.title ? data.title : "Xenaxio", {
+    body: typeof data.body === "string" ? data.body : "",
+    tag: `xenaxio-notice:${link}`,
+    renotify: true,
+    icon: ICON,
+    badge: ICON,
+    data: { notice: link },
+  });
+}
+
+async function openNotice(link) {
+  const target = `${BASE_PATH}/${LOCALE}${link}`;
+  for (const client of await windows()) {
+    try {
+      const focused = await client.focus();
+      focused.postMessage({ kind: "xenaxio-chat-navigate", url: target });
+      return;
+    } catch (_) {
+      // Next window, or a new one below.
+    }
+  }
+  if (self.clients.openWindow) await self.clients.openWindow(target);
+}
+
 async function handleClick(data) {
   if (data.assistant) return openAssistant(data.assistant);
+  if (data.notice) return openNotice(data.notice);
   const query = new URLSearchParams();
   if (data.roomId) query.set("room", data.roomId);
   if (data.eventId) query.set("event", data.eventId);

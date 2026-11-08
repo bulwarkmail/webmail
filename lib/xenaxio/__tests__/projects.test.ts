@@ -6,6 +6,8 @@ const task = (over: Partial<TaskSummary>): TaskSummary => ({
   id: "t",
   objectId: "p",
   columnId: "c1",
+  number: 1,
+  ref: "P-1-1",
   title: "Task",
   assignee: null,
   dueOn: null,
@@ -15,6 +17,7 @@ const task = (over: Partial<TaskSummary>): TaskSummary => ({
   doneAt: null,
   hasDescription: false,
   comments: 0,
+  checklist: { done: 0, total: 0 },
   updatedAt: "2026-11-07T10:00:00Z",
   ...over,
 });

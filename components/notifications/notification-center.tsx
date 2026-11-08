@@ -14,6 +14,7 @@ import {
   useNotificationCenterStore,
   type CenterEntry,
 } from "@/stores/notification-center-store";
+import { useXenaxioNoticeCount, XenaxioNotices } from "@/components/xenaxio/notices";
 
 /** "99+" past two digits, like the other badges. */
 export function formatBadgeCount(count: number): string {
@@ -21,7 +22,8 @@ export function formatBadgeCount(count: number): string {
 }
 
 export function useUnreadNotificationCount(): number {
-  return useNotificationCenterStore(selectUnreadCount);
+  // xenaxio (step 124): the platform's notifications count too.
+  return useNotificationCenterStore(selectUnreadCount) + useXenaxioNoticeCount();
 }
 
 function EntryIcon({ entry }: { entry: CenterEntry }) {
@@ -88,6 +90,8 @@ export function NotificationPanel({ onClose, className, sheet = false }: { onClo
           </button>
         )}
       </div>
+      {/* xenaxio (step 124): the platform's notifications above the browser's own */}
+      <XenaxioNotices onClose={onClose} />
       {entries.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
       ) : (

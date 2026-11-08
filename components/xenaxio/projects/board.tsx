@@ -35,6 +35,13 @@ export interface BoardLane {
   footer?: ReactNode;
 }
 
+/** Step 124 I: swimlanes — horizontal rows, each with its own lanes (ids of lanes passed in `lanes`). */
+export interface BoardRow {
+  id: string;
+  title: string;
+  laneIds: string[];
+}
+
 export interface BoardItem {
   id: string;
   laneId: string;
@@ -106,6 +113,7 @@ export function Board({
   emptyText,
   after,
   label,
+  rows,
 }: {
   lanes: BoardLane[];
   items: BoardItem[];
@@ -117,6 +125,8 @@ export function Board({
   /** After the last lane (e.g. "add column"). */
   after?: ReactNode;
   label: string;
+  /** Step 124 I: lanes grouped in swimlanes; one drag works across them. */
+  rows?: BoardRow[];
 }) {
   const [layout, setLayout] = useState<Layout>(() => layoutOf(lanes, items));
   const [active, setActive] = useState<string | null>(null);
@@ -170,12 +180,34 @@ export function Board({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => (setActive(null), setLayout(source))}>
-      <div role="list" aria-label={label} className="flex min-h-0 flex-1 snap-x gap-3 overflow-x-auto overscroll-x-contain p-3 sm:p-4">
-        {lanes.map((lane) => (
-          <Lane key={lane.id} lane={lane} ids={layout[lane.id] ?? []} disabled={disabled} render={render} emptyText={emptyText} />
-        ))}
-        {after}
-      </div>
+      {rows ? (
+        <div role="list" aria-label={label} className="min-h-0 flex-1 space-y-4 overflow-auto overscroll-contain p-3 sm:p-4">
+          {rows.map((row) => {
+            const rowLanes = row.laneIds.map((id) => lanes.find((l) => l.id === id)).filter((l): l is BoardLane => !!l);
+            const count = rowLanes.reduce((n, l) => n + (layout[l.id]?.length ?? 0), 0);
+            return (
+              <section key={row.id} aria-label={row.title} data-board-row={row.id}>
+                <h3 className="sticky left-0 mb-1.5 flex items-center gap-2 text-sm font-semibold">
+                  <span className="truncate">{row.title}</span>
+                  <span className="text-xs font-normal tabular-nums text-muted-foreground">{count}</span>
+                </h3>
+                <div className="flex snap-x gap-3">
+                  {rowLanes.map((lane) => (
+                    <Lane key={lane.id} lane={lane} ids={layout[lane.id] ?? []} disabled={disabled} render={render} emptyText={emptyText} />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      ) : (
+        <div role="list" aria-label={label} className="flex min-h-0 flex-1 snap-x gap-3 overflow-x-auto overscroll-x-contain p-3 sm:p-4">
+          {lanes.map((lane) => (
+            <Lane key={lane.id} lane={lane} ids={layout[lane.id] ?? []} disabled={disabled} render={render} emptyText={emptyText} />
+          ))}
+          {after}
+        </div>
+      )}
       <DragOverlay>{active ? <div className="rotate-1 cursor-grabbing shadow-lg">{render(active)}</div> : null}</DragOverlay>
     </DndContext>
   );

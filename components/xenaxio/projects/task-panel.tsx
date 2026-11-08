@@ -4,9 +4,10 @@
 // sheet on the phone): title, column or done, assignee, due date, priority,
 // labels, description (Markdown, as the notes of step 115) and comments.
 // Someone assigned by another person gets an email from the platform (B1).
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+// Step 124: the task's number, a checklist, watchers, @mentions and the history.
+import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
-import { Trash, X } from "@/components/icons";
+import { Copy, Eye, EyeOff, Trash, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -15,8 +16,10 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { errorText, XenaxioApiError } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { type ObjectDetail, type Priority, projectsApi, type TaskDetail, type TaskInput } from "@/lib/xenaxio/projects";
+import { cn } from "@/lib/utils";
 import { toast } from "@/stores/toast-store";
 import { PersonBadge, selectClass } from "./bits";
+import { Checklist, CommentBody, History, MentionInput } from "./task-extras";
 
 export function TaskPanel({ project, taskId, onClose, onChanged }: { project: ObjectDetail; taskId: string; onClose: () => void; onChanged: () => void }) {
   const t = useXT();
@@ -27,8 +30,8 @@ export function TaskPanel({ project, taskId, onClose, onChanged }: { project: Ob
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState("");
   const [labels, setLabels] = useState("");
-  const [comment, setComment] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const canEdit = project.can.edit;
   const ref = useFocusTrap({ isActive: true, onEscape: onClose, restoreFocus: true });
 
@@ -59,16 +62,40 @@ export function TaskPanel({ project, taskId, onClose, onChanged }: { project: Ob
     }
   };
 
-  const addComment = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!comment.trim()) return;
+  const addComment = async (body: string, mentions: string[]): Promise<boolean> => {
     try {
-      show(await projectsApi.comment(project.id, taskId, comment.trim()));
-      setComment("");
+      show(await projectsApi.comment(project.id, taskId, body, mentions));
+      onChanged();
+      return true;
+    } catch (err) {
+      toast.error(errorText(t, err));
+      return false;
+    }
+  };
+
+  const watch = async (watching: boolean) => {
+    try {
+      show(await projectsApi.watch(project.id, taskId, watching));
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+
+  const toTask = async (itemId: string) => {
+    try {
+      await projectsApi.checklistToTask(project.id, taskId, itemId);
+      show(await projectsApi.task(project.id, taskId));
       onChanged();
     } catch (err) {
       toast.error(errorText(t, err));
     }
+  };
+
+  const copyRef = (ref: string) => {
+    void navigator.clipboard?.writeText(ref).then(
+      () => toast.success(t("projects.ref_copied", { ref })),
+      () => undefined,
+    );
   };
 
   const columns = project.columns;
@@ -78,8 +105,28 @@ export function TaskPanel({ project, taskId, onClose, onChanged }: { project: Ob
       <aside ref={ref} role="dialog" aria-modal="true" aria-label={task?.title ?? t("projects.task")} className="flex h-full w-full max-w-lg flex-col border-l border-border bg-background shadow-xl">
         <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
           <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-            {project.ref} · {project.title}
+            {task ? (
+              <button type="button" className="inline-flex items-center gap-1 font-medium tabular-nums text-foreground hover:underline" onClick={() => copyRef(task.ref)} title={t("projects.copy_ref")}>
+                {task.ref}
+                <Copy className="h-3 w-3" aria-hidden="true" />
+              </button>
+            ) : null}
+            {task ? " · " : ""}
+            {project.title}
           </span>
+          {task && (
+            <button
+              type="button"
+              className={cn("flex items-center gap-1 rounded px-1.5 py-1 text-xs hover:bg-muted", task.watching ? "text-primary" : "text-muted-foreground")}
+              aria-pressed={task.watching}
+              onClick={() => void watch(!task.watching)}
+              title={task.watching ? t("projects.watching") : undefined}
+            >
+              {task.watching ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              <span className="hidden sm:inline">{task.watching ? t("projects.unwatch") : t("projects.watch")}</span>
+              {task.watchers.length > 0 && <span className="tabular-nums">{task.watchers.length}</span>}
+            </button>
+          )}
           {task && canEdit && (
             <button type="button" className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive" onClick={() => setDeleting(true)} aria-label={t("projects.task_delete")}>
               <Trash className="h-4 w-4" />
@@ -193,6 +240,8 @@ export function TaskPanel({ project, taskId, onClose, onChanged }: { project: Ob
               )}
             </div>
 
+            <Checklist items={task.checklistItems} canEdit={canEdit} onSave={(next) => void save({ checklist: next })} onToTask={(id) => void toTask(id)} />
+
             <div className="space-y-2 text-sm">
               <span className="text-xs text-muted-foreground">{t("projects.comments")}</span>
               <ul className="space-y-2">
@@ -203,19 +252,25 @@ export function TaskPanel({ project, taskId, onClose, onChanged }: { project: Ob
                       <p className="text-xs text-muted-foreground">
                         {c.author?.name ?? "—"} · {new Date(c.createdAt).toLocaleString(locale, { dateStyle: "short", timeStyle: "short" })}
                       </p>
-                      <p className="whitespace-pre-wrap break-words">{c.body}</p>
+                      <p className="whitespace-pre-wrap break-words">
+                        <CommentBody body={c.body} people={project.people} />
+                      </p>
                     </div>
                   </li>
                 ))}
               </ul>
-              {canEdit && (
-                <form onSubmit={addComment} className="flex gap-2">
-                  <Input value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t("projects.comment_add")} aria-label={t("projects.comment_add")} maxLength={4000} />
-                  <Button type="submit" size="sm" disabled={!comment.trim()}>
-                    {t("projects.comment_send")}
-                  </Button>
-                </form>
-              )}
+              {canEdit && <MentionInput people={project.people} onSend={addComment} />}
+            </div>
+            {task.watchers.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t("projects.watchers")}: {task.watchers.map((w) => w.name).join(", ")}
+              </p>
+            )}
+            <div className="space-y-2">
+              <button type="button" className="text-xs text-primary hover:underline" aria-expanded={showHistory} onClick={() => setShowHistory((v) => !v)}>
+                {t("projects.history")} ({task.history.length})
+              </button>
+              {showHistory && <History events={task.history} />}
             </div>
             {task.createdBy && (
               <p className="text-xs text-muted-foreground">

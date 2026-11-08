@@ -100,6 +100,7 @@ import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { calendarHooks } from "@/lib/plugin-hooks";
 import { eventToView } from "@/lib/plugin-projection";
 import { eventItem, useAssistantScreenItem } from "@/lib/xenaxio/assistant-screen";
+import { isProjectTask, useProjectCalendarTasks } from "@/lib/xenaxio/project-calendar";
 
 type PendingScopeAction =
   | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; sendScheduling?: boolean }
@@ -661,15 +662,21 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setShowTaskModal(true);
   }, [closeEventPanelForTask]);
 
+  // xenaxio (step 124 E): the person's project tasks with a due date join the grid.
+  const projectTasks = useProjectCalendarTasks();
   const openEditTaskModal = useCallback((task: CalendarTask) => {
+    // xenaxio (step 124 E): a project task opens in Projects.
+    const projectTask = isProjectTask(task) ? projectTasks.href(task) : null;
+    if (projectTask) return router.push(projectTask);
     closeEventPanelForTask();
     setEditTask(task);
     setShowTaskModal(true);
-  }, [closeEventPanelForTask]);
+  }, [closeEventPanelForTask, projectTasks, router]);
 
   const handleToggleTaskComplete = useCallback((task: CalendarTask) => {
+    if (isProjectTask(task)) return projectTasks.toggle(task);
     if (client) toggleTaskCompleteFn(client, task);
-  }, [client, toggleTaskCompleteFn]);
+  }, [client, toggleTaskCompleteFn, projectTasks]);
 
   // false: a plugin stopped it and said why, so the task form stays open.
   const handleSaveTask = useCallback(async (data: Partial<import("@/lib/jmap/types").CalendarTask>) => {
@@ -1508,9 +1515,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // Tasks on the month, week and day grids follow the calendar filter like
   // the events do (#1107).
   const calendarTasks = useMemo(() => {
-    if (!enableCalendarTasks || !showTasksOnCalendar) return undefined;
-    return filterTasksByCalendars(taskStore.tasks, selectedCalendarIds);
-  }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds]);
+    const own = enableCalendarTasks && showTasksOnCalendar ? filterTasksByCalendars(taskStore.tasks, selectedCalendarIds) : [];
+    const all = projectTasks.tasks.length ? [...own, ...projectTasks.tasks] : own;
+    return enableCalendarTasks && showTasksOnCalendar ? all : all.length ? all : undefined;
+  }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds, projectTasks.tasks]);
 
   useEffect(() => {
     const hiddenEvents = events.filter((event) => {

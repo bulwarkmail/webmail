@@ -149,10 +149,29 @@ export interface ObjectDetail extends ObjectSummary {
   can: { edit: boolean; manage: boolean; join: boolean };
 }
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
+/** Step 124 F: one line of a task's history (never texts of descriptions or comments). */
+export interface TaskEvent {
+  id: string;
+  author: PersonRef | null;
+  field: "created" | "title" | "column" | "assignee" | "due" | "priority" | "labels" | "done" | "checklist";
+  from: string | null;
+  to: string | null;
+  createdAt: string;
+}
+
 export interface TaskSummary {
   id: string;
   objectId: string;
   columnId: string;
+  /** Step 124 D: number in the project and the reference "P-12-7". */
+  number: number;
+  ref: string;
   title: string;
   assignee: PersonRef | null;
   dueOn: string | null;
@@ -162,6 +181,8 @@ export interface TaskSummary {
   doneAt: string | null;
   hasDescription: boolean;
   comments: number;
+  /** Step 124 A: ticked and all checklist items. */
+  checklist: { done: number; total: number };
   updatedAt: string;
 }
 
@@ -170,6 +191,39 @@ export interface TaskDetail extends TaskSummary {
   createdBy: PersonRef | null;
   createdAt: string;
   commentList: { id: string; author: PersonRef | null; body: string; createdAt: string }[];
+  checklistItems: ChecklistItem[];
+  history: TaskEvent[];
+  /** Step 124 C. */
+  watchers: PersonRef[];
+  watching: boolean;
+}
+
+/** Step 124 H: a task of the parent or a sub-project on the parent's board. */
+export interface RollupTask extends TaskSummary {
+  project: { id: string; ref: string; title: string };
+  column: string;
+  columnDone: boolean;
+}
+
+export interface RollupProject {
+  id: string;
+  ref: string;
+  title: string;
+  depth: number;
+  columns: BoardColumn[];
+}
+
+/** Step 124 G: a ready-made or company template. */
+export interface ProjectTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  builtIn: boolean;
+  type: string;
+  columns: number;
+  tasks: number;
+  createdBy: string | null;
+  canDelete: boolean;
 }
 
 export interface ObjectComment {
@@ -195,6 +249,7 @@ export interface TaskInput {
   priority?: Priority | null;
   labels?: string[];
   done?: boolean;
+  checklist?: { id?: string; text: string; done?: boolean }[];
 }
 
 async function call<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> {
@@ -244,7 +299,13 @@ export const projectsApi = {
     call<{ objects: ObjectSummary[] }>("GET", `${OBJECTS}${query({ type: opts.type ?? "project", status: opts.status, archived: opts.archived ? "1" : undefined, q: opts.q, mine: opts.mine ? "1" : undefined })}`),
   linked: (kind: LinkKind, ref: string, account?: string | null) => call<{ objects: ObjectSummary[] }>("GET", `${OBJECTS}/linked${query({ kind, ref, account: account ?? undefined })}`),
   myTasks: (status: "open" | "done" | "all" = "open") => call<{ tasks: MyTask[] }>("GET", `${OBJECTS}/tasks/mine${query({ status })}`),
-  create: (body: { type?: string; title: string; description?: string; visibility?: Visibility; dueOn?: string | null; members?: string[]; parentId?: string | null; status?: string; fields?: Record<string, unknown> }) =>
+  // Step 124: a task by its reference, the person's tasks with a due date (calendar), templates.
+  taskByRef: (ref: string) => call<{ objectId: string; taskId: string }>("GET", `${OBJECTS}/tasks/ref/${seg(ref)}`),
+  calendarTasks: (from: string, to: string) => call<{ tasks: MyTask[] }>("GET", `${OBJECTS}/tasks/calendar${query({ from, to })}`),
+  templates: (type = "project") => call<{ templates: ProjectTemplate[] }>("GET", `${OBJECTS}/templates${query({ type })}`),
+  saveTemplate: (id: string, name: string) => call<ProjectTemplate>("POST", `${one(id)}/template`, { name }),
+  deleteTemplate: (templateId: string) => call<Record<string, never>>("DELETE", `${OBJECTS}/templates/${seg(templateId)}`),
+  create: (body: { type?: string; title: string; description?: string; visibility?: Visibility; dueOn?: string | null; members?: string[]; parentId?: string | null; status?: string; fields?: Record<string, unknown>; template?: string }) =>
     call<ObjectDetail>("POST", OBJECTS, { type: "project", ...body }),
   get: (id: string) => call<ObjectDetail>("GET", one(id)),
   update: (id: string, body: { title?: string; description?: string; visibility?: Visibility; dueOn?: string | null; status?: string; ownerId?: string | null; fields?: Record<string, unknown> }) =>
@@ -260,12 +321,15 @@ export const projectsApi = {
   updateColumn: (id: string, columnId: string, body: { name?: string; done?: boolean; index?: number }) => call<{ columns: BoardColumn[] }>("PATCH", `${one(id)}/columns/${seg(columnId)}`, body),
   removeColumn: (id: string, columnId: string, moveTo?: string) => call<{ columns: BoardColumn[] }>("DELETE", `${one(id)}/columns/${seg(columnId)}${query({ moveTo })}`),
   tasks: (id: string) => call<{ columns: BoardColumn[]; tasks: TaskSummary[] }>("GET", `${one(id)}/tasks`),
+  rollup: (id: string) => call<{ projects: RollupProject[]; tasks: RollupTask[] }>("GET", `${one(id)}/tasks${query({ subprojects: "1" })}`),
   task: (id: string, taskId: string) => call<TaskDetail>("GET", `${one(id)}/tasks/${seg(taskId)}`),
   createTask: (id: string, body: TaskInput & { title: string; index?: number }) => call<TaskSummary>("POST", `${one(id)}/tasks`, body),
   updateTask: (id: string, taskId: string, body: TaskInput) => call<TaskSummary>("PATCH", `${one(id)}/tasks/${seg(taskId)}`, body),
   moveTask: (id: string, taskId: string, columnId: string, index: number) => call<TaskSummary>("POST", `${one(id)}/tasks/${seg(taskId)}/move`, { columnId, index }),
   deleteTask: (id: string, taskId: string) => call<Record<string, never>>("DELETE", `${one(id)}/tasks/${seg(taskId)}`),
-  comment: (id: string, taskId: string, body: string) => call<TaskDetail>("POST", `${one(id)}/tasks/${seg(taskId)}/comments`, { body }),
+  comment: (id: string, taskId: string, body: string, mentions: string[] = []) => call<TaskDetail>("POST", `${one(id)}/tasks/${seg(taskId)}/comments`, { body, ...(mentions.length ? { mentions } : {}) }),
+  watch: (id: string, taskId: string, watching: boolean) => call<TaskDetail>("PUT", `${one(id)}/tasks/${seg(taskId)}/watch`, { watching }),
+  checklistToTask: (id: string, taskId: string, itemId: string) => call<TaskSummary>("POST", `${one(id)}/tasks/${seg(taskId)}/checklist/${seg(itemId)}/task`, {}),
   // Step 119: comments on the record itself.
   comments: (id: string) => call<{ comments: ObjectComment[] }>("GET", `${one(id)}/comments`),
   addComment: (id: string, body: string) => call<{ comments: ObjectComment[] }>("POST", `${one(id)}/comments`, { body }),
