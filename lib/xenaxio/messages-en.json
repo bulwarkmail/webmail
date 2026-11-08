@@ -3879,9 +3879,12 @@
     "place_address": "Address",
     "place_coords": "Coordinates (latitude, longitude)",
     "place_here": "My location",
-    "place_map": "Open on map (OpenStreetMap)",
     "history_tab": "History",
-    "history_with_comments": "Also show changes"
+    "history_with_comments": "Also show changes",
+    "place_open_in": "Open in:",
+    "map_google": "Google Maps",
+    "map_apple": "Apple Maps",
+    "map_osm": "OpenStreetMap"
   },
   "objects": {
     "title": "Records",

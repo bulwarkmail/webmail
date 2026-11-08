@@ -10,7 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { usePeopleStore } from "@/lib/xenaxio/people";
-import { CURRENCIES, dayText, local, type ObjectFile, type ObjectSummary, objectFileUrl as objectFileHref, osmHref, type Place, projectsApi, type TypeField, typeHref } from "@/lib/xenaxio/projects";
+import { CURRENCIES, dayText, local, type ObjectFile, type ObjectSummary, objectFileUrl as objectFileHref, mapApps, mapHref, osmHref, type Place, projectsApi, type TypeField, typeHref } from "@/lib/xenaxio/projects";
 import { selectClass } from "./bits";
 
 type Money = { amount: number; currency: string };
@@ -336,11 +336,7 @@ function PlaceInput({ value, onSave, disabled, id }: { value: Place | null; onSa
           </button>
         )}
       </div>
-      {href && (
-        <a href={href} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
-          {t("projects.place_map")}
-        </a>
-      )}
+      {href && value && <PlaceLinks place={value} />}
     </div>
   );
 }
@@ -391,5 +387,51 @@ function FilePicker({ objectId, images, value, onSave, disabled }: { objectId: s
         </select>
       )}
     </div>
+  );
+}
+
+/** "Open in": the maps this device offers (owner 08.11.2026). */
+export function PlaceLinks({ place, className }: { place: Place; className?: string }) {
+  const t = useXT();
+  const apps = mapApps(typeof navigator === "undefined" ? "" : navigator.userAgent);
+  return (
+    <span className={cn("flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs", className)}>
+      <span className="text-muted-foreground">{t("projects.place_open_in")}</span>
+      {apps.map((app) => {
+        const href = mapHref(place, app);
+        return href ? (
+          <a key={app} href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+            {t(`projects.map_${app}`)}
+          </a>
+        ) : null;
+      })}
+    </span>
+  );
+}
+
+/** A place in a table cell: its address, a click offers the maps (and does not open the row). */
+export function PlaceMenu({ place }: { place: Place }) {
+  const t = useXT();
+  const [open, setOpen] = useState(false);
+  const label = place.address ?? (typeof place.lat === "number" ? `${place.lat}, ${place.lng}` : "");
+  const apps = mapApps(typeof navigator === "undefined" ? "" : navigator.userAgent);
+  return (
+    <span className="relative inline-block max-w-full" onClick={(e) => e.stopPropagation()}>
+      <button type="button" className="max-w-full truncate text-left text-primary hover:underline" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((v) => !v)}>
+        📍 {label}
+      </button>
+      {open && (
+        <span role="menu" className="absolute left-0 top-full z-20 mt-1 flex min-w-40 flex-col rounded-md border border-border bg-popover p-1 shadow-md" onMouseLeave={() => setOpen(false)}>
+          {apps.map((app) => {
+            const href = mapHref(place, app);
+            return href ? (
+              <a key={app} role="menuitem" href={href} target="_blank" rel="noopener noreferrer" className="rounded px-2 py-1 text-sm hover:bg-muted" onClick={() => setOpen(false)}>
+                {t(`projects.map_${app}`)}
+              </a>
+            ) : null;
+          })}
+        </span>
+      )}
+    </span>
   );
 }

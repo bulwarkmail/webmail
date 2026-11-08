@@ -42,3 +42,16 @@ describe("project tasks in the calendar", () => {
     expect(noticeHref("/objects/?type=vehicle&id=o1&task=t1")).toBe("/objects?type=vehicle&id=o1&task=t1");
   });
 });
+
+import { mapApps, mapHref } from "@/lib/xenaxio/projects";
+
+describe("places open in the person's map (owner 08.11.2026)", () => {
+  it("offers Apple Maps only on Apple devices and builds links by coordinates or address", () => {
+    expect(mapApps("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)")).toEqual(["apple", "google", "osm"]);
+    expect(mapApps("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")).toEqual(["google", "osm"]);
+    expect(mapHref({ lat: 52.52, lng: 13.405 }, "google")).toBe("https://www.google.com/maps/search/?api=1&query=52.52%2C13.405");
+    expect(mapHref({ address: "Hauptstr. 1, Berlin", lat: 52.52, lng: 13.405 }, "apple")).toBe("https://maps.apple.com/?ll=52.52,13.405&q=Hauptstr.%201%2C%20Berlin");
+    expect(mapHref({ address: "Hauptstr. 1" }, "osm")).toBe("https://www.openstreetmap.org/search?query=Hauptstr.%201");
+    expect(mapHref({}, "google")).toBeNull();
+  });
+});

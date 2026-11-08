@@ -480,3 +480,24 @@ export function osmHref(p: Place): string | null {
   if (p.address) return `https://www.openstreetmap.org/search?query=${encodeURIComponent(p.address)}`;
   return null;
 }
+
+export type MapApp = "google" | "apple" | "osm";
+
+/**
+ * Owner 08.11.2026: a place opens in the map the person chooses — Google Maps everywhere
+ * (the app on phones), Apple Maps on Apple devices, OpenStreetMap. Only links: nothing is
+ * loaded from those services until the person clicks.
+ */
+export function mapHref(p: Place, app: MapApp): string | null {
+  const hasCoords = typeof p.lat === "number" && typeof p.lng === "number";
+  if (!hasCoords && !p.address) return null;
+  const q = hasCoords ? `${p.lat},${p.lng}` : p.address!;
+  if (app === "google") return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+  if (app === "apple") return hasCoords ? `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(p.address ?? q)}` : `https://maps.apple.com/?q=${encodeURIComponent(q)}`;
+  return osmHref(p);
+}
+
+/** The maps to offer on this device: Apple Maps only on iPhone, iPad and Mac. */
+export function mapApps(userAgent: string): MapApp[] {
+  return /iPhone|iPad|iPod|Macintosh/.test(userAgent) ? ["apple", "google", "osm"] : ["google", "osm"];
+}

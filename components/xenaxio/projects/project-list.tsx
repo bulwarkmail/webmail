@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 import { errorText } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
-import { dayText, type FieldFilter, isOverdue, local, type MyTask, type ObjectSummary, type ObjectType, type ProjectTemplate, projectsApi, type Visibility } from "@/lib/xenaxio/projects";
+import { dayText, type FieldFilter, isOverdue, local, type MyTask, type ObjectSummary, type ObjectType, type Place, type ProjectTemplate, projectsApi, type Visibility } from "@/lib/xenaxio/projects";
 import { usePeopleStore } from "@/lib/xenaxio/people";
-import { FieldInput, fieldText } from "./fields";
+import { FieldInput, fieldText, PlaceMenu } from "./fields";
 import { ImportDialog, exportCsv } from "./import-csv";
 import { toast } from "@/stores/toast-store";
 import { Board } from "./board";
@@ -210,7 +210,8 @@ function ProjectCard({ p, type, locale, onOpen, showStatus = true }: { p: Object
         .slice(0, 2)
         .map((f) => (
           <p key={f.key} className="mt-0.5 truncate text-xs text-muted-foreground">
-            {local(f.label, locale)}: {fieldText(f, p.fields[f.key], locale)}
+            {f.type === "location" ? "📍 " : `${local(f.label, locale)}: `}
+            {fieldText(f, p.fields[f.key], locale)}
           </p>
         ))}
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -492,7 +493,7 @@ export function ProjectList({ onOpen, typeKey = "project" }: { onOpen: (id: stri
                     {(type?.statuses.length ?? 1) > 0 && <td className="px-2 py-2">{status && <StatusChip text={local(status.name, locale)} color={status.color} />}</td>}
                     {columns.map((f) => (
                       <td key={f.key} className="px-2 py-2">
-                        {fieldText(f, p.fields?.[f.key], locale, people) || "—"}
+                        {f.type === "location" && p.fields?.[f.key] ? <PlaceMenu place={p.fields[f.key] as Place} /> : fieldText(f, p.fields?.[f.key], locale, people) || "—"}
                       </td>
                     ))}
                     <td className={cn("px-2 py-2", isOverdue(p.dueOn, p.closed) && "font-medium text-destructive")}>{p.dueOn ? dayText(p.dueOn, locale) : "—"}</td>
