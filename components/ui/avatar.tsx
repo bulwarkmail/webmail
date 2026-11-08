@@ -90,6 +90,54 @@ function emailHash(email: string): number {
   return Math.abs(hash);
 }
 
+// An unspaced Han-character name is usually surname + given name. Compound
+// surnames take two characters, so the given name of 司马光 starts at the
+// third character, not the second.
+const HAN_CHAR = /\p{Script=Han}/u;
+const COMPOUND_SURNAMES = new Set([
+  "欧阳", "司马", "上官", "诸葛", "东方", "独孤", "南宫", "万俟", "闻人",
+  "夏侯", "令狐", "尉迟", "公孙", "长孙", "慕容", "司徒", "司空", "皇甫",
+  "宇文", "呼延", "端木", "申屠", "公冶", "太叔", "西门", "鲜于", "闾丘",
+  "轩辕", "百里", "拓跋", "澹台", "谷梁",
+]);
+
+/**
+ * The given-name initials of a Han-script name: Chinese names are written
+ * without spaces, so the Western "first letters of the words" rule
+ * degenerates to the first two characters of the whole string - the surname
+ * plus one character of the given name (王阳明 showed 王阳). What reads
+ * naturally there is the given name instead: 王阳明 → 阳明, 陈阳 → 陈阳,
+ * 司马光 → 光. Only a name made entirely of Han characters takes this path;
+ * anything mixed, Latin, or kana keeps the Western rule.
+ *
+ * Accepted lengths: 2 (the whole name), 3 (surname + 2-char given name),
+ * and 4 only with a known compound surname. Anything longer falls back to
+ * the Western rule: the surname/given-name split of a 4+ character Han
+ * string is not guessable (Japanese 山田太郎 is 1+3, 高桥和也 is 2+2), so
+ * slicing at any fixed point produces a cross-boundary pair that is
+ * neither a name nor a surname - worse than the plain leading characters.
+ *
+ * Known trade-off at 3 characters: Chinese 1+2 is the dominant shape this
+ * rule exists for, and Japanese 1+2 (林太郎 → 太郎) cuts the same way, but
+ * a Japanese 2+1 name (田中実) slices to 中実, a cross-boundary pair.
+ * Script alone cannot tell the languages apart, and a surname dictionary
+ * is out of scope, so the majority case wins.
+ * Korean names in Hangul are NOT Han script (김 is \p{Script=Hangul}) and
+ * never take this path; they keep the Western rule.
+ */
+function hanGivenName(name: string): string | null {
+  const compact = name.replace(/\s+/g, "");
+  if (compact.length < 2) return null;
+  for (const ch of compact) {
+    if (!HAN_CHAR.test(ch)) return null;
+  }
+  if (compact.length === 2) return compact;
+  const compound = COMPOUND_SURNAMES.has(compact.slice(0, 2));
+  if (compact.length === 3) return compound ? compact.slice(2, 3) : compact.slice(1, 3);
+  if (compact.length === 4 && compound) return compact.slice(2, 4);
+  return null;
+}
+
 // Dev-only: common first names to infer gender for demo portrait selection
 const FEMALE_NAMES: Set<string> = IS_DEV ? new Set([
   "alice", "emily", "sarah", "priya", "carol", "anna", "maria", "emma", "olivia",
@@ -236,6 +284,8 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
 
   const getInitials = () => {
     if (name) {
+      const han = hanGivenName(name);
+      if (han) return han;
       const parts = name
         .trim()
         .split(/\s+/)

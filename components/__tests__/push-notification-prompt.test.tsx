@@ -7,6 +7,8 @@ import { useUIStore } from "@/stores/ui-store";
 
 const mocks = vi.hoisted(() => ({
   pathname: "/en",
+  appName: "Webmail",
+  translate: vi.fn((key: string, _values?: Record<string, unknown>) => key),
   enabled: false,
   supported: true,
   enableWebPush: vi.fn(),
@@ -42,21 +44,16 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-// Translations render as the key, followed by any values passed in, so the
-// tests see whether the app name reaches the title.
+vi.mock("next/navigation", () => ({
+  usePathname: () => mocks.pathname,
+}));
+
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
-    values ? `${key} ${Object.values(values).join(" ")}` : key,
+  useTranslations: () => mocks.translate,
 }));
 
 vi.mock("@/hooks/use-config", () => ({
-  useConfig: () => ({ appName: "Acme Mail" }),
-}));
-
-const TITLE = "title Acme Mail";
-
-vi.mock("next/navigation", () => ({
-  usePathname: () => mocks.pathname,
+  useConfig: () => ({ appName: mocks.appName }),
 }));
 
 vi.mock("@/stores/auth-store", () => ({
@@ -117,6 +114,8 @@ describe("PushNotificationPrompt", () => {
     vi.useFakeTimers();
     localStorage.clear();
     mocks.pathname = "/en";
+    mocks.appName = "Webmail";
+    mocks.translate.mockClear();
     mocks.supported = true;
     mocks.enabled = false;
     mocks.authState.client = { getAccountId: () => "account-1" };
@@ -152,8 +151,23 @@ describe("PushNotificationPrompt", () => {
     render(<PushNotificationPrompt />);
     await advancePromptDelay();
 
-    expect(screen.getByText(TITLE)).toBeInTheDocument();
+    expect(screen.getByText("title")).toBeInTheDocument();
     expect(mocks.isWebPushEnabled).toHaveBeenCalledWith("account-1");
+  });
+
+  it("names the app in the title with the configured APP_NAME", async () => {
+    mocks.appName = "Acme Mail";
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    expect(mocks.translate).toHaveBeenCalledWith("title", { appName: "Acme Mail" });
+  });
+
+  it("names the app Bulwark in the title on a stock install", async () => {
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    expect(mocks.translate).toHaveBeenCalledWith("title", { appName: "Bulwark" });
   });
 
   it("enables push through the existing web-push flow", async () => {
@@ -172,7 +186,7 @@ describe("PushNotificationPrompt", () => {
       inboxOnly: false,
       mutes: { accounts: [], mailboxes: {} },
     });
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
   });
 
   it("registers with the relay the user picked from the admin list", async () => {
@@ -244,7 +258,7 @@ describe("PushNotificationPrompt", () => {
     render(<PushNotificationPrompt />);
     await advancePromptDelay();
 
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
   });
 
   it("waits for the background pass before deciding on onboarding (#1321)", async () => {
@@ -258,7 +272,7 @@ describe("PushNotificationPrompt", () => {
     render(<PushNotificationPrompt />);
     await advancePromptDelay();
     expect(mocks.isWebPushEnabled).not.toHaveBeenCalled();
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
 
     // The subscription is back: nothing to ask the user.
     mocks.enabled = true;
@@ -267,7 +281,7 @@ describe("PushNotificationPrompt", () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(mocks.isWebPushEnabled).toHaveBeenCalledWith("account-1");
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
   });
 
   it("offers onboarding when push is still off after the background pass", async () => {
@@ -278,13 +292,13 @@ describe("PushNotificationPrompt", () => {
 
     render(<PushNotificationPrompt />);
     await advancePromptDelay();
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
 
     await act(async () => {
       settled();
       await vi.advanceTimersByTimeAsync(0);
     });
-    expect(screen.getByText(TITLE)).toBeInTheDocument();
+    expect(screen.getByText("title")).toBeInTheDocument();
   });
 
   it("re-registers every login when the service worker reports a replaced subscription", async () => {
@@ -420,7 +434,7 @@ describe("PushNotificationPrompt", () => {
     await advancePromptDelay();
 
     expect(mocks.isWebPushEnabled).not.toHaveBeenCalled();
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
   });
 
   it("does not render on the settings route", async () => {
@@ -455,13 +469,13 @@ describe("PushNotificationPrompt", () => {
     mocks.authState.client = { getAccountId: () => "account-2" };
     rerender(<PushNotificationPrompt />);
     await advancePromptDelay();
-    expect(screen.getByText(TITLE)).toBeInTheDocument();
+    expect(screen.getByText("title")).toBeInTheDocument();
     fireEvent.click(screen.getByText("not_now"));
 
     mocks.authState.client = { getAccountId: () => "account-1" };
     rerender(<PushNotificationPrompt />);
     await advancePromptDelay();
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
   });
 
   it("defers push onboarding until the PWA install prompt is closed", async () => {
@@ -476,7 +490,7 @@ describe("PushNotificationPrompt", () => {
     await advancePromptDelay();
 
     expect(mocks.isWebPushEnabled).not.toHaveBeenCalled();
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
 
     act(() => {
       window.dispatchEvent(
@@ -488,18 +502,18 @@ describe("PushNotificationPrompt", () => {
     await advancePromptDelay();
 
     expect(mocks.isWebPushEnabled).toHaveBeenCalledWith("account-1");
-    expect(screen.getByText(TITLE)).toBeInTheDocument();
+    expect(screen.getByText("title")).toBeInTheDocument();
   });
 
   it("stays off the screen while a composer is open", async () => {
     render(<PushNotificationPrompt />);
     await advancePromptDelay();
-    expect(screen.getByText(TITLE)).toBeInTheDocument();
+    expect(screen.getByText("title")).toBeInTheDocument();
 
     act(() => useUIStore.getState().beginComposing());
-    expect(screen.queryByText(TITLE)).not.toBeInTheDocument();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
 
     act(() => useUIStore.getState().endComposing());
-    expect(screen.getByText(TITLE)).toBeInTheDocument();
+    expect(screen.getByText("title")).toBeInTheDocument();
   });
 });

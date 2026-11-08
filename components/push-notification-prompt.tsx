@@ -20,8 +20,9 @@ import {
   waitForWebPushResync,
 } from "@/lib/web-push";
 import { webPushErrorKey } from "@/lib/web-push-errors";
-import { useConfig } from "@/hooks/use-config";
 import { resolveActiveRelayUrl } from "@/lib/push-relays";
+import { productName } from "@/lib/product-name";
+import { useConfig } from "@/hooks/use-config";
 import {
   isPWAInstallPromptVisible,
   PWA_INSTALL_PROMPT_VISIBILITY_EVENT,
@@ -93,7 +94,7 @@ export function PushNotificationPrompt() {
   const pathname = usePathname();
   const tPush = useTranslations("settings.notifications.push");
   const tInstall = useTranslations("pwa_install");
-  const { appName } = useConfig();
+  const appName = productName(useConfig().appName);
 
   const client = useAuthStore((state) => state.client);
   const username = useAuthStore((state) => state.username);
