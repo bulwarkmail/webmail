@@ -1054,7 +1054,13 @@
     "tool_link_to_object": "Linking to the project…",
     "tool_list_project_tasks": "Checking project tasks…",
     "tool_create_project_task": "Preparing a project task…",
-    "tool_update_project_task": "Preparing a change to the task…"
+    "tool_update_project_task": "Preparing a change to the task…",
+    "helper_working": "{helper} is working …",
+    "helpers": {
+      "mail_research": "Mail research",
+      "file_research": "File research",
+      "calendar": "Calendar"
+    }
   },
   "mcp": {
     "title": "Connect AI chats",
@@ -3319,7 +3325,8 @@
       "link_to_object": "Link emails, files and events to projects",
       "list_project_tasks": "See tasks on project boards",
       "create_project_task": "Add tasks to project boards",
-      "update_project_task": "Change and move tasks on project boards"
+      "update_project_task": "Change and move tasks on project boards",
+      "delegate": "Helpers"
     },
     "admin_title": "Company AI permissions",
     "admin_intro": "A limit for everyone in the company. Employees can only be stricter for themselves. Reading tools stay allowed under \"Ask at most\".",
