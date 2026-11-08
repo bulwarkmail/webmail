@@ -300,7 +300,22 @@
     "object_stages_required": "Projects always have stages.",
     "object_comments_off": "Comments are off for this type.",
     "object_comments_limit": "This record has too many comments.",
-    "object_comment_not_found": "This comment does not exist."
+    "object_comment_not_found": "This comment does not exist.",
+    "object_files_off": "Files are not turned on for this type.",
+    "object_file_empty": "The file is empty.",
+    "object_file_too_large": "The file is too large (up to 50 MB).",
+    "object_file_name_invalid": "The file name is not valid.",
+    "object_too_many_files": "This record already has 200 files.",
+    "object_files_space_full": "The company's room for files of records is full.",
+    "object_file_not_found": "The file no longer exists.",
+    "object_file_not_yours": "Only who added the file, the owners or an admin delete it.",
+    "object_mention_not_member": "Only people of the project can be mentioned.",
+    "object_checklist_invalid": "A checklist item needs text (up to 200 characters).",
+    "object_checklist_too_long": "A checklist has up to 50 items.",
+    "object_template_not_found": "The template no longer exists.",
+    "object_template_not_yours": "Only who saved the template or an admin delete it.",
+    "object_too_many_templates": "The company already has 50 templates.",
+    "object_template_needs_board": "Templates are for types with a board."
   },
   "login": {
     "title": "Sign in",
@@ -3842,7 +3857,21 @@
     "lane_no_priority": "No priority",
     "lane_no_label": "No label",
     "calendar_layer": "Tasks",
-    "lane_project_move": "A task stays in its own project."
+    "lane_project_move": "A task stays in its own project.",
+    "files": "Files",
+    "files_add": "Add files",
+    "files_drop": "Drop files here or choose them",
+    "files_none": "No files yet.",
+    "files_uploading": "Uploading {name}…",
+    "file_download": "Download",
+    "file_open": "Open",
+    "file_delete": "Delete file",
+    "file_delete_text": "Delete \"{name}\"? Copies saved in Files stay.",
+    "file_to_dateien": "Save in Files",
+    "file_saved": "\"{name}\" saved in your Files",
+    "task_links": "Linked",
+    "attachments_count": "{count} attachments",
+    "add_to_task": "To a task"
   },
   "objects": {
     "title": "Records",
@@ -3969,7 +3998,9 @@
     "use_stages": "Use stages",
     "use_stages_hint": "For records that go through steps (requests, deals, candidates). Without stages a record is never “done”; it leaves through the archive.",
     "stages_off_text": "Turn stages off? The {n} records lose their stage.",
-    "comments": "Comments on records"
+    "comments": "Comments on records",
+    "attachments": "Files",
+    "attachments_hint": "People can attach files to records of this type."
   },
   "groups_page": {
     "title": "Groups",

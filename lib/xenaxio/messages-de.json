@@ -300,7 +300,22 @@
     "object_stages_required": "Projekte haben immer Phasen.",
     "object_comments_off": "Kommentare sind für diesen Typ aus.",
     "object_comments_limit": "Dieser Eintrag hat zu viele Kommentare.",
-    "object_comment_not_found": "Diesen Kommentar gibt es nicht."
+    "object_comment_not_found": "Diesen Kommentar gibt es nicht.",
+    "object_files_off": "Dateien sind für diesen Typ nicht eingeschaltet.",
+    "object_file_empty": "Die Datei ist leer.",
+    "object_file_too_large": "Die Datei ist zu groß (bis 50 MB).",
+    "object_file_name_invalid": "Der Dateiname ist ungültig.",
+    "object_too_many_files": "Dieser Eintrag hat bereits 200 Dateien.",
+    "object_files_space_full": "Der Platz der Firma für Dateien von Einträgen ist voll.",
+    "object_file_not_found": "Die Datei gibt es nicht mehr.",
+    "object_file_not_yours": "Nur wer die Datei hinzugefügt hat, die Verantwortlichen oder ein Admin löschen sie.",
+    "object_mention_not_member": "Erwähnt werden können nur Personen des Projekts.",
+    "object_checklist_invalid": "Ein Punkt der Checkliste braucht Text (bis 200 Zeichen).",
+    "object_checklist_too_long": "Eine Checkliste hat bis zu 50 Punkte.",
+    "object_template_not_found": "Die Vorlage gibt es nicht mehr.",
+    "object_template_not_yours": "Nur wer die Vorlage gespeichert hat oder ein Admin löscht sie.",
+    "object_too_many_templates": "Die Firma hat bereits 50 Vorlagen.",
+    "object_template_needs_board": "Vorlagen gibt es für Typen mit Board."
   },
   "login": {
     "title": "Anmelden",
@@ -3842,7 +3857,21 @@
     "lane_no_priority": "Ohne Priorität",
     "lane_no_label": "Ohne Label",
     "calendar_layer": "Aufgaben",
-    "lane_project_move": "Eine Aufgabe bleibt in ihrem Projekt."
+    "lane_project_move": "Eine Aufgabe bleibt in ihrem Projekt.",
+    "files": "Dateien",
+    "files_add": "Dateien hinzufügen",
+    "files_drop": "Dateien hierher ziehen oder auswählen",
+    "files_none": "Noch keine Dateien.",
+    "files_uploading": "{name} wird hochgeladen …",
+    "file_download": "Herunterladen",
+    "file_open": "Öffnen",
+    "file_delete": "Datei löschen",
+    "file_delete_text": "„{name}“ löschen? In Dateien gespeicherte Kopien bleiben.",
+    "file_to_dateien": "In Dateien speichern",
+    "file_saved": "„{name}“ in Ihren Dateien gespeichert",
+    "task_links": "Verknüpft",
+    "attachments_count": "{count} Anhänge",
+    "add_to_task": "Zu Aufgabe"
   },
   "objects": {
     "title": "Einträge",
@@ -3969,7 +3998,9 @@
     "use_stages": "Phasen verwenden",
     "use_stages_hint": "Für Einträge, die Schritte durchlaufen (Anfragen, Deals, Bewerber). Ohne Phasen ist ein Eintrag nie „erledigt“; er verlässt die Liste über das Archiv.",
     "stages_off_text": "Phasen ausschalten? Die {n} Einträge verlieren ihre Phase.",
-    "comments": "Kommentare zu Einträgen"
+    "comments": "Kommentare zu Einträgen",
+    "attachments": "Dateien",
+    "attachments_hint": "An Einträge dieses Typs können Dateien angehängt werden."
   },
   "groups_page": {
     "title": "Gruppen",

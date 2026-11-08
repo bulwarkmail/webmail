@@ -18,6 +18,7 @@ const task = (over: Partial<TaskSummary>): TaskSummary => ({
   hasDescription: false,
   comments: 0,
   checklist: { done: 0, total: 0 },
+  attachments: 0,
   updatedAt: "2026-11-07T10:00:00Z",
   ...over,
 });

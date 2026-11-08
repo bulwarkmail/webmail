@@ -21,6 +21,7 @@ const mine: MyTask = {
   hasDescription: false,
   comments: 0,
   checklist: { done: 0, total: 0 },
+  attachments: 0,
   updatedAt: "2026-11-07T10:00:00Z",
   object: { id: "p1", ref: "P-12", title: "Messe" },
   column: "Offen",

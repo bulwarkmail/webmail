@@ -44,6 +44,7 @@ import { Modal, PeoplePicker, PersonBadge, selectClass, StatusChip } from "./bit
 import { NewProjectDialog } from "./project-list";
 import { FieldInput } from "./fields";
 import { RecordComments } from "./record-comments";
+import { Attachments } from "./attachments";
 import { Lock } from "@/components/icons";
 import { typeHref } from "@/lib/xenaxio/projects";
 import { TaskPanel } from "./task-panel";
@@ -86,6 +87,7 @@ function TaskCard({ task, locale, onOpen, project }: { task: TaskSummary; locale
             ☑ {task.checklist.done}/{task.checklist.total}
           </span>
         )}
+        {task.attachments > 0 && <span title={t("projects.attachments_count", { count: task.attachments })}>📎 {task.attachments}</span>}
         {task.comments > 0 && <span>💬 {task.comments}</span>}
         <span className="ml-auto">{task.assignee && <PersonBadge name={task.assignee.name} email={task.assignee.email} />}</span>
       </div>
@@ -690,6 +692,7 @@ function Overview({ project, type, allTypes, onChanged, onOpenProject }: { proje
             </ul>
           </div>
         ))}
+        {(type?.attachments ?? false) && <Attachments objectId={project.id} canEdit={project.can.edit && !project.archivedAt} />}
         {type?.comments && <RecordComments objectId={project.id} archived={!!project.archivedAt} />}
         {nests && <div className="space-y-1.5 text-sm sm:col-span-2">
           <div className="flex items-center gap-2">
@@ -758,6 +761,8 @@ function Linked({ project, onChanged }: { project: ObjectDetail; onChanged: (p: 
   const canEdit = project.can.edit;
   const [creating, setCreating] = useState(false);
   const channel = project.links.find((l) => l.kind === "channel");
+  // Step 124 B: links of tasks show in their task.
+  const recordLinks = project.links.filter((l) => !l.taskId);
 
   const remove = async (l: ObjectLink) => {
     try {
@@ -799,11 +804,11 @@ function Linked({ project, onChanged }: { project: ObjectDetail; onChanged: (p: 
             {t("projects.channel_create")}
           </Button>
         )}
-        {project.links.length === 0 ? (
+        {recordLinks.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("projects.linked_none")}</p>
         ) : (
           <ul className="divide-y divide-border rounded-md border border-border">
-            {project.links.map((l) => {
+            {recordLinks.map((l) => {
               const Icon = LINK_ICONS[l.kind] ?? LinkIcon;
               const href = linkHref(l);
               return (
@@ -953,7 +958,7 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
             .map((k) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={cn("-mb-px border-b-2 px-0.5 py-2", tab === k ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
               {t(`projects.tab.${k}`)}
-              {k === "linked" && project.links.length > 0 ? ` (${project.links.length})` : ""}
+              {k === "linked" && project.links.some((l) => !l.taskId) ? ` (${project.links.filter((l) => !l.taskId).length})` : ""}
             </button>
           ))}
         </nav>

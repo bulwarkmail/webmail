@@ -2,7 +2,7 @@
 // The platform keeps the cases, people, links, columns and tasks; the client
 // draws the card from the type's fields, so later case types (industry packs)
 // need no code here.
-import { apiFetch } from "@/lib/browser-navigation";
+import { apiFetch, withBasePath } from "@/lib/browser-navigation";
 import { XenaxioApiError } from "@/lib/xenaxio/api";
 
 // Whole paths, so the Lite build check (scripts/lite/lib.mjs) sees each one.
@@ -85,6 +85,8 @@ export interface ObjectType {
   hasTasks: boolean;
   /** Step 119: comments on records of this type. */
   comments: boolean;
+  /** Step 127: files attached to records of this type. */
+  attachments: boolean;
   access: TypeAccess;
   menu: TypeMenu;
   archivedAt: string | null;
@@ -122,6 +124,8 @@ export interface ObjectSummary {
 
 export interface ObjectLink {
   id: string;
+  /** Step 124 B: set when the link belongs to a task. */
+  taskId?: string | null;
   kind: LinkKind;
   ref: string;
   account: string | null;
@@ -183,7 +187,21 @@ export interface TaskSummary {
   comments: number;
   /** Step 124 A: ticked and all checklist items. */
   checklist: { done: number; total: number };
+  /** Step 124 B: files and links of the task. */
+  attachments: number;
   updatedAt: string;
+}
+
+/** Step 127 A, 124 B: a file attached to a record or a task. */
+export interface ObjectFile {
+  id: string;
+  taskId: string | null;
+  name: string;
+  type: string;
+  size: number;
+  createdBy: { id: string; name: string } | null;
+  createdAt: string;
+  can: { delete: boolean };
 }
 
 export interface TaskDetail extends TaskSummary {
@@ -193,6 +211,8 @@ export interface TaskDetail extends TaskSummary {
   commentList: { id: string; author: PersonRef | null; body: string; createdAt: string }[];
   checklistItems: ChecklistItem[];
   history: TaskEvent[];
+  /** Step 124 B: emails and files from Files linked to the task. */
+  links: ObjectLink[];
   /** Step 124 C. */
   watchers: PersonRef[];
   watching: boolean;
@@ -315,7 +335,10 @@ export const projectsApi = {
   setPerson: (id: string, userId: string, role: "owner" | "member" = "member") => call<ObjectDetail>("PUT", `${one(id)}/people/${seg(userId)}`, { role }),
   removePerson: (id: string, userId: string) => call<ObjectDetail | Record<string, never>>("DELETE", `${one(id)}/people/${seg(userId)}`),
   join: (id: string) => call<ObjectDetail>("POST", `${one(id)}/join`, {}),
-  addLink: (id: string, link: { kind: LinkKind; ref: string; account?: string | null; title?: string | null }) => call<ObjectLink>("POST", `${one(id)}/links`, link),
+  // Step 127 A, 124 B: files of a record or a task.
+  files: (id: string, taskId?: string | null) => call<{ files: ObjectFile[] }>("GET", `${one(id)}/files${query({ taskId: taskId ?? undefined })}`),
+  deleteFile: (id: string, fileId: string) => call<Record<string, never>>("DELETE", `${one(id)}/files/${seg(fileId)}`),
+  addLink: (id: string, link: { kind: LinkKind; ref: string; account?: string | null; title?: string | null; taskId?: string | null }) => call<ObjectLink>("POST", `${one(id)}/links`, link),
   removeLink: (id: string, linkId: string) => call<Record<string, never>>("DELETE", `${one(id)}/links/${seg(linkId)}`),
   addColumn: (id: string, body: { name: string; done?: boolean; index?: number }) => call<{ columns: BoardColumn[] }>("POST", `${one(id)}/columns`, body),
   updateColumn: (id: string, columnId: string, body: { name?: string; done?: boolean; index?: number }) => call<{ columns: BoardColumn[] }>("PATCH", `${one(id)}/columns/${seg(columnId)}`, body),
@@ -339,7 +362,7 @@ export const projectsApi = {
   // Step 119: the admin's editor of object types.
   adminTypes: () => call<{ types: ObjectType[] }>("GET", OBJECT_TYPES),
   createType: (body: { name: Text; plural: Text; prefix?: string; hasTasks?: boolean; menu?: TypeMenu; access?: TypeAccess }) => call<ObjectType>("POST", OBJECT_TYPES, body),
-  updateType: (key: string, body: { name?: Text; plural?: Text; prefix?: string; hasTasks?: boolean; comments?: boolean; parentTypes?: string[]; card?: string[]; menu?: TypeMenu; access?: TypeAccess }) =>
+  updateType: (key: string, body: { name?: Text; plural?: Text; prefix?: string; hasTasks?: boolean; comments?: boolean; attachments?: boolean; parentTypes?: string[]; card?: string[]; menu?: TypeMenu; access?: TypeAccess }) =>
     call<ObjectType>("PATCH", `${OBJECT_TYPES}/${seg(key)}`, body),
   archiveType: (key: string, archived: boolean) => call<ObjectType>("POST", `${OBJECT_TYPES}/${seg(key)}/archive`, { archived }),
   removeType: (key: string) => call<Record<string, never>>("DELETE", `${OBJECT_TYPES}/${seg(key)}`),
@@ -411,4 +434,29 @@ export function filterTasks<T extends TaskSummary>(tasks: T[], f: TaskFilter, to
     const text = `${t.title} ${t.labels.join(" ")} ${t.assignee?.name ?? ""}`.toLowerCase();
     return words.every((w) => text.includes(w));
   });
+}
+
+/** Step 127 A: where a file of a record is downloaded (inline: pictures and PDFs open in the browser). */
+export function objectFileUrl(objectId: string, fileId: string, inline = false): string {
+  return withBasePath(`${OBJECTS}/${encodeURIComponent(objectId)}/files/${encodeURIComponent(fileId)}${inline ? "?inline=1" : ""}`);
+}
+
+/** Uploads one file (raw body; its name and task in the query). */
+export async function uploadObjectFile(objectId: string, file: File, taskId?: string | null): Promise<ObjectFile> {
+  const q = new URLSearchParams({ name: file.name || "file" });
+  if (taskId) q.set("taskId", taskId);
+  let res: Response;
+  try {
+    res = await apiFetch(`${OBJECTS}/${encodeURIComponent(objectId)}/files?${q}`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "x-xenaxio-csrf": "1", "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    });
+  } catch {
+    throw new XenaxioApiError(0, "network");
+  }
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) throw new XenaxioApiError(res.status, typeof data.error === "string" ? data.error : res.status === 413 ? "object_file_too_large" : "internal");
+  return data as unknown as ObjectFile;
 }

@@ -20,6 +20,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/stores/toast-store";
 import { PersonBadge, selectClass } from "./bits";
 import { Checklist, CommentBody, History, MentionInput } from "./task-extras";
+import { Attachments } from "./attachments";
+import { linkHref } from "./project-view";
+import { Link } from "@/i18n/navigation";
 
 export function TaskPanel({ project, taskId, onClose, onChanged }: { project: ObjectDetail; taskId: string; onClose: () => void; onChanged: () => void }) {
   const t = useXT();
@@ -241,6 +244,44 @@ export function TaskPanel({ project, taskId, onClose, onChanged }: { project: Ob
             </div>
 
             <Checklist items={task.checklistItems} canEdit={canEdit} onSave={(next) => void save({ checklist: next })} onToTask={(id) => void toTask(id)} />
+
+            <Attachments objectId={project.id} taskId={taskId} canEdit={canEdit} onChanged={onChanged} compact />
+            {task.links.length > 0 && (
+              <div className="space-y-1 text-sm">
+                <span className="text-xs text-muted-foreground">{t("projects.task_links")}</span>
+                <ul className="space-y-1">
+                  {task.links.map((l) => {
+                    const href = linkHref(l);
+                    return (
+                      <li key={l.id} className="flex items-center gap-2">
+                        {href ? (
+                          <Link href={href} className="min-w-0 flex-1 truncate hover:underline">
+                            {l.title ?? l.ref}
+                          </Link>
+                        ) : (
+                          <span className="min-w-0 flex-1 truncate">{l.title ?? l.ref}</span>
+                        )}
+                        {canEdit && (
+                          <button
+                            type="button"
+                            className="rounded p-0.5 text-muted-foreground hover:text-destructive"
+                            aria-label={t("projects.link_remove")}
+                            onClick={() =>
+                              void projectsApi
+                                .removeLink(project.id, l.id)
+                                .then(async () => (show(await projectsApi.task(project.id, taskId)), onChanged()))
+                                .catch((err: unknown) => toast.error(errorText(t, err)))
+                            }
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
 
             <div className="space-y-2 text-sm">
               <span className="text-xs text-muted-foreground">{t("projects.comments")}</span>

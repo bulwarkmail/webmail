@@ -14,7 +14,7 @@ import { errorText } from "@/lib/xenaxio/api";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { useLocale } from "next-intl";
-import { type LinkKind, local, type ObjectSummary, type ObjectType, projectsApi, typeHref } from "@/lib/xenaxio/projects";
+import { type LinkKind, local, type ObjectSummary, type ObjectType, projectsApi, type TaskSummary, typeHref } from "@/lib/xenaxio/projects";
 import { selectClass } from "./bits";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -63,12 +63,27 @@ export function AddToProjectDialog({ target, onClose }: { target: LinkTarget; on
     return () => window.clearTimeout(timer);
   }, [q, t, typeKey]);
 
-  const add = async (p: ObjectSummary) => {
+  // Step 124 B: to a task of the record's board instead of the record itself.
+  const [taskFor, setTaskFor] = useState<{ id: string; tasks: TaskSummary[]; taskId: string } | null>(null);
+  const withBoard = typeKey === "project" || !!types.find((x) => x.key === typeKey)?.hasTasks;
+  const pickTask = async (p: ObjectSummary) => {
+    if (taskFor?.id === p.id) return setTaskFor(null);
+    try {
+      const r = await projectsApi.tasks(p.id);
+      const open = r.tasks.filter((x) => !x.done);
+      setTaskFor({ id: p.id, tasks: open, taskId: open[0]?.id ?? "" });
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+
+  const add = async (p: ObjectSummary, taskId?: string) => {
     setBusy(p.id);
     try {
-      await projectsApi.addLink(p.id, { kind: target.kind, ref: target.ref, account: target.account, title: target.title });
-      setLinked((cur) => new Set([...cur, p.id]));
-      toast.success(t("projects.added_to", { title: p.title }));
+      await projectsApi.addLink(p.id, { kind: target.kind, ref: target.ref, account: target.account, title: target.title, ...(taskId ? { taskId } : {}) });
+      if (!taskId) setLinked((cur) => new Set([...cur, p.id]));
+      setTaskFor(null);
+      toast.success(t("projects.added_to", { title: taskId ? (taskFor?.tasks.find((x) => x.id === taskId)?.title ?? p.title) : p.title }));
     } catch (err) {
       toast.error(errorText(t, err));
     } finally {
@@ -91,7 +106,8 @@ export function AddToProjectDialog({ target, onClose }: { target: LinkTarget; on
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("objects.search")} aria-label={t("objects.search")} autoFocus />
       <ul className="mt-2 max-h-72 overflow-y-auto rounded-md border border-border">
         {(projects ?? []).map((p) => (
-          <li key={p.id} className="flex items-center gap-2 px-2 py-1.5 text-sm">
+          <li key={p.id} className="px-2 py-1.5 text-sm">
+            <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{p.ref}</span>
             <span className="min-w-0 flex-1 truncate">{p.title}</span>
             {linked.has(p.id) ? (
@@ -103,6 +119,32 @@ export function AddToProjectDialog({ target, onClose }: { target: LinkTarget; on
               <Button size="sm" variant="outline" disabled={busy === p.id} onClick={() => void add(p)}>
                 {t("projects.add")}
               </Button>
+            )}
+            {withBoard && (
+              <Button size="sm" variant="ghost" aria-expanded={taskFor?.id === p.id} onClick={() => void pickTask(p)}>
+                {t("projects.add_to_task")}
+              </Button>
+            )}
+            </div>
+            {taskFor?.id === p.id && (
+              <div className="mt-1.5 flex gap-2">
+                {taskFor.tasks.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">{t("projects.tasks_none")}</span>
+                ) : (
+                  <>
+                    <select className={selectClass} value={taskFor.taskId} onChange={(e) => setTaskFor({ ...taskFor, taskId: e.target.value })} aria-label={t("projects.task")}>
+                      {taskFor.tasks.map((x) => (
+                        <option key={x.id} value={x.id}>
+                          {x.ref} · {x.title}
+                        </option>
+                      ))}
+                    </select>
+                    <Button size="sm" disabled={busy === p.id || !taskFor.taskId} onClick={() => void add(p, taskFor.taskId)}>
+                      {t("projects.add")}
+                    </Button>
+                  </>
+                )}
+              </div>
             )}
           </li>
         ))}

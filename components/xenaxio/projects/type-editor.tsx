@@ -340,6 +340,10 @@ function TypeForm({ type, types, groups, onChanged, onGone }: { type: ObjectType
           <input type="checkbox" checked={type.comments} onChange={(e) => void act(() => projectsApi.updateType(type.key, { comments: e.target.checked }))} />
           {t("typeeditor.comments")}
         </label>
+        <label className="flex items-center gap-2 text-sm" title={t("typeeditor.attachments_hint")}>
+          <input type="checkbox" checked={type.attachments} onChange={(e) => void act(() => projectsApi.updateType(type.key, { attachments: e.target.checked }))} />
+          {t("typeeditor.attachments")}
+        </label>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
