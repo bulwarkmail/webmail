@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useConfig } from '@/hooks/use-config';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { productName } from '@/lib/product-name';
-import { appPasswordDescription } from '@/lib/plugin-secrets/credentials';
-import { appPasswordRights, type RightArea } from '@/lib/plugin-secrets/app-password-permissions';
+import { appPasswordDescription, appPasswordRights, type RightArea } from '@/lib/plugin-secrets/app-password-permissions';
 import { useAuthStore } from '@/stores/auth-store';
 import {
   currentConnect,

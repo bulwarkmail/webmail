@@ -205,11 +205,6 @@ export function checkCredentials(
   return { credentials: errors.length ? undefined : out, errors };
 }
 
-/** The name of the app password the server makes for a plugin: the user sees it in their security settings. */
-export function appPasswordDescription(pluginName: string): string {
-  return `Plugin: ${pluginName.trim().slice(0, 80)}`;
-}
-
 /** The header to add for a secret, or null when the credential adds none. */
 export function authHeaderFor(
   inject: CredentialInject,

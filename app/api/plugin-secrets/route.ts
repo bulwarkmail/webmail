@@ -5,7 +5,8 @@ import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impers
 import { logger } from '@/lib/logger';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart/credentials';
-import { CREDENTIAL_ID_RE, appPasswordDescription, checkInject, credentialOrigin } from '@/lib/plugin-secrets/credentials';
+import { CREDENTIAL_ID_RE, checkInject, credentialOrigin } from '@/lib/plugin-secrets/credentials';
+import { appPasswordDescription } from '@/lib/plugin-secrets/app-password-permissions';
 import { makePluginAppPassword, revokePluginAppPassword } from '@/lib/plugin-secrets/app-password';
 import { adminCredentialOrigins, adminCredentialStatus } from '@/lib/plugin-secrets/proxy';
 import { declaringPlugin } from '@/lib/plugin-secrets/known-plugins';

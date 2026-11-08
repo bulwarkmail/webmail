@@ -98,3 +98,8 @@ export function appPasswordRights(permissions: readonly string[]): AppPasswordRi
     other,
   };
 }
+
+/** The name of the app password the server makes for a plugin: the user sees it in their security settings. */
+export function appPasswordDescription(pluginName: string): string {
+  return `Plugin: ${pluginName.trim().slice(0, 80)}`;
+}
