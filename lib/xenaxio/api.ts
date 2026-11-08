@@ -928,7 +928,8 @@ export interface MemoryNote {
   updatedAt: string;
   /** Step 91: who or what it is about; absent: the user. */
   subject?: string;
-  kind?: "person" | "work" | "episode";
+  /** Step 121: "lesson" — a rule the person taught by correcting the assistant. */
+  kind?: "person" | "work" | "episode" | "lesson";
   /** user: the person said it; data: taken from an email, file or chat. */
   trust?: "user" | "data";
   source?: { type: "chat" | "mail" | "file" | "run" | "page"; id?: string };
@@ -970,6 +971,8 @@ export interface MemoryState {
   company?: MemoryNote[];
   maxNotes: number;
   maxLength: number;
+  /** Step 121: "Learn from my corrections" (absent on older servers). */
+  learn?: boolean;
 }
 
 /** Step 48: an outside calendar (Google, Outlook, any .ics link) the platform keeps in a calendar here. */
@@ -1219,6 +1222,8 @@ export const xenaxio = {
   deleteMemory: (id: string) => request<{ ok: true }>("DELETE", `/api/ai/memories/${encodeURIComponent(id)}`),
   deleteAllMemories: () => request<{ ok: true }>("DELETE", "/api/ai/memories"),
   setMemoryEnabled: (enabled: boolean) => request<{ enabled: boolean }>("POST", "/api/ai/memories/settings", { enabled }),
+  /** Step 121: learning from the person's corrections on or off. */
+  setLearning: (enabled: boolean) => request<{ learn: boolean }>("POST", "/api/ai/memories/learning", { enabled }),
   schedules: () => request<ScheduleList>("GET", "/api/ai/schedules"),
   pauseSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/pause`),
   resumeSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/resume`),

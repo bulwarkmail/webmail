@@ -91,9 +91,46 @@ interface Turn {
   /** Step 84: skills the answer followed. */
   skills?: string[];
   /** Step 91: facts the assistant kept in this answer; `undone` once the user took one back. */
-  memory?: { id: string; text: string; undone?: boolean }[];
+  memory?: { id: string; text: string; undone?: boolean; lesson?: boolean }[];
   /** Step 101: what the answer really did, from its tool calls. */
   actions?: ActionReport;
+  /** Step 121: a proposal of this answer the user just declined: the panel asks why (optional). */
+  whyFor?: string;
+  /** Step 121: the user marked this answer as not helpful ("open": writing the comment). */
+  feedback?: "open" | "sent";
+}
+
+/** Step 121: one optional line for the user (why they declined, what was wrong), sent or dismissed. */
+function InlineAsk({ label, send, cancel, onSend, onCancel, allowEmpty }: { label: string; send: string; cancel: string; onSend: (text: string) => Promise<void>; onCancel: () => void; allowEmpty?: boolean }) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      className="flex flex-wrap items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!text.trim() && !allowEmpty) return onCancel();
+        setBusy(true);
+        void onSend(text.trim()).finally(() => setBusy(false));
+      }}
+    >
+      <input
+        className="min-w-0 flex-1 rounded border border-border bg-background px-2 py-1 text-xs"
+        value={text}
+        maxLength={1000}
+        placeholder={label}
+        aria-label={label}
+        autoFocus
+        onChange={(e) => setText(e.target.value)}
+      />
+      <Button type="submit" size="sm" variant="outline" disabled={busy}>
+        {send}
+      </Button>
+      <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={onCancel}>
+        {cancel}
+      </Button>
+    </form>
+  );
 }
 
 /** Step 83: the assistant's plan for a longer task. */
@@ -625,6 +662,8 @@ export function AssistantPanel() {
       if (!confirm) {
         await assistant.reject(proposal.id);
         set("rejected");
+        // Step 121: the panel asks why; the reason teaches the assistant (optional).
+        setTurns((prev) => prev.map((turn) => (turn.proposals?.some((p) => p.id === proposal.id) ? { ...turn, whyFor: proposal.id } : turn)));
         return;
       }
       const { result } = await assistant.confirm(proposal.id);
@@ -1027,7 +1066,7 @@ export function AssistantPanel() {
               {/* Step 91: what the assistant kept, with undo. */}
               {turn.memory?.map((m) => (
                 <p key={m.id} className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span className={m.undone ? "line-through" : ""}>{t("assistant.remembered", { text: m.text })}</span>
+                  <span className={m.undone ? "line-through" : ""}>{m.lesson ? `${t("assistant.learned")}: ${m.text}` : t("assistant.remembered", { text: m.text })}</span>
                   {!m.undone && (
                     <button type="button" className="text-primary underline underline-offset-2" onClick={() => void undoMemory(i, m.id)}>
                       {t("assistant.remembered_undo")}
@@ -1067,9 +1106,51 @@ export function AssistantPanel() {
                   )}
                 </Fragment>
               ))}
+              {/* Step 121: why a proposal was declined (optional); the reason becomes a lesson. */}
+              {turn.whyFor && (
+                <InlineAsk
+                  label={t("assistant.reject_reason")}
+                  send={t("assistant.bad_answer_send")}
+                  cancel={t("assistant.cancel")}
+                  onCancel={() => setTurns((prev) => prev.map((x, n) => (n === i ? { ...x, whyFor: undefined } : x)))}
+                  onSend={async (reason) => {
+                    const learned = await assistant.reason(turn.whyFor!, reason).catch(() => []);
+                    setTurns((prev) => prev.map((x, n) => (n === i ? { ...x, whyFor: undefined, memory: [...(x.memory ?? []), ...learned.map((l) => ({ ...l, lesson: true }))] } : x)));
+                  }}
+                />
+              )}
               {/* Step 101: what this answer really did; the proposal cards tell the live state. */}
               {turn.actions && !(busy && i === turns.length - 1) && (
                 <ActionReportView report={turn.actions} live={proposalStates} />
+              )}
+              {/* Step 121: "not helpful", with an optional comment that teaches the assistant. */}
+              {turn.role === "assistant" && turn.text.trim() && !(busy && i === turns.length - 1) && (
+                turn.feedback === "open" ? (
+                  <InlineAsk
+                    allowEmpty
+                    label={t("assistant.bad_answer_title")}
+                    send={t("assistant.bad_answer_send")}
+                    cancel={t("assistant.cancel")}
+                    onCancel={() => setTurns((prev) => prev.map((x, n) => (n === i ? { ...x, feedback: undefined } : x)))}
+                    onSend={async (comment) => {
+                      const question = [...turns.slice(0, i)].reverse().find((x) => x.role === "user")?.text ?? "";
+                      const learned = await assistant.feedback({ question, answer: turn.text, ...(comment ? { comment } : {}), ...(conversationId ? { conversationId } : {}) }).catch(() => []);
+                      setTurns((prev) => prev.map((x, n) => (n === i ? { ...x, feedback: "sent", memory: [...(x.memory ?? []), ...learned.map((l) => ({ ...l, lesson: true }))] } : x)));
+                    }}
+                  />
+                ) : turn.feedback === "sent" ? (
+                  <p className="text-xs text-muted-foreground">{t("assistant.bad_answer_thanks")}</p>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    aria-label={t("assistant.bad_answer")}
+                    title={t("assistant.bad_answer")}
+                    onClick={() => setTurns((prev) => prev.map((x, n) => (n === i ? { ...x, feedback: "open" } : x)))}
+                  >
+                    👎
+                  </button>
+                )
               )}
               {turn.sources && turn.sources.length > 0 && (
                 <div className="space-y-1">
