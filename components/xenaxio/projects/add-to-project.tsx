@@ -13,7 +13,9 @@ import type { Email } from "@/lib/jmap/types";
 import { errorText } from "@/lib/xenaxio/api";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useXT } from "@/lib/xenaxio/i18n";
-import { type LinkKind, type ObjectSummary, projectHref, projectsApi } from "@/lib/xenaxio/projects";
+import { useLocale } from "next-intl";
+import { type LinkKind, local, type ObjectSummary, type ObjectType, projectsApi, typeHref } from "@/lib/xenaxio/projects";
+import { selectClass } from "./bits";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFileStore } from "@/stores/file-store";
@@ -33,6 +35,16 @@ export function AddToProjectDialog({ target, onClose }: { target: LinkTarget; on
   const [projects, setProjects] = useState<ObjectSummary[] | null>(null);
   const [linked, setLinked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
+  // Step 119: projects or a type of the company's own ("Add to…").
+  const locale = useLocale();
+  const [types, setTypes] = useState<ObjectType[]>([]);
+  const [typeKey, setTypeKey] = useState("project");
+  useEffect(() => {
+    projectsApi
+      .types()
+      .then((r) => setTypes(r.types))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     projectsApi
@@ -44,12 +56,12 @@ export function AddToProjectDialog({ target, onClose }: { target: LinkTarget; on
   useEffect(() => {
     const timer = window.setTimeout(() => {
       projectsApi
-        .list({ mine: true, ...(q.trim() ? { q: q.trim() } : {}) })
+        .query({ type: typeKey, mine: typeKey === "project", ...(q.trim() ? { q: q.trim() } : {}), limit: 50 })
         .then((r) => setProjects(r.objects))
         .catch((err: unknown) => toast.error(errorText(t, err)));
     }, q ? 250 : 0);
     return () => window.clearTimeout(timer);
-  }, [q, t]);
+  }, [q, t, typeKey]);
 
   const add = async (p: ObjectSummary) => {
     setBusy(p.id);
@@ -65,16 +77,25 @@ export function AddToProjectDialog({ target, onClose }: { target: LinkTarget; on
   };
 
   return (
-    <Modal open onClose={onClose} title={t("projects.add_to")}>
+    <Modal open onClose={onClose} title={t("objects.add_to")}>
       <p className="mb-2 truncate text-sm text-muted-foreground">{target.title}</p>
-      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("projects.search")} aria-label={t("projects.search")} autoFocus />
+      {types.length > 1 && (
+        <select className={`${selectClass} mb-2`} value={typeKey} onChange={(e) => setTypeKey(e.target.value)} aria-label={t("objects.type")}>
+          {types.map((x) => (
+            <option key={x.key} value={x.key}>
+              {local(x.plural, locale)}
+            </option>
+          ))}
+        </select>
+      )}
+      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("objects.search")} aria-label={t("objects.search")} autoFocus />
       <ul className="mt-2 max-h-72 overflow-y-auto rounded-md border border-border">
         {(projects ?? []).map((p) => (
           <li key={p.id} className="flex items-center gap-2 px-2 py-1.5 text-sm">
             <span className="text-xs text-muted-foreground">{p.ref}</span>
             <span className="min-w-0 flex-1 truncate">{p.title}</span>
             {linked.has(p.id) ? (
-              <Link href={projectHref(p.id)} className="flex items-center gap-1 text-xs text-green-700 hover:underline dark:text-green-400">
+              <Link href={typeHref(typeKey, p.id)} className="flex items-center gap-1 text-xs text-green-700 hover:underline dark:text-green-400">
                 <Check className="h-3.5 w-3.5" />
                 {t("projects.added")}
               </Link>
@@ -107,7 +128,7 @@ export function AddEmailToProjectButton({ email }: { email: LinkableEmail }) {
   const account = email.sourceAccountId ?? useAuthStore.getState().client?.getAccountId() ?? null;
   return (
     <>
-      <Button variant="ghost" size="sm" className="sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0" title={t("projects.add_to")} onClick={() => setOpen(true)}>
+      <Button variant="ghost" size="sm" className="sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0" title={t("objects.add_to")} onClick={() => setOpen(true)}>
         <IconLayoutKanban className="w-4 h-4" />
         <span className="hidden lg:inline text-sm">{t("projects.add_to_short")}</span>
       </Button>

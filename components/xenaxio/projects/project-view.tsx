@@ -39,6 +39,9 @@ import { toast } from "@/stores/toast-store";
 import { Board } from "./board";
 import { Modal, PeoplePicker, PersonBadge, selectClass, StatusChip } from "./bits";
 import { NewProjectDialog } from "./project-list";
+import { FieldInput } from "./fields";
+import { Lock } from "@/components/icons";
+import { typeHref } from "@/lib/xenaxio/projects";
 import { TaskPanel } from "./task-panel";
 
 type Tab = "board" | "overview" | "linked";
@@ -358,7 +361,7 @@ function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; 
   );
 }
 
-function Overview({ project, type, onChanged, onOpenProject }: { project: ObjectDetail; type: ObjectType | undefined; onChanged: (p: ObjectDetail) => void; onOpenProject: (id: string) => void }) {
+function Overview({ project, type, allTypes, onChanged, onOpenProject }: { project: ObjectDetail; type: ObjectType | undefined; allTypes: ObjectType[]; onChanged: (p: ObjectDetail) => void; onOpenProject: (id: string) => void }) {
   const t = useXT();
   const locale = useLocale();
   const [editing, setEditing] = useState(false);
@@ -453,7 +456,7 @@ function Overview({ project, type, onChanged, onOpenProject }: { project: Object
         {canManage && (
           <label className="flex items-center gap-2 pt-1 text-sm">
             <input type="checkbox" checked={project.visibility === "company"} onChange={(e) => void save({ visibility: e.target.checked ? "company" : "members" })} />
-            {t("projects.visibility.company_toggle")}
+            {project.type === "project" ? t("projects.visibility.company_toggle") : t("objects.visibility_company")}
           </label>
         )}
       </div>
@@ -489,11 +492,43 @@ function Overview({ project, type, onChanged, onOpenProject }: { project: Object
     ),
   };
 
+  // Step 119: the type's own fields, in the card's order.
+  for (const f of type?.fields ?? []) {
+    if (f.type === "external") continue;
+    blocks[f.key] = (
+      <div className="block space-y-1 text-sm">
+        <label htmlFor={`f-${f.key}`} className="flex items-center gap-1 text-xs text-muted-foreground">
+          {local(f.label, locale)}
+          {f.required ? " *" : ""}
+          {f.sensitive && <Lock className="h-3 w-3" aria-label={t("objects.sensitive")} />}
+        </label>
+        <FieldInput id={`f-${f.key}`} field={f} value={project.fields?.[f.key] ?? null} disabled={!canEdit} onSave={(v) => void save({ fields: { [f.key]: v } })} />
+      </div>
+    );
+  }
+  const wide = (key: string) => ["members", "description"].includes(key) || ["textarea", "refs", "multiselect"].includes(type?.fields.find((f) => f.key === key)?.type ?? "");
+  const nests = !type || type.parentTypes.includes(type.key);
+  const typeName = (key: string) => local(allTypes.find((x) => x.key === key)?.plural, locale) || key;
+
   return (
     <div className="min-h-0 flex-1 overflow-auto p-3 sm:p-4">
       <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
-        {(type?.card ?? Object.keys(blocks)).map((key) => (blocks[key] ? <div key={key} className={cn(["members", "description"].includes(key) && "sm:col-span-2")}>{blocks[key]}</div> : null))}
-        <div className="space-y-1.5 text-sm sm:col-span-2">
+        {(type?.card ?? Object.keys(blocks)).map((key) => (blocks[key] ? <div key={key} className={cn(wide(key) && "sm:col-span-2")}>{blocks[key]}</div> : null))}
+        {project.backrefs.map((b) => (
+          <div key={`${b.type}:${b.field}`} className="space-y-1.5 text-sm sm:col-span-2">
+            <span className="text-xs text-muted-foreground">{t("objects.backrefs", { type: typeName(b.type) })}</span>
+            <ul className="space-y-1">
+              {b.records.map((r) => (
+                <li key={r.id}>
+                  <Link href={typeHref(b.type, r.id)} className="text-primary hover:underline">
+                    {r.ref} {r.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        {nests && <div className="space-y-1.5 text-sm sm:col-span-2">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{t("projects.sub")}</span>
             {canEdit && (
@@ -523,7 +558,7 @@ function Overview({ project, type, onChanged, onOpenProject }: { project: Object
           ) : (
             !project.parent && <p className="text-muted-foreground">{t("projects.sub_none")}</p>
           )}
-        </div>
+        </div>}
       </div>
       <Modal open={adding} onClose={() => setAdding(false)} title={t("projects.people_add")}>
         <PeoplePicker selected={newPeople} onChange={setNewPeople} exclude={project.people.map((p) => p.id)} />
@@ -550,7 +585,7 @@ function Overview({ project, type, onChanged, onOpenProject }: { project: Object
           </Button>
         </div>
       </Modal>
-      <NewProjectDialog open={creatingSub} onClose={() => setCreatingSub(false)} parentId={project.id} onCreated={(id) => (setCreatingSub(false), onOpenProject(id))} />
+      <NewProjectDialog type={type} open={creatingSub} onClose={() => setCreatingSub(false)} parentId={project.id} onCreated={(id) => (setCreatingSub(false), onOpenProject(id))} />
     </div>
   );
 }
@@ -640,6 +675,7 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
   const [project, setProject] = useState<ObjectDetail | null>(null);
   const [type, setType] = useState<ObjectType | undefined>();
   const [tab, setTab] = useState<Tab>("board");
+  const [allTypes, setAllTypes] = useState<ObjectType[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -656,12 +692,19 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
   }, [id, t]);
 
   useEffect(load, [load]);
+  const kind = project?.type;
   useEffect(() => {
+    if (!kind) return;
     projectsApi
       .types()
-      .then((r) => setType(r.types.find((x) => x.key === "project")))
+      .then((r) => {
+        const found = r.types.find((x) => x.key === kind);
+        setType(found);
+        setAllTypes(r.types);
+        if (found && !found.hasTasks) setTab((cur) => (cur === "board" ? "overview" : cur));
+      })
       .catch(() => undefined);
-  }, []);
+  }, [kind]);
 
   if (error)
     return (
@@ -736,7 +779,9 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
         </div>
         <h1 className="mt-1 truncate text-lg font-semibold">{project.title}</h1>
         <nav role="tablist" aria-label={project.title} className="mt-1 flex gap-4 text-sm">
-          {(["board", "overview", "linked"] as const).map((k) => (
+          {(["board", "overview", "linked"] as const)
+            .filter((k) => k !== "board" || (type?.hasTasks ?? project.type === "project"))
+            .map((k) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={cn("-mb-px border-b-2 px-0.5 py-2", tab === k ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
               {t(`projects.tab.${k}`)}
               {k === "linked" && project.links.length > 0 ? ` (${project.links.length})` : ""}
@@ -745,8 +790,8 @@ export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: {
         </nav>
       </header>
 
-      {tab === "board" && <TaskBoard project={project} onOpenTask={(task) => onOpenTask(task)} reloadKey={reloadKey} />}
-      {tab === "overview" && <Overview project={project} type={type} onChanged={setProject} onOpenProject={onOpenProject} />}
+      {tab === "board" && (type?.hasTasks ?? project.type === "project") && <TaskBoard project={project} onOpenTask={(task) => onOpenTask(task)} reloadKey={reloadKey} />}
+      {tab === "overview" && <Overview project={project} type={type} allTypes={allTypes} onChanged={setProject} onOpenProject={onOpenProject} />}
       {tab === "linked" && <Linked project={project} onChanged={setProject} />}
 
       {taskId && (

@@ -9,7 +9,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useThemeStore } from "@/stores/theme-store";
 import { useShallow } from "zustand/react/shallow";
 import { usePathname, Link, useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -36,7 +36,8 @@ import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useChatNavItem } from "@/lib/xenaxio/chat/nav";
 import { useMeetNavItem } from "@/lib/xenaxio/meet-nav";
 import { useFlowsNavItem } from "@/lib/xenaxio/flows-nav";
-import { useProjectsNavItem } from "@/lib/xenaxio/projects-nav";
+import { useObjectMenu } from "@/lib/xenaxio/projects-nav";
+import { local as localText } from "@/lib/xenaxio/projects";
 
 interface NavItem {
   id: string;
@@ -317,7 +318,9 @@ export function NavigationRail({
   const chatNav = useChatNavItem();
   const meetNav = useMeetNavItem();
   const flowsNav = useFlowsNavItem();
-  const projectsNav = useProjectsNavItem();
+  // xenaxio (steps 118–119): Projects and the company's own object types in the menu.
+  const objectMenu = useObjectMenu();
+  const menuLocale = useLocale();
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
     { id: "calendar", icon: CalendarEvent, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
@@ -328,7 +331,7 @@ export function NavigationRail({
     // xenaxio (step 78): video meetings, when the company has them on.
     { id: "meetings", icon: Video, labelKey: "meetings", label: meetNav.label, href: "/meetings", hidden: !meetNav.visible },
     // xenaxio (step 118): projects with boards.
-    { id: "projects", icon: LayoutGrid, labelKey: "projects", label: projectsNav.label, href: "/projects", hidden: !projectsNav.visible },
+    ...objectMenu.map((m) => ({ id: `objects:${m.key}`, icon: iconForName(m.icon) ?? LayoutGrid, labelKey: "projects", label: localText(m.plural, menuLocale), href: m.href })),
     // xenaxio (step F1.1): flows, when the company has them on.
     { id: "flows", icon: Share2, labelKey: "flows", label: flowsNav.label, href: "/flows", hidden: !flowsNav.visible, badge: flowsNav.badge },
   ];

@@ -13,7 +13,10 @@ import { cn } from "@/lib/utils";
 import { errorText } from "@/lib/xenaxio/api";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { useXenaxioMe } from "@/lib/xenaxio/me-store";
-import { dayText, isOverdue, local, type MyTask, type ObjectSummary, type ObjectType, projectsApi, type Visibility } from "@/lib/xenaxio/projects";
+import { dayText, type FieldFilter, isOverdue, local, type MyTask, type ObjectSummary, type ObjectType, projectsApi, type Visibility } from "@/lib/xenaxio/projects";
+import { usePeopleStore } from "@/lib/xenaxio/people";
+import { FieldInput, fieldText } from "./fields";
+import { ImportDialog, exportCsv } from "./import-csv";
 import { toast } from "@/stores/toast-store";
 import { Board } from "./board";
 import { Modal, PeoplePicker, PersonBadge, selectClass, StatusChip } from "./bits";
@@ -30,7 +33,7 @@ function readView(): View {
   }
 }
 
-export function NewProjectDialog({ open, onClose, onCreated, parentId }: { open: boolean; onClose: () => void; onCreated: (id: string) => void; parentId?: string | null }) {
+export function NewProjectDialog({ open, onClose, onCreated, parentId, type }: { open: boolean; onClose: () => void; onCreated: (id: string) => void; parentId?: string | null; type?: ObjectType }) {
   const t = useXT();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -39,7 +42,10 @@ export function NewProjectDialog({ open, onClose, onCreated, parentId }: { open:
   const [members, setMembers] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [values, setValues] = useState<Record<string, unknown>>({});
   const me = useXenaxioMe();
+  const locale = useLocale();
+  const typeKey = type?.key ?? "project";
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,11 +53,13 @@ export function NewProjectDialog({ open, onClose, onCreated, parentId }: { open:
     setBusy(true);
     setError(null);
     try {
-      const created = await projectsApi.create({ title: title.trim(), ...(description.trim() ? { description } : {}), ...(dueOn ? { dueOn } : {}), visibility, members, ...(parentId ? { parentId } : {}) });
+      const fields = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== null && v !== undefined));
+      const created = await projectsApi.create({ type: typeKey, title: title.trim(), ...(description.trim() ? { description } : {}), ...(dueOn ? { dueOn } : {}), visibility, members, ...(parentId ? { parentId } : {}), ...(Object.keys(fields).length ? { fields } : {}) });
       setTitle("");
       setDescription("");
       setDueOn("");
       setMembers([]);
+      setValues({});
       onCreated(created.id);
     } catch (err) {
       setError(errorText(t, err));
@@ -61,7 +69,7 @@ export function NewProjectDialog({ open, onClose, onCreated, parentId }: { open:
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={parentId ? t("projects.new_sub") : t("projects.new")}>
+    <Modal open={open} onClose={onClose} title={parentId ? t("projects.new_sub") : typeKey === "project" ? t("projects.new") : t("objects.new", { name: local(type?.name, locale) })} wide={(type?.fields.length ?? 0) > 0}>
       <form onSubmit={submit} className="space-y-3">
         {error && <Notice kind="error">{error}</Notice>}
         <TextField label={t("projects.field.title")} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus />
@@ -79,6 +87,21 @@ export function NewProjectDialog({ open, onClose, onCreated, parentId }: { open:
             </select>
           </label>
         </div>
+        {(type?.fields ?? []).length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {type!.fields
+              .filter((f) => f.type !== "external")
+              .map((f) => (
+                <div key={f.key} className={cn("space-y-1.5 text-sm", (f.type === "textarea" || f.type === "refs" || f.type === "multiselect") && "sm:col-span-2")}>
+                  <label htmlFor={`new-${f.key}`} className="font-medium">
+                    {local(f.label, locale)}
+                    {f.required ? " *" : ""}
+                  </label>
+                  <FieldInput id={`new-${f.key}`} field={f} value={values[f.key] ?? null} onSave={(v) => setValues((cur) => ({ ...cur, [f.key]: v }))} />
+                </div>
+              ))}
+          </div>
+        )}
         <div className="space-y-1.5">
           <p className="text-sm font-medium">{t("projects.field.people")}</p>
           <PeoplePicker selected={members} onChange={setMembers} exclude={me ? [me.user.id] : []} />
@@ -107,6 +130,15 @@ function ProjectCard({ p, type, locale, onOpen, showStatus = true }: { p: Object
         {p.visibility === "company" && <span className="text-xs text-muted-foreground">· {t("projects.visibility.company_short")}</span>}
       </div>
       <p className="mt-0.5 line-clamp-2 text-sm font-medium">{p.title}</p>
+      {/* Step 119: the first two filled fields of the type (never sensitive ones). */}
+      {(type?.fields ?? [])
+        .filter((f) => !f.sensitive && !["textarea", "ref", "refs", "external"].includes(f.type) && p.fields?.[f.key] !== undefined && p.fields?.[f.key] !== null)
+        .slice(0, 2)
+        .map((f) => (
+          <p key={f.key} className="mt-0.5 truncate text-xs text-muted-foreground">
+            {local(f.label, locale)}: {fieldText(f, p.fields[f.key], locale)}
+          </p>
+        ))}
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         {showStatus && status && <StatusChip text={local(status.name, locale)} color={status.color} />}
         {p.dueOn && <span className={cn(isOverdue(p.dueOn, p.closed) && "font-medium text-destructive")}>{dayText(p.dueOn, locale)}</span>}
@@ -117,7 +149,7 @@ function ProjectCard({ p, type, locale, onOpen, showStatus = true }: { p: Object
   );
 }
 
-export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) => void }) {
+export function ProjectList({ onOpen, typeKey = "project" }: { onOpen: (id: string, task?: string) => void; typeKey?: string }) {
   const t = useXT();
   const locale = useLocale();
   const [view, setViewState] = useState<View>("board");
@@ -129,7 +161,12 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
   const [archived, setArchived] = useState(false);
   const [q, setQ] = useState("");
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Step 119: a filter by one choice field of the type (e.g. source = fair).
+  const [filter, setFilter] = useState<{ field: string; value: string } | null>(null);
+  const people = usePeopleStore((s) => s.people);
+  const isProject = typeKey === "project";
 
   useEffect(() => setViewState(readView()), []);
   const setView = (v: View) => {
@@ -145,18 +182,23 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
     projectsApi
       .types()
       .then((r) => {
-        setType(r.types.find((x) => x.key === "project"));
-        setMayCreate(r.mayCreate);
+        const found = r.types.find((x) => x.key === typeKey);
+        setType(found);
+        setMayCreate(r.create?.[typeKey] ?? (isProject ? r.mayCreate : false));
+        if (!found) setError(t("objects.type_missing"));
       })
       .catch((err: unknown) => setError(errorText(t, err)));
-  }, [t]);
+  }, [t, typeKey, isProject]);
 
   const load = useCallback(() => {
+    const filters: FieldFilter[] = filter ? [{ field: filter.field, op: "eq", value: filter.value }] : [];
     projectsApi
-      .list({ archived, mine, ...(q.trim() ? { q: q.trim() } : {}) })
+      .query({ type: typeKey, archived, mine, ...(q.trim() ? { q: q.trim() } : {}), ...(filters.length ? { filters } : {}), limit: 1000 })
       .then((r) => setProjects(r.objects))
       .catch((err: unknown) => setError(errorText(t, err)));
-  }, [archived, mine, q, t]);
+  }, [archived, mine, q, t, typeKey, filter]);
+  const choiceFields = useMemo(() => (type?.fields ?? []).filter((f) => (f.type === "select" || f.type === "multiselect") && !f.sensitive), [type]);
+  const columns = useMemo(() => (type?.fields ?? []).filter((f) => !f.sensitive && f.type !== "textarea" && f.type !== "external").slice(0, 5), [type]);
 
   useEffect(() => {
     const timer = window.setTimeout(load, q ? 250 : 0);
@@ -190,7 +232,7 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <header className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2.5 sm:px-4">
-        <h1 className="mr-2 text-lg font-semibold">{t("projects.title")}</h1>
+        <h1 className="mr-2 text-lg font-semibold">{isProject ? t("projects.title") : local(type?.plural, locale)}</h1>
         <div role="tablist" aria-label={t("projects.views")} className="flex rounded-md border border-border p-0.5">
           {(
             [
@@ -198,8 +240,10 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
               ["list", LayoutList, t("projects.view.list")],
               ["tasks", CheckSquare, t("projects.view.tasks")],
             ] as const
-          ).map(([v, Icon, label]) => (
-            <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)} className={cn("flex items-center gap-1.5 rounded px-2 py-1 text-sm", view === v ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground")}>
+          )
+            .filter(([v]) => isProject || v !== "tasks")
+            .map(([v, Icon, label]) => (
+            <button key={v} type="button" role="tab" aria-label={label} aria-selected={view === v} onClick={() => setView(v)} className={cn("flex items-center gap-1.5 rounded px-2 py-1 text-sm", view === v ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="h-4 w-4" />
               <span className="hidden sm:inline">{label}</span>
             </button>
@@ -207,22 +251,54 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
         </div>
         {view !== "tasks" && (
           <>
-            <Input className="h-9 w-full min-w-0 sm:w-56" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("projects.search")} aria-label={t("projects.search")} />
+            <Input className="h-9 w-full min-w-0 sm:w-56" value={q} onChange={(e) => setQ(e.target.value)} placeholder={isProject ? t("projects.search") : t("objects.search")} aria-label={isProject ? t("projects.search") : t("objects.search")} />
             <label className="flex items-center gap-1.5 text-sm">
               <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} />
               {t("projects.mine")}
             </label>
+            {choiceFields.length > 0 && (
+              <select
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                aria-label={t("objects.filter_field")}
+                value={filter ? `${filter.field}:${filter.value}` : ""}
+                onChange={(e) => {
+                  const [field, value] = e.target.value.split(":");
+                  setFilter(field && value ? { field, value } : null);
+                }}
+              >
+                <option value="">{t("objects.filter_none")}</option>
+                {choiceFields.map((f) => (
+                  <optgroup key={f.key} label={local(f.label, locale)}>
+                    {(f.options ?? []).map((o) => (
+                      <option key={o.key} value={`${f.key}:${o.key}`}>
+                        {local(o.label, locale)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            )}
             <button type="button" onClick={() => setArchived((a) => !a)} aria-pressed={archived} className={cn("flex items-center gap-1 rounded px-2 py-1 text-sm", archived ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground")}>
               <Archive className="h-4 w-4" />
               {t("projects.archive")}
             </button>
           </>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex gap-2">
+          {type && projects && projects.length > 0 && (
+            <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => exportCsv(type, projects, locale, people)}>
+              {t("objects.export")}
+            </Button>
+          )}
+          {mayCreate && type && (
+            <Button size="sm" variant="outline" onClick={() => setImporting(true)}>
+              {t("objects.import")}
+            </Button>
+          )}
           {mayCreate && (
             <Button size="sm" onClick={() => setCreating(true)}>
               <Plus className="mr-1 h-4 w-4" />
-              {t("projects.new")}
+              {isProject ? t("projects.new") : t("objects.new", { name: local(type?.name, locale) })}
             </Button>
           )}
         </div>
@@ -255,9 +331,14 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
               <tr className="border-b border-border">
                 <th className="px-4 py-2 font-medium">{t("projects.field.title")}</th>
                 <th className="px-2 py-2 font-medium">{t("projects.field.status")}</th>
+                {columns.map((f) => (
+                  <th key={f.key} className="px-2 py-2 font-medium">
+                    {local(f.label, locale)}
+                  </th>
+                ))}
                 <th className="px-2 py-2 font-medium">{t("projects.field.due")}</th>
                 <th className="px-2 py-2 font-medium">{t("projects.field.owner")}</th>
-                <th className="px-2 py-2 font-medium">{t("projects.field.tasks")}</th>
+                {type?.hasTasks && <th className="px-2 py-2 font-medium">{t("projects.field.tasks")}</th>}
               </tr>
             </thead>
             <tbody>
@@ -272,9 +353,14 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
                       </button>
                     </td>
                     <td className="px-2 py-2">{status && <StatusChip text={local(status.name, locale)} color={status.color} />}</td>
+                    {columns.map((f) => (
+                      <td key={f.key} className="px-2 py-2">
+                        {fieldText(f, p.fields?.[f.key], locale, people) || "—"}
+                      </td>
+                    ))}
                     <td className={cn("px-2 py-2", isOverdue(p.dueOn, p.closed) && "font-medium text-destructive")}>{p.dueOn ? dayText(p.dueOn, locale) : "—"}</td>
                     <td className="px-2 py-2">{p.owner?.name ?? "—"}</td>
-                    <td className="px-2 py-2 tabular-nums">{t("projects.progress", { done: p.doneTasks, total: p.openTasks + p.doneTasks })}</td>
+                    {type?.hasTasks && <td className="px-2 py-2 tabular-nums">{t("projects.progress", { done: p.doneTasks, total: p.openTasks + p.doneTasks })}</td>}
                   </tr>
                 );
               })}
@@ -306,7 +392,18 @@ export function ProjectList({ onOpen }: { onOpen: (id: string, task?: string) =>
         </div>
       )}
 
+      {importing && type && (
+        <ImportDialog
+          type={type}
+          onClose={() => setImporting(false)}
+          onDone={() => {
+            setImporting(false);
+            load();
+          }}
+        />
+      )}
       <NewProjectDialog
+        type={type}
         open={creating}
         onClose={() => setCreating(false)}
         onCreated={(id) => {

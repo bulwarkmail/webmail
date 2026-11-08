@@ -844,7 +844,7 @@ export function FileBrowser({
         )}
         <ContextMenuItem icon={LinkIcon} label={xt("file_link.copy")} onClick={() => { closeMenu(); copyFileLink(resource); }} />
         {addToProject && !resource.isDirectory && (
-          <ContextMenuItem icon={LayoutGrid} label={xt("projects.add_to")} onClick={() => { closeMenu(); addToProject(resource); }} />
+          <ContextMenuItem icon={LayoutGrid} label={xt("objects.add_to")} onClick={() => { closeMenu(); addToProject(resource); }} />
         )}
         {resource.isDirectory && !resource.isShared && (
           <ContextMenuItem

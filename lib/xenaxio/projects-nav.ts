@@ -1,18 +1,44 @@
-// xenaxio step 118: the "Projekte" entry of the navigation (rail, Mountain View
-// top bar, phone bar). Every company of the Xenaxio workspace has projects
-// (D1); companies without email (XenRooms) get them with XenBoards later.
+// xenaxio steps 118–119: menu entries of object types (rail, Mountain View top
+// bar, phone bar): Projects and the company's own types the admin put in the
+// menu for this person, in their own order, without the ones they hid. Asked
+// once per page load; "My menu" and the type editor refresh it.
 import { useEffect } from "react";
+import { create } from "zustand";
 import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
-import { useXT } from "@/lib/xenaxio/i18n";
 import { useXenaxioMeStore } from "@/lib/xenaxio/me-store";
+import { type MenuItem, projectsApi } from "@/lib/xenaxio/projects";
 
-export function useProjectsNavItem(): { visible: boolean; label: string } {
-  const t = useXT();
+const useMenuStore = create<{ items: MenuItem[]; asked: boolean; ask: (force?: boolean) => void }>((set, get) => ({
+  items: [],
+  asked: false,
+  ask: (force = false) => {
+    if (get().asked && !force) return;
+    set({ asked: true });
+    void projectsApi
+      .menu()
+      .then((r) => set({ items: r.items }))
+      .catch(() => undefined);
+  },
+}));
+
+/** After a change to the menu (own order, the admin's editor): read it again. */
+export function refreshObjectMenu(items?: MenuItem[]): void {
+  if (items) useMenuStore.setState({ items, asked: true });
+  else useMenuStore.getState().ask(true);
+}
+
+/** The person's visible menu entries of object types (none outside the Xenaxio workspace). */
+export function useObjectMenu(): MenuItem[] {
   const me = useXenaxioMeStore((s) => s.me);
-  const load = useXenaxioMeStore((s) => s.load);
-  useEffect(() => {
-    if (XENAXIO_BFF) void load();
-  }, [load]);
+  const loadMe = useXenaxioMeStore((s) => s.load);
+  const items = useMenuStore((s) => s.items);
+  const ask = useMenuStore((s) => s.ask);
   const workspace = !!me && (me.tenant.product ?? "workspace") === "workspace" && me.user.kind !== "chat";
-  return { visible: XENAXIO_BFF && workspace, label: t("projects.nav") };
+  useEffect(() => {
+    if (XENAXIO_BFF) void loadMe();
+  }, [loadMe]);
+  useEffect(() => {
+    if (XENAXIO_BFF && workspace) ask();
+  }, [ask, workspace]);
+  return XENAXIO_BFF && workspace ? items.filter((i) => !i.hidden) : [];
 }

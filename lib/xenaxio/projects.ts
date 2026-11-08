@@ -8,11 +8,61 @@ import { XenaxioApiError } from "@/lib/xenaxio/api";
 // Whole paths, so the Lite build check (scripts/lite/lib.mjs) sees each one.
 const OBJECTS = "/api/objects";
 const ADMIN_PROJECTS = "/api/admin/projects";
+// Step 119: the admin's editor of object types and the person's own menu.
+const OBJECT_TYPES = "/api/object-types";
+const MY_MENU = "/api/me/menu";
 
 export type Visibility = "members" | "company";
 export type Priority = "high" | "medium" | "low";
 export type LinkKind = "email" | "file" | "channel" | "event" | "flow_run" | "object";
-type Text = { de: string; en: string };
+export type Text = { de: string; en: string };
+
+/** Step 119: kinds of fields a company's admin can add to a type. */
+export const FIELD_KINDS = ["text", "textarea", "number", "money", "date", "select", "multiselect", "user", "checkbox", "url", "email", "phone", "ref", "refs"] as const;
+export type FieldKind = (typeof FIELD_KINDS)[number] | "external";
+export const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "PLN", "CZK", "SEK", "DKK", "NOK", "UAH"] as const;
+export const STATUS_COLORS = ["blue", "amber", "green", "red", "gray", "violet", "teal", "pink"] as const;
+
+export interface TypeField {
+  key: string;
+  type: FieldKind;
+  label: Text;
+  hint?: Text;
+  required?: boolean;
+  default?: unknown;
+  options?: { key: string; label: Text }[];
+  ref?: string;
+  sensitive?: boolean;
+}
+
+export interface TypeAccess {
+  read?: "members" | "all" | "groups";
+  readGroups?: string[];
+  create?: "all" | "groups" | "admins";
+  createGroups?: string[];
+}
+
+export interface TypeMenu {
+  show?: boolean;
+  icon?: string;
+  order?: number;
+  groups?: string[];
+}
+
+export interface MenuItem {
+  key: string;
+  name: Text;
+  plural: Text;
+  icon: string;
+  href: string;
+  hidden: boolean;
+}
+
+export interface FieldFilter {
+  field: string;
+  op: "eq" | "in" | "contains" | "gte" | "lte" | "empty" | "set";
+  value?: unknown;
+}
 
 export interface TypeStatus {
   key: string;
@@ -28,11 +78,16 @@ export interface ObjectType {
   name: Text;
   plural: Text;
   prefix: string;
-  fields: { key: string; type: string; label: Text; options?: { key: string; label: Text }[] }[];
+  fields: TypeField[];
   statuses: TypeStatus[];
   card: string[];
   parentTypes: string[];
   hasTasks: boolean;
+  access: TypeAccess;
+  menu: TypeMenu;
+  archivedAt: string | null;
+  /** Admin list only: how many records the type has. */
+  records?: number;
 }
 
 export interface PersonRef {
@@ -59,6 +114,8 @@ export interface ObjectSummary {
   myRole: "owner" | "member" | null;
   archivedAt: string | null;
   updatedAt: string;
+  /** Step 119: values of the type's fields (never sensitive ones). */
+  fields: Record<string, unknown>;
 }
 
 export interface ObjectLink {
@@ -85,6 +142,7 @@ export interface ObjectDetail extends ObjectSummary {
   columns: BoardColumn[];
   parent: { id: string; ref: string; title: string } | null;
   children: { id: string; ref: string; title: string; type: string; status: string }[];
+  backrefs: { type: string; field: string; records: { id: string; ref: string; title: string; status: string }[] }[];
   createdAt: string;
   can: { edit: boolean; manage: boolean; join: boolean };
 }
@@ -163,15 +221,22 @@ function query(params: Record<string, string | undefined>): string {
 }
 
 export const projectsApi = {
-  types: () => call<{ types: ObjectType[]; mayCreate: boolean }>("GET", `${OBJECTS}/types`),
+  types: () => call<{ types: ObjectType[]; mayCreate: boolean; create: Record<string, boolean> }>("GET", `${OBJECTS}/types`),
+  // Step 119: lists filtered and sorted by fields, imports, the person's menu.
+  query: (body: { type: string; status?: string; archived?: boolean; q?: string; mine?: boolean; filters?: FieldFilter[]; sort?: { field: string; dir: "asc" | "desc" }; limit?: number }) =>
+    call<{ objects: ObjectSummary[] }>("POST", `${OBJECTS}/query`, body),
+  importRows: (type: string, rows: { title: string; status?: string; dueOn?: string | null; fields?: Record<string, unknown> }[]) =>
+    call<{ added: number; skipped: { row: number; error: string; field?: string }[] }>("POST", `${OBJECTS}/import`, { type, rows }),
+  menu: () => call<{ items: MenuItem[] }>("GET", `${OBJECTS}/menu`),
+  setMenu: (prefs: { order?: string[]; hidden?: string[] }) => call<{ items: MenuItem[] }>("PUT", MY_MENU, prefs),
   list: (opts: { type?: string; status?: string; archived?: boolean; q?: string; mine?: boolean } = {}) =>
     call<{ objects: ObjectSummary[] }>("GET", `${OBJECTS}${query({ type: opts.type ?? "project", status: opts.status, archived: opts.archived ? "1" : undefined, q: opts.q, mine: opts.mine ? "1" : undefined })}`),
   linked: (kind: LinkKind, ref: string, account?: string | null) => call<{ objects: ObjectSummary[] }>("GET", `${OBJECTS}/linked${query({ kind, ref, account: account ?? undefined })}`),
   myTasks: (status: "open" | "done" | "all" = "open") => call<{ tasks: MyTask[] }>("GET", `${OBJECTS}/tasks/mine${query({ status })}`),
-  create: (body: { type?: string; title: string; description?: string; visibility?: Visibility; dueOn?: string | null; members?: string[]; parentId?: string | null }) =>
+  create: (body: { type?: string; title: string; description?: string; visibility?: Visibility; dueOn?: string | null; members?: string[]; parentId?: string | null; status?: string; fields?: Record<string, unknown> }) =>
     call<ObjectDetail>("POST", OBJECTS, { type: "project", ...body }),
   get: (id: string) => call<ObjectDetail>("GET", one(id)),
-  update: (id: string, body: { title?: string; description?: string; visibility?: Visibility; dueOn?: string | null; status?: string; ownerId?: string | null }) =>
+  update: (id: string, body: { title?: string; description?: string; visibility?: Visibility; dueOn?: string | null; status?: string; ownerId?: string | null; fields?: Record<string, unknown> }) =>
     call<ObjectDetail>("PATCH", one(id), body),
   archive: (id: string, archived: boolean) => call<ObjectDetail>("POST", `${one(id)}/archive`, { archived }),
   remove: (id: string) => call<Record<string, never>>("DELETE", one(id)),
@@ -191,6 +256,19 @@ export const projectsApi = {
   deleteTask: (id: string, taskId: string) => call<Record<string, never>>("DELETE", `${one(id)}/tasks/${seg(taskId)}`),
   comment: (id: string, taskId: string, body: string) => call<TaskDetail>("POST", `${one(id)}/tasks/${seg(taskId)}/comments`, { body }),
   creators: () => call<{ creators: "all" | "admins" }>("GET", ADMIN_PROJECTS),
+  // Step 119: the admin's editor of object types.
+  adminTypes: () => call<{ types: ObjectType[] }>("GET", OBJECT_TYPES),
+  createType: (body: { name: Text; plural: Text; prefix?: string; hasTasks?: boolean; menu?: TypeMenu; access?: TypeAccess }) => call<ObjectType>("POST", OBJECT_TYPES, body),
+  updateType: (key: string, body: { name?: Text; plural?: Text; prefix?: string; hasTasks?: boolean; parentTypes?: string[]; card?: string[]; menu?: TypeMenu; access?: TypeAccess }) =>
+    call<ObjectType>("PATCH", `${OBJECT_TYPES}/${seg(key)}`, body),
+  archiveType: (key: string, archived: boolean) => call<ObjectType>("POST", `${OBJECT_TYPES}/${seg(key)}/archive`, { archived }),
+  removeType: (key: string) => call<Record<string, never>>("DELETE", `${OBJECT_TYPES}/${seg(key)}`),
+  addField: (key: string, field: TypeField) => call<ObjectType>("POST", `${OBJECT_TYPES}/${seg(key)}/fields`, field),
+  updateField: (key: string, field: TypeField) => call<{ type: ObjectType; affected: number }>("PUT", `${OBJECT_TYPES}/${seg(key)}/fields/${seg(field.key)}`, field),
+  removeField: (key: string, field: string) => call<{ type: ObjectType; affected: number }>("DELETE", `${OBJECT_TYPES}/${seg(key)}/fields/${seg(field)}`),
+  fieldUsage: (key: string, field: string, option?: string) => call<{ records: number }>("GET", `${OBJECT_TYPES}/${seg(key)}/fields/${seg(field)}/usage${query({ option })}`),
+  reorderFields: (key: string, order: string[]) => call<ObjectType>("PUT", `${OBJECT_TYPES}/${seg(key)}/fields-order`, { order }),
+  setStatuses: (key: string, statuses: TypeStatus[], moveTo?: Record<string, string>) => call<ObjectType>("PUT", `${OBJECT_TYPES}/${seg(key)}/statuses`, { statuses, ...(moveTo ? { moveTo } : {}) }),
   setCreators: (creators: "all" | "admins") => call<{ creators: "all" | "admins" }>("PUT", ADMIN_PROJECTS, { creators }),
 };
 
@@ -198,6 +276,12 @@ export const projectsApi = {
 export function local(t: Text | undefined, locale: string): string {
   if (!t) return "";
   return locale.startsWith("de") ? t.de : t.en;
+}
+
+/** Step 119: the page of a type's records (projects keep their own page). */
+export function typeHref(type: string, id?: string | null): string {
+  if (type === "project") return projectHref(id);
+  return `/objects?type=${encodeURIComponent(type)}${id ? `&id=${encodeURIComponent(id)}` : ""}`;
 }
 
 /** The project page; the client is a static export, so the project and task go in the query. */

@@ -86,9 +86,12 @@ function Overview() {
         {isAdmin && <Tile href="/workspace/files" icon={<Folder className="w-5 h-5" />} title={t("workspace.files")} description={t("workspace.files_desc")} />}
         {isAdmin && <Tile href="/workspace/ai" icon={<Sparkles className="w-5 h-5" />} title={t("workspace.ai")} description={t("workspace.ai_desc")} />}
         {isAdmin && <Tile href="/workspace/projects" icon={<LayoutGrid className="w-5 h-5" />} title={t("workspace.projects")} description={t("workspace.projects_desc")} />}
+        {isAdmin && <Tile href="/workspace/object-types" icon={<LayoutGrid className="w-5 h-5" />} title={t("workspace.object_types")} description={t("workspace.object_types_desc")} />}
+        {isAdmin && <Tile href="/workspace/groups" icon={<Users className="w-5 h-5" />} title={t("workspace.groups")} description={t("workspace.groups_desc")} />}
         {isAdmin && <Tile href="/workspace/flows" icon={<Share2 className="w-5 h-5" />} title={t("workspace.flows")} description={t("workspace.flows_desc")} />}
         {isAdmin && <Tile href="/workspace/audit" icon={<FileText className="w-5 h-5" />} title={t("workspace.audit")} description={t("workspace.audit_desc")} />}
         <Tile href="/workspace/assistant" icon={<Brain className="w-5 h-5" />} title={t("workspace.assistant")} description={t("workspace.assistant_desc")} />
+        <Tile href="/workspace/menu" icon={<LayoutGrid className="w-5 h-5" />} title={t("workspace.my_menu")} description={t("workspace.my_menu_desc")} />
         <Tile href="/workspace/mail-apps" icon={<Smartphone className="w-5 h-5" />} title={t("workspace.mail_apps")} description={t("workspace.mail_apps_desc")} />
         <Tile href="/workspace/mcp" icon={<Terminal className="w-5 h-5" />} title={t("workspace.mcp")} description={t("workspace.mcp_desc")} />
         <Tile href="/workspace/permissions" icon={<ShieldCheck className="w-5 h-5" />} title={t("workspace.permissions")} description={t("workspace.permissions_desc")} />

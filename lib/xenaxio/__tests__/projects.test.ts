@@ -53,3 +53,12 @@ describe("projects helpers", () => {
     expect(ids({ text: "anna flyer" })).toEqual(["a"]);
   });
 });
+
+describe("step 119: links to records of a type", () => {
+  it("opens projects on their page and other types on /objects", async () => {
+    const { typeHref } = await import("@/lib/xenaxio/projects");
+    expect(typeHref("project", "p1")).toBe("/projects?id=p1");
+    expect(typeHref("vehicle")).toBe("/objects?type=vehicle");
+    expect(typeHref("vehicle", "v 1")).toBe("/objects?type=vehicle&id=v%201");
+  });
+});
