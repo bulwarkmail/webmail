@@ -1060,7 +1060,15 @@
       "mail_research": "Mail research",
       "file_research": "File research",
       "calendar": "Calendar"
-    }
+    },
+    "bad_answer": "Not helpful",
+    "bad_answer_title": "What was wrong? (optional)",
+    "bad_answer_send": "Send",
+    "bad_answer_thanks": "Thanks for the feedback.",
+    "learned": "Learned",
+    "reject_reason": "Why? (optional)",
+    "reject_confirm": "Decline",
+    "cancel": "Cancel"
   },
   "mcp": {
     "title": "Connect AI chats",
@@ -1577,7 +1585,14 @@
     "company_intro": "Facts every employee's assistant knows: where invoices go, who is responsible for what, important dates. The assistant adds to them only when someone explicitly says “for everyone”.",
     "company_count": "Facts ({count} of {max})",
     "company_none": "No company knowledge yet.",
-    "company_privacy": "Stored encrypted in Germany and sent to the AI only when an employee uses the assistant. The audit log only records that something changed."
+    "company_privacy": "Stored encrypted in Germany and sent to the AI only when an employee uses the assistant. The audit log only records that something changed.",
+    "lessons": "Lessons from your corrections",
+    "lessons_none": "No lessons yet. The assistant learns when you rewrite its drafts before sending, tell it why you declined a proposal, or mark an answer as bad.",
+    "learn_title": "Learn from my corrections",
+    "learn_on": "On: the assistant learns from drafts you change before sending, from your reason for declining a proposal and from your comment on a bad answer. A draft’s text is kept encrypted for at most 14 days and deleted right after the comparison.",
+    "learn_off": "Off: the assistant does not learn from your corrections.",
+    "learn_switch_on": "Turn on",
+    "learn_switch_off": "Turn off"
   },
   "schedules": {
     "title": "Scheduled tasks ({count} of {max} active)",

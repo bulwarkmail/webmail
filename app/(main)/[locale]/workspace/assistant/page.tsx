@@ -67,8 +67,9 @@ function Memory() {
   if (!data) return error ? <Notice kind="error">{error}</Notice> : <Spinner label={t("common.loading")} />;
 
   const full = data.notes.length >= data.maxNotes;
+  const lessons = data.notes.filter((n) => n.kind === "lesson");
   const aboutMe = data.notes.filter((n) => (n.kind ?? "person") === "person" && !n.subject);
-  const work = data.notes.filter((n) => !aboutMe.includes(n));
+  const work = data.notes.filter((n) => !aboutMe.includes(n) && n.kind !== "lesson");
   const save = (note: MemoryNote, input: MemoryInput) => run(() => xenaxio.updateMemory(note.id, input));
   return (
     <div className="max-w-2xl space-y-6">
@@ -101,6 +102,11 @@ function Memory() {
           <h3 className="text-sm font-medium">{t("memory.work")}</h3>
           <FactList notes={work} maxLength={data.maxLength} busy={busy} empty={t("memory.none_work")} onSave={save} onDelete={remove} />
         </div>
+        {/* Step 121: lessons from the user's corrections, with their own switch. */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{t("memory.lessons")}</h3>
+          <FactList notes={lessons} maxLength={data.maxLength} busy={busy} empty={t("memory.lessons_none")} onSave={save} onDelete={remove} />
+        </div>
         {(data.company?.length ?? 0) > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium">{t("memory.company")}</h3>
@@ -109,6 +115,16 @@ function Memory() {
           </div>
         )}
       </section>
+
+      {data.learn !== undefined && (
+        <section className="space-y-3 rounded-lg border border-border bg-card p-4" aria-labelledby="learn-title">
+          <h2 id="learn-title" className="font-medium">{t("memory.learn_title")}</h2>
+          <p className="text-sm text-muted-foreground">{data.learn ? t("memory.learn_on") : t("memory.learn_off")}</p>
+          <Button variant={data.learn ? "outline" : "default"} disabled={busy} onClick={() => void run(() => xenaxio.setLearning(!data.learn))}>
+            {data.learn ? t("memory.learn_switch_off") : t("memory.learn_switch_on")}
+          </Button>
+        </section>
+      )}
 
       <AddFact maxLength={data.maxLength} busy={busy} full={full} fullText={t("memory.full", { max: data.maxNotes })} hint={t("memory.add_hint", { max: data.maxLength })} onAdd={add} />
 

@@ -1060,7 +1060,15 @@
       "mail_research": "Mail-Recherche",
       "file_research": "Datei-Recherche",
       "calendar": "Kalender"
-    }
+    },
+    "bad_answer": "Nicht hilfreich",
+    "bad_answer_title": "Was war falsch? (optional)",
+    "bad_answer_send": "Senden",
+    "bad_answer_thanks": "Danke für die Rückmeldung.",
+    "learned": "Gelernt",
+    "reject_reason": "Warum? (optional)",
+    "reject_confirm": "Ablehnen",
+    "cancel": "Abbrechen"
   },
   "mcp": {
     "title": "KI-Chats verbinden",
@@ -1577,7 +1585,14 @@
     "company_intro": "Fakten, die der Assistent aller Mitarbeitenden kennt: wohin Rechnungen gehen, wer wofür zuständig ist, wichtige Termine. Der Assistent ergänzt sie nur, wenn jemand ausdrücklich „für alle“ sagt.",
     "company_count": "Fakten ({count} von {max})",
     "company_none": "Noch kein Firmenwissen.",
-    "company_privacy": "Verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn ein Mitarbeitender den Assistenten nutzt. Im Protokoll steht nur, dass sich etwas geändert hat."
+    "company_privacy": "Verschlüsselt in Deutschland gespeichert und nur an die KI übermittelt, wenn ein Mitarbeitender den Assistenten nutzt. Im Protokoll steht nur, dass sich etwas geändert hat.",
+    "lessons": "Lektionen aus Ihren Korrekturen",
+    "lessons_none": "Noch keine Lektionen. Der Assistent lernt, wenn Sie seine Entwürfe vor dem Senden ändern, einen Vorschlag mit Grund ablehnen oder eine Antwort als schlecht markieren.",
+    "learn_title": "Aus meinen Korrekturen lernen",
+    "learn_on": "An: Der Assistent lernt aus Entwürfen, die Sie vor dem Senden ändern, aus Ihrem Grund für eine Ablehnung und aus Ihrem Kommentar zu einer schlechten Antwort. Der Text eines Entwurfs wird höchstens 14 Tage verschlüsselt aufbewahrt und gleich nach dem Vergleich gelöscht.",
+    "learn_off": "Aus: Der Assistent lernt nicht aus Ihren Korrekturen.",
+    "learn_switch_on": "Einschalten",
+    "learn_switch_off": "Ausschalten"
   },
   "schedules": {
     "title": "Geplante Aufgaben ({count} von {max} aktiv)",
