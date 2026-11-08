@@ -1218,8 +1218,8 @@ function buildCoreApi(manifest: PluginManifest) {
       /** Resolves to the new task, or null when another plugin stopped it. */
       create: (task: TaskInput) => callApi('tasks.create', [task]) as Promise<TaskView | null>,
       /**
-       * Change the given fields. `alerts`, `links` and `relatedTo` merge
-       * by id: an entry given is set, one given null is removed, the rest
+       * Change the given fields. `alerts`, `links`, `relatedTo` and
+       * `keywords` merge by id: an entry given is set, one given null is removed, the rest
        * stay as they are (each written by its own JMAP patch path); null
        * for the whole map clears it.
        */

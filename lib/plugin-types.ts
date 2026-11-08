@@ -646,6 +646,13 @@ export interface TaskInput {
    * update as `alerts` is.
    */
   relatedTo?: Record<string, TaskRelationInput | null> | null;
+  /**
+   * Keywords (1-64 of `A-Z a-z 0-9 . _ -`): `true` sets one, null removes
+   * it. A task holds at most 10, counting every keyword on it, those
+   * another app wrote too. Merged by key on update as `alerts` is; keywords
+   * another app wrote stay unless named with null.
+   */
+  keywords?: Record<string, true | null> | null;
 }
 
 /**
