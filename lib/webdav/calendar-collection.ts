@@ -69,3 +69,131 @@ export async function mkCalendarCollection(opts: {
   });
   return response.status === 201;
 }
+
+/** Key prefix of the entries parseCalendarCollectionComponents adds by display name. */
+const NAME_KEY = '\u0000name:';
+
+/**
+ * Parses CalDAV multistatus PROPFIND XML response and extracts the
+ * supported-calendar-component-set for each collection, keyed by its path
+ * segment, and once more by its display name where no other collection has
+ * that name (see davComponentsFor).
+ */
+export function parseCalendarCollectionComponents(xml: string): Record<string, CalendarComponentType[]> {
+  const result: Record<string, CalendarComponentType[]> = {};
+  if (!xml || typeof xml !== 'string') return result;
+  const byName = new Map<string, CalendarComponentType[] | null>();
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xml, 'application/xml');
+    const responses = doc.getElementsByTagNameNS('DAV:', 'response');
+
+    for (let i = 0; i < responses.length; i++) {
+      const resp = responses[i];
+      const hrefEl = resp.getElementsByTagNameNS('DAV:', 'href')[0];
+      if (!hrefEl?.textContent) continue;
+
+      const compNodes = resp.getElementsByTagNameNS('urn:ietf:params:xml:ns:caldav', 'comp');
+      if (!compNodes || compNodes.length === 0) continue;
+
+      const href = decodeURIComponent(hrefEl.textContent).replace(/\/+$/, '');
+      const segments = href.split('/').filter(Boolean);
+      if (segments.length === 0) continue;
+
+      const resTypeNode = resp.getElementsByTagNameNS('DAV:', 'resourcetype')[0];
+      const hasCalendarType = Boolean(resTypeNode?.getElementsByTagNameNS('urn:ietf:params:xml:ns:caldav', 'calendar').length);
+
+      // Skip root directories if they have fewer than 3 segments and lack calendar resourcetype
+      if (segments.length < 3 && !hasCalendarType) continue;
+
+      const collectionId = segments[segments.length - 1];
+      if (!collectionId) continue;
+
+      const comps: CalendarComponentType[] = [];
+      for (let j = 0; j < compNodes.length; j++) {
+        const name = compNodes[j].getAttribute('name')?.toUpperCase();
+        if (name === 'VEVENT' || name === 'VTODO' || name === 'VJOURNAL') {
+          comps.push(name as CalendarComponentType);
+        }
+      }
+      if (comps.length > 0) {
+        result[collectionId] = comps;
+        const displayName = resp.getElementsByTagNameNS('DAV:', 'displayname')[0]?.textContent?.trim();
+        // A name two collections share identifies neither.
+        if (displayName) byName.set(displayName, byName.has(displayName) ? null : comps);
+      }
+    }
+    for (const [displayName, comps] of byName) {
+      if (comps) result[NAME_KEY + displayName] = comps;
+    }
+  } catch (error) {
+    console.error('Failed to parse CalDAV calendar components XML:', error);
+  }
+
+  return result;
+}
+
+/**
+ * Fetches the supported-calendar-component-set for all calendar collections
+ * from Stalwart's CalDAV endpoint via the /api/webdav proxy.
+ *
+ * `accountHeaders` pins the request to a specific account's cookie slot
+ * (via {@link getAccountSlotHeadersFor}) - required when scanning an account
+ * other than the currently active one, since the proxy otherwise resolves
+ * credentials from whichever account is focused in the UI in multi-account setups.
+ * Defaults to the active account for single-account callers.
+ */
+export async function fetchCalendarCollectionComponents(
+  accountHeaders: Record<string, string> = getActiveAccountSlotHeaders(),
+): Promise<Record<string, CalendarComponentType[]>> {
+  try {
+    const response = await apiFetch('/api/webdav', {
+      method: 'POST',
+      headers: {
+        'X-WebDAV-Method': 'PROPFIND',
+        'X-WebDAV-Collection': 'cal',
+        'X-WebDAV-Path': '/',
+        'Depth': '1',
+        'Content-Type': 'application/xml; charset=utf-8',
+        ...accountHeaders,
+      },
+      body: `<?xml version="1.0" encoding="utf-8"?>
+<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <D:prop>
+    <D:displayname/>
+    <D:resourcetype/>
+    <C:supported-calendar-component-set/>
+  </D:prop>
+</D:propfind>`,
+    });
+
+    if (response.status !== 207) {
+      return {};
+    }
+
+    const text = await response.text();
+    return parseCalendarCollectionComponents(text);
+  } catch {
+    return {};
+  }
+}
+
+
+/**
+ * The supported components of a calendar's CalDAV collection. Stalwart names a
+ * collection by its path (a client's UUID, or the random name
+ * mkCalendarCollection picks), not by the JMAP calendar id, and gives no
+ * property linking the two; the display name is the link where it names one
+ * collection and one calendar.
+ */
+export function davComponentsFor(
+  calendar: { id: string; name?: string },
+  davComponents: Record<string, CalendarComponentType[]>,
+  calendars: Array<{ name?: string }>,
+): CalendarComponentType[] | undefined {
+  const byId = davComponents[calendar.id];
+  if (byId) return byId;
+  if (!calendar.name || calendars.filter((c) => c.name === calendar.name).length !== 1) return undefined;
+  return davComponents[NAME_KEY + calendar.name];
+}

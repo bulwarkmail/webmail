@@ -23,7 +23,8 @@ import { debug } from "@/lib/debug";
 import { normalizeCalendarEventLike, parseDurationSeconds } from "@/lib/calendar-event-normalization";
 import { SYNTHETIC_ID_PROBE, RECURRENCE_BASE_PROPERTIES, hydrateRecurrenceInstances, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
 import { isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-component-detection";
-import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName } from "@/lib/webdav/calendar-collection";
+import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName, fetchCalendarCollectionComponents, davComponentsFor } from "@/lib/webdav/calendar-collection";
+import { getAccountSlotHeadersFor } from "@/lib/auth/active-account-slot";
 import { sanitizeDisplayName, splitMailbox } from "@/lib/rfc5322-mailbox";
 import { decodeFileNodeName } from "./filenode-name";
 import { PartialAccountsError } from "./partial-accounts";
@@ -9010,7 +9011,7 @@ export class JMAPClient implements IJMAPClient {
 
       if (response.methodResponses?.[0]?.[0] === "Calendar/get") {
         const calendars = (response.methodResponses[0][1].list || []) as Calendar[];
-        const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, calendars.map((c) => c.id));
+        const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, calendars);
         return calendars.map((cal) => ({ ...cal, isTasksOnly: tasksOnly.has(cal.id) }));
       }
       return [];
@@ -9023,7 +9024,9 @@ export class JMAPClient implements IJMAPClient {
   /**
    * Ids of the given calendars that hold only tasks and no events, so the event
    * calendar UI can hide them. Stalwart's Calendar/get exposes no
-   * supported-component set, so this is derived by inspecting objects per calendar.
+   * supported-component set over JMAP, so component support is checked over
+   * CalDAV first (where an empty VTODO-only collection is recognized
+   * immediately), and any other calendar is derived by inspecting objects.
    *
    * Each calendar is queried on its own with the singular `inCalendar`
    * condition, so a large event archive in one calendar no longer pushes the
@@ -9031,10 +9034,40 @@ export class JMAPClient implements IJMAPClient {
    * soon as one event turns up; one whose pages are all tasks is paged to the
    * end and only then marked. Queries are chunked by maxCallsInRequest and gets
    * by maxObjectsInGet. Past the per-calendar cap, on a failed query or on any
-   * error the calendar is left visible (fail open). Empty calendars stay visible.
+   * error the calendar is left visible (fail open). Empty calendars stay
+   * visible unless a CalDAV collection explicitly supports only VTODO.
    */
-  private async getTasksOnlyCalendarIds(accountId: string, rawCalendarIds: string[]): Promise<Set<string>> {
+  private async getTasksOnlyCalendarIds(
+    accountId: string,
+    rawCalendarsOrIds: Array<{ id: string; name?: string }> | string[],
+    cachedDavComponents?: Record<string, CalendarComponentType[]>,
+  ): Promise<Set<string>> {
+    const rawCalendarIds = rawCalendarsOrIds.map((c) => (typeof c === 'string' ? c : c.id));
     if (rawCalendarIds.length === 0) return new Set();
+
+    const tasksOnly = new Set<string>();
+    const calendarsToScan: string[] = [];
+
+    try {
+      const davComponents = cachedDavComponents ?? await fetchCalendarCollectionComponents(
+        getAccountSlotHeadersFor(this.username, this.serverUrl),
+      );
+      const ownAccount = accountId === this.getCalendarsAccountId();
+      const named = rawCalendarsOrIds.map((c) => (typeof c === 'string' ? { id: c } : { id: c.id, name: c.name }));
+      for (const cal of named) {
+        const id = cal.id;
+        const comps = ownAccount ? davComponentsFor(cal, davComponents, named) : davComponents[id];
+        if (comps && comps.includes('VTODO') && !comps.includes('VEVENT')) {
+          tasksOnly.add(id);
+        } else {
+          calendarsToScan.push(id);
+        }
+      }
+    } catch {
+      calendarsToScan.push(...rawCalendarIds);
+    }
+
+    if (calendarsToScan.length === 0) return tasksOnly;
 
     const QUERY_PAGE = 200;
     const MAX_SCAN_PER_CALENDAR = 5000; // safety bound; beyond this we fail open
@@ -9042,9 +9075,8 @@ export class JMAPClient implements IJMAPClient {
     const timeZone = await this.calendarTimeZone();
     const maxCalls = Math.max(1, this.getMaxCallsInRequest());
     const maxGet = Math.max(1, this.getMaxObjectsInGet());
-    const tasksOnly = new Set<string>();
     const position = new Map<string, number>();
-    let pending = Array.from(new Set(rawCalendarIds)); // calendars with no event seen so far
+    let pending = Array.from(new Set(calendarsToScan)); // calendars with no event seen so far
 
     try {
       while (pending.length > 0) {
@@ -9133,13 +9165,19 @@ export class JMAPClient implements IJMAPClient {
     const primaryId = this.getCalendarsAccountId();
     const accountIds = this.getCalendarCapableAccountIds();
 
+    let davComponentsPromise: Promise<Record<string, CalendarComponentType[]> | undefined> | undefined;
+
     for (const accountId of accountIds) {
       const isPrimary = accountId === primaryId;
       if (!isPrimary && this.calendarAccessDenied.has(accountId)) continue;
       const account = this.accounts[accountId];
 
       try {
-        const response = await this.requestCalendars(accountId);
+        const calendarsPromise = this.requestCalendars(accountId);
+        davComponentsPromise ??= fetchCalendarCollectionComponents(
+          getAccountSlotHeadersFor(this.username, this.serverUrl),
+        ).catch(() => undefined);
+        const response = await calendarsPromise;
         const [method, result] = response.methodResponses?.[0] ?? [];
 
         if (method !== "Calendar/get") {
@@ -9151,7 +9189,8 @@ export class JMAPClient implements IJMAPClient {
         }
 
         const rawCalendars = (result.list || []) as Calendar[];
-        const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, rawCalendars.map((c) => c.id));
+        const cachedDavComponents = await davComponentsPromise;
+        const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, rawCalendars, cachedDavComponents);
         const calendars = rawCalendars.map((cal) => ({
           ...cal,
           id: isPrimary ? cal.id : `${accountId}:${cal.id}`,
