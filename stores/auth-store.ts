@@ -1552,19 +1552,27 @@ export function classifySessionMatch(
 
 const signInGenerations = new Map<string, number>();
 const targetGenerations = new WeakMap<AccountEntry, number>();
-useAccountStore.subscribe((state, previous) => {
-  for (const account of previous.accounts) {
-    if (!state.accounts.some((current) => current.id === account.id)) {
-      signInGenerations.set(account.id, (signInGenerations.get(account.id) ?? 0) + 1);
-    }
+let trackingSignInTargets = false;
+
+function trackSignInTarget(account: AccountEntry): void {
+  if (!trackingSignInTargets) {
+    useAccountStore.subscribe((state, previous) => {
+      for (const entry of previous.accounts) {
+        if (!state.accounts.some((current) => current.id === entry.id)) {
+          signInGenerations.set(entry.id, (signInGenerations.get(entry.id) ?? 0) + 1);
+        }
+      }
+    });
+    trackingSignInTargets = true;
   }
-});
+  targetGenerations.set(account, signInGenerations.get(account.id) ?? 0);
+}
 
 function signInTarget(serverUrl: string, accountId?: string | null): AccountEntry | undefined {
   if (!accountId) return undefined;
   const account = useAccountStore.getState().getAccountById(accountId);
   if (!account?.awaitingSignIn || account.serverUrl !== serverUrl) throw new Error('Invalid username or password');
-  targetGenerations.set(account, signInGenerations.get(account.id) ?? 0);
+  trackSignInTarget(account);
   return account;
 }
 
@@ -3917,7 +3925,7 @@ export const useAuthStore = create<AuthState>()(
         const accountStore = useAccountStore.getState();
         const account = accountStore.getAccountById(accountId);
         if (!account || account.authMode !== 'basic' || clients.has(accountId)) return false;
-        targetGenerations.set(account, signInGenerations.get(account.id) ?? 0);
+        trackSignInTarget(account);
         const { serverUrl, username, cookieSlot } = account;
         await waitForCredentialCleanup(cookieSlot);
         if (await precheckCredentials(serverUrl, { username, password })) return false;
