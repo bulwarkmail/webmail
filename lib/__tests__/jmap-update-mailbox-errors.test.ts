@@ -35,6 +35,10 @@ describe('updateMailbox confirms protocol success', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(answer('Mailbox/set', { notUpdated: { folder: { type: 'invalidProperties' } } }));
     await expect(client().updateMailbox('folder', { name: 'New' })).rejects.toThrow('Failed to update mailbox: invalidProperties');
   });
+  it('reports a per-record refusal in the words of the server, with its JMAP type', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(answer('Mailbox/set', { notUpdated: { folder: { type: 'invalidProperties', description: 'A folder with this name already exists' } } }));
+    await expect(client().updateMailbox('folder', { name: 'New' })).rejects.toMatchObject({ message: 'A folder with this name already exists', jmapType: 'invalidProperties' });
+  });
   it.each(changes)('preserves successful update behavior for %j', async (patch) => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(answer('Mailbox/set', { accountId: 'own', oldState: 's0', newState: 's1', updated: { folder: null } }));
     await expect(client().updateMailbox('folder', patch)).resolves.toBeUndefined();

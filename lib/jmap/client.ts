@@ -4667,7 +4667,8 @@ export class JMAPClient implements IJMAPClient {
 
     const result = methodResult(response, '0', 'Update mailbox');
     if (result?.notUpdated?.[mailboxId]) {
-      throw new Error(`Failed to update mailbox: ${result.notUpdated[mailboxId].type || 'unknown error'}`);
+      const err = result.notUpdated[mailboxId];
+      throw jmapError(err.description || `Failed to update mailbox: ${err.type || 'unknown error'}`, err);
     }
   }
 

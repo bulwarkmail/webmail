@@ -8006,6 +8006,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update folder role' });
+      // The role may already be off its old folder: show what the server has.
+      try {
+        if (get().viewingAccountId) {
+          await refreshMailboxesForViewingAccount(client);
+        } else {
+          await get().fetchMailboxes(client);
+        }
+      } catch { /* the role error is the one to report */ }
       throw error;
     }
   },
