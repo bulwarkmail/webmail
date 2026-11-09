@@ -79,7 +79,11 @@ describe('the format painter', () => {
     const { editor, button, select, mouseUp } = await setup('<p><strong>bold</strong> one two</p>');
 
     select(1, 5);
-    fireEvent.click(button());
+    // The sequence a browser dispatches for a double click: two clicks, the
+    // second with detail 2, then dblclick. The second click used to reach the
+    // toggle and put the painter down before dblclick could make it sticky.
+    fireEvent.click(button(), { detail: 1 });
+    fireEvent.click(button(), { detail: 2 });
     fireEvent.doubleClick(button());
 
     select(6, 9);
