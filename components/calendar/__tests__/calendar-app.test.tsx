@@ -746,6 +746,35 @@ describe('CalendarApp event menu', () => {
     fireEvent.click(await screen.findByRole('menuitem', { name: 'events.edit' }));
     expect(await screen.findByPlaceholderText('form.title')).toHaveValue('Standup');
   });
+
+  it('keeps the event info popup open when opening its three-dot menu in month view', async () => {
+    renderApp();
+    const card = screen.getAllByRole('button', { name: /Standup/ })[0];
+    fireEvent.click(card);
+    const popup = await screen.findByRole('dialog', { name: 'Standup' });
+    expect(popup).toBeInTheDocument();
+
+    const moreButton = within(popup).getByRole('button', { name: 'toolbar.more' });
+    fireEvent.click(moreButton);
+
+    expect(await screen.findByRole('menuitem', { name: 'events.export_ics' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Standup' })).toBeInTheDocument();
+  });
+
+  it('keeps the event info popup open when copying title from the three-dot menu', async () => {
+    renderApp();
+    const card = screen.getAllByRole('button', { name: /Standup/ })[0];
+    fireEvent.click(card);
+    const popup = await screen.findByRole('dialog', { name: 'Standup' });
+    const moreButton = within(popup).getByRole('button', { name: 'toolbar.more' });
+    fireEvent.click(moreButton);
+
+    const copyTitle = await screen.findByRole('menuitem', { name: 'events.copy_title' });
+    fireEvent.click(copyTitle);
+
+    expect(screen.queryByRole('menuitem', { name: 'events.copy_title' })).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Standup' })).toBeInTheDocument();
+  });
 });
 
 describe('CalendarApp from the keyboard', () => {

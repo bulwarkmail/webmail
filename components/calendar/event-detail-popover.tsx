@@ -335,6 +335,9 @@ export function EventDetailPopover({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element | null;
+      const el = target instanceof Element ? target : (target as unknown as Node | null)?.parentElement ?? null;
+      if (el?.closest?.('[role="menu"]')) return;
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -442,6 +445,7 @@ export function EventDetailPopover({
           onClick={onMore ?? onDuplicate}
           className={HEADER_BUTTON}
           label={onMore ? t("toolbar.more") : t("events.duplicate")}
+          aria-haspopup={onMore ? "menu" : undefined}
         >
           {onMore ? <MoreVertical className="w-4 h-4" /> : <CopyPlus className="w-4 h-4" />}
         </IconButton>

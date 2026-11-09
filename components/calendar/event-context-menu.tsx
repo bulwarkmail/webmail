@@ -57,6 +57,8 @@ interface EventContextMenuProps {
   answersOnly?: boolean;
   /** "Copy to <address>", one per other signed-in account (pim-p2-16). */
   copyTo?: Array<{ address: string; onCopy: () => void }>;
+  /** Opened over a dialog or popover: drawn at z-[70] rather than z-50. */
+  overDialog?: boolean;
 }
 
 export function EventContextMenu({
@@ -77,6 +79,7 @@ export function EventContextMenu({
   responseStatus,
   answersOnly = false,
   copyTo = [],
+  overDialog = false,
 }: EventContextMenuProps) {
   const tP2 = useTranslations("ux_p2_pim_cal");
   const t = useTranslations("calendar");
@@ -107,14 +110,14 @@ export function EventContextMenu({
 
   if (answersOnly && answers) {
     return (
-      <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
+      <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose} overDialog={overDialog}>
         {answers}
       </ContextMenu>
     );
   }
 
   return (
-    <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
+    <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose} overDialog={overDialog}>
       {answers && (
         <>
           {answers}
