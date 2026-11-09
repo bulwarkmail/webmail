@@ -956,6 +956,32 @@ describe('CalendarApp day view tasks', () => {
       useSettingsStore.setState({ showTasksOnCalendar: false } as never);
     }
   });
+
+  // A task-only list is never among the selected calendars: its tasks follow
+  // the task list tick instead.
+  it.each([
+    [[], true],
+    [['todo'], false],
+  ])('draws the tasks of a task-only list by its task list tick (hidden: %j)', async (hiddenTaskListIds, shown) => {
+    setUp([], 'day');
+    const todo = { ...calendars[0], id: 'todo', name: 'To-do', isTasksOnly: true, isDefault: false };
+    const task = { id: 't2', '@type': 'Task', title: 'Water plants', calendarIds: { todo: true }, progress: 'needs-action', priority: 0, due: '2026-10-12', showWithoutTime: true } as never;
+    useCalendarStore.setState({ calendars: [...calendars, todo], hiddenTaskListIds } as never);
+    useSettingsStore.setState({ showTasksOnCalendar: true } as never);
+    useTaskStore.setState({ tasks: [task] } as never);
+    client.getCalendarTasks.mockResolvedValue([task]);
+    try {
+      renderApp();
+      if (shown) {
+        await waitFor(() => expect(document.querySelector('[data-calendar-task="t2"]')).not.toBeNull());
+      } else {
+        expect(document.querySelector('[data-calendar-task="t2"]')).toBeNull();
+      }
+    } finally {
+      useSettingsStore.setState({ showTasksOnCalendar: false } as never);
+      useCalendarStore.setState({ hiddenTaskListIds: [] } as never);
+    }
+  });
 });
 
 describe('CalendarApp company calendars on a phone', () => {

@@ -2032,11 +2032,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   );
 
   // Tasks on the month, week and day grids follow the calendar filter like
-  // the events do (#1107).
+  // the events do (#1107); tasks in task-only lists follow the task list tick.
   const calendarTasks = useMemo(() => {
     if (!enableCalendarTasks || !showTasksOnCalendar) return undefined;
-    return filterTasksByCalendars(taskStore.tasks, selectedCalendarIds);
-  }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds]);
+    return filterTasksByCalendars(taskStore.tasks, selectedCalendarIds, calendars, hiddenTaskListIds);
+  }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds, calendars, hiddenTaskListIds]);
 
   useEffect(() => {
     const hiddenEvents = events.filter((event) => {

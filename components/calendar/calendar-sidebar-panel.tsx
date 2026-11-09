@@ -120,6 +120,7 @@ export function CalendarSidebarPanel({
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
+  const showTasksOnCalendar = useSettingsStore((s) => s.showTasksOnCalendar);
   const tasks = useTaskStore((s) => s.tasks);
   const setViewMode = useCalendarStore((s) => s.setViewMode);
 
@@ -290,10 +291,19 @@ export function CalendarSidebarPanel({
   };
 
   // The tasks view lists task lists, each with its own tick (pim-1): a
-  // task-only list never shows in the grid, so the grid's selection can't
-  // say which tasks to list.
+  // task-only list is never among the grid's selected calendars, so that
+  // selection can't say which tasks to list. The calendar views list the
+  // task-only lists below the calendars with the same tick, which also
+  // steers their tasks on the grid; a calendar holding tasks keeps its
+  // calendar tick there.
   const inTasksView = enableCalendarTasks && viewMode === 'tasks';
-  const taskLists = useMemo(() => (inTasksView ? taskListsOf(calendars, tasks) : []), [inTasksView, calendars, tasks]);
+  const taskLists = useMemo(
+    () => {
+      if (inTasksView) return taskListsOf(calendars, tasks);
+      return enableCalendarTasks && showTasksOnCalendar ? calendars.filter(c => c.isTasksOnly) : [];
+    },
+    [inTasksView, enableCalendarTasks, showTasksOnCalendar, calendars, tasks],
+  );
   const accountLabel = (localAccountId: string) => {
     const acct = localAccounts.find(a => a.id === localAccountId);
     return accountAddress(acct) || localAccountId;
@@ -317,6 +327,23 @@ export function CalendarSidebarPanel({
       toast.error(tMgmt('error_default'));
     }
   };
+
+  const renderTaskListsSection = () => (
+    <div data-testid="task-lists-section">
+      {renderSectionHeader('__task_lists__', tUx('task_lists'))}
+      {!collapsedAccountGroups.has('__task_lists__') && taskListGroups.map((group) => (
+        <div key={group.key} className={cn(group.label && "mt-1")}>
+          {group.label && (
+            <div className="ps-5 pe-3 py-0.5 text-[0.6875rem] font-medium text-muted-foreground flex items-center gap-1">
+              <User className="w-3 h-3" aria-hidden="true" />
+              <span className="truncate">{accountLabel(group.label)}</span>
+            </div>
+          )}
+          {group.lists.map((cal) => renderCalendarItem(cal, true))}
+        </div>
+      ))}
+    </div>
+  );
 
   if (calendars.length === 0 && !onSubscribe) return null;
 
@@ -586,20 +613,7 @@ export function CalendarSidebarPanel({
         </button>
       )}
       {inTasksView ? (
-        <div data-testid="task-lists-section">
-          {renderSectionHeader('__task_lists__', tUx('task_lists'))}
-          {!collapsedAccountGroups.has('__task_lists__') && taskListGroups.map((group) => (
-            <div key={group.key} className={cn(group.label && "mt-1")}>
-              {group.label && (
-                <div className="ps-5 pe-3 py-0.5 text-[0.6875rem] font-medium text-muted-foreground flex items-center gap-1">
-                  <User className="w-3 h-3" aria-hidden="true" />
-                  <span className="truncate">{accountLabel(group.label)}</span>
-                </div>
-              )}
-              {group.lists.map((cal) => renderCalendarItem(cal, true))}
-            </div>
-          ))}
-        </div>
+        renderTaskListsSection()
       ) : multiAccountMode && localAccountGroups.length > 0 ? (
         <>
           {localAccountGroups.map((group, idx) => {
@@ -702,6 +716,7 @@ export function CalendarSidebarPanel({
           )}
         </>
       )}
+      {!inTasksView && taskLists.length > 0 && <div className="mt-3">{renderTaskListsSection()}</div>}
 
       {renderCalendarMenu()}
       <ConfirmDialog {...confirmDialogProps} />

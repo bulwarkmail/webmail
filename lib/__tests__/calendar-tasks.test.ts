@@ -43,6 +43,41 @@ describe('filterTasksByCalendars', () => {
     expect(filterTasksByCalendars(tasks, ['cal-1', 'cal-3']).map((t) => t.id)).toEqual(['a', 'c']);
     expect(filterTasksByCalendars(tasks, [])).toEqual([]);
   });
+
+  describe('task-only lists', () => {
+    // A task-only list is never among the selected calendars, so its tasks
+    // follow the task list tick instead (hiddenTaskListIds).
+    const calendars = [
+      { id: 'events', isTasksOnly: false },
+      { id: 'list', isTasksOnly: true },
+    ];
+    const tasks = [
+      makeTask('in-events', { calendarIds: { events: true } }),
+      makeTask('in-list', { calendarIds: { list: true } }),
+    ];
+
+    it('shows the tasks of a task-only list that is not hidden', () => {
+      expect(filterTasksByCalendars(tasks, ['events'], calendars, []).map((t) => t.id)).toEqual([
+        'in-events',
+        'in-list',
+      ]);
+    });
+
+    it('hides the tasks of a hidden task-only list', () => {
+      expect(filterTasksByCalendars(tasks, ['events'], calendars, ['list']).map((t) => t.id)).toEqual(['in-events']);
+    });
+
+    it('hides a hidden task-only list even when an older selection still holds it', () => {
+      expect(filterTasksByCalendars(tasks, ['events', 'list'], calendars, ['list']).map((t) => t.id)).toEqual([
+        'in-events',
+      ]);
+    });
+
+    it('keeps tasks in event calendars on the calendar selection', () => {
+      expect(filterTasksByCalendars(tasks, [], calendars, []).map((t) => t.id)).toEqual(['in-list']);
+      expect(filterTasksByCalendars(tasks, [], calendars, ['events']).map((t) => t.id)).toEqual(['in-list']);
+    });
+  });
 });
 
 describe('taskDueDayKey', () => {
