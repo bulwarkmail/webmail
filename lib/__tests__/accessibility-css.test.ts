@@ -227,6 +227,19 @@ describe('focus outline off', () => {
     document.body.innerHTML = '';
   });
 
+  it('keeps the outline in the accessibility panel, the way back by keyboard', () => {
+    const rule = ruleAt('html:root[data-focus-ring="off"] :focus-visible');
+    const bare = rule.selectors.map((s) => s.replace(/(:focus-visible|:focus)+/g, '*'));
+    document.body.innerHTML = '<div data-keep-focus-outline="true"><button>Normal</button></div><button>Send</button>';
+    const inPanel = document.querySelector('[data-keep-focus-outline] button')!;
+    const outside = document.body.lastElementChild!;
+    document.documentElement.dataset.focusRing = 'off';
+    expect(bare.some((s) => inPanel.matches(s))).toBe(false);
+    expect(bare.some((s) => outside.matches(s))).toBe(true);
+    delete document.documentElement.dataset.focusRing;
+    document.body.innerHTML = '';
+  });
+
   it("takes the writing area's bar off, and its forced-colors outline", () => {
     const rule = ruleAt('html:root[data-focus-ring="off"] [data-composer-writing]');
     expect(rule.selectors).toEqual(['html:root[data-focus-ring="off"] [data-composer-writing]:has(:is(.tiptap, textarea):focus-visible)']);
