@@ -57,6 +57,7 @@ export function MessageListSettings() {
     searchDefaultScope,
     showPreview,
     showVerificationCodes,
+    showAttachmentChips,
     disableThreading,
     emailsPerPage,
     archiveMode,
@@ -208,6 +209,19 @@ export function MessageListSettings() {
             onChange={(checked) => updateSetting('showVerificationCodes', checked)}
           />
         </SettingItem>
+
+        {!isSettingHidden('showAttachmentChips') && (
+        <SettingItem
+          label={t('show_attachment_chips.label')}
+          description={t('show_attachment_chips.description')}
+          locked={isSettingLocked('showAttachmentChips')}
+        >
+          <ToggleSwitch
+            checked={showAttachmentChips}
+            onChange={(checked) => updateSetting('showAttachmentChips', checked)}
+          />
+        </SettingItem>
+        )}
 
         <PrivacyLinkRow topic="senders" />
       </SettingsSection>

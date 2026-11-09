@@ -2079,6 +2079,10 @@
         "label": "Pokazuj kody weryfikacyjne",
         "description": "Oferuj kod z e-maili logowania i potwierdzenia do skopiowania jednym kliknięciem, na liście przez jeden dzień i w wiadomości"
       },
+      "show_attachment_chips": {
+        "label": "Pokaż etykiety załączników",
+        "description": "Wyświetlaj etykiety załączników na liście wiadomości"
+      },
       "plain_text_mode": {
         "label": "Tylko zwykły tekst",
         "description": "Wyłącz edytor tekstu sformatowanego i wysyłaj wszystkie wiadomości e-mail tylko jako zwykły tekst, w tym odpowiedzi i przekazywanie dalej"

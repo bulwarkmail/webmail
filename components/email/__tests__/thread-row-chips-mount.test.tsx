@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import type { Email } from '@/lib/jmap/types';
 
@@ -34,6 +34,22 @@ describe('attachment chips in message rows', () => {
       );
       expect(ListAttachmentChips.mock.calls.length > 0 ? 1 : 0).toBe(expected);
       unmount();
+    }
+  });
+
+  it('does not mount the loader when showAttachmentChips is off', async () => {
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    act(() => { useSettingsStore.setState({ showAttachmentChips: false }); });
+    try {
+      ListAttachmentChips.mockClear();
+      const [thread] = groupEmailsByThread([row('with', true)]);
+      const { unmount } = render(
+        <ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={() => {}} onOpenAttachment={() => {}} />,
+      );
+      expect(ListAttachmentChips).not.toHaveBeenCalled();
+      unmount();
+    } finally {
+      act(() => { useSettingsStore.setState({ showAttachmentChips: true }); });
     }
   });
 });

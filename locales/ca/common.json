@@ -2082,6 +2082,10 @@
         "label": "Mostra els codis de verificació",
         "description": "Ofereix el codi dels correus d'inici de sessió i de confirmació per copiar-lo amb un clic, a la llista durant un dia i al missatge"
       },
+      "show_attachment_chips": {
+        "label": "Mostra els xips de fitxers adjunts",
+        "description": "Mostra els xips de fitxers adjunts a la llista de missatges"
+      },
       "plain_text_mode": {
         "label": "Només text sense format",
         "description": "Desactiva l'editor de text enriquit i envia tots els correus només com a text sense format, incloses les respostes i els reenviaments"

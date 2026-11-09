@@ -2082,6 +2082,10 @@
         "label": "Zobrazovať overovacie kódy",
         "description": "Ponúkať kód z prihlasovacích a potvrdzovacích e-mailov na skopírovanie jedným kliknutím, v zozname počas jedného dňa a v správe"
       },
+      "show_attachment_chips": {
+        "label": "Zobraziť štítky příloh",
+        "description": "Zobrazovať štítky príloh v zozname správ"
+      },
       "plain_text_mode": {
         "label": "Iba prostý text",
         "description": "Zakázať editor formátovaného textu a odosielať všetky e-maily iba ako prostý text"

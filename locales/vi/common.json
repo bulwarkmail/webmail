@@ -2094,6 +2094,10 @@
         "label": "Hiển thị mã xác minh",
         "description": "Cho phép sao chép mã trong thư đăng nhập và xác nhận chỉ bằng một lần nhấn; mã hiển thị trong danh sách một ngày và cả trong thư"
       },
+      "show_attachment_chips": {
+        "label": "Hiển thị khối tệp đính kèm",
+        "description": "Hiển thị khối tệp đính kèm trong danh sách thư"
+      },
       "plain_text_mode": {
         "label": "Chỉ dùng văn bản thuần",
         "description": "Tắt trình soạn thảo văn bản đa dạng thức và chỉ gửi thư dưới dạng văn bản thuần, kể cả thư trả lời và chuyển tiếp"

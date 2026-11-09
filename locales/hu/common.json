@@ -2082,6 +2082,10 @@
         "label": "Ellenőrző kódok megjelenítése",
         "description": "A bejelentkezési és megerősítő e-mailek kódjának felajánlása egy kattintásos másolásra, a listában egy napig és az üzenetben"
       },
+      "show_attachment_chips": {
+        "label": "Csatolmánycímkék megjelenítése",
+        "description": "Csatolmánycímkék megjelenítése az üzenetlistában"
+      },
       "plain_text_mode": {
         "label": "Csak szöveges mód",
         "description": "Rich text szerkesztő letiltása és az összes e-mail küldése csak szöveges formátumban, beleértve a válaszokat és továbbításokat"

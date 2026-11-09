@@ -2082,6 +2082,10 @@
         "label": "Näita kinnituskoode",
         "description": "Paku sisselogimis- ja kinnituskirjade koodi ühe klõpsuga kopeerimiseks, nimekirjas ühe päeva jooksul ja kirjas endas"
       },
+      "show_attachment_chips": {
+        "label": "Kuva manuste nupud",
+        "description": "Kuva manuste nupud kirjade loendis"
+      },
       "plain_text_mode": {
         "label": "Ainult lihttekst",
         "description": "Keela vormindatud teksti redaktor ja saada kõik kirjad ainult lihttekstina, sealhulgas vastused ja edastused"

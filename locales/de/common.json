@@ -2079,6 +2079,10 @@
         "label": "Bestätigungscodes anzeigen",
         "description": "Code aus Anmelde- und Bestätigungs-E-Mails zum Kopieren mit einem Klick anbieten, in der Liste einen Tag lang und in der Nachricht"
       },
+      "show_attachment_chips": {
+        "label": "Anhang-Chips anzeigen",
+        "description": "Anhang-Chips in der Nachrichtenliste anzeigen"
+      },
       "plain_text_mode": {
         "label": "Nur Klartext",
         "description": "Rich-Text-Editor deaktivieren und alle E-Mails nur als Klartext senden, einschließlich Antworten und Weiterleitungen"

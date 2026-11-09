@@ -2122,6 +2122,10 @@
         "label": "Rādīt verifikācijas kodus",
         "description": "Piedāvāt kodu no pieteikšanās un apstiprinājuma e-pastiem kopēšanai ar vienu klikšķi, sarakstā vienu dienu un ziņojumā"
       },
+      "show_attachment_chips": {
+        "label": "Rādīt pielikumu mikroshēmas",
+        "description": "Rādīt pielikumu mikroshēmas ziņu sarakstā"
+      },
       "attachment_click_action": {
         "label": "Darbība, noklikšķinot uz pielikuma",
         "description": "Izvēlieties priekšskatījumu vai tūlītēju lejupielādi",

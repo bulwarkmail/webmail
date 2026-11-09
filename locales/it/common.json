@@ -2122,6 +2122,10 @@
         "label": "Mostra codici di verifica",
         "description": "Offri il codice delle email di accesso e conferma da copiare con un clic, nell'elenco per un giorno e nel messaggio"
       },
+      "show_attachment_chips": {
+        "label": "Mostra chip allegati",
+        "description": "Mostra i chip degli allegati nell'elenco messaggi"
+      },
       "attachment_click_action": {
         "label": "Azione al clic sugli allegati",
         "description": "Scegli se facendo clic su un allegato si apre un'anteprima o si avvia subito il download",

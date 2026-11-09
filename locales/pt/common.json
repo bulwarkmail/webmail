@@ -2122,6 +2122,10 @@
         "label": "Mostrar códigos de verificação",
         "description": "Oferecer o código dos e-mails de início de sessão e confirmação para copiar com um clique, na lista durante um dia e na mensagem"
       },
+      "show_attachment_chips": {
+        "label": "Mostrar etiquetas de anexos",
+        "description": "Mostrar etiquetas de anexos na lista de mensagens"
+      },
       "attachment_click_action": {
         "label": "Ação ao clicar em anexos",
         "description": "Escolha se clicar em um anexo abre uma pré-visualização ou inicia o download imediatamente",
