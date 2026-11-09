@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('client_id', clientId);
     authUrl.searchParams.set('redirect_uri', redirect_uri);
-    const scopes = withProviderDataScopes(getOauthScopes(), metadata.scopes_supported);
+    const scopes = withProviderDataScopes(getOauthScopes(), metadata.scopes_supported, Boolean(resource));
     authUrl.searchParams.set('scope', reauthScopes(scopes, isReauth, metadata.scopes_supported));
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('code_challenge', codeChallenge);

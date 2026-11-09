@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('next/server', () => ({
   NextResponse: {
@@ -45,16 +45,18 @@ vi.mock('@/lib/oauth/token-exchange', () => ({
   getDiscoveryValidator: () => undefined,
 }));
 
+const provider = vi.hoisted(() => ({ scopes: 'openid email', supported: undefined as string[] | undefined }));
 vi.mock('@/lib/oauth/discovery', () => ({
   discoverOAuth: async () => ({
     issuer: 'https://idp.example.com',
     authorization_endpoint: 'https://idp.example.com/authorize',
     token_endpoint: 'https://idp.example.com/token',
+    ...(provider.supported ? { scopes_supported: provider.supported } : {}),
   }),
 }));
 
 vi.mock('@/lib/oauth/tokens', () => ({
-  getOauthScopes: () => 'openid email',
+  getOauthScopes: () => provider.scopes,
   refreshTokenServerCookieName: (slot: number) => `jmap_rt_server_${slot}`,
 }));
 
@@ -154,6 +156,40 @@ describe('sso start route', () => {
     const { body } = await callRoute({ redirect_uri: 'https://mail.example.com/auth/callback' });
 
     expect(new URL(body.authorize_url).searchParams.has('resource')).toBe(false);
+  });
+
+  // Pocket ID: the API's scopes are granted per resource and are not in the
+  // provider's own scopes_supported (#1583).
+  describe('configured Stalwart scopes and a provider that does not list them', () => {
+    const SECURITY = 'urn:stalwart:oauth:scope:security';
+    const configured = `openid email profile urn:ietf:params:oauth:scope:mail ${SECURITY}`;
+    const scopeOf = (url: string) => new URL(url).searchParams.get('scope');
+
+    beforeEach(() => {
+      provider.scopes = configured;
+      provider.supported = ['openid', 'profile', 'email', 'groups', 'offline_access'];
+    });
+    afterEach(() => {
+      provider.scopes = 'openid email';
+      provider.supported = undefined;
+    });
+
+    it('are sent with the resource they belong to', async () => {
+      getRequiredConfig.mockReturnValueOnce({
+        clientId: 'client',
+        discoveryUrl: 'https://idp.example.com',
+        resource: 'https://mail.example.com',
+      });
+      const { body } = await callRoute({ redirect_uri: 'https://mail.example.com/auth/callback' });
+
+      expect(scopeOf(body.authorize_url)).toBe(configured);
+    });
+
+    it('are left out without a resource, as for a server entry\'s own provider', async () => {
+      const { body } = await callRoute({ redirect_uri: 'https://mail.example.com/auth/callback' });
+
+      expect(scopeOf(body.authorize_url)).toBe('openid email profile urn:ietf:params:oauth:scope:mail');
+    });
   });
 });
 
