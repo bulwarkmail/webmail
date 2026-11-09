@@ -237,22 +237,19 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
   pressed?: boolean;
   popup?: "menu" | "dialog";
   expanded?: boolean;
-  onClick: () => void;
-  /** A double click keeps the button armed after each use (format painter). */
-  onDoubleClick?: () => void;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   /** Keep the editor's focus (and its selection) through the click (format painter). */
   onMouseDown?: React.MouseEventHandler<HTMLButtonElement>;
   children: React.ReactNode;
   title: string;
   disabled?: boolean;
-}>(function ToolbarButton({ item, active, pressed, popup, expanded, onClick, onDoubleClick, onMouseDown, children, title, disabled }, ref) {
+}>(function ToolbarButton({ item, active, pressed, popup, expanded, onClick, onMouseDown, children, title, disabled }, ref) {
   return (
     <button
       ref={ref}
       type="button"
       data-toolbar-item={item}
       onClick={onClick}
-      onDoubleClick={onDoubleClick}
       onMouseDown={onMouseDown}
       disabled={disabled}
       title={title}
@@ -855,9 +852,20 @@ export function RichTextEditor({
   // selection after that (a word processor's behaviour). Escape, or another
   // click on the button, puts it down.
   const [painter, setPainter] = useState<PainterState | null>(null);
-  const armPainter = useCallback(() => {
+  const armPainter = useCallback((event?: { detail?: number }) => {
     if (!editor) return;
-    if (painter) { setPainter(null); return; }
+    // A real double click is click(detail 1), click(detail 2), then dblclick:
+    // the second click reaches this handler before any dblclick could, so the
+    // double is recognised here by the click count, not by a dblclick handler
+    // (a toggle there would find the painter already put down by this click).
+    // Keyboard activation fires click with detail 0: a single arm.
+    const double = (event?.detail ?? 0) >= 2;
+    if (painter) {
+      // The second click of a double click keeps it armed, and sticky.
+      if (double) setPainter((current) => (current ? { ...current, sticky: true } : current));
+      else setPainter(null);
+      return;
+    }
     const style = editor.getAttributes("textStyle");
     setPainter({
       format: {
@@ -879,7 +887,8 @@ export function RichTextEditor({
       },
       from: editor.state.selection.from,
       to: editor.state.selection.to,
-      sticky: false,
+      // A double click that arms the painter outright: sticky from the start.
+      sticky: double,
     });
     // For the keyboard: the mouse never leaves the editor focused (the
     // button suppresses the focus grab), but pressing the button with
@@ -887,10 +896,6 @@ export function RichTextEditor({
     // sits right beside the editor.
     editor.commands.focus(null, { scrollIntoView: false });
   }, [editor, painter]);
-  // A double click arrives after the click that armed it: just make it sticky.
-  const makePainterSticky = useCallback(() => {
-    setPainter((current) => (current ? { ...current, sticky: true } : current));
-  }, []);
   // Applying is replace semantics, as in a word processor: the marks the
   // source didn't have come off the target too. A selection being dragged or
   // extended with shift+arrows fires selectionUpdate at every step, so the
@@ -1565,7 +1570,6 @@ export function RichTextEditor({
           item="format-painter"
           pressed={painter !== null}
           onClick={armPainter}
-          onDoubleClick={makePainterSticky}
           onMouseDown={(event) => event.preventDefault()}
           title={tToolbar("format_painter")}
         >
