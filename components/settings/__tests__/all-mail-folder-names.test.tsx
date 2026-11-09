@@ -110,11 +110,20 @@ describe('unified view settings visibility', () => {
     ]) expect(screen.queryByRole('switch', { name })).toBeNull();
   });
 
-  it('shows the Unified Mailbox control for a single account even with no allowed views', () => {
+  // With one account and no view allowed, the Unified mailbox switch would
+  // have nothing to combine.
+  it('hides the section for a single account when the admin allows none of the views', () => {
     singleAccount();
     usePolicyStore.setState({ isFeatureEnabled: () => false });
-    render(<MultipleAccountsSection />);
-    expect(screen.getByRole('switch', { name: 'unified_mailbox.label' })).toBeInTheDocument();
+    const { container } = render(<MultipleAccountsSection />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('hides the section for a single account when every allowed view is hidden', () => {
+    singleAccount();
+    usePolicyStore.setState({ isSettingHidden: (setting) => setting.startsWith('enableCross') });
+    const { container } = render(<MultipleAccountsSection />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('hides the entire section when a single account has Unified Mailbox hidden and off', () => {
