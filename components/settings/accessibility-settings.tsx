@@ -338,7 +338,8 @@ export function AccessibilitySettings() {
           />
         </SettingItem>
         <SettingItem label={t('focus_always.label')} description={t('focus_always.description')}>
-          <ToggleSwitch checked={settings.focusAlwaysVisible} onChange={(checked) => set('focusAlwaysVisible', checked)} />
+          {/* Off draws no outline, after a click or otherwise. */}
+          <ToggleSwitch checked={settings.focusAlwaysVisible} onChange={(checked) => set('focusAlwaysVisible', checked)} disabled={settings.focusRing === 'off'} />
         </SettingItem>
       </SettingsSection>
 
