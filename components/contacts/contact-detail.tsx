@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatAddressLines } from "@/lib/address-format";
 import type { ContactCard, AnniversaryDate } from "@/lib/jmap/types";
-import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoRef } from "@/stores/contact-store";
+import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoRef, useContactStore } from "@/stores/contact-store";
+import { findRelatedContact } from "@/lib/contact-related";
 import { ContactActivity } from "./contact-activity";
 import { toast } from "@/stores/toast-store";
 import { ContactContextMenu } from "./contact-context-menu";
@@ -35,6 +36,8 @@ interface ContactDetailProps {
   onCompose?: () => void;
   /** Print the contact on a sheet of its own. */
   onPrint?: () => void;
+  /** Show another contact: a related contact's name leads to its card. */
+  onOpenContact?: (contactId: string) => void;
   isMobile?: boolean;
   className?: string;
   /** In an address book shared read-only: no Edit, Move or Delete. */
@@ -79,7 +82,9 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 }
 
 
-export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, isMobile, className, readOnly = false }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, onOpenContact, isMobile, className, readOnly = false }: ContactDetailProps) {
+  // Related contacts are stored by uid and shown by name (#1578).
+  const loadedContacts = useContactStore((s) => s.contacts);
   const t = useTranslations("contacts");
   const tRoot = useTranslations();
   const tCommon = useTranslations("common");
@@ -408,9 +413,23 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
             <div className="space-y-2">
               {relatedTo.map(([uri, rel], i) => {
                 const relType = rel.relation ? Object.keys(rel.relation).find(k => rel.relation![k]) : undefined;
+                // The key is the related card's uid. A value no card has (a
+                // name, a URL from an import) is shown as stored.
+                const related = findRelatedContact(uri, contact, loadedContacts);
+                const relatedName = related ? getContactDisplayName(related) : "";
                 return (
                   <FieldRow key={`rel${i}`} icon={Users} label={relType || t("detail.related_default_label")}>
-                    <div className="text-sm break-all">{uri}</div>
+                    {related && relatedName && onOpenContact ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpenContact(related.id)}
+                        className="text-sm text-primary hover:underline break-words text-start"
+                      >
+                        {relatedName}
+                      </button>
+                    ) : (
+                      <div className={relatedName ? "text-sm break-words" : "text-sm break-all"}>{relatedName || uri}</div>
+                    )}
                   </FieldRow>
                 );
               })}
