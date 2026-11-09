@@ -105,8 +105,7 @@ describe('the sidebar in the tasks view (pim-1)', () => {
     useCalendarStore.setState({ viewMode: 'month' } as never);
     render(<CalendarSidebarPanel calendars={[home, todo, work]} selectedCalendarIds={['home', 'work']} onToggleVisibility={() => {}} client={client} />);
     const taskLists = screen.getByTestId('task-lists-section');
-    const items = screen.getAllByTestId('calendar-item');
-    expect(items.filter((el) => !taskLists.contains(el)).map((el) => el.dataset.calendarName)).toEqual(['Home', 'Work']);
+    expect(screen.getAllByTestId('calendar-item').map((el) => el.dataset.calendarName)).toEqual(['Home', 'Work']);
     expect(within(taskLists).getAllByRole('checkbox').map((el) => el.textContent?.trim())).toEqual(['To-do']);
   });
 
@@ -123,6 +122,14 @@ describe('the sidebar in the tasks view (pim-1)', () => {
     useCalendarStore.setState({ viewMode: 'week' } as never);
     render(<CalendarSidebarPanel calendars={[home, todo, work]} selectedCalendarIds={['home', 'work']} onToggleVisibility={() => {}} client={client} />);
     expect(screen.queryByTestId('task-lists-section')).toBeNull();
+  });
+
+  // The agenda draws no tasks, so a tick there would steer nothing.
+  it('leaves the task-only lists out of the agenda', () => {
+    useCalendarStore.setState({ viewMode: 'agenda' } as never);
+    render(<CalendarSidebarPanel calendars={[home, todo, work]} selectedCalendarIds={['home', 'work']} onToggleVisibility={() => {}} client={client} />);
+    expect(screen.queryByTestId('task-lists-section')).toBeNull();
+    expect(screen.getAllByTestId('calendar-item').map((el) => el.dataset.calendarName)).toEqual(['Home', 'Work']);
   });
 });
 

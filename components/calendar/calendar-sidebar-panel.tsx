@@ -295,14 +295,15 @@ export function CalendarSidebarPanel({
   // selection can't say which tasks to list. The calendar views list the
   // task-only lists below the calendars with the same tick, which also
   // steers their tasks on the grid; a calendar holding tasks keeps its
-  // calendar tick there.
+  // calendar tick there. The agenda draws no tasks, so it lists none.
   const inTasksView = enableCalendarTasks && viewMode === 'tasks';
+  const tasksOnGrid = enableCalendarTasks && showTasksOnCalendar && viewMode !== 'agenda';
   const taskLists = useMemo(
     () => {
       if (inTasksView) return taskListsOf(calendars, tasks);
-      return enableCalendarTasks && showTasksOnCalendar ? calendars.filter(c => c.isTasksOnly) : [];
+      return tasksOnGrid ? calendars.filter(c => c.isTasksOnly) : [];
     },
-    [inTasksView, enableCalendarTasks, showTasksOnCalendar, calendars, tasks],
+    [inTasksView, tasksOnGrid, calendars, tasks],
   );
   const accountLabel = (localAccountId: string) => {
     const acct = localAccounts.find(a => a.id === localAccountId);
