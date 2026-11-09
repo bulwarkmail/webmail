@@ -43,4 +43,21 @@ describe('the Move dialog', () => {
     expect(onMove).toHaveBeenCalledWith('travel');
     expect(useMoveDialogStore.getState().request).toBeNull();
   });
+
+  // A Pro folder tab's reader files within its own account: the dialog lists
+  // the folders its Move menu listed, not the ones Mail has open.
+  it('lists the folders the asking menu listed, not those of the host', () => {
+    render(<MoveToDialogHost mailboxes={mailboxes} selectedMailbox="inbox" />);
+    const other = [
+      box('inbox', 'Inbox', { role: 'inbox', accountId: 'B' }),
+      box('projects', 'Projects', { accountId: 'B' }),
+    ];
+    const onMove = vi.fn();
+    act(() => useMoveDialogStore.getState().open({ emails: [email], onMove, mailboxes: other, selectedMailbox: '' }));
+
+    expect(screen.queryByTestId('move-to:work')).toBeNull();
+    expect(screen.queryByTestId('move-to:travel')).toBeNull();
+    fireEvent.click(screen.getByTestId('move-to:projects'));
+    expect(onMove).toHaveBeenCalledWith('projects');
+  });
 });

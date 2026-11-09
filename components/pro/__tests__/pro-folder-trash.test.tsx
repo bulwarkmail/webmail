@@ -339,10 +339,51 @@ it.each(['selection', 'reselection', 'client', 'login', 'mailbox', 'unmount', 's
   else if (change === 'login') act(() => useAuthStore.setState({ activeAccountId: 'replacement' }));
   else if (change === 'mailbox') { view.rerender(surface({ ...data, mailboxId: 'archive' })); await flush(); }
   else if (change === 'unmount') view.unmount();
-  else if (change === 'settings') act(() => useSettingsStore.setState({ deleteAction: 'trash-and-read' }));
+  else if (change === 'settings') act(() => useSettingsStore.setState({ deleteAction: 'permanent' }));
   else act(() => useAuthStore.setState({ getClientForAccount: () => undefined }));
   const before = protectedState(); await act(async () => gate.resolve(true)); checkProtected(before);
   expect(client.moveToTrash).not.toHaveBeenCalled(); expect(undoHistory()).toHaveLength(0);
+});
+
+// "Move to Trash and mark as read" is an ordinary Trash too: the folder owns
+// it, and the message is marked read in the same request.
+it('trashes a folder-only message as read with the trash-and-read setting, and Undo brings it back unread', async () => {
+  useSettingsStore.setState({ deleteAction: 'trash-and-read' });
+  await show(); await open(); globalAbsent(); await remove();
+  expect(client.moveToTrash).toHaveBeenCalledExactlyOnceWith('e1', 'trash', 'owner', true);
+  await act(async () => removal.resolve()); closed();
+  fireEvent.click(screen.getByRole('button', { name: 'notifications.undo' })); await flush();
+  expect(client.restoreEmails.mock.calls[0][0]).toEqual([{ id: 'e1', mailboxIds: { inbox: true }, seen: false }]);
+});
+
+it('does not count a message trashed as read among the unread in Trash', async () => {
+  useSettingsStore.setState({ deleteAction: 'trash-and-read' });
+  const target = clone(server.get('e1')!);
+  useEmailStore.setState({ emails: [target], selectedEmail: null });
+  await show(); await open(); await remove(); await act(async () => removal.resolve()); closed();
+  const boxes = useEmailStore.getState().mailboxes;
+  expect(boxes.find(m => m.id === 'inbox')!.unreadEmails).toBe(0);
+  expect(boxes.find(m => m.id === 'trash')!.totalEmails).toBe(3);
+  expect(boxes.find(m => m.id === 'trash')!.unreadEmails).toBe(1);
+});
+
+it('still trashes with the trash-and-read setting when the message was already read', async () => {
+  useSettingsStore.setState({ deleteAction: 'trash-and-read' });
+  await show(); await open('e2'); fireEvent.click(screen.getByTestId('reader-delete')); await flush();
+  expect(client.moveToTrash).toHaveBeenCalledExactlyOnceWith('e2', 'trash', 'owner', false);
+});
+
+// The reader stays up while a request is out, so its other filing buttons
+// are still there: a second action on the same message must wait.
+it('does not archive a message whose Delete is still on its way', async () => {
+  const moveEmail = vi.fn(async () => {});
+  Object.assign(client, { moveEmail });
+  await show(); await open(); await remove();
+  expect(client.moveToTrash).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByTitle(/^archive(?:\s|$)/)); await flush();
+  expect(moveEmail).not.toHaveBeenCalled();
+  await act(async () => removal.resolve()); closed(); expect(undoHistory()).toHaveLength(1);
+  expect(moveEmail).not.toHaveBeenCalled();
 });
 
 it.each(['success', 'failure'])('protects a replacement selection on stale service %s', async outcome => {

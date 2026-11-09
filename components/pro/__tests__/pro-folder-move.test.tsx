@@ -12,6 +12,7 @@ import { clearAllHooks, emailHooks } from '@/lib/plugin-hooks';
 import { clearUndoHistory, undoHistory } from '@/lib/undo-history';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { ProFolderTabData } from '@/stores/pro-tab-store';
+import { ProTabFocusContext } from '@/hooks/use-pane-context';
 
 vi.mock('@/hooks/use-media-query', () => ({
   useDeviceDetection: () => ({ isMobile: false, isTablet: false, isDesktop: true }),
@@ -264,6 +265,50 @@ it.each(['other-login', 'shared'] as const)('moves and Undoes a folder-only %s m
   expect(s.owning.restoreEmails).toHaveBeenCalledExactlyOnceWith([{ id: 'e1', mailboxIds: { inbox: true, extra: true }, seen: false }], s.owner);
   expect((s.shared ? s.other : client).restoreEmails).not.toHaveBeenCalled(); expect(undoHistory()).toHaveLength(0);
   expect(useEmailStore.getState().emails).toEqual([s.collision]);
+});
+
+// Undo restores through the tab's own client, but the refresh of Mail's
+// folders after it belongs to the login Mail shows: the tab's client would
+// write another account's folders into the sidebar.
+it('refreshes Mail after Undo through the active login, not the login of the folder tab', async () => {
+  const s = scoped('other-login');
+  await show(s.folder); await open(); await move(s.destination); await act(async () => removal.resolve()); closed();
+  const undo = useToastStore.getState().toasts.find(t => t.action)?.action; expect(undo).toBeDefined();
+  act(() => undo!.onClick()); await flush();
+  expect(s.other.restoreEmails).toHaveBeenCalledTimes(1); expect(client.restoreEmails).not.toHaveBeenCalled();
+  expect(s.other.getAllMailboxes).not.toHaveBeenCalled(); expect(client.getAllMailboxes).toHaveBeenCalled();
+});
+
+it('shows the message in the folder again after Undo', async () => {
+  await show(); await open(); await move(); await act(async () => removal.resolve()); closed();
+  const pages = client.getEmails.mock.calls.length;
+  const undo = useToastStore.getState().toasts.find(t => t.action)?.action; expect(undo).toBeDefined();
+  act(() => undo!.onClick()); await flush(); await flush();
+  expect(client.restoreEmails).toHaveBeenCalledTimes(1);
+  expect(client.getEmails.mock.calls.length).toBeGreaterThan(pages); expect(row()).toBeInTheDocument();
+});
+
+it('brings a message back unread only if it was: Undo keeps the read state the row reached', async () => {
+  // The row is marked read on its own; the reader keeps the copy it loaded.
+  useSettingsStore.setState({ markAsReadDelay: 0 });
+  await show(); await open(); await act(async () => read.resolve());
+  expect(client.markAsRead).toHaveBeenCalledExactlyOnceWith('e1', true, undefined);
+  await move(); await act(async () => removal.resolve()); closed();
+  const undo = useToastStore.getState().toasts.find(t => t.action)?.action; expect(undo).toBeDefined();
+  act(() => undo!.onClick()); await flush();
+  expect(client.restoreEmails.mock.calls[0][0]).toEqual([{ id: 'e1', mailboxIds: { inbox: true }, seen: true }]);
+});
+
+// In Archive the filing key brings the message back to the Inbox. The
+// reader's own list-based move would do nothing for a folder-only message.
+it('moves a folder-only message to the Inbox with the archive key in an Archive tab', async () => {
+  useSettingsStore.setState({ singleKeyShortcuts: true });
+  for (const e of server.values()) e.mailboxIds = { archive: true };
+  render(<ProTabFocusContext.Provider value><ProFolderTabBody tabId="move-folder" data={{ ...data, mailboxId: 'archive', title: 'Archive' }} /></ProTabFocusContext.Provider>);
+  await flush(); await open(); globalAbsent();
+  fireEvent.keyDown(document.body, { key: 'e' }); await flush();
+  expect(client.moveEmail).toHaveBeenCalledExactlyOnceWith('e1', 'inbox', 'owner');
+  await act(async () => removal.resolve()); closed(); expect(archived).not.toHaveBeenCalled();
 });
 
 it.each(['other-login', 'shared'] as const)('completes matching %s membership and counters while preserving its global namesake', async kind => {

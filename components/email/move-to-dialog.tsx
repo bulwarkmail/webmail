@@ -12,6 +12,13 @@ interface MoveDialogRequest {
   /** The messages to move. */
   emails: Email[];
   onMove: (mailboxId: string) => void;
+  /**
+   * The folders the asking Move menu listed, and the folder it was in, where
+   * they aren't the host's: a Pro folder tab's reader files within its own
+   * account, whatever Mail shows.
+   */
+  mailboxes?: Mailbox[];
+  selectedMailbox?: string;
 }
 
 interface MoveDialogState {
@@ -89,8 +96,8 @@ export function MoveToDialogHost({ mailboxes, selectedMailbox }: { mailboxes: Ma
   return (
     <MoveToDialog
       emails={request.emails}
-      mailboxes={mailboxes}
-      selectedMailbox={selectedMailbox}
+      mailboxes={request.mailboxes ?? mailboxes}
+      selectedMailbox={request.mailboxes ? request.selectedMailbox ?? "" : selectedMailbox}
       onClose={close}
       onMove={request.onMove}
     />

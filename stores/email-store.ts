@@ -2994,8 +2994,11 @@ function movedEmailState(
   email: Email,
   destinationMailboxId: string,
   isTarget: (email: Email) => boolean,
+  arrivesRead = false,
 ): Partial<EmailStore> {
   const isUnread = !email.keywords?.$seen;
+  // Marked read in the same request (Trash and mark as read).
+  const arrivesUnread = isUnread && !arrivesRead;
   // Counter changes go to the email's own account list; source and
   // destination live in the same account. (#281)
   const mailboxPatch = applyMailboxCounterUpdate(state, email, (mailbox) => {
@@ -3012,9 +3015,9 @@ function movedEmailState(
       return {
         ...mailbox,
         totalEmails: mailbox.totalEmails + 1,
-        unreadEmails: isUnread ? mailbox.unreadEmails + 1 : mailbox.unreadEmails,
+        unreadEmails: arrivesUnread ? mailbox.unreadEmails + 1 : mailbox.unreadEmails,
         totalThreads: mailbox.totalThreads + 1,
-        unreadThreads: isUnread ? mailbox.unreadThreads + 1 : mailbox.unreadThreads,
+        unreadThreads: arrivesUnread ? mailbox.unreadThreads + 1 : mailbox.unreadThreads,
       };
     }
     return mailbox;
@@ -3036,6 +3039,7 @@ export function captureListedMove(
   emailId: string,
   source: { client: IJMAPClient; clientAccountId?: string; accountId: string },
   destinationMailboxId: string,
+  arrivesRead = false,
 ): () => void {
   const isCurrentView = captureEmailListView();
   const matchesSource = (email: Email) => {
@@ -3062,7 +3066,7 @@ export function captureListedMove(
       const current = state.emails.find(isTarget);
       if (!current) return state;
       // Use current fields/counters after any same-view refresh or read.
-      return movedEmailState(state, { ...current, sourceClientAccountId: source.clientAccountId }, destinationMailboxId, isTarget);
+      return movedEmailState(state, { ...current, sourceClientAccountId: source.clientAccountId }, destinationMailboxId, isTarget, arrivesRead);
     });
   };
 }
