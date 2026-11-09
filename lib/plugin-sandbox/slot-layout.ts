@@ -19,9 +19,15 @@ export function isInlineSlot(slot: SlotName | string | null | undefined): boolea
   return !!slot && INLINE_SLOTS.has(slot as SlotName);
 }
 
-/** Tallest a slot iframe gets; content past this scrolls inside it. */
+/**
+ * Tallest a slot iframe gets; content past this scrolls inside it, except in
+ * an inline slot, whose frame never scrolls and cuts it off.
+ */
 export const MAX_SLOT_HEIGHT = 2000;
-/** Widest an inline slot gets, so one plugin can't push the host's buttons off screen. */
+/**
+ * Widest an inline slot gets, so one plugin can't push the host's buttons off
+ * screen. Content past it is cut off, not scrolled.
+ */
 export const MAX_INLINE_SLOT_WIDTH = 480;
 
 function clamp(value: unknown, max: number): number | null {
