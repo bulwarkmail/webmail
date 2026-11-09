@@ -39,7 +39,8 @@ import {
 } from '@/stores/settings-store';
 import type { MessageListTabsConfig } from '../plugin-types';
 import { apiFetch, getPathPrefix, withBasePath } from '../browser-navigation';
-import { createOAuthState } from '../plugin-oauth';
+import { createOAuthState, isPluginSignIn } from '../plugin-oauth';
+import { openPluginSignInInApp } from '../desktop/browser-sign-in';
 import { reportUploadProgress } from '../upload-progress';
 import { DEFAULT_KEYWORD_SCAN_LIMIT } from '../jmap/client';
 import { isServerSetKeyword } from '../jmap/server-keywords';
@@ -2317,6 +2318,9 @@ export async function dispatchApiCall(
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
         throw new Error(`ui.openExternalUrl: ${parsed.protocol} not allowed`);
       }
+      // The plugin's own OAuth sign-in, in the desktop app: in the system browser its
+      // callback page would park the code where this page can't read it.
+      if (isPluginSignIn(parsed, plugin.id, window.location.origin, getPathPrefix()) && await openPluginSignInInApp(parsed.toString())) return undefined;
       // Other plugins' link checks (onBeforeExternalLink) see it like a
       // click in a message; the plugin's own handler isn't asked again, so a
       // link check opens the link after its dialog.
