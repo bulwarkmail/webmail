@@ -25,6 +25,7 @@ import { InvitationPrintSync } from '@/lib/print/invitation-print';
 import { useRouter } from '@/i18n/navigation';
 import { isDocumentRTL } from '@/i18n/direction';
 import { useAuthStore } from '@/stores/auth-store';
+import { useInternalMailDomains } from '@/components/email/external-sender-chip';
 import { useShallow } from "zustand/react/shallow";
 import { useEmailStore } from '@/stores/email-store';
 import { eventTargets } from '@/lib/calendar-targets';
@@ -425,6 +426,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       .map((address) => address.toLowerCase());
     return Array.from(new Set(emails));
   }));
+  // The organisation's other domains, for the message's own account.
+  const internalMailDomains = useInternalMailDomains(email.sourceClientAccountId);
   const calendarInvitationParsingEnabled = useSettingsStore((s) => s.calendarInvitationParsingEnabled);
   const storeCalendars = useCalendarStore((s) => s.calendars);
   // An invitation in a group mailbox or in a mailbox another person shared
@@ -734,7 +737,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       : tSeries('declined_dates', {
         dates: new Intl.ListFormat(locale, { type: 'conjunction' }).format(declinedOccurrences.map(occurrenceDate)),
       });
-  const trustAssessment = parsedEvent && !userIsSender ? getInvitationTrustAssessment(parsedEvent, email, method, identityEmails) : null;
+  const trustAssessment = parsedEvent && !userIsSender ? getInvitationTrustAssessment(parsedEvent, email, method, identityEmails, internalMailDomains) : null;
   const trustMessage = trustAssessment ? getTrustMessage(t, trustAssessment) : null;
   const participationLabel = getParticipationLabel(t, currentRsvp);
   const actorSummary = parsedEvent ? getInvitationActorSummary(parsedEvent, method) : null;

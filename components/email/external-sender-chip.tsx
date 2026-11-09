@@ -22,7 +22,7 @@ type FromList = readonly { email?: string | null }[] | null | undefined;
  * stores, another signed-in one (the unified inbox) resolved for that
  * account, so its own scopes and identities decide.
  */
-function useAccountContext(accountId: string | null | undefined): ExternalMailContext | null {
+function useAccountContext(accountId: string | null | undefined, need?: 'senderLabel'): ExternalMailContext | null {
   const externalMail = usePolicyStore((s) => s.policy.organisation?.externalMail);
   const rawPolicy = usePolicyStore((s) => s.rawPolicy);
   const identities = useAuthStore((s) => s.identities);
@@ -31,11 +31,11 @@ function useAccountContext(accountId: string | null | undefined): ExternalMailCo
   useEffect(() => {
     if (!other || !accountId) return;
     let cancelled = false;
-    void externalMailContextFor(accountId, 'senderLabel').then((context) => {
+    void externalMailContextFor(accountId, need).then((context) => {
       if (!cancelled) setOtherContext({ accountId, context });
     });
     return () => { cancelled = true; };
-  }, [other, accountId, rawPolicy]);
+  }, [other, accountId, rawPolicy, need]);
   return useMemo(() => {
     if (other) return otherContext && otherContext.accountId === accountId ? otherContext.context : null;
     if (!externalMail) return null;
@@ -49,11 +49,27 @@ function useAccountContext(accountId: string | null | undefined): ExternalMailCo
  * empty otherwise.
  */
 export function useExternalSenders(from: FromList, accountId?: string | null): ExternalSender[] {
-  const context = useAccountContext(accountId);
+  const context = useAccountContext(accountId, 'senderLabel');
   return useMemo(() => {
     if (!context?.policy.senderLabel) return [];
     return externalSenders(from, internalDomains(context.identityEmails, context.policy.domains));
   }, [context, from]);
+}
+
+const NO_DOMAINS: string[] = [];
+
+/**
+ * The organisation's own domains for the message's account: its identities'
+ * and the admin's list, whether or not the "External" label is on. The
+ * invitation banner trusts mail between them as it trusts mail within the
+ * reader's own domain (#1593).
+ */
+export function useInternalMailDomains(accountId?: string | null): string[] {
+  const context = useAccountContext(accountId);
+  return useMemo(
+    () => (context ? internalDomains(context.identityEmails, context.policy.domains) : NO_DOMAINS),
+    [context],
+  );
 }
 
 /**

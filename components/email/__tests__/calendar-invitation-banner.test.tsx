@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { CalendarInvitationBanner } from '../calendar-invitation-banner';
 import type { Email } from '@/lib/jmap/types';
 import { jmapSetError } from '@/lib/jmap/jmap-error';
@@ -68,10 +68,14 @@ const mocks = vi.hoisted(() => {
     Object.assign(calendarState, nextState);
   };
 
+  // The organisation's domains for the message's account (external-sender-chip).
+  const internalMail = { domains: [] as string[], askedFor: [] as Array<string | null | undefined> };
+
   return {
     pushMock,
     clientMock,
     sourceClientMock,
+    internalMail,
     authState,
     emailState,
     settingsState,
@@ -145,6 +149,13 @@ vi.mock('@/i18n/navigation', () => ({
 
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: (selector: (state: typeof mocks.authState) => unknown) => selector(mocks.authState),
+}));
+
+vi.mock('@/components/email/external-sender-chip', () => ({
+  useInternalMailDomains: (accountId?: string | null) => {
+    mocks.internalMail.askedFor.push(accountId);
+    return mocks.internalMail.domains;
+  },
 }));
 
 vi.mock('@/stores/email-store', () => ({
@@ -340,6 +351,45 @@ describe('CalendarInvitationBanner', () => {
     });
 
     expect(screen.queryByText(/sent from/i)).not.toBeInTheDocument();
+  });
+
+  // #1593: one server, several domains. Mail between them carries no
+  // Authentication-Results header, as mail within one domain doesn't.
+  describe('an invitation from another of the organisation\'s domains', () => {
+    const invite = [{
+      uid: 'uid-sister',
+      title: 'Sister Domain Sync',
+      start: '2026-03-22T14:00:00Z',
+      organizerCalendarAddress: 'mailto:alice@sister.example',
+      participants: {
+        organizer: { '@type': 'Participant', calendarAddress: 'mailto:alice@sister.example', name: 'Alice', roles: { owner: true }, participationStatus: 'accepted' },
+        attendee: { '@type': 'Participant', email: 'user@example.com', name: 'User', roles: { attendee: true }, participationStatus: 'needs-action' },
+      },
+    }];
+    const email = () => makeEmail({ id: 'email-sister', from: [{ email: 'alice@sister.example', name: 'Alice' }], sourceClientAccountId: 'login-b' });
+
+    afterEach(() => {
+      mocks.internalMail.domains = [];
+      mocks.internalMail.askedFor = [];
+    });
+
+    it('cautions while the admin has not listed the domain', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={email()} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Sister Domain Sync' })).toBeInTheDocument());
+      expect(screen.getByText('authentication_missing_info')).toBeInTheDocument();
+    });
+
+    it('shows no caution once the domain is listed, for the account the message is in', async () => {
+      mocks.internalMail.domains = ['example.com', 'sister.example'];
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={email()} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Sister Domain Sync' })).toBeInTheDocument());
+      expect(screen.queryByText('authentication_missing_info')).not.toBeInTheDocument();
+      expect(mocks.internalMail.askedFor).toContain('login-b');
+    });
   });
 
   it('shows existing event status, current response, and view-in-calendar action', async () => {
