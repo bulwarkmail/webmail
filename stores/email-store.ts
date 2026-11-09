@@ -7881,16 +7881,40 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   renameMailbox: async (client, mailboxId, name): Promise<boolean> => {
+    // Resolution errors are synchronous; after dispatch, only the captured
+    // login/client and mailbox owner may receive success or failure state.
+    let isCurrentContext = () => true;
     try {
       const target = resolveMailboxMutationContext(client, mailboxId);
+      const epoch = currentStoreEpoch();
+      const auth = useAuthStore.getState();
+      const viewingId = get().viewingAccountId;
+      const actionClient = resolveActionClient(client);
+      const actionAccountId = actionClient.getAccountId();
+      const ownerAccountId = target.ownerAccountId ?? actionAccountId;
+      const previousName = resolveActionMailboxes().find(mb => mb.id === mailboxId)?.name ?? null;
+      isCurrentContext = () => {
+        const currentAuth = useAuthStore.getState();
+        if (currentStoreEpoch() !== epoch
+          || currentAuth.activeAccountId !== auth.activeAccountId
+          || currentAuth.client !== auth.client
+          || get().viewingAccountId !== viewingId
+          || resolveActionClient(client) !== actionClient
+          || actionClient.getAccountId() !== actionAccountId) return false;
+        const currentTarget = resolveMailboxAccountTarget(client, target.ownerAccountId);
+        const currentMailbox = resolveActionMailboxes().find(mb => mb.id === mailboxId);
+        return currentTarget.client === target.client && currentTarget.accountId === target.accountId
+          && (!currentMailbox || (currentMailbox.accountId ?? actionAccountId) === ownerAccountId);
+      };
       if (emailHooks.onBeforeMailboxRename.size > 0
         && !(await emailHooks.onBeforeMailboxRename.intercept({ mailboxId, name }))) {
         return false;
       }
-      const previousName = resolveActionMailboxes().find(mb => mb.id === mailboxId)?.name ?? null;
       await target.client.updateMailbox(target.mailboxId, { name }, target.accountId);
       void emailHooks.onMailboxRename.emit({ mailboxId, name, previousName });
-      const viewingId = get().viewingAccountId;
+      // The server succeeded even if an account switch made its view stale.
+      // The epoch also rejects A -> B -> A, without rejecting folder navigation.
+      if (!isCurrentContext()) return true;
       if (viewingId) {
         set((state) => ({
           accountMailboxes: {
@@ -7908,7 +7932,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         });
       }
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to rename folder' });
+      if (isCurrentContext()) set({ error: error instanceof Error ? error.message : 'Failed to rename folder' });
       throw error;
     }
     return true;
