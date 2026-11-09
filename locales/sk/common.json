@@ -2083,7 +2083,7 @@
         "description": "Ponúkať kód z prihlasovacích a potvrdzovacích e-mailov na skopírovanie jedným kliknutím, v zozname počas jedného dňa a v správe"
       },
       "show_attachment_chips": {
-        "label": "Zobraziť štítky příloh",
+        "label": "Zobraziť štítky príloh",
         "description": "Zobrazovať štítky príloh v zozname správ"
       },
       "plain_text_mode": {
