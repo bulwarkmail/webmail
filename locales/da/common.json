@@ -3394,7 +3394,8 @@
         "description": "Rammen om den knap, det link eller det felt, tastaturet står på.",
         "normal": "Normal",
         "thick": "Tyk",
-        "extra": "Ekstra tyk"
+        "extra": "Ekstra tyk",
+        "off": "Fra"
       },
       "focus_always": {
         "label": "Vis altid fokus",

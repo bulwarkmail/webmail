@@ -3394,7 +3394,8 @@
         "description": "El contorn al voltant del botó, l'enllaç o el camp on és el teclat.",
         "normal": "Normal",
         "thick": "Gruixut",
-        "extra": "Molt gruixut"
+        "extra": "Molt gruixut",
+        "off": "Desactivat"
       },
       "focus_always": {
         "label": "Mostra sempre el focus",

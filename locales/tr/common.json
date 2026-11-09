@@ -3394,7 +3394,8 @@
         "description": "Klavyenin üzerinde olduğu düğmenin, bağlantının veya alanın çevresindeki çerçeve.",
         "normal": "Normal",
         "thick": "Kalın",
-        "extra": "Çok kalın"
+        "extra": "Çok kalın",
+        "off": "Kapalı"
       },
       "focus_always": {
         "label": "Odağı her zaman göster",

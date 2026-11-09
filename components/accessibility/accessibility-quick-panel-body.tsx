@@ -93,6 +93,7 @@ export function QuickPanel({ isOpen, onClose, signedIn }: { isOpen: boolean; onC
             value={settings.focusRing}
             onChange={(value) => set('focusRing', value)}
             options={[
+              { value: 'off', label: tA('focus_ring.off') },
               { value: 'normal', label: tA('focus_ring.normal') },
               { value: 'thick', label: tA('focus_ring.thick') },
               { value: 'extra', label: tA('focus_ring.extra') },

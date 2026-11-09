@@ -3394,7 +3394,8 @@
         "description": "A keret azon gomb, hivatkozás vagy mező körül, amelyen a billentyűzet áll.",
         "normal": "Normál",
         "thick": "Vastag",
-        "extra": "Extra vastag"
+        "extra": "Extra vastag",
+        "off": "Ki"
       },
       "focus_always": {
         "label": "Fókusz mindig látszik",

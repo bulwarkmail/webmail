@@ -3406,7 +3406,8 @@
         "description": "Đường viền quanh nút, liên kết hoặc trường đang nhận thao tác bàn phím.",
         "normal": "Bình thường",
         "thick": "Dày",
-        "extra": "Cực dày"
+        "extra": "Cực dày",
+        "off": "Tắt"
       },
       "focus_always": {
         "label": "Luôn hiển thị tiêu điểm",

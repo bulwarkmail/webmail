@@ -3394,7 +3394,8 @@
         "description": "De rand rond de knop, link of het veld waar het toetsenbord op staat.",
         "normal": "Normaal",
         "thick": "Dik",
-        "extra": "Extra dik"
+        "extra": "Extra dik",
+        "off": "Uit"
       },
       "focus_always": {
         "label": "Focus altijd tonen",

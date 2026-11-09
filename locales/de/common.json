@@ -3394,7 +3394,8 @@
         "description": "Der Rahmen um die Schaltfläche, den Link oder das Feld, auf dem die Tastatur gerade ist.",
         "normal": "Normal",
         "thick": "Dick",
-        "extra": "Extra dick"
+        "extra": "Extra dick",
+        "off": "Aus"
       },
       "focus_always": {
         "label": "Fokus immer zeigen",

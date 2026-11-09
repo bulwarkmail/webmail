@@ -3394,7 +3394,8 @@
         "description": "Ramka wokół przycisku, linku lub pola, na którym jest klawiatura.",
         "normal": "Normalna",
         "thick": "Gruba",
-        "extra": "Bardzo gruba"
+        "extra": "Bardzo gruba",
+        "off": "Wyłączone"
       },
       "focus_always": {
         "label": "Zawsze pokazuj fokus",

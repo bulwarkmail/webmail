@@ -3394,7 +3394,8 @@
         "description": "Il contorno intorno al pulsante, link o campo su cui si trova la tastiera.",
         "normal": "Normale",
         "thick": "Spesso",
-        "extra": "Molto spesso"
+        "extra": "Molto spesso",
+        "off": "Disattivo"
       },
       "focus_always": {
         "label": "Mostra sempre il focus",

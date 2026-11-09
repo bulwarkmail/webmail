@@ -3394,7 +3394,8 @@
         "description": "Rámik okolo tlačidla, odkazu alebo poľa, na ktorom je klávesnica.",
         "normal": "Normálny",
         "thick": "Hrubý",
-        "extra": "Veľmi hrubý"
+        "extra": "Veľmi hrubý",
+        "off": "Vypnuté"
       },
       "focus_always": {
         "label": "Vždy zobrazovať zameranie",

@@ -3394,7 +3394,8 @@
         "description": "Rammen rundt knappen, lenken eller feltet tastaturet står på.",
         "normal": "Normal",
         "thick": "Tykk",
-        "extra": "Ekstra tykk"
+        "extra": "Ekstra tykk",
+        "off": "Av"
       },
       "focus_always": {
         "label": "Vis alltid fokus",

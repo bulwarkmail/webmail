@@ -330,6 +330,7 @@ export function AccessibilitySettings() {
             value={settings.focusRing}
             onChange={(value) => set('focusRing', value)}
             options={[
+              { value: 'off', label: t('focus_ring.off') },
               { value: 'normal', label: t('focus_ring.normal') },
               { value: 'thick', label: t('focus_ring.thick') },
               { value: 'extra', label: t('focus_ring.extra') },

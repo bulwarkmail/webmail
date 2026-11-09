@@ -25,7 +25,7 @@ export const FONT_SIZE_SCALE: Record<FontSize, number> = {
 /** Follow the operating system, or override it either way. */
 export type SystemToggle = 'system' | 'on' | 'off';
 export type ContrastMode = 'system' | 'more' | 'normal';
-export type FocusRing = 'normal' | 'thick' | 'extra';
+export type FocusRing = 'off' | 'normal' | 'thick' | 'extra';
 export type AppFont = 'default' | 'atkinson' | 'lexend' | 'opendyslexic';
 export type LineSpacing = 'normal' | 'relaxed' | 'loose';
 export type LetterSpacing = 'normal' | 'wide' | 'wider';
@@ -169,7 +169,7 @@ export const ACCESSIBILITY_ALLOWED: Partial<Record<string, readonly unknown[]>> 
   readingWidth: ['full', 'comfortable'],
   reduceMotion: SYSTEM_TOGGLE,
   pauseAnimatedImages: SYSTEM_TOGGLE,
-  focusRing: ['normal', 'thick', 'extra'],
+  focusRing: ['off', 'normal', 'thick', 'extra'],
   largeTargets: SYSTEM_TOGGLE,
   mailViewMode: ['html', 'plain'],
   mailTextScale: MAIL_TEXT_SCALES,

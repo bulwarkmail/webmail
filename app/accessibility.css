@@ -150,6 +150,20 @@ html:root[data-focus-always="on"] [data-composer-writing] :is(.tiptap, textarea)
 [data-composer-writing]:has(:is(.tiptap, textarea):focus-visible) {
   box-shadow: inset var(--focus-ring-width) 0 0 0 var(--focus-ring-color);
 }
+/* Focus outline Off (data-focus-ring="off"): no focus indication at all, for
+   people who only use a mouse and find a box round every field they click
+   into distracting. It takes off the outline above, the browser's own with
+   it, and the bar along the writing area (the forced-colors outline round
+   that area too, which this outweighs). Padded to outweigh every outline
+   rule above. Full labels on focus stop as well (Large text, below). */
+html:root[data-focus-ring="off"] :focus-visible:focus-visible:focus-visible:focus-visible:focus-visible:focus-visible,
+html:root[data-focus-ring="off"] :focus:focus:focus:focus:focus:focus {
+  outline: none !important;
+}
+html:root[data-focus-ring="off"] [data-composer-writing]:has(:is(.tiptap, textarea):focus-visible) {
+  box-shadow: none;
+  outline: none;
+}
 /* The focused element scrolls clear of sticky headers and the bottom bar,
    in the page and inside the panes, which scroll on their own (scroll
    padding belongs to the scrolling box, so the root's alone did nothing
@@ -183,8 +197,10 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
     hyphens: auto;
   }
 }
-:is(button, a[href], [role="menuitem"], [role="tab"], [role="treeitem"]):focus-visible:is(.truncate),
-:is(button, a[href], [role="menuitem"], [role="tab"], [role="treeitem"]):focus-visible .truncate {
+/* Not with the focus outline off: the focus then changes nothing on screen.
+   :where() keeps the specificity as it was. */
+:where(:root:not([data-focus-ring="off"])) :is(button, a[href], [role="menuitem"], [role="tab"], [role="treeitem"]):focus-visible:is(.truncate),
+:where(:root:not([data-focus-ring="off"])) :is(button, a[href], [role="menuitem"], [role="tab"], [role="treeitem"]):focus-visible .truncate {
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
