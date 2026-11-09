@@ -40,6 +40,8 @@ export type SettingsSearchCondition =
   | 'touch'
   /** The Mountain View interface layout. */
   | 'mountainView'
+  /** Any interface layout but Mountain View. */
+  | 'notMountainView'
   /** More than one account signed in. */
   | 'multiAccount'
   /** In the desktop app (its bridge is there). */
@@ -158,9 +160,9 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.appearance.list_density.label' },
     { label: 'settings.appearance.sections.layout' },
     { label: 'settings.appearance.interface_layout.label' },
-    { label: 'settings.email_behavior.mail_layout.label', synonyms: syn2('reading_pane') },
+    { label: 'settings.email_behavior.mail_layout.label', synonyms: syn2('reading_pane'), when: 'notMountainView' },
     { label: 'settings.appearance.toolbar_position.label' },
-    { label: 'settings.appearance.toolbar_labels.label' },
+    { label: 'settings.appearance.toolbar_labels.label', when: 'notMountainView' },
     { label: 'settings.appearance.sections.sidebar' },
     { label: 'settings.appearance.colorful_sidebar_icons.label' },
     { label: 'settings.appearance.show_folder_total_count.label' },
@@ -283,7 +285,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'proofreading.settings.enable' },
     { label: 'proofreading.settings.writing_language' },
     { label: 'settings.composing_page.sections.replying' },
-    { label: 'settings.email_behavior.reply_under_message.label' },
+    { label: 'settings.email_behavior.reply_under_message.label', when: 'notMountainView' },
     { label: 'settings.email_behavior.quick_reply.label' },
     { label: 'compose_words.reply_from_received.label' },
     { label: 'settings.email_behavior.signature_position.label' },

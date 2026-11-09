@@ -387,6 +387,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       if (!archiveActionEnabled && ARCHIVE_ACTION_SEARCH_PATHS.has(entry.label)) return false;
       if (entry.when === 'touch') return touchScreen;
       if (entry.when === 'mountainView') return mountainViewLayout;
+      if (entry.when === 'notMountainView') return !mountainViewLayout;
       if (entry.when === 'multiAccount') return multiAccount;
       // The desktop app's own rows (settings-p2-5), and the browser's that it hides.
       const desktop = getDesktopBridge();
