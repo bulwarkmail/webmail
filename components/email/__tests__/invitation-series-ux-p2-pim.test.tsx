@@ -151,6 +151,8 @@ vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push: mocks.pushMock }),
 }));
 
+// The organisation's domains come from the policy and the auth store's state.
+vi.mock('@/components/email/external-sender-chip', () => ({ useInternalMailDomains: () => [] }));
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: (selector: (state: typeof mocks.authState) => unknown) => selector(mocks.authState),
 }));
