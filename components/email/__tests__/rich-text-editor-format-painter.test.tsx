@@ -133,4 +133,34 @@ describe('the format painter', () => {
 
     expect(editor.getHTML()).toMatch(/<h1[^>]*>para<\/h1>/);
   });
+
+  // A span styled with a font size or background colour, but no colour of its
+  // own, parses with color: "" (the CSSOM's value for an unset property), not
+  // null. That "" used to reach the painter's copy, where the apply's
+  // `color ?? backgroundColor ?? fontSize` picked it ("" is not nullish) and
+  // took the no-textStyle branch: painting a font size or background colour
+  // applied nothing at all unless the source also had a colour.
+  it('copies a font size from text with no colour of its own', async () => {
+    // "big" is 1–4, " plain" is 4–10; paint onto "plain" (5–10).
+    const { editor, button, select, mouseUp } = await setup('<p><span style="font-size: 20px">big</span> plain</p>');
+
+    select(1, 4);
+    fireEvent.click(button());
+    select(5, 10);
+    mouseUp();
+
+    expect(editor.getHTML()).toMatch(/<span style="font-size: 20px[^"]*">plain<\/span>/);
+  });
+
+  it('copies a background colour from text with no colour of its own', async () => {
+    // "bg" is 1–3, " plain" is 3–9; paint onto "plain" (4–9).
+    const { editor, button, select, mouseUp } = await setup('<p><span style="background-color: yellow">bg</span> plain</p>');
+
+    select(1, 3);
+    fireEvent.click(button());
+    select(4, 9);
+    mouseUp();
+
+    expect(editor.getHTML()).toMatch(/<span style="background-color: yellow[^"]*">plain<\/span>/);
+  });
 });
