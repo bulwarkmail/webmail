@@ -48,6 +48,8 @@ vi.mock('@/lib/offline/offline-mode', () => ({
   registerOfflineHooks: () => {},
   offlineSessionFor: async () => { order.push('local copy'); return {}; },
   markStartedOffline: () => {},
+  // Real storage deletion is covered by auth-store-retain-accounts.
+  wipeAccount: async () => {},
 }));
 
 const heard = vi.hoisted(() => [] as string[]);

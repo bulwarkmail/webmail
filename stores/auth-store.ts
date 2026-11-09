@@ -399,9 +399,12 @@ function renewalSignal(outer: AbortSignal): { signal: AbortSignal; done: () => v
 const TIMED_OUT = Symbol('timed out');
 // A sign-out may stop waiting, but a new sign-in must wait for its actual DELETEs.
 const credentialCleanups = new Map<number, Promise<string | null>>();
+const accountDataCleanups = new Map<number, Promise<void>>();
 
 async function waitForCredentialCleanup(slot: number): Promise<void> {
-  while (credentialCleanups.has(slot)) await credentialCleanups.get(slot);
+  while (credentialCleanups.has(slot) || accountDataCleanups.has(slot)) {
+    await Promise.all([credentialCleanups.get(slot), accountDataCleanups.get(slot)]);
+  }
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof TIMED_OUT> {
@@ -1688,8 +1691,24 @@ async function startLocalCopyClient(accountId: string, serverUrl: string, userna
 // While device-only clients get replaced, restoring goes straight to the server.
 let skipLocalCopy = false;
 
-/** Clear a failed session while retaining its remembered sign-in target. */
-function requireAccountSignIn(accountId: string): void {
+function wipeExpiredAccountData(accountId: string, slot: number): Promise<void> {
+  const pending = accountDataCleanups.get(slot);
+  if (pending) return pending;
+  if (IS_LITE || !useOfflineStore.getState().enabled.includes(accountId)) return Promise.resolve();
+  // Expiry must not purge the shared store while another slot signs in.
+  const cleanup = import('@/lib/offline/offline-mode').then((offline) => offline.wipeAccount(accountId, { accountOnly: true }));
+  accountDataCleanups.set(slot, cleanup);
+  void cleanup.then(() => {
+    if (accountDataCleanups.get(slot) === cleanup) accountDataCleanups.delete(slot);
+  }, (error) => {
+    // Keep the failed barrier: a new session must not race an incomplete wipe.
+    debug.error('Failed to wipe expired account data:', error);
+  });
+  return cleanup;
+}
+
+/** Clear a failed session and its local data, retaining only its sign-in target. */
+async function requireAccountSignIn(accountId: string, options: { keepLocalData?: boolean } = {}): Promise<void> {
   const accountStore = useAccountStore.getState();
   const account = accountStore.getAccountById(accountId);
   if (!account) return;
@@ -1705,6 +1724,7 @@ function requireAccountSignIn(accountId: string): void {
   clearPluginStorageForAccount(accountId);
   closingSlots.add(account.cookieSlot);
   void clearSlotCredentials(account.cookieSlot, account.authMode === 'oauth');
+  if (!options.keepLocalData) await wipeExpiredAccountData(accountId, account.cookieSlot);
 }
 
 function performFullLogout(set: (state: Partial<AuthState>) => void, options: SignOutCleanupOptions = {}): void {
@@ -2738,13 +2758,19 @@ export const useAuthStore = create<AuthState>()(
                 resetRefreshBackoff(accountId ?? undefined);
                 const forced = await forcedSignOutOf(res);
                 // Only this login's refresh token was refused.
-                if (accountId && !isActive) {
+                if (accountId && accountId !== get().activeAccountId) {
                   if (forced) noteRefusedLogin(accountId, true, forced);
-                  requireAccountSignIn(accountId);
+                  // The worker may be waiting for this auth answer before it can close.
+                  void requireAccountSignIn(accountId).catch((error) => debug.error('Account cleanup failed:', error));
                   return null;
                 }
                 await saveDraftsBeforeExpiry(slot);
                 if (forced && accountId) noteRefusedLogin(accountId, true, forced);
+                if (accountId && accountId !== get().activeAccountId) {
+                  void requireAccountSignIn(accountId).catch((error) => debug.error('Account cleanup failed:', error));
+                  return null;
+                }
+                if (accountId) void wipeExpiredAccountData(accountId, slot);
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 get().logout({ endProviderSession: false, keepLocalData: true });
@@ -2759,7 +2785,7 @@ export const useAuthStore = create<AuthState>()(
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 // removeAccount() on the active account would sign out as if the user asked to.
-                if (accountId && accountId !== get().activeAccountId) requireAccountSignIn(accountId);
+                if (accountId && accountId !== get().activeAccountId) void requireAccountSignIn(accountId, { keepLocalData: true });
                 else {
                   await saveDraftsBeforeExpiry(slot);
                   // An outage on our side says nothing against the mail on this device.
@@ -3195,7 +3221,8 @@ export const useAuthStore = create<AuthState>()(
           if (targetForced) noteRefusedLogin(accountId, true, targetForced);
           else if (refusedAtConnect.has(accountId)) noteRefusedLogin(accountId, false);
           refusedAtConnect.delete(accountId);
-          requireAccountSignIn(accountId);
+          await requireAccountSignIn(accountId);
+          if (superseded()) return;
 
           // Restore the previous account if still available
           if (state.activeAccountId && state.activeAccountId !== accountId) {
@@ -3542,7 +3569,7 @@ export const useAuthStore = create<AuthState>()(
               else if (refusedAtConnect.has(account.id)) noteRefusedLogin(account.id, false);
               refusedAtConnect.delete(account.id);
               expiredDuringRestore = true;
-              requireAccountSignIn(account.id);
+              await requireAccountSignIn(account.id);
             }
           };
 
