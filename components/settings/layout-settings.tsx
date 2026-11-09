@@ -232,8 +232,10 @@ export function MultipleAccountsSection() {
     ? t('all_mail.account_hint', { account: activeAccount.displayName || activeAccount.email })
     : null;
 
-  // Nothing to combine: one account, no shared mailboxes, no group inboxes.
-  if (connectedAccountCount < 2 && sharedMailAccounts.length === 0 && !hasGroupInboxes) return null;
+  // Unread, Starred and All mail also work within a single account.
+  const hasVisibleUnifiedControl = !isSettingHidden('enableUnifiedMailbox') ||
+    (enableUnifiedMailbox && crossViews.some(({ allowed, setting }) => allowed && !isSettingHidden(setting)));
+  if (connectedAccountCount < 2 && sharedMailAccounts.length === 0 && !hasGroupInboxes && !hasVisibleUnifiedControl) return null;
 
   return (
     <SettingsSection id="accounts" title={t('sections.accounts')} description={t('sections.accounts_description')}>
