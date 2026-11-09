@@ -4,6 +4,7 @@ import { useAuthStore } from '../auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { clearAllHooks, emailHooks } from '@/lib/plugin-hooks';
 import { emailKeyFor } from '@/lib/thread-utils';
+import { SEARCH_SCOPE_ALL_FOLDERS } from '@/lib/search-scope-folders';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
@@ -82,6 +83,8 @@ function openFolder(folderId: string, emails: Email[]) {
     isUnifiedView: false,
     unifiedRole: null,
     crossView: null,
+    searchQuery: '',
+    searchMailboxId: folderId,
     emails,
     selectedEmail: null,
     selectedEmailKeys: new Set(),
@@ -237,6 +240,20 @@ describe('move and archive hooks', () => {
     expect(archived).not.toHaveBeenCalled();
   });
 
+  it('reports the folder a search hit is in, not the open one (#1452)', async () => {
+    openFolder('archive', [makeEmail('e1', { mailboxIds: { custom: true } })]);
+    useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: SEARCH_SCOPE_ALL_FOLDERS });
+    const after = vi.fn();
+    const archived = vi.fn();
+    emailHooks.onAfterEmailMove.register('t', after);
+    emailHooks.onEmailArchive.register('t', archived);
+
+    expect(await useEmailStore.getState().moveToMailbox(client, 'e1', 'archive')).toBe(true);
+
+    expect(after).toHaveBeenCalledWith({ emailIds: ['e1'], fromMailboxId: 'custom', toMailboxId: 'archive' });
+    expect(archived).toHaveBeenCalledWith({ emailIds: ['e1'] });
+  });
+
   it('batch archive asks and reports once for the selection', async () => {
     const a = makeEmail('a');
     const b = makeEmail('b');
@@ -354,6 +371,76 @@ describe('read, star and keyword hooks', () => {
 
     expect(before).toHaveBeenCalledWith({ emailIds: ['e1'], starred: true });
     expect(after).toHaveBeenCalledWith({ emailIds: ['e1'], starred: true });
+  });
+
+  it('stars a selection in one write, asks once and reports once', async () => {
+    openFolder('inbox', [makeEmail('a'), makeEmail('b', { keywords: { $seen: true, $flagged: true } }), makeEmail('c')]);
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b', 'c']) });
+    const before = vi.fn(() => true);
+    const after = vi.fn();
+    emailHooks.onBeforeEmailStarToggle.register('t', before);
+    emailHooks.onEmailStarToggle.register('t', after);
+
+    expect(await useEmailStore.getState().batchSetStarred(client, true)).toBe(true);
+
+    // b has its star already: left alone.
+    expect(client.batchUpdateKeywords).toHaveBeenCalledTimes(1);
+    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['a', 'c'], { 'keywords/$flagged': true }, undefined);
+    expect(before).toHaveBeenCalledWith({ emailIds: ['a', 'c'], starred: true });
+    expect(after).toHaveBeenCalledWith({ emailIds: ['a', 'c'], starred: true });
+    expect(useEmailStore.getState().emails.every((e) => e.keywords.$flagged)).toBe(true);
+
+    await useEmailStore.getState().batchSetStarred(client, false);
+    expect(client.batchUpdateKeywords).toHaveBeenLastCalledWith(['a', 'b', 'c'], { 'keywords/$flagged': null }, undefined);
+    expect(useEmailStore.getState().emails.some((e) => e.keywords.$flagged)).toBe(false);
+  });
+
+  it('writes nothing for a selection a plugin stops', async () => {
+    openFolder('inbox', [makeEmail('a'), makeEmail('b')]);
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b']) });
+    emailHooks.onBeforeEmailStarToggle.register('t', () => false);
+    await useEmailStore.getState().batchSetStarred(client, true);
+    expect(client.batchUpdateKeywords).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().emails.some((e) => e.keywords.$flagged)).toBe(false);
+  });
+
+  it('names a group mailbox\'s account on a star toggle', async () => {
+    const groupInbox = makeMailbox({ id: 'vertrieb:inbox', originalId: 'inbox', role: 'inbox', isShared: true, accountId: 'vertrieb' });
+    openFolder('vertrieb:inbox', [makeEmail('e1', { mailboxIds: { 'vertrieb:inbox': true } })]);
+    useEmailStore.setState({ mailboxes: [...mailboxes, groupInbox] });
+    const before = vi.fn(() => true);
+    const after = vi.fn();
+    emailHooks.onBeforeEmailStarToggle.register('t', before);
+    emailHooks.onEmailStarToggle.register('t', after);
+
+    expect(await useEmailStore.getState().toggleStar(client, 'e1')).toBe(true);
+
+    expect(client.toggleStar).toHaveBeenCalledWith('e1', true, 'vertrieb');
+    expect(before).toHaveBeenCalledWith({ emailIds: ['e1'], starred: true, accountId: 'vertrieb' });
+    expect(after).toHaveBeenCalledWith({ emailIds: ['e1'], starred: true, accountId: 'vertrieb' });
+  });
+
+  it('names a stamped row\'s account only when it is not the own one', async () => {
+    openFolder('inbox', [
+      makeEmail('own', { sourceClientAccountId: 'acct', sourceAccountId: 'me' }),
+      makeEmail('shared', { sourceClientAccountId: 'acct', sourceAccountId: 'vertrieb' }),
+    ]);
+    const before = vi.fn(() => true);
+    const after = vi.fn();
+    emailHooks.onBeforeEmailStarToggle.register('t', before);
+    emailHooks.onEmailStarToggle.register('t', after);
+
+    await useEmailStore.getState().toggleStar(client, 'own');
+    await useEmailStore.getState().toggleStar(client, 'shared');
+
+    expect(before.mock.calls).toEqual([
+      [{ emailIds: ['own'], starred: true }],
+      [{ emailIds: ['shared'], starred: true, accountId: 'vertrieb' }],
+    ]);
+    expect(after.mock.calls).toEqual([
+      [{ emailIds: ['own'], starred: true }],
+      [{ emailIds: ['shared'], starred: true, accountId: 'vertrieb' }],
+    ]);
   });
 
   it('stops a star toggle a plugin refuses', async () => {

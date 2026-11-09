@@ -120,14 +120,14 @@ describe('CalendarMonthView tasks', () => {
     });
     const row = document.querySelector<HTMLElement>('[data-week="2026-09-07"]');
     // jsdom measures no viewport, so rows keep the 146px minimum: room for
-    // four 26px rows under the 30 + 4 offset, the last taken by the link -
-    // three entries, not one, on a short desktop window.
+    // four 26px rows under the 30 + 4 offset, all four for entries, as the
+    // link sits beside the date (pim-p3-3).
     expect(row?.style.minHeight).toBe('146px');
     expect(screen.getByText('Event e1')).toBeInTheDocument();
-    expect(document.querySelector('[data-calendar-task="b"]')).not.toBeNull();
-    expect(document.querySelector('[data-calendar-task="c"]')).toBeNull();
+    expect(document.querySelector('[data-calendar-task="c"]')).not.toBeNull();
+    expect(document.querySelector('[data-calendar-task="d"]')).toBeNull();
     const more = screen.getByRole('button', { name: 'events.more' });
-    expect(more.parentElement?.style.top).toBe(`${30 + 78}px`);
+    expect(more.parentElement?.style.top).toBe('4px');
     fireEvent.click(more);
     expect(onOpenDay).toHaveBeenCalledWith(new Date(2026, 8, 10));
   });

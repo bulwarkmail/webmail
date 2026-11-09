@@ -4,6 +4,8 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { listApprovals, decideApproval, revokeApproval } from '@/lib/admin/plugin-approvals';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
+import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
+import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
 /**
  * Admin-protected CRUD for the per-(pluginId, bundleHash) approval table.
@@ -27,6 +29,8 @@ export async function GET(request: NextRequest) {
     const entries = await listApprovals();
     return NextResponse.json({ entries }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (err) {
+    const unavailable = storeUnavailableResponse(err);
+    if (unavailable) return unavailable;
     logger.error('plugin-approvals GET', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -50,6 +54,11 @@ export async function POST(request: NextRequest) {
     }
     if (b.decision !== 'approved' && b.decision !== 'denied') {
       return NextResponse.json({ error: 'decision must be "approved" or "denied"' }, { status: 400 });
+    }
+
+    if (b.decision === 'approved') {
+      const refused = devicePolicyPluginRefusal(b.pluginId);
+      if (refused) return refused;
     }
 
     const entry = await decideApproval(b.pluginId, b.bundleHash, b.decision, adminUser);

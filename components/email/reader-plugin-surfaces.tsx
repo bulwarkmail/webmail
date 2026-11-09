@@ -5,6 +5,7 @@
 // frame between a reply's own text and the quote under it.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useQuietState } from "@/hooks/use-quiet-state";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { iconForName, MoreVertical, Puzzle } from "@/components/icons";
@@ -216,7 +217,8 @@ export function ReaderAboveQuoteSlot({
   version?: unknown;
 }) {
   const offered = usePluginSlotOffers("reader-above-quote").length > 0;
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  // Without a plugin for the slot the anchor stays null on every open: no draw for it.
+  const [anchor, setAnchor] = useQuietState<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
     if (!offered || !root) {
@@ -228,7 +230,7 @@ export function ReaderAboveQuoteSlot({
     return () => {
       next?.remove();
     };
-  }, [offered, root, version]);
+  }, [offered, root, version, setAnchor]);
 
   if (!anchor) return null;
   const slot = <PluginSlot name="reader-above-quote" className="w-full" extraProps={extraProps} />;

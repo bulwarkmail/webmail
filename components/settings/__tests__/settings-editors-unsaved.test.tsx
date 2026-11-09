@@ -102,8 +102,9 @@ describe('identity dialog', () => {
     // In a portal on body, not inside the settings page.
     expect(screen.getByRole('dialog').parentElement?.parentElement).toBe(document.body);
 
-    fireEvent.click(screen.getByRole('button', { name: 'create_new' }));
-    fireEvent.change(screen.getByPlaceholderText('name_placeholder'), { target: { value: 'Work' } });
+    // "Add address" and "Your name" (settings-p2-2, p2-3), no placeholder.
+    fireEvent.click(screen.getByRole('button', { name: 'add' }));
+    fireEvent.change(screen.getByLabelText('label'), { target: { value: 'Work' } });
 
     clickOutside();
     expect(onClose).not.toHaveBeenCalled();

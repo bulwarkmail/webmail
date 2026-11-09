@@ -33,7 +33,8 @@ describe('CalendarManagementSettings rename', () => {
 
   function openEditor() {
     render(<CalendarManagementSettings />);
-    fireEvent.click(screen.getByTitle('edit'));
+    // One visible "Edit…" per row (pim-20).
+    fireEvent.click(screen.getByRole('button', { name: 'edit_calendar' }));
   }
 
   it('sends the new name without the colour it did not change, for Stalwart 1.0', async () => {
@@ -68,9 +69,30 @@ describe('CalendarManagementSettings CalDAV fallback address', () => {
 
     render(<CalendarManagementSettings />);
 
+    // The address waits behind "Use in other apps" (usability pass 2026-11-04).
+    fireEvent.click(await screen.findByTestId('calendar-use-in-other-apps'));
     const url = await screen.findByText('https://host.example/stalwart/.well-known/caldav');
     // Left to right in Arabic too: the start of the address stays in view.
     expect(url).toHaveAttribute('dir', 'ltr');
+    // Once for the account, not under each calendar (pim-26).
+    expect(screen.getAllByText('https://host.example/stalwart/.well-known/caldav')).toHaveLength(1);
+    vi.restoreAllMocks();
+  });
+
+  // pim-26: the account's address repeated under every calendar.
+  it('shows the account address once, not under each calendar', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 502 }));
+    useAuthStore.setState({
+      client: { getAccountId: () => 'acct-1' }, serverUrl: 'https://host.example', username: 'alice@example.com',
+    } as never);
+    const second = { ...appleColored, id: 'cal-2', name: 'Work', isDefault: false } as Calendar;
+    useCalendarStore.setState({ calendars: [appleColored, second], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    fireEvent.click(await screen.findByTestId('calendar-use-in-other-apps'));
+    await screen.findByText('https://host.example/.well-known/caldav');
+    expect(screen.getAllByText('https://host.example/.well-known/caldav')).toHaveLength(1);
     vi.restoreAllMocks();
   });
 
@@ -86,9 +108,10 @@ describe('CalendarManagementSettings CalDAV fallback address', () => {
   });
 });
 
-// Phone: seven icons in a row hid the calendar names. The row actions are
-// also in a ⋮ menu (right-click too), the same list as the icons, and every
-// icon is a named button with the touch hit area.
+// Seven icons on hover hid what they did and pushed the names aside on a
+// phone (pim-20). Each row shows "Edit…" (name, colour, then reminders and
+// sharing) and a ⋮ (right-click too) with the order and the destructive
+// actions.
 describe('CalendarManagementSettings row actions', () => {
   const work = {
     id: 'work', name: 'Work', color: '#ff0000', isDefault: false, isShared: false, shareWith: null, sortOrder: 1,
@@ -109,9 +132,9 @@ describe('CalendarManagementSettings row actions', () => {
     fireEvent.click(more[1]); // Work, not the default calendar
     const menu = await screen.findByRole('menu');
     const items = Array.from(menu.querySelectorAll('[role="menuitem"]')).map((el) => el.textContent);
-    expect(items).toEqual(['edit', 'default_alerts', 'share', 'clear_events', 'move_up', 'move_down', 'delete']);
+    expect(items).toEqual(['edit_calendar', 'move_up', 'move_down', 'clear_all_events', 'delete_calendar']);
 
-    fireEvent.click(screen.getByRole('menuitem', { name: 'delete' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'delete_calendar' }));
     expect(await screen.findByRole('alertdialog')).toBeTruthy();
   });
 
@@ -119,13 +142,80 @@ describe('CalendarManagementSettings row actions', () => {
     render(<CalendarManagementSettings />);
     fireEvent.click(screen.getAllByRole('button', { name: 'row_actions' })[0]);
     const menu = await screen.findByRole('menu');
-    expect(Array.from(menu.querySelectorAll('[role="menuitem"]')).map((el) => el.textContent)).not.toContain('delete');
+    expect(Array.from(menu.querySelectorAll('[role="menuitem"]')).map((el) => el.textContent)).not.toContain('delete_calendar');
   });
 
-  it('names every row icon', () => {
+  it('shows one Edit button per row and no arrows or hover icons', () => {
     render(<CalendarManagementSettings />);
-    for (const name of ['move_up', 'move_down', 'edit', 'default_alerts', 'share', 'clear_events', 'delete', 'change_color']) {
-      expect(screen.getAllByRole('button', { name }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'edit_calendar' })).toHaveLength(2);
+    for (const name of ['move_up', 'move_down', 'edit', 'default_alerts', 'share', 'clear_events', 'delete']) {
+      expect(screen.queryAllByRole('button', { name })).toHaveLength(0);
     }
+    expect(screen.getAllByRole('button', { name: 'change_color' }).length).toBeGreaterThan(0);
+  });
+
+  it('opens reminders and sharing from the Edit form', () => {
+    render(<CalendarManagementSettings />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'edit_calendar' })[1]);
+    expect(screen.getByRole('button', { name: 'default_alerts_open' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'share_open' })).toBeInTheDocument();
+  });
+});
+
+// pim-p2-3: with two accounts signed in, both accounts' calendars were one
+// list with two rows reading "Calendar · Default".
+describe('CalendarManagementSettings with two accounts', () => {
+  it("lists each account's calendars under its address", async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login-a', email: 'a@example.org', username: 'a@example.org', displayName: 'Sam', label: 'Sam' },
+        { id: 'login-b', email: 'b@example.org', username: 'b@example.org', displayName: 'Sam', label: 'Sam' },
+      ] as never,
+      activeAccountId: 'login-a',
+    });
+    useAuthStore.setState({ client: { getAccountId: () => 'acct-1' }, serverUrl: null, username: null } as never);
+    const a = { ...appleColored, id: 'login-a::cal', name: 'Home', localAccountId: 'login-a' } as Calendar;
+    const b = { ...appleColored, id: 'login-b::cal', name: 'Office', localAccountId: 'login-b' } as Calendar;
+    useCalendarStore.setState({ calendars: [b, a], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    const groups = screen.getAllByTestId('calendar-settings-group');
+    expect(groups.map((g) => g.querySelector('[data-testid="calendar-settings-account"]')?.textContent)).toEqual(['a@example.org', 'b@example.org']);
+    expect(groups.map((g) => Array.from(g.querySelectorAll('[data-testid="calendar-settings-item"]')).map((el) => el.getAttribute('data-calendar-name')))).toEqual([['Home'], ['Office']]);
+    useAccountStore.setState({ accounts: [], activeAccountId: null });
+  });
+});
+
+// pim-p2-3: opened straight away (no visit to Calendar first), Settings
+// loaded only the account on screen.
+describe('CalendarManagementSettings opened with two accounts signed in', () => {
+  it("loads and lists both accounts' calendars", async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    const fake = (name: string) => ({
+      supportsCalendars: () => true,
+      getAccountId: () => 'acct',
+      getAllCalendarsWithFailures: vi.fn(async () => ({ calendars: [{ ...appleColored, id: 'cal', name }], failedAccountIds: [] })),
+    });
+    const clients: Record<string, unknown> = { 'login-a': fake('Home'), 'login-b': fake('Office') };
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login-a', email: 'a@example.org', username: 'a@example.org', displayName: 'Sam', label: 'Sam', isConnected: true },
+        { id: 'login-b', email: 'b@example.org', username: 'b@example.org', displayName: 'Sam', label: 'Sam', isConnected: true },
+      ] as never,
+      activeAccountId: 'login-a',
+    });
+    useAuthStore.setState({
+      client: clients['login-a'], serverUrl: null, username: null, activeAccountId: 'login-a',
+      getClientForAccount: ((id: string) => clients[id]) as never,
+    } as never);
+    useCalendarStore.setState({ calendars: [], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    await waitFor(() => expect(screen.getAllByTestId('calendar-settings-account').map((el) => el.textContent)).toEqual(['a@example.org', 'b@example.org']));
+    useAccountStore.setState({ accounts: [], activeAccountId: null });
+    useCalendarStore.getState().setAccountClients(null, null);
   });
 });

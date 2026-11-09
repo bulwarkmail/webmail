@@ -1,0 +1,103 @@
+name: "CI: Kubernetes manifests"
+
+# Builds the image from this commit, deploys deploy/kubernetes to a kind
+# cluster (three replicas and one Valkey) and runs
+# deploy/kubernetes/test/smoke.sh against it: every replica ready on the
+# shared store, one admin session valid everywhere, a config change reaching
+# every replica, no failed requests while a pod is deleted and during a
+# rolling restart. The config-in-git overlay runs next to it in its own
+# namespace and must refuse config saves.
+#
+# It runs when the manifests change, weekly on main (an app change can break
+# several replicas without touching the manifests), and on demand:
+#   gh workflow run kubernetes.yml
+
+on:
+  pull_request:
+    paths:
+      - deploy/kubernetes/**
+      - .github/workflows/kubernetes.yml
+  push:
+    branches: [main]
+    paths:
+      - deploy/kubernetes/**
+      - .github/workflows/kubernetes.yml
+  schedule:
+    - cron: "41 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kubernetes-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  kind:
+    name: kind
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      KIND_VERSION: v0.29.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build the image
+        run: docker build --build-arg "GIT_COMMIT=${GITHUB_SHA}" -t bulwark-local:ci .
+
+      - name: Create the cluster
+        run: |
+          # The runner's own kind in /usr/local/bin belongs to root; use a pinned one.
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSLo "$RUNNER_TEMP/bin/kind" "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          chmod +x "$RUNNER_TEMP/bin/kind"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/bin:$PATH"
+          kind create cluster --name ci --wait 180s
+          kind load docker-image bulwark-local:ci --name ci
+
+      - name: Deploy the base and the config-in-git overlay
+        run: |
+          umask 077
+          admin="$(openssl rand -hex 16)"
+          echo "::add-mask::$admin"
+          {
+            echo "SESSION_SECRET=$(openssl rand -base64 32)"
+            echo "ADMIN_PASSWORD=$admin"
+            echo "VALKEY_PASSWORD=$(openssl rand -hex 24)"
+          } > deploy/kubernetes/base/secrets.env
+          echo "ADMIN_PASSWORD=$admin" >> "$GITHUB_ENV"
+          for target in base:bulwark overlays/config-in-git:bulwark-ro; do
+            src="${target%%:*}"; ns="${target##*:}"
+            mkdir -p "ci/$ns"
+            cat > "ci/$ns/kustomization.yaml" <<EOF
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          namespace: $ns
+          resources:
+            - ../../deploy/kubernetes/$src
+          images:
+            - name: ghcr.io/bulwarkmail/webmail
+              newName: bulwark-local
+              newTag: ci
+          EOF
+            kubectl create namespace "$ns" --dry-run=client -o yaml | kubectl apply -f -
+            kubectl apply -k "ci/$ns"
+          done
+
+      - name: Smoke test (base)
+        run: bash deploy/kubernetes/test/smoke.sh bulwark
+
+      - name: Smoke test (config in git)
+        run: READ_ONLY_CONFIG=1 bash deploy/kubernetes/test/smoke.sh bulwark-ro
+
+      - name: Show the cluster
+        if: failure()
+        run: |
+          kubectl get pods -A -o wide
+          for ns in bulwark bulwark-ro; do
+            kubectl -n "$ns" describe pods | tail -n 80
+            kubectl -n "$ns" logs -l app.kubernetes.io/name=bulwark --tail=80 --prefix || true
+          done

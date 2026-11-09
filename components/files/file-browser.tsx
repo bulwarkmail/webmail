@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
-  Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info,
+  Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info, Pin, PinOff,
   FilePlus, CopyPlus, AlertCircle, FolderUp, Share2, SquarePen, Eye, FolderOpen,
-  RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput,
+  RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput, ExternalLink, Inbox, Calendar, UserPlus,
 } from "@/components/icons";
-import { useIsDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
+import { useIsFullDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { useContextMenu } from "@/hooks/use-context-menu";
+import { useKeepFileOffline } from "@/hooks/use-keep-file-offline";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,18 @@ import { FilesSidebar, type CreateKind } from "@/components/files/files-sidebar"
 import { FilesHeader, type Crumb, type SortDir, type SortKey, type ViewMode } from "@/components/files/files-header";
 import { FileGridView, FileListView, type FileItemHandlers } from "@/components/files/file-views";
 import { FileDetailsPanel } from "@/components/files/file-details-panel";
-import { INTERNAL_DRAG_TYPE, anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { INTERNAL_DRAG_TYPE, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { AppMain } from "@/components/layout/app-landmarks";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
+import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
+import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
+import { getFilePreviewKind } from "@/lib/file-preview";
+import type { FileAppAction } from "@/lib/files-app-actions";
+import { useAppSidePanel } from "@/components/plugins/app-side-panel";
+import { MAX_SIDE_PANEL_FILES } from "@/lib/plugin-sandbox/assistant/f.types";
+import { KeepOnDeviceMenuItem, ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
 import { resourceToView, useFileStore, isSharedFilesPage, sharedFilePages, type FileResource } from "@/stores/file-store";
 import { TRASH_LOCATION, TRASH_PATH, isTrashLocation } from "@/lib/files-trash";
 import { PluginActions, usePluginActions } from "@/components/plugins/plugin-actions";
@@ -42,6 +50,8 @@ import type { FileNodeRights } from "@/lib/jmap/types";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { isAppShortcutBlocked, isArrowKeyWidgetTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
+import { useDesktopCommands } from "@/lib/desktop/commands";
+import { FilesListingSkeleton } from "@/components/boot-skeleton/files-skeleton";
 
 const NO_FORMATS: string[] = [];
 
@@ -69,8 +79,11 @@ interface FileBrowserProps {
   clipboard: ClipboardState | null;
   onNavigate: (path: string, resourceId?: string | null) => void;
   onCreateFolder: (name: string) => Promise<void>;
-  onUploadFiles: (files: File[]) => Promise<void>;
-  onUploadFolder: (files: File[]) => Promise<void>;
+  /** What the app itself does with a file: "Import into contacts…" and the like (pim-p2-7). */
+  appActionFor?: (resource: FileResource) => { kind: FileAppAction; label: string; onRun: () => void } | null;
+  /** `into`: a folder of the one in view, when files are dropped on its row. */
+  onUploadFiles: (files: File[], into?: FileResource) => Promise<void>;
+  onUploadFolder: (files: File[], into?: FileResource) => Promise<void>;
   onCancelUpload: () => void;
   /** Delete: into the trash, or for good when in the trash or a shared drive. */
   onDelete: (name: string) => Promise<void>;
@@ -115,6 +128,8 @@ interface FileBrowserProps {
   onRenameNode: (id: string, newName: string) => Promise<void>;
   onDeleteNode: (id: string, name: string) => Promise<void>;
   onDownloadNode: (id: string) => Promise<void>;
+  /** A device policy turned downloads off (Organisation > Devices): every download action goes. */
+  downloadsOff?: boolean;
   onRevealNode: (id: string) => Promise<void>;
   onRemoveRecent: (id: string) => void;
   /** Pro shell only: all connected accounts surfaced as top-level folders at the root. */
@@ -132,10 +147,18 @@ interface FileBrowserProps {
   sharingEnabled?: boolean;
   /** Add/update/remove a principal's share on a node. Set null rights to revoke. */
   onShare?: (id: string, principalId: string, rights: FileNodeRights | null) => Promise<void>;
+  /** A file with no preview and no editor: shows its icon, size and Download (pim-16). Left out: it downloads. */
+  onShowFileInfo?: (name: string) => void;
+  /** The desktop app can open this file in its program. */
+  canOpenInApp?: (resource: FileResource) => boolean;
+  onOpenInApp?: (resource: FileResource) => void;
+  /** A principal was given access to a node they couldn't see before. */
+  onShared?: (resource: FileResource, principalId: string) => void;
 }
 
 function isPreviewable(name: string): boolean {
-  return isImageFile(name) || isTextFile(name) || isPdfFile(name) || isAudioFile(name) || isVideoFile(name);
+  // A saved message opens like a mail (pim-p2-7).
+  return isImageFile(name) || isTextFile(name) || isPdfFile(name) || isAudioFile(name) || isVideoFile(name) || getFilePreviewKind(name) === "eml";
 }
 
 type MenuData = { kind: "item"; resource: FileResource } | { kind: "empty" } | { kind: "new" };
@@ -203,6 +226,7 @@ export function FileBrowser({
   onRenameNode,
   onDeleteNode,
   onDownloadNode,
+  downloadsOff = false,
   onRevealNode,
   onRemoveRecent,
   accountFolders,
@@ -213,9 +237,17 @@ export function FileBrowser({
   ownAccountId,
   sharingEnabled,
   onShare,
+  onShowFileInfo,
+  canOpenInApp,
+  onOpenInApp,
+  appActionFor,
+  onShared,
 }: FileBrowserProps) {
   const t = useTranslations("files");
-  const newFileLabel = newFileFormats.length > 0 ? t("new_file") : t("new_text_file");
+  const tMenu = useTranslations("menuAudit");
+  const tUx = useTranslations("ux_pim_files");
+  // Menu entries that open a dialog end in "…".
+  const newFileLabel = newFileFormats.length > 0 ? tMenu("files_new_file") : tMenu("files_new_text_file");
   const fileNameRules = useMemo(() => client?.getFileNameRules?.() ?? null, [client]);
   const validateFileName = useCallback((name: string) => {
     const problem = fileNameProblem(name, fileNameRules);
@@ -263,11 +295,13 @@ export function FileBrowser({
   }), [settings.showIcons, settings.coloredIcons, settings.showThumbnails]);
 
   // ---- Layout ----------------------------------------------------------------
-  const isDesktop = useIsDesktop();
-  const isNarrow = !isDesktop;
+  // Below the full desktop the sidebar opens over the page.
+  const isFullDesktop = useIsFullDesktop();
+  const isNarrow = !isFullDesktop;
   const isMobile = useIsMobile();
   const touch = useMediaQuery("(pointer: coarse)") && isMobile;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
+  const closeNarrowSidebar = useCallback(() => setNarrowSidebarOpen(false), []);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   useEffect(() => { setNarrowSidebarOpen(false); }, [currentPath]);
   // Anything picked in the drawer closes it (R7).
@@ -313,6 +347,8 @@ export function FileBrowser({
   const dragDepth = useRef(0);
   const anchorName = useRef<string | null>(null);
   const menu = useContextMenu<MenuData>();
+  const tOffline = useTranslations("offlineStorage");
+  const { keptOffline, canKeepOffline, toggleKeptOffline } = useKeepFileOffline(client);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -435,6 +471,26 @@ export function FileBrowser({
   // What plugins see of the selection (file-actions, file-preview-section).
   const selectedViews = useMemo(() => selectedList.map((r) => resourceToView(r, currentPath)), [selectedList, currentPath]);
 
+  // The plugin side panel (app-side-panel), with the selected files and the
+  // open folder. It shares its place with the details panel: opening it
+  // folds the details, and while the details are open it steps aside here
+  // only (the other views keep it as the user left it).
+  const sidePanelContext = useMemo(() => ({
+    ...(selectedViews.length > 0 ? { files: selectedViews.slice(0, MAX_SIDE_PANEL_FILES), fileCount: selectedViews.length } : {}),
+    folder: { id: currentParentId ?? null, path: currentPath },
+  }), [selectedViews, currentParentId, currentPath]);
+  const sidePanel = useAppSidePanel({ view: "files", context: sidePanelContext, hidden: showDetails, onOpen: () => toggleDetails(false) });
+  // Both stored open (the details here, the panel in any view): once the
+  // panel shows here the details fold, so the two never sit side by side.
+  const sidePanelDocks = sidePanel.docks;
+  const sidePanelWanted = sidePanel.wantsOpen;
+  const sidePanelSettled = useRef(false);
+  useEffect(() => {
+    if (sidePanelSettled.current || !sidePanelDocks) return;
+    sidePanelSettled.current = true;
+    if (showDetails && sidePanelWanted) toggleDetails(false);
+  }, [sidePanelDocks, sidePanelWanted, showDetails, toggleDetails]);
+
   // ---- Breadcrumbs -----------------------------------------------------------
   const crumbs: Crumb[] = useMemo(() => {
     const segments = currentPath.split("/").filter(Boolean);
@@ -471,6 +527,26 @@ export function FileBrowser({
     else navigateCrumb(parent);
   }, [crumbs, accountLabel, onNavigate, navigateCrumb]);
 
+  // The focused item went (Del, moved away): the focus goes to the one now in its place,
+  // as in Explorer, not to the whole list, which drew a frame round everything (pim-p3-17).
+  const shownNamesRef = useRef<{ path: string; names: string[] }>({ path: "", names: [] });
+  useLayoutEffect(() => {
+    const before = shownNamesRef.current;
+    const names = displayResources.map((r) => r.name);
+    shownNamesRef.current = { path: currentPath, names };
+    // Another folder opened: nothing went from this one.
+    if (before.path !== currentPath || !focusedName || names.includes(focusedName)) return;
+    const was = before.names.indexOf(focusedName);
+    const active = document.activeElement;
+    if (was === -1 || (active && active !== document.body)) return;
+    const next = names[Math.min(was, names.length - 1)];
+    if (!next) return;
+    setFocusedName(next);
+    anchorName.current = next;
+    onSetSelection(new Set([next]));
+    scrollAreaRef.current?.querySelector<HTMLElement>(`[data-resource="${CSS.escape(next)}"]`)?.focus({ preventScroll: true });
+  }, [displayResources, currentPath, focusedName, onSetSelection]);
+
   // ---- Opening ---------------------------------------------------------------
   const openResource = useCallback((resource: FileResource) => {
     // A symlink has nothing to open (Stalwart 1.0).
@@ -485,10 +561,12 @@ export function FileBrowser({
       onPreviewImage(resource.name);
     } else if (isPreviewable(resource.name)) {
       onPreviewFile(resource.name);
+    } else if (onShowFileInfo) {
+      onShowFileInfo(resource.name);
     } else {
       void onDownload(resource.name);
     }
-  }, [onNavigate, pathOf, isOfficeEditable, onEditFile, onPreviewImage, onPreviewFile, onDownload]);
+  }, [onNavigate, pathOf, isOfficeEditable, onEditFile, onPreviewImage, onPreviewFile, onShowFileInfo, onDownload]);
 
   const previewResource = useCallback((resource: FileResource) => {
     if (isImageFile(resource.name)) onPreviewImage(resource.name);
@@ -568,6 +646,16 @@ export function FileBrowser({
     void onMoveTo(names, targetId);
   }, [onMoveTo]);
 
+  // Files from outside dropped on a folder's row go into that folder (pim-p2-6).
+  const uploadIntoRef = useRef<(files: File[], asFolder: boolean, into: FileResource) => Promise<void>>(async () => {});
+  uploadIntoRef.current = async (files, asFolder, into) => {
+    if (files.length === 0) return;
+    if (asFolder) await onUploadFolder(files, into);
+    else await onUploadFiles(files, into);
+  };
+  const takesFilesFromOutside = useCallback((e: React.DragEvent, resource: FileResource) =>
+    resource.isDirectory && !resource.isSymlink && canCreate && !isInternalDrag(e) && Array.from(e.dataTransfer.types ?? []).includes("Files"), [canCreate]);
+
   const itemDragProps = useCallback((resource: FileResource) => ({
     draggable: !touch && !inTrash,
     onDragStart: (e: React.DragEvent) => {
@@ -576,6 +664,12 @@ export function FileBrowser({
       e.dataTransfer.effectAllowed = "move";
     },
     onDragOver: (e: React.DragEvent) => {
+      if (takesFilesFromOutside(e, resource)) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        setDropTarget(resource.name);
+        return;
+      }
       if (!resource.isDirectory || !isInternalDrag(e)) return;
       e.preventDefault();
       e.stopPropagation();
@@ -584,6 +678,16 @@ export function FileBrowser({
     },
     onDragLeave: () => setDropTarget((cur) => (cur === resource.name ? null : cur)),
     onDrop: (e: React.DragEvent) => {
+      if (takesFilesFromOutside(e, resource)) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDropTarget(null);
+        dragDepth.current = 0;
+        setIsDraggingFiles(false);
+        const transfer = e.dataTransfer;
+        void getDroppedFilesAndFolders(transfer).then(({ files, hasDirectories }) => uploadIntoRef.current(files, hasDirectories, resource));
+        return;
+      }
       if (!resource.isDirectory || !isInternalDrag(e)) return;
       e.preventDefault();
       e.stopPropagation();
@@ -591,7 +695,7 @@ export function FileBrowser({
       const names = readDraggedNames(e).filter((n) => n !== resource.name);
       if (names.length > 0) moveNames(names, resource.id);
     },
-  }), [touch, inTrash, selectedResources, moveNames]);
+  }), [touch, inTrash, selectedResources, moveNames, takesFilesFromOutside]);
 
   const runUpload = useCallback(async (files: File[], asFolder: boolean) => {
     if (files.length === 0) return;
@@ -722,6 +826,13 @@ export function FileBrowser({
     return Math.max(1, tops.filter((top) => top === tops[0]).length);
   }, [focusedName]);
 
+  // Edit > Search files in the desktop app's menus, and File > New folder… and Upload files… (pim-p3-18).
+  useDesktopCommands({
+    "edit.search": () => searchInputRef.current?.focus(),
+    "file.newFolder": () => { if (canCreate) setShowNewFolder(true); },
+    "file.uploadFiles": () => { if (canCreate) fileInputRef.current?.click(); },
+  }, { "edit.search": !accountPickerMode, "file.newFolder": canCreate, "file.uploadFiles": canCreate });
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target) || isAppShortcutBlocked(e)) return;
@@ -761,6 +872,8 @@ export function FileBrowser({
         return;
       }
       if (e.key === "Escape") {
+        // The folder drawer is the innermost layer; it closes itself (R8).
+        if (narrowSidebarOpen) return;
         // The details panel over the list closes first (innermost layer, R8).
         if (showDetails && isNarrow) toggleDetails(false);
         else if (searchQuery) setSearchQuery("");
@@ -778,9 +891,14 @@ export function FileBrowser({
         setRenameTarget(singleSelected.name);
         return;
       }
-      if (e.key === "Enter" && singleSelected) {
+      // Enter opens the selected item, or the one Tab put the focus on.
+      const enterTarget = singleSelected
+        ?? (selected.length === 0 && focusedName && (e.target as HTMLElement | null)?.dataset?.resource === focusedName
+          ? displayResources.find((r) => r.name === focusedName) ?? null
+          : null);
+      if (e.key === "Enter" && enterTarget) {
         e.preventDefault();
-        openResource(singleSelected);
+        openResource(enterTarget);
         return;
       }
       if (e.key === " " && focusedName) {
@@ -818,13 +936,14 @@ export function FileBrowser({
     return () => window.removeEventListener("keydown", handler);
   }, [
     showNewFolder, showNewTextFile, renameTarget, renameFolder, shareTargetId, moveTarget, accountPickerMode, selectedList, singleSelected, inTrash,
-    showDetails, isNarrow, toggleDetails,
+    showDetails, isNarrow, toggleDetails, narrowSidebarOpen,
     selectAllVisible, onCopy, onCut, onPaste, clipboard, searchQuery, onClearSelection, deleteNames, openResource,
-    focusedName, onToggleSelect, currentPath, navigateUp, viewMode, gridColumns, moveFocus,
+    focusedName, onToggleSelect, currentPath, navigateUp, viewMode, gridColumns, moveFocus, displayResources,
   ]);
 
   // ---- Context menu ----------------------------------------------------------
   const openMenu = menu.openContextMenu;
+  const openMenuFrom = menu.openContextMenuFrom;
   const openItemMenu = useCallback((e: React.MouseEvent, resource: FileResource) => {
     // Acting on an item outside the selection makes it the selection, like a
     // desktop file manager.
@@ -836,9 +955,9 @@ export function FileBrowser({
     setKeyboardNav(false);
     const target = e.currentTarget as HTMLElement | null;
     // The "..." button opens the menu under itself; a right-click at the pointer.
-    if (e.type === "click" && target) openMenu(anchorEvent(target, "end"), { kind: "item", resource });
+    if (e.type === "click" && target) openMenuFrom(target, { kind: "item", resource }, "end");
     else openMenu(e, { kind: "item", resource });
-  }, [selectedResources, onSetSelection, openMenu]);
+  }, [selectedResources, onSetSelection, openMenu, openMenuFrom]);
 
   const closeMenu = menu.closeContextMenu;
   const menuData = menu.contextMenu.data;
@@ -861,7 +980,7 @@ export function FileBrowser({
           {one && !one.isDirectory && !one.isSymlink && isPreviewable(one.name) && (
             <ContextMenuItem icon={Eye} label={t("preview")} onClick={() => { closeMenu(); previewResource(one); }} />
           )}
-          {one && !one.isDirectory && !one.isSymlink && (
+          {one && !one.isDirectory && !one.isSymlink && !downloadsOff && (
             <ContextMenuItem icon={Download} label={t("download")} onClick={() => { closeMenu(); void onDownload(one.name); }} />
           )}
           <ContextMenuSeparator />
@@ -875,7 +994,7 @@ export function FileBrowser({
       const withFolders = !!onDownloadZip && menuSelection.some((r) => r.isDirectory);
       return (
         <>
-          {(fileCount > 0 || withFolders) && (
+          {(fileCount > 0 || withFolders) && !downloadsOff && (
             <ContextMenuItem
               icon={Download}
               label={withFolders ? t("download_zip") : t("download_count", { count: fileCount })}
@@ -911,11 +1030,35 @@ export function FileBrowser({
             {isOfficeEditable?.(resource.name) && onEditFile && (
               <ContextMenuItem icon={SquarePen} label={t("office_edit")} onClick={() => { closeMenu(); onEditFile(resource.name); }} />
             )}
+            {/* Neither previewed nor edited here: Open shows what there is (pim-16). */}
+            {!isPreviewable(resource.name) && !(isOfficeEditable?.(resource.name) && onEditFile) && onShowFileInfo && (
+              <ContextMenuItem icon={File} label={t("open")} onClick={() => { closeMenu(); onShowFileInfo(resource.name); }} />
+            )}
+            {canOpenInApp?.(resource) && onOpenInApp && (
+              <ContextMenuItem icon={ExternalLink} label={tUx("open_in_app")} onClick={() => { closeMenu(); onOpenInApp(resource); }} />
+            )}
+            {(() => {
+              const action = appActionFor?.(resource);
+              if (!action) return null;
+              const icon = action.kind === "import-mail" ? Inbox : action.kind === "add-calendar" ? Calendar : UserPlus;
+              return <ContextMenuItem icon={icon} label={action.label} onClick={() => { closeMenu(); action.onRun(); }} />;
+            })()}
           </>
         )}
+        <KeepOnDeviceMenuItem
+          nodeId={resource.id}
+          onRan={closeMenu}
+          fallback={canKeepOffline(resource) && (
+            <ContextMenuItem
+              icon={keptOffline.has(resource.id) ? PinOff : Pin}
+              label={keptOffline.has(resource.id) ? tOffline("unpin") : tOffline("keep_offline")}
+              onClick={() => { closeMenu(); void toggleKeptOffline(resource); }}
+            />
+          )}
+        />
         {(canShare(resource) || (resource.isDirectory && !resource.isShared)) && <ContextMenuSeparator />}
         {canShare(resource) && (
-          <ContextMenuItem icon={Share2} label={t("share")} onClick={() => { closeMenu(); setShareTargetId(resource.id); }} />
+          <ContextMenuItem icon={Share2} label={tMenu("files_share")} onClick={() => { closeMenu(); setShareTargetId(resource.id); }} />
         )}
         {resource.isDirectory && !resource.isShared && (
           <ContextMenuItem
@@ -936,13 +1079,14 @@ export function FileBrowser({
         {!resource.isSymlink && (
           <ContextMenuItem icon={Copy} label={t("copy")} shortcut={formatShortcutCombo("Mod + C")} onClick={() => { closeMenu(); onCopy([resource.name]); }} />
         )}
-        {resource.isDirectory && onDownloadZip && (
+        {resource.isDirectory && onDownloadZip && !downloadsOff && (
           <ContextMenuItem icon={Download} label={t("download_zip")} onClick={() => { closeMenu(); downloadNames([resource.name]); }} />
         )}
-        {!resource.isDirectory && !resource.isSymlink && (
+        {!resource.isDirectory && !resource.isSymlink && !downloadsOff && (
           <ContextMenuItem icon={Download} label={t("download")} onClick={() => { closeMenu(); void onDownload(resource.name); }} />
         )}
         <ContextMenuItem icon={Info} label={t("details")} onClick={() => { closeMenu(); toggleDetails(true); }} />
+        <ShowInFolderMenuItem nodeId={resource.id} onRan={closeMenu} />
         <ContextMenuSeparator />
         <ContextMenuItem icon={Trash2} label={t("delete")} shortcut="Del" destructive onClick={() => { closeMenu(); deleteNames([resource.name]); }} />
         <FilePluginMenuEntries
@@ -956,10 +1100,10 @@ export function FileBrowser({
 
   const newItems = (
     <>
-      <ContextMenuItem icon={Upload} label={t("upload_files")} onClick={() => { closeMenu(); fileInputRef.current?.click(); }} />
-      <ContextMenuItem icon={FolderUp} label={t("upload_folder")} onClick={() => { closeMenu(); folderInputRef.current?.click(); }} />
+      <ContextMenuItem icon={Upload} label={tMenu("files_upload_files")} onClick={() => { closeMenu(); fileInputRef.current?.click(); }} />
+      <ContextMenuItem icon={FolderUp} label={tMenu("files_upload_folder")} onClick={() => { closeMenu(); folderInputRef.current?.click(); }} />
       <ContextMenuSeparator />
-      <ContextMenuItem icon={FolderPlus} label={t("new_folder")} onClick={() => { closeMenu(); setShowNewFolder(true); }} />
+      <ContextMenuItem icon={FolderPlus} label={tMenu("files_new_folder")} onClick={() => { closeMenu(); setShowNewFolder(true); }} />
       <ContextMenuItem icon={FilePlus} label={newFileLabel} onClick={() => { closeMenu(); setShowNewTextFile(true); }} />
     </>
   );
@@ -967,15 +1111,20 @@ export function FileBrowser({
   const handlers: FileItemHandlers = useMemo(() => ({
     onSelectClick: handleSelectClick,
     onToggleSelect: handleToggleSelect,
-    onOpen: openResource,
+    // A double-click's first click selected the file; opening it isn't choosing it, so the
+    // toolbar stays the folder's own when the preview closes (pim-p3-11).
+    onOpen: (r) => {
+      if (!r.isDirectory) onSetSelection(new Set());
+      openResource(r);
+    },
     onContextMenu: openItemMenu,
-    onDownload: (r) => void onDownload(r.name),
+    onDownload: downloadsOff ? undefined : (r) => void onDownload(r.name),
     onShare: (r) => setShareTargetId(r.id),
     canShare,
     dragProps: itemDragProps,
     // Tab onto an item: the arrows go on from there.
     onFocusItem: (r) => setFocusedName(r.name),
-  }), [handleSelectClick, handleToggleSelect, openResource, openItemMenu, onDownload, canShare, itemDragProps]);
+  }), [handleSelectClick, handleToggleSelect, openResource, onSetSelection, openItemMenu, onDownload, downloadsOff, canShare, itemDragProps]);
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -998,10 +1147,12 @@ export function FileBrowser({
   const tSidebar = useTranslations("sidebar");
   const tShell = useTranslations("shell");
   const isEmbedded = useIsEmbedded();
+  // Mountain View's card holds the drawer, under its top bar.
+  const mvShell = useMountainViewShell(isEmbedded);
   useRegisterCommands(tSidebar("files"), [
-    { id: "upload-files", label: t("upload_files"), icon: Upload, run: () => fileInputRef.current?.click(), when: () => canCreate },
-    { id: "upload-folder", label: t("upload_folder"), icon: FolderUp, run: () => folderInputRef.current?.click(), when: () => canCreate },
-    { id: "new-folder", label: t("new_folder"), icon: FolderPlus, run: () => setShowNewFolder(true), when: () => canCreate },
+    { id: "upload-files", label: tMenu("files_upload_files"), icon: Upload, run: () => fileInputRef.current?.click(), when: () => canCreate },
+    { id: "upload-folder", label: tMenu("files_upload_folder"), icon: FolderUp, run: () => folderInputRef.current?.click(), when: () => canCreate },
+    { id: "new-folder", label: tMenu("files_new_folder"), icon: FolderPlus, run: () => setShowNewFolder(true), when: () => canCreate },
     { id: "new-text-file", label: newFileLabel, icon: FilePlus, run: () => setShowNewTextFile(true), when: () => canCreate },
     { id: "trash", label: t("trash"), icon: Trash2, run: () => onNavigate(TRASH_PATH, TRASH_LOCATION), when: () => !inTrash && !accountPickerMode },
     { id: "empty-trash", label: t("empty_trash"), icon: Trash2, run: () => onEmptyTrash?.(), when: () => inTrash && trashCount > 0 && !!onEmptyTrash },
@@ -1031,11 +1182,11 @@ export function FileBrowser({
       onShare={fromDrawer((r: FileResource) => setShareTargetId(r.id))}
       onCreateIn={fromDrawer(createIn)}
       onRenameFolder={fromDrawer(setRenameFolder)}
-      onDownloadFolder={onDownloadZip ? (folder: FileResource) => void onDownloadZip([folder.id], `${folder.name}.zip`) : undefined}
+      onDownloadFolder={onDownloadZip && !downloadsOff ? (folder: FileResource) => void onDownloadZip([folder.id], `${folder.name}.zip`) : undefined}
       onMoveFolder={onMoveNode ? fromDrawer((folder: FileResource) => setMoveTarget({ folder })) : undefined}
       onDeleteFolder={fromDrawer((folder: FileResource) => void onDeleteNode(folder.id, folder.name))}
       onRevealRecent={fromDrawer((id: string) => void onRevealNode(id))}
-      onDownloadRecent={fromDrawer((id: string) => void onDownloadNode(id))}
+      onDownloadRecent={downloadsOff ? undefined : fromDrawer((id: string) => void onDownloadNode(id))}
       onRemoveRecent={onRemoveRecent}
       trashCount={trashCount}
       onOpenTrash={fromDrawer(() => onNavigate(TRASH_PATH, TRASH_LOCATION))}
@@ -1076,7 +1227,7 @@ export function FileBrowser({
       );
     }
     // Until the first listing is in, an empty list means "not loaded yet".
-    if ((isLoading || !hasListed) && resources.length === 0) return <ListSkeleton />;
+    if ((isLoading || !hasListed) && resources.length === 0) return <FilesListingSkeleton view={viewMode} />;
     if (showEmpty && searchQuery) return <NoSearchResults query={searchQuery} onClear={() => setSearchQuery("")} />;
     if (showEmpty && inTrash) {
       return <EmptyState icon={Trash2} title={t("trash_empty_title")} description={t("trash_empty_hint")} />;
@@ -1154,7 +1305,7 @@ export function FileBrowser({
       onClose={() => toggleDetails(false)}
       onOpen={() => singleSelected && (singleSelected.isDirectory ? openResource(singleSelected) : previewResource(singleSelected))}
       onEdit={() => singleSelected && onEditFile?.(singleSelected.name)}
-      onDownload={() => singleSelected && void onDownload(singleSelected.name)}
+      onDownload={downloadsOff ? undefined : () => singleSelected && void onDownload(singleSelected.name)}
       onShare={() => singleSelected && setShareTargetId(singleSelected.id)}
       onToggleStar={() => singleSelected && onToggleFavorite(pathOf(singleSelected))}
       className={cn(
@@ -1183,8 +1334,8 @@ export function FileBrowser({
     pluginFiles: [],
   } : selectedList.length > 0 ? {
     count: selectedList.length,
-    // Folders download as a zip.
-    fileCount: selectedList.filter((r) => !r.isSymlink && (!r.isDirectory || !!onDownloadZip)).length,
+    // Folders download as a zip. None with downloads turned off: no Download button.
+    fileCount: downloadsOff ? 0 : selectedList.filter((r) => !r.isSymlink && (!r.isDirectory || !!onDownloadZip)).length,
     canOpen: !!singleSelected && !singleSelected.isSymlink
       && (singleSelected.isDirectory || isPreviewable(singleSelected.name) || !!isOfficeEditable?.(singleSelected.name)),
     canRename: !!singleSelected,
@@ -1203,26 +1354,21 @@ export function FileBrowser({
   } : null;
 
   return (
-    // Clips the closed drawer, so it never sits over the nav rail.
+    // Holds the drawer in a Pro pane and clips it there when closed.
     <div className="relative flex flex-1 min-h-0 overflow-hidden">
-      {/* Folder sidebar: in flow on desktop, a drawer on narrow panes */}
-      {sidebar && isNarrow && narrowSidebarOpen && (
-        <div className="absolute inset-0 bg-black/50 z-40" onClick={() => setNarrowSidebarOpen(false)} />
-      )}
+      {/* Folder sidebar: in flow on the full desktop; below it a drawer from
+          the window's edge, over the app rail, as Mail's folders. */}
       {sidebar && (isNarrow ? (
-        <div
+        <EdgeDrawer
+          open={narrowSidebarOpen}
+          onClose={closeNarrowSidebar}
+          contained={isEmbedded || mvShell}
           data-testid="files-sidebar-drawer"
           data-pane="sidebar"
-          className={cn(
-            "absolute inset-y-0 start-0 z-50 w-72 border-e border-border",
-            "transform transition-[transform,visibility] duration-300 ease-in-out",
-            !narrowSidebarOpen && "invisible -translate-x-full rtl:translate-x-full",
-          )}
-          // Closed, the drawer is out of reach: no clicks, no Tab stops.
-          inert={!narrowSidebarOpen}
+          className="border-e border-border bg-secondary"
         >
           {sidebar}
-        </div>
+        </EdgeDrawer>
       ) : (
         <>
           <div
@@ -1279,6 +1425,7 @@ export function FileBrowser({
           toolsHidden={accountPickerMode}
           selection={selectionActions}
           emptyTrash={inTrash && onEmptyTrash ? { onEmpty: onEmptyTrash, disabled: trashCount === 0 } : undefined}
+          panelToggle={sidePanel.toggle}
         />
 
         {error && (
@@ -1292,10 +1439,10 @@ export function FileBrowser({
           </div>
         )}
 
-        <div className="relative flex flex-1 min-h-0">
+        <div ref={sidePanel.rowRef} className="relative flex flex-1 min-h-0">
           <div
             ref={scrollAreaRef}
-            className="relative flex-1 min-w-0 overflow-y-auto"
+            className="relative flex-1 min-w-0 overflow-y-auto max-md:pb-20"
             onMouseDown={handleMarqueeMouseDown}
             onContextMenu={(e) => {
               if (accountPickerMode || (e.target as HTMLElement).closest("[data-resource]")) return;
@@ -1347,12 +1494,13 @@ export function FileBrowser({
               size="icon-lg"
               className="absolute bottom-4 end-4 z-20 rounded-full shadow-lg"
               aria-label={t("new")}
-              onClick={(e) => menu.openContextMenu(anchorEvent(e.currentTarget, "end"), { kind: "new" })}
+              onClick={(e) => menu.openContextMenuFrom(e.currentTarget, { kind: "new" }, "end")}
             >
               <Plus className="w-5 h-5" />
             </Button>
           )}
 
+          {sidePanel.panel}
         </div>
       </AppMain>
 
@@ -1460,7 +1608,10 @@ export function FileBrowser({
           shareWith={shareTarget.shareWith}
           ownAccountId={ownAccountId || ""}
           onShare={async (principalId, rights) => {
+            const added = !!rights && !shareTarget.shareWith?.[principalId];
             await onShare(shareTarget.id, principalId, rights as FileNodeRights | null);
+            // Someone new can see it now: offer to tell them (pim-26).
+            if (added) onShared?.(shareTarget, principalId);
           }}
           onClose={() => setShareTargetId(null)}
         />
@@ -1516,21 +1667,6 @@ function SharedWithMe({ folders, pages, onOpen, iconOptions }: {
         ))}
       </div>
     </section>
-  );
-}
-
-function ListSkeleton() {
-  return (
-    <div className="px-4" aria-hidden>
-      <div className="h-9 border-b border-border" />
-      {Array.from({ length: 7 }, (_, i) => (
-        <div key={i} className="h-10 flex items-center gap-3 border-b border-border/60">
-          <div className="w-4 h-4 rounded bg-muted animate-pulse" />
-          <div className="w-5 h-5 rounded bg-muted animate-pulse" />
-          <div className="h-3.5 rounded bg-muted animate-pulse" style={{ width: `${30 + ((i * 37) % 35)}%` }} />
-        </div>
-      ))}
-    </div>
   );
 }
 

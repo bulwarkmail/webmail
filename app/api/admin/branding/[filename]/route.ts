@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { getConfigDir } from '@/lib/admin/paths';
-
-function getBrandingDir(): string {
-  return path.join(getConfigDir(), 'branding');
-}
+import { brandingDocs } from '@/lib/admin/extension-store';
+import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 
 const MIME_TYPES: Record<string, string> = {
   '.svg': 'image/svg+xml',
@@ -20,7 +16,8 @@ const MIME_TYPES: Record<string, string> = {
  * GET /api/admin/branding/[filename] - Serve uploaded branding images
  *
  * This endpoint is public (no admin auth) so browsers can load images.
- * Only files in the branding directory are served; directory traversal is prevented.
+ * Only uploaded branding files are served (C/branding, or the shared store
+ * in shared mode); directory traversal is prevented.
  */
 export async function GET(
   _request: NextRequest,
@@ -41,20 +38,15 @@ export async function GET(
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
 
-    const filePath = path.join(getBrandingDir(), safe);
-
-    // Ensure resolved path is still within getBrandingDir()
-    const resolved = path.resolve(filePath);
-    if (!resolved.startsWith(path.resolve(getBrandingDir()))) {
-      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
-    }
-
-    const fileStat = await stat(resolved).catch(() => null);
-    if (!fileStat || !fileStat.isFile()) {
+    // The collection refuses any name that would leave the branding folder.
+    const doc = await brandingDocs().get(safe).catch((error) => {
+      if (storeUnavailableResponse(error)) throw error;
+      return null;
+    });
+    if (!doc) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-
-    const buffer = await readFile(resolved);
+    const buffer = new Uint8Array(doc.data);
 
     // SVG can carry inline <script> and event handlers that execute when the
     // file is fetched as a top-level document. Defense in depth on top of
@@ -71,7 +63,9 @@ export async function GET(
           "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox",
       },
     });
-  } catch {
+  } catch (error) {
+    const unavailable = storeUnavailableResponse(error);
+    if (unavailable) return unavailable;
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 }

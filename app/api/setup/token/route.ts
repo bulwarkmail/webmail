@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { detectSetupState } from '@/lib/setup/state';
 import { verifySetupToken } from '@/lib/setup/token';
-import { buildSessionCookieAttributes } from '@/lib/setup/session';
+import { buildSessionCookieAttributes, setupStoreUnavailableResponse } from '@/lib/setup/session';
+import { isStoreUnavailableError } from '@/lib/shared-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Token required' }, { status: 400 });
   }
 
-  const ok = await verifySetupToken(submitted);
+  let ok: boolean;
+  try {
+    ok = await verifySetupToken(submitted);
+  } catch (error) {
+    if (isStoreUnavailableError(error)) return setupStoreUnavailableResponse();
+    throw error;
+  }
   if (!ok) {
     // Don't differentiate between "wrong token" and "no token issued" - the
     // operator either has it from the logs or they don't.

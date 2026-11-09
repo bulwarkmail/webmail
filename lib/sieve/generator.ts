@@ -3,6 +3,7 @@ import { debug } from '@/lib/debug';
 import { PERIOD_REQUIRES, hasPeriod, periodTests } from '@/lib/sieve/period';
 import { VACATION_FORWARD_MARKER, isValidVacationForward, normalizeVacationForward } from '@/lib/sieve/vacation-forward';
 import { isValidVacationAudience, normalizeVacationAudience } from '@/lib/sieve/vacation-audience';
+import { usesRegex } from '@/lib/sieve/regex';
 
 const HEADER_MAP: Record<string, string> = {
   from: 'From',
@@ -73,7 +74,7 @@ function generateCondition(condition: FilterCondition): string {
   const values = toValueList(value);
 
   if (field === 'body') {
-    const matchType = comparator === 'is' ? ':is' : ':contains';
+    const matchType = comparator === 'is' ? ':is' : comparator === 'regex' ? ':regex' : ':contains';
     return `body ${matchType} ${formatStringArg(values)}`;
   }
 
@@ -123,6 +124,8 @@ function generateCondition(condition: FilterCondition): string {
       return `header :matches "${headerName}" ${formatStringArg(values, (v) => `*${v}`)}`;
     case 'matches':
       return `header :matches "${headerName}" ${formatStringArg(values)}`;
+    case 'regex':
+      return `header :regex "${headerName}" ${formatStringArg(values)}`;
     default:
       return `header :contains "${headerName}" ${formatStringArg(values)}`;
   }
@@ -219,6 +222,7 @@ function computeRequires(
     for (const condition of rule.conditions) {
       if (condition.field === 'body') extensions.add('body');
       if (condition.field === 'attachment') extensions.add('mime');
+      if (usesRegex(condition)) extensions.add('regex');
     }
     for (const action of rule.actions) {
       switch (action.type) {
@@ -342,8 +346,14 @@ export function generateScript(
   // without what it does not know: a rule without its period forwards for
   // good, the auto-reply goes to everyone. It leaves version 2 alone. A
   // forward that is off only loses its remembered address that way, so it
-  // stays version 1: the native app still edits version 1 only.
-  if (metadata.rules.some(hasPeriod) || metadata.vacationForward?.enabled || metadata.vacationAudience) {
+  // stays version 1: the native app still edits version 1 only. A regex
+  // condition would come back from those as a plain "contains".
+  if (
+    metadata.rules.some(hasPeriod) ||
+    metadata.rules.some(r => r.conditions.some(usesRegex)) ||
+    metadata.vacationForward?.enabled ||
+    metadata.vacationAudience
+  ) {
     metadata.version = 2;
   }
   // The JSON sits inside a /* ... */ comment: a "*/" in any string (a rule

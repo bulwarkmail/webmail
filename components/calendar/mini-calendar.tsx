@@ -239,7 +239,7 @@ export function MiniCalendar({
                   key={d}
                   scope="col"
                   abbr={weeks[0]?.[index] ? intlFormatter.dateTime(weeks[0][index], { weekday: "long" }) : undefined}
-                  className="text-center text-[0.625rem] font-medium text-muted-foreground py-1"
+                  className="overflow-hidden text-center text-[0.625rem] font-medium text-muted-foreground py-1"
                 >
                   {t(`days.${d}`)}
                 </th>
@@ -275,12 +275,12 @@ export function MiniCalendar({
                         tabIndex={key === tabStopKey ? 0 : -1}
                         onClick={() => { setFocusedKey(key); onSelectDate(day); }}
                         onKeyDown={(e) => handleDayKeyDown(e, day, column)}
-                        className="group/day inline-flex items-center justify-center w-7 h-7 pointer-coarse:w-full pointer-coarse:h-11 text-xs"
+                        className="group/day inline-flex items-center justify-center w-full max-w-7 h-7 pointer-coarse:max-w-none pointer-coarse:w-full pointer-coarse:h-11 text-xs"
                         aria-current={today ? "date" : undefined}
                       >
                         <span
                           className={cn(
-                            "relative flex items-center justify-center w-7 h-7 rounded-full transition-colors",
+                            "relative flex items-center justify-center w-full max-w-7 aspect-square rounded-full transition-colors",
                             // Other months' days in the muted text colour, which
                             // still reads at 4.5:1 (a faded one did not).
                             !inMonth && "text-muted-foreground",
@@ -295,7 +295,7 @@ export function MiniCalendar({
                           <span className="sr-only">{label}</span>
                           <span aria-hidden="true">{formatDayNumber(day)}</span>
                           {hasEvent && !selected && !today && (
-                            <span aria-hidden="true" className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                            <span aria-hidden="true" className="absolute top-[calc(50%+0.55em)] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                           )}
                           <PluginDayLabel surface="mini-calendar-marks" date={key} />
                         </span>

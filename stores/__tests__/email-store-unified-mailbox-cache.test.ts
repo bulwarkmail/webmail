@@ -119,6 +119,22 @@ describe('unified scope folder lists', () => {
     expect(useEmailStore.getState().accountMailboxes['jmap-b']?.[0].id).toBe('b-inbox');
   });
 
+  it('keeps a login\'s shared mailboxes apart from its own folders (#1486)', async () => {
+    const b = fakeClient('b');
+    const shared = { ...inbox('g1-inbox', 2), isShared: true, accountId: 'g1', accountName: 'Support' } as Mailbox;
+    b.getAllMailboxes.mockResolvedValue([inbox('b-inbox', 1), shared]);
+    connect({ b });
+    useEmailStore.setState({ accountSharedMailboxes: {} });
+
+    await loadAccountMailboxes(b as unknown as IJMAPClient, 'b', { withShared: true });
+
+    const state = useEmailStore.getState();
+    expect(b.getAllMailboxes).toHaveBeenCalledTimes(1);
+    // Role lookups in b's own list must never land on the shared inbox.
+    expect(state.accountMailboxes.b.map((m) => m.id)).toEqual(['b-inbox']);
+    expect(state.accountSharedMailboxes.b.map((m) => m.id)).toEqual(['g1-inbox']);
+  });
+
   it('retries a login whose fetch failed', async () => {
     const a = fakeClient('a');
     a.getMailboxes.mockRejectedValueOnce(new Error('offline'));

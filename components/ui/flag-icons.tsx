@@ -1,4 +1,4 @@
-import { type SVGProps, type ReactElement } from "react";
+import { useId, type SVGProps, type ReactElement } from "react";
 
 // Flag artwork from Twemoji (https://github.com/jdecked/twemoji),
 // (c) Twitter, Inc and other contributors, CC-BY 4.0.
@@ -134,6 +134,27 @@ function FlagEE(props: FlagProps) {
 function FlagTH(props: FlagProps) {
   return <Flag {...props}><path fill="#A7122D" d="M0 26.518V27c0 2.209 1.791 4 4 4h28c2.209 0 4-1.791 4-4v-.482H0z" /><path fill="#EEE" d="M0 22.181h36v4.485H0z" /><path fill="#292648" d="M0 13.513h36v8.821H0z" /><path fill="#EEE" d="M0 9.181h36v4.485H0z" /><path fill="#A7122D" d="M0 9.333V9c0-2.209 1.791-4 4-4h28c2.209 0 4 1.791 4 4v.333H0z" /></Flag>;
 }
+function FlagVN(props: FlagProps) {
+  return ( <Flag {...props}><path fill="#DA251D" d="M32 5H4C1.791 5 0 6.791 0 9v18c0 2.209 1.791 4 4 4h28c2.209 0 4-1.791 4-4V9c0-2.209-1.791-4-4-4z"/><path fill="#FFFF00" d="M18 10.2l1.751 5.39h5.668l-4.585 3.33 1.751 5.39L18 20.979l-4.585 3.331 1.751-5.39-4.585-3.33h5.668z"/></Flag>);
+}
+function FlagGR(props: FlagProps) {
+  const clipId = useId();
+  return (
+    <Flag {...props}>
+      <defs>
+        <clipPath id={clipId}>
+          <rect x="0" y="5" width="36" height="26" rx="4" />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${clipId})`}>
+        <path fill="#0D5EAF" d="M0 5h36v26H0z" />
+        <path fill="#EEE" d="M0 7.889h36v2.889H0zm0 5.778h36v2.889H0zm0 5.777h36v2.889H0zm0 5.778h36v2.889H0z" />
+        <path fill="#0D5EAF" d="M0 5h14.444v14.444H0z" />
+        <path fill="#EEE" d="M5.778 5h2.889v14.444H5.778zM0 10.778h14.444v2.889H0z" />
+      </g>
+    </Flag>
+  );
+}
 
 export const flagComponents: Record<string, (props: FlagProps) => ReactElement> = {
   ar: FlagAE,
@@ -142,6 +163,7 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   sk: FlagSK,
   da: FlagDK,
   de: FlagDE,
+  el: FlagGR,
   en: FlagGB,
   fa: FlagIR,
   es: FlagES,
@@ -153,6 +175,7 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   lv: FlagLV,
   nl: FlagNL,
   nb: FlagNO,
+  nn: FlagNO,
   pl: FlagPL,
   pt: FlagBR,
   ro: FlagRO,
@@ -160,6 +183,7 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   tr: FlagTR,
   ru: FlagRU,
   uk: FlagUA,
+  vi: FlagVN,
   ko: FlagKR,
   ja: FlagJP,
   mn: FlagMN,

@@ -35,7 +35,7 @@ vi.mock('@/stores/auth-store', async () => {
   };
 });
 vi.mock('@/stores/account-store', () => {
-  const state = { getAccountById: () => undefined };
+  const state = { accounts: [], getAccountById: () => undefined };
   return {
     useAccountStore: Object.assign(
       (selector?: (s: typeof state) => unknown) => (selector ? selector(state) : state),
@@ -69,6 +69,23 @@ describe('plugin list filters in the message list', () => {
     expect(fetchEmails).toHaveBeenCalledWith(client);
     act(() => { fireEvent.click(chip); });
     expect(fetchEmails).toHaveBeenCalledTimes(2);
+  });
+
+  it('drops ticked messages when a chip narrows the list', async () => {
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b']) });
+    render(<EmailList emails={[]} />);
+    const chip = await screen.findByRole('button', { name: 'Open' });
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(2);
+    act(() => { fireEvent.click(chip); });
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
+  });
+
+  it('does not call the folder empty while a filter hides its mail', async () => {
+    render(<EmailList emails={[]} />);
+    expect(await screen.findByText('no_emails_description')).toBeInTheDocument();
+    act(() => { fireEvent.click(screen.getByRole('button', { name: 'Open' })); });
+    expect(screen.getByText('no_emails')).toBeInTheDocument();
+    expect(screen.queryByText('no_emails_description')).toBeNull();
   });
 
   it.each([

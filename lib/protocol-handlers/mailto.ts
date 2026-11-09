@@ -1,4 +1,5 @@
 import { splitRecipients as splitRecipientString } from "@/lib/email-composer-utils";
+import { linkParamsFrom, type LinkParams } from "@/lib/plugin-link-params";
 
 export interface ParsedMailto {
   to: string[];
@@ -19,6 +20,16 @@ export interface ParsedMailto {
    * written from the account in use, without asking which one.
    */
   inApp?: boolean;
+  /**
+   * Handed over by the OS in the desktop app: a link clicked in another program. It
+   * opens in a compose window of its own, and the main window stays where it was.
+   */
+  fromOs?: boolean;
+  /**
+   * The link's `x-<plugin id>-<name>` parameters, for that plugin once the
+   * composer is open (lib/plugin-link-params.ts). Not part of the message.
+   */
+  linkParams?: LinkParams;
 }
 
 const MAX_RECIPIENTS = 200;
@@ -37,6 +48,16 @@ function stripBodyControlChars(value: string): string {
   return value
     .replace(/\r\n?/g, "\n")
     .replace(CONTROL_CHARS_EXCEPT_LINE_BREAKS, "");
+}
+
+/** A subject from outside the app: no control characters, no longer than a mail header allows. */
+export function cleanMailtoSubject(value: string): string {
+  return stripControlChars(value).slice(0, MAX_SUBJECT_LENGTH);
+}
+
+/** A body from outside the app: line breaks kept, other control characters gone, limited in length. */
+export function cleanMailtoBody(value: string): string {
+  return stripBodyControlChars(value).slice(0, MAX_BODY_LENGTH);
 }
 
 function splitRecipients(value: string): string[] {
@@ -63,25 +84,29 @@ function getQueryValue(searchParams: QueryParam[], key: string): string {
   return values.join(",");
 }
 
-function decodePathname(pathname: string): string | null {
+/**
+ * Percent-decoding that never gives up on a link. Links written by hand or by older
+ * programs carry a stray "%" ("50% off") or a cut-off UTF-8 sequence; Outlook and
+ * Thunderbird open those, so each run of valid escapes is decoded and anything else
+ * stays as it is. Bytes that aren't UTF-8 become U+FFFD. RFC 6068 uses
+ * percent-encoding, not form encoding: a literal '+' stays a '+'.
+ */
+function decodeLenient(value: string): string {
   try {
-    return decodeURIComponent(pathname || "");
-  } catch {
-    return null;
-  }
-}
-
-function decodeQueryPart(value: string): string | null {
-  try {
-    // RFC 6068 uses percent-encoding for mailto query fields; unlike form
-    // encoding, a literal '+' is part of the value and must not become space.
     return decodeURIComponent(value);
   } catch {
-    return null;
+    return value.replace(/(?:%[0-9a-f]{2})+/gi, (run) => {
+      try {
+        return decodeURIComponent(run);
+      } catch {
+        const bytes = Uint8Array.from(run.slice(1).split("%"), (hex) => parseInt(hex, 16));
+        return new TextDecoder().decode(bytes);
+      }
+    });
   }
 }
 
-function parseQuery(query: string): QueryParam[] | null {
+function parseQuery(query: string): QueryParam[] {
   if (!query) return [];
 
   const params: QueryParam[] = [];
@@ -90,10 +115,7 @@ function parseQuery(query: string): QueryParam[] | null {
     const separatorIndex = part.indexOf("=");
     const rawKey = separatorIndex >= 0 ? part.slice(0, separatorIndex) : part;
     const rawValue = separatorIndex >= 0 ? part.slice(separatorIndex + 1) : "";
-    const key = decodeQueryPart(rawKey);
-    const value = decodeQueryPart(rawValue);
-    if (key === null || value === null) return null;
-    params.push({ key, value });
+    params.push({ key: decodeLenient(rawKey), value: decodeLenient(rawValue) });
   }
 
   return params;
@@ -107,10 +129,8 @@ export function parseMailto(raw: string): ParsedMailto | null {
   const rawPathname = queryIndex >= 0 ? addressAndQuery.slice(0, queryIndex) : addressAndQuery;
   const rawQuery = queryIndex >= 0 ? addressAndQuery.slice(queryIndex + 1) : "";
 
-  const decodedPathname = decodePathname(rawPathname);
-  if (decodedPathname === null) return null;
+  const decodedPathname = decodeLenient(rawPathname);
   const searchParams = parseQuery(rawQuery);
-  if (searchParams === null) return null;
 
   const to = [
     ...splitRecipients(decodedPathname),
@@ -121,12 +141,14 @@ export function parseMailto(raw: string): ParsedMailto | null {
   const remainingAfterCc = Math.max(0, MAX_RECIPIENTS - to.length - cc.length);
   const bcc = splitRecipients(getQueryValue(searchParams, "bcc")).slice(0, remainingAfterCc);
 
+  const linkParams = linkParamsFrom(searchParams.map(({ key, value }) => [key, value] as const));
   return {
     to,
     cc,
     bcc,
-    subject: stripControlChars(getQueryValue(searchParams, "subject")).slice(0, MAX_SUBJECT_LENGTH),
-    body: stripBodyControlChars(getQueryValue(searchParams, "body")).slice(0, MAX_BODY_LENGTH),
+    subject: cleanMailtoSubject(getQueryValue(searchParams, "subject")),
+    body: cleanMailtoBody(getQueryValue(searchParams, "body")),
+    ...(linkParams ? { linkParams } : {}),
   };
 }
 

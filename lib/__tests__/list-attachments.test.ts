@@ -45,11 +45,13 @@ describe('list requests', () => {
 });
 
 describe('getEmailAttachments', () => {
-  it('asks only for attachment parts, in server-sized batches', async () => {
+  it('asks only for part lists, in server-sized batches', async () => {
     const { client, gets } = recordingClient(2);
     const found = await client.getEmailAttachments(['a', 'b', 'c'], 'owner');
     expect(gets.map(g => g.ids)).toEqual([['a', 'b'], ['c']]);
-    expect(gets[0]).toMatchObject({ accountId: 'owner', properties: ['id', 'attachments'] });
+    expect(gets[0]).toMatchObject({ accountId: 'owner', properties: ['id', 'attachments', 'textBody', 'htmlBody'] });
+    expect(gets[0].fetchTextBodyValues).toBeFalsy();
+    expect(gets[0].fetchHTMLBodyValues).toBeFalsy();
     expect(gets[0].bodyProperties).toEqual(expect.arrayContaining(['partId', 'blobId', 'name', 'type', 'cid', 'disposition']));
     expect(found.get('c')).toEqual([pdf('b-c')]);
   });

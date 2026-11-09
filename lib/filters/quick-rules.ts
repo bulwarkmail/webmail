@@ -427,26 +427,60 @@ export function rulesMenuAvailability(accounts: Array<RuleAccountInfo | null>): 
 
 /** A condition the rule editor offers as a one-click chip. */
 export interface RuleSuggestion {
-  id: 'subject' | 'to' | 'list' | 'domain';
+  id: 'sender' | 'domain' | 'subject' | 'list' | 'to';
   label: string;
   condition: FilterCondition;
   /** Put the condition in place of the first one this matches, instead of adding it. */
   replaces?: (condition: FilterCondition) => boolean;
 }
 
+/** The same condition, values compared without case or order. */
+export function sameCondition(a: FilterCondition, b: FilterCondition): boolean {
+  if (!sameConditionKind(a, b)) return false;
+  const values = (c: FilterCondition) => valueList(c.value).map(v => v.toLowerCase()).sort().join('\n');
+  return values(a) === values(b);
+}
+
+const isSenderCondition = (c: FilterCondition) => c.field === 'from' && c.comparator === 'address_is';
+const isDomainCondition = (c: FilterCondition) => c.field === 'from' && c.comparator === 'domain_is';
+
 /**
- * The chips "Create rule…" offers for `anchor`, the message it was opened on:
- * its subject (without Re:/Fwd:), the own address it was delivered to, its
- * List-Id, and the senders' shared domain in place of the sender condition.
- * `t` is the settings.filters translator.
+ * The chips "Create rule…" offers for `anchor`, the message it was opened on
+ * (mail-p3-9): the sender and the senders' shared domain (each in place of
+ * the other), its subject (without Re:/Fwd:), its List-Id, and a To that
+ * tells this mail apart. The editor hides a chip whose condition the rule
+ * already has, so the sender chip shows once the domain took its place.
+ *
+ * To is offered for an alias or second identity of the account, never for
+ * `mainAddresses` (its sign-in address, which all its mail goes to); when
+ * none of `ownAddresses` is in To or Cc (a list, a group, Bcc), for the
+ * first To. `t` is the settings.filters translator.
  */
 export function buildSuggestions(
   anchor: Pick<Email, 'subject' | 'to' | 'cc'>,
   subject: QuickRuleSubject,
   ownAddresses: ReadonlySet<string>,
+  mainAddresses: ReadonlySet<string>,
   t: Translate,
 ): RuleSuggestion[] {
   const suggestions: RuleSuggestion[] = [];
+
+  if (subject.senders.length > 0) {
+    suggestions.push({
+      id: 'sender',
+      label: senderNameFor(subject.senders, t),
+      condition: senderCondition(subject.senders),
+      replaces: isDomainCondition,
+    });
+    if (subject.domain) {
+      suggestions.push({
+        id: 'domain',
+        label: t('suggest_domain', { domain: subject.domain }),
+        condition: domainCondition(subject.domain),
+        replaces: isSenderCondition,
+      });
+    }
+  }
 
   const topic = stripSubjectPrefixes(anchor.subject);
   if (topic) {
@@ -458,28 +492,25 @@ export function buildSuggestions(
     });
   }
 
-  const inTo = (anchor.to ?? []).find(a => ownAddresses.has(normalizeAddress(a.email)));
-  const inCc = inTo ? undefined : (anchor.cc ?? []).find(a => ownAddresses.has(normalizeAddress(a.email)));
-  const delivered = inTo ?? inCc;
-  if (delivered) {
-    const address = normalizeAddress(delivered.email);
-    suggestions.push({
-      id: 'to',
-      label: t(inTo ? 'suggest_to' : 'suggest_cc', { address }),
-      condition: { field: inTo ? 'to' : 'cc', comparator: 'address_is', value: address },
-    });
-  }
-
   if (subject.listId) {
     suggestions.push({ id: 'list', label: t('suggest_list'), condition: listIdCondition(subject.listId) });
   }
 
-  if (subject.domain && subject.senders.length > 0) {
+  const isOwn = (a: { email?: string | null }) => ownAddresses.has(normalizeAddress(a.email));
+  const inTo = (anchor.to ?? []).find(isOwn);
+  const inCc = inTo ? undefined : (anchor.cc ?? []).find(isOwn);
+  const delivered = inTo ?? inCc;
+  const recipient = delivered
+    ? (mainAddresses.has(normalizeAddress(delivered.email)) ? null : { field: inTo ? 'to' as const : 'cc' as const, address: normalizeAddress(delivered.email) })
+    : (() => {
+        const first = (anchor.to ?? []).map(a => normalizeAddress(a.email)).find(a => a.includes('@'));
+        return first ? { field: 'to' as const, address: first } : null;
+      })();
+  if (recipient) {
     suggestions.push({
-      id: 'domain',
-      label: t('suggest_domain', { domain: subject.domain }),
-      condition: domainCondition(subject.domain),
-      replaces: (c) => c.field === 'from' && c.comparator === 'address_is',
+      id: 'to',
+      label: t(recipient.field === 'to' ? 'suggest_to' : 'suggest_cc', { address: recipient.address }),
+      condition: { field: recipient.field, comparator: 'address_is', value: recipient.address },
     });
   }
 

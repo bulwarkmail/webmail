@@ -1,7 +1,8 @@
 import type { Email, Attachment, CalendarEvent, CalendarParticipant, EmailBodyPart } from '@/lib/jmap/types';
 import { normalizeCalendarEventLike } from '@/lib/calendar-event-normalization';
 import { hasAlignedAuthenticationPass } from '@/lib/email-headers';
-import { fromWallClock, isValidTimeZone, parseLocalDateTime, type WallClock } from '@/lib/timezone';
+import { fromWallClock, getTimeZoneOffsetMs, isValidTimeZone, parseLocalDateTime, type WallClock } from '@/lib/timezone';
+import { applyOverridePatch } from '@/lib/recurrence-instances';
 
 export type InvitationMethod =
   | 'publish'
@@ -477,6 +478,8 @@ export interface EventSummary {
   isAllDay: boolean;
   /** Timed event without a usable time zone: start/end are wall-clock times to show as they are. */
   isFloating: boolean;
+  /** The zone a timed event is in, when Intl knows it; null otherwise. */
+  timeZone?: string | null;
   location: string | null;
   organizer: string | null;
   organizerEmail: string | null;
@@ -533,6 +536,9 @@ export function formatEventSummary(event: Partial<CalendarEvent>): EventSummary 
     end,
     isAllDay,
     isFloating,
+    timeZone: !isAllDay && !isFloating && normalizedEvent.timeZone && isValidTimeZone(normalizedEvent.timeZone)
+      ? normalizedEvent.timeZone
+      : null,
     location,
     organizer,
     organizerEmail,
@@ -691,37 +697,100 @@ export function getInvitationDisplayRange(
   return { start, end };
 }
 
-/** Intl options limited to what next-intl's format.dateTime accepts. */
-export type InvitationDateFormatOptions = Pick<
-  Intl.DateTimeFormatOptions,
-  'weekday' | 'month' | 'day' | 'hour' | 'minute' | 'hour12' | 'timeZone'
-> & {
-  timeZoneName?: 'short' | 'long';
-};
+/** How the banner writes times: the app's language, the user's zone and clock. */
+export interface InvitationFormatOptions {
+  locale: string;
+  /** The user's zone (getEffectiveTimeZone). */
+  timeZone: string;
+  hour12: boolean;
+}
+
+function formatterFor(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  try {
+    return new Intl.DateTimeFormat(locale, options);
+  } catch {
+    return new Intl.DateTimeFormat('en', options);
+  }
+}
+
+type RangeFormatter = Intl.DateTimeFormat & { formatRange?: (start: Date, end: Date) => string };
+
+/** `start` to `end` as Intl writes a range: the date once when both are on one day ("Thu, Nov 5, 10:00 – 11:30"). */
+function formatRange(formatter: Intl.DateTimeFormat, start: Date, end: Date | null): string {
+  if (!end) return formatter.format(start);
+  const ranged = formatter as RangeFormatter;
+  if (typeof ranged.formatRange === 'function') return ranged.formatRange(start, end);
+  return `${formatter.format(start)} – ${formatter.format(end)}`;
+}
 
 /**
- * The banner's "when" line. `formatDate` is next-intl's `format.dateTime`
- * (which formats in the user's display zone) or an Intl equivalent. Timed
- * events with a real zone get a zone label so it is clear which clock the
- * time is on.
+ * The banner's "when" line (pim-23): on the user's clock, the date once for
+ * an event within one day ("Thu, Nov 5, 10:00 – 11:30", Intl's range
+ * format). A timed event whose zone's clock reads differently from the
+ * user's gets its own times after it: "Thu, Nov 5, 16:00 – 17:30 (10:00 –
+ * 11:30 New York)". An event in the user's zone shows no zone: "GMT+1" on
+ * every invitation told nobody anything. All-day and floating events are a
+ * wall clock, the same everywhere.
  */
 export function formatInvitationSchedule(
-  summary: Pick<EventSummary, 'start' | 'end' | 'isAllDay'>,
-  formatDate: (date: Date, options: InvitationDateFormatOptions) => string,
-  hour12: boolean,
+  summary: Pick<EventSummary, 'start' | 'end' | 'isAllDay'> & { timeZone?: string | null },
+  options: InvitationFormatOptions,
 ): string {
   const range = getInvitationDisplayRange(summary);
   if (!range) return summary.start ?? '';
-  const base: InvitationDateFormatOptions = summary.isAllDay
+  const wallClock = range.start.wallClock;
+  const parts: Intl.DateTimeFormatOptions = summary.isAllDay
     ? { weekday: 'short', month: 'short', day: 'numeric' }
-    : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12 };
-  const formatPoint = (point: InvitationDisplayTime, last: boolean) => formatDate(point.date, {
-    ...base,
-    ...(point.wallClock ? { timeZone: 'UTC' } : {}),
-    ...(last && !point.wallClock && !summary.isAllDay ? { timeZoneName: 'short' } : {}),
-  });
-  const start = formatPoint(range.start, !range.end);
-  return range.end ? `${start} – ${formatPoint(range.end, true)}` : start;
+    : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: options.hour12 };
+  const zone = wallClock ? 'UTC' : options.timeZone;
+  const text = formatRange(formatterFor(options.locale, { ...parts, timeZone: zone }), range.start.date, range.end?.date ?? null);
+  if (wallClock || summary.isAllDay || !summary.timeZone || !isValidTimeZone(summary.timeZone)) return text;
+
+  const eventZone = summary.timeZone;
+  const start = range.start.date;
+  if (getTimeZoneOffsetMs(start, eventZone) === getTimeZoneOffsetMs(start, options.timeZone)) return text;
+  // Its own times: without the date when its day there is the user's day.
+  const day = (z: string) => formatterFor('en-CA', { timeZone: z, year: 'numeric', month: '2-digit', day: '2-digit' }).format(start);
+  const own: Intl.DateTimeFormatOptions = day(eventZone) === day(options.timeZone)
+    ? { hour: 'numeric', minute: '2-digit', hour12: options.hour12 }
+    : parts;
+  const ownText = formatRange(formatterFor(options.locale, { ...own, timeZone: eventZone }), start, range.end?.date ?? null);
+  const city = (eventZone.split('/').pop() || eventZone).replace(/_/g, ' ');
+  return `${text} (${ownText} ${city})`;
+}
+
+/**
+ * The ux_pim_event key of the banner's line once the user has answered an
+ * invitation (pim-23), "You accepted on {date}." in place of the prompt to
+ * answer; null while it is unanswered, and for any other message.
+ */
+export function invitationAnsweredKey(
+  method: InvitationMethod,
+  status: string | null | undefined,
+  withDate: boolean,
+): string | null {
+  if (method !== 'request') return null;
+  if (status !== 'accepted' && status !== 'declined' && status !== 'tentative') return null;
+  return `answered_${status}${withDate ? '' : '_nodate'}`;
+}
+
+/**
+ * When the user answered: just now in this banner, else the time the server
+ * keeps for the answer (scheduleUpdated), else the last change of their copy
+ * of the event, which an answer is. Null when none of them is known.
+ */
+export function invitationAnsweredAt(
+  answeredNow: Date | null,
+  participant: Pick<CalendarParticipant, 'scheduleUpdated'> | null | undefined,
+  copyUpdated: string | null | undefined,
+): Date | null {
+  if (answeredNow) return answeredNow;
+  for (const value of [participant?.scheduleUpdated, copyUpdated]) {
+    if (!value) continue;
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) return date;
+  }
+  return null;
 }
 
 /**
@@ -729,6 +798,35 @@ export function formatInvitationSchedule(
  * user's identities, primary first: an invite may be addressed to an alias
  * identity rather than the primary address (#1283).
  */
+/**
+ * An invitation to a series is answered as a series: the answer is the series'
+ * own, and occurrences answered no on their own are listed apart (pim-p2-8).
+ * The card said "You declined" for a weekly meeting when one week was declined,
+ * read from whichever occurrence the calendar held first. `master` is the
+ * series as stored, with its recurrenceOverrides; `declined` holds the
+ * recurrence ids (wall clock in the event's zone), oldest first.
+ */
+export function seriesAnswers(
+  master: Partial<CalendarEvent>,
+  emails: readonly string[],
+): { status: string | null; declined: string[] } {
+  const own = findParticipantByEmails(master, emails);
+  const status = own?.participant.participationStatus ?? null;
+  const declined: string[] = [];
+  for (const [recurrenceId, patch] of Object.entries(master.recurrenceOverrides ?? {})) {
+    if (!patch || typeof patch !== 'object' || (patch as { excluded?: unknown }).excluded === true) continue;
+    const occurrence = applyOverridePatch(master, patch as Record<string, unknown>);
+    const mine = findParticipantByEmails(occurrence, emails);
+    if (mine?.participant.participationStatus === 'declined' && status !== 'declined') declined.push(recurrenceId);
+  }
+  return { status, declined: declined.sort() };
+}
+
+/** Whether a parsed invitation is for a whole series, not one occurrence of it. */
+export function isSeriesInvitation(event: Partial<CalendarEvent> | null | undefined): boolean {
+  return !!event?.recurrenceRules?.length && !event.recurrenceId;
+}
+
 export function findParticipantByEmails(
   event: Partial<CalendarEvent>,
   emails: readonly string[]

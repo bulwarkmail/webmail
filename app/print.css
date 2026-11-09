@@ -39,18 +39,42 @@
   }
 }
 
+/*
+ * The device policy "No printing" (components/device/device-policy-host.tsx):
+ * Ctrl+P and the browser's menu can't be stopped, so the page prints only a
+ * note. Stronger than the print copy's rules above, which it replaces.
+ */
+[data-print-blocked] {
+  display: none;
+}
+
+@media print {
+  html[data-no-print] body > :not([data-print-blocked]):not([data-print-blocked]) {
+    display: none !important;
+  }
+
+  html[data-no-print] body > [data-print-blocked][data-print-blocked] {
+    display: block !important;
+    margin: 30mm 20mm;
+    color: #111;
+    font: 14pt/1.4 var(--font-sans, system-ui, sans-serif);
+  }
+}
+
 .pr-root {
   /* Landscape page area of the smaller of A4 and Letter, 12 mm margins. */
   --pr-page-h: 184mm;
-  --pr-ink: #111;
+  /* A theme may set the --print-* variables (lib/print/print-theme.ts);
+     unset, the copy looks as it always did. */
+  --pr-ink: var(--print-text-color, #111);
   --pr-muted: #555;
   --pr-faint: #8a8a8a;
-  --pr-rule: #bdbdbd;
+  --pr-rule: var(--print-rule-color, #bdbdbd);
   --pr-rule-light: #e2e2e2;
   --pr-shade: #f4f4f4;
   color: var(--pr-ink);
   background: #fff;
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--print-font-family, var(--font-sans, system-ui, sans-serif));
   font-size: 10pt;
   line-height: 1.35;
 }
@@ -92,6 +116,8 @@
 
 .pr-title {
   margin: 0;
+  font-family: var(--print-heading-font-family, var(--print-font-family, var(--font-sans, system-ui, sans-serif)));
+  color: var(--print-heading-color, var(--pr-ink));
   font-size: 15pt;
   font-weight: 600;
   line-height: 1.25;
@@ -690,4 +716,69 @@
 .pr-status {
   color: var(--pr-muted);
   white-space: nowrap;
+}
+
+/* ---- A mail message (components/email/message-print.tsx) ---------------- */
+
+.pr-message-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 2mm;
+  margin: 1.5mm 0 0;
+  color: var(--pr-muted);
+  font-size: 8.5pt;
+}
+
+.pr-message-meta > div {
+  display: contents;
+}
+
+.pr-message-meta dt {
+  color: var(--pr-ink);
+  font-weight: 600;
+}
+
+.pr-message-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* An invitation's card: when and where, in a box above the body. */
+.pr-invitation {
+  margin: 4mm 0 0;
+  padding: 2.5mm 3mm;
+  border: 0.3mm solid var(--pr-rule, #bbb);
+  border-radius: 1.5mm;
+  break-inside: avoid;
+}
+
+.pr-invitation-heading {
+  margin: 0;
+  font-size: 8pt;
+  font-weight: 600;
+  color: var(--pr-muted);
+}
+
+.pr-invitation .pr-message-meta {
+  font-size: 10pt;
+  color: var(--pr-ink);
+}
+
+/* A plugin print style's letterhead: plain text, its own CSS styles it. */
+.pr-letterhead-header,
+.pr-letterhead-footer {
+  white-space: pre-line;
+  font-size: 9pt;
+  color: var(--pr-muted);
+}
+
+.pr-letterhead-header {
+  margin-bottom: 4mm;
+}
+
+.pr-letterhead-footer {
+  margin-top: 6mm;
+  padding-top: 2mm;
+  border-top: 0.25mm solid var(--pr-rule-light);
+  break-inside: avoid;
 }

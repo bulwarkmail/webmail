@@ -8,6 +8,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { useConfig } from "@/hooks/use-config";
 import { withBasePath } from "@/lib/browser-navigation";
 import { useUIStore } from "@/stores/ui-store";
+import { useStrictestDevices } from "@/hooks/use-device-policy";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -55,8 +56,17 @@ export function PWAInstallPrompt() {
   // Stays "visible" for the push prompt's sake while a composer is open, so
   // that card doesn't take its place over the Send button either.
   const composing = useUIStore((state) => state.composingCount > 0);
+  // Organisation > Devices > No install prompt, if any account signed in
+  // here has it: no card, and the browser's own install banner is held back
+  // too. The browser's menu can still install Bulwark.
+  const noInstallPrompt = useStrictestDevices().noInstallPrompt;
 
   useEffect(() => {
+    if (noInstallPrompt) {
+      const suppress = (e: Event) => e.preventDefault();
+      window.addEventListener("beforeinstallprompt", suppress);
+      return () => window.removeEventListener("beforeinstallprompt", suppress);
+    }
     if (isDismissed()) return;
 
     const handler = (e: Event) => {
@@ -70,19 +80,20 @@ export function PWAInstallPrompt() {
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
     };
-  }, []);
+  }, [noInstallPrompt]);
 
+  const visible = showPrompt && !noInstallPrompt;
   useEffect(() => {
-    promptVisible = showPrompt;
+    promptVisible = visible;
     window.dispatchEvent(
       new CustomEvent(PWA_INSTALL_PROMPT_VISIBILITY_EVENT, {
-        detail: { visible: showPrompt },
+        detail: { visible },
       }),
     );
     return () => {
-      if (showPrompt) promptVisible = false;
+      if (visible) promptVisible = false;
     };
-  }, [showPrompt]);
+  }, [visible]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -107,7 +118,7 @@ export function PWAInstallPrompt() {
     setShowPrompt(false);
   };
 
-  if (!showPrompt || !deferredPrompt || composing) {
+  if (!visible || !deferredPrompt || composing) {
     return null;
   }
 

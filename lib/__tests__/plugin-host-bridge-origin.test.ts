@@ -7,6 +7,7 @@ vi.mock('../plugin-sandbox/host-api', () => ({
 
 import { createBackgroundInstance, createSlotInstance } from '../plugin-sandbox/host-bridge';
 import { dispatchApiCall } from '../plugin-sandbox/host-api';
+import { onFrameActivity } from '../session-policy/frame-activity';
 
 function plugin(): InstalledPlugin {
   return {
@@ -132,6 +133,34 @@ describe('slot sizing', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(inst.iframe.style.width).toBe('100%');
+  });
+});
+
+describe('Escape inside a slot frame', () => {
+  const inFrame = (wrapperAttr?: string) => {
+    const wrapper = document.createElement('div');
+    if (wrapperAttr) wrapper.setAttribute(wrapperAttr, 'p1');
+    document.body.appendChild(wrapper);
+    const inst = createSlotInstance({
+      plugin: plugin(), slot: 'plugin-dialog', code: '', locale: 'en', tier: 'untrusted', extraProps: {}, hostContainer: wrapper, onResize: () => {},
+    });
+    instances.push(inst);
+    const keys: string[] = [];
+    const onKey = (e: KeyboardEvent) => { keys.push(e.key); };
+    document.addEventListener('keydown', onKey, true);
+    post(inst.iframe.contentWindow, 'null', { type: 'frame-escape' });
+    document.removeEventListener('keydown', onKey, true);
+    wrapper.remove();
+    return keys;
+  };
+
+  it('reaches the host dialog when the frame is one', () => {
+    expect(inFrame('data-plugin-dialog')).toEqual(['Escape']);
+    expect(inFrame('data-plugin-dialog-popover')).toEqual(['Escape']);
+  });
+
+  it('stays in the frame anywhere else', () => {
+    expect(inFrame()).toEqual([]);
   });
 });
 
@@ -378,5 +407,56 @@ describe('calls before the background frame has booted', () => {
     await expect(hook).rejects.toThrow(/destroyed/);
     await expect(inst.initPromise).rejects.toThrow(/destroyed/);
     expect(inst.closed).toBe(true);
+  });
+});
+
+describe('input in a frame', () => {
+  /** sandbox-ready as the runtime posts it, with its activity port. */
+  function ready(inst: { iframe: HTMLIFrameElement }, port: MessagePort): void {
+    const ev = new MessageEvent('message', { data: { type: 'sandbox-ready' }, origin: 'null', source: inst.iframe.contentWindow });
+    Object.defineProperty(ev, 'ports', { value: [port] });
+    window.dispatchEvent(ev);
+  }
+  const delivered = () => new Promise((r) => setTimeout(r, 20));
+  const channels: MessageChannel[] = [];
+  afterEach(() => {
+    for (const c of channels.splice(0)) { c.port1.close(); c.port2.close(); }
+  });
+  function channel(): MessageChannel {
+    const c = new MessageChannel();
+    channels.push(c);
+    return c;
+  }
+
+  it('counts for the idle timeout what the runtime reports through its port', async () => {
+    const heard = vi.fn();
+    const off = onFrameActivity(heard);
+    try {
+      const inst = createSlotInstance({
+        plugin: plugin(), slot: 'app-page', code: '', locale: 'en', tier: 'untrusted', extraProps: {},
+        hostContainer: document.body, onResize: () => {},
+      });
+      instances.push(inst);
+      const runtime = channel();
+      ready(inst, runtime.port2);
+      runtime.port1.postMessage(null);
+      await delivered();
+      expect(heard).toHaveBeenCalledTimes(1);
+
+      // A second sandbox-ready is not the runtime's: its port is ignored.
+      const forged = channel();
+      ready(inst, forged.port2);
+      forged.port1.postMessage(null);
+      await delivered();
+      expect(heard).toHaveBeenCalledTimes(1);
+
+      // Nor does a frame that is gone count.
+      inst.destroy();
+      runtime.port1.postMessage(null);
+      await delivered();
+      expect(heard).toHaveBeenCalledTimes(1);
+    } finally {
+      off();
+    }
   });
 });

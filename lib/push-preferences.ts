@@ -20,6 +20,23 @@ export function pushPreferencesKey(origin: string): string {
   return `${origin}${BASE_PATH}/__push-state/prefs`;
 }
 
+/**
+ * True for a login with "Email notifications" off or do not disturb on. The worker
+ * shows nothing for its mail. Per login, as settings are: the store only holds the
+ * active login's, and the other logins' mail must not go quiet because of them.
+ */
+export async function writeLoginQuiet(login: string, quiet: boolean): Promise<void> {
+  try {
+    if (typeof caches === 'undefined') return;
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const key = `${window.location.origin}${BASE_PATH}/__push-state/quiet-logins`;
+    const stored = (await (await cache.match(key))?.json().catch(() => null)) as Record<string, boolean> | null;
+    await cache.put(key, new Response(JSON.stringify({ ...stored, [login]: quiet }), { headers: { 'Content-Type': 'application/json' } }));
+  } catch {
+    // Without the store the worker shows every push.
+  }
+}
+
 export async function writePushPreferences(prefs: PushPreferences): Promise<void> {
   if (typeof window === 'undefined') return;
   try {

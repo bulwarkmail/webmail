@@ -48,7 +48,7 @@ interface Recorded {
   identityId?: string;
 }
 
-function mockServer(): Recorded {
+function mockServer(identities = IDENTITIES): Recorded {
   const rec: Recorded = {};
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
     const { methodCalls } = JSON.parse((init as { body: string }).body) as { methodCalls: MethodCall[] };
@@ -60,7 +60,7 @@ function mockServer(): Recorded {
           { id: `${accountId}-sent`, name: 'Sent', role: 'sent' },
         ] }, callId];
       }
-      if (name === 'Identity/get') return [name, { list: IDENTITIES[accountId] ?? [] }, callId];
+      if (name === 'Identity/get') return [name, { list: identities[accountId] ?? [] }, callId];
       if (name === 'Email/set') {
         if (args.create) {
           rec.emailSetAccount = accountId;
@@ -152,6 +152,42 @@ describe('JMAPClient.sendEmail picks the account that owns the From identity (#1
     const rec = mockServer();
     await send(createClient({ me: 'carol@example.org', grp: 'team@example.org' }), 'team@example.org');
     expectAccount(rec, 'grp');
+  });
+
+  // #1450: the composer's identity ids are the member's own. In the group
+  // account the same id can be another of the group's addresses, and the
+  // server takes MAIL FROM from the identity the submission names.
+  describe('identity ids of the member’s account (#1450)', () => {
+    const COLLIDING: Record<string, Array<{ id: string; email: string }>> = {
+      me: [
+        { id: 'by', email: 'info@radar.example' },
+        { id: 'bw', email: '*@lists.example' },
+        { id: 'c', email: 'carol@example.org' },
+      ],
+      grp: [
+        { id: 'by', email: 'info@alias.example' },
+        { id: 'bw', email: 'info@alias.example' },
+        { id: 'b7', email: 'info@radar.example' },
+        { id: 'w', email: '*@lists.example' },
+      ],
+    };
+
+    it.each([
+      ['the From address', 'info@radar.example', 'by', 'b7'],
+      ['a sub-addressed From', 'info+news@radar.example', 'by', 'b7'],
+      ['a From covered by a wildcard identity', 'announce@lists.example', 'bw', 'w'],
+    ])('submits through the group’s identity for %s', async (_case, fromEmail, memberId, groupId) => {
+      const rec = mockServer(COLLIDING);
+      await send(createClient({ me: 'carol@example.org', grp: 'team' }), fromEmail, memberId);
+      expectAccount(rec, 'grp');
+      expect(rec.identityId).toBe(groupId);
+    });
+
+    it('keeps the id when it names the From address in the group account too', async () => {
+      const rec = mockServer();
+      await send(createClient({ me: 'carol@example.org', grp: 'team' }), 'team@example.org', 'b');
+      expect(rec.identityId).toBe('b');
+    });
   });
 
   describe('drafts', () => {

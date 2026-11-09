@@ -12,7 +12,7 @@ import { QuickEventInput } from "./quick-event-input";
 import { CalendarTaskChip } from "./task-chip";
 import { AllHoursToggle, HiddenEventsIndicator } from "./display-hours-controls";
 import { groupTasksByDueDay } from "@/lib/calendar-tasks";
-import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents, packWeekSegments } from "@/lib/calendar-utils";
+import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents, packWeekSegments, pendingTimedMinutes, PENDING_LAYOUT_ID } from "@/lib/calendar-utils";
 import { clipToDisplayHours, indexOfDayOnOrAfter, partitionByDisplayHours, remapSegmentsToShownDays, resolveWorkingDays } from "@/lib/calendar-display-range";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
 import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
@@ -39,6 +39,8 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
   onContextMenuEmpty?: (e: React.MouseEvent, date: Date, hour?: number, allDayArea?: boolean) => void;
+  /** The "?" / "Reply" marker of an unanswered invitation (pim-9). */
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   onCreateAtTime: (date: Date, endDate?: Date) => void;
   /** A click on a day in the all-day row: a new all-day event there. */
   onCreateAllDay?: (date: Date) => void;
@@ -70,6 +72,13 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
 const MIN_HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MOBILE_COL_WIDTH = 120;
+/**
+ * A pane narrower than this shows three days a page, unless the user asked
+ * for the whole week: seven columns there turned overlapping events into
+ * 30px slivers (pim-p3-13).
+ */
+const COMPACT_WEEK_BELOW = 1000;
+const COMPACT_WEEK_DAYS = 3;
 const MIN_COL_WIDTH = 80;
 
 export function CalendarWeekView({
@@ -91,6 +100,7 @@ export function CalendarWeekView({
   onHoverLeave,
   onContextMenuEvent,
   onContextMenuEmpty,
+  onReplyEvent,
   onCreateAtTime,
   onCreateAllDay,
   firstDayOfWeek = 1,
@@ -107,6 +117,7 @@ export function CalendarWeekView({
   revealAt,
 }: CalendarWeekViewProps) {
   const t = useTranslations("calendar");
+  const tCal = useTranslations("ux_p3_pim_cal");
   const paint = useCvdColor();
   const tintedEvents = useSettingsStore((s) => s.calendarTintedEvents);
   const describeError = useCalendarErrorMessage();
@@ -149,13 +160,21 @@ export function CalendarWeekView({
   }, [allDays, workingDays]);
   const colCount = days.length;
   const columnsPerWeek = shownIndexByDay && workingDays ? workingDays.size : 7;
+  const allDaysWhenNarrow = useSettingsStore((s) => s.calendarNarrowWeekAllDays);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  // A narrow pane (not a phone, which has its own strip): three days a page.
+  const narrowPane = !isMobile && viewportWidth > 0 && viewportWidth + gutterWidth < COMPACT_WEEK_BELOW;
+  const canCompact = narrowPane && columnsPerWeek > COMPACT_WEEK_DAYS;
+  const compact = canCompact && !allDaysWhenNarrow;
+  const columnsPerPage = compact ? COMPACT_WEEK_DAYS : columnsPerWeek;
 
   const measureColWidth = useCallback((root: HTMLElement | null) => {
     if (isMobile || !root) return MOBILE_COL_WIDTH;
-    return Math.max(MIN_COL_WIDTH, Math.floor((root.clientWidth - gutterWidth) / columnsPerWeek));
-  }, [isMobile, gutterWidth, columnsPerWeek]);
+    const perPage = !allDaysWhenNarrow && root.clientWidth < COMPACT_WEEK_BELOW && columnsPerWeek > COMPACT_WEEK_DAYS ? COMPACT_WEEK_DAYS : columnsPerWeek;
+    // Not rounded down: the pixels left over showed a sliver of next Monday at the edge.
+    return Math.max(MIN_COL_WIDTH, (root.clientWidth - gutterWidth) / perPage);
+  }, [isMobile, gutterWidth, columnsPerWeek, allDaysWhenNarrow]);
   const [colWidth, setColWidth] = useState(MOBILE_COL_WIDTH);
-  const [viewportWidth, setViewportWidth] = useState(0);
   // First day in view, reported by the scroll handler below (#1293)
   const [visibleDayKey, setVisibleDayKey] = useState<string | null>(null);
   useLayoutEffect(() => {
@@ -234,6 +253,25 @@ export function CalendarWeekView({
     return map;
   }, [days, timedEvents, hours]);
 
+  // The new event being created takes a column beside the events it
+  // overlaps, as it will once saved, instead of covering them. Only its
+  // times count: typing its title doesn't redo the layout.
+  const pendingStartMs = pendingPreview && !pendingPreview.allDay ? pendingPreview.start.getTime() : null;
+  const pendingEndMs = pendingPreview && !pendingPreview.allDay ? pendingPreview.end.getTime() : null;
+  const pendingLayout = useMemo(() => {
+    if (pendingStartMs === null || pendingEndMs === null) return null;
+    const preview = { start: new Date(pendingStartMs), end: new Date(pendingEndMs) };
+    const day = days.find((d) => isSameDay(d, preview.start));
+    const bounds = day ? pendingTimedMinutes(preview, day) : null;
+    if (!day || !bounds) return null;
+    const key = format(day, "yyyy-MM-dd");
+    const partition = partitionByDisplayHours(timedEvents.get(key) || [], day, hours);
+    const all = layoutOverlappingEvents(partition.visible, day, bounds);
+    const pending = all.find((layout) => layout.event.id === PENDING_LAYOUT_ID);
+    if (!pending) return null;
+    return { key, layouts: all.filter((layout) => layout.event.id !== PENDING_LAYOUT_ID), pending };
+  }, [pendingStartMs, pendingEndMs, days, timedEvents, hours]);
+
   // Built over the consecutive days and then moved onto the drawn columns,
   // so an event across a hidden weekend still spans Friday to Monday.
   const allDaySegments = useMemo(() => {
@@ -272,10 +310,10 @@ export function CalendarWeekView({
   const visibleStartIndex = useMemo(() => {
     const tracked = visibleDayKey ? days.findIndex((d) => dayKey(d) === visibleDayKey) : -1;
     if (tracked >= 0) return tracked;
-    const target = isMobile ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
+    const target = isMobile || compact ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
     return indexOfDayOnOrAfter(days, target);
-  }, [visibleDayKey, days, isMobile, focus.date, weekStart]);
-  const visibleColumns = isMobile ? Math.max(1, Math.ceil(viewportWidth / colWidth)) : columnsPerWeek;
+  }, [visibleDayKey, days, isMobile, compact, focus.date, weekStart]);
+  const visibleColumns = isMobile ? Math.max(1, Math.ceil(viewportWidth / colWidth)) : columnsPerPage;
 
   // Max combined rows (events + tasks) across the visible days
   const maxContentRows = useMemo(() => {
@@ -305,9 +343,10 @@ export function CalendarWeekView({
   const scrollToFocus = useCallback(() => {
     const root = rootRef.current;
     if (!root) return;
-    const target = isMobile ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
+    // Three days a page start at the focused day, as on a phone.
+    const target = isMobile || compact ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
     setScrollStart(root, "horizontal", indexOfDayOnOrAfter(days, target) * colWidth);
-  }, [focus.date, isMobile, weekStart, days, colWidth]);
+  }, [focus.date, isMobile, compact, weekStart, days, colWidth]);
 
   useScrollWindow({
     scrollRef: rootRef,
@@ -374,7 +413,7 @@ export function CalendarWeekView({
   }, []);
 
   const {
-    dragCreate, handleGridPointerDown, handleGridPointerMove, handleGridPointerUp,
+    dragCreate, handleGridPointerDown, handleGridPointerMove, handleGridPointerUp, handleGridPointerCancel,
     resizeVisual, handleResizePointerDown, handleResizePointerMove, handleResizePointerUp,
     quickCreate, handleSlotClick, handleSlotDoubleClick, handleQuickCreateSubmit, handleQuickCreateCancel,
     dropTarget, handleColumnDragOver, handleColumnDragLeave, handleColumnDrop,
@@ -435,7 +474,7 @@ export function CalendarWeekView({
   return (
     <div
       ref={rootRef}
-      className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none]"
+      className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none] max-md:pb-20"
       onScroll={handleStripScroll}
       role="grid"
       aria-label={t("views.week")}
@@ -448,7 +487,20 @@ export function CalendarWeekView({
           row and an hours row, each with one cell per day. The events sit in
           their day's cell, so a screen reader reads them under the date. */}
       <div className="flex border-b border-border" role="row">
-        <div role="gridcell" className={cn(gutterClass, "flex items-end justify-center pb-1")}>
+        <div role="gridcell" className={cn(gutterClass, "flex flex-col items-center justify-end gap-1 pb-1")}>
+          {canCompact ? (
+            <button
+              type="button"
+              data-week-days-toggle
+              onClick={() => useSettingsStore.getState().updateSetting("calendarNarrowWeekAllDays", !allDaysWhenNarrow)}
+              aria-pressed={!compact}
+              aria-label={tCal("week_all_days")}
+              title={tCal("week_all_days")}
+              className={cn("rounded-xs px-1 text-[0.625rem] font-medium hover:bg-muted hover:text-foreground", compact ? "text-muted-foreground" : "bg-muted text-foreground")}
+            >
+              {tCal("week_days_short", { count: columnsPerWeek })}
+            </button>
+          ) : null}
           {canToggleHours && (
             <AllHoursToggle
               showAllHours={showAllHours}
@@ -510,7 +562,8 @@ export function CalendarWeekView({
             className={cn(gutterClass, "text-[0.625rem] text-muted-foreground p-1 text-end flex flex-col justify-between")}
             style={{ height: allDayHeight }}
           >
-            <span>{t("events.all_day")}</span>
+            {/* A long single word ("Ganztägig") must stay inside the narrow gutter of a phone. */}
+            <span className="hyphens-auto [overflow-wrap:anywhere]">{t("events.all_day")}</span>
             {isExpandable && (
               <button
                 type="button"
@@ -579,6 +632,7 @@ export function CalendarWeekView({
                           onMouseEnter={(rect) => onHoverEvent?.(segment.event, rect)}
                           onMouseLeave={onHoverLeave}
                           onContextMenu={onContextMenuEvent}
+                          onReply={onReplyEvent}
                           currentUserEmails={currentUserEmails}
                           tabbable={spanInView(segment.startIndex, segment.span)}
                         />
@@ -658,16 +712,18 @@ export function CalendarWeekView({
               const key = format(day, "yyyy-MM-dd");
               const todayCol = isDisplayToday(day);
               const dayLayout = layoutByDay.get(key);
-              const layouted = dayLayout?.layouts ?? [];
+              const layouted = (pendingLayout?.key === key ? pendingLayout.layouts : dayLayout?.layouts) ?? [];
 
               return (
                 <div
                   key={key}
                   className="relative border-e border-border last:border-e-0"
                   role="gridcell"
+                  data-time-column={key}
                   onPointerDown={(e) => handleGridPointerDown(e, key, day)}
                   onPointerMove={handleGridPointerMove}
                   onPointerUp={handleGridPointerUp}
+                  onPointerCancel={handleGridPointerCancel}
                   onDragOver={(e) => handleColumnDragOver(e, key)}
                   onDragLeave={handleColumnDragLeave}
                   onDrop={(e) => handleColumnDrop(e, day)}
@@ -722,6 +778,7 @@ export function CalendarWeekView({
                           onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
                           onMouseLeave={onHoverLeave}
                           onContextMenu={onContextMenuEvent}
+                          onReply={onReplyEvent}
                           currentUserEmails={currentUserEmails}
                           draggable={editable}
                           continuesBefore={clip.clippedStart}
@@ -794,8 +851,11 @@ export function CalendarWeekView({
 
                   {dragCreate?.dayKey === key && (
                     <div
-                      className="absolute left-1 right-1 z-30 rounded-md pointer-events-none bg-primary/15 border-2 border-primary/30 border-dashed"
+                      data-drag-selection
+                      // Opaque and above the events (z-10), which showed through a see-through fill.
+                      className="absolute left-1 right-1 z-30 rounded-md pointer-events-none border-2 border-primary/60 border-dashed"
                       style={{
+                        backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, var(--color-background))",
                         top: ((dragCreate.startMinutes - hours.startMinutes) / 60) * hourHeight,
                         height: ((dragCreate.endMinutes - dragCreate.startMinutes) / 60) * hourHeight,
                       }}
@@ -804,6 +864,19 @@ export function CalendarWeekView({
                         <bdi dir="ltr">{formatSnapTime(dragCreate.startMinutes, timeFormat)} – {formatSnapTime(dragCreate.endMinutes, timeFormat)}</bdi>
                       </div>
                     </div>
+                  )}
+
+                  {dropTarget?.dayKey === key && dropTarget.durationMinutes !== undefined && (
+                    // The event itself where it will land, as the drag-create selection is drawn (pim-p3-2).
+                    <div
+                      data-drop-ghost
+                      className="absolute left-1 right-1 z-30 rounded-md pointer-events-none border-2 border-primary/60 border-dashed"
+                      style={{
+                        backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, var(--color-background))",
+                        top: ((dropTarget.minutes - hours.startMinutes) / 60) * hourHeight,
+                        height: (dropTarget.durationMinutes / 60) * hourHeight,
+                      }}
+                    />
                   )}
 
                   {dropTarget?.dayKey === key && (
@@ -816,38 +889,42 @@ export function CalendarWeekView({
                         <div className="flex-1 h-0.5 bg-primary rounded-full" />
                       </div>
                       <div className="absolute -top-4 start-2 text-[0.625rem] font-medium text-primary bg-background/90 px-1 rounded shadow-sm">
-                        {formatSnapTime(dropTarget.minutes, timeFormat)}
+                        <bdi dir="ltr">{formatSnapTime(dropTarget.minutes, timeFormat)}{dropTarget.durationMinutes !== undefined && ` – ${formatSnapTime((dropTarget.minutes + dropTarget.durationMinutes) % 1440, timeFormat)}`}</bdi>
                       </div>
                     </div>
                   )}
 
-                  {pendingPreview && !pendingPreview.allDay && isSameDay(pendingPreview.start, day) && (
+                  {pendingPreview && pendingLayout?.key === key && (
                     (() => {
-                      const startMin = pendingPreview.start.getHours() * 60 + pendingPreview.start.getMinutes();
-                      let endMin = pendingPreview.end.getHours() * 60 + pendingPreview.end.getMinutes();
-                      if (endMin <= startMin) endMin = 1440;
-                      const durationMin = Math.max(15, endMin - startMin);
-                      if (startMin + durationMin <= hours.startMinutes || startMin >= hours.endMinutes) return null;
-                      const clip = clipToDisplayHours(startMin, startMin + durationMin, hours);
+                      const { startMinutes: startMin, endMinutes: endMin, column, totalColumns } = pendingLayout.pending;
+                      if (endMin <= hours.startMinutes || startMin >= hours.endMinutes) return null;
+                      const clip = clipToDisplayHours(startMin, endMin, hours);
                       const cal = calendars.find(c => c.id === pendingPreview.calendarId);
                       const color = paint(cal?.color || "#3b82f6");
-                      // Drawn like a saved event, so the new event shows where
-                      // it will land while it is being created.
+                      // Drawn like a saved event, in the column it will take, so the new
+                      // event shows where it will land while it is being created.
                       return (
                         <div
-                          data-pending-preview
-                          className={cn("absolute left-0.5 right-0.5 z-30 rounded-xs pointer-events-none overflow-hidden px-1.5 py-0.5 text-xs shadow-md", eventFillClass(tintedEvents, false))}
+                          className="absolute z-30 pointer-events-none"
                           style={{
                             top: ((clip.startMinutes - hours.startMinutes) / 60) * hourHeight,
                             height: Math.max(20, ((clip.endMinutes - clip.startMinutes) / 60) * hourHeight),
-                            ...eventFillStyle(color, { inactive: false, tinted: tintedEvents }),
+                            insetInlineStart: `${(column / totalColumns) * 100}%`,
+                            width: `${(1 / totalColumns) * 100}%`,
+                            paddingInline: 2,
                           }}
                         >
-                          <div className="font-medium truncate">
-                            {pendingPreview.title}
-                          </div>
-                          <div className="text-[0.65625rem] opacity-85 truncate">
-                            <bdi dir="ltr">{formatSnapTime(startMin, timeFormat)} – {formatSnapTime(startMin + durationMin, timeFormat)}</bdi>
+                          <div
+                            data-pending-preview
+                            className={cn("h-full rounded-xs overflow-hidden px-1.5 py-0.5 text-xs shadow-md", eventFillClass(tintedEvents, false))}
+                            style={eventFillStyle(color, { inactive: false, tinted: tintedEvents })}
+                          >
+                            <div className="font-medium truncate">
+                              {pendingPreview.title}
+                            </div>
+                            <div className="text-[0.65625rem] opacity-85 truncate">
+                              <bdi dir="ltr">{formatSnapTime(startMin, timeFormat)} – {formatSnapTime(endMin, timeFormat)}</bdi>
+                            </div>
                           </div>
                         </div>
                       );

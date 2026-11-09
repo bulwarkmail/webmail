@@ -96,7 +96,7 @@ describe('Contacts delete confirms', () => {
   it('counts the contacts when several are selected', async () => {
     renderContacts(['c-alice', 'c-bob']);
     fireEvent.contextMenu(screen.getByText('Alice Smith'));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'bulk.delete' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /context_menu\.delete/ }));
     const dialog = await screen.findByRole('alertdialog');
     expect(within(dialog).getByText('bulk.delete_confirm {"count":2}')).toBeInTheDocument();
     expect(within(dialog).getByText('delete_details_message')).toBeInTheDocument();

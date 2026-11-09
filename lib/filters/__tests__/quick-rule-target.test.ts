@@ -2,7 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
-import { knownListId, loadListIds, resolveQuickRuleTarget, sourceMailboxOf, type QuickRuleTarget } from '../quick-rule-target';
+import { useAccountStore } from '@/stores/account-store';
+import { useIdentityStore } from '@/stores/identity-store';
+import { getOwnAddresses, getRuleAccountAddresses, knownListId, loadListIds, resolveQuickRuleTarget, sourceMailboxOf, type QuickRuleTarget } from '../quick-rule-target';
 
 const client = {
   getAccountId: () => 'd',
@@ -78,5 +80,35 @@ describe('List-Id of list rows', () => {
     expect(knownListId(target, opened)).toBe('news.example.org');
     const withoutList = email({ a: true }, { headers: { Subject: 'x' } } as Partial<Email>);
     expect(knownListId(target, withoutList)).toBeNull();
+  });
+});
+
+// mail-p3-9: with a second account signed in (a colleague's mailbox, or a
+// second one of the user's), its mail counted as the user's own, so "Create
+// rule…" started with no sender and the "Always move…" lines were missing.
+describe('the addresses of the account a rule goes into', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ activeAccountId: 'login-a', identities: [{ email: 'Alice@example.org' }] } as never);
+    useIdentityStore.setState({ identities: [{ email: 'sales@example.org' }] } as never);
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login-a', email: 'alice@example.org', username: 'alice@example.org' },
+        { id: 'login-b', email: 'bob@example.org', username: 'bob' },
+      ],
+    } as never);
+  });
+
+  it('leave out the other signed-in accounts', () => {
+    const { own, main } = getRuleAccountAddresses({ clientAccountId: 'login-a' });
+    expect([...own].sort()).toEqual(['alice@example.org', 'sales@example.org']);
+    expect([...main]).toEqual(['alice@example.org']);
+    // Every signed-in account still counts for things that aren't rules.
+    expect(getOwnAddresses().has('bob@example.org')).toBe(true);
+  });
+
+  it('are those of the message account when it is not the active one', () => {
+    const { own, main } = getRuleAccountAddresses({ clientAccountId: 'login-b' });
+    expect([...own]).toEqual(['bob@example.org']);
+    expect([...main]).toEqual(['bob@example.org']);
   });
 });

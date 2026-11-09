@@ -1,5 +1,6 @@
 import type { Mailbox } from '@/lib/jmap/types';
 import { buildMailboxTree, flattenMailboxTree, type MailboxNode } from '@/lib/utils';
+import type { SearchDefaultScope } from '@/lib/search-default-scope';
 
 /**
  * `searchMailboxId` of the "All folders" search scope: every folder of every
@@ -18,13 +19,20 @@ export function isAllFoldersSearchScope(searchMailboxId: string): boolean {
 }
 
 /**
- * The search scope a folder starts with: Spam and Trash search themselves,
- * since that is what a search from inside them looks for; every other folder
- * searches all folders except Spam and Trash ("").
+ * The search scope a folder starts with. With `defaultScope` 'folder' that
+ * is the open folder. Otherwise Spam and Trash search themselves, since that
+ * is what a search from inside them looks for, and every other folder
+ * searches all folders except Spam and Trash (""). A view that is not a
+ * folder of `mailboxes` (unified views, tags) always starts with "".
  */
-export function defaultSearchScopeFor(mailboxes: Mailbox[], openMailboxId: string | null | undefined): string {
+export function defaultSearchScopeFor(
+  mailboxes: Mailbox[],
+  openMailboxId: string | null | undefined,
+  defaultScope: SearchDefaultScope,
+): string {
   const open = openMailboxId ? mailboxes.find((mb) => mb.id === openMailboxId) : undefined;
-  return open && (open.role === 'trash' || open.role === 'junk') ? open.id : '';
+  if (!open) return '';
+  return defaultScope === 'folder' || open.role === 'trash' || open.role === 'junk' ? open.id : '';
 }
 
 export interface SearchScopeFolderGroup {

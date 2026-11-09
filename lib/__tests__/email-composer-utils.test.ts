@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   plainTextToComposerBody,
   rewriteCidImagesForEditor,
@@ -490,6 +490,27 @@ describe("waitForPendingUploads", () => {
     ...over,
   });
 
+  it.each(["success", "failure", "removal"] as const)(
+    "prefers cancellation when upload %s happens before the next poll",
+    async terminal => {
+      vi.useFakeTimers();
+      try {
+        let list = [att({ uploading: true })];
+        let cancelled = false;
+        const result = waitForPendingUploads(() => list, () => cancelled);
+        expect(vi.getTimerCount()).toBe(1);
+        cancelled = true;
+        list = terminal === "removal" ? [] : [att({ error: terminal === "failure" })];
+        await vi.advanceTimersByTimeAsync(150);
+        expect(await result).toBe("cancelled");
+        expect(vi.getTimerCount()).toBe(0);
+      } finally {
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
+    }
+  );
+
   it("resolves 'completed' immediately when nothing is uploading", async () => {
     const result = await waitForPendingUploads(
       () => [att({}), att({})],
@@ -649,11 +670,25 @@ describe("getQuoteBodies", () => {
       htmlBody: [part("h", "text/html")],
       bodyValues: {
         t: { value: "plain version" },
-        h: { value: "<p>html version</p>" },
+        h: { value: "<p><b>html</b> version</p>" },
       },
     });
     expect(body).toBe("plain version");
-    expect(htmlBody).toBe("<p>html version</p>");
+    expect(htmlBody).toBe("<p><b>html</b> version</p>");
+  });
+
+  it("quotes the text part when the HTML part is a bare wrapper without line breaks", () => {
+    const text = "Line one\nLine two\nLine three";
+    const { body, htmlBody } = getQuoteBodies({
+      textBody: [part("t", "text/plain")],
+      htmlBody: [part("h", "text/html")],
+      bodyValues: {
+        t: { value: text },
+        h: { value: "<html><body>Line one\nLine two\nLine three</body></html>" },
+      },
+    });
+    expect(body).toBe(text);
+    expect(htmlBody).toBeUndefined();
   });
 
   it("falls back to the preview when body values are missing", () => {

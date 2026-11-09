@@ -3,8 +3,8 @@ import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
 import { parseJmapServers, redactJmapServers } from '@/lib/admin/jmap-servers';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
-import { getOauthScopes } from '@/lib/oauth/tokens';
-import { httpOrMailtoOrEmpty, httpUrlOrEmpty } from '@/lib/config-validation';
+import { getOauthResource, getOauthScopes } from '@/lib/oauth/tokens';
+import { httpOrMailtoOrEmpty, httpUrlOrEmpty, httpUrlOrPathOrEmpty } from '@/lib/config-validation';
 import {
   matchDomainBranding,
   parseDomainBranding,
@@ -12,6 +12,7 @@ import {
   type BrandingOverrideKey,
 } from '@/lib/admin/domain-branding';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
+import { browserErrorSettings } from '@/lib/error-reporting/settings';
 
 /**
  * Runtime configuration endpoint
@@ -51,6 +52,8 @@ export async function GET(request: NextRequest) {
   const jmapServerUrl = configManager.get<string>('jmapServerUrl') || process.env.NEXT_PUBLIC_JMAP_SERVER_URL || '';
   const oauthEnabled = configManager.get<boolean>('oauthEnabled', false);
   const oauthOnly = oauthEnabled && configManager.get<boolean>('oauthOnly', false);
+  const oauthPasswordFallbackEnabled =
+    oauthOnly && configManager.get<boolean>('oauthPasswordFallbackEnabled', false);
   const stalwartFeaturesEnabled = configManager.get<boolean>('stalwartFeaturesEnabled', true);
   const stalwartJmapPassthroughEnabled =
     stalwartFeaturesEnabled && configManager.get<boolean>('stalwartJmapPassthroughEnabled', true);
@@ -63,9 +66,11 @@ export async function GET(request: NextRequest) {
       jmapServerUrl,
       oauthEnabled,
       oauthOnly,
+      oauthPasswordFallbackEnabled,
       oauthClientId: configManager.get<string>('oauthClientId', ''),
       oauthIssuerUrl: configManager.get<string>('oauthIssuerUrl', ''),
       oauthScopes: getOauthScopes(),
+      oauthResource: getOauthResource(),
       rememberMeEnabled: hasSessionSecret(),
       settingsSyncEnabled: configManager.get<boolean>('settingsSyncEnabled', false) && hasSessionSecret(),
       stalwartFeaturesEnabled,
@@ -87,7 +92,10 @@ export async function GET(request: NextRequest) {
       loginShowSubtitle: configManager.get<boolean>('loginShowSubtitle', true),
       loginShowTotp: configManager.get<boolean>('loginShowTotp', true),
       loginShowTokenLogin: configManager.get<boolean>('loginShowTokenLogin', false),
+      desktopBrowserSignIn: configManager.get<boolean>('desktopBrowserSignIn', true),
       loginShowRememberMe: configManager.get<boolean>('loginShowRememberMe', false),
+      // Session cookies hold the unticked sign-in, sealed like a remembered one.
+      browserSessionSignIn: configManager.get<boolean>('browserSessionSignIn', false) && hasSessionSecret(),
       loginShowVersion: configManager.get<boolean>('loginShowVersion', true),
       demoMode: configManager.get<boolean>('demoMode', false),
       allowCustomJmapEndpoint: configManager.get<boolean>('allowCustomJmapEndpoint', false),
@@ -106,8 +114,13 @@ export async function GET(request: NextRequest) {
       helpUrl: httpUrlOrEmpty(branded<string>('helpUrl', '')),
       easyReadUrl: httpUrlOrEmpty(branded<string>('easyReadUrl', '')),
       signLanguageUrl: httpUrlOrEmpty(branded<string>('signLanguageUrl', '')),
+      accountManagementUrl: httpUrlOrPathOrEmpty(configManager.get<string>('accountManagementUrl', '')),
+      accountManagementLabel: configManager.get<string>('accountManagementLabel', ''),
       // Browser-side switches of lib/outgoing-hosts.ts read this (#903).
       noThirdPartyTraffic: await isNoThirdPartyTrafficOn(),
+      // Error reporting (lib/error-reporting/client.ts): off unless a DSN is
+      // set or this server counts errors. The DSN is public by design.
+      errorReporting: await browserErrorSettings(),
     },
     {
       // Runtime settings can change without new asset URLs. Prevent stale

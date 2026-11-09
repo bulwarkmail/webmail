@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Check, CheckCircle2, AlertTriangle, AlertCircle, Server, ShieldCheck, KeyRound, FileText, Palette, Lock, ShieldAlert } from '@/components/icons';
 import { apiFetch, getPathPrefix, withBasePath } from '@/lib/browser-navigation';
 import { takeSetupTokenFromUrl } from '@/lib/setup/url-token';
+import { SetupSkeleton } from '@/components/boot-skeleton/setup-skeleton';
+import { SETUP_STEPS } from '@/lib/setup/steps';
 
 type State = 'bootstrap' | 'configured' | 'env-managed';
 
@@ -85,15 +87,7 @@ const EMPTY_CONFIG: WizardConfig = {
 
 // The wizard follows the browser's language, like the login page; the
 // labels are setup.steps.<id>.
-const STEPS = [
-  { id: 'welcome' },
-  { id: 'server' },
-  { id: 'auth' },
-  { id: 'security' },
-  { id: 'logging' },
-  { id: 'branding' },
-  { id: 'review' },
-] as const;
+const STEPS = SETUP_STEPS;
 
 type SetupT = ReturnType<typeof useTranslations<'setup'>>;
 
@@ -201,8 +195,24 @@ export default function SetupWizardPage() {
     return <InsecureContextScreen onContinue={() => setInsecureAcknowledged(true)} />;
   }
 
+  // The server HTML, and every visit until the status answers: the wizard's
+  // frame with the welcome step, where a fresh install starts.
   if (bootstrapping) {
-    return <CenteredCard><p className="text-muted-foreground">{t('loading')}</p></CenteredCard>;
+    return (
+      <SetupSkeleton
+        label={t('loading')}
+        strings={{
+          title: t('title'),
+          subtitle: t('subtitle'),
+          steps: STEPS.map((step) => t(`steps.${step.id}`)),
+          welcomeTitle: t('welcome.title'),
+          welcomeBody: t('welcome.body'),
+          tokenLabel: t('welcome.token_label'),
+          tokenPlaceholder: t('welcome.token_placeholder'),
+          continueLabel: t('welcome.continue'),
+        }}
+      />
+    );
   }
 
   if (completed) {

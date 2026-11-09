@@ -57,6 +57,23 @@ export function collectReferencedCids(html: string | null | undefined): Readonly
   return cids;
 }
 
+/**
+ * Machine-readable report parts: the delivery status of a bounce (RFC 3464),
+ * the disposition of a read receipt (RFC 8098) and their RFC 6533 UTF-8
+ * forms. A multipart/report needs them, but they are not files anyone
+ * attached, so no view lists them and a forward leaves them out.
+ */
+const REPORT_PART_TYPES: ReadonlySet<string> = new Set([
+  'message/delivery-status',
+  'message/disposition-notification',
+  'message/global-delivery-status',
+  'message/global-disposition-notification',
+]);
+
+export function isReportPart(type: string | null | undefined): boolean {
+  return REPORT_PART_TYPES.has((type || '').toLowerCase());
+}
+
 export interface AttachmentPartLike {
   cid?: string | null;
   type?: string | null;

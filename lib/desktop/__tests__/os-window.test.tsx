@@ -1,0 +1,482 @@
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { BulwarkDesktopBridge, DesktopOsPowerEvent, DesktopOsStatus } from '../types';
+import type { CalendarEvent } from '@/lib/jmap/types';
+
+/** The window's end: badge, drag-out, waking up, the settings section. Dropped and pasted files: components/file-drop. */
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) => (values ? `${key}:${JSON.stringify(values)}` : key),
+  useLocale: () => 'en',
+}));
+
+function setBridge(bridge: Partial<BulwarkDesktopBridge['os']> | undefined, platform: 'win32' | 'darwin' = 'win32') {
+  window.bulwarkDesktop = bridge ? ({ version: 1, platform, os: bridge } as unknown as BulwarkDesktopBridge) : undefined;
+}
+
+afterEach(() => {
+  setBridge(undefined);
+  vi.unstubAllGlobals();
+});
+
+describe('the badge', () => {
+  it('goes to the bridge in the app, and the Badging API is left alone', async () => {
+    const { useAppBadge } = await import('@/hooks/use-app-badge');
+    const setBadge = vi.fn();
+    const setAppBadge = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'setAppBadge', { value: setAppBadge, configurable: true });
+    setBridge({ setBadge });
+    const { rerender } = renderHook(({ count, enabled }) => useAppBadge(count, enabled), { initialProps: { count: 4, enabled: true } });
+    expect(setBadge).toHaveBeenLastCalledWith(4);
+    rerender({ count: 4, enabled: false });
+    expect(setBadge).toHaveBeenLastCalledWith(0);
+    expect(setAppBadge).not.toHaveBeenCalled();
+  });
+
+  it('a pop-out has no say in it', async () => {
+    const { useAppBadge } = await import('@/hooks/use-app-badge');
+    const role = await import('@/lib/popout/window-role');
+    const popout = vi.spyOn(role, 'isPopoutWindow').mockReturnValue(true);
+    const setBadge = vi.fn();
+    setBridge({ setBadge });
+    renderHook(() => useAppBadge(4, true));
+    expect(setBadge).not.toHaveBeenCalled();
+    popout.mockRestore();
+  });
+});
+
+describe('new-mail sound', () => {
+  it('is left to the notification path in the app, not played twice', async () => {
+    const { desktopPlaysMailSound } = await import('../mail-notifications');
+    expect(desktopPlaysMailSound()).toBe(false);
+    setBridge({ notify: vi.fn() as never });
+    expect(desktopPlaysMailSound()).toBe(true);
+  });
+});
+
+describe('the policy keeps refreshing', () => {
+  const fetchPolicy = vi.fn(async () => {});
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    fetchPolicy.mockClear();
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    usePolicyStore.setState({ loaded: true, fetching: false, fetchPolicy });
+    const { resetPolicyRefresh } = await import('@/hooks/use-policy-refresh');
+    resetPolicyRefresh();
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    delete (document as unknown as Record<string, unknown>).visibilityState;
+  });
+
+  it('in the desktop app while hidden in the tray', async () => {
+    const { POLICY_REFRESH_MS, usePolicyRefresh } = await import('@/hooks/use-policy-refresh');
+    setBridge({});
+    const { unmount } = renderHook(() => usePolicyRefresh());
+    vi.advanceTimersByTime(POLICY_REFRESH_MS);
+    expect(fetchPolicy).toHaveBeenCalledTimes(1);
+    unmount();
+  });
+
+  it('but not in a browser tab out of view', async () => {
+    const { POLICY_REFRESH_MS, usePolicyRefresh } = await import('@/hooks/use-policy-refresh');
+    const { unmount } = renderHook(() => usePolicyRefresh());
+    vi.advanceTimersByTime(POLICY_REFRESH_MS);
+    expect(fetchPolicy).not.toHaveBeenCalled();
+    unmount();
+  });
+});
+
+describe('dragging an attachment out', () => {
+  const blobUrl = 'blob:https://app/1';
+  const source = {
+    name: 'report.pdf',
+    type: 'application/pdf',
+    getBlobUrl: async () => blobUrl,
+    getBlob: async () => new Blob([new Uint8Array([1, 2, 3])]),
+  };
+
+  async function ready() {
+    const { useAttachmentDrag } = await import('@/hooks/use-attachment-drag');
+    const hook = renderHook(() => useAttachmentDrag(source, true));
+    act(() => hook.result.current.onPointerEnter());
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    return hook;
+  }
+
+  it('in the app: the OS\'s own drag, with the bytes for a real file', async () => {
+    const startDrag = vi.fn(async () => true);
+    setBridge({ startDrag, copyFiles: vi.fn() as never });
+    const hook = await ready();
+    const event = { preventDefault: vi.fn(), dataTransfer: { setData: vi.fn(), effectAllowed: '' } };
+    hook.result.current.onDragStart(event as never);
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(event.dataTransfer.setData).not.toHaveBeenCalled();
+    await waitFor(() => expect(startDrag).toHaveBeenCalled());
+    const [files] = startDrag.mock.calls[0] as unknown as [{ name: string; data: Uint8Array }[]];
+    expect(files[0].name).toBe('report.pdf');
+    expect([...files[0].data]).toEqual([1, 2, 3]);
+  });
+
+  it('in the app, a drag before the bytes are here starts nothing and fetches them for the next', async () => {
+    const startDrag = vi.fn(async () => true);
+    setBridge({ startDrag, copyFiles: vi.fn() as never });
+    const { useAttachmentDrag } = await import('@/hooks/use-attachment-drag');
+    const hook = renderHook(() => useAttachmentDrag(source, true));
+    const event = { preventDefault: vi.fn(), dataTransfer: { setData: vi.fn(), effectAllowed: '' } };
+    hook.result.current.onDragStart(event as never);
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(startDrag).not.toHaveBeenCalled();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    hook.result.current.onDragStart(event as never);
+    await waitFor(() => expect(startDrag).toHaveBeenCalled());
+  });
+
+  it('in the app, without getBlob (a decrypted attachment): the browser drag, and no copy button', async () => {
+    const startDrag = vi.fn(async () => true);
+    setBridge({ startDrag, copyFiles: vi.fn() as never });
+    const { useAttachmentDrag } = await import('@/hooks/use-attachment-drag');
+    const { name, type, getBlobUrl } = source;
+    const hook = renderHook(() => useAttachmentDrag({ name, type, getBlobUrl }, true));
+    act(() => hook.result.current.onPointerEnter());
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const event = { preventDefault: vi.fn(), dataTransfer: { setData: vi.fn(), effectAllowed: '' } };
+    hook.result.current.onDragStart(event as never);
+    expect(startDrag).not.toHaveBeenCalled();
+    expect(event.dataTransfer.setData).toHaveBeenCalledWith('DownloadURL', expect.stringContaining(blobUrl));
+    expect(hook.result.current.onCopyAsFile).toBeUndefined();
+  });
+
+  it('in a browser: still DownloadURL, and no copy button', async () => {
+    const hook = await ready();
+    const event = { preventDefault: vi.fn(), dataTransfer: { setData: vi.fn(), effectAllowed: '' } };
+    hook.result.current.onDragStart(event as never);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.dataTransfer.setData).toHaveBeenCalledWith('DownloadURL', `application/pdf:report.pdf:${blobUrl}`);
+    expect(hook.result.current.onCopyAsFile).toBeUndefined();
+  });
+
+  it('Copy as file hands the bytes to main', async () => {
+    const copyFiles = vi.fn(async () => true);
+    setBridge({ startDrag: vi.fn() as never, copyFiles });
+    const hook = await ready();
+    await expect(hook.result.current.onCopyAsFile?.()).resolves.toBe(true);
+    const [files] = copyFiles.mock.calls[0] as unknown as [{ name: string; data: Uint8Array }[]];
+    expect(files[0].name).toBe('report.pdf');
+  });
+});
+
+describe('waking up', () => {
+  async function started(os: Partial<BulwarkDesktopBridge['os']> = {}) {
+    let fire: (event: DesktopOsPowerEvent) => void = () => {};
+    setBridge({ onPower: (listener: (event: DesktopOsPowerEvent) => void) => { fire = listener; return () => {}; }, ...os });
+    const power = await import('../power');
+    const events = await import('../system-events');
+    return { fire: (event: DesktopOsPowerEvent) => fire(event), power: events, stop: power.startPowerWatch() };
+  }
+
+  it('a resume checks for changes at once, the way a tab coming back does, and only once with the unlock', async () => {
+    const { fire, power, stop } = await started();
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    const fetchPolicy = vi.fn(async () => {});
+    usePolicyStore.setState({ loaded: true, fetching: false, fetchPolicy });
+    const visible = vi.fn();
+    const online = vi.fn();
+    const wake = vi.fn();
+    document.addEventListener('visibilitychange', visible);
+    window.addEventListener('online', online);
+    const stopWake = power.addWakeHandler(wake);
+    fire('resume');
+    fire('unlock-screen');
+    expect(visible).toHaveBeenCalledTimes(1);
+    expect(online).toHaveBeenCalledTimes(1);
+    expect(fetchPolicy).toHaveBeenCalledTimes(1);
+    expect(wake).toHaveBeenCalledTimes(1);
+    document.removeEventListener('visibilitychange', visible);
+    window.removeEventListener('online', online);
+    stopWake();
+    stop();
+  });
+
+  it('a suspend tells the sleep handlers and wakes nothing', async () => {
+    const { fire, power, stop } = await started();
+    const sleep = vi.fn();
+    const visible = vi.fn();
+    const stopSleep = power.addSleepHandler(sleep);
+    document.addEventListener('visibilitychange', visible);
+    fire('suspend');
+    fire('lock-screen');
+    expect(sleep).toHaveBeenCalledTimes(1);
+    expect(visible).not.toHaveBeenCalled();
+    document.removeEventListener('visibilitychange', visible);
+    stopSleep();
+    stop();
+  });
+
+  it('a new kind of network counts as waking; a change in its speed estimate does not', async () => {
+    const connection = Object.assign(new EventTarget(), { type: 'wifi' });
+    vi.stubGlobal('navigator', Object.create(navigator, { connection: { value: connection }, onLine: { value: true } }));
+    const { power, stop } = await started();
+    const wake = vi.fn();
+    const stopWake = power.addWakeHandler(wake);
+    connection.dispatchEvent(new Event('change'));
+    expect(wake).not.toHaveBeenCalled();
+    connection.type = 'ethernet';
+    connection.dispatchEvent(new Event('change'));
+    expect(wake).toHaveBeenCalledTimes(1);
+    stopWake();
+    stop();
+  });
+
+  it('where Chromium gives no type, a change is nothing to go on', async () => {
+    const connection = new EventTarget();
+    vi.stubGlobal('navigator', Object.create(navigator, { connection: { value: connection }, onLine: { value: true } }));
+    const { power, stop } = await started();
+    const wake = vi.fn();
+    const stopWake = power.addWakeHandler(wake);
+    connection.dispatchEvent(new Event('change'));
+    expect(wake).not.toHaveBeenCalled();
+    stopWake();
+    stop();
+  });
+
+  it('woken up with no network, it does not say the network is back, and a wake within 30 s is the same wake', async () => {
+    const online = vi.fn();
+    window.addEventListener('online', online);
+    vi.stubGlobal('navigator', Object.create(navigator, { onLine: { value: false } }));
+    const { fire, power, stop } = await started();
+    const wake = vi.fn();
+    const stopWake = power.addWakeHandler(wake);
+    fire('resume');
+    expect(wake).toHaveBeenCalledTimes(1);
+    expect(online).not.toHaveBeenCalled();
+    const now = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 29_000);
+    fire('unlock-screen');
+    expect(wake).toHaveBeenCalledTimes(1);
+    clock.mockReturnValue(now + 31_000);
+    fire('unlock-screen');
+    expect(wake).toHaveBeenCalledTimes(2);
+    clock.mockRestore();
+    window.removeEventListener('online', online);
+    stopWake();
+    stop();
+  });
+});
+
+describe('the summary', () => {
+  const event = (id: string, start: string, over: Partial<CalendarEvent> = {}) => ({ id, title: id, start, utcStart: start, status: 'confirmed', showWithoutTime: false, ...over }) as unknown as CalendarEvent;
+  const now = new Date('2026-11-03T10:00:00Z').getTime();
+
+  it('the next event is the soonest one still ahead, not cancelled and not all-day', async () => {
+    const { nextEventOf } = await import('../os-summary');
+    const events = [
+      event('later', '2026-11-03T15:00:00Z'),
+      event('past', '2026-11-03T09:00:00Z'),
+      event('cancelled', '2026-11-03T11:00:00Z', { status: 'cancelled' }),
+      event('allday', '2026-11-03T10:30:00Z', { showWithoutTime: true }),
+      event('soon', '2026-11-03T12:00:00Z'),
+    ];
+    expect(nextEventOf(events, now)?.id).toBe('soon');
+    expect(nextEventOf([event('past', '2026-11-03T09:00:00Z')], now)).toBeNull();
+  });
+
+  it('the event\'s time follows the app\'s time format, not the language\'s', async () => {
+    const { formatEventTime } = await import('../os-summary');
+    const at = new Date(2026, 10, 3, 11, 0).getTime();
+    const morning = new Date(2026, 10, 3, 8, 0).getTime();
+    expect(formatEventTime(at, morning, 'en-US', '24h')).toBe('11:00');
+    expect(formatEventTime(at, morning, 'en-US', '12h')).toMatch(/^11:00\sAM$/);
+    expect(formatEventTime(new Date(2026, 10, 3, 9, 5).getTime(), morning, 'en-US', '24h')).toBe('09:05');
+  });
+
+  describe('with a login', () => {
+    const row = { id: 'e1', threadId: 't1', subject: 'Lunch?', from: [{ name: 'Alice', email: 'a@example.org' }] };
+    const getEmails = vi.fn(async () => ({ emails: [row], hasMore: false, total: 1 }));
+    const fake = { getAccountId: () => 'acc', getEmails, queryCalendarEvents: vi.fn(async () => []) };
+
+    beforeEach(async () => {
+      getEmails.mockClear();
+      const { useAuthStore } = await import('@/stores/auth-store');
+      const { useAccountStore } = await import('@/stores/account-store');
+      const { useEmailStore } = await import('@/stores/email-store');
+      useAuthStore.setState({ isAuthenticated: true, client: fake as never, activeAccountId: 'alice@one' });
+      useAccountStore.setState({ accounts: [{ id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' }] as never });
+      useEmailStore.setState({ mailboxes: [{ id: 'in', role: 'inbox', name: 'Inbox' }] as never });
+      const { usePolicyStore } = await import('@/stores/policy-store');
+      usePolicyStore.setState({ loaded: true });
+    });
+
+    afterEach(async () => {
+      const { useAuthStore } = await import('@/stores/auth-store');
+      useAuthStore.setState({ isAuthenticated: false, client: null, activeAccountId: null });
+      const { setAppLockCheck } = await import('../app-lock-state');
+      setAppLockCheck(null);
+    });
+
+    it('lists unread mail with what the tray item needs to open it', async () => {
+      const { readSummary } = await import('../os-summary');
+      const summary = await readSummary('en');
+      expect(summary.unread).toEqual([expect.objectContaining({ emailId: 'e1', accountId: 'acc', sender: 'Alice', subject: 'Lunch?' })]);
+      expect(JSON.parse(summary.unread[0].context!)).toMatchObject({ emailId: 'e1', slot: 3 });
+      expect(getEmails).toHaveBeenCalledWith('in', undefined, 5, 0, undefined, false, { notKeyword: '$seen' });
+      // One account: no need to say whose.
+      expect(summary.account).toBeUndefined();
+    });
+
+    it('with two accounts it names the one the unread mail is from', async () => {
+      const { useAccountStore } = await import('@/stores/account-store');
+      useAccountStore.setState({ accounts: [
+        { id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' },
+        { id: 'bob@two', cookieSlot: 4, serverUrl: 'https://two.example', username: 'bob@example.org' },
+      ] as never });
+      const { readSummary } = await import('../os-summary');
+      expect((await readSummary('en')).account).toBe('alice@example.org');
+    });
+
+    it('before the policy is known it is empty', async () => {
+      const { usePolicyStore } = await import('@/stores/policy-store');
+      const { readSummary, EMPTY_SUMMARY } = await import('../os-summary');
+      usePolicyStore.setState({ loaded: false });
+      await expect(readSummary('en')).resolves.toEqual(EMPTY_SUMMARY);
+      expect(getEmails).not.toHaveBeenCalled();
+    });
+
+    it('a read under way when the login goes doesn\'t bring it back; a policy change reads again', async () => {
+      const setSummary = vi.fn();
+      setBridge({ setSummary });
+      const { startOsSummary, EMPTY_SUMMARY } = await import('../os-summary');
+      const { useAuthStore } = await import('@/stores/auth-store');
+      const { usePolicyStore } = await import('@/stores/policy-store');
+      let answer: (value: unknown) => void = () => {};
+      getEmails.mockImplementationOnce(() => new Promise((resolve) => { answer = resolve as never; }) as never);
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+      const summary = startOsSummary(() => 'en');
+      await vi.advanceTimersByTimeAsync(2100);
+      useAuthStore.setState({ isAuthenticated: false, client: null, activeAccountId: null });
+      expect(setSummary).toHaveBeenLastCalledWith(EMPTY_SUMMARY);
+      answer({ emails: [row], hasMore: false, total: 1 });
+      await vi.advanceTimersByTimeAsync(10);
+      await new Promise((resolve) => setImmediate(resolve));
+      await vi.advanceTimersByTimeAsync(2100);
+      expect(setSummary).toHaveBeenLastCalledWith(EMPTY_SUMMARY);
+      expect(JSON.stringify(setSummary.mock.calls)).not.toContain('Lunch');
+
+      setSummary.mockClear();
+      usePolicyStore.setState({ policy: { ...usePolicyStore.getState().policy } });
+      await vi.advanceTimersByTimeAsync(2100);
+      expect(setSummary).toHaveBeenCalled();
+      summary.stop();
+      vi.useRealTimers();
+    });
+
+    it('while locked it is empty, without asking anyone anything', async () => {
+      const { setAppLockCheck } = await import('../app-lock-state');
+      const { readSummary, EMPTY_SUMMARY } = await import('../os-summary');
+      setAppLockCheck(() => true);
+      await expect(readSummary('en')).resolves.toEqual(EMPTY_SUMMARY);
+      expect(getEmails).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('the settings section', () => {
+  const settings = { closeToTray: true, startAtLogin: false, startMinimized: false, attentionOnNewMail: true, quietHoursEnabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00', showShortcut: null };
+  const status = (over = {}): DesktopOsStatus => ({ settings: { ...settings, ...over }, pausedUntil: null, shortcutActive: false });
+
+  function bridgeFor(current: DesktopOsStatus) {
+    return {
+      getStatus: vi.fn(async () => current),
+      setSettings: vi.fn(async (patch: Partial<DesktopOsStatus['settings']>) => ({ ...current, settings: { ...current.settings, ...patch } })),
+      onStatusChange: vi.fn(() => () => {}),
+      defaultAppStatus: vi.fn(async () => ({ registered: false, mailto: false, webcal: false })),
+      openDefaultAppSettings: vi.fn(async () => ({ registered: true, mailto: false, webcal: false })),
+    };
+  }
+
+  it('a browser never sees it', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const { container } = render(<DesktopOsSettings />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('in the app it shows the state and changes it', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    render(<DesktopOsSettings />);
+    expect(await screen.findByText('start')).toBeInTheDocument();
+    expect(screen.queryByText('start_minimized_label')).toBeNull();
+    // First in the section, before Close to tray.
+    fireEvent.click(screen.getAllByRole('switch')[0]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ startAtLogin: true }));
+    expect(await screen.findByText('start_minimized_label')).toBeInTheDocument();
+  });
+
+  it('the button offers the app and opens where the choice is made', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    render(<DesktopOsSettings />);
+    fireEvent.click(await screen.findByRole('button', { name: 'default_app_button' }));
+    await waitFor(() => expect(os.openDefaultAppSettings).toHaveBeenCalled());
+  });
+
+  it('switching "Show the app" on takes a key the composer doesn\'t use', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    render(<DesktopOsSettings />);
+    expect(await screen.findByText('show_shortcut_label')).toBeInTheDocument();
+    // Start with the computer, Close to tray, then this one.
+    fireEvent.click(screen.getAllByRole('switch')[2]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ showShortcut: 'CommandOrControl+Alt+F11' }));
+  });
+
+  it('says when another app holds the shortcut', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    setBridge(bridgeFor(status({ showShortcut: 'CommandOrControl+Shift+B' })) as never);
+    render(<DesktopOsSettings />);
+    expect(await screen.findByText(/show_shortcut_taken/)).toBeInTheDocument();
+  });
+
+  it('macOS gets its own word for the bounce', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    setBridge(bridgeFor(status()) as never, 'darwin');
+    render(<DesktopOsSettings part="notifications" />);
+    expect(await screen.findByText('attention_mac_label')).toBeInTheDocument();
+  });
+
+  it('the taskbar flash and quiet hours are with the notifications, not on General', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    const general = render(<DesktopOsSettings />);
+    expect(await screen.findByText('close_to_tray_label')).toBeInTheDocument();
+    expect(screen.queryByText('attention_label')).toBeNull();
+    expect(screen.queryByText('quiet_hours_label')).toBeNull();
+    general.unmount();
+    // The flash is in the Notifications page's desktop section; quiet hours are rows
+    // under its Pause notifications section (settings-p3-6).
+    const notifications = render(<DesktopOsSettings part="notifications" />);
+    expect(await screen.findByText('attention_label')).toBeInTheDocument();
+    expect(screen.queryByText('quiet_hours_label')).toBeNull();
+    expect(screen.queryByText('close_to_tray_label')).toBeNull();
+    notifications.unmount();
+    render(<DesktopOsSettings part="quietHours" />);
+    expect(await screen.findByText('quiet_hours_label')).toBeInTheDocument();
+    expect(screen.queryByText('attention_label')).toBeNull();
+    expect(screen.queryByText('close_to_tray_label')).toBeNull();
+    fireEvent.click(screen.getAllByRole('switch')[0]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ quietHoursEnabled: true }));
+  });
+});

@@ -57,10 +57,23 @@ describe('LanguageSwitcher', () => {
   it('moves through results with the arrow keys', () => {
     const input = openMenu();
     fireEvent.change(input, { target: { value: 'sk' } });
-    expect(optionNames().slice(0, 2)).toEqual([expect.stringContaining('Česky'), expect.stringContaining('Slovenčina')]);
+    expect(optionNames().slice(0, 2)).toEqual([expect.stringContaining('Česky'), expect.stringContaining('Dansk')]);
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(setLocale).toHaveBeenCalledWith('sk');
+    expect(setLocale).toHaveBeenCalledWith('da');
+  });
+
+  it('lists languages by their own names, Auto first and Latin scripts before others', () => {
+    openMenu();
+    const names = screen.getAllByRole('option').map((o) => o.querySelector('[dir="auto"]')?.textContent);
+    expect(names.slice(0, 6)).toEqual(['Auto', 'Català', 'Česky', 'Dansk', 'Deutsch', 'Eesti']);
+    // Slovenčina sorts with S, between Română and Tiếng Việt.
+    const sk = names.indexOf('Slovenčina');
+    expect(names[sk - 1]).toBe('Română');
+    expect(names[sk + 1]).toBe('Tiếng Việt');
+    // Every Latin-script name comes before the first non-Latin one.
+    const firstOther = names.findIndex((n) => !/^[\p{Script=Latin}\s]+$/u.test(n ?? ''));
+    expect(names.slice(firstOther).every((n) => !/^\p{Script=Latin}/u.test(n ?? ''))).toBe(true);
   });
 
   it('says so when nothing matches', () => {

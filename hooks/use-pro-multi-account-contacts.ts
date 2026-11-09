@@ -38,6 +38,13 @@ export function useProMultiAccountContacts(): {
     return pairs;
   }, [enabled, accounts]);
 
+  // Told to the store first, so a refresh asked for by one login (at a switch,
+  // after a share) lists them all instead of replacing the list with its own.
+  useEffect(() => {
+    useContactStore.getState().setAccountClients(enabled ? accountClients : null);
+    return () => useContactStore.getState().setAccountClients(null);
+  }, [enabled, accountClients]);
+
   useEffect(() => {
     if (!enabled || !activeAccountId || accountClients.length === 0) return;
     void fetchAllAccountsAddressBooks(accountClients);

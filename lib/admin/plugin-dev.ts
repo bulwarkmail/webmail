@@ -2,6 +2,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { builtinModules } from 'node:module';
 import { logger } from '@/lib/logger';
 import type { ServerPlugin } from './plugin-registry';
 import { checkPluginManifest } from '@/lib/extension-package';
@@ -93,6 +94,9 @@ async function bundleEntrypoint(bundlePath: string): Promise<string> {
     // (`new Function('module', 'exports', 'require', 'React', ...)`).
     format: 'cjs',
     platform: 'neutral',
+    // Neutral leaves mainFields empty, so packages that only declare "main"
+    // or "module" (asn1js, pkijs, ...) would not resolve.
+    mainFields: ['browser', 'module', 'main'],
     write: false,
     logLevel: 'silent',
     sourcemap: 'inline',
@@ -103,6 +107,10 @@ async function bundleEntrypoint(bundlePath: string): Promise<string> {
     external: [
       'react', 'react-dom', 'react-dom/client', 'react/jsx-runtime',
       '@plugin-host',
+      // Browser libraries reach for Node builtins behind runtime checks that
+      // never pass in the sandbox (asmcrypto's require('crypto')). Leave them
+      // out instead of failing the whole bundle.
+      ...builtinModules, ...builtinModules.map((m) => `node:${m}`),
     ],
   });
   const out = result.outputFiles?.[0]?.text;

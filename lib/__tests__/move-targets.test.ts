@@ -53,6 +53,25 @@ describe('buildMoveTargets', () => {
     const { tree } = buildMoveTargets([...mailboxes, other], { currentMailboxId: 'S:a', ownerAccountId: 'S' });
     expect(tree.map((n) => n.id)).toEqual(['shared-account-S', `${OWN_ACCOUNT_MOVE_NODE_PREFIX}A`, 'shared-account-T']);
   });
+
+  it('offers the open folder for a search hit from another folder (#1452)', () => {
+    const hit = { mailboxIds: { c: true } } as unknown as Email;
+    const { tree, targetIds } = buildMoveTargets(mailboxes, { currentMailboxId: 'a', ownerAccountId: 'A', emails: [hit] });
+    expect(targetIds.has('a')).toBe(true);
+    expect(tree.map((n) => n.id)).toContain('a');
+  });
+
+  it('leaves the open folder out when every message is already in it', () => {
+    const inInbox = { mailboxIds: { a: true } } as unknown as Email;
+    const inBoth = { mailboxIds: { a: true, c: true } } as unknown as Email;
+    const elsewhere = { mailboxIds: { c: true } } as unknown as Email;
+    const opts = { currentMailboxId: 'a', ownerAccountId: 'A' };
+
+    expect(buildMoveTargets(mailboxes, { ...opts, emails: [inInbox, inBoth] }).targetIds.has('a')).toBe(false);
+    expect(buildMoveTargets(mailboxes, { ...opts, emails: [inInbox, elsewhere] }).targetIds.has('a')).toBe(true);
+    // The shared Inbox is a different folder for a message of the own Inbox.
+    expect(buildMoveTargets(mailboxes, { currentMailboxId: 'S:a', emails: [inInbox] }).targetIds.has('S:a')).toBe(true);
+  });
 });
 
 describe('resolveMoveOwnerAccountId', () => {

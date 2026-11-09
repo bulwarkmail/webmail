@@ -2,22 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
 import { configManager } from '@/lib/admin/config-manager';
-import { getConfigDir, assertWritable } from '@/lib/admin/paths';
+import { assertWritable } from '@/lib/admin/paths';
 import {
   parseDomainBranding,
   type DomainBrandingEntry,
   type BrandingOverrideKey,
 } from '@/lib/admin/domain-branding';
 import { logger } from '@/lib/logger';
-import { writeFile, unlink, mkdir, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
+import { brandingDocs } from '@/lib/admin/extension-store';
+import type { PutResult } from '@/lib/shared-store';
+import { announceChange } from '@/lib/shared-store/changes';
 
-function getBrandingDir(): string {
-  return path.join(getConfigDir(), 'branding');
-}
+// Uploads live in C/branding, or the shared store in shared mode (#1066),
+// and are served by /api/admin/branding/<file> from there.
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+// The login background is a photo more often than not.
+const MAX_BACKGROUND_SIZE = 5 * 1024 * 1024; // 5 MB
+const BACKGROUND_SLOTS = new Set<string>(['loginBackgroundLightUrl', 'loginBackgroundDarkUrl']);
 const ALLOWED_MIME_TYPES = new Set([
   'image/svg+xml',
   'image/png',
@@ -37,6 +40,8 @@ const VALID_SLOTS = new Set<UploadSlot>([
   'appLogoDarkUrl',
   'loginLogoLightUrl',
   'loginLogoDarkUrl',
+  'loginBackgroundLightUrl',
+  'loginBackgroundDarkUrl',
   'pwaScreenshotMobileUrl',
   'pwaScreenshotDesktopUrl',
 ]);
@@ -112,6 +117,10 @@ function clearDomainKeys(
   return next;
 }
 
+function brandingUrl(name: string, written: PutResult): string {
+  return `/api/admin/branding/${name}${written.ok ? `?v=${written.version}` : ''}`;
+}
+
 /**
  * POST /api/admin/branding - Upload a branding image file
  *
@@ -151,8 +160,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File too large (max 2 MB)' }, { status: 400 });
+    const background = BACKGROUND_SLOTS.has(slot);
+    if (file.size > (background ? MAX_BACKGROUND_SIZE : MAX_FILE_SIZE)) {
+      return NextResponse.json({ error: `File too large (max ${background ? 5 : 2} MB)` }, { status: 400 });
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
@@ -166,40 +176,36 @@ export async function POST(request: NextRequest) {
     const safeName = host
       ? domainAssetName(host, slot as BrandingOverrideKey, ext)
       : sanitizeFilename(`${slot}${ext}`);
-    const filePath = path.join(getBrandingDir(), safeName);
-
-    if (!existsSync(getBrandingDir())) {
-      await mkdir(getBrandingDir(), { recursive: true });
-    }
-
     // Strip any prior asset for the same slot but a different extension so
     // the directory doesn't accumulate orphan files on re-upload.
-    const dir = getBrandingDir();
-    const allFiles = await readdir(dir).catch(() => [] as string[]);
-    for (const f of allFiles) {
+    const docs = brandingDocs();
+    for (const f of await docs.list('')) {
       if (f === safeName) continue;
       const isSame = host
         ? isDomainAssetFor(f, host, slot as BrandingOverrideKey)
         : POSSIBLE_EXTS.some(e => f === `${slot}${e}`);
-      if (isSame) {
-        try { await unlink(path.join(dir, f)); } catch { /* ignore */ }
-      }
+      if (isSame) await docs.delete(f);
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, buffer);
+    const written = await docs.put(safeName, buffer);
 
-    const servedUrl = `/api/admin/branding/${safeName}`;
+    // The version in the URL changes with the bytes, so browsers (which may
+    // keep the file for an hour) and the rendered icons and previews pick up
+    // a re-upload of the same slot and type at once.
+    const servedUrl = brandingUrl(safeName, written);
     await configManager.ensureLoaded();
 
     if (host) {
-      const current = parseDomainBranding(configManager.get<unknown>('domainBranding', []));
-      const next = mergeDomainEntry(current, host, { [slot]: servedUrl });
-      await configManager.setAdminConfig({ domainBranding: next });
+      // Built on the stored list, so a save of another domain at the same
+      // time (here or on another instance) stays.
+      await configManager.updateAdminConfig<unknown>('domainBranding', (current) =>
+        mergeDomainEntry(parseDomainBranding(current), host, { [slot]: servedUrl }), []);
     } else {
       await configManager.setAdminConfig({ [slot]: servedUrl });
     }
 
+    await announceChange('branding');
     await auditLog('branding_upload', {
       slot,
       host: host || undefined,
@@ -248,34 +254,27 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: `Invalid host: ${rawHost}` }, { status: 400 });
     }
 
-    const dir = getBrandingDir();
+    const docs = brandingDocs();
     let removed = false;
-    if (host) {
-      const allFiles = await readdir(dir).catch(() => [] as string[]);
-      for (const f of allFiles) {
-        if (isDomainAssetFor(f, host, slot as BrandingOverrideKey)) {
-          try { await unlink(path.join(dir, f)); removed = true; } catch { /* ignore */ }
-        }
-      }
-    } else {
-      for (const ext of POSSIBLE_EXTS) {
-        const filePath = path.join(dir, `${slot}${ext}`);
-        if (existsSync(filePath)) {
-          await unlink(filePath);
-          removed = true;
-        }
+    for (const f of await docs.list('')) {
+      const isSame = host
+        ? isDomainAssetFor(f, host, slot as BrandingOverrideKey)
+        : POSSIBLE_EXTS.some(e => f === `${slot}${e}`);
+      if (isSame) {
+        await docs.delete(f);
+        removed = true;
       }
     }
 
     await configManager.ensureLoaded();
     if (host) {
-      const current = parseDomainBranding(configManager.get<unknown>('domainBranding', []));
-      const next = clearDomainKeys(current, host, [slot as BrandingOverrideKey]);
-      await configManager.setAdminConfig({ domainBranding: next });
+      await configManager.updateAdminConfig<unknown>('domainBranding', (current) =>
+        clearDomainKeys(parseDomainBranding(current), host, [slot as BrandingOverrideKey]), []);
     } else {
       await configManager.removeAdminOverride(slot);
     }
 
+    await announceChange('branding');
     await auditLog('branding_delete', { slot, host: host || undefined, fileRemoved: removed }, ip);
 
     return NextResponse.json({ success: true });

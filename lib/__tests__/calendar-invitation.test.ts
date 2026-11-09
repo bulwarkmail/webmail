@@ -655,9 +655,10 @@ describe('invitation times across time zones (#1252)', () => {
     else process.env.TZ = originalTZ;
   });
 
-  // What next-intl's format.dateTime does with the provider's display zone.
-  const formatIn = (timeZone: string) => (date: Date, options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat('en-US', { timeZone, ...options }).format(date);
+  // The banner's options for a user in `timeZone`. Intl writes ranges with
+  // thin spaces around the dash; the expectations use plain ones.
+  const formatIn = (timeZone: string, hour12 = false) => ({ locale: 'en-US', timeZone, hour12 });
+  const plain = (text: string) => text.replace(/[\u2009\u202f]/g, ' ');
 
   // CalendarEvent/parse output for the Exchange invite in the issue.
   const londonInvite: Partial<CalendarEvent> = {
@@ -674,12 +675,27 @@ describe('invitation times across time zones (#1252)', () => {
     expect(summary.isFloating).toBe(false);
   });
 
-  it('shows the invite in the viewer zone with a zone label', () => {
+  it('shows the invite in the viewer zone, the date once, and its own times after it (pim-23)', () => {
     const summary = formatEventSummary(londonInvite);
-    expect(formatInvitationSchedule(summary, formatIn('Europe/Warsaw'), false))
-      .toBe('Tue, Oct 20, 16:00 – Tue, Oct 20, 16:25 GMT+2');
-    expect(formatInvitationSchedule(summary, formatIn('America/New_York'), true))
-      .toBe('Tue, Oct 20, 10:00 AM – Tue, Oct 20, 10:25 AM EDT');
+    expect(plain(formatInvitationSchedule(summary, formatIn('Europe/Warsaw'))))
+      .toBe('Tue, Oct 20, 16:00 – 16:25 (15:00 – 15:25 London)');
+    expect(plain(formatInvitationSchedule(summary, formatIn('America/New_York', true))))
+      .toBe('Tue, Oct 20, 10:00 – 10:25 AM (3:00 – 3:25 PM London)');
+  });
+
+  it('shows no zone for an invite on the viewer clock (pim-23)', () => {
+    const berlin = formatEventSummary({ title: 'Sprint planning', start: '2026-11-05T10:00:00', timeZone: 'Europe/Berlin', duration: 'PT1H30M' });
+    expect(plain(formatInvitationSchedule(berlin, formatIn('Europe/Berlin')))).toBe('Thu, Nov 5, 10:00 – 11:30');
+    // Another zone with the same clock that day says nothing either.
+    expect(plain(formatInvitationSchedule(berlin, formatIn('Europe/Paris')))).toBe('Thu, Nov 5, 10:00 – 11:30');
+  });
+
+  it('gives the event zone its date when its day there is another (pim-23)', () => {
+    const tokyo = formatEventSummary({ start: '2026-11-06T08:00:00', timeZone: 'Asia/Tokyo', duration: 'PT1H' });
+    expect(plain(formatInvitationSchedule(tokyo, formatIn('Europe/Berlin'))))
+      .toBe('Fri, Nov 6, 00:00 – 01:00 (08:00 – 09:00 Tokyo)');
+    expect(plain(formatInvitationSchedule(tokyo, formatIn('America/New_York'))))
+      .toBe('Thu, Nov 5, 18:00 – 19:00 (Fri, Nov 6, 08:00 – 09:00 Tokyo)');
   });
 
   it('treats a UTC start as UTC', () => {
@@ -698,14 +714,14 @@ describe('invitation times across time zones (#1252)', () => {
   it('shows floating times as the same wall clock everywhere, without a zone label', () => {
     const summary = formatEventSummary({ start: '2026-10-20T15:00:00', timeZone: null, duration: 'PT30M' });
     expect(summary.isFloating).toBe(true);
-    expect(formatInvitationSchedule(summary, formatIn('Asia/Tokyo'), false))
-      .toBe('Tue, Oct 20, 15:00 – Tue, Oct 20, 15:30');
+    expect(plain(formatInvitationSchedule(summary, formatIn('Asia/Tokyo'))))
+      .toBe('Tue, Oct 20, 15:00 – 15:30');
   });
 
   it('does not shift all-day dates in zones west or east of UTC', () => {
     const oneDay = formatEventSummary({ start: '2026-03-16T00:00:00', duration: 'P1D', showWithoutTime: true, timeZone: 'Europe/London' });
-    expect(formatInvitationSchedule(oneDay, formatIn('America/Los_Angeles'), false)).toBe('Mon, Mar 16');
-    expect(formatInvitationSchedule(oneDay, formatIn('Pacific/Auckland'), false)).toBe('Mon, Mar 16');
+    expect(formatInvitationSchedule(oneDay, formatIn('America/Los_Angeles'))).toBe('Mon, Mar 16');
+    expect(formatInvitationSchedule(oneDay, formatIn('Pacific/Auckland'))).toBe('Mon, Mar 16');
 
     const threeDays = formatEventSummary({
       start: '2026-03-16T00:00:00',
@@ -713,7 +729,7 @@ describe('invitation times across time zones (#1252)', () => {
       utcStart: '2026-03-16T00:00:00Z',
       utcEnd: '2026-03-19T00:00:00Z',
     });
-    expect(formatInvitationSchedule(threeDays, formatIn('America/Los_Angeles'), false)).toBe('Mon, Mar 16 – Wed, Mar 18');
+    expect(plain(formatInvitationSchedule(threeDays, formatIn('America/Los_Angeles')))).toBe('Mon, Mar 16 – Wed, Mar 18');
   });
 
   it('shows only the start for a zero-duration event', () => {
@@ -723,8 +739,8 @@ describe('invitation times across time zones (#1252)', () => {
       utcStart: '2026-10-20T14:00:00Z',
       utcEnd: '2026-10-20T14:00:00Z',
     });
-    expect(formatInvitationSchedule(summary, formatIn('Europe/Warsaw'), false))
-      .toBe('Tue, Oct 20, 16:00 GMT+2');
+    expect(plain(formatInvitationSchedule(summary, formatIn('Europe/Warsaw'))))
+      .toBe('Tue, Oct 20, 16:00 (15:00 London)');
   });
 
   it('still prefers the server utcStart/utcEnd when present', () => {
@@ -733,7 +749,7 @@ describe('invitation times across time zones (#1252)', () => {
       utcStart: '2026-10-20T14:00:00Z',
       utcEnd: '2026-10-20T14:25:00Z',
     });
-    expect(formatInvitationSchedule(summary, formatIn('UTC'), false))
-      .toBe('Tue, Oct 20, 14:00 – Tue, Oct 20, 14:25 UTC');
+    expect(plain(formatInvitationSchedule(summary, formatIn('UTC'))))
+      .toBe('Tue, Oct 20, 14:00 – 14:25 (15:00 – 15:25 London)');
   });
 });

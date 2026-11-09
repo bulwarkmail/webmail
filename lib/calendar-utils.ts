@@ -1,5 +1,5 @@
-import { addDays, differenceInCalendarDays, parseISO, startOfDay, subMilliseconds } from "date-fns";
-import { parseDuration } from "@/components/calendar/event-card";
+import { addDays, differenceInCalendarDays, isSameDay, parseISO, startOfDay, subMilliseconds } from "date-fns";
+import { parseDuration } from "@/lib/calendar-event-normalization";
 import type { CalendarEvent } from "@/lib/jmap/types";
 import { fromWallClock, isValidTimeZone, parseLocalDateTime, toDisplayDate } from "@/lib/timezone";
 
@@ -48,8 +48,14 @@ export function getEventStartDate(
   return parseISO(event.start);
 }
 
-export function packWeekSegments(rawSegments: CalendarWeekSegment[]): CalendarWeekSegment[] {
+/**
+ * Rows for a week's bars, first come first placed. `firstId`: an event that
+ * takes the top row before the others (a just-created one, so a full day
+ * can't hide it).
+ */
+export function packWeekSegments(rawSegments: CalendarWeekSegment[], firstId?: string | null): CalendarWeekSegment[] {
   rawSegments.sort((left, right) => {
+    if (firstId && (left.event.id === firstId) !== (right.event.id === firstId)) return left.event.id === firstId ? -1 : 1;
     if (left.startIndex !== right.startIndex) return left.startIndex - right.startIndex;
     if (left.span !== right.span) return right.span - left.span;
     if (left.event.showWithoutTime !== right.event.showWithoutTime) {
@@ -184,8 +190,8 @@ export function buildWeekSegmentsRaw(events: CalendarEvent[], weekDays: Date[]):
   return rawSegments;
 }
 
-export function buildWeekSegments(events: CalendarEvent[], weekDays: Date[]): CalendarWeekSegment[] {
-  return packWeekSegments(buildWeekSegmentsRaw(events, weekDays));
+export function buildWeekSegments(events: CalendarEvent[], weekDays: Date[], firstId?: string | null): CalendarWeekSegment[] {
+  return packWeekSegments(buildWeekSegmentsRaw(events, weekDays), firstId);
 }
 
 /**
@@ -229,14 +235,49 @@ export function buildTimedFullDayWeekSegments(events: CalendarEvent[], weekDays:
   return packWeekSegments(rawSegments);
 }
 
+/**
+ * The minutes the unsaved event being created covers on `day` in the week
+ * and day views, or null when it isn't a timed event starting that day. An
+ * end at or before the start is midnight.
+ */
+export function pendingTimedMinutes(
+  preview: { start: Date; end: Date; allDay?: boolean } | null | undefined,
+  day: Date,
+): { startMinutes: number; endMinutes: number } | null {
+  if (!preview || preview.allDay || !isSameDay(preview.start, day)) return null;
+  const startMinutes = preview.start.getHours() * 60 + preview.start.getMinutes();
+  let endMinutes = isSameDay(preview.end, day) ? preview.end.getHours() * 60 + preview.end.getMinutes() : 1440;
+  if (endMinutes <= startMinutes) endMinutes = 1440;
+  return { startMinutes, endMinutes: Math.max(startMinutes + 15, endMinutes) };
+}
+
+/** The id the unsaved event being created goes by in a day's layout. */
+export const PENDING_LAYOUT_ID = "__pending-event__";
+
+/**
+ * A day's timed events in columns: each group of overlapping events shares
+ * the day's width. `pending` is the new event being created (its minutes on
+ * that day); it takes a column like a saved one, with the id
+ * PENDING_LAYOUT_ID, so it doesn't cover the events it overlaps.
+ */
 export function layoutOverlappingEvents(
   events: CalendarEvent[],
   day: Date,
+  pending?: { startMinutes: number; endMinutes: number } | null,
 ): TimedEventLayout[] {
   const layoutInputs = events.flatMap((event) => {
     const bounds = getTimedEventBoundsForDay(event, day);
     return bounds ? [{ event, ...bounds }] : [];
   });
+  if (pending) {
+    layoutInputs.push({
+      event: { id: PENDING_LAYOUT_ID } as CalendarEvent,
+      startMinutes: pending.startMinutes,
+      endMinutes: Math.max(pending.startMinutes + 15, pending.endMinutes),
+      continuesBefore: false,
+      continuesAfter: false,
+    });
+  }
 
   const sorted = layoutInputs.sort((a, b) => {
     const diff = a.startMinutes - b.startMinutes;

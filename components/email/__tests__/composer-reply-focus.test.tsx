@@ -1,4 +1,4 @@
-import { render, act } from '@testing-library/react';
+import { render, act, fireEvent, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -9,17 +9,27 @@ import { useSettingsStore } from '@/stores/settings-store';
 const toastError = vi.hoisted(() => vi.fn());
 
 const editorFocus = vi.hoisted(() => vi.fn());
+const caret = vi.hoisted(() => ({ textEnd: null as number | null, selected: [] as number[], focused: 0 }));
 
 // Reports a stub editor as ready, the way the real one does once mounted.
 vi.mock('@/components/email/rich-text-editor', () => ({
   RichTextEditor: ({ onEditorReady }: { onEditorReady?: (editor: unknown) => void }) => {
     React.useEffect(() => {
-      onEditorReady?.({ commands: { focus: editorFocus, setContent: () => {} }, isDestroyed: false });
+      const chain = {
+        setTextSelection: (pos: number) => { caret.selected.push(pos); return chain; },
+        focus: () => { caret.focused += 1; return chain; },
+        run: () => true,
+      };
+      onEditorReady?.({ commands: { focus: editorFocus, setContent: () => {} }, isDestroyed: false, isEditable: true, state: {}, chain: () => chain, on: () => {}, off: () => {} });
     }, [onEditorReady]);
     return React.createElement('div', { 'data-testid': 'rich-text-editor' });
   },
 }));
 
+vi.mock('@/components/email/reply-quote-collapse', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/components/email/reply-quote-collapse')>()),
+  userTextEnd: () => caret.textEnd,
+}));
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/components/ui/avatar', () => ({ Avatar: () => null }));
 vi.mock('@/components/identity/sub-address-helper', () => ({ SubAddressHelper: () => null }));
@@ -222,9 +232,15 @@ describe('composer initial focus', () => {
     expect(editorFocus).toHaveBeenCalledWith('start');
   });
 
-  it('leaves a new message to focus the To field', () => {
-    render(<EmailComposer initialData={{ ...DATA, mode: 'compose' }} mode="compose" />);
+  it('leaves a new, unaddressed message to focus the To field', () => {
+    render(<EmailComposer initialData={{ ...DATA, to: '', mode: 'compose' }} mode="compose" />);
     expect(editorFocus).not.toHaveBeenCalled();
+  });
+
+  // desktop-p3-12: a new message that arrives addressed (a mail link) starts in the body, as in Outlook.
+  it('puts the caret in the body of a new message that arrives addressed', () => {
+    render(<EmailComposer initialData={{ ...DATA, mode: 'compose' }} mode="compose" />);
+    expect(editorFocus).toHaveBeenCalledWith('start');
   });
 
   it('focuses the plain text body of a reply', async () => {
@@ -232,5 +248,43 @@ describe('composer initial focus', () => {
     render(<EmailComposer initialData={{ ...DATA, mode: 'replyAll' }} mode="replyAll" />);
     await act(() => new Promise((r) => setTimeout(r, 150)));
     expect(document.activeElement?.tagName).toBe('TEXTAREA');
+  });
+});
+
+// compose-p2-9: the white space under the text is the message too.
+describe('a click in the empty space under the text', () => {
+  beforeEach(() => {
+    editorFocus.mockClear();
+    caret.textEnd = null;
+    caret.selected = [];
+    caret.focused = 0;
+    useSettingsStore.setState({ plainTextMode: false });
+  });
+
+  const emptySpace = () => screen.getByTestId('rich-text-editor').parentElement!.parentElement!;
+
+  it('puts the caret at the end of the text above the folded quote', () => {
+    caret.textEnd = 7;
+    render(<EmailComposer initialData={{ ...DATA, mode: 'reply' }} mode="reply" />);
+    editorFocus.mockClear();
+    const event = fireEvent.mouseDown(emptySpace(), { button: 0 });
+    expect(event).toBe(false);
+    expect(caret.selected).toEqual([7]);
+    expect(caret.focused).toBe(1);
+  });
+
+  it('puts the caret at the end of the body when nothing is folded', () => {
+    render(<EmailComposer initialData={{ ...DATA, mode: 'compose' }} mode="compose" />);
+    fireEvent.mouseDown(emptySpace(), { button: 0 });
+    expect(editorFocus).toHaveBeenCalledWith('end');
+  });
+
+  it('leaves clicks on buttons alone', () => {
+    caret.textEnd = 7;
+    render(<EmailComposer initialData={{ ...DATA, mode: 'reply' }} mode="reply" />);
+    const button = document.createElement('button');
+    emptySpace().appendChild(button);
+    fireEvent.mouseDown(button, { button: 0 });
+    expect(caret.selected).toEqual([]);
   });
 });

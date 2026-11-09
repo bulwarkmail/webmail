@@ -1178,7 +1178,7 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
 
 // PRODID names the product that wrote the file, not the one that first made
 // the card, so the card's own prodId is not written back.
-const VCARD_PRODID = "-//JMAP-Webmail//EN";
+const VCARD_PRODID = "-//Bulwark Mail//Bulwark Webmail//EN";
 
 function hasUriScheme(value: string): boolean {
   return /^[a-z][a-z0-9+.-]*:/i.test(value);
@@ -1596,16 +1596,19 @@ export function detectDuplicates(
     }
   }
 
+  // A file can hold the same person twice (a CSV export often does): the first
+  // one counts, the later ones are duplicates of it, by its id.
+  const seenInFile = new Map<string, string>();
   incoming.forEach((card, idx) => {
-    if (card.emails) {
-      for (const e of Object.values(card.emails)) {
-        const match = existingEmails.get(e.address.toLowerCase());
-        if (match) {
-          dupes.set(idx, match);
-          return;
-        }
+    const addresses = Object.values(card.emails ?? {}).map((e) => e.address?.trim().toLowerCase()).filter(Boolean) as string[];
+    for (const address of addresses) {
+      const match = existingEmails.get(address) ?? seenInFile.get(address);
+      if (match) {
+        dupes.set(idx, match);
+        return;
       }
     }
+    for (const address of addresses) seenInFile.set(address, card.id);
   });
 
   return dupes;

@@ -459,6 +459,43 @@ describe('auth-store in the static Lite build', () => {
     expect(readLiteRefreshToken(0)).toBeNull();
   });
 
+  it('signing in again to the same account revokes the refresh token it replaces (#1571)', async () => {
+    let issued = 0;
+    const { revoked } = stalwartFetch({
+      revocation: true,
+      tokenAnswer: () => jsonResponse({ access_token: `AT-${++issued}`, expires_in: 3600, refresh_token: `RT-${issued}` }),
+    });
+    await useAuthStore.getState().login(SERVER, 'alice', 'pw', undefined, true);
+    expect(readLiteRefreshToken(0)?.refreshToken).toBe('RT-1');
+
+    await useAuthStore.getState().login(SERVER, 'alice', 'pw', undefined, true);
+
+    expect(useAccountStore.getState().accounts).toHaveLength(1);
+    expect(readLiteRefreshToken(0)?.refreshToken).toBe('RT-2');
+    await vi.waitFor(() => expect(revoked).toEqual(['RT-1']));
+  });
+
+  it('an OAuth sign-in to an account already signed in revokes the token of the slot it leaves (#1571)', async () => {
+    const { revoked } = stalwartFetch({ revocation: true });
+    const accountId = useAccountStore.getState().addAccount({
+      label: 'alice', serverUrl: SERVER, username: 'alice@example.com', authMode: 'oauth', rememberMe: true,
+      displayName: 'alice', email: 'alice@example.com', lastLoginAt: Date.now(), isConnected: false, hasError: false, isDefault: true,
+    });
+    useAccountStore.getState().updateAccount(accountId, { cookieSlot: 0 });
+    saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'alice@example.com', refreshToken: 'RT-old', tokenEndpoint: `${SERVER}/auth/token`, revocationEndpoint: `${SERVER}/auth/revoke` }, true);
+    vi.spyOn(JMAPClient.prototype, 'getUsername').mockReturnValue('alice@example.com');
+    const redirect = `${SERVER}/webmail/oauth/callback`;
+    saveLiteOAuthFlow({ tokenEndpoint: `${SERVER}/auth/token`, clientId: 'bulwark-webmail', redirectUri: redirect, persistent: true });
+    sessionStorage.setItem('oauth_cookie_slot', '1');
+
+    expect(await useAuthStore.getState().loginWithOAuth(SERVER, 'CODE', 'VERIFIER', redirect)).toBe(true);
+
+    expect(useAccountStore.getState().getAccountById(accountId)?.cookieSlot).toBe(1);
+    expect(readLiteRefreshToken(1)?.refreshToken).toBe('RT-1');
+    expect(readLiteRefreshToken(0)).toBeNull();
+    await vi.waitFor(() => expect(revoked).toEqual(['RT-old']));
+  });
+
   describe('OAuth sign-in (Lite on Stalwart)', () => {
     const PROVIDER_TOKEN = 'https://id.example.org/token';
     const REDIRECT = 'https://mail.example.com/webmail/oauth/callback';

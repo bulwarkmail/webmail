@@ -10,6 +10,7 @@ import {
   DEFAULT_VERSION_ENDPOINT,
 } from '@/lib/version-check';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
+import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
 
 /**
  * GET /api/admin/version
@@ -40,6 +41,8 @@ export async function GET(request: NextRequest) {
     logger.error('version admin GET error', {
       error: err instanceof Error ? err.message : 'unknown',
     });
+    const unavailable = storedDataUnavailableResponse(err, { 'Cache-Control': 'no-store' });
+    if (unavailable) return unavailable;
     return NextResponse.json({ error: 'failed' }, { status: 500 });
   }
 }
@@ -64,6 +67,8 @@ export async function POST(req: NextRequest) {
     logger.error('version admin POST error', {
       error: err instanceof Error ? err.message : 'unknown',
     });
+    const unavailable = storedDataUnavailableResponse(err, { 'Cache-Control': 'no-store' });
+    if (unavailable) return unavailable;
     return NextResponse.json({ error: 'failed' }, { status: 500 });
   }
 }

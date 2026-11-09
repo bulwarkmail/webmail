@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ, Loader2, FolderInput, Upload, Printer } from "@/components/icons";
+import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ, Loader2, FolderInput, Upload, Printer, Merge } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,6 +21,8 @@ import { getContactDisplayName, getContactSortName, hasContactPhoto } from "@/st
 import { useSettingsStore } from "@/stores/settings-store";
 import { isAppShortcutBlocked } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
+import { useDesktopCommands } from "@/lib/desktop/commands";
+import { ContactRowsSkeleton } from "@/components/boot-skeleton/contacts-skeleton";
 
 type TriState = boolean | null;
 
@@ -104,6 +106,8 @@ function ToggleChip({ icon, label, value, onClick }: { icon: React.ReactNode; la
 
 interface ContactListProps {
   contacts: ContactCard[];
+  /** A contact in an address book shared read-only: its menu has no Edit, Move or Delete. */
+  isContactReadOnly?: (contact: ContactCard) => boolean;
   selectedContactId: string | null;
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -123,7 +127,14 @@ interface ContactListProps {
   onAddContactToGroup: (id: string) => void;
   /** Opens the app's composer to the contact. */
   onComposeContact?: (contact: ContactCard) => void;
-  onDuplicateContact?: (contact: ContactCard) => void;
+  /** "Merge with…" for one contact. */
+  onMergeContact?: (contact: ContactCard) => void;
+  /** Two or more ticked: merge them. */
+  onBulkMerge?: () => void;
+  /** One new message to everyone ticked. */
+  onBulkCompose?: () => void;
+  /** A line over the list, e.g. "Possible duplicates (2)". */
+  banner?: React.ReactNode;
   /** Move contacts to another address book; undefined where there is none. */
   onMoveContacts?: (ids: string[]) => void;
   /** Show a burger button at the start that opens the (overlay) categories sidebar. */
@@ -143,6 +154,7 @@ interface ContactListProps {
 
 export function ContactList({
   contacts,
+  isContactReadOnly,
   selectedContactId,
   searchQuery,
   onSearchChange,
@@ -161,7 +173,10 @@ export function ContactList({
   onDeleteContact,
   onAddContactToGroup,
   onComposeContact,
-  onDuplicateContact,
+  onMergeContact,
+  onBulkMerge,
+  onBulkCompose,
+  banner,
   onMoveContacts,
   onMenuClick,
   phoneMenuItems,
@@ -172,6 +187,8 @@ export function ContactList({
   printTitle,
 }: ContactListProps) {
   const t = useTranslations("contacts");
+  const tx = useTranslations("ux_pim_contact");
+  const tMerge = useTranslations("ux_pim_cimport");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const density = useSettingsStore((state) => state.density);
@@ -385,6 +402,8 @@ export function ContactList({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+  // Edit > Search contacts in the desktop app's menus.
+  useDesktopCommands({ "edit.search": () => searchRef.current?.focus() }, { "edit.search": true });
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -617,6 +636,12 @@ export function ContactList({
               <span className="hidden @md:inline">{t("address_books.move_to")}</span>
             </Button>
           )}
+          {onBulkMerge && selectedContactIds.size > 1 && (
+            <Button variant="ghost" size="xs" onClick={onBulkMerge} aria-label={tMerge("merge_selected")} title={tMerge("merge_selected")} className="shrink-0">
+              <Merge className="w-3.5 h-3.5 @md:me-1" />
+              <span className="hidden @md:inline">{tMerge("merge_selected")}</span>
+            </Button>
+          )}
           <Button variant="ghost" size="xs" onClick={onBulkExport} disabled={exporting} aria-busy={exporting} aria-label={t("bulk.export")} title={t("bulk.export")} className="shrink-0">
             {exporting
               ? <Loader2 className="w-3.5 h-3.5 @md:me-1 animate-spin" />
@@ -641,28 +666,23 @@ export function ContactList({
         </div>
       )}
 
-      {/* Contact list */}
+      {/* Contact list. The banner scrolls with it: it comes with the loaded
+          contacts, and above the scroll area it pushed the whole list down.
+          The loading rows stand in for the list, not inside it, so the list
+          that replaces them is new and nothing on screen moves. */}
+      <div ref={listRef} className="flex-1 overflow-y-auto max-md:pb-20">
+      {sorted.length === 0 && isLoading && !searchQuery && activeFilters === 0 ? (
+        // The rows the page skeleton drew, at the same density.
+        <ContactRowsSkeleton density={density} letters={groupByLetter} />
+      ) : (<>
+      {!hasSelection && banner}
       <div
-        ref={listRef}
         role="listbox"
         aria-label={t("title")}
         aria-multiselectable
         onKeyDown={handleListKeyDown}
-        className="flex-1 overflow-y-auto"
       >
-        {sorted.length === 0 && isLoading && !searchQuery && activeFilters === 0 ? (
-          <div aria-hidden className="py-1" data-testid="contact-list-skeleton">
-            {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-                <div className="w-9 h-9 rounded-full bg-muted animate-pulse shrink-0" />
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="h-3.5 rounded bg-muted animate-pulse" style={{ width: `${45 + ((i * 29) % 35)}%` }} />
-                  <div className="h-3 rounded bg-muted/70 animate-pulse" style={{ width: `${30 + ((i * 17) % 30)}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : sorted.length === 0 ? (
+        {sorted.length === 0 ? (
           searchQuery || activeFilters > 0 ? (
             <EmptyState
               compact
@@ -702,7 +722,7 @@ export function ContactList({
                   {onImport && (
                     <Button variant="outline" size="sm" onClick={onImport}>
                       <Upload className="w-4 h-4 me-1.5" />
-                      {t("import.title")}
+                      {tx("import_menu")}
                     </Button>
                   )}
                 </>
@@ -719,6 +739,7 @@ export function ContactList({
                 isChecked={selectedContactIds.has(contact.id)}
                 hasSelection={hasSelection}
                 isFocused={contact.id === cursorId}
+                isMenuTarget={contextMenu.isOpen && contextMenu.data?.id === contact.id}
                 onFocus={() => setFocusedId(contact.id)}
                 density={density}
                 selectedContactIds={selectedContactIds}
@@ -765,6 +786,8 @@ export function ContactList({
           })()
         )}
       </div>
+      </>)}
+      </div>
 
       {printTitle != null && (
         <ContactListPrint
@@ -790,12 +813,15 @@ export function ContactList({
           onDelete={() => onDeleteContact(contextMenu.data!)}
           onAddToGroup={() => onAddContactToGroup(contextMenu.data!.id)}
           onCompose={onComposeContact ? () => onComposeContact(contextMenu.data!) : undefined}
-          onDuplicate={onDuplicateContact ? () => onDuplicateContact(contextMenu.data!) : undefined}
+          onMergeWith={onMergeContact ? () => onMergeContact(contextMenu.data!) : undefined}
           onMoveTo={onMoveContacts ? () => onMoveContacts([contextMenu.data!.id]) : undefined}
           onBatchMoveTo={onMoveContacts ? () => onMoveContacts([...selectedContactIds]) : undefined}
           onBatchExport={onBulkExport}
           onBatchAddToGroup={onBulkAddToGroup}
           onBatchDelete={onBulkDelete}
+          onBatchMerge={onBulkMerge}
+          onBatchCompose={onBulkCompose}
+          readOnly={isContactReadOnly?.(contextMenu.data) ?? false}
         />
       )}
     </div>

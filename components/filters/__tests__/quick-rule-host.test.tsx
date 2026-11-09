@@ -6,6 +6,7 @@ import { generateScript } from '@/lib/sieve/generator';
 import { mockStalwartAccount } from '@/lib/filters/__tests__/sieve-mock';
 import { useQuickRuleStore } from '@/stores/quick-rule-store';
 import { QuickRuleHost } from '../quick-rule-host';
+import { QuickRuleDialogs } from '../quick-rule-dialogs';
 
 vi.mock('@/stores/toast-store', () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }));
 
@@ -43,7 +44,7 @@ function openEditor(server: ReturnType<typeof account>, mode: 'prefill' | 'edit'
     suggestions: [],
     sourceMailboxId: null,
   });
-  render(<QuickRuleHost />);
+  render(<QuickRuleDialogs />);
 }
 
 /** Once the account's script has been read and counted. */
@@ -56,6 +57,23 @@ async function counted(server: ReturnType<typeof account>) {
 
 afterEach(() => {
   useQuickRuleStore.getState().closeEditor();
+  useQuickRuleStore.getState().closeNewFolder();
+});
+
+describe('the host', () => {
+  it('draws nothing while no rule editor or folder prompt is open', () => {
+    const { container } = render(<QuickRuleHost />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('brings in the dialogs once one opens', async () => {
+    render(<QuickRuleHost />);
+    act(() => {
+      useQuickRuleStore.getState().requestNewFolder({ target: {}, subject: {}, sourceMailboxId: null, preset: vi.fn() } as never);
+    });
+    // The dialogs' code comes with the first one that opens.
+    expect(await screen.findByRole('dialog', {}, { timeout: 10000 })).toBeInTheDocument();
+  });
 });
 
 describe('a rule made from a message, against the redirect limit', () => {

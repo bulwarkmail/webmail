@@ -34,6 +34,14 @@ function server(rows: Email[]) {
   return {
     getEmails,
     getThreads: vi.fn(async () => []),
+    getThread: vi.fn(async (threadId: string) => ({ id: threadId, emailIds: [threadId.replace('thread-', '')] })),
+    markAsRead: vi.fn(async (id: string, read: boolean) => {
+      const row = rows.find((e) => e.id === id)!;
+      row.keywords = read ? { $seen: true } : {};
+    }),
+    moveEmail: vi.fn(async (id: string) => {
+      rows.splice(rows.findIndex((e) => e.id === id), 1);
+    }),
     getAccountId: () => 'me',
   } as unknown as IJMAPClient & { getEmails: typeof getEmails };
 }
@@ -129,6 +137,68 @@ describe('the "Unread first" inbox', () => {
     expect(ids().slice(0, 2)).toEqual(['m1', 'm9']);
     expect(ids().slice(2)).toContain('m5');
     expect(ids().filter((id) => id === 'm5')).toHaveLength(1);
+  });
+
+  // Opening a message from the section, as a click does, and the push refresh
+  // its read state raises on the server.
+  async function openAndRead(c: ReturnType<typeof server>, id: string) {
+    const row = useEmailStore.getState().emails.find((e) => e.id === id)!;
+    useEmailStore.getState().selectEmail(row);
+    await useEmailStore.getState().markAsRead(c, id, true);
+    await useEmailStore.getState().refreshCurrentMailbox(c);
+  }
+
+  it('keeps the message opened in the section where it was, so archiving it opens the next unread one (#1453)', async () => {
+    const c = server(inboxRows());
+    await useEmailStore.getState().fetchEmails(c, 'inbox');
+
+    await openAndRead(c, 'm5');
+
+    expect(ids().slice(0, 3)).toEqual(['m1', 'm5', 'm9']);
+    expect(ids().filter((id) => id === 'm5')).toHaveLength(1);
+    expect(useEmailStore.getState().unreadSection!.ids.has('m5')).toBe(true);
+
+    await useEmailStore.getState().moveThreadToMailbox(c, 'm5', 'archive');
+
+    expect(useEmailStore.getState().selectedEmail?.id).toBe('m9');
+  });
+
+  it('opens the newest read message after archiving the last unread one', async () => {
+    const c = server(inboxRows());
+    await useEmailStore.getState().fetchEmails(c, 'inbox');
+
+    await openAndRead(c, 'm9');
+    await useEmailStore.getState().moveThreadToMailbox(c, 'm9', 'archive');
+
+    expect(useEmailStore.getState().selectedEmail?.id).toBe('m0');
+  });
+
+  it('counts the open message the read page has as loaded', async () => {
+    const rows = inboxRows();
+    const c = server(rows);
+    await useEmailStore.getState().fetchEmails(c, 'inbox');
+    await useEmailStore.getState().loadMoreEmails(c);
+    expect(useEmailStore.getState().hasMoreEmails).toBe(false);
+
+    // Read elsewhere meanwhile, so the refresh changes the list.
+    rows[9].keywords = { $seen: true };
+    await openAndRead(c, 'm5');
+
+    expect(useEmailStore.getState().hasMoreEmails).toBe(false);
+    expect(new Set(ids()).size).toBe(33);
+  });
+
+  it('lets the message read go to everything else once another one is opened', async () => {
+    const c = server(inboxRows());
+    await useEmailStore.getState().fetchEmails(c, 'inbox');
+    await openAndRead(c, 'm5');
+
+    await openAndRead(c, 'm1');
+
+    const state = useEmailStore.getState();
+    expect(state.unreadSection!.ids.has('m5')).toBe(false);
+    expect(ids().slice(0, 2)).toEqual(['m1', 'm9']);
+    expect(ids().slice(2)).toContain('m5');
   });
 
   it('announces new mail, which only the section has', async () => {

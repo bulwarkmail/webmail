@@ -114,7 +114,8 @@ export function TemplatePicker({ isOpen, onClose, onSelect, accountId }: Templat
           </span>
         )}
       </div>
-      {template.subject && (
+      {/* Not the name a second time ("Meeting follow-up / Meeting follow-up"). */}
+      {template.subject && template.subject.trim() !== template.name.trim() && (
         <p className="text-xs text-muted-foreground truncate mt-1">
           {template.subject}
         </p>
@@ -131,13 +132,15 @@ export function TemplatePicker({ isOpen, onClose, onSelect, accountId }: Templat
     </button>
   );
 
-  const renderSection = (title: string, items: EmailTemplate[], source: TemplateSource) => {
+  const renderSection = (title: string, items: EmailTemplate[], source: TemplateSource, withHeading = true) => {
     if (items.length === 0) return null;
     return (
       <div className="mb-4" key={`${source.key}:${title}`}>
-        <h3 className="text-xs font-semibold text-muted-foreground mb-1 px-3">
-          {title}
-        </h3>
+        {withHeading && (
+          <h3 className="text-xs font-semibold text-muted-foreground mb-1 px-3">
+            {title}
+          </h3>
+        )}
         <div className="space-y-0.5">{items.map((item) => renderTemplateItem(item, source))}</div>
       </div>
     );
@@ -171,7 +174,9 @@ export function TemplatePicker({ isOpen, onClose, onSelect, accountId }: Templat
         {Object.entries(byCategory)
           .filter(([cat]) => cat !== '')
           .map(([cat, items]) => renderSection(cat, items, source))}
-        {renderSection(t('section_uncategorized'), byCategory[''] ?? [], source)}
+        {/* "Other" only sets them apart from favourites, recent or categories. */}
+        {renderSection(t('section_uncategorized'), byCategory[''] ?? [], source,
+          favorites.length > 0 || recent.length > 0 || Object.keys(byCategory).some((cat) => cat !== ''))}
       </>
     );
     if (!withHeading) return <div key={source.key}>{body}</div>;

@@ -9,6 +9,7 @@ import { useManagedAccountStore } from "@/stores/managed-account-store";
 import { toast } from "@/stores/toast-store";
 import { SettingsSection } from "./settings-section";
 import { cn } from "@/lib/utils";
+import { collectionDisplayName } from "@/lib/default-collection-name";
 import { IconButton } from "@/components/ui/icon-button";
 import type { AddressBook, AddressBookRights } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "./share-collection-dialog";
@@ -79,6 +80,8 @@ export function AddressBookManagementSettings() {
   const t = useTranslations("contacts.address_books");
   const tContacts = useTranslations("contacts");
   const tSettings = useTranslations("settings.contacts");
+  const tWording = useTranslations("uxs_wording");
+  const bookName = (book: AddressBook) => collectionDisplayName(book.name, "addressBook", tWording("default_address_book"));
   const { client } = useAuthStore();
   const managedAccountId = useManagedAccountStore((s) => s.managedAccountId);
   const { addressBooks, contacts, supportsSync, fetchAddressBooks, createAddressBook, renameAddressBook, shareAddressBook, setDefaultAddressBook, removeAddressBook, renameKeyword } = useContactStore();
@@ -144,7 +147,7 @@ export function AddressBookManagementSettings() {
     if (!client) return;
     const ok = await confirm({
       title: t("delete_title"),
-      message: t("confirm_delete", { name: book.name }),
+      message: t("confirm_delete", { name: bookName(book) }),
       confirmText: t("delete"),
       variant: "destructive",
     });
@@ -225,8 +228,9 @@ export function AddressBookManagementSettings() {
       return (
         <AddressBookEditRow
           key={book.id}
-          initial={book.name}
-          onSave={(name) => handleUpdate(book, name)}
+          initial={bookName(book)}
+          // Saved unchanged, the shown name keeps the server's own.
+          onSave={(name) => handleUpdate(book, name === bookName(book) ? book.name : name)}
           onCancel={() => setEditingId(null)}
           isLoading={isLoading}
         />
@@ -245,7 +249,7 @@ export function AddressBookManagementSettings() {
       >
         <Book className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium truncate block" title={book.name} dir="auto">{book.name}</span>
+          <span className="text-sm font-medium truncate block" title={bookName(book)} dir="auto">{bookName(book)}</span>
         </div>
         {book.isDefault && (
           <span className="flex-shrink-0 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
@@ -269,7 +273,7 @@ export function AddressBookManagementSettings() {
             actions sit behind a ⋮ there, as for calendars. */}
         {actions.length > 0 && (
           <IconButton
-            label={tContacts("row_actions", { name: book.name })}
+            label={tContacts("row_actions", { name: bookName(book) })}
             className="sm:hidden flex-shrink-0 text-muted-foreground"
             onClick={(e) => openContextMenuFrom(e.currentTarget, book, "end")}
           >
@@ -436,7 +440,7 @@ export function AddressBookManagementSettings() {
         <ShareCollectionDialog
           client={client}
           kind="addressBook"
-          collectionName={book.name}
+          collectionName={bookName(book)}
           shareWith={book.shareWith}
           ownAccountId={client.getAccountId()}
           onShare={async (principalId, rights) => {

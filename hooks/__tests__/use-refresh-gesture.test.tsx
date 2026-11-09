@@ -212,6 +212,31 @@ describe('useRefreshGesture pull-to-refresh indicator', () => {
     expect(indicator()).toBeNull();
   });
 
+  it('leaves Ctrl+R to the desktop app\'s menu, where it replies; F5 still refreshes there', () => {
+    const onRefresh = vi.fn();
+    window.bulwarkDesktop = { version: 1 } as never;
+    try {
+      render(<Harness onRefresh={onRefresh} />);
+      const ctrlR = new KeyboardEvent('keydown', { key: 'r', ctrlKey: true, cancelable: true });
+      act(() => { window.dispatchEvent(ctrlR); });
+      expect(ctrlR.defaultPrevented).toBe(false);
+      expect(onRefresh).not.toHaveBeenCalled();
+      act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F5', cancelable: true })); });
+      expect(onRefresh).toHaveBeenCalledTimes(1);
+    } finally {
+      window.bulwarkDesktop = undefined;
+    }
+  });
+
+  it('takes Ctrl+R in a browser, which would reload the page', () => {
+    const onRefresh = vi.fn();
+    render(<Harness onRefresh={onRefresh} />);
+    const ctrlR = new KeyboardEvent('keydown', { key: 'r', ctrlKey: true, cancelable: true });
+    act(() => { window.dispatchEvent(ctrlR); });
+    expect(ctrlR.defaultPrevented).toBe(true);
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
   it('stays inert when disabled', () => {
     const onRefresh = vi.fn();
     render(<Harness onRefresh={onRefresh} enabled={false} />);

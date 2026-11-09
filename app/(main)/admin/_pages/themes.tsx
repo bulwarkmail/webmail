@@ -43,27 +43,35 @@ export function ThemesPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const setMessage = useAdminFeedback();
+  const [loadFailed, setLoadFailed] = useState(false);
   // On/off per theme waits for Save, like the policy switches below.
   const [enabledDraft, setEnabledDraft] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [policy, setPolicy] = useState<SettingsPolicy>(() => withThemeDefaults({ ...DEFAULT_POLICY }));
   const [savedPolicy, setSavedPolicy] = useState<SettingsPolicy>(() => withThemeDefaults({ ...DEFAULT_POLICY }));
   const [savingPolicy, setSavingPolicy] = useState(false);
+  // The version of the policy this page loaded (see the policy page).
+  const policyETag = useRef<string | null>(null);
 
   const fetchThemes = useCallback(async () => {
     try {
       const res = await apiFetch('/api/admin/themes');
-      if (res.ok) setThemes(await res.json());
+      if (!res.ok) throw new Error();
+      setThemes(await res.json());
+    } catch {
+      setLoadFailed(true);
+      setMessage({ type: 'error', text: 'Could not load the themes' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setMessage]);
 
   const fetchPolicy = useCallback(async () => {
     try {
       const res = await apiFetch('/api/admin/policy');
       if (res.ok) {
         const data = withThemeDefaults(await res.json());
+        policyETag.current = res.headers.get('ETag');
         setPolicy(data);
         setSavedPolicy(data);
       }
@@ -80,7 +88,9 @@ export function ThemesPage() {
   const dirty = policyDirty || switched.length > 0;
   useAdminUnsavedChanges('themes', dirty);
 
-  function setFeature(key: 'themesEnabled' | 'userThemesEnabled', value: boolean) {
+  // policy.features.userThemesEnabled stays in saved policies untouched: users
+  // have no way to upload a theme, so it has no switch here.
+  function setFeature(key: 'themesEnabled', value: boolean) {
     setPolicy(prev => ({ ...prev, features: { ...prev.features, [key]: value } }));
     setMessage(null);
   }
@@ -150,11 +160,19 @@ export function ThemesPage() {
     try {
       const res = await apiFetch('/api/admin/policy', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(policyETag.current ? { 'If-Match': policyETag.current } : {}) },
         body: JSON.stringify(policy),
       });
       if (res.ok) {
-        setSavedPolicy(policy);
+        policyETag.current = res.headers.get('ETag');
+        // The server sanitises; continue from what it stored.
+        const stored = ((await res.json().catch(() => null)) as { policy?: SettingsPolicy } | null)?.policy;
+        if (stored) {
+          setPolicy(withThemeDefaults(stored));
+          setSavedPolicy(withThemeDefaults(stored));
+        } else {
+          setSavedPolicy(policy);
+        }
         return null;
       }
       const data = await res.json().catch(() => ({}));
@@ -180,7 +198,7 @@ export function ThemesPage() {
     setSavingPolicy(false);
     setMessage(errors.length > 0
       ? { type: 'error', text: `Couldn't save everything. ${errors.join('; ')}` }
-      : { type: 'success', text: 'Themes saved. Users see the change on their next login.' });
+      : { type: 'success', text: 'Themes saved. Users get the change when they next open or reload Bulwark.' });
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -230,7 +248,6 @@ export function ThemesPage() {
 
   const enabledCount = themes.filter(isOn).length;
   const themesEnabled = policy.features.themesEnabled ?? true;
-  const userThemesEnabled = policy.features.userThemesEnabled ?? true;
   const lockColorMode = policy.themePolicy?.lockColorMode === true;
   const disabledBuiltin = policy.themePolicy?.disabledBuiltinThemes || [];
   const disabledInstalled = policy.themePolicy?.disabledThemes || [];
@@ -276,8 +293,8 @@ export function ThemesPage() {
           ) : themes.length === 0 ? (
             <EmptyState
               icon={SwatchBook}
-              title="No themes installed"
-              hint="Install one from the marketplace or upload a theme ZIP."
+              title={loadFailed ? 'Could not load the themes' : 'No themes installed'}
+              hint={loadFailed ? undefined : 'Install one from the marketplace or upload a theme ZIP.'}
               action={<AdminButtonLink href={adminPath('marketplace')}><Store className="h-4 w-4" /> Browse the marketplace</AdminButtonLink>}
             />
           ) : (
@@ -333,9 +350,6 @@ export function ThemesPage() {
         <SettingsSection id="policy" title="Theme policy" description="Control theme availability and defaults for users.">
           <SettingItem label="Themes" description="Allow users to select and apply themes">
             <ToggleSwitch checked={themesEnabled} onChange={(v) => setFeature('themesEnabled', v)} />
-          </SettingItem>
-          <SettingItem label="Users may upload themes" description="Allow users to upload their own theme files">
-            <ToggleSwitch checked={userThemesEnabled} disabled={!themesEnabled} onChange={(v) => setFeature('userThemesEnabled', v)} />
           </SettingItem>
           <SettingItem label="Default theme" description="Theme applied when users have not chosen one">
             <select
@@ -405,7 +419,7 @@ export function ThemesPage() {
         onSave={() => void save()}
         onDiscard={() => { setPolicy(savedPolicy); setEnabledDraft({}); }}
         saveLabel="Save"
-        note="Users see the change on their next login"
+        note="Users get the change when they next open or reload Bulwark"
       />
     </div>
   );

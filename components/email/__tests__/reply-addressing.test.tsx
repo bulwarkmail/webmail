@@ -344,6 +344,45 @@ describe('composer reply addressing', () => {
     }
   });
 
+  // #1353: a GitHub notification names the repo in To; the catch-all alias
+  // it went to is only in Delivered-To.
+  it('rewrites From to the catch-all address the message was delivered to', () => {
+    setAutoSelect(true);
+    try {
+      render(<EmailComposer mode="reply" replyTo={{
+        from: [{ email: 'notifications@github.com', name: 'GitHub' }],
+        to: [{ email: 'repo@noreply.github.com', name: 'owner/repo' }],
+        deliveredTo: ['github@example.com'],
+        subject: 'New issue',
+      }} />);
+      expect(screen.getByDisplayValue('github@example.com')).toBeTruthy();
+    } finally {
+      setAutoSelect(false);
+    }
+  });
+
+  // Stalwart's Delivered-To names the mailbox; the catch-all address in To
+  // is the one the sender wrote to and must keep winning.
+  it('keeps the catch-all address in To ahead of the delivery address', () => {
+    setAutoSelect(true);
+    try {
+      render(<EmailComposer mode="reply" replyTo={{ ...RECEIVED_CATCH_ALL, deliveredTo: ['me@example.com'] }} />);
+      expect(screen.getByDisplayValue('colleague@example.com')).toBeTruthy();
+    } finally {
+      setAutoSelect(false);
+    }
+  });
+
+  it('replies from an identity in Delivered-To while the setting is off', () => {
+    render(<EmailComposer mode="reply" replyTo={{
+      from: [{ email: 'bob@other.com', name: 'Bob' }],
+      to: [{ email: 'list@lists.other.com', name: 'List' }],
+      deliveredTo: ['info@example.com'],
+      subject: 'List mail',
+    }} />);
+    expect(identitySelect().value).toBe('id-info');
+  });
+
   // #1000: on a domain whose other addresses are distribution lists rather
   // than catch-all aliases, the setting can stay on but limited to configured
   // identities, so a reply to list@ gets no From override.

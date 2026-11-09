@@ -4,7 +4,7 @@ import { resyncWebPush, revokePushDevice, type PushDevice } from '@/lib/web-push
 import { doGetPublicKeyFromWKD } from '@/lib/plugin-sandbox/host-api';
 import { applyLiteConfig } from '@/lib/lite-config';
 import { setNoThirdPartyTraffic, noThirdPartyTraffic, parseNoThirdPartyEnv } from '@/lib/third-party-mode';
-import { isBuiltInHost, pluginAllowed, pluginDeclaresNetwork } from '@/lib/outgoing-hosts';
+import { credentialAllowedInMode, isBuiltInHost, pluginAllowed, pluginDeclaresNetwork } from '@/lib/outgoing-hosts';
 import { isPlaceholderHost } from '@/lib/admin/outgoing-hosts-registry';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
@@ -116,6 +116,19 @@ describe('plugins', () => {
 });
 
 describe('config', () => {
+  it('lets a plugin run that reaches only servers the admin entered, and no other', () => {
+    setNoThirdPartyTraffic(true);
+    const admin = (extra: Record<string, unknown>) => ({ label: 'x', scope: 'admin', secretKey: 's', ...extra });
+    const linkCheck = { permissions: ['http:proxy'], credentials: { company: admin({ originKey: 'url' }), google: admin({ origin: 'https://safebrowsing.googleapis.com' }) } };
+    const fixedOnly = { permissions: ['http:proxy'], credentials: { google: admin({ origin: 'https://safebrowsing.googleapis.com' }) } };
+    const userAccount = { permissions: ['http:proxy'], credentials: { company: admin({ originKey: 'url' }), own: { label: 'x', scope: 'user' } } };
+    const alsoFetches = { permissions: ['http:proxy', 'http:fetch'], httpOrigins: ['https://api.vendor.example'], credentials: { company: admin({ originKey: 'url' }) } };
+    expect([linkCheck, fixedOnly, userAccount, alsoFetches].map(pluginAllowed)).toEqual([true, false, false, false]);
+    expect(credentialAllowedInMode(linkCheck.credentials.company)).toBe(true);
+    expect(credentialAllowedInMode(linkCheck.credentials.google)).toBe(false);
+    setNoThirdPartyTraffic(false);
+  });
+
   it('reads noThirdPartyTraffic from the Lite config.json', () => {
     expect(applyLiteConfig({}).noThirdPartyTraffic).toBe(false);
     expect(applyLiteConfig({ noThirdPartyTraffic: true }).noThirdPartyTraffic).toBe(true);

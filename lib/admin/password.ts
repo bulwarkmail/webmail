@@ -1,15 +1,12 @@
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto';
-import { readFile, writeFile, rename } from 'node:fs/promises';
 import { logger } from '@/lib/logger';
-import {
-  ensureConfigDir,
-  ensureStateDir,
-  getConfigPath,
-  getStatePath,
-  assertWritable,
-} from './paths';
+import { isSharedMode, type DocCollection, type PutOptions, type PutResult, type StoredDoc } from '@/lib/shared-store';
+import { announceChange, onSharedChange } from '@/lib/shared-store/changes';
+import { assertWritable, isConfigReadOnly } from './paths';
+import { adminConfigDocs, adminStateDocs, isStoreUnavailable } from './admin-store';
 import type { AdminConfigData, AdminStateData } from './types';
 import { readFileEnv } from '../read-file-env';
+import { desktopServerSecret } from '@/lib/desktop/server-secrets';
 
 const SCRYPT_KEYLEN = 64;
 const SCRYPT_COST = 16384; // 2^14
@@ -61,62 +58,157 @@ function isHashed(value: string): boolean {
   return value.startsWith('$scrypt$') || value.startsWith('$2a$') || value.startsWith('$2b$');
 }
 
-// ─── Disk I/O ───────────────────────────────────────────────────────────────
+// ─── Storage ────────────────────────────────────────────────────────────────
+//
+// admin.json lives in the admin config collection, admin-state.json in the
+// admin state collection (lib/admin/admin-store.ts): today's files in local
+// mode, the shared store with several replicas (#1066).
 
-async function readJson<T>(filePath: string): Promise<T | null> {
+function parseJson<T>(data: Buffer, what: string): T | null {
   try {
-    const raw = await readFile(filePath, 'utf-8');
-    return JSON.parse(raw) as T;
+    return JSON.parse(data.toString('utf-8')) as T;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
     logger.warn('Failed to read admin file', {
-      filePath,
+      file: what,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
     return null;
   }
 }
 
-async function readConfigData(): Promise<AdminConfigData | null> {
-  return readJson<AdminConfigData>(getConfigPath(ADMIN_CONFIG_FILE));
+/**
+ * A stored admin document, or null when it's missing or unreadable (logged).
+ * With a shared store, an unreachable store throws instead: "no admin
+ * password" would be the wrong answer.
+ */
+async function readDoc<T>(docs: DocCollection, id: string): Promise<{ data: T; version: string } | null> {
+  let doc: StoredDoc | null;
+  try {
+    doc = await docs.get(id);
+  } catch (error) {
+    if (isStoreUnavailable(error)) throw error;
+    logger.warn('Failed to read admin file', { file: id, error: error instanceof Error ? error.message : 'Unknown error' });
+    return null;
+  }
+  if (!doc) return null;
+  const data = parseJson<T>(doc.data, id);
+  return data ? { data, version: doc.version } : null;
+}
+
+function readConfigDoc() {
+  return readDoc<AdminConfigData>(adminConfigDocs(), ADMIN_CONFIG_FILE);
 }
 
 async function readStateData(): Promise<AdminStateData | null> {
-  return readJson<AdminStateData>(getStatePath(ADMIN_STATE_FILE));
+  return (await readDoc<AdminStateData>(adminStateDocs(), ADMIN_STATE_FILE))?.data ?? null;
 }
 
-async function writeConfigData(data: AdminConfigData): Promise<void> {
+/** Owner-only, like the other files that hold secrets (see admin-store.ts). */
+async function writeConfigData(data: AdminConfigData, options: PutOptions = {}): Promise<PutResult> {
   assertWritable('save admin password');
-  await ensureConfigDir();
-  const target = getConfigPath(ADMIN_CONFIG_FILE);
-  const tmp = target + '.tmp';
-  // Owner-only, like the other files that hold secrets.
-  await writeFile(tmp, JSON.stringify(data, null, 2), { encoding: 'utf-8', mode: 0o600 });
-  await rename(tmp, target);
+  return adminConfigDocs().put(ADMIN_CONFIG_FILE, JSON.stringify(data, null, 2), options);
 }
 
-async function writeStateData(data: AdminStateData): Promise<void> {
-  await ensureStateDir();
-  const target = getStatePath(ADMIN_STATE_FILE);
-  const tmp = target + '.tmp';
-  await writeFile(tmp, JSON.stringify(data, null, 2), 'utf-8');
-  await rename(tmp, target);
+async function writeStateData(data: AdminStateData, options: PutOptions = {}): Promise<PutResult> {
+  return adminStateDocs().put(ADMIN_STATE_FILE, JSON.stringify(data, null, 2), options);
 }
 
 // ─── Cache & init ───────────────────────────────────────────────────────────
 
-let cachedConfig: AdminConfigData | null = null;
-let cachedState: AdminStateData | null = null;
-let initialized = false;
+/**
+ * What this process knows of admin.json and admin-state.json. On globalThis:
+ * Next bundles this module once per entry (each route bundle, the
+ * instrumentation), and a copy with its own cache kept accepting the old
+ * password after a password change made through another one, until a
+ * restart.
+ *
+ * With a shared store it only answers the synchronous isAdminEnabled() and
+ * getAdminMeta(): passwords and sessions are checked against the store, and
+ * epoch `admin` refreshes the copy when another replica changes the password.
+ */
+interface AdminCache {
+  config: AdminConfigData | null;
+  state: AdminStateData | null;
+  initialized: boolean;
+  /** Shared mode: one read of the state for checks that run together. */
+  stateRead?: Promise<AdminStateData | null>;
+  /**
+   * The password came from ADMIN_PASSWORD into a read-only config without an
+   * admin.json: it lives in this process only, and every replica makes it
+   * from the same variable on start.
+   */
+  fromEnvOnly?: boolean;
+  unlisten?: () => void;
+}
+
+const CACHE_KEY = Symbol.for('bulwark.admin.password');
+const cache: AdminCache = ((globalThis as typeof globalThis & { [CACHE_KEY]?: AdminCache })[CACHE_KEY] ??= {
+  config: null,
+  state: null,
+  initialized: false,
+});
+
+/** Forget what this process read, as a restart would (tests). */
+export function resetAdminCacheForTests(): void {
+  cache.unlisten?.();
+  cache.config = null;
+  cache.state = null;
+  cache.initialized = false;
+  cache.stateRead = undefined;
+  cache.unlisten = undefined;
+  cache.fromEnvOnly = undefined;
+}
 
 function freshState(): AdminStateData {
   const now = new Date().toISOString();
   return { createdAt: now, lastLogin: null, passwordChangedAt: now };
 }
 
+/**
+ * The admin state. Local mode: read once, then from memory, as before.
+ * Shared mode: from the store on every call (a sign-out on another replica
+ * counts at once); calls that overlap share one read.
+ */
 async function loadState(): Promise<AdminStateData | null> {
-  if (!cachedState) cachedState = await readStateData();
-  return cachedState;
+  if (!isSharedMode()) {
+    if (!cache.state) cache.state = await readStateData();
+    return cache.state;
+  }
+  cache.stateRead ??= readStateData()
+    .then((state) => {
+      cache.state = state;
+      return state;
+    })
+    .finally(() => {
+      cache.stateRead = undefined;
+    });
+  return cache.stateRead;
+}
+
+/**
+ * Change the admin state with `change`. Local mode: from the copy in memory
+ * (kept even when the write fails), as before. Shared mode: against the
+ * stored state, retried on a concurrent write, so a sign-out on one replica
+ * and a sign-in on another both stay. `change` may run more than once.
+ */
+async function updateState(change: (previous: AdminStateData | null) => AdminStateData): Promise<AdminStateData> {
+  if (!isSharedMode()) {
+    const next = change(await loadState());
+    cache.state = next;
+    await writeStateData(next);
+    return next;
+  }
+  const result = await adminStateDocs().update(ADMIN_STATE_FILE, (current) =>
+    JSON.stringify(change(current ? parseJson<AdminStateData>(current, ADMIN_STATE_FILE) : null), null, 2),
+  );
+  const next = result.data ? parseJson<AdminStateData>(result.data, ADMIN_STATE_FILE) : null;
+  if (next) cache.state = next;
+  return next ?? change(null);
+}
+
+/** One session generation on: every admin session of the old password is signed out (a stolen cookie with it). */
+function nextGeneration(previous: AdminStateData | null): AdminStateData {
+  return { ...freshState(), sessionGeneration: (previous?.sessionGeneration ?? 0) + 1 };
 }
 
 /**
@@ -124,8 +216,17 @@ async function loadState(): Promise<AdminStateData | null> {
  * admin session of the old password is signed out (a stolen cookie with it).
  */
 async function stateForNewPassword(): Promise<AdminStateData> {
-  const previous = await loadState();
-  return { ...freshState(), sessionGeneration: (previous?.sessionGeneration ?? 0) + 1 };
+  return nextGeneration(await loadState());
+}
+
+/** Shared mode: reload the copy when another replica changed the admin password. */
+function listenForAdminChanges(): void {
+  cache.unlisten?.();
+  cache.unlisten = onSharedChange('admin', async (origin) => {
+    if (origin === 'local') return;
+    cache.config = (await readConfigDoc())?.data ?? null;
+    cache.state = await readStateData();
+  });
 }
 
 /**
@@ -133,40 +234,90 @@ async function stateForNewPassword(): Promise<AdminStateData> {
  * - If admin.json exists, use it (state file may or may not exist; created on first need).
  * - Otherwise, if ADMIN_PASSWORD env var is set, hash and persist it.
  * - Otherwise, admin dashboard stays disabled.
+ *
+ * With a shared store, a replica that found no admin password looks again
+ * on the next call: another replica's setup wizard may have set one.
  */
 export async function initAdminPassword(): Promise<boolean> {
-  if (initialized) return cachedConfig !== null;
+  const shared = isSharedMode();
+  if (cache.initialized && (!shared || cache.config)) return cache.config !== null;
+  if (shared && !cache.initialized) listenForAdminChanges();
 
-  const existingConfig = await readConfigData();
-  if (existingConfig) {
-    cachedConfig = existingConfig;
-    cachedState = (await readStateData()) ?? freshState();
-    if (!(await readStateData())) {
-      // No state file yet (fresh install or migration); create it.
-      try {
-        await writeStateData(cachedState);
-      } catch {
-        /* state dir may not be writable yet during early boot probes */
+  const existing = await readConfigDoc();
+  if (existing) {
+    cache.config = existing.data;
+    if (shared) {
+      let state = await readStateData();
+      if (!state) {
+        // No state yet (fresh install or import); whoever comes first writes it.
+        const fresh = freshState();
+        state = (await writeStateData(fresh, { ifVersion: null })).ok ? fresh : (await readStateData()) ?? fresh;
+      }
+      cache.state = state;
+    } else {
+      cache.state = (await readStateData()) ?? freshState();
+      if (!(await readStateData())) {
+        // No state file yet (fresh install or migration); create it.
+        try {
+          await writeStateData(cache.state);
+        } catch {
+          /* state dir may not be writable yet during early boot probes */
+        }
       }
     }
-    initialized = true;
-    logger.info('Admin dashboard enabled (password loaded from admin.json)');
+    if (!cache.initialized) logger.info('Admin dashboard enabled (password loaded from admin.json)');
+    cache.initialized = true;
     return true;
   }
 
-  const envPassword = process.env.ADMIN_PASSWORD;
+  const envPassword = desktopServerSecret('adminPassword') || process.env.ADMIN_PASSWORD;
   if (!envPassword) {
-    initialized = true;
-    logger.info('Admin dashboard disabled (no ADMIN_PASSWORD set)');
+    if (!cache.initialized) logger.info('Admin dashboard disabled (no ADMIN_PASSWORD set)');
+    cache.initialized = true;
     return false;
   }
 
   const hash = isHashed(envPassword) ? envPassword : await hashPassword(envPassword);
-  cachedConfig = { passwordHash: hash, passwordHashFile: undefined };
-  cachedState = await stateForNewPassword();
-  await writeConfigData(cachedConfig);
-  await writeStateData(cachedState);
-  initialized = true;
+  const config: AdminConfigData = { passwordHash: hash, passwordHashFile: undefined };
+  if (isConfigReadOnly()) {
+    // Nowhere to save admin.json (a ConfigMap, a :ro volume). Keep the
+    // password in memory instead of failing the start; each replica does the
+    // same from the same variable. Changing it in the admin console is
+    // refused, as every other write to read-only config is.
+    cache.config = config;
+    cache.fromEnvOnly = true;
+    cache.state = shared ? await readStateData() : (await readStateData()) ?? freshState();
+    if (shared && !cache.state) {
+      const fresh = freshState();
+      cache.state = (await writeStateData(fresh, { ifVersion: null })).ok ? fresh : (await readStateData()) ?? fresh;
+    }
+    if (!cache.initialized) {
+      logger.info('Admin dashboard enabled with ADMIN_PASSWORD (config is read-only, so it is not saved to admin.json)');
+    }
+    cache.initialized = true;
+    return true;
+  }
+  if (shared) {
+    // Replicas booting together with ADMIN_PASSWORD: the first one writes
+    // admin.json and moves the session generation on, the others use it.
+    const written = await writeConfigData(config, { ifVersion: null });
+    if (written.ok) {
+      cache.config = config;
+      await updateState(nextGeneration);
+      await announceChange('admin');
+    } else {
+      cache.config = written.current ? parseJson<AdminConfigData>(written.current.data, ADMIN_CONFIG_FILE) : null;
+      cache.state = await readStateData();
+      cache.initialized = true;
+      return cache.config !== null;
+    }
+  } else {
+    cache.config = config;
+    cache.state = await stateForNewPassword();
+    await writeConfigData(cache.config);
+    await writeStateData(cache.state);
+  }
+  cache.initialized = true;
   if (isHashed(envPassword)) {
     logger.info('Admin password hash saved to admin.json from environment variable');
   } else {
@@ -175,45 +326,89 @@ export async function initAdminPassword(): Promise<boolean> {
   return true;
 }
 
-/**
- * Verify a password against the stored admin hash.
- */
-export async function verifyAdminPassword(password: string): Promise<boolean> {
-  if (!cachedConfig) cachedConfig = await readConfigData();
-  if (!cachedConfig) return false;
-  if (cachedConfig.passwordHash) {
-    return verifyPassword(password, cachedConfig.passwordHash);
-  } else if (cachedConfig.passwordHashFile) {
-    let passwordHash = readFileEnv(cachedConfig.passwordHashFile);
+function verifyAgainst(config: AdminConfigData, password: string): Promise<boolean> {
+  if (config.passwordHash) {
+    return verifyPassword(password, config.passwordHash);
+  } else if (config.passwordHashFile) {
+    let passwordHash = readFileEnv(config.passwordHashFile);
     if (passwordHash) {
       return verifyPassword(password, passwordHash);
     }
   }
   logger.error('The admin password hash could neither be retrieved from passwordHash nor from passwordHashFile in admin.json');
-  return false;
+  return Promise.resolve(false);
 }
 
 /**
- * Change the admin password. Returns true on success.
+ * Verify a password against the stored admin hash. With a shared store
+ * admin.json is read on every call, so a password changed on another
+ * replica counts at once.
+ */
+export async function verifyAdminPassword(password: string): Promise<boolean> {
+  if (cache.fromEnvOnly && cache.config) {
+    // A mounted admin.json that appeared later still wins.
+    const mounted = (await readConfigDoc())?.data ?? null;
+    return verifyAgainst(mounted ?? cache.config, password);
+  }
+  if (isSharedMode()) {
+    cache.config = (await readConfigDoc())?.data ?? null;
+  } else if (!cache.config) {
+    cache.config = (await readConfigDoc())?.data ?? null;
+  }
+  const config = cache.config;
+  if (!config) return false;
+  return verifyAgainst(config, password);
+}
+
+/**
+ * Two password changes at once (on two replicas): the one that came second
+ * was checked against a password that no longer applies.
+ */
+export class AdminPasswordConflictError extends Error {
+  constructor() {
+    super('The admin password was changed somewhere else a moment ago. Sign in with the new password and try again.');
+    this.name = 'AdminPasswordConflictError';
+  }
+}
+
+/** By name, as the class may come from another bundle's copy of this module. */
+export function isAdminPasswordConflict(error: unknown): error is AdminPasswordConflictError {
+  return error instanceof Error && error.name === 'AdminPasswordConflictError';
+}
+
+/**
+ * Change the admin password. Returns true on success, false when the
+ * current password is wrong. Throws AdminPasswordConflictError when another
+ * change landed between the check and the write (shared store).
  */
 export async function changeAdminPassword(currentPassword: string, newPassword: string): Promise<boolean> {
-  const valid = await verifyAdminPassword(currentPassword);
+  const shared = isSharedMode();
+  // Shared mode: the version checked is the one replaced, so of two changes
+  // at once with the same current password only one goes through.
+  const stored = shared ? await readConfigDoc() : null;
+  const valid = shared
+    ? !!stored && (await verifyAgainst(stored.data, currentPassword))
+    : await verifyAdminPassword(currentPassword);
   if (!valid) return false;
 
   // Write first, then swap the cache: a refused write (read-only config)
   // must not leave the new password active until the next restart.
   const hash = await hashPassword(newPassword);
   const next: AdminConfigData = { passwordHash: hash, passwordHashFile: undefined };
-  await writeConfigData(next);
-  cachedConfig = next;
+  if (shared) {
+    if (!(await writeConfigData(next, { ifVersion: stored!.version })).ok) throw new AdminPasswordConflictError();
+  } else {
+    await writeConfigData(next);
+  }
+  cache.config = next;
 
-  const previous = await loadState();
-  cachedState = {
+  const changedAt = new Date().toISOString();
+  await updateState((previous) => ({
     ...(previous ?? freshState()),
-    passwordChangedAt: new Date().toISOString(),
+    passwordChangedAt: changedAt,
     sessionGeneration: (previous?.sessionGeneration ?? 0) + 1,
-  };
-  await writeStateData(cachedState);
+  }));
+  if (shared) await announceChange('admin');
   return true;
 }
 
@@ -232,14 +427,23 @@ export async function setInitialAdminPassword(
   newPassword: string,
   options: { allowOverwrite?: boolean } = {},
 ): Promise<boolean> {
-  const existing = await readConfigData();
+  const existing = await readConfigDoc();
   if (existing && !options.allowOverwrite) return false;
   const hash = await hashPassword(newPassword);
-  cachedConfig = { passwordHash: hash, passwordHashFile: undefined };
-  cachedState = await stateForNewPassword();
-  await writeConfigData(cachedConfig);
-  await writeStateData(cachedState);
-  initialized = true;
+  const config: AdminConfigData = { passwordHash: hash, passwordHashFile: undefined };
+  if (isSharedMode()) {
+    const written = await writeConfigData(config, options.allowOverwrite ? {} : { ifVersion: null });
+    if (!written.ok) return false;
+    cache.config = config;
+    await updateState(nextGeneration);
+    await announceChange('admin');
+  } else {
+    cache.config = config;
+    cache.state = await stateForNewPassword();
+    await writeConfigData(cache.config);
+    await writeStateData(cache.state);
+  }
+  cache.initialized = true;
   return true;
 }
 
@@ -247,13 +451,15 @@ export async function setInitialAdminPassword(
  * Update the last login timestamp.
  */
 export async function updateLastLogin(): Promise<void> {
-  if (!cachedConfig) return;
-  cachedState = {
-    ...(cachedState ?? freshState()),
-    lastLogin: new Date().toISOString(),
-  };
+  if (!cache.config) return;
+  const lastLogin = new Date().toISOString();
   try {
-    await writeStateData(cachedState);
+    if (isSharedMode()) {
+      await updateState((previous) => ({ ...(previous ?? freshState()), lastLogin }));
+    } else {
+      cache.state = { ...(cache.state ?? freshState()), lastLogin };
+      await writeStateData(cache.state);
+    }
   } catch (error) {
     logger.warn('Failed to update admin last-login state', {
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -265,15 +471,15 @@ export async function updateLastLogin(): Promise<void> {
  * Check if admin dashboard is enabled (has a password configured).
  */
 export function isAdminEnabled(): boolean {
-  return cachedConfig !== null;
+  return cache.config !== null;
 }
 
 /**
  * Get admin metadata (without the hash).
  */
 export function getAdminMeta(): AdminStateData | null {
-  if (!cachedConfig) return null;
-  return cachedState ?? freshState();
+  if (!cache.config) return null;
+  return cache.state ?? freshState();
 }
 
 // ─── Admin session sign-out ─────────────────────────────────────────────────
@@ -294,9 +500,9 @@ export async function isAdminSessionRevoked(sid: string): Promise<boolean> {
  */
 export async function revokeAdminSession(sid: string, exp: number): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
-  const previous = await loadState();
-  const revoked = Object.fromEntries(Object.entries(previous?.revokedSessions ?? {}).filter(([, until]) => until >= now));
-  revoked[sid] = exp;
-  cachedState = { ...(previous ?? freshState()), revokedSessions: revoked };
-  await writeStateData(cachedState);
+  await updateState((previous) => {
+    const revoked = Object.fromEntries(Object.entries(previous?.revokedSessions ?? {}).filter(([, until]) => until >= now));
+    revoked[sid] = exp;
+    return { ...(previous ?? freshState()), revokedSessions: revoked };
+  });
 }

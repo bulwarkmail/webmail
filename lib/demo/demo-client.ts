@@ -1,11 +1,27 @@
 import type { IJMAPClient, KeywordDiscoveryResult, KeywordMigration } from '@/lib/jmap/client-interface';
-import type { AccountInfo, Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
+import type { AccountInfo, Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarRights, CalendarTask, BusyPeriod, FileNode, FileNodeRights, MailboxRights, Principal, PrincipalAvailability, PrincipalListing, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
 import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
+import type { ShareChange, ShareChangeResult, ShareTarget } from '@/lib/jmap/share-batch';
+import type { AnyRights, ShareKind } from '@/lib/jmap/share-rights';
+import { createDemoPrincipals } from './fixtures/directory';
+import { createDemoBusyBlocks } from './fixtures/availability';
+import { expandRecurringEvents } from '@/lib/recurrence-expansion';
+import { parseDurationSeconds } from '@/lib/calendar-event-normalization';
+import { createDemoArchivedItems, type DemoArchivedItem } from './fixtures/archive';
+import { createDemoSharedMetadata } from './fixtures/shared-metadata';
+import {
+  MAX_METADATA_ENTRY_BYTES, MetadataPatchError, MetadataTooLargeError, MetadataUnsupportedError, metadataValueBytes,
+} from '@/lib/jmap/bulwark-metadata';
+import {
+  hasArchivedEmail as hasArchivedEmailIn, listArchivedEmailsPaged,
+  type ArchiveIo, type ArchiveListResult, type ArchiveQueryPage, type RestoreResult,
+} from '@/lib/recovery/archived-items';
 import { getDemoData, demoSharedAccounts, type DemoData, type DemoProfile } from './demo-data';
 import { generateDemoId } from './demo-utils';
 import { DEMO_ASSETS } from './fixtures/assets';
 import { GONOGO_INVITE_BLOB } from './fixtures/emails';
 import { createGoNoGoInvitationIcs, GONOGO_EVENT_ID } from './fixtures/calendars';
+import { createSpreehostInvoiceXml, INVOICE_BLOB } from './fixtures/invoice';
 import { ALICE, BOB, SARAH, PRIYA, LISA } from './fixtures/people';
 import { parseAuthenticationResults, parseSpamLLM, parseSpamScore } from '@/lib/email-headers';
 import { compareEmails, type SortLevel } from '@/lib/message-list-order';
@@ -13,6 +29,7 @@ import { withBasePath } from '@/lib/browser-navigation';
 import { toInertBlob } from '@/lib/file-preview';
 import type { StorageQuota } from "@/lib/quota";
 import { buildDemoEml, demoEmlBlobId, demoEmlEmailId } from './demo-eml';
+import { stripMessageIdBrackets } from '@/lib/email-threading';
 
 // Fixture blobs with real bytes behind them, served from public/demo/ (see
 // fixtures/assets.ts for the list and the licences). Any other blob id falls
@@ -37,11 +54,19 @@ export const DEMO_SIMULATE_KEY = 'bulwark-demo-simulate';
  *
  * One instance per demo login: `new DemoJMAPClient('work')` is the primary
  * account (with the shared Support mailbox delegated to it), and
- * `new DemoJMAPClient('personal')` the mail-only second account.
+ * `new DemoJMAPClient('personal')` the second account, with mail and contacts.
  */
 export class DemoJMAPClient implements IJMAPClient {
   private data: DemoData;
   private readonly profile: DemoProfile;
+  /** The server's directory: the Meridian Labs cast for the work login, nobody for the personal one. */
+  private readonly principals: Principal[];
+  /** Mail deleted for good that the server still keeps (Recover deleted items). */
+  private archive: DemoArchivedItem[];
+  /** Bulwark's shared Inbox metadata by account and key; only accounts listed here have any. */
+  private metadata: Record<string, Record<string, unknown>>;
+  /** The same for each account's private metadata. */
+  private ownMetadata: Record<string, Record<string, unknown>> = {};
   private blobStore = new Map<string, Blob>();
   private scheduledSubmissions = new Map<string, { id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled'; isSmime: boolean }>();
   private connectionCallback: ((connected: boolean) => void) | null = null;
@@ -52,6 +77,9 @@ export class DemoJMAPClient implements IJMAPClient {
   constructor(profile: DemoProfile = 'work') {
     this.profile = profile;
     this.data = getDemoData(profile);
+    this.principals = profile === 'personal' ? [] : createDemoPrincipals();
+    this.archive = profile === 'personal' ? [] : createDemoArchivedItems(this.data.accountId);
+    this.metadata = profile === 'personal' ? {} : createDemoSharedMetadata();
     // Fixtures carry raw headers the way a server sends them; derive the
     // parsed fields the viewer reads, as JMAPClient.parseEmailHeaders does.
     for (const email of this.data.emails) {
@@ -117,8 +145,8 @@ export class DemoJMAPClient implements IJMAPClient {
 
   // ── Capabilities ──────────────────────────────────────────────
 
-  /** The personal login is mail only; everything else lives in the work account. */
-  private get mailOnly(): boolean { return this.profile === 'personal'; }
+  /** The personal login has mail and contacts; everything else lives in the work account. */
+  private get isPersonal(): boolean { return this.profile === 'personal'; }
 
   hasAccountCapability(capability: string, _accountId?: string): boolean {
     return capability === 'urn:ietf:params:jmap:submission';
@@ -141,11 +169,14 @@ export class DemoJMAPClient implements IJMAPClient {
       'urn:ietf:params:jmap:submission': { maxDelayedSend: 30 * 24 * 60 * 60, submissionExtensions: { FUTURERELEASE: true } },
       'urn:ietf:params:jmap:vacationresponse': {},
       'urn:ietf:params:jmap:quota': {},
-      ...(this.mailOnly ? {} : {
-        'urn:ietf:params:jmap:contacts': {},
+      'urn:ietf:params:jmap:contacts': {},
+      ...(this.isPersonal ? {} : {
         'urn:ietf:params:jmap:calendars': {},
         'urn:ietf:params:jmap:sieve': {},
         'urn:ietf:params:jmap:files': {},
+        'urn:ietf:params:jmap:principals': {},
+        'urn:ietf:params:jmap:principals:availability': {},
+        'urn:ietf:params:jmap:mail:share': {},
       }),
     };
   }
@@ -161,14 +192,228 @@ export class DemoJMAPClient implements IJMAPClient {
   supportsQuota(): boolean { return true; }
   supportsVacationResponse(): boolean { return true; }
   accountSupports(): boolean { return true; }
-  supportsContacts(): boolean { return !this.mailOnly; }
-  supportsCalendars(): boolean { return !this.mailOnly; }
-  supportsSieve(): boolean { return !this.mailOnly; }
-  supportsFiles(): boolean { return !this.mailOnly; }
-  supportsPrincipals(): boolean { return false; }
-  async getPrincipals(): Promise<never[]> { return []; }
-  async setCalendarShare(): Promise<void> { /* demo: no-op */ }
-  async setAddressBookShare(): Promise<void> { /* demo: no-op */ }
+  supportsContacts(): boolean { return true; }
+  supportsCalendars(): boolean { return !this.isPersonal; }
+  supportsSieve(): boolean { return !this.isPersonal; }
+  supportsFiles(): boolean { return !this.isPersonal; }
+
+  // ── Directory and sharing (RFC 9670 principals, mail:share) ───
+  // The work login's server has a directory (fixtures/directory.ts) and
+  // keeps `shareWith` on Nora's folders, calendars, address books and files.
+  // The personal login's server has neither.
+
+  supportsPrincipals(): boolean { return !this.isPersonal; }
+
+  async getPrincipals(): Promise<Principal[]> {
+    return this.principals.map((p) => ({ ...p }));
+  }
+
+  async listPrincipals(): Promise<PrincipalListing> {
+    return { principals: await this.getPrincipals(), status: 'ok' };
+  }
+
+  /** "individual" or "group" by id, as Principal/get answers; Support is a group. */
+  async getPrincipalTypes(ids: string[]): Promise<Record<string, string> | null> {
+    if (!this.supportsPrincipals()) return ids.length === 0 ? {} : null;
+    const wanted = new Set(ids);
+    return Object.fromEntries(this.principals.filter((p) => wanted.has(p.id)).map((p) => [p.id, p.type]));
+  }
+
+  async findPrincipalByEmail(email: string): Promise<{ principal: Principal | null; status: 'ok' | 'forbidden' | 'error' }> {
+    if (!this.supportsPrincipals()) return { principal: null, status: 'error' };
+    const wanted = email.trim().toLowerCase();
+    const principal = this.principals.find((p) => p.email?.toLowerCase() === wanted || p.name.toLowerCase() === wanted);
+    return { principal: principal ? { ...principal } : null, status: 'ok' };
+  }
+
+  supportsMailboxSharing(accountId?: string): boolean {
+    return this.supportsPrincipals() && (!accountId || accountId === this.data.accountId);
+  }
+
+  async getMailboxShareWith(mailboxId: string, accountId?: string): Promise<Record<string, MailboxRights> | null> {
+    const mailbox = this.ownShareItem('mailbox', mailboxId, accountId);
+    if (!mailbox) throw new Error('Folder not found');
+    return mailbox.shareWith ? structuredClone(mailbox.shareWith) as Record<string, MailboxRights> : null;
+  }
+
+  async setMailboxShare(mailboxId: string, principalId: string, rights: MailboxRights | null, accountId?: string): Promise<void> {
+    this.setShare('mailbox', mailboxId, principalId, rights, accountId);
+  }
+
+  async setCalendarShare(calendarId: string, principalId: string, rights: CalendarRights | null, targetAccountId?: string): Promise<void> {
+    this.setShare('calendar', calendarId, principalId, rights, targetAccountId);
+  }
+
+  async setAddressBookShare(addressBookId: string, principalId: string, rights: AddressBookRights | null, targetAccountId?: string): Promise<void> {
+    this.setShare('addressBook', addressBookId, principalId, rights, targetAccountId);
+  }
+
+  /** Every folder, calendar and address book of Nora's own account, and the files she shared. */
+  async getShareTargets(include: { calendars?: boolean; contacts?: boolean; files?: boolean } = {}): Promise<{ targets: ShareTarget[]; failed: ShareKind[] }> {
+    if (!this.supportsPrincipals()) return { targets: [], failed: [] };
+    const accountId = this.data.accountId;
+    const grants = (shareWith: Record<string, AnyRights> | null | undefined) => structuredClone(shareWith ?? {});
+    const targets: ShareTarget[] = this.data.mailboxes.map((mb) => ({
+      kind: 'mailbox', accountId, id: mb.id, name: mb.name, role: mb.role ?? null, parentId: mb.parentId ?? null, shareWith: grants(mb.shareWith),
+    }));
+    if (include.calendars !== false && this.supportsCalendars()) {
+      for (const cal of this.data.calendars.filter((c) => !c.isShared)) {
+        targets.push({ kind: 'calendar', accountId, id: cal.id, name: cal.name, isDefault: cal.isDefault, shareWith: grants(cal.shareWith) });
+      }
+    }
+    if (include.contacts !== false && this.supportsContacts()) {
+      for (const book of this.data.addressBooks.filter((b) => !b.isShared)) {
+        targets.push({ kind: 'addressBook', accountId, id: book.id, name: book.name, isDefault: book.isDefault, shareWith: grants(book.shareWith) });
+      }
+    }
+    if (include.files !== false && this.supportsFiles()) {
+      for (const node of this.data.fileNodes.filter((n) => Object.keys(n.shareWith ?? {}).length > 0)) {
+        targets.push({ kind: 'file', accountId, id: node.id, name: node.name, parentId: node.parentId ?? null, shareWith: grants(node.shareWith) });
+      }
+    }
+    return { targets, failed: [] };
+  }
+
+  /** Grants and revokes, each with a result, as the server's /set answers would give them. */
+  async applyShareChanges(changes: ShareChange[]): Promise<ShareChangeResult[]> {
+    return changes.map((change) => {
+      if (!this.ownShareItem(change.kind, change.id, change.accountId)) return { change, ok: false, error: 'notFound' };
+      this.setShare(change.kind, change.id, change.principalId, change.rights, change.accountId);
+      return { change, ok: true };
+    });
+  }
+
+  // ── Free/busy (Principal/getAvailability) ─────────────────────
+
+  supportsAvailability(): boolean { return this.supportsPrincipals(); }
+  async mayGetAvailability(): Promise<boolean> { return this.supportsAvailability(); }
+
+  async getPrincipalAvailability(principalId: string, utcStart: Date, utcEnd: Date): Promise<BusyPeriod[]> {
+    const answer = (await this.getPrincipalsAvailability([principalId], utcStart, utcEnd))[principalId];
+    if (!answer || 'error' in answer) throw Object.assign(new Error('Failed to query availability'), { type: answer?.error ?? 'notFound' });
+    return answer.periods;
+  }
+
+  async getPrincipalsAvailability(principalIds: string[], utcStart: Date, utcEnd: Date): Promise<Record<string, PrincipalAvailability>> {
+    const results: Record<string, PrincipalAvailability> = {};
+    if (!this.supportsAvailability()) return results;
+    for (const id of principalIds) {
+      const principal = this.principals.find((p) => p.id === id);
+      results[id] = principal ? { periods: this.busyPeriods(principal, utcStart, utcEnd) } : { error: 'notFound' };
+    }
+    return results;
+  }
+
+  /**
+   * A principal's busy time in the window: the timed events on the demo
+   * calendars they take part in (Nora: also those of her own calendars
+   * without participants), unless declined or marked free, plus their
+   * blocks in fixtures/availability.ts. No details, as with `showDetails: false`.
+   */
+  private busyPeriods(principal: Principal, utcStart: Date, utcEnd: Date): BusyPeriod[] {
+    const email = principal.email?.toLowerCase();
+    const isSelf = principal.id === this.data.accountId;
+    const counting = new Set(this.data.calendars.filter((c) => c.includeInAvailability !== 'none').map((c) => c.id));
+    const periods: BusyPeriod[] = [];
+    for (const event of expandRecurringEvents(this.data.calendarEvents, utcStart.toISOString(), utcEnd.toISOString())) {
+      if (event.showWithoutTime || event.freeBusyStatus === 'free' || event.status === 'cancelled') continue;
+      if (!Object.keys(event.calendarIds).some((id) => counting.has(id))) continue;
+      const me = Object.values(event.participants ?? {}).find((p) => p.email?.toLowerCase() === email);
+      if (!me && !(isSelf && !event.participants)) continue;
+      if (me?.participationStatus === 'declined') continue;
+      const start = event.utcStart ?? new Date(event.start).toISOString();
+      const end = event.utcEnd ?? new Date(new Date(start).getTime() + (parseDurationSeconds(event.duration) ?? 3600) * 1000).toISOString();
+      const tentative = event.status === 'tentative' || me?.participationStatus === 'tentative' || me?.participationStatus === 'needs-action';
+      periods.push({ utcStart: start, utcEnd: end, busyStatus: tentative ? 'tentative' : 'confirmed' });
+    }
+    periods.push(...createDemoBusyBlocks(principal.id));
+    return periods
+      .filter((p) => new Date(p.utcStart).getTime() < utcEnd.getTime() && new Date(p.utcEnd).getTime() > utcStart.getTime())
+      .sort((a, b) => a.utcStart.localeCompare(b.utcStart));
+  }
+
+  // ── Bulwark data in Inbox metadata (urn:ietf:params:jmap:metadata) ──
+  // Only the Support group keeps any (fixtures/shared-metadata.ts): its
+  // shared tags and the team inbox plugin's names. Keys are without the
+  // `org.bulwarkmail.` namespace, as JMAPClient hands them out.
+
+  supportsBulwarkMetadata(accountId?: string): boolean {
+    return !!accountId && Object.prototype.hasOwnProperty.call(this.metadata, accountId);
+  }
+
+  advertisesBulwarkMetadata(accountId?: string): boolean {
+    return this.supportsBulwarkMetadata(accountId);
+  }
+
+  async getBulwarkMetadata(accountId?: string, options?: { private?: boolean }): Promise<Record<string, unknown> | null> {
+    if (!this.supportsBulwarkMetadata(accountId)) return null;
+    const store = options?.private ? this.ownMetadata : this.metadata;
+    return structuredClone(store[accountId!] ?? {});
+  }
+
+  async setBulwarkMetadata(accountId: string | undefined, key: string, value: unknown, options?: { private?: boolean }): Promise<void> {
+    if (!this.supportsBulwarkMetadata(accountId)) throw new MetadataUnsupportedError();
+    if (value !== null && metadataValueBytes(value) > MAX_METADATA_ENTRY_BYTES) {
+      throw new MetadataTooLargeError(`The entry is larger than ${MAX_METADATA_ENTRY_BYTES} bytes`);
+    }
+    const store = options?.private ? this.ownMetadata : this.metadata;
+    const entries = (store[accountId!] ??= {});
+    if (value === null) delete entries[key];
+    else entries[key] = structuredClone(value);
+    this.notifyMailboxChange(accountId!);
+  }
+
+  /** Sets (null: removes) values inside one entry; a path whose parent is missing fails as on Stalwart. */
+  async patchBulwarkMetadata(accountId: string | undefined, key: string, patches: Array<{ path: string[]; value: unknown }>): Promise<{ newState?: string }> {
+    if (!this.supportsBulwarkMetadata(accountId)) throw new MetadataUnsupportedError();
+    const entries = this.metadata[accountId!];
+    const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+    let result: unknown = structuredClone(entries[key]);
+    for (const { path, value } of patches) {
+      if (path.length === 0) { result = structuredClone(value); continue; }
+      let node: unknown = result;
+      for (const segment of path.slice(0, -1)) node = isObject(node) ? node[segment] : undefined;
+      if (!isObject(node)) throw new MetadataPatchError('A parent of the patched value does not exist');
+      const last = path[path.length - 1];
+      if (value === null) delete node[last];
+      else node[last] = structuredClone(value);
+    }
+    if (result !== null && result !== undefined && metadataValueBytes(result) > MAX_METADATA_ENTRY_BYTES) {
+      throw new MetadataTooLargeError(`The entry is larger than ${MAX_METADATA_ENTRY_BYTES} bytes`);
+    }
+    if (result === null || result === undefined) delete entries[key];
+    else entries[key] = result;
+    return { newState: this.notifyMailboxChange(accountId!) };
+  }
+
+  /** A metadata change bumps the account's Mailbox state, as Stalwart does; returns the new state. */
+  private notifyMailboxChange(accountId: string): string {
+    const state = generateDemoId('state');
+    this.stateChangeCallback?.({ '@type': 'StateChange', changed: { [accountId]: { Mailbox: state } } });
+    return state;
+  }
+
+  /** One of Nora's own shareable items, or null (another account's, or unknown). */
+  private ownShareItem(kind: ShareKind, id: string, accountId?: string): { shareWith?: Record<string, AnyRights> | null } | null {
+    if (!this.supportsPrincipals() || (accountId && accountId !== this.data.accountId)) return null;
+    const own = <T extends { id: string; originalId?: string; isShared?: boolean }>(list: T[]) =>
+      list.find((item) => !item.isShared && (item.id === id || item.originalId === id)) ?? null;
+    switch (kind) {
+      case 'mailbox': return own(this.data.mailboxes);
+      case 'calendar': return own(this.data.calendars);
+      case 'addressBook': return own(this.data.addressBooks);
+      case 'file': return this.data.fileNodes.find((n) => n.id === id) ?? null;
+    }
+  }
+
+  private setShare(kind: ShareKind, id: string, principalId: string, rights: AnyRights | null, accountId?: string): void {
+    const item = this.ownShareItem(kind, id, accountId);
+    if (!item) throw new Error('Not found');
+    const next = { ...(item.shareWith ?? {}) };
+    if (rights) next[principalId] = { ...rights };
+    else delete next[principalId];
+    item.shareWith = Object.keys(next).length > 0 ? next : null;
+  }
 
   // ── Push / state ──────────────────────────────────────────────
 
@@ -278,8 +523,9 @@ export class DemoJMAPClient implements IJMAPClient {
   /**
    * Minimal JMAP filter evaluator for demo mode: supports the conditions the
    * message-list category tabs and the folder-less search scopes use
-   * (hasKeyword / notKeyword / from / text / inMailbox / inMailboxOtherThan
-   * and AND / OR / NOT operators). Unknown conditions are ignored.
+   * (hasKeyword / notKeyword / from / text / header / inMailbox /
+   * inMailboxOtherThan and AND / OR / NOT operators). Unknown conditions are
+   * ignored.
    */
   private matchesFilter(e: Email, filter: Record<string, unknown>): boolean {
     if (typeof filter.operator === 'string') {
@@ -318,6 +564,16 @@ export class DemoJMAPClient implements IJMAPClient {
       const q = filter.body.toLowerCase();
       const bodyText = Object.values(e.bodyValues || {}).map(v => v.value).join(' ').toLowerCase();
       if (!bodyText.includes(q)) return false;
+    }
+    // RFC 8621 4.4.1: [name] tests that the header exists, [name, value] that
+    // its value contains the text. Ignoring it would match every message.
+    if (Array.isArray(filter.header) && typeof filter.header[0] === 'string') {
+      const wanted = filter.header[0].toLowerCase();
+      const text = typeof filter.header[1] === 'string' ? filter.header[1].toLowerCase() : null;
+      const match = Object.entries(e.headers ?? {}).some(([name, value]) =>
+        name.toLowerCase() === wanted
+        && (text === null || (Array.isArray(value) ? value : [value]).some(v => String(v).toLowerCase().includes(text))));
+      if (!match) return false;
     }
     if (typeof filter.inMailbox === 'string' && !e.mailboxIds[filter.inMailbox]) return false;
     if (Array.isArray(filter.inMailboxOtherThan)) {
@@ -409,11 +665,14 @@ export class DemoJMAPClient implements IJMAPClient {
     limit?: number;
     onProgress?: (scanned: number, total: number) => void;
     signal?: AbortSignal;
+    accountId?: string;
   }): Promise<{ keywords: Record<string, number>; scanned: number; total: number; complete: boolean }> {
-    const total = this.data.emails.length;
+    // One account's mail: the Support group's tags are not Nora's own.
+    const emails = this.data.emails.filter(this.inAccount(options?.accountId));
+    const total = emails.length;
     const scanned = Math.min(total, Math.max(0, options?.limit ?? total));
     const keywords: Record<string, number> = {};
-    for (const email of this.data.emails.slice(0, scanned)) {
+    for (const email of emails.slice(0, scanned)) {
       for (const [keyword, isSet] of Object.entries(email.keywords || {})) {
         if (isSet) keywords[keyword] = (keywords[keyword] ?? 0) + 1;
       }
@@ -791,13 +1050,15 @@ export class DemoJMAPClient implements IJMAPClient {
     attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
     _fromName?: string,
     htmlBody?: string,
+    inReplyTo?: string[],
+    references?: string[],
   ): Promise<string> {
     const draftsMb = this.data.mailboxes.find(m => m.role === 'drafts');
     const id = draftId || generateDemoId('email');
     const existing = draftId ? this.data.emails.findIndex(e => e.id === draftId) : -1;
 
     const email: Email = {
-      id, threadId: generateDemoId('thread'),
+      id, threadId: this.threadFor(inReplyTo, references),
       mailboxIds: { [draftsMb?.id || this.data.mailboxes[0].id]: true },
       keywords: { $seen: true, $draft: true },
       size: body.length,
@@ -819,6 +1080,8 @@ export class DemoJMAPClient implements IJMAPClient {
         : { '1': { value: body } },
       attachments: attachments?.map(a => ({ ...a, partId: generateDemoId('part') })),
       messageId: `<${id}@demo.example.com>`,
+      inReplyTo: inReplyTo?.length ? inReplyTo : undefined,
+      references: references?.length ? references : undefined,
     };
 
     if (existing >= 0) {
@@ -853,7 +1116,7 @@ export class DemoJMAPClient implements IJMAPClient {
     }
     const sentMb = this.data.mailboxes.find(m => m.role === 'sent');
     const email: Email = {
-      id: generateDemoId('email'), threadId: generateDemoId('thread'),
+      id: generateDemoId('email'), threadId: this.threadFor(inReplyTo, references),
       mailboxIds: { [delayedUntil ? (this.data.mailboxes.find(m => m.role === 'drafts')?.id || this.data.mailboxes[0].id) : (sentMb?.id || this.data.mailboxes[0].id)]: true },
       keywords: delayedUntil ? { $seen: true, $draft: true } : { $seen: true },
       size: body.length + (htmlBody?.length || 0),
@@ -891,6 +1154,19 @@ export class DemoJMAPClient implements IJMAPClient {
     return delayedUntil
       ? { scheduled: true, emailId: email.id, emailSubmissionId, sendAt: delayedUntil }
       : { scheduled: false, emailId: email.id };
+  }
+
+  /**
+   * The thread a new message joins. A server threads a reply by In-Reply-To
+   * and References, so the reply shows up in the conversation it answers;
+   * without a known parent the message starts a thread of its own.
+   */
+  private threadFor(inReplyTo?: string[], references?: string[]): string {
+    const wanted = new Set([...(inReplyTo ?? []), ...(references ?? [])].map(stripMessageIdBrackets));
+    const parent = wanted.size > 0
+      ? this.data.emails.find(e => e.messageId && wanted.has(stripMessageIdBrackets(e.messageId)))
+      : undefined;
+    return parent?.threadId ?? generateDemoId('thread');
   }
 
   /** The From address of new mail: the chosen identity, else the account's own address. */
@@ -939,6 +1215,8 @@ export class DemoJMAPClient implements IJMAPClient {
     if (blobId === GONOGO_INVITE_BLOB) {
       return new Blob([createGoNoGoInvitationIcs()], { type: 'text/calendar; method=REQUEST' });
     }
+    // Built on fetch so its dates follow the clock (fixtures/invoice.ts).
+    if (blobId === INVOICE_BLOB) return new Blob([createSpreehostInvoiceXml()], { type: 'application/xml' });
     const emlOf = demoEmlEmailId(blobId);
     const emlEmail = emlOf ? this.data.emails.find((e) => e.id === emlOf) : undefined;
     if (emlEmail) return new Blob([buildDemoEml(emlEmail)], { type: 'message/rfc822' });
@@ -1394,7 +1672,9 @@ export class DemoJMAPClient implements IJMAPClient {
     return [...this.data.fileNodes];
   }
 
-  async setFileNodeShare(): Promise<void> { /* demo: no-op */ }
+  async setFileNodeShare(fileNodeId: string, principalId: string, rights: FileNodeRights | null, targetAccountId?: string): Promise<void> {
+    this.setShare('file', fileNodeId, principalId, rights, targetAccountId);
+  }
 
   async getFileNodes(ids: string[] | null): Promise<FileNode[]> {
     if (ids === null) return [...this.data.fileNodes];
@@ -1431,6 +1711,13 @@ export class DemoJMAPClient implements IJMAPClient {
     // content, and a move or its Undo shouldn't make a file look edited.
     const node = this.data.fileNodes.find(n => n.id === id);
     if (node) Object.assign(node, updates);
+  }
+
+  async replaceFileNodeBlob(id: string, blobId: string): Promise<void> {
+    const node = this.data.fileNodes.find(n => n.id === id);
+    if (!node) throw new Error('No such file');
+    const blob = this.blobStore.get(blobId);
+    Object.assign(node, { blobId, ...(blob ? { size: blob.size } : {}), modified: new Date().toISOString() });
   }
 
   async updateFileNodes(updates: Record<string, Partial<Pick<FileNode, 'name' | 'parentId'>>>): Promise<{ updated: string[]; notUpdated: Record<string, string> }> {
@@ -1558,6 +1845,77 @@ export class DemoJMAPClient implements IJMAPClient {
     email.mailboxIds = { [draftMailboxId]: true };
     email.keywords.$draft = true;
     this.recalcMailboxCounts();
+  }
+
+  // ── Recover deleted items (x:ArchivedItem, lib/recovery/archived-items.ts) ──
+  // As on Stalwart Enterprise with archiveDeletedItemsFor set: the work
+  // account keeps what Nora deleted for good (fixtures/archive.ts).
+
+  advertisesArchivedItems(accountId?: string): boolean {
+    return !this.isPersonal && (!accountId || accountId === this.data.accountId);
+  }
+
+  /** x:ArchivedItem/query: newest first, paged; `total` with calculateTotal. */
+  async queryArchivedItemIds(accountId?: string, options: { position?: number; limit?: number; calculateTotal?: boolean } = {}): Promise<ArchiveQueryPage> {
+    const id = accountId || this.data.accountId;
+    if (!this.advertisesArchivedItems(id)) {
+      throw Object.assign(new Error('Archived items are not available for this account'), { type: 'forbidden' });
+    }
+    const ids = this.archive
+      .filter((a) => a.item.accountId === id)
+      .sort((a, b) => b.item.archivedAt.localeCompare(a.item.archivedAt))
+      .map((a) => a.item.id);
+    const position = options.position ?? 0;
+    return {
+      ids: ids.slice(position, options.limit ? position + options.limit : undefined),
+      total: options.calculateTotal ? ids.length : null,
+    };
+  }
+
+  private archiveIo(accountId: string): ArchiveIo {
+    return {
+      query: (position, limit) => this.queryArchivedItemIds(accountId, { position, limit, calculateTotal: true }),
+      // x:ArchivedItem/get
+      get: async (ids) => ids.flatMap((id) => {
+        const found = this.archive.find((a) => a.item.id === id);
+        return found ? [structuredClone(found.item)] : [];
+      }),
+    };
+  }
+
+  async listArchivedEmails(accountId?: string, options: { days?: number; startPosition?: number } = {}): Promise<ArchiveListResult> {
+    const id = accountId || this.data.accountId;
+    return listArchivedEmailsPaged(this.archiveIo(id), id, { days: options.days ?? 0, startPosition: options.startPosition });
+  }
+
+  async hasArchivedEmail(accountId?: string, options: { days?: number } = {}): Promise<boolean> {
+    const id = accountId || this.data.accountId;
+    return hasArchivedEmailIn(this.archiveIo(id), id, { days: options.days ?? 0 });
+  }
+
+  /**
+   * x:ArchivedItem/set `{ status: "requestRestore" }`: the item leaves the
+   * archive and the message is back in the Inbox, unread and without keywords.
+   */
+  async restoreArchivedItems(ids: string[], accountId?: string): Promise<RestoreResult[]> {
+    const id = accountId || this.data.accountId;
+    const results = ids.map((itemId): RestoreResult => {
+      const index = this.archive.findIndex((a) => a.item.id === itemId && a.item.accountId === id);
+      if (index < 0) return { id: itemId, ok: false, error: 'notFound', type: 'notFound' };
+      const [{ email }] = this.archive.splice(index, 1);
+      const restored = structuredClone(email);
+      this.deriveHeaderFields(restored);
+      this.data.emails.push(withEmlBlob(restored));
+      return { id: itemId, ok: true };
+    });
+    if (results.some((r) => r.ok)) {
+      this.recalcMailboxCounts();
+      this.stateChangeCallback?.({
+        '@type': 'StateChange',
+        changed: { [this.data.accountId]: { Email: generateDemoId('state'), Mailbox: generateDemoId('state') } },
+      });
+    }
+    return results;
   }
 
   // ── Internal helpers ──────────────────────────────────────────

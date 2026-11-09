@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, act, renderHook } from "@testing-library/react";
-import { realAttachments, ListAttachmentChips, useListHasAttachment, attachmentIcon } from "../attachment-chips";
+import { realAttachments, ListAttachmentChips, useListHasAttachment, attachmentIcon, listRowShowsChips } from "../attachment-chips";
 import type { Attachment, Email } from "@/lib/jmap/types";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 
@@ -34,6 +34,18 @@ describe("realAttachments", () => {
 
   it("drops parts with no filename, which cannot be labelled or saved", () => {
     expect(realAttachments([att({ name: undefined })])).toEqual([]);
+  });
+
+  it("drops the report part of a bounce, which the reader does not list either", () => {
+    // A forwarded bounce: both parts named "attachment" by the forward, but
+    // only the original message is something the reader shows.
+    const original = att({ partId: "3", blobId: "b3", name: "attachment", type: "message/rfc822" });
+    const out = realAttachments([
+      att({ partId: "2", blobId: "b2", name: "attachment", type: "message/delivery-status" }),
+      original,
+      att({ partId: "4", blobId: "b4", name: "receipt", type: "Message/Disposition-Notification" }),
+    ]);
+    expect(out).toEqual([original]);
   });
 
   it("keeps genuine attachments in order", () => {
@@ -199,5 +211,29 @@ describe("attachmentIcon", () => {
     // "startup" contains "tar" and "pdf-notes" contains "pdf".
     expect(attachmentIcon("application/octet-stream", "startup.docx").className).toContain("text-sky-600");
     expect(attachmentIcon("", "pdf-notes.bin").className).toBe("text-muted-foreground");
+  });
+});
+
+describe("listRowShowsChips", () => {
+  const email = { id: "e1", hasAttachment: true } as Email;
+  const loader = (cached?: Attachment[]) => {
+    const load = (() => () => {}) as LoadListAttachments;
+    load.peek = () => cached;
+    return load;
+  };
+
+  it("counts the room a row holds while its parts load", () => {
+    expect(listRowShowsChips(email, loader(undefined))).toBe(true);
+  });
+
+  it("drops the chip row once the parts turn out to be inline images", () => {
+    // The list guesses row heights by this; a chip row it no longer draws
+    // made it guess the chip height from a row without one.
+    const logo = att({ partId: "2", blobId: "b2", name: "logo.png", type: "image/png", disposition: "inline" });
+    expect(listRowShowsChips(email, loader([logo]))).toBe(false);
+  });
+
+  it("keeps the chip row when the loaded parts include a real attachment", () => {
+    expect(listRowShowsChips(email, loader([att({})]))).toBe(true);
   });
 });

@@ -51,6 +51,8 @@ export const SARAH = p('Sarah', 'Kim', 'sarah@designco.example', 'sarah-kim');
 export const OLIVIA = p('Olivia', 'Bennett', 'olivia@northwind.example', 'olivia-bennett');
 export const JENNIFER = p('Jennifer', 'Hayes', 'jennifer@talent-partners.example', 'jennifer-hayes');
 export const KENJI = p('Kenji', 'Watanabe', 'kenji@infrasummit.example', 'kenji-watanabe');
+/** Meridian Labs' hosting company; sends the monthly e-invoice (fixtures/invoice.ts). */
+export const SPREEHOST: Person = { name: 'Spreehost Billing', email: 'billing@spreehost.example', given: 'Spreehost', surname: 'Billing' };
 
 // ── Family and friends ────────────────────────────────────────
 export const SOFIA = p('Sofia', 'Russo', 'sofia.russo@example.com', 'sofia-russo');

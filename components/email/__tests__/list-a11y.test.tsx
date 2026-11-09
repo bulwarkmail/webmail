@@ -36,6 +36,16 @@ function List({ ids, initial: active }: { ids: string[]; initial?: string }) {
 
 const option = (name: string) => screen.getByRole('row', { name });
 
+/** Lays rows out at these tops in a 200px tall view; 60px each. */
+function mockRowTops(tops: Record<string, number>) {
+  return vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    const id = this.getAttribute('data-row-key');
+    const top = id ? tops[id] : 0;
+    const height = id ? 60 : 200;
+    return { top, bottom: top + height, left: 0, right: 100, width: 100, height, x: 0, y: top, toJSON() {} } as DOMRect;
+  });
+}
+
 describe('message list as one widget', () => {
   it('names a row in one sentence and skips what does not apply', () => {
     expect(rowLabel(['unread', 'Anna Berg', 'Budget', false, null, '', 'Has attachment'])).toBe('unread, Anna Berg, Budget, Has attachment');
@@ -82,6 +92,40 @@ describe('message list as one widget', () => {
     expect(option('row a')).toHaveAttribute('tabindex', '-1');
   });
 
+  it('leaves the focus alone when rows scroll in or out', () => {
+    const { rerender } = render(<List ids={['a', 'b', 'c']} initial="a" />);
+    act(() => option('row c').focus());
+    rerender(<List ids={['b', 'c']} initial="a" />);
+    expect(document.activeElement).toBe(option('row c'));
+    rerender(<List ids={['a', 'b', 'c']} initial="a" />);
+    expect(document.activeElement).toBe(option('row c'));
+  });
+
+  it('hands the focus to a row in view when the open message is scrolled out of it', () => {
+    const rect = mockRowTops({ a: -300, b: 20, c: 80 });
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    try {
+      render(<List ids={['a', 'b', 'c']} initial="a" />);
+      act(() => screen.getByTestId('scroller').focus());
+      expect(document.activeElement).toBe(option('row b'));
+      expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    } finally {
+      rect.mockRestore();
+      focus.mockRestore();
+    }
+  });
+
+  it('puts the Tab stop on the first row in view when nothing is open', () => {
+    const rect = mockRowTops({ a: -300, b: 20 });
+    try {
+      render(<List ids={['a', 'b']} />);
+      expect(option('row b')).toHaveAttribute('tabindex', '0');
+      expect(option('row a')).toHaveAttribute('tabindex', '-1');
+    } finally {
+      rect.mockRestore();
+    }
+  });
+
   it('never pulls the focus out of another part of the page', () => {
     const { rerender } = render(<List ids={['a', 'b']} initial="a" />);
     act(() => screen.getByText('outside').focus());
@@ -115,5 +159,35 @@ describe('message list as one widget', () => {
     render(<div role="treegrid"><Row id="a" onToggle={onToggle} /></div>);
     fireEvent.keyDown(screen.getByText('star a'), { key: ' ' });
     expect(onToggle).not.toHaveBeenCalled();
+  });
+});
+
+// The list keeps a row on screen for the next folder's message at its place.
+function SlotList({ ids }: { ids: string[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useListboxFocus(ref, undefined, ids.join());
+  return (
+    <div ref={ref} tabIndex={-1} data-testid="scroller">
+      <div role="treegrid" aria-label="Messages" data-setsize="3">
+        {ids.map((id, slot) => <Row key={`row-${slot}`} id={id} />)}
+      </div>
+    </div>
+  );
+}
+
+describe('a focused row that shows another message', () => {
+  it("hands the focus on to the list's Tab stop, as a new row did", () => {
+    const spy = mockRowTops({ a: 0, b: 60, c: 120, d: 0, e: 60, f: 120 });
+    const { rerender } = render(<SlotList ids={['a', 'b', 'c']} />);
+    option('row b').focus();
+    expect(document.activeElement).toBe(option('row b'));
+    const focused: string[] = [];
+    const scroller = screen.getByTestId('scroller');
+    scroller.addEventListener('focusin', (e) => { focused.push((e.target as HTMLElement).getAttribute('aria-label') ?? (e.target as HTMLElement).dataset.testid ?? ''); });
+    act(() => { rerender(<SlotList ids={['d', 'e', 'f']} />); });
+    // Through the list to the Tab stop: a focus move a screen reader announces.
+    expect(focused).toContain('scroller');
+    expect(document.activeElement).toBe(option('row d'));
+    spy.mockRestore();
   });
 });

@@ -49,6 +49,10 @@ describe('formatDate formatters', () => {
       const got = formatDate(d);
       if (dateFormat === 'full') {
         expect(got).toBe(d.toLocaleString(numeric, { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12 }));
+      } else if (dateFormat === 'smart' && ago > 7 * 86_400_000 && dateLocale === 'auto'
+        && d.toLocaleDateString('en-US', { timeZone: zone, year: 'numeric' }) === new Date(now).toLocaleDateString('en-US', { timeZone: zone, year: 'numeric' })) {
+        // Earlier this year: day and month (mail-16).
+        expect(got).toBe(d.toLocaleDateString('en-US', { timeZone: zone, month: 'short', day: 'numeric' }));
       } else if (dateFormat === 'smart' && ago > 7 * 86_400_000) {
         expect(got).toBe(d.toLocaleDateString(numeric, { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }));
       } else if (dateFormat === 'smart' && ago > 86_400_000) {
@@ -58,5 +62,19 @@ describe('formatDate formatters', () => {
         expect(got.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it("works out a row's date once, not on every render, and again when a setting changes", () => {
+    useSettingsStore.setState({ dateFormat: 'smart', timeFormat: '24h', dateLocale: 'auto', timeZone: 'Europe/Berlin' });
+    const date = new Date(Date.now() - 3 * 86_400_000);
+    const parts = vi.spyOn(Intl.DateTimeFormat.prototype, 'formatToParts');
+    const first = formatDate(date);
+    const worked = parts.mock.calls.length;
+    expect(worked).toBeGreaterThan(0);
+    for (let i = 0; i < 20; i++) expect(formatDate(date)).toBe(first);
+    expect(parts.mock.calls.length).toBe(worked);
+    useSettingsStore.setState({ timeFormat: '12h' });
+    formatDate(date);
+    expect(parts.mock.calls.length).toBeGreaterThan(worked);
   });
 });

@@ -3,118 +3,20 @@
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Folder } from '@/components/icons';
-import { useSettingsStore, type ToolbarPosition, type MailLayout, type InterfaceLayout } from '@/stores/settings-store';
+import { useSettingsStore, effectiveMailLayout, type ToolbarPosition, type MailLayout, type InterfaceLayout } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
+import { LayoutPreview, useOptionPreview } from './layout-preview';
 import { cn } from '@/lib/utils';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { hiddenSharedMailIds, setSharedMailAccountHidden } from '@/lib/shared-mail-visibility';
+import { localizeMailboxName } from '@/lib/mailbox-label';
 
-const MAIL_LAYOUT_PREVIEW_ROWS = [
-  { sender: 'Alice', subject: 'Quarterly roadmap', preview: 'The draft is ready for review.', selected: false },
-  { sender: 'Nadia', subject: 'Design sync', preview: 'Pushed updated mocks and notes.', selected: true },
-  { sender: 'Billing', subject: 'Invoice 1042', preview: 'Your receipt is attached.', selected: false },
-];
-
-const MAIL_LAYOUT_PREVIEW_ROWS_FOCUS = [
-  ...MAIL_LAYOUT_PREVIEW_ROWS,
-  { sender: 'Sam', subject: 'Lunch?', preview: '', selected: false },
-  { sender: 'Newsletter', subject: 'Weekly digest', preview: '', selected: false },
-];
-
-function MailLayoutPreview({
-  value,
-  t,
-}: {
-  value: MailLayout;
-  t: (key: string) => string;
-}) {
-  return (
-    <div className="mt-3 rounded-xl border border-border bg-background p-3">
-      <div>
-        <div className="text-sm font-medium text-foreground">{t(`mail_layout.${value}`)}</div>
-        <div className="mt-1 text-xs text-muted-foreground">{t(`mail_layout.${value}_description`)}</div>
-      </div>
-
-      <div className="mt-3 overflow-hidden rounded-lg border border-border bg-muted/20">
-        <div className="flex h-28">
-          <div className="w-11 border-e border-border bg-muted/40" />
-
-          {value === 'split' && (
-            <>
-              <div className="w-28 border-e border-border bg-background">
-                {MAIL_LAYOUT_PREVIEW_ROWS.map((row) => (
-                  <div
-                    key={row.subject}
-                    className={cn(
-                      'border-b border-border px-2 py-1.5 text-[0.625rem] last:border-b-0',
-                      row.selected && 'bg-primary/10'
-                    )}
-                  >
-                    <div className="truncate font-medium text-foreground">{row.sender}</div>
-                    <div className="truncate text-muted-foreground">{row.subject}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex-1 bg-background px-3 py-2">
-                <div className="h-2.5 w-20 rounded bg-foreground/10" />
-                <div className="mt-2 h-2 w-full rounded bg-foreground/10" />
-                <div className="mt-1.5 h-2 w-5/6 rounded bg-foreground/10" />
-                <div className="mt-1.5 h-2 w-2/3 rounded bg-foreground/10" />
-              </div>
-            </>
-          )}
-
-          {value === 'focus' && (
-            <div className="flex-1 bg-background">
-              {MAIL_LAYOUT_PREVIEW_ROWS_FOCUS.map((row) => (
-                <div
-                  key={row.subject}
-                  className={cn(
-                    'border-b border-border px-2 py-1 text-[0.625rem] last:border-b-0',
-                    row.selected && 'bg-primary/10'
-                  )}
-                >
-                  <div className="truncate text-foreground">
-                    <span className="font-medium">{row.sender}</span>
-                    <span className="mx-1.5 text-muted-foreground">{row.subject}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {value === 'horizontal' && (
-            <div className="flex-1 flex flex-col bg-background">
-              <div className="border-b border-border bg-background">
-                {MAIL_LAYOUT_PREVIEW_ROWS.map((row) => (
-                  <div
-                    key={row.subject}
-                    className={cn(
-                      'border-b border-border px-2 py-1 text-[0.625rem] last:border-b-0',
-                      row.selected && 'bg-primary/10'
-                    )}
-                  >
-                    <div className="truncate text-foreground">
-                      <span className="font-medium">{row.sender}</span>
-                      <span className="mx-1.5 text-muted-foreground">{row.subject}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex-1 bg-background px-3 py-2">
-                <div className="h-2 w-20 rounded bg-foreground/10" />
-                <div className="mt-1.5 h-1.5 w-full rounded bg-foreground/10" />
-                <div className="mt-1 h-1.5 w-5/6 rounded bg-foreground/10" />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+const INTERFACE_LAYOUT_KEYS: Record<InterfaceLayout, string> = {
+  default: 'default',
+  'mountain-view': 'mountain_view',
+};
 
 /**
  * The Appearance page's Layout section: where the interface, the reading
@@ -123,9 +25,15 @@ function MailLayoutPreview({
 export function LayoutSection() {
   const t = useTranslations('settings.appearance');
   const tEmail = useTranslations('settings.email_behavior');
+  const tPreview = useTranslations('layout_preview');
   const { toolbarPosition, showToolbarLabels, mailLayout, interfaceLayout, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
   const mountainView = interfaceLayout === 'mountain-view';
+  // Each preview draws the option under the pointer or focus, so people can
+  // compare before they choose, and the selected one otherwise.
+  const interfacePreview = useOptionPreview(interfaceLayout);
+  const mailPreview = useOptionPreview(mailLayout);
+  const interfaceKey = INTERFACE_LAYOUT_KEYS[interfacePreview.shown];
 
   return (
     <SettingsSection id="layout" title={t('sections.layout')}>
@@ -133,14 +41,29 @@ export function LayoutSection() {
           go - a layout choice, so it leads the section. */}
       {!isSettingHidden('interfaceLayout') && (
       <SettingItem label={t('interface_layout.label')} description={t('interface_layout.description')} locked={isSettingLocked('interfaceLayout')}>
-        <RadioGroup
-          value={interfaceLayout}
-          onChange={(value) => updateSetting('interfaceLayout', value as InterfaceLayout)}
-          options={[
-            { value: 'default', label: t('interface_layout.default') },
-            { value: 'mountain-view', label: t('interface_layout.mountain_view') },
-          ]}
-        />
+        <div className="w-[22rem] max-w-full">
+          <div {...interfacePreview.handlers}>
+            <RadioGroup
+              value={interfaceLayout}
+              onChange={(value) => updateSetting('interfaceLayout', value as InterfaceLayout)}
+              options={[
+                { value: 'default', label: t('interface_layout.default') },
+                { value: 'mountain-view', label: t('interface_layout.mountain_view') },
+              ]}
+            />
+          </div>
+          {/* Drawn with the mail layout each option would use: the saved one
+              under the default layout, the full-width list under Mountain View. */}
+          <LayoutPreview
+            testId="interface-layout-preview"
+            option={interfacePreview.shown}
+            title={t(`interface_layout.${interfaceKey}`)}
+            description={tPreview(`${interfaceKey}_description`)}
+            selectedTitle={t(`interface_layout.${INTERFACE_LAYOUT_KEYS[interfaceLayout]}`)}
+            shell={interfacePreview.shown}
+            mail={effectiveMailLayout(mailLayout, interfacePreview.shown)}
+          />
+        </div>
       </SettingItem>
       )}
       {/* Mountain View always shows the list and then the conversation, and
@@ -149,16 +72,28 @@ export function LayoutSection() {
       {!isSettingHidden('mailLayout') && !mountainView && (
       <SettingItem label={tEmail('mail_layout.label')} description={tEmail('mail_layout.description')} locked={isSettingLocked('mailLayout')}>
         <div className="w-[22rem] max-w-full">
-          <RadioGroup
-            value={mailLayout}
-            onChange={(value) => updateSetting('mailLayout', value as MailLayout)}
-            options={[
-              { value: 'split', label: tEmail('mail_layout.split') },
-              { value: 'focus', label: tEmail('mail_layout.focus') },
-              { value: 'horizontal', label: tEmail('mail_layout.horizontal') },
-            ]}
+          <div {...mailPreview.handlers}>
+            <RadioGroup
+              value={mailLayout}
+              onChange={(value) => updateSetting('mailLayout', value as MailLayout)}
+              options={[
+                { value: 'split', label: tEmail('mail_layout.split') },
+                { value: 'focus', label: tEmail('mail_layout.focus') },
+                { value: 'horizontal', label: tEmail('mail_layout.horizontal') },
+              ]}
+            />
+          </div>
+          {/* In the shell of the chosen interface layout: the app rail and
+              folder sidebar of the default layout. */}
+          <LayoutPreview
+            testId="mail-layout-preview"
+            option={mailPreview.shown}
+            title={tEmail(`mail_layout.${mailPreview.shown}`)}
+            description={tEmail(`mail_layout.${mailPreview.shown}_description`)}
+            selectedTitle={tEmail(`mail_layout.${mailLayout}`)}
+            shell={interfaceLayout}
+            mail={mailPreview.shown}
           />
-          <MailLayoutPreview value={mailLayout} t={tEmail} />
         </div>
       </SettingItem>
       )}
@@ -188,12 +123,21 @@ export function LayoutSection() {
 /** The Appearance page's Sidebar section: what the folder sidebar and rail show. */
 export function SidebarSection() {
   const t = useTranslations('settings.appearance');
-  const { hideAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
+  const tP3 = useTranslations('mail_p3_conv');
+  const { sidebarAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
   const accounts = useAccountStore(s => s.accounts);
   const multiAccount = accounts.length > 1;
 
   return (
     <SettingsSection id="sidebar" title={t('sections.sidebar')}>
+      {/* Compose sits under the switcher now, not over the list (mail-p3-11). */}
+      <SettingItem label={t('sidebar_account_switcher.label')} description={tP3('sidebar_account_switcher_description')}>
+        <ToggleSwitch
+          checked={sidebarAccountSwitcher}
+          onChange={(checked) => updateSetting('sidebarAccountSwitcher', checked)}
+        />
+      </SettingItem>
+
       <SettingItem label={t('colorful_sidebar_icons.label')} description={t('colorful_sidebar_icons.description')}>
         <ToggleSwitch
           checked={colorfulSidebarIcons}
@@ -208,17 +152,7 @@ export function SidebarSection() {
         />
       </SettingItem>
 
-      {/* The account switcher and the rail avatars only mean something with
-          a second account; a single-account user never sees either. */}
-      {multiAccount && (
-        <SettingItem label={t('hide_account_switcher.label')} description={t('hide_account_switcher.description')}>
-          <ToggleSwitch
-            checked={hideAccountSwitcher}
-            onChange={(checked) => updateSetting('hideAccountSwitcher', checked)}
-          />
-        </SettingItem>
-      )}
-
+      {/* The rail avatars only mean something with a second account. */}
       {multiAccount && (
         <SettingItem label={t('show_rail_account_list.label')} description={t('show_rail_account_list.description')}>
           <ToggleSwitch
@@ -238,6 +172,7 @@ export function SidebarSection() {
  */
 export function MultipleAccountsSection() {
   const t = useTranslations('settings.appearance');
+  const tSidebar = useTranslations('sidebar');
   const { enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, tintListRowsByAccount, showAccountDot, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const accounts = useAccountStore(s => s.accounts);
@@ -245,6 +180,7 @@ export function MultipleAccountsSection() {
   const mailboxes = useEmailStore(s => s.mailboxes);
   const hasGroupInboxes = useMemo(() => mailboxes.some(m => m.isShared), [mailboxes]);
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
+  const compactSharedMailboxes = useSettingsStore(s => s.compactSharedMailboxes);
   const hiddenSharedMailAccounts = useSettingsStore(s => s.hiddenSharedMailAccounts);
   const hiddenSharedIds = hiddenSharedMailIds(hiddenSharedMailAccounts, activeAccountId);
   const sharedMailAccounts = useMemo(() => {
@@ -390,7 +326,9 @@ export function MultipleAccountsSection() {
                       {checked && <Check className="w-3 h-3" />}
                     </span>
                     <Folder className={cn("w-4 h-4 flex-shrink-0", mb.role ? "text-primary" : "text-muted-foreground")} />
-                    <span className="text-sm text-foreground truncate">{mb.name}</span>
+                    <span className="text-sm text-foreground truncate">
+                      {localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`))}
+                    </span>
                   </button>
                 );
               })}
@@ -446,6 +384,19 @@ export function MultipleAccountsSection() {
             </SettingItem>
           ))}
         </div>
+      )}
+
+      {sharedMailAccounts.length > 0 && showSharedMailAccounts && !isSettingHidden('compactSharedMailboxes') && (
+        <SettingItem
+          label={t('compact_shared_mailboxes.label')}
+          description={t('compact_shared_mailboxes.description')}
+          locked={isSettingLocked('compactSharedMailboxes')}
+        >
+          <ToggleSwitch
+            checked={compactSharedMailboxes}
+            onChange={(v) => updateSetting('compactSharedMailboxes', v)}
+          />
+        </SettingItem>
       )}
     </SettingsSection>
   );

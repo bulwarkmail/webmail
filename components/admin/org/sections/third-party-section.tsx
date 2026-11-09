@@ -18,6 +18,8 @@ interface OutgoingHostsState {
   builtIn: OutgoingHost[];
   reachable: ReachableHost[];
   networkPlugins: { id: string; name: string }[];
+  /** Running in the mode with the servers entered on their admin page; these manifest servers stay off. */
+  partlyOffPlugins?: { id: string; name: string; hosts: string[] }[];
 }
 
 const SIDE_LABEL: Record<ReachableHost['side'], string> = {
@@ -137,13 +139,18 @@ export function ThirdPartySection({ draft }: { draft: OrgPolicyDraft }) {
           {on && relays.length === 0 && (
             <ConfigNote>
               Push notifications now need a relay you run yourself. Add one under{' '}
-              <AdminLink href="/admin/policy" className="underline underline-offset-2">User policy &gt; Push relays</AdminLink>;
+              <AdminLink href="/admin/policy" className="underline underline-offset-2">Features and settings &gt; Push relays</AdminLink>;
               until then users get new mail only while Bulwark is open.
             </ConfigNote>
           )}
           {on && state.networkPlugins.length > 0 && (
             <ConfigNote>
               Not running because they declare network access: {state.networkPlugins.map((p) => p.name).join(', ')}.
+            </ConfigNote>
+          )}
+          {on && (state.partlyOffPlugins?.length ?? 0) > 0 && (
+            <ConfigNote>
+              Running with only the servers entered on their admin page: {state.partlyOffPlugins!.map((p) => `${p.name} (${p.hosts.join(', ')} stays off)`).join('; ')}.
             </ConfigNote>
           )}
 

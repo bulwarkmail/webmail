@@ -23,9 +23,21 @@ import {
   type DirectoryDetail,
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
-import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
+import { IMPLICIT_PERMISSIONS, MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
+import { declaredPermissions, HIGH_RISK_PERMISSIONS } from '@/lib/plugin-sandbox/permission-text';
+import { getPluginRegistry } from '@/lib/admin/plugin-registry';
+import { productName } from '@/lib/product-name';
+import { withAppName } from '@/lib/settings-search';
 
 const MAX_PREVIEW_SOURCE_LEN = 100_000;
+
+/** For a directory that predates it. It only lists what it knows about, and admin pages are in English. */
+const LOCAL_PERMISSION_TEXT: Record<string, { title: string; body: string }> = {
+  keystore: {
+    title: 'Use certificates on this computer',
+    body: 'Ask to sign and decrypt messages with certificates on this computer or a smart card. The app asks each user first. The plugin never gets the private key, but while they allow it, it can sign in their name and read what it decrypts.',
+  },
+};
 
 /** A version row as the detail page renders it. */
 function versionRow(v: DirectoryVersion) {
@@ -40,6 +52,7 @@ function versionRow(v: DirectoryVersion) {
     sha256: v.sha256,
     yanked: v.yanked,
     changelog: v.changelog ?? null,
+    notes: v.notes ?? null,
     downloads: v.downloads ?? 0,
     signed: !!v.signature,
     commit: v.provenance?.source?.commit ?? null,
@@ -172,6 +185,18 @@ export async function GET(
     const installed = await installedExtensions();
     const state = installedStateOf(installed, slug, type);
     const history = await historyFor(type, slug);
+    const appName = productName(configManager.get<string>('appName'));
+    // What the bundle itself declares, optional permissions too: the directory's list can leave some out.
+    const declared = type === 'plugin' ? declaredPermissions(manifest) : [];
+    const listed = new Set((detail.permissions ?? []).map((p) => p.id));
+    const unlisted = declared.filter((id) => !listed.has(id) && LOCAL_PERMISSION_TEXT[id]).map((id) => ({
+      id,
+      ...LOCAL_PERMISSION_TEXT[id],
+      highRisk: HIGH_RISK_PERMISSIONS.has(id),
+    }));
+    const installedPlugin = state.installed && type === 'plugin' ? (await getPluginRegistry()).plugins.find((p) => p.id === slug) : null;
+    const implicit = new Set<string>(IMPLICIT_PERMISSIONS);
+    const addedPermissions = installedPlugin ? declared.filter((p) => !installedPlugin.permissions?.includes(p) && !implicit.has(p)) : [];
 
     return NextResponse.json(
       {
@@ -184,7 +209,8 @@ export async function GET(
           screenshots: detail.screenshots ?? [],
           themePreviews: detail.themePreviews ?? [],
           advisories: detail.advisories ?? [],
-          permissionDetails: detail.permissions ?? [],
+          // The directory ships the webmail's permission texts unfilled.
+          permissionDetails: [...(detail.permissions ?? []), ...unlisted].map((p) => withAppName(p, appName) as typeof p),
           source: detail.source,
           createdAt: detail.createdAt ?? null,
           updatedAt: detail.updatedAt ?? null,
@@ -197,6 +223,7 @@ export async function GET(
         requestedVersionMissing: requested && !requestedRow ? requested : null,
         bundle: {
           manifest,
+          addedPermissions,
           source: sourcePreview,
           size: bundleSize,
           error: bundleError,

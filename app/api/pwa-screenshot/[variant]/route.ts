@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 import { configManager } from '@/lib/admin/config-manager';
 import { fetchBrandingAsset } from '@/lib/admin/branding-asset';
+import { renderCache } from '@/lib/admin/render-cache';
 import {
   matchDomainBranding,
   parseDomainBranding,
@@ -20,8 +21,9 @@ const VARIANTS = {
 
 type Variant = keyof typeof VARIANTS;
 
-// Cache resized images keyed by (variant, source URL).
-const cache = new Map<string, Blob>();
+// Cache resized images keyed by (variant, source URL); an uploaded source's
+// URL carries its version. Capped, and dropped on a branding change.
+const cache = renderCache('pwa-screenshot');
 
 export async function GET(
   req: NextRequest,

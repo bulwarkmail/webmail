@@ -85,6 +85,27 @@ const ANY_PREFIX_RE = buildPrefixRegex([...REPLY_TOKENS, ...FORWARD_TOKENS]);
  *   stripSubjectPrefixes("foo")                    === "foo"
  *   stripSubjectPrefixes("")                       === ""
  */
+const FORWARD_RE = buildPrefixRegex(FORWARD_TOKENS);
+const REPLY_RE = buildPrefixRegex(REPLY_TOKENS);
+
+/**
+ * Whether the subject's leading prefix chain marks a forward anywhere in it
+ * ("Fwd:", "Re: Fwd:", "AW: WG:"), case-insensitively. Booking cards use it:
+ * a forwarded booking mail was authenticated for the forwarder, not for the
+ * airline or shop it quotes.
+ */
+export function hasForwardPrefix(subject: string | undefined | null): boolean {
+  let rest = (subject ?? "").trimStart();
+  for (let i = 0; i < 20; i++) {
+    const forward = FORWARD_RE.exec(rest);
+    if (forward && forward[0].length > 0) return true;
+    const reply = REPLY_RE.exec(rest);
+    if (!reply || reply[0].length === 0) return false;
+    rest = rest.slice(reply[0].length).trimStart();
+  }
+  return false;
+}
+
 export function stripSubjectPrefixes(subject: string | undefined | null): string {
   if (!subject) return "";
   let s = subject;

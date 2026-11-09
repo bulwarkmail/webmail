@@ -11,9 +11,17 @@ permissions:
 
 jobs:
   vitest:
-    name: Vitest
+    name: Vitest (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    # Most of a run is per-file overhead (imports and jsdom setup), not test
+    # code, so spreading the files over parallel runners cuts the wall time
+    # almost linearly. fail-fast is off so one red shard doesn't hide failures
+    # in the others.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -33,7 +41,7 @@ jobs:
         # forks + a small worker count keeps the load-sensitive component tests
         # from timing out on the shared runners; the longer per-test timeout
         # covers the jsdom-heavy suites.
-        run: npx vitest run --pool=forks --maxWorkers=2 --testTimeout=15000
+        run: npx vitest run --pool=forks --maxWorkers=2 --testTimeout=15000 --shard=${{ matrix.shard }}/4
 
   # The pre-commit hook lints only staged files and never runs on fork PRs,
   # so this is the one place the whole tree is checked.
@@ -59,3 +67,26 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+  # The build the release tarball and a manual install use, with its guard at
+  # the end. Docker and the Lite images build another way (webpack, export), so
+  # nothing else would notice this one breaking before a release does.
+  standalone-build:
+    name: Standalone build and guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build

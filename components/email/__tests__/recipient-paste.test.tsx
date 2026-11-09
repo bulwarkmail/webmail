@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
@@ -239,10 +239,23 @@ describe('RecipientChipInput paste', () => {
     const input = toInput();
     paste(input, '"Alice Smith <alice@x.com>", "Alex Smith <alex@x.com>"');
 
-    // Chips render as "Name (email)" when a display name is present.
-    expect(screen.getByText('Alice Smith (alice@x.com)')).toBeInTheDocument();
-    expect(screen.getByText('Alex Smith (alex@x.com)')).toBeInTheDocument();
+    // A named chip has its address in the tooltip.
+    expect(screen.getByTitle('Alice Smith <alice@x.com>')).toBeInTheDocument();
+    expect(screen.getByTitle('Alex Smith <alex@x.com>')).toBeInTheDocument();
     expect(input.value).toBe('');
+  });
+
+  // "Maximilian Alexander von Hoh…": the chip showed "Name (address)" and
+  // cut both. It shows the name; the address is in the tooltip, and screen
+  // readers still hear it.
+  it('shows the name only on a named chip', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    paste(toInput(), 'Maximilian Alexander von Hohenberg <max.hohenberg@example.org>');
+
+    const label = screen.getByTitle('Maximilian Alexander von Hohenberg <max.hohenberg@example.org>');
+    expect(within(label).getByText('Maximilian Alexander von Hohenberg')).toHaveClass('truncate');
+    expect(within(label).queryByText(/max\.hohenberg@example\.org/, { ignore: '.sr-only' })).toBeNull();
+    expect(label.closest('[draggable]')?.textContent).toBe('Maximilian Alexander von Hohenberg (max.hohenberg@example.org)');
   });
 
   it('keeps a `Name <email>` pair as a single named chip', () => {
@@ -250,7 +263,7 @@ describe('RecipientChipInput paste', () => {
     const input = toInput();
     paste(input, 'John Doe <j@x.com>, jane@y.com');
 
-    expect(screen.getByText('John Doe (j@x.com)')).toBeInTheDocument();
+    expect(screen.getByTitle('John Doe <j@x.com>')).toBeInTheDocument();
     expect(screen.getByText('jane@y.com')).toBeInTheDocument();
     expect(input.value).toBe('');
   });
@@ -260,7 +273,7 @@ describe('RecipientChipInput paste', () => {
     const input = toInput();
     paste(input, '"Doe, John" <j@x.com>; bob@z.com');
 
-    expect(screen.getByText('Doe, John (j@x.com)')).toBeInTheDocument();
+    expect(screen.getByTitle('Doe, John <j@x.com>')).toBeInTheDocument();
     expect(screen.getByText('bob@z.com')).toBeInTheDocument();
     expect(input.value).toBe('');
   });
@@ -295,7 +308,7 @@ describe('RecipientChipInput paste', () => {
     const input = toInput();
     paste(input, '"VIP" <vip@x.com>, not-an-email, b@y.com');
 
-    expect(screen.getByText('VIP (vip@x.com)')).toBeInTheDocument();
+    expect(screen.getByTitle('VIP <vip@x.com>')).toBeInTheDocument();
     expect(screen.getByText('b@y.com')).toBeInTheDocument();
     expect(input.value).toBe('not-an-email');
   });

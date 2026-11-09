@@ -7,6 +7,7 @@ import { currentStoreEpoch } from '@/lib/store-epoch';
 import { debug } from '@/lib/debug';
 import { vacationHooks } from '@/lib/plugin-hooks';
 import { vacationToView } from '@/lib/plugin-projection';
+import { vacationReplyLoaded, vacationReplySaved } from '@/lib/vacation-calendar';
 
 /** What the vacation card sets for forwarding; the period comes from the vacation. */
 export type VacationForwardSettings = Pick<VacationForward, 'enabled' | 'to' | 'keepCopy'>;
@@ -40,6 +41,11 @@ interface VacationStore {
   audienceAvailable: boolean;
   /** Stored forwarding or recipients do not run until the card is saved (see readVacationFilters). */
   notRunning: boolean;
+  /**
+   * The account has filters (Sieve) but they couldn't be read on the last
+   * load, so whether the out-of-office forwards mail isn't known.
+   */
+  forwardUnknown: boolean;
   /** The most forwards the filter rules let one message collect (see readVacationFilters). */
   otherForwards: number;
   isLoading: boolean;
@@ -107,6 +113,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
   audience: null,
   audienceAvailable: false,
   notRunning: false,
+  forwardUnknown: false,
   otherForwards: 0,
   isLoading: false,
   isSaving: false,
@@ -122,7 +129,8 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
       const vacation = await client.getVacationResponse(accountId);
       let isEnabled = vacation.isEnabled;
       let filters: VacationFilters | null = null;
-      if (hasSieve(client, accountId)) {
+      const sieve = hasSieve(client, accountId);
+      if (sieve) {
         filters = await readVacationFilters(client, accountId).catch(() => null);
         // Running from the filters script leaves the vacation script itself
         // inactive, so VacationResponse reports it as off.
@@ -145,9 +153,13 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
         audienceAvailable: false,
         notRunning: false,
         otherForwards: 0,
+        forwardUnknown: sieve && !filters,
         ...(filters ? fromFilters(filters) : {}),
         isLoading: false,
       });
+      // Out-of-office blocks the calendar (lib/vacation-calendar.ts): the
+      // reply may have been set in another client.
+      vacationReplyLoaded(client, accountId, { isEnabled, fromDate: vacation.fromDate, toDate: vacation.toDate, subject: vacation.subject || '' });
     } catch (error) {
       if (stale()) return;
       set({
@@ -232,6 +244,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
       : { ...current, ...vacationUpdates, ...filtersState, isSaving: false }));
     // The reply itself is saved even when its filters part failed.
     void vacationHooks.onVacationUpdate.emit(next);
+    vacationReplySaved(client, accountId, before, { isEnabled: next.isEnabled, fromDate: next.fromDate, toDate: next.toDate, subject: next.subject });
     if (filtersError) throw filtersError;
     return true;
   },
@@ -252,6 +265,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
       audience: null,
       audienceAvailable: false,
       notRunning: false,
+      forwardUnknown: false,
       otherForwards: 0,
       isLoading: false,
       isSaving: false,

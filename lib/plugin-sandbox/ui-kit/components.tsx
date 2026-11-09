@@ -103,11 +103,15 @@ export const Button = React.forwardRef<HTMLButtonElement, KitButtonProps>(functi
   );
 });
 
-/** A text link styled like the app's inline links ("Add condition"). */
+/**
+ * A text link styled like the app's inline links ("Add condition"). A long one
+ * wraps like a paragraph: lines start at the icon's side (a button centres its
+ * text otherwise), with the icon beside the first line.
+ */
 export function LinkButton({ icon, children, className, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { icon?: string }) {
   return (
-    <button type="button" className={cn('bk inline-flex items-center gap-1 text-sm text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none', className)} {...rest}>
-      {icon && <Icon name={icon} size="sm" />}
+    <button type="button" className={cn('bk inline-flex items-start gap-1 text-start text-sm text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none', className)} {...rest}>
+      {icon && <Icon name={icon} size="sm" className="mt-[0.1875rem]" />}
       {children}
     </button>
   );
@@ -665,7 +669,7 @@ export interface KitCheckboxProps {
   id?: string;
 }
 
-/** The composer's check items and the Files app's select box: a drawn box, not the browser's. */
+/** The Files app's select box: a drawn box, not the browser's. */
 export function Checkbox({ checked, onChange, label, hint, disabled = false, id, ariaLabel }: KitCheckboxProps) {
   const autoId = React.useId();
   const boxId = id ?? autoId;
@@ -1188,7 +1192,7 @@ export function InfoBar({ tone = 'neutral', icon, eyebrow, title, children, comp
       <div className="bk flex flex-wrap items-center gap-x-3 gap-y-1.5 px-6 py-1.5 border-b border-border bg-muted/30 text-sm">
         {icon && <span className={cn('w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0', INFO_TONE[tone])}><Icon name={icon} size="sm" /></span>}
         {eyebrow && <span className="text-[0.6875rem] font-semibold text-muted-foreground">{eyebrow}</span>}
-        {title && <span className="min-w-0 flex-1 text-foreground break-words">{title}</span>}
+        {title && <span className="min-w-0 flex-1 text-foreground [overflow-wrap:anywhere]">{title}</span>}
         {children}
       </div>
     );
@@ -1206,7 +1210,7 @@ export function InfoBar({ tone = 'neutral', icon, eyebrow, title, children, comp
             {(eyebrow || title) && (
               <div>
                 {eyebrow && <div className="text-[0.6875rem] font-semibold text-muted-foreground">{eyebrow}</div>}
-                {title && <div className="text-sm font-medium text-foreground break-words">{title}</div>}
+                {title && <div className="text-sm font-medium text-foreground [overflow-wrap:anywhere]">{title}</div>}
               </div>
             )}
             {children}
@@ -1360,6 +1364,81 @@ export function DetailRow({ label, children, mono = false }: { label: React.Reac
       <dt className="text-muted-foreground text-xs pt-1">{label}</dt>
       <dd className={cn('text-sm text-foreground min-w-0 break-words', mono && 'font-mono text-xs')}>{children}</dd>
     </>
+  );
+}
+
+export interface KitTableColumn {
+  /** The key of the cell in each row. */
+  key: string;
+  label: React.ReactNode;
+  /** `end` for amounts and numbers: right-aligned (left in RTL), in tabular figures. */
+  align?: 'start' | 'end';
+  /** Hidden when the frame is narrower than 640 px (a phone). */
+  hideNarrow?: boolean;
+  /** A fixed width such as `6rem`; the other columns share the rest. */
+  width?: string;
+}
+
+export interface KitTableSummaryRow {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  /** The line that matters most, such as the amount due. */
+  strong?: boolean;
+}
+
+/**
+ * A table of data: a header row, one row per entry, and summary rows under
+ * it whose label lines up with the last column (totals of an invoice).
+ * Rows are objects keyed by column key; `key` names the row for React.
+ * Wider than the frame, it scrolls sideways.
+ */
+export function Table({ columns, rows, summary, label, empty }: {
+  columns: KitTableColumn[];
+  rows: (Record<string, React.ReactNode> & { key?: string | number })[];
+  summary?: KitTableSummaryRow[];
+  /** The table's name for screen readers. */
+  label?: string;
+  /** Shown in place of the rows when there are none. */
+  empty?: React.ReactNode;
+}) {
+  const cell = (c: KitTableColumn) => cn(
+    'px-3 align-top',
+    c.align === 'end' ? 'text-end tabular-nums whitespace-nowrap' : 'text-start',
+    c.hideNarrow && 'hidden sm:table-cell',
+  );
+  const visibleSpan = columns.length - 1;
+  return (
+    <div className="bk overflow-x-auto">
+      <table className="w-full border-collapse text-sm" aria-label={label}>
+        <thead>
+          <tr className="border-b border-border text-xs font-medium text-muted-foreground">
+            {columns.map((c) => (
+              <th key={c.key} scope="col" className={cn(cell(c), 'py-2 font-medium')} style={c.width ? { width: c.width } : undefined}>{c.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && empty !== undefined ? (
+            <tr><td colSpan={columns.length} className="px-3 py-3 text-muted-foreground">{empty}</td></tr>
+          ) : rows.map((row, i) => (
+            <tr key={row.key ?? i} className="border-b border-border/60">
+              {columns.map((c) => <td key={c.key} className={cn(cell(c), 'py-2 text-foreground break-words')}>{row[c.key]}</td>)}
+            </tr>
+          ))}
+        </tbody>
+        {summary && summary.length > 0 && (
+          <tfoot>
+            {summary.map((s, i) => (
+              <tr key={i} className={cn(s.strong && 'border-t border-border')}>
+                {/* On phones the hideNarrow columns are gone; the label still spans what is left. */}
+                <th scope="row" colSpan={visibleSpan} className={cn('px-3 text-end font-normal', s.strong ? 'py-2 font-semibold text-foreground' : 'py-1 text-muted-foreground')}>{s.label}</th>
+                <td className={cn('px-3 text-end tabular-nums whitespace-nowrap', s.strong ? 'py-2 font-semibold text-foreground' : 'py-1 text-foreground')}>{s.value}</td>
+              </tr>
+            ))}
+          </tfoot>
+        )}
+      </table>
+    </div>
   );
 }
 

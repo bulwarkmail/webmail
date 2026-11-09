@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from lib/desktop/policy-schema.ts by scripts/generate-desktop-policies.mjs. Do not edit. -->
+<policyDefinitionResources xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions" revision="1.0" schemaVersion="1.0">
+  <displayName>Bulwark Desktop</displayName>
+  <description>Einstellungen für die Bulwark-Desktop-App.</description>
+  <resources>
+    <stringTable>
+      <string id="Category_Bulwark">Bulwark</string>
+      <string id="Category_Desktop">Bulwark Desktop</string>
+      <string id="Category_Recommended">Bulwark Desktop: Standardwerte, die Benutzer ändern können</string>
+      <string id="SUPPORTED_Bulwark_Desktop">Alle Versionen von Bulwark Desktop</string>
+      <string id="Category_connection">Verbindung</string>
+      <string id="Category_updates">Updates</string>
+      <string id="Category_plugins">Plugins</string>
+      <string id="Category_security">Offline-E-Mails und App-Sperre</string>
+      <string id="Category_privacy">Datenschutz</string>
+      <string id="Category_signIn">Anmeldung und Zertifikate</string>
+      <string id="Category_system">Systemintegration und Fehlerbehebung</string>
+      <string id="InstanceUrl">Bulwark-Server</string>
+      <string id="InstanceUrl_Explain">Die Adresse Ihres Bulwark-Servers, beginnend mit https://. Wenn erzwungen, öffnet sich die App auf diesem Server, die Serverauswahl ist ausgeblendet und das Fenster bleibt auf diesem Server. Eine ungültige Adresse zeigt eine Fehlerseite mit dem Namen dieser Richtlinie, und die App weicht auf nichts anderes aus. Als Standardwert öffnet sich die App auf diesem Server, bis der Benutzer etwas anderes wählt.</string>
+      <string id="AllowStandalone">Direkte Verbindungen zu Mailservern zulassen</string>
+      <string id="AllowStandalone_Explain">Wenn deaktiviert, öffnet die App nur einen Bulwark-Server, und niemand kann sich direkt bei einem Mailserver anmelden. Früher hinzugefügte Konten bleiben auf dem Datenträger, sind aber ausgeblendet. Wenn Sie einen Bulwark-Server erzwingen und diese Richtlinie nicht konfigurieren, sind direkte Verbindungen ebenfalls aus. Aktivieren Sie sie, um beides anzubieten.</string>
+      <string id="AllowedJmapServers">Zugelassene Mailserver</string>
+      <string id="AllowedJmapServers_Explain">Die Mailserver, bei denen sich Benutzer anmelden dürfen. Einer pro Zeile: eine Adresse wie https://mail.example.com oder https://*.example.com für alle Subdomains. Ein Server ohne Schema bedeutet https. Unverschlüsseltes http muss mit http:// angegeben werden. Ist diese Liste gesetzt, wird alles andere abgelehnt, und Konten auf einem Server, der von der Liste genommen wird, ruhen, bis er wieder darauf steht, und behalten ihre Daten. Ein Bulwark-Server, den der Benutzer wählt, oder der unter „Bulwark-Server“ als Standardwert muss ebenfalls auf der Liste stehen. Ein erzwungener nicht.</string>
+      <string id="AllowInsecureInstance">Bulwark-Server über unverschlüsseltes http zulassen</string>
+      <string id="AllowInsecureInstance_Explain">Wenn aktiviert, darf die Adresse unter „Bulwark-Server“ mit http:// beginnen. Passwörter und E-Mails gehen dann unverschlüsselt über das Netzwerk, und Funktionen, die https brauchen, wie Offline-E-Mails und S/MIME, funktionieren nicht. Lassen Sie dies aus, sofern der Server nicht in einem Netzwerk steht, dem Sie vertrauen.</string>
+      <string id="UpdateChannel">Update-Kanal</string>
+      <string id="UpdateChannel_Explain">Auf welche Versionen die App aktualisiert wird.</string>
+      <string id="UpdateChannel_stable">Stabil</string>
+      <string id="UpdateChannel_beta">Beta</string>
+      <string id="AutoUpdate">Automatisch aktualisieren</string>
+      <string id="AutoUpdate_Explain">Wenn deaktiviert, sucht die App nicht nach Updates und lädt keine herunter. Verwenden Sie dies, wenn SCCM, Intune oder ähnliche Werkzeuge die Updates liefern.</string>
+      <string id="PluginsMode">Welche Plugins laufen dürfen</string>
+      <string id="PluginsMode_Explain">Ob Plugins installiert und ausgeführt werden dürfen. Mit der Liste oder ohne Plugins können Benutzer selbst keine Plugins hinzufügen, weil ein Paket jede beliebige ID nennen kann. Mit der Liste laufen nur Plugins, die Ihr Bulwark-Server oder das Verzeichnis der App bereitstellt. Ein abgelehntes Plugin behält seine Daten und Einstellungen: Es kommt unverändert zurück, wenn die Richtlinie es wieder erlaubt.</string>
+      <string id="PluginsMode_allowed">Alle Plugins sind erlaubt</string>
+      <string id="PluginsMode_allowlist">Nur Plugins auf der Liste</string>
+      <string id="PluginsMode_off">Keine Plugins</string>
+      <string id="PluginAllowlist">Erlaubte Plugins</string>
+      <string id="PluginAllowlist_Explain">Die IDs der Plugins, die laufen dürfen, wenn „Welche Plugins laufen dürfen“ auf die Liste gesetzt ist. Eine pro Zeile.</string>
+      <string id="OfflineEnabled">E-Mails auf dem Gerät behalten</string>
+      <string id="OfflineEnabled_Explain">Ob Konten eine verschlüsselte Kopie der E-Mails auf diesem Gerät für die Offline-Nutzung behalten. Wenn erzwungen aus, werden bereits vorhandene Kopien entfernt.</string>
+      <string id="AppLockRequired">App-Sperre verlangen</string>
+      <string id="AppLockRequired_Explain">Wenn aktiviert, müssen Benutzer die App-Sperre einrichten und können sie nicht ausschalten.</string>
+      <string id="AppLockTimeoutMinutes">App sperren nach</string>
+      <string id="AppLockTimeoutMinutes_Explain">Wie viele Minuten ohne Nutzung die App entsperrt bleibt. Von 1 bis 1440.</string>
+      <string id="AppLockPinMinLength">Mindestlänge der PIN für die App-Sperre</string>
+      <string id="AppLockPinMinLength_Explain">Wie viele Zeichen eine neue PIN für die App-Sperre mindestens haben muss. Von 5 bis 64. Wenn nicht konfiguriert, sind es 5. Eine zuvor festgelegte PIN funktioniert weiter, bis sie geändert wird.</string>
+      <string id="AppLockHelloAllowed">Entsperren der App mit Windows Hello erlauben</string>
+      <string id="AppLockHelloAllowed_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer die App-Sperre außer mit ihrer PIN auch mit Windows Hello aufheben. Wenn deaktiviert, wird die Option ausgeblendet, und Windows Hello entsperrt die App auch dort nicht mehr, wo es eingerichtet war: Dann ist die PIN nötig. Nur unter Windows.</string>
+      <string id="TelemetryAllowed">Nutzungsstatistiken zulassen</string>
+      <string id="TelemetryAllowed_Explain">Wenn deaktiviert, sendet die App keine Nutzungsstatistiken und fragt nicht danach. Wenn aktiviert oder nicht konfiguriert, fragt sie den Benutzer trotzdem zuerst.</string>
+      <string id="CrashReportsAllowed">Absturzberichte zulassen</string>
+      <string id="CrashReportsAllowed_Explain">Wenn deaktiviert, sendet die App keine Absturzberichte und fragt nicht danach. Wenn aktiviert oder nicht konfiguriert, fragt sie den Benutzer trotzdem zuerst.</string>
+      <string id="QuickComposeShortcut">Globale Tastenkombination für neue Nachricht</string>
+      <string id="QuickComposeShortcut_Explain">Die Tastenkombination, die von überall aus eine neue Nachricht öffnet, etwa CommandOrControl+Alt+N. Geben Sie off ein, um sie auszuschalten.</string>
+      <string id="AuthServerAllowlist">Server für die integrierte Anmeldung</string>
+      <string id="AuthServerAllowlist_Explain">Die Server, die die Windows-Anmeldung (Kerberos, NTLM) verwenden dürfen, durch Kommas getrennt, etwa *.example.com. Ein von der Liste entfernter Server erhält sie sofort nicht mehr. Ein neuer braucht einen Neustart der App.</string>
+      <string id="AuthNegotiateDelegateAllowlist">Server für die delegierte Anmeldung</string>
+      <string id="AuthNegotiateDelegateAllowlist_Explain">Die Server, an die die App Kerberos-Anmeldedaten delegieren darf, durch Kommas getrennt. Wird beim Neustart der App wirksam.</string>
+      <string id="AutoSelectCertificateForUrls">Clientzertifikate automatisch wählen</string>
+      <string id="AutoSelectCertificateForUrls_Explain">Eine JSON-Regel pro Zeile, im Format von Chrome: {&quot;pattern&quot;:&quot;https://[*.]example.com&quot;,&quot;filter&quot;:{&quot;ISSUER&quot;:{&quot;CN&quot;:&quot;Example CA&quot;}}}. Die App wählt dann für diese Website das passende Zertifikat ohne Rückfrage.</string>
+      <string id="KeystoreEnabled">Zertifikatspeicher des Systems erlauben</string>
+      <string id="KeystoreEnabled_Explain">Wenn deaktiviert, kann nichts in der App mit den Zertifikaten und Smartcards im Speicher des Betriebssystems signieren oder entschlüsseln, und niemand wird gefragt. Das hat Vorrang vor der Liste der Websites unten. Es gilt auch, wenn Plugins ausgeschaltet sind. Importierte Schlüssel sind nicht betroffen.</string>
+      <string id="KeystoreAllowedOrigins">Websites, die den Zertifikatspeicher des Systems verwenden dürfen</string>
+      <string id="KeystoreAllowedOrigins_Explain">Die Bulwark-Server, nach https-Adresse, deren Plugins mit den Zertifikaten im Speicher des Betriebssystems signieren und entschlüsseln dürfen, ohne dass der Benutzer für jede Website gefragt wird. Eine pro Zeile.</string>
+      <string id="BrowserSignIn">Anmeldung über den Browser anbieten</string>
+      <string id="BrowserSignIn_Explain">Wenn aktiviert oder nicht konfiguriert, bietet die Anmeldeseite „Mit Ihrem Browser anmelden“ an, damit Benutzer dort ihren Passwort-Manager, Passkeys und Ihr Single Sign-on verwenden können. Wenn deaktiviert, fehlt die Schaltfläche und die App lehnt den Vorgang ab. Das Formular in der App bleibt, sofern der Server nicht nur OAuth erlaubt.</string>
+      <string id="WipeOfflineData">Auf dem Gerät behaltene E-Mails löschen</string>
+      <string id="WipeOfflineData_Explain">Setzen Sie dies auf einen neuen Wert, etwa das heutige Datum, um alles zu löschen, was die App für alle Server und Konten auf dem Gerät behält: E-Mails, Schlüssel und Anmeldungen, Benutzer melden sich also neu an. Jeder Wert löscht einmal: Die App merkt sich, welche sie schon ausgeführt hat, ein Wert kann also stehen bleiben. Verwenden Sie einen neuen Wert, um erneut zu löschen. Diese Liste liegt im Profil des Benutzers. Wer sie bearbeitet, kann also eine Löschung umgehen, von der er weiß: Dies räumt ein Gerät auf, es nimmt der Person am Gerät keine Daten weg.</string>
+      <string id="OpenWithEnabled">App unter „Öffnen mit“ und „Senden an“ anbieten</string>
+      <string id="OpenWithEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, trägt sich die App unter Windows in die Liste „Öffnen mit“ für gängige Dokumente und Bilder und in das Menü „Senden an“ ein, damit Benutzer eine Datei aus dem Dateimanager an eine neue Nachricht anhängen können. Sie wird nie zum Standardprogramm für diese Dateien. Wenn deaktiviert, entfernt die App diese Einträge für den Benutzer. Mail-Links und .eml-, .ics- und .vcf-Dateien sind nicht betroffen.</string>
+      <string id="DeveloperToolsAvailability">Entwicklertools</string>
+      <string id="DeveloperToolsAvailability_Explain">Dieselben Werte wie die gleichnamige Richtlinie von Chrome. 2: Die Entwicklertools sind aus und die Einstellung ist gesperrt. 0 oder 1 oder nicht konfiguriert: Benutzer können sie nach einer Warnung in den Einstellungen einschalten. Mit den Entwicklertools kann jeder an der Tastatur alles lesen, was die App enthält, auch E-Mails und Passwörter im Speicher.</string>
+      <string id="RecentFilesInAttach">Zuletzt verwendete Dateien im Menü „Anfügen“ anzeigen</string>
+      <string id="RecentFilesInAttach_Explain">Wenn aktiviert oder nicht konfiguriert, listet die Schaltfläche „Anfügen“ in einer neuen Nachricht die Dateien auf, die der Benutzer zuletzt geöffnet hat, so wie das Betriebssystem sie erfasst. Ein Klick fügt eine davon an. Die Liste wird beim Öffnen des Menüs gelesen und bleibt auf dem Gerät. Wenn deaktiviert, fehlt die Liste und die App lehnt es ab, sie zu lesen. Das Anfügen über den Dateidialog ist nicht betroffen.</string>
+      <string id="FilesDriveEnabled">Dateien als Laufwerk zulassen</string>
+      <string id="FilesDriveEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer ihre Dateien im Dateimanager als Laufwerk anzeigen. Dateien werden beim Öffnen heruntergeladen. Vorerst nur unter Windows. Wenn deaktiviert, wird das Laufwerk nicht angeboten, und ein vorhandenes Laufwerk wird mit den Kopien der Dateien darin entfernt. Die Dateien auf dem Server sind davon nicht betroffen.</string>
+      <string id="FilesFolderSyncEnabled">Synchronisieren von Ordnern mit Dateien zulassen</string>
+      <string id="FilesFolderSyncEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer einen Ordner auf dem Computer und einen Ordner in Dateien in beide Richtungen gleich halten. Wenn deaktiviert, wird dies nicht angeboten, und Ordner, die gerade synchronisiert werden, hören damit auf. Die Dateien in diesen Ordnern bleiben, wo sie sind.</string>
+      <string id="FilesDriveLetter">Laufwerksbuchstabe für Dateien</string>
+      <string id="FilesDriveLetter_Explain">Nur unter Windows. Ein Buchstabe von D bis Z gibt dem Laufwerk Dateien für jeden Benutzer diesen Buchstaben, und Benutzer können ihn nicht ändern. Geben Sie none ein, damit es nie einen Buchstaben bekommt. Wenn nicht konfiguriert, wählen Benutzer in den Einstellungen, und bis dahin gibt es keinen Buchstaben. Ein Wert, den die App nicht lesen kann, gilt als none.</string>
+    </stringTable>
+    <presentationTable>
+      <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Adresse des Bulwark-Servers</label></textBox></presentation>
+      <presentation id="InstanceUrl_Recommended"><textBox refId="InstanceUrl_Recommended_Value"><label>Adresse des Bulwark-Servers</label></textBox></presentation>
+      <presentation id="AllowedJmapServers"><listBox refId="AllowedJmapServers_Value">Zugelassene Mailserver</listBox></presentation>
+      <presentation id="UpdateChannel"><dropdownList refId="UpdateChannel_Value" noSort="true" defaultItem="0">Update-Kanal</dropdownList></presentation>
+      <presentation id="UpdateChannel_Recommended"><dropdownList refId="UpdateChannel_Recommended_Value" noSort="true" defaultItem="0">Update-Kanal</dropdownList></presentation>
+      <presentation id="PluginsMode"><dropdownList refId="PluginsMode_Value" noSort="true" defaultItem="0">Welche Plugins laufen dürfen</dropdownList></presentation>
+      <presentation id="PluginAllowlist"><listBox refId="PluginAllowlist_Value">Plugin-IDs</listBox></presentation>
+      <presentation id="AppLockTimeoutMinutes"><decimalTextBox refId="AppLockTimeoutMinutes_Value" defaultValue="10">Minuten</decimalTextBox></presentation>
+      <presentation id="AppLockTimeoutMinutes_Recommended"><decimalTextBox refId="AppLockTimeoutMinutes_Recommended_Value" defaultValue="10">Minuten</decimalTextBox></presentation>
+      <presentation id="AppLockPinMinLength"><decimalTextBox refId="AppLockPinMinLength_Value" defaultValue="8">Zeichen</decimalTextBox></presentation>
+      <presentation id="QuickComposeShortcut"><textBox refId="QuickComposeShortcut_Value"><label>Tastenkombination</label></textBox></presentation>
+      <presentation id="QuickComposeShortcut_Recommended"><textBox refId="QuickComposeShortcut_Recommended_Value"><label>Tastenkombination</label></textBox></presentation>
+      <presentation id="AuthServerAllowlist"><textBox refId="AuthServerAllowlist_Value"><label>Server</label></textBox></presentation>
+      <presentation id="AuthNegotiateDelegateAllowlist"><textBox refId="AuthNegotiateDelegateAllowlist_Value"><label>Server</label></textBox></presentation>
+      <presentation id="AutoSelectCertificateForUrls"><listBox refId="AutoSelectCertificateForUrls_Value">Regeln</listBox></presentation>
+      <presentation id="KeystoreAllowedOrigins"><listBox refId="KeystoreAllowedOrigins_Value">Adressen</listBox></presentation>
+      <presentation id="WipeOfflineData"><textBox refId="WipeOfflineData_Value"><label>Löschcode</label></textBox></presentation>
+      <presentation id="DeveloperToolsAvailability"><decimalTextBox refId="DeveloperToolsAvailability_Value" defaultValue="2">Wert (0, 1 oder 2)</decimalTextBox></presentation>
+      <presentation id="FilesDriveLetter"><textBox refId="FilesDriveLetter_Value"><label>Laufwerksbuchstabe</label></textBox></presentation>
+    </presentationTable>
+  </resources>
+</policyDefinitionResources>

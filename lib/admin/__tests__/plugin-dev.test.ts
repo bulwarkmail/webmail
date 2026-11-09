@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -44,6 +45,23 @@ describe('dev plugins', () => {
     expect(entry.plugin.locales).toEqual({ de: { hi: 'Hallo' } });
     expect(entry.plugin.tier).toBe('privileged');
     expect(await getEnabledPluginFrameOrigins()).toContain('https://video.example.com');
+  });
+
+  it('bundles src/ with packages that only declare main and touch Node builtins', async () => {
+    // Shaped like asn1js (no "exports") and asmcrypto (require('crypto')
+    // behind a runtime check), which the S/MIME plugin pulls in.
+    await devPlugin('deps', { ...BASE, id: 'deps' }, {
+      'src/index.js': "import { value } from 'legacy-pkg';\nexport default value;",
+      'node_modules/legacy-pkg/package.json': JSON.stringify({ name: 'legacy-pkg', main: 'lib/main.js' }),
+      'node_modules/legacy-pkg/lib/main.js':
+        "exports.value = typeof process !== 'undefined' && process.versions?.node ? require('crypto') : 42;",
+    });
+    const { listDevPlugins, readDevBundle } = await import('../plugin-dev');
+
+    const [entry] = await listDevPlugins();
+
+    expect(entry?.plugin.id).toBe('deps');
+    expect(await readDevBundle(entry)).not.toContain('esbuild failed');
   });
 
   it('refuses an entrypoint outside the plugin folder', async () => {

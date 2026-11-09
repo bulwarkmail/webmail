@@ -1,7 +1,7 @@
 import type { ConfigData } from '@/hooks/use-config';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
-import { httpOrMailtoOrEmpty, httpUrlOrEmpty } from '@/lib/config-validation';
+import { httpOrMailtoOrEmpty, httpUrlOrEmpty, httpUrlOrPathOrEmpty } from '@/lib/config-validation';
 import { parseNoThirdPartyValue } from '@/lib/third-party-mode';
 import { sanitizeOrganisationPolicy } from '@/lib/admin/organisation-policy';
 import { sanitizeRestrictions, sanitizeScopes } from '@/lib/admin/policy-scopes';
@@ -15,6 +15,7 @@ import { sanitizeRestrictions, sanitizeScopes } from '@/lib/admin/policy-scopes'
 export const LITE_FORCED_FLAGS = {
   oauthEnabled: false,
   oauthOnly: false,
+  oauthPasswordFallbackEnabled: false,
   autoSsoEnabled: false,
   settingsSyncEnabled: false,
   stalwartFeaturesEnabled: false,
@@ -71,6 +72,7 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     oauthClientId: '',
     oauthIssuerUrl: '',
     oauthScopes: '',
+    oauthResource: '',
     rememberMeEnabled: bool(input.rememberMeEnabled, true),
     faviconUrl: str(input.faviconUrl, '') || '/branding/Bulwark_Favicon.svg',
     appLogoLightUrl: str(input.appLogoLightUrl, ''),
@@ -88,7 +90,10 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     loginShowSubtitle: bool(input.loginShowSubtitle, true),
     loginShowTotp: bool(input.loginShowTotp, true),
     loginShowTokenLogin: bool(input.loginShowTokenLogin, false),
+    desktopBrowserSignIn: false,
     loginShowRememberMe: bool(input.loginShowRememberMe, false),
+    // Lite keeps an unticked sign-in in the tab's sessionStorage instead.
+    browserSessionSignIn: false,
     loginShowVersion: bool(input.loginShowVersion, true),
     demoMode: bool(input.demoMode, false),
     allowCustomJmapEndpoint: bool(input.allowCustomJmapEndpoint, jmapServerUrl === '' && jmapServers.length === 0),
@@ -102,6 +107,9 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     helpUrl: httpUrlOrEmpty(input.helpUrl),
     easyReadUrl: httpUrlOrEmpty(input.easyReadUrl),
     signLanguageUrl: httpUrlOrEmpty(input.signLanguageUrl),
+    // Lite has no Security tab: this links to the server's own page for it (#1570).
+    accountManagementUrl: httpUrlOrPathOrEmpty(input.accountManagementUrl),
+    accountManagementLabel: str(input.accountManagementLabel, ''),
     // Same browser-side switches as the server build (lib/outgoing-hosts.ts).
     noThirdPartyTraffic: parseNoThirdPartyValue(input.noThirdPartyTraffic),
     oauthRevokeOnSignOut: bool(input.oauthRevokeOnSignOut, true),

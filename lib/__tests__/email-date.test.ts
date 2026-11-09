@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { emailDisplayDate, MAX_FUTURE_SENT_AT_MS } from '@/lib/email-date';
+import { emailDisplayDate, emailListDate, MAX_DELIVERY_DELAY_MS, MAX_FUTURE_SENT_AT_MS } from '@/lib/email-date';
 
 // #891: migrated/restored mail gets receivedAt = import time; the Date header
 // (sentAt) is the message's real date and must win for display.
@@ -38,5 +38,25 @@ describe('emailDisplayDate', () => {
 
   it('returns undefined when neither is present', () => {
     expect(emailDisplayDate({})).toBeUndefined();
+  });
+});
+
+// mail-17: the list sorts by receivedAt, so it shows receivedAt too.
+describe('emailListDate', () => {
+  const receivedAt = '2026-08-20T12:00:00Z';
+
+  it('shows when the mail arrived, not its Date header', () => {
+    expect(emailListDate({ sentAt: '2026-08-20T09:00:00Z', receivedAt })).toBe(receivedAt);
+  });
+
+  it('keeps the Date header for mail that arrived long after it was sent (imports, #891)', () => {
+    const sentAt = new Date(Date.parse(receivedAt) - MAX_DELIVERY_DELAY_MS - 1000).toISOString();
+    expect(emailListDate({ sentAt, receivedAt })).toBe(sentAt);
+  });
+
+  it('falls back to the display date without a usable receivedAt', () => {
+    expect(emailListDate({ sentAt: '2019-03-04T05:06:07Z' })).toBe('2019-03-04T05:06:07Z');
+    expect(emailListDate({ sentAt: '2019-03-04T05:06:07Z', receivedAt: 'garbage' })).toBe('2019-03-04T05:06:07Z');
+    expect(emailListDate({})).toBeUndefined();
   });
 });

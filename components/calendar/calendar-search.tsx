@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useMemo, useRef, type KeyboardEvent } from "react";
+import { forwardRef, useCallback, useMemo, useRef, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { Search, MapPin, Repeat } from "@/components/icons";
@@ -18,6 +18,8 @@ import type { Calendar, CalendarEvent } from "@/lib/jmap/types";
 import type { CalendarSearchResults as Results } from "@/hooks/use-calendar-event-search";
 import { getEventColor } from "./event-card";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useShortenedText } from "@/hooks/use-shortened-text";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 const RESULT_SELECTOR = "[data-search-result]";
 
@@ -34,6 +36,15 @@ interface CalendarSearchFieldProps {
 export const CalendarSearchField = forwardRef<HTMLInputElement, CalendarSearchFieldProps>(
   function CalendarSearchField({ value, onChange, onDismiss, autoFocus, className }, ref) {
     const t = useTranslations("calendar");
+    const tGrid = useTranslations("ux_pim_grid");
+    // A narrow field says "Search" rather than cut "Search events" (pim-21:
+    // "Termine durchs" at 150 % in German). The name stays the full one.
+    const [measureRef, placeholder] = useShortenedText([t("search.title"), tGrid("search_short")]);
+    const inputRef = useCallback((node: HTMLInputElement | null) => {
+      measureRef(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    }, [measureRef, ref]);
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Escape") {
         // Escape clears the search first, then leaves the field (R8).
@@ -49,7 +60,7 @@ export const CalendarSearchField = forwardRef<HTMLInputElement, CalendarSearchFi
     return (
       <div role="search" className={className}>
         <ToolbarSearch
-          ref={ref}
+          ref={inputRef}
           value={value}
           autoFocus={autoFocus}
           onChange={(e) => onChange(e.target.value)}
@@ -57,7 +68,7 @@ export const CalendarSearchField = forwardRef<HTMLInputElement, CalendarSearchFi
           onClear={() => onChange("")}
           clearLabel={t("search.clear")}
           shortcut="/"
-          placeholder={t("search.title")}
+          placeholder={placeholder}
           aria-label={t("search.title")}
           autoComplete="off"
           data-calendar-search
@@ -84,6 +95,7 @@ export function CalendarSearchResults({
   query, results, calendars, timeFormat = "24h", currentUserEmails, onSelectEvent, onContextMenuEvent, onClearSearch,
 }: CalendarSearchResultsProps) {
   const t = useTranslations("calendar");
+  const shownName = useCollectionNames();
   const paint = useCvdColor();
   const intlFormatter = useDisplayDateFormatter();
   const listRef = useRef<HTMLDivElement>(null);
@@ -115,7 +127,7 @@ export function CalendarSearchResults({
     const end = getEventEndDate(ev);
     const isInactive = ev.status === "cancelled" || isDeclinedByUser(ev, currentUserEmails);
     const locationName = ev.locations ? Object.values(ev.locations)[0]?.name : null;
-    const meta = [locationName, calendar?.name].filter(Boolean).join(" · ");
+    const meta = [locationName, calendar ? shownName.calendar(calendar) : null].filter(Boolean).join(" · ");
     // A series the server found by its first occurrence.
     const repeats = !ev.recurrenceId && isRecurringEvent(ev);
     const sameYear = start.getFullYear() === thisYear;

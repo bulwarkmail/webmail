@@ -14,16 +14,55 @@ import { scrollBehavior } from '@/lib/reduced-motion';
  * while it is off, but report themselves so the page can say how many it
  * hid. The provider wraps one settings page; without one (tests, plugin
  * previews) advanced rows simply show.
+ *
+ * A search result or link to one advanced row shows that row alone, once,
+ * without turning the switch on (settings-p3-7): the page asks with a
+ * `settings-reveal` event that says `advanced`. For a moment every advanced
+ * block draws ("probe"), the target is looked up, and then only the blocks
+ * it sits in stay (their `data-advanced-id`). Leaving the page forgets it:
+ * the provider is mounted once per page.
  */
 interface AdvancedSettingsContextValue {
   show: boolean;
   register: (id: string, hidden: boolean) => void;
+  /** Advanced blocks shown as a one-off; "probe" while the target is looked for. */
+  revealed: ReadonlySet<string> | 'probe' | null;
 }
 const AdvancedSettingsContext = createContext<AdvancedSettingsContextValue | null>(null);
+
+/** What a page asks to see: a row by its search label, or a section by its id. */
+export interface SettingsRevealRequest {
+  label?: string;
+  section?: string;
+  /** The target is an advanced row: show it even with the switch off. */
+  advanced?: boolean;
+}
+
+function findRevealTarget(request: SettingsRevealRequest): HTMLElement | null {
+  if (request.section) return document.querySelector<HTMLElement>(`[data-settings-section="${request.section.replace(/"/g, '\\"')}"]`);
+  if (request.label) return document.querySelector<HTMLElement>(`[data-search-label="${request.label.replace(/"/g, '\\"')}"]`);
+  return null;
+}
+
+/** The advanced blocks an element sits in, itself included. */
+function advancedBlocksOf(el: HTMLElement): Set<string> {
+  const ids = new Set<string>();
+  let at: HTMLElement | null = el.closest<HTMLElement>('[data-advanced-id]');
+  while (at) {
+    if (at.dataset.advancedId) ids.add(at.dataset.advancedId);
+    at = at.parentElement?.closest<HTMLElement>('[data-advanced-id]') ?? null;
+  }
+  return ids;
+}
+
+/** How long a page may take to draw an advanced row it loads first. */
+const REVEAL_WAIT_MS = 2000;
 
 export function AdvancedSettingsProvider({ children }: { children: ReactNode }) {
   const show = useSettingsStore((s) => s.showAdvancedSettings);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+  const [revealed, setRevealed] = useState<ReadonlySet<string> | 'probe' | null>(null);
+  const [request, setRequest] = useState<SettingsRevealRequest | null>(null);
   const register = useCallback((id: string, isHidden: boolean) => {
     setHidden((prev) => {
       if (prev.has(id) === isHidden) return prev;
@@ -32,7 +71,43 @@ export function AdvancedSettingsProvider({ children }: { children: ReactNode }) 
       return next;
     });
   }, []);
-  const value = useMemo(() => ({ show, register }), [show, register]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<SettingsRevealRequest | null>).detail;
+      if (!detail?.advanced || useSettingsStore.getState().showAdvancedSettings) return;
+      // Already on screen: nothing to reveal.
+      if (findRevealTarget(detail)) return;
+      setRequest({ ...detail });
+      setRevealed('probe');
+    };
+    window.addEventListener('settings-reveal', handler);
+    return () => window.removeEventListener('settings-reveal', handler);
+  }, []);
+
+  // While probing, every advanced block draws: find the target, keep what holds it.
+  useEffect(() => {
+    if (revealed !== 'probe' || !request) return;
+    const deadline = Date.now() + REVEAL_WAIT_MS;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const look = () => {
+      const el = findRevealTarget(request);
+      if (el) {
+        setRevealed(advancedBlocksOf(el));
+        setRequest(null);
+        return;
+      }
+      if (Date.now() < deadline) timer = setTimeout(look, 80);
+      else {
+        setRevealed(null);
+        setRequest(null);
+      }
+    };
+    look();
+    return () => { if (timer) clearTimeout(timer); };
+  }, [revealed, request]);
+
+  const value = useMemo(() => ({ show, register, revealed }), [show, register, revealed]);
   return (
     <AdvancedSettingsContext.Provider value={value}>
       {children}
@@ -41,18 +116,24 @@ export function AdvancedSettingsProvider({ children }: { children: ReactNode }) 
   );
 }
 
-/** True when this row or section should render; registers it as hidden otherwise. */
-function useAdvancedVisible(advanced: boolean | undefined): boolean {
+/**
+ * Whether an advanced block draws, and the attribute that marks it (so a
+ * one-off reveal can tell which blocks hold its target). Registers it as
+ * hidden while it doesn't draw. `revealed` is true while a search result
+ * shows it as a one-off (or looks for its target).
+ */
+export function useAdvancedVisibility(advanced: boolean | undefined): { visible: boolean; revealed: boolean; marker: { 'data-advanced-id'?: string } } {
   const ctx = useContext(AdvancedSettingsContext);
   const id = useId();
-  const hidden = Boolean(advanced) && ctx !== null && !ctx.show;
+  const revealedHere = ctx !== null && (ctx.revealed === 'probe' || (ctx.revealed !== null && ctx.revealed.has(id)));
+  const hidden = Boolean(advanced) && ctx !== null && !ctx.show && !revealedHere;
   const register = ctx?.register;
   useEffect(() => {
     if (!register) return;
     register(id, hidden);
     return () => register(id, false);
   }, [register, id, hidden]);
-  return !hidden;
+  return { visible: !hidden, revealed: revealedHere, marker: advanced ? { 'data-advanced-id': id } : {} };
 }
 
 function HiddenAdvancedNotice({ count }: { count: number }) {
@@ -94,8 +175,11 @@ export function AdvancedSettingsSwitch() {
 
 /** Wraps a block that is not a SettingItem but should still hide with Advanced off. */
 export function AdvancedOnly({ children }: { children: ReactNode }) {
-  const visible = useAdvancedVisible(true);
-  return visible ? <>{children}</> : null;
+  const { visible, marker } = useAdvancedVisibility(true);
+  const show = useContext(AdvancedSettingsContext)?.show ?? true;
+  if (!visible) return null;
+  // Marked only while it is shown as a one-off, so the page's layout is as before otherwise.
+  return show ? <>{children}</> : <div className="contents" {...marker}>{children}</div>;
 }
 
 const highlightTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
@@ -196,10 +280,10 @@ interface SettingsSectionProps {
 }
 
 export function SettingsSection({ title, description, children, advanced, id, term }: SettingsSectionProps) {
-  const visible = useAdvancedVisible(advanced);
+  const { visible, marker } = useAdvancedVisibility(advanced);
   if (!visible) return null;
   return (
-    <div data-search-label={title} data-settings-section={id} className="space-y-4 scroll-mt-4">
+    <div data-search-label={title} data-settings-section={id} {...marker} className="space-y-4 scroll-mt-4">
       <div>
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
@@ -244,7 +328,7 @@ function hasOwnName(el: HTMLElement): boolean {
 
 export function SettingItem({ label, description, children, locked, advanced, nested, term }: SettingItemProps) {
   const labelId = useId();
-  const visible = useAdvancedVisible(advanced);
+  const { visible, marker } = useAdvancedVisibility(advanced);
   // A row with one text field, select or textarea and nothing naming it
   // (an <Input> dropped into the row) borrows the row's label, like the
   // toggles do through SettingLabelContext. Rows with several fields name
@@ -262,6 +346,7 @@ export function SettingItem({ label, description, children, locked, advanced, ne
   return (
     <div
       data-search-label={label}
+      {...marker}
       className={cn(
         "flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4 py-3 border-b border-border last:border-0",
         nested && "ms-4 ps-3 border-s-2 border-s-border border-b-transparent py-2",
@@ -280,7 +365,7 @@ export function SettingItem({ label, description, children, locked, advanced, ne
       </div>
       <SettingLabelContext.Provider value={labelId}>
         {/* The admin's value stays readable; inert keeps mouse and keyboard off it. */}
-        <div ref={controlsRef} className={cn("flex-shrink-0", locked && "opacity-60")} inert={locked || undefined}>{children}</div>
+        <div ref={controlsRef} className={cn("flex-shrink-0 min-w-0 max-w-full sm:max-w-[70%] wrap-anywhere", locked && "opacity-60")} inert={locked || undefined}>{children}</div>
       </SettingLabelContext.Provider>
     </div>
   );
@@ -338,12 +423,14 @@ interface RadioGroupProps {
 export function RadioGroup({ value, onChange, options }: RadioGroupProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
-    <div className="flex gap-1.5" role="group" aria-labelledby={labelledBy}>
+    <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby={labelledBy}>
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           aria-pressed={value === option.value}
+          // Read by useOptionPreview, which draws the option under the pointer.
+          data-option-value={option.value}
           onClick={() => onChange(option.value)}
           className={cn(
             'px-3 py-1.5 text-xs rounded-md transition-colors duration-150',
@@ -379,7 +466,7 @@ export function Select({ value, onChange, options, disabled, className, ariaLabe
       aria-labelledby={ariaLabel ? undefined : labelledBy}
       dir="auto"
       className={cn(
-        "px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-hidden transition-colors duration-150 pointer-coarse:min-h-11",
+        "max-w-full px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-hidden transition-colors duration-150 pointer-coarse:min-h-11",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-muted-foreground",
         className
       )}

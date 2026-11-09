@@ -28,6 +28,11 @@ export const BRANDING_OVERRIDE_KEYS = [
   'loginPrivacyPolicyUrl',
   'loginWebsiteUrl',
   'loginUsernamePlaceholder',
+  'loginLayout',
+  'loginBackgroundLightUrl',
+  'loginBackgroundDarkUrl',
+  'loginBackgroundDim',
+  'loginBackgroundBlur',
   'accessibilityStatementUrl',
   'accessibilityFeedbackUrl',
   'helpUrl',
@@ -36,6 +41,20 @@ export const BRANDING_OVERRIDE_KEYS = [
 ] as const;
 
 export type BrandingOverrideKey = (typeof BRANDING_OVERRIDE_KEYS)[number];
+
+/**
+ * Colour tokens a host's `palette` may set, named like theme tokens. The
+ * built-in look reads them (app/globals.css); an installed theme, picked by
+ * the user or set as the default, still wins for every colour it sets.
+ */
+export const BRAND_PALETTE_TOKENS = ['primary', 'primary-foreground', 'accent', 'accent-foreground'] as const;
+
+export type BrandPaletteToken = (typeof BRAND_PALETTE_TOKENS)[number];
+
+export interface BrandPalette {
+  light?: Partial<Record<BrandPaletteToken, string>>;
+  dark?: Partial<Record<BrandPaletteToken, string>>;
+}
 
 export interface DomainBrandingEntry {
   /**
@@ -63,17 +82,63 @@ export interface DomainBrandingEntry {
   loginPrivacyPolicyUrl?: string;
   loginWebsiteUrl?: string;
   loginUsernamePlaceholder?: string;
+  loginLayout?: string;
+  loginBackgroundLightUrl?: string;
+  loginBackgroundDarkUrl?: string;
+  loginBackgroundDim?: string;
+  loginBackgroundBlur?: string;
   accessibilityStatementUrl?: string;
   accessibilityFeedbackUrl?: string;
   helpUrl?: string;
   easyReadUrl?: string;
   signLanguageUrl?: string;
+  palette?: BrandPalette;
 }
 
 // Accepts plain hostnames (foo, foo.bar, foo.bar.baz) and one-level wildcards
 // at the leftmost label (*.example.com). Rejects IPs, scheme/path/userinfo,
 // and embedded wildcards.
 const HOST_RE = /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/;
+
+// Hex colours only: the values are written into a <style> element.
+const HEX_COLOR_RE = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+
+function parsePaletteMode(raw: unknown): BrandPalette['light'] {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  const rec = raw as Record<string, unknown>;
+  const out: Partial<Record<BrandPaletteToken, string>> = {};
+  for (const token of BRAND_PALETTE_TOKENS) {
+    const v = rec[token];
+    if (typeof v === 'string' && HEX_COLOR_RE.test(v.trim())) out[token] = v.trim().toLowerCase();
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function parsePalette(raw: unknown): BrandPalette | undefined {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  const rec = raw as Record<string, unknown>;
+  const light = parsePaletteMode(rec.light);
+  const dark = parsePaletteMode(rec.dark);
+  if (!light && !dark) return undefined;
+  return { ...(light ? { light } : {}), ...(dark ? { dark } : {}) };
+}
+
+/**
+ * The CSS for a host's palette: `--brand-*` variables on :root, which
+ * app/globals.css uses in place of its defaults. Empty when nothing is set.
+ */
+export function brandPaletteCss(palette: BrandPalette | undefined): string {
+  if (!palette) return '';
+  const decls: string[] = [];
+  for (const [mode, prefix] of [['light', '--brand-'], ['dark', '--brand-dark-']] as const) {
+    const colors = palette[mode] ?? {};
+    for (const token of BRAND_PALETTE_TOKENS) {
+      const v = colors[token];
+      if (v && HEX_COLOR_RE.test(v)) decls.push(`${prefix}${token}:${v}`);
+    }
+  }
+  return decls.length > 0 ? `:root{${decls.join(';')}}` : '';
+}
 
 function normalizeHost(host: string): string {
   return host.trim().toLowerCase().replace(/\.+$/, '');
@@ -112,6 +177,8 @@ export function parseDomainBranding(raw: unknown): DomainBrandingEntry[] {
         writable[key] = v;
       }
     }
+    const palette = parsePalette(rec.palette);
+    if (palette) entry.palette = palette;
     out.push(entry);
   }
   return out;

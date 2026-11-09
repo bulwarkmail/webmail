@@ -63,7 +63,7 @@ function LowVisionPreview() {
   // Big, high-contrast text, a thick focus outline, an underlined link, a big pointer.
   return (
     <Frame className="flex-col gap-1.5 p-1.5">
-      <span className="text-[20px] leading-none font-bold text-foreground">Aa</span>
+      <span className="text-[1.25rem] leading-none font-bold text-foreground">Aa</span>
       <span className="flex items-center gap-1.5 rounded-sm px-1 py-1 outline outline-[2.5px] outline-primary">
         <Avatar size={10} />
         <Bar width={40} strong className="h-[4px]" />
@@ -83,7 +83,7 @@ function DyslexiaPreview() {
     <Frame className="justify-center">
       <span className="flex flex-col gap-[6px] w-[64px] py-1.5">
         <span
-          className="text-[14px] leading-none text-foreground tracking-[0.12em]"
+          className="text-[0.875rem] leading-none text-foreground tracking-[0.12em]"
           style={{ fontFamily: '"Atkinson Hyperlegible Next", sans-serif' }}
         >
           Abc
@@ -160,12 +160,20 @@ function MotionPreview() {
 }
 
 function HearingPreview() {
-  // A notification that stays until closed and a flash at the edge instead of a sound.
+  // The tab title lights up instead of a sound, and the notification stays until
+  // closed. No ring around the frame: that reads as the card being selected.
   return (
-    <Frame className="flex-col p-1.5 ring-2 ring-inset ring-primary/70">
-      <Bar width="55%" strong />
-      <Bar width="75%" className="mt-[5px]" />
-      <VolumeOff className="absolute top-1 end-1 w-3.5 h-3.5 text-muted-foreground" />
+    <Frame className="flex-col">
+      <span className="flex items-end justify-between h-[14px] ps-1.5 pe-1 bg-muted/60 border-b border-border">
+        <span className="flex items-center w-[46px] h-[9px] rounded-t-sm bg-primary/25 px-1">
+          <Bar width="100%" className="bg-primary" />
+        </span>
+        <VolumeOff className="self-center w-3 h-3 text-muted-foreground" />
+      </span>
+      <span className="flex flex-col gap-[5px] p-1.5">
+        <Bar width="55%" strong />
+        <Bar width="75%" />
+      </span>
       <span className="absolute bottom-1.5 inset-x-1.5 flex items-center gap-1 rounded-sm border border-border bg-muted px-1 py-[3px] shadow-sm">
         <BellRinging className="w-3 h-3 text-primary shrink-0" stroke={2.25} />
         <Bar width="100%" strong className="flex-1" />

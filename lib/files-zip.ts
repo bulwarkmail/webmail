@@ -1,5 +1,6 @@
 import type { FileNode } from '@/lib/jmap/types';
 import { fileNodeKind } from '@/lib/jmap/filenode-kind';
+import { saveBlobAs, type DownloadKind, type DownloadSubject } from '@/lib/download-guard';
 
 /*
  * Downloading folders: the server has no archive download, so the browser
@@ -113,14 +114,7 @@ export async function buildZip(
   return blob;
 }
 
-/** Hand a blob to the browser as a download. */
-export function saveBlob(blob: Blob, name: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+/** Hand a blob to the browser as a download, unless a device policy forbids it (false then). */
+export function saveBlob(blob: Blob, name: string, options: { kind?: DownloadKind; subject?: DownloadSubject } = {}): boolean {
+  return saveBlobAs(blob, name, { kind: options.kind ?? 'file', subject: options.subject });
 }

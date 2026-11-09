@@ -57,8 +57,8 @@ describe('api.app.searchSettings', () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].pageId).toBe('composing');
     expect(results[0].page).toBe('Verfassen');
-    const de = (await import('@/locales/de/common.json')).default as unknown as { settings: { email_behavior: { send_delay: { label: string } } } };
-    expect(results.map((r) => r.label)).toContain(de.settings.email_behavior.send_delay.label);
+    const de = (await import('@/locales/de/common.json')).default as unknown as { compose_words: { undo_send: { label: string } } };
+    expect(results.map((r) => r.label)).toContain(de.compose_words.undo_send.label);
   });
 
   it('leaves out pages the server does not offer', async () => {
@@ -101,5 +101,23 @@ describe('api.app.getSettings', () => {
     expect(settings).not.toHaveProperty('trustedSenders');
     expect(settings).not.toHaveProperty('pushRelayUrl');
     expect(JSON.stringify(settings)).not.toContain('boss@example.org');
+  });
+
+  it('shares every setting a plugin may change, so it knows the value it would replace', async () => {
+    const { SETTINGS_SCHEMA } = await import('@/lib/settings-schema');
+    const { SHARED_SETTINGS } = await import('../plugin-sandbox/host-api-app');
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    const { useCalendarStore } = await import('@/stores/calendar-store');
+    const shared = new Set<string>(SHARED_SETTINGS);
+    const missing = Object.values(SETTINGS_SCHEMA).filter((e) => e.store === 'settings' && !shared.has(e.key)).map((e) => e.key);
+    expect(missing).toEqual([]);
+
+    useSettingsStore.getState().resetToDefaults();
+    useCalendarStore.setState({ viewMode: 'week' });
+    const settings = await dispatchApiCall(plugin(['settings:read']), 'app.getSettings', []) as Record<string, unknown>;
+    expect(settings.calendarView).toBe('week');
+    // The reminder words come through whole (29 by default), or a proposal
+    // built on them would drop the rest.
+    expect(settings.attachmentReminderKeywords).toEqual(useSettingsStore.getState().attachmentReminderKeywords);
   });
 });

@@ -1,14 +1,11 @@
 {
-  "meta_description": "Client de webmail minimalist care utilizează protocolul JMAP",
+  "meta_description": "Webmail auto-găzduit pentru e-mail, calendar, contacte și fișiere, construit pe JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "E-mail",
     "username_placeholder": "user@example.com",
     "password_label": "Parolă",
     "password_placeholder": "Introduceți parola",
-    "jmap_endpoint_label": "JMAP Server",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Serverul trebuie să permită cererile CORS provenite de la acest domeniu.",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server selectat din domeniul dvs. de e-mail.",
     "sign_in": "Autentificare",
@@ -29,7 +26,7 @@
     },
     "show_password": "Afișează parola",
     "hide_password": "Ascunde parola",
-    "totp_toggle": "Am un cod 2FA",
+    "totp_toggle": "Am un cod din aplicația de autentificare",
     "token_toggle": "Autentificare cu un token de acces",
     "password_toggle": "Autentificare cu o parolă",
     "token_label": "Token de acces",
@@ -112,6 +109,33 @@
     "code_label": "Cod de autentificare",
     "verify": "Verifică"
   },
+  "ux_p3_words": {
+    "appearance_description": "Schimbați aspectul {appName}.",
+    "text_size_app": "Scalează tot textul din aplicație. 100% este dimensiunea normală.",
+    "scrollbars_app": "Folosește barele de derulare ale sistemului, care sunt mai late și mai ușor de prins.",
+    "voice_app": "Vocea care citește mesajele cu voce tare. Lista arată vocile pe care le are acest computer pentru limba interfeței.",
+    "voice_default_app": "Vocea sistemului",
+    "visual_alerts_app": "Face să clipească încet titlul ferestrei când sosesc e-mailuri noi sau un memento și păstrează mementourile pe ecran până le închideți.",
+    "sounds_link_app": "Sunetele notificărilor și numărul de necitite de pe pictograma din bara de activități se setează pe pagina Notificări.",
+    "writing_language_app": "Limba în care scrieți de obicei. Corectura și verificarea ortografică o folosesc.",
+    "badge_all_app": "Numărul de pe pictograma din bara de activități și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate.",
+    "badge_all_browser": "Numărul de pe filă și de pe pictograma aplicației adună căsuțele de primire ale tuturor conturilor conectate.",
+    "dnd_title": "Nu deranjați",
+    "pause_label": "Întrerupeți notificările",
+    "pause_description": "Fără sunete, ferestre pop-up sau anunțuri vocale pentru e-mailurile noi, până când opriți din nou această opțiune.",
+    "dnd_link_app": "Întrerupeți notificările și setați orele de liniște pe pagina Notificări.",
+    "dnd_link_browser": "Întrerupeți notificările pe pagina Notificări.",
+    "backup_app": "Exportați setările într-un fișier și importați-le pe celelalte dispozitive.",
+    "sync_app": "Celelalte dispozitive conectate la acest cont primesc aceleași setări.",
+    "progress_attachments": "Se descarcă atașamentele",
+    "progress_events": "Se descarcă evenimentele",
+    "progress_contacts": "Se descarcă contactele",
+    "progress_files_list": "Se listează fișierele",
+    "progress_other": "Se descarcă",
+    "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele pe care le păstrați offline în Fișiere, criptate pe acest dispozitiv. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
+    "filter_value_placeholder": "Valoare",
+    "filter_values_hint": "Separați mai multe valori prin virgule."
+  },
   "sidebar": {
     "sign_in_again": "Autentifică-te din nou",
     "close": "Închide",
@@ -127,7 +151,7 @@
     "sign_out_of": "Deconectați-vă de pe {account}",
     "sign_out_all": "Deconectați-vă de la toate conturile",
     "add_account": "Adăugare cont",
-    "set_as_default": "Setați ca implicită",
+    "set_as_default": "Deschideți acest cont la pornire",
     "switch_account": "Schimbă contul",
     "contacts": "Contacte",
     "calendar": "Calendar",
@@ -178,6 +202,7 @@
     },
     "clear_search": "Șterge căutarea",
     "vacation_active": "Răspunsul automat de vacanță este activ",
+    "vacation_turn_off": "Dezactivați",
     "demo_banner": "Modul demo",
     "demo_reset": "Resetare",
     "demo_tour": "Tur de prezentare",
@@ -216,22 +241,30 @@
     "mv_storage_used": "{percent}% din {total} folosit",
     "accessibility": "Accesibilitate"
   },
+  "account_unread": {
+    "others": "Necitite în alte conturi: {count}",
+    "badge_all_accounts": {
+      "label": "Numără mesajele necitite din toate conturile",
+      "description": "Numărul de pe filă, de pe pictograma aplicației și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate."
+    },
+    "empty_hint": "Puteți goli folderul {folder} pentru a șterge definitiv toate mesajele."
+  },
   "protocol_handlers": {
     "title": "Aplicații implicite",
-    "description": "Alegeți dacă linkurile către e-mail și calendar se deschid în {appName}. Din punct de vedere tehnic, {appName} se înregistrează ca gestionar de protocol pentru linkurile de tip mailto: și webcal:.",
+    "description": "Alegeți dacă linkurile de e-mail și calendar se deschid în {appName}.",
     "unsupported": "Acest browser sau această conexiune nu acceptă înregistrarea manuală a gestionarului de protocoale. Este posibil să puteți utiliza totuși aplicația PWA instalată prin setările browserului sau ale sistemului de operare.",
-    "mailto_label": "Linkuri din e-mail",
-    "mailto_description": "Deschideți linkurile „mailto:” în {appName} cu o fereastră de redactare precompletată.",
-    "protocol_open_mode_label": "La deschiderea linkurilor de protocol",
+    "mailto_label": "Deschideți linkurile de e-mail în {appName}",
+    "mailto_description": "Un clic pe o adresă de e-mail de pe un site începe un mesaj nou în {appName}.",
+    "protocol_open_mode_label": "Cum se deschid linkurile",
     "protocol_open_mode_description": "Alegeți dacă {appName} deschide linkurile mailto: și webcal: într-o filă nouă sau reutilizează o sesiune deschisă. Opțiunea „sesiune activă” necesită permisiunea de notificare, astfel încât să puteți face clic pe o notificare de rezervă pentru a aduce {appName} în prim-plan dacă browserul blochează focalizarea.",
     "protocol_open_mode_active_session": "Deschideți într-o sesiune activă, dacă este posibil",
     "protocol_open_mode_new_tab": "Deschideți întotdeauna o filă nouă",
     "focus_notification_title": "Deschideți {appName}",
     "focus_notification_body": "Linkul a fost deschis în {appName}. Faceți clic pentru a aduce fereastra în prim-plan.",
-    "webcal_label": "Linkuri către calendar",
-    "webcal_description": "Deschideți linkurile webcal: din {appName} cu o fereastră de dialog de abonare la calendar completată în prealabil.",
-    "register_mailto": "Înregistrați aplicația de e-mail",
-    "register_webcal": "Înregistrați aplicația de calendar",
+    "webcal_label": "Deschideți linkurile de calendar în {appName}",
+    "webcal_description": "Un clic pe un link de calendar de pe un site adaugă calendarul în {appName}.",
+    "register_mailto": "Folosiți {appName} pentru linkurile de e-mail",
+    "register_webcal": "Folosiți {appName} pentru linkurile de calendar",
     "mailto_registered": "S-a solicitat înregistrarea unui gestionar de e-mail",
     "webcal_registered": "S-a solicitat înregistrarea unui handler pentru calendar",
     "registration_failed": "Înregistrarea gestionarului de protocol a eșuat",
@@ -241,7 +274,6 @@
     "select_account_title": "Alegeți contul",
     "select_mailto_account": "Alegeți contul în care să se deschidă acest link de e-mail.",
     "select_webcal_account": "Alegeți contul care ar trebui să deschidă acest link către calendar.",
-    "select_account_note": "Aceasta se aplică numai acestui link de protocol.",
     "detail_to": "Către",
     "detail_subject": "Subiect",
     "detail_no_subject": "Fără subiect",
@@ -249,6 +281,28 @@
     "detail_source": "Sursă",
     "active_account": "Activ",
     "switching_account": "Se schimbă contul..."
+  },
+  "pwaLaunch": {
+    "shortcut_new_message": "Mesaj nou",
+    "shortcut_calendar": "Calendar",
+    "shortcut_contacts": "Contacte",
+    "unsupported_file": "{name} nu poate fi deschis aici.",
+    "open_failed": "Fișierul nu a putut fi deschis. Încercați să îl deschideți din nou.",
+    "share_gone": "Ce ați partajat nu mai este aici. Partajați din nou.",
+    "share_files_lost": "Fișierele partajate nu au putut fi păstrate. Adăugați-le din nou la mesaj.",
+    "ics_needs_server": "Importul unui fișier de calendar are nevoie de conexiune la server. Importul începe când reveniți online.",
+    "contacts_need_server": "Importul contactelor are nevoie de conexiune la server. Încercați din nou când reveniți online.",
+    "share_confirm_title": "Începeți un mesaj nou?",
+    "share_confirm_message": "Alt site sau altă aplicație vrea să înceapă un mesaj. Nu se încarcă și nu se salvează nimic fără acordul dvs.",
+    "share_confirm_subject": "Subiect:",
+    "share_confirm_text": "Text:",
+    "share_confirm_files": "{count, plural, one {Fișier:} few {Fișiere:} other {Fișiere:}}",
+    "share_confirm_accept": "Începeți mesajul",
+    "share_confirm_decline": "Nu începeți",
+    "share_cut": "Textul partajat era prea lung și a fost scurtat.",
+    "handoff_expired": "Ceva ce ați deschis sau partajat a așteptat prea mult și nu mai este disponibil. Deschideți sau partajați din nou.",
+    "compose_waiting": "Închideți acest mesaj pentru a-l începe pe următorul.",
+    "save_first_failed": "Mesajul nu a putut fi salvat, așa că fișierul nu a fost deschis. Salvați mesajul, apoi deschideți calendarul sau contactele."
   },
   "sidebar_apps": {
     "modal_title": "Aplicații din bara laterală",
@@ -302,6 +356,9 @@
     "no_search_results": "Nu s-au găsit rezultate",
     "no_search_results_description": "Încercați să modificați criteriile de căutare sau filtrele",
     "more_results_searching": "Se caută mai multe rezultate…",
+    "resize_plugin_results": "Redimensionează rezultatele din pluginuri",
+    "compact_plugin_results": "Un rând pe rezultat",
+    "plugin_result_score": "{count} din 5",
     "loading": "Se încarcă e-mailurile...",
     "unread": "necitit",
     "to_me": "Pentru mine",
@@ -390,6 +447,29 @@
       "position": "{more, select, yes {Pagina {page} din {pages} sau mai multe} other {Pagina {page} din {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversație selectată} few {# conversații selectate} other {# de conversații selectate}}",
+    "search_count": "{conversations, plural, one {# conversație} few {# conversații} other {# de conversații}} ({messages, plural, one {# mesaj} few {# mesaje} other {# de mesaje}})",
+    "conversation_count": "{count, plural, one {# conversație} few {# conversații} other {# de conversații}}",
+    "archived": "Arhivat",
+    "moved_to_trash": "Mutat în coșul de gunoi",
+    "moved_to": "Mutată la {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail mutat în {mailbox}} few {# e-mailuri mutate în {mailbox}} other {# de e-mailuri mutate în {mailbox}}}",
+    "new_folder_title": "Dosar nou",
+    "new_subfolder_title": "Subfolder nou"
+  },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversație arhivată} few {# conversații arhivate} other {# de conversații arhivate}}",
+    "conversations_to_trash": "{count, plural, one {# conversație mutată în coșul de gunoi} few {# conversații mutate în coșul de gunoi} other {# de conversații mutate în coșul de gunoi}}",
+    "conversations_deleted": "{count, plural, one {# conversație ștearsă} few {# conversații șterse} other {# de conversații șterse}}",
+    "conversations_moved_to": "{count, plural, one {# conversație mutată în {mailbox}} few {# conversații mutate în {mailbox}} other {# de conversații mutate în {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversație mutată} few {# conversații mutate} other {# de conversații mutate}}",
+    "select_all_in_folder": "{count, plural, one {Selectează # conversație din {folder}} few {Selectează toate cele # conversații din {folder}} other {Selectează toate cele # de conversații din {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selectează # e-mail din {folder}} few {Selectează toate cele # e-mailuri din {folder}} other {Selectează toate cele # de e-mailuri din {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selectează # conversație} few {Selectează toate cele # conversații} other {Selectează toate cele # de conversații}}",
+    "select_all_emails": "{count, plural, one {Selectează # e-mail} few {Selectează toate cele # e-mailuri} other {Selectează toate cele # de e-mailuri}}",
+    "selecting_all": "Se selectează…"
+  },
   "shared_tags": {
     "title": "Etichete partajate",
     "description": "Etichetele căsuțelor dvs. de grup. Toți membrii grupului văd aceleași nume și culori pe mesajele lui.",
@@ -462,7 +542,6 @@
     "view_in_light_mode": "Vizualizare în modul luminos",
     "export_email": "Exportați ca fișier .eml",
     "forward_as_attachment": "Redirecționează ca atașament",
-    "import_email": "Importați fișiere .eml sau .zip…",
     "keyboard_shortcuts": "Comenzi rapide de la tastatură",
     "email_source": "Sursa e-mailului",
     "draft_banner": "Acest mesaj este o schiță",
@@ -474,6 +553,9 @@
     "source_truncated": "Se afișează primii {size}. Exportă mesajul pentru rest.",
     "source_copied": "Sursă copiată în clipboard",
     "attachments": "Anexe",
+    "attachments_count": "{count, plural, one {# atașament} few {# atașamente} other {# de atașamente}}",
+    "attachments_show_more": "Afișează încă {count}",
+    "attachments_show_fewer": "Afișează mai puține",
     "important": "Important",
     "download": "Descărcați",
     "download_all": "Descărcați tot",
@@ -776,9 +858,73 @@
       "copied": "Cod copiat",
       "copy_failed": "Codul nu a putut fi copiat"
     },
+    "structured_mail": {
+      "kind_flight": "Zbor",
+      "kind_train": "Tren",
+      "kind_bus": "Autobuz",
+      "kind_lodging": "Hotel",
+      "kind_rentalcar": "Mașină închiriată",
+      "kind_event": "Eveniment",
+      "kind_restaurant": "Restaurant",
+      "kind_order": "Comandă",
+      "kind_parcel": "Colet",
+      "region_flight": "Rezervare zbor",
+      "region_train": "Rezervare tren",
+      "region_bus": "Rezervare autobuz",
+      "region_lodging": "Rezervare hotel",
+      "region_rentalcar": "Rezervare mașină închiriată",
+      "region_event": "Rezervare eveniment",
+      "region_restaurant": "Rezervare la restaurant",
+      "region_shipment": "Comandă și livrare",
+      "status_cancelled": "Anulată",
+      "status_pending": "În așteptare",
+      "status_hold": "Rezervată provizoriu",
+      "order_status_payment_due": "Plată restantă",
+      "order_status_processing": "În procesare",
+      "order_status_problem": "Problemă",
+      "order_status_in_transit": "Expediată",
+      "order_status_pickup_available": "Gata de ridicare",
+      "order_status_returned": "Returnată",
+      "order_status_delivered": "Livrată",
+      "order_status_cancelled": "Anulată",
+      "reference": "Cod de rezervare",
+      "order_number": "Număr comandă",
+      "tracking_number": "Număr de urmărire",
+      "copy_reference": "Copiază codul de rezervare {value}",
+      "copy_order_number": "Copiază numărul comenzii {value}",
+      "copy_tracking_number": "Copiază numărul de urmărire {value}",
+      "copied_reference": "Codul de rezervare a fost copiat",
+      "copied_order_number": "Numărul comenzii a fost copiat",
+      "copied_tracking_number": "Numărul de urmărire a fost copiat",
+      "copy_failed": "Nu s-a putut copia în clipboard",
+      "passengers": "Pasageri",
+      "seats": "Locuri",
+      "tickets": "Bilete",
+      "link_check_in": "Check-in",
+      "link_manage": "Gestionează rezervarea",
+      "link_ticket": "Bilet",
+      "link_track": "Urmărește",
+      "link_view_order": "Vezi comanda",
+      "check_in_label": "Check-in",
+      "check_out_label": "Check-out",
+      "from_time": "de la {time}",
+      "until_time": "până la {time}",
+      "nights": "{count, plural, one {# noapte} few {# nopți} other {# de nopți}}",
+      "pickup": "Preluare",
+      "dropoff": "Predare",
+      "party_size": "{count, plural, one {Masă pentru # persoană} few {Masă pentru # persoane} other {Masă pentru # de persoane}}",
+      "items_more": "și încă {count}",
+      "items_count": "{count, plural, one {# articol} few {# articole} other {# de articole}}",
+      "total": "Total {total}",
+      "expected_by": "Sosește până pe {date}",
+      "local_time": "ora locală",
+      "local_time_title": "Ora locală a locului, nu cea din fusul tău orar",
+      "route": "{from} – {to}"
+    },
     "mv_position": "{index} din {total}",
     "plugin_panel_show": "Afișează panoul pluginului",
     "plugin_panel_hide": "Ascunde panoul pluginului",
+    "plugin_panel": "Panoul pluginului",
     "copy": "Copiază",
     "contact_added": "Contact adăugat",
     "save_to_files": {
@@ -806,6 +952,18 @@
     "read_aloud_stop": "Opriți citirea",
     "reader_view": "Vizualizare pentru citire"
   },
+  "reader_actions": {
+    "restore": "Restaurează",
+    "restore_to": "Mută înapoi în {folder}",
+    "delete_forever": "Șterge definitiv"
+  },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mută în Primite",
+    "delete_forever_title": "Ștergi definitiv acest mesaj?",
+    "delete_forever_batch_title": "{count, plural, one {Ștergi definitiv acest mesaj?} other {Ștergi definitiv aceste # mesaje?}}",
+    "delete_forever_message": "Nu îl mai poți recupera.",
+    "delete_forever_batch_message": "{count, plural, one {Nu îl mai poți recupera.} other {Nu le mai poți recupera.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De la {domain}, din afara organizației dvs.",
@@ -817,6 +975,35 @@
     "field_bcc": "BCC",
     "send_anyway": "Trimite oricum",
     "back": "Înapoi"
+  },
+  "phishing_report": {
+    "action": "Raportează ca phishing…",
+    "confirm_title": "Raportați ca phishing?",
+    "confirm_message": "{count, plural, one {Mesajul ajunge la {address} și este mutat în Spam.} few {Fiecare dintre cele # mesaje ajunge la {address} ca raport separat și este mutat în Spam.} other {Fiecare dintre cele # de mesaje ajunge la {address} ca raport separat și este mutat în Spam.}}",
+    "confirm": "Raportează",
+    "cancel": "Anulează",
+    "sending": "Se raportează…",
+    "done": "{count, plural, one {Raportat la {address} și mutat în Spam.} few {# mesaje raportate la {address} și mutate în Spam.} other {# de mesaje raportate la {address} și mutate în Spam.}}",
+    "not_moved": "{count, plural, one {Raportat la {address}, dar mesajul nu a putut fi mutat în Spam.} few {Raportate la {address}, dar # mesaje nu au putut fi mutate în Spam.} other {Raportate la {address}, dar # de mesaje nu au putut fi mutate în Spam.}}",
+    "failed": "{count, plural, one {Mesajul nu a putut fi raportat.} few {# mesaje nu au putut fi raportate.} other {# de mesaje nu au putut fi raportate.}}",
+    "undo": "Anulează",
+    "undone": "{count, plural, one {Mutat înapoi. Raportul a fost deja trimis.} few {Mutate înapoi. Rapoartele au fost deja trimise.} other {Mutate înapoi. Rapoartele au fost deja trimise.}}",
+    "undo_failed": "Nu a putut fi mutat înapoi.",
+    "banner": "Ați raportat acest mesaj ca phishing. Linkurile din el sunt dezactivate.",
+    "link_off": "link dezactivat",
+    "link_off_note": "(link dezactivat)",
+    "no_subject": "(fără subiect)"
+  },
+  "classification": {
+    "picker_label": "Clasificare",
+    "chip_label": "Clasificare: {name}",
+    "none": "Fără clasificare",
+    "pick_required": "Alegeți o clasificare",
+    "required_hint": "Organizația dvs. cere o clasificare.",
+    "required_toast": "Alegeți o clasificare înainte de trimitere.",
+    "quick_reply_needs_label": "Acest răspuns are nevoie de o clasificare. Alegeți una aici, apoi trimiteți.",
+    "forward_needs_label": "Este necesară o clasificare. Redirecționați mesajul din fereastra de redactare.",
+    "received_hint": "Setată de programul de e-mail al expeditorului. Oricine poate seta o clasificare, deci nu dovedește nimic."
   },
   "email_composer": {
     "select_from_directory": "Selectează din director",
@@ -833,10 +1020,10 @@
     "forward_message": "Redirecționează",
     "from": "De la",
     "to": "Către",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Subiect",
-    "body_placeholder": "Scrieți mesajul...",
+    "body_placeholder": "Scrieți mesajul…",
     "send": "Trimite",
     "cancel": "Anulează",
     "attach": "Atașați",
@@ -893,10 +1080,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Dacă serverul dvs. nu acceptă această adresă ca expeditor al plicului, se folosește în schimb {identity}, iar destinatarii o pot vedea în antetul Return-Path."
     },
-    "save_as_template": "Salvează ca șablon",
+    "save_as_template": "Salvează ca șablon…",
     "attach_from_device": "Încarcă de pe acest dispozitiv",
     "templates_menu": "Șabloane",
-    "insert_template": "Inserează șablon",
+    "insert_template": "Inserează șablon…",
     "options": "Opțiuni",
     "option_plain_text": "Text simplu",
     "option_plain_text_hint": "Trimite fără formatare",
@@ -932,7 +1119,7 @@
     "recipients_partly_refused": "Serverul a respins {recipients}. Ceilalți destinatari primesc mesajul.",
     "send_offline": "Se pare că ești offline. Mesajul este încă aici; trimite-l din nou când revii online.",
     "formatting": "Formatare",
-    "send_recipients_rejected": "Netrimis - serverul a respins toți destinatarii.",
+    "send_recipients_rejected": "Netrimis: serverul a respins toți destinatarii.",
     "send_plugin_failed": "Nu a fost trimis - un plugin care se ocupă de trimitere a eșuat sau a durat prea mult. Verifică dosarul Trimise înainte de a trimite din nou.",
     "send_some_recipients_rejected": "Trimis, dar nu și acestor destinatari - serverul i-a respins.",
     "continue_draft": "Continuă schița",
@@ -975,7 +1162,7 @@
       "unfinished": []
     },
     "schedule_send": "Programează trimiterea",
-    "schedule_send_description": "Alegeți momentul în care serverul ar trebui să transmită acest mesaj.",
+    "schedule_send_description": "Alegeți când să fie trimis.",
     "schedule_preset": {
       "this_morning": "Azi dimineață",
       "this_afternoon": "Azi după-amiază",
@@ -1026,6 +1213,7 @@
       "edit_link": "Editează linkul",
       "remove_link": "Elimină linkul",
       "link_address": "Adresa linkului",
+      "link_text": "Text",
       "link_invalid": "Adresa nu poate conține spații",
       "table": "Tabel",
       "clear_formatting": "Șterge formatarea",
@@ -1095,6 +1283,27 @@
       "edit": "Editați descrierea imaginii",
       "plain_text": "[Imagine: {alt}]"
     }
+  },
+  "compose_ux": {
+    "draft_discarded": "Ciornă renunțată",
+    "undo": "Anulează",
+    "discard_draft": "Renunță la ciornă",
+    "save_failed_close": "Ciorna nu a putut fi salvată. Încercați din nou sau renunțați la ea.",
+    "try_again": "Încearcă din nou",
+    "add_description": "Adaugă o descriere",
+    "attachments_summary": "Atașamente: {count}, {size}",
+    "from_sub_address": "Folosește o subadresă…",
+    "from_edit_sender": "Editează expeditorul…",
+    "shortcut_insert_link": "Inserează un link",
+    "shortcut_save_draft": "Salvează ciorna",
+    "shortcut_show_cc": "Afișează Cc",
+    "shortcut_show_bcc": "Afișează Bcc"
+  },
+  "compose_dock": {
+    "open_draft": "Deschide",
+    "reply_type": "Tipul răspunsului: {kind}",
+    "resize_reply": "Redimensionează răspunsul",
+    "fields_menu": "Mai multe câmpuri"
   },
   "confirm_dialog": {
     "confirm": "Confirmare",
@@ -1186,8 +1395,6 @@
     "templates_import_errors": "Unele șabloane nu au putut fi importate",
     "templates_import_empty": "Nu s-au găsit șabloane în fișier",
     "export_email_error": "Nu s-a putut exporta e-mailul",
-    "import_email_success": "E-mailul a fost importat cu succes",
-    "import_email_error": "Importul e-mailului a eșuat",
     "rule_created": "Regula a fost creată",
     "rule_merged": "Adăugat la regula „{name}”",
     "rule_already_covered": "Deja acoperit de regula „{name}”",
@@ -1210,12 +1417,75 @@
     "tag_removed_count": "{count, plural, one {Eticheta a fost eliminată de pe # e-mail} few {Eticheta a fost eliminată de pe # e-mailuri} other {Eticheta a fost eliminată de pe # de e-mailuri}}",
     "new_mail_count": "{count, plural, one {# mesaj nou} few {# mesaje noi} other {# de mesaje noi}}"
   },
+  "org_notice": {
+    "label": "Anunț",
+    "dismiss": "Închide anunțul",
+    "severity_info": "Informație",
+    "severity_warning": "Avertisment",
+    "severity_critical": "Important"
+  },
+  "vacation_templates": {
+    "title": "Șabloanele organizației",
+    "description": "Porniți de la un răspuns scris de organizația dvs. Puteți schimba textul după aceea.",
+    "pick_label": "Folosiți un șablon",
+    "pick_placeholder": "Alegeți un șablon",
+    "deputy_label": "Adresa înlocuitorului",
+    "deputy_placeholder": "coleg@example.com",
+    "deputy_hint": "Răspunsul îl indică pe acest coleg pentru probleme urgente.",
+    "deputy_missing": "Introduceți mai întâi adresa înlocuitorului.",
+    "deputy_name_label": "Numele înlocuitorului",
+    "deputy_name_missing": "Introduceți mai întâi numele înlocuitorului.",
+    "apply": "Folosiți acest text",
+    "apply_hint": "Înlocuiește subiectul și textul de mai jos."
+  },
+  "uxs_vacation": {
+    "default_subject": "În afara biroului",
+    "default_message": "Vă mulțumesc pentru e-mail. Sunt în afara biroului și voi răspunde când mă întorc.",
+    "write_message_first": "Scrieți mai întâi un mesaj. Fără el, oamenii ar primi un răspuns gol.",
+    "enter_address_first": "Introduceți mai întâi adresa către care se redirecționează.",
+    "message_title": "Răspunsul dvs.",
+    "message_label": "Mesaj",
+    "message_description": "Ce primesc cei care vă scriu. Puteți folosi formatare și linkuri.",
+    "from_label": "De la (opțional)",
+    "from_description": "Lăsați gol pentru a începe imediat.",
+    "until_label": "Până la (opțional)",
+    "until_description": "Lăsați gol pentru a răspunde până îl dezactivați.",
+    "from_placeholder": "Imediat",
+    "until_placeholder": "Până îl dezactivați",
+    "audience_all": "Tuturor",
+    "audience_internal": "Doar organizației mele ({domains})",
+    "audience_external": "Doar persoanelor din afara organizației mele",
+    "signature_label": "Semnătură",
+    "signature_plain_label": "Semnătură (text simplu)",
+    "signature_plain_description": "Scrieți doar text simplu (Redactarea), deci și semnătura este text simplu.",
+    "edit_as_html": "Editați ca HTML",
+    "edit_formatted": "Înapoi la editorul cu formatare",
+    "html_source_label": "Semnătură HTML",
+    "signature_size": "{bytes} din {max} octeți folosiți",
+    "signature_too_long": "Prea lungă pentru server ({bytes} din {max} octeți). Scurtați-o."
+  },
+  "retention_notice": {
+    "line": "Mesajele de aici sunt șterse la {count, plural, one {# zi} few {# zile} other {# de zile}} după ce au fost mutate aici."
+  },
+  "device_policy": {
+    "downloads_off": "Organizația dvs. a dezactivat descărcările.",
+    "download_off_named": "{name}: organizația dvs. a dezactivat descărcările",
+    "download_blocked": "Organizația dvs. a dezactivat descărcările.",
+    "export_blocked": "Organizația dvs. a dezactivat exportul e-mailurilor.",
+    "print_blocked": "Organizația dvs. a dezactivat imprimarea."
+  },
   "third_party": {
     "push_needs_relay": "Notificările push au nevoie de un releu push administrat de organizația dvs., iar niciunul nu este configurat. E-mailurile noi apar în continuare cât timp aplicația este deschisă.",
     "relay_desc": "Sunt oferite doar releele proprii ale organizației dvs., deoarece acest server nu contactează servicii externe.",
     "relay_none": "Niciunul configurat",
     "plugin_refused": "Nu a pornit: acest plugin se conectează la servicii externe, pe care organizația dvs. le-a dezactivat.",
     "remote_content_blocked": "Organizația dvs. blochează conținutul de pe alte servere, așa că imaginile externe din acest mesaj nu sunt afișate."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Organizația dvs. blochează conținutul la distanță în toate mesajele, așa că nu se încarcă nici de la expeditorii de încredere."
+  },
+  "trusted_senders_book": {
+    "unavailable": "Indisponibil: acest cont nu poate păstra agende pe server. Lista rămâne pe acest dispozitiv."
   },
   "date": {
     "today": "Astăzi",
@@ -1389,8 +1659,8 @@
       "title": "Aspect",
       "description": "Personalizați aspectul și funcționalitatea serviciului dvs. de webmail",
       "theme": {
-        "label": "Tema",
-        "description": "Alegeți schema de culori preferată",
+        "label": "Luminos sau întunecat",
+        "description": "Sistem urmează setarea dispozitivului",
         "light": "Ușor",
         "dark": "Întunecat",
         "system": "Sistem"
@@ -1418,7 +1688,7 @@
         "label": "Aspectul interfeței",
         "description": "Unde se află căutarea, navigarea și barele de instrumente",
         "default": "Implicit",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Căutarea sus"
       },
       "animations": {
         "label": "Activați animațiile",
@@ -1438,13 +1708,17 @@
         "label": "Ascunde comutatorul de conturi din bara laterală",
         "description": "Ascundeți selectorul de conturi din partea de sus a barei laterale a folderelor. Puteți comuta între conturi în continuare din bara de navigare din partea de jos."
       },
+      "sidebar_account_switcher": {
+        "label": "Comutator de conturi în partea de sus a barei laterale",
+        "description": "Afișează comutatorul de conturi deasupra folderelor și butonul rotund Compune peste lista de mesaje. Dezactivați pentru a pune Compune deasupra folderelor."
+      },
       "show_rail_account_list": {
         "label": "Afișați avatarurile conturilor în bara de navigare",
         "description": "Afișați cercurile conturilor individuale în partea de jos a barei de navigare pentru comutarea rapidă, cu un buton de deconectare sub acestea."
       },
       "unified_mailbox": {
         "label": "Căsuță poștală unificată",
-        "description": "Afișați folderele combinate (Mesaje primite, Mesaje trimise etc.) pentru toate conturile conectate",
+        "description": "Afișați folderele combinate (Mesaje primite, Mesaje trimise etc.) pentru contul activ și folderele sale partajate. Secțiunea apare doar când există ceva de combinat: combinarea tuturor conturilor este activată și sunt conectate mai multe conturi, o căsuță de e-mail de grup este inclusă mai jos, sau Toată poșta, Necitite ori Cu stea este activată. Acestea trei sunt opțiuni separate, care apar doar după ce administratorul le activează.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -1462,7 +1736,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Pictograme colorate în bara laterală",
-        "description": "Colorați pictogramele folderelor și etichetelor în funcție de tip (albastru pentru „Inbox”, roșu pentru „Junk”, verde pentru „Sent” etc.). Dezactivați această opțiune pentru o bară laterală monocromă."
+        "description": "Colorează pictogramele dosarelor și etichetelor după tip (Primite albastru, Spam roșu, Trimise verde etc.). Dezactivați pentru pictograme gri."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1474,11 +1748,15 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Ca să vedeți e-mailurile noi cât lucrați în altă filă sau aplicație."
       },
       "show_shared_mail_accounts": {
         "label": "Afișează conturile de e-mail partajate",
         "description": "Afișează folderele cutiilor poștale partajate cu tine la Partajat, în bara laterală. Dezactivează pentru a le ascunde pe toate sau ascunde conturi individuale mai jos. Calendarele și contactele lor rămân."
+      },
+      "compact_shared_mailboxes": {
+        "label": "Căsuțe partajate compacte",
+        "description": "Afișează fiecare căsuță poștală partajată ca un singur rând care îi deschide mesajele primite, cu dosarele dedesubt. Dosarele goale, precum Ciorne sau Coș de gunoi, sunt omise."
       },
       "pro_interface": {
         "label": "Interfață Pro (experimentală)",
@@ -1521,7 +1799,7 @@
     },
     "keywords": {
       "title": "Etichete de e-mail",
-      "description": "Definiți etichete pentru a vă organiza e-mailurile pe culori. Acestea sunt stocate pe server sub formă de cuvinte-cheie dJMAP.",
+      "description": "Creați etichete pentru a vă sorta mesajele. Etichetele sunt salvate împreună cu mesajele pe server.",
       "add_keyword": "Adăugați etichetă",
       "label_field": "Nume afișat",
       "label_placeholder": "de ex. Serviciu, Personal, Urgent",
@@ -1556,8 +1834,8 @@
         "hide": "Ascunde"
       },
       "unrecognized": {
-        "title": "Recuperați etichetele de pe server",
-        "description": "Numele și culorile etichetelor sunt stocate în acest browser, dar etichetele în sine se află pe e-mailurile dvs. sub formă de cuvinte-cheie JMAP. Scanați corespondența pentru cuvinte-cheie care nu au o etichetă aici și adăugați-le înapoi.",
+        "title": "Găsiți etichetele de pe mesaje care lipsesc aici",
+        "description": "Acest browser păstrează numele și culorile etichetelor. Etichetele în sine sunt salvate pe mesaje. Căutați în e-mailuri etichetele care lipsesc aici și adăugați-le din nou.",
         "scan": "Căutați etichete",
         "rescan": "Scanați din nou",
         "scanning": "Se scanează… {scanned} din {total} e-mailuri",
@@ -1571,14 +1849,14 @@
     "notifications": {
       "test_sound": "Testați sunetul de notificare",
       "sounds": {
-        "default": "Implicit (Bip)",
+        "default": "Bip",
         "cheerful": "Vesel",
         "involved": "Implicat",
         "swift": "Gest rapid",
         "relax": "Relaxează-te"
       },
       "push": {
-        "title": "Notificări în fundal",
+        "title": "Notificări când {appName} este închis",
         "description": "Primiți notificări de sistem pentru e-mailuri noi chiar și atunci când acest site este închis. Notificările sunt transmise prin intermediul serverului de push Bulwark; serverul nu vede niciodată conținutul e-mailurilor.",
         "relay_label": "Relay push",
         "relay_desc": "Implicit este setat serverul de retransmitere găzduit Bulwark. Modificați această setare numai dacă utilizați un server propriu.",
@@ -1588,8 +1866,9 @@
         "status_inactive": "Nu este activat pe acest dispozitiv",
         "status_unsupported": "Acest browser nu acceptă Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Notificările în fundal nu sunt disponibile în demonstrație.",
         "status_busy": "Se lucrează…",
-        "enable": "Activați",
+        "enable": "Activați pe acest dispozitiv",
         "reenable": "Reînregistrează-te",
         "disable": "Dezactivare",
         "confirm_disable_title": "Dezactivați notificările din fundal?",
@@ -1614,7 +1893,12 @@
         "confirm_revoke_message_this": "Acest dispozitiv va înceta imediat să primească notificări în fundal.",
         "shared_mailboxes_no_push": "Căsuțele poștale pe care alții le partajează cu dvs. nu trimit notificări în fundal.",
         "error_forbidden": "Serverul de e-mail nu permite notificări în fundal pentru acest cont.",
-        "error_over_quota": "Acest cont are prea multe înregistrări push pe serverul de e-mail (limita este de obicei 15). Revocați din setările de notificări dispozitivele pe care nu le mai folosiți, apoi încercați din nou."
+        "error_over_quota": "Acest cont are prea multe înregistrări push pe serverul de e-mail (limita este de obicei 15). Revocați din setările de notificări dispozitivele pe care nu le mai folosiți, apoi încercați din nou.",
+        "error_blocked": "Notificările sunt blocate pentru acest site. Permite-le în setările site-ului din browser, apoi încearcă din nou.",
+        "error_not_granted": "Notificările nu au fost permise, deci push rămâne dezactivat.",
+        "error_verification_timeout": "Serverul de e-mail nu a confirmat la timp acest dispozitiv, deci push rămâne dezactivat. Încearcă din nou peste un minut.",
+        "error_relay": "Releul push nu poate fi accesat acum, deci push rămâne dezactivat. Încearcă din nou mai târziu.",
+        "error_teardown": "Push este dezactivat în acest browser, dar serverul de e-mail sau releul nu au putut fi accesate. Notificările pot continua să sosească câteva zile. Pentru a le opri mai devreme, când ești din nou online activează setările avansate și revocă acest dispozitiv la Dispozitive înregistrate."
       },
       "push_all": {
           "title": "All accounts",
@@ -1629,17 +1913,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Sunet de notificare",
+        "title": "Sunet",
         "description": "Alegeți ce sunet să se redea pentru notificări",
-        "choose": "Sunet",
+        "choose": "Ton",
         "choose_desc": "Selectați un ton de notificare și faceți clic pe pictograma difuzorului pentru a-l asculta"
       },
       "email": {
-        "title": "Notificări prin e-mail",
+        "title": "E-mailuri noi",
         "description": "Configurați notificările pentru e-mailurile primite",
         "enabled": "Notificări prin e-mail",
         "enabled_desc": "Afișați notificări la primirea de e-mailuri noi",
-        "sound": "Sunet de notificare",
+        "sound": "Sunet pentru e-mailuri noi",
         "sound_desc": "Redă o alertă audio la sosirea unor e-mailuri noi",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1649,7 +1933,7 @@
         "description": "Configurați notificările pentru evenimentele din calendar",
         "enabled": "Notificări privind evenimentele",
         "enabled_desc": "Afișați alerte pentru evenimentele viitoare din calendar",
-        "sound": "Sunet de notificare",
+        "sound": "Sunet pentru mementouri",
         "sound_desc": "Redă o alertă audio pentru mementourile din calendar"
       }
     },
@@ -1688,7 +1972,7 @@
       },
       "first_day": {
         "label": "Prima zi a săptămânii",
-        "description": "Începeți săptămâna duminică sau luni",
+        "description": "Prima zi a săptămânii în calendare",
         "sunday": "Duminică",
         "monday": "Luni"
       },
@@ -1709,6 +1993,12 @@
       "clear_search_on_folder_change": {
         "label": "Șterge căutarea la schimbarea folderului",
         "description": "Un clic pe un folder (Inbox, Trimise…) șterge căutarea activă și afișează acel folder. Dezactivat, căutarea rămâne și se reia în folderul ales."
+      },
+      "search_default_scope": {
+        "label": "Caută în",
+        "description": "Unde caută o căutare nouă. Poți alege în continuare alt folder în filtrele de căutare.",
+        "all": "Toate folderele, cu excepția Spam și Coș de gunoi",
+        "folder": "Folderul deschis"
       },
       "request_read_receipt": {
         "label": "Solicitați confirmări de citire în mod implicit",
@@ -1772,13 +2062,13 @@
       },
       "mail_layout": {
         "label": "Structura e-mailului",
-        "description": "Alegeți între panoul de citire clasic divizat, un flux de citire concentrat în stilul Gmail sau un panou de citire în partea de jos, în stilul Zimbra.",
+        "description": "Unde stau pe ecran lista de mesaje și mesajul deschis.",
         "split": "Panou divizat",
-        "split_description": "Mențineți lista de mesaje și panoul de citire vizibile unul lângă celălalt.",
+        "split_description": "Lista și mesajul alăturate",
         "focus": "Listă cu elemente evidențiate",
-        "focus_description": "Afișați câte o linie pe mesaj și deschideți e-mailul pe toată lățimea ecranului, menținând în același timp vizibilă bara laterală a folderelor.",
+        "focus_description": "Lista, apoi mesajul pe toată lățimea",
         "horizontal": "Panoul de citire în partea de jos",
-        "horizontal_description": "Afișați lista de mesaje în partea de sus și deschideți mesajul selectat într-un panou de citire situat sub aceasta."
+        "horizontal_description": "Mesajul sub listă"
       },
       "list_columns": {
         "label": "Afișează lista pe coloane",
@@ -1803,7 +2093,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Răspunde de la adresa de la care a fost primit mesajul",
-        "description": "Când răspundeți, trimiteți mesajul de la adresa la care a fost trimis inițial. Se potrivesc mai întâi identitățile; pentru livrările de tip „catch-all” ale domeniului, antetul „De la” este rescris cu aliasul, în timp ce trimiterea se face prin identitatea dvs. principală."
+        "description": "Când răspundeți, trimiteți de la adresa la care a fost trimis mesajul."
       },
       "reply_identity_match": {
         "label": "Potrivirea adresei de primire",
@@ -1816,6 +2106,14 @@
         "description": "Unde să inserați semnătura în răspunsuri și redirecționări. Deasupra textului citat, semnătura se citește în mod natural ca o încheiere a răspunsului; sub text, mesajul original rămâne contiguu.",
         "above_quote": "Înaintea textului citat",
         "below_quote": "După textul între ghilimele"
+      },
+      "signature_new_mail": {
+        "label": "Semnătură la mesajele noi",
+        "description": "Inserează automat semnătura când compui un mesaj nou. Dezactivează pentru a începe fiecare mesaj nou fără ea."
+      },
+      "signature_reply_forward": {
+        "label": "Semnătură la răspunsuri și redirecționări",
+        "description": "Adaugă automat semnătura când răspunzi sau redirecționezi un mesaj. Dezactivează pentru a le trimite fără ea."
       },
       "signature_separator": {
         "label": "Delimitator de semnătură",
@@ -1833,12 +2131,6 @@
         "description": "Alegeți dacă, la clic pe un fișier atașat, acesta să fie previzualizat sau descărcat imediat",
         "preview": "Previzualizați, dacă este posibil",
         "download": "Descărcați imediat"
-      },
-      "attachment_position": {
-        "label": "Poziția atașamentului",
-        "description": "Unde să afișați atașamentele în antetul e-mailului",
-        "beside-sender": "Lângă expeditor",
-        "below-header": "Sub antet"
       },
       "emails_per_page": {
         "10": "10 e-mailuri",
@@ -1954,8 +2246,8 @@
         "unsupported": "Contul curent nu indică faptul că acceptă trimiterea amânată. Setarea este totuși salvată pentru alte conturi."
       },
       "return_to_list_after_action": {
-        "label": "Revenire la listă după ștergere sau marcare ca necitit",
-        "description": "După ștergerea sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."
+        "label": "Revenire la listă după ștergere, arhivare, mutare sau marcare ca necitit",
+        "description": "După ștergerea, arhivarea, mutarea, raportarea ca spam sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."
       },
       "swipe_right_action": {
         "label": "Acțiune la glisare spre dreapta (mobil)",
@@ -1997,6 +2289,7 @@
       "auth_method_oauth": "Autentificare unică (OAuth /OIDC)",
       "auth_method_basic": "Parolă",
       "auth_method_token": "Token de acces",
+      "account_management_link": "Gestionează securitatea contului (2FA, parole pentru aplicații)",
       "demo_account": "Cont demo",
       "email": {
         "label": "Adresă de e-mail",
@@ -2019,8 +2312,8 @@
         "title": "Conturi conectate",
         "description": "Trageți pentru a reordona modul în care apar conturile în meniul derulant al conturilor",
         "active": "Cont activ în prezent",
-        "default_badge": "Cont implicit",
-        "set_default": "Setați ca implicită",
+        "default_badge": "Se deschide la pornire",
+        "set_default": "Deschideți acest cont la pornire",
         "switch_to": "Treceți la acest cont",
         "move_up": "Sus",
         "move_down": "Derulați în jos",
@@ -2080,6 +2373,57 @@
       "managing": "Administrare: {name}"
     },
     "security": {
+      "masked_addresses": {
+        "address": "Adresă",
+        "description_column": "Descriere",
+        "website_column": "Site web",
+        "state": "Stare",
+        "actions": "Acțiuni",
+        "no_description": "Fără descriere",
+        "edit": "Editare",
+        "close": "Închidere",
+        "pagination": "Pagini cu adrese mascate",
+        "page": "Pagina {page} din {pages}",
+        "previous": "Anterioară",
+        "next": "Următoare",
+        "delete": "Ștergere",
+        "delete_title": "Ștergeți definitiv adresa mascată?",
+        "delete_warning": "Ștergeți {address}? Acțiunea nu poate fi anulată. E-mailurile trimise la această adresă nu vor mai fi livrate.",
+        "delete_confirm": "Ștergeți definitiv",
+        "cancel": "Anulează",
+        "deleted": "Adresa a fost ștearsă definitiv.",
+        "deleted_refresh_failed": "Ștergerea a fost confirmată, dar lista nu a putut fi reîmprospătată. Reîmprospătați pentru a încărca lista actuală.",
+        "delete_forbidden": "Sesiunea curentă nu are permisiunea de a șterge adrese mascate. Celelalte acțiuni permise rămân disponibile.",
+        "delete_failed": "Adresa nu a fost ștearsă. Reîmprospătați lista înainte de a încerca din nou.",
+        "delete_unconfirmed": "Ștergerea nu a putut fi confirmată și nu va fi reîncercată. Reîmprospătați lista pentru a verifica adresa înainte de orice altă ștergere.",
+        "title": "Adrese mascate",
+        "intro": "Primiți e-mailuri fără să vă dezvăluiți adresa principală. Dezactivarea unei adrese respinge e-mailurile noi trimise la ea. Aceste adrese nu pot fi folosite pentru trimiterea de e-mailuri.",
+        "loading": "Se încarcă adresele mascate…",
+        "count": "{count, plural, one {# adresă} few {# adrese} other {# de adrese}}",
+        "empty": "Nu există încă adrese mascate.",
+        "website": "Site web (opțional)",
+        "description": "Descriere (opțional)",
+        "no_website": "Nespecificat",
+        "enabled": "Activată",
+        "disabled": "Dezactivată",
+        "enable": "Activați",
+        "disable": "Dezactivați",
+        "copy": "Copiere",
+        "copied": "Adresa a fost copiată.",
+        "copy_failed": "Copierea nu a reușit. Selectați și copiați adresa de mai sus.",
+        "save": "Salvați descrierea",
+        "create": "Creați o adresă mascată",
+        "refresh": "Reîmprospătare",
+        "saved": "Modificarea a fost salvată.",
+        "forbidden": "Sesiunea curentă nu are permisiunea de a lista adresele mascate.",
+        "unavailable": "Adresele mascate nu sunt disponibile pentru acest cont sau server.",
+        "load_failed": "Lista completă de adrese nu a putut fi încărcată. Reîmprospătați pentru a încerca din nou.",
+        "save_failed": "Modificarea nu a putut fi confirmată. Reîmprospătați lista înainte de a încerca din nou.",
+        "create_forbidden": "Serverul nu a permis crearea unei adrese mascate cu această sesiune.",
+        "update_forbidden": "Serverul nu a permis editarea adreselor mascate cu această sesiune. Puteți copia în continuare adresele.",
+        "over_quota": "Cota de adrese mascate a serverului a fost atinsă. Adresele dezactivate pot fi luate în calcul în continuare.",
+        "rate_limit": "Limita de creare a serverului a fost atinsă. Încercați din nou mai târziu."
+      },
       "title": "Securitatea contului",
       "description": "Gestionați-vă parola, autentificarea în doi pași și setările de securitate",
       "detecting": "Se detectează capacitățile serverului...",
@@ -2107,7 +2451,7 @@
       },
       "totp": {
         "section_title": "Autentificare în doi pași",
-        "label": "Autentificare TOTP",
+        "label": "Conectare în doi pași",
         "description": "Adăugați un nivel suplimentar de securitate cu o parolă unică, valabilă o singură dată, bazată pe timp",
         "active": "Activat",
         "inactive": "Dezactivat",
@@ -2187,12 +2531,12 @@
         "enabled_success": "Criptarea datelor stocate este activată"
       },
       "email_client": {
-        "title": "Configurarea clientului de e-mail",
-        "description": "Utilizați aceste date de autentificare pentru a configura clientul de e-mail de pe desktop sau de pe dispozitivul mobil (Thunderbird, Apple Mail, Outlook etc.)",
-        "jmap_username_label": "JMAP Nume de utilizator",
+        "title": "Folosiți e-mailul în alte aplicații",
+        "description": "Thunderbird, Apple Mail, Outlook și aplicațiile de e-mail de pe telefon pot folosi aceste setări.",
+        "jmap_username_label": "Nume de utilizator",
         "copy": "Copiere",
         "copied": "Copiat",
-        "password_instructions": "Folosiți numele de utilizator de la JMAP menționat mai sus, împreună cu o parolă de aplicație, pentru a vă autentifica în clientul de e-mail. Creați o parolă de aplicație în secțiunea de mai jos, dacă nu ați făcut-o deja."
+        "password_instructions": "Ca parolă, folosiți o parolă de aplicație, nu parola obișnuită. Puteți crea una mai jos pe această pagină."
       },
       "link_device": {
         "title": "Aplicație mobilă",
@@ -2443,7 +2787,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Reîncărcați contactele, calendarele și dosarele de pe server. Rămâneți conectat.",
         "button": "Refresh",
         "confirm_title": "Reîmprospătați datele din cache?"
       },
@@ -2456,12 +2800,12 @@
       },
       "export_settings": {
         "label": "Setări de export",
-        "description": "Descărcați setările în format JSON",
+        "description": "Descărcați o copie a setărilor",
         "button": "Export"
       },
       "import_settings": {
         "label": "Importați setările",
-        "description": "Încărcați setările dintr-un fișier JSON",
+        "description": "Restaurați setările dintr-un fișier",
         "button": "Import"
       },
       "about": {
@@ -2512,11 +2856,13 @@
       "manage_description": "Adăugați, editați sau eliminați aplicații personalizate din bara laterală"
     },
     "contacts": {
-      "title": "Contacte",
-      "description": "Importați și exportați contactele",
+      "title": "Lista de contacte",
+      "description": "Cum sunt afișate contactele, și fișiere de contacte de importat sau exportat",
       "group_by_letter_label": "Grupați după prima literă",
       "sort_by_last_name_label": "Sortare după nume de familie",
       "sort_by_last_name_description": "Ordonați lista de contacte după numele de familie, astfel încât membrii familiei să apară împreună",
+      "show_directory_label": "Afișează directorul",
+      "show_directory_description": "Afișează conturile și grupurile de pe serverul de e-mail la „Director” în Contacte",
       "group_by_letter_description": "Afișați titlurile secțiunilor în ordine alfabetică în lista de contacte",
       "import_label": "Importați contactele",
       "import_description": "Importați contactele dintr-un fișier „vCard” (.vcf)",
@@ -2606,18 +2952,19 @@
       "not_supported": "Serverul dvs. de e-mail nu acceptă filtre de e-mail.",
       "rule_name": "Numele regulii",
       "rule_name_placeholder": "de ex., Sortează buletinele informative",
-      "match_all": "Îndepliniți TOATE condițiile",
-      "match_any": "Îndepliniți ORICE condiție",
+      "match_all": "Îndeplinește toate condițiile",
+      "match_any": "Îndeplinește oricare condiție",
       "conditions": "Condiții",
       "add_condition": "Adăugați condiție",
       "actions": "Acțiuni",
       "add_action": "Adăugare acțiune",
       "remove_condition": "Elimină condiția",
       "remove_action": "Elimină acțiunea",
-      "stop_processing": "Opriți procesarea regulilor următoare",
+      "stop_processing": "Nu aplicați regulile următoare",
       "include_spam": "Mută și mesajele marcate ca spam",
       "attachment_type_placeholder": "de ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valoare (mai multe valori separate prin virgule)",
+      "regex_placeholder": "Expresie regulată, de ex. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Atașament",
         "from": "De la",
@@ -2639,6 +2986,7 @@
         "starts_with": "începe cu",
         "ends_with": "se termină cu",
         "matches": "se potrivește cu modelul",
+        "regex": "se potrivește cu expresia regulată",
         "greater_than": "este mai mare decât",
         "less_than": "este mai mic decât",
         "address_is": "este adresa",
@@ -2654,7 +3002,7 @@
         "discard": "Ignorare (ștergere fără confirmare)",
         "reject": "Respinge cu mesaj",
         "keep": "Păstrează în căsuța de primire",
-        "stop": "Opriți procesarea"
+        "stop": "Nu aplicați regulile următoare"
       },
       "move_to_folder": "Selectează folderul",
       "copy_to_folder": "Selectează folderul",
@@ -2677,6 +3025,7 @@
       "open_sieve_editor": "Deschideți editorul de fișiere Sieve în format brut",
       "fetch_error": "Nu s-au putut încărca filtrele",
       "expanded_view": "Vizualizare extinsă",
+      "show_rule_details": "Afișați condițiile și acțiunile fiecărei reguli",
       "expanded_view_description": "Afișați regulile de filtrare cu blocuri detaliate de condiții și acțiuni",
       "if": "Dacă",
       "then": "Apoi",
@@ -2701,6 +3050,7 @@
       "validation_action_forward": "Introduceți o adresă către care să se redirecționeze",
       "validation_action_reject": "Introduceți mesajul de respingere",
       "validation_header_name": "Numele antetelor pot conține doar literele A-Z, cifre, cratime și liniuțe de subliniere",
+      "validation_regex": "Această expresie regulată nu este validă",
       "templates_section": "Începeți de la șablon",
       "template_newsletters": "Mutați buletinele informative în dosar",
       "template_receipts": "Arhivarea automată a confirmărilor de primire",
@@ -2754,6 +3104,9 @@
       "validation_period_empty": "Introduceți o dată de începere sau de încheiere pentru perioadă",
       "validation_period_invalid": "Introduceți o dată validă cu oră pentru perioadă sau lăsați câmpul gol",
       "apply_existing_period": "O regulă cu perioadă acționează doar asupra mesajelor care sosesc în acea perioadă, deci nu poate fi aplicată mesajelor existente.",
+      "apply_existing_in": "Aplicați și mesajelor care sunt deja în {folder}",
+      "apply_existing_count": "{count, plural, one {Aplicați și # mesajului care este deja în {folder}} few {Aplicați și celor # mesaje care sunt deja în {folder}} other {Aplicați și celor # de mesaje care sunt deja în {folder}}}",
+      "apply_existing_none": "Niciun mesaj din {folder} nu se potrivește încă acestei reguli.",
       "period_status_scheduled": "programată",
       "period_status_active": "activă",
       "period_status_expired": "expirată"
@@ -2797,7 +3150,7 @@
         "description": "Configurați modul de afișare a fișierelor și folderelor"
       },
       "default_view": {
-        "label": "Vizualizare implicită",
+        "label": "Afișează fișierele ca",
         "description": "Alegeți între afișarea sub formă de grilă și cea sub formă de listă",
         "list": "Listă",
         "grid": "Tabel"
@@ -2993,10 +3346,6 @@
         "label": "Mască de citire",
         "description": "Estompează tot ce este în mesaj, în afară de câteva rânduri din jurul cursorului, ca să nu pierdeți locul."
       },
-      "plain_language": {
-        "label": "Limbaj simplu",
-        "description": "Formulări mai simple în setări și în mesajele de eroare și explicații scurte pentru termenii tehnici. Disponibil în engleză și germană."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "Mai mult contrast face textul, marginile și conturul de focalizare mai închise sau mai deschise la orice temă și subliniază linkurile. Sistem urmează dispozitivul dvs.",
@@ -3190,6 +3539,127 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Confidențialitate",
+      "about": "Despre"
+    },
+    "search": {
+      "signature": "semnătură semnătură e-mail subsol",
+      "sign_out": "deconectare ieșire logout",
+      "app_lock": "PIN blocare cod ecran de blocare",
+      "text_size": "mărime font text mai mare zoom mărire",
+      "vacation": "răspuns automat în afara biroului absent concediu vacanță autoreply",
+      "two_factor": "2FA doi factori doi pași MFA OTP autentificator cod unic",
+      "encryption": "S/MIME smime PGP OpenPGP criptare certificat",
+      "password": "parolă schimbă parola parolă nouă",
+      "offline": "offline fără conexiune fără internet descărcare stocare sincronizare",
+      "wipe": "elimină șterge golește dispozitiv date",
+      "outbox": "căsuța de ieșire netrimis în așteptare coadă",
+      "remote_content": "imagini la distanță conținut extern urmărire pixeli expeditori de încredere",
+      "push": "push releu fundal notificări",
+      "version": "versiune actualizare despre cod sursă GitHub licență"
+    },
+    "privacy": {
+      "push_title": "Notificări",
+      "push_link": {
+        "label": "Releu pentru notificări",
+        "description": "Notificările cu aplicația închisă trec printr-un releu push, care nu vă vede niciodată e-mailurile. Îl alegeți pe pagina Notificări.",
+        "button": "Notificări"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Imagini la distanță și expeditori de încredere",
+      "receipts_label": "Confirmări de citire",
+      "senders_label": "Imaginile expeditorilor",
+      "description": "Aceste setări sunt pe pagina Confidențialitate.",
+      "button": "Confidențialitate"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densitate și etichetele barei",
+        "description": "Cât de apropiate sunt rândurile listei și dacă butoanele își arată numele se setează pe pagina Aspect."
+      },
+      "light_mode": {
+        "label": "Fundal deschis pentru mesaje",
+        "description": "Afișarea mesajelor pe fundal deschis în modul întunecat se setează pe pagina Citire."
+      },
+      "calendar": {
+        "label": "Previzualizarea evenimentelor în calendar",
+        "description": "Dacă indicarea unui eveniment îi arată detaliile se setează pe pagina Calendar."
+      },
+      "list": {
+        "label": "Conversații și rânduri de previzualizare",
+        "description": "Gruparea pe conversații și rândul de previzualizare de sub fiecare mesaj se setează pe pagina Lista de mesaje."
+      },
+      "reading": {
+        "label": "Marcare ca citit",
+        "description": "Când un mesaj contează ca citit și unde ajungeți după ce îl ștergeți sau îl mutați se setează pe pagina Citire."
+      },
+      "send_warnings_description": "Anularea trimiterii și avertismentele pentru subiect lipsă, atașament uitat sau text substituent.",
+      "bulk_delete": {
+        "label": "Întrebare înainte de a șterge mai multe mesaje",
+        "description": "Aceasta se setează pe pagina Lista de mesaje."
+      },
+      "sounds": {
+        "label": "Sunete și numărul de necitite",
+        "description": "Sunetele notificărilor și numărul de necitite din filă se setează pe pagina Notificări."
+      }
+    },
+    "about": {
+      "title": "Despre {appName}"
+    },
+    "sign_out": {
+      "description": "Deconectați acest cont pe acest dispozitiv."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "zona de notificări bara de sistem fundal minimizare tray",
+      "autostart": "pornire automată la pornire pornește cu Windows la conectare",
+      "default_app": "aplicație de e-mail implicită program de e-mail implicit mailto linkuri de e-mail",
+      "menu_bar": "bara de meniu meniuri tasta Alt Fișier Editare Vizualizare",
+      "updates": "actualizări actualizare versiune nouă beta canal",
+      "devtools": "instrumente pentru dezvoltatori devtools consolă inspectare F12 depanare",
+      "taskbar": "bara de activități clipire Dock atenție",
+      "quiet_hours": "ore de liniște nu deranjați silențios fără sunet noapte",
+      "telemetry": "informații de utilizare telemetrie statistici analiză",
+      "crash": "rapoarte de blocare rapoarte de erori blocare",
+      "threads": "fire conversații grupare threads",
+      "block_images": "blocare imagini imagini externe încărcare imagini",
+      "dark_mode": "mod întunecat mod luminos mod noapte dark mode",
+      "timezone": "fus orar timezone",
+      "reading_pane": "panou de citire panou de previzualizare vizualizare împărțită",
+      "week_start": "începutul săptămânii prima zi luni duminică",
+      "empty_trash": "golire coș de gunoi coș de gunoi elemente șterse",
+      "do_not_disturb": "ore de liniște fără sunet liniște"
+    },
+    "desktop_notifications": {
+      "title": "Pe acest computer",
+      "closed_label": "Cu fereastra închisă",
+      "closed_description": "{appName} vă anunță despre e-mailurile noi cât timp rulează. Ca să ruleze în continuare în zona de notificări după ce închideți fereastra, activați asta în {page}."
+    },
+    "push_unsupported": "Acest browser nu poate afișa notificări când site-ul este închis.",
+    "backup_description_app": "Folosiți aceleași setări pe celelalte dispozitive.",
+    "sender_favicons": {
+      "label": "Imagini de pe site-urile companiilor",
+      "description": "Afișați pictogramele site-urilor web ca imagini de profil pentru expeditorii de afaceri"
+    },
+    "privacy_push": {
+      "label": "Releu pentru notificări",
+      "description": "Notificările cu {appName} închis trec printr-un releu push, care nu vă vede niciodată e-mailurile. Le activați sau dezactivați pe pagina {page}."
+    },
+    "reset": {
+      "message": "Readuce toate setările la cum erau la început. E-mailurile, filtrele, răspunsul automat și semnăturile rămân cum sunt.",
+      "sync_on": "Celelalte dispozitive folosesc aceleași setări, așa că se schimbă și ele.",
+      "sync_off": "Celelalte dispozitive își păstrează setările."
+    }
+  },
+  "layout_preview": {
+    "default_description": "Aplicații și dosare în stânga, căutare deasupra listei",
+    "mountain_view_description": "Căutare sus, mesajele se deschid pe toată lățimea"
+  },
   "setup": {
     "title": "Configurarea Bulwark Webmail",
     "subtitle": "Configurați instanța de webmail din browser.",
@@ -3291,7 +3761,7 @@
       "row_url_required": "Serverul nr. {index}: URL-ul este obligatoriu",
       "row_url_scheme": "Serverul nr. {index}: URL-ul trebuie să înceapă cu http:// sau https://",
       "stalwart": "Activați funcțiile specifice Stalwart",
-      "stalwart_hint": "Adaugă schimbarea parolei și gestionarea filtrelor Sieve. Poate fi activat fără risc și pe alte servere."
+      "stalwart_hint": "Adaugă pagina Securitate (parolă, autentificare în doi pași și parole pentru aplicații) și recuperarea elementelor șterse. Poate fi activat fără risc și pe alte servere."
     },
     "auth": {
       "title": "Autentificare",
@@ -3471,6 +3941,13 @@
     },
     "find_emails_from": "Găsește e-mailurile de la {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Caută un folder",
+    "recent": "Recente",
+    "no_match": "Niciun folder nu se potrivește",
+    "choose_folder": "Alege folderul…",
+    "current_folder": "Deja în {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcați folderul ca citit",
     "mark_folder_tree_read": "Marcați folderul și subfolderele ca citite",
@@ -3479,9 +3956,9 @@
     "new_folder": "Dosar nou…",
     "rename": "Redenumire…",
     "share": "Partajează…",
-    "import_email": "Importați fișiere .eml sau .zip…",
     "empty_folder": "Folder gol",
     "empty_folder_generic": "Folder gol",
+    "empty_folder_all_accounts": "Golește coșul de gunoi (toate conturile)",
     "delete_folder": "Șterge dosarul",
     "refresh": "Reîmprospătează",
     "hide_shared_account": "Ascunde din bara laterală",
@@ -3492,6 +3969,11 @@
     "reset_folder_notifications": "Resetează notificările dosarelor",
     "mark_all_confirm_title": "Marcați toate folderele ca citite",
     "mark_all_confirm_message": "Doriți să marcați toate mesajele necitite din contul dvs. personal ca fiind citite?",
+    "empty_all_confirm_title": "Golește coșul de gunoi pentru toate conturile",
+    "empty_all_confirm_message": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi al tuturor conturilor dvs.? Nu se poate anula.",
+    "toast_emptied_all": "Coșul de gunoi a fost golit pe toate conturile",
+    "toast_error_empty_all_partial": "Coșul de gunoi a fost golit, dar unele conturi au eșuat",
+    "toast_error_empty_all": "Golirea coșului de gunoi a eșuat",
     "delete_confirm_title": "Șterge dosarul",
     "delete_confirm_message": "Doriți să ștergeți definitiv folderul „{name}”? Această acțiune nu poate fi anulată.",
     "prompt_new_subfolder": "Introduceți un nume pentru noul subfolder.",
@@ -3518,6 +4000,25 @@
     "delete_with_contents_title": "Dosarul nu este gol",
     "delete_with_contents_message": "Dosarul „{name}” încă mai conține {count, plural, one {1 mesaj} other {# mesaje}}. Ștergi dosarul și toate mesajele sale? Acțiunea nu poate fi anulată.",
     "delete_with_contents_confirm": "Șterge dosarul și mesajele"
+  },
+  "mail_p2_folders": {
+    "all_folders": "Toate dosarele",
+    "empty_trash": "Golește coșul de gunoi",
+    "empty_spam": "Golește spamul",
+    "empty_trash_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi? Nu se poate anula.",
+    "empty_spam_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din spam? Nu se poate anula.",
+    "title_all_accounts": "{name} ({count}, {total} în toate conturile)",
+    "title_all_accounts_only": "{name} ({total} în toate conturile)"
+  },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nu s-au găsit rezultate} one {# conversație găsită} few {# conversații găsite} other {# de conversații găsite}}",
+    "name_unread_sub": "{name}, necitite: {count}, încă {sub} în subdosare",
+    "name_unread_only_sub": "{name}, necitite în subdosare: {sub}",
+    "sub_unread": "Necitite în subdosare: {sub}"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gestionați conturile…",
+    "apply_to_existing": "{count, plural, one {Aplicați la # mesaj existent din {folder}} few {Aplicați la # mesaje existente din {folder}} other {Aplicați la # de mesaje existente din {folder}}}"
   },
   "shortcuts": {
     "title": "Comenzi rapide de la tastatură",
@@ -3589,6 +4090,17 @@
     "messages_count": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
     "expand_named": "Extinde conversația: {subject}",
     "collapse_named": "Ascunde conversația: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
+    "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Afișează comutatorul de conturi deasupra folderelor, cu Compune sub el. Dezactivați pentru a pune Compune în locul lui."
+  },
+  "mail_p2_conv": {
+    "show_message": "Afișează mesajul",
+    "back_to_reply": "Înapoi la răspuns"
   },
   "identities": {
     "modal_title": "Gestionarea identităților de expediere",
@@ -3719,6 +4231,34 @@
         "next": "Spuneți de ce aveți nevoie de la cititor și până când."
       }
     }
+  },
+  "compose_send": {
+    "back": "Înapoi la editare",
+    "send_anyway": "Trimite oricum",
+    "warnings_title": "Trimiteți totuși acest mesaj?",
+    "warning_subject": "Fără subiect",
+    "warning_text": "Fără text",
+    "warning_attachment": "Menționează „{keyword}”, dar niciun fișier nu este atașat",
+    "warning_placeholders": "Text substituent pe care îl vor vedea destinatarii:",
+    "warning_proofreading": "Greșeli de ortografie sau gramatică nerezolvate: {count}",
+    "empty_text_title": "Trimiteți fără text?",
+    "empty_text_message": "Acest mesaj nu are text și nici atașament. Îl trimiteți totuși?",
+    "scheduled_for": "Programat pentru {when}",
+    "sending": "Se trimite…",
+    "sent": "Trimis",
+    "view": "Vezi",
+    "template_saved": "Șablon salvat",
+    "schedule_anyway": "Programează oricum",
+    "schedule_warnings_title": "Programați totuși acest mesaj?",
+    "picker_button": "Adaugă din contacte",
+    "picker_title": "Adaugă destinatari",
+    "tab_contacts": "Contacte",
+    "tab_directory": "Director",
+    "contacts_empty_title": "Încă nu există contacte",
+    "contacts_empty_hint": "Aici apar persoanele pe care le salvați în Contacte.",
+    "contacts_no_match": "Niciun contact nu corespunde căutării",
+    "template_name": "Numele șablonului",
+    "template_edit_details": "Editează detaliile…"
   },
   "org_templates": {
     "section_personal": "Șabloanele mele",
@@ -4176,6 +4716,35 @@
       "menu": "Deschideți meniul contactului"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Acasă",
+    "phone_voice": "Telefon",
+    "more_fields": "Mai multe câmpuri",
+    "import_menu": "Importați contactele…",
+    "new_address_book_menu": "Agendă nouă…"
+  },
+  "uxs_wording": {
+    "more_options": "Mai multe opțiuni",
+    "use_in_other_apps": "Folosește în alte aplicații",
+    "default_address_book": "Contacte",
+    "default_calendar": "Calendar",
+    "preview_documents": "Documente",
+    "preview_photos": "Fotografii",
+    "sample_subject": "Notițe de la întâlnirea din cafenea",
+    "mail_apps": {
+      "imap": "E-mail primit (IMAP)",
+      "smtp": "E-mail trimis (SMTP)",
+      "caldav": "Calendare (CalDAV)",
+      "carddav": "Contacte (CardDAV)",
+      "port_security": "Portul {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Fără criptare",
+      "copy_label": "Copiază {name}",
+      "loading": "Se citesc setările de pe serverul de e-mail…",
+      "not_found": "Serverul de e-mail nu a comunicat numele serverelor pentru alte aplicații. Cereți-le administratorului."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendare: {names}",
@@ -4419,7 +4988,7 @@
       "hide_non_working_days_desc": "Omite din vizualizarea pe săptămână zilele în care nu lucrezi. Evenimentele lor apar în continuare în vizualizările pe lună, pe zi și agendă.",
       "working_days": "Zile lucrătoare",
       "title": "Setări calendar",
-      "default_view": "Vizualizare implicită",
+      "default_view": "Calendarul se deschide în",
       "week_starts_on": "Săptămâna începe pe",
       "time_format": "Formatul orei",
       "default_calendar": "Calendarul implicit",
@@ -4430,17 +4999,22 @@
       "notifications_enabled_desc": "Afișați alerte pentru evenimentele viitoare din calendar",
       "notification_sound": "Sunet de notificare",
       "notification_sound_desc": "Redă un sunet pentru alertele din calendar",
-      "invitation_parsing": "Analizați invitațiile prin e-mail",
+      "invitation_parsing": "Afișează invitațiile din e-mail",
       "invitation_parsing_desc": "Detectați invitațiile din calendar din atașamentele de e-mail și afișați acțiunile din calendar",
       "show_time_in_month_view": "Afișați ora în vizualizarea lunară",
       "show_time_in_month_view_desc": "Afișați orele evenimentelor în vizualizarea calendarului lunar",
       "tinted_events": "Culori deschise pentru evenimente",
       "tinted_events_desc": "Afișează evenimentele într-o nuanță deschisă a culorii calendarului, cu o bară colorată la început, ca în Outlook și la tipărire, în loc de blocuri pline.",
+      "month_timed_events": "Evenimente cu oră în vizualizarea lunară",
+      "month_timed_events_desc": "Cum apar în vizualizarea lunară evenimentele cu oră de început. Evenimentele de o zi întreagă și cele de mai multe zile rămân bare.",
+      "month_timed_events_bar": "Bară",
+      "month_timed_events_text": "Text colorat",
+      "month_timed_events_dot": "Punct și text",
       "show_week_numbers": "Afișați numerele săptămânilor",
       "show_week_numbers_desc": "Afișați numerele săptămânilor în mini-calendar",
       "calendar_free_scroll": "Derulare liberă",
       "calendar_free_scroll_desc": "Derulează continuu prin luni, săptămâni și zile în loc de o singură perioadă odată",
-      "enable_tasks": "Activați sarcinile",
+      "enable_tasks": "Sarcini",
       "enable_tasks_desc": "Afișați o vizualizare a sarcinilor în calendar pentru gestionarea sarcinilor de îndeplinit",
       "show_tasks_on_calendar": "Afișați sarcinile în calendar",
       "show_tasks_on_calendar_desc": "Afișați sarcinile în vizualizările lunare, săptămânale și zilnice ale calendarului",
@@ -4621,8 +5195,8 @@
       "error_update": "Nu s-a putut actualiza calendarul",
       "error_delete": "Nu s-a putut șterge calendarul",
       "caldav_url": "CalDAV URL",
-      "copy_url": "Copiați CalDAV URL",
-      "url_copied": "CalDAV URL copiat în clipboard",
+      "copy_url": "Copiază adresa pentru alte aplicații",
+      "url_copied": "Adresa a fost copiată",
       "share": "Partajare calendar…",
       "new_event_in_calendar": "Eveniment nou în acest calendar",
       "shared_with": "Partajat cu {names}",
@@ -4642,8 +5216,8 @@
       "default_alerts_updated": "Mementourile implicite au fost actualizate"
     },
     "subscription": {
-      "title": "iCal Abonament",
-      "section_title": "iCal Abonamente",
+      "title": "Abonare la un calendar",
+      "section_title": "Calendare abonate",
       "description": "Abonați-vă la un flux extern de tip iCalendar. Evenimentele vor fi sincronizate automat în propriul calendar. Suportă adresele URL de tip https:// și webcal://.",
       "url_label": "URL de calendar",
       "url_placeholder": "https://example.com/calendar.ics sau webcal://...",
@@ -4756,18 +5330,217 @@
     "mini_has_events": "are evenimente",
     "mini_week_number": "Săptămâna {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Liste de sarcini",
+    "task_status_not_started": "Neîncepută",
+    "task_status_in_progress": "În lucru",
+    "quick_task_due": "Termen {date}",
+    "quick_task_due_remove": "Păstrați „{words}” în titlu",
+    "rename_calendar": "Redenumire…",
+    "rename_title": "Redenumiți calendarul",
+    "rename_confirm": "Redenumiți",
+    "rename_empty": "Introduceți un nume.",
+    "edit_calendar": "Editare…",
+    "default_alerts_open": "Mementouri implicite…",
+    "share_open": "Partajare…",
+    "clear_all_events": "Ștergeți toate evenimentele…",
+    "delete_calendar": "Ștergere…",
+    "caldav_title": "Adresă pentru alte aplicații (CalDAV)",
+    "caldav_hint": "Adăugați această adresă în Thunderbird, Calendarul Apple sau DAVx⁵ pentru a sincroniza calendarele.",
+    "caldav_shared_by": "Partajat de {name}:",
+    "freebusy_description": "Cei cu care partajați văd când sunteți ocupat, nu ce evenimente aveți. „Sugerează ore” folosește asta."
+  },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Listă",
+    "task_list_not_in_calendar": "{name} (listă de sarcini, nu apare în calendar)",
+    "copy_to_account": "Copiază în {address}",
+    "copied_to_account": "Copiat în {address}",
+    "delete_original": "Șterge originalul"
+  },
+  "calendar_offline": {
+    "split_needs_server": "Această modificare are nevoie de conexiune la server. Modifică deocamdată doar acest eveniment sau încearcă din nou când ești din nou online."
+  },
+  "ux_pim_event": {
+    "time_zone": "Fus orar",
+    "time_zone_line": "Fus orar: {zone}",
+    "your_time": "{times} ora ta",
+    "zone_times": "{times} {zone} ({local} ora ta)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Acceptat",
+    "status_declined": "Respins",
+    "status_tentative": "Poate",
+    "status_needs_action": "Încă fără răspuns",
+    "status_delegated": "Delegat",
+    "answered_accepted": "Ai acceptat pe {date}.",
+    "answered_declined": "Ai refuzat pe {date}.",
+    "answered_tentative": "Ai răspuns poate pe {date}.",
+    "answered_accepted_nodate": "Ai acceptat.",
+    "answered_declined_nodate": "Ai refuzat.",
+    "answered_tentative_nodate": "Ai răspuns poate."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Se repetă: {rule}",
+    "declined_dates": "Ați refuzat {dates}.",
+    "declined_many": "Ați refuzat {count} întâlniri din această serie.",
+    "answers_series": "Răspunsul dvs. este pentru toate întâlnirile din serie."
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "până la {time}",
+    "week_all_days": "Afișează toată săptămâna",
+    "week_days_short": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+    "print": "Imprimare…"
+  },
   "calendar_event_notifications": {
     "someone": "Cineva",
     "invited": "{name} te-a invitat la „{title}”",
     "updated": "{name} a actualizat „{title}”",
     "cancelled": "{name} a anulat „{title}”",
-    "untitled": "Eveniment fără titlu"
+    "untitled": "Eveniment fără titlu",
+    "summary": "Modificări ale evenimentelor la care participi: {count}"
+  },
+  "calendar_month_select": {
+    "selected_range": "Selectat de la {start} la {end}.",
+    "selected_day": "Selectat {day}.",
+    "enter_hint": "Apăsați Enter pentru a crea un eveniment."
+  },
+  "company_calendars": {
+    "section": "Organizație"
+  },
+  "ux_pim_grid": {
+    "search_short": "Caută",
+    "reply": "Răspunde",
+    "reply_to_invitation": "Răspunde la invitație"
+  },
+  "vacation_calendar": {
+    "label": "Blochează-mi calendarul",
+    "description": "Adaugă un eveniment ocupat pe durata absenței, ca nimeni să nu vă programeze ședințe atunci.",
+    "no_access_managed": "Calendarul acestui cont nu poate fi blocat: nu aveți acces de scriere la el.",
+    "no_calendar": "Calendarul nu poate fi blocat: Bulwark nu a găsit un calendar în care să adauge evenimentul.",
+    "filter_warning": "Activarea oprește scriptul dvs. de filtre cât timp răspunsul este activ."
+  },
+  "calendar_delegate": {
+    "answer_for": "Răspunde în numele {name}",
+    "no_write": "Vedeți invitațiile lui {name}, dar nu puteți răspunde în numele său. Cereți acces de editare.",
+    "also_invited": "Sunteți și dvs. invitat, iar acest server nu poate deosebi răspunsul dvs. de cel al lui {name}. {name} trebuie să răspundă la aceasta.",
+    "answered_by": "Răspuns de {who}"
+  },
+  "free_busy_share": {
+    "button": "Partajează disponibilitatea mea cu {group}",
+    "already": "Disponibilitatea dvs. este partajată cu {group}",
+    "done": "Disponibilitatea dvs. este acum partajată cu {group}.",
+    "error": "Disponibilitatea nu a putut fi partajată. Încercați din nou.",
+    "group_label": "Grup",
+    "title": "Disponibilitate",
+    "description": "Colegii din grup văd când sunteți ocupat, nu ce evenimente aveți. „Sugerează ore” folosește asta."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Faceți clic pentru a selecta un fișier vCard sau CSV",
+    "file_types": "Fișiere .vcf sau .csv, de exemplu din Outlook sau Google Agendă",
+    "parse_error": "Fișierul nu a putut fi citit",
+    "columns_title": "Asociați coloanele",
+    "columns_hint": "Alegeți unde merge fiecare coloană din {file}. Coloanele setate pe „Nu importa” sunt omise.",
+    "column": "Coloană",
+    "sample": "Exemplu",
+    "field": "Câmp de contact",
+    "skip": "Nu importa",
+    "no_columns": "Alegeți un câmp pentru cel puțin o coloană.",
+    "continue": "Continuați",
+    "back": "Înapoi",
+    "import_into": "Importă în",
+    "group_name": "Nume",
+    "group_email": "E-mail",
+    "group_phone": "Telefon",
+    "group_org": "Organizație",
+    "group_adr_any": "Adresă",
+    "group_adr_home": "Adresă de acasă",
+    "group_adr_work": "Adresă de serviciu",
+    "group_adr_other": "Altă adresă",
+    "group_more": "Mai mult",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Nume complet",
+    "t_name_given": "Prenume",
+    "t_name_middle": "Al doilea prenume",
+    "t_name_surname": "Nume de familie",
+    "t_name_prefix": "Titlu (Dr., dna)",
+    "t_name_suffix": "Sufix (Jr.)",
+    "t_nickname": "Poreclă",
+    "t_email": "E-mail",
+    "t_email_home": "E-mail (acasă)",
+    "t_email_work": "E-mail (serviciu)",
+    "t_phone": "Telefon",
+    "t_phone_mobile": "Mobil",
+    "t_phone_home": "Telefon (acasă)",
+    "t_phone_work": "Telefon (serviciu)",
+    "t_phone_fax": "Fax",
+    "t_phone_fax_home": "Fax (acasă)",
+    "t_phone_fax_work": "Fax (serviciu)",
+    "t_phone_pager": "Pager",
+    "t_org_name": "Companie",
+    "t_org_unit": "Departament",
+    "t_org_title": "Funcție",
+    "t_street": "Stradă",
+    "t_pobox": "Căsuță poștală",
+    "t_locality": "Localitate",
+    "t_region": "Județ sau regiune",
+    "t_postcode": "Cod poștal",
+    "t_country": "Țară",
+    "t_web": "Site web",
+    "t_birthday": "Zi de naștere",
+    "t_anniversary": "Aniversare",
+    "t_notes": "Note",
+    "t_categories": "Categorii",
+    "t_type": "Tipul valorii (Acasă, Serviciu…)",
+    "merge_with": "Îmbinați cu…",
+    "merge_selected": "Îmbinați…",
+    "find_duplicates": "Găsiți duplicate",
+    "possible_duplicates": "Posibile duplicate ({count})",
+    "duplicates_title": "Posibile duplicate",
+    "duplicates_hint": "Contacte cu același nume, aceeași adresă de e-mail sau același număr de telefon.",
+    "duplicates_none": "Nu s-au găsit posibile duplicate.",
+    "pick_title": "Îmbinați {name} cu…",
+    "pick_search": "Căutați contacte",
+    "pick_suggested": "Posibile duplicate",
+    "pick_all": "Toate contactele",
+    "pick_none": "Nu există alte contacte cu care să îmbinați.",
+    "preview_title": "Îmbinați contactele ({count})",
+    "preview_hint": "Aceste contacte devin o singură fișă cu tot ce este mai jos.",
+    "preview_deleted": "Preluate, apoi șterse: {names}",
+    "groups": "Grupuri",
+    "merge": "Îmbinați",
+    "merging": "Se îmbină…",
+    "merged": "Contacte îmbinate",
+    "merge_failed": "Contactele nu au putut fi îmbinate.",
+    "merge_not_possible": "Aceste contacte nu pot fi îmbinate: sunt în conturi diferite sau într-o agendă pe care nu o puteți modifica.",
+    "undo": "Anulați",
+    "undone": "Îmbinare anulată",
+    "undo_failed": "Îmbinarea nu a putut fi anulată complet."
+  },
+  "find_time": {
+    "suggest": "Sugerează ore",
+    "searching": "Se caută ore libere",
+    "slots_title": "Liber pentru toți cei pe care Bulwark i-a putut verifica",
+    "slot": "{day}, de la {start} la {end}",
+    "none": "Nu există timp liber în următoarele 10 zile lucrătoare.",
+    "picked": "Eveniment mutat la {slot}",
+    "rate_limited": "Prea multe interogări în ultimul minut. Încercați din nou peste un minut.",
+    "unavailable": "Disponibilitatea nu este accesibilă pe acest server, așa că Bulwark nu poate sugera ore.",
+    "not_checked": "Neverificați:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "din afara organizației dvs.",
+    "reason_unknown": "ore ocupate necunoscute",
+    "reason_not_found": "negăsit pe acest server",
+    "reason_error": "nu a putut fi verificat",
+    "unknown_note": "Bulwark vede orele ocupate doar în calendarele partajate cu dvs. Pentru aceste persoane nu poate deosebi liber de nepartajat.",
+    "directory_off": "Bulwark nu poate căuta persoane pe acest server. Administratorul poate activa interogările de director în Stalwart.",
+    "not_looked_up": "Adresa nu a putut fi căutată",
+    "found": "Ore libere găsite: {count}"
   },
   "share_notifications": {
     "someone": "Cineva",
     "shared": "{name} a partajat cu tine {kind} „{object}”",
     "changed": "{name} ți-a modificat accesul la {kind} „{object}”",
     "revoked": "{name} ți-a retras accesul la {kind} „{object}”",
+    "summary": "{name} ți-a modificat accesul la {count, plural, one {# element partajat} few {# elemente partajate} other {# de elemente partajate}}",
     "object": {
       "folder": "dosarul",
       "calendar": "calendarul",
@@ -4939,17 +5712,16 @@
     "any_size": "Orice dimensiune",
     "larger_than_mb": "Mai mare de {size} MB",
     "custom_size": "Dimensiune personalizată",
-    "done": "Gata",
     "name_or_address": "Nume sau adresă"
   },
   "welcome": {
     "title": "Bine ați venit în căsuța dvs. poștală",
     "tip_compose": "Apăsați tasta c pentru a redacta un e-mail nou",
     "tip_shortcuts": "Apăsați tasta „?” pentru a vedea toate comenzile rapide de la tastatură",
-    "tip_sidebar": "Găsiți Calendar, Contacte și Setări în meniul din bara laterală",
+    "tip_sidebar_apps": "{apps} sunt în bara din stânga",
     "tip_settings": "Personalizați-vă experiența în Setări",
     "tip_compose_touch": "Atinge butonul cu creion pentru a scrie un e-mail nou",
-    "tip_sidebar_touch": "Calendarul, Contactele și Setările sunt în bara de jos",
+    "tip_sidebar_apps_touch": "{apps} sunt în bara de jos",
     "got_it": "Am înțeles",
     "settings": "Setări",
     "dismiss": "Ignoră",
@@ -5113,7 +5885,6 @@
     "settings_ascending": "În ordine crescătoare",
     "settings_descending": "Descendent",
     "disabled_title": "Funcția de fișiere este dezactivată de administratorul dvs.",
-    "disabled_description": "Încărcarea fișierelor de dimensiuni mari prin intermediul WebDAV poate provoca instabilitate în Stalwart /RocksDB, inclusiv blocări din cauza epuizării memoriei și utilizare irecuperabilă a spațiului pe disc. Este posibil ca fișierele șterse să nu fie eliminate imediat din spațiul de stocare blob. Această funcție nu este recomandată pentru mediile de producție.",
     "migration_title": "Se actualizează fișierele...",
     "migration_description": "Organizarea dosarelor și a fișierelor în structura corespunzătoare. Această operațiune se efectuează o singură dată.",
     "new": "Nou",
@@ -5164,6 +5935,47 @@
     "previous_file": "Fișierul anterior",
     "next_file": "Fișierul următor",
     "loading": "Se încarcă…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} există deja.",
+    "conflict_file_hint": "Înlocuiește pune conținutul nou în fișierul existent, iar partajările lui rămân. Păstrează-le pe ambele adaugă o copie numerotată.",
+    "conflict_folder_hint": "Înlocuiește adaugă fișierele în dosarul existent și înlocuiește fișierele cu același nume. Păstrează-le pe ambele creează un al doilea dosar numerotat.",
+    "replace": "Înlocuiește",
+    "keep_both": "Păstrează-le pe ambele",
+    "skip": "Omite",
+    "apply_to_all": "{count, plural, other {Fă la fel pentru toate cele # conflicte}}",
+    "no_preview": "Nu există previzualizare pentru acest tip de fișier.",
+    "open_in_app": "Deschide în aplicația implicită",
+    "shared_with": "{name} este acum partajat cu {person}.",
+    "send_message": "Trimite un mesaj",
+    "share_mail_subject": "Am partajat {name} cu tine",
+    "share_mail_body": "Salut,\n\nAm partajat „{name}” cu tine. Îl poți deschide aici:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Adăugați tot în calendar",
+    "zone_contacts_all": "Adăugați tot la contacte",
+    "save_to_files": "Salvați în Fișiere",
+    "saved": "{name} a fost salvat în Fișiere.",
+    "saved_copy": "Salvat în Fișiere ca {name}.",
+    "save_failed": "{name} nu a putut fi salvat în Fișiere.",
+    "changed_on_server": "{name} a fost modificat în Fișiere după ce l-ați deschis.",
+    "gone_on_server": "{name} nu mai este în Fișiere.",
+    "keep_both": "Păstrează-le pe ambele",
+    "replace": "Înlocuiește",
+    "cancel": "Anulează",
+    "save_as_new": "Salvați ca fișier nou",
+    "import_to_mail": "Importați într-un dosar de e-mail…",
+    "import_to_mail_title": "Importați într-un dosar de e-mail",
+    "imported_to_mail": "Importat în {folder}.",
+    "import_to_mail_failed": "{name} nu a putut fi importat.",
+    "import_contacts": "Importați în contacte…",
+    "add_to_calendar": "Adăugați în calendar…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Fișiere editate",
+    "hide": "Ascunde",
+    "discard_detail_file": "Modificările din această copie se șterg. Fișierul din Fișiere nu se schimbă.",
+    "saved_auto": "{name} a fost salvat în Fișiere. Salvările următoare din programul lui ajung acolo singure."
   },
   "smime": {
     "your_certificates": "Certificatele dvs.",
@@ -5300,6 +6112,159 @@
   "unified_mailbox": {
     "search_unavailable": "Funcția de căutare nu este disponibilă în vizualizarea unificată"
   },
+  "mail_import": {
+    "menu_import": "Importă e-mailuri…",
+    "settings_label": "Importă e-mailuri",
+    "settings_description": "Aduceți e-mailuri din fișiere .eml, ZIP, mbox sau Outlook .pst și .ost.",
+    "settings_button": "Importă…",
+    "title": "Importă e-mailuri",
+    "description": "Alegeți fișiere .eml, .zip, .mbox sau Outlook .pst și .ost.",
+    "choose_files": "Alege fișiere…",
+    "chosen_files": "Fișiere alese",
+    "remove_file": "Elimină {name}",
+    "format_eml": "Mesaj",
+    "format_zip": "Arhivă ZIP",
+    "format_mbox": "Fișier mbox",
+    "format_pst": "Fișier de date Outlook",
+    "target_label": "Importă în",
+    "target_top": "Nivelul de sus",
+    "keep_folders": "Recreează dosarele din fișier",
+    "keep_folders_hint": "Dosarele cu același nume sunt refolosite.",
+    "resume": "Continuă de unde s-a oprit ultimul import al acestor fișiere (mesaje deja procesate: {count})",
+    "quota_note": "Multe servere acceptă de la un utilizator doar circa 1000 de mesaje sau 50 MB pe oră. Un import mai mare face o pauză și apoi continuă singur.",
+    "start": "Importă",
+    "cancel": "Anulează",
+    "running_title": "Se importă e-mailurile",
+    "progress_label": "Progresul importului",
+    "status_imported": "Mesaje importate: {count}",
+    "reading_file": "Se citește {name}",
+    "paused": "În pauză până la {time}. Serverul acceptă cel mult {files} încărcări sau {size} pe oră. Importul continuă singur.",
+    "paused_generic": "În pauză până la {time}. S-a atins limita de încărcare a serverului. Importul continuă singur.",
+    "background": "Rulează în fundal",
+    "cancel_import": "Anulează importul",
+    "chip": "Se importă e-mailurile: {percent}%",
+    "chip_paused": "Import în pauză până la {time}",
+    "done_title": "Import încheiat",
+    "cancelled_title": "Import anulat",
+    "failed_title": "Import oprit",
+    "summary_imported": "Mesaje importate: {count}",
+    "summary_folders": "Dosare create: {count}",
+    "summary_skipped": "Neimportate:",
+    "skip_too_large": "Mai mari decât acceptă serverul: {count}",
+    "skip_deleted": "Șterse în Thunderbird: {count}",
+    "skip_embedded": "Mesaje atașate la alte mesaje: {count}",
+    "skip_contact": "Contacte: {count}",
+    "skip_calendar": "Elemente de calendar: {count}",
+    "skip_other": "Alte elemente: {count}",
+    "summary_failed": "Nu s-au putut importa: {count}",
+    "failure_invalid": "nu este un mesaj valid",
+    "untitled": "(fără subiect)",
+    "cancelled_hint": "Pentru a continua mai târziu, importați din nou aceleași fișiere în același dosar.",
+    "close": "Închide",
+    "pst_note": "Din fișierele Outlook vin doar e-mailurile. Contactele, elementele de calendar și sarcinile sunt numărate și lăsate deoparte.",
+    "pst_error_encrypted": "Acest fișier Outlook folosește criptare puternică, pe care Bulwark nu o poate citi. În Outlook, exportați e-mailurile într-un fișier .pst nou, fără criptare.",
+    "pst_error_not_pst": "Acest fișier nu este un fișier de date Outlook pe care Bulwark îl poate citi.",
+    "pst_error_unreadable": "Bulwark nu a putut citi acest fișier Outlook.",
+    "pst_error_worker": "Cititorul de fișiere Outlook nu s-a încărcat. Reîncărcați pagina și încercați din nou.",
+    "error_over_quota": "Căsuța poștală este plină, așa că importul s-a oprit. Faceți loc și importați din nou aceleași fișiere în același dosar pentru a continua.",
+    "error_forbidden": "Nu puteți adăuga e-mailuri în acest dosar, așa că importul s-a oprit.",
+    "error_failures": "Prea multe mesaje la rând au eșuat, așa că importul s-a oprit. Importați mai târziu aceleași fișiere în același dosar pentru a continua.",
+    "error_network": "Conexiunea la server a eșuat de mai multe ori, așa că importul s-a oprit. Importați din nou aceleași fișiere în același dosar pentru a continua.",
+    "error_busy": "Aceste fișiere se importă deja în altă filă.",
+    "retry_hint": "Importați din nou aceleași fișiere în același dosar pentru a reîncerca mesajele care au eșuat.",
+    "skip_unreadable": "Ilizibile în fișierul Outlook: {count}",
+    "keep_folders_top_hint": "La nivelul de sus, Inbox, Elemente trimise, Elemente șterse și altele asemenea ajung în ale dumneavoastră.",
+    "toast_done": "Import încheiat. Importate: {imported}, eșuate: {failed}.",
+    "toast_stopped": "Importul s-a oprit.",
+    "toast_show": "Afișează",
+    "section_title": "Fișiere de e-mail",
+    "section_description": "Aduceți e-mailuri din fișiere sau salvați e-mailurile ca fișiere."
+  },
+  "mail_export": {
+    "menu_export": "Exportă dosarul…",
+    "settings_label": "Exportă toate e-mailurile",
+    "settings_description": "Salvați toate dosarele acestui cont într-un fișier ZIP, ca fișiere mbox sau .eml.",
+    "settings_button": "Exportă…",
+    "title_folder": "Exportă „{name}”",
+    "title_account": "Exportă toate e-mailurile",
+    "description_folder": "Salvați mesajele din acest dosar într-un fișier.",
+    "description_account": "Salvați toate dosarele acestui cont într-un fișier ZIP.",
+    "format_label": "Format",
+    "format_mbox_folder": "Fișier mbox",
+    "format_eml_folder": "ZIP cu fișiere .eml",
+    "format_mbox_account": "ZIP cu un fișier mbox pentru fiecare dosar",
+    "format_eml_account": "ZIP cu fișiere .eml, câte un dosar pentru fiecare dosar de e-mail",
+    "hint_mbox": "Thunderbird, Apple Mail și majoritatea programelor de e-mail deschid fișiere mbox.",
+    "hint_eml": "Câte un fișier pentru fiecare mesaj, pe care îl deschide orice program de e-mail.",
+    "save_picker": "Alegeți unde se salvează fișierul.",
+    "save_download": "Fișierul se descarcă la sfârșitul exportului.",
+    "save_memory": "Acest browser ține tot exportul în memorie, deci poate salva cel mult 200 MB. Pentru mai mult, folosiți Chrome sau Edge sau exportați dosar cu dosar.",
+    "start": "Exportă",
+    "cancel": "Anulează",
+    "running_title": "Se exportă e-mailurile",
+    "progress_label": "Progresul exportului",
+    "status_exported": "Mesaje exportate: {count} din {total}",
+    "paused": "În pauză până la {time}: serverul a cerut o pauză. Exportul continuă singur.",
+    "background": "Rulează în fundal",
+    "cancel_export": "Anulează exportul",
+    "chip": "Se exportă e-mailurile: {percent}%",
+    "chip_paused": "Export în pauză până la {time}",
+    "done_title": "Export încheiat",
+    "cancelled_title": "Export anulat",
+    "failed_title": "Export oprit",
+    "summary_exported": "Mesaje exportate: {count}",
+    "summary_file": "Salvat ca {name} ({size}).",
+    "summary_failed": "Nu s-au putut exporta: {count}",
+    "download_again": "Descarcă din nou",
+    "too_large": "Exportul este mai mare decât poate ține acest browser în memorie. Folosiți Chrome sau Edge sau exportați dosar cu dosar.",
+    "close": "Închide",
+    "untitled": "(fără subiect)",
+    "toast_done": "Export încheiat: {name}",
+    "toast_stopped": "Exportul s-a oprit.",
+    "toast_show": "Afișează"
+  },
+  "desktopImport": {
+    "find": "Găsește datele Thunderbird și Outlook…",
+    "find_hint": "Caută în locurile obișnuite de pe acest computer. Bulwark întreabă mai întâi.",
+    "scan_declined": "Nu s-a căutat nimic, pentru că nu ați permis.",
+    "scan_failed": "Căutarea nu a funcționat. Încercați din nou.",
+    "read_declined": "Nu s-a citit niciun fișier, pentru că nu ați permis.",
+    "read_failed": "Aceste fișiere nu mai pot fi citite. Căutați din nou.",
+    "nothing_found": "Niciun profil Thunderbird sau fișier de date Outlook în locurile obișnuite. Pentru a importa un fișier din altă parte, folosiți Alegeți fișiere.",
+    "found_list": "Date de e-mail găsite pe acest computer",
+    "outlook_files": "Fișiere de date Outlook",
+    "thunderbird_profile": "Profil Thunderbird {name}",
+    "address_book": "Agenda lui {name}",
+    "message_count": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
+    "contact_count": "{count, plural, one {# contact} few {# contacte} other {# de contacte}}",
+    "confirm": "{count, plural, one {Folosește acest element…} few {Folosește aceste # elemente…} other {Folosește aceste # de elemente…}}",
+    "back": "Înapoi",
+    "estimate": "{size} selectați. Multe servere, printre care Stalwart, acceptă doar aproximativ 1000 de mesaje sau 50 MB pe oră de la un utilizator, deci durează cel puțin {time}. La limită, importul se oprește și continuă singur. Rulează în fundal și continuă după o repornire.",
+    "duration_hours": "{count, plural, one {# oră} few {# ore} other {# de ore}}",
+    "duration_days": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+    "time_left": "Mai rămân cel puțin {time} la limita de încărcare a serverului. Între timp puteți lucra în continuare.",
+    "thunderbird_running": "Thunderbird rulează. Închideți-l mai întâi. Dacă schimbă un dosar în timpul importului, acel dosar o ia de la capăt, iar mesajele deja importate sunt omise.",
+    "ost_refused": "Nu sunt oferite: {names}. Fișierele .ost din Outlook sunt doar o copie locală a unei căsuțe poștale și nu pot fi importate aici. În Outlook, exportați e-mailurile într-un fișier .pst.",
+    "calendars_left_out": "Calendarele Thunderbird nu sunt importate. Exportați-le din Thunderbird ca fișiere .ics și importați-le în calendar.",
+    "pst_items_left_out": "Din fișierele Outlook se importă doar e-mailurile, nu contactele sau calendarele.",
+    "picked": "{count, plural, one {# dosar sau fișier de pe acest computer} few {# dosare și fișiere de pe acest computer} other {# de dosare și fișiere de pe acest computer}}",
+    "remove_picked": "Eliminați aceste fișiere",
+    "contacts_picked": "{count, plural, one {# contact din Thunderbird ajunge în contactele dvs.} few {# contacte din Thunderbird ajung în contactele dvs.} other {# de contacte din Thunderbird ajung în contactele dvs.}}",
+    "contacts_added": "{count, plural, one {S-a adăugat # contact din Thunderbird.} few {S-au adăugat # contacte din Thunderbird.} other {S-au adăugat # de contacte din Thunderbird.}}",
+    "contacts_failed": "Unele contacte din Thunderbird nu au putut fi adăugate.",
+    "files_refused": "Omise, pentru că nu mai pot fi citite: {names}",
+    "skip_seen": "Omiteți mesajele pe care un import anterior le-a pus deja în același dosar",
+    "skip_duplicate": "{count, plural, one {# mesaj a fost deja importat} few {# mesaje au fost deja importate} other {# de mesaje au fost deja importate}}",
+    "file_unavailable": "Un fișier s-a schimbat sau nu mai poate fi citit. Închideți Thunderbird și importați din nou. Mesajele deja importate sunt omise.",
+    "resume_gone": "Importul de pe acest computer nu poate continua, pentru că fișierele lui au dispărut.",
+    "pst_in_use": "{names} nu poate fi citit cât timp este deschis în Outlook. Închideți Outlook și căutați din nou.",
+    "description": "Găsiți e-mailuri pe acest computer sau alegeți fișiere .eml, .zip, .mbox ori Outlook .pst.",
+    "settings_description": "Aduceți e-mailuri din Thunderbird sau din fișiere .eml, ZIP, mbox ori Outlook .pst.",
+    "resume_refused": "Nu pot fi citite acum: {names}. Restul continuă, iar acestea sunt încercate din nou la următoarea pornire.",
+    "resume_stop_trying": "Nu mai încerca",
+    "resume_hand_picked": "Alegeți din nou aceste fișiere pentru a importa restul: {names}. Mesajele deja importate sunt omise.",
+    "scan_incomplete": "Căutarea a durat prea mult și a fost oprită. Iată ce a găsit până atunci."
+  },
   "recover_deleted": {
     "tab": "Recuperați elementele șterse",
     "title": "Recuperați elementele șterse",
@@ -5333,13 +6298,261 @@
     "date_label": "Data",
     "subject_label": "Subiect"
   },
+  "print_styles": {
+    "title": "Imprimare",
+    "description": "Cum arată mesajele, contactele și calendarele imprimate.",
+    "style_label": "Stil de imprimare",
+    "style_description": "Suplimentele pot adăuga stiluri, de exemplu un antet cu adresa firmei dvs.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalați {appName}",
-    "description": "Instalați aplicația noastră pentru acces rapid și asistență offline.",
+    "description": "Instalați aplicația noastră pentru acces rapid.",
     "not_now": "Nu acum",
     "install": "Instalați",
     "dont_remind": "Nu-mi mai reaminti",
     "dismiss_aria": "Ignorați solicitarea de instalare"
+  },
+  "app_update": {
+    "ready": "O versiune nouă de {appName} este gata.",
+    "reload": "Reîncarcă"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "Citiți și scrieți e-mailuri pe acest dispozitiv fără conexiune.",
+      "keep_label": "Păstrează e-mailurile pe acest dispozitiv",
+      "keep_description": "Păstrează ultimele 30 de zile din Inbox și din dosarele pe care le deschideți, până la 250 MB, criptate în acest browser. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
+      "warning": "Oricine poate folosi acest profil de browser poate citi aceste e-mailuri. Activați opțiunea doar pe propriul dispozitiv și folosiți criptarea discului.",
+      "forbidden": "Organizația dvs. nu permite păstrarea e-mailurilor pe dispozitive.",
+      "unsupported": "Acest browser nu poate păstra e-mailuri pentru folosire offline.",
+      "syncing": "Se salvează e-mailurile pe acest dispozitiv…",
+      "usage": "{size} pe acest dispozitiv",
+      "usage_updated": "{size} pe acest dispozitiv, actualizat {time}",
+      "off_confirm_title": "Dezactivați modul offline?",
+      "off_confirm_message": "{count, plural, one {# mesaj din Mesaje de trimis nu a fost trimis.} few {# mesaje din Mesaje de trimis nu au fost trimise.} other {# de mesaje din Mesaje de trimis nu au fost trimise.}} Dezactivarea le șterge, împreună cu e-mailurile păstrate pe acest dispozitiv.",
+      "off_confirm": "Dezactivează"
+    },
+    "outbox": {
+      "title": "Mesaje de trimis",
+      "description": "Mesajele scrise offline. Sunt trimise când dispozitivul este din nou online.",
+      "empty": "Nimic nu așteaptă să fie trimis.",
+      "no_subject": "(fără subiect)",
+      "to": "Către: {recipients}",
+      "status_waiting": "Așteaptă o conexiune",
+      "status_sending": "Se trimite",
+      "status_failed": "Nu a putut fi trimis: {error}",
+      "status_uncertain": "Conexiunea s-a întrerupt în timpul trimiterii. Verificați Trimise înainte să îl trimiteți din nou.",
+      "retry": "Trimite din nou",
+      "delete": "Șterge",
+      "delete_confirm_title": "Ștergeți acest mesaj?",
+      "delete_confirm_message": "Nu a fost trimis și nu poate fi recuperat.",
+      "changes": "{count, plural, one {# modificare} few {# modificări} other {# de modificări}} la citit, marcaje sau dosare vor fi trimise când sunteți din nou online.",
+      "status_held": "Regulile organizației s-au schimbat cât timp mesajul a așteptat. Scrieți-l din nou pentru a-l trimite.",
+      "retry_label": "Trimite din nou: {subject}",
+      "delete_label": "Șterge: {subject}"
+    },
+    "banner": {
+      "offline": "Sunteți offline. Vedeți e-mailurile păstrate pe acest dispozitiv. Ce modificați sau scrieți este trimis când sunteți din nou online.",
+      "outbox": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}} în Mesaje de trimis",
+      "server_down": "Serverul de e-mail nu poate fi contactat. Vedeți e-mailurile păstrate pe acest dispozitiv. Ce modificați sau scrieți este trimis când răspunde din nou."
+    },
+    "toast": {
+      "queued": "Salvat în Mesaje de trimis. Va fi trimis când sunteți din nou online.",
+      "sent": "Trimis din Mesaje de trimis: {subject}",
+      "send_failed": "Un mesaj din Mesaje de trimis nu a putut fi trimis: {subject}",
+      "refused_delete": "Ștergerea definitivă necesită o conexiune. Încercați din nou când sunteți online.",
+      "refused_other": "Pentru asta este nevoie de conexiune. Încercați din nou când sunteți online.",
+      "forbidden": "Organizația dvs. a dezactivat modul offline. E-mailurile păstrate pe acest dispozitiv au fost eliminate.",
+      "back_online": "Sunteți din nou online. Reîncărcați pentru a vă conecta și a trimite ce așteaptă.",
+      "reload": "Reîncarcă",
+      "held": "Un mesaj din Mesaje de trimis are nevoie de dvs.: {subject}",
+      "lost": "Aceste mesaje nu au fost trimise și au fost șterse: {subjects}"
+    },
+    "signout": {
+      "title": "Vă deconectați cu mesaje netrimise?",
+      "message": "{count, plural, one {# mesaj nu a fost trimis.} few {# mesaje nu au fost trimise.} other {# de mesaje nu au fost trimise.}} Deconectarea le șterge.",
+      "confirm": "Deconectare",
+      "lost": "Aceste mesaje nu au fost trimise și au fost șterse la deconectare: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Pentru asta este nevoie de conexiune. Încercați din nou când sunteți online.",
+      "plugins_down": "Pluginul de semnare sau criptare nu funcționează offline. Trimiteți mesajul când sunteți din nou online.",
+      "file_missing": "Un fișier atașat offline nu mai este pe acest dispozitiv. Atașați-l din nou.",
+      "no_sent_mailbox": "Dosarul Trimise nu a fost găsit.",
+      "no_drafts_mailbox": "Dosarul Ciorne nu a fost găsit."
+    }
+  },
+  "offlineConflicts": {
+    "title": "Modificări neaplicate",
+    "description": "Ați făcut aceste modificări offline. Nu au fost aplicate, iar mesajul rămâne așa cum este pe server.",
+    "changed": "Modificat pe alt dispozitiv, modificarea dvs. nu a fost aplicată",
+    "changed_delete": "Modificat pe alt dispozitiv, nu a fost șters",
+    "gone": "Nu mai este pe server, modificarea dvs. nu a fost aplicată",
+    "refused": "Serverul a refuzat această modificare: {reason}",
+    "dismiss": "Închide",
+    "dismiss_label": "Închide nota despre {subject}",
+    "banner": "Modificări neaplicate: {count}",
+    "toast": "Modificări făcute offline care nu au fost aplicate: {count}. Căsuța de trimitere arată care.",
+    "storage_failed": "Acest dispozitiv nu mai are loc pentru e-mailul offline. Eliberați spațiu sau păstrați mai puțin din setări.",
+    "signout_changes_title": "Vă deconectați cu modificări nesalvate?",
+    "signout_changes": "Modificări care nu sunt încă pe server: {count}. Deconectarea le șterge.",
+    "store_unavailable": "E-mailul offline de pe acest dispozitiv nu poate fi deschis acum. E-mailul netrimis rămâne aici, iar aplicația continuă să încerce.",
+    "store_reset": "E-mailul offline de pe acest dispozitiv nu a putut fi citit, așa că se descarcă din nou. Ce nu fusese trimis s-a pierdut.",
+    "legacy_stranded": "Acest browser nu poate deschide e-mailul netrimis păstrat de o versiune anterioară. Actualizarea browserului îl poate recupera.",
+    "store_private": "Ferestrele private nu pot păstra e-mailuri pentru utilizare offline.",
+    "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
+  },
+  "offlineWipe": {
+    "note": "Organizația dvs. a eliminat datele acestui cont de pe acest dispozitiv. Conectați-vă pentru a începe din nou.",
+    "note_unsent": "Organizația dvs. a eliminat datele acestui cont de pe acest dispozitiv. Mesaje netrimise șterse: {count}.",
+    "settings_title": "Elimină tot de pe acest dispozitiv",
+    "settings_description": "Pentru când dați acest computer altcuiva sau nu îl mai folosiți. E-mailurile de pe server rămân.",
+    "settings_button": "Elimină tot…",
+    "settings_wiping": "Se elimină…",
+    "confirm_title": "Eliminați tot de pe acest dispozitiv?",
+    "confirm_message": "Se șterge ceea ce această aplicație păstrează pe acest dispozitiv, pentru toate conturile de aici. E-mailurile de pe server nu sunt atinse.",
+    "confirm_mail": "E-mailuri, calendare, contacte și fișiere păstrate aici",
+    "confirm_unsent": "Mesaje netrimise care așteaptă aici: {count}. Se vor pierde.",
+    "confirm_keys": "Chei S/MIME și OpenPGP. Pentru a le folosi din nou aveți nevoie de propria copie de rezervă.",
+    "confirm_plugins": "Date stocate aici de pluginuri",
+    "confirm_files": "Atașamente deschise pentru editare și fișiere care așteaptă să fie atașate",
+    "confirm_accounts": "Toate conturile sunt deconectate",
+    "confirm_button": "Elimină tot",
+    "note_unknown": "Organizația dvs. a eliminat datele acestui cont de pe acest dispozitiv. Este posibil să fi fost șterse și mesaje netrimise.",
+    "refused_waiting": "Mesaje netrimise care așteaptă parola nouă: {count}. Rămân până la {date}.",
+    "refused_waiting_unknown": "Este posibil ca mesaje netrimise să aștepte parola nouă. Rămân până la {date}.",
+    "confirm_unsent_unknown": "Este posibil să existe aici mesaje netrimise. Se vor pierde.",
+    "confirm_templates": "Șabloane de e-mail salvate pe acest dispozitiv",
+    "session_waiting": "Mesaje netrimise care așteaptă următoarea conectare: {count}. Rămân până la {date}.",
+    "session_waiting_unknown": "Este posibil ca mesaje netrimise să aștepte următoarea conectare. Rămân până la {date}.",
+    "needs_sign_in": "Necesită conectare",
+    "switcher_waiting": "Mesaje netrimise: {count}. Vor fi șterse de pe acest dispozitiv la {date}.",
+    "switcher_kept": "E-mailurile de pe acest dispozitiv vor fi șterse la {date}.",
+    "sibling_waiting": "{name} a fost deconectat. Mesaje netrimise: {count}. Conectați-vă până la {date}, altfel vor fi șterse de pe acest dispozitiv.",
+    "sibling_kept": "{name} a fost deconectat. Conectați-vă până la {date}, altfel e-mailurile vor fi șterse de pe acest dispozitiv."
+  },
+  "offlineStorage": {
+    "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele alese de dvs., criptate pe acest dispozitiv. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
+    "window_label": "Cât de departe în urmă se păstrează",
+    "window_description": "E-mailurile și evenimentele mai vechi dispar de pe acest dispozitiv. Le puteți deschide în continuare când sunteți online.",
+    "window_days": "{days, plural, one {# zi} few {# zile} other {# de zile}}",
+    "window_year": "1 an",
+    "window_everything": "Tot",
+    "attachments_label": "Păstrează atașamentele",
+    "attachments_description": "Atașamentele mesajelor păstrate și fișierele păstrate offline, în total până la {total}. Cele mai vechi sunt șterse primele.",
+    "total_locked": "Organizația dvs. permite cel mult {size} de atașamente și fișiere.",
+    "attachment_cap_label": "Cel mai mare atașament păstrat",
+    "usage_mail": "Mesaje și index de căutare",
+    "usage_attachments": "Atașamente",
+    "usage_calendar": "Calendar",
+    "usage_contacts": "Contacte",
+    "usage_files": "Fișiere păstrate offline",
+    "usage_row": "{size} ({count, plural, one {# element} few {# elemente} other {# de elemente}})",
+    "progress_list": "Se listează mesajele",
+    "progress_bodies": "Se descarcă mesajele",
+    "progress_threads": "Se sortează conversațiile",
+    "progress_files": "Se descarcă fișierele",
+    "progress_other": "Se aduc date pe acest dispozitiv",
+    "progress_count": "{done} din {total}",
+    "progress_count_open": "{done} până acum",
+    "progress_left": "mai durează aproximativ {minutes, plural, one {# minut} few {# minute} other {# de minute}}",
+    "clear_label": "Golește acest cont",
+    "clear_description": "Șterge tot ce păstrează acest dispozitiv pentru acest cont, apoi descarcă din nou.",
+    "clear_button": "Golește…",
+    "clear_confirm_title": "Goliți acest cont pe acest dispozitiv?",
+    "clear_confirm_message": "Tot ce păstrează acest dispozitiv pentru {account} este șters și descărcat din nou. E-mailurile dvs. de pe server rămân.",
+    "clear_confirm_unsent": "{count, plural, one {# mesaj netrimis se pierde.} few {# mesaje netrimise se pierd.} other {# de mesaje netrimise se pierd.}}",
+    "clear_confirm": "Golește",
+    "persist_refused": "Acest browser poate șterge e-mailurile păstrate când se termină spațiul. Instalarea aplicației de obicei previne asta.",
+    "persist_retry": "Cereți browserului să le păstreze",
+    "safari_hint": "Safari șterge datele unui site după 7 zile fără vizite. Adăugați Bulwark pe ecranul principal sau în Dock ca să păstrați e-mailurile pe acest dispozitiv.",
+    "evicted": "Browserul a șters e-mailurile păstrate pe acest dispozitiv. Se descarcă din nou.",
+    "evicted_lost": "{count, plural, one {# mesaj sau modificare netrimis s-a pierdut.} few {# mesaje sau modificări netrimise s-au pierdut.} other {# de mesaje sau modificări netrimise s-au pierdut.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Spațiul dispozitivului este plin.",
+    "storage_full_text": "Bulwark nu mai salvează e-mailuri aici. Păstrați mai puține e-mailuri sau goliți acest cont pentru a face loc.",
+    "open_settings": "Deschide setările",
+    "default_on": "Bulwark păstrează e-mailurile pe acest dispozitiv, ca să funcționeze fără conexiune. Puteți schimba asta în Setări.",
+    "conflict_calendar": "Eveniment din calendar",
+    "conflict_contacts": "Contact",
+    "kept_files_title": "Fișiere păstrate offline",
+    "kept_state_kept": "Pe acest dispozitiv",
+    "kept_state_waiting": "Așteaptă descărcarea",
+    "kept_error_tooLarge": "Prea mare pentru a fi păstrat",
+    "kept_error_overLimit": "Peste limita acestui dispozitiv",
+    "kept_error_notAllowed": "Organizația dvs. nu permite păstrarea fișierelor",
+    "kept_error_download": "Nu a putut fi descărcat",
+    "keep_offline": "Păstrează offline",
+    "unpin": "Nu mai păstra offline",
+    "unpin_label": "Nu mai păstra {name} offline",
+    "warning_desktop": "Oricine poate folosi contul de utilizator al acestui computer poate citi acest e-mail. Folosiți criptarea discului.",
+    "off_confirm_text": "Aceasta șterge tot ce păstrează acest dispozitiv pentru {account}. E-mailurile dvs. de pe server rămân.",
+    "unsent_changes": "{count, plural, one {# modificare care nu a ajuns pe server se pierde.} few {# modificări care nu au ajuns pe server se pierd.} other {# de modificări care nu au ajuns pe server se pierd.}}",
+    "clear_needs_connection": "Este nevoie de o conexiune, deoarece totul este descărcat din nou.",
+    "usage_label": "Ce păstrează acest dispozitiv",
+    "pin_not_ready": "Acest fișier nu se află încă în lista acestui dispozitiv. Încercați din nou peste un moment."
+  },
+  "keyProtection": {
+    "browser_note": "Într-un browser, cheia acestor mesaje se află în același profil de browser ca mesajele. Cine copiază fișierele profilului le poate citi, așa că folosește criptarea discului.",
+    "no_secure_storage": "Acest computer nu are un spațiu securizat pentru chei pe care aplicația să îl poată folosi, așa că cheia acestor mesaje este doar mascată pe disc. Folosește criptarea discului.",
+    "wrap_failed": "Spațiul securizat pentru chei al acestui computer nu a acceptat cheia acestor mesaje, așa că nu este protejată cum ar trebui. Repornește aplicația și folosește criptarea discului.",
+    "rekey_progress": "Se recriptează mesajele de pe acest dispozitiv: {percent}%. Poți lucra în continuare.",
+    "rekey_failed": "Recriptarea mesajelor de pe acest dispozitiv nu s-a încheiat, așa că vechea cheie le mai poate deschide. Aplicația încearcă din nou la următoarea pornire.",
+    "reenroll_note": "Cheia de acces și deblocarea de sistem foloseau cheia vechiului PIN, așa că au fost eliminate. Configurează-le din nou dacă le folosești."
+  },
+  "offlineDrafts": {
+    "title": "Ciorne pe acest dispozitiv",
+    "description": "Aceste ciorne sunt salvate pe acest dispozitiv. Ajung singure pe server imediat ce poate fi contactat.",
+    "saved_on_device": "Salvat pe acest dispozitiv",
+    "status_waiting": "Se așteaptă serverul",
+    "status_sending": "Se salvează pe server",
+    "status_uncertain": "Se verifică dacă a ajuns pe server",
+    "status_refused": "Serverul a refuzat această ciornă: {error}",
+    "file_missing": "Un fișier atașat nu mai este pe acest dispozitiv",
+    "open": "Deschide",
+    "open_label": "Deschide {subject}",
+    "retry": "Încearcă din nou",
+    "retry_label": "Încearcă din nou: {subject}",
+    "toast_refused": "Ciorna {subject} nu a putut fi salvată pe server. Rămâne pe acest dispozitiv.",
+    "toast_conflict": "Ciorna {subject} a fost modificată pe alt dispozitiv. Ambele versiuni sunt păstrate.",
+    "conflict_changed": "Modificată pe alt dispozitiv. Ambele versiuni sunt în Ciorne.",
+    "conflict_gone": "Modificată sau eliminată pe alt dispozitiv. Versiunea dvs. este în Ciorne.",
+    "banner_refused": "Ciorne refuzate de server: {count}",
+    "banner_waiting": "Ciorne care așteaptă serverul: {count}"
+  },
+  "offlineExport": {
+    "settings_label": "Exportă mesajele păstrate",
+    "settings_description": "Salvați mesajele de pe acest dispozitiv ca fișiere mbox sau .eml. Funcționează și offline.",
+    "title": "Exportă mesajele păstrate",
+    "description": "Salvează originalele păstrate pe acest dispozitiv. Fișierele .eml sunt copii exacte. Un fișier mbox adaugă marcajele cerute de format și scrie starea de citit și marcat în antetele fiecărui mesaj, în locul celor existente. Mesajele mai vechi decât perioada aleasă nu sunt incluse. Pentru a salva tot de pe server, folosiți „Exportă toate e-mailurile”.",
+    "folders_label": "Dosare",
+    "all_folders": "Toate dosarele",
+    "folder_kept": "{kept} din {total} aici",
+    "loading": "Se citesc datele de pe acest dispozitiv…",
+    "load_failed": "Mesajele de pe acest dispozitiv nu au putut fi citite.",
+    "nothing_kept": "Pe acest dispozitiv nu sunt încă mesaje păstrate.",
+    "kept": "Originale pe acest dispozitiv: {kept} din {total} mesaje",
+    "missing_online": "De descărcat de pe server: {count}",
+    "missing_offline": "Nu pot fi exportate offline: {count}. Puteți încerca din nou când sunteți online.",
+    "reason_attachments_off": "Mesajele originale sunt păstrate doar când „Păstrează atașamentele” este activat.",
+    "reason_not_kept": "Mesajele originale se descarcă ultimele și doar cât timp este loc.",
+    "not_kept_attachments_off": "Fără original aici, deoarece atașamentele nu sunt păstrate pe acest dispozitiv: {count}",
+    "not_kept_not_kept": "Încă fără original pe acest dispozitiv: {count}",
+    "retry": "Încearcă din nou online",
+    "retry_online": "Sunteți online acum, deci pot veni de pe server.",
+    "retry_offline": "Puteți încerca din nou când sunteți online.",
+    "settings_button": "Exportă…",
+    "message_failed": "Serverul nu a livrat acest mesaj.",
+    "failed_generic": "Exportul s-a oprit din cauza unei erori. Încercați din nou.",
+    "stopped_limit": "Exportul s-a oprit la {limit}, maximul pe care îl poate păstra acest browser. Alegeți mai puține dosare sau folosiți Chromium, Firefox ori aplicația desktop.",
+    "over_limit": "Acest browser poate păstra cel mult {limit}, iar această alegere are aproximativ {size}. Alegeți mai puține dosare sau folosiți Chromium, Firefox ori aplicația desktop.",
+    "no_room": "Acest export are nevoie de aproximativ {size}, iar acest browser mai are {free}. Alegeți mai puține dosare sau eliberați spațiu.",
+    "stopped_no_room": "Browserul a rămas fără spațiu pentru export. Alegeți mai puține dosare sau eliberați spațiu.",
+    "stopped_offline_off": "Exportul s-a oprit deoarece acest cont nu mai păstrează mesaje pe acest dispozitiv.",
+    "policy_unknown": "Regulile organizației dvs. pentru acest cont nu se cunosc încă, așa că exportul rămâne oprit deocamdată.",
+    "leftover_file": "Fișierul {name} nu a putut fi eliminat din locul unde l-ați salvat. Este incomplet, îl puteți șterge."
   },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",
@@ -5423,6 +6636,10 @@
       "accounts_heading": "Conturi conectate",
       "account_on": "{label} pe {host}",
       "account_waiting": "{label} pe {host} (conectare neterminată)",
+      "forward_heading": "Redirecționează mesaje către",
+      "forward_hint": "Adrese către care acest plugin poate redirecționa mesaje fără să întrebe.",
+      "forward_remove": "Eliminați",
+      "forward_remove_label": "Opriți redirecționarea către {address}",
       "disconnect": "Deconectați",
       "disconnect_failed": "{label} nu a putut fi deconectat"
     },
@@ -5453,13 +6670,17 @@
         "title": "Acces complet la această aplicație",
         "body": "Rulează cu aceleași drepturi ca webmailul însuși. Poate citi toate e-mailurile și cheile stocate și poate acționa în numele dvs. Permiteți acest lucru doar pluginurilor în care aveți încredere deplină."
       },
+      "keystore": {
+        "title": "Folosește certificatele de pe acest computer",
+        "body": "Cere să semneze și să decripteze mesaje cu certificate de pe acest computer sau de pe un smart card. Aplicația vă întreabă mai întâi. Pluginul nu primește niciodată cheia privată, dar cât timp permiteți poate semna în numele dvs. și poate citi ce decriptează."
+      },
       "email_raw_send": {
         "title": "Trimiterea mesajelor create de el însuși",
         "body": "Trimite mesaje complete, de exemplu semnate sau criptate, din contul dvs."
       },
       "email_blob_read": {
-        "title": "Citirea conținutului brut al mesajelor",
-        "body": "Citește datele originale ale mesajelor și atașamentelor dvs. și ale fiecărui fișier pe care îl atașați înainte de trimitere."
+        "title": "Citirea atașamentelor și a sursei mesajelor",
+        "body": "Citește atașamentele (inclusiv textul și imaginile lor) și sursa completă a mesajelor cu care lucrați, precum și fiecare fișier pe care îl atașați înainte de trimitere."
       },
       "email_blob_write": {
         "title": "Înlocuirea atașamentelor înainte de trimitere",
@@ -5477,6 +6698,10 @@
         "title": "Modificarea calendarului",
         "body": "Creează, modifică și șterge evenimente."
       },
+      "calendar_respond": {
+        "title": "Răspunsul la invitații",
+        "body": "Acceptă sau refuză invitații din calendar. Răspunsul dvs. ajunge la organizator prin e-mail."
+      },
       "contacts_read": {
         "title": "Citirea contactelor",
         "body": "Caută în agendele dvs. și le citește."
@@ -5487,11 +6712,11 @@
       },
       "files_read": {
         "title": "Citirea fișierelor",
-        "body": "Răsfoiește și deschide fișierele stocate în contul dvs."
+        "body": "Găsește, deschide și citește fișierele din contul dvs."
       },
       "files_write": {
         "title": "Modificarea fișierelor",
-        "body": "Încarcă, redenumește, mută și șterge fișiere din contul dvs."
+        "body": "Salvează, creează, redenumește și mută fișiere în contul dvs. și poate împiedica ștergerea unui fișier."
       },
       "identity_read": {
         "title": "Vizualizarea identităților de expediere",
@@ -5542,8 +6767,12 @@
         "body": "Vede preferințele dvs. și definițiile etichetelor."
       },
       "settings_write": {
+        "title": "Modificarea etichetelor",
+        "body": "Adaugă, redenumește și reordonează etichetele dvs. și blochează modificările setărilor dvs."
+      },
+      "settings_change": {
         "title": "Modificarea setărilor",
-        "body": "Adaugă și reordonează etichete și modifică preferințele dvs."
+        "body": "Modifică aspectul și funcționarea aplicației, de exemplu tema, formatul orei sau panoul de citire. Setările stabilite de organizația dvs. rămân neschimbate."
       },
       "security_read": {
         "title": "Vizualizarea securității contului",
@@ -5556,6 +6785,10 @@
       "auth_emit": {
         "title": "Deconectarea dvs.",
         "body": "Vă deconectează din webmail."
+      },
+      "auth_impersonation_return": {
+        "title": "Să vă readucă în contul dvs.",
+        "body": "După ce un administrator a deschis o cutie poștală prin impersonare, să închidă acea sesiune și să vă reconecteze la contul din care a pornit."
       },
       "account_read": {
         "title": "Vizualizarea conturilor",
@@ -5604,6 +6837,10 @@
       "ui_email_details": {
         "title": "Adăugarea de panouri la detaliile mesajului",
         "body": "Afișează un panou propriu lângă sau sub un mesaj deschis."
+      },
+      "ui_side_panel": {
+        "title": "Adăugarea unui panou în alte vizualizări",
+        "body": "Afișarea propriului panou lângă Calendar, Contacte, Fișiere și Setări."
       },
       "ui_download_file": {
         "title": "Salvarea fișierelor pe dispozitiv",
@@ -5659,11 +6896,19 @@
       },
       "compose_read": {
         "title": "Citirea mesajului pe care îl scrieți",
-        "body": "Citirea textului unui mesaj în timp ce îl scrieți, când folosiți pluginul în editor. Nu și semnătura sau mesajul citat."
+        "body": "Citirea unui mesaj în timp ce îl scrieți, când folosiți pluginul în editor: textul, subiectul, destinatarii, inclusiv cei din Bcc, și numele și dimensiunea atașamentelor. Nu și semnătura sau mesajul citat."
       },
       "compose_write": {
         "title": "Modificarea mesajului pe care îl scrieți",
         "body": "Înlocuirea sau adăugarea de text într-un mesaj în timp ce îl scrieți, când folosiți pluginul în editor. Puteți anula fiecare modificare și decideți în continuare dacă îl trimiteți."
+      },
+      "compose_check": {
+        "title": "Verificarea a ceea ce scrieți",
+        "body": "Citește ce scrieți în editor în timp ce tastați și poate trimite textul serviciului pe care îl folosește. Doar când verificarea este pornită și nimic cât timp un mesaj este setat să fie semnat sau criptat. Textul scris înainte de a activa asta poate fi deja verificat."
+      },
+      "email_forward": {
+        "title": "Redirecționarea mesajelor dvs.",
+        "body": "Redirecționează mesaje din contul dvs. împreună cu atașamentele, fără a deschide editorul. Sunteți întrebat înainte de prima redirecționare către fiecare adresă."
       },
       "ui_notifications": {
         "title": "Afișarea notificărilor",
@@ -5679,7 +6924,7 @@
       },
       "ui_tasks": {
         "title": "Adăugarea în vizualizarea sarcinilor",
-        "body": "Afișează secțiuni proprii în detaliile unei sarcini și butoane în lista de sarcini."
+        "body": "Afișează secțiuni proprii în detaliile unei sarcini, butoane în lista de sarcini și o listă de sarcini proprie în locul celei din Bulwark."
       },
       "ui_files": {
         "title": "Adăugarea în vizualizarea fișierelor",
@@ -5697,6 +6942,11 @@
         "title": "Folosirea conturilor pe care le conectați",
         "body": "Trimite cereri prin serverul {appName} cu un cont sau o cheie configurate de dvs. sau de administratorul dvs. Pluginul nu vede niciodată parola, dar poate face tot ce poate face acel cont pe serverul său."
       }
+    },
+    "forward_approval": {
+      "title": "Permiteți ca {plugin} să redirecționeze mesaje către {addresses}?",
+      "message": "{plugin} vrea să redirecționeze „{subject}” împreună cu atașamentele către {addresses}. Dacă permiteți, de acum înainte va putea redirecționa mesaje către această adresă fără să întrebe. Puteți retrage permisiunea din Setări > Suplimente.",
+      "allow": "Permiteți și redirecționați"
     },
     "dialog": {
       "from_plugin": "De la pluginul {name}",
@@ -5726,6 +6976,28 @@
       "error_server": "Introduceți adresa serverului, de exemplu https://cloud.example.com",
       "error_save": "Nu s-a putut salva: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Nu a fost trimis. O verificare cerută de organizația ta nu rulează. Încearcă din nou peste o clipă.",
+    "stopped_working": "Nu a fost trimis. O verificare cerută de organizația ta nu mai funcționează. Reîncarcă pagina. Dacă nu ajută, anunță administratorul."
+  },
+  "compose_words": {
+    "undo_send": {
+      "label": "Anulează trimiterea",
+      "description": "Îți oferă câteva secunde să retragi un mesaj după ce apeși Trimite."
+    },
+    "reply_from_received": {
+      "label": "Răspunde de la adresa de la care a fost primit mesajul",
+      "description": "Răspunde de la adresa la care a fost trimis e-mailul. Util dacă ai mai multe adrese."
+    },
+    "require_tls": "Livrează doar printr-o conexiune sigură",
+    "require_tls_hint": "Mesajul în sine nu este criptat. Este returnat dacă un server nu poate folosi TLS.",
+    "encrypt": "Criptează…",
+    "encrypt_hint": "Necesită un supliment S/MIME sau PGP. Deschide Setările.",
+    "quick_reply_to": "Răspuns către {names}…",
+    "open_full_editor": "Deschide în editorul complet",
+    "forward_to_label": "Către",
+    "forward_cc_label": "Cc"
   },
   "plugin_list": {
     "filters": "Filtre",
@@ -5760,6 +7032,9 @@
   },
   "top_bar": {
     "more": "Mai multe opțiuni"
+  },
+  "windowChrome": {
+    "hide_offline_notice": "Ascunde notificarea offline"
   },
   "shell": {
     "resize": "Redimensionează",
@@ -5805,6 +7080,19 @@
     "group_plugins": "Pluginuri",
     "group_account": "Cont",
     "switch_to": "Comută la {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Sunteți offline. Unele acțiuni au nevoie de conexiune.",
+    "files_new_folder": "Dosar nou…",
+    "files_new_file": "Fișier nou…",
+    "files_new_text_file": "Fișier text nou…",
+    "files_upload_files": "Încărcați fișiere…",
+    "files_upload_folder": "Încărcare folder…",
+    "files_share": "Distribuie…",
+    "files_share_button": "Distribuie",
+    "contacts_add_to_group": "Adaugă la grup…",
+    "contacts_bulk_add_to_group": "Adaugă la grup…",
+    "schedule_send": "Programează trimiterea…"
   },
   "notification_center": {
     "title": "Notificări",
@@ -5939,5 +7227,1045 @@
     "easy_read": "Ușor de citit",
     "sign_language": "Limbaj mimico-gestual",
     "new_tab": "se deschide într-o filă nouă"
+  },
+  "pwaNotify": {
+    "action_archive": "Arhivează",
+    "action_mark_read": "Marcați ca citit",
+    "action_reply": "Răspunde",
+    "reply_placeholder": "Scrieți un răspuns"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Adaugă în calendar",
+    "update_in_calendar": "Actualizează în calendar",
+    "remove_from_calendar": "Elimină din calendar",
+    "in_calendar": "În calendarul dvs.",
+    "view_in_calendar": "Vizualizare în calendar",
+    "select_calendar": "Alegeți un calendar",
+    "added": "Adăugat în calendarul dvs.",
+    "updated": "Calendar actualizat",
+    "removed": "Eliminat din calendarul dvs.",
+    "action_failed": "Calendarul nu a putut fi modificat. Încercați din nou.",
+    "blocked": "Un plugin a oprit această modificare în calendar.",
+    "title": {
+      "rental_car": "Mașină închiriată",
+      "rental_car_company": "Mașină închiriată: {company}"
+    },
+    "description": {
+      "reference": "Cod rezervare: {reference}",
+      "passengers": "Pasageri: {names}",
+      "seats": "Locuri: {seats}",
+      "checkin": "Check-in: {url}",
+      "manage": "Gestionați rezervarea: {url}",
+      "ticket": "Bilet: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Mașină: {car}",
+      "tickets": "Bilete: {numbers}",
+      "party_size": "Număr de persoane: {count}",
+      "added_from": "Adăugat dintr-un e-mail de la {domain}",
+      "added_from_subject": "Adăugat din e-mailul „{subject}” de la {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografie",
+      "grammar": "Gramatică",
+      "style": "Stil",
+      "other": "Sugestie"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nicio sugestie",
+      "suggestions": "Sugestii",
+      "replace_with": "Înlocuiește cu {text}",
+      "also": "Și de la {checker}",
+      "ignore": "Ignoră",
+      "add_to_dictionary": "Adaugă în dicționar",
+      "disable_rule": "Dezactivează această regulă",
+      "changed": "Textul s-a schimbat. Așteptați următoarea verificare."
+    },
+    "list_item": "{word}: {message} Sugestie: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nicio greșeală de ortografie sau gramatică} one {# greșeală de ortografie sau gramatică} few {# greșeli de ortografie sau gramatică} other {# de greșeli de ortografie sau gramatică}}",
+    "status": {
+      "title": "Verificare text",
+      "off": "Verificarea textului este oprită",
+      "paused": "Verificarea textului este întreruptă",
+      "rate_limited": "Verificare întreruptă",
+      "unavailable": "Verificare indisponibilă",
+      "checking": "Se verifică…",
+      "issues": "{count, plural, =0 {Nicio problemă} one {# problemă} few {# probleme} other {# de probleme}}"
+    },
+    "panel": {
+      "title": "Verificare text",
+      "required": "Cerută de organizația dvs.",
+      "check_message": "Verifică acest mesaj",
+      "notice": "În timp ce tastați, textul scris ajunge la {checkers} pentru verificare. Semnătura și mesajul citat sunt lăsate deoparte. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte de a activa asta poate fi deja verificat.",
+      "turn_on": "Pornește verificarea textului",
+      "paused_protected": "Nu se verifică nimic cât timp acest mesaj este setat să fie semnat sau criptat.",
+      "paused_unknown": "{plugin} poate semna sau cripta mesaje fără să arate asta aici, așa că nu se verifică nimic cât timp este pornit.",
+      "rate_limited": "{checker} a cerut o pauză. Verificarea reîncepe peste un minut.",
+      "unavailable": "{checker} nu poate verifica acum. Încearcă din nou când continuați să scrieți.",
+      "no_issues": "Nu s-au găsit probleme.",
+      "list_label": "Probleme în acest mesaj",
+      "shortcuts": "Problema următoare: {next}. Anterioara: {previous}."
+    },
+    "notice": {
+      "on": "Verificarea textului este pornită. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte poate fi deja verificat.",
+      "forced": "Organizația dvs. a pornit verificarea textului. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte poate fi deja verificat.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Trimiteți cu probleme nerezolvate?",
+      "body": "{count, plural, one {În acest mesaj a rămas # greșeală de ortografie sau gramatică.} few {În acest mesaj au rămas # greșeli de ortografie sau gramatică.} other {În acest mesaj au rămas # de greșeli de ortografie sau gramatică.}}",
+      "review": "Revizuiți",
+      "send": "Trimite oricum"
+    },
+    "settings": {
+      "title": "Verificare text",
+      "description": "Subliniază greșelile de ortografie și gramatică în timp ce scrieți, cu sugestii de corectare.",
+      "enable": "Verifică ortografia și gramatica în timp ce tastez",
+      "enable_description": "Textul pe care îl scrieți ajunge la suplimentul de verificare și la serviciul pe care îl folosește, fără semnătură și fără mesajele citate. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat.",
+      "no_checker": "Nu este instalat niciun supliment de verificare a textului. Cereți administratorului să adauge unul.",
+      "plugin_description": "Trimite ce scrieți către {plugin}.",
+      "writing_language": "Limba de scriere",
+      "writing_language_description": "Limba în care scrieți de obicei. O folosesc verificarea textului și corectorul ortografic al browserului.",
+      "auto": "Detectează automat"
+    },
+    "shortcuts": {
+      "next_issue": "Următoarea greșeală de ortografie sau gramatică",
+      "previous_issue": "Greșeala de ortografie sau gramatică anterioară"
+    }
+  },
+  "pwaWindows": {
+    "open_in_window": "Deschide într-o fereastră nouă",
+    "save_all_to_folder": "Salvează tot într-un dosar…",
+    "saved_all": "{count, plural, one {# atașament salvat în {folder}.} few {# atașamente salvate în {folder}.} other {# de atașamente salvate în {folder}.}}",
+    "saved_partial": "{saved} din {total} atașamente salvate în {folder}.",
+    "save_failed": "Atașamentele nu au putut fi salvate în {folder}.",
+    "popup_blocked": "Browserul a blocat fereastra nouă. Permite ferestrele pop-up pentru acest site și încearcă din nou.",
+    "opening": "Se deschide…",
+    "session_ended_title": "Ești deconectat în această fereastră",
+    "session_ended_body": "Deschide aplicația și autentifică-te, apoi deschide din nou această fereastră.",
+    "open_app": "Deschide aplicația",
+    "close_window": "Închide fereastra",
+    "message_gone_title": "Acest mesaj nu mai există",
+    "message_gone_body": "A fost șters sau mutat în alt cont.",
+    "message_moved": "Acest mesaj a fost mutat în alt dosar.",
+    "message_moved_to": "Acest mesaj a fost mutat în {folder}.",
+    "window_not_ready": "Fereastra nouă nu s-a deschis la timp. Ciorna rămâne aici."
+  },
+  "desktopUi": {
+    "settings": {
+      "title": "Ferestrele aplicației",
+      "double_click_label": "Deschide mesajele într-o fereastră nouă la dublu clic",
+      "double_click_description": "Un singur clic deschide în continuare mesajul lângă listă.",
+      "restore_label": "Redeschide ferestrele la pornire",
+      "restore_description": "Ferestrele de mesaje și ciorne deschise la ieșire revin."
+    },
+    "attachment": {
+      "open": "Deschide",
+      "save_as": "Salvează ca…",
+      "copy": "Copiază",
+      "copy_failed": "Fișierul nu a putut fi copiat."
+    },
+    "menu": {
+      "file": "Fișier",
+      "edit": "Editare",
+      "view": "Vizualizare",
+      "message": "Mesaj",
+      "go": "Salt la",
+      "window": "Fereastră",
+      "help": "Ajutor",
+      "new_window": "Fereastră nouă",
+      "print": "Imprimare…",
+      "save_pdf": "Salvare ca PDF…",
+      "switch_connection": "Schimbare conexiune…",
+      "close": "Închidere",
+      "quit": "Ieșire",
+      "undo": "Anulare",
+      "redo": "Refacere",
+      "cut": "Decupare",
+      "copy": "Copiere",
+      "paste": "Lipire",
+      "select_all": "Selectare totală",
+      "search": "Căutare în e-mail",
+      "refresh": "Verificare e-mailuri noi",
+      "reading_pane": "Panou de citire",
+      "pane_right": "În dreapta",
+      "pane_below": "Sub listă",
+      "pane_off": "Dezactivat",
+      "zoom_in": "Mărire",
+      "zoom_out": "Micșorare",
+      "zoom_reset": "Dimensiune reală",
+      "full_screen": "Ecran complet",
+      "open_in_window": "Deschidere în fereastră nouă",
+      "next_message": "Mesajul următor",
+      "previous_message": "Mesajul anterior",
+      "next_unread": "Următorul mesaj necitit",
+      "mail": "E-mail",
+      "files": "Fișiere",
+      "back": "Înapoi",
+      "forward": "Înainte",
+      "minimize": "Minimizare",
+      "next_window": "Fereastra următoare",
+      "shortcuts": "Comenzi rapide de la tastatură",
+      "docs": "Documentație",
+      "settings": "Setări…",
+      "about": "Despre Bulwark",
+      "from_plugins": "Mai multe de la pluginuri…",
+      "pick_gone": "Meniul era depășit. Deschideți-l din nou și încercați încă o dată.",
+      "bar_label": "Meniu"
+    },
+    "context": {
+      "add_to_dictionary": "Adăugare „{word}” în dicționar",
+      "no_suggestions": "Fără sugestii",
+      "open_link": "Deschidere link",
+      "copy_link": "Copiere link",
+      "copy_address": "Copiere adresă",
+      "save_image": "Salvare imagine…",
+      "copy_image": "Copiere imagine"
+    },
+    "closing": {
+      "unsaved_title": "O ciornă nu a putut fi salvată",
+      "unsaved_detail": "Dacă închideți acum, ce ați scris de la ultima salvare se pierde.",
+      "close_anyway": "Închidere oricum",
+      "unsent_title": "Unele mesaje nu au fost trimise încă",
+      "unsent_one": "Un mesaj așteaptă să fie trimis. Pleacă la următoarea deschidere a Bulwark.",
+      "unsent_many": "{count} mesaje așteaptă să fie trimise. Pleacă la următoarea deschidere a Bulwark.",
+      "quit": "Ieșire",
+      "leave_title": "Părăsiți pagina cu modificări nesalvate?",
+      "leave_detail": "Modificările făcute pe această pagină nu au fost salvate încă.",
+      "leave": "Părăsire",
+      "stay": "Rămâneți"
+    },
+    "spellcheck": {
+      "offer": "Verificarea ortografică pentru {language} are nevoie de un dicționar. Bulwark îl poate descărca de la Google. Textul dvs. nu este trimis.",
+      "download": "Descărcare"
+    },
+    "restore": {
+      "unavailable_title": "Această ciornă nu poate fi deschisă acum",
+      "unavailable_body": "Este în siguranță pe server, în Ciorne. Încercați din nou când revine conexiunea.",
+      "try_again": "Încercați din nou",
+      "close": "Închidere"
+    }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Căutare „{text}” în e-mail"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Sunteți offline. Acest mesaj are nevoie de conexiune ca să se deschidă.",
+    "reader_failed": "Mesajul nu a putut fi încărcat.",
+    "retry": "Încercați din nou",
+    "action_offline": "Sunteți offline. Pentru asta e nevoie de conexiune.",
+    "offline_bar": "Sunteți offline. Citirea și modificarea e-mailurilor au nevoie de conexiune.",
+    "offline_default_on": "E-mailurile dvs. sunt păstrate pe acest dispozitiv, ca să le puteți citi offline."
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Afișează mereu bara de meniu",
+    "always_show_description": "Altfel apare la apăsarea tastei Alt.",
+    "exit": "Ieșire",
+    "tray_pause": "Întrerupe notificările",
+    "tray_pause_hour": "Pentru 1 oră",
+    "tray_pause_tomorrow": "Până mâine",
+    "tray_resume": "Reactivează notificările",
+    "tray_open": "Deschide Bulwark",
+    "tray_quit": "Închide Bulwark",
+    "tray_exit": "Ieșire din Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Salvează ciorna",
+    "attach_files": "Atașează fișiere…",
+    "shortcut_apps": "Mergi la E-mail, Calendar, Contacte sau Fișiere"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Deschide…",
+    "menu_save_as": "Salvează ca…",
+    "open_filter": "Mesaje, evenimente și contacte",
+    "save_filter": "Mesaj e-mail",
+    "folder_title": "Alegeți un dosar pentru mesaje",
+    "folder_button": "Salvează aici",
+    "saved_many": "{count, plural, one {# mesaj salvat.} few {# mesaje salvate.} other {# de mesaje salvate.}}",
+    "save_failed": "{count, plural, one {# mesaj nu a putut fi salvat.} few {# mesaje nu au putut fi salvate.} other {# de mesaje nu au putut fi salvate.}}",
+    "shortcut_open": "Deschide un mesaj, eveniment sau contact salvat",
+    "shortcut_save_as": "Salvează mesajul ca fișier"
+  },
+  "appLock": {
+    "section_title": "Blocarea aplicației",
+    "section_desc": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră și filă. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",
+    "enable_label": "Blochează cu un PIN",
+    "enable_desc": "PIN-ul rămâne pe acest dispozitiv.",
+    "protects_desc": "De ce protejează: PIN-ul ține în afara aplicației pe cineva aflat la acest dispozitiv. Mesajele stocate aici primesc o cheie nouă când activezi blocarea sau schimbi PIN-ul, ceea ce poate dura puțin. Nu poate opri un program care rulează pe acest computer, o extensie de browser instalată de tine sau pe cineva care copiază fișierele aplicației și are timp să încerce multe PIN-uri, așa că merită un PIN mai lung. În aplicația desktop, încercarea PIN-urilor cere și autentificarea ta pe acest computer. Contul tău de pe server nu este afectat.",
+    "enable_body": "Veți avea nevoie de el de fiecare dată când aplicația se blochează și după o repornire.",
+    "set_pin_title": "Alegeți un PIN",
+    "change_pin": "Schimbați PIN-ul…",
+    "change_pin_title": "Schimbați PIN-ul",
+    "pin_label": "PIN",
+    "pin_current": "PIN-ul actual",
+    "pin_new": "PIN nou",
+    "pin_repeat": "Repetați PIN-ul",
+    "pin_hint": "Cel puțin 5 caractere. Merg și literele, iar un PIN mai lung e mai greu de ghicit.",
+    "pin_hint_policy": "Organizația dvs. cere cel puțin {count, plural, one {# caracter} few {# caractere} other {# de caractere}}. Merg și literele.",
+    "pin_obvious": "Acest PIN este prea ușor de ghicit. Evitați repetițiile, secvențele și alegerile obișnuite.",
+    "pin_mismatch": "Cele două PIN-uri nu sunt la fel.",
+    "pin_recovery": "Dacă îl uitați, singura soluție este să eliminați datele de pe acest dispozitiv și să vă conectați din nou. E-mailurile de pe server rămân. Mesajele care încă așteaptă trimiterea pe acest dispozitiv se pierd.",
+    "save": "Salvați",
+    "cancel": "Anulați",
+    "save_failed": "Nu a mers. Încercați din nou.",
+    "timeout_label": "Blochează după",
+    "timeout_desc": "Timp fără utilizare în orice fereastră sau filă.",
+    "lock_now": "Blochează acum",
+    "lock_now_desc": "Blochează imediat toate ferestrele și filele.",
+    "disable_title": "Dezactivați blocarea?",
+    "disable_body": "Introduceți PIN-ul pentru a o dezactiva.",
+    "disable_confirm": "Dezactivați",
+    "passkey_label": "Cheie de acces",
+    "passkey_desc": "Deblocați cu o cheie de acces sau de securitate care poate proteja cheia. Nu toate pot, iar PIN-ul funcționează în continuare.",
+    "passkey_add": "Adăugați o cheie de acces…",
+    "passkey_add_title": "Adăugați o cheie de acces",
+    "passkey_remove": "Eliminați",
+    "passkey_added": "Cheia de acces a fost adăugată.",
+    "passkey_no_prf": "Această cheie de acces nu poate proteja cheia. PIN-ul funcționează în continuare.",
+    "passkey_failed": "Cheia de acces nu a mers. Introduceți PIN-ul.",
+    "use_passkey": "Folosiți o cheie de acces",
+    "use_hello": "Folosiți Windows Hello",
+    "use_touchid": "Folosiți Touch ID",
+    "os_add": "Activați…",
+    "os_add_title": "Folosiți {method}",
+    "os_remove": "Dezactivați",
+    "os_desc": "{method} este o verificare făcută de aplicație. După un da, aplicația citește cheia din spațiul criptat al acestui computer. Un program care rulează sub contul dvs. ar putea-o citi acolo fără {method}, deci PIN-ul protejează mai mult. PIN-ul funcționează în continuare.",
+    "os_failed": "Nu a mers. Introduceți PIN-ul.",
+    "lock_title": "{app} este blocată",
+    "locking": "Se blochează…",
+    "pin_prompt": "Introduceți PIN-ul pentru a continua.",
+    "unlock": "Deblocați",
+    "unlocking": "Se deblochează…",
+    "wrong_pin": "Acest PIN nu este corect.",
+    "unlock_failed": "Deblocarea nu a mers. Încercați din nou.",
+    "blocked_later": "Prea multe încercări. Încercați mai târziu.",
+    "forgot": "Ați uitat PIN-ul?",
+    "forgot_title": "Eliminați datele locale și vă deconectați?",
+    "forgot_body": "Un PIN uitat nu poate fi recuperat. Astfel se elimină e-mailurile păstrate pe acest dispozitiv și toate conturile sunt deconectate, ca să vă puteți conecta din nou. E-mailurile de pe server rămân. Mesajele care încă așteaptă trimiterea pe acest dispozitiv se pierd.",
+    "forgot_provider": "Dacă v-ați autentificat prin pagina organizației, acea autentificare rămâne deschisă acolo. Următoarea autentificare de aici va cere acelei pagini o nouă autentificare, dacă permite.",
+    "forgot_confirm": "Eliminați și deconectați",
+    "unlock_in_main": "Deblocați în fereastra principală.",
+    "open_main": "Mergeți la fereastra principală",
+    "setup_required_title": "Organizația dvs. cere o blocare a aplicației",
+    "setup_required_body": "Alegeți un PIN. Veți avea nevoie de el pentru a deschide {app} după blocare.",
+    "draft_saved_notice": "Ce scriați a fost salvat în Ciorne înainte de blocare.",
+    "use_hello_name": "Windows Hello",
+    "use_touchid_name": "Touch ID",
+    "timeout_option": "{count, plural, one {# minut} few {# minute} other {# de minute}}",
+    "blocked_seconds": "Prea multe încercări. Încercați din nou peste {count, plural, one {# secundă} few {# secunde} other {# de secunde}}.",
+    "blocked_minutes": "Prea multe încercări. Încercați din nou peste {count, plural, one {# minut} few {# minute} other {# de minute}}."
+  },
+  "appLockHello": {
+    "switch_label": "Deblocați cu Windows Hello",
+    "switch_desc": "Folosiți fața, amprenta sau PIN-ul Windows. PIN-ul aplicației funcționează în continuare.",
+    "protects": "Cu Windows Hello pornit, Windows păstrează pentru această aplicație o cheie care funcționează doar după ce Windows Hello a verificat că sunteți dvs. Cheia aplicației este blocată și cu ea, așa că pentru deblocare e nevoie de fața, amprenta sau PIN-ul Windows, iar alt program de pe acest computer nu poate folosi cheia fără ca Windows să vă întrebe mai întâi. PIN-ul aplicației funcționează în continuare și aveți nevoie de el dacă Windows Hello este resetat sau oprit.",
+    "enable_title": "Porniți Windows Hello",
+    "enable_body": "Introduceți PIN-ul aplicației. Apoi Windows vă cere să confirmați cu Windows Hello.",
+    "enable_failed": "Windows Hello nu a putut fi pornit. Încercați din nou.",
+    "cancelled": "Windows Hello a fost anulat.",
+    "unsupported": "Windows Hello de pe acest computer nu poate proteja cheia. PIN-ul dvs. funcționează în continuare.",
+    "unavailable": "Windows Hello nu este disponibil pe acest computer.",
+    "busy": "Windows Hello este ocupat sau blocat. Încercați mai târziu.",
+    "off_after_pin_change": "Windows Hello este oprit acum, pentru că nu a confirmat după schimbarea PIN-ului. Porniți-l din nou dacă îl folosiți.",
+    "prompt": "Confirmați cu Windows Hello că sunteți dvs.",
+    "waiting": "Se așteaptă Windows Hello…",
+    "use_hello": "Deblocați cu Windows Hello",
+    "use_pin": "Folosiți PIN-ul",
+    "failed": "Windows Hello nu a deblocat aplicația. Introduceți PIN-ul.",
+    "gone": "Windows Hello nu mai deblochează aplicația pe acest computer. Introduceți PIN-ul."
+  },
+  "uxs_general": {
+    "time_zone_common": "Fusuri orare uzuale",
+    "time_zone_all": "Toate fusurile orare",
+    "time_zone_search": "Căutați un fus orar",
+    "time_zone_no_match": "Niciun fus orar găsit",
+    "time_zone_desktop_description": "Afișează orele mesajelor și programărilor în acest fus orar. Dacă nu alegeți unul, se folosește fusul orar al computerului.",
+    "app_lock_desc_desktop": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",
+    "app_lock_timeout_desc_desktop": "Timp fără utilizare în orice fereastră.",
+    "app_lock_now_desc_desktop": "Blochează imediat toate ferestrele.",
+    "app_lock_protects_toggle": "De ce protejează?",
+    "app_lock_timeout_hours": "{count, plural, one {# oră} few {# ore} other {# de ore}}",
+    "app_lock_until_screen": "Când se blochează ecranul",
+    "app_lock_until_session": "La deconectare sau repornire",
+    "desktop_attention_title": "Pe acest computer"
+  },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Numele dvs.",
+      "description": "Oamenii văd acest nume lângă adresa dvs. când le trimiteți e-mail.",
+      "saved": "Numele dvs. a fost salvat.",
+      "error": "Numele dvs. nu a putut fi salvat. Încercați din nou."
+    },
+    "addresses": {
+      "description": "Adresele de pe care puteți trimite, fiecare cu numele și semnătura ei.",
+      "label": "Adresele dvs.",
+      "count": "{count, plural, =0 {Încă nicio adresă} one {# adresă} few {# adrese} other {# de adrese}}",
+      "manage": "Editați adresele…",
+      "modal_title": "Adresele dvs. de e-mail",
+      "add": "Adăugați o adresă",
+      "edit": "Editați adresa",
+      "added": "Adresa a fost adăugată.",
+      "saved": "Adresa a fost salvată.",
+      "deleted": "Adresa a fost ștearsă.",
+      "delete_title": "Ștergeți această adresă?"
+    },
+    "signatures": {
+      "title": "Semnături",
+      "description": "Se adaugă la sfârșitul mesajelor pe care le scrieți. Fiecare adresă are semnătura ei.",
+      "saved": "Semnătura a fost salvată.",
+      "error": "Semnătura nu a putut fi salvată. Încercați din nou.",
+      "no_addresses": "Nu există încă nicio adresă de pe care să trimiteți."
+    },
+    "search": {
+      "addresses": "identitate identități alias expeditor adresa expeditorului adresa de la identity sender",
+      "signatures": "semnătură semnătură e-mail subsol identitate expeditor adresa de la signature",
+      "your_name": "nume afișat nume complet numele expeditorului display name"
+    }
+  },
+  "desktop_sign_in": {
+    "server_needed": "Introdu mai întâi adresa serverului.",
+    "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
+    "server_invalid": "Această adresă de server nu este validă."
+  },
+  "desktop_browser_sign_in": {
+    "button": "Conectați-vă cu browserul…",
+    "waiting": "Se așteaptă browserul…",
+    "waiting_hint": "Terminați conectarea acolo. Managerul de parole funcționează în browser.",
+    "cancel": "Anulați",
+    "or_here": "sau conectați-vă aici",
+    "timed_out": "Conectarea în browser a durat prea mult. Încercați din nou.",
+    "no_browser": "Bulwark nu a putut deschide browserul. Încercați din nou sau conectați-vă aici.",
+    "failed": "Conectarea prin browser nu a reușit. Încercați din nou.",
+    "handoff_banner": "Un program de pe acest computer a cerut această conectare pentru aplicația Bulwark. Acest browser rămâne deconectat de la Bulwark. Dacă nu ați pornit dvs. acest lucru, închideți această filă.",
+    "consent_title": "Vă conectați la aplicația Bulwark?",
+    "consent_description": "Un program de pe acest computer, la portul {port}, cere conectarea pentru {username}. Continuați doar dacă tocmai ați apăsat „Conectați-vă cu browserul…” în aplicația Bulwark de aici. Dacă nu, poate cineva încearcă să intre în contul dvs.: alegeți Nu acum.",
+    "consent_confirm": "Conectați-vă la aplicație",
+    "consent_cancel": "Nu acum",
+    "page_done": "Puteți închide această filă și reveni la Bulwark.",
+    "page_failed": "Conectarea nu a reușit. Reveniți la Bulwark și încercați din nou.",
+    "page_link_used": "Acest link funcționează o singură dată. Reveniți la Bulwark și începeți din nou.",
+    "page_title": "Conectați-vă la {server}",
+    "page_intro": "Această pagină vine de la aplicația Bulwark de pe acest computer. Parola merge la {server} și nicăieri altundeva.",
+    "page_username": "Adresă de e-mail sau nume de utilizator",
+    "page_password": "Parolă",
+    "page_code": "Cod cu doi factori",
+    "page_submit": "Conectați-vă",
+    "page_wrong_password": "Serverul nu a acceptat acest nume de utilizator și această parolă.",
+    "page_code_needed": "Acest cont are nevoie și de un cod cu doi factori. Introduceți din nou parola și codul.",
+    "page_no_answer": "Bulwark nu s-a putut conecta. Verificați dacă serverul este accesibil și încercați din nou.",
+    "declined": "Ați refuzat în browser, așa că nu s-a făcut nicio conectare.",
+    "too_many": "Prea multe încercări de conectare din această rețea. Așteptați câteva minute și încercați din nou.",
+    "page_declined": "Nu s-a transmis nimic. Puteți închide această filă."
+  },
+  "uxs_login": {
+    "theme_button": "Luminos sau întunecat",
+    "server_label": "Server de e-mail",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Căutăm serverul tău de e-mail…",
+    "server_found": "Server de e-mail: {server}",
+    "server_change": "Schimbă",
+    "server_change_hint": "Scrieți adresa altui server.",
+    "server_not_found": "Nu am găsit serverul de e-mail pentru această adresă. Introdu-l aici, de exemplu mail.example.com.",
+    "server_needed": "Introdu adresa serverului tău de e-mail.",
+    "server_invalid": "Aceasta nu este adresa unui server. Scrie-o ca mail.example.com.",
+    "email_needed": "Introdu mai întâi adresa ta de e-mail.",
+    "other_ways": "Alte moduri de conectare",
+    "trouble": "Ai probleme?",
+    "trouble_cors": "Serverul tău de e-mail trebuie să permită autentificarea de pe acest site. Dacă autentificarea nu reușește, cere celui care administrează serverul să o permită.",
+    "provider_unsupported": "{provider} nu oferă JMAP, modul în care Bulwark comunică cu serverele de e-mail, așa că Bulwark nu se poate conecta încă direct la el."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock este activat",
+    "language_button": "Limbă: {language}"
+  },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Schimbați modul în care se conectează Bulwark?",
+      "message": "Bulwark repornește și întreabă cum să se conecteze: cu adresa dvs. de e-mail sau prin Bulwark-ul organizației dvs. Conturile dvs. de pe acest computer rămân conectate.",
+      "confirm": "Schimbă",
+      "org_link": "Folosește în schimb Bulwark-ul organizației mele",
+      "add_account": "Adaugă cont…"
+    },
+    "picture": {
+      "button": "Imagine",
+      "title": "Inserează imagine",
+      "address": "Adresa web a imaginii",
+      "address_hint": "Imaginea rămâne pe web și este afișată de acolo.",
+      "description": "Descriere",
+      "invalid": "Introduceți o adresă web care începe cu https://.",
+      "insert": "Inserează"
+    },
+    "sign_in_page": {
+      "open_app": "Deschide Bulwark",
+      "done_as": "Conectat ca {address}. Puteți închide această filă."
+    }
+  },
+  "desktop_updates": {
+    "title": "Actualizări",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark caută singur actualizări.",
+    "status_checking": "Se caută actualizări…",
+    "status_up_to_date": "Aveți cea mai nouă versiune.",
+    "status_downloading": "Se descarcă versiunea {version}…",
+    "status_ready": "Versiunea {version} este gata. Se instalează la următoarea închidere sau reporniți acum.",
+    "status_available": "Versiunea {version} este disponibilă.",
+    "status_available_per_machine": "Versiunea {version} este disponibilă. Bulwark este instalat pentru toată lumea pe acest computer, așa că actualizările le instalează un administrator.",
+    "status_older": "Aveți o versiune beta. Versiunea stabilă {version} este mai veche, așa că Bulwark rămâne pe această versiune până când cea stabilă o ajunge din urmă.",
+    "status_error": "Nu s-au putut căuta actualizări. Bulwark încearcă din nou mai târziu.",
+    "status_off": "Organizația dvs. a dezactivat actualizările din aplicație.",
+    "check": "Caută acum",
+    "restart": "Repornește pentru actualizare",
+    "download": "Descarcă",
+    "install_older": "Instalează versiunea mai veche…",
+    "channel_label": "Canal de actualizare",
+    "channel_description": "Versiunile beta apar mai devreme și pot avea mai multe probleme.",
+    "channel_stable": "Stabil",
+    "channel_beta": "Beta",
+    "shell_restart": "Repornește pentru actualizare",
+    "shell_check": "Caută actualizări…",
+    "shell_available": "Bulwark {version} este disponibil",
+    "shell_ready_title": "Bulwark este gata de actualizare",
+    "shell_ready_body": "Versiunea {version} se instalează la următoarea închidere. Faceți clic pentru a reporni acum. Ciornele se salvează întâi.",
+    "shell_available_title": "Există o versiune nouă de Bulwark",
+    "shell_none_title": "Bulwark este actualizat",
+    "shell_none_detail": "Aveți versiunea {version}.",
+    "shell_failed_title": "Bulwark nu a putut căuta actualizări",
+    "shell_failed_detail": "Verificați conexiunea și încercați mai târziu. Nu s-a schimbat nimic.",
+    "shell_beta_title": "Treceți la versiuni beta?",
+    "shell_beta_detail": "Primiți versiunile noi mai devreme și pot avea mai multe probleme. Pentru a reveni, instalați o versiune stabilă mai veche sau așteptați să ajungă stabila din urmă.",
+    "shell_beta_confirm": "Treci la beta",
+    "shell_older_title": "Reveniți la Bulwark {version}?",
+    "shell_older_detail": "Aveți beta {current}. Stabila {target} este mai veche și s-ar putea să nu citească ce a salvat beta pe acest computer. E-mailurile rămân pe server, dar cele păstrate offline se pot descărca din nou, iar modificările netrimise se pot pierde. Dacă așteptați, stabila ajunge beta din urmă și treceți la ea fără acest pas.",
+    "shell_older_confirm": "Instalează versiunea mai veche"
+  },
+  "desktop_keystore": {
+    "title": "Certificate de pe acest computer",
+    "description": "Acest server poate cere să vă folosească certificatele și smart cardurile. Veți fi întrebat în continuare înainte de folosirea fiecărui certificat.",
+    "label": "Accesul acestui server",
+    "label_description": "Retrageți permisiunea. Serverul va trebui să ceară din nou.",
+    "revoke": "Retrage",
+    "revoked": "Permisiune retrasă"
+  },
+  "desktop_certificates": {
+    "picker_title": "{host} cere un certificat",
+    "picker_detail": "Serverul vrea să știe cine ești. Certificatul pe care îl alegi merge doar la acest server. Dacă nu cunoști acest server, nu trimite niciunul.",
+    "picker_issued": "Emis de {issuer}, valabil până la {date}",
+    "picker_remember": "Reține pentru {host}",
+    "picker_none": "Nu trimite un certificat",
+    "picker_more": "Mai multe certificate…"
+  },
+  "desktopOs": {
+    "section_title": "Aplicație desktop",
+    "section_description": "Cum funcționează aplicația cu computerul tău.",
+    "close_to_tray_label": "Rămâne în zona de notificări la închidere",
+    "close_to_tray_description": "E-mailurile noi și mementourile continuă să sosească după închiderea ferestrei.",
+    "start_at_login_label": "Pornește la conectarea în computer",
+    "start_at_login_description": "Aplicația pornește singură când te conectezi.",
+    "start_minimized_label": "Pornește în zona de notificări",
+    "start_minimized_description": "La conectare nu se deschide nicio fereastră. Deschide-o din pictograma din zona de notificări.",
+    "attention_label": "Clipește în bara de activități la e-mail nou",
+    "attention_mac_label": "Sare pictograma din Dock la e-mail nou",
+    "attention_description": "Doar când aplicația nu este în față.",
+    "quiet_hours_label": "Ore de liniște",
+    "quiet_hours_description": "Fără notificări sau sunete în aceste ore. E-mailurile sosesc în continuare.",
+    "quiet_hours_from": "De la",
+    "quiet_hours_to": "până la",
+    "show_shortcut_label": "Arată aplicația cu o comandă rapidă de la tastatură",
+    "show_shortcut_description": "{keys} aduce aplicația în față din orice altă aplicație.",
+    "show_shortcut_taken": "Altă aplicație folosește {keys}. Închide-o sau dezactivează și reactivează această opțiune.",
+    "default_app_label": "Aplicația de e-mail implicită",
+    "default_app_description": "Deschide linkurile de e-mail și fișierele .eml, .ics și .vcf cu această aplicație.",
+    "default_app_is_default": "Această aplicație îți deschide linkurile de e-mail.",
+    "default_app_button": "Alege aplicația implicită…",
+    "new_mail": "E-mail nou",
+    "no_subject": "(fără subiect)",
+    "action_delete": "Șterge",
+    "copy_as_file": "Copiază ca fișier",
+    "copied": "Fișier copiat. Îl poți lipi într-un dosar.",
+    "copy_failed": "Fișierul nu a putut fi copiat.",
+    "reply_lost": "Răspunsul scris nu a putut fi păstrat. Deschide mesajul și răspunde de acolo."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Caută contacte",
+    "search_files": "Caută fișiere",
+    "import": "Importă",
+    "import_mail": "E-mail…",
+    "import_calendar": "Calendar…",
+    "import_contacts": "Contacte…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Reîmprospătează",
+    "menu_today": "Astăzi",
+    "menu_next_period": "Perioada următoare",
+    "menu_previous_period": "Perioada anterioară",
+    "account_scope_label": "Se afișează {address}. Schimbă contul",
+    "account_scope_menu": "Schimbă contul",
+    "merge_links": "Linkuri",
+    "merge_photo": "Fotografie",
+    "merge_kept": "Se păstrează",
+    "import_show": "Afișează"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact selectat} few {# contacte selectate} other {# de contacte selectate}}",
+    "selection_more": "și încă {count}",
+    "no_addresses": "Niciunul dintre contactele selectate nu are adresă de e-mail.",
+    "task_open": "Deschide",
+    "due_next_week": "Săptămâna viitoare",
+    "due_none": "Fără termen",
+    "due_pick": "Alege o dată…",
+    "move_to_list": "Mută în listă",
+    "dupes_legend": "{count, plural, one {1 este deja în Contacte:} few {# sunt deja în Contacte:} other {# sunt deja în Contacte:}}",
+    "dupes_skip": "Omite-le",
+    "dupes_update": "Actualizează contactele existente",
+    "dupes_updates": "Actualizează contactul",
+    "upload_cancelled": "Încărcare anulată",
+    "upload_cancelled_partial": "{count, plural, one {1 fișier a fost încărcat} few {# fișiere au fost încărcate} other {# de fișiere au fost încărcate}} înainte de anulare",
+    "download_cancelled": "Descărcare anulată"
+  },
+  "desktopEdit": {
+    "edit": "Editează",
+    "edit_named": "Editează {name}",
+    "opened": "{name} este deschis în programul său. Salvați modificările acolo și veți fi întrebat ce să faceți cu ele.",
+    "offers_label": "Atașamente editate",
+    "changed_title": "{name} a fost modificat",
+    "changed_body": "Ați salvat modificări în alt program. Ce să se întâmple cu ele?",
+    "reply": "Atașează la un răspuns",
+    "new_message": "Atașează la un mesaj nou",
+    "open_draft": "Deschide ciorna",
+    "save_copy": "Salvează o copie…",
+    "discard": "Renunță la modificări…",
+    "discard_title": "Renunțați la modificările din {name}?",
+    "discard_detail": "Copia editată este ștearsă. Atașamentul original nu se schimbă.",
+    "discard_confirm": "Renunță",
+    "cancel": "Anulează",
+    "update": "Actualizează atașamentul",
+    "no_app": "Niciun program de pe acest computer nu poate deschide acest fișier.",
+    "blocked_type": "Acest tip de fișier nu poate fi deschis pentru editare, deoarece ar putea rula ca program.",
+    "blocked_policy": "Organizația dvs. nu permite salvarea atașamentelor pe acest dispozitiv.",
+    "removed_policy": "Organizația dvs. nu mai permite acest lucru, așa că a fost ștearsă copia editată a {name}.",
+    "too_large": "Acest fișier este prea mare pentru a fi deschis pentru editare.",
+    "too_many": "Sunt prea multe fișiere deschise pentru editare. Terminați mai întâi cu câteva.",
+    "failed": "Fișierul nu a putut fi deschis pentru editare.",
+    "read_busy": "Alt program încă folosește {name}. Închideți-l acolo și încercați din nou.",
+    "read_failed": "Copia editată a {name} nu a putut fi citită.",
+    "send_stale_title": "{name} are modificări care nu sunt în acest mesaj",
+    "send_stale_detail": "Dacă trimiteți acum, mesajul pleacă cu versiunea mai veche. Modificările rămân pe acest computer până la 30 de zile, până când decideți ce faceți cu ele.",
+    "send_stale_send": "Trimite oricum",
+    "send_stale_back": "Înapoi",
+    "signout_title": "Vă deconectați și ștergeți modificările?",
+    "signout_confirm": "Deconectare",
+    "lock_note": "Fișierele deschise cu Editează rămân deschise în programul lor cât timp aplicația este blocată și rămân lizibile pe acest computer. Altele noi nu se pot deschide până la deblocare.",
+    "changed_title_hidden": "Un atașament editat a fost salvat",
+    "last_chance": "Nefolosit de 30 de zile. Această copie se șterge mâine.",
+    "held_named": "{names}: încă deschis în alt program, așa că copia nu poate fi ștearsă încă. Închideți-l acolo și va fi ștearsă.",
+    "held_unnamed": "Copia unui atașament este încă deschisă în alt program și nu poate fi ștearsă încă. Închideți-o acolo și va fi ștearsă.",
+    "removed_policy_held": "Organizația dvs. nu mai permite acest lucru. {name} este încă deschis în alt program, așa că copia poate fi ștearsă doar după ce îl închideți acolo.",
+    "removed_policy_hidden": "Organizația dvs. nu mai permite editarea atașamentelor, așa că o copie editată a fost eliminată.",
+    "outside_note": "Fișierele de recuperare și lista de fișiere recente ale acelui program nu pot fi șterse de această aplicație.",
+    "clear_title": "Ștergeți atașamentele editate?",
+    "clear_confirm": "Șterge",
+    "signout_changed": "Încă neatașate sau nesalvate, și șterse acum: {names}.",
+    "signout_held": "Încă deschise în alt program, așa că se șterg doar după ce le închideți acolo: {names}."
+  },
+  "desktopPrint": {
+    "title": "Imprimă",
+    "pages_one": "1 pagină",
+    "pages_many": "Pagini: {count}",
+    "preparing": "Se pregătește previzualizarea…",
+    "preview_failed": "Previzualizarea nu a putut fi creată.",
+    "preview_label": "Previzualizare",
+    "destination": "Destinație",
+    "save_as_pdf": "Salvează ca PDF",
+    "pages": "Pagini",
+    "pages_all": "Toate",
+    "pages_custom": "Personalizat",
+    "pages_example": "de ex. 1-3, 5",
+    "pages_invalid": "Introduceți pagini între 1 și {count}, de exemplu 1-3, 5.",
+    "copies": "Copii",
+    "layout": "Aspect",
+    "portrait": "Portret",
+    "landscape": "Peisaj",
+    "color": "Culoare",
+    "color_color": "Color",
+    "color_mono": "Alb-negru",
+    "more": "Mai multe setări",
+    "paper": "Dimensiunea hârtiei",
+    "paper_printer": "Implicit pentru imprimantă",
+    "margins": "Margini",
+    "margins_default": "Implicite",
+    "margins_none": "Fără",
+    "margins_minimum": "Minime",
+    "scale": "Scară (%)",
+    "options": "Opțiuni",
+    "header_footer": "Antete și subsoluri",
+    "background": "Grafică de fundal",
+    "print": "Imprimă",
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "system_dialog": "Imprimă cu dialogul sistemului…",
+    "failed_title": "Imprimarea nu a reușit",
+    "failed_detail": "Imprimanta nu a acceptat lucrarea. Verificați dacă este pornită și încercați din nou."
+  },
+  "files_sync": {
+    "title": "Fișiere pe acest computer",
+    "drive": {
+      "title": "Unitatea Fișiere",
+      "label": "Afișează Fișiere ca unitate",
+      "description": "Fișierele dvs. apar în Explorer ca o unitate. Un fișier se descarcă atunci când îl deschideți.",
+      "unsupported": "Necesită Windows 10 versiunea 1809 sau mai nouă.",
+      "root_name": "Unitatea Fișiere",
+      "letter_label": "Literă de unitate",
+      "letter_description": "Atribuie unității o literă proprie în Explorer.",
+      "letter_none": "Fără literă"
+    },
+    "folders": {
+      "title": "Dosare sincronizate",
+      "description": "Un dosar de pe acest computer și un dosar din Fișiere sunt păstrate identice, în ambele direcții.",
+      "empty": "Încă nu se sincronizează niciun dosar.",
+      "forced_off": "Organizația dvs. a dezactivat sincronizarea dosarelor. Fișierele din ele rămân pe acest computer.",
+      "add": "Adăugați un dosar…",
+      "loading": "Se încarcă dosarele…",
+      "load_failed": "Dosarele dvs. din Fișiere nu au putut fi încărcate. Încercați din nou.",
+      "pick_title": "Ce dosar din Fișiere?",
+      "pick_confirm": "Alegeți un dosar de pe acest computer…",
+      "paired_with": "Cu {folder} din Fișiere",
+      "pause": "Întrerupe",
+      "resume": "Reia",
+      "remove": "Elimină…",
+      "remove_title": "Opriți sincronizarea acestui dosar?",
+      "remove_message": "Fișierele de pe acest computer rămân unde sunt, la fel și cele din Fișiere. Modificările nu mai trec de la unul la altul.",
+      "remove_confirm": "Oprește sincronizarea",
+      "add_failed": {
+        "overlap": "Acest dosar se află într-un dosar sincronizat, conține unul sau este un dosar de sistem. Alegeți altul.",
+        "denied": "Aplicația nu poate folosi acest dosar. Alegeți altul.",
+        "policy": "Organizația dvs. nu permite acest lucru.",
+        "failed": "Dosarul nu a putut fi adăugat. Încercați din nou."
+      }
+    },
+    "status": {
+      "starting": "Se pornește…",
+      "idle": "Actualizat. Ultima sincronizare {time}",
+      "idle_never": "Actualizat",
+      "syncing": "Se sincronizează: {done} gata, {pending} rămase",
+      "paused": "Întrerupt",
+      "offline": "Offline. {count, plural, =0 {Modificările așteaptă serverul} one {# modificare așteaptă serverul} few {# modificări așteaptă serverul} other {# de modificări așteaptă serverul}}",
+      "error": "Oprit: {reason}",
+      "confirm_delete": "Întrerupt până când răspundeți la întrebarea de mai jos",
+      "blocked": "Dezactivat de organizația dvs."
+    },
+    "mass_delete": {
+      "title": "Ștergeți {count, plural, one {# element} few {# elemente} other {# de elemente}}?",
+      "local": "{count, plural, one {# element a fost șters} few {# elemente au fost șterse} other {# de elemente au fost șterse}} din {folder} de pe acest computer. {count, plural, one {Îl ștergeți} few {Le ștergeți} other {Le ștergeți}} și din Fișiere?",
+      "remote": "{count, plural, one {# element a fost șters} few {# elemente au fost șterse} other {# de elemente au fost șterse}} din {folder} din Fișiere. {count, plural, one {Îl ștergeți} few {Le ștergeți} other {Le ștergeți}} și de pe acest computer?",
+      "allow": "{count, plural, one {Șterge-l} few {Șterge-le} other {Șterge-le}}",
+      "restore": "{count, plural, one {Restaurează-l} few {Restaurează-le} other {Restaurează-le}}",
+      "later": "Decideți mai târziu"
+    },
+    "activity": {
+      "title": "Activitate recentă",
+      "empty": "Nu s-a întâmplat nimic încă.",
+      "clear": "Golește",
+      "to_files": "Către Fișiere",
+      "to_computer": "Către acest computer",
+      "mark_conflict": "Conflict de versiuni",
+      "mark_error": "Eroare",
+      "mark_question": "Așteaptă răspunsul dvs.",
+      "uploaded": "S-a încărcat {path}",
+      "downloaded": "S-a descărcat {path}",
+      "folder-created": "S-a creat dosarul {path}",
+      "renamed": "{detail} a fost redenumit în {path}",
+      "moved": "{detail} a fost mutat în {path}",
+      "deleted": "S-a șters {path}",
+      "trashed": "{path} a fost mutat în coșul de gunoi",
+      "conflict": "{path} a fost modificat în ambele locuri. Cealaltă versiune este păstrată ca {detail}",
+      "renamed-for-disk": "{path} se numește {detail} pe acest computer, deoarece numele său nu este permis aici",
+      "too-large": "{path} este mai mare decât permite Fișiere ({detail}). Rămâne doar pe acest computer",
+      "waiting": "{path} așteaptă serverul",
+      "mass-delete": "Întrerupt înainte de ștergerea multor elemente",
+      "error": "{path} nu a putut fi sincronizat"
+    },
+    "errors": {
+      "offline": "Serverul nu poate fi accesat",
+      "server_refused": "Serverul a refuzat modificarea",
+      "too_large": "Fișierul este prea mare pentru Fișiere",
+      "name_invalid": "Numele nu este permis",
+      "disk_full": "Discul este plin",
+      "denied": "Acces refuzat",
+      "busy": "Un alt program îl folosește",
+      "quota": "Spațiul dvs. de stocare din Fișiere este plin",
+      "not_found": "Nu mai există",
+      "policy": "Organizația dvs. nu permite acest lucru",
+      "failed": "Ceva nu a mers bine"
+    },
+    "item": {
+      "label": "Pe acest computer",
+      "synced": "Sincronizat",
+      "syncing": "Se sincronizează",
+      "pending": "Așteaptă sincronizarea",
+      "error": "Nu s-a putut sincroniza",
+      "online-only": "Doar în Fișiere, se descarcă la deschidere"
+    },
+    "show_in": {
+      "explorer": "Afișează în Explorer",
+      "finder": "Afișează în Finder",
+      "file_manager": "Afișează în managerul de fișiere",
+      "failed": "Dosarul nu a putut fi deschis."
+    }
+  },
+  "files_storage": {
+    "title": "Spațiu de stocare în Fișiere",
+    "used_of": "{used} din {total} folosiți",
+    "used": "{used} folosiți",
+    "no_limit": "Serverul nu stabilește nicio limită. Atât ocupă fișierele dvs.",
+    "almost_full": "Spațiul dvs. de stocare din Fișiere este aproape plin",
+    "full": "Spațiul dvs. de stocare din Fișiere este plin",
+    "state_synced": "La zi",
+    "state_syncing": "Se sincronizează",
+    "state_paused": "Întrerupt",
+    "state_offline": "Offline",
+    "state_error": "Oprit"
+  },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Se încarcă modificările înainte de oprirea unității",
+      "title_sign_out": "Se încarcă modificările înainte de deconectare",
+      "title_stop_folder": "Se încarcă modificările înainte de oprirea sincronizării folderului",
+      "cannot_title": "Unele modificări nu pot fi încărcate acum",
+      "waiting": "De încărcat: {names}",
+      "progress": "{done} din {total} încărcate",
+      "cannot_offline": "Serverul nu poate fi accesat. Încă neîncărcate: {names}",
+      "cannot_other": "Nu pot fi încărcate: {names}. Activitatea recentă din Setări arată motivul.",
+      "go_note_drive": "Dacă continuați acum, ce nu s-a încărcat se copiază în Documente\\Bulwark – not uploaded. Nu se pierde nimic.",
+      "go_note_folder": "Dacă continuați acum, ce nu s-a încărcat rămâne în folderul de pe acest computer.",
+      "keep_turn_off": "Păstrează unitatea",
+      "keep_sign_out": "Rămâi conectat",
+      "keep_stop_folder": "Continuă sincronizarea",
+      "go_turn_off": "Oprește acum",
+      "go_sign_out": "Deconectează-te acum",
+      "go_stop_folder": "Oprește sincronizarea acum"
+    },
+    "drive": {
+      "off_note": "Dacă dezactivați, unitatea dispare din Explorer. Fișierele rămân în Fișiere.",
+      "rescued": "Fișierele neîncărcate ({count}) sunt acum în {folder}.",
+      "rescued_open": "Deschide folderul",
+      "rescued_dismiss": "Ascunde",
+      "start_at_login": "Pornește Bulwark la conectarea în Windows",
+      "start_at_login_why": "Unitatea are nevoie ca Bulwark să ruleze, ca OneDrive.",
+      "closed_warning": "Fișierele din unitate nu se deschid cât timp Bulwark este închis.",
+      "where": "În Explorer ca Bulwark Files",
+      "where_letter": "În Explorer ca Bulwark Files ({letter}:)",
+      "open": "Deschide",
+      "letter_note": "Prin literă, Explorer nu arată starea sincronizării și nici „Păstrați întotdeauna pe acest dispozitiv”. Le găsiți sub Bulwark Files în Explorer.",
+      "letter_failed": "Litera unității nu a putut fi setată. Încercați din nou."
+    },
+    "tray": {
+      "idle": "Bulwark Files: La zi",
+      "syncing": "Bulwark Files: Se sincronizează. Rămase: {count}",
+      "paused": "Bulwark Files: Întrerupt",
+      "offline": "Bulwark Files: Offline. În așteptare: {count}",
+      "question": "Bulwark Files: Așteaptă răspunsul dvs.",
+      "error": "Bulwark Files: Eroare"
+    },
+    "notify": {
+      "conflict_title": "Un fișier a fost modificat în două locuri",
+      "problem_title": "Un fișier nu poate fi sincronizat"
+    },
+    "activity": {
+      "waiting_count": "Modificări care așteaptă serverul: {count}",
+      "disk_name": "{path} din Fișiere se numește {detail} pe acest computer, pentru că unele caractere nu sunt permise aici",
+      "disk_case": "{path} din Fișiere se numește {detail} pe acest computer, pentru că aici există deja un nume care diferă doar prin majuscule",
+      "disk_group": "Nume din Fișiere pe care acest computer nu le permite: {count}. Aici au nume puțin diferite.",
+      "show": "Afișează",
+      "hide": "Ascunde"
+    },
+    "cant_sync": {
+      "title": "Nu se poate sincroniza"
+    },
+    "folders": {
+      "stop": "Oprește sincronizarea…",
+      "pick_title_known": "Cu ce folder din Fișiere să rămână la fel {name}?",
+      "pick_confirm_known": "Păstrează-le la fel"
+    },
+    "pin": {
+      "keep": "Păstrați întotdeauna pe acest dispozitiv",
+      "free": "Eliberați spațiu",
+      "failed": "Nu a funcționat. Încercați din nou în Explorer."
+    },
+    "account": {
+      "of": "Fișierele lui {address}",
+      "choose": "Fișierele lui"
+    }
+  },
+  "desktopQuickCompose": {
+    "label": "Scriere rapidă",
+    "menu": "Scriere rapidă",
+    "description": "{keys} deschide o fereastră mică pentru un mesaj nou, din orice altă aplicație.",
+    "description_off": "Deschide o fereastră mică pentru un mesaj nou, din orice altă aplicație.",
+    "taken": "Altă aplicație folosește {keys}, așa că aici nu face nimic. Alege alte taste sau închide aplicația respectivă.",
+    "change": "Schimbă tastele: {keys}",
+    "recording": "Apasă tastele…",
+    "recording_hint": "Ține apăsată tasta Ctrl (Cmd pe Mac) cu Alt sau Shift și apasă o literă, o cifră, Enter sau o tastă funcțională. Esc anulează.",
+    "back_to_main": "Mută în fereastra principală",
+    "back_busy": "Fereastra principală are deja un mesaj deschis. Închide-l și încearcă din nou.",
+    "back_no_answer": "Fereastra principală nu a răspuns. Mesajul rămâne aici.",
+    "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
+    "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
+  },
+  "desktopAttachRecent": {
+    "heading": "Fișiere recente",
+    "browse": "Răsfoiește acest computer…",
+    "from_files": "Din Fișiere…",
+    "missing": "„{name}” nu mai există.",
+    "too_large": "„{name}” depășește {max} și nu poate fi atașat.",
+    "failed": "„{name}” nu a putut fi atașat. Încearcă din nou."
+  },
+  "composeRecentLimit": {
+    "too_large": "Prea mare",
+    "too_large_hint": "Mai mare decât acceptă serverul ({max})"
+  },
+  "compose_windows": {
+    "more_formatting": "Mai multe opțiuni de formatare",
+    "offline": "Offline",
+    "offline_hint": "Pentru trimitere e nevoie de conexiune.",
+    "offline_hint_outbox": "Ce trimiteți acum așteaptă în Mesaje de trimis și pleacă atunci când sunteți din nou online.",
+    "offline_send_saved": "Sunteți offline. Mesajul este salvat în Ciorne.",
+    "offline_send_unsaved": "Sunteți offline. Mesajul rămâne aici și este salvat în Ciorne când sunteți din nou online."
+  },
+  "composer_panel": {
+    "show_panel": "Afișează {name}",
+    "hide_panel": "Ascunde {name}"
+  },
+  "desktopDevTools": {
+    "section_title": "Depanare",
+    "label": "Instrumente pentru dezvoltatori ({shortcut})",
+    "description": "Permite ca {shortcut} și F12 să deschidă instrumentele pentru dezvoltatori în fereastra în care sunteți. Se oprește când aplicația se blochează.",
+    "forced_off": "Oprit de organizația dvs.",
+    "locked": "Deblocați aplicația pentru a schimba asta.",
+    "menu_toggle": "Afișați sau ascundeți instrumentele pentru dezvoltatori"
+  },
+  "fileDrop": {
+    "overlay_label": "Plasați fișiere",
+    "overlay_title": "Unde merg fișierele?",
+    "overlay_hint": "Plasați în afara opțiunilor sau apăsați Esc pentru a anula.",
+    "files_unknown": "Fișiere",
+    "files_summary": "{count, plural, one {# fișier} few {# fișiere} other {# de fișiere}}",
+    "files_summary_size": "{count, plural, one {# fișier} few {# fișiere} other {# de fișiere}}, {size}",
+    "zone_attach_here": "Atașați la acest mesaj",
+    "zone_insert_inline": "Inserați în mesaj",
+    "zone_new_message": "Atașați la un mesaj nou",
+    "zone_upload_files": "Încărcați în Fișiere",
+    "zone_upload_folder": "Încărcați în {folder}",
+    "zone_calendar": "Adăugați în calendar",
+    "zone_contacts": "Adăugați la contacte",
+    "zone_open_eml": "Deschideți mesajul",
+    "zone_import_eml": "Importați în {folder}",
+    "note_limit_message": "Până la {size} pe mesaj",
+    "note_limit_file": "Până la {size} pe fișier",
+    "note_kept_offline": "Rămâne pe acest dispozitiv până reveniți online",
+    "note_needs_connection": "Necesită conexiune",
+    "announce": "{files, plural, =0 {Fișiere trase} one {# fișier tras} few {# fișiere trase} other {# de fișiere trase}}. Opțiuni: {choices}.",
+    "choose_title": "{count, plural, one {Unde merge acest fișier?} few {Unde merg aceste fișiere?} other {Unde merg aceste fișiere?}}",
+    "save_first_failed": "Mesajul deschis nu a putut fi salvat, așa că aplicația a rămas unde era.",
+    "import_done": "{count, plural, one {# mesaj importat în {folder}.} few {# mesaje importate în {folder}.} other {# de mesaje importate în {folder}.}}",
+    "import_failed": "{name} nu a putut fi importat.",
+    "too_large_file": "{name} este prea mare. Limita este {max} pe fișier.",
+    "too_large_message": "Aceste fișiere sunt prea mari pentru un mesaj. Limita este {max}.",
+    "folders_left_out": "Dosarele pot merge doar în Fișiere, așa că au fost lăsate deoparte.",
+    "nothing_here": "Aceste fișiere nu pot fi folosite aici."
+  },
+  "desktopReminders": {
+    "generic_title": "Memento",
+    "snooze": "Amână {count} min",
+    "snooze_short": "{count} min",
+    "open": "Deschide",
+    "join": "Participă",
+    "missed_title": "{count, plural, one {# memento ratat} few {# mementouri ratate} other {# de mementouri ratate}}",
+    "missed_more": "și încă {count}",
+    "missed_show": "Afișează",
+    "missed_dialog_title": "Mementouri ratate",
+    "missed_dialog_description": "Au venit la scadență cât timp aplicația era închisă, computerul în repaus sau notificările în pauză.",
+    "open_calendar": "Deschide calendarul",
+    "done": "Gata",
+    "join_host": "Participă ({host})",
+    "join_named": "Participă: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Instrumente pentru dezvoltatori",
+    "updates_label": "Caută actualizări",
+    "search": {
+      "quick_compose": "scriere rapidă mesaj nou de oriunde comandă rapidă globală",
+      "files_drive": "eliberează spațiu OneDrive Dropbox Explorer Finder literă de unitate fișiere la cerere",
+      "offline_space": "eliberează spațiu spațiu pe disc stocare",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID amprentă față cheie de acces passkey"
+    }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Confidențialitate și securitate",
+      "security": "Parolă și conectare",
+      "about_updates": "Despre și actualizări",
+      "backup": "Copie de rezervă și import"
+    },
+    "sections": {
+      "start": "Pornire și închidere",
+      "shortcuts": "Comenzi rapide din alte aplicații",
+      "mail_links": "Linkuri și fișiere de e-mail"
+    },
+    "privacy_link_description": "Aceste setări sunt pe pagina Confidențialitate și securitate."
+  },
+  "desktop_policy": {
+    "server_refused": "Organizația ta nu permite acest server pe acest dispozitiv.",
+    "plugin_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv, așa că nu rulează. Setările și datele sale sunt păstrate.",
+    "install_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv.",
+    "plugins_label": "Pluginuri",
+    "plugins_off": "Organizația ta a dezactivat pluginurile pe acest dispozitiv.",
+    "plugins_allowlist": "Organizația ta permite doar anumite pluginuri pe acest dispozitiv.",
+    "off": "Dezactivat"
+  },
+  "desktopTelemetry": {
+    "section_title": "Date de utilizare și rapoarte de blocare",
+    "section_description": "Ambele sunt oprite până le porniți și fiecare are propriul comutator.",
+    "telemetry_label": "Trimite date de utilizare",
+    "telemetry_description": "O dată pe zi: un ID aleatoriu, numerele de versiune ale aplicației, sistemul de operare, de cât timp rulează aplicația și cum se conectează. Cu propriul server de e-mail, și ce funcții sunt pornite, un număr aproximativ de conturi și câte pluginuri și teme aveți. Niciodată e-mailuri, adrese sau nume de servere.",
+    "crash_label": "Trimite rapoarte de blocare",
+    "crash_description": "Erorile din aplicație pleacă cu un ID aleatoriu, nume de fișiere din codul aplicației și mesaje scurte, curățate. Dacă aplicația însăși se blochează, un fișier de blocare rămâne pe acest computer și pleacă doar dacă îl trimiteți.",
+    "crash_memory": "Un fișier de blocare este o copie a unei părți din memoria aplicației din momentul blocării. Bulwark elimină numele de utilizator, adresele și tokenurile de autentificare pe care le găsește, dar un fișier de blocare poate conține totuși textul e-mailurilor dvs.",
+    "instance_note": "Pe un server Bulwark, administratorul acestuia decide separat ce îi raportează paginile.",
+    "forced_off": "Organizația dvs. a oprit această opțiune.",
+    "url_label": "Unde ajung fișierele de blocare",
+    "url_description": "Adresa https care primește un fișier de blocare. Bulwark nu vine cu una.",
+    "url_invalid": "Introduceți o adresă https completă.",
+    "url_save": "Salvează",
+    "files_label": "Fișiere de blocare pe acest computer",
+    "files_description": "Bulwark le păstrează pe cele mai noi și le șterge pe cele mai vechi de o lună.",
+    "files_empty": "Nu există fișiere de blocare.",
+    "file_size": "{size} KB",
+    "send": "Trimite raportul de blocare…",
+    "delete_all": "Șterge tot",
+    "sent": "Raport de blocare trimis.",
+    "send_no_consent": "Porniți mai întâi rapoartele de blocare.",
+    "send_no_url": "Nu este setată nicio adresă, deci nu există unde să fie trimis. Introduceți una mai sus.",
+    "send_failed": "Raportul de blocare nu a putut fi trimis."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Numărul de necitite pe pictograma din bara de activități",
+    "unread_badge_description": "Ca să vedeți e-mailurile noi în timp ce lucrați în altă aplicație.",
+    "tip_compose_keys": "Apăsați {keys} pentru a scrie un mesaj nou",
+    "tip_palette_keys": "Apăsați {keys} pentru a găsi orice comandă"
+  },
+  "uxp3_desktop": {
+    "web_address": "Adresă web"
+  },
+  "selectionView": {
+    "starred": "Marcat cu stea",
+    "unstarred": "Stea eliminată"
+  },
+  "impersonation": {
+    "return_notice": "Ați deschis {mailbox} prin impersonare.",
+    "return_button": "Înapoi la contul meu"
   }
 }

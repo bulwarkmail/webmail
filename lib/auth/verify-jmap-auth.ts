@@ -5,6 +5,8 @@ import {
   type PublicFetchResponse,
 } from '@/lib/security/url-guard';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
+import { observeUpstream } from '@/lib/metrics/upstream';
+import { desktopRedirectRefused } from '@/lib/desktop/server-redirect';
 
 const VERIFY_TIMEOUT_MS = 10000;
 const MAX_REDIRECTS = 3;
@@ -150,7 +152,7 @@ export function assertBasicAuthMatchesUsername(authHeader: string, claimedUserna
 
 export interface VerifiedJmapSession {
   apiUrl: string;
-  /** Canonical login name the server reports for the credential (RFC 8620 §2). */
+  /** Canonical login name the server reports for the credential (RFC 8620 Â§2). */
   username?: string;
   primaryAccounts?: Record<string, string>;
   accounts: Record<string, unknown>;
@@ -242,6 +244,41 @@ export interface ResolvedJmapIdentity {
   accountName: string;
 }
 
+export interface JmapSessionIdentity {
+  /** Normalized server URL. */
+  serverUrl: string;
+  /**
+   * The addresses the session names for the credential, lowercased: its
+   * `username` and the name of its primary mail account. Shared and group
+   * accounts are left out.
+   */
+  addresses: string[];
+}
+
+/**
+ * Who `authHeader` signs in as, read from the server's JMAP session alone:
+ * for a credential that comes with no username claim, such as the mobile
+ * app's access token. One request; throws {@link JmapAuthVerificationError}
+ * like {@link verifyJmapAuth} when the server refuses it.
+ */
+export async function fetchJmapSessionIdentity(
+  serverUrl: string,
+  authHeader: string,
+  options: VerifyJmapAuthOptions = {},
+): Promise<JmapSessionIdentity> {
+  const { serverUrl: normalizedServerUrl, session } = await fetchVerifiedSession(serverUrl, authHeader, options);
+  const addresses = new Set<string>();
+  if (session.username) addresses.add(session.username);
+  const mailAccountId = session.primaryAccounts?.['urn:ietf:params:jmap:mail'];
+  const mailAccount = typeof mailAccountId === 'string' ? session.accounts[mailAccountId] : undefined;
+  const accountName = (mailAccount as { name?: unknown } | undefined)?.name;
+  if (typeof accountName === 'string') addresses.add(accountName);
+  return {
+    serverUrl: normalizedServerUrl,
+    addresses: [...addresses].map((a) => a.trim().toLowerCase()).filter(Boolean),
+  };
+}
+
 /** {@link verifyJmapIdentity}, also returning the account name to key per-user data on. */
 export async function resolveJmapIdentity(
   serverUrl: string,
@@ -326,9 +363,13 @@ async function fetchIdentityEmails(
     };
     // No redirect handling here: a redirect on the POST would downgrade it to
     // a GET and can only come from a misconfigured proxy - treat as failure.
-    const response = options.trusted
-      ? await fetch(apiUrl, { ...requestInit, redirect: 'manual' })
-      : await fetchPublicUrl(apiUrl, requestInit);
+    // Measured and traced like every call to Stalwart (lib/metrics/upstream.ts).
+    const response = await observeUpstream('stalwart', async (trace) => {
+      const init = { ...requestInit, headers: { ...requestInit.headers, ...trace } };
+      return options.trusted
+        ? await fetch(apiUrl, { ...init, redirect: 'manual' })
+        : await fetchPublicUrl(apiUrl, init);
+    });
     if (!response.ok) {
       throw new JmapAuthVerificationError(
         response.status === 401 || response.status === 403
@@ -400,16 +441,24 @@ async function fetchVerifiedSession(
       // Untrusted (user-supplied) endpoints connect through the rebinding-safe
       // fetch so the address validated above is the one the socket uses.
       // Admin-configured servers may legitimately live on private addresses.
-      response = options.trusted
-        ? await fetch(currentUrl, { ...requestInit, redirect: 'manual' })
-        : await fetchPublicUrl(currentUrl, requestInit);
+      const target = currentUrl;
+      response = await observeUpstream('stalwart', async (trace) => {
+        const init = { ...requestInit, headers: { ...requestInit.headers, ...trace } };
+        return options.trusted
+          ? await fetch(target, { ...init, redirect: 'manual' })
+          : await fetchPublicUrl(target, init);
+      });
 
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get('location');
         if (!location) {
           throw new JmapAuthVerificationError('Failed to verify JMAP session', 502);
         }
-        currentUrl = new URL(location, currentUrl).toString();
+        const next = new URL(location, currentUrl).toString();
+        if (desktopRedirectRefused(currentUrl, next, options.trusted === true)) {
+          throw new JmapAuthVerificationError('The mail server redirected to a server that has not been approved', 502);
+        }
+        currentUrl = next;
         continue;
       }
       break;

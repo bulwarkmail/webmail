@@ -20,6 +20,9 @@
  *   with it everything is scanned and sorted, and position and limit page
  *   it. A user without Impersonate is refused an `accountId` filter
  *   (`unsupportedFilter`);
+ * - /get for a user without Impersonate: only the items of the call's
+ *   account, each without `accountId` (crates/jmap/src/registry/get.rs
+ *   `insert`, 1.0.1; #1480);
  * - the /set answer: crates/jmap/src/registry/mapping/archived_item.rs
  *   (`updated` with null, `notUpdated` with `notFound`).
  * The `forbidden` refusal is the one the unlicensed test servers really
@@ -114,7 +117,9 @@ export function fakeArchiveServer(items: Array<Record<string, unknown>>, options
       if (method === 'x:ArchivedItem/get') {
         const ids = args.ids as string[];
         const visible = ids.map((i) => byId.get(i)).filter((i): i is Record<string, unknown> => !!i && (!!options.impersonate || i.accountId === account));
-        return [method, { accountId: account, list: visible, notFound: ids.filter((i) => !visible.some((v) => v.id === i)) }, callId];
+        // Without Impersonate the server leaves accountId out of every item (registry/get.rs `insert`).
+        const list = options.impersonate ? visible : visible.map(({ accountId: _owner, ...rest }) => rest);
+        return [method, { accountId: account, list, notFound: ids.filter((i) => !visible.some((v) => v.id === i)) }, callId];
       }
       if (method === 'x:ArchivedItem/set') {
         const ids = Object.keys(args.update as object);

@@ -8,6 +8,7 @@ import { AdminLink } from '@/components/admin/admin-link';
 import { AdminList, AdminListRow } from '@/components/admin/list';
 import { Badge } from '@/components/admin/badge';
 import type { AuditEntry } from '@/lib/admin/types';
+import { formatAuditDetail } from '@/lib/admin/audit-format';
 import { adminPageDef, adminPath } from '@/lib/admin/admin-nav';
 import { apiFetch } from '@/lib/browser-navigation';
 import type { UpdateStatus } from '@/lib/version-check/types';
@@ -34,6 +35,34 @@ interface VersionData {
   status: UpdateStatus | null;
 }
 
+interface InstancesData {
+  mode: 'local' | 'redis';
+  location: string;
+  instances: number | null;
+}
+
+/** The storage line: which store, and how many instances share it (#1066). */
+export function storageSummary(data: InstancesData | null): { value: string; description?: string } {
+  if (!data) return { value: '-' };
+  if (data.mode === 'local') return { value: 'Local files on this server' };
+  const count = data.instances === null
+    ? 'store unreachable'
+    : `${data.instances} ${data.instances === 1 ? 'instance' : 'instances'} checked in during the last minute`;
+  return { value: `Shared store, ${count}`, description: data.location };
+}
+
+/**
+ * The line under the version number. Only the server's updateAvailable means
+ * there is something to install: latest can be older than what runs here, right
+ * after a release or on a beta. A version the server doesn't know gets no line.
+ */
+export function versionSummary(version: VersionData | null): { text?: string; tone: StatTone } {
+  if (!version || version.status?.severity === 'unknown') return { tone: 'muted' };
+  const { updateAvailable, latest, severity } = version.status ?? {};
+  if (!updateAvailable || !latest) return { text: 'Up to date', tone: 'muted' };
+  return { text: `v${latest} available`, tone: severity === 'security' || severity === 'deprecated' ? 'danger' : 'warning' };
+}
+
 const PAGE = adminPageDef('dashboard');
 
 export function DashboardPage() {
@@ -47,13 +76,14 @@ export function DashboardPage() {
   const [themeCount, setThemeCount] = useState(0);
   const [accountCounts, setAccountCounts] = useState<{ total: number; active7d: number } | null>(null);
   const [version, setVersion] = useState<VersionData | null>(null);
+  const [instances, setInstances] = useState<InstancesData | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   async function fetchDashboardData() {
-    const [statusRes, auditRes, configRes, adminConfigRes, pluginRes, approvalsRes, themeRes, telemetryRes, versionRes] = await Promise.all([
+    const [statusRes, auditRes, configRes, adminConfigRes, pluginRes, approvalsRes, themeRes, telemetryRes, versionRes, instancesRes] = await Promise.all([
       apiFetch('/api/admin/auth'),
       apiFetch('/api/admin/audit?limit=10'),
       apiFetch('/api/config'),
@@ -63,6 +93,7 @@ export function DashboardPage() {
       apiFetch('/api/admin/themes').catch(() => null),
       apiFetch('/api/admin/telemetry').catch(() => null),
       apiFetch('/api/admin/version').catch(() => null),
+      apiFetch('/api/admin/instances').catch(() => null),
     ]);
 
     if (statusRes.ok) setStatus(await statusRes.json());
@@ -99,6 +130,10 @@ export function DashboardPage() {
       const data = await versionRes.json();
       if (typeof data?.current === 'string') setVersion({ current: data.current, status: data.status ?? null });
     }
+    if (instancesRes?.ok) {
+      const data = await instancesRes.json();
+      if (data?.mode === 'local' || data?.mode === 'redis') setInstances(data);
+    }
 
     const w: string[] = [];
     if (adminConfigRes.ok) {
@@ -118,16 +153,11 @@ export function DashboardPage() {
     setWarnings(w);
   }
 
+  const storage = storageSummary(instances);
   const jmapUrl = config?.jmapServerUrl || '-';
   const jmapHostname = jmapUrl !== '-' ? (() => { try { return new URL(jmapUrl).hostname; } catch { return jmapUrl; } })() : '-';
 
-  const newer = version?.status?.latest && version.status.latest !== version.current ? version.status.latest : null;
-  const severity = version?.status?.severity ?? 'none';
-  const versionSub: { text?: string; tone: StatTone } = !version
-    ? { tone: 'muted' }
-    : newer
-      ? { text: `v${newer} available`, tone: severity === 'security' || severity === 'deprecated' ? 'danger' : 'warning' }
-      : { text: 'Up to date', tone: 'muted' };
+  const versionSub = versionSummary(version);
 
   return (
     <div>
@@ -172,6 +202,9 @@ export function DashboardPage() {
           <SettingItem label="Application">
             <span className="text-sm text-foreground">{config?.appName || '-'}</span>
           </SettingItem>
+          <SettingItem label="Storage" description={storage.description}>
+            <span className="text-sm text-foreground">{storage.value}</span>
+          </SettingItem>
           <SettingItem label="JMAP server" description={jmapUrl !== '-' ? jmapUrl : undefined}>
             <span className="text-sm text-foreground">{jmapHostname}</span>
           </SettingItem>
@@ -200,7 +233,7 @@ export function DashboardPage() {
                 <AdminListRow
                   key={i}
                   title={<code className="font-mono text-xs">{entry.action}</code>}
-                  description={formatDetail(entry.detail) || undefined}
+                  description={formatAuditDetail(entry.detail) || undefined}
                   meta={<>{entry.ip} &middot; {new Date(entry.ts).toLocaleString()}</>}
                 />
               ))}
@@ -253,12 +286,4 @@ function StatTile({ label, value, sub, subTone = 'muted', href }: StatTileProps)
 
 function OnOff({ on }: { on: boolean }) {
   return <Badge tone={on ? 'success' : 'muted'}>{on ? 'On' : 'Off'}</Badge>;
-}
-
-function formatDetail(detail: Record<string, unknown>): string {
-  if (!detail || Object.keys(detail).length === 0) return '';
-  if (detail.key) return `${detail.key}: ${detail.old} → ${detail.new}`;
-  if (detail.reason) return String(detail.reason);
-  if (detail.changes && Array.isArray(detail.changes)) return `${detail.changes.length} setting(s) changed`;
-  return JSON.stringify(detail).slice(0, 80);
 }

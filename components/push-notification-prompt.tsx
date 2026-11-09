@@ -19,8 +19,10 @@ import {
   resyncWebPush,
   waitForWebPushResync,
 } from "@/lib/web-push";
+import { webPushErrorKey } from "@/lib/web-push-errors";
 import { resolveActiveRelayUrl } from "@/lib/push-relays";
-import { jmapErrorType } from "@/lib/jmap/jmap-error";
+import { productName } from "@/lib/product-name";
+import { useConfig } from "@/hooks/use-config";
 import {
   isPWAInstallPromptVisible,
   PWA_INSTALL_PROMPT_VISIBILITY_EVENT,
@@ -92,6 +94,7 @@ export function PushNotificationPrompt() {
   const pathname = usePathname();
   const tPush = useTranslations("settings.notifications.push");
   const tInstall = useTranslations("pwa_install");
+  const appName = productName(useConfig().appName);
 
   const client = useAuthStore((state) => state.client);
   const username = useAuthStore((state) => state.username);
@@ -310,11 +313,9 @@ export function PushNotificationPrompt() {
       });
       setShowPrompt(false);
     } catch (err) {
-      // Readable text for the server refusals a user can act on.
-      const type = jmapErrorType(err);
-      if (type === "forbidden") setError(tPush("error_forbidden"));
-      else if (type === "overQuota") setError(tPush("error_over_quota"));
-      else setError(err instanceof Error ? err.message : "Failed to enable push");
+      // Readable text for what a user can act on.
+      const key = webPushErrorKey(err);
+      setError(key ? tPush(key) : err instanceof Error ? err.message : "Failed to enable push");
     } finally {
       setIsEnabling(false);
     }
@@ -342,7 +343,7 @@ export function PushNotificationPrompt() {
           <Bell className="w-5 h-5 mt-0.5 text-primary shrink-0" />
           <div>
             <h3 className="font-semibold text-sm text-foreground">
-              {tPush("title")}
+              {tPush("title", { appName })}
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
               {tPush("description")}

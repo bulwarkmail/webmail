@@ -1,0 +1,450 @@
+/*
+ * Page skeletons (components/boot-skeleton).
+ *
+ * The server draws every variant of a skeleton; these variants show the one
+ * that matches the attributes the boot script set on <html> before the first
+ * paint (lib/boot-skeleton/boot-script.ts). Part of the first stylesheet, so
+ * nothing here arrives late.
+ */
+
+/* Mountain View shell. Its geometry only applies on desktop, so pair it with
+   desk: in markup (desk:mv:hidden), except the phone bottom bar, which follows
+   the layout at every width. */
+@custom-variant mv (&:where([data-interface-layout="mountain-view"] *));
+
+/* Mail layout (effectiveMailLayout: Mountain View and simple mode are focus). */
+@custom-variant boot-split (&:where([data-boot-mail-layout="split"] *));
+@custom-variant boot-horizontal (&:where([data-boot-mail-layout="horizontal"] *));
+@custom-variant boot-focus (&:where([data-boot-mail-layout="focus"] *));
+/* One pane at a time: the focused layout, and the split layout in a window
+   too narrow for the list and the reader side by side (SPLIT_PANES_MIN,
+   useDrawnMailLayout). The rows keep the split layout's shape (boot-focus). */
+@custom-variant boot-onepane {
+  &:where([data-boot-mail-layout="focus"] *) {
+    @slot;
+  }
+  @media (width < 52.5rem) {
+    &:where([data-boot-mail-layout="split"] *) {
+      @slot;
+    }
+  }
+}
+
+/* Compose heads the folder sidebar, in place of the account switcher. */
+@custom-variant boot-sidebar-compose (&:where([data-boot-sidebar-compose="on"] *));
+
+/* A message, thread, contact, settings page or admin page is open. */
+@custom-variant boot-open (&:where([data-boot-pane] *));
+@custom-variant boot-thread (&:where([data-boot-pane="thread"] *));
+
+/* The Pro interface takes this page over on a desktop. */
+@custom-variant boot-pro (&:where([data-boot-pro="on"] *));
+
+/* Nothing stored that checkAuth could restore: draw the login card. */
+@custom-variant boot-out (&:where([data-boot-auth="out"] *));
+
+/* Calendar view. */
+@custom-variant boot-cal-month (&:where([data-boot-calendar-view="month"] *));
+@custom-variant boot-cal-week (&:where([data-boot-calendar-view="week"] *));
+@custom-variant boot-cal-day (&:where([data-boot-calendar-view="day"] *));
+@custom-variant boot-cal-agenda (&:where([data-boot-calendar-view="agenda"] *));
+@custom-variant boot-cal-tasks (&:where([data-boot-calendar-view="tasks"] *));
+@custom-variant boot-cal-collapsed (&:where([data-boot-collapsed~="calendar"] *));
+
+/* Files. */
+@custom-variant boot-files-grid (&:where([data-boot-files-view="grid"] *));
+@custom-variant boot-files-details (&:where([data-boot-files-details="on"] *));
+
+/* What the rail showed last time (bulwark-boot-hints). Without hints every
+   app is drawn: the rail of a server with all of them. */
+@custom-variant boot-no-calendar (&:where([data-boot-rail]:not([data-boot-rail~="calendar"]) *));
+@custom-variant boot-no-contacts (&:where([data-boot-rail]:not([data-boot-rail~="contacts"]) *));
+@custom-variant boot-no-files (&:where([data-boot-rail]:not([data-boot-rail~="files"]) *));
+@custom-variant boot-rail-add-app (&:where([data-boot-rail~="add-app"] *));
+@custom-variant boot-rail-admin (&:where([data-boot-rail~="admin"] *));
+@custom-variant boot-rail-a11y (&:where([data-boot-rail~="a11y"] *));
+@custom-variant boot-rail-quota (&:where([data-boot-rail~="quota"] *));
+
+/* A placeholder shape. A slow opacity pulse rather than a moving shimmer:
+   opacity runs on the compositor, so the skeleton costs the main thread
+   nothing while the app's JS is still starting up. The colour is a tint of
+   the text colour rather than --color-muted, which equals the sidebar
+   colour in dark mode (and nearly so in light mode), so shapes show on every
+   panel and follow a theme's palette. */
+.sk-shape {
+  background-color: color-mix(in oklab, var(--color-foreground) 9%, transparent);
+  animation: sk-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes sk-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Reduced motion: no pulse at all (the global rule only shortens it). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .sk-shape {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .sk-shape {
+  animation: none;
+}
+
+/* More contrast: shapes that stand out from the panels they sit on. */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) .sk-shape {
+    background-color: color-mix(in oklab, var(--color-foreground) 28%, transparent);
+  }
+}
+:root[data-contrast="more"] .sk-shape {
+  background-color: color-mix(in oklab, var(--color-foreground) 28%, transparent);
+}
+
+/* Forced colours drop backgrounds; keep the shapes as system grey. */
+@media (forced-colors: active) {
+  .sk-shape {
+    forced-color-adjust: none;
+    background-color: GrayText;
+    animation: none;
+  }
+}
+
+/* pro */
+
+/* The Pro shell takes a standard page over (components/boot-skeleton/shell.tsx):
+   on a desktop with the Pro interface on, unless the visitor is signed out,
+   and never again inside the Pro shell itself (an embedded page's gate). */
+@custom-variant boot-pro-frame (&:where([data-boot-pro="on"]:not([data-boot-auth="out"]) *):not(:where([data-pro-shell] *)));
+
+/* The Pro split pane, on its stored side. */
+@custom-variant boot-pro-split (&:where([data-boot-pro-split] *));
+@custom-variant boot-pro-split-left (&:where([data-boot-pro-split="left"] *));
+
+/* Each pane's tab strip draws as many tabs as the store holds (up to eight),
+   and its body the active tab's page (lib/boot-skeleton/boot-script.ts,
+   data-boot-pro-<pane>-tabs / -active / -kind). One tab and mail without them. */
+[data-sk-pro-tab]:nth-child(n+2),
+[data-sk-pro-body] {
+  display: none;
+}
+:root[data-boot-pro-main-tabs="2"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+2),
+:root[data-boot-pro-main-tabs="3"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+3),
+:root[data-boot-pro-main-tabs="4"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+4),
+:root[data-boot-pro-main-tabs="5"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+5),
+:root[data-boot-pro-main-tabs="6"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+6),
+:root[data-boot-pro-main-tabs="7"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+7),
+:root[data-boot-pro-main-tabs="8"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(-n+8),
+:root[data-boot-pro-split-tabs="2"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+2),
+:root[data-boot-pro-split-tabs="3"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+3),
+:root[data-boot-pro-split-tabs="4"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+4),
+:root[data-boot-pro-split-tabs="5"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+5),
+:root[data-boot-pro-split-tabs="6"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+6),
+:root[data-boot-pro-split-tabs="7"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+7),
+:root[data-boot-pro-split-tabs="8"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(-n+8) {
+  display: flex;
+}
+:root:not([data-boot-pro-main-active]) [data-sk-pro-pane="main"] [data-sk-pro-tab]:first-child,
+:root:not([data-boot-pro-split-active]) [data-sk-pro-pane="split"] [data-sk-pro-tab]:first-child,
+:root[data-boot-pro-main-active="0"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(1),
+:root[data-boot-pro-main-active="1"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(2),
+:root[data-boot-pro-main-active="2"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(3),
+:root[data-boot-pro-main-active="3"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(4),
+:root[data-boot-pro-main-active="4"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(5),
+:root[data-boot-pro-main-active="5"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(6),
+:root[data-boot-pro-main-active="6"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(7),
+:root[data-boot-pro-main-active="7"] [data-sk-pro-pane="main"] [data-sk-pro-tab]:nth-child(8),
+:root[data-boot-pro-split-active="0"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(1),
+:root[data-boot-pro-split-active="1"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(2),
+:root[data-boot-pro-split-active="2"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(3),
+:root[data-boot-pro-split-active="3"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(4),
+:root[data-boot-pro-split-active="4"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(5),
+:root[data-boot-pro-split-active="5"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(6),
+:root[data-boot-pro-split-active="6"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(7),
+:root[data-boot-pro-split-active="7"] [data-sk-pro-pane="split"] [data-sk-pro-tab]:nth-child(8) {
+  /* ProTabBar's active tab; its bottom edge covers the strip's border. */
+  background-color: var(--color-background);
+  border-inline-color: rgba(128, 128, 128, 0.3);
+  --sk-pro-tab-accent: var(--sk-pro-pane-accent);
+}
+:root:not([data-boot-pro-focus="split"]) [data-sk-pro-pane="main"],
+:root[data-boot-pro-focus="split"] [data-sk-pro-pane="split"] {
+  /* The focused pane's active tab carries the accent top edge. */
+  --sk-pro-pane-accent: var(--color-primary);
+}
+:root:not([data-boot-pro-main-kind]) [data-sk-pro-pane="main"] [data-sk-pro-body="mail"],
+:root:not([data-boot-pro-split-kind]) [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-main-kind="mail"] [data-sk-pro-pane="main"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-main-kind="calendar"] [data-sk-pro-pane="main"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-main-kind="contacts"] [data-sk-pro-pane="main"] [data-sk-pro-body="contacts"],
+:root[data-boot-pro-main-kind="files"] [data-sk-pro-pane="main"] [data-sk-pro-body="files"],
+:root[data-boot-pro-main-kind="settings"] [data-sk-pro-pane="main"] [data-sk-pro-body="settings"],
+:root[data-boot-pro-main-kind="other"] [data-sk-pro-pane="main"] [data-sk-pro-body="other"],
+:root[data-boot-pro-split-kind="mail"] [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
+:root[data-boot-pro-split-kind="calendar"] [data-sk-pro-pane="split"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-split-kind="contacts"] [data-sk-pro-pane="split"] [data-sk-pro-body="contacts"],
+:root[data-boot-pro-split-kind="files"] [data-sk-pro-pane="split"] [data-sk-pro-body="files"],
+:root[data-boot-pro-split-kind="settings"] [data-sk-pro-pane="split"] [data-sk-pro-body="settings"],
+:root[data-boot-pro-split-kind="other"] [data-sk-pro-pane="split"] [data-sk-pro-body="other"] {
+  display: block;
+}
+
+/* The rail marks the focused tab's app (pro/page.tsx, railActiveItemId). */
+:root:not([data-boot-pro-kind]) [data-pro-shell] [data-sk-rail="mail"],
+:root[data-boot-pro-kind="mail"] [data-pro-shell] [data-sk-rail="mail"],
+:root[data-boot-pro-kind="calendar"] [data-pro-shell] [data-sk-rail="calendar"],
+:root[data-boot-pro-kind="contacts"] [data-pro-shell] [data-sk-rail="contacts"],
+:root[data-boot-pro-kind="files"] [data-pro-shell] [data-sk-rail="files"],
+:root[data-boot-pro-kind="settings"] [data-pro-shell] [data-sk-rail="settings"] {
+  background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+
+/* settings */
+
+/* The open settings page in the skeleton nav: the row whose
+   data-sk-settings-tab matches data-boot-settings-tab. */
+@custom-variant boot-settings-active (&:where(
+  [data-boot-settings-tab="account"] [data-sk-settings-tab="account"],
+  [data-boot-settings-tab="general"] [data-sk-settings-tab="general"],
+  [data-boot-settings-tab="notifications"] [data-sk-settings-tab="notifications"],
+  [data-boot-settings-tab="appearance"] [data-sk-settings-tab="appearance"],
+  [data-boot-settings-tab="accessibility"] [data-sk-settings-tab="accessibility"],
+  [data-boot-settings-tab="message_list"] [data-sk-settings-tab="message_list"],
+  [data-boot-settings-tab="reading"] [data-sk-settings-tab="reading"],
+  [data-boot-settings-tab="composing"] [data-sk-settings-tab="composing"],
+  [data-boot-settings-tab="vacation"] [data-sk-settings-tab="vacation"],
+  [data-boot-settings-tab="filters"] [data-sk-settings-tab="filters"],
+  [data-boot-settings-tab="organize"] [data-sk-settings-tab="organize"],
+  [data-boot-settings-tab="security"] [data-sk-settings-tab="security"],
+  [data-boot-settings-tab="sharing"] [data-sk-settings-tab="sharing"],
+  [data-boot-settings-tab="recovery"] [data-sk-settings-tab="recovery"],
+  [data-boot-settings-tab="calendar"] [data-sk-settings-tab="calendar"],
+  [data-boot-settings-tab="contacts"] [data-sk-settings-tab="contacts"],
+  [data-boot-settings-tab="files"] [data-sk-settings-tab="files"],
+  [data-boot-settings-tab="files_sync"] [data-sk-settings-tab="files_sync"],
+  [data-boot-settings-tab="addons"] [data-sk-settings-tab="addons"],
+  [data-boot-settings-tab="offline"] [data-sk-settings-tab="offline"],
+  [data-boot-settings-tab="privacy"] [data-sk-settings-tab="privacy"],
+  [data-boot-settings-tab="backup"] [data-sk-settings-tab="backup"],
+  [data-boot-settings-tab="desktop"] [data-sk-settings-tab="desktop"],
+  [data-boot-settings-tab="troubleshooting"] [data-sk-settings-tab="troubleshooting"],
+  [data-boot-settings-tab="about"] [data-sk-settings-tab="about"]
+));
+
+/* Settings pages the nav listed last time (bulwark-boot-hints). Without
+   hints every page is drawn except recovery (an Enterprise feature). */
+@custom-variant boot-no-settings-security (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="security"]) *));
+@custom-variant boot-no-settings-sharing (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="sharing"]) *));
+@custom-variant boot-no-settings-filters (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="filters"]) *));
+@custom-variant boot-no-settings-vacation (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="vacation"]) *));
+@custom-variant boot-no-settings-calendar (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="calendar"]) *));
+@custom-variant boot-no-settings-contacts (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="contacts"]) *));
+@custom-variant boot-no-settings-files (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="files"]) *));
+@custom-variant boot-no-settings-addons (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="addons"]) *));
+@custom-variant boot-no-settings-offline (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="offline"]) *));
+@custom-variant boot-settings-recovery (&:where([data-boot-settings-tabs~="recovery"] *));
+@custom-variant boot-settings-files-sync (&:where([data-boot-settings-tabs~="files_sync"] *));
+/* The desktop app's own page; Troubleshooting, listed with advanced settings on or while open. */
+@custom-variant boot-settings-desktop (&:where([data-boot-settings-tabs~="desktop"] *));
+@custom-variant boot-settings-troubleshooting (&:where([data-boot-settings-tabs~="troubleshooting"] *, [data-boot-settings-tab="troubleshooting"] *));
+
+/* Settings pages with one section have no section jump row (SectionNav). */
+@custom-variant boot-settings-one-section (&:where([data-boot-settings-tab="security"] *, [data-boot-settings-tab="filters"] *, [data-boot-settings-tab="vacation"] *, [data-boot-settings-tab="recovery"] *, [data-boot-settings-tab="addons"] *));
+/* Accessibility has eleven sections: its jump row wraps to a second line. */
+@custom-variant boot-settings-two-rows (&:where([data-boot-settings-tab="accessibility"] *));
+
+/* contacts, files, apps */
+
+/* List density (data-boot-density, the settings' density): contact rows drop
+   the avatar and the second line in extra compact. */
+@custom-variant boot-density-xc (&:where([data-boot-density="extra-compact"] *));
+
+/* /contacts/new: the new-contact form (data-boot-pane="create"). */
+@custom-variant boot-create (&:where([data-boot-pane="create"] *));
+
+/* calendar */
+
+/* Week numbers beside the sidebar's mini month (showWeekNumbers). */
+@custom-variant boot-cal-weeknums (&:where([data-boot-cal-weeknums="on"] *));
+
+/* Calendar tasks are on (enableCalendarTasks): a view pill and a sidebar row. */
+@custom-variant boot-cal-tasks-on (&:where([data-boot-cal-tasks="on"] *));
+
+/* The views measure their pane to size their rows; the skeleton does the
+   same with the pane as a size container. --sk-head is the header's
+   offsetHeight (whole pixels, as the views read it). */
+.sk-cal-view {
+  container-type: size;
+}
+.sk-cal-week,
+.sk-cal-day {
+  /* pt-2 + weekday line + gap-0.5 + date circle + pb-1.5 + border */
+  --sk-head: round(nearest, 3.5rem + 1.03125rem + 1px, 1px);
+  --sk-hour-min: 60px;
+  /* fillHourHeight takes the fitted height from ceil(min * 0.9) up. */
+  --sk-hour-floor: 54px;
+  --sk-hour: var(--sk-hour-min);
+  --sk-shift: 0px;
+}
+.sk-cal-day {
+  --sk-hour-min: 64px;
+  --sk-hour-floor: 58px;
+}
+.sk-cal-month {
+  /* py-2 + text-xs line + border */
+  --sk-head: calc(2rem + 1px);
+  --sk-week-min: 146px;
+  --sk-week: var(--sk-week-min);
+}
+@media (width < 48rem) {
+  .sk-cal-week {
+    --sk-head: round(nearest, 3rem + 1.03125rem + 1px, 1px);
+  }
+  .sk-cal-month {
+    --sk-head: round(nearest, 0.75rem + 1.03125rem + 1px, 1px);
+    --sk-week-min: 52px;
+  }
+}
+@supports (height: round(down, 1.5px, 1px)) and (height: 1cqh) {
+  .sk-cal-week,
+  .sk-cal-day {
+    /* clientHeight, a whole number of pixels */
+    --sk-pane: round(nearest, 100cqh, 1px);
+    --sk-fit: round(down, (var(--sk-pane) - var(--sk-head)) / var(--boot-cal-hours, 12), 1px);
+    --sk-hour: max(var(--sk-fit), clamp(0px, (var(--sk-hour-floor) - var(--sk-fit)) * 1000, var(--sk-hour-min)));
+    /* The scroll the grid opens at: an hour before now, at most to the end. */
+    --sk-shift: clamp(
+      0px,
+      var(--boot-cal-scroll, -1) * var(--sk-hour-min) - 8px,
+      var(--boot-cal-hours, 12) * var(--sk-hour) - (var(--sk-pane) - var(--sk-head))
+    );
+  }
+  .sk-cal-month {
+    --sk-week: max(var(--sk-week-min), round(down, (round(nearest, 100cqh, 1px) - var(--sk-head)) / 6, 1px));
+  }
+}
+.sk-cal-hours {
+  height: calc(var(--boot-cal-hours, 12) * var(--sk-hour));
+}
+.sk-cal-hours > * {
+  top: calc(-1 * var(--sk-shift));
+}
+.sk-cal-hour {
+  height: var(--sk-hour);
+}
+/* The slots' border-b border-border/50, one per hour, as a background. */
+.sk-cal-slots {
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--sk-hour) - 1px),
+    color-mix(in oklab, var(--color-border) 50%, transparent) calc(var(--sk-hour) - 1px)
+  );
+  background-size: 100% var(--sk-hour);
+}
+/* A range that starts at midnight leaves its first hour unlabelled. */
+.sk-cal-first-label {
+  opacity: min(1, var(--boot-cal-start, 8));
+}
+/* The all-hours toggle shows while the hours are limited. */
+.sk-cal-hours-toggle {
+  opacity: min(1, 24 - var(--boot-cal-hours, 12));
+}
+.sk-cal-month-week {
+  height: var(--sk-week);
+}
+.sk-cal-mini-days {
+  height: calc(var(--boot-cal-mini-rows, 6) * 1.75rem);
+}
+@media (pointer: coarse) {
+  .sk-cal-mini-days {
+    height: calc(var(--boot-cal-mini-rows, 6) * 2.75rem);
+  }
+}
+/* Week columns: floor((pane - gutter) / columns), at least 80px; 120px on
+   phones (calendar-week-view.tsx, measureColWidth). Columns past the pane
+   are the next days of the strip, cut off. */
+.sk-cal-cols {
+  --sk-col: calc((100cqw - 3.5rem) / var(--boot-cal-cols, 7));
+  grid-auto-flow: column;
+  grid-auto-columns: var(--sk-col);
+}
+@supports (width: round(down, 1.5px, 1px)) and (width: 1cqw) {
+  .sk-cal-cols {
+    --sk-col: max(80px, round(down, (100cqw - 3.5rem) / var(--boot-cal-cols, 7), 1px));
+  }
+}
+@media (width < 48rem) {
+  .sk-cal-cols {
+    --sk-col: 120px;
+  }
+}
+
+/* mail */
+
+/* List density (the density setting, data-boot-density): extra-compact rows
+   (boot-density-xc, defined with contacts above) have no avatar, compact and
+   extra-compact ones no preview. */
+@custom-variant boot-dense (&:where([data-boot-density="compact"] *, [data-boot-density="extra-compact"] *));
+/* Message previews turned off (showPreview). */
+@custom-variant boot-no-preview (&:where([data-boot-preview="off"] *));
+/* The preview is one line except in comfortable rows. */
+@custom-variant boot-one-preview-line (&:where(:root:not([data-boot-density="comfortable"]) *));
+/* The default interface layout, the opposite of mv: (both can't be told apart by order). */
+@custom-variant boot-std (&:where(:root:not([data-interface-layout="mountain-view"]) *));
+/* Mountain View's side panel shows only with calendar or contacts. */
+@custom-variant boot-no-mv-side (&:where([data-boot-rail]:not([data-boot-rail~="calendar"]):not([data-boot-rail~="contacts"]) *));
+
+/* Message list rows (MailListRowsSkeleton), in short classes because a
+   skeleton draws dozens of them. Geometry as ThreadListItem's: a 1px rule,
+   the cell's density padding and gap, its minimum height on stacked rows.
+   In the components layer, so utilities on the same element still win. */
+@layer components {
+  .sk-mrow {
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-background);
+  }
+  .sk-mcell {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--density-item-gap);
+    padding: var(--density-item-py) 0.75rem;
+  }
+  .sk-mcell-min {
+    min-height: var(--list-item-height);
+  }
+  /* The avatar's column: centred on the row. */
+  .sk-mav {
+    display: flex;
+    flex-shrink: 0;
+    align-self: stretch;
+    align-items: center;
+  }
+  /* A line of text as tall as the real one (font size and leading from its
+     classes), with its bar centred on it. */
+  .sk-ml {
+    position: relative;
+    display: block;
+    height: 1lh;
+  }
+  .sk-ml > .sk-shape {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    height: 0.75rem;
+    margin-block: auto;
+    border-radius: 0.25rem;
+  }
+}
+
+/* Panels drawn in the shapes' own colour (the sidebar in dark themes, the
+   Mountain View phone header): lift the shapes off them. Below the contrast
+   rules' specificity, and not in forced colours. */
+@media not (forced-colors: active) {
+  :where(.dark) .sk-lift-dark .sk-shape,
+  :where([data-interface-layout="mountain-view"]) .sk-lift-mv .sk-shape,
+  .sk-lift .sk-shape {
+    background-color: color-mix(in oklab, var(--color-foreground) 10%, transparent);
+  }
+}

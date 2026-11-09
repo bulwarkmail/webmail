@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin/session';
 import { logger } from '@/lib/logger';
+import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 import { listHistory } from '@/lib/admin/extension-history';
 import { getPlugin, getTheme } from '@/lib/admin/plugin-registry';
 import { EXTENSION_ID_RE } from '@/lib/extension-package';
@@ -41,6 +42,8 @@ export async function GET(
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error) {
+    const unavailable = storeUnavailableResponse(error);
+    if (unavailable) return unavailable;
     logger.error('Extension history error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

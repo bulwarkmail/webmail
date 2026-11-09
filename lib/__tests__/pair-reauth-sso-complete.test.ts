@@ -62,6 +62,9 @@ import { openPhoneRefreshToken } from '@/lib/auth/pair-bundle';
 import { POST as completePOST } from '@/app/api/auth/reauth/sso/complete/route';
 import { POST as createPOST } from '@/app/api/auth/pair/create/route';
 import { POST as redeemPOST } from '@/app/api/auth/pair/redeem/route';
+import { setStoreForTests } from '@/lib/shared-store';
+import { resetLocalStoreForTests } from '@/lib/shared-store/local';
+import { switchableSharedStore } from './helpers/shared-store-down';
 
 const SERVER = 'https://mail.example.org';
 const WEBMAIL = 'https://webmail.example';
@@ -143,10 +146,10 @@ describe('reauth/sso/complete', () => {
 
     const proof = readPairReauthFromStore(cookieStore as never);
     expect(proof?.owner).toBe(`2:${USER}`);
-    expect(isGrantAvailable(proof!.grantId, `2:${USER}`)).toBe(true);
+    expect(await isGrantAvailable(proof!.grantId, `2:${USER}`)).toBe(true);
 
-    const pairing = createPairingCode(proof!.grantId, `2:${USER}`, WEBMAIL)!;
-    const redeemed = redeemPairingCode(pairing.code);
+    const pairing = (await createPairingCode(proof!.grantId, `2:${USER}`, WEBMAIL))!;
+    const redeemed = await redeemPairingCode(pairing.code);
     expect(redeemed).toMatchObject({
       ok: true,
       grant: {
@@ -170,8 +173,8 @@ describe('reauth/sso/complete', () => {
     expect((await complete()).status).toBe(200);
     expect(exchangeCodeForTokens).toHaveBeenCalledWith('code-1', 'verifier-1', `${WEBMAIL}/auth/callback`, 'corp');
     const proof = readPairReauthFromStore(cookieStore as never)!;
-    const pairing = createPairingCode(proof.grantId, proof.owner, WEBMAIL)!;
-    expect(redeemPairingCode(pairing.code)).toMatchObject({
+    const pairing = (await createPairingCode(proof.grantId, proof.owner, WEBMAIL))!;
+    expect(await redeemPairingCode(pairing.code)).toMatchObject({
       ok: true,
       grant: { serverId: 'corp', tokenEndpoint: 'https://idp.example.net/corp/token', clientId: 'client-corp', confidential: true },
     });
@@ -305,13 +308,13 @@ describe('reauth/sso/complete', () => {
     pending();
     await complete();
     const first = readPairReauthFromStore(cookieStore as never)!;
-    const firstCode = createPairingCode(first.grantId, first.owner, WEBMAIL)!;
+    const firstCode = (await createPairingCode(first.grantId, first.owner, WEBMAIL))!;
 
     pending();
     await complete();
     const second = readPairReauthFromStore(cookieStore as never)!;
     expect(second.grantId).not.toBe(first.grantId);
-    expect(redeemPairingCode(firstCode.code)).toEqual({ ok: false, reason: 'expired' });
+    expect(await redeemPairingCode(firstCode.code)).toEqual({ ok: false, reason: 'expired' });
   });
 });
 
@@ -336,5 +339,23 @@ describe('reauth/sso/complete freshness', () => {
     pending({ created_at: Date.now() });
     exchangeCodeForTokens.mockResolvedValue({ ...FRESH, id_token: idToken({ sub: 'x' }) });
     expect((await complete()).status).toBe(200);
+  });
+});
+
+describe('reauth/sso/complete while the shared store is down (#1066)', () => {
+  afterEach(() => {
+    setStoreForTests(null);
+    resetLocalStoreForTests();
+  });
+
+  it('answers 503 and sets no pairing proof when the grant can not be kept', async () => {
+    const store = switchableSharedStore();
+    store.down = true;
+    setStoreForTests(store);
+    signIn(2);
+    pending({ slot: 2 });
+    const res = await complete();
+    expect(res.status).toBe(503);
+    expect(readPairReauthFromStore(cookieStore as never)).toBeNull();
   });
 });

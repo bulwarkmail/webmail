@@ -4,6 +4,55 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { debug } from '@/lib/debug';
 import { taskHooks } from '@/lib/plugin-hooks';
 import { taskToView } from '@/lib/plugin-projection';
+import { applyPatchObject, patchedProperties } from '@/lib/jmap/patch-object';
+import { getClientByLocalAccountId } from './client-registry';
+
+/**
+ * One signed-in login whose tasks the list shows next to the others'
+ * (pim-12). Same shape as the calendar store's CalendarAccountClient.
+ */
+export interface TaskAccountClient {
+  localAccountId: string;
+  client: IJMAPClient;
+}
+
+// Ids of a login's tasks and calendars when the calendar shows several
+// logins: `<localAccountId>::<id>`, as the calendar store namespaces them.
+const LOGIN_DELIMITER = '::';
+
+function splitLoginId(id: string): { localAccountId: string | null; raw: string } {
+  const idx = id.indexOf(LOGIN_DELIMITER);
+  return idx >= 0
+    ? { localAccountId: id.slice(0, idx), raw: id.slice(idx + LOGIN_DELIMITER.length) }
+    : { localAccountId: null, raw: id };
+}
+
+function prefixTask(task: CalendarTask, localAccountId: string): CalendarTask {
+  const prefix = `${localAccountId}${LOGIN_DELIMITER}`;
+  return {
+    ...task,
+    id: `${prefix}${task.id}`,
+    calendarIds: Object.fromEntries(Object.entries(task.calendarIds ?? {}).map(([id, v]) => [`${prefix}${id}`, v])),
+    localAccountId,
+  };
+}
+
+function stripCalendarIds(calendarIds: Record<string, boolean>): { localAccountId: string | null; calendarIds: Record<string, boolean> } {
+  let localAccountId: string | null = null;
+  const out: Record<string, boolean> = {};
+  for (const [id, v] of Object.entries(calendarIds)) {
+    const parts = splitLoginId(id);
+    localAccountId = localAccountId ?? parts.localAccountId;
+    out[parts.raw] = v;
+  }
+  return { localAccountId, calendarIds: out };
+}
+
+/** The client of the login an id names, else `client`. */
+function clientOf(client: IJMAPClient, localAccountId: string | null): IJMAPClient {
+  if (!localAccountId) return client;
+  return getClientByLocalAccountId(localAccountId) ?? client;
+}
 
 export type TaskViewFilter = 'all' | 'pending' | 'completed' | 'overdue';
 
@@ -28,10 +77,24 @@ interface TaskStore {
   /** Resolves to null when a plugin stopped the create. */
   createTask: (client: IJMAPClient, task: Partial<CalendarTask>) => Promise<CalendarTask | null>;
   /** false when a plugin stopped it (the plugin tells the user why). */
-  updateTask: (client: IJMAPClient, id: string, updates: Partial<CalendarTask>) => Promise<boolean>;
+  /**
+   * `updates` may name members by path (`alerts/<id>/acknowledged`). `base`
+   * is the task as the caller read it, for a task the list does not hold
+   * or holds in an older state.
+   */
+  updateTask: (client: IJMAPClient, id: string, updates: Partial<CalendarTask>, base?: CalendarTask) => Promise<boolean>;
   deleteTask: (client: IJMAPClient, id: string) => Promise<boolean>;
   toggleTaskComplete: (client: IJMAPClient, task: CalendarTask) => Promise<void>;
   clearTasks: () => void;
+  /**
+   * The logins whose tasks the list shows, set while the calendar shows
+   * several logins; null for the active one only. Task and calendar ids
+   * are then `<localAccountId>::<id>`, and each change goes through the
+   * task's own login.
+   */
+  accountClients: TaskAccountClient[] | null;
+  /** `refetchWith`: loads the list again in the new form when it was loaded. */
+  setAccountClients: (accounts: TaskAccountClient[] | null, refetchWith?: IJMAPClient | null) => void;
 }
 
 // Each fetch gets a number: only the latest one's answer is kept, so an
@@ -45,6 +108,18 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   showCompleted: false,
   isLoading: false,
   error: null,
+  accountClients: null,
+  setAccountClients: (accounts, refetchWith) => {
+    const before = get().accountClients;
+    const same = before === accounts || (!!before && !!accounts && before.length === accounts.length
+      && before.every((a, i) => a.localAccountId === accounts[i].localAccountId && a.client === accounts[i].client));
+    if (same) return;
+    const loaded = get().tasks.length > 0 || get().isLoading;
+    // The ids change form: tasks of the old form must not stay.
+    latestFetch += 1;
+    set({ accountClients: accounts, tasks: [], selectedTaskId: null, isLoading: false });
+    if (loaded && refetchWith) void get().fetchTasks(refetchWith);
+  },
   setTasks: (tasks) => set({ tasks }),
   setSelectedTaskId: (id) => set({ selectedTaskId: id }),
   setFilter: (filter) => {
@@ -64,7 +139,18 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const stillCurrent = () => fetch === latestFetch;
     set({ isLoading: true, error: null });
     try {
-      const tasks = await client.getCalendarTasks(calendarIds);
+      const accounts = get().accountClients;
+      const tasks = accounts
+        ? (await Promise.all(accounts.map(async (a) => {
+            const own = calendarIds
+              ?.map(splitLoginId)
+              .filter((parts) => parts.localAccountId === a.localAccountId)
+              .map((parts) => parts.raw);
+            if (own && own.length === 0) return [];
+            const list = await a.client.getCalendarTasks(own);
+            return list.map((task) => prefixTask(task, a.localAccountId));
+          }))).flat()
+        : await client.getCalendarTasks(calendarIds);
       // A fetch started later decides the list.
       if (!stillCurrent()) return;
       debug.log('tasks', 'TaskStore/fetchTasks received', tasks.length, 'tasks');
@@ -86,28 +172,57 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   createTask: async (client, task) => {
     debug.log('tasks', 'TaskStore/createTask', task);
     if (!(await taskHooks.onBeforeTaskCreate.intercept(taskToView({ id: '', ...task } as CalendarTask)))) return null;
-    const created = await client.createCalendarTask(task);
+    const target = stripCalendarIds(task.calendarIds ?? {});
+    const created = target.localAccountId
+      ? prefixTask(await clientOf(client, target.localAccountId).createCalendarTask({ ...task, calendarIds: target.calendarIds }), target.localAccountId)
+      : await client.createCalendarTask(task);
     debug.log('tasks', 'TaskStore/createTask result', { id: created.id, uid: created.uid, title: created.title });
     set({ tasks: [...get().tasks, created] });
     void taskHooks.onTaskCreate.emit(taskToView(created));
     return created;
   },
 
-  updateTask: async (client, id, updates) => {
-    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch: updates }))) return false;
-    const before = get().tasks.find(t => t.id === id);
-    const newId = await client.updateCalendarTask(id, updates);
+  updateTask: async (client, id, updates, base) => {
+    const before = base ?? get().tasks.find(t => t.id === id);
+    // `updates` may name members by path (`alerts/<id>/acknowledged`);
+    // plugins read the patch as whole properties.
+    const patch = patchedProperties(before ?? { id }, updates);
+    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch }))) return false;
+    const source = splitLoginId(id);
+    let newId: string;
+    if (source.localAccountId) {
+      const dest = updates.calendarIds ? stripCalendarIds(updates.calendarIds) : null;
+      const sourceClient = clientOf(client, source.localAccountId);
+      if (dest?.localAccountId && dest.localAccountId !== source.localAccountId && before) {
+        // Into a list of another login: make it there, then remove it here.
+        // In that order, so a failed create leaves the task where it was.
+        const { id: _id, localAccountId: _l, originalId: _o, accountId: _a, isShared: _s, ...rest } = before;
+        const moved = applyPatchObject(rest, { ...updates, calendarIds: dest.calendarIds }) as Partial<CalendarTask>;
+        const created = await clientOf(client, dest.localAccountId).createCalendarTask(moved);
+        await sourceClient.deleteCalendarTask(source.raw);
+        newId = prefixTask(created, dest.localAccountId).id;
+      } else {
+        const raw = await sourceClient.updateCalendarTask(source.raw, dest ? { ...updates, calendarIds: dest.calendarIds } : updates);
+        newId = !raw || raw === source.raw ? id : `${source.localAccountId}${LOGIN_DELIMITER}${raw}`;
+      }
+    } else {
+      newId = await client.updateCalendarTask(id, updates);
+    }
     if (newId && newId !== id) {
       // Moved into a calendar of another account: the server recreated it
       // under a new id, so reload rather than patch the old entry. (#1204)
       set({ selectedTaskId: get().selectedTaskId === id ? newId : get().selectedTaskId });
       await get().fetchTasks(client);
       const moved = get().tasks.find(t => t.id === newId)
-        ?? ({ ...before, ...updates, id: newId } as CalendarTask);
+        ?? ({ ...applyPatchObject(before ?? {}, updates), id: newId } as CalendarTask);
       void taskHooks.onTaskUpdate.emit(taskToView(moved));
       return true;
     }
-    const updated = { ...(before ?? { id }), ...updates, updated: new Date().toISOString() } as CalendarTask;
+    // Applied to the task the caller read, else as the store holds it now:
+    // another update may have finished meanwhile (two alerts acknowledged
+    // at once).
+    const current = base ?? get().tasks.find(t => t.id === id) ?? { id };
+    const updated = { ...applyPatchObject(current, updates), updated: new Date().toISOString() } as CalendarTask;
     set({
       tasks: get().tasks.map(t => t.id === id ? updated : t),
     });
@@ -118,7 +233,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   deleteTask: async (client, id) => {
     const title = get().tasks.find(t => t.id === id)?.title || '';
     if (!(await taskHooks.onBeforeTaskDelete.intercept({ taskId: id, title }))) return false;
-    await client.deleteCalendarTask(id);
+    const target = splitLoginId(id);
+    await clientOf(client, target.localAccountId).deleteCalendarTask(target.raw);
     set({
       tasks: get().tasks.filter(t => t.id !== id),
       selectedTaskId: get().selectedTaskId === id ? null : get().selectedTaskId,
@@ -132,7 +248,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const updates: Partial<CalendarTask> = {
       progress: newProgress,
     };
-    await client.updateCalendarTask(task.id, updates);
+    const target = splitLoginId(task.id);
+    await clientOf(client, target.localAccountId).updateCalendarTask(target.raw, updates);
     set({
       tasks: get().tasks.map(t => t.id === task.id ? { ...t, ...updates, updated: new Date().toISOString() } : t),
     });

@@ -65,13 +65,25 @@ const ALL_UNIFIED_ROLES: UnifiedMailboxRole[] = [
  * match, or undefined if none of the account's known folders contain it.
  */
 export function resolveSourceFolderName(email: Email, mailboxes: Mailbox[]): string | undefined {
+  return sourceMailboxOf(email, mailboxes)?.name;
+}
+
+/**
+ * The role of that folder, so the list can name it the way the sidebar does
+ * (localizeMailboxName): "Sent", not the server's "Sent Items".
+ */
+export function resolveSourceFolderRole(email: Email, mailboxes: Mailbox[]): string | undefined {
+  return sourceMailboxOf(email, mailboxes)?.role ?? undefined;
+}
+
+function sourceMailboxOf(email: Email, mailboxes: Mailbox[]): Mailbox | undefined {
   for (const m of mailboxes) {
     // All fetch paths now namespace shared emails' mailboxIds to the store id
     // (`${ownerId}:${origId}`), so matching `m.id` works for own and shared
     // alike. The `originalId` check stays as a defensive fallback for any email
     // that still carries a bare owner id. (#281 V3)
-    if (email.mailboxIds?.[m.id]) return m.name;
-    if (m.originalId && email.mailboxIds?.[m.originalId]) return m.name;
+    if (email.mailboxIds?.[m.id]) return m;
+    if (m.originalId && email.mailboxIds?.[m.originalId]) return m;
   }
   return undefined;
 }
@@ -195,6 +207,7 @@ export async function fetchUnifiedEmails(
       sourceClientAccountId: account.clientAccountId,
       sourceAccountId: account.jmapAccountId,
       sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+      sourceFolderRole: resolveSourceFolderRole(email, account.mailboxes),
     }));
 
     mergedEmails = mergedEmails.concat(decorated);
@@ -261,7 +274,7 @@ export async function advancedSearchUnifiedEmails(
  * namespaced (`${ownerId}:${origId}`) so we must use `originalId` and pass the
  * owner's accountId through the request.
  */
-function resolveJmapTarget(
+export function resolveJmapTarget(
   account: UnifiedAccountClient,
   mailbox: Mailbox,
 ): { jmapMailboxId: string; jmapAccountId: string | undefined } {
@@ -321,6 +334,7 @@ async function fanOutUnifiedQuery(
       sourceClientAccountId: account.clientAccountId,
       sourceAccountId: account.jmapAccountId,
       sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+      sourceFolderRole: resolveSourceFolderRole(email, account.mailboxes),
     }));
     mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
@@ -467,6 +481,7 @@ async function fanOutCrossQuery(
       sourceClientAccountId: account.clientAccountId,
       sourceAccountId: account.jmapAccountId,
       sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+      sourceFolderRole: resolveSourceFolderRole(email, account.mailboxes),
     }));
     mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;
@@ -724,6 +739,7 @@ async function fanOutAccountQuery(
       sourceClientAccountId: account.clientAccountId,
       sourceAccountId: account.jmapAccountId,
       sourceFolder: resolveSourceFolderName(email, account.mailboxes),
+      sourceFolderRole: resolveSourceFolderRole(email, account.mailboxes),
     }));
     mergedEmails = mergedEmails.concat(decorated);
     totalSum += result.total;

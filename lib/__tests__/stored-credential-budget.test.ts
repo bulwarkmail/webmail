@@ -18,40 +18,40 @@ const MIN = 60 * 1000;
 beforeEach(() => resetStoredCredentialBudgetForTests());
 
 describe('stored credential budget', () => {
-  it('refuses a credential for an hour after the server refused it', () => {
+  it('refuses a credential for an hour after the server refused it', async () => {
     const t0 = 1_000_000;
-    recordStoredCredentialStatus(basic('a'), 401, t0);
-    expect(isStoredCredentialRefused(basic('a'), t0 + 59 * MIN)).toBe(true);
-    expect(isStoredCredentialRefused(basic('b'), t0 + 59 * MIN)).toBe(false);
-    expect(isStoredCredentialRefused(basic('a'), t0 + 61 * MIN)).toBe(false);
+    await recordStoredCredentialStatus(basic('a'), 401, t0);
+    expect(await isStoredCredentialRefused(basic('a'), t0 + 59 * MIN)).toBe(true);
+    expect(await isStoredCredentialRefused(basic('b'), t0 + 59 * MIN)).toBe(false);
+    expect(await isStoredCredentialRefused(basic('a'), t0 + 61 * MIN)).toBe(false);
   });
 
-  it('past 20 failures in 15 minutes passes only credentials that worked in that time', () => {
+  it('past 20 failures in 15 minutes passes only credentials that worked in that time', async () => {
     const t0 = 1_000_000;
-    recordStoredCredentialStatus(basic('active'), 200, t0);
-    recordStoredCredentialStatus(basic('idle'), 200, t0 - 20 * MIN);
-    for (let i = 0; i < 19; i++) recordStoredCredentialStatus(basic(`stale-${i}`), 401, t0 + i);
-    expect(isStoredCredentialRefused(basic('fresh'), t0 + MIN)).toBe(false);
+    await recordStoredCredentialStatus(basic('active'), 200, t0);
+    await recordStoredCredentialStatus(basic('idle'), 200, t0 - 20 * MIN);
+    for (let i = 0; i < 19; i++) await recordStoredCredentialStatus(basic(`stale-${i}`), 401, t0 + i);
+    expect(await isStoredCredentialRefused(basic('fresh'), t0 + MIN)).toBe(false);
 
-    recordStoredCredentialStatus(basic('stale-19'), 401, t0 + MIN);
-    expect(isStoredCredentialRefused(basic('fresh'), t0 + 2 * MIN)).toBe(true);
-    expect(isStoredCredentialRefused(basic('idle'), t0 + 2 * MIN)).toBe(true);
-    expect(isStoredCredentialRefused(basic('active'), t0 + 2 * MIN)).toBe(false);
+    await recordStoredCredentialStatus(basic('stale-19'), 401, t0 + MIN);
+    expect(await isStoredCredentialRefused(basic('fresh'), t0 + 2 * MIN)).toBe(true);
+    expect(await isStoredCredentialRefused(basic('idle'), t0 + 2 * MIN)).toBe(true);
+    expect(await isStoredCredentialRefused(basic('active'), t0 + 2 * MIN)).toBe(false);
 
     // The window ends 15 minutes after it started.
-    expect(isStoredCredentialRefused(basic('fresh'), t0 + 16 * MIN)).toBe(false);
+    expect(await isStoredCredentialRefused(basic('fresh'), t0 + 16 * MIN)).toBe(false);
   });
 
-  it('a successful sign-in lifts an earlier refusal of the same credential', () => {
-    recordStoredCredentialStatus(basic('a'), 401, 1000);
-    recordStoredCredentialStatus(basic('a'), 200, 2000);
-    expect(isStoredCredentialRefused(basic('a'), 3000)).toBe(false);
+  it('a successful sign-in lifts an earlier refusal of the same credential', async () => {
+    await recordStoredCredentialStatus(basic('a'), 401, 1000);
+    await recordStoredCredentialStatus(basic('a'), 200, 2000);
+    expect(await isStoredCredentialRefused(basic('a'), 3000)).toBe(false);
   });
 
-  it('leaves access tokens alone', () => {
-    for (let i = 0; i < 30; i++) recordStoredCredentialStatus(`Bearer expired-${i}`, 401, 1000);
-    expect(isStoredCredentialRefused('Bearer expired-0', 2000)).toBe(false);
-    expect(isStoredCredentialRefused(basic('a'), 2000)).toBe(false);
+  it('leaves access tokens alone', async () => {
+    for (let i = 0; i < 30; i++) await recordStoredCredentialStatus(`Bearer expired-${i}`, 401, 1000);
+    expect(await isStoredCredentialRefused('Bearer expired-0', 2000)).toBe(false);
+    expect(await isStoredCredentialRefused(basic('a'), 2000)).toBe(false);
   });
 });
 

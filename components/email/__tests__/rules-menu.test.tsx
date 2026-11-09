@@ -8,6 +8,7 @@ const targets = new Map<string, QuickRuleTarget | null>();
 vi.mock('@/lib/filters/quick-rule-target', () => ({
   resolveQuickRuleTarget: (email: Email) => targets.get(email.id) ?? null,
   getOwnAddresses: () => new Set(['me@example.org']),
+  getRuleAccountAddresses: () => ({ own: new Set(['me@example.org']), main: new Set(['me@example.org']) }),
   knownListId: () => null,
   loadListIds: async () => {},
   sourceMailboxOf: () => ({ id: 'inbox' }),
@@ -25,6 +26,7 @@ const { ContextMenu } = await import('@/components/ui/context-menu');
 const { useAuthStore } = await import('@/stores/auth-store');
 const { useFilterStore } = await import('@/stores/filter-store');
 const { useSettingsStore } = await import('@/stores/settings-store');
+const { useQuickRuleStore } = await import('@/stores/quick-rule-store');
 
 const client = { name: 'client-a' };
 const mailboxes = [
@@ -124,6 +126,24 @@ describe('Rules entry of the message menu', () => {
     }]);
   });
 
+  it('lists folders in Move-list order, with a read-only parent greyed above its subfolders', () => {
+    const boxes = [
+      { id: 'zeta', name: 'Zeta', role: null, parentId: null, sortOrder: 0, myRights: { mayAddItems: true } },
+      { id: 'trash', name: 'Trash', role: 'trash', parentId: null, sortOrder: 9, myRights: { mayAddItems: true } },
+      { id: 'inbox', name: 'Inbox', role: 'inbox', parentId: null, sortOrder: 5, myRights: { mayAddItems: true } },
+      { id: 'shared', name: 'Shared', role: null, parentId: null, sortOrder: 0, myRights: { mayAddItems: false } },
+      { id: 'alpha', name: 'alpha', role: null, parentId: 'shared', sortOrder: 0, myRights: { mayAddItems: true } },
+    ] as unknown as Mailbox[];
+    targets.set('e1', target({ mailboxes: boxes }));
+    renderMenu(email('e1'));
+    openRules();
+    fireEvent.mouseEnter(screen.getByTestId('rules:move_sender').parentElement!);
+    const rows = screen.getAllByTestId(/^rules:move_sender:/).map((el) => el.getAttribute('data-testid'));
+    expect(rows).toEqual(['rules:move_sender:inbox', 'rules:move_sender:trash', 'rules:move_sender:shared', 'rules:move_sender:alpha', 'rules:move_sender:zeta', 'rules:move_sender:new-folder']);
+    expect(screen.getByTestId('rules:move_sender:shared')).toBeDisabled();
+    expect(screen.getByTestId('rules:move_sender:shared').closest('[data-native-submenu]')).not.toBeNull();
+  });
+
   it('disables Block sender with a hint when the account has no Junk folder', () => {
     targets.set('e1', target());
     renderMenu(email('e1'));
@@ -141,5 +161,19 @@ describe('Rules entry of the message menu', () => {
     expect(screen.queryByTestId('rules:block')).toBeNull();
     expect(screen.getByTestId('rules:create')).not.toBeDisabled();
     expect(screen.getByTestId('rules:manage')).toBeInTheDocument();
+  });
+
+  // mail-p3-9: Create rule… opened with a blank From and a "To me" chip.
+  it('starts Create rule… with From set to the sender, and offers sender and domain before the subject', () => {
+    targets.set('e1', target());
+    const message = { ...email('e1'), subject: 'Re: Invoice 42', to: [{ email: 'me@example.org' }] } as Email;
+    renderMenu(message);
+    openRules();
+    fireEvent.click(screen.getByTestId('rules:create'));
+    const editor = useQuickRuleStore.getState().editor!;
+    expect(editor.rule.conditions).toEqual([{ field: 'from', comparator: 'address_is', value: 'anna@acme.com' }]);
+    // Mail to the account's own address is all its mail: no To chip.
+    expect(editor.suggestions.map((s) => s.id)).toEqual(['sender', 'domain', 'subject']);
+    useQuickRuleStore.getState().closeEditor();
   });
 });

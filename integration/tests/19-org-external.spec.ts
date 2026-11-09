@@ -184,7 +184,7 @@ test('sending to org-dave asks first, sending to org-bob does not', async ({ bro
 test('a quick reply to org-dave asks too: Back keeps the text, Send anyway sends it', async ({ browser }) => {
   const alice = await userPage(browser, ORG.alice);
   await openMessage(alice, FROM_DAVE);
-  const box = alice.getByPlaceholder('Write a quick reply...');
+  const box = alice.getByPlaceholder(/^Reply to /);
   await box.fill(`Quick reply ${RUN}`);
   await box.press('Control+Enter');
   await expect(confirm(alice)).toBeVisible();

@@ -6,21 +6,22 @@ import { Check, Plus, LogOut, Mails, Star, ChevronDown, AlertCircle, GripVertica
 import { useTranslations } from "next-intl";
 import type { Mailbox } from "@/lib/jmap/types";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
+import { useDesktopPolicy } from "@/lib/desktop/policy";
+import { accountRefusedByDesktopPolicy } from "@/lib/desktop/refused-accounts";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { HelpMenuItems } from "@/components/layout/help-links";
-import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds } from "@/lib/account-utils";
+import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds, accountRowText, accountAvatarName, accountSharesAddress } from "@/lib/account-utils";
 import { inboxUnread, totalInboxUnread } from "@/lib/account-inbox-unread";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
+import { onRefusedLoginsChanged, siblingWaits, waitDate } from "@/lib/devices/wipe-state";
 import { Avatar } from "@/components/ui/avatar";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
-import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconButton } from "@/components/ui/icon-button";
 import { toUnicodeDomain, toUnicodeEmail } from "@/lib/idn";
+import { buildSettingsPath } from "@/lib/deep-links";
 
 interface AccountSwitcherProps {
   /** "rail" = small avatar only (NavigationRail), "expanded" = avatar + name + email (Sidebar) */
@@ -37,10 +38,10 @@ interface AccountSwitcherProps {
   allInboxesSelected?: boolean;
 }
 
-function AccountAvatar({ account, size = "sm" }: { account: AccountEntry; size?: "sm" | "md" | "xl" }) {
+function AccountAvatar({ account, accounts, size = "sm" }: { account: AccountEntry; accounts: AccountEntry[]; size?: "sm" | "md" | "xl" }) {
   return (
     <Avatar
-      name={account.displayName || account.label}
+      name={accountAvatarName(account, accounts)}
       email={account.email || account.username}
       size="sm"
       className={cn(
@@ -71,6 +72,9 @@ export function AccountSwitcher({
   allInboxesSelected = false,
 }: AccountSwitcherProps) {
   const t = useTranslations("sidebar");
+  const tUnread = useTranslations("account_unread");
+  const tAccounts = useTranslations("settings.account.accounts");
+  const tFolders = useTranslations("uxs_folders");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -95,7 +99,13 @@ export function AccountSwitcher({
   const tCommon = useTranslations("common");
   const ownMailboxes = useEmailStore((s) => s.mailboxes);
 
-  const accounts = useAccountStore((s) => s.accounts);
+  const storedAccounts = useAccountStore((s) => s.accounts);
+  const devicePolicy = useDesktopPolicy();
+  // One on a server the device's OS policy refuses is stopped, and isn't on offer here.
+  const accounts = useMemo(
+    () => (devicePolicy.AllowedJmapServers.value ? storedAccounts.filter((account) => !accountRefusedByDesktopPolicy(account, devicePolicy)) : storedAccounts),
+    [storedAccounts, devicePolicy],
+  );
   const setDefaultAccount = useAccountStore((s) => s.setDefaultAccount);
   const reorderAccounts = useAccountStore((s) => s.reorderAccounts);
   // Read activeAccountId from authStore so the selector matches the actually-loaded
@@ -105,9 +115,12 @@ export function AccountSwitcher({
   const activeAccount = accounts.find((a) => a.id === activeAccountId);
   const switchAccount = useAuthStore((s) => s.switchAccount);
   const logout = useAuthStore((s) => s.logout);
-  const removeAccount = useAuthStore((s) => s.removeAccount);
   const logoutAll = useAuthStore((s) => s.logoutAll);
-  const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
+  const tWipe = useTranslations("offlineWipe");
+  // An account that signed out by itself beside this one: its data waits.
+  const [, noteWaitsChanged] = useState(0);
+  useEffect(() => onRefusedLoginsChanged(() => noteWaitsChanged((count) => count + 1)), []);
+  const waiting = siblingWaits(activeAccountId);
 
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
@@ -195,18 +208,9 @@ export function AccountSwitcher({
     router.push(`/login?mode=add-account` as never);
   };
 
-  const handleRemove = async (e: React.MouseEvent, account: AccountEntry) => {
-    e.stopPropagation();
-    const label = toUnicodeEmail(account.email || account.username);
-    // The popover closes first: the dialog is the only thing asking now.
+  const handleManageAccounts = () => {
     setOpen(false);
-    const ok = await confirm({
-      title: t("remove_account_title"),
-      message: t("remove_account_confirm", { account: label }),
-      confirmText: t("remove_account"),
-      variant: "destructive",
-    });
-    if (ok) removeAccount(account.id);
+    router.push(buildSettingsPath("account", "browser") as never);
   };
 
   const handleLogout = () => {
@@ -267,7 +271,14 @@ export function AccountSwitcher({
   // primaryIdentity can be an alias (e.g. info@korazo.net) that differs from
   // the actually logged-in account (info@linusrath.de).
   // IDN domains arrive in their ASCII (xn--) form; show them as written (#1100).
-  const displayName = toUnicodeEmail(activeAccount?.displayName || activeAccount?.label || "");
+  // A name another account shares gives way to the address (accountRowText).
+  // The rows below lead with the address when two accounts share a name, so
+  // they differ in their bold line. The button names one account only, with
+  // its address under it, so its name stays put when another account is
+  // added (settings-14).
+  const activeText = activeAccount ? accountRowText(activeAccount, [activeAccount]) : null;
+  const displayName = toUnicodeEmail(activeText?.title || "");
+  const displaySubtitle = toUnicodeEmail(activeText?.subtitle || "");
   const displayEmail = toUnicodeEmail(activeAccount?.email || activeAccount?.username || "");
 
   // Mountain View leads its popover with the account you are already in - large avatar,
@@ -280,15 +291,18 @@ export function AccountSwitcher({
   const unreadByAccount: Record<string, Mailbox[] | undefined> = activeAccountId
     ? { ...accountMailboxes, [activeAccountId]: ownMailboxes }
     : accountMailboxes;
-  const unreadFor = (account: AccountEntry) => {
-    if (account.awaitingSignIn) return undefined;
-    if (mvPopover) return inboxUnread(unreadByAccount[account.id]);
-    return undefined;
-  };
-  const allInboxesUnread = totalInboxUnread(
-    accounts.filter((account) => account.isConnected).map((account) => account.id),
-    unreadByAccount
-  );
+  // With several accounts every row carries the unread waiting in its Inbox, as Gmail and
+  // Outlook show. A single account's count is already on its Inbox in the folder list.
+  const severalAccounts = accounts.length > 1;
+  const unreadFor = (account: AccountEntry) =>
+    !account.awaitingSignIn && (mvPopover || severalAccounts) ? inboxUnread(unreadByAccount[account.id]) : undefined;
+  // The server is only worth a line when it is what tells two rows apart.
+  const sharesAddress = (account: AccountEntry) => accountSharesAddress(account, accounts);
+  const connectedIds = accounts.filter((account) => account.isConnected).map((account) => account.id);
+  const allInboxesUnread = totalInboxUnread(connectedIds, unreadByAccount);
+  // What waits in the accounts not on screen: a dot on the avatar says so.
+  const othersUnread = totalInboxUnread(connectedIds.filter((id) => id !== activeAccountId), unreadByAccount);
+  const othersUnreadText = othersUnread > 0 ? tUnread("others", { count: othersUnread }) : null;
 
   return (
     <>
@@ -306,20 +320,29 @@ export function AccountSwitcher({
             : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
           className
         )}
-        title={variant !== "expanded" ? (displayName || displayEmail) : undefined}
-        aria-label={t("switch_account")}
+        title={[displayName, displaySubtitle, variant !== "expanded" ? othersUnreadText : null].filter(Boolean).join("\n")}
+        aria-label={othersUnreadText ? `${t("switch_account")}, ${othersUnreadText}` : t("switch_account")}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={open ? menuId : undefined}
       >
         {activeAccount ? (
           <>
-            <AccountAvatar account={activeAccount} size={variant === "expanded" ? "md" : "sm"} />
+            <span className="relative flex-shrink-0">
+              <AccountAvatar account={activeAccount} accounts={accounts} size={variant === "expanded" ? "md" : "sm"} />
+              {othersUnreadText && (
+                <span
+                  aria-hidden="true"
+                  data-testid="other-accounts-unread"
+                  className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-background"
+                />
+              )}
+            </span>
             {variant === "expanded" && (
               <>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+                  {displaySubtitle && <p className="text-xs text-muted-foreground truncate">{displaySubtitle}</p>}
                 </div>
                 <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground flex-shrink-0 transition-transform", open && "rotate-180")} />
               </>
@@ -368,10 +391,10 @@ export function AccountSwitcher({
 
           {mvPopover && activeAccount && (
             <div className="flex items-center gap-4 rounded-t-3xl bg-background px-4 pt-4 pb-3" data-mv-account-current="">
-              <AccountAvatar account={activeAccount} size="xl" />
+              <AccountAvatar account={activeAccount} accounts={accounts} size="xl" />
               <div className="min-w-0 flex-1">
-                <p className="text-lg leading-6 truncate">{displayName || displayEmail}</p>
-                {displayName && <p className="text-sm text-muted-foreground truncate">{displayEmail}</p>}
+                <p className="text-lg leading-6 wrap-anywhere">{displayName}</p>
+                {displaySubtitle && <p className="text-sm text-muted-foreground wrap-anywhere">{displaySubtitle}</p>}
               </div>
             </div>
           )}
@@ -410,6 +433,7 @@ export function AccountSwitcher({
             {listedAccounts.map((account) => {
               const isActive = account.id === activeAccountId;
               const isDraggable = !account.isDefault && accounts.length > 2;
+              const text = accountRowText(account, accounts);
               return (
                 <div
                   key={account.id}
@@ -434,13 +458,13 @@ export function AccountSwitcher({
                   className={cn(
                     "w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors",
                     isActive ? "bg-accent/50" : "hover:bg-muted",
-                    (!isActive && !account.isDefault) ? (isDraggable ? "pe-16" : "pe-10") : (isDraggable && "pe-7")
+                    isDraggable && "pe-7"
                   )}
                   role="menuitem"
                   disabled={isActive}
                 >
                   <div className="relative flex-shrink-0">
-                    <AccountAvatar account={account} size="md" />
+                    <AccountAvatar account={account} accounts={accounts} size="md" />
                     {isActive && (
                       <div className="absolute -bottom-0.5 -end-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
                         <Check className="w-2.5 h-2.5 text-primary-foreground" />
@@ -449,62 +473,69 @@ export function AccountSwitcher({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-medium truncate">
-                        {toUnicodeEmail(account.displayName || account.label)}
+                      <span className="text-sm font-medium wrap-anywhere" title={toUnicodeEmail(text.title)}>
+                        {toUnicodeEmail(text.title)}
                       </span>
-                      {account.isDefault && (
-                        <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" />
+                      {account.isDefault && accounts.length > 1 && (
+                        <span title={tAccounts("default_badge")} className="flex-shrink-0 inline-flex">
+                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" aria-label={tAccounts("default_badge")} />
+                        </span>
                       )}
                       <UnreadBadge count={unreadFor(account)} />
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {toUnicodeEmail(account.email || account.username)}
-                    </p>
-                    {account.awaitingSignIn && (
-                      <p className="text-xs text-primary">{t("sign_in_again")}</p>
+                    {text.subtitle && (
+                      <p className="text-xs text-muted-foreground wrap-anywhere" title={toUnicodeEmail(text.subtitle)}>
+                        {toUnicodeEmail(text.subtitle)}
+                      </p>
                     )}
-                    {/* Server and connection state: Mountain View keeps the line
-                        only for an account in trouble. */}
-                    <div className={cn("flex items-center gap-1 mt-0.5", mvPopover && !account.hasError && "hidden")}>
-                      {account.hasError ? (
-                        <AlertCircle className="w-3 h-3 text-destructive" />
-                      ) : (
-                        <span className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          account.isConnected ? "bg-green-500" : "bg-muted-foreground/40"
-                        )} />
-                      )}
-                      <span className="text-[0.625rem] text-muted-foreground truncate">
-                        {(() => { try { return toUnicodeDomain(new URL(account.serverUrl).hostname); } catch { return account.serverUrl; } })()}
-                      </span>
-                    </div>
+                    {account.awaitingSignIn && <p className="text-xs text-primary">{t("sign_in_again")}</p>}
+                    {/* The server line: only for an account in trouble, or
+                        when two accounts have the same address. */}
+                    {(account.hasError || sharesAddress(account)) && (
+                      <div className="flex items-center gap-1 mt-0.5" data-testid="account-server">
+                        {account.hasError && <AlertCircle className="w-3 h-3 text-destructive" />}
+                        <span className="text-xs text-muted-foreground truncate">
+                          {(() => { try { return toUnicodeDomain(new URL(account.serverUrl).hostname); } catch { return account.serverUrl; } })()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </button>
                 {isDraggable && (
                   <span
                     aria-hidden
-                    className={cn(
-                      "pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground/50 opacity-0 transition-opacity group-hover/acct:opacity-100",
-                      !isActive && !account.isDefault ? "end-10" : "end-1.5"
-                    )}
+                    className="pointer-events-none absolute top-1/2 -translate-y-1/2 end-1.5 text-muted-foreground/50 opacity-0 transition-opacity group-hover/acct:opacity-100"
                   >
                     <GripVertical className="w-4 h-4" />
                   </span>
                 )}
-                {!isActive && !account.isDefault && (
-                  // Shown on hover and focus, and always on a touch screen (R7).
-                  <IconButton
-                    onClick={(e) => void handleRemove(e, account)}
-                    role="menuitem"
-                    label={t("remove_account")}
-                    className="absolute end-1.5 top-1/2 -translate-y-1/2 text-muted-foreground opacity-0 transition-opacity group-hover/acct:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <X />
-                  </IconButton>
-                )}
                 </div>
               );
             })}
+            {waiting.map((wait) => (
+              <button
+                key={wait.account}
+                type="button"
+                role="menuitem"
+                data-testid="account-needs-sign-in"
+                className="w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors hover:bg-muted"
+                onClick={() => {
+                  setOpen(false);
+                  router.push(`/login?mode=add-account&username=${encodeURIComponent(wait.username)}` as never);
+                }}
+              >
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-destructive" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium truncate">{toUnicodeEmail(wait.label)}</span>
+                  <span className="block text-xs text-foreground">{tWipe("needs_sign_in")}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {wait.unsent
+                      ? tWipe("switcher_waiting", { count: wait.unsent, date: waitDate(wait.until) })
+                      : tWipe("switcher_kept", { date: waitDate(wait.until) })}
+                  </span>
+                </span>
+              </button>
+            ))}
           </div>
 
           {/* Mountain View: the account actions as rows closing the white card,
@@ -539,7 +570,7 @@ export function AccountSwitcher({
                     className="w-full flex items-center gap-4 px-5 py-3 text-sm text-start hover:bg-muted transition-colors"
                     role="menuitem"
                   >
-                    <LogOut className="w-5 h-5 text-muted-foreground" />
+                    <LogOut className="w-5 h-5 shrink-0 text-muted-foreground" />
                     <span className="truncate">{t("sign_out_of", { account: displayEmail })}</span>
                   </button>
                 )}
@@ -595,6 +626,20 @@ export function AccountSwitcher({
             </div>
           )}
 
+          {!mvPopover && (
+            <div className={cn(accounts.length >= getMaxAccounts() && "border-t border-border")}>
+              <button
+                onClick={handleManageAccounts}
+                data-testid="manage-accounts"
+                className="w-full flex items-center gap-2 px-3 py-2 pointer-coarse:min-h-11 text-sm text-start text-foreground hover:bg-muted transition-colors"
+                role="menuitem"
+              >
+                <Settings className="w-4 h-4" />
+                {tFolders("manage_accounts")}
+              </button>
+            </div>
+          )}
+
           {/* Accessibility and help links the operator set (lib/help-links.ts). */}
           {!mvPopover && (
             <HelpMenuItems
@@ -639,7 +684,6 @@ export function AccountSwitcher({
         </div>,
         document.body
       )}
-      <ConfirmDialog {...confirmDialogProps} />
     </>
   );
 }

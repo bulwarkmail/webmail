@@ -5,6 +5,8 @@ import { useFaviconBadge } from '@/hooks/use-favicon-badge';
 import { useAppBadge } from '@/hooks/use-app-badge';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useAccountStore } from '@/stores/account-store';
+import { useAuthStore } from '@/stores/auth-store';
 import type { Mailbox } from '@/lib/jmap/types';
 
 vi.mock('@/hooks/use-favicon-badge', () => ({
@@ -94,6 +96,51 @@ describe('FaviconBadge', () => {
 
     expect(useFaviconBadgeMock).toHaveBeenCalledWith(4, true);
     expect(useAppBadgeMock).toHaveBeenCalledWith(4, true);
+  });
+
+  // Usability test 2026-11-04, mail-6: with two accounts the badge counted
+  // only the one on screen (11 instead of 31).
+  describe('with several accounts', () => {
+    const accounts = (ids: string[], connected = true) =>
+      ids.map((id) => ({ id, label: id, email: id, username: id, isConnected: connected }));
+
+    beforeEach(() => {
+      useAccountStore.setState({ accounts: accounts(['a', 'b', 'c']) } as never);
+      useAuthStore.setState({ activeAccountId: 'a' } as never);
+      useEmailStore.setState({
+        mailboxes: [mailbox({ id: 'inbox', role: 'inbox', unreadEmails: 11 })],
+        accountMailboxes: {
+          // The active login's cached copy is older; `mailboxes` is the live one.
+          a: [mailbox({ id: 'inbox', role: 'inbox', unreadEmails: 2 })],
+          b: [mailbox({ id: 'inbox', role: 'inbox', unreadEmails: 20 }), mailbox({ id: 'shared', role: 'inbox', isShared: true, unreadEmails: 50 })],
+        },
+      });
+    });
+
+    afterEach(() => {
+      useAccountStore.setState({ accounts: [] } as never);
+      useEmailStore.setState({ accountMailboxes: {} });
+      useSettingsStore.setState({ unreadBadgeAllAccounts: true });
+    });
+
+    it('adds up the inbox of every signed-in account', () => {
+      render(<FaviconBadge />);
+      // c's folders are not loaded yet and add nothing.
+      expect(useAppBadgeMock).toHaveBeenLastCalledWith(31, true);
+      expect(useFaviconBadgeMock).toHaveBeenLastCalledWith(31, true);
+    });
+
+    it('counts only the open account when the setting is off', () => {
+      useSettingsStore.setState({ unreadBadgeAllAccounts: false });
+      render(<FaviconBadge />);
+      expect(useAppBadgeMock).toHaveBeenLastCalledWith(11, true);
+    });
+
+    it('leaves out an account that is signed out', () => {
+      useAccountStore.setState({ accounts: [...accounts(['a']), ...accounts(['b'], false)] } as never);
+      render(<FaviconBadge />);
+      expect(useAppBadgeMock).toHaveBeenLastCalledWith(11, true);
+    });
   });
 
   it('badges zero when there is no inbox yet', () => {

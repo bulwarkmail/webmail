@@ -5,11 +5,12 @@ import { Loader2, Sparkles } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
-import { DEFAULT_OAUTH_SCOPES } from '@/lib/oauth/scopes';
+import { DEFAULT_OAUTH_SCOPES, STALWART_SCOPE_FULL } from '@/lib/oauth/scopes';
 import { SettingsSection, SettingItem, SectionNav } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { AdminSaveBar } from '@/components/admin/save-bar';
 import { withEdit } from '@/lib/admin/edits';
 import { useAdminFeedback } from '@/components/admin/feedback';
@@ -56,10 +57,16 @@ export function AuthPage() {
     return () => window.removeEventListener('focus', checkSignIn);
   }, []);
 
+  // Only the first load shows the skeleton: swapping the page out after a
+  // save would throw away the scroll position.
   async function fetchConfig() {
-    setLoading(true);
-    const res = await apiFetch('/api/admin/config');
-    if (res.ok) setConfig(await res.json());
+    try {
+      const res = await apiFetch('/api/admin/config');
+      if (!res.ok) throw new Error();
+      setConfig(await res.json());
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load the settings' });
+    }
     setLoading(false);
   }
 
@@ -138,9 +145,18 @@ export function AuthPage() {
       });
       const data = await res.json();
       if (res.ok) {
+        const mobile = data.mobileClient === 'created' || data.mobileClient === 'updated'
+          ? ` Bulwark Mobile client ${data.mobileClient} (${data.mobileClientId}, ${data.mobileRedirectUri}).`
+          : data.mobileClient === 'failed'
+            ? ` Stalwart refused the Bulwark Mobile client (${data.mobileClientId}); the app registers its own instead, without access to account settings.`
+            : '';
+        const scopes: string[] = Array.isArray(data.stalwartScopes) ? data.stalwartScopes : [];
+        const limited = scopes.length > 0 && !scopes.includes(STALWART_SCOPE_FULL)
+          ? ' Only a Stalwart superuser can allow full access, so the client got security and settings access; the admin panel stays out of reach through SSO.'
+          : '';
         setMessage({
           type: 'success',
-          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.`,
+          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}${limited}`,
         });
         setEdits({});
         setSetupOpen(false);
@@ -167,9 +183,7 @@ export function AuthPage() {
     return (
       <div>
         <AdminPageHeader title={PAGE.label} description={PAGE.description} />
-        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading
-        </div>
+        <AdminBodySkeleton status="Loading" />
       </div>
     );
   }
@@ -205,7 +219,7 @@ export function AuthPage() {
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="mt-4 space-y-4 [overflow-wrap:anywhere]">
           <div>
             <label htmlFor="setup-origin" className="block text-xs font-medium text-foreground mb-1">
               Webmail origin
@@ -220,7 +234,7 @@ export function AuthPage() {
               className={cn(inputClass, 'w-full')}
             />
             <p className="text-[0.6875rem] text-muted-foreground mt-1">
-              Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}/&lt;locale&gt;/auth/callback</code>) on Stalwart.
+              Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}{(process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '')}/&lt;locale&gt;/auth/callback</code>) on Stalwart.
             </p>
             {!setupOriginValid && setupOrigin.length > 0 && (
               <p className="text-[0.6875rem] text-destructive mt-1">Must be like https://host with no path.</p>
@@ -256,6 +270,9 @@ export function AuthPage() {
             />
             Also enable “OAuth only” (hide password login)
           </label>
+          <p className="text-[0.6875rem] text-muted-foreground">
+            On Stalwart 1.0 this also registers a client for Bulwark Mobile: <code>bulwark-mobile</code>, no secret, redirect URI <code>org.bulwarkmail.mobile:/auth/callback</code>.
+          </p>
         </div>
       </Dialog>
 
@@ -270,7 +287,7 @@ export function AuthPage() {
             <div className="flex flex-col items-start gap-1 sm:items-end">
               <Button type="button" size="sm" className="gap-2" onClick={openSetupDialog} disabled={setupRunning || configReadOnly || setupSignIn?.signedIn === false}>
                 {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                {setupRunning ? 'Configuring…' : 'Set up automagically'}
+                {setupRunning ? 'Configuring…' : 'Set up with Stalwart'}
               </Button>
               {configReadOnly && (
                 <p className="text-xs text-destructive">
@@ -291,12 +308,14 @@ export function AuthPage() {
           </SettingItem>
           <ConfigToggleItem label="Enabled" configKey="oauthEnabled" value={currentValue('oauthEnabled') as boolean} source={config.oauthEnabled?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="OAuth only" description="Hide password login form when enabled" configKey="oauthOnly" value={currentValue('oauthOnly') as boolean} source={config.oauthOnly?.source} onChange={handleChange} onRevert={handleRevert} />
+          <ConfigToggleItem label="Password fallback" description={'With OAuth only: show a "Sign in with a password" link under the SSO button and allow password sign-in. For SSO deployments whose accounts also have local passwords.'} configKey="oauthPasswordFallbackEnabled" value={currentValue('oauthPasswordFallbackEnabled') as boolean} source={config.oauthPasswordFallbackEnabled?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Client ID" configKey="oauthClientId" value={currentValue('oauthClientId') as string} source={config.oauthClientId?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Client secret" configKey="oauthClientSecret" value={currentValue('oauthClientSecret') as string} source={config.oauthClientSecret?.source} onChange={handleChange} onRevert={handleRevert} type="password" placeholder={config.oauthClientSecret?.hasValue ? '••••••••  (saved - type to replace)' : undefined} />
           <ConfigTextItem label="Issuer URL" configKey="oauthIssuerUrl" value={currentValue('oauthIssuerUrl') as string} source={config.oauthIssuerUrl?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://auth.example.com" wide />
           <ConfigToggleItem label="Allow private endpoints" description="Permit discovered endpoints on other hosts to resolve to RFC-1918 / loopback addresses. Endpoints on the issuer's own host are always allowed, so split-DNS setups rarely need this." configKey="oauthAllowPrivateEndpoints" value={currentValue('oauthAllowPrivateEndpoints') as boolean} source={config.oauthAllowPrivateEndpoints?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Scopes" description={`Space-separated scopes that replace the defaults (${DEFAULT_OAUTH_SCOPES}). Leave blank to use them. offline_access is not requested by default; add it here or under Extra Scopes if your provider only issues refresh tokens for it, or sessions end when the access token expires.`} configKey="oauthScopes" value={currentValue('oauthScopes') as string} source={config.oauthScopes?.source} onChange={handleChange} onRevert={handleRevert} placeholder={DEFAULT_OAUTH_SCOPES} wide />
           <ConfigTextItem label="Extra scopes" description={`Additional space-separated scopes appended to the defaults (${DEFAULT_OAUTH_SCOPES}). Ignored when OAuth Scopes is set.`} configKey="oauthExtraScopes" value={currentValue('oauthExtraScopes') as string} source={config.oauthExtraScopes?.source} onChange={handleChange} onRevert={handleRevert} placeholder="urn:ietf:params:oauth:..." wide />
+          <ConfigTextItem label="Resource" description="RFC 8707 resource indicator sent with the authorization request, for providers that issue access tokens per API (Pocket ID, for example). The token's audience is then this resource, usually the mail server's URL. Must be an absolute URI without a fragment. Not sent when signing in to a server entry with its own provider." configKey="oauthResource" value={currentValue('oauthResource') as string} source={config.oauthResource?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://mail.example.com" wide />
         </SettingsSection>
 
         <SettingsSection id="sso" title="Single sign-on">
@@ -325,7 +344,7 @@ export function AuthPage() {
         </SettingsSection>
 
         <SettingsSection id="session" title="Session and security">
-          <ConfigSelectItem label="Cookie SameSite" configKey="cookieSameSite" value={currentValue('cookieSameSite') as string} source={config.cookieSameSite?.source} options={['lax', 'strict', 'none']} onChange={handleChange} onRevert={handleRevert} />
+          <ConfigSelectItem label="Cookie SameSite" description="When the browser sends the sign-in cookies with requests from other sites. Lax suits most setups; None is needed when Bulwark is embedded in another site, and Strict blocks links into Bulwark from elsewhere." configKey="cookieSameSite" value={currentValue('cookieSameSite') as string} source={config.cookieSameSite?.source} options={['lax', 'strict', 'none']} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Allowed frame ancestors" configKey="allowedFrameAncestors" value={currentValue('allowedFrameAncestors') as string} source={config.allowedFrameAncestors?.source} onChange={handleChange} onRevert={handleRevert} placeholder="'none' or https://..." wide />
           <ConfigTextItem label="Parent origin" description="For embedded mode communication" configKey="parentOrigin" value={currentValue('parentOrigin') as string} source={config.parentOrigin?.source} onChange={handleChange} onRevert={handleRevert} />
         </SettingsSection>

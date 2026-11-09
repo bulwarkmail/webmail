@@ -5,12 +5,16 @@
 // register endpoint we hit on the relay.
 
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import type { AccountInfo, EmailPushConfig, Mailbox } from '@/lib/jmap/types';
 import { isJmapSetError, jmapErrorType } from '@/lib/jmap/jmap-error';
+import { WebPushStepError } from '@/lib/web-push-errors';
 import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
 import { isBuiltInHost, relayAllowed } from '@/lib/outgoing-hosts';
 import { noThirdPartyTraffic } from '@/lib/third-party-mode';
 import { IS_LITE } from '@/lib/lite';
+import { serviceWorkerUrl, SW_SCOPE } from '@/lib/app-update';
+import { forgetRelayRegistration, keepRelayRegistration, readRelayRegistrations } from '@/lib/pwa-notify/worker-state';
 import {
   EMPTY_NOTIFICATION_MUTES,
   isAccountMuted,
@@ -49,13 +53,16 @@ function relayBaseKey(accountId: string): string {
   return RELAY_BASE_PREFIX + accountId;
 }
 
+/** The browser endpoint this account last gave the relay: see relayDroppedOurEndpoint. */
+const ENDPOINT_PREFIX = 'bulwark.push.endpoint.v1.';
+function endpointKey(accountId: string): string {
+  return ENDPOINT_PREFIX + accountId;
+}
+
 function emailPushRefusedKey(accountId: string): string {
   return EMAIL_PUSH_REFUSED_PREFIX + accountId;
 }
 
-const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
-const SW_SCOPE = `${BASE_PATH}/`;
-const SW_URL = `${BASE_PATH}/sw.js`;
 
 // Re-exported for callers that already import the relay default from here.
 // The relay list itself lives in lib/push-relays.ts.
@@ -81,8 +88,11 @@ const PUSH_TYPES = ['EmailDelivery'] as const;
 // capability and get the plain EmailDelivery subscription as before.
 export const EMAIL_PUSH_CAPABILITY = 'urn:ietf:params:jmap:emailpush';
 
-// Only ids: the relay stays content-blind and the SW dedupes on them.
-const EMAIL_PUSH_PROPERTIES = ['id', 'threadId'];
+// Only ids: the relay stays content-blind and the SW dedupes on them. Never
+// add from, subject or preview: they would reach the push service around
+// the device policy "Push without sender and subject" (its text is held
+// back in app/api/push/preview). A test keeps this list as it is.
+export const EMAIL_PUSH_PROPERTIES: readonly string[] = ['id', 'threadId'];
 
 function sameTypes(a: readonly string[] | null | undefined, b: readonly string[]): boolean {
   if (!a || a.length !== b.length) return false;
@@ -406,7 +416,11 @@ export interface EnableWebPushParams {
   client: IJMAPClient;
   // Optional - falls back to DEFAULT_RELAY_BASE_URL.
   relayBaseUrl?: string;
-  // Free-form label the relay shows in /metrics; never returned in pushes.
+  // Free-form label (callers pass the sign-in name). The relay stores it with
+  // the registration and copies it into every push it forwards: encrypted for
+  // the browser in a Web Push payload, readable to Google and Apple in the FCM
+  // and APNs payloads of the native apps. It is not part of the relay's
+  // /metrics.
   accountLabel?: string;
   // Destroy the recorded server-side subscription and create a brand-new one
   // instead of refreshing the existing record's expiry. Stalwart binds the set
@@ -414,6 +428,8 @@ export interface EnableWebPushParams {
   // that outlives a permission change keeps pushing for mailboxes the user can
   // no longer read - recreating is the only client-side remedy (#841).
   forceRecreate?: boolean;
+  // For a re-sync: stop if another tab turned push off while this waited its turn.
+  onlyIfStillOn?: boolean;
   // Scope OS push notifications to Inbox-only mail. Mirrors settings-store's
   // pushNotifyInboxOnly. Required, not optional: it changes the server-side
   // delivery filter, so every caller must decide explicitly.
@@ -438,6 +454,8 @@ export function isWebPushSupported(): boolean {
   // No service worker is registered in the static Lite build (see
   // components/service-worker-registration.tsx), so push cannot be enabled.
   if (IS_LITE) return false;
+  // Electron has the API, but subscribing always fails: it has no push service.
+  if (isDesktopApp()) return false;
   return (
     'serviceWorker' in navigator &&
     'PushManager' in window &&
@@ -517,12 +535,14 @@ function readPushKey(
 }
 
 async function fetchVapidPublicKey(relayBaseUrl: string): Promise<string> {
-  const res = await fetch(buildRelayUrl(relayBaseUrl, '/api/push/vapid-public-key'));
+  const res = await fetch(buildRelayUrl(relayBaseUrl, '/api/push/vapid-public-key')).catch((err: unknown) => {
+    throw new WebPushStepError('relay', `Could not reach the push relay: ${String(err)}`);
+  });
   if (!res.ok) {
     if (res.status === 503) {
       throw new Error('The push relay does not have Web Push configured');
     }
-    throw new Error(`Failed to fetch VAPID key: ${res.status}`);
+    throw new WebPushStepError('relay', `Failed to fetch VAPID key: ${res.status}`);
   }
   const body = (await res.json()) as { publicKey?: string };
   if (!body.publicKey) throw new Error('Relay returned an empty VAPID key');
@@ -532,11 +552,11 @@ async function fetchVapidPublicKey(relayBaseUrl: string): Promise<string> {
 async function ensurePermission(): Promise<void> {
   if (Notification.permission === 'granted') return;
   if (Notification.permission === 'denied') {
-    throw new Error('Notifications are blocked - allow them in browser settings to continue');
+    throw new WebPushStepError('blocked', 'Notifications are blocked - allow them in browser settings to continue');
   }
   const result = await Notification.requestPermission();
   if (result !== 'granted') {
-    throw new Error('Notification permission was not granted');
+    throw new WebPushStepError(result === 'denied' ? 'blocked' : 'not-granted', 'Notification permission was not granted');
   }
 }
 
@@ -546,7 +566,7 @@ async function ensureServiceWorker(): Promise<ServiceWorkerRegistration> {
   // push handler is in place.
   let registration = await navigator.serviceWorker.getRegistration(SW_SCOPE);
   if (!registration) {
-    registration = await navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE });
+    registration = await navigator.serviceWorker.register(serviceWorkerUrl(), { scope: SW_SCOPE });
   }
   await navigator.serviceWorker.ready;
   return registration;
@@ -575,9 +595,11 @@ async function registerWithRelay(params: {
       subscription: { endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } },
       accountLabel: params.accountLabel,
     }),
+  }).catch((err: unknown) => {
+    throw new WebPushStepError('relay', `Could not reach the push relay: ${String(err)}`);
   });
   if (!res.ok) {
-    throw new Error(`Relay register failed: ${res.status}`);
+    throw new WebPushStepError('relay', `Relay register failed: ${res.status}`);
   }
 }
 
@@ -624,28 +646,85 @@ async function relayReportsDead(
   return (await relayStatusFor(relayBaseUrl, subscriptionId)) === 'inactive';
 }
 
+// Stalwart rate-limits PushVerification per account (60 s by default).
+const VERIFICATION_RESEND_AFTER_MS = 62_000;
+const VERIFICATION_TIMEOUT_MS = 80_000;
+
+/**
+ * The relay deletes a record when the push service answers 404 or 410. The browser
+ * doesn't get told: it keeps the subscription, and registering that endpoint again
+ * only lasts until the next push. Only for the endpoint this account registered:
+ * after another account moved the browser on, a missing record means nothing.
+ */
+async function relayDroppedOurEndpoint(
+  accountId: string,
+  relayBaseUrl: string,
+  subscriptionId: string,
+  endpoint: string,
+): Promise<boolean> {
+  if (localStorage.getItem(relayBaseKey(accountId)) !== relayBaseUrl) return false;
+  if (localStorage.getItem(endpointKey(accountId)) !== endpoint) return false;
+  try {
+    const res = await fetch(buildRelayUrl(relayBaseUrl, `/api/push/active/${encodeURIComponent(subscriptionId)}`));
+    if (res.status !== 404) return false;
+    // An old relay without this route answers 404 for everything.
+    const body = (await res.json().catch(() => null)) as { error?: unknown } | null;
+    return body?.error === 'Unknown subscription';
+  } catch {
+    return false;
+  }
+}
+
+/** The browser moved to a new endpoint: every other login's relay record has to follow, connected in this tab or not. */
+async function moveOtherLogins(accountId: string, subscription: PushSubscription): Promise<void> {
+  const others = Object.entries(await readRelayRegistrations()).filter(([id]) => id !== accountId);
+  for (const [, entry] of others) {
+    await registerWithRelay({
+      relayBaseUrl: entry.relay,
+      subscriptionId: entry.subscriptionId,
+      subscription: { endpoint: subscription.endpoint, keys: { p256dh: readPushKey(subscription, 'p256dh'), auth: readPushKey(subscription, 'auth') } },
+      accountLabel: entry.accountLabel,
+    }).catch(() => undefined);
+  }
+}
+
 async function pollVerificationCode(
   relayBaseUrl: string,
   subscriptionId: string,
+  askAgain: () => Promise<unknown>,
 ): Promise<string> {
-  // Stalwart per-account rate-limits PushVerification posts (default 60s).
-  // If there are leftover unverified subscriptions on the account, our new
-  // one queues up behind them - so we wait long enough to clear one verify
-  // window even in the unlucky case.
-  const timeoutAt = Date.now() + 75_000;
+  // If there are leftover unverified subscriptions on the account, our new one
+  // queues up behind them, so we wait long enough to clear one verify window.
+  //
+  // Stalwart hands out the lowest free subscription id, so one destroyed and
+  // created again within the window (off and on again, or a retry) gets the same
+  // id. It takes that for a repeat and drops the verification for good, on 0.16.27
+  // and 1.0 alike (push.rs: `verified_id == subscription.id`). Any change to the
+  // subscription after the window makes it send one.
+  const startedAt = Date.now();
+  const timeoutAt = startedAt + VERIFICATION_TIMEOUT_MS;
+  let askedAgain = false;
   let delay = 400;
   while (Date.now() < timeoutAt) {
-    const res = await fetch(
-      buildRelayUrl(relayBaseUrl, `/api/push/verify/${encodeURIComponent(subscriptionId)}`),
-    );
-    if (res.ok) {
-      const body = (await res.json()) as { verificationCode?: string | null };
-      if (body.verificationCode) return body.verificationCode;
+    if (!askedAgain && Date.now() - startedAt >= VERIFICATION_RESEND_AFTER_MS) {
+      askedAgain = true;
+      await askAgain().catch(() => undefined);
+    }
+    try {
+      const res = await fetch(
+        buildRelayUrl(relayBaseUrl, `/api/push/verify/${encodeURIComponent(subscriptionId)}`),
+      );
+      if (res.ok) {
+        const body = (await res.json()) as { verificationCode?: string | null };
+        if (body.verificationCode) return body.verificationCode;
+      }
+    } catch {
+      // A blip on the way to the relay; the code is still coming.
     }
     await new Promise((r) => setTimeout(r, delay));
     delay = Math.min(delay * 1.5, 2000);
   }
-  throw new Error('Timed out waiting for PushVerification from the JMAP server');
+  throw new WebPushStepError('verification-timeout', 'Timed out waiting for PushVerification from the JMAP server');
 }
 
 // Push the subscription's expiry forward and re-sync `types` / the delivery
@@ -693,6 +772,28 @@ async function refreshSubscriptionExpires(
   }
 }
 
+// Another tab may be on the same steps, and the relay and the server only know
+// one registration per device: one tab would reap the subscription the other is
+// verifying. Tabs take turns, in every browser that has Web Locks. Whoever comes
+// second finds the first one's work and only refreshes it.
+function oneTabAtATime<T>(run: () => Promise<T>): Promise<T> {
+  const limited = () => withinPushSetupLimit(run);
+  const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+  return locks ? locks.request('bulwark-web-push', limited) as Promise<T> : limited();
+}
+
+// A worker that never gets ready or a subscribe() that never answers would hold up
+// every tab and every login, for good. Verification alone can take 80 s.
+const PUSH_SETUP_LIMIT_MS = 120_000;
+
+function withinPushSetupLimit<T>(run: () => Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const limit = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(new WebPushStepError('verification-timeout', 'Push setup took too long')), PUSH_SETUP_LIMIT_MS);
+  });
+  return Promise.race([run(), limit]).finally(() => clearTimeout(timer));
+}
+
 export async function enableWebPush(
   params: EnableWebPushParams,
 ): Promise<EnableWebPushResult> {
@@ -705,7 +806,18 @@ export async function enableWebPush(
   const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
   if (!relayBaseUrl) throw new Error('relayBaseUrl is required');
 
+  // Outside the lock: the browser's question must come with the user's click.
   await ensurePermission();
+  return oneTabAtATime(() => enableWebPushForThisTab(params, relayBaseUrl));
+}
+
+async function enableWebPushForThisTab(
+  params: EnableWebPushParams,
+  relayBaseUrl: string,
+): Promise<EnableWebPushResult> {
+  if (params.onlyIfStillOn && !localStorage.getItem(subscriptionIdKey(params.client.getAccountId()))) {
+    return { subscriptionId: '' };
+  }
   const registration = await ensureServiceWorker();
 
   const vapidPublicKey = await fetchVapidPublicKey(relayBaseUrl);
@@ -735,15 +847,23 @@ export async function enableWebPush(
     await pushSubscription.unsubscribe().catch(() => undefined);
     pushSubscription = null;
   }
+  const accountId = params.client.getAccountId();
+  const deviceClientId = getOrCreateDeviceClientId(accountId);
+  let endpointGivenUp = false;
+  if (pushSubscription && await relayDroppedOurEndpoint(accountId, relayBaseUrl, deviceClientId, pushSubscription.endpoint)) {
+    await pushSubscription.unsubscribe().catch(() => undefined);
+    pushSubscription = null;
+    endpointGivenUp = true;
+    // The other accounts' records point at the old endpoint: their turn comes too.
+    lastResync.clear();
+  }
   if (!pushSubscription) {
     pushSubscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
     });
+    if (endpointGivenUp) await moveOtherLogins(accountId, pushSubscription);
   }
-
-  const accountId = params.client.getAccountId();
-  const deviceClientId = getOrCreateDeviceClientId(accountId);
 
   await registerWithRelay({
     relayBaseUrl,
@@ -757,6 +877,12 @@ export async function enableWebPush(
     },
     accountLabel: params.accountLabel,
   });
+  localStorage.setItem(endpointKey(accountId), pushSubscription.endpoint);
+  await keepRelayRegistration(accountId, {
+    relay: relayBaseUrl,
+    subscriptionId: deviceClientId,
+    ...(params.accountLabel ? { accountLabel: params.accountLabel } : {}),
+  }, vapidPublicKey);
 
   // Reuse the JMAP-side PushSubscription if the server still has it, just
   // refreshing the expiry so it doesn't time out between sessions. With
@@ -785,12 +911,16 @@ export async function enableWebPush(
   const storedServerId = localStorage.getItem(subIdKey);
   let replacedServerId: string | null = null;
   if (storedServerId) {
-    const match = existingSubs.find((s) => s.id === storedServerId);
+    // By device too: Stalwart gives the id of an expired subscription to the next
+    // one, which may be another device's.
+    const match = existingSubs.find((s) => s.id === storedServerId && s.deviceClientId === deviceClientId);
     if (match) {
       if (!params.forceRecreate) {
         const refreshed = await refreshSubscriptionExpires(params.client, match, emailPush);
         if (refreshed) {
           rememberRefusedEmailPushAccounts(accountId, refusedBefore, emailPush, refreshed.emailPush);
+          // Unless it moved, which goes the other way, this is where it lives.
+          if (!localStorage.getItem(relayBaseKey(accountId))) localStorage.setItem(relayBaseKey(accountId), relayBaseUrl);
           return { subscriptionId: storedServerId };
         }
       }
@@ -821,7 +951,7 @@ export async function enableWebPush(
   //     relay can't vouch for (a different relay, a non-Bulwark client, a
   //     network blip) - is left untouched.
   for (const s of existingSubs) {
-    if (s.id === storedServerId) continue;
+    if (s.id === replacedServerId) continue;
     if (s.deviceClientId === deviceClientId) {
       await params.client.destroyPushSubscription(s.id).catch(() => undefined);
       continue;
@@ -858,12 +988,26 @@ export async function enableWebPush(
   const serverAssignedId = created.result;
   rememberRefusedEmailPushAccounts(accountId, refusedBefore, emailPush, created.emailPush);
 
-  const verificationCode = await pollVerificationCode(relayBaseUrl, deviceClientId);
-  await params.client.verifyPushSubscription(serverAssignedId, verificationCode);
+  try {
+    const verificationCode = await pollVerificationCode(relayBaseUrl, deviceClientId, () =>
+      params.client.updatePushSubscription(serverAssignedId, { expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS) }),
+    );
+    await params.client.verifyPushSubscription(serverAssignedId, verificationCode);
+  } catch (err) {
+    // Unverified, it never delivers anything, takes up one of the account's
+    // places and stands in the way of the next verification.
+    await params.client.destroyPushSubscription(serverAssignedId).catch(() => undefined);
+    throw err;
+  }
+  const previousRelay = localStorage.getItem(relayBaseKey(accountId));
   localStorage.setItem(subIdKey, serverAssignedId);
   localStorage.setItem(relayBaseKey(accountId), relayBaseUrl);
   if (replacedServerId) {
     await params.client.destroyPushSubscription(replacedServerId).catch(() => undefined);
+  }
+  // Moved: the old relay would otherwise keep this browser's endpoint for 90 days.
+  if (previousRelay && previousRelay !== relayBaseUrl) {
+    await dropRelayRecord(previousRelay, deviceClientId);
   }
 
   return { subscriptionId: serverAssignedId };
@@ -874,46 +1018,76 @@ export interface DisableWebPushParams {
   relayBaseUrl?: string;
 }
 
-// Best-effort teardown: clear the JMAP subscription, the relay mapping, and
-// (only when no other accounts still need it) the browser-wide
-// PushSubscription. Any single failure is swallowed so the user always ends
-// up in a "disabled" state locally.
-export async function disableWebPush(params: DisableWebPushParams): Promise<void> {
-  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
+/** Nothing is sent to a relay that may not be used, such as the built-in one in the no-third-party mode. */
+async function dropRelayRecord(relayBaseUrl: string, deviceClientId: string): Promise<boolean> {
+  if (!relayBaseUrl || !relayAllowed(relayBaseUrl)) return true;
+  try {
+    const res = await fetch(
+      buildRelayUrl(relayBaseUrl, `/api/push/register/${encodeURIComponent(deviceClientId)}`),
+      { method: 'DELETE' },
+    );
+    return res.ok || res.status === 404;
+  } catch {
+    return false;
+  }
+}
+
+// Teardown: clear the JMAP subscription, the relay mapping, and (only when no
+// other accounts still need it) the browser-wide PushSubscription. A failed step
+// doesn't stop the others, and the browser always ends up "disabled" locally, so
+// a later page load won't bring push back. But a server or relay that couldn't be
+// told keeps pinging this browser for days, so the caller hears about it at the end.
+export function disableWebPush(params: DisableWebPushParams): Promise<void> {
+  // Read now: a client signing out loses it while this waits its turn.
   const accountId = params.client.getAccountId();
+  return oneTabAtATime(() => disableWebPushForThisTab(params, accountId));
+}
+
+async function disableWebPushForThisTab(params: DisableWebPushParams, accountId: string): Promise<void> {
+  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
 
   const subIdKey = subscriptionIdKey(accountId);
   const devIdKey = deviceClientIdKey(accountId);
 
   const storedServerId = localStorage.getItem(subIdKey);
   const deviceClientId = localStorage.getItem(devIdKey);
+  const registeredWith = localStorage.getItem(relayBaseKey(accountId));
 
   // Destroy every subscription the server holds for this device, not just the
   // id we happen to have recorded. A destroy that lost its round-trip, a failed
   // enable, or site data cleared between sessions can leave a registration this
   // client no longer tracks - and Stalwart keeps fanning StateChanges out to it
   // until it expires, so "disable" has to mean gone (#841).
+  const failed: string[] = [];
   const idsToDestroy = new Set<string>();
-  if (storedServerId) idsToDestroy.add(storedServerId);
+  // The stored id alone can have gone to another device since (Stalwart reuses them).
+  if (storedServerId && !deviceClientId) idsToDestroy.add(storedServerId);
   if (deviceClientId) {
-    const existingSubs = await params.client.listPushSubscriptions().catch(() => []);
+    const existingSubs = await params.client.listPushSubscriptions().catch(() => {
+      failed.push('listing the subscriptions');
+      return [];
+    });
     for (const s of existingSubs) {
       if (s.deviceClientId === deviceClientId) idsToDestroy.add(s.id);
     }
   }
   for (const id of idsToDestroy) {
-    await params.client.destroyPushSubscription(id).catch(() => undefined);
+    await params.client.destroyPushSubscription(id).catch(() => {
+      failed.push('destroying a subscription');
+    });
   }
   localStorage.removeItem(subIdKey);
   localStorage.removeItem(relayBaseKey(accountId));
+  localStorage.removeItem(endpointKey(accountId));
+  await forgetRelayRegistration(accountId);
   // Enabling again starts from the full emailPush map.
   localStorage.removeItem(emailPushRefusedKey(accountId));
 
-  if (deviceClientId && relayBaseUrl && relayAllowed(relayBaseUrl)) {
-    await fetch(
-      buildRelayUrl(relayBaseUrl, `/api/push/register/${encodeURIComponent(deviceClientId)}`),
-      { method: 'DELETE' },
-    ).catch(() => undefined);
+  if (deviceClientId) {
+    // The relay this device registered with can differ from the current choice.
+    for (const relay of new Set([registeredWith ?? relayBaseUrl, relayBaseUrl])) {
+      if (!(await dropRelayRecord(relay, deviceClientId))) failed.push('dropping the relay record');
+    }
   }
   // Keep the deviceClientId around so a later re-enable for this account
   // reuses the same relay subscriptionId rather than scattering orphans.
@@ -929,6 +1103,55 @@ export async function disableWebPush(params: DisableWebPushParams): Promise<void
     const sub = await registration?.pushManager.getSubscription();
     if (sub) await sub.unsubscribe().catch(() => undefined);
   }
+
+  if (failed.length > 0) {
+    throw new WebPushStepError('teardown', `Push is off in this browser, but ${failed.join(' and ')} failed`);
+  }
+}
+
+/**
+ * A login is signing out or being removed: nothing for it should wake this
+ * browser any more, and it won't be there to refresh anything. Takes no relay
+ * from the settings: what counts is the one it registered with.
+ */
+export async function endWebPushForSignOut(client: IJMAPClient): Promise<void> {
+  let accountId: string;
+  try {
+    accountId = client.getAccountId();
+  } catch {
+    return;
+  }
+  if (!accountId || typeof localStorage === 'undefined' || !localStorage.getItem(subscriptionIdKey(accountId))) return;
+  const relayBaseUrl = localStorage.getItem(relayBaseKey(accountId)) ?? undefined;
+  await disableWebPush({ client, relayBaseUrl }).catch(() => undefined);
+}
+
+/**
+ * Nobody stays signed in here. A login without a connection can't reach its mail
+ * server, but the relay needs no login: without the record its pings go nowhere.
+ * Whatever is left of the keys goes, so nothing keeps the browser subscription.
+ */
+export async function dropAllWebPushRegistrations(): Promise<void> {
+  if (typeof localStorage === 'undefined') return;
+  const accounts: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith(SUBSCRIPTION_ID_PREFIX)) accounts.push(key.slice(SUBSCRIPTION_ID_PREFIX.length));
+  }
+  if (accounts.length === 0) return;
+  for (const accountId of accounts) {
+    const relay = localStorage.getItem(relayBaseKey(accountId));
+    const device = localStorage.getItem(deviceClientIdKey(accountId));
+    if (relay && device) await dropRelayRecord(relay, device);
+    localStorage.removeItem(subscriptionIdKey(accountId));
+    localStorage.removeItem(relayBaseKey(accountId));
+    localStorage.removeItem(endpointKey(accountId));
+    await forgetRelayRegistration(accountId);
+  }
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  const registration = await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => null);
+  const sub = await registration?.pushManager.getSubscription().catch(() => null);
+  await sub?.unsubscribe().catch(() => undefined);
 }
 
 export interface PushDevice {
@@ -996,15 +1219,7 @@ export async function revokePushDevice(params: {
   }
 
   await params.client.destroyPushSubscription(params.device.id);
-  if (relayBaseUrl && relayAllowed(relayBaseUrl) && params.device.deviceClientId) {
-    await fetch(
-      buildRelayUrl(
-        relayBaseUrl,
-        `/api/push/register/${encodeURIComponent(params.device.deviceClientId)}`,
-      ),
-      { method: 'DELETE' },
-    ).catch(() => undefined);
-  }
+  if (params.device.deviceClientId) await dropRelayRecord(relayBaseUrl, params.device.deviceClientId);
 }
 
 export async function isWebPushEnabled(accountId: string): Promise<boolean> {
@@ -1109,6 +1324,7 @@ async function runResync(accountId: string, params: ResyncWebPushParams): Promis
     if (!moved && !params.force && !(await resyncDue(accountId))) return false;
     await enableWebPush({
       client: params.client,
+      onlyIfStillOn: true,
       forceRecreate: moved,
       relayBaseUrl: params.relayBaseUrl,
       accountLabel: params.accountLabel,

@@ -11,7 +11,15 @@
  * Over budget the route answers `inconclusive`: the browser then probes the
  * JMAP server itself, from its own address, exactly as it did before the
  * pre-check existed.
+ *
+ * With a shared store (#1066) the counts live there, so every replica spends
+ * the same budget. If the store can't be reached, `reserve` throws
+ * StoreUnavailableError and the caller refuses the attempt.
  */
+
+import { createHash } from 'node:crypto';
+import { getStore, isSharedMode, type CounterLimit } from '@/lib/shared-store';
+import { logger } from '@/lib/logger';
 
 const WINDOW_MS = 15 * 60 * 1000;
 const CLIENT_MAX_FAILURES = 5;
@@ -29,6 +37,8 @@ interface Budget {
 }
 
 export interface FailureBudgetOptions {
+  /** Names this budget's counters in the shared store. */
+  name: string;
   /** Failures one client may cause per window. */
   clientMax: number;
   /** Failures all clients together may cause per window; `Infinity` for no ceiling. */
@@ -36,13 +46,22 @@ export interface FailureBudgetOptions {
   windowMs?: number;
 }
 
+/** Gives a reserved attempt back. Never throws; calling it twice refunds once. */
+export type BudgetRefund = () => Promise<void>;
+
 export interface FailureBudget {
   /**
-   * Reserve one attempt for `client`. Returns null when the client or the
-   * whole server is over budget; otherwise a function that refunds the
-   * attempt, to be called when the credentials turned out to be right.
+   * Reserve one attempt for `client`. Resolves to null when the client or
+   * the whole server is over budget; otherwise to a function that refunds
+   * the attempt, to be called when the credentials turned out to be right.
+   * Rejects with StoreUnavailableError when the shared store is down.
    */
-  reserve(client: string, now?: number): (() => void) | null;
+  reserve(client: string, now?: number): Promise<BudgetRefund | null>;
+}
+
+/** A client address as a counter key: as it is when it's short and printable, else hashed. */
+function clientKey(client: string): string {
+  return /^[\x21-\x7e]{1,128}$/.test(client) ? client : `h:${createHash('sha256').update(client).digest('base64url')}`;
 }
 
 export function createFailureBudget(options: FailureBudgetOptions): FailureBudget {
@@ -66,37 +85,69 @@ export function createFailureBudget(options: FailureBudgetOptions): FailureBudge
     }
   }
 
+  // One process: today's in-memory windows.
+  function reserveLocal(client: string, now: number): BudgetRefund | null {
+    global = fresh(global, now);
+    const own = fresh(clients.get(client), now);
+    if (global.used >= options.globalMax || own.used >= options.clientMax) return null;
+
+    if (!clients.has(client)) prune(now);
+    own.used++;
+    global.used++;
+    clients.set(client, own);
+
+    const reservedGlobal = global;
+    let refunded = false;
+    return async () => {
+      if (refunded) return;
+      refunded = true;
+      own.used = Math.max(0, own.used - 1);
+      reservedGlobal.used = Math.max(0, reservedGlobal.used - 1);
+    };
+  }
+
+  // Several replicas: one atomic reservation over the client's and the
+  // global counter; a refused attempt counts nowhere.
+  async function reserveShared(client: string, now: number): Promise<BudgetRefund | null> {
+    const limits: CounterLimit[] = [{ key: `budget:${options.name}:client:${clientKey(client)}`, max: options.clientMax, windowMs }];
+    if (Number.isFinite(options.globalMax)) {
+      limits.push({ key: `budget:${options.name}:all`, max: options.globalMax, windowMs });
+    }
+    const store = getStore();
+    const result = await store.counters.reserve(limits, now);
+    if (!result.ok) return null;
+    let refunded = false;
+    return async () => {
+      if (refunded) return;
+      refunded = true;
+      try {
+        // Only from the windows the attempt was counted in.
+        await store.counters.refund(limits.map((limit, i) => ({ key: limit.key, resetAt: result.resetAts[i] })), now);
+      } catch (error) {
+        // The attempt stays counted: the safe side.
+        logger.warn('Could not refund a sign-in attempt', {
+          budget: options.name,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    };
+  }
+
   return {
-    reserve(client: string, now: number = Date.now()): (() => void) | null {
-      global = fresh(global, now);
-      const own = fresh(clients.get(client), now);
-      if (global.used >= options.globalMax || own.used >= options.clientMax) return null;
-
-      if (!clients.has(client)) prune(now);
-      own.used++;
-      global.used++;
-      clients.set(client, own);
-
-      const reservedGlobal = global;
-      let refunded = false;
-      return () => {
-        if (refunded) return;
-        refunded = true;
-        own.used = Math.max(0, own.used - 1);
-        reservedGlobal.used = Math.max(0, reservedGlobal.used - 1);
-      };
+    async reserve(client: string, now: number = Date.now()): Promise<BudgetRefund | null> {
+      return isSharedMode() ? reserveShared(client, now) : reserveLocal(client, now);
     },
   };
 }
 
-const verifyBudget = createFailureBudget({ clientMax: CLIENT_MAX_FAILURES, globalMax: GLOBAL_MAX_FAILURES });
+const verifyBudget = createFailureBudget({ name: 'verify', clientMax: CLIENT_MAX_FAILURES, globalMax: GLOBAL_MAX_FAILURES });
 
 /**
- * Reserve one probe for `client`. Returns null when the client or the whole
- * server is over budget; otherwise a function that refunds the probe, to be
- * called when the credentials turned out to be right.
+ * Reserve one probe for `client`. Resolves to null when the client or the
+ * whole server is over budget; otherwise to a function that refunds the
+ * probe, to be called when the credentials turned out to be right.
  */
-export function reserveVerifyProbe(client: string, now: number = Date.now()): (() => void) | null {
+export function reserveVerifyProbe(client: string, now: number = Date.now()): Promise<BudgetRefund | null> {
   return verifyBudget.reserve(client, now);
 }
 
@@ -112,9 +163,9 @@ export function reserveVerifyProbe(client: string, now: number = Date.now()): ((
  * lib/auth/client-address.ts), so a mail server that trusts this host
  * attributes the failures to the client that caused them.
  */
-const loginBudget = createFailureBudget({ clientMax: CLIENT_MAX_FAILURES, globalMax: Infinity });
+const loginBudget = createFailureBudget({ name: 'login', clientMax: CLIENT_MAX_FAILURES, globalMax: Infinity });
 
-export function reserveLoginAttempt(client: string, now: number = Date.now()): (() => void) | null {
+export function reserveLoginAttempt(client: string, now: number = Date.now()): Promise<BudgetRefund | null> {
   return loginBudget.reserve(client, now);
 }
 

@@ -40,7 +40,7 @@ function FacetButton({ active, label, count, onClick }: { active: boolean; label
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
         "w-full flex items-center gap-2 ps-3 pe-2 text-sm text-left transition-colors duration-150 cursor-pointer",
-        "max-lg:min-h-[44px] border-s-2",
+        "tap:min-h-[44px] border-s-2",
         active
           ? "bg-accent text-accent-foreground font-semibold border-primary"
           : "hover:bg-muted/50 text-foreground border-transparent",

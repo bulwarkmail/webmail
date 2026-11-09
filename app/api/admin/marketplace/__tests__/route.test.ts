@@ -103,6 +103,17 @@ describe('POST /api/admin/marketplace', () => {
     ]);
   });
 
+  it("keeps the version's changelog with the install", async () => {
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }), { changelog: '### Fixed\n- Dates in March' });
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
+    expect(registry.get('pretty-dates')).toMatchObject({ changelog: '### Fixed\n- Dates in March' });
+
+    // A version without notes doesn't keep the last one's.
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }), { changelog: null });
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
+    expect(registry.get('pretty-dates')).not.toHaveProperty('changelog');
+  });
+
   it('answers 404 for a version the directory does not have', async () => {
     directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }), {}, { missing: true });
     const res = await install({ slug: 'pretty-dates', version: '9.9.9', type: 'plugin' });
@@ -202,5 +213,51 @@ describe('POST /api/admin/marketplace', () => {
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/does not match/);
     expect(registry.get('pgp-plugin')?.version).toBe('2.0.0');
+  });
+});
+
+describe('an update that asks for more than the installed version', () => {
+  const INSTALLED = { id: 'pretty-dates', name: 'Pretty Dates', version: '0.9.0', permissions: ['email:read'], enabled: true };
+
+  it('is refused until someone has seen what it adds, and installs nothing meanwhile', async () => {
+    registry.set('pretty-dates', { ...INSTALLED });
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates', permissions: ['email:read', 'email:send'] }));
+    const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' });
+    expect(res.status).toBe(409);
+    expect((await res.json()).permissionsAdded).toEqual(['email:send']);
+    expect(registry.get('pretty-dates')!.version).toBe('0.9.0');
+  });
+
+  it('counts an optional permission, since it is granted like any other', async () => {
+    registry.set('pretty-dates', { ...INSTALLED });
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates', optionalPermissions: ['email:send'] }));
+    const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' });
+    expect(res.status).toBe(409);
+    expect((await res.json()).permissionsAdded).toEqual(['email:send']);
+  });
+
+  it('forcing it is about something else, and does not get past this', async () => {
+    registry.set('pretty-dates', { ...INSTALLED });
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates', permissions: ['email:read', 'email:send'] }));
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', force: true })).status).toBe(409);
+  });
+
+  it('goes through when what was accepted covers it, and only then', async () => {
+    registry.set('pretty-dates', { ...INSTALLED });
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates', permissions: ['email:read', 'email:send', 'email:raw-send'] }));
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', acceptPermissions: ['email:send'] })).status).toBe(409);
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', acceptPermissions: 'email:send,email:raw-send' })).status).toBe(409);
+    const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', acceptPermissions: ['email:send', 'email:raw-send'] });
+    expect(res.status).toBe(200);
+    expect(registry.get('pretty-dates')!.permissions).toEqual(['email:read', 'email:send', 'email:raw-send']);
+  });
+
+  it('asks nothing when nothing is added, or on a first install', async () => {
+    registry.set('pretty-dates', { ...INSTALLED });
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }));
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
+    registry.clear();
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates', permissions: ['email:read', 'email:send'] }));
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
   });
 });

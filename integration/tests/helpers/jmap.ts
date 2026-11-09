@@ -202,6 +202,29 @@ export class JmapClient {
     return mb.id;
   }
 
+  /**
+   * Upload an RFC 5322 message and import it into this account's mailbox with
+   * `role`, unread. A stand-in for SMTP delivery where submission is unreachable.
+   */
+  async importRaw(raw: string, role = 'inbox', accountId: string = this.accountId): Promise<string> {
+    const up = await fetch(`${JMAP_URL}/jmap/upload/${accountId}/`, {
+      method: 'POST',
+      headers: { Authorization: this.authHeader, 'Content-Type': 'message/rfc822' },
+      body: raw,
+    });
+    if (!up.ok) throw new Error(`JMAP upload failed: ${up.status}`);
+    const { blobId } = await up.json();
+    const mailbox = await this.mailboxByRole(role, accountId);
+    if (!mailbox) throw new Error(`No ${role} mailbox`);
+    const r = await this.request([['Email/import', {
+      accountId,
+      emails: { m: { blobId, mailboxIds: { [mailbox.id]: true }, keywords: {} } },
+    }, '0']]);
+    const created = r.methodResponses?.[0]?.[1]?.created?.m;
+    if (!created) throw new Error(`Email/import failed: ${JSON.stringify(r.methodResponses).slice(0, 400)}`);
+    return created.id as string;
+  }
+
   async mailboxes(accountId: string = this.accountId): Promise<JmapMailbox[]> {
     const r = await this.request([['Mailbox/get', { accountId }, '0']]);
     return r.methodResponses[0][1].list as JmapMailbox[];

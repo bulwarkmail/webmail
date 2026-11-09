@@ -7,6 +7,11 @@
 //   hold runs out or the user picks "Send now". Undo drops it: that message
 //   never leaves.
 // A failed send never gets here; the callers only report a resolved send.
+//
+// `accountId` names the account the sent message lies in (ids repeat across
+// accounts; a group identity's send lies in the group's), `composerId` the
+// composer it came from, as its slots and actions know it, so a plugin can
+// act on what the user chose there.
 
 import type { SendEmailResult } from './jmap/types';
 import { emailHooks } from './plugin-hooks';
@@ -18,16 +23,21 @@ export interface SentMessage {
   subject: string;
   /** Set when the user scheduled the message; absent for an undo-send hold. */
   delayedUntil?: string;
+  /** The id plugins know the sending composer by (composer-registry.ts). */
+  composerId?: string;
 }
 
 interface AfterSendPayload {
   emailId: string | null;
+  /** The JMAP account `emailId` lies in. */
+  accountId: string | null;
   submissionId: string | null;
   to: string[];
   cc: string[];
   bcc: string[];
   subject: string;
   scheduledFor: string | null;
+  composerId: string | null;
 }
 
 const held = new Map<string, { timer: ReturnType<typeof setTimeout>; payload: AfterSendPayload }>();
@@ -39,14 +49,18 @@ function emit(payload: AfterSendPayload): void {
 
 /** Report a send the server accepted (see the rules above). */
 export function announceSent(result: SendEmailResult, message: SentMessage): void {
+  // Waiting in the offline outbox (#523): nothing left yet.
+  if (result.queued) return;
   const payload: AfterSendPayload = {
     emailId: result.emailId ?? null,
+    accountId: result.emailAccountId ?? null,
     submissionId: result.emailSubmissionId ?? null,
     to: [...message.to],
     cc: [...message.cc],
     bcc: [...message.bcc],
     subject: message.subject,
     scheduledFor: null,
+    composerId: message.composerId ?? null,
   };
   if (message.delayedUntil) {
     emit({ ...payload, scheduledFor: result.sendAt ?? message.delayedUntil });

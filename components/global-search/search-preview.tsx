@@ -8,6 +8,8 @@ import type { CalendarHit, ContactHit, FileHit, GlobalSearchHit } from "@/lib/gl
 import { getContactDisplayName, getContactPhotoRef, getContactPrimaryEmail } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn, formatFileSize } from "@/lib/utils";
+import { descriptionAsText } from "@/lib/calendar-description";
+import { useHitSubtitle } from "./hit-subtitle";
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return '';
@@ -73,6 +75,7 @@ function DetailRow({ icon: Icon, children, pre }: { icon: typeof Clock; children
 }
 
 function ContactPreview({ hit, onOpen, openLabel }: { hit: ContactHit; onOpen: (hit: GlobalSearchHit) => void; openLabel: string }) {
+  const subtitleOf = useHitSubtitle();
   const contact = hit.contact;
   const name = getContactDisplayName(contact) || hit.title;
   const emails = Object.values(contact.emails ?? {}).map((e) => e.address).filter(Boolean);
@@ -83,7 +86,7 @@ function ContactPreview({ hit, onOpen, openLabel }: { hit: ContactHit; onOpen: (
       <PreviewHeader
         visual={<Avatar name={name} email={getContactPrimaryEmail(contact) || undefined} contactPhoto={getContactPhotoRef(contact) ?? null} size="lg" className="shrink-0" />}
         title={name}
-        subtitle={[hit.accountLabel, hit.subtitle].filter(Boolean).join(' · ')}
+        subtitle={subtitleOf(hit)}
         action={<OpenButton hit={hit} onOpen={onOpen} label={openLabel} />}
       />
       <div className="border-t border-border" />
@@ -97,7 +100,9 @@ function ContactPreview({ hit, onOpen, openLabel }: { hit: ContactHit; onOpen: (
 }
 
 function CalendarPreview({ hit, onOpen, openLabel, recurringLabel }: { hit: CalendarHit; onOpen: (hit: GlobalSearchHit) => void; openLabel: string; recurringLabel: string }) {
+  const subtitleOf = useHitSubtitle();
   const event = hit.event;
+  const description = descriptionAsText(event);
   const locations = Object.values(event.locations ?? {}).map((l) => l?.name).filter(Boolean);
   const participants = Object.values(event.participants ?? {})
     .map((p) => (p as { name?: string | null; email?: string | null }))
@@ -114,14 +119,14 @@ function CalendarPreview({ hit, onOpen, openLabel, recurringLabel }: { hit: Cale
             {recurringLabel}
           </span>
         ) : undefined}
-        subtitle={[hit.accountLabel, hit.subtitle].filter(Boolean).join(' · ')}
+        subtitle={subtitleOf(hit)}
         action={<OpenButton hit={hit} onOpen={onOpen} label={openLabel} />}
       />
       <div className="border-t border-border" />
       <dl className="flex flex-col gap-2.5">
         <DetailRow icon={Clock}>{formatDateTime(event.start)}</DetailRow>
         {locations.map((location) => <DetailRow key={location} icon={MapPin}>{location}</DetailRow>)}
-        {event.description && <DetailRow icon={AlignLeft} pre>{event.description}</DetailRow>}
+        {description && <DetailRow icon={AlignLeft} pre>{description}</DetailRow>}
         {participants.length > 0 && <DetailRow icon={Users}>{participants.join(', ')}</DetailRow>}
       </dl>
     </div>

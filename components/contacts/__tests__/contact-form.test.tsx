@@ -570,12 +570,191 @@ describe('ContactForm', () => {
 
   it("names the account of an address book once, not twice", () => {
     const books = [
-      { id: 'b1', name: 'Stalwart Address Book (usera@example.org)', accountName: 'usera@example.org', isDefault: true },
+      { id: 'b1', name: 'Personal (usera@example.org)', accountName: 'usera@example.org', isDefault: true },
       { id: 'b2', name: 'Team', accountName: 'userb@example.org', isShared: true },
     ] as never;
     render(<ContactForm addressBooks={books} onSave={vi.fn()} onCancel={vi.fn()} />);
     const options = screen.getAllByRole('option').map((o) => o.textContent);
-    expect(options).toContain('Stalwart Address Book (usera@example.org)');
+    expect(options).toContain('Personal (usera@example.org)');
     expect(options).toContain('Team (userb@example.org)');
+  });
+});
+
+// pim-4: saving never rewrites what the user didn't touch.
+describe('ContactForm keeps what was not edited', () => {
+  // As a card with a structured German address comes from ContactCard/get.
+  const home = {
+    '@type': 'Address',
+    contexts: { private: true },
+    countryCode: 'DE',
+    full: 'Hauptstraße 1, 3. OG, 10000 Berlin',
+    isOrdered: true,
+    defaultSeparator: ', ',
+    components: [
+      { kind: 'name', value: 'Hauptstraße' },
+      { kind: 'separator', value: ' ' },
+      { kind: 'number', value: '1' },
+      { kind: 'apartment', value: '3. OG' },
+      { kind: 'postcode', value: '10000' },
+      { kind: 'locality', value: 'Berlin' },
+      { kind: 'country', value: 'Germany' },
+    ],
+  };
+  const office = {
+    components: [
+      { kind: 'number', value: '1' },
+      { kind: 'name', value: 'Main Street' },
+      { kind: 'locality', value: 'Springfield' },
+      { kind: 'region', value: 'IL' },
+      { kind: 'postcode', value: '62701' },
+      { kind: 'country', value: 'USA' },
+    ],
+    contexts: { work: true },
+  };
+  const card: ContactCard = {
+    ...existingContact,
+    nicknames: { nick: { name: 'Ali', contexts: { private: true } } },
+    emails: { home: { address: 'alice@example.com', pref: 1, label: 'main' }, w: { address: 'alice@work.example', contexts: { work: true } } },
+    addresses: { home, office } as ContactCard['addresses'],
+  };
+
+  async function save(change: () => void) {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<ContactForm contact={card} onSave={onSave} onCancel={vi.fn()} />);
+    change();
+    fireEvent.submit(screen.getByText('save').closest('form')!);
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    return onSave.mock.calls[0][0] as Partial<ContactCard>;
+  }
+
+  it('sends only the nickname when only the nickname changed', async () => {
+    const data = await save(() => fireEvent.change(screen.getByDisplayValue('Ali'), { target: { value: 'Lissy' } }));
+    expect(Object.keys(data)).toEqual(['nicknames']);
+    // The nickname keeps its key and its contexts.
+    expect(data.nicknames).toEqual({ nick: { name: 'Lissy', contexts: { private: true } } });
+  });
+
+  it("shows street and number in the address's own order, German fields as Street, Postcode + City", () => {
+    render(<ContactForm contact={card} onSave={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByDisplayValue('Hauptstraße 1')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('1 Main Street')).toBeInTheDocument();
+    const berlin = screen.getByDisplayValue('Berlin');
+    const postcode = screen.getByDisplayValue('10000');
+    // Postcode comes before the city for Germany, after it for the US.
+    expect(postcode.compareDocumentPosition(berlin) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const springfield = screen.getByDisplayValue('Springfield');
+    const zip = screen.getByDisplayValue('62701');
+    expect(springfield.compareDocumentPosition(zip) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('keeps an untouched address exactly as stored when another address is edited', async () => {
+    const data = await save(() => fireEvent.change(screen.getByDisplayValue('62701'), { target: { value: '62702' } }));
+    expect(data.addresses!.home).toBe(home);
+    expect(data.addresses!.office.components!.find(c => c.kind === 'postcode')!.value).toBe('62702');
+    expect('emails' in data).toBe(false);
+  });
+
+  // An address with only parts the form has no field for shows as empty rows.
+  // Editing another address dropped it from the save.
+  it('keeps an address the form cannot show when another address is edited', async () => {
+    const box = { components: [{ kind: 'postOfficeBox', value: 'Postfach 12 34' }], contexts: { work: true } };
+    const textOnly = { full: 'c/o Example GmbH, somewhere' };
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<ContactForm contact={{ ...card, addresses: { home, office, box, textOnly } as ContactCard['addresses'] }} onSave={onSave} onCancel={vi.fn()} />);
+    fireEvent.change(screen.getByDisplayValue('62701'), { target: { value: '62702' } });
+    fireEvent.submit(screen.getByText('save').closest('form')!);
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    const data = onSave.mock.calls[0][0] as Partial<ContactCard>;
+    expect(data.addresses!.box).toBe(box);
+    expect(data.addresses!.textOnly).toBe(textOnly);
+  });
+
+  it('saves an edited German address in German order and keeps the parts the form does not show', async () => {
+    const data = await save(() => fireEvent.change(screen.getByDisplayValue('Hauptstraße 1'), { target: { value: 'Hauptstraße 12a' } }));
+    const saved = data.addresses!.home;
+    expect(saved.components!.map(c => `${c.kind}:${c.value}`)).toEqual([
+      'name:Hauptstraße', 'separator: ', 'number:12a', 'apartment:3. OG', 'postcode:10000', 'separator: ', 'locality:Berlin', 'country:Germany',
+    ]);
+    expect(saved).toMatchObject({ '@type': 'Address', countryCode: 'DE', contexts: { private: true }, isOrdered: true, defaultSeparator: ', ' });
+    // The old one-line text would contradict the new parts.
+    expect(saved.full).toBeUndefined();
+    expect(data.addresses!.office).toBe(office);
+  });
+
+  it('keeps an untouched email with its key, pref and label when another is edited', async () => {
+    const data = await save(() => fireEvent.change(screen.getByDisplayValue('alice@work.example'), { target: { value: 'alice@new.example' } }));
+    expect(data.emails!.home).toBe(card.emails!.home);
+    expect(data.emails!.w).toEqual({ address: 'alice@new.example', contexts: { work: true } });
+  });
+
+  // #1515: Android writes TEL;TYPE=car, which Stalwart turns into the context
+  // "car"; a custom label arrives as X-ABLabel, the phone's `label`.
+  describe('a phone type the form has no option for', () => {
+    const phoneSelects = (number: string) => {
+      const row = screen.getByDisplayValue(number).parentElement!;
+      const [type, context] = Array.from(row.querySelectorAll('select'));
+      return { type, context };
+    };
+
+    async function saveAfter(phones: ContactCard['phones'], change: () => void) {
+      const onSave = vi.fn().mockResolvedValue(undefined);
+      render(<ContactForm contact={{ ...card, phones }} onSave={onSave} onCancel={vi.fn()} />);
+      change();
+      fireEvent.submit(screen.getByText('save').closest('form')!);
+      await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+      return (onSave.mock.calls[0][0] as Partial<ContactCard>).phones!;
+    }
+
+    it('shows an Android "car" phone as car and keeps it when the number changes', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', contexts: { car: true } } }, () => {
+        const { context } = phoneSelects('+49 151 34');
+        expect(context.value).toBe('car');
+        expect(context.selectedOptions[0].textContent).toBe('car');
+        fireEvent.change(screen.getByDisplayValue('+49 151 34'), { target: { value: '+49 151 56' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 56', contexts: { car: true } } });
+    });
+
+    it('shows a custom label in the type select and keeps it when the number changes', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', label: 'Car', features: { voice: true } } }, () => {
+        expect(phoneSelects('+49 151 34').type.selectedOptions[0].textContent).toBe('Car');
+        fireEvent.change(screen.getByDisplayValue('+49 151 34'), { target: { value: '+49 151 56' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 56', label: 'Car', features: { voice: true } } });
+    });
+
+    it('drops the label once another type is picked', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', label: 'Car', features: { voice: true } } }, () => {
+        fireEvent.change(phoneSelects('+49 151 34').type, { target: { value: 'mobile' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 34', features: { mobile: true } } });
+    });
+
+    it('shows a feature the form does not offer as stored', () => {
+      render(<ContactForm contact={{ ...card, phones: { p0: { number: '+49 30 1', features: { textphone: true } } } }} onSave={vi.fn()} onCancel={vi.fn()} />);
+      expect(phoneSelects('+49 30 1').type.value).toBe('textphone');
+    });
+
+    it('shows an email context the form does not offer as stored', () => {
+      render(<ContactForm contact={{ ...card, emails: { e0: { address: 'alice@example.com', contexts: { school: true } } } }} onSave={vi.fn()} onCancel={vi.fn()} />);
+      const select = screen.getByDisplayValue('alice@example.com').parentElement!.querySelector('select')!;
+      expect(select.value).toBe('school');
+    });
+  });
+
+  it('still sends every field of a new contact, its address in the order of the country typed', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<ContactForm onSave={onSave} onCancel={vi.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText('given_name'), { target: { value: 'Jane' } });
+    fireEvent.click(screen.getByText('addresses'));
+    fireEvent.click(screen.getByText('add_address'));
+    fireEvent.change(screen.getByPlaceholderText('street'), { target: { value: 'Hauptstraße 5' } });
+    fireEvent.change(screen.getByPlaceholderText('country'), { target: { value: 'Deutschland' } });
+    fireEvent.submit(screen.getByText('save').closest('form')!);
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    const data = onSave.mock.calls[0][0] as Partial<ContactCard>;
+    expect('emails' in data && 'notes' in data && 'name' in data).toBe(true);
+    expect(data.addresses!.a0).toMatchObject({ countryCode: 'DE' });
+    expect(data.addresses!.a0.components!.map(c => `${c.kind}:${c.value}`)).toEqual(['name:Hauptstraße', 'separator: ', 'number:5', 'country:Deutschland']);
   });
 });

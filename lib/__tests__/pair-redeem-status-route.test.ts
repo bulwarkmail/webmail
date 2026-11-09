@@ -45,9 +45,9 @@ function oauthGrant(overrides: Partial<Extract<PairingGrant, { flow: 'oauth' }>>
   };
 }
 
-function seed(grant: PairingGrant = oauthGrant(), now = Date.now(), base: string | null = WEBMAIL) {
-  const grantId = stashGrant(grant, OWNER, now);
-  const pairing = createPairingCode(grantId, OWNER, base, now);
+async function seed(grant: PairingGrant = oauthGrant(), now = Date.now(), base: string | null = WEBMAIL) {
+  const grantId = await stashGrant(grant, OWNER, now);
+  const pairing = await createPairingCode(grantId, OWNER, base, now);
   if (!pairing) throw new Error('expected a code');
   return { grantId, ...pairing };
 }
@@ -93,7 +93,7 @@ describe('pair/redeem', () => {
   });
 
   it('rejects an expired code with 410 expired_code', async () => {
-    const { code } = seed(oauthGrant(), Date.now() - CODE_TTL_MS - 1000);
+    const { code } = await seed(oauthGrant(), Date.now() - CODE_TTL_MS - 1000);
     const res = await redeem({ pairing_code: code });
     expect(res.status).toBe(410);
     expect(res.body).toEqual({ error: 'expired_code' });
@@ -101,7 +101,7 @@ describe('pair/redeem', () => {
   });
 
   it('hands the grant out once, then answers 410 used_code', async () => {
-    const { code } = seed();
+    const { code } = await seed();
     const first = await redeem({ pairing_code: code });
     expect(first.status).toBe(200);
     expect(first.cacheControl).toBe('no-store');
@@ -113,12 +113,12 @@ describe('pair/redeem', () => {
   });
 
   it('is open to the phone, which sends no browser headers', async () => {
-    const { code } = seed();
+    const { code } = await seed();
     expect((await redeem({ pairing_code: code })).status).toBe(200);
   });
 
   it('refuses a cross-site browser request', async () => {
-    const { code } = seed();
+    const { code } = await seed();
     const res = await redeem({ pairing_code: code }, { 'sec-fetch-site': 'cross-site', origin: 'https://evil.example' });
     expect(res.status).toBe(403);
     // ...without burning the code.
@@ -126,7 +126,7 @@ describe('pair/redeem', () => {
   });
 
   it('points a public client at the provider with the raw refresh token', async () => {
-    const { code } = seed();
+    const { code } = await seed();
     const res = await redeem({ pairing_code: code });
     expect(res.body).toMatchObject({
       flow: 'oauth',
@@ -139,7 +139,7 @@ describe('pair/redeem', () => {
   });
 
   it('proxies a confidential client through the webmail with a sealed refresh token', async () => {
-    const { code } = seed(oauthGrant({ confidential: true, serverId: 'main' }));
+    const { code } = await seed(oauthGrant({ confidential: true, serverId: 'main' }));
     const res = await redeem({ pairing_code: code });
     expect(res.status).toBe(200);
     expect(res.body.token_endpoint).toBe(`${WEBMAIL}/api/auth/pair/token`);
@@ -156,7 +156,7 @@ describe('pair/redeem', () => {
 
   it('proxies an external IdP on another host', async () => {
     const endpoint = 'https://login.idp-vendor.example/realms/acme/protocol/openid-connect/token';
-    const { code } = seed(oauthGrant({ tokenEndpoint: endpoint, clientId: 'webmail', confidential: false }));
+    const { code } = await seed(oauthGrant({ tokenEndpoint: endpoint, clientId: 'webmail', confidential: false }));
     const res = await redeem({ pairing_code: code });
     expect(res.body.token_endpoint).toBe(`${WEBMAIL}/api/auth/pair/token`);
     expect(res.body.client_id).toBe('webmail');
@@ -164,14 +164,14 @@ describe('pair/redeem', () => {
   });
 
   it('counts the access token lifetime from when it was issued', async () => {
-    const { code } = seed(oauthGrant({ issuedAt: Date.now() - 90_000, expiresIn: 300 }));
+    const { code } = await seed(oauthGrant({ issuedAt: Date.now() - 90_000, expiresIn: 300 }));
     const res = await redeem({ pairing_code: code });
     expect(res.body.expires_in).toBeGreaterThanOrEqual(209);
     expect(res.body.expires_in).toBeLessThanOrEqual(210);
   });
 
   it('hands out a password grant as username and password', async () => {
-    const { code } = seed({
+    const { code } = await seed({
       flow: 'password',
       serverUrl: SERVER,
       username: 'alice@example.org',
@@ -186,20 +186,20 @@ describe('pair/redeem', () => {
 
 describe('pair/status', () => {
   it('reports pending, then redeemed', async () => {
-    const { code, statusId } = seed();
+    const { code, statusId } = await seed();
     expect(await status(`?id=${statusId}`)).toEqual({ status: 'pending', cacheControl: 'no-store' });
     await redeem({ pairing_code: code });
     expect((await status(`?id=${statusId}`)).status).toBe('redeemed');
   });
 
   it('reports a code replaced by a newer QR as expired', async () => {
-    const first = seed();
-    createPairingCode(first.grantId, OWNER, WEBMAIL);
+    const first = await seed();
+    await createPairingCode(first.grantId, OWNER, WEBMAIL);
     expect((await status(`?id=${first.statusId}`)).status).toBe('expired');
   });
 
   it('does not accept the pairing code itself as a status id', async () => {
-    const { code } = seed();
+    const { code } = await seed();
     expect((await status(`?id=${code}`)).status).toBe('unknown');
     expect((await status(`?id=${code.slice(0, 32)}`)).status).toBe('unknown');
   });

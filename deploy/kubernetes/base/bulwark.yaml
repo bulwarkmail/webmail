@@ -1,0 +1,144 @@
+# Bulwark itself: any number of replicas, no volumes. Everything they share
+# (admin config, plugins, branding, synced settings, sign-in limits, sessions)
+# lives in the Valkey store; see https://bulwarkmail.org/docs/deployment/multi-instance
+apiVersion: v1
+kind: Service
+metadata:
+  name: bulwark
+  labels:
+    app.kubernetes.io/name: bulwark
+spec:
+  selector:
+    app.kubernetes.io/name: bulwark
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bulwark
+  labels:
+    app.kubernetes.io/name: bulwark
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bulwark
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bulwark
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      # Spread the replicas over nodes where there are several.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: bulwark
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: bulwark
+          image: ghcr.io/bulwarkmail/webmail
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: bulwark-env
+          env:
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bulwark-secrets
+                  key: SESSION_SECRET
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bulwark-secrets
+                  key: ADMIN_PASSWORD
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bulwark-secrets
+                  key: VALKEY_PASSWORD
+            # Kubernetes fills in $(VALKEY_PASSWORD) from the variable above.
+            - name: REDIS_URL
+              value: redis://:$(VALKEY_PASSWORD)@valkey:6379/0
+          # /api/health only says the process runs; /api/ready also says it
+          # finished starting and reaches the store. A store outage takes the
+          # pods out of the Service without restarting them.
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+            periodSeconds: 5
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          lifecycle:
+            # Let the Service drop the pod before it stops taking requests.
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            # Scratch space only; nothing here needs to survive the pod.
+            - name: data
+              mountPath: /app/data
+            - name: next-cache
+              mountPath: /app/.next/cache
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bulwark
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bulwark

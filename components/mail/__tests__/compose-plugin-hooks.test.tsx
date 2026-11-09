@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -50,6 +51,20 @@ vi.mock('@/hooks/use-media-query', () => ({
 }));
 vi.mock('@/lib/push-bindings', () => ({ reconcilePushBindings: () => {}, releasePushBindings: () => {} }));
 vi.mock('@/components/email/email-list', () => ({ EmailList: () => <div>message list</div> }));
+// The desktop app's compose windows, for a mail link from another program.
+const desktopWindows = vi.hoisted(() => ({ on: false, handOver: vi.fn(async () => true), open: vi.fn() }));
+vi.mock('@/lib/popout/support', async (original) => ({
+  ...(await original<object>()),
+  hasDesktopWindows: () => desktopWindows.on,
+  popoutsAvailable: () => desktopWindows.on,
+}));
+vi.mock('@/lib/popout/open', async (original) => ({
+  ...(await original<object>()),
+  openComposerWindow: (account?: string | null, options?: { quick?: boolean }) => {
+    desktopWindows.open(account, options);
+    return { handOver: desktopWindows.handOver, cancel: vi.fn() };
+  },
+}));
 
 const { MailApp } = await import('../mail-app');
 
@@ -161,6 +176,97 @@ describe('onMailtoIntercept', () => {
     expect(taken).toBe(true);
     await waitFor(() => expect(intercept).toHaveBeenCalledTimes(1));
     await act(() => new Promise((r) => setTimeout(r, 50)));
+    expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
+  });
+});
+
+describe('a mail link from another program in the desktop app', () => {
+  beforeEach(() => {
+    clearAllHooks();
+    composerProps.last = null;
+    desktopWindows.on = true;
+    desktopWindows.open.mockClear();
+    desktopWindows.handOver.mockClear();
+  });
+  afterEach(() => {
+    desktopWindows.on = false;
+  });
+
+  const fromOs = async () => {
+    const { savePendingMailto, notifyPendingMailto } = await import('@/lib/protocol-handlers/session');
+    act(() => {
+      savePendingMailto({ to: ['bob@example.com'], cc: [], bcc: [], subject: 'Hi', body: 'Text', fromOs: true });
+      notifyPendingMailto();
+    });
+  };
+
+  it('opens in a compose window of its own, not in the main window', async () => {
+    render(<MailApp />);
+    await fromOs();
+    await waitFor(() => expect(desktopWindows.handOver).toHaveBeenCalledTimes(1));
+    expect(desktopWindows.handOver).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'compose',
+      initialData: expect.objectContaining({ to: 'bob@example.com', subject: 'Hi' }),
+    }));
+    await act(() => new Promise((r) => setTimeout(r, 50)));
+    expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
+  });
+
+  // desktop-p3-12: a mail link opened the big composer, tray New message the small one.
+  it('opens at the size of quick compose, as every new message from outside does', async () => {
+    render(<MailApp />);
+    await fromOs();
+    await waitFor(() => expect(desktopWindows.open).toHaveBeenCalledTimes(1));
+    expect(desktopWindows.open.mock.calls[0][1]).toEqual({ quick: true });
+  });
+
+  it('files from Send to or Open with go to a compose window too, attached, and the main window shows no composer', async () => {
+    const { handOffDraft } = await import('@/lib/launch-handoff');
+    render(<MailApp />);
+    const file = new File(['pdf'], 'report.pdf', { type: 'application/pdf' });
+    act(() => { handOffDraft({ files: [file], fromOs: true }); });
+    await waitFor(() => expect(desktopWindows.handOver).toHaveBeenCalledTimes(1));
+    expect(desktopWindows.handOver).toHaveBeenCalledWith(expect.objectContaining({ mode: 'compose', initialFiles: [file] }));
+    await act(() => new Promise((r) => setTimeout(r, 50)));
+    expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
+  });
+
+  it('with two accounts it opens from the default one, in its own window, with no question', async () => {
+    const client = useAuthStore.getState().client;
+    useAuthStore.setState({ getAllConnectedClients: () => new Map([['login', client], ['second', client]]) as never });
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login', email: 'me@example.com', isConnected: true, isDefault: false },
+        { id: 'second', email: 'work@example.com', isConnected: true, isDefault: true },
+      ],
+      defaultAccountId: 'second',
+    } as never);
+    try {
+      render(<MailApp />);
+      await fromOs();
+      await waitFor(() => expect(desktopWindows.handOver).toHaveBeenCalledTimes(1));
+      expect(desktopWindows.open).toHaveBeenCalledWith('second', { quick: true });
+      expect(screen.queryByText('select_account_title')).not.toBeInTheDocument();
+      // The main window keeps the account it shows.
+      expect(useAuthStore.getState().activeAccountId).toBe('login');
+    } finally {
+      useAccountStore.setState({ accounts: [], defaultAccountId: null } as never);
+    }
+  });
+
+  it('a link inside the app still opens here', async () => {
+    render(<MailApp />);
+    act(() => { requestInternalMailto('mailto:bob@example.com?subject=Hi'); });
+    await screen.findByText('stub composer', {}, { timeout: 5000 });
+    expect(desktopWindows.open).not.toHaveBeenCalled();
+  });
+
+  it('a plugin that says no keeps both closed', async () => {
+    emailHooks.onBeforeCompose.register('test', () => false);
+    render(<MailApp />);
+    await fromOs();
+    await act(() => new Promise((r) => setTimeout(r, 100)));
+    expect(desktopWindows.open).not.toHaveBeenCalled();
     expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
   });
 });

@@ -3,6 +3,8 @@ import { withBasePath } from '@/lib/browser-navigation';
 
 export type NotificationSoundChoice = 'default' | 'cheerful' | 'involved' | 'swift' | 'relax';
 
+// 'default' is the beep. It was the default sound until Involved replaced
+// it, and keeps its id so stored and synced choices still match.
 export const NOTIFICATION_SOUNDS: { id: NotificationSoundChoice; file?: string }[] = [
   { id: 'default' },
   { id: 'cheerful', file: '/notification/cheerful-527.mp3' },
@@ -53,7 +55,7 @@ function playFile(file: string) {
 
 export function playNotificationSound(sound?: NotificationSoundChoice) {
   try {
-    const choice = sound ?? 'default';
+    const choice = sound ?? 'involved';
     const entry = NOTIFICATION_SOUNDS.find((s) => s.id === choice);
 
     if (entry?.file) {

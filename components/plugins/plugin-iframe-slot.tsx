@@ -10,7 +10,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { SlotName } from '@/lib/plugin-types';
 import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
-import { createSlotInstance, type SandboxInstance } from '@/lib/plugin-sandbox/host-bridge';
+import type { SandboxInstance } from '@/lib/plugin-sandbox/host-bridge';
+import { loadHostBridge } from '@/lib/plugin-sandbox/load-host-bridge';
 import type { FloatingDropdownOption } from '@/lib/plugin-sandbox/protocol';
 import { slotPropsFor } from '@/lib/plugin-sandbox/permissions';
 import { isInlineSlot } from '@/lib/plugin-sandbox/slot-layout';
@@ -25,6 +26,15 @@ interface Props {
   extraProps?: Record<string, unknown>;
   /** The frame fills its panel and scrolls inside, instead of growing with its content. */
   fill?: boolean;
+  /** With `fill`: the height the frame keeps however little room its panel has. */
+  minFillHeight?: number;
+  /**
+   * Told whether the frame is up: false when the plugin's shouldShow says no
+   * or its frame fails to start, true once it has started. For a slot that
+   * stands in for a part of Bulwark (calendar-task-view), so the caller can
+   * draw its own part again.
+   */
+  onShownChange?: (shown: boolean) => void;
 }
 
 interface FloatingDropdownState {
@@ -38,9 +48,11 @@ interface FloatingDropdownState {
   ariaLabel?: string;
 }
 
-export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false }: Props) {
+export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, minFillHeight, onShownChange }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<SandboxInstance | null>(null);
+  const onShownChangeRef = useRef(onShownChange);
+  useEffect(() => { onShownChangeRef.current = onShownChange; }, [onShownChange]);
   const [height, setHeight] = useState<number>(0);
   const [width, setWidth] = useState<number | undefined>(undefined);
   const [floatingDropdown, setFloatingDropdown] = useState<FloatingDropdownState | null>(null);
@@ -80,58 +92,85 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false }: P
     return () => { cancelled = true; };
   }, [pluginId, slot, props]);
 
-  // Spawn / tear down the slot iframe.
+  useEffect(() => {
+    if (show === false) onShownChangeRef.current?.(false);
+  }, [show]);
+
+  // The latest props, for a frame that starts after they changed.
+  const propsRef = useRef(props);
+  propsRef.current = props;
+
+  // Spawn / tear down the slot iframe. The bridge is the plugin runtime's,
+  // loaded with the plugin itself (stores/plugin-store.ts), so this import
+  // only picks it up.
   useEffect(() => {
     if (show !== true) return;
     const active = getActivePlugin(pluginId);
-    if (!active || !wrapperRef.current) return;
+    const hostContainer = wrapperRef.current;
+    if (!active || !hostContainer) return;
     const locale = (globalThis as unknown as { __APP_LOCALE__?: string }).__APP_LOCALE__ ?? 'en';
-    const inst = createSlotInstance({
-      plugin: active.plugin,
-      slot,
-      code: active.code,
-      locale,
-      tier: active.tier,
-      extraProps: props,
-      fill,
-      hostContainer: wrapperRef.current,
-      onResize: (h, w) => {
-        setHeight(h);
-        if (w !== undefined) setWidth(w);
-      },
-      onFloatingDropdown: (msg) => {
-        if (msg.type === 'floating-dropdown-open') {
-          setFloatingDropdown({
-            id: msg.id,
-            rect: msg.rect,
-            options: msg.options,
-            multiple: msg.multiple,
-            selectedValues: msg.selectedValues,
-            singleValue: msg.singleValue,
-            highlightedIndex: msg.highlightedIndex,
-            ariaLabel: msg.ariaLabel,
-          });
-        } else if (msg.type === 'floating-dropdown-update') {
-          setFloatingDropdown((prev) => {
-            if (!prev || prev.id !== msg.id) return prev;
-            return {
-              ...prev,
-              ...(msg.rect ? { rect: msg.rect } : {}),
-              ...(msg.options ? { options: msg.options } : {}),
-              ...(msg.multiple !== undefined ? { multiple: msg.multiple } : {}),
-              ...(msg.selectedValues ? { selectedValues: msg.selectedValues } : {}),
-              ...(msg.singleValue !== undefined ? { singleValue: msg.singleValue } : {}),
-              ...(msg.highlightedIndex !== undefined ? { highlightedIndex: msg.highlightedIndex } : {}),
-            };
-          });
-        } else if (msg.type === 'floating-dropdown-close') {
-          setFloatingDropdown((prev) => (prev?.id === msg.id ? null : prev));
-        }
-      },
+    let live = true;
+    let inst: SandboxInstance | null = null;
+    void loadHostBridge().then(({ createSlotInstance }) => {
+      if (!live) return;
+      const created = createSlotInstance({
+        plugin: active.plugin,
+        slot,
+        code: active.code,
+        locale,
+        tier: active.tier,
+        extraProps: props,
+        fill,
+        hostContainer,
+        onResize: (h, w) => {
+          setHeight(h);
+          if (w !== undefined) setWidth(w);
+        },
+        onFloatingDropdown: (msg) => {
+          if (msg.type === 'floating-dropdown-open') {
+            setFloatingDropdown({
+              id: msg.id,
+              rect: msg.rect,
+              options: msg.options,
+              multiple: msg.multiple,
+              selectedValues: msg.selectedValues,
+              singleValue: msg.singleValue,
+              highlightedIndex: msg.highlightedIndex,
+              ariaLabel: msg.ariaLabel,
+            });
+          } else if (msg.type === 'floating-dropdown-update') {
+            setFloatingDropdown((prev) => {
+              if (!prev || prev.id !== msg.id) return prev;
+              return {
+                ...prev,
+                ...(msg.rect ? { rect: msg.rect } : {}),
+                ...(msg.options ? { options: msg.options } : {}),
+                ...(msg.multiple !== undefined ? { multiple: msg.multiple } : {}),
+                ...(msg.selectedValues ? { selectedValues: msg.selectedValues } : {}),
+                ...(msg.singleValue !== undefined ? { singleValue: msg.singleValue } : {}),
+                ...(msg.highlightedIndex !== undefined ? { highlightedIndex: msg.highlightedIndex } : {}),
+              };
+            });
+          } else if (msg.type === 'floating-dropdown-close') {
+            setFloatingDropdown((prev) => (prev?.id === msg.id ? null : prev));
+          }
+        },
+      });
+      inst = created;
+      instanceRef.current = created;
+      if (propsRef.current !== props) created.updateProps(propsRef.current);
+      // A frame that fails to start stays blank; say so to a caller that can
+      // draw something in its place.
+      if (onShownChangeRef.current) {
+        created.initPromise.then(
+          () => { if (live) onShownChangeRef.current?.(true); },
+          () => { if (live) onShownChangeRef.current?.(false); },
+        );
+      }
     });
-    instanceRef.current = inst;
     return () => {
-      try { inst.destroy(); } catch { /* ignore */ }
+      live = false;
+      try { inst?.destroy(); } catch { /* ignore */ }
       instanceRef.current = null;
       setFloatingDropdown(null);
     };
@@ -166,7 +205,11 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false }: P
         ref={wrapperRef}
         style={inline
           ? { display: 'inline-block', verticalAlign: 'middle', height, width: width ?? 0, maxWidth: '100%', overflow: 'hidden' }
-          : fill ? { flex: '1 1 0%', minHeight: 0 } : { height, minHeight: height }}
+          : fill ? { flex: '1 1 0%', minHeight: minFillHeight ?? 0 } : { height, minHeight: height }}
+        // A frame with nothing to show must not be a stop for Tab, where the
+        // focus would vanish. Not visibility: hidden, because the browser stops
+        // rendering an isolated frame then, and only its rendering reports a height.
+        inert={!fill && height === 0}
         data-plugin-iframe-slot={`${pluginId}:${slot}`}
         data-plugin-iframe-fill={fill || undefined}
       />

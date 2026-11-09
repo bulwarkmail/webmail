@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { IconButton } from "@/components/ui/icon-button";
 import { X } from "@/components/icons";
+import { DialogSurfacePortal, useDialogSurface, useDialogSurfaceContext } from "@/components/ui/dialog-surface";
 import { cn } from "@/lib/utils";
 
 export type DialogSize = "sm" | "md" | "lg" | "full-on-phone";
@@ -43,6 +44,11 @@ export interface DialogProps {
   bodyClassName?: string;
   /** Test hook on the panel. */
   testId?: string;
+  /**
+   * Stay over the page in the desktop app instead of opening a window of its own. For
+   * what can't work in another window; say why where it's set.
+   */
+  inPage?: boolean;
 }
 
 const SIZES: Record<DialogSize, string> = {
@@ -62,6 +68,10 @@ const FIELD_SELECTOR =
  * The one dialog shell (R4): a portal on <body> at z-[60] over a dimmed
  * backdrop, labelled by its title, focus moved in and given back, Escape
  * from anywhere inside, outside click closes unless `dirty`.
+ *
+ * In the desktop app it is a window of its own instead (dialog-surface.tsx): the same
+ * card, drawn by the same tree into a frameless window modal to the one it was opened
+ * from. Its header moves the window. Alt+F4 closes it as Escape does.
  *
  * ```tsx
  * <Dialog isOpen={open} onClose={close} title={t("rename")}
@@ -88,15 +98,19 @@ export function Dialog({
   className,
   bodyClassName,
   testId,
+  inPage = false,
 }: DialogProps) {
   const tCommon = useTranslations("common");
   const id = useId();
   const titleId = `${id}-title`;
   const descriptionId = `${id}-description`;
+  const parentSurface = useDialogSurfaceContext();
+  const surface = useDialogSurface(isOpen, { title: typeof title === "string" ? title : "", onClose, inPage });
   // The focus starts on an explicit target, else the first field, else
   // the first control.
   const panelRef = useFocusTrap({
-    isActive: isOpen,
+    isActive: isOpen && surface.mode !== "pending",
+    openerDocument: parentSurface?.doc,
     onEscape: onClose,
     restoreFocus: true,
     initialFocus: () => initialFocus?.current ?? panelRef.current?.querySelector<HTMLElement>(FIELD_SELECTOR),
@@ -105,12 +119,14 @@ export function Dialog({
   // a field and released outside doesn't count as an outside click.
   const pressedOnBackdrop = useRef(false);
 
-  if (!isOpen || typeof document === "undefined") return null;
+  if (!isOpen || typeof document === "undefined" || surface.mode === "pending") return null;
+  const inWindow = surface.mode === "window";
 
   const blockOutside = preventOutsideClose || dirty;
 
+  // In a window of its own the header is where the window is moved from.
   const heading = (
-    <>
+    <div data-dialog-drag="">
       <h2 id={titleId} className={cn("text-lg font-semibold text-foreground", showClose && "pe-8")}>
         {title}
       </h2>
@@ -119,11 +135,11 @@ export function Dialog({
           {description}
         </p>
       )}
-    </>
+    </div>
   );
 
   const footerRow = footer && (
-    <div className="flex items-center justify-end gap-3 px-6 pb-6 shrink-0">{footer}</div>
+    <div className="flex flex-wrap items-center justify-end gap-3 px-6 pb-6 shrink-0">{footer}</div>
   );
 
   // With an icon the title, text and body sit in one column beside it (a
@@ -152,11 +168,68 @@ export function Dialog({
     </>
   );
 
+  const panel = (
+    <div
+      ref={panelRef}
+      role={role}
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={description ? descriptionId : undefined}
+      data-testid={testId}
+      data-dialog-window={inWindow ? "" : undefined}
+      className={cn(
+        "relative flex flex-col max-h-full bg-background border border-border rounded-lg shadow-xl w-full outline-none animate-in zoom-in-95 duration-200",
+        SIZES[size],
+        className
+      )}
+    >
+      {/* The strip above the title moves the window too. */}
+      {inWindow && <div data-dialog-drag="" aria-hidden="true" className="absolute inset-x-0 top-0 h-6" />}
+      {onSubmit ? (
+        <form onSubmit={onSubmit} className="flex flex-col min-h-0 flex-1">
+          {body}
+        </form>
+      ) : (
+        body
+      )}
+      {showClose && (
+        // Last in the tab order, so the focus starts in the content.
+        <IconButton label={tCommon("close")} onClick={onClose} className="absolute top-3 end-3">
+          <X className="w-4 h-4" />
+        </IconButton>
+      )}
+    </div>
+  );
+
+  // No backdrop: the window behind can't be used while this one is open.
+  // In a window of its own: around the card the room for its shadow, transparent, where a
+  // click does what a click on the dimmed backdrop does over the page.
+  if (surface.mode === "window") {
+    return (
+      <DialogSurfacePortal surface={surface.surface}>
+        <div
+          className="fixed inset-0 flex items-center justify-center p-[var(--bulwark-dialog-margin,2.5rem)] pt-[calc(var(--bulwark-dialog-margin,2.5rem)+var(--titlebar-row-height,0px))]"
+          data-dialog-margin=""
+          onMouseDown={(e) => {
+            pressedOnBackdrop.current = e.target === e.currentTarget;
+          }}
+          onClick={(e) => {
+            const outside = pressedOnBackdrop.current && e.target === e.currentTarget;
+            pressedOnBackdrop.current = false;
+            if (outside && !blockOutside) onClose();
+          }}
+        >
+          {panel}
+        </div>
+      </DialogSurfacePortal>
+    );
+  }
+
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150",
-        size === "full-on-phone" && "max-sm:p-0"
+        "fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 pt-[calc(1rem+var(--titlebar-row-height))] animate-in fade-in duration-150",
+        size === "full-on-phone" && "max-sm:p-0 max-sm:pt-[var(--titlebar-row-height)]"
       )}
       onMouseDown={(e) => {
         pressedOnBackdrop.current = e.target === e.currentTarget;
@@ -167,34 +240,8 @@ export function Dialog({
         if (outside && !blockOutside) onClose();
       }}
     >
-      <div
-        ref={panelRef}
-        role={role}
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
-        data-testid={testId}
-        className={cn(
-          "relative flex flex-col max-h-full bg-background border border-border rounded-lg shadow-xl w-full outline-none animate-in zoom-in-95 duration-200",
-          SIZES[size],
-          className
-        )}
-      >
-        {onSubmit ? (
-          <form onSubmit={onSubmit} className="flex flex-col min-h-0 flex-1">
-            {body}
-          </form>
-        ) : (
-          body
-        )}
-        {showClose && (
-          // Last in the tab order, so the focus starts in the content.
-          <IconButton label={tCommon("close")} onClick={onClose} className="absolute top-3 end-3">
-            <X className="w-4 h-4" />
-          </IconButton>
-        )}
-      </div>
+      {panel}
     </div>,
-    document.body
+    parentSurface?.doc.body ?? document.body
   );
 }

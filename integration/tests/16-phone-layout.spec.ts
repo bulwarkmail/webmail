@@ -34,16 +34,33 @@ test.describe('phone layout', () => {
     await jmap.waitForEmail(subject);
   });
 
-  test('the message list is never wider than the screen', async ({ page }) => {
+  test('the message list and search controls stay within the phone viewport', async ({ page }) => {
     await login(page, alice);
     await expectEmailVisible(page, subject);
     const { width } = page.viewportSize()!;
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await expectOnScreen(page.locator('[data-mobile-mail-header]'), width);
-    // The account button is the header's last control.
-    await expectOnScreen(page.locator('[data-testid="account-switcher"]').first(), width);
+    // The account button is the header's last control. The closed drawer has
+    // its own, off screen to the left, so look in the header.
+    await expectOnScreen(page.locator('[data-mobile-mail-header] [data-testid="account-switcher"]').first(), width);
     await expectOnScreen(emailItem(page, subject).first(), width);
+
+    // The full-screen search panel is outside the app shell's safe-area
+    // padding. Its Back button must still clear an installed phone's status bar.
+    const cdp = await page.context().newCDPSession(page);
+    try {
+      await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: 62 } });
+      await page.locator('[data-mobile-mail-search] button').first().click();
+      const back = page.getByRole('button', { name: 'Go back', exact: true });
+      await expect(back).toBeVisible();
+      await expect.poll(async () => (await back.boundingBox())?.y ?? -1).toBeGreaterThanOrEqual(62);
+      await back.click();
+      await expect(page.locator('[data-mobile-mail-header]')).toBeVisible();
+    } finally {
+      await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: {} });
+      await cdp.detach();
+    }
   });
 
   test('the selection toolbar compacts so every button is on screen', async ({ page }) => {

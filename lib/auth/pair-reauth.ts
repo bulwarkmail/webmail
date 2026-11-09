@@ -2,6 +2,7 @@ import type { cookies } from 'next/headers';
 import { encryptPayload, decryptPayload } from '@/lib/auth/crypto';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { discardGrant } from '@/lib/auth/pairing-store';
+import { logger } from '@/lib/logger';
 
 // Step-up proof for device pairing. Linking a phone provisions a new
 // long-lived login, so the desktop must prove who it is again first: the
@@ -25,10 +26,19 @@ export function pairingOwner(slot: number, username: string): string {
   return `${slot}:${username.trim().toLowerCase()}`;
 }
 
-export function setPairReauthInStore(cookieStore: CookieStore, proof: PairReauthProof): void {
+/** Kill a grant; when the shared store is down the pairing store retries it once the store is back. */
+async function discard(grantId: string): Promise<void> {
+  try {
+    await discardGrant(grantId);
+  } catch (error) {
+    logger.warn('Pair: grant not discarded', { error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+}
+
+export async function setPairReauthInStore(cookieStore: CookieStore, proof: PairReauthProof): Promise<void> {
   // A new step-up replaces the previous grant; its QR must stop working.
   const previous = readPairReauthFromStore(cookieStore);
-  if (previous && previous.grantId !== proof.grantId) discardGrant(previous.grantId);
+  if (previous && previous.grantId !== proof.grantId) await discard(previous.grantId);
   const value = encryptPayload(
     { purpose: 'pair', created_at: Date.now(), grant_id: proof.grantId, owner: proof.owner },
     'pair-reauth',
@@ -60,11 +70,11 @@ export function readPairReauthFromStore(cookieStore: CookieStore): PairReauthPro
  * Sign-out: forget the proof and kill its grant, so a QR left on screen dies.
  * With `slot`, only when the proof belongs to that account.
  */
-export function clearPairReauthInStore(cookieStore: CookieStore, slot?: number): void {
+export async function clearPairReauthInStore(cookieStore: CookieStore, slot?: number): Promise<void> {
   const raw = cookieStore.get(PAIR_REAUTH_COOKIE)?.value;
   if (!raw) return;
   const proof = readPairReauthFromStore(cookieStore);
   if (slot !== undefined && proof && !proof.owner.startsWith(`${slot}:`)) return;
-  if (proof) discardGrant(proof.grantId);
+  if (proof) await discard(proof.grantId);
   cookieStore.delete(PAIR_REAUTH_COOKIE);
 }

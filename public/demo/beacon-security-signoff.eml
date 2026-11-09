@@ -1,0 +1,74 @@
+From: Alice Johnson <alice.johnson@meridianlabs.example>
+To: Nora Lindqvist <nora@meridianlabs.example>
+Cc: Michael Torres <michael.torres@meridianlabs.example>
+Subject: Beacon security review: signed off
+Date: Fri, 30 Oct 2026 11:24:00 +0100
+Message-ID: <demo-email-smime-signoff@meridianlabs.example>
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="----=_Part_7731_BeaconSecurityReview"
+
+This is a cryptographically signed message in MIME format.
+
+------=_Part_7731_BeaconSecurityReview
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Hi Nora,
+
+I went through the Beacon security review this morning. All four findings
+from the pen test are fixed and retested:
+
+1. Webhook secrets are rotated on every key roll (BEA-377).
+2. The admin API rejects tokens older than 24 hours (BEA-381).
+3. Signature checks compare in constant time (BEA-384).
+4. Tenant ids in the logs are hashed (BEA-390).
+
+From the security side Beacon is cleared for general availability. I signed
+this mail so it can go into the launch record as it is.
+
+Alice
+
+--
+Alice Johnson
+Engineering Manager, Meridian Labs
+------=_Part_7731_BeaconSecurityReview
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIIHRQYJKoZIhvcNAQcCoIIHNjCCBzICAQExDTALBglghkgBZQMEAgEwCwYJKoZIhvcNAQcBoIIE
+ujCCAbMwggFaoAMCAQICFAbZ+cxq69Gn3hmvFi+HIqCU/W40MAoGCCqGSM49BAMCMDgxFjAUBgNV
+BAoMDU1lcmlkaWFuIExhYnMxHjAcBgNVBAMMFU1lcmlkaWFuIExhYnMgVGVzdCBDQTAeFw0yNjAx
+MDEwMDAwMDBaFw0zNjAxMDEwMDAwMDBaMDgxFjAUBgNVBAoMDU1lcmlkaWFuIExhYnMxHjAcBgNV
+BAMMFU1lcmlkaWFuIExhYnMgVGVzdCBDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABP0Fmk3A
+4M6fhRduaB4jb9Jhv8Z2fNIX+ua9gs7AW0O7Itt+rFd5SKVNACANJC73z1ZXytInOfVxlqa6bSXj
+oUGjQjBAMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBTC3nRxw2Bo
+MFbDIHns/YketBH1SjAKBggqhkjOPQQDAgNHADBEAiAxrtlO0JM9Onp3FiP1gHOawoCdC8IAFgbN
+3oY7Mufz1wIgQd7oPcSAjMc7n1LVdg+6b161ia897tAVrVBhxOrVCQswggL/MIICpaADAgECAgUg
+JhAxATAKBggqhkjOPQQDAjA4MRYwFAYDVQQKDA1NZXJpZGlhbiBMYWJzMR4wHAYDVQQDDBVNZXJp
+ZGlhbiBMYWJzIFRlc3QgQ0EwHhcNMjYwMTAxMDAwMDAwWhcNMzYwMTAxMDAwMDAwWjBjMRYwFAYD
+VQQKDA1NZXJpZGlhbiBMYWJzMRYwFAYDVQQDDA1BbGljZSBKb2huc29uMTEwLwYJKoZIhvcNAQkB
+FiJhbGljZS5qb2huc29uQG1lcmlkaWFubGFicy5leGFtcGxlMIIBIjANBgkqhkiG9w0BAQEFAAOC
+AQ8AMIIBCgKCAQEAukSTn2kAlFnRH53SnjgBnmv3PzA58RfRDuFmq9onL7QRk8qeGA0DpC7u+BZs
+9rH8DhgVEnVdeBYRGZtFr16pjcGZ+G04aj5IGeSbqCXJZG1am9P8w1Qka+vEz5i7pZDYXw8eEwor
+Ws+dnPjwloHNPwqTu7WDw0OBmmIDlFnNv02NMCYHge0MqaNTTj1TQ+cV/Fu9veVfd/paDdKpoB/3
+bg5T/BGTel6rbaxDY1xrypiTlWuQVaYEUGymIOYCqGer0V68gfFmiKTkn3fLCalQZUD2ndgbK3Tr
+n0PJt+CR5pFmTjIoUA1/wyGQvoSGX0qHy17HUOPSgexQWWXcXJTWdQIDAQABo4GlMIGiMAwGA1Ud
+EwEB/wQCMAAwDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMEMC0GA1UdEQQmMCSB
+ImFsaWNlLmpvaG5zb25AbWVyaWRpYW5sYWJzLmV4YW1wbGUwHQYDVR0OBBYEFKecC3Vbx6ybmvPY
+rIu8vV6E+OQzMB8GA1UdIwQYMBaAFMLedHHDYGgwVsMgeez9iR60EfVKMAoGCCqGSM49BAMCA0gA
+MEUCIBq0hi3NFFtT4u+u3aqp/MeuLL7YjPruRsNf8bn29e+eAiEAjc5doGs8B00mO3Vlr4K9Ptog
+3mAllilUlT7ut26gb84xggJRMIICTQIBATBBMDgxFjAUBgNVBAoMDU1lcmlkaWFuIExhYnMxHjAc
+BgNVBAMMFU1lcmlkaWFuIExhYnMgVGVzdCBDQQIFICYQMQEwCwYJYIZIAWUDBAIBoIHkMBgGCSqG
+SIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI2MTAzMTEzMDIwOFowLwYJKoZI
+hvcNAQkEMSIEIJLeKudmqfPFIpBmk5S015TTwfLqmaa9tA7GPOKPMNdLMHkGCSqGSIb3DQEJDzFs
+MGowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYI
+KoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMA0GCSqG
+SIb3DQEBAQUABIIBAAs2flXVnlf0hwcVlkCM3hxNecRf846qf5kqp9GDFvvVeGu9O8fzKN8zfJy6
+KN8swXDFKFwahx5VX5k/4PhBNXWx5e6CEX9ovuu1TfXPwEVvTeqLN48DCSNloRHzhy1DQPIdgo/R
+5iVkoWiiNv22wBPs0gSBN32O+UQ6C2tvGA5YtXjmKttNQy3df9Ad6C++qpUu1yy7CTKtAF4vjU4W
+/7xt3MPvNcET/ksQJ3CDxYvkPaekMOUvrzlHUyJdg+xZTTJiF5jWfYysyBlte1nv9NLJyTQpWMYN
+W0DUnMfZXupNhWiy+URGLS7/8bJ9280Mt+/kQP3XQ7nV57fP/2ApYis=
+
+------=_Part_7731_BeaconSecurityReview--

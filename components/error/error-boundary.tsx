@@ -3,6 +3,7 @@
 import React, { Component, ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { debug } from "@/lib/debug";
+import { captureException } from "@/lib/error-reporting/client";
 
 export interface FallbackProps {
   error: Error;
@@ -42,6 +43,10 @@ class ErrorBoundaryCore extends Component<
       stack: error.stack,
       componentStack: errorInfo.componentStack,
     });
+
+    // Off unless error reporting is configured (lib/error-reporting/client.ts).
+    // The component stack stays here: it names components, nothing else.
+    captureException(error, "boundary", false);
 
     // Call optional error handler
     this.props.onError?.(error, errorInfo);

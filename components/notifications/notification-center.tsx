@@ -8,6 +8,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { isDocumentRTL } from "@/i18n/direction";
 import { toastHooks } from "@/lib/plugin-hooks";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -59,16 +60,18 @@ export function NotificationPanel({ onClose, className, sheet = false }: { onClo
 
   return (
     <div className={cn("flex flex-col bg-background text-foreground", className)} data-notification-panel="">
-      <div className="flex items-center gap-1 px-3 h-12 border-b border-border shrink-0">
+      <div className="flex flex-wrap items-center justify-end gap-1 px-3 py-1 min-h-12 border-b border-border shrink-0">
         {/* Full screen on a phone it is a dialog of its own, titled like one. */}
-        <h2 className={cn("flex-1 min-w-0 truncate font-semibold", sheet ? "text-lg" : "text-sm")}>{t("title")}</h2>
-        <Button variant="ghost" size="xs" onClick={markAllRead} disabled={unread === 0} className="gap-1 px-2 text-xs text-muted-foreground">
+        <h2 className={cn("flex-[1_0_auto] max-w-full truncate font-semibold", sheet ? "text-lg" : "text-sm")}>{t("title")}</h2>
+        {/* On a phone the title keeps the room and the actions are icons: their
+            labels pushed the title out, and "Mark all as read" wrapped. */}
+        <Button variant="ghost" size="xs" onClick={markAllRead} disabled={unread === 0} className="gap-1 px-2 text-xs text-muted-foreground shrink-0" title={t("mark_all_read")}>
           <CheckCheck className="w-4 h-4" />
-          <span>{t("mark_all_read")}</span>
+          <span className={cn(sheet && "max-sm:sr-only")}>{t("mark_all_read")}</span>
         </Button>
-        <Button variant="ghost" size="xs" onClick={clear} disabled={entries.length === 0} className="gap-1 px-2 text-xs text-muted-foreground">
+        <Button variant="ghost" size="xs" onClick={clear} disabled={entries.length === 0} className="gap-1 px-2 text-xs text-muted-foreground shrink-0" title={t("clear")}>
           <Trash2 className="w-4 h-4" />
-          <span>{t("clear")}</span>
+          <span className={cn(sheet && "max-sm:sr-only")}>{t("clear")}</span>
         </Button>
         {sheet && (
           <IconButton size="icon-lg" label={t("close")} title="" onClick={onClose} className="text-muted-foreground">
@@ -125,7 +128,8 @@ export function NotificationPanel({ onClose, className, sheet = false }: { onClo
                     href={entry.action.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => markRead(entry.id)}
+                    onClick={(event) => { markRead(entry.id); gateLinkClick(event); }}
+                    onAuxClick={(event) => { markRead(entry.id); gateLinkClick(event); }}
                     className="-mt-1 mb-1 ms-[38px] inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-hidden"
                   >
                     {entry.action.label}
@@ -156,7 +160,7 @@ export function NotificationSheet({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label={t("title")}
-      className="fixed inset-0 z-50 flex flex-col bg-background pt-[env(safe-area-inset-top)]"
+      className="fixed inset-0 z-50 flex flex-col bg-background pt-[var(--app-top-inset)]"
     >
       <NotificationPanel onClose={onClose} sheet className="flex-1 min-h-0" />
     </div>,

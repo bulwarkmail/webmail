@@ -15,7 +15,7 @@ interface SearchFilterPanelProps {
   filters: SearchFilters;
   onChange: (patch: Partial<SearchFilters>, mode: FilterChangeMode) => void;
   onClearAll: () => void;
-  /** Runs any pending search and closes the panel (Done, or Enter in a field). */
+  /** Runs any pending search and closes the panel (Search, or Enter in a field). */
   onDone: () => void;
   /** The folder picker, shared with Mountain View's form. */
   folderSelect?: ReactNode;
@@ -62,7 +62,7 @@ function sizePresetOf(filters: SearchFilters): string {
  * Every criterion is in view at once, labelled on the left; the yes/no ones
  * are on/off chips, the date and size offer the usual ranges with a custom
  * one behind them. Changes run the search as they are made, so the list
- * behind already shows the result when Done closes the panel.
+ * behind already shows the result when Search closes the panel.
  */
 export function SearchFilterPanel({ filters, onChange, onClearAll, onDone, folderSelect }: SearchFilterPanelProps) {
   const t = useTranslations("advanced_search");
@@ -247,7 +247,7 @@ export function SearchFilterPanel({ filters, onChange, onClearAll, onDone, folde
           </Button>
         )}
         <Button type="submit" size="sm" className="h-8 px-4 text-xs">
-          {t("done")}
+          {t("search")}
         </Button>
       </div>
     </form>

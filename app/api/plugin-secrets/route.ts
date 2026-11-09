@@ -7,11 +7,15 @@ import { adminCredentialOrigins, adminCredentialStatus } from '@/lib/plugin-secr
 import { declaredUserCredential } from '@/lib/plugin-secrets/known-plugins';
 import {
   VaultFullError,
+  deleteAllUserCredentials,
   deleteUserCredentials,
   listUserCredentials,
   putUserCredential,
   type VaultUser,
 } from '@/lib/plugin-secrets/vault';
+import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { clearWipeProof, hasWipeProof, setWipeProof } from '@/lib/plugin-secrets/wipe-proof';
 
 const PLUGIN_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
 const MAX_SECRET_LENGTH = 4096;
@@ -35,14 +39,23 @@ export async function GET(request: NextRequest) {
   if (pluginId !== undefined && !PLUGIN_ID_RE.test(pluginId)) {
     return NextResponse.json({ error: 'Invalid plugin id' }, { status: 400 });
   }
-  const credentials = await listUserCredentials(user, pluginId);
+  let credentials;
+  try {
+    credentials = await listUserCredentials(user, pluginId);
+  } catch (error) {
+    const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+    if (unavailable) return unavailable;
+    throw error;
+  }
   // For one plugin, also say which of its admin credentials are set up, and
   // on which servers: the host page checks the links a plugin shows against
   // them (the plugin itself only gets yes/no, see proxyAccounts).
   const [admin, adminOrigins] = pluginId
     ? await Promise.all([adminCredentialStatus(pluginId), adminCredentialOrigins(pluginId)])
     : [[], []];
-  return NextResponse.json({ credentials, admin, adminOrigins }, { headers: NO_STORE });
+  const answer = NextResponse.json({ credentials, admin, adminOrigins }, { headers: NO_STORE });
+  if (IS_DESKTOP_BUILD && credentials.length > 0) setWipeProof(answer, user);
+  return answer;
 }
 
 /**
@@ -93,22 +106,65 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof VaultFullError) return NextResponse.json({ error: error.message }, { status: 409 });
+    const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+    if (unavailable) return unavailable;
     throw error;
   }
-  return NextResponse.json({ ok: true }, { headers: NO_STORE });
+  const answer = NextResponse.json({ ok: true }, { headers: NO_STORE });
+  if (IS_DESKTOP_BUILD) setWipeProof(answer, user);
+  return answer;
 }
 
 /** DELETE /api/plugin-secrets?plugin=<id>[&credential=<id>] - disconnect. */
 export async function DELETE(request: NextRequest) {
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  // An account dropped earlier, in the desktop app: no session cookie left, so it
+  // takes the proof that account got while it had one (lib/plugin-secrets/wipe-proof.ts).
+  const { searchParams } = request.nextUrl;
+  const owner = searchParams.get('username');
+  const server = searchParams.get('server');
+  if (IS_DESKTOP_BUILD && searchParams.get('all') === 'true' && owner && server) {
+    const named = { username: owner, serverUrl: server };
+    if (!hasWipeProof(request, named)) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_STORE });
+    try {
+      await deleteAllUserCredentials(named);
+      const answer = NextResponse.json({ ok: true }, { headers: NO_STORE });
+      clearWipeProof(answer, named);
+      return answer;
+    } catch (error) {
+      const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+      if (unavailable) return unavailable;
+      throw error;
+    }
+  }
   const user = await currentUser(request);
   if (user instanceof NextResponse) return user;
+  // A wipe in the desktop app, where this server and its files are on the device.
+  // On an instance they aren't the device's to remove.
+  if (IS_DESKTOP_BUILD && request.nextUrl.searchParams.get('all') === 'true') {
+    try {
+      await deleteAllUserCredentials(user);
+      const answer = NextResponse.json({ ok: true }, { headers: NO_STORE });
+      clearWipeProof(answer, user);
+      return answer;
+    } catch (error) {
+      const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+      if (unavailable) return unavailable;
+      throw error;
+    }
+  }
   const pluginId = request.nextUrl.searchParams.get('plugin') ?? '';
   const credentialId = request.nextUrl.searchParams.get('credential') ?? undefined;
   if (!PLUGIN_ID_RE.test(pluginId)) return bad('Invalid plugin id');
   if (credentialId !== undefined && !CREDENTIAL_ID_RE.test(credentialId)) return bad('Invalid credential id');
-  await deleteUserCredentials(user, pluginId, credentialId);
+  try {
+    await deleteUserCredentials(user, pluginId, credentialId);
+  } catch (error) {
+    const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+    if (unavailable) return unavailable;
+    throw error;
+  }
   return NextResponse.json({ ok: true }, { headers: NO_STORE });
 }
 

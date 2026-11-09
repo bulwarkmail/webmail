@@ -2,6 +2,7 @@ import { render, act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { clearAllHooks } from '@/lib/plugin-hooks';
+import { composerHandle } from '@/lib/plugin-sandbox/composer-registry';
 
 // A quick reply that a pre-send question stopped (Back on the external
 // recipient confirm) must keep the typed text; one that went out clears it.
@@ -39,19 +40,29 @@ const message = {
 
 beforeEach(() => clearAllHooks());
 
-async function typeAndSend(onQuickReply: (body: string) => Promise<boolean | void>) {
+async function typeAndSend(onQuickReply: (body: string, extra?: { composerId?: string }) => Promise<boolean | void>) {
   render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={onQuickReply} />);
   await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
-  const box = screen.getByPlaceholderText('quick_reply_placeholder') as HTMLTextAreaElement;
+  const box = screen.getByPlaceholderText('quick_reply_to') as HTMLTextAreaElement;
   fireEvent.focus(box);
   fireEvent.change(box, { target: { value: 'My answer' } });
   fireEvent.click(screen.getByRole('button', { name: 'send' }));
-  await waitFor(() => expect(onQuickReply).toHaveBeenCalledWith('My answer'));
+  await waitFor(() => expect(onQuickReply).toHaveBeenCalledWith('My answer', { composerId: expect.any(String) }));
   await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
   return box;
 }
 
 describe('quick reply', () => {
+  it('sends with the id its plugin actions hand out, for the send checks of plugins', async () => {
+    let registered: unknown = null;
+    await typeAndSend(vi.fn(async (_body: string, extra?: { composerId?: string }) => {
+      registered = composerHandle(extra?.composerId);
+      return true;
+    }));
+    // The quick reply's own composer, open while it is focused.
+    expect(registered).not.toBeNull();
+  });
+
   it('keeps the text when nothing was sent', async () => {
     const box = await typeAndSend(vi.fn(async () => false));
     expect(box.value).toBe('My answer');
@@ -60,6 +71,22 @@ describe('quick reply', () => {
   it('clears the text after a send', async () => {
     const box = await typeAndSend(vi.fn(async () => true));
     expect(box.value).toBe('');
+  });
+});
+
+// mail-p2-8: Undo send on a quick reply brings its text back into this box.
+describe('quick reply after Undo send', () => {
+  it('takes the undone text back into the box of the message it answered', async () => {
+    const { useQuickReplyRestoreStore } = await import('@/stores/quick-reply-restore-store');
+    useQuickReplyRestoreStore.setState({ pending: null });
+    render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={vi.fn()} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+    const box = screen.getByPlaceholderText('quick_reply_to') as HTMLTextAreaElement;
+    act(() => { useQuickReplyRestoreStore.getState().restore('other', 'Not for this one'); });
+    expect(box.value).toBe('');
+    act(() => { useQuickReplyRestoreStore.getState().restore('m1', 'My answer'); });
+    await waitFor(() => expect(box.value).toBe('My answer'));
+    expect(useQuickReplyRestoreStore.getState().pending).toBeNull();
   });
 });
 
@@ -77,7 +104,7 @@ describe('automatic sign-out while the external recipient question is open', () 
     render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
       onQuickReply={onQuickReply} onSaveQuickReplyDraft={onSaveQuickReplyDraft} />);
     await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
-    const box = screen.getByPlaceholderText('quick_reply_placeholder') as HTMLTextAreaElement;
+    const box = screen.getByPlaceholderText('quick_reply_to') as HTMLTextAreaElement;
     fireEvent.focus(box);
     fireEvent.change(box, { target: { value: 'My answer' } });
     fireEvent.click(screen.getByRole('button', { name: 'send' }));

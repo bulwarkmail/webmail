@@ -9,6 +9,7 @@ import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { registerComposeFlush, resetComposeFlushRegistry } from '@/lib/compose-flush-registry';
 import { consumeSessionEnd } from '@/lib/session-policy/sign-out-reason';
 import { LAST_ACTIVITY_KEY } from '@/lib/session-policy/activity-channel';
+import { reportFrameActivity } from '@/lib/session-policy/frame-activity';
 
 /** BroadcastChannel between "tabs" of one test. */
 class FakeBroadcastChannel {
@@ -142,6 +143,32 @@ describe('session timeout guard', () => {
     expect(localStorage.getItem(LAST_ACTIVITY_KEY)).toBe(String(START + 10 * SECOND));
   });
 
+  it('counts input a plugin frame reports like input here, and tells the other tabs', async () => {
+    await signIn(policyWith({ idleMinutes: 1, maxHours: 0, warnSeconds: 30 }));
+    const otherTab = new FakeBroadcastChannel('bulwark-session-activity');
+    const heard = vi.fn();
+    otherTab.onmessage = (event) => heard((event.data as { at: number }).at);
+
+    await advance(20 * SECOND);
+    act(() => { reportFrameActivity(); });
+    expect(heard).toHaveBeenCalledWith(START + 20 * SECOND);
+    await advance(29 * SECOND);
+    expect(screen.queryByText('idle_title')).toBeNull();
+    await advance(1 * SECOND);
+    expect(screen.getByText('idle_title')).toBeTruthy();
+  });
+
+  it('does not end the idle warning on input a plugin frame reports', async () => {
+    await signIn(policyWith({ idleMinutes: 1, maxHours: 0, warnSeconds: 30 }));
+
+    await advance(40 * SECOND);
+    expect(screen.getByText('idle_title')).toBeTruthy();
+    act(() => { reportFrameActivity(); });
+    expect(screen.getByText('idle_title')).toBeTruthy();
+    await advance(20 * SECOND);
+    expect(logoutAll).toHaveBeenCalled();
+  });
+
   it('saves the drafts, then signs every account out with the reason, at zero', async () => {
     await signIn(policyWith({ idleMinutes: 1, maxHours: 0, warnSeconds: 30 }));
     const order: string[] = [];
@@ -157,7 +184,7 @@ describe('session timeout guard', () => {
     await advance(500);
 
     expect(order).toEqual(['draft saved', 'signed out']);
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     expect(consumeSessionEnd()).toEqual({ kind: 'idle', minutes: 1 });
   });
 
@@ -169,7 +196,7 @@ describe('session timeout guard', () => {
     await advance(DRAFT_FLUSH_TIMEOUT_MS - 1);
     expect(logoutAll).not.toHaveBeenCalled();
     await advance(1);
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
   });
 
   it('uses the strictest of the signed-in accounts', async () => {
@@ -231,7 +258,7 @@ describe('session timeout guard', () => {
     expect(screen.queryByText('max_title')).toBeNull();
     await advance(60 * SECOND);
     await advance(0);
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     expect(consumeSessionEnd()).toEqual({ kind: 'max', hours: 1 });
   });
 
@@ -249,7 +276,7 @@ describe('session timeout guard', () => {
     fireEvent.pointerDown(window);
     await advance(0);
 
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     expect(consumeSessionEnd()).toEqual({ kind: 'idle', minutes: 1 });
   });
 
@@ -292,7 +319,7 @@ describe('session timeout guard', () => {
       // Later in the body than the overlay, so it paints on top at a higher z-index too.
       expect(overlay.compareDocumentPosition(warning) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       await advance(30 * SECOND);
-      expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+      expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     } finally {
       overlay.remove();
       hasFocus.mockRestore();

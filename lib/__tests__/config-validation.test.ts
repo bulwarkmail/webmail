@@ -71,6 +71,7 @@ describe('server configuration validation', () => {
     ['jmapServerUrl', null],
     ['oauthEnabled', 'false'],
     ['oauthOnly', 0],
+    ['oauthPasswordFallbackEnabled', 'true'],
     ['oauthClientId', false],
     ['loginLogoLightUrl', {}],
     ['loginShowHeading', null],
@@ -105,5 +106,20 @@ describe('server configuration validation', () => {
     delete entry[key];
 
     expect(isConfigData({ ...createConfig(), jmapServers: [entry] })).toBe(false);
+  });
+});
+
+describe('error reporting settings in the server configuration', () => {
+  const settings = { dsn: '', sampleRate: 1, environment: 'production', collect: false };
+
+  it('are optional, for Lite and servers before they existed', () => {
+    expect(isConfigData({ ...createConfig(), errorReporting: settings })).toBe(true);
+    expect(isConfigData(createConfig())).toBe(true);
+  });
+
+  it('are refused when malformed', () => {
+    expect(isConfigData({ ...createConfig(), errorReporting: { ...settings, sampleRate: '1' } })).toBe(false);
+    expect(isConfigData({ ...createConfig(), errorReporting: { ...settings, collect: 'yes' } })).toBe(false);
+    expect(isConfigData({ ...createConfig(), errorReporting: 'https://key@x.example/1' })).toBe(false);
   });
 });

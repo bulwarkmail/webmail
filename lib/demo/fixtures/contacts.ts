@@ -1,7 +1,7 @@
 import type { ContactCard, AddressBook } from '@/lib/jmap/types';
 import {
   type Person, portraitUri,
-  NORA, ALICE, BOB, PRIYA, AHMED, JAMES, MICHAEL, RACHEL, WEI, MARIA, LISA,
+  NORA, NORA_PERSONAL, ALICE, BOB, PRIYA, AHMED, JAMES, MICHAEL, RACHEL, WEI, MARIA, LISA,
   SARAH, OLIVIA, JENNIFER, KENJI, SOFIA, ANNA, ELIAS, CARLOS, MARCUS, EMMA, DAVID, DANIEL,
   TOMAS, LENA, YUSUF,
 } from './people';
@@ -9,6 +9,8 @@ import {
 export const AB = {
   personal: 'demo-addressbook-personal',
   work: 'demo-addressbook-work',
+  /** The one address book of the personal login. */
+  home: 'demo-addressbook-home',
 } as const;
 
 export function createDemoAddressBooks(): AddressBook[] {
@@ -206,6 +208,39 @@ export function createDemoContacts(): ContactCard[] {
       name: { components: [{ kind: 'surname', value: 'Book club' }] },
       members: { 'demo-contact-marcus': true, 'demo-contact-emma': true, 'demo-contact-david': true },
     },
+  ];
+}
+
+export function createDemoPersonalAddressBooks(): AddressBook[] {
+  return [{
+    id: AB.home,
+    name: 'Contacts',
+    isDefault: true,
+    isSubscribed: true,
+    sortOrder: 1,
+    myRights: { mayRead: true, mayWrite: true, mayShare: true, mayDelete: false },
+  }];
+}
+
+/**
+ * The personal login's contacts: Nora's own card and copies of the work
+ * account's Personal book. Avatars only look at the open account's cards,
+ * so without these every sender of the personal mail, and Nora herself,
+ * fell back to initials there.
+ */
+export function createDemoPersonalContacts(): ContactCard[] {
+  const homeId = (id: string) => id.replace(/^demo-/, 'demo-home-');
+  const copies = createDemoContacts()
+    .filter((card) => card.addressBookIds[AB.personal])
+    .map((card) => ({
+      ...card,
+      id: homeId(card.id),
+      addressBookIds: { [AB.home]: true },
+      ...(card.members ? { members: Object.fromEntries(Object.keys(card.members).map((id) => [homeId(id), true])) } : {}),
+    }));
+  return [
+    person('demo-home-contact-nora', AB.home, NORA_PERSONAL, 'private', { moreEmails: [[NORA.email, 'work']] }),
+    ...copies,
   ];
 }
 

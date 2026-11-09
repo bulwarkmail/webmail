@@ -93,3 +93,17 @@ describe('migrateSettings v5 -> v6 (Unified Mailbox rework)', () => {
     expect(out.includeGroupInUnified).toBe(true);
   });
 });
+
+describe('settings-store autoSaveDraftInterval', () => {
+  // Drafts save 2 s after the last change; this interval was never read.
+  it('is no longer a setting, nor exported', () => {
+    expect('autoSaveDraftInterval' in useSettingsStore.getState()).toBe(false);
+    expect(JSON.parse(useSettingsStore.getState().exportSettings())).not.toHaveProperty('autoSaveDraftInterval');
+  });
+
+  it('is dropped from persisted settings and ignored in an import', () => {
+    expect(migrateSettings({ autoSaveDraftInterval: 60000 }, 10)).not.toHaveProperty('autoSaveDraftInterval');
+    useSettingsStore.getState().importSettings(JSON.stringify({ autoSaveDraftInterval: 30000 }));
+    expect('autoSaveDraftInterval' in useSettingsStore.getState()).toBe(false);
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findComposeIdentityId, findDraftIdentityId, findReplyIdentityId, resolveComposeAccountEmail, resolveReplyFrom } from '../reply-identity';
+import { deliveryAddresses, findComposeIdentityId, findDraftIdentityId, findReplyIdentityId, resolveComposeAccountEmail, resolveReplyFrom } from '../reply-identity';
 import type { Identity } from '../jmap/types';
 
 const identities: Identity[] = [
@@ -207,6 +207,72 @@ describe('resolveReplyFrom', () => {
   it('returns null when recipients are on foreign domains', () => {
     expect(resolveReplyFrom(identities, { to: [{ email: 'nobody@elsewhere.com' }] }))
       .toBeNull();
+  });
+
+  // #1353: a GitHub notification is addressed to the repo, and the catch-all
+  // alias it was delivered to only shows up in Delivered-To.
+  const github = { to: [{ email: 'repo@noreply.github.com', name: 'owner/repo' }] };
+
+  it('takes the delivery address as catch-all override when To/Cc/Bcc have none', () => {
+    expect(resolveReplyFrom(identities, { ...github, deliveredTo: ['github@primary.com'] })).toEqual({
+      identityId: 'primary',
+      overrideEmail: 'github@primary.com',
+      overrideName: undefined,
+    });
+  });
+
+  it('matches a delivery address that is an identity', () => {
+    expect(resolveReplyFrom(identities, { ...github, deliveredTo: ['harry@secondary.com'] }, 'exact'))
+      .toEqual({ identityId: 'secondary' });
+  });
+
+  it('keeps a catch-all address in To ahead of the mailbox it was delivered to', () => {
+    expect(resolveReplyFrom(identities, {
+      to: [{ email: 'sales@primary.com', name: 'Sales' }],
+      deliveredTo: ['harry@primary.com'],
+    })).toEqual({ identityId: 'primary', overrideEmail: 'sales@primary.com', overrideName: 'Sales' });
+  });
+
+  it('never makes a delivery address an override in exact mode', () => {
+    expect(resolveReplyFrom(identities, { ...github, deliveredTo: ['github@primary.com'] }, 'exact'))
+      .toBeNull();
+  });
+
+  it('ignores delivery addresses on foreign domains', () => {
+    expect(resolveReplyFrom(identities, { ...github, deliveredTo: ['me@gmail.com'] })).toBeNull();
+  });
+});
+
+describe('findReplyIdentityId with delivery addresses', () => {
+  it('falls back to the delivery address when To/Cc/Bcc have no identity', () => {
+    expect(findReplyIdentityId(identities, {
+      to: [{ email: 'list@lists.example.org' }],
+      deliveredTo: ['harry+lists@secondary.com'],
+    })).toBe('secondary');
+  });
+
+  it('prefers an identity in To over the delivery address', () => {
+    expect(findReplyIdentityId(identities, {
+      to: [{ email: 'harry@secondary.com' }],
+      deliveredTo: ['harry@primary.com'],
+    })).toBe('secondary');
+  });
+});
+
+describe('deliveryAddresses', () => {
+  it('reads the delivery headers in priority order, case-insensitively, without duplicates', () => {
+    expect(deliveryAddresses({
+      'X-Original-To': ' alias@primary.com',
+      'delivered-to': [' github@primary.com', ' harry@gmail.com'],
+      'X-Delivered-to': '<GitHub@primary.com>',
+      'X-Original-Delivered-To': 'mailing list list@lists.example.org',
+      Subject: 'not@an-address.com',
+    })).toEqual(['github@primary.com', 'harry@gmail.com', 'alias@primary.com', 'list@lists.example.org']);
+  });
+
+  it('returns nothing when there are no headers or no address in them', () => {
+    expect(deliveryAddresses(undefined)).toEqual([]);
+    expect(deliveryAddresses({ 'Delivered-To': 'nobody' })).toEqual([]);
   });
 });
 

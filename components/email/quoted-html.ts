@@ -6,9 +6,10 @@ import { NodeSelection, Plugin, PluginKey, Selection, TextSelection } from "@tip
 import type { Editor } from "@tiptap/react";
 
 import { addParagraphSpacing, addTrailingParagraphBreaks } from "@/components/email/paragraph-breaks";
-import { buildSignatureBlock } from "@/components/email/signature-block";
+import { buildSignatureBlock } from "@/components/email/signature-markers";
 import { parkRemoteResources, restoreRemoteResources, sanitizeComposerIslandHtml } from "@/lib/email-sanitization";
 import { useSettingsStore } from "@/stores/settings-store";
+import { remoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
 
 // Marker attribute that identifies the quoted-original wrapper in serialized
 // HTML, so parseHTML can recognise it on the way back in.
@@ -21,6 +22,22 @@ const QUOTED_REMOTE_ALLOWED_ATTR = "data-quoted-remote";
 
 // Atom blocks typing must never replace just because they were left selected.
 const ATOM_BLOCKS = new Set(["quotedHtml", "signatureBlock"]);
+
+/**
+ * Replacing the editor's content throws the caret to where the old selection
+ * maps to: the quote as a node, where the next key typed replaces the whole
+ * quote, or the line below it. There is no focus event for the guard below to
+ * catch: a reply's inline images finish loading while the caret already waits
+ * in the body. It goes back to where it was, or to the start if that is gone.
+ */
+export function restoreCaretAfterContentSync(editor: Editor, caret: number): void {
+  const { doc } = editor.state;
+  const near = Selection.near(doc.resolve(Math.min(caret, doc.content.size)));
+  const target = near instanceof TextSelection ? near : Selection.atStart(doc);
+  if (target instanceof TextSelection && !target.eq(editor.state.selection)) {
+    editor.view.dispatch(editor.state.tr.setSelection(target));
+  }
+}
 
 // Reusable style for the quote bar when quoting email text (like in a reply).
 const QUOTE_BAR_STYLE =
@@ -166,8 +183,13 @@ export const QuotedHtml = TiptapNode.create({
       // content, its images and backgrounds are parked so opening a reply
       // doesn't fire the trackers the viewer held back. Parking is
       // display-only - the html attribute (what gets sent) keeps them.
-      const blockRemote =
-        !node.attrs.remoteAllowed && useSettingsStore.getState().externalContentPolicy !== "allow";
+      // A draft re-opened after the organisation blocked remote content (or
+      // before its policy loaded) keeps its quote parked, whatever the
+      // wrapper remembered from when the draft was started.
+      // The draft doesn't say which account it quotes: held back in any
+      // signed-in account keeps it parked.
+      const blockRemote = remoteContentHeldBackAnywhere()
+        || (!node.attrs.remoteAllowed && useSettingsStore.getState().externalContentPolicy !== "allow");
       let renderedHtml = "";
       const render = (html: string) => {
         renderedHtml = html;
@@ -253,6 +275,10 @@ export const QuotedHtml = TiptapNode.create({
  */
 export function serializeEditorContent(editor: Editor): string {
   const serializer = DOMSerializer.fromSchema(editor.schema);
+  // Built in an inert document: an <img> made in the app document starts
+  // loading at once, so serialising (on every change) fired every remote
+  // image of the content, also while remote content is blocked.
+  const inert = document.implementation.createHTMLDocument("");
   const parts: string[] = [];
   // Empty paragraphs at the very end (the editor keeps one after a quote)
   // stay invisible; every other empty line gets a <br> so it keeps its
@@ -276,8 +302,8 @@ export function serializeEditorContent(editor: Editor): string {
       parts.push(buildSignatureBlock((node.attrs.html as string) || ""));
       return;
     }
-    const fragment = serializer.serializeNode(node);
-    const tmp = document.createElement("div");
+    const fragment = serializer.serializeNode(node, { document: inert });
+    const tmp = inert.createElement("div");
     tmp.appendChild(fragment);
     if (index <= lastLine) addTrailingParagraphBreaks(tmp);
     addParagraphSpacing(tmp);

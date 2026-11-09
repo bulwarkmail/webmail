@@ -21,7 +21,7 @@ vi.mock('@/stores/auth-store', async () => {
   };
 });
 vi.mock('@/stores/account-store', () => {
-  const state = { getAccountById: () => undefined };
+  const state = { accounts: [], getAccountById: () => undefined };
   return {
     useAccountStore: Object.assign(
       (selector?: (s: typeof state) => unknown) => (selector ? selector(state) : state),

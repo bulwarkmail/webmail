@@ -69,15 +69,16 @@ describe('JMAPClient archived items', () => {
     expect(queries(spy).every(([, args]) => (args.filter as { accountId?: string })?.accountId === ACCOUNT)).toBe(true);
   });
 
-  it('drops the other accounts in an unfiltered mixed answer', async () => {
-    // A server that ignores the filter and answers with every account.
+  it('drops the other accounts in an unfiltered mixed answer and keeps items without accountId', async () => {
+    // A server that ignores the filter and answers with every account. 'n' has
+    // no accountId, the way Stalwart sends items to a user without Impersonate (#1480).
     respondWith((body) => ({
       methodResponses: body.methodCalls.map(([method, , id]) => method === 'x:ArchivedItem/query'
         ? [method, { ids: ['a', 'z', 'n'], total: 3 }, id]
         : [method, { list: [archivedEmail('a'), archivedEmail('z', { accountId: 'cz' }), archivedEmail('n', { accountId: undefined })] }, id]),
     }));
     const result = await client().listArchivedEmails(undefined, { days: 0 });
-    expect(result.items.map((i) => i.id)).toEqual(['a']);
+    expect(result.items.map((i) => i.id)).toEqual(['a', 'n']);
   });
 
   it('throws the refusal with its type when the server has no license', async () => {

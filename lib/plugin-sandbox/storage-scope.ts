@@ -52,7 +52,8 @@ export function claimLegacyPluginStorage(pluginId: string, accountId: string): v
     const moves: [string, string][] = [];
     for (let i = 0; i < window.localStorage.length; i++) {
       const key = window.localStorage.key(i);
-      if (key?.startsWith(legacy) && !key.startsWith(`${legacy}@`)) {
+      // `@`: already per account; `!`: the host's own (hostOnlyPluginKey).
+      if (key?.startsWith(legacy) && !key.startsWith(`${legacy}@`) && !key.startsWith(`${legacy}!`)) {
         moves.push([key, scoped + key.slice(legacy.length)]);
       }
     }
@@ -66,13 +67,29 @@ export function claimLegacyPluginStorage(pluginId: string, accountId: string): v
   }
 }
 
+/**
+ * Where the host keeps something about a plugin that the plugin must not
+ * change, such as the addresses the user let it forward mail to:
+ * `plugin:<pluginId>:!<name>:@<accountId>:`. A plugin's own keys always have
+ * `@` right after its id, so api.storage can't reach these, and removing the
+ * plugin or signing the account out still removes them.
+ */
+export function hostOnlyPluginKey(pluginId: string, accountId: string, name: string): string {
+  return `${PLUGIN_PREFIX}${pluginId}:!${name}:${accountTag(accountId)}`;
+}
+
 /** Delete what every plugin stored for this account. */
 export function clearPluginStorageForAccount(accountId: string): void {
   const tag = accountTag(accountId);
   removeKeys((key) => {
     if (!key.startsWith(PLUGIN_PREFIX)) return false;
     const idEnd = key.indexOf(':', PLUGIN_PREFIX.length);
-    return idEnd > 0 && key.startsWith(tag, idEnd + 1);
+    if (idEnd <= 0) return false;
+    if (key.startsWith(tag, idEnd + 1)) return true;
+    // A host-only key: `!<name>:` before the account tag.
+    if (key[idEnd + 1] !== '!') return false;
+    const nameEnd = key.indexOf(':', idEnd + 2);
+    return nameEnd > 0 && key.startsWith(tag, nameEnd + 1);
   });
 }
 

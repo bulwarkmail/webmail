@@ -575,7 +575,7 @@ describe("vCard 4.0 export (issue #1407)", () => {
     expect(vcf).toBe([
       "BEGIN:VCARD",
       "VERSION:4.0",
-      "PRODID:-//JMAP-Webmail//EN",
+      "PRODID:-//Bulwark Mail//Bulwark Webmail//EN",
       "UID;VALUE=text:sabre-vobject-5e64d0ac-69da-4393-bfe4-87844b9a7db6",
       "REV:20250728T121700Z",
       "N:Doe;Jane;;;",
@@ -1175,6 +1175,17 @@ describe("detectDuplicates", () => {
     const dupes = detectDuplicates(existing, incoming);
     expect(dupes.size).toBe(1);
     expect(dupes.get(0)).toBe("existing-1");
+  });
+
+  // pim-p2-15 (2026-11-04): a CSV with the same address on two rows imported both.
+  it("marks a later card of the same file with the same address as a duplicate of the first", () => {
+    const incoming: ContactCard[] = [
+      { id: "row-1", addressBookIds: {}, emails: { e0: { address: "anna@example.org" } } },
+      { id: "row-2", addressBookIds: {}, emails: { e0: { address: "bob@example.org" } } },
+      { id: "row-3", addressBookIds: {}, emails: { e0: { address: " Anna@Example.org" } } },
+    ];
+    const dupes = detectDuplicates([], incoming);
+    expect([...dupes.entries()]).toEqual([[2, "row-1"]]);
   });
 
   it("returns empty map when no duplicates", () => {

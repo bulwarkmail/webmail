@@ -3,9 +3,10 @@ import { useTemplateStore } from '@/stores/template-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { DEMO_KEYWORDS } from './fixtures/keywords';
 import { createDemoTemplates } from './fixtures/templates';
+import { DEMO_SIGNATURE_DETAILS } from './fixtures/identities';
 
 /** Bump when the seeded preferences change, so returning visitors get them. */
-const SEED_VERSION = '2026-10';
+const SEED_VERSION = '2026-11';
 export const DEMO_SEED_KEY = 'bulwark-demo-seed';
 
 /**
@@ -30,6 +31,8 @@ export function seedDemoPreferences(): void {
   settings.updateSetting('enableUnifiedMailbox', true);
   settings.updateSetting('unifiedCrossAccount', true);
   settings.updateSetting('includeGroupInUnified', true);
+  // Fills the organisation signature, when an administrator sets one.
+  settings.updateSetting('signatureDetails', DEMO_SIGNATURE_DETAILS);
 
   const templates = useTemplateStore.getState();
   if (templates.templates.length === 0) {

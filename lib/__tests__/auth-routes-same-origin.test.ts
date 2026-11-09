@@ -219,10 +219,14 @@ const MUTATING_HANDLERS: Array<[string, string]> = [
   ['@/app/api/auth/pair/create/route', 'POST'],
   ['@/app/api/auth/pair/redeem/route', 'POST'],
   ['@/app/api/auth/pair/token/route', 'POST'],
+  ['@/app/api/auth/handoff/create/route', 'POST'],
+  ['@/app/api/auth/handoff/confirm/route', 'POST'],
+  ['@/app/api/auth/handoff/redeem/route', 'POST'],
   ['@/app/api/auth/sso/start/route', 'POST'],
   ['@/app/api/auth/sso/complete/route', 'POST'],
   ['@/app/api/auth/reauth/sso/complete/route', 'POST'],
   ['@/app/api/auth/verify/route', 'POST'],
+  ['@/app/api/auth/discover-server/route', 'POST'],
 ];
 
 describe('every mutating /api/auth handler rejects cross-site requests', () => {

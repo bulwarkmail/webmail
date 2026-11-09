@@ -88,7 +88,7 @@ export function ContactGroupForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-border">
+      <div data-window-top-row="" className="px-6 py-4 border-b border-border">
         <h2 className="text-lg font-semibold">
           {isEditing ? t("groups.edit") : t("groups.create")}
         </h2>

@@ -163,7 +163,8 @@ export async function openFiles(page: Page): Promise<void> {
  * (and the switcher) pins the layout first.
  */
 export async function openMailView(page: Page): Promise<void> {
-  await navRail(page).getByRole('link', { name: 'Mail', exact: true }).click();
+  // "Mail", or "Mail, 3 unread" while there is unread mail.
+  await navRail(page).getByRole('link', { name: /^Mail(, \d+ unread)?$/ }).click();
   await accountSwitcher(page).waitFor({ state: 'visible', timeout: 30000 });
   await folderRow(page, { role: 'inbox' }).first().waitFor({ state: 'visible', timeout: 30000 });
 }
@@ -309,6 +310,10 @@ export async function folderMailboxId(page: Page, sel: FolderSelector): Promise<
 /**
  * Move an email to `destMailboxId` (a UI mailbox id, e.g. from
  * {@link folderMailboxId}) via the list context menu's "Move to" submenu.
+ * The message's own account lists its folders there; every other account a
+ * move can reach is a submenu under its name (`move-account:<accountId>`,
+ * 4d404929e). Submenus are opened by click: a menu opened by a right-click
+ * ignores the pointer until it has moved, and a hover is one move.
  */
 export async function moveEmailTo(page: Page, subject: string, destMailboxId: string): Promise<void> {
   const row = emailItem(page, subject).first();
@@ -318,8 +323,18 @@ export async function moveEmailTo(page: Page, subject: string, destMailboxId: st
     await row.click({ button: 'right' });
     await submenu.waitFor({ state: 'visible', timeout: 2000 });
   }).toPass({ timeout: 15000 });
-  await submenu.hover();
-  const target = page.locator(`[data-testid="move-to:${destMailboxId}"]`);
+  await submenu.click();
+  const target = page.locator(`[data-testid="move-to:${destMailboxId}"]`).first();
+  const accounts = page.locator('[data-testid^="move-account:"]');
+  await expect(target.or(accounts).first()).toBeVisible({ timeout: 5000 });
+  if (!(await target.isVisible())) {
+    const ids = await accounts.evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')!));
+    for (const id of ids) {
+      await page.locator(`[data-testid="${id}"]`).click();
+      await target.waitFor({ state: 'visible', timeout: 1500 }).catch(() => {});
+      if (await target.isVisible()) break;
+    }
+  }
   await target.waitFor({ state: 'visible', timeout: 5000 });
   await target.click();
 }
@@ -430,10 +445,12 @@ export async function emailContextAction(page: Page, subject: string, testId: st
  */
 export async function openCalendar(page: Page): Promise<void> {
   await page.locator('a[href$="/calendar"]').first().click();
+  // On a phone the calendar list is in the closed drawer: there, loaded is enough.
+  const phone = (page.viewportSize()?.width ?? 1280) < 768;
   await page
     .locator('[data-testid="calendar-item"]')
     .first()
-    .waitFor({ state: 'visible', timeout: 30000 });
+    .waitFor({ state: phone ? 'attached' : 'visible', timeout: 30000 });
 }
 
 /** A sidebar calendar row by its (exact) name. */

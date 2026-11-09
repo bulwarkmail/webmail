@@ -141,11 +141,39 @@ describe('actions for team mailboxes', () => {
   });
 });
 
+describe('actions shown by a row badge', () => {
+  const FOLLOW_UP_ACTIONS = [
+    { id: 'follow-up', label: 'Follow up', notBadge: 'follow-up' },
+    { id: 'done', label: 'Done', hasBadge: 'follow-up' },
+  ];
+
+  it("shows each by the row's badges, in any account, and hides both where the surface has no row", () => {
+    act(() => setPluginActions('fu', 'Follow-ups', 'message-row-actions', FOLLOW_UP_ACTIONS));
+    const items = () => screen.queryAllByRole('menuitem').map((m) => m.textContent);
+    const view = render(
+      <PluginActions surface="message-row-actions" context={{ emailId: 'm1' }} variant="menu"
+        target={{ accountId: 'ch', accountKind: 'group', keywords: [], badges: ['follow-up'] }} />,
+    );
+    expect(items()).toEqual(['Done']);
+    view.rerender(
+      <PluginActions surface="message-row-actions" context={{ emailId: 'm1' }} variant="menu"
+        target={{ accountKind: 'personal', keywords: ['$flagged'], badges: [] }} />,
+    );
+    expect(items()).toEqual(['Follow up']);
+    view.rerender(
+      <PluginActions surface="message-row-actions" context={{ emailId: 'm1' }} variant="menu"
+        target={{ accountKind: 'personal', keywords: [] }} />,
+    );
+    expect(items()).toEqual([]);
+  });
+});
+
 describe('PluginActions overflow button', () => {
-  it('uses the vertical "more" icon, as every other overflow menu does (R2)', () => {
+  it('uses the puzzle icon, not a second vertical "more" next to the toolbar\'s own', () => {
     act(() => setPluginActions('tasks', 'Email to task', 'message-bulk-actions', [{ id: 'make', label: 'Make tasks' }]));
     render(<PluginActions surface="message-bulk-actions" context={{ emailIds: ['e1'] }} overflow />);
     const more = screen.getByRole('button', { name: 'more_actions' });
-    expect(more.querySelector('.tabler-icon-dots-vertical')).not.toBeNull();
+    expect(more.querySelector('.tabler-icon-puzzle')).not.toBeNull();
+    expect(more.querySelector('.tabler-icon-dots-vertical')).toBeNull();
   });
 });

@@ -164,8 +164,11 @@ describe('RichTextEditor image descriptions (MA-02)', () => {
   const altDialog = () => screen.getByRole('dialog', { name: 'title' });
   const html = (editor: Editor) => editor.getHTML();
 
-  it('asks for a description when an image is dropped in, and never uses the file name', async () => {
+  it('offers a description for a dropped image, and never uses the file name', async () => {
     const { editor } = await dropImage();
+    // Nothing asks on the drop; the chip on the image does, when clicked.
+    expect(screen.queryByRole('dialog', { name: 'title' })).toBeNull();
+    fireEvent.click(await screen.findByTestId('image-alt-add'));
     const dialog = await waitFor(() => altDialog());
     expect(html(editor)).not.toContain('IMG_2041');
     expect(html(editor)).not.toMatch(/alt=/);
@@ -178,6 +181,9 @@ describe('RichTextEditor image descriptions (MA-02)', () => {
 
   it('marks an image decorative with an empty alt', async () => {
     const { editor } = await dropImage();
+    // Nothing asks on the drop; the chip on the image does, when clicked.
+    expect(screen.queryByRole('dialog', { name: 'title' })).toBeNull();
+    fireEvent.click(await screen.findByTestId('image-alt-add'));
     const dialog = await waitFor(() => altDialog());
     fireEvent.click(within(dialog).getByLabelText('decorative'));
     expect(within(dialog).getByLabelText('label')).toBeDisabled();

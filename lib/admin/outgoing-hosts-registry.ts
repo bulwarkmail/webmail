@@ -39,8 +39,8 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     host: 'telemetry.bulwarkmail.org',
     files: ['lib/telemetry/types.ts'],
     side: 'server',
-    usedBy: 'Anonymous daily heartbeat, sent only after an admin turned telemetry on.',
-    off: 'Off by default. BULWARK_TELEMETRY=off, or Admin > Telemetry.',
+    usedBy: 'Anonymous daily heartbeat, sent only after an admin turned telemetry on; with instant error counts on, also the current day\'s error counts as they change. In the desktop app the user decides: the heartbeat with its usage info switch, and with crash report consent alone the error counts, with no heartbeat.',
+    off: 'Off by default. BULWARK_TELEMETRY=off, or System > Usage stats (switch it off or clear the collector URL). The desktop app has no admin page and takes no collector URL: its two switches in Settings, the TelemetryAllowed and CrashReportsAllowed policies, or BULWARK_TELEMETRY=off in its environment, which stops both.',
     inMode: 'Never sent, whatever the telemetry setting says.',
     lite: false,
   },
@@ -51,7 +51,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     side: 'server',
     usedBy: 'Hourly check for a newer Bulwark release, shown to admins.',
     off: 'BULWARK_UPDATE_CHECK=off, or BULWARK_UPDATE_CHECK_URL= (empty).',
-    inMode: 'Not checked; Admin > Version says why. Checks resume when the switch goes off.',
+    inMode: 'Not checked; System > Updates says why. Checks resume when the switch goes off.',
     lite: false,
   },
   {
@@ -60,7 +60,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     files: ['lib/push-relays.ts', 'app/api/dev-jmap/[...path]/route.ts'],
     side: 'browser',
     usedBy: 'Built-in Web Push relay that wakes the browser for new mail.',
-    off: 'Add your own relays under Admin > User policy > Push relays and lock the choice.',
+    off: 'Add your own relays under Users > Features and settings > Push relays and lock the choice.',
     inMode: 'Not offered. Push works only with a relay the admin configured; existing registrations move to it or are removed.',
     lite: false,
   },
@@ -77,7 +77,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
   {
     id: 'connector',
     host: 'connector.bulwarkmail.org',
-    files: ['lib/admin/types.ts', 'lib/connector/registry.ts'],
+    files: ['lib/connector/registry.ts'],
     side: 'server',
     usedBy: 'Links in the docs and the directory that open this instance; the connector asks this server what it can open.',
     off: 'CONNECTOR_ENABLED=false.',
@@ -104,6 +104,16 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     usedBy: 'Brand logos (BIMI) for messages that pass DMARC, looked up by /api/bimi: TXT records at the sender\'s domain, then the logo, mark certificate and CRL they name.',
     off: 'Users can turn sender icons off in Settings > Message list.',
     inMode: 'Avatars show no brand logos; /api/bimi answers 403 before any lookup.',
+    lite: false,
+  },
+  {
+    id: 'spellcheck-dictionaries',
+    host: 'redirector.gvt1.com',
+    files: ['lib/desktop/dictionary-download.ts'],
+    side: 'browser',
+    usedBy: 'Desktop app only: a spellcheck dictionary from Google, for a language the OS has no checker for, after the user said yes when the composer asked. The text being written is not sent.',
+    off: 'Answer no when the composer asks once. Nothing is fetched until a yes.',
+    inMode: 'The composer does not ask, and the app has no address to fetch dictionaries from.',
     lite: false,
   },
   {
@@ -157,8 +167,12 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
  * has to be looked at again.
  */
 export const NON_REQUEST_HOSTS: readonly { host: string; files: readonly string[]; why: string }[] = [
-  { host: 'bulwarkmail.org', why: 'docs links and comments', files: ['app/(main)/admin/_pages/telemetry.tsx', 'components/admin/org/sections/recovery-section.tsx', 'instrumentation.node.ts', 'lib/telemetry/state.ts', 'lib/telemetry/types.ts'] },
+  { host: 'schemas.microsoft.com', why: 'XML namespace of the ADMX templates', files: ['lib/desktop/policy-templates.ts'] },
+  { host: 'www.apple.com', why: 'DTD named in the sample .mobileconfig', files: ['lib/desktop/policy-templates.ts'] },
+  { host: 'bulwarkmail.org', why: 'docs links, comments and the contact URL in User-Agent headers', files: ['app/(main)/admin/_pages/telemetry.tsx', 'app/api/fetch-ical/route.ts', 'app/api/translate/route.ts', 'components/admin/org/sections/recovery-section.tsx', 'components/admin/org/sections/company-calendars-section.tsx', 'components/admin/org/sections/free-busy-section.tsx', 'components/admin/org/sections/labels-section.tsx', 'components/admin/org/sections/out-of-office-calendar-section.tsx', 'components/admin/org/sections/phishing-report-section.tsx', 'instrumentation.node.ts', 'lib/telemetry/state.ts', 'lib/telemetry/types.ts', 'app/(main)/admin/_pages/monitoring.tsx', 'lib/admin/types.ts', 'lib/error-reporting/client.ts', 'lib/error-reporting/lite.ts', 'lib/error-reporting/scrub.ts', 'instrumentation.ts', 'app/api/health/live/route.ts', 'app/api/health/ready/route.ts', 'app/api/metrics/route.ts', 'lib/metrics/index.ts', 'lib/tracing/config.ts', 'lib/tracing/scrub.ts', 'lib/tracing/start.ts'] },
+  { host: 'bulwarkmail.org', why: 'docs links of the Notices, Devices (offline mode too) and out-of-office template pages', files: ['components/admin/org/sections/announcement-section.tsx', 'components/admin/org/sections/devices-section.tsx', 'components/admin/org/sections/offline-section.tsx', 'components/admin/org/sections/retention-section.tsx', 'components/admin/org/sections/vacation-templates-section.tsx'] },
   { host: 'bulwarkmail.com', why: 'JMAP capability URI', files: ['lib/jmap/client.ts'] },
+  { host: 'develop.sentry.dev', why: 'link to the envelope format in a comment', files: ['lib/error-reporting/envelope.ts'] },
   { host: 'extensions.bulwarkmail.org', why: 'signed statement type URIs', files: ['lib/admin/directory-keys.ts'] },
   { host: 'www.w3.org', why: 'XML namespaces', files: ['components/ui/flag-icons.tsx', 'lib/favicon-badge.ts'] },
   { host: 'creativecommons.org', why: 'licence metadata inside an SVG', files: ['components/ui/flag-icons.tsx'] },
@@ -170,6 +184,7 @@ export const NON_REQUEST_HOSTS: readonly { host: string; files: readonly string[
   { host: 'www.youtube-nocookie.com', why: 'example in a comment', files: ['lib/plugin-types.ts'] },
   { host: 'bulwark-webmail.vercel.app', why: 'sample message text', files: ['stores/email-store.ts'] },
   { host: 'randomuser.me', why: 'docs links in a comment of the mock server', files: ['app/api/dev-jmap/[...path]/route.ts'] },
+  { host: 'schema.org', why: 'vocabulary names in booking markup, matched and never requested', files: ['lib/structured-mail/extract.ts'] },
 ];
 
 /**
@@ -179,13 +194,18 @@ export const NON_REQUEST_HOSTS: readonly { host: string; files: readonly string[
  * listed with the reason.
  */
 export const BUILT_URL_FILES: readonly { file: string; why: string }[] = [
+  { file: 'lib/desktop/policy-schema.ts', why: 'parses a host out of a policy value to check it, and fetches nothing' },
   { file: 'app/(main)/admin/_pages/marketplace-detail.tsx', why: "link to an extension's source host, from the directory's answer" },
   { file: 'app/(main)/setup/page.tsx', why: "the instance's own origin, and scheme checks of the admin-entered server URL" },
   { file: 'app/api/plugin-secrets/route.ts', why: "scheme check of a credential's server URL" },
+  { file: 'lib/admin/organisation-policy.ts', why: 'parses and normalises the company calendar feed URLs an admin entered (webcal to https)' },
+  { file: 'components/admin/org/sections/company-calendars-section.tsx', why: 'checks the company calendar feed URL the admin is typing' },
   { file: 'components/calendar/ical-subscription-modal.tsx', why: "webcal:// rewritten to https:// for a feed the user enters" },
   { file: 'components/email/rich-text-editor.tsx', why: "adds the scheme to a link address the user types in the editor" },
   { file: 'lib/admin/branding-asset.ts', why: "scheme checks of admin-configured branding URLs" },
   { file: 'lib/auth/pair-bundle.ts', why: "scheme checks of the paired server URL" },
+  { file: 'lib/auth/mail-server-address.ts', why: 'adds https:// to a server address the user types on the sign-in form' },
+  { file: 'lib/auth/discover-mail-server.ts', why: "the well-known and SRV addresses of the domain in the address the user typed, fetched through fetchPublicUrl" },
   { file: 'lib/calendar-subscription-sync.ts', why: "webcal:// rewritten to https:// for a feed the user subscribed to" },
   { file: 'lib/email-sanitization.ts', why: "comment about links in mail" },
   { file: 'lib/idn.ts', why: "parses a host name the user typed" },

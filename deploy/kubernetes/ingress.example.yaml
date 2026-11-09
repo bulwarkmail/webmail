@@ -1,0 +1,28 @@
+# Not applied by kustomization.yaml: adapt and apply it yourself, or use a
+# Gateway API HTTPRoute instead. Plain round robin is fine; Bulwark needs no
+# sticky sessions. Set TRUSTED_PROXY_DEPTH in bulwark.env to the number of
+# proxies in front of the pods (1 for the ingress controller alone).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bulwark
+  namespace: bulwark
+  annotations:
+    # Attachments and plugin packages can be large.
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [webmail.example.com]
+      secretName: bulwark-tls
+  rules:
+    - host: webmail.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bulwark
+                port:
+                  name: http

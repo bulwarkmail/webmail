@@ -1,7 +1,29 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { mainWindowStorage } from '@/lib/popout/window-role';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { forgetDesktopServer } from '@/lib/desktop/bridge';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
+import { clearEvicted, dropEvictedOwner, isEvicted, markEvicted, rememberEvictedOwner } from '@/lib/offline/state';
+
+export type AccountRemovalReason = 'explicit' | 'evicted' | 'wiped';
+
+const removalListeners = new Set<(accountId: string, reason: AccountRemovalReason) => void>();
+
+/** Told when an account's session is evicted or its entry leaves the registry. */
+export function onAccountRemoved(listener: (accountId: string, reason: AccountRemovalReason) => void): () => void {
+  removalListeners.add(listener);
+  return () => removalListeners.delete(listener);
+}
+
+function sameServerOrigin(a: string, b: string): boolean {
+  try {
+    return new URL(a).origin === new URL(b).origin;
+  } catch {
+    return a === b;
+  }
+}
 
 export interface AccountEntry {
   /** Unique key: `${username}@${serverHostname}` */
@@ -57,10 +79,15 @@ export interface AccountEntry {
   /** Whether this is the default account (loaded on app start) */
   isDefault: boolean;
   /**
-   * A session that could not be restored, or an account restored from backup.
-   * Keep its metadata until explicit sign-out/removal; opening it asks to sign in.
+   * Brought back from the account list backup and not signed in on this
+   * device yet. Kept across reloads, and opening it leads to the sign-in form.
    */
   awaitingSignIn?: boolean;
+  /**
+   * Opened by an admin through an impersonation handoff rather than by the
+   * mailbox owner. The server says so each time the session is restored.
+   */
+  impersonated?: boolean;
 }
 
 interface AccountState {
@@ -69,8 +96,12 @@ interface AccountState {
   defaultAccountId: string | null;
 
   addAccount: (entry: Omit<AccountEntry, 'id' | 'cookieSlot' | 'avatarColor'>) => string;
-  removeAccount: (accountId: string) => void;
-  /** Retain account metadata without a live session. 세션 없이 계정 메타데이터를 보존합니다. */
+  /**
+   * `reason`: 'explicit' when someone signed the account out or removed it, its
+   * offline data goes with it; 'evicted' when the app dropped it by itself.
+   */
+  removeAccount: (accountId: string, reason?: AccountRemovalReason) => void;
+  /** End a remembered session without forgetting its sign-in target. */
   requireSignIn: (accountId: string) => void;
   setActiveAccount: (accountId: string) => void;
   setDefaultAccount: (accountId: string) => void;
@@ -94,6 +125,8 @@ export const useAccountStore = create<AccountState>()(
         const state = get();
 
         const id = generateAccountId(entry.username, entry.serverUrl);
+        clearEvicted(id);
+        dropEvictedOwner(id);
         if (state.accounts.some((a) => a.id === id)) {
           // Already exists - update mutable fields and return existing id
           set((s) => ({
@@ -144,22 +177,31 @@ export const useAccountStore = create<AccountState>()(
         return id;
       },
 
-      /** Drop session state while keeping the existing account and cookie slot.
-       * 기존 계정과 쿠키 슬롯을 유지하면서 세션 상태를 정리합니다. */
       requireSignIn: (accountId) => {
+        const account = get().getAccountById(accountId);
+        if (!account) return;
+        if (!account.rememberMe && !account.awaitingSignIn) {
+          get().removeAccount(accountId, 'evicted');
+          return;
+        }
+        if (!isEvicted(accountId)) markEvicted(accountId);
+        if (IS_DESKTOP_BUILD && isEvicted(accountId)) rememberEvictedOwner(accountId, account);
+        for (const listener of [...removalListeners]) listener(accountId, 'evicted');
         get().updateAccount(accountId, {
-          awaitingSignIn: true,
-          isConnected: false,
-          hasError: false,
-          errorMessage: undefined,
-          rememberMe: false,
+          awaitingSignIn: true, isConnected: false, hasError: false, errorMessage: undefined,
           providerSession: false,
         });
         if (get().activeAccountId === accountId) set({ activeAccountId: null });
       },
 
-      removeAccount: (accountId) => {
+      removeAccount: (accountId, reason = 'explicit') => {
         if (!get().accounts.some((a) => a.id === accountId)) return;
+        const leaving = get().accounts.find((a) => a.id === accountId);
+        if (reason === 'evicted') {
+          markEvicted(accountId);
+          if (IS_DESKTOP_BUILD && leaving && isEvicted(accountId)) rememberEvictedOwner(accountId, leaving);
+        }
+        for (const listener of [...removalListeners]) listener(accountId, reason);
         set((s) => {
           const remaining = s.accounts.filter((a) => a.id !== accountId);
           const wasDefault = s.defaultAccountId === accountId;
@@ -184,6 +226,10 @@ export const useAccountStore = create<AccountState>()(
           };
         });
         void authHooks.onAccountRemove.emit({ accountId });
+        // The desktop app stops trusting a server its last account left.
+        if (IS_DESKTOP_BUILD && leaving && !get().accounts.some((a) => sameServerOrigin(a.serverUrl, leaving.serverUrl))) {
+          forgetDesktopServer(leaving.serverUrl, 'signed-out');
+        }
       },
 
       setActiveAccount: (accountId) => {
@@ -261,6 +307,7 @@ export const useAccountStore = create<AccountState>()(
     }),
     {
       name: 'account-registry',
+      storage: createJSONStorage(mainWindowStorage),
       partialize: (state) => ({
         accounts: state.accounts,
         activeAccountId: state.activeAccountId,

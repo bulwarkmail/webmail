@@ -2,6 +2,8 @@ import type { SettingsPolicy } from './types';
 import { parseJmapServers } from './jmap-servers';
 import { isBuiltInHost } from '@/lib/outgoing-hosts';
 import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
+import { allFeeds } from './company-feeds';
+import { tracingEndpoint } from '@/lib/tracing/config';
 
 /**
  * What stays reachable with "no third-party traffic" on: the hosts the
@@ -17,7 +19,7 @@ export interface ReachableHost {
   host: string;
   /** scheme://host[:port], for the CSP; absent for addresses users enter. */
   origin?: string;
-  /** Where it was configured, e.g. "JMAP_SERVER_URL" or "User policy > Push relays". */
+  /** Where it was configured, e.g. "JMAP_SERVER_URL" or "Features and settings > Push relays". */
   setIn: string;
   /** Who connects: this server, the browser, or both. */
   side: 'server' | 'browser' | 'both';
@@ -39,10 +41,15 @@ function parse(url: unknown): URL | null {
 
 export interface ReachableInput {
   get: (key: string) => unknown;
-  policy: Pick<SettingsPolicy, 'pushRelays' | 'pushRelayUrl' | 'defaultSidebarApps'> & { features?: Partial<SettingsPolicy['features']> };
+  policy: Pick<SettingsPolicy, 'pushRelays' | 'pushRelayUrl' | 'defaultSidebarApps'> & Partial<Pick<SettingsPolicy, 'organisation' | 'scopes'>> & { features?: Partial<SettingsPolicy['features']> };
   env: Record<string, string | undefined>;
   /** The relay the browser bundle was built with (NEXT_PUBLIC_PUSH_RELAY_URL inlined at build time). */
   buildRelayUrl?: string;
+  /**
+   * Plugins that run in the mode and the servers the admin entered on their
+   * admin page (credentials with an originKey; lib/outgoing-hosts.ts).
+   */
+  plugins?: { name: string; origins: string[] }[];
 }
 
 const BRANDING_KEYS = [
@@ -50,7 +57,7 @@ const BRANDING_KEYS = [
   'appLogoLightUrl', 'appLogoDarkUrl', 'loginLogoLightUrl', 'loginLogoDarkUrl',
 ] as const;
 
-export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_RELAY_BASE_URL }: ReachableInput): ReachableHost[] {
+export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_RELAY_BASE_URL, plugins = [] }: ReachableInput): ReachableHost[] {
   const out: ReachableHost[] = [];
   const seen = new Set<string>();
   const add = (kind: string, url: unknown, setIn: string, side: ReachableHost['side'], note?: string) => {
@@ -76,8 +83,8 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
     add('OAuth issuer', get('oauthAuthorizeUrl'), 'OAUTH_AUTHORIZE_URL', 'browser');
     add('OAuth issuer', get('oauthEndSessionUrl'), 'OAUTH_END_SESSION_URL', 'browser');
   }
-  for (const relay of policy.pushRelays ?? []) add('Push relay', relay?.url, 'User policy > Push relays', 'browser');
-  add('Push relay', policy.pushRelayUrl, 'User policy > Push relays', 'browser');
+  for (const relay of policy.pushRelays ?? []) add('Push relay', relay?.url, 'Features and settings > Push relays', 'browser');
+  add('Push relay', policy.pushRelayUrl, 'Features and settings > Push relays', 'browser');
   // The relay browsers offer as the default is the one inlined when the
   // bundle was built. A different value in the running environment does
   // nothing for them, so it is listed with a warning.
@@ -85,12 +92,25 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
   const runtimeRelay = parse(env.NEXT_PUBLIC_PUSH_RELAY_URL);
   if (runtimeRelay && runtimeRelay.origin !== parse(buildRelayUrl)?.origin) {
     add('Push relay', runtimeRelay.href, 'NEXT_PUBLIC_PUSH_RELAY_URL (environment)', 'browser',
-      'Set in the environment only: browsers use the relay this build was made with. Rebuild, or add it under User policy > Push relays.');
+      'Set in the environment only: browsers use the relay this build was made with. Rebuild, or add it under Features and settings > Push relays.');
   }
   add('Extension directory', get('extensionDirectoryUrl'), 'EXTENSION_DIRECTORY_URL', 'server');
-  for (const app of policy.defaultSidebarApps ?? []) add('Sidebar app', app?.url, `User policy > Sidebar apps (${app?.name ?? ''})`, 'browser');
+  // Company calendars of Everyone and of every scope: this server fetches
+  // them (app/api/fetch-ical by feed id), whatever the switch says.
+  for (const feed of allFeeds(policy)) add('Company calendar', feed.url, `Organisation > Calendars (${feed.name})`, 'server');
+  // A plugin's server the admin entered (a company link check): this server
+  // proxies its requests (app/api/plugin-proxy).
+  for (const plugin of plugins) {
+    for (const origin of plugin.origins) add(`Plugin ${plugin.name}`, origin, "The plugin's admin page", 'server');
+  }
+  for (const app of policy.defaultSidebarApps ?? []) add('Sidebar app', app?.url, `Features and settings > Default sidebar apps (${app?.name ?? ''})`, 'browser');
   add('Document editor (WOPI)', get('wopiClientUrl'), 'WOPI_CLIENT_URL', 'both');
   add('Translation (LibreTranslate)', env.LIBRETRANSLATE_URL, 'LIBRETRANSLATE_URL', 'server');
+  // Only when an admin set it; browsers and this server send error reports there.
+  add('Error reporting', get('errorReportingDsn'), 'ERROR_REPORTING_DSN', 'both');
+  // OpenTelemetry's OTLP endpoint, only when set in the standard OTEL_* variables.
+  const otlp = tracingEndpoint(env);
+  if (otlp) add('Tracing (OTLP)', otlp, env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ? 'OTEL_EXPORTER_OTLP_TRACES_ENDPOINT' : 'OTEL_EXPORTER_OTLP_ENDPOINT', 'server');
   for (const key of BRANDING_KEYS) add('Branding image', get(key), key, 'browser');
 
   // User-directed: what users type in themselves stays allowed.

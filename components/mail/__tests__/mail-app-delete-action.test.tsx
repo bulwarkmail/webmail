@@ -118,7 +118,7 @@ describe('Delete on the open message', () => {
     fireEvent.click(await screen.findByText('stub delete', {}, { timeout: 5000 }));
     const confirm = await screen.findByRole('alertdialog');
     expect(client.deleteEmail).not.toHaveBeenCalled();
-    fireEvent.click(await screen.findByText('email_list.permanent_delete', { selector: 'button' }));
+    fireEvent.click(await screen.findByText('reader_actions.delete_forever', { selector: 'button' }));
     await waitFor(() => expect(client.deleteEmail).toHaveBeenCalledWith('m1', undefined));
     expect(confirm).toBeTruthy();
     expect(client.moveToTrash).not.toHaveBeenCalled();
@@ -143,8 +143,8 @@ describe('Undo after a delete to Trash', () => {
     client.restoreEmails = vi.fn().mockResolvedValue(undefined);
     render(<MailApp />);
     fireEvent.click(await screen.findByText('stub delete', {}, { timeout: 5000 }));
-    await waitFor(() => expect(useToastStore.getState().toasts.some(t => t.title === 'notifications.email_deleted')).toBe(true));
-    const deleted = useToastStore.getState().toasts.find(t => t.title === 'notifications.email_deleted')!;
+    await waitFor(() => expect(useToastStore.getState().toasts.some(t => t.title === 'mail_list_extra.moved_to_trash')).toBe(true));
+    const deleted = useToastStore.getState().toasts.find(t => t.title === 'mail_list_extra.moved_to_trash')!;
     expect(deleted.action?.label).toBe('undo');
     deleted.action!.onClick();
     await waitFor(() => expect(client.restoreEmails).toHaveBeenCalled());
@@ -155,7 +155,7 @@ describe('Undo after a delete to Trash', () => {
     useSettingsStore.setState({ deleteAction: 'permanent' } as never);
     render(<MailApp />);
     fireEvent.click(await screen.findByText('stub delete', {}, { timeout: 5000 }));
-    fireEvent.click(await screen.findByText('email_list.permanent_delete', { selector: 'button' }));
+    fireEvent.click(await screen.findByText('reader_actions.delete_forever', { selector: 'button' }));
     await waitFor(() => expect(useToastStore.getState().toasts.some(t => t.title === 'notifications.email_deleted')).toBe(true));
     expect(useToastStore.getState().toasts.find(t => t.title === 'notifications.email_deleted')!.action).toBeUndefined();
   });

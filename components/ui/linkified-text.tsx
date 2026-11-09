@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { plainTextToSafeHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
 
 interface LinkifiedTextProps {
   /** Plain text, as stored on the object (no markup is interpreted). */
@@ -21,7 +22,9 @@ interface LinkifiedTextProps {
  * whole string and emits nothing but `<a href="http(s)://...">`, then
  * `sanitizePlainTextRenderedHtml` re-checks the result. That second pass is
  * defense in depth - unlike message bodies this renders into the main
- * document, not the sandboxed iframe.
+ * document, not the sandboxed iframe. A click or middle-click on a link goes
+ * through the plugins' link check (onBeforeExternalLink) like a link in a
+ * message.
  */
 export function LinkifiedText({ text, className }: LinkifiedTextProps) {
   const html = useMemo(
@@ -29,5 +32,5 @@ export function LinkifiedText({ text, className }: LinkifiedTextProps) {
     [text],
   );
 
-  return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <span className={className} onClick={gateLinkClick} onAuxClick={gateLinkClick} dangerouslySetInnerHTML={{ __html: html }} />;
 }

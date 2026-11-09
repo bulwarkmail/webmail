@@ -8,7 +8,12 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore } from "@/stores/email-store";
-import { useFileStore, deletesToTrash, isSharedLocation, linkedPreviewResource, resourceServerRef, resourceToView, type UploadReport } from "@/stores/file-store";
+import { useFilesSyncStore } from "@/stores/files-sync-store";
+import { filesRingQuota } from "@/lib/files-sync/drive-status";
+import { useFileStore, deletesToTrash, isSharedFilesPage, isSharedLocation, linkedPreviewResource, resourceServerRef, resourceToView, type FileResource, type UploadReport } from "@/stores/file-store";
+import { filesDropTarget, hasQueuedFilesUpload, setFilesDropTarget, subscribeQueuedFilesUpload, takeQueuedFilesUpload } from "@/lib/file-drop/files-target";
+import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
+import { isInternalDrag } from "@/components/files/file-item-parts";
 import { isTrashLocation } from "@/lib/files-trash";
 import { fileErrorKind, isPartialCopy } from "@/lib/file-errors";
 import { toast } from "@/stores/toast-store";
@@ -28,9 +33,23 @@ import type { FileNodeRights } from "@/lib/jmap/types";
 import { ImagePreviewModal } from "@/components/files/image-preview-modal";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
+import { UploadConflictDialog, type UploadConflictQuestion } from "@/components/files/upload-conflict-dialog";
+import { FileNoPreview } from "@/components/files/file-no-preview";
+import { sharedNodeLink } from "@/components/files/share-message";
+import { loadPrincipalDirectory } from "@/lib/jmap/principal-directory";
+import { savePendingMailto } from "@/lib/protocol-handlers/session";
+import { formatRecipient } from "@/lib/email-composer-utils";
+import { useRouter } from "@/i18n/navigation";
+import { useEditAttachment } from "@/hooks/use-edit-attachment";
+import { fileAppAction, type FileAppAction } from "@/lib/files-app-actions";
+import { handOffFiles } from "@/lib/launch-handoff";
+import { ImportEmlDialog } from "@/components/files/import-eml-dialog";
+import { useCalendarStore } from "@/stores/calendar-store";
+import { resolveConflictsInTurn, type ConflictAnswer, type UploadConflictResolver } from "@/lib/files-upload-conflicts";
 import { useWopiStatus, canWopiOpen, fileExtension } from "@/hooks/use-wopi-status";
 import { apiFetch } from "@/lib/browser-navigation";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
+import { useStrictestDevices } from "@/hooks/use-device-policy";
 import { AlertTriangle, Loader2 } from "@/components/icons";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { isImageFile } from "@/components/files/file-icons";
@@ -40,8 +59,11 @@ import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
+import { FilesSkeleton, FilesSkeletonBody } from "@/components/boot-skeleton/files-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 export interface FilesAppProps {
   /** Path segments after `/files` - the folder path, one segment per level. */
@@ -52,9 +74,13 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('files', routeSegments);
   const t = useTranslations("files");
+  // "Cancelled", spelled as the rest of the app spells it (pim-p3-17).
+  const tPc = useTranslations("ux_p3_pim_pc");
+  const skeleton = useSkeletonLabels();
   const tSidebar = useTranslations("sidebar");
   const tShell = useTranslations("shell");
   useDocumentTitle(tSidebar("files"));
+  useDesktopWindowName(tSidebar("files"), { withAccount: true });
   const tDeepLink = useTranslations("deep_link");
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const { isAuthenticated, logout, checkAuth, isLoading: authLoading, client } = useAuthStore();
@@ -63,7 +89,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const accounts = useAccountStore((s) => s.accounts);
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
-  const { quota, isPushConnected } = useEmailStore();
+  const { quota: mailQuota, isPushConnected } = useEmailStore();
+  // In the desktop app the engine keeps the storage Files counts against: the ring shows the
+  // same numbers as Settings > Files on this computer and Explorer.
+  const filesQuota = useFilesSyncStore((s) => s.quota);
+  const quota = useMemo(() => filesRingQuota(filesQuota) ?? mailQuota, [filesQuota, mailQuota]);
   const {
     currentPath,
     resources,
@@ -136,6 +166,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<string | null>(null);
+  // A file with no preview and no editor: its icon, size and Download (pim-16).
+  const [infoFile, setInfoFile] = useState<string | null>(null);
   // WOPI document editing (#425): name of the file open in the editor overlay.
   const [editFile, setEditFile] = useState<string | null>(null);
   const wopiStatus = useWopiStatus(filesEnabled);
@@ -352,7 +384,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   // reported once it is done.
   const showUploadReport = useCallback((report: UploadReport) => {
     if (report.canceled) {
-      toast.info(t("upload_canceled"), report.uploaded > 0 ? t("upload_canceled_partial", { count: report.uploaded }) : undefined);
+      toast.info(tPc("upload_cancelled"), report.uploaded > 0 ? tPc("upload_cancelled_partial", { count: report.uploaded }) : undefined);
     } else if (report.uploaded > 0) {
       toast.success(t("upload_success", { count: report.uploaded }));
     }
@@ -361,7 +393,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       + (report.failed.length > 3 ? ", …" : "");
     const reason = failureReason(report.failed[0].error);
     toast.error(t("upload_failed", { count: report.failed.length }), reason ? `${names}: ${reason}` : names);
-  }, [t, failureReason]);
+  }, [t, tPc, failureReason]);
 
   const handleCreateFolder = useCallback(async (name: string) => {
     try {
@@ -375,7 +407,23 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const maxSizeUpload = client?.getMaxSizeUpload() || 0;
 
-  const handleUploadFiles = useCallback(async (files: File[]) => {
+  // A name that is taken in the target folder: asked one at a time (pim-10).
+  const [conflictQuestion, setConflictQuestion] = useState<UploadConflictQuestion | null>(null);
+  const resolveConflicts = useCallback<UploadConflictResolver>((conflicts) => resolveConflictsInTurn(
+    conflicts,
+    (conflict, index, total) => new Promise<ConflictAnswer>((resolve) => {
+      setConflictQuestion({
+        conflict,
+        remaining: total - index,
+        answer: (answer) => {
+          setConflictQuestion(null);
+          resolve(answer);
+        },
+      });
+    }),
+  ), []);
+
+  const handleUploadFiles = useCallback(async (files: File[], into?: FileResource) => {
     if (maxSizeUpload > 0) {
       const oversized = files.filter(f => f.size > maxSizeUpload);
       files = files.filter(f => f.size <= maxSizeUpload);
@@ -385,14 +433,14 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (files.length === 0) return;
     try {
-      showUploadReport(await uploadFiles(files));
+      showUploadReport(await uploadFiles(files, { resolveConflicts, ...(into ? { into: { id: into.id, name: into.name } } : {}) }));
     } catch (err) {
       console.error("Failed to upload files:", err);
       toast.error(t("upload_error"), failureReason(err));
     }
-  }, [uploadFiles, t, maxSizeUpload, showUploadReport, failureReason]);
+  }, [uploadFiles, t, maxSizeUpload, showUploadReport, failureReason, resolveConflicts]);
 
-  const handleUploadFolder = useCallback(async (files: File[]) => {
+  const handleUploadFolder = useCallback(async (files: File[], into?: FileResource) => {
     if (maxSizeUpload > 0) {
       const oversized = files.filter(f => f.size > maxSizeUpload);
       files = files.filter(f => f.size <= maxSizeUpload);
@@ -402,12 +450,12 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (files.length === 0) return;
     try {
-      showUploadReport(await uploadFolder(files));
+      showUploadReport(await uploadFolder(files, { resolveConflicts, ...(into ? { into: { id: into.id, name: into.name } } : {}) }));
     } catch (err) {
       console.error("Failed to upload folder:", err);
       toast.error(t("upload_error"), failureReason(err));
     }
-  }, [uploadFolder, t, maxSizeUpload, showUploadReport, failureReason]);
+  }, [uploadFolder, t, maxSizeUpload, showUploadReport, failureReason, resolveConflicts]);
 
   const handleUndo = useCallback(async () => {
     try {
@@ -559,13 +607,13 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     } catch (err) {
       toast.dismiss(toastId);
       if (err instanceof DOMException && err.name === "AbortError") {
-        toast.info(t("download_canceled"));
+        toast.info(tPc("download_cancelled"));
         return;
       }
       console.error("Failed to download the zip:", err);
       toast.error(t("zip_error", { name: zipName }), failureReason(err));
     }
-  }, [downloadZip, t, failureReason]);
+  }, [downloadZip, t, tPc, failureReason]);
 
   // A document format the editor can create starts from a blank template
   // and opens in the editor (#1393); any other name is an empty text file.
@@ -643,6 +691,72 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     addRecentFile(name, findResourceId(name));
   }, [addRecentFile, findResourceId]);
 
+  const handleShowFileInfo = useCallback((name: string) => {
+    setInfoFile(name);
+    addRecentFile(name, findResourceId(name));
+  }, [addRecentFile, findResourceId]);
+
+  // The desktop app opens a file in the program the computer uses for it,
+  // the way Edit opens an attachment (pim-16). Nothing in a browser.
+  const filesLocalAccount = useFileStore((s) => s.currentAccountId) ?? activeAccountId ?? "";
+  const { canEdit: canOpenNameInApp, edit: openInDesktopApp } = useEditAttachment(filesLocalAccount);
+  const canOpenInApp = useCallback((r: FileResource) => !r.isDirectory && !r.isSymlink && canOpenNameInApp(r.name), [canOpenNameInApp]);
+  const handleOpenInApp = useCallback((r: FileResource) => {
+    void openInDesktopApp({
+      key: `files:${filesLocalAccount}:${r.id}`,
+      name: r.name,
+      type: r.contentType || "application/octet-stream",
+      account: filesLocalAccount,
+      // Saved in its program, it goes back into this node (pim-p2-1).
+      source: { kind: "node", nodeId: r.id, blobId: r.blobId ?? null, parentId: r.parentId ?? null, size: r.contentLength, modified: r.lastModified },
+      load: async () => (await getFileContent(r.name)).blob,
+    });
+    // The program has it now: the pane has nothing more to offer (pim-p2-18).
+    setInfoFile((open) => (open === r.name ? null : open));
+  }, [openInDesktopApp, filesLocalAccount, getFileContent]);
+
+  // What the app itself does with a file kept here (pim-p2-7).
+  const tFiles2 = useTranslations("ux_p2_pim_files");
+  const calendarSupported = useCalendarStore((s) => s.supportsCalendar);
+  const calendarAllowed = usePolicyStore((s) => s.isFeatureEnabled("calendarEnabled"));
+  const contactsAllowed = usePolicyStore((s) => s.isFeatureEnabled("contactsEnabled"));
+  const calendarOn = calendarSupported && calendarAllowed;
+  const contactsOn = !!storeClient?.supportsContacts?.() && contactsAllowed;
+  const [importEml, setImportEml] = useState<File | null>(null);
+  const appActionOf = useCallback((r: FileResource): FileAppAction | null => {
+    if (r.isDirectory || r.isSymlink || r.trash) return null;
+    const action = fileAppAction(r.name, r.contentType);
+    if (action === "add-calendar" && !calendarOn) return null;
+    if (action === "import-contacts" && !contactsOn) return null;
+    return action;
+  }, [calendarOn, contactsOn]);
+  const runAppAction = useCallback(async (r: FileResource) => {
+    const action = appActionOf(r);
+    if (!action) return;
+    let file: File;
+    try {
+      const { blob, contentType } = await getFileContent(r.name);
+      file = new File([blob], r.name, { type: contentType || r.contentType || blob.type });
+    } catch (err) {
+      console.error("Could not read a file for its import:", err);
+      toast.error(t("download_error"));
+      return;
+    }
+    if (action === "import-mail") {
+      setImportEml(file);
+      return;
+    }
+    // The preview stays open: the move to the import closes it with the page.
+    // Closed first, its Back landed after that move and undid it (pim-p2-7).
+    handOffFiles([file], action === "add-calendar" ? "calendar" : "contacts");
+  }, [appActionOf, getFileContent, t]);
+  const appActionFor = useCallback((r: FileResource) => {
+    const action = appActionOf(r);
+    if (!action) return null;
+    const label = action === "import-mail" ? tFiles2("import_to_mail") : action === "add-calendar" ? tFiles2("add_to_calendar") : tFiles2("import_contacts");
+    return { kind: action, label, onRun: () => void runAppAction(r) };
+  }, [appActionOf, runAppAction, tFiles2]);
+
   const handleRenameNode = useCallback(async (id: string, newName: string) => {
     try {
       if (!await renameNode(id, newName)) return;
@@ -685,6 +799,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
   }, [deleteNode, trashNode, confirmDialog, handleUndo, t, failureReason]);
 
+  // Files may hold what an attachment-only block would keep in: the device
+  // policy covers them too, the strictest of the accounts signed in here
+  // (the drive may be another account's).
+  const filesDownloadsOff = useStrictestDevices().noDownloads;
+
   const handleDownloadNode = useCallback(async (id: string) => {
     try {
       await downloadNode(id);
@@ -709,6 +828,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     if (isOfficeEditable(name)) setEditFile(name);
     else if (isImageFile(name)) setPreviewImage(name);
     else if (isFilePreviewable(name)) setPreviewFile(name);
+    else setInfoFile(name);
   }, [revealNode, addRecentFile, isOfficeEditable, tDeepLink]);
 
   // The permalink for the folder on screen. In the Pro shell only the focused
@@ -723,29 +843,31 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   // The previewed file as plugins see it (file-preview-section).
   const previewedName = previewFile ?? previewImage;
-  // ←/→ in a preview go through the folder's other previewable files.
+  // ←/→ in a preview go through the folder's other files that open in one:
+  // previews and the pane of a file with no preview (pim-p2-18). Office
+  // documents open the editor, so the arrows pass them by.
+  const shownName = previewedName ?? infoFile;
   const previewNeighbours = useMemo(() => {
-    if (!previewedName) return undefined;
+    if (!shownName) return undefined;
     const names = resources
-      .filter((r) => !r.isDirectory && !r.isSymlink && (isImageFile(r.name) || isFilePreviewable(r.name)))
+      .filter((r) => !r.isDirectory && !r.isSymlink && (isImageFile(r.name) || isFilePreviewable(r.name) || !isOfficeEditable(r.name)))
       .map((r) => r.name);
-    const i = names.indexOf(previewedName);
+    const i = names.indexOf(shownName);
     if (i === -1) return undefined;
     return {
       previous: names[i - 1] ?? null,
       next: names[i + 1] ?? null,
       onGo: (name: string) => {
         addRecentFile(name, resources.find((r) => r.name === name)?.id ?? name);
-        if (isImageFile(name)) {
-          setPreviewFile(null);
-          setPreviewImage(name);
-        } else {
-          setPreviewImage(null);
-          setPreviewFile(name);
-        }
+        setPreviewFile(null);
+        setPreviewImage(null);
+        setInfoFile(null);
+        if (isImageFile(name)) setPreviewImage(name);
+        else if (isFilePreviewable(name)) setPreviewFile(name);
+        else setInfoFile(name);
       },
     };
-  }, [previewedName, resources, addRecentFile]);
+  }, [shownName, resources, addRecentFile, isOfficeEditable]);
   const previewedView = useMemo(() => {
     const resource = previewedName ? resources.find((r) => r.name === previewedName) : undefined;
     return resource ? resourceToView(resource, currentPath) : null;
@@ -765,6 +887,36 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const handleShare = useCallback(async (id: string, principalId: string, rights: FileNodeRights | null) => {
     await shareResource(id, principalId, rights);
   }, [shareResource]);
+
+  // After sharing with someone new: "Send a message" opens the composer to
+  // them with a link to it (pim-26). The server doesn't tell them.
+  const tUx = useTranslations("ux_pim_files");
+  const router = useRouter();
+  const handleShared = useCallback((resource: FileResource, principalId: string) => {
+    if (!storeClient || !filesAccountId) return;
+    void loadPrincipalDirectory(storeClient).then(({ principals }) => {
+      const person = principals.find((p) => p.id === principalId);
+      const email = person?.email?.trim();
+      if (!person || !email) return;
+      const link = sharedNodeLink(window.location.origin, filesAccountId, resource);
+      toast.success(tUx("shared_with", { name: resource.name, person: person.name || email }), {
+        action: {
+          label: tUx("send_message"),
+          onClick: () => {
+            savePendingMailto({
+              to: [formatRecipient(person.name && person.name !== email ? person.name : "", email)],
+              cc: [],
+              bcc: [],
+              subject: tUx("share_mail_subject", { name: resource.name }),
+              body: tUx("share_mail_body", { name: resource.name, link }),
+              inApp: true,
+            });
+            router.push("/");
+          },
+        },
+      });
+    });
+  }, [storeClient, filesAccountId, tUx, router]);
 
   // Pro shell only: all connected accounts are equal top-level entries at
   // the root. The root path "/" itself is a cross-account picker - no
@@ -796,10 +948,59 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     useFileStore.setState({ supportsFiles: null });
   }, [getClientForAccount]);
 
-  if (!isAuthenticated) return null;
+  // The file drop overlay: "Upload to <folder>" while this screen is on view in a folder
+  // that takes files, and what was dropped elsewhere for Files once one is listed.
+  const dropRootRef = useRef<HTMLDivElement>(null);
+  const canTakeDrops = supportsFiles === true && !isAccountPicker && !isSharedFilesPage(currentParentId) && !isTrashLocation(currentParentId);
+  const dropUploadRef = useRef({ files: handleUploadFiles, folder: handleUploadFolder });
+  dropUploadRef.current = { files: handleUploadFiles, folder: handleUploadFolder };
+  useEffect(() => {
+    if (!canTakeDrops) return;
+    const folder = currentPath === "/" ? null : currentPath.split("/").filter(Boolean).pop() ?? null;
+    return setFilesDropTarget({
+      folder,
+      take: ({ files, asFolder }) => void (asFolder ? dropUploadRef.current.folder(files) : dropUploadRef.current.files(files)),
+      visible: () => !!dropRootRef.current?.isConnected && dropRootRef.current.getClientRects().length > 0,
+    });
+  }, [canTakeDrops, currentPath]);
+  useEffect(() => {
+    if (supportsFiles !== true || isLoading || !storeClient || isAccountPicker) return;
+    const take = () => {
+      if (!hasQueuedFilesUpload()) return;
+      // In the trash or the list of shared drives: to the top of Files first.
+      if (!canTakeDrops) {
+        void navigate(null);
+        return;
+      }
+      const upload = takeQueuedFilesUpload();
+      if (upload) void (upload.asFolder ? dropUploadRef.current.folder(upload.files) : dropUploadRef.current.files(upload.files));
+    };
+    take();
+    return subscribeQueuedFilesUpload(take);
+  }, [supportsFiles, isLoading, storeClient, isAccountPicker, canTakeDrops, navigate]);
+
+  // Until the session is restored: the page skeleton the server drew.
+  if (!isAuthenticated) {
+    return isEmbedded
+      ? <FilesSkeletonBody embedded />
+      : <FilesSkeleton label={skeleton.label} labels={skeleton.labels} />;
+  }
 
   return (
-    <div className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div
+      ref={dropRootRef}
+      className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}
+      // Files from outside dropped anywhere on the screen go into the folder in view,
+      // as the list itself does (pim-p2-6). The list and a folder's row take theirs first.
+      onDrop={(e) => {
+        if (e.defaultPrevented || !canTakeDrops || isInternalDrag(e) || !Array.from(e.dataTransfer.types ?? []).includes("Files")) return;
+        if (filesDropTarget() === null) return;
+        e.preventDefault();
+        void getDroppedFilesAndFolders(e.dataTransfer).then(({ files, hasDirectories }) => (
+          hasDirectories ? dropUploadRef.current.folder(files) : dropUploadRef.current.files(files)
+        ));
+      }}
+    >
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
       <AppTopBannerSlot />
       {refreshIndicator}
@@ -840,7 +1041,6 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   <div className="max-w-lg text-center space-y-3 px-4">
                     <AlertTriangle className="w-10 h-10 text-amber-600 dark:text-amber-400 mx-auto" />
                     <p className="text-sm font-medium">{t("disabled_title")}</p>
-                    <p className="text-xs text-muted-foreground">{t("disabled_description")}</p>
                   </div>
                 </AppMain>
               ) : supportsFiles === false ? (
@@ -893,6 +1093,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   onRenameNode={handleRenameNode}
                   onDeleteNode={handleDeleteNode}
                   onDownloadNode={handleDownloadNode}
+                  downloadsOff={filesDownloadsOff}
                   onRevealNode={handleRevealNode}
                   onRemoveRecent={removeRecentFile}
                   accountFolders={accountFolders}
@@ -903,6 +1104,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   ownAccountId={filesAccountId}
                   sharingEnabled={sharingEnabled}
                   onShare={handleShare}
+                  onShowFileInfo={handleShowFileInfo}
+                  canOpenInApp={canOpenInApp}
+                  onOpenInApp={handleOpenInApp}
+                  appActionFor={appActionFor}
+                  onShared={handleShared}
                 />
               )}
             </div>
@@ -925,7 +1131,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
         <ImagePreviewModal
           name={previewImage}
           onClose={() => setPreviewImage(null)}
-          onDownload={handleDownload}
+          onDownload={filesDownloadsOff ? undefined : handleDownload}
           getImageUrl={getImageUrl}
           file={previewedView}
           neighbours={previewNeighbours}
@@ -941,8 +1147,29 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
           getFileContent={() => getFileContent(previewFile)}
           file={previewedView}
           neighbours={previewNeighbours}
+          extraAction={(() => {
+            const resource = resources.find((r) => r.name === previewFile);
+            const action = resource ? appActionFor(resource) : null;
+            return action ? { label: action.label, onClick: action.onRun } : undefined;
+          })()}
         />
       )}
+
+      {/* A file with no preview (pim-16) */}
+      {infoFile && (() => {
+        const resource = resources.find((r) => r.name === infoFile);
+        if (!resource) return null;
+        return (
+          <FileNoPreview
+            resource={resource}
+            onClose={() => setInfoFile(null)}
+            onDownload={filesDownloadsOff ? undefined : () => void handleDownload(infoFile)}
+            onOpenInApp={canOpenInApp(resource) ? () => handleOpenInApp(resource) : undefined}
+            appAction={appActionFor(resource) ?? undefined}
+            neighbours={previewNeighbours}
+          />
+        );
+      })()}
 
       {/* WOPI document editor overlay (#425) */}
       {editFile && (() => {
@@ -982,6 +1209,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
       <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />
       <ConfirmDialog {...confirmDialogProps} />
+      <UploadConflictDialog question={conflictQuestion} />
+      <ImportEmlDialog file={importEml} onClose={() => setImportEml(null)} />
       </div>
     </div>
   );

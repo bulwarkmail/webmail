@@ -87,6 +87,25 @@ function domainOf(address: string): string | undefined {
   return /^[^\s<>@]+\.[^\s<>@]+$/.test(domain) ? domain : undefined;
 }
 
+/**
+ * The original envelope domain of a Sender Rewriting Scheme address, or
+ * undefined when `address` isn't one. A forwarder rewrites
+ * `user@orig.example` to `SRS0=hash=tt=orig.example=user@forwarder`, and a
+ * second forwarder to `SRS1=hash=forwarder==hash=tt=orig.example=user@...`.
+ * Only the leading fields are split off: the local part may contain `=`.
+ */
+function srsOriginalDomain(address: string): string | undefined {
+  const at = address.lastIndexOf('@');
+  if (at < 0) return undefined;
+  const fields = address.slice(0, at).split('=');
+  const tag = fields[0].toUpperCase();
+  // SRS0: tag, hash, timestamp, domain, local part...
+  // SRS1: tag, hash, first forwarder, '', hash, timestamp, domain, local part...
+  const index = tag === 'SRS0' ? 3 : tag === 'SRS1' && fields[3] === '' ? 6 : -1;
+  if (index < 0 || fields.length <= index + 1) return undefined;
+  return domainOf(`@${fields[index]}`);
+}
+
 export interface SenderVerification {
   /**
    * `failed`: the message fails the From domain's checks (see
@@ -117,12 +136,18 @@ export function getSenderVerification(
   const domain = domainOf(fromEmail);
   if (!domain) return null;
 
-  // DMARC only counts the MAIL FROM identity; a HELO pass proves nothing
-  // about who wrote the message.
+  // Name the sender by a passing DKIM signature first: it survives
+  // forwarding, where the envelope is the forwarder's. Otherwise use the
+  // MAIL FROM identity (a HELO pass proves nothing about who wrote the
+  // message), decoding an SRS rewrite back to the original envelope domain.
+  const dkimPass = (auth.dkim?.all ?? (auth.dkim ? [auth.dkim] : []))
+    .find((entry) => entry.result === 'pass' && entry.domain);
   const mailFrom = auth.spf?.all?.find((entry) => entry.identity === 'mailfrom');
   const envelope = mailFrom?.domain ?? auth.spf?.domain;
-  const envelopeDomain = envelope ? domainOf(envelope) : undefined;
-  const sentFrom = envelopeDomain && envelopeDomain !== domain ? envelopeDomain : undefined;
+  const senderDomain = dkimPass?.domain
+    ? domainOf(`@${dkimPass.domain}`)
+    : envelope ? srsOriginalDomain(envelope) ?? domainOf(envelope) : undefined;
+  const sentFrom = senderDomain && senderDomain !== domain ? senderDomain : undefined;
 
   if (isAuthenticationSpoofed(auth)) return { status: 'failed', domain, sentFrom };
   // Only a pass that aligns with the From domain counts: `spf=pass` for the
@@ -131,6 +156,38 @@ export function getSenderVerification(
   // better. The DMARC verdict is `none` in both cases (no policy published).
   if (hasAlignedAuthenticationPass(auth, fromEmail)) return null;
   return { status: 'unverified', domain, sentFrom };
+}
+
+/**
+ * `with` protocols (RFC 3848) that record an authenticated submission: the
+ * client handed the message in after logging in, so whatever
+ * Authentication-Results it carries below that hop are the client's own text.
+ */
+const SUBMISSION_PROTOCOL_RE = /\bwith\s+(?:UTF8)?(?:E?SMTP|LMTP)S?A\b/i;
+
+/**
+ * Whether the topmost Authentication-Results header looks like it was
+ * written by a server that received the message, rather than by whoever
+ * composed it. A receiving server writes its Received line first and its
+ * Authentication-Results below it (Stalwart and Gmail both do), so: a
+ * Received header must sit above the topmost Authentication-Results, and the
+ * nearest one must not record an authenticated submission. Takes the headers
+ * in message order.
+ *
+ * This only catches a forged header on its own. Stalwart (0.16 and 1.0)
+ * keeps both headers when a signed-in user writes them into a mail they
+ * submit over JMAP, and adds nothing above them, so a forged Received line
+ * followed by a forged "dkim=pass" arrives exactly like mail from outside.
+ * Only the server can tell them apart.
+ */
+export function authenticationResultsOnReceipt(headers: readonly { name: string; value: string }[]): boolean {
+  const index = headers.findIndex((header) => header.name.toLowerCase() === 'authentication-results');
+  if (index < 0) return false;
+  for (let i = index - 1; i >= 0; i--) {
+    if (headers[i].name.toLowerCase() !== 'received') continue;
+    return !SUBMISSION_PROTOCOL_RE.test(headers[i].value);
+  }
+  return false;
 }
 
 /**

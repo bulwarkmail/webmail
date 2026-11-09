@@ -14,7 +14,57 @@ const BREAKPOINTS = {
   "2xl": 1536,
 } as const;
 
+/**
+ * The widths that decide the layout (`desk:` in app/globals.css is the first).
+ * Below PHONE_BELOW the phone layout: one pane at a time, a bottom tab bar and
+ * the folders in a drawer. From there up the desktop layout, with the app rail
+ * and the folder sidebar beside the list. Below FULL_DESKTOP that desktop is
+ * compact: the folder sidebar folds to its icons, and calendar, contacts and
+ * files open their sidebars over the page. A half-screen window and a laptop
+ * at 150 % (911px) are desktops, not tablets (usability test 2026-11-04).
+ */
+export const PHONE_BELOW = 600;
+export const FULL_DESKTOP = BREAKPOINTS.lg;
+export interface DeviceClass {
+  /** Phone layout. */
+  isMobile: boolean;
+  /** Desktop layout narrower than the full desktop: the sidebar folds to icons. */
+  isCompact: boolean;
+  /** Desktop layout, compact or full. */
+  isDesktop: boolean;
+}
+
+/** The layout a window or pane `width` CSS pixels wide gets. */
+export function classifyWidth(width: number): DeviceClass {
+  return {
+    isMobile: width < PHONE_BELOW,
+    isCompact: width >= PHONE_BELOW && width < FULL_DESKTOP,
+    isDesktop: width >= PHONE_BELOW,
+  };
+}
+
 const getMediaQueryServerSnapshot = () => false;
+
+// One MediaQueryList per query for the page's life: `matches` follows the
+// window, and every message row asks on every render. A fresh
+// window.matchMedia() per read showed up at about half a millisecond per row
+// in a search on a slow machine.
+const mediaQueryLists = new Map<string, MediaQueryList>();
+let listsMadeBy: Window["matchMedia"] | null = null;
+
+/** The page's MediaQueryList for `query`, made once (again if matchMedia itself was replaced). */
+export function mediaQueryList(query: string): MediaQueryList {
+  if (listsMadeBy !== window.matchMedia) {
+    mediaQueryLists.clear();
+    listsMadeBy = window.matchMedia;
+  }
+  let list = mediaQueryLists.get(query);
+  if (!list) {
+    list = window.matchMedia(query);
+    mediaQueryLists.set(query, list);
+  }
+  return list;
+}
 
 /**
  * The media query for "narrower than `px`" in rem, as Tailwind writes its own
@@ -42,7 +92,7 @@ export function atLeast(px: number): string {
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      const mq = window.matchMedia(query);
+      const mq = mediaQueryList(query);
       mq.addEventListener("change", callback);
       return () => mq.removeEventListener("change", callback);
     },
@@ -50,7 +100,7 @@ export function useMediaQuery(query: string): boolean {
   );
 
   const getSnapshot = useCallback(
-    () => window.matchMedia(query).matches,
+    () => mediaQueryList(query).matches,
     [query],
   );
 
@@ -61,23 +111,18 @@ export function useMediaQuery(query: string): boolean {
  * When the Pro shell renders a page inside a (possibly split) pane, that pane
  * publishes its measured width via `PaneSizeContext`. Inner pages should
  * branch their layout against the pane width - not the full viewport - so a
- * narrow pane gets the mobile/tablet layout instead of overflowing.
+ * narrow pane gets the phone or compact layout instead of overflowing.
  *
  * Returns `null` when no pane size is published, signalling the caller to
  * fall back to `window.matchMedia`.
  */
-function classifyPane(paneWidth: number | null) {
-  if (paneWidth === null) return null;
-  return {
-    isMobile: paneWidth < BREAKPOINTS.md,
-    isTablet: paneWidth >= BREAKPOINTS.md && paneWidth < BREAKPOINTS.lg,
-    isDesktop: paneWidth >= BREAKPOINTS.lg,
-  };
+function classifyPane(paneWidth: number | null): DeviceClass | null {
+  return paneWidth === null ? null : classifyWidth(paneWidth);
 }
 
 /**
- * Hook to detect device type and sync with UI store
- * Uses Tailwind breakpoints: mobile < 768px, tablet 768-1024px, desktop > 1024px
+ * Hook to detect the layout class (classifyWidth) and sync it with the UI
+ * store: phone below 600px, compact desktop to 1024px, full desktop above.
  *
  * When invoked inside a Pro pane, the returned values reflect the pane's
  * width instead of the window's. The global UI store is NOT updated in that
@@ -85,35 +130,48 @@ function classifyPane(paneWidth: number | null) {
  * and the store is meant to mirror the actual viewport for callers that read
  * it directly (mobile navigation helpers etc.).
  */
-export function useDeviceDetection() {
-  const { setDeviceType, isMobile, isTablet, isDesktop } = useUIStore(useShallow((state) => ({ setDeviceType: state.setDeviceType, isMobile: state.isMobile, isTablet: state.isTablet, isDesktop: state.isDesktop })));
+export function useDeviceDetection(): DeviceClass {
+  const { setDeviceType, isMobile, isCompact, isDesktop } = useUIStore(useShallow((state) => ({ setDeviceType: state.setDeviceType, isMobile: state.isMobile, isCompact: state.isCompact, isDesktop: state.isDesktop })));
   const paneWidth = usePaneSize();
   const paneClassification = classifyPane(paneWidth);
 
-  const isMobileQuery = useMediaQuery(narrowerThan(BREAKPOINTS.md));
-  const isTabletQuery = useMediaQuery(`${atLeast(BREAKPOINTS.md)} and ${narrowerThan(BREAKPOINTS.lg)}`);
-  const isDesktopQuery = useMediaQuery(atLeast(BREAKPOINTS.lg));
+  // Each class asks its own query, so the first hydration pass (every query
+  // false) reads as the full desktop and draws no folded sidebar for a frame.
+  const isMobileQuery = useMediaQuery(narrowerThan(PHONE_BELOW));
+  const isCompactQuery = useMediaQuery(`${atLeast(PHONE_BELOW)} and ${narrowerThan(FULL_DESKTOP)}`);
+  const isDesktopQuery = useMediaQuery(atLeast(PHONE_BELOW));
 
   useEffect(() => {
     if (paneClassification) return;
-    setDeviceType(isMobileQuery, isTabletQuery, isDesktopQuery);
-  }, [isMobileQuery, isTabletQuery, isDesktopQuery, setDeviceType, paneClassification]);
+    setDeviceType(isMobileQuery, isCompactQuery, isDesktopQuery);
+  }, [isMobileQuery, isCompactQuery, isDesktopQuery, setDeviceType, paneClassification]);
 
   if (paneClassification) return paneClassification;
-  return { isMobile, isTablet, isDesktop };
+  return { isMobile, isCompact, isDesktop };
+}
+
+/** The phone layout (below PHONE_BELOW), for the window or the Pro pane. */
+export function useIsMobile() {
+  const paneWidth = usePaneSize();
+  const viewport = useMediaQuery(narrowerThan(PHONE_BELOW));
+  return paneWidth !== null ? paneWidth < PHONE_BELOW : viewport;
+}
+
+/** The desktop layout, compact or full (from PHONE_BELOW up). */
+export function useIsDesktop() {
+  const paneWidth = usePaneSize();
+  const viewport = useMediaQuery(atLeast(PHONE_BELOW));
+  return paneWidth !== null ? paneWidth >= PHONE_BELOW : viewport;
 }
 
 /**
- * Convenience hooks for specific breakpoints
+ * The full desktop (from FULL_DESKTOP up), where sidebars sit beside the page
+ * at their own width. Below it calendar, contacts and files open theirs over
+ * the page.
  */
-export function useIsMobile() {
+export function useIsFullDesktop() {
   const paneWidth = usePaneSize();
-  const viewport = useMediaQuery(narrowerThan(BREAKPOINTS.md));
-  return paneWidth !== null ? paneWidth < BREAKPOINTS.md : viewport;
+  const viewport = useMediaQuery(atLeast(FULL_DESKTOP));
+  return paneWidth !== null ? paneWidth >= FULL_DESKTOP : viewport;
 }
 
-export function useIsDesktop() {
-  const paneWidth = usePaneSize();
-  const viewport = useMediaQuery(atLeast(BREAKPOINTS.lg));
-  return paneWidth !== null ? paneWidth >= BREAKPOINTS.lg : viewport;
-}

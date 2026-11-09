@@ -1,7 +1,7 @@
 // "Flat fields" - the bulwarkmail.org design system carried into the app.
 //
 // Neutral grounds, square panes, one regular-weight sans, and raspberry only
-// as a small mark: the primary button, the unread square, the 3px edge on the
+// as a small mark: the primary button, the unread bar, the 3px edge on the
 // active folder and the selected message, the focus ring and links. Errors,
 // warnings and success have their own colours so nothing destructive can be
 // mistaken for the brand.
@@ -39,6 +39,7 @@ export const flatFieldsCSS = `
   --color-primary: #db2d54;
   --color-primary-foreground: #ffffff;
   --color-unread: #db2d54;
+  --color-unread-wash: color-mix(in srgb, #db2d54 6%, #ffffff);
   --color-destructive: #b42318;
   --color-destructive-foreground: #ffffff;
   --color-success: #17784a;
@@ -101,6 +102,7 @@ export const flatFieldsCSS = `
   --color-primary: #db2d54;
   --color-primary-foreground: #ffffff;
   --color-unread: #f0486f;
+  --color-unread-wash: color-mix(in srgb, #f0486f 11%, #131315);
   --color-destructive: #ff9b8f;
   --color-destructive-foreground: #131315;
   --color-success: #4cc38a;
@@ -321,11 +323,12 @@ body[data-theme-skin="builtin-flat-fields"] :is(input[type="checkbox"], input[ty
   accent-color: var(--color-primary);
 }
 
-/* Unread is a small square and a heavy weight, not a tinted row. Hanken
-   Grotesk's 600 sits too close to the 500 of read senders to tell apart, so
-   unread sender and subject go to 700 and read senders drop to 400. */
-body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] .bg-accent\\/30:not(:hover) {
-  background-color: var(--color-background);
+/* Unread has to read at a glance: a faint brand wash on the row, a brand bar
+   beside the avatar and a heavy weight. Hanken Grotesk's 600 sits too close
+   to the 500 of read senders to tell apart, so unread sender and subject go
+   to 700 and read senders drop to 400. */
+body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] [data-unread="true"].bg-accent\\/30:not(:hover):not(:is([aria-current="true"], [aria-selected="true"])) {
+  background-color: var(--color-unread-wash);
 }
 
 body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] [data-unread="true"] .text-foreground:is(.font-semibold, .font-bold) {
@@ -336,6 +339,12 @@ body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] [data-unrea
   font-weight: 400;
 }
 
+/* Near-white 400 on the dark ground still reads as heavy, so read subjects
+   also step down from the text colour. */
+body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] [data-unread="false"] :is([class~="text-foreground/80"], [class~="text-foreground/90"]) {
+  color: color-mix(in srgb, var(--color-foreground) 75%, var(--color-background));
+}
+
 body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] svg.fill-unread {
   color: transparent;
   fill: transparent;
@@ -344,18 +353,24 @@ body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] svg.fill-un
   height: 7px;
 }
 
-/* The square sits clear of the 3px selection edge. */
+/* Rows without an avatar keep a square, clear of the 3px selection edge. */
 body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] div.absolute:has(> svg.fill-unread) {
   inset-inline-start: 6px;
 }
 
-/* In the split layout the app anchors the mark at "padding + half an
-   avatar", but the avatar is centred in the row, so the mark lined up with
-   nothing. Put it on the sender line it marks (text-sm in a 20-24px row).
-   The other layouts already centre it on their single line. The offset is
-   an inline style, hence !important. */
-body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] div.absolute[style*="+ 1.25rem"]:has(> svg.fill-unread) {
-  top: calc(var(--density-item-py) + 0.75rem) !important;
+/* Beside an avatar the app puts the dot on the avatar's edge, where it sits
+   on the picture. Draw a bar the avatar's height against its left side. */
+body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] div.absolute.top-1\\/2:has(> svg.fill-unread) {
+  inset-block: 0;
+  inset-inline-start: -3px;
+  translate: none;
+  transform: none;
+  display: flex;
+}
+
+body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] div.absolute.top-1\\/2 > svg.fill-unread {
+  width: 3px;
+  height: 100%;
 }
 
 /* ── Raspberry is too light for text on grey: text uses the link colour. ── */

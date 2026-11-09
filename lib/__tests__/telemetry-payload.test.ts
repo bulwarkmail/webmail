@@ -8,7 +8,10 @@ vi.mock('@/lib/admin/config-manager', () => ({
     get: (key: string, fallback: unknown) => (key === 'jmapServerUrl' ? 'https://mail.example.org' : fallback),
   },
 }));
-vi.mock('@/lib/telemetry/state', () => ({ getInstanceId: async () => 'instance-1' }));
+vi.mock('@/lib/telemetry/state', () => ({
+  getInstanceId: async () => 'instance-1',
+  effectiveErrorsConsent: async () => ({ consent: 'off', source: 'file' }),
+}));
 vi.mock('@/lib/telemetry/login-tracker', () => ({ getLoginCounts: async () => ({ total: 3, active7d: 1 }) }));
 vi.mock('@/lib/admin/plugin-registry', () => ({
   getPluginRegistry: async () => ({ plugins: [] }),

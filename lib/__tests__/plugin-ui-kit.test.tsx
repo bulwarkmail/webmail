@@ -22,6 +22,16 @@ const source = (file: string) => readFileSync(path.join(ROOT, file), 'utf8');
 const classesOf = (el: Element) => el.getAttribute('class')!.split(/\s+/).filter((c) => c !== 'bk').sort();
 
 describe('plugin UI kit components', () => {
+  it('starts a long LinkButton\'s lines at its icon, as a paragraph, not centred as a button would', () => {
+    // The AI assistant's examples in its panel ("Decline the invitation politely and suggest next month instead").
+    render(<kit.LinkButton icon="arrow-right">Decline the invitation politely and suggest next month instead</kit.LinkButton>);
+    const link = screen.getByRole('button');
+    expect(link.className).toMatch(/(^|\s)text-start(\s|$)/);
+    // The icon stays beside the first line rather than the middle of the text.
+    expect(link.className).toMatch(/(^|\s)items-start(\s|$)/);
+    expect(link.querySelector('svg')!.getAttribute('class')).toContain('mt-');
+  });
+
   it('renders the app\'s own Button and Input', () => {
     render(<>
       <kit.Button variant="secondary" size="sm">Cancel</kit.Button>
@@ -55,7 +65,9 @@ describe('plugin UI kit components', () => {
       ['components/settings/settings-section.tsx', 'bg-muted-foreground ltr:translate-x-1 rtl:-translate-x-1'],
       ['components/settings/settings-section.tsx', 'flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4 py-3 border-b border-border last:border-0'],
       ['components/settings/settings-section.tsx', 'px-3 py-1.5 text-xs rounded-md transition-colors duration-150'],
-      ['components/email/composer-toolbar-menu.tsx', 'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border'],
+      ['components/files/file-views.tsx', 'w-4 h-4 rounded border flex items-center justify-center shrink-0'],
+      ['components/files/file-views.tsx', 'bg-primary border-primary text-primary-foreground'],
+      ['components/files/file-views.tsx', 'border-muted-foreground/50 bg-background'],
       ['components/calendar/ical-import-modal.tsx', 'flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors'],
       ['components/ui/empty-state.tsx', 'w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4'],
       ['components/files/file-views.tsx', 'border-b border-border/60'],
@@ -63,7 +75,7 @@ describe('plugin UI kit components', () => {
       ['components/email/email-viewer.tsx', 'w-10 h-10 rounded-full'],
       ['components/email/email-viewer.tsx', 'text-[0.6875rem] font-semibold text-muted-foreground'],
       ['components/email/email-viewer.tsx', 'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]'],
-      ['components/identity/identity-form.tsx', 'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200'],
+      ['components/identity/signature-editor.tsx', 'flex w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 hover:border-muted-foreground'],
     ];
     const kitSource = source('lib/plugin-sandbox/ui-kit/components.tsx');
     for (const [file, classes] of copies) {
@@ -127,11 +139,41 @@ describe('plugin UI kit components', () => {
     expect(container.querySelector('dd')).toHaveTextContent('2 MB');
   });
 
+  it('draws a table with amounts aligned to the end and totals under the last column', () => {
+    render(<kit.Table
+      label="Items"
+      columns={[
+        { key: 'name', label: 'Item' },
+        { key: 'qty', label: 'Qty', align: 'end', hideNarrow: true },
+        { key: 'net', label: 'Net', align: 'end' },
+      ]}
+      rows={[{ key: 'a', name: 'Consulting', qty: '8 h', net: '800.00' }, { name: 'Travel', qty: '1', net: '120.50' }]}
+      summary={[{ label: 'VAT 19 %', value: '174.80' }, { label: 'Total', value: '1,095.30', strong: true }]}
+    />);
+    const table = screen.getByRole('table', { name: 'Items' });
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Item', 'Qty', 'Net']);
+    const travel = screen.getByText('Travel').closest('tr')!;
+    expect([...travel.children].map((c) => c.textContent)).toEqual(['Travel', '1', '120.50']);
+    expect(screen.getByText('120.50').className).toContain('text-end');
+    expect(screen.getByText('1').className).toContain('hidden sm:table-cell');
+    const total = screen.getByRole('rowheader', { name: 'Total' });
+    expect(total.getAttribute('colspan')).toBe('2');
+    expect(total.closest('tr')!.lastElementChild!).toHaveTextContent('1,095.30');
+    expect(total.className).toContain('font-semibold');
+    expect(table.closest('.bk')).not.toBeNull();
+  });
+
+  it('says so when a table has no rows', () => {
+    render(<kit.Table columns={[{ key: 'a', label: 'A' }, { key: 'b', label: 'B' }]} rows={[]} empty="No items" />);
+    expect(screen.getByText('No items').getAttribute('colspan')).toBe('2');
+  });
+
   it('makes sidebar rows as tall as folder rows on touch screens', () => {
-    // The page sets --touch-row-min-h to 44px below lg, where folder rows
-    // are max-lg:min-h-[44px]; the frame can't see the page's width itself.
-    expect(source('components/layout/sidebar.tsx')).toContain('max-lg:min-h-[44px]');
-    expect(source('app/globals.css')).toMatch(/@media \(width < 64rem\) \{\s*:root \{\s*--touch-row-min-h: 44px;/);
+    // The page sets --touch-row-min-h to 44px where folder rows are
+    // tap:min-h-[44px] (phones, touch screens below the full desktop); the
+    // frame can't see the page's width itself.
+    expect(source('components/layout/sidebar.tsx')).toContain('tap:min-h-[44px]');
+    expect(source('app/globals.css')).toMatch(/@media \(width < 37\.5rem\), \(width < 64rem\) and \(pointer: coarse\) \{\s*:root \{\s*--touch-row-min-h: 44px;/);
     render(<kit.SidebarRow label="Anna" onClick={() => {}} />);
     expect(screen.getByRole('button', { name: 'Anna' }).style.minHeight).toBe('var(--touch-row-min-h, 0px)');
   });

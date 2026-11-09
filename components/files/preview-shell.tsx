@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Download, X } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 
 export interface PreviewNeighbours {
   /** The previous and next previewable file of the folder, if any. */
@@ -13,10 +14,30 @@ export interface PreviewNeighbours {
   onGo: (name: string) => void;
 }
 
+/** A backdrop click this soon after the preview opened is part of the click that opened it. */
+export const BACKDROP_GRACE_MS = 400;
+
+/**
+ * `onClose` for a click on the area around the content. The rest of the
+ * click that opened the preview (a double-click's second click, a
+ * triple-click) is ignored, so it can't close the preview again (pim-3).
+ */
+export function useBackdropClose(onClose: () => void): () => void {
+  const openedAt = useRef(0);
+  useEffect(() => {
+    openedAt.current = Date.now();
+  }, []);
+  return useCallback(() => {
+    if (Date.now() - openedAt.current < BACKDROP_GRACE_MS) return;
+    onClose();
+  }, [onClose]);
+}
+
 interface PreviewShellProps {
   name: string;
   onClose: () => void;
-  onDownload: () => void;
+  /** Left out: no download button (a device policy turned downloads off). */
+  onDownload?: () => void;
   /** Extra header buttons before Download (e.g. "Open in new tab"). */
   actions?: ReactNode;
   neighbours?: PreviewNeighbours;
@@ -32,13 +53,27 @@ interface PreviewShellProps {
  */
 export function PreviewShell({ name, onClose, onDownload, actions, neighbours, closeOnBackdrop = true, children }: PreviewShellProps) {
   const t = useTranslations("files");
+  const closeFromBackdrop = useBackdropClose(onClose);
   // Tab stays in the preview and the focus goes back to the file that was
   // opened when it closes. Escape is the listener below.
   const shellRef = useFocusTrap({ isActive: true, restoreFocus: true });
+  // Its own close goes to the bar's start when the window's close is at its end.
+  const [bar, setBar] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(bar);
+  const close = (
+    <IconButton label={t("close_preview")} onClick={onClose} className="shrink-0">
+      <X />
+    </IconButton>
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // A dialog opened from the preview (Import to a mail folder…) sits on top
+        // and closes first; the preview stays.
+        const target = e.target instanceof Element ? e.target : null;
+        const above = target?.closest('[role="dialog"], [role="alertdialog"]');
+        if (above && shellRef.current && !shellRef.current.contains(above)) return;
         e.stopPropagation();
         onClose();
         return;
@@ -67,7 +102,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       window.removeEventListener("keydown", onKey, { capture: true });
       window.removeEventListener("keydown", onArrow);
     };
-  }, [onClose, neighbours]);
+  }, [onClose, neighbours, shellRef]);
 
   return (
     <div
@@ -76,16 +111,19 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       aria-modal="true"
       aria-label={name}
       className="fixed inset-0 z-50 flex flex-col bg-black/80"
-      onClick={closeOnBackdrop ? onClose : undefined}
+      onClick={closeOnBackdrop ? closeFromBackdrop : undefined}
     >
       {/* Full-screen under `viewport-fit=cover`: the bar pads itself out of
           the iOS status bar (#936). The insets are physical, so pl/pr. */}
       <div
-        className="flex items-center justify-between gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 bg-background/90 backdrop-blur border-b border-border"
+        ref={setBar}
+        data-window-top-row=""
+        className="flex items-center justify-between gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+var(--app-top-inset))] pb-3 bg-background/90 backdrop-blur border-b border-border"
         onClick={(e) => e.stopPropagation()}
       >
+        {closeFirst && close}
         <h3 className="text-sm font-medium truncate" title={name}>{name}</h3>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 ms-auto">
           {neighbours && (
             <>
               <IconButton label={t("previous_file")} disabled={!neighbours.previous} onClick={() => neighbours.previous && neighbours.onGo(neighbours.previous)}>
@@ -97,13 +135,13 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
             </>
           )}
           {actions}
-          <IconButton label={t("download")} onClick={onDownload}>
-            <Download />
-          </IconButton>
-          <IconButton label={t("close_preview")} onClick={onClose}>
-            <X />
-          </IconButton>
+          {onDownload && (
+            <IconButton label={t("download")} onClick={onDownload}>
+              <Download />
+            </IconButton>
+          )}
         </div>
+        {!closeFirst && close}
       </div>
       {children}
     </div>

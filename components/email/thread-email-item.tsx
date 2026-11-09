@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { useTranslations } from "next-intl";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
@@ -21,6 +21,7 @@ import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
 import { useTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge } from "./tag-badge";
+import { ROW_TAG_GROUP_CLASS } from "./row-tag-classes";
 import { useListRowShape, LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
 import { SizeCell, listLeadClass } from "./list-columns";
 import { rowA11yProps, rowLabel } from "./list-a11y";
@@ -116,7 +117,7 @@ export function ThreadEmailItem({
     label: rowLabel([
       isUnread && t('unread'),
       senderName,
-      formatDate(emailDisplayDate(email)),
+      formatDate(emailListDate(email)),
       isStarred && tStatus('starred'),
       isAnswered && tStatus('replied'),
       isForwarded && tStatus('forwarded'),
@@ -196,10 +197,14 @@ export function ThreadEmailItem({
                 </span>
               </span>
               <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-                {tagIds.map((id) => (
-                  <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                ))}
-                <span className={cn("min-w-0 truncate", isUnread ? "text-muted-foreground" : "text-muted-foreground")}>
+                {tagIds.length > 0 && (
+                  <span className={ROW_TAG_GROUP_CLASS}>
+                    {tagIds.map((id) => (
+                      <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                    ))}
+                  </span>
+                )}
+                <span className={cn("flex-1 min-w-0 truncate", isUnread ? "text-muted-foreground" : "text-muted-foreground")}>
                   {cleanPreview(email.preview) || t('no_preview_available')}
                 </span>
               </div>
@@ -215,7 +220,7 @@ export function ThreadEmailItem({
                 "text-xs tabular-nums",
                 isUnread ? "text-foreground font-medium" : "text-muted-foreground"
               )}>
-                {formatDate(emailDisplayDate(email))}
+                {formatDate(emailListDate(email))}
               </span>
               <SizeCell bytes={email.size} />
             </div>
@@ -306,7 +311,7 @@ export function ThreadEmailItem({
           {/* Single line: Sender, indicators, preview, date */}
           <div className="flex items-center gap-2">
             <span className={cn(
-              "truncate text-sm flex-shrink-0 max-w-[150px]",
+              "flex-1 min-w-0 truncate text-sm max-w-[150px]",
               isUnread
                 ? "font-semibold text-foreground"
                 : "font-medium text-muted-foreground"
@@ -314,7 +319,7 @@ export function ThreadEmailItem({
               {sender?.name || sender?.email?.split('@')[0] || t('unknown_sender')}
             </span>
 
-            {/* Indicators */}
+            {/* Indicators stay outside the clipped tag suffix. */}
             <div className="flex items-center gap-1 flex-shrink-0">
               {email.isScheduled && (
                 <CalendarClock className="w-3 h-3 text-primary" />
@@ -337,14 +342,18 @@ export function ThreadEmailItem({
               {email.hasAttachment && (
                 <Paperclip className="w-3 h-3 text-muted-foreground" />
               )}
-              {tagIds.map((id) => (
-                <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-              ))}
             </div>
+            {tagIds.length > 0 && (
+              <span className={ROW_TAG_GROUP_CLASS}>
+                {tagIds.map((id) => (
+                  <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                ))}
+              </span>
+            )}
 
             {/* Preview snippet */}
             <span className={cn(
-              "text-sm truncate flex-1 min-w-0",
+              "text-sm flex-1 min-w-0 truncate",
               isUnread
                 ? "text-muted-foreground"
                 : "text-muted-foreground"
@@ -359,7 +368,7 @@ export function ThreadEmailItem({
                 ? "text-foreground font-medium"
                 : "text-muted-foreground"
             )}>
-              {formatDate(emailDisplayDate(email))}
+              {formatDate(emailListDate(email))}
             </span>
           </div>
         </div>

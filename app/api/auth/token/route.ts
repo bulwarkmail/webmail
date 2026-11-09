@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { observeUpstream } from '@/lib/metrics/upstream';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import {
   refreshTokenCookieName,
   refreshTokenServerCookieName,
   accessTokenCookieName,
-  encodeCachedAccessToken,
   decodeCachedAccessToken,
 } from '@/lib/oauth/tokens';
 import {
@@ -13,13 +13,11 @@ import {
   buildOAuthParams,
   getMetadata,
   getRequiredConfig,
-  getTokenEndpoint,
   defaultClientOptions,
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
 import type { OAuthMetadata } from '@/lib/oauth/discovery';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
-import { fitsSetCookieBudget } from '@/lib/oauth/set-cookie-budget';
 import {
   buildEndSessionUrl,
   clearIdToken,
@@ -29,6 +27,7 @@ import {
   isRevokeOnSignOutEnabled,
   storeIdToken,
 } from '@/lib/oauth/end-session';
+import { cacheAccessToken, noteSignedOut, redeemRefreshToken, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import {
@@ -40,6 +39,15 @@ import {
   writeSignInStamp,
 } from '@/lib/auth/session-age';
 import { clearStalwartAuthContextInStore, readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
+import {
+  clearCustomUpstream,
+  readCustomUpstream,
+  resolveCustomUpstream,
+  writeCustomUpstream,
+  type CustomUpstream,
+} from '@/lib/oauth/custom-upstream';
 
 function parseSlot(raw: string | null): number | null {
   if (raw === null) return null;
@@ -56,23 +64,24 @@ function getSlot(request: NextRequest): number {
 // not hold it up for long.
 const REVOCATION_TIMEOUT_MS = 3000;
 
-async function revokeRefreshToken(token: string, serverId: string | null, metadata: OAuthMetadata | null): Promise<void> {
-  if (!metadata?.revocation_endpoint) return;
+async function revokeRefreshToken(token: string, serverId: string | null, metadata: OAuthMetadata | null, upstream: CustomUpstream | null): Promise<void> {
+  const revocationEndpoint = metadata?.revocation_endpoint;
+  if (!revocationEndpoint) return;
   const params = buildOAuthParams({
     token,
     token_type_hint: 'refresh_token',
-  }, serverId, await defaultClientOptions(serverId).catch(() => ({ fallbackClientId: DEFAULT_CLIENT_ID })));
+  }, serverId, await defaultClientOptions(serverId, upstream).catch(() => ({ fallbackClientId: DEFAULT_CLIENT_ID })));
 
   try {
     // Never follow a redirect with the refresh token and client secret in
     // the body: the endpoint was validated, its redirect target was not.
-    const revocationResponse = await fetch(metadata.revocation_endpoint, {
+    const revocationResponse = await observeUpstream('oauth', () => fetch(revocationEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),
       signal: AbortSignal.timeout(REVOCATION_TIMEOUT_MS),
       redirect: 'error',
-    });
+    }));
     if (!revocationResponse.ok) {
       logger.warn('Token revocation returned error', { status: revocationResponse.status });
     }
@@ -88,12 +97,12 @@ async function revokeRefreshToken(token: string, serverId: string | null, metada
  * Stalwart, and for a logout page shared with other apps, which must keep
  * working once the provider starts advertising its own.
  */
-function endSessionUrlFor(metadata: OAuthMetadata | null, serverId: string | null, idToken: string | undefined): string | null {
+function endSessionUrlFor(metadata: OAuthMetadata | null, serverId: string | null, idToken: string | undefined, upstream: CustomUpstream | null): string | null {
   if (!isEndSessionEnabled()) return null;
   let clientId: string;
   let configuredEndpoint: string | undefined;
   try {
-    ({ clientId, endSessionUrl: configuredEndpoint } = getRequiredConfig(serverId));
+    ({ clientId, endSessionUrl: configuredEndpoint } = upstream ? getRequiredConfig(serverId, { upstream }) : getRequiredConfig(serverId));
   } catch {
     return null;
   }
@@ -109,42 +118,13 @@ function endSessionUrlFor(metadata: OAuthMetadata | null, serverId: string | nul
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
-/**
- * Cache the access token for the slot so a page reload can resume with it.
- *
- * Scoped to the token's own lifetime - once it expires the cookie is worthless
- * and should not linger. A token too large to store, or one that would push
- * the response past a proxy's header buffer beside `otherCookieValues`, is
- * simply not cached: a reload then refreshes instead (#1237).
- * Returns the cookie value written, or null.
- */
-function cacheAccessToken(
-  cookieStore: CookieStore,
-  slot: number,
-  accessToken: string,
-  expiresIn: number,
-  otherCookieValues: ReadonlyArray<string | null | undefined>,
-  remember: boolean,
-): string | null {
-  const name = accessTokenCookieName(slot);
-  const value = encodeCachedAccessToken(accessToken, expiresIn);
-  if (!value || !fitsSetCookieBudget([...otherCookieValues, value])) {
-    // Drop any stale entry rather than leaving a mismatch.
-    if (cookieStore.get(name)) cookieStore.delete(name);
-    return null;
-  }
-  // The value carries its own expiry, so a session cookie needs no maxAge.
-  cookieStore.set(name, value, remember ? { ...getCookieOptions(), maxAge: expiresIn } : getSignInCookieOptions(false));
-  return value;
-}
-
 export async function POST(request: NextRequest) {
   // CSRF gate (GHSA-qvr9-m8cq-7wvg): cookies written here are SameSite=Lax,
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
   try {
-    const { code, code_verifier, redirect_uri, slot: bodySlot, server_id: bodyServerId, remember: bodyRemember } = await request.json();
+    const { code, code_verifier, redirect_uri, slot: bodySlot, server_id: bodyServerId, remember: bodyRemember, custom_server_url: customServerUrl, client_id: bodyClientId } = await request.json();
     // "Remember me" left unticked: the cookies end with the browser session.
     // Clients from before the choice remembered every sign-in.
     const remember = bodyRemember !== false;
@@ -156,7 +136,14 @@ export async function POST(request: NextRequest) {
     const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : getSlot(request);
     const serverId = typeof bodyServerId === 'string' && bodyServerId ? bodyServerId : null;
 
-    const tokens = await exchangeCodeForTokens(code, code_verifier, redirect_uri, serverId);
+    // The desktop app signs in to a server the user typed, with a client it
+    // registered there. Nothing configured here knows about either.
+    const customUpstream = IS_DESKTOP_BUILD && !serverId ? await resolveCustomUpstream(customServerUrl, bodyClientId) : null;
+    if (IS_DESKTOP_BUILD && !serverId && !customUpstream) {
+      return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
+    }
+
+    const tokens = await exchangeCodeForTokens(code, code_verifier, redirect_uri, serverId, customUpstream ? { upstream: customUpstream } : undefined);
     // A sign-in: the maximum session length counts from here, on the server
     // and, from this answer, in the browser.
     const signedInAt = Date.now();
@@ -185,6 +172,7 @@ export async function POST(request: NextRequest) {
     } else if (cookieStore.get(serverCookieName)) {
       cookieStore.delete(serverCookieName);
     }
+    if (customUpstream) writeCustomUpstream(cookieStore, slot, customUpstream, remember);
 
     return response;
   } catch (error) {
@@ -227,8 +215,9 @@ export async function PUT(request: NextRequest) {
         clearStalwartAuthContextInStore(cookieStore, slot);
         return NextResponse.json({ error: SESSION_TOO_OLD, maxHours }, { status: 401 });
       }
-      // Bind the time to this token from now on.
-      if (!age.stamp) writeSignInStamp(cookieStore, slot, { signedInAt: age.signedInAt, refreshToken, ...(account ? { account } : {}) }, getSignInCookieOptions(remember));
+      // Bind the time to this token from now on, and record whether the
+      // sign-in is remembered where a stamp from before doesn't say (#1509).
+      if (!age.stamp || age.stamp.remember === undefined) writeSignInStamp(cookieStore, slot, { signedInAt: age.signedInAt, refreshToken, ...(account ? { account } : {}) }, getSignInCookieOptions(remember));
     }
     const signedIn = age ? { signed_in_at: age.signedInAt } : {};
 
@@ -252,68 +241,50 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // The refresh token may have been minted by the password+TOTP login route,
-    // which works without a configured OAuth client by falling back to the
-    // default client id - refreshing must fall back the same way (#873).
-    const tokenEndpoint = await getTokenEndpoint(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+    // Discovery or the token endpoint out of reach is an outage: the client
+    // waits it out. A 500 here would count toward signing the user out.
+    const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
+    // The device's OS policy refuses this server for now. The cookies stay, so the
+    // account comes back with no sign-in if the policy does.
+    const refusedByDevice = upstream ? devicePolicyServerRefusal(upstream.serverUrl) : null;
+    if (refusedByDevice) return refusedByDevice;
+    const redemption = await redeemRefreshToken(refreshToken, serverId, upstream);
+    if (redemption.kind === 'unreachable') {
+      logger.warn('Token refresh: provider unreachable', { error: redemption.message });
+      return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
+    }
 
-    const params = buildOAuthParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }, serverId, await defaultClientOptions(serverId));
-
-    const tokenResponse = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-      // See revokeRefreshToken: the body holds the refresh token.
-      redirect: 'error',
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      logger.error('Token refresh failed', { status: tokenResponse.status, error: errorText });
+    if (redemption.kind === 'refused') {
+      const { status, errorText } = redemption;
+      logger.error('Token refresh failed', { status, error: errorText });
       // Drop the refresh token only when the server definitively rejected it
       // (invalid/expired/revoked grant). A 5xx or 429 is an outage - keeping
       // the cookie lets the session resume once the server is back.
-      const status = tokenResponse.status;
       if (status === 400 || status === 401 || status === 403) {
         cookieStore.delete(cookieName);
         cookieStore.delete(refreshTokenServerCookieName(slot));
         cookieStore.delete(accessTokenCookieName(slot));
+        clearCustomUpstream(cookieStore, slot);
         clearIdToken(cookieStore, slot, request.nextUrl.basePath);
-        return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
+        // Only invalid_grant says the login itself is over. invalid_client, or
+        // a provider refusing an early refresh (#552), says nothing about it,
+        // and the client keeps the account's local data for those.
+        return NextResponse.json({ error: oauthErrorCode(errorText) === 'invalid_grant' ? 'invalid_grant' : 'Refresh failed' }, { status: 401 });
       }
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
 
-    const tokens = await tokenResponse.json();
-
+    const { tokens } = redemption;
     if (!tokens.access_token) {
       logger.error('Refresh response missing access_token', { response: JSON.stringify(tokens).substring(0, 500) });
       return NextResponse.json({ error: 'Invalid token response' }, { status: 502 });
     }
 
-    if (tokens.refresh_token) {
-      const options = getSignInCookieOptions(remember);
-      cookieStore.set(cookieName, tokens.refresh_token, options);
-      // The stamp follows the rotated token, with the same sign-in time and lifetime.
-      if (age) {
-        writeSignInStamp(cookieStore, slot, {
-          signedInAt: age.signedInAt,
-          refreshToken: tokens.refresh_token,
-          ...(age.stamp?.account ? { account: age.stamp.account } : {}),
-        }, options);
-      }
-    }
-
-    const expiresIn = tokens.expires_in || 3600;
-    const cachedAccessToken = cacheAccessToken(cookieStore, slot, tokens.access_token, expiresIn, [tokens.refresh_token], remember);
-    // Providers may reissue the id token on refresh. Only a slot signed in
-    // through the provider keeps one; a password login's slot gains none here.
-    if (typeof tokens.id_token === 'string' && cookieStore.get(idTokenCookieName(slot))) {
-      storeIdToken(cookieStore, slot, tokens.id_token, request.nextUrl.basePath, [tokens.refresh_token, cachedAccessToken], remember);
-    }
+    const { expiresIn } = storeRenewedTokens(cookieStore, slot, { ...tokens, access_token: tokens.access_token }, {
+      remember,
+      age,
+      basePath: request.nextUrl.basePath,
+    });
 
     return NextResponse.json({
       access_token: tokens.access_token,
@@ -322,7 +293,20 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Token refresh error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    // On the desktop this route runs on the user's machine, so an unreachable
+    // mail server lands here. The client signs out after repeated 500s; a 503
+    // tells it to keep the session and try again.
+    if (IS_DESKTOP_BUILD) return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+function oauthErrorCode(body: string): string | null {
+  try {
+    const code = (JSON.parse(body) as { error?: unknown }).error;
+    return typeof code === 'string' ? code : null;
+  } catch {
+    return null;
   }
 }
 
@@ -339,21 +323,25 @@ async function signOutSlot(
 ): Promise<string | null> {
   const cookieName = refreshTokenCookieName(slot);
   const refreshToken = cookieStore.get(cookieName)?.value;
+  // A push preview renewing with this token right now must not write the
+  // rotated one back after this answer cleared it (#1509).
+  if (refreshToken) noteSignedOut(refreshToken);
   const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
-  const idToken = cookieStore.get(idTokenCookieName(slot))?.value;
+  const idToken =cookieStore.get(idTokenCookieName(slot))?.value;
+  const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
 
   // With revocation off (#1388) the token is only dropped from the browser.
   const tokenToRevoke = refreshToken && isRevokeOnSignOutEnabled() ? refreshToken : undefined;
   let endSessionUrl: string | null = null;
   if (tokenToRevoke || endSession) {
-    const metadata = await getMetadata(serverId, { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
+    const metadata = await getMetadata(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
       logger.warn('Failed to discover OAuth metadata during logout', {
         error: err instanceof Error ? err.message : 'Unknown error',
       });
       return null;
     });
-    if (tokenToRevoke) await revokeRefreshToken(tokenToRevoke, serverId, metadata);
-    if (endSession) endSessionUrl = endSessionUrlFor(metadata, serverId, idToken);
+    if (tokenToRevoke) await revokeRefreshToken(tokenToRevoke, serverId, metadata, upstream);
+    if (endSession) endSessionUrl = endSessionUrlFor(metadata, serverId, idToken, upstream);
   }
 
   // Cleared whether or not revocation worked: the browser must not be able
@@ -364,6 +352,7 @@ async function signOutSlot(
     if (cookieStore.get(name)) cookieStore.delete(name);
   }
   clearSignInStamp(cookieStore, slot);
+  if (IS_DESKTOP_BUILD) clearCustomUpstream(cookieStore, slot);
   if (idToken !== undefined) clearIdToken(cookieStore, slot, basePath);
   return endSessionUrl;
 }

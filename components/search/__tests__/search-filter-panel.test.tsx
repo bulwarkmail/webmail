@@ -79,12 +79,12 @@ describe('SearchFilterPanel', () => {
     expect(screen.queryByRole('button', { name: /clear_all/ })).toBeNull();
   });
 
-  it('clears everything and closes on Done or Enter', () => {
+  it('clears everything and closes on Search or Enter', () => {
     const { onClearAll, onDone } = renderPanel({ subject: 'invoice' });
     fireEvent.click(screen.getByRole('button', { name: /clear_all/ }));
     expect(onClearAll).toHaveBeenCalledTimes(1);
     fireEvent.submit(screen.getByLabelText('subject').closest('form')!);
-    fireEvent.click(screen.getByRole('button', { name: 'done' }));
+    fireEvent.click(screen.getByRole('button', { name: 'search' }));
     expect(onDone).toHaveBeenCalledTimes(2);
   });
 });

@@ -53,6 +53,21 @@ describe.each(['vertical', 'horizontal'] as const)('navigation rail (%s)', (orie
   });
 });
 
+describe('phone tab bar with plugin pages', () => {
+  it('keeps Settings out of the part that scrolls and scrolls to the open page', () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    register();
+    const { container } = render(<NavigationRail orientation="horizontal" />);
+
+    const scroller = container.querySelector('[data-mobile-navigation-scroll]')!;
+    expect(scroller.querySelector('a[href="/apps/kanban/board"]')).not.toBeNull();
+    const settings = container.querySelector('a[href="/settings"]')!;
+    expect(scroller.contains(settings)).toBe(false);
+    expect(scrollIntoView.mock.instances[0]).toBe(scroller.querySelector('[aria-current="page"]'));
+  });
+});
+
 describe('Mountain View app grid', () => {
   it('offers plugin pages next to the built-in apps', () => {
     register();
@@ -63,5 +78,29 @@ describe('Mountain View app grid', () => {
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/apps/kanban/board', '/apps/kanban/stats']);
     expect(links[0]).toHaveAttribute('role', 'menuitem');
     expect(screen.getByText('Stats')).toBeInTheDocument();
+  });
+});
+
+describe('tabBarItemWidth', () => {
+  it('leaves entries alone when they all fit', async () => {
+    const { tabBarItemWidth } = await import('../navigation-rail');
+    expect(tabBarItemWidth(338, 6)).toBeNull();
+    expect(tabBarItemWidth(312, 6)).toBeNull();
+    expect(tabBarItemWidth(0, 6)).toBeNull();
+  });
+
+  it('shows whole entries and half of the next when they do not fit', async () => {
+    const { tabBarItemWidth } = await import('../navigation-rail');
+    // 320 px phone with Settings pinned: 268 px for six entries.
+    const width = tabBarItemWidth(268, 6)!;
+    expect(width).toBeGreaterThanOrEqual(52);
+    const visible = 268 / width;
+    expect(visible - Math.floor(visible)).toBeCloseTo(0.5);
+    // The same at any width that overflows.
+    for (const bar of [120, 200, 268, 300, 311]) {
+      const w = tabBarItemWidth(bar, 6)!;
+      expect(w).toBeGreaterThanOrEqual(52);
+      expect(bar / w - Math.floor(bar / w)).toBeCloseTo(0.5);
+    }
   });
 });

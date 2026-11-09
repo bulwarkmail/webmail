@@ -232,6 +232,34 @@ describe('POST /api/auth/session (GHSA-wxcm-j4jc-9fxq)', () => {
     );
   });
 
+  it('refuses password sign-in when only OAuth logins are allowed', async () => {
+    config.oauthEnabled = true;
+    config.oauthOnly = true;
+    const { status, body } = await postSession({
+      serverUrl: SERVER, username: 'alice@example.org', password: 'alice-secret', slot: 0,
+    });
+    expect(status).toBe(403);
+    expect(body.error).toMatch(/disabled/i);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(cookieSet).not.toHaveBeenCalled();
+  });
+
+  it('mints cookies for a password when the OAuth-only fallback is enabled', async () => {
+    config.oauthEnabled = true;
+    config.oauthOnly = true;
+    config.oauthPasswordFallbackEnabled = true;
+    const { status, body } = await postSession({
+      serverUrl: SERVER, username: 'alice@example.org', password: 'alice-secret', slot: 0,
+    });
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      `${SERVER}/.well-known/jmap`,
+      expect.objectContaining({ headers: { Authorization: basic('alice@example.org', 'alice-secret') } }),
+    );
+    expect(cookieSet).toHaveBeenCalledTimes(1);
+  });
+
   it('records the account a bare Bearer claim resolves to, so per-user data is not keyed on the claim', async () => {
     const { status } = await postSession({ serverUrl: SERVER, username: 'mallory', token: 'tok-mallory', slot: 0 });
     expect(status).toBe(200);

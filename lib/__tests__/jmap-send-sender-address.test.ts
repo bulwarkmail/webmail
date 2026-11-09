@@ -77,3 +77,18 @@ describe('sendEmail without a From address from the composer (#1377)', () => {
     expect(created[0].from).toEqual([{ name: 'Sales', email: 'sales@kisaanu.org' }]);
   });
 });
+
+describe('sendEmail names the account the sent message lies in', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('the own account, or the group account a group identity sends from', async () => {
+    const client = createClient('me@example.com');
+    mockServer([{ id: 'identity-1', email: 'me@example.com' }]);
+    expect(await send(client)).toMatchObject({ emailId: 'email-9', emailAccountId: 'account-1' });
+
+    vi.spyOn(client, 'resolveSendAccountId').mockResolvedValue('group-1');
+    expect(await send(client)).toMatchObject({ emailId: 'email-9', emailAccountId: 'group-1' });
+  });
+});

@@ -263,25 +263,74 @@ describe('composer empty subject warning', () => {
     );
   });
 
-  it('does not ask again after Send anyway and a trip back to add an attachment', async () => {
+  // compose-27: the subject and the attachment used to be two dialogs in a row.
+  it('asks about a missing subject and a missing attachment in one dialog', async () => {
     useSettingsStore.setState({ attachmentReminderEnabled: true, attachmentReminderKeywords: ['hello'] } as never);
     try {
       const onSend = vi.fn();
       render(<EmailComposer initialData={DRAFT_WITHOUT_SUBJECT} onSend={onSend} />);
 
       fireEvent.click(sendButton());
-      fireEvent.click(await screen.findByText('empty_subject.send_anyway'));
-      // The body says "Hello", so the attachment reminder stops the send.
-      fireEvent.click(await screen.findByText('forgot_attachment.back'));
-      await waitFor(() => expect(screen.queryByText('forgot_attachment.title')).not.toBeInTheDocument());
 
-      fireEvent.click(sendButton());
+      const dialog = await screen.findByRole('alertdialog');
+      expect(dialog).toHaveTextContent('warnings_title');
+      expect(dialog).toHaveTextContent('warning_subject');
+      expect(dialog).toHaveTextContent('warning_attachment');
+      // Several warnings: no "don't ask again", which would be unclear.
+      expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
 
-      expect(await screen.findByText('forgot_attachment.title')).toBeInTheDocument();
-      expect(screen.queryByText('empty_subject.title')).not.toBeInTheDocument();
+      fireEvent.click(within(dialog).getByText('send_anyway'));
+
+      await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+      expect(screen.queryByText('forgot_attachment.title')).not.toBeInTheDocument();
     } finally {
       useSettingsStore.setState({ attachmentReminderEnabled: false, attachmentReminderKeywords: [] } as never);
     }
+  });
+
+  it('goes back to editing from the combined dialog without sending', async () => {
+    useSettingsStore.setState({ attachmentReminderEnabled: true, attachmentReminderKeywords: ['hello'] } as never);
+    try {
+      const onSend = vi.fn();
+      render(<EmailComposer initialData={DRAFT_WITHOUT_SUBJECT} onSend={onSend} />);
+
+      fireEvent.click(sendButton());
+      fireEvent.click(await screen.findByText('back'));
+
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+      expect(onSend).not.toHaveBeenCalled();
+    } finally {
+      useSettingsStore.setState({ attachmentReminderEnabled: false, attachmentReminderKeywords: [] } as never);
+    }
+  });
+
+  // compose-28: Send works with an empty body and asks first.
+  it('keeps Send enabled with an empty body and asks "Send without text?"', async () => {
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT_WITHOUT_SUBJECT, subject: 'Lunch?', body: '' }} onSend={onSend} />);
+    expect(sendButton()).not.toBeDisabled();
+
+    fireEvent.click(sendButton());
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('empty_text_title');
+    expect(onSend).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByText('send_anyway'));
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend.mock.calls[0][0]).toMatchObject({ subject: 'Lunch?' });
+  });
+
+  it('lists no subject and no text together', async () => {
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT_WITHOUT_SUBJECT, body: '' }} onSend={onSend} />);
+
+    fireEvent.click(sendButton());
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('warning_subject');
+    expect(dialog).toHaveTextContent('warning_text');
+    expect(onSend).not.toHaveBeenCalled();
   });
 
   it('goes back to editing without sending', async () => {
@@ -329,9 +378,8 @@ describe('composer empty subject warning', () => {
     );
     fireEvent.change(screen.getByDisplayValue('Lunch'), { target: { value: '' } });
 
+    // Closing saves the draft; no question unless the save fails.
     act(() => requestCloseRef.current!(vi.fn()));
-    const dialog = await screen.findByRole('alertdialog');
-    fireEvent.click(within(dialog).getByText('save'));
 
     await waitFor(() => expect(createDraft).toHaveBeenCalled());
     expect(createDraft.mock.calls[0][1]).toBe('');

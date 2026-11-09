@@ -99,6 +99,29 @@ describe('reset', () => {
     // A shared everyday preference is not an accessibility setting to reset.
     expect(settings().disableThreading).toBe(true);
   });
+
+  it("gives back the organisation's defaults instead of writing Bulwark's as the user's choice", () => {
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, defaults: { appFont: 'atkinson', fontSize: 'large' } }, loaded: true });
+    settings().applyAdminPolicy();
+    settings().updateSetting('appFont', 'lexend');
+    settings().updateSetting('fontSize', 'huge');
+    render(<AccessibilitySettings />);
+    fireEvent.click(screen.getByRole('button', { name: 'settings.accessibility.reset.button' }));
+    expect(settings().appFont).toBe('atkinson');
+    expect(settings().fontSize).toBe('large');
+    // Nothing is left marked as chosen, so a later change of the default reaches the user.
+    expect(settings().explicitSettings).not.toContain('appFont');
+    expect(settings().explicitSettings).not.toContain('fontSize');
+  });
+
+  it('also resets the plain text font and the send confirmation', () => {
+    settings().updateSetting('plainTextFont', 'mono');
+    settings().updateSetting('sendConfirmation', true);
+    render(<AccessibilitySettings />);
+    fireEvent.click(screen.getByRole('button', { name: 'settings.accessibility.reset.button' }));
+    expect(settings().plainTextFont).toBe('sans');
+    expect(settings().sendConfirmation).toBe(false);
+  });
 });
 
 describe('toast duration', () => {
@@ -110,6 +133,26 @@ describe('toast duration', () => {
     ) as HTMLSelectElement;
     const values = Array.from(select.options).map((o) => o.value);
     expect(values).toEqual(['20', '60', '0']);
+  });
+});
+
+// settings-p3-20 (2026-11-04): sizes in four styles ("87.5%", "88 %", "12 px", "14px").
+// Percentages in the language's own style (German here: "87,5 %"), pixels as "{size} px".
+describe('sizes', () => {
+  const optionsOf = (label: string) =>
+    Array.from((screen.getByRole('combobox', { name: label }) as HTMLSelectElement).options).map((o) => o.textContent ?? '');
+
+  it('writes message text sizes as the language writes percentages', () => {
+    render(<AccessibilitySettings />);
+    const options = optionsOf('settings.accessibility.mail_text_size.label');
+    expect(options.slice(1, 4).map((o) => o.replace(/\s/g, ' '))).toEqual(['87,5 %', '100 %', '112,5 %']);
+  });
+
+  it('writes the sizes for new messages like the smallest-text sizes, "{size} px"', () => {
+    render(<AccessibilitySettings />);
+    const options = optionsOf('settings.accessibility.compose_size.label');
+    expect(options.slice(1, 3)).toEqual(['settings.accessibility.mail_min_font_size.px {"size":14}', 'settings.accessibility.mail_min_font_size.px {"size":16}']);
+    expect(options.some((o) => /\dpx/.test(o))).toBe(false);
   });
 });
 
@@ -128,6 +171,52 @@ describe('read aloud voice', () => {
       expect(settings().readAloudVoice).toBe('uri:Markus');
     } finally {
       vi.unstubAllGlobals();
+    }
+  });
+});
+
+// settings-10 (2026-11-04): Accessibility repeated about twenty settings of
+// other pages, two rows of it called "Notification sound". Only access
+// settings stay; a link row in each section leads to the page with the rest.
+describe('one setting, one place', () => {
+  const borrowed = [
+    'settings.appearance.list_density.label',
+    'settings.appearance.toolbar_labels.label',
+    'settings.email_behavior.always_light_mode.label',
+    'calendar.settings.hover_preview',
+    'settings.email_behavior.group_conversations.label',
+    'settings.email_behavior.show_preview.label',
+    'settings.advanced.sender_favicons.label',
+    'settings.email_behavior.mark_read.label',
+    'settings.email_behavior.return_to_list_after_action.label',
+    'settings.email_behavior.send_delay.label',
+    'settings.email_behavior.confirm_bulk_delete.label',
+    'settings.notifications.email.sound',
+    'settings.notifications.calendar.sound',
+    'settings.notifications.sound_selection.choose',
+    'settings.appearance.favicon_unread_badge.label',
+  ];
+
+  it('draws no row that belongs to another page', () => {
+    const { container } = render(<AccessibilitySettings />);
+    const rows = Array.from(container.querySelectorAll('[data-search-label]')).map((el) => el.getAttribute('data-search-label'));
+    expect(rows.filter((row) => borrowed.includes(row ?? ''))).toEqual([]);
+  });
+
+  it('links to the pages that have them', () => {
+    const goTo: unknown[] = [];
+    const listener = (e: Event) => goTo.push((e as CustomEvent).detail);
+    window.addEventListener('settings-tab-change', listener);
+    try {
+      render(<AccessibilitySettings />);
+      for (const link of ['text', 'light_mode', 'list', 'reading', 'bulk_delete', 'sounds']) {
+        expect(screen.getByText(`uxs_structure.a11y_links.${link}.label`)).toBeTruthy();
+      }
+      const soundsRow = screen.getByText('uxs_structure.a11y_links.sounds.label').closest('[data-search-label]') as HTMLElement;
+      fireEvent.click(within(soundsRow).getByRole('button'));
+      expect(goTo).toEqual([{ tab: 'notifications', section: 'sound' }]);
+    } finally {
+      window.removeEventListener('settings-tab-change', listener);
     }
   });
 });

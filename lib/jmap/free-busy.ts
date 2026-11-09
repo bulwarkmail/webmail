@@ -25,6 +25,14 @@ export const AVAILABILITY_TTL_MS = 3 * 60 * 1000;
  */
 export const RATE_LIMIT_BACKOFF_MS = 60 * 1000;
 
+/**
+ * Stalwart 1.0 allows this many availability calls per account a minute
+ * (x:Calendar.availabilityRateLimit, the default). 0.16 has no limit; counting
+ * there costs nothing.
+ */
+export const AVAILABILITY_CALLS_PER_MINUTE = 100;
+const MINUTE_MS = 60 * 1000;
+
 const access = new WeakMap<IJMAPClient, boolean>();
 const pendingChecks = new WeakMap<IJMAPClient, Promise<boolean>>();
 
@@ -66,6 +74,8 @@ interface CachedLookup {
 interface LookupState {
   cache: Map<string, CachedLookup>;
   backoffUntil: number;
+  /** When each call of the last minute went out, oldest first. */
+  sent: number[];
 }
 
 const lookups = new WeakMap<IJMAPClient, LookupState>();
@@ -73,10 +83,23 @@ const lookups = new WeakMap<IJMAPClient, LookupState>();
 function lookupStateOf(client: IJMAPClient): LookupState {
   let state = lookups.get(client);
   if (!state) {
-    state = { cache: new Map(), backoffUntil: 0 };
+    state = { cache: new Map(), backoffUntil: 0, sent: [] };
     lookups.set(client, state);
   }
   return state;
+}
+
+/**
+ * How many more availability calls this tab can make within the server's
+ * limit right now: none while it backs off after a refusal. The limit is per
+ * account and other tabs and devices spend from it too, so this is an upper
+ * bound; a search that needs more than this is not started.
+ */
+export function availabilityCallsLeft(client: IJMAPClient, now = Date.now()): number {
+  const state = lookupStateOf(client);
+  if (now < state.backoffUntil) return 0;
+  state.sent = state.sent.filter((at) => now - at < MINUTE_MS);
+  return Math.max(0, AVAILABILITY_CALLS_PER_MINUTE - state.sent.length);
 }
 
 /**
@@ -124,6 +147,7 @@ export async function lookUpAvailability(
   if (missing.length > 0 && now < state.backoffUntil) {
     for (const id of missing) results.set(id, Promise.resolve({ error: "rateLimit" }));
   } else if (missing.length > 0) {
+    for (let i = 0; i < missing.length; i++) state.sent.push(now);
     const batch = client.getPrincipalsAvailability!(missing, days.start, days.end)
       .catch((): Record<string, PrincipalAvailability> => ({}));
     for (const id of missing) {

@@ -1,0 +1,95 @@
+# The shared store every Bulwark replica uses. One Valkey with persistence
+# (AOF) and noeviction: an evicting policy would silently drop settings and
+# admin config under memory pressure. A managed Redis or Valkey works as well;
+# then delete this file from kustomization.yaml and point REDIS_URL at it.
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey
+  labels:
+    app.kubernetes.io/name: valkey
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: valkey
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: valkey
+  labels:
+    app.kubernetes.io/name: valkey
+spec:
+  serviceName: valkey
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: valkey
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: valkey
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: valkey
+          image: valkey/valkey:8-alpine
+          command: ["sh", "-c"]
+          args:
+            - >-
+              exec valkey-server
+              --requirepass "$VALKEY_PASSWORD"
+              --appendonly yes
+              --maxmemory 512mb
+              --maxmemory-policy noeviction
+              --dir /data
+          env:
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bulwark-secrets
+                  key: VALKEY_PASSWORD
+          ports:
+            - name: redis
+              containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "REDISCLI_AUTH=\"$VALKEY_PASSWORD\" valkey-cli --no-auth-warning ping | grep -q PONG"]
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "REDISCLI_AUTH=\"$VALKEY_PASSWORD\" valkey-cli --no-auth-warning ping | grep -q PONG"]
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 640Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

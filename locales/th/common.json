@@ -1,5 +1,5 @@
 {
-  "meta_description": "เว็บเมลแบบมินิมอลที่ใช้โปรโตคอล JMAP",
+  "meta_description": "เว็บเมลแบบโฮสต์เองสำหรับอีเมล ปฏิทิน รายชื่อติดต่อ และไฟล์ สร้างบน JMAP",
   "common": {
     "print": "พิมพ์",
     "loading": "กำลังโหลด...",
@@ -41,8 +41,19 @@
     "date_label": "วันที่",
     "subject_label": "เรื่อง"
   },
+  "print_styles": {
+    "title": "การพิมพ์",
+    "description": "ลักษณะของข้อความ รายชื่อติดต่อ และปฏิทินเมื่อพิมพ์ออกมา",
+    "style_label": "รูปแบบการพิมพ์",
+    "style_description": "ส่วนเสริมสามารถเพิ่มรูปแบบได้ เช่น หัวจดหมายที่มีที่อยู่บริษัทของคุณ",
+    "standard": "มาตรฐาน",
+    "from_plugin": "{name} ({plugin})"
+  },
   "top_bar": {
     "more": "ตัวเลือกเพิ่มเติม"
+  },
+  "windowChrome": {
+    "hide_offline_notice": "ซ่อนประกาศออฟไลน์"
   },
   "shell": {
     "resize": "ปรับขนาด",
@@ -98,6 +109,19 @@
     "group_account": "บัญชี",
     "switch_to": "สลับไปที่ {account}"
   },
+  "menuAudit": {
+    "offline_header": "คุณออฟไลน์อยู่ บางการทำงานต้องใช้การเชื่อมต่อ",
+    "files_new_folder": "โฟลเดอร์ใหม่…",
+    "files_new_file": "ไฟล์ใหม่…",
+    "files_new_text_file": "ไฟล์ข้อความใหม่…",
+    "files_upload_files": "อัปโหลดไฟล์…",
+    "files_upload_folder": "อัปโหลดโฟลเดอร์…",
+    "files_share": "แชร์…",
+    "files_share_button": "แชร์",
+    "contacts_add_to_group": "เพิ่มในกลุ่ม…",
+    "contacts_bulk_add_to_group": "เพิ่มในกลุ่ม…",
+    "schedule_send": "กำหนดเวลาส่ง…"
+  },
   "notification_center": {
     "title": "การแจ้งเตือน",
     "mark_all_read": "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด",
@@ -136,9 +160,6 @@
     "username_placeholder": "user@example.com",
     "password_label": "รหัสผ่าน",
     "password_placeholder": "กรอกรหัสผ่านของคุณ",
-    "jmap_endpoint_label": "เซิร์ฟเวอร์ JMAP",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "เซิร์ฟเวอร์ต้องอนุญาตคำขอ CORS จากโดเมนนี้",
     "jmap_server_label": "เซิร์ฟเวอร์",
     "jmap_server_auto_picked": "เลือกเซิร์ฟเวอร์จากโดเมนอีเมลของคุณโดยอัตโนมัติ",
     "sign_in": "เข้าสู่ระบบ",
@@ -159,7 +180,7 @@
     },
     "show_password": "แสดงรหัสผ่าน",
     "hide_password": "ซ่อนรหัสผ่าน",
-    "totp_toggle": "ฉันมีรหัสยืนยันตัวตน (2FA)",
+    "totp_toggle": "ฉันมีรหัสจากแอปยืนยันตัวตน",
     "token_toggle": "เข้าสู่ระบบด้วยโทเค็น (Access Token)",
     "password_toggle": "เข้าสู่ระบบด้วยรหัสผ่าน",
     "token_label": "โทเค็นการเข้าถึง (Access Token)",
@@ -242,6 +263,33 @@
     "code_label": "รหัสยืนยันตัวตน",
     "verify": "ยืนยัน"
   },
+  "ux_p3_words": {
+    "appearance_description": "เปลี่ยนรูปลักษณ์ของ {appName}",
+    "text_size_app": "ปรับขนาดข้อความทั้งหมดในแอป 100% คือขนาดปกติ",
+    "scrollbars_app": "ใช้แถบเลื่อนของระบบเอง ซึ่งกว้างกว่าและจับได้ง่ายกว่า",
+    "voice_app": "เสียงที่อ่านข้อความออกเสียง รายการแสดงเสียงที่คอมพิวเตอร์เครื่องนี้มีสำหรับภาษาของอินเทอร์เฟซ",
+    "voice_default_app": "เสียงของระบบ",
+    "visual_alerts_app": "ทำให้ชื่อหน้าต่างกะพริบช้าๆ เมื่อมีอีเมลใหม่หรือการเตือน และแสดงการเตือนบนหน้าจอจนกว่าคุณจะปิด",
+    "sounds_link_app": "เสียงแจ้งเตือนและจำนวนที่ยังไม่อ่านบนไอคอนในแถบงาน ตั้งค่าได้ในหน้าการแจ้งเตือน",
+    "writing_language_app": "ภาษาที่คุณใช้เขียนเป็นประจำ การพิสูจน์อักษรและการตรวจตัวสะกดจะใช้ภาษานี้",
+    "badge_all_app": "ตัวเลขบนไอคอนในแถบงานและในถาดระบบ จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้",
+    "badge_all_browser": "ตัวเลขบนแท็บและไอคอนแอป จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้",
+    "dnd_title": "ห้ามรบกวน",
+    "pause_label": "หยุดการแจ้งเตือนชั่วคราว",
+    "pause_description": "ไม่มีเสียง ป๊อปอัป หรือประกาศด้วยเสียงสำหรับอีเมลใหม่ จนกว่าคุณจะปิดตัวเลือกนี้อีกครั้ง",
+    "dnd_link_app": "หยุดการแจ้งเตือนชั่วคราวและตั้งช่วงเวลาเงียบได้ในหน้าการแจ้งเตือน",
+    "dnd_link_browser": "หยุดการแจ้งเตือนชั่วคราวได้ในหน้าการแจ้งเตือน",
+    "backup_app": "ส่งออกการตั้งค่าเป็นไฟล์ แล้วนำเข้าบนอุปกรณ์อื่นของคุณ",
+    "sync_app": "อุปกรณ์อื่นที่ลงชื่อเข้าใช้บัญชีนี้จะได้รับการตั้งค่าเดียวกัน",
+    "progress_attachments": "กำลังดาวน์โหลดไฟล์แนบ",
+    "progress_events": "กำลังดาวน์โหลดกิจกรรม",
+    "progress_contacts": "กำลังดาวน์โหลดรายชื่อติดต่อ",
+    "progress_files_list": "กำลังแสดงรายการไฟล์",
+    "progress_other": "กำลังดาวน์โหลด",
+    "keep_description": "เก็บอีเมล ปฏิทิน รายชื่อติดต่อ และไฟล์ที่คุณเก็บไว้ใช้แบบออฟไลน์ในไฟล์ ไว้ในอุปกรณ์นี้แบบเข้ารหัส เมื่อออฟไลน์คุณอ่าน ติดธง และย้ายอีเมลได้ และสิ่งที่คุณเขียนจะรออยู่ในกล่องขาออก เมื่อออกจากระบบทุกอย่างจะถูกลบ",
+    "filter_value_placeholder": "ค่า",
+    "filter_values_hint": "หากต้องการหลายค่า ให้คั่นด้วยเครื่องหมายจุลภาค"
+  },
   "sidebar": {
     "sign_in_again": "ลงชื่อเข้าใช้อีกครั้ง",
     "close": "ปิดแถบด้านข้าง",
@@ -257,7 +305,7 @@
     "sign_out_of": "ออกจากระบบ {account}",
     "sign_out_all": "ออกจากระบบทุกบัญชี",
     "add_account": "เพิ่มบัญชี",
-    "set_as_default": "ตั้งเป็นค่าเริ่มต้น",
+    "set_as_default": "เปิดบัญชีนี้เมื่อเริ่มต้น",
     "switch_account": "สลับบัญชี",
     "contacts": "ผู้ติดต่อ",
     "calendar": "ปฏิทิน",
@@ -308,6 +356,7 @@
     },
     "clear_search": "ล้างการค้นหา",
     "vacation_active": "เปิดใช้งานการตอบกลับอัตโนมัติอยู่",
+    "vacation_turn_off": "ปิด",
     "demo_banner": "โหมดทดลองใช้งาน (Demo)",
     "demo_reset": "รีเซ็ตข้อมูล",
     "demo_tour": "แนะนำการใช้งาน",
@@ -345,6 +394,14 @@
     "mv_manage_account": "จัดการบัญชีของคุณ",
     "mv_storage_used": "ใช้ไป {percent}% จาก {total}",
     "accessibility": "การเข้าถึง"
+  },
+  "account_unread": {
+    "others": "ยังไม่ได้อ่านในบัญชีอื่น: {count}",
+    "badge_all_accounts": {
+      "label": "นับอีเมลที่ยังไม่ได้อ่านของทุกบัญชี",
+      "description": "ตัวเลขบนแท็บ ไอคอนแอป และถาดระบบ จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้"
+    },
+    "empty_hint": "คุณสามารถล้างโฟลเดอร์{folder}เพื่อลบข้อความทั้งหมดอย่างถาวร"
   },
   "language": {
     "title": "ภาษา",
@@ -397,6 +454,159 @@
   },
   "unified_mailbox": {
     "search_unavailable": "ไม่สามารถค้นหาในมุมมองรวมศูนย์ได้"
+  },
+  "mail_import": {
+    "menu_import": "นำเข้าอีเมล…",
+    "settings_label": "นำเข้าอีเมล",
+    "settings_description": "นำอีเมลเข้าจากไฟล์ .eml, ZIP, mbox หรือ .pst และ .ost ของ Outlook",
+    "settings_button": "นำเข้า…",
+    "title": "นำเข้าอีเมล",
+    "description": "เลือกไฟล์ .eml, .zip, .mbox หรือ .pst และ .ost ของ Outlook",
+    "choose_files": "เลือกไฟล์…",
+    "chosen_files": "ไฟล์ที่เลือก",
+    "remove_file": "เอา {name} ออก",
+    "format_eml": "ข้อความ",
+    "format_zip": "ไฟล์บีบอัด ZIP",
+    "format_mbox": "ไฟล์ mbox",
+    "format_pst": "ไฟล์ข้อมูล Outlook",
+    "target_label": "นำเข้าไปที่",
+    "target_top": "ระดับบนสุด",
+    "keep_folders": "สร้างโฟลเดอร์จากไฟล์ขึ้นใหม่",
+    "keep_folders_hint": "โฟลเดอร์ที่ชื่อเดียวกันจะถูกใช้ซ้ำ",
+    "resume": "ทำต่อจากจุดที่การนำเข้าไฟล์เหล่านี้ครั้งล่าสุดหยุดไว้ (ข้อความที่ทำแล้ว: {count})",
+    "quota_note": "เซิร์ฟเวอร์หลายแห่งรับจากผู้ใช้หนึ่งคนได้เพียงประมาณ 1000 ข้อความหรือ 50 MB ต่อชั่วโมง การนำเข้าที่ใหญ่กว่านี้จะหยุดพักแล้วทำต่อเอง",
+    "start": "นำเข้า",
+    "cancel": "ยกเลิก",
+    "running_title": "กำลังนำเข้าอีเมล",
+    "progress_label": "ความคืบหน้าการนำเข้า",
+    "status_imported": "ข้อความที่นำเข้าแล้ว: {count}",
+    "reading_file": "กำลังอ่าน {name}",
+    "paused": "หยุดพักถึง {time} เซิร์ฟเวอร์รับการอัปโหลดได้สูงสุด {files} ครั้งหรือ {size} ต่อชั่วโมง การนำเข้าจะทำต่อเอง",
+    "paused_generic": "หยุดพักถึง {time} ถึงขีดจำกัดการอัปโหลดของเซิร์ฟเวอร์แล้ว การนำเข้าจะทำต่อเอง",
+    "background": "ทำงานเบื้องหลัง",
+    "cancel_import": "ยกเลิกการนำเข้า",
+    "chip": "กำลังนำเข้าอีเมล: {percent}%",
+    "chip_paused": "การนำเข้าหยุดพักถึง {time}",
+    "done_title": "นำเข้าเสร็จแล้ว",
+    "cancelled_title": "ยกเลิกการนำเข้าแล้ว",
+    "failed_title": "การนำเข้าหยุดลง",
+    "summary_imported": "ข้อความที่นำเข้าแล้ว: {count}",
+    "summary_folders": "โฟลเดอร์ที่สร้าง: {count}",
+    "summary_skipped": "ไม่ได้นำเข้า:",
+    "skip_too_large": "ใหญ่กว่าที่เซิร์ฟเวอร์รับได้: {count}",
+    "skip_deleted": "ถูกลบใน Thunderbird: {count}",
+    "skip_embedded": "ข้อความที่แนบอยู่ในข้อความอื่น: {count}",
+    "skip_contact": "รายชื่อติดต่อ: {count}",
+    "skip_calendar": "รายการปฏิทิน: {count}",
+    "skip_other": "รายการอื่น: {count}",
+    "summary_failed": "นำเข้าไม่ได้: {count}",
+    "failure_invalid": "ไม่ใช่ข้อความที่ถูกต้อง",
+    "untitled": "(ไม่มีหัวเรื่อง)",
+    "cancelled_hint": "หากต้องการทำต่อภายหลัง ให้นำเข้าไฟล์เดิมไปยังโฟลเดอร์เดิมอีกครั้ง",
+    "close": "ปิด",
+    "pst_note": "จากไฟล์ Outlook จะนำเข้าเฉพาะอีเมล รายชื่อติดต่อ รายการปฏิทิน และงานจะถูกนับแล้วข้ามไป",
+    "pst_error_encrypted": "ไฟล์ Outlook นี้ใช้การเข้ารหัสระดับสูงที่ Bulwark อ่านไม่ได้ ใน Outlook ให้ส่งออกอีเมลไปยังไฟล์ .pst ใหม่ที่ไม่เข้ารหัส",
+    "pst_error_not_pst": "ไฟล์นี้ไม่ใช่ไฟล์ข้อมูล Outlook ที่ Bulwark อ่านได้",
+    "pst_error_unreadable": "Bulwark อ่านไฟล์ Outlook นี้ไม่ได้",
+    "pst_error_worker": "ตัวอ่านไฟล์ Outlook โหลดไม่สำเร็จ โหลดหน้าใหม่แล้วลองอีกครั้ง",
+    "error_over_quota": "กล่องจดหมายเต็ม การนำเข้าจึงหยุดลง เคลียร์พื้นที่แล้วนำเข้าไฟล์เดิมไปยังโฟลเดอร์เดิมอีกครั้งเพื่อทำต่อ",
+    "error_forbidden": "คุณไม่มีสิทธิ์เพิ่มอีเมลในโฟลเดอร์นี้ การนำเข้าจึงหยุดลง",
+    "error_failures": "ข้อความล้มเหลวติดต่อกันมากเกินไป การนำเข้าจึงหยุดลง นำเข้าไฟล์เดิมไปยังโฟลเดอร์เดิมอีกครั้งภายหลังเพื่อทำต่อ",
+    "error_network": "การเชื่อมต่อกับเซิร์ฟเวอร์ล้มเหลวซ้ำๆ การนำเข้าจึงหยุดลง นำเข้าไฟล์เดิมไปยังโฟลเดอร์เดิมอีกครั้งเพื่อทำต่อ",
+    "error_busy": "ไฟล์เหล่านี้กำลังถูกนำเข้าในอีกแท็บหนึ่งอยู่แล้ว",
+    "retry_hint": "นำเข้าไฟล์เดิมไปยังโฟลเดอร์เดิมอีกครั้งเพื่อลองข้อความที่ล้มเหลวอีกรอบ",
+    "skip_unreadable": "อ่านไม่ได้ในไฟล์ Outlook: {count}",
+    "keep_folders_top_hint": "ในระดับบนสุด กล่องจดหมายเข้า รายการที่ส่ง รายการที่ลบ และที่คล้ายกันจะเข้าไปในโฟลเดอร์ของคุณเอง",
+    "toast_done": "นำเข้าเสร็จแล้ว นำเข้าแล้ว: {imported} ล้มเหลว: {failed}",
+    "toast_stopped": "การนำเข้าหยุดลง",
+    "toast_show": "แสดง",
+    "section_title": "ไฟล์อีเมล",
+    "section_description": "นำอีเมลเข้าจากไฟล์ หรือบันทึกอีเมลของคุณเป็นไฟล์"
+  },
+  "mail_export": {
+    "menu_export": "ส่งออกโฟลเดอร์…",
+    "settings_label": "ส่งออกอีเมลทั้งหมด",
+    "settings_description": "บันทึกทุกโฟลเดอร์ของบัญชีนี้ลงในไฟล์ ZIP เดียว เป็นไฟล์ mbox หรือ .eml",
+    "settings_button": "ส่งออก…",
+    "title_folder": "ส่งออก “{name}”",
+    "title_account": "ส่งออกอีเมลทั้งหมด",
+    "description_folder": "บันทึกข้อความในโฟลเดอร์นี้เป็นไฟล์",
+    "description_account": "บันทึกทุกโฟลเดอร์ของบัญชีนี้ลงในไฟล์ ZIP เดียว",
+    "format_label": "รูปแบบ",
+    "format_mbox_folder": "ไฟล์ mbox",
+    "format_eml_folder": "ZIP ของไฟล์ .eml",
+    "format_mbox_account": "ZIP ที่มีไฟล์ mbox หนึ่งไฟล์ต่อโฟลเดอร์",
+    "format_eml_account": "ZIP ของไฟล์ .eml หนึ่งโฟลเดอร์ต่อโฟลเดอร์อีเมล",
+    "hint_mbox": "Thunderbird, Apple Mail และโปรแกรมอีเมลส่วนใหญ่เปิดไฟล์ mbox ได้",
+    "hint_eml": "หนึ่งไฟล์ต่อหนึ่งข้อความ ซึ่งโปรแกรมอีเมลใดก็เปิดได้",
+    "save_picker": "คุณเลือกเองว่าจะบันทึกไฟล์ไว้ที่ใด",
+    "save_download": "ไฟล์จะถูกดาวน์โหลดเมื่อส่งออกเสร็จ",
+    "save_memory": "เบราว์เซอร์นี้เก็บการส่งออกทั้งหมดไว้ในหน่วยความจำ จึงบันทึกได้สูงสุด 200 MB หากมากกว่านั้นให้ใช้ Chrome หรือ Edge หรือส่งออกทีละโฟลเดอร์",
+    "start": "ส่งออก",
+    "cancel": "ยกเลิก",
+    "running_title": "กำลังส่งออกอีเมล",
+    "progress_label": "ความคืบหน้าการส่งออก",
+    "status_exported": "ข้อความที่ส่งออกแล้ว: {count} จาก {total}",
+    "paused": "หยุดพักถึง {time}: เซิร์ฟเวอร์ขอให้พัก การส่งออกจะทำต่อเอง",
+    "background": "ทำงานเบื้องหลัง",
+    "cancel_export": "ยกเลิกการส่งออก",
+    "chip": "กำลังส่งออกอีเมล: {percent}%",
+    "chip_paused": "การส่งออกหยุดพักถึง {time}",
+    "done_title": "ส่งออกเสร็จแล้ว",
+    "cancelled_title": "ยกเลิกการส่งออกแล้ว",
+    "failed_title": "การส่งออกหยุดลง",
+    "summary_exported": "ข้อความที่ส่งออกแล้ว: {count}",
+    "summary_file": "บันทึกเป็น {name} ({size}) แล้ว",
+    "summary_failed": "ส่งออกไม่ได้: {count}",
+    "download_again": "ดาวน์โหลดอีกครั้ง",
+    "too_large": "การส่งออกใหญ่เกินกว่าที่เบราว์เซอร์นี้เก็บไว้ในหน่วยความจำได้ ให้ใช้ Chrome หรือ Edge หรือส่งออกทีละโฟลเดอร์",
+    "close": "ปิด",
+    "untitled": "(ไม่มีหัวเรื่อง)",
+    "toast_done": "ส่งออกเสร็จแล้ว: {name}",
+    "toast_stopped": "การส่งออกหยุดลง",
+    "toast_show": "แสดง"
+  },
+  "desktopImport": {
+    "find": "ค้นหาข้อมูล Thunderbird และ Outlook…",
+    "find_hint": "ค้นหาในตำแหน่งปกติบนคอมพิวเตอร์เครื่องนี้ Bulwark จะถามคุณก่อน",
+    "scan_declined": "ไม่ได้ค้นหา เพราะคุณไม่อนุญาต",
+    "scan_failed": "ค้นหาไม่สำเร็จ ลองอีกครั้ง",
+    "read_declined": "ไม่ได้อ่านไฟล์ใด เพราะคุณไม่อนุญาต",
+    "read_failed": "ไม่สามารถอ่านไฟล์เหล่านี้ได้อีก ค้นหาอีกครั้ง",
+    "nothing_found": "ไม่พบโปรไฟล์ Thunderbird หรือไฟล์ข้อมูล Outlook ในตำแหน่งปกติ หากต้องการนำเข้าไฟล์จากที่อื่น ให้ใช้ เลือกไฟล์",
+    "found_list": "ข้อมูลเมลที่พบบนคอมพิวเตอร์เครื่องนี้",
+    "outlook_files": "ไฟล์ข้อมูล Outlook",
+    "thunderbird_profile": "โปรไฟล์ Thunderbird {name}",
+    "address_book": "สมุดที่อยู่ของ {name}",
+    "message_count": "{count, plural, other {# ข้อความ}}",
+    "contact_count": "{count, plural, other {# รายชื่อ}}",
+    "confirm": "{count, plural, other {ใช้ # รายการนี้…}}",
+    "back": "กลับ",
+    "estimate": "เลือกแล้ว {size} เซิร์ฟเวอร์จำนวนมาก รวมถึง Stalwart รับได้เพียงประมาณ 1000 ข้อความหรือ 50 MB ต่อชั่วโมงจากผู้ใช้หนึ่งคน จึงใช้เวลาอย่างน้อย {time} เมื่อถึงขีดจำกัด การนำเข้าจะหยุดชั่วคราวแล้วทำต่อเอง โดยทำงานในพื้นหลังและทำต่อหลังรีสตาร์ท",
+    "duration_hours": "{count, plural, other {# ชั่วโมง}}",
+    "duration_days": "{count, plural, other {# วัน}}",
+    "time_left": "เหลืออย่างน้อย {time} ตามขีดจำกัดการอัปโหลดของเซิร์ฟเวอร์ ระหว่างนี้คุณทำงานต่อได้",
+    "thunderbird_running": "Thunderbird กำลังทำงาน ปิดก่อน หากโปรแกรมเปลี่ยนโฟลเดอร์ระหว่างการนำเข้า โฟลเดอร์นั้นจะเริ่มใหม่ และข้อความที่นำเข้าแล้วจะถูกข้าม",
+    "ost_refused": "ไม่แสดง: {names} ไฟล์ .ost ของ Outlook เป็นเพียงสำเนาในเครื่องของกล่องจดหมายและนำเข้าที่นี่ไม่ได้ ให้ส่งออกเมลใน Outlook เป็นไฟล์ .pst แทน",
+    "calendars_left_out": "ปฏิทิน Thunderbird จะไม่ถูกนำเข้า ส่งออกจาก Thunderbird เป็นไฟล์ .ics แล้วนำเข้าในปฏิทิน",
+    "pst_items_left_out": "จากไฟล์ Outlook จะนำเข้าเฉพาะเมล ไม่รวมรายชื่อหรือปฏิทิน",
+    "picked": "{count, plural, other {# โฟลเดอร์และไฟล์จากคอมพิวเตอร์เครื่องนี้}}",
+    "remove_picked": "เอาไฟล์เหล่านี้ออก",
+    "contacts_picked": "{count, plural, other {# รายชื่อจาก Thunderbird จะเข้าสู่รายชื่อของคุณ}}",
+    "contacts_added": "{count, plural, other {เพิ่ม # รายชื่อจาก Thunderbird แล้ว}}",
+    "contacts_failed": "ไม่สามารถเพิ่มรายชื่อบางรายการจาก Thunderbird ได้",
+    "files_refused": "ข้ามไป เพราะอ่านไม่ได้อีก: {names}",
+    "skip_seen": "ข้ามข้อความที่การนำเข้าครั้งก่อนใส่ไว้ในโฟลเดอร์เดียวกันแล้ว",
+    "skip_duplicate": "{count, plural, other {# ข้อความเคยนำเข้าแล้ว}}",
+    "file_unavailable": "ไฟล์มีการเปลี่ยนแปลงหรืออ่านไม่ได้อีก ปิด Thunderbird แล้วนำเข้าอีกครั้ง ข้อความที่นำเข้าแล้วจะถูกข้าม",
+    "resume_gone": "การนำเข้าจากคอมพิวเตอร์เครื่องนี้ดำเนินต่อไม่ได้ เพราะไฟล์หายไป",
+    "pst_in_use": "อ่าน {names} ไม่ได้ขณะที่ Outlook เปิดไฟล์อยู่ ปิด Outlook แล้วค้นหาอีกครั้ง",
+    "description": "ค้นหาเมลบนคอมพิวเตอร์เครื่องนี้ หรือเลือกไฟล์ .eml, .zip, .mbox หรือ Outlook .pst",
+    "settings_description": "นำเมลเข้าจาก Thunderbird หรือจากไฟล์ .eml, ZIP, mbox หรือ Outlook .pst",
+    "resume_refused": "ยังอ่านไม่ได้ตอนนี้: {names} ส่วนที่เหลือทำต่อไป และจะลองรายการเหล่านี้อีกครั้งเมื่อเริ่มครั้งถัดไป",
+    "resume_stop_trying": "เลิกลอง",
+    "resume_hand_picked": "เลือกไฟล์เหล่านี้อีกครั้งเพื่อนำเข้าส่วนที่เหลือ: {names} ข้อความที่นำเข้าแล้วจะถูกข้าม",
+    "scan_incomplete": "การค้นหาใช้เวลานานเกินไปและถูกหยุด นี่คือสิ่งที่พบจนถึงตอนนั้น"
   },
   "recover_deleted": {
     "tab": "กู้คืนรายการที่ลบ",
@@ -461,6 +671,17 @@
     "expand_named": "ขยายการสนทนา: {subject}",
     "collapse_named": "ย่อการสนทนา: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}",
+    "return_to_list_follows_layout": "จนกว่าคุณจะเปลี่ยน ค่านี้จะเป็นไปตามเลย์เอาต์: ปิดเมื่อรายการและข้อความอยู่เคียงข้างกัน และเปิดในกรณีอื่น"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "แสดงตัวสลับบัญชีเหนือโฟลเดอร์ และปุ่มเขียนจดหมายอยู่ด้านล่าง ปิดตัวเลือกนี้เพื่อให้ปุ่มเขียนจดหมายอยู่แทนที่ตัวสลับบัญชี"
+  },
+  "mail_p2_conv": {
+    "show_message": "แสดงข้อความ",
+    "back_to_reply": "กลับไปที่คำตอบของคุณ"
+  },
   "notifications": {
     "email_sent": "ส่งอีเมลแล้ว",
     "email_deleted": "ลบอีเมลแล้ว",
@@ -517,8 +738,6 @@
     "templates_import_errors": "ไม่สามารถนำเข้าแม่แบบบางรายการได้",
     "templates_import_empty": "ไม่พบแม่แบบข้อความในไฟล์",
     "export_email_error": "ส่งออกอีเมลไม่สำเร็จ",
-    "import_email_success": "นำเข้าอีเมลเรียบร้อยแล้ว",
-    "import_email_error": "นำเข้าอีเมลไม่สำเร็จ",
     "rule_created": "สร้างกฎตัวกรองแล้ว",
     "rule_merged": "เพิ่มลงในกฎ “{name}” แล้ว",
     "rule_already_covered": "ครอบคลุมอยู่ในกฎ “{name}” แล้ว",
@@ -541,12 +760,75 @@
     "tag_removed_count": "{count, plural, other {นำป้ายกำกับออกจากอีเมล # ฉบับแล้ว}}",
     "new_mail_count": "{count, plural, other {ข้อความใหม่ # ฉบับ}}"
   },
+  "org_notice": {
+    "label": "ประกาศ",
+    "dismiss": "ปิดประกาศ",
+    "severity_info": "ข้อมูล",
+    "severity_warning": "คำเตือน",
+    "severity_critical": "สำคัญ"
+  },
+  "vacation_templates": {
+    "title": "เทมเพลตขององค์กร",
+    "description": "เริ่มจากคำตอบที่องค์กรของคุณเขียนไว้ คุณแก้ไขข้อความได้ภายหลัง",
+    "pick_label": "ใช้เทมเพลต",
+    "pick_placeholder": "เลือกเทมเพลต",
+    "deputy_label": "ที่อยู่ของผู้ทำหน้าที่แทน",
+    "deputy_placeholder": "colleague@example.com",
+    "deputy_hint": "คำตอบจะระบุเพื่อนร่วมงานคนนี้สำหรับเรื่องด่วน",
+    "deputy_missing": "ป้อนที่อยู่ของผู้ทำหน้าที่แทนก่อน",
+    "deputy_name_label": "ชื่อของผู้ทำหน้าที่แทน",
+    "deputy_name_missing": "ป้อนชื่อของผู้ทำหน้าที่แทนก่อน",
+    "apply": "ใช้ข้อความนี้",
+    "apply_hint": "แทนที่หัวเรื่องและข้อความด้านล่าง"
+  },
+  "uxs_vacation": {
+    "default_subject": "ไม่อยู่ที่สำนักงาน",
+    "default_message": "ขอบคุณสำหรับอีเมล ตอนนี้ฉันไม่อยู่ที่สำนักงาน และจะตอบกลับเมื่อกลับมา",
+    "write_message_first": "เขียนข้อความก่อน ถ้าไม่มีข้อความ ผู้คนจะได้รับคำตอบว่างเปล่า",
+    "enter_address_first": "ใส่ที่อยู่ที่จะส่งต่อไปก่อน",
+    "message_title": "คำตอบของคุณ",
+    "message_label": "ข้อความ",
+    "message_description": "สิ่งที่คนที่เขียนถึงคุณจะได้รับ ใช้การจัดรูปแบบและลิงก์ได้",
+    "from_label": "ตั้งแต่ (ไม่บังคับ)",
+    "from_description": "เว้นว่างไว้เพื่อเริ่มทันที",
+    "until_label": "จนถึง (ไม่บังคับ)",
+    "until_description": "เว้นว่างไว้เพื่อตอบกลับต่อไปจนกว่าคุณจะปิด",
+    "from_placeholder": "ทันที",
+    "until_placeholder": "จนกว่าคุณจะปิด",
+    "audience_all": "ทุกคน",
+    "audience_internal": "เฉพาะองค์กรของฉัน ({domains})",
+    "audience_external": "เฉพาะคนนอกองค์กรของฉัน",
+    "signature_label": "ลายเซ็น",
+    "signature_plain_label": "ลายเซ็น (ข้อความธรรมดา)",
+    "signature_plain_description": "คุณเขียนเป็นข้อความธรรมดาเท่านั้น (การเขียน) ลายเซ็นจึงเป็นข้อความธรรมดาด้วย",
+    "edit_as_html": "แก้ไขเป็น HTML",
+    "edit_formatted": "กลับไปที่ตัวแก้ไขแบบจัดรูปแบบ",
+    "html_source_label": "ลายเซ็นแบบ HTML",
+    "signature_size": "ใช้ไป {bytes} จาก {max} ไบต์",
+    "signature_too_long": "ยาวเกินไปสำหรับเซิร์ฟเวอร์ ({bytes} จาก {max} ไบต์) โปรดทำให้สั้นลง"
+  },
+  "retention_notice": {
+    "line": "ข้อความที่นี่จะถูกลบ {count, plural, other {# วัน}} หลังจากย้ายมาที่นี่"
+  },
+  "device_policy": {
+    "downloads_off": "องค์กรของคุณปิดการดาวน์โหลด",
+    "download_off_named": "{name}: องค์กรของคุณปิดการดาวน์โหลด",
+    "download_blocked": "องค์กรของคุณปิดการดาวน์โหลด",
+    "export_blocked": "องค์กรของคุณปิดการส่งออกอีเมล",
+    "print_blocked": "องค์กรของคุณปิดการพิมพ์"
+  },
   "third_party": {
     "push_needs_relay": "การแจ้งเตือนแบบพุชต้องใช้ push relay ที่องค์กรของคุณดูแล แต่ยังไม่ได้ตั้งค่าไว้ อีเมลใหม่จะยังแสดงขณะที่เปิดแอปอยู่",
     "relay_desc": "มีให้เลือกเฉพาะรีเลย์ขององค์กรคุณเอง เนื่องจากเซิร์ฟเวอร์นี้ไม่ติดต่อบริการภายนอก",
     "relay_none": "ยังไม่ได้ตั้งค่า",
     "plugin_refused": "ไม่ได้เริ่มทำงาน: ปลั๊กอินนี้เชื่อมต่อกับบริการภายนอก ซึ่งองค์กรของคุณปิดไว้",
     "remote_content_blocked": "องค์กรของคุณบล็อกเนื้อหาจากเซิร์ฟเวอร์อื่น จึงไม่แสดงรูปภาพภายนอกในข้อความนี้"
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "องค์กรของคุณบล็อกเนื้อหาระยะไกลในอีเมลทั้งหมด จึงไม่โหลดแม้จากผู้ส่งที่เชื่อถือได้"
+  },
+  "trusted_senders_book": {
+    "unavailable": "ใช้ไม่ได้: บัญชีนี้เก็บสมุดที่อยู่บนเซิร์ฟเวอร์ไม่ได้ รายชื่อจะอยู่บนอุปกรณ์นี้"
   },
   "email_list": {
     "sections": {
@@ -566,6 +848,9 @@
     "no_search_results": "ไม่พบผลการค้นหา",
     "no_search_results_description": "ลองปรับเปลี่ยนคำค้นหาหรือตัวกรองของคุณ",
     "more_results_searching": "กำลังค้นหาผลลัพธ์เพิ่มเติม…",
+    "resize_plugin_results": "ปรับขนาดผลลัพธ์จากปลั๊กอิน",
+    "compact_plugin_results": "หนึ่งบรรทัดต่อผลลัพธ์",
+    "plugin_result_score": "{count} จาก 5",
     "loading": "กำลังโหลดอีเมล...",
     "unread": "ยังไม่อ่าน",
     "to_me": "ถึงฉัน",
@@ -654,6 +939,29 @@
       "position": "{more, select, yes {หน้า {page} จาก {pages} หรือมากกว่า} other {หน้า {page} จาก {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {เลือกแล้ว # การสนทนา}}",
+    "search_count": "{conversations, plural, other {# การสนทนา}} ({messages, plural, other {# ข้อความ}})",
+    "conversation_count": "{count, plural, other {# การสนทนา}}",
+    "archived": "เก็บถาวรแล้ว",
+    "moved_to_trash": "ย้ายไปถังขยะแล้ว",
+    "moved_to": "ย้ายไปยัง {mailbox} แล้ว",
+    "moved_count_to": "{count, plural, other {ย้าย # อีเมลไปยัง {mailbox} แล้ว}}",
+    "new_folder_title": "สร้างโฟลเดอร์ใหม่",
+    "new_subfolder_title": "สร้างโฟลเดอร์ย่อยใหม่"
+  },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {เก็บถาวร # การสนทนาแล้ว}}",
+    "conversations_to_trash": "{count, plural, other {ย้าย # การสนทนาไปถังขยะแล้ว}}",
+    "conversations_deleted": "{count, plural, other {ลบ # การสนทนาแล้ว}}",
+    "conversations_moved_to": "{count, plural, other {ย้าย # การสนทนาไปยัง {mailbox} แล้ว}}",
+    "conversations_moved": "{count, plural, other {ย้าย # การสนทนาแล้ว}}",
+    "select_all_in_folder": "{count, plural, other {เลือกการสนทนาทั้งหมด # รายการใน {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, other {เลือกอีเมลทั้งหมด # ฉบับใน {folder}}}",
+    "select_all_conversations": "{count, plural, other {เลือกการสนทนาทั้งหมด # รายการ}}",
+    "select_all_emails": "{count, plural, other {เลือกอีเมลทั้งหมด # ฉบับ}}",
+    "selecting_all": "กำลังเลือก…"
+  },
   "shared_tags": {
     "title": "ป้ายกำกับที่แชร์",
     "description": "ป้ายกำกับของกล่องจดหมายกลุ่มของคุณ ทุกคนในกลุ่มจะเห็นชื่อและสีเดียวกันบนอีเมลของกลุ่ม",
@@ -731,6 +1039,13 @@
     },
     "find_emails_from": "ค้นหาอีเมลจาก {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "ค้นหาโฟลเดอร์",
+    "recent": "ล่าสุด",
+    "no_match": "ไม่มีโฟลเดอร์ที่ตรงกัน",
+    "choose_folder": "เลือกโฟลเดอร์…",
+    "current_folder": "อยู่ใน {folder} แล้ว"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "ทำเครื่องหมายโฟลเดอร์ว่าอ่านแล้ว",
     "mark_folder_tree_read": "ทำเครื่องหมายโฟลเดอร์และโฟลเดอร์ย่อยว่าอ่านแล้ว",
@@ -739,9 +1054,9 @@
     "new_folder": "สร้างโฟลเดอร์ใหม่…",
     "rename": "เปลี่ยนชื่อ…",
     "share": "แชร์…",
-    "import_email": "นำเข้าไฟล์ .eml หรือ .zip…",
     "empty_folder": "ล้างข้อมูลในโฟลเดอร์",
     "empty_folder_generic": "ล้างข้อมูลในโฟลเดอร์",
+    "empty_folder_all_accounts": "ล้างถังขยะ (ทุกบัญชี)",
     "delete_folder": "ลบโฟลเดอร์",
     "refresh": "รีเฟรช",
     "hide_shared_account": "ซ่อนจากแถบด้านข้าง",
@@ -752,6 +1067,11 @@
     "reset_folder_notifications": "รีเซ็ตการตั้งค่าการแจ้งเตือนโฟลเดอร์",
     "mark_all_confirm_title": "ทำเครื่องหมายทุกโฟลเดอร์ว่าอ่านแล้ว",
     "mark_all_confirm_message": "ต้องการทำเครื่องหมายข้อความที่ยังไม่อ่านทั้งหมดในบัญชีส่วนตัวของคุณว่าอ่านแล้วหรือไม่?",
+    "empty_all_confirm_title": "ล้างถังขยะของทุกบัญชี",
+    "empty_all_confirm_message": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในถังขยะของทุกบัญชีของคุณอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "toast_emptied_all": "ล้างถังขยะในทุกบัญชีแล้ว",
+    "toast_error_empty_all_partial": "ล้างถังขยะแล้ว แต่บางบัญชีล้มเหลว",
+    "toast_error_empty_all": "ล้างถังขยะไม่สำเร็จ",
     "delete_confirm_title": "ลบโฟลเดอร์",
     "delete_confirm_message": "ต้องการลบโฟลเดอร์ “{name}” อย่างถาวรหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้",
     "prompt_new_subfolder": "ระบุชื่อสำหรับโฟลเดอร์ย่อยใหม่",
@@ -778,6 +1098,25 @@
     "delete_with_contents_title": "โฟลเดอร์ไม่ว่าง",
     "delete_with_contents_message": "โฟลเดอร์ “{name}” ยังมีข้อความอยู่ {count, plural, other {# ข้อความ}} ต้องการลบโฟลเดอร์และข้อความทั้งหมดภายในหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้",
     "delete_with_contents_confirm": "ลบโฟลเดอร์และข้อความทั้งหมด"
+  },
+  "mail_p2_folders": {
+    "all_folders": "โฟลเดอร์ทั้งหมด",
+    "empty_trash": "ล้างถังขยะ",
+    "empty_spam": "ล้างสแปม",
+    "empty_trash_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในถังขยะอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "empty_spam_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในสแปมอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "title_all_accounts": "{name} ({count}, {total} ในทุกบัญชี)",
+    "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
+  },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {ไม่พบผลการค้นหา} other {พบ # การสนทนา}}",
+    "name_unread_sub": "{name}, ยังไม่อ่าน {count}, ในโฟลเดอร์ย่อยอีก {sub}",
+    "name_unread_only_sub": "{name}, ยังไม่อ่านในโฟลเดอร์ย่อย {sub}",
+    "sub_unread": "ยังไม่อ่านในโฟลเดอร์ย่อย {sub}"
+  },
+  "uxs_folders": {
+    "manage_accounts": "จัดการบัญชี…",
+    "apply_to_existing": "{count, plural, other {นำไปใช้กับข้อความเดิม # ฉบับใน {folder}}}"
   },
   "shortcuts": {
     "title": "แป้นพิมพ์ลัด",
@@ -964,6 +1303,34 @@
       }
     }
   },
+  "compose_send": {
+    "back": "กลับไปแก้ไข",
+    "send_anyway": "ส่งต่อไป",
+    "warnings_title": "ส่งข้อความนี้ต่อไปหรือไม่",
+    "warning_subject": "ไม่มีหัวเรื่อง",
+    "warning_text": "ไม่มีข้อความ",
+    "warning_attachment": "มีคำว่า \"{keyword}\" แต่ไม่ได้แนบไฟล์",
+    "warning_placeholders": "ข้อความตัวยึดตำแหน่งที่ผู้รับจะเห็น:",
+    "warning_proofreading": "ปัญหาการสะกดหรือไวยากรณ์ที่ยังค้างอยู่: {count}",
+    "empty_text_title": "ส่งโดยไม่มีข้อความหรือไม่",
+    "empty_text_message": "ข้อความนี้ไม่มีเนื้อหาและไม่มีไฟล์แนบ ส่งต่อไปหรือไม่",
+    "scheduled_for": "ตั้งเวลาส่งไว้ที่ {when}",
+    "sending": "กำลังส่ง…",
+    "sent": "ส่งแล้ว",
+    "view": "ดู",
+    "template_saved": "บันทึกเทมเพลตแล้ว",
+    "schedule_anyway": "กำหนดเวลาต่อไป",
+    "schedule_warnings_title": "กำหนดเวลาส่งข้อความนี้ต่อไปหรือไม่",
+    "picker_button": "เพิ่มจากผู้ติดต่อ",
+    "picker_title": "เพิ่มผู้รับ",
+    "tab_contacts": "ผู้ติดต่อ",
+    "tab_directory": "ไดเรกทอรีกลาง",
+    "contacts_empty_title": "ยังไม่มีผู้ติดต่อ",
+    "contacts_empty_hint": "คนที่คุณบันทึกไว้ในผู้ติดต่อจะแสดงที่นี่",
+    "contacts_no_match": "ไม่มีผู้ติดต่อที่ตรงกับการค้นหา",
+    "template_name": "ชื่อแม่แบบ",
+    "template_edit_details": "แก้ไขรายละเอียด…"
+  },
   "org_templates": {
     "section_personal": "แม่แบบของฉัน",
     "section_organisation": "องค์กร",
@@ -1037,7 +1404,6 @@
     "any_size": "ทุกขนาด",
     "larger_than_mb": "ใหญ่กว่า {size} MB",
     "custom_size": "กำหนดขนาดเอง",
-    "done": "เสร็จสิ้น",
     "name_or_address": "ชื่อหรือที่อยู่"
   },
   "global_search": {
@@ -1132,10 +1498,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "หากเซิร์ฟเวอร์ไม่ยอมรับที่อยู่นี้เป็น envelope sender ระบบจะใช้ {identity} แทน และผู้รับสามารถดูได้ในส่วนหัว Return-Path"
     },
-    "save_as_template": "บันทึกเป็นแม่แบบข้อความ",
+    "save_as_template": "บันทึกเป็นแม่แบบข้อความ…",
     "attach_from_device": "อัปโหลดจากอุปกรณ์นี้",
     "templates_menu": "แม่แบบข้อความ",
-    "insert_template": "แทรกแม่แบบ",
+    "insert_template": "แทรกแม่แบบ…",
     "options": "ตัวเลือก",
     "option_plain_text": "ข้อความธรรมดา (Plain text)",
     "option_plain_text_hint": "ส่งโดยไม่มีการจัดรูปแบบ",
@@ -1170,7 +1536,7 @@
     "submission_limit": "เซิร์ฟเวอร์ปฏิเสธการส่งข้อความเนื่องจากเกินขีดจำกัด: {reason}",
     "recipients_refused": "ส่งไม่สำเร็จ: เซิร์ฟเวอร์ปฏิเสธผู้รับ {recipients}",
     "recipients_partly_refused": "เซิร์ฟเวอร์ปฏิเสธผู้รับ {recipients} แต่ผู้รับรายอื่นจะยังคงได้รับข้อความ",
-    "send_recipients_rejected": "ส่งไม่สำเร็จ - เซิร์ฟเวอร์ปฏิเสธผู้รับทุกคน",
+    "send_recipients_rejected": "ส่งไม่สำเร็จ: เซิร์ฟเวอร์ปฏิเสธผู้รับทุกคน",
     "cut": "ตัด",
     "copy": "คัดลอก",
     "send_plugin_failed": "ส่งไม่สำเร็จ - ปลั๊กอินที่จัดการการส่งเกิดข้อผิดพลาด กรุณาตรวจสอบโฟลเดอร์ส่งแล้วก่อนส่งซ้ำ",
@@ -1223,7 +1589,7 @@
       "unfinished": []
     },
     "schedule_send": "กำหนดเวลาส่ง",
-    "schedule_send_description": "เลือกเวลาที่ต้องการให้เซิร์ฟเวอร์ส่งข้อความนี้",
+    "schedule_send_description": "เลือกเวลาที่จะส่ง",
     "schedule_preset": {
       "this_morning": "เช้านี้",
       "this_afternoon": "บ่ายนี้",
@@ -1274,6 +1640,7 @@
       "edit_link": "แก้ไขลิงก์",
       "remove_link": "นำลิงก์ออก",
       "link_address": "ที่อยู่ลิงก์",
+      "link_text": "ข้อความ",
       "link_invalid": "ที่อยู่ต้องไม่มีช่องว่าง",
       "table": "ตาราง",
       "clear_formatting": "ล้างการจัดรูปแบบ",
@@ -1318,7 +1685,7 @@
     "attach": "แนบไฟล์",
     "attach_files": "ไฟล์",
     "attach_photos": "รูปภาพและวิดีโอ",
-    "body_placeholder": "เขียนข้อความของคุณที่นี่...",
+    "body_placeholder": "เขียนข้อความของคุณที่นี่…",
     "cancel": "ยกเลิก",
     "formatting": "การจัดรูปแบบ",
     "forward_message": "ส่งต่อ",
@@ -1352,6 +1719,27 @@
       "edit": "แก้ไขคำอธิบายรูปภาพ",
       "plain_text": "[รูปภาพ: {alt}]"
     }
+  },
+  "compose_ux": {
+    "draft_discarded": "ทิ้งฉบับร่างแล้ว",
+    "undo": "เลิกทำ",
+    "discard_draft": "ทิ้งฉบับร่าง",
+    "save_failed_close": "บันทึกฉบับร่างไม่ได้ ลองอีกครั้งหรือทิ้งไป",
+    "try_again": "ลองอีกครั้ง",
+    "add_description": "เพิ่มคำอธิบาย",
+    "attachments_summary": "ไฟล์แนบ: {count} ไฟล์, {size}",
+    "from_sub_address": "ใช้ที่อยู่ย่อย…",
+    "from_edit_sender": "แก้ไขผู้ส่ง…",
+    "shortcut_insert_link": "แทรกลิงก์",
+    "shortcut_save_draft": "บันทึกฉบับร่าง",
+    "shortcut_show_cc": "แสดงสำเนา",
+    "shortcut_show_bcc": "แสดงสำเนาลับ"
+  },
+  "compose_dock": {
+    "open_draft": "เปิด",
+    "reply_type": "ประเภทการตอบกลับ: {kind}",
+    "resize_reply": "ปรับขนาดการตอบกลับ",
+    "fields_menu": "ช่องเพิ่มเติม"
   },
   "email_viewer": {
     "read_receipt": {
@@ -1397,7 +1785,6 @@
     "view_in_light_mode": "แสดงผลในโหมดสว่าง",
     "export_email": "ส่งออกเป็นไฟล์ .eml",
     "forward_as_attachment": "ส่งต่อเป็นไฟล์แนบ",
-    "import_email": "นำเข้าไฟล์ .eml หรือ .zip…",
     "keyboard_shortcuts": "แป้นพิมพ์ลัด",
     "email_source": "ต้นฉบับอีเมล",
     "draft_banner": "ข้อความนี้เป็นร่างจดหมาย",
@@ -1409,6 +1796,9 @@
     "source_truncated": "แสดง {size} แรก ส่งออกข้อความเพื่อดูส่วนที่เหลือ",
     "source_copied": "คัดลอกข้อความต้นฉบับแล้ว",
     "attachments": "ไฟล์แนบ",
+    "attachments_count": "{count, plural, other {ไฟล์แนบ # รายการ}}",
+    "attachments_show_more": "แสดงเพิ่มอีก {count} รายการ",
+    "attachments_show_fewer": "แสดงน้อยลง",
     "important": "สำคัญ",
     "download": "ดาวน์โหลด",
     "download_all": "ดาวน์โหลดทั้งหมด",
@@ -1711,6 +2101,69 @@
       "copied": "คัดลอกรหัสแล้ว!",
       "copy_failed": "คัดลอกไม่สำเร็จ"
     },
+    "structured_mail": {
+      "kind_flight": "เที่ยวบิน",
+      "kind_train": "รถไฟ",
+      "kind_bus": "รถบัส",
+      "kind_lodging": "โรงแรม",
+      "kind_rentalcar": "รถเช่า",
+      "kind_event": "กิจกรรม",
+      "kind_restaurant": "ร้านอาหาร",
+      "kind_order": "คำสั่งซื้อ",
+      "kind_parcel": "พัสดุ",
+      "region_flight": "การจองเที่ยวบิน",
+      "region_train": "การจองรถไฟ",
+      "region_bus": "การจองรถบัส",
+      "region_lodging": "การจองโรงแรม",
+      "region_rentalcar": "การจองรถเช่า",
+      "region_event": "การจองกิจกรรม",
+      "region_restaurant": "การจองโต๊ะอาหาร",
+      "region_shipment": "คำสั่งซื้อและการจัดส่ง",
+      "status_cancelled": "ยกเลิกแล้ว",
+      "status_pending": "รอการยืนยัน",
+      "status_hold": "กันที่ไว้",
+      "order_status_payment_due": "รอชำระเงิน",
+      "order_status_processing": "กำลังดำเนินการ",
+      "order_status_problem": "มีปัญหา",
+      "order_status_in_transit": "จัดส่งแล้ว",
+      "order_status_pickup_available": "พร้อมให้รับ",
+      "order_status_returned": "ส่งคืนแล้ว",
+      "order_status_delivered": "ส่งถึงแล้ว",
+      "order_status_cancelled": "ยกเลิกแล้ว",
+      "reference": "รหัสการจอง",
+      "order_number": "หมายเลขคำสั่งซื้อ",
+      "tracking_number": "หมายเลขพัสดุ",
+      "copy_reference": "คัดลอกรหัสการจอง {value}",
+      "copy_order_number": "คัดลอกหมายเลขคำสั่งซื้อ {value}",
+      "copy_tracking_number": "คัดลอกหมายเลขพัสดุ {value}",
+      "copied_reference": "คัดลอกรหัสการจองแล้ว",
+      "copied_order_number": "คัดลอกหมายเลขคำสั่งซื้อแล้ว",
+      "copied_tracking_number": "คัดลอกหมายเลขพัสดุแล้ว",
+      "copy_failed": "คัดลอกไปยังคลิปบอร์ดไม่ได้",
+      "passengers": "ผู้โดยสาร",
+      "seats": "ที่นั่ง",
+      "tickets": "ตั๋ว",
+      "link_check_in": "เช็คอิน",
+      "link_manage": "จัดการการจอง",
+      "link_ticket": "ตั๋ว",
+      "link_track": "ติดตามพัสดุ",
+      "link_view_order": "ดูคำสั่งซื้อ",
+      "check_in_label": "เช็คอิน",
+      "check_out_label": "เช็คเอาท์",
+      "from_time": "ตั้งแต่ {time}",
+      "until_time": "ภายใน {time}",
+      "nights": "{count, plural, other {# คืน}}",
+      "pickup": "รับรถ",
+      "dropoff": "คืนรถ",
+      "party_size": "{count, plural, other {โต๊ะสำหรับ # คน}}",
+      "items_more": "และอีก {count} รายการ",
+      "items_count": "{count, plural, other {# รายการ}}",
+      "total": "รวม {total}",
+      "expected_by": "ถึงภายใน {date}",
+      "local_time": "เวลาท้องถิ่น",
+      "local_time_title": "เวลาท้องถิ่นของสถานที่ ไม่ใช่เขตเวลาของคุณ",
+      "route": "{from} ไป {to}"
+    },
     "mv_position": "{index} จาก {total}",
     "copy": "คัดลอก",
     "contact_added": "เพิ่มผู้ติดต่อแล้ว",
@@ -1724,6 +2177,7 @@
     },
     "plugin_panel_show": "แสดงแถบปลั๊กอิน",
     "plugin_panel_hide": "ซ่อนแถบปลั๊กอิน",
+    "plugin_panel": "แถบปลั๊กอิน",
     "frame_title": "ข้อความ: {subject}",
     "frame_title_from": "ข้อความจาก {sender}",
     "download_named": "ดาวน์โหลด {name}",
@@ -1741,6 +2195,18 @@
     "read_aloud_stop": "หยุดอ่าน",
     "reader_view": "มุมมองการอ่าน"
   },
+  "reader_actions": {
+    "restore": "กู้คืน",
+    "restore_to": "ย้ายกลับไปที่ {folder}",
+    "delete_forever": "ลบถาวร"
+  },
+  "mail_p3_actions": {
+    "move_to_inbox": "ย้ายไปที่กล่องข้อความ",
+    "delete_forever_title": "ลบข้อความนี้อย่างถาวรหรือไม่",
+    "delete_forever_batch_title": "{count, plural, one {ลบข้อความนี้อย่างถาวรหรือไม่} other {ลบข้อความ # ฉบับนี้อย่างถาวรหรือไม่}}",
+    "delete_forever_message": "คุณจะกู้คืนไม่ได้",
+    "delete_forever_batch_message": "{count, plural, one {คุณจะกู้คืนไม่ได้} other {คุณจะกู้คืนไม่ได้}}"
+  },
   "external_mail": {
     "sender_label": "ภายนอก",
     "sender_tooltip": "จาก {domain} ซึ่งอยู่นอกองค์กรของคุณ",
@@ -1753,14 +2219,43 @@
     "send_anyway": "ส่งต่อไป",
     "back": "ย้อนกลับ"
   },
+  "phishing_report": {
+    "action": "รายงานฟิชชิง…",
+    "confirm_title": "รายงานเป็นฟิชชิงหรือไม่",
+    "confirm_message": "{count, plural, =1 {ข้อความจะถูกส่งไปยัง {address} และย้ายไปที่จดหมายขยะ} other {ข้อความแต่ละฉบับจากทั้งหมด # ฉบับจะถูกส่งไปยัง {address} เป็นรายงานแยกกัน และย้ายไปที่จดหมายขยะ}}",
+    "confirm": "รายงาน",
+    "cancel": "ยกเลิก",
+    "sending": "กำลังรายงาน…",
+    "done": "{count, plural, =1 {รายงานไปยัง {address} และย้ายไปที่จดหมายขยะแล้ว} other {รายงานข้อความ # ฉบับไปยัง {address} และย้ายไปที่จดหมายขยะแล้ว}}",
+    "not_moved": "{count, plural, =1 {รายงานไปยัง {address} แล้ว แต่ไม่สามารถย้ายข้อความไปที่จดหมายขยะได้} other {รายงานไปยัง {address} แล้ว แต่ไม่สามารถย้ายข้อความ # ฉบับไปที่จดหมายขยะได้}}",
+    "failed": "{count, plural, =1 {ไม่สามารถรายงานข้อความได้} other {ไม่สามารถรายงานข้อความ # ฉบับได้}}",
+    "undo": "เลิกทำ",
+    "undone": "{count, plural, =1 {ย้ายกลับแล้ว รายงานถูกส่งไปแล้ว} other {ย้ายกลับแล้ว รายงานถูกส่งไปแล้ว}}",
+    "undo_failed": "ไม่สามารถย้ายกลับได้",
+    "banner": "คุณรายงานข้อความนี้ว่าเป็นฟิชชิง ลิงก์ในข้อความถูกปิดใช้งานแล้ว",
+    "link_off": "ปิดใช้งานลิงก์แล้ว",
+    "link_off_note": "(ปิดใช้งานลิงก์แล้ว)",
+    "no_subject": "(ไม่มีเรื่อง)"
+  },
+  "classification": {
+    "picker_label": "ระดับความลับ",
+    "chip_label": "ระดับความลับ: {name}",
+    "none": "ไม่มีระดับความลับ",
+    "pick_required": "เลือกระดับความลับ",
+    "required_hint": "องค์กรของคุณกำหนดให้ต้องระบุระดับความลับ",
+    "required_toast": "เลือกระดับความลับก่อนส่ง",
+    "quick_reply_needs_label": "การตอบกลับนี้ต้องมีระดับความลับ เลือกที่นี่ แล้วกดส่ง",
+    "forward_needs_label": "ต้องระบุระดับความลับ ส่งต่อข้อความจากหน้าต่างเขียนจดหมาย",
+    "received_hint": "ตั้งโดยโปรแกรมอีเมลของผู้ส่ง ใครก็ตั้งระดับความลับได้ จึงพิสูจน์อะไรไม่ได้"
+  },
   "welcome": {
     "title": "ยินดีต้อนรับสู่กล่องจดหมายของคุณ",
     "tip_compose": "กด c เพื่อเขียนอีเมลใหม่",
     "tip_shortcuts": "กด ? เพื่อดูแป้นพิมพ์ลัดทั้งหมด",
-    "tip_sidebar": "เข้าถึง ปฏิทิน ผู้ติดต่อ และการตั้งค่า ได้จากเมนูแถบด้านข้าง",
+    "tip_sidebar_apps": "{apps} อยู่ในแถบด้านซ้าย",
     "tip_settings": "ปรับแต่งประสบการณ์การใช้งานของคุณได้ที่ การตั้งค่า",
     "tip_compose_touch": "แตะไอคอนดินสอเพื่อเขียนอีเมลใหม่",
-    "tip_sidebar_touch": "เข้าถึง ปฏิทิน ผู้ติดต่อ และการตั้งค่า ได้จากแถบเมนูด้านล่าง",
+    "tip_sidebar_apps_touch": "เข้าถึง {apps} ได้จากแถบเมนูด้านล่าง",
     "got_it": "รับทราบ",
     "settings": "การตั้งค่า",
     "dismiss": "ปิด",
@@ -1777,11 +2272,251 @@
   },
   "pwa_install": {
     "title": "ติดตั้ง {appName}",
-    "description": "ติดตั้งแอปพลิเคชันของเราเพื่อการเข้าถึงที่รวดเร็วและการรองรับการทำงานแบบออฟไลน์",
+    "description": "ติดตั้งแอปพลิเคชันของเราเพื่อการเข้าถึงที่รวดเร็ว",
     "not_now": "ไม่ใช่ตอนนี้",
     "install": "ติดตั้ง",
     "dont_remind": "ไม่ต้องแจ้งเตือนอีก",
     "dismiss_aria": "ปิดการแจ้งเตือนการติดตั้ง"
+  },
+  "app_update": {
+    "ready": "{appName} เวอร์ชันใหม่พร้อมแล้ว",
+    "reload": "โหลดใหม่"
+  },
+  "offline": {
+    "settings": {
+      "title": "ออฟไลน์",
+      "description": "อ่านและเขียนอีเมลบนอุปกรณ์นี้ได้โดยไม่ต้องเชื่อมต่อ",
+      "keep_label": "เก็บอีเมลไว้บนอุปกรณ์นี้",
+      "keep_description": "เก็บอีเมล 30 วันล่าสุดของกล่องจดหมายเข้าและโฟลเดอร์ที่คุณเปิด สูงสุด 250 MB โดยเข้ารหัสไว้ในเบราว์เซอร์นี้ เมื่อออฟไลน์คุณอ่าน ติดธง และย้ายอีเมลได้ และสิ่งที่คุณเขียนจะรออยู่ในกล่องขาออก เมื่อออกจากระบบทุกอย่างจะถูกลบ",
+      "warning": "ใครก็ตามที่ใช้โปรไฟล์เบราว์เซอร์นี้ได้จะอ่านอีเมลเหล่านี้ได้ เปิดใช้เฉพาะบนอุปกรณ์ของคุณเอง และใช้การเข้ารหัสดิสก์",
+      "forbidden": "องค์กรของคุณไม่อนุญาตให้เก็บอีเมลไว้บนอุปกรณ์",
+      "unsupported": "เบราว์เซอร์นี้เก็บอีเมลไว้ใช้แบบออฟไลน์ไม่ได้",
+      "syncing": "กำลังบันทึกอีเมลของคุณลงในอุปกรณ์นี้…",
+      "usage": "{size} บนอุปกรณ์นี้",
+      "usage_updated": "{size} บนอุปกรณ์นี้ อัปเดต {time}",
+      "off_confirm_title": "ปิดโหมดออฟไลน์ไหม",
+      "off_confirm_message": "{count, plural, other {มีข้อความในกล่องขาออก # รายการที่ยังไม่ได้ส่ง}} การปิดจะลบข้อความเหล่านั้นและอีเมลที่เก็บไว้บนอุปกรณ์นี้",
+      "off_confirm": "ปิด"
+    },
+    "outbox": {
+      "title": "กล่องขาออก",
+      "description": "ข้อความที่คุณเขียนขณะออฟไลน์ จะถูกส่งเมื่ออุปกรณ์นี้กลับมาออนไลน์",
+      "empty": "ไม่มีอะไรรอส่ง",
+      "no_subject": "(ไม่มีหัวเรื่อง)",
+      "to": "ถึง: {recipients}",
+      "status_waiting": "กำลังรอการเชื่อมต่อ",
+      "status_sending": "กำลังส่ง",
+      "status_failed": "ส่งไม่ได้: {error}",
+      "status_uncertain": "การเชื่อมต่อขาดระหว่างส่ง ตรวจดูในรายการที่ส่งแล้วก่อนส่งอีกครั้ง",
+      "retry": "ส่งอีกครั้ง",
+      "delete": "ลบ",
+      "delete_confirm_title": "ลบข้อความนี้ไหม",
+      "delete_confirm_message": "ข้อความนี้ยังไม่ได้ส่งและกู้คืนไม่ได้",
+      "changes": "การเปลี่ยนแปลง {count, plural, other {# รายการ}} ของสถานะอ่าน ธง หรือโฟลเดอร์จะถูกส่งเมื่อคุณกลับมาออนไลน์",
+      "status_held": "กฎขององค์กรเปลี่ยนไประหว่างที่ข้อความรออยู่ เขียนใหม่เพื่อส่ง",
+      "retry_label": "ส่งอีกครั้ง: {subject}",
+      "delete_label": "ลบ: {subject}"
+    },
+    "banner": {
+      "offline": "คุณออฟไลน์อยู่ คุณกำลังดูอีเมลที่เก็บไว้บนอุปกรณ์นี้ สิ่งที่คุณเปลี่ยนหรือเขียนจะถูกส่งเมื่อกลับมาออนไลน์",
+      "outbox": "{count, plural, other {# ข้อความ}}ในกล่องขาออก",
+      "server_down": "เชื่อมต่อเซิร์ฟเวอร์อีเมลไม่ได้ คุณกำลังดูอีเมลที่เก็บไว้บนอุปกรณ์นี้ สิ่งที่คุณเปลี่ยนหรือเขียนจะถูกส่งเมื่อเซิร์ฟเวอร์ตอบกลับอีกครั้ง"
+    },
+    "toast": {
+      "queued": "บันทึกในกล่องขาออกแล้ว จะถูกส่งเมื่อคุณกลับมาออนไลน์",
+      "sent": "ส่งจากกล่องขาออกแล้ว: {subject}",
+      "send_failed": "ส่งข้อความจากกล่องขาออกไม่ได้: {subject}",
+      "refused_delete": "การลบถาวรต้องใช้การเชื่อมต่อ ลองอีกครั้งเมื่อออนไลน์",
+      "refused_other": "การทำงานนี้ต้องใช้การเชื่อมต่อ ลองอีกครั้งเมื่อออนไลน์",
+      "forbidden": "องค์กรของคุณปิดโหมดออฟไลน์แล้ว อีเมลที่เก็บไว้บนอุปกรณ์นี้ถูกลบแล้ว",
+      "back_online": "คุณกลับมาออนไลน์แล้ว โหลดใหม่เพื่อเข้าสู่ระบบและส่งสิ่งที่รออยู่",
+      "reload": "โหลดใหม่",
+      "held": "ข้อความในกล่องขาออกต้องการให้คุณตรวจดู: {subject}",
+      "lost": "ข้อความเหล่านี้ไม่ได้ถูกส่งและถูกลบแล้ว: {subjects}"
+    },
+    "signout": {
+      "title": "ออกจากระบบทั้งที่มีข้อความยังไม่ได้ส่งไหม",
+      "message": "{count, plural, other {มีข้อความ # รายการที่ยังไม่ได้ส่ง}} การออกจากระบบจะลบข้อความเหล่านั้น",
+      "confirm": "ออกจากระบบ",
+      "lost": "ข้อความเหล่านี้ไม่ได้ถูกส่งและถูกลบเมื่อคุณออกจากระบบ: {subjects}"
+    },
+    "errors": {
+      "unavailable": "การทำงานนี้ต้องใช้การเชื่อมต่อ ลองอีกครั้งเมื่อออนไลน์",
+      "plugins_down": "ปลั๊กอินลงนามหรือเข้ารหัสของคุณไม่ทำงานเมื่อออฟไลน์ ส่งข้อความนี้เมื่อกลับมาออนไลน์",
+      "file_missing": "ไฟล์ที่แนบขณะออฟไลน์ไม่อยู่บนอุปกรณ์นี้แล้ว แนบอีกครั้ง",
+      "no_sent_mailbox": "ไม่พบโฟลเดอร์ที่ส่งแล้ว",
+      "no_drafts_mailbox": "ไม่พบโฟลเดอร์แบบร่าง"
+    }
+  },
+  "offlineConflicts": {
+    "title": "การเปลี่ยนแปลงที่ไม่ได้นำไปใช้",
+    "description": "คุณทำการเปลี่ยนแปลงเหล่านี้ขณะออฟไลน์ การเปลี่ยนแปลงไม่ได้ถูกนำไปใช้ และข้อความยังคงเหมือนบนเซิร์ฟเวอร์",
+    "changed": "มีการเปลี่ยนแปลงบนอุปกรณ์อื่น การเปลี่ยนแปลงของคุณจึงไม่ถูกนำไปใช้",
+    "changed_delete": "มีการเปลี่ยนแปลงบนอุปกรณ์อื่น จึงไม่ถูกลบ",
+    "gone": "ไม่มีบนเซิร์ฟเวอร์แล้ว การเปลี่ยนแปลงของคุณจึงไม่ถูกนำไปใช้",
+    "refused": "เซิร์ฟเวอร์ปฏิเสธการเปลี่ยนแปลงนี้: {reason}",
+    "dismiss": "ปิด",
+    "dismiss_label": "ปิดหมายเหตุเกี่ยวกับ {subject}",
+    "banner": "การเปลี่ยนแปลงที่ไม่ได้นำไปใช้: {count}",
+    "toast": "การเปลี่ยนแปลงขณะออฟไลน์ที่ไม่ได้นำไปใช้: {count} ดูรายการได้ในกล่องขาออก",
+    "storage_failed": "อุปกรณ์นี้ไม่มีที่ว่างสำหรับอีเมลออฟไลน์แล้ว โปรดเพิ่มพื้นที่ว่างหรือเก็บให้น้อยลงในการตั้งค่า",
+    "signout_changes_title": "ออกจากระบบทั้งที่มีการเปลี่ยนแปลงที่ยังไม่บันทึกหรือไม่",
+    "signout_changes": "การเปลี่ยนแปลงที่ยังไม่อยู่บนเซิร์ฟเวอร์: {count} การออกจากระบบจะลบรายการเหล่านี้",
+    "store_unavailable": "ตอนนี้เปิดอีเมลออฟไลน์บนอุปกรณ์นี้ไม่ได้ อีเมลที่ยังไม่ส่งยังอยู่ที่นี่ และแอปจะลองต่อไป",
+    "store_reset": "อ่านอีเมลออฟไลน์บนอุปกรณ์นี้ไม่ได้ จึงกำลังดาวน์โหลดใหม่ สิ่งที่ยังไม่ได้ส่งหายไปแล้ว",
+    "legacy_stranded": "เบราว์เซอร์นี้เปิดอีเมลที่ยังไม่ส่งซึ่งเวอร์ชันก่อนหน้าเก็บไว้ไม่ได้ การอัปเดตเบราว์เซอร์อาจนำกลับมาได้",
+    "store_private": "หน้าต่างส่วนตัวเก็บอีเมลไว้ใช้แบบออฟไลน์ไม่ได้",
+    "server_not_answering": "เซิร์ฟเวอร์อีเมลไม่ตอบสนอง โปรดลองอีกครั้งในอีกสักครู่"
+  },
+  "offlineWipe": {
+    "note": "องค์กรของคุณนำข้อมูลของบัญชีนี้ออกจากอุปกรณ์นี้แล้ว ลงชื่อเข้าใช้เพื่อเริ่มใหม่",
+    "note_unsent": "องค์กรของคุณนำข้อมูลของบัญชีนี้ออกจากอุปกรณ์นี้แล้ว ข้อความที่ยังไม่ส่งที่ถูกลบ: {count}",
+    "settings_title": "นำทุกอย่างออกจากอุปกรณ์นี้",
+    "settings_description": "สำหรับเมื่อคุณจะยกคอมพิวเตอร์เครื่องนี้ให้ผู้อื่นหรือเลิกใช้ อีเมลของคุณบนเซิร์ฟเวอร์ยังอยู่",
+    "settings_button": "นำทุกอย่างออก…",
+    "settings_wiping": "กำลังนำออก…",
+    "confirm_title": "นำทุกอย่างออกจากอุปกรณ์นี้หรือไม่",
+    "confirm_message": "การทำเช่นนี้จะลบสิ่งที่แอปนี้เก็บไว้ในอุปกรณ์นี้ สำหรับทุกบัญชีที่นี่ อีเมลของคุณบนเซิร์ฟเวอร์จะไม่ถูกแตะต้อง",
+    "confirm_mail": "อีเมล ปฏิทิน รายชื่อ และไฟล์ที่เก็บไว้ที่นี่",
+    "confirm_unsent": "ข้อความที่ยังไม่ส่งที่รออยู่ที่นี่: {count} ข้อความเหล่านี้จะสูญหาย",
+    "confirm_keys": "คีย์ S/MIME และ OpenPGP คุณต้องมีข้อมูลสำรองของคุณเองเพื่อใช้อีกครั้ง",
+    "confirm_plugins": "ข้อมูลที่ปลั๊กอินเก็บไว้ที่นี่",
+    "confirm_files": "ไฟล์แนบที่เปิดเพื่อแก้ไขและไฟล์ที่รอแนบ",
+    "confirm_accounts": "ทุกบัญชีจะออกจากระบบ",
+    "confirm_button": "นำทุกอย่างออก",
+    "note_unknown": "องค์กรของคุณได้ลบข้อมูลของบัญชีนี้ออกจากอุปกรณ์นี้แล้ว ข้อความที่ยังไม่ได้ส่งอาจถูกลบด้วย",
+    "refused_waiting": "ข้อความที่ยังไม่ได้ส่งซึ่งรอรหัสผ่านใหม่ของคุณ: {count} เก็บไว้ถึง {date}",
+    "refused_waiting_unknown": "อาจมีข้อความที่ยังไม่ได้ส่งรอรหัสผ่านใหม่ของคุณ เก็บไว้ถึง {date}",
+    "confirm_unsent_unknown": "อาจมีข้อความที่ยังไม่ได้ส่งรออยู่ที่นี่ ข้อความเหล่านั้นจะสูญหาย",
+    "confirm_templates": "เทมเพลตอีเมลที่บันทึกไว้ในอุปกรณ์นี้",
+    "session_waiting": "ข้อความที่ยังไม่ได้ส่งซึ่งรอการลงชื่อเข้าใช้ครั้งถัดไป: {count} เก็บไว้ถึง {date}",
+    "session_waiting_unknown": "อาจมีข้อความที่ยังไม่ได้ส่งรอการลงชื่อเข้าใช้ครั้งถัดไป เก็บไว้ถึง {date}",
+    "needs_sign_in": "ต้องลงชื่อเข้าใช้",
+    "switcher_waiting": "ข้อความที่ยังไม่ได้ส่ง: {count} จะถูกลบออกจากอุปกรณ์นี้ในวันที่ {date}",
+    "switcher_kept": "อีเมลในอุปกรณ์นี้จะถูกลบในวันที่ {date}",
+    "sibling_waiting": "{name} ถูกออกจากระบบแล้ว ข้อความที่ยังไม่ได้ส่ง: {count} โปรดลงชื่อเข้าใช้ภายใน {date} มิฉะนั้นจะถูกลบออกจากอุปกรณ์นี้",
+    "sibling_kept": "{name} ถูกออกจากระบบแล้ว โปรดลงชื่อเข้าใช้ภายใน {date} มิฉะนั้นอีเมลจะถูกลบออกจากอุปกรณ์นี้"
+  },
+  "offlineStorage": {
+    "keep_description": "เก็บอีเมล ปฏิทิน รายชื่อติดต่อ และไฟล์ที่คุณเลือกไว้ในอุปกรณ์นี้แบบเข้ารหัส เมื่อออฟไลน์คุณอ่าน ติดธง และย้ายอีเมลได้ และสิ่งที่คุณเขียนจะรออยู่ในกล่องขาออก เมื่อออกจากระบบทุกอย่างจะถูกลบ",
+    "window_label": "เก็บย้อนหลังนานแค่ไหน",
+    "window_description": "อีเมลและกิจกรรมในปฏิทินที่เก่ากว่านี้จะถูกนำออกจากอุปกรณ์นี้ คุณยังเปิดดูได้เมื่อออนไลน์",
+    "window_days": "{days, plural, other {# วัน}}",
+    "window_year": "1 ปี",
+    "window_everything": "ทั้งหมด",
+    "attachments_label": "เก็บไฟล์แนบ",
+    "attachments_description": "ไฟล์แนบของข้อความที่เก็บไว้และไฟล์ที่เก็บไว้ใช้ออฟไลน์ รวมกันไม่เกิน {total} ของที่เก่าที่สุดจะถูกลบก่อน",
+    "total_locked": "องค์กรของคุณอนุญาตไฟล์แนบและไฟล์รวมกันไม่เกิน {size}",
+    "attachment_cap_label": "ไฟล์แนบที่ใหญ่ที่สุดที่จะเก็บ",
+    "usage_mail": "ข้อความและดัชนีการค้นหา",
+    "usage_attachments": "ไฟล์แนบ",
+    "usage_calendar": "ปฏิทิน",
+    "usage_contacts": "รายชื่อติดต่อ",
+    "usage_files": "ไฟล์ที่เก็บไว้ใช้ออฟไลน์",
+    "usage_row": "{size} ({count, plural, other {# รายการ}})",
+    "progress_list": "กำลังแสดงรายการข้อความ",
+    "progress_bodies": "กำลังดาวน์โหลดข้อความ",
+    "progress_threads": "กำลังเรียงลำดับการสนทนา",
+    "progress_files": "กำลังดาวน์โหลดไฟล์",
+    "progress_other": "กำลังนำข้อมูลมาไว้ที่อุปกรณ์นี้",
+    "progress_count": "{done} จาก {total}",
+    "progress_count_open": "ตอนนี้ {done}",
+    "progress_left": "เหลือประมาณ {minutes, plural, other {# นาที}}",
+    "clear_label": "ล้างบัญชีนี้",
+    "clear_description": "ลบทุกอย่างที่อุปกรณ์นี้เก็บไว้สำหรับบัญชีนี้ แล้วดาวน์โหลดใหม่",
+    "clear_button": "ล้าง…",
+    "clear_confirm_title": "ล้างบัญชีนี้บนอุปกรณ์นี้ไหม",
+    "clear_confirm_message": "ทุกอย่างที่อุปกรณ์นี้เก็บไว้สำหรับ {account} จะถูกลบและดาวน์โหลดใหม่ อีเมลของคุณบนเซิร์ฟเวอร์ยังอยู่",
+    "clear_confirm_unsent": "{count, plural, other {ข้อความที่ยังไม่ได้ส่ง # ข้อความจะสูญหาย}}",
+    "clear_confirm": "ล้าง",
+    "persist_refused": "เบราว์เซอร์นี้อาจลบอีเมลที่เก็บไว้เมื่อพื้นที่เหลือน้อย การติดตั้งแอปมักช่วยป้องกันได้",
+    "persist_retry": "ขอให้เบราว์เซอร์เก็บไว้",
+    "safari_hint": "Safari จะลบข้อมูลของเว็บไซต์หลังจากไม่ได้เข้าชม 7 วัน เพิ่ม Bulwark ลงในหน้าจอโฮมหรือ Dock เพื่อเก็บอีเมลไว้บนอุปกรณ์นี้",
+    "evicted": "เบราว์เซอร์ลบอีเมลที่เก็บไว้บนอุปกรณ์นี้แล้ว กำลังดาวน์โหลดใหม่",
+    "evicted_lost": "{count, plural, other {ข้อความหรือการเปลี่ยนแปลงที่ยังไม่ได้ส่ง # รายการสูญหาย}}",
+    "evicted_dismiss": "ตกลง",
+    "storage_full_title": "พื้นที่เก็บข้อมูลของอุปกรณ์เต็ม",
+    "storage_full_text": "Bulwark หยุดบันทึกอีเมลที่นี่แล้ว เก็บอีเมลให้น้อยลงหรือล้างบัญชีนี้เพื่อเพิ่มพื้นที่",
+    "open_settings": "เปิดการตั้งค่า",
+    "default_on": "Bulwark เก็บอีเมลของคุณไว้บนอุปกรณ์นี้ เพื่อให้ใช้งานได้โดยไม่ต้องเชื่อมต่อ คุณเปลี่ยนได้ในการตั้งค่า",
+    "conflict_calendar": "กิจกรรมในปฏิทิน",
+    "conflict_contacts": "รายชื่อติดต่อ",
+    "kept_files_title": "ไฟล์ที่เก็บไว้ใช้ออฟไลน์",
+    "kept_state_kept": "บนอุปกรณ์นี้",
+    "kept_state_waiting": "รอดาวน์โหลด",
+    "kept_error_tooLarge": "ใหญ่เกินกว่าจะเก็บ",
+    "kept_error_overLimit": "เกินขีดจำกัดของอุปกรณ์นี้",
+    "kept_error_notAllowed": "องค์กรของคุณไม่อนุญาตให้เก็บไฟล์",
+    "kept_error_download": "ดาวน์โหลดไม่ได้",
+    "keep_offline": "เก็บไว้ใช้ออฟไลน์",
+    "unpin": "เลิกเก็บไว้ใช้ออฟไลน์",
+    "unpin_label": "เลิกเก็บ {name} ไว้ใช้ออฟไลน์",
+    "warning_desktop": "ทุกคนที่ใช้บัญชีผู้ใช้บนคอมพิวเตอร์เครื่องนี้ได้จะอ่านอีเมลนี้ได้ ควรใช้การเข้ารหัสดิสก์",
+    "off_confirm_text": "การดำเนินการนี้จะลบทุกอย่างที่อุปกรณ์นี้เก็บไว้สำหรับ {account} อีเมลของคุณบนเซิร์ฟเวอร์ยังอยู่",
+    "unsent_changes": "{count, plural, other {การเปลี่ยนแปลงที่ยังไปไม่ถึงเซิร์ฟเวอร์ # รายการจะสูญหาย}}",
+    "clear_needs_connection": "ต้องมีการเชื่อมต่อ เพราะทุกอย่างจะถูกดาวน์โหลดใหม่",
+    "usage_label": "สิ่งที่อุปกรณ์นี้เก็บไว้",
+    "pin_not_ready": "ไฟล์นี้ยังไม่อยู่ในรายการของอุปกรณ์นี้ ลองอีกครั้งในอีกสักครู่"
+  },
+  "keyProtection": {
+    "browser_note": "ในเบราว์เซอร์ กุญแจของอีเมลนี้อยู่ในโปรไฟล์เบราว์เซอร์เดียวกับอีเมล ผู้ที่คัดลอกไฟล์ของโปรไฟล์จะอ่านอีเมลได้ จึงควรใช้การเข้ารหัสดิสก์",
+    "no_secure_storage": "คอมพิวเตอร์เครื่องนี้ไม่มีที่เก็บกุญแจแบบปลอดภัยที่แอปใช้ได้ กุญแจของอีเมลนี้จึงถูกทำให้อ่านยากบนดิสก์เท่านั้น โปรดใช้การเข้ารหัสดิสก์",
+    "wrap_failed": "ที่เก็บกุญแจแบบปลอดภัยของคอมพิวเตอร์เครื่องนี้ไม่รับกุญแจของอีเมลนี้ กุญแจจึงไม่ได้รับการปกป้องตามที่ควร โปรดรีสตาร์ตแอปและใช้การเข้ารหัสดิสก์",
+    "rekey_progress": "กำลังเข้ารหัสอีเมลบนอุปกรณ์นี้ใหม่: {percent}% คุณทำงานต่อได้",
+    "rekey_failed": "การเข้ารหัสอีเมลบนอุปกรณ์นี้ใหม่ยังไม่เสร็จ กุญแจเก่าจึงยังเปิดได้ แอปจะลองอีกครั้งเมื่อเริ่มครั้งถัดไป",
+    "reenroll_note": "พาสคีย์และการปลดล็อกของระบบใช้กุญแจของ PIN เก่า จึงถูกนำออกแล้ว โปรดตั้งค่าใหม่หากคุณใช้งาน"
+  },
+  "offlineDrafts": {
+    "title": "ฉบับร่างในอุปกรณ์นี้",
+    "description": "ฉบับร่างเหล่านี้บันทึกไว้ในอุปกรณ์นี้ และจะส่งไปยังเซิร์ฟเวอร์เองเมื่อเชื่อมต่อได้",
+    "saved_on_device": "บันทึกในอุปกรณ์นี้แล้ว",
+    "status_waiting": "กำลังรอเซิร์ฟเวอร์",
+    "status_sending": "กำลังบันทึกไปยังเซิร์ฟเวอร์",
+    "status_uncertain": "กำลังตรวจสอบว่าถึงเซิร์ฟเวอร์แล้วหรือไม่",
+    "status_refused": "เซิร์ฟเวอร์ปฏิเสธฉบับร่างนี้: {error}",
+    "file_missing": "ไฟล์แนบไม่อยู่ในอุปกรณ์นี้แล้ว",
+    "open": "เปิด",
+    "open_label": "เปิด {subject}",
+    "retry": "ลองอีกครั้ง",
+    "retry_label": "ลอง {subject} อีกครั้ง",
+    "toast_refused": "บันทึกฉบับร่าง {subject} ไปยังเซิร์ฟเวอร์ไม่ได้ ฉบับร่างยังอยู่ในอุปกรณ์นี้",
+    "toast_conflict": "ฉบับร่าง {subject} ถูกเปลี่ยนในอุปกรณ์อื่น เก็บไว้ทั้งสองฉบับ",
+    "conflict_changed": "เปลี่ยนในอุปกรณ์อื่น ทั้งสองฉบับอยู่ในฉบับร่าง",
+    "conflict_gone": "เปลี่ยนหรือลบในอุปกรณ์อื่น ฉบับของคุณอยู่ในฉบับร่าง",
+    "banner_refused": "ฉบับร่างที่เซิร์ฟเวอร์ปฏิเสธ: {count}",
+    "banner_waiting": "ฉบับร่างที่รอเซิร์ฟเวอร์: {count}"
+  },
+  "offlineExport": {
+    "settings_label": "ส่งออกอีเมลที่เก็บไว้",
+    "settings_description": "บันทึกอีเมลในอุปกรณ์นี้เป็นไฟล์ mbox หรือ .eml ใช้งานแบบออฟไลน์ได้",
+    "title": "ส่งออกอีเมลที่เก็บไว้",
+    "description": "บันทึกต้นฉบับที่อุปกรณ์นี้เก็บไว้ ไฟล์ .eml เป็นสำเนาที่ตรงทุกประการ ส่วนไฟล์ mbox จะเพิ่มเครื่องหมายที่รูปแบบไฟล์ต้องการ และเขียนสถานะอ่านแล้วและติดธงลงในส่วนหัวของแต่ละข้อความแทนค่าเดิม อีเมลที่เก่ากว่าช่วงเวลาที่คุณเลือกจะไม่รวมอยู่ด้วย หากต้องการบันทึกทุกอย่างจากเซิร์ฟเวอร์ ให้ใช้ “ส่งออกอีเมลทั้งหมด”",
+    "folders_label": "โฟลเดอร์",
+    "all_folders": "ทุกโฟลเดอร์",
+    "folder_kept": "ที่นี่ {kept} จาก {total}",
+    "loading": "กำลังอ่านข้อมูลในอุปกรณ์นี้…",
+    "load_failed": "อ่านอีเมลในอุปกรณ์นี้ไม่ได้",
+    "nothing_kept": "ยังไม่มีอีเมลที่เก็บไว้ในอุปกรณ์นี้",
+    "kept": "ต้นฉบับในอุปกรณ์นี้: {kept} จาก {total} ข้อความ",
+    "missing_online": "ต้องดาวน์โหลดจากเซิร์ฟเวอร์: {count}",
+    "missing_offline": "ส่งออกขณะออฟไลน์ไม่ได้: {count} ลองอีกครั้งได้เมื่อออนไลน์",
+    "reason_attachments_off": "ข้อความต้นฉบับจะเก็บไว้เฉพาะเมื่อเปิด “เก็บไฟล์แนบ”",
+    "reason_not_kept": "ข้อความต้นฉบับจะดาวน์โหลดเป็นลำดับสุดท้าย และเฉพาะเมื่อมีพื้นที่",
+    "not_kept_attachments_off": "ไม่มีต้นฉบับเพราะอุปกรณ์นี้ไม่เก็บไฟล์แนบ: {count}",
+    "not_kept_not_kept": "ยังไม่มีต้นฉบับในอุปกรณ์นี้: {count}",
+    "retry": "ลองอีกครั้งแบบออนไลน์",
+    "retry_online": "ตอนนี้คุณออนไลน์แล้ว จึงดึงจากเซิร์ฟเวอร์ได้",
+    "retry_offline": "ลองอีกครั้งได้เมื่อออนไลน์",
+    "settings_button": "ส่งออก…",
+    "message_failed": "เซิร์ฟเวอร์ไม่ได้ส่งข้อความนี้มา",
+    "failed_generic": "การส่งออกหยุดเพราะเกิดข้อผิดพลาด โปรดลองอีกครั้ง",
+    "stopped_limit": "การส่งออกหยุดที่ {limit} ซึ่งเป็นขนาดสูงสุดที่เบราว์เซอร์นี้เก็บได้ เลือกโฟลเดอร์ให้น้อยลง หรือใช้ Chromium, Firefox หรือแอปเดสก์ท็อป",
+    "over_limit": "เบราว์เซอร์นี้เก็บได้สูงสุด {limit} แต่ที่เลือกไว้มีขนาดประมาณ {size} เลือกโฟลเดอร์ให้น้อยลง หรือใช้ Chromium, Firefox หรือแอปเดสก์ท็อป",
+    "no_room": "การส่งออกนี้ต้องใช้ประมาณ {size} แต่เบราว์เซอร์นี้เหลือ {free} เลือกโฟลเดอร์ให้น้อยลงหรือเพิ่มพื้นที่ว่าง",
+    "stopped_no_room": "เบราว์เซอร์มีพื้นที่ไม่พอสำหรับการส่งออก เลือกโฟลเดอร์ให้น้อยลงหรือเพิ่มพื้นที่ว่าง",
+    "stopped_offline_off": "การส่งออกหยุดเพราะบัญชีนี้ไม่ได้เก็บอีเมลไว้ในอุปกรณ์นี้แล้ว",
+    "policy_unknown": "ยังไม่ทราบกฎขององค์กรของคุณสำหรับบัญชีนี้ จึงปิดการส่งออกไว้ก่อน",
+    "leftover_file": "นำไฟล์ {name} ออกจากตำแหน่งที่คุณบันทึกไม่ได้ ไฟล์นี้ไม่สมบูรณ์ คุณจึงลบได้"
   },
   "plugin_pages": {
     "loading": "กำลังโหลดหน้าเว็บ...",
@@ -1907,7 +2642,6 @@
     },
     "details": "รายละเอียด",
     "details_hint": "เลือกไฟล์หรือโฟลเดอร์เพื่อดูรายละเอียด",
-    "disabled_description": "การอัปโหลดไฟล์ขนาดใหญ่ผ่าน WebDAV อาจทำให้ฐานข้อมูล Stalwart/RocksDB ไม่เสถียร รวมถึงการใช้หน่วยความจำเกินและพื้นที่ดิสก์ ฟังก์ชันนี้ไม่แนะนำให้เปิดใช้งานในสภาพแวดล้อม Production",
     "disabled_title": "ฟังก์ชันไฟล์ถูกปิดใช้งานโดยผู้ดูแลระบบของคุณ",
     "dismiss": "ปิดข้อความ",
     "download": "ดาวน์โหลด",
@@ -2044,22 +2778,63 @@
     "zoom_out": "ซูมออก",
     "zoom_reset": "พอดีหน้าจอ"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} มีอยู่แล้ว",
+    "conflict_file_hint": "แทนที่จะใส่เนื้อหาใหม่ลงในไฟล์เดิม การแชร์ของไฟล์จึงยังคงอยู่ เก็บทั้งสองจะเพิ่มสำเนาที่มีหมายเลข",
+    "conflict_folder_hint": "แทนที่จะเพิ่มไฟล์ลงในโฟลเดอร์เดิมและแทนที่ไฟล์ที่ชื่อซ้ำกัน เก็บทั้งสองจะสร้างโฟลเดอร์ที่สองที่มีหมายเลข",
+    "replace": "แทนที่",
+    "keep_both": "เก็บทั้งสอง",
+    "skip": "ข้าม",
+    "apply_to_all": "{count, plural, other {ทำแบบนี้กับข้อขัดแย้งทั้ง # รายการ}}",
+    "no_preview": "ไฟล์ประเภทนี้ไม่มีตัวอย่าง",
+    "open_in_app": "เปิดในแอปเริ่มต้น",
+    "shared_with": "ตอนนี้แชร์ {name} กับ {person} แล้ว",
+    "send_message": "ส่งข้อความ",
+    "share_mail_subject": "ฉันแชร์ {name} กับคุณ",
+    "share_mail_body": "สวัสดี\n\nฉันแชร์ \"{name}\" กับคุณแล้ว เปิดได้ที่นี่:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "เพิ่มทั้งหมดในปฏิทิน",
+    "zone_contacts_all": "เพิ่มทั้งหมดในรายชื่อติดต่อ",
+    "save_to_files": "บันทึกลงในไฟล์",
+    "saved": "บันทึก {name} ลงในไฟล์แล้ว",
+    "saved_copy": "บันทึกลงในไฟล์เป็น {name} แล้ว",
+    "save_failed": "บันทึก {name} ลงในไฟล์ไม่ได้",
+    "changed_on_server": "{name} ถูกเปลี่ยนในไฟล์หลังจากที่คุณเปิด",
+    "gone_on_server": "{name} ไม่อยู่ในไฟล์แล้ว",
+    "keep_both": "เก็บทั้งสอง",
+    "replace": "แทนที่",
+    "cancel": "ยกเลิก",
+    "save_as_new": "บันทึกเป็นไฟล์ใหม่",
+    "import_to_mail": "นำเข้าไปยังโฟลเดอร์อีเมล…",
+    "import_to_mail_title": "นำเข้าไปยังโฟลเดอร์อีเมล",
+    "imported_to_mail": "นำเข้าไปยัง {folder} แล้ว",
+    "import_to_mail_failed": "นำเข้า {name} ไม่ได้",
+    "import_contacts": "นำเข้าไปยังรายชื่อติดต่อ…",
+    "add_to_calendar": "เพิ่มในปฏิทิน…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "ไฟล์ที่แก้ไข",
+    "hide": "ซ่อน",
+    "discard_detail_file": "การแก้ไขในสำเนานี้จะถูกลบ ไฟล์ในไฟล์จะไม่เปลี่ยน",
+    "saved_auto": "บันทึก {name} ลงในไฟล์แล้ว การบันทึกครั้งต่อไปจากโปรแกรมจะไปที่นั่นเอง"
+  },
   "protocol_handlers": {
     "title": "แอปพลิเคชันเริ่มต้น",
-    "description": "เลือกว่าต้องการให้ลิงก์อีเมลและปฏิทินเปิดใน {appName} หรือไม่ {appName} จะลงทะเบียนเป็นตัวจัดการโปรโตคอลสำหรับลิงก์ mailto: และ webcal:",
+    "description": "เลือกว่าจะเปิดลิงก์อีเมลและปฏิทินใน {appName} หรือไม่",
     "unsupported": "เบราว์เซอร์หรือการเชื่อมต่อนี้ไม่รองรับการลงทะเบียนโปรโตคอลด้วยตนเอง",
-    "mailto_label": "ลิงก์อีเมล (mailto:)",
-    "mailto_description": "เปิดลิงก์ mailto: ใน {appName} พร้อมเปิดหน้าต่างเขียนจดหมายและกรอกข้อมูลล่วงหน้า",
-    "protocol_open_mode_label": "เมื่อเปิดลิงก์โปรโตคอล",
+    "mailto_label": "เปิดลิงก์อีเมลใน {appName}",
+    "mailto_description": "การคลิกที่อยู่อีเมลบนเว็บไซต์จะเริ่มข้อความใหม่ใน {appName}",
+    "protocol_open_mode_label": "วิธีเปิดลิงก์",
     "protocol_open_mode_description": "เลือกว่าต้องการให้ {appName} เปิดลิงก์ mailto: และ webcal: ในแท็บใหม่ หรือใช้งานเซสชันเดิมที่เปิดอยู่ ตัวเลือกเซสชันเดิมจำเป็นต้องได้รับสิทธิ์การแจ้งเตือน เพื่อให้คุณสามารถคลิกการแจ้งเตือนเพื่อนำหน้าต่าง {appName} มาไว้ด้านหน้าได้หากเบราว์เซอร์บล็อกการโฟกัส",
     "protocol_open_mode_active_session": "เปิดในเซสชันเดิมหากทำได้",
     "protocol_open_mode_new_tab": "เปิดแท็บใหม่เสมอ",
     "focus_notification_title": "เปิด {appName}",
     "focus_notification_body": "ลิงก์ถูกเปิดใน {appName} แล้ว คลิกเพื่อนำหน้าต่างมาไว้ด้านหน้า",
-    "webcal_label": "ลิงก์ปฏิทิน (webcal:)",
-    "webcal_description": "เปิดลิงก์ webcal: ใน {appName} พร้อมหน้าต่างสมัครรับข้อมูลปฏิทิน",
-    "register_mailto": "ลงทะเบียนเป็นแอปอีเมลเริ่มต้น",
-    "register_webcal": "ลงทะเบียนเป็นแอปปฏิทินเริ่มต้น",
+    "webcal_label": "เปิดลิงก์ปฏิทินใน {appName}",
+    "webcal_description": "การคลิกลิงก์ปฏิทินบนเว็บไซต์จะเพิ่มปฏิทินใน {appName}",
+    "register_mailto": "ใช้ {appName} สำหรับลิงก์อีเมล",
+    "register_webcal": "ใช้ {appName} สำหรับลิงก์ปฏิทิน",
     "mailto_registered": "ส่งคำขอลงทะเบียนตัวจัดการอีเมลแล้ว",
     "webcal_registered": "ส่งคำขอลงทะเบียนตัวจัดการปฏิทินแล้ว",
     "registration_failed": "การลงทะเบียนตัวจัดการโปรโตคอลไม่สำเร็จ",
@@ -2069,7 +2844,6 @@
     "select_account_title": "เลือกบัญชี",
     "select_mailto_account": "เลือกบัญชีที่ต้องการให้เปิดลิงก์อีเมลนี้",
     "select_webcal_account": "เลือกบัญชีที่ต้องการให้เปิดลิงก์ปฏิทินนี้",
-    "select_account_note": "การตั้งค่านี้มีผลเฉพาะกับลิงก์โปรโตคอลนี้เท่านั้น",
     "detail_to": "ถึง",
     "detail_subject": "เรื่อง",
     "detail_no_subject": "ไม่มีหัวข้อเรื่อง",
@@ -2077,6 +2851,28 @@
     "detail_source": "แหล่งที่มา",
     "active_account": "ใช้งานอยู่",
     "switching_account": "กำลังสลับบัญชี..."
+  },
+  "pwaLaunch": {
+    "shortcut_new_message": "ข้อความใหม่",
+    "shortcut_calendar": "ปฏิทิน",
+    "shortcut_contacts": "รายชื่อติดต่อ",
+    "unsupported_file": "ไม่สามารถเปิด {name} ที่นี่ได้",
+    "open_failed": "เปิดไฟล์ไม่ได้ ลองเปิดอีกครั้ง",
+    "share_gone": "สิ่งที่คุณแชร์ไม่อยู่ที่นี่แล้ว โปรดแชร์อีกครั้ง",
+    "share_files_lost": "เก็บไฟล์ที่แชร์ไว้ไม่ได้ โปรดเพิ่มไฟล์ลงในข้อความอีกครั้ง",
+    "ics_needs_server": "การนำเข้าไฟล์ปฏิทินต้องเชื่อมต่อกับเซิร์ฟเวอร์ การนำเข้าจะเริ่มเมื่อคุณกลับมาออนไลน์",
+    "contacts_need_server": "การนำเข้ารายชื่อติดต่อต้องเชื่อมต่อกับเซิร์ฟเวอร์ โปรดลองอีกครั้งเมื่อคุณกลับมาออนไลน์",
+    "share_confirm_title": "เริ่มข้อความใหม่หรือไม่",
+    "share_confirm_message": "เว็บไซต์หรือแอปอื่นต้องการเริ่มข้อความ จะไม่มีการอัปโหลดหรือบันทึกสิ่งใดหากคุณไม่ยินยอม",
+    "share_confirm_subject": "หัวเรื่อง:",
+    "share_confirm_text": "ข้อความ:",
+    "share_confirm_files": "{count, plural, other {ไฟล์:}}",
+    "share_confirm_accept": "เริ่มข้อความ",
+    "share_confirm_decline": "ไม่เริ่ม",
+    "share_cut": "ข้อความที่แชร์ยาวเกินไปจึงถูกตัดให้สั้นลง",
+    "handoff_expired": "สิ่งที่คุณเปิดหรือแชร์รอนานเกินไปและไม่อยู่แล้ว โปรดเปิดหรือแชร์อีกครั้ง",
+    "compose_waiting": "ปิดข้อความนี้เพื่อเริ่มข้อความถัดไป",
+    "save_first_failed": "บันทึกข้อความไม่ได้ จึงยังไม่เปิดไฟล์ โปรดบันทึกข้อความแล้วเปิดปฏิทินหรือรายชื่อติดต่อ"
   },
   "sidebar_apps": {
     "modal_title": "แอปพลิเคชันแถบด้านข้าง",
@@ -2117,13 +2913,152 @@
     "invited": "{name} เชิญคุณเข้าร่วม “{title}”",
     "updated": "{name} อัปเดตกิจกรรม “{title}”",
     "cancelled": "{name} ยกเลิกกิจกรรม “{title}”",
-    "untitled": "กิจกรรมที่ไม่มีชื่อ"
+    "untitled": "กิจกรรมที่ไม่มีชื่อ",
+    "summary": "การเปลี่ยนแปลงในกิจกรรมที่คุณเข้าร่วม: {count}"
+  },
+  "calendar_month_select": {
+    "selected_range": "เลือก {start} ถึง {end} แล้ว",
+    "selected_day": "เลือก {day} แล้ว",
+    "enter_hint": "กด Enter เพื่อสร้างกิจกรรม"
+  },
+  "company_calendars": {
+    "section": "องค์กร"
+  },
+  "ux_pim_grid": {
+    "search_short": "ค้นหา",
+    "reply": "ตอบกลับ",
+    "reply_to_invitation": "ตอบกลับคำเชิญ"
+  },
+  "vacation_calendar": {
+    "label": "บล็อกปฏิทินของฉัน",
+    "description": "เพิ่มกิจกรรมไม่ว่างในช่วงที่คุณไม่อยู่ เพื่อไม่ให้ใครนัดประชุมกับคุณในเวลานั้น",
+    "no_access_managed": "บล็อกปฏิทินของบัญชีนี้ไม่ได้ เพราะคุณไม่มีสิทธิ์เขียน",
+    "no_calendar": "บล็อกปฏิทินไม่ได้ Bulwark ไม่พบปฏิทินสำหรับเพิ่มกิจกรรม",
+    "filter_warning": "การเปิดใช้จะปิดสคริปต์ตัวกรองของคุณเองตลอดช่วงที่การตอบกลับทำงาน"
+  },
+  "calendar_delegate": {
+    "answer_for": "ตอบแทน {name}",
+    "no_write": "คุณเห็นคำเชิญของ {name} แต่ตอบแทนไม่ได้ โปรดขอสิทธิ์แก้ไข",
+    "also_invited": "คุณได้รับเชิญด้วย และเซิร์ฟเวอร์นี้แยกคำตอบของคุณกับของ {name} ไม่ได้ {name} ต้องตอบเอง",
+    "answered_by": "ตอบโดย {who}"
+  },
+  "free_busy_share": {
+    "button": "แชร์เวลาว่าง/ไม่ว่างของฉันกับ {group}",
+    "already": "แชร์เวลาว่าง/ไม่ว่างของคุณกับ {group} แล้ว",
+    "done": "แชร์เวลาว่าง/ไม่ว่างของคุณกับ {group} แล้ว",
+    "error": "แชร์เวลาว่าง/ไม่ว่างไม่สำเร็จ ลองอีกครั้ง",
+    "group_label": "กลุ่ม",
+    "title": "ว่าง/ไม่ว่าง",
+    "description": "เพื่อนร่วมงานในกลุ่มเห็นว่าคุณไม่ว่างเมื่อใด แต่ไม่เห็นรายละเอียดกิจกรรม ฟีเจอร์แนะนำเวลาใช้ข้อมูลนี้"
+  },
+  "ux_pim_cimport": {
+    "file_hint": "คลิกเพื่อเลือกไฟล์ vCard หรือ CSV",
+    "file_types": "ไฟล์ .vcf หรือ .csv เช่น จาก Outlook หรือ Google Contacts",
+    "parse_error": "อ่านไฟล์ไม่ได้",
+    "columns_title": "จับคู่คอลัมน์",
+    "columns_hint": "เลือกว่าแต่ละคอลัมน์ของ {file} จะไปที่ใด คอลัมน์ที่ตั้งเป็น “ไม่นำเข้า” จะถูกข้าม",
+    "column": "คอลัมน์",
+    "sample": "ตัวอย่าง",
+    "field": "ช่องของผู้ติดต่อ",
+    "skip": "ไม่นำเข้า",
+    "no_columns": "เลือกช่องให้อย่างน้อยหนึ่งคอลัมน์",
+    "continue": "ดำเนินการต่อ",
+    "back": "ย้อนกลับ",
+    "import_into": "นำเข้าไปยัง",
+    "group_name": "ชื่อ",
+    "group_email": "อีเมล",
+    "group_phone": "โทรศัพท์",
+    "group_org": "องค์กร",
+    "group_adr_any": "ที่อยู่",
+    "group_adr_home": "ที่อยู่บ้าน",
+    "group_adr_work": "ที่อยู่ที่ทำงาน",
+    "group_adr_other": "ที่อยู่อื่น",
+    "group_more": "เพิ่มเติม",
+    "address_field": "{group}: {part}",
+    "t_name_full": "ชื่อเต็ม",
+    "t_name_given": "ชื่อ",
+    "t_name_middle": "ชื่อกลาง",
+    "t_name_surname": "นามสกุล",
+    "t_name_prefix": "คำนำหน้า (ดร., นาง)",
+    "t_name_suffix": "คำต่อท้าย (Jr.)",
+    "t_nickname": "ชื่อเล่น",
+    "t_email": "อีเมล",
+    "t_email_home": "อีเมล (บ้าน)",
+    "t_email_work": "อีเมล (ที่ทำงาน)",
+    "t_phone": "โทรศัพท์",
+    "t_phone_mobile": "มือถือ",
+    "t_phone_home": "โทรศัพท์ (บ้าน)",
+    "t_phone_work": "โทรศัพท์ (ที่ทำงาน)",
+    "t_phone_fax": "แฟกซ์",
+    "t_phone_fax_home": "แฟกซ์ (บ้าน)",
+    "t_phone_fax_work": "แฟกซ์ (ที่ทำงาน)",
+    "t_phone_pager": "เพจเจอร์",
+    "t_org_name": "บริษัท",
+    "t_org_unit": "แผนก",
+    "t_org_title": "ตำแหน่งงาน",
+    "t_street": "ถนน",
+    "t_pobox": "ตู้ไปรษณีย์",
+    "t_locality": "เมือง",
+    "t_region": "รัฐหรือภูมิภาค",
+    "t_postcode": "รหัสไปรษณีย์",
+    "t_country": "ประเทศ",
+    "t_web": "เว็บไซต์",
+    "t_birthday": "วันเกิด",
+    "t_anniversary": "วันครบรอบ",
+    "t_notes": "บันทึก",
+    "t_categories": "หมวดหมู่",
+    "t_type": "ประเภทของค่า (บ้าน, ที่ทำงาน…)",
+    "merge_with": "รวมกับ…",
+    "merge_selected": "รวม…",
+    "find_duplicates": "ค้นหารายการซ้ำ",
+    "possible_duplicates": "อาจซ้ำกัน ({count})",
+    "duplicates_title": "อาจซ้ำกัน",
+    "duplicates_hint": "ผู้ติดต่อที่มีชื่อ ที่อยู่อีเมล หรือหมายเลขโทรศัพท์เดียวกัน",
+    "duplicates_none": "ไม่พบรายการที่อาจซ้ำกัน",
+    "pick_title": "รวม {name} กับ…",
+    "pick_search": "ค้นหาผู้ติดต่อ",
+    "pick_suggested": "อาจซ้ำกัน",
+    "pick_all": "ผู้ติดต่อทั้งหมด",
+    "pick_none": "ไม่มีผู้ติดต่ออื่นให้รวม",
+    "preview_title": "รวมผู้ติดต่อ ({count})",
+    "preview_hint": "ผู้ติดต่อเหล่านี้จะกลายเป็นการ์ดเดียวที่มีทุกอย่างด้านล่าง",
+    "preview_deleted": "รวมเข้าแล้วลบ: {names}",
+    "groups": "กลุ่ม",
+    "merge": "รวม",
+    "merging": "กำลังรวม…",
+    "merged": "รวมผู้ติดต่อแล้ว",
+    "merge_failed": "รวมผู้ติดต่อไม่ได้",
+    "merge_not_possible": "รวมผู้ติดต่อเหล่านี้ไม่ได้ เพราะอยู่คนละบัญชี หรืออยู่ในสมุดที่อยู่ที่คุณเปลี่ยนแปลงไม่ได้",
+    "undo": "เลิกทำ",
+    "undone": "เลิกทำการรวมแล้ว",
+    "undo_failed": "เลิกทำการรวมได้ไม่ครบ"
+  },
+  "find_time": {
+    "suggest": "แนะนำเวลา",
+    "searching": "กำลังหาเวลาว่าง",
+    "slots_title": "ว่างสำหรับทุกคนที่ Bulwark ตรวจสอบได้",
+    "slot": "{day} {start} ถึง {end}",
+    "none": "ไม่มีเวลาว่างใน 10 วันทำงานถัดไป",
+    "picked": "ย้ายกิจกรรมไปที่ {slot} แล้ว",
+    "rate_limited": "มีการค้นหามากเกินไปในหนึ่งนาทีที่ผ่านมา ลองอีกครั้งในอีกหนึ่งนาที",
+    "unavailable": "เซิร์ฟเวอร์นี้ไม่มีข้อมูลว่าง/ไม่ว่าง Bulwark จึงแนะนำเวลาไม่ได้",
+    "not_checked": "ไม่ได้ตรวจสอบ:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "อยู่นอกองค์กรของคุณ",
+    "reason_unknown": "ไม่ทราบเวลาที่ไม่ว่าง",
+    "reason_not_found": "ไม่พบในเซิร์ฟเวอร์นี้",
+    "reason_error": "ตรวจสอบไม่ได้",
+    "unknown_note": "Bulwark เห็นเวลาที่ไม่ว่างเฉพาะในปฏิทินที่แชร์กับคุณ สำหรับคนเหล่านี้จึงแยกไม่ออกว่าว่างหรือไม่ได้แชร์",
+    "directory_off": "Bulwark ค้นหาบุคคลในเซิร์ฟเวอร์นี้ไม่ได้ ผู้ดูแลระบบเปิดการค้นหาไดเรกทอรีได้ใน Stalwart",
+    "not_looked_up": "ค้นหาที่อยู่นี้ไม่ได้",
+    "found": "พบเวลาว่าง: {count}"
   },
   "share_notifications": {
     "someone": "บุคคลอื่น",
     "shared": "{name} แชร์ {kind} “{object}” กับคุณ",
     "changed": "{name} เปลี่ยนแปลงสิทธิ์การเข้าถึง {kind} “{object}” ของคุณ",
     "revoked": "{name} ยกเลิกสิทธิ์การเข้าถึง {kind} “{object}” ของคุณ",
+    "summary": "{name} เปลี่ยนสิทธิ์การเข้าถึงรายการที่แชร์ {count, plural, other {# รายการ}} ของคุณ",
     "object": {
       "folder": "โฟลเดอร์",
       "calendar": "ปฏิทิน",
@@ -2381,6 +3316,10 @@
       "accounts_heading": "บัญชีที่เชื่อมต่อ",
       "account_on": "{label} บน {host}",
       "account_waiting": "{label} บน {host} (ยังลงชื่อเข้าใช้ไม่เสร็จสมบูรณ์)",
+      "forward_heading": "ส่งต่ออีเมลไปยัง",
+      "forward_hint": "ที่อยู่ที่ปลั๊กอินนี้ส่งต่อข้อความไปได้โดยไม่ต้องถาม",
+      "forward_remove": "นำออก",
+      "forward_remove_label": "หยุดส่งต่อไปยัง {address}",
       "disconnect": "ยกเลิกการเชื่อมต่อ",
       "disconnect_failed": "ไม่สามารถยกเลิกการเชื่อมต่อ {label} ได้"
     },
@@ -2399,13 +3338,17 @@
         "title": "สิทธิ์การเข้าถึงแอปพลิเคชันอย่างเต็มรูปแบบ",
         "body": "ทำงานด้วยสิทธิ์เดียวกันกับตัวเว็บเมลเอง สามารถอ่านอีเมลทั้งหมดและคีย์ลับที่จัดเก็บไว้ รวมถึงดำเนินการแทนคุณได้ อนุญาตเฉพาะปลั๊กอินที่คุณไว้วางใจอย่างสมบูรณ์เท่านั้น"
       },
+      "keystore": {
+        "title": "ใช้ใบรับรองในคอมพิวเตอร์เครื่องนี้",
+        "body": "ขอลงนามและถอดรหัสข้อความด้วยใบรับรองในคอมพิวเตอร์เครื่องนี้หรือบนสมาร์ตการ์ด แอปจะถามคุณก่อน ปลั๊กอินไม่ได้รับคีย์ส่วนตัว แต่ตราบใดที่คุณอนุญาต ปลั๊กอินจะลงนามในนามของคุณและอ่านสิ่งที่ถอดรหัสได้"
+      },
       "email_raw_send": {
         "title": "ส่งข้อความที่สร้างขึ้นเอง",
         "body": "ส่งข้อความฉบับสมบูรณ์ เช่น ข้อความที่มีการลงลายมือชื่อดิจิทัลหรือเข้ารหัส จากบัญชีของคุณ"
       },
       "email_blob_read": {
-        "title": "อ่านเนื้อหาต้นฉบับของข้อความ",
-        "body": "อ่านไฟล์แนบและซอร์สโค้ดฉบับเต็มของข้อความที่คุณใช้งาน รวมถึงทุกไฟล์ที่คุณแนบก่อนที่จะส่ง"
+        "title": "อ่านไฟล์แนบและต้นฉบับของข้อความ",
+        "body": "อ่านไฟล์แนบ (รวมถึงข้อความและรูปภาพในไฟล์) และต้นฉบับทั้งหมดของข้อความที่คุณใช้งาน รวมถึงทุกไฟล์ที่คุณแนบก่อนที่จะส่ง"
       },
       "email_blob_write": {
         "title": "แทนที่ไฟล์แนบก่อนส่ง",
@@ -2445,11 +3388,11 @@
       },
       "files_read": {
         "title": "อ่านไฟล์ของคุณ",
-        "body": "เรียกดูและเปิดไฟล์ที่จัดเก็บไว้ในบัญชีของคุณ"
+        "body": "ค้นหา เปิด และอ่านไฟล์ในบัญชีของคุณ"
       },
       "files_write": {
         "title": "จัดการไฟล์ของคุณ",
-        "body": "อัปโหลด เปลี่ยนชื่อ ย้าย และลบไฟล์ในบัญชีของคุณ"
+        "body": "บันทึก สร้าง เปลี่ยนชื่อ และย้ายไฟล์ในบัญชีของคุณ และป้องกันไม่ให้ลบไฟล์"
       },
       "filters_read": {
         "title": "อ่านตัวกรองอีเมลของคุณ",
@@ -2487,6 +3430,10 @@
         "title": "จัดการปฏิทินของคุณ",
         "body": "สร้าง แก้ไข และลบกิจกรรมในปฏิทิน และตอบรับคำเชิญ"
       },
+      "calendar_respond": {
+        "title": "ตอบคำเชิญ",
+        "body": "ตอบรับหรือปฏิเสธคำเชิญในปฏิทิน คำตอบของคุณจะส่งถึงผู้จัดทางอีเมล"
+      },
       "vacation_read": {
         "title": "ดูการตอบกลับอัตโนมัติของคุณ",
         "body": "ดูว่าการตอบกลับอัตโนมัติเปิดใช้งานอยู่หรือไม่ พร้อมข้อความและวันที่กำหนดไว้"
@@ -2500,8 +3447,12 @@
         "body": "ดูการตั้งค่าและคำจำกัดความของแท็กของคุณ"
       },
       "settings_write": {
+        "title": "แก้ไขแท็กของคุณ",
+        "body": "เพิ่ม เปลี่ยนชื่อ และจัดลำดับแท็กของคุณใหม่ รวมถึงบล็อกการเปลี่ยนแปลงการตั้งค่าของคุณ"
+      },
+      "settings_change": {
         "title": "แก้ไขการตั้งค่าของคุณ",
-        "body": "เพิ่มและจัดลำดับแท็กใหม่ รวมถึงปรับเปลี่ยนการตั้งค่าตามความต้องการ"
+        "body": "เปลี่ยนหน้าตาและการทำงานของแอป เช่น ธีม รูปแบบเวลา หรือหน้าต่างอ่านจดหมาย การตั้งค่าที่องค์กรของคุณกำหนดไว้จะคงเดิม"
       },
       "security_read": {
         "title": "ดูความปลอดภัยของบัญชีคุณ",
@@ -2514,6 +3465,10 @@
       "auth_emit": {
         "title": "ลงชื่อคุณออกจากระบบ",
         "body": "ลงชื่อคุณออกจากระบบเว็บเมล"
+      },
+      "auth_impersonation_return": {
+        "title": "พาคุณกลับไปที่บัญชีของคุณ",
+        "body": "หลังจากผู้ดูแลระบบเปิดกล่องจดหมายผ่านการสวมสิทธิ์ผู้ใช้ ให้จบเซสชันนั้นและลงชื่อเข้าใช้บัญชีที่เริ่มต้นอีกครั้ง"
       },
       "account_read": {
         "title": "ดูบัญชีของคุณ",
@@ -2562,6 +3517,10 @@
       "ui_email_details": {
         "title": "เพิ่มแผงข้อมูลในรายละเอียดข้อความ",
         "body": "แสดงแผงควบคุมของปลั๊กอินเองถัดจากหรือด้านล่างของข้อความที่เปิดอยู่"
+      },
+      "ui_side_panel": {
+        "title": "เพิ่มแผงในมุมมองอื่น",
+        "body": "แสดงแผงของตัวเองข้างปฏิทิน รายชื่อติดต่อ ไฟล์ และการตั้งค่า"
       },
       "ui_download_file": {
         "title": "บันทึกไฟล์ลงในอุปกรณ์ของคุณ",
@@ -2621,7 +3580,7 @@
       },
       "ui_tasks": {
         "title": "เพิ่มองค์ประกอบในรายการงาน",
-        "body": "แสดงส่วนข้อมูลของปลั๊กอินเองในรายละเอียดของงานและปุ่มในรายการงาน"
+        "body": "แสดงส่วนข้อมูลของปลั๊กอินเองในรายละเอียดของงาน ปุ่มในรายการงาน และรายการงานของปลั๊กอินเองแทนรายการของ Bulwark"
       },
       "ui_files": {
         "title": "เพิ่มองค์ประกอบในไฟล์",
@@ -2645,16 +3604,29 @@
       },
       "compose_read": {
         "title": "อ่านข้อความที่คุณกำลังเขียน",
-        "body": "อ่านข้อความในขณะที่คุณเขียน เมื่อคุณใช้ปลั๊กอินในหน้าต่างเขียนอีเมล โดยไม่รวมถึงลายเซ็นหรือข้อความที่อ้างอิง"
+        "body": "อ่านอีเมลในขณะที่คุณเขียน เมื่อคุณใช้ปลั๊กอินในหน้าต่างเขียนอีเมล ได้แก่ ข้อความ หัวเรื่อง ผู้รับรวมถึงสำเนาลับ (Bcc) และชื่อกับขนาดของไฟล์แนบ โดยไม่รวมถึงลายเซ็นหรือข้อความที่อ้างอิง"
       },
       "compose_write": {
         "title": "ปรับแต่งข้อความที่คุณกำลังเขียน",
         "body": "แทนที่หรือเพิ่มข้อความในขณะที่คุณเขียน เมื่อคุณใช้ปลั๊กอินในหน้าต่างเขียนอีเมล คุณสามารถเลิกทำการเปลี่ยนแปลงแต่ละครั้งได้ และยังคงเป็นผู้ตัดสินใจว่าจะส่งข้อความหรือไม่"
       },
+      "compose_check": {
+        "title": "ตรวจสิ่งที่คุณเขียน",
+        "body": "อ่านสิ่งที่คุณเขียนในหน้าเขียนข้อความขณะพิมพ์ และอาจส่งไปยังบริการที่ใช้ เฉพาะเมื่อเปิดการตรวจทาน และไม่ส่งอะไรเลยขณะที่ข้อความตั้งค่าให้ลงนามหรือเข้ารหัส ข้อความที่คุณเขียนก่อนเปิดตัวเลือกนั้นอาจถูกตรวจไปแล้ว"
+      },
+      "email_forward": {
+        "title": "ส่งต่ออีเมลของคุณ",
+        "body": "ส่งต่อข้อความจากบัญชีของคุณพร้อมไฟล์แนบ โดยไม่ต้องเปิดหน้าเขียนข้อความ ระบบจะถามคุณก่อนส่งต่อไปยังแต่ละที่อยู่เป็นครั้งแรก"
+      },
       "ui_notifications": {
         "title": "แสดงการแจ้งเตือน",
         "body": "แสดงการแจ้งเตือนบนอุปกรณ์ของคุณ หรือภายในแอปหากคุณยังไม่ได้อนุญาตการแจ้งเตือนของอุปกรณ์ โดยแต่ละการแจ้งเตือนจะระบุชื่อปลั๊กอิน"
       }
+    },
+    "forward_approval": {
+      "title": "อนุญาตให้ {plugin} ส่งต่ออีเมลไปยัง {addresses} หรือไม่",
+      "message": "{plugin} ต้องการส่งต่อ “{subject}” พร้อมไฟล์แนบไปยัง {addresses} หากคุณอนุญาต จากนี้ไปปลั๊กอินจะส่งต่ออีเมลไปยังที่อยู่นี้ได้โดยไม่ต้องถาม คุณยกเลิกได้ที่ การตั้งค่า > ส่วนเสริม",
+      "allow": "อนุญาตและส่งต่อ"
     },
     "dialog": {
       "from_plugin": "จากปลั๊กอิน {name}",
@@ -2684,6 +3656,28 @@
       "error_server": "กรุณาระบุที่อยู่เซิร์ฟเวอร์ เช่น https://cloud.example.com",
       "error_save": "บันทึกไม่สำเร็จ: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "ยังไม่ได้ส่ง การตรวจสอบที่องค์กรของคุณกำหนดไม่ได้ทำงานอยู่ ลองอีกครั้งในอีกสักครู่",
+    "stopped_working": "ยังไม่ได้ส่ง การตรวจสอบที่องค์กรของคุณกำหนดหยุดทำงาน โหลดหน้านี้ใหม่ หากยังไม่ได้ผล โปรดแจ้งผู้ดูแลระบบ"
+  },
+  "compose_words": {
+    "undo_send": {
+      "label": "ยกเลิกการส่ง",
+      "description": "ให้เวลาคุณสองสามวินาทีเพื่อเรียกข้อความกลับหลังจากกดส่ง"
+    },
+    "reply_from_received": {
+      "label": "ตอบกลับจากที่อยู่ที่ได้รับ",
+      "description": "ตอบกลับจากที่อยู่ที่อีเมลถูกส่งมา มีประโยชน์หากคุณมีหลายที่อยู่"
+    },
+    "require_tls": "ส่งผ่านการเชื่อมต่อที่ปลอดภัยเท่านั้น",
+    "require_tls_hint": "ตัวข้อความเองไม่ได้ถูกเข้ารหัส ข้อความจะถูกตีกลับหากเซิร์ฟเวอร์ใช้ TLS ไม่ได้",
+    "encrypt": "เข้ารหัส…",
+    "encrypt_hint": "ต้องใช้ส่วนเสริม S/MIME หรือ PGP จะเปิดการตั้งค่า",
+    "quick_reply_to": "ตอบกลับถึง {names}…",
+    "open_full_editor": "เปิดในตัวแก้ไขเต็มรูปแบบ",
+    "forward_to_label": "ถึง",
+    "forward_cc_label": "สำเนา"
   },
   "plugin_list": {
     "filters": "ตัวกรอง",
@@ -3125,6 +4119,35 @@
       "menu": "เปิดเมนูของผู้ติดต่อ"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "บ้าน",
+    "phone_voice": "โทรศัพท์",
+    "more_fields": "ช่องเพิ่มเติม",
+    "import_menu": "นำเข้าผู้ติดต่อ…",
+    "new_address_book_menu": "สมุดที่อยู่ใหม่…"
+  },
+  "uxs_wording": {
+    "more_options": "ตัวเลือกเพิ่มเติม",
+    "use_in_other_apps": "ใช้ในแอปอื่น",
+    "default_address_book": "รายชื่อติดต่อ",
+    "default_calendar": "ปฏิทิน",
+    "preview_documents": "เอกสาร",
+    "preview_photos": "รูปภาพ",
+    "sample_subject": "บันทึกการประชุมที่ร้านกาแฟ",
+    "mail_apps": {
+      "imap": "อีเมลขาเข้า (IMAP)",
+      "smtp": "อีเมลขาออก (SMTP)",
+      "caldav": "ปฏิทิน (CalDAV)",
+      "carddav": "รายชื่อติดต่อ (CardDAV)",
+      "port_security": "พอร์ต {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "ไม่เข้ารหัส",
+      "copy_label": "คัดลอก {name}",
+      "loading": "กำลังอ่านการตั้งค่าจากเซิร์ฟเวอร์อีเมล…",
+      "not_found": "เซิร์ฟเวอร์อีเมลไม่ได้แจ้งชื่อเซิร์ฟเวอร์สำหรับแอปอื่น โปรดสอบถามผู้ดูแลระบบ"
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "ปฏิทิน: {names}",
@@ -3368,7 +4391,7 @@
       "hide_non_working_days_desc": "ซ่อนวันที่คุณไม่ได้ทำงานจากมุมมองรายสัปดาห์ โดยกิจกรรมในวันเหล่านั้นยังคงแสดงในมุมมองรายเดือน รายวัน และกำหนดการ",
       "working_days": "วันทำงาน",
       "title": "การตั้งค่าปฏิทิน",
-      "default_view": "มุมมองเริ่มต้น",
+      "default_view": "ปฏิทินเปิดในมุมมอง",
       "week_starts_on": "วันเริ่มต้นสัปดาห์",
       "time_format": "รูปแบบเวลา",
       "default_calendar": "ปฏิทินเริ่มต้น",
@@ -3379,17 +4402,22 @@
       "notifications_enabled_desc": "แสดงการแจ้งเตือนสำหรับกิจกรรมในปฏิทินที่กำลังจะมาถึง",
       "notification_sound": "เสียงแจ้งเตือน",
       "notification_sound_desc": "เล่นเสียงเมื่อมีการแจ้งเตือนกิจกรรมในปฏิทิน",
-      "invitation_parsing": "วิเคราะห์คำเชิญจากอีเมล",
+      "invitation_parsing": "แสดงคำเชิญจากอีเมล",
       "invitation_parsing_desc": "ตรวจหาคำเชิญเข้าร่วมกิจกรรมในไฟล์แนบอีเมลและแสดงปุ่มการดำเนินการในปฏิทิน",
       "show_time_in_month_view": "แสดงเวลาในมุมมองรายเดือน",
       "show_time_in_month_view_desc": "แสดงเวลากิจกรรมในมุมมองปฏิทินรายเดือน บนหน้าจอขนาดเล็กจะแสดงรายการกิจกรรมเต็มแทนการแสดงจุด",
       "tinted_events": "สีกิจกรรมแบบอ่อน",
       "tinted_events_desc": "แสดงกิจกรรมเป็นสีอ่อนของสีปฏิทินพร้อมแถบสีที่ด้านต้น เหมือนใน Outlook และฉบับพิมพ์ แทนที่จะเป็นบล็อกสีทึบ",
+      "month_timed_events": "กิจกรรมที่มีเวลาในมุมมองเดือน",
+      "month_timed_events_desc": "ลักษณะของกิจกรรมที่มีเวลาเริ่มในมุมมองเดือน กิจกรรมทั้งวันและหลายวันยังคงเป็นแถบ",
+      "month_timed_events_bar": "แถบ",
+      "month_timed_events_text": "ข้อความสี",
+      "month_timed_events_dot": "จุดและข้อความ",
       "show_week_numbers": "แสดงหมายเลขสัปดาห์",
       "show_week_numbers_desc": "แสดงหมายเลขสัปดาห์ในปฏิทินขนาดเล็ก",
       "calendar_free_scroll": "การเลื่อนอย่างอิสระ",
       "calendar_free_scroll_desc": "เลื่อนผ่านเดือน สัปดาห์ และวันได้อย่างต่อเนื่องแทนการเลื่อนทีละช่วงเวลา",
-      "enable_tasks": "เปิดใช้งานรายการงาน",
+      "enable_tasks": "งาน",
       "enable_tasks_desc": "แสดงมุมมองงานในปฏิทินเพื่อจัดการสิ่งที่ต้องทำ",
       "show_tasks_on_calendar": "แสดงงานบนปฏิทิน",
       "show_tasks_on_calendar_desc": "แสดงรายการงานในมุมมองปฏิทินรายเดือน รายสัปดาห์ และรายวัน",
@@ -3570,8 +4598,8 @@
       "error_update": "อัปเดตปฏิทินไม่สำเร็จ",
       "error_delete": "ลบปฏิทินไม่สำเร็จ",
       "caldav_url": "CalDAV URL",
-      "copy_url": "คัดลอก CalDAV URL",
-      "url_copied": "คัดลอก CalDAV URL ไปยังคลิปบอร์ดแล้ว",
+      "copy_url": "คัดลอกที่อยู่สำหรับแอปอื่น",
+      "url_copied": "คัดลอกที่อยู่แล้ว",
       "share": "แชร์ปฏิทิน…",
       "new_event_in_calendar": "กิจกรรมใหม่ในปฏิทินนี้",
       "shared_with": "แชร์กับ {names}",
@@ -3591,8 +4619,8 @@
       "default_alerts_updated": "อัปเดตการแจ้งเตือนเริ่มต้นแล้ว"
     },
     "subscription": {
-      "title": "การสมัครรับ iCal",
-      "section_title": "การสมัครรับ iCal",
+      "title": "สมัครรับปฏิทิน",
+      "section_title": "ปฏิทินที่สมัครรับ",
       "description": "สมัครรับฟีด iCalendar จากภายนอก กิจกรรมจะได้รับการซิงค์อัตโนมัติลงในปฏิทินแยกต่างหาก รองรับ URL แบบ https:// และ webcal://",
       "url_label": "URL ปฏิทิน",
       "url_placeholder": "https://example.com/calendar.ics หรือ webcal://...",
@@ -3705,6 +4733,66 @@
     "mini_has_events": "มีกิจกรรม",
     "mini_week_number": "สัปดาห์ที่ {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "รายการงาน",
+    "task_status_not_started": "ยังไม่เริ่ม",
+    "task_status_in_progress": "กำลังทำ",
+    "quick_task_due": "ครบกำหนด {date}",
+    "quick_task_due_remove": "เก็บ “{words}” ไว้ในชื่อ",
+    "rename_calendar": "เปลี่ยนชื่อ…",
+    "rename_title": "เปลี่ยนชื่อปฏิทิน",
+    "rename_confirm": "เปลี่ยนชื่อ",
+    "rename_empty": "ป้อนชื่อ",
+    "edit_calendar": "แก้ไข…",
+    "default_alerts_open": "การแจ้งเตือนเริ่มต้น…",
+    "share_open": "แชร์…",
+    "clear_all_events": "ล้างกิจกรรมทั้งหมด…",
+    "delete_calendar": "ลบ…",
+    "caldav_title": "ที่อยู่สำหรับแอปอื่น (CalDAV)",
+    "caldav_hint": "เพิ่มที่อยู่นี้ใน Thunderbird, ปฏิทินของ Apple หรือ DAVx⁵ เพื่อซิงค์ปฏิทินของคุณ",
+    "caldav_shared_by": "แชร์โดย {name}:",
+    "freebusy_description": "ผู้ที่คุณแชร์ด้วยจะเห็นว่าคุณไม่ว่างเมื่อใด แต่ไม่เห็นรายละเอียดกิจกรรม ฟีเจอร์แนะนำเวลาใช้ข้อมูลนี้"
+  },
+  "ux_p2_pim_cal": {
+    "task_list_label": "รายการ",
+    "task_list_not_in_calendar": "{name} (รายการงาน ไม่แสดงในปฏิทิน)",
+    "copy_to_account": "คัดลอกไปที่ {address}",
+    "copied_to_account": "คัดลอกไปที่ {address} แล้ว",
+    "delete_original": "ลบต้นฉบับ"
+  },
+  "calendar_offline": {
+    "split_needs_server": "การเปลี่ยนแปลงนี้ต้องเชื่อมต่อกับเซิร์ฟเวอร์ ตอนนี้เปลี่ยนเฉพาะกิจกรรมนี้ หรือลองอีกครั้งเมื่อกลับมาออนไลน์"
+  },
+  "ux_pim_event": {
+    "time_zone": "เขตเวลา",
+    "time_zone_line": "เขตเวลา: {zone}",
+    "your_time": "{times} ตามเวลาของคุณ",
+    "zone_times": "{times} {zone} ({local} ตามเวลาของคุณ)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "ยอมรับแล้ว",
+    "status_declined": "ปฏิเสธแล้ว",
+    "status_tentative": "อาจจะ",
+    "status_needs_action": "ยังไม่ได้ตอบ",
+    "status_delegated": "มอบหมายต่อแล้ว",
+    "answered_accepted": "คุณตอบรับเมื่อ {date}",
+    "answered_declined": "คุณปฏิเสธเมื่อ {date}",
+    "answered_tentative": "คุณตอบว่าอาจจะเมื่อ {date}",
+    "answered_accepted_nodate": "คุณตอบรับแล้ว",
+    "answered_declined_nodate": "คุณปฏิเสธแล้ว",
+    "answered_tentative_nodate": "คุณตอบว่าอาจจะ"
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "ทำซ้ำ: {rule}",
+    "declined_dates": "คุณปฏิเสธวันที่ {dates}",
+    "declined_many": "คุณปฏิเสธ {count} การประชุมในชุดนี้",
+    "answers_series": "คำตอบของคุณใช้กับทุกการประชุมในชุดนี้"
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "จนถึง {time}",
+    "week_all_days": "แสดงทั้งสัปดาห์",
+    "week_days_short": "{count, plural, other {# วัน}}",
+    "print": "พิมพ์…"
+  },
   "settings": {
     "title": "การตั้งค่า",
     "org_locked": "กำหนดโดยองค์กรของคุณ",
@@ -3813,8 +4901,8 @@
       "title": "รูปลักษณ์",
       "description": "ปรับแต่งรูปลักษณ์และความรู้สึกของเว็บเมลของคุณ",
       "theme": {
-        "label": "ธีม",
-        "description": "เลือกโทนสีที่คุณต้องการ",
+        "label": "สว่างหรือมืด",
+        "description": "ตัวเลือก \"ระบบ\" จะใช้ตามการตั้งค่าของอุปกรณ์",
         "light": "สว่าง",
         "dark": "มืด",
         "system": "ตามระบบ"
@@ -3842,7 +4930,7 @@
         "label": "เค้าโครงส่วนต่อประสาน",
         "description": "ตำแหน่งของแถบค้นหา แถบนำทาง และแถบเครื่องมือ",
         "default": "ค่าเริ่มต้น",
-        "mountain_view": "Mountain View"
+        "mountain_view": "แถบค้นหาด้านบน"
       },
       "animations": {
         "label": "เปิดใช้งานภาพเคลื่อนไหว",
@@ -3862,13 +4950,17 @@
         "label": "ซ่อนตัวสลับบัญชีในแถบด้านข้าง",
         "description": "ซ่อนตัวเลือกบัญชีที่ด้านบนของแถบโฟลเดอร์ คุณยังสามารถสลับบัญชีจากแถบนำทางหลักด้านล่างได้"
       },
+      "sidebar_account_switcher": {
+        "label": "ตัวสลับบัญชีที่ด้านบนของแถบด้านข้าง",
+        "description": "แสดงตัวสลับบัญชีเหนือโฟลเดอร์ และปุ่มเขียนจดหมายทรงกลมบนรายการข้อความ ปิดตัวเลือกนี้เพื่อย้ายปุ่มเขียนจดหมายไปไว้เหนือโฟลเดอร์แทน"
+      },
       "show_rail_account_list": {
         "label": "แสดงรูปประจำตัวบัญชีบนแถบนำทางหลัก",
         "description": "แสดงวงกลมบัญชีแต่ละบัญชีที่ด้านล่างของแถบนำทางหลักเพื่อการสลับบัญชีอย่างรวดเร็ว พร้อมปุ่มลงชื่อออกด้านล่าง"
       },
       "unified_mailbox": {
         "label": "กล่องข้อความรวม",
-        "description": "แสดงโฟลเดอร์รวม (กล่องข้อความ, รายการส่ง ฯลฯ) สำหรับบัญชีที่ใช้งานอยู่และโฟลเดอร์ที่แชร์ จำเป็นต้องมีบัญชีที่เชื่อมต่อมากกว่าหนึ่งบัญชี (หรือกล่องข้อความกลุ่มที่รวมอยู่ด้านล่าง) ก่อนที่โฟลเดอร์ใดๆ จะปรากฏที่นี่ หากมีเพียงบัญชีเดียว จะมีเพียงส่วนหัวของหมวดหมู่ รายการ อีเมลทั้งหมด / ยังไม่ได้อ่าน / ติดดาว ด้านล่างเป็นตัวเลือกแยกต่างหากที่ควบคุมโดยผู้ดูแลระบบและจะไม่แสดงจนกว่าผู้ดูแลระบบจะเปิดใช้งาน",
+        "description": "แสดงโฟลเดอร์รวม (กล่องข้อความ, รายการส่ง ฯลฯ) สำหรับบัญชีที่ใช้งานอยู่และโฟลเดอร์ที่แชร์ ส่วนนี้จะปรากฏเมื่อมีสิ่งที่ต้องรวมเท่านั้น: เปิด \"ครอบคลุมทุกบัญชี\" และเชื่อมต่อมากกว่าหนึ่งบัญชี รวมกล่องข้อความกลุ่มไว้ด้านล่าง หรือเปิด อีเมลทั้งหมด ยังไม่ได้อ่าน หรือ ติดดาว ตัวเลือกทั้งสามนี้แยกต่างหากและจะแสดงเมื่อผู้ดูแลระบบเปิดใช้งานแล้วเท่านั้น",
         "cross_account": {
           "label": "ครอบคลุมทุกบัญชี",
           "description": "รวมกล่องข้อความจากทุกบัญชีที่เชื่อมต่อเข้าด้วยกัน แทนที่จะจำกัดอยู่เฉพาะบัญชีที่ใช้งานอยู่"
@@ -3886,7 +4978,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "ไอคอนแถบด้านข้างแบบมีสีสัน",
-        "description": "ใส่สีไอคอนโฟลเดอร์และแท็กตามประเภท (สีน้ำเงินสำหรับกล่องข้อความ, สีแดงสำหรับจดหมายขยะ, สีเขียวสำหรับรายการส่ง ฯลฯ) ปิดใช้งานเพื่อใช้แถบด้านข้างแบบสีเดียว"
+        "description": "ใส่สีไอคอนโฟลเดอร์และแท็กตามประเภท (กล่องข้อความสีน้ำเงิน จดหมายขยะสีแดง ส่งแล้วสีเขียว เป็นต้น) ปิดเพื่อใช้ไอคอนสีเทา"
       },
       "tint_list_rows": {
         "label": "ย้อมสีแถวข้อความตามสีแท็ก",
@@ -3898,11 +4990,15 @@
       },
       "favicon_unread_badge": {
         "label": "ป้ายจำนวนที่ยังไม่ได้อ่านบนแท็บและไอคอนแอป",
-        "description": "แสดงจำนวนอีเมลที่ยังไม่ได้อ่านเป็นป้ายตัวเลขบนไอคอนแท็บเบราว์เซอร์ และบนไอคอนแอปที่ติดตั้งไว้หากรองรับ เพื่อให้เห็นอีเมลใหม่เมื่อไม่ได้เปิดแท็บนั้นอยู่ ปิดใช้งานเพื่อไม่แสดงป้ายบนไอคอนทั้งสอง"
+        "description": "เพื่อให้คุณเห็นอีเมลใหม่ขณะทำงานในแท็บหรือแอปอื่น"
       },
       "show_shared_mail_accounts": {
         "label": "แสดงบัญชีอีเมลที่แชร์",
         "description": "แสดงรายการโฟลเดอร์ของกล่องข้อความที่ผู้อื่นแชร์กับคุณภายใต้ส่วน ที่แชร์ ในแถบด้านข้าง ปิดใช้งานเพื่อซ่อนทั้งหมด หรือซ่อนทีละบัญชีด้านล่าง โดยปฏิทินและผู้ติดต่อของบัญชีเหล่านั้นจะยังคงอยู่"
+      },
+      "compact_shared_mailboxes": {
+        "label": "กล่องจดหมายที่แชร์แบบกะทัดรัด",
+        "description": "แสดงกล่องจดหมายที่แชร์แต่ละกล่องเป็นแถวเดียวที่เปิดกล่องขาเข้า โดยมีโฟลเดอร์อยู่ด้านล่าง โฟลเดอร์ที่ว่าง เช่น ฉบับร่างหรือถังขยะ จะไม่แสดง"
       },
       "pro_interface": {
         "label": "ส่วนต่อประสานระดับโปร (ทดลองใช้)",
@@ -3945,7 +5041,7 @@
     },
     "keywords": {
       "title": "แท็กอีเมล",
-      "description": "กำหนดแท็กเพื่อจัดหมวดหมู่อีเมลของคุณ ข้อมูลนี้จะถูกบันทึกเป็นคีย์เวิร์ด JMAP บนเซิร์ฟเวอร์",
+      "description": "สร้างแท็กเพื่อจัดเรียงข้อความของคุณ แท็กจะถูกบันทึกไว้กับข้อความบนเซิร์ฟเวอร์",
       "add_keyword": "เพิ่มแท็ก",
       "label_field": "ชื่อที่แสดง",
       "label_placeholder": "เช่น งาน, ส่วนตัว, ด่วน",
@@ -3980,8 +5076,8 @@
         "hide": "ซ่อน"
       },
       "unrecognized": {
-        "title": "กู้คืนแท็กจากเซิร์ฟเวอร์",
-        "description": "ชื่อและสีของแท็กจะจัดเก็บไว้ในเบราว์เซอร์นี้ แต่ตัวแท็กเองจะอยู่บนข้อความของคุณในฐานะคีย์เวิร์ด JMAP สแกนอีเมลของคุณเพื่อหาคีย์เวิร์ดที่ยังไม่มีคำจำกัดความที่นี่ แล้วเพิ่มกลับเข้ามา",
+        "title": "ค้นหาแท็กบนข้อความที่ยังไม่มีที่นี่",
+        "description": "เบราว์เซอร์นี้เก็บชื่อและสีของแท็ก ส่วนตัวแท็กถูกบันทึกไว้บนข้อความ ค้นหาแท็กที่ยังไม่มีที่นี่ในอีเมลของคุณแล้วเพิ่มกลับเข้ามา",
         "scan": "สแกนหาแท็ก",
         "rescan": "สแกนอีกครั้ง",
         "scanning": "กำลังสแกน… {scanned} จาก {total} ข้อความ",
@@ -3995,14 +5091,14 @@
     "notifications": {
       "test_sound": "ทดสอบเสียงแจ้งเตือน",
       "sounds": {
-        "default": "ค่าเริ่มต้น (เสียงบี๊บ)",
+        "default": "เสียงบี๊บ",
         "cheerful": "ร่าเริง (Cheerful)",
         "involved": "กระตือรือร้น (Involved)",
         "swift": "รวดเร็ว (Swift Gesture)",
         "relax": "ผ่อนคลาย (Relax)"
       },
       "push": {
-        "title": "การแจ้งเตือนเบื้องหลัง",
+        "title": "การแจ้งเตือนเมื่อปิด {appName} อยู่",
         "description": "รับการแจ้งเตือนของระบบสำหรับอีเมลใหม่เมื่อปิดเว็บไซต์นี้ จัดส่งผ่าน Bulwark push relay โดยรีเลย์จะไม่เห็นเนื้อหาอีเมลของคุณ",
         "relay_label": "พุชรีเลย์",
         "relay_desc": "เซิร์ฟเวอร์ที่ทำหน้าที่จัดส่งการแจ้งเตือนของคุณ เลือกจากรีเลย์ที่ผู้ดูแลระบบกำหนดไว้",
@@ -4012,8 +5108,9 @@
         "status_inactive": "ไม่ได้เปิดใช้งานบนอุปกรณ์นี้",
         "status_unsupported": "เบราว์เซอร์นี้ไม่รองรับ Web Push",
         "status_lite": "Web Push ไม่พร้อมใช้งานใน Bulwark Lite จำเป็นต้องใช้ Bulwark server",
+        "status_demo": "การแจ้งเตือนในพื้นหลังไม่พร้อมใช้งานในเดโม",
         "status_busy": "กำลังดำเนินการ…",
-        "enable": "เปิดใช้งาน",
+        "enable": "เปิดบนอุปกรณ์นี้",
         "reenable": "ลงทะเบียนใหม่",
         "disable": "ปิดใช้งาน",
         "confirm_disable_title": "ปิดใช้งานการแจ้งเตือนเบื้องหลังหรือไม่?",
@@ -4038,7 +5135,12 @@
         "confirm_revoke_message_this": "อุปกรณ์นี้จะหยุดรับการแจ้งเตือนเบื้องหลังทันที",
         "shared_mailboxes_no_push": "กล่องข้อความที่ผู้อื่นแชร์กับคุณจะไม่ส่งการแจ้งเตือนเบื้องหลัง",
         "error_forbidden": "เมลเซิร์ฟเวอร์ไม่อนุญาตการแจ้งเตือนเบื้องหลังสำหรับบัญชีนี้",
-        "error_over_quota": "บัญชีนี้มีการลงทะเบียนพุชบนเมลเซิร์ฟเวอร์มากเกินไป (ขีดจำกัดปกติคือ 15 อุปกรณ์) กรุณาเพิกถอนอุปกรณ์ที่ไม่ได้ใช้งานแล้วในการตั้งค่าการแจ้งเตือน แล้วลองใหม่อีกครั้ง"
+        "error_over_quota": "บัญชีนี้มีการลงทะเบียนพุชบนเมลเซิร์ฟเวอร์มากเกินไป (ขีดจำกัดปกติคือ 15 อุปกรณ์) กรุณาเพิกถอนอุปกรณ์ที่ไม่ได้ใช้งานแล้วในการตั้งค่าการแจ้งเตือน แล้วลองใหม่อีกครั้ง",
+        "error_blocked": "การแจ้งเตือนถูกบล็อกสำหรับเว็บไซต์นี้ อนุญาตในการตั้งค่าเว็บไซต์ของเบราว์เซอร์ แล้วลองอีกครั้ง",
+        "error_not_granted": "ไม่ได้อนุญาตการแจ้งเตือน พุชจึงยังปิดอยู่",
+        "error_verification_timeout": "เซิร์ฟเวอร์อีเมลไม่ยืนยันอุปกรณ์นี้ทันเวลา พุชจึงยังปิดอยู่ ลองอีกครั้งในอีกหนึ่งนาที",
+        "error_relay": "ไม่สามารถเชื่อมต่อรีเลย์พุชได้ในขณะนี้ พุชจึงยังปิดอยู่ ลองอีกครั้งภายหลัง",
+        "error_teardown": "ปิดพุชในเบราว์เซอร์นี้แล้ว แต่ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์อีเมลหรือรีเลย์ได้ อาจยังได้รับการแจ้งเตือนอีกสองสามวัน หากต้องการหยุดเร็วขึ้น เมื่อกลับมาออนไลน์ให้เปิดการตั้งค่าขั้นสูงและเพิกถอนอุปกรณ์นี้ในอุปกรณ์ที่ลงทะเบียน"
       },
       "push_all": {
         "title": "ทุกบัญชี",
@@ -4053,17 +5155,17 @@
         "result_disabled": "ปิดใช้งานการแจ้งเตือนสำหรับ {count} บัญชีแล้ว"
       },
       "sound_selection": {
-        "title": "เสียงแจ้งเตือน",
+        "title": "เสียง",
         "description": "เลือกเสียงที่จะเล่นเมื่อมีการแจ้งเตือน",
-        "choose": "เสียง",
+        "choose": "เสียงแจ้งเตือน",
         "choose_desc": "เลือกเสียงแจ้งเตือนและคลิกไอคอนลำโพงเพื่อทดลองฟัง"
       },
       "email": {
-        "title": "การแจ้งเตือนอีเมล",
+        "title": "อีเมลใหม่",
         "description": "กำหนดค่าการแจ้งเตือนสำหรับอีเมลขาเข้า",
         "enabled": "การแจ้งเตือนอีเมล",
         "enabled_desc": "แสดงการแจ้งเตือนเมื่อมีอีเมลใหม่เข้ามา",
-        "sound": "เสียงแจ้งเตือน",
+        "sound": "เสียงเมื่อมีอีเมลใหม่",
         "sound_desc": "เล่นเสียงเตือนเมื่อมีอีเมลใหม่เข้ามา",
         "inbox_only": "เฉพาะกล่องข้อความเข้า",
         "inbox_only_desc": "แจ้งเตือนเฉพาะอีเมลที่เข้ามายังกล่องข้อความเข้าเท่านั้น ข้ามอีเมลที่ตัวกรองจัดเก็บไปยังโฟลเดอร์อื่น"
@@ -4073,7 +5175,7 @@
         "description": "กำหนดค่าการแจ้งเตือนสำหรับกิจกรรมในปฏิทิน",
         "enabled": "การแจ้งเตือนกิจกรรม",
         "enabled_desc": "แสดงการแจ้งเตือนสำหรับกิจกรรมในปฏิทินที่กำลังจะมาถึง",
-        "sound": "เสียงแจ้งเตือน",
+        "sound": "เสียงเตือนความจำ",
         "sound_desc": "เล่นเสียงเตือนสำหรับกิจกรรมในปฏิทิน"
       }
     },
@@ -4112,7 +5214,7 @@
       },
       "first_day": {
         "label": "วันแรกของสัปดาห์",
-        "description": "เริ่มต้นสัปดาห์ในวันอาทิตย์หรือวันจันทร์",
+        "description": "วันแรกของสัปดาห์ในปฏิทิน",
         "sunday": "วันอาทิตย์",
         "monday": "วันจันทร์"
       },
@@ -4133,6 +5235,12 @@
       "clear_search_on_folder_change": {
         "label": "ล้างการค้นหาเมื่อเปลี่ยนโฟลเดอร์",
         "description": "การคลิกโฟลเดอร์ (กล่องข้อความ, รายการส่ง, …) จะล้างการค้นหาที่ใช้งานอยู่และเรียกดูโฟลเดอร์นั้น เมื่อปิดใช้งาน การค้นหาจะยังคงมีผลและทำงานซ้ำในโฟลเดอร์ที่คุณสลับไป"
+      },
+      "search_default_scope": {
+        "label": "ค้นหาใน",
+        "description": "ตำแหน่งที่การค้นหาใหม่จะค้นหา คุณยังเลือกโฟลเดอร์อื่นได้ในตัวกรองการค้นหา",
+        "all": "ทุกโฟลเดอร์ ยกเว้นจดหมายขยะและถังขยะ",
+        "folder": "โฟลเดอร์ที่เปิดอยู่"
       },
       "request_read_receipt": {
         "label": "ขอใบตอบรับการเปิดอ่านโดยค่าเริ่มต้น",
@@ -4196,13 +5304,13 @@
       },
       "mail_layout": {
         "label": "เค้าโครงอีเมล",
-        "description": "เลือกระหว่างแผงการอ่านแบบแยกส่วนคลาสสิก, รูปแบบการอ่านแบบโฟกัสสไตล์ Gmail, หรือแผงการอ่านด้านล่างสไตล์ Zimbra",
+        "description": "ตำแหน่งของรายการข้อความและข้อความที่เปิดอยู่บนหน้าจอ",
         "split": "แผงแยกด้านข้าง",
-        "split_description": "แสดงรายการข้อความและแผงการอ่านเคียงข้างกัน",
+        "split_description": "รายการและข้อความอยู่ข้างกัน",
         "focus": "รายการแบบโฟกัส",
-        "focus_description": "แสดงหนึ่งบรรทัดต่อข้อความและเปิดอ่านแบบเต็มความกว้าง โดยยังคงมองเห็นแถบโฟลเดอร์ด้านข้าง",
+        "focus_description": "รายการก่อน แล้วข้อความเต็มความกว้าง",
         "horizontal": "แผงการอ่านด้านล่าง",
-        "horizontal_description": "แสดงรายการข้อความด้านบนและเปิดข้อความที่เลือกในแผงการอ่านด้านล่าง"
+        "horizontal_description": "ข้อความอยู่ใต้รายการ"
       },
       "list_columns": {
         "label": "แสดงรายการข้อความเป็นคอลัมน์",
@@ -4227,7 +5335,7 @@
       },
       "auto_select_reply_identity": {
         "label": "ตอบกลับจากที่อยู่ที่ได้รับ",
-        "description": "เมื่อตอบกลับ ให้ส่งจากที่อยู่อีเมลที่ข้อความนั้นถูกส่งมาถึงในตอนแรก ข้อมูลประจำตัวที่คุณตั้งค่าไว้จะตรงกันเสมอ ส่วนที่อยู่อื่นๆ บนโดเมนของคุณจะนับรวมด้วยหรือไม่ (catch-all) จะถูกกำหนดโดย “การจับคู่ที่อยู่ที่ได้รับ” ด้านล่าง"
+        "description": "เมื่อตอบกลับ ให้ส่งจากที่อยู่ที่ข้อความถูกส่งมาถึง"
       },
       "reply_identity_match": {
         "label": "การจับคู่ที่อยู่ที่ได้รับ",
@@ -4240,6 +5348,14 @@
         "description": "ตำแหน่งที่จะแทรกลายเซ็นของคุณในการตอบกลับและการส่งต่อ การวางเหนือข้อความที่อ้างอิงจะอ่านได้อย่างเป็นธรรมชาติเหมือนคำลงท้ายของการตอบกลับ การวางด้านล่างจะทำให้ข้อความเดิมต่อเนื่องกัน",
         "above_quote": "ก่อนข้อความที่อ้างอิง",
         "below_quote": "หลังข้อความที่อ้างอิง"
+      },
+      "signature_new_mail": {
+        "label": "ลายเซ็นในอีเมลใหม่",
+        "description": "แทรกลายเซ็นของคุณโดยอัตโนมัติเมื่อเขียนอีเมลใหม่ ปิดใช้งานหากต้องการเริ่มอีเมลใหม่ทุกฉบับโดยไม่มีลายเซ็น"
+      },
+      "signature_reply_forward": {
+        "label": "ลายเซ็นในการตอบกลับและส่งต่อ",
+        "description": "แนบลายเซ็นของคุณโดยอัตโนมัติเมื่อตอบกลับหรือส่งต่ออีเมล ปิดใช้งานหากต้องการส่งโดยไม่มีลายเซ็น"
       },
       "signature_separator": {
         "label": "เส้นคั่นลายเซ็น",
@@ -4257,12 +5373,6 @@
         "description": "เลือกว่าเมื่อคลิกไฟล์แนบจะให้แสดงตัวอย่างหรือดาวน์โหลดทันที",
         "preview": "แสดงตัวอย่างเมื่อเป็นไปได้",
         "download": "ดาวน์โหลดทันที"
-      },
-      "attachment_position": {
-        "label": "ตำแหน่งไฟล์แนบ",
-        "description": "ตำแหน่งที่จะแสดงไฟล์แนบในส่วนหัวของอีเมล",
-        "beside-sender": "ข้างผู้ส่ง",
-        "below-header": "ใต้ส่วนหัว"
       },
       "emails_per_page": {
         "10": "10 ฉบับ",
@@ -4378,8 +5488,8 @@
         "unsupported": "บัญชีปัจจุบันไม่รองรับการส่งแบบหน่วงเวลา การตั้งค่านี้จะยังคงถูกบันทึกไว้สำหรับบัญชีอื่น"
       },
       "return_to_list_after_action": {
-        "label": "กลับไปยังรายการหลังจากลบหรือทำเครื่องหมายว่ายังไม่ได้อ่าน",
-        "description": "หลังจากลบหรือทำเครื่องหมายข้อความที่เปิดอยู่ว่ายังไม่ได้อ่าน ให้กลับไปยังรายการข้อความแทนการเปิดข้อความถัดไป"
+        "label": "กลับไปยังรายการหลังจากลบ เก็บถาวร ย้าย หรือทำเครื่องหมายว่ายังไม่ได้อ่าน",
+        "description": "หลังจากลบ เก็บถาวร ย้าย รายงานเป็นจดหมายขยะ หรือทำเครื่องหมายข้อความที่เปิดอยู่ว่ายังไม่ได้อ่าน ให้กลับไปยังรายการข้อความแทนการเปิดข้อความถัดไป"
       },
       "swipe_right_action": {
         "label": "การดำเนินการเมื่อปัดไปทางขวา (มือถือ)",
@@ -4421,6 +5531,7 @@
       "auth_method_oauth": "การลงชื่อเข้าใช้ครั้งเดียว (OAuth/OIDC)",
       "auth_method_basic": "รหัสผ่าน",
       "auth_method_token": "โทเค็นการเข้าถึง",
+      "account_management_link": "จัดการความปลอดภัยของบัญชี (2FA, รหัสผ่านแอป)",
       "demo_account": "บัญชีทดลองใช้",
       "email": {
         "label": "ที่อยู่อีเมล",
@@ -4443,8 +5554,8 @@
         "title": "บัญชีที่ลงชื่อเข้าใช้",
         "description": "ลากเพื่อจัดลำดับการแสดงผลบัญชีในเมนูแบบเลื่อนลงของบัญชี",
         "active": "บัญชีที่ใช้งานอยู่ในปัจจุบัน",
-        "default_badge": "บัญชีเริ่มต้น",
-        "set_default": "ตั้งเป็นค่าเริ่มต้น",
+        "default_badge": "เปิดเมื่อเริ่มต้น",
+        "set_default": "เปิดบัญชีนี้เมื่อเริ่มต้น",
         "switch_to": "สลับไปยังบัญชีนี้",
         "move_up": "เลื่อนขึ้น",
         "move_down": "เลื่อนลง",
@@ -4650,6 +5761,57 @@
       "error_role": "อัปเดตบทบาทของโฟลเดอร์ไม่สำเร็จ"
     },
     "security": {
+      "masked_addresses": {
+        "address": "ที่อยู่",
+        "description_column": "คำอธิบาย",
+        "website_column": "เว็บไซต์",
+        "state": "สถานะ",
+        "actions": "การดำเนินการ",
+        "no_description": "ไม่มีคำอธิบาย",
+        "edit": "แก้ไข",
+        "close": "ปิด",
+        "pagination": "หน้าของที่อยู่แฝง",
+        "page": "หน้า {page} จาก {pages}",
+        "previous": "ก่อนหน้า",
+        "next": "ถัดไป",
+        "delete": "ลบ",
+        "delete_title": "ลบที่อยู่แฝงอย่างถาวรไหม",
+        "delete_warning": "ลบ {address} ไหม การดำเนินการนี้ย้อนกลับไม่ได้ อีเมลที่ส่งมายังที่อยู่นี้จะไม่ถูกส่งถึงอีกต่อไป",
+        "delete_confirm": "ลบอย่างถาวร",
+        "cancel": "ยกเลิก",
+        "deleted": "ลบที่อยู่อย่างถาวรแล้ว",
+        "deleted_refresh_failed": "ยืนยันการลบแล้ว แต่รีเฟรชรายการไม่ได้ รีเฟรชเพื่อโหลดรายการปัจจุบัน",
+        "delete_forbidden": "เซสชันปัจจุบันของคุณไม่ได้รับอนุญาตให้ลบที่อยู่แฝง การดำเนินการอื่นที่ได้รับอนุญาตยังคงใช้ได้",
+        "delete_failed": "ไม่ได้ลบที่อยู่ รีเฟรชรายการก่อนลองอีกครั้ง",
+        "delete_unconfirmed": "ยืนยันการลบไม่ได้ และจะไม่ลองซ้ำ รีเฟรชรายการเพื่อตรวจสอบที่อยู่ก่อนลบเพิ่มเติม",
+        "title": "ที่อยู่แฝง",
+        "intro": "รับอีเมลได้โดยไม่ต้องเปิดเผยที่อยู่หลักของคุณ เมื่อปิดใช้งานที่อยู่ใด อีเมลใหม่ที่ส่งถึงที่อยู่นั้นจะถูกปฏิเสธ ที่อยู่เหล่านี้ใช้ส่งอีเมลไม่ได้",
+        "loading": "กำลังโหลดที่อยู่แฝง…",
+        "count": "{count, plural, other {# ที่อยู่}}",
+        "empty": "ยังไม่มีที่อยู่แฝง",
+        "website": "เว็บไซต์ (ไม่บังคับ)",
+        "description": "คำอธิบาย (ไม่บังคับ)",
+        "no_website": "ไม่ได้ระบุ",
+        "enabled": "เปิดใช้งาน",
+        "disabled": "ปิดใช้งาน",
+        "enable": "เปิดใช้งาน",
+        "disable": "ปิดใช้งาน",
+        "copy": "คัดลอก",
+        "copied": "คัดลอกที่อยู่แล้ว",
+        "copy_failed": "คัดลอกไม่ได้ เลือกและคัดลอกที่อยู่ด้านบน",
+        "save": "บันทึกคำอธิบาย",
+        "create": "สร้างที่อยู่แฝง",
+        "refresh": "รีเฟรช",
+        "saved": "บันทึกการเปลี่ยนแปลงแล้ว",
+        "forbidden": "เซสชันปัจจุบันของคุณไม่ได้รับอนุญาตให้แสดงรายการที่อยู่แฝง",
+        "unavailable": "ที่อยู่แฝงไม่พร้อมใช้งานสำหรับบัญชีหรือเซิร์ฟเวอร์นี้",
+        "load_failed": "โหลดรายการที่อยู่ทั้งหมดไม่ได้ รีเฟรชเพื่อลองอีกครั้ง",
+        "save_failed": "ยืนยันการเปลี่ยนแปลงไม่ได้ รีเฟรชรายการก่อนลองอีกครั้ง",
+        "create_forbidden": "เซิร์ฟเวอร์ไม่อนุญาตให้สร้างที่อยู่แฝงด้วยเซสชันนี้",
+        "update_forbidden": "เซิร์ฟเวอร์ไม่อนุญาตให้แก้ไขที่อยู่แฝงด้วยเซสชันนี้ คุณยังคัดลอกที่อยู่ได้",
+        "over_quota": "ถึงโควตาที่อยู่แฝงของเซิร์ฟเวอร์แล้ว ที่อยู่ที่ปิดใช้งานอาจยังนับรวมในขีดจำกัด",
+        "rate_limit": "ถึงขีดจำกัดอัตราการสร้างของเซิร์ฟเวอร์แล้ว ลองอีกครั้งภายหลัง"
+      },
       "title": "ความปลอดภัยของบัญชี",
       "description": "จัดการรหัสผ่าน การยืนยันตัวตนแบบสองขั้นตอน และการตั้งค่าความปลอดภัยของคุณ",
       "detecting": "กำลังตรวจสอบความสามารถของเซิร์ฟเวอร์...",
@@ -4677,7 +5839,7 @@
       },
       "totp": {
         "section_title": "การยืนยันตัวตนแบบสองขั้นตอน",
-        "label": "การยืนยันตัวตน TOTP",
+        "label": "ลงชื่อเข้าใช้สองขั้นตอน",
         "description": "เพิ่มความปลอดภัยอีกระดับด้วยรหัสผ่านแบบใช้ครั้งเดียวตามเวลา (TOTP)",
         "active": "เปิดใช้งาน",
         "inactive": "ปิดใช้งาน",
@@ -4773,12 +5935,12 @@
         "delete_message": "{name} จะถูกนำออกจากเซิร์ฟเวอร์"
       },
       "email_client": {
-        "title": "การตั้งค่าโปรแกรมอีเมลภายนอก",
-        "description": "ใช้ข้อมูลประจำตัวเหล่านี้เพื่อกำหนดค่าโปรแกรมอีเมลบนเดสก์ท็อปหรือมือถือของคุณ (Thunderbird, Apple Mail, Outlook ฯลฯ)",
-        "jmap_username_label": "ชื่อผู้ใช้ JMAP",
+        "title": "ใช้อีเมลในแอปอื่น",
+        "description": "Thunderbird, Apple Mail, Outlook และแอปอีเมลบนโทรศัพท์ใช้การตั้งค่าเหล่านี้ได้",
+        "jmap_username_label": "ชื่อผู้ใช้",
         "copy": "คัดลอก",
         "copied": "คัดลอกแล้ว",
-        "password_instructions": "ใช้ชื่อผู้ใช้ JMAP ด้านบนควบคู่ไปกับรหัสผ่านแอปเพื่อลงชื่อเข้าใช้โปรแกรมอีเมลของคุณ สร้างรหัสผ่านแอปในส่วนด้านล่างหากคุณยังไม่ได้สร้าง"
+        "password_instructions": "ใช้รหัสผ่านสำหรับแอปเป็นรหัสผ่าน ไม่ใช่รหัสผ่านปกติของคุณ สร้างได้ที่ด้านล่างของหน้านี้"
       },
       "link_device": {
         "title": "เชื่อมโยงแอปบนมือถือ",
@@ -4867,7 +6029,7 @@
       },
       "refresh_cache": {
         "label": "รีเฟรชข้อมูลในแคช",
-        "description": "โหลดผู้ติดต่อ ปฏิทิน และโฟลเดอร์จากเซิร์ฟเวอร์ใหม่ โดยยังคงรักษาบัญชีและเซสชันของคุณไว้ — แก้ไขมุมมองที่ไม่อัปเดตหรือไม่ถูกต้องโดยไม่ต้องลงชื่อออก",
+        "description": "โหลดผู้ติดต่อ ปฏิทิน และโฟลเดอร์จากเซิร์ฟเวอร์ใหม่ คุณยังคงลงชื่อเข้าใช้อยู่",
         "button": "รีเฟรช",
         "confirm_title": "รีเฟรชข้อมูลที่แคชไว้ไหม"
       },
@@ -4880,12 +6042,12 @@
       },
       "export_settings": {
         "label": "ส่งออกการตั้งค่า",
-        "description": "ดาวน์โหลดการตั้งค่าของคุณเป็นไฟล์ JSON",
+        "description": "ดาวน์โหลดสำเนาการตั้งค่า",
         "button": "ส่งออก"
       },
       "import_settings": {
         "label": "นำเข้าการตั้งค่า",
-        "description": "อัปโหลดการตั้งค่าจากไฟล์ JSON",
+        "description": "กู้คืนการตั้งค่าจากไฟล์",
         "button": "นำเข้า"
       },
       "about": {
@@ -4936,12 +6098,14 @@
       "manage_description": "เพิ่ม แก้ไข หรือลบแอปที่กำหนดเองออกจากแถบด้านข้างของคุณ"
     },
     "contacts": {
-      "title": "ผู้ติดต่อ",
-      "description": "นำเข้าและส่งออกรายชื่อผู้ติดต่อของคุณ",
+      "title": "รายชื่อติดต่อ",
+      "description": "วิธีแสดงรายชื่อติดต่อ และไฟล์รายชื่อสำหรับนำเข้าหรือส่งออก",
       "group_by_letter_label": "จัดกลุ่มตามตัวอักษรแรก",
       "group_by_letter_description": "แสดงส่วนหัวตามตัวอักษรในรายการผู้ติดต่อ",
       "sort_by_last_name_label": "เรียงลำดับตามนามสกุล",
       "sort_by_last_name_description": "เรียงลำดับรายชื่อผู้ติดต่อตามนามสกุลเพื่อให้บุคคลในครอบครัวเดียวกันอยู่ด้วยกัน",
+      "show_directory_label": "แสดงไดเรกทอรีกลาง",
+      "show_directory_description": "แสดงบัญชีและกลุ่มบนเซิร์ฟเวอร์อีเมลใต้ \"ไดเรกทอรีกลาง\" ในรายชื่อติดต่อ",
       "import_label": "นำเข้าผู้ติดต่อ",
       "import_description": "นำเข้าผู้ติดต่อจากไฟล์ vCard (.vcf)",
       "export_label": "ส่งออกผู้ติดต่อ",
@@ -5038,10 +6202,11 @@
       "add_action": "เพิ่มการดำเนินการ",
       "remove_condition": "นำเงื่อนไขออก",
       "remove_action": "นำการทำงานออก",
-      "stop_processing": "หยุดการประมวลผลกฎข้อถัดไป",
+      "stop_processing": "ไม่ใช้กฎถัดไป",
       "include_spam": "ย้ายข้อความที่ทำเครื่องหมายว่าเป็นสแปมด้วย",
       "attachment_type_placeholder": "เช่น pdf, doc, jpg",
       "value_placeholder_multi": "ค่า (หากมีหลายค่าให้คั่นด้วยเครื่องหมายจุลภาค)",
+      "regex_placeholder": "นิพจน์ทั่วไป เช่น ^Cron|mailman",
       "condition_fields": {
         "attachment": "ไฟล์แนบ",
         "from": "ผู้ส่ง (From)",
@@ -5063,6 +6228,7 @@
         "starts_with": "ขึ้นต้นด้วย",
         "ends_with": "ลงท้ายด้วย",
         "matches": "ตรงตามรูปแบบ",
+        "regex": "ตรงกับนิพจน์ทั่วไป",
         "greater_than": "มากกว่า",
         "less_than": "น้อยกว่า",
         "address_is": "เป็นที่อยู่อีเมล",
@@ -5078,7 +6244,7 @@
         "discard": "ละทิ้ง (ลบอย่างเงียบๆ)",
         "reject": "ปฏิเสธพร้อมข้อความ",
         "keep": "เก็บไว้ในกล่องข้อความ",
-        "stop": "หยุดการประมวลผล"
+        "stop": "ไม่ใช้กฎถัดไป"
       },
       "move_to_folder": "เลือกโฟลเดอร์",
       "copy_to_folder": "เลือกโฟลเดอร์",
@@ -5101,6 +6267,7 @@
       "open_sieve_editor": "เปิดตัวแก้ไข Sieve โดยตรง",
       "fetch_error": "โหลดตัวกรองไม่สำเร็จ",
       "expanded_view": "มุมมองขยาย",
+      "show_rule_details": "แสดงเงื่อนไขและการทำงานของแต่ละกฎ",
       "expanded_view_description": "แสดงกฎตัวกรองพร้อมบล็อกเงื่อนไขและการดำเนินการโดยละเอียด",
       "if": "ถ้า (If)",
       "then": "แล้ว (Then)",
@@ -5125,6 +6292,7 @@
       "validation_action_forward": "ป้อนที่อยู่ที่จะส่งต่อไป",
       "validation_action_reject": "ป้อนข้อความปฏิเสธ",
       "validation_header_name": "ชื่อส่วนหัวต้องประกอบด้วยตัวอักษร A-Z, ตัวเลข, เครื่องหมายยัติภังค์ และขีดล่างเท่านั้น",
+      "validation_regex": "นิพจน์ทั่วไปนี้ไม่ถูกต้อง",
       "templates_section": "เริ่มต้นจากเทมเพลต",
       "template_newsletters": "ย้ายจดหมายข่าวไปยังโฟลเดอร์",
       "template_receipts": "เก็บใบเสร็จถาวรอัตโนมัติ",
@@ -5178,6 +6346,9 @@
       "validation_period_empty": "ป้อนวันที่เริ่มต้นหรือวันที่สิ้นสุดสำหรับช่วงเวลา",
       "validation_period_invalid": "ป้อนวันที่และเวลาที่ถูกต้อง หรือเว้นว่างไว้",
       "apply_existing_period": "กฎที่มีการกำหนดช่วงเวลาจะมีผลกับข้อความที่มาถึงในช่วงเวลานั้นเท่านั้น จึงไม่สามารถใช้กับข้อความที่มีอยู่ได้",
+      "apply_existing_in": "ใช้กับข้อความที่อยู่ใน {folder} แล้วด้วย",
+      "apply_existing_count": "{count, plural, other {ใช้กับข้อความ # ฉบับที่อยู่ใน {folder} แล้วด้วย}}",
+      "apply_existing_none": "ยังไม่มีข้อความใน {folder} ที่ตรงกับกฎนี้",
       "period_status_scheduled": "กำหนดเวลาแล้ว",
       "period_status_active": "ใช้งานอยู่",
       "period_status_expired": "หมดอายุแล้ว"
@@ -5221,7 +6392,7 @@
         "description": "กำหนดค่าวิธีแสดงไฟล์และโฟลเดอร์"
       },
       "default_view": {
-        "label": "มุมมองเริ่มต้น",
+        "label": "แสดงไฟล์เป็น",
         "description": "เลือกระหว่างเค้าโครงแบบตารางกริดและแบบรายการ",
         "list": "รายการ",
         "grid": "ตารางกริด"
@@ -5417,10 +6588,6 @@
         "label": "แถบบังการอ่าน",
         "description": "หรี่ทุกอย่างในข้อความ ยกเว้นไม่กี่บรรทัดรอบตัวชี้ เพื่อช่วยให้คุณไม่หลงตำแหน่งที่อ่านอยู่"
       },
-      "plain_language": {
-        "label": "ภาษาที่เข้าใจง่าย",
-        "description": "ใช้ถ้อยคำที่ง่ายขึ้นในการตั้งค่าและข้อความแสดงข้อผิดพลาด พร้อมคำอธิบายสั้นๆ ของศัพท์เทคนิค ใช้ได้ในภาษาอังกฤษและภาษาเยอรมัน"
-      },
       "contrast": {
         "label": "คอนทราสต์",
         "description": "คอนทราสต์สูงทำให้ข้อความ เส้นขอบ และเส้นกรอบโฟกัสเข้มขึ้นหรืออ่อนลงในทุกธีม และขีดเส้นใต้ลิงก์ ตามระบบจะทำตามอุปกรณ์ของคุณ",
@@ -5614,6 +6781,127 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "ออฟไลน์",
+      "privacy": "ความเป็นส่วนตัว",
+      "about": "เกี่ยวกับ"
+    },
+    "search": {
+      "signature": "ลายเซ็น ลายเซ็นอีเมล ส่วนท้าย",
+      "sign_out": "ออกจากระบบ ลงชื่อออก logout",
+      "app_lock": "PIN ล็อก รหัส หน้าจอล็อก",
+      "text_size": "ขนาดตัวอักษร ตัวอักษรใหญ่ ซูม ขยาย",
+      "vacation": "ตอบกลับอัตโนมัติ ไม่อยู่ที่สำนักงาน ไม่อยู่ ลาพักร้อน วันหยุด autoreply",
+      "two_factor": "2FA สองปัจจัย สองขั้นตอน MFA OTP แอปยืนยันตัวตน รหัสใช้ครั้งเดียว",
+      "encryption": "S/MIME smime PGP OpenPGP การเข้ารหัส ใบรับรอง",
+      "password": "รหัสผ่าน เปลี่ยนรหัสผ่าน รหัสผ่านใหม่",
+      "offline": "ออฟไลน์ offline ไม่มีการเชื่อมต่อ ไม่มีอินเทอร์เน็ต ดาวน์โหลด พื้นที่จัดเก็บ ซิงค์",
+      "wipe": "ลบ ล้าง อุปกรณ์ ข้อมูล",
+      "outbox": "กล่องขาออก ยังไม่ส่ง รอส่ง คิว",
+      "remote_content": "รูปภาพภายนอก เนื้อหาภายนอก การติดตาม พิกเซล ผู้ส่งที่เชื่อถือ",
+      "push": "พุช push รีเลย์ เบื้องหลัง การแจ้งเตือน",
+      "version": "เวอร์ชัน อัปเดต เกี่ยวกับ ซอร์สโค้ด GitHub สัญญาอนุญาต"
+    },
+    "privacy": {
+      "push_title": "การแจ้งเตือน",
+      "push_link": {
+        "label": "รีเลย์การแจ้งเตือน",
+        "description": "การแจ้งเตือนขณะปิดแอปจะผ่านรีเลย์พุช ซึ่งไม่เคยเห็นอีเมลของคุณ คุณเลือกได้ในหน้าการแจ้งเตือน",
+        "button": "การแจ้งเตือน"
+      }
+    },
+    "privacy_links": {
+      "images_label": "รูปภาพภายนอกและผู้ส่งที่เชื่อถือ",
+      "receipts_label": "ใบตอบรับการอ่าน",
+      "senders_label": "รูปภาพผู้ส่ง",
+      "description": "การตั้งค่าเหล่านี้อยู่ในหน้าความเป็นส่วนตัว",
+      "button": "ความเป็นส่วนตัว"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "ความหนาแน่นและป้ายปุ่ม",
+        "description": "ระยะห่างของแถวในรายการและการแสดงชื่อบนปุ่ม ตั้งค่าได้ในหน้ารูปลักษณ์"
+      },
+      "light_mode": {
+        "label": "พื้นหลังสว่างสำหรับข้อความ",
+        "description": "การแสดงข้อความบนพื้นหลังสว่างในโหมดมืด ตั้งค่าได้ในหน้าการอ่าน"
+      },
+      "calendar": {
+        "label": "ตัวอย่างกิจกรรมในปฏิทิน",
+        "description": "การแสดงรายละเอียดเมื่อชี้ที่กิจกรรม ตั้งค่าได้ในหน้าปฏิทิน"
+      },
+      "list": {
+        "label": "การสนทนาและบรรทัดตัวอย่าง",
+        "description": "การจัดกลุ่มตามการสนทนาและบรรทัดตัวอย่างใต้แต่ละข้อความ ตั้งค่าได้ในหน้ารายการข้อความ"
+      },
+      "reading": {
+        "label": "ทำเครื่องหมายว่าอ่านแล้ว",
+        "description": "เมื่อใดข้อความจะนับว่าอ่านแล้ว และจะไปที่ใดหลังลบหรือย้าย ตั้งค่าได้ในหน้าการอ่าน"
+      },
+      "send_warnings_description": "การยกเลิกการส่ง และคำเตือนเรื่องไม่มีหัวเรื่อง ลืมแนบไฟล์ หรือข้อความตัวยึดตำแหน่ง",
+      "bulk_delete": {
+        "label": "ถามก่อนลบหลายข้อความ",
+        "description": "ตั้งค่าได้ในหน้ารายการข้อความ"
+      },
+      "sounds": {
+        "label": "เสียงและตัวนับที่ยังไม่อ่าน",
+        "description": "เสียงแจ้งเตือนและจำนวนที่ยังไม่อ่านบนแท็บ ตั้งค่าได้ในหน้าการแจ้งเตือน"
+      }
+    },
+    "about": {
+      "title": "เกี่ยวกับ {appName}"
+    },
+    "sign_out": {
+      "description": "ออกจากระบบบัญชีนี้บนอุปกรณ์นี้"
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "ถาดระบบ พื้นที่แจ้งเตือน พื้นหลัง ย่อลงถาด tray",
+      "autostart": "เริ่มอัตโนมัติ เริ่มพร้อม Windows เมื่อลงชื่อเข้าใช้",
+      "default_app": "แอปอีเมลเริ่มต้น โปรแกรมอีเมลเริ่มต้น mailto ลิงก์อีเมล",
+      "menu_bar": "แถบเมนู เมนู ปุ่ม Alt ไฟล์ แก้ไข มุมมอง",
+      "updates": "อัปเดต เวอร์ชันใหม่ เบต้า ช่อง",
+      "devtools": "เครื่องมือนักพัฒนา devtools คอนโซล ตรวจสอบ F12 ดีบัก",
+      "taskbar": "แถบงาน กะพริบ Dock ความสนใจ",
+      "quiet_hours": "ช่วงเวลาเงียบ ห้ามรบกวน ปิดเสียง กลางคืน",
+      "telemetry": "ข้อมูลการใช้งาน การวัดระยะไกล สถิติ การวิเคราะห์",
+      "crash": "รายงานข้อขัดข้อง รายงานข้อผิดพลาด แครช",
+      "threads": "เธรด การสนทนา จัดกลุ่ม threads",
+      "block_images": "บล็อกรูปภาพ รูปภาพภายนอก โหลดรูปภาพ",
+      "dark_mode": "โหมดมืด โหมดสว่าง โหมดกลางคืน dark mode",
+      "timezone": "เขตเวลา timezone",
+      "reading_pane": "บานหน้าต่างการอ่าน บานหน้าต่างแสดงตัวอย่าง มุมมองแบ่ง",
+      "week_start": "วันเริ่มต้นสัปดาห์ วันแรก วันจันทร์ วันอาทิตย์",
+      "empty_trash": "ล้างถังขยะ ถังขยะ รายการที่ลบ",
+      "do_not_disturb": "ช่วงเวลาเงียบ ปิดเสียง เงียบ"
+    },
+    "desktop_notifications": {
+      "title": "บนคอมพิวเตอร์เครื่องนี้",
+      "closed_label": "เมื่อปิดหน้าต่าง",
+      "closed_description": "{appName} จะแจ้งอีเมลใหม่ตราบที่ยังทำงานอยู่ หากต้องการให้ทำงานต่อในถาดระบบหลังปิดหน้าต่าง ให้เปิดใน {page}"
+    },
+    "push_unsupported": "เบราว์เซอร์นี้แสดงการแจ้งเตือนไม่ได้เมื่อปิดเว็บไซต์",
+    "backup_description_app": "ใช้การตั้งค่าเดียวกันบนอุปกรณ์อื่นของคุณ",
+    "sender_favicons": {
+      "label": "รูปภาพจากเว็บไซต์ของบริษัท",
+      "description": "แสดงไอคอนเว็บไซต์เป็นรูปโปรไฟล์สำหรับผู้ส่งที่เป็นองค์กรธุรกิจ"
+    },
+    "privacy_push": {
+      "label": "รีเลย์การแจ้งเตือน",
+      "description": "การแจ้งเตือนขณะปิด {appName} จะผ่านรีเลย์พุช ซึ่งไม่เคยเห็นอีเมลของคุณ คุณเปิดหรือปิดได้ในหน้า {page}"
+    },
+    "reset": {
+      "message": "คืนการตั้งค่าทั้งหมดเป็นแบบตอนเริ่มต้น อีเมล ตัวกรอง การตอบกลับอัตโนมัติ และลายเซ็นของคุณยังคงเหมือนเดิม",
+      "sync_on": "อุปกรณ์อื่นของคุณใช้การตั้งค่าเดียวกัน จึงเปลี่ยนตามไปด้วย",
+      "sync_off": "อุปกรณ์อื่นของคุณยังคงใช้การตั้งค่าเดิม"
+    }
+  },
+  "layout_preview": {
+    "default_description": "แอปและโฟลเดอร์อยู่ทางซ้าย ช่องค้นหาอยู่เหนือรายการ",
+    "mountain_view_description": "ช่องค้นหาอยู่ด้านบน ข้อความเปิดเต็มความกว้าง"
+  },
   "setup": {
     "title": "ตั้งค่า Bulwark Webmail",
     "subtitle": "ตั้งค่าอินสแตนซ์เว็บเมลของคุณจากเบราว์เซอร์",
@@ -5715,7 +7003,7 @@
       "row_url_required": "เซิร์ฟเวอร์ {index}: ต้องระบุ URL",
       "row_url_scheme": "เซิร์ฟเวอร์ {index}: URL ต้องขึ้นต้นด้วย http:// หรือ https://",
       "stalwart": "เปิดใช้ฟีเจอร์เฉพาะของ Stalwart",
-      "stalwart_hint": "เพิ่มการเปลี่ยนรหัสผ่านและการจัดการตัวกรอง Sieve เปิดใช้กับเซิร์ฟเวอร์อื่นได้อย่างปลอดภัย"
+      "stalwart_hint": "เพิ่มหน้าความปลอดภัย (รหัสผ่าน การยืนยันตัวตนแบบสองขั้นตอน และรหัสผ่านแอป) และการกู้คืนรายการที่ลบแล้ว เปิดใช้กับเซิร์ฟเวอร์อื่นได้อย่างปลอดภัย"
     },
     "auth": {
       "title": "การยืนยันตัวตน",
@@ -5947,5 +7235,1045 @@
     "easy_read": "ภาษาที่อ่านง่าย",
     "sign_language": "ภาษามือ",
     "new_tab": "เปิดในแท็บใหม่"
+  },
+  "pwaNotify": {
+    "action_archive": "เก็บถาวร",
+    "action_mark_read": "ทำเครื่องหมายว่าอ่านแล้ว",
+    "action_reply": "ตอบกลับ",
+    "reply_placeholder": "เขียนคำตอบ"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "เพิ่มลงในปฏิทิน",
+    "update_in_calendar": "อัปเดตในปฏิทิน",
+    "remove_from_calendar": "นำออกจากปฏิทิน",
+    "in_calendar": "อยู่ในปฏิทินของคุณ",
+    "view_in_calendar": "เปิดดูในปฏิทิน",
+    "select_calendar": "เลือกปฏิทิน",
+    "added": "เพิ่มลงในปฏิทินของคุณแล้ว",
+    "updated": "อัปเดตปฏิทินแล้ว",
+    "removed": "นำออกจากปฏิทินของคุณแล้ว",
+    "action_failed": "เปลี่ยนแปลงปฏิทินไม่สำเร็จ โปรดลองอีกครั้ง",
+    "blocked": "ปลั๊กอินหยุดการเปลี่ยนแปลงปฏิทินนี้",
+    "title": {
+      "rental_car": "รถเช่า",
+      "rental_car_company": "รถเช่า: {company}"
+    },
+    "description": {
+      "reference": "หมายเลขการจอง: {reference}",
+      "passengers": "ผู้โดยสาร: {names}",
+      "seats": "ที่นั่ง: {seats}",
+      "checkin": "เช็กอิน: {url}",
+      "manage": "จัดการการจอง: {url}",
+      "ticket": "ตั๋ว: {url}",
+      "phone": "โทรศัพท์: {phone}",
+      "car": "รถ: {car}",
+      "tickets": "หมายเลขตั๋ว: {numbers}",
+      "party_size": "จำนวนคน: {count}",
+      "added_from": "เพิ่มจากอีเมลของ {domain}",
+      "added_from_subject": "เพิ่มจากอีเมล “{subject}” ของ {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "การสะกดคำ",
+      "grammar": "ไวยากรณ์",
+      "style": "สำนวน",
+      "other": "คำแนะนำ"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "ไม่มีคำแนะนำ",
+      "suggestions": "คำแนะนำ",
+      "replace_with": "แทนที่ด้วย {text}",
+      "also": "พบโดย {checker} ด้วย",
+      "ignore": "ละเว้น",
+      "add_to_dictionary": "เพิ่มลงในพจนานุกรม",
+      "disable_rule": "ปิดกฎนี้",
+      "changed": "ข้อความเปลี่ยนไปแล้ว โปรดรอการตรวจครั้งถัดไป"
+    },
+    "list_item": "{word}: {message} คำแนะนำ: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {ไม่มีปัญหาการสะกดหรือไวยากรณ์} other {ปัญหาการสะกดหรือไวยากรณ์ # รายการ}}",
+    "status": {
+      "title": "การตรวจทาน",
+      "off": "ปิดการตรวจทาน",
+      "paused": "หยุดการตรวจทานชั่วคราว",
+      "rate_limited": "หยุดการตรวจชั่วคราว",
+      "unavailable": "ตรวจไม่ได้ในขณะนี้",
+      "checking": "กำลังตรวจ…",
+      "issues": "{count, plural, =0 {ไม่มีปัญหา} other {# ปัญหา}}"
+    },
+    "panel": {
+      "title": "การตรวจทาน",
+      "required": "องค์กรของคุณกำหนดให้เปิด",
+      "check_message": "ตรวจข้อความนี้",
+      "notice": "ขณะที่คุณพิมพ์ ข้อความที่คุณเขียนจะถูกส่งไปยัง {checkers} เพื่อตรวจ ลายเซ็นและข้อความที่อ้างถึงจะไม่ถูกส่ง จะไม่ส่งอะไรเลยขณะที่ข้อความตั้งค่าให้ลงนามหรือเข้ารหัส แต่สิ่งที่คุณเขียนก่อนเปิดตัวเลือกนั้นอาจถูกตรวจไปแล้ว",
+      "turn_on": "เปิดการตรวจทาน",
+      "paused_protected": "จะไม่มีการตรวจใด ๆ ขณะที่ข้อความนี้ตั้งค่าให้ลงนามหรือเข้ารหัส",
+      "paused_unknown": "{plugin} สามารถลงนามหรือเข้ารหัสข้อความโดยไม่แสดงที่นี่ จึงไม่มีการตรวจใด ๆ ขณะที่เปิดอยู่",
+      "rate_limited": "{checker} ขอให้รอสักครู่ การตรวจจะเริ่มอีกครั้งในหนึ่งนาที",
+      "unavailable": "{checker} ตรวจไม่ได้ในขณะนี้ จะลองใหม่เมื่อคุณพิมพ์ต่อ",
+      "no_issues": "ไม่พบปัญหา",
+      "list_label": "ปัญหาในข้อความนี้",
+      "shortcuts": "ปัญหาถัดไป: {next} ก่อนหน้า: {previous}"
+    },
+    "notice": {
+      "on": "เปิดการตรวจทานอยู่ ขณะที่คุณพิมพ์ ข้อความที่คุณเขียนจะถูกส่งไปยัง {checkers} เพื่อตรวจ โดยไม่รวมลายเซ็นและข้อความที่อ้างถึง จะไม่ส่งอะไรเลยขณะที่ข้อความตั้งค่าให้ลงนามหรือเข้ารหัส แต่สิ่งที่คุณเขียนก่อนหน้านั้นอาจถูกตรวจไปแล้ว",
+      "forced": "องค์กรของคุณเปิดการตรวจทานไว้ ขณะที่คุณพิมพ์ ข้อความที่คุณเขียนจะถูกส่งไปยัง {checkers} เพื่อตรวจ โดยไม่รวมลายเซ็นและข้อความที่อ้างถึง จะไม่ส่งอะไรเลยขณะที่ข้อความตั้งค่าให้ลงนามหรือเข้ารหัส แต่สิ่งที่คุณเขียนก่อนหน้านั้นอาจถูกตรวจไปแล้ว",
+      "ok": "ตกลง"
+    },
+    "send_warning": {
+      "title": "ส่งทั้งที่ยังมีปัญหาอยู่ไหม",
+      "body": "ข้อความนี้ยังมี{count, plural, other {ปัญหาการสะกดหรือไวยากรณ์ # รายการ}}ที่ยังไม่ได้แก้",
+      "review": "ตรวจดู",
+      "send": "ส่งต่อไป"
+    },
+    "settings": {
+      "title": "การตรวจทาน",
+      "description": "ขีดเส้นใต้คำที่สะกดผิดและไวยากรณ์ที่ผิดขณะเขียน พร้อมคำแนะนำในการแก้ไข",
+      "enable": "ตรวจการสะกดและไวยากรณ์ขณะที่ฉันพิมพ์",
+      "enable_description": "ข้อความที่คุณเขียนจะถูกส่งไปยังส่วนเสริมการตรวจทานและบริการที่ส่วนเสริมนั้นใช้ โดยไม่รวมลายเซ็นและข้อความที่อ้างถึง จะไม่ส่งอะไรเลยขณะที่ข้อความตั้งค่าให้ลงนามหรือเข้ารหัส",
+      "no_checker": "ยังไม่ได้ติดตั้งส่วนเสริมการตรวจทาน กรุณาแจ้งผู้ดูแลระบบให้เพิ่ม",
+      "plugin_description": "ส่งสิ่งที่คุณเขียนไปยัง {plugin}",
+      "writing_language": "ภาษาที่ใช้เขียน",
+      "writing_language_description": "ภาษาที่คุณใช้เขียนเป็นประจำ การตรวจทานและตัวตรวจการสะกดของเบราว์เซอร์จะใช้ภาษานี้",
+      "auto": "ตรวจหาอัตโนมัติ"
+    },
+    "shortcuts": {
+      "next_issue": "ปัญหาการสะกดหรือไวยากรณ์ถัดไป",
+      "previous_issue": "ปัญหาการสะกดหรือไวยากรณ์ก่อนหน้า"
+    }
+  },
+  "pwaWindows": {
+    "open_in_window": "เปิดในหน้าต่างใหม่",
+    "save_all_to_folder": "บันทึกทั้งหมดลงในโฟลเดอร์…",
+    "saved_all": "{count, plural, other {บันทึกไฟล์แนบ # รายการลงใน {folder} แล้ว}}",
+    "saved_partial": "บันทึกไฟล์แนบ {saved} จาก {total} รายการลงใน {folder} แล้ว",
+    "save_failed": "ไม่สามารถบันทึกไฟล์แนบลงใน {folder} ได้",
+    "popup_blocked": "เบราว์เซอร์บล็อกหน้าต่างใหม่ โปรดอนุญาตป๊อปอัปสำหรับเว็บไซต์นี้แล้วลองอีกครั้ง",
+    "opening": "กำลังเปิด…",
+    "session_ended_title": "คุณออกจากระบบในหน้าต่างนี้แล้ว",
+    "session_ended_body": "เปิดแอปและลงชื่อเข้าใช้ จากนั้นเปิดหน้าต่างนี้อีกครั้ง",
+    "open_app": "เปิดแอป",
+    "close_window": "ปิดหน้าต่าง",
+    "message_gone_title": "ไม่มีข้อความนี้แล้ว",
+    "message_gone_body": "ข้อความถูกลบหรือย้ายไปยังบัญชีอื่น",
+    "message_moved": "ข้อความนี้ถูกย้ายไปยังโฟลเดอร์อื่น",
+    "message_moved_to": "ข้อความนี้ถูกย้ายไปยัง {folder}",
+    "window_not_ready": "หน้าต่างใหม่เปิดไม่ทัน แบบร่างของคุณยังอยู่ที่นี่"
+  },
+  "desktopUi": {
+    "settings": {
+      "title": "หน้าต่างของแอป",
+      "double_click_label": "เปิดข้อความในหน้าต่างใหม่เมื่อดับเบิลคลิก",
+      "double_click_description": "คลิกครั้งเดียวยังคงเปิดข้อความข้างรายการ",
+      "restore_label": "เปิดหน้าต่างอีกครั้งเมื่อเริ่มต้น",
+      "restore_description": "หน้าต่างข้อความและฉบับร่างที่เปิดอยู่ตอนออกจะกลับมา"
+    },
+    "attachment": {
+      "open": "เปิด",
+      "save_as": "บันทึกเป็น…",
+      "copy": "คัดลอก",
+      "copy_failed": "คัดลอกไฟล์ไม่ได้"
+    },
+    "menu": {
+      "file": "ไฟล์",
+      "edit": "แก้ไข",
+      "view": "มุมมอง",
+      "message": "ข้อความ",
+      "go": "ไป",
+      "window": "หน้าต่าง",
+      "help": "ช่วยเหลือ",
+      "new_window": "หน้าต่างใหม่",
+      "print": "พิมพ์…",
+      "save_pdf": "บันทึกเป็น PDF…",
+      "switch_connection": "เปลี่ยนการเชื่อมต่อ…",
+      "close": "ปิด",
+      "quit": "ออก",
+      "undo": "เลิกทำ",
+      "redo": "ทำซ้ำ",
+      "cut": "ตัด",
+      "copy": "คัดลอก",
+      "paste": "วาง",
+      "select_all": "เลือกทั้งหมด",
+      "search": "ค้นหาอีเมล",
+      "refresh": "ตรวจสอบอีเมลใหม่",
+      "reading_pane": "บานหน้าต่างการอ่าน",
+      "pane_right": "ด้านขวา",
+      "pane_below": "ใต้รายการ",
+      "pane_off": "ปิด",
+      "zoom_in": "ขยาย",
+      "zoom_out": "ย่อ",
+      "zoom_reset": "ขนาดจริง",
+      "full_screen": "เต็มหน้าจอ",
+      "open_in_window": "เปิดในหน้าต่างใหม่",
+      "next_message": "ข้อความถัดไป",
+      "previous_message": "ข้อความก่อนหน้า",
+      "next_unread": "ข้อความที่ยังไม่ได้อ่านถัดไป",
+      "mail": "อีเมล",
+      "files": "ไฟล์",
+      "back": "ย้อนกลับ",
+      "forward": "ไปข้างหน้า",
+      "minimize": "ย่อหน้าต่าง",
+      "next_window": "หน้าต่างถัดไป",
+      "shortcuts": "แป้นพิมพ์ลัด",
+      "docs": "เอกสารประกอบ",
+      "settings": "การตั้งค่า…",
+      "about": "เกี่ยวกับ Bulwark",
+      "from_plugins": "เพิ่มเติมจากปลั๊กอิน…",
+      "pick_gone": "เมนูนี้เก่าแล้ว โปรดเปิดใหม่แล้วลองอีกครั้ง",
+      "bar_label": "เมนู"
+    },
+    "context": {
+      "add_to_dictionary": "เพิ่ม “{word}” ในพจนานุกรม",
+      "no_suggestions": "ไม่มีคำแนะนำ",
+      "open_link": "เปิดลิงก์",
+      "copy_link": "คัดลอกลิงก์",
+      "copy_address": "คัดลอกที่อยู่",
+      "save_image": "บันทึกรูปภาพ…",
+      "copy_image": "คัดลอกรูปภาพ"
+    },
+    "closing": {
+      "unsaved_title": "บันทึกฉบับร่างไม่ได้",
+      "unsaved_detail": "หากปิดตอนนี้ สิ่งที่คุณเขียนหลังจากบันทึกครั้งล่าสุดจะหายไป",
+      "close_anyway": "ปิดต่อไป",
+      "unsent_title": "มีอีเมลที่ยังไม่ได้ส่ง",
+      "unsent_one": "มี 1 ข้อความรอส่ง จะส่งออกเมื่อคุณเปิด Bulwark ครั้งถัดไป",
+      "unsent_many": "มี {count} ข้อความรอส่ง จะส่งออกเมื่อคุณเปิด Bulwark ครั้งถัดไป",
+      "quit": "ออก",
+      "leave_title": "ออกโดยไม่บันทึกการเปลี่ยนแปลงหรือไม่",
+      "leave_detail": "การเปลี่ยนแปลงของคุณในหน้านี้ยังไม่ได้บันทึก",
+      "leave": "ออก",
+      "stay": "อยู่ต่อ"
+    },
+    "spellcheck": {
+      "offer": "การตรวจตัวสะกดสำหรับ{language}ต้องมีพจนานุกรม Bulwark ดาวน์โหลดจาก Google ได้ ข้อความของคุณจะไม่ถูกส่งไป",
+      "download": "ดาวน์โหลด"
+    },
+    "restore": {
+      "unavailable_title": "ตอนนี้ยังเปิดฉบับร่างนี้ไม่ได้",
+      "unavailable_body": "ฉบับร่างปลอดภัยอยู่บนเซิร์ฟเวอร์ ในโฟลเดอร์ฉบับร่าง ลองอีกครั้งเมื่อเชื่อมต่อได้",
+      "try_again": "ลองอีกครั้ง",
+      "close": "ปิด"
+    }
+  },
+  "desktop_mail": {
+    "context_search_mail": "ค้นหา “{text}” ในอีเมล"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "คุณออฟไลน์อยู่ ข้อความนี้ต้องมีการเชื่อมต่อจึงจะเปิดได้",
+    "reader_failed": "โหลดข้อความนี้ไม่ได้",
+    "retry": "ลองอีกครั้ง",
+    "action_offline": "คุณออฟไลน์อยู่ การทำงานนี้ต้องมีการเชื่อมต่อ",
+    "offline_bar": "คุณออฟไลน์อยู่ การอ่านและแก้ไขอีเมลต้องมีการเชื่อมต่อ",
+    "offline_default_on": "อีเมลของคุณถูกเก็บไว้ในอุปกรณ์นี้ คุณจึงอ่านได้แม้ออฟไลน์"
+  },
+  "desktopMenuBar": {
+    "always_show_label": "แสดงแถบเมนูเสมอ",
+    "always_show_description": "มิฉะนั้นแถบเมนูจะแสดงเมื่อกด Alt",
+    "exit": "ออก",
+    "tray_pause": "หยุดการแจ้งเตือนชั่วคราว",
+    "tray_pause_hour": "1 ชั่วโมง",
+    "tray_pause_tomorrow": "จนถึงพรุ่งนี้",
+    "tray_resume": "เปิดการแจ้งเตือนอีกครั้ง",
+    "tray_open": "เปิด Bulwark",
+    "tray_quit": "ปิด Bulwark",
+    "tray_exit": "ออกจาก Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "บันทึกฉบับร่าง",
+    "attach_files": "แนบไฟล์…",
+    "shortcut_apps": "ไปที่อีเมล ปฏิทิน รายชื่อติดต่อ หรือไฟล์"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "เปิด…",
+    "menu_save_as": "บันทึกเป็น…",
+    "open_filter": "ข้อความ กิจกรรม และรายชื่อติดต่อ",
+    "save_filter": "ข้อความอีเมล",
+    "folder_title": "เลือกโฟลเดอร์สำหรับข้อความ",
+    "folder_button": "บันทึกที่นี่",
+    "saved_many": "บันทึกข้อความแล้ว {count} รายการ",
+    "save_failed": "บันทึกข้อความไม่ได้ {count} รายการ",
+    "shortcut_open": "เปิดข้อความ กิจกรรม หรือรายชื่อติดต่อที่บันทึกไว้",
+    "shortcut_save_as": "บันทึกข้อความเป็นไฟล์"
+  },
+  "appLock": {
+    "section_title": "ล็อกแอป",
+    "section_desc": "ขอ PIN หลังจากไม่ได้ใช้งานระยะหนึ่ง ในทุกหน้าต่างและแท็บ ระหว่างที่ล็อกอยู่ แอปจะอ่านอีเมลที่เก็บบนอุปกรณ์นี้ไม่ได้จนกว่าจะมีผู้ป้อน PIN",
+    "enable_label": "ล็อกด้วย PIN",
+    "enable_desc": "PIN จะอยู่บนอุปกรณ์นี้",
+    "protects_desc": "สิ่งที่ป้องกันได้: PIN กันผู้ที่อยู่ตรงอุปกรณ์นี้ไม่ให้เข้าแอป อีเมลที่เก็บไว้ที่นี่จะได้กุญแจใหม่เมื่อคุณเปิดการล็อกหรือเปลี่ยน PIN ซึ่งอาจใช้เวลาสักครู่ แต่ไม่สามารถหยุดโปรแกรมที่ทำงานบนคอมพิวเตอร์เครื่องนี้ ส่วนขยายเบราว์เซอร์ที่คุณติดตั้ง หรือผู้ที่คัดลอกไฟล์ของแอปและมีเวลาลอง PIN จำนวนมาก PIN ที่ยาวขึ้นจึงคุ้มค่า ในแอปเดสก์ท็อป การลอง PIN ต้องใช้การเข้าสู่ระบบของคุณบนคอมพิวเตอร์เครื่องนี้ด้วย บัญชีของคุณบนเซิร์ฟเวอร์ไม่ได้รับผลกระทบ",
+    "enable_body": "คุณต้องใช้ทุกครั้งที่แอปล็อก และหลังเริ่มใหม่",
+    "set_pin_title": "เลือก PIN",
+    "change_pin": "เปลี่ยน PIN…",
+    "change_pin_title": "เปลี่ยน PIN",
+    "pin_label": "PIN",
+    "pin_current": "PIN ปัจจุบัน",
+    "pin_new": "PIN ใหม่",
+    "pin_repeat": "ใส่ PIN อีกครั้ง",
+    "pin_hint": "อย่างน้อย 5 ตัวอักษร ใช้ตัวอักษรได้ และ PIN ที่ยาวกว่าเดาได้ยากกว่า",
+    "pin_hint_policy": "องค์กรของคุณกำหนดให้ใช้อย่างน้อย {count, plural, other {# ตัวอักษร}} ใช้ตัวอักษรได้",
+    "pin_obvious": "PIN นี้เดาง่ายเกินไป หลีกเลี่ยงการซ้ำ ตัวเลขเรียง และรหัสที่คนใช้บ่อย",
+    "pin_mismatch": "PIN ทั้งสองไม่ตรงกัน",
+    "pin_recovery": "หากลืม วิธีเดียวคือลบข้อมูลบนอุปกรณ์นี้แล้วลงชื่อเข้าใช้ใหม่ อีเมลบนเซิร์ฟเวอร์ยังอยู่ ข้อความที่ยังรอส่งบนอุปกรณ์นี้จะหายไป",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "save_failed": "ไม่สำเร็จ ลองอีกครั้ง",
+    "timeout_label": "ล็อกหลังจาก",
+    "timeout_desc": "เวลาที่ไม่ได้ใช้งานในหน้าต่างหรือแท็บใดก็ตาม",
+    "lock_now": "ล็อกเดี๋ยวนี้",
+    "lock_now_desc": "ล็อกทุกหน้าต่างและแท็บทันที",
+    "disable_title": "ปิดการล็อกแอปหรือไม่",
+    "disable_body": "ใส่ PIN เพื่อปิด",
+    "disable_confirm": "ปิด",
+    "passkey_label": "พาสคีย์",
+    "passkey_desc": "ปลดล็อกด้วยพาสคีย์หรือคีย์ความปลอดภัยที่ปกป้องกุญแจได้ ไม่ใช่ทุกอันที่ทำได้ และ PIN ยังใช้ได้",
+    "passkey_add": "เพิ่มพาสคีย์…",
+    "passkey_add_title": "เพิ่มพาสคีย์",
+    "passkey_remove": "ลบ",
+    "passkey_added": "เพิ่มพาสคีย์แล้ว",
+    "passkey_no_prf": "พาสคีย์นี้ปกป้องกุญแจไม่ได้ PIN ยังใช้ได้",
+    "passkey_failed": "พาสคีย์ใช้ไม่ได้ ใส่ PIN แทน",
+    "use_passkey": "ใช้พาสคีย์",
+    "use_hello": "ใช้ Windows Hello",
+    "use_touchid": "ใช้ Touch ID",
+    "os_add": "เปิด…",
+    "os_add_title": "ใช้ {method}",
+    "os_remove": "ปิด",
+    "os_desc": "{method} เป็นการตรวจสอบโดยแอป หลังจากยืนยัน แอปจะอ่านกุญแจจากที่เก็บแบบเข้ารหัสของคอมพิวเตอร์นี้ โปรแกรมที่ทำงานภายใต้บัญชีผู้ใช้ของคุณอาจอ่านได้โดยไม่ต้องใช้ {method} ดังนั้น PIN จึงปกป้องได้มากกว่า PIN ยังใช้ได้",
+    "os_failed": "ไม่สำเร็จ ใส่ PIN แทน",
+    "lock_title": "{app} ถูกล็อก",
+    "locking": "กำลังล็อก…",
+    "pin_prompt": "ใส่ PIN เพื่อดำเนินการต่อ",
+    "unlock": "ปลดล็อก",
+    "unlocking": "กำลังปลดล็อก…",
+    "wrong_pin": "PIN นี้ไม่ถูกต้อง",
+    "unlock_failed": "ปลดล็อกไม่สำเร็จ ลองอีกครั้ง",
+    "blocked_later": "ลองหลายครั้งเกินไป ลองอีกครั้งภายหลัง",
+    "forgot": "ลืม PIN หรือไม่",
+    "forgot_title": "ลบข้อมูลในเครื่องและออกจากระบบหรือไม่",
+    "forgot_body": "PIN ที่ลืมไม่สามารถกู้คืนได้ การดำเนินการนี้จะลบอีเมลที่เก็บบนอุปกรณ์นี้และออกจากระบบทุกบัญชี เพื่อให้คุณลงชื่อเข้าใช้ใหม่ได้ อีเมลบนเซิร์ฟเวอร์ยังอยู่ ข้อความที่ยังรอส่งบนอุปกรณ์นี้จะหายไป",
+    "forgot_provider": "หากคุณลงชื่อเข้าใช้ผ่านหน้าเข้าสู่ระบบขององค์กร การเข้าสู่ระบบนั้นจะยังเปิดอยู่ที่นั่น การลงชื่อเข้าใช้ครั้งถัดไปที่นี่จะขอให้หน้านั้นเข้าสู่ระบบใหม่ หากหน้านั้นอนุญาต",
+    "forgot_confirm": "ลบและออกจากระบบ",
+    "unlock_in_main": "ปลดล็อกในหน้าต่างหลัก",
+    "open_main": "ไปที่หน้าต่างหลัก",
+    "setup_required_title": "องค์กรของคุณกำหนดให้ใช้การล็อกแอป",
+    "setup_required_body": "เลือก PIN คุณต้องใช้เพื่อเปิด {app} หลังจากล็อก",
+    "draft_saved_notice": "สิ่งที่คุณเขียนถูกบันทึกในแบบร่างก่อนล็อก",
+    "use_hello_name": "Windows Hello",
+    "use_touchid_name": "Touch ID",
+    "timeout_option": "{count, plural, other {# นาที}}",
+    "blocked_seconds": "ลองหลายครั้งเกินไป ลองอีกครั้งใน {count, plural, other {# วินาที}}",
+    "blocked_minutes": "ลองหลายครั้งเกินไป ลองอีกครั้งใน {count, plural, other {# นาที}}"
+  },
+  "appLockHello": {
+    "switch_label": "ปลดล็อกด้วย Windows Hello",
+    "switch_desc": "ใช้ใบหน้า ลายนิ้วมือ หรือ PIN ของ Windows โดย PIN ของแอปยังใช้ได้อยู่",
+    "protects": "เมื่อเปิด Windows Hello แล้ว Windows จะเก็บกุญแจสำหรับแอปนี้ไว้ ซึ่งใช้ได้ก็ต่อเมื่อ Windows Hello ตรวจสอบแล้วว่าเป็นคุณ กุญแจของแอปก็ถูกล็อกด้วยกุญแจนี้ด้วย การปลดล็อกจึงต้องใช้ใบหน้า ลายนิ้วมือ หรือ PIN ของ Windows และโปรแกรมอื่นในคอมพิวเตอร์เครื่องนี้ใช้กุญแจนั้นไม่ได้หาก Windows ไม่ได้ถามคุณก่อน PIN ของแอปยังใช้ได้อยู่ และคุณต้องใช้ PIN นั้นหาก Windows Hello ถูกรีเซ็ตหรือปิด",
+    "enable_title": "เปิด Windows Hello",
+    "enable_body": "ใส่ PIN ของแอป จากนั้น Windows จะขอให้คุณยืนยันด้วย Windows Hello",
+    "enable_failed": "เปิด Windows Hello ไม่สำเร็จ ลองอีกครั้ง",
+    "cancelled": "ยกเลิก Windows Hello แล้ว",
+    "unsupported": "Windows Hello ในคอมพิวเตอร์เครื่องนี้ปกป้องกุญแจไม่ได้ PIN ของคุณยังใช้ได้อยู่",
+    "unavailable": "ไม่มี Windows Hello ในคอมพิวเตอร์เครื่องนี้",
+    "busy": "Windows Hello ไม่ว่างหรือถูกล็อกอยู่ ลองอีกครั้งในภายหลัง",
+    "off_after_pin_change": "Windows Hello ปิดอยู่ในตอนนี้ เพราะไม่ได้ยืนยันหลังจากเปลี่ยน PIN เปิดอีกครั้งหากคุณใช้งาน",
+    "prompt": "ยืนยันด้วย Windows Hello ว่าเป็นคุณ",
+    "waiting": "กำลังรอ Windows Hello…",
+    "use_hello": "ปลดล็อกด้วย Windows Hello",
+    "use_pin": "ใช้ PIN แทน",
+    "failed": "Windows Hello ไม่ได้ปลดล็อกแอป ใส่ PIN ของคุณ",
+    "gone": "Windows Hello ปลดล็อกแอปในคอมพิวเตอร์เครื่องนี้ไม่ได้อีกต่อไป ใส่ PIN ของคุณ"
+  },
+  "uxs_general": {
+    "time_zone_common": "เขตเวลาที่ใช้บ่อย",
+    "time_zone_all": "เขตเวลาทั้งหมด",
+    "time_zone_search": "ค้นหาเขตเวลา",
+    "time_zone_no_match": "ไม่พบเขตเวลา",
+    "time_zone_desktop_description": "แสดงเวลาของอีเมลและนัดหมายตามเขตเวลานี้ ถ้าคุณไม่เลือก จะใช้เขตเวลาของคอมพิวเตอร์",
+    "app_lock_desc_desktop": "ขอ PIN หลังจากไม่ได้ใช้งานระยะหนึ่ง ในทุกหน้าต่าง ระหว่างที่ล็อกอยู่ แอปจะอ่านอีเมลที่เก็บบนอุปกรณ์นี้ไม่ได้จนกว่าจะมีผู้ป้อน PIN",
+    "app_lock_timeout_desc_desktop": "เวลาที่ไม่ได้ใช้งานในหน้าต่างใดก็ตาม",
+    "app_lock_now_desc_desktop": "ล็อกทุกหน้าต่างทันที",
+    "app_lock_protects_toggle": "สิ่งนี้ป้องกันอะไร",
+    "app_lock_timeout_hours": "{count, plural, other {# ชั่วโมง}}",
+    "app_lock_until_screen": "เมื่อหน้าจอล็อก",
+    "app_lock_until_session": "เมื่อออกจากระบบหรือรีสตาร์ต",
+    "desktop_attention_title": "บนคอมพิวเตอร์เครื่องนี้"
+  },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "ชื่อของคุณ",
+      "description": "ผู้คนจะเห็นชื่อนี้ข้างที่อยู่ของคุณเมื่อคุณส่งอีเมลถึงพวกเขา",
+      "saved": "บันทึกชื่อของคุณแล้ว",
+      "error": "บันทึกชื่อของคุณไม่ได้ ลองอีกครั้ง"
+    },
+    "addresses": {
+      "description": "ที่อยู่ที่คุณใช้ส่งได้ แต่ละที่อยู่มีชื่อและลายเซ็นของตัวเอง",
+      "label": "ที่อยู่ของคุณ",
+      "count": "{count, plural, =0 {ยังไม่มีที่อยู่} other {# ที่อยู่}}",
+      "manage": "แก้ไขที่อยู่…",
+      "modal_title": "ที่อยู่อีเมลของคุณ",
+      "add": "เพิ่มที่อยู่",
+      "edit": "แก้ไขที่อยู่",
+      "added": "เพิ่มที่อยู่แล้ว",
+      "saved": "บันทึกที่อยู่แล้ว",
+      "deleted": "ลบที่อยู่แล้ว",
+      "delete_title": "ลบที่อยู่นี้หรือไม่"
+    },
+    "signatures": {
+      "title": "ลายเซ็น",
+      "description": "ใส่ไว้ท้ายข้อความที่คุณเขียน แต่ละที่อยู่มีลายเซ็นของตัวเอง",
+      "saved": "บันทึกลายเซ็นแล้ว",
+      "error": "บันทึกลายเซ็นไม่ได้ ลองอีกครั้ง",
+      "no_addresses": "ยังไม่มีที่อยู่สำหรับส่ง"
+    },
+    "search": {
+      "addresses": "ข้อมูลประจำตัว นามแฝง ผู้ส่ง ที่อยู่ผู้ส่ง ที่อยู่จาก identity alias sender",
+      "signatures": "ลายเซ็น ลายเซ็นอีเมล ท้ายกระดาษ ผู้ส่ง ที่อยู่จาก signature",
+      "your_name": "ชื่อที่แสดง ชื่อเต็ม ชื่อผู้ส่ง display name"
+    }
+  },
+  "desktop_sign_in": {
+    "server_needed": "ป้อนที่อยู่เซิร์ฟเวอร์ก่อน",
+    "server_declined": "คุณไม่ได้อนุญาตเซิร์ฟเวอร์นี้ จึงไม่มีการส่งข้อมูลใดไป",
+    "server_invalid": "ที่อยู่เซิร์ฟเวอร์นี้ไม่ถูกต้อง"
+  },
+  "desktop_browser_sign_in": {
+    "button": "ลงชื่อเข้าใช้ด้วยเบราว์เซอร์…",
+    "waiting": "กำลังรอเบราว์เซอร์…",
+    "waiting_hint": "ลงชื่อเข้าใช้ให้เสร็จในเบราว์เซอร์ ตัวจัดการรหัสผ่านของคุณใช้งานได้ที่นั่น",
+    "cancel": "ยกเลิก",
+    "or_here": "หรือลงชื่อเข้าใช้ที่นี่",
+    "timed_out": "การลงชื่อเข้าใช้ในเบราว์เซอร์ใช้เวลานานเกินไป ลองอีกครั้ง",
+    "no_browser": "Bulwark เปิดเบราว์เซอร์ไม่ได้ ลองอีกครั้งหรือลงชื่อเข้าใช้ที่นี่",
+    "failed": "ลงชื่อเข้าใช้ผ่านเบราว์เซอร์ไม่สำเร็จ ลองอีกครั้ง",
+    "handoff_banner": "โปรแกรมบนคอมพิวเตอร์เครื่องนี้ขอการลงชื่อเข้าใช้นี้สำหรับแอป Bulwark เบราว์เซอร์นี้จะยังไม่ได้ลงชื่อเข้าใช้ Bulwark หากคุณไม่ได้เริ่มเอง ให้ปิดแท็บนี้",
+    "consent_title": "ลงชื่อเข้าใช้แอป Bulwark หรือไม่",
+    "consent_description": "โปรแกรมบนคอมพิวเตอร์เครื่องนี้ที่พอร์ต {port} กำลังขอการลงชื่อเข้าใช้ของ {username} ดำเนินการต่อเฉพาะเมื่อคุณเพิ่งกด \"ลงชื่อเข้าใช้ด้วยเบราว์เซอร์…\" ในแอป Bulwark บนเครื่องนี้ หากไม่ได้กด อาจมีคนพยายามเข้าบัญชีของคุณ ให้เลือก ไม่ใช่ตอนนี้",
+    "consent_confirm": "ลงชื่อเข้าใช้แอป",
+    "consent_cancel": "ไม่ใช่ตอนนี้",
+    "page_done": "คุณปิดแท็บนี้และกลับไปที่ Bulwark ได้",
+    "page_failed": "ลงชื่อเข้าใช้ไม่สำเร็จ กลับไปที่ Bulwark แล้วลองอีกครั้ง",
+    "page_link_used": "ลิงก์นี้ใช้ได้ครั้งเดียว กลับไปที่ Bulwark แล้วเริ่มใหม่",
+    "page_title": "ลงชื่อเข้าใช้ {server}",
+    "page_intro": "หน้านี้มาจากแอป Bulwark บนคอมพิวเตอร์เครื่องนี้ รหัสผ่านของคุณจะส่งไปที่ {server} เท่านั้น",
+    "page_username": "ที่อยู่อีเมลหรือชื่อผู้ใช้",
+    "page_password": "รหัสผ่าน",
+    "page_code": "รหัสสองปัจจัย",
+    "page_submit": "ลงชื่อเข้าใช้",
+    "page_wrong_password": "เซิร์ฟเวอร์ไม่ยอมรับชื่อผู้ใช้และรหัสผ่านนี้",
+    "page_code_needed": "บัญชีนี้ต้องใช้รหัสสองปัจจัยด้วย ป้อนรหัสผ่านอีกครั้งพร้อมรหัส",
+    "page_no_answer": "Bulwark ลงชื่อเข้าใช้ไม่ได้ ตรวจสอบว่าเข้าถึงเซิร์ฟเวอร์ได้แล้วลองอีกครั้ง",
+    "declined": "คุณปฏิเสธในเบราว์เซอร์ จึงไม่มีการลงชื่อเข้าใช้",
+    "too_many": "มีการพยายามลงชื่อเข้าใช้จากเครือข่ายนี้มากเกินไป รอสักครู่แล้วลองอีกครั้ง",
+    "page_declined": "ไม่มีการส่งมอบสิ่งใด คุณปิดแท็บนี้ได้"
+  },
+  "uxs_login": {
+    "theme_button": "สว่างหรือมืด",
+    "server_label": "เซิร์ฟเวอร์อีเมล",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "กำลังค้นหาเซิร์ฟเวอร์อีเมลของคุณ…",
+    "server_found": "เซิร์ฟเวอร์อีเมล: {server}",
+    "server_change": "เปลี่ยน",
+    "server_change_hint": "พิมพ์ที่อยู่ของเซิร์ฟเวอร์อื่น",
+    "server_not_found": "ไม่พบเซิร์ฟเวอร์อีเมลของที่อยู่นี้ ป้อนที่นี่ เช่น mail.example.com",
+    "server_needed": "ป้อนที่อยู่เซิร์ฟเวอร์อีเมลของคุณ",
+    "server_invalid": "นี่ไม่ใช่ที่อยู่เซิร์ฟเวอร์ ให้พิมพ์แบบ mail.example.com",
+    "email_needed": "ป้อนที่อยู่อีเมลของคุณก่อน",
+    "other_ways": "วิธีลงชื่อเข้าใช้อื่นๆ",
+    "trouble": "มีปัญหาใช่ไหม",
+    "trouble_cors": "เซิร์ฟเวอร์อีเมลของคุณต้องอนุญาตให้ลงชื่อเข้าใช้จากเว็บไซต์นี้ หากลงชื่อเข้าใช้ไม่ได้ ให้ขอผู้ดูแลเซิร์ฟเวอร์อีเมลอนุญาต",
+    "provider_unsupported": "{provider} ไม่รองรับ JMAP ซึ่งเป็นวิธีที่ Bulwark ใช้คุยกับเซิร์ฟเวอร์อีเมล Bulwark จึงยังเชื่อมต่อโดยตรงไม่ได้"
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock เปิดอยู่",
+    "language_button": "ภาษา: {language}"
+  },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "เปลี่ยนวิธีที่ Bulwark เชื่อมต่อไหม",
+      "message": "Bulwark จะเริ่มใหม่และถามวิธีเชื่อมต่อ: ด้วยที่อยู่อีเมลของคุณ หรือผ่าน Bulwark ขององค์กรของคุณ บัญชีของคุณบนคอมพิวเตอร์เครื่องนี้ยังคงลงชื่อเข้าใช้อยู่",
+      "confirm": "เปลี่ยน",
+      "org_link": "ใช้ Bulwark ขององค์กรของฉันแทน",
+      "add_account": "เพิ่มบัญชี…"
+    },
+    "picture": {
+      "button": "รูปภาพ",
+      "title": "แทรกรูปภาพ",
+      "address": "ที่อยู่เว็บของรูปภาพ",
+      "address_hint": "รูปภาพจะอยู่บนเว็บและแสดงจากที่นั่น",
+      "description": "คำอธิบาย",
+      "invalid": "ป้อนที่อยู่เว็บที่ขึ้นต้นด้วย https://",
+      "insert": "แทรก"
+    },
+    "sign_in_page": {
+      "open_app": "เปิด Bulwark",
+      "done_as": "ลงชื่อเข้าใช้เป็น {address} แล้ว คุณปิดแท็บนี้ได้"
+    }
+  },
+  "desktop_updates": {
+    "title": "การอัปเดต",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark ตรวจหาการอัปเดตเอง",
+    "status_checking": "กำลังตรวจหาการอัปเดต…",
+    "status_up_to_date": "คุณมีเวอร์ชันล่าสุดแล้ว",
+    "status_downloading": "กำลังดาวน์โหลดเวอร์ชัน {version}…",
+    "status_ready": "เวอร์ชัน {version} พร้อมแล้ว จะติดตั้งเมื่อคุณออกครั้งถัดไป หรือรีสตาร์ตเลยตอนนี้",
+    "status_available": "มีเวอร์ชัน {version} ให้ใช้งาน",
+    "status_available_per_machine": "มีเวอร์ชัน {version} ให้ใช้งาน Bulwark ติดตั้งไว้สำหรับทุกคนบนคอมพิวเตอร์เครื่องนี้ ผู้ดูแลระบบจึงเป็นผู้ติดตั้งการอัปเดต",
+    "status_older": "คุณใช้เวอร์ชันเบต้าอยู่ เวอร์ชันเสถียร {version} เก่ากว่า Bulwark จึงอยู่ที่เวอร์ชันนี้จนกว่าเวอร์ชันเสถียรจะตามทัน",
+    "status_error": "ตรวจหาการอัปเดตไม่สำเร็จ Bulwark จะลองอีกครั้งในภายหลัง",
+    "status_off": "องค์กรของคุณปิดการอัปเดตในแอปแล้ว",
+    "check": "ตรวจหาเลย",
+    "restart": "รีสตาร์ตเพื่ออัปเดต",
+    "download": "ดาวน์โหลด",
+    "install_older": "ติดตั้งเวอร์ชันเก่ากว่า…",
+    "channel_label": "ช่องทางการอัปเดต",
+    "channel_description": "เวอร์ชันเบต้ามาเร็วกว่าและอาจมีปัญหามากกว่า",
+    "channel_stable": "เสถียร",
+    "channel_beta": "เบต้า",
+    "shell_restart": "รีสตาร์ตเพื่ออัปเดต",
+    "shell_check": "ตรวจหาการอัปเดต…",
+    "shell_available": "Bulwark {version} พร้อมใช้งาน",
+    "shell_ready_title": "Bulwark พร้อมอัปเดต",
+    "shell_ready_body": "เวอร์ชัน {version} จะติดตั้งเมื่อคุณออกครั้งถัดไป คลิกเพื่อรีสตาร์ตเลย ฉบับร่างจะถูกบันทึกก่อน",
+    "shell_available_title": "มี Bulwark เวอร์ชันใหม่",
+    "shell_none_title": "Bulwark เป็นเวอร์ชันล่าสุด",
+    "shell_none_detail": "คุณมีเวอร์ชัน {version}",
+    "shell_failed_title": "Bulwark ตรวจหาการอัปเดตไม่ได้",
+    "shell_failed_detail": "ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้งภายหลัง ไม่มีอะไรเปลี่ยนแปลง",
+    "shell_beta_title": "เปลี่ยนไปใช้เวอร์ชันเบต้าไหม",
+    "shell_beta_detail": "คุณจะได้เวอร์ชันใหม่เร็วขึ้น และอาจมีปัญหามากกว่า หากจะกลับ ให้ติดตั้งเวอร์ชันเสถียรที่เก่ากว่าหรือรอจนเวอร์ชันเสถียรตามทัน",
+    "shell_beta_confirm": "เปลี่ยนไปใช้เบต้า",
+    "shell_older_title": "กลับไปใช้ Bulwark {version} ไหม",
+    "shell_older_detail": "คุณใช้เบต้า {current} เวอร์ชันเสถียร {target} เก่ากว่าและอาจอ่านสิ่งที่เบต้าบันทึกไว้ในคอมพิวเตอร์เครื่องนี้ไม่ได้ อีเมลยังอยู่บนเซิร์ฟเวอร์ แต่อีเมลออฟไลน์อาจดาวน์โหลดใหม่และการเปลี่ยนแปลงที่ยังไม่ส่งอาจหายไป หากรอ เวอร์ชันเสถียรจะตามทันและคุณจะเปลี่ยนได้โดยไม่ต้องทำขั้นตอนนี้",
+    "shell_older_confirm": "ติดตั้งเวอร์ชันเก่ากว่า"
+  },
+  "desktop_keystore": {
+    "title": "ใบรับรองในคอมพิวเตอร์เครื่องนี้",
+    "description": "เซิร์ฟเวอร์นี้สามารถขอใช้ใบรับรองและสมาร์ตการ์ดของคุณได้ คุณจะยังถูกถามก่อนใช้ใบรับรองแต่ละใบ",
+    "label": "การเข้าถึงของเซิร์ฟเวอร์นี้",
+    "label_description": "ถอนการอนุญาตของคุณ เซิร์ฟเวอร์จะต้องขออีกครั้ง",
+    "revoke": "ถอน",
+    "revoked": "ถอนการอนุญาตแล้ว"
+  },
+  "desktop_certificates": {
+    "picker_title": "{host} ขอใบรับรอง",
+    "picker_detail": "เซิร์ฟเวอร์ต้องการทราบว่าคุณคือใคร ใบรับรองที่คุณเลือกจะส่งไปยังเซิร์ฟเวอร์นี้เท่านั้น หากคุณไม่รู้จักเซิร์ฟเวอร์นี้ อย่าส่ง",
+    "picker_issued": "ออกโดย {issuer} ใช้ได้ถึง {date}",
+    "picker_remember": "จดจำสำหรับ {host}",
+    "picker_none": "ไม่ส่งใบรับรอง",
+    "picker_more": "ใบรับรองเพิ่มเติม…"
+  },
+  "desktopOs": {
+    "section_title": "แอปเดสก์ท็อป",
+    "section_description": "วิธีที่แอปทำงานกับคอมพิวเตอร์ของคุณ",
+    "close_to_tray_label": "ทำงานต่อในถาดระบบเมื่อปิด",
+    "close_to_tray_description": "เมลใหม่และการแจ้งเตือนยังเข้ามาหลังปิดหน้าต่าง",
+    "start_at_login_label": "เริ่มเมื่อลงชื่อเข้าใช้คอมพิวเตอร์",
+    "start_at_login_description": "แอปเริ่มเองเมื่อคุณลงชื่อเข้าใช้",
+    "start_minimized_label": "เริ่มในถาดระบบ",
+    "start_minimized_description": "ไม่มีหน้าต่างเปิดเมื่อลงชื่อเข้าใช้ เปิดด้วยไอคอนในถาดระบบ",
+    "attention_label": "กะพริบแถบงานเมื่อมีเมลใหม่",
+    "attention_mac_label": "ให้ไอคอน Dock เด้งเมื่อมีเมลใหม่",
+    "attention_description": "เฉพาะเมื่อแอปไม่ได้อยู่ด้านหน้า",
+    "quiet_hours_label": "ช่วงเวลาเงียบ",
+    "quiet_hours_description": "ไม่มีการแจ้งเตือนและเสียงในช่วงนี้ เมลยังเข้ามาตามปกติ",
+    "quiet_hours_from": "จาก",
+    "quiet_hours_to": "ถึง",
+    "show_shortcut_label": "แสดงแอปด้วยแป้นพิมพ์ลัด",
+    "show_shortcut_description": "{keys} นำแอปขึ้นมาด้านหน้าจากแอปอื่นใดก็ได้",
+    "show_shortcut_taken": "แอปอื่นใช้ {keys} อยู่ ปิดแอปนั้น หรือปิดแล้วเปิดตัวเลือกนี้อีกครั้ง",
+    "default_app_label": "แอปเมลเริ่มต้น",
+    "default_app_description": "เปิดลิงก์เมลและไฟล์ .eml, .ics และ .vcf ด้วยแอปนี้",
+    "default_app_is_default": "แอปนี้เปิดลิงก์เมลของคุณ",
+    "default_app_button": "เลือกแอปเริ่มต้น…",
+    "new_mail": "เมลใหม่",
+    "no_subject": "(ไม่มีหัวเรื่อง)",
+    "action_delete": "ลบ",
+    "copy_as_file": "คัดลอกเป็นไฟล์",
+    "copied": "คัดลอกไฟล์แล้ว คุณวางลงในโฟลเดอร์ได้",
+    "copy_failed": "คัดลอกไฟล์ไม่ได้",
+    "reply_lost": "ไม่สามารถเก็บคำตอบที่พิมพ์ไว้ได้ เปิดข้อความแล้วตอบจากที่นั่น"
+  },
+  "ux_pim_menu": {
+    "search_contacts": "ค้นหาผู้ติดต่อ",
+    "search_files": "ค้นหาไฟล์",
+    "import": "นำเข้า",
+    "import_mail": "อีเมล…",
+    "import_calendar": "ปฏิทิน…",
+    "import_contacts": "ผู้ติดต่อ…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "รีเฟรช",
+    "menu_today": "วันนี้",
+    "menu_next_period": "ช่วงถัดไป",
+    "menu_previous_period": "ช่วงก่อนหน้า",
+    "account_scope_label": "กำลังแสดง {address} สลับบัญชี",
+    "account_scope_menu": "สลับบัญชี",
+    "merge_links": "ลิงก์",
+    "merge_photo": "รูปภาพ",
+    "merge_kept": "เก็บไว้",
+    "import_show": "แสดง"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {เลือกผู้ติดต่อ # รายการ}}",
+    "selection_more": "และอีก {count} รายการ",
+    "no_addresses": "ไม่มีผู้ติดต่อที่เลือกรายใดมีที่อยู่อีเมล",
+    "task_open": "เปิด",
+    "due_next_week": "สัปดาห์หน้า",
+    "due_none": "ไม่มีวันครบกำหนด",
+    "due_pick": "เลือกวันที่…",
+    "move_to_list": "ย้ายไปยังรายการ",
+    "dupes_legend": "{count, plural, other {# รายการมีอยู่ในรายชื่อติดต่อแล้ว:}}",
+    "dupes_skip": "ข้าม",
+    "dupes_update": "อัปเดตผู้ติดต่อที่มีอยู่",
+    "dupes_updates": "อัปเดตผู้ติดต่อ",
+    "upload_cancelled": "ยกเลิกการอัปโหลดแล้ว",
+    "upload_cancelled_partial": "อัปโหลดแล้ว {count, plural, other {# ไฟล์}} ก่อนที่คุณจะยกเลิก",
+    "download_cancelled": "ยกเลิกการดาวน์โหลดแล้ว"
+  },
+  "desktopEdit": {
+    "edit": "แก้ไข",
+    "edit_named": "แก้ไข {name}",
+    "opened": "{name} เปิดอยู่ในโปรแกรมของไฟล์นั้น บันทึกการเปลี่ยนแปลงที่นั่น แล้วระบบจะถามว่าจะทำอย่างไรกับการเปลี่ยนแปลงนั้น",
+    "offers_label": "ไฟล์แนบที่แก้ไขแล้ว",
+    "changed_title": "{name} มีการเปลี่ยนแปลง",
+    "changed_body": "คุณบันทึกการเปลี่ยนแปลงในโปรแกรมอื่น จะให้ทำอย่างไรกับการเปลี่ยนแปลงนั้น",
+    "reply": "แนบไปกับการตอบกลับ",
+    "new_message": "แนบไปกับข้อความใหม่",
+    "open_draft": "เปิดฉบับร่าง",
+    "save_copy": "บันทึกสำเนา…",
+    "discard": "ละทิ้งการแก้ไข…",
+    "discard_title": "ละทิ้งการแก้ไขใน {name} หรือไม่",
+    "discard_detail": "สำเนาที่แก้ไขจะถูกลบ ไฟล์แนบต้นฉบับจะไม่เปลี่ยนแปลง",
+    "discard_confirm": "ละทิ้ง",
+    "cancel": "ยกเลิก",
+    "update": "อัปเดตไฟล์แนบ",
+    "no_app": "ไม่มีโปรแกรมในคอมพิวเตอร์นี้ที่เปิดไฟล์นี้ได้",
+    "blocked_type": "เปิดไฟล์ประเภทนี้เพื่อแก้ไขไม่ได้ เพราะอาจทำงานเป็นโปรแกรมได้",
+    "blocked_policy": "องค์กรของคุณไม่อนุญาตให้บันทึกไฟล์แนบในอุปกรณ์นี้",
+    "removed_policy": "องค์กรของคุณไม่อนุญาตอีกต่อไป จึงลบสำเนาที่แก้ไขของ {name} แล้ว",
+    "too_large": "ไฟล์นี้ใหญ่เกินกว่าจะเปิดเพื่อแก้ไข",
+    "too_many": "มีไฟล์ที่เปิดเพื่อแก้ไขมากเกินไป โปรดจัดการบางไฟล์ให้เสร็จก่อน",
+    "failed": "เปิดไฟล์เพื่อแก้ไขไม่ได้",
+    "read_busy": "โปรแกรมอื่นยังใช้ {name} อยู่ โปรดปิดที่นั่นแล้วลองอีกครั้ง",
+    "read_failed": "อ่านสำเนาที่แก้ไขของ {name} ไม่ได้",
+    "send_stale_title": "{name} มีการแก้ไขที่ไม่ได้อยู่ในข้อความนี้",
+    "send_stale_detail": "หากส่งตอนนี้ ข้อความจะส่งไปพร้อมเวอร์ชันเก่า การแก้ไขของคุณจะอยู่ในคอมพิวเตอร์นี้ได้นานสูงสุด 30 วัน จนกว่าคุณจะตัดสินใจ",
+    "send_stale_send": "ส่งต่อไป",
+    "send_stale_back": "ย้อนกลับ",
+    "signout_title": "ออกจากระบบและลบการแก้ไขหรือไม่",
+    "signout_confirm": "ออกจากระบบ",
+    "lock_note": "ไฟล์ที่เปิดด้วยแก้ไขจะยังเปิดอยู่ในโปรแกรมของไฟล์นั้นขณะที่แอปถูกล็อก และยังอ่านได้ในคอมพิวเตอร์นี้ ไฟล์ใหม่จะเปิดไม่ได้จนกว่าคุณจะปลดล็อก",
+    "changed_title_hidden": "บันทึกไฟล์แนบที่แก้ไขแล้ว",
+    "last_chance": "ไม่ได้ใช้มา 30 วัน สำเนานี้จะถูกลบพรุ่งนี้",
+    "held_named": "{names}: ยังเปิดอยู่ในโปรแกรมอื่น จึงยังลบสำเนาไม่ได้ ปิดที่นั่นแล้วสำเนาจะถูกลบ",
+    "held_unnamed": "สำเนาของไฟล์แนบยังเปิดอยู่ในโปรแกรมอื่น จึงยังลบไม่ได้ ปิดที่นั่นแล้วจะถูกลบ",
+    "removed_policy_held": "องค์กรของคุณไม่อนุญาตอีกต่อไป {name} ยังเปิดอยู่ในโปรแกรมอื่น จึงลบสำเนาได้หลังจากคุณปิดที่นั่นเท่านั้น",
+    "removed_policy_hidden": "องค์กรของคุณไม่อนุญาตให้แก้ไขไฟล์แนบอีกต่อไป จึงนำสำเนาที่แก้ไขออกแล้ว",
+    "outside_note": "แอปนี้ล้างไฟล์กู้คืนและรายการไฟล์ล่าสุดของโปรแกรมนั้นไม่ได้",
+    "clear_title": "ลบไฟล์แนบที่แก้ไขหรือไม่",
+    "clear_confirm": "ลบ",
+    "signout_changed": "ยังไม่ได้แนบหรือบันทึก และจะถูกลบตอนนี้: {names}",
+    "signout_held": "ยังเปิดอยู่ในโปรแกรมอื่น จึงจะถูกลบหลังจากคุณปิดที่นั่นเท่านั้น: {names}"
+  },
+  "desktopPrint": {
+    "title": "พิมพ์",
+    "pages_one": "1 หน้า",
+    "pages_many": "{count} หน้า",
+    "preparing": "กำลังเตรียมตัวอย่าง…",
+    "preview_failed": "สร้างตัวอย่างไม่ได้",
+    "preview_label": "ตัวอย่าง",
+    "destination": "ปลายทาง",
+    "save_as_pdf": "บันทึกเป็น PDF",
+    "pages": "หน้า",
+    "pages_all": "ทั้งหมด",
+    "pages_custom": "กำหนดเอง",
+    "pages_example": "เช่น 1-3, 5",
+    "pages_invalid": "ป้อนหน้าระหว่าง 1 ถึง {count} เช่น 1-3, 5",
+    "copies": "จำนวนสำเนา",
+    "layout": "เค้าโครง",
+    "portrait": "แนวตั้ง",
+    "landscape": "แนวนอน",
+    "color": "สี",
+    "color_color": "สี",
+    "color_mono": "ขาวดำ",
+    "more": "การตั้งค่าเพิ่มเติม",
+    "paper": "ขนาดกระดาษ",
+    "paper_printer": "ค่าเริ่มต้นของเครื่องพิมพ์",
+    "margins": "ระยะขอบ",
+    "margins_default": "ค่าเริ่มต้น",
+    "margins_none": "ไม่มี",
+    "margins_minimum": "ต่ำสุด",
+    "scale": "มาตราส่วน (%)",
+    "options": "ตัวเลือก",
+    "header_footer": "ส่วนหัวและส่วนท้าย",
+    "background": "กราฟิกพื้นหลัง",
+    "print": "พิมพ์",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "system_dialog": "พิมพ์ด้วยกล่องโต้ตอบของระบบ…",
+    "failed_title": "พิมพ์ไม่ได้",
+    "failed_detail": "เครื่องพิมพ์ไม่รับงาน ตรวจสอบว่าเปิดเครื่องอยู่แล้วลองอีกครั้ง"
+  },
+  "files_sync": {
+    "title": "ไฟล์บนคอมพิวเตอร์เครื่องนี้",
+    "drive": {
+      "title": "ไดรฟ์ไฟล์",
+      "label": "แสดงไฟล์เป็นไดรฟ์",
+      "description": "ไฟล์ของคุณจะแสดงในตัวสำรวจไฟล์เหมือนไดรฟ์ แต่ละไฟล์จะดาวน์โหลดเมื่อคุณเปิด",
+      "unsupported": "ต้องใช้ Windows 10 เวอร์ชัน 1809 ขึ้นไป",
+      "root_name": "ไดรฟ์ไฟล์",
+      "letter_label": "อักษรไดรฟ์",
+      "letter_description": "กำหนดอักษรเฉพาะให้ไดรฟ์ในตัวสำรวจไฟล์",
+      "letter_none": "ไม่มีอักษร"
+    },
+    "folders": {
+      "title": "โฟลเดอร์ที่ซิงค์",
+      "description": "โฟลเดอร์บนคอมพิวเตอร์เครื่องนี้และโฟลเดอร์ในไฟล์จะเหมือนกันเสมอ ทั้งสองทิศทาง",
+      "empty": "ยังไม่มีโฟลเดอร์ที่ซิงค์",
+      "forced_off": "องค์กรของคุณปิดการซิงค์โฟลเดอร์ ไฟล์ในโฟลเดอร์เหล่านั้นยังอยู่บนคอมพิวเตอร์เครื่องนี้",
+      "add": "เพิ่มโฟลเดอร์…",
+      "loading": "กำลังโหลดโฟลเดอร์ของคุณ…",
+      "load_failed": "โหลดโฟลเดอร์ของคุณในไฟล์ไม่ได้ โปรดลองอีกครั้ง",
+      "pick_title": "ซิงค์กับโฟลเดอร์ใดในไฟล์",
+      "pick_confirm": "เลือกโฟลเดอร์บนคอมพิวเตอร์เครื่องนี้…",
+      "paired_with": "กับ {folder} ในไฟล์",
+      "pause": "หยุดชั่วคราว",
+      "resume": "ทำต่อ",
+      "remove": "นำออก…",
+      "remove_title": "หยุดซิงค์โฟลเดอร์นี้หรือไม่",
+      "remove_message": "ไฟล์บนคอมพิวเตอร์เครื่องนี้และไฟล์ในไฟล์จะยังอยู่ที่เดิม การเปลี่ยนแปลงจะไม่ส่งจากฝั่งหนึ่งไปอีกฝั่งอีกต่อไป",
+      "remove_confirm": "หยุดซิงค์",
+      "add_failed": {
+        "overlap": "โฟลเดอร์นี้อยู่ในโฟลเดอร์ที่ซิงค์ มีโฟลเดอร์ที่ซิงค์อยู่ข้างใน หรือเป็นโฟลเดอร์ระบบ โปรดเลือกโฟลเดอร์อื่น",
+        "denied": "แอปใช้โฟลเดอร์นี้ไม่ได้ โปรดเลือกโฟลเดอร์อื่น",
+        "policy": "องค์กรของคุณไม่อนุญาต",
+        "failed": "เพิ่มโฟลเดอร์ไม่ได้ โปรดลองอีกครั้ง"
+      }
+    },
+    "status": {
+      "starting": "กำลังเริ่ม…",
+      "idle": "เป็นปัจจุบันแล้ว ซิงค์ล่าสุด {time}",
+      "idle_never": "เป็นปัจจุบันแล้ว",
+      "syncing": "กำลังซิงค์: เสร็จแล้ว {done} เหลืออีก {pending}",
+      "paused": "หยุดชั่วคราว",
+      "offline": "ออฟไลน์ {count, plural, =0 {การเปลี่ยนแปลงกำลังรอเซิร์ฟเวอร์} other {การเปลี่ยนแปลง # รายการกำลังรอเซิร์ฟเวอร์}}",
+      "error": "หยุดแล้ว: {reason}",
+      "confirm_delete": "หยุดชั่วคราวจนกว่าคุณจะตอบคำถามด้านล่าง",
+      "blocked": "ปิดโดยองค์กรของคุณ"
+    },
+    "mass_delete": {
+      "title": "ลบ {count, plural, other {# รายการ}}หรือไม่",
+      "local": "{count, plural, other {# รายการ}}ถูกลบออกจาก {folder} บนคอมพิวเตอร์เครื่องนี้ ลบในไฟล์ด้วยหรือไม่",
+      "remote": "{count, plural, other {# รายการ}}ถูกลบออกจาก {folder} ในไฟล์ ลบบนคอมพิวเตอร์เครื่องนี้ด้วยหรือไม่",
+      "allow": "{count, plural, other {ลบ}}",
+      "restore": "{count, plural, other {นำกลับมา}}",
+      "later": "ตัดสินใจภายหลัง"
+    },
+    "activity": {
+      "title": "กิจกรรมล่าสุด",
+      "empty": "ยังไม่มีอะไรเกิดขึ้น",
+      "clear": "ล้าง",
+      "to_files": "ไปยังไฟล์",
+      "to_computer": "ไปยังคอมพิวเตอร์เครื่องนี้",
+      "mark_conflict": "ขัดแย้ง",
+      "mark_error": "ข้อผิดพลาด",
+      "mark_question": "รอคำตอบจากคุณ",
+      "uploaded": "อัปโหลด {path} แล้ว",
+      "downloaded": "ดาวน์โหลด {path} แล้ว",
+      "folder-created": "สร้างโฟลเดอร์ {path} แล้ว",
+      "renamed": "เปลี่ยนชื่อ {detail} เป็น {path} แล้ว",
+      "moved": "ย้าย {detail} ไปยัง {path} แล้ว",
+      "deleted": "ลบ {path} แล้ว",
+      "trashed": "ย้าย {path} ไปที่ถังขยะแล้ว",
+      "conflict": "{path} ถูกเปลี่ยนทั้งสองที่ อีกเวอร์ชันหนึ่งเก็บไว้เป็น {detail}",
+      "renamed-for-disk": "{path} ใช้ชื่อ {detail} บนคอมพิวเตอร์เครื่องนี้ เพราะชื่อเดิมใช้ที่นี่ไม่ได้",
+      "too-large": "{path} ใหญ่เกินกว่าที่ไฟล์อนุญาต ({detail}) จึงอยู่บนคอมพิวเตอร์เครื่องนี้เท่านั้น",
+      "waiting": "{path} กำลังรอเซิร์ฟเวอร์",
+      "mass-delete": "หยุดชั่วคราวก่อนลบหลายรายการ",
+      "error": "ซิงค์ {path} ไม่ได้"
+    },
+    "errors": {
+      "offline": "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้",
+      "server_refused": "เซิร์ฟเวอร์ปฏิเสธการเปลี่ยนแปลง",
+      "too_large": "ไฟล์นี้ใหญ่เกินกว่าที่ไฟล์อนุญาต",
+      "name_invalid": "ใช้ชื่อนี้ไม่ได้",
+      "disk_full": "ดิสก์เต็ม",
+      "denied": "ไม่ได้รับอนุญาต",
+      "busy": "โปรแกรมอื่นกำลังใช้งานอยู่",
+      "quota": "พื้นที่เก็บข้อมูลของคุณในไฟล์เต็มแล้ว",
+      "not_found": "ไม่มีอยู่แล้ว",
+      "policy": "องค์กรของคุณไม่อนุญาต",
+      "failed": "เกิดข้อผิดพลาด"
+    },
+    "item": {
+      "label": "บนคอมพิวเตอร์เครื่องนี้",
+      "synced": "ซิงค์แล้ว",
+      "syncing": "กำลังซิงค์",
+      "pending": "รอซิงค์",
+      "error": "ซิงค์ไม่ได้",
+      "online-only": "อยู่ในไฟล์เท่านั้น ดาวน์โหลดเมื่อเปิด"
+    },
+    "show_in": {
+      "explorer": "แสดงในตัวสำรวจไฟล์",
+      "finder": "แสดงใน Finder",
+      "file_manager": "แสดงในตัวจัดการไฟล์",
+      "failed": "เปิดโฟลเดอร์ไม่ได้"
+    }
+  },
+  "files_storage": {
+    "title": "พื้นที่เก็บข้อมูลในไฟล์",
+    "used_of": "ใช้ไป {used} จาก {total}",
+    "used": "ใช้ไป {used}",
+    "no_limit": "เซิร์ฟเวอร์ไม่ได้กำหนดขีดจำกัด นี่คือพื้นที่ที่ไฟล์ของคุณใช้",
+    "almost_full": "พื้นที่เก็บข้อมูลของคุณในไฟล์ใกล้เต็มแล้ว",
+    "full": "พื้นที่เก็บข้อมูลของคุณในไฟล์เต็มแล้ว",
+    "state_synced": "เป็นปัจจุบัน",
+    "state_syncing": "กำลังซิงค์",
+    "state_paused": "หยุดชั่วคราว",
+    "state_offline": "ออฟไลน์",
+    "state_error": "หยุดแล้ว"
+  },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "กำลังอัปโหลดการเปลี่ยนแปลงก่อนปิดไดรฟ์",
+      "title_sign_out": "กำลังอัปโหลดการเปลี่ยนแปลงก่อนออกจากระบบ",
+      "title_stop_folder": "กำลังอัปโหลดการเปลี่ยนแปลงก่อนหยุดซิงค์โฟลเดอร์",
+      "cannot_title": "อัปโหลดการเปลี่ยนแปลงบางรายการไม่ได้ในตอนนี้",
+      "waiting": "รออัปโหลด: {names}",
+      "progress": "อัปโหลดแล้ว {done} จาก {total}",
+      "cannot_offline": "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ยังไม่ได้อัปโหลด: {names}",
+      "cannot_other": "อัปโหลดไม่ได้: {names} ดูเหตุผลได้ในกิจกรรมล่าสุดในการตั้งค่า",
+      "go_note_drive": "หากดำเนินการต่อตอนนี้ สิ่งที่ยังไม่ได้อัปโหลดจะถูกคัดลอกไปที่ เอกสาร\\Bulwark – not uploaded จึงไม่มีอะไรสูญหาย",
+      "go_note_folder": "หากดำเนินการต่อตอนนี้ สิ่งที่ยังไม่ได้อัปโหลดจะยังอยู่ในโฟลเดอร์บนคอมพิวเตอร์เครื่องนี้",
+      "keep_turn_off": "เปิดไดรฟ์ไว้",
+      "keep_sign_out": "อยู่ในระบบต่อ",
+      "keep_stop_folder": "ซิงค์ต่อ",
+      "go_turn_off": "ปิดเลย",
+      "go_sign_out": "ออกจากระบบเลย",
+      "go_stop_folder": "หยุดซิงค์เลย"
+    },
+    "drive": {
+      "off_note": "การปิดจะนำไดรฟ์ออกจากตัวสำรวจไฟล์ ไฟล์ของคุณยังอยู่ในไฟล์",
+      "rescued": "ไฟล์ที่ยังไม่ได้อัปโหลด ({count}) อยู่ใน {folder} แล้ว",
+      "rescued_open": "เปิดโฟลเดอร์",
+      "rescued_dismiss": "ปิด",
+      "start_at_login": "เริ่ม Bulwark เมื่อลงชื่อเข้าใช้ Windows",
+      "start_at_login_why": "ไดรฟ์ต้องให้ Bulwark ทำงานอยู่ เช่นเดียวกับ OneDrive",
+      "closed_warning": "เปิดไฟล์ในไดรฟ์ไม่ได้ขณะที่ Bulwark ปิดอยู่",
+      "where": "ในตัวสำรวจไฟล์ชื่อ Bulwark Files",
+      "where_letter": "ในตัวสำรวจไฟล์ชื่อ Bulwark Files ({letter}:)",
+      "open": "เปิด",
+      "letter_note": "เมื่อเปิดผ่านอักษรไดรฟ์ ตัวสำรวจไฟล์จะไม่แสดงสถานะการซิงค์และ “เก็บไว้บนอุปกรณ์นี้เสมอ” ดูได้ที่ Bulwark Files ในตัวสำรวจ",
+      "letter_failed": "ตั้งอักษรไดรฟ์ไม่ได้ ลองอีกครั้ง"
+    },
+    "tray": {
+      "idle": "Bulwark Files: เป็นปัจจุบัน",
+      "syncing": "Bulwark Files: กำลังซิงค์ เหลือ: {count}",
+      "paused": "Bulwark Files: หยุดชั่วคราว",
+      "offline": "Bulwark Files: ออฟไลน์ รออยู่: {count}",
+      "question": "Bulwark Files: รอคำตอบของคุณ",
+      "error": "Bulwark Files: ข้อผิดพลาด"
+    },
+    "notify": {
+      "conflict_title": "มีไฟล์ถูกแก้ไขในสองที่",
+      "problem_title": "ซิงค์ไฟล์ไม่ได้"
+    },
+    "activity": {
+      "waiting_count": "การเปลี่ยนแปลงที่รอเซิร์ฟเวอร์: {count}",
+      "disk_name": "{path} ในไฟล์มีชื่อ {detail} บนคอมพิวเตอร์เครื่องนี้ เพราะมีอักขระบางตัวที่ใช้ที่นี่ไม่ได้",
+      "disk_case": "{path} ในไฟล์มีชื่อ {detail} บนคอมพิวเตอร์เครื่องนี้ เพราะมีชื่อที่ต่างกันแค่ตัวพิมพ์ใหญ่และเล็กอยู่แล้ว",
+      "disk_group": "ชื่อในไฟล์ที่คอมพิวเตอร์เครื่องนี้ไม่อนุญาต: {count} ที่นี่จึงมีชื่อต่างไปเล็กน้อย",
+      "show": "แสดง",
+      "hide": "ซ่อน"
+    },
+    "cant_sync": {
+      "title": "ซิงค์ไม่ได้"
+    },
+    "folders": {
+      "stop": "หยุดซิงค์…",
+      "pick_title_known": "จะให้ {name} ตรงกับโฟลเดอร์ใดในไฟล์",
+      "pick_confirm_known": "ให้ตรงกัน"
+    },
+    "pin": {
+      "keep": "เก็บไว้บนอุปกรณ์นี้เสมอ",
+      "free": "เพิ่มพื้นที่ว่าง",
+      "failed": "ไม่สำเร็จ ลองอีกครั้งในตัวสำรวจไฟล์"
+    },
+    "account": {
+      "of": "ไฟล์ของ {address}",
+      "choose": "ไฟล์ของ"
+    }
+  },
+  "desktopQuickCompose": {
+    "label": "เขียนด่วน",
+    "menu": "เขียนด่วน",
+    "description": "{keys} เปิดหน้าต่างเล็กสำหรับข้อความใหม่จากแอปอื่นใดก็ได้",
+    "description_off": "เปิดหน้าต่างเล็กสำหรับข้อความใหม่จากแอปอื่นใดก็ได้",
+    "taken": "แอปอื่นกำลังใช้ {keys} อยู่ จึงไม่มีผลที่นี่ เลือกปุ่มอื่นหรือปิดแอปนั้น",
+    "change": "เปลี่ยนปุ่ม: {keys}",
+    "recording": "กดปุ่ม…",
+    "recording_hint": "กด Ctrl (Cmd บน Mac) ค้างไว้พร้อม Alt หรือ Shift แล้วกดตัวอักษร ตัวเลข Enter หรือปุ่มฟังก์ชัน กด Esc เพื่อยกเลิก",
+    "back_to_main": "ย้ายไปหน้าต่างหลัก",
+    "back_busy": "หน้าต่างหลักมีข้อความเปิดอยู่แล้ว ปิดข้อความนั้นแล้วลองอีกครั้ง",
+    "back_no_answer": "หน้าต่างหลักไม่ตอบสนอง ข้อความของคุณยังอยู่ที่นี่",
+    "types_character": "ปุ่มเหล่านี้พิมพ์อักขระบนแป้นพิมพ์ของคุณ และอักขระนั้นจะใช้ไม่ได้ในทุกแอป ลองใช้ปุ่มอื่น",
+    "reserved": "ระบบหรือแอปส่วนใหญ่ใช้ปุ่มเหล่านี้ ลองใช้ปุ่มอื่น"
+  },
+  "desktopAttachRecent": {
+    "heading": "ไฟล์ล่าสุด",
+    "browse": "เรียกดูคอมพิวเตอร์เครื่องนี้…",
+    "from_files": "จากไฟล์…",
+    "missing": "“{name}” ไม่มีอยู่แล้ว",
+    "too_large": "“{name}” มีขนาดใหญ่กว่า {max} จึงแนบไม่ได้",
+    "failed": "แนบ “{name}” ไม่สำเร็จ ลองอีกครั้ง"
+  },
+  "composeRecentLimit": {
+    "too_large": "ใหญ่เกินไป",
+    "too_large_hint": "ใหญ่กว่าที่เซิร์ฟเวอร์รับได้ ({max})"
+  },
+  "compose_windows": {
+    "more_formatting": "การจัดรูปแบบเพิ่มเติม",
+    "offline": "ออฟไลน์",
+    "offline_hint": "ต้องเชื่อมต่อจึงจะส่งได้",
+    "offline_hint_outbox": "สิ่งที่คุณส่งตอนนี้จะรออยู่ในกล่องขาออกและถูกส่งเมื่อคุณกลับมาออนไลน์",
+    "offline_send_saved": "คุณออฟไลน์อยู่ ข้อความถูกบันทึกไว้ในจดหมายร่างแล้ว",
+    "offline_send_unsaved": "คุณออฟไลน์อยู่ ข้อความจะอยู่ที่นี่และถูกบันทึกในจดหมายร่างเมื่อคุณกลับมาออนไลน์"
+  },
+  "composer_panel": {
+    "show_panel": "แสดง {name}",
+    "hide_panel": "ซ่อน {name}"
+  },
+  "desktopDevTools": {
+    "section_title": "การแก้ไขปัญหา",
+    "label": "เครื่องมือสำหรับนักพัฒนาซอฟต์แวร์ ({shortcut})",
+    "description": "ให้ {shortcut} และ F12 เปิดเครื่องมือสำหรับนักพัฒนาซอฟต์แวร์ของหน้าต่างที่คุณอยู่ จะปิดอีกครั้งเมื่อแอปล็อก",
+    "forced_off": "องค์กรของคุณปิดสิ่งนี้แล้ว",
+    "locked": "ปลดล็อกแอปเพื่อเปลี่ยนการตั้งค่านี้",
+    "menu_toggle": "แสดงหรือซ่อนเครื่องมือสำหรับนักพัฒนาซอฟต์แวร์"
+  },
+  "fileDrop": {
+    "overlay_label": "วางไฟล์",
+    "overlay_title": "จะให้ไฟล์ไปที่ไหน",
+    "overlay_hint": "วางนอกตัวเลือกหรือกด Esc เพื่อยกเลิก",
+    "files_unknown": "ไฟล์",
+    "files_summary": "{count, plural, other {# ไฟล์}}",
+    "files_summary_size": "{count, plural, other {# ไฟล์}}, {size}",
+    "zone_attach_here": "แนบกับข้อความนี้",
+    "zone_insert_inline": "แทรกลงในข้อความ",
+    "zone_new_message": "แนบกับข้อความใหม่",
+    "zone_upload_files": "อัปโหลดไปยังไฟล์",
+    "zone_upload_folder": "อัปโหลดไปยัง {folder}",
+    "zone_calendar": "เพิ่มในปฏิทิน",
+    "zone_contacts": "เพิ่มในรายชื่อติดต่อ",
+    "zone_open_eml": "เปิดข้อความ",
+    "zone_import_eml": "นำเข้าไปยัง {folder}",
+    "note_limit_message": "สูงสุด {size} ต่อข้อความ",
+    "note_limit_file": "สูงสุด {size} ต่อไฟล์",
+    "note_kept_offline": "เก็บไว้ในอุปกรณ์นี้จนกว่าคุณจะออนไลน์อีกครั้ง",
+    "note_needs_connection": "ต้องใช้การเชื่อมต่อ",
+    "announce": "{files, plural, =0 {ลากไฟล์เข้ามาแล้ว} other {ลาก # ไฟล์เข้ามาแล้ว}} ตัวเลือก: {choices}",
+    "choose_title": "{count, plural, other {จะให้ไฟล์นี้ไปที่ไหน}}",
+    "save_first_failed": "บันทึกข้อความที่เปิดอยู่ไม่ได้ แอปจึงอยู่ที่เดิม",
+    "import_done": "{count, plural, other {นำเข้า # ข้อความไปยัง {folder} แล้ว}}",
+    "import_failed": "นำเข้า {name} ไม่ได้",
+    "too_large_file": "{name} ใหญ่เกินไป ขีดจำกัดคือ {max} ต่อไฟล์",
+    "too_large_message": "ไฟล์เหล่านี้ใหญ่เกินไปสำหรับข้อความเดียว ขีดจำกัดคือ {max}",
+    "folders_left_out": "โฟลเดอร์ไปได้เฉพาะที่ไฟล์ จึงไม่ได้รวมไว้",
+    "nothing_here": "ใช้ไฟล์เหล่านี้ที่นี่ไม่ได้"
+  },
+  "desktopReminders": {
+    "generic_title": "การแจ้งเตือน",
+    "snooze": "เลื่อน {count} นาที",
+    "snooze_short": "{count} นาที",
+    "open": "เปิด",
+    "join": "เข้าร่วม",
+    "missed_title": "{count, plural, other {การแจ้งเตือนที่พลาด # รายการ}}",
+    "missed_more": "และอีก {count} รายการ",
+    "missed_show": "แสดง",
+    "missed_dialog_title": "การแจ้งเตือนที่พลาด",
+    "missed_dialog_description": "ถึงเวลาแจ้งเตือนขณะที่แอปปิดอยู่ คอมพิวเตอร์อยู่ในโหมดพัก หรือหยุดการแจ้งเตือนชั่วคราว",
+    "open_calendar": "เปิดปฏิทิน",
+    "done": "เสร็จ",
+    "join_host": "เข้าร่วม ({host})",
+    "join_named": "เข้าร่วม: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "เครื่องมือนักพัฒนา",
+    "updates_label": "ตรวจหาอัปเดต",
+    "search": {
+      "quick_compose": "เขียนด่วน ข้อความใหม่จากทุกที่ ทางลัดทั่วระบบ",
+      "files_drive": "เพิ่มพื้นที่ว่าง OneDrive Dropbox File Explorer Finder อักษรไดรฟ์ ไฟล์ตามต้องการ",
+      "offline_space": "เพิ่มพื้นที่ว่าง พื้นที่ดิสก์ ที่เก็บข้อมูล",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID ลายนิ้วมือ ใบหน้า พาสคีย์ passkey"
+    }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "ความเป็นส่วนตัวและความปลอดภัย",
+      "security": "รหัสผ่านและการลงชื่อเข้าใช้",
+      "about_updates": "เกี่ยวกับและการอัปเดต",
+      "backup": "สำรองและนำเข้า"
+    },
+    "sections": {
+      "start": "การเปิดและปิด",
+      "shortcuts": "แป้นพิมพ์ลัดจากแอปอื่น",
+      "mail_links": "ลิงก์และไฟล์อีเมล"
+    },
+    "privacy_link_description": "การตั้งค่าเหล่านี้อยู่ในหน้าความเป็นส่วนตัวและความปลอดภัย"
+  },
+  "desktop_policy": {
+    "server_refused": "องค์กรของคุณไม่อนุญาตให้ใช้เซิร์ฟเวอร์นี้บนอุปกรณ์นี้",
+    "plugin_refused": "องค์กรของคุณไม่อนุญาตให้ใช้ปลั๊กอินนี้บนอุปกรณ์นี้ จึงไม่ทำงาน แต่การตั้งค่าและข้อมูลของปลั๊กอินยังคงอยู่",
+    "install_refused": "องค์กรของคุณไม่อนุญาตให้ใช้ปลั๊กอินนี้บนอุปกรณ์นี้",
+    "plugins_label": "ปลั๊กอิน",
+    "plugins_off": "องค์กรของคุณปิดปลั๊กอินบนอุปกรณ์นี้",
+    "plugins_allowlist": "องค์กรของคุณอนุญาตเฉพาะปลั๊กอินบางตัวบนอุปกรณ์นี้",
+    "off": "ปิด"
+  },
+  "desktopTelemetry": {
+    "section_title": "ข้อมูลการใช้งานและรายงานข้อขัดข้อง",
+    "section_description": "ทั้งสองอย่างปิดอยู่จนกว่าคุณจะเปิด และแต่ละอย่างมีสวิตช์ของตัวเอง",
+    "telemetry_label": "ส่งข้อมูลการใช้งาน",
+    "telemetry_description": "วันละครั้ง: ID แบบสุ่ม หมายเลขเวอร์ชันของแอป ระบบปฏิบัติการของคุณ ระยะเวลาที่แอปทำงาน และวิธีที่แอปเชื่อมต่อ หากใช้เซิร์ฟเวอร์อีเมลของคุณเอง จะส่งฟีเจอร์ที่เปิดอยู่ จำนวนบัญชีโดยประมาณ และจำนวนปลั๊กอินกับธีมด้วย ไม่ส่งอีเมล ที่อยู่ หรือชื่อเซิร์ฟเวอร์เด็ดขาด",
+    "crash_label": "ส่งรายงานข้อขัดข้อง",
+    "crash_description": "ข้อผิดพลาดในแอปจะถูกส่งพร้อม ID แบบสุ่ม ชื่อไฟล์จากโค้ดของแอปเอง และข้อความสั้นๆ ที่ทำความสะอาดแล้ว หากตัวแอปเองขัดข้อง ไฟล์ข้อขัดข้องจะอยู่บนคอมพิวเตอร์เครื่องนี้และออกไปเมื่อคุณส่งเท่านั้น",
+    "crash_memory": "ไฟล์ข้อขัดข้องคือสำเนาส่วนหนึ่งของหน่วยความจำแอปในขณะที่ขัดข้อง Bulwark จะลบชื่อผู้ใช้ ที่อยู่ และโทเค็นการลงชื่อเข้าใช้ที่พบ แต่ไฟล์ข้อขัดข้องอาจยังมีข้อความในอีเมลของคุณอยู่",
+    "instance_note": "บนเซิร์ฟเวอร์ Bulwark ผู้ดูแลเซิร์ฟเวอร์นั้นจะตัดสินใจแยกต่างหากว่าหน้าเว็บจะรายงานอะไรให้เซิร์ฟเวอร์",
+    "forced_off": "องค์กรของคุณปิดสิ่งนี้แล้ว",
+    "url_label": "ปลายทางของไฟล์ข้อขัดข้อง",
+    "url_description": "ที่อยู่ https ที่รับไฟล์ข้อขัดข้อง Bulwark ไม่มีที่อยู่ให้มาด้วย",
+    "url_invalid": "ป้อนที่อยู่ https แบบเต็ม",
+    "url_save": "บันทึก",
+    "files_label": "ไฟล์ข้อขัดข้องบนคอมพิวเตอร์เครื่องนี้",
+    "files_description": "Bulwark เก็บไฟล์ล่าสุดไว้และลบไฟล์ที่เก่ากว่าหนึ่งเดือน",
+    "files_empty": "ไม่มีไฟล์ข้อขัดข้อง",
+    "file_size": "{size} KB",
+    "send": "ส่งรายงานข้อขัดข้อง…",
+    "delete_all": "ลบทั้งหมด",
+    "sent": "ส่งรายงานข้อขัดข้องแล้ว",
+    "send_no_consent": "เปิดรายงานข้อขัดข้องก่อน",
+    "send_no_url": "ไม่ได้ตั้งที่อยู่ จึงไม่มีปลายทางให้ส่ง ป้อนที่อยู่ด้านบน",
+    "send_failed": "ไม่สามารถส่งรายงานข้อขัดข้องได้"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "จำนวนที่ยังไม่อ่านบนไอคอนในแถบงาน",
+    "unread_badge_description": "เพื่อให้เห็นอีเมลใหม่ขณะทำงานในแอปอื่น",
+    "tip_compose_keys": "กด {keys} เพื่อเขียนข้อความใหม่",
+    "tip_palette_keys": "กด {keys} เพื่อค้นหาคำสั่งใดก็ได้"
+  },
+  "uxp3_desktop": {
+    "web_address": "ที่อยู่เว็บ"
+  },
+  "selectionView": {
+    "starred": "ติดดาวแล้ว",
+    "unstarred": "นำดาวออกแล้ว"
+  },
+  "impersonation": {
+    "return_notice": "คุณเปิด {mailbox} ผ่านการสวมสิทธิ์ผู้ใช้",
+    "return_button": "กลับไปที่บัญชีของฉัน"
   }
 }

@@ -2,6 +2,7 @@ import { Profiler } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ThreadListItem } from '../thread-list-item';
+import { TagDisplayContext, type TagDisplay } from '@/hooks/use-tag-display';
 import { useSettingsStore, DEFAULT_KEYWORDS } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useUIStore } from '@/stores/ui-store';
@@ -21,7 +22,7 @@ vi.mock('@/stores/auth-store', () => {
   };
 });
 
-const accountState = { getAccountById: () => undefined };
+const accountState = { accounts: [], getAccountById: () => undefined };
 vi.mock('@/stores/account-store', () => ({
   useAccountStore: Object.assign(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,7 +67,7 @@ const conversation = () => [
 
 describe('ThreadListItem folder chip in search results (#1172)', () => {
   beforeEach(() => {
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
@@ -92,6 +93,14 @@ describe('ThreadListItem folder chip in search results (#1172)', () => {
       useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: '' });
       renderThread(emails());
       expect(screen.getByTitle('Archive')).toBeTruthy();
+    });
+
+    // Usability test 2026-11-04, mail-14: the chip said the server's "Sent Items".
+    it('names a folder with a role the way the sidebar does', () => {
+      useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: '' });
+      renderThread(emails().map((e) => ({ ...e, sourceFolder: 'Sent Items', sourceFolderRole: 'sent' })));
+      expect(screen.getByTitle('mailboxes.sent')).toBeTruthy();
+      expect(screen.queryByTitle('Sent Items')).toBeNull();
     });
 
     it('shows the folder when the search covers all folders', () => {
@@ -140,5 +149,47 @@ describe('ThreadListItem folder chip in search results (#1172)', () => {
       act(() => useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: '' }));
       expect(onRender).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('ThreadListItem sender line in a narrow list', () => {
+  const display: TagDisplay = { variant: 'badge', placement: 'sender', tight: true };
+  const tagged = (keywords: Record<string, boolean>) => [makeEmail({ keywords: { $seen: true, ...keywords } })];
+  const renderIn = (value: TagDisplay, emails: Email[]) => {
+    const [thread] = groupEmailsByThread(emails);
+    return render(
+      <TagDisplayContext.Provider value={value}>
+        <ThreadListItem thread={thread} isExpanded={false} onToggleExpand={noop} onEmailSelect={noop} />
+      </TagDisplayContext.Provider>,
+    );
+  };
+
+  beforeEach(() => {
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], showPreview: false, mailLayout: 'split', interfaceLayout: 'default', showColorNames: false });
+    useEmailStore.setState({ selectedEmailKeys: new Set<string>(), selectedMailbox: 'inbox', isUnifiedView: false, selectedKeyword: null, searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS }, searchMailboxId: 'archive' });
+  });
+
+  const dots = (c: HTMLElement) => c.querySelectorAll('[data-tag-dot]').length;
+
+  it('names a single tag', () => {
+    const { container } = renderIn(display, tagged({ '$label:red': true }));
+    expect(dots(container)).toBe(0);
+  });
+
+  it('turns several tags into dots so the name keeps its room', () => {
+    const { container } = renderIn(display, tagged({ '$label:red': true, '$label:blue': true }));
+    expect(dots(container)).toBe(2);
+  });
+
+  it('turns a tag into a dot next to the folder chip', () => {
+    useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: '' });
+    const { container } = renderIn(display, tagged({ '$label:red': true }));
+    expect(dots(container)).toBe(1);
+  });
+
+  it('keeps the names while the list has room', () => {
+    const { container } = renderIn({ ...display, tight: false }, tagged({ '$label:red': true, '$label:blue': true }));
+    expect(dots(container)).toBe(0);
   });
 });

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useCallback } from "react";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { rowA11yProps, rowLabel } from "./list-a11y";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
@@ -20,13 +21,15 @@ import { useListRowShape, LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
 import { SizeCell } from "./list-columns";
 import { accountTintKey, generateAvatarColor } from "@/lib/account-utils";
 import { useUIStore } from "@/stores/ui-store";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useEmailStore, isUnscopedSearchActive } from "@/stores/email-store";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
 import { emailKeyFor, getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
-import { useTagDisplay } from "@/hooks/use-tag-display";
-import { TagBadge, TAG_GROUP_CLASS, TAG_LOZENGE_CLASS } from "./tag-badge";
+import { useRowTagDisplay, useTagDisplay } from "@/hooks/use-tag-display";
+import { TagBadge, TAG_LOZENGE_CLASS } from "./tag-badge";
+import { ROW_TAG_GROUP_CLASS } from "./row-tag-classes";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useSwipeActions } from "@/hooks/use-swipe-actions";
@@ -38,7 +41,8 @@ import { PluginRowBadges } from "./plugin-row-badges";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { brandIndicatorDomain } from "@/lib/email-headers";
-import { useTranslations } from "next-intl";
+import { RowTranslatorsProvider, useRowTranslators } from "@/components/email/row-translators";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 
 /**
  * Unread bullet in the row gutter.
@@ -84,15 +88,70 @@ export function listMailboxRole(state: {
     ?? (state.isUnifiedView ? (state.unifiedRole ?? undefined) : undefined);
 }
 
-/** Hover actions mount on the first pointerover or keyboard focus in the row. */
-function useArmOnPointerOver(): [boolean, () => void] {
-  const [armed, setArmed] = React.useState(false);
-  const arm = React.useCallback(() => setArmed(true), []);
-  return [armed, arm];
+/**
+ * The folder a list row was listed in: its id (where a drag moves the
+ * message from) and its role (sender or recipient, junk actions).
+ */
+export interface ListFolder {
+  mailboxId: string;
+  role: string | undefined;
+}
+
+const NO_LIST_FOLDER: ListFolder = { mailboxId: '', role: undefined };
+
+/**
+ * The folder a row belongs to. The message list hands it over (listFolder),
+ * kept with the rows it was fetched for: following the selected folder
+ * instead re-rendered every row on screen the moment another folder was
+ * clicked, and showed the old rows with the new folder's sender or recipient
+ * until the new ones came. A row drawn on its own reads the store.
+ */
+function useRowFolder(listFolder: ListFolder | undefined): ListFolder {
+  const fromStore = useEmailStore(useShallow((state) => (listFolder
+    ? NO_LIST_FOLDER
+    : { mailboxId: state.selectedMailbox, role: listMailboxRole(state) })));
+  return listFolder ?? fromStore;
+}
+
+/**
+ * The account dot tells signed-in accounts apart. With a single account every
+ * row would carry the same dot, so it only shows once there are two or more.
+ */
+function useShowAccountDot(tintListRowsByAccount: boolean): boolean {
+  const enabled = useSettingsStore((state) => state.showAccountDot);
+  const severalAccounts = useAccountStore((state) => state.accounts.length > 1);
+  return enabled && severalAccounts && !tintListRowsByAccount;
+}
+
+/**
+ * Rows swipe on a phone, and on a touch screen below the full desktop: a
+ * tablet draws the compact desktop layout and keeps the phone's gesture.
+ */
+function useSwipeRows(): boolean {
+  const isMobile = useUIStore((state) => state.isMobile);
+  const touchCompact = useMediaQuery("(pointer: coarse) and (width < 64rem)");
+  return isMobile || touchCompact;
+}
+
+/**
+ * Hover actions mount on the first pointerover or keyboard focus in the row,
+ * for the message it shows: a row the list keeps for the next message (see
+ * useRowSlots) starts unarmed again, as a new row did, instead of carrying
+ * the last message's hidden hover actions along.
+ */
+function useArmOnPointerOver(messageKey = ''): [boolean, () => void] {
+  const [armedFor, setArmedFor] = React.useState<string | null>(null);
+  const keyRef = React.useRef(messageKey);
+  keyRef.current = messageKey;
+  const arm = React.useCallback(() => setArmedFor((prev) => (prev === keyRef.current ? prev : keyRef.current)), []);
+  // Forgotten as soon as the row shows another message, so coming back to
+  // this one (back to the folder) finds it unarmed too, as a new row would.
+  if (armedFor !== null && armedFor !== messageKey) setArmedFor(null);
+  return [armedFor === messageKey, arm];
 }
 
 function UnreadDot({ besideAvatar }: { besideAvatar: boolean }) {
-  const t = useTranslations('email_viewer');
+  const t = useRowTranslators()!.viewer;
   return (
     <div
       className={cn('absolute -translate-y-1/2', besideAvatar ? '-start-2.5 top-1/2' : 'start-0.5')}
@@ -206,7 +265,7 @@ function MvRowLead({
         onDoubleClick={(e) => e.stopPropagation()}
         className="group/check -ms-3 flex items-start self-stretch ps-3 pe-0.5"
       >
-        <span className="flex h-10 items-center">
+        <span className="flex h-[var(--list-item-height)] items-center">
           <span
             className={cn(
               "p-1 rounded-full transition-colors group-hover/check:bg-foreground/10",
@@ -222,7 +281,7 @@ function MvRowLead({
         </span>
       </button>
       {onToggleStar && (
-        <span className="flex h-10 items-center">
+        <span className="flex h-[var(--list-item-height)] items-center">
           <button
             type="button"
             aria-label={starLabel}
@@ -300,10 +359,13 @@ function describeAccount(label: string | undefined, account: AccountEntry | unde
  * aggregate "All …" views (All Mail / unified / cross-account) where rows come
  * from different folders. `email.sourceFolder` is stamped at fetch time.
  */
-function SourceFolderTag({ name }: { name: string }) {
+function SourceFolderTag({ name: serverName, role, tight }: { name: string; role?: string; tight?: boolean }) {
+  // The sidebar's name for the folder: "Sent", not the server's "Sent Items".
+  const tSidebar = useRowTranslators()!.sidebar;
+  const name = localizeMailboxName(role, serverName, (key) => tSidebar(`mailboxes.${key}`));
   return (
     <span
-      className="inline-flex max-w-[8rem] shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground"
+      className={cn("inline-flex shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground", tight ? "max-w-[4.5rem]" : "max-w-[8rem]")}
       title={name}
     >
       <Folder className="h-3 w-3 shrink-0" />
@@ -363,6 +425,8 @@ interface ThreadListItemProps {
   onPrefetch?: (email: Email) => void;
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
   onOpenConversation?: (thread: ThreadGroup) => void;
+  /** The reading pane shows the conversation: the row opens it there and never unfolds. */
+  conversationInReader?: boolean;
   onToggleStar?: (email: Email) => void;
   onMarkAsRead?: (email: Email, read: boolean) => void;
   onDelete?: (email: Email) => void;
@@ -372,6 +436,8 @@ interface ThreadListItemProps {
   onUndoSpam?: (email: Email) => void;
   onOpenAttachment?: (email: Email, attachment: Attachment) => void;
   loadAttachments?: LoadListAttachments;
+  /** The folder the row is listed in (see useRowFolder); a row on its own reads the store. */
+  listFolder?: ListFolder;
 }
 
 interface SingleEmailItemProps {
@@ -381,7 +447,8 @@ interface SingleEmailItemProps {
   onDoubleClick?: () => void;
   onPrefetch?: () => void;
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
-  showPreview: boolean;
+  /** Given by a conversation row; a row of its own reads the setting. */
+  showPreview?: boolean;
   rowTint: string | null;
   onToggleStar?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -392,6 +459,7 @@ interface SingleEmailItemProps {
   onUndoSpam?: () => void;
   onOpenAttachment?: (attachment: Attachment) => void;
   loadAttachments?: LoadListAttachments;
+  listFolder?: ListFolder;
 }
 
 // Visual + behaviour metadata for each mobile swipe action. Keyed by the
@@ -405,25 +473,44 @@ const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: AppIcon; b
 };
 
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
-  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onPrefetch, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments }, ref) {
-    const t = useTranslations('email_viewer');
-    const tBatch = useTranslations('email_list.batch_actions');
-    const tHover = useTranslations('settings.email_behavior.hover_actions');
-    const tStatus = useTranslations('email_list');
+  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onPrefetch, onContextMenu, showPreview: showPreviewProp, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments, listFolder }, ref) {
+    const { viewer: t, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tUnknown = t('unknown_sender');
     const tNoSubject = t('no_subject');
+    // One subscription for the row's settings instead of one per setting: a
+    // list draws fourteen or so of these rows at a time.
+    const {
+      showPreview: showPreviewSetting, tintListRowsByTag, tintListRowsByAccount, density, timeFormat, showAvatarsInJunk,
+      interfaceLayout, announceRowPreview, showRowActionButton, swipeRightAction, swipeLeftAction,
+    } = useSettingsStore(useShallow((state) => ({
+      showPreview: state.showPreview,
+      tintListRowsByTag: state.tintListRowsByTag,
+      tintListRowsByAccount: state.tintListRowsByAccount,
+      density: state.density,
+      timeFormat: state.timeFormat,
+      showAvatarsInJunk: state.showAvatarsInJunk,
+      interfaceLayout: state.interfaceLayout,
+      announceRowPreview: state.announceRowPreview,
+      showRowActionButton: state.showRowActionButton,
+      swipeRightAction: state.swipeRightAction,
+      swipeLeftAction: state.swipeLeftAction,
+    })));
+    const showPreview = showPreviewProp ?? showPreviewSetting;
     const isUnread = !email.keywords?.$seen;
     const isStarred = email.keywords?.$flagged;
     const isPinned = email.keywords?.['$pinned'] === true;
     const isAnswered = email.keywords?.$answered;
     const isForwarded = email.keywords?.$forwarded;
     const showPaperclip = useListHasAttachment(email, loadAttachments);
-    const { selectedMailbox, currentMailboxRole, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, isUnifiedView } = useEmailStore(useShallow((state) => ({
-      selectedMailbox: state.selectedMailbox,
-      // The role, not the folder list: the list is a new array on every
-      // count update, and subscribing to it re-rendered every row for each.
-      currentMailboxRole: listMailboxRole(state),
-      selectedEmailKeys: state.selectedEmailKeys,
+    // The role, not the folder list: the list is a new array on every
+    // count update, and subscribing to it re-rendered every row for each.
+    const { mailboxId: selectedMailbox, role: currentMailboxRole } = useRowFolder(listFolder);
+    // Whether this row is ticked and whether anything is, not the selection
+    // itself: a new selection (each tick, every folder switch) would draw
+    // every row on screen again.
+    const { isChecked, selecting, toggleEmailSelection, selectRangeEmails, isUnifiedView } = useEmailStore(useShallow((state) => ({
+      isChecked: state.selectedEmailKeys.has(emailKeyFor(email)),
+      selecting: state.selectedEmailKeys.size > 0,
       toggleEmailSelection: state.toggleEmailSelection,
       selectRangeEmails: state.selectRangeEmails,
       isUnifiedView: state.isUnifiedView,
@@ -441,15 +528,10 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const formatAddress = useOwnDomainAddress();
     const tagScope = useEmailTagScope(email);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
-    const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
-    const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
+    // Only a row with tags or a folder chip follows the list's width class.
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useRowTagDisplay(getEmailTagIds(email.keywords).length > 0 || !!email.sourceFolder);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
-    const showAccountDot = useSettingsStore((state) => state.showAccountDot) && !tintListRowsByAccount;
-    const density = useSettingsStore((state) => state.density);
-    const timeFormat = useSettingsStore((state) => state.timeFormat);
-    const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
-    const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
+    const showAccountDot = useShowAccountDot(tintListRowsByAccount);
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
     const senderWarning = useSenderWarning(showRecipient ? undefined : email);
     // Show the originating folder in the aggregate "All …" views.
@@ -458,10 +540,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const account = email.accountId ? getAccountById(email.accountId) : undefined;
     const accountColor = account?.avatarColor;
     const accountDescription = describeAccount(email.accountLabel, account);
-    const isChecked = selectedEmailKeys.has(emailKeyFor(email));
-    const announceRowPreview = useSettingsStore((state) => state.announceRowPreview);
-    const showRowActionButton = useSettingsStore((state) => state.showRowActionButton);
     const isMobile = useUIStore((state) => state.isMobile);
+    const swipeRows = useSwipeRows();
     // One line per row where the list has the full width; stacked on phones.
     const { oneLine: oneLineRow, columns } = useListRowShape();
     // Mountain View leads its rows with a checkbox and a clickable star
@@ -503,7 +583,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       sourceMailboxId: selectedMailbox,
     });
 
-    const [hoverActionsArmed, armHoverActions] = useArmOnPointerOver();
+    const [hoverActionsArmed, armHoverActions] = useArmOnPointerOver(emailKeyFor(email));
     const { onTouchStart, onTouchEnd, onTouchMove, onTouchCancel, isPressed } = useLongPress(
       useCallback((pos) => {
         onContextMenu?.(
@@ -517,8 +597,6 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
 
     // Mobile swipe actions (Gmail-style): drag a row left/right to fire the
     // configured action. Desktop keeps hover actions + context menu.
-    const swipeRightAction = useSettingsStore((state) => state.swipeRightAction);
-    const swipeLeftAction = useSettingsStore((state) => state.swipeLeftAction);
     const runSwipeAction = useCallback((action: SwipeAction) => {
       switch (action) {
         case 'archive': onArchive?.(); break;
@@ -541,7 +619,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     };
     const hasRight = isActionable(swipeRightAction);
     const hasLeft = isActionable(swipeLeftAction);
-    const swipeEnabled = isMobile && (hasLeft || hasRight);
+    const swipeEnabled = swipeRows && (hasLeft || hasRight);
     const { swipeHandlers, offsetX, side: swipeSide, willCommit, consumeTap } = useSwipeActions({
       enabled: swipeEnabled,
       hasLeft,
@@ -577,7 +655,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       isUnread && t('unread'),
       sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown,
       email.subject || tNoSubject,
-      formatDate(emailDisplayDate(email)),
+      formatDate(emailListDate(email)),
       isPinned && tStatus('pinned'),
       isStarred && tStatus('starred'),
       isAnswered && tStatus('replied'),
@@ -589,7 +667,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     // Once something is ticked, the whole row is the checkbox, as in phone
     // mail apps (#1014). Mountain View on the desktop opens the message and
     // keeps the ticks instead, as Gmail does (#1231).
-    const togglesOnClick = selectedEmailKeys.size > 0 && !mvRow;
+    const togglesOnClick = selecting && !mvRow;
 
     const handleClick = (e: React.MouseEvent) => {
       if (swipeEnabled && consumeTap()) { return; }
@@ -631,12 +709,12 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           label: a11yLabel,
           selected,
           checked: isChecked,
-          selectionMode: selectedEmailKeys.size > 0,
+          selectionMode: selecting,
           onToggleCheck: () => toggleEmailSelection(email),
           onOpenMenu: onContextMenu ? handleContextMenu : undefined,
         })}
         className={cn(
-          "relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
+          "@container/mail-row relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
           mvMobileRow && "border-b-transparent",
           resolvedRowTint ? resolvedRowTint : (
             selected
@@ -664,6 +742,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           onDoubleClick();
         }}
         onContextMenu={handleContextMenu}
+        data-menu-row=""
         style={{ minHeight: oneLineRow ? undefined : 'var(--list-item-height)', touchAction: swipeEnabled ? 'pan-y' : undefined }}
       >
         {showRowActionButton && onContextMenu && (
@@ -697,11 +776,12 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         )}
         <div
           role="gridcell"
-          className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', swipeEnabled && 'relative z-10 bg-inherit')}
+          data-row-text=""
+          className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', swipeEnabled && 'relative z-10 bg-inherit')}
           style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
           {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
-          {!mvRow && density === 'extra-compact' && selectedEmailKeys.size > 0 && (
+          {!mvRow && density === 'extra-compact' && selecting && (
             <button
               onClick={handleCheckboxClick}
               role="checkbox"
@@ -739,6 +819,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             <AvatarGutter onToggle={handleCheckboxClick}>
               <div className="relative flex flex-shrink-0">
                 <SelectableAvatar
+                  // Its image state is about the sender: a row that shows another message (useRowSlots) starts it afresh.
+                  key={`${sender?.email ?? ''}|${sender?.name ?? ''}`}
                   name={sender?.name}
                   email={sender?.email}
                   size={oneLineRow ? "sm" : "md"}
@@ -762,7 +844,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           <div className="flex-1 min-w-0">
             {oneLineRow ? (
               <>
-              <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-10")}>
+              <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-[var(--list-item-height)]")}>
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   {/* In columns the dot sits inside the From cell, so a row
                       with it starts its columns where the header does. */}
@@ -776,7 +858,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </span>
                   )}
                   <span dir={columns ? undefined : "auto"} className={cn(
-                    columns ? cn(LIST_COLUMN_CLASS.from, 'flex items-center gap-2') : 'w-32 shrink-0 truncate lg:w-40',
+                    columns ? cn(LIST_COLUMN_CLASS.from, 'flex items-center gap-2') : 'w-32 min-w-0 shrink truncate lg:w-40',
                     'text-sm',
                     isUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'font-medium text-foreground/80'
                   )}>
@@ -799,11 +881,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       </>
                     ) : (sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown)}
                   </span>
-                  <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                  <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
                     {tagIds.length > 0 && (
-                      <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
+                      <span className={cn(ROW_TAG_GROUP_CLASS, mvRow && "me-2")}>
                         {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
                         ))}
                       </span>
                     )}
@@ -813,9 +895,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     )}>
                       <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
                     </span>
-                    <PluginRowBadges email={email} className={mvRow ? "ms-2" : undefined} />
+                    <PluginRowBadges key={emailKeyFor(email)} email={email} className={mvRow ? "ms-2" : undefined} />
                     {(previewSnippet || inlinePreview) && (
-                      <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                      <span dir="auto" className="min-w-0 flex-1 shrink-[9999] truncate text-muted-foreground">
                         {/* Gmail runs the snippet on from the subject after a dash. */}
                         {mvRow && '\u00a0-\u00a0'}
                         {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
@@ -835,7 +917,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </>
                   )}
                   {showPaperclip && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
+                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} role={email.sourceFolderRole} tight={senderLineTight} />}
                   {scheduledSendLabel ? (
                     <span
                       className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -850,14 +932,14 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       columns && LIST_COLUMN_CLASS.date,
                       isUnread ? (mvRow ? 'text-foreground font-bold' : 'text-foreground font-semibold') : 'text-muted-foreground'
                     )}>
-                      {formatDate(emailDisplayDate(email), mvRow ? { listStyle: 'mountain-view' } : undefined)}
+                      {formatDate(emailListDate(email), mvRow ? { listStyle: 'mountain-view' } : undefined)}
                     </span>
                   )}
                   {columns && <SizeCell bytes={email.size} />}
                 </div>
               </div>
               {mvRow && (
-                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mvRow />
+                <RowChips key={emailKeyFor(email)} email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mvRow />
               )}
               </>
             ) : (
@@ -874,7 +956,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       </span>
                     )}
                     <span dir="auto" className={cn(
-                      "truncate text-sm",
+                      "flex-1 min-w-0 truncate text-sm",
                       isUnread
                         ? "font-bold text-foreground"
                         : "font-medium text-muted-foreground"
@@ -882,13 +964,13 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       {sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown}
                     </span>
                     {tagPlacement === 'sender' && tagIds.length > 0 && (
-                      <span className={TAG_GROUP_CLASS}>
+                      <span className={ROW_TAG_GROUP_CLASS}>
                         {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                          <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
                         ))}
                       </span>
                   )}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5">
                       {isPinned && (
                         <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                       )}
@@ -913,7 +995,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
+                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} role={email.sourceFolderRole} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"
@@ -929,7 +1011,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                           ? "text-foreground font-semibold"
                           : "text-muted-foreground"
                       )}>
-                        {formatDate(emailDisplayDate(email))}
+                        {formatDate(emailListDate(email))}
                       </span>
                     )}
                     {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
@@ -944,28 +1026,28 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
 
                 <div className="mb-1 flex min-w-0 items-center gap-1.5">
                   {tagPlacement === 'subject' && tagIds.length > 0 && (
-                      <span className={TAG_GROUP_CLASS}>
+                      <span className={ROW_TAG_GROUP_CLASS}>
                         {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
                         ))}
                       </span>
                   )}
                   <span dir="auto" className={cn(
-                    "min-w-0 flex-1 truncate text-sm",
+                    "flex-1 min-w-0 truncate text-sm",
                     isUnread
                       ? "font-semibold text-foreground"
                       : "font-normal text-foreground/90"
                   )}>
                     <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
                   </span>
-                  <PluginRowBadges email={email} />
+                  <PluginRowBadges key={emailKeyFor(email)} email={email} />
                 </div>
 
                 {showPreview && density !== 'extra-compact' && density !== 'compact' && (
                   <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                     <p dir="auto" className={cn(
                       "text-sm leading-relaxed",
-                      mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                      mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : density === 'comfortable' ? "line-clamp-2" : "line-clamp-1",
                       isUnread
                         ? "text-muted-foreground"
                         : "text-muted-foreground"
@@ -981,7 +1063,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     )}
                   </div>
                 )}
-                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mountainView={mvMobileRow} />
+                <RowChips key={emailKeyFor(email)} email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mountainView={mvMobileRow} />
               </>
             )}
           </div>
@@ -992,6 +1074,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           // A cell of its own: a row holds cells, not buttons (SR-01).
           <div role="gridcell">
           <EmailHoverActions
+            key={emailKeyFor(email)}
             email={email}
             backgroundClassName={resolvedRowTint ? resolvedRowTint : mvRow ? mvHoverBackground(isChecked, isUnread, selected) : ((selected || isChecked) ? "bg-accent" : "bg-muted")}
             onToggleStar={onToggleStar}
@@ -1002,7 +1085,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             onMarkAsSpam={onMarkAsSpam}
             onUndoSpam={onUndoSpam}
             isInJunk={currentMailboxRole === 'junk'}
-            spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
+            spamApplicable={spamApplicableIn(currentMailboxRole)}
             mailboxRole={currentMailboxRole ?? null}
             pinToFirstLine={mvRow}
           />
@@ -1013,8 +1096,48 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
   }
 );
 
-export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
-  function ThreadListItem({
+/**
+ * A list row. A conversation of one message is that message's row, drawn by
+ * SingleEmailItem alone: the conversation row's hooks (swipe, long press,
+ * drag, tags, sender check, a dozen store subscriptions) ran for it too,
+ * only to hand everything to SingleEmailItem, which works it out again.
+ */
+const ThreadListItemRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
+  function ThreadListItemRow(props, ref) {
+    const { thread } = props;
+    // A conversation row holds state about its conversation: it is built
+    // afresh for another one (see useRowSlots).
+    if (thread.emailCount !== 1) return <ConversationRow key={thread.threadKey} {...props} ref={ref} />;
+    const { latestEmail } = thread;
+    const { onEmailSelect, onEmailDoubleClick, onPrefetch, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment } = props;
+    return (
+      <SingleEmailItem
+        ref={ref}
+        email={latestEmail}
+        selected={props.selectedEmailKey === emailKeyFor(latestEmail)}
+        onClick={() => onEmailSelect(latestEmail)}
+        onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(latestEmail) : undefined}
+        onPrefetch={onPrefetch ? () => onPrefetch(latestEmail) : undefined}
+        onContextMenu={props.onContextMenu}
+        // SingleEmailItem tints the row the same way (account, then tag).
+        rowTint={null}
+        onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
+        onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
+        onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
+        onArchive={onArchive ? () => onArchive(latestEmail) : undefined}
+        onSetTag={onSetTag ? (color) => onSetTag(latestEmail.id, color, emailKeyFor(latestEmail)) : undefined}
+        onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
+        onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
+        onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
+        loadAttachments={props.loadAttachments}
+        listFolder={props.listFolder}
+      />
+    );
+  }
+);
+
+const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
+  function ConversationRow({
     onOpenAttachment,
     loadAttachments,
     thread,
@@ -1029,6 +1152,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     onPrefetch,
     onContextMenu,
     onOpenConversation,
+    conversationInReader = false,
     onToggleStar,
     onMarkAsRead,
     onDelete,
@@ -1036,12 +1160,9 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     onSetTag,
     onMarkAsSpam,
     onUndoSpam,
+    listFolder,
   }, ref) {
-    const t = useTranslations('threads');
-    const tEmailViewer = useTranslations('email_viewer');
-    const tBatch = useTranslations('email_list.batch_actions');
-    const tHover = useTranslations('settings.email_behavior.hover_actions');
-    const tStatus = useTranslations('email_list');
+    const { threads: t, viewer: tEmailViewer, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tNoSubject = tEmailViewer('no_subject');
     const showPreview = useSettingsStore((state) => state.showPreview);
     const density = useSettingsStore((state) => state.density);
@@ -1049,6 +1170,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
     const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
     const isMobile = useUIStore((state) => state.isMobile);
+    const swipeRows = useSwipeRows();
     const { latestEmail, participantNames, hasUnread, hasStarred, hasPinned, hasAnswered, hasForwarded, emailCount } = thread;
     // Only the latest email's parts are loaded; an older one with the flag keeps the paperclip.
     const latestHasAttachment = useListHasAttachment(latestEmail, loadAttachments);
@@ -1072,12 +1194,13 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       ? formatScheduledSendAt(latestEmail.scheduledSendAt, timeFormat)
       : null;
 
-    const { selectedMailbox, currentMailboxRole, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, isUnifiedView } = useEmailStore(useShallow((state) => ({
-      selectedMailbox: state.selectedMailbox,
-      // The role, not the folder list: the list is a new array on every
-      // count update, and subscribing to it re-rendered every row for each.
-      currentMailboxRole: listMailboxRole(state),
-      selectedEmailKeys: state.selectedEmailKeys,
+    // The role, not the folder list: the list is a new array on every
+    // count update, and subscribing to it re-rendered every row for each.
+    const { mailboxId: selectedMailbox, role: currentMailboxRole } = useRowFolder(listFolder);
+    // See SingleEmailItem: what the selection means for this row, not the selection.
+    const { isChecked, selecting, toggleEmailSelection, selectRangeEmails, isUnifiedView } = useEmailStore(useShallow((state) => ({
+      isChecked: thread.emails.some((e) => state.selectedEmailKeys.has(emailKeyFor(e))),
+      selecting: state.selectedEmailKeys.size > 0,
       toggleEmailSelection: state.toggleEmailSelection,
       selectRangeEmails: state.selectRangeEmails,
       isUnifiedView: state.isUnifiedView,
@@ -1148,7 +1271,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     };
     const threadHasRight = threadActionable(threadSwipeRightAction);
     const threadHasLeft = threadActionable(threadSwipeLeftAction);
-    const threadSwipeEnabled = isMobile && (threadHasLeft || threadHasRight);
+    const threadSwipeEnabled = swipeRows && (threadHasLeft || threadHasRight);
     const {
       swipeHandlers: threadSwipeHandlers, offsetX: threadOffsetX, side: threadSwipeSide,
       willCommit: threadWillCommit, consumeTap: threadConsumeTap,
@@ -1171,11 +1294,11 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     const tagScope = useEmailTagScope(latestEmail);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
-    const showAccountDot = useSettingsStore((state) => state.showAccountDot) && !tintListRowsByAccount;
+    const showAccountDot = useShowAccountDot(tintListRowsByAccount);
     // A collapsed row speaks for every message under it, so it carries their tags too.
     const tagIds = sortTagIds(getThreadTagIds(thread.emails));
     const threadTintSource = threadAccountColor
@@ -1190,39 +1313,14 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const isSelected = selectedEmailKey === emailKeyFor(latestEmail) ||
       thread.emails.some(e => emailKeyFor(e) === selectedEmailKey);
 
-    const isChecked = thread.emails.some(e => selectedEmailKeys.has(emailKeyFor(e)));
     const announceRowPreview = useSettingsStore((state) => state.announceRowPreview);
     const showRowActionButton = useSettingsStore((state) => state.showRowActionButton);
-
-    if (emailCount === 1) {
-      return (
-        <SingleEmailItem
-          ref={ref}
-          email={latestEmail}
-          selected={selectedEmailKey === emailKeyFor(latestEmail)}
-          onClick={() => onEmailSelect(latestEmail)}
-          onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(latestEmail) : undefined}
-          onPrefetch={onPrefetch ? () => onPrefetch(latestEmail) : undefined}
-          onContextMenu={onContextMenu}
-          showPreview={showPreview}
-          rowTint={rowTint}
-          onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
-          onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
-          onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
-          onArchive={onArchive ? () => onArchive(latestEmail) : undefined}
-          onSetTag={onSetTag ? (color) => onSetTag(latestEmail.id, color, emailKeyFor(latestEmail)) : undefined}
-          onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
-          onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
-          onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
-          loadAttachments={loadAttachments}
-        />
-      );
-    }
 
     const emailsToShow = expandedEmails || thread.emails;
 
     // Toggle selection for all emails in this thread.
     const toggleThreadSelection = () => {
+      const { selectedEmailKeys } = useEmailStore.getState();
       const allSelected = thread.emails.every(em => selectedEmailKeys.has(emailKeyFor(em)));
       const newSelection = new Set(selectedEmailKeys);
       thread.emails.forEach(em => {
@@ -1245,7 +1343,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     };
 
     // See SingleEmailItem: with rows ticked, a click ticks instead of opening.
-    const threadTogglesOnClick = selectedEmailKeys.size > 0 && !mvRow;
+    const threadTogglesOnClick = selecting && !mvRow;
 
     const handleHeaderClick = (e: React.MouseEvent) => {
       if (threadSwipeEnabled && threadConsumeTap()) { return; }
@@ -1277,7 +1375,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
         return;
       }
 
-      if (mvRow || mvMobileRow) {
+      // So does the default layout, whose reading pane shows the conversation.
+      if (mvRow || mvMobileRow || conversationInReader) {
         // Desktop keeps the ticked rows while the conversation is read (#1231).
         onEmailSelect(latestEmail);
         return;
@@ -1304,7 +1403,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       displayNames.join(', '),
       threadSubject,
       t('messages_tooltip', { count: emailCount }),
-      formatDate(emailDisplayDate(latestEmail)),
+      formatDate(emailListDate(latestEmail)),
       hasPinned && tStatus('pinned'),
       hasStarred && tStatus('starred'),
       hasAnswered && tStatus('replied'),
@@ -1331,9 +1430,9 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             rowKey: emailKeyFor(latestEmail),
             label: a11yLabel,
             selected: isSelected && !isExpanded,
-            expanded: isExpanded,
+            expanded: conversationInReader ? undefined : isExpanded,
             checked: isChecked,
-            selectionMode: selectedEmailKeys.size > 0,
+            selectionMode: selecting,
             onToggleCheck: toggleThreadSelection,
             onOpenMenu: onContextMenu ? handleContextMenu : undefined,
           })}
@@ -1344,7 +1443,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           data-mv-row={mvRow && !rowTint ? "" : undefined}
           data-checked={isChecked ? "" : undefined}
           className={cn(
-            "relative group cursor-pointer select-none transition-shadow duration-200 overflow-hidden",
+            "@container/mail-row relative group cursor-pointer select-none transition-shadow duration-200 overflow-hidden",
             rowTint ? rowTint : (
               isSelected
                 ? "bg-accent"
@@ -1371,6 +1470,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             onEmailDoubleClick(latestEmail);
           }}
           onContextMenu={handleContextMenu}
+          data-menu-row=""
           style={{ minHeight: oneLineRow ? undefined : 'var(--list-item-height)', touchAction: threadSwipeEnabled ? 'pan-y' : undefined }}
         >
           {showRowActionButton && onContextMenu && (
@@ -1401,11 +1501,12 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           )}
           <div
             role="gridcell"
-            className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', threadSwipeEnabled && 'relative z-10 bg-inherit')}
+            data-row-text=""
+            className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', threadSwipeEnabled && 'relative z-10 bg-inherit')}
             style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: threadSwipeEnabled && threadOffsetX ? `translateX(${threadOffsetX}px)` : undefined, transition: threadSwipeEnabled && threadOffsetX === 0 ? 'transform 200ms ease-out' : undefined }}
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
-            {!mvRow && density === 'extra-compact' && selectedEmailKeys.size > 0 && (
+            {!mvRow && density === 'extra-compact' && selecting && (
               <button
                 onClick={handleThreadCheckboxClick}
                 role="checkbox"
@@ -1455,7 +1556,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     selectLabel={selectRowLabel}
                   />
                   {hasUnread && <UnreadDot besideAvatar />}
-                  {!isMobile && !columns && (
+                  {!isMobile && !columns && !conversationInReader && (
                     <button
                       data-expand-toggle
                       onClick={(e) => {
@@ -1493,7 +1594,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             <div className="flex-1 min-w-0">
               {oneLineRow ? (
                 <>
-                <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-10")}>
+                <div className={cn("flex flex-wrap items-center justify-between gap-3", mvRow && "min-h-[var(--list-item-height)]")}>
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     {!columns && isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                       <span
@@ -1509,6 +1610,10 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       // count follows the names, so a folded conversation is
                       // one line like any message. (#262)
                       <span data-list-from="" className={cn(LIST_COLUMN_CLASS.from, 'flex items-center gap-2 text-sm')}>
+                        {conversationInReader ? (
+                          // The reading pane shows the conversation: the chevron's room, as on a single message's row.
+                          <span aria-hidden="true" className="w-3.5 shrink-0" />
+                        ) : (
                         <button
                           data-expand-toggle
                           onClick={(e) => {
@@ -1527,6 +1632,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                             <ChevronRight className="w-3.5 h-3.5" />
                           )}
                         </button>
+                        )}
                         {isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                           <span
                             className="w-2 h-2 rounded-full flex-shrink-0"
@@ -1536,7 +1642,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                             <span className="sr-only">{threadAccountDescription}</span>
                           </span>
                         )}
-                        <span dir="auto" className={cn('min-w-0 truncate', hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80')}>
+                        <span dir="auto" className={cn('flex-1 min-w-0 truncate', hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80')}>
                           {displayNames.join(', ')}
                         </span>
                         <span className="shrink-0 text-xs text-muted-foreground" title={t('messages_tooltip', { count: emailCount })}>
@@ -1545,8 +1651,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </span>
                     ) : mvRow ? (
                       // Gmail puts the message count after the names, in grey.
-                      <span data-mv-names="" className="flex w-32 shrink-0 items-baseline gap-1 text-sm lg:w-40">
-                        <span dir="auto" className={cn('min-w-0 truncate', hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/80')}>
+                      <span data-mv-names="" className="flex w-32 min-w-0 shrink items-baseline gap-1 text-sm lg:w-40">
+                        <span dir="auto" className={cn('flex-1 min-w-0 truncate', hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/80')}>
                           {displayNames.join(', ')}
                         </span>
                         <span className="shrink-0 text-xs text-muted-foreground" title={t('messages_tooltip', { count: emailCount })}>
@@ -1558,26 +1664,19 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       // Matches SingleEmailItem: the sender column sets where
                       // every row's tags and subject begin, so the two have to
                       // agree or thread rows sit 1rem further right.
-                      'w-32 shrink-0 truncate text-sm lg:w-40',
+                      'w-32 min-w-0 shrink truncate text-sm lg:w-40',
                       hasUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
                     )}>
                       {displayNames.join(', ')}
                     </span>
                     )}
-                    <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
-                      {((!mvRow && !columns) || tagIds.length > 0) && (
-                      <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
-                        {!mvRow && !columns && (
-                          <ThreadCountPill
-                            count={emailCount}
-                            hasUnread={hasUnread}
-                            title={t('messages_tooltip', { count: emailCount })}
-                          />
-                        )}
-                        {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                        ))}
-                      </span>
+                    <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
+                      {tagIds.length > 0 && (
+                        <span className={cn(ROW_TAG_GROUP_CLASS, mvRow && "me-2")}>
+                          {tagIds.map((id) => (
+                            <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                          ))}
+                        </span>
                       )}
                       <span dir="auto" className={cn(
                         'min-w-0 truncate',
@@ -1587,14 +1686,22 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </span>
                       <PluginRowBadges email={latestEmail} className={mvRow ? "ms-2" : undefined} />
                       {(previewSnippet || inlinePreview) && (
-                        <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                        <span dir="auto" className="min-w-0 flex-1 shrink-[9999] truncate text-muted-foreground">
                           {mvRow && '\u00a0-\u00a0'}
                           {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2.5 shrink-0">
+                  {/* Fixed controls wrap together instead of overflowing the text lane. */}
+                  <div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2.5 text-sm">
+                    {!mvRow && !columns && (
+                      <ThreadCountPill
+                        count={emailCount}
+                        hasUnread={hasUnread}
+                        title={t('messages_tooltip', { count: emailCount })}
+                      />
+                    )}
                     {hasPinned && <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />}
                     {hasStarred && !mvRow && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                     {hasAnswered && !hasForwarded && !mvRow && <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -1606,7 +1713,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </>
                     )}
                     {hasAttachment && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
+                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} role={latestEmail.sourceFolderRole} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -1621,7 +1728,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         columns && LIST_COLUMN_CLASS.date,
                         hasUnread ? (mvRow ? 'text-foreground font-bold' : 'text-foreground font-semibold') : 'text-muted-foreground'
                       )}>
-                        {formatDate(emailDisplayDate(latestEmail), mvRow ? { listStyle: 'mountain-view' } : undefined)}
+                        {formatDate(emailListDate(latestEmail), mvRow ? { listStyle: 'mountain-view' } : undefined)}
                       </span>
                     )}
                     {columns && <SizeCell bytes={thread.emails.reduce((sum, e) => sum + (e.size ?? 0), 0)} />}
@@ -1638,7 +1745,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                 </>
               ) : (
                 <>
-                  <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       {isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                         <span
@@ -1650,24 +1757,29 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         </span>
                       )}
                       <span dir="auto" className={cn(
-                        "truncate text-sm",
+                        "flex-1 min-w-0 truncate text-sm",
                         hasUnread
                           ? "font-bold text-foreground"
                           : "font-medium text-muted-foreground"
                       )}>
                         {displayNames.join(", ")}
                       </span>
-                      <span className={TAG_GROUP_CLASS}>
-                        <ThreadCountPill
-                          count={emailCount}
-                          hasUnread={hasUnread}
-                          title={t('messages_tooltip', { count: emailCount })}
-                        />
-                        {tagPlacement === 'sender' && tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
-                        ))}
-                      </span>
-                      <div className="flex items-center gap-1.5">
+                      {tagPlacement === 'sender' && tagIds.length > 0 && (
+                        <span className={ROW_TAG_GROUP_CLASS}>
+                          {tagIds.map((id) => (
+                            <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                    {/* Fixed controls wrap together instead of overflowing the text lane. */}
+                    <div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-1.5">
+                      <ThreadCountPill
+                        count={emailCount}
+                        hasUnread={hasUnread}
+                        title={t('messages_tooltip', { count: emailCount })}
+                      />
+                      <div className="flex shrink-0 items-center gap-1.5">
                         {hasPinned && (
                           <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                         )}
@@ -1690,9 +1802,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
+                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} role={latestEmail.sourceFolderRole} tight={senderLineTight} />}
                       {scheduledSendLabel ? (
                         <span
                           className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"
@@ -1708,7 +1818,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                             ? "text-foreground font-semibold"
                             : "text-muted-foreground"
                         )}>
-                          {formatDate(emailDisplayDate(latestEmail))}
+                          {formatDate(emailListDate(latestEmail))}
                         </span>
                       )}
                       {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
@@ -1723,14 +1833,14 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
                   <div className="mb-1 flex min-w-0 items-center gap-1.5">
                     {tagPlacement === 'subject' && tagIds.length > 0 && (
-                        <span className={TAG_GROUP_CLASS}>
+                        <span className={ROW_TAG_GROUP_CLASS}>
                           {tagIds.map((id) => (
-                            <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                            <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
                           ))}
                         </span>
                     )}
                     <span dir="auto" className={cn(
-                      "min-w-0 flex-1 truncate text-sm",
+                      "flex-1 min-w-0 truncate text-sm",
                       hasUnread
                         ? "font-semibold text-foreground"
                         : "font-normal text-foreground/90"
@@ -1744,7 +1854,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                       <p dir="auto" className={cn(
                         "text-sm leading-relaxed",
-                        mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                        mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : density === 'comfortable' ? "line-clamp-2" : "line-clamp-1",
                         hasUnread
                           ? "text-muted-foreground"
                           : "text-muted-foreground"
@@ -1785,7 +1895,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
               onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
               isInJunk={currentMailboxRole === 'junk'}
-              spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
+              spamApplicable={spamApplicableIn(currentMailboxRole)}
               mailboxRole={currentMailboxRole ?? null}
               pinToFirstLine={mvRow}
             />
@@ -1819,6 +1929,20 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
         )}
       </div>
     );
+  }
+);
+
+ThreadListItemRow.displayName = "ThreadListItemRow";
+
+/**
+ * A message or conversation row. In a list the words come from the list's
+ * RowTranslatorsProvider; a row drawn on its own makes its own.
+ */
+export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
+  function ThreadListItem(props, ref) {
+    return useRowTranslators()
+      ? <ThreadListItemRow {...props} ref={ref} />
+      : <RowTranslatorsProvider><ThreadListItemRow {...props} ref={ref} /></RowTranslatorsProvider>;
   }
 );
 
@@ -1875,6 +1999,7 @@ export function areThreadRowPropsEqual(prev: ThreadListItemProps, next: ThreadLi
  * ThreadListItem for the message list. Opening a message, switching folder or
  * a late thread count re-rendered every row on screen; this one re-renders
  * only when something it draws has changed. Handlers are compared by
- * identity, so the list passes stable ones (see useStableHandlers).
+ * identity, so the list passes stable ones (see useStableHandlers). The list
+ * holds the RowTranslatorsProvider, so its rows skip ThreadListItem's check.
  */
-export const MemoizedThreadListItem = React.memo(ThreadListItem, areThreadRowPropsEqual);
+export const MemoizedThreadListItem = React.memo(ThreadListItemRow, areThreadRowPropsEqual);

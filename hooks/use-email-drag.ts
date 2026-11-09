@@ -9,6 +9,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useUIStore } from "@/stores/ui-store";
 import { isDragOutSupported } from "@/hooks/use-attachment-drag";
+import { canDragNativeFiles, forgetDragBlob, keepDragBlob, keptDragBlob, startNativeFileDrag } from "@/lib/desktop/file-drag";
+import { canExport } from "@/lib/device-policy";
 import { appUrl, buildMailPath } from "@/lib/deep-links";
 import {
   bundleExportFilename,
@@ -102,7 +104,10 @@ function selectionKey(emails: RoutedEmail[], bundleOptions: EmailFilenameOptions
 
 function revokeLater(url: string): void {
   // Chromium may read the URL asynchronously after the drop completes.
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    forgetDragBlob(url);
+  }, 60_000);
 }
 
 async function buildEmailZip(emails: RoutedEmail[]): Promise<string> {
@@ -125,7 +130,7 @@ async function buildEmailZip(emails: RoutedEmail[]): Promise<string> {
     }),
   );
   const zipBlob = await zip.generateAsync({ type: "blob", mimeType: "application/zip" });
-  return URL.createObjectURL(zipBlob);
+  return keepDragBlob(URL.createObjectURL(zipBlob), zipBlob);
 }
 
 function prefetchEmailBundle(
@@ -214,7 +219,8 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
   }, [email.id, email.blobId, email.sourceClientAccountId, email.sourceAccountId, client, filenameOptions]);
 
   const prefetchSingle = useCallback((target: Email) => {
-    if (!dragOutEnabled || !target.blobId) return;
+    // Dragging a message out is an export: not under the account's "No export".
+    if (!dragOutEnabled || !target.blobId || !canExport(target)) return;
     const route = routeEmail(target, filenameOptions);
     if (!route.client) return;
     const previous = singleRef.current;
@@ -222,8 +228,11 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     if (previous?.url) revokeLater(previous.url);
     const entry: BundleEntry = { key: route.key, name: route.name, url: null, promise: null };
     singleRef.current = entry;
-    entry.promise = route.client
-      .fetchBlobAsObjectUrl(target.blobId, route.name, "message/rfc822", route.accountId)
+    // The desktop app's native drag needs the bytes as well as the address.
+    const fetched = canDragNativeFiles()
+      ? route.client.fetchBlob(target.blobId, route.name, "message/rfc822", route.accountId).then((blob) => keepDragBlob(URL.createObjectURL(blob), blob))
+      : route.client.fetchBlobAsObjectUrl(target.blobId, route.name, "message/rfc822", route.accountId);
+    entry.promise = fetched
       .then((url) => {
         if (url) {
           if (singleRef.current === entry && routeEmail(target, filenameOptions).key === entry.key) entry.url = url;
@@ -241,6 +250,7 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     const selected = state.selectedEmailKeys.has(emailKeyFor(email))
       ? resolveSelectedEmails(state)
       : threadEmails || [email];
+    if (!selected.every((em) => canExport(em))) return;
     if (selected.length > 1) {
       if (selected.some((em) => em.blobId)) {
         prefetchEmailBundle(selected.map((em) => routeEmail(em, filenameOptions)), bundleOptions);
@@ -284,13 +294,22 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
         .join("\r\n")
     );
 
-    // Drag-out to file explorer.
-    if (dragOutEnabled && client) {
+    // Drag-out to file explorer, unless a device policy turned export off
+    // for one of the messages' accounts. Moving to a folder still works.
+    if (dragOutEnabled && client && emailsToDrag.every((em) => canExport(em))) {
       if (emailsToDrag.length === 1 && emailsToDrag[0].blobId) {
         const route = routeEmail(emailsToDrag[0], filenameOptions);
         const url = singleRef.current?.key === route.key ? singleRef.current.url : null;
         if (url) {
           const name = emailExportFilename(emailsToDrag[0], filenameOptions);
+          // Desktop app, Alt held: the OS's own drag with the real file. A plain drag has
+          // to stay the page's, because it also moves the message to a folder.
+          const blob = e.altKey ? keptDragBlob(url) : undefined;
+          if (blob) {
+            e.preventDefault();
+            void startNativeFileDrag([{ name, blob }]);
+            return;
+          }
           // `DownloadURL` format: <mime>:<filename>:<url>. Chromium expects
           // the filename raw - URL-encoding it ends up literally on disk
           // (e.g. `%20` instead of a space). The sanitiser already removed
@@ -309,6 +328,12 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
         const routed = emailsToDrag.map((em) => routeEmail(em, filenameOptions));
         const ready = getReadyBundle(routed, bundleOptions);
         if (ready) {
+          const blob = e.altKey ? keptDragBlob(ready.url) : undefined;
+          if (blob) {
+            e.preventDefault();
+            void startNativeFileDrag([{ name: ready.name, blob }]);
+            return;
+          }
           e.dataTransfer.setData(
             "DownloadURL",
             `application/zip:${ready.name}:${ready.url}`,

@@ -5,6 +5,7 @@ import { getPluginConfig, setPluginConfig, deletePluginConfigKey } from '@/lib/a
 import { requireAdminAuth } from '@/lib/admin/session';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
+import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 
 /** Resolve a plugin from the persisted registry first, then PLUGIN_DEV_DIR. */
 async function resolvePlugin(id: string) {
@@ -74,7 +75,9 @@ export async function GET(
     return NextResponse.json(response, {
       headers: { 'Cache-Control': 'no-store' },
     });
-  } catch {
+  } catch (error) {
+    const unavailable = storeUnavailableResponse(error);
+    if (unavailable) return unavailable;
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

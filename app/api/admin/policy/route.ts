@@ -1,22 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { configManager } from '@/lib/admin/config-manager';
-import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
+import { completePolicy, configManager, isPolicyConflict } from '@/lib/admin/config-manager';
+import { cookies } from 'next/headers';
+import { requireAdminAuth, getClientIP, verifyCurrentAdminSession } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
-import { POLICY_DOMAINS_HEADER, POLICY_SCOPE_HEADER, type SettingsPolicy } from '@/lib/admin/types';
+import { ADMIN_SESSION_COOKIE, POLICY_DOMAINS_HEADER, POLICY_SCOPE_HEADER, type SettingsPolicy } from '@/lib/admin/types';
 import { canSeeInstanceDetails, signedInIdentity } from '@/lib/auth/instance-details';
+import { bearerIdentity } from '@/lib/auth/bearer-identity';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { scopesVisibleTo } from '@/lib/admin/policy-scopes';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
+import { stripFeedUrls } from '@/lib/admin/company-feeds';
+
+/** The policy version as an HTTP entity tag. */
+function policyETag(version: string): string {
+  return `"${version}"`;
+}
+
+/**
+ * A policy version: DEFAULT_POLICY_VERSION ('default') or what versionOf makes
+ * (22 base64url chars). Spelled out, not imported: route tests mock the config
+ * manager with only what they use.
+ */
+const POLICY_VERSION = /^(?:default|[A-Za-z0-9_-]{22})$/;
+
+/**
+ * The version an If-Match header names, or undefined for none (or `*`).
+ * The admin pages send the ETag of the policy they loaded.
+ *
+ * A proxy that compresses the response may change the ETag: nginx makes it
+ * weak (`W/"v"`), Caddy and Apache append the encoding (`"v-zstd"`,
+ * `"v-gzip"`). The page sends that back unchanged, so both are undone here
+ * (#1557). The suffix is only dropped when what is left is a version.
+ */
+function ifMatchVersion(request: NextRequest): string | undefined {
+  const raw = request.headers.get('if-match')?.trim();
+  if (!raw || raw === '*') return undefined;
+  const tag = raw.split(',')[0].trim().replace(/^W\//, '').replace(/^"(.*)"$/, '$1');
+  const encoded = /^(.+)-(?:gzip|br|zstd|deflate|compress)$/.exec(tag);
+  if (encoded && !POLICY_VERSION.test(tag) && POLICY_VERSION.test(encoded[1])) return encoded[1];
+  return tag;
+}
 
 /**
  * GET /api/admin/policy - Get settings policy (NOT admin-protected - users read this;
  * visitors who are not signed in get the subset the login page needs)
+ *
+ * Clients without a webmail session (the mobile app) sign in with
+ * `Authorization: Bearer <JMAP access token>` for the configured mail server
+ * and get what a signed-in user of that account gets here
+ * (lib/auth/bearer-identity.ts). A token that doesn't check out gets the
+ * public subset, as without one.
  */
 export async function GET(request: NextRequest) {
   try {
     await configManager.ensureLoaded();
-    const policy = configManager.getPolicy();
+    // Together: the identity checks below wait on the store, and a change
+    // applied meanwhile must not pair this policy with a newer version.
+    const { policy, version } = configManager.getPolicyWithVersion();
     if (!(await canSeeInstanceDetails(request))) {
+      const tokenIdentity = await bearerIdentity(request);
+      if (tokenIdentity) return userPolicyResponse(policy, tokenIdentity.addresses);
       // The login page needs the theme policy and gates; the plugin lists,
       // push relays and sidebar app URLs map the deployment and are only
       // used after signing in, when the client fetches the policy again.
@@ -42,26 +86,59 @@ export async function GET(request: NextRequest) {
     // Without a session secret the server can't tell who is asking and
     // answers with all of them (documented).
     const identity = await signedInIdentity();
-    const filtered = identity !== null && !identity.admin;
-    const scopes = filtered
-      ? scopesVisibleTo(policy.scopes ?? [], identity.addresses)
-      : policy.scopes ?? [];
-    // Which domains the scopes were picked for, so a browser that signs in
-    // to an account of another domain knows to fetch again.
-    const domains = filtered
-      ? [...new Set(identity.addresses.map((a) => a.slice(a.lastIndexOf('@') + 1)).filter(Boolean))].join(',')
-      : null;
-    return NextResponse.json({ ...policy, scopes }, {
-      headers: { 'Cache-Control': 'no-store', ...(domains !== null ? { [POLICY_DOMAINS_HEADER]: domains } : {}) },
+    if (identity !== null && !identity.admin) return userPolicyResponse(policy, identity.addresses);
+    // Without a session secret only the admin dashboard's own session tells
+    // the admin apart; everyone else gets the feeds without their addresses,
+    // which may hold tokens.
+    if (identity === null && !(await hasAdminSession())) {
+      return NextResponse.json({ ...stripFeedUrls(policy), scopes: stripFeedUrls(policy).scopes ?? [] }, {
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+    // The whole policy, as the admin pages edit it: with its version, which
+    // they send back as If-Match when they save.
+    return NextResponse.json({ ...policy, scopes: policy.scopes ?? [] }, {
+      headers: { 'Cache-Control': 'no-store', ETag: policyETag(version) },
     });
   } catch (error) {
+    // A Bearer token can't be checked without the shared store (its budget).
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     logger.error('Policy read error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
+async function hasAdminSession(): Promise<boolean> {
+  try {
+    const token = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
+    return !!token && (await verifyCurrentAdminSession(token)) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The policy for a signed-in user who is not the admin, with the addresses
+ * they sign in with. Company calendar addresses stay here: the browser
+ * fetches a feed by id through /api/fetch-ical (lib/admin/company-feeds.ts).
+ */
+function userPolicyResponse(raw: SettingsPolicy, addresses: string[]): NextResponse {
+  const policy = stripFeedUrls(raw);
+  const scopes = scopesVisibleTo(policy.scopes ?? [], addresses);
+  // Which domains the scopes were picked for, so a browser that signs in
+  // to an account of another domain knows to fetch again.
+  const domains = [...new Set(addresses.filter((a) => a.includes('@')).map((a) => a.slice(a.lastIndexOf('@') + 1)).filter(Boolean))].join(',');
+  return NextResponse.json({ ...policy, scopes }, {
+    headers: { 'Cache-Control': 'no-store', [POLICY_DOMAINS_HEADER]: domains },
+  });
+}
+
 /**
  * PUT /api/admin/policy - Update settings policy (admin-protected)
+ *
+ * With `If-Match: <ETag from GET>` the save is refused with 409 when the
+ * policy changed since it was read, so a page opened earlier can't undo
+ * someone else's save. Without it the policy is replaced, as it always was.
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -98,14 +175,25 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'organisation must be an object' }, { status: 400 });
     }
 
-    await configManager.setPolicy(policy);
+    let version: string;
+    try {
+      version = await configManager.setPolicy(policy, { ifVersion: ifMatchVersion(request) });
+    } catch (error) {
+      if (isPolicyConflict(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
     await auditLog('policy.update', {
       restrictionCount: Object.keys(policy.restrictions || {}).length,
       // Entries the sanitizer dropped never reach users, so log what stuck.
       defaultSidebarAppCount: configManager.getPolicy().defaultSidebarApps?.length ?? 0,
     }, ip);
 
-    return NextResponse.json({ ok: true });
+    // What was stored, with its version: the page continues from this
+    // instead of reading it back from a replica that may not have it yet.
+    const saved = completePolicy(policy);
+    return NextResponse.json({ ok: true, policy: { ...saved, scopes: saved.scopes ?? [] } }, { headers: { ETag: policyETag(version) } });
   } catch (error) {
     const readOnly = configReadOnlyResponse(error);
     if (readOnly) return readOnly;

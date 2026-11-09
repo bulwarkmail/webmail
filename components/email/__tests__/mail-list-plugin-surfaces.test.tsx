@@ -71,7 +71,7 @@ beforeEach(() => {
   setActionDispatcher(dispatch);
   useEmailStore.setState(initialEmailState, true);
   useEmailStore.setState({ selectedMailbox: 'inbox', mailboxes, emails: [], selectedEmailKeys: new Set<string>() });
-  useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+  useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
   useSettingsStore.setState({ interfaceLayout: 'default', hoverActions: ['delete', 'star'], hoverActionsMode: 'inline' } as never);
 });
 
@@ -275,6 +275,16 @@ describe('message-row-actions', () => {
     await act(async () => { fireEvent.click(item); });
     expect(dispatch).toHaveBeenCalledWith('p', 'message-row-actions', 'later', { emailId: 'a' });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('puts them under More actions in the right-click menu of a row, in the browser and the desktop app alike', async () => {
+    act(() => setPluginActions('p', 'Snooze+', 'message-row-actions', [{ id: 'later', label: 'Later' }]));
+    menu({ rowMenu: true });
+    expect(screen.queryByRole('menuitem', { name: 'Later' })).toBeNull();
+    fireEvent.click(screen.getByTestId('ctx-more'));
+    const more = screen.getByRole('menu', { name: 'more_actions' });
+    await act(async () => { fireEvent.click(within(more).getByRole('menuitem', { name: 'Later' })); });
+    expect(dispatch).toHaveBeenCalledWith('p', 'message-row-actions', 'later', { emailId: 'a' });
   });
 
   it('keeps them out of the menu for a multi-selection, and out of an empty menu', () => {

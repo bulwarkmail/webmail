@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FileNode } from '@/lib/jmap/types';
 import { useToastStore } from '@/stores/toast-store';
+import { fileHooks } from '@/lib/plugin-hooks';
 import { SaveToFilesDialog } from '../save-to-files-dialog';
 
 // "Save to Files" files an attachment in a folder of the Files app by its
@@ -61,5 +62,22 @@ describe('SaveToFilesDialog', () => {
     expect(saveHere.disabled).toBe(false);
     fireEvent.click(saveHere);
     await waitFor(() => expect(createFileNode).toHaveBeenCalledWith('invoice.pdf', 'blob-1', 'application/pdf', 1234, null));
+  });
+
+  // The dialog used to file the blob without the upload hooks, so a plugin
+  // that checks what goes into Files never heard about it.
+  it('asks plugins first, as an upload into Files does, and saves nothing when one says no', async () => {
+    const createFileNode = vi.fn().mockResolvedValue({});
+    const veto = vi.fn(() => false);
+    const reg = fileHooks.onBeforeFileUpload.register('dlp', veto);
+    const client = { listAllFileNodes: vi.fn().mockResolvedValue(nodes), createFileNode } as unknown as IJMAPClient;
+    render(<SaveToFilesDialog attachment={attachment} client={client} onClose={vi.fn()} />);
+
+    fireEvent.click(await screen.findByText('Documents'));
+    fireEvent.click(screen.getByRole('button', { name: 'save_here' }));
+
+    await waitFor(() => expect(veto).toHaveBeenCalledWith({ name: 'invoice.pdf', size: 1234, type: 'application/pdf', path: '/Documents' }));
+    expect(createFileNode).not.toHaveBeenCalled();
+    reg.dispose();
   });
 });

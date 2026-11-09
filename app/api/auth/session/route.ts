@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { encryptSession, decryptSession, sessionAuthHeader, type SessionCredentials } from '@/lib/auth/crypto';
 import { SESSION_COOKIE_MAX_AGE, sessionCookieName } from '@/lib/auth/session-cookie';
-import { getCookieOptions } from '@/lib/oauth/cookie-config';
+import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import {
   clearStalwartAuthContextInStore,
@@ -17,15 +17,24 @@ import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
 import { readImpersonationConfig } from '@/lib/impersonation/master-config';
-import { revokeImpersonationCredential } from '@/lib/impersonation/app-password';
+import { revokeImpersonationGrant } from '@/lib/impersonation/revoke-grant';
+import { discardRestore } from '@/lib/impersonation/restore';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { revokeWopiTokens } from '@/lib/wopi/revocation';
 import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, SESSION_TOO_OLD } from '@/lib/auth/session-age';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
-function sessionCookieOptions() {
+/**
+ * A remembered session keeps its cookie for 30 days. One signed in with
+ * "Remember me" unticked (BROWSER_SESSION_SIGN_IN) gets no expiry, so the
+ * browser drops it when its session ends.
+ */
+function sessionCookieOptions(remember = true) {
+  if (!remember) return getSignInCookieOptions(false);
   return {
     ...getCookieOptions(),
     maxAge: SESSION_COOKIE_MAX_AGE,
@@ -43,27 +52,19 @@ function holdsMasterPassword(credentials: SessionCredentials): boolean {
   return !!config && credentials.password === config.masterPassword;
 }
 
-async function revokeImpersonationGrant(
+/**
+ * True when this slot's session is the one an impersonation handoff opened
+ * (GET /api/auth/impersonate). Its username is the plain target mailbox, so
+ * nothing in the session itself tells the two apart; the grant cookie does.
+ */
+function isImpersonationSession(
   cookieStore: Awaited<ReturnType<typeof cookies>>,
-): Promise<void> {
+  slot: number,
+  credentials: SessionCredentials,
+): boolean {
+  if (slot !== 0) return false;
   const grant = openImpersonationGrant(cookieStore.get(IMPERSONATION_GRANT_COOKIE)?.value);
-  cookieStore.delete(IMPERSONATION_GRANT_COOKIE);
-  const config = readImpersonationConfig();
-  if (!grant || !config) return;
-  try {
-    await revokeImpersonationCredential({
-      serverUrl: grant.serverUrl,
-      mailbox: grant.mailbox,
-      masterUser: config.masterUser,
-      masterPassword: config.masterPassword,
-      id: grant.credentialId,
-    });
-  } catch (error) {
-    // The app password still expires on its own; sign-out must not fail.
-    logger.warn('Impersonation credential revocation failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+  return !!grant && grant.mailbox === credentials.username && grant.serverUrl === credentials.serverUrl;
 }
 
 function getSlot(request: NextRequest): number {
@@ -115,16 +116,21 @@ export async function POST(request: NextRequest) {
   try {
     const oauthEnabled = configManager.get<boolean>('oauthEnabled', false);
     const oauthOnly = configManager.get<boolean>('oauthOnly', false);
-    if (oauthEnabled && oauthOnly) {
+    if (oauthEnabled && oauthOnly && !configManager.get<boolean>('oauthPasswordFallbackEnabled', false)) {
       return NextResponse.json({ error: 'Basic authentication is disabled' }, { status: 403 });
     }
 
     // A password signs in with Basic auth, an access token (token login) with
     // Bearer: exactly one of them.
-    const { serverUrl, username, password, token: accessToken, slot: bodySlot } = await request.json();
+    // `remember: false` asks for a cookie that ends with the browser session;
+    // clients that send no flag get the 30-day cookie.
+    const { serverUrl, username, password, token: accessToken, slot: bodySlot, remember } = await request.json();
     if (!serverUrl || !username || typeof (password || accessToken) !== 'string' || !!password === !!accessToken) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
 
     // Pin the upstream URL to a configured JMAP server so an unauthenticated
     // caller cannot point this route at internal hosts. We accept the global
@@ -168,8 +174,8 @@ export async function POST(request: NextRequest) {
     // password. `trusted` only relaxes the public-address requirement.
     // Wrong credentials tried from here count against this server's address
     // upstream, so each client gets a failure budget (lib/auth/verify-budget.ts).
-    const clientIp = loginClientAddress(request);
-    const refund = reserveLoginAttempt(clientIp);
+    const clientIp = loginClientAddress(request, upstreamUrl);
+    const refund = await reserveLoginAttempt(clientIp);
     if (!refund) {
       return NextResponse.json(
         { error: 'too_many_attempts', hint: 'Too many failed sign-in attempts. Try again later.' },
@@ -190,15 +196,15 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       // Only a credential the server rejected spends the budget; an outage
       // or a mismatched claim says nothing about the password.
-      if (!(error instanceof JmapAuthVerificationError && error.status === 401)) refund();
+      if (!(error instanceof JmapAuthVerificationError && error.status === 401)) await refund();
       throw error;
     }
-    refund();
-    // A remembered sign-in starts the maximum session length.
+    await refund();
+    // A sign-in kept here starts the maximum session length.
     const signedInAt = Date.now();
     const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt);
     const cookieStore = await cookies();
-    cookieStore.set(cookieName, token, sessionCookieOptions());
+    cookieStore.set(cookieName, token, sessionCookieOptions(remember !== false));
     setStalwartAuthContextInStore(cookieStore, slot, {
       serverUrl: normalizedServerUrl,
       username,
@@ -213,6 +219,8 @@ export async function POST(request: NextRequest) {
     // The browser counts the maximum session length from the server's time.
     return NextResponse.json(warning ? { ok: true, warning, signedInAt } : { ok: true, signedInAt });
   } catch (error) {
+    // The sign-in limit can't be counted without the shared store: refused.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     if (error instanceof JmapAuthVerificationError) {
       return NextResponse.json(
         verificationFailureBody('session', error, upstreamUrl, upstreamTrusted),
@@ -254,8 +262,9 @@ export async function GET(request: NextRequest) {
 
     // Only return non-sensitive fields. Use PUT to retrieve full credentials.
     const { serverUrl, username } = credentials;
+    const impersonated = isImpersonationSession(cookieStore, slot, credentials);
     return NextResponse.json(
-      { serverUrl, username, signedInAt: age.signedInAt },
+      { serverUrl, username, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) },
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } },
     );
   } catch (error) {
@@ -296,6 +305,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
+    // The device's OS policy refuses this server for now: nothing restores, and the
+    // cookie stays, so the account comes back with no sign-in if the policy does.
+    const refusedByDevice = devicePolicyServerRefusal(credentials.serverUrl);
+    if (refusedByDevice) return refusedByDevice;
+
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 
@@ -306,7 +320,8 @@ export async function PUT(request: NextRequest) {
     });
 
     // The browser counts the maximum session length from the server's time.
-    return NextResponse.json({ ...credentials, signedInAt: age.signedInAt }, {
+    const impersonated = isImpersonationSession(cookieStore, slot, credentials);
+    return NextResponse.json({ ...credentials, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (error) {
@@ -333,15 +348,20 @@ export async function DELETE(request: NextRequest) {
         clearStalwartAuthContextInStore(cookieStore, i);
       }
       await revokeImpersonationGrant(cookieStore);
+      await discardRestore(cookieStore);
       // A phone that already paired keeps its own sign-in; a QR still on
       // screen stops working.
-      clearPairReauthInStore(cookieStore);
+      await clearPairReauthInStore(cookieStore);
     } else {
       const slot = getSlot(request);
       cookieStore.delete(sessionCookieName(slot));
       clearStalwartAuthContextInStore(cookieStore, slot);
-      if (slot === 0) await revokeImpersonationGrant(cookieStore);
-      clearPairReauthInStore(cookieStore, slot);
+      if (slot === 0) {
+        await revokeImpersonationGrant(cookieStore);
+        // Signing out of the impersonation gives up the way back too.
+        await discardRestore(cookieStore);
+      }
+      await clearPairReauthInStore(cookieStore, slot);
     }
 
     return NextResponse.json({ ok: true });

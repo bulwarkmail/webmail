@@ -118,6 +118,46 @@ test("keyboard focus stays visible in Windows contrast themes", async ({ page })
   expect(outlines.filter((o) => o !== "ok" && o !== "skip")).toEqual([]);
 });
 
+test("menus open in place under reduced motion", async ({ page }) => {
+  // Reduce motion shortens transitions to 0.01ms, but Chrome paints a
+  // transition's first frame at its start value: a menu moved from where it
+  // was measured showed there for a frame (the Sort submenu in the corner).
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await signIn(page);
+  // Each frame, where every visible menu is painted.
+  await page.evaluate(() => {
+    const frames = new Map<Element, string[]>();
+    (window as unknown as { __menuFrames: typeof frames }).__menuFrames = frames;
+    const tick = () => {
+      for (const menu of document.querySelectorAll('[role="menu"]')) {
+        if (getComputedStyle(menu).visibility !== "visible") continue;
+        const r = menu.getBoundingClientRect();
+        frames.set(menu, [...(frames.get(menu) ?? []), `${Math.round(r.left)},${Math.round(r.top)}`]);
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  await page.getByTestId("mail-folder-menu").first().click();
+  await page.getByTestId("mail-sort").click();
+  await page.getByTestId("mail-sort-oldest").waitFor();
+  await page.waitForTimeout(500);
+  const result = await page.evaluate(() => {
+    const frames = (window as unknown as { __menuFrames: Map<Element, string[]> }).__menuFrames;
+    const jumps: string[] = [];
+    for (const [menu, seen] of frames) {
+      const r = menu.getBoundingClientRect();
+      const final = `${Math.round(r.left)},${Math.round(r.top)}`;
+      const elsewhere = seen.filter((at) => at !== final);
+      if (elsewhere.length > 0) jumps.push(`${menu.getAttribute("aria-label") ?? "menu"} at ${elsewhere.join(" ")} before ${final}`);
+    }
+    return { jumps, menus: frames.size };
+  });
+  // The ⋮ menu and its Sort submenu.
+  expect(result.menus).toBe(2);
+  expect(result.jumps).toEqual([]);
+});
+
 test("single-key shortcuts don't act behind an open dialog", async ({ page }) => {
   await signIn(page);
   const rows = page.locator(ROWS);

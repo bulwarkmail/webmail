@@ -1,3 +1,4 @@
+import { isStandaloneDisplayMode } from "@/lib/standalone-display";
 import type { ParsedMailto } from "./mailto";
 import type { ParsedWebcal } from "./webcal";
 import { matchSurface } from "@/lib/deep-links";
@@ -136,9 +137,7 @@ function getMailtoClientPriority(info: ProtocolClientInfo): number {
 }
 
 function getDefaultProtocolClientInfo(): ProtocolClientInfo {
-  const nav = navigator as Navigator & { standalone?: boolean };
-  const standalone = window.matchMedia?.("(display-mode: standalone)").matches || nav.standalone === true;
-  return { path: window.location.pathname, standalone, clientId: BROWSER_CLIENT_ID };
+  return { path: window.location.pathname, standalone: isStandaloneDisplayMode(), clientId: BROWSER_CLIENT_ID };
 }
 
 async function requestMailtoViaServiceWorker(value: ParsedMailto, timeoutMs: number): Promise<boolean> {
@@ -357,4 +356,15 @@ export function subscribeToPendingWebcal(callback: () => void): () => void {
 
 export function hasPendingWebcal(): boolean {
   return hasPending(WEBCAL_KEY, isParsedWebcal);
+}
+
+/**
+ * The account a mail link from outside goes out from, with no question: the one marked
+ * default, else the one in use, as Outlook and Thunderbird do. The composer's From can
+ * change it. Only signed-in accounts count.
+ */
+export function mailLinkAccountId(accounts: readonly { id: string }[], defaultId: string | null, activeId: string | null): string | null {
+  if (defaultId && accounts.some((account) => account.id === defaultId)) return defaultId;
+  if (activeId && accounts.some((account) => account.id === activeId)) return activeId;
+  return accounts[0]?.id ?? activeId ?? null;
 }

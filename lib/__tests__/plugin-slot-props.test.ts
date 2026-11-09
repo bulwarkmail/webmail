@@ -34,6 +34,7 @@ describe('slot props follow read permissions', () => {
     ['contact-cryptokeys', 'cryptoKeys', 'contacts:read'],
     ['app-top-banner', 'username', 'account:read'],
     ['app-top-banner', 'serverUrl', 'account:read'],
+    ['app-top-banner', 'impersonated', 'account:read'],
   ] as const)('%s.%s needs %s', (slot, key, perm) => {
     const without = slotPropsFor(plugin([]), slot, { [key]: 'value' });
     const withPerm = slotPropsFor(plugin([perm]), slot, { [key]: 'value' });

@@ -8,6 +8,11 @@
 //              (Stalwart target: the entry document, then the zip)
 //   4. verify    fail on missing files or undocumented /api references
 //
+// With BULWARK_SOURCE_MAPS=1 (CI) the browser source maps move out of out/
+// right after the build, before anything is packed, into SOURCEMAPS_OUT
+// (default sourcemaps/lite-<target>) for the error tracker. Either way the
+// export and the Stalwart zip are checked for maps last.
+//
 // Inputs (env): LITE_TARGET (static | stalwart), LITE_JMAP_SERVER_URL,
 // LITE_APP_NAME, LITE_ALLOW_CUSTOM_ENDPOINT, LITE_REMEMBER_ME, LITE_DEMO_MODE,
 // LITE_NO_THIRD_PARTY_TRAFFIC,
@@ -16,12 +21,14 @@
 // --skip-prepare (tree already pruned), --dry-run (print the plan only).
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { makeBuildId, normalizeBasePath, parseLiteTarget, resolveRepoRoot } from "./lib.mjs";
+import { makeBuildId, normalizeBasePath, parseLiteTarget, resolveRepoRoot, STALWART_ZIP_NAME } from "./lib.mjs";
 import { runPrepare } from "./prepare.mjs";
 import { runPostbuild } from "./postbuild.mjs";
 import { verifyExport } from "./verify.mjs";
+import { buildPstWorker } from "../build-pst-worker.mjs";
+import { check as checkSourceMaps, collect as collectSourceMaps } from "../sourcemaps.mjs";
 
 const repoRoot = resolveRepoRoot(import.meta.url);
 const argv = process.argv.slice(2);
@@ -72,6 +79,10 @@ if (!argv.includes("--skip-prepare")) {
   runPrepare({ argv: argv.filter((a) => a === "--in-place"), env });
 }
 
+// The Outlook PST import worker is a file in public/, which the export copies.
+const pstWorker = await buildPstWorker();
+console.log(`[lite] PST import worker ${pstWorker.bytes} bytes`);
+
 const require = createRequire(import.meta.url);
 const nextBin = require.resolve("next/dist/bin/next", { paths: [repoRoot] });
 console.log(`[lite] next build --turbopack (static export, ${target} target, build ${env.NEXT_PUBLIC_LITE_BUILD_ID})`);
@@ -81,12 +92,25 @@ if (build.status !== 0) {
   process.exit(build.status ?? 1);
 }
 
+if (env.BULWARK_SOURCE_MAPS === "1") {
+  const out = env.SOURCEMAPS_OUT?.trim() || join(repoRoot, "sourcemaps", `lite-${target}`);
+  const moved = collectSourceMaps([join(repoRoot, "out", "_next", "static")], out);
+  console.log(`[lite] moved ${moved.length} source maps to ${out}`);
+}
+
 runPostbuild({ env });
 
 const { problems, locales, apiStrings, zipBytes } = verifyExport({ target });
 if (problems.length > 0) {
   console.error(`[lite] verification failed (${problems.length} problems):`);
   for (const p of problems) console.error(`  - ${p}`);
+  process.exit(1);
+}
+const shipped = [join(repoRoot, "out"), join(repoRoot, STALWART_ZIP_NAME)].filter((p) => existsSync(p));
+const mapProblems = shipped.flatMap((p) => checkSourceMaps(p).map((problem) => `${p}: ${problem}`));
+if (mapProblems.length > 0) {
+  console.error(`[lite] source maps would ship (${mapProblems.length}):`);
+  for (const p of mapProblems.slice(0, 20)) console.error(`  - ${p}`);
   process.exit(1);
 }
 console.log(`[lite] done: out/ holds ${locales.length} locales; ${apiStrings.length} documented /api strings in chunks${zipBytes ? `; zip ${(zipBytes / 1024 / 1024).toFixed(1)} MB` : ""}`);

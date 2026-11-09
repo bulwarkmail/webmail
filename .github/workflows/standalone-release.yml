@@ -40,8 +40,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # With browser and server source maps; Turbopack gives every chunk a
+      # debug ID. The maps go to Bugsink and never into the tarball.
+      # https://bulwarkmail.org/docs/deployment/monitoring
       - name: Build standalone
+        env:
+          BULWARK_SOURCE_MAPS: "1"
         run: npm run build
+
+      # .next/server holds the server chunks' maps; standalone copies the
+      # chunks only. It doesn't ship, but its maps are needed for server frames.
+      - name: Move source maps out of the build
+        run: node scripts/sourcemaps.mjs collect --out sourcemaps .next/static .next/standalone .next/server
+
+      # Turbopack chunks were not checked for being the same on both
+      # platforms, so each one uploads its own.
+      - name: Upload source maps to Bugsink
+        env:
+          BUGSINK_AUTH_TOKEN: ${{ secrets.BUGSINK_AUTH_TOKEN }}
+        run: bash scripts/upload-sourcemaps.sh sourcemaps
 
       - name: Package tarball
         env:
@@ -58,6 +75,9 @@ jobs:
 
           tar -czf "$TARBALL" bulwark-standalone/
           echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
+
+      - name: Check the tarball holds no source maps
+        run: node scripts/sourcemaps.mjs check "$TARBALL"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7

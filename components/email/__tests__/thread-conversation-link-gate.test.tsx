@@ -26,8 +26,14 @@ const { clearAllHooks, uiHooks } = await import('@/lib/plugin-hooks');
 
 const BODY = '<p>hi</p><a id="web" href="https://site.example/a">web</a><a id="app" href="/settings/accounts">app</a>';
 
-function renderBody() {
-  const email = {
+function renderBody(plain?: string) {
+  const email = plain ? {
+    id: 'e1', threadId: 't1', mailboxIds: { a: true }, keywords: { $seen: true },
+    from: [{ name: 'Sender', email: 'sender@t.example' }], to: [{ email: 'me@example.org' }],
+    subject: 's', receivedAt: '2026-09-26T10:00:00Z', size: 1, preview: 'hi', hasAttachment: false,
+    htmlBody: [{ partId: '1', type: 'text/plain' }], textBody: [{ partId: '1', type: 'text/plain' }], attachments: [],
+    bodyValues: { '1': { value: plain } },
+  } : {
     id: 'e1', threadId: 't1', mailboxIds: { a: true }, keywords: { $seen: true },
     from: [{ name: 'Sender', email: 'sender@t.example' }], to: [{ email: 'me@example.org' }],
     subject: 's', receivedAt: '2026-09-26T10:00:00Z', size: 1, preview: 'hi', hasAttachment: false,
@@ -41,6 +47,7 @@ function renderBody() {
       onBack={() => {}}
     />,
   );
+  if (plain) return container as unknown as Document;
   const iframe = container.querySelector('iframe')!;
   // jsdom does not load srcdoc: put the sanitised body in by hand.
   const srcdoc = iframe.getAttribute('srcdoc') ?? '';
@@ -75,6 +82,19 @@ describe('conversation view link gate', () => {
     expect(hook).toHaveBeenCalledTimes(1);
   }, 30_000);
 
+  it('sends a middle-click through the check too, with the link text', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const hook = vi.fn(() => false);
+    uiHooks.onBeforeExternalLink.register('p1', hook);
+    const doc = renderBody();
+
+    const ev = new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 });
+    doc.getElementById('web')!.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(true);
+    await waitFor(() => expect(hook).toHaveBeenCalledWith(expect.objectContaining({ href: 'https://site.example/a', text: 'web' })));
+    expect(open).not.toHaveBeenCalled();
+  }, 30_000);
+
   it('opens nothing when a plugin stops the link', async () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     const hook = vi.fn(() => false);
@@ -84,6 +104,28 @@ describe('conversation view link gate', () => {
     expect(click(doc.getElementById('web')!)).toBe(true);
     await waitFor(() => expect(hook).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 20));
+    expect(open).not.toHaveBeenCalled();
+  }, 30_000);
+});
+
+describe('conversation view link gate, more paths', () => {
+  it('sends a link in a plain-text message through the check', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const hook = vi.fn(() => false);
+    uiHooks.onBeforeExternalLink.register('p1', hook);
+    const root = renderBody('Pay at https://pay.example/x now');
+    const link = root.querySelector('[data-plugin-source="email-body"] a')!;
+    expect(click(link)).toBe(true);
+    await waitFor(() => expect(hook).toHaveBeenCalledWith(expect.objectContaining({ href: 'https://pay.example/x', emailId: 'e1' })));
+    expect(open).not.toHaveBeenCalled();
+  }, 30_000);
+
+  it('leaves a middle-click to the browser while no link check listens', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const doc = renderBody();
+    const ev = new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 });
+    doc.getElementById('web')!.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(false);
     expect(open).not.toHaveBeenCalled();
   }, 30_000);
 });

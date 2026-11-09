@@ -1,5 +1,18 @@
 import type { Identity } from '@/lib/jmap/types';
+import type { SignatureDetails } from '@/lib/org-signature';
 import { NORA, NORA_ALIAS, SUPPORT } from './people';
+
+/**
+ * What Nora filled in under Settings > Account > Your details, for the
+ * organisation signature an administrator sets (lib/org-signature.ts).
+ * The same title and phone as her own signature below.
+ */
+export const DEMO_SIGNATURE_DETAILS: SignatureDetails = {
+  title: 'Engineering Lead',
+  department: 'Platform',
+  phone: '+49 30 555 0199',
+  mobile: '',
+};
 
 export function createDemoIdentities(): Identity[] {
   return [

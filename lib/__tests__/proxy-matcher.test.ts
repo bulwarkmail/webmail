@@ -60,6 +60,13 @@ describe('proxy matcher', () => {
     expect(runs('/webmail/api/settings')).toBe(true);
   });
 
+  it('runs for the bare base path, so it can redirect to a locale (#1455)', async () => {
+    const runs = await proxied('/webmail');
+    expect(runs('/webmail')).toBe(true);
+    expect(runs('/webmail/')).toBe(true);
+    expect(runs('/webmail/en/login')).toBe(true);
+  });
+
   it('keeps the body limit at the default and gives the left-out routes the proxy\'s API headers', async () => {
     vi.resetModules();
     const { default: nextConfig } = (await import('../../next.config')) as { default: NextConfig };

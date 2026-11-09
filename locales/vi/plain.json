@@ -1,0 +1,768 @@
+{
+  "login": {
+    "reconnecting": "Đã mất kết nối. Đang thử kết nối lại…",
+    "error": {
+      "invalid_credentials": "Địa chỉ email hoặc mật khẩu không đúng. Hãy kiểm tra cả hai rồi thử lại.",
+      "invalid_token": "Máy chủ không chấp nhận mã truy cập này. Có thể mã chưa đầy đủ hoặc không còn hiệu lực. Hãy sao chép lại mã hoặc tạo mã mới.",
+      "connection_failed": "Không thể kết nối với máy chủ thư. Hãy kiểm tra kết nối Internet rồi thử lại.",
+      "cors_blocked": "Máy chủ thư vẫn hoạt động nhưng không cho phép đăng nhập từ trang web này. Hãy nhờ quản trị viên cho phép trang web này trên máy chủ.",
+      "server_error": "Máy chủ thư đang gặp sự cố. Hãy thử lại sau vài phút.",
+      "generic": "Đã xảy ra lỗi. Hãy thử lại. Nếu lỗi tiếp diễn, hãy nhờ quản trị viên trợ giúp.",
+      "totp_required": "Tài khoản của bạn cần thêm một mã để đăng nhập. Hãy mở ứng dụng xác thực và nhập mã gồm 6 chữ số bên dưới.",
+      "totp_invalid": "Mã này không đúng hoặc đã hết hạn. Hãy nhập mã hiện đang hiển thị trong ứng dụng xác thực.",
+      "oauth_discovery_failed": "Hiện không thể đăng nhập thông qua tổ chức của bạn. Hãy thử lại sau hoặc liên hệ quản trị viên.",
+      "token_exchange_failed": "Mật khẩu và mã của bạn đúng nhưng máy chủ thư không cho phép ứng dụng này truy cập. Hãy nhờ quản trị viên kiểm tra cài đặt đăng nhập cho ứng dụng này."
+    },
+    "token_hint": "Một số nhà cung cấp thư cho phép dùng mã truy cập thay cho mật khẩu. Hãy tạo mã trong cài đặt của nhà cung cấp thư, sao chép rồi dán vào đây.",
+    "config_error": {
+      "title": "Ứng dụng thư điện tử trên web chưa được thiết lập đúng",
+      "fetch_failed": "Không thể tải cài đặt của ứng dụng thư điện tử trên web. Hãy thử lại sau vài phút.",
+      "server_not_configured": "Chưa thiết lập máy chủ thư. Hãy nhờ quản trị viên thiết lập."
+    },
+    "session_expired": "Bạn đã được đăng xuất. Hãy đăng nhập lại để tiếp tục.",
+    "oauth_error": {
+      "title": "Đăng nhập không thành công",
+      "invalid_state": "Quá trình đăng nhập bị gián đoạn. Hãy bắt đầu lại.",
+      "missing_params": "Thiếu một số dữ liệu đăng nhập. Hãy bắt đầu lại.",
+      "token_exchange_failed": "Không thể hoàn tất đăng nhập. Hãy thử lại.",
+      "access_denied": "Bạn không được phép đăng nhập tại đây. Hãy nhờ quản trị viên cấp quyền truy cập."
+    }
+  },
+  "session_limits": {
+    "idle_message": "Bạn đã không thao tác trong một khoảng thời gian. Bạn sẽ được đăng xuất sau {seconds, plural, one {# giây} other {# giây}}. Các thư bạn đang soạn sẽ được lưu thành bản nháp.",
+    "max_message": "Tổ chức của bạn tự động đăng xuất sau {hours, plural, one {# giờ} other {# giờ}} kể từ khi bạn đăng nhập. Bạn sẽ được đăng xuất sau {seconds, plural, one {# giây} other {# giây}}. Các thư bạn đang soạn sẽ được lưu thành bản nháp.",
+    "reason_max": "Bạn đã được đăng xuất vì đã đăng nhập trong {hours, plural, one {# giờ} other {# giờ}}. Đây là thời gian tối đa tổ chức của bạn cho phép.",
+    "drafts_not_saved": "Không thể lưu một số thư bạn đang soạn thành bản nháp."
+  },
+  "totp_reauth": {
+    "title": "Nhập mã mới",
+    "description": "Mã trước đó của bạn không còn hiệu lực. Hãy mở ứng dụng xác thực và nhập mã mới để tiếp tục.",
+    "oauth_hint": "Yêu cầu này sẽ xuất hiện lại sau một khoảng thời gian. Quản trị viên có thể ngừng yêu cầu này bằng cách bật phương thức đăng nhập khác (OAuth).",
+    "code_label": "Mã từ ứng dụng xác thực"
+  },
+  "email_list": {
+    "permanent_delete_confirm_message": "Thư này sẽ bị xóa vĩnh viễn. Bạn không thể khôi phục lại.",
+    "permanent_delete_confirm_batch_message": "{count, plural, one {Thư này} other {# thư này}} sẽ bị xóa vĩnh viễn. Bạn không thể khôi phục {count, plural, one {thư này} other {các thư này}}.",
+    "empty_folder": {
+      "confirm_message": "Tất cả thư trong thư mục này sẽ bị xóa vĩnh viễn. Bạn không thể khôi phục lại."
+    }
+  },
+  "email_viewer": {
+    "read_receipt": {
+      "send_failed": "Không thể gửi xác nhận đã đọc"
+    },
+    "archive_mailbox_not_found": "Không có thư mục Lưu trữ nên không thể lưu trữ thư",
+    "source_load_failed": "Không thể tải nội dung gốc của thư. Hãy thử lại hoặc lưu thư thành tệp (.eml).",
+    "spam": {
+      "error": "Không thể đánh dấu thư này là thư rác. Hãy thử lại.",
+      "error_not_spam": "Không thể chuyển thư trở lại. Hãy thử lại."
+    },
+    "unsubscribe_banner": {
+      "error": "Hủy đăng ký không thành công. Hãy thử lại sau."
+    },
+    "calendar_invitation": {
+      "parse_error": "Không thể đọc lời mời này",
+      "action_failed": "Thao tác đó không thực hiện được trong lịch của bạn. Hãy thử lại."
+    },
+    "undo_send_failed": "Không thể dừng gửi. Thư có thể đã được gửi.",
+    "undo_send_signed_out": "Không thể dừng gửi vì bạn không còn đăng nhập vào tài khoản gửi thư này.",
+    "send_cancelled_restore_failed": "Đã dừng gửi nhưng không thể đưa thư trở lại Bản nháp. Thư vẫn nằm trong Đã gửi.",
+    "send_cancelled_remove_failed": "Đã dừng gửi nhưng không thể xóa thư khỏi Đã gửi.",
+    "cancel_scheduled_failed": "Không thể hủy lịch gửi. Hãy thử lại.",
+    "save_to_files": {
+      "failed": "Không thể lưu tệp vào Tệp. Hãy thử lại."
+    }
+  },
+  "email_composer": {
+    "files_picker": {
+      "load_failed": "Không thể tải các tệp của bạn. Hãy thử lại."
+    },
+    "save_failed": "Không thể lưu bản nháp. Hãy thử lại.",
+    "validation": {
+      "invalid_recipients": "Chưa gửi. Các địa chỉ sau không đúng: {addresses}",
+      "attachment_upload_failed": "Chưa gửi. Không thể tải lên một tệp đính kèm. Hãy xóa tệp đó rồi thử lại."
+    },
+    "upload_failed": "Không thể tải lên {filename}. Hãy thử lại.",
+    "send_failed": "Thư của bạn chưa được gửi. Hãy thử lại.",
+    "send_offline": "Bạn chưa kết nối Internet. Thư của bạn vẫn ở đây. Hãy gửi lại khi có kết nối mạng.",
+    "send_timeout": "Máy chủ ngừng phản hồi. Thư có thể đã được gửi. Hãy kiểm tra thư mục Đã gửi trước khi gửi lại.",
+    "submission_limit": "Máy chủ không gửi thư vì bạn đã đạt giới hạn: {reason}",
+    "send_plugin_failed": "Chưa gửi. Tiện ích bổ sung dùng để gửi thư không hoạt động hoặc mất quá nhiều thời gian. Hãy kiểm tra thư mục Đã gửi trước khi gửi lại.",
+    "schedule_send_invalid": "Nhập ngày và giờ.",
+    "schedule_send_cleanup_warning": "Thư sẽ được gửi vào thời điểm đã chọn. Tuy nhiên, không thể xóa bản nháp nên bản nháp vẫn nằm trong Bản nháp.",
+    "invalid_recipient": "Đây không phải địa chỉ email hợp lệ",
+    "send_filing_warning": "Đã gửi. Tuy nhiên, bản nháp cũ của thư này có thể vẫn nằm trong Bản nháp.",
+    "send_guard_failed": "Chưa gửi. Tiện ích bổ sung dùng để kiểm tra thư trước khi gửi không hoạt động hoặc không phản hồi.",
+    "attachment_upload_failed": "Không thể tải lên"
+  },
+  "common": {
+    "reconnecting": "Đã mất kết nối. Đang thử kết nối lại…"
+  },
+  "notifications": {
+    "error_archiving": "Không thể lưu trữ thư. Hãy thử lại.",
+    "error_updating": "Không thể thay đổi thư. Hãy thử lại.",
+    "error_sending": "Thư của bạn chưa được gửi. Hãy thử lại.",
+    "error_deleting": "Không thể xóa thư. Hãy thử lại.",
+    "error_loading": "Không thể tải các thư của bạn. Hãy thử lại.",
+    "move_failed": "Không thể di chuyển. Hãy thử lại.",
+    "undo_failed": "Không thể hoàn tác. Hãy thử lại.",
+    "copy_failed": "Không thể sao chép. Hãy thử lại.",
+    "move_error": "Không thể di chuyển các thư vào thư mục này. Hãy thử lại.",
+    "tag_failed": "Không thể thêm nhãn. Hãy thử lại.",
+    "identity_create_failed": "Không thể thêm địa chỉ người gửi: {error}",
+    "identity_update_failed": "Không thể thay đổi địa chỉ người gửi: {error}",
+    "identity_delete_failed": "Không thể xóa địa chỉ người gửi: {error}",
+    "identity_unauthorized": "Bạn không được phép gửi thư từ địa chỉ email này. Hãy liên hệ quản trị viên nếu cần sử dụng địa chỉ này.",
+    "vacation_save_failed": "Không thể lưu thư trả lời tự động của bạn. Hãy thử lại.",
+    "filters_save_failed": "Không thể lưu các quy tắc lọc của bạn. Hãy thử lại.",
+    "export_email_error": "Không thể lưu thư thành tệp. Hãy thử lại.",
+    "rule_apply_failed": "Không thể áp dụng quy tắc cho các thư hiện có",
+    "rule_folder_failed": "Không thể tạo thư mục. Hãy thử lại.",
+    "vacation_filters_save_failed": "Đã lưu thư trả lời tự động. Tuy nhiên, không thể lưu cài đặt chuyển tiếp và danh sách người nhận trả lời. Hãy thử lại."
+  },
+  "settings": {
+    "reset_confirm": "Đưa tất cả cài đặt về trạng thái ban đầu?",
+    "themes": {
+      "description": "Chọn giao diện. Quản trị viên có thể thêm các giao diện khác.",
+      "locked": "Quản trị viên đã chọn giao diện. Bạn không thể thay đổi.",
+      "forced": "Quản trị viên đã chọn giao diện \"{name}\". Bạn không thể thay đổi."
+    },
+    "appearance": {
+      "message_list_order": {
+        "description": "Thứ tự thư trong danh sách. Máy chủ sắp xếp toàn bộ thư mục, không chỉ các thư bạn đang thấy.",
+        "tiebreak_note": "Bạn có thể chọn tối đa ba tiêu chí. Tiêu chí sau chỉ được xét khi các tiêu chí trước cho kết quả bằng nhau. Cuối cùng, thư mới nhất luôn được xếp trước.",
+        "scope": {
+          "description": "Khi tắt, thứ tự này chỉ áp dụng cho Hộp thư đến. Các thư mục khác hiển thị thư mới nhất trước."
+        },
+        "unsupported_note": "Máy chủ thư không thể sắp xếp theo trạng thái đã đọc hoặc chưa đọc, dấu sao hoặc thẻ. Các tiêu chí đó sẽ bị bỏ qua và thư mới nhất được xếp trước."
+      },
+      "description": "Thay đổi giao diện của ứng dụng thư điện tử trên web",
+      "font_size": {
+        "description": "Tăng hoặc giảm cỡ chữ"
+      },
+      "list_density": {
+        "description": "Khoảng cách giữa các mục"
+      },
+      "animations": {
+        "description": "Hiển thị chuyển động nhẹ nhàng khi các thành phần mở hoặc đóng"
+      },
+      "toolbar_position": {
+        "description": "Vị trí các nút thao tác với thư, như Trả lời, Lưu trữ hoặc Xóa"
+      },
+      "toolbar_labels": {
+        "description": "Hiển thị chữ bên cạnh biểu tượng của nút. Tắt để tiết kiệm chỗ khi bạn đã quen với các biểu tượng."
+      },
+      "hide_account_switcher": {
+        "description": "Ẩn danh sách tài khoản phía trên danh sách thư mục. Bạn vẫn có thể đổi tài khoản ở cuối thanh bên trái."
+      },
+      "show_rail_account_list": {
+        "label": "Hiển thị tài khoản của bạn trên thanh bên trái",
+        "description": "Hiển thị một hình tròn cho mỗi tài khoản ở cuối thanh bên trái để bạn đổi tài khoản nhanh chóng. Nút đăng xuất nằm bên dưới."
+      },
+      "unified_mailbox": {
+        "description": "Hiển thị các thư mục gộp thư từ nhiều tài khoản, chẳng hạn một Hộp thư đến chung. Bạn cần có nhiều tài khoản hoặc hộp thư nhóm bên dưới để thấy các thư mục này.",
+        "cross_account": {
+          "description": "Gộp thư từ tất cả tài khoản của bạn, không chỉ tài khoản đang dùng."
+        },
+        "include_group": {
+          "description": "Thêm cả các hộp thư đến mà bạn dùng chung với nhóm."
+        }
+      },
+      "all_mail": {
+        "folders_description": "Chọn các thư mục của tài khoản này sẽ xuất hiện trong danh sách Tất cả thư, Chưa đọc và Đã gắn dấu sao."
+      },
+      "tint_list_rows": {
+        "description": "Tô màu mỗi thư trong danh sách theo màu thẻ đầu tiên của thư đó. Khi tắt, màu thẻ vẫn xuất hiện ở các chấm nhỏ."
+      },
+      "show_folder_total_count": {
+        "description": "Hiển thị tổng số thư trong thư mục hoặc thẻ bên cạnh số thư chưa đọc."
+      },
+      "favicon_unread_badge": {
+      },
+      "show_shared_mail_accounts": {
+        "description": "Hiển thị thư mục của các hộp thư được chia sẻ với bạn trong mục Đã chia sẻ của danh sách thư mục. Tắt để ẩn tất cả hoặc ẩn từng tài khoản bên dưới. Lịch và danh bạ của các tài khoản đó vẫn được giữ lại."
+      },
+      "pro_interface": {
+        "description": "Bố cục cho màn hình lớn, hỗ trợ nhiều tab và nhiều tài khoản cùng lúc. Bạn có thể trở về bố cục thông thường bất cứ lúc nào."
+      },
+      "account_marker": {
+        "description": "Trong các thư mục hợp nhất, đánh dấu từng thư bằng màu của tài khoản tương ứng."
+      }
+    },
+    "keywords": {
+      "description": "Tạo thẻ để sắp xếp thư. Các thẻ được lưu cùng thư trên máy chủ.",
+      "migration_error": "Không thể thay đổi thẻ trên các thư của bạn. Hãy thử lại.",
+      "filters_migration_error": "Một số quy tắc lọc vẫn dùng thẻ cũ. Bạn cần tự sửa các quy tắc đó.",
+      "nesting": {
+        "description": "Đặt thẻ bên trong thẻ khác, giống như thư mục. Thanh bên hiển thị chúng theo dạng cây."
+      },
+      "has_children_locked": "Thẻ này chứa các thẻ khác nên bạn không thể đổi tên hoặc di chuyển. Hãy di chuyển hoặc xóa các thẻ bên trong trước.",
+      "has_children_delete": "Hãy xóa các thẻ bên trong thẻ này trước",
+      "unrecognized": {
+        "description": "Trình duyệt này lưu tên và màu thẻ. Bản thân các thẻ được lưu trên thư. Hãy tìm các thẻ còn thiếu trong thư của bạn rồi thêm lại vào đây.",
+        "partial": "Chỉ tìm trong {scanned} thư mới nhất trên tổng số {total} thư. Các thẻ chỉ có trên thư cũ hơn có thể bị thiếu.",
+        "error": "Không thể tìm thẻ trong thư của bạn. Hãy thử lại."
+      }
+    },
+    "notifications": {
+      "push": {
+        "description": "Nhận thông báo thư mới trên màn hình ngay cả khi trang web này đã đóng. Dịch vụ chuyển thông báo không thấy nội dung thư của bạn.",
+        "relay_label": "Dịch vụ thông báo",
+        "relay_desc": "Dịch vụ chuyển thông báo đến thiết bị của bạn. Quản trị viên quyết định những dịch vụ bạn có thể chọn.",
+        "relay_locked_desc": "Quản trị viên đã chọn dịch vụ thông báo. Bạn không thể thay đổi.",
+        "status_unsupported": "Trình duyệt này không thể hiển thị thông báo khi trang web đã đóng",
+        "status_lite": "Phiên bản ứng dụng thư điện tử trên web này không thể gửi thông báo khi đã đóng.",
+        "reenable": "Bật lại",
+        "ios_hint": "Trên iPhone và iPad, trước tiên hãy thêm trang web này vào màn hình chính. Safari chỉ gửi thông báo cho các trang web trên màn hình chính.",
+        "devices_title": "Thiết bị nhận thông báo",
+        "devices_desc": "Tất cả thiết bị nhận thông báo cho tài khoản này. Nếu xóa một thiết bị, thiết bị đó sẽ ngừng nhận thông báo ngay lập tức.",
+        "devices_error": "Không thể tải danh sách thiết bị. Hãy thử lại.",
+        "device_status_unknown": "Dịch vụ thông báo không nhận diện được thiết bị này",
+        "revoke": "Xóa",
+        "confirm_revoke_title": "Xóa thiết bị này?",
+        "confirm_revoke_message": "Thiết bị sẽ ngừng nhận thông báo ngay lập tức. Để nhận lại, hãy bật lại thông báo trên thiết bị đó.",
+        "confirm_revoke_message_this": "Thiết bị này sẽ ngừng nhận thông báo ngay lập tức.",
+        "shared_mailboxes_no_push": "Bạn không nhận được thông báo cho các hộp thư được người khác chia sẻ với bạn.",
+        "error_forbidden": "Máy chủ thư không cho phép thông báo đối với tài khoản này.",
+        "error_over_quota": "Quá nhiều thiết bị nhận thông báo cho tài khoản này (giới hạn thường là 15). Hãy xóa các thiết bị không còn dùng rồi thử lại."
+      },
+      "push_all": {
+        "description": "Bật hoặc tắt thông báo cho nhiều tài khoản cùng lúc.",
+        "result_partial": "Đã bật cho {enabled} tài khoản. Không bật được cho {failed} tài khoản."
+      },
+      "sound_selection": {
+        "choose_desc": "Chọn âm thanh. Nhấp vào biểu tượng loa để nghe thử."
+      },
+      "email": {
+        "description": "Chọn cách nhận thông báo thư mới",
+        "inbox_only_desc": "Chỉ thông báo về thư trong Hộp thư đến, không thông báo về thư được bộ lọc chuyển vào thư mục khác"
+      },
+      "calendar": {
+        "description": "Chọn cách nhận thông báo về các cuộc hẹn"
+      }
+    },
+    "language_region": {
+      "description": "Ngôn ngữ, cách hiển thị ngày giờ và các thiết lập khác theo quốc gia của bạn",
+      "date_locale": {
+        "description": "Thứ tự ngày, tháng và năm khi hiển thị ngày"
+      },
+      "time_format": {
+        "description": "Hiển thị giờ như 3:00 PM (12 giờ) hoặc 15:00 (24 giờ)"
+      },
+      "time_zone": {
+        "description": "Hiển thị thời gian của thư và cuộc hẹn theo múi giờ này. Nếu không chọn, múi giờ của trình duyệt sẽ được sử dụng."
+      }
+    },
+    "email_behavior": {
+      "inbox_type": {
+        "description": "Với tùy chọn \"Chưa đọc trước\", 25 thư chưa đọc mới nhất sẽ xuất hiện ở đầu Hộp thư đến"
+      },
+      "clear_search_on_folder_change": {
+        "description": "Khi mở thư mục khác, tìm kiếm sẽ kết thúc và bạn thấy toàn bộ thư mục. Khi tắt tùy chọn này, tìm kiếm sẽ tiếp tục trong thư mục mới."
+      },
+      "request_read_receipt": {
+        "label": "Luôn yêu cầu xác nhận đã đọc",
+        "description": "Thư mới sẽ yêu cầu người nhận thông báo khi họ mở thư. Bạn có thể tắt yêu cầu này cho từng thư."
+      },
+      "read_receipt_response": {
+        "label": "Khi người gửi yêu cầu xác nhận đã đọc",
+        "description": "Một số người gửi muốn được thông báo khi bạn mở thư của họ. Chọn cách xử lý yêu cầu đó."
+      },
+      "description": "Chọn cách xử lý thư của bạn",
+      "mark_read": {
+        "description": "Thời điểm thư đã mở được tính là đã đọc"
+      },
+      "delete_action": {
+        "description": "Điều gì xảy ra khi bạn xóa thư",
+        "warning": "Thư đã xóa sẽ mất vĩnh viễn. Bạn không thể khôi phục lại."
+      },
+      "message_spacing": {
+        "description": "Khoảng cách quanh phần văn bản của thư đang mở"
+      },
+      "archive_mode": {
+        "description": "Cách sắp xếp thư lưu trữ vào thư mục"
+      },
+      "permanently_delete_junk": {
+        "label": "Xóa vĩnh viễn thư rác",
+        "description": "Khi xóa thư trong thư mục Thư rác, thư sẽ bị xóa vĩnh viễn mà không chuyển vào Thùng rác trước."
+      },
+      "confirm_bulk_delete": {
+        "description": "Hỏi trước khi chuyển nhiều thư đã chọn vào Thùng rác. Luôn hỏi trước khi xóa vĩnh viễn."
+      },
+      "list_columns": {
+        "description": "Hiển thị danh sách dưới dạng bảng với các cột Từ, Tiêu đề, Ngày và Kích thước."
+      },
+      "show_verification_codes": {
+        "description": "Khi thư chứa mã đăng nhập hoặc mã xác nhận, hiển thị nút sao chép mã. Trong danh sách thư, nút này hiển thị trong một ngày."
+      },
+      "plain_text_mode": {
+        "description": "Soạn tất cả thư dưới dạng văn bản thuần, không có chữ đậm, màu sắc hoặc hình ảnh. Áp dụng cả cho thư trả lời và thư chuyển tiếp."
+      },
+      "auto_select_reply_identity": {
+        "description": "Khi trả lời, thư sẽ được gửi từ địa chỉ đã nhận thư gốc. Áp dụng cho tất cả địa chỉ riêng của bạn."
+      },
+      "reply_identity_match": {
+        "label": "Những địa chỉ được tính là của bạn",
+        "description": "\"Chỉ địa chỉ khớp chính xác\" chỉ dùng các địa chỉ bạn đã thiết lập. \"Mọi địa chỉ trên miền của tôi\" còn cho phép trả lời từ các địa chỉ khác trên miền của bạn. Hãy chọn địa chỉ khớp chính xác nếu các địa chỉ khác là danh sách gửi thư của nhóm."
+      },
+      "signature_position": {
+        "description": "Vị trí chữ ký khi trả lời hoặc chuyển tiếp. Đặt phía trên phần trích dẫn để kết thúc câu trả lời của bạn. Đặt phía dưới để giữ nguyên phần thư cũ liền mạch."
+      },
+      "signature_separator": {
+        "label": "Dòng phân cách trước chữ ký",
+        "description": "Thêm dòng \"-- \" thông dụng trước chữ ký. Nhiều ứng dụng thư dùng dòng này để nhận diện chữ ký."
+      },
+      "sub_address_delimiter": {
+        "label": "Ký tự trước thẻ địa chỉ",
+        "description": "Ký tự giữa tên người dùng và thẻ trong địa chỉ, như user{delimiter}tag@domain.com. Hãy dùng cùng ký tự với máy chủ thư."
+      },
+      "attachment_click_action": {
+        "label": "Khi nhấp vào tệp đính kèm",
+        "description": "Chọn xem nhấp vào tệp đính kèm sẽ hiển thị tệp hay lưu tệp vào thiết bị"
+      },
+      "always_light_mode": {
+        "description": "Hiển thị thư trên nền sáng ngay cả khi ứng dụng dùng chế độ tối. Một số thư có thể hiển thị không đúng khi chuyển sang nền tối."
+      },
+      "external_content": {
+        "label": "Hình ảnh từ Internet",
+        "description": "Chọn có hiển thị hình ảnh được thư tải từ Internet hay không. Việc tải hình ảnh có thể cho người gửi biết bạn đã mở thư."
+      },
+      "trusted_senders": {
+        "description": "Những người gửi có hình ảnh luôn được hiển thị",
+        "empty_description": "Khi hình ảnh trong thư bị chặn, nhấp vào \"Luôn tin tưởng người gửi này\" để thêm người gửi vào đây.",
+        "save_error": "Không thể lưu danh sách. Hãy thử lại.",
+        "use_address_book_label": "Lưu danh sách trong sổ địa chỉ",
+        "use_address_book_description": "Lưu những người gửi đáng tin cậy vào một sổ địa chỉ riêng. Nhờ đó, danh sách giống nhau trên mọi thiết bị của bạn."
+      },
+      "hover_actions": {
+        "description": "Các nút xuất hiện khi bạn di chuột lên một thư trong danh sách"
+      },
+      "default_mail_program": {
+        "description": "Mở liên kết email trên trang web (liên kết mailto:) trong {appName}",
+        "error": "Trình duyệt của bạn không hỗ trợ thao tác này"
+      },
+      "attachment_reminder": {
+        "description": "Nếu thư đề cập đến tệp đính kèm nhưng chưa đính kèm tệp nào, bạn sẽ nhận được cảnh báo trước khi gửi",
+        "keywords_label": "Những từ kích hoạt lời nhắc",
+        "keywords_description": "Nếu thư chứa một trong các từ này, bạn sẽ nhận được lời nhắc"
+      },
+      "placeholder_warning": {
+        "description": "Hỏi trước khi gửi nếu thư vẫn còn chỗ cần điền, như [TIME] hoặc [Your Name], trường mẫu còn trống hoặc ghi chú như TODO."
+      },
+      "recipient_mentions": {
+        "description": "Nhập @ trong nội dung thư để chọn một người nhận. Tên của họ sẽ được chèn vào văn bản. Nhấn Enter hoặc Tab để chọn tên đang được đánh dấu."
+      },
+      "mention_adds_recipient": {
+        "description": "Khi nhập @, bạn cũng có thể chọn người trong danh bạ. Nếu họ chưa có trong danh sách người nhận, họ sẽ được thêm vào thư."
+      },
+      "hide_inline_image_attachments": {
+        "label": "Không liệt kê hình ảnh trong nội dung thư như tệp đính kèm",
+        "description": "Hình ảnh trong nội dung thư không xuất hiện lại trong danh sách tệp đính kèm"
+      },
+      "attachment_image_previews": {
+        "description": "Hiển thị ảnh thu nhỏ của hình ảnh đính kèm thay cho biểu tượng tệp"
+      },
+      "send_delay": {
+        "description": "Thư sẽ chờ vài giây trước khi được gửi. Trong thời gian đó, bạn vẫn có thể dừng gửi.",
+        "unsupported": "Máy chủ thư của tài khoản này không hỗ trợ chờ trước khi gửi. Cài đặt này vẫn được lưu cho các tài khoản khác."
+      },
+      "swipe_right_action": {
+        "description": "Trên màn hình cảm ứng: thao tác thực hiện khi vuốt thư sang phải."
+      },
+      "swipe_left_action": {
+        "description": "Trên màn hình cảm ứng: thao tác thực hiện khi vuốt thư sang trái."
+      },
+      "rtl_editing": {
+        "label": "Viết từ phải sang trái",
+        "description": "Thêm nút vào khung soạn thư để bạn viết đoạn văn từ trái sang phải hoặc từ phải sang trái."
+      }
+    },
+    "account": {
+      "description": "Xem thông tin chi tiết của tài khoản",
+      "auth_method_label": "Cách bạn đăng nhập",
+      "auth_method_oauth": "Trang đăng nhập của tổ chức bạn",
+      "server": {
+        "label": "Địa chỉ máy chủ thư"
+      },
+      "accounts": {
+        "description": "Kéo các tài khoản để đổi thứ tự trong danh sách tài khoản"
+      },
+      "backup": {
+        "description": "Lưu danh sách tài khoản trên máy chủ và khôi phục trên thiết bị khác. Danh sách được bảo vệ bằng mật khẩu chỉ bạn biết. Mật khẩu hộp thư không được lưu nên bạn cần đăng nhập lại vào từng tài khoản.",
+        "description_passwords": "Lưu danh sách tài khoản trên máy chủ và khôi phục trên thiết bị khác. Danh sách được bảo vệ bằng mật khẩu chỉ bạn biết. Bạn cũng có thể lưu mật khẩu hộp thư để các tài khoản tự đăng nhập.",
+        "password_hint": "Dùng ít nhất 10 ký tự. Không ai có thể đặt lại mật khẩu này. Nếu quên, hãy lưu lại danh sách bằng mật khẩu mới.",
+        "restore_hint": "Mật khẩu bạn đã chọn khi lưu danh sách.",
+        "include_passwords_hint": "Sau khi khôi phục danh sách, các tài khoản này sẽ tự đăng nhập. Hãy lưu ý: bất kỳ ai biết mật khẩu bản sao lưu đều có thể mở mọi hộp thư trong danh sách.",
+        "skipped": "{count, plural, one {Không thêm được # tài khoản} other {Không thêm được # tài khoản}} vì bạn đã có số tài khoản tối đa được phép.",
+        "sign_in_failed": "{count, plural, one {# mật khẩu đã lưu không dùng được} other {# mật khẩu đã lưu không dùng được}}. Hãy tự đăng nhập vào các tài khoản này từ danh sách tài khoản.",
+        "errors": {
+          "unlock_failed": "Mật khẩu không đúng hoặc danh sách này thuộc tài khoản khác.",
+          "owner_signin_required": "Hãy đăng nhập lại vào tài khoản này rồi thử lại.",
+          "https_required": "Chỉ hoạt động qua kết nối an toàn (địa chỉ bắt đầu bằng https).",
+          "storage_failed": "Máy chủ không thể lưu hoặc mở danh sách. Hãy thử lại sau."
+        }
+      },
+      "shared_accounts": {
+        "description": "Các tài khoản bạn dùng chung với người khác và được phép quản lý. Chọn một tài khoản để thay đổi bộ lọc, thư trả lời tự động, lịch và danh bạ của tài khoản đó."
+      }
+    },
+    "security": {
+      "description": "Đổi mật khẩu và bảo vệ tài khoản",
+      "not_available": "Bạn không thể thay đổi cài đặt bảo mật cho máy chủ thư này tại đây. Máy chủ có thể không cho phép. Xem <a href=\"https://bulwarkmail.org/docs/guides/account-security\" class=\"underline hover:opacity-80\" target=\"_blank\">tài liệu</a> để biết thêm.",
+      "password": {
+        "error_title": "Mật khẩu của bạn chưa được thay đổi",
+        "error_mismatch": "Hai mật khẩu mới không giống nhau. Hãy nhập lại.",
+        "error_min_length": "Mật khẩu phải có ít nhất 8 ký tự",
+        "error_generic": "Không thể đổi mật khẩu. Hãy thử lại."
+      },
+      "display_name": {
+        "description": "Tên mà máy chủ thư hiển thị cho bạn",
+        "error": "Không thể thay đổi tên của bạn. Hãy thử lại."
+      },
+      "totp": {
+        "description": "Tăng cường bảo vệ tài khoản: khi đăng nhập, bạn cần nhập thêm mã từ ứng dụng trên điện thoại",
+        "enable_error": "Không thể bật xác thực hai yếu tố. Hãy thử lại.",
+        "disable_error": "Không thể tắt xác thực hai yếu tố. Hãy thử lại.",
+        "setup_instructions": "Mở ứng dụng xác thực (ví dụ Google Authenticator hoặc Authy) rồi thêm liên kết này:",
+        "verification_code": "Mã từ ứng dụng",
+        "disable_confirm_prompt": "Để tắt xác thực hai yếu tố, hãy nhập mật khẩu.",
+        "password_required": "Nhập mật khẩu",
+        "code_required": "Nhập mã từ ứng dụng",
+        "code_invalid": "Mã này không đúng hoặc đã hết hạn. Hãy nhập mã hiện đang hiển thị trong ứng dụng."
+      },
+      "app_passwords": {
+        "description": "Mật khẩu bổ sung cho các ứng dụng thư không hỗ trợ yêu cầu mã xác thực thứ hai, chẳng hạn một số ứng dụng thư trên điện thoại",
+        "allowed_ips_label": "Chỉ cho phép từ các địa chỉ Internet này (tùy chọn)",
+        "allowed_ips_hint": "Phân tách các địa chỉ bằng dấu phẩy hoặc dấu cách. Để trống để cho phép mọi địa chỉ.",
+        "copy_now_warning": "Hãy sao chép mật khẩu này ngay. Bạn sẽ không thể xem lại.",
+        "add_error": "Không thể tạo mật khẩu ứng dụng. Hãy thử lại.",
+        "remove_error": "Không thể xóa mật khẩu ứng dụng. Hãy thử lại.",
+        "delete_message": "Các ứng dụng dùng {name} sẽ không thể đăng nhập nữa."
+      },
+      "api_keys": {
+        "description": "Khóa dành cho chương trình và tập lệnh tự làm việc với hộp thư mà không cần bạn thao tác, ví dụ để sao lưu",
+        "copy_now_warning": "Hãy sao chép khóa này ngay. Bạn sẽ không thể xem lại.",
+        "add_error": "Không thể tạo khóa. Hãy thử lại.",
+        "remove_error": "Không thể xóa khóa. Hãy thử lại.",
+        "delete_message": "Các chương trình và tập lệnh dùng {name} sẽ ngừng hoạt động."
+      },
+      "encryption": {
+        "label": "Lưu trữ thư được mã hóa",
+        "description": "Máy chủ lưu thư của bạn dưới dạng được khóa. Chỉ khóa của bạn mới mở được.",
+        "error": "Không thể thay đổi cài đặt mã hóa. Hãy thử lại.",
+        "algorithm_label": "Loại mã hóa",
+        "encrypt_on_append": "Mã hóa cả thư được các ứng dụng thêm vào hộp thư",
+        "allow_spam_training": "Cho phép bộ lọc thư rác học từ thư mới trước khi thư được mã hóa",
+        "disable_message": "Từ bây giờ, máy chủ lưu thư mới mà không mã hóa."
+      },
+      "public_keys": {
+        "key_label": "Khóa công khai (S/MIME hoặc PGP, dạng văn bản)",
+        "add_error": "Không thể thêm khóa công khai. Hãy kiểm tra xem bạn đã dán đầy đủ khóa hay chưa.",
+        "remove_error": "Không thể xóa khóa công khai. Hãy thử lại."
+      },
+      "link_device": {
+        "description": "Đăng nhập vào ứng dụng Bulwark Mail trên điện thoại mà không cần nhập mật khẩu. Điện thoại có phiên đăng nhập riêng. Nếu đăng xuất tại đây, điện thoại vẫn giữ trạng thái đăng nhập.",
+        "error": "Không thể tạo mã. Hãy thử lại.",
+        "password_prompt": "Nhập mật khẩu để xác nhận đó là bạn. Mật khẩu không được gửi đến điện thoại.",
+        "error_not_signed_in": "Bạn đã được đăng xuất. Hãy đăng nhập lại rồi liên kết điện thoại.",
+        "error_impersonation": "Bạn đang xem hộp thư của người khác. Bạn không thể liên kết điện thoại từ đây.",
+        "error_too_many_attempts": "Bạn đã thử quá nhiều lần. Hãy chờ một lát rồi thử lại.",
+        "error_session_secret": "Máy chủ này chưa thiết lập tính năng liên kết điện thoại. Hãy liên hệ quản trị viên.",
+        "error_server_unreachable": "Không thể kết nối với máy chủ thư. Hãy thử lại.",
+        "error_pairing_unavailable": "Máy chủ thư không cho phép liên kết điện thoại theo cách này. Hãy liên hệ quản trị viên.",
+        "error_insecure_server": "Ứng dụng trên điện thoại cần kết nối an toàn với máy chủ thư (https). Máy chủ này chưa có kết nối đó."
+      },
+      "sections": {
+        "devices_description": "Đọc thư trong các ứng dụng khác và trên thiết bị khác."
+      }
+    },
+    "identities": {
+      "description": "Các địa chỉ email bạn có thể dùng để gửi thư",
+      "identities_count": {
+        "label": "Địa chỉ người gửi của bạn",
+        "description": "Các địa chỉ bạn có thể dùng để gửi thư"
+      },
+      "sub_addressing": {
+        "label": "Địa chỉ có thẻ",
+        "description": "Thêm thẻ vào địa chỉ, như user+shop@domain.com. Thư gửi đến địa chỉ đó vẫn đến hộp thư của bạn và bạn có thể sắp xếp theo thẻ."
+      }
+    },
+    "vacation": {
+      "description": "Tự động trả lời thư mới khi bạn vắng mặt",
+      "not_supported": "Máy chủ thư không thể gửi thư trả lời tự động.",
+      "fetch_error": "Không thể tải thư trả lời tự động của bạn. Hãy thử lại.",
+      "status": {
+        "description": "Mọi người gửi thư cho bạn đều nhận được thư trả lời tự động"
+      },
+      "date_range": {
+        "start_description": "Để trống để bắt đầu ngay"
+      },
+      "message": {
+        "subject_description": "Tiêu đề thư trả lời tự động",
+        "html_description": "Thêm phiên bản có liên kết và định dạng. Những người có ứng dụng thư không hiển thị được phiên bản này sẽ nhận văn bản thuần bên trên."
+      },
+      "warnings": {
+        "end_before_start": "Ngày kết thúc phải sau ngày bắt đầu",
+        "invalid_date": "Nhập ngày giờ bắt đầu và kết thúc hoặc để trống trường",
+        "empty_body": "Thư không có nội dung. Người gửi sẽ nhận được thư trả lời trống.",
+        "subject_too_long": "Tiêu đề quá dài đối với máy chủ. Hãy rút ngắn (tối đa {max} byte).",
+        "body_too_long": "Nội dung thư quá dài đối với máy chủ. Hãy rút ngắn (tối đa {max} byte, tính cả định dạng).",
+        "forward_address": "Nhập địa chỉ email cần chuyển tiếp đến",
+        "not_running": "Đã lưu cài đặt chuyển tiếp và danh sách người nhận trả lời nhưng hiện đang tắt. Nhấp Lưu để bật lại."
+      },
+      "forward": {
+        "description": "Chuyển tiếp thư mới đến địa chỉ khác trong khoảng thời gian bên trên, có hoặc không kèm trả lời tự động. Nếu không có ngày kết thúc, việc chuyển tiếp tiếp tục cho đến khi bạn tắt. Thư rác không được chuyển tiếp.",
+        "keep_description": "Khi tắt, thư chỉ được chuyển tiếp. Thư không được giữ trong hộp thư này và các quy tắc lọc không được áp dụng."
+      }
+    },
+    "folders": {
+      "description": "Quản lý thư mục và chọn chức năng cho từng thư mục",
+      "folder_list_description": "Nhấp vào biểu tượng thư mục để thay đổi biểu tượng",
+      "standard_roles_description": "Chọn thư mục dùng làm Hộp thư đến, Đã gửi, Thùng rác, v.v.",
+      "reorder": "Kéo lên hoặc xuống để đổi thứ tự. Kéo sang trái hoặc phải để đặt thư mục vào thư mục khác.",
+      "move_partial_error": "Không thể di chuyển {count, plural, one {# thư mục} other {# thư mục}}. Hãy thử lại.",
+      "confirm_delete": "Xóa \"{name}\"? Thư trong thư mục này sẽ được chuyển vào Thùng rác.",
+      "cannot_delete_role": "Thư mục này có chức năng riêng, như Hộp thư đến hoặc Thùng rác. Hãy gỡ chức năng đó trước rồi bạn mới có thể xóa thư mục.",
+      "error_delete_has_children": "Chưa xóa thư mục vì bên trong có các thư mục khác. Hãy xóa hoặc di chuyển chúng trước.",
+      "error_delete_has_email": "Chưa xóa thư mục vì bên trong vẫn còn thư. Hãy di chuyển hoặc xóa các thư đó trước.",
+      "error_role": "Không thể thay đổi chức năng của thư mục. Hãy thử lại."
+    },
+    "advanced": {
+      "debug_mode": {
+        "description": "Ghi lại chi tiết hơn về hoạt động của ứng dụng để giúp tìm sự cố."
+      },
+      "settings_sync": {
+        "label": "Cùng cài đặt trên mọi thiết bị",
+        "description": "Lưu cài đặt trên máy chủ để tất cả trình duyệt và thiết bị đều sử dụng cùng cài đặt"
+      },
+      "sender_favicons": {
+        "description": "Với người gửi là công ty, dùng biểu tượng trang web làm ảnh người gửi",
+        "refresh_description": "Tải lại biểu tượng trang web, chẳng hạn khi công ty có biểu tượng mới"
+      },
+      "show_avatars_in_junk": {
+        "label": "Hiển thị ảnh người gửi trong thư mục Thư rác",
+        "description": "Hiển thị cả ảnh người gửi hoặc biểu tượng trang web trong thư mục Thư rác. Tùy chọn này mặc định tắt vì hình ảnh có thể khiến thư giả mạo trông đáng tin hơn."
+      },
+      "keyboard_shortcuts": {
+        "description": "Xem tất cả các phím có thể dùng thay cho chuột"
+      },
+      "refresh_cache": {
+        "label": "Tải lại dữ liệu từ máy chủ",
+        "description": "Tải lại danh bạ, lịch và thư mục từ máy chủ. Dùng khi dữ liệu hiển thị đã cũ hoặc không đúng. Bạn vẫn giữ trạng thái đăng nhập.",
+        "confirm_title": "Tải lại dữ liệu từ máy chủ?"
+      },
+      "reset_settings": {
+        "description": "Đưa tất cả cài đặt về trạng thái ban đầu"
+      },
+      "export_settings": {
+        "description": "Tải xuống bản sao cài đặt"
+      },
+      "import_settings": {
+        "description": "Khôi phục cài đặt từ tệp"
+      },
+      "sections": {
+        "backup_description": "Dùng cùng cài đặt trên các trình duyệt và thiết bị khác.",
+        "fix_description": "Khi dữ liệu hiển thị đã cũ hoặc không đúng, hoặc bạn muốn bắt đầu lại."
+      }
+    },
+    "sidebar_apps": {
+      "description": "Thêm ứng dụng và liên kết riêng vào thanh bên trái",
+      "keep_loaded_description": "Giữ các ứng dụng mở trong nền khi chuyển đổi để không phải tải lại",
+      "managed_description": "Quản trị viên đã thiết lập các ứng dụng này cho mọi người. Bạn không thể thay đổi."
+    },
+    "contacts": {
+      "group_by_letter_description": "Hiển thị chữ cái phía trên mỗi nhóm tên trong danh sách liên hệ",
+      "sort_by_last_name_description": "Sắp xếp liên hệ theo họ để những người cùng gia đình nằm cạnh nhau",
+      "import_description": "Thêm liên hệ từ tệp danh bạ (.vcf)",
+      "export_description": "Lưu tất cả liên hệ vào tệp danh bạ (.vcf)"
+    },
+    "downloads": {
+      "description": "Chọn tên tệp cho các thư và tệp đính kèm bạn lưu.",
+      "email_template": {
+        "description": "Tên tệp khi lưu thư hoặc kéo thư vào thư mục trên máy tính. Phần mở rộng .eml được thêm tự động."
+      },
+      "attachment_template": {
+        "description": "Tên tệp khi lưu tệp đính kèm hoặc kéo tệp ra ngoài. Nếu bỏ qua '{filename}' và '{ext}', tệp vẫn giữ phần mở rộng gốc."
+      },
+      "bundle_template": {
+        "description": "Tên tệp khi lưu nhiều thư cùng nhau trong một tệp .zip. Phần mở rộng .zip được thêm tự động."
+      },
+      "spaces": {
+        "description": "Dùng ký tự khác thay cho dấu cách trong tên tệp."
+      },
+      "lowercase": {
+        "description": "Viết toàn bộ tên tệp bằng chữ thường."
+      },
+      "strip_diacritics": {
+        "description": "Chuyển chữ có dấu thành chữ không dấu (ä → a, é → e). Một số chương trình không xử lý được chữ có dấu."
+      },
+      "collapse_separators": {
+        "description": "Khi có nhiều dấu cách, _ hoặc - liên tiếp, chỉ giữ lại một ký tự."
+      },
+      "after_export": {
+        "description": "Bạn có thể chuyển thư sang thư mục khác sau khi lưu thành tệp."
+      }
+    },
+    "filters": {
+      "description": "Các quy tắc tự động sắp xếp thư mới, chẳng hạn chuyển vào thư mục",
+      "no_rules_description": "Tạo quy tắc để thư mới được sắp xếp tự động",
+      "vacation_active_description": "Thư mới được trả lời tự động",
+      "delete_confirm": "Xóa quy tắc này?",
+      "raw_editor": "Chỉnh sửa quy tắc bằng mã (Sieve)",
+      "raw_editor_warning": "Nếu thay đổi mã, bạn có thể không còn chỉnh sửa được các quy tắc tại đây bằng trình chỉnh sửa thông thường. Các thay đổi trong mã sẽ thay thế những quy tắc thông thường.",
+      "not_supported": "Máy chủ thư không hỗ trợ quy tắc lọc.",
+      "match_all": "Tất cả điều kiện phải đúng",
+      "match_any": "Chỉ cần một điều kiện đúng",
+      "stop_processing": "Không kiểm tra các quy tắc phía dưới quy tắc này",
+      "value_placeholder_multi": "Giá trị (phân tách nhiều giá trị bằng dấu phẩy)",
+      "condition_fields": {
+        "header": "Trường tiêu đề khác",
+        "body": "Nội dung thư"
+      },
+      "comparators": {
+        "matches": "khớp với mẫu (* = văn bản bất kỳ)"
+      },
+      "forward_limit": "Máy chủ này chuyển tiếp một thư đến tối đa {count} địa chỉ. Các lượt chuyển tiếp còn lại sẽ bị bỏ qua.",
+      "forward_unavailable": "Máy chủ này không cho phép chuyển tiếp. Các quy tắc chuyển tiếp thư sẽ không có tác dụng.",
+      "header_name": "Tên trường tiêu đề",
+      "opaque_warning": "Các quy tắc này đã được thay đổi trong ứng dụng khác. Tại đây, bạn chỉ có thể chỉnh sửa chúng bằng mã.",
+      "open_sieve_editor": "Chỉnh sửa quy tắc bằng mã (Sieve)",
+      "expanded_view_description": "Hiển thị từng quy tắc với đầy đủ điều kiện và thao tác",
+      "reset_warning": "Thao tác này xóa tất cả quy tắc hiện tại để bạn bắt đầu lại từ đầu.",
+      "validation_empty_conditions": "Thêm ít nhất một điều kiện và điền giá trị",
+      "validation_empty_actions": "Thêm ít nhất một thao tác",
+      "validation_header_name": "Chỉ dùng chữ cái từ A đến Z, chữ số, - và _ trong tên trường tiêu đề",
+      "sieve_editor": {
+        "title": "Quy tắc lọc dạng mã (Sieve)",
+        "warning": "Nếu thay đổi mã, bạn có thể không còn chỉnh sửa được các quy tắc tại đây bằng trình chỉnh sửa thông thường. Các thay đổi trong mã sẽ thay thế những quy tắc thông thường.",
+        "script_content": "Quy tắc dạng mã",
+        "valid": "Mã không có lỗi",
+        "invalid": "Mã có lỗi",
+        "validating": "Đang kiểm tra…",
+        "validate": "Kiểm tra",
+        "overwrite_message": "Mã này không còn chứa các quy tắc bạn đã tạo bằng trình chỉnh sửa thông thường. Nếu lưu, mã sẽ thay thế các quy tắc đó. Bạn không thể hoàn tác.",
+        "validation_failed": "Không thể kiểm tra mã. Hãy thử lại."
+      },
+      "managed_by_tooltip": "Do {source} quản lý. Hãy thay đổi trong ứng dụng đó hoặc chỉnh sửa quy tắc bằng mã.",
+      "apply_existing_unsupported": "Chỉ một số quy tắc có thể áp dụng cho thư hiện có: quy tắc kiểm tra người gửi, người nhận, tiêu đề thư hoặc trường tiêu đề, đồng thời thực hiện thao tác di chuyển, sao chép, đánh dấu đã đọc, gắn dấu sao hoặc gắn thẻ.",
+      "validation_period_order": "Ngày kết thúc phải sau ngày bắt đầu",
+      "period_hint": "Quy tắc áp dụng cho thư đến trong khoảng thời gian này. Để trống một trường nếu không giới hạn thời điểm bắt đầu hoặc kết thúc.",
+      "validation_period_invalid": "Nhập ngày kèm giờ hoặc để trống trường",
+      "apply_existing_period": "Quy tắc có giới hạn thời gian chỉ áp dụng cho thư đến trong khoảng đó nên không thể áp dụng cho các thư hiện có."
+    },
+    "templates": {
+      "description": "Lưu những thư bạn thường soạn để dùng lại. Mẫu thư có thể chứa các chỗ trống để bạn điền mỗi lần sử dụng.",
+      "export_import_description": "Lưu các mẫu thành tệp hoặc chuyển sang thiết bị khác",
+      "validation": {
+        "too_long": "Tên có thể dài tối đa 200 ký tự"
+      }
+    },
+    "files": {
+      "sort_direction": {
+        "description": "Từ A đến Z hoặc từ Z đến A"
+      },
+      "show_thumbnails": {
+        "description": "Hiển thị ảnh thu nhỏ của mỗi hình ảnh thay cho biểu tượng"
+      },
+      "show_hidden": {
+        "description": "Hiển thị tệp và thư mục ẩn (có tên bắt đầu bằng dấu chấm)"
+      }
+    },
+    "reading_page": {
+      "sections": {
+        "images_description": "Hình ảnh từ Internet có thể cho người gửi biết bạn đã mở thư."
+      }
+    }
+  },
+  "errors": {
+    "page_error_description": "Trang này đã ngừng hoạt động. Hãy thử lại hoặc quay về Hộp thư đến.",
+    "sidebar_error": "Không thể tải các thư mục của bạn",
+    "email_list_error": "Không thể tải các thư của bạn",
+    "viewer_error_title": "Không thể hiển thị thư này",
+    "viewer_error_description": "Một thành phần trong thư khiến thư không thể hiển thị tại đây. Thư có thể sử dụng định dạng chưa được hỗ trợ.",
+    "composer_error": "Không thể mở khung soạn thư mới",
+    "settings_error_title": "Không thể mở Cài đặt",
+    "settings_error_description": "Không thể tải cài đặt của bạn. Các thay đổi bạn thực hiện lúc này có thể không được lưu."
+  },
+  "identities": {
+    "delete_confirm": "Xóa địa chỉ người gửi này? Bạn không thể hoàn tác.",
+    "cannot_delete": "Bạn không thể xóa địa chỉ người gửi này",
+    "validation_errors": {
+      "invalid_emails": "Các địa chỉ email sau không đúng: {emails}"
+    },
+    "form": {
+      "email_invalid": "Nhập địa chỉ email hợp lệ",
+      "email_immutable": "Bạn không thể thay đổi địa chỉ email sau khi thêm",
+      "signature_byte_limit_reached": "Chữ ký quá dài đối với máy chủ"
+    },
+    "sub_address": {
+      "invalid_tag": "Chỉ dùng chữ cái, chữ số và dấu gạch ngang (-) trong thẻ"
+    }
+  },
+  "calendar": {
+    "import": {
+      "url_description": "Nhập địa chỉ web của tệp lịch (.ics) để thêm các sự kiện trong tệp."
+    },
+    "management": {
+      "description": "Tạo lịch mới, đổi tên và đổi màu lịch. Bạn cũng có thể nhấp chuột phải vào lịch trên thanh bên để đổi màu.",
+      "description_touch": "Tạo lịch mới, đổi tên và đổi màu lịch.",
+      "confirm_delete": "Xóa \"{name}\"? Tất cả cuộc hẹn trong lịch này cũng sẽ bị xóa.",
+      "confirm_clear": "Xóa tất cả cuộc hẹn trong \"{name}\"? Bạn không thể hoàn tác.",
+      "kind_hint": "Thiết lập này quyết định những ứng dụng nào trên các thiết bị khác sẽ hiển thị lịch này. Bạn không thể thay đổi về sau.",
+      "default_alerts_hint": "Các cuộc hẹn mới trong lịch này sẽ dùng những lời nhắc này, trừ khi bạn thay đổi trong từng cuộc hẹn. Thay đổi tại đây không ảnh hưởng đến các cuộc hẹn hiện có. Máy chủ thư gửi lời nhắc qua email."
+    },
+    "subscription": {
+      "description": "Theo dõi lịch trên Internet, chẳng hạn lịch ngày lễ. Các cuộc hẹn được tự động cập nhật và hiển thị trong một lịch riêng. Địa chỉ bắt đầu bằng https:// hoặc webcal://.",
+      "confirm_delete": "Ngừng theo dõi \"{name}\"? Lịch và tất cả cuộc hẹn trong đó sẽ bị xóa."
+    }
+  },
+  "sharing": {
+    "description": "Cho phép người hoặc nhóm khác trên máy chủ này sử dụng mục này. Thay đổi có hiệu lực ngay lập tức.",
+    "directory_restricted": "Máy chủ không hiển thị danh sách tất cả người dùng. Vì vậy, bạn chỉ thấy các nhóm của mình và những người chia sẻ nội dung với bạn. Quản trị viên có thể thay đổi điều này.",
+    "directory_not_browsable": "Máy chủ không hiển thị danh sách tất cả người dùng.",
+    "directory_failed": "Không thể tải danh sách người và nhóm. Hãy thử lại.",
+    "share_failed": "Không thể thay đổi việc chia sẻ. Hãy thử lại."
+  },
+  "delegates": {
+    "description": "Cho phép người khác sử dụng thư, lịch và danh bạ của bạn chỉ trong một bước. Xem ai được sử dụng nội dung nào.",
+    "read_failed": "Không thể tải một số thông tin chia sẻ của bạn. Bạn có thể thay đổi hoặc xóa quyền truy cập sau khi tải xong.",
+    "remove_message": "{name} không còn được sử dụng bất kỳ nội dung nào bạn đã chia sẻ từ tài khoản: thư, lịch, danh bạ và tệp.",
+    "not_found": "Không có ai dùng địa chỉ {address} trên máy chủ này.",
+    "lookup_failed": "Không tìm thấy địa chỉ này. Hãy kiểm tra rồi thử lại.",
+    "known_only": "Bạn chỉ thấy các nhóm của mình và những người đã chia sẻ nội dung với bạn.",
+    "directory_off_note": "Để thêm người mới, trước tiên quản trị viên phải cho phép tìm kiếm người dùng trên máy chủ.",
+    "directory_failed": "Không thể tải danh sách người và nhóm. Hãy thử lại.",
+    "nothing_to_change": "Chưa có gì thay đổi. Hãy chọn nội dung người đó được truy cập hoặc nhấp Xóa quyền truy cập.",
+    "change_note": "Những thư mục, lịch và sổ địa chỉ bạn không chọn sẽ ngừng được chia sẻ. Các tệp đã chia sẻ vẫn giữ nguyên. Xóa quyền truy cập sẽ thu hồi cả quyền truy cập các tệp đó.",
+    "rights_keep_hint": "Nội dung họ đã được truy cập giữ nguyên quyền hiện tại. Nội dung mới được cấp quyền giống các mục cùng loại hoặc chỉ có quyền đọc.",
+    "send_note": "Người được cấp quyền có thể đọc và sắp xếp thư, lịch của bạn. Họ không thể gửi thư với tư cách là bạn hoặc thay mặt bạn. Nếu nhiều người cần dùng chung một địa chỉ, hãy nhờ quản trị viên cung cấp hộp thư chung.",
+    "partial_title": "Không thể thay đổi một số mục. Các mục còn lại đã hoàn tất."
+  },
+  "smime": {
+    "your_certificates_desc": "Thêm và quản lý chứng chỉ của bạn. Bạn cần chứng chỉ để ký hoặc mã hóa thư bằng S/MIME.",
+    "recipient_certificates_desc": "Chứng chỉ của người khác. Bạn có thể dùng các chứng chỉ này để gửi thư mã hóa cho họ.",
+    "identity_bindings_desc": "Chọn chứng chỉ tương ứng với từng địa chỉ người gửi của bạn",
+    "defaults_desc": "Chọn xem thư mới có được ký hoặc mã hóa ngay từ đầu hay không",
+    "encrypt_by_default_desc": "Tự động mã hóa thư khi bạn có chứng chỉ cho mọi người nhận",
+    "remember_unlocked_desc": "Giữ các khóa ở trạng thái mở khóa cho đến khi bạn đóng trình duyệt này",
+    "p12_passphrase_desc": "Nhập mật khẩu của tệp chứng chỉ này",
+    "storage_passphrase_desc": "Chọn mật khẩu để bảo vệ khóa này khi được lưu trong trình duyệt.",
+    "unlock_key_desc": "Nhập mật khẩu của khóa này để ký hoặc mở thư",
+    "cert_expired": "Chứng chỉ này không còn hiệu lực",
+    "status_encrypted_no_key": "Thư này được mã hóa nhưng bạn không có khóa để mở",
+    "status_encrypted_failed": "Thư này được khóa nhưng không thể mở khóa. Bạn có thể chưa có đúng khóa.",
+    "status_signed_invalid": "Chữ ký không hợp lệ. Thư có thể đã bị thay đổi.",
+    "status_signed_expired_cert": "Được ký bằng chứng chỉ không còn hiệu lực",
+    "status_signed_self_signed": "Chữ ký hợp lệ nhưng người gửi tự tạo chứng chỉ nên chưa có ai xác minh danh tính của họ.",
+    "status_signed_mismatch": "Chữ ký hợp lệ nhưng thuộc về người khác, không phải người gửi",
+    "auto_import_signer_certs_desc": "Khi kiểm tra thư đã ký, lưu chứng chỉ của người gửi. Sau đó, bạn có thể gửi thư mã hóa cho họ.",
+    "export_passphrase_desc": "Chọn mật khẩu để bảo vệ tệp bạn lưu",
+    "export_storage_desc": "Nhập mật khẩu của khóa này để lưu khóa thành tệp"
+  },
+  "recover_deleted": {
+    "load_failed": "Không thể tải thư đã xóa. Hãy thử lại."
+  },
+  "global_search": {
+    "account_error": "Không thể tìm kiếm trong {account}"
+  }
+}

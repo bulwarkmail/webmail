@@ -11,7 +11,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import type { SlotName } from '@/lib/plugin-types';
 import { offersForSlot, subscribe } from '@/lib/plugin-sandbox/registry';
-import { hostFeaturesFor, isSlotHandedOver } from '@/lib/plugin-sandbox/host-features';
+import { hostFeaturesFor, slotHandedOver } from '@/lib/plugin-sandbox/handover';
 import { usePolicyStore } from '@/stores/policy-store';
 
 export function usePluginSlotOffers(slotName: SlotName) {
@@ -20,7 +20,7 @@ export function usePluginSlotOffers(slotName: SlotName) {
   const externalMail = usePolicyStore((s) => s.policy.organisation?.externalMail);
   return useMemo(() => {
     const features = hostFeaturesFor(externalMail);
-    const shown = offers.filter((offer) => !isSlotHandedOver(offer.pluginId, slotName, features));
+    const shown = offers.filter((offer) => !slotHandedOver(offer.pluginId, slotName, features));
     return shown.length === offers.length ? offers : shown;
   }, [offers, slotName, externalMail]);
 }

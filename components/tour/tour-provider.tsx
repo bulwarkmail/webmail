@@ -8,10 +8,15 @@ import { useCalendarStore } from "@/stores/calendar-store";
 import { useWebDAVStore } from "@/stores/webdav-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
-import { getTourSteps, isTourStepOnPage, type TourStep } from "./tour-steps";
+import { getTourSteps, isTourStepOnPage, proTabOfTourStep, type TourStep } from "./tour-steps";
+import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
+import { useProTabStore } from "@/stores/pro-tab-store";
 import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { requestAppCommand } from "@/lib/app-commands";
-import { TourOverlay } from "./tour-overlay";
+import { lazyComponent } from "@/lib/lazy-component";
+
+// Drawn only while a tour runs; its code comes with the first run.
+const TourOverlay = lazyComponent(() => import("./tour-overlay").then((m) => m.TourOverlay));
 
 const TOUR_COMPLETED_KEY = "tour_completed";
 const TOUR_CURRENT_STEP_KEY = "tour_current_step";
@@ -52,6 +57,7 @@ function rememberStep(step: TourStep | undefined) {
 export function TourProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const proActive = useProInterfaceActive();
   const { isDemoMode } = useAuthStore(useShallow((state) => ({ isDemoMode: state.isDemoMode })));
   const { supportsCalendar } = useCalendarStore(useShallow((state) => ({ supportsCalendar: state.supportsCalendar })));
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
@@ -87,12 +93,20 @@ export function TourProvider({ children }: { children: ReactNode }) {
   // closes it first.
   useEffect(() => {
     if (!step) return;
+    // Under Pro every app is a tab of the one route. Asking for another route
+    // only comes back here, which went round for as long as the tour ran. The
+    // path says nothing here: it may show the address the focused tab wrote.
+    if (proActive) {
+      const tab = proTabOfTourStep(step);
+      if (tab) useProTabStore.getState().openTab(tab);
+      return;
+    }
     if (!isTourStepOnPage(step, pathname)) {
       router.push(step.page ?? "/");
     } else if (phone && !step.page && step.view !== "reader") {
       requestAppCommand("show-list");
     }
-  }, [step, pathname, phone, router]);
+  }, [step, pathname, phone, router, proActive]);
 
   useEffect(() => {
     // One-time migration: if the legacy per-device flag is set but the synced

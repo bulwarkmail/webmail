@@ -160,19 +160,37 @@ export async function setSelectionTagWithUndo(
 }
 
 /**
+ * Stars the selection or takes the star off (batchSetStarred; rejects when a write
+ * fails), with a toast that offers Undo. The messages already as asked are not put back.
+ */
+export async function setSelectionStarredWithUndo(
+  client: IJMAPClient,
+  starred: boolean,
+  words: { success: string; error: string; labels: UndoLabels },
+): Promise<void> {
+  const points = keywordRestorePoints(resolveSelectedEmails(useEmailStore.getState()), ["$flagged"], { $flagged: starred });
+  await runBatchEmailAction(() => useEmailStore.getState().batchSetStarred(client, starred), {
+    success: words.success,
+    error: words.error,
+    undo: undoKeywordAction(client, points, words.labels),
+  });
+}
+
+/**
  * The toast's Undo for a reversible move (delete to Trash, archive, move,
  * report spam, remove from folder): puts the messages back where `batches`
  * says they were. None when there is nothing to put back.
  *
  * `receipts` (filled while the move runs) name the messages it took to
  * another account: Undo moves those back, the same way, into the folders
- * their restore points name (undoMove).
+ * their restore points name (undoMove). `onUndone` runs once they are back.
  */
 export function undoMoveAction(
   client: IJMAPClient | null | undefined,
   batches: EmailRestoreBatch[] | null | undefined,
   labels: UndoLabels,
   receipts?: CrossAccountMoveReceipt[],
+  onUndone?: () => void,
 ): UndoToastAction | undefined {
   if (!client || !batches || !batches.some(b => b.points.length > 0)) return undefined;
   return {
@@ -183,6 +201,7 @@ export function undoMoveAction(
         try {
           await useEmailStore.getState().undoMove(client, batches, receipts ?? []);
           toast.success(labels.done);
+          onUndone?.();
         } catch (error) {
           console.error("Failed to undo:", error);
           toast.error(labels.failed);

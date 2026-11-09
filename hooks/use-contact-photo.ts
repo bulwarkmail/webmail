@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useAuthStore } from "@/stores/auth-store";
 import { getClientByLocalAccountId } from "@/stores/client-registry";
@@ -87,5 +87,13 @@ export function useContactPhotoSrc(photo: ContactPhotoRef | null | undefined): {
     }, { concurrency: contactPhotoConcurrency(client.getMaxConcurrentRequests?.()) });
   }, [key, blobId, mediaType, accountId, localAccountId, visible, blobUrl, activeClient]);
 
-  return { src: photo && "uri" in photo ? photo.uri : blobUrl, observe: setElement };
+  // Only a photo still to download needs its element. Taking every element
+  // into state drew each avatar a second time right after it mounted, for
+  // every row of every list, though most have nothing to download. A new key
+  // makes a new callback, which React calls again with the element.
+  const observe = useCallback((next: Element | null) => {
+    if (key) setElement(next);
+  }, [key]);
+
+  return { src: photo && "uri" in photo ? photo.uri : blobUrl, observe };
 }

@@ -215,7 +215,25 @@ describe('Lite configuration compatibility', () => {
     expect(data.appName).toBe('Stalwart Mail');
     expect(data.jmapServerUrl).toBe(window.location.origin);
     expect(data.allowCustomJmapEndpoint).toBe(false);
-    expect(mocks.apiFetch).toHaveBeenCalledExactlyOnceWith('/config.json?v=test-build', undefined);
+    expect(mocks.apiFetch).toHaveBeenCalledExactlyOnceWith('/config.json?v=test-build', { cache: 'no-cache' });
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('the config request at start', () => {
+  it('goes out as soon as the module runs in a production build, before any component asks', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    mocks.apiFetch.mockResolvedValueOnce(success());
+    const { getCachedConfig, fetchConfig } = await import('../use-config');
+    expect(mocks.apiFetch).toHaveBeenCalledTimes(1);
+    expect(mocks.apiFetch.mock.calls[0][0]).toBe('/api/config');
+    expect(await fetchConfig()).toEqual(config);
+    expect(getCachedConfig()).toEqual(config);
+    expect(mocks.apiFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for a component outside production builds', async () => {
+    await import('../use-config');
+    expect(mocks.apiFetch).not.toHaveBeenCalled();
   });
 });

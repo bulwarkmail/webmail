@@ -21,7 +21,12 @@ import { EmptyState } from '@/components/admin/empty-state';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { ConfigNote, inputClass } from '@/components/admin/config-items';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { ChangelogBadges, ChangelogEntries, anyFlag, type ChangelogEntry, type ChangelogFlags } from '@/components/admin/changelog';
+import { PluginPermissionList } from '@/components/plugins/plugin-permission-list';
+import { offerToTurnOnPlugins, pluginsOffForUsers, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
+import { pluginTypeLabel } from './plugin-type-label';
 
 const CURRENT_APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
 
@@ -43,7 +48,11 @@ interface InstalledEntry {
 
 interface UpdatesResult {
   installed: InstalledEntry[];
-  updates: Array<{ slug: string; currentVersion: string; version: string; channel: 'stable' | 'beta'; changelog: string | null }>;
+  updates: Array<{
+    addedPermissions?: string[];
+    slug: string; currentVersion: string; version: string; channel: 'stable' | 'beta'; publishedAt: string | null;
+    changelog: string | null; notes?: ChangelogFlags; changelogs?: ChangelogEntry[];
+  }>;
   yanked: Array<{ slug: string; version: string; reason: string | null; at: string }>;
   deprecated: Array<{ slug: string; message: string | null; replacement: string | null }>;
   suspended: string[];
@@ -70,6 +79,16 @@ const PAGE = adminPageDef('marketplace');
 export const detailHref = (slug: string, version?: string | null) =>
   `${adminPath('marketplace', slug)}${version ? `?version=${encodeURIComponent(version)}` : ''}`;
 
+/**
+ * The notes an update brings: every version between the installed one and
+ * the offered one, or, from a directory older than 2026-10-30, the offered
+ * version's alone.
+ */
+function updateNotes(u: UpdatesResult['updates'][number]): ChangelogEntry[] {
+  if (u.changelogs?.length) return u.changelogs;
+  return [{ version: u.version, publishedAt: u.publishedAt ?? null, changelog: u.changelog, notes: u.notes }];
+}
+
 /** The segmented Browse / Installed and All / Plugins / Themes switches. */
 const pillGroupClass = 'flex items-center gap-0.5 rounded-md bg-muted p-0.5 self-start';
 const pillClass = (active: boolean) => cn(
@@ -81,7 +100,9 @@ const pillClass = (active: boolean) => cn(
  * Installs one version of an extension. A version the publisher withdrew,
  * or one older than the installed version, comes back as 409; the admin is
  * asked (in the page's ConfirmDialog), and the install is repeated with
- * `force` if they insist. Returns the error text to show, or null.
+ * `force` if they insist. An update that asks for more permissions comes back
+ * the same way, and is repeated with the ones the admin saw. "Update all" goes
+ * through here too, so it asks about each. Returns the error text to show, or null.
  */
 export interface InstallQuestion {
   title: string;
@@ -94,28 +115,39 @@ export async function installVersion(
   body: { slug: string; version: string; type: 'plugin' | 'theme' },
   confirm: (question: InstallQuestion) => boolean | Promise<boolean>,
 ): Promise<{ ok: true; warnings: string[]; signature: string | null; updated: boolean } | { ok: false; error: string }> {
-  const send = (force: boolean) => apiFetch('/api/admin/marketplace', {
+  let force = false;
+  let acceptPermissions: string[] | undefined;
+  const send = () => apiFetch('/api/admin/marketplace', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(force ? { ...body, force: true } : body),
+    body: JSON.stringify({ ...body, ...(force ? { force: true } : {}), ...(acceptPermissions ? { acceptPermissions } : {}) }),
   });
   try {
-    let res = await send(false);
-    if (res.status === 409) {
+    let res = await send();
+    // At most one of each question: withdrawn or older, then permissions.
+    for (let asked = 0; res.status === 409 && asked < 3; asked += 1) {
       const data = await res.json().catch(() => ({}));
-      if (data.yanked) {
+      if (Array.isArray(data.permissionsAdded) && !acceptPermissions) {
+        const names = (data.permissionsAdded as string[]).join(', ');
+        const message = `${body.slug} ${body.version} asks for new permissions that the installed version doesn't have: ${names}.`;
+        if (!(await confirm({ title: 'Allow the new permissions?', message, confirmText: 'Update', cancelText: 'Cancel' }))) {
+          return { ok: false, error: 'Not installed.' };
+        }
+        acceptPermissions = data.permissionsAdded;
+      } else if (data.yanked && !force) {
         if (!(await confirm({ title: 'Install it anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        res = await send(true);
-      } else if (data.downgrade) {
+        force = true;
+      } else if (data.downgrade && !force) {
         if (!(await confirm({ title: 'Install the older version anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        res = await send(true);
+        force = true;
       } else {
         return { ok: false, error: data.error || 'Installation failed' };
       }
+      res = await send();
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: data.error || 'Installation failed' };
@@ -143,6 +175,18 @@ export function MarketplacePage() {
   const [error, setError] = useState<string | null>(null);
   const [updates, setUpdates] = useState<UpdatesResult | null>(null);
   const [updatesLoading, setUpdatesLoading] = useState(true);
+  // A plugin's quick install asks first, with what it may do (themes don't).
+  const [quickInstall, setQuickInstall] = useState<MarketplaceListing | null>(null);
+  // Whether plugins are off for users, so the one quick-install dialog can offer to
+  // turn them on too instead of asking again after installing. null: not known yet.
+  const [quickPluginsOff, setQuickPluginsOff] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!quickInstall) return;
+    let current = true;
+    setQuickPluginsOff(null);
+    void pluginsOffForUsers().then((off) => { if (current) setQuickPluginsOff(off); });
+    return () => { current = false; };
+  }, [quickInstall]);
 
   const fetchExtensions = useCallback(async () => {
     setLoading(true);
@@ -205,7 +249,8 @@ export function MarketplacePage() {
     return next;
   });
 
-  async function install(ext: { slug: string; name: string; type: 'plugin' | 'theme' }, version: string, isUpdate: boolean) {
+  /** `turnOn`: the admin already said whether to turn plugins on for users; otherwise they're asked after installing. */
+  async function install(ext: { slug: string; name: string; type: 'plugin' | 'theme' }, version: string, isUpdate: boolean, turnOn?: boolean) {
     markInstalling(ext.slug, true);
     setMessage(null);
     const result = await installVersion({ slug: ext.slug, version, type: ext.type }, confirm);
@@ -216,11 +261,14 @@ export function MarketplacePage() {
     }
     const warnings = result.warnings.length ? ` (${result.warnings.length} warning${result.warnings.length === 1 ? '' : 's'})` : '';
     const signed = result.signature === 'verified' ? ', signed by the directory' : '';
+    const outcome: TurnOnOutcome = !isUpdate && ext.type === 'plugin'
+      ? await offerToTurnOnPlugins(turnOn === undefined ? confirm : () => turnOn)
+      : 'already-on';
     setMessage({
       type: 'success',
       text: isUpdate
         ? `"${ext.name}" updated to v${version}${signed}${warnings}`
-        : `"${ext.name}" installed (v${version})${signed}${warnings}`,
+        : `"${ext.name}" installed (v${version})${signed}${warnings}.${turnOnNote(outcome)}`,
     });
     setExtensions((prev) => prev.map((e) => (e.slug === ext.slug
       ? { ...e, installed: true, installedVersion: version, installedSource: { kind: 'marketplace', slug: ext.slug, directoryUrl: directoryUrl ?? '' } }
@@ -271,6 +319,50 @@ export function MarketplacePage() {
       />
 
       <ConfirmDialog {...confirmProps} />
+      <Dialog
+        isOpen={quickInstall !== null}
+        onClose={() => setQuickInstall(null)}
+        role="alertdialog"
+        showClose={false}
+        title={`Install ${quickInstall?.name ?? ''}?`}
+        description={`${quickInstall?.author ? `By ${quickInstall.author.displayName}. ` : ''}${quickPluginsOff
+          ? 'It is installed for every user. Plugins are off for users, so it only runs once you turn them on.'
+          : 'It is installed for every user and turned on for them; they can turn it off in their settings.'} What it may do in each mailbox:`}
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => setQuickInstall(null)}>Cancel</Button>
+            {quickPluginsOff && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const ext = quickInstall;
+                  setQuickInstall(null);
+                  if (ext?.latestVersion) void install(ext, ext.latestVersion, false, false);
+                }}
+              >
+                Install only
+              </Button>
+            )}
+            <Button
+              disabled={quickPluginsOff === null}
+              onClick={() => {
+                const ext = quickInstall;
+                const turnOn = quickPluginsOff ?? false;
+                setQuickInstall(null);
+                if (ext?.latestVersion) void install(ext, ext.latestVersion, false, turnOn);
+              }}
+            >
+              {quickPluginsOff ? 'Install and turn on plugins' : 'Install'}
+            </Button>
+          </>
+        )}
+      >
+        {quickInstall && (
+          <div className="mt-3 max-h-64 overflow-y-auto" data-testid="quick-install-permissions">
+            <PluginPermissionList permissions={quickInstall.permissions ?? []} compact />
+          </div>
+        )}
+      </Dialog>
 
       <div className="space-y-10">
         {updates && noticeCount > 0 && (
@@ -286,7 +378,7 @@ export function MarketplacePage() {
         )}
 
         <div className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <div className={pillGroupClass}>
               {([['browse', 'Browse'], ['installed', `Installed${installedCount ? ` (${installedCount})` : ''}`]] as const).map(([v, label]) => (
                 <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v} className={pillClass(view === v)}>
@@ -294,7 +386,7 @@ export function MarketplacePage() {
                 </button>
               ))}
             </div>
-            <div className="relative min-w-0 flex-1">
+            <div className="relative min-w-0 flex-1 sm:min-w-56">
               <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
@@ -376,7 +468,11 @@ export function MarketplacePage() {
                         key={ext.slug}
                         extension={ext}
                         installing={installing.has(ext.slug)}
-                        onInstall={() => ext.latestVersion && install(ext, ext.latestVersion, ext.installed)}
+                        onInstall={() => {
+                          if (!ext.latestVersion) return;
+                          if (ext.type === 'plugin' && !ext.installed) setQuickInstall(ext);
+                          else void install(ext, ext.latestVersion, ext.installed);
+                        }}
                       />
                     ))}
                   </div>
@@ -437,28 +533,49 @@ function UpdatesSection({
             </div>
           )}
           <ul className="divide-y divide-border rounded-lg border border-border">
-            {updates.updates.map((u) => (
-              <li key={u.slug} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 text-sm">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <AdminLink href={detailHref(u.slug, u.version)} className="font-medium text-foreground hover:underline">{name(u.slug)}</AdminLink>
-                    <span className="text-muted-foreground">v{u.currentVersion} → v{u.version}</span>
-                    {u.channel === 'beta' && <Badge tone="info">beta</Badge>}
+            {updates.updates.map((u) => {
+              const entries = updateNotes(u);
+              const withNotes = entries.filter((e) => e.changelog);
+              return (
+                <li key={u.slug} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1 text-sm">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <AdminLink href={detailHref(u.slug, u.version)} className="font-medium text-foreground hover:underline">{name(u.slug)}</AdminLink>
+                      <span className="text-muted-foreground">v{u.currentVersion} → v{u.version}</span>
+                      {u.channel === 'beta' && <Badge tone="info">beta</Badge>}
+                      <ChangelogBadges flags={{ security: anyFlag(entries, 'security'), breaking: anyFlag(entries, 'breaking') }} />
+                    </div>
+                    {(u.addedPermissions?.length ?? 0) > 0 && (
+                      <p className="mt-1 text-xs text-amber-800 dark:text-amber-300" data-testid={`update-permissions-${u.slug}`}>
+                        New permissions: <span className="font-mono">{u.addedPermissions!.join(', ')}</span>
+                      </p>
+                    )}
+                    {withNotes.length > 0 ? (
+                      <details className="mt-1" data-testid={`update-notes-${u.slug}`}>
+                        <summary className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">
+                          {entries.length > 1 ? `What's new in ${entries.length} versions` : "What's new"}
+                        </summary>
+                        <div className="mt-2 max-h-80 overflow-y-auto pe-2">
+                          <ChangelogEntries entries={entries} />
+                        </div>
+                      </details>
+                    ) : (
+                      <p className="mt-0.5 text-xs text-muted-foreground">No changelog for this update.</p>
+                    )}
                   </div>
-                  {u.changelog && <p className="mt-0.5 line-clamp-2 whitespace-pre-wrap text-xs text-muted-foreground">{u.changelog}</p>}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 shrink-0 gap-1.5 self-start text-xs"
-                  onClick={() => onUpdate(u)}
-                  disabled={installing.has(u.slug)}
-                >
-                  {installing.has(u.slug) ? <Loader2 className="h-3 w-3 animate-spin" /> : <ArrowUpCircle className="h-3 w-3" />}
-                  Update
-                </Button>
-              </li>
-            ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 shrink-0 gap-1.5 self-start text-xs"
+                    onClick={() => onUpdate(u)}
+                    disabled={installing.has(u.slug)}
+                  >
+                    {installing.has(u.slug) ? <Loader2 className="h-3 w-3 animate-spin" /> : <ArrowUpCircle className="h-3 w-3" />}
+                    Update
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -564,6 +681,7 @@ function InstalledView({
               href={fromMarketplace ? detailHref(entry.id) : undefined}
               icon={entry.kind === 'plugin' ? <Puzzle /> : <SwatchBook />}
               title={entry.name}
+              wideControl
               titleExtra={(
                 <>
                   <span className="text-xs text-muted-foreground">v{entry.version}</span>
@@ -666,7 +784,7 @@ function ExtensionCard({
             </div>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <Badge tone={isPlugin ? 'info' : 'accent'}>
-                {isPlugin ? (extension.pluginType || 'plugin') : 'theme'}
+                {isPlugin ? pluginTypeLabel(extension.pluginType) : 'Theme'}
               </Badge>
               {offered?.channel === 'beta' && <Badge tone="info">beta</Badge>}
               {extension.deprecated && <Badge>deprecated</Badge>}

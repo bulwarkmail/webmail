@@ -1,0 +1,52 @@
+"use client";
+
+import { useEffect, useRef, type RefObject } from "react";
+import { registerComposer, type ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
+import { replaceTextareaRange } from "@/lib/plugin-sandbox/composer-own-text";
+import { textToEditorHtml } from "@/lib/plugin-sandbox/editor-html";
+import { ComposerPluginToolbarButtons } from "./composer-toolbar-menu";
+
+type Props = {
+  /** The id plugins know this quick reply by; the viewer passes it to the send too (OutgoingEmail.composerId). */
+  composerId: string;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+  readMetadata: () => ComposerMetadata;
+  onChange: (text: string) => void;
+};
+
+/** Own the quick-reply capability without an extra reading-pane render. */
+export function QuickReplyPluginActions({ composerId, inputRef, readMetadata, onChange }: Props) {
+  const metadataRef = useRef(readMetadata);
+  metadataRef.current = readMetadata;
+  useEffect(() => {
+    const registration = registerComposer({
+      readBody: () => { const text = inputRef.current?.value ?? ''; return { text, html: textToEditorHtml(text) }; },
+      readMetadata: () => metadataRef.current(),
+      readSelection: () => {
+        const input = inputRef.current;
+        const text = input?.value.slice(input.selectionStart, input.selectionEnd) ?? '';
+        return { text, html: textToEditorHtml(text), empty: !text };
+      },
+      replaceBody: (_html, text) => {
+        const input = inputRef.current;
+        if (!input || input.disabled) return false;
+        const changed = replaceTextareaRange(input, 0, input.value.length, text);
+        if (changed) onChange(input.value);
+        return changed;
+      },
+      replaceSelection: (_html, text, { below }) => {
+        const input = inputRef.current;
+        if (!input || input.disabled) return false;
+        let from = input.selectionStart;
+        let replacement = text;
+        if (below) { from = input.selectionEnd; replacement = `\n\n${text}`; }
+        const changed = replaceTextareaRange(input, from, input.selectionEnd, replacement);
+        if (changed) onChange(input.value);
+        return changed;
+      },
+      attach: async () => false,
+    }, composerId);
+    return registration.unregister;
+  }, [composerId, inputRef, onChange]);
+  return <ComposerPluginToolbarButtons alwaysVisible surface="composer-toolbar-actions" context={() => ({ composerId })} />;
+}

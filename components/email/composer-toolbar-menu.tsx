@@ -1,5 +1,6 @@
 "use client";
 
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, CONTEXT_MENU_ITEM_CLASS } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -7,6 +8,7 @@ import { Check, ChevronDown, iconForName, Puzzle, type AppIcon } from "@/compone
 import { usePluginActions } from "@/components/plugins/plugin-actions";
 import { runAction } from "@/lib/plugin-sandbox/actions";
 import { cn } from "@/lib/utils";
+import { useComposerBarLabels } from "./composer-bar-labels";
 
 interface ComposerToolbarMenuProps {
   icon: AppIcon;
@@ -26,6 +28,7 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
   const menu = useContextMenu<null>();
   const open = menu.contextMenu.isOpen;
   const close = menu.closeContextMenu;
+  const bar = useComposerBarLabels();
 
   return (
     <div className="relative">
@@ -49,13 +52,13 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
         <Icon className="w-4 h-4" />
         {/* By the bar's width, not the window's: a composer pane on a wide
             screen has no room for the labels either (#1375). */}
-        <span className="hidden @[40rem]/composer-bar:inline text-sm">{label}</span>
+        <span className={cn(bar.label, "text-sm")}>{label}</span>
         {activeCount > 0 && (
           <span className="min-w-4 h-4 rounded-full bg-primary px-1 text-[0.625rem] font-semibold leading-4 text-primary-foreground">
             {activeCount}
           </span>
         )}
-        <ChevronDown className="hidden @[40rem]/composer-bar:block w-3.5 h-3.5 text-muted-foreground" />
+        <ChevronDown className={cn(bar.chevron, "w-3.5 h-3.5 text-muted-foreground")} />
       </Button>
       <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={close}>
         <div className="min-w-56">{children(close)}</div>
@@ -67,21 +70,28 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
 interface ItemProps {
   icon?: AppIcon;
   onSelect: () => void;
+  /** A line under the label, as on the check items. */
+  description?: string;
+  /** Greyed out: the item can't do its job here yet, and says where to set it up. */
+  muted?: boolean;
   testId?: string;
   children: React.ReactNode;
 }
 
-export function ComposerToolbarMenuItem({ icon: Icon, onSelect, testId, children }: ItemProps) {
+export function ComposerToolbarMenuItem({ icon: Icon, onSelect, description, muted, testId, children }: ItemProps) {
   return (
     <button
       type="button"
       role="menuitem"
       onClick={onSelect}
       data-testid={testId}
-      className={CONTEXT_MENU_ITEM_CLASS}
+      className={cn(CONTEXT_MENU_ITEM_CLASS, description && "items-start", muted && "text-muted-foreground")}
     >
-      {Icon ? <Icon className="w-4 h-4 shrink-0" /> : null}
-      <span className="flex-1">{children}</span>
+      {Icon ? <Icon className={cn("w-4 h-4 shrink-0", description && "mt-0.5")} /> : null}
+      <span className="flex-1">
+        <span className="block">{children}</span>
+        {description && <span className="block text-xs text-muted-foreground">{description}</span>}
+      </span>
     </button>
   );
 }
@@ -105,17 +115,20 @@ export function ComposerToolbarMenuCheckItem({ checked, onToggle, description, t
       data-testid={testId}
       className={cn(CONTEXT_MENU_ITEM_CLASS, "items-start")}
     >
+      {/* A box, empty when off: with nothing drawn, an option that is off
+          didn't look like something to switch on (compose-p3-17). */}
       <span
         className={cn(
-          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
-          checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50"
+          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border",
+          checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/60",
         )}
         aria-hidden="true"
+        data-check-box={checked ? "on" : "off"}
       >
         {checked && <Check className="w-3 h-3" />}
       </span>
       <span className="flex-1">
-        <span className="block">{children}</span>
+        <span className="block" data-menu-label="">{children}</span>
         {description && <span className="block text-xs text-muted-foreground">{description}</span>}
       </span>
     </button>
@@ -140,16 +153,10 @@ export function ComposerToolbarMenuRadioItem({ checked, onSelect, testId, childr
       data-testid={testId}
       className={CONTEXT_MENU_ITEM_CLASS}
     >
-      <span
-        className={cn(
-          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-          checked ? "border-primary" : "border-muted-foreground/50"
-        )}
-        aria-hidden="true"
-      >
-        {checked && <span className="h-2 w-2 rounded-full bg-primary" />}
+      <span className="flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden="true">
+        {checked && <Check className="w-4 h-4" />}
       </span>
-      <span className="flex-1">{children}</span>
+      <span className="flex-1" data-menu-label="">{children}</span>
     </button>
   );
 }
@@ -176,29 +183,30 @@ interface PluginItemsProps {
  * no room next to the app's own buttons, Discard and Send, so the buttons
  * are hidden and the same actions are listed in the Options menu instead
  * (ComposerPluginMenuItems with `onlyWhenNarrow`).
+ * `alwaysVisible` is for a wrapping toolbar without an Options fallback.
  */
-export function ComposerPluginToolbarButtons({ surface, context }: { surface: "composer-toolbar-actions"; context: () => Record<string, unknown> }) {
+export function ComposerPluginToolbarButtons({ surface, context, alwaysVisible = false }: { surface: "composer-toolbar-actions"; context: () => Record<string, unknown>; alwaysVisible?: boolean }) {
   const actions = usePluginActions(surface);
   if (actions.length === 0) return null;
   return (
     <>
       {actions.map((action) => {
         const Icon = iconForName(action.icon) ?? Puzzle;
-        const tip = action.shortcut ? `${action.label} (${action.shortcut})` : action.label;
+        const tip = action.shortcut ? `${action.label} (${formatShortcutCombo(action.shortcut)})` : action.label;
         return (
           <Button
             key={`${action.pluginId}:${action.id}`}
             type="button"
             variant="ghost"
-            className={cn("hidden @[44rem]/composer-bar:inline-flex h-9 gap-1.5 px-2 sm:px-2.5", action.danger && "text-destructive")}
+            className={cn("h-9 gap-1.5 px-2 sm:px-2.5", alwaysVisible && "max-w-full", !alwaysVisible && "hidden @[44rem]/composer-bar:inline-flex", action.danger && "text-destructive")}
             title={tip}
             aria-label={action.label}
             aria-keyshortcuts={action.shortcut}
             data-plugin-action={`${action.pluginId}:${action.id}`}
             onClick={() => { void runAction(action, surface, context()); }}
           >
-            <Icon className="w-4 h-4" />
-            <span className="text-sm">{action.label}</span>
+            <Icon className="w-4 h-4 shrink-0" />
+            <span className={cn("text-sm", alwaysVisible && "truncate")}>{action.label}</span>
           </Button>
         );
       })}

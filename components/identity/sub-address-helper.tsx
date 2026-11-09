@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
+import { popoverShift } from '@/lib/popover-shift';
 import { useTranslations } from 'next-intl';
 import { Plus, Tag, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,11 @@ interface SubAddressHelperProps {
   recipientEmails: string[];
   onSelectTag: (tag: string) => void;
   disabled?: boolean;
+  /** Opened from elsewhere (the composer's From list) instead of its own button. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** No button of its own: the host opens it. */
+  hideTrigger?: boolean;
 }
 
 export function SubAddressHelper({
@@ -28,9 +34,17 @@ export function SubAddressHelper({
   recipientEmails,
   onSelectTag,
   disabled = false,
+  open,
+  onOpenChange,
+  hideTrigger = false,
 }: SubAddressHelperProps) {
   const t = useTranslations('identities.sub_address');
-  const [isOpen, setIsOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const isOpen = open ?? ownOpen;
+  const setIsOpen = (next: boolean) => {
+    if (open === undefined) setOwnOpen(next);
+    onOpenChange?.(next);
+  };
   const [tag, setTag] = useState('');
   const [error, setError] = useState<string | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -60,9 +74,19 @@ export function SubAddressHelper({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      // Its own document: in the desktop app a dialog has a window of its own.
+      const doc = popoverRef.current?.ownerDocument ?? document;
+      doc.addEventListener('mousedown', handleClickOutside);
+      return () => doc.removeEventListener('mousedown', handleClickOutside);
     }
+  }, [isOpen]);
+
+  // Anchored to its button, it would run off the left of a phone's screen.
+  useLayoutEffect(() => {
+    const el = popoverRef.current;
+    if (!isOpen || !el) return;
+    const shift = popoverShift(el.getBoundingClientRect(), { left: 0, right: window.innerWidth });
+    el.style.translate = shift !== 0 ? `${shift}px` : '';
   }, [isOpen]);
 
   const handleTagChange = (value: string) => {
@@ -119,27 +143,37 @@ export function SubAddressHelper({
   return (
     <div className="relative">
       {/* Trigger Button */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={disabled}
-        title={t('button_tooltip')}
-        className="h-8 px-2"
-      >
-        <Plus className="w-4 h-4 me-1" />
-        <Tag className="w-4 h-4" />
-      </Button>
+      {!hideTrigger && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={disabled}
+          title={t('button_tooltip')}
+          className="h-8 px-2"
+        >
+          <Plus className="w-4 h-4 me-1" />
+          <Tag className="w-4 h-4" />
+        </Button>
+      )}
 
       {/* Popover */}
       {isOpen && (
         <div
           ref={popoverRef}
+          role="dialog"
+          aria-label={t('popover_title')}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.stopPropagation();
+              setIsOpen(false);
+            }
+          }}
           className={cn(
             'absolute top-full end-0 mt-1 z-50',
             'bg-background border border-border rounded-lg shadow-lg',
-            'w-80 p-4 animate-in fade-in zoom-in-95 duration-150'
+            'w-80 max-w-[calc(100vw-1rem)] p-4 animate-in fade-in zoom-in-95 duration-150'
           )}
         >
           {/* Header */}

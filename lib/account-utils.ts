@@ -1,3 +1,6 @@
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { toUnicodeEmail } from '@/lib/idn';
+
 /**
  * Utilities for multi-account support:
  * - Account ID generation
@@ -136,7 +139,69 @@ export function isHttp2Available(): boolean {
  * once HTTP/2+ is observed, otherwise returns {@link MAX_ACCOUNTS_HTTP1}.
  */
 export function getMaxAccounts(): number {
+  // The cap is for the push streams sharing one http/1.1 origin. The embedded
+  // server speaks http/1.1, but each account streams from its own mail server.
+  if (IS_DESKTOP_BUILD) return MAX_ACCOUNT_SLOTS;
   return isHttp2Available() ? MAX_ACCOUNT_SLOTS : MAX_ACCOUNTS_HTTP1;
+}
+
+/** Minimal shape needed to name an account in a list (structural — avoids importing AccountEntry). */
+export interface NamedAccount {
+  id: string;
+  displayName?: string;
+  label: string;
+  email?: string;
+  username: string;
+}
+
+/**
+ * The bold title and the line under it for an account in a list. Usually the
+ * name over the address. One person signed in to two mailboxes has the same
+ * name, and often the same picture, on both, so the rows only differed in the
+ * small address line: when another account shares the name, the address
+ * becomes the title and the name is left out. A name that is just the address
+ * again is left out too.
+ */
+export function accountRowText(
+  account: NamedAccount,
+  accounts: NamedAccount[],
+): { title: string; subtitle: string | null } {
+  const key = (value: string) => value.trim().toLowerCase();
+  const nameOf = (a: NamedAccount) => a.displayName || a.label;
+  const name = nameOf(account);
+  const address = account.email || account.username;
+  const shared = accounts.some((a) => a.id !== account.id && key(nameOf(a)) === key(name));
+  if (!name || shared || key(name) === key(address)) return { title: address, subtitle: null };
+  return { title: name, subtitle: address };
+}
+
+/**
+ * Whether another signed-in account has the same address (one mailbox on two
+ * servers). Only then is the server worth a line under an account: in every
+ * other case it says nothing the person needs (settings-14, settings-p2-11).
+ */
+export function accountSharesAddress(
+  account: NamedAccount,
+  accounts: NamedAccount[],
+): boolean {
+  const key = (a: NamedAccount) => toUnicodeEmail(a.email || a.username).trim().toLowerCase();
+  return accounts.some((other) => other.id !== account.id && key(other) === key(account));
+}
+
+/**
+ * The name an account's avatar takes its initials from. Usually the account's
+ * name. When another account has the same name, both would show the same two
+ * letters, so the initials come from the address instead: its local part split
+ * at dots, dashes, underscores and plus signs ("dso-ux-mail-b" gives "DB",
+ * "dso-ux-mail" gives "DM").
+ */
+export function accountAvatarName(account: NamedAccount, accounts: NamedAccount[]): string {
+  const name = account.displayName || account.label;
+  const { title, subtitle } = accountRowText(account, accounts);
+  if (subtitle !== null || title !== (account.email || account.username)) return name;
+  const local = title.split('@')[0] ?? title;
+  const words = local.split(/[.\-_+]+/).filter(Boolean);
+  return words.length > 0 ? words.join(' ') : name || title;
 }
 
 /** Minimal shape needed to order accounts (structural — avoids importing AccountEntry). */

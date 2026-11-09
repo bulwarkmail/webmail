@@ -29,6 +29,15 @@ describe('list header ⋮', () => {
     fireEvent.click(screen.getByText('mark_folder_read'));
     expect(onMarkFolderRead).toHaveBeenCalledTimes(1);
   });
+  // p2-14: "Empty folder" read the same in Trash and Spam.
+  it('names Empty after Trash or Spam', () => {
+    const onEmptyFolder = vi.fn();
+    render(<MailFolderMenu folderRole="junk" onEmptyFolder={onEmptyFolder} />);
+    fireEvent.click(screen.getByTestId('mail-folder-menu'));
+    expect(screen.getByTestId('mail-empty-folder').textContent).toContain('empty_spam');
+    fireEvent.click(screen.getByTestId('mail-empty-folder'));
+    expect(onEmptyFolder).toHaveBeenCalledTimes(1);
+  });
   it('carries Refresh and Sort, which have no buttons of their own', () => {
     const onRefresh = vi.fn();
     render(<MailFolderMenu folderRole="inbox" onRefresh={onRefresh} onMarkAllFoldersRead={vi.fn()} />);

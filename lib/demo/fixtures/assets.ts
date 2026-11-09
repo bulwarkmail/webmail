@@ -9,6 +9,12 @@
  * "Wedding couple (1293575)", "Men drinking", "Lake Mountain Landscape",
  * "Team members of startup"); prototype-v3.png is drawn for the demo; the
  * rest is rendered by the generator.
+ *
+ * beacon-security-signoff.eml is a real S/MIME signed message (detached
+ * signature, multipart/signed) and .p7s its signature part. Alice's
+ * certificate comes from a throwaway "Meridian Labs Test CA" made with
+ * openssl for the demo; no key of it is kept here. The S/MIME plugin
+ * verifies the raw message, so these bytes must never change.
  */
 export interface DemoAsset {
   path: string;
@@ -41,6 +47,8 @@ export const DEMO_ASSETS = {
   'demo-blob-wedding-3': { path: '/demo/wedding-038-the-toast.jpg', name: 'wedding-038-the-toast.jpg', type: 'image/jpeg', size: 133897 },
   'demo-blob-vacation': { path: '/demo/vacation.jpg', name: 'lake-como.jpg', type: 'image/jpeg', size: 91949 },
   'demo-blob-team-photo': { path: '/demo/team-photo.jpg', name: 'team-offsite.jpg', type: 'image/jpeg', size: 71066 },
+  'demo-blob-security-signoff': { path: '/demo/beacon-security-signoff.eml', name: 'Beacon security review signed off.eml', type: 'message/rfc822', size: 4054 },
+  'demo-blob-security-signoff-p7s': { path: '/demo/beacon-security-signoff.p7s', name: 'smime.p7s', type: 'application/pkcs7-signature', size: 1865 },
 } as const satisfies Record<string, DemoAsset>;
 
 export type DemoBlobId = keyof typeof DEMO_ASSETS;

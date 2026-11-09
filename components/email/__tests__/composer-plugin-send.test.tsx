@@ -6,6 +6,7 @@ import { EmailComposer } from '../email-composer';
 const hoisted = vi.hoisted(() => ({
   takeOver: vi.fn(),
   toastError: vi.fn(),
+  transform: vi.fn(async (email: unknown) => email),
 }));
 
 // ─── Heavy component mocks (mirrors composer-from-override-envelope.test.tsx) ─
@@ -158,7 +159,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
     onBeforeDraftAutoSave: { transform: async (draft: unknown) => draft },
     onBeforeEmailSend: { intercept: async () => true, interceptOutcome: async () => 'allowed' },
     onComposeSend: { takeOver: hoisted.takeOver },
-    onTransformOutgoingEmail: { transform: async (email: unknown) => email },
+    onTransformOutgoingEmail: { transform: hoisted.transform },
   },
   contactHooks: {
     search: { call: async () => [] },
@@ -253,5 +254,42 @@ describe('composer send taken over by a plugin (#1207)', () => {
     const { onSend } = renderComposer();
 
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+  });
+
+  it('sends the headers a plugin added to the outgoing message', async () => {
+    hoisted.takeOver.mockResolvedValue('default');
+    hoisted.transform.mockImplementationOnce(async (email: unknown) => ({
+      ...(email as Record<string, unknown>),
+      headers: { 'X-Classification': 'Internal' },
+    }));
+    const { onSend } = renderComposer();
+
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend.mock.calls[0][0].headers).toEqual({ 'X-Classification': 'Internal' });
+  });
+
+  it('tells onTransformOutgoingEmail which composer sends, and starts with no keywords', async () => {
+    hoisted.takeOver.mockResolvedValue('default');
+    const { onSend } = renderComposer();
+
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    const input = hoisted.transform.mock.calls[0][0] as { composerId?: string; keywords?: string[] };
+    expect(input.composerId).toEqual(expect.any(String));
+    expect(input.composerId).toBe(onSend.mock.calls[0][0].composerId);
+    expect(input.keywords).toEqual([]);
+    // Nothing added: nothing to set.
+    expect(onSend.mock.calls[0][0].keywords).toBeUndefined();
+  });
+
+  it('sends the custom keywords a plugin added, without system ones', async () => {
+    hoisted.takeOver.mockResolvedValue('default');
+    hoisted.transform.mockImplementationOnce(async (email: unknown) => ({
+      ...(email as Record<string, unknown>),
+      keywords: ['akte-01/2026', '$seen', '$Draft', '$flagged', '$label:clients', 'bad keyword', 'AKTE-01/2026'],
+    }));
+    const { onSend } = renderComposer();
+
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend.mock.calls[0][0].keywords).toEqual(['akte-01/2026', '$flagged', '$label:clients']);
   });
 });

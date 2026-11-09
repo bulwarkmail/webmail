@@ -1,11 +1,19 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Paragraph from '@tiptap/extension-paragraph';
 import { trailingParagraphBreakRule } from '../paragraph-breaks';
 import { QuotedHtml, buildQuotedHtmlBlock, serializeEditorContent } from '../quoted-html';
 import { SignatureBlock, buildSignatureBlock } from '../signature-block';
-import { ReplyQuoteCollapse, markReplyQuoteHeader } from '../reply-quote-collapse';
+import { ReplyQuoteCollapse, markReplyQuoteHeader, userTextEnd } from '../reply-quote-collapse';
+
+// jsdom has no elementFromPoint; ProseMirror's own mousedown handler asks it where a click landed.
+// Without it that handler throws after the test, as an unhandled error, while the test still passes.
+beforeAll(() => {
+  if (typeof document.elementFromPoint !== 'function') {
+    Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: () => null });
+  }
+});
 
 const HEADER = markReplyQuoteHeader('<div>On Monday, Bob wrote:<br></div>');
 const ORIGINAL = '<p>Original message</p><img src="cid:logo"><blockquote>Earlier reply</blockquote>';
@@ -166,5 +174,88 @@ describe('reply quote visibility', () => {
     expect(markReplyQuoteHeader(unknown)).toBe(unknown);
     mount(`<p>Response</p>${markReplyQuoteHeader('<p><b>From:</b> Bob</p>')}${QUOTE}`);
     expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+  });
+});
+
+// compose-p2-3: a click under the folded quote used to put the caret on the
+// empty last line, below the hidden original, where the text went unseen.
+describe('a click in a reply with a folded quote', () => {
+  const click = (e: Editor, pos: number) => {
+    let handled = false;
+    e.view.someProp('handleClick', (handler) => { handled = handler(e.view, pos, new MouseEvent('click')) || handled; return handled; });
+    return handled;
+  };
+  const lastPos = (e: Editor) => e.state.doc.content.size - 1;
+
+  it('puts the caret at the end of the text above the quote', () => {
+    const e = mount();
+    expect(e.state.doc.lastChild?.type.name).toBe('paragraph');
+    expect(click(e, lastPos(e))).toBe(true);
+    expect(e.state.selection.from).toBe(1 + 'My response'.length);
+    expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps the click where it was once the quote is shown', () => {
+    const e = mount();
+    toggle().click();
+    expect(click(e, lastPos(e))).toBe(false);
+  });
+
+  it('keeps a click on a line the user can see below the quote', () => {
+    const e = mount(`<p>My response</p>${HEADER}${QUOTE}<p>Postscript</p>`);
+    expect(click(e, lastPos(e) - 2)).toBe(false);
+  });
+
+  it('keeps a click in the text above the quote', () => {
+    const e = mount();
+    expect(click(e, 3)).toBe(false);
+  });
+
+  it.each(['above', 'below'])('ends the text before a signature %s the quote', (position) => {
+    const signature = buildSignatureBlock('<b>My signature</b>');
+    const e = mount(`<p>My response</p>${position === 'above' ? signature : ''}${HEADER}${QUOTE}${position === 'below' ? signature : ''}`);
+    expect(userTextEnd(e.state)).toBe(1 + 'My response'.length);
+  });
+
+  // compose-p3-13: the reply keeps a line break (or an empty line) between
+  // the text and the quote; a click under the text put the caret after it,
+  // so what came next landed on a new line.
+  it('ends the text before the line break and the empty line kept above the quote', () => {
+    const withBreak = mount(`<p>My response<br><br></p>${HEADER}${QUOTE}`);
+    expect(userTextEnd(withBreak.state)).toBe(1 + 'My response'.length);
+    withBreak.destroy();
+    const withEmptyLine = mount(`<p>My response</p><p></p>${HEADER}${QUOTE}`);
+    expect(userTextEnd(withEmptyLine.state)).toBe(1 + 'My response'.length);
+  });
+
+  it('puts a click on the empty line above the folded quote at the end of the text', () => {
+    const e = mount(`<p>My response</p><p></p>${HEADER}${QUOTE}`);
+    const emptyLine = 1 + 'My response'.length + 2 + 1;
+    const handled = e.view.someProp('handleClick', (f) => f(e.view, emptyLine, new MouseEvent('click')));
+    expect(handled).toBe(true);
+    expect(e.state.selection.from).toBe(1 + 'My response'.length);
+  });
+
+  it('puts a click on the editor itself, under the text, at the end of the text', () => {
+    const e = mount(`<p>My response<br></p>${HEADER}${QUOTE}`);
+    e.view.coordsAtPos = () => ({ left: 0, right: 0, top: 10, bottom: 30 });
+    const below = new MouseEvent('mousedown', { button: 0, clientY: 200, bubbles: true, cancelable: true });
+    e.view.dom.dispatchEvent(below);
+    expect(below.defaultPrevented).toBe(true);
+    expect(e.state.selection.from).toBe(1 + 'My response'.length);
+    // On the text's own line the click is the browser's.
+    const onLine = new MouseEvent('mousedown', { button: 0, clientY: 20, bubbles: true, cancelable: true });
+    e.view.dom.dispatchEvent(onLine);
+    expect(onLine.defaultPrevented).toBe(false);
+  });
+
+  it('starts an empty reply on its first line', () => {
+    const e = mount(`<p></p><p></p>${HEADER}${QUOTE}`);
+    expect(userTextEnd(e.state)).toBe(1);
+  });
+
+  it('has no end of text in a body with neither quote nor signature', () => {
+    const e = mount('<p>Just text</p>');
+    expect(userTextEnd(e.state)).toBeNull();
   });
 });

@@ -1,14 +1,11 @@
 {
-  "meta_description": "Client de correu web minimalista que utilitza el protocol JMAP",
+  "meta_description": "Correu web autoallotjat per a correu, calendari, contactes i fitxers, basat en JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "Correu electrònic",
     "username_placeholder": "usuari@exemple.com",
     "password_label": "Contrasenya",
     "password_placeholder": "Introduïu la contrasenya",
-    "jmap_endpoint_label": "Servidor JMAP",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "El servidor ha de permetre sol·licituds CORS des d'aquest domini.",
     "jmap_server_label": "Servidor",
     "jmap_server_auto_picked": "Servidor seleccionat a partir del domini del vostre correu electrònic.",
     "sign_in": "Inicia la sessió",
@@ -29,7 +26,7 @@
     },
     "show_password": "Mostra la contrasenya",
     "hide_password": "Amaga la contrasenya",
-    "totp_toggle": "Tinc un codi 2FA",
+    "totp_toggle": "Tinc un codi de la meva aplicació d'autenticació",
     "token_toggle": "Inicia la sessió amb un token d'accés",
     "password_toggle": "Inicia la sessió amb una contrasenya",
     "token_label": "Token d'accés",
@@ -112,6 +109,33 @@
     "code_label": "Codi d'autenticació",
     "verify": "Verifica"
   },
+  "ux_p3_words": {
+    "appearance_description": "Canvieu l'aspecte de {appName}.",
+    "text_size_app": "Escala tot el text de l'aplicació. El 100% és la mida normal.",
+    "scrollbars_app": "Fa servir les barres de desplaçament del sistema, que són més amples i fàcils d'agafar.",
+    "voice_app": "La veu que llegeix els missatges en veu alta. La llista mostra les veus que té aquest ordinador per a l'idioma de la interfície.",
+    "voice_default_app": "Veu del sistema",
+    "visual_alerts_app": "Fa parpellejar lentament el títol de la finestra quan arriba correu nou o un recordatori, i manté els recordatoris a la pantalla fins que els tanqueu.",
+    "sounds_link_app": "Els sons de notificació i el nombre de no llegits a la icona de la barra de tasques es configuren a la pàgina Notificacions.",
+    "writing_language_app": "L'idioma en què escriviu normalment. La revisió i el corrector ortogràfic el fan servir.",
+    "badge_all_app": "El número de la icona de la barra de tasques i de la safata suma les safates d'entrada de tots els comptes amb la sessió iniciada.",
+    "badge_all_browser": "El número de la pestanya i de la icona de l'aplicació suma les safates d'entrada de tots els comptes amb la sessió iniciada.",
+    "dnd_title": "No molestis",
+    "pause_label": "Posa en pausa les notificacions",
+    "pause_description": "Sense sons, finestres emergents ni anuncis per veu per al correu nou fins que ho torneu a desactivar.",
+    "dnd_link_app": "Poseu en pausa les notificacions i definiu les hores de silenci a la pàgina Notificacions.",
+    "dnd_link_browser": "Poseu en pausa les notificacions a la pàgina Notificacions.",
+    "backup_app": "Exporteu la configuració a un fitxer i importeu-la als altres dispositius.",
+    "sync_app": "Els altres dispositius amb la sessió iniciada en aquest compte reben la mateixa configuració.",
+    "progress_attachments": "Baixant els fitxers adjunts",
+    "progress_events": "Baixant els esdeveniments",
+    "progress_contacts": "Baixant els contactes",
+    "progress_files_list": "Llistant els fitxers",
+    "progress_other": "Baixant",
+    "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que manteniu sense connexió a Fitxers, xifrats en aquest dispositiu. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",
+    "filter_value_placeholder": "Valor",
+    "filter_values_hint": "Per coincidir amb diversos valors, separeu-los amb comes."
+  },
   "sidebar": {
     "sign_in_again": "Torna a iniciar la sessió",
     "close": "Tanca",
@@ -127,7 +151,7 @@
     "sign_out_of": "Tanca la sessió de {account}",
     "sign_out_all": "Tanca la sessió de tots els comptes",
     "add_account": "Afegeix un compte",
-    "set_as_default": "Estableix com a predeterminat",
+    "set_as_default": "Obre aquest compte en iniciar",
     "switch_account": "Canvia de compte",
     "contacts": "Contactes",
     "calendar": "Calendari",
@@ -178,6 +202,7 @@
     },
     "clear_search": "Neteja la cerca",
     "vacation_active": "La resposta automàtica està activa",
+    "vacation_turn_off": "Desactiva",
     "demo_banner": "Mode de demostració",
     "demo_reset": "Reinicia",
     "demo_tour": "Visita guiada",
@@ -216,22 +241,30 @@
     "mv_storage_used": "{percent}% de {total} utilitzat",
     "accessibility": "Accessibilitat"
   },
+  "account_unread": {
+    "others": "Sense llegir en altres comptes: {count}",
+    "badge_all_accounts": {
+      "label": "Compta el correu no llegit de tots els comptes",
+      "description": "El número de la pestanya, la icona de l'aplicació i la safata suma les safates d'entrada de tots els comptes amb la sessió iniciada."
+    },
+    "empty_hint": "Podeu buidar la carpeta {folder} per eliminar definitivament tots els missatges."
+  },
   "protocol_handlers": {
     "title": "Aplicacions predeterminades",
-    "description": "Trieu si els enllaços de correu i calendari s'obren al {appName}. Tècnicament, el {appName} es registra com a gestor de protocol per als enllaços mailto: i webcal:.",
+    "description": "Trieu si els enllaços de correu i de calendari s'obren a {appName}.",
     "unsupported": "Aquest navegador o connexió no admet el registre manual de gestors de protocol. És possible que encara pugueu utilitzar la PWA instal·lada des de la configuració del navegador o del sistema operatiu.",
-    "mailto_label": "Enllaços de correu",
-    "mailto_description": "Obre els enllaços mailto: al {appName} amb el redactor emplenat prèviament.",
-    "protocol_open_mode_label": "En obrir enllaços de protocol",
+    "mailto_label": "Obre els enllaços de correu a {appName}",
+    "mailto_description": "En fer clic en una adreça de correu d'un lloc web, comença un missatge nou a {appName}.",
+    "protocol_open_mode_label": "Com s'obren els enllaços",
     "protocol_open_mode_description": "Trieu si el {appName} obre els enllaços mailto: i webcal: en una pestanya nova o reutilitza una sessió oberta. L'opció de sessió activa necessita permís de notificacions perquè pugueu prémer una notificació alternativa per portar el {appName} al davant si el navegador bloqueja el focus.",
     "protocol_open_mode_active_session": "Obre en la sessió activa si és possible",
     "protocol_open_mode_new_tab": "Obre sempre una pestanya nova",
     "focus_notification_title": "Obre el {appName}",
     "focus_notification_body": "L'enllaç s'ha obert al {appName}. Feu clic per portar la finestra al davant.",
-    "webcal_label": "Enllaços de calendari",
-    "webcal_description": "Obre els enllaços webcal: al {appName} amb el diàleg de subscripció al calendari emplenat prèviament.",
-    "register_mailto": "Registra com a aplicació de correu",
-    "register_webcal": "Registra com a aplicació de calendari",
+    "webcal_label": "Obre els enllaços de calendari a {appName}",
+    "webcal_description": "En fer clic en un enllaç de calendari d'un lloc web, s'afegeix el calendari a {appName}.",
+    "register_mailto": "Usa {appName} per als enllaços de correu",
+    "register_webcal": "Usa {appName} per als enllaços de calendari",
     "mailto_registered": "S'ha sol·licitat el registre del gestor de correu",
     "webcal_registered": "S'ha sol·licitat el registre del gestor de calendari",
     "registration_failed": "No s'ha pogut registrar el gestor de protocol",
@@ -241,7 +274,6 @@
     "select_account_title": "Trieu un compte",
     "select_mailto_account": "Trieu quin compte ha d'obrir aquest enllaç de correu.",
     "select_webcal_account": "Trieu quin compte ha d'obrir aquest enllaç de calendari.",
-    "select_account_note": "Això només s'aplica a aquest enllaç de protocol.",
     "detail_to": "Per a",
     "detail_subject": "Assumpte",
     "detail_no_subject": "Sense assumpte",
@@ -249,6 +281,28 @@
     "detail_source": "Origen",
     "active_account": "Actiu",
     "switching_account": "Canviant de compte..."
+  },
+  "pwaLaunch": {
+    "shortcut_new_message": "Missatge nou",
+    "shortcut_calendar": "Calendari",
+    "shortcut_contacts": "Contactes",
+    "unsupported_file": "{name} no es pot obrir aquí.",
+    "open_failed": "No s'ha pogut obrir el fitxer. Torneu a obrir-lo.",
+    "share_gone": "El que heu compartit ja no hi és. Torneu a compartir-ho.",
+    "share_files_lost": "No s'han pogut conservar els fitxers compartits. Torneu-los a afegir al missatge.",
+    "ics_needs_server": "Per importar un fitxer de calendari cal connexió amb el servidor. La importació començarà quan torneu a estar en línia.",
+    "contacts_need_server": "Per importar contactes cal connexió amb el servidor. Torneu-ho a provar quan torneu a estar en línia.",
+    "share_confirm_title": "Voleu començar un missatge nou?",
+    "share_confirm_message": "Un altre lloc o aplicació vol començar un missatge. No es puja ni es desa res si no hi esteu d'acord.",
+    "share_confirm_subject": "Assumpte:",
+    "share_confirm_text": "Text:",
+    "share_confirm_files": "{count, plural, one {Fitxer:} other {Fitxers:}}",
+    "share_confirm_accept": "Comença el missatge",
+    "share_confirm_decline": "No el comencis",
+    "share_cut": "El text compartit era massa llarg i s'ha escurçat.",
+    "handoff_expired": "Una cosa que heu obert o compartit ha esperat massa i ja no hi és. Torneu-la a obrir o compartir.",
+    "compose_waiting": "Tanqueu aquest missatge per començar el següent.",
+    "save_first_failed": "No s'ha pogut desar el missatge, per això no s'ha obert el fitxer. Deseu el missatge i obriu el calendari o els contactes."
   },
   "sidebar_apps": {
     "modal_title": "Aplicacions de la barra lateral",
@@ -302,6 +356,9 @@
     "no_search_results": "No s'ha trobat cap resultat",
     "no_search_results_description": "Proveu d'ajustar la cerca o els filtres",
     "more_results_searching": "S'estan cercant més resultats…",
+    "resize_plugin_results": "Canvia la mida dels resultats dels connectors",
+    "compact_plugin_results": "Una línia per resultat",
+    "plugin_result_score": "{count} de 5",
     "loading": "Carregant els correus...",
     "unread": "no llegit",
     "to_me": "Per a mi",
@@ -390,6 +447,29 @@
       "position": "{more, select, yes {Pàgina {page} de {pages} o més} other {Pàgina {page} de {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversa seleccionada} other {# converses seleccionades}}",
+    "search_count": "{conversations, plural, one {# conversa} other {# converses}} ({messages, plural, one {# missatge} other {# missatges}})",
+    "conversation_count": "{count, plural, one {# conversa} other {# converses}}",
+    "archived": "Arxivat",
+    "moved_to_trash": "S'ha mogut a la Paperera",
+    "moved_to": "Mogut a {mailbox}",
+    "moved_count_to": "{count, plural, one {# correu mogut a {mailbox}} other {# correus moguts a {mailbox}}}",
+    "new_folder_title": "Carpeta nova",
+    "new_subfolder_title": "Subcarpeta nova"
+  },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversa arxivada} other {# converses arxivades}}",
+    "conversations_to_trash": "{count, plural, one {# conversa moguda a la Paperera} other {# converses mogudes a la Paperera}}",
+    "conversations_deleted": "{count, plural, one {# conversa suprimida} other {# converses suprimides}}",
+    "conversations_moved_to": "{count, plural, one {# conversa moguda a {mailbox}} other {# converses mogudes a {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversa moguda} other {# converses mogudes}}",
+    "select_all_in_folder": "{count, plural, one {Selecciona la # conversa de {folder}} other {Selecciona les # converses de {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selecciona el # correu de {folder}} other {Selecciona els # correus de {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selecciona la # conversa} other {Selecciona les # converses}}",
+    "select_all_emails": "{count, plural, one {Selecciona el # correu} other {Selecciona els # correus}}",
+    "selecting_all": "S'està seleccionant…"
+  },
   "shared_tags": {
     "title": "Etiquetes compartides",
     "description": "Etiquetes de les vostres bústies de grup. Tothom del grup veu els mateixos noms i colors al seu correu.",
@@ -462,7 +542,6 @@
     "view_in_light_mode": "Veure en mode clar",
     "export_email": "Exporta com a .eml",
     "forward_as_attachment": "Reenvia com a fitxer adjunt",
-    "import_email": "Importa .eml o .zip…",
     "keyboard_shortcuts": "Dreceres de teclat",
     "email_source": "Codi font del correu",
     "draft_banner": "Aquest missatge és un esborrany",
@@ -474,6 +553,9 @@
     "source_truncated": "Es mostren els primers {size}. Exporta el missatge per veure la resta.",
     "source_copied": "S'ha copiat el codi font al porta-retalls",
     "attachments": "Fitxers adjunts",
+    "attachments_count": "{count, plural, one {# fitxer adjunt} other {# fitxers adjunts}}",
+    "attachments_show_more": "Mostra'n {count} més",
+    "attachments_show_fewer": "Mostra'n menys",
     "important": "Important",
     "download": "Baixa",
     "download_all": "Baixa-ho tot",
@@ -776,9 +858,73 @@
       "copied": "Codi copiat",
       "copy_failed": "No s'ha pogut copiar el codi"
     },
+    "structured_mail": {
+      "kind_flight": "Vol",
+      "kind_train": "Tren",
+      "kind_bus": "Autobús",
+      "kind_lodging": "Hotel",
+      "kind_rentalcar": "Cotxe de lloguer",
+      "kind_event": "Esdeveniment",
+      "kind_restaurant": "Restaurant",
+      "kind_order": "Comanda",
+      "kind_parcel": "Paquet",
+      "region_flight": "Reserva de vol",
+      "region_train": "Reserva de tren",
+      "region_bus": "Reserva d'autobús",
+      "region_lodging": "Reserva d'hotel",
+      "region_rentalcar": "Reserva de cotxe de lloguer",
+      "region_event": "Reserva d'esdeveniment",
+      "region_restaurant": "Reserva de restaurant",
+      "region_shipment": "Comanda i lliurament",
+      "status_cancelled": "Cancel·lada",
+      "status_pending": "Pendent",
+      "status_hold": "En espera",
+      "order_status_payment_due": "Pagament pendent",
+      "order_status_processing": "En preparació",
+      "order_status_problem": "Problema",
+      "order_status_in_transit": "Enviada",
+      "order_status_pickup_available": "A punt per recollir",
+      "order_status_returned": "Retornada",
+      "order_status_delivered": "Lliurada",
+      "order_status_cancelled": "Cancel·lada",
+      "reference": "Codi de reserva",
+      "order_number": "Número de comanda",
+      "tracking_number": "Número de seguiment",
+      "copy_reference": "Copia el codi de reserva {value}",
+      "copy_order_number": "Copia el número de comanda {value}",
+      "copy_tracking_number": "Copia el número de seguiment {value}",
+      "copied_reference": "S'ha copiat el codi de reserva",
+      "copied_order_number": "S'ha copiat el número de comanda",
+      "copied_tracking_number": "S'ha copiat el número de seguiment",
+      "copy_failed": "No s'ha pogut copiar al porta-retalls",
+      "passengers": "Passatgers",
+      "seats": "Seients",
+      "tickets": "Entrades",
+      "link_check_in": "Facturació",
+      "link_manage": "Gestiona la reserva",
+      "link_ticket": "Entrada",
+      "link_track": "Segueix l'enviament",
+      "link_view_order": "Mostra la comanda",
+      "check_in_label": "Entrada",
+      "check_out_label": "Sortida",
+      "from_time": "des de les {time}",
+      "until_time": "fins a les {time}",
+      "nights": "{count, plural, one {# nit} other {# nits}}",
+      "pickup": "Recollida",
+      "dropoff": "Devolució",
+      "party_size": "{count, plural, one {Taula per a # persona} other {Taula per a # persones}}",
+      "items_more": "i {count} més",
+      "items_count": "{count, plural, one {# article} other {# articles}}",
+      "total": "Total {total}",
+      "expected_by": "Arriba abans del {date}",
+      "local_time": "hora local",
+      "local_time_title": "Hora local del lloc, no la de la teva zona horària",
+      "route": "{from} a {to}"
+    },
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostra el tauler del connector",
     "plugin_panel_hide": "Amaga el tauler del connector",
+    "plugin_panel": "Tauler del connector",
     "copy": "Copia",
     "contact_added": "S'ha afegit el contacte",
     "save_to_files": {
@@ -806,6 +952,18 @@
     "read_aloud_stop": "Atura la lectura",
     "reader_view": "Vista de lectura"
   },
+  "reader_actions": {
+    "restore": "Restaura",
+    "restore_to": "Torna a moure a {folder}",
+    "delete_forever": "Suprimeix per sempre"
+  },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mou a la safata d'entrada",
+    "delete_forever_title": "Vols suprimir aquest missatge per sempre?",
+    "delete_forever_batch_title": "{count, plural, one {Vols suprimir aquest missatge per sempre?} other {Vols suprimir aquests # missatges per sempre?}}",
+    "delete_forever_message": "No el podràs recuperar.",
+    "delete_forever_batch_message": "{count, plural, one {No el podràs recuperar.} other {No els podràs recuperar.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De {domain}, fora de la vostra organització",
@@ -817,6 +975,35 @@
     "field_bcc": "CCO",
     "send_anyway": "Envia igualment",
     "back": "Enrere"
+  },
+  "phishing_report": {
+    "action": "Denuncia com a pesca de credencials…",
+    "confirm_title": "Voleu denunciar-ho com a pesca de credencials?",
+    "confirm_message": "{count, plural, one {El missatge s'envia a {address} i es mou al correu brossa.} other {Cadascun dels # missatges s'envia a {address} com a denúncia independent i es mou al correu brossa.}}",
+    "confirm": "Denuncia",
+    "cancel": "Cancel·la",
+    "sending": "S'està denunciant…",
+    "done": "{count, plural, one {S'ha denunciat a {address} i s'ha mogut al correu brossa.} other {S'han denunciat # missatges a {address} i s'han mogut al correu brossa.}}",
+    "not_moved": "{count, plural, one {S'ha denunciat a {address}, però el missatge no s'ha pogut moure al correu brossa.} other {S'ha denunciat a {address}, però # missatges no s'han pogut moure al correu brossa.}}",
+    "failed": "{count, plural, one {No s'ha pogut denunciar el missatge.} other {No s'han pogut denunciar # missatges.}}",
+    "undo": "Desfés",
+    "undone": "{count, plural, one {S'ha tornat al lloc. La denúncia ja s'havia enviat.} other {S'han tornat al lloc. Les denúncies ja s'havien enviat.}}",
+    "undo_failed": "No s'ha pogut tornar al lloc.",
+    "banner": "Heu denunciat aquest missatge com a pesca de credencials. Els enllaços estan desactivats.",
+    "link_off": "enllaç desactivat",
+    "link_off_note": "(enllaç desactivat)",
+    "no_subject": "(sense assumpte)"
+  },
+  "classification": {
+    "picker_label": "Classificació",
+    "chip_label": "Classificació: {name}",
+    "none": "Sense classificació",
+    "pick_required": "Trieu una classificació",
+    "required_hint": "La vostra organització exigeix una classificació.",
+    "required_toast": "Trieu una classificació abans d'enviar.",
+    "quick_reply_needs_label": "Aquesta resposta necessita una classificació. Trieu-ne una aquí i després envieu-la.",
+    "forward_needs_label": "Cal una classificació. Reenvieu el missatge des del redactor.",
+    "received_hint": "La defineix el programa de correu del remitent. Qualsevol pot definir una classificació, així que no demostra res."
   },
   "email_composer": {
     "select_from_directory": "Selecciona del directori",
@@ -833,10 +1020,10 @@
     "forward_message": "Reenvia",
     "from": "De",
     "to": "Per a",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCO",
     "subject": "Assumpte",
-    "body_placeholder": "Escriviu el vostre missatge...",
+    "body_placeholder": "Escriviu el vostre missatge…",
     "send": "Envia",
     "cancel": "Cancel·la",
     "attach": "Adjunta",
@@ -893,10 +1080,10 @@
       "email_placeholder": "alias@exemple.com",
       "envelope_notice": "Si el vostre servidor no accepta aquesta adreça com a remitent del sobre, s'hi fa servir {identity}, i els destinataris la poden veure a la capçalera Return-Path."
     },
-    "save_as_template": "Desa com a plantilla",
+    "save_as_template": "Desa com a plantilla…",
     "attach_from_device": "Puja des d'aquest dispositiu",
     "templates_menu": "Plantilles",
-    "insert_template": "Insereix una plantilla",
+    "insert_template": "Insereix una plantilla…",
     "options": "Opcions",
     "option_plain_text": "Text pla",
     "option_plain_text_hint": "Envia sense format",
@@ -975,7 +1162,7 @@
       "unfinished": []
     },
     "schedule_send": "Programa l'enviament",
-    "schedule_send_description": "Trieu quan ha d'alliberar el servidor aquest missatge.",
+    "schedule_send_description": "Tria quan s'ha d'enviar.",
     "schedule_preset": {
       "this_morning": "Aquest matí",
       "this_afternoon": "Aquesta tarda",
@@ -1026,6 +1213,7 @@
       "edit_link": "Edita l'enllaç",
       "remove_link": "Treu l'enllaç",
       "link_address": "Adreça de l'enllaç",
+      "link_text": "Text",
       "link_invalid": "L'adreça no pot tenir espais",
       "table": "Taula",
       "clear_formatting": "Neteja el format",
@@ -1095,6 +1283,27 @@
       "edit": "Edita la descripció de la imatge",
       "plain_text": "[Imatge: {alt}]"
     }
+  },
+  "compose_ux": {
+    "draft_discarded": "Esborrany descartat",
+    "undo": "Desfés",
+    "discard_draft": "Descarta l'esborrany",
+    "save_failed_close": "No s'ha pogut desar l'esborrany. Torneu-ho a provar o descarteu-lo.",
+    "try_again": "Torna-ho a provar",
+    "add_description": "Afegeix una descripció",
+    "attachments_summary": "Adjunts: {count}, {size}",
+    "from_sub_address": "Fes servir una subadreça…",
+    "from_edit_sender": "Edita el remitent…",
+    "shortcut_insert_link": "Insereix un enllaç",
+    "shortcut_save_draft": "Desa l'esborrany",
+    "shortcut_show_cc": "Mostra Cc",
+    "shortcut_show_bcc": "Mostra Cco"
+  },
+  "compose_dock": {
+    "open_draft": "Obre",
+    "reply_type": "Tipus de resposta: {kind}",
+    "resize_reply": "Canvia la mida de la resposta",
+    "fields_menu": "Més camps"
   },
   "confirm_dialog": {
     "confirm": "Confirma",
@@ -1186,8 +1395,6 @@
     "templates_import_errors": "Algunes plantilles no s'han pogut importar",
     "templates_import_empty": "No s'ha trobat cap plantilla al fitxer",
     "export_email_error": "No s'ha pogut exportar el correu",
-    "import_email_success": "Correu importat correctament",
-    "import_email_error": "No s'ha pogut importar el correu",
     "rule_created": "S'ha creat la regla",
     "rule_merged": "S'ha afegit a la regla «{name}»",
     "rule_already_covered": "Ja ho cobreix la regla «{name}»",
@@ -1210,12 +1417,75 @@
     "tag_removed_count": "{count, plural, one {S'ha tret l'etiqueta de # correu} other {S'ha tret l'etiqueta de # correus}}",
     "new_mail_count": "{count, plural, one {# missatge nou} other {# missatges nous}}"
   },
+  "org_notice": {
+    "label": "Avís",
+    "dismiss": "Tanca l'avís",
+    "severity_info": "Informació",
+    "severity_warning": "Advertència",
+    "severity_critical": "Important"
+  },
+  "vacation_templates": {
+    "title": "Plantilles de l'organització",
+    "description": "Comenceu amb una resposta que ha escrit la vostra organització. Després podeu canviar el text.",
+    "pick_label": "Utilitza una plantilla",
+    "pick_placeholder": "Trieu una plantilla",
+    "deputy_label": "Adreça del suplent",
+    "deputy_placeholder": "company@example.com",
+    "deputy_hint": "La resposta indica aquesta persona per als assumptes urgents.",
+    "deputy_missing": "Primer introduïu l’adreça del vostre suplent.",
+    "deputy_name_label": "Nom del suplent",
+    "deputy_name_missing": "Primer introduïu el nom del vostre suplent.",
+    "apply": "Utilitza aquest text",
+    "apply_hint": "Substitueix l'assumpte i el text de sota."
+  },
+  "uxs_vacation": {
+    "default_subject": "Fora de l'oficina",
+    "default_message": "Gràcies pel teu correu. Soc fora de l'oficina i respondré quan torni.",
+    "write_message_first": "Escriu primer un missatge. Sense missatge, la gent rebria una resposta buida.",
+    "enter_address_first": "Escriu primer l'adreça a la qual reenviar.",
+    "message_title": "La teva resposta",
+    "message_label": "Missatge",
+    "message_description": "El que rep qui t'escriu. Pots fer servir format i enllaços.",
+    "from_label": "Des de (opcional)",
+    "from_description": "Deixa-ho buit per començar ara mateix.",
+    "until_label": "Fins a (opcional)",
+    "until_description": "Deixa-ho buit per continuar responent fins que ho desactivis.",
+    "from_placeholder": "Des d’ara",
+    "until_placeholder": "Fins que el desactiveu",
+    "audience_all": "Tothom",
+    "audience_internal": "Només la meva organització ({domains})",
+    "audience_external": "Només persones de fora de la meva organització",
+    "signature_label": "Signatura",
+    "signature_plain_label": "Signatura (text sense format)",
+    "signature_plain_description": "Escrius només text sense format (Redacció), així que la signatura també ho és.",
+    "edit_as_html": "Edita com a HTML",
+    "edit_formatted": "Torna a l'editor amb format",
+    "html_source_label": "Signatura en HTML",
+    "signature_size": "{bytes} de {max} bytes utilitzats",
+    "signature_too_long": "Massa llarga per al servidor ({bytes} de {max} bytes). Escurça-la."
+  },
+  "retention_notice": {
+    "line": "Els missatges d'aquí s'eliminen {count, plural, one {# dia} other {# dies}} després de moure'ls aquí."
+  },
+  "device_policy": {
+    "downloads_off": "La vostra organització ha desactivat les baixades.",
+    "download_off_named": "{name}: la vostra organització ha desactivat les baixades",
+    "download_blocked": "La vostra organització ha desactivat les baixades.",
+    "export_blocked": "La vostra organització ha desactivat l'exportació del correu.",
+    "print_blocked": "La vostra organització ha desactivat la impressió."
+  },
   "third_party": {
     "push_needs_relay": "Les notificacions push necessiten un repetidor push gestionat per la vostra organització, i no n'hi ha cap de configurat. El correu nou es continua mostrant mentre l'aplicació està oberta.",
     "relay_desc": "Només s'ofereixen els repetidors propis de la vostra organització, perquè aquest servidor no contacta amb serveis externs.",
     "relay_none": "No n'hi ha cap de configurat",
     "plugin_refused": "No s'ha iniciat: aquest connector es connecta a serveis externs, que la vostra organització ha desactivat.",
     "remote_content_blocked": "La vostra organització bloqueja el contingut d'altres servidors, així que les imatges remotes d'aquest missatge no es mostren."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "La vostra organització bloqueja el contingut remot a tots els correus, de manera que tampoc es carrega dels remitents de confiança."
+  },
+  "trusted_senders_book": {
+    "unavailable": "No disponible: aquest compte no pot desar llibretes d'adreces al servidor. La llista es queda en aquest dispositiu."
   },
   "date": {
     "today": "Avui",
@@ -1389,8 +1659,8 @@
       "title": "Aparença",
       "description": "Personalitzeu l'aspecte del vostre correu web",
       "theme": {
-        "label": "Tema",
-        "description": "Trieu l'esquema de colors preferit",
+        "label": "Clar o fosc",
+        "description": "Sistema segueix la configuració del dispositiu",
         "light": "Clar",
         "dark": "Fosc",
         "system": "Sistema"
@@ -1418,7 +1688,7 @@
         "label": "Disposició de la interfície",
         "description": "On se situen la cerca, la navegació i les barres d'eines",
         "default": "Predeterminat",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Barra de cerca a dalt"
       },
       "animations": {
         "label": "Activa les animacions",
@@ -1438,13 +1708,17 @@
         "label": "Amaga el selector de comptes de la barra lateral",
         "description": "Amaga el selector de comptes a la part superior de la barra lateral de carpetes. Encara podreu canviar de compte des de la barra de navegació inferior."
       },
+      "sidebar_account_switcher": {
+        "label": "Selector de comptes a la part superior de la barra lateral",
+        "description": "Mostra el selector de comptes damunt de les carpetes i el botó rodó Redacta damunt de la llista de missatges. Desactiveu-ho per posar Redacta damunt de les carpetes."
+      },
       "show_rail_account_list": {
         "label": "Mostra els avatars dels comptes a la barra de navegació",
         "description": "Mostra cercles individuals per a cada compte a la part inferior de la barra de navegació per canviar-hi ràpidament, amb un botó de tancament de sessió a sota."
       },
       "unified_mailbox": {
         "label": "Bústia unificada",
-        "description": "Mostra carpetes combinades (Safata d'entrada, Enviats, etc.) del compte actiu i les seves carpetes compartides.",
+        "description": "Mostra carpetes combinades (Safata d'entrada, Enviats, etc.) del compte actiu i les seves carpetes compartides. La secció només apareix quan hi ha alguna cosa per combinar: «En tots els comptes» activat amb més d'un compte connectat, una safata d'entrada de grup inclosa a sota, o Tot el correu, No llegits o Destacats activat. Aquestes tres són opcions separades que només apareixen quan l'administrador les activa.",
         "cross_account": {
           "label": "En tots els comptes",
           "description": "Combina la bústia unificada de tots els comptes connectats en lloc de limitar-la al compte actiu."
@@ -1462,7 +1736,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Icones de colors a la barra lateral",
-        "description": "Acoloreix les icones de carpetes i etiquetes segons el tipus (blau per a la safata d'entrada, vermell per a la brossa, verd per als enviats, etc.). Desactiveu-ho per a una barra lateral monocroma."
+        "description": "Acoloreix les icones de carpetes i etiquetes per tipus (Safata d'entrada en blau, Correu brossa en vermell, Enviats en verd, etc.). Desactiveu-ho per tenir icones grises."
       },
       "tint_list_rows": {
         "label": "Acoloreix les files de la llista segons l'etiqueta",
@@ -1474,11 +1748,15 @@
       },
       "favicon_unread_badge": {
         "label": "Nombre de no llegits a la icona de la pestanya",
-        "description": "Mostra el nombre de no llegits de la safata d'entrada com a distintiu a la icona de la pestanya del navegador, perquè el correu nou sigui visible encara que la pestanya no tingui el focus. Desactiveu-ho per mantenir la icona sense distintiu."
+        "description": "Així veieu el correu nou mentre treballeu en una altra pestanya o aplicació."
       },
       "show_shared_mail_accounts": {
         "label": "Mostra els comptes de correu compartits",
         "description": "Mostra les carpetes de les bústies compartides amb tu a Compartit, a la barra lateral. Desactiva-ho per amagar-les totes, o amaga comptes concrets a sota. Els calendaris i contactes es mantenen."
+      },
+      "compact_shared_mailboxes": {
+        "label": "Bústies compartides compactes",
+        "description": "Mostra cada bústia compartida com una sola fila que obre la seva safata d'entrada, amb les seves carpetes a sota. Les buides, com Esborranys o Paperera, no es mostren."
       },
       "pro_interface": {
         "label": "Interfície Pro (experimental)",
@@ -1521,7 +1799,7 @@
     },
     "keywords": {
       "title": "Etiquetes de correu",
-      "description": "Definiu etiquetes per organitzar els correus amb colors. Es desen com a paraules clau JMAP al servidor.",
+      "description": "Creeu etiquetes per ordenar els missatges. Les etiquetes es desen amb els missatges al servidor.",
       "add_keyword": "Afegeix una etiqueta",
       "label_field": "Nom mostrat",
       "label_placeholder": "p. ex. Feina, Personal, Urgent",
@@ -1556,8 +1834,8 @@
         "hide": "Amaga"
       },
       "unrecognized": {
-        "title": "Recupera etiquetes del servidor",
-        "description": "Els noms i els colors de les etiquetes es desen en aquest navegador, però les etiquetes viuen als vostres correus com a paraules clau JMAP. Analitzeu el correu per trobar paraules clau que cap etiqueta d'aquí no expliqui i torneu-les a afegir.",
+        "title": "Cerca etiquetes dels missatges que falten aquí",
+        "description": "Aquest navegador desa els noms i els colors de les etiquetes. Les etiquetes es desen als missatges. Cerqueu al correu les etiquetes que falten aquí i torneu-les a afegir.",
         "scan": "Cerca etiquetes",
         "rescan": "Torna a cercar",
         "scanning": "S'està analitzant… {scanned} de {total} correus",
@@ -1571,14 +1849,14 @@
     "notifications": {
       "test_sound": "Prova el so de notificació",
       "sounds": {
-        "default": "Per defecte (bip)",
+        "default": "Bip",
         "cheerful": "Alegre",
         "involved": "Elaborat",
         "swift": "Gest ràpid",
         "relax": "Relaxant"
       },
       "push": {
-        "title": "Notificacions en segon pla",
+        "title": "Notificacions quan {appName} està tancat",
         "description": "Rebeu notificacions del sistema per al correu nou quan aquest lloc estigui tancat. S'entreguen mitjançant el repetidor push del Bulwark; el repetidor mai no veu el contingut del correu.",
         "relay_label": "Repetidor push",
         "relay_desc": "Per defecte utilitza el repetidor allotjat del Bulwark. Canvieu-ho només si allotgeu el vostre propi servidor.",
@@ -1588,8 +1866,9 @@
         "status_inactive": "No activat en aquest dispositiu",
         "status_unsupported": "Aquest navegador no admet Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Les notificacions en segon pla no estan disponibles a la demo.",
         "status_busy": "Treballant…",
-        "enable": "Activa",
+        "enable": "Activa en aquest dispositiu",
         "reenable": "Torna a registrar",
         "disable": "Desactiva",
         "confirm_disable_title": "Voleu desactivar les notificacions en segon pla?",
@@ -1614,7 +1893,12 @@
         "confirm_revoke_message_this": "Aquest dispositiu deixarà de rebre notificacions en segon pla immediatament.",
         "shared_mailboxes_no_push": "Les bústies que altres usuaris comparteixen amb vós no envien notificacions en segon pla.",
         "error_forbidden": "El servidor de correu no permet notificacions en segon pla per a aquest compte.",
-        "error_over_quota": "Aquest compte té massa registres push al servidor de correu (el límit sol ser 15). Revoqueu els dispositius que ja no feu servir a la configuració de notificacions i torneu-ho a provar."
+        "error_over_quota": "Aquest compte té massa registres push al servidor de correu (el límit sol ser 15). Revoqueu els dispositius que ja no feu servir a la configuració de notificacions i torneu-ho a provar.",
+        "error_blocked": "Les notificacions estan bloquejades per a aquest lloc. Permet-les a la configuració del lloc del navegador i torna-ho a provar.",
+        "error_not_granted": "No s'han permès les notificacions, així que les notificacions push continuen desactivades.",
+        "error_verification_timeout": "El servidor de correu no ha confirmat aquest dispositiu a temps, així que les notificacions push continuen desactivades. Torna-ho a provar d'aquí a un minut.",
+        "error_relay": "Ara mateix no es pot accedir al repetidor de notificacions, així que les notificacions push continuen desactivades. Torna-ho a provar més tard.",
+        "error_teardown": "Les notificacions push estan desactivades en aquest navegador, però no s'ha pogut accedir al servidor de correu o al repetidor. Encara poden arribar notificacions durant uns dies. Per aturar-les abans, activa la configuració avançada quan tornis a tenir connexió i revoca aquest dispositiu a Dispositius registrats."
       },
       "push_all": {
           "title": "All accounts",
@@ -1629,17 +1913,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "So de notificació",
+        "title": "So",
         "description": "Trieu quin so es reprodueix per a les notificacions",
-        "choose": "So",
+        "choose": "To",
         "choose_desc": "Seleccioneu un to de notificació i feu clic a la icona de l'altaveu per escoltar-lo"
       },
       "email": {
-        "title": "Notificacions de correu",
+        "title": "Correu nou",
         "description": "Configureu les notificacions per als correus entrants",
         "enabled": "Notificacions de correu",
         "enabled_desc": "Mostra notificacions quan arribin correus nous",
-        "sound": "So de notificació",
+        "sound": "So per al correu nou",
         "sound_desc": "Reprodueix un avís sonor quan arribin correus nous",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1649,7 +1933,7 @@
         "description": "Configureu les notificacions per als esdeveniments del calendari",
         "enabled": "Notificacions d'esdeveniments",
         "enabled_desc": "Mostra avisos per als esdeveniments propers del calendari",
-        "sound": "So de notificació",
+        "sound": "So per als recordatoris",
         "sound_desc": "Reprodueix un avís sonor per als recordatoris del calendari"
       }
     },
@@ -1688,7 +1972,7 @@
       },
       "first_day": {
         "label": "Primer dia de la setmana",
-        "description": "Comença la setmana en diumenge o dilluns",
+        "description": "Primer dia de la setmana als calendaris",
         "sunday": "Diumenge",
         "monday": "Dilluns"
       },
@@ -1709,6 +1993,12 @@
       "clear_search_on_folder_change": {
         "label": "Esborra la cerca en canviar de carpeta",
         "description": "En clicar una carpeta (Safata d'entrada, Enviats…) s'esborra la cerca activa i es mostra aquesta carpeta. Si està desactivat, la cerca es manté i es torna a executar a la carpeta triada."
+      },
+      "search_default_scope": {
+        "label": "Cerca a",
+        "description": "On busca una cerca nova. Encara pots triar una altra carpeta als filtres de cerca.",
+        "all": "Totes les carpetes excepte Correu brossa i Paperera",
+        "folder": "La carpeta oberta"
       },
       "request_read_receipt": {
         "label": "Sol·licita confirmacions de lectura per defecte",
@@ -1772,13 +2062,13 @@
       },
       "mail_layout": {
         "label": "Disposició del correu",
-        "description": "Trieu entre la vista dividida clàssica, un flux de lectura centrat a l'estil Gmail, o una subfinestra de lectura inferior a l'estil Zimbra.",
+        "description": "On van la llista de missatges i el missatge obert a la pantalla.",
         "split": "Vista dividida",
-        "split_description": "Manté la llista de missatges i la subfinestra de lectura visibles una al costat de l'altra.",
+        "split_description": "Llista i missatge un al costat de l'altre",
         "focus": "Llista centrada",
-        "focus_description": "Mostra una línia per missatge i obre el correu a amplada completa mantenint visible la barra lateral de carpetes.",
+        "focus_description": "La llista i després el missatge a tota amplada",
         "horizontal": "Subfinestra de lectura a baix",
-        "horizontal_description": "Mostra la llista de missatges a dalt i obre el missatge seleccionat en una subfinestra de lectura a sota."
+        "horizontal_description": "Missatge sota la llista"
       },
       "list_columns": {
         "label": "Mostra la llista en columnes",
@@ -1803,7 +2093,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Respon des de l'adreça de recepció",
-        "description": "En respondre, envia des de l'adreça a la qual es va enviar originalment el missatge. Primer intenta coincidir amb les identitats; per als lliuraments de captura general de domini, reescriu la capçalera «De» amb l'àlies mentre envia a través de la identitat principal."
+        "description": "En respondre, envia des de l’adreça a la qual es va enviar el missatge."
       },
       "reply_identity_match": {
         "label": "Coincidència de l'adreça de recepció",
@@ -1816,6 +2106,14 @@
         "description": "On inserir la signatura a les respostes i reenviaments. Abans del text citat es llegeix de manera natural com a tancament de la resposta; després manté el missatge original contigu.",
         "above_quote": "Abans del text citat",
         "below_quote": "Després del text citat"
+      },
+      "signature_new_mail": {
+        "label": "Signatura als correus nous",
+        "description": "Insereix automàticament la teva signatura en redactar un missatge nou. Desactiva-ho per començar cada missatge nou sense ella."
+      },
+      "signature_reply_forward": {
+        "label": "Signatura en respostes i reenviaments",
+        "description": "Afegeix automàticament la teva signatura en respondre o reenviar un missatge. Desactiva-ho per enviar-los sense ella."
       },
       "signature_separator": {
         "label": "Delimitador de la signatura",
@@ -1833,12 +2131,6 @@
         "description": "Trieu si en clicar un fitxer adjunt es previsualitza o es baixa immediatament",
         "preview": "Previsualitza quan sigui possible",
         "download": "Baixa immediatament"
-      },
-      "attachment_position": {
-        "label": "Posició dels fitxers adjunts",
-        "description": "On mostrar els fitxers adjunts a la capçalera del correu",
-        "beside-sender": "Al costat del remitent",
-        "below-header": "Sota la capçalera"
       },
       "emails_per_page": {
         "10": "10 correus",
@@ -1954,8 +2246,8 @@
         "unsupported": "El compte actual no indica compatibilitat amb l'enviament retardat. La configuració es continua desant per a altres comptes."
       },
       "return_to_list_after_action": {
-        "label": "Torna a la llista després de suprimir o marcar com a no llegit",
-        "description": "Després de suprimir o marcar com a no llegit el missatge obert, torna a la llista de missatges en lloc d'obrir el següent."
+        "label": "Torna a la llista després de suprimir, arxivar, moure o marcar com a no llegit",
+        "description": "Després de suprimir, arxivar, moure, denunciar com a brossa o marcar com a no llegit el missatge obert, torna a la llista de missatges en lloc d'obrir el següent."
       },
       "swipe_right_action": {
         "label": "Acció en lliscar a la dreta (mòbil)",
@@ -1997,6 +2289,7 @@
       "auth_method_oauth": "Inici de sessió únic (OAuth/OIDC)",
       "auth_method_basic": "Contrasenya",
       "auth_method_token": "Token d'accés",
+      "account_management_link": "Gestiona la seguretat del compte (2FA, contrasenyes d'aplicació)",
       "demo_account": "Compte de demostració",
       "email": {
         "label": "Adreça electrònica",
@@ -2019,8 +2312,8 @@
         "title": "Comptes amb la sessió iniciada",
         "description": "Arrossegueu per reordenar com apareixen els comptes al menú desplegable",
         "active": "Compte actiu actualment",
-        "default_badge": "Compte predeterminat",
-        "set_default": "Estableix com a predeterminat",
+        "default_badge": "S'obre en iniciar",
+        "set_default": "Obre aquest compte en iniciar",
         "switch_to": "Canvia a aquest compte",
         "move_up": "Mou amunt",
         "move_down": "Mou avall",
@@ -2080,6 +2373,57 @@
       "managing": "Gestionant: {name}"
     },
     "security": {
+      "masked_addresses": {
+        "address": "Adreça",
+        "description_column": "Descripció",
+        "website_column": "Lloc web",
+        "state": "Estat",
+        "actions": "Accions",
+        "no_description": "Sense descripció",
+        "edit": "Edita",
+        "close": "Tanca",
+        "pagination": "Pàgines d'adreces emmascarades",
+        "page": "Pàgina {page} de {pages}",
+        "previous": "Anterior",
+        "next": "Següent",
+        "delete": "Suprimeix",
+        "delete_title": "Voleu suprimir definitivament l'adreça emmascarada?",
+        "delete_warning": "Voleu suprimir {address}? Això no es pot desfer. El correu enviat a aquesta adreça ja no es lliurarà.",
+        "delete_confirm": "Suprimeix definitivament",
+        "cancel": "Cancel·la",
+        "deleted": "S'ha suprimit l'adreça definitivament.",
+        "deleted_refresh_failed": "S'ha confirmat la supressió, però no s'ha pogut actualitzar la llista. Actualitzeu-la per carregar la llista actual.",
+        "delete_forbidden": "La sessió actual no té permís per suprimir adreces emmascarades. Les altres accions permeses continuen disponibles.",
+        "delete_failed": "No s'ha suprimit l'adreça. Actualitzeu la llista abans de tornar-ho a provar.",
+        "delete_unconfirmed": "No s'ha pogut confirmar la supressió. No es tornarà a intentar. Actualitzeu la llista per comprovar l'adreça abans de fer cap altra supressió.",
+        "title": "Adreces emmascarades",
+        "intro": "Rebeu correu sense compartir la vostra adreça principal. Si desactiveu una adreça, es rebutjarà el correu nou que s'hi enviï. Aquestes adreces no es poden fer servir per enviar correu.",
+        "loading": "S'estan carregant les adreces emmascarades…",
+        "count": "{count, plural, one {# adreça} other {# adreces}}",
+        "empty": "Encara no hi ha cap adreça emmascarada.",
+        "website": "Lloc web (opcional)",
+        "description": "Descripció (opcional)",
+        "no_website": "No especificat",
+        "enabled": "Activada",
+        "disabled": "Desactivada",
+        "enable": "Activa",
+        "disable": "Desactiva",
+        "copy": "Copia",
+        "copied": "S'ha copiat l'adreça.",
+        "copy_failed": "No s'ha pogut copiar. Seleccioneu i copieu l'adreça de més amunt.",
+        "save": "Desa la descripció",
+        "create": "Crea una adreça emmascarada",
+        "refresh": "Actualitza",
+        "saved": "S'ha desat el canvi.",
+        "forbidden": "La sessió actual no té permís per mostrar les adreces emmascarades.",
+        "unavailable": "Les adreces emmascarades no estan disponibles per a aquest compte o servidor.",
+        "load_failed": "No s'ha pogut carregar la llista completa d'adreces. Actualitzeu-la per tornar-ho a provar.",
+        "save_failed": "No s'ha pogut confirmar el canvi. Actualitzeu la llista abans de tornar-ho a provar.",
+        "create_forbidden": "El servidor no ha permès crear una adreça emmascarada amb aquesta sessió.",
+        "update_forbidden": "El servidor no ha permès editar adreces emmascarades amb aquesta sessió. Encara podeu copiar les adreces.",
+        "over_quota": "S'ha arribat a la quota d'adreces emmascarades del servidor. És possible que les adreces desactivades també comptin per al límit.",
+        "rate_limit": "S'ha arribat al límit de creació del servidor. Torneu-ho a provar més tard."
+      },
       "title": "Seguretat del compte",
       "description": "Gestioneu la contrasenya, l'autenticació de dos factors i la configuració de seguretat",
       "detecting": "Detectant les capacitats del servidor...",
@@ -2107,7 +2451,7 @@
       },
       "totp": {
         "section_title": "Autenticació de dos factors",
-        "label": "Autenticació TOTP",
+        "label": "Inici de sessió en dos passos",
         "description": "Afegiu una capa addicional de seguretat amb una contrasenya d'un sol ús basada en el temps",
         "active": "Activada",
         "inactive": "Desactivada",
@@ -2187,12 +2531,12 @@
         "enabled_success": "Xifratge en repòs activat"
       },
       "email_client": {
-        "title": "Configuració del client de correu",
-        "description": "Utilitzeu aquestes credencials per configurar el client de correu d'escriptori o mòbil (Thunderbird, Apple Mail, Outlook, etc.)",
-        "jmap_username_label": "Nom d'usuari JMAP",
+        "title": "Feu servir el correu en altres aplicacions",
+        "description": "Thunderbird, Apple Mail, Outlook i les aplicacions de correu del mòbil poden fer servir aquests paràmetres.",
+        "jmap_username_label": "Nom d'usuari",
         "copy": "Copia",
         "copied": "Copiat",
-        "password_instructions": "Utilitzeu el nom d'usuari JMAP anterior juntament amb una contrasenya d'aplicació per iniciar la sessió al client de correu. Creeu una contrasenya d'aplicació a la secció següent si encara no ho heu fet."
+        "password_instructions": "Com a contrasenya, feu servir una contrasenya d'aplicació, no la normal. En podeu crear una més avall en aquesta pàgina."
       },
       "link_device": {
         "title": "Enllaça l'aplicació mòbil",
@@ -2443,7 +2787,7 @@
       },
       "refresh_cache": {
         "label": "Actualitza les dades emmagatzemades",
-        "description": "Torna a carregar els contactes, els calendaris i les carpetes des del servidor. Manté els comptes i les sessions — soluciona una vista obsoleta o incorrecta sense tancar la sessió.",
+        "description": "Torna a carregar els contactes, els calendaris i les carpetes des del servidor. Mantens la sessió iniciada.",
         "button": "Actualitza",
         "confirm_title": "Voleu actualitzar les dades de la memòria cau?"
       },
@@ -2456,12 +2800,12 @@
       },
       "export_settings": {
         "label": "Exporta la configuració",
-        "description": "Baixeu la configuració en format JSON",
+        "description": "Baixa una còpia dels paràmetres",
         "button": "Exporta"
       },
       "import_settings": {
         "label": "Importa la configuració",
-        "description": "Carregueu la configuració des d'un fitxer JSON",
+        "description": "Restaura els paràmetres des d’un fitxer",
         "button": "Importa"
       },
       "about": {
@@ -2512,11 +2856,13 @@
       "manage_description": "Afegiu, editeu o elimineu aplicacions personalitzades de la barra lateral"
     },
     "contacts": {
-      "title": "Contactes",
-      "description": "Importeu i exporteu els contactes",
+      "title": "Llista de contactes",
+      "description": "Com es mostren els contactes, i fitxers de contactes per importar o exportar",
       "group_by_letter_label": "Agrupa per lletra inicial",
       "sort_by_last_name_label": "Ordena per cognom",
       "sort_by_last_name_description": "Ordena la llista de contactes per cognom perquè els membres d'una família apareguin junts",
+      "show_directory_label": "Mostra el directori",
+      "show_directory_description": "Llista els comptes i grups del servidor de correu a \"Directori\" dins de Contactes",
       "group_by_letter_description": "Mostra capçaleres de secció alfabètiques a la llista de contactes",
       "import_label": "Importa contactes",
       "import_description": "Importeu contactes des d'un fitxer vCard (.vcf)",
@@ -2606,18 +2952,19 @@
       "not_supported": "El servidor de correu no admet filtres de correu.",
       "rule_name": "Nom de la regla",
       "rule_name_placeholder": "p. ex., Ordena els butlletins",
-      "match_all": "Coincideix amb TOTES les condicions",
-      "match_any": "Coincideix amb QUALSEVOL condició",
+      "match_all": "Coincideix amb totes les condicions",
+      "match_any": "Coincideix amb qualsevol condició",
       "conditions": "Condicions",
       "add_condition": "Afegeix una condició",
       "actions": "Accions",
       "add_action": "Afegeix una acció",
       "remove_condition": "Treu la condició",
       "remove_action": "Treu l'acció",
-      "stop_processing": "Atura el processament de les regles següents",
+      "stop_processing": "No apliquis les regles següents",
       "include_spam": "Mou també els missatges marcats com a correu brossa",
       "attachment_type_placeholder": "p. ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valor (múltiples separats per comes)",
+      "regex_placeholder": "Expressió regular, p. ex. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Fitxer adjunt",
         "from": "De",
@@ -2639,6 +2986,7 @@
         "starts_with": "comença per",
         "ends_with": "acaba amb",
         "matches": "coincideix amb el patró",
+        "regex": "coincideix amb l'expressió regular",
         "greater_than": "és més gran que",
         "less_than": "és menys que",
         "address_is": "és l'adreça",
@@ -2654,7 +3002,7 @@
         "discard": "Descarta (suprimeix silenciosament)",
         "reject": "Rebutja amb un missatge",
         "keep": "Mantén a la safata d'entrada",
-        "stop": "Atura el processament"
+        "stop": "No apliquis les regles següents"
       },
       "move_to_folder": "Selecciona una carpeta",
       "copy_to_folder": "Selecciona una carpeta",
@@ -2677,6 +3025,7 @@
       "open_sieve_editor": "Obre l'editor Sieve en brut",
       "fetch_error": "No s'han pogut carregar els filtres",
       "expanded_view": "Vista ampliada",
+      "show_rule_details": "Mostra les condicions i les accions de cada regla",
       "expanded_view_description": "Mostra les regles de filtre amb blocs detallats de condicions i accions",
       "if": "Si",
       "then": "Aleshores",
@@ -2701,6 +3050,7 @@
       "validation_action_forward": "Introduïu una adreça on reenviar",
       "validation_action_reject": "Introduïu el missatge de rebuig",
       "validation_header_name": "Els noms de capçalera només poden contenir les lletres A-Z, xifres, guionets i guions baixos",
+      "validation_regex": "Aquesta expressió regular no és vàlida",
       "templates_section": "Comença des d'una plantilla",
       "template_newsletters": "Mou els butlletins a una carpeta",
       "template_receipts": "Arxiva automàticament els rebuts",
@@ -2754,6 +3104,9 @@
       "validation_period_empty": "Introdueix una data d'inici o de finalització per al període",
       "validation_period_invalid": "Introdueix una data vàlida amb l'hora per al període, o deixa el camp buit",
       "apply_existing_period": "Una regla amb període només actua sobre els missatges que arriben dins d'aquest període, de manera que no es pot aplicar als missatges existents.",
+      "apply_existing_in": "Aplica-la també als missatges que ja són a {folder}",
+      "apply_existing_count": "{count, plural, one {Aplica-la també al # missatge que ja és a {folder}} other {Aplica-la també als # missatges que ja són a {folder}}}",
+      "apply_existing_none": "Encara cap missatge de {folder} no compleix aquesta regla.",
       "period_status_scheduled": "programada",
       "period_status_active": "activa",
       "period_status_expired": "caducada"
@@ -2797,7 +3150,7 @@
         "description": "Configureu com es mostren els fitxers i les carpetes"
       },
       "default_view": {
-        "label": "Vista predeterminada",
+        "label": "Mostra els fitxers com a",
         "description": "Trieu entre disposició de quadrícula i de llista",
         "list": "Llista",
         "grid": "Quadrícula"
@@ -2993,10 +3346,6 @@
         "label": "Màscara de lectura",
         "description": "Enfosqueix tot el missatge excepte unes quantes línies al voltant del punter, perquè no perdis el lloc."
       },
-      "plain_language": {
-        "label": "Llenguatge senzill",
-        "description": "Textos més simples a les opcions i als missatges d'error, i explicacions breus dels termes tècnics. Disponible en anglès i alemany."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "Més contrast fa que el text, les vores i el contorn de focus siguin més foscos o més clars amb qualsevol tema, i subratlla els enllaços. Sistema segueix el teu dispositiu.",
@@ -3190,6 +3539,127 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Fora de línia",
+      "privacy": "Privadesa",
+      "about": "Quant a"
+    },
+    "search": {
+      "signature": "signatura signatura de correu peu de missatge",
+      "sign_out": "tancar la sessió sortir desconnectar logout",
+      "app_lock": "PIN bloqueig codi bloquejar pantalla",
+      "text_size": "mida de la lletra text més gran zoom ampliar",
+      "vacation": "resposta automàtica fora de l’oficina absent vacances autoreply",
+      "two_factor": "2FA dos factors dos passos MFA OTP autenticador codi d’un sol ús",
+      "encryption": "S/MIME smime PGP OpenPGP xifratge certificat",
+      "password": "contrasenya canviar contrasenya nova contrasenya",
+      "offline": "fora de línia sense connexió sense internet baixar emmagatzematge sincronitzar",
+      "wipe": "treure esborrar eliminar dispositiu dades",
+      "outbox": "safata de sortida no enviat en espera cua",
+      "remote_content": "imatges remotes contingut extern seguiment píxels remitents de confiança",
+      "push": "push repetidor segon pla notificacions",
+      "version": "versió actualització quant a codi font GitHub llicència"
+    },
+    "privacy": {
+      "push_title": "Notificacions",
+      "push_link": {
+        "label": "Repetidor de notificacions",
+        "description": "Les notificacions amb l’aplicació tancada passen per un repetidor push, que mai no veu el vostre correu. El trieu a la pàgina Notificacions.",
+        "button": "Notificacions"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Imatges remotes i remitents de confiança",
+      "receipts_label": "Confirmacions de lectura",
+      "senders_label": "Imatges dels remitents",
+      "description": "Aquests paràmetres són a la pàgina Privadesa.",
+      "button": "Privadesa"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densitat i etiquetes de la barra",
+        "description": "La separació de les files de la llista i si els botons mostren el nom es configuren a la pàgina Aparença."
+      },
+      "light_mode": {
+        "label": "Fons clar per als missatges",
+        "description": "Mostrar els missatges amb fons clar en mode fosc es configura a la pàgina Lectura."
+      },
+      "calendar": {
+        "label": "Previsualització d’esdeveniments al calendari",
+        "description": "Si en assenyalar un esdeveniment se’n mostren els detalls es configura a la pàgina Calendari."
+      },
+      "list": {
+        "label": "Converses i línies de previsualització",
+        "description": "L’agrupació per conversa i la línia de previsualització de cada missatge es configuren a la pàgina Llista de missatges."
+      },
+      "reading": {
+        "label": "Marcar com a llegit",
+        "description": "Quan un missatge compta com a llegit, i on aneu després d’esborrar-lo o moure’l, es configura a la pàgina Lectura."
+      },
+      "send_warnings_description": "Desfer l’enviament i els avisos d’assumpte buit, adjunt oblidat o text provisional.",
+      "bulk_delete": {
+        "label": "Preguntar abans d’esborrar diversos missatges",
+        "description": "Això es configura a la pàgina Llista de missatges."
+      },
+      "sounds": {
+        "label": "Sons i comptador de no llegits",
+        "description": "Els sons de notificació i el nombre de no llegits a la pestanya es configuren a la pàgina Notificacions."
+      }
+    },
+    "about": {
+      "title": "Quant a {appName}"
+    },
+    "sign_out": {
+      "description": "Tanca la sessió d’aquest compte en aquest dispositiu."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "safata safata del sistema àrea de notificació segon pla minimitzar",
+      "autostart": "inici automàtic arrencada iniciar amb Windows en iniciar la sessió",
+      "default_app": "aplicació de correu predeterminada programa de correu mailto enllaços de correu",
+      "menu_bar": "barra de menús menús tecla Alt Fitxer Edita Visualitza",
+      "updates": "actualitzacions actualitzar versió nova beta canal",
+      "devtools": "eines de desenvolupament devtools consola inspeccionar F12 depuració",
+      "taskbar": "barra de tasques parpelleig Dock atenció",
+      "quiet_hours": "hores de silenci no molestis silenci mut nit",
+      "telemetry": "informació d’ús telemetria estadístiques analítica",
+      "crash": "informes d’error informes de fallada fallada",
+      "threads": "fils converses conversa agrupar threads",
+      "block_images": "bloquejar imatges imatges externes carregar imatges",
+      "dark_mode": "mode fosc mode clar mode nocturn tema fosc",
+      "timezone": "fus horari zona horària timezone",
+      "reading_pane": "panell de lectura panell de previsualització vista dividida",
+      "week_start": "inici de la setmana primer dia dilluns diumenge",
+      "empty_trash": "buidar la paperera paperera elements suprimits",
+      "do_not_disturb": "hores de silenci silenci mut"
+    },
+    "desktop_notifications": {
+      "title": "En aquest ordinador",
+      "closed_label": "Amb la finestra tancada",
+      "closed_description": "{appName} us avisa del correu nou mentre s’executa. Perquè continuï a la safata quan tanqueu la finestra, activeu-ho a {page}."
+    },
+    "push_unsupported": "Aquest navegador no pot mostrar notificacions quan el lloc web està tancat.",
+    "backup_description_app": "Feu servir la mateixa configuració als altres dispositius.",
+    "sender_favicons": {
+      "label": "Imatges dels llocs web de les empreses",
+      "description": "Mostra icones de llocs web com a imatges de perfil per als remitents d'empresa"
+    },
+    "privacy_push": {
+      "label": "Repetidor de notificacions",
+      "description": "Les notificacions amb {appName} tancat passen per un repetidor push, que mai no veu el vostre correu. Les activeu o desactiveu a la pàgina {page}."
+    },
+    "reset": {
+      "message": "Torna tota la configuració a com era al principi. El correu, els filtres, la resposta automàtica i les signatures es queden com estan.",
+      "sync_on": "Els altres dispositius fan servir la mateixa configuració, així que també canvien.",
+      "sync_off": "Els altres dispositius mantenen la seva configuració."
+    }
+  },
+  "layout_preview": {
+    "default_description": "Aplicacions i carpetes a l'esquerra, cerca sobre la llista",
+    "mountain_view_description": "Cerca a dalt de tot, els missatges s'obren a tota l'amplada"
+  },
   "setup": {
     "title": "Configuració de Bulwark Webmail",
     "subtitle": "Configureu la vostra instància de correu web des del navegador.",
@@ -3291,7 +3761,7 @@
       "row_url_required": "Servidor núm. {index}: l’URL és obligatori",
       "row_url_scheme": "Servidor núm. {index}: l’URL ha de començar per http:// o https://",
       "stalwart": "Activa les funcions pròpies de Stalwart",
-      "stalwart_hint": "Afegeix el canvi de contrasenya i la gestió de filtres Sieve. Es pot activar sense risc en altres servidors."
+      "stalwart_hint": "Afegeix la pàgina de Seguretat (contrasenya, autenticació en dos passos i contrasenyes d’aplicació) i la recuperació d’elements suprimits. Es pot activar sense risc en altres servidors."
     },
     "auth": {
       "title": "Autenticació",
@@ -3471,6 +3941,13 @@
     },
     "find_emails_from": "Cerca correus de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Cerca una carpeta",
+    "recent": "Recents",
+    "no_match": "Cap carpeta coincideix",
+    "choose_folder": "Tria una carpeta…",
+    "current_folder": "Ja és a {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marca la carpeta com a llegida",
     "mark_folder_tree_read": "Marca la carpeta i les subcarpetes com a llegides",
@@ -3479,9 +3956,9 @@
     "new_folder": "Carpeta nova…",
     "rename": "Canvia el nom…",
     "share": "Comparteix…",
-    "import_email": "Importa .eml o .zip…",
     "empty_folder": "Buida la carpeta",
     "empty_folder_generic": "Buida la carpeta",
+    "empty_folder_all_accounts": "Buida la paperera (tots els comptes)",
     "delete_folder": "Suprimeix la carpeta",
     "refresh": "Actualitza",
     "hide_shared_account": "Amaga de la barra lateral",
@@ -3492,6 +3969,11 @@
     "reset_folder_notifications": "Restableix les notificacions de les carpetes",
     "mark_all_confirm_title": "Marca totes les carpetes com a llegides",
     "mark_all_confirm_message": "Voleu marcar tots els missatges no llegits del vostre compte personal com a llegits?",
+    "empty_all_confirm_title": "Buida la paperera de tots els comptes",
+    "empty_all_confirm_message": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de la paperera de tots els teus comptes? No es pot desfer.",
+    "toast_emptied_all": "S’ha buidat la paperera de tots els comptes",
+    "toast_error_empty_all_partial": "S’ha buidat la paperera, però alguns comptes han fallat",
+    "toast_error_empty_all": "No s’ha pogut buidar la paperera",
     "delete_confirm_title": "Suprimeix la carpeta",
     "delete_confirm_message": "Voleu suprimir definitivament la carpeta «{name}»? Aquesta acció no es pot desfer.",
     "prompt_new_subfolder": "Introduïu un nom per a la subcarpeta nova.",
@@ -3518,6 +4000,25 @@
     "delete_with_contents_title": "La carpeta no està buida",
     "delete_with_contents_message": "La carpeta \"{name}\" encara conté {count, plural, one {1 missatge} other {# missatges}}. Vols suprimir la carpeta i tots els seus missatges? No es pot desfer.",
     "delete_with_contents_confirm": "Suprimeix la carpeta i els missatges"
+  },
+  "mail_p2_folders": {
+    "all_folders": "Totes les carpetes",
+    "empty_trash": "Buida la paperera",
+    "empty_spam": "Buida el correu brossa",
+    "empty_trash_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de la paperera? No es pot desfer.",
+    "empty_spam_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} del correu brossa? No es pot desfer.",
+    "title_all_accounts": "{name} ({count}, {total} a tots els comptes)",
+    "title_all_accounts_only": "{name} ({total} a tots els comptes)"
+  },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {No s'ha trobat cap resultat} one {# conversa trobada} other {# converses trobades}}",
+    "name_unread_sub": "{name}, {count} sense llegir, {sub} més a les subcarpetes",
+    "name_unread_only_sub": "{name}, {sub} sense llegir a les subcarpetes",
+    "sub_unread": "{sub} sense llegir a les subcarpetes"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gestiona els comptes…",
+    "apply_to_existing": "{count, plural, one {Aplica a # missatge existent de {folder}} other {Aplica a # missatges existents de {folder}}}"
   },
   "shortcuts": {
     "title": "Dreceres de teclat",
@@ -3589,6 +4090,17 @@
     "messages_count": "{count, plural, one {# missatge} other {# missatges}}",
     "expand_named": "Desplega la conversa: {subject}",
     "collapse_named": "Replega la conversa: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Mostra # missatge anterior} other {Mostra # missatges anteriors}}",
+    "return_to_list_follows_layout": "Mentre no ho canviïs, segueix el disseny: desactivat quan la llista i el missatge són l'un al costat de l'altre, activat en els altres casos."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Mostra el selector de comptes damunt de les carpetes, amb Redacta a sota. Desactiveu-ho per posar Redacta al seu lloc."
+  },
+  "mail_p2_conv": {
+    "show_message": "Mostra el missatge",
+    "back_to_reply": "Torna a la resposta"
   },
   "identities": {
     "modal_title": "Gestiona les identitats d'enviament",
@@ -3719,6 +4231,34 @@
         "next": "Digueu què necessiteu del lector i per a quan."
       }
     }
+  },
+  "compose_send": {
+    "back": "Torna a l'edició",
+    "send_anyway": "Envia igualment",
+    "warnings_title": "Vols enviar aquest missatge igualment?",
+    "warning_subject": "Sense assumpte",
+    "warning_text": "Sense text",
+    "warning_attachment": "Esmenta «{keyword}», però no hi ha cap fitxer adjunt",
+    "warning_placeholders": "Text de mostra que veuran els destinataris:",
+    "warning_proofreading": "Errors d'ortografia o gramàtica pendents: {count}",
+    "empty_text_title": "Vols enviar-lo sense text?",
+    "empty_text_message": "Aquest missatge no té text ni cap fitxer adjunt. Vols enviar-lo igualment?",
+    "scheduled_for": "Programat per a {when}",
+    "sending": "S'està enviant…",
+    "sent": "Enviat",
+    "view": "Mostra",
+    "template_saved": "Plantilla desada",
+    "schedule_anyway": "Programa igualment",
+    "schedule_warnings_title": "Vols programar aquest missatge igualment?",
+    "picker_button": "Afegeix des dels contactes",
+    "picker_title": "Afegeix destinataris",
+    "tab_contacts": "Contactes",
+    "tab_directory": "Directori",
+    "contacts_empty_title": "Encara no hi ha contactes",
+    "contacts_empty_hint": "Aquí apareixen les persones que deses a Contactes.",
+    "contacts_no_match": "Cap contacte coincideix amb la cerca",
+    "template_name": "Nom de la plantilla",
+    "template_edit_details": "Edita els detalls…"
   },
   "org_templates": {
     "section_personal": "Les meves plantilles",
@@ -4176,6 +4716,35 @@
       "menu": "Obre el menú del contacte"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Casa",
+    "phone_voice": "Telèfon",
+    "more_fields": "Més camps",
+    "import_menu": "Importa contactes…",
+    "new_address_book_menu": "Llibreta d'adreces nova…"
+  },
+  "uxs_wording": {
+    "more_options": "Més opcions",
+    "use_in_other_apps": "Fes-ho servir en altres aplicacions",
+    "default_address_book": "Contactes",
+    "default_calendar": "Calendari",
+    "preview_documents": "Documents",
+    "preview_photos": "Fotos",
+    "sample_subject": "Notes de la reunió al cafè",
+    "mail_apps": {
+      "imap": "Correu entrant (IMAP)",
+      "smtp": "Correu sortint (SMTP)",
+      "caldav": "Calendaris (CalDAV)",
+      "carddav": "Contactes (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Sense xifratge",
+      "copy_label": "Copia {name}",
+      "loading": "S'estan llegint els paràmetres del servidor de correu…",
+      "not_found": "El servidor de correu no ha indicat els noms dels servidors per a altres aplicacions. Demaneu-los al vostre administrador."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendaris: {names}",
@@ -4419,7 +4988,7 @@
       "hide_non_working_days_desc": "Treu de la vista setmanal els dies que no treballes. Els seus esdeveniments continuen apareixent a les vistes de mes, dia i agenda.",
       "working_days": "Dies laborables",
       "title": "Configuració del calendari",
-      "default_view": "Vista predeterminada",
+      "default_view": "El calendari s'obre a",
       "week_starts_on": "La setmana comença el",
       "time_format": "Format d'hora",
       "default_calendar": "Calendari predeterminat",
@@ -4430,17 +4999,22 @@
       "notifications_enabled_desc": "Mostra avisos per als esdeveniments propers del calendari",
       "notification_sound": "So de notificació",
       "notification_sound_desc": "Reprodueix un so per als avisos del calendari",
-      "invitation_parsing": "Analitza les invitacions per correu",
+      "invitation_parsing": "Mostra les invitacions del correu",
       "invitation_parsing_desc": "Detecta les invitacions de calendari als fitxers adjunts del correu i mostra les accions del calendari",
       "show_time_in_month_view": "Mostra l'hora a la vista mensual",
       "show_time_in_month_view_desc": "Mostra l'hora dels esdeveniments a la vista mensual del calendari. En pantalles petites, això mostra entrades completes d'esdeveniment en lloc de punts.",
       "tinted_events": "Colors d'esdeveniment clars",
       "tinted_events_desc": "Mostra els esdeveniments amb un to clar del color del calendari i una barra de color al principi, com a l'Outlook i a la impressió, en lloc de blocs sòlids.",
+      "month_timed_events": "Esdeveniments amb hora a la vista mensual",
+      "month_timed_events_desc": "Com es mostren a la vista mensual els esdeveniments amb hora d'inici. Els esdeveniments de tot el dia i de diversos dies continuen sent barres.",
+      "month_timed_events_bar": "Barra",
+      "month_timed_events_text": "Text de color",
+      "month_timed_events_dot": "Punt i text",
       "show_week_numbers": "Mostra els números de setmana",
       "show_week_numbers_desc": "Mostra els números de setmana al minicalendari",
       "calendar_free_scroll": "Desplaçament lliure",
       "calendar_free_scroll_desc": "Desplaça't de manera contínua per mesos, setmanes i dies en lloc d'un període cada vegada",
-      "enable_tasks": "Activa les tasques",
+      "enable_tasks": "Tasques",
       "enable_tasks_desc": "Mostra una vista de tasques al calendari per gestionar pendents",
       "show_tasks_on_calendar": "Mostra les tasques al calendari",
       "show_tasks_on_calendar_desc": "Mostra les tasques a les vistes de mes, setmana i dia del calendari",
@@ -4621,8 +5195,8 @@
       "error_update": "No s'ha pogut actualitzar el calendari",
       "error_delete": "No s'ha pogut suprimir el calendari",
       "caldav_url": "URL de CalDAV",
-      "copy_url": "Copia l'URL de CalDAV",
-      "url_copied": "URL de CalDAV copiat al porta-retalls",
+      "copy_url": "Copia l'adreça per a altres aplicacions",
+      "url_copied": "S'ha copiat l'adreça",
       "share": "Comparteix el calendari…",
       "new_event_in_calendar": "Esdeveniment nou en aquest calendari",
       "shared_with": "Compartit amb {names}",
@@ -4642,8 +5216,8 @@
       "default_alerts_updated": "Recordatoris predeterminats actualitzats"
     },
     "subscription": {
-      "title": "Subscripció iCal",
-      "section_title": "Subscripcions iCal",
+      "title": "Subscriu-te a un calendari",
+      "section_title": "Calendaris subscrits",
       "description": "Subscriviu-vos a un canal iCalendar extern. Els esdeveniments se sincronitzaran automàticament en el seu propi calendari. Admet URL https:// i webcal://.",
       "url_label": "URL del calendari",
       "url_placeholder": "https://example.com/calendar.ics or webcal://...",
@@ -4756,18 +5330,217 @@
     "mini_has_events": "té esdeveniments",
     "mini_week_number": "Setmana {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Llistes de tasques",
+    "task_status_not_started": "No començada",
+    "task_status_in_progress": "En curs",
+    "quick_task_due": "Venciment: {date}",
+    "quick_task_due_remove": "Deixa «{words}» al títol",
+    "rename_calendar": "Canvia el nom…",
+    "rename_title": "Canvia el nom del calendari",
+    "rename_confirm": "Canvia el nom",
+    "rename_empty": "Escriviu un nom.",
+    "edit_calendar": "Edita…",
+    "default_alerts_open": "Recordatoris predeterminats…",
+    "share_open": "Comparteix…",
+    "clear_all_events": "Esborra tots els esdeveniments…",
+    "delete_calendar": "Suprimeix…",
+    "caldav_title": "Adreça per a altres aplicacions (CalDAV)",
+    "caldav_hint": "Afegiu aquesta adreça a Thunderbird, al Calendari d’Apple o a DAVx⁵ per sincronitzar els calendaris.",
+    "caldav_shared_by": "Compartit per {name}:",
+    "freebusy_description": "Qui rebi la compartició veu quan esteu ocupat, no quins esdeveniments teniu. «Suggereix horaris» ho fa servir."
+  },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Llista",
+    "task_list_not_in_calendar": "{name} (llista de tasques, no es mostra al calendari)",
+    "copy_to_account": "Copia a {address}",
+    "copied_to_account": "S'ha copiat a {address}",
+    "delete_original": "Suprimeix l'original"
+  },
+  "calendar_offline": {
+    "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."
+  },
+  "ux_pim_event": {
+    "time_zone": "Fus horari",
+    "time_zone_line": "Fus horari: {zone}",
+    "your_time": "{times} la vostra hora",
+    "zone_times": "{times} {zone} ({local} la vostra hora)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Acceptat",
+    "status_declined": "Rebutjat",
+    "status_tentative": "Potser",
+    "status_needs_action": "Encara sense resposta",
+    "status_delegated": "Delegat",
+    "answered_accepted": "Vau acceptar el {date}.",
+    "answered_declined": "Vau rebutjar el {date}.",
+    "answered_tentative": "Vau respondre potser el {date}.",
+    "answered_accepted_nodate": "Heu acceptat.",
+    "answered_declined_nodate": "Heu rebutjat.",
+    "answered_tentative_nodate": "Heu respost potser."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Es repeteix: {rule}",
+    "declined_dates": "Has rebutjat el {dates}.",
+    "declined_many": "Has rebutjat {count} reunions d'aquesta sèrie.",
+    "answers_series": "La teva resposta val per a totes les reunions de la sèrie."
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "fins a les {time}",
+    "week_all_days": "Mostra tota la setmana",
+    "week_days_short": "{count, plural, one {# dia} other {# dies}}",
+    "print": "Imprimeix…"
+  },
   "calendar_event_notifications": {
     "someone": "Algú",
     "invited": "{name} t'ha convidat a \"{title}\"",
     "updated": "{name} ha actualitzat \"{title}\"",
     "cancelled": "{name} ha cancel·lat \"{title}\"",
-    "untitled": "Esdeveniment sense títol"
+    "untitled": "Esdeveniment sense títol",
+    "summary": "Canvis en esdeveniments en què participes: {count}"
+  },
+  "calendar_month_select": {
+    "selected_range": "Seleccionat de {start} a {end}.",
+    "selected_day": "Seleccionat {day}.",
+    "enter_hint": "Premeu Retorn per crear un esdeveniment."
+  },
+  "company_calendars": {
+    "section": "Organització"
+  },
+  "ux_pim_grid": {
+    "search_short": "Cerca",
+    "reply": "Respon",
+    "reply_to_invitation": "Respon a la invitació"
+  },
+  "vacation_calendar": {
+    "label": "Bloca el meu calendari",
+    "description": "Afegeix un esdeveniment ocupat mentre sou fora, perquè ningú us convoqui a reunions aleshores.",
+    "no_access_managed": "No es pot blocar el calendari d’aquest compte: no hi teniu accés d’escriptura.",
+    "no_calendar": "No es pot blocar el calendari: Bulwark no ha trobat cap calendari on afegir l’esdeveniment.",
+    "filter_warning": "Si ho activeu, el vostre propi script de filtres s’aturarà mentre la resposta estigui activa."
+  },
+  "calendar_delegate": {
+    "answer_for": "Respon en nom de {name}",
+    "no_write": "Podeu veure les invitacions de {name}, però no podeu respondre en nom seu. Demaneu-li accés d’edició.",
+    "also_invited": "També esteu convidat, i aquest servidor no distingeix la vostra resposta de la de {name}. {name} ha de respondre aquesta.",
+    "answered_by": "Resposta de {who}"
+  },
+  "free_busy_share": {
+    "button": "Comparteix la meva disponibilitat amb {group}",
+    "already": "La vostra disponibilitat està compartida amb {group}",
+    "done": "Ara la vostra disponibilitat està compartida amb {group}.",
+    "error": "No s’ha pogut compartir la vostra disponibilitat. Torneu-ho a provar.",
+    "group_label": "Grup",
+    "title": "Disponibilitat",
+    "description": "Els companys del grup veuen quan esteu ocupat, no quins esdeveniments teniu. «Suggereix horaris» ho fa servir."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Feu clic per seleccionar un fitxer vCard o CSV",
+    "file_types": "Fitxers .vcf o .csv, per exemple d’Outlook o de Google Contactes",
+    "parse_error": "No s’ha pogut llegir el fitxer",
+    "columns_title": "Assigna les columnes",
+    "columns_hint": "Trieu on va cada columna de {file}. Les columnes amb «No importis» s’ometen.",
+    "column": "Columna",
+    "sample": "Exemple",
+    "field": "Camp del contacte",
+    "skip": "No importis",
+    "no_columns": "Trieu un camp per a almenys una columna.",
+    "continue": "Continua",
+    "back": "Enrere",
+    "import_into": "Importa a",
+    "group_name": "Nom",
+    "group_email": "Correu",
+    "group_phone": "Telèfon",
+    "group_org": "Organització",
+    "group_adr_any": "Adreça",
+    "group_adr_home": "Adreça personal",
+    "group_adr_work": "Adreça de la feina",
+    "group_adr_other": "Altra adreça",
+    "group_more": "Més",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Nom complet",
+    "t_name_given": "Nom",
+    "t_name_middle": "Segon nom",
+    "t_name_surname": "Cognoms",
+    "t_name_prefix": "Tractament (Dr., Sra.)",
+    "t_name_suffix": "Sufix (Jr.)",
+    "t_nickname": "Sobrenom",
+    "t_email": "Correu",
+    "t_email_home": "Correu (personal)",
+    "t_email_work": "Correu (feina)",
+    "t_phone": "Telèfon",
+    "t_phone_mobile": "Mòbil",
+    "t_phone_home": "Telèfon (personal)",
+    "t_phone_work": "Telèfon (feina)",
+    "t_phone_fax": "Fax",
+    "t_phone_fax_home": "Fax (personal)",
+    "t_phone_fax_work": "Fax (feina)",
+    "t_phone_pager": "Cercapersones",
+    "t_org_name": "Empresa",
+    "t_org_unit": "Departament",
+    "t_org_title": "Càrrec",
+    "t_street": "Carrer",
+    "t_pobox": "Apartat de correus",
+    "t_locality": "Ciutat",
+    "t_region": "Estat o regió",
+    "t_postcode": "Codi postal",
+    "t_country": "País",
+    "t_web": "Lloc web",
+    "t_birthday": "Aniversari",
+    "t_anniversary": "Commemoració",
+    "t_notes": "Notes",
+    "t_categories": "Categories",
+    "t_type": "Tipus del valor (Casa, Feina…)",
+    "merge_with": "Combina amb…",
+    "merge_selected": "Combina…",
+    "find_duplicates": "Cerca duplicats",
+    "possible_duplicates": "Possibles duplicats ({count})",
+    "duplicates_title": "Possibles duplicats",
+    "duplicates_hint": "Contactes amb el mateix nom, correu o número de telèfon.",
+    "duplicates_none": "No s’han trobat possibles duplicats.",
+    "pick_title": "Combina {name} amb…",
+    "pick_search": "Cerca contactes",
+    "pick_suggested": "Possibles duplicats",
+    "pick_all": "Tots els contactes",
+    "pick_none": "No hi ha cap altre contacte per combinar.",
+    "preview_title": "Combina contactes ({count})",
+    "preview_hint": "Aquests contactes esdevenen una sola fitxa amb tot el que hi ha a sota.",
+    "preview_deleted": "Incorporats i després suprimits: {names}",
+    "groups": "Grups",
+    "merge": "Combina",
+    "merging": "S’està combinant…",
+    "merged": "Contactes combinats",
+    "merge_failed": "No s’han pogut combinar els contactes.",
+    "merge_not_possible": "Aquests contactes no es poden combinar: són en comptes diferents o en una llibreta d’adreces que no podeu canviar.",
+    "undo": "Desfés",
+    "undone": "Combinació desfeta",
+    "undo_failed": "No s’ha pogut desfer del tot la combinació."
+  },
+  "find_time": {
+    "suggest": "Suggereix horaris",
+    "searching": "S’estan cercant horaris lliures",
+    "slots_title": "Lliure per a tothom que Bulwark ha pogut comprovar",
+    "slot": "{day}, de {start} a {end}",
+    "none": "No hi ha temps lliure en els propers 10 dies laborables.",
+    "picked": "Esdeveniment mogut a {slot}",
+    "rate_limited": "Massa consultes en l’últim minut. Torneu-ho a provar d’aquí a un minut.",
+    "unavailable": "La disponibilitat no està disponible en aquest servidor, així que Bulwark no pot suggerir horaris.",
+    "not_checked": "No comprovats:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "fora de la vostra organització",
+    "reason_unknown": "hores ocupades desconegudes",
+    "reason_not_found": "no trobat en aquest servidor",
+    "reason_error": "no s’ha pogut comprovar",
+    "unknown_note": "Bulwark només veu les hores ocupades dels calendaris compartits amb vós. Per a aquestes persones no pot distingir lliure de no compartit.",
+    "directory_off": "Bulwark no pot cercar persones en aquest servidor. L’administrador pot activar les consultes de directori a Stalwart.",
+    "not_looked_up": "No s’ha pogut cercar aquesta adreça",
+    "found": "Horaris lliures trobats: {count}"
   },
   "share_notifications": {
     "someone": "Algú",
     "shared": "{name} ha compartit amb tu {kind} \"{object}\"",
     "changed": "{name} ha canviat el teu accés a {kind} \"{object}\"",
     "revoked": "{name} ha retirat el teu accés a {kind} \"{object}\"",
+    "summary": "{name} ha canviat el teu accés a {count, plural, one {# element compartit} other {# elements compartits}}",
     "object": {
       "folder": "la carpeta",
       "calendar": "el calendari",
@@ -4939,17 +5712,16 @@
     "any_size": "Qualsevol mida",
     "larger_than_mb": "Més de {size} MB",
     "custom_size": "Mida personalitzada",
-    "done": "Fet",
     "name_or_address": "Nom o adreça"
   },
   "welcome": {
     "title": "Us donem la benvinguda a la bústia",
     "tip_compose": "Premeu c per redactar un correu nou",
     "tip_shortcuts": "Premeu ? per veure totes les dreceres de teclat",
-    "tip_sidebar": "Trobeu el Calendari, els Contactes i la Configuració al menú de la barra lateral",
+    "tip_sidebar_apps": "{apps} són a la barra de l'esquerra",
     "tip_settings": "Personalitzeu la vostra experiència a la Configuració",
     "tip_compose_touch": "Toca el botó del llapis per escriure un correu nou",
-    "tip_sidebar_touch": "Trobaràs el Calendari, els Contactes i la Configuració a la barra inferior",
+    "tip_sidebar_apps_touch": "Trobaràs {apps} a la barra inferior",
     "got_it": "Entesos",
     "settings": "Configuració",
     "dismiss": "Descarta",
@@ -5113,7 +5885,6 @@
     "settings_ascending": "Ascendent",
     "settings_descending": "Descendent",
     "disabled_title": "La funció de fitxers està desactivada per l'administrador",
-    "disabled_description": "Les pujades de fitxers grans via WebDAV poden causar inestabilitat a Stalwart/RocksDB, incloent-hi fallades per manca de memòria i ús de disc irrecuperable. És possible que els fitxers suprimits no s'eliminin immediatament de l'emmagatzematge de blobs. No es recomana aquesta funció per a entorns de producció.",
     "migration_title": "Actualitzant els vostres fitxers…",
     "migration_description": "S'estan organitzant les carpetes i els fitxers en la seva estructura adequada. Això només passa una vegada.",
     "new": "Nou",
@@ -5164,6 +5935,47 @@
     "previous_file": "Fitxer anterior",
     "next_file": "Fitxer següent",
     "loading": "S'està carregant…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} ja existeix.",
+    "conflict_file_hint": "Substitueix posa el contingut nou al fitxer existent, i se’n mantenen les comparticions. Conserva’ls tots dos afegeix una còpia amb un número.",
+    "conflict_folder_hint": "Substitueix afegeix els fitxers a la carpeta existent i substitueix els que tenen el mateix nom. Conserva’ls tots dos crea una segona carpeta amb un número.",
+    "replace": "Substitueix",
+    "keep_both": "Conserva’ls tots dos",
+    "skip": "Omet",
+    "apply_to_all": "{count, plural, one {Fes el mateix amb el conflicte} other {Fes el mateix amb els # conflictes}}",
+    "no_preview": "No hi ha previsualització per a aquest tipus de fitxer.",
+    "open_in_app": "Obre amb l’aplicació predeterminada",
+    "shared_with": "{name} ara està compartit amb {person}.",
+    "send_message": "Envia un missatge",
+    "share_mail_subject": "He compartit {name} amb tu",
+    "share_mail_body": "Hola,\n\nHe compartit «{name}» amb tu. El pots obrir aquí:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Afegeix-ho tot al calendari",
+    "zone_contacts_all": "Afegeix-ho tot als contactes",
+    "save_to_files": "Desa a Fitxers",
+    "saved": "{name} s'ha desat a Fitxers.",
+    "saved_copy": "S'ha desat a Fitxers com a {name}.",
+    "save_failed": "No s'ha pogut desar {name} a Fitxers.",
+    "changed_on_server": "{name} ha canviat a Fitxers després que l'obrissis.",
+    "gone_on_server": "{name} ja no és a Fitxers.",
+    "keep_both": "Conserva’ls tots dos",
+    "replace": "Substitueix",
+    "cancel": "Cancel·la",
+    "save_as_new": "Desa com a fitxer nou",
+    "import_to_mail": "Importa a una carpeta de correu…",
+    "import_to_mail_title": "Importa a una carpeta de correu",
+    "imported_to_mail": "S'ha importat a {folder}.",
+    "import_to_mail_failed": "No s'ha pogut importar {name}.",
+    "import_contacts": "Importa als contactes…",
+    "add_to_calendar": "Afegeix al calendari…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Fitxers editats",
+    "hide": "Amaga",
+    "discard_detail_file": "Es suprimeixen els canvis d'aquesta còpia. El fitxer de Fitxers no canvia.",
+    "saved_auto": "{name} s'ha desat a Fitxers. Els desaments posteriors des del seu programa hi aniran sols."
   },
   "smime": {
     "your_certificates": "Els vostres certificats",
@@ -5300,6 +6112,159 @@
   "unified_mailbox": {
     "search_unavailable": "La cerca no està disponible a la vista unificada"
   },
+  "mail_import": {
+    "menu_import": "Importa correu…",
+    "settings_label": "Importa correu",
+    "settings_description": "Porta correu des de fitxers .eml, ZIP, mbox o Outlook .pst i .ost.",
+    "settings_button": "Importa…",
+    "title": "Importa correu",
+    "description": "Trieu fitxers .eml, .zip, .mbox o Outlook .pst i .ost.",
+    "choose_files": "Tria fitxers…",
+    "chosen_files": "Fitxers triats",
+    "remove_file": "Treu {name}",
+    "format_eml": "Missatge",
+    "format_zip": "Arxiu ZIP",
+    "format_mbox": "Fitxer mbox",
+    "format_pst": "Fitxer de dades d'Outlook",
+    "target_label": "Importa a",
+    "target_top": "Nivell superior",
+    "keep_folders": "Recrea les carpetes del fitxer",
+    "keep_folders_hint": "Les carpetes amb el mateix nom es tornen a fer servir.",
+    "resume": "Continua on es va aturar l'última importació d'aquests fitxers (missatges ja fets: {count})",
+    "quota_note": "Molts servidors només accepten uns 1000 missatges o 50 MB per hora de cada usuari. Una importació més gran fa una pausa i després continua sola.",
+    "start": "Importa",
+    "cancel": "Cancel·la",
+    "running_title": "S'està important el correu",
+    "progress_label": "Progrés de la importació",
+    "status_imported": "Missatges importats: {count}",
+    "reading_file": "S'està llegint {name}",
+    "paused": "En pausa fins a les {time}. El servidor accepta com a màxim {files} pujades o {size} per hora. La importació continua sola.",
+    "paused_generic": "En pausa fins a les {time}. S'ha arribat al límit de pujada del servidor. La importació continua sola.",
+    "background": "Continua en segon pla",
+    "cancel_import": "Cancel·la la importació",
+    "chip": "S'està important el correu: {percent} %",
+    "chip_paused": "Importació en pausa fins a les {time}",
+    "done_title": "Importació acabada",
+    "cancelled_title": "Importació cancel·lada",
+    "failed_title": "Importació aturada",
+    "summary_imported": "Missatges importats: {count}",
+    "summary_folders": "Carpetes creades: {count}",
+    "summary_skipped": "No importats:",
+    "skip_too_large": "Més grans del que accepta el servidor: {count}",
+    "skip_deleted": "Suprimits a Thunderbird: {count}",
+    "skip_embedded": "Missatges adjunts a altres missatges: {count}",
+    "skip_contact": "Contactes: {count}",
+    "skip_calendar": "Elements del calendari: {count}",
+    "skip_other": "Altres elements: {count}",
+    "summary_failed": "No s'han pogut importar: {count}",
+    "failure_invalid": "no és un missatge vàlid",
+    "untitled": "(sense assumpte)",
+    "cancelled_hint": "Per continuar més tard, torneu a importar els mateixos fitxers a la mateixa carpeta.",
+    "close": "Tanca",
+    "pst_note": "Dels fitxers d'Outlook només s'importa el correu. Els contactes, elements del calendari i tasques es compten i es deixen fora.",
+    "pst_error_encrypted": "Aquest fitxer d'Outlook fa servir xifratge alt, que Bulwark no pot llegir. A Outlook, exporteu el correu a un fitxer .pst nou sense xifratge.",
+    "pst_error_not_pst": "Aquest fitxer no és un fitxer de dades d'Outlook que Bulwark pugui llegir.",
+    "pst_error_unreadable": "Bulwark no ha pogut llegir aquest fitxer d'Outlook.",
+    "pst_error_worker": "El lector de fitxers d'Outlook no s'ha carregat. Torneu a carregar la pàgina i proveu-ho de nou.",
+    "error_over_quota": "La bústia és plena, així que la importació s'ha aturat. Feu espai i torneu a importar els mateixos fitxers a la mateixa carpeta per continuar.",
+    "error_forbidden": "No podeu afegir correu a aquesta carpeta, així que la importació s'ha aturat.",
+    "error_failures": "Han fallat massa missatges seguits, així que la importació s'ha aturat. Torneu a importar els mateixos fitxers a la mateixa carpeta més tard per continuar.",
+    "error_network": "La connexió amb el servidor ha fallat diverses vegades, així que la importació s'ha aturat. Torneu a importar els mateixos fitxers a la mateixa carpeta per continuar.",
+    "error_busy": "Aquests fitxers ja s'estan important en una altra pestanya.",
+    "retry_hint": "Torneu a importar els mateixos fitxers a la mateixa carpeta per tornar a provar els que han fallat.",
+    "skip_unreadable": "Il·legibles al fitxer d'Outlook: {count}",
+    "keep_folders_top_hint": "Al nivell superior, Safata d'entrada, Elements enviats, Elements suprimits i similars van a les vostres.",
+    "toast_done": "Importació acabada. Importats: {imported}, fallats: {failed}.",
+    "toast_stopped": "La importació s'ha aturat.",
+    "toast_show": "Mostra",
+    "section_title": "Fitxers de correu",
+    "section_description": "Porteu correu des de fitxers, o deseu el vostre correu com a fitxers."
+  },
+  "mail_export": {
+    "menu_export": "Exporta la carpeta…",
+    "settings_label": "Exporta tot el correu",
+    "settings_description": "Desa totes les carpetes d'aquest compte en un fitxer ZIP, com a fitxers mbox o .eml.",
+    "settings_button": "Exporta…",
+    "title_folder": "Exporta «{name}»",
+    "title_account": "Exporta tot el correu",
+    "description_folder": "Desa els missatges d'aquesta carpeta en un fitxer.",
+    "description_account": "Desa totes les carpetes d'aquest compte en un fitxer ZIP.",
+    "format_label": "Format",
+    "format_mbox_folder": "Fitxer mbox",
+    "format_eml_folder": "ZIP de fitxers .eml",
+    "format_mbox_account": "ZIP amb un fitxer mbox per carpeta",
+    "format_eml_account": "ZIP de fitxers .eml, una carpeta per cada carpeta de correu",
+    "hint_mbox": "Thunderbird, Apple Mail i la majoria de programes de correu obren fitxers mbox.",
+    "hint_eml": "Un fitxer per missatge, que qualsevol programa de correu pot obrir.",
+    "save_picker": "Trieu on es desa el fitxer.",
+    "save_download": "El fitxer es baixa quan acaba l'exportació.",
+    "save_memory": "Aquest navegador guarda tota l'exportació a la memòria i només pot desar fins a 200 MB. Per a més, feu servir Chrome o Edge, o exporteu carpeta per carpeta.",
+    "start": "Exporta",
+    "cancel": "Cancel·la",
+    "running_title": "S'està exportant el correu",
+    "progress_label": "Progrés de l'exportació",
+    "status_exported": "Missatges exportats: {count} de {total}",
+    "paused": "En pausa fins a les {time}: el servidor ha demanat una pausa. L'exportació continua sola.",
+    "background": "Continua en segon pla",
+    "cancel_export": "Cancel·la l'exportació",
+    "chip": "S'està exportant el correu: {percent} %",
+    "chip_paused": "Exportació en pausa fins a les {time}",
+    "done_title": "Exportació acabada",
+    "cancelled_title": "Exportació cancel·lada",
+    "failed_title": "Exportació aturada",
+    "summary_exported": "Missatges exportats: {count}",
+    "summary_file": "Desat com a {name} ({size}).",
+    "summary_failed": "No s'han pogut exportar: {count}",
+    "download_again": "Torna a baixar",
+    "too_large": "L'exportació és més gran del que aquest navegador pot guardar a la memòria. Feu servir Chrome o Edge, o exporteu carpeta per carpeta.",
+    "close": "Tanca",
+    "untitled": "(sense assumpte)",
+    "toast_done": "Exportació acabada: {name}",
+    "toast_stopped": "L'exportació s'ha aturat.",
+    "toast_show": "Mostra"
+  },
+  "desktopImport": {
+    "find": "Cerca dades de Thunderbird i Outlook…",
+    "find_hint": "Cerca als llocs habituals d'aquest ordinador. Bulwark t'ho pregunta abans.",
+    "scan_declined": "No s'ha cercat res perquè no ho has permès.",
+    "scan_failed": "La cerca no ha funcionat. Torna-ho a provar.",
+    "read_declined": "No s'ha llegit cap fitxer perquè no ho has permès.",
+    "read_failed": "Aquests fitxers ja no es poden llegir. Torna a cercar.",
+    "nothing_found": "No hi ha cap perfil de Thunderbird ni fitxer de dades d'Outlook als llocs habituals. Per importar un fitxer d'un altre lloc, fes servir Tria fitxers.",
+    "found_list": "Dades de correu trobades en aquest ordinador",
+    "outlook_files": "Fitxers de dades d'Outlook",
+    "thunderbird_profile": "Perfil de Thunderbird {name}",
+    "address_book": "Llibreta d'adreces de {name}",
+    "message_count": "{count, plural, one {# missatge} other {# missatges}}",
+    "contact_count": "{count, plural, one {# contacte} other {# contactes}}",
+    "confirm": "{count, plural, one {Fes servir aquest element…} other {Fes servir aquests # elements…}}",
+    "back": "Enrere",
+    "estimate": "{size} seleccionats. Molts servidors, entre ells Stalwart, només accepten uns 1000 missatges o 50 MB per hora d'un usuari, així que això triga almenys {time}. Al límit, la importació s'atura i continua sola. Funciona en segon pla i continua després de reiniciar.",
+    "duration_hours": "{count, plural, one {# hora} other {# hores}}",
+    "duration_days": "{count, plural, one {# dia} other {# dies}}",
+    "time_left": "Queden almenys {time} amb el límit de pujada del servidor. Mentrestant pots continuar treballant.",
+    "thunderbird_running": "Thunderbird està obert. Tanca'l primer. Si canvia una carpeta durant la importació, aquesta carpeta torna a començar i s'ometen els missatges ja importats.",
+    "ost_refused": "No s'ofereixen: {names}. Els fitxers .ost d'Outlook només són una còpia local d'una bústia i aquí no es poden importar. A Outlook, exporta el correu a un fitxer .pst.",
+    "calendars_left_out": "Els calendaris de Thunderbird no s'importen. Exporta'ls des de Thunderbird com a fitxers .ics i importa'ls al calendari.",
+    "pst_items_left_out": "Dels fitxers d'Outlook només s'importa el correu, no els contactes ni els calendaris.",
+    "picked": "{count, plural, one {# carpeta o fitxer d'aquest ordinador} other {# carpetes i fitxers d'aquest ordinador}}",
+    "remove_picked": "Elimina aquests fitxers",
+    "contacts_picked": "{count, plural, one {# contacte de Thunderbird va als teus contactes.} other {# contactes de Thunderbird van als teus contactes.}}",
+    "contacts_added": "{count, plural, one {S'ha afegit # contacte de Thunderbird.} other {S'han afegit # contactes de Thunderbird.}}",
+    "contacts_failed": "Alguns contactes de Thunderbird no s'han pogut afegir.",
+    "files_refused": "Omesos perquè ja no es poden llegir: {names}",
+    "skip_seen": "Omet els missatges que una importació anterior ja va posar a la mateixa carpeta",
+    "skip_duplicate": "{count, plural, one {# missatge ja es va importar abans} other {# missatges ja es van importar abans}}",
+    "file_unavailable": "Un fitxer ha canviat o ja no es pot llegir. Tanca Thunderbird i torna a importar. Els missatges ja importats s'ometen.",
+    "resume_gone": "La importació d'aquest ordinador no pot continuar perquè els fitxers ja no hi són.",
+    "pst_in_use": "{names} no es pot llegir mentre Outlook el tingui obert. Tanca Outlook i torna a cercar.",
+    "description": "Cerca correu en aquest ordinador, o tria fitxers .eml, .zip, .mbox o Outlook .pst.",
+    "settings_description": "Porta correu de Thunderbird, o de fitxers .eml, ZIP, mbox o Outlook .pst.",
+    "resume_refused": "Ara no es poden llegir: {names}. La resta continua, i aquests es tornen a provar al pròxim inici.",
+    "resume_stop_trying": "Deixa de provar-ho",
+    "resume_hand_picked": "Torna a triar aquests fitxers per importar la resta: {names}. Els missatges ja importats s'ometen.",
+    "scan_incomplete": "La cerca ha trigat massa i s'ha aturat. Això és el que ha trobat fins aleshores."
+  },
   "recover_deleted": {
     "tab": "Recupera elements suprimits",
     "title": "Recupera elements suprimits",
@@ -5333,13 +6298,261 @@
     "date_label": "Data",
     "subject_label": "Assumpte"
   },
+  "print_styles": {
+    "title": "Impressió",
+    "description": "Com es veuen els missatges, els contactes i els calendaris impresos.",
+    "style_label": "Estil d'impressió",
+    "style_description": "Els complements poden afegir estils, per exemple un capçal amb l'adreça de la vostra empresa.",
+    "standard": "Estàndard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instal·la {appName}",
-    "description": "Instal·leu la nostra aplicació per a un accés ràpid i compatibilitat sense connexió.",
+    "description": "Instal·leu la nostra aplicació per a un accés ràpid.",
     "not_now": "Ara no",
     "install": "Instal·la",
     "dont_remind": "No m'ho tornis a recordar",
     "dismiss_aria": "Descarta l'avís d'instal·lació"
+  },
+  "app_update": {
+    "ready": "Hi ha una versió nova de {appName} a punt.",
+    "reload": "Torna a carregar"
+  },
+  "offline": {
+    "settings": {
+      "title": "Sense connexió",
+      "description": "Llegiu i escriviu correu en aquest dispositiu sense connexió.",
+      "keep_label": "Desa el correu en aquest dispositiu",
+      "keep_description": "Desa els darrers 30 dies de la safata d'entrada i de les carpetes que obriu, fins a 250 MB, xifrats en aquest navegador. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",
+      "warning": "Qualsevol persona que pugui fer servir aquest perfil del navegador pot llegir aquest correu. Activeu-ho només al vostre dispositiu i feu servir xifratge de disc.",
+      "forbidden": "La vostra organització no permet desar correu als dispositius.",
+      "unsupported": "Aquest navegador no pot desar correu per fer-lo servir sense connexió.",
+      "syncing": "S'està desant el correu en aquest dispositiu…",
+      "usage": "{size} en aquest dispositiu",
+      "usage_updated": "{size} en aquest dispositiu, actualitzat {time}",
+      "off_confirm_title": "Voleu desactivar el mode sense connexió?",
+      "off_confirm_message": "{count, plural, one {# missatge de la safata de sortida no s'ha enviat.} other {# missatges de la safata de sortida no s'han enviat.}} Si el desactiveu, s'esborren juntament amb el correu desat en aquest dispositiu.",
+      "off_confirm": "Desactiva"
+    },
+    "outbox": {
+      "title": "Safata de sortida",
+      "description": "Missatges que heu escrit sense connexió. S'envien quan aquest dispositiu torna a tenir connexió.",
+      "empty": "No hi ha res pendent d'enviar.",
+      "no_subject": "(sense assumpte)",
+      "to": "Per a: {recipients}",
+      "status_waiting": "S'espera connexió",
+      "status_sending": "S'està enviant",
+      "status_failed": "No s'ha pogut enviar: {error}",
+      "status_uncertain": "La connexió s'ha tallat durant l'enviament. Comproveu Enviats abans de tornar-lo a enviar.",
+      "retry": "Torna a enviar",
+      "delete": "Suprimeix",
+      "delete_confirm_title": "Voleu suprimir aquest missatge?",
+      "delete_confirm_message": "No s'ha enviat i no es pot recuperar.",
+      "changes": "{count, plural, one {# canvi} other {# canvis}} de llegit, marques o carpetes s'enviaran quan torneu a tenir connexió.",
+      "status_held": "Les normes de la vostra organització han canviat mentre esperava. Torneu-lo a escriure per enviar-lo.",
+      "retry_label": "Torna a enviar: {subject}",
+      "delete_label": "Suprimeix: {subject}"
+    },
+    "banner": {
+      "offline": "No teniu connexió. Veieu el correu desat en aquest dispositiu. El que canvieu o escriviu s'envia quan torneu a tenir connexió.",
+      "outbox": "{count, plural, one {# missatge} other {# missatges}} a la safata de sortida",
+      "server_down": "No es pot connectar amb el servidor de correu. Veieu el correu desat en aquest dispositiu. El que canvieu o escriviu s'envia quan torni a respondre."
+    },
+    "toast": {
+      "queued": "Desat a la safata de sortida. S'envia quan torneu a tenir connexió.",
+      "sent": "Enviat des de la safata de sortida: {subject}",
+      "send_failed": "No s'ha pogut enviar un missatge de la safata de sortida: {subject}",
+      "refused_delete": "Suprimir definitivament necessita connexió. Torneu-ho a provar quan tingueu connexió.",
+      "refused_other": "Això necessita connexió. Torneu-ho a provar quan tingueu connexió.",
+      "forbidden": "La vostra organització ha desactivat el mode sense connexió. S'ha esborrat el correu desat en aquest dispositiu.",
+      "back_online": "Torneu a tenir connexió. Recarregueu per iniciar la sessió i enviar el que és pendent.",
+      "reload": "Torna a carregar",
+      "held": "Un missatge de la safata de sortida us necessita: {subject}",
+      "lost": "Aquests missatges no s'han enviat i s'han esborrat: {subjects}"
+    },
+    "signout": {
+      "title": "Voleu tancar la sessió amb missatges sense enviar?",
+      "message": "{count, plural, one {# missatge no s'ha enviat.} other {# missatges no s'han enviat.}} En tancar la sessió s'esborren.",
+      "confirm": "Tanca la sessió",
+      "lost": "Aquests missatges no s'han enviat i s'han esborrat en tancar la sessió: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Això necessita connexió. Torneu-ho a provar quan tingueu connexió.",
+      "plugins_down": "El vostre connector de signatura o xifratge no funciona sense connexió. Envieu-ho quan torneu a tenir connexió.",
+      "file_missing": "Un fitxer adjuntat sense connexió ja no és en aquest dispositiu. Torneu-lo a adjuntar.",
+      "no_sent_mailbox": "No s'ha trobat la carpeta Enviats.",
+      "no_drafts_mailbox": "No s'ha trobat la carpeta Esborranys."
+    }
+  },
+  "offlineConflicts": {
+    "title": "Canvis no aplicats",
+    "description": "Heu fet aquests canvis sense connexió. No s'han aplicat i el missatge queda tal com és al servidor.",
+    "changed": "Canviat en un altre dispositiu, el vostre canvi no s'ha aplicat",
+    "changed_delete": "Canviat en un altre dispositiu, no s'ha suprimit",
+    "gone": "Ja no és al servidor, el vostre canvi no s'ha aplicat",
+    "refused": "El servidor ha rebutjat aquest canvi: {reason}",
+    "dismiss": "Descarta",
+    "dismiss_label": "Descarta la nota sobre {subject}",
+    "banner": "Canvis no aplicats: {count}",
+    "toast": "Canvis fets sense connexió que no s'han aplicat: {count}. La safata de sortida indica quins.",
+    "storage_failed": "Aquest dispositiu no té més espai per al correu sense connexió. Allibereu espai o conserveu-ne menys a la configuració.",
+    "signout_changes_title": "Voleu tancar la sessió amb canvis sense desar?",
+    "signout_changes": "Canvis que encara no són al servidor: {count}. En tancar la sessió s'eliminen.",
+    "store_unavailable": "El correu sense connexió d'aquest dispositiu no es pot obrir ara. El correu no enviat es queda aquí i l'aplicació ho continua provant.",
+    "store_reset": "No s'ha pogut llegir el correu sense connexió d'aquest dispositiu, així que es torna a baixar. El que no s'havia enviat s'ha perdut.",
+    "legacy_stranded": "Aquest navegador no pot obrir el correu no enviat desat per una versió anterior. Actualitzar el navegador el pot recuperar.",
+    "store_private": "Les finestres privades no poden desar correu per fer-lo servir sense connexió.",
+    "server_not_answering": "El servidor de correu no respon. Torneu-ho a provar d'aquí a un moment."
+  },
+  "offlineWipe": {
+    "note": "La teva organització ha tret les dades d'aquest compte d'aquest dispositiu. Inicia la sessió per tornar a començar.",
+    "note_unsent": "La teva organització ha tret les dades d'aquest compte d'aquest dispositiu. Missatges sense enviar eliminats: {count}.",
+    "settings_title": "Treu-ho tot d'aquest dispositiu",
+    "settings_description": "Per quan regalis aquest ordinador o el deixis d'utilitzar. El teu correu al servidor es manté.",
+    "settings_button": "Treu-ho tot…",
+    "settings_wiping": "S'està traient…",
+    "confirm_title": "Vols treure-ho tot d'aquest dispositiu?",
+    "confirm_message": "Això elimina el que aquesta aplicació guarda en aquest dispositiu, per a tots els comptes d'aquí. El teu correu al servidor no es toca.",
+    "confirm_mail": "Correu, calendaris, contactes i fitxers guardats aquí",
+    "confirm_unsent": "Missatges sense enviar en espera aquí: {count}. Es perdran.",
+    "confirm_keys": "Claus S/MIME i OpenPGP. Necessitaràs la teva pròpia còpia de seguretat per tornar-les a utilitzar.",
+    "confirm_plugins": "Dades que els connectors han guardat aquí",
+    "confirm_files": "Adjunts oberts per editar i fitxers pendents d'adjuntar",
+    "confirm_accounts": "Es tanca la sessió de tots els comptes",
+    "confirm_button": "Treu-ho tot",
+    "note_unknown": "La teva organització ha eliminat les dades d'aquest compte d'aquest dispositiu. És possible que també s'hagin suprimit missatges sense enviar.",
+    "refused_waiting": "Missatges sense enviar que esperen la teva contrasenya nova: {count}. Es conserven fins al {date}.",
+    "refused_waiting_unknown": "És possible que hi hagi missatges sense enviar esperant la teva contrasenya nova. Es conserven fins al {date}.",
+    "confirm_unsent_unknown": "És possible que hi hagi missatges sense enviar esperant aquí. Es perdran.",
+    "confirm_templates": "Plantilles de correu desades en aquest dispositiu",
+    "session_waiting": "Missatges sense enviar que esperen el teu proper inici de sessió: {count}. Es conserven fins al {date}.",
+    "session_waiting_unknown": "És possible que hi hagi missatges sense enviar esperant el teu proper inici de sessió. Es conserven fins al {date}.",
+    "needs_sign_in": "Cal iniciar la sessió",
+    "switcher_waiting": "Missatges sense enviar: {count}. S'eliminaran d'aquest dispositiu el {date}.",
+    "switcher_kept": "El correu d'aquest dispositiu s'eliminarà el {date}.",
+    "sibling_waiting": "S'ha tancat la sessió de {name}. Missatges sense enviar: {count}. Inicia la sessió abans del {date} o s'eliminaran d'aquest dispositiu.",
+    "sibling_kept": "S'ha tancat la sessió de {name}. Inicia la sessió abans del {date} o el correu s'eliminarà d'aquest dispositiu."
+  },
+  "offlineStorage": {
+    "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que trieu, xifrats en aquest dispositiu. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",
+    "window_label": "Fins a quan enrere desar",
+    "window_description": "El correu i els esdeveniments més antics surten d'aquest dispositiu. Encara els podeu obrir quan tingueu connexió.",
+    "window_days": "{days, plural, one {# dia} other {# dies}}",
+    "window_year": "1 any",
+    "window_everything": "Tot",
+    "attachments_label": "Desa els fitxers adjunts",
+    "attachments_description": "Fitxers adjunts dels missatges desats i fitxers que deseu sense connexió, fins a {total} en total. Els més antics se suprimeixen primer.",
+    "total_locked": "La vostra organització permet com a màxim {size} d'adjunts i fitxers.",
+    "attachment_cap_label": "Adjunt més gran que es desa",
+    "usage_mail": "Missatges i índex de cerca",
+    "usage_attachments": "Fitxers adjunts",
+    "usage_calendar": "Calendari",
+    "usage_contacts": "Contactes",
+    "usage_files": "Fitxers desats sense connexió",
+    "usage_row": "{size} ({count, plural, one {# element} other {# elements}})",
+    "progress_list": "Llistant els missatges",
+    "progress_bodies": "Baixant els missatges",
+    "progress_threads": "Ordenant les converses",
+    "progress_files": "Baixant els fitxers",
+    "progress_other": "Portant dades a aquest dispositiu",
+    "progress_count": "{done} de {total}",
+    "progress_count_open": "{done} fins ara",
+    "progress_left": "queden uns {minutes, plural, one {# minut} other {# minuts}}",
+    "clear_label": "Buida aquest compte",
+    "clear_description": "Suprimeix tot el que aquest dispositiu desa d'aquest compte i ho torna a baixar.",
+    "clear_button": "Buida…",
+    "clear_confirm_title": "Voleu buidar aquest compte en aquest dispositiu?",
+    "clear_confirm_message": "Tot el que aquest dispositiu desa de {account} se suprimeix i es torna a baixar. El vostre correu al servidor no es toca.",
+    "clear_confirm_unsent": "{count, plural, one {Es perdrà # missatge sense enviar.} other {Es perdran # missatges sense enviar.}}",
+    "clear_confirm": "Buida",
+    "persist_refused": "Aquest navegador pot esborrar el correu desat quan falti espai. Instal·lar l'aplicació sol evitar-ho.",
+    "persist_retry": "Demana al navegador que el conservi",
+    "safari_hint": "El Safari esborra les dades d'un lloc després de 7 dies sense visitar-lo. Afegiu Bulwark a la pantalla d'inici o al Dock per mantenir el vostre correu en aquest dispositiu.",
+    "evicted": "El navegador ha esborrat el correu desat en aquest dispositiu. Es torna a baixar.",
+    "evicted_lost": "{count, plural, one {S'ha perdut # missatge o canvi sense enviar.} other {S'han perdut # missatges o canvis sense enviar.}}",
+    "evicted_dismiss": "D'acord",
+    "storage_full_title": "L'emmagatzematge del dispositiu és ple.",
+    "storage_full_text": "Bulwark ha deixat de desar correu aquí. Deseu menys correu o buideu aquest compte per fer espai.",
+    "open_settings": "Obre la configuració",
+    "default_on": "Bulwark desa el vostre correu en aquest dispositiu perquè funcioni sense connexió. Podeu canviar-ho a la configuració.",
+    "conflict_calendar": "Esdeveniment del calendari",
+    "conflict_contacts": "Contacte",
+    "kept_files_title": "Fitxers desats sense connexió",
+    "kept_state_kept": "En aquest dispositiu",
+    "kept_state_waiting": "Esperant la baixada",
+    "kept_error_tooLarge": "Massa gran per desar-lo",
+    "kept_error_overLimit": "Supera el límit d'aquest dispositiu",
+    "kept_error_notAllowed": "La vostra organització no permet desar fitxers",
+    "kept_error_download": "No s'ha pogut baixar",
+    "keep_offline": "Desa sense connexió",
+    "unpin": "Deixa de desar sense connexió",
+    "unpin_label": "Deixa de desar {name} sense connexió",
+    "warning_desktop": "Qualsevol persona que pugui fer servir el compte d'usuari d'aquest ordinador pot llegir aquest correu. Feu servir el xifratge de disc.",
+    "off_confirm_text": "Això suprimeix tot el que aquest dispositiu desa de {account}. El vostre correu al servidor no es toca.",
+    "unsent_changes": "{count, plural, one {Es perdrà # canvi que no ha arribat al servidor.} other {Es perdran # canvis que no han arribat al servidor.}}",
+    "clear_needs_connection": "Cal una connexió, perquè tot es torna a baixar.",
+    "usage_label": "Què desa aquest dispositiu",
+    "pin_not_ready": "Aquest fitxer encara no és a la llista d'aquest dispositiu. Torneu-ho a provar d'aquí a un moment."
+  },
+  "keyProtection": {
+    "browser_note": "En un navegador, la clau d'aquest correu és al mateix perfil del navegador que el correu. Qui copiï els fitxers del perfil el pot llegir, així que feu servir el xifratge del disc.",
+    "no_secure_storage": "Aquest ordinador no té un magatzem segur de claus que l'aplicació pugui fer servir, així que la clau d'aquest correu només està ofuscada al disc. Feu servir el xifratge del disc.",
+    "wrap_failed": "El magatzem segur de claus d'aquest ordinador no ha acceptat la clau d'aquest correu, així que no està protegida com caldria. Reinicieu l'aplicació i feu servir el xifratge del disc.",
+    "rekey_progress": "S'està tornant a xifrar el correu d'aquest dispositiu: {percent} %. Podeu continuar treballant.",
+    "rekey_failed": "El nou xifratge del correu d'aquest dispositiu no ha acabat, així que la clau antiga encara el pot obrir. L'aplicació ho tornarà a provar en el proper inici.",
+    "reenroll_note": "La clau d'accés i el desbloqueig del sistema feien servir la clau del PIN antic, així que s'han eliminat. Torneu-los a configurar si els feu servir."
+  },
+  "offlineDrafts": {
+    "title": "Esborranys en aquest dispositiu",
+    "description": "Aquests esborranys estan desats en aquest dispositiu. Aniran al servidor sols tan bon punt s'hi pugui connectar.",
+    "saved_on_device": "Desat en aquest dispositiu",
+    "status_waiting": "Esperant el servidor",
+    "status_sending": "Desant al servidor",
+    "status_uncertain": "Comprovant si ha arribat al servidor",
+    "status_refused": "El servidor ha rebutjat aquest esborrany: {error}",
+    "file_missing": "Un fitxer adjunt ja no és en aquest dispositiu",
+    "open": "Obre",
+    "open_label": "Obre {subject}",
+    "retry": "Torna-ho a provar",
+    "retry_label": "Torna a provar {subject}",
+    "toast_refused": "L'esborrany {subject} no s'ha pogut desar al servidor. Es queda en aquest dispositiu.",
+    "toast_conflict": "L'esborrany {subject} s'ha canviat en un altre dispositiu. Es conserven les dues versions.",
+    "conflict_changed": "Canviat en un altre dispositiu. Les dues versions són a Esborranys.",
+    "conflict_gone": "Canviat o eliminat en un altre dispositiu. La vostra versió és a Esborranys.",
+    "banner_refused": "Esborranys rebutjats pel servidor: {count}",
+    "banner_waiting": "Esborranys que esperen el servidor: {count}"
+  },
+  "offlineExport": {
+    "settings_label": "Exporta el correu desat",
+    "settings_description": "Desa el correu d'aquest dispositiu com a fitxers mbox o .eml. Funciona sense connexió.",
+    "title": "Exporta el correu desat",
+    "description": "Desa els originals que conserva aquest dispositiu. Els fitxers .eml són còpies exactes. Un fitxer mbox afegeix les marques que requereix el seu format i escriu l'estat de llegit i marcat a les capçaleres de cada missatge, en lloc de les que tingués. El correu anterior al període triat no hi és. Per desar-ho tot del servidor, fes servir «Exporta tot el correu».",
+    "folders_label": "Carpetes",
+    "all_folders": "Totes les carpetes",
+    "folder_kept": "{kept} de {total} aquí",
+    "loading": "S'està llegint el que hi ha en aquest dispositiu…",
+    "load_failed": "No s'ha pogut llegir el correu d'aquest dispositiu.",
+    "nothing_kept": "Encara no hi ha correu desat en aquest dispositiu.",
+    "kept": "Originals en aquest dispositiu: {kept} de {total} missatges",
+    "missing_online": "Per baixar del servidor: {count}",
+    "missing_offline": "No es poden exportar sense connexió: {count}. Pots tornar-ho a provar quan tinguis connexió.",
+    "reason_attachments_off": "Els missatges originals només es conserven si «Desa els fitxers adjunts» està activat.",
+    "reason_not_kept": "Els missatges originals es baixen al final, i només si queda espai.",
+    "not_kept_attachments_off": "Sense original aquí perquè aquest dispositiu no conserva adjunts: {count}",
+    "not_kept_not_kept": "Encara sense original en aquest dispositiu: {count}",
+    "retry": "Torna-ho a provar amb connexió",
+    "retry_online": "Ja tens connexió, així que poden venir del servidor.",
+    "retry_offline": "Pots tornar-ho a provar quan tinguis connexió.",
+    "settings_button": "Exporta…",
+    "message_failed": "El servidor no ha lliurat aquest missatge.",
+    "failed_generic": "L'exportació s'ha aturat per un error. Torna-ho a provar.",
+    "stopped_limit": "L'exportació s'ha aturat a {limit}, el màxim que pot contenir aquest navegador. Tria menys carpetes o fes servir Chromium, Firefox o l'aplicació d'escriptori.",
+    "over_limit": "Aquest navegador pot contenir com a màxim {limit}, i aquesta selecció ocupa uns {size}. Tria menys carpetes o fes servir Chromium, Firefox o l'aplicació d'escriptori.",
+    "no_room": "Aquesta exportació necessita uns {size}, i aquest navegador en té {free} disponibles. Tria menys carpetes o allibera espai.",
+    "stopped_no_room": "El navegador s'ha quedat sense espai per a l'exportació. Tria menys carpetes o allibera espai.",
+    "stopped_offline_off": "L'exportació s'ha aturat perquè aquest compte ja no conserva correu en aquest dispositiu.",
+    "policy_unknown": "Encara no es coneixen les regles de la teva organització per a aquest compte, així que l'exportació continua desactivada de moment.",
+    "leftover_file": "No s'ha pogut treure el fitxer {name} d'on l'has desat. Està incomplet, el pots suprimir."
   },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",
@@ -5423,6 +6636,10 @@
       "accounts_heading": "Comptes connectats",
       "account_on": "{label} a {host}",
       "account_waiting": "{label} a {host} (inici de sessió sense acabar)",
+      "forward_heading": "Reenvia el correu a",
+      "forward_hint": "Adreces a les quals aquest connector pot reenviar missatges sense preguntar.",
+      "forward_remove": "Elimina",
+      "forward_remove_label": "Deixa de reenviar a {address}",
       "disconnect": "Desconnecta",
       "disconnect_failed": "No s'ha pogut desconnectar {label}"
     },
@@ -5453,13 +6670,17 @@
         "title": "Accés complet a aquesta aplicació",
         "body": "S'executa amb els mateixos drets que el mateix webmail. Pot llegir tot el vostre correu i les claus desades i actuar en nom vostre. Permeteu-ho només als connectors en què confieu plenament."
       },
+      "keystore": {
+        "title": "Utilitzar els certificats d'aquest ordinador",
+        "body": "Demana signar i desxifrar missatges amb certificats d'aquest ordinador o d'una targeta intel·ligent. L'aplicació us ho pregunta abans. El connector no rep mai la clau privada, però mentre ho permeteu pot signar en nom vostre i llegir el que desxifra."
+      },
       "email_raw_send": {
         "title": "Enviar missatges que ha creat ell mateix",
         "body": "Enviar missatges complets, per exemple signats o xifrats, des del vostre compte."
       },
       "email_blob_read": {
-        "title": "Llegir el contingut original dels missatges",
-        "body": "Llegir les dades originals dels vostres missatges i adjunts, i de cada fitxer que adjunteu abans d'enviar-lo."
+        "title": "Llegir els adjunts i el codi font dels missatges",
+        "body": "Llegir els adjunts (també el seu text i les seves imatges) i el codi font complet dels missatges amb què treballeu, i cada fitxer que adjunteu abans d'enviar-lo."
       },
       "email_blob_write": {
         "title": "Substituir adjunts abans d'enviar",
@@ -5477,6 +6698,10 @@
         "title": "Canviar el vostre calendari",
         "body": "Crear, canviar i suprimir esdeveniments."
       },
+      "calendar_respond": {
+        "title": "Respondre invitacions",
+        "body": "Acceptar o rebutjar invitacions de calendari. La vostra resposta s'envia a l'organitzador per correu electrònic."
+      },
       "contacts_read": {
         "title": "Llegir els vostres contactes",
         "body": "Cercar i llegir les vostres llibretes d'adreces."
@@ -5487,11 +6712,11 @@
       },
       "files_read": {
         "title": "Llegir els vostres fitxers",
-        "body": "Navegar pels fitxers desats al vostre compte i obrir-los."
+        "body": "Cercar, obrir i llegir els fitxers del vostre compte."
       },
       "files_write": {
         "title": "Canviar els vostres fitxers",
-        "body": "Pujar, canviar el nom, moure i suprimir fitxers del vostre compte."
+        "body": "Desar, crear, canviar el nom i moure fitxers del vostre compte, i impedir que se suprimeixi un fitxer."
       },
       "identity_read": {
         "title": "Veure les vostres identitats d'enviament",
@@ -5542,8 +6767,12 @@
         "body": "Veure les vostres preferències i les definicions d'etiquetes."
       },
       "settings_write": {
+        "title": "Canviar les vostres etiquetes",
+        "body": "Afegir, canviar el nom i reordenar les vostres etiquetes, i impedir canvis a la vostra configuració."
+      },
+      "settings_change": {
         "title": "Canviar la vostra configuració",
-        "body": "Afegir i reordenar etiquetes i canviar les vostres preferències."
+        "body": "Canviar l'aspecte i el funcionament de l'aplicació, com ara el tema, el format d'hora o la subfinestra de lectura. La configuració que ha establert la vostra organització es manté igual."
       },
       "security_read": {
         "title": "Veure la seguretat del compte",
@@ -5556,6 +6785,10 @@
       "auth_emit": {
         "title": "Tancar la vostra sessió",
         "body": "Tancar la vostra sessió al webmail."
+      },
+      "auth_impersonation_return": {
+        "title": "Tornar-te al teu compte",
+        "body": "Quan un administrador ha obert una bústia per suplantació, tancar aquesta sessió i tornar a iniciar la sessió al compte des del qual va començar."
       },
       "account_read": {
         "title": "Veure els vostres comptes",
@@ -5604,6 +6837,10 @@
       "ui_email_details": {
         "title": "Afegir panells als detalls del missatge",
         "body": "Mostrar un panell propi al costat o a sota d'un missatge obert."
+      },
+      "ui_side_panel": {
+        "title": "Afegir un tauler a altres vistes",
+        "body": "Mostrar el seu propi tauler al costat del Calendari, els Contactes, els Fitxers i la Configuració."
       },
       "ui_download_file": {
         "title": "Desar fitxers al dispositiu",
@@ -5659,11 +6896,19 @@
       },
       "compose_read": {
         "title": "Llegir el missatge que escriviu",
-        "body": "Llegir el text d'un missatge mentre l'escriviu, quan feu servir el connector a l'editor. No la signatura ni el missatge citat."
+        "body": "Llegir un missatge mentre l'escriviu, quan feu servir el connector a l'editor: el text, l'assumpte, els destinataris (també en Cco) i el nom i la mida dels adjunts. No la signatura ni el missatge citat."
       },
       "compose_write": {
         "title": "Canviar el missatge que escriviu",
         "body": "Substituir o afegir text en un missatge mentre l'escriviu, quan feu servir el connector a l'editor. Podeu desfer cada canvi i continueu decidint si l'envieu."
+      },
+      "compose_check": {
+        "title": "Revisar el que escriviu",
+        "body": "Llegeix el que escriviu a l'editor mentre teclegeu i ho pot enviar al servei que fa servir. Només quan la revisió està activada, i res mentre un missatge estigui configurat per signar-se o xifrar-se. El text que heu escrit abans d'activar-ho potser ja s'ha revisat."
+      },
+      "email_forward": {
+        "title": "Reenviar el vostre correu",
+        "body": "Reenviar missatges del vostre compte amb els adjunts, sense obrir l'editor. Se us pregunta abans del primer reenviament a cada adreça."
       },
       "ui_notifications": {
         "title": "Mostrar notificacions",
@@ -5679,7 +6924,7 @@
       },
       "ui_tasks": {
         "title": "Afegir elements a la vista de tasques",
-        "body": "Mostrar seccions pròpies als detalls d'una tasca i botons a la llista de tasques."
+        "body": "Mostrar seccions pròpies als detalls d'una tasca, botons a la llista de tasques i una llista de tasques pròpia en lloc de la de Bulwark."
       },
       "ui_files": {
         "title": "Afegir elements a la vista de fitxers",
@@ -5697,6 +6942,11 @@
         "title": "Fer servir els comptes que connecteu",
         "body": "Enviar peticions a través del servidor de {appName} amb un compte o una clau que heu configurat vós o el vostre administrador. El connector no veu mai la contrasenya, però pot fer tot el que aquest compte pot fer al seu propi servidor."
       }
+    },
+    "forward_approval": {
+      "title": "Voleu permetre que {plugin} reenviï correu a {addresses}?",
+      "message": "{plugin} vol reenviar «{subject}» amb els adjunts a {addresses}. Si ho permeteu, d'ara endavant podrà reenviar correu a aquesta adreça sense preguntar. Ho podeu revocar a Configuració > Complements.",
+      "allow": "Permet i reenvia"
     },
     "dialog": {
       "from_plugin": "Del connector {name}",
@@ -5726,6 +6976,28 @@
       "error_server": "Introduïu l'adreça del servidor, per exemple https://cloud.example.com",
       "error_save": "No s'ha pogut desar: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "No s'ha enviat. Una comprovació que exigeix la vostra organització no s'està executant. Torneu-ho a provar d'aquí a un moment.",
+    "stopped_working": "No s'ha enviat. Una comprovació que exigeix la vostra organització ha deixat de funcionar. Torneu a carregar la pàgina. Si no ho soluciona, aviseu l'administrador."
+  },
+  "compose_words": {
+    "undo_send": {
+      "label": "Desfés l'enviament",
+      "description": "Us dona uns segons per recuperar un missatge després de prémer Envia."
+    },
+    "reply_from_received": {
+      "label": "Respon des de l'adreça de recepció",
+      "description": "Respon des de l'adreça a la qual es va enviar el correu. Útil si teniu diverses adreces."
+    },
+    "require_tls": "Lliura només per una connexió segura",
+    "require_tls_hint": "El missatge en si no està xifrat. Es retorna si un servidor no pot fer servir TLS.",
+    "encrypt": "Xifra…",
+    "encrypt_hint": "Cal un complement S/MIME o PGP. Obre la configuració.",
+    "quick_reply_to": "Respon a {names}…",
+    "open_full_editor": "Obre l'editor complet",
+    "forward_to_label": "Per a",
+    "forward_cc_label": "CC"
   },
   "plugin_list": {
     "filters": "Filtres",
@@ -5760,6 +7032,9 @@
   },
   "top_bar": {
     "more": "Més opcions"
+  },
+  "windowChrome": {
+    "hide_offline_notice": "Amaga l'avís de fora de línia"
   },
   "shell": {
     "resize": "Canvia la mida",
@@ -5805,6 +7080,19 @@
     "group_plugins": "Connectors",
     "group_account": "Compte",
     "switch_to": "Canvia a {account}"
+  },
+  "menuAudit": {
+    "offline_header": "No teniu connexió. Algunes accions la necessiten.",
+    "files_new_folder": "Carpeta nova…",
+    "files_new_file": "Fitxer nou…",
+    "files_new_text_file": "Fitxer de text nou…",
+    "files_upload_files": "Puja fitxers…",
+    "files_upload_folder": "Puja una carpeta…",
+    "files_share": "Comparteix…",
+    "files_share_button": "Comparteix",
+    "contacts_add_to_group": "Afegeix al grup…",
+    "contacts_bulk_add_to_group": "Afegeix al grup…",
+    "schedule_send": "Programa l'enviament…"
   },
   "notification_center": {
     "title": "Notificacions",
@@ -5939,5 +7227,1045 @@
     "easy_read": "Lectura fàcil",
     "sign_language": "Llengua de signes",
     "new_tab": "s'obre en una pestanya nova"
+  },
+  "pwaNotify": {
+    "action_archive": "Arxiva",
+    "action_mark_read": "Marca com a llegit",
+    "action_reply": "Respon",
+    "reply_placeholder": "Escriu una resposta"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Afegeix al calendari",
+    "update_in_calendar": "Actualitza al calendari",
+    "remove_from_calendar": "Treu del calendari",
+    "in_calendar": "Al vostre calendari",
+    "view_in_calendar": "Mostra al calendari",
+    "select_calendar": "Trieu un calendari",
+    "added": "S’ha afegit al vostre calendari",
+    "updated": "S’ha actualitzat el calendari",
+    "removed": "S’ha tret del vostre calendari",
+    "action_failed": "No s’ha pogut modificar el calendari. Torneu-ho a provar.",
+    "blocked": "Un connector ha impedit aquest canvi al calendari.",
+    "title": {
+      "rental_car": "Cotxe de lloguer",
+      "rental_car_company": "Cotxe de lloguer: {company}"
+    },
+    "description": {
+      "reference": "Codi de reserva: {reference}",
+      "passengers": "Passatgers: {names}",
+      "seats": "Seients: {seats}",
+      "checkin": "Facturació: {url}",
+      "manage": "Gestiona la reserva: {url}",
+      "ticket": "Bitllet: {url}",
+      "phone": "Telèfon: {phone}",
+      "car": "Cotxe: {car}",
+      "tickets": "Entrades: {numbers}",
+      "party_size": "Persones: {count}",
+      "added_from": "Afegit des d’un correu de {domain}",
+      "added_from_subject": "Afegit des del correu «{subject}» de {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografia",
+      "grammar": "Gramàtica",
+      "style": "Estil",
+      "other": "Suggeriment"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "No hi ha suggeriments",
+      "suggestions": "Suggeriments",
+      "replace_with": "Substitueix per {text}",
+      "also": "També de {checker}",
+      "ignore": "Ignora",
+      "add_to_dictionary": "Afegeix al diccionari",
+      "disable_rule": "Desactiva aquesta regla",
+      "changed": "El text ha canviat. Espereu la propera revisió."
+    },
+    "list_item": "{word}: {message} Suggeriment: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {No hi ha errors d'ortografia ni de gramàtica} one {# error d'ortografia o de gramàtica} other {# errors d'ortografia o de gramàtica}}",
+    "status": {
+      "title": "Revisió",
+      "off": "Revisió desactivada",
+      "paused": "Revisió en pausa",
+      "rate_limited": "Comprovació en pausa",
+      "unavailable": "Comprovació no disponible",
+      "checking": "S'està comprovant…",
+      "issues": "{count, plural, =0 {Cap problema} one {# problema} other {# problemes}}"
+    },
+    "panel": {
+      "title": "Revisió",
+      "required": "Exigit per la vostra organització",
+      "check_message": "Revisa aquest missatge",
+      "notice": "Mentre escriviu, el text s'envia a {checkers} perquè el revisi. La vostra signatura i el missatge citat en queden fora. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans d'activar-ho potser ja s'ha revisat.",
+      "turn_on": "Activa la revisió",
+      "paused_protected": "No es revisa res mentre aquest missatge estigui configurat per signar-se o xifrar-se.",
+      "paused_unknown": "{plugin} pot signar o xifrar missatges sense mostrar-ho aquí, així que no es revisa res mentre estigui activat.",
+      "rate_limited": "{checker} ha demanat esperar. La revisió es reprèn d'aquí a un minut.",
+      "unavailable": "{checker} no pot revisar ara mateix. Ho torna a provar quan continueu escrivint.",
+      "no_issues": "No s'ha trobat cap problema.",
+      "list_label": "Problemes en aquest missatge",
+      "shortcuts": "Problema següent: {next}. Anterior: {previous}."
+    },
+    "notice": {
+      "on": "La revisió està activada. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans potser ja s'ha revisat.",
+      "forced": "La vostra organització ha activat la revisió. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans potser ja s'ha revisat.",
+      "ok": "D'acord"
+    },
+    "send_warning": {
+      "title": "Voleu enviar-lo amb problemes pendents?",
+      "body": "{count, plural, one {Queda # error d'ortografia o de gramàtica} other {Queden # errors d'ortografia o de gramàtica}} per resoldre en aquest missatge.",
+      "review": "Revisa",
+      "send": "Envia igualment"
+    },
+    "settings": {
+      "title": "Revisió",
+      "description": "Subratlla els errors d'ortografia i de gramàtica mentre escriviu, amb suggeriments per corregir-los.",
+      "enable": "Revisa l'ortografia i la gramàtica mentre escric",
+      "enable_description": "El text que escriviu s'envia al complement de revisió i al servei que fa servir, sense la vostra signatura ni els missatges citats. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se.",
+      "no_checker": "No hi ha cap complement de revisió instal·lat. Demaneu a l'administrador que n'afegeixi un.",
+      "plugin_description": "Envia el que escriviu a {plugin}.",
+      "writing_language": "Llengua d'escriptura",
+      "writing_language_description": "La llengua en què escriviu normalment. La fan servir la revisió i el corrector ortogràfic del navegador.",
+      "auto": "Detecta automàticament"
+    },
+    "shortcuts": {
+      "next_issue": "Error d'ortografia o de gramàtica següent",
+      "previous_issue": "Error d'ortografia o de gramàtica anterior"
+    }
+  },
+  "pwaWindows": {
+    "open_in_window": "Obre en una finestra nova",
+    "save_all_to_folder": "Desa-ho tot en una carpeta…",
+    "saved_all": "{count, plural, one {S’ha desat # adjunt a {folder}.} other {S’han desat # adjunts a {folder}.}}",
+    "saved_partial": "S’han desat {saved} de {total} adjunts a {folder}.",
+    "save_failed": "No s’han pogut desar els adjunts a {folder}.",
+    "popup_blocked": "El navegador ha blocat la finestra nova. Permet les finestres emergents per a aquest lloc i torna-ho a provar.",
+    "opening": "S’està obrint…",
+    "session_ended_title": "Has tancat la sessió en aquesta finestra",
+    "session_ended_body": "Obre l’aplicació i inicia la sessió, i després torna a obrir aquesta finestra.",
+    "open_app": "Obre l’aplicació",
+    "close_window": "Tanca la finestra",
+    "message_gone_title": "Aquest missatge ja no hi és",
+    "message_gone_body": "S’ha suprimit o s’ha mogut a un altre compte.",
+    "message_moved": "Aquest missatge s’ha mogut a una altra carpeta.",
+    "message_moved_to": "Aquest missatge s’ha mogut a {folder}.",
+    "window_not_ready": "La finestra nova no s’ha obert a temps. L’esborrany es queda aquí."
+  },
+  "desktopUi": {
+    "settings": {
+      "title": "Finestres de l'aplicació",
+      "double_click_label": "Obre els missatges en una finestra nova amb doble clic",
+      "double_click_description": "Un sol clic continua obrint el missatge al costat de la llista.",
+      "restore_label": "Torna a obrir les finestres en iniciar",
+      "restore_description": "Les finestres de missatges i esborranys obertes en sortir tornen a aparèixer."
+    },
+    "attachment": {
+      "open": "Obre",
+      "save_as": "Desa com a…",
+      "copy": "Copia",
+      "copy_failed": "No s’ha pogut copiar el fitxer."
+    },
+    "menu": {
+      "file": "Fitxer",
+      "edit": "Edita",
+      "view": "Visualitza",
+      "message": "Missatge",
+      "go": "Vés-hi",
+      "window": "Finestra",
+      "help": "Ajuda",
+      "new_window": "Finestra nova",
+      "print": "Imprimeix…",
+      "save_pdf": "Desa com a PDF…",
+      "switch_connection": "Canvia de connexió…",
+      "close": "Tanca",
+      "quit": "Surt",
+      "undo": "Desfés",
+      "redo": "Refés",
+      "cut": "Retalla",
+      "copy": "Copia",
+      "paste": "Enganxa",
+      "select_all": "Selecciona-ho tot",
+      "search": "Cerca al correu",
+      "refresh": "Comprova si hi ha correu nou",
+      "reading_pane": "Tauler de lectura",
+      "pane_right": "A la dreta",
+      "pane_below": "Sota la llista",
+      "pane_off": "Desactivat",
+      "zoom_in": "Amplia",
+      "zoom_out": "Redueix",
+      "zoom_reset": "Mida real",
+      "full_screen": "Pantalla completa",
+      "open_in_window": "Obre en una finestra nova",
+      "next_message": "Missatge següent",
+      "previous_message": "Missatge anterior",
+      "next_unread": "Següent missatge no llegit",
+      "mail": "Correu",
+      "files": "Fitxers",
+      "back": "Enrere",
+      "forward": "Endavant",
+      "minimize": "Minimitza",
+      "next_window": "Finestra següent",
+      "shortcuts": "Dreceres de teclat",
+      "docs": "Documentació",
+      "settings": "Configuració…",
+      "about": "Quant a Bulwark",
+      "from_plugins": "Més dels connectors…",
+      "pick_gone": "Aquest menú estava desfasat. Torneu-lo a obrir i proveu-ho una altra vegada.",
+      "bar_label": "Menú"
+    },
+    "context": {
+      "add_to_dictionary": "Afegeix «{word}» al diccionari",
+      "no_suggestions": "Cap suggeriment",
+      "open_link": "Obre l’enllaç",
+      "copy_link": "Copia l’enllaç",
+      "copy_address": "Copia l’adreça",
+      "save_image": "Desa la imatge…",
+      "copy_image": "Copia la imatge"
+    },
+    "closing": {
+      "unsaved_title": "No s’ha pogut desar un esborrany",
+      "unsaved_detail": "Si tanqueu ara, es perdrà el que heu escrit des de l’últim desament.",
+      "close_anyway": "Tanca igualment",
+      "unsent_title": "Hi ha correu sense enviar",
+      "unsent_one": "Hi ha un missatge pendent d’enviar. Se n’anirà la propera vegada que obriu Bulwark.",
+      "unsent_many": "Hi ha {count} missatges pendents d’enviar. Se n’aniran la propera vegada que obriu Bulwark.",
+      "quit": "Surt",
+      "leave_title": "Voleu sortir amb canvis sense desar?",
+      "leave_detail": "Els canvis fets en aquesta pàgina encara no s’han desat.",
+      "leave": "Surt",
+      "stay": "Queda’t"
+    },
+    "spellcheck": {
+      "offer": "La revisió ortogràfica en {language} necessita un diccionari. Bulwark el pot baixar de Google. El vostre text no s’envia.",
+      "download": "Baixa"
+    },
+    "restore": {
+      "unavailable_title": "Aquest esborrany no es pot obrir ara",
+      "unavailable_body": "Està segur al servidor, a Esborranys. Torneu-ho a provar quan hi hagi connexió.",
+      "try_again": "Torna-ho a provar",
+      "close": "Tanca"
+    }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Cerca «{text}» al correu"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "No tens connexió. Aquest missatge necessita connexió per obrir-se.",
+    "reader_failed": "No s'ha pogut carregar aquest missatge.",
+    "retry": "Torna-ho a provar",
+    "action_offline": "No tens connexió. Això necessita connexió.",
+    "offline_bar": "No tens connexió. Llegir i canviar el correu necessita connexió.",
+    "offline_default_on": "El teu correu es guarda en aquest dispositiu, així el pots llegir sense connexió."
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Mostra sempre la barra de menús",
+    "always_show_description": "Si no, apareix en prémer Alt.",
+    "exit": "Surt",
+    "tray_pause": "Posa en pausa les notificacions",
+    "tray_pause_hour": "Durant 1 hora",
+    "tray_pause_tomorrow": "Fins demà",
+    "tray_resume": "Torna a activar les notificacions",
+    "tray_open": "Obre Bulwark",
+    "tray_quit": "Surt de Bulwark",
+    "tray_exit": "Surt de Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Desa l'esborrany",
+    "attach_files": "Adjunta fitxers…",
+    "shortcut_apps": "Ves a Correu, Calendari, Contactes o Fitxers"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Obre…",
+    "menu_save_as": "Desa com a…",
+    "open_filter": "Missatges, esdeveniments i contactes",
+    "save_filter": "Missatge de correu",
+    "folder_title": "Tria una carpeta per als missatges",
+    "folder_button": "Desa aquí",
+    "saved_many": "{count, plural, one {S'ha desat # missatge.} other {S'han desat # missatges.}}",
+    "save_failed": "{count, plural, one {No s'ha pogut desar # missatge.} other {No s'han pogut desar # missatges.}}",
+    "shortcut_open": "Obre un missatge, esdeveniment o contacte desat",
+    "shortcut_save_as": "Desa el missatge com a fitxer"
+  },
+  "appLock": {
+    "section_title": "Bloqueig de l'app",
+    "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, l'aplicació no pot llegir el correu desat en aquest dispositiu fins que algú introdueixi el PIN.",
+    "enable_label": "Bloqueja amb un PIN",
+    "enable_desc": "El PIN es queda en aquest dispositiu.",
+    "protects_desc": "De què protegeix: el PIN impedeix que algú davant d'aquest dispositiu entri a l'aplicació. El correu desat aquí rep una clau nova quan activeu el bloqueig o canvieu el PIN, cosa que pot trigar una estona. No pot aturar un programa que s'executi en aquest ordinador, una extensió del navegador que hàgiu instal·lat ni algú que copiï els fitxers de l'aplicació i tingui temps de provar molts PIN, així que val la pena un PIN més llarg. A l'aplicació d'escriptori, provar PIN també requereix la vostra sessió en aquest ordinador. El vostre compte al servidor no es veu afectat.",
+    "enable_body": "El necessitareu cada vegada que l'app es bloquegi i després de reiniciar.",
+    "set_pin_title": "Trieu un PIN",
+    "change_pin": "Canvia el PIN…",
+    "change_pin_title": "Canvia el PIN",
+    "pin_label": "PIN",
+    "pin_current": "PIN actual",
+    "pin_new": "PIN nou",
+    "pin_repeat": "Repetiu el PIN",
+    "pin_hint": "Almenys 5 caràcters. També serveixen lletres, i un PIN més llarg és més difícil d'endevinar.",
+    "pin_hint_policy": "La vostra organització exigeix almenys {count, plural, one {# caràcter} other {# caràcters}}. També serveixen lletres.",
+    "pin_obvious": "Aquest PIN és massa fàcil d'endevinar. Eviteu repeticions, seqüències i opcions habituals.",
+    "pin_mismatch": "Els dos PIN no coincideixen.",
+    "pin_recovery": "Si l'oblideu, l'única sortida és eliminar les dades d'aquest dispositiu i tornar a iniciar la sessió. El correu al servidor es manté. Els missatges que encara esperen l'enviament en aquest dispositiu es perden.",
+    "save": "Desa",
+    "cancel": "Cancel·la",
+    "save_failed": "No ha funcionat. Torneu-ho a provar.",
+    "timeout_label": "Bloqueja després de",
+    "timeout_desc": "Temps sense ús en qualsevol finestra o pestanya.",
+    "lock_now": "Bloqueja ara",
+    "lock_now_desc": "Bloqueja totes les finestres i pestanyes de cop.",
+    "disable_title": "Voleu desactivar el bloqueig?",
+    "disable_body": "Escriviu el PIN per desactivar-lo.",
+    "disable_confirm": "Desactiva",
+    "passkey_label": "Clau d'accés",
+    "passkey_desc": "Desbloquegeu amb una clau d'accés o de seguretat que pugui protegir la clau. No totes poden, i el PIN continua funcionant.",
+    "passkey_add": "Afegeix una clau d'accés…",
+    "passkey_add_title": "Afegeix una clau d'accés",
+    "passkey_remove": "Elimina",
+    "passkey_added": "S'ha afegit la clau d'accés.",
+    "passkey_no_prf": "Aquesta clau d'accés no pot protegir la clau. El PIN continua funcionant.",
+    "passkey_failed": "La clau d'accés no ha funcionat. Escriviu el PIN.",
+    "use_passkey": "Utilitza una clau d'accés",
+    "use_hello": "Utilitza Windows Hello",
+    "use_touchid": "Utilitza Touch ID",
+    "os_add": "Activa…",
+    "os_add_title": "Utilitza {method}",
+    "os_remove": "Desactiva",
+    "os_desc": "{method} és una comprovació de l'app. Després d'un sí, l'app llegeix la clau de l'emmagatzematge xifrat d'aquest ordinador. Un programa que s'executi amb el vostre compte d'usuari la podria llegir allà sense {method}, així que el PIN protegeix més. El PIN continua funcionant.",
+    "os_failed": "No ha funcionat. Escriviu el PIN.",
+    "lock_title": "{app} està bloquejada",
+    "locking": "S'està bloquejant…",
+    "pin_prompt": "Escriviu el PIN per continuar.",
+    "unlock": "Desbloqueja",
+    "unlocking": "S'està desbloquejant…",
+    "wrong_pin": "Aquest PIN no és correcte.",
+    "unlock_failed": "No s'ha pogut desbloquejar. Torneu-ho a provar.",
+    "blocked_later": "Massa intents. Torneu-ho a provar més tard.",
+    "forgot": "Heu oblidat el PIN?",
+    "forgot_title": "Voleu eliminar les dades locals i tancar la sessió?",
+    "forgot_body": "Un PIN oblidat no es pot recuperar. Això elimina el correu desat en aquest dispositiu i tanca la sessió de tots els comptes, perquè pugueu tornar a entrar. El correu al servidor es manté. Els missatges que encara esperen l'enviament en aquest dispositiu es perden.",
+    "forgot_provider": "Si heu iniciat la sessió a través de la pàgina d'inici de sessió de la vostra organització, aquesta sessió hi continua oberta. El proper inici de sessió aquí demanarà a aquella pàgina una sessió nova, si ho permet.",
+    "forgot_confirm": "Elimina i tanca la sessió",
+    "unlock_in_main": "Desbloquegeu a la finestra principal.",
+    "open_main": "Vés a la finestra principal",
+    "setup_required_title": "La vostra organització exigeix un bloqueig de l'app",
+    "setup_required_body": "Trieu un PIN. El necessitareu per obrir {app} quan es bloquegi.",
+    "draft_saved_notice": "El que escrivíeu s'ha desat a Esborranys abans del bloqueig.",
+    "use_hello_name": "Windows Hello",
+    "use_touchid_name": "Touch ID",
+    "timeout_option": "{count, plural, one {# minut} other {# minuts}}",
+    "blocked_seconds": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# segon} other {# segons}}.",
+    "blocked_minutes": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# minut} other {# minuts}}."
+  },
+  "appLockHello": {
+    "switch_label": "Desbloqueja amb Windows Hello",
+    "switch_desc": "Feu servir la cara, l'empremta o el PIN de Windows. El PIN de l'aplicació continua funcionant.",
+    "protects": "Amb Windows Hello activat, Windows guarda per a aquesta aplicació una clau que només funciona després que Windows Hello comprovi que sou vós. La clau de l'aplicació també queda blocada amb ella, de manera que per desblocar cal la cara, l'empremta o el PIN de Windows, i un altre programa d'aquest ordinador no pot fer servir aquesta clau sense que Windows us ho demani abans. El PIN de l'aplicació continua funcionant, i el necessitareu si Windows Hello es restableix o es desactiva.",
+    "enable_title": "Activa Windows Hello",
+    "enable_body": "Escriviu el PIN de l'aplicació. Després Windows us demanarà que ho confirmeu amb Windows Hello.",
+    "enable_failed": "No s'ha pogut activar Windows Hello. Torneu-ho a provar.",
+    "cancelled": "S'ha cancel·lat Windows Hello.",
+    "unsupported": "Windows Hello no pot protegir la clau en aquest ordinador. El vostre PIN continua funcionant.",
+    "unavailable": "Windows Hello no està disponible en aquest ordinador.",
+    "busy": "Windows Hello està ocupat o blocat. Torneu-ho a provar més tard.",
+    "off_after_pin_change": "Windows Hello ara està desactivat, perquè no ha confirmat després del canvi de PIN. Torneu-lo a activar si el feu servir.",
+    "prompt": "Confirmeu amb Windows Hello que sou vós.",
+    "waiting": "S'està esperant Windows Hello…",
+    "use_hello": "Desbloqueja amb Windows Hello",
+    "use_pin": "Utilitza el PIN",
+    "failed": "Windows Hello no ha desblocat l'aplicació. Escriviu el PIN.",
+    "gone": "Windows Hello ja no desbloca l'aplicació en aquest ordinador. Escriviu el PIN."
+  },
+  "uxs_general": {
+    "time_zone_common": "Zones horàries habituals",
+    "time_zone_all": "Totes les zones horàries",
+    "time_zone_search": "Cerca zones horàries",
+    "time_zone_no_match": "No s'ha trobat cap zona horària",
+    "time_zone_desktop_description": "Mostra les hores del correu i de les cites en aquesta zona horària. Si no en trieu cap, s'usa la zona horària de l'ordinador.",
+    "app_lock_desc_desktop": "Demana un PIN després d'un temps sense ús, a cada finestra. Mentre està bloquejada, l'aplicació no pot llegir el correu desat en aquest dispositiu fins que algú introdueixi el PIN.",
+    "app_lock_timeout_desc_desktop": "Temps sense ús en qualsevol finestra.",
+    "app_lock_now_desc_desktop": "Bloqueja totes les finestres de cop.",
+    "app_lock_protects_toggle": "De què protegeix això?",
+    "app_lock_timeout_hours": "{count, plural, one {# hora} other {# hores}}",
+    "app_lock_until_screen": "Quan es bloqueja la pantalla",
+    "app_lock_until_session": "Quan tanco la sessió o reinicio",
+    "desktop_attention_title": "En aquest ordinador"
+  },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "El vostre nom",
+      "description": "La gent veu aquest nom al costat de la vostra adreça quan els envieu correu.",
+      "saved": "S'ha desat el vostre nom.",
+      "error": "No s'ha pogut desar el vostre nom. Torneu-ho a provar."
+    },
+    "addresses": {
+      "description": "Les adreces des de les quals podeu enviar, cadascuna amb el seu nom i la seva signatura.",
+      "label": "Les vostres adreces",
+      "count": "{count, plural, =0 {Encara no hi ha adreces} one {# adreça} other {# adreces}}",
+      "manage": "Edita les adreces…",
+      "modal_title": "Les vostres adreces de correu",
+      "add": "Afegeix una adreça",
+      "edit": "Edita l'adreça",
+      "added": "S'ha afegit l'adreça.",
+      "saved": "S'ha desat l'adreça.",
+      "deleted": "S'ha suprimit l'adreça.",
+      "delete_title": "Voleu suprimir aquesta adreça?"
+    },
+    "signatures": {
+      "title": "Signatures",
+      "description": "S'afegeix al final dels missatges que escriviu. Cada adreça té la seva.",
+      "saved": "S'ha desat la signatura.",
+      "error": "No s'ha pogut desar la signatura. Torneu-ho a provar.",
+      "no_addresses": "Encara no teniu cap adreça per enviar."
+    },
+    "search": {
+      "addresses": "identitat identitats àlies remitent adreça del remitent adreça de identity alias sender",
+      "signatures": "signatura signatura de correu peu identitat remitent adreça de signature",
+      "your_name": "nom visible nom complet nom del remitent display name"
+    }
+  },
+  "desktop_sign_in": {
+    "server_needed": "Primer escriu l'adreça del servidor.",
+    "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
+    "server_invalid": "Aquesta adreça de servidor no és vàlida."
+  },
+  "desktop_browser_sign_in": {
+    "button": "Inicia la sessió amb el navegador…",
+    "waiting": "S’està esperant el navegador…",
+    "waiting_hint": "Acaba d’iniciar la sessió allà. El teu gestor de contrasenyes funciona al navegador.",
+    "cancel": "Cancel·la",
+    "or_here": "o inicia la sessió aquí",
+    "timed_out": "L’inici de sessió al navegador ha trigat massa. Torna-ho a provar.",
+    "no_browser": "Bulwark no ha pogut obrir el navegador. Torna-ho a provar o inicia la sessió aquí.",
+    "failed": "No s’ha pogut iniciar la sessió a través del navegador. Torna-ho a provar.",
+    "handoff_banner": "Un programa d’aquest ordinador ha demanat aquest inici de sessió per a l’aplicació Bulwark. Aquest navegador continua sense sessió a Bulwark. Si no ho has començat tu, tanca aquesta pestanya.",
+    "consent_title": "Vols iniciar la sessió a l’aplicació Bulwark?",
+    "consent_description": "Un programa d’aquest ordinador, al port {port}, demana l’inici de sessió de {username}. Continua només si acabes de prémer «Inicia la sessió amb el navegador…» a l’aplicació Bulwark d’aquí. Si no, potser algú intenta entrar al teu compte: tria Ara no.",
+    "consent_confirm": "Inicia la sessió a l’aplicació",
+    "consent_cancel": "Ara no",
+    "page_done": "Pots tancar aquesta pestanya i tornar a Bulwark.",
+    "page_failed": "No s’ha pogut iniciar la sessió. Torna a Bulwark i torna-ho a provar.",
+    "page_link_used": "Aquest enllaç només funciona una vegada. Torna a Bulwark i comença de nou.",
+    "page_title": "Inicia la sessió a {server}",
+    "page_intro": "Aquesta pàgina ve de l’aplicació Bulwark d’aquest ordinador. La teva contrasenya va a {server} i enlloc més.",
+    "page_username": "Adreça electrònica o nom d’usuari",
+    "page_password": "Contrasenya",
+    "page_code": "Codi de dos factors",
+    "page_submit": "Inicia la sessió",
+    "page_wrong_password": "El servidor no ha acceptat aquest nom d’usuari i aquesta contrasenya.",
+    "page_code_needed": "Aquest compte també necessita un codi de dos factors. Torna a escriure la contrasenya i el codi.",
+    "page_no_answer": "Bulwark no ha pogut iniciar la sessió. Comprova que el servidor sigui accessible i torna-ho a provar.",
+    "declined": "Has dit que no al navegador, així que no s’ha iniciat cap sessió.",
+    "too_many": "Massa intents d’inici de sessió des d’aquesta xarxa. Espera uns minuts i torna-ho a provar.",
+    "page_declined": "No s’ha lliurat res. Pots tancar aquesta pestanya."
+  },
+  "uxs_login": {
+    "theme_button": "Clar o fosc",
+    "server_label": "Servidor de correu",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "S'està cercant el teu servidor de correu…",
+    "server_found": "Servidor de correu: {server}",
+    "server_change": "Canvia",
+    "server_change_hint": "Escriviu una altra adreça de servidor.",
+    "server_not_found": "No hem trobat el servidor de correu d'aquesta adreça. Escriu-lo aquí, per exemple mail.example.com.",
+    "server_needed": "Escriu l'adreça del teu servidor de correu.",
+    "server_invalid": "Això no és l'adreça d'un servidor. Escriu-la com mail.example.com.",
+    "email_needed": "Primer escriu la teva adreça electrònica.",
+    "other_ways": "Altres maneres d'iniciar la sessió",
+    "trouble": "Tens problemes?",
+    "trouble_cors": "El teu servidor de correu ha de permetre iniciar sessió des d'aquest lloc web. Si no funciona, demana a qui gestiona el servidor que ho permeti.",
+    "provider_unsupported": "{provider} no ofereix JMAP, la manera com Bulwark parla amb els servidors de correu, així que Bulwark encara no s'hi pot connectar directament."
+  },
+  "login_a11y": {
+    "caps_lock_on": "El bloqueig de majúscules està activat",
+    "language_button": "Llengua: {language}"
+  },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Voleu canviar com es connecta Bulwark?",
+      "message": "Bulwark es reinicia i pregunta com connectar-se: amb la vostra adreça electrònica o a través del Bulwark de la vostra organització. Els vostres comptes d'aquest ordinador continuen amb la sessió iniciada.",
+      "confirm": "Canvia",
+      "org_link": "Fes servir el Bulwark de la meva organització",
+      "add_account": "Afegeix un compte…"
+    },
+    "picture": {
+      "button": "Imatge",
+      "title": "Insereix una imatge",
+      "address": "Adreça web de la imatge",
+      "address_hint": "La imatge es queda al web i es mostra des d'allà.",
+      "description": "Descripció",
+      "invalid": "Introduïu una adreça web que comenci per https://.",
+      "insert": "Insereix"
+    },
+    "sign_in_page": {
+      "open_app": "Obre Bulwark",
+      "done_as": "Heu iniciat la sessió com a {address}. Podeu tancar aquesta pestanya."
+    }
+  },
+  "desktop_updates": {
+    "title": "Actualitzacions",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark cerca actualitzacions tot sol.",
+    "status_checking": "S’estan cercant actualitzacions…",
+    "status_up_to_date": "Teniu l’última versió.",
+    "status_downloading": "S’està baixant la versió {version}…",
+    "status_ready": "La versió {version} està a punt. S’instal·larà la pròxima vegada que sortiu, o reinicieu ara.",
+    "status_available": "La versió {version} està disponible.",
+    "status_available_per_machine": "La versió {version} està disponible. Bulwark està instal·lat per a tothom en aquest ordinador, així que un administrador instal·la les actualitzacions.",
+    "status_older": "Teniu una beta. La versió estable {version} és anterior, així que Bulwark es queda en aquesta versió fins que l’estable l’atrapi.",
+    "status_error": "No s’han pogut cercar actualitzacions. Bulwark ho tornarà a provar més tard.",
+    "status_off": "La vostra organització ha desactivat les actualitzacions a l’aplicació.",
+    "check": "Cerca ara",
+    "restart": "Reinicia per actualitzar",
+    "download": "Baixa",
+    "install_older": "Instal·la una versió anterior…",
+    "channel_label": "Canal d’actualització",
+    "channel_description": "Les versions beta arriben abans i poden tenir més problemes.",
+    "channel_stable": "Estable",
+    "channel_beta": "Beta",
+    "shell_restart": "Reinicia per actualitzar",
+    "shell_check": "Cerca actualitzacions…",
+    "shell_available": "Bulwark {version} està disponible",
+    "shell_ready_title": "Bulwark està a punt per actualitzar-se",
+    "shell_ready_body": "La versió {version} s’instal·larà la pròxima vegada que sortiu. Feu clic per reiniciar ara. Els esborranys es desen primer.",
+    "shell_available_title": "Hi ha una versió nova de Bulwark",
+    "shell_none_title": "Bulwark està al dia",
+    "shell_none_detail": "Teniu la versió {version}.",
+    "shell_failed_title": "Bulwark no ha pogut cercar actualitzacions",
+    "shell_failed_detail": "Comproveu la connexió i torneu-ho a provar més tard. No ha canviat res.",
+    "shell_beta_title": "Voleu passar a versions beta?",
+    "shell_beta_detail": "Rebeu les versions noves abans, i poden tenir més problemes. Per tornar, instal·leu una versió estable anterior o espereu que l’estable l’atrapi.",
+    "shell_beta_confirm": "Passa a beta",
+    "shell_older_title": "Voleu tornar a Bulwark {version}?",
+    "shell_older_detail": "Teniu la beta {current}. L’estable {target} és anterior i pot no llegir el que la beta ha desat en aquest ordinador. El correu es queda al servidor, però el correu desat fora de línia es pot tornar a baixar i els canvis sense enviar es poden perdre. Si espereu, l’estable atrapa la beta i hi passeu sense aquest pas.",
+    "shell_older_confirm": "Instal·la una versió anterior"
+  },
+  "desktop_keystore": {
+    "title": "Certificats d'aquest ordinador",
+    "description": "Aquest servidor pot demanar utilitzar els vostres certificats i targetes intel·ligents. Tot i així, se us preguntarà abans d'utilitzar cada certificat.",
+    "label": "Accés d'aquest servidor",
+    "label_description": "Retira el permís. El servidor ho haurà de tornar a demanar.",
+    "revoke": "Retira",
+    "revoked": "Permís retirat"
+  },
+  "desktop_certificates": {
+    "picker_title": "{host} demana un certificat",
+    "picker_detail": "El servidor vol saber qui ets. El certificat que triïs només va a aquest servidor. Si no coneixes aquest servidor, no n'enviïs cap.",
+    "picker_issued": "Emès per {issuer}, vàlid fins al {date}",
+    "picker_remember": "Recorda-ho per a {host}",
+    "picker_none": "No enviïs cap certificat",
+    "picker_more": "Més certificats…"
+  },
+  "desktopOs": {
+    "section_title": "Aplicació d'escriptori",
+    "section_description": "Com funciona l'aplicació amb l'ordinador.",
+    "close_to_tray_label": "Continua a la safata en tancar",
+    "close_to_tray_description": "El correu nou i els recordatoris continuen arribant després de tancar la finestra.",
+    "start_at_login_label": "Inicia en entrar a l'ordinador",
+    "start_at_login_description": "L'aplicació s'inicia sola quan entreu.",
+    "start_minimized_label": "Inicia a la safata",
+    "start_minimized_description": "No s'obre cap finestra en entrar. Obriu-la amb la icona de la safata.",
+    "attention_label": "Fes parpellejar la barra de tasques amb correu nou",
+    "attention_mac_label": "Fes botar la icona del Dock amb correu nou",
+    "attention_description": "Només quan l'aplicació no és al davant.",
+    "quiet_hours_label": "Hores de silenci",
+    "quiet_hours_description": "Cap notificació ni so en aquestes hores. El correu continua arribant.",
+    "quiet_hours_from": "De",
+    "quiet_hours_to": "a",
+    "show_shortcut_label": "Mostra l'aplicació amb una drecera de teclat",
+    "show_shortcut_description": "{keys} porta l'aplicació al davant des de qualsevol altra aplicació.",
+    "show_shortcut_taken": "Una altra aplicació fa servir {keys}. Tanqueu-la o desactiveu i torneu a activar això.",
+    "default_app_label": "Aplicació de correu predeterminada",
+    "default_app_description": "Obre els enllaços de correu i els fitxers .eml, .ics i .vcf amb aquesta aplicació.",
+    "default_app_is_default": "Aquesta aplicació obre els vostres enllaços de correu.",
+    "default_app_button": "Tria l'aplicació predeterminada…",
+    "new_mail": "Correu nou",
+    "no_subject": "(sense assumpte)",
+    "action_delete": "Suprimeix",
+    "copy_as_file": "Copia com a fitxer",
+    "copied": "Fitxer copiat. El podeu enganxar en una carpeta.",
+    "copy_failed": "No s'ha pogut copiar el fitxer.",
+    "reply_lost": "No s'ha pogut conservar la resposta que heu escrit. Obriu el missatge i responeu des d'allà."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Cerca contactes",
+    "search_files": "Cerca fitxers",
+    "import": "Importa",
+    "import_mail": "Correu…",
+    "import_calendar": "Calendari…",
+    "import_contacts": "Contactes…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Actualitza",
+    "menu_today": "Avui",
+    "menu_next_period": "Període següent",
+    "menu_previous_period": "Període anterior",
+    "account_scope_label": "Es mostra {address}. Canvia de compte",
+    "account_scope_menu": "Canvia de compte",
+    "merge_links": "Enllaços",
+    "merge_photo": "Foto",
+    "merge_kept": "Es conserva",
+    "import_show": "Mostra"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contacte seleccionat} other {# contactes seleccionats}}",
+    "selection_more": "i {count} més",
+    "no_addresses": "Cap dels contactes seleccionats té adreça electrònica.",
+    "task_open": "Obre",
+    "due_next_week": "La setmana vinent",
+    "due_none": "Sense data de venciment",
+    "due_pick": "Tria una data…",
+    "move_to_list": "Mou a la llista",
+    "dupes_legend": "{count, plural, one {1 ja és a Contactes:} other {# ja són a Contactes:}}",
+    "dupes_skip": "Omet-los",
+    "dupes_update": "Actualitza els contactes existents",
+    "dupes_updates": "Actualitza el contacte",
+    "upload_cancelled": "Pujada cancel·lada",
+    "upload_cancelled_partial": "{count, plural, one {S'ha pujat 1 fitxer} other {S'han pujat # fitxers}} abans de cancel·lar",
+    "download_cancelled": "S'ha cancel·lat la baixada"
+  },
+  "desktopEdit": {
+    "edit": "Edita",
+    "edit_named": "Edita {name}",
+    "opened": "{name} és obert al seu programa. Deseu-hi els canvis i se us preguntarà què fer-ne.",
+    "offers_label": "Adjunts editats",
+    "changed_title": "{name} ha canviat",
+    "changed_body": "Heu desat canvis en un altre programa. Què voleu fer-ne?",
+    "reply": "Adjunta a una resposta",
+    "new_message": "Adjunta a un missatge nou",
+    "open_draft": "Obre l’esborrany",
+    "save_copy": "Desa una còpia…",
+    "discard": "Descarta els canvis…",
+    "discard_title": "Voleu descartar els canvis a {name}?",
+    "discard_detail": "S’elimina la còpia editada. L’adjunt original no canvia.",
+    "discard_confirm": "Descarta",
+    "cancel": "Cancel·la",
+    "update": "Actualitza l’adjunt",
+    "no_app": "Cap programa d’aquest ordinador pot obrir aquest fitxer.",
+    "blocked_type": "Aquest tipus de fitxer no es pot obrir per editar-lo, perquè es podria executar com un programa.",
+    "blocked_policy": "La vostra organització no permet desar adjunts en aquest dispositiu.",
+    "removed_policy": "La vostra organització ja no ho permet, així que s’ha eliminat la còpia editada de {name}.",
+    "too_large": "Aquest fitxer és massa gran per obrir-lo i editar-lo.",
+    "too_many": "Hi ha massa fitxers oberts per editar. Primer acabeu-ne alguns.",
+    "failed": "No s’ha pogut obrir el fitxer per editar-lo.",
+    "read_busy": "Un altre programa encara fa servir {name}. Tanqueu-lo allà i torneu-ho a provar.",
+    "read_failed": "No s’ha pogut llegir la còpia editada de {name}.",
+    "send_stale_title": "{name} té canvis que no són en aquest missatge",
+    "send_stale_detail": "Si l’envieu ara, el missatge surt amb la versió anterior. Els canvis es queden en aquest ordinador fins a 30 dies, fins que decidiu què fer-ne.",
+    "send_stale_send": "Envia igualment",
+    "send_stale_back": "Torna",
+    "signout_title": "Voleu tancar la sessió i eliminar els canvis?",
+    "signout_confirm": "Tanca la sessió",
+    "lock_note": "Els fitxers oberts amb Edita continuen oberts al seu programa mentre l’aplicació està bloquejada, i continuen sent llegibles en aquest ordinador. No se’n poden obrir de nous fins que la desbloquegeu.",
+    "changed_title_hidden": "S’ha desat un adjunt editat",
+    "last_chance": "Sense fer servir durant 30 dies. Aquesta còpia s’elimina demà.",
+    "held_named": "{names}: encara obert en un altre programa, així que la còpia encara no es pot eliminar. Tanqueu-lo allà i s’eliminarà.",
+    "held_unnamed": "La còpia d’un adjunt encara és oberta en un altre programa i encara no es pot eliminar. Tanqueu-la allà i s’eliminarà.",
+    "removed_policy_held": "La vostra organització ja no ho permet. {name} encara és obert en un altre programa, així que la còpia no es pot eliminar fins que el tanqueu allà.",
+    "removed_policy_hidden": "La vostra organització ja no permet editar adjunts, així que s’ha tret una còpia editada.",
+    "outside_note": "Els fitxers de recuperació i la llista de fitxers recents d’aquell programa queden fora de l’abast d’aquesta aplicació.",
+    "clear_title": "Voleu eliminar els adjunts editats?",
+    "clear_confirm": "Elimina",
+    "signout_changed": "Encara sense adjuntar ni desar, i eliminats ara: {names}.",
+    "signout_held": "Encara oberts en un altre programa, així que no s’eliminen fins que els tanqueu allà: {names}."
+  },
+  "desktopPrint": {
+    "title": "Imprimeix",
+    "pages_one": "1 pàgina",
+    "pages_many": "{count} pàgines",
+    "preparing": "S’està preparant la previsualització…",
+    "preview_failed": "No s’ha pogut fer la previsualització.",
+    "preview_label": "Previsualització",
+    "destination": "Destinació",
+    "save_as_pdf": "Desa com a PDF",
+    "pages": "Pàgines",
+    "pages_all": "Totes",
+    "pages_custom": "Personalitzat",
+    "pages_example": "p. ex. 1-3, 5",
+    "pages_invalid": "Introduïu pàgines entre 1 i {count}, com ara 1-3, 5.",
+    "copies": "Còpies",
+    "layout": "Disposició",
+    "portrait": "Vertical",
+    "landscape": "Horitzontal",
+    "color": "Color",
+    "color_color": "Color",
+    "color_mono": "Blanc i negre",
+    "more": "Més opcions",
+    "paper": "Mida del paper",
+    "paper_printer": "Predeterminada de la impressora",
+    "margins": "Marges",
+    "margins_default": "Predeterminats",
+    "margins_none": "Cap",
+    "margins_minimum": "Mínims",
+    "scale": "Escala (%)",
+    "options": "Opcions",
+    "header_footer": "Capçaleres i peus de pàgina",
+    "background": "Gràfics de fons",
+    "print": "Imprimeix",
+    "save": "Desa",
+    "cancel": "Cancel·la",
+    "system_dialog": "Imprimeix amb el diàleg del sistema…",
+    "failed_title": "No s’ha pogut imprimir",
+    "failed_detail": "La impressora no ha acceptat la feina. Comproveu que està engegada i torneu-ho a provar."
+  },
+  "files_sync": {
+    "title": "Fitxers en aquest ordinador",
+    "drive": {
+      "title": "Unitat Fitxers",
+      "label": "Mostra Fitxers com una unitat",
+      "description": "Els vostres Fitxers apareixen a l'Explorador de fitxers com una unitat. Un fitxer es baixa quan l'obriu.",
+      "unsupported": "Cal el Windows 10 versió 1809 o posterior.",
+      "root_name": "Unitat Fitxers",
+      "letter_label": "Lletra d'unitat",
+      "letter_description": "Dona a la unitat una lletra pròpia a l'Explorador de fitxers.",
+      "letter_none": "Sense lletra"
+    },
+    "folders": {
+      "title": "Carpetes sincronitzades",
+      "description": "Una carpeta d'aquest ordinador i una carpeta de Fitxers es mantenen iguals, en tots dos sentits.",
+      "empty": "Encara no se sincronitza cap carpeta.",
+      "forced_off": "La vostra organització ha desactivat la sincronització de carpetes. Els fitxers que contenen es queden en aquest ordinador.",
+      "add": "Afegeix una carpeta…",
+      "loading": "S'estan carregant les vostres carpetes…",
+      "load_failed": "No s'han pogut carregar les vostres carpetes de Fitxers. Torneu-ho a provar.",
+      "pick_title": "Quina carpeta de Fitxers?",
+      "pick_confirm": "Trieu una carpeta d'aquest ordinador…",
+      "paired_with": "Amb {folder} a Fitxers",
+      "pause": "Posa en pausa",
+      "resume": "Reprèn",
+      "remove": "Elimina…",
+      "remove_title": "Voleu deixar de sincronitzar aquesta carpeta?",
+      "remove_message": "Els fitxers d'aquest ordinador es queden on són, i els de Fitxers també. Els canvis ja no passen de l'un a l'altre.",
+      "remove_confirm": "Deixa de sincronitzar",
+      "add_failed": {
+        "overlap": "Aquesta carpeta és dins d'una carpeta sincronitzada, en conté una o és una carpeta del sistema. Trieu-ne una altra.",
+        "denied": "L'aplicació no pot fer servir aquesta carpeta. Trieu-ne una altra.",
+        "policy": "La vostra organització no ho permet.",
+        "failed": "No s'ha pogut afegir la carpeta. Torneu-ho a provar."
+      }
+    },
+    "status": {
+      "starting": "S'està iniciant…",
+      "idle": "Al dia. Darrera sincronització {time}",
+      "idle_never": "Al dia",
+      "syncing": "S'està sincronitzant: {done} fets, {pending} pendents",
+      "paused": "En pausa",
+      "offline": "Sense connexió. {count, plural, =0 {Els canvis esperen el servidor} one {# canvi espera el servidor} other {# canvis esperen el servidor}}",
+      "error": "Aturat: {reason}",
+      "confirm_delete": "En pausa fins que respongueu la pregunta de sota",
+      "blocked": "Desactivat per la vostra organització"
+    },
+    "mass_delete": {
+      "title": "Voleu suprimir {count, plural, one {# element} other {# elements}}?",
+      "local": "{count, plural, one {S'ha suprimit # element} other {S'han suprimit # elements}} de {folder} en aquest ordinador. Voleu {count, plural, one {suprimir-lo} other {suprimir-los}} també a Fitxers?",
+      "remote": "{count, plural, one {S'ha suprimit # element} other {S'han suprimit # elements}} de {folder} a Fitxers. Voleu {count, plural, one {suprimir-lo} other {suprimir-los}} també en aquest ordinador?",
+      "allow": "{count, plural, one {Suprimeix-lo} other {Suprimeix-los}}",
+      "restore": "{count, plural, one {Recupera'l} other {Recupera'ls}}",
+      "later": "Decideix més tard"
+    },
+    "activity": {
+      "title": "Activitat recent",
+      "empty": "Encara no ha passat res.",
+      "clear": "Esborra",
+      "to_files": "Cap a Fitxers",
+      "to_computer": "Cap a aquest ordinador",
+      "mark_conflict": "Conflicte",
+      "mark_error": "Ha fallat",
+      "mark_question": "Cal la vostra resposta",
+      "uploaded": "S'ha pujat {path}",
+      "downloaded": "S'ha baixat {path}",
+      "folder-created": "S'ha creat la carpeta {path}",
+      "renamed": "S'ha canviat el nom de {detail} a {path}",
+      "moved": "S'ha mogut {detail} a {path}",
+      "deleted": "S'ha suprimit {path}",
+      "trashed": "S'ha mogut {path} a la paperera",
+      "conflict": "{path} s'ha canviat als dos llocs. L'altra versió es desa com a {detail}",
+      "renamed-for-disk": "{path} es diu {detail} en aquest ordinador, perquè el seu nom no s'hi permet",
+      "too-large": "{path} supera la mida que permet Fitxers ({detail}). Es queda només en aquest ordinador",
+      "waiting": "{path} espera el servidor",
+      "mass-delete": "En pausa abans de suprimir molts elements",
+      "error": "No s'ha pogut sincronitzar {path}"
+    },
+    "errors": {
+      "offline": "No es pot connectar amb el servidor",
+      "server_refused": "El servidor ha rebutjat el canvi",
+      "too_large": "El fitxer és massa gran per a Fitxers",
+      "name_invalid": "El nom no està permès",
+      "disk_full": "El disc és ple",
+      "denied": "Accés denegat",
+      "busy": "Un altre programa l'està fent servir",
+      "quota": "L'emmagatzematge de Fitxers és ple",
+      "not_found": "Ja no hi és",
+      "policy": "La vostra organització no ho permet",
+      "failed": "Alguna cosa ha anat malament"
+    },
+    "item": {
+      "label": "En aquest ordinador",
+      "synced": "Sincronitzat",
+      "syncing": "S'està sincronitzant",
+      "pending": "Pendent de sincronitzar",
+      "error": "No s'ha pogut sincronitzar",
+      "online-only": "Només a Fitxers, es baixa en obrir-lo"
+    },
+    "show_in": {
+      "explorer": "Mostra a l'Explorador de fitxers",
+      "finder": "Mostra al Finder",
+      "file_manager": "Mostra al gestor de fitxers",
+      "failed": "No s'ha pogut obrir la carpeta."
+    }
+  },
+  "files_storage": {
+    "title": "Emmagatzematge de Fitxers",
+    "used_of": "{used} de {total} utilitzats",
+    "used": "{used} utilitzats",
+    "no_limit": "El servidor no posa cap límit. Això és el que ocupen els fitxers.",
+    "almost_full": "L'emmagatzematge de Fitxers és gairebé ple",
+    "full": "L'emmagatzematge de Fitxers és ple",
+    "state_synced": "Al dia",
+    "state_syncing": "Sincronitzant",
+    "state_paused": "En pausa",
+    "state_offline": "Sense connexió",
+    "state_error": "Aturat"
+  },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "S'estan pujant els canvis abans de desactivar la unitat",
+      "title_sign_out": "S'estan pujant els canvis abans de tancar la sessió",
+      "title_stop_folder": "S'estan pujant els canvis abans d'aturar la sincronització de la carpeta",
+      "cannot_title": "Alguns canvis no es poden pujar ara",
+      "waiting": "Pendent de pujar: {names}",
+      "progress": "{done} de {total} pujats",
+      "cannot_offline": "No es pot connectar amb el servidor. Encara sense pujar: {names}",
+      "cannot_other": "No es poden pujar: {names}. L'activitat recent de la configuració n'explica el motiu.",
+      "go_note_drive": "Si continueu ara, el que no s'hagi pujat es copia a Documents\\Bulwark – not uploaded. No es perd res.",
+      "go_note_folder": "Si continueu ara, el que no s'hagi pujat es queda a la carpeta d'aquest ordinador.",
+      "keep_turn_off": "Mantén la unitat",
+      "keep_sign_out": "Mantén la sessió",
+      "keep_stop_folder": "Continua sincronitzant",
+      "go_turn_off": "Desactiva ara",
+      "go_sign_out": "Tanca la sessió ara",
+      "go_stop_folder": "Atura la sincronització ara"
+    },
+    "drive": {
+      "off_note": "En desactivar-ho, la unitat desapareix de l'Explorador de fitxers. Els fitxers es queden a Fitxers.",
+      "rescued": "Els fitxers que no s'han pujat ({count}) ara són a {folder}.",
+      "rescued_open": "Obre la carpeta",
+      "rescued_dismiss": "Descarta",
+      "start_at_login": "Inicia Bulwark en iniciar la sessió al Windows",
+      "start_at_login_why": "La unitat necessita que Bulwark s'executi, com OneDrive.",
+      "closed_warning": "Els fitxers de la unitat no s'obren mentre Bulwark està tancat.",
+      "where": "A l'Explorador de fitxers com a Bulwark Files",
+      "where_letter": "A l'Explorador de fitxers com a Bulwark Files ({letter}:)",
+      "open": "Obre",
+      "letter_note": "Per la lletra, l'Explorador de fitxers no mostra l'estat de sincronització ni «Mantén sempre en aquest dispositiu». Es veuen a Bulwark Files, a l'Explorador.",
+      "letter_failed": "No s'ha pogut assignar la lletra d'unitat. Torneu-ho a provar."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Actualitzat",
+      "syncing": "Bulwark Files: S'està sincronitzant. Queden: {count}",
+      "paused": "Bulwark Files: En pausa",
+      "offline": "Bulwark Files: Sense connexió. En espera: {count}",
+      "question": "Bulwark Files: Necessita la vostra resposta",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "Un fitxer s'ha canviat en dos llocs",
+      "problem_title": "Un fitxer no es pot sincronitzar"
+    },
+    "activity": {
+      "waiting_count": "Canvis que esperen el servidor: {count}",
+      "disk_name": "{path} a Fitxers es diu {detail} en aquest ordinador, perquè alguns dels seus caràcters no s'hi permeten",
+      "disk_case": "{path} a Fitxers es diu {detail} en aquest ordinador, perquè ja hi ha un nom que només canvia en majúscules i minúscules",
+      "disk_group": "Noms de Fitxers que aquest ordinador no permet: {count}. Aquí tenen noms una mica diferents.",
+      "show": "Mostra",
+      "hide": "Amaga"
+    },
+    "cant_sync": {
+      "title": "No es pot sincronitzar"
+    },
+    "folders": {
+      "stop": "Atura la sincronització…",
+      "pick_title_known": "Amb quina carpeta de Fitxers s'ha de mantenir igual {name}?",
+      "pick_confirm_known": "Mantén-les iguals"
+    },
+    "pin": {
+      "keep": "Mantén sempre en aquest dispositiu",
+      "free": "Allibera espai",
+      "failed": "No ha funcionat. Torneu-ho a provar a l'Explorador de fitxers."
+    },
+    "account": {
+      "of": "Fitxers de {address}",
+      "choose": "Fitxers de"
+    }
+  },
+  "desktopQuickCompose": {
+    "label": "Redacció ràpida",
+    "menu": "Redacció ràpida",
+    "description": "{keys} obre una finestra petita per a un missatge nou, des de qualsevol altra aplicació.",
+    "description_off": "Obre una finestra petita per a un missatge nou, des de qualsevol altra aplicació.",
+    "taken": "Una altra aplicació fa servir {keys}, així que aquí no fa res. Tria altres tecles o tanca aquella aplicació.",
+    "change": "Canvia les tecles: {keys}",
+    "recording": "Prem les tecles…",
+    "recording_hint": "Mantén premuda Ctrl (Cmd al Mac) amb Alt o Maj, i prem una lletra, un número, Retorn o una tecla de funció. Esc cancel·la.",
+    "back_to_main": "Mou a la finestra principal",
+    "back_busy": "La finestra principal ja té un missatge obert. Tanca'l i torna-ho a provar.",
+    "back_no_answer": "La finestra principal no ha respost. El teu missatge es queda aquí.",
+    "types_character": "Aquestes tecles escriuen un caràcter al teu teclat, i deixaria de funcionar a totes les aplicacions. Prova altres tecles.",
+    "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
+  },
+  "desktopAttachRecent": {
+    "heading": "Fitxers recents",
+    "browse": "Explora aquest ordinador…",
+    "from_files": "Des de Fitxers…",
+    "missing": "«{name}» ja no hi és.",
+    "too_large": "«{name}» supera {max} i no es pot adjuntar.",
+    "failed": "No s'ha pogut adjuntar «{name}». Torneu-ho a provar."
+  },
+  "composeRecentLimit": {
+    "too_large": "Massa gran",
+    "too_large_hint": "Més gran del que accepta el servidor ({max})"
+  },
+  "compose_windows": {
+    "more_formatting": "Més format",
+    "offline": "Sense connexió",
+    "offline_hint": "Per enviar cal connexió.",
+    "offline_hint_outbox": "El que envieu ara espera a la safata de sortida i s'envia quan torneu a tenir connexió.",
+    "offline_send_saved": "No teniu connexió. El missatge està desat a Esborranys.",
+    "offline_send_unsaved": "No teniu connexió. El missatge es queda aquí i es desa a Esborranys quan torneu a tenir connexió."
+  },
+  "composer_panel": {
+    "show_panel": "Mostra {name}",
+    "hide_panel": "Amaga {name}"
+  },
+  "desktopDevTools": {
+    "section_title": "Resolució de problemes",
+    "label": "Eines per a desenvolupadors ({shortcut})",
+    "description": "Permet que {shortcut} i F12 obrin les eines per a desenvolupadors a la finestra on ets. Es desactiva quan l'app es bloqueja.",
+    "forced_off": "Desactivat per la teva organització.",
+    "locked": "Desbloqueja l'app per canviar-ho.",
+    "menu_toggle": "Mostra o amaga les eines per a desenvolupadors"
+  },
+  "fileDrop": {
+    "overlay_label": "Deixa anar fitxers",
+    "overlay_title": "On han d'anar els fitxers?",
+    "overlay_hint": "Deixa anar fora de les opcions o prem Esc per cancel·lar.",
+    "files_unknown": "Fitxers",
+    "files_summary": "{count, plural, one {# fitxer} other {# fitxers}}",
+    "files_summary_size": "{count, plural, one {# fitxer} other {# fitxers}}, {size}",
+    "zone_attach_here": "Adjunta a aquest missatge",
+    "zone_insert_inline": "Insereix al missatge",
+    "zone_new_message": "Adjunta a un missatge nou",
+    "zone_upload_files": "Puja a Fitxers",
+    "zone_upload_folder": "Puja a {folder}",
+    "zone_calendar": "Afegeix al calendari",
+    "zone_contacts": "Afegeix als contactes",
+    "zone_open_eml": "Obre el missatge",
+    "zone_import_eml": "Importa a {folder}",
+    "note_limit_message": "Fins a {size} per missatge",
+    "note_limit_file": "Fins a {size} per fitxer",
+    "note_kept_offline": "Es queda en aquest dispositiu fins que tornis a tenir connexió",
+    "note_needs_connection": "Necessita connexió",
+    "announce": "{files, plural, =0 {Fitxers arrossegats} one {# fitxer arrossegat} other {# fitxers arrossegats}}. Opcions: {choices}.",
+    "choose_title": "{count, plural, one {On ha d'anar aquest fitxer?} other {On han d'anar aquests fitxers?}}",
+    "save_first_failed": "No s'ha pogut desar el missatge obert, així que l'app s'ha quedat on era.",
+    "import_done": "{count, plural, one {# missatge importat a {folder}.} other {# missatges importats a {folder}.}}",
+    "import_failed": "No s'ha pogut importar {name}.",
+    "too_large_file": "{name} és massa gran. El límit és {max} per fitxer.",
+    "too_large_message": "Aquests fitxers són massa grans per a un missatge. El límit és {max}.",
+    "folders_left_out": "Les carpetes només poden anar a Fitxers, així que s'han deixat fora.",
+    "nothing_here": "Aquests fitxers no es poden fer servir aquí."
+  },
+  "desktopReminders": {
+    "generic_title": "Recordatori",
+    "snooze": "Posposa {count} min",
+    "snooze_short": "{count} min",
+    "open": "Obre",
+    "join": "Uneix-te",
+    "missed_title": "{count, plural, one {# recordatori perdut} other {# recordatoris perduts}}",
+    "missed_more": "i {count} més",
+    "missed_show": "Mostra",
+    "missed_dialog_title": "Recordatoris perduts",
+    "missed_dialog_description": "Van vèncer mentre l'aplicació estava tancada, l'ordinador en repòs o les notificacions en pausa.",
+    "open_calendar": "Obre el calendari",
+    "done": "Fet",
+    "join_host": "Uneix-te ({host})",
+    "join_named": "Uneix-te: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Eines per a desenvolupadors",
+    "updates_label": "Cerca actualitzacions",
+    "search": {
+      "quick_compose": "redacció ràpida missatge nou des de qualsevol lloc drecera global",
+      "files_drive": "allibera espai OneDrive Dropbox Explorador Finder lletra d'unitat fitxers a petició",
+      "offline_space": "allibera espai espai al disc emmagatzematge",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID empremta digital cara clau d'accés passkey"
+    }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privadesa i seguretat",
+      "security": "Contrasenya i inici de sessió",
+      "about_updates": "Quant a i actualitzacions",
+      "backup": "Còpia de seguretat i importació"
+    },
+    "sections": {
+      "start": "Inici i tancament",
+      "shortcuts": "Dreceres des d'altres aplicacions",
+      "mail_links": "Enllaços i fitxers de correu"
+    },
+    "privacy_link_description": "Aquests paràmetres són a la pàgina Privadesa i seguretat."
+  },
+  "desktop_policy": {
+    "server_refused": "La teva organització no permet aquest servidor en aquest dispositiu.",
+    "plugin_refused": "La teva organització no permet aquest connector en aquest dispositiu, per tant no s'executa. Se'n conserven la configuració i les dades.",
+    "install_refused": "La teva organització no permet aquest connector en aquest dispositiu.",
+    "plugins_label": "Connectors",
+    "plugins_off": "La teva organització ha desactivat els connectors en aquest dispositiu.",
+    "plugins_allowlist": "La teva organització només permet determinats connectors en aquest dispositiu.",
+    "off": "Desactivat"
+  },
+  "desktopTelemetry": {
+    "section_title": "Dades d'ús i informes d'errors greus",
+    "section_description": "Tots dos estan desactivats fins que els activis, i cadascun té el seu interruptor.",
+    "telemetry_label": "Envia dades d'ús",
+    "telemetry_description": "Un cop al dia: un identificador aleatori, els números de versió de l'aplicació, el teu sistema operatiu, quant de temps fa que funciona l'aplicació i com es connecta. Amb un servidor de correu propi, també quines funcions estan actives, un nombre aproximat de comptes i quants connectors i temes tens. Mai correus, adreces ni noms de servidor.",
+    "crash_label": "Envia informes d'errors greus",
+    "crash_description": "Els errors de l'aplicació s'envien amb un identificador aleatori, noms de fitxer del codi de l'aplicació i missatges curts i nets. Si la mateixa aplicació es tanca per un error, un fitxer d'error queda en aquest ordinador i només en surt si l'envies.",
+    "crash_memory": "Un fitxer d'error és una còpia d'una part de la memòria de l'aplicació en el moment de l'error. Bulwark elimina els noms d'usuari, les adreces i els testimonis d'inici de sessió que troba, però un fitxer d'error encara pot contenir el text dels teus correus.",
+    "instance_note": "En un servidor Bulwark, el seu administrador decideix per separat què li comuniquen les pàgines.",
+    "forced_off": "La teva organització ho ha desactivat.",
+    "url_label": "Destinació dels fitxers d'error",
+    "url_description": "L'adreça https que rep un fitxer d'error. Bulwark no n'inclou cap.",
+    "url_invalid": "Escriu una adreça https completa.",
+    "url_save": "Desa",
+    "files_label": "Fitxers d'error en aquest ordinador",
+    "files_description": "Bulwark conserva els més recents i elimina els de més d'un mes.",
+    "files_empty": "No hi ha fitxers d'error.",
+    "file_size": "{size} KB",
+    "send": "Envia l'informe d'error…",
+    "delete_all": "Elimina-ho tot",
+    "sent": "Informe d'error enviat.",
+    "send_no_consent": "Activa primer els informes d'errors greus.",
+    "send_no_url": "No hi ha cap adreça, així que no hi ha on enviar-ho. Escriu-ne una a dalt.",
+    "send_failed": "No s'ha pogut enviar l'informe d'error."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nombre de no llegits a la icona de la barra de tasques",
+    "unread_badge_description": "Per veure el correu nou mentre treballeu en una altra aplicació.",
+    "tip_compose_keys": "Premeu {keys} per escriure un missatge nou",
+    "tip_palette_keys": "Premeu {keys} per trobar qualsevol ordre"
+  },
+  "uxp3_desktop": {
+    "web_address": "Adreça web"
+  },
+  "selectionView": {
+    "starred": "Marcat amb estrella",
+    "unstarred": "Estrella eliminada"
+  },
+  "impersonation": {
+    "return_notice": "Has obert {mailbox} mitjançant una suplantació.",
+    "return_button": "Torna al meu compte"
   }
 }

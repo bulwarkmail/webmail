@@ -11,12 +11,18 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { archiveIdentity, parseArchiveEnvelope, ARCHIVE_MAX_BYTES, type ArchiveOwner } from '@/lib/account-archive';
 import { deleteArchive, loadArchive, saveArchive } from '@/lib/account-archive-storage';
+import { isStoreUnavailable } from '@/lib/stored-data-errors';
 
 export const runtime = 'nodejs';
 
 const reply = (data: unknown, status = 200) => NextResponse.json(data, {
   status, headers: { 'Cache-Control': 'no-store' },
 });
+
+/** A shared store that can't be reached is a 503 the client retries; nothing was written. */
+const storageFailed = (error: unknown) => isStoreUnavailable(error)
+  ? NextResponse.json({ error: 'storage_unavailable' }, { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '10' } })
+  : reply({ error: 'storage_failed' }, 500);
 
 /**
  * The owner whose archive this request may touch, or the response refusing it.
@@ -49,12 +55,12 @@ async function verifiedOwner(request: NextRequest): Promise<ArchiveOwner | NextR
       const trusted = resolveTrustedJmapUrl(ctx.serverUrl,
         configManager.get<string>('jmapServerUrl', ''),
         parseJmapServers(configManager.get<unknown>('jmapServers', [])));
-      if (isStoredCredentialRefused(ctx.authHeader)) return denied;
+      if (await isStoredCredentialRefused(ctx.authHeader)) return denied;
       await verifyJmapAuth(ctx.serverUrl, ctx.authHeader, { trusted: !!trusted, clientIp: loginClientAddress(request) });
-      recordStoredCredentialStatus(ctx.authHeader, 200);
+      await recordStoredCredentialStatus(ctx.authHeader, 200);
     } catch (error) {
       if (error instanceof JmapAuthVerificationError && error.upstreamStatus === 401) {
-        recordStoredCredentialStatus(ctx.authHeader, 401);
+        await recordStoredCredentialStatus(ctx.authHeader, 401);
       }
       return denied;
     }
@@ -67,7 +73,7 @@ export async function GET(request: NextRequest) {
   const owner = await verifiedOwner(request);
   if (owner instanceof NextResponse) return owner;
   try { return reply({ envelope: await loadArchive(owner) }); }
-  catch { return reply({ error: 'storage_failed' }, 500); }
+  catch (error) { return storageFailed(error); }
 }
 
 export async function PUT(request: NextRequest) {
@@ -83,7 +89,7 @@ export async function PUT(request: NextRequest) {
     envelope = parseArchiveEnvelope((JSON.parse(text) as { envelope?: unknown })?.envelope);
   } catch { return reply({ error: 'invalid_archive' }, 400); }
   try { await saveArchive(owner, envelope); return reply({ ok: true }); }
-  catch { return reply({ error: 'storage_failed' }, 500); }
+  catch (error) { return storageFailed(error); }
 }
 
 export async function DELETE(request: NextRequest) {
@@ -92,5 +98,5 @@ export async function DELETE(request: NextRequest) {
   const owner = await verifiedOwner(request);
   if (owner instanceof NextResponse) return owner;
   try { await deleteArchive(owner); return reply({ ok: true }); }
-  catch { return reply({ error: 'storage_failed' }, 500); }
+  catch (error) { return storageFailed(error); }
 }

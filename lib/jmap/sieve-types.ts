@@ -26,6 +26,9 @@ export type FilterComparator =
   | 'is' | 'not_is'
   | 'starts_with' | 'ends_with'
   | 'matches'
+  // Sieve `:regex` (the "regex" extension), on header fields and the body.
+  // The value is one regular expression; commas in it are not separators.
+  | 'regex'
   | 'greater_than' | 'less_than'
   // For field === 'attachment':
   //   has_any  → message has any attachment (Content-Disposition: attachment)

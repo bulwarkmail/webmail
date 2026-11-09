@@ -23,6 +23,7 @@ vi.mock('@/stores/auth-store', () => {
 
 const ACCOUNT_TEAL = { id: 'acct-teal', avatarColor: '#0d9488', label: 'Teal account' };
 const accountState = {
+  accounts: [ACCOUNT_TEAL],
   getAccountById: (id: string) => (id === ACCOUNT_TEAL.id ? ACCOUNT_TEAL : undefined),
 };
 vi.mock('@/stores/account-store', () => ({
@@ -65,7 +66,7 @@ function renderRow(email: Email) {
 }
 
 beforeEach(() => {
-  useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+  useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
 });
 
 describe('ThreadListItem tag badge', () => {
@@ -237,7 +238,7 @@ describe('ThreadListItem row content', () => {
 
   it('puts the star at the trailing edge in the Mountain View phone row', () => {
     useSettingsStore.setState({ interfaceLayout: 'mountain-view', mailLayout: 'split' });
-    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     const onToggleStar = vi.fn();
     const [thread] = groupEmailsByThread([makeEmail()]);
     const { container } = render(
@@ -267,7 +268,7 @@ describe('ThreadListItem opening a thread on the phone', () => {
 
   function tap(interfaceLayout: 'mountain-view' | 'default') {
     useSettingsStore.setState({ interfaceLayout, mailLayout: 'split' });
-    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     useEmailStore.setState({ selectedEmailKeys: new Set<string>(), selectedMailbox: 'inbox' });
     const onEmailSelect = vi.fn();
     const onOpenConversation = vi.fn();
@@ -304,7 +305,7 @@ describe('ThreadListItem opening a thread on the phone', () => {
 describe('ThreadListItem keeping the selection when a message opens', () => {
   function open(interfaceLayout: 'mountain-view' | 'default', emails: Email[]) {
     useSettingsStore.setState({ interfaceLayout, mailLayout: 'split' });
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
     useEmailStore.setState({ selectedEmailKeys: new Set(['other']), selectedMailbox: 'inbox' });
     const onEmailSelect = vi.fn();
     const [thread] = groupEmailsByThread(emails);
@@ -347,7 +348,7 @@ describe('ThreadListItem whole row toggles in selection mode', () => {
     } = {},
   ) {
     useSettingsStore.setState({ interfaceLayout: layout, mailLayout: 'split', density: 'regular' } as never);
-    useUIStore.setState({ isMobile: mobile, isTablet: false, isDesktop: !mobile });
+    useUIStore.setState({ isMobile: mobile, isCompact: false, isDesktop: !mobile });
     useEmailStore.setState({ selectedEmailKeys: new Set(selected), selectedMailbox: 'inbox' });
     const onEmailSelect = vi.fn();
     const onEmailDoubleClick = vi.fn();
@@ -498,7 +499,7 @@ describe('ThreadListItem avatar gutter (#1381)', () => {
 describe('ThreadListItem Mountain View phone row layout', () => {
   it('sets the star at the end of the preview line, not under the time', () => {
     useSettingsStore.setState({ interfaceLayout: 'mountain-view', mailLayout: 'split', showPreview: true, density: 'regular' } as never);
-    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     const [thread] = groupEmailsByThread([makeEmail()]);
     const { container } = render(
       <ThreadListItem
@@ -887,7 +888,7 @@ describe('ThreadListItem hover actions', () => {
     expect(screen.getByTestId('hover-action-delete')).toBeTruthy();
   });
 
-  // Tabbing to a row's checkbox shows them too (group-focus-within), so they
+  // Tabbing to a row's checkbox shows them too (group-has-[:focus-visible]), so they
   // have to be there without a pointer.
   it.each([
     ['a single message', () => groupEmailsByThread([makeEmail()])[0]],
@@ -938,7 +939,7 @@ describe('ThreadListItem fallbacks', () => {
 
 describe('ThreadListItem swipe on a conversation', () => {
   it('archives the conversation\'s row like a single message\'s', () => {
-    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     useSettingsStore.setState({ swipeRightAction: 'archive', swipeLeftAction: 'delete' } as never);
     const first = makeEmail({ id: 'a', threadId: 't', receivedAt: '2024-01-15T09:00:00Z' });
     const second = makeEmail({ id: 'b', threadId: 't', receivedAt: '2024-01-15T10:00:00Z' });
@@ -952,6 +953,37 @@ describe('ThreadListItem swipe on a conversation', () => {
     fireEvent.touchMove(row, { touches: [{ clientX: 160, clientY: 12 }] });
     fireEvent.touchEnd(row);
     expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 'b' }));
+  });
+
+  // A tablet draws the compact desktop layout (600-1024px) and keeps the swipe;
+  // a mouse in a window that narrow does not get it.
+  it.each([
+    ['swipes on a touch screen of a compact desktop', true, 1],
+    ['does not swipe with a mouse', false, 0],
+  ])('%s', (_name, coarse, calls) => {
+    useUIStore.setState({ isMobile: false, isCompact: true, isDesktop: true });
+    useSettingsStore.setState({ swipeRightAction: 'archive', swipeLeftAction: 'delete' } as never);
+    const spy = vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
+      matches: coarse && query === '(pointer: coarse) and (width < 64rem)', media: query, onchange: null,
+      addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList);
+    try {
+      const first = makeEmail({ id: 'a', threadId: 't', receivedAt: '2024-01-15T09:00:00Z' });
+      const second = makeEmail({ id: 'b', threadId: 't', receivedAt: '2024-01-15T10:00:00Z' });
+      const [thread] = groupEmailsByThread([first, second]);
+      const onArchive = vi.fn();
+      const { container } = render(
+        <ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={() => {}} onArchive={onArchive} onDelete={vi.fn()} />,
+      );
+      const row = container.querySelector('[data-unread]')!;
+      fireEvent.touchStart(row, { touches: [{ clientX: 10, clientY: 10 }] });
+      fireEvent.touchMove(row, { touches: [{ clientX: 160, clientY: 12 }] });
+      fireEvent.touchEnd(row);
+      expect(onArchive).toHaveBeenCalledTimes(calls);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 

@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { Children, isValidElement, type ReactNode } from 'react';
+
+const edition = vi.hoisted(() => ({ lite: false }));
+vi.mock('@/lib/lite', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/lite')>(),
+  get IS_LITE() { return edition.lite; },
+}));
 
 // The root layout pulls in globals.css, next/font and client components purely
 // for rendering; stub them so the test can import generateViewport in isolation.
@@ -17,10 +24,13 @@ vi.mock('next-intl/server', () => ({
 }));
 vi.mock('next/headers', () => ({ headers: vi.fn() }));
 vi.mock('@/lib/admin/config-manager', () => ({
-  configManager: { ensureLoaded: vi.fn(async () => {}), get: vi.fn() },
+  configManager: {
+    ensureLoaded: vi.fn(async () => {}), get: vi.fn(),
+    getAllWithSources: () => ({ pwaThemeColor: { source: 'default' } }),
+  },
 }));
 
-import { generateViewport } from '@/app/(main)/layout';
+import RootLayout, { generateMetadata, generateViewport } from '@/app/(main)/layout';
 import { headers } from 'next/headers';
 import { configManager } from '@/lib/admin/config-manager';
 
@@ -39,6 +49,7 @@ function onHost(host: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  edition.lite = false;
   onHost('mail.example.com');
   withConfig({});
 });
@@ -71,5 +82,31 @@ describe('root layout generateViewport - theme color (#671)', () => {
     expect(viewport.width).toBe('device-width');
     expect(viewport.initialScale).toBe(1);
     expect(viewport.viewportFit).toBe('cover');
+  });
+
+  it('lets iOS choose the status bar while retaining install metadata in both editions', async () => {
+    withConfig({ appName: 'Test Mail' });
+    for (const lite of [false, true]) {
+      edition.lite = lite;
+      const appName = lite ? process.env.NEXT_PUBLIC_APP_NAME || 'Webmail' : 'Test Mail';
+      const layout = await RootLayout({ children: null });
+      const head = Children.toArray(layout.props.children).find(
+        (child) => isValidElement(child) && child.type === 'head',
+      );
+      expect(isValidElement(head)).toBe(true);
+      const metas = Children.toArray((head as { props: { children: ReactNode } }).props.children)
+        .filter((child) => isValidElement<{ name?: string; content?: string }>(child) && child.type === 'meta')
+        .map((child) => (child as { props: { name?: string; content?: string } }).props);
+
+      expect(metas.find((meta) => meta.name === 'apple-mobile-web-app-status-bar-style')).toBeUndefined();
+      expect(metas.find((meta) => meta.name === 'mobile-web-app-capable')?.content).toBe('yes');
+      expect(metas.find((meta) => meta.name === 'apple-mobile-web-app-capable')?.content).toBe('yes');
+      expect(metas.find((meta) => meta.name === 'apple-mobile-web-app-title')?.content).toBe(appName);
+      // An appleWebApp object makes Next emit status-bar-style=default even
+      // when statusBarStyle itself is omitted.
+      const metadata = await generateMetadata();
+      expect(metadata.appleWebApp).toBeFalsy();
+      expect(metadata.title).toBe(appName);
+    }
   });
 });

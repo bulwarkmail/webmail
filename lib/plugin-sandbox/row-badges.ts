@@ -18,14 +18,27 @@ export function subscribeRowBadges(listener: () => void): () => void {
   return () => { listeners.delete(listener); };
 }
 
-/** Ask every visible row again. At most once a second; extra calls are dropped. */
-export function refreshRowBadges(now = Date.now()): boolean {
-  if (now - lastRefresh < ROW_BADGE_REFRESH_INTERVAL_MS) return false;
-  lastRefresh = now;
+function bump(): void {
   generation += 1;
   for (const l of listeners) {
     try { l(); } catch { /* ignore */ }
   }
+}
+
+/**
+ * A plugin's onEmailListItemRender handler came or went: ask every row
+ * again. The list usually renders before the plugins have started, and
+ * those rows would otherwise never show the plugin's badges.
+ */
+export function rowBadgeHandlersChanged(): void {
+  bump();
+}
+
+/** Ask every visible row again. At most once a second; extra calls are dropped. */
+export function refreshRowBadges(now = Date.now()): boolean {
+  if (now - lastRefresh < ROW_BADGE_REFRESH_INTERVAL_MS) return false;
+  lastRefresh = now;
+  bump();
   return true;
 }
 

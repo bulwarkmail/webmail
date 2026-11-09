@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Email } from '@/lib/jmap/types';
-import { andFilters, isUnreadFirstView, mergeUnreadSection, withoutReached, type UnreadSection } from '../unread-first';
+import { andFilters, isUnreadFirstView, mergeUnreadSection, openSectionRows, withoutReached, type UnreadSection } from '../unread-first';
 
 const mail = (id: string, threadId = `thread-${id}`) => ({ id, threadId, keywords: {} }) as Email;
 const section = (...ids: string[]): UnreadSection => ({ mailboxId: 'inbox', ids: new Set(ids), total: ids.length });
@@ -20,6 +20,14 @@ describe('mergeUnreadSection', () => {
     expect(merged.ids.has('u2')).toBe(true);
   });
 
+  it('keeps that message at its place in the section, not after it (#1453)', () => {
+    const at = (id: string, minute: number, threadId?: string) =>
+      ({ ...mail(id, threadId), receivedAt: new Date(Date.UTC(2026, 9, 1, 0, minute)).toISOString() }) as Email;
+    const list = [at('u1', 50), at('u2', 40, 'open'), at('u3', 30), at('r1', 45)];
+    const merged = mergeUnreadSection(list, section('u1', 'u2', 'u3'), [at('u1', 50), at('u3', 30)], 'open');
+    expect(merged.emails.map((e) => e.id)).toEqual(['u1', 'u2', 'u3', 'r1']);
+  });
+
   it('takes a row of the main list the section now has into the section', () => {
     const merged = mergeUnreadSection([mail('r1'), mail('r2')], section(), [mail('r2')], null);
     expect(merged.emails.map((e) => e.id)).toEqual(['r2', 'r1']);
@@ -31,6 +39,19 @@ describe('withoutReached', () => {
     const before = section('u1');
     expect(withoutReached(before, ['r1'])).toBe(before);
     expect([...withoutReached(before, ['u1'])!.ids]).toEqual([]);
+  });
+
+  it('leaves the kept rows in the section', () => {
+    const before = section('u1', 'u2');
+    expect([...withoutReached(before, ['u1', 'u2'], new Set(['u2']))!.ids]).toEqual(['u2']);
+  });
+});
+
+describe('openSectionRows', () => {
+  it('is the section\'s rows of the open conversation', () => {
+    const list = [mail('u1', 'open'), mail('u2'), mail('r1', 'open')];
+    expect([...openSectionRows(list, section('u1', 'u2'), 'open')]).toEqual(['u1']);
+    expect(openSectionRows(list, section('u1', 'u2'), null).size).toBe(0);
   });
 });
 

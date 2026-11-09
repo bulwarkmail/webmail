@@ -7,7 +7,7 @@ import {
   plainTextBodyWithoutSignature,
 } from "@/lib/signature-utils";
 import { wantsSignatureSeparator } from "@/lib/signature-delimiter";
-import { buildSignatureBlock, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-block";
+import { buildSignatureBlock, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-markers";
 
 /**
  * Helpers for the composer's per-message HTML <-> plain-text switch (#1022).
@@ -139,7 +139,19 @@ export function replaceEmbeddedSignature(
       ? children.find((node) => node.textContent?.includes(options.quoteHeader!))
       : undefined;
     const quote = header ?? children.find(isQuoteBoundary) ?? null;
-    removed = { parent: doc.body, insertBefore: quote };
+    // With no line above it, the signature would open the body and leave no
+    // place to type (#1503). Put an empty one first, as getInitialBody does,
+    // and keep the bare line breaks for the gap down to the quote.
+    const above = quote ? children.slice(0, children.indexOf(quote)) : children;
+    const hasLineAbove = above.some((node) => node.nodeType === 1
+      ? (node as Element).tagName !== 'BR'
+      : !!node.textContent?.trim());
+    if (!hasLineAbove) {
+      removed = { parent: doc.body, insertBefore: above[0] ?? quote };
+      signatureHtml = `<p></p>${signatureHtml}`;
+    } else {
+      removed = { parent: doc.body, insertBefore: quote };
+    }
   }
   const host = doc.createElement('div');
   host.innerHTML = signatureHtml;
@@ -190,23 +202,49 @@ export function replacePlainTextSignatureAboveQuote(
  * Convert the rich-text editor's body to a plain-text body. Formatting is
  * dropped (that is the point of plain text); an embedded signature comes back
  * as the identity's plain-text signature so the body still "carries" it.
+ * The quote keeps its "> " lines and lists their markers, as in the text part
+ * the send path builds: the attachment reminder and plugin edits find the
+ * quote by them.
  */
 export function htmlComposeBodyToPlainText(
   html: string,
   identity: SignatureIdentityLike,
-  options: { separator: boolean },
+  options: { separator: boolean; imageAlt?: (alt: string) => string },
 ): string {
   const stripped = stripEmbeddedSignature(html);
-  const text = htmlToPlainText(stripped.html, { paragraphSpacing: true });
+  const text = htmlToPlainText(stripped.html, { paragraphSpacing: true, mailMarkup: true, imageAlt: options.imageAlt });
   if (!stripped.hadSignature) return text;
   return appendPlainTextSignature(text, identity, { separator: options.separator });
 }
 
+const QUOTE_LINE = /^>/;
+
+// Plain text to editor HTML, with runs of "> " lines as a <blockquote> (one
+// level per ">"), so a quote stays a quote in the rich editor.
+function plainTextWithQuotesToHtml(text: string): string {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n');
+  if (!lines.some((line) => QUOTE_LINE.test(line))) return plainTextToComposerBody(text);
+  const parts: string[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const quoted = QUOTE_LINE.test(lines[i]);
+    const run: string[] = [];
+    while (i < lines.length && QUOTE_LINE.test(lines[i]) === quoted) run.push(lines[i++]);
+    if (quoted) {
+      parts.push(`<blockquote>${plainTextWithQuotesToHtml(run.map((line) => line.replace(/^> ?/, '')).join('\n')) || '<p></p>'}</blockquote>`);
+    } else {
+      parts.push(plainTextToComposerBody(run.join('\n').replace(/^\n+|\n+$/g, '')));
+    }
+  }
+  return parts.join('');
+}
+
 /**
  * Convert a plain-text body to editor HTML: paragraphs per blank line, <br>
- * per newline. A trailing plain-text signature is swapped for the embedded
- * (marker-bracketed) HTML signature so identity switches and the send path
- * keep working as in a body that started out as HTML.
+ * per newline, "> " lines as a quote. A trailing plain-text signature is
+ * swapped for the embedded (marker-bracketed) HTML signature so identity
+ * switches and the send path keep working as in a body that started out as
+ * HTML.
  */
 export function plainComposeBodyToHtml(
   text: string,
@@ -215,7 +253,7 @@ export function plainComposeBodyToHtml(
 ): string {
   const hadSignature = plainTextBodyHasSignature(text, identity);
   const userText = hadSignature ? plainTextBodyWithoutSignature(text, identity) : text;
-  const html = plainTextToComposerBody(userText);
+  const html = plainTextWithQuotesToHtml(userText);
   if (!hadSignature) return html;
   const embedded = buildEmbeddedSignatureHtml(identity, { embed: true, separator: options.separator });
   return `${html || '<p></p>'}${embedded}`;

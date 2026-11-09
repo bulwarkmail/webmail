@@ -18,6 +18,9 @@ import { dayLabelsByDate, resetDayLabels } from '../plugin-sandbox/day-labels';
 import { allPages, resetPages } from '../plugin-sandbox/pages';
 import { onPanelRequest, resetPanelRequests } from '../plugin-sandbox/panel-requests';
 import { onPageNavigation, resetPageNavigation } from '../plugin-sandbox/page-navigation';
+import { onOpenTask, resetOpenTask } from '../plugin-sandbox/open-task';
+import { useCalendarStore } from '@/stores/calendar-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import type { StreamSink } from '../plugin-sandbox/proxy-client';
 import '../plugin-sandbox/loader';
 
@@ -89,6 +92,14 @@ describe('ui.setActions', () => {
     expect(() => checkActions([{ id: 'x', label: 'X' }, { id: 'x', label: 'Y' }])).toThrow(/twice/);
     expect(() => checkActions(Array.from({ length: 9 }, (_, i) => ({ id: `a${i}`, label: 'A' })))).toThrow(/At most/);
     expect(() => checkActions([{ id: 'x', label: 'X', icon: '<svg>' }])).toThrow(/icon/);
+  });
+
+  it("takes a row badge's key as hasBadge and notBadge", () => {
+    expect(checkActions([{ id: 'x', label: 'X', hasBadge: 'follow-up', notBadge: 'done:1' }])[0])
+      .toMatchObject({ hasBadge: 'follow-up', notBadge: 'done:1' });
+    expect(() => checkActions([{ id: 'x', label: 'X', hasBadge: '' }])).toThrow(/hasBadge/);
+    expect(() => checkActions([{ id: 'x', label: 'X', notBadge: 'a b' }])).toThrow(/notBadge/);
+    expect(() => checkActions([{ id: 'x', label: 'X', hasBadge: 3 }])).toThrow(/hasBadge/);
   });
 
   it('takes a badge as a whole number from 0, none for 0', () => {
@@ -167,6 +178,77 @@ describe('day labels and pages', () => {
 
     it('answers false while nothing can move the tab', async () => {
       await expect(dispatchApiCall(paged, 'ui.openPage', ['files'])).resolves.toBe(false);
+    });
+  });
+
+  describe('ui.openTask', () => {
+    beforeEach(() => { resetOpenTask(); });
+
+    it('opens the task in the calendar\'s editor and says whether it did', async () => {
+      const seen: string[] = [];
+      onOpenTask((id) => { seen.push(id); return id === 't1'; });
+      const tasky = plugin({ id: 'ot1', permissions: ['ui:tasks'] });
+      await expect(dispatchApiCall(tasky, 'ui.openTask', ['t1'])).resolves.toBe(true);
+      await expect(dispatchApiCall(plugin({ id: 'ot1', permissions: ['tasks:read'] }), 'ui.openTask', ['gone'])).resolves.toBe(false);
+      expect(seen).toEqual(['t1', 'gone']);
+    });
+
+    it('answers false while no calendar is on screen', async () => {
+      await expect(dispatchApiCall(plugin({ id: 'ot2', permissions: ['ui:tasks'] }), 'ui.openTask', ['t1'])).resolves.toBe(false);
+    });
+
+    it('needs ui:tasks or tasks:read and a task id', async () => {
+      const seen: string[] = [];
+      onOpenTask((id) => { seen.push(id); return true; });
+      await expect(dispatchApiCall(plugin({ id: 'ot3', permissions: ['calendar:read'] }), 'ui.openTask', ['t1'])).rejects.toThrow(/lacks permission/);
+      await expect(dispatchApiCall(plugin({ id: 'ot3', permissions: ['ui:tasks'] }), 'ui.openTask', [42])).rejects.toThrow(/taskId/);
+      expect(seen).toEqual([]);
+    });
+  });
+
+  describe('ui.openCalendar', () => {
+    const seen: string[] = [];
+    beforeEach(() => {
+      resetPageNavigation();
+      seen.length = 0;
+      useSettingsStore.setState({ enableCalendarTasks: true });
+      useCalendarStore.setState({ viewMode: 'month' });
+    });
+
+    it('opens the task view: the calendar\'s view set, the tab moved to its permalink', async () => {
+      onPageNavigation((href) => { seen.push(href); });
+      await expect(dispatchApiCall(plugin({ id: 'tv1', permissions: ['ui:tasks'] }), 'ui.openCalendar', [{ view: 'tasks' }])).resolves.toBe(true);
+      expect(useCalendarStore.getState().viewMode).toBe('tasks');
+      await expect(dispatchApiCall(plugin({ id: 'tv1', permissions: ['calendar:read'] }), 'ui.openCalendar', [{ view: 'week' }])).resolves.toBe(true);
+      expect(seen).toEqual(['/calendar/tasks', '/calendar/week']);
+    });
+
+    it('needs the view\'s permission and refuses any other view', async () => {
+      onPageNavigation((href) => { seen.push(href); });
+      await expect(dispatchApiCall(plugin({ id: 'tv2', permissions: ['calendar:read'] }), 'ui.openCalendar', [{ view: 'tasks' }])).rejects.toThrow(/lacks permission/);
+      await expect(dispatchApiCall(plugin({ id: 'tv2', permissions: ['ui:tasks'] }), 'ui.openCalendar', [{ view: 'month' }])).rejects.toThrow(/lacks permission/);
+      await expect(dispatchApiCall(plugin({ id: 'tv2', permissions: ['ui:tasks'] }), 'ui.openCalendar', [{ view: 'settings' }])).rejects.toThrow(/view must be one of/);
+      await expect(dispatchApiCall(plugin({ id: 'tv2', permissions: ['ui:tasks'] }), 'ui.openCalendar', [{ view: 'tasks', date: 'x' }])).rejects.toThrow(/unknown property/);
+      expect(seen).toEqual([]);
+      expect(useCalendarStore.getState().viewMode).toBe('month');
+    });
+
+    it('answers false while nothing can move the tab or the user has tasks off', async () => {
+      const tasky = plugin({ id: 'tv3', permissions: ['ui:tasks'] });
+      await expect(dispatchApiCall(tasky, 'ui.openCalendar', [{ view: 'tasks' }])).resolves.toBe(false);
+      onPageNavigation((href) => { seen.push(href); });
+      useSettingsStore.setState({ enableCalendarTasks: false });
+      await expect(dispatchApiCall(tasky, 'ui.openCalendar', [{ view: 'tasks' }])).resolves.toBe(false);
+      expect(seen).toEqual([]);
+      expect(useCalendarStore.getState().viewMode).toBe('month');
+    });
+
+    it('moves the tab at most 10 times a minute', async () => {
+      onPageNavigation((href) => { seen.push(href); });
+      const busy = plugin({ id: 'tv4', permissions: ['ui:tasks'] });
+      for (let i = 0; i < 10; i++) await dispatchApiCall(busy, 'ui.openCalendar', [{ view: 'tasks' }]);
+      await expect(dispatchApiCall(busy, 'ui.openCalendar', [{ view: 'tasks' }])).rejects.toThrow(/a minute/);
+      expect(seen).toHaveLength(10);
     });
   });
 });

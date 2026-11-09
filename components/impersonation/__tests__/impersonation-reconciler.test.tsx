@@ -63,6 +63,23 @@ describe('ImpersonationReconciler', () => {
     expect(replace).toHaveBeenCalledWith('/en/mail?x=y');
   });
 
+  it('hands the account list to the server first, so returning can bring it back (#1538)', () => {
+    const fetchMock = vi.fn(async () => Response.json({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+    window.history.replaceState({}, '', '/en/mail?impersonated=1');
+    document.cookie = `${IMPERSONATION_MARKER_COOKIE}=1; path=/`;
+
+    render(<ImpersonationReconciler />);
+
+    vi.unstubAllGlobals();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('/api/auth/impersonate/return');
+    expect(init.method).toBe('PUT');
+    expect(JSON.parse(String(init.body)).accounts.map((a: { id: string }) => a.id)).toEqual([previous.id]);
+    expect(localStorage.getItem('account-registry')).toBeNull();
+  });
+
   it('ignores the query marker without the cookie the impersonate route sets', () => {
     window.history.replaceState({}, '', '/en/mail?impersonated=1');
 

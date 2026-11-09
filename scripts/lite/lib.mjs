@@ -41,9 +41,20 @@ export const LITE_REMOVED_PATHS = [
   "app/(main)/[...rest]",
   "app/(main)/[locale]/[...rest]",
   "app/(main)/protocol",
+  "app/(main)/[locale]/popout",
   "e2e",
   "integration",
+  // The local store: Lite has no offline mode. A dev checkout may hold these.
+  "public/store-worker.js",
+  "public/sqlite3mc",
 ];
+
+/** The local store's engine in an export: Lite has no offline mode, and must not ship or load it. */
+export function unexpectedEngineFiles(files) {
+  return files
+    .map((file) => file.replace(/\\/g, "/"))
+    .filter((file) => /(^|\/)store-worker\.js$/.test(file) || /(^|\/)sqlite3mc\//.test(file) || /(^|\/)sqlite3\.(wasm|mjs)$/.test(file));
+}
 
 /** Test trees are pruned too: they import the routes removed above. */
 export const LITE_TEST_DIR_NAME = "__tests__";
@@ -89,6 +100,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/plugin-secrets",
   // stores/settings-store.ts - settingsSyncEnabled is pinned off.
   "/api/settings",
+  // lib/devices/client.ts - offline mode and its wipes aren't in Lite (no OfflineHost, IS_LITE guards in the auth store).
+  "/api/devices",
   // Stalwart's own account discovery (lib/auth/lite-oauth.ts), not a route of this app.
   "/api/discover",
   // OAuth / SSO / pairing - Lite discovers and redeems codes in the browser
@@ -100,9 +113,24 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/auth/reauth/sso/complete",
   "/api/auth/pair/create",
   "/api/auth/pair/status",
+  // Mobile sign-in hand-off with a code (login page, SSO callback) - skipped
+  // in Lite, which has no server to park the sign-in on and hands over in
+  // the fragment.
+  "/api/auth/handoff/create",
+  "/api/auth/handoff/confirm",
+  // The desktop app's sign-in on an instance: no bridge in a browser, and IS_LITE guards.
+  "/api/auth/desktop-handoff/check",
+  "/api/auth/desktop-handoff/discard",
+  "/api/auth/desktop-handoff/park",
+  "/api/auth/desktop-handoff/redeem",
+  // Return from an impersonation (#1538): lib/impersonation/return-client.ts
+  // skips every call in Lite, which has no impersonation.
+  "/api/auth/impersonate/return",
   "/api/auth/totp-token-exchange",
   "/api/auth/session",
   "/api/auth/verify",
+  // The sign-in form's mail server lookup: the login page skips it in Lite (IS_LITE).
+  "/api/auth/discover-server",
   "/api/auth/stalwart-context",
   "/api/account/stalwart/jmap",
   // Admin shield probe - skipped in Lite (components/layout/navigation-rail.tsx).
@@ -121,14 +149,19 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/fetch-ical",
   "/api/caldav/discover",
   "/api/webdav",
-  // Sender favicons - disabled in Lite (initials fallback).
+  // Sender favicons and BIMI logos - disabled in Lite (initials fallback).
   "/api/favicon",
+  "/api/bimi",
   // Web push relay paths (relative to the *relay* origin, not this host).
   "/api/push/vapid-public-key",
   "/api/push/register",
   "/api/push/active",
   "/api/push/verify",
   "/api/push/jmap",
+  // Offline mode (#523) - OfflineHost isn't mounted in Lite, and the update
+  // check (lib/app-update.ts) asks lite-build.json there instead.
+  "/api/offline/shell",
+  "/api/version",
   // Dev-only JMAP mock.
   "/api/jmap",
   "/api/dev-jmap",
@@ -857,11 +890,17 @@ multiple accounts, calendar, contacts, files, themes, settings export/import,
 password and TOTP login, demo mode, deep links.
 
 Not available in Lite (they need the Node.js server): the admin console and
-setup wizard, plugins and sidebar apps, settings sync across devices, OAuth /
-SSO login, the account security tab (app passwords, 2FA setup), ICS URL
-subscriptions and CalDAV discovery, sender favicons, office (WOPI) editing,
-web push notifications, the update banner, device pairing, and the
-"Default apps" page (registering Lite as the mailto:/webcal: handler).
+setup wizard, plugins and sidebar apps, settings sync across devices, the
+account security tab (app passwords, 2FA setup), ICS URL subscriptions and
+CalDAV discovery, sender favicons, office (WOPI) editing, web push
+notifications, the update banner, device pairing, and the "Default apps" page
+(registering Lite as the mailto:/webcal: handler).
+
+OAuth / SSO login is not in this build. It is in Lite when Stalwart serves it
+as an Application (\`npm run build:lite -- --target=stalwart\`, or the
+\`${STALWART_ZIP_NAME}\` of a release): accounts whose domain signs in at an
+OpenID provider are sent there, and setting the Application's
+\`oauthClientId\` adds **Sign in with SSO**. That bundle's README explains it.
 
 ## Security notes
 

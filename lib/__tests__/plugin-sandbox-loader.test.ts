@@ -102,6 +102,36 @@ function lastStatus() {
   return statuses[statuses.length - 1];
 }
 
+describe('loadSandboxedPlugin under the OS policy of the device', () => {
+  it('starts nothing the policy refuses: no frame, no download', async () => {
+    const { EMPTY_POLICY_LAYERS, resolvePolicies } = await import('../desktop/policy-schema');
+    const snapshot = (forcedMachine: Record<string, unknown>) => resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine });
+    const bridgeWith = (current: ReturnType<typeof snapshot>) => ({ version: 1, platform: 'win32' as const, policy: { get: () => current, onChange: () => () => {} } });
+    window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['other-plugin'] }));
+    mocks.getCode.mockResolvedValue(CODE);
+    try {
+      await loadSandboxedPlugin(plugin());
+      expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'error', error: 'device-policy' });
+      expect(mocks.createBackgroundInstance).not.toHaveBeenCalled();
+      expect(mocks.downloadManagedBundle).not.toHaveBeenCalled();
+      expect(mocks.getCode).not.toHaveBeenCalled();
+
+      window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['managed-plugin'] }));
+      await loadSandboxedPlugin(plugin());
+      expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'running' });
+      unloadSandboxedPlugin('managed-plugin');
+
+      // The same id on a package of the user's own doesn't pass.
+      mocks.createBackgroundInstance.mockClear();
+      await loadSandboxedPlugin(plugin({ managed: false }));
+      expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'error', error: 'device-policy' });
+      expect(mocks.createBackgroundInstance).not.toHaveBeenCalled();
+    } finally {
+      window.bulwarkDesktop = undefined;
+    }
+  });
+});
+
 describe('loadSandboxedPlugin in the no-third-party mode (#903)', () => {
   it('refuses a plugin that declares network access and runs one that does not', async () => {
     const { setNoThirdPartyTraffic } = await import('../third-party-mode');
@@ -118,6 +148,160 @@ describe('loadSandboxedPlugin in the no-third-party mode (#903)', () => {
     } finally {
       setNoThirdPartyTraffic(false);
     }
+  });
+});
+
+describe('loadSandboxedPlugin when a frame is slow to boot', () => {
+  const hung = () => ({ ...fakeBackground(), initPromise: new Promise(() => {}) });
+
+  // The bundle check runs on real promises and crypto: wait for the frame
+  // that is due before moving the clock past its timeout.
+  const framesStarted = async (count: number) => {
+    for (let i = 0; i < 2000 && mocks.createBackgroundInstance.mock.calls.length < count; i++) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    await new Promise((resolve) => setImmediate(resolve));
+  };
+
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('tries once more after the init timeout and runs when the second frame answers', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    const first = hung();
+    mocks.createBackgroundInstance.mockReturnValueOnce(first);
+
+    const run = loadSandboxedPlugin(plugin());
+    await framesStarted(1);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await framesStarted(2);
+    await run;
+
+    expect(first.destroy).toHaveBeenCalled();
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(2);
+    expect(statuses.some((s) => s.status === 'error')).toBe(false);
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'running' });
+  });
+
+  it('reports the error when the second try times out too, and stops there', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    mocks.createBackgroundInstance.mockImplementation(() => hung());
+
+    const run = loadSandboxedPlugin(plugin());
+    await framesStarted(1);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await framesStarted(2);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await run;
+
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(2);
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'error' });
+    expect(lastStatus().error).toMatch(/timed out/);
+  });
+
+  it('does not try again when the plugin was turned off while it started', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    mocks.createBackgroundInstance.mockImplementation(() => hung());
+
+    const run = loadSandboxedPlugin(plugin());
+    await framesStarted(1);
+    unloadSandboxedPlugin('managed-plugin');
+    await vi.advanceTimersByTimeAsync(30_000);
+    await run;
+
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry a plugin that fails for another reason', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    mocks.createBackgroundInstance.mockImplementationOnce(() => ({
+      ...fakeBackground(),
+      initPromise: Promise.reject(new Error('bundle threw')),
+    }));
+
+    await loadSandboxedPlugin(plugin());
+
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(1);
+    expect(lastStatus()).toMatchObject({ status: 'error', error: 'bundle threw' });
+  });
+
+  it('shows no error and leaves no frame when a plugin turned off while starting times out', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    const frame = hung();
+    mocks.createBackgroundInstance.mockReturnValueOnce(frame);
+
+    const run = loadSandboxedPlugin(plugin());
+    await framesStarted(1);
+    unloadSandboxedPlugin('managed-plugin');
+    await vi.advanceTimersByTimeAsync(30_000);
+    await run;
+
+    expect(frame.destroy).toHaveBeenCalled();
+    expect(statuses.some((s) => s.status === 'error')).toBe(false);
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'disabled' });
+  });
+});
+
+describe('a plugin turned off during its first start, with no remembered slots', () => {
+  function startingFrame() {
+    let finish!: (info: unknown) => void;
+    let fail!: (err: Error) => void;
+    const bg = fakeBackground();
+    bg.initPromise = new Promise((res, rej) => { finish = res; fail = rej; });
+    mocks.createBackgroundInstance.mockImplementation(() => bg);
+    return { bg, finish, fail };
+  }
+  const INFO = { hooks: [], slots: [{ name: 'sidebar-section', hasShouldShow: false, order: 100 }], shortcuts: [] };
+  const started = () => vi.waitFor(() => expect(mocks.createBackgroundInstance).toHaveBeenCalled());
+
+  beforeEach(() => {
+    localStorage.clear();
+    mocks.getCode.mockResolvedValue(CODE);
+  });
+
+  it('does not come up running when its init then succeeds', async () => {
+    const { bg, finish } = startingFrame();
+    const load = loadSandboxedPlugin(plugin());
+    await started();
+
+    unloadSandboxedPlugin('managed-plugin');
+    finish(INFO);
+    await load;
+
+    expect(bg.destroy).toHaveBeenCalled();
+    expect(getActive('managed-plugin')).toBeUndefined();
+    expect(statuses.some((s) => s.status === 'running')).toBe(false);
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'disabled' });
+  });
+
+  it('shows no error when its init then fails', async () => {
+    const { bg, fail } = startingFrame();
+    const load = loadSandboxedPlugin(plugin());
+    await started();
+
+    unloadSandboxedPlugin('managed-plugin');
+    fail(new Error('bundle threw'));
+    await load;
+
+    expect(bg.destroy).toHaveBeenCalled();
+    expect(statuses.some((s) => s.status === 'error')).toBe(false);
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'disabled' });
+  });
+
+  it('runs after all when it is turned back on while still starting', async () => {
+    const { bg, finish } = startingFrame();
+    const load = loadSandboxedPlugin(plugin());
+    await started();
+
+    unloadSandboxedPlugin('managed-plugin');
+    const again = loadSandboxedPlugin(plugin());
+    finish(INFO);
+    await Promise.all([load, again]);
+
+    expect(bg.destroy).not.toHaveBeenCalled();
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(1);
+    expect(getActive('managed-plugin')).toBeDefined();
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'running' });
   });
 });
 

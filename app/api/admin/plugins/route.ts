@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
+import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 import {
   getPlugin,
   getPluginRegistry,
@@ -12,10 +13,11 @@ import {
 import { listDevPlugins } from '@/lib/admin/plugin-dev';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
 import { cleanUpDeletedPlugin } from '@/lib/admin/extension-cleanup';
-import { listHistory } from '@/lib/admin/extension-history';
+import { keptVersions, listHistory } from '@/lib/admin/extension-history';
 import { ExtensionPackageError, readPluginPackage, suspiciousCode } from '@/lib/extension-package';
 import { MAX_PLUGIN_SIZE } from '@/lib/plugin-types';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
+import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
 /**
  * GET /api/admin/plugins - List all admin-managed plugins
@@ -33,20 +35,21 @@ export async function GET(request: NextRequest) {
     // Dev plugins win on id collision so admins see what users actually load.
     const devIds = new Set(devEntries.map(e => e.plugin.id));
     const merged = [
-      ...devEntries.map(e => ({ ...e.plugin, dev: true as const, previousVersions: [] as string[] })),
+      ...devEntries.map(e => ({ ...e.plugin, dev: true as const, ...keptVersions([]) })),
       ...(await Promise.all(registry.plugins
         .filter(p => !devIds.has(p.id))
         .map(async p => ({
           ...p,
           dev: false as const,
-          // Versions this server still has a copy of (lib/admin/extension-history.ts).
-          previousVersions: (await listHistory('plugin', p.id).catch(() => [])).map(h => h.version),
+          ...keptVersions(await listHistory('plugin', p.id).catch(() => [])),
         })))),
     ];
     return NextResponse.json(merged, {
       headers: { 'Cache-Control': 'no-store' },
     });
   } catch (error) {
+    const unavailable = storeUnavailableResponse(error);
+    if (unavailable) return unavailable;
     logger.error('Plugin list error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -85,6 +88,9 @@ export async function POST(request: NextRequest) {
     }
     const { manifest, code } = pkg;
 
+    const refused = devicePolicyPluginRefusal(manifest.id);
+    if (refused) return refused;
+
     // Admin uploads reach every user, so the patterns a user upload only
     // warns about are refused here.
     const suspicious = suspiciousCode(code);
@@ -111,6 +117,7 @@ export async function POST(request: NextRequest) {
       entrypoint: manifest.entrypoint,
       enabled: existing?.enabled ?? true,
       ...(existing?.forceEnabled !== undefined ? { forceEnabled: existing.forceEnabled } : {}),
+      ...(existing?.defaultOff ? { defaultOff: true } : {}),
       ...(manifest.configSchema ? { configSchema: manifest.configSchema } : {}),
       ...(manifest.settingsSchema ? { settingsSchema: manifest.settingsSchema } : {}),
       ...(manifest.locales ? { locales: manifest.locales } : {}),
@@ -141,7 +148,9 @@ export async function POST(request: NextRequest) {
 
 /**
  * PATCH /api/admin/plugins - Update plugin metadata (enable/disable)
- * Body: { id: string, enabled: boolean }
+ * Body: { id: string, enabled?: boolean, forceEnabled?: boolean, defaultOff?: boolean }
+ * `defaultOff` decides what users get while they haven't chosen: off when
+ * true, on otherwise. `forceEnabled` keeps it on for everyone.
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -149,18 +158,25 @@ export async function PATCH(request: NextRequest) {
     if ('error' in result) return result.error;
 
     const ip = getClientIP(request);
-    const { id, enabled, forceEnabled } = await request.json();
+    const { id, enabled, forceEnabled, defaultOff } = await request.json();
 
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Missing plugin id' }, { status: 400 });
     }
-    if (typeof enabled !== 'boolean' && typeof forceEnabled !== 'boolean') {
-      return NextResponse.json({ error: 'enabled or forceEnabled must be a boolean' }, { status: 400 });
+    if (typeof enabled !== 'boolean' && typeof forceEnabled !== 'boolean' && typeof defaultOff !== 'boolean') {
+      return NextResponse.json({ error: 'enabled, forceEnabled or defaultOff must be a boolean' }, { status: 400 });
     }
 
-    const updates: { enabled?: boolean; forceEnabled?: boolean } = {};
+    // Turning one off stays possible: the policy only stops what would run.
+    if (enabled === true || forceEnabled === true) {
+      const refused = devicePolicyPluginRefusal(id);
+      if (refused) return refused;
+    }
+
+    const updates: { enabled?: boolean; forceEnabled?: boolean; defaultOff?: boolean } = {};
     if (typeof enabled === 'boolean') updates.enabled = enabled;
     if (typeof forceEnabled === 'boolean') updates.forceEnabled = forceEnabled;
+    if (typeof defaultOff === 'boolean') updates.defaultOff = defaultOff;
 
     const { updatePluginMeta } = await import('@/lib/admin/plugin-registry');
     let updated = await updatePluginMeta(id, updates);

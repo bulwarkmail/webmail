@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { cleanPreview } from '@/lib/utils';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readPushAuthContext } from '@/lib/stalwart/push-auth-context';
+import { renewPushAuthHeader } from '@/lib/stalwart/push-token-renewal';
+import type { StalwartAuthContext } from '@/lib/stalwart/auth-context';
 import {
   getStalwartCredentials,
   type StalwartCredentials,
@@ -13,6 +15,8 @@ import { rebaseApiUrl } from '@/lib/stalwart/jmap-api';
 import { forwardedClientHeaders, loginClientAddress } from '@/lib/auth/client-address';
 import { DisallowedUrlError } from '@/lib/security/url-guard';
 import { UPSTREAM_JSON_MAX_BYTES, UpstreamBodyTooLargeError, readJsonCapped } from '@/lib/security/capped-body';
+import { serverDevicePolicy } from '@/lib/admin/server-device-policy';
+import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,12 +27,45 @@ interface ResolvedTarget {
   accountId: string;
   /** See StalwartCredentials.trusted - false routes through the guarded fetch. */
   trusted: boolean;
+  /** The login, for its device policy. */
+  serverUrl: string;
+  username: string;
+  accountName?: string;
   /**
    * Cookie slot of the login that owns the account. Handed back so a click
    * on the notification opens the message in that login: the worker knows
    * only the JMAP account id, which can repeat across servers.
    */
   slot?: number;
+}
+
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
+/**
+ * The login's JMAP session, and the Authorization header that opened it. A
+ * token sign-in's access token expires within the hour, and with no tab open
+ * nothing renews it: the mail server turns it away and the push gets the
+ * worker's generic notification (#1509). Renewed here then, once, when
+ * `mayRenew` says this is the login the push is for.
+ */
+async function openSession(
+  cookieStore: CookieStore,
+  slot: number,
+  ctx: StalwartAuthContext,
+  serverUrl: string,
+  trusted: boolean,
+  forwarded: Record<string, string>,
+  basePath: string | undefined,
+  mayRenew: boolean,
+): Promise<{ res: Response; authHeader: string }> {
+  const get = (authHeader: string) => fetchJmapServer(`${serverUrl}/.well-known/jmap`, {
+    headers: { Authorization: authHeader, ...forwarded },
+  }, trusted);
+  const res = await get(ctx.authHeader);
+  if (res.status !== 401 || !mayRenew) return { res, authHeader: ctx.authHeader };
+  const renewed = await renewPushAuthHeader(cookieStore, slot, ctx, basePath);
+  if (!renewed) return { res, authHeader: ctx.authHeader };
+  return { res: await get(renewed), authHeader: renewed };
 }
 
 // When the SW passes ?accountId=, we need the slot whose JMAP session owns
@@ -39,24 +76,36 @@ interface ResolvedTarget {
 // session of everyone it is shared with, who sees only that folder - not its
 // Inbox, nor the message that just arrived there.
 //
-// The push names nothing but the account id, and ids repeat across servers
-// (and a group account is listed by each member). When that leaves more than
-// one login, answer 'ambiguous' rather than guess: a wrong guess previews
-// another login's mail and opens it there.
-async function resolveTargetForAccount(accountId: string, forwarded: Record<string, string>): Promise<ResolvedTarget | 'ambiguous' | null> {
+// Ids repeat across servers (and a group account is listed by each member), so
+// the account id alone can leave several logins. On one server, the push's label
+// names the login that registered it and settles it. Not across servers: logins
+// with the same account id share one relay record in this browser (lib/web-push.ts
+// keys it by account id), so the label is only whoever registered last. Whatever
+// doesn't fit answers 'ambiguous' rather than guess: a wrong guess previews another
+// login's mail and opens it there.
+async function resolveTargetForAccount(accountId: string, login: string | null, forwarded: Record<string, string>, basePath: string | undefined): Promise<ResolvedTarget | 'ambiguous' | null> {
   const cookieStore = await cookies();
-  const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
+  const contexts: { slot: number; ctx: StalwartAuthContext }[] = [];
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
-    if (!ctx) continue;
+    const ctx = await readPushAuthContext(cookieStore, slot);
+    if (ctx) contexts.push({ slot, ctx });
+  }
+  // Renewing writes a slot's rotated tokens into this answer. Every expired
+  // login at once could outgrow a proxy's header buffer, and an answer lost
+  // after the providers rotated leaves the browser with spent refresh tokens.
+  // So only the login the push names, or the only one there is (#1509).
+  const named = login?.toLowerCase();
+  const mayRenew = (ctx: StalwartAuthContext) => (named
+    ? ctx.username.toLowerCase() === named || ctx.accountName?.toLowerCase() === named
+    : contexts.length === 1);
+  const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
+  for (const { slot, ctx } of contexts) {
     const serverUrl = ctx.serverUrl.replace(/\/+$/, '');
     probes.push(
       (async () => {
         try {
           const trusted = await isTrustedJmapServerUrl(serverUrl);
-          const res = await fetchJmapServer(`${serverUrl}/.well-known/jmap`, {
-            headers: { Authorization: ctx.authHeader, ...forwarded },
-          }, trusted);
+          const { res, authHeader } = await openSession(cookieStore, slot, ctx, serverUrl, trusted, forwarded, basePath, mayRenew(ctx));
           if (!res.ok) return null;
           const session = (await readJsonCapped(res, UPSTREAM_JSON_MAX_BYTES)) as {
             apiUrl?: string;
@@ -75,7 +124,7 @@ async function resolveTargetForAccount(accountId: string, forwarded: Record<stri
             Object.prototype.hasOwnProperty.call(session.accounts ?? {}, accountId);
           if (mailAccountId !== accountId && !isSharedAccount) return null;
           return {
-            target: { authHeader: ctx.authHeader, apiUrl, accountId, trusted, slot },
+            target: { authHeader, apiUrl, accountId, trusted, slot, serverUrl, username: ctx.username, accountName: ctx.accountName },
             own: mailAccountId === accountId,
           };
         } catch {
@@ -85,16 +134,21 @@ async function resolveTargetForAccount(accountId: string, forwarded: Record<stri
     );
   }
   const results = (await Promise.all(probes)).filter((r) => r !== null);
+  if (login && results.length > 0) {
+    const name = login.toLowerCase();
+    const named = results.filter((r) => r.target.username.toLowerCase() === name || r.target.accountName?.toLowerCase() === name);
+    const servers = new Set(results.map((r) => r.target.serverUrl));
+    if (named.length !== 1 || servers.size > 1) return 'ambiguous';
+    return named[0].target;
+  }
   const owners = results.filter((r) => r.own);
   if (owners.length === 1) return owners[0].target;
   if (results.length === 1) return results[0].target;
   return results.length > 1 ? 'ambiguous' : null;
 }
 
-async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Record<string, string>): Promise<ResolvedTarget | null> {
-  const sessionRes = await fetchJmapServer(`${creds.serverUrl}/.well-known/jmap`, {
-    headers: { Authorization: creds.authHeader, ...forwarded },
-  }, creds.trusted);
+async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Record<string, string>, basePath: string | undefined): Promise<ResolvedTarget | null> {
+  const { res: sessionRes, authHeader } = await openSession(await cookies(), creds.slot, creds, creds.serverUrl, creds.trusted, forwarded, basePath, true);
   if (!sessionRes.ok) return null;
   const session = (await readJsonCapped(sessionRes, UPSTREAM_JSON_MAX_BYTES)) as {
     apiUrl?: string;
@@ -103,7 +157,7 @@ async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Recor
   const apiUrl = rebaseApiUrl(session, creds.serverUrl);
   const accountId = session.primaryAccounts?.['urn:ietf:params:jmap:mail'];
   if (!apiUrl || !accountId) return null;
-  return { authHeader: creds.authHeader, apiUrl, accountId, trusted: creds.trusted };
+  return { authHeader, apiUrl, accountId, trusted: creds.trusted, serverUrl: creds.serverUrl, username: creds.username, accountName: creds.accountName };
 }
 
 /**
@@ -119,6 +173,14 @@ async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Recor
  * a generic "New mail" string.
  */
 export async function GET(request: NextRequest) {
+  // The preview may renew a login's token (#1509), which spends its refresh
+  // token at the provider. GET passes the same-origin gate of the other auth
+  // routes, so a page elsewhere could make the browser do that with a link.
+  // The service worker's own fetch is same-origin.
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (fetchSite && fetchSite !== 'same-origin') {
+    return NextResponse.json({ error: 'Cross-origin request' }, { status: 403 });
+  }
   try {
     // SW passes ?accountId=<jmap-account-id> derived from the push payload's
     // StateChange so multi-account browsers fetch from the right slot. Older
@@ -131,11 +193,12 @@ export async function GET(request: NextRequest) {
     // which is wrong whenever Sieve filed the new message into a folder.
     const requestedEmailId = request.nextUrl.searchParams.get('emailId');
     const forwarded = forwardedClientHeaders(loginClientAddress(request));
+    const basePath = request.nextUrl.basePath;
 
     let target: ResolvedTarget | null = null;
     let authHeader: string;
     if (requestedAccountId) {
-      const resolved = await resolveTargetForAccount(requestedAccountId, forwarded);
+      const resolved = await resolveTargetForAccount(requestedAccountId, request.nextUrl.searchParams.get('login'), forwarded, basePath);
       if (!resolved) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
       }
@@ -151,11 +214,11 @@ export async function GET(request: NextRequest) {
       if (!creds) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
       }
-      target = await resolveDefaultTarget(creds, forwarded);
+      target = await resolveDefaultTarget(creds, forwarded, basePath);
       if (!target) {
         return NextResponse.json({ error: 'JMAP session failed' }, { status: 502 });
       }
-      authHeader = creds.authHeader;
+      authHeader = target.authHeader;
     }
 
     const { apiUrl, accountId, trusted } = target;
@@ -198,7 +261,20 @@ export async function GET(request: NextRequest) {
     }
 
     const inboxId = inboxBody.ids[0];
-    const emailProperties = ['id', 'threadId', 'from', 'subject', 'preview', 'receivedAt'];
+    // Organisation > Devices > Push without sender and subject, for this
+    // login's scopes (worked out from its own session): the message's
+    // sender, subject and text are never read, so they can't reach the
+    // notification, the push service or the lock screen. Unknown counts as on.
+    const redacted = await serverDevicePolicy({
+      serverUrl: target.serverUrl,
+      authHeader,
+      username: target.username,
+      accountName: target.accountName,
+      trusted,
+    }).then((devices) => devices.pushWithoutContent, () => true);
+    const emailProperties = redacted
+      ? ['id', 'threadId', 'receivedAt']
+      : ['id', 'threadId', 'from', 'subject', 'preview', 'receivedAt'];
 
     if (!inboxId && !requestedEmailId) {
       return NextResponse.json({
@@ -333,11 +409,17 @@ export async function GET(request: NextRequest) {
     // Some servers build the preview from HTML without skipping <style>; a
     // notification that opens on a style sheet says nothing.
     if (email?.preview) email = { ...email, preview: cleanPreview(email.preview) };
+    // Whatever the server sent anyway, only what a click needs goes back.
+    if (redacted && email) email = { id: email.id, threadId: email.threadId, receivedAt: email.receivedAt ?? null };
 
     return NextResponse.json({
       email,
       unreadTotal,
+      ...(redacted ? { redacted: true } : {}),
       ...(target.slot !== undefined ? { slot: target.slot } : {}),
+      // For the notification's buttons, which must not land on whoever signs
+      // into this slot later (app/api/push/action).
+      ...(target.slot !== undefined && email ? { login: await loginFingerprint(target.serverUrl, target.username) } : {}),
     }, {
       headers: {
         // SW already gates on its own logic - don't let push events get

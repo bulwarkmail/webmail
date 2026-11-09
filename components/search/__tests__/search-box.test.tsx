@@ -1,8 +1,9 @@
 // React's onFocus/onBlur listen to focusin/focusout — RTL's fireEvent fires both.
 import { render, screen, act, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { SearchBox } from '../search-box';
+import { useEmailStore } from '@/stores/email-store';
 import { useSearchHistoryStore } from '@/stores/search-history-store';
 
 vi.mock('@/components/ui/avatar', () => ({
@@ -297,5 +298,31 @@ describe('SearchBox end controls', () => {
   it('shows the trailing control next to the clear button', () => {
     render(<SearchBox value="test" onChange={() => {}} onSubmit={() => {}} onClear={() => {}} onSelectContact={() => {}} trailing={<button>filters</button>} />);
     expect(screen.getByText('filters').parentElement).toBe(screen.getByTestId('search-clear').parentElement);
+  });
+});
+
+// mail-16: an account with no matching contact still gets suggestions from
+// the senders of the mail on screen.
+describe('SearchBox suggestions from the list', () => {
+  beforeEach(() => {
+    useSearchHistoryStore.setState({ recentSearches: [] });
+  });
+  afterEach(() => {
+    useEmailStore.setState({ emails: [] });
+  });
+
+  it('offers senders of loaded mail that match what is typed', () => {
+    useEmailStore.setState({
+      emails: [
+        { id: '1', from: [{ name: 'Greta Sørensen', email: 'greta@example.com' }] },
+        { id: '2', from: [{ name: 'Greta Sørensen', email: 'greta@example.com' }] },
+        { id: '3', from: [{ name: 'Tobias Brenner', email: 'tobias@example.com' }] },
+      ] as never,
+    });
+    render(<Harness />);
+    fireEvent.change(input(), { target: { value: 'greta' } });
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(1);
+    expect(options[0]).toHaveTextContent('greta@example.com');
   });
 });

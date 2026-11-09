@@ -114,9 +114,37 @@ describe('undo send toast', () => {
     await waitFor(() => expect(undoToast()).toBeDefined());
     const toast = undoToast()!;
     expect(toast.title).toBe('email_viewer.sending_in');
-    // 30 s is the setting, but only 10 s are left of the window.
-    expect(toast.duration).toBeLessThan(10_000);
+    // 30 s is the setting, but only 10 s are left of the window: Undo ends
+    // half a second before the server lets it go (undoEndsAt), and the toast
+    // stays a second longer to say "Sent".
+    expect(toast.duration).toBeLessThanOrEqual(10_000 - 500 + 1000);
     expect(toast.pauseOnHover).toBe(false);
+  });
+
+  // compose-p2-12: once Undo is over the toast says the message went.
+  it('turns into "Sent" with View before the server releases the message', async () => {
+    render(<MailApp />);
+    sendDelayedBy(2_500);
+
+    await waitFor(() => expect(undoToast()).toBeDefined());
+    const id = undoToast()!.id;
+    await waitFor(() => {
+      const toast = useToastStore.getState().toasts.find((t) => t.id === id);
+      expect(toast?.title).toBe('compose_send.sent');
+      expect(toast?.action?.label).toBe('compose_send.view');
+    }, { timeout: 3000 });
+  });
+
+  // compose-23: "Email scheduled for sending" with "Undo send" said neither
+  // when it goes nor that the button cancels it.
+  it('says when a scheduled message goes, with Cancel and Send now', async () => {
+    render(<MailApp />);
+    sendDelayedBy(3 * 86_400_000);
+
+    await waitFor(() => expect(useToastStore.getState().toasts.some((t) => t.title === 'compose_send.scheduled_for')).toBe(true));
+    const toast = useToastStore.getState().toasts.find((t) => t.title === 'compose_send.scheduled_for')!;
+    expect(toast.action?.label).toBe('cancel');
+    expect(toast.secondaryAction?.label).toBe('email_viewer.send_now');
   });
 
   it('says so when the undo comes too late', async () => {

@@ -1,8 +1,15 @@
-import { render, screen, fireEvent, act, within } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer, type ComposerDraftData } from '../email-composer';
 import { useAuthStore } from '@/stores/auth-store';
+import { UNDO_TOAST_DURATION } from '@/lib/email-action-toast';
+
+const offlineQueue = vi.hoisted(() => ({ noteDraftReplacedElsewhere: vi.fn(async () => {}) }));
+vi.mock('@/lib/offline/queue', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/offline/queue')>()),
+  noteDraftReplacedElsewhere: offlineQueue.noteDraftReplacedElsewhere,
+}));
 
 // ─── Heavy component mocks (mirrors composer-close-guard.test.tsx) ────────────
 
@@ -137,6 +144,7 @@ vi.mock('@/stores/template-store', () => {
 
 vi.mock('@/stores/toast-store', () => ({
   toast: { info: () => {}, error: () => {}, success: () => {} },
+  useToastStore: { getState: () => ({ toasts: [] }) },
 }));
 
 vi.mock('@/lib/plugin-hooks', () => ({
@@ -155,7 +163,10 @@ vi.mock('@/lib/plugin-hooks', () => ({
     onRecipientChipsChange: { transform: async (chips: unknown) => chips },
     onDraftChange: { emit: () => {} },
     onBeforeDraftAutoSave: { transform: async (draft: unknown) => draft },
-    onBeforeEmailSend: { intercept: async () => true, interceptOutcome: async () => 'allowed' },
+    // No plugin checks sends here (size 0, as the real bus without one): the
+    // message for a send check would be built otherwise, reading the other
+    // login's identities from a client this test only half mocks.
+    onBeforeEmailSend: { size: 0, intercept: async () => true, interceptOutcome: async () => 'allowed' },
     onComposeSend: { intercept: async () => true, takeOver: async () => 'default' },
     onTransformOutgoingEmail: { transform: async (email: unknown) => email },
   },
@@ -245,10 +256,12 @@ describe('a draft and the login it was saved with', () => {
         await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
       },
       switchFrom: (identityId: string) => fireEvent.change(screen.getByTestId('composer-from'), { target: { value: identityId } }),
-      discard: () => {
-        // The Discard button asks even when the draft is saved.
+      discard: async (onDiscardDraft: ReturnType<typeof vi.fn>) => {
+        // The bin asks nothing; the draft goes once its Undo is over.
         fireEvent.click(screen.getByText('discard'));
-        fireEvent.click(within(screen.getByRole('alertdialog')).getByText('discard'));
+        expect(screen.queryByRole('alertdialog')).toBeNull();
+        expect(onDiscardDraft).not.toHaveBeenCalled();
+        await act(async () => { await vi.advanceTimersByTimeAsync(UNDO_TOAST_DURATION); });
       },
       send: async () => {
         fireEvent.click(screen.getAllByTestId('composer-send')[0]);
@@ -265,7 +278,7 @@ describe('a draft and the login it was saved with', () => {
     expect(clientA.createDraft).toHaveBeenCalledTimes(1);
     composer.switchFrom('login-b::id-b');
     await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
-    composer.discard();
+    await composer.discard(onDiscardDraft);
 
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-a2', { accountId: undefined, localAccountId: 'login-a' });
   });
@@ -286,8 +299,21 @@ describe('a draft and the login it was saved with', () => {
     expect(clientA.deleteEmail).toHaveBeenCalledWith('draft-a2', undefined);
     expect(clientB.deleteEmail).not.toHaveBeenCalled();
 
-    composer.discard();
+    await composer.discard(onDiscardDraft);
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-b2', { accountId: undefined, localAccountId: 'login-b' });
+  });
+
+  it('leaves the old version in its own login while the new one is only on the device', async () => {
+    const composer = open(DRAFT);
+    await composer.editSubject('Hello', 'Hello 2');
+    (clientB.createDraft as ReturnType<typeof vi.fn>).mockReset();
+    (clientB.createDraft as ReturnType<typeof vi.fn>).mockResolvedValue('local-standin');
+    composer.switchFrom('login-b::id-b');
+    await composer.editSubject('Hello 2', 'Hello 3');
+
+    expect(clientB.createDraft).toHaveBeenCalledTimes(1);
+    expect(clientA.deleteEmail).not.toHaveBeenCalled();
+    expect(offlineQueue.noteDraftReplacedElsewhere).toHaveBeenCalledWith('login-b', 'local-standin', { login: 'login-a', jmap: undefined, id: 'draft-a2' });
   });
 
   it('keeps replacing versions through createDraft while the login stays the same', async () => {
@@ -308,7 +334,7 @@ describe('a draft and the login it was saved with', () => {
     composer.switchFrom('login-b::id-b');
     await composer.send();
 
-    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ localAccountId: 'login-b', draftId: undefined, draftAccountId: undefined }));
+    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ localAccountId: 'login-b', draftId: undefined, draftAccountId: undefined }), expect.anything());
     expect(clientA.deleteEmail).toHaveBeenCalledWith('draft-a2', undefined);
     expect(clientB.deleteEmail).not.toHaveBeenCalled();
   });
@@ -351,16 +377,16 @@ describe('a draft and the login it was saved with', () => {
     expect(clientB.deleteEmail).toHaveBeenCalledWith('draft-b1', 'c');
     expect(clientA.deleteEmail).not.toHaveBeenCalled();
 
-    composer.discard();
+    await composer.discard(onDiscardDraft);
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-a2', { accountId: undefined, localAccountId: 'login-a' });
   });
 
-  it('discards an unsaved draft opened from another login through that login and account', () => {
+  it('discards an unsaved draft opened from another login through that login and account', async () => {
     const onDiscardDraft = vi.fn();
     const composer = open({ ...DRAFT, draftId: 'draft-b1', draftAccountId: 'c', draftLocalAccountId: 'login-b' }, { onDiscardDraft });
 
     fireEvent.change(screen.getByDisplayValue('Hello'), { target: { value: 'Hello 2' } });
-    composer.discard();
+    await composer.discard(onDiscardDraft);
 
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-b1', { accountId: 'c', localAccountId: 'login-b' });
   });

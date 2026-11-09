@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
-import { groupSearchScopeFolders } from '@/lib/search-scope-folders';
+import { defaultSearchScopeFor, groupSearchScopeFolders } from '@/lib/search-scope-folders';
 
 // The search panel's Folder dropdown lists the shared/group folders under
 // their owner account instead of as bare names among the own ones (#1082),
@@ -77,5 +77,34 @@ describe('groupSearchScopeFolders', () => {
 
     expect(own).toHaveLength(1);
     expect(shared).toEqual([]);
+  });
+});
+
+describe('defaultSearchScopeFor', () => {
+  const folders = [
+    mb({ id: 'inbox', role: 'inbox' }),
+    mb({ id: 'projects' }),
+    mb({ id: 'trash', role: 'trash' }),
+    mb({ id: 'junk', role: 'junk' }),
+  ];
+
+  it('searches all folders but Spam and Trash from any other folder by default', () => {
+    expect(defaultSearchScopeFor(folders, 'inbox', 'all')).toBe('');
+    expect(defaultSearchScopeFor(folders, 'projects', 'all')).toBe('');
+    expect(defaultSearchScopeFor(folders, 'trash', 'all')).toBe('trash');
+    expect(defaultSearchScopeFor(folders, 'junk', 'all')).toBe('junk');
+  });
+
+  // #1485
+  it('searches the open folder when "Search in" is set to it', () => {
+    expect(defaultSearchScopeFor(folders, 'inbox', 'folder')).toBe('inbox');
+    expect(defaultSearchScopeFor(folders, 'projects', 'folder')).toBe('projects');
+    expect(defaultSearchScopeFor(folders, 'trash', 'folder')).toBe('trash');
+  });
+
+  it('searches all folders from a view that is not a folder', () => {
+    expect(defaultSearchScopeFor(folders, '__unified_inbox', 'folder')).toBe('');
+    expect(defaultSearchScopeFor(folders, '', 'folder')).toBe('');
+    expect(defaultSearchScopeFor(folders, null, 'folder')).toBe('');
   });
 });

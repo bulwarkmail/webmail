@@ -30,5 +30,6 @@ export function mailtoComposerDraft(pending: ParsedMailto, plainTextMode: boolea
     draftId: null,
     ...(isHtml ? { plainTextMode: false } : {}),
     ...(pending.attachments?.length ? { attachments: pending.attachments } : {}),
+    ...(pending.linkParams ? { linkParams: pending.linkParams } : {}),
   };
 }

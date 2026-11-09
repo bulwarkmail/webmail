@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import en from '@/locales/en/common.json';
 
@@ -58,12 +58,29 @@ async function openResult(query: string, label: string) {
 
 describe('settings search and the Advanced switch', () => {
   it('leaves Advanced off for a row that is not an advanced one', async () => {
-    await openResult('favicons', 'Sender favicons');
+    // settings-p2-18: the row is named like its section now, "Sender pictures".
+    await openResult('company websites', 'Pictures from company websites');
     expect(useSettingsStore.getState().showAdvancedSettings).toBe(false);
   });
 
-  it('turns Advanced on for an advanced row it has to reveal', async () => {
-    await openResult('emails per page', 'Emails per page');
-    expect(useSettingsStore.getState().showAdvancedSettings).toBe(true);
+  // settings-p3-7: an advanced row is found with the switch off, marked as such, and
+  // opening it asks its page to show that row alone; the switch stays off. (It used to
+  // turn the switch on for every page; settings-search-anchors checks the row shows.)
+  it('marks an advanced result and opens it without turning Advanced on', async () => {
+    const asked: unknown[] = [];
+    const listen = (event: Event) => asked.push((event as CustomEvent).detail);
+    window.addEventListener('settings-reveal', listen);
+    try {
+      render(<SettingsApp linkSegments={[]} />);
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'emails per page' } });
+      const result = screen.getByRole('button', { name: /^Emails per page/ });
+      expect(within(result).getByTestId('settings-result-advanced')).toBeInTheDocument();
+      fireEvent.click(result);
+      await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    } finally {
+      window.removeEventListener('settings-reveal', listen);
+    }
+    expect(asked).toContainEqual({ label: 'Emails per page', advanced: true });
+    expect(useSettingsStore.getState().showAdvancedSettings).toBe(false);
   });
 });

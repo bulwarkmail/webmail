@@ -48,10 +48,13 @@ vi.mock('@/lib/admin/session', () => ({
   requireAdminAuth: async () => (state.hasAdminSession ? { role: 'admin' } : { error: 'unauthorized' }),
   getClientIP: () => '127.0.0.1',
   isSameOriginRequest: () => true,
+  getAdminDeviceId: async () => null,
+  setAdminDeviceCookie: vi.fn(),
 }));
 
 vi.mock('@/lib/admin/rate-limit', () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
+  checkDeviceRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 
 const auditLog = vi.fn();

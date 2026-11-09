@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin/session';
 import { logger } from '@/lib/logger';
+import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 import { readApprovalBundle } from '@/lib/admin/plugin-approvals';
 import { readPluginPackage } from '@/lib/extension-package';
 
@@ -28,6 +29,8 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (err) {
+    const unavailable = storeUnavailableResponse(err);
+    if (unavailable) return unavailable;
     logger.error('plugin-approvals source GET', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

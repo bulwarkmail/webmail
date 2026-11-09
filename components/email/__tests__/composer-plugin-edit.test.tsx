@@ -3,11 +3,13 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import React from 'react';
 import type { Editor } from '@tiptap/core';
 import { undoDepth } from '@tiptap/pm/history';
-import { EmailComposer } from '../email-composer';
+import { EmailComposer, type ComposerDraftData } from '../email-composer';
 import { buildSignatureBlock } from '../signature-block';
 import { buildQuotedHtmlBlock, serializeEditorContent } from '../quoted-html';
 import { composerHandle } from '@/lib/plugin-sandbox/composer-registry';
 import { resetActions, setActionDispatcher, setPluginActions } from '@/lib/plugin-sandbox/actions';
+import { useAuthStore } from '@/stores/auth-store';
+import { usePluginStore } from '@/stores/plugin-store';
 
 // The real composer around the real editor, worked on by a plugin through
 // the handle it registers for api.composer: what the plugin reads as the
@@ -142,6 +144,8 @@ vi.mock('@/stores/toast-store', () => ({
   toast: { info: () => {}, error: () => {}, success: () => {} },
 }));
 
+const linkHook = vi.hoisted(() => ({ emitTo: vi.fn(async () => {}) }));
+
 vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
@@ -162,6 +166,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
     onBeforeEmailSend: { intercept: async () => true, interceptOutcome: async () => 'allowed' },
     onComposeSend: { takeOver: async () => 'default' },
     onTransformOutgoingEmail: { transform: async (email: unknown) => email },
+    onComposeFromLink: { size: 1, pluginIds: () => ['akte'], emitTo: linkHook.emitTo },
   },
   contactHooks: {
     search: { call: async () => [] },
@@ -215,11 +220,11 @@ const DRAFT = {
 const PLUGIN = 'assistant';
 
 /** The real composer; its id comes from a click on a plugin's toolbar button, as for a plugin. */
-async function renderComposer(body = BODY) {
+async function renderComposer(body = BODY, initialData: Partial<ComposerDraftData> = {}) {
   const clicks: Record<string, unknown>[] = [];
   setActionDispatcher(async (_plugin, _surface, _id, context) => { clicks.push(context); });
   setPluginActions(PLUGIN, 'Assistant', 'composer-toolbar-actions', [{ id: 'ask', label: 'Assistant', icon: 'sparkles', shortcut: 'Ctrl+Shift+Y' }]);
-  render(<EmailComposer initialData={{ ...DRAFT, body }} mode="reply" onClose={vi.fn()} />);
+  render(<EmailComposer initialData={{ ...DRAFT, body, ...initialData }} mode="reply" onClose={vi.fn()} />);
   const dom = await waitFor(() => {
     const el = document.querySelector('.ProseMirror') as (HTMLElement & { editor?: Editor }) | null;
     expect(el?.editor).toBeTruthy();
@@ -252,6 +257,88 @@ describe('plugins editing the message being written', () => {
   afterEach(() => {
     resetActions();
     setActionDispatcher(null);
+  });
+
+  it('reads live subject and recipient metadata from the registered composer', async () => {
+    const { handle } = await renderComposer(BODY, { cc: 'cc@example.com', bcc: 'bcc@example.com' });
+    expect(handle.readMetadata?.()).toMatchObject({ subject: 'Re: Photo', to: ['Bob Builder <bob@example.com>'], cc: ['cc@example.com'], bcc: ['bcc@example.com'], attachments: [], pending: false });
+    fireEvent.change(screen.getByDisplayValue('Re: Photo'), { target: { value: 'Updated subject' } });
+    expect(handle.readMetadata?.().subject).toBe('Updated subject');
+  });
+
+  it('sets the subject as the user typing it would, and the draft changes with it', async () => {
+    const { handle } = await renderComposer();
+    const field = screen.getByDisplayValue('Re: Photo') as HTMLInputElement;
+    // jsdom lays nothing out: the field is on screen.
+    field.getClientRects = () => [{}] as unknown as DOMRectList;
+    const typed = vi.fn();
+    field.addEventListener('input', typed);
+    let ok = false;
+    act(() => { ok = handle.setSubject!('Akte 01/2026: Re: Photo'); });
+    expect(ok).toBe(true);
+    // Through the field, so the browser's undo has it, and React's state follows.
+    expect(typed).toHaveBeenCalled();
+    expect(field.value).toBe('Akte 01/2026: Re: Photo');
+    expect(handle.readMetadata?.().subject).toBe('Akte 01/2026: Re: Photo');
+  });
+
+  it('sets the subject also where the subject line is not on screen (a docked reply)', async () => {
+    const { handle } = await renderComposer();
+    // The hidden field has no box.
+    let ok = false;
+    act(() => { ok = handle.setSubject!('Akte 01/2026'); });
+    expect(ok).toBe(true);
+    expect(handle.readMetadata?.().subject).toBe('Akte 01/2026');
+  });
+
+  it("hands each plugin its link's parameters once, with the composer's id", async () => {
+    usePluginStore.setState({ initialized: true });
+    linkHook.emitTo.mockClear();
+    const { id } = await renderComposer(BODY, { linkParams: { 'x-akte-case': '01/2026', 'x-other-thing': 'x' } });
+    await waitFor(() => expect(linkHook.emitTo).toHaveBeenCalledTimes(1));
+    expect(linkHook.emitTo).toHaveBeenCalledWith('akte', { composerId: id, params: { case: '01/2026' } });
+  });
+
+  it('tells no plugin anything without link parameters', async () => {
+    usePluginStore.setState({ initialized: true });
+    linkHook.emitTo.mockClear();
+    await renderComposer();
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+    expect(linkHook.emitTo).not.toHaveBeenCalled();
+  });
+
+  it('distinguishes equal blob ids from two logins and reads through the attachment owner', async () => {
+    const fetchA = vi.fn(async () => ({ type: 'text/plain', size: 1, arrayBuffer: async () => new Uint8Array([1]).buffer }));
+    const fetchB = vi.fn(async () => ({ type: 'text/plain', size: 1, arrayBuffer: async () => new Uint8Array([2]).buffer }));
+    const fetchOwn = vi.fn();
+    const previous = useAuthStore.getState();
+    const oldClient = previous.client;
+    const oldGetClient = previous.getClientForAccount;
+    const owners = new Map([['login-a', { fetchBlob: fetchA }], ['login-b', { fetchBlob: fetchB }]]);
+    useAuthStore.setState({
+      client: { fetchBlob: fetchOwn, hasDelayedSend: () => false, getMaxDelayedSend: () => 0 } as never,
+      getClientForAccount: (id: string) => owners.get(id) as never,
+    });
+    try {
+      const { handle } = await renderComposer(BODY, {
+        attachments: [
+          { blobId: 'same-blob', name: 'a.txt', type: 'text/plain', size: 1, sourceAccountId: 'login-a' },
+          { blobId: 'same-blob', name: 'b.txt', type: 'text/plain', size: 1, sourceAccountId: 'login-b' },
+        ],
+      });
+      const files = handle.readMetadata!().attachments;
+      expect(files).toHaveLength(2);
+      expect(files[0].id).not.toBe(files[1].id);
+      const result = await handle.readAttachment!(files[1].id);
+      expect(new Uint8Array(result.data)).toEqual(new Uint8Array([2]));
+      expect(fetchB).toHaveBeenCalledWith('same-blob', 'b.txt', 'text/plain');
+      expect(fetchA).not.toHaveBeenCalled();
+      expect(fetchOwn).not.toHaveBeenCalled();
+      await expect(handle.readAttachment!('not-attached')).rejects.toThrow('attachment_unavailable');
+    } finally {
+      cleanup();
+      useAuthStore.setState({ client: oldClient, getClientForAccount: oldGetClient });
+    }
   });
 
   it('reads only the user\'s own text: no signature, no quote header, no quote', async () => {

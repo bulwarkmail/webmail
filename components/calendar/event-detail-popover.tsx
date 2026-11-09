@@ -15,24 +15,30 @@ import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar, CalendarParticipant } from "@/lib/jmap/types";
 import { parseDuration, getEventColor } from "./event-card";
 import { getEventDisplayEndDate, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
+import { eventZonedTimes, zonedTimesText } from "@/lib/event-time-zone";
 import { buildRecurrenceSummary } from "./recurrence-editor";
 import { formatEventAlertsLabel } from "./alert-list-editor";
 import {
   getUserParticipantId,
-  getUserStatus,
   getParticipantList,
 } from "@/lib/calendar-participants";
 import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
+import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
+import { descriptionAsText } from "@/lib/calendar-description";
 import { useNoThirdPartyTraffic } from "@/hooks/use-third-party-mode";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { eventToView } from "@/lib/plugin-projection";
-import { ParticipantStatusBadge, RsvpButtons } from "./rsvp-buttons";
+import { ParticipantStatusBadge } from "./rsvp-buttons";
+import { AnswerBars, useAnswerView } from "./answer-bars";
+import type { AnswerTarget } from "@/lib/calendar-delegate";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -47,7 +53,8 @@ interface EventDetailPopoverProps {
   onPrint?: () => void;
   onClose: () => void;
   onSaveNote: (note: string) => void;
-  onRsvp?: (status: CalendarParticipant["participationStatus"]) => void;
+  /** Without a target: the user's own answer on this event. */
+  onRsvp?: (status: CalendarParticipant["participationStatus"], target?: AnswerTarget) => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   currentUserEmails?: string[];
@@ -107,12 +114,20 @@ function computePosition(
   };
 }
 
-function formatDurationDisplay(minutes: number): string {
-  if (minutes < 60) return `${minutes}min`;
+/** "1 hr 30 min", "1 Std. 30 Min.": the language's own short units (pim-p2-19). */
+export function formatDurationDisplay(minutes: number, locale: string): string {
+  const unit = (value: number, name: "hour" | "minute") => {
+    try {
+      return new Intl.NumberFormat(locale, { style: "unit", unit: name, unitDisplay: "short" }).format(value);
+    } catch {
+      return `${value}${name === "hour" ? "h" : "min"}`;
+    }
+  };
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (m === 0) return `${h}h`;
-  return `${h}h${m}min`;
+  if (h === 0) return unit(m, "minute");
+  if (m === 0) return unit(h, "hour");
+  return `${unit(h, "hour")} ${unit(m, "minute")}`;
 }
 
 function getRecurrenceLabel(event: CalendarEvent, t: ReturnType<typeof useTranslations>, locale: string): string | null {
@@ -140,9 +155,11 @@ export function EventDetailPopover({
   isMobile,
   pinned = false,
 }: EventDetailPopoverProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
+  const tEvent = useTranslations("ux_pim_event");
   const locale = useLocale();
   const popoverRef = useRef<HTMLDivElement>(null);
   const noteInputRef = useRef<HTMLTextAreaElement>(null);
@@ -162,6 +179,11 @@ export function EventDetailPopover({
   const endDate = getEventEndDate(event);
   const displayEndDate = getEventDisplayEndDate(event);
   const isMultiDay = !isSameDay(startDate, displayEndDate);
+  // An event on another zone's clock shows its own times too (pim-2).
+  const zoned = eventZonedTimes(event, startDate, endDate);
+  const zonedText = zoned
+    ? zonedTimesText(zoned, startDate, endDate, timeFormat === "12h" ? "h:mm a" : "HH:mm", locale)
+    : null;
 
   const locationName = useMemo(() => primaryLocationName(event) ?? null, [event]);
   // Re-computes the location link once the config is known (#903).
@@ -171,6 +193,7 @@ export function EventDetailPopover({
   // join URL in the description; surface it as the meeting link anyway.
   const meeting = useMemo(() => findMeetingLink(event), [event]);
   const pluginProps = useMemo(() => ({ event: eventToView(event) }), [event]);
+  const description = useMemo(() => descriptionAsText(event), [event]);
   const virtualLocation = meeting?.uri ?? null;
 
   // A URL opens as a link, a location that only names the service joins the
@@ -234,10 +257,7 @@ export function EventDetailPopover({
     [event, currentUserEmails]
   );
 
-  const userCurrentStatus = useMemo(
-    () => getUserStatus(event, currentUserEmails),
-    [event, currentUserEmails]
-  );
+  const answerView = useAnswerView(event, calendar, currentUserEmails, canRsvp && !!userParticipantId);
 
   const formatTime = useCallback(
     (d: Date) => format(d, timeFormat === "12h" ? "h:mm a" : "HH:mm"),
@@ -361,6 +381,7 @@ export function EventDetailPopover({
   const hasParticipants = participants.length > 0;
 
   const formatEventDate = useFormatEventDate();
+  const { formatDateRangeLabel } = useCalendarLocale();
 
   const popover = (
     <div
@@ -472,11 +493,9 @@ export function EventDetailPopover({
             {isMultiDay ? (
               event.showWithoutTime ? (
                 <>
+                  {/* One range as the language writes it (pim-13). */}
                   <div className="font-medium text-foreground">
-                    {formatEventDate(startDate)} –
-                  </div>
-                  <div className="font-medium text-foreground">
-                    {formatEventDate(displayEndDate)}
+                    {formatDateRangeLabel(startDate, displayEndDate, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
                   </div>
                   <div className="text-muted-foreground">{t("events.all_day")}</div>
                 </>
@@ -495,8 +514,13 @@ export function EventDetailPopover({
                     </span>
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    ({formatDurationDisplay(durationMinutes)})
+                    ({formatDurationDisplay(durationMinutes, locale)})
                   </div>
+                  {zoned && zonedText && (
+                    <div className="text-muted-foreground text-xs" data-testid="event-zone-times">
+                      {tEvent("zone_only", { times: zonedText.times, zone: zoned.zone })}
+                    </div>
+                  )}
                 </>
               )
             ) : (
@@ -506,10 +530,14 @@ export function EventDetailPopover({
                 </span>
                 {event.showWithoutTime ? (
                   <span className="text-muted-foreground ms-1.5">{t("events.all_day")}</span>
+                ) : zoned && zonedText ? (
+                  <div className="text-muted-foreground" data-testid="event-zone-times">
+                    {tEvent("zone_times", { times: zonedText.times, zone: zoned.zone, local: zonedText.local })}
+                  </div>
                 ) : (
                   <div className="text-muted-foreground">
                     <bdi dir="ltr">{formatTime(startDate)} – {formatTime(endDate)}</bdi>
-                    <span className="ms-1.5 text-xs">({formatDurationDisplay(durationMinutes)})</span>
+                    <span className="ms-1.5 text-xs">({formatDurationDisplay(durationMinutes, locale)})</span>
                   </div>
                 )}
               </>
@@ -525,6 +553,8 @@ export function EventDetailPopover({
               href={locationHref ?? undefined}
               target="_blank"
               rel="noreferrer"
+              onClick={gateLinkClick}
+              onAuxClick={gateLinkClick}
               className={cn("text-sm min-w-0 break-words", locationHref ? "text-primary hover:underline" : "text-foreground")}
               dir="auto"
               title={locationName}
@@ -555,6 +585,8 @@ export function EventDetailPopover({
               href={virtualLocation}
               target="_blank"
               rel="noreferrer"
+              onClick={gateLinkClick}
+              onAuxClick={gateLinkClick}
               className="text-sm text-primary hover:underline truncate"
               title={virtualLocation}
             >
@@ -621,16 +653,16 @@ export function EventDetailPopover({
         {calendar && (
           <div className="flex items-start gap-2.5">
             <CalendarIcon className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <span dir="auto" className="text-sm text-foreground truncate" title={calendar.name}>{calendar.name}</span>
+            <span dir="auto" className="text-sm text-foreground truncate" title={shownName.calendar(calendar)}>{shownName.calendar(calendar)}</span>
           </div>
         )}
 
         {/* Description */}
-        {event.description && (
+        {description && (
           <div className="flex items-start gap-2.5">
             <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <p dir="auto" className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3 break-words">
-              <LinkifiedText text={event.description} />
+              <LinkifiedText text={description} />
             </p>
           </div>
         )}
@@ -687,14 +719,14 @@ export function EventDetailPopover({
         </div>
       )}
 
-      {/* RSVP Bar (for attendees) */}
-      {canRsvp && onRsvp && userParticipantId && (
-        <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-2">
-            {t("participants.rsvp_label")}
-          </p>
-          <RsvpButtons status={userCurrentStatus} onRespond={onRsvp} size="xs" />
-        </div>
+      {/* RSVP bars: the user's own, and "Answer for <owner>" in a calendar shared with them. */}
+      {onRsvp && (
+        <AnswerBars
+          view={answerView}
+          size="xs"
+          className="px-4 py-3 border-t border-border empty:hidden"
+          onRespond={(target, status) => onRsvp(status, target)}
+        />
       )}
 
     </div>

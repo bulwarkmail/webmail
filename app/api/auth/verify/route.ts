@@ -5,8 +5,10 @@ import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
-import { getClientIP } from '@/lib/admin/session';
-import { reserveVerifyProbe } from '@/lib/auth/verify-budget';
+import { loginClientAddress } from '@/lib/auth/client-address';
+import { reserveVerifyProbe, type BudgetRefund } from '@/lib/auth/verify-budget';
+import { isStoreUnavailable } from '@/lib/auth/store-unavailable';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
 /**
  * Server-side credential pre-check for the login form (#969): a password
@@ -53,9 +55,12 @@ export async function POST(request: NextRequest) {
     await configManager.ensureLoaded();
     const oauthEnabled = configManager.get<boolean>('oauthEnabled', false);
     const oauthOnly = configManager.get<boolean>('oauthOnly', false);
-    if (oauthEnabled && oauthOnly) {
+    if (oauthEnabled && oauthOnly && !configManager.get<boolean>('oauthPasswordFallbackEnabled', false)) {
       return respond('inconclusive');
     }
+
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
 
     // Same upstream pinning as /api/auth/session: an unauthenticated caller
     // must not be able to point this route at arbitrary internal hosts.
@@ -82,8 +87,16 @@ export async function POST(request: NextRequest) {
 
     // Wrong passwords tried from here count against this server's address
     // upstream; over budget the browser probes the JMAP server itself.
-    const clientIp = getClientIP(request);
-    const refund = reserveVerifyProbe(clientIp);
+    const clientIp = loginClientAddress(request, upstreamUrl);
+    let refund: BudgetRefund | null;
+    try {
+      refund = await reserveVerifyProbe(clientIp);
+    } catch (error) {
+      // The shared store is down: the budget can't be counted, so nothing
+      // is sent upstream and the browser probes for itself.
+      if (isStoreUnavailable(error)) return respond('inconclusive');
+      throw error;
+    }
     if (!refund) return respond('inconclusive');
 
     const authHeader = hasToken
@@ -91,13 +104,13 @@ export async function POST(request: NextRequest) {
       : 'Basic ' + Buffer.from(username + ':' + password).toString('base64');
     try {
       await verifyJmapAuth(upstreamUrl, authHeader, { trusted: upstreamTrusted, clientIp });
-      refund();
+      await refund();
       return respond('ok');
     } catch (error) {
       if (error instanceof JmapAuthVerificationError && error.upstreamStatus === 401) {
         return respond('unauthorized');
       }
-      refund();
+      await refund();
       logger.debug('Login pre-check inconclusive', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });

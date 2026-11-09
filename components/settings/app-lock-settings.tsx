@@ -1,0 +1,267 @@
+"use client";
+
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
+import { CurrentPinField, NewPinFields, newPinReady } from "@/components/app-lock/pin-fields";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
+import { useConfig } from "@/hooks/use-config";
+import {
+  addOsUnlock,
+  addPasskey,
+  appLockUntilChoices,
+  changeAppLockPin,
+  disableAppLock,
+  disableHello,
+  enableAppLock,
+  enableHello,
+  hasPasskey,
+  helloState,
+  type HelloState,
+  lockEverywhere,
+  removePasskey,
+  setAppLockTimeout,
+} from "@/lib/app-lock/controller";
+import { passkeysPossible } from "@/lib/app-lock/passkey";
+import { appLockRequired, effectiveTimeout, onLockPolicyChange } from "@/lib/app-lock/policy";
+import { readAppLockFile, TIMEOUT_CHOICES, type AppLockUntil } from "@/lib/app-lock/state";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { useIsDesktopApp } from "@/hooks/use-is-desktop-app";
+import type { DesktopOsUnlockKind } from "@/lib/desktop/types";
+import { IS_LITE } from "@/lib/lite";
+import { toast } from "@/stores/toast-store";
+import { KeyProtectionNotes } from "@/components/offline/key-protection-notes";
+import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
+
+type Pending = "enable" | "disable" | "change" | "passkey" | "os" | "hello" | null;
+
+function useLockFacts() {
+  const [, refresh] = useState(0);
+  const update = useCallback(() => refresh((n) => n + 1), []);
+  useEffect(() => onLockPolicyChange(update), [update]);
+  const file = readAppLockFile();
+  return { on: file.on, required: appLockRequired(), timeout: effectiveTimeout(file.timeoutMinutes, file.until), update };
+}
+
+/** The app lock's section on the General page: it has to exist on any server. */
+export function AppLockSettings() {
+  const t = useTranslations("appLock");
+  const tKey = useTranslations("keyProtection");
+  const tEdit = useTranslations("desktopEdit");
+  const tGeneral = useTranslations("uxs_general");
+  const tHello = useTranslations("appLockHello");
+  // The desktop app has windows, no tabs.
+  const desktop = useIsDesktopApp();
+  const { appName } = useConfig();
+  const { on, required, timeout, update } = useLockFacts();
+  const [pending, setPending] = useState<Pending>(null);
+  const [pin, setPin] = useState("");
+  const [repeat, setRepeat] = useState("");
+  const [current, setCurrent] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [passkey, setPasskey] = useState(false);
+  const [os, setOs] = useState<{ kind: DesktopOsUnlockKind; enrolled: boolean } | null>(null);
+  const [hello, setHello] = useState<HelloState>({ shown: false, on: false });
+
+  const refreshMethods = useCallback(() => {
+    void hasPasskey().then(setPasskey).catch(() => {});
+    void helloState().then(setHello).catch(() => {});
+    void getDesktopBridge()?.appLock?.status()
+      .then((status) => setOs(status.os ? { kind: status.os, enrolled: status.osEnrolled } : null))
+      .catch(() => {});
+  }, []);
+  useEffect(refreshMethods, [refreshMethods, on]);
+  useEffect(() => onLockPolicyChange(refreshMethods), [refreshMethods]);
+
+  const close = () => {
+    setPending(null);
+    setPin("");
+    setRepeat("");
+    setCurrent("");
+    setError(null);
+    setBusy(false);
+  };
+
+  const describeFailure = (failure: unknown): string => {
+    const name = (failure as Error)?.name;
+    if (name === "WrongPinError") return t("wrong_pin");
+    if (name === "PinBlockedError") return t("blocked_later");
+    if (name === "PasskeyNoPrfError") return t("passkey_no_prf");
+    if (name === "ObviousPinError") return t("pin_obvious");
+    if (name === "HelloError") {
+      const reason = (failure as Error & { reason?: string }).reason;
+      if (reason === "cancelled") return tHello("cancelled");
+      if (reason === "unsupported") return tHello("unsupported");
+      if (reason === "unavailable" || reason === "policy") return tHello("unavailable");
+      if (reason === "busy") return tHello("busy");
+      return tHello("enable_failed");
+    }
+    return t("save_failed");
+  };
+
+  const run = async (work: () => Promise<void>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await work();
+      close();
+      update();
+      refreshMethods();
+    } catch (failure) {
+      setBusy(false);
+      setError(describeFailure(failure));
+    }
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
+    if (pending === "enable" && newPinReady(pin, repeat)) void run(() => enableAppLock(pin));
+    if (pending === "change" && current && newPinReady(pin, repeat)) {
+      void run(async () => {
+        const { reenroll, helloOff } = await changeAppLockPin(current, pin);
+        if (reenroll) toast.info(tKey("reenroll_note"), { duration: 0 });
+        if (helloOff) toast.info(tHello("off_after_pin_change"), { duration: 0 });
+      });
+    }
+    if (pending === "disable" && current) void run(() => disableAppLock(current));
+    if (pending === "passkey" && current) {
+      void run(async () => {
+        await addPasskey(current, appName);
+        toast.success(t("passkey_added"));
+      });
+    }
+    if (pending === "hello" && current) void run(() => enableHello(current));
+    if (pending === "os" && current) {
+      void run(async () => {
+        if (!(await addOsUnlock(current))) throw new Error("Not set up");
+      });
+    }
+  };
+
+  if (IS_LITE) return null;
+
+  const osName = os?.kind === "touchid" ? t("use_touchid_name") : t("use_hello_name");
+  const asksNew = pending === "enable" || pending === "change";
+  const asksCurrent = pending === "disable" || pending === "change" || pending === "passkey" || pending === "os" || pending === "hello";
+  const ready = (!asksNew || newPinReady(pin, repeat)) && (!asksCurrent || current.length > 0);
+  const titles: Record<Exclude<Pending, null>, string> = {
+    enable: t("set_pin_title"),
+    change: t("change_pin_title"),
+    disable: t("disable_title"),
+    passkey: t("passkey_add_title"),
+    os: t("os_add_title", { method: osName }),
+    hello: tHello("enable_title"),
+  };
+
+  return (
+    <SettingsSection id="app-lock" title={t("section_title")} description={desktop ? tGeneral("app_lock_desc_desktop") : t("section_desc")}>
+      <SettingItem label={t("enable_label")} description={t("enable_desc")} locked={required}>
+        <ToggleSwitch checked={on || required} onChange={(next) => setPending(next ? "enable" : "disable")} testId="app-lock-switch" />
+      </SettingItem>
+      {on && hello.shown && (
+        <SettingItem label={tHello("switch_label")} description={tHello("switch_desc")}>
+          <ToggleSwitch
+            checked={hello.on}
+            onChange={(next) => {
+              if (next) setPending("hello");
+              else void disableHello().catch(() => {}).then(refreshMethods);
+            }}
+            testId="app-lock-hello-switch"
+          />
+        </SettingItem>
+      )}
+      <details className="text-xs text-muted-foreground">
+        <summary className="cursor-pointer select-none text-foreground">{tGeneral("app_lock_protects_toggle")}</summary>
+        <p className="mt-1" data-testid="app-lock-protects">{t("protects_desc")}</p>
+        {hello.shown && <p className="mt-1" data-testid="app-lock-protects-hello">{tHello("protects")}</p>}
+      </details>
+      <KeyProtectionNotes />
+
+      {on && (
+        <>
+          <SettingItem label={t("timeout_label")} description={desktop ? tGeneral("app_lock_timeout_desc_desktop") : t("timeout_desc")} locked={timeout.locked}>
+            <select
+              data-testid="app-lock-timeout"
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+              value={timeout.until ?? timeout.minutes}
+              onChange={(event) => {
+                const { value } = event.target;
+                setAppLockTimeout(value === "screen" || value === "session" ? value : Number(value));
+                update();
+              }}
+            >
+              {[...new Set([...TIMEOUT_CHOICES, timeout.minutes])].sort((a, b) => a - b).map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {minutes >= 60 && minutes % 60 === 0 ? tGeneral("app_lock_timeout_hours", { count: minutes / 60 }) : t("timeout_option", { count: minutes })}
+                </option>
+              ))}
+              {!timeout.locked && [...new Set<AppLockUntil>([...appLockUntilChoices(), ...(timeout.until ? [timeout.until] : [])])].map((until) => (
+                <option key={until} value={until}>
+                  {tGeneral(until === "screen" ? "app_lock_until_screen" : "app_lock_until_session")}
+                </option>
+              ))}
+            </select>
+          </SettingItem>
+
+          <SettingItem label={t("lock_now")} description={desktop ? tGeneral("app_lock_now_desc_desktop") : t("lock_now_desc")}>
+            <Button variant="outline" size="sm" className="text-xs h-7" onClick={lockEverywhere} data-testid="app-lock-now">{t("lock_now")}</Button>
+          </SettingItem>
+
+          <SettingItem label={t("pin_label")} description={t("pin_recovery")}>
+            <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setPending("change")}>{t("change_pin")}</Button>
+          </SettingItem>
+
+          {passkeysPossible() && (
+            <SettingItem label={t("passkey_label")} description={t("passkey_desc")}>
+              {passkey ? (
+                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => void removePasskey().then(refreshMethods)}>{t("passkey_remove")}</Button>
+              ) : (
+                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setPending("passkey")} data-testid="app-lock-add-passkey">{t("passkey_add")}</Button>
+              )}
+            </SettingItem>
+          )}
+
+          {os && (
+            <SettingItem label={osName} description={t("os_desc", { method: osName })}>
+              {os.enrolled ? (
+                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => void getDesktopBridge()?.appLock?.osRemove().then(refreshMethods)}>{t("os_remove")}</Button>
+              ) : (
+                <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setPending("os")}>{t("os_add")}</Button>
+              )}
+            </SettingItem>
+          )}
+        </>
+      )}
+
+      {on && getDesktopBridge()?.edit && (
+        <p className="text-xs text-muted-foreground" data-testid="app-lock-edit-note">{tEdit("lock_note")}</p>
+      )}
+
+      <Dialog
+        isOpen={pending !== null}
+        onClose={close}
+        title={pending ? titles[pending] : ""}
+        description={pending === "disable" ? t("disable_body") : pending === "enable" ? t("enable_body") : pending === "hello" ? tHello("enable_body") : undefined}
+        onSubmit={submit}
+        dirty={pin.length > 0 || current.length > 0}
+        testId="app-lock-dialog"
+        footer={(
+          <>
+            <Button type="button" variant="outline" onClick={close}>{t("cancel")}</Button>
+            <Button type="submit" disabled={busy || !ready} data-testid="app-lock-dialog-save">
+              {pending === "disable" ? t("disable_confirm") : t("save")}
+            </Button>
+          </>
+        )}
+      >
+        <div className="space-y-3">
+          {asksCurrent && <CurrentPinField value={current} onChange={setCurrent} error={error} />}
+          {asksNew && <NewPinFields pin={pin} repeat={repeat} onPin={setPin} onRepeat={setRepeat} />}
+          {!asksCurrent && error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        </div>
+      </Dialog>
+    </SettingsSection>
+  );
+}

@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatAddressLines } from "@/lib/address-format";
 import type { ContactCard, AnniversaryDate } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoRef } from "@/stores/contact-store";
 import { ContactActivity } from "./contact-activity";
@@ -19,13 +20,15 @@ import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { contactHooks } from "@/lib/plugin-hooks";
 import { contactToView } from "@/lib/plugin-projection";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
 
 interface ContactDetailProps {
   contact: ContactCard | null;
   onEdit: () => void;
   onDelete: () => void;
   onAddToGroup?: () => void;
-  onDuplicate?: () => void;
+  /** "Merge with…" in the ⋮. */
+  onMergeWith?: () => void;
   /** Move to another address book; undefined where there is none to move to. */
   onMoveTo?: () => void;
   /** Compose an email to this contact in the app (no OS mailto handoff). */
@@ -34,17 +37,20 @@ interface ContactDetailProps {
   onPrint?: () => void;
   isMobile?: boolean;
   className?: string;
+  /** In an address book shared read-only: no Edit, Move or Delete. */
+  readOnly?: boolean;
 }
 
 // Contexts and phone features the contact form offers, shown with the same
-// labels here. Anything else (custom vCard types) is shown as stored.
+// labels here. Anything else (custom vCard types) is shown as stored. The
+// standard's "private" reads "Home" and "voice" reads "Phone" (#pim-19).
 const CONTEXT_LABEL_KEYS: Record<string, string> = {
   work: "form.context_work",
-  private: "form.context_private",
+  private: "ux_pim_contact.context_private",
 };
 
 const PHONE_FEATURE_LABEL_KEYS: Record<string, string> = {
-  voice: "form.phone_voice",
+  voice: "ux_pim_contact.phone_voice",
   cell: "form.phone_cell",
   mobile: "form.phone_cell",
   fax: "form.phone_fax",
@@ -73,14 +79,16 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 }
 
 
-export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onMoveTo, onCompose, onPrint, isMobile, className }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, isMobile, className, readOnly = false }: ContactDetailProps) {
   const t = useTranslations("contacts");
+  const tRoot = useTranslations();
   const tCommon = useTranslations("common");
   const locale = useLocale();
   // The ⋮ shows the contact's menu, the one right-click shows in the list (R6).
   const moreMenu = useContextMenu<ContactCard>();
-  const contextLabel = (key: string) => (CONTEXT_LABEL_KEYS[key] ? t(CONTEXT_LABEL_KEYS[key]) : key);
-  const featureLabel = (key: string) => (PHONE_FEATURE_LABEL_KEYS[key] ? t(PHONE_FEATURE_LABEL_KEYS[key]) : key);
+  const label = (labelKey: string) => (labelKey.startsWith("ux_pim_contact.") ? tRoot(labelKey) : t(labelKey));
+  const contextLabel = (key: string) => (CONTEXT_LABEL_KEYS[key] ? label(CONTEXT_LABEL_KEYS[key]) : key);
+  const featureLabel = (key: string) => (PHONE_FEATURE_LABEL_KEYS[key] ? label(PHONE_FEATURE_LABEL_KEYS[key]) : key);
 
   const cryptoKeys = contact?.cryptoKeys ? Object.values(contact.cryptoKeys) : [];
   const hasCryptoKeysSlotOffers = usePluginSlotOffers('contact-cryptokeys').length > 0;
@@ -98,7 +106,9 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
 
   if (!contact) {
     return (
-      <div className={cn("flex flex-col items-center justify-center h-full text-muted-foreground", className)}>
+      <div className={cn("relative flex flex-col items-center justify-center h-full text-muted-foreground", className)}>
+        {/* The window's controls lie over this end, and its empty top is something to drag by. */}
+        <div aria-hidden="true" data-window-top-row="" className="absolute inset-x-0 top-0 h-14" />
         <BookUser className="w-16 h-16 mb-4 opacity-20" />
         <p className="text-sm">{t("detail.no_contact_selected")}</p>
       </div>
@@ -138,12 +148,13 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
 
   return (
     <div className={cn("flex flex-col h-full overflow-y-auto", className)}>
-      <div className={cn("border-b border-border", isMobile ? "px-4 py-4" : "px-6 py-6")}>
+      <div data-window-top-row="" className={cn("border-b border-border", isMobile ? "px-4 py-4" : "px-6 py-6")}>
         <div className={cn("flex gap-4", isMobile ? "flex-col" : "flex-wrap items-start justify-between")}>
           <div className={cn("flex items-center gap-4 min-w-0 flex-1", !isMobile && "basis-60")}>
             <Avatar name={name} email={email} contactPhoto={photo} size={isMobile ? "md" : "lg"} />
             <div className="min-w-0 flex-1">
-              <h2 className={cn("font-semibold truncate", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
+              {/* A long name takes two lines, then ends in "…" with the whole name on hover. */}
+              <h2 title={name || undefined} className={cn("font-semibold line-clamp-2 break-words", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
               {hasNickname && (
                 <p className="text-sm text-muted-foreground truncate">&ldquo;{nicknames.map(n => n.name).join(", ")}&rdquo;</p>
               )}
@@ -152,7 +163,8 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
+          {/* May not grow past the pane: in a narrow one the buttons at the end were pushed out of reach. */}
+          <div className="flex items-center gap-1.5 max-w-full flex-wrap">
             {email && onCompose && (
               <Button variant="outline" size="xs" onClick={onCompose} className="gap-1.5 touch-manipulation">
                 <Send />
@@ -168,11 +180,19 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                 {t("context_menu.call")}
               </a>
             )}
-            <Button variant="outline" size="xs" onClick={onEdit} className="gap-1.5 touch-manipulation">
-              <Pencil />
-              {t("form.edit_title")}
-            </Button>
-            {onPrint && (
+            {/* A phone's row has no room for this label: the ⋮ fell onto a line of its own. */}
+            {readOnly ? null : isMobile ? (
+              <ToolbarButton label={t("form.edit_title")} onClick={onEdit} className="touch-manipulation">
+                <Pencil />
+              </ToolbarButton>
+            ) : (
+              <Button variant="outline" size="xs" onClick={onEdit} className="gap-1.5 touch-manipulation">
+                <Pencil />
+                {t("form.edit_title")}
+              </Button>
+            )}
+            {/* On a phone it stays in the ⋮, which has Print too. */}
+            {onPrint && !isMobile && (
               <ToolbarButton label={tCommon("print")} onClick={onPrint} className="touch-manipulation">
                 <Printer />
               </ToolbarButton>
@@ -195,10 +215,11 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                 onClose={moreMenu.closeContextMenu}
                 menuRef={moreMenu.menuRef}
                 inDetail
+                readOnly={readOnly}
                 onCompose={onCompose}
                 onDelete={onDelete}
                 onAddToGroup={onAddToGroup}
-                onDuplicate={onDuplicate}
+                onMergeWith={onMergeWith}
                 onMoveTo={onMoveTo}
               />
             )}
@@ -249,23 +270,14 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
               })}
 
               {addresses.map((a, i) => {
-                const lines: string[] = [];
-                if (a.full || a.fullAddress) {
-                  lines.push((a.full || a.fullAddress) as string);
-                } else if (a.components && a.components.length > 0) {
-                  const joined = a.components.filter(c => c.kind !== 'separator').map(c => c.value).filter(Boolean).join(", ");
-                  if (joined) lines.push(joined);
-                } else {
-                  const parts = [a.street, [a.postcode, a.locality].filter(Boolean).join(" "), a.region, a.country]
-                    .map(s => (typeof s === "string" ? s.trim() : ""))
-                    .filter(Boolean) as string[];
-                  lines.push(...parts);
-                }
+                // One line per part, in the order of the address's country:
+                // "Hauptstraße 1" / "10000 Berlin" / "Germany".
+                const lines = formatAddressLines(a, locale);
                 return (
                   <FieldRow key={`ad${i}`} icon={MapPin} label={formatContexts(a.contexts, contextLabel) || t("detail.address_default_label")}>
-                    <div className="text-sm space-y-0.5">
+                    <div className="text-sm space-y-0.5" data-testid="contact-address">
                       {lines.map((line, idx) => (
-                        <div key={idx}>{line}</div>
+                        <div key={idx} data-address-line="">{line}</div>
                       ))}
                       {a.timeZone && (
                         <div className="text-xs text-muted-foreground">{t("detail.timezone")}: {a.timeZone}</div>
@@ -283,7 +295,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                 >
                   <div className="flex items-center gap-2 group">
                     {typeof svc.uri === 'string' && svc.uri.startsWith("http") ? (
-                      <a href={svc.uri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                      <a href={svc.uri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                         {svc.user || svc.uri}
                       </a>
                     ) : (
@@ -419,7 +431,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                   <div className="flex items-start gap-2 text-sm break-all">
                     <KeyRound className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     {typeof key.uri === 'string' && key.uri.startsWith("http") ? (
-                      <a href={key.uri} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      <a href={key.uri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-primary hover:underline">
                         {key.uri}
                       </a>
                     ) : (
@@ -437,21 +449,21 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
             <div className="space-y-3">
               {contact.calendarUri && (
                 <FieldRow icon={Calendar} label={t("detail.calendar_uri")}>
-                  <a href={contact.calendarUri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                  <a href={contact.calendarUri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                     {contact.calendarUri}
                   </a>
                 </FieldRow>
               )}
               {contact.schedulingUri && (
                 <FieldRow icon={Calendar} label={t("detail.scheduling_uri")}>
-                  <a href={contact.schedulingUri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                  <a href={contact.schedulingUri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                     {contact.schedulingUri}
                   </a>
                 </FieldRow>
               )}
               {contact.freeBusyUri && (
                 <FieldRow icon={Calendar} label={t("detail.freebusy_uri")}>
-                  <a href={contact.freeBusyUri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                  <a href={contact.freeBusyUri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                     {contact.freeBusyUri}
                   </a>
                 </FieldRow>

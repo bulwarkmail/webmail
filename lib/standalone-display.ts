@@ -8,6 +8,8 @@
  * instead.
  */
 
+import { downloadAllowedQuietly, type DownloadSubject } from "@/lib/download-guard";
+
 type StandaloneNavigator = Navigator & { standalone?: boolean };
 
 const APP_DISPLAY_MODES = ["standalone", "fullscreen", "window-controls-overlay"] as const;
@@ -32,8 +34,11 @@ export function canOpenUrlInNewWindow(url: string): boolean {
  * false without opening anything when it cannot, so the caller shows the
  * file in-app (or downloads it) instead of leaving the user a dead window.
  */
-export function openPreviewInNewWindow(url: string): boolean {
+export function openPreviewInNewWindow(url: string, subject?: DownloadSubject): boolean {
   if (!canOpenUrlInNewWindow(url)) return false;
+  // A file in a tab of its own can be saved from there: the same device
+  // policy as a download. Refused, the caller previews it in the app.
+  if (!downloadAllowedQuietly('attachment', subject)) return false;
   window.open(url, "_blank", "noopener,noreferrer");
   return true;
 }

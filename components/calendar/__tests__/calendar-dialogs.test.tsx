@@ -38,7 +38,7 @@ describe('calendar dialogs', () => {
   it('opens the subscription dialog in the address field, with a named close button', () => {
     const onClose = vi.fn();
     render(<ICalSubscriptionModal client={client} onClose={onClose} />);
-    expect(document.activeElement).toBe(screen.getByLabelText('url_label'));
+    expect(document.activeElement).toBe(screen.getByLabelText('web_address'));
     fireEvent.click(screen.getByRole('button', { name: 'close' }));
     expect(onClose).toHaveBeenCalled();
   });
@@ -79,6 +79,7 @@ describe('import preview', () => {
     const parsing = {
       getAccountId: () => 'acct',
       getCalendarsAccountId: () => 'acct',
+      getServerUrl: () => 'https://mail.example.com',
       uploadBlob: vi.fn().mockResolvedValue({ blobId: 'b1' }),
       parseCalendarEvents: vi.fn().mockResolvedValue([weekly]),
     } as unknown as IJMAPClient;

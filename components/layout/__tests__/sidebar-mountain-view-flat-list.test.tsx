@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
+import { CROSS_VIEW_IDS } from '@/lib/jmap/types';
 
 // Under Mountain View the sidebar is laid out the way Gmail's is: inbox, sent
 // and drafts, a "More" that reveals the other system folders, then a
@@ -142,5 +143,37 @@ describe('Sidebar collapsed rail under Mountain View', () => {
 
     fireEvent.mouseEnter(rail);
     expect(rail).not.toHaveAttribute('data-mv-rail-peek');
+  });
+});
+
+// With the unified section above them, the folders had no heading, so they
+// read as part of that section: collapsing "Unified Mailbox" seemed to leave
+// half of it behind (#1470). They get their own collapsible heading there.
+describe('Sidebar under Mountain View with the unified section', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useUIStore.setState({ sidebarCollapsed: false } as never);
+    useSettingsStore.setState({ emailKeywords: [], enableUnifiedMailbox: false, hideAccountSwitcher: true } as never);
+  });
+
+  const sectionToggle = (name: string) =>
+    document.querySelector(`button[data-section-name="${name}"]`) as HTMLButtonElement;
+
+  it('heads the folders, and each heading folds only its own rows', () => {
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" mvShell showCrossAll />);
+
+    expect(sectionToggle('folders')).not.toBeNull();
+
+    fireEvent.click(sectionToggle('unified_mailbox'));
+    expect(document.querySelector(`[data-folder-name="${CROSS_VIEW_IDS.all}"]`)).toBeNull();
+    expect(folderRow('Inbox')).not.toBeNull();
+
+    fireEvent.click(sectionToggle('folders'));
+    expect(folderRow('Inbox')).toBeNull();
+  });
+
+  it('keeps the flat list without a heading when there is no unified section', () => {
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" mvShell />);
+    expect(sectionToggle('folders')).toBeNull();
   });
 });

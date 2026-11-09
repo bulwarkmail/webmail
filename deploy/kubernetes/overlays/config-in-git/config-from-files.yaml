@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bulwark
+spec:
+  template:
+    spec:
+      containers:
+        - name: bulwark
+          env:
+            - name: ADMIN_CONFIG_READONLY
+              value: "true"
+          volumeMounts:
+            - name: admin-config
+              mountPath: /app/data/admin
+              readOnly: true
+      volumes:
+        - name: admin-config
+          configMap:
+            name: bulwark-admin-config

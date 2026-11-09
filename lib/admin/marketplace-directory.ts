@@ -138,9 +138,19 @@ export interface DirectoryVersion {
   downloadUrl: string;
   /** Only on the full view (`/versions`, `/versions/{v}`). */
   changelog?: string | null;
+  /** Whether the changelog has a Security or Breaking heading (directories since 2026-10-30). */
+  notes?: { security: boolean; breaking: boolean };
   downloads?: number;
   signature?: { keyId: string } | null;
   provenance?: { source: { host: string; repo: string | null; commit: string | null } } | null;
+}
+
+/** One version's notes in an update: every version between the installed one and the offered one has one. */
+export interface DirectoryChangelogEntry {
+  version: string;
+  publishedAt: string | null;
+  changelog: string | null;
+  notes: { security: boolean; breaking: boolean };
 }
 
 export interface DirectoryAuthor {

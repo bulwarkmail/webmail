@@ -68,8 +68,18 @@ describe('folder list from the keyboard', () => {
   it('has no button inside another button', () => {
     useSettingsStore.setState({ hideAccountSwitcher: true } as never);
     const withUnread = mailboxes.map((m) => ({ ...m, unreadEmails: 3, totalEmails: 5 }) as Mailbox);
-    const { container } = render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" onUnreadFilterClick={() => {}} onCreateFolder={() => {}} />);
+    const { container } = render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" onCreateFolder={() => {}} />);
     expect(container.querySelectorAll('button button, button [role="button"]')).toHaveLength(0);
+  });
+
+  // The count is text now (mail-8): the row's button is the keyboard target.
+  it('keeps the unread count out of the tab order', () => {
+    useSettingsStore.setState({ hideAccountSwitcher: true } as never);
+    const withUnread = mailboxes.map((m) => ({ ...m, unreadEmails: 4, totalEmails: 7 }) as Mailbox);
+    render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" />);
+    const counts = row('travel').querySelector<HTMLElement>('[data-testid="folder-counts"]')!;
+    expect(counts.textContent).toContain('4');
+    expect(counts.querySelector('button, [tabindex]')).toBeNull();
   });
 });
 

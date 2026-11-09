@@ -6,6 +6,8 @@ vi.mock('@/lib/browser-navigation', () => ({ apiFetch }));
 
 import { useSettingsStore } from '../settings-store';
 import { useTemplateStore } from '../template-store';
+import { useLocaleStore } from '../locale-store';
+import { noteSignedOutChoice, signedOutChoices } from '@/lib/signed-out-choices';
 
 // #1185: settings-storage is one store for the whole browser. After signing
 // out of A, an account B without server settings showed A's tags, templates
@@ -65,6 +67,8 @@ beforeEach(async () => {
   });
   useSettingsStore.getState().disableSync();
   useSettingsStore.getState().resetToDefaults();
+  // The reset is the test's clean slate, not a change made on this device.
+  localStorage.removeItem('settings-sync-stamps');
   useTemplateStore.setState({ templates: [], recentTemplateIds: [], deletedTemplateIds: {} });
 });
 
@@ -180,5 +184,57 @@ describe('settings that never reached a server', () => {
     await setUpAccountA();
     await signOut();
     expect(useSettingsStore.getState().proInterface).toBe(true);
+  });
+});
+
+describe('choices made on the sign-in page', () => {
+  // The visitor needed larger text and German to read the form. Signing in
+  // as B on a device A last used without signing out starts from defaults,
+  // and that must not take their own choices with it.
+  async function chooseOnSignInPage() {
+    useSettingsStore.getState().updateSetting('fontSize', 'xx-large');
+    useSettingsStore.getState().updateSetting('underlineLinks', true);
+    noteSignedOutChoice('fontSize', 'underlineLinks');
+    useLocaleStore.getState().setLocale('de');
+    noteSignedOutChoice('locale');
+  }
+
+  it("keeps them when B signs in over A's settings, and still drops A's", async () => {
+    await setUpAccountA();
+    useSettingsStore.getState().disableSync(); // e.g. the session expired
+    await chooseOnSignInPage();
+
+    serverFiles[B.username] = { fontSize: 'small', underlineLinks: false, locale: 'fr' };
+    await signIn(B);
+
+    const state = useSettingsStore.getState();
+    expect(state.fontSize).toBe('xx-large');
+    expect(state.underlineLinks).toBe(true);
+    expect(useLocaleStore.getState().locale).toBe('de');
+    expect(state.emailKeywords).not.toContainEqual(SECRET_TAG);
+    // Taken over: the next sign-in of someone else starts clean again.
+    expect(signedOutChoices()).toEqual([]);
+  });
+
+  it('keeps them for a new account without server settings', async () => {
+    await setUpAccountA();
+    useSettingsStore.getState().disableSync();
+    await chooseOnSignInPage();
+
+    await signIn(B);
+
+    expect(useSettingsStore.getState().fontSize).toBe('xx-large');
+    expect(useSettingsStore.getState().emailKeywords).not.toContainEqual(SECRET_TAG);
+  });
+
+  it('keeps them after a regular sign-out too', async () => {
+    await setUpAccountA();
+    await signOut();
+    await chooseOnSignInPage();
+
+    serverFiles[B.username] = { fontSize: 'small' };
+    await signIn(B);
+
+    expect(useSettingsStore.getState().fontSize).toBe('xx-large');
   });
 });

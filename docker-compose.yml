@@ -9,6 +9,9 @@ services:
     env_file:
       - .env.local
     volumes:
+      # These six volumes together are everything Bulwark keeps under /app/data.
+      # A fresh install can use one `bulwark-data:/app/data` volume instead.
+      #
       # Encrypted user settings (SETTINGS_DATA_DIR).
       - bulwark-settings:/app/data/settings
       # Admin configuration: config.json, policy.json, admin.json (passwordHash),
@@ -21,6 +24,10 @@ services:
       # Anonymous telemetry: instance id, consent state, login HMACs (TELEMETRY_DATA_DIR).
       # Persisting this preserves the admin's consent choice and stable instance id across upgrades.
       - bulwark-telemetry:/app/data/telemetry
+      # Users' plugin credentials, encrypted (PLUGIN_SECRETS_DIR).
+      - bulwark-plugin-secrets:/app/data/plugin-secrets
+      # Result of the last update check (VERSION_CHECK_DATA_DIR).
+      - bulwark-version-check:/app/data/version-check
     healthcheck:
       test:
         [
@@ -42,3 +49,5 @@ volumes:
   bulwark-admin:
   bulwark-admin-state:
   bulwark-telemetry:
+  bulwark-plugin-secrets:
+  bulwark-version-check:

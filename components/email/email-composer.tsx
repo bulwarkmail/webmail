@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { isServerOutage } from "@/lib/jmap/offline-hooks";
 import { Button, TOUCH_HIT_AREA } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
@@ -14,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import {
   X,
   Paperclip,
+  FilePen,
   Send,
   Save,
   Check,
@@ -35,32 +38,52 @@ import {
   Minimize2,
   Trash2,
   ExternalLink,
+  LogIn,
   ReplyAll,
   Reply,
   Forward,
   BookUser,
+  Lock,
+  CloudOff,
+  Pencil,
+  UserPen,
+  ArrowLeftRight,
+  UserPlus,
 } from "@/components/icons";
+import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
+import { ComposerHeaderPluginActions } from "@/components/email/composer-header-plugin-actions";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
+import { ComposerBarCompactContext } from "@/components/email/composer-bar-labels";
+import { ReplyTypeMenu, type ReplyKind } from "@/components/email/reply-type-menu";
+import { useReplyDock } from "@/components/mail/reply-dock";
 import type { MessagePriority } from "@/lib/message-priority";
 import { registerComposer } from "@/lib/plugin-sandbox/composer-registry";
-import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, replaceOwnContent, replaceSelection as replaceEditorSelection, replaceTextareaRange, textToEditorHtml, type OwnTextOptions } from "@/lib/plugin-sandbox/composer-edit";
+import { MAX_PLUGIN_FETCH_BYTES } from "@/lib/plugin-sandbox/host-api-input";
+import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, replaceOwnContent, replaceSelection as replaceEditorSelection, replaceInputText, replaceTextareaRange, textToEditorHtml, type OwnTextOptions } from "@/lib/plugin-sandbox/composer-edit";
 import { actionsFor, runAction } from "@/lib/plugin-sandbox/actions";
 import { matchesCombo } from "@/lib/plugin-sandbox/shortcuts";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
+import { forwardRecipientLines } from "@/lib/quote-header";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
+import { SendWarningsDialog, type SendWarning } from "./send-warnings-dialog";
+import { QuickSaveTemplateDialog } from "@/components/templates/quick-save-template-dialog";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu, isContextMenuKey } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay, sanitizeEmailHtml, escapeHtml, sanitizePluginBodyHtml } from "@/lib/email-sanitization";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
-import { markReplyQuoteHeader } from "@/components/email/reply-quote-collapse";
+import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
+import { attachmentIcon } from "@/components/email/attachment-chips";
+import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
+import { discardWithUndo, openKeptDraft, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
-import { containsEmbeddedSignature } from "@/components/email/signature-block";
+import { containsEmbeddedSignature } from "@/components/email/signature-markers";
 import {
   buildEmbeddedSignatureHtml,
   htmlComposeBodyToPlainText,
@@ -77,7 +100,9 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { ComposerPluginSidebar, useComposerSidebars } from "./composer-plugin-sidebars";
+import { ComposerPanelButton, ComposerPanelHead, ComposerPanelToggle, ComposerPluginSidebar, isPanelOpen, useComposerSidebars } from "./composer-plugin-sidebars";
+import { dragKindFromTypes } from "@/components/pro/pro-shell-drop";
+import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { ComposerSelectionMenu, useComposerSelectionMenu } from "./composer-selection-menu";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
@@ -88,6 +113,11 @@ import { FilePickerDialog } from "@/components/files/file-picker-dialog";
 import { DirectoryPickerDialog } from "@/components/contacts/directory-picker-dialog";
 import type { DirectoryEntry } from "@/stores/contact-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import { isStandInId } from "@/lib/jmap/stand-in-ids";
+import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
+import { offlineActive, offlineAllowed } from "@/lib/offline/offline-mode";
+import { useBrowserOnline } from "@/hooks/use-browser-online";
+import { appPath, buildSettingsPath } from "@/lib/deep-links";
 import type { FileNode } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
@@ -96,12 +126,13 @@ import { personalTemplatesFor } from "@/lib/templates/personal-templates";
 import { notifyIdentitySelected } from "@/stores/identity-store";
 import { usePluginSignature } from "@/hooks/use-plugin-signature";
 import { useOrgSignature, useOrgSignatureIdentity } from "@/hooks/use-org-signature";
+import { remoteContentBlockedByOrg, remoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { OrgDisclaimerPreview } from "@/components/email/org-disclaimer-preview";
 // Registers the organisation signature check and the disclaimer on the send path.
 import "@/lib/org/outgoing";
 import { SubAddressHelper } from "@/components/identity/sub-address-helper";
 import { generateSubAddress } from "@/lib/sub-addressing";
-import { substitutePlaceholders, spliceTemplateAboveSignature, composeBodyHasUserContent } from "@/lib/template-utils";
+import { substitutePlaceholders, spliceTemplateAboveSignature, composeBodyHasUserContent, embedTemplateImages } from "@/lib/template-utils";
 import { findUnfilledPlaceholders, stripEmbeddedSignatureHtml } from "@/lib/placeholder-check";
 import enMessages from "@/locales/en/common.json";
 import { TemplatePicker } from "@/components/templates/template-picker";
@@ -110,6 +141,16 @@ import type { EmailTemplate } from "@/lib/template-types";
 import { appendPlainTextSignature, getPlainTextSignature, plainTextBodyHasSignature, plainTextBodyWithoutSignature } from "@/lib/signature-utils";
 import { wantsSignatureSeparator } from "@/lib/signature-delimiter";
 import { finalizeOutgoing, runPreSendChecks, type OutgoingContext } from "@/lib/outgoing/send-pipeline";
+import { classifyOutgoing, isLabelRequiredError, labelMissing, labelsPolicyFor, resolveLabel, type OriginalMessage } from "@/lib/outgoing/classification";
+import { beginLabelTakeover, endLabelTakeover } from "@/lib/outgoing/classification-raw";
+import { undoDelayUntil } from "@/lib/outgoing/undo-delay";
+import { beginComposeTakeover, endComposeTakeover } from "@/lib/outgoing/compose-takeover";
+import { cleanOutgoingKeywords } from "@/lib/outgoing/outgoing-keywords";
+import { recipientsChanged, runPluginSendCheck, sendGuardMessageKey } from "@/lib/outgoing/plugin-send-check";
+import { externalRecipientsFor, inspectAttachments, sniffFile } from "@/lib/outgoing/send-check-payload";
+import { whenPolicySettled } from "@/stores/policy-store";
+import { ClassificationLabelPicker, type ClassificationPickerHandle } from "./classification-label-picker";
+import { useComposerClassification } from "./use-composer-classification";
 import { findComposeIdentityId, findDraftIdentityId, findReplyIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
 import { buildReplyRecipients, isSelfSent, ownReplyAddresses } from "@/lib/reply-recipients";
 import { computeReplyThreadingHeaders, type ReplyThreadingHeaders } from "@/lib/email-threading";
@@ -136,21 +177,49 @@ import {
   plainTextToComposerBody,
 } from "@/lib/email-composer-utils";
 import type { ComposePrefill } from "@/lib/plugin-compose-gate";
-import { composerContextMode, composerMounted, composerUnmounted, draftSaved } from "@/lib/plugin-composer-hooks";
+import { composerContextMode, composerMounted, composerUnmounted, deliverLinkParams, draftSaved } from "@/lib/plugin-composer-hooks";
+import { whenPluginsStarted } from "@/stores/plugin-store";
 import { isValidEmail } from "@/lib/validation";
 import { composeTextStyle, composeTextStyleCss } from "@/components/email/font-size";
 import { buildMentionCandidates, type MentionCandidate } from "@/lib/recipient-mentions";
 import { describeRecipientChanges, recipientDisplayName, type RecipientChange, type RecipientFields } from "@/lib/recipient-announcements";
 import { announce as announceStatus } from "@/lib/announce";
-import { normalizeCid } from "@/lib/attachment-visibility";
+import { isReportPart, normalizeCid } from "@/lib/attachment-visibility";
+import { unnamedAttachmentName } from "@/lib/attachment-name";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
+import { useProofreading } from "@/components/email/proofreading/use-proofreading";
+import { IssuePopup } from "@/components/email/proofreading/issue-popup";
+import { ProofreadingStatus } from "@/components/email/proofreading/proofreading-status";
+import { ProofreadingNotice } from "@/components/email/proofreading/proofreading-notice";
+import { issueRect } from "@/components/email/proofreading/text-check-extension";
 import { isRecipientMentionActive } from "@/components/email/recipient-mention";
 import type { Editor } from "@tiptap/react";
 import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
 import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
-import { registerComposeFlush } from "@/lib/compose-flush-registry";
+import { isAppLockedNow } from "@/lib/app-lock/state";
+import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
+import { getDesktopBridge, isDesktopApp } from "@/lib/desktop/bridge";
+import { askInWindow } from "@/lib/desktop/dialog-window";
+import { readRecentFile, RECENT_FILE_MAX_BYTES, useRecentFilesOffered } from "@/lib/desktop/recent-files";
+import type { DesktopRecentFile } from "@/lib/desktop/types";
+import { RecentFilesMenuSection } from "@/components/email/recent-files-menu-section";
+import { useDesktopCommands } from "@/lib/desktop/commands";
+import { noteComposerLanguage } from "@/lib/desktop/languages";
+import { noteOpenDraft } from "@/lib/desktop/window-restore";
+import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
+import { setComposerFileTarget } from "@/lib/desktop/window-files";
+import { useComposerEdits } from "@/hooks/use-composer-edits";
+
+// A Pro tab, message or folder dragged across a composer tab is on its way to
+// the pane or the split edge: those drags belong to the shell. There is no shell
+// outside Pro, and the composer stops them like any other drag: a message row
+// carries its subject as text, which To and Subject would take.
+function useIsShellDrag() {
+  const isPaneScoped = useIsPaneScoped();
+  return useCallback((e: React.DragEvent) => isPaneScoped && dragKindFromTypes(e.dataTransfer.types) !== null, [isPaneScoped]);
+}
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -197,7 +266,20 @@ function createChipDragPreview(label: string): HTMLElement {
 // inserts as a single chip and expands into its members on send.
 type SuggestionItem = { name: string; email: string; group?: { id: string; memberCount: number } };
 
+/** The From list's entries that aren't identities. */
+const FROM_SUB_ADDRESS = '__sub_address';
+const FROM_EDIT_SENDER = '__edit_sender';
+
+// Which `initialFiles` arrays are attached: a remount gets the same array.
+const attachedInitialFiles = new WeakSet<File[]>();
+
 export interface ComposerDraftData {
+  /**
+   * Handed in from outside (a share, the desktop app) and not touched yet.
+   * It is only where the composer starts: no draft on the server until the
+   * user's first real edit.
+   */
+  unedited?: boolean;
   to: string;
   cc: string;
   bcc: string;
@@ -208,6 +290,12 @@ export interface ComposerDraftData {
   selectedIdentityId: string | null;
   subAddressTag: string;
   mode: 'compose' | 'reply' | 'replyAll' | 'forward';
+  /**
+   * What a re-opened draft is, for its title: it re-opens in "compose" mode
+   * (see inReplyTo below), and was titled "New message" even when it was a
+   * reply (compose-p3-6). Absent, In-Reply-To makes it a reply.
+   */
+  kind?: 'reply' | 'replyAll' | 'forward';
   replyTo?: EmailComposerProps['replyTo'];
   draftId: string | null;
   /**
@@ -231,7 +319,11 @@ export interface ComposerDraftData {
    * File). Without these the composer starts with zero attachments and the
    * next save/send rebuilds the draft without them - silent data loss (#849).
    */
-  attachments?: Array<{ blobId: string; name?: string; type?: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string }>;
+  attachments?: Array<{ blobId: string; name?: string; type?: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string; editBlocked?: boolean }>;
+  /** The send options picked so far; absent, the defaults. Carried to another window. */
+  requestReadReceipt?: boolean;
+  requestDsn?: boolean;
+  requireTls?: boolean;
   /** When set, overrides the header From: and the envelope MAIL FROM, where the server allows it. */
   fromOverrideEmail?: string;
   fromOverrideName?: string;
@@ -252,11 +344,31 @@ export interface ComposerDraftData {
   /** Priority of a re-opened draft, read back from its headers (#970). */
   priority?: MessagePriority;
   /**
+   * The `x-<plugin id>-<name>` parameters of the link this message came
+   * from (lib/plugin-link-params.ts): each plugin hears its own once the
+   * composer is open. Not carried on to another window.
+   */
+  linkParams?: Record<string, string>;
+  /**
+   * Classification label of a re-opened draft (X-Bulwark-Label): an id,
+   * null for "no label", absent when the draft says nothing.
+   */
+  classification?: string | null;
+  /**
    * Handed to the host when the composer went away with edits the server may
    * not have: the composer opened again with it counts them as unsaved, so
    * an automatic sign-out saves them (lib/compose-flush-registry.ts).
    */
   unsaved?: boolean;
+}
+
+/** The window a draft moves to; see EmailComposerProps.popOut. */
+export interface ComposerPopOut {
+  /** True once the composer is on screen there. Until then this one keeps the text. */
+  handOver(data: ComposerDraftData): Promise<boolean>;
+  cancel(): void;
+  /** What to say when handOver answered false, if not that the new window was late. */
+  notShownMessage?: () => string;
 }
 
 interface EmailComposerProps {
@@ -295,7 +407,23 @@ interface EmailComposerProps {
     requireTls?: boolean;
     /** Importance / X-Priority; absent for normal (#970). */
     priority?: MessagePriority;
-  }) => void | false | Promise<void | false>;
+    /** Extra headers plugins added in onTransformOutgoingEmail. */
+    headers?: Record<string, string>;
+    /** The classification label's headers (lib/outgoing/classification.ts), written after `headers`. */
+    labelHeaders?: Record<string, string>;
+    /** The id plugins know this composer by, for onAfterEmailSend. */
+    composerId?: string;
+    /** Keywords plugins set for the Sent copy (lib/outgoing/outgoing-keywords.ts). */
+    keywords?: string[];
+  },
+  /** The composer as it was at Send, to bring it back as it was after Undo send (mail-p2-8). */
+  state?: ComposerDraftData,
+  ) => void | false | Promise<void | false>;
+  /**
+   * onSend failed. A host that closes the composer as soon as onSend starts
+   * gets the message back here, to open it again: it must never vanish.
+   */
+  onSendFailed?: (state: ComposerDraftData) => void;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
   /**
@@ -316,6 +444,68 @@ interface EmailComposerProps {
    */
   onDiscardDraft?: (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => void;
   onSaveState?: (data: ComposerDraftData) => void;
+  /**
+   * Undo after the bin: opens a composer again with what this one held. The
+   * draft on the server is still there then.
+   */
+  onRestoreDiscarded?: (data: ComposerDraftData) => void;
+  /**
+   * The bin took the draft `draftId` off screen; it is deleted once Undo
+   * is over (onDiscardDraft) or comes back (onRestoreDiscarded). Until then
+   * the host shows it nowhere else, such as the reply-draft card.
+   */
+  onDiscardStarted?: (draftId: string) => void;
+  /**
+   * Offers "Open in new window". Called in the click, since a browser only
+   * opens a window for a user action: the host opens it and answers with what
+   * takes the draft, or null when no window opened. The composer then saves,
+   * hands the draft over under the same draft id, and closes here.
+   */
+  popOut?: () => ComposerPopOut | null;
+  /** The move goes back to the main window: the button says that, and shows at any width. */
+  popOutToMainLabel?: string;
+  /**
+   * Docked under the message it answers (mail-p2-2): the composer starts
+   * compact, without the Subject line, the From line when there's nothing to
+   * pick, and the formatting bar until asked for. Full screen shows them all.
+   * Its title row goes too: the kind of reply, the window buttons and Close
+   * share the To row (inline-reply).
+   */
+  docked?: boolean;
+  /** A docked reply's kind menu offers Forward: the host opens a forward of the same message. */
+  onSwitchToForward?: () => void;
+  /**
+   * This composer is all a window shows (lib/popout). It closes itself once a
+   * message has gone. Closing the window with unsaved text hands the draft to
+   * another window to save, or asks first when there is none.
+   */
+  ownWindow?: {
+    /** The state as the window unloads, for a reload to start from. */
+    onUnloadState?: (data: ComposerDraftData) => void;
+    /**
+     * A save reached the server, for other windows showing the Drafts folder and for a
+     * reload to find it. `accountId`: the account it lives in, when not the own one.
+     * `localAccountId`: the login it was saved through.
+     */
+    onDraftSaved?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
+    /**
+     * Hands a draft to another window to save as this one closes: a request
+     * started now wouldn't survive. False when that can't be done safely.
+     */
+    rescueDraft?: (draft: RescuedDraft) => boolean;
+    /**
+     * The window closes with its draft kept: another window says so, as
+     * this one is gone before a toast here could be read.
+     */
+    onDraftKept?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
+    /**
+     * The bin closed the window: another window says "Draft discarded" with Undo. `draftId` is
+     * null before the first save; `state` is the composer as it was, for Undo to bring back.
+     */
+    onDraftDiscarded?: (draftId: string | null, where: { accountId?: string; localAccountId?: string }, state: ComposerDraftData) => void;
+  };
+  /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
+  onSubjectChange?: (subject: string) => void;
   className?: string;
   initialDraftText?: string;
   initialData?: ComposerDraftData | null;
@@ -333,6 +523,12 @@ interface EmailComposerProps {
   sessionKey?: string;
   /** Id of the message being replied to or forwarded, for onComposerOpen. */
   sourceEmailId?: string;
+  /**
+   * Files to attach when the composer opens, from a share or a launch (see
+   * lib/launch-handoff.ts). They go through the same checks as a picked file.
+   * Attached once per array, also when the composer remounts with it.
+   */
+  initialFiles?: File[] | null;
   mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
   /**
    * Email of the mailbox/account the user is viewing when they start a new
@@ -350,6 +546,8 @@ interface EmailComposerProps {
     to?: { email?: string; name?: string }[];
     cc?: { email?: string; name?: string }[];
     bcc?: { email?: string; name?: string }[];
+    /** Addresses the original was delivered to, from lib/reply-identity deliveryAddresses (#1353). */
+    deliveredTo?: string[];
     subject?: string;
     body?: string;
     htmlBody?: string;
@@ -371,15 +569,25 @@ interface EmailComposerProps {
     quoteHeaderText?: string;
     /** Mirror of QuoteHeader.wrapInBlockquote. Defaults to true. */
     quoteWrapInBlockquote?: boolean;
+    /** The original's headers: a reply or forward starts with its classification label. */
+    headers?: Record<string, string | string[]>;
+    /** The original carries the phishing mark: its forwarded parts stay out of the desktop app's Edit. */
+    phishingMarked?: boolean;
+    /** The original's From, when `from` is left out (a forward as attachment): whether its label counts. */
+    originalFrom?: { email?: string; name?: string }[];
   };
 }
 
 type ComposerAttachment = {
   file?: File;
+  // The desktop app's Edit: which session's file this is. See useComposerEdits.
+  editSessionId?: string;
   // Login whose server holds `blobId`, set for parts of the original message
   // on a forward - the message may go out through another account, which
   // cannot resolve them. See rehomeForeignBlobs.
   sourceAccountId?: string;
+  // From a message marked as phishing: stays out of the desktop app's Edit.
+  editBlocked?: boolean;
   name: string;
   type: string;
   size: number;
@@ -441,16 +649,34 @@ const MAX_PLUGIN_INSERT_LENGTH = 100_000;
 const PLUGIN_SELECTION_DELAY_MS = 150;
 const EMPTY_SELECTION = { text: '', empty: true } as const;
 
+/** Offline mode's refusals to keep a send (#523) and the text that explains each. */
+const OFFLINE_SEND_ERRORS: Record<string, string> = {
+  OfflinePluginsDownError: 'errors.plugins_down',
+  OfflineFileMissingError: 'errors.file_missing',
+  OfflineUnavailableError: 'errors.unavailable',
+  SendNotStartedError: 'errors.unavailable',
+};
+
 export function EmailComposer({
   onSend,
+  onSendFailed,
   onScheduledSendCreated,
   onClose,
   requestCloseRef,
   onDiscardDraft,
   onSaveState,
+  onRestoreDiscarded,
+  onDiscardStarted,
+  popOut,
+  popOutToMainLabel,
+  docked = false,
+  onSwitchToForward,
+  ownWindow,
+  onSubjectChange,
   className,
   initialDraftText: initialDraftTextProp,
   initialData: initialDataProp,
+  initialFiles,
   prefill,
   sessionKey,
   sourceEmailId,
@@ -459,9 +685,23 @@ export function EmailComposer({
   replyTo
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
+  const tMenu = useTranslations('menuAudit');
   const tCommon = useTranslations('common');
+  const tWindows = useTranslations('pwaWindows');
   const tQuote = useTranslations('quote_header');
   const tViewer = useTranslations('email_viewer');
+  const tClassification = useTranslations('classification');
+  const tEdit = useTranslations('desktopEdit');
+  const tOfflineDrafts = useTranslations('offlineDrafts');
+  const tOffline = useTranslations('offline');
+  const tRecent = useTranslations('desktopAttachRecent');
+  const tOfflineNotes = useTranslations('offlineConflicts');
+  const tSendGuards = useTranslations('send_guards');
+  const tWords = useTranslations('compose_words');
+  const tUx = useTranslations('compose_ux');
+  const tDock = useTranslations('compose_dock');
+  const router = useRouter();
+  const showAdvancedSettings = useSettingsStore((state) => state.showAdvancedSettings);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plainTextModeDefault = useSettingsStore((state) => state.plainTextMode);
   // Per-message format (#1022). Seeded from the "plain text only" setting -
@@ -470,6 +710,10 @@ export function EmailComposer({
   const [plainTextMode, setPlainTextMode] = useState<boolean>(
     () => initialDataProp?.plainTextMode ?? plainTextModeDefault
   );
+  // The format right now, for async work that writes into the body after an
+  // await: the user may have switched it meanwhile.
+  const plainTextModeRef = useRef(plainTextMode);
+  plainTextModeRef.current = plainTextMode;
   // A plugin's onBeforeCompose prefill (plain text body) folded into what the
   // composer starts from: over `initialData` when the host hands one in (a
   // mailto:, a re-opened draft), otherwise over the fields built below.
@@ -508,6 +752,13 @@ export function EmailComposer({
   const updateSetting = useSettingsStore((state) => state.updateSetting);
   const sendDelaySeconds = useSettingsStore((state) => state.sendDelaySeconds);
   const signaturePosition = useSettingsStore((state) => state.signaturePosition);
+  const signatureNewMailEnabled = useSettingsStore((state) => state.signatureNewMailEnabled);
+  const signatureReplyForwardEnabled = useSettingsStore((state) => state.signatureReplyForwardEnabled);
+  // Whether automatic signature insertion is on for this composer mode: new
+  // mail (and re-opened drafts, which open in compose mode) follow the
+  // new-mail toggle, replies and forwards the reply/forward one. What the
+  // body already carries is never stripped - only the insert/append is gated.
+  const autoSignatureEnabled = mode === 'compose' ? signatureNewMailEnabled : signatureReplyForwardEnabled;
   const signatureSeparatorEnabled = useSettingsStore((state) => state.signatureSeparatorEnabled);
   const requestReadReceiptDefault = useSettingsStore((state) => state.requestReadReceiptDefault);
   // A draft belongs to the account the composer was opened in. Switching
@@ -583,12 +834,13 @@ export function EmailComposer({
   const shouldEmbedSignatureAboveQuote =
     (mode === 'reply' || mode === 'replyAll' || mode === 'forward') &&
     signaturePosition === 'above_quote' &&
+    signatureReplyForwardEnabled &&
     hasInitialSignature;
   // New-mail composes always embed the signature into the editor body so it's
   // editable/removable (the previous read-only preview below the editor was
   // never spec-correct - see #329). Compose mode also ignores any leftover
   // `replyTo` from a still-selected email; getInitialBody short-circuits below.
-  const shouldEmbedSignatureInNewMail = mode === 'compose' && hasInitialSignature;
+  const shouldEmbedSignatureInNewMail = mode === 'compose' && signatureNewMailEnabled && hasInitialSignature;
 
   // Format a single EmailAddress for display in the composer input
   const toRecipient = (r: { name?: string; email?: string }): Recipient =>
@@ -681,6 +933,7 @@ export function EmailComposer({
             ? `${from.name} <${from.email}>`
             : (from.email || from.name || tCommon('unknown')))
         : tCommon('unknown');
+      const forwardLines = forwardRecipientLines(replyTo, { toLabel: tWords('forward_to_label'), ccLabel: tWords('forward_cc_label') });
 
       const originalText = replyTo.body || (replyTo.htmlBody ? htmlToPlainText(replyTo.htmlBody) : '');
       const quotedText = originalText.split('\n').map(line => `> ${line}`).join('\n');
@@ -701,7 +954,7 @@ export function EmailComposer({
       }
 
       if (mode === 'forward') {
-        return `${prefix}${signatureBlock}\n\n${tQuote('forwarded_separator')}\n${tQuote('from_label')}: ${fromStrFull}\n${tQuote('date_label')}: ${date}\n${tQuote('subject_label')}: ${replyTo.subject || ''}\n\n${originalText}`;
+        return `${prefix}${signatureBlock}\n\n${tQuote('forwarded_separator')}\n${tQuote('from_label')}: ${fromStrFull}\n${tQuote('date_label')}: ${date}\n${tQuote('subject_label')}: ${replyTo.subject || ''}${forwardLines.map((line) => `\n${line.label}: ${line.value}`).join('')}\n\n${originalText}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
         return `${prefix}${signatureBlock}\n\n${tQuote('reply_line', { date, from: fromStrFull })}\n${quotedText}`;
       }
@@ -731,16 +984,24 @@ export function EmailComposer({
           ? `${from.name} <${from.email}>`
           : (from.email || from.name || tCommon('unknown')))
       : tCommon('unknown');
+    const forwardLinesHtml = forwardRecipientLines(replyTo, { toLabel: tWords('forward_to_label'), ccLabel: tWords('forward_cc_label') })
+      .map((line) => `${line.label}: ${escapeHtml(line.value)}<br>`).join('');
 
+    // Like a new mail, an empty line above the signature gives the cursor a
+    // place for the reply. Without it the reply started on the "-- " line (#1503).
     const signatureBlock = buildEmbeddedSignatureHtml(initialSignatureIdentity, {
       embed: shouldEmbedSignatureAboveQuote,
       separator: signatureSeparatorEnabled,
     });
+    const head = `${prefix || (signatureBlock ? '<p></p>' : '')}${signatureBlock}`;
 
     // Whether the quoted original may show its remote images in the editor:
     // the viewer's rule, minus the per-message "load" click it doesn't know.
     const { externalContentPolicy, isSenderTrusted } = useSettingsStore.getState();
-    const quoteRemoteAllowed = externalContentPolicy === 'allow' || (!!from?.email && isSenderTrusted(from.email));
+    // The original's own account decides (replyTo.accountId), and the
+    // active one, which the composer may send from.
+    const quoteRemoteAllowed = !remoteContentHeldBack() && !remoteContentHeldBack(replyTo?.accountId)
+      && (externalContentPolicy === 'allow' || (!!from?.email && isSenderTrusted(from.email)));
 
     const replyHeader = (html: string) => mode === 'reply' || mode === 'replyAll'
       ? markReplyQuoteHeader(html)
@@ -756,7 +1017,7 @@ export function EmailComposer({
           rewriteCidImagesForEditor(sanitizeEmailHtml(replyTo.htmlBody)),
           { remoteAllowed: quoteRemoteAllowed, showQuoteBorder: replyTo.quoteWrapInBlockquote !== false },
         );
-        return `${prefix}${signatureBlock}<br>${replyHeader(replyTo.quoteHeaderHtml)}${island}`;
+        return `${head}<br>${replyHeader(replyTo.quoteHeaderHtml)}${island}`;
       }
       const escaped = replyTo.body
         ? replyTo.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
@@ -765,7 +1026,7 @@ export function EmailComposer({
       const bodyHtml = wrap
         ? `<blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escaped}</blockquote>`
         : escaped;
-      return `${prefix}${signatureBlock}<br>${replyHeader(replyTo.quoteHeaderHtml)}${bodyHtml}`;
+      return `${head}<br>${replyHeader(replyTo.quoteHeaderHtml)}${bodyHtml}`;
     }
 
     // Build quoted content as HTML
@@ -773,7 +1034,7 @@ export function EmailComposer({
       // HTML-escape user-controlled values: an unescaped sender "Name <email>"
       // has its "<email>" eaten as a bogus HTML tag by the rich-text editor (#482).
       const quoteHeader = mode === 'forward'
-        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>`
+        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br>${forwardLinesHtml}<br>`
         : `${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br>`;
       // Embed the original as a QuotedHtml island (verbatim, schema-free) so
       // its layout survives the editor round-trip. Sanitize first to strip
@@ -783,15 +1044,15 @@ export function EmailComposer({
         rewriteCidImagesForEditor(sanitizeEmailHtml(replyTo.htmlBody)),
         { remoteAllowed: quoteRemoteAllowed },
       );
-      return `${prefix}${signatureBlock}<br>${replyHeader(`<div>${quoteHeader}</div>`)}${island}`;
+      return `${head}<br>${replyHeader(`<div>${quoteHeader}</div>`)}${island}`;
     }
 
     if (replyTo.body) {
       const escapedOriginal = replyTo.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
       if (mode === 'forward') {
-        return `${prefix}${signatureBlock}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>${escapedOriginal}`;
+        return `${head}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br>${forwardLinesHtml}<br>${escapedOriginal}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
-        return `${prefix}${signatureBlock}<br><br>${replyHeader(`<p>${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br></p>`)}<blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
+        return `${head}<br><br>${replyHeader(`<p>${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br></p>`)}<blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
       }
     }
     return prefix;
@@ -897,6 +1158,12 @@ export function EmailComposer({
     const nextCc = getInitialCc();
     if (same(nextTo, auto.to) && same(nextCc, auto.cc)) return;
     autoRecipientsRef.current = { to: nextTo, cc: nextCc };
+    // Not the user's change: an untouched reply stays untouched.
+    initialValuesRef.current = {
+      ...initialValuesRef.current,
+      to: formatRecipientList(withInput(nextTo, toInput)),
+      cc: formatRecipientList(withInput(nextCc, ccInput)),
+    };
     setTo(nextTo);
     setCc(nextCc);
     if (nextCc.length > 0) setShowCc(true);
@@ -910,11 +1177,11 @@ export function EmailComposer({
     input.trim() ? [...chips, parseRecipient(input)] : chips;
   const [isDraggingChipOverCc, setIsDraggingChipOverCc] = useState(false);
   const [isDraggingChipOverBcc, setIsDraggingChipOverBcc] = useState(false);
-  const [requestReadReceipt, setRequestReadReceipt] = useState(requestReadReceiptDefault);
+  const [requestReadReceipt, setRequestReadReceipt] = useState(initialData?.requestReadReceipt ?? requestReadReceiptDefault);
   // SMTP submission options, offered only when the server advertises the
   // extension (RFC 8621 §1.3 submissionExtensions).
-  const [requestDsn, setRequestDsn] = useState(false);
-  const [requireTls, setRequireTls] = useState(false);
+  const [requestDsn, setRequestDsn] = useState(initialData?.requestDsn ?? false);
+  const [requireTls, setRequireTls] = useState(initialData?.requireTls ?? false);
   // Message priority (#970): normal writes no header at all.
   const [priority, setPriority] = useState<MessagePriority>(initialData?.priority ?? 'normal');
   const priorityRef = useRef(priority);
@@ -931,7 +1198,17 @@ export function EmailComposer({
   const [draftLocalAccountId, setDraftLocalAccountId] = useState<string | undefined>(initialData?.draftLocalAccountId);
   const draftLocalAccountIdRef = useRef<string | undefined>(initialData?.draftLocalAccountId);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  // The last save stayed on this device: the server wasn't there.
+  const [savedOnDevice, setSavedOnDevice] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveCloseAttemptRef = useRef<{ cancelled: boolean; saving: boolean } | null>(null);
+  const [isSavingAndClosing, setIsSavingAndClosing] = useState(false);
+  const [isWaitingToSave, setIsWaitingToSave] = useState(false);
+  // Only the close attempt is cancelled here; uploads keep their existing
+  // removal/teardown behavior. A replaced composer must not save or close later.
+  useEffect(() => () => {
+    if (saveCloseAttemptRef.current) saveCloseAttemptRef.current.cancelled = true;
+  }, []);
   const lastSavedDataRef = useRef<string>("");
   // Tracks the currently-running saveDraft so concurrent callers (autosave
   // timer + send button) serialize instead of issuing parallel destroy/create
@@ -953,7 +1230,7 @@ export function EmailComposer({
       return initialData.attachments
         .filter(att => !!att.blobId)
         .map(att => ({
-          name: att.name || 'attachment',
+          name: att.name || unnamedAttachmentName(att.type),
           type: att.type || 'application/octet-stream',
           size: att.size,
           blobId: att.blobId,
@@ -962,6 +1239,7 @@ export function EmailComposer({
           // A forward stashed before its first save still holds the original
           // account's blobs: keep the tag so they are copied before saving.
           ...(att.sourceAccountId ? { sourceAccountId: att.sourceAccountId } : {}),
+          ...(att.editBlocked ? { editBlocked: true } : {}),
           fromDraftPart: true,
         }));
     }
@@ -979,12 +1257,18 @@ export function EmailComposer({
           embeddedCids.has(normalizeCid(att.cid)) ||
           (att.disposition === 'inline' && (att.type || '').startsWith('image/'))
         )))
+        // A bounce's delivery status or a receipt's disposition is no file
+        // anyone attached; the reader does not list it, so it stays behind.
+        .filter(att => !isReportPart(att.type))
+        // A part without a name goes out under the one the reader showed
+        // ("Email.eml" for the original message of a bounce).
         .map(att => ({
-          name: att.name || 'attachment',
+          name: att.name || unnamedAttachmentName(att.type),
           type: att.type || 'application/octet-stream',
           size: att.size,
           blobId: att.blobId,
           sourceAccountId: att.sourceAccountId ?? sourceAccountId ?? undefined,
+          ...(replyTo.phishingMarked ? { editBlocked: true } : {}),
         }));
     }
     return [];
@@ -1012,6 +1296,9 @@ export function EmailComposer({
   const [filesPicker, setFilesPicker] = useState<{ client: IJMAPClient; accountId?: string } | null>(null);
   const [showDirectoryPicker, setShowDirectoryPicker] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
+  // Save as template asks for a name only; "Edit details…" opens the full
+  // editor with the name typed so far (null: the name dialog).
+  const [saveTemplateDetails, setSaveTemplateDetails] = useState<string | null>(null);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   // The formatting toolbar is folded away on a phone until asked for.
   const [showFormattingOnMobile, setShowFormattingOnMobile] = useState(false);
@@ -1020,21 +1307,35 @@ export function EmailComposer({
   // bar folded away behind "Aa" until asked for.
   const mvWindow = useMvComposeWindow();
   const [mvShowFormatting, setMvShowFormatting] = useState(false);
+  // A pop-out or quick compose window is narrower than a tablet, but it is a
+  // window on a computer: it keeps the main window's layout, not the phone's.
+  const phoneLayout = !ownWindow;
+  // Full screen: the composer over the whole window, as Gmail has it. The same
+  // button or Escape puts it back. Not in a window of its own, which is all composer.
+  const [maximized, setMaximized] = useState(false);
+  const canMaximize = !ownWindow && !mvWindow;
+  const dockCompact = docked && !maximized;
+  // Reply and Reply all switched in place from a docked reply's kind menu:
+  // only the recipients differ, and the text stays (inline-reply).
+  const [replyKindSwitched, setReplyKindSwitched] = useState<'reply' | 'replyAll' | null>(null);
+  // A docked reply keeps From out of the way until asked for or it isn't the usual one.
+  const [showDockFrom, setShowDockFrom] = useState(false);
+  const [showDockFormatting, setShowDockFormatting] = useState(false);
   // "close" (X, Escape): save or discard. "discard" (the Discard button): the
   // user already chose, so only confirm it.
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
-  const [showAllAttachments, setShowAllAttachments] = useState(false);
+  // The sub-address popover, opened from the From list.
+  const [subAddressOpen, setSubAddressOpen] = useState(false);
+  // Closing saves without asking; the question comes only when that save failed.
+  const [closeSaveFailed, setCloseSaveFailed] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
-  const [showAttachmentWarning, setShowAttachmentWarning] = useState(false);
-  const [attachmentWarningKeyword, setAttachmentWarningKeyword] = useState('');
-  const [attachmentWarningDelayedUntil, setAttachmentWarningDelayedUntil] = useState<string | undefined>();
-  const [showEmptySubjectWarning, setShowEmptySubjectWarning] = useState(false);
-  const [emptySubjectDelayedUntil, setEmptySubjectDelayedUntil] = useState<string | undefined>();
-  const [emptySubjectDontAskAgain, setEmptySubjectDontAskAgain] = useState(false);
-  const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false);
-  const [placeholderWarningMatches, setPlaceholderWarningMatches] = useState<string[]>([]);
-  const [placeholderWarningDelayedUntil, setPlaceholderWarningDelayedUntil] = useState<string | undefined>();
-  const [placeholderDontAskAgain, setPlaceholderDontAskAgain] = useState(false);
+  // What the checks before sending found (no subject, no text, placeholders,
+  // a missing attachment, open proofreading issues), asked about in one dialog.
+  // `schedule`: asked before the schedule dialog, which opens on "Schedule anyway".
+  const [sendWarnings, setSendWarnings] = useState<{ items: SendWarning[]; delayedUntil?: string; schedule?: boolean } | null>(null);
+  const checkThenScheduleRef = useRef<() => void>(() => {});
+  // Open proofreading issues, once a checker asked to warn about them.
+  const proofreadingConfirmedRef = useRef(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   // Asks before sending at once when the account can't hold a message back.
   const { dialogProps: noDelayDialogProps, confirm: confirmNoDelay } = useConfirmDialog();
@@ -1055,6 +1356,7 @@ export function EmailComposer({
     if (!(await confirmDiscardTemplate(saveTemplateDirty))) return;
     setSaveTemplateDirty(false);
     setShowSaveAsTemplate(false);
+    setSaveTemplateDetails(null);
   };
 
   const { client: activeClient } = useAuthStore();
@@ -1080,6 +1382,30 @@ export function EmailComposer({
   // scopes decide the organisation signature and disclaimer: the identity's
   // own account, else the one the composer was opened in.
   const composingAccountId = currentIdentityParts.localAccountId ?? composerAccountIdRef.current;
+  // What the header calls it. A re-opened draft is in "compose" mode; a reply
+  // draft is still a reply (compose-p3-6).
+  const titleMode: 'compose' | 'reply' | 'replyAll' | 'forward' = replyKindSwitched ?? (mode !== 'compose'
+    ? mode
+    : initialData?.kind ?? (initialData?.inReplyTo?.length ? 'reply' : 'compose'));
+  // Classification label (enterprise pack): the labels of the account and
+  // identity the message goes out from; replies and forwards start with
+  // the original's label, re-opened drafts with theirs.
+  const labelOriginal = useMemo<OriginalMessage | null>(
+    () => (mode === 'compose' || !replyTo?.headers
+      ? null
+      : { headers: replyTo.headers, from: replyTo.from ?? replyTo.originalFrom, accountId: replyTo.accountId }),
+    [mode, replyTo?.headers, replyTo?.from, replyTo?.originalFrom, replyTo?.accountId],
+  );
+  const classification = useComposerClassification({
+    accountId: composingAccountId,
+    senderEmail: currentIdentity?.email,
+    original: labelOriginal,
+    initialChoice: initialData?.classification,
+  });
+  const classificationRef = useRef(classification);
+  classificationRef.current = classification;
+  const classificationPickerRef = useRef<ClassificationPickerHandle>(null);
+  const [labelInvalid, setLabelInvalid] = useState(false);
   // The upload callbacks below list only `client` as a dependency, so they read
   // the composing identity's client through a ref: uploads must land in the
   // account that owns the draft, and a direct substitution would capture a
@@ -1208,6 +1534,21 @@ export function EmailComposer({
   // when the user switches identity in "above quote" mode without rebuilding
   // the whole body (which would lose user edits to the surrounding draft).
   const editorRef = useRef<Editor | null>(null);
+  // The white space under the text is the message too (compose-p2-9): a
+  // click there puts the caret at the end of the user's text, above a folded
+  // quote and the signature, instead of dropping the focus.
+  const focusBodyFromEmptySpace = (event: React.MouseEvent<HTMLElement>) => {
+    const editor = editorRef.current;
+    const target = event.target as HTMLElement;
+    if (event.button !== 0 || !editor || editor.isDestroyed || !editor.isEditable) return;
+    if (target.closest('.ProseMirror, button, input, textarea, select, a, label, [role="toolbar"], [role="dialog"], [data-plugin-slot]')) return;
+    event.preventDefault();
+    const end = userTextEnd(editor.state);
+    if (end === null) editor.commands.focus('end');
+    else editor.chain().setTextSelection(end).focus().run();
+  };
+  // Set while the composer itself swaps the signature in the editor.
+  const signatureSwapRef = useRef(false);
   // Set once a reply's body got its initial focus, so switching formats later
   // does not move the caret back to the start.
   const replyFocusedRef = useRef(false);
@@ -1243,6 +1584,9 @@ export function EmailComposer({
     const isReplyLike = mode === 'reply' || mode === 'replyAll' || mode === 'forward';
     if (!isReplyLike && mode !== 'compose') return;
     if (isReplyLike && signaturePosition !== 'above_quote') return;
+    // With automatic insertion off the body never got a signature spliced
+    // in, so there is nothing to swap.
+    if (!autoSignatureEnabled) return;
 
     if (plainTextMode) {
       // A new plain-text message carries the signature at the end of the
@@ -1277,18 +1621,27 @@ export function EmailComposer({
       separator: signatureSeparatorEnabled,
     }), { quoteHeader: getQuoteHeaderLine() });
     if (nextHtml !== currentHtml) {
-      editor.commands.setContent(nextHtml, { emitUpdate: true });
+      // The signature following From is no edit of the user's: an untouched
+      // reply whose identity resolves late must stay untouched.
+      signatureSwapRef.current = true;
+      try {
+        editor.commands.setContent(nextHtml, { emitUpdate: true });
+      } finally {
+        signatureSwapRef.current = false;
+      }
     }
     // Intentionally keyed to the signature-relevant fields plus the internal
     // prev*Ref guards above; depending on the whole `signatureIdentity` object
     // would re-run on unrelated identity-field changes and re-splice the
     // signature into the live editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision]);
+  }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision, autoSignatureEnabled]);
 
+  // The send checks run first, so they don't open on top of the picked time
+  // saying "Send anyway" when nothing is sent now (compose-p2-14).
   const openScheduleDialog = useCallback(() => {
-    setShowScheduleDialog(true);
     closeSendMenu();
+    checkThenScheduleRef.current();
   }, [closeSendMenu]);
 
   // `autoSelectReplyIdentity` fused two behaviours: matching one of the user's
@@ -1346,6 +1699,10 @@ export function EmailComposer({
       cc: replyTo?.cc,
       bcc: replyTo?.bcc,
     };
+    // Where the message was delivered (Delivered-To and friends, #1353). Tried
+    // after each To/Cc/Bcc step below, so a catch-all address in To still
+    // beats the mailbox Stalwart delivered it to.
+    const deliveredTo = replyTo?.deliveredTo;
 
     // Own-identity match: unconditional, since it only ever selects one of the
     // user's own configured addresses.
@@ -1364,7 +1721,7 @@ export function EmailComposer({
     if (autoSelectReplyIdentity && mode !== 'forward') {
       // Without custom From the catch-all rewrite has nothing to write into.
       const matchMode = customFromEnabled ? replyIdentityMatch : 'exact';
-      const resolved = resolveReplyFrom(sourceAccountIdentities, recipients, matchMode);
+      const resolved = resolveReplyFrom(sourceAccountIdentities, { ...recipients, deliveredTo }, matchMode);
       if (resolved) {
         setSelectedIdentityId(resolved.identityId);
         if (resolved.overrideEmail && !fromOverrideEnabled) {
@@ -1374,6 +1731,14 @@ export function EmailComposer({
         }
         return;
       }
+    }
+
+    // A delivery address that is one of the user's identities: unconditional,
+    // like the own-identity match above.
+    const deliveredIdentityId = findReplyIdentityId(sourceAccountIdentities, { deliveredTo });
+    if (deliveredIdentityId) {
+      setSelectedIdentityId(deliveredIdentityId);
+      return;
     }
 
     // Nothing on the message's account matched, but it is not the active one:
@@ -1401,6 +1766,7 @@ export function EmailComposer({
     mode,
     replyTo?.bcc,
     replyTo?.cc,
+    replyTo?.deliveredTo,
     replyTo?.from,
     replyTo?.to,
     selectedIdentityId,
@@ -1563,13 +1929,20 @@ export function EmailComposer({
   // Whether a Sent mailbox is known so the on-demand server search is worth
   // offering (falls back to hiding the "search the server" row otherwise).
   const canSearchServer = useContactStore((s) => s.sentMailboxId != null);
+  // The recipient picker: the user's contacts, and the server's directory.
+  const hasContacts = useContactStore((s) => (s.contacts?.length ?? 0) > 0);
+  const tSend = useTranslations('compose_send');
   const addToTrustedSendersBook = useContactStore((s) => s.addToTrustedSendersBook);
   const addTrustedSender = useSettingsStore((s) => s.addTrustedSender);
   const trustedSendersAddressBook = useSettingsStore((s) => s.trustedSendersAddressBook);
   // "Save as template" keeps it with the account the message is written from.
+  // It says so: the dialog closing was the only sign before (compose-p2-15).
   const addTemplate = useCallback(
-    (data: Parameters<ReturnType<typeof personalTemplatesFor>['add']>[0]) => personalTemplatesFor(composingAccountId).add(data),
-    [composingAccountId],
+    (data: Parameters<ReturnType<typeof personalTemplatesFor>['add']>[0]) => {
+      personalTemplatesFor(composingAccountId).add(data);
+      toast.success(tSend('template_saved'));
+    },
+    [composingAccountId, tSend],
   );
   // The admin may leave users only organisation and team templates.
   const composingTemplates = useTemplateSources(composingAccountId);
@@ -1646,15 +2019,61 @@ export function EmailComposer({
     }
     changeVersionRef.current += 1;
   }, [toStr, ccStr, bccStr, subject, body, attachments.length]);
+  // Handed-in text and files aren't the user's until they touch them. Nothing
+  // counts as dirty until then, so autosave, the page-close save and the flush
+  // before a sign-out all leave them alone.
+  // So does a fresh composer, a reply or forward above all: the quote and the
+  // signature it starts with are no reason to keep a draft. Closed before the
+  // user changes anything, it leaves nothing behind.
+  const uneditedRef = useRef(initialData?.unedited === true || (
+    !initialDataProp && !prefill && !initialDraftTextProp && !(initialFiles && initialFiles.length > 0)
+  ));
+  const [firstEditSeen, setFirstEditSeen] = useState(false);
+  const markEdited = useCallback(() => {
+    if (!uneditedRef.current) return;
+    uneditedRef.current = false;
+    setFirstEditSeen(true);
+  }, []);
   const isDirtyRef = useRef(false);
   isDirtyRef.current = toStr !== initialValuesRef.current.to || ccStr !== initialValuesRef.current.cc ||
     bccStr !== initialValuesRef.current.bcc || subject !== initialValuesRef.current.subject ||
     // `!==`, not `>`: a re-opened draft starts with hydrated attachments, and
     // removing one must count as dirty or the removal never reaches the server.
     body !== initialValuesRef.current.body || attachments.length !== initialValuesRef.current.attachmentCount;
-  // A priority change alone is an edit worth saving (#970).
+  // A priority change alone is an edit worth saving (#970), and so is a label pick.
   const initialPriorityRef = useRef(priority);
   if (priority !== initialPriorityRef.current) isDirtyRef.current = true;
+  const initialLabelChoiceRef = useRef(classification.choice);
+  if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
+  // Text the host handed in is no edit to hand back: it has its own copy, and a
+  // stand-in mounted before the edits arrived must not overwrite them.
+  const hasEditsRef = useRef(false);
+  hasEditsRef.current = isDirtyRef.current;
+  // Text handed in that the server doesn't have yet is unsaved work, however
+  // little it differs from what this composer started with.
+  if (initialData?.unsaved && changeVersionRef.current !== savedVersionRef.current) isDirtyRef.current = true;
+  if (uneditedRef.current) isDirtyRef.current = false;
+  // Changes only the user makes, also without typing: a picked recipient, a
+  // removed attachment, a priority. Handed-in files move the count they're
+  // compared with (addFiles). The body isn't here, a signature can change it;
+  // typing in it comes through the composer root's input events.
+  useEffect(() => {
+    if (!uneditedRef.current) return;
+    const start = initialValuesRef.current;
+    if (toStr !== start.to || ccStr !== start.cc || bccStr !== start.bcc || subject !== start.subject
+      || attachments.length !== start.attachmentCount || priority !== initialPriorityRef.current) {
+      markEdited();
+    }
+  }, [toStr, ccStr, bccStr, subject, attachments.length, priority, markEdited]);
+  const firstLabelRunRef = useRef(true);
+  useEffect(() => {
+    if (firstLabelRunRef.current) {
+      firstLabelRunRef.current = false;
+      return;
+    }
+    changeVersionRef.current += 1;
+    setLabelInvalid(false);
+  }, [classification.choice]);
   const firstPriorityRunRef = useRef(true);
   useEffect(() => {
     if (firstPriorityRunRef.current) {
@@ -1665,7 +2084,7 @@ export function EmailComposer({
   }, [priority]);
 
   // Ref to latest saveDraft for use in event handlers with stale closures
-  const saveDraftRef = useRef<() => Promise<string | null>>(() => Promise.resolve(null));
+  const saveDraftRef = useRef<(opts?: { auto?: boolean; announce?: boolean }) => Promise<string | null>>(() => Promise.resolve(null));
 
   // Set by the explicit close paths (clean close, save-and-close, discard) so
   // the unmount auto-save below doesn't fire and stash a stale pendingDraft
@@ -1698,45 +2117,142 @@ export function EmailComposer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveSessionKey]);
 
+  const rescueRequestRef = useRef<() => RescuedDraft | null>(() => null);
+  const closedRef = useRef(false);
+
+  // The composer as a host needs it to bring it back: after a remount, in
+  // another window. Read through refs, so a handler set up once stays current.
+  const snapshotStateRef = useRef<() => ComposerDraftData>(() => { throw new Error('Not mounted'); });
+  snapshotStateRef.current = () => ({
+    ...stateRef.current,
+    draftAccountId: draftAccountIdRef.current,
+    mode,
+    replyTo,
+    priority: priorityRef.current,
+    classification: classificationRef.current.draftChoice,
+    // Edits the last save didn't cover; a minimised composer with
+    // none needs no save before an automatic sign-out.
+    unsaved: !uneditedRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current),
+    ...(uneditedRef.current ? { unedited: true } : {}),
+    requestReadReceipt,
+    requestDsn,
+    requireTls,
+  });
+
+  useEffect(() => {
+    onSubjectChange?.(subject);
+  }, [onSubjectChange, subject]);
+
   // Auto-save state on unmount (when user navigates away without explicitly closing)
   useEffect(() => {
     return () => {
       if (explicitCloseRef.current) return;
-      if (onSaveState && isDirtyRef.current) {
-        const s = stateRef.current;
-        onSaveState({
-          ...s,
-          draftAccountId: draftAccountIdRef.current,
-          mode,
-          replyTo,
-          priority: priorityRef.current,
-          // Edits the last save didn't cover; a minimised composer with
-          // none needs no save before an automatic sign-out.
-          unsaved: changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current,
-        });
+      // Kept in the host's memory across a remount, handed-in or not. Only the
+      // server stays out of it. Only what the host has no copy of: an edit, or a
+      // draft saved under a new id.
+      if (onSaveState && (hasEditsRef.current || uneditedRef.current || draftIdRef.current !== (initialData?.draftId ?? null))) {
+        onSaveState(snapshotStateRef.current());
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-save draft to server on page close (best-effort)
+  // A composer that comes back with the app: a draft it opened on counts from the start.
+  // Gone with the composer: sent, discarded or closed.
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (isDirtyRef.current) {
-        saveDraftRef.current();
+    if (draftIdRef.current) noteOpenDraft(effectiveSessionKey, { draftId: draftIdRef.current, localAccountId: draftLocalAccountIdRef.current ?? useAuthStore.getState().activeAccountId, ownerAccountId: draftAccountIdRef.current });
+    return () => noteOpenDraft(effectiveSessionKey, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveSessionKey]);
+
+  // The header's close goes to its start when the window's own close is at its end.
+  const [composerHeader, setComposerHeader] = useState<HTMLDivElement | null>(null);
+  const closeBesideControls = useCloseBesideControls(composerHeader);
+
+  // Auto-save draft to server on page close (best-effort)
+  const ownWindowRef = useRef(ownWindow);
+  ownWindowRef.current = ownWindow;
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // The lock saved what it could and is on its way to the lock screen: no prompt, and no copy of the text.
+      if (isAppLockedNow()) return;
+      const own = ownWindowRef.current;
+      if (!own) {
+        if (isDirtyRef.current) {
+          saveDraftRef.current();
+        }
+        return;
       }
+      // This composer closed itself: nothing left to keep.
+      if (closedRef.current) return;
+      // Closing now could stop a send halfway.
+      if (isSendingRef.current) {
+        event.preventDefault();
+        return;
+      }
+      // Sent, discarded or saved and closed.
+      if (explicitCloseRef.current || sentRef.current) return;
+      if (!isDirtyRef.current) return;
+      const state = snapshotStateRef.current();
+      own.onUnloadState?.(state);
+      if (!state.unsaved) return;
+      // A request started while a window closes is dropped, so another window
+      // saves it, but not when:
+      // - a plugin may change or stop what is saved, as it only runs here (and
+      //   rescueDraft says no while plugins haven't started);
+      // - the last save failed or the browser is offline, so that window's
+      //   would likely fail too, with nobody looking;
+      // - a save is running: its new id is unknown, and two saves make two drafts.
+      const canHandOver = own.rescueDraft
+        && emailHooks.onBeforeDraftAutoSave.size === 0
+        && !saveFailedRef.current
+        && navigator.onLine !== false
+        && !inflightSaveRef.current;
+      if (canHandOver) {
+        const draft = rescueRequestRef.current();
+        if (!draft || own.rescueDraft?.(draft)) return;
+      }
+      // Nobody can take it. The prompt keeps the window open: "stay" lets the
+      // save run, and "leave" is the user's own choice.
+      saveDraftRef.current();
+      event.preventDefault();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  // The first focus waits a moment for the fields to render. If the user has already
+  // clicked somewhere in this composer by then (Attach, Subject, a menu), it stays there.
+  const focusUnlessMoved = (target: HTMLElement | null): boolean => {
+    if (!target) return false;
+    const root = target.closest('[data-testid="email-composer"]');
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== target) {
+      // A menu this composer opened (Attach, a picker) is drawn outside it, in a portal.
+      if ((root && root.contains(active)) || active.closest('[role="menu"], [role="listbox"]')) return false;
+    }
+    target.focus();
+    return true;
+  };
+
+  // A new message that comes addressed (a mail link, a draft): the caret goes to the body,
+  // as in Outlook and Thunderbird. Only the first render's To counts (desktop-p3-12).
+  const addressedAtStartRef = useRef<boolean | null>(null);
+  if (addressedAtStartRef.current === null) addressedAtStartRef.current = mode === 'compose' && to.length > 0;
+
   // Auto-focus the To field when composing a new email or forwarding
   useEffect(() => {
+    if (mode === 'compose' && addressedAtStartRef.current) {
+      // The rich text editor focuses itself once it is ready (onEditorReady below).
+      if (!plainTextMode) return;
+      const timer = setTimeout(() => {
+        if (focusUnlessMoved(bodyRef.current)) bodyRef.current?.setSelectionRange(0, 0);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
     if (mode === 'forward' || mode === 'compose') {
       // Small delay to ensure the input is rendered
-      const timer = setTimeout(() => {
-        toInputRef.current?.focus();
-      }, 100);
+      const timer = setTimeout(() => focusUnlessMoved(toInputRef.current), 100);
       return () => clearTimeout(timer);
     }
     // A reply has its recipients already: put the caret at the start of the
@@ -1744,8 +2260,7 @@ export function EmailComposer({
     // rich text editor focuses itself once it is ready (onEditorReady below).
     if ((mode === 'reply' || mode === 'replyAll') && plainTextMode) {
       const timer = setTimeout(() => {
-        bodyRef.current?.focus();
-        bodyRef.current?.setSelectionRange(0, 0);
+        if (focusUnlessMoved(bodyRef.current)) bodyRef.current?.setSelectionRange(0, 0);
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -1829,12 +2344,12 @@ export function EmailComposer({
     const editor = editorRef.current;
     const html = editor && !editor.isDestroyed ? serializeEditorContent(editor) : body;
     editorRef.current = null;
-    setBody(htmlComposeBodyToPlainText(html, signatureIdentity, { separator }));
+    setBody(htmlComposeBodyToPlainText(html, signatureIdentity, { separator, imageAlt: imageAltText }));
     setPlainTextMode(true);
     // Keyed on the signature fields, not the identity object (see the
     // signature effects above for the same rationale).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plainTextMode, body, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled]);
+  }, [plainTextMode, body, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled, imageAltText]);
 
   // Move a chip from one recipient field to another. `toIndex`, when given,
   // inserts at that position in the destination (drag-and-drop reordering,
@@ -2004,18 +2519,55 @@ export function EmailComposer({
     }
   };
 
+  const handleImageUpload = useCallback(async (
+    file: File,
+  ): Promise<{ src: string; cid: string } | null> => {
+    if (!client) return null;
+    try {
+      const readAsDataUrl = new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve((e.target?.result as string) ?? null);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+      const [{ blobId }, dataUrl] = await Promise.all([
+        (composerClientRef.current ?? client).uploadBlob(file),
+        readAsDataUrl,
+      ]);
+      if (!dataUrl) throw new Error('Failed to read image as data URL');
+      const cid = `${generateUUID()}@webmail`;
+      inlineImagesRef.current.push({
+        cid,
+        blobId,
+        type: file.type || 'application/octet-stream',
+        name: file.name,
+        size: file.size,
+        dataUrl,
+        uploadedAt: Date.now(),
+      });
+      return { src: dataUrl, cid };
+    } catch (error) {
+      debug.error(`Failed to upload inline image ${file.name}:`, error);
+      toast.error(t('upload_failed', { filename: file.name }));
+      return null;
+    }
+  }, [client, t]);
+
   const handleTemplateSelect = useCallback(async (template: EmailTemplate, filledValues: Record<string, string>) => {
     let filledSubject = Object.keys(filledValues).length > 0
       ? substitutePlaceholders(template.subject, filledValues)
       : template.subject;
     const filledBody = Object.keys(filledValues).length > 0
-      ? substitutePlaceholders(template.body, filledValues)
+      ? substitutePlaceholders(template.body, filledValues, { html: !!template.isHTML })
       : template.body;
 
-    // In plain text mode, use template body as-is; otherwise convert to HTML
-    let bodyContent = plainTextMode || template.isHTML
-      ? filledBody
-      : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
+    // Match the template to the draft's format: an HTML template goes into a
+    // plain-text draft as its text, not its markup (#1506).
+    let bodyContent = plainTextMode
+      ? (template.isHTML ? htmlToPlainText(filledBody) : filledBody)
+      : template.isHTML
+        ? filledBody
+        : `<p>${filledBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
     // Plugins may rewrite the template before it goes in (onTemplateRender).
     const rendered = await renderTemplateWithPlugins(template.id, {
       subject: filledSubject,
@@ -2026,6 +2578,8 @@ export function EmailComposer({
       filledSubject = rendered.subject;
       bodyContent = plainTextMode ? rendered.text : sanitizePluginBodyHtml(rendered.html);
     }
+    // Its data: images go out as cid: parts, like pasted ones (#1490).
+    if (!plainTextMode) bodyContent = await embedTemplateImages(bodyContent, handleImageUpload);
 
     if (mode === 'compose') {
       // An empty template subject must not wipe one the user typed (#540).
@@ -2111,7 +2665,7 @@ export function EmailComposer({
 
     setShowTemplatePicker(false);
     notifyTemplateApplied(template);
-  }, [mode, plainTextMode, signatureIdentity, signatureSeparatorEnabled]);
+  }, [mode, plainTextMode, signatureIdentity, signatureSeparatorEnabled, handleImageUpload]);
 
   useEffect(() => {
     const handleTemplateKey = (e: KeyboardEvent) => {
@@ -2129,16 +2683,18 @@ export function EmailComposer({
     return () => window.removeEventListener('keydown', handleTemplateKey);
   }, [templatesEnabled]);
 
-  const addFiles = useCallback(async (files: File[]) => {
+  const addFiles = useCallback(async (files: File[], opts?: { handedIn?: boolean }) => {
     if (!client || files.length === 0) return;
 
     // Let plugins veto each upload before it's queued.
     const allowedFiles: File[] = [];
     for (const file of files) {
+      const sniffed = emailHooks.onBeforeAttachmentUpload.size > 0 ? await sniffFile(file) : {};
       const ok = await emailHooks.onBeforeAttachmentUpload.intercept({
         name: file.name,
         type: file.type || 'application/octet-stream',
         size: file.size,
+        ...sniffed,
       });
       if (ok) allowedFiles.push(file);
     }
@@ -2181,6 +2737,8 @@ export function EmailComposer({
         abortController: controller,
       };
     });
+    // Files handed in are where the composer starts, not an edit.
+    if (opts?.handedIn) initialValuesRef.current.attachmentCount += newAttachments.length;
     setAttachments(prev => [...prev, ...newAttachments]);
 
     for (let i = 0; i < files.length; i++) {
@@ -2219,7 +2777,9 @@ export function EmailComposer({
             // offloading it - don't drop a link for a file they cancelled.
             if (controller?.signal.aborted) continue;
             setAttachments(prev => prev.filter(att => att.file !== file));
-            if (plainTextMode) {
+            // The ref, not the closure: the user may have switched format
+            // while the handler was offloading the file.
+            if (plainTextModeRef.current) {
               setBody(previous =>
                 previous && !previous.endsWith('\n') ? `${previous}\n${transformed.text}` : previous + transformed.text
               );
@@ -2290,41 +2850,33 @@ export function EmailComposer({
         );
       }
     }
-  }, [client, t, plainTextMode]);
-
-  const handleImageUpload = useCallback(async (
-    file: File,
-  ): Promise<{ src: string; cid: string } | null> => {
-    if (!client) return null;
-    try {
-      const readAsDataUrl = new Promise<string | null>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve((e.target?.result as string) ?? null);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      });
-      const [{ blobId }, dataUrl] = await Promise.all([
-        (composerClientRef.current ?? client).uploadBlob(file),
-        readAsDataUrl,
-      ]);
-      if (!dataUrl) throw new Error('Failed to read image as data URL');
-      const cid = `${generateUUID()}@webmail`;
-      inlineImagesRef.current.push({
-        cid,
-        blobId,
-        type: file.type || 'application/octet-stream',
-        name: file.name,
-        size: file.size,
-        dataUrl,
-        uploadedAt: Date.now(),
-      });
-      return { src: dataUrl, cid };
-    } catch (error) {
-      debug.error(`Failed to upload inline image ${file.name}:`, error);
-      toast.error(t('upload_failed', { filename: file.name }));
-      return null;
-    }
   }, [client, t]);
+
+  useEffect(() => {
+    if (!client || !initialFiles || initialFiles.length === 0 || attachedInitialFiles.has(initialFiles)) return;
+    attachedInitialFiles.add(initialFiles);
+    void addFiles(initialFiles, { handedIn: true });
+  }, [client, initialFiles, addFiles]);
+
+  // The Attach menu's recent files, in the desktop app (lib/desktop/recent-files.ts). The
+  // shell reads the file; from there it's a file like one from the file dialog.
+  const recentOffered = useRecentFilesOffered();
+  // The largest recent file worth offering: what the server takes per file,
+  // and what the app reads (compose-p3-18).
+  const recentFileLimit = () => {
+    const serverMax = (composerClientRef.current ?? client)?.getMaxSizeUpload?.() ?? 0;
+    return serverMax > 0 ? Math.min(serverMax, RECENT_FILE_MAX_BYTES) : RECENT_FILE_MAX_BYTES;
+  };
+  const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
+    const result = await readRecentFile(file.id);
+    if (result.ok) {
+      await addFiles([result.file]);
+      return;
+    }
+    if (result.reason === 'missing') toast.error(tRecent('missing', { name: file.name }));
+    else if (result.reason === 'too-large') toast.error(tRecent('too_large', { name: file.name, max: formatFileSize(RECENT_FILE_MAX_BYTES) }));
+    else if (result.reason === 'failed') toast.error(tRecent('failed', { name: file.name }));
+  }, [addFiles, tRecent]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
@@ -2348,35 +2900,40 @@ export function EmailComposer({
     dragTimeoutRef.current = setTimeout(clearDragState, 150);
   }, [clearDragState]);
 
+  const isShellDrag = useIsShellDrag();
   const handleDragEnter = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.types.includes('Files')) {
       setIsDraggingOver(true);
       resetDragTimeout();
     }
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     resetDragTimeout();
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     resetDragTimeout();
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     clearDragState();
     if (e.dataTransfer.files?.length) {
       addFiles(Array.from(e.dataTransfer.files));
     }
-  }, [addFiles, clearDragState]);
+  }, [addFiles, clearDragState, isShellDrag]);
 
   const removeAttachment = (index: number) => {
     const att = attachments[index];
@@ -2390,7 +2947,9 @@ export function EmailComposer({
   // offers "attach from there". No `file` is set, matching the existing
   // draft-part hydration path above (a blobId-only attachment is already a
   // supported shape, just never previously reachable from a plugin).
-  const handlePluginAttachmentAdd = useCallback(async (raw: PluginAttachmentUpload): Promise<boolean> => {
+  // `sourceAccountId` (host only, api.files.attach): the login whose Files
+  // hold the blob, so a draft sent from another login copies it over first.
+  const handlePluginAttachmentAdd = useCallback(async (raw: PluginAttachmentUpload, sourceAccountId?: string): Promise<boolean> => {
     // The values come from a plugin: check them, and run the same intercept
     // and size limit every other way of attaching a file goes through.
     const upload = normalizePluginAttachment(raw);
@@ -2408,7 +2967,7 @@ export function EmailComposer({
       toast.error(t('attachments_total_too_large', { max: formatFileSize(maxTotal) }));
       return false;
     }
-    setAttachments(prev => [...prev, upload]);
+    setAttachments(prev => [...prev, sourceAccountId ? { ...upload, sourceAccountId } : upload]);
     return true;
   }, [composerClient, t]);
   // Stable props, so a re-render of the composer doesn't post them to the
@@ -2416,9 +2975,59 @@ export function EmailComposer({
   const pluginToolbarOffers = usePluginSlotOffers('composer-toolbar');
   // The plugin side panels fold when the composer gets too narrow for them.
   const [composerRootEl, setComposerRootEl] = useState<HTMLDivElement | null>(null);
+
+  // The desktop app: files dropped or pasted anywhere on the window come here, if this one's on screen.
+  const loadAttachmentForEdit = useCallback(async (att: ComposerAttachment): Promise<Blob> => {
+    if (att.file) return att.file;
+    // A forwarded part lives in its own login until the draft is saved through another.
+    const owner = att.sourceAccountId && att.sourceAccountId !== composerAccountId
+      ? useAuthStore.getState().getClientForAccount(att.sourceAccountId)
+      : composerClient;
+    if (!owner || !att.blobId) throw new Error('No content for this attachment');
+    return owner.fetchBlob(att.blobId, att.name, att.type);
+  }, [composerClient, composerAccountId]);
+  const composerEdits = useComposerEdits<ComposerAttachment>({
+    attachments,
+    setAttachments,
+    addFiles,
+    load: loadAttachmentForEdit,
+    account: composerAccountId ?? '',
+    draftId,
+    ownerAccountId: draftAccountId,
+    repliesTo: mode === 'reply' || mode === 'replyAll' ? sourceEmailId : undefined,
+    ready: !!client,
+  });
+  useEffect(() => setComposerFileTarget(
+    (files) => void addFiles(files),
+    () => !!composerRootEl?.isConnected && composerRootEl.getClientRects().length > 0,
+    // The file drop overlay's "Insert into the message": the editor's own paste, so the
+    // upload, the place and the question for a description are the same as pasting.
+    {
+      available: () => !!editorRef.current && !editorRef.current.isDestroyed,
+      insert: (files) => {
+        const editor = editorRef.current;
+        if (!editor || editor.isDestroyed) return;
+        const transfer = new DataTransfer();
+        for (const file of files) transfer.items.add(file);
+        editor.commands.focus();
+        editor.view.dom.dispatchEvent(new ClipboardEvent('paste', { clipboardData: transfer, cancelable: true }));
+      },
+    },
+  ), [addFiles, composerRootEl]);
   // The id plugins know this composer by (registered below, with the handle).
   const [pluginComposerId, setPluginComposerId] = useState<string | null>(null);
-  const pluginSidebars = useComposerSidebars(composerRootEl, pluginComposerId);
+  // A reply under its message starts with its panels folded, and keeps what
+  // the user does with them to itself (inline-reply).
+  const pluginSidebars = useComposerSidebars(composerRootEl, pluginComposerId, { inline: docked || mvWindow?.variant === 'inline' });
+  // A docked reply with a panel open takes the reading pane, the message
+  // folded to a bar: beside the reply's few lines the panel's list was cut off.
+  const replyDock = useReplyDock();
+  const sidePanelShown = isPanelOpen(pluginSidebars.modes.left) || isPanelOpen(pluginSidebars.modes.right);
+  useEffect(() => {
+    if (!replyDock) return;
+    replyDock.setWantsRoom(docked && sidePanelShown);
+    return () => replyDock.setWantsRoom(false);
+  }, [replyDock, docked, sidePanelShown]);
   const pluginAttachmentSourceOffers = usePluginSlotOffers('composer-attachment-source');
   const hasAboveBodyOffers = usePluginSlotOffers('composer-above-body').length > 0;
   const hasBelowBodyOffers = usePluginSlotOffers('composer-below-body').length > 0;
@@ -2428,6 +3037,13 @@ export function EmailComposer({
   // Plugin entries make the Send and Attach buttons menus even where the app
   // itself has nothing else to put there.
   const hasSendMenuActions = usePluginActions('composer-send-menu').length > 0;
+  // With nothing but "Schedule send" in Send's menu, the arrow opens the
+  // schedule dialog itself: a menu with one item was one click too many.
+  const sendArrowSchedules = !hasSendMenuActions && !!composerClient?.hasDelayedSend();
+  const handleSendArrow = (e: React.MouseEvent<HTMLElement>) => {
+    if (sendArrowSchedules) openScheduleDialog();
+    else toggleSendMenu(e);
+  };
   const hasAttachMenuActions = usePluginActions('composer-attach-menu').length > 0;
   // Ticked plugin options count in the Options button's badge like the app's own.
   const pluginOptionsOn = usePluginActions('composer-options-menu').filter((a) => a.checked).length;
@@ -2515,28 +3131,17 @@ export function EmailComposer({
   }, [previewAttachment, composerClient]);
 
   // Auto-save draft functionality
-  // `auto`: the debounced save while typing. Only that one may be skipped
-  // by a plugin; saves on close and before send always run, or the text
-  // would be lost.
-  const saveDraftOnce = async (auto = false): Promise<string | null> => {
-    if (!client || !composerClient) return null;
-    const versionAtStart = changeVersionRef.current;
+  const draftRecipients = () => ({
+    toAddresses: expandRecipients(withInput(to, toInput)).map(r => formatRecipient(r.name, r.email)),
+    ccAddresses: expandRecipients(withInput(cc, ccInput)).map(r => formatRecipient(r.name, r.email)),
+    bccAddresses: expandRecipients(withInput(bcc, bccInput)).map(r => formatRecipient(r.name, r.email)),
+  });
 
-    const toAddresses = expandRecipients(withInput(to, toInput)).map(r => formatRecipient(r.name, r.email));
-    const ccAddresses = expandRecipients(withInput(cc, ccInput)).map(r => formatRecipient(r.name, r.email));
-    const bccAddresses = expandRecipients(withInput(bcc, bccInput)).map(r => formatRecipient(r.name, r.email));
+  const draftHasContent = (toAddresses: string[]) =>
+    !!toAddresses.length || !!subject || !!(plainTextMode ? body.trim() : htmlToPlainText(body).trim());
 
-    if (!toAddresses.length && !subject && !(plainTextMode ? body.trim() : htmlToPlainText(body).trim())) {
-      return null;
-    }
-
-    try {
-      await rehomeForeignBlobs();
-    } catch (error) {
-      // The save below then fails with blobNotFound and reports it.
-      debug.warn('email', 'Failed to copy forwarded parts to the sending account:', error);
-    }
-
+  // What a saved draft holds, as of now. No awaits: a closing window has none to spare.
+  const draftContent = () => {
     // Prepare attachments for draft. cid/disposition ride along so inline
     // parts of a re-opened draft keep matching the body's cid: references.
     const uploadedAttachments = attachmentsRef.current
@@ -2557,7 +3162,7 @@ export function EmailComposer({
     // below the editor - was saved without it (#823). Embed the *marked-up*
     // form so re-opening the draft round-trips the signature as one block and
     // signatureAlreadyInBody sees it instead of appending a second copy.
-    const draftSignatureHtml = signatureAlreadyInBody
+    const draftSignatureHtml = signatureAlreadyInBody || !autoSignatureEnabled
       ? ''
       : buildEmbeddedSignatureHtml(signatureIdentity, {
           embed: true,
@@ -2565,10 +3170,86 @@ export function EmailComposer({
         });
     const draftHtmlBody = plainTextMode ? undefined : `${body}${draftSignatureHtml}`;
     const draftTextBody = plainTextMode
-      ? (signatureAlreadyInBody
+      ? (signatureAlreadyInBody || !autoSignatureEnabled
           ? body
           : appendPlainTextSignature(body, signatureIdentity, { separator: signatureSeparatorEnabled }))
       : htmlToPlainText(draftHtmlBody!, imageAltText);
+
+    return { uploadedAttachments, draftHtmlBody, draftTextBody };
+  };
+
+  // Get the selected identity or primary identity
+  // Generate sub-addressed email if tag is set
+  const draftSender = () => {
+    const identityFromEmail = currentIdentity?.email
+      ? subAddressTag
+        ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
+        : currentIdentity.email
+      : undefined;
+    const fromEmail = (fromOverrideEnabled && fromOverrideEmail.trim())
+      ? fromOverrideEmail.trim()
+      : identityFromEmail;
+    const fromName = (fromOverrideEnabled && fromOverrideEmail.trim())
+      ? (fromOverrideName.trim() || undefined)
+      : (currentIdentity?.name || undefined);
+    return { fromEmail, fromName };
+  };
+
+  // The save below, for another window to make as this one closes. Null with nothing to save.
+  rescueRequestRef.current = () => {
+    const { toAddresses, ccAddresses, bccAddresses } = draftRecipients();
+    if (!draftHasContent(toAddresses)) return null;
+    const { uploadedAttachments, draftHtmlBody, draftTextBody } = draftContent();
+    const { fromEmail, fromName } = draftSender();
+    const login = loginFor(currentIdentityParts.localAccountId);
+    const previousLogin = draftLocalAccountIdRef.current;
+    // A version saved through another login can't be replaced from this one.
+    const replaces = !previousLogin || previousLogin === login;
+    return {
+      localAccountId: login,
+      to: toAddresses,
+      subject,
+      body: draftTextBody,
+      cc: ccAddresses,
+      bcc: bccAddresses,
+      identityId: currentIdentityRawId,
+      fromEmail,
+      draftId: replaces ? draftIdRef.current || undefined : undefined,
+      attachments: uploadedAttachments,
+      fromName,
+      htmlBody: draftHtmlBody,
+      inReplyTo: replyThreadingHeaders?.inReplyTo,
+      references: replyThreadingHeaders?.references,
+      options: {
+        priority,
+        previousDraftAccountId: replaces ? draftAccountIdRef.current : undefined,
+        classification: classificationRef.current.draftChoice,
+      },
+      state: snapshotStateRef.current(),
+    };
+  };
+
+  // `auto`: the debounced save while typing. Only that one may be skipped
+  // by a plugin; saves on close and before send always run, or the text
+  // would be lost.
+  const saveDraftOnce = async (auto = false): Promise<string | null> => {
+    if (!client || !composerClient) return null;
+    const versionAtStart = changeVersionRef.current;
+
+    const { toAddresses, ccAddresses, bccAddresses } = draftRecipients();
+
+    if (!draftHasContent(toAddresses)) {
+      return null;
+    }
+
+    try {
+      await rehomeForeignBlobs();
+    } catch (error) {
+      // The save below then fails with blobNotFound and reports it.
+      debug.warn('email', 'Failed to copy forwarded parts to the sending account:', error);
+    }
+
+    const { uploadedAttachments, draftHtmlBody, draftTextBody } = draftContent();
 
     // Create a hash of current data to compare with last saved. Hashing the
     // composed bodies (not the raw editor body) means a signature that changed
@@ -2589,19 +3270,7 @@ export function EmailComposer({
 
     setSaveStatus('saving');
 
-    // Get the selected identity or primary identity
-    // Generate sub-addressed email if tag is set
-    const identityFromEmail = currentIdentity?.email
-      ? subAddressTag
-        ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
-        : currentIdentity.email
-      : undefined;
-    const fromEmail = (fromOverrideEnabled && fromOverrideEmail.trim())
-      ? fromOverrideEmail.trim()
-      : identityFromEmail;
-    const fromName = (fromOverrideEnabled && fromOverrideEmail.trim())
-      ? (fromOverrideName.trim() || undefined)
-      : (currentIdentity?.name || undefined);
+    const { fromEmail, fromName } = draftSender();
 
     try {
       const previousDraftId = draftIdRef.current;
@@ -2665,10 +3334,15 @@ export function EmailComposer({
         savedDraft.htmlBody,
         replyThreadingHeaders?.inReplyTo,
         replyThreadingHeaders?.references,
-        { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId },
+        { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice },
       );
       if (replacedElsewhere) {
-        await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        if (isStandInId(savedDraftId) && savingLogin) {
+          // The new version is only on this device: the old one stays until it's up.
+          await noteDraftReplacedElsewhere(savingLogin, savedDraftId, { login: previousDraftLogin!, jmap: previousDraftAccountId, id: savedDraft.draftId! });
+        } else {
+          await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        }
       }
 
       // Update the ref synchronously so a queued save sees the new id and
@@ -2677,6 +3351,8 @@ export function EmailComposer({
       draftIdRef.current = savedDraftId;
       draftAccountIdRef.current = draftAccountId;
       draftLocalAccountIdRef.current = savingLogin;
+      // Before a save's promise settles: quitting waits for it, then keeps this list.
+      noteOpenDraft(effectiveSessionKey, { draftId: savedDraftId, localAccountId: savingLogin ?? useAuthStore.getState().activeAccountId, ownerAccountId: draftAccountId });
       setDraftId(savedDraftId);
       setDraftAccountId(draftAccountId);
       setDraftLocalAccountId(savingLogin);
@@ -2702,7 +3378,7 @@ export function EmailComposer({
                 // Uploads that finished during the save are not in this version.
                 if (!att.blobId || att.uploading || !savedBlobIds.has(att.blobId)) return att;
                 const idx = freshParts.findIndex((p, i) =>
-                  !claimed.has(i) && (p.name || 'attachment') === att.name && p.size === att.size);
+                  !claimed.has(i) && (p.name || unnamedAttachmentName(p.type)) === att.name && p.size === att.size);
                 if (idx === -1) return att;
                 claimed.add(idx);
                 return { ...att, blobId: freshParts[idx].blobId, fromDraftPart: true };
@@ -2720,6 +3396,7 @@ export function EmailComposer({
         }
       }
 
+      setSavedOnDevice(isStandInId(savedDraftId));
       setSaveStatus('saved');
       saveFailedRef.current = false;
       lastDraftIdRef.current = savedDraftId;
@@ -2756,6 +3433,7 @@ export function EmailComposer({
       // Only the save the user asked for is read out: autosave would say it
       // every minute, and the save before sending is followed by "Sent".
       if (opts.announce && id && !saveFailedRef.current) announceStatus(t('draft_saved'));
+      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.(id, { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current });
       return id;
     })();
     inflightSaveRef.current = promise;
@@ -2777,7 +3455,7 @@ export function EmailComposer({
   // login page can say a draft wasn't saved.
   useEffect(() => registerComposeFlush(async () => {
     while (isSendingRef.current) await new Promise((resolve) => setTimeout(resolve, SEND_WAIT_POLL_MS));
-    if (sentRef.current) return;
+    if (sentRef.current || uneditedRef.current) return;
     const unsaved = changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current;
     if (!unsaved) return;
     if (saveTimeoutRef.current) {
@@ -2786,6 +3464,15 @@ export function EmailComposer({
     }
     await saveDraftRef.current();
     if (saveFailedRef.current) throw new Error('The draft was not saved');
+  }), []);
+
+  // Where this composer's text is, for the app lock.
+  useEffect(() => registerComposeSnapshot({
+    ownWindow: !!ownWindowRef.current,
+    state: () => (sentRef.current || uneditedRef.current ? null : snapshotStateRef.current()),
+    draft: () => (draftIdRef.current && !sentRef.current
+      ? { draftId: draftIdRef.current, localAccountId: draftLocalAccountIdRef.current, ownerAccountId: draftAccountIdRef.current }
+      : null),
   }), []);
 
   // The draft as plugins see it: onDraftChange, the frames above and below
@@ -2828,8 +3515,6 @@ export function EmailComposer({
   // catalogue): plain text at the caret, replacing the selection, so a
   // rewrite of a selected paragraph is one call and Ctrl+Z takes it back in
   // the rich editor. Stable, so the slot iframes don't get new props.
-  const plainTextModeRef = useRef(plainTextMode);
-  plainTextModeRef.current = plainTextMode;
   const pluginInsertText = useCallback((value: unknown) => {
     if (typeof value !== 'string' || value.length === 0 || value.length > MAX_PLUGIN_INSERT_LENGTH) return false;
     if (plainTextModeRef.current) {
@@ -2874,9 +3559,41 @@ export function EmailComposer({
   };
   const pluginAttachRef = useRef(handlePluginAttachmentAdd);
   pluginAttachRef.current = handlePluginAttachmentAdd;
+  const pluginAttachmentIdsRef = useRef(new WeakMap<ComposerAttachment, string>());
+  // Read live draft data without re-registering the composer on every edit.
+  const pluginData = {
+    readMetadata: () => {
+      const draft = draftSnapshotRef.current();
+      return {
+        subject: draft.subject, to: draft.to, cc: draft.cc, bcc: draft.bcc,
+        accountKey: composerAccountId ?? '', identityId: draft.identityId,
+        pending: attachmentsRef.current.some(att => att.uploading || att.error || !att.blobId),
+        attachments: attachmentsRef.current.flatMap(att => {
+          if (!att.blobId || att.uploading || att.error) return [];
+          const id = pluginAttachmentIdsRef.current.get(att) ?? generateUUID();
+          pluginAttachmentIdsRef.current.set(att, id);
+          return [{ id, name: att.name, type: att.type || 'application/octet-stream', size: att.size }];
+        }),
+      };
+    },
+    readAttachment: async (attachmentId: string) => {
+      const file = attachmentsRef.current.find(att => pluginAttachmentIdsRef.current.get(att) === attachmentId && !att.uploading && !att.error);
+      if (!file?.blobId) throw new Error('attachment_unavailable');
+      let owner = composerClient;
+      if (file.sourceAccountId && file.sourceAccountId !== composerAccountId) owner = useAuthStore.getState().getClientForAccount(file.sourceAccountId) ?? null;
+      if (!owner) throw new Error('attachment_unavailable');
+      const blob = await owner.fetchBlob(file.blobId, file.name, file.type);
+      if (blob.size > MAX_PLUGIN_FETCH_BYTES) throw new Error('composer.readAttachment: attachment exceeds 25 MiB');
+      return { name: file.name, type: file.type || blob.type, size: blob.size, data: await blob.arrayBuffer() };
+    },
+  };
+  const pluginDataRef = useRef(pluginData);
+  pluginDataRef.current = pluginData;
   useEffect(() => {
     const plainRange = (value: string) => plainOwnRange(value, pluginEditOptsRef.current);
     const { id, unregister } = registerComposer({
+      readMetadata: () => pluginDataRef.current.readMetadata(),
+      readAttachment: (attachmentId) => pluginDataRef.current.readAttachment(attachmentId),
       readBody: () => {
         if (plainTextModeRef.current) {
           const value = bodyRef.current?.value ?? '';
@@ -2919,11 +3636,44 @@ export function EmailComposer({
         const editor = editorRef.current;
         return !!editor && replaceEditorSelection(editor, html, { below });
       },
+      setSubject: (text) => {
+        // Typed into the field, so Ctrl+Z there takes it back; the subject
+        // state follows through the field's input event, and the draft saves
+        // as after typing. The body keeps focus and caret when it had them.
+        const editor = editorRef.current;
+        const editorFocused = !plainTextModeRef.current && !!editor && !editor.isDestroyed && editor.isFocused;
+        const textarea = plainTextModeRef.current ? bodyRef.current : null;
+        const textareaFocused = !!textarea && document.activeElement === textarea;
+        const caret = textarea ? [textarea.selectionStart ?? 0, textarea.selectionEnd ?? 0] as const : null;
+        const input = subjectInputRef.current;
+        if (!input || !replaceInputText(input, text)) {
+          // No subject line on screen (a docked reply): the value only.
+          setSubject(text);
+          return true;
+        }
+        if (editorFocused) editor.commands.focus();
+        else if (textareaFocused && textarea && caret) {
+          textarea.focus({ preventScroll: true });
+          textarea.setSelectionRange(caret[0], caret[1]);
+        }
+        return true;
+      },
       attach: (file) => pluginAttachRef.current(file as PluginAttachmentUpload),
+      attachFile: ({ sourceAccountId, ...file }) => pluginAttachRef.current(file as PluginAttachmentUpload, sourceAccountId),
     });
     setPluginComposerId(id);
     return unregister;
   }, []);
+
+  // Parameters for plugins from the link this message came from, once per
+  // composer, when the plugins have started.
+  const linkParamsRef = useRef(initialData?.linkParams);
+  useEffect(() => {
+    const params = linkParamsRef.current;
+    if (!pluginComposerId || !params) return;
+    linkParamsRef.current = undefined;
+    void deliverLinkParams(pluginComposerId, params, whenPluginsStarted);
+  }, [pluginComposerId]);
 
   // The selected text of the message, for the plugin frames around it and
   // the panels beside it (an assistant works on what the user highlights).
@@ -2942,6 +3692,11 @@ export function EmailComposer({
     if (!replyFocusedRef.current && (mode === 'reply' || mode === 'replyAll')) {
       replyFocusedRef.current = true;
       ed.commands.focus('start');
+    } else if (!replyFocusedRef.current && mode === 'compose' && addressedAtStartRef.current) {
+      replyFocusedRef.current = true;
+      // Without a view yet there's nothing to check the user's own focus against.
+      const dom = ed.view?.dom as HTMLElement | undefined;
+      if (!dom || focusUnlessMoved(dom)) ed.commands.focus('start');
     }
   }, [mode]);
   useEffect(() => {
@@ -2981,6 +3736,26 @@ export function EmailComposer({
     };
   }, [wantsPluginSelection, pluginEditor, plainTextMode]);
 
+  // Proofreading: checker plugins underline mistakes while the user types
+  // (components/email/proofreading). The browser's own spell check steps
+  // back while one checks spelling, and the text carries its language.
+  const uiLocale = useLocale();
+  const writingLanguage = useSettingsStore((s) => s.writingLanguage);
+  const textLang = writingLanguage && writingLanguage !== 'auto' ? writingLanguage : uiLocale;
+  // The desktop app's spellcheck follows what's being written.
+  useEffect(() => {
+    noteComposerLanguage(effectiveSessionKey, textLang);
+    return () => noteComposerLanguage(effectiveSessionKey, null);
+  }, [effectiveSessionKey, textLang]);
+  const proofreading = useProofreading({
+    composerId: pluginComposerId,
+    sessionKey: effectiveSessionKey,
+    editor: pluginEditor,
+    textareaRef: bodyRef,
+    plainTextMode,
+    ownOptions: pluginEditOptsRef,
+  });
+
   const pluginDraftProps = useMemo(
     () => ({ draft: pluginDraft, selection: pluginSelection, insertText: pluginInsertText, getSelectedText: pluginSelectedText, composerId: pluginComposerId }),
     [pluginDraft, pluginSelection, pluginInsertText, pluginSelectedText, pluginComposerId],
@@ -2992,6 +3767,30 @@ export function EmailComposer({
   const pluginSidebarRightProps = useMemo(
     () => ({ draft: pluginDraft, selection: pluginSelection, composerId: pluginComposerId, focusRequest: pluginSidebars.focusRequests.right }),
     [pluginDraft, pluginSelection, pluginComposerId, pluginSidebars.focusRequests.right],
+  );
+
+  // The plugin panels in the header row: a folded one's Show button, and an
+  // open one's head with its Hide button (see composer-plugin-sidebars.tsx).
+  const leftPanelToggle = pluginSidebars.modes.left === 'folded'
+    ? <ComposerPanelToggle side="left" mode="folded" name={pluginSidebars.names.left} shortcut={pluginSidebars.shortcuts.left} onToggle={() => pluginSidebars.toggle('left')} />
+    : null;
+  const rightPanelToggle = pluginSidebars.modes.right === 'folded'
+    ? <ComposerPanelToggle side="right" mode="folded" name={pluginSidebars.names.right} shortcut={pluginSidebars.shortcuts.right} onToggle={() => pluginSidebars.toggle('right')} />
+    : null;
+  const rightPanelOpen = isPanelOpen(pluginSidebars.modes.right);
+  const panelHead = (side: 'left' | 'right', className: string, children?: React.ReactNode, childrenClassName?: string) => (
+    <ComposerPanelHead
+      side={side}
+      mode={pluginSidebars.modes[side]}
+      width={pluginSidebars.widths[side]}
+      name={pluginSidebars.names[side]}
+      shortcut={pluginSidebars.shortcuts[side]}
+      onToggle={() => pluginSidebars.toggle(side)}
+      className={className}
+      childrenClassName={childrenClassName}
+    >
+      {children}
+    </ComposerPanelHead>
   );
 
   // The right-click menu on selected text, when a plugin put entries in it.
@@ -3033,7 +3832,8 @@ export function EmailComposer({
   );
   // A cloud picker attaches files, or puts share links in the text.
   const pluginAttachmentSourceProps = useMemo(
-    () => ({ onAttach: handlePluginAttachmentAdd, insertText: pluginInsertText, composerId: pluginComposerId }),
+    // One argument only: the login of a blob is the host's to say (attachFile).
+    () => ({ onAttach: (raw: PluginAttachmentUpload) => handlePluginAttachmentAdd(raw), insertText: pluginInsertText, composerId: pluginComposerId }),
     [handlePluginAttachmentAdd, pluginInsertText, pluginComposerId],
   );
   const pluginComposerIdRef = useRef(pluginComposerId);
@@ -3047,6 +3847,10 @@ export function EmailComposer({
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
+
+    // Save and close owns the final save while it waits for uploads.
+    // Upload progress and completion must not schedule a competing autosave.
+    if (saveCloseAttemptRef.current) return;
 
     // Don't auto-save if nothing has changed from initial state
     if (!isDirtyRef.current) {
@@ -3071,7 +3875,7 @@ export function EmailComposer({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- saveDraft reads current state when called, not when effect is set up
-  }, [toStr, ccStr, bccStr, subject, body, attachments, priority]);
+  }, [toStr, ccStr, bccStr, subject, body, attachments, priority, firstEditSeen]);
 
   useEffect(() => {
     return () => {
@@ -3084,26 +3888,40 @@ export function EmailComposer({
   // Groups expand here so validation and every outgoing payload see the
   // actual member addresses.
   const toAddresses = expandRecipients(withInput(to, toInput));
-  const bodyPlainText = plainTextMode ? body.trim() : htmlToPlainText(body).trim();
-  const hasContent = bodyPlainText || attachments.some(att => att.blobId && !att.uploading);
+  // Read when Send is pressed. Worked out on every render, it turned the
+  // whole body (a reply's quote with it) into text each time the composer
+  // drew, three or four times while a reply opened.
+  const hasContent = () => !!(plainTextMode ? body.trim() : htmlToPlainText(body).trim())
+    || attachments.some(att => att.blobId && !att.uploading);
   // A missing subject no longer blocks Send (#684) - users hit the disabled
-  // button without understanding why. It is confirmed in a dialog instead.
-  const canSend = toAddresses.length > 0 && hasContent;
+  // button without understanding why. It is confirmed in a dialog instead,
+  // and so is a message with no text and no file.
+  const canSend = toAddresses.length > 0;
 
   const getSendTooltip = (): string | undefined => {
     if (isWaitingForUploads) return t('validation.attachments_uploading');
     if (canSend) return undefined;
     if (toAddresses.length === 0) return t('validation.recipient_required');
-    if (!hasContent) return t('validation.body_required');
     return undefined;
   };
 
-  const resolveDelayedUntil = async (requestedDelayedUntil?: string): Promise<string | undefined> => {
-    if (requestedDelayedUntil) return requestedDelayedUntil;
-    if (sendDelaySeconds === 0) return undefined;
+  /**
+   * Whether the send waits, asking "send without a delay?" when the server
+   * can't. Returns what gives the time to send at: called only once every
+   * question is answered, right before the message is handed on, so the
+   * Undo time is never spent on reading a question (compose-p3-1). A time
+   * picked in the schedule dialog stays as it is.
+   */
+  const decideSendDelay = async (requestedDelayedUntil?: string): Promise<() => string | undefined> => {
+    if (requestedDelayedUntil) return () => requestedDelayedUntil;
+    if (sendDelaySeconds === 0) return () => undefined;
     if (composerClient?.hasDelayedSend()) {
-      return new Date(Date.now() + sendDelaySeconds * 1000).toISOString();
+      const seconds = sendDelaySeconds;
+      return () => undoDelayUntil(seconds);
     }
+    // Undo send is on by default; a server without delayed sending just
+    // sends. Only a delay the user picked is worth a question.
+    if (!useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds')) return () => undefined;
     const confirmed = await confirmNoDelay({
       title: t('send_delay_unsupported_title'),
       message: t('send_delay_unsupported_confirm'),
@@ -3112,7 +3930,7 @@ export function EmailComposer({
     if (!confirmed) {
       throw new Error(t('send_delay_unsupported'));
     }
-    return undefined;
+    return () => undefined;
   };
 
   // The cids of the inline images (tagged with data-cid) the body still shows.
@@ -3185,9 +4003,21 @@ export function EmailComposer({
     attachmentsRef.current = attachments;
   }, [attachments]);
   const [isWaitingForUploads, setIsWaitingForUploads] = useState(false);
-  const sendCancelledRef = useRef(false);
+  // Cancellation belongs to this attempt: resuming editing or starting a
+  // later Send must never revive an older wait. Teardown cancels only Send,
+  // leaving background uploads and the unmount recovery snapshot alone.
+  const sendUploadWaitRef = useRef<{ cancelled: boolean } | null>(null);
+  const cancelSendUploadWait = () => {
+    if (sendUploadWaitRef.current) sendUploadWaitRef.current.cancelled = true;
+  };
+  useEffect(() => () => {
+    if (sendUploadWaitRef.current) sendUploadWaitRef.current.cancelled = true;
+  }, []);
+  const confirmingSendRef = useRef(false);
   // The user confirmed sending without a subject for this message.
   const emptySubjectConfirmedRef = useRef(false);
+  // ... and without text.
+  const emptyTextConfirmedRef = useRef(false);
   // Placeholders the user chose to send as they are. The warning comes back
   // only for one that is not in here.
   const confirmedPlaceholdersRef = useRef<Set<string>>(new Set());
@@ -3232,25 +4062,45 @@ export function EmailComposer({
     else editor.commands.focus();
   };
 
-  const handleSend = async ({ skipAttachmentCheck = false, skipSubjectCheck = false, delayedUntil }: {
-    skipAttachmentCheck?: boolean;
-    skipSubjectCheck?: boolean;
+  const handleSend = async ({ warningsConfirmed = false, delayedUntil, checkOnly = false }: {
+    /** "Send anyway" in the warnings dialog: don't check those again. */
+    warningsConfirmed?: boolean;
     delayedUntil?: string;
+    /** Only the checks, then the schedule dialog instead of a send. */
+    checkOnly?: boolean;
   } = {}) => {
     if (isSendingRef.current) return;
 
+    // Saved in another program and not on this message yet: not silently the older one.
+    // The wait lets a second click in, so that one goes no further.
+    if (composerEdits.holdsEdits()) {
+      if (confirmingSendRef.current) return;
+      confirmingSendRef.current = true;
+      try {
+        if (!(await composerEdits.confirmSend())) return;
+      } finally {
+        confirmingSendRef.current = false;
+      }
+      if (isSendingRef.current) return;
+    }
+
     if (attachmentsRef.current.some(att => att.uploading)) {
+      const attempt = { cancelled: false };
+      sendUploadWaitRef.current = attempt;
       isSendingRef.current = true;
       setIsSending(true);
       setIsWaitingForUploads(true);
       const uploadResult = await waitForPendingUploads(
         () => attachmentsRef.current,
-        () => sendCancelledRef.current
+        () => attempt.cancelled
       );
       setIsWaitingForUploads(false);
       isSendingRef.current = false;
       setIsSending(false);
-      if (uploadResult === 'cancelled') return;
+      sendUploadWaitRef.current = null;
+      // Teardown or close may follow the helper's last poll but precede this
+      // continuation. Never submit the abandoned attempt in that gap.
+      if (attempt.cancelled || uploadResult === 'cancelled') return;
       if (uploadResult === 'failed') {
         // An upload broke while we were waiting - the user may not be
         // looking at the composer, so auto-sending would silently drop
@@ -3269,7 +4119,6 @@ export function EmailComposer({
     if (!canSend) {
       const errors: { to?: boolean; body?: boolean } = {};
       if (toAddresses.length === 0) errors.to = true;
-      if (!hasContent) errors.body = true;
       setValidationErrors(errors);
 
       if (errors.to) {
@@ -3278,6 +4127,22 @@ export function EmailComposer({
         toInputRef.current?.focus();
       }
       return;
+    }
+
+    // A required classification label (enterprise pack), read from the
+    // policy once it has loaded: no label, no send. Not a pre-send check,
+    // which would be skipped when it throws.
+    await whenPolicySettled();
+    {
+      const labelSender = { email: currentIdentity?.email, accountId: composingAccountId };
+      const labelPolicy = labelsPolicyFor(labelSender);
+      const label = resolveLabel(labelPolicy, classificationRef.current.choice, labelOriginal);
+      if (labelMissing(labelPolicy, label)) {
+        setLabelInvalid(true);
+        toast.error(tClassification('required_toast'));
+        classificationPickerRef.current?.open();
+        return;
+      }
     }
 
     // Catch addresses the server would reject before asking it. Its answer
@@ -3292,61 +4157,75 @@ export function EmailComposer({
       return;
     }
 
-    // Empty subject confirmation (#684). Asked once per message: after "Send
-    // anyway" and a trip back to add an attachment, it asked again.
-    if (!skipSubjectCheck && !emptySubjectConfirmedRef.current && emptySubjectWarningEnabled && !subject.trim()) {
-      setEmptySubjectDontAskAgain(false);
-      setEmptySubjectDelayedUntil(delayedUntil);
-      setShowEmptySubjectWarning(true);
-      return;
-    }
-
-    // Unfilled placeholders: template fields left as {{name}}, fill-ins like
-    // [TIME] from AI drafts, and markers like TODO. The signature is left
-    // out, or a placeholder in it would stop every message.
-    if (placeholderWarningEnabled) {
-      const authored = plainTextMode
-        ? plainTextBodyWithoutSignature(body, signatureIdentity)
-        : stripEmbeddedSignatureHtml(body);
-      const bodyText = extractUserAuthoredText(authored, {
-        plainTextMode,
-        forwardedSeparator: tQuote('forwarded_separator'),
-      });
-      // The fill-in words of the UI language, and of English: AI drafts and
-      // templates are often English whatever the UI language is.
-      const found = findUnfilledPlaceholders(subject, bodyText, [
-        enMessages.email_composer.placeholder_words,
-        t.raw('placeholder_words'),
-      ]);
-      if (found.some(p => !confirmedPlaceholdersRef.current.has(p))) {
-        setPlaceholderWarningMatches(found);
-        setPlaceholderDontAskAgain(false);
-        setPlaceholderWarningDelayedUntil(delayedUntil);
-        setShowPlaceholderWarning(true);
-        return;
+    // What the user may have missed, asked about in one dialog (two in a
+    // row used to ask about each in turn). Answered with "Send anyway", the
+    // subject, the text, the placeholders listed and the proofreading issues
+    // aren't asked about again for this message.
+    if (!warningsConfirmed) {
+      const warnings: SendWarning[] = [];
+      // Empty subject confirmation (#684).
+      if (!emptySubjectConfirmedRef.current && emptySubjectWarningEnabled && !subject.trim()) {
+        warnings.push({ kind: 'subject' });
       }
-    }
+      // No text and no file: Send stays enabled and asks instead.
+      if (!emptyTextConfirmedRef.current && !hasContent()) {
+        warnings.push({ kind: 'text' });
+      }
 
-    // Attachment reminder check
-    if (!skipAttachmentCheck && attachmentReminderEnabled) {
-      const hasAttachments = attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
-      if (!hasAttachments) {
-        // Scan only the user-authored text: the quoted original of a
-        // reply/forward often mentions an attachment itself, which used to fire
-        // the reminder even when the user typed no keyword and added nothing (#570).
-        const bodyText = extractUserAuthoredText(body, {
+      // Unfilled placeholders: template fields left as {{name}}, fill-ins like
+      // [TIME] from AI drafts, and markers like TODO. The signature is left
+      // out, or a placeholder in it would stop every message.
+      if (placeholderWarningEnabled) {
+        const authored = plainTextMode
+          ? plainTextBodyWithoutSignature(body, signatureIdentity)
+          : stripEmbeddedSignatureHtml(body);
+        const bodyText = extractUserAuthoredText(authored, {
           plainTextMode,
           forwardedSeparator: tQuote('forwarded_separator'),
         });
-        const searchText = `${subject} ${bodyText}`.toLowerCase();
-        const matched = attachmentReminderKeywords.find(kw => searchText.includes(kw.toLowerCase()));
-        if (matched) {
-          setAttachmentWarningKeyword(matched);
-          setAttachmentWarningDelayedUntil(delayedUntil);
-          setShowAttachmentWarning(true);
-          return;
+        // The fill-in words of the UI language, and of English: AI drafts and
+        // templates are often English whatever the UI language is.
+        const found = findUnfilledPlaceholders(subject, bodyText, [
+          enMessages.email_composer.placeholder_words,
+          t.raw('placeholder_words'),
+        ]);
+        if (found.some(p => !confirmedPlaceholdersRef.current.has(p))) {
+          warnings.push({ kind: 'placeholders', matches: found });
         }
       }
+
+      // Attachment reminder check
+      if (attachmentReminderEnabled) {
+        const hasAttachments = attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
+        if (!hasAttachments) {
+          // Scan only the user-authored text: the quoted original of a
+          // reply/forward often mentions an attachment itself, which used to fire
+          // the reminder even when the user typed no keyword and added nothing (#570).
+          const bodyText = extractUserAuthoredText(body, {
+            plainTextMode,
+            forwardedSeparator: tQuote('forwarded_separator'),
+          });
+          const searchText = `${subject} ${bodyText}`.toLowerCase();
+          const matched = attachmentReminderKeywords.find(kw => searchText.includes(kw.toLowerCase()));
+          if (matched) warnings.push({ kind: 'attachment', keyword: matched });
+        }
+      }
+
+      // Open proofreading issues, when a checker asked for the warning (the
+      // LanguageTool plugin's "warn before sending" option).
+      if (!proofreadingConfirmedRef.current) {
+        const open = proofreading.sendWarningIssues().length;
+        if (open > 0) warnings.push({ kind: 'proofreading', count: open });
+      }
+
+      if (warnings.length > 0) {
+        setSendWarnings({ items: warnings, delayedUntil, ...(checkOnly ? { schedule: true } : {}) });
+        return;
+      }
+    }
+    if (checkOnly) {
+      setShowScheduleDialog(true);
+      return;
     }
 
     // Checks other features register (lib/outgoing/send-pipeline.ts), such
@@ -3450,9 +4329,14 @@ export function EmailComposer({
     // above-quote replies, a re-opened draft) `signatureAlreadyInBody` is set
     // and the trailing append below is skipped so we don't duplicate it.
 
+    // Whether automatic signature insertion is on for this composer mode
+    // (component-level `autoSignatureEnabled` - see signatureAlreadyInBody).
+    // What the body already carries is never stripped - only the append is
+    // gated.
+
     // Build HTML signature block (used only in rich text mode)
     const buildSignatureHtml = (): string => {
-      if (signatureAlreadyInBody) return '';
+      if (signatureAlreadyInBody || !autoSignatureEnabled) return '';
       const sep = wantsSignatureSeparator(signatureSeparatorEnabled, signatureIdentity) ? `<br><br>-- <br>` : `<br><br>`;
       if (signatureIdentity?.htmlSignature) {
         return `${sep}${sanitizeSignatureHtml(signatureIdentity.htmlSignature)}`;
@@ -3469,8 +4353,8 @@ export function EmailComposer({
     // In plain text mode, send text/plain only (no HTML body)
     const signatureOpts = { separator: signatureSeparatorEnabled };
     const builtTextBody = plainTextMode
-      ? (signatureAlreadyInBody ? body : appendPlainTextSignature(body, signatureIdentity, signatureOpts))
-      : (signatureAlreadyInBody ? htmlToPlainText(body, imageAltText) : appendPlainTextSignature(htmlToPlainText(body, imageAltText), signatureIdentity, signatureOpts));
+      ? (signatureAlreadyInBody || !autoSignatureEnabled ? body : appendPlainTextSignature(body, signatureIdentity, signatureOpts))
+      : (signatureAlreadyInBody || !autoSignatureEnabled ? htmlToPlainText(body, imageAltText) : appendPlainTextSignature(htmlToPlainText(body, imageAltText), signatureIdentity, signatureOpts));
 
     // Before any blobId is read: forwarded parts may still sit on the account
     // that holds the original message.
@@ -3499,27 +4383,60 @@ export function EmailComposer({
     const lastStage = (html: string | undefined, text: string) =>
       finalizeOutgoing({ html: html || undefined, text }, outgoingContext, 'last');
     const inlineAttachments = rewritten?.attachments ?? [];
+    // The message as it is now, once onSend has it: the host may close the
+    // composer before the send is through.
+    let handedToHost: ComposerDraftData | null = null;
 
     try {
-      const effectiveDelayedUntil = await resolveDelayedUntil(delayedUntil);
+      // Whether it waits is asked now; when it goes is worked out once
+      // every question below is answered.
+      const sendDelayTime = await decideSendDelay(delayedUntil);
       // Let plugins veto the send (external-mail warning, mistyped-domain
-      // guards, etc.). Returning false from any handler aborts before either
-      // the S/MIME or standard JMAP path runs.
-      const sendablePreview: OutgoingEmail = {
+      // guards, send checks). Returning false from any handler aborts before
+      // either the S/MIME or standard JMAP path runs. What a send check needs
+      // beyond the bodies (lib/outgoing/send-check-payload.ts) is worked out
+      // after waiting for required checks that are still starting, and only
+      // while a plugin listens.
+      const sendClient = composerClientRef.current ?? client;
+      const readBlob = (blobId: string, name: string, type: string, bytes: number) => (sendClient
+        ? sendClient.fetchBlobArrayBuffer(blobId, name, type, undefined, bytes)
+        : Promise.reject(new Error('No client')));
+      // What is checked is what goes: a file added while the check waits or
+      // asks isn't sent with this message.
+      const sentAttachments = attachmentsRef.current.filter(att => att.blobId && !att.uploading && !att.error);
+      const recipientsAtCheck = {
         to: toAddresses.map(r => formatRecipient(r.name, r.email)),
         cc: ccAddresses.map(r => formatRecipient(r.name, r.email)),
         bcc: bccAddresses.map(r => formatRecipient(r.name, r.email)),
+      };
+      const buildCheck = async (recipients: { to: string[]; cc: string[]; bcc: string[] }): Promise<OutgoingEmail> => ({
+        ...recipients,
         subject,
         htmlBody: finalHtmlBody || '',
         textBody: finalBody,
         identityId: currentIdentity?.id || '',
         fromEmail,
-        attachments: attachmentsRef.current
-          .filter(att => att.blobId && !att.uploading && !att.error)
-          .map(a => ({ name: a.name, type: a.type || 'application/octet-stream', size: a.size })),
+        attachments: await inspectAttachments([
+            ...sentAttachments.map(a => ({
+              name: a.name, type: a.type, size: a.size, blobId: a.blobId, file: a.file,
+              load: (bytes: number) => readBlob(a.blobId!, a.name, a.type, bytes),
+            })),
+            ...inlineAttachments.map(a => ({
+              name: a.name, type: a.type, size: a.size, blobId: a.blobId, inline: true,
+              load: (bytes: number) => readBlob(a.blobId, a.name, a.type, bytes),
+            })),
+          ]),
         inReplyTo: threadingHeaders?.inReplyTo?.[0],
-      };
-      const sendCheck = await emailHooks.onBeforeEmailSend.interceptOutcome(sendablePreview);
+        surface: 'composer',
+        mode,
+        authoredText: extractUserAuthoredText(
+          plainTextMode ? plainTextBodyWithoutSignature(body, signatureIdentity) : stripEmbeddedSignatureHtml(body),
+          { plainTextMode, forwardedSeparator: tQuote('forwarded_separator') },
+        ),
+        externalRecipients: await externalRecipientsFor({ ...outgoingContext, ...recipients }),
+        ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
+      });
+      const sendCheck = await runPluginSendCheck(() => buildCheck(recipientsAtCheck));
       if (sendCheck !== 'allowed') {
         // A plugin vetoed the send (it is expected to show its own UI).
         // Leave a trace so a silent no-op send is diagnosable (#592).
@@ -3527,6 +4444,8 @@ export function EmailComposer({
         // A guard that crashed or never answered showed nothing; say why
         // the message is still here.
         if (sendCheck === 'failed') toast.error(t('send_guard_failed'));
+        const guardKey = sendGuardMessageKey(sendCheck);
+        if (guardKey) toast.error(tSendGuards(guardKey));
         return;
       }
 
@@ -3539,11 +4458,23 @@ export function EmailComposer({
       // draft, and never fall back to sending it unsigned (#1207). It signs
       // or encrypts the message with the `last` finalisers' additions.
       const sealed = lastStage(finalHtmlBody, finalBody);
+      // The plugins' checks are answered: the Undo time starts here. Taken
+      // again below for the standard send, after the plugins' changes.
+      let effectiveDelayedUntil = sendDelayTime();
+      // The label as it stands now, from the policy of the sending account.
+      const labelPolicy = labelsPolicyFor({ email: currentIdentity?.email, accountId: composingAccountId });
+      const sendLabel = resolveLabel(labelPolicy, classificationRef.current.choice, labelOriginal);
+      // A crypto plugin builds the MIME itself: it gets the labelled
+      // subject, and its raw send gets the label's headers, matched by the
+      // token it can pass back (lib/outgoing/classification-raw.ts).
+      const takeoverLabelled = classifyOutgoing(labelPolicy, sendLabel, { subject });
+      const labelToken = beginLabelTakeover(labelPolicy, sendLabel, currentIdentity?.id ?? '');
       const composeSendRequest = {
+        labelToken: labelToken ?? undefined,
         to: toAddresses.map(r => formatRecipient(r.name, r.email)),
         cc: ccAddresses.map(r => formatRecipient(r.name, r.email)),
         bcc: bccAddresses.map(r => formatRecipient(r.name, r.email)),
-        subject,
+        subject: takeoverLabelled.subject,
         htmlBody: sealed.html || '',
         textBody: sealed.text,
         identityId: currentIdentity?.id || '',
@@ -3553,13 +4484,19 @@ export function EmailComposer({
         references: threadingHeaders?.references,
         delayedUntil: effectiveDelayedUntil,
         attachments: [
-          ...attachmentsRef.current
-            .filter(att => att.blobId && !att.uploading && !att.error)
+          ...sentAttachments
             .map(a => ({ name: a.name, type: a.type || 'application/octet-stream', size: a.size, blobId: a.blobId, cid: a.cid })),
           ...inlineAttachments.map(a => ({ name: a.name, type: a.type, size: a.size, blobId: a.blobId, cid: a.cid })),
         ],
       };
-      const pluginOutcome = await emailHooks.onComposeSend.takeOver(composeSendRequest);
+      let pluginOutcome: Awaited<ReturnType<typeof emailHooks.onComposeSend.takeOver>>;
+      const composeTakeover = beginComposeTakeover(currentIdentity?.id ?? '');
+      try {
+        pluginOutcome = await emailHooks.onComposeSend.takeOver(composeSendRequest);
+      } finally {
+        endLabelTakeover(labelToken);
+        endComposeTakeover(composeTakeover);
+      }
       if (pluginOutcome === 'aborted') {
         // The plugin shows its own error, or the user cancelled its prompt.
         debug.log('email', 'Send aborted by an onComposeSend plugin handler');
@@ -3581,8 +4518,7 @@ export function EmailComposer({
       } else {
         // Standard JMAP send path
         // Collect uploaded attachment blobIds for the send request
-        const uploadedAttachments: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }> = attachmentsRef.current
-          .filter(att => att.blobId && !att.uploading && !att.error)
+        const uploadedAttachments: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }> = sentAttachments
           .map(att => ({
             blobId: att.blobId!,
             name: att.name,
@@ -3608,10 +4544,30 @@ export function EmailComposer({
           fromEmail,
           attachments: uploadedAttachments.map(a => ({ name: a.name, type: a.type, size: a.size })),
           inReplyTo: threadingHeaders?.inReplyTo?.[0],
+          ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
+          // Plugins with email:write add keywords for the Sent copy here.
+          keywords: [],
         };
         const outgoing = await emailHooks.onTransformOutgoingEmail.transform(transformInput);
+        const outgoingKeywords = cleanOutgoingKeywords(outgoing.keywords);
+        // A plugin that adds or changes recipients after the send checks
+        // (an automatic Bcc) could take the message outside after an
+        // "only outside the organisation" rule passed: check it again for
+        // the recipients it really goes to.
+        if (recipientsChanged(recipientsAtCheck, outgoing)) {
+          const recheck = await runPluginSendCheck(() => buildCheck({ to: outgoing.to ?? [], cc: outgoing.cc ?? [], bcc: outgoing.bcc ?? [] }));
+          if (recheck !== 'allowed') {
+            debug.log('email', `Send stopped on the second check after a plugin changed the recipients (${recheck})`);
+            if (recheck === 'failed') toast.error(t('send_guard_failed'));
+            const recheckKey = sendGuardMessageKey(recheck);
+            if (recheckKey) toast.error(tSendGuards(recheckKey));
+            return;
+          }
+        }
         // Below whatever the plugins added (a footer), the `last` finalisers.
         const sealedOutgoing = lastStage(outgoing.htmlBody, outgoing.textBody);
+        // The label after the plugins had their say, so none can drop it.
+        const labelled = classifyOutgoing(labelPolicy, sendLabel, { subject: outgoing.subject, headers: outgoing.headers });
 
         // Strip the cross-account namespace from the identity id before
         // handing it to the parent - the JMAP server only knows the raw
@@ -3639,11 +4595,20 @@ export function EmailComposer({
         // Read when the close is reported: the host tears the composer down
         // while onSend is still running. Reset below if the send fails.
         sentRef.current = true;
+        handedToHost = {
+          ...snapshotStateRef.current(),
+          // The save before the send may have moved the draft to a new id.
+          draftId: draftIdRef.current,
+          draftAccountId: draftAccountIdRef.current,
+          draftLocalAccountId: draftLocalAccountIdRef.current,
+        };
+        // A second check may have asked again: the Undo time starts now.
+        effectiveDelayedUntil = sendDelayTime();
         const outcome = await onSend?.({
           to: outgoing.to,
           cc: outgoing.cc,
           bcc: outgoing.bcc,
-          subject: outgoing.subject,
+          subject: labelled.subject,
           body: sealedOutgoing.text,
           htmlBody: sealedOutgoing.html || undefined,
           draftId: finalDraftId && !draftElsewhere ? finalDraftId : undefined,
@@ -3660,12 +4625,19 @@ export function EmailComposer({
           requestDsn: requestDsn || undefined,
           requireTls: requireTls || undefined,
           priority: priority !== 'normal' ? priority : undefined,
+          headers: labelled.headers,
+          labelHeaders: labelled.labelHeaders,
           delayedUntil: effectiveDelayedUntil,
-        });
+          composerId: pluginComposerIdRef.current ?? undefined,
+          ...(outgoingKeywords.length > 0 ? { keywords: outgoingKeywords } : {}),
+        }, handedToHost);
         // Not when nothing went: no host, or one that sent nothing.
         if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);
 
-        if (mode === 'reply' || mode === 'replyAll') {
+        // Replying trusts the recipients, but not while the organisation
+        // blocks remote content: the list would take effect the moment the
+        // block is lifted, with senders nobody chose to trust.
+        if ((mode === 'reply' || mode === 'replyAll') && !remoteContentBlockedByOrg() && !remoteContentBlockedByOrg(composingAccountId)) {
           for (const recipient of [...outgoing.to, ...outgoing.cc].filter(Boolean)) {
             if (trustedSendersAddressBook && client) {
               addToTrustedSendersBook(client, recipient).catch(err => {
@@ -3678,6 +4650,7 @@ export function EmailComposer({
         }
       }
 
+      composerEdits.finish();
       setTo([]);
       setCc([]);
       setBcc([]);
@@ -3698,13 +4671,22 @@ export function EmailComposer({
       // Clear ref so unmount effect doesn't re-save
       stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
       // The host closes the composer from onSend or onScheduledSendCreated;
-      // a send the plugin made itself reaches neither (#1207).
-      if (sendHandledByPlugin && !effectiveDelayedUntil) cleanClose();
+      // a send the plugin made itself reaches neither (#1207). A window of
+      // its own closes only now: closing it stops whatever is still running,
+      // such as removing the draft's last version above.
+      if (ownWindowRef.current || (sendHandledByPlugin && !effectiveDelayedUntil)) cleanClose();
     } catch (err) {
       // Not sent, so the composer stays open and is an unsent draft again.
       explicitCloseRef.current = false;
       sentRef.current = false;
       debug.error('Failed to send email:', err);
+      // A host that closed the composer at Send opens it again with the text.
+      if (handedToHost) onSendFailed?.(handedToHost);
+      if (isLabelRequiredError(err)) {
+        setLabelInvalid(true);
+        toast.error(tClassification('required_toast'));
+        return;
+      }
       if (err instanceof RecipientsRejectedError) {
         // Nothing went out; the message stays open here so the addresses
         // can be fixed. The SMTP replies say why each one was refused (#1123).
@@ -3722,6 +4704,11 @@ export function EmailComposer({
       } else if (err instanceof SubmissionQuotaError) {
         // At a full submission quota only an administrator can help.
         toast.error(sendFailureMessage(err, t));
+      } else if (isServerOutage(err)) {
+        toast.error(t('send_failed'), { message: tOfflineNotes('server_not_answering') });
+      } else if (err instanceof Error && OFFLINE_SEND_ERRORS[err.name]) {
+        // Offline mode (#523) refused to keep it: says why, in the user's language.
+        toast.error(t('send_failed'), { message: tOffline(OFFLINE_SEND_ERRORS[err.name]) });
       } else if (err instanceof TypeError || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
         // fetch() rejects with a TypeError when the network is gone; its
         // "Failed to fetch" told the user nothing.
@@ -3737,12 +4724,15 @@ export function EmailComposer({
   };
 
 
+  checkThenScheduleRef.current = () => void handleSend({ checkOnly: true });
+
   // A host can hand a follow-up to requestCloseRef - "close this session, then
   // do that". It runs only once the composer really closes, never when the
   // guard dialog is cancelled, and never before onClose has had its say.
   const afterCloseRef = useRef<(() => void) | null>(null);
 
   const emitClose = () => {
+    closedRef.current = true;
     onClose?.();
     const afterClose = afterCloseRef.current;
     afterCloseRef.current = null;
@@ -3761,7 +4751,7 @@ export function EmailComposer({
   };
 
   const cleanClose = () => {
-    sendCancelledRef.current = true;
+    cancelSendUploadWait();
     explicitCloseRef.current = true;
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -3770,38 +4760,353 @@ export function EmailComposer({
     emitClose();
   };
 
-  const handleSaveDraftAndClose = async () => {
-    sendCancelledRef.current = true;
-    explicitCloseRef.current = true;
+  const cancelSaveAndClose = () => {
+    const attempt = saveCloseAttemptRef.current;
+    if (!attempt || attempt.saving) return;
+    attempt.cancelled = true;
+    saveCloseAttemptRef.current = null;
+    setIsWaitingToSave(false);
+    setIsSavingAndClosing(false);
+  };
+
+  // "Draft saved" with Open and Discard, once the composer closed and kept
+  // its draft. Read before the close resets the refs; the Discard runs after
+  // unmount, through the host's own discard, as the composer's Discard does.
+  // Open goes the way of a draft opened from the list (openKeptDraft).
+  const announceKeptDraft = () => {
+    const draftId = draftIdRef.current;
+    if (!draftId) return;
+    const where = { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current };
+    const ownWindowKept = ownWindowRef.current?.onDraftKept;
+    if (ownWindowKept) {
+      ownWindowKept(draftId, where);
+      return;
+    }
+    const discard = onDiscardDraft;
+    showDraftSavedToast(() => discard?.(draftId, where), {
+      saved: t('draft_saved'),
+      discard: t('discard'),
+      open: tDock('open_draft'),
+      discarded: tUx('draft_discarded'),
+      undo: tUx('undo'),
+    }, () => openKeptDraft(draftId, where));
+  };
+
+  const handleSaveDraftAndClose = async (opts: { fromClose?: boolean } = {}) => {
+    if (saveCloseAttemptRef.current) return;
+    const attempt = { cancelled: false, saving: false };
+    saveCloseAttemptRef.current = attempt;
+    cancelSendUploadWait();
+    setIsSavingAndClosing(true);
     setShowCloseDialog(false);
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
     }
-    // Close whatever the save does. When the request stalled, this await never
-    // settled and onClose never ran, so the composer stayed mounted and the next
-    // close attempt just re-opened this dialog - Discard was the only way out
-    // (#702). Requests carry a deadline now, so a broken save resolves.
     try {
-      await saveDraft({ announce: true });
-      if (saveFailedRef.current) {
-        // The server never took the draft. Clearing stateRef here would drop the
-        // message on the floor with nothing but a toast, so leave the text in
-        // place and let the unmount stash hand it to the host's "continue draft"
-        // slot - the same path an implicit close uses.
+      setIsWaitingToSave(attachmentsRef.current.some(att => att.uploading));
+      // Queued files also have uploading:true. Removed files leave the list,
+      // so intentional cancellation does not become an upload failure.
+      const result = await waitForPendingUploads(
+        () => attachmentsRef.current,
+        () => attempt.cancelled,
+      );
+      // The helper can finish its loop just as the user cancels the wait.
+      if (attempt.cancelled) return;
+      setIsWaitingToSave(false);
+      if (result === 'failed') {
         toast.error(t('save_failed'));
-        explicitCloseRef.current = false;
-      } else {
-        stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+        if (opts.fromClose) {
+          setCloseSaveFailed(true);
+          openCloseDialog('close');
+        } else {
+          afterCloseRef.current = null;
+        }
+        return;
       }
-    } finally {
+
+      attempt.saving = true;
+      // Read the latest text/identity as well as the confirmed attachment IDs:
+      // the user can keep editing or remove files while uploads are pending.
+      const savedId = await saveDraftRef.current({ announce: true });
+      if (attempt.cancelled) return;
+      if (saveFailedRef.current || !savedId) {
+        // Nothing to save (no recipient, subject, text or file) isn't a failure.
+        if (!saveFailedRef.current && !draftIdRef.current && !draftHasContent(draftRecipients().toAddresses)) {
+          cleanClose();
+          return;
+        }
+        toast.error(t('save_failed'));
+        if (opts.fromClose) {
+          setCloseSaveFailed(true);
+          openCloseDialog('close');
+        } else {
+          afterCloseRef.current = null;
+        }
+        return;
+      }
+      announceKeptDraft();
+      explicitCloseRef.current = true;
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
       emitClose();
+    } finally {
+      if (saveCloseAttemptRef.current === attempt) {
+        saveCloseAttemptRef.current = null;
+        setIsWaitingToSave(false);
+        setIsSavingAndClosing(false);
+      }
     }
   };
 
-  const handleDiscardAndClose = () => {
-    sendCancelledRef.current = true;
+  // Moves the draft to its own window. The window opens first, inside the
+  // click, and waits; this window saves what the server doesn't have yet,
+  // gives it the draft under the same id, and closes the composer here.
+  const [isPoppingOut, setIsPoppingOut] = useState(false);
+  const poppingOutRef = useRef(false);
+  const handlePopOut = async () => {
+    if (!popOut || poppingOutRef.current || isSendingRef.current || saveCloseAttemptRef.current) return;
+    const target = popOut();
+    if (!target) {
+      toast.error(tWindows('popup_blocked'));
+      return;
+    }
+    poppingOutRef.current = true;
+    setIsPoppingOut(true);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    try {
+      const uploads = await waitForPendingUploads(() => attachmentsRef.current, () => false);
+      if (uploads === 'failed') {
+        target.cancel();
+        toast.error(t('save_failed'));
+        return;
+      }
+      if (isDirtyRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current)) {
+        // A failed save doesn't stop the move: the text goes along, marked
+        // unsaved, and this composer lets go only once it is on screen there.
+        await saveDraftRef.current().catch(() => null);
+      }
+      const data = snapshotStateRef.current();
+      const shown = await target.handOver({
+        ...data,
+        draftId: draftIdRef.current ?? lastDraftIdRef.current,
+        draftLocalAccountId: draftLocalAccountIdRef.current,
+      });
+      // Not on screen there, so this is still the only copy of the text.
+      if (!shown) {
+        target.cancel();
+        toast.error(target.notShownMessage?.() ?? tWindows('window_not_ready'));
+        return;
+      }
+      explicitCloseRef.current = true;
+      cancelSendUploadWait();
+      emitClose();
+    } finally {
+      poppingOutRef.current = false;
+      setIsPoppingOut(false);
+    }
+  };
+
+  // Close at the top end (R4). On a phone it moves to the start, as the phone's
+  // mail apps have it, with Send at the end. Beside the window's own close it
+  // goes to the start too.
+  const composerCloseButton = (
+    <IconButton
+      onClick={() => handleClose()}
+      className={cn(closeBesideControls ? "-ms-2" : "-me-2", phoneLayout && "max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11")}
+      label={tCommon('close')}
+      data-testid="composer-close"
+      data-own-window-close={ownWindow ? "" : undefined}
+    >
+      <X className="w-5 h-5 md:w-4 md:h-4" />
+    </IconButton>
+  );
+
+  const popOutButton = (className: string, iconClassName: string) => popOut && (
+    <button
+      type="button"
+      onClick={(event) => { event.stopPropagation(); void handlePopOut(); }}
+      disabled={isPoppingOut || isSending}
+      className={popOutToMainLabel ? className.replace("hidden md:grid", "grid") : className}
+      aria-label={popOutToMainLabel ?? tWindows('open_in_window')}
+      title={popOutToMainLabel ?? tWindows('open_in_window')}
+      data-testid={popOutToMainLabel ? "composer-back-to-main" : "composer-open-in-window"}
+    >
+      {/* Into the main window: an arrow going in, not the inward arrows of leaving full screen. */}
+      {popOutToMainLabel ? <LogIn className={iconClassName} /> : <ExternalLink className={iconClassName} />}
+    </button>
+  );
+
+  // What ends the header row: the window buttons, Close last. With the right
+  // panel open they end its head instead, at the far end of the composer.
+  const windowButtons = (
+    <>
+      {canMaximize && (
+        <button
+          type="button"
+          onClick={() => setMaximized((v) => !v)}
+          className="hidden md:grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={maximized ? t('restore') : t('maximize')}
+          title={maximized ? t('restore') : t('maximize')}
+          data-testid="composer-maximize"
+        >
+          {maximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </button>
+      )}
+      {popOutButton(cn(phoneLayout ? "hidden md:grid" : "grid", "h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"), "w-4 h-4")}
+      {!closeBesideControls && composerCloseButton}
+    </>
+  );
+  const mvInlineButtons = mvWindow && (
+    <>
+      {mvWindow.popOut && (
+        <button
+          type="button"
+          onClick={mvWindow.popOut}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={t('pop_out')}
+          title={t('pop_out')}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </button>
+      )}
+      {popOutButton("grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground", "h-4 w-4")}
+      <button
+        type="button"
+        onClick={() => handleClose()}
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+        aria-label={tCommon('close')}
+        title={tCommon('close')}
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </>
+  );
+  const mvWindowButtons = mvWindow && (
+    <>
+      {mvWindow.state !== "minimized" && popOutButton("grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground", "h-4 w-4")}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "minimized" ? "normal" : "minimized"); }}
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+        aria-label={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
+        title={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "maximized" ? "normal" : "maximized"); }}
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+        aria-label={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
+        title={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
+      >
+        {mvWindow.state === "maximized" ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); handleClose(); }}
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+        aria-label={tCommon('close')}
+        title={tCommon('close')}
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </>
+  );
+  // Files dropped on the header attach, as on the rest of the message.
+  const headerDropProps = { onDragEnter: handleDragEnter, onDragLeave: handleDragLeave, onDragOver: handleDragOver, onDrop: handleDrop };
+
+  // Reply and Reply all in place, from a docked reply's kind menu. Reply all
+  // adds the others; Reply takes away those Reply all added. What the user
+  // added or took away themselves stays as it is.
+  const switchReplyKind = (next: ReplyKind) => {
+    if (next === 'forward') {
+      onSwitchToForward?.();
+      return;
+    }
+    if (!replyTo) return;
+    const one = buildReplyRecipients(replyTo, 'reply', ownIdentityEmails, sourceAccountEmails);
+    const all = buildReplyRecipients(replyTo, 'replyAll', ownIdentityEmails, sourceAccountEmails);
+    const key = (email?: string) => (email ?? '').trim().toLowerCase();
+    const have = new Set([...to, ...cc, ...bcc].map((r) => key(r.email)));
+    if (next === 'replyAll') {
+      const addTo = all.to.map(toRecipient).filter((r) => !have.has(key(r.email)));
+      addTo.forEach((r) => have.add(key(r.email)));
+      const addCc = all.cc.map(toRecipient).filter((r) => !have.has(key(r.email)));
+      setTo([...to, ...addTo]);
+      if (addCc.length > 0) {
+        setCc([...cc, ...addCc]);
+        setShowCc(true);
+      }
+    } else {
+      const keep = new Set(one.to.map((r) => key(r.email)));
+      const added = new Set([...all.to, ...all.cc].map((r) => key(r.email)).filter((e) => !keep.has(e)));
+      setTo(to.filter((r) => !added.has(key(r.email))));
+      setCc(cc.filter((r) => !added.has(key(r.email))));
+    }
+    autoRecipientsRef.current = null;
+    setReplyKindSwitched(next);
+    markEdited();
+  };
+  const replyKind: ReplyKind | null = titleMode === 'reply' || titleMode === 'replyAll' || titleMode === 'forward' ? titleMode : null;
+  const canSwitchReplyKind = !!replyTo && (mode === 'reply' || mode === 'replyAll');
+  const dockReplyType = dockCompact && replyKind ? (
+    <ReplyTypeMenu
+      kind={replyKind}
+      kinds={canSwitchReplyKind ? (onSwitchToForward ? ['reply', 'replyAll', 'forward'] : ['reply', 'replyAll']) : [replyKind]}
+      onSwitch={canSwitchReplyKind ? switchReplyKind : undefined}
+    />
+  ) : null;
+  // From in a docked reply: folded until asked for, unless it isn't the usual sender.
+  const dockFromShown = showDockFrom || fromOverrideEnabled
+    || (identities.length > 1 && !!currentIdentity && !!primaryIdentity
+      // By address: with several accounts the list's ids carry the account in front.
+      && currentIdentity.email.toLowerCase() !== primaryIdentity.email.toLowerCase());
+  const saveStatusText = saveStatus === 'saving' ? t('saving')
+    : saveStatus === 'saved' ? (savedOnDevice ? tOfflineDrafts('saved_on_device') : t('draft_saved'))
+    : saveStatus === 'error' ? t('save_failed') : '';
+  // The end of a docked reply's To row: what the title row held (save state,
+  // plugin buttons, the panels' Show and Hide, Full screen, Pop out, Close).
+  const dockWindowCluster = dockCompact ? (
+    <div className="flex shrink-0 items-center gap-0.5 ms-0.5 ps-1.5 border-s border-border/60" data-dock-window-buttons="">
+      <span
+        className={cn("grid place-items-center", saveStatus === 'idle' ? "w-0 overflow-hidden" : "h-7 w-6")}
+        data-testid="composer-save-status"
+        data-status={saveStatus}
+        title={saveStatusText || undefined}
+      >
+        {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground" aria-hidden="true" />}
+        {saveStatus === 'saved' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />}
+        {saveStatus === 'error' && <X className="w-3.5 h-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />}
+        {saveStatusText && <span className="sr-only">{saveStatusText}</span>}
+      </span>
+      <ComposerHeaderPluginActions composerId={pluginComposerId} />
+      {pluginSidebars.modes.left && (
+        <ComposerPanelButton side="left" open={isPanelOpen(pluginSidebars.modes.left)} name={pluginSidebars.names.left} shortcut={pluginSidebars.shortcuts.left} onToggle={() => pluginSidebars.toggle('left')} />
+      )}
+      {pluginSidebars.modes.right && (
+        <ComposerPanelButton side="right" open={isPanelOpen(pluginSidebars.modes.right)} name={pluginSidebars.names.right} shortcut={pluginSidebars.shortcuts.right} onToggle={() => pluginSidebars.toggle('right')} />
+      )}
+      {windowButtons}
+    </div>
+  ) : null;
+
+  // `keepDraft`: the bin's discard, which deletes the draft once its Undo is
+  // over, not here.
+  const handleDiscardAndClose = ({ keepDraft = false }: { keepDraft?: boolean } = {}) => {
+    cancelSaveAndClose();
+    cancelSendUploadWait();
     explicitCloseRef.current = true;
+    // Discard owns the whole pending batch. Abort queued controllers too so
+    // the serial upload loop skips them after the active upload settles.
+    for (const attachment of attachmentsRef.current) {
+      attachment.abortController?.abort();
+    }
     setShowCloseDialog(false);
+    composerEdits.finish();
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -3809,7 +5114,7 @@ export function EmailComposer({
     // From belongs to: switching From doesn't move the draft until it is
     // saved again, and the same id names another message on another server.
     const discardedDraftId = draftIdRef.current;
-    if (discardedDraftId && onDiscardDraft) {
+    if (discardedDraftId && onDiscardDraft && !keepDraft) {
       onDiscardDraft(discardedDraftId, {
         accountId: draftAccountIdRef.current,
         localAccountId: draftLocalAccountIdRef.current,
@@ -3819,30 +5124,112 @@ export function EmailComposer({
     emitClose();
   };
 
+  /**
+   * The question before closing or discarding. In the desktop app it is a window of its
+   * own; an older shell asks with the OS's message box.
+   */
+  const openCloseDialog = (kind: 'discard' | 'close') => {
+    const inPage = () => {
+      setCloseDialogKind(kind);
+      setShowCloseDialog(true);
+    };
+    const discarding = kind === 'discard';
+    const asked = askInWindow({
+      title: discarding ? t('discard_draft_title') : t('close_draft_title'),
+      message: discarding ? t('discard_draft_message') : tUx('save_failed_close'),
+      buttons: discarding
+        ? [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }]
+        : [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }, { label: tUx('try_again') }],
+      defaultIndex: discarding ? 0 : 2,
+    });
+    if (asked) {
+      void asked.answer.then((answer) => {
+        const button = answer && answer !== 'failed' && 'button' in answer ? answer.button : -1;
+        if (answer === 'failed') inPage();
+        else if (button === 1) handleDiscardAndClose();
+        else if (button === 2) void handleSaveDraftAndClose({ fromClose: true });
+        else afterCloseRef.current = null;
+      });
+      return;
+    }
+    const dialogs = getDesktopBridge()?.dialogs;
+    if (!dialogs) {
+      inPage();
+      return;
+    }
+    const buttons = discarding ? [t('discard'), t('cancel')] : [tUx('try_again'), t('discard'), t('cancel')];
+    void dialogs.confirm({
+      type: 'warning',
+      message: discarding ? t('discard_draft_title') : t('close_draft_title'),
+      detail: discarding ? t('discard_draft_message') : tUx('save_failed_close'),
+      buttons,
+      defaultId: discarding ? 1 : 0,
+    }).then((choice) => {
+      if (buttons[choice] === t('discard')) handleDiscardAndClose();
+      else if (!discarding && choice === 0) void handleSaveDraftAndClose({ fromClose: true });
+      else afterCloseRef.current = null;
+    });
+  };
+
   // Discard deletes the draft, also one that has no unsaved changes, such as
   // a scheduled message reopened with "Cancel and edit". It used to share the
   // X button's path, which closed such a composer and kept the draft.
+  // It asks nothing (compose-p2-10): the composer goes at once with "Draft
+  // discarded · Undo", as Discard on the "Draft saved" toast does, and the
+  // draft is deleted once Undo is no longer offered. Undo brings the composer
+  // back with its text where the host can; elsewhere the last saved draft
+  // stays in Drafts. A window of its own has the main window say it.
   const handleDiscardClick = () => {
+    if (saveCloseAttemptRef.current?.saving) return;
+    cancelSaveAndClose();
     if (!isDirtyRef.current && !draftIdRef.current) {
       cleanClose();
       return;
     }
     afterCloseRef.current = null;
-    setCloseDialogKind('discard');
-    setShowCloseDialog(true);
+    const draftId = draftIdRef.current;
+    const where = { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current };
+    const snapshot = snapshotStateRef.current();
+    const discard = onDiscardDraft;
+    const restore = onRestoreDiscarded;
+    const windowDiscarded = ownWindowRef.current?.onDraftDiscarded;
+    if (draftId && !windowDiscarded) onDiscardStarted?.(draftId);
+    handleDiscardAndClose({ keepDraft: true });
+    // Also before the first save: the text must not go without an Undo (desktop-p3-1).
+    if (windowDiscarded) {
+      windowDiscarded(draftId, where, snapshot);
+      return;
+    }
+    discardWithUndo(
+      () => { if (draftId) discard?.(draftId, where); },
+      { discarded: tUx('draft_discarded'), undo: tUx('undo') },
+      restore ? () => restore(snapshot) : undefined,
+    );
   };
 
+  // X, Escape, another message, a host's tab: one rule, as drafts save
+  // themselves. Closing keeps the draft and says so, with Discard on the
+  // toast; it asks only when the save fails. A message the user hasn't
+  // touched (a reply opened and closed again) leaves nothing behind.
   const handleClose = (afterClose?: () => void) => {
+    if (saveCloseAttemptRef.current?.saving) return;
+    cancelSaveAndClose();
     afterCloseRef.current = afterClose ?? null;
+    setCloseSaveFailed(false);
+    if (uneditedRef.current || (!isDirtyRef.current && !draftIdRef.current)) {
+      cleanClose();
+      return;
+    }
     const savedAlready = draftIdRef.current !== null
       && changeVersionRef.current === savedVersionRef.current
-      && !saveFailedRef.current;
-    if (isDirtyRef.current && !savedAlready) {
-      setCloseDialogKind('close');
-      setShowCloseDialog(true);
-    } else {
+      && !saveFailedRef.current
+      && !attachmentsRef.current.some(att => att.uploading || att.error);
+    if (!isDirtyRef.current || savedAlready) {
+      announceKeptDraft();
       cleanClose();
+      return;
     }
+    void handleSaveDraftAndClose({ fromClose: true });
   };
 
   // Expose the dirty-aware close handler so external hosts (e.g. the Pro tab
@@ -3856,18 +5243,86 @@ export function EmailComposer({
     };
   });
 
+  // Offline. With "Keep mail on this device" on, a send waits in the outbox
+  // and goes out once the server answers again. Without it there is nowhere
+  // safe to keep a message for later: Send says so and the text stays here.
+  const tComposeWindows = useTranslations('compose_windows');
+  const browserOnline = useBrowserOnline();
+  const [offlineSendNotice, setOfflineSendNotice] = useState<'saved' | 'unsaved' | null>(null);
+  const sendOrSayOffline = () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false && !offlineActive(composingAccountId ?? null)) {
+      const saved = !!draftIdRef.current && changeVersionRef.current === savedVersionRef.current && !saveFailedRef.current;
+      setOfflineSendNotice(saved ? 'saved' : 'unsaved');
+      announceStatus(tComposeWindows(saved ? 'offline_send_saved' : 'offline_send_unsaved'));
+      return;
+    }
+    handleSend();
+  };
+  // Back online: the notice goes, and what couldn't be saved meanwhile is saved now.
+  const wasOnlineRef = useRef(browserOnline);
+  useEffect(() => {
+    const cameBack = browserOnline && !wasOnlineRef.current;
+    wasOnlineRef.current = browserOnline;
+    if (!cameBack) return;
+    setOfflineSendNotice(null);
+    if (saveCloseAttemptRef.current || sentRef.current || isSendingRef.current || !isDirtyRef.current) return;
+    if (changeVersionRef.current === savedVersionRef.current && !saveFailedRef.current) return;
+    void saveDraftRef.current({ auto: true });
+  }, [browserOnline]);
+  // Only asked while offline: it reads the organisation's policy and the store's support.
+  const offlineHint = browserOnline ? '' : tComposeWindows(offlineActive(composingAccountId ?? null) ? 'offline_hint_outbox' : 'offline_hint');
+
+  // "Edit sender…": From becomes a name and an address to type, starting
+  // from the identity's.
+  const startFromOverride = () => {
+    setFromOverrideEnabled(true);
+    if (!fromOverrideEmail && currentIdentity?.email) setFromOverrideEmail(currentIdentity.email);
+    if (!fromOverrideName && currentIdentity?.name) setFromOverrideName(currentIdentity.name);
+  };
+
   const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;
     // Keys from a dialog the composer opened (Insert link, ...) reach here
     // through React's tree although the dialog portals to the body: they
     // belong to that dialog, and Escape must close only it.
     if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
+    // Same for what is drawn inside the composer: the directory picker and the
+    // formatting toolbar's menus, which close on Escape themselves. This
+    // handler runs in the capture phase, so they would never see it.
+    const targetDialog = e.target instanceof Element ? e.target.closest('[role="dialog"],[role="alertdialog"],[role="menu"]') : null;
+    if (targetDialog && e.currentTarget.contains(targetDialog)) return;
 
     const isPlainEscape = e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey;
     const hasPrimaryModifier = e.ctrlKey || e.metaKey;
     const isSendShortcut = e.key === 'Enter' && hasPrimaryModifier && !e.altKey && !e.shiftKey;
     const isScheduleShortcut = e.key === 'Enter' && hasPrimaryModifier && !e.altKey && e.shiftKey;
     if (!isPlainEscape && !isSendShortcut && !isScheduleShortcut) {
+      // Ctrl+S saves the draft (Outlook, Thunderbird, Apple Mail), not the
+      // page; Ctrl+Shift+C and Ctrl+Shift+B show Cc and Bcc (Gmail).
+      const key = e.key.toLowerCase();
+      if (hasPrimaryModifier && !e.altKey && !e.shiftKey && key === 's') {
+        e.preventDefault();
+        // Says "Draft saved" also when autosave already had everything.
+        if (!isSavingAndClosing) {
+          void saveDraft({ announce: true }).then((id) => {
+            if (!id || saveFailedRef.current) return;
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus((status) => (status === 'saved' ? 'idle' : status)), 2000);
+          });
+        }
+        return;
+      }
+      if (hasPrimaryModifier && !e.altKey && e.shiftKey && (key === 'c' || key === 'b')) {
+        e.preventDefault();
+        if (key === 'c') {
+          setShowCc(true);
+          setTimeout(() => ccInputRef.current?.focus(), 0);
+        } else {
+          setShowBcc(true);
+          setTimeout(() => bccInputRef.current?.focus(), 0);
+        }
+        return;
+      }
       // A plugin's composer button with a shortcut (composer-toolbar-actions)
       // works while the composer has focus, also while typing.
       if (!e.altKey && !hasPrimaryModifier) return;
@@ -3883,19 +5338,32 @@ export function EmailComposer({
       filesPicker ||
       showSaveAsTemplate ||
       showScheduleDialog ||
-      showAttachmentWarning ||
-      showEmptySubjectWarning ||
-      showPlaceholderWarning ||
+      sendWarnings ||
       showCloseDialog
     ) return;
 
     if (isPlainEscape) {
       if (activeAutoField) return;
+      // A selected recipient: Escape only lets go of it (its own handler).
+      if (e.target instanceof Element && e.target.closest('[data-recipient-chip]')) return;
       // Same for the "@" recipient list in the body: this handler runs in the
       // capture phase, before the editor could close the list itself.
       if (isRecipientMentionActive(editorRef.current)) return;
+      // And for proofreading's popup and panel: Escape closes only them.
+      if (proofreading.popup || proofreading.panel) return;
       e.preventDefault();
+      // Full screen first goes back to where the composer was.
+      if (maximized) {
+        setMaximized(false);
+        return;
+      }
       handleClose();
+      return;
+    }
+
+    // Match the disabled Send controls while Save and close owns the draft.
+    if (isSavingAndClosing) {
+      e.preventDefault();
       return;
     }
 
@@ -3906,7 +5374,7 @@ export function EmailComposer({
       }
 
       e.preventDefault();
-      handleSend();
+      sendOrSayOffline();
       return;
     }
 
@@ -3916,21 +5384,185 @@ export function EmailComposer({
     }
   };
 
+  // The desktop app's Message menu while this composer is open: the same handlers as
+  // its buttons and keys (lib/desktop/commands.ts). Nothing in a browser.
+  useDesktopCommands({
+    'compose.send': () => { if (!isSavingAndClosing) void handleSend(); },
+    'compose.saveDraft': () => { void saveDraft({ announce: true }); },
+    'compose.attach': () => fileInputRef.current?.click(),
+  }, {
+    'compose.send': !!canSend && !isSending && !isSavingAndClosing,
+    'compose.saveDraft': !isSavingAndClosing,
+    'compose.attach': !isSavingAndClosing,
+  });
+
   return (
+    <ComposerBarCompactContext.Provider value={dockCompact}>
     <div
       ref={setComposerRootEl}
       data-testid="email-composer"
-      className={cn("flex h-full bg-background relative", className)}
+      // Edits made while the draft moves wouldn't move with it.
+      inert={isPoppingOut || undefined}
+      // The header row on top, across the plugin panels too, so the window
+      // buttons and Close end the whole composer; panels and message below.
+      data-tour="composer"
+      className={cn(
+        "flex flex-col h-full bg-background relative",
+        className,
+        // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
+        // At the folder sidebar's z-50 and after it in the page, so over it (compose-p2-5).
+        // Its header is the window's top row, beside the controls, as the inline composer's
+        // is: an empty band for the controls stood above it (compose-p3-16). Below the
+        // desktop app's menu bar when that shows.
+        maximized && "fixed inset-0 top-[var(--titlebar-inset)] z-50 h-auto",
+      )}
+      data-maximized={maximized || undefined}
       onKeyDownCapture={handleComposerKeyDown}
+      // Bubble phase, in the same batch as the field's own onChange. A state
+      // change in the capture phase renders first and puts the old value back.
+      onInput={markEdited}
+      onChange={markEdited}
+      onPaste={markEdited}
+      onCut={markEdited}
+      onDrop={markEdited}
     >
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-testid="composer-live-region">
         {liveMessage && <span key={liveMessage.n}>{liveMessage.text}</span>}
       </div>
-      <ComposerPluginSidebar side="left" mode={pluginSidebars.modes.left} onOpen={() => pluginSidebars.open('left')} onClose={() => pluginSidebars.close('left')} extraProps={pluginSidebarLeftProps} width={pluginSidebars.widths.left} onWidthChange={(w) => pluginSidebars.setSideWidth('left', w)} />
-      {/* Right-side composer sidebar slot is rendered after the main content div below. */}
+      {/* Header - mobile: clean bar with close/send, desktop: title bar.
+          In Mountain View's window it is the window's title bar instead. */}
+      {mvWindow?.variant === "inline" ? (
+        <div className="@container/composer-head flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
+          {panelHead('left', 'px-1.5')}
+          <div className="flex-1 min-w-0 flex items-center gap-2 ps-4 pe-1.5">
+            {titleMode === 'replyAll'
+              ? <ReplyAll className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              : titleMode === 'forward'
+                ? <Forward className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                : <Reply className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+            <h3 className="flex-1 min-w-0 truncate text-sm" data-testid="composer-save-status" data-status={saveStatus}>
+              {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
+            </h3>
+            {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            <ComposerHeaderPluginActions composerId={pluginComposerId} />
+            {leftPanelToggle}
+            {rightPanelToggle}
+            {!rightPanelOpen && mvInlineButtons}
+          </div>
+          {panelHead('right', 'ps-1.5 pe-1.5', mvInlineButtons, 'gap-2')}
+        </div>
+      ) : mvWindow ? (
+        <div
+          className={cn(
+            "@container/composer-head flex items-stretch h-10 shrink-0 bg-[var(--mv-search-bg)]",
+            mvWindow.state === "minimized" && "cursor-pointer",
+          )}
+          data-mv-compose-titlebar=""
+          onClick={mvWindow.state === "minimized" ? () => mvWindow.setState("normal") : undefined}
+          {...headerDropProps}
+        >
+          {mvWindow.state !== "minimized" && panelHead('left', 'px-1.5')}
+          <div className="flex-1 min-w-0 flex items-center gap-1 ps-4 pe-1.5">
+            <h3 className="flex-1 min-w-0 truncate text-sm font-medium" data-testid="composer-save-status" data-status={saveStatus}>
+              {titleMode !== 'compose'
+                ? (subject || t('new_message'))
+                : t('new_message')}
+            </h3>
+            {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            {mvWindow.state !== "minimized" && <ComposerHeaderPluginActions composerId={pluginComposerId} />}
+            {mvWindow.state !== "minimized" && leftPanelToggle}
+            {mvWindow.state !== "minimized" && rightPanelToggle}
+            {(mvWindow.state === "minimized" || !rightPanelOpen) && mvWindowButtons}
+          </div>
+          {mvWindow.state !== "minimized" && panelHead('right', 'ps-1.5 pe-1.5', mvWindowButtons, 'gap-1')}
+        </div>
+      ) : dockCompact ? null : (
+      <div ref={setComposerHeader} className="@container/composer-head flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
+        {panelHead('left', 'px-2')}
+        <div className="flex-1 min-w-0 flex items-center gap-3 px-4 py-2 md:py-0">
+        {closeBesideControls && composerCloseButton}
+        {/* A folded panel's Show button where the panel goes: the left one's at the start, the right one's before the window buttons. */}
+        {leftPanelToggle && <div className="hidden md:flex -ms-2">{leftPanelToggle}</div>}
+        <div className="flex-1 min-w-0 flex items-center gap-3">
+          <div className="flex items-center gap-2" data-testid="composer-save-status" data-status={saveStatus}>
+            <h3 className="font-semibold text-base">
+              {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
+            </h3>
+            {saveStatus === 'saving' && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Save className="w-3 h-3 animate-pulse" />
+                <span className={phoneLayout ? "hidden md:inline" : undefined}>{t('saving')}</span>
+              </div>
+            )}
+            {saveStatus === 'saved' && (
+              <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                <Check className="w-3 h-3" />
+                <span className={phoneLayout ? "hidden md:inline" : undefined}>{savedOnDevice ? tOfflineDrafts('saved_on_device') : t('draft_saved')}</span>
+              </div>
+            )}
+            {saveStatus === 'error' && (
+              <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                <X className="w-3 h-3" />
+                <span className={phoneLayout ? "hidden md:inline" : undefined}>{t('save_failed')}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Mobile: keep scheduled send reachable without consuming footer space. */}
+        {phoneLayout && (composerClient?.hasDelayedSend() || hasSendMenuActions ? (
+          <div className="relative inline-flex md:hidden">
+            <Button
+              onClick={() => sendOrSayOffline()}
+              disabled={!canSend || isSending || isSavingAndClosing}
+              title={getSendTooltip()}
+              size="sm"
+              data-testid="composer-send"
+              className="h-11 rounded-e-none border-e border-primary-foreground/20 px-3"
+            >
+              <Send className="w-4 h-4 me-1.5" />
+              {t('send')}
+            </Button>
+            <Button
+              type="button"
+              onMouseDown={(e) => { if (showSendMenu) e.stopPropagation(); }}
+              onClick={handleSendArrow}
+              disabled={!canSend || isSending || isSavingAndClosing}
+              title={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
+              aria-label={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
+              size="sm"
+              className="h-11 min-w-11 rounded-s-none px-2"
+              aria-haspopup={sendArrowSchedules ? 'dialog' : 'menu'}
+              aria-expanded={sendArrowSchedules ? undefined : showSendMenu}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={() => sendOrSayOffline()}
+            disabled={!canSend || isSending || isSavingAndClosing}
+            title={getSendTooltip()}
+            size="sm"
+            data-testid="composer-send"
+            className="md:hidden h-11 px-4"
+          >
+            <Send className="w-4 h-4 me-1.5" />
+            {t('send')}
+          </Button>
+        ))}
+        <ComposerHeaderPluginActions composerId={pluginComposerId} />
+        {rightPanelToggle}
+        {!rightPanelOpen && windowButtons}
+        </div>
+        {panelHead('right', 'ps-1.5 pe-4', windowButtons, 'gap-3')}
+      </div>
+      )}
+
+      {/* The left panel, the message and the right panel, under the header. */}
+      <div className="flex flex-1 min-h-0 relative" data-composer-panels="">
+      <ComposerPluginSidebar side="left" mode={pluginSidebars.modes.left} extraProps={pluginSidebarLeftProps} width={pluginSidebars.widths.left} onWidthChange={(w) => pluginSidebars.setSideWidth('left', w)} />
     <div
       className="flex flex-col h-full bg-background relative flex-1 min-w-0"
-      data-tour="composer"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -3945,165 +5577,6 @@ export function EmailComposer({
           </div>
         </div>
       )}
-      {/* Header - mobile: clean bar with close/send, desktop: title bar.
-          In Mountain View's window it is the window's title bar instead. */}
-      {mvWindow?.variant === "inline" ? (
-        <div className="flex items-center gap-2 h-10 ps-4 pe-1.5 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="">
-          {mode === 'replyAll'
-            ? <ReplyAll className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            : mode === 'forward'
-              ? <Forward className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              : <Reply className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
-          <h3 className="flex-1 min-w-0 truncate text-sm" data-testid="composer-save-status" data-status={saveStatus}>
-            {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
-          </h3>
-          {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
-          {mvWindow.popOut && (
-            <button
-              type="button"
-              onClick={mvWindow.popOut}
-              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label={t('pop_out')}
-              title={t('pop_out')}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => handleClose()}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={tCommon('close')}
-            title={tCommon('close')}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : mvWindow ? (
-        <div
-          className={cn(
-            "flex items-center gap-1 h-10 ps-4 pe-1.5 shrink-0 bg-[var(--mv-search-bg)]",
-            mvWindow.state === "minimized" && "cursor-pointer",
-          )}
-          data-mv-compose-titlebar=""
-          onClick={mvWindow.state === "minimized" ? () => mvWindow.setState("normal") : undefined}
-        >
-          <h3 className="flex-1 min-w-0 truncate text-sm font-medium" data-testid="composer-save-status" data-status={saveStatus}>
-            {mode === 'reply' || mode === 'replyAll' || mode === 'forward'
-              ? (subject || t('new_message'))
-              : t('new_message')}
-          </h3>
-          {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "minimized" ? "normal" : "minimized"); }}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-            aria-label={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
-            title={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
-          >
-            <Minus className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "maximized" ? "normal" : "maximized"); }}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-            aria-label={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
-            title={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
-          >
-            {mvWindow.state === "maximized" ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); handleClose(); }}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-            aria-label={tCommon('close')}
-            title={tCommon('close')}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-      <div className="flex items-center gap-3 px-4 py-2 md:py-3 border-b bg-background">
-        <div className="flex-1 min-w-0 flex items-center gap-3">
-          <div className="flex items-center gap-2" data-testid="composer-save-status" data-status={saveStatus}>
-            <h3 className="font-semibold text-base">
-              {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
-            </h3>
-            {saveStatus === 'saving' && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Save className="w-3 h-3 animate-pulse" />
-                <span className="hidden md:inline">{t('saving')}</span>
-              </div>
-            )}
-            {saveStatus === 'saved' && (
-              <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                <Check className="w-3 h-3" />
-                <span className="hidden md:inline">{t('draft_saved')}</span>
-              </div>
-            )}
-            {saveStatus === 'error' && (
-              <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                <X className="w-3 h-3" />
-                <span className="hidden md:inline">{t('save_failed')}</span>
-              </div>
-            )}
-          </div>
-        </div>
-        {/* Mobile: keep scheduled send reachable without consuming footer space. */}
-        {composerClient?.hasDelayedSend() || hasSendMenuActions ? (
-          <div className="relative inline-flex md:hidden">
-            <Button
-              onClick={() => handleSend()}
-              disabled={!canSend || isSending}
-              title={getSendTooltip()}
-              size="sm"
-              data-testid="composer-send"
-              className="h-11 rounded-e-none border-e border-primary-foreground/20 px-3"
-            >
-              <Send className="w-4 h-4 me-1.5" />
-              {t('send')}
-            </Button>
-            <Button
-              type="button"
-              onMouseDown={(e) => { if (showSendMenu) e.stopPropagation(); }}
-              onClick={toggleSendMenu}
-              disabled={!canSend || isSending}
-              title={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
-              aria-label={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
-              size="sm"
-              className="h-11 min-w-11 rounded-s-none px-2"
-              aria-haspopup="menu"
-              aria-expanded={showSendMenu}
-            >
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </div>
-        ) : (
-          <Button
-            onClick={() => handleSend()}
-            disabled={!canSend || isSending}
-            title={getSendTooltip()}
-            size="sm"
-            data-testid="composer-send"
-            className="md:hidden h-11 px-4"
-          >
-            <Send className="w-4 h-4 me-1.5" />
-            {t('send')}
-          </Button>
-        )}
-        {/* Close at the top end (R4). On a phone it moves to the start, as
-            the phone's mail apps have it, with Send at the end. */}
-        <IconButton
-          onClick={() => handleClose()}
-          className="-me-2 max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11"
-          label={tCommon('close')}
-          data-testid="composer-close"
-        >
-          <X className="w-5 h-5 md:w-4 md:h-4" />
-        </IconButton>
-      </div>
-      )}
-
       {/* Fields + body. While pinFields holds, the fields sit outside the
           body's scroll container so From/To/Cc/Bcc/Subject stay reachable
           while scrolling long bodies, matching the pinned formatting toolbar
@@ -4113,18 +5586,20 @@ export function EmailComposer({
         ref={composerMainRef}
         className={cn("flex-1 min-h-0 flex flex-col", !pinFields && "overflow-y-auto")}
       >
-      <div ref={composerFieldsRef} className="shrink-0 space-y-0 border-b">
+      <div ref={composerFieldsRef} className={cn("shrink-0 space-y-0 border-b", dockCompact && "@container/dock-fields")}>
           {/* From field */}
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
-            <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('from')}:</span>
-            <div className="flex-1 flex items-center gap-1 min-w-0">
+          <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50", dockCompact && "py-1", dockCompact && !dockFromShown && "hidden")} data-composer-from="">
+            <span className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('from')}:</span>
+            <div className={cn("flex-1 flex items-center gap-1 min-w-0", fromOverrideEnabled && "flex-wrap")}>
               {fromOverrideEnabled ? (
-                <div className="flex-1 flex items-center gap-1 min-w-0">
+                // Both fields need room to type in: on a narrow composer they take a
+                // line of their own, or a line each, rather than squeeze to nothing.
+                <div className="flex-1 flex flex-wrap items-center gap-1 min-w-52">
                   <Input
                     value={fromOverrideName}
                     onChange={(e) => setFromOverrideName(e.target.value)}
                     placeholder={t('from_override.name_placeholder')}
-                    className="h-7 text-sm w-32 md:w-40 shrink-0"
+                    className="h-7 text-sm flex-1 min-w-32 md:flex-none md:w-40"
                     aria-label={t('from_override.name_label')}
                   />
                   <Input
@@ -4132,15 +5607,25 @@ export function EmailComposer({
                     onChange={(e) => setFromOverrideEmail(e.target.value)}
                     placeholder={t('from_override.email_placeholder')}
                     type="email"
-                    className="h-7 text-sm flex-1 min-w-0 font-mono"
+                    className="h-7 text-sm flex-[2] min-w-32 font-mono"
                     aria-label={t('from_override.email_label')}
                   />
                 </div>
-              ) : identities.length > 1 ? (
+              ) : identities.length > 0 ? (
                 <select
                   data-testid="composer-from"
+                  aria-label={t('from')}
                   value={selectedIdentityId || primaryIdentity?.id || ''}
                   onChange={(e) => {
+                    // The sender's rarer options sit at the end of the list.
+                    if (e.target.value === FROM_SUB_ADDRESS) {
+                      setSubAddressOpen(true);
+                      return;
+                    }
+                    if (e.target.value === FROM_EDIT_SENDER) {
+                      startFromOverride();
+                      return;
+                    }
                     setSelectedIdentityId(e.target.value);
                     setIdentityPickedByUser(true);
                     notifyIdentitySelected(identities, e.target.value);
@@ -4172,6 +5657,8 @@ export function EmailComposer({
                           </option>
                         );
                       })}
+                  <option value={FROM_SUB_ADDRESS}>{tUx('from_sub_address')}</option>
+                  {customFromEnabled && <option value={FROM_EDIT_SENDER}>{tUx('from_edit_sender')}</option>}
                 </select>
               ) : (
                 <span data-testid="composer-from" className="text-sm text-foreground flex-1 truncate">
@@ -4190,6 +5677,9 @@ export function EmailComposer({
               )}
               {!fromOverrideEnabled && (
                 <SubAddressHelper
+                  hideTrigger={identities.length > 0}
+                  open={identities.length > 0 ? subAddressOpen : undefined}
+                  onOpenChange={setSubAddressOpen}
                   baseEmail={
                     (selectedIdentityId
                       ? identities.find(id => id.id === selectedIdentityId)?.email
@@ -4211,7 +5701,7 @@ export function EmailComposer({
                   <X className="w-3 h-3" />
                 </Button>
               )}
-              {customFromEnabled && (
+              {customFromEnabled && (fromOverrideEnabled || identities.length === 0) && (
                 <Button
                   type="button"
                   variant={fromOverrideEnabled ? 'outline' : 'ghost'}
@@ -4220,13 +5710,7 @@ export function EmailComposer({
                     if (fromOverrideEnabled) {
                       setFromOverrideEnabled(false);
                     } else {
-                      setFromOverrideEnabled(true);
-                      if (!fromOverrideEmail && currentIdentity?.email) {
-                        setFromOverrideEmail(currentIdentity.email);
-                      }
-                      if (!fromOverrideName && currentIdentity?.name) {
-                        setFromOverrideName(currentIdentity.name);
-                      }
+                      startFromOverride();
                     }
                   }}
                   className="h-6 px-2 text-xs shrink-0"
@@ -4244,8 +5728,14 @@ export function EmailComposer({
           )}
 
           {/* To field */}
-          <div data-testid="composer-to" className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>
-            <span id={fieldLabelId('to')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('to')}:</span>
+          <div
+            data-testid="composer-to"
+            data-composer-to-row=""
+            className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", dockCompact && "py-1 ps-3 pe-2", shakeField === 'to' && "animate-shake")}
+            {...(dockCompact ? headerDropProps : {})}
+          >
+            {dockReplyType}
+            <span id={fieldLabelId('to')} className={cn("text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap", dockCompact && "min-w-0 md:min-w-0")}>{t('to')}:</span>
             <RecipientChipInput
               labelId={fieldLabelId('to')}
               chips={to}
@@ -4275,17 +5765,51 @@ export function EmailComposer({
               validationMessage={t('validation.recipient_required')}
               onTab={focusSubject}
               onMoveChip={handleMoveChip}
+              narrowInput={dockCompact}
             />
-            <div className="flex gap-0.5 shrink-0">
-              {activeClient?.supportsPrincipals?.() && (
+            {/* A narrow docked reply: From, Cc, Bcc and the address book in one menu, so the addresses keep their room. */}
+            {dockCompact && (
+              <div className="shrink-0 @[34rem]/dock-fields:hidden" data-dock-fields-menu="">
+                <ComposerToolbarMenu icon={UserPlus} label={tDock('fields_menu')} testId="composer-dock-fields">
+                  {(close) => <>
+                    <ComposerToolbarMenuCheckItem checked={showCc} onToggle={() => setShowCc(!showCc)}>Cc</ComposerToolbarMenuCheckItem>
+                    <ComposerToolbarMenuCheckItem checked={showBcc} onToggle={() => setShowBcc(!showBcc)}>Bcc</ComposerToolbarMenuCheckItem>
+                    {identities.length > 1 && (
+                      <ComposerToolbarMenuCheckItem checked={dockFromShown} onToggle={() => setShowDockFrom((v) => !v)}>{t('from')}</ComposerToolbarMenuCheckItem>
+                    )}
+                    {(hasContacts || activeClient?.supportsPrincipals?.()) && (
+                      <ComposerToolbarMenuItem icon={BookUser} onSelect={() => { close(); setShowDirectoryPicker(true); }}>
+                        {tSend('picker_button')}
+                      </ComposerToolbarMenuItem>
+                    )}
+                  </>}
+                </ComposerToolbarMenu>
+              </div>
+            )}
+            <div className={cn("flex gap-0.5 shrink-0", dockCompact && "hidden @[34rem]/dock-fields:flex")}>
+              {dockCompact && identities.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDockFrom((v) => !v)}
+                  className={cn("text-xs h-7 px-2", dockFromShown && "bg-muted")}
+                  aria-pressed={dockFromShown}
+                  title={currentIdentity?.email ? `${t('from')}: ${currentIdentity.email}` : t('from')}
+                  data-testid="composer-dock-from"
+                >
+                  {t('from')}
+                </Button>
+              )}
+              {(hasContacts || activeClient?.supportsPrincipals?.()) && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowDirectoryPicker(true)}
                   className="h-7 w-7 p-0"
-                  title={t('select_from_directory')}
-                  aria-label={t('select_from_directory')}
+                  title={tSend('picker_button')}
+                  aria-label={tSend('picker_button')}
                   data-testid="composer-directory-picker"
                 >
                   <BookUser className="w-4 h-4" />
@@ -4304,6 +5828,7 @@ export function EmailComposer({
                 }}
                 onDragLeave={() => setIsDraggingChipOverCc(false)}
                 onDrop={(e) => {
+                  if (isShellDrag(e)) return;
                   e.preventDefault();
                   setIsDraggingChipOverCc(false);
                   const raw = e.dataTransfer.getData('application/x-recipient-chip');
@@ -4328,6 +5853,7 @@ export function EmailComposer({
                 }}
                 onDragLeave={() => setIsDraggingChipOverBcc(false)}
                 onDrop={(e) => {
+                  if (isShellDrag(e)) return;
                   e.preventDefault();
                   setIsDraggingChipOverBcc(false);
                   const raw = e.dataTransfer.getData('application/x-recipient-chip');
@@ -4340,12 +5866,13 @@ export function EmailComposer({
                 Bcc
               </Button>
             </div>
+            {dockWindowCluster}
           </div>
 
           {/* Cc field */}
           {showCc && (
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
-              <span id={fieldLabelId('cc')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('cc_label')}</span>
+            <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", dockCompact && "py-1")} data-composer-to-row="">
+              <span id={fieldLabelId('cc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('cc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('cc')}
                 chips={cc}
@@ -4375,8 +5902,8 @@ export function EmailComposer({
 
           {/* Bcc field */}
           {showBcc && (
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
-              <span id={fieldLabelId('bcc')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('bcc_label')}</span>
+            <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", dockCompact && "py-1")} data-composer-to-row="">
+              <span id={fieldLabelId('bcc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('bcc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('bcc')}
                 chips={bcc}
@@ -4405,8 +5932,8 @@ export function EmailComposer({
           )}
 
           {/* Subject field */}
-          <div className="flex items-center gap-2 px-4 py-2.5">
-            <label htmlFor={`${fieldIdBase}-subject`} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('subject_label')}</label>
+          <div className={cn("flex flex-wrap items-center gap-2 px-4 py-2.5", dockCompact && "hidden")} data-composer-subject="">
+            <label htmlFor={`${fieldIdBase}-subject`} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('subject_label')}</label>
             <Input
               id={`${fieldIdBase}-subject`}
               ref={subjectInputRef}
@@ -4423,14 +5950,44 @@ export function EmailComposer({
               }}
               className="flex-1 border-0 h-8 px-0 text-sm"
             />
+            {classification.policy.list.length > 0 && (
+              // A chip at the end of the subject row; on a phone on its own line under it.
+              <ClassificationLabelPicker
+                ref={classificationPickerRef}
+                labels={classification.policy.list}
+                selected={classification.label}
+                required={classification.policy.required}
+                invalid={labelInvalid}
+                onPick={classification.setChoice}
+                className="shrink-0 max-md:order-last max-md:basis-full max-md:ps-14"
+              />
+            )}
           </div>
       </div>
 
-      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")}>
+      {/* The writing area: text, signature and quote read as one page, with the focus shown on it (app/accessibility.css). */}
+      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace} data-composer-writing="">
         {wantsPluginDraft && (
           <PluginSlot name="composer-above-body" className="w-full" extraProps={pluginDraftProps} />
         )}
         {/* Body */}
+        <ProofreadingNotice status={proofreading.status} />
+        {proofreading.popup && !plainTextMode && pluginEditor && (() => {
+          const issue = proofreading.issues.find((i) => i.key === proofreading.popup!.key);
+          return issue ? (
+            <IssuePopup
+              state={proofreading.popup}
+              issue={issue}
+              anchor={() => issueRect(pluginEditor, issue.key)}
+              onApply={proofreading.apply}
+              onDismiss={proofreading.dismiss}
+              onClose={proofreading.closePopup}
+              onNavigate={proofreading.navigate}
+              textRoot={() => (pluginEditor.isDestroyed ? null : pluginEditor.view.dom)}
+              container={(pluginEditor.isDestroyed ? null : pluginEditor.view.dom.closest<HTMLElement>('[aria-modal="true"]')) ?? document.body}
+            />
+          ) : null;
+        })()}
         {plainTextMode ? (
           <>
           <label htmlFor={`${fieldIdBase}-body`} className="sr-only">{t('body_label')}</label>
@@ -4451,14 +6008,20 @@ export function EmailComposer({
             aria-invalid={validationErrors.body || undefined}
             aria-describedby={validationErrors.body ? `${fieldIdBase}-body-error` : undefined}
             onContextMenu={onBodyContextMenu}
+            onMouseDown={selectionMenu.onMouseDown}
+            spellCheck={proofreading.browserSpellcheck}
+            lang={textLang}
           />
           </>
         ) : (
-          <div ref={editorContainerRef} onContextMenu={onBodyContextMenu}>
+          <div ref={editorContainerRef} onContextMenu={onBodyContextMenu} onMouseDownCapture={selectionMenu.onMouseDown}>
             <RichTextEditor
               content={body}
               onChange={(html) => {
                 setBody(html);
+                // Only edits made in the editor get here: toolbar commands,
+                // a pasted or dropped image, typing; and the signature swap.
+                if (!signatureSwapRef.current) markEdited();
                 if (validationErrors.body) setValidationErrors(prev => ({ ...prev, body: false }));
               }}
               onImageUpload={handleImageUpload}
@@ -4468,13 +6031,16 @@ export function EmailComposer({
               ariaInvalid={validationErrors.body}
               ariaDescribedBy={`${fieldIdBase}-body-error`}
               defaultTextStyle={composeStyle}
-              collapseToolbarOnMobile={!showFormattingOnMobile}
-              toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : 'top'}
+              collapseToolbarOnMobile={phoneLayout && !showFormattingOnMobile}
+              toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : dockCompact && !showDockFormatting ? 'hidden' : 'top'}
               onEditorReady={handleEditorReady}
               mentionCandidates={recipientMentionsEnabled ? mentionCandidates : undefined}
               findMentionContacts={recipientMentionsEnabled && mentionAddsRecipientTo !== 'off' ? findMentionContacts : undefined}
               mentionAddsTo={mentionAddsRecipientTo === 'cc' ? 'cc' : 'to'}
               onMentionAdd={addMentionedRecipient}
+              spellcheck={proofreading.browserSpellcheck}
+              lang={textLang}
+              textCheck={proofreading.editorHandlers}
             />
           </div>
         )}
@@ -4487,8 +6053,10 @@ export function EmailComposer({
 
         {/* Hide the visual signature preview when the signature has already been
             embedded into the body (compose, above-quote replies, re-opened
-            drafts) - it would otherwise read as a second signature. */}
-        {signatureAlreadyInBody ? null
+            drafts) - it would otherwise read as a second signature. Also when
+            automatic insertion is off: nothing will be appended at send time,
+            so a preview would promise a signature that never goes out. */}
+        {signatureAlreadyInBody || !autoSignatureEnabled ? null
           : plainTextMode ? (
           getPlainTextSignature(signatureIdentity) ? (
             <div className="px-4 pb-3 text-sm leading-6 text-muted-foreground break-words whitespace-pre-wrap font-mono">
@@ -4509,24 +6077,37 @@ export function EmailComposer({
       </div>
       </div>
 
+        {isWaitingToSave && (
+          <div className="flex items-center justify-between gap-2 px-4 py-2 border-t shrink-0" data-testid="composer-save-upload-wait">
+            <span role="status" className="text-sm text-muted-foreground">{t('attachment_uploading')}</span>
+            <Button variant="outline" size="sm" onClick={() => {
+              cancelSaveAndClose();
+              afterCloseRef.current = null;
+            }}>{t('cancel')}</Button>
+          </div>
+        )}
         {/* Attachments */}
         {attachments.length > 0 && (
           <div className="px-4 py-2 border-t shrink-0">
+            {attachments.length > 1 && (
+              <p className="mb-1.5 text-xs text-muted-foreground tabular-nums" data-testid="composer-attachments-summary">
+                {tUx('attachments_summary', {
+                  count: attachments.length,
+                  size: formatFileSize(attachments.reduce((sum, att) => sum + (att.size || 0), 0)),
+                })}
+              </p>
+            )}
             <div
-              className={cn(
-                "flex flex-wrap gap-2",
-                // Collapsed this is three chips and a counter, so it stays
-                // small. Expanded it is as tall as the attachment count
-                // makes it, and it sits outside the body's scroll container
-                // and cannot shrink - so a few dozen files grew it past the
-                // composer, pushed the send toolbar off the bottom and left
-                // nothing that scrolled: the list was stuck with its last
-                // rows and the Send button both unreachable. Cap the
-                // expanded list and give it a scroller of its own.
-                showAllAttachments && "max-h-[30vh] overflow-y-auto overscroll-contain",
-              )}
+              // Every file shows, wrapping. Past four rows (two in a short
+              // window) the list scrolls by itself: it sits outside the
+              // body's scroller and can't shrink, and a few dozen files pushed
+              // Send off the bottom. The height is whole rows of 2rem chips
+              // with 0.5rem gaps, so no chip is cut in half (compose-p2-11);
+              // the line above says how many there are. Failed files first.
+              className="flex flex-wrap gap-2 max-h-[4.5rem] [@media(min-height:700px)]:max-h-[9.5rem] overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
+              data-testid="composer-attachments"
             >
-              {(showAllAttachments ? attachments : attachments.slice(0, 3)).map((att, index) => {
+              {attachmentsForDisplay(attachments).map(({ att, index }) => {
                 // Clickable to preview only once it has content (local File or an
                 // uploaded blob) and the type is previewable; never mid-upload.
                 const canPreview = !att.uploading && !att.error
@@ -4586,9 +6167,11 @@ export function EmailComposer({
                       <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />
                     ) : att.error ? (
                       <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                    ) : (
-                      <Paperclip className="w-3 h-3 flex-shrink-0" />
-                    )}
+                    ) : (() => {
+                      // The file's type, as the reader shows it.
+                      const { icon: TypeIcon, className: typeIconClass } = attachmentIcon(att.type, att.name);
+                      return <TypeIcon className={cn("w-3.5 h-3.5 flex-shrink-0", typeIconClass)} aria-hidden />;
+                    })()}
                     {canPreview ? (
                       <button
                         type="button"
@@ -4600,6 +6183,28 @@ export function EmailComposer({
                       </button>
                     ) : (
                       <div className="flex items-center gap-2 min-w-0">{label}</div>
+                    )}
+                    {composerEdits.hasUpdate(att) && !att.uploading && (
+                      <button
+                        type="button"
+                        onClick={() => void composerEdits.update(att)}
+                        className="-my-0.5 whitespace-nowrap text-xs font-medium text-primary hover:underline"
+                        data-testid="composer-edit-update"
+                      >
+                        {tEdit('update')}
+                      </button>
+                    )}
+                    {!att.uploading && !att.error && composerEdits.canEditChip(att) && (
+                      <button
+                        type="button"
+                        onClick={() => void composerEdits.startEdit(att)}
+                        className={cn("-my-0.5 hover:text-foreground text-muted-foreground min-w-6 min-h-6 flex items-center justify-center", TOUCH_HIT_AREA)}
+                        title={tEdit('edit')}
+                        aria-label={tEdit('edit_named', { name: att.name })}
+                        data-testid="composer-edit"
+                      >
+                        <FilePen className="w-3 h-3" />
+                      </button>
                     )}
                     <button
                       onClick={() => removeAttachment(index)}
@@ -4613,14 +6218,6 @@ export function EmailComposer({
                 </div>
                 );
               })}
-              {attachments.length > 3 && (
-                <button
-                  onClick={() => setShowAllAttachments(prev => !prev)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showAllAttachments ? t('show_less') : `+${attachments.length - 3}`}
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -4643,18 +6240,39 @@ export function EmailComposer({
           </div>
         )}
 
+        {offlineSendNotice && !browserOnline && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted px-4 py-2 text-sm text-foreground" data-testid="composer-offline-notice">
+            <CloudOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="min-w-0">{tComposeWindows(offlineSendNotice === 'saved' ? 'offline_send_saved' : 'offline_send_unsaved')}</span>
+            {offlineAllowed(composingAccountId ?? null) && (
+              <a
+                href={appPath(buildSettingsPath('backup', 'offline'))}
+                target="_blank"
+                rel="noopener"
+                className="font-medium text-primary underline underline-offset-2"
+              >
+                {tOffline('settings.keep_label')}
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Bottom toolbar. In Mountain View's window both halves fold into
             one row (see [data-mv-compose-footer] in globals.css): Send first,
             the tools after it, and Discard as a bin at the far end. */}
         <div
+          data-composer-footer=""
+          data-toast-avoid="bottom"
           data-mv-compose-footer={mvWindow ? "" : undefined}
           className={cn(
             "@container/composer-bar flex items-center justify-between px-4 py-2.5 max-md:py-1.5 bg-background shrink-0 pb-[calc(0.625rem+env(safe-area-inset-bottom)/2)]",
             mvWindow ? "gap-1" : "border-t",
+            // One row next to Send in a docked reply (labels by ComposerBarCompactContext).
+            dockCompact && "py-1.5 pb-1.5 px-3 gap-2",
           )}
         >
-          {/* Left side actions */}
-          <div className="flex min-w-0 flex-1 items-center gap-1">
+          {/* Left side actions. Plugins add to them: past the room they wrap, not under Discard. */}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
             <input
               ref={fileInputRef}
               type="file"
@@ -4663,14 +6281,22 @@ export function EmailComposer({
               className="hidden"
               accept="*/*"
             />
-            {(filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
+            {recentOffered || (filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
               <ComposerToolbarMenu icon={Paperclip} label={t('attach')} testId="composer-attach-menu">
                 {(close) => <>
+                  {/* As Outlook's: the recent files first, one click attaches one and closes. */}
+                  {recentOffered && (
+                    <RecentFilesMenuSection
+                      onPick={(file) => { close(); void attachRecentFile(file); }}
+                      maxBytes={recentFileLimit()}
+                    />
+                  )}
                   <ComposerToolbarMenuItem
                     icon={Upload}
                     onSelect={() => { close(); fileInputRef.current?.click(); }}
+                    testId="composer-attach-from-device"
                   >
-                    {t('attach_from_device')}
+                    {isDesktopApp() ? tRecent('browse') : t('attach_from_device')}
                   </ComposerToolbarMenuItem>
                   {filesEnabled && composerClient?.supportsFiles?.() && (
                     <ComposerToolbarMenuItem
@@ -4678,7 +6304,7 @@ export function EmailComposer({
                       onSelect={() => { close(); setFilesPicker({ client: composerClient, accountId: composerAccountId }); }}
                       testId="composer-attach-from-files"
                     >
-                      {t('attach_from_files')}
+                      {isDesktopApp() ? tRecent('from_files') : t('attach_from_files')}
                     </ComposerToolbarMenuItem>
                   )}
                   <ComposerPluginMenuItems surface="composer-attach-menu" context={composerActionContext} onSelect={close} separator />
@@ -4696,20 +6322,21 @@ export function EmailComposer({
                 <span className="hidden @[40rem]/composer-bar:inline text-sm">{t('attach')}</span>
               </Button>
             )}
-            {!plainTextMode && (
+            {!plainTextMode && (mvWindow || phoneLayout) && (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => mvWindow ? setMvShowFormatting((v) => !v) : setShowFormattingOnMobile((v) => !v)}
+                onClick={() => mvWindow ? setMvShowFormatting((v) => !v) : dockCompact ? setShowDockFormatting((v) => !v) : setShowFormattingOnMobile((v) => !v)}
                 className={cn(
                   "h-9 w-9 max-md:h-11 max-md:w-11",
-                  !mvWindow && "md:hidden",
-                  (mvWindow ? mvShowFormatting : showFormattingOnMobile) && "bg-accent text-accent-foreground",
+                  !mvWindow && !dockCompact && "md:hidden",
+                  (mvWindow ? mvShowFormatting : dockCompact ? showDockFormatting : showFormattingOnMobile) && "bg-accent text-accent-foreground",
                 )}
                 data-mv-formatting-toggle={mvWindow ? "" : undefined}
+                data-dock-formatting-toggle={dockCompact ? "" : undefined}
                 title={t('formatting')}
                 aria-label={t('formatting')}
-                aria-pressed={mvWindow ? mvShowFormatting : showFormattingOnMobile}
+                aria-pressed={mvWindow ? mvShowFormatting : dockCompact ? showDockFormatting : showFormattingOnMobile}
               >
                 <Type className="w-4 h-4" />
               </Button>
@@ -4763,15 +6390,30 @@ export function EmailComposer({
                     {t('option_dsn')}
                   </ComposerToolbarMenuCheckItem>
                 )}
-                {composerClient?.supportsSubmissionExtension?.('REQUIRETLS') && (
+                {/* REQUIRETLS only secures the way there, so it is an advanced
+                    option; one already ticked stays visible to untick. */}
+                {composerClient?.supportsSubmissionExtension?.('REQUIRETLS') && (showAdvancedSettings || requireTls) && (
                   <ComposerToolbarMenuCheckItem
                     checked={requireTls}
                     onToggle={() => setRequireTls(v => !v)}
-                    description={t('option_require_tls_hint')}
+                    description={tWords('require_tls_hint')}
                     testId="composer-require-tls-toggle"
                   >
-                    {t('option_require_tls')}
+                    {tWords('require_tls')}
                   </ComposerToolbarMenuCheckItem>
+                )}
+                {/* Encrypting is a crypto plugin's job (S/MIME, PGP). Without
+                    one, say where to get it rather than offer nothing. */}
+                {(emailHooks.onComposeSend?.size ?? 0) === 0 && isFeatureEnabled('pluginsEnabled') && !ownWindow && (
+                  <ComposerToolbarMenuItem
+                    icon={Lock}
+                    muted
+                    description={tWords('encrypt_hint')}
+                    onSelect={() => { close(); router.push('/settings/addons'); }}
+                    testId="composer-encrypt-setup"
+                  >
+                    {tWords('encrypt')}
+                  </ComposerToolbarMenuItem>
                 )}
                 <div role="separator" className="my-1 h-px bg-border" />
                 <div role="group" aria-label={t('option_priority')} data-testid="composer-priority">
@@ -4787,15 +6429,41 @@ export function EmailComposer({
                     </ComposerToolbarMenuRadioItem>
                   ))}
                 </div>
+                {classification.policy.list.length > 0 && (
+                  <>
+                    <div role="separator" className="my-1 h-px bg-border" />
+                    <div role="group" aria-label={tClassification('picker_label')} data-testid="composer-options-classification">
+                      <div className="px-3 pt-1 pb-0.5 text-xs font-medium text-muted-foreground" aria-hidden="true">{tClassification('picker_label')}</div>
+                      {[...(classification.policy.required ? [] : [null]), ...classification.policy.list].map((option) => (
+                        <ComposerToolbarMenuRadioItem
+                          key={option?.id ?? 'none'}
+                          checked={(classification.label?.id ?? null) === (option?.id ?? null)}
+                          onSelect={() => classification.setChoice(option?.id ?? null)}
+                          testId={`composer-options-label-${option?.id ?? 'none'}`}
+                        >
+                          {option?.name ?? tClassification('none')}
+                        </ComposerToolbarMenuRadioItem>
+                      ))}
+                    </div>
+                  </>
+                )}
                 <ComposerPluginMenuItems surface="composer-options-menu" context={composerActionContext} onSelect={close} separator />
                 <ComposerPluginMenuItems surface="composer-toolbar-actions" context={composerActionContext} onSelect={close} separator onlyWhenNarrow />
               </>}
             </ComposerToolbarMenu>
             <ComposerPluginToolbarButtons surface="composer-toolbar-actions" context={composerActionContext} />
+            <ProofreadingStatus proofreading={proofreading} plainTextMode={plainTextMode} />
           </div>
 
           {/* Right side - Discard + Send (desktop) */}
           <div className="flex shrink-0 items-center gap-2">
+            {!browserOnline && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground" title={offlineHint} data-testid="composer-offline">
+                <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
+                {tComposeWindows('offline')}
+                <span className="sr-only">{offlineHint}</span>
+              </span>
+            )}
             {mvWindow ? (
               <button
                 type="button"
@@ -4814,16 +6482,20 @@ export function EmailComposer({
                 variant="ghost"
                 onClick={handleDiscardClick}
                 data-testid="composer-discard"
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                aria-label={t('discard')}
+                title={t('discard')}
+                className="px-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 max-md:h-11 max-md:w-11"
               >
-                {t('discard')}
+                {/* A bin left of Send in every composer: the word ran over the tools in a narrow one. */}
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+                <span className="sr-only">{t('discard')}</span>
               </Button>
             )}
             {composerClient?.hasDelayedSend() || hasSendMenuActions ? (
-              <div data-mv-send={mvWindow ? "" : undefined} className="relative hidden md:inline-flex">
+              <div data-mv-send={mvWindow ? "" : undefined} className={cn("relative", phoneLayout ? "hidden md:inline-flex" : "inline-flex")}>
                 <Button
-                  onClick={() => handleSend()}
-                  disabled={!canSend || isSending}
+                  onClick={() => sendOrSayOffline()}
+                  disabled={!canSend || isSending || isSavingAndClosing}
                   title={getSendTooltip()}
                   data-testid="composer-send"
                   className="rounded-e-none border-e border-primary-foreground/20"
@@ -4834,25 +6506,25 @@ export function EmailComposer({
                 <Button
                   type="button"
                   onMouseDown={(e) => { if (showSendMenu) e.stopPropagation(); }}
-                  onClick={toggleSendMenu}
-                  disabled={!canSend || isSending}
+                  onClick={handleSendArrow}
+                  disabled={!canSend || isSending || isSavingAndClosing}
                   title={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
                   aria-label={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
                   className="rounded-s-none px-2"
-                  aria-haspopup="menu"
-                  aria-expanded={showSendMenu}
+                  aria-haspopup={sendArrowSchedules ? 'dialog' : 'menu'}
+                  aria-expanded={sendArrowSchedules ? undefined : showSendMenu}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </Button>
               </div>
             ) : (
               <Button
-                onClick={() => handleSend()}
-                disabled={!canSend || isSending}
+                onClick={() => sendOrSayOffline()}
+                disabled={!canSend || isSending || isSavingAndClosing}
                 title={getSendTooltip()}
                 data-testid="composer-send"
                 data-mv-send={mvWindow ? "" : undefined}
-                className="hidden md:inline-flex"
+                className={phoneLayout ? "hidden md:inline-flex" : "inline-flex"}
               >
                 <Send className="w-4 h-4 me-2" />
                 {t('send')}
@@ -4886,7 +6558,18 @@ export function EmailComposer({
         />
       )}
 
-      {showSaveAsTemplate && (
+      {showSaveAsTemplate && saveTemplateDetails === null && (
+        <QuickSaveTemplateDialog
+          defaultName={subject.trim()}
+          onClose={() => setShowSaveAsTemplate(false)}
+          onEditDetails={(name) => setSaveTemplateDetails(name)}
+          onSave={(name) => {
+            addTemplate({ name, subject, body, isHTML: !plainTextMode, category: '', isFavorite: false });
+            setShowSaveAsTemplate(false);
+          }}
+        />
+      )}
+      {showSaveAsTemplate && saveTemplateDetails !== null && (
         <Dialog
           isOpen
           onClose={() => void closeSaveAsTemplate()}
@@ -4899,8 +6582,10 @@ export function EmailComposer({
             <TemplateForm
               categorySource={composingPersonalTemplates}
               initialData={{
+                name: saveTemplateDetails,
                 subject,
                 body,
+                isHTML: !plainTextMode,
                 to: withInput(to, toInput).map(r => formatRecipient(r.name, r.email)),
                 cc: withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email)),
                 bcc: withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email)),
@@ -4909,6 +6594,7 @@ export function EmailComposer({
                 addTemplate(data);
                 setSaveTemplateDirty(false);
                 setShowSaveAsTemplate(false);
+                setSaveTemplateDetails(null);
               }}
               onCancel={() => void closeSaveAsTemplate()}
               onDirtyChange={setSaveTemplateDirty}
@@ -4920,7 +6606,7 @@ export function EmailComposer({
 
       <ContextMenu ref={sendMenu.menuRef} isOpen={showSendMenu} position={sendMenu.contextMenu.position} onClose={closeSendMenu}>
         {composerClient?.hasDelayedSend() && (
-          <ContextMenuItem icon={CalendarClock} label={t('schedule_send')} onClick={openScheduleDialog} testId="composer-schedule-send" />
+          <ContextMenuItem icon={CalendarClock} label={tMenu('schedule_send')} shortcut={formatShortcutCombo('Mod + Shift + Enter')} onClick={openScheduleDialog} testId="composer-schedule-send" />
         )}
         <ComposerPluginMenuItems
           surface="composer-send-menu"
@@ -4933,136 +6619,55 @@ export function EmailComposer({
       <ScheduleSendDialog
         isOpen={showScheduleDialog}
         onClose={() => setShowScheduleDialog(false)}
-        onSchedule={(delayedUntil) => handleSend({ delayedUntil })}
+        // Checked before the dialog opened (openScheduleDialog).
+        onSchedule={(delayedUntil) => handleSend({ delayedUntil, warningsConfirmed: true })}
         supported={!!composerClient?.hasDelayedSend()}
         maxDelayedSend={composerClient?.getMaxDelayedSend() ?? 0}
-        disabled={!canSend || isSending}
+        disabled={!canSend || isSending || isSavingAndClosing}
       />
-
-      <Dialog
-        isOpen={showAttachmentWarning}
-        onClose={() => setShowAttachmentWarning(false)}
-        role="alertdialog"
-        showClose={false}
-        title={t('forgot_attachment.title')}
-        description={t('forgot_attachment.message', { keyword: attachmentWarningKeyword })}
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setShowAttachmentWarning(false)}>
-              {t('forgot_attachment.back')}
-            </Button>
-            <Button onClick={() => { setShowAttachmentWarning(false); handleSend({ skipAttachmentCheck: true, skipSubjectCheck: true, delayedUntil: attachmentWarningDelayedUntil }); setAttachmentWarningDelayedUntil(undefined); }}>
-              {t('forgot_attachment.send_anyway')}
-            </Button>
-          </>
-        }
-      />
-
-      <Dialog
-        isOpen={showEmptySubjectWarning}
-        onClose={() => setShowEmptySubjectWarning(false)}
-        role="alertdialog"
-        showClose={false}
-        title={t('empty_subject.title')}
-        description={t('empty_subject.message')}
-        footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEmptySubjectWarning(false);
-                  setEmptySubjectDelayedUntil(undefined);
-                  // After the focus trap tears down it restores focus to the
-                  // Send button, so claim the subject field on the next tick.
-                  setTimeout(() => subjectInputRef.current?.focus(), 0);
-                }}
-              >
-                {t('empty_subject.back')}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (emptySubjectDontAskAgain) updateSetting('emptySubjectWarningEnabled', false);
-                  emptySubjectConfirmedRef.current = true;
-                  setShowEmptySubjectWarning(false);
-                  handleSend({ skipSubjectCheck: true, delayedUntil: emptySubjectDelayedUntil });
-                  setEmptySubjectDelayedUntil(undefined);
-                }}
-              >
-                {t('empty_subject.send_anyway')}
-              </Button>
-            </>
-        }
-      >
-        <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={emptySubjectDontAskAgain}
-            onChange={(e) => setEmptySubjectDontAskAgain(e.target.checked)}
-            className="rounded border-input"
-          />
-          {t('empty_subject.dont_ask_again')}
-        </label>
-      </Dialog>
 
       <ConfirmDialog {...noDelayDialogProps} />
       <ConfirmDialog {...sendConfirmDialogProps} />
 
-      <Dialog
-        isOpen={showPlaceholderWarning}
-        onClose={() => setShowPlaceholderWarning(false)}
-        role="alertdialog"
-        showClose={false}
-        title={t('placeholder_warning.title')}
-        description={t('placeholder_warning.message')}
-        footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowPlaceholderWarning(false);
-                  setPlaceholderWarningDelayedUntil(undefined);
-                  // The focus trap hands focus back to the Send button as it
-                  // tears down, so select on the next tick.
-                  const first = placeholderWarningMatches[0];
-                  setTimeout(() => { if (first) selectPlaceholder(first); }, 0);
-                }}
-              >
-                {t('placeholder_warning.back')}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (placeholderDontAskAgain) updateSetting('placeholderWarningEnabled', false);
-                  placeholderWarningMatches.forEach((p) => confirmedPlaceholdersRef.current.add(p));
-                  setShowPlaceholderWarning(false);
-                  handleSend({ skipSubjectCheck: true, delayedUntil: placeholderWarningDelayedUntil });
-                  setPlaceholderWarningDelayedUntil(undefined);
-                }}
-              >
-                {t('placeholder_warning.send_anyway')}
-              </Button>
-            </>
-        }
-      >
-        <ul className="mt-3 flex flex-wrap items-center gap-1.5" aria-label={t('placeholder_warning.found')}>
-          {placeholderWarningMatches.slice(0, 5).map((p) => (
-            <li key={p} className="max-w-full truncate rounded bg-muted px-2 py-0.5 font-mono text-xs text-foreground">{p}</li>
-          ))}
-          {placeholderWarningMatches.length > 5 && (
-            <li className="text-xs text-muted-foreground">
-              {t('placeholder_warning.more', { count: placeholderWarningMatches.length - 5 })}
-            </li>
-          )}
-        </ul>
-        <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={placeholderDontAskAgain}
-            onChange={(e) => setPlaceholderDontAskAgain(e.target.checked)}
-            className="rounded border-input"
-          />
-          {t('placeholder_warning.dont_ask_again')}
-        </label>
-      </Dialog>
+      <SendWarningsDialog
+        warnings={sendWarnings?.items ?? null}
+        scheduling={sendWarnings?.schedule === true}
+        onBack={() => {
+          const first = sendWarnings?.items[0];
+          setSendWarnings(null);
+          // The focus trap hands focus back to the Send button as it tears
+          // down: go to what the first warning is about on the next tick.
+          setTimeout(() => {
+            if (first?.kind === 'subject') subjectInputRef.current?.focus();
+            else if (first?.kind === 'placeholders') selectPlaceholder(first.matches[0]);
+            else if (first?.kind === 'proofreading') proofreading.navigate(1);
+            else if (first?.kind === 'text') {
+              if (plainTextModeRef.current) bodyRef.current?.focus();
+              else editorRef.current?.commands.focus();
+            }
+          }, 0);
+        }}
+        onSendAnyway={(dontAskAgain) => {
+          if (!sendWarnings) return;
+          const { items, delayedUntil, schedule } = sendWarnings;
+          for (const warning of items) {
+            if (warning.kind === 'subject') {
+              emptySubjectConfirmedRef.current = true;
+              if (dontAskAgain) updateSetting('emptySubjectWarningEnabled', false);
+            } else if (warning.kind === 'text') {
+              emptyTextConfirmedRef.current = true;
+            } else if (warning.kind === 'placeholders') {
+              warning.matches.forEach((p) => confirmedPlaceholdersRef.current.add(p));
+              if (dontAskAgain) updateSetting('placeholderWarningEnabled', false);
+            } else if (warning.kind === 'proofreading') {
+              proofreadingConfirmedRef.current = true;
+            }
+          }
+          setSendWarnings(null);
+          if (schedule) setShowScheduleDialog(true);
+          else handleSend({ warningsConfirmed: true, delayedUntil });
+        }}
+      />
 
       <Dialog
         isOpen={showCloseDialog}
@@ -5070,19 +6675,19 @@ export function EmailComposer({
         role="alertdialog"
         showClose={false}
         title={closeDialogKind === 'discard' ? t('discard_draft_title') : t('close_draft_title')}
-        description={closeDialogKind === 'discard' ? t('discard_draft_message') : t('close_draft_message')}
+        description={closeDialogKind === 'discard' ? t('discard_draft_message') : closeSaveFailed ? tUx('save_failed_close') : t('close_draft_message')}
         footer={
           <>
             <Button variant="outline" onClick={() => dismissCloseDialog()}>
               {t('cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleDiscardAndClose}>
+            <Button variant="destructive" onClick={() => handleDiscardAndClose()}>
               {t('discard')}
             </Button>
             {closeDialogKind === 'close' && (
-              <Button onClick={handleSaveDraftAndClose}>
+              <Button onClick={() => void handleSaveDraftAndClose({ fromClose: closeSaveFailed })}>
                 <Save className="w-4 h-4 me-2" />
-                {tCommon('save')}
+                {closeSaveFailed ? tUx('try_again') : tCommon('save')}
               </Button>
             )}
           </>
@@ -5098,9 +6703,11 @@ export function EmailComposer({
         />
       )}
     </div>
-      <ComposerPluginSidebar side="right" mode={pluginSidebars.modes.right} onOpen={() => pluginSidebars.open('right')} onClose={() => pluginSidebars.close('right')} extraProps={pluginSidebarRightProps} width={pluginSidebars.widths.right} onWidthChange={(w) => pluginSidebars.setSideWidth('right', w)} />
+      <ComposerPluginSidebar side="right" mode={pluginSidebars.modes.right} extraProps={pluginSidebarRightProps} width={pluginSidebars.widths.right} onWidthChange={(w) => pluginSidebars.setSideWidth('right', w)} />
+      </div>
       <ComposerSelectionMenu menu={selectionMenu} composerId={pluginComposerId} onClipboard={clipboardFromMenu} />
     </div>
+    </ComposerBarCompactContext.Provider>
   );
 }
 
@@ -5209,6 +6816,7 @@ export function RecipientChipInput({
   validationMessage,
   onTab,
   onMoveChip,
+  narrowInput = false,
 }: {
   /** The id of the field's visible label ("To:"), which names the input and the chip list. */
   labelId: string;
@@ -5236,6 +6844,8 @@ export function RecipientChipInput({
   validationMessage?: string;
   onTab?: () => void;
   onMoveChip: (recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc', toIndex?: number) => void;
+  /** A narrow row (a docked reply's To): the typing space beside the chips may get small before it wraps under them. */
+  narrowInput?: boolean;
 }) {
   const t = useTranslations('email_composer');
   const { contextMenu, openContextMenu, openContextMenuFrom, closeContextMenu, menuRef } = useContextMenu<{ index: number; recipient: Recipient }>();
@@ -5244,6 +6854,9 @@ export function RecipientChipInput({
   // one by default: Shift+Tab from the input lands next to it.
   const [rovingChip, setRovingChip] = useState<number | null>(null);
   const chipRefs = useRef<Array<HTMLElement | null>>([]);
+  // The chip a Backspace in the empty input selected: a second one removes it
+  // and goes back to typing.
+  const backspaceChipRef = useRef<number | null>(null);
   const errorId = `${labelId}-error`;
   const chipHintId = `${labelId}-chip-hint`;
   const fieldNames: Record<'to' | 'cc' | 'bcc', string> = { to: t('to'), cc: t('cc'), bcc: t('bcc') };
@@ -5277,6 +6890,25 @@ export function RecipientChipInput({
 
   const handleChipKeyDown = (e: React.KeyboardEvent<HTMLElement>, index: number) => {
     if (e.target !== e.currentTarget) return;
+    const fromInput = backspaceChipRef.current === index;
+    backspaceChipRef.current = null;
+    // Escape lets go of the chip (the composer stays open); typing goes on in the input.
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      inputRef.current?.focus();
+      return;
+    }
+    if (fromInput && (e.key === 'Backspace' || e.key === 'Delete')) {
+      e.preventDefault();
+      onChipsChange(chips.filter((_, i) => i !== index));
+      setRovingChip(null);
+      inputRef.current?.focus();
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && e.key !== ' ') {
+      inputRef.current?.focus();
+      return;
+    }
     const rtl = typeof window !== 'undefined' && getComputedStyle(e.currentTarget).direction === 'rtl';
     const back = rtl ? 'ArrowRight' : 'ArrowLeft';
     const forward = rtl ? 'ArrowLeft' : 'ArrowRight';
@@ -5321,11 +6953,16 @@ export function RecipientChipInput({
     }
   }, [editingChip]);
 
-  // Format a recipient for display in a chip / context menu
+  // A chip shows the name only (the address when there is none); the full
+  // "Name <address>" is in its tooltip and at the top of its menu.
   const formatChipDisplay = (r: Recipient): string =>
     r.group
       ? `${r.name || 'Group'} (${r.group.members.length})`
-      : r.name && r.name !== r.email ? `${r.name} (${r.email})` : r.email;
+      : r.name && r.name !== r.email ? r.name : r.email;
+  const formatChipFull = (r: Recipient): string =>
+    r.group
+      ? formatChipDisplay(r)
+      : r.name && r.name !== r.email ? `${r.name} <${r.email}>` : r.email;
 
   // Handle saving an edited chip
   const handleSaveEdit = (newValue: string) => {
@@ -5456,12 +7093,13 @@ export function RecipientChipInput({
       return;
     }
 
-    // Backspace on an empty input pulls the last chip back into the input for
-    // quick editing.
+    // Backspace on an empty input selects the last chip; the next one removes
+    // it whole. It used to put the address back as text, so a few presses
+    // left half an address behind. Editing is a double-click, Enter or F2.
     if (e.key === 'Backspace' && !inputText && chips.length > 0) {
-      const lastChip = chips[chips.length - 1];
-      onChipsChange(chips.slice(0, -1));
-      onInputChange(formatRecipient(lastChip.name, lastChip.email));
+      e.preventDefault();
+      backspaceChipRef.current = chips.length - 1;
+      focusChip(chips.length - 1);
       return;
     }
   };
@@ -5547,9 +7185,11 @@ export function RecipientChipInput({
     setDropIndex(past ? index + 1 : index);
   };
 
+  const isShellDrag = useIsShellDrag();
   // Insert the dragged chip at `target`. Same-field is a local reorder;
   // cross-field routes through onMoveChip with the destination index (#593).
   const performDrop = (e: React.DragEvent, target: number) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     setIsDragOver(false);
     setDropIndex(null);
@@ -5597,7 +7237,8 @@ export function RecipientChipInput({
     <div className="flex-1 min-w-0">
       <div
         className={cn(
-          "flex flex-wrap items-center gap-1 min-h-[32px] cursor-text",
+          // A long list scrolls by itself, or a reply-all to 80 people leaves no room for the text.
+          "flex flex-wrap items-center gap-1 min-h-[32px] max-h-[min(30dvh,10rem)] overflow-y-auto p-0.5 -m-0.5 cursor-text",
           validationError && "ring-2 ring-red-500 dark:ring-red-400 rounded",
           isDragOver && "ring-2 ring-primary/50 rounded bg-accent/20"
         )}
@@ -5647,18 +7288,29 @@ export function RecipientChipInput({
               onDragOver={(e) => handleChipDragOver(e, i)}
               onDrop={(e) => { e.stopPropagation(); performDrop(e, dropIndex ?? i); }}
               className={cn(
-                "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
+                "inline-flex items-center gap-1 max-w-full min-w-0 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
                 isEditing
                   ? "bg-background ring-1 ring-ring"
                   : ( customColor && colorStyles[customColor]
                       ? `${colorStyles[customColor]} cursor-grab active:cursor-grabbing`
                       :  "bg-secondary text-secondary-foreground hover:bg-accent cursor-grab active:cursor-grabbing"),
-                !isEditing && draggingIndex === i && "opacity-50"
+                !isEditing && draggingIndex === i && "opacity-50",
+                // Selected: by Backspace in the field, arrows or Tab.
+                !isEditing && "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               )}
               onContextMenu={isEditing ? undefined : (e) => handleContextMenu(e, i, chip)}
+              // A click opens the chip's menu too (address, Edit, Move to,
+              // Remove), as Gmail and Outlook do; it did nothing visible.
+              onClick={isEditing ? undefined : (e) => {
+                if (e.target instanceof Element && e.target.closest('button')) return;
+                // Not on to the field, whose click puts the caret in the input.
+                e.stopPropagation();
+                openChipMenu(i);
+              }}
               data-invalid={isInvalid || undefined}
               title={isInvalid ? t('invalid_recipient') : undefined}
               role="listitem"
+              data-recipient-chip=""
               ref={(el) => { chipRefs.current[i] = el; }}
               tabIndex={isEditing ? undefined : i === tabChip ? 0 : -1}
               aria-describedby={isEditing ? undefined : chipHintId}
@@ -5712,17 +7364,19 @@ export function RecipientChipInput({
                 />
               ) : (
                 <span
-                  className="inline-flex items-center gap-1 max-w-[200px]"
-                  title={chip.group ? chip.group.members.map(m => m.email).join(', ') : undefined}
+                  className="inline-flex items-center gap-1 min-w-0 max-w-[200px]"
+                  title={chip.group ? chip.group.members.map(m => m.email).join(', ') : formatChipFull(chip)}
                 >
                   {chip.group && <Users className="w-3 h-3 shrink-0" aria-hidden />}
                   <span className="truncate">{chipDisplay}</span>
+                  {/* Screen readers still hear the address the chip no longer shows. */}
+                  {!chip.group && chipDisplay !== chip.email && <span className="sr-only">{` (${chip.email})`}</span>}
                   {isInvalid && <span className="sr-only">{`, ${t('invalid_recipient')}`}</span>}
                 </span>
               )}
               <button
                 type="button"
-                className={cn("flex items-center justify-center w-6 h-6 -m-1 rounded-full hover:bg-muted-foreground/20 transition-colors", TOUCH_HIT_AREA)}
+                className={cn("flex items-center justify-center shrink-0 w-6 h-6 -m-1 rounded-full hover:bg-muted-foreground/20 transition-colors", TOUCH_HIT_AREA)}
                 aria-label={isEditing ? t('recipient_remove') : t('recipient_remove_named', { name: recipientDisplayName(chip) })}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -5769,7 +7423,10 @@ export function RecipientChipInput({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onBlur={handleBlur}
-            className="flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+            // focus-inset: the keyboard focus ring goes inside the box. Drawn
+            // outside, the field's own scroller cut it to a line along the top
+            // and the end (compose-p2-18, a pop-out focuses To from a key).
+            className={cn("focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none", narrowInput && chips.length > 0 && "min-w-12")}
             role="combobox"
             aria-expanded={activeAutoField === field && autocompleteResults.length > 0}
             aria-autocomplete="list"
@@ -5813,19 +7470,20 @@ export function RecipientChipInput({
       >
         {contextMenu.data && (
           <>
-            <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground truncate max-w-[200px]">
-              {formatChipDisplay(contextMenu.data.recipient)}
+            <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground break-all max-w-[260px]">
+              {formatChipFull(contextMenu.data.recipient)}
             </div>
             <ContextMenuSeparator />
             {!contextMenu.data.recipient.group && (
-              <ContextMenuItem label={t('recipient_edit_email')} onClick={handleEditEmail} />
+              <ContextMenuItem icon={Pencil} label={t('recipient_edit_email')} onClick={handleEditEmail} />
             )}
-            <ContextMenuItem label={t('recipient_edit_name')} onClick={handleEditName} />
+            <ContextMenuItem icon={UserPen} label={t('recipient_edit_name')} onClick={handleEditName} />
             <ContextMenuSeparator />
             {/* Moving between fields without dragging (WCAG 2.5.7). */}
             {(['to', 'cc', 'bcc'] as const).filter((target) => target !== field).map((target) => (
               <ContextMenuItem
                 key={target}
+                icon={ArrowLeftRight}
                 testId={`recipient-move-${target}`}
                 label={t('recipient_move_to', { field: fieldNames[target] })}
                 onClick={() => {
@@ -5837,7 +7495,7 @@ export function RecipientChipInput({
               />
             ))}
             <ContextMenuSeparator />
-            <ContextMenuItem label={t('recipient_remove')} onClick={() => {
+            <ContextMenuItem icon={X} label={t('recipient_remove')} onClick={() => {
               if (contextMenu.data) {
                 handleChipRemove(contextMenu.data.index, { stopPropagation: () => {} } as React.MouseEvent);
               }

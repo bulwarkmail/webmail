@@ -75,7 +75,7 @@ describe('settings-store keywords', () => {
       // at runtime and each has to carry its own utility prefix.
       Object.values(KEYWORD_PALETTE).forEach((entry) => {
         expect(entry.dot).toMatch(/^bg-/);
-        expect(entry.fill).toMatch(/^bg-/);
+        expect(entry.fill).toMatch(/^tag-fill-/);
         expect(entry.border).toMatch(/^border-/);
         expect(entry.text).toMatch(/^text-.* dark:text-/);
         expect(entry.rowTint).toMatch(/^bg-.* dark:bg-/);

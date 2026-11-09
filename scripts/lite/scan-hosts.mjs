@@ -26,6 +26,7 @@ export const LITE_BUILT_IN_HOSTS = [
   "www.google.com",
   "randomuser.me",
   "img.freepik.com",
+  "redirector.gvt1.com",
   "openpgpkey.",
 ];
 
@@ -39,10 +40,12 @@ export const LITE_BUNDLE_NON_REQUEST = [
   { files: CHUNKS, why: "example addresses the translations localise", hosts: ["eksempel.dk", "mail.eksempel.dk", "piemers.lv", "pasts.piemers.lv", "ornek.com", "mail.ornek.com"] },
   { files: CHUNKS, why: "links inside the sample mail of the demo mode (lib/demo/fixtures)", hosts: ["zoom.us", "notion.so", "www.figma.com", "vercel.com", "i.scdn.co", "cf.bstatic.com", "open.spotify.com", "linear.app", "sentry.io", "app.docusign.com", "github.com", "bulwark-webmail.vercel.app"] },
   { files: CHUNKS, why: "JMAP capability URI and XML namespaces", hosts: ["bulwarkmail.com", "www.w3.org", "creativecommons.org"] },
+  { files: CHUNKS, why: "schema.org vocabulary names in booking markup (lib/structured-mail), matched and never requested", hosts: ["schema.org"] },
   { files: /./, why: "docs links in the translations and the README", hosts: ["bulwarkmail.org", "github.com"] },
   { files: PAGES, why: "XML namespaces of inline SVG", hosts: ["www.w3.org"] },
   { files: /^_next\/static\/chunks\/[^/]+\.css$/, why: "XML namespace of the SVG pointers in app/accessibility.css (large mouse pointer)", hosts: ["www.w3.org"] },
   { files: /^_next\/static\/media\/pdf\.worker[^/]*\.m?js$/, why: "XML namespaces and the licence link inside pdf.js", hosts: ["www.apache.org", "www.w3.org", "www.xfa.org", "ns.adobe.com"] },
+  { files: /^pst-worker\.js$/, why: "licence links in the bundled licence comments of buffer, ieee754 and long (scripts/build-pst-worker.mjs)", hosts: ["feross.org", "www.apache.org"] },
 ];
 
 const RESERVED_TLDS = new Set(["example", "test", "invalid", "localhost", "local", "internal", "lan"]);

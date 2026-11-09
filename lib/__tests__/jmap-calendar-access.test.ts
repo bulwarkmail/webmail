@@ -105,6 +105,27 @@ describe('calendar fan-out to shared accounts without access', () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
+  it.each(Object.entries(DENIALS))('lists the own tasks past a share Stalwart %s refuses, before any event query', async (_version, answer) => {
+    denial = answer;
+    fetchSpy.mockImplementation(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}'));
+      const [method, args] = body.methodCalls?.[0] ?? [];
+      if (args?.accountId === 'ev') return jsonResponse({ methodResponses: [['error', denial, '0']] });
+      if (method === 'CalendarEvent/query') return jsonResponse({ methodResponses: [[method, { ids: ['t1'] }, '0']] });
+      return jsonResponse({ methodResponses: [['CalendarEvent/get', {
+        list: [{ id: 't1', '@type': 'Task', title: 'Follow up', progress: 'needs-action', calendarIds: { c: true } }],
+        notFound: [],
+      }, '0']] });
+    });
+
+    const tasks = await client.getCalendarTasks();
+    await client.getCalendarTasks();
+
+    expect(tasks.map((t) => t.title)).toEqual(['Follow up']);
+    expect(callsForAccount('ev')).toHaveLength(1);
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
   it('getAllCalendars skips an account already known to be inaccessible', async () => {
     await client.queryAllCalendarEvents({});
     fetchSpy.mockClear();

@@ -22,7 +22,8 @@ vi.mock('next/server', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({
-  logger: { debug: vi.fn() },
+  configureLogger: vi.fn(),
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
 // Env vars these tests drive. Stubbed to undefined before each test so the
@@ -34,7 +35,7 @@ const MANAGED_ENV = [
   'SESSION_SECRET_FILE', 'SETTINGS_SYNC_ENABLED', 'STALWART_FEATURES', 'DEV_MOCK_JMAP',
   'FAVICON_URL', 'APP_LOGO_LIGHT_URL', 'APP_LOGO_DARK_URL', 'LOGIN_COMPANY_NAME',
   'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
-  'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL', 'LOGIN_SHOW_REMEMBER_ME',
+  'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL', 'LOGIN_SHOW_REMEMBER_ME', 'BROWSER_SESSION_SIGN_IN',
   'ACCESSIBILITY_STATEMENT_URL', 'ACCESSIBILITY_FEEDBACK_URL', 'HELP_URL', 'EASY_READ_URL', 'SIGN_LANGUAGE_URL',
   'LOGIN_USERNAME_PLACEHOLDER',
 ] as const;
@@ -171,6 +172,17 @@ describe('config API route', () => {
     expect((await getConfig()).loginUsernamePlaceholder).toBe('max.mustermann@acme.example');
   });
 
+  it('publishes the account page link, as a URL or a path, and drops other values (#1570)', async () => {
+    expect((await getConfig()).accountManagementUrl).toBe('');
+    vi.stubEnv('ACCOUNT_MANAGEMENT_URL', '/account/');
+    vi.stubEnv('ACCOUNT_MANAGEMENT_LABEL', 'Security');
+    const config = await getConfig();
+    expect(config.accountManagementUrl).toBe('/account/');
+    expect(config.accountManagementLabel).toBe('Security');
+    vi.stubEnv('ACCOUNT_MANAGEMENT_URL', 'javascript:alert(1)');
+    expect((await getConfig()).accountManagementUrl).toBe('');
+  });
+
   it('publishes the source code URL for the About card (#1161)', async () => {
     vi.stubEnv('SOURCE_CODE_URL', 'https://git.example.com/acme/webmail/tree/v1.2.3');
 
@@ -245,6 +257,17 @@ describe('config API route', () => {
 
     vi.stubEnv('LOGIN_SHOW_REMEMBER_ME', 'true');
     expect((await getConfig()).loginShowRememberMe).toBe(true);
+  });
+
+  it('keeps unticked sign-ins until the browser closes only with BROWSER_SESSION_SIGN_IN and SESSION_SECRET', async () => {
+    expect((await getConfig()).browserSessionSignIn).toBe(false);
+
+    vi.stubEnv('BROWSER_SESSION_SIGN_IN', 'true');
+    // Nothing can seal the cookie without a secret.
+    expect((await getConfig()).browserSessionSignIn).toBe(false);
+
+    vi.stubEnv('SESSION_SECRET', 'test-secret');
+    expect((await getConfig()).browserSessionSignIn).toBe(true);
   });
 
   it('should enable settingsSync only when both SESSION_SECRET and SETTINGS_SYNC_ENABLED are set', async () => {

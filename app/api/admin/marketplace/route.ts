@@ -42,8 +42,9 @@ import {
   type DirectorySummary,
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
-import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
+import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE, IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import { createHash } from 'node:crypto';
+import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
 /** Query parameters the UI may pass on to the directory's list endpoint. */
 const FORWARDED = ['q', 'type', 'pluginType', 'tag', 'author', 'sort', 'order', 'page', 'perPage', 'featured'] as const;
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     const ip = getClientIP(request);
-    const { slug, version, type, force } = await request.json();
+    const { slug, version, type, force, acceptPermissions } = await request.json();
 
     if (!slug || !version || !type) {
       return NextResponse.json({ error: 'Missing slug, version, or type' }, { status: 400 });
@@ -159,6 +160,11 @@ export async function POST(request: NextRequest) {
     }
     if (typeof version !== 'string' || !RELEASE_VERSION.test(version)) {
       return NextResponse.json({ error: 'Invalid version: must look like 1.2.3' }, { status: 400 });
+    }
+
+    if (type === 'plugin') {
+      const refused = devicePolicyPluginRefusal(slug);
+      if (refused) return refused;
     }
 
     const directoryUrl = await getDirectoryUrl();
@@ -236,6 +242,8 @@ export async function POST(request: NextRequest) {
     }
 
     const source = { kind: 'marketplace' as const, slug, directoryUrl };
+    // Kept with the install, and so with its rollback copy later.
+    const notes = typeof meta.changelog === 'string' && meta.changelog.trim() ? { changelog: meta.changelog.slice(0, 20_000) } : {};
     const installExtras = {
       signature: signature.status,
       channel: meta.channel,
@@ -282,6 +290,7 @@ export async function POST(request: NextRequest) {
         installedAt: existingTheme?.installedAt ?? now,
         updatedAt: now,
         source,
+        ...notes,
       };
 
       await saveTheme(theme, css, skin);
@@ -331,6 +340,20 @@ export async function POST(request: NextRequest) {
     const existingPlugin = await getPlugin(slug);
     const isUpdate = existingPlugin !== null;
 
+    // An update must not widen what a plugin may do with nobody seeing it. `force` is for
+    // withdrawn and older versions, and says nothing about this.
+    const implicit = new Set<string>(IMPLICIT_PERMISSIONS);
+    const permissionsAdded = isUpdate
+      ? manifest.permissions.filter((p) => !existingPlugin.permissions?.includes(p) && !implicit.has(p))
+      : [];
+    const accepted = Array.isArray(acceptPermissions) ? acceptPermissions : [];
+    if (permissionsAdded.some((p) => !accepted.includes(p))) {
+      return NextResponse.json(
+        { error: `Version ${version} asks for new permissions: ${permissionsAdded.join(', ')}.`, permissionsAdded },
+        { status: 409 },
+      );
+    }
+
     const plugin: ServerPlugin = {
       id: slug,
       name: manifest.name,
@@ -347,6 +370,7 @@ export async function POST(request: NextRequest) {
       ...(existingPlugin?.forceEnabled !== undefined
         ? { forceEnabled: existingPlugin.forceEnabled }
         : {}),
+      ...(existingPlugin?.defaultOff ? { defaultOff: true } : {}),
       installedAt: existingPlugin?.installedAt ?? now,
       updatedAt: now,
       ...(manifest.configSchema ? { configSchema: manifest.configSchema } : {}),
@@ -357,6 +381,7 @@ export async function POST(request: NextRequest) {
       ...(manifest.locales ? { locales: manifest.locales } : {}),
       ...(manifest.credentials ? { credentials: manifest.credentials } : {}),
       source,
+      ...notes,
     };
 
     await savePlugin(plugin, code);
@@ -372,6 +397,7 @@ export async function POST(request: NextRequest) {
         httpOrigins: plugin.httpOrigins ?? [],
         apiPostPaths: plugin.apiPostPaths ?? [],
         signature: signature.status,
+        ...(permissionsAdded.length > 0 ? { permissionsAdded } : {}),
         ...(meta.yanked ? { yanked: true } : {}),
         ...(isUpdate ? { previousVersion: existingPlugin.version } : {}),
       },

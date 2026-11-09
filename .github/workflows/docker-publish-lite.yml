@@ -181,6 +181,11 @@ jobs:
           cache-from: type=gha,scope=lite
           cache-to: type=gha,mode=max,scope=lite
 
+      # No source maps for this image yet: with BULWARK_SOURCE_MAPS=1 the
+      # multi-platform build stalled on the runner after the Lite build step
+      # (twice, 2026-11-01), though it finishes locally. The static Lite zips
+      # (static-lite.yml) still upload theirs.
+
       - name: Inspect image
         run: docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
 

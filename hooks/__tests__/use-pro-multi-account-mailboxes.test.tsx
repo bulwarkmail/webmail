@@ -8,6 +8,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { invalidateUnifiedMailboxes, useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { emitPushStateChange } from '@/lib/push-events';
 
 /**
  * The Pro shell needs every login's folders for its per-account tree. While
@@ -15,9 +16,12 @@ import { useSettingsStore } from '@/stores/settings-store';
  * every connected account on each connection cost 1 + 2 + … + N folder lists.
  * Each login must now be loaded once.
  */
-const clients = new Map<string, { getMailboxes: ReturnType<typeof vi.fn> }>();
+type FakeClient = { getMailboxes: ReturnType<typeof vi.fn>; getAllMailboxes: ReturnType<typeof vi.fn> };
+const clients = new Map<string, FakeClient>();
 const client = (id: string) => {
-  if (!clients.has(id)) clients.set(id, { getMailboxes: vi.fn(async () => [{ id: `${id}-inbox`, role: 'inbox' }]) });
+  // The Pro shell loads each login's own and shared folders in one call (#1486).
+  const folders = async () => [{ id: `${id}-inbox`, role: 'inbox' }];
+  if (!clients.has(id)) clients.set(id, { getMailboxes: vi.fn(folders), getAllMailboxes: vi.fn(folders) });
   return clients.get(id)!;
 };
 
@@ -36,7 +40,7 @@ describe('useProMultiAccountMailboxes', () => {
   beforeEach(() => {
     clients.clear();
     invalidateUnifiedMailboxes();
-    useEmailStore.setState({ accountMailboxes: {} });
+    useEmailStore.setState({ accountMailboxes: {}, accountSharedMailboxes: {} });
     useSettingsStore.setState({ proInterface: true } as never);
     useAuthStore.setState({ getClientForAccount: (id: string) => client(id) } as never);
   });
@@ -48,45 +52,80 @@ describe('useProMultiAccountMailboxes', () => {
       act(() => connected(['a', 'b', 'c', 'd', 'e', 'f'].slice(0, n), 'a'));
     }
     await waitFor(() => expect(Object.keys(useEmailStore.getState().accountMailboxes)).toHaveLength(6));
-    for (const [id, c] of clients) expect(c.getMailboxes, id).toHaveBeenCalledTimes(1);
+    for (const [id, c] of clients) expect(c.getAllMailboxes, id).toHaveBeenCalledTimes(1);
   });
 
   it('does not refetch for changes that are not a connection', async () => {
     connected(['a', 'b']);
     renderHook(() => useProMultiAccountMailboxes());
-    await waitFor(() => expect(client('b').getMailboxes).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(client('b').getAllMailboxes).toHaveBeenCalledTimes(1));
     // A display-name or login-time update rewrites `accounts` but connects no one.
     act(() => connected(['a', 'b']));
     act(() => connected(['a', 'b']));
-    expect(client('a').getMailboxes).toHaveBeenCalledTimes(1);
-    expect(client('b').getMailboxes).toHaveBeenCalledTimes(1);
+    expect(client('a').getAllMailboxes).toHaveBeenCalledTimes(1);
+    expect(client('b').getAllMailboxes).toHaveBeenCalledTimes(1);
   });
 
   it('reloads every login once when the user switches account', async () => {
     connected(['a', 'b'], 'a');
     renderHook(() => useProMultiAccountMailboxes());
-    await waitFor(() => expect(client('b').getMailboxes).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(client('b').getAllMailboxes).toHaveBeenCalledTimes(1));
     act(() => connected(['a', 'b'], 'b'));
-    await waitFor(() => expect(client('a').getMailboxes).toHaveBeenCalledTimes(2));
-    expect(client('b').getMailboxes).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(client('a').getAllMailboxes).toHaveBeenCalledTimes(2));
+    expect(client('b').getAllMailboxes).toHaveBeenCalledTimes(2);
   });
 
   it('tries a login again when its first folder load failed', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     connected(['a', 'b']);
-    client('b').getMailboxes.mockRejectedValueOnce(new Error('offline'));
+    client('b').getAllMailboxes.mockRejectedValueOnce(new Error('offline'));
     renderHook(() => useProMultiAccountMailboxes());
-    await waitFor(() => expect(client('b').getMailboxes).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(client('b').getAllMailboxes).toHaveBeenCalledTimes(1));
     await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
     act(() => connected(['a', 'b', 'c']));
     await waitFor(() => expect(useEmailStore.getState().accountMailboxes.b).toBeDefined());
-    expect(client('b').getMailboxes).toHaveBeenCalledTimes(2);
+    expect(client('b').getAllMailboxes).toHaveBeenCalledTimes(2);
   });
 
-  it('stays idle outside the Pro shell', () => {
+  it('stays idle outside the Pro shell with one account', () => {
     useSettingsStore.setState({ proInterface: false } as never);
+    connected(['a']);
+    renderHook(() => useProMultiAccountMailboxes());
+    expect(client('a').getAllMailboxes).not.toHaveBeenCalled();
+    expect(client('a').getMailboxes).not.toHaveBeenCalled();
+  });
+
+  // Usability test 2026-11-04, mail-6: the account switcher and the badge
+  // count every account's unread in every layout, not only Mountain View.
+  it("loads each login's own folders outside the Pro shell once a second account is connected", async () => {
+    useSettingsStore.setState({ proInterface: false, interfaceLayout: 'default' } as never);
     connected(['a', 'b']);
     renderHook(() => useProMultiAccountMailboxes());
-    expect(client('a').getMailboxes).not.toHaveBeenCalled();
+    await waitFor(() => expect(useEmailStore.getState().accountMailboxes.b).toBeDefined());
+    expect(client('b').getMailboxes).toHaveBeenCalledTimes(1);
+    expect(client('b').getAllMailboxes).not.toHaveBeenCalled();
+  });
+
+  it("reads a background login's folders again after its push, once per burst", async () => {
+    useSettingsStore.setState({ proInterface: false, interfaceLayout: 'default' } as never);
+    connected(['a', 'b'], 'a');
+    renderHook(() => useProMultiAccountMailboxes());
+    await waitFor(() => expect(client('b').getMailboxes).toHaveBeenCalledTimes(1));
+
+    vi.useFakeTimers();
+    try {
+      const change = { '@type': 'StateChange', changed: { b: { Mailbox: 's2', Email: 'e2' } } } as never;
+      // What the mail view's own push handler does first (createMailPushListener).
+      invalidateUnifiedMailboxes(client('b') as never);
+      emitPushStateChange(change, client('b') as never, 'background');
+      emitPushStateChange(change, client('b') as never, 'background');
+      // The active login's push is the mail view's business, not this hook's.
+      emitPushStateChange(change, client('a') as never, 'active');
+      await vi.advanceTimersByTimeAsync(2000);
+    } finally {
+      vi.useRealTimers();
+    }
+    await waitFor(() => expect(client('b').getMailboxes).toHaveBeenCalledTimes(2));
+    expect(client('a').getMailboxes).toHaveBeenCalledTimes(1);
   });
 });

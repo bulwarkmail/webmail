@@ -10,7 +10,6 @@ import {
   injectThemeSkinCSS,
   removeThemeSkinCSS,
 } from '@/lib/theme-loader';
-import { extractTheme } from '@/lib/plugin-validator';
 import { BUILTIN_THEMES } from '@/lib/builtin-themes';
 import { usePolicyStore } from '@/stores/policy-store';
 import { apiFetch } from '@/lib/browser-navigation';
@@ -159,6 +158,13 @@ export const useThemeStore = create<ThemeState>()(
           set({ activeThemeId: effectiveThemeId });
         }
 
+        // No theme in effect: drop the copy the boot script may have put back
+        // from the cache (lib/boot-skeleton/boot-script.ts, applyBootTheme).
+        if (!effectiveThemeId) {
+          removeThemeCSS();
+          removeThemeSkinCSS();
+        }
+
         // Apply active custom theme on boot
         if (effectiveThemeId) {
           const t = installedThemes.find(t => t.id === effectiveThemeId);
@@ -209,6 +215,8 @@ export const useThemeStore = create<ThemeState>()(
       },
 
       installTheme: async (file: File) => {
+        // The package reader (ZIP, manifest checks) loads with the first install, not with the page.
+        const { extractTheme } = await import('@/lib/plugin-validator');
         const result = await extractTheme(file);
         if (!result.valid || !result.manifest) {
           return { success: false, error: result.errors.join('; '), warnings: result.warnings };
@@ -594,7 +602,9 @@ function applyCustomThemeCSS(theme: InstalledTheme, resolvedTheme: 'light' | 'da
   // copy was stripped from localStorage on persist.
   if (theme.skin) {
     injectThemeSkinCSS(theme.skin, theme.id);
-  } else if (theme.apiVersion === 2) {
+  } else if (theme.apiVersion === 2 || theme.managed) {
+    // Server-synced themes carry no apiVersion, but their skin is kept in
+    // IndexedDB too (#1561).
     pluginStorage.getThemeSkin(theme.id).then((skin) => {
       // Bail out if the user switched themes mid-flight.
       if (useThemeStore.getState().activeThemeId !== theme.id) return;

@@ -107,6 +107,11 @@ export type InitPayload = BackgroundInit | SlotInit;
 
 // ─── Sandbox → Host messages ─────────────────────────────────
 
+/**
+ * The runtime is listening. Carries in `event.ports[0]` the port the runtime
+ * reports user input in the frame through, for the host's idle timeout; a
+ * message on it means "the user did something here just now".
+ */
 export interface ReadyMsg { type: 'sandbox-ready'; }
 
 export interface InitDoneMsg {
@@ -174,6 +179,12 @@ export interface SlotResizeMsg {
   width?: number;
 }
 
+/**
+ * Escape pressed inside a slot frame and left alone by the plugin. Keys in a
+ * frame never reach the host, so a plugin dialog would not close on it.
+ */
+export interface FrameEscapeMsg { type: 'frame-escape'; }
+
 export interface SlotShouldShowResultMsg {
   type: 'slot-should-show-result';
   id: string;
@@ -230,6 +241,7 @@ export type SandboxToHost =
   | CallbackInvokeMsg
   | HookResultMsg
   | SlotResizeMsg
+  | FrameEscapeMsg
   | ThemeAppliedMsg
   | SlotShouldShowResultMsg
   | FloatingDropdownOpenMsg

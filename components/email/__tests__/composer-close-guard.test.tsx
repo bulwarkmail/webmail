@@ -1,9 +1,10 @@
+import { PaneIdContext } from '@/hooks/use-pane-context';
 import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { useAuthStore } from '@/stores/auth-store';
-import { LIVE_REGION_IDS } from '@/lib/announce';
+import { LIVE_REGION_IDS, resetAnnouncerForTests } from '@/lib/announce';
 
 // ─── Heavy component mocks (mirrors reply-addressing.test.tsx) ────────────────
 
@@ -134,6 +135,9 @@ vi.mock('@/stores/toast-store', () => ({
   toast: { info: () => {}, error: () => {}, success: () => {} },
 }));
 
+const draftToast = vi.hoisted(() => ({ showDraftSavedToast: vi.fn(), openKeptDraft: vi.fn() }));
+vi.mock('@/lib/compose/draft-close-toast', () => draftToast);
+
 vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
@@ -163,6 +167,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
 vi.mock('@/lib/email-sanitization', () => ({
   sanitizeSignatureHtml: (v: string) => v,
   sanitizeEmailHtml: (v: string) => v,
+  escapeHtml: (v: string) => v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
   parseHtmlSafely: (html: string) => new DOMParser().parseFromString(html, 'text/html'),
 }));
 
@@ -183,11 +188,38 @@ vi.mock('@/lib/template-utils', () => ({ substitutePlaceholders: (s: string) => 
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
+describe('a message row dragged over the composer', () => {
+  const rowDrag = { types: ['application/x-email-ids', 'text/plain'], files: [], getData: () => 'Subject of the row', dropEffect: '' };
+  const subjectField = () => screen.getByDisplayValue('Half-written');
+  const draft = {
+    to: '', cc: '', bcc: '', subject: 'Half-written', body: '', showCc: false, showBcc: false,
+    selectedIdentityId: 'id-me', subAddressTag: '', mode: 'compose' as const, draftId: null,
+  };
+
+  it('is stopped in the standard shell, or Subject would take the row\'s subject', () => {
+    render(<EmailComposer initialData={draft} onClose={vi.fn()} />);
+    // fireEvent returns false when the event's default was prevented.
+    expect(fireEvent.dragOver(subjectField(), { dataTransfer: rowDrag })).toBe(false);
+    expect(fireEvent.drop(subjectField(), { dataTransfer: rowDrag })).toBe(false);
+  });
+
+  it('is left to the shell inside a Pro pane', () => {
+    render(
+      <PaneIdContext.Provider value="main">
+        <EmailComposer initialData={draft} onClose={vi.fn()} />
+      </PaneIdContext.Provider>,
+    );
+    expect(fireEvent.dragOver(subjectField(), { dataTransfer: rowDrag })).toBe(true);
+    expect(fireEvent.drop(subjectField(), { dataTransfer: rowDrag })).toBe(true);
+  });
+});
+
 /**
  * A host that replaces the compose session - a mailto: click, say - must not
  * drop text the user has not sent. It hands a follow-up to requestCloseRef and
- * the composer runs it only once it has really closed, so "Save" and "Discard"
- * continue into the new session while "Cancel" leaves the draft standing.
+ * the composer runs it only once it has really closed. Closing saves the draft
+ * without asking; only a failed save asks, and there "Discard" continues into
+ * the new session while "Cancel" leaves the draft standing.
  */
 
 const DIRTY_DRAFT = {
@@ -223,17 +255,124 @@ function renderWithCloseRef(props: Record<string, unknown> = {}) {
   return { requestCloseRef, afterClose, onClose, unmount: view.unmount };
 }
 
+beforeEach(resetAnnouncerForTests);
+
 describe('composer close guard with a follow-up', () => {
-  it('asks before replacing an unsaved draft instead of dropping it', async () => {
-    const { requestCloseRef, afterClose } = renderWithCloseRef();
+  const savingClient = (createDraft = vi.fn().mockResolvedValue('draft-9')) => {
+    useAuthStore.setState({
+      client: { createDraft, getEmail: vi.fn(), hasDelayedSend: () => false, getMaxDelayedSend: () => 0 } as never,
+    });
+    return createDraft;
+  };
+  afterEach(() => {
+    useAuthStore.setState({ client: null });
+  });
+
+  it('saves the draft and runs the follow-up, without asking', async () => {
+    const createDraft = savingClient();
+    const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
 
     act(() => requestCloseRef.current!(afterClose));
 
-    expect(await screen.findByText('close_draft_title')).toBeInTheDocument();
-    expect(afterClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+    expect(createDraft).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alertdialog')).toBeNull();
   });
 
-  it('runs the follow-up after discarding', async () => {
+  it('asks only when the save fails, and keeps the text', async () => {
+    // No connection to save through: the save fails.
+    const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
+
+    act(() => requestCloseRef.current!(afterClose));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('save_failed_close');
+    expect(within(dialog).getByRole('button', { name: /try_again/ })).toBeInTheDocument();
+    expect(afterClose).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue('Half-written more')).toBeInTheDocument();
+  });
+
+  describe('in the desktop app', () => {
+    afterEach(() => {
+      window.bulwarkDesktop = undefined;
+    });
+
+    const nativeBridge = (answer: number) => {
+      const confirm = vi.fn(async () => answer);
+      window.bulwarkDesktop = { version: 1, platform: 'win32', dialogs: { confirm } } as never;
+      return confirm;
+    };
+
+    it('asks through the OS when the save fails, and shows no dialog of its own', async () => {
+      const confirm = nativeBridge(2);
+      const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
+      act(() => requestCloseRef.current!(afterClose));
+      await waitFor(() => expect(confirm).toHaveBeenCalledTimes(1));
+      expect(confirm.mock.calls[0]).toMatchObject([{ message: 'close_draft_title', detail: 'save_failed_close', buttons: ['try_again', 'discard', 'cancel'], defaultId: 0 }]);
+      expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
+      // The last button is Cancel: nothing happens.
+      await act(async () => {});
+      expect(onClose).not.toHaveBeenCalled();
+      expect(afterClose).not.toHaveBeenCalled();
+    });
+
+    it('Discard discards, and the follow-up runs', async () => {
+      nativeBridge(1);
+      const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
+      act(() => requestCloseRef.current!(afterClose));
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+    });
+
+    it('saves without asking when the save works', async () => {
+      const confirm = nativeBridge(2);
+      savingClient();
+      const { requestCloseRef, afterClose } = renderWithCloseRef();
+      act(() => requestCloseRef.current!(afterClose));
+      await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+      expect(confirm).not.toHaveBeenCalled();
+    });
+
+    describe('with a shell that has windows of its own', () => {
+      const windowBridge = (answer: unknown) => {
+        const confirm = vi.fn(async () => 2);
+        const show = vi.fn(async () => answer);
+        window.bulwarkDesktop = { version: 1, platform: 'win32', dialogs: { confirm, show, cancel: vi.fn() } } as never;
+        return { confirm, show };
+      };
+
+      it('asks in the app\'s own window, not the OS box, with Try again as the default', async () => {
+        const { confirm, show } = windowBridge(null);
+        const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
+        act(() => requestCloseRef.current!(afterClose));
+        await waitFor(() => expect(show).toHaveBeenCalledTimes(1));
+        expect(confirm).not.toHaveBeenCalled();
+        expect(show.mock.calls[0]).toMatchObject([{
+          title: 'close_draft_title',
+          message: [{ text: 'save_failed_close' }],
+          buttons: [{ label: 'cancel', variant: 'secondary' }, { label: 'discard', variant: 'destructive' }, { label: 'try_again' }],
+          defaultIndex: 2,
+        }]);
+        expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
+        // Escape: nothing happens.
+        await act(async () => {});
+        expect(onClose).not.toHaveBeenCalled();
+        expect(afterClose).not.toHaveBeenCalled();
+      });
+
+      it('Discard in the window discards, and the follow-up runs', async () => {
+        windowBridge({ button: 1 });
+        const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
+        act(() => requestCloseRef.current!(afterClose));
+        await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+      });
+    });
+  });
+
+  it('runs the follow-up after discarding a draft that could not be saved', async () => {
     const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
 
     act(() => requestCloseRef.current!(afterClose));
@@ -265,44 +404,81 @@ describe('composer close guard with a follow-up', () => {
     expect(afterClose).not.toHaveBeenCalled();
   });
 
-  it('closes without asking once autosave has stored every change', async () => {
-    const createDraft = vi.fn().mockResolvedValue('draft-9');
-    useAuthStore.setState({
-      client: { createDraft, getEmail: vi.fn(), hasDelayedSend: () => false, getMaxDelayedSend: () => 0 } as never,
-    });
-    try {
-      const { requestCloseRef, afterClose } = renderWithCloseRef();
-      await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1), { timeout: 4000 });
-      await act(async () => {});
+  it('closes without saving again once autosave has stored every change', async () => {
+    const createDraft = savingClient();
+    const { requestCloseRef, afterClose } = renderWithCloseRef();
+    await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    await act(async () => {});
 
-      act(() => requestCloseRef.current!(afterClose));
+    act(() => requestCloseRef.current!(afterClose));
 
-      await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
-      expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
-    } finally {
-      useAuthStore.setState({ client: null });
-    }
+    await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+    expect(createDraft).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
   });
 
-  it('still asks when there are edits since the last autosave', async () => {
-    const createDraft = vi.fn().mockResolvedValue('draft-9');
-    useAuthStore.setState({
-      client: { createDraft, getEmail: vi.fn(), hasDelayedSend: () => false, getMaxDelayedSend: () => 0 } as never,
-    });
-    try {
-      const { requestCloseRef, afterClose } = renderWithCloseRef();
-      await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1), { timeout: 4000 });
-      fireEvent.change(screen.getByDisplayValue('Half-written more'), { target: { value: 'Half-written more and more' } });
+  it('saves the edits made since the last autosave when it closes', async () => {
+    const createDraft = savingClient();
+    const { requestCloseRef, afterClose } = renderWithCloseRef();
+    await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    fireEvent.change(screen.getByDisplayValue('Half-written more'), { target: { value: 'Half-written more and more' } });
 
-      act(() => requestCloseRef.current!(afterClose));
+    act(() => requestCloseRef.current!(afterClose));
 
-      expect(await screen.findByText('close_draft_title')).toBeInTheDocument();
-    } finally {
-      useAuthStore.setState({ client: null });
-    }
+    await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+    expect(createDraft).toHaveBeenCalledTimes(2);
+    expect(createDraft.mock.calls[1][1]).toBe('Half-written more and more');
+    expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
+  });
+
+  it('says the draft was kept, with Open, and a Discard that deletes it through the host', async () => {
+    savingClient();
+    draftToast.showDraftSavedToast.mockClear();
+    const onDiscardDraft = vi.fn();
+    const { requestCloseRef, afterClose } = renderWithCloseRef({ onDiscardDraft });
+
+    act(() => requestCloseRef.current!(afterClose));
+
+    await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+    expect(draftToast.showDraftSavedToast).toHaveBeenCalledTimes(1);
+    const [discard, labels, open] = draftToast.showDraftSavedToast.mock.calls[0];
+    expect(labels).toMatchObject({ saved: 'draft_saved', discard: 'discard', open: 'open_draft' });
+    discard();
+    expect(onDiscardDraft).toHaveBeenCalledWith('draft-9', expect.anything());
+    // Open brings the same draft back, the way a draft opened from the list comes.
+    expect(draftToast.openKeptDraft).not.toHaveBeenCalled();
+    open();
+    expect(draftToast.openKeptDraft).toHaveBeenCalledWith('draft-9', expect.anything());
+  });
+
+  // compose-19: the keys people bring from other mail apps.
+  it('saves the draft on Ctrl+S, and keeps the browser from saving the page', async () => {
+    const createDraft = savingClient();
+    renderWithCloseRef();
+    const subject = screen.getByDisplayValue('Half-written more');
+    expect(fireEvent.keyDown(subject, { key: 's', ctrlKey: true })).toBe(false);
+    await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1));
+
+    // Nothing new to save: it still says so.
+    await waitFor(() => expect(screen.getByTestId('composer-save-status')).toHaveAttribute('data-status', 'idle'), { timeout: 4000 });
+    fireEvent.keyDown(subject, { key: 's', ctrlKey: true });
+    await waitFor(() => expect(screen.getByTestId('composer-save-status')).toHaveAttribute('data-status', 'saved'));
+    expect(createDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows Cc on Ctrl+Shift+C and Bcc on Ctrl+Shift+B, and puts the cursor there', async () => {
+    renderWithCloseRef();
+    // A new message puts the cursor in To shortly after it opens; let that pass.
+    await act(async () => { await new Promise((r) => setTimeout(r, 250)); });
+    const subject = screen.getByDisplayValue('Half-written more');
+    expect(fireEvent.keyDown(subject, { key: 'C', ctrlKey: true, shiftKey: true })).toBe(false);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('combobox', { name: 'cc_label' })));
+    expect(fireEvent.keyDown(subject, { key: 'B', ctrlKey: true, shiftKey: true })).toBe(false);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('combobox', { name: 'bcc_label' })));
   });
 
   it('closes straight through when there is nothing to lose', async () => {
+    draftToast.showDraftSavedToast.mockClear();
     const requestCloseRef = { current: null } as React.MutableRefObject<((afterClose?: () => void) => void) | null>;
     const afterClose = vi.fn();
     render(<EmailComposer requestCloseRef={requestCloseRef} onClose={vi.fn()} />);
@@ -311,62 +487,39 @@ describe('composer close guard with a follow-up', () => {
 
     await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
     expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
+    expect(draftToast.showDraftSavedToast).not.toHaveBeenCalled();
   });
 
-  it('runs the follow-up after saving the draft', async () => {
-    const { requestCloseRef, afterClose } = renderWithCloseRef();
-
-    act(() => requestCloseRef.current!(afterClose));
-    const dialog = await screen.findByRole('alertdialog');
-    fireEvent.click(within(dialog).getByText('save'));
-
-    await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
-  });
-
-  it('tells screen readers the draft was saved when the user saves, not on autosave', async () => {
-    const createDraft = vi.fn().mockResolvedValue('draft-9');
-    useAuthStore.setState({
-      client: { createDraft, getEmail: vi.fn(), hasDelayedSend: () => false, getMaxDelayedSend: () => 0 } as never,
-    });
+  it('tells screen readers the draft was saved when the user closes, not on autosave', async () => {
+    const createDraft = savingClient();
     const polite = () => document.getElementById(LIVE_REGION_IDS.polite);
-    try {
-      const { requestCloseRef, afterClose } = renderWithCloseRef();
-      await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1), { timeout: 4000 });
-      await new Promise((r) => setTimeout(r, 200));
-      expect(polite()?.textContent ?? '').not.toContain('draft_saved');
+    const { requestCloseRef, afterClose } = renderWithCloseRef();
+    await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    await new Promise((r) => setTimeout(r, 200));
+    expect(polite()?.textContent ?? '').not.toContain('draft_saved');
 
-      fireEvent.change(screen.getByDisplayValue('Half-written more'), { target: { value: 'Half-written more and more' } });
-      act(() => requestCloseRef.current!(afterClose));
-      fireEvent.click(within(await screen.findByRole('alertdialog')).getByText('save'));
+    fireEvent.change(screen.getByDisplayValue('Half-written more'), { target: { value: 'Half-written more and more' } });
+    act(() => requestCloseRef.current!(afterClose));
 
-      await waitFor(() => expect(polite()?.textContent).toContain('draft_saved'));
-    } finally {
-      useAuthStore.setState({ client: null });
-    }
+    await waitFor(() => expect(polite()?.textContent).toContain('draft_saved'));
   });
 
-  it('drops the follow-up when the save fails and the rescue takes over', async () => {
-    // When the server refuses the draft, the composer text survives only via
-    // the unmount stash into the continue-draft slot (#702). That rescue
-    // outranks the request that triggered the close, so the follow-up must
-    // never fire - otherwise the new session would bury the stashed text.
-    const createDraft = vi.fn().mockRejectedValue(new Error('server refused'));
-    useAuthStore.setState({
-      client: { createDraft, hasDelayedSend: () => false, getMaxDelayedSend: () => 0 } as never,
-    });
+  it('keeps the composer open, says why and drops the follow-up when the save fails', async () => {
+    // A refused save keeps the live composer recoverable. Replacing it via a
+    // close follow-up would bury the unsaved text. Navigation can still stash
+    // that text through the existing unmount path.
+    const createDraft = savingClient(vi.fn().mockRejectedValue(new Error('server refused')));
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       const onSaveState = vi.fn();
       const { requestCloseRef, afterClose, onClose, unmount } = renderWithCloseRef({ onSaveState });
 
       act(() => requestCloseRef.current!(afterClose));
-      const dialog = await screen.findByRole('alertdialog');
-      fireEvent.click(within(dialog).getByText('save'));
 
-      // The host still gets its close - the composer must not stay stuck -
-      // but the follow-up is dropped because the text was never persisted.
-      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
-      expect(createDraft).toHaveBeenCalled();
+      await waitFor(() => expect(createDraft).toHaveBeenCalled());
+      expect(await screen.findByRole('alertdialog')).toHaveTextContent('save_failed_close');
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByDisplayValue('Half-written more')).toBeInTheDocument();
       expect(afterClose).not.toHaveBeenCalled();
 
       // The rescue itself: unmounting stashes the live text on the host.
@@ -375,7 +528,6 @@ describe('composer close guard with a follow-up', () => {
         expect.objectContaining({ subject: 'Half-written more' }),
       );
     } finally {
-      useAuthStore.setState({ client: null });
       consoleError.mockRestore();
     }
   });

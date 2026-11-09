@@ -40,7 +40,7 @@ async function loadEmail(client: IJMAPClient, emailId: string, accountId?: strin
  * The account to read `emailId` from: undefined for the signed-in account,
  * null when it is not this login's to read.
  */
-async function sourceAccount(client: IJMAPClient, emailId: string, method: string, accountArg: unknown): Promise<string | undefined | null> {
+export async function sourceAccount(client: IJMAPClient, emailId: string, method: string, accountArg: unknown): Promise<string | undefined | null> {
   const { emails } = useEmailStore.getState();
   if (accountArg === undefined) {
     // A listed message of a shared account is asked of the account that owns
@@ -64,6 +64,23 @@ async function sourceAccount(client: IJMAPClient, emailId: string, method: strin
     return owner.client === client && owner.accountId === accountId;
   });
   return listed ? accountId : null;
+}
+
+/**
+ * The message a plugin named, read the way email.get reads it, with the
+ * account it is in (undefined: the signed-in account). Null when there is
+ * no such message this login may read.
+ */
+export async function readNamedEmail(
+  client: IJMAPClient,
+  emailId: string,
+  method: string,
+  accountArg?: unknown,
+): Promise<{ email: Email; accountId: string | undefined } | null> {
+  const accountId = await sourceAccount(client, emailId, method, accountArg);
+  if (accountId === null) return null;
+  const email = await loadEmail(client, emailId, accountId, accountArg !== undefined);
+  return email ? { email, accountId } : null;
 }
 
 export async function doEmailGet(id: unknown, accountArg?: unknown): Promise<EmailReadView | null> {
@@ -130,11 +147,13 @@ const SEARCH_DATE_FIELDS = ['after', 'before'] as const;
  * subject and body, whole words), `from`, `to`, `subject`, `after` and
  * `before` (dates), `hasAttachment`, in one folder with `mailboxId`. At
  * least one condition; summaries without the body (api.email.get reads one).
+ * `position` skips that many results, to page past the first `limit`.
  */
 export async function doEmailSearch(options: unknown): Promise<EmailSummary[]> {
   const method = 'email.search';
-  const opts = readObject(options, method, 'query', [...SEARCH_TEXT_FIELDS, ...SEARCH_DATE_FIELDS, 'hasAttachment', 'mailboxId', 'limit']);
+  const opts = readObject(options, method, 'query', [...SEARCH_TEXT_FIELDS, ...SEARCH_DATE_FIELDS, 'hasAttachment', 'mailboxId', 'limit', 'position']);
   const limit = opts.limit === undefined ? 20 : readInteger(opts.limit, method, 'limit', 1, MAX_PLUGIN_SEARCH_RESULTS);
+  const position = opts.position === undefined ? 0 : readInteger(opts.position, method, 'position', 0, 1_000_000);
   const filter: Record<string, unknown> = {};
   for (const key of SEARCH_TEXT_FIELDS) {
     if (opts[key] === undefined) continue;
@@ -160,7 +179,7 @@ export async function doEmailSearch(options: unknown): Promise<EmailSummary[]> {
     jmapMailboxId = mailbox.originalId || mailbox.id;
     accountId = mailbox.isShared ? mailbox.accountId : undefined;
   }
-  const { emails } = await client.getEmails(jmapMailboxId, accountId, limit, 0, undefined, false, filter);
+  const { emails } = await client.getEmails(jmapMailboxId, accountId, limit, position, undefined, false, filter);
   return emails.map((email) => emailSummary(email, accountId ?? client.getAccountId()));
 }
 

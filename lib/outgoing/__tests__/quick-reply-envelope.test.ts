@@ -23,6 +23,16 @@ describe('quick reply addressing', () => {
     expect(envelope.sendingIdentity?.id).toBe('id-team');
     expect(envelope.primaryIdentity?.id).toBe('id-me');
   });
+
+  // #1353: list mail names the list in To; only Delivered-To shows the alias.
+  it('sends from the identity in Delivered-To when To/Cc name none', () => {
+    const listMail = {
+      ...message,
+      to: [{ name: 'Dev list', email: 'dev@lists.example.net' }],
+      headers: { 'Delivered-To': ' org-team@example.org' },
+    } as unknown as Email;
+    expect(quickReplyEnvelope(listMail, [me, team]).sendingIdentity?.id).toBe('id-team');
+  });
 });
 
 describe('saving a quick reply as a draft before an automatic sign-out', () => {

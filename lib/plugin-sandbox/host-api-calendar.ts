@@ -6,23 +6,41 @@
 // Plugins describe events in a small shape of their own (CalendarEventInput
 // in plugin-types.ts); arbitrary JSCalendar objects are not accepted.
 
+import { addDays, parseISO, subDays } from 'date-fns';
 import { createRecurrenceRule } from '@/lib/recurrence-rule';
 import type {
-  CalendarEventInput, CalendarEventView, CalendarView, TaskInput, TaskView,
+  CalendarEventInput, CalendarEventView, CalendarView, InstalledPlugin, TaskInput, TaskView,
 } from '../plugin-types';
-import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRecurrenceRule, CalendarTask } from '../jmap/types';
+import type {
+  Calendar, CalendarEvent, CalendarEventAlert, CalendarLink, CalendarParticipant, CalendarRecurrenceRule,
+  CalendarRelation, CalendarTask, ContactCard,
+} from '../jmap/types';
 import type { IJMAPClient } from '../jmap/client-interface';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useIdentityStore } from '@/stores/identity-store';
+import { useSettingsStore } from '@/stores/settings-store';
+import { useContactStore } from '@/stores/contact-store';
+import {
+  BIRTHDAY_CALENDAR_ID,
+  createBirthdayCalendar,
+  generateBirthdayEvents,
+} from '@/lib/birthday-calendar';
+import { getEffectiveLocale } from '@/i18n/detect-locale';
+import { messagesFor } from './host-api-app';
+import { pluginHasPermission } from './permissions';
 import { eventToView, taskToView } from '../plugin-projection';
 import { expandRecurringEvents } from '../recurrence-expansion';
 import { buildParticipantMap } from '../calendar-participants';
 import { parseDurationSeconds } from '../calendar-event-normalization';
+import { parseAlertOffset, withOwnAlertIds } from '../calendar-alerts';
+import { plainDescriptionFields } from '../calendar-description';
+import { patchPath } from '../jmap/patch-object';
+import { isValidEmail } from '../validation';
 import { getEffectiveTimeZone } from '../timezone';
 import { generateUUID } from '../utils';
 import {
-  readBoolean, readId, readInteger, readObject, readString, sessionClient,
+  isPlainRecord, readBoolean, readId, readInteger, readObject, readString, sessionClient,
 } from './host-api-input';
 
 /** Longest range calendar.getEvents covers in one call. */
@@ -215,9 +233,39 @@ async function pickCalendar(
   return choice.id;
 }
 
-export async function doCalendarListCalendars(): Promise<CalendarView[]> {
+async function birthdayCalendarName(): Promise<string> {
+  try {
+    const locale = getEffectiveLocale();
+    const msgs = await messagesFor(locale);
+    if (typeof msgs?.birthday_calendar === 'string') return msgs.birthday_calendar;
+  } catch {
+    // fallback
+  }
+  return 'Birthdays';
+}
+
+async function ensureContacts(client: IJMAPClient): Promise<ContactCard[]> {
+  const store = useContactStore.getState();
+  if (!store.contactsLoaded && store.contacts.length === 0 && client?.supportsContacts?.()) {
+    try {
+      await store.fetchContacts(client);
+    } catch {
+      // Ignore network errors; proceed with current contacts
+    }
+  }
+  return useContactStore.getState().contacts;
+}
+
+export async function doCalendarListCalendars(plugin?: InstalledPlugin): Promise<CalendarView[]> {
   const client = sessionClient('calendar.listCalendars');
-  return (await ensureCalendars(client)).map(calendarToView);
+  const calendars = (await ensureCalendars(client)).map(calendarToView);
+  const settings = useSettingsStore.getState();
+  const canReadContacts = plugin ? pluginHasPermission(plugin, 'contacts:read') : false;
+  if (settings.showBirthdayCalendar && canReadContacts) {
+    const name = await birthdayCalendarName();
+    calendars.push(calendarToView(createBirthdayCalendar(name, settings.birthdayCalendarColor)));
+  }
+  return calendars;
 }
 
 // ─── Reading events ───────────────────────────────────────────
@@ -227,7 +275,7 @@ function rangeBound(when: WhenParts): string {
   return `${when.date}T${when.time ?? '00:00:00'}${when.utc ? 'Z' : ''}`;
 }
 
-export async function doCalendarGetEvents(options: unknown): Promise<CalendarEventView[]> {
+export async function doCalendarGetEvents(options: unknown, plugin?: InstalledPlugin): Promise<CalendarEventView[]> {
   const method = 'calendar.getEvents';
   const opts = readObject(options, method, 'options', ['from', 'to', 'calendarIds']);
   const from = readWhen(opts.from, method, 'from');
@@ -254,6 +302,24 @@ export async function doCalendarGetEvents(options: unknown): Promise<CalendarEve
   const valid = raw.filter((e) => typeof e.start === 'string' && e.start && !Number.isNaN(Date.parse(e.start)));
   const events = expandRecurringEvents(valid, start, end)
     .filter((e) => !calendarIds || Object.keys(e.calendarIds || {}).some((id) => e.calendarIds[id] && calendarIds.has(id)));
+
+  const canReadContacts = plugin ? pluginHasPermission(plugin, 'contacts:read') : false;
+  const { showBirthdayCalendar } = useSettingsStore.getState();
+  if (showBirthdayCalendar && canReadContacts && (!calendarIds || calendarIds.has(BIRTHDAY_CALENDAR_ID))) {
+    const contacts = await ensureContacts(client);
+    // A birthday lasts its whole day. Keep the ones whose day overlaps the
+    // range the way the server does for regular events: the day ends after
+    // `from` and starts before `to`, so `to` itself is excluded.
+    const rangeStart = parseISO(start);
+    const rangeEnd = parseISO(end);
+    const birthdays = generateBirthdayEvents(contacts, subDays(rangeStart, 1).toISOString(), end)
+      .filter((b) => {
+        const dayStart = parseISO(b.start);
+        return dayStart < rangeEnd && addDays(dayStart, 1) > rangeStart;
+      });
+    events.push(...birthdays);
+  }
+
   const sortKey = (e: CalendarEvent) => e.utcStart ?? e.start;
   events.sort((a, b) => (sortKey(a) < sortKey(b) ? -1 : sortKey(a) > sortKey(b) ? 1 : 0));
   return events.slice(0, MAX_PLUGIN_EVENTS).map(eventToView);
@@ -288,9 +354,21 @@ async function loadEvent(client: IJMAPClient, id: string): Promise<CalendarEvent
   };
 }
 
-export async function doCalendarGetEvent(id: unknown): Promise<CalendarEventView | null> {
+export async function doCalendarGetEvent(id: unknown, plugin?: InstalledPlugin): Promise<CalendarEventView | null> {
   const method = 'calendar.getEvent';
   const eventId = readId(id, method);
+  if (eventId.startsWith('birthday-')) {
+    const canReadContacts = plugin ? pluginHasPermission(plugin, 'contacts:read') : false;
+    const { showBirthdayCalendar } = useSettingsStore.getState();
+    if (!showBirthdayCalendar || !canReadContacts) return null;
+    const client = sessionClient(method);
+    const contacts = await ensureContacts(client);
+    const match = eventId.match(/^birthday-(.+)-(\d{4})$/);
+    const year = match ? parseInt(match[2], 10) : new Date().getFullYear();
+    const birthdays = generateBirthdayEvents(contacts, `${year}-01-01T00:00:00`, `${year}-12-31T23:59:59`);
+    const found = birthdays.find((b) => b.id === eventId);
+    return found ? eventToView(found) : null;
+  }
   const event = await loadEvent(sessionClient(method), eventId);
   return event ? eventToView(event) : null;
 }
@@ -301,6 +379,9 @@ export async function doCalendarGetEvent(id: unknown): Promise<CalendarEventView
  * range the calendar has loaded is added to that list first.
  */
 async function eventForMutation(client: IJMAPClient, method: string, id: string): Promise<CalendarEvent> {
+  if (id.startsWith('birthday-')) {
+    throw new Error(`${method}: birthday events cannot be modified`);
+  }
   const event = await loadEvent(client, id);
   if (!event) throw new Error(`${method}: no event with id "${id}"`);
   if (!useCalendarStore.getState().events.some((e) => e.id === id)) {
@@ -457,6 +538,8 @@ export async function doCalendarUpdateEvent(id: unknown, patch: unknown): Promis
     updates.calendarIds = { [await pickCalendar(client, method, data.calendarId, false)]: true };
   }
   const existing = await eventForMutation(client, method, eventId);
+  // A plugin writes plain text, also over an HTML description.
+  if (updates.description !== undefined) Object.assign(updates, plainDescriptionFields(existing, updates.description));
 
   const timeKeys = ['start', 'end', 'duration', 'timeZone', 'isAllDay'] as const;
   if (timeKeys.some((k) => data[k] !== undefined)) {
@@ -486,7 +569,323 @@ export async function doCalendarDeleteEvent(id: unknown): Promise<void> {
 
 // ─── Tasks ────────────────────────────────────────────────────
 
-const TASK_FIELDS = ['title', 'description', 'due', 'priority', 'calendarId'] as const;
+const TASK_FIELDS = [
+  'title', 'description', 'due', 'priority', 'calendarId', 'alerts', 'links', 'relatedTo', 'keywords',
+] as const;
+/** Most alerts a plugin may give a task. */
+export const MAX_PLUGIN_TASK_ALERTS = 5;
+/** Most links a plugin may give a task. */
+export const MAX_PLUGIN_TASK_LINKS = 10;
+/** Most relations a plugin may give a task. */
+export const MAX_PLUGIN_TASK_RELATIONS = 10;
+/** Most keywords a plugin may give a task. */
+export const MAX_PLUGIN_TASK_KEYWORDS = 10;
+const MAX_HREF = 2048;
+const MAX_LINK_TITLE = 500;
+const MAX_RELATED_UID = 998;
+const MAX_RELATIONS_PER_UID = 4;
+const MAX_ALERT_OFFSET_MS = MAX_PLUGIN_EVENT_RANGE_DAYS * DAY_MS;
+/** Longest key a plugin may name to remove an entry it did not write. */
+const MAX_REMOVED_KEY = 1024;
+
+const MEMBER_ID_RE = /^[A-Za-z0-9._-]{1,64}$/;
+const OFFSET_RE = /^-?P(?:\d+W|(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+S)?)?)$/;
+const REL_RE = /^[a-z][a-z0-9.-]{0,63}$/;
+const RELATION_RE = /^[a-z][a-z0-9-]{0,31}$/;
+// Printable ASCII without spaces; a Message-ID keeps its angle brackets.
+const RELATED_UID_RE = /^(?:<[!-;=?-~]+>|[!-;=?-~]+)$/;
+const CONTROL_RE = /\p{Cc}/u;
+
+/** The maps a plugin edits on a task, each keyed as JSCalendar keys it. */
+const TASK_MAPS = ['alerts', 'links', 'relatedTo', 'keywords'] as const;
+type TaskMap = typeof TASK_MAPS[number];
+
+/**
+ * A map change: `null` for the whole map (removes every entry), else the
+ * entries named, each a value to set or null to remove. Entries not named
+ * are left as they are.
+ */
+type MapChange<T> = null | [key: string, value: T | null][];
+
+/** An instant in UTC, as JSCalendar's UTCDateTime (`2026-05-01T07:30:00Z`). */
+function readInstant(value: unknown, method: string, field: string): string {
+  const when = readWhen(value, method, field);
+  if (!when.utc || when.time === null) throw new Error(`${method}: ${field} must be a time in UTC, like 2026-05-01T07:30:00Z`);
+  return `${when.date}T${when.time}Z`;
+}
+
+function utcNow(): string {
+  return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+/**
+ * `{ key: value | null }` → its entries, each value read by `read`. A key
+ * set must pass `keyOk`; a key removed (null) may be any key the task could
+ * hold, so a plugin can remove entries another app wrote.
+ */
+function readMapChange<T>(
+  value: unknown,
+  method: string,
+  field: string,
+  max: number,
+  keyOk: (key: string) => boolean,
+  keyRule: string,
+  read: (value: unknown, field: string) => T,
+): MapChange<T> {
+  if (value === null) return null;
+  if (!isPlainRecord(value)) throw new Error(`${method}: ${field} must be an object keyed by id, or null`);
+  const entries = Object.entries(value);
+  if (entries.length > max) throw new Error(`${method}: ${field} may name at most ${max} entries`);
+  return entries.map(([key, entry]) => {
+    const where = `${field}["${key.slice(0, 64)}"]`;
+    if (entry === null) {
+      if (!key || key.length > MAX_REMOVED_KEY || CONTROL_RE.test(key)) throw new Error(`${method}: ${where} is not a key a task holds`);
+      return [key, null];
+    }
+    if (!keyOk(key)) throw new Error(`${method}: ${field} key "${key.slice(0, 64)}" must be ${keyRule}`);
+    return [key, read(entry, where)];
+  });
+}
+
+function readTrigger(value: unknown, method: string, field: string): CalendarEventAlert['trigger'] {
+  if (isPlainRecord(value) && Object.hasOwn(value, 'at')) {
+    const t = readObject(value, method, field, ['at']);
+    return { '@type': 'AbsoluteTrigger', when: readInstant(t.at, method, `${field}.at`) };
+  }
+  const t = readObject(value, method, field, ['offset', 'relativeTo']);
+  if (typeof t.offset !== 'string' || !OFFSET_RE.test(t.offset) || !/\d/.test(t.offset) || t.offset.endsWith('T')) {
+    throw new Error(`${method}: ${field}.offset must be an ISO 8601 duration such as -PT15M, or give ${field}.at`);
+  }
+  const ms = parseAlertOffset(t.offset);
+  if (ms === null || Math.abs(ms) > MAX_ALERT_OFFSET_MS) {
+    throw new Error(`${method}: ${field}.offset may be at most ${MAX_PLUGIN_EVENT_RANGE_DAYS} days`);
+  }
+  if (t.relativeTo !== undefined && t.relativeTo !== 'due' && t.relativeTo !== 'start') {
+    throw new Error(`${method}: ${field}.relativeTo must be due or start`);
+  }
+  // JSCalendar names a task's due its "end".
+  return { '@type': 'OffsetTrigger', offset: t.offset, relativeTo: t.relativeTo === 'start' ? 'start' : 'end' };
+}
+
+function alertsOf(value: unknown, method: string): MapChange<CalendarEventAlert> {
+  return readMapChange(value, method, 'alerts', MAX_PLUGIN_TASK_ALERTS, (k) => MEMBER_ID_RE.test(k),
+    '1-64 letters, digits or . _ -', (entry, field) => {
+      const a = readObject(entry, method, field, ['trigger', 'action']);
+      if (a.action !== undefined && a.action !== 'display' && a.action !== 'email') {
+        throw new Error(`${method}: ${field}.action must be display or email`);
+      }
+      return {
+        '@type': 'Alert',
+        trigger: readTrigger(a.trigger, method, `${field}.trigger`),
+        action: a.action === 'email' ? 'email' : 'display',
+        acknowledged: null,
+        relatedTo: null,
+      };
+    });
+}
+
+/** A link's target: http(s), a `mailto:` address, or a path of this Bulwark made a full URL. */
+function readHref(value: unknown, method: string, field: string): string {
+  const href = readString(value, method, field, MAX_HREF, { min: 1 });
+  if (/[\s\p{Cc}\\]/u.test(href)) throw new Error(`${method}: ${field} must not contain spaces, control characters or backslashes`);
+  if (href.startsWith('/') && !href.startsWith('//')) return new URL(href, window.location.origin).href;
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    throw new Error(`${method}: ${field} must be an http(s) URL, a mailto: address or a path starting with /`);
+  }
+  if (url.protocol === 'mailto:') {
+    let address: string;
+    try {
+      address = decodeURIComponent(url.pathname);
+    } catch {
+      address = '';
+    }
+    if (url.search || url.hash || !isValidEmail(address)) throw new Error(`${method}: ${field} must be mailto: and one address`);
+    return href;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`${method}: ${field} must be an http(s) URL, a mailto: address or a path starting with /`);
+  }
+  if (url.username || url.password) throw new Error(`${method}: ${field} must not carry a user name or password`);
+  return href;
+}
+
+function linksOf(value: unknown, method: string): MapChange<CalendarLink> {
+  return readMapChange(value, method, 'links', MAX_PLUGIN_TASK_LINKS, (k) => MEMBER_ID_RE.test(k),
+    '1-64 letters, digits or . _ -', (entry, field) => {
+      const l = readObject(entry, method, field, ['href', 'rel', 'title']);
+      if (l.rel !== undefined && (typeof l.rel !== 'string' || !REL_RE.test(l.rel))) {
+        throw new Error(`${method}: ${field}.rel must be a lower-case link relation such as describedby`);
+      }
+      const title = l.title === undefined ? '' : readString(l.title, method, `${field}.title`, MAX_LINK_TITLE, { trim: true });
+      return {
+        '@type': 'Link',
+        href: readHref(l.href, method, `${field}.href`),
+        cid: null,
+        contentType: null,
+        size: null,
+        rel: (l.rel as string | undefined) ?? null,
+        display: null,
+        title: title || null,
+      };
+    });
+}
+
+function relatedToOf(value: unknown, method: string): MapChange<CalendarRelation> {
+  return readMapChange(value, method, 'relatedTo', MAX_PLUGIN_TASK_RELATIONS,
+    (k) => k.length <= MAX_RELATED_UID && RELATED_UID_RE.test(k),
+    `a Message-ID like <id@example.com> or a UID, at most ${MAX_RELATED_UID} printable characters without spaces`,
+    (entry, field) => {
+      const r = readObject(entry, method, field, ['relation']);
+      let relation: Record<string, boolean> | null = null;
+      if (r.relation !== undefined) {
+        if (!Array.isArray(r.relation) || r.relation.length > MAX_RELATIONS_PER_UID) {
+          throw new Error(`${method}: ${field}.relation must be an array of at most ${MAX_RELATIONS_PER_UID} relation types`);
+        }
+        r.relation.forEach((type, j) => {
+          if (typeof type !== 'string' || !RELATION_RE.test(type)) {
+            throw new Error(`${method}: ${field}.relation[${j}] must be a lower-case relation type such as parent`);
+          }
+        });
+        if (r.relation.length) relation = Object.fromEntries((r.relation as string[]).map((type) => [type, true]));
+      }
+      return { '@type': 'Relation', relation };
+    });
+}
+
+/** A task's keywords: `{ keyword: true }` sets one, null removes it. */
+function keywordsOf(value: unknown, method: string): MapChange<true> {
+  return readMapChange(value, method, 'keywords', MAX_PLUGIN_TASK_KEYWORDS, (k) => MEMBER_ID_RE.test(k),
+    '1-64 letters, digits or . _ -', (entry, field) => {
+      if (entry !== true) throw new Error(`${method}: ${field} must be true, or null to remove it`);
+      return true;
+    });
+}
+
+interface TaskMapChanges {
+  alerts?: MapChange<CalendarEventAlert>;
+  links?: MapChange<CalendarLink>;
+  relatedTo?: MapChange<CalendarRelation>;
+  keywords?: MapChange<true>;
+}
+
+/** The plugin's map changes, read and checked before anything is asked of the server. */
+function mapChangesOf(data: Record<string, unknown>, method: string): TaskMapChanges {
+  const changes: TaskMapChanges = {};
+  if (data.alerts !== undefined) changes.alerts = alertsOf(data.alerts, method);
+  if (data.links !== undefined) changes.links = linksOf(data.links, method);
+  if (data.relatedTo !== undefined) changes.relatedTo = relatedToOf(data.relatedTo, method);
+  if (data.keywords !== undefined) changes.keywords = keywordsOf(data.keywords, method);
+  return changes;
+}
+
+/** The entries set, as a map (null when none), for a task that has none yet. */
+function wholeMap<T>(change: MapChange<T>): Record<string, T> | null {
+  const set = (change ?? []).filter((entry): entry is [string, T] => entry[1] !== null);
+  return set.length ? Object.fromEntries(set) : null;
+}
+
+/** Map changes on a new task: the entries set. Alerts turn the calendar's defaults off. */
+function createMaps(changes: TaskMapChanges): Partial<CalendarTask> {
+  const task: Partial<CalendarTask> = {};
+  for (const name of TASK_MAPS) {
+    const change = changes[name];
+    if (change !== undefined) Object.assign(task, { [name]: wholeMap(change as MapChange<unknown>) });
+  }
+  if (task.alerts) task.useDefaultAlerts = false;
+  return task;
+}
+
+function sameAlert(a: CalendarEventAlert, b: CalendarEventAlert): boolean {
+  const key = (t: CalendarEventAlert['trigger']) => t['@type'] === 'AbsoluteTrigger'
+    ? `at ${Date.parse(t.when)}`
+    : `offset ${parseAlertOffset(t.offset)} ${t.relativeTo === 'end' ? 'end' : 'start'}`;
+  return a.action === b.action && key(a.trigger) === key(b.trigger);
+}
+
+function countAfter(held: object | null | undefined, change: [string, unknown][]): number {
+  const keys = new Set(Object.keys(held ?? {}));
+  for (const [key, value] of change) {
+    if (value === null) keys.delete(key);
+    else keys.add(key);
+  }
+  return keys.size;
+}
+
+/**
+ * The patch for a task's maps: each entry named by its JMAP path, so entries
+ * the plugin did not name, and members changed meanwhile elsewhere, stay as
+ * the server holds them. A map the task does not have yet is written whole.
+ * An alert set with the trigger and action it has keeps its `acknowledged`;
+ * a new trigger (a snooze) makes it fire again.
+ */
+function updateMaps(method: string, task: CalendarTask, changes: TaskMapChanges): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  const limits: Record<TaskMap, number> = {
+    alerts: MAX_PLUGIN_TASK_ALERTS,
+    links: MAX_PLUGIN_TASK_LINKS,
+    relatedTo: MAX_PLUGIN_TASK_RELATIONS,
+    keywords: MAX_PLUGIN_TASK_KEYWORDS,
+  };
+  for (const name of TASK_MAPS) {
+    const change = changes[name] as MapChange<unknown> | undefined;
+    if (change === undefined) continue;
+    if (change === null) {
+      patch[name] = null;
+      // Else the calendar's defaults would still show and fire.
+      if (name === 'alerts' && task.useDefaultAlerts) patch.useDefaultAlerts = false;
+      continue;
+    }
+    const held = task[name] as Record<string, unknown> | null | undefined;
+    const adds = change.some(([key, value]) => value !== null && !(held && Object.hasOwn(held, key)));
+    if (adds && countAfter(held, change) > limits[name]) {
+      throw new Error(`${method}: the task would hold more than ${limits[name]} ${name}`);
+    }
+    if (name === 'alerts' && task.useDefaultAlerts) {
+      Object.assign(patch, ownAlerts(method, task, change as [string, CalendarEventAlert | null][]));
+      continue;
+    }
+    if (!held || Object.keys(held).length === 0) {
+      patch[name] = wholeMap(change);
+      continue;
+    }
+    for (const [key, value] of change) {
+      if (name === 'alerts' && value !== null && Object.hasOwn(held, key) && sameAlert(held[key] as CalendarEventAlert, value as CalendarEventAlert)) {
+        continue;
+      }
+      patch[patchPath(name, key)] = value;
+    }
+  }
+  return patch;
+}
+
+/**
+ * Alerts of a task that uses its calendar's default alerts. Stalwart shows
+ * the defaults in `alerts` under the defaults' ids and drops on save every
+ * alert under one of those ids, so the defaults the plugin keeps become the
+ * task's own under new ids (as the task form does), and an alert of the
+ * plugin's under a default's id is refused rather than lost.
+ */
+function ownAlerts(
+  method: string,
+  task: CalendarTask,
+  change: [string, CalendarEventAlert | null][],
+): Partial<CalendarTask> {
+  const defaults = task.alerts ?? {};
+  const removed = new Set<string>();
+  const set: [string, CalendarEventAlert][] = [];
+  for (const [key, value] of change) {
+    if (value === null) removed.add(key);
+    else if (Object.hasOwn(defaults, key)) {
+      throw new Error(`${method}: alert "${key}" is one of the calendar's default alerts the task uses (useDefaultAlerts); give yours another id`);
+    } else set.push([key, value]);
+  }
+  const kept = Object.entries(defaults).filter(([key]) => !removed.has(key)).map(([, alert]) => alert);
+  const alerts = { ...withOwnAlertIds(kept, [...Object.keys(defaults), ...set.map(([key]) => key)]), ...Object.fromEntries(set) };
+  return { useDefaultAlerts: false, alerts: Object.keys(alerts).length ? alerts : null };
+}
 
 function isDone(task: CalendarTask): boolean {
   return task.progress === 'completed' || task.progress === 'cancelled';
@@ -505,6 +904,22 @@ export async function doTasksList(options: unknown): Promise<TaskView[]> {
     .map(taskToView);
 }
 
+// A plugin's writes to one task, one after another: Stalwart refuses a
+// CalendarEvent/set while another is under way on the same object, and each
+// write is worked out against the task as the one before left it.
+const taskWrites = new Map<string, Promise<unknown>>();
+
+function oneAtATime<T>(taskId: string, write: () => Promise<T>): Promise<T> {
+  const before = taskWrites.get(taskId) ?? Promise.resolve();
+  const next = before.catch(() => undefined).then(write);
+  const settled = next.catch(() => undefined);
+  taskWrites.set(taskId, settled);
+  void settled.then(() => {
+    if (taskWrites.get(taskId) === settled) taskWrites.delete(taskId);
+  });
+  return next;
+}
+
 async function loadTask(client: IJMAPClient, id: string): Promise<CalendarTask | null> {
   const inStore = useTaskStore.getState().tasks.find((t) => t.id === id);
   if (inStore) return inStore;
@@ -515,6 +930,24 @@ async function requireTask(client: IJMAPClient, method: string, id: string): Pro
   const task = await loadTask(client, id);
   if (!task) throw new Error(`${method}: no task with id "${id}"`);
   return task;
+}
+
+/**
+ * The task with its alerts, links, relations and keywords as the server
+ * holds them now: the store's copy may be older, and a map the task seems
+ * not to have is written whole, which would drop what the server gained.
+ */
+async function withServerMaps(client: IJMAPClient, task: CalendarTask): Promise<CalendarTask> {
+  const server = await client.getCalendarEvent(task.originalId ?? task.id, task.accountId);
+  if (!server) return task;
+  return {
+    ...task,
+    alerts: server.alerts ?? null,
+    links: server.links ?? null,
+    relatedTo: server.relatedTo ?? null,
+    keywords: server.keywords ?? null,
+    useDefaultAlerts: server.useDefaultAlerts,
+  };
 }
 
 export async function doTasksGet(id: unknown): Promise<TaskView | null> {
@@ -547,6 +980,7 @@ export async function doTasksCreate(input: unknown): Promise<TaskView | null> {
     ...(data.due === undefined ? { due: null, showWithoutTime: true } : dueOf(data.due, method)),
     priority: data.priority === undefined ? 0 : readInteger(data.priority, method, 'priority', 0, 9),
     progress: 'needs-action',
+    ...createMaps(mapChangesOf(data, method)),
     calendarIds: { [await pickCalendar(client, method, data.calendarId, true)]: true },
   };
   const created = await useTaskStore.getState().createTask(client, task);
@@ -569,8 +1003,37 @@ export async function doTasksUpdate(id: unknown, patch: unknown): Promise<void> 
   if (data.calendarId !== undefined) {
     updates.calendarIds = { [await pickCalendar(client, method, data.calendarId, true)]: true };
   }
-  await requireTask(client, method, taskId);
-  await useTaskStore.getState().updateTask(client, taskId, updates);
+  const maps = mapChangesOf(data, method);
+  await oneAtATime(taskId, async () => {
+    let task = await requireTask(client, method, taskId);
+    if (Object.keys(maps).length) task = await withServerMaps(client, task);
+    Object.assign(updates, updateMaps(method, task, maps));
+    if (Object.keys(updates).length === 0) return;
+    await useTaskStore.getState().updateTask(client, taskId, updates, task);
+  });
+}
+
+/**
+ * Mark one of a task's alerts dismissed at `when` (UTC; now when left out),
+ * or not dismissed with null. Only that alert's `acknowledged` is written.
+ */
+export async function doTasksAcknowledgeAlert(id: unknown, alertId: unknown, when: unknown): Promise<void> {
+  const method = 'tasks.acknowledgeAlert';
+  const taskId = readId(id, method);
+  const key = readId(alertId, method, 'alertId');
+  const acknowledged = when === undefined ? utcNow() : when === null ? null : readInstant(when, method, 'when');
+  const client = sessionClient(method);
+  await oneAtATime(taskId, async () => {
+    const task = await withServerMaps(client, await requireTask(client, method, taskId));
+    const alert = task.alerts && Object.hasOwn(task.alerts, key) ? task.alerts[key] : null;
+    if (!alert) throw new Error(`${method}: the task has no alert "${key}"`);
+    if (task.useDefaultAlerts) {
+      throw new Error(`${method}: the task uses its calendar's default alerts (useDefaultAlerts); make them its own with tasks.update(id, { alerts: {} }) first`);
+    }
+    if ((alert.acknowledged ?? null) === acknowledged) return;
+    const patch = { [patchPath('alerts', key, 'acknowledged')]: acknowledged } as Partial<CalendarTask>;
+    await useTaskStore.getState().updateTask(client, taskId, patch, task);
+  });
 }
 
 export async function doTasksSetComplete(id: unknown, complete: unknown): Promise<void> {
@@ -578,9 +1041,11 @@ export async function doTasksSetComplete(id: unknown, complete: unknown): Promis
   const taskId = readId(id, method);
   const done = readBoolean(complete, method, 'complete');
   const client = sessionClient(method);
-  const task = await requireTask(client, method, taskId);
-  if ((task.progress === 'completed') === done) return;
-  await useTaskStore.getState().toggleTaskComplete(client, task);
+  await oneAtATime(taskId, async () => {
+    const task = await requireTask(client, method, taskId);
+    if ((task.progress === 'completed') === done) return;
+    await useTaskStore.getState().toggleTaskComplete(client, task);
+  });
 }
 
 export async function doTasksDelete(id: unknown): Promise<void> {

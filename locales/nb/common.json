@@ -1,14 +1,11 @@
 {
-  "meta_description": "Minimalistisk nettpostklient som bruker JMAP-protokollen",
+  "meta_description": "Selvhostet nettpost for e-post, kalender, kontakter og filer, bygget på JMAP",
   "login": {
     "title": "Nettpost",
     "username_label": "E-post",
     "username_placeholder": "user@example.com",
     "password_label": "Passord",
     "password_placeholder": "Skriv inn passordet ditt",
-    "jmap_endpoint_label": "JMAP-server",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Serveren må tillate CORS-forespørsler fra dette domenet.",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Serveren ble valgt ut fra e-postdomenet ditt.",
     "sign_in": "Logg på",
@@ -29,7 +26,7 @@
     },
     "show_password": "Vis passord",
     "hide_password": "Skjul passord",
-    "totp_toggle": "Jeg har en kode for tofaktorautentisering",
+    "totp_toggle": "Jeg har en kode fra autentiseringsappen min",
     "token_toggle": "Logg på med et tilgangstoken",
     "password_toggle": "Logg på med passord",
     "token_label": "Tilgangstoken",
@@ -112,8 +109,35 @@
     "code_label": "Autentiseringskode",
     "verify": "Bekreft"
   },
+  "ux_p3_words": {
+    "appearance_description": "Endre hvordan {appName} ser ut.",
+    "text_size_app": "Skalerer all tekst i appen. 100 % er normal størrelse.",
+    "scrollbars_app": "Bruker systemets egne rullefelt, som er bredere og lettere å ta tak i.",
+    "voice_app": "Stemmen som leser opp meldinger. Listen viser stemmene denne datamaskinen har for språket i grensesnittet.",
+    "voice_default_app": "Systemstemme",
+    "visual_alerts_app": "Får vindustittelen til å blinke sakte når det kommer ny e-post eller en påminnelse, og holder påminnelser på skjermen til du lukker dem.",
+    "sounds_link_app": "Varsellyder og antall uleste på ikonet på oppgavelinjen stiller du inn på siden Varsler.",
+    "writing_language_app": "Språket du vanligvis skriver på. Korrektur og stavekontroll bruker det.",
+    "badge_all_app": "Tallet på ikonet på oppgavelinjen og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer.",
+    "badge_all_browser": "Tallet på fanen og appikonet legger sammen innboksene til alle påloggede kontoer.",
+    "dnd_title": "Ikke forstyrr",
+    "pause_label": "Sett varsler på pause",
+    "pause_description": "Ingen lyder, hurtigvinduer eller opplest informasjon om ny e-post før du slår dette av igjen.",
+    "dnd_link_app": "Sett varsler på pause og still inn stille timer på siden Varsler.",
+    "dnd_link_browser": "Sett varsler på pause på siden Varsler.",
+    "backup_app": "Eksporter innstillingene dine til en fil, og importer dem på de andre enhetene dine.",
+    "sync_app": "Andre enheter som er logget på denne kontoen, får de samme innstillingene.",
+    "progress_attachments": "Laster ned vedlegg",
+    "progress_events": "Laster ned hendelser",
+    "progress_contacts": "Laster ned kontakter",
+    "progress_files_list": "Henter fillisten",
+    "progress_other": "Laster ned",
+    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du holder frakoblet i Filer, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
+    "filter_value_placeholder": "Verdi",
+    "filter_values_hint": "Skill flere verdier med komma."
+  },
   "sidebar": {
-    "sign_in_again": "Logg inn på nytt",
+    "sign_in_again": "Logg inn igjen",
     "close": "Lukk",
     "compose": "Skriv",
     "compose_hint": "Skriv (c)",
@@ -127,7 +151,7 @@
     "sign_out_of": "Logg ut av {account}",
     "sign_out_all": "Logg ut av alle kontoer",
     "add_account": "Legg til konto",
-    "set_as_default": "Sett som standard",
+    "set_as_default": "Åpne denne kontoen ved oppstart",
     "switch_account": "Bytt konto",
     "contacts": "Kontakter",
     "calendar": "Kalender",
@@ -178,6 +202,7 @@
     },
     "clear_search": "Tøm søket",
     "vacation_active": "Feriesvar er aktivt",
+    "vacation_turn_off": "Slå av",
     "demo_banner": "Demomodus",
     "demo_reset": "Tilbakestill",
     "demo_tour": "Omvisning",
@@ -216,22 +241,30 @@
     "mv_storage_used": "{percent} % av {total} brukt",
     "accessibility": "Tilgjengelighet"
   },
+  "account_unread": {
+    "others": "Uleste i andre kontoer: {count}",
+    "badge_all_accounts": {
+      "label": "Tell ulest e-post i alle kontoer",
+      "description": "Tallet på fanen, appikonet og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer."
+    },
+    "empty_hint": "Du kan tømme mappen {folder} for å fjerne alle meldinger permanent."
+  },
   "protocol_handlers": {
     "title": "Standardapper",
-    "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}. Teknisk sett registrerer {appName} seg som protokollbehandler for mailto:- og webcal:-lenker.",
+    "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}.",
     "unsupported": "Denne nettleseren eller tilkoblingen støtter ikke manuell registrering av protokollbehandlere. Det kan hende du likevel kan velge den installerte PWA-en i innstillingene for nettleseren eller operativsystemet.",
-    "mailto_label": "E-postlenker",
-    "mailto_description": "Åpne mailto:-lenker i {appName} med et forhåndsutfylt meldingsvindu.",
-    "protocol_open_mode_label": "Når mailto:- og webcal:-lenker åpnes",
+    "mailto_label": "Åpne e-postlenker i {appName}",
+    "mailto_description": "Et klikk på en e-postadresse på et nettsted starter en ny melding i {appName}.",
+    "protocol_open_mode_label": "Slik åpnes lenker",
     "protocol_open_mode_description": "Velg om {appName} skal åpne mailto:- og webcal:-lenker i en ny fane eller bruke en økt som allerede er åpen. Alternativet for aktiv økt krever tillatelse til varsler. Hvis nettleseren hindrer {appName} i å få fokus, kan du klikke på et varsel for å vise vinduet.",
     "protocol_open_mode_active_session": "Åpne i aktiv økt hvis mulig",
     "protocol_open_mode_new_tab": "Åpne alltid en ny fane",
     "focus_notification_title": "Åpne {appName}",
     "focus_notification_body": "Lenken ble åpnet i {appName}. Klikk for å vise vinduet.",
-    "webcal_label": "Kalenderlenker",
-    "webcal_description": "Åpne webcal:-lenker i {appName} med en forhåndsutfylt dialog for kalenderabonnement.",
-    "register_mailto": "Registrer e-postprogram",
-    "register_webcal": "Registrer kalenderprogram",
+    "webcal_label": "Åpne kalenderlenker i {appName}",
+    "webcal_description": "Et klikk på en kalenderlenke på et nettsted legger til kalenderen i {appName}.",
+    "register_mailto": "Bruk {appName} for e-postlenker",
+    "register_webcal": "Bruk {appName} for kalenderlenker",
     "mailto_registered": "Forespørsel om registrering av e-postprogram er sendt",
     "webcal_registered": "Forespørsel om registrering av kalenderprogram er sendt",
     "registration_failed": "Registrering av protokollbehandler mislyktes",
@@ -241,7 +274,6 @@
     "select_account_title": "Velg konto",
     "select_mailto_account": "Velg hvilken konto som skal åpne denne e-postlenken.",
     "select_webcal_account": "Velg hvilken konto som skal åpne denne kalenderlenken.",
-    "select_account_note": "Dette gjelder bare denne lenken.",
     "detail_to": "Til",
     "detail_subject": "Emne",
     "detail_no_subject": "Uten emne",
@@ -249,6 +281,28 @@
     "detail_source": "Kilde",
     "active_account": "Aktiv",
     "switching_account": "Bytter konto..."
+  },
+  "pwaLaunch": {
+    "shortcut_new_message": "Ny melding",
+    "shortcut_calendar": "Kalender",
+    "shortcut_contacts": "Kontakter",
+    "unsupported_file": "{name} kan ikke åpnes her.",
+    "open_failed": "Filen kunne ikke åpnes. Prøv å åpne den på nytt.",
+    "share_gone": "Det du delte, er ikke her lenger. Del det på nytt.",
+    "share_files_lost": "De delte filene kunne ikke tas vare på. Legg dem til i meldingen på nytt.",
+    "ics_needs_server": "Import av en kalenderfil krever tilkobling til serveren. Importen starter når du er på nett igjen.",
+    "contacts_need_server": "Import av kontakter krever tilkobling til serveren. Prøv igjen når du er på nett igjen.",
+    "share_confirm_title": "Vil du starte en ny melding?",
+    "share_confirm_message": "Et annet nettsted eller en annen app vil starte en melding. Ingenting lastes opp eller lagres uten at du godtar det.",
+    "share_confirm_subject": "Emne:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Fil:} other {Filer:}}",
+    "share_confirm_accept": "Start melding",
+    "share_confirm_decline": "Ikke start",
+    "share_cut": "Den delte teksten var for lang og er forkortet.",
+    "handoff_expired": "Noe du åpnet eller delte, ventet for lenge og er borte. Åpne eller del det på nytt.",
+    "compose_waiting": "Lukk denne meldingen for å starte den neste.",
+    "save_first_failed": "Meldingen kunne ikke lagres, så filen er ikke åpnet. Lagre meldingen, og åpne deretter kalenderen eller kontaktene."
   },
   "sidebar_apps": {
     "modal_title": "Apper i sidefeltet",
@@ -302,6 +356,9 @@
     "no_search_results": "Ingen resultater funnet",
     "no_search_results_description": "Prøv å justere søket eller filtrene",
     "more_results_searching": "Søker etter flere resultater…",
+    "resize_plugin_results": "Endre størrelse på resultater fra utvidelser",
+    "compact_plugin_results": "Én linje per resultat",
+    "plugin_result_score": "{count} av 5",
     "loading": "Laster inn e-poster...",
     "unread": "ulest",
     "to_me": "Til meg",
@@ -390,6 +447,29 @@
       "position": "{more, select, yes {Side {page} av {pages} eller flere} other {Side {page} av {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# samtale valgt} other {# samtaler valgt}}",
+    "search_count": "{conversations, plural, one {# samtale} other {# samtaler}} ({messages, plural, one {# melding} other {# meldinger}})",
+    "conversation_count": "{count, plural, one {# samtale} other {# samtaler}}",
+    "archived": "Arkivert",
+    "moved_to_trash": "Flyttet til papirkurven",
+    "moved_to": "Flyttet til {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-post flyttet til {mailbox}} other {# e-poster flyttet til {mailbox}}}",
+    "new_folder_title": "Ny mappe",
+    "new_subfolder_title": "Ny undermappe"
+  },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# samtale arkivert} other {# samtaler arkivert}}",
+    "conversations_to_trash": "{count, plural, one {# samtale flyttet til papirkurven} other {# samtaler flyttet til papirkurven}}",
+    "conversations_deleted": "{count, plural, one {# samtale slettet} other {# samtaler slettet}}",
+    "conversations_moved_to": "{count, plural, one {# samtale flyttet til {mailbox}} other {# samtaler flyttet til {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# samtale flyttet} other {# samtaler flyttet}}",
+    "select_all_in_folder": "{count, plural, one {Velg den # samtalen i {folder}} other {Velg alle # samtaler i {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Velg den # e-posten i {folder}} other {Velg alle # e-poster i {folder}}}",
+    "select_all_conversations": "{count, plural, one {Velg den # samtalen} other {Velg alle # samtaler}}",
+    "select_all_emails": "{count, plural, one {Velg den # e-posten} other {Velg alle # e-poster}}",
+    "selecting_all": "Velger…"
+  },
   "shared_tags": {
     "title": "Delte etiketter",
     "description": "Etiketter i gruppepostkassene dine. Alle i gruppen ser de samme navnene og fargene på e-posten der.",
@@ -462,7 +542,6 @@
     "view_in_light_mode": "Vis i lys modus",
     "export_email": "Eksporter som .eml",
     "forward_as_attachment": "Videresend som vedlegg",
-    "import_email": "Importer .eml eller .zip…",
     "keyboard_shortcuts": "Tastatursnarveier",
     "email_source": "Meldingskilde",
     "draft_banner": "Denne meldingen er et utkast",
@@ -474,6 +553,9 @@
     "source_truncated": "Viser de første {size}. Eksporter meldingen for resten.",
     "source_copied": "Meldingskilden er kopiert til utklippstavlen",
     "attachments": "Vedlegg",
+    "attachments_count": "{count, plural, one {# vedlegg} other {# vedlegg}}",
+    "attachments_show_more": "Vis {count} til",
+    "attachments_show_fewer": "Vis færre",
     "important": "Viktig",
     "download": "Last ned",
     "download_all": "Last ned alle",
@@ -776,9 +858,73 @@
       "copied": "Kode kopiert",
       "copy_failed": "Kunne ikke kopiere koden"
     },
+    "structured_mail": {
+      "kind_flight": "Fly",
+      "kind_train": "Tog",
+      "kind_bus": "Buss",
+      "kind_lodging": "Hotell",
+      "kind_rentalcar": "Leiebil",
+      "kind_event": "Arrangement",
+      "kind_restaurant": "Restaurant",
+      "kind_order": "Bestilling",
+      "kind_parcel": "Pakke",
+      "region_flight": "Flybestilling",
+      "region_train": "Togbestilling",
+      "region_bus": "Bussbestilling",
+      "region_lodging": "Hotellbestilling",
+      "region_rentalcar": "Leiebilbestilling",
+      "region_event": "Arrangementsbestilling",
+      "region_restaurant": "Bordreservasjon",
+      "region_shipment": "Bestilling og levering",
+      "status_cancelled": "Kansellert",
+      "status_pending": "Venter",
+      "status_hold": "Reservert",
+      "order_status_payment_due": "Betaling mangler",
+      "order_status_processing": "Behandles",
+      "order_status_problem": "Problem",
+      "order_status_in_transit": "Sendt",
+      "order_status_pickup_available": "Klar til henting",
+      "order_status_returned": "Returnert",
+      "order_status_delivered": "Levert",
+      "order_status_cancelled": "Kansellert",
+      "reference": "Bestillingsnummer",
+      "order_number": "Ordrenummer",
+      "tracking_number": "Sporingsnummer",
+      "copy_reference": "Kopier bestillingsnummer {value}",
+      "copy_order_number": "Kopier ordrenummer {value}",
+      "copy_tracking_number": "Kopier sporingsnummer {value}",
+      "copied_reference": "Bestillingsnummer kopiert",
+      "copied_order_number": "Ordrenummer kopiert",
+      "copied_tracking_number": "Sporingsnummer kopiert",
+      "copy_failed": "Kunne ikke kopiere til utklippstavlen",
+      "passengers": "Reisende",
+      "seats": "Seter",
+      "tickets": "Billetter",
+      "link_check_in": "Sjekk inn",
+      "link_manage": "Administrer bestilling",
+      "link_ticket": "Billett",
+      "link_track": "Spor",
+      "link_view_order": "Vis bestilling",
+      "check_in_label": "Innsjekking",
+      "check_out_label": "Utsjekking",
+      "from_time": "fra kl. {time}",
+      "until_time": "innen kl. {time}",
+      "nights": "{count, plural, one {# natt} other {# netter}}",
+      "pickup": "Henting",
+      "dropoff": "Innlevering",
+      "party_size": "{count, plural, one {Bord for # person} other {Bord for # personer}}",
+      "items_more": "og {count} til",
+      "items_count": "{count, plural, one {# vare} other {# varer}}",
+      "total": "Totalt {total}",
+      "expected_by": "Kommer innen {date}",
+      "local_time": "lokal tid",
+      "local_time_title": "Lokal tid på stedet, ikke din tidssone",
+      "route": "{from} til {to}"
+    },
     "mv_position": "{index} av {total}",
     "plugin_panel_show": "Vis tilleggspanel",
     "plugin_panel_hide": "Skjul tilleggspanel",
+    "plugin_panel": "Tilleggspanel",
     "copy": "Kopier",
     "contact_added": "Kontakt lagt til",
     "save_to_files": {
@@ -806,6 +952,18 @@
     "read_aloud_stop": "Stopp opplesning",
     "reader_view": "Lesevisning"
   },
+  "reader_actions": {
+    "restore": "Gjenopprett",
+    "restore_to": "Flytt tilbake til {folder}",
+    "delete_forever": "Slett for godt"
+  },
+  "mail_p3_actions": {
+    "move_to_inbox": "Flytt til innboksen",
+    "delete_forever_title": "Slette denne meldingen for godt?",
+    "delete_forever_batch_title": "{count, plural, one {Slette denne meldingen for godt?} other {Slette disse # meldingene for godt?}}",
+    "delete_forever_message": "Du får den ikke tilbake.",
+    "delete_forever_batch_message": "{count, plural, one {Du får den ikke tilbake.} other {Du får dem ikke tilbake.}}"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, utenfor organisasjonen din",
@@ -817,6 +975,35 @@
     "field_bcc": "BCC",
     "send_anyway": "Send likevel",
     "back": "Tilbake"
+  },
+  "phishing_report": {
+    "action": "Rapporter nettfisking…",
+    "confirm_title": "Rapportere nettfisking?",
+    "confirm_message": "{count, plural, one {Meldingen sendes til {address} og flyttes til Søppelpost.} other {Hver av de # meldingene sendes til {address} som en egen rapport og flyttes til Søppelpost.}}",
+    "confirm": "Rapporter",
+    "cancel": "Avbryt",
+    "sending": "Rapporterer…",
+    "done": "{count, plural, one {Rapportert til {address} og flyttet til Søppelpost.} other {# meldinger rapportert til {address} og flyttet til Søppelpost.}}",
+    "not_moved": "{count, plural, one {Rapportert til {address}, men meldingen kunne ikke flyttes til Søppelpost.} other {Rapportert til {address}, men # meldinger kunne ikke flyttes til Søppelpost.}}",
+    "failed": "{count, plural, one {Meldingen kunne ikke rapporteres.} other {# meldinger kunne ikke rapporteres.}}",
+    "undo": "Angre",
+    "undone": "{count, plural, one {Flyttet tilbake. Rapporten var allerede sendt.} other {Flyttet tilbake. Rapportene var allerede sendt.}}",
+    "undo_failed": "Kunne ikke flytte den tilbake.",
+    "banner": "Du har rapportert denne meldingen som nettfisking. Lenkene i den er slått av.",
+    "link_off": "lenke slått av",
+    "link_off_note": "(lenke slått av)",
+    "no_subject": "(uten emne)"
+  },
+  "classification": {
+    "picker_label": "Klassifisering",
+    "chip_label": "Klassifisering: {name}",
+    "none": "Ingen klassifisering",
+    "pick_required": "Velg en klassifisering",
+    "required_hint": "Organisasjonen din krever en klassifisering.",
+    "required_toast": "Velg en klassifisering før du sender.",
+    "quick_reply_needs_label": "Dette svaret trenger en klassifisering. Velg en her, og send deretter.",
+    "forward_needs_label": "En klassifisering er påkrevd. Videresend meldingen fra meldingsvinduet.",
+    "received_hint": "Satt av avsenderens e-postprogram. Hvem som helst kan sette en klassifisering, så den beviser ingenting."
   },
   "email_composer": {
     "select_from_directory": "Velg fra katalog",
@@ -833,10 +1020,10 @@
     "forward_message": "Videresend",
     "from": "Fra",
     "to": "Til",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Emne",
-    "body_placeholder": "Skriv meldingen din...",
+    "body_placeholder": "Skriv meldingen din…",
     "send": "Send",
     "cancel": "Avbryt",
     "attach": "Legg ved",
@@ -893,10 +1080,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Hvis serveren din ikke godtar denne adressen som konvoluttavsender, brukes {identity} i stedet, og mottakerne kan se den i Return-Path-overskriften."
     },
-    "save_as_template": "Lagre som mal",
+    "save_as_template": "Lagre som mal…",
     "attach_from_device": "Last opp fra denne enheten",
     "templates_menu": "Maler",
-    "insert_template": "Sett inn mal",
+    "insert_template": "Sett inn mal…",
     "options": "Alternativer",
     "option_plain_text": "Ren tekst",
     "option_plain_text_hint": "Send uten formatering",
@@ -975,7 +1162,7 @@
       "unfinished": []
     },
     "schedule_send": "Planlegg sending",
-    "schedule_send_description": "Velg når serveren skal sende denne meldingen.",
+    "schedule_send_description": "Velg når den skal sendes.",
     "schedule_preset": {
       "this_morning": "I dag tidlig",
       "this_afternoon": "I ettermiddag",
@@ -1026,6 +1213,7 @@
       "edit_link": "Rediger lenke",
       "remove_link": "Fjern lenke",
       "link_address": "Lenkeadresse",
+      "link_text": "Tekst",
       "link_invalid": "Adressen kan ikke inneholde mellomrom",
       "table": "Tabell",
       "clear_formatting": "Fjern formatering",
@@ -1095,6 +1283,27 @@
       "edit": "Rediger bildebeskrivelse",
       "plain_text": "[Bilde: {alt}]"
     }
+  },
+  "compose_ux": {
+    "draft_discarded": "Utkast forkastet",
+    "undo": "Angre",
+    "discard_draft": "Forkast utkast",
+    "save_failed_close": "Utkastet kunne ikke lagres. Prøv igjen, eller forkast det.",
+    "try_again": "Prøv igjen",
+    "add_description": "Legg til beskrivelse",
+    "attachments_summary": "Vedlegg: {count}, {size}",
+    "from_sub_address": "Bruk en underadresse…",
+    "from_edit_sender": "Rediger avsender…",
+    "shortcut_insert_link": "Sett inn lenke",
+    "shortcut_save_draft": "Lagre utkast",
+    "shortcut_show_cc": "Vis kopi",
+    "shortcut_show_bcc": "Vis blindkopi"
+  },
+  "compose_dock": {
+    "open_draft": "Åpne",
+    "reply_type": "Svartype: {kind}",
+    "resize_reply": "Endre størrelse på svaret",
+    "fields_menu": "Flere felt"
   },
   "confirm_dialog": {
     "confirm": "Bekreft",
@@ -1186,8 +1395,6 @@
     "templates_import_errors": "Noen maler kunne ikke importeres",
     "templates_import_empty": "Fant ingen maler i filen",
     "export_email_error": "Kunne ikke eksportere e-post",
-    "import_email_success": "E-posten er importert",
-    "import_email_error": "Kunne ikke importere e-post",
     "rule_created": "Regel opprettet",
     "rule_merged": "Lagt til i regelen «{name}»",
     "rule_already_covered": "Dekkes allerede av regelen «{name}»",
@@ -1210,12 +1417,75 @@
     "tag_removed_count": "{count, plural, one {Etikett fjernet fra # e-post} other {Etikett fjernet fra # e-poster}}",
     "new_mail_count": "{count, plural, one {# ny melding} other {# nye meldinger}}"
   },
+  "org_notice": {
+    "label": "Kunngjøring",
+    "dismiss": "Lukk kunngjøringen",
+    "severity_info": "Informasjon",
+    "severity_warning": "Advarsel",
+    "severity_critical": "Viktig"
+  },
+  "vacation_templates": {
+    "title": "Organisasjonens maler",
+    "description": "Start med et svar organisasjonen din har skrevet. Du kan endre teksten etterpå.",
+    "pick_label": "Bruk en mal",
+    "pick_placeholder": "Velg en mal",
+    "deputy_label": "Stedfortrederens adresse",
+    "deputy_placeholder": "kollega@example.com",
+    "deputy_hint": "Svaret nevner denne kollegaen for hastesaker.",
+    "deputy_missing": "Skriv inn stedfortrederens adresse først.",
+    "deputy_name_label": "Stedfortrederens navn",
+    "deputy_name_missing": "Skriv inn stedfortrederens navn først.",
+    "apply": "Bruk denne teksten",
+    "apply_hint": "Erstatter emnet og teksten nedenfor."
+  },
+  "uxs_vacation": {
+    "default_subject": "Ikke på kontoret",
+    "default_message": "Takk for e-posten. Jeg er ikke på kontoret og svarer når jeg er tilbake.",
+    "write_message_first": "Skriv en melding først. Uten den ville folk fått et tomt svar.",
+    "enter_address_first": "Skriv først inn adressen det skal videresendes til.",
+    "message_title": "Svaret ditt",
+    "message_label": "Melding",
+    "message_description": "Dette får de som skriver til deg. Du kan bruke formatering og lenker.",
+    "from_label": "Fra (valgfritt)",
+    "from_description": "La feltet stå tomt for å starte med en gang.",
+    "until_label": "Til (valgfritt)",
+    "until_description": "La feltet stå tomt for å fortsette å svare til du slår det av.",
+    "from_placeholder": "Med en gang",
+    "until_placeholder": "Til du slår det av",
+    "audience_all": "Alle",
+    "audience_internal": "Bare organisasjonen min ({domains})",
+    "audience_external": "Bare folk utenfor organisasjonen min",
+    "signature_label": "Signatur",
+    "signature_plain_label": "Signatur (ren tekst)",
+    "signature_plain_description": "Du skriver bare ren tekst (Skriving), så signaturen din er også ren tekst.",
+    "edit_as_html": "Rediger som HTML",
+    "edit_formatted": "Tilbake til redigeringsverktøyet med formatering",
+    "html_source_label": "Signatur som HTML",
+    "signature_size": "{bytes} av {max} byte brukt",
+    "signature_too_long": "For lang for serveren ({bytes} av {max} byte). Gjør den kortere."
+  },
+  "retention_notice": {
+    "line": "Meldinger her slettes {count, plural, one {# dag} other {# dager}} etter at de ble flyttet hit."
+  },
+  "device_policy": {
+    "downloads_off": "Organisasjonen din har slått av nedlasting.",
+    "download_off_named": "{name}: organisasjonen din har slått av nedlasting",
+    "download_blocked": "Organisasjonen din har slått av nedlasting.",
+    "export_blocked": "Organisasjonen din har slått av eksport av e-post.",
+    "print_blocked": "Organisasjonen din har slått av utskrift."
+  },
   "third_party": {
     "push_needs_relay": "Push-varsler trenger et push-relé som organisasjonen din driver, og det er ikke satt opp noe. Ny e-post vises fortsatt mens appen er åpen.",
     "relay_desc": "Bare organisasjonens egne reléer tilbys, fordi denne serveren ikke kontakter eksterne tjenester.",
     "relay_none": "Ingen satt opp",
     "plugin_refused": "Ikke startet: dette tillegget kobler til eksterne tjenester, som organisasjonen din har slått av.",
     "remote_content_blocked": "Organisasjonen din blokkerer innhold fra andre servere, så eksterne bilder i denne meldingen vises ikke."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Organisasjonen din blokkerer eksternt innhold i all e-post, så det lastes heller ikke fra pålitelige avsendere."
+  },
+  "trusted_senders_book": {
+    "unavailable": "Ikke tilgjengelig: denne kontoen kan ikke lagre adressebøker på serveren. Listen blir på denne enheten."
   },
   "date": {
     "today": "I dag",
@@ -1389,8 +1659,8 @@
       "title": "Utseende",
       "description": "Tilpass utseendet til nettposten",
       "theme": {
-        "label": "Tema",
-        "description": "Velg fargevalget du foretrekker",
+        "label": "Lyst eller mørkt",
+        "description": "System følger innstillingen på enheten din",
         "light": "Lyst",
         "dark": "Mørkt",
         "system": "System"
@@ -1418,7 +1688,7 @@
         "label": "Grensesnittoppsett",
         "description": "Hvor søk, navigasjon og verktøylinjer ligger",
         "default": "Standard",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Søkefelt øverst"
       },
       "animations": {
         "label": "Aktiver animasjoner",
@@ -1438,13 +1708,17 @@
         "label": "Skjul kontobytter i sidefeltet",
         "description": "Skjul kontovelgeren øverst i mappesidefeltet. Du kan fortsatt bytte konto fra navigasjonsfeltet nederst."
       },
+      "sidebar_account_switcher": {
+        "label": "Kontobytter øverst i sidefeltet",
+        "description": "Vis kontobytteren over mappene og den runde Skriv-knappen over meldingslisten. Slå av for å plassere Skriv over mappene i stedet."
+      },
       "show_rail_account_list": {
         "label": "Vis kontobilder i navigasjonsfeltet",
         "description": "Vis et kontobilde for hver konto nederst i navigasjonsfeltet, slik at du raskt kan bytte konto. En utloggingsknapp vises nedenfor."
       },
       "unified_mailbox": {
         "label": "Samlet postkasse",
-        "description": "Vis kombinerte mapper (innboks, sendt osv.) for den aktive kontoen og dens delte mapper.",
+        "description": "Vis kombinerte mapper (innboks, sendt osv.) for den aktive kontoen og dens delte mapper. Delen vises bare når det er noe å kombinere: «På tvers av alle kontoer» er på og mer enn én konto er tilkoblet, en gruppeinnboks er tatt med nedenfor, eller All e-post, Ulest eller Stjernemerket er på. Disse tre er egne valg som bare vises når administratoren slår dem på.",
         "cross_account": {
           "label": "På tvers av alle kontoer",
           "description": "Slå sammen den samlede postkassen på tvers av alle tilkoblede kontoer, i stedet for å begrense den til den aktive kontoen."
@@ -1462,7 +1736,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Fargede ikoner i sidefeltet",
-        "description": "Fargelegg mappe- og etikettikoner etter type (blått ikon for Innboks, rødt for Søppelpost, grønt for Sendt osv.). Deaktiver dette for et ensfarget sidefelt."
+        "description": "Gi mappe- og etikettikoner farger (blå Innboks, rød Søppelpost, grønn Sendt og så videre). Slå av for grå ikoner."
       },
       "tint_list_rows": {
         "label": "Fargelegg meldingsrader etter etikett",
@@ -1474,11 +1748,15 @@
       },
       "favicon_unread_badge": {
         "label": "Antall uleste på faneikonet",
-        "description": "Vis antall uleste meldinger i innboksen som et merke på nettleserfaneikonet, slik at ny e-post er synlig når fanen ikke er fokusert. Deaktiver for å beholde ikonet uten merke."
+        "description": "Slik ser du ny e-post mens du jobber i en annen fane eller app."
       },
       "show_shared_mail_accounts": {
         "label": "Vis delte e-postkontoer",
         "description": "Vis mappene fra postbokser som er delt med deg under Delt i sidepanelet. Slå av for å skjule alle, eller skjul enkeltkontoer nedenfor. Kalendere og kontakter blir værende."
+      },
+      "compact_shared_mailboxes": {
+        "label": "Kompakte delte postbokser",
+        "description": "Vis hver delte postboks som én rad som åpner innboksen, med mappene under. Tomme mapper som Utkast eller Papirkurv utelates."
       },
       "pro_interface": {
         "label": "Pro-grensesnitt (eksperimentelt)",
@@ -1521,7 +1799,7 @@
     },
     "keywords": {
       "title": "E-postetiketter",
-      "description": "Definer etiketter for å organisere e-postene dine. De lagres som JMAP-nøkkelord på serveren.",
+      "description": "Lag etiketter for å sortere meldingene dine. Etikettene lagres sammen med meldingene på serveren.",
       "add_keyword": "Legg til etikett",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. arbeid, personlig, haster",
@@ -1556,8 +1834,8 @@
         "hide": "Skjul"
       },
       "unrecognized": {
-        "title": "Gjenopprett etiketter fra serveren",
-        "description": "Navn og farger på etiketter lagres i denne nettleseren, men selve etikettene finnes på meldingene som JMAP-nøkkelord. Søk gjennom meldingene etter nøkkelord som ikke er definert her, og legg dem til igjen.",
+        "title": "Finn etiketter på meldingene som mangler her",
+        "description": "Denne nettleseren lagrer navn og farger på etikettene dine. Selve etikettene er lagret på meldingene. Søk i e-posten etter etiketter som mangler her, og legg dem til igjen.",
         "scan": "Søk etter etiketter",
         "rescan": "Søk på nytt",
         "scanning": "Søker... {scanned} av {total} meldinger",
@@ -1571,14 +1849,14 @@
     "notifications": {
       "test_sound": "Test varslingslyden",
       "sounds": {
-        "default": "Standard (pip)",
+        "default": "Pip",
         "cheerful": "Munter",
         "involved": "Engasjert",
         "swift": "Rask",
         "relax": "Rolig"
       },
       "push": {
-        "title": "Bakgrunnsvarsler",
+        "title": "Varsler når {appName} er lukket",
         "description": "Motta systemvarsler om ny e-post selv når denne siden ikke er åpen. Varslene leveres via Bulwarks push-relé, som aldri ser innholdet i e-posten.",
         "relay_label": "Push-relé",
         "relay_desc": "Reléet som driftes av Bulwark, brukes som standard. Endre dette bare hvis du drifter et eget relé.",
@@ -1588,8 +1866,9 @@
         "status_inactive": "Ikke aktivert på denne enheten",
         "status_unsupported": "Denne nettleseren støtter ikke Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Bakgrunnsvarsler er ikke tilgjengelige i demoen.",
         "status_busy": "Behandler...",
-        "enable": "Aktiver",
+        "enable": "Slå på for denne enheten",
         "reenable": "Registrer på nytt",
         "disable": "Deaktiver",
         "confirm_disable_title": "Vil du deaktivere bakgrunnsvarsler?",
@@ -1614,7 +1893,12 @@
         "confirm_revoke_message_this": "Denne enheten slutter umiddelbart å motta bakgrunnsvarsler.",
         "shared_mailboxes_no_push": "Postbokser som andre deler med deg, sender ikke bakgrunnsvarsler.",
         "error_forbidden": "E-postserveren tillater ikke bakgrunnsvarsler for denne kontoen.",
-        "error_over_quota": "Denne kontoen har for mange push-registreringer på e-postserveren (grensen er vanligvis 15). Tilbakekall enheter du ikke lenger bruker i varslingsinnstillingene, og prøv igjen."
+        "error_over_quota": "Denne kontoen har for mange push-registreringer på e-postserveren (grensen er vanligvis 15). Tilbakekall enheter du ikke lenger bruker i varslingsinnstillingene, og prøv igjen.",
+        "error_blocked": "Varsler er blokkert for dette nettstedet. Tillat dem i nettleserens nettstedsinnstillinger, og prøv igjen.",
+        "error_not_granted": "Varsler ble ikke tillatt, så push forblir av.",
+        "error_verification_timeout": "E-postserveren bekreftet ikke denne enheten i tide, så push forblir av. Prøv igjen om et minutt.",
+        "error_relay": "Push-reléet kan ikke nås akkurat nå, så push forblir av. Prøv igjen senere.",
+        "error_teardown": "Push er av i denne nettleseren, men e-postserveren eller reléet kunne ikke nås. Varsler kan fortsette å komme i noen dager. For å stoppe dem tidligere, slå på avanserte innstillinger når du er på nett igjen, og tilbakekall denne enheten under Registrerte enheter."
       },
       "push_all": {
           "title": "All accounts",
@@ -1629,17 +1913,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Varslingslyd",
+        "title": "Lyd",
         "description": "Velg hvilken lyd som skal spilles av for varsler",
-        "choose": "Lyd",
+        "choose": "Tone",
         "choose_desc": "Velg en varseltone og klikk på høyttalerikonet for å forhåndsvise den"
       },
       "email": {
-        "title": "E-postvarsler",
+        "title": "Ny e-post",
         "description": "Velg innstillinger for varsler om innkommende e-post",
         "enabled": "E-postvarsler",
         "enabled_desc": "Vis varsler når nye e-poster kommer",
-        "sound": "Varslingslyd",
+        "sound": "Lyd ved ny e-post",
         "sound_desc": "Spill av et lydvarsel når nye e-poster kommer",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1649,7 +1933,7 @@
         "description": "Velg innstillinger for varsler om kalenderhendelser",
         "enabled": "Hendelsesvarsler",
         "enabled_desc": "Vis varsler for kommende kalenderhendelser",
-        "sound": "Varslingslyd",
+        "sound": "Lyd ved påminnelser",
         "sound_desc": "Spill av et lydvarsel for kalenderpåminnelser"
       }
     },
@@ -1688,7 +1972,7 @@
       },
       "first_day": {
         "label": "Første dag i uken",
-        "description": "Start uken på søndag eller mandag",
+        "description": "Første dag i uken i kalendere",
         "sunday": "søndag",
         "monday": "mandag"
       },
@@ -1709,6 +1993,12 @@
       "clear_search_on_folder_change": {
         "label": "Tøm søket ved bytte av mappe",
         "description": "Å klikke på en mappe (Innboks, Sendt …) tømmer det aktive søket og viser mappen. Når det er av, beholdes søket og kjøres på nytt i mappen du bytter til."
+      },
+      "search_default_scope": {
+        "label": "Søk i",
+        "description": "Hvor et nytt søk leter. Du kan fortsatt velge en annen mappe i søkefiltrene.",
+        "all": "Alle mapper unntatt søppelpost og papirkurv",
+        "folder": "Den åpne mappen"
       },
       "request_read_receipt": {
         "label": "Be om lesebekreftelser som standard",
@@ -1772,13 +2062,13 @@
       },
       "mail_layout": {
         "label": "E-postoppsett",
-        "description": "Velg mellom den klassiske delte leseruten, en fokusert leseflyt i Gmail-stil eller en bunnleserute i Zimbra-stil.",
+        "description": "Hvor meldingslisten og den åpne meldingen står på skjermen.",
         "split": "Delt rute",
-        "split_description": "Hold meldingslisten og leseruten synlige side ved side.",
+        "split_description": "Liste og melding side om side",
         "focus": "Fokusert liste",
-        "focus_description": "Vis én linje per melding, og åpne meldingen i full bredde samtidig som mappesidefeltet forblir synlig.",
+        "focus_description": "Listen, så meldingen i full bredde",
         "horizontal": "Leseruten nederst",
-        "horizontal_description": "Vis meldingslisten øverst og åpne den valgte meldingen i en leserute under den."
+        "horizontal_description": "Meldingen under listen"
       },
       "list_columns": {
         "label": "Vis listen som kolonner",
@@ -1803,7 +2093,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Svar fra mottatt adresse",
-        "description": "Når du svarer, bruker Bulwark adressen meldingen opprinnelig ble sendt til. Programmet ser først etter en samsvarende identitet. For meldinger til et oppsamlingsdomene brukes aliaset i Fra-feltet, mens sendingen går gjennom hovedidentiteten din."
+        "description": "Når du svarer, send fra adressen meldingen ble sendt til."
       },
       "reply_identity_match": {
         "label": "Samsvar for mottaksadresse",
@@ -1816,6 +2106,14 @@
         "description": "Velg hvor signaturen skal settes inn i svar og videresendinger. Over den siterte teksten fungerer den som en naturlig avslutning på svaret. Under den siterte teksten holdes den opprinnelige meldingen samlet.",
         "above_quote": "Før sitert tekst",
         "below_quote": "Etter sitert tekst"
+      },
+      "signature_new_mail": {
+        "label": "Signatur på nye e-poster",
+        "description": "Setter automatisk inn signaturen din når du skriver en ny melding. Slå av for å starte hver ny melding uten."
+      },
+      "signature_reply_forward": {
+        "label": "Signatur på svar og videresendinger",
+        "description": "Legger automatisk til signaturen din når du svarer eller videresender. Slå av for å sende dem uten."
       },
       "signature_separator": {
         "label": "Signaturavgrensning",
@@ -1833,12 +2131,6 @@
         "description": "Velg om et klikk på et filvedlegg skal forhåndsvise det eller laste det ned umiddelbart",
         "preview": "Forhåndsvis når det er mulig",
         "download": "Last ned umiddelbart"
-      },
-      "attachment_position": {
-        "label": "Plassering av vedlegg",
-        "description": "Velg hvor vedlegg skal vises i e-postoverskriften",
-        "beside-sender": "Ved siden av avsender",
-        "below-header": "Under overskriften"
       },
       "emails_per_page": {
         "10": "10 e-poster",
@@ -1954,8 +2246,8 @@
         "unsupported": "Denne kontoen støtter ikke forsinket sending. Innstillingen lagres likevel for andre kontoer."
       },
       "return_to_list_after_action": {
-        "label": "Gå tilbake til listen etter sletting eller merking som ulest",
-        "description": "Gå tilbake til meldingslisten i stedet for å åpne neste melding etter at du har slettet den åpne meldingen eller merket den som ulest."
+        "label": "Gå tilbake til listen etter sletting, arkivering, flytting eller merking som ulest",
+        "description": "Gå tilbake til meldingslisten i stedet for å åpne neste melding etter at du har slettet, arkivert, flyttet eller rapportert den åpne meldingen som søppelpost eller merket den som ulest."
       },
       "swipe_right_action": {
         "label": "Handling ved sveip mot høyre (mobil)",
@@ -1997,6 +2289,7 @@
       "auth_method_oauth": "Enkel pålogging (OAuth/OIDC)",
       "auth_method_basic": "Passord",
       "auth_method_token": "Tilgangstoken",
+      "account_management_link": "Administrer kontosikkerhet (2FA, app-passord)",
       "demo_account": "Demokonto",
       "email": {
         "label": "E-postadresse",
@@ -2019,8 +2312,8 @@
         "title": "Innloggede kontoer",
         "description": "Dra for å endre rekkefølgen på kontoene i kontomenyen",
         "active": "Aktiv konto",
-        "default_badge": "Standardkonto",
-        "set_default": "Sett som standard",
+        "default_badge": "Åpnes ved oppstart",
+        "set_default": "Åpne denne kontoen ved oppstart",
         "switch_to": "Bytt til denne kontoen",
         "move_up": "Flytt opp",
         "move_down": "Flytt ned",
@@ -2080,6 +2373,57 @@
       "managing": "Innstillinger for: {name}"
     },
     "security": {
+      "masked_addresses": {
+        "address": "Adresse",
+        "description_column": "Beskrivelse",
+        "website_column": "Nettsted",
+        "state": "Status",
+        "actions": "Handlinger",
+        "no_description": "Ingen beskrivelse",
+        "edit": "Rediger",
+        "close": "Lukk",
+        "pagination": "Sider med maskerte adresser",
+        "page": "Side {page} av {pages}",
+        "previous": "Forrige",
+        "next": "Neste",
+        "delete": "Slett",
+        "delete_title": "Slette den maskerte adressen permanent?",
+        "delete_warning": "Slette {address}? Dette kan ikke angres. E-post som sendes til denne adressen, blir ikke lenger levert.",
+        "delete_confirm": "Slett permanent",
+        "cancel": "Avbryt",
+        "deleted": "Adressen er slettet permanent.",
+        "deleted_refresh_failed": "Slettingen er bekreftet, men listen kunne ikke oppdateres. Oppdater for å laste inn den gjeldende listen.",
+        "delete_forbidden": "Den gjeldende økten din har ikke tillatelse til å slette maskerte adresser. Andre tillatte handlinger er fortsatt tilgjengelige.",
+        "delete_failed": "Adressen ble ikke slettet. Oppdater listen før du prøver igjen.",
+        "delete_unconfirmed": "Slettingen kunne ikke bekreftes. Den blir ikke forsøkt på nytt. Oppdater listen og sjekk adressen før du sletter noe mer.",
+        "title": "Maskerte adresser",
+        "intro": "Motta e-post uten å dele hovedadressen din. Når en adresse deaktiveres, avvises ny e-post til den. Disse adressene kan ikke brukes til å sende e-post.",
+        "loading": "Laster inn maskerte adresser…",
+        "count": "{count, plural, one {# adresse} other {# adresser}}",
+        "empty": "Ingen maskerte adresser ennå.",
+        "website": "Nettsted (valgfritt)",
+        "description": "Beskrivelse (valgfritt)",
+        "no_website": "Ikke angitt",
+        "enabled": "Aktivert",
+        "disabled": "Deaktivert",
+        "enable": "Aktiver",
+        "disable": "Deaktiver",
+        "copy": "Kopier",
+        "copied": "Adressen er kopiert.",
+        "copy_failed": "Kunne ikke kopiere. Merk og kopier adressen ovenfor.",
+        "save": "Lagre beskrivelse",
+        "create": "Opprett maskert adresse",
+        "refresh": "Oppdater",
+        "saved": "Endringen er lagret.",
+        "forbidden": "Den gjeldende økten din har ikke tillatelse til å vise maskerte adresser.",
+        "unavailable": "Maskerte adresser er ikke tilgjengelige for denne kontoen eller serveren.",
+        "load_failed": "Kunne ikke laste inn hele adresselisten. Oppdater for å prøve igjen.",
+        "save_failed": "Endringen kunne ikke bekreftes. Oppdater listen før du prøver igjen.",
+        "create_forbidden": "Serveren tillot ikke å opprette en maskert adresse med denne økten.",
+        "update_forbidden": "Serveren tillot ikke å redigere maskerte adresser med denne økten. Du kan fortsatt kopiere adresser.",
+        "over_quota": "Serverens kvote for maskerte adresser er nådd. Deaktiverte adresser kan fortsatt telle med i grensen.",
+        "rate_limit": "Serverens grense for oppretting er nådd. Prøv igjen senere."
+      },
       "title": "Kontosikkerhet",
       "description": "Administrer passordet ditt, tofaktorautentisering og sikkerhetsinnstillinger",
       "detecting": "Kontrollerer hvilke funksjoner serveren støtter...",
@@ -2107,7 +2451,7 @@
       },
       "totp": {
         "section_title": "Tofaktorautentisering",
-        "label": "TOTP-autentisering",
+        "label": "Pålogging i to trinn",
         "description": "Legg til et ekstra lag med sikkerhet med et tidsbasert engangspassord",
         "active": "Aktivert",
         "inactive": "Deaktivert",
@@ -2203,12 +2547,12 @@
         "delete_message": "{name} fjernes fra serveren."
       },
       "email_client": {
-        "title": "Oppsett av e-postklient",
-        "description": "Bruk denne påloggingsinformasjonen til å sette opp en e-postklient på datamaskinen eller mobilen (Thunderbird, Apple Mail, Outlook osv.)",
-        "jmap_username_label": "JMAP-brukernavn",
+        "title": "Bruk e-posten i andre apper",
+        "description": "Thunderbird, Apple Mail, Outlook og e-postapper på telefonen kan bruke disse innstillingene.",
+        "jmap_username_label": "Brukernavn",
         "copy": "Kopier",
         "copied": "Kopiert",
-        "password_instructions": "Bruk JMAP-brukernavnet ovenfor sammen med et app-passord for å logge på e-postklienten. Opprett et app-passord i delen nedenfor hvis du ikke allerede har gjort det."
+        "password_instructions": "Bruk et app-passord som passord, ikke det vanlige passordet ditt. Du kan lage et lenger ned på denne siden."
       },
       "link_device": {
         "title": "Koble til mobilappen",
@@ -2443,7 +2787,7 @@
       },
       "refresh_cache": {
         "label": "Oppdater bufrede data",
-        "description": "Last inn kontakter, kalendere og mapper på nytt fra serveren. Kontoene og øktene beholdes, slik at du kan rette en utdatert eller feil visning uten å logge av.",
+        "description": "Last inn kontakter, kalendere og mapper fra serveren på nytt. Du forblir logget inn.",
         "button": "Oppdater",
         "confirm_title": "Oppdatere bufrede data?"
       },
@@ -2456,12 +2800,12 @@
       },
       "export_settings": {
         "label": "Eksporter innstillinger",
-        "description": "Last ned innstillingene dine som JSON",
+        "description": "Last ned en kopi av innstillingene",
         "button": "Eksporter"
       },
       "import_settings": {
         "label": "Importer innstillinger",
-        "description": "Last opp innstillinger fra en JSON-fil",
+        "description": "Gjenopprett innstillinger fra en fil",
         "button": "Importer"
       },
       "about": {
@@ -2512,11 +2856,13 @@
       "manage_description": "Legg til, rediger eller fjern egendefinerte apper fra sidefeltet"
     },
     "contacts": {
-      "title": "Kontakter",
-      "description": "Importer og eksporter kontaktene dine",
+      "title": "Kontaktliste",
+      "description": "Hvordan kontakter vises, og kontaktfiler som skal importeres eller eksporteres",
       "group_by_letter_label": "Grupper etter første bokstav",
       "sort_by_last_name_label": "Sorter etter etternavn",
       "sort_by_last_name_description": "Sorter kontaktlisten etter etternavn slik at familiemedlemmer står samlet",
+      "show_directory_label": "Vis katalogen",
+      "show_directory_description": "Vis kontoene og gruppene på e-postserveren under «Katalog» i Kontakter",
       "group_by_letter_description": "Vis alfabetiske overskrifter i kontaktlisten",
       "import_label": "Importer kontakter",
       "import_description": "Importer kontakter fra en vCard-fil (.vcf).",
@@ -2606,18 +2952,19 @@
       "not_supported": "E-postserveren din støtter ikke e-postfiltre.",
       "rule_name": "Regelnavn",
       "rule_name_placeholder": "f.eks. sorter nyhetsbrev",
-      "match_all": "ALLE vilkår må samsvare",
-      "match_any": "Minst ETT vilkår må samsvare",
+      "match_all": "Alle vilkår må samsvare",
+      "match_any": "Minst ett vilkår må samsvare",
       "conditions": "Vilkår",
       "add_condition": "Legg til vilkår",
       "actions": "Handlinger",
       "add_action": "Legg til handling",
       "remove_condition": "Fjern betingelse",
       "remove_action": "Fjern handling",
-      "stop_processing": "Ikke behandle flere regler",
+      "stop_processing": "Ikke bruk senere regler",
       "include_spam": "Flytt også meldinger som er merket som søppelpost",
       "attachment_type_placeholder": "f.eks. pdf, doc, jpg",
       "value_placeholder_multi": "Verdi (skill flere verdier med komma)",
+      "regex_placeholder": "Regulært uttrykk, f.eks. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Vedlegg",
         "from": "Fra",
@@ -2639,6 +2986,7 @@
         "starts_with": "starter med",
         "ends_with": "slutter med",
         "matches": "samsvarer med mønsteret",
+        "regex": "samsvarer med regulært uttrykk",
         "greater_than": "er større enn",
         "less_than": "er mindre enn",
         "address_is": "er adressen",
@@ -2654,7 +3002,7 @@
         "discard": "Forkast (slett uten varsel)",
         "reject": "Avvis med melding",
         "keep": "Behold i innboksen",
-        "stop": "Stopp behandlingen"
+        "stop": "Ikke bruk senere regler"
       },
       "move_to_folder": "Velg mappe",
       "copy_to_folder": "Velg mappe",
@@ -2677,6 +3025,7 @@
       "open_sieve_editor": "Åpne redigereren for Sieve-kode",
       "fetch_error": "Kunne ikke laste inn filtre",
       "expanded_view": "Utvidet visning",
+      "show_rule_details": "Vis betingelsene og handlingene for hver regel",
       "expanded_view_description": "Vis filterregler med detaljerte blokker for vilkår og handlinger",
       "if": "Hvis",
       "then": "Gjør følgende",
@@ -2701,6 +3050,7 @@
       "validation_action_forward": "Skriv inn en adresse det skal videresendes til",
       "validation_action_reject": "Skriv inn avvisningsmeldingen",
       "validation_header_name": "Navn på meldingshoder kan bare inneholde bokstavene A-Z, sifre, bindestreker og understreker",
+      "validation_regex": "Dette regulære uttrykket er ugyldig",
       "templates_section": "Start med en mal",
       "template_newsletters": "Flytt nyhetsbrev til mappe",
       "template_receipts": "Arkiver kvitteringer automatisk",
@@ -2754,6 +3104,9 @@
       "validation_period_empty": "Angi en start- eller sluttdato for perioden",
       "validation_period_invalid": "Angi en gyldig dato med klokkeslett for perioden, eller la feltet stå tomt",
       "apply_existing_period": "En regel med periode virker bare på meldinger som kommer i perioden, og kan derfor ikke brukes på eksisterende meldinger.",
+      "apply_existing_in": "Bruk også på meldingene som allerede er i {folder}",
+      "apply_existing_count": "{count, plural, one {Bruk også på den # meldingen som allerede er i {folder}} other {Bruk også på de # meldingene som allerede er i {folder}}}",
+      "apply_existing_none": "Ingen meldinger i {folder} passer med regelen ennå.",
       "period_status_scheduled": "planlagt",
       "period_status_active": "aktiv",
       "period_status_expired": "utløpt"
@@ -2797,7 +3150,7 @@
         "description": "Velg hvordan filer og mapper skal vises"
       },
       "default_view": {
-        "label": "Standardvisning",
+        "label": "Vis filer som",
         "description": "Velg mellom rutenett og listeoppsett",
         "list": "Liste",
         "grid": "Rutenett"
@@ -2993,10 +3346,6 @@
         "label": "Lesemaske",
         "description": "Demper alt i en melding unntatt noen få linjer rundt pekeren, slik at du holder styr på hvor du er."
       },
-      "plain_language": {
-        "label": "Enkelt språk",
-        "description": "Enklere ord i innstillinger og feilmeldinger, og korte forklaringer av tekniske uttrykk. Tilgjengelig på engelsk og tysk."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Mer kontrast gjør tekst, kantlinjer og fokusrammen mørkere eller lysere i alle temaer, og understreker lenker. System følger enheten din.",
@@ -3190,6 +3539,127 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Frakoblet",
+      "privacy": "Personvern",
+      "about": "Om"
+    },
+    "search": {
+      "signature": "signatur e-postsignatur bunntekst",
+      "sign_out": "logg ut logout avlogging",
+      "app_lock": "PIN lås kode låseskjerm",
+      "text_size": "skriftstørrelse større tekst zoom forstørr",
+      "vacation": "autosvar automatisk svar fraværende ferie ikke på kontoret autoreply",
+      "two_factor": "2FA totrinns tofaktor MFA OTP autentiseringsapp engangskode",
+      "encryption": "S/MIME smime PGP OpenPGP kryptering sertifikat",
+      "password": "passord endre passord nytt passord",
+      "offline": "frakoblet offline uten tilkobling uten internett last ned lagring synkroniser",
+      "wipe": "fjern slett tøm enhet data",
+      "outbox": "utboks ikke sendt venter kø",
+      "remote_content": "eksterne bilder eksternt innhold sporing piksler klarerte avsendere",
+      "push": "push relé bakgrunn varsler",
+      "version": "versjon oppdatering om kildekode GitHub lisens"
+    },
+    "privacy": {
+      "push_title": "Varsler",
+      "push_link": {
+        "label": "Relé for varsler",
+        "description": "Varsler mens appen er lukket går gjennom et push-relé, som aldri ser e-posten din. Du velger det på siden Varsler.",
+        "button": "Varsler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Eksterne bilder og klarerte avsendere",
+      "receipts_label": "Lesebekreftelser",
+      "senders_label": "Avsenderbilder",
+      "description": "Disse innstillingene finner du på siden Personvern.",
+      "button": "Personvern"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tetthet og knappenavn",
+        "description": "Hvor tett radene i listen står, og om knappene viser navnet sitt, stiller du inn på siden Utseende."
+      },
+      "light_mode": {
+        "label": "Lys bakgrunn for meldinger",
+        "description": "Å vise meldinger på lys bakgrunn i mørk modus stiller du inn på siden Lesing."
+      },
+      "calendar": {
+        "label": "Forhåndsvisning av hendelser i kalenderen",
+        "description": "Om det å peke på en hendelse viser detaljene, stiller du inn på siden Kalender."
+      },
+      "list": {
+        "label": "Samtaler og forhåndsvisningslinjer",
+        "description": "Gruppering etter samtale og forhåndsvisningslinjen under hver melding stiller du inn på siden Meldingsliste."
+      },
+      "reading": {
+        "label": "Merke som lest",
+        "description": "Når en melding regnes som lest, og hvor du havner etter å ha slettet eller flyttet den, stiller du inn på siden Lesing."
+      },
+      "send_warnings_description": "Angre sending og varslene om manglende emne, glemt vedlegg eller plassholdertekst.",
+      "bulk_delete": {
+        "label": "Spør før sletting av flere meldinger",
+        "description": "Dette stiller du inn på siden Meldingsliste."
+      },
+      "sounds": {
+        "label": "Lyder og telleren for uleste",
+        "description": "Varsellyder og antall uleste i fanen stiller du inn på siden Varsler."
+      }
+    },
+    "about": {
+      "title": "Om {appName}"
+    },
+    "sign_out": {
+      "description": "Logg ut av denne kontoen på denne enheten."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systemstatusfelt varslingsområde bakgrunn minimer tray",
+      "autostart": "autostart oppstart start med Windows ved pålogging",
+      "default_app": "standard e-postapp standard e-postprogram mailto e-postlenker",
+      "menu_bar": "menylinje menyer Alt-tast Fil Rediger Vis",
+      "updates": "oppdateringer oppdatering ny versjon beta kanal",
+      "devtools": "utviklerverktøy devtools konsoll inspiser F12 feilsøking",
+      "taskbar": "oppgavelinje blink Dock oppmerksomhet",
+      "quiet_hours": "stille timer ikke forstyrr lydløs natt",
+      "telemetry": "bruksdata telemetri statistikk analyse",
+      "crash": "krasjrapporter feilrapporter krasj",
+      "threads": "tråder samtaler samtalevisning threads",
+      "block_images": "blokker bilder eksterne bilder last inn bilder",
+      "dark_mode": "mørk modus lys modus nattmodus dark mode",
+      "timezone": "tidssone timezone",
+      "reading_pane": "leserute forhåndsvisningsrute delt visning",
+      "week_start": "ukestart første ukedag mandag søndag",
+      "empty_trash": "tøm papirkurven papirkurv slettede elementer",
+      "do_not_disturb": "stille timer lydløs stillhet"
+    },
+    "desktop_notifications": {
+      "title": "På denne datamaskinen",
+      "closed_label": "Når vinduet er lukket",
+      "closed_description": "{appName} varsler om ny e-post så lenge den kjører. Slå det på under {page} hvis den skal kjøre videre i systemstatusfeltet når du lukker vinduet."
+    },
+    "push_unsupported": "Denne nettleseren kan ikke vise varsler når nettstedet er lukket.",
+    "backup_description_app": "Bruk de samme innstillingene på de andre enhetene dine.",
+    "sender_favicons": {
+      "label": "Bilder fra bedriftenes nettsteder",
+      "description": "Vis nettstedsikoner som profilbilder for bedriftsavsendere"
+    },
+    "privacy_push": {
+      "label": "Relé for varsler",
+      "description": "Varsler mens {appName} er lukket går gjennom et push-relé, som aldri ser e-posten din. Du slår dem av og på på siden {page}."
+    },
+    "reset": {
+      "message": "Setter alle innstillinger tilbake til slik de var fra start. E-post, filtre, autosvar og signaturer blir som de er.",
+      "sync_on": "De andre enhetene dine bruker de samme innstillingene, så de endres også.",
+      "sync_off": "De andre enhetene dine beholder innstillingene sine."
+    }
+  },
+  "layout_preview": {
+    "default_description": "Apper og mapper til venstre, søk over listen",
+    "mountain_view_description": "Søk over hele toppen, meldinger åpnes i full bredde"
+  },
   "setup": {
     "title": "Oppsett av Bulwark Webmail",
     "subtitle": "Sett opp webmail-instansen din i nettleseren.",
@@ -3291,7 +3761,7 @@
       "row_url_required": "Server nr. {index}: URL-en er påkrevd",
       "row_url_scheme": "Server nr. {index}: URL-en må begynne med http:// eller https://",
       "stalwart": "Slå på Stalwart-spesifikke funksjoner",
-      "stalwart_hint": "Legger til endring av passord og administrasjon av Sieve-filtre. Trygt å slå på også for andre servere."
+      "stalwart_hint": "Legger til siden Sikkerhet (passord, tofaktorautentisering og app-passord) og gjenoppretting av slettede elementer. Trygt å slå på også for andre servere."
     },
     "auth": {
       "title": "Autentisering",
@@ -3471,6 +3941,13 @@
     },
     "find_emails_from": "Finn e-poster fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Finn en mappe",
+    "recent": "Nylig brukt",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Velg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Merk mappen som lest",
     "mark_folder_tree_read": "Merk mappe og undermapper som lest",
@@ -3479,9 +3956,9 @@
     "new_folder": "Ny mappe…",
     "rename": "Gi nytt navn…",
     "share": "Del…",
-    "import_email": "Importer .eml eller .zip…",
     "empty_folder": "Tøm mappe",
     "empty_folder_generic": "Tøm mappe",
+    "empty_folder_all_accounts": "Tøm papirkurv (alle kontoer)",
     "delete_folder": "Slett mappe",
     "refresh": "Oppdater",
     "hide_shared_account": "Skjul fra sidepanelet",
@@ -3492,6 +3969,11 @@
     "reset_folder_notifications": "Tilbakestill varsler for mapper",
     "mark_all_confirm_title": "Merk alle mapper som lest",
     "mark_all_confirm_message": "Vil du merke alle uleste meldinger på den personlige kontoen din som lest?",
+    "empty_all_confirm_title": "Tøm papirkurv for alle kontoer",
+    "empty_all_confirm_message": "Slette {count, plural, one {meldingen} other {alle # meldingene}} i papirkurven på alle kontoene dine for godt? Dette kan ikke angres.",
+    "toast_emptied_all": "Papirkurv tømt på tvers av alle kontoer",
+    "toast_error_empty_all_partial": "Papirkurv tømt, men noen kontoer mislyktes",
+    "toast_error_empty_all": "Kunne ikke tømme papirkurven",
     "delete_confirm_title": "Slett mappe",
     "delete_confirm_message": "Vil du slette mappen «{name}» permanent? Denne handlingen kan ikke angres.",
     "prompt_new_subfolder": "Skriv inn et navn for den nye undermappen.",
@@ -3518,6 +4000,25 @@
     "delete_with_contents_title": "Mappen er ikke tom",
     "delete_with_contents_message": "Mappen «{name}» inneholder fortsatt {count, plural, one {1 melding} other {# meldinger}}. Slette mappen og alle meldingene i den? Dette kan ikke angres.",
     "delete_with_contents_confirm": "Slett mappe og meldinger"
+  },
+  "mail_p2_folders": {
+    "all_folders": "Alle mapper",
+    "empty_trash": "Tøm papirkurven",
+    "empty_spam": "Tøm søppelpost",
+    "empty_trash_confirm": "Slette {count, plural, one {meldingen} other {alle # meldingene}} i papirkurven for godt? Dette kan ikke angres.",
+    "empty_spam_confirm": "Slette {count, plural, one {meldingen} other {alle # meldingene}} i søppelpost for godt? Dette kan ikke angres.",
+    "title_all_accounts": "{name} ({count}, {total} i alle kontoer)",
+    "title_all_accounts_only": "{name} ({total} i alle kontoer)"
+  },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Ingen treff} one {# samtale funnet} other {# samtaler funnet}}",
+    "name_unread_sub": "{name}, {count} uleste, {sub} til i undermapper",
+    "name_unread_only_sub": "{name}, {sub} uleste i undermapper",
+    "sub_unread": "{sub} uleste i undermapper"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Administrer kontoer…",
+    "apply_to_existing": "{count, plural, one {Bruk på # eksisterende melding i {folder}} other {Bruk på # eksisterende meldinger i {folder}}}"
   },
   "shortcuts": {
     "title": "Tastatursnarveier",
@@ -3589,6 +4090,17 @@
     "messages_count": "{count, plural, one {# melding} other {# meldinger}}",
     "expand_named": "Utvid samtalen: {subject}",
     "collapse_named": "Fold sammen samtalen: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Vis # eldre melding} other {Vis # eldre meldinger}}",
+    "return_to_list_follows_layout": "Inntil du endrer det, følger det oppsettet: av når listen og meldingen står side om side, ellers på."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Vis kontobytteren over mappene, med Skriv under den. Slå av for å sette Skriv i stedet for den."
+  },
+  "mail_p2_conv": {
+    "show_message": "Vis meldingen",
+    "back_to_reply": "Tilbake til svaret ditt"
   },
   "identities": {
     "modal_title": "Administrer avsenderidentiteter",
@@ -3719,6 +4231,34 @@
         "next": "Si hva du trenger fra leseren, og innen når."
       }
     }
+  },
+  "compose_send": {
+    "back": "Tilbake til redigering",
+    "send_anyway": "Send likevel",
+    "warnings_title": "Sende denne meldingen likevel?",
+    "warning_subject": "Ingen emne",
+    "warning_text": "Ingen tekst",
+    "warning_attachment": "Nevner «{keyword}», men ingen fil er lagt ved",
+    "warning_placeholders": "Plassholdertekst som mottakerne vil se:",
+    "warning_proofreading": "Åpne stave- eller grammatikkfeil: {count}",
+    "empty_text_title": "Sende uten tekst?",
+    "empty_text_message": "Denne meldingen har verken tekst eller vedlegg. Sende den likevel?",
+    "scheduled_for": "Planlagt til {when}",
+    "sending": "Sender…",
+    "sent": "Sendt",
+    "view": "Vis",
+    "template_saved": "Mal lagret",
+    "schedule_anyway": "Planlegg likevel",
+    "schedule_warnings_title": "Planlegge denne meldingen likevel?",
+    "picker_button": "Legg til fra kontakter",
+    "picker_title": "Legg til mottakere",
+    "tab_contacts": "Kontakter",
+    "tab_directory": "Katalog",
+    "contacts_empty_title": "Ingen kontakter ennå",
+    "contacts_empty_hint": "Personer du lagrer i Kontakter, vises her.",
+    "contacts_no_match": "Ingen kontakter samsvarer med søket",
+    "template_name": "Navn på mal",
+    "template_edit_details": "Rediger detaljer…"
   },
   "org_templates": {
     "section_personal": "Mine maler",
@@ -4176,6 +4716,35 @@
       "menu": "Åpne kontaktens meny"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Hjem",
+    "phone_voice": "Telefon",
+    "more_fields": "Flere felt",
+    "import_menu": "Importer kontakter…",
+    "new_address_book_menu": "Ny adressebok…"
+  },
+  "uxs_wording": {
+    "more_options": "Flere valg",
+    "use_in_other_apps": "Bruk i andre apper",
+    "default_address_book": "Kontakter",
+    "default_calendar": "Kalender",
+    "preview_documents": "Dokumenter",
+    "preview_photos": "Bilder",
+    "sample_subject": "Notater fra møtet på kaféen i Tromsø",
+    "mail_apps": {
+      "imap": "Innkommende e-post (IMAP)",
+      "smtp": "Utgående e-post (SMTP)",
+      "caldav": "Kalendere (CalDAV)",
+      "carddav": "Kontakter (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Ingen kryptering",
+      "copy_label": "Kopier {name}",
+      "loading": "Leser innstillingene fra e-postserveren…",
+      "not_found": "E-postserveren oppga ikke servernavn for andre apper. Spør administratoren din om dem."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendere: {names}",
@@ -4419,7 +4988,7 @@
       "hide_non_working_days_desc": "Utelat dagene du ikke jobber, fra ukevisningen. Hendelsene deres vises fortsatt i måneds-, dag- og agendavisningen.",
       "working_days": "Arbeidsdager",
       "title": "Kalenderinnstillinger",
-      "default_view": "Standardvisning",
+      "default_view": "Kalenderen åpner i",
       "week_starts_on": "Uken starter på",
       "time_format": "Tidsformat",
       "default_calendar": "Standardkalender",
@@ -4430,17 +4999,22 @@
       "notifications_enabled_desc": "Vis varsler for kommende kalenderhendelser",
       "notification_sound": "Varslingslyd",
       "notification_sound_desc": "Spill av en lyd for kalendervarsler",
-      "invitation_parsing": "Les kalenderinvitasjoner i e-post",
+      "invitation_parsing": "Vis invitasjoner fra e-post",
       "invitation_parsing_desc": "Finn kalenderinvitasjoner i e-postvedlegg og vis tilgjengelige kalenderhandlinger",
       "show_time_in_month_view": "Vis klokkeslett i månedsvisning",
       "show_time_in_month_view_desc": "Vis klokkeslettet for hendelser i månedsvisningen. På små skjermer vises hele hendelsesoppføringen i stedet for en prikk.",
       "tinted_events": "Lyse hendelsesfarger",
       "tinted_events_desc": "Vis hendelser i en lys nyanse av kalenderens farge med en farget stolpe i starten, som i Outlook og på utskrifter, i stedet for fylte blokker.",
+      "month_timed_events": "Hendelser med klokkeslett i månedsvisning",
+      "month_timed_events_desc": "Hvordan hendelser med starttidspunkt vises i månedsvisningen. Heldags- og flerdagshendelser forblir stolper.",
+      "month_timed_events_bar": "Stolpe",
+      "month_timed_events_text": "Farget tekst",
+      "month_timed_events_dot": "Prikk og tekst",
       "show_week_numbers": "Vis ukenummer",
       "show_week_numbers_desc": "Vis ukenummer i minikalenderen",
       "calendar_free_scroll": "Fri rulling",
       "calendar_free_scroll_desc": "Rull fortløpende gjennom måneder, uker og dager i stedet for én periode om gangen",
-      "enable_tasks": "Aktiver oppgaver",
+      "enable_tasks": "Oppgaver",
       "enable_tasks_desc": "Vis en oppgavevisning i kalenderen for å administrere gjøremål",
       "show_tasks_on_calendar": "Vis oppgaver i kalenderen",
       "show_tasks_on_calendar_desc": "Vis oppgaver i måneds-, uke- og dagsvisningen",
@@ -4621,8 +5195,8 @@
       "error_update": "Kunne ikke oppdatere kalenderen",
       "error_delete": "Kunne ikke slette kalenderen",
       "caldav_url": "CalDAV-URL",
-      "copy_url": "Kopier CalDAV-URL",
-      "url_copied": "CalDAV-URL kopiert til utklippstavlen",
+      "copy_url": "Kopier adressen for andre apper",
+      "url_copied": "Adressen er kopiert",
       "share": "Del kalender…",
       "new_event_in_calendar": "Ny hendelse i denne kalenderen",
       "shared_with": "Delt med {names}",
@@ -4642,8 +5216,8 @@
       "default_alerts_updated": "Standardpåminnelser oppdatert"
     },
     "subscription": {
-      "title": "iCal-abonnement",
-      "section_title": "iCal-abonnementer",
+      "title": "Abonner på en kalender",
+      "section_title": "Kalendere du abonnerer på",
       "description": "Abonner på en ekstern iCalendar-strøm. Hendelser synkroniseres automatisk til en egen kalender. Du kan bruke URL-er med https:// og webcal://.",
       "url_label": "Kalender-URL",
       "url_placeholder": "https://example.com/calendar.ics eller webcal://...",
@@ -4756,18 +5330,217 @@
     "mini_has_events": "har hendelser",
     "mini_week_number": "Uke {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Oppgavelister",
+    "task_status_not_started": "Ikke startet",
+    "task_status_in_progress": "Pågår",
+    "quick_task_due": "Forfaller {date}",
+    "quick_task_due_remove": "Behold «{words}» i tittelen",
+    "rename_calendar": "Gi nytt navn…",
+    "rename_title": "Gi kalenderen nytt navn",
+    "rename_confirm": "Gi nytt navn",
+    "rename_empty": "Skriv inn et navn.",
+    "edit_calendar": "Rediger…",
+    "default_alerts_open": "Standardpåminnelser…",
+    "share_open": "Del…",
+    "clear_all_events": "Fjern alle hendelser…",
+    "delete_calendar": "Slett…",
+    "caldav_title": "Adresse for andre apper (CalDAV)",
+    "caldav_hint": "Legg til denne adressen i Thunderbird, Apple Kalender eller DAVx⁵ for å synkronisere kalenderne dine.",
+    "caldav_shared_by": "Delt av {name}:",
+    "freebusy_description": "De du deler med, ser når du er opptatt, ikke hva hendelsene dine er. Foreslå tidspunkter bruker det."
+  },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (oppgaveliste, vises ikke i kalenderen)",
+    "copy_to_account": "Kopier til {address}",
+    "copied_to_account": "Kopiert til {address}",
+    "delete_original": "Slett originalen"
+  },
+  "calendar_offline": {
+    "split_needs_server": "Denne endringen krever tilkobling til serveren. Endre bare denne hendelsen for nå, eller prøv igjen når du er tilkoblet."
+  },
+  "ux_pim_event": {
+    "time_zone": "Tidssone",
+    "time_zone_line": "Tidssone: {zone}",
+    "your_time": "{times} din tid",
+    "zone_times": "{times} {zone} ({local} din tid)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Godtatt",
+    "status_declined": "Avslått",
+    "status_tentative": "Kanskje",
+    "status_needs_action": "Har ikke svart ennå",
+    "status_delegated": "Overført",
+    "answered_accepted": "Du godtok {date}.",
+    "answered_declined": "Du avslo {date}.",
+    "answered_tentative": "Du svarte kanskje {date}.",
+    "answered_accepted_nodate": "Du godtok.",
+    "answered_declined_nodate": "Du avslo.",
+    "answered_tentative_nodate": "Du svarte kanskje."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Gjentas: {rule}",
+    "declined_dates": "Du avslo {dates}.",
+    "declined_many": "Du avslo {count} møter i denne serien.",
+    "answers_series": "Svaret ditt gjelder alle møtene i serien."
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "til {time}",
+    "week_all_days": "Vis hele uken",
+    "week_days_short": "{count, plural, one {# dag} other {# dager}}",
+    "print": "Skriv ut…"
+  },
   "calendar_event_notifications": {
     "someone": "Noen",
     "invited": "{name} har invitert deg til «{title}»",
     "updated": "{name} har oppdatert «{title}»",
     "cancelled": "{name} har avlyst «{title}»",
-    "untitled": "Hendelse uten tittel"
+    "untitled": "Hendelse uten tittel",
+    "summary": "Endringer i hendelser du deltar i: {count}"
+  },
+  "calendar_month_select": {
+    "selected_range": "{start} til {end} er valgt.",
+    "selected_day": "{day} er valgt.",
+    "enter_hint": "Trykk Enter for å opprette en hendelse."
+  },
+  "company_calendars": {
+    "section": "Organisasjon"
+  },
+  "ux_pim_grid": {
+    "search_short": "Søk",
+    "reply": "Svar",
+    "reply_to_invitation": "Svar på invitasjonen"
+  },
+  "vacation_calendar": {
+    "label": "Blokker kalenderen min",
+    "description": "Legger inn en opptatt-hendelse mens du er borte, så ingen booker møter med deg da.",
+    "no_access_managed": "Kalenderen til denne kontoen kan ikke blokkeres: du har ikke skrivetilgang til den.",
+    "no_calendar": "Kalenderen din kan ikke blokkeres: Bulwark fant ingen kalender å legge hendelsen i.",
+    "filter_warning": "Slår du dette på, slås ditt eget filterskript av så lenge svaret er aktivt."
+  },
+  "calendar_delegate": {
+    "answer_for": "Svar for {name}",
+    "no_write": "Du ser invitasjonene til {name}, men kan ikke svare for dem. Be om redigeringstilgang.",
+    "also_invited": "Du er også invitert, og denne serveren kan ikke skille svaret ditt fra svaret til {name}. {name} må svare på denne selv.",
+    "answered_by": "Besvart av {who}"
+  },
+  "free_busy_share": {
+    "button": "Del min ledig/opptatt med {group}",
+    "already": "Din ledig/opptatt er delt med {group}",
+    "done": "Din ledig/opptatt er nå delt med {group}.",
+    "error": "Kunne ikke dele ledig/opptatt. Prøv igjen.",
+    "group_label": "Gruppe",
+    "title": "Ledig/opptatt",
+    "description": "Kolleger i gruppen ser når du er opptatt, ikke hva hendelsene dine er. Foreslå tidspunkter bruker det."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Klikk for å velge en vCard- eller CSV-fil",
+    "file_types": ".vcf- eller .csv-filer, for eksempel fra Outlook eller Google Kontakter",
+    "parse_error": "Kunne ikke lese filen",
+    "columns_title": "Koble kolonnene",
+    "columns_hint": "Velg hvor hver kolonne i {file} skal. Kolonner med «Ikke importer» hoppes over.",
+    "column": "Kolonne",
+    "sample": "Eksempel",
+    "field": "Kontaktfelt",
+    "skip": "Ikke importer",
+    "no_columns": "Velg et felt for minst én kolonne.",
+    "continue": "Fortsett",
+    "back": "Tilbake",
+    "import_into": "Importer til",
+    "group_name": "Navn",
+    "group_email": "E-post",
+    "group_phone": "Telefon",
+    "group_org": "Organisasjon",
+    "group_adr_any": "Adresse",
+    "group_adr_home": "Privatadresse",
+    "group_adr_work": "Jobbadresse",
+    "group_adr_other": "Annen adresse",
+    "group_more": "Mer",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Fullt navn",
+    "t_name_given": "Fornavn",
+    "t_name_middle": "Mellomnavn",
+    "t_name_surname": "Etternavn",
+    "t_name_prefix": "Tittel (dr., fru)",
+    "t_name_suffix": "Suffiks (jr.)",
+    "t_nickname": "Kallenavn",
+    "t_email": "E-post",
+    "t_email_home": "E-post (privat)",
+    "t_email_work": "E-post (jobb)",
+    "t_phone": "Telefon",
+    "t_phone_mobile": "Mobil",
+    "t_phone_home": "Telefon (privat)",
+    "t_phone_work": "Telefon (jobb)",
+    "t_phone_fax": "Faks",
+    "t_phone_fax_home": "Faks (privat)",
+    "t_phone_fax_work": "Faks (jobb)",
+    "t_phone_pager": "Personsøker",
+    "t_org_name": "Firma",
+    "t_org_unit": "Avdeling",
+    "t_org_title": "Stilling",
+    "t_street": "Gate",
+    "t_pobox": "Postboks",
+    "t_locality": "Sted",
+    "t_region": "Fylke eller region",
+    "t_postcode": "Postnummer",
+    "t_country": "Land",
+    "t_web": "Nettsted",
+    "t_birthday": "Bursdag",
+    "t_anniversary": "Merkedag",
+    "t_notes": "Notater",
+    "t_categories": "Kategorier",
+    "t_type": "Type verdi (Privat, Jobb…)",
+    "merge_with": "Slå sammen med…",
+    "merge_selected": "Slå sammen…",
+    "find_duplicates": "Finn duplikater",
+    "possible_duplicates": "Mulige duplikater ({count})",
+    "duplicates_title": "Mulige duplikater",
+    "duplicates_hint": "Kontakter med samme navn, e-postadresse eller telefonnummer.",
+    "duplicates_none": "Fant ingen mulige duplikater.",
+    "pick_title": "Slå sammen {name} med…",
+    "pick_search": "Søk i kontakter",
+    "pick_suggested": "Mulige duplikater",
+    "pick_all": "Alle kontakter",
+    "pick_none": "Ingen andre kontakter å slå sammen med.",
+    "preview_title": "Slå sammen kontakter ({count})",
+    "preview_hint": "Disse kontaktene blir ett kort med alt nedenfor.",
+    "preview_deleted": "Tatt med og deretter slettet: {names}",
+    "groups": "Grupper",
+    "merge": "Slå sammen",
+    "merging": "Slår sammen…",
+    "merged": "Kontakter slått sammen",
+    "merge_failed": "Kunne ikke slå sammen kontaktene.",
+    "merge_not_possible": "Disse kontaktene kan ikke slås sammen: De ligger i ulike kontoer eller i en adressebok du ikke kan endre.",
+    "undo": "Angre",
+    "undone": "Sammenslåing angret",
+    "undo_failed": "Sammenslåingen kunne ikke angres helt."
+  },
+  "find_time": {
+    "suggest": "Foreslå tidspunkter",
+    "searching": "Ser etter ledige tidspunkter",
+    "slots_title": "Ledig for alle Bulwark kunne sjekke",
+    "slot": "{day}, {start} til {end}",
+    "none": "Ingen ledig tid de neste 10 arbeidsdagene.",
+    "picked": "Hendelsen er flyttet til {slot}",
+    "rate_limited": "For mange oppslag det siste minuttet. Prøv igjen om et minutt.",
+    "unavailable": "Ledig/opptatt er ikke tilgjengelig på denne serveren, så Bulwark kan ikke foreslå tidspunkter.",
+    "not_checked": "Ikke sjekket:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "utenfor organisasjonen din",
+    "reason_unknown": "opptatte tider ukjent",
+    "reason_not_found": "ikke funnet på denne serveren",
+    "reason_error": "kunne ikke sjekkes",
+    "unknown_note": "Bulwark ser bare opptatte tider i kalendere som er delt med deg. For disse personene kan den ikke skille ledig fra ikke delt.",
+    "directory_off": "Bulwark kan ikke slå opp personer på denne serveren. Administratoren kan slå på katalogspørringer i Stalwart.",
+    "not_looked_up": "Adressen kunne ikke slås opp",
+    "found": "Ledige tidspunkter funnet: {count}"
   },
   "share_notifications": {
     "someone": "Noen",
     "shared": "{name} har delt {kind} «{object}» med deg",
     "changed": "{name} har endret tilgangen din til {kind} «{object}»",
     "revoked": "{name} har fjernet tilgangen din til {kind} «{object}»",
+    "summary": "{name} har endret tilgangen din til {count, plural, one {# delt element} other {# delte elementer}}",
     "object": {
       "folder": "mappen",
       "calendar": "kalenderen",
@@ -4939,17 +5712,16 @@
     "any_size": "Alle størrelser",
     "larger_than_mb": "Større enn {size} MB",
     "custom_size": "Egendefinert størrelse",
-    "done": "Ferdig",
     "name_or_address": "Navn eller adresse"
   },
   "welcome": {
     "title": "Velkommen til postkassen din",
     "tip_compose": "Trykk c for å skrive en ny e-post",
     "tip_shortcuts": "Trykk på ? for å se alle tastatursnarveier",
-    "tip_sidebar": "Finn kalender, kontakter og innstillinger i menyen i sidefeltet",
+    "tip_sidebar_apps": "{apps} finner du i feltet til venstre",
     "tip_settings": "Tilpass nettposten under Innstillinger",
     "tip_compose_touch": "Trykk på blyantknappen for å skrive en ny e-post",
-    "tip_sidebar_touch": "Kalender, Kontakter og Innstillinger finner du i linjen nederst",
+    "tip_sidebar_apps_touch": "{apps} finner du i linjen nederst",
     "got_it": "Skjønner",
     "settings": "Innstillinger",
     "dismiss": "Lukk",
@@ -5113,7 +5885,6 @@
     "settings_ascending": "Stigende",
     "settings_descending": "Synkende",
     "disabled_title": "Administratoren har deaktivert filfunksjonen",
-    "disabled_description": "Store filopplastinger via WebDAV kan føre til ustabilitet i Stalwart/RocksDB, blant annet krasj på grunn av for lite minne og diskplass som ikke blir frigjort. Slettede filer kan ikke fjernes umiddelbart fra blob-lagringen. Denne funksjonen anbefales ikke for produksjonsmiljøer.",
     "migration_title": "Oppdaterer filene dine...",
     "migration_description": "Mapper og filer organiseres i riktig struktur. Dette skjer bare én gang.",
     "new": "Ny",
@@ -5164,6 +5935,47 @@
     "previous_file": "Forrige fil",
     "next_file": "Neste fil",
     "loading": "Laster inn…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} finnes allerede.",
+    "conflict_file_hint": "Erstatt legger det nye innholdet i den eksisterende filen, så delingene blir. Behold begge legger til en kopi med et nummer.",
+    "conflict_folder_hint": "Erstatt legger filene i den eksisterende mappen og erstatter filer med samme navn. Behold begge lager en ny mappe med et nummer.",
+    "replace": "Erstatt",
+    "keep_both": "Behold begge",
+    "skip": "Hopp over",
+    "apply_to_all": "{count, plural, one {Gjør det samme for konflikten} other {Gjør det samme for alle # konfliktene}}",
+    "no_preview": "Det finnes ingen forhåndsvisning for denne filtypen.",
+    "open_in_app": "Åpne i standardprogram",
+    "shared_with": "{name} er nå delt med {person}.",
+    "send_message": "Send en melding",
+    "share_mail_subject": "Jeg har delt {name} med deg",
+    "share_mail_body": "Hei,\n\nJeg har delt «{name}» med deg. Du kan åpne den her:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Legg alle til i kalenderen",
+    "zone_contacts_all": "Legg alle til i kontakter",
+    "save_to_files": "Lagre i Filer",
+    "saved": "{name} er lagret i Filer.",
+    "saved_copy": "Lagret i Filer som {name}.",
+    "save_failed": "Kunne ikke lagre {name} i Filer.",
+    "changed_on_server": "{name} ble endret i Filer etter at du åpnet den.",
+    "gone_on_server": "{name} finnes ikke lenger i Filer.",
+    "keep_both": "Behold begge",
+    "replace": "Erstatt",
+    "cancel": "Avbryt",
+    "save_as_new": "Lagre som ny fil",
+    "import_to_mail": "Importer til en e-postmappe…",
+    "import_to_mail_title": "Importer til en e-postmappe",
+    "imported_to_mail": "Importert til {folder}.",
+    "import_to_mail_failed": "Kunne ikke importere {name}.",
+    "import_contacts": "Importer til kontakter…",
+    "add_to_calendar": "Legg til i kalenderen…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Redigerte filer",
+    "hide": "Skjul",
+    "discard_detail_file": "Endringene dine i denne kopien slettes. Filen i Filer endres ikke.",
+    "saved_auto": "{name} er lagret i Filer. Senere lagringer fra programmet havner der av seg selv."
   },
   "smime": {
     "your_certificates": "Dine sertifikater",
@@ -5300,6 +6112,159 @@
   "unified_mailbox": {
     "search_unavailable": "Søk er ikke tilgjengelig i den samlede visningen"
   },
+  "mail_import": {
+    "menu_import": "Importer e-post…",
+    "settings_label": "Importer e-post",
+    "settings_description": "Hent inn e-post fra .eml-, ZIP-, mbox- eller Outlook-.pst- og -.ost-filer.",
+    "settings_button": "Importer…",
+    "title": "Importer e-post",
+    "description": "Velg .eml-, .zip-, .mbox- eller Outlook-.pst- og -.ost-filer.",
+    "choose_files": "Velg filer…",
+    "chosen_files": "Valgte filer",
+    "remove_file": "Fjern {name}",
+    "format_eml": "Melding",
+    "format_zip": "ZIP-arkiv",
+    "format_mbox": "mbox-fil",
+    "format_pst": "Outlook-datafil",
+    "target_label": "Importer til",
+    "target_top": "Øverste nivå",
+    "keep_folders": "Gjenskap mappene fra filen",
+    "keep_folders_hint": "Mapper med samme navn brukes på nytt.",
+    "resume": "Fortsett der forrige import av disse filene stoppet (meldinger allerede ferdige: {count})",
+    "quota_note": "Mange servere tar bare imot rundt 1000 meldinger eller 50 MB i timen fra én bruker. En større import tar en pause og fortsetter så av seg selv.",
+    "start": "Importer",
+    "cancel": "Avbryt",
+    "running_title": "Importerer e-post",
+    "progress_label": "Fremdrift for importen",
+    "status_imported": "Importerte meldinger: {count}",
+    "reading_file": "Leser {name}",
+    "paused": "Satt på pause til {time}. Serveren tar imot høyst {files} opplastinger eller {size} i timen. Importen fortsetter av seg selv.",
+    "paused_generic": "Satt på pause til {time}. Serverens opplastingsgrense er nådd. Importen fortsetter av seg selv.",
+    "background": "Kjør i bakgrunnen",
+    "cancel_import": "Avbryt import",
+    "chip": "Importerer e-post: {percent} %",
+    "chip_paused": "Import satt på pause til {time}",
+    "done_title": "Import fullført",
+    "cancelled_title": "Import avbrutt",
+    "failed_title": "Import stoppet",
+    "summary_imported": "Importerte meldinger: {count}",
+    "summary_folders": "Opprettede mapper: {count}",
+    "summary_skipped": "Ikke importert:",
+    "skip_too_large": "Større enn serveren tillater: {count}",
+    "skip_deleted": "Slettet i Thunderbird: {count}",
+    "skip_embedded": "Meldinger lagt ved andre meldinger: {count}",
+    "skip_contact": "Kontakter: {count}",
+    "skip_calendar": "Kalenderelementer: {count}",
+    "skip_other": "Andre elementer: {count}",
+    "summary_failed": "Kunne ikke importeres: {count}",
+    "failure_invalid": "ikke en gyldig melding",
+    "untitled": "(uten emne)",
+    "cancelled_hint": "Importer de samme filene til samme mappe igjen for å fortsette senere.",
+    "close": "Lukk",
+    "pst_note": "Fra Outlook-filer kommer bare e-post med. Kontakter, kalenderelementer og oppgaver telles og hoppes over.",
+    "pst_error_encrypted": "Denne Outlook-filen bruker høy kryptering, som Bulwark ikke kan lese. Eksporter e-posten i Outlook til en ny .pst-fil uten kryptering.",
+    "pst_error_not_pst": "Denne filen er ikke en Outlook-datafil som Bulwark kan lese.",
+    "pst_error_unreadable": "Bulwark kunne ikke lese denne Outlook-filen.",
+    "pst_error_worker": "Leseren for Outlook-filer ble ikke lastet. Last inn siden på nytt og prøv igjen.",
+    "error_over_quota": "Postkassen er full, så importen stoppet. Frigjør plass og importer de samme filene til samme mappe igjen for å fortsette.",
+    "error_forbidden": "Du kan ikke legge e-post i denne mappen, så importen stoppet.",
+    "error_failures": "For mange meldinger på rad mislyktes, så importen stoppet. Importer de samme filene til samme mappe igjen senere for å fortsette.",
+    "error_network": "Tilkoblingen til serveren mislyktes gang på gang, så importen stoppet. Importer de samme filene til samme mappe igjen for å fortsette.",
+    "error_busy": "Disse filene importeres allerede i en annen fane.",
+    "retry_hint": "Importer de samme filene til samme mappe igjen for å prøve de som mislyktes, på nytt.",
+    "skip_unreadable": "Uleselige i Outlook-filen: {count}",
+    "keep_folders_top_hint": "På øverste nivå havner Innboks, Sendte elementer, Slettede elementer og lignende i dine egne.",
+    "toast_done": "Import fullført. Importert: {imported}, mislyktes: {failed}.",
+    "toast_stopped": "Importen stoppet.",
+    "toast_show": "Vis",
+    "section_title": "E-postfiler",
+    "section_description": "Hent inn e-post fra filer, eller lagre e-posten din som filer."
+  },
+  "mail_export": {
+    "menu_export": "Eksporter mappe…",
+    "settings_label": "Eksporter all e-post",
+    "settings_description": "Lagre alle mappene i denne kontoen i én ZIP-fil, som mbox- eller .eml-filer.",
+    "settings_button": "Eksporter…",
+    "title_folder": "Eksporter «{name}»",
+    "title_account": "Eksporter all e-post",
+    "description_folder": "Lagre meldingene i denne mappen som en fil.",
+    "description_account": "Lagre alle mappene i denne kontoen i én ZIP-fil.",
+    "format_label": "Format",
+    "format_mbox_folder": "mbox-fil",
+    "format_eml_folder": "ZIP med .eml-filer",
+    "format_mbox_account": "ZIP med én mbox-fil per mappe",
+    "format_eml_account": "ZIP med .eml-filer, én mappe per e-postmappe",
+    "hint_mbox": "Thunderbird, Apple Mail og de fleste e-postprogrammer åpner mbox-filer.",
+    "hint_eml": "Én fil per melding, som alle e-postprogrammer kan åpne.",
+    "save_picker": "Du velger hvor filen lagres.",
+    "save_download": "Filen lastes ned når eksporten er ferdig.",
+    "save_memory": "Denne nettleseren holder hele eksporten i minnet og kan derfor lagre høyst 200 MB. Bruk Chrome eller Edge for mer, eller eksporter mappe for mappe.",
+    "start": "Eksporter",
+    "cancel": "Avbryt",
+    "running_title": "Eksporterer e-post",
+    "progress_label": "Fremdrift for eksporten",
+    "status_exported": "Eksporterte meldinger: {count} av {total}",
+    "paused": "Satt på pause til {time}: serveren ba om en pause. Eksporten fortsetter av seg selv.",
+    "background": "Kjør i bakgrunnen",
+    "cancel_export": "Avbryt eksport",
+    "chip": "Eksporterer e-post: {percent} %",
+    "chip_paused": "Eksport satt på pause til {time}",
+    "done_title": "Eksport fullført",
+    "cancelled_title": "Eksport avbrutt",
+    "failed_title": "Eksport stoppet",
+    "summary_exported": "Eksporterte meldinger: {count}",
+    "summary_file": "Lagret som {name} ({size}).",
+    "summary_failed": "Kunne ikke eksporteres: {count}",
+    "download_again": "Last ned på nytt",
+    "too_large": "Eksporten er større enn denne nettleseren kan holde i minnet. Bruk Chrome eller Edge, eller eksporter mappe for mappe.",
+    "close": "Lukk",
+    "untitled": "(uten emne)",
+    "toast_done": "Eksport fullført: {name}",
+    "toast_stopped": "Eksporten stoppet.",
+    "toast_show": "Vis"
+  },
+  "desktopImport": {
+    "find": "Finn Thunderbird- og Outlook-data…",
+    "find_hint": "Søker på de vanlige stedene på denne datamaskinen. Bulwark spør først.",
+    "scan_declined": "Det ble ikke søkt, fordi du ikke tillot det.",
+    "scan_failed": "Søket virket ikke. Prøv igjen.",
+    "read_declined": "Ingen filer ble lest, fordi du ikke tillot det.",
+    "read_failed": "Disse filene kan ikke lenger leses. Søk igjen.",
+    "nothing_found": "Ingen Thunderbird-profil eller Outlook-datafil på de vanlige stedene. Bruk Velg filer for å importere en fil fra et annet sted.",
+    "found_list": "E-postdata funnet på denne datamaskinen",
+    "outlook_files": "Outlook-datafiler",
+    "thunderbird_profile": "Thunderbird-profil {name}",
+    "address_book": "Adressebok for {name}",
+    "message_count": "{count, plural, one {# melding} other {# meldinger}}",
+    "contact_count": "{count, plural, one {# kontakt} other {# kontakter}}",
+    "confirm": "{count, plural, one {Bruk dette elementet…} other {Bruk disse # elementene…}}",
+    "back": "Tilbake",
+    "estimate": "{size} valgt. Mange servere, også Stalwart, tar bare imot rundt 1000 meldinger eller 50 MB i timen fra én bruker, så dette tar minst {time}. Ved grensen tar importen pause og fortsetter av seg selv. Den kjører i bakgrunnen og fortsetter etter en omstart.",
+    "duration_hours": "{count, plural, one {# time} other {# timer}}",
+    "duration_days": "{count, plural, one {# dag} other {# dager}}",
+    "time_left": "Minst {time} igjen ved serverens opplastingsgrense. Du kan jobbe videre imens.",
+    "thunderbird_running": "Thunderbird kjører. Lukk det først. Hvis det endrer en mappe under importen, starter mappen på nytt, og meldinger som allerede er importert, hoppes over.",
+    "ost_refused": "Ikke tilbudt: {names}. Outlooks .ost-filer er bare en lokal kopi av en postkasse og kan ikke importeres her. Eksporter heller e-posten til en .pst-fil i Outlook.",
+    "calendars_left_out": "Thunderbird-kalendere importeres ikke. Eksporter dem fra Thunderbird som .ics-filer, og importer dem i kalenderen.",
+    "pst_items_left_out": "Fra Outlook-filer importeres bare e-post, ikke kontakter eller kalendere.",
+    "picked": "{count, plural, one {# mappe eller fil fra denne datamaskinen} other {# mapper og filer fra denne datamaskinen}}",
+    "remove_picked": "Fjern disse filene",
+    "contacts_picked": "{count, plural, one {# kontakt fra Thunderbird kommer i kontaktene dine.} other {# kontakter fra Thunderbird kommer i kontaktene dine.}}",
+    "contacts_added": "{count, plural, one {# kontakt fra Thunderbird lagt til.} other {# kontakter fra Thunderbird lagt til.}}",
+    "contacts_failed": "Noen kontakter fra Thunderbird kunne ikke legges til.",
+    "files_refused": "Utelatt, fordi de ikke lenger kan leses: {names}",
+    "skip_seen": "Hopp over meldinger som en tidligere import allerede har lagt i samme mappe",
+    "skip_duplicate": "{count, plural, one {# melding er allerede importert tidligere} other {# meldinger er allerede importert tidligere}}",
+    "file_unavailable": "En fil er endret eller kan ikke lenger leses. Lukk Thunderbird og importer på nytt. Meldinger som allerede er importert, hoppes over.",
+    "resume_gone": "Importen fra denne datamaskinen kan ikke fortsette, fordi filene er borte.",
+    "pst_in_use": "{names} kan ikke leses mens Outlook har filen åpen. Lukk Outlook og søk igjen.",
+    "description": "Finn e-post på denne datamaskinen, eller velg .eml-, .zip-, .mbox- eller Outlook .pst-filer.",
+    "settings_description": "Hent e-post fra Thunderbird eller fra .eml-, ZIP-, mbox- eller Outlook .pst-filer.",
+    "resume_refused": "Kan ikke leses akkurat nå: {names}. Resten fortsetter, og disse prøves igjen ved neste start.",
+    "resume_stop_trying": "Ikke prøv mer",
+    "resume_hand_picked": "Velg disse filene på nytt for å importere resten: {names}. Meldinger som allerede er importert, hoppes over.",
+    "scan_incomplete": "Søket tok for lang tid og ble stoppet. Dette er det den fant frem til da."
+  },
   "recover_deleted": {
     "tab": "Gjenopprett slettede elementer",
     "title": "Gjenopprett slettede elementer",
@@ -5333,13 +6298,261 @@
     "date_label": "Dato",
     "subject_label": "Emne"
   },
+  "print_styles": {
+    "title": "Utskrift",
+    "description": "Hvordan utskrevne meldinger, kontakter og kalendere ser ut.",
+    "style_label": "Utskriftsstil",
+    "style_description": "Tillegg kan legge til stiler, for eksempel et brevhode med firmaets adresse.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
-    "description": "Installer appen for rask tilgang og støtte for bruk uten nett.",
+    "description": "Installer appen for rask tilgang.",
     "not_now": "Ikke nå",
     "install": "Installer",
     "dont_remind": "Ikke minn meg på det igjen",
     "dismiss_aria": "Lukk forespørselen om installering"
+  },
+  "app_update": {
+    "ready": "En ny versjon av {appName} er klar.",
+    "reload": "Last inn på nytt"
+  },
+  "offline": {
+    "settings": {
+      "title": "Frakoblet",
+      "description": "Les og skriv e-post på denne enheten uten tilkobling.",
+      "keep_label": "Behold e-post på denne enheten",
+      "keep_description": "Beholder de siste 30 dagene av innboksen og av mappene du åpner, opptil 250 MB, kryptert i denne nettleseren. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
+      "warning": "Alle som kan bruke denne nettleserprofilen, kan lese denne e-posten. Slå det bare på på din egen enhet, og bruk diskkryptering.",
+      "forbidden": "Organisasjonen din tillater ikke at e-post beholdes på enheter.",
+      "unsupported": "Denne nettleseren kan ikke beholde e-post for bruk uten tilkobling.",
+      "syncing": "Lagrer e-posten din på denne enheten…",
+      "usage": "{size} på denne enheten",
+      "usage_updated": "{size} på denne enheten, oppdatert {time}",
+      "off_confirm_title": "Slå av frakoblet modus?",
+      "off_confirm_message": "{count, plural, one {# melding i utboksen er ikke sendt.} other {# meldinger i utboksen er ikke sendt.}} Hvis du slår det av, slettes de sammen med e-posten som er lagret på denne enheten.",
+      "off_confirm": "Slå av"
+    },
+    "outbox": {
+      "title": "Utboks",
+      "description": "Meldinger du skrev uten tilkobling. De sendes når enheten er tilkoblet igjen.",
+      "empty": "Ingenting venter på å bli sendt.",
+      "no_subject": "(uten emne)",
+      "to": "Til: {recipients}",
+      "status_waiting": "Venter på tilkobling",
+      "status_sending": "Sendes",
+      "status_failed": "Kunne ikke sendes: {error}",
+      "status_uncertain": "Tilkoblingen ble brutt under sendingen. Sjekk Sendt før du sender den igjen.",
+      "retry": "Send igjen",
+      "delete": "Slett",
+      "delete_confirm_title": "Slette denne meldingen?",
+      "delete_confirm_message": "Den er ikke sendt og kan ikke hentes tilbake.",
+      "changes": "{count, plural, one {# endring} other {# endringer}} av lest, flagg eller mapper sendes når du er tilkoblet igjen.",
+      "status_held": "Organisasjonens regler endret seg mens meldingen ventet. Skriv den på nytt for å sende den.",
+      "retry_label": "Send igjen: {subject}",
+      "delete_label": "Slett: {subject}"
+    },
+    "banner": {
+      "offline": "Du er frakoblet. Du ser e-posten som er lagret på denne enheten. Det du endrer eller skriver, sendes når du er tilkoblet igjen.",
+      "outbox": "{count, plural, one {# melding} other {# meldinger}} i utboksen",
+      "server_down": "E-postserveren kan ikke nås. Du ser e-posten som er lagret på denne enheten. Det du endrer eller skriver, sendes når den svarer igjen."
+    },
+    "toast": {
+      "queued": "Lagret i utboksen. Den sendes når du er tilkoblet igjen.",
+      "sent": "Sendt fra utboksen: {subject}",
+      "send_failed": "En melding i utboksen kunne ikke sendes: {subject}",
+      "refused_delete": "Permanent sletting krever tilkobling. Prøv igjen når du er tilkoblet.",
+      "refused_other": "Dette krever tilkobling. Prøv igjen når du er tilkoblet.",
+      "forbidden": "Organisasjonen din har slått av frakoblet modus. E-posten som var lagret på denne enheten, er fjernet.",
+      "back_online": "Du er tilkoblet igjen. Last inn på nytt for å logge på og sende det som venter.",
+      "reload": "Last inn på nytt",
+      "held": "En melding i utboksen trenger deg: {subject}",
+      "lost": "Disse meldingene ble ikke sendt og er slettet: {subjects}"
+    },
+    "signout": {
+      "title": "Logge av med usendte meldinger?",
+      "message": "{count, plural, one {# melding er ikke sendt.} other {# meldinger er ikke sendt.}} Når du logger av, slettes de.",
+      "confirm": "Logg av",
+      "lost": "Disse meldingene ble ikke sendt og ble slettet da du ble logget av: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Dette krever tilkobling. Prøv igjen når du er tilkoblet.",
+      "plugins_down": "Programtillegget for signering eller kryptering kjører ikke uten tilkobling. Send dette når du er tilkoblet igjen.",
+      "file_missing": "En fil som ble lagt ved uten tilkobling, er ikke lenger på denne enheten. Legg den ved på nytt.",
+      "no_sent_mailbox": "Fant ikke mappen Sendt.",
+      "no_drafts_mailbox": "Fant ikke mappen Utkast."
+    }
+  },
+  "offlineConflicts": {
+    "title": "Endringer som ikke ble utført",
+    "description": "Du gjorde disse endringene uten nett. De ble ikke utført, og meldingen forblir som den er på serveren.",
+    "changed": "Endret på en annen enhet, endringen din ble ikke utført",
+    "changed_delete": "Endret på en annen enhet, den ble ikke slettet",
+    "gone": "Finnes ikke lenger på serveren, endringen din ble ikke utført",
+    "refused": "Serveren avviste denne endringen: {reason}",
+    "dismiss": "Lukk",
+    "dismiss_label": "Lukk merknaden om {subject}",
+    "banner": "Endringer som ikke ble utført: {count}",
+    "toast": "Endringer gjort uten nett som ikke ble utført: {count}. Utboksen viser hvilke.",
+    "storage_failed": "Denne enheten har ikke mer plass til e-post uten nett. Frigjør plass, eller behold mindre i innstillingene.",
+    "signout_changes_title": "Logge ut med endringer som ikke er lagret?",
+    "signout_changes": "Endringer som ennå ikke er på serveren: {count}. Når du logger ut, slettes de.",
+    "store_unavailable": "E-post uten nett på denne enheten kan ikke åpnes nå. Usendt e-post blir her, og appen fortsetter å prøve.",
+    "store_reset": "E-post uten nett på denne enheten kunne ikke leses og lastes derfor ned på nytt. Det som ikke var sendt, er borte.",
+    "legacy_stranded": "Denne nettleseren kan ikke åpne usendt e-post fra en tidligere versjon. En oppdatering av nettleseren kan hente den tilbake.",
+    "store_private": "Private vinduer kan ikke beholde e-post for bruk uten nett.",
+    "server_not_answering": "E-postserveren svarer ikke. Prøv igjen om litt."
+  },
+  "offlineWipe": {
+    "note": "Organisasjonen din har fjernet dataene for denne kontoen fra denne enheten. Logg på for å begynne på nytt.",
+    "note_unsent": "Organisasjonen din har fjernet dataene for denne kontoen fra denne enheten. Slettede usendte meldinger: {count}.",
+    "settings_title": "Fjern alt fra denne enheten",
+    "settings_description": "For når du gir bort denne datamaskinen eller slutter å bruke den. E-posten din på serveren blir værende.",
+    "settings_button": "Fjern alt…",
+    "settings_wiping": "Fjerner…",
+    "confirm_title": "Vil du fjerne alt fra denne enheten?",
+    "confirm_message": "Dette sletter det denne appen lagrer på denne enheten, for alle kontoer her. E-posten din på serveren blir ikke rørt.",
+    "confirm_mail": "E-post, kalendere, kontakter og filer som er lagret her",
+    "confirm_unsent": "Usendte meldinger som venter her: {count}. De går tapt.",
+    "confirm_keys": "S/MIME- og OpenPGP-nøkler. Du trenger din egen sikkerhetskopi for å bruke dem igjen.",
+    "confirm_plugins": "Data som programtillegg har lagret her",
+    "confirm_files": "Vedlegg som er åpnet for redigering, og filer som venter på å bli lagt ved",
+    "confirm_accounts": "Alle kontoer logges av",
+    "confirm_button": "Fjern alt",
+    "note_unknown": "Organisasjonen din har fjernet dataene til denne kontoen fra denne enheten. Usendte meldinger kan også være slettet.",
+    "refused_waiting": "Usendte meldinger som venter på det nye passordet: {count}. De blir til {date}.",
+    "refused_waiting_unknown": "Usendte meldinger venter kanskje på det nye passordet. De blir til {date}.",
+    "confirm_unsent_unknown": "Det venter kanskje usendte meldinger her. De går tapt.",
+    "confirm_templates": "E-postmaler lagret på denne enheten",
+    "session_waiting": "Usendte meldinger som venter på neste pålogging: {count}. De blir til {date}.",
+    "session_waiting_unknown": "Usendte meldinger venter kanskje på neste pålogging. De blir til {date}.",
+    "needs_sign_in": "Krever pålogging",
+    "switcher_waiting": "Usendte meldinger: {count}. Slettes fra denne enheten {date}.",
+    "switcher_kept": "E-posten på denne enheten slettes {date}.",
+    "sibling_waiting": "{name} ble logget ut. Usendte meldinger: {count}. Logg på innen {date}, ellers slettes de fra denne enheten.",
+    "sibling_kept": "{name} ble logget ut. Logg på innen {date}, ellers slettes e-posten fra denne enheten."
+  },
+  "offlineStorage": {
+    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du velger, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
+    "window_label": "Hvor langt tilbake som beholdes",
+    "window_description": "Eldre e-post og kalenderhendelser forlater denne enheten. Du kan fortsatt åpne dem når du er tilkoblet.",
+    "window_days": "{days, plural, one {# dag} other {# dager}}",
+    "window_year": "1 år",
+    "window_everything": "Alt",
+    "attachments_label": "Behold vedlegg",
+    "attachments_description": "Vedlegg fra beholdte meldinger og filene du beholder frakoblet, opptil {total} til sammen. De eldste fjernes først.",
+    "total_locked": "Organisasjonen din tillater høyst {size} med vedlegg og filer.",
+    "attachment_cap_label": "Største vedlegg som beholdes",
+    "usage_mail": "Meldinger og søkeindeks",
+    "usage_attachments": "Vedlegg",
+    "usage_calendar": "Kalender",
+    "usage_contacts": "Kontakter",
+    "usage_files": "Filer beholdt frakoblet",
+    "usage_row": "{size} ({count, plural, one {# element} other {# elementer}})",
+    "progress_list": "Lister opp meldinger",
+    "progress_bodies": "Laster ned meldinger",
+    "progress_threads": "Sorterer samtaler",
+    "progress_files": "Laster ned filer",
+    "progress_other": "Henter data til denne enheten",
+    "progress_count": "{done} av {total}",
+    "progress_count_open": "{done} så langt",
+    "progress_left": "omtrent {minutes, plural, one {# minutt} other {# minutter}} igjen",
+    "clear_label": "Tøm denne kontoen",
+    "clear_description": "Sletter alt denne enheten beholder for denne kontoen, og laster det ned på nytt.",
+    "clear_button": "Tøm…",
+    "clear_confirm_title": "Tømme denne kontoen på denne enheten?",
+    "clear_confirm_message": "Alt denne enheten beholder for {account}, slettes og lastes ned på nytt. E-posten din på serveren blir værende.",
+    "clear_confirm_unsent": "{count, plural, one {# usendt melding går tapt.} other {# usendte meldinger går tapt.}}",
+    "clear_confirm": "Tøm",
+    "persist_refused": "Denne nettleseren kan slette den beholdte e-posten når plassen blir knapp. Å installere appen hjelper vanligvis.",
+    "persist_retry": "Be nettleseren om å beholde den",
+    "safari_hint": "Safari sletter data fra et nettsted etter 7 dager uten besøk. Legg Bulwark til på Hjem-skjermen eller i Dock for å beholde e-posten på denne enheten.",
+    "evicted": "Nettleseren slettet e-posten som var beholdt på denne enheten. Den lastes ned på nytt.",
+    "evicted_lost": "{count, plural, one {# usendt melding eller endring gikk tapt.} other {# usendte meldinger eller endringer gikk tapt.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Lagringsplassen på enheten er full.",
+    "storage_full_text": "Bulwark har sluttet å lagre e-post her. Behold mindre e-post, eller tøm denne kontoen for å få plass.",
+    "open_settings": "Åpne innstillinger",
+    "default_on": "Bulwark beholder e-posten din på denne enheten, så den fungerer uten tilkobling. Du kan endre dette i Innstillinger.",
+    "conflict_calendar": "Kalenderhendelse",
+    "conflict_contacts": "Kontakt",
+    "kept_files_title": "Filer beholdt frakoblet",
+    "kept_state_kept": "På denne enheten",
+    "kept_state_waiting": "Venter på nedlasting",
+    "kept_error_tooLarge": "For stor til å beholdes",
+    "kept_error_overLimit": "Over grensen for denne enheten",
+    "kept_error_notAllowed": "Organisasjonen din tillater ikke at filer beholdes",
+    "kept_error_download": "Kunne ikke lastes ned",
+    "keep_offline": "Behold frakoblet",
+    "unpin": "Slutt å beholde frakoblet",
+    "unpin_label": "Slutt å beholde {name} frakoblet",
+    "warning_desktop": "Alle som kan bruke brukerkontoen på denne datamaskinen, kan lese denne e-posten. Bruk diskkryptering.",
+    "off_confirm_text": "Dette sletter alt denne enheten beholder for {account}. E-posten din på serveren blir værende.",
+    "unsent_changes": "{count, plural, one {# endring som ikke har nådd serveren, går tapt.} other {# endringer som ikke har nådd serveren, går tapt.}}",
+    "clear_needs_connection": "Dette krever en tilkobling, fordi alt lastes ned på nytt.",
+    "usage_label": "Dette beholder enheten",
+    "pin_not_ready": "Denne filen er ikke på listen til denne enheten ennå. Prøv igjen om litt."
+  },
+  "keyProtection": {
+    "browser_note": "I en nettleser ligger nøkkelen til denne e-posten i den samme nettleserprofilen som e-posten. Den som kopierer profilens filer, kan lese den, så bruk diskkryptering.",
+    "no_secure_storage": "Denne datamaskinen har ikke et sikkert nøkkellager appen kan bruke, så nøkkelen til denne e-posten er bare tilslørt på disken. Bruk diskkryptering.",
+    "wrap_failed": "Det sikre nøkkellageret på denne datamaskinen tok ikke imot nøkkelen til denne e-posten, så den er ikke beskyttet slik den skal være. Start appen på nytt, og bruk diskkryptering.",
+    "rekey_progress": "E-posten på denne enheten krypteres på nytt: {percent} %. Du kan jobbe videre.",
+    "rekey_failed": "Den nye krypteringen av e-posten på denne enheten ble ikke ferdig, så den gamle nøkkelen kan fortsatt åpne den. Appen prøver igjen ved neste start.",
+    "reenroll_note": "Tilgangsnøkkelen og systemopplåsingen brukte nøkkelen til den gamle PIN-koden, så de er fjernet. Sett dem opp igjen hvis du bruker dem."
+  },
+  "offlineDrafts": {
+    "title": "Utkast på denne enheten",
+    "description": "Disse utkastene er lagret på denne enheten. De går til serveren av seg selv så snart den kan nås.",
+    "saved_on_device": "Lagret på denne enheten",
+    "status_waiting": "Venter på serveren",
+    "status_sending": "Lagrer på serveren",
+    "status_uncertain": "Sjekker om det nådde serveren",
+    "status_refused": "Serveren avviste dette utkastet: {error}",
+    "file_missing": "En vedlagt fil er ikke lenger på denne enheten",
+    "open": "Åpne",
+    "open_label": "Åpne {subject}",
+    "retry": "Prøv igjen",
+    "retry_label": "Prøv {subject} igjen",
+    "toast_refused": "Utkastet {subject} kunne ikke lagres på serveren. Det blir på denne enheten.",
+    "toast_conflict": "Utkastet {subject} ble endret på en annen enhet. Begge versjonene beholdes.",
+    "conflict_changed": "Endret på en annen enhet. Begge versjonene ligger i Utkast.",
+    "conflict_gone": "Endret eller fjernet på en annen enhet. Din versjon ligger i Utkast.",
+    "banner_refused": "Utkast avvist av serveren: {count}",
+    "banner_waiting": "Utkast som venter på serveren: {count}"
+  },
+  "offlineExport": {
+    "settings_label": "Eksporter lagret e-post",
+    "settings_description": "Lagre e-posten på denne enheten som mbox- eller .eml-filer. Dette virker også frakoblet.",
+    "title": "Eksporter lagret e-post",
+    "description": "Dette lagrer originalene denne enheten beholder. .eml-filer er nøyaktige kopier. En mbox-fil legger til merkene formatet trenger, og skriver status for lest og flagget i hver meldings overskrifter, i stedet for dem den hadde. E-post eldre enn perioden du valgte, er ikke med. Bruk «Eksporter all e-post» for å lagre alt fra serveren.",
+    "folders_label": "Mapper",
+    "all_folders": "Alle mapper",
+    "folder_kept": "{kept} av {total} her",
+    "loading": "Leser det som ligger på denne enheten…",
+    "load_failed": "Kunne ikke lese e-posten på denne enheten.",
+    "nothing_kept": "Ingen e-post er lagret på denne enheten ennå.",
+    "kept": "Originaler på denne enheten: {kept} av {total} meldinger",
+    "missing_online": "Skal lastes ned fra serveren: {count}",
+    "missing_offline": "Kan ikke eksporteres frakoblet: {count}. Du kan prøve igjen når du er tilkoblet.",
+    "reason_attachments_off": "Originale meldinger beholdes bare når «Behold vedlegg» er på.",
+    "reason_not_kept": "Originale meldinger lastes ned sist, og bare så lenge det er plass.",
+    "not_kept_attachments_off": "Ingen original her fordi vedlegg ikke beholdes på denne enheten: {count}",
+    "not_kept_not_kept": "Ingen original på denne enheten ennå: {count}",
+    "retry": "Prøv igjen tilkoblet",
+    "retry_online": "Du er tilkoblet nå, så disse kan komme fra serveren.",
+    "retry_offline": "Du kan prøve igjen når du er tilkoblet.",
+    "settings_button": "Eksporter…",
+    "message_failed": "Serveren leverte ikke denne meldingen.",
+    "failed_generic": "Eksporten stoppet på grunn av en feil. Prøv igjen.",
+    "stopped_limit": "Eksporten stoppet ved {limit}, det meste denne nettleseren kan holde. Velg færre mapper, eller bruk Chromium, Firefox eller skrivebordsappen.",
+    "over_limit": "Denne nettleseren kan holde høyst {limit}, og dette valget er omtrent {size}. Velg færre mapper, eller bruk Chromium, Firefox eller skrivebordsappen.",
+    "no_room": "Denne eksporten trenger omtrent {size}, og denne nettleseren har {free} igjen. Velg færre mapper, eller frigjør plass.",
+    "stopped_no_room": "Nettleseren gikk tom for plass til eksporten. Velg færre mapper, eller frigjør plass.",
+    "stopped_offline_off": "Eksporten stoppet fordi denne kontoen ikke lenger beholder e-post på denne enheten.",
+    "policy_unknown": "Organisasjonens regler for denne kontoen er ikke kjent ennå, så eksport er av inntil videre.",
+    "leftover_file": "Filen {name} kunne ikke fjernes fra stedet du lagret den. Den er ufullstendig, så du kan slette den."
   },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",
@@ -5423,6 +6636,10 @@
       "accounts_heading": "Tilkoblede kontoer",
       "account_on": "{label} på {host}",
       "account_waiting": "{label} på {host} (pålogging ikke fullført)",
+      "forward_heading": "Videresender e-post til",
+      "forward_hint": "Adresser dette programtillegget kan videresende meldinger til uten å spørre.",
+      "forward_remove": "Fjern",
+      "forward_remove_label": "Slutt å videresende til {address}",
       "disconnect": "Koble fra",
       "disconnect_failed": "Kunne ikke koble fra {label}"
     },
@@ -5453,13 +6670,17 @@
         "title": "Full tilgang til denne appen",
         "body": "Kjører med de samme rettighetene som selve webmailen. Det kan lese all e-posten din og lagrede nøkler og handle på dine vegne. Tillat dette bare for tillegg du stoler fullt på."
       },
+      "keystore": {
+        "title": "Bruk sertifikater på denne datamaskinen",
+        "body": "Ber om å signere og dekryptere meldinger med sertifikater på denne datamaskinen eller et smartkort. Appen spør deg først. Tillegget får aldri den private nøkkelen, men så lenge du tillater det, kan det signere i ditt navn og lese det det dekrypterer."
+      },
       "email_raw_send": {
         "title": "Sende meldinger det har laget selv",
         "body": "Sende ferdige meldinger, for eksempel signerte eller krypterte, fra kontoen din."
       },
       "email_blob_read": {
-        "title": "Lese råinnholdet i meldinger",
-        "body": "Lese de opprinnelige dataene i meldingene og vedleggene dine, og i hver fil du legger ved før den sendes."
+        "title": "Lese vedlegg og kilden til meldinger",
+        "body": "Lese vedlegg (også teksten og bildene i dem) og hele kilden til meldingene du jobber med, og hver fil du legger ved før den sendes."
       },
       "email_blob_write": {
         "title": "Erstatte vedlegg før sending",
@@ -5477,6 +6698,10 @@
         "title": "Endre kalenderen din",
         "body": "Opprette, endre og slette hendelser."
       },
+      "calendar_respond": {
+        "title": "Svare på invitasjoner",
+        "body": "Godta eller avslå kalenderinvitasjoner. Svaret ditt sendes til arrangøren på e-post."
+      },
       "contacts_read": {
         "title": "Lese kontaktene dine",
         "body": "Søke i og lese adressebøkene dine."
@@ -5487,11 +6712,11 @@
       },
       "files_read": {
         "title": "Lese filene dine",
-        "body": "Bla gjennom og åpne filene som er lagret på kontoen din."
+        "body": "Finne, åpne og lese filene på kontoen din."
       },
       "files_write": {
         "title": "Endre filene dine",
-        "body": "Laste opp, gi nytt navn til, flytte og slette filer på kontoen din."
+        "body": "Lagre, opprette, gi nytt navn til og flytte filer på kontoen din, og hindre at en fil blir slettet."
       },
       "identity_read": {
         "title": "Se avsenderidentitetene dine",
@@ -5542,8 +6767,12 @@
         "body": "Se innstillingene og etikettdefinisjonene dine."
       },
       "settings_write": {
+        "title": "Endre etikettene dine",
+        "body": "Legge til, gi nytt navn til og endre rekkefølgen på etikettene dine, og stoppe endringer i innstillingene dine."
+      },
+      "settings_change": {
         "title": "Endre innstillingene dine",
-        "body": "Legge til og endre rekkefølgen på etiketter og endre innstillingene dine."
+        "body": "Endre hvordan appen ser ut og fungerer, for eksempel tema, tidsformat eller leserute. Innstillinger som organisasjonen din har bestemt, forblir som de er."
       },
       "security_read": {
         "title": "Se kontosikkerheten din",
@@ -5556,6 +6785,10 @@
       "auth_emit": {
         "title": "Logge deg ut",
         "body": "Logge deg ut av webmailen."
+      },
+      "auth_impersonation_return": {
+        "title": "Sende deg tilbake til din egen konto",
+        "body": "Når en administrator har åpnet en postkasse via imitering, avslutte den økten og logge inn igjen på kontoen den startet fra."
       },
       "account_read": {
         "title": "Se kontoene dine",
@@ -5604,6 +6837,10 @@
       "ui_email_details": {
         "title": "Legge til paneler i meldingsdetaljene",
         "body": "Vise et eget panel ved siden av eller under en åpen melding."
+      },
+      "ui_side_panel": {
+        "title": "Legg til et panel i andre visninger",
+        "body": "Vis sitt eget panel ved siden av Kalender, Kontakter, Filer og Innstillinger."
       },
       "ui_download_file": {
         "title": "Lagre filer på enheten din",
@@ -5659,11 +6896,19 @@
       },
       "compose_read": {
         "title": "Lese meldingen du skriver",
-        "body": "Lese teksten i en melding mens du skriver den, når du bruker tillegget i redigeringsvinduet. Ikke signaturen eller den siterte meldingen."
+        "body": "Lese en melding mens du skriver den, når du bruker tillegget i redigeringsvinduet: tekst, emne, mottakere inkludert blindkopi og navn og størrelse på vedlegg. Ikke signaturen eller den siterte meldingen."
       },
       "compose_write": {
         "title": "Endre meldingen du skriver",
         "body": "Erstatte eller legge til tekst i en melding mens du skriver den, når du bruker tillegget i redigeringsvinduet. Du kan angre hver endring, og du bestemmer fortsatt om den skal sendes."
+      },
+      "compose_check": {
+        "title": "Sjekke det du skriver",
+        "body": "Leser det du skriver i redigeringsvinduet mens du skriver, og kan sende det til tjenesten det bruker. Bare når korrekturen er slått på, og ingenting så lenge en melding er satt til å bli signert eller kryptert. Tekst du skrev før du slo det på, kan allerede være sjekket."
+      },
+      "email_forward": {
+        "title": "Videresende e-posten din",
+        "body": "Videresende meldinger fra kontoen din med vedlegg, uten å åpne redigeringsvinduet. Du blir spurt før første videresending til hver adresse."
       },
       "ui_notifications": {
         "title": "Vise varsler",
@@ -5679,7 +6924,7 @@
       },
       "ui_tasks": {
         "title": "Legge til i oppgavevisningen",
-        "body": "Vise egne seksjoner i detaljene for en oppgave og knapper i oppgavelisten."
+        "body": "Vise egne seksjoner i detaljene for en oppgave, knapper i oppgavelisten og en egen oppgaveliste i stedet for Bulwarks."
       },
       "ui_files": {
         "title": "Legge til i filvisningen",
@@ -5697,6 +6942,11 @@
         "title": "Bruke kontoer du kobler til",
         "body": "Sende forespørsler via {appName}s server med en konto eller nøkkel som du eller administratoren din har satt opp. Tillegget ser aldri passordet, men det kan gjøre alt den kontoen kan gjøre på sin egen server."
       }
+    },
+    "forward_approval": {
+      "title": "Tillate {plugin} å videresende e-post til {addresses}?",
+      "message": "{plugin} vil videresende «{subject}» med vedlegg til {addresses}. Hvis du tillater det, kan den heretter videresende e-post til denne adressen uten å spørre. Du kan trekke det tilbake under Innstillinger > Tillegg.",
+      "allow": "Tillat og videresend"
     },
     "dialog": {
       "from_plugin": "Fra tillegget {name}",
@@ -5726,6 +6976,28 @@
       "error_server": "Skriv inn adressen til serveren, for eksempel https://cloud.example.com",
       "error_save": "Kunne ikke lagre: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Ikke sendt. En kontroll organisasjonen din krever, kjører ikke. Prøv igjen om et øyeblikk.",
+    "stopped_working": "Ikke sendt. En kontroll organisasjonen din krever, har sluttet å virke. Last inn siden på nytt. Hvis det ikke hjelper, si fra til administratoren."
+  },
+  "compose_words": {
+    "undo_send": {
+      "label": "Angre sending",
+      "description": "Gir deg noen sekunder til å ta tilbake en melding etter at du har trykket Send."
+    },
+    "reply_from_received": {
+      "label": "Svar fra mottatt adresse",
+      "description": "Svar fra adressen e-posten ble sendt til. Nyttig hvis du har flere adresser."
+    },
+    "require_tls": "Lever bare over en sikker tilkobling",
+    "require_tls_hint": "Selve meldingen er ikke kryptert. Den sendes i retur hvis en server ikke kan bruke TLS.",
+    "encrypt": "Krypter…",
+    "encrypt_hint": "Krever et S/MIME- eller PGP-tillegg. Åpner Innstillinger.",
+    "quick_reply_to": "Svar til {names}…",
+    "open_full_editor": "Åpne i full redigering",
+    "forward_to_label": "Til",
+    "forward_cc_label": "Kopi"
   },
   "plugin_list": {
     "filters": "Filtre",
@@ -5760,6 +7032,9 @@
   },
   "top_bar": {
     "more": "Flere alternativer"
+  },
+  "windowChrome": {
+    "hide_offline_notice": "Skjul frakoblet-melding"
   },
   "shell": {
     "resize": "Endre størrelse",
@@ -5805,6 +7080,19 @@
     "group_plugins": "Tillegg",
     "group_account": "Konto",
     "switch_to": "Bytt til {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Du er frakoblet. Noen handlinger trenger tilkobling.",
+    "files_new_folder": "Ny mappe…",
+    "files_new_file": "Ny fil…",
+    "files_new_text_file": "Ny tekstfil…",
+    "files_upload_files": "Last opp filer…",
+    "files_upload_folder": "Last opp mappe…",
+    "files_share": "Del…",
+    "files_share_button": "Del",
+    "contacts_add_to_group": "Legg til i gruppe…",
+    "contacts_bulk_add_to_group": "Legg til i gruppe…",
+    "schedule_send": "Planlegg sending…"
   },
   "notification_center": {
     "title": "Varsler",
@@ -5939,5 +7227,1045 @@
     "easy_read": "Lettlest",
     "sign_language": "Tegnspråk",
     "new_tab": "åpnes i en ny fane"
+  },
+  "pwaNotify": {
+    "action_archive": "Arkiver",
+    "action_mark_read": "Merk som lest",
+    "action_reply": "Svar",
+    "reply_placeholder": "Skriv et svar"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Legg til i kalenderen",
+    "update_in_calendar": "Oppdater i kalenderen",
+    "remove_from_calendar": "Fjern fra kalenderen",
+    "in_calendar": "I kalenderen din",
+    "view_in_calendar": "Se i kalenderen",
+    "select_calendar": "Velg en kalender",
+    "added": "Lagt til i kalenderen din",
+    "updated": "Kalenderen er oppdatert",
+    "removed": "Fjernet fra kalenderen din",
+    "action_failed": "Kunne ikke endre kalenderen. Prøv igjen.",
+    "blocked": "Et programtillegg stoppet denne endringen i kalenderen.",
+    "title": {
+      "rental_car": "Leiebil",
+      "rental_car_company": "Leiebil: {company}"
+    },
+    "description": {
+      "reference": "Bestillingsnummer: {reference}",
+      "passengers": "Reisende: {names}",
+      "seats": "Seter: {seats}",
+      "checkin": "Innsjekking: {url}",
+      "manage": "Administrer bestillingen: {url}",
+      "ticket": "Billett: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Bil: {car}",
+      "tickets": "Billetter: {numbers}",
+      "party_size": "Antall personer: {count}",
+      "added_from": "Lagt til fra en e-post fra {domain}",
+      "added_from_subject": "Lagt til fra e-posten «{subject}» fra {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Stavemåte",
+      "grammar": "Grammatikk",
+      "style": "Stil",
+      "other": "Forslag"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Ingen forslag",
+      "suggestions": "Forslag",
+      "replace_with": "Erstatt med {text}",
+      "also": "Også fra {checker}",
+      "ignore": "Ignorer",
+      "add_to_dictionary": "Legg til i ordboken",
+      "disable_rule": "Slå av denne regelen",
+      "changed": "Teksten er endret. Vent på neste sjekk."
+    },
+    "list_item": "{word}: {message} Forslag: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Ingen stave- eller grammatikkfeil} one {# stave- eller grammatikkfeil} other {# stave- eller grammatikkfeil}}",
+    "status": {
+      "title": "Korrektur",
+      "off": "Korrektur av",
+      "paused": "Korrektur satt på pause",
+      "rate_limited": "Sjekk satt på pause",
+      "unavailable": "Sjekk utilgjengelig",
+      "checking": "Sjekker…",
+      "issues": "{count, plural, =0 {Ingen problemer} one {# problem} other {# problemer}}"
+    },
+    "panel": {
+      "title": "Korrektur",
+      "required": "Påkrevd av organisasjonen din",
+      "check_message": "Sjekk denne meldingen",
+      "notice": "Mens du skriver, sendes teksten til {checkers} for å bli sjekket. Signaturen din og den siterte meldingen holdes utenfor. Ingenting sendes så lenge en melding er satt til å bli signert eller kryptert; det du skrev før du slo det på, kan allerede være sjekket.",
+      "turn_on": "Slå på korrektur",
+      "paused_protected": "Ingenting sjekkes så lenge denne meldingen er satt til å bli signert eller kryptert.",
+      "paused_unknown": "{plugin} kan signere eller kryptere meldinger uten å vise det her, så ingenting sjekkes mens det er på.",
+      "rate_limited": "{checker} ba om å vente. Sjekkingen starter igjen om et minutt.",
+      "unavailable": "{checker} kan ikke sjekke akkurat nå. Det prøver igjen når du skriver videre.",
+      "no_issues": "Fant ingen problemer.",
+      "list_label": "Problemer i denne meldingen",
+      "shortcuts": "Neste problem: {next}. Forrige: {previous}."
+    },
+    "notice": {
+      "on": "Korrektur er på. Mens du skriver, sendes teksten til {checkers} for å bli sjekket, uten signaturen din eller den siterte meldingen. Ingenting sendes så lenge en melding er satt til å bli signert eller kryptert; det du skrev før det, kan allerede være sjekket.",
+      "forced": "Organisasjonen din har slått på korrektur. Mens du skriver, sendes teksten til {checkers} for å bli sjekket, uten signaturen din eller den siterte meldingen. Ingenting sendes så lenge en melding er satt til å bli signert eller kryptert; det du skrev før det, kan allerede være sjekket.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Sende med åpne problemer?",
+      "body": "{count, plural, one {# stave- eller grammatikkfeil er fortsatt åpen} other {# stave- eller grammatikkfeil er fortsatt åpne}} i denne meldingen.",
+      "review": "Gå gjennom",
+      "send": "Send likevel"
+    },
+    "settings": {
+      "title": "Korrektur",
+      "description": "Understrek stave- og grammatikkfeil mens du skriver, med forslag til å rette dem.",
+      "enable": "Sjekk stavemåte og grammatikk mens jeg skriver",
+      "enable_description": "Teksten du skriver, sendes til korrekturtillegget og tjenesten det bruker, uten signaturen din eller siterte meldinger. Ingenting sendes så lenge en melding er satt til å bli signert eller kryptert.",
+      "no_checker": "Ingen korrekturtillegg er installert. Be administratoren din om å legge til et.",
+      "plugin_description": "Sender det du skriver, til {plugin}.",
+      "writing_language": "Skrivespråk",
+      "writing_language_description": "Språket du vanligvis skriver på. Korrekturen og stavekontrollen i nettleseren din bruker det.",
+      "auto": "Oppdag automatisk"
+    },
+    "shortcuts": {
+      "next_issue": "Neste stave- eller grammatikkfeil",
+      "previous_issue": "Forrige stave- eller grammatikkfeil"
+    }
+  },
+  "pwaWindows": {
+    "open_in_window": "Åpne i nytt vindu",
+    "save_all_to_folder": "Lagre alle i en mappe…",
+    "saved_all": "{count, plural, one {# vedlegg lagret i {folder}.} other {# vedlegg lagret i {folder}.}}",
+    "saved_partial": "{saved} av {total} vedlegg lagret i {folder}.",
+    "save_failed": "Kunne ikke lagre vedleggene i {folder}.",
+    "popup_blocked": "Nettleseren blokkerte det nye vinduet. Tillat popup-vinduer for dette nettstedet og prøv igjen.",
+    "opening": "Åpner…",
+    "session_ended_title": "Du er logget ut i dette vinduet",
+    "session_ended_body": "Åpne appen og logg inn, og åpne deretter dette vinduet på nytt.",
+    "open_app": "Åpne appen",
+    "close_window": "Lukk vindu",
+    "message_gone_title": "Denne meldingen er borte",
+    "message_gone_body": "Den ble slettet eller flyttet til en annen konto.",
+    "message_moved": "Denne meldingen ble flyttet til en annen mappe.",
+    "message_moved_to": "Denne meldingen ble flyttet til {folder}.",
+    "window_not_ready": "Det nye vinduet åpnet seg ikke i tide. Utkastet blir her."
+  },
+  "desktopUi": {
+    "settings": {
+      "title": "Appens vinduer",
+      "double_click_label": "Åpne meldinger i et nytt vindu ved dobbeltklikk",
+      "double_click_description": "Et enkelt klikk åpner fortsatt meldingen ved siden av listen.",
+      "restore_label": "Åpne vinduer på nytt ved start",
+      "restore_description": "Meldings- og utkastvinduer som var åpne da du avsluttet, kommer tilbake."
+    },
+    "attachment": {
+      "open": "Åpne",
+      "save_as": "Lagre som…",
+      "copy": "Kopier",
+      "copy_failed": "Filen kunne ikke kopieres."
+    },
+    "menu": {
+      "file": "Fil",
+      "edit": "Rediger",
+      "view": "Vis",
+      "message": "Melding",
+      "go": "Gå",
+      "window": "Vindu",
+      "help": "Hjelp",
+      "new_window": "Nytt vindu",
+      "print": "Skriv ut…",
+      "save_pdf": "Lagre som PDF…",
+      "switch_connection": "Bytt tilkobling…",
+      "close": "Lukk",
+      "quit": "Avslutt",
+      "undo": "Angre",
+      "redo": "Gjør om",
+      "cut": "Klipp ut",
+      "copy": "Kopier",
+      "paste": "Lim inn",
+      "select_all": "Velg alt",
+      "search": "Søk i e-post",
+      "refresh": "Se etter ny e-post",
+      "reading_pane": "Leserute",
+      "pane_right": "Til høyre",
+      "pane_below": "Under listen",
+      "pane_off": "Av",
+      "zoom_in": "Zoom inn",
+      "zoom_out": "Zoom ut",
+      "zoom_reset": "Faktisk størrelse",
+      "full_screen": "Fullskjerm",
+      "open_in_window": "Åpne i nytt vindu",
+      "next_message": "Neste melding",
+      "previous_message": "Forrige melding",
+      "next_unread": "Neste uleste melding",
+      "mail": "E-post",
+      "files": "Filer",
+      "back": "Tilbake",
+      "forward": "Fremover",
+      "minimize": "Minimer",
+      "next_window": "Neste vindu",
+      "shortcuts": "Tastatursnarveier",
+      "docs": "Dokumentasjon",
+      "settings": "Innstillinger…",
+      "about": "Om Bulwark",
+      "from_plugins": "Mer fra utvidelser…",
+      "pick_gone": "Den menyen var utdatert. Åpne den på nytt og prøv igjen.",
+      "bar_label": "Meny"
+    },
+    "context": {
+      "add_to_dictionary": "Legg til «{word}» i ordboken",
+      "no_suggestions": "Ingen forslag",
+      "open_link": "Åpne lenke",
+      "copy_link": "Kopier lenke",
+      "copy_address": "Kopier adresse",
+      "save_image": "Lagre bilde…",
+      "copy_image": "Kopier bilde"
+    },
+    "closing": {
+      "unsaved_title": "Et utkast kunne ikke lagres",
+      "unsaved_detail": "Hvis du lukker nå, går det du har skrevet siden forrige lagring tapt.",
+      "close_anyway": "Lukk likevel",
+      "unsent_title": "Noe e-post er ikke sendt ennå",
+      "unsent_one": "Én melding venter på å bli sendt. Den sendes neste gang du åpner Bulwark.",
+      "unsent_many": "{count} meldinger venter på å bli sendt. De sendes neste gang du åpner Bulwark.",
+      "quit": "Avslutt",
+      "leave_title": "Forlate siden med ulagrede endringer?",
+      "leave_detail": "Endringene dine på denne siden er ikke lagret ennå.",
+      "leave": "Forlat",
+      "stay": "Bli"
+    },
+    "spellcheck": {
+      "offer": "Stavekontroll for {language} trenger en ordbok. Bulwark kan laste den ned fra Google. Teksten din blir ikke sendt.",
+      "download": "Last ned"
+    },
+    "restore": {
+      "unavailable_title": "Dette utkastet kan ikke åpnes akkurat nå",
+      "unavailable_body": "Det er trygt på serveren, i Utkast. Prøv igjen når tilkoblingen er tilbake.",
+      "try_again": "Prøv igjen",
+      "close": "Lukk"
+    }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Søk etter «{text}» i e-post"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Du er frakoblet. Denne meldingen trenger tilkobling for å åpnes.",
+    "reader_failed": "Meldingen kunne ikke lastes inn.",
+    "retry": "Prøv igjen",
+    "action_offline": "Du er frakoblet. Dette trenger tilkobling.",
+    "offline_bar": "Du er frakoblet. Å lese og endre e-post trenger tilkobling.",
+    "offline_default_on": "E-posten din lagres på denne enheten, så du kan lese den uten nett."
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Vis alltid menylinjen",
+    "always_show_description": "Ellers vises den når du trykker på Alt.",
+    "exit": "Avslutt",
+    "tray_pause": "Sett varsler på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Til i morgen",
+    "tray_resume": "Slå på varsler igjen",
+    "tray_open": "Åpne Bulwark",
+    "tray_quit": "Avslutt Bulwark",
+    "tray_exit": "Avslutt Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Lagre utkast",
+    "attach_files": "Legg ved filer…",
+    "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Åpne…",
+    "menu_save_as": "Lagre som…",
+    "open_filter": "Meldinger, hendelser og kontakter",
+    "save_filter": "E-postmelding",
+    "folder_title": "Velg en mappe for meldingene",
+    "folder_button": "Lagre her",
+    "saved_many": "{count, plural, one {# melding lagret.} other {# meldinger lagret.}}",
+    "save_failed": "{count, plural, one {# melding kunne ikke lagres.} other {# meldinger kunne ikke lagres.}}",
+    "shortcut_open": "Åpne en lagret melding, hendelse eller kontakt",
+    "shortcut_save_as": "Lagre meldingen som en fil"
+  },
+  "appLock": {
+    "section_title": "Applås",
+    "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
+    "enable_label": "Lås med en PIN-kode",
+    "enable_desc": "PIN-koden blir på denne enheten.",
+    "protects_desc": "Dette beskytter mot: PIN-koden holder folk ved denne enheten ute av appen. E-posten som er lagret her, får en ny nøkkel når du slår på låsen eller endrer PIN-koden, og det kan ta et øyeblikk. Den kan ikke stoppe et program som kjører på denne datamaskinen, en nettleserutvidelse du har installert, eller noen som kopierer appens filer og har tid til å prøve mange PIN-koder, så en lengre PIN-kode lønner seg. I skrivebordsappen krever det også påloggingen din på denne datamaskinen å prøve PIN-koder. Kontoen din på serveren berøres ikke.",
+    "enable_body": "Du trenger den hver gang appen låses, og etter en omstart.",
+    "set_pin_title": "Velg en PIN-kode",
+    "change_pin": "Endre PIN-kode…",
+    "change_pin_title": "Endre PIN-koden",
+    "pin_label": "PIN-kode",
+    "pin_current": "Nåværende PIN-kode",
+    "pin_new": "Ny PIN-kode",
+    "pin_repeat": "Gjenta PIN-koden",
+    "pin_hint": "Minst 5 tegn. Bokstaver går også, og en lengre PIN-kode er vanskeligere å gjette.",
+    "pin_hint_policy": "Organisasjonen din krever minst {count, plural, one {# tegn} other {# tegn}}. Bokstaver går også.",
+    "pin_obvious": "Den PIN-koden er for lett å gjette. Unngå gjentakelser, rekkefølger og vanlige valg.",
+    "pin_mismatch": "De to PIN-kodene er ikke like.",
+    "pin_recovery": "Hvis du glemmer den, er eneste utvei å fjerne dataene på denne enheten og logge på igjen. E-posten din på serveren blir værende. Meldinger som fortsatt venter på sending fra denne enheten, går tapt.",
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "save_failed": "Det virket ikke. Prøv igjen.",
+    "timeout_label": "Lås etter",
+    "timeout_desc": "Tid uten bruk i et vindu eller en fane.",
+    "lock_now": "Lås nå",
+    "lock_now_desc": "Låser alle vinduer og faner med en gang.",
+    "disable_title": "Slå av applåsen?",
+    "disable_body": "Skriv inn PIN-koden for å slå den av.",
+    "disable_confirm": "Slå av",
+    "passkey_label": "Tilgangsnøkkel",
+    "passkey_desc": "Lås opp med en tilgangsnøkkel eller sikkerhetsnøkkel som kan beskytte nøkkelen. Ikke alle kan det, og PIN-koden virker fortsatt.",
+    "passkey_add": "Legg til en tilgangsnøkkel…",
+    "passkey_add_title": "Legg til en tilgangsnøkkel",
+    "passkey_remove": "Fjern",
+    "passkey_added": "Tilgangsnøkkelen er lagt til.",
+    "passkey_no_prf": "Denne tilgangsnøkkelen kan ikke beskytte nøkkelen. PIN-koden virker fortsatt.",
+    "passkey_failed": "Tilgangsnøkkelen virket ikke. Skriv inn PIN-koden.",
+    "use_passkey": "Bruk en tilgangsnøkkel",
+    "use_hello": "Bruk Windows Hello",
+    "use_touchid": "Bruk Touch ID",
+    "os_add": "Slå på…",
+    "os_add_title": "Bruk {method}",
+    "os_remove": "Slå av",
+    "os_desc": "{method} er en kontroll appen gjør. Etter et ja leser appen nøkkelen fra datamaskinens krypterte lager. Et program under brukerkontoen din kan lese den der uten {method}, så PIN-koden beskytter mer. PIN-koden virker fortsatt.",
+    "os_failed": "Det virket ikke. Skriv inn PIN-koden.",
+    "lock_title": "{app} er låst",
+    "locking": "Låser…",
+    "pin_prompt": "Skriv inn PIN-koden for å fortsette.",
+    "unlock": "Lås opp",
+    "unlocking": "Låser opp…",
+    "wrong_pin": "Den PIN-koden er ikke riktig.",
+    "unlock_failed": "Opplåsing virket ikke. Prøv igjen.",
+    "blocked_later": "For mange forsøk. Prøv igjen senere.",
+    "forgot": "Glemt PIN-koden?",
+    "forgot_title": "Fjerne lokale data og logge ut?",
+    "forgot_body": "En glemt PIN-kode kan ikke gjenopprettes. Dette fjerner e-post lagret på denne enheten og logger ut alle kontoer, slik at du kan logge på igjen. E-posten din på serveren blir værende. Meldinger som fortsatt venter på sending fra denne enheten, går tapt.",
+    "forgot_provider": "Hvis du logget på via organisasjonens påloggingsside, forblir den påloggingen åpen der. Neste pålogging her ber den siden om en ny pålogging, der det er mulig.",
+    "forgot_confirm": "Fjern og logg ut",
+    "unlock_in_main": "Lås opp i hovedvinduet.",
+    "open_main": "Gå til hovedvinduet",
+    "setup_required_title": "Organisasjonen din krever en applås",
+    "setup_required_body": "Velg en PIN-kode. Du trenger den for å åpne {app} når den er låst.",
+    "draft_saved_notice": "Det du skrev, ble lagret i Utkast før appen ble låst.",
+    "use_hello_name": "Windows Hello",
+    "use_touchid_name": "Touch ID",
+    "timeout_option": "{count, plural, one {# minutt} other {# minutter}}",
+    "blocked_seconds": "For mange forsøk. Prøv igjen om {count, plural, one {# sekund} other {# sekunder}}.",
+    "blocked_minutes": "For mange forsøk. Prøv igjen om {count, plural, one {# minutt} other {# minutter}}."
+  },
+  "appLockHello": {
+    "switch_label": "Lås opp med Windows Hello",
+    "switch_desc": "Bruk ansiktet, fingeravtrykket eller Windows-PIN-koden. Appens PIN-kode virker fortsatt.",
+    "protects": "Når Windows Hello er på, tar Windows vare på en nøkkel for denne appen som bare virker etter at Windows Hello har sjekket at det er deg. Appens nøkkel er også låst med den, så det trengs ansiktet, fingeravtrykket eller Windows-PIN-koden for å låse opp, og et annet program på denne datamaskinen kan ikke bruke nøkkelen uten at Windows spør deg først. Appens PIN-kode virker fortsatt, og du trenger den hvis Windows Hello tilbakestilles eller slås av.",
+    "enable_title": "Slå på Windows Hello",
+    "enable_body": "Skriv inn appens PIN-kode. Deretter ber Windows deg bekrefte med Windows Hello.",
+    "enable_failed": "Windows Hello kunne ikke slås på. Prøv igjen.",
+    "cancelled": "Windows Hello ble avbrutt.",
+    "unsupported": "Windows Hello på denne datamaskinen kan ikke beskytte nøkkelen. PIN-koden din virker fortsatt.",
+    "unavailable": "Windows Hello er ikke tilgjengelig på denne datamaskinen.",
+    "busy": "Windows Hello er opptatt eller låst. Prøv igjen senere.",
+    "off_after_pin_change": "Windows Hello er av nå, fordi det ikke bekreftet etter at PIN-koden ble endret. Slå det på igjen hvis du bruker det.",
+    "prompt": "Bekreft med Windows Hello at det er deg.",
+    "waiting": "Venter på Windows Hello…",
+    "use_hello": "Lås opp med Windows Hello",
+    "use_pin": "Bruk PIN-kode i stedet",
+    "failed": "Windows Hello låste ikke opp appen. Skriv inn PIN-koden.",
+    "gone": "Windows Hello låser ikke lenger opp appen på denne datamaskinen. Skriv inn PIN-koden."
+  },
+  "uxs_general": {
+    "time_zone_common": "Vanlige tidssoner",
+    "time_zone_all": "Alle tidssoner",
+    "time_zone_search": "Søk etter tidssone",
+    "time_zone_no_match": "Fant ingen tidssone",
+    "time_zone_desktop_description": "Vis tidspunkter for e-post og avtaler i denne tidssonen. Hvis du ikke velger en, brukes tidssonen til datamaskinen.",
+    "app_lock_desc_desktop": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
+    "app_lock_timeout_desc_desktop": "Tid uten bruk i et vindu.",
+    "app_lock_now_desc_desktop": "Låser alle vinduer med en gang.",
+    "app_lock_protects_toggle": "Hva beskytter dette mot?",
+    "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
+    "app_lock_until_screen": "Når skjermen låses",
+    "app_lock_until_session": "Når jeg logger av eller starter på nytt",
+    "desktop_attention_title": "På denne datamaskinen"
+  },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Navnet ditt",
+      "description": "Folk ser dette navnet ved siden av adressen din når du sender dem e-post.",
+      "saved": "Navnet ditt er lagret.",
+      "error": "Navnet ditt kunne ikke lagres. Prøv igjen."
+    },
+    "addresses": {
+      "description": "Adressene du kan sende fra, hver med sitt eget navn og sin egen signatur.",
+      "label": "Adressene dine",
+      "count": "{count, plural, =0 {Ingen adresser ennå} one {# adresse} other {# adresser}}",
+      "manage": "Rediger adresser…",
+      "modal_title": "E-postadressene dine",
+      "add": "Legg til adresse",
+      "edit": "Rediger adresse",
+      "added": "Adressen er lagt til.",
+      "saved": "Adressen er lagret.",
+      "deleted": "Adressen er slettet.",
+      "delete_title": "Vil du slette denne adressen?"
+    },
+    "signatures": {
+      "title": "Signaturer",
+      "description": "Legges til på slutten av meldingene du skriver. Hver adresse har sin egen.",
+      "saved": "Signaturen er lagret.",
+      "error": "Signaturen kunne ikke lagres. Prøv igjen.",
+      "no_addresses": "Det finnes ingen adresse å sende fra ennå."
+    },
+    "search": {
+      "addresses": "identitet identiteter alias avsender avsenderadresse fra-adresse identity sender",
+      "signatures": "signatur e-postsignatur bunntekst identitet avsender fra-adresse signature",
+      "your_name": "visningsnavn fullt navn avsendernavn display name"
+    }
+  },
+  "desktop_sign_in": {
+    "server_needed": "Skriv inn serveradressen først.",
+    "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
+    "server_invalid": "Denne serveradressen er ikke gyldig."
+  },
+  "desktop_browser_sign_in": {
+    "button": "Logg inn med nettleseren…",
+    "waiting": "Venter på nettleseren…",
+    "waiting_hint": "Fullfør innloggingen der. Passordbehandleren din virker i nettleseren.",
+    "cancel": "Avbryt",
+    "or_here": "eller logg inn her",
+    "timed_out": "Innloggingen i nettleseren tok for lang tid. Prøv igjen.",
+    "no_browser": "Bulwark kunne ikke åpne nettleseren. Prøv igjen, eller logg inn her.",
+    "failed": "Innlogging via nettleseren virket ikke. Prøv igjen.",
+    "handoff_banner": "Et program på denne datamaskinen ba om denne innloggingen for Bulwark-appen. Denne nettleseren forblir logget ut av Bulwark. Hvis du ikke startet dette, lukk denne fanen.",
+    "consent_title": "Logge inn i Bulwark-appen?",
+    "consent_description": "Et program på denne datamaskinen, på port {port}, ber om innloggingen for {username}. Fortsett bare hvis du nettopp trykket på «Logg inn med nettleseren…» i Bulwark-appen her. Hvis ikke, prøver kanskje noen å komme inn på kontoen din: velg Ikke nå.",
+    "consent_confirm": "Logg inn i appen",
+    "consent_cancel": "Ikke nå",
+    "page_done": "Du kan lukke denne fanen og gå tilbake til Bulwark.",
+    "page_failed": "Innloggingen virket ikke. Gå tilbake til Bulwark og prøv igjen.",
+    "page_link_used": "Denne lenken virker bare én gang. Gå tilbake til Bulwark og start på nytt.",
+    "page_title": "Logg inn på {server}",
+    "page_intro": "Denne siden kommer fra Bulwark-appen på denne datamaskinen. Passordet ditt går til {server} og ingen andre steder.",
+    "page_username": "E-postadresse eller brukernavn",
+    "page_password": "Passord",
+    "page_code": "Tofaktorkode",
+    "page_submit": "Logg inn",
+    "page_wrong_password": "Serveren godtok ikke dette brukernavnet og passordet.",
+    "page_code_needed": "Denne kontoen trenger også en tofaktorkode. Skriv inn passordet på nytt og koden.",
+    "page_no_answer": "Bulwark kunne ikke logge inn. Sjekk at serveren kan nås, og prøv igjen.",
+    "declined": "Du sa nei i nettleseren, så ingenting ble logget inn.",
+    "too_many": "For mange innloggingsforsøk fra dette nettverket. Vent noen minutter og prøv igjen.",
+    "page_declined": "Ingenting ble overlevert. Du kan lukke denne fanen."
+  },
+  "uxs_login": {
+    "theme_button": "Lyst eller mørkt",
+    "server_label": "E-postserver",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Leter etter e-postserveren din…",
+    "server_found": "E-postserver: {server}",
+    "server_change": "Endre",
+    "server_change_hint": "Skriv inn en annen serveradresse.",
+    "server_not_found": "Vi fant ikke e-postserveren for denne adressen. Skriv den inn her, for eksempel mail.example.com.",
+    "server_needed": "Skriv inn adressen til e-postserveren din.",
+    "server_invalid": "Dette er ikke en serveradresse. Skriv den som mail.example.com.",
+    "email_needed": "Skriv inn e-postadressen din først.",
+    "other_ways": "Andre måter å logge på",
+    "trouble": "Problemer?",
+    "trouble_cors": "E-postserveren din må tillate pålogging fra dette nettstedet. Hvis påloggingen mislykkes, be den som drifter e-postserveren om å tillate det.",
+    "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."
+  },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock er på",
+    "language_button": "Språk: {language}"
+  },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Vil du endre hvordan Bulwark kobler til?",
+      "message": "Bulwark starter på nytt og spør hvordan det skal koble til: med e-postadressen din eller via organisasjonens Bulwark. Kontoene dine på denne datamaskinen forblir pålogget.",
+      "confirm": "Endre",
+      "org_link": "Bruk organisasjonens Bulwark i stedet",
+      "add_account": "Legg til konto…"
+    },
+    "picture": {
+      "button": "Bilde",
+      "title": "Sett inn bilde",
+      "address": "Nettadressen til bildet",
+      "address_hint": "Bildet blir liggende på nettet og vises derfra.",
+      "description": "Beskrivelse",
+      "invalid": "Skriv inn en nettadresse som begynner med https://.",
+      "insert": "Sett inn"
+    },
+    "sign_in_page": {
+      "open_app": "Åpne Bulwark",
+      "done_as": "Logget på som {address}. Du kan lukke denne fanen."
+    }
+  },
+  "desktop_updates": {
+    "title": "Oppdateringer",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark ser etter oppdateringer selv.",
+    "status_checking": "Ser etter oppdateringer…",
+    "status_up_to_date": "Du har den nyeste versjonen.",
+    "status_downloading": "Laster ned versjon {version}…",
+    "status_ready": "Versjon {version} er klar. Den installeres neste gang du avslutter, eller start på nytt nå.",
+    "status_available": "Versjon {version} er tilgjengelig.",
+    "status_available_per_machine": "Versjon {version} er tilgjengelig. Bulwark er installert for alle på denne datamaskinen, så en administrator installerer oppdateringer.",
+    "status_older": "Du har en beta. Stabil versjon {version} er eldre, så Bulwark blir på denne versjonen til stabil har tatt den igjen.",
+    "status_error": "Kunne ikke se etter oppdateringer. Bulwark prøver igjen senere.",
+    "status_off": "Organisasjonen din har slått av oppdateringer i appen.",
+    "check": "Se etter nå",
+    "restart": "Start på nytt for å oppdatere",
+    "download": "Last ned",
+    "install_older": "Installer eldre versjon…",
+    "channel_label": "Oppdateringskanal",
+    "channel_description": "Betaversjoner kommer tidligere og kan ha flere problemer.",
+    "channel_stable": "Stabil",
+    "channel_beta": "Beta",
+    "shell_restart": "Start på nytt for å oppdatere",
+    "shell_check": "Se etter oppdateringer…",
+    "shell_available": "Bulwark {version} er tilgjengelig",
+    "shell_ready_title": "Bulwark er klar til å oppdatere",
+    "shell_ready_body": "Versjon {version} installeres neste gang du avslutter. Klikk for å starte på nytt nå. Utkastene dine lagres først.",
+    "shell_available_title": "Det finnes en ny versjon av Bulwark",
+    "shell_none_title": "Bulwark er oppdatert",
+    "shell_none_detail": "Du har versjon {version}.",
+    "shell_failed_title": "Bulwark kunne ikke se etter oppdateringer",
+    "shell_failed_detail": "Sjekk tilkoblingen og prøv igjen senere. Ingenting er endret.",
+    "shell_beta_title": "Bytte til betaversjoner?",
+    "shell_beta_detail": "Du får nye versjoner tidligere, og de kan ha flere problemer. For å gå tilbake installerer du en eldre stabil versjon eller venter til stabil har tatt den igjen.",
+    "shell_beta_confirm": "Bytt til beta",
+    "shell_older_title": "Tilbake til Bulwark {version}?",
+    "shell_older_detail": "Du har betaen {current}. Stabil {target} er eldre og kan kanskje ikke lese det betaen har lagret på denne datamaskinen. E-posten blir på serveren, men e-post lagret frakoblet kan lastes ned på nytt, og endringer som ikke er sendt, kan gå tapt. Hvis du venter, tar stabil igjen betaen, og du bytter uten dette trinnet.",
+    "shell_older_confirm": "Installer eldre versjon"
+  },
+  "desktop_keystore": {
+    "title": "Sertifikater på denne datamaskinen",
+    "description": "Denne serveren kan be om å bruke sertifikatene og smartkortene dine. Du blir likevel spurt før hvert sertifikat brukes.",
+    "label": "Tilgang for denne serveren",
+    "label_description": "Trekk tilbake tillatelsen din. Serveren må da spørre på nytt.",
+    "revoke": "Trekk tilbake",
+    "revoked": "Tillatelsen er trukket tilbake"
+  },
+  "desktop_certificates": {
+    "picker_title": "{host} ber om et sertifikat",
+    "picker_detail": "Serveren vil vite hvem du er. Et sertifikat du velger, går bare til denne serveren. Hvis du ikke kjenner serveren, ikke send noe.",
+    "picker_issued": "Utstedt av {issuer}, gyldig til {date}",
+    "picker_remember": "Husk dette for {host}",
+    "picker_none": "Ikke send et sertifikat",
+    "picker_more": "Flere sertifikater…"
+  },
+  "desktopOs": {
+    "section_title": "Skrivebordsapp",
+    "section_description": "Slik samarbeider appen med datamaskinen din.",
+    "close_to_tray_label": "Fortsett i systemstatusfeltet ved lukking",
+    "close_to_tray_description": "Ny e-post og påminnelser fortsetter å komme etter at du lukker vinduet.",
+    "start_at_login_label": "Start når du logger på datamaskinen",
+    "start_at_login_description": "Appen starter av seg selv når du logger på.",
+    "start_minimized_label": "Start i systemstatusfeltet",
+    "start_minimized_description": "Det åpnes ikke noe vindu ved pålogging. Åpne appen med ikonet i systemstatusfeltet.",
+    "attention_label": "Blink i oppgavelinjen ved ny e-post",
+    "attention_mac_label": "La Dock-ikonet sprette ved ny e-post",
+    "attention_description": "Bare når appen ikke er foran.",
+    "quiet_hours_label": "Stille timer",
+    "quiet_hours_description": "Ingen varsler eller lyder i dette tidsrommet. E-post kommer fortsatt.",
+    "quiet_hours_from": "Fra",
+    "quiet_hours_to": "til",
+    "show_shortcut_label": "Vis appen med en hurtigtast",
+    "show_shortcut_description": "{keys} henter appen frem fra hvilken som helst annen app.",
+    "show_shortcut_taken": "En annen app bruker {keys}. Lukk den appen, eller slå dette av og på igjen.",
+    "default_app_label": "Standard e-postapp",
+    "default_app_description": "Åpne e-postlenker og .eml-, .ics- og .vcf-filer med denne appen.",
+    "default_app_is_default": "Denne appen åpner e-postlenkene dine.",
+    "default_app_button": "Velg standardapp…",
+    "new_mail": "Ny e-post",
+    "no_subject": "(uten emne)",
+    "action_delete": "Slett",
+    "copy_as_file": "Kopier som fil",
+    "copied": "Filen er kopiert. Du kan lime den inn i en mappe.",
+    "copy_failed": "Filen kunne ikke kopieres.",
+    "reply_lost": "Svaret du skrev, kunne ikke beholdes. Åpne meldingen og svar der."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Søk i kontakter",
+    "search_files": "Søk i filer",
+    "import": "Importer",
+    "import_mail": "E-post…",
+    "import_calendar": "Kalender…",
+    "import_contacts": "Kontakter…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Oppdater",
+    "menu_today": "I dag",
+    "menu_next_period": "Neste periode",
+    "menu_previous_period": "Forrige periode",
+    "account_scope_label": "Viser {address}. Bytt konto",
+    "account_scope_menu": "Bytt konto",
+    "merge_links": "Lenker",
+    "merge_photo": "Bilde",
+    "merge_kept": "Beholdes",
+    "import_show": "Vis"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valgt} other {# kontakter valgt}}",
+    "selection_more": "og {count} til",
+    "no_addresses": "Ingen av de valgte kontaktene har en e-postadresse.",
+    "task_open": "Åpne",
+    "due_next_week": "Neste uke",
+    "due_none": "Ingen forfallsdato",
+    "due_pick": "Velg en dato…",
+    "move_to_list": "Flytt til liste",
+    "dupes_legend": "{count, plural, one {1 finnes allerede i Kontakter:} other {# finnes allerede i Kontakter:}}",
+    "dupes_skip": "Hopp over",
+    "dupes_update": "Oppdater de eksisterende kontaktene",
+    "dupes_updates": "Oppdaterer kontakten",
+    "upload_cancelled": "Opplastingen ble avbrutt",
+    "upload_cancelled_partial": "{count, plural, one {1 fil ble} other {# filer ble}} lastet opp før du avbrøt",
+    "download_cancelled": "Nedlasting avbrutt"
+  },
+  "desktopEdit": {
+    "edit": "Rediger",
+    "edit_named": "Rediger {name}",
+    "opened": "{name} er åpen i programmet sitt. Lagre endringene der, så blir du spurt om hva som skal skje med dem.",
+    "offers_label": "Redigerte vedlegg",
+    "changed_title": "{name} ble endret",
+    "changed_body": "Du lagret endringer i et annet program. Hva skal skje med dem?",
+    "reply": "Legg ved et svar",
+    "new_message": "Legg ved en ny melding",
+    "open_draft": "Åpne utkast",
+    "save_copy": "Lagre en kopi…",
+    "discard": "Forkast endringer…",
+    "discard_title": "Vil du forkaste endringene i {name}?",
+    "discard_detail": "Den redigerte kopien slettes. Det opprinnelige vedlegget endres ikke.",
+    "discard_confirm": "Forkast",
+    "cancel": "Avbryt",
+    "update": "Oppdater vedlegg",
+    "no_app": "Ingen programmer på denne datamaskinen kan åpne filen.",
+    "blocked_type": "Denne filtypen kan ikke åpnes for redigering fordi den kan kjøre som et program.",
+    "blocked_policy": "Organisasjonen din tillater ikke lagring av vedlegg på denne enheten.",
+    "removed_policy": "Organisasjonen din tillater ikke dette lenger, så den redigerte kopien av {name} ble slettet.",
+    "too_large": "Filen er for stor til å åpnes for redigering.",
+    "too_many": "For mange filer er åpne for redigering. Gjør ferdig noen av dem først.",
+    "failed": "Filen kunne ikke åpnes for redigering.",
+    "read_busy": "Et annet program bruker fortsatt {name}. Lukk den der og prøv igjen.",
+    "read_failed": "Den redigerte kopien av {name} kunne ikke leses.",
+    "send_stale_title": "{name} har endringer som ikke er i denne meldingen",
+    "send_stale_detail": "Hvis du sender nå, går meldingen med den eldre versjonen. Endringene blir på denne datamaskinen i opptil 30 dager, til du bestemmer hva som skal skje med dem.",
+    "send_stale_send": "Send likevel",
+    "send_stale_back": "Tilbake",
+    "signout_title": "Vil du logge ut og slette endringene?",
+    "signout_confirm": "Logg ut",
+    "lock_note": "Filer du åpnet med Rediger, forblir åpne i programmet sitt mens appen er låst, og kan fortsatt leses på denne datamaskinen. Nye kan ikke åpnes før du låser opp.",
+    "changed_title_hidden": "Et redigert vedlegg ble lagret",
+    "last_chance": "Ikke brukt på 30 dager. Denne kopien slettes i morgen.",
+    "held_named": "{names}: fortsatt åpen i et annet program, så kopien kan ikke slettes ennå. Lukk den der, så slettes den.",
+    "held_unnamed": "Kopien av et vedlegg er fortsatt åpen i et annet program og kan ikke slettes ennå. Lukk den der, så slettes den.",
+    "removed_policy_held": "Organisasjonen din tillater ikke dette lenger. {name} er fortsatt åpen i et annet program, så kopien kan ikke slettes før du lukker den der.",
+    "removed_policy_hidden": "Organisasjonen din tillater ikke lenger redigering av vedlegg, så en redigert kopi ble fjernet.",
+    "outside_note": "Programmets egne gjenopprettingsfiler og liste over nylige filer kan ikke denne appen fjerne.",
+    "clear_title": "Vil du slette de redigerte vedleggene?",
+    "clear_confirm": "Slett",
+    "signout_changed": "Ikke lagt ved eller lagret ennå, og slettet nå: {names}.",
+    "signout_held": "Fortsatt åpne i et annet program, så de slettes først når du lukker dem der: {names}."
+  },
+  "desktopPrint": {
+    "title": "Skriv ut",
+    "pages_one": "1 side",
+    "pages_many": "{count} sider",
+    "preparing": "Forbereder forhåndsvisning…",
+    "preview_failed": "Forhåndsvisningen kunne ikke lages.",
+    "preview_label": "Forhåndsvisning",
+    "destination": "Mål",
+    "save_as_pdf": "Lagre som PDF",
+    "pages": "Sider",
+    "pages_all": "Alle",
+    "pages_custom": "Egendefinert",
+    "pages_example": "f.eks. 1-3, 5",
+    "pages_invalid": "Skriv inn sider mellom 1 og {count}, for eksempel 1-3, 5.",
+    "copies": "Kopier",
+    "layout": "Oppsett",
+    "portrait": "Stående",
+    "landscape": "Liggende",
+    "color": "Farge",
+    "color_color": "Farge",
+    "color_mono": "Svart-hvitt",
+    "more": "Flere innstillinger",
+    "paper": "Papirstørrelse",
+    "paper_printer": "Skriverens standard",
+    "margins": "Marger",
+    "margins_default": "Standard",
+    "margins_none": "Ingen",
+    "margins_minimum": "Minimum",
+    "scale": "Skala (%)",
+    "options": "Alternativer",
+    "header_footer": "Topp- og bunntekst",
+    "background": "Bakgrunnsgrafikk",
+    "print": "Skriv ut",
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "system_dialog": "Skriv ut med systemdialogen…",
+    "failed_title": "Kunne ikke skrive ut",
+    "failed_detail": "Skriveren tok ikke imot jobben. Sjekk at den er slått på, og prøv igjen."
+  },
+  "files_sync": {
+    "title": "Filer på denne datamaskinen",
+    "drive": {
+      "title": "Filer-stasjon",
+      "label": "Vis Filer som en stasjon",
+      "description": "Filer vises i Filutforsker som en stasjon. En fil lastes ned når du åpner den.",
+      "unsupported": "Krever Windows 10 versjon 1809 eller nyere.",
+      "root_name": "Filer-stasjon",
+      "letter_label": "Stasjonsbokstav",
+      "letter_description": "Gir stasjonen sin egen bokstav i Filutforsker.",
+      "letter_none": "Ingen bokstav"
+    },
+    "folders": {
+      "title": "Synkroniserte mapper",
+      "description": "En mappe på denne datamaskinen og en mappe i Filer holdes like, i begge retninger.",
+      "empty": "Ingen mapper synkroniseres ennå.",
+      "forced_off": "Organisasjonen din har slått av synkronisering av mapper. Filene i dem blir værende på denne datamaskinen.",
+      "add": "Legg til mappe…",
+      "loading": "Laster inn mappene dine…",
+      "load_failed": "Mappene dine i Filer kunne ikke lastes inn. Prøv igjen.",
+      "pick_title": "Hvilken mappe i Filer?",
+      "pick_confirm": "Velg mappe på denne datamaskinen…",
+      "paired_with": "Med {folder} i Filer",
+      "pause": "Sett på pause",
+      "resume": "Fortsett",
+      "remove": "Fjern…",
+      "remove_title": "Slutte å synkronisere denne mappen?",
+      "remove_message": "Filene på denne datamaskinen blir der de er, og det samme gjør filene i Filer. Endringer går ikke lenger fra den ene til den andre.",
+      "remove_confirm": "Slutt å synkronisere",
+      "add_failed": {
+        "overlap": "Denne mappen ligger i en synkronisert mappe, inneholder en, eller er en systemmappe. Velg en annen.",
+        "denied": "Appen kan ikke bruke denne mappen. Velg en annen.",
+        "policy": "Organisasjonen din tillater ikke dette.",
+        "failed": "Mappen kunne ikke legges til. Prøv igjen."
+      }
+    },
+    "status": {
+      "starting": "Starter…",
+      "idle": "Oppdatert. Sist synkronisert {time}",
+      "idle_never": "Oppdatert",
+      "syncing": "Synkroniserer: {done} ferdig, {pending} gjenstår",
+      "paused": "På pause",
+      "offline": "Frakoblet. {count, plural, =0 {Endringer venter på serveren} one {# endring venter på serveren} other {# endringer venter på serveren}}",
+      "error": "Stoppet: {reason}",
+      "confirm_delete": "På pause til du svarer på spørsmålet nedenfor",
+      "blocked": "Slått av av organisasjonen din"
+    },
+    "mass_delete": {
+      "title": "Slette {count, plural, one {# element} other {# elementer}}?",
+      "local": "{count, plural, one {# element ble} other {# elementer ble}} slettet fra {folder} på denne datamaskinen. Slette {count, plural, one {det} other {dem}} i Filer også?",
+      "remote": "{count, plural, one {# element ble} other {# elementer ble}} slettet fra {folder} i Filer. Slette {count, plural, one {det} other {dem}} på denne datamaskinen også?",
+      "allow": "{count, plural, one {Slett det} other {Slett dem}}",
+      "restore": "{count, plural, one {Gjenopprett det} other {Gjenopprett dem}}",
+      "later": "Bestem senere"
+    },
+    "activity": {
+      "title": "Nylig aktivitet",
+      "empty": "Ingenting har skjedd ennå.",
+      "clear": "Tøm",
+      "to_files": "Til Filer",
+      "to_computer": "Til denne datamaskinen",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Feil",
+      "mark_question": "Venter på svaret ditt",
+      "uploaded": "Lastet opp {path}",
+      "downloaded": "Lastet ned {path}",
+      "folder-created": "Opprettet mappen {path}",
+      "renamed": "Endret navnet på {detail} til {path}",
+      "moved": "Flyttet {detail} til {path}",
+      "deleted": "Slettet {path}",
+      "trashed": "Flyttet {path} til papirkurven",
+      "conflict": "{path} ble endret begge steder. Den andre versjonen er beholdt som {detail}",
+      "renamed-for-disk": "{path} heter {detail} på denne datamaskinen, fordi navnet ikke er tillatt her",
+      "too-large": "{path} er større enn Filer tillater ({detail}). Den blir bare på denne datamaskinen",
+      "waiting": "{path} venter på serveren",
+      "mass-delete": "Satt på pause før sletting av mange elementer",
+      "error": "{path} kunne ikke synkroniseres"
+    },
+    "errors": {
+      "offline": "Serveren kan ikke nås",
+      "server_refused": "Serveren avviste endringen",
+      "too_large": "Filen er for stor for Filer",
+      "name_invalid": "Navnet er ikke tillatt",
+      "disk_full": "Disken er full",
+      "denied": "Ingen tilgang",
+      "busy": "Et annet program bruker den",
+      "quota": "Lagringsplassen din i Filer er full",
+      "not_found": "Den finnes ikke lenger",
+      "policy": "Organisasjonen din tillater ikke dette",
+      "failed": "Noe gikk galt"
+    },
+    "item": {
+      "label": "På denne datamaskinen",
+      "synced": "Synkronisert",
+      "syncing": "Synkroniserer",
+      "pending": "Venter på synkronisering",
+      "error": "Kunne ikke synkronisere",
+      "online-only": "Bare i Filer, lastes ned når den åpnes"
+    },
+    "show_in": {
+      "explorer": "Vis i Filutforsker",
+      "finder": "Vis i Finder",
+      "file_manager": "Vis i filbehandler",
+      "failed": "Mappen kunne ikke åpnes."
+    }
+  },
+  "files_storage": {
+    "title": "Lagringsplass i Filer",
+    "used_of": "{used} av {total} brukt",
+    "used": "{used} brukt",
+    "no_limit": "Serveren setter ingen grense. Så mye tar filene dine.",
+    "almost_full": "Lagringsplassen din i Filer er nesten full",
+    "full": "Lagringsplassen din i Filer er full",
+    "state_synced": "Oppdatert",
+    "state_syncing": "Synkroniserer",
+    "state_paused": "På pause",
+    "state_offline": "Frakoblet",
+    "state_error": "Stoppet"
+  },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Laster opp endringer før stasjonen slås av",
+      "title_sign_out": "Laster opp endringer før du logger av",
+      "title_stop_folder": "Laster opp endringer før mappen slutter å synkronisere",
+      "cannot_title": "Noen endringer kan ikke lastes opp nå",
+      "waiting": "Gjenstår å laste opp: {names}",
+      "progress": "{done} av {total} lastet opp",
+      "cannot_offline": "Serveren kan ikke nås. Ikke lastet opp ennå: {names}",
+      "cannot_other": "Kan ikke lastes opp: {names}. Nylig aktivitet i Innstillinger forteller hvorfor.",
+      "go_note_drive": "Hvis du fortsetter nå, blir det som ikke er lastet opp, kopiert til Dokumenter\\Bulwark – not uploaded. Ingenting går tapt.",
+      "go_note_folder": "Hvis du fortsetter nå, blir det som ikke er lastet opp, i mappen på denne datamaskinen.",
+      "keep_turn_off": "Behold stasjonen",
+      "keep_sign_out": "Forbli pålogget",
+      "keep_stop_folder": "Fortsett synkroniseringen",
+      "go_turn_off": "Slå av nå",
+      "go_sign_out": "Logg av nå",
+      "go_stop_folder": "Stopp synkroniseringen nå"
+    },
+    "drive": {
+      "off_note": "Når du slår av dette, forsvinner stasjonen fra Filutforsker. Filene dine blir i Filer.",
+      "rescued": "Filer som ikke ble lastet opp ({count}), ligger nå i {folder}.",
+      "rescued_open": "Åpne mappe",
+      "rescued_dismiss": "Lukk",
+      "start_at_login": "Start Bulwark når du logger på Windows",
+      "start_at_login_why": "Stasjonen trenger at Bulwark kjører, slik som OneDrive.",
+      "closed_warning": "Filer på stasjonen kan ikke åpnes mens Bulwark er lukket.",
+      "where": "I Filutforsker som Bulwark Files",
+      "where_letter": "I Filutforsker som Bulwark Files ({letter}:)",
+      "open": "Åpne",
+      "letter_note": "Via stasjonsbokstaven viser Filutforsker verken synkroniseringsstatus eller «Behold alltid på denne enheten». De vises under Bulwark Files i Filutforsker.",
+      "letter_failed": "Stasjonsbokstaven kunne ikke angis. Prøv igjen."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Oppdatert",
+      "syncing": "Bulwark Files: Synkroniserer. Gjenstår: {count}",
+      "paused": "Bulwark Files: Satt på pause",
+      "offline": "Bulwark Files: Frakoblet. Venter: {count}",
+      "question": "Bulwark Files: Venter på svaret ditt",
+      "error": "Bulwark Files: Feil"
+    },
+    "notify": {
+      "conflict_title": "En fil ble endret to steder",
+      "problem_title": "En fil kan ikke synkroniseres"
+    },
+    "activity": {
+      "waiting_count": "Endringer som venter på serveren: {count}",
+      "disk_name": "{path} i Filer heter {detail} på denne datamaskinen, fordi noen av tegnene ikke er tillatt her",
+      "disk_case": "{path} i Filer heter {detail} på denne datamaskinen, fordi det allerede finnes et navn her som bare skiller seg i store og små bokstaver",
+      "disk_group": "Navn i Filer som denne datamaskinen ikke tillater: {count}. De har litt andre navn her.",
+      "show": "Vis",
+      "hide": "Skjul"
+    },
+    "cant_sync": {
+      "title": "Kan ikke synkronisere"
+    },
+    "folders": {
+      "stop": "Stopp synkroniseringen…",
+      "pick_title_known": "Hvilken mappe i Filer skal {name} holdes lik?",
+      "pick_confirm_known": "Hold dem like"
+    },
+    "pin": {
+      "keep": "Behold alltid på denne enheten",
+      "free": "Frigjør plass",
+      "failed": "Det fungerte ikke. Prøv igjen i Filutforsker."
+    },
+    "account": {
+      "of": "Filer for {address}",
+      "choose": "Filer for"
+    }
+  },
+  "desktopQuickCompose": {
+    "label": "Rask skriving",
+    "menu": "Rask skriving",
+    "description": "{keys} åpner et lite vindu for en ny melding, fra hvilken som helst annen app.",
+    "description_off": "Åpner et lite vindu for en ny melding, fra hvilken som helst annen app.",
+    "taken": "En annen app bruker {keys}, så her skjer det ingenting. Velg andre taster, eller lukk den appen.",
+    "change": "Endre tastene: {keys}",
+    "recording": "Trykk på tastene…",
+    "recording_hint": "Hold Ctrl (Cmd på Mac) nede sammen med Alt eller Shift, og trykk på en bokstav, et tall, Enter eller en funksjonstast. Esc avbryter.",
+    "back_to_main": "Flytt til hovedvinduet",
+    "back_busy": "Hovedvinduet har allerede en melding åpen. Lukk den, og prøv igjen.",
+    "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her.",
+    "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
+    "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
+  },
+  "desktopAttachRecent": {
+    "heading": "Nylige filer",
+    "browse": "Bla gjennom denne datamaskinen…",
+    "from_files": "Fra Filer…",
+    "missing": "«{name}» finnes ikke lenger.",
+    "too_large": "«{name}» er større enn {max} og kan ikke legges ved.",
+    "failed": "Kunne ikke legge ved «{name}». Prøv igjen."
+  },
+  "composeRecentLimit": {
+    "too_large": "For stor",
+    "too_large_hint": "Større enn serveren tar imot ({max})"
+  },
+  "compose_windows": {
+    "more_formatting": "Mer formatering",
+    "offline": "Frakoblet",
+    "offline_hint": "Du må ha tilkobling for å sende.",
+    "offline_hint_outbox": "Det du sender nå, venter i utboksen og sendes når du er på nett igjen.",
+    "offline_send_saved": "Du er frakoblet. Meldingen er lagret i Utkast.",
+    "offline_send_unsaved": "Du er frakoblet. Meldingen blir her og lagres i Utkast når du er på nett igjen."
+  },
+  "composer_panel": {
+    "show_panel": "Vis {name}",
+    "hide_panel": "Skjul {name}"
+  },
+  "desktopDevTools": {
+    "section_title": "Feilsøking",
+    "label": "Utviklerverktøy ({shortcut})",
+    "description": "Lar {shortcut} og F12 åpne utviklerverktøyene for vinduet du er i. Slås av igjen når appen låses.",
+    "forced_off": "Slått av av organisasjonen din.",
+    "locked": "Lås opp appen for å endre dette.",
+    "menu_toggle": "Vis eller skjul utviklerverktøy"
+  },
+  "fileDrop": {
+    "overlay_label": "Slipp filer",
+    "overlay_title": "Hvor skal filene?",
+    "overlay_hint": "Slipp utenfor valgene eller trykk på Esc for å avbryte.",
+    "files_unknown": "Filer",
+    "files_summary": "{count, plural, one {# fil} other {# filer}}",
+    "files_summary_size": "{count, plural, one {# fil} other {# filer}}, {size}",
+    "zone_attach_here": "Legg ved denne meldingen",
+    "zone_insert_inline": "Sett inn i meldingen",
+    "zone_new_message": "Legg ved en ny melding",
+    "zone_upload_files": "Last opp til Filer",
+    "zone_upload_folder": "Last opp til {folder}",
+    "zone_calendar": "Legg til i kalenderen",
+    "zone_contacts": "Legg til i kontakter",
+    "zone_open_eml": "Åpne melding",
+    "zone_import_eml": "Importer til {folder}",
+    "note_limit_message": "Opptil {size} per melding",
+    "note_limit_file": "Opptil {size} per fil",
+    "note_kept_offline": "Blir på denne enheten til du er på nett igjen",
+    "note_needs_connection": "Trenger tilkobling",
+    "announce": "{files, plural, =0 {Filer} one {# fil} other {# filer}} dratt inn. Valg: {choices}.",
+    "choose_title": "{count, plural, one {Hvor skal denne filen?} other {Hvor skal disse filene?}}",
+    "save_first_failed": "Den åpne meldingen kunne ikke lagres, så appen ble der den var.",
+    "import_done": "{count, plural, one {# melding importert til {folder}.} other {# meldinger importert til {folder}.}}",
+    "import_failed": "{name} kunne ikke importeres.",
+    "too_large_file": "{name} er for stor. Grensen er {max} per fil.",
+    "too_large_message": "Disse filene er for store for én melding. Grensen er {max}.",
+    "folders_left_out": "Mapper kan bare gå til Filer, så de ble utelatt.",
+    "nothing_here": "Disse filene kan ikke brukes her."
+  },
+  "desktopReminders": {
+    "generic_title": "Påminnelse",
+    "snooze": "Utsett {count} min",
+    "snooze_short": "{count} min",
+    "open": "Åpne",
+    "join": "Bli med",
+    "missed_title": "{count, plural, one {# tapt påminnelse} other {# tapte påminnelser}}",
+    "missed_more": "og {count} til",
+    "missed_show": "Vis",
+    "missed_dialog_title": "Tapte påminnelser",
+    "missed_dialog_description": "De forfalt mens appen var lukket, datamaskinen sov eller varsler var satt på pause.",
+    "open_calendar": "Åpne kalender",
+    "done": "Ferdig",
+    "join_host": "Bli med ({host})",
+    "join_named": "Bli med: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Utviklerverktøy",
+    "updates_label": "Se etter oppdateringer",
+    "search": {
+      "quick_compose": "rask skriving ny melding fra hvor som helst global snarvei",
+      "files_drive": "frigjør plass OneDrive Dropbox Filutforsker Finder stasjonsbokstav filer ved behov",
+      "offline_space": "frigjør plass diskplass lagringsplass",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingeravtrykk ansikt tilgangsnøkkel passkey"
+    }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Personvern og sikkerhet",
+      "security": "Passord og pålogging",
+      "about_updates": "Om og oppdateringer",
+      "backup": "Sikkerhetskopi og import"
+    },
+    "sections": {
+      "start": "Start og lukking",
+      "shortcuts": "Hurtigtaster fra andre apper",
+      "mail_links": "E-postlenker og -filer"
+    },
+    "privacy_link_description": "Disse innstillingene finner du på siden Personvern og sikkerhet."
+  },
+  "desktop_policy": {
+    "server_refused": "Organisasjonen din tillater ikke denne serveren på denne enheten.",
+    "plugin_refused": "Organisasjonen din tillater ikke dette programtillegget på denne enheten, så det kjører ikke. Innstillingene og dataene beholdes.",
+    "install_refused": "Organisasjonen din tillater ikke dette programtillegget på denne enheten.",
+    "plugins_label": "Programtillegg",
+    "plugins_off": "Organisasjonen din har slått av programtillegg på denne enheten.",
+    "plugins_allowlist": "Organisasjonen din tillater bare bestemte programtillegg på denne enheten.",
+    "off": "Av"
+  },
+  "desktopTelemetry": {
+    "section_title": "Bruksdata og krasjrapporter",
+    "section_description": "Begge er av til du slår dem på, og hver har sin egen bryter.",
+    "telemetry_label": "Send bruksdata",
+    "telemetry_description": "Én gang om dagen: en tilfeldig ID, appens versjonsnumre, operativsystemet ditt, hvor lenge appen har kjørt og hvordan den kobler til. Med egen e-postserver også hvilke funksjoner som er på, et omtrentlig antall kontoer og hvor mange programtillegg og temaer du har. Aldri e-post, adresser eller servernavn.",
+    "crash_label": "Send krasjrapporter",
+    "crash_description": "Feil i appen sendes med en tilfeldig ID, filnavn fra appens egen kode og korte, rensede meldinger. Hvis selve appen krasjer, blir en krasjfil liggende på denne datamaskinen og forlater den bare hvis du sender den.",
+    "crash_memory": "En krasjfil er en kopi av en del av appens minne da den krasjet. Bulwark fjerner brukernavn, adresser og påloggingstokener det finner, men en krasjfil kan likevel inneholde teksten i e-posten din.",
+    "instance_note": "På en Bulwark-server bestemmer administratoren separat hva sidene rapporterer til den.",
+    "forced_off": "Organisasjonen din har slått av dette.",
+    "url_label": "Hvor krasjfiler sendes",
+    "url_description": "Https-adressen som mottar en krasjfil. Bulwark har ingen med.",
+    "url_invalid": "Skriv inn en fullstendig https-adresse.",
+    "url_save": "Lagre",
+    "files_label": "Krasjfiler på denne datamaskinen",
+    "files_description": "Bulwark beholder de nyeste og sletter dem som er eldre enn en måned.",
+    "files_empty": "Ingen krasjfiler.",
+    "file_size": "{size} KB",
+    "send": "Send krasjrapport…",
+    "delete_all": "Slett alle",
+    "sent": "Krasjrapport sendt.",
+    "send_no_consent": "Slå på krasjrapporter først.",
+    "send_no_url": "Ingen adresse er angitt, så den kan ikke sendes noe sted. Skriv inn en ovenfor.",
+    "send_failed": "Krasjrapporten kunne ikke sendes."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Antall uleste på ikonet på oppgavelinjen",
+    "unread_badge_description": "Slik ser du ny e-post mens du jobber i en annen app.",
+    "tip_compose_keys": "Trykk på {keys} for å skrive en ny melding",
+    "tip_palette_keys": "Trykk på {keys} for å finne en kommando"
+  },
+  "uxp3_desktop": {
+    "web_address": "Nettadresse"
+  },
+  "selectionView": {
+    "starred": "Stjernemerket",
+    "unstarred": "Stjerne fjernet"
+  },
+  "impersonation": {
+    "return_notice": "Du åpnet {mailbox} via imitering.",
+    "return_button": "Tilbake til kontoen min"
   }
 }

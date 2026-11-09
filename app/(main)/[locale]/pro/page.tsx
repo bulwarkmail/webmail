@@ -10,8 +10,10 @@ import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useAuthStore, redirectToLogin } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useDeviceDetection } from "@/hooks/use-media-query";
+import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
 import { EmbeddedContext } from "@/hooks/use-is-embedded";
+import { OrgAnnouncement } from "@/components/org/org-announcement";
+import { ImpersonationReturnBar } from "@/components/impersonation/impersonation-return-bar";
 import { PaneSizeContext } from "@/hooks/use-pane-size";
 import { PaneIdContext, ProTabFocusContext } from "@/hooks/use-pane-context";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
@@ -31,9 +33,13 @@ import {
   type BodyDropTarget,
   type MailboxDragPayload,
 } from "@/components/pro/pro-shell-drop";
-import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId, type ProSplitSide } from "@/stores/pro-tab-store";
+import { handOffComposeTab, useProTabStore, type ProTab, type ProTabKind, type ProPaneId, type ProSplitSide } from "@/stores/pro-tab-store";
+import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { getPathPrefix } from "@/lib/browser-navigation";
+import { onOpenEmail, proEmailTabOpener } from "@/lib/plugin-sandbox/open-email";
+import { ProSkeleton } from "@/components/boot-skeleton/pro-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 import { MailApp } from "@/components/mail/mail-app";
 import { CalendarApp } from "@/components/calendar/calendar-app";
@@ -43,6 +49,9 @@ import { SettingsApp } from "@/components/settings/settings-app";
 import { ProComposeTabBody } from "@/components/pro/pro-compose-tab-body";
 import { ProEmailTabBody } from "@/components/pro/pro-email-tab-body";
 import { ProFolderTabBody } from "@/components/pro/pro-folder-tab-body";
+
+// Pro runs wherever the desktop layout does, the compact one included.
+const DESKTOP_MIN_WIDTH = PHONE_BELOW;
 
 // Each surface renders the same component the standard routes do. Deep links
 // reach them through the handoff ProInterfaceRedirect parks (#733), not as
@@ -187,7 +196,9 @@ function Pane({ paneId, tabs, activeTabId, loadedTabIds, onPaneFocus, isFocused 
 
 export default function ProHome() {
   const t = useTranslations();
-  const { isMobile, isTablet, isDesktop } = useDeviceDetection();
+  const { label: skeletonLabel } = useSkeletonLabels();
+  const { isMobile, isDesktop } = useDeviceDetection();
+  const router = useRouter();
 
   const [initialCheckDone, setInitialCheckDone] = useState(
     () => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client
@@ -254,16 +265,28 @@ export default function ProHome() {
     // switching Pro off from Settings lands back in Settings rather than
     // on the mail list. Read imperatively: the focused tab must not retrigger
     // this effect, it only matters at the moment a precondition flips.
-    if (isMobile || isTablet || !proInterface) {
+    if (isMobile || !proInterface) {
       const { tabs: allTabs, focusedPaneId: pane, activeTabId, activeSplitTabId } = useProTabStore.getState();
       const focusedId = pane === 'split' ? activeSplitTabId : activeTabId;
       const kind = allTabs.find((tab) => tab.id === focusedId)?.kind;
       const surface = kind === 'calendar' || kind === 'contacts' || kind === 'files' || kind === 'settings'
         ? `/${kind}`
         : '/';
-      window.location.replace(`${getPathPrefix()}${surface}`);
+      if (!proInterface) {
+        window.location.replace(`${getPathPrefix()}${surface}`);
+        return;
+      }
+      // The flags come from a store that a standard page may have left behind
+      // from before the window widened: arriving here from there is no reason
+      // to go straight back. The window itself says.
+      if (window.matchMedia(atLeast(DESKTOP_MIN_WIDTH)).matches) return;
+      // A narrower window (snapped to half a screen, say) is no reason to
+      // reload: compose tabs live in memory, and they come back when the window
+      // widens again. The one in front goes along to the standard composer.
+      if (kind === 'compose' && focusedId) handOffComposeTab(focusedId);
+      router.replace(surface);
     }
-  }, [initialCheckDone, isMobile, isTablet, proInterface]);
+  }, [initialCheckDone, isMobile, proInterface, router]);
 
   const mainTabs = useMemo(() => tabs.filter((t) => t.paneId === 'main'), [tabs]);
   const splitTabs = useMemo(() => tabs.filter((t) => t.paneId === 'split'), [tabs]);
@@ -332,6 +355,12 @@ export default function ProHome() {
     window.addEventListener('keydown', onSearchShortcut);
     return () => window.removeEventListener('keydown', onSearchShortcut);
   }, []);
+
+  // A plugin opening a message (api.ui.openEmail) gets an email tab, as a
+  // message link does here: the mail tab stays mounted while hidden, so its
+  // reader is not one the user would see.
+  const loadingTitle = t('common.loading');
+  useEffect(() => onOpenEmail(proEmailTabOpener(loadingTitle)), [loadingTitle]);
 
   const handleRailNavigate = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => {
     openTab(itemId);
@@ -406,8 +435,10 @@ export default function ProHome() {
     if (!kind) return;
     const target = resolveTargetForEvent(e);
     setDraggedTabId(null);
-    if (!target) return;
+    // Also with nowhere to put it: a field under the pointer would take the text
+    // a message row carries.
     e.preventDefault();
+    if (!target) return;
 
     if (kind === 'tab') {
       const draggedId = e.dataTransfer.getData(PRO_TAB_DRAG_MIME);
@@ -440,19 +471,34 @@ export default function ProHome() {
     }
   };
 
-  // Loading state (matches standard page exactly)
-  if (!initialCheckDone || authLoading || !isAuthenticated || !client) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto"></div>
-          <p className="mt-4 text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
-      </div>
-    );
-  }
+  // A tab being dragged is the shell's business wherever it goes, except onto
+  // a tab strip: no surface takes tabs, and many drop handlers (settings rows,
+  // address books, calendar days) stop or claim whatever crosses them. So the
+  // shell answers on the way down, before they see it. Messages and folders
+  // stay on the way up: a folder row in a pane is a real target for those.
+  const isTabDragOffStrip = (e: DragEvent<HTMLDivElement>) =>
+    dragKindFromTypes(e.dataTransfer.types) === 'tab'
+    && !(e.target instanceof Element && e.target.closest('[data-pane-strip]'));
 
-  if (!isDesktop) return null;
+  const handleBodyDragOverCapture = (e: DragEvent<HTMLDivElement>) => {
+    if (!isTabDragOffStrip(e)) return;
+    e.stopPropagation();
+    handleBodyDragOver(e);
+  };
+
+  const handleBodyDropCapture = (e: DragEvent<HTMLDivElement>) => {
+    if (!isTabDragOffStrip(e)) return;
+    e.stopPropagation();
+    handleBodyDrop(e);
+  };
+
+  // Until the session is up: the same skeleton the server drew, so hydration
+  // matches and nothing moves. Below desktop width the effect above is about
+  // to send the visitor to the standard page; keep the skeleton up meanwhile
+  // rather than a blank page.
+  if (!initialCheckDone || authLoading || !isAuthenticated || !client || !isDesktop) {
+    return <ProSkeleton label={skeletonLabel} />;
+  }
 
   // Each pane renders as a column: its own tab strip directly above its
   // body, so a tab visibly belongs to the pane beneath it and clicking a
@@ -503,12 +549,16 @@ export default function ProHome() {
 
   return (
     <EmbeddedContext.Provider value={true}>
-      <div className="flex flex-col h-dvh bg-background overflow-hidden pt-[env(safe-area-inset-top)]">
+      {/* data-pro-shell: a page skeleton inside a pane draws its own frame, not the Pro one. */}
+      <div data-pro-shell="" className="flex flex-col h-dvh bg-background overflow-hidden pt-[var(--app-top-inset)]">
+        {/* Once for the whole shell: email and folder tabs have no app strip, and split panes would show it twice. */}
+        <OrgAnnouncement />
+        <ImpersonationReturnBar />
         <div className="flex flex-1 overflow-hidden">
           {/* Leftmost Navigation Rail - identical to the standard layout */}
           <div
             className="w-14 bg-secondary flex flex-col flex-shrink-0"
-            style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}
+            style={{ borderInlineEnd: '1px solid rgba(128, 128, 128, 0.3)' }}
           >
             <NavigationRail
               collapsed
@@ -536,8 +586,12 @@ export default function ProHome() {
           )}
 
           {!inlineApp && (
+            // The split's side and the drop zones are physical (left, right),
+            // so the row must not flip in RTL: a drop on the right went left.
             <div
-              className="relative flex flex-row flex-1 overflow-hidden min-w-0"
+              className="relative flex flex-row rtl:flex-row-reverse flex-1 overflow-hidden min-w-0"
+              onDragOverCapture={handleBodyDragOverCapture}
+              onDropCapture={handleBodyDropCapture}
               onDragOver={handleBodyDragOver}
               onDragLeave={handleBodyDragLeave}
               onDrop={handleBodyDrop}

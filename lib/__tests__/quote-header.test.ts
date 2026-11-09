@@ -90,3 +90,35 @@ describe('buildQuoteHeader (#482 — sender address survives HTML rendering)', (
     expect(h.text).not.toContain('<noname@x.tld>');
   });
 });
+
+// Gmail and Outlook list who the forwarded mail went to.
+describe('buildQuoteHeader forward recipients', () => {
+  const email = {
+    from: [sender],
+    to: [{ name: 'Anna Becker', email: 'anna@example.com' }, { email: 'team@example.com' }],
+    cc: [{ name: 'Carol <x>', email: 'carol@example.com' }],
+    subject: 'Hello',
+    receivedAt: '2026-01-01T10:00:00Z',
+  };
+
+  it('adds To and Cc lines after the subject', async () => {
+    const h = await buildQuoteHeader({ mode: 'forward', email, ...base });
+    expect(h.text).toContain('Subject: Hello\nTo: Anna Becker <anna@example.com>, team@example.com\nCc: Carol <x> <carol@example.com>\n');
+    expect(h.html).toContain('To: Anna Becker &lt;anna@example.com&gt;, team@example.com<br>Cc: Carol &lt;x&gt; &lt;carol@example.com&gt;<br>');
+  });
+
+  it('uses the caller\'s To and Cc labels', async () => {
+    const labels = {
+      formatReplyLine: () => '', forwardedSeparator: '--', fromLabel: 'Von', dateLabel: 'Datum', subjectLabel: 'Betreff',
+      toLabel: 'An', ccLabel: 'Kopie',
+    };
+    const h = await buildQuoteHeader({ mode: 'forward', email, labels, ...base });
+    expect(h.text).toContain('\nAn: Anna Becker <anna@example.com>, team@example.com\nKopie: Carol <x> <carol@example.com>\n');
+  });
+
+  it('leaves out a line for an empty list', async () => {
+    const h = await buildQuoteHeader({ mode: 'forward', email: { ...email, cc: [] }, ...base });
+    expect(h.text).toContain('\nTo: ');
+    expect(h.text).not.toContain('Cc:');
+  });
+});

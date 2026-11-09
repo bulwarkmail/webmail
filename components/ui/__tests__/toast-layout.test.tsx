@@ -36,18 +36,10 @@ describe('toast layout', () => {
     expect(titles).toEqual(['First', 'Second']);
   });
 
-  it('sits above the bottom controls on a phone, and over an open composer', () => {
+  // Where it stands above docked boxes and beside panels: toast-placement.test.tsx.
+  it('starts in the bottom end corner, across the bottom on a phone', () => {
     render(<Toasts />);
-    const container = toastContainer();
-    expect(container.className).toContain('max-sm:bottom-[calc(var(--bottom-controls-height,3.75rem)+0.75rem)]');
-    expect(container).toHaveClass('[html[data-composer-open]_&]:bottom-20');
-  });
-
-  it('sits above a registered bottom bar on the desktop too, such as a form footer', () => {
-    render(<Toasts />);
-    const container = toastContainer();
-    expect(container).toHaveClass('bottom-[max(1.25rem,calc(var(--bottom-controls-height,0px)+0.75rem))]');
-    expect(container).not.toHaveClass('bottom-5');
+    expect(toastContainer()).toHaveClass('bottom-5', 'end-5', 'max-sm:inset-x-3', 'max-sm:bottom-3');
   });
 
   it('names the close button and hides it on a phone', () => {
@@ -107,6 +99,8 @@ describe('useBottomControls', () => {
     );
     const { unmount } = render(<Bar />);
     expect(document.documentElement.style.getPropertyValue('--bottom-controls-height')).toBe('64px');
+    // Toasts keep clear of it (lib/toast-placement).
+    expect(screen.getByText('tabs')).toHaveAttribute('data-toast-avoid', 'bottom');
     unmount();
     expect(document.documentElement.style.getPropertyValue('--bottom-controls-height')).toBe('');
   });
@@ -201,10 +195,53 @@ describe('toasts and the focused element', () => {
     act(() => { (document.getElementById('save') as HTMLElement).focus(); });
     act(() => { vi.advanceTimersByTime(20); });
     expect(toastContainer()).toHaveAttribute('data-dodging');
-    expect(toastContainer()).toHaveClass('top-5');
+    expect(toastContainer().style.top).toBe('20px');
+    expect(toastContainer().style.bottom).toBe('auto');
 
     act(() => { (document.getElementById('title') as HTMLElement).focus(); });
     act(() => { vi.advanceTimersByTime(20); });
     expect(toastContainer()).not.toHaveAttribute('data-dodging');
+  });
+
+  // With the focus in the composer's text or the quick reply box, "Email
+  // sent" and "Sending in 5 seconds" moved to the top and covered the
+  // composer's close button and the reader's toolbar. A large field the
+  // stack only overlaps at a corner keeps the toasts at the bottom.
+  it('stays at the bottom over a corner of a large focused field', () => {
+    const h = window.innerHeight;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.hasAttribute('data-toast-container')) return rect(h - 100, 600, 360, 80);
+      if (this.id === 'body') return rect(h - 400, 300, 700, 360);
+      return rect(10, 10, 80, 36);
+    });
+    render(<><Toasts /><textarea id="body" /></>);
+    act(() => { (document.getElementById('body') as HTMLElement).focus(); });
+    act(() => { toast.success('Email sent'); });
+    act(() => { vi.advanceTimersByTime(20); });
+    expect(toastContainer()).not.toHaveAttribute('data-dodging');
+    expect(toastContainer().style.top).toBe('');
+  });
+
+  // On a phone the top of the screen is the header with Back and the message
+  // actions; an Undo toast that moved there blocked them. (#1472)
+  it('stays at the bottom on a phone, clear of the header', () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
+      matches: query === '(width < 40rem)',
+      media: query, onchange: null,
+      addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList);
+    const h = window.innerHeight;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.hasAttribute('data-toast-container')) return rect(h - 140, 12, 366, 80);
+      if (this.id === 'list') return rect(56, 0, 390, h - 116);
+      return rect(10, 10, 80, 36);
+    });
+    render(<><Toasts /><div id="list" tabIndex={-1}>Messages</div></>);
+    act(() => { (document.getElementById('list') as HTMLElement).focus(); });
+    act(() => { toast.success('Moved to Trash'); });
+    act(() => { vi.advanceTimersByTime(20); });
+    expect(toastContainer()).not.toHaveAttribute('data-dodging');
+    expect(toastContainer().style.top).toBe('');
   });
 });

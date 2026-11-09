@@ -37,8 +37,26 @@ export function toStorageQuota(quotas: JMAPQuota[]): StorageQuota | null {
   const q =
     quotas.find((q) => q.resourceType === "octets" && coversMail(q)) ||
     quotas.find((q) => q.resourceType === "mail" || q.scope === "mail");
-  if (!q) return null;
+  return q ? fromQuota(q) : null;
+}
 
+/**
+ * Picks the storage quota Files counts against out of a Quota/get list: an octets quota whose
+ * types name FileNode (the one with the fewest other types, if several), else one that names no
+ * types and so covers everything. Stalwart 1.0 and 0.16 both send one shared quota, `scope`
+ * account, types Email, SieveScript, FileNode, CalendarEvent and ContactCard, and only when the
+ * account has a limit; with none the list is empty.
+ */
+export function toFilesQuota(quotas: JMAPQuota[]): StorageQuota | null {
+  const octets = quotas.filter((q) => q.resourceType === "octets");
+  const forFiles = octets
+    .filter((q) => q.types?.includes("FileNode"))
+    .sort((a, b) => (a.types?.length ?? 0) - (b.types?.length ?? 0));
+  const q = forFiles[0] ?? octets.find((q) => !q.types?.length);
+  return q ? fromQuota(q) : null;
+}
+
+function fromQuota(q: JMAPQuota): StorageQuota {
   const hard = q.hardLimit ?? q.limit ?? 0;
   const soft = positive(q.softLimit) && (!positive(hard) || q.softLimit < hard) ? q.softLimit : undefined;
   const total = soft ?? hard;

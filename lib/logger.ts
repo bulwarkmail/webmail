@@ -10,16 +10,68 @@ const COLORS: Record<LogLevel, string> = {
 };
 const RESET = '\x1b[0m';
 
+type LogFormat = 'text' | 'json';
+
+interface LogSettings {
+  level?: string;
+  format?: string;
+}
+
+// The config manager pushes the resolved logLevel / logFormat (admin config,
+// then LOG_LEVEL / LOG_FORMAT, then default) here after every load and save.
+// Kept on globalThis so every bundle that loads this module sees the same
+// values, like the config manager singleton itself.
+const SETTINGS_KEY = Symbol.for('bulwark.logger.settings');
+type GlobalWithLogSettings = typeof globalThis & { [SETTINGS_KEY]?: LogSettings };
+const g = globalThis as GlobalWithLogSettings;
+
+/** Use these settings instead of LOG_LEVEL / LOG_FORMAT. */
+export function configureLogger(settings: LogSettings): void {
+  g[SETTINGS_KEY] = { ...settings };
+}
+
 function getLevel(): number {
-  const env = process.env.LOG_LEVEL?.toLowerCase() as LogLevel | undefined;
-  return env && env in LEVELS ? LEVELS[env] : LEVELS.info;
+  const configured = (g[SETTINGS_KEY]?.level ?? process.env.LOG_LEVEL)?.toLowerCase() as LogLevel | undefined;
+  return configured && configured in LEVELS ? LEVELS[configured] : LEVELS.info;
 }
 
 function isJson(): boolean {
-  return process.env.LOG_FORMAT?.toLowerCase() === 'json';
+  const configured = (g[SETTINGS_KEY]?.format ?? process.env.LOG_FORMAT)?.toLowerCase() as LogFormat | undefined;
+  return configured === 'json';
+}
+
+/** Whether log lines go out as JSON (LOG_FORMAT=json or the admin setting). */
+export function isJsonLogFormat(): boolean {
+  return isJson();
+}
+
+/**
+ * Gets every logger.error call, with the stack of the call. The server's
+ * error reporting sets it (lib/error-reporting/server.ts); without it errors
+ * are only logged.
+ */
+export type ErrorSink = (message: string, extra: Record<string, unknown> | undefined, stack: string | undefined) => void;
+const SINK_KEY = Symbol.for('bulwark.logger.errorSink');
+type GlobalWithSink = typeof globalThis & { [SINK_KEY]?: ErrorSink };
+
+export function setErrorSink(sink: ErrorSink | null): void {
+  const target = globalThis as GlobalWithSink;
+  if (sink) target[SINK_KEY] = sink;
+  else delete target[SINK_KEY];
 }
 
 function log(level: LogLevel, message: string, extra?: Record<string, unknown>): void {
+  if (level === 'error') {
+    const sink = (globalThis as GlobalWithSink)[SINK_KEY];
+    if (sink) {
+      try {
+        // Frames: log, logger.error, then the caller.
+        sink(message, extra, new Error().stack);
+      } catch {
+        // reporting must not break logging
+      }
+    }
+  }
   if (LEVELS[level] > getLevel()) return;
 
   if (isJson()) {

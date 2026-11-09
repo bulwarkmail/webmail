@@ -9,6 +9,9 @@ import {
   hasClientSecret,
 } from '@/lib/oauth/token-exchange';
 import { buildRedeemBundle } from '@/lib/auth/pair-bundle';
+import { isHandoffCodeChallenge, stashHandoff } from '@/lib/auth/handoff-store';
+import { desktopHandoffTarget } from '@/lib/auth/mobile-handoff';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { storeIdToken } from '@/lib/oauth/end-session';
@@ -30,6 +33,32 @@ function webmailBaseFromCallback(redirectUri: string): string | null {
     return `${url.origin}${url.pathname.replace(/\/[^/]+\/auth\/callback\/?$/, '').replace(/\/+$/, '')}`;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Who just signed in, for the question the desktop app's hand-off asks: the id token says, as
+ * it came straight from the provider, and otherwise the mail server's session does.
+ */
+async function accountName(serverUrl: string, accessToken: string, idToken: string | undefined): Promise<string> {
+  try {
+    const claims = JSON.parse(Buffer.from((idToken ?? '').split('.')[1] ?? '', 'base64url').toString('utf8')) as Record<string, unknown>;
+    for (const claim of ['email', 'preferred_username', 'name']) {
+      if (typeof claims[claim] === 'string' && claims[claim]) return claims[claim] as string;
+    }
+  } catch {
+    // Not a JWT, or none: the server can say.
+  }
+  try {
+    const session = await fetch(`${serverUrl.replace(/\/+$/, '')}/.well-known/jmap`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      redirect: 'error',
+      signal: AbortSignal.timeout(5000),
+    });
+    const body = (await session.json()) as { username?: unknown };
+    return typeof body.username === 'string' ? body.username : '';
+  } catch {
+    return '';
   }
 }
 
@@ -98,6 +127,9 @@ export async function POST(request: NextRequest) {
       typeof pending.mobile_redirect_uri === 'string' ? pending.mobile_redirect_uri : null;
     const mobileState = typeof pending.mobile_state === 'string' ? pending.mobile_state : null;
     const isMobileFlow = Boolean(mobileRedirectUri);
+    const mobileCodeChallenge = isHandoffCodeChallenge(pending.mobile_code_challenge)
+      ? pending.mobile_code_challenge
+      : null;
     const remember = pending.remember !== false;
 
     if (!codeVerifier || !redirectUri) {
@@ -144,6 +176,30 @@ export async function POST(request: NextRequest) {
       // builds refuse a provider on another host, so those renew through
       // this webmail - the same bundle a paired phone gets.
       const { clientId, serverUrl } = getRequiredConfig(pendingServerId);
+      if (mobileRedirectUri && desktopHandoffTarget(mobileRedirectUri)) {
+        // The desktop app on this instance: its redeem writes its own cookies, the way
+        // the code below would have for this browser. sso/start made sure of a challenge.
+        if (!mobileCodeChallenge) throw new Error('desktop hand-off without a challenge');
+        const handoffCode = await stashHandoff({
+          flow: 'desktop-tokens',
+          server_url: serverUrl,
+          server_id: pendingServerId,
+          custom: false,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          id_token: tokens.id_token,
+          expires_in: tokens.expires_in ?? 3600,
+          signed_in_at: signedInAt,
+        }, { challenge: mobileCodeChallenge, state: mobileState ?? '', awaitConfirm: true });
+        logger.info('Desktop hand-off parked', { flow: 'desktop-tokens' });
+        return NextResponse.json({
+          mobile_handoff_code: handoffCode,
+          server_url: serverUrl,
+          account: await accountName(serverUrl, tokens.access_token, tokens.id_token),
+          mobile_redirect_uri: mobileRedirectUri,
+          mobile_state: mobileState,
+        });
+      }
       const bundle = buildRedeemBundle({
         flow: 'oauth',
         serverUrl,
@@ -158,6 +214,24 @@ export async function POST(request: NextRequest) {
         trusted: true,
       }, webmailBaseFromCallback(redirectUri));
       if (bundle.flow !== 'oauth') throw new Error('unexpected bundle');
+      if (mobileCodeChallenge) {
+        // The app sent a PKCE challenge: park the tokens and give the browser
+        // only a one-time code for the link (lib/auth/handoff-store.ts). The
+        // tokens never reach the page. The code starts working when the user
+        // confirms the hand-off (/api/auth/handoff/confirm).
+        const handoffCode = await stashHandoff(bundle, {
+          challenge: mobileCodeChallenge,
+          state: mobileState ?? '',
+          awaitConfirm: true,
+        });
+        logger.info('Mobile hand-off parked', { flow: 'oauth' });
+        return NextResponse.json({
+          mobile_handoff_code: handoffCode,
+          server_url: bundle.server_url,
+          mobile_redirect_uri: mobileRedirectUri,
+          mobile_state: mobileState,
+        });
+      }
       return NextResponse.json({
         access_token: bundle.access_token,
         expires_in: bundle.expires_in,
@@ -179,6 +253,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Clean up pending cookie on any error
     cookieStore.delete(SSO_PENDING_COOKIE);
+    // The mobile hand-off can't be parked without the shared store.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     logger.error('SSO complete error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Token exchange failed' }, { status: 401 });
   }

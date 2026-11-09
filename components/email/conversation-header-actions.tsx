@@ -8,13 +8,15 @@ import { ContextMenu } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useCopyToAccount, useEmailExport } from "@/hooks/use-message-file-actions";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
-import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { resolveEmailBlobContext } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { Archive, FolderInput, MoreVertical, Trash2 } from "@/components/icons";
 import { EmailContextMenu } from "./email-context-menu";
-import { MoveTargetList } from "./move-target-list";
+import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
+import { useChooseMoveFolder } from "./move-to-dialog";
 import { ViewSourceDialog } from "./view-source-dialog";
+import { canExport } from "@/lib/device-policy";
 import type { MessageActionKey } from "./message-actions";
 
 /**
@@ -55,11 +57,10 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
   const { mailboxes, selectedMailbox, onArchive, onDelete, onMoveToMailbox } = actions;
 
   const ownerAccountId = resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox);
-  const { tree: moveTree, targetIds: moveTargetIds } = useMemo(
-    () => buildMoveTargets(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId }),
-    [mailboxes, selectedMailbox, ownerAccountId],
-  );
-  const canMove = !!onMoveToMailbox && moveTree.length > 0;
+  const moveEmails = useMemo(() => [email], [email]);
+  const moveModel = useMoveMenu(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId, emails: moveEmails });
+  const canMove = !!onMoveToMailbox && !moveMenuIsEmpty(moveModel);
+  const chooseMoveFolder = useChooseMoveFolder();
 
   const exportFollowUp = { onArchive, onDelete, archiveEnabled };
   const source = resolveEmailBlobContext(email, client);
@@ -106,11 +107,13 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
           onClose={moveMenu.closeContextMenu}
           label={t("email_viewer.move_to")}
         >
-          <div className="w-56 max-h-72 overflow-y-auto">
-            <MoveTargetList
-              tree={moveTree}
-              targetIds={moveTargetIds}
+          <div className="w-64 max-w-full">
+            <MoveFolderList
+              model={moveModel}
               onPick={(mailboxId) => { moveMenu.closeContextMenu(); onMoveToMailbox!(mailboxId); }}
+              onChooseFolder={chooseMoveFolder
+                ? () => { moveMenu.closeContextMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox! }); }
+                : undefined}
             />
           </div>
         </ContextMenu>
@@ -135,8 +138,9 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
           onUndoSpam={actions.onUndoSpam}
           copyTargets={copyTargets}
           onCopyToAccount={(accountId, mailboxId) => void copyToAccount([email], accountId, mailboxId)}
-          onExport={() => void exportEmail(email, exportFollowUp, source)}
-          onViewSource={() => setShowSource(true)}
+          // Not under the device policy "No export" of the message's account.
+          onExport={canExport(email) ? () => void exportEmail(email, exportFollowUp, source) : undefined}
+          onViewSource={canExport(email) ? () => setShowSource(true) : undefined}
           omit={OMIT}
           rowPlugins={false}
         />

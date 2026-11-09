@@ -1,6 +1,5 @@
 {
   "login": {
-    "jmap_endpoint_cors_hint": "Der Mailserver muss Anmeldungen von dieser Website erlauben. Ihre Administration kann das einrichten.",
     "reconnecting": "Die Verbindung ist weg. Wir versuchen, wieder zu verbinden…",
     "error": {
       "invalid_credentials": "Die E-Mail-Adresse oder das Passwort ist falsch. Prüfen Sie beides und versuchen Sie es noch einmal.",
@@ -14,7 +13,6 @@
       "oauth_discovery_failed": "Die Anmeldung über Ihre Organisation funktioniert gerade nicht. Versuchen Sie es später noch einmal oder fragen Sie Ihre Administration.",
       "token_exchange_failed": "Passwort und Code sind richtig, aber der Mailserver hat diese App nicht hereingelassen. Bitten Sie Ihre Administration, die Anmelde-Einstellungen für diese App zu prüfen."
     },
-    "totp_toggle": "Ich habe einen Code aus meiner Authenticator-App",
     "token_hint": "Manche Mailanbieter geben Ihnen ein Token statt eines Passworts. Erstellen Sie es in den Einstellungen Ihres Mailanbieters, kopieren Sie es und fügen Sie es hier ein.",
     "config_error": {
       "title": "Das Webmail ist nicht richtig eingerichtet",
@@ -117,7 +115,6 @@
     "vacation_save_failed": "Ihre automatische Antwort konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
     "filters_save_failed": "Ihre Filterregeln konnten nicht gespeichert werden. Versuchen Sie es noch einmal.",
     "export_email_error": "Die E-Mail konnte nicht als Datei gespeichert werden. Versuchen Sie es noch einmal.",
-    "import_email_error": "Die E-Mail konnte nicht aus der Datei hinzugefügt werden. Prüfen Sie die Datei und versuchen Sie es noch einmal.",
     "rule_apply_failed": "Die Regel konnte nicht auf die E-Mails angewendet werden, die schon da sind",
     "rule_folder_failed": "Der Ordner konnte nicht erstellt werden. Versuchen Sie es noch einmal.",
     "vacation_filters_save_failed": "Ihre automatische Antwort ist gespeichert. Die Weiterleitung und die Antwortliste konnten aber nicht gespeichert werden. Versuchen Sie es noch einmal."
@@ -139,9 +136,6 @@
         "unsupported_note": "Ihr Mailserver kann nicht nach gelesen oder ungelesen, Stern oder Label sortieren. Diese Stufen fallen weg, und die neuesten E-Mails kommen zuerst."
       },
       "description": "Ändern Sie, wie das Webmail aussieht",
-      "theme": {
-        "description": "Wählen Sie helle oder dunkle Farben"
-      },
       "font_size": {
         "description": "Machen Sie den Text größer oder kleiner"
       },
@@ -176,9 +170,6 @@
       "all_mail": {
         "folders_description": "Wählen Sie, welche Ordner dieses Kontos zu den Listen „Alle Mails“, „Ungelesen“ und „Markiert“ gehören."
       },
-      "colorful_sidebar_icons": {
-        "description": "Ordner- und Label-Symbole farbig zeigen (blauer Posteingang, roter Spam, grünes Gesendet und so weiter). Schalten Sie das aus für graue Symbole."
-      },
       "tint_list_rows": {
         "description": "Jede E-Mail in der Liste in der Farbe ihres ersten Labels einfärben. Ist das aus, zeigen die kleinen Punkte die Label-Farbe trotzdem."
       },
@@ -186,7 +177,6 @@
         "description": "Zeigen, wie viele E-Mails ein Ordner oder Label insgesamt hat, neben der Zahl der ungelesenen."
       },
       "favicon_unread_badge": {
-        "description": "Die Zahl der ungelesenen E-Mails auf dem Browser-Tab und dem App-Symbol zeigen. So sehen Sie neue E-Mails, auch wenn Sie gerade einen anderen Tab nutzen."
       },
       "show_shared_mail_accounts": {
         "description": "Die Ordner von Postfächern, die andere mit Ihnen teilen, in der Ordnerliste unter „Geteilt“ zeigen. Schalten Sie das aus, um alle auszublenden, oder blenden Sie unten einzelne Konten aus. Kalender und Kontakte bleiben."
@@ -297,12 +287,6 @@
       "confirm_bulk_delete": {
         "description": "Fragen, bevor mehrere ausgewählte E-Mails in den Papierkorb kommen. Beim endgültigen Löschen wird immer gefragt."
       },
-      "mail_layout": {
-        "description": "Wählen Sie, wie die E-Mail-Liste und die geöffnete E-Mail auf dem Bildschirm stehen.",
-        "split_description": "Die E-Mail-Liste und die geöffnete E-Mail stehen nebeneinander.",
-        "focus_description": "Jede E-Mail hat eine Zeile. Eine geöffnete E-Mail nutzt die ganze Breite. Die Ordnerliste bleibt sichtbar.",
-        "horizontal_description": "Die E-Mail-Liste steht oben. Die geöffnete E-Mail steht darunter."
-      },
       "list_columns": {
         "description": "Die Liste als Tabelle mit den Spalten Von, Betreff, Datum und Größe zeigen."
       },
@@ -313,7 +297,7 @@
         "description": "Alle E-Mails als reinen Text schreiben, ohne Fettdruck, Farben oder Bilder. Das gilt auch für Antworten und Weiterleitungen."
       },
       "auto_select_reply_identity": {
-        "description": "Wenn Sie antworten, geht die Antwort von der Adresse aus, an die die E-Mail ging. Das klappt mit all Ihren eigenen Adressen. Weiter unten wählen Sie, ob auch andere Adressen Ihrer Domain zählen."
+        "description": "Wenn Sie antworten, geht die Antwort von der Adresse aus, an die die E-Mail ging. Das klappt mit all Ihren eigenen Adressen."
       },
       "reply_identity_match": {
         "label": "Welche Adressen als Ihre gelten",
@@ -333,9 +317,6 @@
       "attachment_click_action": {
         "label": "Wenn Sie auf einen Anhang klicken",
         "description": "Wählen Sie, ob ein Klick auf einen Anhang ihn anzeigt oder auf Ihrem Gerät speichert"
-      },
-      "attachment_position": {
-        "description": "Wo Anhänge in einer geöffneten E-Mail stehen"
       },
       "always_light_mode": {
         "description": "E-Mails mit hellem Hintergrund zeigen, auch wenn die App dunkel ist. Manche E-Mails sehen falsch aus, wenn sie dunkel dargestellt werden."
@@ -437,7 +418,6 @@
         "error": "Ihr Name konnte nicht geändert werden. Versuchen Sie es noch einmal."
       },
       "totp": {
-        "label": "Code aus einer Authenticator-App",
         "description": "Schützen Sie Ihr Konto besser: Bei der Anmeldung geben Sie zusätzlich einen Code aus einer App auf Ihrem Handy ein",
         "enable_error": "Die Zwei-Faktor-Authentifizierung konnte nicht eingeschaltet werden. Versuchen Sie es noch einmal.",
         "disable_error": "Die Zwei-Faktor-Authentifizierung konnte nicht ausgeschaltet werden. Versuchen Sie es noch einmal.",
@@ -477,11 +457,6 @@
         "key_label": "Öffentlicher Schlüssel (S/MIME oder PGP, als Text)",
         "add_error": "Der öffentliche Schlüssel konnte nicht hinzugefügt werden. Prüfen Sie, ob Sie ihn ganz eingefügt haben.",
         "remove_error": "Der öffentliche Schlüssel konnte nicht gelöscht werden. Versuchen Sie es noch einmal."
-      },
-      "email_client": {
-        "description": "Mit diesen Angaben richten Sie E-Mail auf Ihrem Computer oder Handy ein, zum Beispiel in Thunderbird, Apple Mail oder Outlook",
-        "jmap_username_label": "Benutzername für Mail-Apps",
-        "password_instructions": "Nutzen Sie in Ihrer Mail-App den Benutzernamen oben und ein App-Passwort. Ein App-Passwort erstellen Sie weiter unten auf dieser Seite."
       },
       "link_device": {
         "description": "Melden Sie sich in der Bulwark-Mail-App auf Ihrem Handy an, ohne Ihr Passwort einzutippen. Ihr Handy bekommt eine eigene Anmeldung. Wenn Sie sich hier abmelden, bleibt Ihr Handy angemeldet.",
@@ -577,10 +552,10 @@
         "description": "Alle Einstellungen auf den Anfangszustand zurücksetzen"
       },
       "export_settings": {
-        "description": "Ihre Einstellungen als Datei auf Ihrem Gerät speichern"
+        "description": "Eine Kopie Ihrer Einstellungen herunterladen"
       },
       "import_settings": {
-        "description": "Ihre Einstellungen aus einer früher gespeicherten Datei laden"
+        "description": "Einstellungen aus einer Datei wiederherstellen"
       },
       "sections": {
         "backup_description": "Dieselben Einstellungen in anderen Browsern und auf anderen Geräten nutzen.",

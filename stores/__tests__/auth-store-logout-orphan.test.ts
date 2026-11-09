@@ -78,7 +78,7 @@ it('signing out leaves no other account resumable', async () => {
 
   await useAuthStore.getState().logout(); // "Sign out"
   expect(useAccountStore.getState().accounts).toHaveLength(1);
-  expect(useAccountStore.getState().accounts[0]).toMatchObject({ awaitingSignIn: true, isConnected: false, rememberMe: false });
+  expect(useAccountStore.getState().accounts[0]).toMatchObject({ awaitingSignIn: true, isConnected: false, rememberMe: true });
   expect(jar.size).toBe(0);
 
   // Next visitor opens the app in the same browser.

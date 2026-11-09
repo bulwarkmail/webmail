@@ -143,6 +143,19 @@ describe('FileBrowser', () => {
     act(() => { useFileStore.setState({ client: null, sharedRoots: [], allFolders: [] }); });
   });
 
+  it('draws the loading listing in the list view, as the page skeleton did', () => {
+    renderBrowser({ resources: [], hasListed: false });
+    expect(screen.getByTestId('files-list-skeleton')).toBeInTheDocument();
+    expect(screen.queryByTestId('files-grid-skeleton')).toBeNull();
+  });
+
+  it('draws the loading listing as tiles when the grid view is picked', () => {
+    act(() => { useSettingsStore.setState({ filesSettings: { ...DEFAULT_FILES_SETTINGS, defaultViewMode: 'grid' } }); });
+    renderBrowser({ resources: [], hasListed: false });
+    expect(screen.getByTestId('files-grid-skeleton')).toBeInTheDocument();
+    expect(screen.queryByTestId('files-list-skeleton')).toBeNull();
+  });
+
   it('lists folders shared with the user at the root and in the sidebar (#1181)', async () => {
     const { onNavigate } = renderBrowser();
     await screen.findAllByText('Team');
@@ -185,20 +198,23 @@ describe('FileBrowser', () => {
     expect(within(tree()).getByText('Documents')).toBeInTheDocument();
   });
 
-  it('opens a folder from its name and selects it from the row', () => {
+  // pim-3: the name is plain text, as in a file manager. A click selects, a
+  // double-click opens.
+  it('selects a folder from its name and opens it on a double-click', () => {
     const { onNavigate, onSetSelection } = renderBrowser();
-    const row = within(list()).getByText('Documents').closest('[role=row]')!;
-    fireEvent.click(row);
+    fireEvent.click(within(list()).getByText('Documents'));
     expect(onSetSelection).toHaveBeenCalledWith(new Set(['Documents']));
     expect(onNavigate).not.toHaveBeenCalled();
 
-    fireEvent.click(within(list()).getByText('Documents'));
+    fireEvent.doubleClick(within(list()).getByText('Documents'));
     expect(onNavigate).toHaveBeenCalledWith('/Documents', 'f-docs');
   });
 
-  it('previews a text file when its name is clicked', () => {
+  it('previews a text file when its name is double-clicked', () => {
     const { onPreviewFile } = renderBrowser();
     fireEvent.click(within(list()).getByText('notes.txt'));
+    expect(onPreviewFile).not.toHaveBeenCalled();
+    fireEvent.doubleClick(within(list()).getByText('notes.txt'));
     expect(onPreviewFile).toHaveBeenCalledWith('notes.txt');
   });
 
@@ -208,7 +224,7 @@ describe('FileBrowser', () => {
     renderBrowser({ resources: [resource(OWN[1])], allFolders: [shared] });
 
     fireEvent.contextMenu(within(tree()).getByText('Documents'));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'share' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'files_share' }));
 
     expect(await screen.findByTestId('share-dialog')).toHaveTextContent('Documents:p1');
   });
@@ -217,7 +233,7 @@ describe('FileBrowser', () => {
     renderBrowser();
     await screen.findAllByText('Team');
     fireEvent.contextMenu(within(tree()).getByText('Team'));
-    expect(screen.queryByRole('menuitem', { name: 'share' })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'files_share' })).toBeNull();
   });
 
   it('hides dot files unless the setting shows them', () => {
@@ -271,7 +287,7 @@ describe('FileBrowser', () => {
   it('offers new and upload entries on My files in the sidebar', () => {
     renderBrowser();
     fireEvent.contextMenu(within(tree()).getByText('my_files'));
-    for (const name of ['open', 'new_folder', 'new_text_file', 'upload_files', 'upload_folder']) {
+    for (const name of ['open', 'files_new_folder', 'files_new_text_file', 'files_upload_files', 'files_upload_folder']) {
       expect(screen.getByRole('menuitem', { name })).toBeInTheDocument();
     }
   });
@@ -348,6 +364,55 @@ describe('FileBrowser', () => {
     expect(drawer.className).toContain('invisible');
     tree();
     expect(drawer).not.toHaveAttribute('inert');
+  });
+
+  // The same drawer as Mail's folders (usability test 2026-11-04): it opened
+  // beside the app rail with only the file list dimmed, ignored Escape and
+  // left the focus on the page.
+  it("opens the folder drawer from the window's edge, with the whole window dimmed", () => {
+    renderBrowser();
+    const drawer = screen.getByTestId('files-sidebar-drawer');
+    const classes = drawer.className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['fixed', 'start-0', 'top-[var(--drawer-top)]', 'bottom-0']));
+    expect(classes).not.toContain('absolute');
+    // Where the window's controls are over the page, app/globals.css places it by this.
+    expect(drawer).toHaveAttribute('data-window-drawer');
+    tree();
+    expect(screen.getByTestId('drawer-scrim').className.split(/\s+/)).toEqual(expect.arrayContaining(['fixed', 'inset-0']));
+  });
+
+  it('takes the focus into the folder drawer, keeps Tab there and gives it back on Escape without clearing the search', () => {
+    renderBrowser();
+    const drawer = screen.getByTestId('files-sidebar-drawer');
+    const menu = screen.getByRole('button', { name: 'open_folder_tree' });
+    fireEvent.change(screen.getAllByRole('searchbox')[0], { target: { value: 'notes' } });
+    menu.focus();
+    fireEvent.click(menu);
+    // The folder on screen.
+    expect(drawer.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).toHaveAttribute('aria-current', 'page');
+    const stops = Array.from(drawer.querySelectorAll<HTMLElement>('button:not(:disabled)'));
+    stops.at(-1)!.focus();
+    fireEvent.keyDown(stops.at(-1)!, { key: 'Tab' });
+    expect(document.activeElement).toBe(stops[0]);
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(drawer).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu);
+    expect(screen.getAllByRole('searchbox')[0]).toHaveValue('notes');
+  });
+
+  it('closes the folder drawer on a click on the dimmed window and gives the focus back to the menu button', () => {
+    renderBrowser();
+    const drawer = screen.getByTestId('files-sidebar-drawer');
+    const menu = screen.getByRole('button', { name: 'open_folder_tree' });
+    menu.focus();
+    fireEvent.click(menu);
+    // A press on the scrim drops the focus to the page.
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.click(screen.getByTestId('drawer-scrim'));
+    expect(drawer).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu);
   });
 
   it("renames in a dialog that selects the name without its extension and closes on Escape", async () => {
@@ -444,7 +509,7 @@ describe('FileBrowser', () => {
     }
     render(<Probe />);
     const files = groups.find((g) => g.label === 'files');
-    expect(files?.commands.map((c) => c.label)).toEqual(expect.arrayContaining(['upload_files', 'new_folder', 'trash']));
+    expect(files?.commands.map((c) => c.label)).toEqual(expect.arrayContaining(['files_upload_files', 'files_new_folder', 'trash']));
 
     fireEvent.keyDown(document.body, { key: '/' });
     expect(document.activeElement).toHaveAttribute('role', 'searchbox');

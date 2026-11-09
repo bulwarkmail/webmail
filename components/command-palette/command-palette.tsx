@@ -27,10 +27,11 @@ import { useGlobalSearchStore } from "@/stores/global-search-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useThemeStore } from "@/stores/theme-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { usePluginActions } from "@/components/plugins/plugin-actions";
 import { usePluginPages, pluginPageHref } from "@/hooks/use-plugin-pages";
-import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
-import { GlobalSearchPalette } from "@/components/global-search/global-search-palette";
+import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
+import { lazyComponent } from "@/lib/lazy-component";
 import { isContextMenuOpen } from "@/components/ui/context-menu";
 import { runAction } from "@/lib/plugin-sandbox/actions";
 import { COMMAND_PALETTE_OPEN_EVENT, KEYBOARD_SHORTCUTS_OPEN_EVENT, parkAppCommand, requestAppCommand, type AppCommand } from "@/lib/app-commands";
@@ -38,11 +39,14 @@ import { commandMatches, useRegisteredCommandGroups } from "@/lib/command-regist
 import { shortcutAlternatives } from "@/lib/shortcut-keys";
 import { toUnicodeEmail } from "@/lib/idn";
 import { isEditableEventTarget, isKeyboardLayerOpen } from "@/lib/keyboard";
-import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
+import { isSingleKeyHint, isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
+
+// "Search everything" draws nothing until it opens; its code comes with the first open.
+const GlobalSearchPalette = lazyComponent(() => import("@/components/global-search/global-search-palette").then((m) => m.GlobalSearchPalette));
 
 interface PaletteCommand {
   id: string;
@@ -74,6 +78,7 @@ export function CommandPaletteHost() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const searchOpen = useGlobalSearchStore((s) => s.isOpen);
   const proShell = isProShell(pathname);
   const enabled = isAuthenticated && !proShell;
 
@@ -131,8 +136,8 @@ export function CommandPaletteHost() {
     <>
       {open && <CommandPalette onClose={() => setOpen(false)} onShowShortcuts={() => setShowShortcuts(true)} />}
       {/* "Search everything" in the standard shell; the Pro shell mounts its own. */}
-      {enabled && <GlobalSearchPalette proShell={false} />}
-      <KeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      {enabled && searchOpen && <GlobalSearchPalette proShell={false} />}
+      <LazyKeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
     </>
   );
 }
@@ -162,6 +167,9 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   // A touch screen has no keyboard to use the shortcuts with (R8).
   const touch = useMediaQuery("(pointer: coarse)");
+  // With single-key shortcuts off, "r" or "#" does nothing: no hint for it.
+  const singleKeys = useSettingsStore((s) => s.singleKeyShortcuts !== false);
+  const hintKeys = (shortcut: string) => shortcutAlternatives(shortcut).filter((key) => singleKeys || !isSingleKeyHint(key));
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useFocusTrap({ isActive: true, onEscape: onClose, restoreFocus: true, initialFocus: () => inputRef.current });
@@ -255,7 +263,16 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
         run: () => { void useAuthStore.getState().switchAccount(entry.id); },
       });
     }
-    list.push({ id: "sign-out", group: account, icon: LogOut, label: tSidebar("sign_out"), run: () => { void useAuthStore.getState().logout(); } });
+    // It signs out of the open account only, as the account menu's entry says.
+    const current = accounts.find((entry) => entry.id === activeAccountId);
+    const currentName = current ? toUnicodeEmail(current.email || current.username) : "";
+    list.push({
+      id: "sign-out",
+      group: account,
+      icon: LogOut,
+      label: currentName ? tSidebar("sign_out_of", { account: currentName }) : tSidebar("sign_out"),
+      run: () => { void useAuthStore.getState().logout(); },
+    });
     for (const action of pluginActions) {
       list.push({
         id: `plugin:${action.pluginId}:${action.id}`,
@@ -326,7 +343,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
         aria-label={t("title")}
         className={cn(
           "w-full max-w-xl overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-xl",
-          "max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:pt-[env(safe-area-inset-top)]",
+          "max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:pt-[var(--app-top-inset)]",
           "flex flex-col",
         )}
       >
@@ -347,7 +364,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
             placeholder={t("placeholder")}
             autoComplete="off"
             spellCheck={false}
-            className="h-12 flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="h-12 flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-inset"
           />
           <kbd className="hidden sm:inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground">Esc</kbd>
           {/* Full screen on a phone: no backdrop to tap and no Escape key (R4). */}
@@ -394,10 +411,10 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
                   {command.source && (
                     <span className="flex-shrink-0 truncate max-w-[40%] text-xs text-muted-foreground">{command.source}</span>
                   )}
-                  {command.shortcut && (
+                  {command.shortcut && hintKeys(command.shortcut).length > 0 && (
                     // Key hints only where there is a keyboard (R8).
                     <span className="flex-shrink-0 flex items-center gap-1 pointer-coarse:hidden" aria-hidden="true">
-                      {shortcutAlternatives(command.shortcut).map((key) => (
+                      {hintKeys(command.shortcut).map((key) => (
                         <kbd key={key} className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground">{key}</kbd>
                       ))}
                     </span>

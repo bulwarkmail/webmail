@@ -7,6 +7,7 @@
 // at, never one it found by itself.
 
 import { generateUUID } from '@/lib/utils';
+import type { ComposerSnapshot, ComposerAttachmentData } from '@/lib/plugin-types';
 
 export interface ComposerContent {
   html: string;
@@ -20,7 +21,22 @@ export interface ComposerAttachment {
   size: number;
 }
 
+export type ComposerMetadata = {
+  subject: string;
+  to: string[];
+  cc?: string[];
+  bcc?: string[];
+  pending?: boolean;
+  attachments: ComposerSnapshot['attachments'];
+  accountKey?: string;
+  identityId?: string;
+};
+
 export interface ComposerHandle {
+  /** Read this composer's metadata; account and identity stay host-side. */
+  readMetadata?(): ComposerMetadata;
+  /** Read a file currently attached to this composer. */
+  readAttachment?(id: string): Promise<ComposerAttachmentData>;
   /** The user's own text, without the signature and the quote. */
   readBody(): ComposerContent;
   readSelection(): ComposerContent & { empty: boolean };
@@ -28,17 +44,52 @@ export interface ComposerHandle {
   replaceBody(html: string, text: string): boolean;
   /** Replace the selection (or insert at the caret), or with `below` add after it. */
   replaceSelection(html: string, text: string, opts: { below: boolean }): boolean;
+  /**
+   * Replace the subject (plain text, already cleaned), as the user typing it
+   * would: one undo step, the draft marked changed. Absent where the
+   * composer has no subject (a quick reply).
+   */
+  setSubject?(subject: string): boolean;
   /** Attach a blob the plugin uploaded, through the composer's usual checks. */
   attach(file: ComposerAttachment): Promise<boolean>;
+  /**
+   * Attach a file from the user's Files (host only, api.files.attach), with
+   * the login whose Files hold it, through the same checks.
+   */
+  attachFile?(file: ComposerAttachment & { sourceAccountId?: string }): Promise<boolean>;
 }
 
 const handles = new Map<string, ComposerHandle>();
+const snapshots = new Map<string, { fingerprint: string; revision: string }>();
 
-/** Register an open composer. Returns its id and a function that unregisters it. */
-export function registerComposer(handle: ComposerHandle): { id: string; unregister: () => void } {
-  const id = generateUUID();
+/** Bind an opaque revision to the current body, recipients, files and account. */
+export function captureComposer(id: string): ComposerSnapshot {
+  const handle = handles.get(id);
+  if (!handle) throw new Error('composer is not open any more');
+  const body = handle.readBody();
+  const metadata = handle.readMetadata?.() ?? { subject: '', to: [], attachments: [] };
+  const fingerprint = JSON.stringify({ body, metadata });
+  let current = snapshots.get(id);
+  if (!current || current.fingerprint !== fingerprint) {
+    current = { fingerprint, revision: generateUUID() };
+    snapshots.set(id, current);
+  }
+  return {
+    revision: current.revision,
+    subject: metadata.subject,
+    text: body.text,
+    to: [...metadata.to],
+    cc: [...(metadata.cc ?? [])],
+    bcc: [...(metadata.bcc ?? [])],
+    attachments: metadata.attachments.map(file => ({ ...file })),
+    pending: metadata.pending ?? false,
+  };
+}
+
+/** Register an open composer, optionally using a preallocated capability id. */
+export function registerComposer(handle: ComposerHandle, id = generateUUID()): { id: string; unregister: () => void } {
   handles.set(id, handle);
-  return { id, unregister: () => { handles.delete(id); } };
+  return { id, unregister: () => { handles.delete(id); snapshots.delete(id); } };
 }
 
 export function composerHandle(id: unknown): ComposerHandle | null {
@@ -48,4 +99,5 @@ export function composerHandle(id: unknown): ComposerHandle | null {
 /** Test helper. */
 export function resetComposers(): void {
   handles.clear();
+  snapshots.clear();
 }

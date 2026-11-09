@@ -8,6 +8,7 @@ type KitKey = 'remove' | 'remove_named' | 'clear' | 'clear_search' | 'open' | 'c
 export const KIT_STRINGS: Record<string, Record<KitKey, string>> = {
   en: { remove: 'Remove', remove_named: 'Remove {name}', clear: 'Clear', clear_search: 'Clear search', open: 'Open list', close: 'Close list' },
   de: { remove: 'Entfernen', remove_named: '{name} entfernen', clear: 'Leeren', clear_search: 'Suche leeren', open: 'Liste öffnen', close: 'Liste schließen' },
+  el: { remove: 'Αφαίρεση', remove_named: 'Αφαίρεση {name}', clear: 'Εκκαθάριση', clear_search: 'Εκκαθάριση αναζήτησης', open: 'Άνοιγμα λίστας', close: 'Κλείσιμο λίστας' },
   ar: { remove: 'إزالة', remove_named: 'إزالة {name}', clear: 'مسح', clear_search: 'مسح البحث', open: 'فتح القائمة', close: 'إغلاق القائمة' },
   ca: { remove: 'Treu', remove_named: 'Treu {name}', clear: 'Esborra', clear_search: 'Esborra la cerca', open: 'Obre la llista', close: 'Tanca la llista' },
   cs: { remove: 'Odebrat', remove_named: 'Odebrat {name}', clear: 'Vymazat', clear_search: 'Vymazat hledání', open: 'Otevřít seznam', close: 'Zavřít seznam' },
@@ -24,6 +25,7 @@ export const KIT_STRINGS: Record<string, Record<KitKey, string>> = {
   lv: { remove: 'Noņemt', remove_named: 'Noņemt {name}', clear: 'Notīrīt', clear_search: 'Notīrīt meklēšanu', open: 'Atvērt sarakstu', close: 'Aizvērt sarakstu' },
   mn: { remove: 'Хасах', remove_named: '{name}-г хасах', clear: 'Цэвэрлэх', clear_search: 'Хайлтыг цэвэрлэх', open: 'Жагсаалт нээх', close: 'Жагсаалт хаах' },
   nb: { remove: 'Fjern', remove_named: 'Fjern {name}', clear: 'Tøm', clear_search: 'Tøm søket', open: 'Åpne listen', close: 'Lukk listen' },
+  nn: { remove: 'Fjern', remove_named: 'Fjern {name}', clear: 'Tøm', clear_search: 'Tøm søket', open: 'Opne lista', close: 'Lukk lista' },
   nl: { remove: 'Verwijderen', remove_named: '{name} verwijderen', clear: 'Wissen', clear_search: 'Zoekopdracht wissen', open: 'Lijst openen', close: 'Lijst sluiten' },
   pl: { remove: 'Usuń', remove_named: 'Usuń {name}', clear: 'Wyczyść', clear_search: 'Wyczyść wyszukiwanie', open: 'Otwórz listę', close: 'Zamknij listę' },
   pt: { remove: 'Remover', remove_named: 'Remover {name}', clear: 'Limpar', clear_search: 'Limpar pesquisa', open: 'Abrir lista', close: 'Fechar lista' },
@@ -33,6 +35,7 @@ export const KIT_STRINGS: Record<string, Record<KitKey, string>> = {
   th: { remove: 'นำออก', remove_named: 'นำ {name} ออก', clear: 'ล้าง', clear_search: 'ล้างการค้นหา', open: 'เปิดรายการ', close: 'ปิดรายการ' },
   tr: { remove: 'Kaldır', remove_named: '{name} öğesini kaldır', clear: 'Temizle', clear_search: 'Aramayı temizle', open: 'Listeyi aç', close: 'Listeyi kapat' },
   uk: { remove: 'Вилучити', remove_named: 'Вилучити {name}', clear: 'Очистити', clear_search: 'Очистити пошук', open: 'Відкрити список', close: 'Закрити список' },
+  vi: { remove: 'Xóa', remove_named: 'Xóa {name}', clear: 'Xóa hết', clear_search: 'Xóa tìm kiếm', open: 'Mở danh sách', close: 'Đóng danh sách' },
   zh: { remove: '移除', remove_named: '移除 {name}', clear: '清除', clear_search: '清除搜索', open: '打开列表', close: '关闭列表' },
   'zh-TW': { remove: '移除', remove_named: '移除 {name}', clear: '清除', clear_search: '清除搜尋', open: '開啟清單', close: '關閉清單' },
 };

@@ -22,7 +22,7 @@ describe('announceSent for a send held back for undo', () => {
     vi.advanceTimersByTime(9_000);
     expect(sent).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1_000);
-    expect(sent).toHaveBeenCalledWith({ emailId: 'e1', submissionId: 's1', ...message, scheduledFor: null });
+    expect(sent).toHaveBeenCalledWith({ emailId: 'e1', accountId: null, submissionId: 's1', ...message, scheduledFor: null, composerId: null });
   });
 
   it('reports at once on "Send now"', () => {
@@ -42,5 +42,17 @@ describe('announceSent for a send held back for undo', () => {
     cancelAnnouncedSend('s1');
     vi.advanceTimersByTime(20_000);
     expect(sent).not.toHaveBeenCalled();
+  });
+});
+
+describe('announceSent names the message and the composer', () => {
+  it("gives the account the message lies in and the sending composer's id", () => {
+    const sent = vi.fn();
+    emailHooks.onAfterEmailSend.register('t', sent);
+    announceSent(
+      { scheduled: false, emailId: 'e9', emailAccountId: 'group', emailSubmissionId: 's9' },
+      { ...message, composerId: 'composer-1' },
+    );
+    expect(sent).toHaveBeenCalledWith(expect.objectContaining({ emailId: 'e9', accountId: 'group', composerId: 'composer-1' }));
   });
 });

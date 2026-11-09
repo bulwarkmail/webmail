@@ -10,19 +10,26 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { IconButton } from "@/components/ui/icon-button";
 import { PaneSpinner, Spinner } from "@/components/ui/spinner";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useContactStore } from "@/stores/contact-store";
+import { useContactStore, useTrustedSendersInBook } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { UNDO_TOAST_DURATION } from "@/lib/email-action-toast";
 import { cn } from "@/lib/utils";
+import { OrgLockedNote } from "@/components/settings/org-locked-note";
 
 interface TrustedSendersModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * The organisation blocks remote content: the list can be read and
+   * cleaned up, but adding senders is pointless and offered nowhere.
+   */
+  readOnly?: boolean;
 }
 
-export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProps) {
+export function TrustedSendersModal({ isOpen, onClose, readOnly = false }: TrustedSendersModalProps) {
   const t = useTranslations("settings.email_behavior.trusted_senders");
+  const tLock = useTranslations("remote_content_lock");
   const tNotifications = useTranslations("notifications");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,6 +42,7 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
     addToTrustedSendersBook,
     removeFromTrustedSendersBook,
   } = useContactStore();
+  const inBook = useTrustedSendersInBook();
   const { client } = useAuthStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,9 +58,13 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
     }
   }, [isOpen, trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
 
-  // The active list depends on mode
-  const activeSenders = trustedSendersAddressBook ? trustedSenderEmails : trustedSenders;
-  const isLoading = trustedSendersAddressBook && (!trustedSendersLoaded || trustedSendersLoading);
+  // The book, plus any sender still kept on the device (not filed yet), or
+  // only the device's list where the account can't keep the book.
+  const activeSenders = useMemo(
+    () => (inBook ? Array.from(new Set([...trustedSenderEmails, ...trustedSenders])) : trustedSenders),
+    [inBook, trustedSenderEmails, trustedSenders],
+  );
+  const isLoading = inBook && (!trustedSendersLoaded || trustedSendersLoading);
 
   // Filter senders based on search query
   const filteredSenders = useMemo(() => {
@@ -87,7 +99,7 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
   };
 
   const addSender = async (email: string) => {
-    if (trustedSendersAddressBook && client) {
+    if (inBook && client) {
       await addToTrustedSendersBook(client, email);
     } else {
       addTrustedSender(email);
@@ -129,7 +141,7 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
   // with Undo that adds the address back.
   const handleRemoveSender = async (email: string) => {
     try {
-      if (trustedSendersAddressBook && client) {
+      if (inBook && client) {
         await removeFromTrustedSendersBook(client, email);
       } else {
         removeTrustedSender(email);
@@ -200,7 +212,9 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
       dirty={isAdding && newEmail.trim() !== ""}
       className="max-h-[60vh]"
       bodyClassName="px-0 pb-0 mt-4 border-y border-border"
-      footer={!isLoading && (!isEmpty || isAdding) ? <div className="w-full pt-4">{addRow}</div> : undefined}
+      footer={readOnly
+        ? <div className="w-full pt-4"><OrgLockedNote /><p className="mt-1 text-xs text-muted-foreground">{tLock("trusted_senders_note")}</p></div>
+        : !isLoading && (!isEmpty || isAdding) ? <div className="w-full pt-4">{addRow}</div> : undefined}
     >
       {/* Search (only when 5+ senders) */}
       {showSearch && (
@@ -229,7 +243,7 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
           icon={ShieldCheck}
           title={t("empty_title")}
           description={t("empty_description")}
-          actions={!isAdding ? (
+          actions={!isAdding && !readOnly ? (
             <Button size="sm" onClick={() => setIsAdding(true)}>
               <Plus className="w-4 h-4" />
               {t("add_manually")}

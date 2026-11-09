@@ -114,10 +114,20 @@ export type PayloadPurpose =
   | 'wopi-token'
   /** The app password an impersonation handoff minted, kept for revocation. */
   | 'impersonation-grant'
+  /** A session parked by an impersonation handoff for "Return to my account" (lib/impersonation/restore.ts). */
+  | 'impersonation-restore'
   /** A user's plugin credentials (lib/plugin-secrets/vault.ts). */
   | 'plugin-secrets'
   /** When a token sign-in happened, for the maximum session length (lib/auth/session-age.ts). */
-  | 'session-age';
+  | 'session-age'
+  /** A pairing grant or code record in the shared store (lib/auth/pairing-store.ts). */
+  | 'pairing-store'
+  /** A parked mobile hand-off sign-in in the shared store (lib/auth/handoff-store.ts). */
+  | 'handoff-store'
+  /** Which server a desktop account's refresh token belongs to (lib/oauth/custom-upstream.ts). */
+  | 'custom-upstream'
+  /** Proof of an earlier session, for wiping a dropped account's plugin secrets (lib/plugin-secrets/wipe-proof.ts). */
+  | 'plugin-wipe-proof';
 
 /**
  * Whether a blob minted before purposes were bound may be re-admitted for
@@ -137,8 +147,13 @@ const LEGACY_PAYLOAD_MARKERS: Record<PayloadPurpose, (payload: Record<string, un
   'pair-refresh': () => false,
   'wopi-token': (p) => p.t === 'wopi',
   'impersonation-grant': () => false,
+  'impersonation-restore': () => false,
   'plugin-secrets': () => false,
   'session-age': () => false,
+  'pairing-store': () => false,
+  'handoff-store': () => false,
+  'custom-upstream': () => false,
+  'plugin-wipe-proof': () => false,
 };
 
 export function encryptPayload(payload: Record<string, unknown>, purpose: PayloadPurpose): string {

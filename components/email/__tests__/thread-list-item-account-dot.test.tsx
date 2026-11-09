@@ -19,7 +19,9 @@ vi.mock('@/stores/auth-store', () => {
 });
 
 const ACCOUNT_TEAL = { id: 'acct-teal', avatarColor: '#0d9488', label: 'Teal account' };
+const ACCOUNT_OTHER = { id: 'acct-other', avatarColor: '#dc2626', label: 'Other account' };
 const accountState = {
+  accounts: [ACCOUNT_TEAL, ACCOUNT_OTHER] as { id: string }[],
   getAccountById: (id: string) => (id === ACCOUNT_TEAL.id ? ACCOUNT_TEAL : undefined),
 };
 vi.mock('@/stores/account-store', () => ({
@@ -65,7 +67,8 @@ const accountDot = (c: HTMLElement) =>
 
 describe('ThreadListItem account dot (#912)', () => {
   beforeEach(() => {
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    accountState.accounts = [ACCOUNT_TEAL, ACCOUNT_OTHER];
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
@@ -103,6 +106,13 @@ describe('ThreadListItem account dot (#912)', () => {
         const { container } = renderEmails(emails());
         expect(accountDot(container)).toBeNull();
         // The rest of the row still renders.
+        expect(container.textContent).toContain('Test Subject');
+      });
+
+      it('hides the dot with only one account signed in', () => {
+        accountState.accounts = [ACCOUNT_TEAL];
+        const { container } = renderEmails(emails());
+        expect(accountDot(container)).toBeNull();
         expect(container.textContent).toContain('Test Subject');
       });
     });

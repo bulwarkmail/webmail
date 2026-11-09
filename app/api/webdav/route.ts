@@ -6,6 +6,7 @@ import { forwardedClientHeaders, loginClientAddress } from '@/lib/auth/client-ad
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
 import { DisallowedUrlError } from '@/lib/security/url-guard';
 import { UpstreamBodyTooLargeError, readBodyCapped, readTextCapped } from '@/lib/security/capped-body';
+import { bootGateResponse } from '@/lib/shared-store/boot-gate';
 
 /** A PROPFIND listing of a folder with many thousand entries still fits. */
 const MAX_PROPFIND_RESPONSE_BYTES = 50 * 1024 * 1024;
@@ -59,6 +60,9 @@ function buildDavTargetUrl(baseUrl: string, username: string, rawPath: string, c
  *   Overwrite: WebDAV Overwrite header for MOVE/COPY
  */
 export async function POST(request: NextRequest) {
+  // The proxy doesn't run for this route, so it applies the boot gate itself.
+  const notReady = bootGateResponse();
+  if (notReady) return notReady;
   // CSRF gate (GHSA-9mvj-98f5-9q6g): this handler acts with the caller's
   // session cookie, which SameSite=Lax still sends from a same-site page.
   const crossOrigin = rejectCrossOriginRequest(request);

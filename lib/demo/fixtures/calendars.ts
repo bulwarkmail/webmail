@@ -1,5 +1,7 @@
 import type { Calendar, CalendarEvent, CalendarParticipant } from '@/lib/jmap/types';
+import { CALENDAR_PRESETS } from '@/lib/jmap/share-rights';
 import { demoAt, demoDate, demoISODate } from '../demo-utils';
+import { PRINCIPAL } from './directory';
 import { type Person, NORA, ALICE, BOB, PRIYA, AHMED, LISA, MICHAEL, SARAH, CARLOS, MARCUS, EMMA, DAVID, KENJI, JAMES } from './people';
 
 export const CAL = {
@@ -20,12 +22,21 @@ const readOnly = {
   mayReadFreeBusy: true, mayReadItems: true, mayWriteAll: false, mayWriteOwn: false, mayUpdatePrivate: false, mayRSVP: false, mayShare: false, mayDelete: false,
 };
 
+/**
+ * Nora's Work, Personal and Birthdays calendars, and Alice's "Beacon team"
+ * calendar, which Alice shares with the team: it comes from her account and
+ * shows under her name. Nora shares Work with Alice (read), who covers for
+ * her while she is in Lisbon.
+ */
 export function createDemoCalendars(): Calendar[] {
   const base = { description: null, isSubscribed: true, isVisible: true, includeInAvailability: 'all' as const, defaultAlertsWithTime: null, defaultAlertsWithoutTime: null, timeZone: null, shareWith: null };
   return [
-    { ...base, id: CAL.work, name: 'Work', color: '#db2d54', sortOrder: 1, isDefault: true, myRights: rights(false) },
+    { ...base, id: CAL.work, name: 'Work', color: '#db2d54', sortOrder: 1, isDefault: true, myRights: rights(false), shareWith: { [PRINCIPAL.alice]: { ...CALENDAR_PRESETS.read } } },
     { ...base, id: CAL.personal, name: 'Personal', color: '#3b82f6', sortOrder: 2, isDefault: false, myRights: rights(true) },
-    { ...base, id: CAL.team, name: 'Beacon team', description: 'Shared by Alice Johnson', color: '#8b5cf6', sortOrder: 3, isDefault: false, myRights: rights(false, false) },
+    {
+      ...base, id: CAL.team, name: 'Beacon team', description: 'Launch dates, standups and reviews for Beacon', color: '#8b5cf6', sortOrder: 3, isDefault: false, myRights: rights(false, false),
+      isShared: true, accountId: PRINCIPAL.alice, accountName: ALICE.name,
+    },
     { ...base, id: CAL.birthdays, name: 'Birthdays', color: '#eab308', sortOrder: 4, isDefault: false, includeInAvailability: 'none', myRights: readOnly },
   ];
 }

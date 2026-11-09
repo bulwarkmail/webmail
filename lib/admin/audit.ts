@@ -1,6 +1,5 @@
-import { appendFile, stat, rename, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import { logger } from '@/lib/logger';
+import { getStore, isSharedMode, type AppendLog, type LogOptions } from '@/lib/shared-store';
 import { ensureStateDir, getStatePath } from './paths';
 import { SENSITIVE_CONFIG_KEYS, type AuditEntry } from './types';
 
@@ -60,8 +59,19 @@ const MAX_LOG_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_ROTATIONS = 3;
 const AUDIT_LOG_FILE = 'audit.log';
 
-function getAuditLogPath(): string {
-  return getStatePath(AUDIT_LOG_FILE);
+/**
+ * The audit log (#1066). Local mode: <state dir>/audit.log, rotated at
+ * 10 MB to .1 … .3, of which only the current file is read, as before.
+ * Shared mode: one log for every replica, keeping the newest 50 000
+ * entries (about what one 10 MB file holds).
+ */
+export const AUDIT_LOG_OPTIONS: LogOptions = {
+  local: { path: () => getStatePath(AUDIT_LOG_FILE), maxBytes: MAX_LOG_SIZE, rotations: MAX_ROTATIONS },
+  maxEntries: 50_000,
+};
+
+function auditStore(): AppendLog {
+  return getStore().log('audit', AUDIT_LOG_OPTIONS);
 }
 
 /**
@@ -69,7 +79,8 @@ function getAuditLogPath(): string {
  * so it remains writable when the config dir is mounted read-only.
  */
 export async function auditLog(action: string, detail: Record<string, unknown>, ip: string): Promise<void> {
-  await ensureStateDir();
+  const shared = isSharedMode();
+  if (!shared) await ensureStateDir();
 
   const entry: AuditEntry = {
     ts: new Date().toISOString(),
@@ -78,30 +89,20 @@ export async function auditLog(action: string, detail: Record<string, unknown>, 
     ip,
   };
 
-  const logPath = getAuditLogPath();
+  // Also in the server log, so LOG_FORMAT=json shippers see admin actions.
+  // The audit file below stays the record the admin panel reads.
+  logger.info(`audit: ${action}`, { audit: entry });
+
   try {
-    await appendFile(logPath, JSON.stringify(entry) + '\n', 'utf-8');
-    await rotateIfNeeded(logPath);
+    // One line per entry; the store rotates the local file (audit.log.3 →
+    // deleted, .2 → .3, .1 → .2, audit.log → .1) once it passes 10 MB.
+    await auditStore().append(JSON.stringify(entry));
   } catch (error) {
-    logger.error('Failed to write audit log', { error: error instanceof Error ? error.message : 'Unknown error' });
-  }
-}
-
-async function rotateIfNeeded(logPath: string): Promise<void> {
-  try {
-    const stats = await stat(logPath);
-    if (stats.size < MAX_LOG_SIZE) return;
-
-    // Rotate: audit.log.3 → deleted, audit.log.2 → .3, audit.log.1 → .2, audit.log → .1
-    for (let i = MAX_ROTATIONS; i >= 1; i--) {
-      const from = i === 1 ? logPath : `${logPath}.${i - 1}`;
-      const to = `${logPath}.${i}`;
-      if (existsSync(from)) {
-        try { await rename(from, to); } catch { /* target may exist on overwrite */ }
-      }
-    }
-  } catch {
-    // stat failed, probably file doesn't exist yet
+    logger.error('Failed to write audit log', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      // With a shared store that is down, the entry is kept in the server log.
+      ...(shared ? { entry } : {}),
+    });
   }
 }
 
@@ -109,10 +110,8 @@ async function rotateIfNeeded(logPath: string): Promise<void> {
  * Read audit log entries, newest first. Supports pagination.
  */
 export async function readAuditLog(page: number = 1, limit: number = 50, actionFilter?: string): Promise<{ entries: AuditEntry[]; total: number }> {
-  const logPath = getAuditLogPath();
   try {
-    const content = await readFile(logPath, 'utf-8');
-    const lines = content.trim().split('\n').filter(Boolean);
+    const lines = await auditStore().readAll();
 
     let entries: AuditEntry[] = lines.map(line => {
       try { return JSON.parse(line); } catch { return null; }

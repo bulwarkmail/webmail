@@ -57,6 +57,12 @@ export interface StalwartPasswordLoginOptions {
    * {@link stalwartDefaultClient}) and signs in with that.
    */
   registerUnknownClient?: boolean;
+  /**
+   * Scope to ask for with `clientId` when the admin registered it (see
+   * getPasswordLoginScope). A client this login registers itself is allowed
+   * STALWART_LOGIN_SCOPE only, so it always gets that.
+   */
+  scope?: string;
 }
 
 export interface StalwartTokens {
@@ -265,6 +271,7 @@ async function requestLoginCode(
         redirectUri: client.redirectUri ?? opts.redirectUri,
         codeChallenge: challenge,
         state,
+        scope: client.redirectUri ? undefined : opts.scope,
       })),
     });
 

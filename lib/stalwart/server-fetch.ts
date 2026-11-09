@@ -16,8 +16,11 @@
  */
 
 import { configManager } from '@/lib/admin/config-manager';
+import { logger } from '@/lib/logger';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
+import { observeUpstream } from '@/lib/metrics/upstream';
+import { desktopRedirectRefused } from '@/lib/desktop/server-redirect';
 import {
   isStoredCredentialRefused,
   recordStoredCredentialStatus,
@@ -70,10 +73,23 @@ export async function fetchJmapServer(
   trusted: boolean | undefined,
 ): Promise<Response> {
   const authHeader = new Headers(givenInit.headers).get('authorization');
-  if (authHeader && isStoredCredentialRefused(authHeader)) return refusedCredentialResponse();
-  const response = await fetchUnbudgeted(url, givenInit, trusted);
-  if (authHeader) recordStoredCredentialStatus(authHeader, response.status);
+  if (authHeader && (await isStoredCredentialRefused(authHeader))) return refusedCredentialResponse();
+  // With tracing on, Stalwart gets the trace context and its spans join ours.
+  const response = await observeUpstream('stalwart', (trace) => fetchUnbudgeted(url, withTraceHeaders(givenInit, trace), trusted));
+  // Not awaited: this process's copy is updated at once, the shared write follows.
+  if (authHeader) {
+    void recordStoredCredentialStatus(authHeader, response.status).catch((error) => {
+      logger.warn('Stored credential status not recorded', { error: error instanceof Error ? error.message : 'Unknown error' });
+    });
+  }
   return response;
+}
+
+function withTraceHeaders(init: ServerFetchInit, trace: Record<string, string>): ServerFetchInit {
+  if (Object.keys(trace).length === 0) return init;
+  const headers = new Headers(init.headers);
+  for (const [name, value] of Object.entries(trace)) headers.set(name, value);
+  return { ...init, headers };
 }
 
 async function fetchUnbudgeted(
@@ -85,7 +101,9 @@ async function fetchUnbudgeted(
   // endpoints on, one the user chose) must not pin a connection for as long
   // as it likes. Callers with their own signal keep it.
   const init: ServerFetchInit = givenInit.signal ? givenInit : { ...givenInit, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) };
-  if (trusted !== false) {
+  // The desktop app's approved server gets its hops checked by hand as well.
+  const approvedOnDesktop = process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && trusted !== false;
+  if (trusted !== false && !approvedOnDesktop) {
     return fetch(url, init);
   }
 
@@ -96,12 +114,10 @@ async function fetchUnbudgeted(
   let body = rest.body;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    const response: PublicFetchResponse = await fetchPublicUrl(currentUrl, {
-      ...(rest as Omit<ServerFetchInit, 'redirect' | 'headers'>),
-      method,
-      body: body as never,
-      headers,
-    });
+    const hop = { ...(rest as Omit<ServerFetchInit, 'redirect' | 'headers'>), method, body: body as never, headers };
+    const response: PublicFetchResponse = approvedOnDesktop
+      ? ((await fetch(currentUrl, { ...hop, redirect: 'manual' } as RequestInit)) as unknown as PublicFetchResponse)
+      : await fetchPublicUrl(currentUrl, hop);
 
     if (redirect === 'manual' || response.status < 300 || response.status >= 400) {
       return response as unknown as Response;
@@ -114,6 +130,9 @@ async function fetchUnbudgeted(
     await response.body?.cancel().catch(() => {});
 
     const next = new URL(location, currentUrl);
+    if (desktopRedirectRefused(currentUrl, next, approvedOnDesktop)) {
+      throw new Error(`${currentUrl} redirected to a server that has not been approved`);
+    }
     if (next.origin !== new URL(currentUrl).origin) {
       for (const key of Object.keys(headers)) {
         if (key.toLowerCase() === 'authorization' || key.toLowerCase() === 'cookie') {

@@ -1,62 +1,37 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { DownloadsSettings } from './downloads-settings';
-import { TrustedSendersModal } from '@/components/trusted-senders-modal';
+import { PrivacyLinkRow } from './privacy-settings';
 import { ChevronRight } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
-import { useContactStore } from '@/stores/contact-store';
-import { useAuthStore } from '@/stores/auth-store';
-import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
+import { useReturnToListAfterAction } from '@/hooks/use-return-to-list';
 
 /**
  * The Reading page: the open message. Opening it, how its body is drawn,
- * remote images and trusted senders (the former Content & Senders tab), and
  * attachments, and (Advanced) how downloads are named, the former Downloads
- * tab. List, delete and swipe rows live on the Message list page.
+ * tab. Remote images and trusted senders are on Privacy, with a link here;
+ * list, delete and swipe rows live on the Message list page.
  */
 export function ReadingSettings() {
-  // No third-party traffic (#903) blocks remote content outright: the
-  // setting shows as the organisation's, set to block.
-  const remoteBlockedByOrg = useNoThirdPartyTraffic();
   const t = useTranslations('settings.email_behavior');
   const tPage = useTranslations('settings.reading_page');
-  const [showTrustedModal, setShowTrustedModal] = useState(false);
-  const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
+  const tPane = useTranslations('conversation_pane');
+  // As it applies in this layout: left alone, it follows the layout.
+  const returnToList = useReturnToListAfterAction();
+  const { isSettingLocked, isSettingHidden } = usePolicyStore();
 
   const {
     markAsReadDelay,
-    returnToListAfterAction,
     mailAttachmentAction,
-    attachmentPosition,
     hideInlineImageAttachments,
     attachmentImagePreviewsEnabled,
     messageSpacing,
-    externalContentPolicy,
     emailAlwaysLightMode,
-    trustedSenders,
-    trustedSendersAddressBook,
     updateSetting,
   } = useSettingsStore();
-  const { trustedSenderEmails, trustedSendersLoaded, loadTrustedSendersBook } = useContactStore();
-  const client = useAuthStore((state) => state.client);
-
-  // Load the address book so the count reflects the synced senders, not 0.
-  useEffect(() => {
-    if (trustedSendersAddressBook && client && !trustedSendersLoaded) {
-      loadTrustedSendersBook(client);
-    }
-  }, [trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
-
-  const getTrustedSendersCount = () => {
-    const count = trustedSendersAddressBook ? trustedSenderEmails.length : trustedSenders.length;
-    if (count === 0) return t('trusted_senders.count_zero');
-    if (count === 1) return t('trusted_senders.count_one');
-    return t('trusted_senders.count_other', { count });
-  };
 
   return (
     <div className="space-y-8">
@@ -76,9 +51,14 @@ export function ReadingSettings() {
         </SettingItem>
         )}
 
-        <SettingItem label={t('return_to_list_after_action.label')} description={t('return_to_list_after_action.description')}>
+        <SettingItem
+          label={t('return_to_list_after_action.label')}
+          description={returnToList.followsLayout
+            ? `${t('return_to_list_after_action.description')} ${tPane('return_to_list_follows_layout')}`
+            : t('return_to_list_after_action.description')}
+        >
           <ToggleSwitch
-            checked={returnToListAfterAction}
+            checked={returnToList.checked}
             onChange={(checked) => updateSetting('returnToListAfterAction', checked)}
           />
         </SettingItem>
@@ -117,60 +97,11 @@ export function ReadingSettings() {
             onChange={(checked) => updateSetting('emailAlwaysLightMode', checked)}
           />
         </SettingItem>
-      </SettingsSection>
 
-      <SettingsSection id="images" title={tPage('sections.images')} description={tPage('sections.images_description')}>
-        {isFeatureEnabled('externalContentEnabled') && !isSettingHidden('externalContentPolicy') && (
-        <SettingItem label={t('external_content.label')} description={t('external_content.description')} locked={isSettingLocked('externalContentPolicy') || remoteBlockedByOrg}>
-          <Select
-            value={remoteBlockedByOrg ? 'block' : externalContentPolicy}
-            onChange={(value) =>
-              updateSetting('externalContentPolicy', value as 'ask' | 'block' | 'allow')
-            }
-            options={[
-              { value: 'ask', label: t('external_content.ask') },
-              { value: 'block', label: t('external_content.block') },
-              { value: 'allow', label: t('external_content.allow') },
-            ]}
-          />
-        </SettingItem>
-        )}
-
-        <SettingItem label={t('trusted_senders.label')} description={t('trusted_senders.description')}>
-          <button
-            onClick={() => setShowTrustedModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-accent rounded-md transition-colors"
-          >
-            <span className="text-sm text-foreground">{getTrustedSendersCount()}</span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-        </SettingItem>
-
-        <SettingItem nested label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')}>
-          <ToggleSwitch
-            checked={!!trustedSendersAddressBook}
-            onChange={(checked) => updateSetting('trustedSendersAddressBook', checked)}
-          />
-        </SettingItem>
-
-        <TrustedSendersModal
-          isOpen={showTrustedModal}
-          onClose={() => setShowTrustedModal(false)}
-        />
+        <PrivacyLinkRow topic="images" />
       </SettingsSection>
 
       <SettingsSection id="attachments" title={tPage('sections.attachments')}>
-        <SettingItem label={t('attachment_position.label')} description={t('attachment_position.description')}>
-          <Select
-            value={attachmentPosition}
-            onChange={(value) => updateSetting('attachmentPosition', value as 'beside-sender' | 'below-header')}
-            options={[
-              { value: 'beside-sender', label: t('attachment_position.beside-sender') },
-              { value: 'below-header', label: t('attachment_position.below-header') },
-            ]}
-          />
-        </SettingItem>
-
         <SettingItem label={t('attachment_click_action.label')} description={t('attachment_click_action.description')}>
           <Select
             value={mailAttachmentAction}

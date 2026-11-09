@@ -1,6 +1,7 @@
 import type { Email } from '@/lib/jmap/types';
 import type { InterfaceLayout, MvInboxType } from '@/stores/settings-store';
 import { threadKeyFor } from '@/lib/thread-utils';
+import { compareEmails } from '@/lib/message-list-order';
 
 /**
  * Mountain View's "Unread first" inbox, as Gmail has it: the newest unread
@@ -62,12 +63,31 @@ export function unreadSectionRowCount(emails: Email[], section: UnreadSection | 
   return count;
 }
 
-/** The section without the rows a page of the main query has just reached. */
-export function withoutReached(section: UnreadSection | null, reached: Iterable<string>): UnreadSection | null {
+/**
+ * The section's rows of the open conversation. They stay in the section,
+ * read or not, until something else is opened: the message read is still
+ * where it was opened, so the next one after it is the next unread one
+ * (#1453), and "mark as unread" finds it there.
+ */
+export function openSectionRows(emails: Email[], section: UnreadSection | null, openThreadKey: string | null): Set<string> {
+  const ids = new Set<string>();
+  if (!section || !openThreadKey) return ids;
+  for (const email of emails) {
+    if (section.ids.has(email.id) && threadKeyFor(email) === openThreadKey) ids.add(email.id);
+  }
+  return ids;
+}
+
+/** The section without the rows a page of the main query has just reached, but for the `kept` ones. */
+export function withoutReached(
+  section: UnreadSection | null,
+  reached: Iterable<string>,
+  kept?: ReadonlySet<string>,
+): UnreadSection | null {
   if (!section) return section;
   let ids: Set<string> | null = null;
   for (const id of reached) {
-    if (!section.ids.has(id)) continue;
+    if (!section.ids.has(id) || kept?.has(id)) continue;
     ids ??= new Set(section.ids);
     ids.delete(id);
   }
@@ -78,7 +98,9 @@ export function withoutReached(section: UnreadSection | null, reached: Iterable<
  * Put a freshly loaded section into the list. Rows of the old section that
  * are gone from it leave the list, except the open conversation's: every
  * action looks its message up in the list, so "mark as unread" on the mail
- * just read must still find it.
+ * just read must still find it. They keep their place in the section, the
+ * order it is loaded in, or the message after the one archived would be
+ * the first read one (#1453).
  */
 export function mergeUnreadSection(
   emails: Email[],
@@ -101,8 +123,16 @@ export function mergeUnreadSection(
     }
     rest.push(email);
   }
-  return { emails: [...fresh, ...kept, ...rest], ids };
+  const section = [...fresh];
+  for (const email of kept) {
+    const at = section.findIndex((other) => sectionOrder(email, other) < 0);
+    section.splice(at === -1 ? section.length : at, 0, email);
+  }
+  return { emails: [...section, ...rest], ids };
 }
+
+/** The order loadUnreadSection asks the server for. */
+const sectionOrder = compareEmails([], { pinnedFirst: true });
 
 /** A section put back together from a list remembered or restored without one: its unread rows. */
 export function sectionFromUnreadRows(emails: Email[], mailboxId: string, total?: number): UnreadSection {

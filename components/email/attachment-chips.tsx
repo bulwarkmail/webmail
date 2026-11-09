@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { FileText, FileSpreadsheet, FileImage, FileVideo, FileAudio, FileArchive, File as FileIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { stripBidiControls } from "@/lib/bidi";
+import { isReportPart } from "@/lib/attachment-visibility";
 import type { Attachment, Email } from "@/lib/jmap/types";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 
@@ -12,12 +13,13 @@ import type { LoadListAttachments } from "@/lib/list-attachments";
  * pixels, spacers a couple of hundred bytes each — none of which anyone
  * wants to download. Only parts the sender actually attached belong in
  * the list, so anything marked inline or referenced by a Content-ID is
- * dropped.
+ * dropped, and so are the report parts of a bounce or read receipt, which
+ * the reader does not list either.
  */
 export function realAttachments(attachments?: Attachment[]): Attachment[] {
   if (!attachments?.length) return [];
   return attachments.filter(
-    (a) => a.disposition !== "inline" && !a.cid && !!a.name,
+    (a) => a.disposition !== "inline" && !a.cid && !!a.name && !isReportPart(a.type),
   );
 }
 
@@ -140,7 +142,8 @@ export function useListAttachments(email: Email, load?: LoadListAttachments): At
   // answer cached and takes it in the first render, so it mounts at its full
   // height instead of growing a frame later and making the list correct
   // the scroll position under the reader.
-  const [loaded, setLoaded] = useState<{ id: string; attachments: Attachment[] } | null>(() => {
+  // `attachments: null` is "asked, no answer yet".
+  const [loaded, setLoaded] = useState<{ id: string; attachments: Attachment[] | null } | null>(() => {
     const cached = needsLoad ? load?.peek?.(email) : undefined;
     return cached ? { id: email.id, attachments: cached } : null;
   });
@@ -156,7 +159,7 @@ export function useListAttachments(email: Email, load?: LoadListAttachments): At
     // The peek ran during render, before the list's owner had caught up with
     // a view change, so it may have read another account's entry for the
     // same id. The loader's answer is the real one; without one yet, wait.
-    if (!answered) setLoaded(null);
+    if (!answered) setLoaded({ id, attachments: null });
     return cancel;
     // The row's email object is replaced on every keyword change; only a
     // different message needs a different answer.
@@ -164,7 +167,12 @@ export function useListAttachments(email: Email, load?: LoadListAttachments): At
   }, [needsLoad, load, email.id]);
 
   if (email.attachments) return email.attachments;
-  return loaded?.id === email.id ? loaded.attachments : undefined;
+  if (loaded?.id === email.id) return loaded.attachments ?? undefined;
+  // A row the list keeps for another message (see useRowSlots) starts with
+  // the last one's state: read the cache for this one, as a new row does in
+  // its first render, or the paperclip showed for a frame on a message
+  // whose parts are all inline.
+  return (needsLoad ? load?.peek?.(email) : undefined) ?? undefined;
 }
 
 /**
@@ -182,11 +190,14 @@ export function useListHasAttachment(email: Email, load?: LoadListAttachments): 
 /**
  * Whether a list row will draw a chip row for this email, counting the room
  * it holds while the parts load. Lets the list estimate a row's height
- * before it has measured it.
+ * before it has measured it. Once the parts are in, they decide: a mail
+ * whose only parts are inline images draws no chips.
  */
 export function listRowShowsChips(email: Email, load?: LoadListAttachments): boolean {
   if (email.attachments) return realAttachments(email.attachments).length > 0;
-  return !!load && !!email.hasAttachment;
+  if (!load || !email.hasAttachment) return false;
+  const loaded = load.peek?.(email);
+  return loaded ? realAttachments(loaded).length > 0 : true;
 }
 
 interface ListAttachmentChipsProps extends Omit<AttachmentChipsProps, "attachments"> {

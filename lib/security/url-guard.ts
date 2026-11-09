@@ -10,7 +10,7 @@ import {
   type RequestInit as UndiciRequestInit,
   type Response as UndiciResponse,
 } from 'undici';
-import { isPrivateAddress } from './ip-ranges';
+import { isPrivateAddress, parseV6Groups } from './ip-ranges';
 
 const BLOCKED_HOSTNAMES = new Set(['localhost']);
 const BLOCKED_HOSTNAME_SUFFIXES = ['.localhost', '.local', '.internal', '.arpa', '.localdomain'];
@@ -30,11 +30,46 @@ function isBlockedHostname(hostname: string): boolean {
 }
 
 /**
+ * An intranet address: RFC 1918, CGNAT or an IPv6 unique local address,
+ * as such or IPv4-mapped. Never loopback, link-local (cloud metadata lives
+ * there), unspecified, multicast or the AWS metadata ULA.
+ */
+export function isIntranetAddress(ip: string): boolean {
+  const host = normalizeHostname(ip);
+  const v4 = (a: string) => /^10\./.test(a) || /^172\.(1[6-9]|2\d|3[0-1])\./.test(a) || /^192\.168\./.test(a)
+    || /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(a);
+  const family = isIP(host);
+  if (family === 4) return v4(host);
+  if (family !== 6) return false;
+  const g = parseV6Groups(host);
+  if (!g) return false;
+  if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) {
+    return v4(`${g[6] >> 8}.${g[6] & 0xff}.${g[7] >> 8}.${g[7] & 0xff}`);
+  }
+  const awsMetadata = g[0] === 0xfd00 && g[1] === 0x0ec2 && g.slice(2, 7).every((x) => x === 0) && g[7] === 0x254;
+  return (g[0] & 0xfe00) === 0xfc00 && !awsMetadata;
+}
+
+/**
+ * Whether an admin-entered host names the intranet: an intranet address
+ * literal, a name under a private suffix (.local, .internal, .localdomain)
+ * or a single-label name. Public names and localhost never are, so a public
+ * host whose DNS later points inside can't be used to reach it.
+ */
+export function isIntranetHostName(hostname: string): boolean {
+  const host = normalizeHostname(hostname);
+  if (!host || host === 'localhost' || host.endsWith('.localhost')) return false;
+  if (isIP(host)) return isIntranetAddress(host);
+  if (['.local', '.internal', '.localdomain'].some((suffix) => host.endsWith(suffix))) return true;
+  return !host.includes('.');
+}
+
+/**
  * Synchronous part of the guard: protocol, embedded credentials, blocked
  * hostnames / suffixes, and literal IP addresses. Returns the parsed URL when
  * those checks pass, `null` otherwise. Does NOT touch DNS.
  */
-function parseAllowedUrl(urlString: string): URL | null {
+function parseAllowedUrl(urlString: string, privateHost?: string): URL | null {
   let url: URL;
   try {
     url = new URL(urlString);
@@ -46,6 +81,7 @@ function parseAllowedUrl(urlString: string): URL | null {
   if (url.username || url.password) return null;
 
   const hostname = normalizeHostname(url.hostname);
+  if (privateHost && hostname === privateHost && isIntranetHostName(hostname)) return url;
   if (isBlockedHostname(hostname)) return null;
   if (isBlockedIpAddress(hostname)) return null;
 
@@ -213,9 +249,57 @@ export function envProxyFor(url: URL): URL | null {
   }
 }
 
-function lookupChecked(hostname: string): Promise<string> {
+/**
+ * guardedLookup, except that `privateHost` may resolve to an intranet
+ * address (isIntranetAddress): a host on the intranet the admin entered
+ * themselves (company calendars). Loopback, link-local and metadata
+ * addresses stay refused for it too; every other name, redirect targets
+ * included, is checked as always; and the address is still the one the
+ * socket connects to.
+ */
+function lookupAllowing(privateHost: string): typeof guardedLookup {
+  return (hostname, options, callback) => {
+    if (normalizeHostname(hostname) !== privateHost) {
+      guardedLookup(hostname, options, callback);
+      return;
+    }
+    const cb = (typeof options === 'function' ? options : callback) as LookupCallback;
+    const opts: LookupOptions = typeof options === 'function' ? {} : typeof options === 'number' ? { family: options } : (options ?? {});
+    lookup(normalizeHostname(hostname), { family: opts.family, hints: opts.hints, all: true, verbatim: true })
+      .then((records) => {
+        if (records.length === 0) {
+          const err: NodeJS.ErrnoException = new Error(`getaddrinfo ENOTFOUND ${hostname}`);
+          err.code = 'ENOTFOUND';
+          cb(err);
+          return;
+        }
+        const refused = records.find((record) => isBlockedIpAddress(record.address) && !isIntranetAddress(record.address));
+        if (refused) {
+          cb(new BlockedAddressError(hostname, refused.address));
+          return;
+        }
+        if (opts.all) cb(null, records);
+        else cb(null, records[0].address, records[0].family);
+      })
+      .catch((err: NodeJS.ErrnoException) => cb(err));
+  };
+}
+
+const privateHostDispatchers = new Map<string, Dispatcher>();
+
+function getPrivateHostDispatcher(privateHost: string): Dispatcher {
+  let dispatcher = privateHostDispatchers.get(privateHost);
+  if (!dispatcher) {
+    dispatcher = new Agent({ connect: { lookup: lookupAllowing(privateHost) as unknown as LookupFunction } });
+    privateHostDispatchers.set(privateHost, dispatcher);
+  }
+  return dispatcher;
+}
+
+function lookupChecked(hostname: string, privateHost?: string): Promise<string> {
+  const look = privateHost ? lookupAllowing(privateHost) : guardedLookup;
   return new Promise((resolve, reject) => {
-    guardedLookup(hostname, {}, (err, address) => (err ? reject(err) : resolve(address as string)));
+    look(hostname, {}, (err, address) => (err ? reject(err) : resolve(address as string)));
   });
 }
 
@@ -229,8 +313,9 @@ const proxiedDispatchers = new Map<string, Dispatcher>();
  * address. The request keeps its Host header, and TLS inside the tunnel uses
  * the hostname for SNI and the certificate check.
  */
-function getProxiedPublicDispatcher(proxy: URL): Dispatcher {
-  let dispatcher = proxiedDispatchers.get(proxy.href);
+function getProxiedPublicDispatcher(proxy: URL, privateHost?: string): Dispatcher {
+  const cacheKey = privateHost ? `${proxy.href}|${privateHost}` : proxy.href;
+  let dispatcher = proxiedDispatchers.get(cacheKey);
   if (dispatcher) return dispatcher;
 
   const proxyClient = new Client(proxy.origin);
@@ -241,7 +326,7 @@ function getProxiedPublicDispatcher(proxy: URL): Dispatcher {
   const connect: buildConnector.connector = (opts, callback) => {
     const hostname = normalizeHostname(opts.hostname);
     const port = Number(opts.port) || (opts.protocol === 'https:' ? 443 : 80);
-    lookupChecked(hostname)
+    lookupChecked(hostname, privateHost)
       .then(async (address) => {
         const authority = `${isIP(address) === 6 ? `[${address}]` : address}:${port}`;
         const tunnel = await proxyClient.connect({
@@ -265,7 +350,7 @@ function getProxiedPublicDispatcher(proxy: URL): Dispatcher {
       .catch((err: Error) => callback(err, null));
   };
   dispatcher = new Agent({ connect });
-  proxiedDispatchers.set(proxy.href, dispatcher);
+  proxiedDispatchers.set(cacheKey, dispatcher);
   return dispatcher;
 }
 
@@ -296,18 +381,33 @@ export type PublicFetchResponse = UndiciResponse;
 export async function fetchPublicUrl(
   url: string,
   init: Omit<UndiciRequestInit, 'dispatcher' | 'redirect'> = {},
+  options: {
+    /**
+     * One hostname on the intranet (isIntranetHostName) that may resolve to
+     * an intranet address: only for an address the admin entered (company
+     * calendars). It must equal the URL's hostname to make any difference;
+     * a public name here changes nothing.
+     */
+    allowPrivateHost?: string;
+  } = {},
 ): Promise<PublicFetchResponse> {
-  const parsed = parseAllowedUrl(url);
+  const privateHost = options.allowPrivateHost && isIntranetHostName(options.allowPrivateHost)
+    ? normalizeHostname(options.allowPrivateHost)
+    : undefined;
+  const parsed = parseAllowedUrl(url, privateHost);
   if (!parsed) {
     throw new DisallowedUrlError(url);
   }
   const proxy = envProxyFor(parsed);
+  const exempt = privateHost && normalizeHostname(parsed.hostname) === privateHost ? privateHost : undefined;
 
   try {
     return await undiciFetch(url, {
       ...init,
       redirect: 'manual',
-      dispatcher: proxy ? getProxiedPublicDispatcher(proxy) : getPublicDispatcher(),
+      dispatcher: proxy
+        ? getProxiedPublicDispatcher(proxy, exempt)
+        : exempt ? getPrivateHostDispatcher(exempt) : getPublicDispatcher(),
     });
   } catch (err) {
     const blocked = findBlockedCause(err);

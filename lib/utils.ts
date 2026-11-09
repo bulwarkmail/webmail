@@ -74,7 +74,7 @@ const dateFormatters = new Map<string, Intl.DateTimeFormat>();
  * field: then toLocaleString, toLocaleDateString and toLocaleTimeString all
  * format exactly as the formatter does.
  */
-function cachedDateFormat(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+function cachedDateFormat(locale: string | undefined, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
   const key = `${locale}|${JSON.stringify(options)}`;
   let formatter = dateFormatters.get(key);
   if (!formatter) {
@@ -91,7 +91,10 @@ function cachedDateFormat(locale: string, options: Intl.DateTimeFormatOptions): 
  *   - `smart` (default) — locale-aware, age-bucketed:
  *       today        → time only           ("15:31" or "3:31 PM")
  *       last 7 days  → short weekday+time  ("Fr 15:31", "Fri 3:31 PM")
- *       older        → full locale date    ("28.04.2026", "04/28/2026")
+ *       this year    → day and month       ("28. Apr.", "Apr 28"), as Gmail
+ *                      and Outlook do; a numeric date when a date order is
+ *                      picked in the region settings
+ *       older        → full locale date    ("28.04.2025", "04/28/2025")
  *       With `listStyle: 'mountain-view'` the buckets are Gmail's instead:
  *       today → time, this year → "Oct 10", older → "10/10/25".
  *   - `relative` — legacy en-US relative format ("1h ago", "2d ago").
@@ -123,16 +126,44 @@ export function formatDate(
   const now = new Date();
 
   const locale = getEffectiveLocale();
+  // Three fields, not a copy of the whole settings store per call: every
+  // message row asks on every render.
+  const settings = useSettingsStore.getState();
+  const dateFormat = overrides && "dateFormat" in overrides ? overrides.dateFormat : settings.dateFormat;
+  const dateLocale = overrides && "dateLocale" in overrides ? overrides.dateLocale : settings.dateLocale;
+  const timeFormat = settings.timeFormat;
+  const timeZone = getEffectiveTimeZone();
+  // The same message, settings and minute give the same text.
+  const memoKey = `${d.getTime()}|${Math.floor(now.getTime() / 60000)}|${locale}|${dateFormat}|${dateLocale}|${timeFormat}|${timeZone}|${overrides?.listStyle ?? ""}`;
+  const memo = formattedDates.get(memoKey);
+  if (memo !== undefined) return memo;
+  if (formattedDates.size >= FORMATTED_DATES_MAX) formattedDates.clear();
+  const text = formatDateUncached(d, now, locale, dateFormat, dateLocale, timeFormat, timeZone, overrides?.listStyle);
+  formattedDates.set(memoKey, text);
+  return text;
+}
+
+const formattedDates = new Map<string, string>();
+const FORMATTED_DATES_MAX = 2_000;
+
+function formatDateUncached(
+  d: Date,
+  now: Date,
+  locale: string,
+  dateFormat: DateFormat | undefined,
+  dateLocale: DateLocale | undefined,
+  timeFormat: string | undefined,
+  timeZone: string,
+  listStyle: 'mountain-view' | undefined,
+): string {
   // Names (weekday, month) follow the UI language: `en` alone resolves to
   // en-US in Intl; everything else uses the language subtag as-is and lets
   // the runtime pick a sensible default region.
   const uiLocale = locale === "en" ? "en-US" : locale;
-  const { dateFormat, dateLocale, timeFormat } = { ...useSettingsStore.getState(), ...overrides };
   // Numeric dates additionally honour the regional `dateLocale` override
   // (defaults to `auto` = the UI language, preserving prior behaviour). (#456)
   const numericLocale = resolveDateLocale(dateLocale, uiLocale);
   const hour12 = timeFormat === "12h";
-  const timeZone = getEffectiveTimeZone();
 
   if (dateFormat === "relative") {
     const diff = now.getTime() - d.getTime();
@@ -183,21 +214,32 @@ export function formatDate(
     dWall.day === nowWall.day;
   if (isSameDay) return timeStr;
 
-  if (overrides?.listStyle === 'mountain-view') {
+  if (listStyle === 'mountain-view') {
     if (dWall.year === nowWall.year) {
       return cachedDateFormat(uiLocale, { timeZone, month: "short", day: "numeric" }).format(d);
     }
     return cachedDateFormat(numericLocale, { timeZone, year: "2-digit", month: "numeric", day: "numeric" }).format(d);
   }
 
-  const daysAgo = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (daysAgo < 7) {
+  // Count calendar days in the display zone, not 24-hour periods: a mail
+  // from last Wednesday must never read "Wed" on a Wednesday (mail-p2-10).
+  // The weekday only names the last six days; older mail gets its date.
+  const daysAgo = Math.round(
+    (Date.UTC(nowWall.year, nowWall.month - 1, nowWall.day) - Date.UTC(dWall.year, dWall.month - 1, dWall.day)) / 86400000,
+  );
+  if (daysAgo >= 0 && daysAgo < 7) {
     // German Intl outputs "Fr." with a trailing dot for `weekday: 'short'`;
     // strip it so the result reads cleanly next to the time.
     const weekday = cachedDateFormat(uiLocale, { timeZone, weekday: "short" })
       .format(d)
       .replace(/\.$/, "");
     return `${weekday} ${timeStr}`;
+  }
+
+  // Earlier this year: "Oct 24" rather than "10/24/2026" (mail-16). A date
+  // order picked in the region settings keeps its numeric dates.
+  if (dWall.year === nowWall.year && (dateLocale ?? "auto") === "auto") {
+    return cachedDateFormat(uiLocale, { timeZone, month: "short", day: "numeric" }).format(d);
   }
 
   return cachedDateFormat(numericLocale, {
@@ -247,7 +289,12 @@ export function formatDateTime(
     if (options?.timeZoneName) localeOptions.timeZoneName = options.timeZoneName;
   }
 
-  return d.toLocaleString(effectiveLocale, localeOptions);
+  // A field is always named here but for a bare dateOnly call, which keeps
+  // toLocaleString's own defaults (a formatter would drop the time).
+  const namesAField = !!(localeOptions.weekday || localeOptions.year || localeOptions.month || localeOptions.day || localeOptions.hour);
+  return namesAField
+    ? cachedDateFormat(effectiveLocale, localeOptions).format(d)
+    : d.toLocaleString(effectiveLocale, localeOptions);
 }
 
 /**

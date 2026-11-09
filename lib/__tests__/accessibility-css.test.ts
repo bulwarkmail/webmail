@@ -193,3 +193,47 @@ describe('reduced transparency', () => {
     expect(css).toMatch(/:root\[data-transparency="reduce"\] body\[data-theme-skin="builtin-aurora-glass"\] :is\(\.bg-card, \.bg-popover, \[role="menu"\], \[role="dialog"\], \[role="listbox"\]\) \{\s*background-color: var\(--color-popover\) !important;/);
   });
 });
+
+// inline-reply: the editor always matches :focus-visible, and the outline
+// boxed in the typing part alone, with the signature outside it.
+describe("the composer's writing area", () => {
+  it('shows the focus on the whole page, not as a box round the editor', () => {
+    // The rule that takes the outline off, found by its first selector.
+    const start = css.indexOf('html:root [data-composer-writing]');
+    expect(start).toBeGreaterThan(-1);
+    const rule = css.slice(start, css.indexOf('}', start));
+    expect(rule).toMatch(/\{\s*outline: none !important;\s*$/);
+    const off = rule.slice(0, rule.indexOf('{')).split(/,\s*\n/).map((s) => s.trim().replace(/(:focus-visible|:focus)+/g, ''));
+    document.body.innerHTML = '<div data-composer-writing=""><div class="tiptap ProseMirror" contenteditable="true"></div><p>Signature</p></div><div class="tiptap other" contenteditable="true"></div>';
+    const inside = document.querySelector('[data-composer-writing] .tiptap')!;
+    const outside = document.querySelector('.tiptap.other')!;
+    expect(off.some((s) => inside.matches(s))).toBe(true);
+    // Only inside the writing area: other editors keep the outline.
+    expect(off.some((s) => outside.matches(s))).toBe(false);
+    document.body.innerHTML = '';
+    expect(css).toMatch(/\[data-composer-writing\]:has\(:is\(\.tiptap, textarea\):focus-visible\) \{\s*box-shadow: inset var\(--focus-ring-width\) 0 0 0 var\(--focus-ring-color\);/);
+    // Forced colours drop box-shadows: an outline round the page there.
+    expect(forcedBlock()).toMatch(/\[data-composer-writing\]:has\(:is\(\.tiptap, textarea\):focus-visible\) \{\s*outline: var\(--focus-ring-width\) solid CanvasText;/);
+  });
+});
+
+describe('more contrast', () => {
+  const globals = readFileSync(path.join(process.cwd(), 'app', 'globals.css'), 'utf8');
+  const brandVars = [...new Set([...globals.matchAll(/var\((--brand-[\w-]+)/g)].map((m) => m[1]))];
+
+  /** The declarations of the rule whose selector is `selector`. */
+  function body(selector: string): string {
+    const at = css.indexOf(`${selector} {`);
+    expect(at).toBeGreaterThan(-1);
+    return css.slice(css.indexOf('{', at) + 1, css.indexOf('}', at));
+  }
+
+  it.each([
+    ['the system setting', ':root:not([data-contrast="normal"])'],
+    ['the More setting', ':root[data-contrast="more"]'],
+  ])('drops the host palette for %s, so its stock colour pairs apply', (_name, selector) => {
+    expect(brandVars.length).toBeGreaterThanOrEqual(8);
+    const rule = body(selector);
+    for (const name of brandVars) expect(rule).toContain(`${name}: initial;`);
+  });
+});

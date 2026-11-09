@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { registerOutgoingFinalizer, registerPreSendCheck, resetSendPipeline } from '@/lib/outgoing/send-pipeline';
+import { composerHandle } from '@/lib/plugin-sandbox/composer-registry';
 
 // ─── Heavy component mocks (mirrors composer-reopened-draft-signature.test.tsx) ─
 
@@ -229,6 +230,16 @@ describe('composer send pipeline', () => {
     expect(seen).toEqual([expect.objectContaining({
       surface: 'composer', to: ['bob@example.com'], cc: ['carol@example.com'], fromEmail: 'me@example.com', mode: 'compose', plainText: false,
     })]);
+  });
+
+  it('names the composer plugins know it by, for onAfterEmailSend', async () => {
+    let open = false;
+    const onSend = vi.fn((data: { composerId?: string }) => { open = !!composerHandle(data.composerId); });
+    render(<EmailComposer initialData={DRAFT} onSend={onSend} />);
+    clickSend();
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend.mock.calls[0][0]).toEqual(expect.objectContaining({ composerId: expect.any(String) }));
+    expect(open).toBe(true);
   });
 
   it('sends nothing when a check says no, and sends after it says yes', async () => {

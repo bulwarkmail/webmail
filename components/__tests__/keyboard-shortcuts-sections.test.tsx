@@ -37,7 +37,9 @@ describe('keyboard shortcuts help per app', () => {
     nav.pathname = '/';
     render(<KeyboardShortcutsModal isOpen onClose={() => {}} />);
     expect(screen.getAllByText('or').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Ctrl + K').length).toBe(1);
+    // The command palette, and Insert link in the composer.
+    expect(screen.getAllByText('Ctrl + K').length).toBe(2);
+    expect(screen.queryByText('⌘ + K')).toBeNull();
   });
 });
 

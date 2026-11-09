@@ -55,6 +55,20 @@ if (typeof window !== 'undefined' && typeof window.localStorage?.getItem !== 'fu
   });
 }
 
+// The page skeletons keep the server's markup un-hydrated
+// (components/boot-skeleton/server-markup.tsx) and tell a server render by
+// there being no window. jsdom has one, so a server render in a test says so.
+vi.mock('react-dom/server', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-dom/server')>();
+  const asServer = <A extends unknown[], R>(render: (...args: A) => R) => (...args: A): R => {
+    const g = globalThis as { __bulwarkServerRender?: boolean };
+    const before = g.__bulwarkServerRender;
+    g.__bulwarkServerRender = true;
+    try { return render(...args); } finally { g.__bulwarkServerRender = before; }
+  };
+  return { ...actual, renderToString: asServer(actual.renderToString), renderToStaticMarkup: asServer(actual.renderToStaticMarkup) };
+});
+
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
   useLocale: () => 'en',

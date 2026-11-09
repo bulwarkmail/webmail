@@ -102,6 +102,50 @@ describe('ContactsApp', () => {
     expect(within(drawer()).getByText('tabs.all')).toBeInTheDocument();
   });
 
+  // The same drawer as Mail's folders (usability test 2026-11-04): it opened
+  // beside the app rail, ignored Escape and left the focus on the page.
+  it("opens the drawer from the window's edge, over the app rail and under the top bar", () => {
+    renderContacts();
+    const classes = drawer().className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['fixed', 'start-0', 'top-[var(--drawer-top)]', 'bottom-0']));
+    expect(classes).not.toContain('absolute');
+    // Where the window's controls are over the page, app/globals.css places it by this.
+    expect(drawer()).toHaveAttribute('data-window-drawer');
+  });
+
+  it('takes the focus into the drawer, keeps Tab there and gives it back to the menu button on Escape', () => {
+    renderContacts();
+    const menu = screen.getAllByRole('button', { name: 'open_categories' })[0];
+    menu.focus();
+    fireEvent.click(menu);
+    // The category on screen.
+    const current = within(drawer()).getByRole('button', { name: /tabs\.all/ });
+    expect(document.activeElement).toBe(current);
+    const stops = Array.from(drawer().querySelectorAll<HTMLElement>('button:not(:disabled)'));
+    stops.at(-1)!.focus();
+    fireEvent.keyDown(stops.at(-1)!, { key: 'Tab' });
+    expect(document.activeElement).toBe(stops[0]);
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(drawer()).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu);
+  });
+
+  it('dims the whole window behind the drawer and closes it on a click there, back to the menu button', () => {
+    renderContacts();
+    const menu = screen.getAllByRole('button', { name: 'open_categories' })[0];
+    menu.focus();
+    fireEvent.click(menu);
+    const scrim = screen.getByTestId('drawer-scrim');
+    expect(scrim.className.split(/\s+/)).toEqual(expect.arrayContaining(['fixed', 'inset-0']));
+    // A press on the scrim drops the focus to the page.
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.click(scrim);
+    expect(drawer()).toHaveAttribute('inert');
+    expect(screen.queryByTestId('drawer-scrim')).toBeNull();
+    expect(document.activeElement).toBe(menu);
+  });
+
   it("closes the drawer when something in it is picked, so it doesn't stay over the form", () => {
     renderContacts();
     fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);
@@ -182,7 +226,7 @@ describe('ContactsApp', () => {
   it('starts a new group with the contact when "Add to group" finds no group to add to', () => {
     renderContacts();
     fireEvent.contextMenu(screen.getByText('Alice Smith'));
-    fireEvent.click(screen.getByText('context_menu.add_to_group'));
+    fireEvent.click(screen.getByText('contacts_add_to_group'));
     expect(screen.getByText('groups.members_label (1)')).toBeInTheDocument();
   });
 
@@ -190,16 +234,32 @@ describe('ContactsApp', () => {
     const team: ContactCard = { id: 'g-team', kind: 'group', addressBookIds: {}, name: { full: 'Team' }, members: {} };
     renderContacts([alice, bob, team]);
     fireEvent.contextMenu(screen.getByText('Bob Jones'));
-    fireEvent.click(screen.getByText('context_menu.add_to_group'));
+    fireEvent.click(screen.getByText('contacts_add_to_group'));
     fireEvent.click(screen.getByText('bulk.new_group'));
     expect(screen.getByText('groups.members_label (1)')).toBeInTheDocument();
+  });
+
+  it('offers no Edit, Move or Delete for a contact in an address book shared read-only', () => {
+    const shared = { ...alice, addressBookIds: { 'ab-shared': true } };
+    renderContacts([shared, bob]);
+    act(() => {
+      useContactStore.setState({ addressBooks: [{ id: 'ab-shared', name: 'Team', myRights: { mayRead: true, mayWrite: false } }] as never });
+    });
+    fireEvent.contextMenu(screen.getByText('Alice Smith'));
+    expect(screen.queryByRole('menuitem', { name: 'context_menu.edit' })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: /context_menu.delete/ })).toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'context_menu.export_vcard' })).toBeInTheDocument();
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+
+    fireEvent.contextMenu(screen.getByText('Bob Jones'));
+    expect(screen.getByRole('menuitem', { name: 'context_menu.edit' })).toBeInTheDocument();
   });
 
   it('imports in a real dialog that Escape closes', () => {
     renderContacts();
     fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);
     fireEvent.click(within(drawer()).getByRole('button', { name: 'new' }));
-    fireEvent.click(screen.getByText('import.title'));
+    fireEvent.click(screen.getByText('import_menu'));
     const dialog = screen.getByRole('dialog', { name: 'import.title' });
     fireEvent.keyDown(dialog, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'import.title' })).toBeNull();
@@ -257,7 +317,7 @@ describe('ContactsApp', () => {
     try {
       renderContacts();
       fireEvent.click(screen.getByRole('button', { name: 'more' }));
-      fireEvent.click(screen.getByText('import.title'));
+      fireEvent.click(screen.getByText('import_menu'));
       expect(screen.getByRole('dialog', { name: 'import.title' })).toBeInTheDocument();
     } finally {
       window.matchMedia = matchMedia;
@@ -271,7 +331,7 @@ describe('ContactsApp', () => {
     fireEvent.click(within(drawer()).getByText('Work'));
     expect(screen.getByText('empty_view_title')).toBeInTheDocument();
     expect(screen.queryByText('empty_state_title')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /import.title/ }));
+    fireEvent.click(screen.getByRole('button', { name: /import_menu/ }));
     expect(screen.getByRole('dialog', { name: 'import.title' })).toBeInTheDocument();
   });
 
@@ -283,12 +343,97 @@ describe('ContactsApp', () => {
     expect(consumePendingMailto()).toMatchObject({ to: [expect.stringContaining('alice@example.com')], inApp: true });
   });
 
-  it('says so when a duplicate fails', async () => {
-    renderContacts();
-    const addLocalContact = vi.fn(async () => { throw new Error('quota'); });
-    act(() => { useContactStore.setState({ addLocalContact }); });
-    fireEvent.contextMenu(screen.getByText('Alice Smith'));
-    fireEvent.click(screen.getByText('context_menu.duplicate'));
-    await waitFor(() => expect(useToastStore.getState().toasts.at(-1)?.title).toBe('toast.error_create'));
+  describe('merging duplicates (pim-14)', () => {
+    const anna1: ContactCard = {
+      id: 'c-anna1', uid: 'urn:uuid:anna1', addressBookIds: {}, updated: '2026-01-01T00:00:00Z',
+      name: { components: [{ kind: 'given', value: 'Anna' }, { kind: 'surname', value: 'Example' }], isOrdered: true },
+      emails: { e0: { address: 'anna@home.example.net' } },
+      addresses: { a0: { components: [{ kind: 'name', value: 'Hauptstraße 1' }, { kind: 'locality', value: 'Berlin' }], isOrdered: true } },
+    };
+    const anna2: ContactCard = {
+      id: 'c-anna2', uid: 'urn:uuid:anna2', addressBookIds: {}, updated: '2026-06-01T00:00:00Z',
+      name: { components: [{ kind: 'given', value: 'Anna' }, { kind: 'surname', value: 'Example' }], isOrdered: true },
+      emails: { e0: { address: 'anna@example.net' } },
+    };
+    const club: ContactCard = { id: 'g-club', kind: 'group', addressBookIds: {}, name: { full: 'Club' }, members: { 'urn:uuid:anna1': true } };
+    const lastToast = () => useToastStore.getState().toasts.at(-1);
+
+    it('merges two ticked contacts from the selection bar, keeps all their data and group, and Undo brings the other back', async () => {
+      renderContacts([anna1, anna2, bob, club]);
+      fireEvent.click(screen.getAllByText('Anna Example')[0]);
+      fireEvent.click(screen.getAllByText('Anna Example')[1], { ctrlKey: true });
+      // The list's selection bar (the selection pane on the right has the same button).
+      fireEvent.click(screen.getAllByRole('button', { name: 'merge_selected' })[0]);
+      const preview = await screen.findByTestId('merge-preview');
+      expect(within(preview).getByText('anna@example.net')).toBeInTheDocument();
+      expect(within(preview).getByText('anna@home.example.net')).toBeInTheDocument();
+      // One line per address line, as the card shows it (pim-p2-14); getByText joins the lines with a space.
+      expect(within(preview).getByText('Hauptstraße 1 Berlin')).toBeInTheDocument();
+      expect(within(preview).getByText('Club')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+
+      await waitFor(() => expect(useContactStore.getState().contacts.map((c) => c.id)).toEqual(['c-anna2', 'c-bob', 'g-club']));
+      const kept = useContactStore.getState().contacts[0];
+      expect(Object.values(kept.emails ?? {}).map((e) => e.address)).toEqual(['anna@example.net', 'anna@home.example.net']);
+      expect(Object.values(kept.addresses ?? {})).toEqual([anna1.addresses!.a0]);
+      expect(useContactStore.getState().contacts[2].members).toEqual({ 'urn:uuid:anna2': true });
+      expect(lastToast()?.title).toBe('merged');
+
+      await act(async () => { lastToast()?.action?.onClick(); });
+      await waitFor(() => expect(useContactStore.getState().contacts.map((c) => c.id).sort()).toEqual(['c-anna1', 'c-anna2', 'c-bob', 'g-club']));
+      const restored = useContactStore.getState().contacts;
+      expect(Object.keys(restored.find((c) => c.id === 'c-anna2')!.emails ?? {})).toEqual(['e0']);
+      expect(restored.find((c) => c.id === 'g-club')?.members).toEqual({ 'urn:uuid:anna1': true });
+    });
+
+    it('lists possible duplicates over the list and merges a set from there', async () => {
+      renderContacts([anna1, anna2, bob]);
+      fireEvent.click(screen.getByText('possible_duplicates'));
+      const view = screen.getByTestId('contact-duplicates');
+      expect(within(view).getAllByText('Anna Example')).toHaveLength(2);
+      expect(within(view).queryByText('Bob Jones')).toBeNull();
+      fireEvent.click(within(view).getByRole('button', { name: /merge_selected/ }));
+      await screen.findByTestId('merge-preview');
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+      await waitFor(() => expect(useContactStore.getState().contacts.map((c) => c.id)).toEqual(['c-anna2', 'c-bob']));
+      // Nothing left to merge: the line goes away.
+      await waitFor(() => expect(screen.queryByText('possible_duplicates')).toBeNull());
+    });
+
+    it('offers Merge with… instead of Duplicate, picks the other card, then merges', async () => {
+      renderContacts([anna1, anna2, bob]);
+      fireEvent.contextMenu(screen.getByText('Bob Jones'));
+      expect(screen.queryByText('context_menu.duplicate')).toBeNull();
+      fireEvent.click(screen.getByText('merge_with'));
+      const list = await screen.findByTestId('merge-pick-list');
+      fireEvent.click(within(list).getAllByText('Anna Example')[0]);
+      await screen.findByTestId('merge-preview');
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+      await waitFor(() => expect(useContactStore.getState().contacts).toHaveLength(2));
+    });
+
+    it('says so when the merge fails, and deletes nothing', async () => {
+      renderContacts([anna1, anna2]);
+      const updateLocalContact = vi.fn(async () => { throw new Error('quota'); });
+      act(() => { useContactStore.setState({ updateLocalContact }); });
+      fireEvent.click(screen.getByText('possible_duplicates'));
+      fireEvent.click(within(screen.getByTestId('contact-duplicates')).getByRole('button', { name: /merge_selected/ }));
+      await screen.findByTestId('merge-preview');
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+      await waitFor(() => expect(lastToast()?.title).toBe('merge_failed'));
+      expect(useContactStore.getState().contacts).toHaveLength(2);
+    });
+  });
+
+  it("marks no member in the list on a group's page, even with a contact open before", () => {
+    const team: ContactCard = { id: 'g-team', addressBookIds: {}, kind: 'group', name: { full: 'Team' }, members: { 'c-alice': true, 'c-bob': true } };
+    renderContacts([alice, bob, team]);
+    fireEvent.click(screen.getByText('Alice Smith'));
+    expect(document.querySelector('[data-contact-id="c-alice"]')).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);
+    fireEvent.click(within(drawer()).getByText('Team'));
+    expect(screen.getByText('groups.members_label')).toBeInTheDocument();
+    expect(document.querySelector('[data-contact-id="c-alice"]')).toHaveAttribute('aria-selected', 'false');
+    expect(document.querySelectorAll('[data-contact-id][aria-selected="true"]')).toHaveLength(0);
   });
 });

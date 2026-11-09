@@ -4,6 +4,35 @@ import { buildMailboxTree, type MailboxNode } from "./utils";
 /** Header node that wraps the user's own folders when another account leads. */
 export const OWN_ACCOUNT_MOVE_NODE_PREFIX = "own-account-";
 
+// Whether an email belongs to a given mailbox.
+// Own-account emails carry bare ids (equal to both `id` and `originalId`).
+// As of #281 V3, EVERY client fetch path (getEmails/getEmail/getThreadEmails/
+// searchEmails/advancedSearchEmails) namespaces shared/delegated emails'
+// `mailboxIds` to the store id (`${ownerId}:${origId}`), so the `ids[mailbox.id]`
+// fast path below matches own and shared mailboxes alike - one id space.
+// The `originalId` branches remain as a defensive fallback for any email that
+// still carries a bare owner id (scoped to the owning account via
+// `sourceAccountId === mailbox.accountId` so a bare owner id can't collide with
+// another account's folder). (#281)
+export function emailInMailbox(
+  email: { mailboxIds?: Record<string, boolean>; sourceAccountId?: string },
+  mailbox: Mailbox,
+): boolean {
+  const ids = email.mailboxIds;
+  if (!ids) return false;
+  if (ids[mailbox.id]) return true;
+  if (!mailbox.isShared && mailbox.originalId) return !!ids[mailbox.originalId];
+  if (
+    mailbox.isShared &&
+    mailbox.originalId &&
+    email.sourceAccountId &&
+    email.sourceAccountId === mailbox.accountId
+  ) {
+    return !!ids[mailbox.originalId];
+  }
+  return false;
+}
+
 /**
  * JMAP accountId of the account a message lives in, for scoping its Move menu.
  *
@@ -34,16 +63,30 @@ export function resolveMoveOwnerAccountId(
  * shared one (#1149). The shared account's folders now come first and the
  * user's own folders follow under their account name, so a deliberate
  * cross-account move is still one pick away but no longer the obvious one.
+ *
+ * The open folder is left out only when the messages being moved are all in
+ * it. A search across folders lists messages from other folders while the
+ * open one stays selected, and those can be moved into it (#1452).
  */
 export function buildMoveTargets(
   mailboxes: Mailbox[],
-  opts: { currentMailboxId?: string | null; ownerAccountId?: string },
+  opts: {
+    currentMailboxId?: string | null;
+    ownerAccountId?: string;
+    /** The messages being moved; without them the open folder is left out. */
+    emails?: Array<Pick<Email, "mailboxIds" | "sourceAccountId">>;
+  },
 ): { tree: MailboxNode[]; targetIds: Set<string> } {
+  const current = mailboxes.find((m) => m.id === opts.currentMailboxId);
+  const emails = opts.emails ?? [];
+  const hiddenId = current && (emails.length === 0 || emails.every((e) => emailInMailbox(e, current)))
+    ? current.id
+    : undefined;
   const targetIds = new Set(
     mailboxes
       .filter(
         (m) =>
-          m.id !== opts.currentMailboxId &&
+          m.id !== hiddenId &&
           m.role !== "drafts" &&
           !m.id.startsWith("shared-") &&
           m.myRights?.mayAddItems

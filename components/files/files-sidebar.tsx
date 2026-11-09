@@ -13,7 +13,8 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { cn } from "@/lib/utils";
 import { sharedFilePages, type FileResource } from "@/stores/file-store";
 import { getFileIconByName } from "@/components/files/file-icons";
-import { anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { AccountScopeLabel } from "@/components/layout/account-scope-label";
 
 const COLLAPSED_KEY = "files-sidebar-collapsed";
 const RECENT_LIMIT = 8;
@@ -83,7 +84,8 @@ export interface FilesSidebarProps {
   onDeleteFolder: (folder: FileResource) => void;
   /** Open the folder holding a recent file, with the file selected. */
   onRevealRecent: (id: string) => void;
-  onDownloadRecent: (id: string) => void;
+  /** Left out when a device policy turned downloads off. */
+  onDownloadRecent?: (id: string) => void;
   onRemoveRecent: (id: string) => void;
   /** Items in the trash; the entry shows their number. */
   trashCount?: number;
@@ -124,6 +126,7 @@ export function FilesSidebar({
   onDropToTrash,
 }: FilesSidebarProps) {
   const t = useTranslations("files");
+  const tMenu = useTranslations("menuAudit");
   const newMenu = useContextMenu<null>();
   const itemMenu = useContextMenu<MenuTarget>();
   const newButtonRef = useRef<HTMLButtonElement>(null);
@@ -273,10 +276,10 @@ export function FilesSidebar({
   const createItems = (path: string, id: string | null) => (
     <>
       <ContextMenuSeparator />
-      <ContextMenuItem icon={FolderPlus} label={t("new_folder")} onClick={() => run(() => onCreateIn(path, id, "folder"))} />
-      <ContextMenuItem icon={FilePlus} label={newFileLabel ?? t("new_text_file")} onClick={() => run(() => onCreateIn(path, id, "text"))} />
-      <ContextMenuItem icon={Upload} label={t("upload_files")} onClick={() => run(() => onCreateIn(path, id, "files"))} />
-      <ContextMenuItem icon={FolderUp} label={t("upload_folder")} onClick={() => run(() => onCreateIn(path, id, "dir"))} />
+      <ContextMenuItem icon={FolderPlus} label={tMenu("files_new_folder")} onClick={() => run(() => onCreateIn(path, id, "folder"))} />
+      <ContextMenuItem icon={FilePlus} label={newFileLabel ?? tMenu("files_new_text_file")} onClick={() => run(() => onCreateIn(path, id, "text"))} />
+      <ContextMenuItem icon={Upload} label={tMenu("files_upload_files")} onClick={() => run(() => onCreateIn(path, id, "files"))} />
+      <ContextMenuItem icon={FolderUp} label={tMenu("files_upload_folder")} onClick={() => run(() => onCreateIn(path, id, "dir"))} />
     </>
   );
 
@@ -284,7 +287,11 @@ export function FilesSidebar({
     <div className="flex flex-col h-full bg-secondary">
       {/* Same h-14 box as the mail sidebar's account switcher, so the apps line up. */}
       <div className="px-3 h-14 box-content border-b border-border flex items-center justify-between flex-shrink-0">
-        <span className="text-sm font-semibold truncate">{t("title")}</span>
+        {/* Which account it shows, when there are several: the address, which switches. */}
+        <div className="flex min-w-0 flex-col">
+          <span className="text-sm font-semibold truncate">{t("title")}</span>
+          <AccountScopeLabel />
+        </div>
         {canCreate && (
           <IconButton
             ref={newButtonRef}
@@ -295,7 +302,7 @@ export function FilesSidebar({
             onMouseDown={(e) => { if (newMenu.contextMenu.isOpen) e.stopPropagation(); }}
             onClick={(e) => {
               if (newMenu.contextMenu.isOpen) newMenu.closeContextMenu();
-              else newMenu.openContextMenu(anchorEvent(e.currentTarget, "end"), null);
+              else newMenu.openContextMenuFrom(e.currentTarget, null, "end");
             }}
           >
             <Plus />
@@ -454,11 +461,11 @@ export function FilesSidebar({
       </nav>
 
       <ContextMenu ref={newMenu.menuRef} isOpen={newMenu.contextMenu.isOpen} position={newMenu.contextMenu.position} onClose={newMenu.closeContextMenu}>
-        <ContextMenuItem icon={Upload} label={t("upload_files")} onClick={() => { newMenu.closeContextMenu(); onUploadFiles(); }} />
-        <ContextMenuItem icon={FolderUp} label={t("upload_folder")} onClick={() => { newMenu.closeContextMenu(); onUploadFolder(); }} />
+        <ContextMenuItem icon={Upload} label={tMenu("files_upload_files")} onClick={() => { newMenu.closeContextMenu(); onUploadFiles(); }} />
+        <ContextMenuItem icon={FolderUp} label={tMenu("files_upload_folder")} onClick={() => { newMenu.closeContextMenu(); onUploadFolder(); }} />
         <ContextMenuSeparator />
-        <ContextMenuItem icon={FolderPlus} label={t("new_folder")} onClick={() => { newMenu.closeContextMenu(); onNewFolder(); }} />
-        <ContextMenuItem icon={FilePlus} label={newFileLabel ?? t("new_text_file")} onClick={() => { newMenu.closeContextMenu(); onNewTextFile(); }} />
+        <ContextMenuItem icon={FolderPlus} label={tMenu("files_new_folder")} onClick={() => { newMenu.closeContextMenu(); onNewFolder(); }} />
+        <ContextMenuItem icon={FilePlus} label={newFileLabel ?? tMenu("files_new_text_file")} onClick={() => { newMenu.closeContextMenu(); onNewTextFile(); }} />
       </ContextMenu>
 
       <ContextMenu ref={itemMenu.menuRef} isOpen={itemMenu.contextMenu.isOpen} position={itemMenu.contextMenu.position} onClose={itemMenu.closeContextMenu}>
@@ -483,7 +490,7 @@ export function FilesSidebar({
                   Details act on the list and are left out here (R6). */}
               {(!folder.isShared || canShare(folder)) && <ContextMenuSeparator />}
               {canShare(folder) && (
-                <ContextMenuItem icon={Share2} label={t("share")} onClick={() => run(() => onShare(folder))} />
+                <ContextMenuItem icon={Share2} label={tMenu("files_share")} onClick={() => run(() => onShare(folder))} />
               )}
               {!folder.isShared && (
                 <ContextMenuItem
@@ -520,7 +527,9 @@ export function FilesSidebar({
           <>
             <ContextMenuItem icon={Eye} label={t("open")} onClick={() => run(() => onOpenRecent(menuTarget.id))} />
             <ContextMenuItem icon={FolderSearch} label={t("show_in_folder")} onClick={() => run(() => onRevealRecent(menuTarget.id))} />
-            <ContextMenuItem icon={Download} label={t("download")} onClick={() => run(() => onDownloadRecent(menuTarget.id))} />
+            {onDownloadRecent && (
+              <ContextMenuItem icon={Download} label={t("download")} onClick={() => run(() => onDownloadRecent(menuTarget.id))} />
+            )}
             <ContextMenuSeparator />
             <ContextMenuItem icon={X} label={t("remove_from_recent")} onClick={() => run(() => onRemoveRecent(menuTarget.id))} />
           </>

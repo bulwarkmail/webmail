@@ -155,11 +155,12 @@ export function SearchSuggestions({
               }}
             >
               <Avatar name={suggestion.name} email={suggestion.email} size="sm" className="shrink-0 w-6 h-6 text-[0.625rem]" />
-              <span className="flex-1 min-w-0 flex items-baseline gap-1.5 truncate">
+              <span className="flex-1 min-w-0 flex items-baseline gap-1.5 overflow-hidden">
                 {suggestion.name ? (
                   <>
-                    <HighlightedText text={suggestion.name} query={query} className="truncate" />
-                    <HighlightedText text={`<${suggestion.email}>`} query={query} className="text-muted-foreground truncate" />
+                    {/* The address gives way first: both shrinking left "Bo..." in a narrow list. */}
+                    <HighlightedText text={suggestion.name} query={query} className="truncate shrink-0 max-w-[60%]" />
+                    <HighlightedText text={`<${suggestion.email}>`} query={query} className="text-muted-foreground truncate min-w-0" />
                   </>
                 ) : (
                   <HighlightedText text={suggestion.email} query={query} className="truncate" />

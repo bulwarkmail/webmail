@@ -23,60 +23,60 @@ beforeEach(() => {
 });
 
 describe('pair step-up attempts', () => {
-  it('locks after five failures', () => {
-    for (let i = 0; i < 4; i++) recordPairStepUpFailure(OWNER, T0 + i);
-    expect(isPairStepUpLocked(OWNER, T0 + 10)).toBe(false);
-    recordPairStepUpFailure(OWNER, T0 + 5);
-    expect(isPairStepUpLocked(OWNER, T0 + 10)).toBe(true);
+  it('locks after five failures', async () => {
+    for (let i = 0; i < 4; i++) await recordPairStepUpFailure(OWNER, T0 + i);
+    expect(await isPairStepUpLocked(OWNER, T0 + 10)).toBe(false);
+    await recordPairStepUpFailure(OWNER, T0 + 5);
+    expect(await isPairStepUpLocked(OWNER, T0 + 10)).toBe(true);
   });
 
-  it('unlocks when the fifteen-minute window has passed', () => {
-    for (let i = 0; i < 5; i++) recordPairStepUpFailure(OWNER, T0);
-    expect(isPairStepUpLocked(OWNER, T0 + WINDOW_MS - 1)).toBe(true);
-    expect(isPairStepUpLocked(OWNER, T0 + WINDOW_MS)).toBe(false);
+  it('unlocks when the fifteen-minute window has passed', async () => {
+    for (let i = 0; i < 5; i++) await recordPairStepUpFailure(OWNER, T0);
+    expect(await isPairStepUpLocked(OWNER, T0 + WINDOW_MS - 1)).toBe(true);
+    expect(await isPairStepUpLocked(OWNER, T0 + WINDOW_MS)).toBe(false);
     // A failure after the window starts a new count.
-    recordPairStepUpFailure(OWNER, T0 + WINDOW_MS);
-    expect(isPairStepUpLocked(OWNER, T0 + WINDOW_MS + 1)).toBe(false);
+    await recordPairStepUpFailure(OWNER, T0 + WINDOW_MS);
+    expect(await isPairStepUpLocked(OWNER, T0 + WINDOW_MS + 1)).toBe(false);
   });
 
-  it('counts the window from the first failure, not the last', () => {
-    recordPairStepUpFailure(OWNER, T0);
-    for (let i = 0; i < 4; i++) recordPairStepUpFailure(OWNER, T0 + WINDOW_MS - 10 + i);
-    expect(isPairStepUpLocked(OWNER, T0 + WINDOW_MS - 1)).toBe(true);
-    expect(isPairStepUpLocked(OWNER, T0 + WINDOW_MS)).toBe(false);
+  it('counts the window from the first failure, not the last', async () => {
+    await recordPairStepUpFailure(OWNER, T0);
+    for (let i = 0; i < 4; i++) await recordPairStepUpFailure(OWNER, T0 + WINDOW_MS - 10 + i);
+    expect(await isPairStepUpLocked(OWNER, T0 + WINDOW_MS - 1)).toBe(true);
+    expect(await isPairStepUpLocked(OWNER, T0 + WINDOW_MS)).toBe(false);
   });
 
-  it('keeps accounts apart', () => {
-    for (let i = 0; i < 5; i++) recordPairStepUpFailure(OWNER, T0);
-    expect(isPairStepUpLocked('1:alice@example.org', T0)).toBe(false);
-    expect(isPairStepUpLocked('0:bob@example.org', T0)).toBe(false);
+  it('keeps accounts apart', async () => {
+    for (let i = 0; i < 5; i++) await recordPairStepUpFailure(OWNER, T0);
+    expect(await isPairStepUpLocked('1:alice@example.org', T0)).toBe(false);
+    expect(await isPairStepUpLocked('0:bob@example.org', T0)).toBe(false);
   });
 
-  it('clears the count after a successful step-up', () => {
-    for (let i = 0; i < 5; i++) recordPairStepUpFailure(OWNER, T0);
-    clearPairStepUpFailures(OWNER);
-    expect(isPairStepUpLocked(OWNER, T0)).toBe(false);
+  it('clears the count after a successful step-up', async () => {
+    for (let i = 0; i < 5; i++) await recordPairStepUpFailure(OWNER, T0);
+    await clearPairStepUpFailures(OWNER);
+    expect(await isPairStepUpLocked(OWNER, T0)).toBe(false);
   });
 
-  it('drops entries whose day ran out, so the map stays bounded', () => {
-    recordPairStepUpFailure('0:a@example.org', T0);
-    recordPairStepUpFailure('0:b@example.org', T0);
-    recordPairStepUpFailure('0:c@example.org', T0 + DAY_MS);
+  it('drops entries whose day ran out, so the map stays bounded', async () => {
+    await recordPairStepUpFailure('0:a@example.org', T0);
+    await recordPairStepUpFailure('0:b@example.org', T0);
+    await recordPairStepUpFailure('0:c@example.org', T0 + DAY_MS);
     const map = (globalThis as unknown as { __bulwarkPairAttempts: Map<string, unknown> }).__bulwarkPairAttempts;
     expect([...map.keys()]).toEqual(['0:c@example.org']);
   });
 
-  it("caps failures per day well below the mail server ban", () => {
+  it("caps failures per day well below the mail server ban", async () => {
     // 5 per window, window after window: the 21st attempt of the day is refused.
     let now = T0;
     for (let i = 0; i < 20; i++) {
       if (i > 0 && i % 5 === 0) now += WINDOW_MS;
-      expect(beginPairStepUp(OWNER, now)).toBe(true);
-      settlePairStepUp(OWNER, 'wrong_credential');
+      expect(await beginPairStepUp(OWNER, now)).toBe(true);
+      await settlePairStepUp(OWNER, 'wrong_credential');
     }
     now += WINDOW_MS;
-    expect(isPairStepUpLocked(OWNER, now)).toBe(true);
-    expect(isPairStepUpLocked(OWNER, T0 + DAY_MS)).toBe(false);
+    expect(await isPairStepUpLocked(OWNER, now)).toBe(true);
+    expect(await isPairStepUpLocked(OWNER, T0 + DAY_MS)).toBe(false);
   });
 
   it('keys an account by server and login name, whatever the cookie slot', () => {

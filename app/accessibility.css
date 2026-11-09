@@ -130,9 +130,25 @@
 }
 /* Inside a scroll container a positive offset is clipped; draw it inside.
    `focus-inset` does the same for any control that sits flush against the
-   edge of a clipping container. */
-:is([role="option"], [role="row"], [role="treeitem"], [role="gridcell"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="tab"], .focus-inset):focus-visible {
+   edge of a clipping container. The selector is padded to outweigh the two
+   rules above, whose :not() lists count towards their specificity. */
+html:root :is([role="option"], [role="row"], [role="treeitem"], [role="gridcell"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="tab"], .focus-inset):focus-visible:focus-visible:focus-visible:focus-visible {
   outline-offset: calc(var(--focus-ring-width) * -1) !important;
+}
+/* The composer's writing area (data-composer-writing) is one page: the text,
+   the signature and the folded quote. A text field always matches
+   :focus-visible, so the outline boxed in the typing part alone and left the
+   signature outside it, like a form field (inline-reply). The focus shows on
+   the page instead, as a bar along its start edge; forced-colors mode, which
+   drops box-shadows, gets an outline round the whole page (in the
+   forced-colors block below). Padded like the
+   rule above to outweigh the global outline. */
+html:root [data-composer-writing] :is(.tiptap, textarea):focus-visible:focus-visible:focus-visible:focus-visible:focus-visible,
+html:root[data-focus-always="on"] [data-composer-writing] :is(.tiptap, textarea):focus:focus:focus:focus:focus {
+  outline: none !important;
+}
+[data-composer-writing]:has(:is(.tiptap, textarea):focus-visible) {
+  box-shadow: inset var(--focus-ring-width) 0 0 0 var(--focus-ring-color);
 }
 /* The focused element scrolls clear of sticky headers and the bottom bar,
    in the page and inside the panes, which scroll on their own (scroll
@@ -178,8 +194,21 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
 
 /* ---------- More contrast (WCAG 1.4.6 as a setting) ---------- */
 
+/* The blocks below pin some colours of a pair but not the other (primary but
+   not its light foreground, accent text but not the accent ground), so a
+   host palette (DOMAIN_BRANDING, the --brand-* variables) would be paired
+   with the stock colours. More contrast drops the palette: every --brand-*
+   is reset, and app/globals.css falls back to its own pairs. */
 @media (prefers-contrast: more) {
   :root:not([data-contrast="normal"]) {
+    --brand-primary: initial;
+    --brand-primary-foreground: initial;
+    --brand-accent: initial;
+    --brand-accent-foreground: initial;
+    --brand-dark-primary: initial;
+    --brand-dark-primary-foreground: initial;
+    --brand-dark-accent: initial;
+    --brand-dark-accent-foreground: initial;
     --color-foreground: #000000;
     --color-muted-foreground: #1f2937;
     --color-border: #4b5563;
@@ -219,6 +248,14 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
   }
 }
 :root[data-contrast="more"] {
+  --brand-primary: initial;
+  --brand-primary-foreground: initial;
+  --brand-accent: initial;
+  --brand-accent-foreground: initial;
+  --brand-dark-primary: initial;
+  --brand-dark-primary-foreground: initial;
+  --brand-dark-accent: initial;
+  --brand-dark-accent-foreground: initial;
   --color-foreground: #000000;
   --color-muted-foreground: #1f2937;
   --color-border: #4b5563;
@@ -255,6 +292,29 @@ html.dark[data-contrast="more"] {
 }
 :root[data-contrast="more"] a[href]:not([role]) {
   text-decoration-line: underline;
+}
+/* Proofreading underlines: darker in light mode, lighter in dark mode. */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) {
+    --text-issue-grammar: #1d4ed8;
+    --text-issue-style: #92400e;
+    --text-issue-other: #374151;
+  }
+  .dark:not([data-contrast="normal"]) {
+    --text-issue-grammar: #93c5fd;
+    --text-issue-style: #fcd34d;
+    --text-issue-other: #e5e7eb;
+  }
+}
+:root[data-contrast="more"] {
+  --text-issue-grammar: #1d4ed8;
+  --text-issue-style: #92400e;
+  --text-issue-other: #374151;
+}
+html.dark[data-contrast="more"] {
+  --text-issue-grammar: #93c5fd;
+  --text-issue-style: #fcd34d;
+  --text-issue-other: #e5e7eb;
 }
 
 /* ---------- Reduced transparency ---------- */
@@ -383,6 +443,11 @@ html.dark[data-contrast="more"] {
  * because the colour is what it shows.
  */
 @media (forced-colors: active) {
+  /* The composer's writing area: box-shadows are gone here, so an outline round the page. */
+  [data-composer-writing]:has(:is(.tiptap, textarea):focus-visible) {
+    outline: var(--focus-ring-width) solid CanvasText;
+    outline-offset: calc(var(--focus-ring-width) * -1);
+  }
   :focus-visible:not([tabindex="-1"]:not(a[href], button, input, select, textarea, summary, [contenteditable="true"], [role="button"], [role="link"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="option"], [role="gridcell"], [role="row"], [role="treeitem"], [role="tab"], [role="radio"], [role="checkbox"], [role="switch"], [role="slider"], [role="spinbutton"], [role="columnheader"], [role="rowheader"])) {
     outline-color: Highlight !important;
   }
@@ -482,4 +547,17 @@ html.dark[data-contrast="more"] {
 
 :root[data-simple-mode="on"] [data-simple-hide] {
   display: none !important;
+}
+
+/* Proofreading underlines in forced colours: one colour, so the line styles tell the kinds apart. */
+@media (forced-colors: active) {
+  .tiptap .text-issue {
+    text-decoration-color: CanvasText;
+    text-decoration-thickness: 2px;
+  }
+  .tiptap .text-issue-active {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
 }

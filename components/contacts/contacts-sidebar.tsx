@@ -10,8 +10,10 @@ import { useLongPress } from "@/hooks/use-long-press";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import type { ContactCard, AddressBook } from "@/lib/jmap/types";
-import { getContactDisplayName } from "@/stores/contact-store";
+import { getContactDisplayName, TRUSTED_SENDERS_BOOK_NAME } from "@/stores/contact-store";
 import { useAccountStore } from "@/stores/account-store";
+import { useCollectionNames } from "@/hooks/use-collection-names";
+import { AccountScopeLabel } from "@/components/layout/account-scope-label";
 
 export type ContactCategory = "all" | "directory" | { groupId: string } | { addressBookId: string } | { keyword: string } | "uncategorized";
 
@@ -90,10 +92,18 @@ function saveCollapsed(state: Record<string, boolean>) {
   } catch { /* ignore */ }
 }
 
+/**
+ * The app's own "Trusted Senders" book: the senders whose images load, kept
+ * and managed in Settings, not a list of people. The sidebar leaves it out.
+ */
+export function isTrustedSendersBook(book: AddressBook): boolean {
+  return !book.isShared && book.name === TRUSTED_SENDERS_BOOK_NAME;
+}
+
 export function ContactsSidebar({
   groups,
   individuals,
-  addressBooks,
+  addressBooks: allAddressBooks,
   activeCategory,
   onSelectCategory,
   onCreateGroup,
@@ -116,8 +126,11 @@ export function ContactsSidebar({
   className,
   multiAccountMode,
 }: ContactsSidebarProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("contacts");
+  const tx = useTranslations("ux_pim_contact");
   const router = useRouter();
+  const addressBooks = useMemo(() => allAddressBooks.filter(b => !isTrustedSendersBook(b)), [allAddressBooks]);
   const { contextMenu: groupContextMenu, openContextMenu: openGroupContextMenu, openContextMenuFrom: openGroupMenuFrom, closeContextMenu: closeGroupContextMenu, menuRef: groupMenuRef } = useContextMenu<ContactCard>();
   const { contextMenu: bookContextMenu, openContextMenu: openBookContextMenu, openContextMenuFrom: openBookMenuFrom, closeContextMenu: closeBookContextMenu, menuRef: bookMenuRef } = useContextMenu<AddressBook>();
   const hasBookMenu = !!(onRenameAddressBook || onShareAddressBook || onSetDefaultAddressBook || onCreateContactInBook || onDeleteAddressBook);
@@ -127,7 +140,7 @@ export function ContactsSidebar({
   const bookMenu = (book: AddressBook) => hasBookMenu ? {
     onContextMenu: (e: React.MouseEvent) => openBookContextMenu(e, book),
     onOpenMenu: (anchor: HTMLElement) => openBookMenuFrom(anchor, book, "end"),
-    menuLabel: t("row_actions", { name: book.name }),
+    menuLabel: t("row_actions", { name: shownName.addressBook(book) }),
   } : {};
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsed);
@@ -271,7 +284,11 @@ export function ContactsSidebar({
       {/* Header */}
       {/* Same h-14 box as the mail sidebar's account switcher, so the apps line up. */}
       <div className="px-3 h-14 box-content border-b border-border flex items-center justify-between flex-shrink-0">
-        <span className="text-sm font-semibold truncate">{t("title")}</span>
+        {/* Which account it shows, when there are several: the address, which switches. */}
+        <div className="flex min-w-0 flex-col">
+          <span className="text-sm font-semibold truncate">{t("title")}</span>
+          <AccountScopeLabel />
+        </div>
         <div className="relative flex-shrink-0">
           <IconButton
             label={t("new")}
@@ -289,12 +306,12 @@ export function ContactsSidebar({
             <ContextMenuItem icon={UserPlus} label={t("create_new")} onClick={() => { newMenu.closeContextMenu(); onCreateContact(); }} />
             <ContextMenuItem icon={UsersRound} label={t("groups.create")} onClick={() => { newMenu.closeContextMenu(); onCreateGroup(); }} />
             {onCreateAddressBook && (
-              <ContextMenuItem icon={BookPlus} label={t("address_books.create")} onClick={() => { newMenu.closeContextMenu(); onCreateAddressBook(); }} />
+              <ContextMenuItem icon={BookPlus} label={tx("new_address_book_menu")} onClick={() => { newMenu.closeContextMenu(); onCreateAddressBook(); }} />
             )}
             {onImport && (
               <>
                 <ContextMenuSeparator />
-                <ContextMenuItem icon={Upload} label={t("import.title")} onClick={() => { newMenu.closeContextMenu(); onImport(); }} />
+                <ContextMenuItem icon={Upload} label={tx("import_menu")} onClick={() => { newMenu.closeContextMenu(); onImport(); }} />
               </>
             )}
           </ContextMenu>
@@ -306,6 +323,8 @@ export function ContactsSidebar({
         {/* All contacts */}
         <button
           onClick={() => onSelectCategory("all")}
+          // Marked as the other categories are: the drawer opens on it.
+          aria-current={isAllActive ? "true" : undefined}
           className={cn(
             "w-full flex items-center gap-2 px-3 text-sm transition-colors min-h-8 pointer-coarse:min-h-11",
             isAllActive
@@ -325,6 +344,7 @@ export function ContactsSidebar({
         {directoryCount !== undefined && (
           <button
             onClick={() => onSelectCategory("directory")}
+            aria-current={activeCategory === "directory" ? "true" : undefined}
             className={cn(
               "w-full flex items-center gap-2 px-3 text-sm transition-colors min-h-8 pointer-coarse:min-h-11",
               activeCategory === "directory"
@@ -725,6 +745,7 @@ export function ContactsSidebar({
               {(["to", "cc", "bcc"] as const).map((field) => (
                 <ContextMenuItem
                   key={field}
+                  icon={Mail}
                   label={t(`groups.send_email_${field}`)}
                   onClick={() => {
                     const groupId = groupContextMenu.data!.id;
@@ -905,6 +926,7 @@ function AddressBookItem({
   onSelect: () => void;
   onDropContacts?: (contactIds: string[], addressBook: AddressBook) => void;
 }) {
+  const shownName = useCollectionNames();
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -939,7 +961,7 @@ function AddressBookItem({
       isActive={isActive}
       isDragOver={isDragOver}
       icon={<Book className="w-4 h-4 flex-shrink-0" />}
-      label={book.name}
+      label={shownName.addressBook(book)}
       count={contactCount}
       extra={sharedOut ? <Users className="w-3 h-3 text-muted-foreground flex-shrink-0 ms-auto" /> : undefined}
       onSelect={onSelect}

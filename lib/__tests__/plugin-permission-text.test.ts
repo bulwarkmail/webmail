@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALL_PERMISSIONS, IMPLICIT_PERMISSIONS } from '../plugin-types';
 import { permissionKey } from '../plugin-sandbox/permission-text';
+import { locales } from '@/i18n/routing';
 
 // Every permission a plugin can ask for is explained to the user in the
 // consent dialog and in Settings > Plugins, in their language.
@@ -14,8 +15,8 @@ describe('permission texts', () => {
   const shown = ALL_PERMISSIONS.filter((p) => !implicit.has(p));
   const langs = readdirSync(LOCALES).filter((l) => !l.includes('.'));
 
-  it('covers all 29 locales', () => {
-    expect(langs).toHaveLength(29);
+  it('covers every supported locale', () => {
+    expect([...langs].sort()).toEqual([...locales].sort());
   });
 
   it.each(langs)('has a title and body for every permission in %s', (lang) => {

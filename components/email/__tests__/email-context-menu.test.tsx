@@ -53,6 +53,7 @@ function renderMenu(props: Partial<MenuProps> = {}) {
 describe('EmailContextMenu batch forward as attachment', () => {
   it('shows the batch header and batch forward item when the right-clicked email is in a multi-selection', () => {
     renderMenu({ isMultiSelect: true, selectedCount: 3, onBatchForwardAsAttachment: vi.fn() });
+    fireEvent.click(screen.getByTestId('ctx-more'));
     expect(screen.getByTestId('ctx-batch-forward-as-attachment')).toBeInTheDocument();
     expect(screen.getByText('items_selected')).toBeInTheDocument();
   });
@@ -60,6 +61,7 @@ describe('EmailContextMenu batch forward as attachment', () => {
   it('clicking the batch item invokes onBatchForwardAsAttachment and closes the menu', () => {
     const onBatchForwardAsAttachment = vi.fn();
     const { onClose } = renderMenu({ isMultiSelect: true, selectedCount: 3, onBatchForwardAsAttachment });
+    fireEvent.click(screen.getByTestId('ctx-more'));
     fireEvent.click(screen.getByTestId('ctx-batch-forward-as-attachment'));
     expect(onBatchForwardAsAttachment).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -67,6 +69,7 @@ describe('EmailContextMenu batch forward as attachment', () => {
 
   it('hides the single-message forward-as-attachment item in batch mode', () => {
     renderMenu({ isMultiSelect: true, selectedCount: 3, onBatchForwardAsAttachment: vi.fn() });
+    fireEvent.click(screen.getByTestId('ctx-more'));
     // vitest's next-intl mock renders labels as raw keys; the singular key
     // must be absent while the plural batch key is present.
     expect(screen.queryByText('forward_as_attachment')).toBeNull();
@@ -96,6 +99,7 @@ describe('EmailContextMenu batch forward as attachment', () => {
 
   it('disables the batch item when no handler is passed', () => {
     renderMenu({ isMultiSelect: true, selectedCount: 3 });
+    fireEvent.click(screen.getByTestId('ctx-more'));
     expect((screen.getByTestId('ctx-batch-forward-as-attachment') as HTMLButtonElement).disabled).toBe(true);
   });
 });

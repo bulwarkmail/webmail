@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 import { configManager } from '@/lib/admin/config-manager';
 import { fetchBrandingAsset } from '@/lib/admin/branding-asset';
+import { renderCache } from '@/lib/admin/render-cache';
 import {
   matchDomainBranding,
   parseDomainBranding,
@@ -10,9 +11,11 @@ import {
 
 const VALID_SIZES = new Set([192, 512]);
 
-// Cache resized images keyed by (size, source URL) so admin re-uploads or URL
-// changes invalidate the prior render instead of serving stale bytes forever.
-const cache = new Map<string, Blob>();
+// Cache resized images keyed by (size, source URL) so admin re-uploads (the
+// URL carries the upload's version) or URL changes invalidate the prior
+// render instead of serving stale bytes forever. Capped, and dropped on a
+// branding change.
+const cache = renderCache('pwa-icon');
 
 export async function GET(
   req: NextRequest,

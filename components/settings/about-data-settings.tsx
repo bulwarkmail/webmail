@@ -16,6 +16,11 @@ import { SpamSiegeGame } from './spam-siege-game';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/stores/toast-store';
 import { DebugSettings } from './debug-settings';
+import { MailBackupSettings } from '@/components/mail-transfer/mail-backup-settings';
+import { productName } from '@/lib/product-name';
+import { isDesktopApp } from '@/lib/desktop/bridge';
+import { IS_LITE } from '@/lib/lite';
+import { DesktopUpdateSettings } from './desktop-update-settings';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -53,7 +58,7 @@ function VersionUpdateTag() {
 }
 
 /**
- * The About card, in the settings sidebar's footer: logo, version with the
+ * The About card, on Settings > About and at the foot of the admin's list: logo, version with the
  * update tag, and the source link. A modified build must offer its own
  * source (AGPL-3.0 §13), so a configured URL replaces the upstream link.
  * Three clicks on the logo open Spam Siege, as before.
@@ -124,18 +129,44 @@ export function AboutFooter() {
 }
 
 /**
- * The Backup & reset page: keep settings (sync, export, import), fix a stale
- * view, start over, and (Advanced, where the admin allows it) debug logging.
- * The About card moved to the settings sidebar's footer.
+ * Settings > About, the last entry of the page list: the About card with the
+ * version and the source link. It was in the sidebar's footer, where it took
+ * room from the page list on short screens. In the desktop app it is "About &
+ * updates": the app's version, update check and channel follow the card
+ * (on General until the settings reorg of 2026-11-05).
+ */
+export function AboutSettings() {
+  const t = useTranslations('uxs_structure.about');
+  const appName = productName(useConfig().appName);
+  return (
+    <div className="space-y-8">
+      <SettingsSection id="about" title={t('title', { appName })}>
+        <div className="-mx-3">
+          <AboutFooter />
+        </div>
+      </SettingsSection>
+      {!IS_LITE && <DesktopUpdateSettings />}
+    </div>
+  );
+}
+
+/**
+ * The Backup & import page: keep settings (sync, export, import), bring mail
+ * in and save it as files. Offline has a page of its own; fixing a stale
+ * view, starting over and debug logging are on Troubleshooting (settings
+ * reorg 2026-11-05).
  */
 export function AboutDataSettings() {
   const t = useTranslations('settings.advanced');
   const tSettings = useTranslations('settings');
-  const { settingsSyncDisabled, updateSetting, resetToDefaults, exportSettings, importSettings } =
+  const { settingsSyncDisabled, updateSetting, exportSettings, importSettings } =
     useSettingsStore();
   const { settingsSyncEnabled } = useConfig();
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
+  const tWords = useTranslations('ux_p3_words');
+  // The app has no "other browsers" (settings-p2-4), and its Backup says only what it
+  // does: a settings file to export and import (settings-p3-9).
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => setInApp(isDesktopApp()), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isFeatureEnabled } = usePolicyStore();
   const handleExport = () => {
@@ -174,16 +205,11 @@ export function AboutDataSettings() {
     e.target.value = '';
   };
 
-  const handleReset = () => {
-    resetToDefaults();
-    toast.success(t('reset_settings.done'));
-  };
-
   return (
     <div className="space-y-8">
-      <SettingsSection id="backup" title={t('sections.backup')} description={t('sections.backup_description')}>
+      <SettingsSection id="backup" title={t('sections.backup')} description={inApp ? tWords('backup_app') : t('sections.backup_description')}>
         {settingsSyncEnabled && (
-          <SettingItem label={t('settings_sync.label')} description={t('settings_sync.description')} term="sync">
+          <SettingItem label={t('settings_sync.label')} description={inApp ? tWords('sync_app') : t('settings_sync.description')} term="sync">
             <ToggleSwitch checked={!settingsSyncDisabled} onChange={(checked) => updateSetting('settingsSyncDisabled', !checked)} />
           </SettingItem>
         )}
@@ -214,7 +240,36 @@ export function AboutDataSettings() {
         )}
       </SettingsSection>
 
-      <SettingsSection id="fix" title={t('sections.fix')} description={t('sections.fix_description')}>
+      <MailBackupSettings />
+    </div>
+  );
+}
+
+/**
+ * Settings > Troubleshooting, listed only with "Show advanced settings" on
+ * (settings reorg 2026-11-05): fix a stale view or start over, and debugging
+ * (detailed logging, the desktop app's developer tools). Every section is
+ * advanced, so a search result or link shows its row alone with the switch
+ * off. These were on Backup & reset and General.
+ */
+export function TroubleshootingSettings() {
+  const t = useTranslations('settings.advanced');
+  const { settingsSyncDisabled, resetToDefaults } = useSettingsStore();
+  const { settingsSyncEnabled } = useConfig();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
+  const tP2 = useTranslations('uxp2_settings');
+  // A reset keeps the sync choice, so the other devices change only when sync is on (settings-p2-18).
+  const syncOn = settingsSyncEnabled && !settingsSyncDisabled;
+
+  const handleReset = () => {
+    resetToDefaults();
+    toast.success(t('reset_settings.done'));
+  };
+
+  return (
+    <div className="space-y-8">
+      <SettingsSection id="fix" advanced title={t('sections.fix')} description={t('sections.fix_description')}>
         <SettingItem label={t('refresh_cache.label')} description={t('refresh_cache.description')} term="cache">
           <Button variant="outline" size="sm" onClick={() => setShowRefreshConfirm(true)}>
             {t('refresh_cache.button')}
@@ -241,7 +296,7 @@ export function AboutDataSettings() {
         onClose={() => setShowResetConfirm(false)}
         onConfirm={handleReset}
         title={t('reset_settings.confirm_title')}
-        message={t('reset_settings.description')}
+        message={`${tP2('reset.message')} ${syncOn ? tP2('reset.sync_on') : tP2('reset.sync_off')}`}
         confirmText={t('reset_settings.button')}
         variant="destructive"
       />

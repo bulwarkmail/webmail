@@ -43,9 +43,9 @@ function icuArgs(text: string): string[] {
 const plainLocales = fs.readdirSync(localesDir).filter((l) => fs.existsSync(path.join(localesDir, l, 'plain.json')));
 
 describe('plain-language strings', () => {
-  it('exist for English and German only, each with a loader', () => {
-    expect(plainLocales.sort()).toEqual(['de', 'en']);
-    expect(Object.keys(PLAIN_LANGUAGE_LOADERS).sort()).toEqual(['de', 'en']);
+  it('exist for English, German and Vietnamese only, each with a loader', () => {
+    expect(plainLocales.sort()).toEqual(['de', 'en', 'vi']);
+    expect(Object.keys(PLAIN_LANGUAGE_LOADERS).sort()).toEqual(['de', 'en', 'vi']);
   });
 
   for (const locale of plainLocales) {

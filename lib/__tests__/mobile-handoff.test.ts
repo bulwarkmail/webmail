@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { MOBILE_HANDOFF_REDIRECT_URI, buildMobileHandoffUrl, mobileHandoffTarget, signedInLoginAction } from '@/lib/auth/mobile-handoff';
+import {
+  MOBILE_HANDOFF_REDIRECT_URI,
+  buildMobileHandoffCodeUrl,
+  buildMobileHandoffUrl,
+  mobileCodeChallenge,
+  mobileHandoffTarget,
+  signedInLoginAction,
+} from '@/lib/auth/mobile-handoff';
 
 // The login page handed the typed password (and the SSO callback the tokens)
 // to any `bulwarkmobile://` URL named in the query string, with nothing on
@@ -57,5 +64,28 @@ describe('signedInLoginAction', () => {
 
   it('leaves add-account mode alone', () => {
     expect(signedInLoginAction({ isMobileHandoff: false, isAddAccountMode: true, hasHandoffPayload: false })).toBe('none');
+  });
+});
+
+describe('code hand-off link', () => {
+  // bulwarkmail.org/docs/development/mobile-handoff: an app that sent a challenge gets a link with
+  // the one-time code and its state, in the query, and nothing else.
+  it('carries only the code and the state', () => {
+    const url = new URL(buildMobileHandoffCodeUrl(MOBILE_HANDOFF_REDIRECT_URI, 'ab'.repeat(32), 'st&ate=1'));
+    expect(`${url.protocol}//${url.host}${url.pathname}`).toBe(MOBILE_HANDOFF_REDIRECT_URI);
+    expect([...url.searchParams.keys()]).toEqual(['code', 'state']);
+    expect(url.searchParams.get('code')).toBe('ab'.repeat(32));
+    expect(url.searchParams.get('state')).toBe('st&ate=1');
+    expect(url.hash).toBe('');
+  });
+
+  it('accepts only an S256 challenge', () => {
+    const challenge = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
+    expect(mobileCodeChallenge(challenge)).toBe(challenge);
+    expect(mobileCodeChallenge(`${challenge}=`)).toBe('');
+    expect(mobileCodeChallenge(challenge.slice(1))).toBe('');
+    expect(mobileCodeChallenge(`${challenge.slice(1)}+`)).toBe('');
+    expect(mobileCodeChallenge('')).toBe('');
+    expect(mobileCodeChallenge(null)).toBe('');
   });
 });

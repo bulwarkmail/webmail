@@ -51,8 +51,8 @@ export function MvComposeWindow({ children }: { children: ReactNode }) {
           "fixed z-40 flex flex-col overflow-hidden bg-background shadow-[0_8px_10px_1px_rgb(0_0_0/0.14),0_3px_14px_2px_rgb(0_0_0/0.12),0_5px_5px_-3px_rgb(0_0_0/0.2)]",
           maximized
             ? "inset-x-[8vw] inset-y-[6vh] rounded-lg"
-            : "bottom-0 end-4 w-[min(560px,calc(100vw-2rem))] rounded-t-lg",
-          minimized && "h-10 w-[min(280px,calc(100vw-2rem))]",
+            : "bottom-0 end-[var(--mv-compose-end,1rem)] w-[min(560px,calc(100vw-var(--mv-compose-end,1rem)-1rem))] rounded-t-lg",
+          minimized && "h-10 w-[min(280px,calc(100vw-var(--mv-compose-end,1rem)-1rem))]",
           state === "normal" && "h-[min(600px,calc(100dvh-5rem))]",
         )}
       >

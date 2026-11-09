@@ -44,6 +44,16 @@ function renderPicker(list: () => Promise<FileNode[]> = async () => TREE) {
 }
 
 describe('FilePickerDialog', () => {
+  // The X in the header was labelled "Cancel" like the footer button.
+  it('names the header X "Close" and keeps one Cancel button, both closing', async () => {
+    const { onClose } = renderPicker();
+    await screen.findByText('invoice.pdf');
+    expect(screen.getAllByRole('button', { name: 'cancel' })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
   it('lists the root without hidden or shared nodes, and offers Shared with me', async () => {
     renderPicker();
     expect(await screen.findByText('invoice.pdf')).toBeInTheDocument();

@@ -32,12 +32,15 @@ import { backgroundReactDom, backgroundUiKit } from './ui-kit/background-kit';
 import { initFloatingDropdownBridge, dispatchFloatingDropdownEvent } from './ui-kit/floating-dropdown-bridge';
 import { interpolate, lookup, textDirection, type LocaleTables } from './plugin-i18n';
 import { isFillableSlot, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
+import { frameEscapeListener } from './frame-escape';
 import type {
-  AppInfoView, AppSettingsView, HostFeaturesView, SettingsSearchResult, CalendarEventInput, CalendarEventView, CalendarView, ComposeInput, DraftInput, EmailReadView,
+  AppInfoView, AppSettingsView, HostFeaturesView, SettingsSearchResult, CalendarEventInput, CalendarEventView, CalendarView, ComposeInput, DraftInput, EmailForwardInput, EmailForwardResult, EmailReadView,
   EmailSummary, IdentityPatch, IdentityView, MailboxView, NotificationInput, SlotName, TaskInput,
-  TaskView, TemplateInput, TemplateView, VacationInput, VacationView,
+  TaskView, TemplateInput, TemplateView, VacationInput, VacationView, ComposerSnapshot, ComposerAttachmentData,
 } from '../plugin-types';
 import { AddressBook, ContactCard } from '../jmap/types';
+import { withAssistantRuntime } from './assistant/runtime';
+import { DEFAULT_API_TIMEOUT_MS, NETWORK_API_TIMEOUT_MS } from './api-timeouts';
 import { EncryptionAtRestConfig, PublicKeyInput } from '@/stores/account-security-store';
 
 // ─── Module-scope state ──────────────────────────────────────
@@ -150,23 +153,128 @@ function applySettings(next: Record<string, unknown>): void {
 }
 // What api.host.features says: one object for the iframe's lifetime,
 // updated in place on 'host-change' like the settings.
-const hostFeaturesState: HostFeaturesView = { externalSenderLabel: false, externalRecipientWarning: false };
+// noThirdPartyTraffic starts on, as the host's own mode does until it knows.
+const hostFeaturesState: HostFeaturesView = { externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: true };
 const hostFeatureListeners = new Set<(features: HostFeaturesView) => void>();
 
 function applyHostFeatures(next: HostFeaturesView | undefined): void {
   if (!next) return;
   hostFeaturesState.externalSenderLabel = next.externalSenderLabel === true;
   hostFeaturesState.externalRecipientWarning = next.externalRecipientWarning === true;
+  // A host older than 1.20 doesn't send it, and never let such a plugin run in the mode.
+  hostFeaturesState.noThirdPartyTraffic = next.noThirdPartyTraffic === true;
+  // The AI assistant's flags (lib/plugin-sandbox/assistant): whatever the host
+  // names, true or false; one it no longer names turns false.
+  const flags = hostFeaturesState as unknown as Record<string, boolean>;
+  const core = new Set(['externalSenderLabel', 'externalRecipientWarning', 'noThirdPartyTraffic']);
+  for (const key of Object.keys(flags)) {
+    if (!core.has(key) && !(key in next)) flags[key] = false;
+  }
+  for (const [key, value] of Object.entries(next)) {
+    if (!core.has(key)) flags[key] = value === true;
+  }
   for (const listener of hostFeatureListeners) {
     try { listener(hostFeaturesState); } catch (err) { console.error('[plugin] host feature listener failed', err); }
   }
 }
 const pendingCallbacks = new Map<string, { resolve: (v: unknown) => void; reject: (err: Error) => void }>();
+
+// ─── Text checkers (api.composer.registerChecker) ─────────────
+
+type CheckKindName = 'spelling' | 'grammar' | 'style' | 'other';
+/** What the host sends a checker. Segment text uses U+FFFC for inline objects. */
+interface CheckRequest {
+  composerId: string;
+  revision: string;
+  language: string;
+  full: boolean;
+  order: string[];
+  segments: { id: string; text: string }[];
+  objectReplacement: string;
+}
+interface CheckAnnotation {
+  segmentId: string;
+  offset: number;
+  length: number;
+  kind: CheckKindName;
+  message: string;
+  shortMessage?: string;
+  replacements?: string[];
+  ruleId?: string;
+  ruleLabel?: string;
+  id?: string;
+}
+type CheckResult = CheckAnnotation[] | { annotations?: CheckAnnotation[]; status?: 'ok' | 'unavailable' | 'paused'; message?: string; retryAfterMs?: number };
+interface CheckerDefinition {
+  id: string;
+  label: string;
+  kinds: CheckKindName[];
+  debounceMs?: number;
+  languages?: string[];
+  mode?: 'typing' | 'on-demand';
+  warnBeforeSend?: boolean;
+  check?: (request: CheckRequest) => CheckResult | Promise<CheckResult>;
+  onAction?: (event: { composerId: string; annotation: CheckAnnotation & { text: string }; action: 'ignore' | 'dictionary' | 'disable-rule' }) => unknown;
+}
+interface CheckerHandle {
+  id: string;
+  update: (patch: { label?: string; kinds?: CheckKindName[]; debounceMs?: number; warnBeforeSend?: boolean }) => Promise<true>;
+  recheck: () => Promise<true>;
+  dispose: () => Promise<void>;
+}
 const hookHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 
-function sendToHost(msg: SandboxToHost): void {
+function sendToHost(msg: SandboxToHost, transfer?: Transferable[]): void {
   if (!parentWindow || !parentOrigin) return;
-  parentWindow.postMessage(msg, parentOrigin);
+  if (transfer) parentWindow.postMessage(msg, parentOrigin, transfer);
+  else parentWindow.postMessage(msg, parentOrigin);
+}
+
+// ─── Activity reports ────────────────────────────────────────
+
+/**
+ * Input that counts as the user being here for the host's idle timeout: the
+ * host window's own list (components/session/session-timeout-guard.tsx),
+ * which input in this frame never reaches. Focus doesn't count there and
+ * doesn't here: a focused frame left alone would keep the session open.
+ */
+const ACTIVITY_EVENTS = ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel'] as const;
+
+/**
+ * At most one report this often. The idle limit is whole minutes, so a
+ * report up to 15 s late costs at most 15 s of it, while a user working in
+ * the frame sends no more than four messages a minute.
+ */
+export const ACTIVITY_REPORT_MS = 15_000;
+
+let reportActivity: (() => void) | null = null;
+let lastActivityReport = -Infinity;
+
+function onUserInput(event: Event): void {
+  // A plugin can dispatch events, but not trusted ones.
+  if (!event.isTrusted || !reportActivity) return;
+  const at = Date.now();
+  if (at - lastActivityReport < ACTIVITY_REPORT_MS) return;
+  lastActivityReport = at;
+  reportActivity();
+}
+
+/**
+ * The port reports go through, handed to the host with 'sandbox-ready',
+ * before any plugin code runs. The plugin shares this frame and can post to
+ * the host as the runtime does, but it never sees this port, and the host
+ * counts only what comes through it. `postMessage` is bound now, so a
+ * plugin patching MessagePort.prototype later doesn't get hold of the port.
+ * (A privileged, same-origin plugin can reach the host page anyway.)
+ */
+function openActivityPort(): MessagePort | null {
+  if (typeof MessageChannel === 'undefined') return null;
+  const channel = new MessageChannel();
+  const post = channel.port1.postMessage.bind(channel.port1);
+  reportActivity = () => {
+    try { post(null); } catch { /* host gone */ }
+  };
+  return channel.port2;
 }
 
 // ─── Host binding ────────────────────────────────────────────
@@ -183,8 +291,10 @@ function sendToHost(msg: SandboxToHost): void {
  *    is never a host.
  *  - `location.origin` is the URL origin even when this iframe runs with an
  *    opaque origin (sandbox="allow-scripts"), and the host page is served
- *    from that same origin: the bridge loads a same-origin path and the route
- *    CSP pins `frame-ancestors 'self'`.
+ *    from that same origin: the bridge loads a same-origin path. The route
+ *    CSP's frame-ancestors also admits the portals the operator lets frame
+ *    the mail UI (#1533), so the origin check on every message is what keeps
+ *    a portal that frames this route directly from driving it.
  *
  * Pinning the first sender instead (pre-fix) let any website window.open()
  * the route, post its own `init` before a real host could, and run its code
@@ -230,12 +340,6 @@ function uid(): string {
 
 // ─── Sandboxed API facade (calls flow to host via postMessage) ─
 
-const DEFAULT_API_TIMEOUT_MS = 30_000;
-// http.post / http.fetch can be carrying an attachment to an external store,
-// which is a transfer rather than a round-trip - 30s is not enough for the
-// files a plugin has any reason to offload. Still bounded so a hung host
-// can't leak the pending promise.
-const NETWORK_API_TIMEOUT_MS = 120_000;
 
 function callApi(method: string, args: unknown[], timeoutMs: number = DEFAULT_API_TIMEOUT_MS): Promise<unknown> {
   const id = uid();
@@ -373,7 +477,12 @@ interface PluginKeywordCounts {
   unread: number;
 }
 
+/** The plugin's api, with the AI assistant's host APIs (lib/plugin-sandbox/assistant) added. */
 function buildPluginApi(manifest: PluginManifest) {
+  return withAssistantRuntime(buildCoreApi(manifest), callApi);
+}
+
+function buildCoreApi(manifest: PluginManifest) {
   applySettings({ ...manifest.settings });
   localeTables = JSON.parse(JSON.stringify(manifest.locales ?? {}));
   return {
@@ -399,6 +508,30 @@ function buildPluginApi(manifest: PluginManifest) {
         hostFeatureListeners.add(listener);
         return () => { hostFeatureListeners.delete(listener); };
       },
+    },
+    /**
+     * The OS certificate store and smart cards, in the desktop app. Privileged tier
+     * with the `keystore` permission, when api.host.features.keystore is true. The
+     * shell asks the user first, so any call can answer keystore:cancelled. Key
+     * operations have no timeout here: the OS may be showing a PIN prompt, and the shell
+     * gives up by itself. Errors are bare codes: keystore:cancelled, ask-first, not-found,
+     * unsupported, locked, invalid, failed. `{ quiet: true }` never opens a dialog: it
+     * answers from what's already allowed, or with ask-first. Use it for anything the user
+     * didn't just ask for.
+     */
+    keystore: {
+      /** Certificates fit for mail that have a private key. The OS doesn't prompt, and it has the usual timeout. */
+      list: (options?: { quiet?: boolean }) => callApi('keystore.list', [options]),
+      /**
+       * Signs a CMS message's signed attributes, given as their DER (a SET): content type,
+       * message digest and signing time at least. The shell hashes them, and asks every time.
+       * scheme: { scheme: 'rsa-pkcs1' | 'rsa-pss' | 'ecdsa', hash }. RSA gives the raw signature, ECDSA DER.
+       */
+      sign: (id: string, signedAttributes: Uint8Array, scheme: unknown) => callApi('keystore.sign', [id, signedAttributes, scheme], 0) as Promise<Uint8Array>,
+      /** Unwraps a content key. scheme: { scheme: 'rsa-pkcs1' } or { scheme: 'rsa-oaep', hash, label? }. */
+      decrypt: (id: string, data: Uint8Array, scheme: unknown, options?: { quiet?: boolean }) => callApi('keystore.decrypt', [id, data, scheme, options], 0) as Promise<Uint8Array>,
+      /** ECDH: the raw shared secret, big-endian, from the peer's SubjectPublicKeyInfo. */
+      agree: (id: string, peerPublicKey: Uint8Array, options?: { quiet?: boolean }) => callApi('keystore.agree', [id, peerPublicKey, options], 0) as Promise<Uint8Array>,
     },
     /** The app the plugin runs in: product, the administrator's name for it, version, edition. No permission needed. */
     app: {
@@ -457,6 +590,13 @@ function buildPluginApi(manifest: PluginManifest) {
       /** The IANA time zone the app shows times in (the user's setting, else the browser's). */
       getTimeZone: () => callApi('user.getTimeZone', []) as Promise<string>,
       logout: () => callApi('user.logout', []),
+      /**
+       * End the impersonation and sign back in to the account that started
+       * it; signs out when the server holds nothing to return to. Only in an
+       * impersonated session (the app-top-banner slot's `canReturn` says
+       * whether a return is waiting). Needs auth:impersonation-return.
+       */
+      returnToOwnAccount: () => callApi('user.returnToOwnAccount', []) as Promise<void>,
     },
     http: {
       // A Blob/File body is sent as a binary request; options.headers may then
@@ -568,6 +708,10 @@ function buildPluginApi(manifest: PluginManifest) {
     // The message being written. `composerId` comes from the composer: the
     // context of a click on a composer action, or a composer slot's props.
     composer: {
+      /** Capture own text and metadata for a conditional edit. Needs compose:read. */
+      getSnapshot: (composerId: string) => callApi('composer.getSnapshot', [composerId]) as Promise<ComposerSnapshot>,
+      /** Read a currently attached file. Needs email:blob-read. */
+      readAttachment: (composerId: string, attachmentId: string) => callApi('composer.readAttachment', [composerId, attachmentId]) as Promise<ComposerAttachmentData>,
       /** The user's own text (no signature, no quote) as { html, text }. Needs compose:read. */
       getBody: (composerId: string) =>
         callApi('composer.getBody', [composerId]) as Promise<{ html: string; text: string }>,
@@ -581,14 +725,72 @@ function buildPluginApi(manifest: PluginManifest) {
        */
       replaceSelection: (composerId: string, content: { text: string } | { html: string }, options?: { below?: boolean }) =>
         callApi('composer.replaceSelection', [composerId, content, options]) as Promise<boolean>,
-      /** Replace the user's own text; the signature and the quote stay. Needs compose:write. */
-      replaceBody: (composerId: string, content: { text: string } | { html: string }) =>
-        callApi('composer.replaceBody', [composerId, content]) as Promise<boolean>,
+      /** Replace own text, optionally only at expectedRevision; signature and quote stay. Needs compose:write. */
+      replaceBody: (composerId: string, content: { text: string } | { html: string }, options?: { expectedRevision: string }) =>
+        callApi('composer.replaceBody', [composerId, content, options]) as Promise<boolean>,
+      /**
+       * Replace the subject with plain text (Bulwark 1.21 and later). Line
+       * breaks and other control characters become spaces; at most 998
+       * characters. One Ctrl+Z undoes it, and the draft saves as after
+       * typing. Needs compose:write.
+       */
+      setSubject: (composerId: string, subject: string) =>
+        callApi('composer.setSubject', [composerId, subject]) as Promise<boolean>,
       /** Attach a blob from jmap.uploadBlob. Needs email:blob-write. */
       attach: (composerId: string, file: { blobId: string; name: string; type?: string; size: number }) =>
         callApi('composer.attach', [composerId, file]) as Promise<boolean>,
+      /**
+       * Register a text checker (needs compose:check), from activate(). In
+       * every composer where the user (or the admin) turned proofreading on,
+       * the host calls `check` with the user's own text in paragraphs while
+       * they type, and draws what it returns as underlines. Never for a
+       * message that will be signed or encrypted. `onAction` hears Ignore,
+       * Add to dictionary and Turn off rule. Mode 'on-demand' gets no text
+       * while typing: use getCheckText and setAnnotations from a user action.
+       */
+      registerChecker: async (def: CheckerDefinition): Promise<CheckerHandle> => {
+        if (mode !== 'background') throw new Error('composer.registerChecker: register checkers from activate(), not from a slot');
+        if (!def || typeof def !== 'object') throw new Error('composer.registerChecker: needs an object');
+        const { check, onAction, ...data } = def;
+        if (data.mode !== 'on-demand' && typeof check !== 'function') throw new Error('composer.registerChecker: check must be a function');
+        if (check !== undefined && typeof check !== 'function') throw new Error('composer.registerChecker: check must be a function');
+        if (onAction !== undefined && typeof onAction !== 'function') throw new Error('composer.registerChecker: onAction must be a function');
+        const id = String(data.id);
+        const checkKey = `checker:${id}`;
+        const actionKey = `checker-action:${id}`;
+        // In place before the host knows the checker, so its first request finds them.
+        if (check) hookHandlers[checkKey] = check as (...args: unknown[]) => unknown; else delete hookHandlers[checkKey];
+        if (onAction) hookHandlers[actionKey] = onAction as (...args: unknown[]) => unknown; else delete hookHandlers[actionKey];
+        try {
+          await callApi('composer.registerChecker', [data]);
+        } catch (err) {
+          delete hookHandlers[checkKey];
+          delete hookHandlers[actionKey];
+          throw err;
+        }
+        return {
+          id,
+          update: (patch) => callApi('composer.updateChecker', [id, patch]) as Promise<true>,
+          recheck: () => callApi('composer.recheck', [id]) as Promise<true>,
+          dispose: async () => {
+            delete hookHandlers[checkKey];
+            delete hookHandlers[actionKey];
+            await callApi('composer.unregisterChecker', [id]);
+          },
+        };
+      },
+      /** The whole text of a composer the plugin was handed, request-shaped, for an on-demand check. Needs compose:check, or compose:read for an on-demand checker. */
+      getCheckText: (composerId: string, checkerId: string) =>
+        callApi('composer.getCheckText', [composerId, checkerId]) as Promise<CheckRequest>,
+      /** Results for a request from getCheckText; resolves to how many were kept. Needs compose:check, or compose:read for an on-demand checker. */
+      setAnnotations: (composerId: string, checkerId: string, revision: string, annotations: CheckAnnotation[]) =>
+        callApi('composer.setAnnotations', [composerId, checkerId, revision, annotations]) as Promise<number>,
     },
     toast: {
+      /** Stay visible until dismissed or this frame closes; returns a frame-owned handle. */
+      progress: (m: string) => callApi('toast.progress', [m]) as Promise<string>,
+      /** Dismiss this frame's progress handle, even after the burst limit. */
+      dismiss: (id: string) => callApi('toast.dismiss', [id]) as Promise<void>,
       success: (m: string) => { void callApi('toast.success', [m]); },
       error: (m: string) => { void callApi('toast.error', [m]); },
       info: (m: string) => { void callApi('toast.info', [m]); },
@@ -620,8 +822,22 @@ function buildPluginApi(manifest: PluginManifest) {
        *  a multi-step form, etc.) rather than a toolbar/row-sized control.
        *  Resolves to whatever value the slot component passes to its
        *  `onResult` prop, or null if the user closes the dialog without
-       *  calling it. No timeout - it waits for the user. */
-      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number }) =>
+       *  calling it. No timeout - it waits for the user.
+       *
+       *  `anchor: 'trigger'` draws it as a popover next to what the user
+       *  activated last - an action button (message row, reader), the
+       *  place a menu was opened at for a menu entry, the flag whose toggle
+       *  a hook intercepted - when that was at most 2 s ago and no other
+       *  key was pressed since; else centred as without it. Meant for a
+       *  small menu of choices. The popover has a one-line header naming
+       *  the plugin, takes `width` as the dialog does and the content's
+       *  height, and closes on Escape or a click outside (null). Hosts
+       *  without it ignore the option.
+       *
+       *  `fill: true` gives the dialog (or the popover) a fixed height, as
+       *  tall as the window lets it be up to 640 px, and the plugin's root
+       *  fills it, for a chat whose input stays at the bottom. */
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger'; fill?: boolean }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Re-runs the onRenderEmailBody hook for the open message (e.g. after a
        *  crypto plugin unlocks a key) so its body re-renders without a reload. */
@@ -630,6 +846,28 @@ function buildPluginApi(manifest: PluginManifest) {
       /** Opens an http/https URL in a new tab via host `window.open`. */
       openExternalUrl: (url: string, target?: string) =>
         callApi('ui.openExternalUrl', [url, target]) as Promise<void>,
+      /**
+       * Print a page the plugin made, such as a document drawn from data:
+       * HTML with <style>, sanitised like a message body, no scripts, images
+       * as data: URLs only. Opens the browser's print dialog (where the user
+       * can also save a PDF); 3 times a minute.
+       *
+       * Bulwark 1.21 and later: `{ title?, pdf }` with a PDF's bytes in place
+       * of `html` prints that PDF: it opens in the app's file preview, which
+       * brings up the print dialog. Same limits as for openFile.
+       */
+      print: (page: { title?: string; html: string } | { title?: string; pdf: ArrayBuffer | ArrayBufferView | Blob }) =>
+        callApi('ui.print', [page], 0) as Promise<boolean>,
+      /**
+       * Show a file the plugin made in Bulwark's own file preview, the one
+       * attachments and Files use, with its Download and Print (Bulwark 1.21
+       * and later). Only PDF and PNG, JPEG, GIF or WebP images, checked by
+       * their bytes; at most 25 MiB; 5 a minute. The file stays in memory
+       * and is gone when the user closes the preview. Resolves to true once
+       * it shows.
+       */
+      openFile: (file: { content: ArrayBuffer | ArrayBufferView | Blob; filename: string; contentType: string }) =>
+        callApi('ui.openFile', [file]) as Promise<boolean>,
       /** Downloads a file generated by the plugin. Not a user's file or attachment. */
       /** `content` is text, or the file's bytes (ArrayBuffer / Uint8Array). */
       downloadFile: (opts: { content: string | ArrayBuffer | Uint8Array; filename: string; contentType?: string }) =>
@@ -663,6 +901,18 @@ function buildPluginApi(manifest: PluginManifest) {
       /** Short labels and dots on calendar days. Replaces this plugin's earlier labels. */
       setDayLabels: (labels: Array<{ date: string; text?: string; title?: string; dot?: boolean }>) =>
         callApi('ui.setDayLabels', [labels]) as Promise<void>,
+      /**
+       * A print style the user can pick under Settings > Appearance >
+       * Printing: CSS for printed messages, contacts and calendars, and a
+       * letterhead (plain text above and below a printed message). The CSS
+       * is scoped to the printout; url(), @import and other at-rules except
+       * @media, @supports and @page { margin } are removed, and the
+       * warnings say what. Same id again replaces it; at most 5 per plugin.
+       */
+      registerPrintTheme: (theme: { id: string; label: string; css?: string; header?: string; footer?: string }) =>
+        callApi('ui.registerPrintTheme', [theme]) as Promise<{ warnings: string[] }>,
+      /** Removes one of this plugin's print styles; printouts that used it go back to Standard. */
+      unregisterPrintTheme: (id: string) => callApi('ui.unregisterPrintTheme', [id]) as Promise<void>,
       /** Full pages with a button in the navigation bar; the `app-page` slot renders them. */
       setPages: (pages: Array<{ id: string; title: string; icon?: string }>) =>
         callApi('ui.setPages', [pages]) as Promise<void>,
@@ -676,17 +926,57 @@ function buildPluginApi(manifest: PluginManifest) {
       openPage: (pageId: string, path?: string) =>
         callApi('ui.openPage', [pageId, path]) as Promise<boolean>,
       /**
+       * Moves this tab to a view of the calendar: 'month', 'week', 'day',
+       * 'agenda' (needs ui:calendar-action or calendar:read) or 'tasks', the
+       * task view (needs ui:tasks or tasks:read), which a plugin offering the
+       * calendar-task-view slot draws. Resolves to false when the app could
+       * not take it (not ready yet, or the user has tasks turned off). At
+       * most 10 a minute.
+       */
+      openCalendar: (options: { view: 'month' | 'week' | 'day' | 'agenda' | 'tasks' }) =>
+        callApi('ui.openCalendar', [options]) as Promise<boolean>,
+      /**
+       * Opens one of the user's tasks (an id from tasks.list) in Bulwark's
+       * task editor, as a click on it in the calendar's task list does: for
+       * a plugin drawing the task view (calendar-task-view). Resolves to
+       * false when the calendar is not on screen or has not loaded the task.
+       * Needs ui:tasks or tasks:read; at most 20 a minute.
+       */
+      openTask: (taskId: string) => callApi('ui.openTask', [taskId]) as Promise<boolean>,
+      /**
+       * Opens a message in the reader of this tab, as a click on it in the
+       * list does: in place on the mail page, in an email tab in the Pro
+       * shell, else the tab loads the message's link (at most 5 times a
+       * minute). `accountId` names the JMAP account holding it (a shared or
+       * group account); the signed-in account's own when missing. Rejects
+       * when no account of the user reads it, the account has no such
+       * message, or the mail page could not open it. Needs `email:read`.
+       */
+      openEmail: (email: { id: string; accountId?: string }) =>
+        callApi('ui.openEmail', [email]) as Promise<void>,
+      /**
        * The header of this plugin's sidebar section (the host draws it like
        * Folders and Tags), e.g. a translated "Upcoming birthdays". null goes
        * back to the plugin's name. At most 40 characters.
        */
       setSectionTitle: (title: string | null) => callApi('ui.setSectionTitle', [title]) as Promise<void>,
       /**
+       * The button and header of this plugin's `side-panel` slot, the panel
+       * beside the mail: a title (at most 40 characters, e.g. a translated
+       * "Upcoming for me") and a host icon by name (as for setPages). null
+       * goes back to the plugin's name and a puzzle piece. `rail: false`
+       * draws no button in the rail: the plugin opens the panel itself
+       * with openPanel / togglePanel('side-panel'), e.g. from a top bar
+       * action.
+       */
+      setSidePanel: (look: { title?: string; icon?: string; rail?: boolean } | null) => callApi('ui.setSidePanel', [look]) as Promise<void>,
+      /**
        * Open, close or toggle the panel this plugin's slot sits in:
        * 'composer-sidebar', 'composer-sidebar-right' (pass the composerId
-       * from the click context or the slot's props) or 'email-detail-sidebar'.
-       * Resolve to whether the panel is open afterwards, or null when no such
-       * panel is on screen (no composer or message open, or a phone), so the
+       * from the click context or the slot's props), 'email-detail-sidebar'
+       * or 'side-panel' (this plugin's panel beside the mail). Resolve to
+       * whether the panel is open afterwards, or null when no such panel is
+       * on screen (no composer or message open, or a phone), so the
        * plugin can fall back to a dialog. A panel opened this way gets a new
        * `focusRequest` prop, so the slot can focus its input.
        */
@@ -739,9 +1029,9 @@ function buildPluginApi(manifest: PluginManifest) {
        * body: `text` (sender, recipients, subject and body, whole words),
        * `from`, `to`, `subject`, `after`/`before` (dates), `hasAttachment`,
        * in one folder with `mailboxId`. At least one condition; limit 1-50
-       * (default 20).
+       * (default 20); `position` skips that many results (paging).
        */
-      search: (query: { text?: string; from?: string; to?: string; subject?: string; after?: string; before?: string; hasAttachment?: boolean; mailboxId?: string; limit?: number }) =>
+      search: (query: { text?: string; from?: string; to?: string; subject?: string; after?: string; before?: string; hasAttachment?: boolean; mailboxId?: string; limit?: number; position?: number }) =>
         callApi('email.search', [query]) as Promise<EmailSummary[]>,
       /**
        * The bytes of one attachment of a message (email:blob-read, at most
@@ -767,6 +1057,15 @@ function buildPluginApi(manifest: PluginManifest) {
        */
       updateKeywords: (emailId: string, changes: Record<string, boolean>, accountId?: string) =>
         callApi('email.updateKeywords', [emailId, changes, accountId]) as Promise<boolean>,
+      /**
+       * Forward a message with its attachments to 1-10 addresses, without
+       * the composer (email:forward). The first forward to an address asks
+       * the user; resolves to { sent: false, reason: 'declined' } when they
+       * say no and 'stopped' when a send check stopped it. 10 a minute.
+       * Waits as long as the user takes to answer.
+       */
+      forward: (emailId: string, input: EmailForwardInput) =>
+        callApi('email.forward', [emailId, input], 0) as Promise<EmailForwardResult>,
     },
     // A small JSON value (at most 4 KB) the plugin keeps in a mail account's
     // Inbox, shared with everyone who can open that account (Stalwart 1.0
@@ -918,10 +1217,23 @@ function buildPluginApi(manifest: PluginManifest) {
       get: (id: string) => callApi('tasks.get', [id]) as Promise<TaskView | null>,
       /** Resolves to the new task, or null when another plugin stopped it. */
       create: (task: TaskInput) => callApi('tasks.create', [task]) as Promise<TaskView | null>,
-      /** Change the given fields. */
+      /**
+       * Change the given fields. `alerts`, `links`, `relatedTo` and
+       * `keywords` merge by id: an entry given is set, one given null is removed, the rest
+       * stay as they are (each written by its own JMAP patch path); null
+       * for the whole map clears it.
+       */
       update: (id: string, patch: Partial<TaskInput>) => callApi('tasks.update', [id, patch]) as Promise<void>,
       /** Mark a task done or not done. */
       setComplete: (id: string, complete: boolean) => callApi('tasks.setComplete', [id, complete]) as Promise<void>,
+      /**
+       * Dismiss one of a task's alerts at `when` (UTC, `2026-05-01T07:30:00Z`;
+       * now when left out), or undo that with null. Bulwark shows no reminder
+       * for a dismissed alert. Refused while the task uses its calendar's
+       * default alerts (TaskView.useDefaultAlerts).
+       */
+      acknowledgeAlert: (id: string, alertId: string, when?: string | null) =>
+        callApi('tasks.acknowledgeAlert', when === undefined ? [id, alertId] : [id, alertId, when]) as Promise<void>,
       delete: (id: string) => callApi('tasks.delete', [id]) as Promise<void>,
     },
     // Message templates (permissions: templates:read / templates:write).
@@ -1273,6 +1585,7 @@ async function bootSlot(payload: SlotInit): Promise<void> {
 
   const reactRoot = renderer.ReactDOM.createRoot(rootEl);
   reactRoot.render(React.createElement(SlotShell));
+  window.addEventListener('keydown', frameEscapeListener(() => sendToHost({ type: 'frame-escape' })));
   sendToHost({ type: 'init-done', hooks: [], slots: [], shortcuts: [] });
 }
 
@@ -1449,16 +1762,19 @@ export function startSandboxRuntime(): () => void {
     () => !!parentWindow,
   );
   window.addEventListener('message', handleHostMessage);
+  for (const event of ACTIVITY_EVENTS) window.addEventListener(event, onUserInput, { capture: true, passive: true });
   // Initial ping, targeted at the host origin so it can only land on the
   // page that framed us. Guard at module scope so React strict mode's
   // double-invoke doesn't re-post (and so a re-post can't race with the
   // parent's init reply).
   if (!readyPosted) {
     readyPosted = true;
-    sendToHost({ type: 'sandbox-ready' });
+    const activityPort = openActivityPort();
+    sendToHost({ type: 'sandbox-ready' }, activityPort ? [activityPort] : undefined);
   }
   return () => {
     window.removeEventListener('message', handleHostMessage);
+    for (const event of ACTIVITY_EVENTS) window.removeEventListener(event, onUserInput, { capture: true });
   };
 }
 

@@ -181,6 +181,17 @@ describe('frame-ancestors of the mail UI', () => {
     else process.env.ALLOWED_FRAME_ANCESTORS = original;
   });
 
+  // Send checks run the admin's patterns in a worker they can stop; only
+  // plugin frames get it, the app keeps its script-src fallback.
+  it('lets plugin frames, and only them, start workers from blobs', async () => {
+    vi.mocked(configManager.getPolicy).mockReturnValueOnce({ features: { pluginsEnabled: true } } as never);
+    const frame = await proxy(new NextRequest('http://localhost:3000/plugin-sandbox', {
+      headers: { 'sec-fetch-dest': 'iframe', 'sec-fetch-mode': 'navigate', 'sec-fetch-site': 'same-origin' },
+    }));
+    expect(frame.headers.get('content-security-policy')).toContain("worker-src 'self' blob:");
+    expect((await load('/en/mail/folder/inbox')).headers.get('content-security-policy')).not.toContain('worker-src');
+  });
+
   it('allows only the app itself by default', async () => {
     delete process.env.ALLOWED_FRAME_ANCESTORS;
     const res = await load('/en/mail/folder/inbox');
@@ -279,5 +290,40 @@ describe('isStaticAssetPath', () => {
     expect(isStaticAssetPath('/brandingx/logo.png')).toBe(false);
     // The sandbox documents themselves keep the sandbox CSP.
     expect(isStaticAssetPath('/plugin-sandbox')).toBe(false);
+  });
+});
+
+// Camera and microphone are off, but an inline app the operator granted them
+// needs its origin in the header (and the document itself, through which a
+// frame inherits): no frame's `allow` widens it.
+describe('Permissions-Policy for the operator\'s sidebar apps', () => {
+  afterEach(() => {
+    vi.mocked(configManager.getPolicy).mockImplementation(() => ({ features: { pluginsEnabled: false } }) as never);
+  });
+
+  const withApps = (defaultSidebarApps: unknown[]) =>
+    vi.mocked(configManager.getPolicy).mockImplementation(() => ({ features: {}, defaultSidebarApps }) as never);
+  const chat = { id: 'admin-app-chat', name: 'Chat', url: 'https://chat.example.com/team', icon: 'Globe', openMode: 'inline', showOnMobile: false };
+
+  it('turns camera and microphone off without such an app', async () => {
+    withApps([{ ...chat, allow: ['clipboard-write', 'fullscreen'] }]);
+    expect((await load('/en/mail')).headers.get('permissions-policy'))
+      .toBe('camera=(), microphone=(), geolocation=(), payment=()');
+  });
+
+  it('names the app\'s origin, and the document\'s own, for what it was granted', async () => {
+    withApps([
+      { ...chat, allow: ['microphone', 'camera'] },
+      { ...chat, id: 'admin-app-talk', url: 'https://talk.example.com', allow: ['microphone'] },
+    ]);
+    expect((await load('/en/mail')).headers.get('permissions-policy')).toBe(
+      'camera=(self "https://chat.example.com"), microphone=(self "https://chat.example.com" "https://talk.example.com"), geolocation=(), payment=()'
+    );
+  });
+
+  it('never for an app that opens in a tab', async () => {
+    withApps([{ ...chat, openMode: 'tab', allow: ['microphone', 'camera'] }]);
+    expect((await load('/en/mail')).headers.get('permissions-policy'))
+      .toBe('camera=(), microphone=(), geolocation=(), payment=()');
   });
 });

@@ -3,16 +3,17 @@ import { act, render, screen } from '@testing-library/react';
 import { useTranslations } from 'next-intl';
 import { IntlProvider } from '../intl-provider';
 import { useLocaleStore } from '@/stores/locale-store';
-import { useSettingsStore } from '@/stores/settings-store';
 import enCommon from '@/locales/en/common.json';
 import deCommon from '@/locales/de/common.json';
 import frCommon from '@/locales/fr/common.json';
 import enPlain from '@/locales/en/plain.json';
 import dePlain from '@/locales/de/plain.json';
+import { addPlainLanguage } from '@/i18n/plain-language';
 
-// Plain-language mode lays locales/<en|de>/plain.json over the catalog when the
-// setting is on. Every useTranslations call has to pick it up from the one
-// provider, live, and only for English and German.
+// The plain wording in locales/<en|de|vi>/plain.json is the only wording
+// (usability pass 2026-11-04, settings-15): it is laid over the catalog for
+// English, German and Vietnamese with no setting, and other locales keep
+// their own strings.
 
 vi.unmock('next-intl');
 
@@ -35,74 +36,60 @@ async function settle() {
   });
 }
 
-describe('plain-language mode', () => {
+describe('plain wording', () => {
   beforeEach(() => {
-    // The fallback assertions need a key that has no plain version.
+    // The fallback assertions need a key that has no plain version, and the
+    // plain assertions one whose plain version differs.
     expect((enPlain as { login: Record<string, unknown> }).login.sign_in).toBeUndefined();
     expect((dePlain as { login: Record<string, unknown> }).login.sign_in).toBeUndefined();
+    expect(enPlain.login.error.invalid_credentials).not.toBe(enCommon.login.error.invalid_credentials);
+    expect(dePlain.login.error.invalid_credentials).not.toBe(deCommon.login.error.invalid_credentials);
   });
 
   afterEach(() => {
     useLocaleStore.setState({ locale: '' });
-    useSettingsStore.setState({ plainLanguage: false });
   });
 
-  it('keeps the normal strings while the setting is off', async () => {
-    render(<IntlProvider locale="en" messages={enCommon}><Strings /></IntlProvider>);
-    await settle();
-    expect(text('plain')).toBe(enCommon.login.error.invalid_credentials);
-  });
-
-  it('uses the plain English string when the setting is on', async () => {
-    useSettingsStore.setState({ plainLanguage: true });
-    render(<IntlProvider locale="en" messages={enCommon}><Strings /></IntlProvider>);
-    expect(await screen.findByText(enPlain.login.error.invalid_credentials)).toBeTruthy();
-    expect(enPlain.login.error.invalid_credentials).not.toBe(enCommon.login.error.invalid_credentials);
+  it('shows the plain English string from the first render, with no setting', () => {
+    render(<IntlProvider locale="en"><Strings /></IntlProvider>);
+    expect(text('plain')).toBe(enPlain.login.error.invalid_credentials);
     // A key without a plain version keeps the common.json string.
     expect(text('normal')).toBe(enCommon.login.sign_in);
   });
 
+  it('adds the plain strings to a server catalog for German, not French', async () => {
+    const de = (await addPlainLanguage('de', deCommon)) as typeof deCommon;
+    expect(de.login.error.invalid_credentials).toBe(dePlain.login.error.invalid_credentials);
+    expect(await addPlainLanguage('fr', frCommon)).toBe(frCommon);
+  });
+
   it('uses the plain German string for a German UI', async () => {
-    useSettingsStore.setState({ plainLanguage: true });
-    render(<IntlProvider locale="de" messages={deCommon}><Strings /></IntlProvider>);
-    expect(await screen.findByText(dePlain.login.error.invalid_credentials)).toBeTruthy();
+    const messages = await addPlainLanguage('de', deCommon);
+    render(<IntlProvider locale="de" messages={messages}><Strings /></IntlProvider>);
+    expect(text('plain')).toBe(dePlain.login.error.invalid_credentials);
     expect(text('normal')).toBe(deCommon.login.sign_in);
   });
 
-  it('works without server messages, as in the Lite export', async () => {
-    useSettingsStore.setState({ plainLanguage: true });
+  it('loads the plain German strings without server messages, as in the Lite export', async () => {
     render(<IntlProvider locale="de"><Strings /></IntlProvider>);
-    expect(await screen.findByText(dePlain.login.error.invalid_credentials)).toBeTruthy();
+    // The German catalog is a lazy chunk, slow to import under load.
+    expect(await screen.findByText(dePlain.login.error.invalid_credentials, {}, { timeout: 8000 })).toBeTruthy();
   });
 
-  it('leaves other locales on their normal strings', async () => {
-    useSettingsStore.setState({ plainLanguage: true });
+  it('leaves other locales on their own strings', async () => {
     render(<IntlProvider locale="fr" messages={frCommon}><Strings /></IntlProvider>);
     await settle();
     expect(text('plain')).toBe(frCommon.login.error.invalid_credentials);
   });
 
-  it('switches live when the setting changes', async () => {
-    render(<IntlProvider locale="en" messages={enCommon}><Strings /></IntlProvider>);
-    await settle();
-    expect(text('plain')).toBe(enCommon.login.error.invalid_credentials);
-
-    act(() => useSettingsStore.setState({ plainLanguage: true }));
-    expect(await screen.findByText(enPlain.login.error.invalid_credentials)).toBeTruthy();
-
-    act(() => useSettingsStore.setState({ plainLanguage: false }));
-    expect(text('plain')).toBe(enCommon.login.error.invalid_credentials);
-  });
-
-  it('follows a language change while the setting stays on', async () => {
-    useSettingsStore.setState({ plainLanguage: true });
-    render(<IntlProvider locale="en" messages={enCommon}><Strings /></IntlProvider>);
-    expect(await screen.findByText(enPlain.login.error.invalid_credentials)).toBeTruthy();
+  it('keeps the plain wording across a language change', async () => {
+    render(<IntlProvider locale="en"><Strings /></IntlProvider>);
+    expect(text('plain')).toBe(enPlain.login.error.invalid_credentials);
 
     act(() => useLocaleStore.setState({ locale: 'de' }));
-    expect(await screen.findByText(dePlain.login.error.invalid_credentials)).toBeTruthy();
+    expect(await screen.findByText(dePlain.login.error.invalid_credentials, {}, { timeout: 8000 })).toBeTruthy();
 
     act(() => useLocaleStore.setState({ locale: 'fr' }));
-    expect(await screen.findByText(frCommon.login.error.invalid_credentials)).toBeTruthy();
+    expect(await screen.findByText(frCommon.login.error.invalid_credentials, {}, { timeout: 8000 })).toBeTruthy();
   });
 });

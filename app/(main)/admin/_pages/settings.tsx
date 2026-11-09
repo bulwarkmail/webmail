@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2 } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
 import { SettingsSection, SectionNav } from '@/components/settings/settings-section';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { AdminSaveBar } from '@/components/admin/save-bar';
 import { withEdit } from '@/lib/admin/edits';
 import { useAdminFeedback } from '@/components/admin/feedback';
@@ -34,11 +34,15 @@ export function SettingsPage() {
     fetchConfig();
   }, []);
 
+  // Only the first load shows the skeleton: swapping the page out after a
+  // save would throw away the scroll position.
   async function fetchConfig() {
-    setLoading(true);
-    const res = await apiFetch('/api/admin/config');
-    if (res.ok) {
+    try {
+      const res = await apiFetch('/api/admin/config');
+      if (!res.ok) throw new Error();
       setConfig(await res.json());
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load the settings' });
     }
     setLoading(false);
   }
@@ -100,9 +104,7 @@ export function SettingsPage() {
     return (
       <div>
         <AdminPageHeader title={PAGE.label} description={PAGE.description} />
-        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading
-        </div>
+        <AdminBodySkeleton status="Loading" />
       </div>
     );
   }
@@ -132,10 +134,12 @@ export function SettingsPage() {
         </SettingsSection>
 
         <SettingsSection id="login" title="Login page">
+          <ConfigToggleItem label="Desktop app: sign in with the browser" description="Lets the desktop app sign in through this login page in the user's browser, so their password manager works there. Turn off on a terminal server or any computer several people use at once: another user there can send a link that asks for someone's sign-in. The app's own form keeps working." configKey="desktopBrowserSignIn" value={currentValue('desktopBrowserSignIn') as boolean} source={config.desktopBrowserSignIn?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show version" description="Show the webmail version in the login page footer. Turn off to keep the exact version hidden from visitors who are not signed in." configKey="loginShowVersion" value={currentValue('loginShowVersion') as boolean} source={config.loginShowVersion?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show 2FA code option" term="two_factor" description="Show the &quot;I have a 2FA code&quot; toggle on the login form. Turn off when two-factor authentication is handled by an external identity provider. Accounts that require a code still get the field." configKey="loginShowTotp" value={currentValue('loginShowTotp') as boolean} source={config.loginShowTotp?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show access token sign-in" term="access_token" description="Offer signing in with an access token instead of a password. For JMAP servers that authenticate API tokens as Bearer tokens, such as Fastmail, which accepts no passwords over JMAP." configKey="loginShowTokenLogin" value={currentValue('loginShowTokenLogin') as boolean} source={config.loginShowTokenLogin?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show remember me" description="Let people choose whether to stay signed in. Off (the default) remembers every sign-in. Either way this needs SESSION_SECRET to be set." configKey="loginShowRememberMe" value={currentValue('loginShowRememberMe') as boolean} source={config.loginShowRememberMe?.source} onChange={handleChange} onRevert={handleRevert} />
+          <ConfigToggleItem label="Keep unticked sign-ins until the browser closes" description="With the remember me box shown, a sign-in made with it unticked survives reloads and new tabs and ends when the browser closes. Off (the default) ends it at the next reload. Needs SESSION_SECRET." configKey="browserSessionSignIn" value={currentValue('browserSessionSignIn') as boolean} source={config.browserSessionSignIn?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show heading" description="Show the application name below the login logo" configKey="loginShowHeading" value={currentValue('loginShowHeading') as boolean} source={config.loginShowHeading?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show subtitle" description="Show the subtitle below the login heading" configKey="loginShowSubtitle" value={currentValue('loginShowSubtitle') as boolean} source={config.loginShowSubtitle?.source} onChange={handleChange} onRevert={handleRevert} />
         </SettingsSection>

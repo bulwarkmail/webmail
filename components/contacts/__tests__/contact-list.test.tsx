@@ -77,6 +77,31 @@ describe('ContactList', () => {
     expect(screen.getByTestId('contact-list-skeleton')).toBeInTheDocument();
   });
 
+  it('draws the loading rows at the list density, as the page skeleton does', () => {
+    const avatars = () => [...screen.getByTestId('contact-list-skeleton').querySelectorAll('.rounded-full')];
+    act(() => { useSettingsStore.setState({ density: 'extra-compact', groupContactsByLetter: false }); });
+    const { unmount } = render(<ContactList {...defaultProps} contacts={[]} isLoading />);
+    expect(avatars().length).toBeGreaterThan(0);
+    expect(avatars().every((el) => el.classList.contains('hidden'))).toBe(true);
+    unmount();
+
+    act(() => { useSettingsStore.setState({ density: 'regular', groupContactsByLetter: true }); });
+    render(<ContactList {...defaultProps} contacts={[]} isLoading />);
+    expect(avatars().some((el) => el.classList.contains('hidden'))).toBe(false);
+  });
+
+  it('puts a banner at the top of the scrolling list, so its arrival moves nothing on screen', () => {
+    const { rerender } = render(<ContactList {...defaultProps} contacts={[]} isLoading />);
+    const scroller = screen.getByTestId('contact-list-skeleton').parentElement!;
+    const loadingList = screen.queryByRole('listbox');
+    rerender(<ContactList {...defaultProps} banner={<button type="button">Possible duplicates (1)</button>} />);
+    // The same scroll area as the loading rows, with the banner inside it, and
+    // a list of its own, not the loading one moved down.
+    expect(screen.getByRole('listbox').parentElement).toBe(scroller);
+    expect(scroller.firstElementChild).toBe(screen.getByRole('button', { name: 'Possible duplicates (1)' }));
+    expect(loadingList === null || loadingList !== screen.getByRole('listbox')).toBe(true);
+  });
+
   it('shows the contacts as soon as they are there, even while loading', () => {
     render(<ContactList {...defaultProps} isLoading />);
     expect(screen.queryByTestId('contact-list-skeleton')).toBeNull();

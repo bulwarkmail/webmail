@@ -10,6 +10,7 @@ import { exportContacts, useContactExportBusy } from "@/components/contacts/cont
 import { useContactStore } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 
 export function ContactsSettings() {
@@ -23,6 +24,9 @@ export function ContactsSettings() {
   } = useContactStore();
   const groupContactsByLetter = useSettingsStore((s) => s.groupContactsByLetter);
   const sortContactsByLastName = useSettingsStore((s) => s.sortContactsByLastName);
+  const showContactsDirectory = useSettingsStore((s) => s.showContactsDirectory);
+  const directoryLocked = usePolicyStore((s) => s.isSettingLocked("showContactsDirectory"));
+  const directoryHidden = usePolicyStore((s) => s.isSettingHidden("showContactsDirectory"));
   const updateSetting = useSettingsStore((s) => s.updateSetting);
   const [showImport, setShowImport] = useState(false);
   const exporting = useContactExportBusy();
@@ -79,6 +83,19 @@ export function ContactsSettings() {
           onChange={(checked) => updateSetting("sortContactsByLastName", checked)}
         />
       </SettingItem>
+
+      {!!client?.supportsPrincipals() && !directoryHidden && (
+        <SettingItem
+          label={tSettings("show_directory_label")}
+          description={tSettings("show_directory_description")}
+          locked={directoryLocked}
+        >
+          <ToggleSwitch
+            checked={showContactsDirectory}
+            onChange={(checked) => updateSetting("showContactsDirectory", checked)}
+          />
+        </SettingItem>
+      )}
 
       <SettingItem
         label={tSettings("import_label")}

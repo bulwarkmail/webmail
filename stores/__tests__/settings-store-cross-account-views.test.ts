@@ -26,6 +26,8 @@ describe('views spanning every account across an account switch', () => {
       enableCrossAllView: true,
       sendDelaySeconds: 0,
     });
+    // What an earlier load left, not changes made on this device.
+    localStorage.removeItem('settings-sync-stamps');
   });
 
   it('keeps the device\'s merged-mailbox choice when another of its logins loads its settings', async () => {

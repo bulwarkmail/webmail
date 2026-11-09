@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Clock, X } from "@/components/icons";
@@ -11,6 +11,8 @@ import { IconButton } from "@/components/ui/icon-button";
 import type { Calendar } from "@/lib/jmap/types";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useCollectionNames } from "@/hooks/use-collection-names";
+import { CalendarSelect } from "@/components/calendar/calendar-select";
 
 export interface QuickCreateDraft {
   start: Date;
@@ -33,6 +35,9 @@ interface QuickCreatePopoverProps {
 }
 
 const WIDTH = 340;
+// Wider for a calendar name that needs it ("Stalwart Calendar
+// (someone@example.org)" was cut off at 340 px, pim-21).
+const MAX_WIDTH = 480;
 const GAP = 8;
 const MARGIN = 12;
 
@@ -40,21 +45,22 @@ const MARGIN = 12;
 // popover sits beside it, or under it when neither side has room.
 const PLACEHOLDER_SELECTOR = "[data-pending-preview]";
 
-function computePosition(anchor: DOMRect | null, height: number): { top: number; left: number } {
+export function computePosition(anchor: DOMRect | null, height: number, width = WIDTH): { top: number; left: number } {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  if (!anchor) return { top: Math.max(MARGIN, (vh - height) / 2), left: Math.max(MARGIN, (vw - WIDTH) / 2) };
+  if (!anchor) return { top: Math.max(MARGIN, (vh - height) / 2), left: Math.max(MARGIN, (vw - width) / 2) };
   const clampTop = (top: number) => Math.min(Math.max(MARGIN, top), vh - height - MARGIN);
-  const clampLeft = (left: number) => Math.min(Math.max(MARGIN, left), vw - WIDTH - MARGIN);
-  if (anchor.right + GAP + WIDTH + MARGIN <= vw) return { top: clampTop(anchor.top), left: anchor.right + GAP };
-  if (anchor.left - GAP - WIDTH >= MARGIN) return { top: clampTop(anchor.top), left: anchor.left - GAP - WIDTH };
+  const clampLeft = (left: number) => Math.min(Math.max(MARGIN, left), vw - width - MARGIN);
+  if (anchor.right + GAP + width + MARGIN <= vw) return { top: clampTop(anchor.top), left: anchor.right + GAP };
+  if (anchor.left - GAP - width >= MARGIN) return { top: clampTop(anchor.top), left: anchor.left - GAP - width };
   if (anchor.bottom + GAP + height + MARGIN <= vh) return { top: anchor.bottom + GAP, left: clampLeft(anchor.left) };
   return { top: Math.max(MARGIN, anchor.top - GAP - height), left: clampLeft(anchor.left) };
 }
 
 /**
- * Compact editor that opens next to an empty slot clicked in the week or
- * day view: a title, the time that was picked, the calendar, and a way into
+ * Compact editor that opens next to an empty slot clicked or dragged over in
+ * the week or day view, or days picked in the month view: a title, the time
+ * that was picked, the calendar, and a way into
  * the full editor. Enter saves, Escape or a click elsewhere discards.
  */
 export function QuickCreatePopover({
@@ -66,6 +72,8 @@ export function QuickCreatePopover({
   onMoreOptions,
   onClose,
 }: QuickCreatePopoverProps) {
+  const shownName = useCollectionNames();
+  const selected = calendars.find((c) => c.id === draft.calendarId);
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
@@ -83,7 +91,7 @@ export function QuickCreatePopover({
       const node = ref.current;
       if (!node) return;
       const anchor = document.querySelector(PLACEHOLDER_SELECTOR)?.getBoundingClientRect() ?? null;
-      setPosition(computePosition(anchor, node.offsetHeight));
+      setPosition(computePosition(anchor, node.offsetHeight, node.offsetWidth));
     };
     place();
     const frame = requestAnimationFrame(place);
@@ -141,14 +149,19 @@ export function QuickCreatePopover({
     };
   }, [onClose]);
 
-  const canSave = draft.title.trim().length > 0 && !!draft.calendarId;
+  // An empty title saves as "(No title)", as in Google Calendar.
+  const canSave = !!draft.calendarId;
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (canSave) onSave();
   }, [canSave, onSave]);
 
   const timeFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
-  const dateLabel = intlFormatter.dateTime(draft.start, { weekday: "long", month: "long", day: "numeric" });
+  const dayFormat = { weekday: "long", month: "long", day: "numeric" } as const;
+  // Days picked by a drag in the month view: the first and the last.
+  const dateLabel = draft.allDay && !isSameDay(draft.start, draft.end)
+    ? `${intlFormatter.dateTime(draft.start, dayFormat)} – ${intlFormatter.dateTime(draft.end, dayFormat)}`
+    : intlFormatter.dateTime(draft.start, dayFormat);
   const timeLabel = draft.allDay ? t("events.all_day") : `${format(draft.start, timeFmt)} – ${format(draft.end, timeFmt)}`;
 
   return createPortal(
@@ -158,7 +171,9 @@ export function QuickCreatePopover({
       aria-label={t("quick_create.aria_label")}
       className="fixed z-[60] bg-background border border-border rounded-lg shadow-xl"
       style={{
-        width: WIDTH,
+        width: "max-content",
+        minWidth: WIDTH,
+        maxWidth: `min(${MAX_WIDTH}px, calc(100vw - ${2 * MARGIN}px))`,
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
         visibility: position ? "visible" : "hidden",
@@ -191,19 +206,17 @@ export function QuickCreatePopover({
             <div className="flex items-center gap-2.5">
               <span
                 className="w-4 h-4 rounded-sm flex-shrink-0"
-                style={{ backgroundColor: paint(calendars.find((c) => c.id === draft.calendarId)?.color || "#3b82f6") }}
+                style={{ backgroundColor: paint(selected?.color || "#3b82f6") }}
                 aria-hidden="true"
               />
-              <select
+              <CalendarSelect
+                calendars={calendars}
                 value={draft.calendarId}
-                onChange={(e) => onChange({ ...draft, calendarId: e.target.value })}
+                onChange={(calendarId) => onChange({ ...draft, calendarId })}
                 aria-label={t("form.calendar_select")}
+                title={selected ? shownName.calendar(selected) : undefined}
                 className="flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-hidden"
-              >
-                {calendars.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              />
             </div>
           )}
         </div>

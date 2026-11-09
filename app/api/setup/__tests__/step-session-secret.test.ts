@@ -11,7 +11,7 @@ import { NextRequest } from 'next/server';
 
 const setAdminConfig = vi.hoisted(() => vi.fn(async (_updates: Record<string, unknown>) => {}));
 vi.mock('@/lib/setup/state', () => ({ detectSetupState: () => 'bootstrap' }));
-vi.mock('@/lib/setup/session', () => ({ authenticateWizardRequest: async () => true }));
+vi.mock('@/lib/setup/session', () => ({ authenticateWizardRequest: async () => true, wizardSessionRefusal: async () => null }));
 vi.mock('@/lib/admin/config-manager', () => ({
   configManager: { ensureLoaded: async () => {}, setAdminConfig },
 }));
@@ -19,6 +19,7 @@ vi.mock('@/lib/telemetry', () => ({
   effectiveConsent: async () => ({ source: 'env' }),
   loadState: async () => ({}),
   saveState: async () => {},
+  updateState: async () => ({}),
   reschedule: async () => {},
 }));
 

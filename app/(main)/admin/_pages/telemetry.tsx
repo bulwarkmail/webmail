@@ -5,6 +5,8 @@ import { Loader2, Send, ExternalLink } from '@/components/icons';
 import { SettingsSection, SettingItem, ToggleSwitch } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { EmptyState } from '@/components/admin/empty-state';
+import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { AdminSaveBar } from '@/components/admin/save-bar';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { ConfigNote, inputClass } from '@/components/admin/config-items';
@@ -16,14 +18,21 @@ import { cn } from '@/lib/utils';
 interface TelemetryStatus {
   consent: 'pending' | 'on' | 'off';
   consentSource: 'no-third-party' | 'env' | 'file';
+  /** 'on' sends them daily; 'instant' also sends today's as they change. */
+  errorsConsent?: ErrorsMode;
+  errorsConsentSource?: 'telemetry' | 'no-third-party' | 'env' | 'file';
   endpoint: string;
   defaultEndpoint: string;
   consentedAt: string | null;
   lastSentAt: string | null;
   nextScheduledAt: string | null;
   payloadPreview: Record<string, unknown>;
+  errorsPreview?: unknown[];
+  instantErrorsPreview?: unknown[];
   accountCounts: { total: number; active7d: number };
 }
+
+type ErrorsMode = 'on' | 'off' | 'instant';
 
 const PAGE = adminPageDef('telemetry');
 
@@ -56,10 +65,12 @@ export function TelemetryPage() {
   // The heartbeat switch waits for Save like the endpoint (one page, one
   // save bar).
   const [consentDraft, setConsentDraft] = useState<'on' | 'off' | null>(null);
+  const [errorsDraft, setErrorsDraft] = useState<ErrorsMode | null>(null);
 
   const endpointDirty = status !== null && endpointDraft !== status.endpoint;
   const consentDirty = status !== null && consentDraft !== null && consentDraft !== status.consent;
-  const dirty = endpointDirty || consentDirty;
+  const errorsDirty = status !== null && errorsDraft !== null && errorsDraft !== (status.errorsConsent ?? 'off');
+  const dirty = endpointDirty || consentDirty || errorsDirty;
   useAdminUnsavedChanges('telemetry', dirty);
 
   async function refresh(): Promise<void> {
@@ -99,11 +110,17 @@ export function TelemetryPage() {
         const error = await post({ action: 'set-consent', consent: consentDraft });
         if (error) errors.push(`Heartbeats: ${error}`);
       }
+      // After the heartbeat switch: error counts need it on.
+      if (errorsDirty && errorsDraft) {
+        const error = await post({ action: 'set-errors-consent', consent: errorsDraft });
+        if (error) errors.push(`Error counts: ${error}`);
+      }
       if (endpointDirty) {
         const error = await post({ action: 'set-endpoint', endpoint: endpointDraft });
         if (error) errors.push(`Endpoint: ${error}`);
       }
       setConsentDraft(null);
+      setErrorsDraft(null);
       setMessage(errors.length > 0
         ? { type: 'error', text: `Couldn't save: ${errors.join('; ')}` }
         : { type: 'success', text: 'Telemetry settings saved.' });
@@ -130,13 +147,24 @@ export function TelemetryPage() {
 
   const header = <AdminPageHeader title={PAGE.label} description={PAGE.description} />;
 
-  if (loading || !status) {
+  if (!loading && !status) {
     return (
       <div>
         {header}
-        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading
-        </div>
+        <EmptyState
+          title="Could not load the usage stats"
+          action={<Button type="button" size="sm" onClick={() => void refresh()}>Retry</Button>}
+        />
+      </div>
+    );
+  }
+
+  // A refresh after a save keeps the page, and with it the scroll position.
+  if (!status) {
+    return (
+      <div>
+        {header}
+        <AdminBodySkeleton status="Loading" />
       </div>
     );
   }
@@ -146,11 +174,31 @@ export function TelemetryPage() {
   const isOn = status.consent === 'on';
   const shownOn = (consentDraft ?? status.consent) === 'on';
 
+  // Error counts follow the heartbeat switch as it is about to be saved.
+  const errorsLocked = noThirdParty || status.errorsConsentSource === 'env' || !shownOn;
+  const errorsMode: ErrorsMode = shownOn ? (errorsDraft ?? status.errorsConsent ?? 'off') : 'off';
+  const errorsShownOn = errorsMode !== 'off';
+  const errorsDescription = [
+    'Adds how often each error happened yesterday, the error name and where in the code it happened. No message text, no URLs, no instance id goes to the error tracker.',
+    !shownOn && 'Needs the heartbeat on.',
+    status.errorsConsentSource === 'env' && 'Locked by the BULWARK_TELEMETRY_ERRORS env var.',
+  ].filter(Boolean).join(' ');
+  const instantDescription = [
+    'Also sends today\'s counts within about a minute when an error is new or happens noticeably more often, so a broken release shows up the same day. The same fields as the daily counts; the collector learns roughly when errors happen.',
+    !errorsShownOn && 'Needs error counts on.',
+  ].filter(Boolean).join(' ');
+
+  // The payload as it will be once the switches are saved.
+  const previewPayload = errorsShownOn
+    ? { ...status.payloadPreview, schema: '2', errors: status.errorsPreview ?? [] }
+    : (({ errors: _omit, ...v1 }) => ({ ...v1, schema: '1' }))(status.payloadPreview as Record<string, unknown> & { errors?: unknown });
+
   const consentDescription = [
     status.consent === 'pending' && 'Initialising - no heartbeats sent yet.',
-    status.consent === 'on' && 'Heartbeats are enabled. Thanks for helping us improve!',
+    status.consent === 'on' && status.endpoint && 'Heartbeats are enabled. Thanks for helping us improve!',
+    status.consent === 'on' && !status.endpoint && 'Heartbeats are on, but none are sent because the collector URL is empty.',
     status.consent === 'off' && 'Heartbeats are off (default).',
-    noThirdParty && 'Locked off: no third-party traffic is on (Organisation > Security).',
+    noThirdParty && 'Locked off: no third-party traffic is on (Users > Security).',
     envOverridden && !noThirdParty && 'Locked by the BULWARK_TELEMETRY env var.',
   ].filter(Boolean).join(' ');
 
@@ -180,7 +228,25 @@ export function TelemetryPage() {
             <ToggleSwitch
               checked={shownOn}
               disabled={busy === 'save' || envOverridden}
-              onChange={(checked) => { setConsentDraft(checked ? 'on' : 'off'); setMessage(null); }}
+              onChange={(checked) => {
+                setConsentDraft(checked ? 'on' : 'off');
+                if (!checked) setErrorsDraft('off');
+                setMessage(null);
+              }}
+            />
+          </SettingItem>
+          <SettingItem label="Also send anonymous error counts" description={errorsDescription}>
+            <ToggleSwitch
+              checked={errorsShownOn}
+              disabled={busy === 'save' || errorsLocked}
+              onChange={(checked) => { setErrorsDraft(checked ? 'on' : 'off'); setMessage(null); }}
+            />
+          </SettingItem>
+          <SettingItem label="Send error counts right away" description={instantDescription}>
+            <ToggleSwitch
+              checked={errorsMode === 'instant'}
+              disabled={busy === 'save' || errorsLocked || !errorsShownOn}
+              onChange={(checked) => { setErrorsDraft(checked ? 'instant' : 'on'); setMessage(null); }}
             />
           </SettingItem>
           <SettingItem label="Last sent">
@@ -216,14 +282,14 @@ export function TelemetryPage() {
         <SettingsSection
           id="endpoint"
           title="Endpoint"
-          description="Where heartbeats are sent. Defaults to the project's collector. Point at your own collector (open source at bulwarkmail/dashboard) or clear this field to disable sending."
+          description={`Where heartbeats are sent. The project's collector is ${status.defaultEndpoint}. Point at your own collector (open source at bulwarkmail/dashboard), or clear this field to stop sending.`}
         >
           <SettingItem label="Collector URL">
             <input
               type="url"
               value={endpointDraft}
               onChange={(e) => { setEndpointDraft(e.target.value); setMessage(null); }}
-              placeholder={status.defaultEndpoint}
+              placeholder="Empty: no heartbeats are sent"
               aria-label="Collector URL"
               autoComplete="off"
               spellCheck={false}
@@ -251,8 +317,24 @@ export function TelemetryPage() {
             </Button>
           </div>
           <pre className="text-xs bg-muted/50 rounded-md p-3 overflow-x-auto max-h-96">
-            {JSON.stringify(status.payloadPreview, null, 2)}
+            {JSON.stringify(previewPayload, null, 2)}
           </pre>
+          {errorsMode === 'instant' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Sent right away: today&apos;s error counts as they would go out now. Each minute only
+                the errors that are new or reached a higher count range are sent.
+              </p>
+              <pre className="text-xs bg-muted/50 rounded-md p-3 overflow-x-auto max-h-96">
+                {JSON.stringify({
+                  schema: '1',
+                  instance_id: status.payloadPreview.instance_id,
+                  day: new Date().toISOString().slice(0, 10),
+                  errors: status.instantErrorsPreview ?? [],
+                }, null, 2)}
+              </pre>
+            </>
+          )}
         </SettingsSection>
       </div>
 
@@ -260,7 +342,7 @@ export function TelemetryPage() {
         dirty={dirty}
         saving={busy === 'save'}
         onSave={() => void save()}
-        onDiscard={() => { setEndpointDraft(status.endpoint); setConsentDraft(null); }}
+        onDiscard={() => { setEndpointDraft(status.endpoint); setConsentDraft(null); setErrorsDraft(null); }}
         saveLabel="Save"
       />
     </div>

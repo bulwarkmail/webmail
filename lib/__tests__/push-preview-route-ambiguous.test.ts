@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeAll, describe, it, expect, vi, beforeEach } from 'vitest';
 
 // The push names only the JMAP account id, and ids repeat: Stalwart numbers
 // accounts alike on every install, and a group account is listed in the
@@ -26,12 +26,17 @@ vi.mock('@/lib/account-utils', () => ({ MAX_ACCOUNT_SLOTS: 3 }));
 
 // slot 0: alice on one.example, slot 1: bob on two.example, slot 2: carol on one.example
 const LOGINS = [
-  { serverUrl: 'https://one.example', authHeader: 'Basic alice' },
-  { serverUrl: 'https://two.example', authHeader: 'Basic bob' },
-  { serverUrl: 'https://one.example', authHeader: 'Basic carol' },
+  { serverUrl: 'https://one.example', authHeader: 'Basic alice', username: 'alice@one.example' },
+  { serverUrl: 'https://two.example', authHeader: 'Basic bob', username: 'bob@two.example' },
+  { serverUrl: 'https://one.example', authHeader: 'Basic carol', username: 'carol@one.example' },
 ];
+const ORIGINAL_LOGINS = [...LOGINS];
 vi.mock('@/lib/stalwart/auth-context', () => ({
   readStalwartAuthContextFromStore: (_store: unknown, slot: number) => LOGINS[slot] ?? null,
+}));
+const remembered = vi.hoisted(() => ({ value: null as null | { serverUrl: string; authHeader: string; username: string } }));
+vi.mock('@/lib/stalwart/push-auth-context', () => ({
+  readPushAuthContext: async (_store: unknown, slot: number) => LOGINS[slot] ?? (slot === 0 ? remembered.value : null),
 }));
 
 vi.mock('@/lib/stalwart/credentials', () => ({
@@ -67,10 +72,16 @@ vi.mock('@/lib/security/url-guard', () => ({
   DisallowedUrlError: class DisallowedUrlError extends Error {},
 }));
 
-async function callRoute(accountId: string) {
+// The route reads the device policy (Organisation > Devices); none is set here.
+vi.mock('@/lib/admin/config-manager', async () => {
+  const { DEFAULT_POLICY } = await import('@/lib/admin/types');
+  return { configManager: { ensureLoaded: async () => {}, getPolicy: () => DEFAULT_POLICY } };
+});
+
+async function callRoute(accountId: string, login?: string) {
   const { GET } = await import('@/app/api/push/preview/route');
   const request = {
-    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? 'e1' : null) } },
+    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? 'e1' : k === 'login' ? login ?? null : null) } },
     headers: new Headers(),
   };
   const res = (await GET(request as unknown as Parameters<typeof GET>[0])) as unknown as {
@@ -82,9 +93,84 @@ async function callRoute(accountId: string) {
 
 const mailCalls = () => fetchJmapServer.mock.calls.filter(([url]) => !url.endsWith('/.well-known/jmap'));
 
+// The route's first import can take longer than a test's limit on a busy machine,
+// and a test that times out keeps running into the next one's state.
+beforeAll(async () => {
+  await import('@/app/api/push/preview/route');
+}, 60_000);
+
+describe('push preview after the browser was closed', () => {
+  it('reads the login from the remembered session when the context cookie is gone', async () => {
+    remembered.value = { serverUrl: 'https://one.example', authHeader: 'Basic remembered', username: 'alice@one.example' };
+    LOGINS.length = 0;
+    try {
+      SESSIONS = { 'Basic remembered': session('https://one.example', 'a') };
+      const { status, body } = await callRoute('a');
+      expect(status).toBe(200);
+      expect((body.email as { subject: string }).subject).toBe('mail of Basic remembered');
+    } finally {
+      remembered.value = null;
+      LOGINS.push(...ORIGINAL_LOGINS);
+    }
+  });
+});
+
 describe('push preview when the account id is in more than one login', () => {
   beforeEach(() => {
     fetchJmapServer.mockClear();
+  });
+
+  it('does not go by the name when two servers use the same id: those logins share one relay record', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a'),
+      'Basic bob': session('https://two.example', 'z'),
+      'Basic carol': session('https://one.example', 'z'),
+    };
+    const { status, body } = await callRoute('z', 'BOB@two.example');
+    expect(status).toBe(409);
+    expect(body.slot).toBeUndefined();
+  });
+
+  it('does not answer for another login when the one the push names is gone', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a'),
+      'Basic bob': session('https://two.example', 'z'),
+      'Basic carol': session('https://one.example', 'c'),
+    };
+    const { status } = await callRoute('z', 'somebody-gone@two.example');
+    expect(status).toBe(409);
+  });
+
+  it('takes the one login with the account when the push names it', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a'),
+      'Basic bob': session('https://two.example', 'z'),
+      'Basic carol': session('https://one.example', 'c'),
+    };
+    const { status, body } = await callRoute('z', 'bob@two.example');
+    expect(status).toBe(200);
+    expect(body.slot).toBe(1);
+  });
+
+  it('takes the login the push names for a group two logins belong to', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a', ['team']),
+      'Basic bob': session('https://two.example', 'b'),
+      'Basic carol': session('https://one.example', 'c', ['team']),
+    };
+    const { status, body } = await callRoute('team', 'carol@one.example');
+    expect(status).toBe(200);
+    expect(body.slot).toBe(2);
+  });
+
+  it('does not take a login that does not have the account', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a', ['team']),
+      'Basic bob': session('https://two.example', 'b'),
+      'Basic carol': session('https://one.example', 'c', ['team']),
+    };
+    const { status } = await callRoute('team', 'bob@two.example');
+    expect(status).toBe(409);
   });
 
   it('shows no preview and names no login when two servers use the same id', async () => {

@@ -28,7 +28,10 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 INTEGRATION_DIR="${REPO_ROOT}/integration"
-PW_IMAGE="mcr.microsoft.com/playwright:v1.59.1-noble"
+# The image's browsers only work with the same Playwright version, so take
+# the tag from the one npm installed.
+PW_VERSION="$(cd "${REPO_ROOT}" && node -p "require('@playwright/test/package.json').version")"
+PW_IMAGE="mcr.microsoft.com/playwright:v${PW_VERSION}-noble"
 # Read by docker-compose.yml as the stalwart build argument.
 export STALWART_IMAGE="${STALWART_IMAGE:-stalwartlabs/stalwart:v0.16}"
 

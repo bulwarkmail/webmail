@@ -116,6 +116,18 @@ describe('POST /api/auth/verify (#969 login pre-check)', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it('checks the password upstream when the OAuth-only fallback is enabled', async () => {
+    config.oauthEnabled = true;
+    config.oauthOnly = true;
+    config.oauthPasswordFallbackEnabled = true;
+    fetchSpy.mockResolvedValue(upstream(401) as unknown as Response);
+
+    const { body } = await callRoute({ serverUrl: TRUSTED, username: 'alice', password: 'wrong' });
+
+    expect(body).toEqual({ result: 'unauthorized' });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('stops probing upstream after five wrong passwords from one client', async () => {
     fetchSpy.mockResolvedValue(upstream(401) as unknown as Response);
     const wrong = { serverUrl: TRUSTED, username: 'alice', password: 'wrong' };

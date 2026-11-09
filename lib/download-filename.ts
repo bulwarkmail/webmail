@@ -269,7 +269,7 @@ export function bundleExportFilename(
 }
 
 // Build a synthetic email for previewing templates in the settings UI.
-export function buildSampleEmail(): Email {
+export function buildSampleEmail(subject = "Benachrichtigung von Ihrem Gerät"): Email {
   // Use a fixed date so the preview doesn't churn as the user types.
   const iso = "2026-05-22T14:05:33Z";
   return {
@@ -283,7 +283,7 @@ export function buildSampleEmail(): Email {
     from: [{ name: "Alice Sender", email: "alice@example.com" }],
     to: [{ name: "Bob Recipient", email: "bob@example.com" }],
     cc: [],
-    subject: "Benachrichtigung von Ihrem Gerät",
+    subject,
     preview: "",
     hasAttachment: true,
     blobId: "sample-blob",

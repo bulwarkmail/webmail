@@ -291,3 +291,124 @@ describe('importEvents zero-duration events (#837)', () => {
     expect(batch.map((e) => e.duration)).toEqual(['PT0S', 'PT8H']);
   });
 });
+
+describe('fetchEvents hooks (onBeforeFetchEvents & onFetchingEvents)', () => {
+  it('does not change behavior when no plugin is registered', async () => {
+    const client = fakeClient({
+      queryAllCalendarEvents: vi.fn().mockResolvedValue([event({ id: 'f1', start: '2026-09-08T10:00:00' })]),
+    });
+    useCalendarStore.setState({ dateRange: { start: '2026-09-01', end: '2026-09-30' } });
+
+    await useCalendarStore.getState().fetchEvents(client, '2026-09-01', '2026-09-30');
+
+    expect(useCalendarStore.getState().events).toHaveLength(1);
+    expect(client.queryAllCalendarEvents).toHaveBeenCalled();
+  });
+
+  it('allows onBeforeFetchEvents to edit the range and onFetchingEvents to edit fetched events', async () => {
+    const client = fakeClient({
+      queryAllCalendarEvents: vi.fn().mockResolvedValue([event({ id: 'f1', title: 'Original' })]),
+    });
+
+    calendarHooks.onBeforeFetchEvents.register('t', () => ({
+      start: '2026-10-01',
+      end: '2026-10-31',
+    }));
+
+    calendarHooks.onFetchingEvents.register('t', (events: CalendarEvent[]) =>
+      events.map((e) => ({ ...e, title: 'Edited by fetch plugin' }))
+    );
+
+    await useCalendarStore.getState().fetchEvents(client, '2026-09-01', '2026-09-30');
+
+    expect(client.queryAllCalendarEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ after: '2026-10-01', before: '2026-10-31' })
+    );
+    expect(useCalendarStore.getState().events[0].title).toBe('Edited by fetch plugin');
+  });
+
+  it('leaves the events as the server sent them when a plugin returns an invalid event array', async () => {
+    const serverEvents = [event({ id: 'f1', title: 'Server Original' })];
+    const client = fakeClient({
+      queryAllCalendarEvents: vi.fn().mockResolvedValue(serverEvents),
+    });
+
+    useCalendarStore.setState({ dateRange: { start: '2026-09-01', end: '2026-09-30' } });
+
+    calendarHooks.onFetchingEvents.register('t', () => 'not-an-array' as unknown as CalendarEvent[]);
+
+    await useCalendarStore.getState().fetchEvents(client, '2026-09-01', '2026-09-30');
+
+    expect(useCalendarStore.getState().events[0].title).toBe('Server Original');
+  });
+});
+
+describe('onCreatingEvent and onUpdatingEvent hooks', () => {
+  it('allows onCreatingEvent to edit the event before sending to the network', async () => {
+    const client = fakeClient();
+
+    calendarHooks.onCreatingEvent.register('t', (payload) => ({
+      localEvent: { ...payload.localEvent, title: 'Modified by creation plugin' },
+      serverEvent: { ...payload.serverEvent, title: 'Modified by creation plugin' },
+    }));
+
+    await useCalendarStore.getState().createEvent(client, { title: 'Initial Title', start: '2026-09-08T10:00:00' });
+
+    expect(client.createCalendarEvent).toHaveBeenCalled();
+    const firstCallArgs = vi.mocked(client.createCalendarEvent).mock.calls[0];
+    expect(firstCallArgs[0]).toMatchObject({ title: 'Modified by creation plugin' });
+  });
+
+  it('allows onUpdatingEvent to edit the update payload before sending to the network', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [event()] });
+
+    calendarHooks.onUpdatingEvent.register('t', (payload) => ({
+      localUpdates: { ...payload.localUpdates, title: 'Modified by update plugin' },
+      serverUpdates: { ...payload.serverUpdates, title: 'Modified by update plugin' },
+      eventId: payload.eventId,
+    }));
+
+    await useCalendarStore.getState().updateEvent(client, 'e1', { title: 'Initial Patch' });
+
+    expect(client.updateCalendarEvent).toHaveBeenCalled();
+    const firstCallArgs = vi.mocked(client.updateCalendarEvent).mock.calls[0];
+    expect(firstCallArgs[0]).toBe('e1');
+    expect(firstCallArgs[1]).toMatchObject({ title: 'Modified by update plugin' });
+  });
+});
+
+describe('broken calendar plugins fall back to the unmodified data', () => {
+  it.each([
+    ['nothing usable', () => ({})],
+    ['dates that do not parse', () => ({ start: 'soon', end: 'later' })],
+  ])('keeps the user range when onBeforeFetchEvents returns %s', async (_name, hook) => {
+    const client = fakeClient({ queryAllCalendarEvents: vi.fn().mockResolvedValue([]) });
+    calendarHooks.onBeforeFetchEvents.register('t', hook as never);
+
+    await useCalendarStore.getState().fetchEvents(client, '2026-09-01', '2026-09-30');
+
+    expect(client.queryAllCalendarEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ after: '2026-09-01', before: '2026-09-30' })
+    );
+  });
+
+  it('creates the event as typed when onCreatingEvent returns null', async () => {
+    const client = fakeClient();
+    calendarHooks.onCreatingEvent.register('t', () => null as never);
+
+    await useCalendarStore.getState().createEvent(client, { title: 'Typed', start: '2026-09-08T10:00:00' });
+
+    expect(vi.mocked(client.createCalendarEvent).mock.calls[0][0]).toMatchObject({ title: 'Typed' });
+  });
+
+  it('updates the event as typed when onUpdatingEvent returns null', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [event()] });
+    calendarHooks.onUpdatingEvent.register('t', () => null as never);
+
+    await useCalendarStore.getState().updateEvent(client, 'e1', { title: 'Typed patch' });
+
+    expect(vi.mocked(client.updateCalendarEvent).mock.calls[0][1]).toMatchObject({ title: 'Typed patch' });
+  });
+});

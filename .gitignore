@@ -16,9 +16,16 @@
 # next.js
 /.next/
 /out/
+# Source maps CI collects for the error tracker (scripts/sourcemaps.mjs)
+/sourcemaps/
 /lite-image/
 # scripts/build-plugin-sandbox.mjs
 /public/plugin-sandbox-assets/
+# scripts/build-pst-worker.mjs
+/public/pst-worker.js
+# scripts/build-store-worker.mjs
+/public/store-worker.js
+/public/sqlite3mc/
 
 # production
 /build
@@ -26,6 +33,8 @@
 # misc
 .DS_Store
 *.pem
+# BIMI test certificates (public; the keys stay out)
+!lib/__tests__/fixtures/bimi/*.pem
 
 # debug
 npm-debug.log*
@@ -53,3 +62,6 @@ next-env.d.ts
 
 # Sibling repos
 /repos/
+
+# Kubernetes reference manifests: the secrets users fill in
+deploy/kubernetes/base/secrets.env

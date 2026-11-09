@@ -186,3 +186,20 @@ describe('CalendarWeekView all-day and tasks height cap', () => {
     expect(screen.getByRole('button', { name: /events.show_more|events.show_less/ })).toBeInTheDocument();
   });
 });
+
+describe('CalendarWeekView column width', () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  // Rounded down, the columns left a few pixels at the edge, where next Monday showed through.
+  it('fills the pane with exactly seven columns when the width does not divide evenly', () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1000);
+    renderView();
+    const columns = document.querySelector<HTMLElement>('[style*="grid-template-columns"]')!;
+    const colWidth = parseFloat(/([\d.]+)px/.exec(columns.style.gridTemplateColumns)![1]);
+    // 1000px less the 56px hour gutter
+    expect(colWidth * 7).toBeCloseTo(944, 1);
+  });
+});

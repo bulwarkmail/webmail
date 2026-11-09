@@ -7,6 +7,7 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { Plus, CalendarDays, CheckSquare, Clock } from "@/components/icons";
+import { useSettingsStore } from "@/stores/settings-store";
 
 interface Position {
   x: number;
@@ -37,6 +38,8 @@ export function EmptySpaceContextMenu({
   showAllDayOption = true,
 }: EmptySpaceContextMenuProps) {
   const t = useTranslations("calendar");
+  // The calendar's own keys (N, T), as the shortcut help lists them; gone with single keys off.
+  const singleKeys = useSettingsStore((state) => state.singleKeyShortcuts !== false);
 
   const handle = (fn: () => void) => () => {
     fn();
@@ -45,7 +48,7 @@ export function EmptySpaceContextMenu({
 
   return (
     <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
-      <ContextMenuItem icon={Plus} label={t("events.new_event")} onClick={handle(onNewEvent)} />
+      <ContextMenuItem icon={Plus} label={t("events.new_event")} shortcut={singleKeys ? "N" : undefined} onClick={handle(onNewEvent)} testId="grid-new-event" />
       {showAllDayOption && (
         <ContextMenuItem
           icon={CalendarDays}
@@ -61,7 +64,7 @@ export function EmptySpaceContextMenu({
         />
       )}
       <ContextMenuSeparator />
-      <ContextMenuItem icon={Clock} label={t("events.go_to_today")} onClick={handle(onGoToToday)} />
+      <ContextMenuItem icon={Clock} label={t("events.go_to_today")} shortcut={singleKeys ? "T" : undefined} onClick={handle(onGoToToday)} testId="grid-go-to-today" />
     </ContextMenu>
   );
 }

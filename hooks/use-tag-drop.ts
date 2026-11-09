@@ -28,7 +28,9 @@ interface UseTagDropReturn {
 export function useTagDrop({ tagId, onSuccess, onError }: UseTagDropOptions): UseTagDropReturn {
   const [isOver, setIsOver] = useState(false);
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
-  const { fetchEmails, fetchTagCounts, selectedMailbox } = useEmailStore(useShallow((state) => ({ fetchEmails: state.fetchEmails, fetchTagCounts: state.fetchTagCounts, selectedMailbox: state.selectedMailbox })));
+  // The open folder is read on the drop: subscribed to, every folder click drew
+  // every tag row again.
+  const { fetchEmails, fetchTagCounts } = useEmailStore(useShallow((state) => ({ fetchEmails: state.fetchEmails, fetchTagCounts: state.fetchTagCounts })));
   const { isDragging, endDrag, markDropped } = useDragDropContext();
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -100,7 +102,7 @@ export function useTagDrop({ tagId, onSuccess, onError }: UseTagDropOptions): Us
       void dragDropHooks.onTagDrop.emit({ emailIds: tagged, keyword: `$label:${tagId}` });
 
       // Refresh the email list
-      await fetchEmails(client, selectedMailbox);
+      await fetchEmails(client, useEmailStore.getState().selectedMailbox);
 
       // Refresh tag counts
       fetchTagCounts(client);
@@ -112,7 +114,7 @@ export function useTagDrop({ tagId, onSuccess, onError }: UseTagDropOptions): Us
     } finally {
       endDrag();
     }
-  }, [client, isDragging, tagId, fetchEmails, fetchTagCounts, selectedMailbox, endDrag, markDropped, onSuccess, onError]);
+  }, [client, isDragging, tagId, fetchEmails, fetchTagCounts, endDrag, markDropped, onSuccess, onError]);
 
   return {
     dropHandlers: {

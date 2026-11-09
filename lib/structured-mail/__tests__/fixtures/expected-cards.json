@@ -1,0 +1,1260 @@
+{
+ "flixbus-booking": [
+  {
+   "key": "bus|ref:3165000001",
+   "kind": "bus",
+   "reference": "3165000001",
+   "passengers": [
+    "Erika Mustermann",
+    "Max Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Flix",
+     "number": "FLX30",
+     "departure": {
+      "place": {
+       "name": "Hannover Hauptbahnhof (FlixTrain)",
+       "address": {
+        "street": "Ernst-August-Platz 1",
+        "locality": "Hannover",
+        "postalCode": "30159",
+        "country": "DE"
+       }
+      },
+      "at": {
+       "date": "2024-06-04",
+       "time": "11:44:00",
+       "offsetMinutes": 120,
+       "utc": "2024-06-04T09:44:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Berlin Ostbahnhof (FlixTrain)",
+       "address": {
+        "street": "Koppenstr. 3",
+        "locality": "Berlin",
+        "postalCode": "10243",
+        "country": "DE"
+       }
+      },
+      "at": {
+       "date": "2024-06-04",
+       "time": "13:44:00",
+       "offsetMinutes": 120,
+       "utc": "2024-06-04T11:44:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "seats": [
+      {
+       "passenger": "Erika Mustermann",
+       "seat": "6D"
+      },
+      {
+       "passenger": "Max Mustermann",
+       "seat": "6C"
+      }
+     ],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Flix"
+  }
+ ],
+ "flixbus-invoice": [
+  {
+   "key": "bus|ref:3165000001",
+   "kind": "bus",
+   "reference": "3165000001",
+   "passengers": [
+    "Max Mustermann",
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Flix SE",
+     "number": "FLX30",
+     "departure": {
+      "place": {
+       "name": "Hannover Hauptbahnhof (FlixTrain)",
+       "address": {
+        "street": "Ernst-August-Platz 1",
+        "locality": "Hannover",
+        "postalCode": "30159",
+        "country": "DE"
+       }
+      },
+      "at": {
+       "date": "2024-06-04",
+       "time": "11:44:00",
+       "offsetMinutes": 120,
+       "utc": "2024-06-04T09:44:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Berlin Ostbahnhof (FlixTrain)",
+       "address": {
+        "street": "Koppenstr. 3",
+        "locality": "Berlin",
+        "postalCode": "10243",
+        "country": "DE"
+       }
+      },
+      "at": {
+       "date": "2024-06-04",
+       "time": "13:44:00",
+       "offsetMinutes": 120,
+       "utc": "2024-06-04T11:44:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "seats": [],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Flix SE",
+   "modified": "2024-05-28T17:18:17+0200"
+  }
+ ],
+ "kaufland-order-1": [
+  {
+   "kind": "shipment",
+   "key": "shipment|order:m100aa1",
+   "merchant": "Kaufland.de",
+   "orderNumber": "M100AA1",
+   "status": "processing",
+   "items": [
+    {
+     "name": "Creality K1 3D-Drucker",
+     "image": {
+      "url": "https://media.cdn.kaufland.de/product-images/100x100/4af2c802b184554243cd708e9d83a180.jpg",
+      "host": "media.cdn.kaufland.de"
+     },
+     "quantity": 1
+    }
+   ],
+   "total": {
+    "amount": "399.00",
+    "currency": "EUR"
+   },
+   "orderUrl": {
+    "url": "https://www.kaufland.de/account/orders?utm_medium=email&utm_content=purchase_confirmation_gmu_de-de&utm_source=real&utm_campaign=customer#100000000000001",
+    "host": "kaufland.de"
+   },
+   "parcels": [],
+   "source": "microdata"
+  }
+ ],
+ "kaufland-parcel-1": [
+  {
+   "kind": "shipment",
+   "key": "shipment|order:m100aa1",
+   "merchant": "Kaufland.de",
+   "orderNumber": "M100AA1",
+   "status": "in_transit",
+   "items": [],
+   "parcels": [
+    {
+     "expectedBy": {
+      "date": "2024-10-13"
+     },
+     "items": [
+      {
+       "name": "Creality K1 3D-Drucker",
+       "image": {
+        "url": "https://media.cdn.kaufland.de/product-images/100x100/4af2c802b184554243cd708e9d83a180.jpg",
+        "host": "media.cdn.kaufland.de"
+       }
+      }
+     ]
+    }
+   ],
+   "source": "microdata"
+  }
+ ],
+ "kaufland-order-2": [
+  {
+   "kind": "shipment",
+   "key": "shipment|order:m200bb2",
+   "merchant": "Kaufland.de",
+   "orderNumber": "M200BB2",
+   "status": "processing",
+   "items": [
+    {
+     "name": "Atomstack Maker AC1 Kamera 5 Megapixel 400x400mm Fotografiebereich für Atomstack NEJE Tool Graviermaschine",
+     "image": {
+      "url": "https://media.cdn.kaufland.de/product-images/100x100/29e4eac9c493c96fbe5d122f305ea21b.jpg",
+      "host": "media.cdn.kaufland.de"
+     },
+     "quantity": 1
+    }
+   ],
+   "total": {
+    "amount": "29.99",
+    "currency": "EUR"
+   },
+   "orderUrl": {
+    "url": "https://www.kaufland.de/account/orders?utm_medium=email&utm_content=purchase_confirmation_gmu_de-de&utm_source=real&utm_campaign=customer#100000000000002",
+    "host": "kaufland.de"
+   },
+   "parcels": [],
+   "source": "microdata"
+  }
+ ],
+ "kaufland-parcel-2": [
+  {
+   "kind": "shipment",
+   "key": "shipment|order:m200bb2",
+   "merchant": "Kaufland.de",
+   "orderNumber": "M200BB2",
+   "status": "in_transit",
+   "items": [],
+   "parcels": [
+    {
+     "expectedBy": {
+      "date": "2024-11-17"
+     },
+     "items": [
+      {
+       "name": "Atomstack Maker AC1 Kamera 5 Megapixel 400x400mm Fotografiebereich für Atomstack NEJE Tool Graviermaschine",
+       "image": {
+        "url": "https://media.cdn.kaufland.de/product-images/100x100/29e4eac9c493c96fbe5d122f305ea21b.jpg",
+        "host": "media.cdn.kaufland.de"
+       }
+      }
+     ]
+    }
+   ],
+   "source": "microdata"
+  }
+ ],
+ "ahoi-event": [
+  {
+   "key": "event|ab12cd|grafikdesign: illustrator-workshop|2021-07-18",
+   "kind": "event",
+   "reference": "AB12CD",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "name": "Grafikdesign: Illustrator-Workshop",
+   "start": {
+    "date": "2021-07-18",
+    "time": "14:00:00",
+    "offsetMinutes": 120,
+    "utc": "2021-07-18T12:00:00Z",
+    "zone": "Etc/GMT-2"
+   },
+   "end": {
+    "date": "2021-07-18",
+    "time": "19:00:00",
+    "offsetMinutes": 120,
+    "utc": "2021-07-18T17:00:00Z",
+    "zone": "Etc/GMT-2"
+   },
+   "tickets": [
+    "AB12CD-1"
+   ],
+   "status": "confirmed",
+   "modified": "2021-05-28T15:30:04+02:00"
+  }
+ ],
+ "k4g-order": [
+  {
+   "kind": "shipment",
+   "key": "shipment|order:a1b2c3d4",
+   "merchant": "K4G",
+   "orderNumber": "A1B2C3D4",
+   "status": "processing",
+   "items": [
+    {
+     "name": "Farming Simulator 22 Steam CD Key",
+     "image": {
+      "url": "https://cdn.k4g.com/files/cover/3b1c373f87c917c637c21b681a9b5464.jpeg",
+      "host": "cdn.k4g.com"
+     },
+     "quantity": 1
+    }
+   ],
+   "total": {
+    "amount": "25.99",
+    "currency": "EUR"
+   },
+   "orderUrl": {
+    "url": "https://k4g.com/order?id=A1B2C3D4&token=0000000000000000000000000000000000000000000000000000000000000000",
+    "host": "k4g.com"
+   },
+   "parcels": [],
+   "source": "json-ld"
+  }
+ ],
+ "uber-order-1": [],
+ "uber-order-2": [],
+ "zave-newsletter": [],
+ "flight-two-passengers-two-legs": [
+  {
+   "key": "flight|ref:qx7k2m",
+   "kind": "flight",
+   "reference": "QX7K2M",
+   "passengers": [
+    "Erika Mustermann",
+    "Max Mustermann"
+   ],
+   "links": {
+    "checkin": {
+     "url": "https://www.airline-a.example.com/checkin?pnr=QX7K2M",
+     "host": "airline-a.example.com"
+    }
+   },
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Lufthansa",
+     "carrierCode": "LH",
+     "number": "400",
+     "departure": {
+      "place": {
+       "name": "Frankfurt Airport",
+       "code": "FRA"
+      },
+      "at": {
+       "date": "2026-12-01",
+       "time": "10:15:00",
+       "offsetMinutes": 60,
+       "utc": "2026-12-01T09:15:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "John F. Kennedy International Airport",
+       "code": "JFK"
+      },
+      "at": {
+       "date": "2026-12-01",
+       "time": "13:05:00",
+       "offsetMinutes": -300,
+       "utc": "2026-12-01T18:05:00Z",
+       "zone": "America/New_York"
+      }
+     },
+     "seats": [
+      {
+       "passenger": "Erika Mustermann",
+       "seat": "12A"
+      },
+      {
+       "passenger": "Max Mustermann",
+       "seat": "12B"
+      }
+     ],
+     "status": "confirmed"
+    },
+    {
+     "carrier": "Lufthansa",
+     "carrierCode": "LH",
+     "number": "401",
+     "departure": {
+      "place": {
+       "name": "John F. Kennedy International Airport",
+       "code": "JFK"
+      },
+      "at": {
+       "date": "2026-12-08",
+       "time": "17:30:00",
+       "offsetMinutes": -300,
+       "utc": "2026-12-08T22:30:00Z",
+       "zone": "America/New_York"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Frankfurt Airport",
+       "code": "FRA"
+      },
+      "at": {
+       "date": "2026-12-09",
+       "time": "07:20:00",
+       "offsetMinutes": 60,
+       "utc": "2026-12-09T06:20:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "seats": [
+      {
+       "passenger": "Erika Mustermann",
+       "seat": "31K"
+      },
+      {
+       "passenger": "Max Mustermann",
+       "seat": "31J"
+      }
+     ],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Lufthansa"
+  }
+ ],
+ "eurowings-missing-commas": [
+  {
+   "key": "flight|ref:ew7q2k",
+   "kind": "flight",
+   "reference": "EW7Q2K",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Eurowings",
+     "carrierCode": "EW",
+     "number": "582",
+     "departure": {
+      "place": {
+       "name": "Köln/Bonn",
+       "code": "CGN"
+      },
+      "at": {
+       "date": "2026-11-20",
+       "time": "06:40:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-20T05:40:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Palma de Mallorca",
+       "code": "PMI"
+      },
+      "at": {
+       "date": "2026-11-20",
+       "time": "09:05:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-20T08:05:00Z",
+       "zone": "Europe/Madrid"
+      }
+     },
+     "seats": [
+      {
+       "passenger": "Erika Mustermann",
+       "seat": "3A"
+      }
+     ],
+     "status": "confirmed"
+    },
+    {
+     "carrier": "Eurowings",
+     "carrierCode": "EW",
+     "number": "583",
+     "departure": {
+      "place": {
+       "name": "Palma de Mallorca",
+       "code": "PMI"
+      },
+      "at": {
+       "date": "2026-11-27",
+       "time": "10:00:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-27T09:00:00Z",
+       "zone": "Europe/Madrid"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Köln/Bonn",
+       "code": "CGN"
+      },
+      "at": {
+       "date": "2026-11-27",
+       "time": "12:25:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-27T11:25:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "seats": [
+      {
+       "passenger": "Erika Mustermann",
+       "seat": "14F"
+      }
+     ],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Eurowings"
+  }
+ ],
+ "volotea-missing-brackets": [
+  {
+   "key": "flight|ref:v0l8ta",
+   "kind": "flight",
+   "reference": "V0L8TA",
+   "passengers": [
+    "Erika Mustermann",
+    "Max Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Volotea",
+     "carrierCode": "V7",
+     "number": "1520",
+     "departure": {
+      "place": {
+       "name": "Venezia",
+       "code": "VCE"
+      },
+      "at": {
+       "date": "2026-12-12",
+       "time": "14:10:00",
+       "offsetMinutes": 60,
+       "utc": "2026-12-12T13:10:00Z",
+       "zone": "Europe/Rome"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Nantes",
+       "code": "NTE"
+      },
+      "at": {
+       "date": "2026-12-12",
+       "time": "16:15:00",
+       "offsetMinutes": 60,
+       "utc": "2026-12-12T15:15:00Z",
+       "zone": "Europe/Paris"
+      }
+     },
+     "seats": [
+      {
+       "passenger": "Erika Mustermann",
+       "seat": "10C"
+      },
+      {
+       "passenger": "Max Mustermann",
+       "seat": "11C"
+      }
+     ],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Volotea"
+  }
+ ],
+ "eventbrite-trailing-commas": [
+  {
+   "key": "event|eb-1029384756|jazz im park|2026-11-14",
+   "kind": "event",
+   "reference": "EB-1029384756",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {
+    "ticket": {
+     "url": "https://tickets.example.com/t/EB-1029384756",
+     "host": "tickets.example.com"
+    }
+   },
+   "source": "json-ld",
+   "name": "Jazz im Park",
+   "venue": {
+    "name": "Stadtpark",
+    "address": {
+     "street": "Parkweg 2",
+     "locality": "Hamburg",
+     "country": "DE"
+    }
+   },
+   "start": {
+    "date": "2026-11-14",
+    "time": "19:00:00",
+    "offsetMinutes": 60,
+    "utc": "2026-11-14T18:00:00Z",
+    "zone": "Europe/Berlin"
+   },
+   "end": {
+    "date": "2026-11-14",
+    "time": "22:30:00",
+    "offsetMinutes": 60,
+    "utc": "2026-11-14T21:30:00Z",
+    "zone": "Europe/Berlin"
+   },
+   "tickets": []
+  }
+ ],
+ "airbnb-entities": [
+  {
+   "key": "lodging|hmxk29q4zp|altbauwohnung am kanal|2027-01-15",
+   "kind": "lodging",
+   "reference": "HMXK29Q4ZP",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "name": "Altbauwohnung am Kanal",
+   "provider": "Altbauwohnung am Kanal",
+   "address": {
+    "locality": "Amsterdam",
+    "country": "NL"
+   },
+   "checkin": {
+    "date": "2027-01-15"
+   },
+   "checkout": {
+    "date": "2027-01-19"
+   }
+  }
+ ],
+ "graph-hotel": [
+  {
+   "key": "lodging|hb-58213|hotel am markt|2026-12-04",
+   "kind": "lodging",
+   "reference": "HB-58213",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {
+    "manage": {
+     "url": "https://www.hotel-booking.example.com/manage/HB-58213",
+     "host": "hotel-booking.example.com"
+    }
+   },
+   "source": "json-ld",
+   "name": "Hotel Am Markt",
+   "provider": "Hotel Am Markt",
+   "address": {
+    "street": "Marktplatz 1",
+    "locality": "Berlin",
+    "postalCode": "10178",
+    "country": "DE"
+   },
+   "phone": "+49 30 1234567",
+   "checkin": {
+    "date": "2026-12-04",
+    "time": "15:00:00",
+    "offsetMinutes": 60,
+    "utc": "2026-12-04T14:00:00Z",
+    "zone": "Europe/Berlin"
+   },
+   "checkout": {
+    "date": "2026-12-06",
+    "time": "11:00:00",
+    "offsetMinutes": 60,
+    "utc": "2026-12-06T10:00:00Z",
+    "zone": "Europe/Berlin"
+   },
+   "status": "confirmed"
+  }
+ ],
+ "train-multiple-types": [
+  {
+   "key": "train|ref:rx4471",
+   "kind": "train",
+   "reference": "RX4471",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Rail Co",
+     "number": "ICE 577",
+     "departure": {
+      "place": {
+       "name": "Hamburg Hbf",
+       "address": {
+        "locality": "Hamburg",
+        "country": "DE"
+       }
+      },
+      "at": {
+       "date": "2026-11-18",
+       "time": "08:01:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-18T07:01:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "München Hbf",
+       "address": {
+        "locality": "München",
+        "country": "DE"
+       }
+      },
+      "at": {
+       "date": "2026-11-18",
+       "time": "13:58:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-18T12:58:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "seats": [
+      {
+       "passenger": "Erika Mustermann",
+       "seat": "12/45"
+      }
+     ],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Rail Co"
+  }
+ ],
+ "event-reservationfor-array": [
+  {
+   "key": "event|kt-7781|faust i|2026-11-21",
+   "kind": "event",
+   "reference": "KT-7781",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "name": "Faust I",
+   "venue": {
+    "name": "Schauspielhaus",
+    "address": {
+     "locality": "Bochum",
+     "country": "DE"
+    }
+   },
+   "start": {
+    "date": "2026-11-21",
+    "time": "19:30:00",
+    "offsetMinutes": 60,
+    "utc": "2026-11-21T18:30:00Z",
+    "zone": "Europe/Berlin"
+   },
+   "tickets": []
+  },
+  {
+   "key": "event|kt-7781|faust ii|2026-11-22",
+   "kind": "event",
+   "reference": "KT-7781",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "name": "Faust II",
+   "venue": {
+    "name": "Schauspielhaus",
+    "address": {
+     "locality": "Bochum",
+     "country": "DE"
+    }
+   },
+   "start": {
+    "date": "2026-11-22",
+    "time": "18:00:00",
+    "offsetMinutes": 60,
+    "utc": "2026-11-22T17:00:00Z",
+    "zone": "Europe/Berlin"
+   },
+   "tickets": []
+  }
+ ],
+ "hotel-legacy-names": [
+  {
+   "key": "lodging|84123376|seehotel weiß|2026-12-27",
+   "kind": "lodging",
+   "reference": "84123376",
+   "passengers": [],
+   "links": {
+    "manage": {
+     "url": "https://hotel-chain.example.com/r/84123376",
+     "host": "hotel-chain.example.com"
+    }
+   },
+   "source": "json-ld",
+   "name": "Seehotel Weiß",
+   "provider": "Seehotel Weiß",
+   "address": {
+    "street": "Seestraße 3, 83727 Schliersee, Deutschland"
+   },
+   "checkin": {
+    "date": "2026-12-27"
+   },
+   "checkout": {
+    "date": "2027-01-02"
+   }
+  }
+ ],
+ "restaurant-cafe": [
+  {
+   "key": "restaurant|t-2231|café kranzler|2026-11-07",
+   "kind": "restaurant",
+   "reference": "T-2231",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "name": "Café Kranzler",
+   "provider": "Café Kranzler",
+   "address": {
+    "street": "Kurfürstendamm 18, 10719 Berlin"
+   },
+   "start": {
+    "date": "2026-11-07",
+    "time": "19:30:00",
+    "offsetMinutes": 60,
+    "utc": "2026-11-07T18:30:00Z",
+    "zone": "Etc/GMT-1"
+   },
+   "partySize": 4,
+   "status": "confirmed"
+  }
+ ],
+ "event-date-only-end": [
+  {
+   "key": "event|fs26-0042|winterfest|2026-12-11",
+   "kind": "event",
+   "reference": "FS26-0042",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "name": "Winterfest",
+   "venue": {
+    "name": "Messegelände",
+    "address": {
+     "locality": "Wien",
+     "countryName": "Austria"
+    }
+   },
+   "start": {
+    "date": "2026-12-11"
+   },
+   "end": {
+    "date": "2026-12-13"
+   },
+   "tickets": []
+  }
+ ],
+ "microdata-flight-missing-arrival": [],
+ "microdata-two-legs": [
+  {
+   "key": "flight|ref:os4k7p",
+   "kind": "flight",
+   "reference": "OS4K7P",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "microdata",
+   "legs": [
+    {
+     "carrier": "Austrian",
+     "carrierCode": "OS",
+     "number": "122",
+     "departure": {
+      "place": {
+       "name": "Wien",
+       "code": "VIE"
+      },
+      "at": {
+       "date": "2026-11-25",
+       "time": "06:50:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-25T05:50:00Z",
+       "zone": "Europe/Vienna"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Frankfurt",
+       "code": "FRA"
+      },
+      "at": {
+       "date": "2026-11-25",
+       "time": "08:15:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-25T07:15:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "seats": [],
+     "status": "confirmed"
+    },
+    {
+     "carrier": "Austrian",
+     "carrierCode": "OS",
+     "number": "125",
+     "departure": {
+      "place": {
+       "name": "Frankfurt",
+       "code": "FRA"
+      },
+      "at": {
+       "date": "2026-11-27",
+       "time": "19:40:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-27T18:40:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Wien",
+       "code": "VIE"
+      },
+      "at": {
+       "date": "2026-11-27",
+       "time": "21:00:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-27T20:00:00Z",
+       "zone": "Europe/Vienna"
+      }
+     },
+     "seats": [],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Austrian"
+  }
+ ],
+ "microdata-itemprop-lists": [
+  {
+   "key": "flight|ref:ib55xq",
+   "kind": "flight",
+   "reference": "IB55XQ",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "microdata",
+   "legs": [
+    {
+     "carrier": "Iberia",
+     "carrierCode": "IB",
+     "number": "3107",
+     "departure": {
+      "place": {
+       "name": "Madrid",
+       "code": "MAD"
+      },
+      "at": {
+       "date": "2026-11-16",
+       "time": "09:30:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-16T08:30:00Z",
+       "zone": "Europe/Madrid"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Barcelona",
+       "code": "BCN"
+      },
+      "at": {
+       "date": "2026-11-16",
+       "time": "10:50:00",
+       "offsetMinutes": 60,
+       "utc": "2026-11-16T09:50:00Z",
+       "zone": "Europe/Madrid"
+      }
+     },
+     "seats": []
+    }
+   ],
+   "provider": "Iberia"
+  }
+ ],
+ "hotel-dates-only": [
+  {
+   "key": "lodging|rs-1188|strandresort usedom|2027-06-01",
+   "kind": "lodging",
+   "reference": "RS-1188",
+   "passengers": [],
+   "links": {},
+   "source": "json-ld",
+   "name": "Strandresort Usedom",
+   "provider": "Strandresort Usedom",
+   "address": {
+    "locality": "Heringsdorf",
+    "country": "DE"
+   },
+   "checkin": {
+    "date": "2027-06-01"
+   },
+   "checkout": {
+    "date": "2027-06-08"
+   }
+  }
+ ],
+ "rental-car": [
+  {
+   "key": "rentalcar|rc-99123|car rental co|2026-12-04",
+   "kind": "rentalcar",
+   "reference": "RC-99123",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "company": "Car Rental Co",
+   "provider": "Car Rental Co",
+   "car": "VW Golf",
+   "pickup": {
+    "place": {
+     "name": "Flughafen BER",
+     "address": {
+      "locality": "Schönefeld",
+      "country": "DE"
+     }
+    },
+    "at": {
+     "date": "2026-12-04",
+     "time": "09:00:00",
+     "offsetMinutes": 60,
+     "utc": "2026-12-04T08:00:00Z",
+     "zone": "Europe/Berlin"
+    }
+   },
+   "dropoff": {
+    "place": {
+     "name": "Flughafen BER",
+     "address": {
+      "locality": "Schönefeld",
+      "country": "DE"
+     }
+    },
+    "at": {
+     "date": "2026-12-07",
+     "time": "18:00:00",
+     "offsetMinutes": 60,
+     "utc": "2026-12-07T17:00:00Z",
+     "zone": "Europe/Berlin"
+    }
+   }
+  }
+ ],
+ "parcel": [
+  {
+   "kind": "shipment",
+   "key": "shipment|order:so-449120",
+   "merchant": "Outdoor Shop",
+   "orderNumber": "SO-449120",
+   "status": "in_transit",
+   "items": [],
+   "parcels": [
+    {
+     "carrier": "DHL",
+     "trackingNumber": "00340434161234567890",
+     "trackingUrl": {
+      "url": "https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=00340434161234567890",
+      "host": "dhl.de"
+     },
+     "expectedBy": {
+      "date": "2026-11-03"
+     },
+     "items": [
+      {
+       "name": "Wanderschuhe",
+       "image": {
+        "url": "https://img.shop.example.com/p/1.jpg",
+        "host": "img.shop.example.com"
+       }
+      },
+      {
+       "name": "Socken"
+      }
+     ]
+    }
+   ],
+   "source": "json-ld"
+  }
+ ],
+ "order-and-parcel": [
+  {
+   "kind": "shipment",
+   "key": "shipment|order:so-449120",
+   "merchant": "Outdoor Shop",
+   "orderNumber": "SO-449120",
+   "status": "in_transit",
+   "items": [
+    {
+     "name": "Wanderschuhe",
+     "quantity": 1
+    },
+    {
+     "name": "Socken",
+     "quantity": 2
+    }
+   ],
+   "total": {
+    "amount": "129.90",
+    "currency": "EUR"
+   },
+   "orderUrl": {
+    "url": "https://www.outdoor-shop.example.com/account/orders/SO-449120",
+    "host": "outdoor-shop.example.com"
+   },
+   "parcels": [
+    {
+     "carrier": "DHL",
+     "trackingNumber": "00340434161234567890",
+     "trackingUrl": {
+      "url": "https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=00340434161234567890",
+      "host": "dhl.de"
+     },
+     "expectedBy": {
+      "date": "2026-11-03"
+     },
+     "items": [
+      {
+       "name": "Wanderschuhe",
+       "image": {
+        "url": "https://img.shop.example.com/p/1.jpg",
+        "host": "img.shop.example.com"
+       }
+      },
+      {
+       "name": "Socken"
+      }
+     ]
+    }
+   ],
+   "source": "json-ld"
+  }
+ ],
+ "flight-cancelled": [
+  {
+   "key": "flight|ref:qx7k2m",
+   "kind": "flight",
+   "reference": "QX7K2M",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Lufthansa",
+     "carrierCode": "LH",
+     "number": "400",
+     "departure": {
+      "place": {
+       "name": "Frankfurt Airport",
+       "code": "FRA"
+      },
+      "at": {
+       "date": "2026-12-01",
+       "time": "10:15:00",
+       "offsetMinutes": 60,
+       "utc": "2026-12-01T09:15:00Z",
+       "zone": "Europe/Berlin"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "John F. Kennedy International Airport",
+       "code": "JFK"
+      },
+      "at": {
+       "date": "2026-12-01",
+       "time": "13:05:00",
+       "offsetMinutes": -300,
+       "utc": "2026-12-01T18:05:00Z",
+       "zone": "America/New_York"
+      }
+     },
+     "seats": [],
+     "status": "cancelled"
+    }
+   ],
+   "status": "cancelled",
+   "provider": "Lufthansa"
+  }
+ ],
+ "flight-date-line-eastbound": [
+  {
+   "key": "flight|ref:qf8h2l",
+   "kind": "flight",
+   "reference": "QF8H2L",
+   "passengers": [
+    "Erika Mustermann"
+   ],
+   "links": {},
+   "source": "json-ld",
+   "legs": [
+    {
+     "carrier": "Qantas",
+     "carrierCode": "QF",
+     "number": "11",
+     "departure": {
+      "place": {
+       "name": "Sydney",
+       "code": "SYD"
+      },
+      "at": {
+       "date": "2026-12-04",
+       "time": "09:50:00",
+       "offsetMinutes": 660,
+       "utc": "2026-12-03T22:50:00Z",
+       "zone": "Australia/Sydney"
+      }
+     },
+     "arrival": {
+      "place": {
+       "name": "Los Angeles",
+       "code": "LAX"
+      },
+      "at": {
+       "date": "2026-12-04",
+       "time": "06:20:00",
+       "offsetMinutes": -480,
+       "utc": "2026-12-04T14:20:00Z",
+       "zone": "America/Los_Angeles"
+      }
+     },
+     "seats": [],
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed",
+   "provider": "Qantas"
+  }
+ ],
+ "doubtful-arrival-before-departure": [],
+ "doubtful-25-hour-flight": [],
+ "doubtful-years-away": [],
+ "doubtful-checkout-before-checkin": [],
+ "doubtful-rental-missing-times": [],
+ "doubtful-bare-date-departure": [],
+ "doubtful-google-example": [],
+ "doubtful-unknown-types-only": [],
+ "doubtful-json-beyond-repair": [],
+ "doubtful-foreign-context": [],
+ "doubtful-zone-mismatch": [],
+ "doubtful-one-bad-leg": [],
+ "doubtful-conflicting-parts": []
+}

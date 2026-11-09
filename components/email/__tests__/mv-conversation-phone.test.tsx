@@ -113,4 +113,30 @@ describe('Mountain View conversation on the phone (#1224)', () => {
     expect(container.querySelector('[data-mv-open-folded]')).not.toBeNull();
     expect(cardIds(container)).toEqual(['m1', 'm2']);
   });
+
+  it('replies from the top of the open message without folding it (#1475)', () => {
+    const open = mail(2);
+    const onReply = vi.fn();
+    const onReplyAll = vi.fn();
+    const { container } = render(
+      <EmailViewer email={open} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
+        mvConversation={[mail(1), open]} onReply={onReply} onReplyAll={onReplyAll} />,
+    );
+    const actions = container.querySelector('[data-mv-open-header-mobile] [data-mv-mobile-sender-actions]')!;
+    expect(actions).not.toBeNull();
+    fireEvent.click(actions.querySelector('button[aria-label="reply"]')!);
+    fireEvent.click(actions.querySelector('button[aria-label="reply_all"]')!);
+    expect(onReply).toHaveBeenCalledTimes(1);
+    expect(onReplyAll).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-mv-open-folded]')).toBeNull();
+  });
+
+  it.each([{ keywords: { $draft: true } }, { isScheduled: true }])('has no reply at the top of %o', (flags) => {
+    const open = mail(2, flags as Partial<Email>);
+    const { container } = render(
+      <EmailViewer email={open} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
+        mvConversation={[mail(1), open]} onReply={vi.fn()} onReplyAll={vi.fn()} />,
+    );
+    expect(container.querySelector('[data-mv-mobile-sender-actions]')).toBeNull();
+  });
 });
