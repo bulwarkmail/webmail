@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useLocale, useTranslations } from "next-intl";
@@ -2278,6 +2278,22 @@ export function EmailComposer({
   const [autoResultsQuery, setAutoResultsQuery] = useState('');
   const [isSearchingServer, setIsSearchingServer] = useState(false);
   const autocompleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Each edit owns a distinct lookup, including A -> B -> A. Dismissal and
+  // unmount revoke that ownership even if a plugin is already awaiting I/O.
+  const autocompleteRequestRef = useRef<{ query: string; field: 'to' | 'cc' | 'bcc' } | null>(null);
+  const serverSearchRef = useRef<{ pending: boolean } | null>(null);
+  const serverSearchContextRef = useRef<object | null>(null);
+  useLayoutEffect(() => {
+    // A new context also distinguishes client A -> B -> A. Local contacts
+    // continue to use the shared pool regardless of the From identity.
+    serverSearchContextRef.current = {};
+    return () => { serverSearchContextRef.current = null; };
+  }, [composerClient]);
+
+  const invalidateAutocomplete = useCallback(() => {
+    autocompleteRequestRef.current = null;
+    if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current);
+  }, []);
   const toInputRef = useRef<HTMLInputElement>(null);
   const ccInputRef = useRef<HTMLInputElement>(null);
   const bccInputRef = useRef<HTMLInputElement>(null);
@@ -2376,10 +2392,7 @@ export function EmailComposer({
   }, [setTo, setCc, setBcc, setShowCc, setShowBcc]);
 
   const handleAutocomplete = useCallback((inputText: string, field: 'to' | 'cc' | 'bcc') => {
-    if (autocompleteTimeoutRef.current) {
-      clearTimeout(autocompleteTimeoutRef.current);
-    }
-
+    invalidateAutocomplete();
     const query = inputText.trim();
     if (query.length < 1) {
       setAutocompleteResults([]);
@@ -2388,6 +2401,8 @@ export function EmailComposer({
       setAutoQuery('');
       return;
     }
+    const request = { query, field };
+    autocompleteRequestRef.current = request;
     setAutoQuery(query);
 
     autocompleteTimeoutRef.current = setTimeout(async () => {
@@ -2395,6 +2410,7 @@ export function EmailComposer({
       // Let plugins contribute extra suggestions (Slack handles, GitHub, CRM, …).
       const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email, group: r.group }));
       const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query });
+      if (autocompleteRequestRef.current !== request) return;
       setAutocompleteResults(merged.map(s => ({ name: s.name, email: s.email, group: s.group })));
       setAutoResultsQuery(query);
       // Keep the dropdown open even without local hits when a server search is
@@ -2402,17 +2418,26 @@ export function EmailComposer({
       setActiveAutoField(merged.length > 0 || canSearchServer ? field : null);
       setAutoSelectedIndex(-1);
     }, 200);
-  }, [getAutocomplete, canSearchServer]);
+  }, [getAutocomplete, canSearchServer, invalidateAutocomplete]);
 
   // On-demand: search the Sent folder server-side for recipients matching the
   // current query and merge fresh hits into the open dropdown (deduped by email).
   const handleServerSearch = useCallback(async () => {
     const query = autoQuery.trim();
-    if (!composerClient || !query || isSearchingServer) return;
+    const request = autocompleteRequestRef.current;
+    const context = serverSearchContextRef.current;
+    if (!composerClient || !query || !request || request.query !== query ||
+        isSearchingServer || serverSearchRef.current?.pending) return;
+    const search = { pending: true };
+    serverSearchRef.current = search;
+    const isCurrent = () => autocompleteRequestRef.current === request &&
+      serverSearchContextRef.current === context && serverSearchRef.current === search;
     setIsSearchingServer(true);
     try {
       const serverResults = await searchRecipients(composerClient, query);
+      if (!isCurrent()) return;
       setAutocompleteResults((prev) => {
+        if (!isCurrent()) return prev;
         const seen = new Set(prev.map((r) => r.email.toLowerCase()));
         const merged = [...prev];
         for (const r of serverResults) {
@@ -2427,7 +2452,13 @@ export function EmailComposer({
     } catch {
       // Best-effort: a failed lookup just leaves the local suggestions in place.
     } finally {
-      setIsSearchingServer(false);
+      // Input/client changes invalidate results, but keep the single-request
+      // guard until this operation settles. An abandoned mount cannot clear
+      // the pending state of a later operation.
+      if (serverSearchRef.current === search) {
+        search.pending = false;
+        setIsSearchingServer(false);
+      }
     }
   }, [autoQuery, composerClient, isSearchingServer, searchRecipients]);
 
@@ -2452,7 +2483,7 @@ export function EmailComposer({
   }, [validationErrors.to]);
 
   const insertAutocomplete = (suggestion: SuggestionItem, field: 'to' | 'cc' | 'bcc') => {
-    if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current);
+    invalidateAutocomplete();
     setAutoQuery('');
     const setter = field === 'to' ? setTo : field === 'cc' ? setCc : setBcc;
     const inputSetter = field === 'to' ? setToInput : field === 'cc' ? setCcInput : setBccInput;
@@ -2492,15 +2523,23 @@ export function EmailComposer({
     if (relatedTarget && dropdownRef.current?.contains(relatedTarget)) {
       return;
     }
+    if (autocompleteRequestRef.current?.field === field) invalidateAutocomplete();
     if (activeAutoField === field) {
       setActiveAutoField(null);
       setAutoSelectedIndex(-1);
     }
-  }, [activeAutoField]);
+  }, [activeAutoField, invalidateAutocomplete]);
 
   // `current` is the row shown highlighted, which before any arrow key is
   // the default pick (defaultSuggestionIndex) rather than autoSelectedIndex.
   const handleAutoKeyDown = (e: React.KeyboardEvent, field: 'to' | 'cc' | 'bcc', current = autoSelectedIndex) => {
+    if (e.key === 'Escape') {
+      invalidateAutocomplete();
+      setAutocompleteResults([]);
+      setActiveAutoField(null);
+      setAutoSelectedIndex(-1);
+      return;
+    }
     if (!activeAutoField || autocompleteResults.length === 0) return;
 
     if (e.key === 'ArrowDown') {
@@ -2512,10 +2551,6 @@ export function EmailComposer({
     } else if (e.key === 'Enter' && autoSelectedIndex >= 0) {
       e.preventDefault();
       insertAutocomplete(autocompleteResults[autoSelectedIndex], field);
-    } else if (e.key === 'Escape') {
-      setAutocompleteResults([]);
-      setActiveAutoField(null);
-      setAutoSelectedIndex(-1);
     }
   };
 
@@ -3879,11 +3914,10 @@ export function EmailComposer({
 
   useEffect(() => {
     return () => {
-      if (autocompleteTimeoutRef.current) {
-        clearTimeout(autocompleteTimeoutRef.current);
-      }
+      invalidateAutocomplete();
+      serverSearchRef.current = null;
     };
-  }, []);
+  }, [invalidateAutocomplete]);
 
   // Groups expand here so validation and every outgoing payload see the
   // actual member addresses.
@@ -7027,12 +7061,18 @@ export function RecipientChipInput({
     if (valid.length === 0) return;
     e.preventDefault();
     onChipsChange([...chips, ...valid]);
-    onInputChange([inputText.trim(), invalid.join(' ')].filter(Boolean).join(' '));
+    const remaining = [inputText.trim(), invalid.join(' ')].filter(Boolean).join(' ');
+    onInputChange(remaining);
+    onAutocomplete(remaining, field);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && activeAutoField === field) {
+      onAutoKeyDown(e, field, highlightIndex);
+      return;
+    }
     if (dropdownOpen) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Escape') {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         onAutoKeyDown(e, field, highlightIndex);
         return;
       }
