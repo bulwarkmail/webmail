@@ -2083,6 +2083,10 @@
         "label": "Pouze prostý text",
         "description": "Zakázat editor formátovaného textu a odesílat všechny e-maily pouze jako prostý text, včetně odpovědí a přeposílání"
       },
+      "reply_under_message": {
+        "label": "Odpovědi pod zprávou",
+        "description": "Odpověď nebo přeposlání se otevře pod svou zprávou, která nad ní zůstane čitelná. Když je vypnuto, zabere celý panel čtení jako nová zpráva."
+      },
       "quick_reply": {
         "label": "Rychlá odpověď",
         "description": "Zobrazit pole pro rychlou odpověď pod zprávami."

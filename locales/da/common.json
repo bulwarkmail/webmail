@@ -2086,6 +2086,10 @@
         "label": "Kun almindelig tekst",
         "description": "Deaktivér den rige teksteditor og send alle e-mails som ren tekst, inklusive svar og videresendelser"
       },
+      "reply_under_message": {
+        "label": "Svar under beskeden",
+        "description": "Et svar eller en videresendelse åbner under sin besked, som forbliver læsbar ovenover. Når det er slået fra, fylder det hele læseruden ligesom en ny besked."
+      },
       "quick_reply": {
         "label": "Hurtigt svar",
         "description": "Vis feltet til hurtigt svar under beskeder."

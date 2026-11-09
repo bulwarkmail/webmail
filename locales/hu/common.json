@@ -2086,6 +2086,10 @@
         "label": "Csak szöveges mód",
         "description": "Rich text szerkesztő letiltása és az összes e-mail küldése csak szöveges formátumban, beleértve a válaszokat és továbbításokat"
       },
+      "reply_under_message": {
+        "label": "Válaszok az üzenet alatt",
+        "description": "A válasz vagy továbbítás a saját üzenete alatt nyílik meg, amely fölötte olvasható marad. Kikapcsolva egy új üzenethez hasonlóan a teljes olvasóablakot elfoglalja."
+      },
       "quick_reply": {
         "label": "Gyors válasz",
         "description": "A gyors válasz mező megjelenítése az üzenetek alatt."

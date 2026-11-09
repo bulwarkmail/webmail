@@ -2086,6 +2086,10 @@
         "label": "Ainult lihttekst",
         "description": "Keela vormindatud teksti redaktor ja saada kõik kirjad ainult lihttekstina, sealhulgas vastused ja edastused"
       },
+      "reply_under_message": {
+        "label": "Vastused kirja all",
+        "description": "Vastus või edasisaatmine avaneb oma kirja all ja kiri jääb selle kohal loetavaks. Väljalülitatuna täidab see uue kirja kombel kogu lugemispaani."
+      },
       "quick_reply": {
         "label": "Kiirvastus",
         "description": "Näita kiirvastuse kasti kirjade all."

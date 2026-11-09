@@ -749,6 +749,7 @@ interface SettingsState extends AccessibilitySettings {
   // Composer
   sendConfirmation: boolean;
   quickReplyEnabled: boolean;
+  replyUnderMessage: boolean; // A reply or forward docks under its message; off, it takes the reading pane like a new message
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
   replyIdentityMatch: ReplyIdentityMatch; // With autoSelectReplyIdentity on: 'exact' = configured identities only, 'domain' = also same-domain catch-all addresses (rewrites From) #1000
@@ -1111,6 +1112,7 @@ const DEFAULT_SETTINGS = {
   // Composer
   sendConfirmation: false,
   quickReplyEnabled: true,
+  replyUnderMessage: true,
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   replyIdentityMatch: 'domain' as ReplyIdentityMatch,
@@ -1617,6 +1619,7 @@ export const useSettingsStore = create<SettingsState>()(
           trustedSenders: state.trustedSenders,
           sendConfirmation: state.sendConfirmation,
           quickReplyEnabled: state.quickReplyEnabled,
+          replyUnderMessage: state.replyUnderMessage,
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           replyIdentityMatch: state.replyIdentityMatch,

@@ -283,6 +283,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'proofreading.settings.enable' },
     { label: 'proofreading.settings.writing_language' },
     { label: 'settings.composing_page.sections.replying' },
+    { label: 'settings.email_behavior.reply_under_message.label' },
     { label: 'settings.email_behavior.quick_reply.label' },
     { label: 'compose_words.reply_from_received.label' },
     { label: 'settings.email_behavior.signature_position.label' },
