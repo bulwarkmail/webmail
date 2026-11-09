@@ -48,12 +48,13 @@ export function defaultTaskList(calendars: Calendar[], activeAccountId?: string 
 }
 
 /**
- * The task lists the tasks view offers (pim-1): every task-only calendar and
- * every calendar that holds a task, in the calendars' order.
+ * The task lists the tasks view offers (pim-1): every task-only calendar,
+ * every calendar that holds a task and every calendar made to take tasks
+ * (still empty, #1595), in the calendars' order.
  */
 export function taskListsOf(calendars: Calendar[], tasks: CalendarTask[]): Calendar[] {
   const holding = new Set(tasks.flatMap((task) => Object.keys(task.calendarIds ?? {})));
-  return calendars.filter((c) => c.isTasksOnly || holding.has(c.id));
+  return calendars.filter((c) => c.isTasksOnly || c.takesTasks || holding.has(c.id));
 }
 
 /**
