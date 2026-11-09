@@ -865,9 +865,15 @@ export function RichTextEditor({
         italic: editor.isActive("italic"),
         underline: editor.isActive("underline"),
         strike: editor.isActive("strike"),
-        color: style.color ?? null,
-        backgroundColor: style.backgroundColor ?? null,
-        fontSize: style.fontSize ?? null,
+        // `|| null`, not `?? null`: the Colour extension's parseHTML reads
+        // element.style.color, and the CSSOM returns "" (not null) for a
+        // property the span never set. A copied "" made the apply's
+        // `color ?? backgroundColor ?? fontSize` pick the "" (not nullish),
+        // so painting a font size or background colour with no source colour
+        // took the no-textStyle branch and applied nothing at all.
+        color: style.color || null,
+        backgroundColor: style.backgroundColor || null,
+        fontSize: style.fontSize || null,
         heading: editor.isActive("heading", { level: 1 }) ? 1
           : editor.isActive("heading", { level: 2 }) ? 2 : null,
       },
