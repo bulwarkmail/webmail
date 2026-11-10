@@ -1081,6 +1081,7 @@
     "templates_menu": "テンプレート",
     "insert_template": "テンプレートを挿入…",
     "options": "オプション",
+    "tags": "タグ",
     "option_plain_text": "プレーンテキスト",
     "option_plain_text_hint": "書式なしで送信",
     "option_read_receipt": "開封確認を要求",

@@ -1081,6 +1081,7 @@
     "templates_menu": "템플릿",
     "insert_template": "템플릿 삽입…",
     "options": "옵션",
+    "tags": "태그",
     "option_plain_text": "일반 텍스트",
     "option_plain_text_hint": "서식 없이 보내기",
     "option_read_receipt": "읽음 확인 요청",
