@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, useId } from "react";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "@/stores/toast-store";
@@ -1079,6 +1079,10 @@ export function EventModal({
     };
   }, [isMobile]);
 
+  const saveRef = useRef(handleSave);
+  useLayoutEffect(() => {
+    saveRef.current = handleSave;
+  });
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -1091,12 +1095,15 @@ export function EventModal({
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        if (canEditBody) handleSave();
+        // A time field hands on its typed time on this Enter, and React
+        // renders it in a microtask queued before this one: save after that,
+        // not with the time from before it.
+        if (canEditBody) queueMicrotask(() => void saveRef.current());
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [requestClose, backToView, handleSave, canEditBody, mode, isEdit]);
+  }, [requestClose, backToView, canEditBody, mode, isEdit]);
 
   const hasParticipants = attendees.length > 0 || (event?.participants && Object.keys(event.participants).length > 0);
 

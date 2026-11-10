@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, useId } from "react";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -215,6 +215,10 @@ export function TaskModal({
       setSaving(false);
     }
   }, [title, description, dueDate, dueTime, showTime, priority, progress, calendarId, alertOption, alertTouched, isEdit, task, onSave, onClose]);
+  const saveRef = useRef(handleSave);
+  useLayoutEffect(() => {
+    saveRef.current = handleSave;
+  });
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -223,9 +227,12 @@ export function TaskModal({
     }
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
-      handleSave();
+      // The due time field hands on its typed time on this Enter, and React
+      // renders it in a microtask queued before this one: save after that,
+      // not with the time from before it.
+      queueMicrotask(() => void saveRef.current());
     }
-  }, [requestClose, handleSave]);
+  }, [requestClose]);
 
   const close = (
     <IconButton label={tCommon("close")} onClick={requestClose}>
@@ -292,7 +299,11 @@ export function TaskModal({
                 <input
                   type="checkbox"
                   checked={showTime}
-                  onChange={(e) => setShowTime(e.target.checked)}
+                  onChange={(e) => {
+                    setShowTime(e.target.checked);
+                    // The field shows a time from the start, and that is the one saved.
+                    if (e.target.checked && !dueTime) setDueTime("09:00");
+                  }}
                   className="rounded"
                 />
                 {t("tasks.include_time")}
