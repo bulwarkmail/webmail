@@ -508,7 +508,7 @@ export function CalendarManagementSettings() {
         color: data.color,
         isVisible: true,
         isSubscribed: true,
-      }, { components: data.components });
+      }, { components: data.components }, managedAccountId ?? undefined);
       setIsCreating(false);
       toast.success(t('calendar_created'));
     } catch {

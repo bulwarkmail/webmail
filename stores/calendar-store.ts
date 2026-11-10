@@ -975,7 +975,7 @@ interface CalendarStore {
   reorderCalendars: (client: IJMAPClient, orderedIds: string[]) => Promise<void>;
   setDefaultCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
   shareCalendar: (client: IJMAPClient, calendarId: string, principalId: string, rights: CalendarRights | null) => Promise<void>;
-  createCalendar: (client: IJMAPClient, calendar: Partial<Calendar>, options?: CreateCalendarOptions) => Promise<Calendar | null>;
+  createCalendar: (client: IJMAPClient, calendar: Partial<Calendar>, options?: CreateCalendarOptions, targetAccountId?: string) => Promise<Calendar | null>;
   removeCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
   clearCalendarEvents: (client: IJMAPClient, calendarId: string) => Promise<number>;
   setSelectedDate: (date: Date) => void;
@@ -1816,17 +1816,20 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      createCalendar: async (client, calendar, options) => {
+      createCalendar: async (client, calendar, options, targetAccountId?: string) => {
         set({ error: null });
         try {
           const state = get();
           let targetClient = client;
-          let targetAccountId: string | undefined;
 
-          // Check for managed (shared) account scope first
-          const managedAccountId = useManagedAccountStore.getState().managedAccountId;
-          if (managedAccountId) {
-            targetAccountId = managedAccountId;
+          if (targetAccountId) {
+            // Explicit target account (managed account or multi-account)
+            if (state.accountClients && state.accountClientsActiveId) {
+              const accountClient = state.accountClients.find((ac) => ac.localAccountId === state.accountClientsActiveId);
+              if (accountClient && accountClient.client.getAccountId() === targetAccountId) {
+                targetClient = accountClient.client;
+              }
+            }
           } else if (state.accountClients && state.accountClientsActiveId) {
             const accountClient = state.accountClients.find((ac) => ac.localAccountId === state.accountClientsActiveId);
             if (accountClient) {
@@ -1852,12 +1855,14 @@ export const useCalendarStore = create<CalendarStore>()(
 
           // The server response doesn't include accountId/localAccountId, so we add them
           // based on the account we created the calendar in.
-          const isManagedAccount = !!managedAccountId;
+          // Don't set localAccountId (invariant: namespaced iff it carries localAccountId).
+          const isManagedAccount = targetAccountId !== undefined && targetAccountId !== client.getAccountId();
           const isShared = !!isManagedAccount || !!(state.accountClients && state.accountClientsActiveId && targetAccountId !== targetClient.getAccountId());
           const enrichedCreated = {
             ...(created as Calendar),
             accountId: targetAccountId,
-            localAccountId: isManagedAccount ? managedAccountId : (isShared ? (state.accountClientsActiveId || targetClient.getAccountId()) : undefined),
+            // Don't set localAccountId - server doesn't return it for new calendars.
+            // The store invariant is: namespaced iff localAccountId is present.
             originalId: created.id,
             isShared,
           } as Calendar;
