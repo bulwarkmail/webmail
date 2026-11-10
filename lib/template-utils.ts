@@ -3,7 +3,7 @@ import type { EmailTemplate } from './template-types';
 import { BUILT_IN_PLACEHOLDERS } from './template-types';
 import { generateUUID } from './utils';
 
-const PLACEHOLDER_REGEX = /\{\{(\w+)\}\}/g;
+const PLACEHOLDER_REGEX = /\{\{(\w+)(?::([^{}<>\n]*))?\}\}/g;
 const MAX_TEMPLATE_NAME_LENGTH = 200;
 
 export function extractPlaceholders(text: string): string[] {
@@ -74,6 +74,19 @@ export function getAutoFilledPlaceholders(
 export function getPlaceholdersFromTemplate(template: EmailTemplate): string[] {
   const combined = `${template.subject} ${template.body}`;
   return extractPlaceholders(combined);
+}
+
+export function getPlaceholderDefaults(template: EmailTemplate): Map<string, string> {
+  const defaults = new Map<string, string>();
+  const collect = (text: string, html: boolean) => {
+    for (const [, name, value] of text.matchAll(PLACEHOLDER_REGEX)) {
+      if (value === undefined || defaults.has(name)) continue;
+      defaults.set(name, html ? new DOMParser().parseFromString(value, 'text/html').body.textContent ?? '' : value);
+    }
+  };
+  collect(template.subject, false);
+  collect(template.body, !!template.isHTML);
+  return defaults;
 }
 
 export function isBuiltInPlaceholder(name: string): boolean {

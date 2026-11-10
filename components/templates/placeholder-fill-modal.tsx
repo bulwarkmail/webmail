@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { useDiscardChanges } from '@/components/settings/use-discard-changes';
-import { substitutePlaceholders, isBuiltInPlaceholder } from '@/lib/template-utils';
+import { substitutePlaceholders, isBuiltInPlaceholder, getPlaceholderDefaults } from '@/lib/template-utils';
 import { sanitizeEmailHtml } from '@/lib/email-sanitization';
 import type { EmailTemplate } from '@/lib/template-types';
 
@@ -32,8 +32,9 @@ export function PlaceholderFillModal({
 
   const [initialValues] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
+    const defaults = getPlaceholderDefaults(template);
     for (const p of placeholders) {
-      initial[p] = autoFilled[p] || '';
+      initial[p] = autoFilled[p] || defaults.get(p) || '';
     }
     return initial;
   });
@@ -86,6 +87,9 @@ export function PlaceholderFillModal({
                 id={`placeholder-${p}`}
                 value={values[p]}
                 onChange={(e) => setValues((prev) => ({ ...prev, [p]: e.target.value }))}
+                onFocus={(e) => {
+                  if (values[p] && values[p] === initialValues[p]) e.currentTarget.select();
+                }}
                 placeholder={t('enter_value')}
                 className="mt-1"
               />
