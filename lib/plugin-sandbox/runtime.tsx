@@ -1520,6 +1520,14 @@ async function bootSlot(payload: SlotInit): Promise<void> {
     document.body.style.overflow = 'hidden';
     rootEl.style.height = '100%';
   }
+  // An inline slot's frame is sized to its content. With fractional display
+  // scaling (Windows at 125 %) that size can fall a fraction of a pixel
+  // short; the frame then shows classic scrollbars, which take room of
+  // their own and cut the row off. Nothing in it needs to scroll.
+  if (inline) {
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
 
   // A trivial pub/sub so host-pushed `props-update` messages re-render the
   // slot tree without tearing down the iframe.
