@@ -40,7 +40,7 @@ import { SearchSnippetText } from "./search-snippet-text";
 import { PluginRowBadges } from "./plugin-row-badges";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
-import { brandIndicatorDomain } from "@/lib/email-headers";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { RowTranslatorsProvider, useRowTranslators } from "@/components/email/row-translators";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 
@@ -534,6 +534,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const showAccountDot = useShowAccountDot(tintListRowsByAccount);
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
     const senderWarning = useSenderWarning(showRecipient ? undefined : email);
+    const brandDomain = useBrandDomain(showRecipient ? undefined : email);
     // Show the originating folder in the aggregate "All …" views.
     const showSourceFolder = useShowSourceFolder(email.sourceFolder);
     const getAccountById = useAccountStore((state) => state.getAccountById);
@@ -827,7 +828,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   className="shadow-sm"
                   disableImages={hideJunkAvatarImages}
                   senderWarning={senderWarning}
-                  brandDomain={showRecipient ? undefined : brandIndicatorDomain(email)}
+                  brandDomain={brandDomain}
                   checked={isChecked}
                   onToggle={handleCheckboxClick}
                   selectLabel={selectRowLabel}
@@ -1226,6 +1227,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     });
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
     const senderWarning = useSenderWarning(showRecipient ? undefined : latestEmail);
+    const brandDomain = useBrandDomain(showRecipient ? undefined : latestEmail);
 
     const { dragHandlers, isDragging: isThreadDragging } = useEmailDrag({
       email: latestEmail,
@@ -1550,7 +1552,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                     className="shadow-sm"
                     disableImages={hideJunkAvatarImages}
                     senderWarning={senderWarning}
-                    brandDomain={showRecipient ? undefined : brandIndicatorDomain(latestEmail)}
+                    brandDomain={brandDomain}
                     checked={isChecked}
                     onToggle={handleThreadCheckboxClick}
                     selectLabel={selectRowLabel}

@@ -32,7 +32,7 @@ import { useThemeStore } from "@/stores/theme-store";
 import { useShallow } from "zustand/react/shallow";
 import { Avatar } from "@/components/ui/avatar";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
-import { brandIndicatorDomain } from "@/lib/email-headers";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
@@ -452,6 +452,7 @@ function EmailCard({
   const readerActions = usePluginActions("reader-actions", { mailboxRole: mailboxRole ?? null, ...targetFilter(plugin.actionTarget, undefined) });
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const formatAddress = useOwnDomainAddress();
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
@@ -490,7 +491,7 @@ function EmailCard({
             size="md"
             className="flex-shrink-0"
             senderWarning={senderWarning}
-            brandDomain={brandIndicatorDomain(email)}
+            brandDomain={brandDomain}
           />
         )}
         <div className="flex-1 min-w-0">

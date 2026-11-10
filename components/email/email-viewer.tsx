@@ -72,7 +72,7 @@ import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useAccountTags, useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds, emailKeyFor } from "@/lib/thread-utils";
-import { getSecurityStatus, extractListHeaders, getSenderVerification, brandIndicatorDomain } from "@/lib/email-headers";
+import { getSecurityStatus, extractListHeaders, getSenderVerification } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
 import type { EmailReadView, ExternalLinkContext } from "@/lib/plugin-types";
 import { ViewSourceDialog } from "./view-source-dialog";
@@ -211,6 +211,7 @@ import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useRemoteContentBlockedByOrg, useRemoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
@@ -894,6 +895,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
   const tSidebar = useTranslations('sidebar');
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const unread = !email.keywords?.$seen;
   return (
     <button
@@ -903,7 +905,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
       data-email-id={email.id}
       className={cn("w-full flex items-start py-3 border-t border-border text-start hover:bg-muted/40 transition-colors", compact ? "gap-3 px-4" : "gap-4 px-6")}
     >
-      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
+      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandDomain} />
       <span className="flex-1 min-w-0">
         <span className="flex items-baseline gap-2">
           <span dir="auto" className={cn("text-sm truncate", unread ? "font-bold" : "font-semibold")}>
@@ -1001,6 +1003,7 @@ export function MvExpandedConversationCard({
   const externalContent = useConversationExternalContent();
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const hasBody = !!email.bodyValues;
   const [showDetails, setShowDetails] = useState(false);
   const loadRequested = useRef(false);
@@ -1041,7 +1044,7 @@ export function MvExpandedConversationCard({
         data-mv-conversation-header=""
         className={cn("flex items-start pt-3 pb-2 cursor-pointer", compact ? "gap-3 px-4" : "gap-4 px-6")}
       >
-        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
+        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandDomain} />
         <span className="flex-1 min-w-0">
           <span className="flex items-baseline gap-2">
             <SenderNameLine
@@ -1055,7 +1058,7 @@ export function MvExpandedConversationCard({
                 {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
               </span>
             )}
-            <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
+            <BrandVerifiedBadge domain={brandDomain} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <ReceivedLabelChip email={email} className="self-center" />
             <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
@@ -1546,6 +1549,7 @@ export function EmailViewer({
   // The policy of the message's own account: in the unified inbox or a Pro
   // tab that may be another signed-in account than the active one.
   const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email?.sourceClientAccountId);
+  const brandDomain = useBrandDomain(email);
   // Also true while the policy is still loading: trust can't unblock yet.
   const remoteHeldBack = useRemoteContentHeldBack(email?.sourceClientAccountId);
   const tThirdParty = useTranslations('third_party');
@@ -5381,7 +5385,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
-                brandDomain={brandIndicatorDomain(email)}
+                brandDomain={brandDomain}
               />
             </button>
 
@@ -5420,7 +5424,7 @@ export function EmailViewer({
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
                     )}
-                    <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
+                    <BrandVerifiedBadge domain={brandDomain} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                     <ReceivedLabelChip email={email} />
                     <EmailIdentityBadge email={email} identities={identities} />
@@ -5587,7 +5591,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
-                brandDomain={brandIndicatorDomain(email)}
+                brandDomain={brandDomain}
               />
             </button>
             <div className="flex-1 min-w-0">
@@ -5603,7 +5607,7 @@ export function EmailViewer({
                 ) : (
                   <span className="text-sm font-semibold text-foreground">{t('unknown_sender')}</span>
                 )}
-                <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
+                <BrandVerifiedBadge domain={brandDomain} />
                 <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                 <ReceivedLabelChip email={email} />
                 <EmailIdentityBadge email={email} identities={identities} />
@@ -5841,7 +5845,7 @@ export function EmailViewer({
                           onViewContact={handleViewContactSidebar}
                           className="text-sm text-start"
                         />
-                        <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
+                        <BrandVerifiedBadge domain={brandDomain} />
                         <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                         <ReceivedLabelChip email={email} />
                         {senderVerification && (

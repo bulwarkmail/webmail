@@ -35,4 +35,35 @@ describe('brandIndicatorDomain', () => {
     expect(brandIndicatorDomain({ from: [], authenticationResults: parseAuthenticationResults('mx.example; dmarc=pass header.from=brand.org') })).toBeUndefined();
     expect(brandIndicatorDomain(undefined)).toBeUndefined();
   });
+
+  // Stalwart writes no Authentication-Results on mail a signed-in user hands in.
+  describe('mail handed in on the same server', () => {
+    const internal = ['brand.org', 'xn--bcher-kva.de'];
+
+    it('names an internal From domain when there is no Authentication-Results header', () => {
+      expect(brandIndicatorDomain(message('colleague@Brand.org'), internal)).toBe('brand.org');
+    });
+
+    it('covers a subdomain of an internal domain, not a lookalike', () => {
+      expect(brandIndicatorDomain(message('news@eu.brand.org'), internal)).toBe('eu.brand.org');
+      expect(brandIndicatorDomain(message('news@notbrand.org'), internal)).toBeUndefined();
+      expect(brandIndicatorDomain(message('news@brand.org.evil.example'), internal)).toBeUndefined();
+    });
+
+    it('matches an IDN domain the message writes in Unicode', () => {
+      expect(brandIndicatorDomain(message('info@bücher.de'), internal)).toBe('bücher.de');
+    });
+
+    it('leaves other domains without a header alone', () => {
+      expect(brandIndicatorDomain(message('news@other.example'), internal)).toBeUndefined();
+    });
+
+    it('still needs the DMARC pass once the server wrote a header', () => {
+      expect(brandIndicatorDomain(message('ceo@brand.org', 'mx.example; spf=none smtp.mailfrom=evil.example; dmarc=none header.from=brand.org'), internal)).toBeUndefined();
+      expect(brandIndicatorDomain(message('ceo@brand.org', 'mx.example; dmarc=fail header.from=brand.org'), internal)).toBeUndefined();
+      // A header with nothing readable in it is still a header.
+      expect(brandIndicatorDomain(message('ceo@brand.org', 'mx.example; none'), internal)).toBeUndefined();
+      expect(brandIndicatorDomain(message('ceo@brand.org', 'mx.example; dmarc=pass header.from=brand.org'), internal)).toBe('brand.org');
+    });
+  });
 });

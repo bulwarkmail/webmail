@@ -28,7 +28,7 @@ vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/hooks/use-plugin-slot-offers', () => ({ usePluginSlotOffers: () => [] }));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail' }) }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
-vi.mock('@/components/email/external-sender-chip', () => ({ ExternalSenderChip: () => null }));
+vi.mock('@/components/email/external-sender-chip', () => ({ ExternalSenderChip: () => null, useInternalMailDomains: () => [] }));
 
 const { EmailViewer } = await import('../email-viewer');
 const initialAuth = useAuthStore.getState();
