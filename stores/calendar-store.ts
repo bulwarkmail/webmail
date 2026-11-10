@@ -49,7 +49,6 @@ import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { isCalendarEventArray, isFetchRange, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
 import { sentByPatchValue } from '@/lib/calendar-delegate';
-import { useManagedAccountStore } from './managed-account-store';
 
 /**
  * When the Pro shell aggregates calendars/events from every connected
