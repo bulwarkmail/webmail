@@ -233,6 +233,13 @@ describe('getPlaceholderDefaults', () => {
     expect(getPlaceholderDefaults(makeTemplate({ body: '{{name:Ada\nLovelace}}' }))).toEqual(new Map());
   });
 
+  // The composer substitutes the kept default like a typed value.
+  it('gives an HTML body\'s default back escaped when it is substituted', () => {
+    const tpl = makeTemplate({ body: '<p>{{name:&lt;img src=x onerror=alert(1)&gt;}}</p>', isHTML: true });
+    const name = getPlaceholderDefaults(tpl).get('name')!;
+    expect(substitutePlaceholders(tpl.body, { name }, { html: true })).toBe('<p>&lt;img src=x onerror=alert(1)&gt;</p>');
+  });
+
   it('keeps an empty default', () => {
     expect(getPlaceholderDefaults(makeTemplate({ body: '{{reason:}} {{note}}' }))).toEqual(new Map([['reason', '']]));
   });

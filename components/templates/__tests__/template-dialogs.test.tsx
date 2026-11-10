@@ -157,6 +157,44 @@ describe('PlaceholderFillModal', () => {
     expect(onConfirm).toHaveBeenCalledWith({ recipient_name: 'Grace', time: '17:00' });
   });
 
+  it('selects the first field\'s default when the dialog opens, so typing replaces it', async () => {
+    render(
+      <PlaceholderFillModal
+        template={{ ...template, body: 'See you at {{time:15:00}}' }}
+        placeholders={['time']}
+        autoFilled={{}}
+        onConfirm={vi.fn()}
+        onSkip={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    await flush();
+    const time = screen.getByPlaceholderText('enter_value') as HTMLInputElement;
+    expect(document.activeElement).toBe(time);
+    expect([time.selectionStart, time.selectionEnd]).toEqual([0, 5]);
+  });
+
+  it('puts an HTML template\'s default in as text, not markup', () => {
+    const onConfirm = vi.fn();
+    render(
+      <PlaceholderFillModal
+        template={{ ...template, isHTML: true, body: '<p>Hi {{name:&lt;img src=x onerror=alert(1)&gt;}}</p>' }}
+        placeholders={['name']}
+        autoFilled={{}}
+        onConfirm={onConfirm}
+        onSkip={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'fill_placeholders' });
+    expect((screen.getByPlaceholderText('enter_value') as HTMLInputElement).value).toBe('<img src=x onerror=alert(1)>');
+    expect(dialog.querySelector('img')).toBeNull();
+    expect(dialog.textContent).toContain('Hi <img src=x onerror=alert(1)>');
+
+    fireEvent.click(screen.getByRole('button', { name: 'insert_with_values' }));
+    expect(onConfirm).toHaveBeenCalledWith({ name: '<img src=x onerror=alert(1)>' });
+  });
+
   it('has an outline secondary button and the close X', () => {
     renderFill();
     expect(screen.getByRole('button', { name: 'insert_raw' }).className).toContain('border-input');
