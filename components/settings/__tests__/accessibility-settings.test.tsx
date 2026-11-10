@@ -126,15 +126,18 @@ describe('reset', () => {
 
 // With the focus outline off there is no outline to show after clicks either.
 describe('focus outline off', () => {
-  it('disables Always show focus until an outline is chosen again', () => {
+  it('disables Always show focus until an outline is chosen', () => {
     render(<AccessibilitySettings />);
     const always = () => screen.getByRole('switch', { name: 'settings.accessibility.focus_always.label' });
+    // Off is the default.
+    expect(settings().focusRing).toBe('off');
+    expect(always()).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'settings.accessibility.focus_ring.normal' }));
+    expect(settings().focusRing).toBe('normal');
     expect(always()).not.toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'settings.accessibility.focus_ring.off' }));
     expect(settings().focusRing).toBe('off');
     expect(always()).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'settings.accessibility.focus_ring.normal' }));
-    expect(always()).not.toBeDisabled();
   });
 });
 

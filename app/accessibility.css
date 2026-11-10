@@ -163,9 +163,9 @@ html:root[data-focus-always="on"] [data-recipient-field] input:focus:focus:focus
 [data-recipient-field]:has(input:focus-visible) {
   outline: var(--focus-ring-width) solid var(--focus-ring-color);
 }
-/* Focus outline Off (data-focus-ring="off"): no focus indication at all, for
-   people who only use a mouse and find a box round every field they click
-   into distracting. It takes off the outline above, the browser's own with
+/* Focus outline Off (data-focus-ring="off"), the default: no focus indication
+   at all, for people who only use a mouse and find a box round every field
+   they click into distracting. It takes off the outline above, the browser's own with
    it, the bar along the writing area (the forced-colors outline round
    that area too, which this outweighs) and the outline round a recipient
    field. Padded to outweigh every outline

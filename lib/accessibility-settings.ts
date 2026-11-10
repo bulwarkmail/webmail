@@ -118,7 +118,10 @@ export const ACCESSIBILITY_DEFAULTS: AccessibilitySettings = {
   readingMask: false,
   reduceMotion: 'system',
   pauseAnimatedImages: 'system',
-  focusRing: 'normal',
+  // Off: most people use a pointer and find a box round every field they
+  // click into distracting. Whoever works by keyboard turns it on in the
+  // settings or the accessibility panel (Alt+Shift+A), which keeps its outline.
+  focusRing: 'off',
   focusAlwaysVisible: false,
   singleKeyShortcuts: true,
   largeTargets: 'system',

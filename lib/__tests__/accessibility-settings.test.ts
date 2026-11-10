@@ -27,7 +27,14 @@ describe('applyAccessibilityTo', () => {
 
   it('writes nothing for "follow the system", so the media queries decide', () => {
     applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium' });
-    expect(root().getAttributeNames().filter((n) => n.startsWith('data-'))).toEqual([]);
+    // The focus outline is the one default that is not the stylesheet's own.
+    expect(root().getAttributeNames().filter((n) => n.startsWith('data-'))).toEqual(['data-focus-ring']);
+  });
+
+  it('leaves the focus outline off by default', () => {
+    expect(ACCESSIBILITY_DEFAULTS.focusRing).toBe('off');
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium' });
+    expect(root().dataset.focusRing).toBe('off');
   });
 
   it('marks explicit overrides either way', () => {
@@ -44,7 +51,7 @@ describe('applyAccessibilityTo', () => {
     expect(root().dataset.transparency).toBeUndefined();
   });
 
-  it('removes an attribute again when the option goes back to its default', () => {
+  it('removes an attribute again when the option goes back to what the stylesheet does unasked', () => {
     applyAccessibilityTo(root(), { appFont: 'lexend', focusRing: 'extra', underlineLinks: true });
     expect(root().dataset.appFont).toBe('lexend');
     expect(root().dataset.focusRing).toBe('extra');

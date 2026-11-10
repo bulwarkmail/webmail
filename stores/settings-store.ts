@@ -1853,6 +1853,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateCalendarTasksDefault(settings);
           migrateUndoSendDefault(settings);
           migrateTrustedSendersBookDefault(settings);
+          migrateFocusOutlineDefault(settings);
           dropAttachmentPosition(settings);
 
           // A server copy doesn't replace a setting changed here after that
@@ -2294,7 +2295,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 15,
+      version: 16,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -2412,6 +2413,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateCalendarTasksDefault(state);
         migrateUndoSendDefault(state);
         migrateTrustedSendersBookDefault(state);
+        migrateFocusOutlineDefault(state);
         // v15: attachments always sit under the header; the setting is gone.
         dropAttachmentPosition(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
@@ -2488,6 +2490,19 @@ export function migrateUndoSendDefault(state: Record<string, unknown>): void {
   if (state.sendDelaySeconds !== 0) return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('sendDelaySeconds');
   if (!chosen) state.sendDelaySeconds = 5;
+}
+
+/**
+ * v16: the focus outline is off by default. Normal that the user never
+ * picked was only the old default and turns off; Normal they picked stays,
+ * and so do Thick and Extra thick. Someone who switched on Always show focus
+ * wants an outline, so theirs stays too. Imports and server copies from
+ * older builds still carry the old default and go through this too.
+ */
+export function migrateFocusOutlineDefault(state: Record<string, unknown>): void {
+  if (state.focusRing !== 'normal' || state.focusAlwaysVisible === true) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('focusRing');
+  if (!chosen) state.focusRing = 'off';
 }
 
 /**
