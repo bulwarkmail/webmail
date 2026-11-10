@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCalendarStore } from '../calendar-store';
-import { useManagedAccountStore } from '../managed-account-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { Calendar } from '@/lib/jmap/types';
 
@@ -16,8 +15,7 @@ function cal(overrides: Partial<Calendar>): Calendar {
 const names = () => useCalendarStore.getState().calendars.map((c) => c.name);
 
 beforeEach(() => {
-  useCalendarStore.setState({ calendars: [], selectedCalendarIds: [], error: null, accountClients: null, accountClientsActiveId: null });
-  useManagedAccountStore.getState().clear();
+  useCalendarStore.setState({ calendars: [], selectedCalendarIds: [], error: null });
 });
 
 describe('calendar order', () => {
@@ -132,7 +130,7 @@ describe('new calendars after a reorder', () => {
       ],
     });
     const createCalendar = vi.fn(async (c: Partial<Calendar>) => cal({ ...c, id: 'n' }));
-    const client = { createCalendar, getAccountId: () => 'primary' } as unknown as IJMAPClient;
+    const client = { createCalendar } as unknown as IJMAPClient;
 
     await useCalendarStore.getState().createCalendar(client, { name: 'Aardvark' });
 
@@ -143,79 +141,10 @@ describe('new calendars after a reorder', () => {
   it('createCalendar leaves sortOrder unset while nothing was reordered', async () => {
     useCalendarStore.setState({ calendars: [cal({ id: 'a', name: 'A' })] });
     const createCalendar = vi.fn(async (c: Partial<Calendar>) => cal({ ...c, id: 'n' }));
-    const client = { createCalendar, getAccountId: () => 'primary' } as unknown as IJMAPClient;
+    const client = { createCalendar } as unknown as IJMAPClient;
 
     await useCalendarStore.getState().createCalendar(client, { name: 'B' });
 
     expect(createCalendar.mock.calls[0][0]).not.toHaveProperty('sortOrder');
-  });
-});
-
-describe('createCalendar with managed account', () => {
-  it('uses managedAccountId as targetAccountId when set', async () => {
-    useManagedAccountStore.getState().setManagedAccount({
-      id: 'group-1',
-      name: 'Sales',
-      isPrimary: false,
-      capabilities: { mail: true, sieve: true, calendars: true, contacts: true, filenode: false },
-    } as any);
-
-    const createCalendar = vi.fn(async (c: Partial<Calendar>, targetAccountId?: string) => {
-      expect(targetAccountId).toBe('group-1');
-      return cal({ ...c, id: 'n', isShared: true });
-    });
-    const client = { createCalendar, getAccountId: () => 'primary' } as unknown as IJMAPClient;
-
-    await useCalendarStore.getState().createCalendar(client, { name: 'Managed Cal' }, undefined, 'group-1');
-
-    expect(createCalendar).toHaveBeenCalledTimes(1);
-  });
-
-  it('returns calendar with correct accountId, localAccountId, isShared', async () => {
-    useManagedAccountStore.getState().setManagedAccount({
-      id: 'group-1',
-      name: 'Sales',
-      isPrimary: false,
-      capabilities: { mail: true, sieve: true, calendars: true, contacts: true, filenode: false },
-    } as any);
-
-    // Debug: verify managed account is set
-    console.log('Managed account ID:', useManagedAccountStore.getState().managedAccountId);
-
-    const createCalendar = vi.fn(async (c: Partial<Calendar>, targetAccountId?: string) => {
-      expect(targetAccountId).toBe('group-1');
-      return cal({ ...c, id: 'n', isShared: true });
-    });
-    const client = { createCalendar, getAccountId: () => 'primary' } as unknown as IJMAPClient;
-
-    // Pass the managed account ID as targetAccountId
-    const created = await useCalendarStore.getState().createCalendar(client, { name: 'Managed Cal' }, undefined, 'group-1');
-
-    console.log('Created calendar:', created);
-
-    expect(created).not.toBeNull();
-    expect(created!.accountId).toBe('group-1');
-    expect(created!.localAccountId).toBeUndefined();
-    expect(created!.isShared).toBe(true);
-    expect(created!.originalId).toBe('n');
-  });
-
-  it('falls back to single-account mode when no managed account', async () => {
-    useManagedAccountStore.getState().clear();
-
-    const createCalendar = vi.fn(async (c: Partial<Calendar>, targetAccountId?: string) => {
-      expect(targetAccountId).toBe('primary');
-      return cal({ ...c, id: 'n', isShared: false });
-    });
-    const client = { createCalendar, getAccountId: () => 'primary' } as unknown as IJMAPClient;
-
-    const created = await useCalendarStore.getState().createCalendar(client, { name: 'Own Cal' });
-
-    console.log('Single-account created:', created);
-
-    expect(created).not.toBeNull();
-    expect(created!.accountId).toBe('primary');
-    expect(created!.localAccountId).toBeUndefined();
-    expect(created!.isShared).toBe(false);
   });
 });
