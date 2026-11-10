@@ -71,6 +71,13 @@ describe('isEmbeddedInBody', () => {
     const none = collectReferencedCids(null);
     expect(isEmbeddedInBody({ cid: 'logoImage', type: 'application/octet-stream' }, none)).toBe(false);
   });
+
+  // Shown as plain text the body draws no image, so the chip is the only way to it.
+  it('keeps a declared inline image when the message is shown as plain text', () => {
+    const logo = { cid: 'logoImage', type: 'image/png', size: 900, disposition: 'inline' };
+    expect(isEmbeddedInBody(logo, collectReferencedCids(null), [logo], { plainText: true })).toBe(false);
+    expect(isEmbeddedInBody(logo, body, [logo], { plainText: true })).toBe(false);
+  });
 });
 
 describe('isEmbeddedInBody with an attached copy of an embedded image', () => {
@@ -86,6 +93,14 @@ describe('isEmbeddedInBody with an attached copy of an embedded image', () => {
 
   it('hides the copies along with the images they repeat, and keeps the real file', () => {
     expect(parts.filter((part) => !isEmbeddedInBody(part, body, parts))).toEqual([invoice]);
+  });
+
+  it('lists each image once, by its copy, when the message is shown as plain text', () => {
+    const none = collectReferencedCids(null);
+    expect(parts.filter((part) => !isEmbeddedInBody(part, none, parts, { plainText: true }))).toEqual([copy1, copy2, invoice]);
+    // An inline image whose copy differs keeps its own chip.
+    const bigger = { ...copy1, size: 23568 };
+    expect(isEmbeddedInBody(inline1, none, [inline1, bigger], { plainText: true })).toBe(false);
   });
 
   it('keeps a copy when it gets no parts to compare with', () => {

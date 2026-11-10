@@ -3017,7 +3017,7 @@ export function EmailViewer({
       .filter(att => !hasCalInvitation || !isCalendarMimeType(att.type))
       // Hide body-embedded parts, and attached copies of them, when the user
       // has opted to keep them out of the attachment list (default on).
-      .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids, email?.attachments)))
+      .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids, email?.attachments, { plainText: plainView })))
       // Hide machine-readable report parts (MDN read-receipts, DSN bounce
       // reports). These are required MIME parts, not real user attachments.
       .filter(att => !isReportPart(att.type))

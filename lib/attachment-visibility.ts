@@ -85,7 +85,8 @@ export interface AttachmentPartLike {
  * True when the part is embedded in the rendered body and should stay out of
  * the attachment list while "hide inline images" is on.
  *
- * - Declared inline images hide as before, referenced or not.
+ * - Declared inline images hide as before, referenced or not, unless the
+ *   body is shown as plain text.
  * - An explicit `attachment` disposition keeps its chip - the sender asked
  *   for a download, even if the body also references the part - unless the
  *   part only repeats an image the body embeds (isCopyOfEmbeddedImage).
@@ -96,12 +97,22 @@ export interface AttachmentPartLike {
  *
  * `parts` are all of the message's attachment parts, `att` among them;
  * without them no part counts as such a copy.
+ *
+ * With `plainText` (an HTML message shown as plain text) the body draws no
+ * image, so every part keeps its chip, declared inline images included. Only
+ * an inline image the message also attaches as a copy leaves its chip to the
+ * copy, so the file is listed once.
  */
 export function isEmbeddedInBody(
   att: AttachmentPartLike,
   referencedCids: ReadonlySet<string>,
   parts: readonly AttachmentPartLike[] = [],
+  options: { plainText?: boolean } = {},
 ): boolean {
+  if (options.plainText) {
+    return att.disposition !== 'attachment'
+      && parts.some((part) => part.disposition === 'attachment' && isSameImage(att, part));
+  }
   if (att.disposition === 'attachment') return isCopyOfEmbeddedImage(att, referencedCids, parts);
   return embedsItself(att, referencedCids);
 }
@@ -131,14 +142,16 @@ function isCopyOfEmbeddedImage(
   referencedCids: ReadonlySet<string>,
   parts: readonly AttachmentPartLike[],
 ): boolean {
-  if (!att.cid || typeof att.size !== 'number' || att.size <= 0) return false;
-  const type = (att.type || '').toLowerCase();
-  if (!type.startsWith('image/')) return false;
-  const cid = normalizeCid(att.cid);
-  if (!referencedCids.has(cid)) return false;
-  return parts.some((part) => part !== att
-    && !!part.cid && normalizeCid(part.cid) === cid
-    && (part.type || '').toLowerCase() === type
-    && part.size === att.size
-    && embedsItself(part, referencedCids));
+  if (!att.cid || !referencedCids.has(normalizeCid(att.cid))) return false;
+  return parts.some((part) => isSameImage(att, part) && embedsItself(part, referencedCids));
+}
+
+/** Two parts that are the same image: Content-ID, type and size alike. */
+function isSameImage(a: AttachmentPartLike, b: AttachmentPartLike): boolean {
+  if (a === b || !a.cid || !b.cid || typeof a.size !== 'number' || a.size <= 0) return false;
+  const type = (a.type || '').toLowerCase();
+  return type.startsWith('image/')
+    && normalizeCid(a.cid) === normalizeCid(b.cid)
+    && (b.type || '').toLowerCase() === type
+    && b.size === a.size;
 }

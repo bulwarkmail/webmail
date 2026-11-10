@@ -194,6 +194,26 @@ describe('the reader (reading pane, pop-outs, Pro tabs)', () => {
     expect(chips[0].textContent).toContain('image001.png');
     expect(chips[1].textContent).toContain('image002.png');
   });
+
+  it('lists an inline image when the message is shown as plain text, since the body shows no image then', async () => {
+    useSettingsStore.setState({ mailViewMode: 'plain' });
+    const { container } = render(<EmailViewer email={inlineOnly()} mailboxes={mailboxes} selectedMailbox="inbox" />);
+    await waitFor(() => expect(container.querySelector('[data-testid="reader-attachments"]')).not.toBeNull());
+    const chips = container.querySelectorAll('[data-testid="reader-attachments"] [data-testid="attachment"]');
+    expect(chips).toHaveLength(1);
+    expect(chips[0].textContent).toContain('logo.png');
+  });
+
+  it('lists an inline image once the reader switches one message to plain text', async () => {
+    const { container } = render(<EmailViewer email={inlineOnly()} mailboxes={mailboxes} selectedMailbox="inbox" />);
+    await waitFor(() => expect(container.querySelector('iframe')).not.toBeNull());
+    expect(container.querySelector('[data-testid="reader-attachments"]')).toBeNull();
+    await act(async () => { screen.getByRole('button', { name: 'more_actions' }).click(); });
+    const item = screen.getAllByRole('menuitem').find((el) => el.textContent?.includes('show_as_plain_text'))!;
+    await act(async () => { item.click(); });
+    await waitFor(() => expect(container.querySelector('[data-testid="reader-attachments"]')).not.toBeNull());
+    expect(container.querySelector('[data-testid="reader-attachments"]')!.textContent).toContain('logo.png');
+  });
 });
 
 describe('a conversation message (phone thread, Mountain View)', () => {
@@ -239,6 +259,13 @@ describe('a conversation message (phone thread, Mountain View)', () => {
     await screen.findByText('image001.png');
     expect(container.querySelectorAll('[data-conversation-attachments] [data-row-item]')).toHaveLength(2);
     expect(screen.getByText('image002.png')).toBeTruthy();
+  });
+
+  it('lists an inline image when mail is shown as plain text, since the body shows no image then', async () => {
+    useSettingsStore.setState({ mailViewMode: 'plain' });
+    const { container } = render(<ConversationEmailBody email={inlineOnly()} allowExternal={false} onAllowExternal={() => {}} />);
+    await screen.findByText('logo.png');
+    expect(container.querySelectorAll('[data-conversation-attachments] [data-row-item]')).toHaveLength(1);
   });
 
   it('keeps many attachments to one line, the rest behind "Show N more"', () => {
