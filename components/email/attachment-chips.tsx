@@ -7,7 +7,6 @@ import { stripBidiControls } from "@/lib/bidi";
 import { isReportPart } from "@/lib/attachment-visibility";
 import type { Attachment, Email } from "@/lib/jmap/types";
 import type { LoadListAttachments } from "@/lib/list-attachments";
-import { useSettingsStore } from "@/stores/settings-store";
 
 /**
  * A message can carry a dozen inline images — signature logos, tracking
@@ -207,11 +206,7 @@ interface ListAttachmentChipsProps extends Omit<AttachmentChipsProps, "attachmen
 }
 
 export function ListAttachmentChips({ email, load, ...chipProps }: ListAttachmentChipsProps) {
-  const showAttachmentChips = useSettingsStore((state) => state.showAttachmentChips);
   const attachments = useListAttachments(email, load);
-  if (!showAttachmentChips) {
-    return chipProps.leading ? <div className={cn("flex items-center gap-1.5", chipProps.className)}>{chipProps.leading}</div> : null;
-  }
   if (attachments === undefined && load && email.hasAttachment) {
     // Hold a chip's height until the parts arrive, so the row does not grow
     // under the reader when they do. A leading chip holds it just as well.

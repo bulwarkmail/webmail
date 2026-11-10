@@ -180,7 +180,8 @@ function RowChips({ email, loadAttachments, onOpenAttachment, mountainView, mvRo
   // The sender column is w-32 (lg:w-40) and the row line has gap-3 after it.
   const className = cn(variant === "mountain-view" ? "mt-2" : "mt-1.5", mvRow && "-mt-0.5 pb-2.5 ps-[8.75rem] lg:ps-[10.75rem]");
   // Most rows have no attachment: no loader for them, nor an empty chip row.
-  const mayHaveAttachments = showAttachmentChips && (email.hasAttachment || (email.attachments?.length ?? 0) > 0);
+  // With the chips turned off only the code is left (the paperclip stays).
+  const mayHaveAttachments = email.hasAttachment || (email.attachments?.length ?? 0) > 0;
   if (showAttachmentChips && onOpenAttachment && mayHaveAttachments) {
     return <ListAttachmentChips email={email} load={loadAttachments} onOpen={onOpenAttachment} leading={leading} variant={variant} max={variant === "mountain-view" ? 3 : 2} className={className} />;
   }

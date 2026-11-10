@@ -141,35 +141,6 @@ describe("ListAttachmentChips", () => {
     expect(screen.queryByTitle("first.pdf")).toBeNull();
     expect(load).toHaveBeenCalledTimes(2);
   });
-
-  it("hides attachment chips when showAttachmentChips is false", async () => {
-    const { useSettingsStore } = await import("@/stores/settings-store");
-    act(() => { useSettingsStore.setState({ showAttachmentChips: false }); });
-    try {
-      const { container } = render(
-        <ListAttachmentChips email={row({ attachments: [att({ name: "have.pdf" })] })} onOpen={vi.fn()} />
-      );
-      expect(screen.queryByTitle("have.pdf")).toBeNull();
-      expect(container.firstChild).toBeNull();
-    } finally {
-      act(() => { useSettingsStore.setState({ showAttachmentChips: true }); });
-    }
-  });
-
-  it("keeps the leading chip when attachment chips are hidden", async () => {
-    const { useSettingsStore } = await import("@/stores/settings-store");
-    act(() => { useSettingsStore.setState({ showAttachmentChips: false }); });
-    try {
-      const leading = <span data-testid="leading-code">123456</span>;
-      render(
-        <ListAttachmentChips email={row({ attachments: [att({ name: "have.pdf" })] })} onOpen={vi.fn()} leading={leading} />
-      );
-      expect(screen.queryByTitle("have.pdf")).toBeNull();
-      expect(screen.getByTestId("leading-code")).toBeTruthy();
-    } finally {
-      act(() => { useSettingsStore.setState({ showAttachmentChips: true }); });
-    }
-  });
 });
 
 // Stalwart flags a message whose only parts are inline images (a logo in a
