@@ -3394,7 +3394,8 @@
         "description": "Apvadījums ap pogu, saiti vai lauku, kurā atrodas tastatūra.",
         "normal": "Parasts",
         "thick": "Biezs",
-        "extra": "Ļoti biezs"
+        "extra": "Ļoti biezs",
+        "off": "Izslēgts"
       },
       "focus_always": {
         "label": "Vienmēr rādīt fokusu",

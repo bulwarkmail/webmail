@@ -3394,7 +3394,8 @@
         "description": "Conturul din jurul butonului, linkului sau câmpului pe care se află tastatura.",
         "normal": "Normal",
         "thick": "Gros",
-        "extra": "Foarte gros"
+        "extra": "Foarte gros",
+        "off": "Oprit"
       },
       "focus_always": {
         "label": "Afișează mereu focalizarea",

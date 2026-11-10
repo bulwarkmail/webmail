@@ -54,6 +54,11 @@ describe('applyAccessibilityTo', () => {
     expect(root().dataset.focusRing).toBeUndefined();
     expect(root().dataset.underlineLinks).toBeUndefined();
   });
+
+  it('marks a focus outline that is turned off', () => {
+    applyAccessibilityTo(root(), { focusRing: 'off' });
+    expect(root().dataset.focusRing).toBe('off');
+  });
 });
 
 describe('accessibilityBootScript', () => {

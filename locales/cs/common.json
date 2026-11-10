@@ -3394,7 +3394,8 @@
         "description": "Obrys kolem tlačítka, odkazu nebo pole, na kterém je klávesnice.",
         "normal": "Normální",
         "thick": "Silný",
-        "extra": "Extra silný"
+        "extra": "Extra silný",
+        "off": "Vypnuto"
       },
       "focus_always": {
         "label": "Vždy zobrazovat zaměření",

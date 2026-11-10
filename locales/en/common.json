@@ -3394,7 +3394,8 @@
         "description": "The outline around the button, link or field the keyboard is on.",
         "normal": "Normal",
         "thick": "Thick",
-        "extra": "Extra thick"
+        "extra": "Extra thick",
+        "off": "Off"
       },
       "focus_always": {
         "label": "Always show focus",

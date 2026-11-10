@@ -3394,7 +3394,8 @@
         "description": "Raam nupu, lingi või välja ümber, kus klaviatuur parajasti on.",
         "normal": "Tavaline",
         "thick": "Paks",
-        "extra": "Eriti paks"
+        "extra": "Eriti paks",
+        "off": "Väljas"
       },
       "focus_always": {
         "label": "Näita fookust alati",

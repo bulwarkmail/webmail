@@ -3394,7 +3394,8 @@
         "description": "키보드가 가리키는 버튼, 링크, 입력란 둘레의 윤곽선이에요.",
         "normal": "보통",
         "thick": "굵게",
-        "extra": "아주 굵게"
+        "extra": "아주 굵게",
+        "off": "꺼짐"
       },
       "focus_always": {
         "label": "포커스 항상 표시",

@@ -124,6 +124,20 @@ describe('reset', () => {
   });
 });
 
+// With the focus outline off there is no outline to show after clicks either.
+describe('focus outline off', () => {
+  it('disables Always show focus until an outline is chosen again', () => {
+    render(<AccessibilitySettings />);
+    const always = () => screen.getByRole('switch', { name: 'settings.accessibility.focus_always.label' });
+    expect(always()).not.toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'settings.accessibility.focus_ring.off' }));
+    expect(settings().focusRing).toBe('off');
+    expect(always()).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'settings.accessibility.focus_ring.normal' }));
+    expect(always()).not.toBeDisabled();
+  });
+});
+
 describe('toast duration', () => {
   it('only offers durations at or above the admin minimum', () => {
     usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, restrictions: { toastDuration: { min: 20 } } }, loaded: true });

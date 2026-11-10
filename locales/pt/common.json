@@ -3394,7 +3394,8 @@
         "description": "O contorno ao redor do botão, link ou campo em que o teclado está.",
         "normal": "Normal",
         "thick": "Grosso",
-        "extra": "Extragrosso"
+        "extra": "Extragrosso",
+        "off": "Desligado"
       },
       "focus_always": {
         "label": "Sempre mostrar o foco",

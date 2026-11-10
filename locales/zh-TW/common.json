@@ -3394,7 +3394,8 @@
         "description": "鍵盤目前所在的按鈕、連結或欄位周圍的外框。",
         "normal": "正常",
         "thick": "粗",
-        "extra": "特粗"
+        "extra": "特粗",
+        "off": "關"
       },
       "focus_always": {
         "label": "一律顯示焦點",

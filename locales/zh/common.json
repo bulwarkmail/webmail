@@ -3394,7 +3394,8 @@
         "description": "键盘当前所在的按钮、链接或字段周围的轮廓。",
         "normal": "正常",
         "thick": "粗",
-        "extra": "特粗"
+        "extra": "特粗",
+        "off": "关"
       },
       "focus_always": {
         "label": "始终显示焦点",

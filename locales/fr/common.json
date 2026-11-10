@@ -3394,7 +3394,8 @@
         "description": "Le contour autour du bouton, du lien ou du champ où se trouve le clavier.",
         "normal": "Normal",
         "thick": "Épais",
-        "extra": "Très épais"
+        "extra": "Très épais",
+        "off": "Désactivé"
       },
       "focus_always": {
         "label": "Toujours afficher le focus",
