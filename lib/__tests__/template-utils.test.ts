@@ -240,6 +240,27 @@ describe('getPlaceholderDefaults', () => {
     expect(substitutePlaceholders(tpl.body, { name }, { html: true })).toBe('<p>&lt;img src=x onerror=alert(1)&gt;</p>');
   });
 
+  it('takes a default with an address in a subject or a plain body', () => {
+    const tpl = makeTemplate({
+      subject: 'For {{contact:Jane <jane@x.com>}}',
+      body: 'Copy {{cc:Bob <bob@x.com>}}',
+    });
+    expect(getPlaceholdersFromTemplate(tpl)).toEqual(['contact', 'cc']);
+    expect(getPlaceholderDefaults(tpl)).toEqual(new Map([['contact', 'Jane <jane@x.com>'], ['cc', 'Bob <bob@x.com>']]));
+    expect(substitutePlaceholders(tpl.subject, { contact: 'Jane <jane@x.com>' })).toBe('For Jane <jane@x.com>');
+  });
+
+  it('still stops a default at a tag in an HTML body when the subject has an address', () => {
+    const tpl = makeTemplate({
+      subject: 'For {{contact:Jane <jane@x.com>}}',
+      body: '<p>{{name:<b>Ada</b>}}</p>',
+      isHTML: true,
+    });
+    expect(getPlaceholdersFromTemplate(tpl)).toEqual(['contact']);
+    expect(getPlaceholderDefaults(tpl)).toEqual(new Map([['contact', 'Jane <jane@x.com>']]));
+    expect(substitutePlaceholders(tpl.body, { name: 'x' }, { html: true })).toBe(tpl.body);
+  });
+
   it('keeps an empty default', () => {
     expect(getPlaceholderDefaults(makeTemplate({ body: '{{reason:}} {{note}}' }))).toEqual(new Map([['reason', '']]));
   });
