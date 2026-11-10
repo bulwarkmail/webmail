@@ -2075,6 +2075,10 @@
         "label": "Texte brut uniquement",
         "description": "Désactiver l'éditeur de texte enrichi et envoyer tous les e-mails en texte brut uniquement, y compris les réponses et les transferts"
       },
+      "reply_under_message": {
+        "label": "Réponses sous le message",
+        "description": "Une réponse ou un transfert s'ouvre sous son message, qui reste lisible au-dessus. Si cette option est désactivée, il occupe tout le panneau de lecture, comme un nouveau message."
+      },
       "quick_reply": {
         "label": "Réponse rapide",
         "description": "Afficher la zone de réponse rapide sous les messages."

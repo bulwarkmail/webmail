@@ -2091,6 +2091,10 @@
         "label": "Només text sense format",
         "description": "Desactiva l'editor de text enriquit i envia tots els correus només com a text sense format, incloses les respostes i els reenviaments"
       },
+      "reply_under_message": {
+        "label": "Respostes sota el missatge",
+        "description": "Una resposta o un reenviament s'obre sota el seu missatge, que continua llegible a sobre. Si està desactivat, ocupa tota la subfinestra de lectura, com un missatge nou."
+      },
       "quick_reply": {
         "label": "Resposta ràpida",
         "description": "Mostra el quadre de resposta ràpida sota els missatges."

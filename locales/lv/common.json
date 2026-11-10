@@ -2075,6 +2075,10 @@
         "label": "Tikai parasts teksts",
         "description": "Izslēgt formatētā teksta redaktoru un sūtīt vēstules tikai kā parastu tekstu"
       },
+      "reply_under_message": {
+        "label": "Atbildes zem ziņas",
+        "description": "Atbilde vai pārsūtīšana atveras zem savas ziņas, kas virs tās paliek salasāma. Ja izslēgts, tā aizņem visu lasīšanas rūti kā jauna ziņa."
+      },
       "quick_reply": {
         "label": "Ātrā atbilde",
         "description": "Rādīt ātrās atbildes lauku zem ziņojumiem."

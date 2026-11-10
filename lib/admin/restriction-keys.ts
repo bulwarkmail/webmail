@@ -90,6 +90,7 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
     page: 'policy',
     defaultValue: 'all',
   },
+  { key: 'replyUnderMessage', label: 'Replies under the message', category: 'Composer', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'defaultReplyMode', label: 'Default Reply Mode', category: 'Composer', type: 'enum', allowedValues: ['reply', 'replyAll'], page: 'policy', defaultValue: 'reply' },
   { key: 'autoSelectReplyIdentity', label: 'Auto-select Reply Identity', category: 'Composer', type: 'boolean', page: 'policy', defaultValue: false },
   { key: 'replyIdentityMatch', label: 'Reply Identity Matching', category: 'Composer', type: 'enum', allowedValues: ['exact', 'domain'], page: 'policy', defaultValue: 'domain' },

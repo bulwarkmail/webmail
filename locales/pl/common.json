@@ -2088,6 +2088,10 @@
         "label": "Tylko zwykły tekst",
         "description": "Wyłącz edytor tekstu sformatowanego i wysyłaj wszystkie wiadomości e-mail tylko jako zwykły tekst, w tym odpowiedzi i przekazywanie dalej"
       },
+      "reply_under_message": {
+        "label": "Odpowiedzi pod wiadomością",
+        "description": "Odpowiedź lub przekazanie otwiera się pod swoją wiadomością, która pozostaje czytelna powyżej. Po wyłączeniu zajmuje cały panel czytania, jak nowa wiadomość."
+      },
       "quick_reply": {
         "label": "Szybka odpowiedź",
         "description": "Pokazuj pole szybkiej odpowiedzi pod wiadomościami."

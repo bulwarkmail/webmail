@@ -23,12 +23,14 @@ export function ComposingSettings() {
   const tPage = useTranslations('settings.composing_page');
   const tWords = useTranslations('compose_words');
   const templatesEnabled = usePolicyStore((s) => s.isFeatureEnabled('templatesEnabled'));
-  // The admin panel can lock or hide these three (restriction-keys.ts).
+  // The admin panel can lock or hide these four (restriction-keys.ts).
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
   const [newKeyword, setNewKeyword] = useState('');
 
   const {
     quickReplyEnabled,
+    replyUnderMessage,
+    interfaceLayout,
     autoSelectReplyIdentity,
     replyIdentityMatch,
     plainTextMode,
@@ -95,6 +97,16 @@ export function ComposingSettings() {
       <ProofreadingSettings />
 
       <SettingsSection id="replying" title={tPage('sections.replying')}>
+        {/* Mountain View floats a reply in a window over the list instead. */}
+        {interfaceLayout !== 'mountain-view' && !isSettingHidden('replyUnderMessage') && (
+        <SettingItem label={t('reply_under_message.label')} description={t('reply_under_message.description')} locked={isSettingLocked('replyUnderMessage')}>
+          <ToggleSwitch
+            checked={replyUnderMessage}
+            onChange={(checked) => updateSetting('replyUnderMessage', checked)}
+          />
+        </SettingItem>
+        )}
+
         <SettingItem label={t('quick_reply.label')} description={t('quick_reply.description')}>
           <ToggleSwitch
             checked={quickReplyEnabled}

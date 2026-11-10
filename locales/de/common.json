@@ -2088,6 +2088,10 @@
         "label": "Nur Klartext",
         "description": "Rich-Text-Editor deaktivieren und alle E-Mails nur als Klartext senden, einschließlich Antworten und Weiterleitungen"
       },
+      "reply_under_message": {
+        "label": "Antworten unter der Nachricht",
+        "description": "Eine Antwort oder Weiterleitung öffnet sich unter ihrer Nachricht, die darüber lesbar bleibt. Ausgeschaltet nimmt sie wie eine neue Nachricht den ganzen Lesebereich ein."
+      },
       "quick_reply": {
         "label": "Schnellantwort",
         "description": "Das Feld für die Schnellantwort unter Nachrichten anzeigen."

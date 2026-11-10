@@ -2091,6 +2091,10 @@
         "label": "Iba prostý text",
         "description": "Zakázať editor formátovaného textu a odosielať všetky e-maily iba ako prostý text"
       },
+      "reply_under_message": {
+        "label": "Odpovede pod správou",
+        "description": "Odpoveď alebo preposlanie sa otvorí pod svojou správou, ktorá nad ňou zostane čitateľná. Keď je vypnuté, zaberie celý panel čítania ako nová správa."
+      },
       "quick_reply": {
         "label": "Rýchla odpoveď",
         "description": "Zobraziť pole na rýchlu odpoveď pod správami."

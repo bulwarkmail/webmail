@@ -2099,6 +2099,10 @@
         "label": "Berre ren tekst",
         "description": "Slå av rikteksteditoren og send all e-post som ren tekst, òg svar og vidaresendingar"
       },
+      "reply_under_message": {
+        "label": "Svar under meldinga",
+        "description": "Eit svar eller ei vidaresending opnar seg under meldinga si, som held seg leseleg over. Når dette er slått av, fyller det heile leseflata, som ei ny melding."
+      },
       "quick_reply": {
         "label": "Raskt svar",
         "description": "Vis boksen for raskt svar under meldingane."

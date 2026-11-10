@@ -2103,6 +2103,10 @@
         "label": "Chỉ dùng văn bản thuần",
         "description": "Tắt trình soạn thảo văn bản đa dạng thức và chỉ gửi thư dưới dạng văn bản thuần, kể cả thư trả lời và chuyển tiếp"
       },
+      "reply_under_message": {
+        "label": "Mở thư trả lời bên dưới thư",
+        "description": "Thư trả lời hoặc chuyển tiếp mở bên dưới thư gốc, thư gốc vẫn đọc được ở phía trên. Khi tắt, nó chiếm toàn bộ ngăn đọc, giống như thư mới."
+      },
       "quick_reply": {
         "label": "Trả lời nhanh",
         "description": "Hiển thị khung trả lời nhanh bên dưới thư."

@@ -2075,6 +2075,10 @@
         "label": "Alleen platte tekst",
         "description": "Schakel de rich text-editor uit en verzend alle e-mails alleen als platte tekst, inclusief antwoorden en doorgestuurde berichten"
       },
+      "reply_under_message": {
+        "label": "Antwoorden onder het bericht",
+        "description": "Een antwoord of doorgestuurd bericht opent onder het bijbehorende bericht, dat erboven leesbaar blijft. Als dit uit staat, neemt het het hele leesvenster in, zoals een nieuw bericht."
+      },
       "quick_reply": {
         "label": "Snel antwoorden",
         "description": "Het vak voor snel antwoorden onder berichten tonen."

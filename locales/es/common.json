@@ -2075,6 +2075,10 @@
         "label": "Solo texto sin formato",
         "description": "Desactivar el editor de texto enriquecido y enviar todos los correos solo como texto sin formato, incluyendo respuestas y reenvíos"
       },
+      "reply_under_message": {
+        "label": "Respuestas debajo del mensaje",
+        "description": "Una respuesta o un reenvío se abre debajo de su mensaje, que sigue siendo legible encima. Si está desactivado, ocupa todo el panel de lectura, como un mensaje nuevo."
+      },
       "quick_reply": {
         "label": "Respuesta rápida",
         "description": "Mostrar el cuadro de respuesta rápida debajo de los mensajes."

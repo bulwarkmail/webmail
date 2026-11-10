@@ -2091,6 +2091,10 @@
         "label": "Numai text simplu",
         "description": "Dezactivați editorul de text formatat și trimiteți toate e-mailurile doar ca text simplu, inclusiv răspunsurile și redirecționările"
       },
+      "reply_under_message": {
+        "label": "Răspunsuri sub mesaj",
+        "description": "Un răspuns sau o redirecționare se deschide sub mesajul său, care rămâne lizibil deasupra. Când este dezactivat, ocupă tot panoul de citire, ca un mesaj nou."
+      },
       "quick_reply": {
         "label": "Răspuns rapid",
         "description": "Afișează caseta de răspuns rapid sub mesaje."

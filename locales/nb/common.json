@@ -2091,6 +2091,10 @@
         "label": "Kun ren tekst",
         "description": "Deaktiver redigering av formatert tekst, og send all e-post som ren tekst, også svar og videresendinger"
       },
+      "reply_under_message": {
+        "label": "Svar under meldingen",
+        "description": "Et svar eller en videresending åpnes under meldingen sin, som forblir lesbar over. Når dette er slått av, fyller det hele leseruten, som en ny melding."
+      },
       "quick_reply": {
         "label": "Hurtigsvar",
         "description": "Vis feltet for hurtigsvar under meldinger."

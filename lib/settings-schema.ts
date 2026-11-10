@@ -270,6 +270,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('mentionAddsRecipientTo', 'composing', `${EB}mention_adds_recipient.label`,
     opts(`${EB}mention_adds_recipient.`, ['to', 'cc', 'off'])),
   bool('rtlEditingSupport', 'composing', `${EB}rtl_editing.label`),
+  bool('replyUnderMessage', 'composing', `${EB}reply_under_message.label`),
   bool('quickReplyEnabled', 'composing', `${EB}quick_reply.label`),
   bool('autoSelectReplyIdentity', 'composing', 'compose_words.reply_from_received.label'),
   // The page shows it only while the composer may rewrite From.

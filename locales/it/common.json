@@ -2075,6 +2075,10 @@
         "label": "Solo testo normale",
         "description": "Disabilita l'editor di testo formattato e invia tutte le email solo come testo normale, incluse risposte e inoltri"
       },
+      "reply_under_message": {
+        "label": "Risposte sotto il messaggio",
+        "description": "Una risposta o un inoltro si apre sotto il suo messaggio, che resta leggibile sopra. Se disattivato, occupa l'intero pannello di lettura, come un nuovo messaggio."
+      },
       "quick_reply": {
         "label": "Risposta rapida",
         "description": "Mostra la casella di risposta rapida sotto i messaggi."

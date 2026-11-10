@@ -149,7 +149,7 @@ export const SHARED_SETTINGS = [
   'searchDefaultScope', 'clearSearchOnFolderChange',
   'messageSpacing', 'attachmentImagePreviewsEnabled', 'hideInlineImageAttachments',
   'filenameSpaceReplacement', 'filenameLowercase', 'filenameStripDiacritics', 'filenameCollapseSeparators', 'postExportAction',
-  'recipientMentionsEnabled', 'mentionAddsRecipientTo', 'rtlEditingSupport', 'quickReplyEnabled', 'replyIdentityMatch',
+  'recipientMentionsEnabled', 'mentionAddsRecipientTo', 'rtlEditingSupport', 'quickReplyEnabled', 'replyUnderMessage', 'replyIdentityMatch',
   'attachmentReminderEnabled', 'attachmentReminderKeywords', 'emptySubjectWarningEnabled', 'placeholderWarningEnabled',
   'notificationSoundChoice', 'pushNotifyInboxOnly', 'faviconUnreadBadge', 'unreadBadgeAllAccounts', 'calendarNotificationSound', 'doNotDisturb', 'visualAlerts',
   'calendarInvitationParsingEnabled', 'showTimeInMonthView', 'calendarTintedEvents', 'calendarMonthTimedEvents',

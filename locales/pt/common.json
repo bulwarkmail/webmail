@@ -2075,6 +2075,10 @@
         "label": "Apenas texto simples",
         "description": "Desativar o editor de texto formatado e enviar todos os e-mails apenas como texto simples, incluindo respostas e encaminhamentos"
       },
+      "reply_under_message": {
+        "label": "Respostas abaixo da mensagem",
+        "description": "Uma resposta ou um encaminhamento abre abaixo da sua mensagem, que continua legível acima. Quando desativado, ocupa todo o painel de leitura, como uma nova mensagem."
+      },
       "quick_reply": {
         "label": "Resposta rápida",
         "description": "Mostrar a caixa de resposta rápida abaixo das mensagens."
