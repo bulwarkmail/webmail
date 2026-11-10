@@ -4622,7 +4622,7 @@ export class JMAPClient implements IJMAPClient {
       }, "0"],
     ]);
 
-    const result = response.methodResponses?.[0]?.[1];
+    const result = methodResult(response, '0', 'Create mailbox');
     if (result?.notCreated?.[createId]) {
       const err = result.notCreated[createId];
       const details = [err.type || 'unknown error'];
