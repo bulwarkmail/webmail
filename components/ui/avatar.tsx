@@ -295,7 +295,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
   const accountColor = useAccountStore((s) => {
     const key = email?.trim().toLowerCase();
     if (!key) return undefined;
-    return s.accounts.find((a) => (a.email || a.username).trim().toLowerCase() === key)?.avatarColor;
+    return s.accounts.find((a) => (a.email || a.username || "").trim().toLowerCase() === key)?.avatarColor;
   });
   const { devMode } = useConfig();
   // Re-render when the config arrives: until then nothing outside is asked (#903).
