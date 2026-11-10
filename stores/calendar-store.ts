@@ -49,6 +49,7 @@ import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { isCalendarEventArray, isFetchRange, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
 import { sentByPatchValue } from '@/lib/calendar-delegate';
+import { useManagedAccountStore } from './managed-account-store';
 
 /**
  * When the Pro shell aggregates calendars/events from every connected
@@ -980,11 +981,11 @@ interface CalendarStore {
   setSelectedDate: (date: Date) => void;
   setViewMode: (mode: CalendarViewMode) => void;
   toggleCalendarVisibility: (calendarId: string) => void;
-  /**
-   * Task lists the tasks view leaves out. The tasks view filters by these,
-   * not by the grid's calendar selection, so a task-only list (which the
-   * grid never shows) has its tasks listed (pim-1).
-   */
+/**
+    * Task lists the tasks view leaves out. The tasks view filters by these,
+    * not by the grid's calendar selection, so a task-only list (which the
+    * grid never shows) has its tasks listed (pim-1).
+    */
   hiddenTaskListIds: string[];
   toggleTaskListVisibility: (calendarId: string) => void;
   /**
@@ -1818,7 +1819,26 @@ export const useCalendarStore = create<CalendarStore>()(
       createCalendar: async (client, calendar, options) => {
         set({ error: null });
         try {
-          const made = await client.createCalendar(withNextSortOrder(client, get().calendars, calendar), undefined, options);
+          const state = get();
+          let targetClient = client;
+          let targetAccountId: string | undefined;
+
+          // Check for managed (shared) account scope first
+          const managedAccountId = useManagedAccountStore.getState().managedAccountId;
+          if (managedAccountId) {
+            targetAccountId = managedAccountId;
+          } else if (state.accountClients && state.accountClientsActiveId) {
+            const accountClient = state.accountClients.find((ac) => ac.localAccountId === state.accountClientsActiveId);
+            if (accountClient) {
+              targetClient = accountClient.client;
+              targetAccountId = targetClient.getAccountId();
+            }
+          } else {
+            targetAccountId = client.getAccountId();
+          }
+
+          const made = await targetClient.createCalendar(withNextSortOrder(targetClient, state.calendars, calendar), targetAccountId, options);
+
           // A calendar asked to hold tasks is one from now on, though it is
           // empty and the server won't say so (#1595). One for tasks alone
           // stays off the grid, as it will once it holds a task.
@@ -1829,15 +1849,28 @@ export const useCalendarStore = create<CalendarStore>()(
           const created: Calendar = kind
             ? { ...made, takesTasks: true, ...(kind === 'tasks' ? { isTasksOnly: true } : {}) }
             : made;
+
+          // The server response doesn't include accountId/localAccountId, so we add them
+          // based on the account we created the calendar in.
+          const isManagedAccount = !!managedAccountId;
+          const isShared = !!isManagedAccount || !!(state.accountClients && state.accountClientsActiveId && targetAccountId !== targetClient.getAccountId());
+          const enrichedCreated = {
+            ...(created as Calendar),
+            accountId: targetAccountId,
+            localAccountId: isManagedAccount ? managedAccountId : (isShared ? (state.accountClientsActiveId || targetClient.getAccountId()) : undefined),
+            originalId: created.id,
+            isShared,
+          } as Calendar;
+
           // Added with its raw id; the next aggregated refetch namespaces it and
           // reconcileSelectedIds() remaps the selection so it stays visible.
-          set((state) => ({
-            calendars: sortCalendars([...state.calendars, created]),
-            selectedCalendarIds: created.isTasksOnly ? state.selectedCalendarIds : [...state.selectedCalendarIds, created.id],
-            ...(kind ? { taskCalendarKinds: { ...state.taskCalendarKinds, [taskKindKey(subscriptionOwner(client), made.id)]: kind } } : {}),
+          set((newState) => ({
+            calendars: sortCalendars([...newState.calendars, enrichedCreated]),
+            selectedCalendarIds: enrichedCreated.isTasksOnly ? newState.selectedCalendarIds : [...newState.selectedCalendarIds, enrichedCreated.id],
+            ...(kind ? { taskCalendarKinds: { ...newState.taskCalendarKinds, [taskKindKey(subscriptionOwner(targetClient), made.id)]: kind } } : {}),
           }));
-          void calendarHooks.onCalendarChange.emit({ calendarId: created.id, change: 'created' });
-          return created;
+          void calendarHooks.onCalendarChange.emit({ calendarId: enrichedCreated.id, change: 'created' });
+          return enrichedCreated;
         } catch (error) {
           debug.error('Failed to create calendar:', error);
           set({ error: 'Failed to create calendar' });
