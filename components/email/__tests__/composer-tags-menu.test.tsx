@@ -4,6 +4,7 @@ import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { useAuthStore } from '@/stores/auth-store';
 import { composerDataFromDraft } from '@/lib/draft-composer-data';
+import { sharedTagsKey, useSharedTagsStore } from '@/stores/shared-tags-store';
 
 // ─── Heavy component mocks (mirrors composer-priority.test.tsx) ──────────────
 
@@ -25,6 +26,11 @@ vi.mock('@/hooks/use-pro-multi-account-identities', () => ({
 }));
 
 // ─── Store mocks ──────────────────────────────────────────────────────────────
+
+// Where a message lives: the login's own account unless a test says otherwise.
+const { blobContext } = vi.hoisted(() => ({
+  blobContext: vi.fn((): { client: unknown; accountId: string | null; clientAccountId?: string } => ({ client: null, accountId: null })),
+}));
 
 vi.mock('@/stores/auth-store', () => {
   const state = {
@@ -77,7 +83,7 @@ vi.mock('@/stores/email-store', () => {
     typeof sel === 'function' ? sel(state) : state;
   hook.getState = () => state;
   hook.setState = (p: Partial<typeof state>) => Object.assign(state, p);
-  return { useEmailStore: hook, resolveEmailBlobContext: () => ({ client: null, accountId: null }) };
+  return { useEmailStore: hook, resolveEmailBlobContext: blobContext };
 });
 
 vi.mock('@/stores/settings-store', async (importOriginal) => {
@@ -190,6 +196,9 @@ async function send(onSend: ReturnType<typeof vi.fn>) {
 describe('Composer Tags menu', () => {
   afterEach(() => {
     useAuthStore.setState({ client: null, activeAccountId: null });
+    useSharedTagsStore.setState({ entries: {} });
+    blobContext.mockReset();
+    blobContext.mockReturnValue({ client: null, accountId: null });
     vi.clearAllMocks();
   });
 
@@ -315,7 +324,26 @@ describe('Composer Tags menu', () => {
     });
   });
 
-  it('scopes tags to group account when replyTo is from a shared account', () => {
+  it('offers the group account\'s shared tags when replying to a message in it', () => {
+    blobContext.mockReturnValue({
+      client: { getAccountId: () => 'own-account' },
+      accountId: 'team-account',
+      clientAccountId: 'login-1',
+    });
+    useSharedTagsStore.setState({
+      entries: {
+        [sharedTagsKey('login-1', 'team-account')]: {
+          status: 'ready',
+          tags: [{ id: 'team-review', label: 'Team review', color: 'green' }],
+          stored: null,
+          pending: [],
+          discovered: {},
+          loadedAt: 0,
+          discoveredAt: 0,
+          readFailedAt: null,
+        },
+      },
+    });
     render(
       <EmailComposer
         mode="reply"
@@ -328,6 +356,8 @@ describe('Composer Tags menu', () => {
         }}
       />
     );
-    expect(screen.getByTestId('composer-tags-menu')).toBeInTheDocument();
+    openTagsMenu();
+    expect(screen.getByText('Team review')).toBeInTheDocument();
+    expect(screen.queryByText('Work')).not.toBeInTheDocument();
   });
 });
