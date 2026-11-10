@@ -7278,10 +7278,15 @@ export function RecipientChipInput({
       <div
         className={cn(
           // A long list scrolls by itself, or a reply-all to 80 people leaves no room for the text.
-          "flex flex-wrap items-center gap-1 min-h-[32px] max-h-[min(30dvh,10rem)] overflow-y-auto p-0.5 -m-0.5 cursor-text",
-          validationError && "ring-2 ring-red-500 dark:ring-red-400 rounded",
-          isDragOver && "ring-2 ring-primary/50 rounded bg-accent/20"
+          "flex flex-wrap items-center gap-1 min-h-[32px] max-h-[min(30dvh,10rem)] overflow-y-auto p-0.5 -m-0.5 cursor-text rounded",
+          // The focus outline (below) goes round the error ring, not over it.
+          validationError && "ring-2 ring-red-500 dark:ring-red-400 outline-offset-2",
+          isDragOver && "ring-2 ring-primary/50 bg-accent/20"
         )}
+        // The chips and the input are one field: the focus outline goes round
+        // all of it (app/accessibility.css). Round the input alone it sat on
+        // the first letter typed, the input having no padding of its own.
+        data-recipient-field=""
         onClick={() => inputRef.current?.focus()}
         onDragOver={handleContainerDragOver}
         onDragLeave={handleContainerDragLeave}
@@ -7463,10 +7468,7 @@ export function RecipientChipInput({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onBlur={handleBlur}
-            // focus-inset: the keyboard focus ring goes inside the box. Drawn
-            // outside, the field's own scroller cut it to a line along the top
-            // and the end (compose-p2-18, a pop-out focuses To from a key).
-            className={cn("focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none", narrowInput && chips.length > 0 && "min-w-12")}
+            className={cn("flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none", narrowInput && chips.length > 0 && "min-w-12")}
             role="combobox"
             aria-expanded={activeAutoField === field && autocompleteResults.length > 0}
             aria-autocomplete="list"

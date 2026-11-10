@@ -240,10 +240,38 @@ describe('focus outline off', () => {
     document.body.innerHTML = '';
   });
 
-  it("takes the writing area's bar off, and its forced-colors outline", () => {
+  it("takes the writing area's bar off, its forced-colors outline, and the outline round a recipient field", () => {
     const rule = ruleAt('html:root[data-focus-ring="off"] [data-composer-writing]');
-    expect(rule.selectors).toEqual(['html:root[data-focus-ring="off"] [data-composer-writing]:has(:is(.tiptap, textarea):focus-visible)']);
+    expect(rule.selectors).toEqual([
+      'html:root[data-focus-ring="off"] [data-composer-writing]:has(:is(.tiptap, textarea):focus-visible)',
+      'html:root[data-focus-ring="off"] [data-recipient-field]:has(input:focus-visible)',
+    ]);
     expect(rule.body).toMatch(/^\s*box-shadow: none;\s*outline: none;\s*$/);
+  });
+});
+
+// The input has no padding: an outline inside it lay on the first letter
+// typed, and one outside it was cut by the field's scroller.
+describe('a recipient field', () => {
+  it('shows the focus round the whole field, not round the input in it', () => {
+    const start = css.indexOf('html:root [data-recipient-field]');
+    expect(start).toBeGreaterThan(-1);
+    const rule = css.slice(start, css.indexOf('}', start));
+    expect(rule).toMatch(/\{\s*outline: none !important;\s*$/);
+    const selectors = rule.slice(0, rule.indexOf('{')).split(/,\s*\n/).map((s) => s.trim());
+    // Padded past the global outline, whose :not() lists count.
+    for (const s of selectors) expect(s.match(/:focus(-visible)?/g)!.length).toBeGreaterThanOrEqual(5);
+    const off = selectors.map((s) => s.replace(/(:focus-visible|:focus)+/g, ''));
+    document.body.innerHTML =
+      '<div data-recipient-field=""><span data-recipient-chip=""><input type="search" class="edit"></span><input type="search" role="combobox" class="main"></div>' +
+      '<input type="text" class="subject">';
+    // The field's own input, and the one a chip is edited in.
+    for (const cls of ['main', 'edit']) expect(off.some((s) => document.querySelector(`.${cls}`)!.matches(s))).toBe(true);
+    // Other inputs keep the outline.
+    expect(off.some((s) => document.querySelector('.subject')!.matches(s))).toBe(false);
+    document.body.innerHTML = '';
+    expect(css).toMatch(/\n\[data-recipient-field\]:has\(input:focus-visible\) \{\s*outline: var\(--focus-ring-width\) solid var\(--focus-ring-color\);\s*\}/);
+    expect(forcedBlock()).toMatch(/\[data-recipient-field\]:has\(input:focus-visible\) \{\s*outline-color: Highlight;/);
   });
 });
 

@@ -253,10 +253,16 @@ describe('recipient fields (SR-06, CV-02)', () => {
     expect(screen.getByRole('list', { name: 'to:' })).toBeInTheDocument();
   });
 
-  // compose-p2-18: the ring outside the input was cut by the field's scroller.
-  it("draws the To field's keyboard focus ring inside it", () => {
-    render(<EmailComposer initialData={DRAFT} />);
-    expect(screen.getByRole('combobox', { name: 'to:' })).toHaveClass('focus-inset');
+  // The focus outline goes round the whole field (app/accessibility.css keys
+  // on data-recipient-field). Round the input alone it was cut by the field's
+  // scroller (compose-p2-18), and drawn inside the input it lay on the text.
+  it('marks the chips and the input as one field for the focus outline', () => {
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'Anna Berg <anna@example.com>' }} />);
+    const input = screen.getByRole('combobox', { name: 'to:' });
+    const field = input.closest('[data-recipient-field]');
+    expect(field).not.toBeNull();
+    expect(field!.contains(screen.getByRole('list', { name: 'to:' }))).toBe(true);
+    expect(input).not.toHaveClass('focus-inset');
   });
 
   it('labels the subject field', () => {
