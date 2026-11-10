@@ -7,15 +7,17 @@ import { ProEmailView } from "@/components/pro/pro-email-tab-body";
 import type { CalendarHit, ContactHit, FileHit, GlobalSearchHit } from "@/lib/global-search/types";
 import { getContactDisplayName, getContactPhotoRef, getContactPrimaryEmail } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useSettingsStore, type TimeFormat } from "@/stores/settings-store";
 import { cn, formatFileSize } from "@/lib/utils";
 import { descriptionAsText } from "@/lib/calendar-description";
 import { useHitSubtitle } from "./hit-subtitle";
 
-function formatDateTime(iso: string | null): string {
+function formatDateTime(iso: string | null, timeFormat: TimeFormat): string {
   if (!iso) return '';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'full', timeStyle: iso.includes('T') ? 'short' : undefined }).format(date);
+  const withTime = iso.includes('T');
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'full', ...(withTime ? { timeStyle: 'short', hour12: timeFormat === '12h' } : {}) }).format(date);
 }
 
 function OpenButton({ hit, onOpen, label }: { hit: GlobalSearchHit; onOpen: (hit: GlobalSearchHit) => void; label: string }) {
@@ -101,6 +103,7 @@ function ContactPreview({ hit, onOpen, openLabel }: { hit: ContactHit; onOpen: (
 
 function CalendarPreview({ hit, onOpen, openLabel, recurringLabel }: { hit: CalendarHit; onOpen: (hit: GlobalSearchHit) => void; openLabel: string; recurringLabel: string }) {
   const subtitleOf = useHitSubtitle();
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const event = hit.event;
   const description = descriptionAsText(event);
   const locations = Object.values(event.locations ?? {}).map((l) => l?.name).filter(Boolean);
@@ -124,7 +127,7 @@ function CalendarPreview({ hit, onOpen, openLabel, recurringLabel }: { hit: Cale
       />
       <div className="border-t border-border" />
       <dl className="flex flex-col gap-2.5">
-        <DetailRow icon={Clock}>{formatDateTime(event.start)}</DetailRow>
+        <DetailRow icon={Clock}>{formatDateTime(event.start, timeFormat)}</DetailRow>
         {locations.map((location) => <DetailRow key={location} icon={MapPin}>{location}</DetailRow>)}
         {description && <DetailRow icon={AlignLeft} pre>{description}</DetailRow>}
         {participants.length > 0 && <DetailRow icon={Users}>{participants.join(', ')}</DetailRow>}
@@ -134,6 +137,7 @@ function CalendarPreview({ hit, onOpen, openLabel, recurringLabel }: { hit: Cale
 }
 
 function FilePreview({ hit, onOpen, openLabel }: { hit: FileHit; onOpen: (hit: GlobalSearchHit) => void; openLabel: string }) {
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   return (
     <div className="p-4 flex flex-col gap-4">
       <PreviewHeader
@@ -145,7 +149,7 @@ function FilePreview({ hit, onOpen, openLabel }: { hit: FileHit; onOpen: (hit: G
       <div className="border-t border-border" />
       <dl className="flex flex-col gap-2.5">
         {!hit.isFolder && <DetailRow icon={HardDrive}>{formatFileSize(hit.node.size)}{hit.node.type ? ` · ${hit.node.type}` : ''}</DetailRow>}
-        {hit.date && <DetailRow icon={Clock}>{formatDateTime(hit.date)}</DetailRow>}
+        {hit.date && <DetailRow icon={Clock}>{formatDateTime(hit.date, timeFormat)}</DetailRow>}
         <DetailRow icon={Folder}>{hit.folderPath}</DetailRow>
       </dl>
     </div>
