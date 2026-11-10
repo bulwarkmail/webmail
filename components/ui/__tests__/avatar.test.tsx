@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Avatar } from '../avatar';
 import { useAuthStore } from '@/stores/auth-store';
 import { useContactStore } from '@/stores/contact-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useFaviconRefreshStore } from '@/stores/favicon-refresh-store';
 import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import type { ContactCard } from '@/lib/jmap/types';
@@ -83,9 +84,11 @@ describe('Avatar', () => {
     });
   });
 
-  it('renders single letter from email when no name', () => {
+  it('reads the part before the @ as a name when there is no name', () => {
     const { container } = render(<Avatar email="bob@example.com" />);
-    expect(container.textContent).toBe('B');
+    expect(container.textContent).toBe('BO');
+    const { container: dotted } = render(<Avatar email="max.mustermann@example.com" />);
+    expect(dotted.textContent).toBe('MM');
   });
 
   it('renders "?" when no name or email', () => {
@@ -99,6 +102,41 @@ describe('Avatar', () => {
     const colorA = (a.firstChild as HTMLElement).style.backgroundColor;
     const colorB = (b.firstChild as HTMLElement).style.backgroundColor;
     expect(colorA).toBe(colorB);
+  });
+
+  describe('one look per person', () => {
+    const look = (el: Element) => {
+      const div = (el as HTMLElement).firstElementChild as HTMLElement;
+      return { text: div.textContent, color: div.style.backgroundColor };
+    };
+
+    afterEach(() => {
+      useAccountStore.setState({ accounts: [] });
+    });
+
+    it('shows the same letters and colour whether the address comes as the name or the email', () => {
+      // The message header passes no name, the contact card passes the address as the name.
+      const header = look(render(<Avatar email="xaver@litzlbauer.de" disableImages />).container);
+      const card = look(render(<Avatar name="xaver@litzlbauer.de" email="xaver@litzlbauer.de" disableImages />).container);
+      const nameOnly = look(render(<Avatar name="Xaver@Litzlbauer.de" disableImages />).container);
+      expect(card).toEqual(header);
+      expect(nameOnly).toEqual(header);
+    });
+
+    it('keeps the colour of an address whether or not the name is known', () => {
+      const named = look(render(<Avatar name="Xaver Litzlbauer" email="xaver@litzlbauer.de" disableImages />).container);
+      const bare = look(render(<Avatar email="Xaver@litzlbauer.de" disableImages />).container);
+      expect(named.color).toBe(bare.color);
+      // Another address does get another colour.
+      const other = look(render(<Avatar email="bob@example.com" disableImages />).container);
+      expect(other.color).not.toBe(bare.color);
+    });
+
+    it('gives a signed-in account its account colour everywhere', () => {
+      useAccountStore.setState({ accounts: [{ email: 'me@example.com', username: 'me', avatarColor: '#0d9488' } as never] });
+      const { container } = render(<Avatar name="Me" email="ME@example.com" disableImages />);
+      expect((container.firstElementChild as HTMLElement).style.backgroundColor).toBe('rgb(13, 148, 136)');
+    });
   });
 
   describe('contact photos', () => {

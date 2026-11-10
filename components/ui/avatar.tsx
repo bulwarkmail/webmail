@@ -7,6 +7,8 @@ import { ShieldAlert } from "@/components/icons";
 import { getLuminance, parseColor } from "@/lib/color-transform";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore, getContactPhotoIndex, type ContactPhotoRef } from "@/stores/contact-store";
+import { useAccountStore } from "@/stores/account-store";
+import { generateAvatarColor } from "@/lib/account-utils";
 import { useConfig } from "@/hooks/use-config";
 import { useContactPhotoSrc } from "@/hooks/use-contact-photo";
 import { avatarHooks } from "@/lib/plugin-hooks";
@@ -138,6 +140,51 @@ function hanGivenName(name: string): string | null {
   return null;
 }
 
+// A display name that is only an address, as many headers and contacts have.
+function isAddress(value: string): boolean {
+  const v = value.trim();
+  return v.includes("@") && !/\s/.test(v);
+}
+
+/**
+ * The letters shown when an avatar has no picture. Every avatar in the app
+ * takes them from here, so one person gets the same letters everywhere,
+ * whether a place knows only their address or passes the address as the name.
+ * A name gives its first and last word's first letters, or the first two
+ * letters of a single word. Without a real name, the part of the address
+ * before the @ is read as one, split at dots, dashes, underscores and plus
+ * signs: "max.mustermann@" gives "MM", "xaver@" gives "XA".
+ */
+export function avatarInitials(name?: string, email?: string): string {
+  const realName = name && !isAddress(name) ? name.trim() : "";
+  const address = (email?.trim() || (name && isAddress(name) ? name.trim() : ""));
+  const source = realName || (address.split("@")[0] ?? "").split(/[._+-]+/).filter(Boolean).join(" ");
+  if (!source) return "?";
+  const han = hanGivenName(source);
+  if (han) return han;
+  const parts = source
+    .split(/\s+/)
+    .map((p) => p.replace(/^[^\p{L}\p{N}]+/u, ""))
+    .filter((p) => p.length > 0);
+  if (parts.length >= 2) {
+    return `${Array.from(parts[0])[0]}${Array.from(parts[parts.length - 1])[0]}`.toUpperCase();
+  }
+  if (parts.length === 1) {
+    return Array.from(parts[0]).slice(0, 2).join("").toUpperCase();
+  }
+  return Array.from(source).slice(0, 2).join("").toUpperCase();
+}
+
+/**
+ * The background behind the initials: picked from the address, so a person
+ * has one colour whether or not a place knows their name. Only without an
+ * address does the name pick it.
+ */
+export function avatarColor(name?: string, email?: string): string {
+  const key = email?.trim().toLowerCase() || (name && isAddress(name) ? name.trim().toLowerCase() : name?.trim()) || "";
+  return generateAvatarColor(key);
+}
+
 // Dev-only: common first names to infer gender for demo portrait selection
 const FEMALE_NAMES: Set<string> = IS_DEV ? new Set([
   "alice", "emily", "sarah", "priya", "carol", "anna", "maria", "emma", "olivia",
@@ -244,6 +291,12 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
   const senderFavicons = useSettingsStore((s) => s.senderFavicons);
   const faviconRefreshedAt = useFaviconRefreshStore((s) => s.refreshedAt);
   const contacts = useContactStore((s) => s.contacts);
+  // A signed-in account's own address keeps the colour it has in the account switcher.
+  const accountColor = useAccountStore((s) => {
+    const key = email?.trim().toLowerCase();
+    if (!key) return undefined;
+    return s.accounts.find((a) => (a.email || a.username).trim().toLowerCase() === key)?.avatarColor;
+  });
   const { devMode } = useConfig();
   // Re-render when the config arrives: until then nothing outside is asked (#903).
   useNoThirdPartyTraffic();
@@ -282,38 +335,6 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
   const faviconDomain = domain ? getRootDomain(domain) : undefined;
   const domainFailed = faviconDomain ? failedFaviconDomains.has(faviconDomain) : false;
 
-  const getInitials = () => {
-    if (name) {
-      const han = hanGivenName(name);
-      if (han) return han;
-      const parts = name
-        .trim()
-        .split(/\s+/)
-        .map((p) => p.replace(/^[^\p{L}\p{N}]+/u, ""))
-        .filter((p) => p.length > 0);
-      if (parts.length >= 2) {
-        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-      }
-      if (parts.length === 1) {
-        return parts[0].slice(0, 2).toUpperCase();
-      }
-      return name.slice(0, 2).toUpperCase();
-    }
-    if (email) {
-      return email[0].toUpperCase();
-    }
-    return "?";
-  };
-
-  const getBackgroundColor = () => {
-    const str = name || email || "";
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 70%, 50%)`;
-  };
 
   const sizeClasses = {
     sm: "w-8 h-8 text-xs",
@@ -370,7 +391,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
     }
   }, [imgSrc, pluginAvatar, faviconDomain, resolvedContactPhoto, brandSrc, brandDomain, customAvatar, profilePic, setFailedBrand, setImgError, setPluginAvatarFailed]);
 
-  const initialsBackground = fallbackColor ?? getBackgroundColor();
+  const initialsBackground = fallbackColor ?? accountColor ?? avatarColor(name, email);
 
   if (senderWarning) {
     return (
@@ -419,7 +440,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
           }}
         />
       ) : (
-        getInitials()
+        avatarInitials(name, email)
       )}
     </div>
   );
