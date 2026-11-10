@@ -926,13 +926,14 @@ export function ConversationEmailBody({
   // Parts the body embeds via cid: stay out of the attachment row while the
   // user hides inline images - the desktop viewer's rule, shared through
   // lib/attachment-visibility.ts so the two views cannot drift apart. The
-  // report parts of a bounce or read receipt never show.
+  // report parts of a bounce or read receipt never show. Shown as plain text,
+  // the body embeds nothing.
   const visibleAttachments = useMemo(() => {
     const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
     if (!hideInlineImageAttachments) return attachments;
-    const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
+    const bodyCids = collectReferencedCids(mailViewMode === 'plain' ? null : getRenderableHtmlBody(email));
     return attachments.filter(att => !isEmbeddedInBody(att, bodyCids, attachments));
-  }, [email, hideInlineImageAttachments]);
+  }, [email, hideInlineImageAttachments, mailViewMode]);
   const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
   const attachmentRow = useFirstRowLimit(visibleAttachments.length, !attachmentsExpanded);
   const attachmentLimit = attachmentsExpanded ? null : attachmentRow.limit;

@@ -113,7 +113,7 @@ function fakePrintWindow() {
 
 beforeEach(() => {
   useAuthStore.setState({ client } as never);
-  useSettingsStore.setState({ markAsReadDelay: -1, externalContentPolicy: 'ask', trustedSenders: [], hideInlineImageAttachments: true });
+  useSettingsStore.setState({ markAsReadDelay: -1, externalContentPolicy: 'ask', trustedSenders: [], hideInlineImageAttachments: true, mailViewMode: 'html' });
 });
 
 afterEach(() => {
@@ -184,6 +184,16 @@ describe('the reader (reading pane, pop-outs, Pro tabs)', () => {
     await waitFor(() => expect(container.querySelector('[data-testid="reader-attachments"]')).not.toBeNull());
     expect(container.querySelectorAll('[data-testid="reader-attachments"] [data-testid="attachment"]')).toHaveLength(4);
   });
+
+  it('lists the copies when the message is shown as plain text, since the body shows no image then', async () => {
+    useSettingsStore.setState({ mailViewMode: 'plain' });
+    const { container } = render(<EmailViewer email={inlineWithCopies()} mailboxes={mailboxes} selectedMailbox="inbox" />);
+    await waitFor(() => expect(container.querySelector('[data-testid="reader-attachments"]')).not.toBeNull());
+    const chips = container.querySelectorAll('[data-testid="reader-attachments"] [data-testid="attachment"]');
+    expect(chips).toHaveLength(2);
+    expect(chips[0].textContent).toContain('image001.png');
+    expect(chips[1].textContent).toContain('image002.png');
+  });
 });
 
 describe('a conversation message (phone thread, Mountain View)', () => {
@@ -221,6 +231,14 @@ describe('a conversation message (phone thread, Mountain View)', () => {
     expect(container.querySelectorAll('[data-conversation-attachments] [data-row-item]')).toHaveLength(1);
     expect(screen.queryByText('image001.png')).toBeNull();
     expect(screen.queryByText('image002.png')).toBeNull();
+  });
+
+  it('lists the copies when mail is shown as plain text, since the body shows no image then', async () => {
+    useSettingsStore.setState({ mailViewMode: 'plain' });
+    const { container } = render(<ConversationEmailBody email={inlineWithCopies()} allowExternal={false} onAllowExternal={() => {}} />);
+    await screen.findByText('image001.png');
+    expect(container.querySelectorAll('[data-conversation-attachments] [data-row-item]')).toHaveLength(2);
+    expect(screen.getByText('image002.png')).toBeTruthy();
   });
 
   it('keeps many attachments to one line, the rest behind "Show N more"', () => {

@@ -2972,6 +2972,12 @@ export function EmailViewer({
     };
   }, [client, blobClient, blobAccountId, email?.id, pluginRenderedAttachments, email?.attachments, setCidBlobUrls]);
 
+  // HTML mail as plain text: Settings > Accessibility for every message, or
+  // the reader's per-message switch.
+  const mailViewMode = useSettingsStore((state) => state.mailViewMode);
+  const [plainViewOverride, setPlainViewOverride] = useQuietState<boolean | null>(null);
+  const plainView = plainViewOverride ?? mailViewMode === 'plain';
+
   const effectiveAttachments = useMemo<EffectiveAttachment[]>(() => {
     if (pluginRenderedAttachments.length > 0) {
       const pluginCids = collectReferencedCids(hideInlineImageAttachments ? pluginRenderedHtml : null);
@@ -2995,10 +3001,11 @@ export function EmailViewer({
     const hasCalInvitation = calendarInvitationParsingEnabled && !!email && !!findCalendarAttachment(email);
     // Parts the rendered body embeds via cid: must not double as chips. The
     // scan reads the same HTML the body renders from (null when the message
-    // renders as plain text: nothing embedded, nothing hidden), so a part only
-    // recognisable by its reference - octet-stream, no disposition, no name -
-    // is caught as well (see lib/attachment-visibility.ts).
-    const bodyCids = collectReferencedCids(hideInlineImageAttachments && email ? getRenderableHtmlBody(email) : null);
+    // renders as plain text, or is shown as plain text: nothing embedded,
+    // nothing hidden), so a part only recognisable by its reference -
+    // octet-stream, no disposition, no name - is caught as well (see
+    // lib/attachment-visibility.ts).
+    const bodyCids = collectReferencedCids(hideInlineImageAttachments && email && !plainView ? getRenderableHtmlBody(email) : null);
     const jmapAttachments = (email?.attachments ?? [])
       // Hide winmail.dat when we have successfully extracted TNEF content or attachments
       .filter(att => !(tnefHtml || tnefText || tnefAttachments.length > 0) || !isTnefAttachment(att.name, att.type))
@@ -3049,7 +3056,7 @@ export function EmailViewer({
     // the whole `email` object would rebuild the attachment list — and its
     // downstream layout measurement — on every email field change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
+  }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments, plainView]);
 
   // Whether external resources must be blocked for the message on screen.
   // Shared by every body path - the message's own HTML, TNEF, unwrapped
@@ -3219,13 +3226,9 @@ export function EmailViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cidBlobUrls, emailContent, shouldBlockExternal, pluginRenderedHtml, pluginRenderedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText, t]);
 
-  // HTML mail as plain text: Settings > Accessibility for every message, or
-  // the reader's per-message switch. The message's own text/plain part when
-  // it has one, otherwise a readable conversion that keeps link targets and
-  // image alt text.
-  const mailViewMode = useSettingsStore((state) => state.mailViewMode);
-  const [plainViewOverride, setPlainViewOverride] = useQuietState<boolean | null>(null);
-  const plainView = plainViewOverride ?? mailViewMode === 'plain';
+  // HTML mail as plain text (mailViewMode / plainViewOverride above): the
+  // message's own text/plain part when it has one, otherwise a readable
+  // conversion that keeps link targets and image alt text.
   const hasHtmlBody = decodedEmailContent.isHtml;
   // The decoded body as plain text: the text part, else the HTML converted.
   const readableText = useCallback(() => {
