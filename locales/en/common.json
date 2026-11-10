@@ -2083,8 +2083,8 @@
         "description": "Offer the code from sign-in and confirmation emails for one-click copying, in the list for a day and in the message"
       },
       "show_attachment_chips": {
-        "label": "Show attachment chips",
-        "description": "Display attachment chips in the message list"
+        "label": "Show attachments in the list",
+        "description": "Show attached files under each message, to open them from the list. The paperclip shows either way."
       },
       "plain_text_mode": {
         "label": "Plain text only",

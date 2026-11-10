@@ -2095,8 +2095,8 @@
         "description": "Cho phép sao chép mã trong thư đăng nhập và xác nhận chỉ bằng một lần nhấn; mã hiển thị trong danh sách một ngày và cả trong thư"
       },
       "show_attachment_chips": {
-        "label": "Hiển thị khối tệp đính kèm",
-        "description": "Hiển thị khối tệp đính kèm trong danh sách thư"
+        "label": "Hiện tệp đính kèm trong danh sách",
+        "description": "Hiện các tệp đính kèm bên dưới mỗi thư để mở ngay từ danh sách. Biểu tượng kẹp giấy vẫn hiển thị trong mọi trường hợp."
       },
       "plain_text_mode": {
         "label": "Chỉ dùng văn bản thuần",

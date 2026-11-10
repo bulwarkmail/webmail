@@ -2083,8 +2083,8 @@
         "description": "Paku sisselogimis- ja kinnituskirjade koodi ühe klõpsuga kopeerimiseks, nimekirjas ühe päeva jooksul ja kirjas endas"
       },
       "show_attachment_chips": {
-        "label": "Kuva manuste nupud",
-        "description": "Kuva manuste nupud kirjade loendis"
+        "label": "Näita manuseid loendis",
+        "description": "Näita manustatud faile iga kirja all, et neid saaks otse loendist avada. Kirjaklambri ikoon on nähtav igal juhul."
       },
       "plain_text_mode": {
         "label": "Ainult lihttekst",

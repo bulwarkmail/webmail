@@ -67,7 +67,7 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
   { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'number', page: 'policy', defaultValue: 0 },
   { key: 'deleteAction', label: 'Delete Action', category: 'Email', type: 'enum', allowedValues: ['trash', 'trash-and-read', 'permanent'], page: 'policy', defaultValue: 'trash' },
   { key: 'showPreview', label: 'Show Preview', category: 'Email', type: 'boolean', page: 'policy', defaultValue: true },
-  { key: 'showAttachmentChips', label: 'Show Attachment Chips', category: 'Email', type: 'boolean', page: 'policy', defaultValue: true },
+  { key: 'showAttachmentChips', label: 'Show Attachments in List', category: 'Email', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'mailLayout', label: 'Mail Layout', category: 'Email', type: 'enum', allowedValues: ['split', 'focus', 'horizontal'], page: 'policy', defaultValue: 'split' },
   { key: 'emailsPerPage', label: 'Emails Per Page', category: 'Email', type: 'number', page: 'policy', defaultValue: 50 },
   { key: 'externalContentPolicy', label: 'External Content Policy', category: 'Email', type: 'enum', allowedValues: ['allow', 'block', 'ask'], page: 'policy', defaultValue: 'ask' },

@@ -2080,8 +2080,8 @@
         "description": "Giriş ve onay e-postalarındaki kodu tek tıkla kopyalamak için sun; listede bir gün boyunca ve iletide"
       },
       "show_attachment_chips": {
-        "label": "Ek çiplerini göster",
-        "description": "İleti listesinde ek çiplerini göster"
+        "label": "Ekleri listede göster",
+        "description": "Ekli dosyaları her iletinin altında göster, böylece doğrudan listeden açılabilsinler. Ataç simgesi her durumda görünür."
       },
       "plain_text_mode": {
         "label": "Yalnızca Düz Metin",

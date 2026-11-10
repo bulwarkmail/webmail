@@ -2091,8 +2091,8 @@
         "description": "Tilby koden frå innloggings- og stadfestingsmeldingar for kopiering med eitt klikk, i lista i eit døgn og i meldinga"
       },
       "show_attachment_chips": {
-        "label": "Vis vedleggsbrikker",
-        "description": "Vis vedleggsbrikker i meldingslista"
+        "label": "Vis vedlegg i lista",
+        "description": "Vis vedlagde filer under kvar melding, så du kan opne dei rett frå lista. Bindersen blir vist uansett."
       },
       "plain_text_mode": {
         "label": "Berre ren tekst",

@@ -2123,8 +2123,8 @@
         "description": "De code uit aanmeld- en bevestigingsmails aanbieden om met één klik te kopiëren, een dag lang in de lijst en in het bericht"
       },
       "show_attachment_chips": {
-        "label": "Bijlage-chips tonen",
-        "description": "Bijlage-chips in de berichtenlijst tonen"
+        "label": "Bijlagen in de lijst tonen",
+        "description": "Bijgevoegde bestanden onder elk bericht tonen, zodat je ze direct vanuit de lijst kunt openen. De paperclip blijft hoe dan ook zichtbaar."
       },
       "attachment_click_action": {
         "label": "Actie bij klikken op bijlagen",

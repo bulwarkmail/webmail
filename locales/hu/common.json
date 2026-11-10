@@ -2083,8 +2083,8 @@
         "description": "A bejelentkezési és megerősítő e-mailek kódjának felajánlása egy kattintásos másolásra, a listában egy napig és az üzenetben"
       },
       "show_attachment_chips": {
-        "label": "Csatolmánycímkék megjelenítése",
-        "description": "Csatolmánycímkék megjelenítése az üzenetlistában"
+        "label": "Mellékletek megjelenítése a listában",
+        "description": "A csatolt fájlok megjelenítése minden üzenet alatt, hogy közvetlenül a listából megnyithassa őket. A gemkapocs ikon mindenképp látható."
       },
       "plain_text_mode": {
         "label": "Csak szöveges mód",

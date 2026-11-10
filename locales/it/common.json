@@ -2123,8 +2123,8 @@
         "description": "Offri il codice delle email di accesso e conferma da copiare con un clic, nell'elenco per un giorno e nel messaggio"
       },
       "show_attachment_chips": {
-        "label": "Mostra chip allegati",
-        "description": "Mostra i chip degli allegati nell'elenco messaggi"
+        "label": "Mostra gli allegati nell'elenco",
+        "description": "Mostra i file allegati sotto ogni messaggio per aprirli direttamente dall'elenco. La graffetta resta visibile in ogni caso."
       },
       "attachment_click_action": {
         "label": "Azione al clic sugli allegati",

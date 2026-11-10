@@ -2083,8 +2083,8 @@
         "description": "Tilbyd koden fra login- og bekræftelsesmails til kopiering med ét klik, i listen i en dag og i beskeden"
       },
       "show_attachment_chips": {
-        "label": "Vis vedhæftningschips",
-        "description": "Vis vedhæftningschips i beskedlisten"
+        "label": "Vis vedhæftede filer i listen",
+        "description": "Vis vedhæftede filer under hver besked, så du kan åbne dem direkte fra listen. Papirclipsen vises under alle omstændigheder."
       },
       "plain_text_mode": {
         "label": "Kun almindelig tekst",

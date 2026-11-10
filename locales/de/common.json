@@ -2080,8 +2080,8 @@
         "description": "Code aus Anmelde- und Bestätigungs-E-Mails zum Kopieren mit einem Klick anbieten, in der Liste einen Tag lang und in der Nachricht"
       },
       "show_attachment_chips": {
-        "label": "Anhang-Chips anzeigen",
-        "description": "Anhang-Chips in der Nachrichtenliste anzeigen"
+        "label": "Anhänge in der Liste anzeigen",
+        "description": "Angehängte Dateien unter jeder Nachricht zeigen, damit Sie sie direkt aus der Liste öffnen können. Die Büroklammer erscheint in jedem Fall."
       },
       "plain_text_mode": {
         "label": "Nur Klartext",

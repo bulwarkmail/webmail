@@ -2080,8 +2080,8 @@
         "description": "Nabízet kód z přihlašovacích a potvrzovacích e-mailů ke zkopírování jedním kliknutím, v seznamu po dobu jednoho dne a ve zprávě"
       },
       "show_attachment_chips": {
-        "label": "Zobrazit štítky příloh",
-        "description": "Zobrazovat štítky příloh v seznamu zpráv"
+        "label": "Zobrazit přílohy v seznamu",
+        "description": "Zobrazovat přiložené soubory pod každou zprávou, aby šly otevřít přímo ze seznamu. Ikona sponky se zobrazuje vždy."
       },
       "plain_text_mode": {
         "label": "Pouze prostý text",

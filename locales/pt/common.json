@@ -2123,8 +2123,8 @@
         "description": "Oferecer o código dos e-mails de início de sessão e confirmação para copiar com um clique, na lista durante um dia e na mensagem"
       },
       "show_attachment_chips": {
-        "label": "Mostrar etiquetas de anexos",
-        "description": "Mostrar etiquetas de anexos na lista de mensagens"
+        "label": "Mostrar anexos na lista",
+        "description": "Mostrar os arquivos anexados abaixo de cada mensagem para abri-los direto da lista. O clipe aparece de qualquer forma."
       },
       "attachment_click_action": {
         "label": "Ação ao clicar em anexos",

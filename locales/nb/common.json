@@ -2083,8 +2083,8 @@
         "description": "Tilby koden fra innloggings- og bekreftelses-e-poster for kopiering med ett klikk, i listen i ett døgn og i meldingen"
       },
       "show_attachment_chips": {
-        "label": "Vis vedleggsbrikker",
-        "description": "Vis vedleggsbrikker i meldingslisten"
+        "label": "Vis vedlegg i listen",
+        "description": "Vis vedlagte filer under hver melding, så du kan åpne dem rett fra listen. Bindersen vises uansett."
       },
       "plain_text_mode": {
         "label": "Kun ren tekst",

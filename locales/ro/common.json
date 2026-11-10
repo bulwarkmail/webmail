@@ -2083,8 +2083,8 @@
         "description": "Oferă codul din e-mailurile de autentificare și confirmare pentru copiere cu un clic, în listă timp de o zi și în mesaj"
       },
       "show_attachment_chips": {
-        "label": "Afișează etichetele anexelor",
-        "description": "Afișează etichetele anexelor în lista de mesaje"
+        "label": "Afișează atașamentele în listă",
+        "description": "Afișează fișierele atașate sub fiecare mesaj, ca să le puteți deschide direct din listă. Agrafa apare oricum."
       },
       "plain_text_mode": {
         "label": "Numai text simplu",

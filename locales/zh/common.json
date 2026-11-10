@@ -2080,8 +2080,8 @@
         "description": "提供登录和确认邮件中的验证码，一键复制（在列表中显示一天，在邮件中始终显示）"
       },
       "show_attachment_chips": {
-        "label": "显示附件标签",
-        "description": "在邮件列表中显示附件标签"
+        "label": "在列表中显示附件",
+        "description": "在每封邮件下方显示附件，方便直接从列表中打开。回形针图标始终显示。"
       },
       "plain_text_mode": {
         "label": "仅纯文本",

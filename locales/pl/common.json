@@ -2080,8 +2080,8 @@
         "description": "Oferuj kod z e-maili logowania i potwierdzenia do skopiowania jednym kliknięciem, na liście przez jeden dzień i w wiadomości"
       },
       "show_attachment_chips": {
-        "label": "Pokaż etykiety załączników",
-        "description": "Wyświetlaj etykiety załączników na liście wiadomości"
+        "label": "Pokazuj załączniki na liście",
+        "description": "Pokazuj załączone pliki pod każdą wiadomością, aby można je było otworzyć prosto z listy. Spinacz jest widoczny w każdym przypadku."
       },
       "plain_text_mode": {
         "label": "Tylko zwykły tekst",

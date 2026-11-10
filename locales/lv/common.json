@@ -2123,8 +2123,8 @@
         "description": "Piedāvāt kodu no pieteikšanās un apstiprinājuma e-pastiem kopēšanai ar vienu klikšķi, sarakstā vienu dienu un ziņojumā"
       },
       "show_attachment_chips": {
-        "label": "Rādīt pielikumu mikroshēmas",
-        "description": "Rādīt pielikumu mikroshēmas ziņu sarakstā"
+        "label": "Rādīt pielikumus sarakstā",
+        "description": "Rādīt pievienotos failus zem katras vēstules, lai tos varētu atvērt tieši no saraksta. Saspraudes ikona tiek rādīta jebkurā gadījumā."
       },
       "attachment_click_action": {
         "label": "Darbība, noklikšķinot uz pielikuma",

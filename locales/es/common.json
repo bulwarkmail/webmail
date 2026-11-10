@@ -2123,8 +2123,8 @@
         "description": "Ofrecer el código de los correos de inicio de sesión y confirmación para copiarlo con un clic, en la lista durante un día y en el mensaje"
       },
       "show_attachment_chips": {
-        "label": "Mostrar etiquetas de archivos adjuntos",
-        "description": "Mostrar etiquetas de archivos adjuntos en la lista de mensajes"
+        "label": "Mostrar adjuntos en la lista",
+        "description": "Mostrar los archivos adjuntos debajo de cada mensaje para abrirlos desde la lista. El clip se muestra de todos modos."
       },
       "attachment_click_action": {
         "label": "Acción al hacer clic en adjuntos",

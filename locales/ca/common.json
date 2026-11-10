@@ -2083,8 +2083,8 @@
         "description": "Ofereix el codi dels correus d'inici de sessió i de confirmació per copiar-lo amb un clic, a la llista durant un dia i al missatge"
       },
       "show_attachment_chips": {
-        "label": "Mostra els xips de fitxers adjunts",
-        "description": "Mostra els xips de fitxers adjunts a la llista de missatges"
+        "label": "Mostra els fitxers adjunts a la llista",
+        "description": "Mostra els fitxers adjunts sota cada missatge per obrir-los des de la llista. El clip es mostra igualment."
       },
       "plain_text_mode": {
         "label": "Només text sense format",
