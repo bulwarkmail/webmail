@@ -13,6 +13,7 @@
 import { apiFetch } from '@/lib/browser-navigation';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 import { generateUUID } from '@/lib/utils';
+import { IS_LITE } from '@/lib/lite';
 import type { CalendarComponentType } from '@/lib/jmap/types';
 
 /** What a plain "calendar" holds unless the user asks for tasks. */
@@ -72,6 +73,9 @@ export async function mkCalendarCollection(opts: {
 
 /** Key prefix of the entries parseCalendarCollectionComponents adds by display name. */
 const NAME_KEY = '\u0000name:';
+
+/** The PROPFIND waits in front of the calendar list, so it gets a short leash. */
+const COMPONENTS_TIMEOUT_MS = 10_000;
 
 /** Decoded path segments of an href or URL, or null when it can't be read. */
 function davPathSegments(hrefOrUrl: string): string[] | null {
@@ -168,9 +172,12 @@ export function parseCalendarCollectionComponents(xml: string, homePath?: string
 export async function fetchCalendarCollectionComponents(
   accountHeaders: Record<string, string> = getActiveAccountSlotHeaders(),
 ): Promise<Record<string, CalendarComponentType[]>> {
+  // Lite has no /api/webdav proxy.
+  if (IS_LITE) return {};
   try {
     const response = await apiFetch('/api/webdav', {
       method: 'POST',
+      signal: AbortSignal.timeout(COMPONENTS_TIMEOUT_MS),
       headers: {
         'X-WebDAV-Method': 'PROPFIND',
         'X-WebDAV-Collection': 'cal',

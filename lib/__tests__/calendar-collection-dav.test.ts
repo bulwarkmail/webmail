@@ -4,6 +4,12 @@ vi.mock('@/lib/auth/active-account-slot', () => ({
   getActiveAccountSlotHeaders: () => ({ 'X-JMAP-Cookie-Slot': '2' }),
 }));
 
+const lite = vi.hoisted(() => ({ on: false }));
+vi.mock('@/lib/lite', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/lite')>();
+  return { ...actual, get IS_LITE() { return lite.on; } };
+});
+
 import {
   buildMkCalendarBody,
   escapeXml,
@@ -279,5 +285,24 @@ describe('collections shared into the calendar home', () => {
   it('skips an href it cannot decode and reads the rest', () => {
     const xml = homeXml.replace('/dav/cal/usera%40example.org/default/', '/dav/cal/usera%40example.org/bad%E0%A4%A/');
     expect(parseCalendarCollectionComponents(xml, requestUri)['x1794141216003']).toEqual(['VTODO']);
+  });
+});
+
+describe('fetchCalendarCollectionComponents limits', () => {
+  afterEach(() => {
+    lite.on = false;
+  });
+
+  it('asks nothing in Lite, which has no WebDAV proxy', async () => {
+    lite.on = true;
+    await expect(fetchCalendarCollectionComponents()).resolves.toEqual({});
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('gives up on a server that does not answer, so the calendar list still loads', async () => {
+    fetchSpy.mockResolvedValueOnce(new Response('<D:multistatus xmlns:D="DAV:"/>', { status: 207 }));
+    await fetchCalendarCollectionComponents();
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 });
