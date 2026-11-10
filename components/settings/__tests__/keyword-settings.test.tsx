@@ -4,6 +4,7 @@ import { KeywordSettings } from '../keyword-settings';
 import { useSettingsStore, DEFAULT_KEYWORDS } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
+import { useFilterStore } from '@/stores/filter-store';
 
 // Mock SettingsSection to just render children, keeping the real controls
 vi.mock('../settings-section', async (importOriginal) => ({
@@ -443,10 +444,13 @@ describe('KeywordSettings editing', () => {
 // digits has none, so Save stayed disabled without a word.
 describe('KeywordSettings names in other scripts', () => {
   const migrateKeyword = vi.fn();
+  const renameKeywordInFilters = vi.fn();
 
   beforeEach(() => {
     useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], nestedTags: false });
     migrateKeyword.mockReset();
+    renameKeywordInFilters.mockReset().mockResolvedValue({ changed: 0, unhandled: 0 });
+    useFilterStore.setState({ renameKeywordInFilters } as never);
     useAuthStore.setState({ client: { migrateKeyword, getTagCounts: vi.fn().mockResolvedValue({}) } as never });
   });
 
@@ -488,6 +492,52 @@ describe('KeywordSettings names in other scripts', () => {
       expect(useSettingsStore.getState().emailKeywords.find((k) => k.id === 'red')?.label).toBe('Красный'),
     );
     expect(migrateKeyword).not.toHaveBeenCalled();
+  });
+
+  // "Счета 1" got a generated id because "Банк 1" had `1`. With "Банк 1"
+  // gone, a colour change must not move it to `1`: that rewrites all its
+  // mail and filters, and the mail "Банк 1" left behind would join it.
+  it('keeps the id of a tag when only its colour changes', async () => {
+    render(<KeywordSettings />);
+    addTag('Банк 1');
+    addTag('Счета 1');
+    const billsId = useSettingsStore.getState().emailKeywords.at(-1)!.id;
+    expect(billsId).not.toBe('1');
+    useSettingsStore.setState({ emailKeywords: useSettingsStore.getState().emailKeywords.filter((k) => k.id !== '1') });
+
+    fireEvent.click(screen.getAllByTitle('edit').at(-1)!);
+    fireEvent.click(screen.getByLabelText('green'));
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() =>
+      expect(useSettingsStore.getState().emailKeywords.find((k) => k.label === 'Счета 1')?.color).toBe('green'),
+    );
+    expect(useSettingsStore.getState().emailKeywords.find((k) => k.label === 'Счета 1')?.id).toBe(billsId);
+    expect(migrateKeyword).not.toHaveBeenCalled();
+    expect(renameKeywordInFilters).not.toHaveBeenCalled();
+  });
+
+  it('keeps the id of a plugin tag when its name changes only in case', async () => {
+    useSettingsStore.setState({ emailKeywords: [{ id: 'from-plugin', label: 'invoices', color: 'blue' }] });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByTitle('edit'));
+    fireEvent.change(screen.getByDisplayValue('invoices'), { target: { value: 'Invoices' } });
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() => expect(useSettingsStore.getState().emailKeywords[0].label).toBe('Invoices'));
+    expect(useSettingsStore.getState().emailKeywords[0].id).toBe('from-plugin');
+    expect(migrateKeyword).not.toHaveBeenCalled();
+  });
+
+  it('still moves the mail when a tag is renamed to another slug', async () => {
+    migrateKeyword.mockResolvedValue({ refused: 0 });
+    useSettingsStore.setState({ emailKeywords: [{ id: 'from-plugin', label: 'invoices', color: 'blue' }] });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByTitle('edit'));
+    fireEvent.change(screen.getByDisplayValue('invoices'), { target: { value: 'Bills' } });
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() => expect(migrateKeyword).toHaveBeenCalledWith('$label:from-plugin', '$label:bills'));
   });
 
   it('nests a tag with a Cyrillic name under its parent', () => {

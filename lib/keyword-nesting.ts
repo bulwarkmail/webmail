@@ -82,8 +82,14 @@ export function generatedKeywordLevel(name: string): string {
  * ids other tags already have (compared without case, as servers fold
  * keywords to lowercase).
  *
- * The slug of the name when it has one that is free. Otherwise a tag being
- * renamed (`currentId`) under the same parent keeps its id, so only the name
+ * A tag being edited (`currentId`, named `currentName` before the edit) that
+ * stays under the same parent keeps its id when the name keeps its slug: a
+ * colour change, or a change of case or punctuation only. Its id need not
+ * be that slug (a generated one, or one a plugin or a scan brought in), and
+ * a new id would rewrite every message and filter that carries the tag.
+ *
+ * Otherwise the slug of the name when it has one that is free. Failing that,
+ * a tag being renamed under the same parent keeps its id, so only the name
  * changes and no message has to be rewritten, and anything else gets
  * `generatedKeywordLevel`, with `-2`, `-3`... if even that is taken. Empty
  * only for an empty name.
@@ -93,14 +99,19 @@ export function chooseKeywordId(
   name: string,
   takenIds: Iterable<string>,
   currentId?: string | null,
+  currentName?: string,
 ): string {
   if (!name.trim()) return "";
+  const samePlace = !!currentId && getParentKeywordId(currentId) === (parentId || null);
+  if (samePlace && currentName !== undefined && normalizeKeywordLevel(name) === normalizeKeywordLevel(currentName)) {
+    return currentId!;
+  }
   const taken = new Set<string>();
   for (const id of takenIds) taken.add(id.toLowerCase());
 
   const slug = composeKeywordId(parentId, name);
   if (slug && !taken.has(slug)) return slug;
-  if (currentId && getParentKeywordId(currentId) === (parentId || null)) return currentId;
+  if (samePlace) return currentId!;
 
   const level = generatedKeywordLevel(name);
   const join = (part: string) => (parentId ? `${parentId}${KEYWORD_SEPARATOR}${part}` : part);

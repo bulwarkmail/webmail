@@ -124,6 +124,20 @@ describe("chooseKeywordId", () => {
   it("returns nothing for an empty name", () => {
     expect(chooseKeywordId(null, "   ", [])).toBe("");
   });
+
+  // A colour change saves the same name: the slug that is free now must not
+  // replace the id the mail carries.
+  it("keeps the id of an edited tag whose name keeps its slug", () => {
+    const bills = generatedKeywordLevel("Счета 1");
+    expect(chooseKeywordId(null, "Счета 1", [], bills, "Счета 1")).toBe(bills);
+    expect(chooseKeywordId(null, "Work!", [], "from-plugin", "work")).toBe("from-plugin");
+    expect(chooseKeywordId("work", "CLIENTS", ["work"], "work/old", "Clients")).toBe("work/old");
+  });
+
+  it("gives an edited tag a new id when the name gets another slug or the parent changes", () => {
+    expect(chooseKeywordId(null, "Crimson", [], "from-plugin", "Red")).toBe("crimson");
+    expect(chooseKeywordId("home", "Clients", ["home"], "work/clients", "Clients")).toBe("home/clients");
+  });
 });
 
 describe("isKeywordNameTaken", () => {

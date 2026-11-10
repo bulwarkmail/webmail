@@ -188,7 +188,11 @@ function KeywordEditForm({
   // slug another tag has still gets an id; only the same name twice under
   // one parent is refused, and only when the name or parent changes, so two
   // same-named tags from before can still get a new colour.
-  const normalizedId = isLocked && initial ? initial.id : chooseKeywordId(parentId || null, label, existingIds, initial?.id);
+  // An edit that keeps the parent and the slug of the name (a colour, case
+  // or punctuation change) keeps the id, so no mail or filter is rewritten.
+  const normalizedId = isLocked && initial
+    ? initial.id
+    : chooseKeywordId(parentId || null, label, existingIds, initial?.id, initial ? initial.label ?? "" : undefined);
   const keepsPlace = !!initial && label.trim() === (initial.label ?? "").trim() && (parentId || null) === getParentKeywordId(initial.id);
   const isDuplicate = !isLocked && !keepsPlace && isKeywordNameTaken(keywords, parentId || null, label, initial?.id);
   // Only a new or changed id has to fit: a longer one that predates the limit
