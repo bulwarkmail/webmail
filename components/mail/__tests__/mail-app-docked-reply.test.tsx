@@ -179,4 +179,16 @@ describe('a reply in the standard layout', () => {
     expect(screen.getByText('stub composer')).toBe(composer);
     expect(composer.closest('[data-reply-dock]')).not.toBeNull();
   });
+
+  // Settings Sync can turn it on from another device while a reply is open.
+  it('keeps an open reply in the pane when the setting is turned on', async () => {
+    useSettingsStore.setState({ replyUnderMessage: false } as never);
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub reply'));
+    const composer = await screen.findByText('stub composer');
+    expect(composer.closest('[data-reply-dock]')).toBeNull();
+    act(() => useSettingsStore.setState({ replyUnderMessage: true } as never));
+    expect(screen.getByText('stub composer')).toBe(composer);
+    expect(composer.closest('[data-reply-dock]')).toBeNull();
+  });
 });

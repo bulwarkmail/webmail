@@ -358,6 +358,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const composerHostRef = useRef('pane');
   // The compose session docked under its message (dockedReply).
   const [dockedSession, setDockedSession] = useState<number | null>(null);
+  // The reply session opened in the pane with Replies under the message off.
+  const [paneSession, setPaneSession] = useState<number | null>(null);
   // A reply draft opened again from its message (compose-p2-6): it docks too.
   const [resumedReplySession, setResumedReplySession] = useState<number | null>(null);
   const showComposerRef = useRef(showComposer);
@@ -5555,7 +5557,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // the setting changes while it is open.
   const dockCandidate = !mvShell && !isMobile && showComposer && !isEmbedded && !floatingComposer
     && ((pendingDraft?.mode ?? composerMode) !== 'compose' || resumedReplySession === composerSessionId);
-  const dockOnOpen = dockCandidate && replyUnderMessage && Boolean(selectedEmail) && !selectedEmail?.keywords?.$draft;
+  const dockWanted = dockCandidate && Boolean(selectedEmail) && !selectedEmail?.keywords?.$draft;
+  if (dockWanted && !replyUnderMessage && dockedSession !== composerSessionId && paneSession !== composerSessionId) {
+    setPaneSession(composerSessionId);
+  }
+  const dockOnOpen = dockWanted && replyUnderMessage && paneSession !== composerSessionId;
   if (dockOnOpen && dockedSession !== composerSessionId) setDockedSession(composerSessionId);
   const dockedReply = dockCandidate && (dockOnOpen || dockedSession === composerSessionId);
   const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : dockedReply ? 'dock' : 'pane';
