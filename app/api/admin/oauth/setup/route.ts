@@ -5,6 +5,7 @@ import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
 import { isStalwartApiKey } from '@/lib/stalwart/api-key';
 import { configManager } from '@/lib/admin/config-manager';
+import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { isConfigReadOnly, ConfigReadOnlyError } from '@/lib/admin/paths';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
@@ -125,15 +126,20 @@ async function getStalwartAccount(creds: ServerCreds): Promise<JmapSessionAccoun
 /**
  * The admin-configured Stalwart, the only server the admin's own sign-in is
  * ever sent to: the session's when it is one of the configured servers,
- * otherwise the main one.
+ * otherwise the main one. Spelled as the config has it, not as the
+ * session cookie does.
  */
 async function adminCredentialServer(session: StalwartCredentials | null): Promise<string | null> {
-  if (session?.trusted) return session.serverUrl;
   await configManager.ensureLoaded();
   const configured = configManager.get<string>('jmapServerUrl', '')
     || process.env.JMAP_SERVER_URL
     || process.env.NEXT_PUBLIC_JMAP_SERVER_URL
     || '';
+  if (session?.trusted) {
+    const servers = parseJmapServers(configManager.get<unknown>('jmapServers', []));
+    const resolved = resolveTrustedJmapUrl(session.serverUrl, configured, servers);
+    if (resolved) return resolved.trim().replace(/\/+$/, '');
+  }
   return configured ? configured.trim().replace(/\/+$/, '') : null;
 }
 

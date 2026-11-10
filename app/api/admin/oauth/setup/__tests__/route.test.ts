@@ -307,6 +307,8 @@ describe('POST /api/admin/oauth/setup', () => {
     beforeEach(() => {
       stalwart103 = true;
       sessionTokenRefused = true;
+      // The server the session is trusted for.
+      storedConfig = { jmapServerUrl: 'https://mail.example.org' };
     });
 
     it('asks for an admin sign-in when Stalwart 1.0.3 refuses the session token', async () => {
@@ -372,6 +374,23 @@ describe('POST /api/admin/oauth/setup', () => {
       expect(requests.every(({ url }) => url.startsWith('https://mail.example.org/'))).toBe(true);
     });
 
+    it('sends the sign-in to the server as the config spells it, not as the session cookie does', async () => {
+      sessionServer = { serverUrl: 'HTTPS://MAIL.example.org/', trusted: true };
+      storedConfig = { jmapServerUrl: 'https://mail.example.org' };
+      acceptedAdminAuth = [`Bearer ${API_KEY}`];
+      expect((await setup({ stalwartSecret: API_KEY })).status).toBe(200);
+      expect(requests[0].url).toBe('https://mail.example.org/.well-known/jmap');
+
+      requests.length = 0;
+      sessionServer = { serverUrl: 'http://10.0.0.5:8080//', trusted: true };
+      storedConfig = {
+        jmapServerUrl: 'https://mail.example.org',
+        jmapServers: JSON.stringify([{ id: 'corp', label: 'Corp', url: 'http://10.0.0.5:8080', domains: [] }]),
+      };
+      expect((await setup({ stalwartSecret: API_KEY })).status).toBe(200);
+      expect(requests[0].url).toBe('http://10.0.0.5:8080/.well-known/jmap');
+    });
+
     it('works without a webmail session', async () => {
       signedIn = false;
       storedConfig = { jmapServerUrl: 'https://mail.example.org' };
@@ -382,6 +401,7 @@ describe('POST /api/admin/oauth/setup', () => {
 
     it('refuses to send the sign-in when no server is configured', async () => {
       signedIn = false;
+      storedConfig = {};
       vi.stubEnv('JMAP_SERVER_URL', '');
       vi.stubEnv('NEXT_PUBLIC_JMAP_SERVER_URL', '');
       try {
