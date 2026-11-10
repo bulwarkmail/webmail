@@ -54,6 +54,12 @@ export interface PluginAction {
    * as a check item, ticked or not. The plugin updates it with setActions.
    */
   checked?: boolean;
+  /**
+   * On button surfaces (the top bar, toolbars): draw the button as a toggle,
+   * pressed or not, e.g. while the plugin's filter runs. The plugin updates
+   * it with setActions. Menus don't draw it; they have `checked`.
+   */
+  pressed?: boolean;
   /** A second line under the label, on menu surfaces. Up to 120 characters. */
   description?: string;
   /**
@@ -148,6 +154,10 @@ export function checkActions(value: unknown): PluginAction[] {
     if (a.checked !== undefined) {
       if (typeof a.checked !== 'boolean') throw new Error(`actions[${i}].checked must be true or false`);
       out.checked = a.checked;
+    }
+    if (a.pressed !== undefined) {
+      if (typeof a.pressed !== 'boolean') throw new Error(`actions[${i}].pressed must be true or false`);
+      out.pressed = a.pressed;
     }
     if (a.protects !== undefined) {
       if (a.protects !== 'sign' && a.protects !== 'encrypt') throw new Error(`actions[${i}].protects must be "sign" or "encrypt"`);
