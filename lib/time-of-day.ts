@@ -1,20 +1,52 @@
 import type { TimeFormat } from "@/stores/settings-store";
 
 /**
- * A time of day as the editors keep it ("HH:mm", 24-hour), read from what
- * someone typed: "14:30", "1430", "14h30", "2:30 pm", "2.30p", "9", "930am".
- * Without "am" or "pm" the hour counts as 24-hour. Null when it isn't a time.
+ * The digits and separators someone typed, in ASCII: full-width digits and
+ * colon (NFKC) and Arabic-Indic and Extended Arabic-Indic digits.
  */
-export function parseTimeOfDay(text: string): string | null {
-  const s = text.trim().toLowerCase();
+function asciiTimeText(text: string): string {
+  let out = "";
+  for (const ch of text.normalize("NFKC")) {
+    const code = ch.charCodeAt(0);
+    if (code >= 0x0660 && code <= 0x0669) out += String(code - 0x0660);
+    else if (code >= 0x06f0 && code <= 0x06f9) out += String(code - 0x06f0);
+    else out += ch;
+  }
+  return out;
+}
+
+interface TypedTime {
+  /** "HH:mm", 24-hour. */
+  value: string;
+  /** No more typing would turn it into another time: see isFinishedTimeOfDay. */
+  finished: boolean;
+}
+
+function readTimeOfDay(text: string): TypedTime | null {
+  const s = asciiTimeText(text).trim().toLowerCase();
   if (!s) return null;
-  const match =
-    /^(\d{1,2})(?:\s*[:.h]\s*(\d{1,2})?)?\s*(?:([ap])\.?\s*(?:m\.?)?)?$/.exec(s) ??
-    /^(\d{1,2})(\d{2})\s*(?:([ap])\.?\s*(?:m\.?)?)?$/.exec(s);
-  if (!match) return null;
-  let hour = Number(match[1]);
-  const minute = match[2] === undefined ? 0 : Number(match[2]);
-  const meridiem = match[3];
+  // "14:30", "14.30", "14h30", "14,30", "14 30", "14h", "14"; then "1430", "930".
+  const separated = /^(\d{1,2})(?:\s*[:.h,]\s*(\d{1,2})?|\s+(\d{1,2}))?\s*(?:([ap])\.?\s*(?:m\.?)?)?$/.exec(s);
+  const bare = separated ? null : /^(\d{1,2})(\d{2})\s*(?:([ap])\.?\s*(?:m\.?)?)?$/.exec(s);
+  let hourText: string;
+  let minuteText: string | undefined;
+  let meridiem: string | undefined;
+  let finished: boolean;
+  if (separated) {
+    hourText = separated[1];
+    minuteText = separated[2] ?? separated[3];
+    meridiem = separated[4];
+    finished = minuteText?.length === 2;
+  } else if (bare) {
+    hourText = bare[1];
+    minuteText = bare[2];
+    meridiem = bare[3];
+    finished = hourText.length === 2;
+  } else {
+    return null;
+  }
+  let hour = Number(hourText);
+  const minute = minuteText === undefined ? 0 : Number(minuteText);
   if (minute > 59) return null;
   if (meridiem) {
     if (hour < 1 || hour > 12) return null;
@@ -22,7 +54,30 @@ export function parseTimeOfDay(text: string): string | null {
   } else if (hour > 23) {
     return null;
   }
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  return {
+    value: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+    finished: finished || !!meridiem,
+  };
+}
+
+/**
+ * A time of day as the editors keep it ("HH:mm", 24-hour), read from what
+ * someone typed: "14:30", "1430", "14h30", "14,30", "14 30", "2:30 pm",
+ * "2.30p", "9", "930am", in any digits. Without "am" or "pm" the hour
+ * counts as 24-hour. Null when it isn't a time.
+ */
+export function parseTimeOfDay(text: string): string | null {
+  return readTimeOfDay(text)?.value ?? null;
+}
+
+/**
+ * Whether typed text is a whole time that more typing wouldn't change into
+ * another: a two-digit minute after a separator ("15:30", "9.05", "14h30"),
+ * four bare digits ("1530") or an am/pm ("2pm", "2:30 pm"). "1", "15",
+ * "153" and "15:3" are on their way to "15:30" and aren't.
+ */
+export function isFinishedTimeOfDay(text: string): boolean {
+  return readTimeOfDay(text)?.finished ?? false;
 }
 
 /**

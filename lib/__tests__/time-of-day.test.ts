@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatTimeOfDay, parseTimeOfDay, stepTimeOfDay } from '../time-of-day';
+import { formatTimeOfDay, isFinishedTimeOfDay, parseTimeOfDay, stepTimeOfDay } from '../time-of-day';
 
 describe('parseTimeOfDay', () => {
   it('reads 24-hour times in the usual spellings', () => {
@@ -23,9 +23,33 @@ describe('parseTimeOfDay', () => {
     expect(parseTimeOfDay('12 pm')).toBe('12:00');
   });
 
+  it('reads a comma or a space between hour and minute', () => {
+    expect(parseTimeOfDay('14,30')).toBe('14:30');
+    expect(parseTimeOfDay('14 30')).toBe('14:30');
+    expect(parseTimeOfDay('2 30 pm')).toBe('14:30');
+  });
+
+  it('reads full-width and Arabic-Indic digits', () => {
+    expect(parseTimeOfDay('１４：３０')).toBe('14:30');
+    expect(parseTimeOfDay('١٤:٣٠')).toBe('14:30');
+    expect(parseTimeOfDay('۰۹:۰۵')).toBe('09:05');
+    expect(parseTimeOfDay('٢:٣٠ pm')).toBe('14:30');
+  });
+
   it('turns down what is not a time', () => {
     for (const text of ['', 'noon', '24:00', '14:60', '13 pm', '0 am', '12345', '1:2:3']) {
       expect(parseTimeOfDay(text)).toBeNull();
+    }
+  });
+});
+
+describe('isFinishedTimeOfDay', () => {
+  it('knows a whole time from one still being typed', () => {
+    for (const text of ['15:30', '9.05', '14h30', '14,30', '14 30', '1530', '0930', '2pm', '2 p', '2:30 pm', '１５：３０']) {
+      expect(isFinishedTimeOfDay(text), text).toBe(true);
+    }
+    for (const text of ['', '1', '15', '15:', '153', '15:3', '930', '14h', 'soon', '25:00']) {
+      expect(isFinishedTimeOfDay(text), text).toBe(false);
     }
   });
 });
