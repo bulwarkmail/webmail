@@ -134,6 +134,8 @@ function setup(extra: Record<string, unknown> = {}) {
 }
 
 const basic = (user: string, secret: string) => `Basic ${Buffer.from(`${user}:${secret}`).toString('base64')}`;
+// Stalwart's shape: "API_" and 28 bytes as unpadded base64url.
+const API_KEY = `API_${Buffer.alloc(28, 0xfb).toString('base64url')}`;
 
 beforeEach(() => {
   readOnly = false;
@@ -332,23 +334,39 @@ describe('POST /api/admin/oauth/setup', () => {
     });
 
     it('sends an API key as a bearer token, with no username needed', async () => {
-      acceptedAdminAuth = ['Bearer API_abc'];
-      const res = await setup({ stalwartSecret: 'API_abc' });
+      acceptedAdminAuth = [`Bearer ${API_KEY}`];
+      const res = await setup({ stalwartSecret: API_KEY });
       expect(res.status).toBe(200);
-      expect(requests.find(({ url }) => url.endsWith('/jmap/'))?.headers.Authorization).toBe('Bearer API_abc');
+      expect(requests.find(({ url }) => url.endsWith('/jmap/'))?.headers.Authorization).toBe(`Bearer ${API_KEY}`);
+    });
+
+    it('sends a password that only starts with API_ as Basic auth with the username', async () => {
+      acceptedAdminAuth = [basic('root@example.org', 'API_my-password')];
+      const res = await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'API_my-password' });
+      expect(res.status).toBe(200);
+      expect(requests.find(({ url }) => url.endsWith('/jmap/'))?.headers.Authorization).toBe(basic('root@example.org', 'API_my-password'));
+    });
+
+    it('needs a username with a password that only looks like an API key', async () => {
+      for (const secret of ['API_abc', `${API_KEY}A`, `${API_KEY.slice(0, -1)}+`]) {
+        const res = await setup({ stalwartSecret: secret });
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toMatch(/username/);
+      }
+      expect(requests).toEqual([]);
     });
 
     it("forwards the admin's address, so Stalwart counts a wrong password against them", async () => {
-      acceptedAdminAuth = ['Bearer API_abc'];
-      await setup({ stalwartSecret: 'API_abc' });
+      acceptedAdminAuth = [`Bearer ${API_KEY}`];
+      await setup({ stalwartSecret: API_KEY });
       expect(requests.find(({ url }) => url.endsWith('/jmap/'))?.headers['X-Forwarded-For']).toBe('203.0.113.7');
     });
 
     it('sends the sign-in only to the configured server, not to one the session user picked', async () => {
       sessionServer = { serverUrl: 'https://picked.example.net', trusted: false };
       storedConfig = { jmapServerUrl: 'https://mail.example.org/' };
-      acceptedAdminAuth = ['Bearer API_abc'];
-      const res = await setup({ stalwartSecret: 'API_abc' });
+      acceptedAdminAuth = [`Bearer ${API_KEY}`];
+      const res = await setup({ stalwartSecret: API_KEY });
       expect(res.status).toBe(200);
       expect(requests.length).toBeGreaterThan(0);
       expect(requests.every(({ url }) => url.startsWith('https://mail.example.org/'))).toBe(true);

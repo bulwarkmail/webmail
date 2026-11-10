@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
 import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart/credentials';
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
+import { isStalwartApiKey } from '@/lib/stalwart/api-key';
 import { configManager } from '@/lib/admin/config-manager';
 import { isConfigReadOnly, ConfigReadOnlyError } from '@/lib/admin/paths';
 import { auditLog } from '@/lib/admin/audit';
@@ -146,7 +147,7 @@ async function adminCredentialServer(session: StalwartCredentials | null): Promi
  * an API key.
  */
 function adminCredentialHeader(username: string, secret: string): string {
-  if (secret.startsWith('API_')) return `Bearer ${secret}`;
+  if (isStalwartApiKey(secret)) return `Bearer ${secret}`;
   return `Basic ${Buffer.from(`${username}:${secret}`, 'utf8').toString('base64')}`;
 }
 
@@ -374,7 +375,7 @@ export async function POST(request: NextRequest) {
     // only, to the configured Stalwart only, never stored or logged.
     const adminSecret = typeof body.stalwartSecret === 'string' ? body.stalwartSecret : '';
     const adminUsername = typeof body.stalwartUsername === 'string' ? body.stalwartUsername.trim() : '';
-    const usesApiKey = adminSecret.startsWith('API_');
+    const usesApiKey = isStalwartApiKey(adminSecret);
     let creds: ServerCreds;
     if (adminSecret) {
       // An API key goes into the header as it is, and a header error would

@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
 import { DEFAULT_OAUTH_SCOPES, STALWART_SCOPE_FULL } from '@/lib/oauth/scopes';
+import { isStalwartApiKey } from '@/lib/stalwart/api-key';
 import { SettingsSection, SettingItem, SectionNav } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
@@ -194,7 +195,7 @@ export function AuthPage() {
   const setupIssuerValid = /^https?:\/\/[^/]+$/.test(setupIssuer.trim().replace(/\/+$/, ''));
   // An API key names its account; a password needs the username with it.
   const setupCredentialReady = !setupNeedsCredential
-    || (setupSecret.length > 0 && (setupSecret.startsWith('API_') || setupUsername.trim().length > 0));
+    || (setupSecret.length > 0 && (isStalwartApiKey(setupSecret) || setupUsername.trim().length > 0));
 
   const hasEdits = Object.keys(edits).length > 0;
 
