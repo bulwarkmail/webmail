@@ -931,7 +931,7 @@ export function ConversationEmailBody({
     const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
     if (!hideInlineImageAttachments) return attachments;
     const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
-    return attachments.filter(att => !isEmbeddedInBody(att, bodyCids));
+    return attachments.filter(att => !isEmbeddedInBody(att, bodyCids, attachments));
   }, [email, hideInlineImageAttachments]);
   const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
   const attachmentRow = useFirstRowLimit(visibleAttachments.length, !attachmentsExpanded);
