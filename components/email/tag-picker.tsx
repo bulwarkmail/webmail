@@ -1,13 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Minus, Plus, Search } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useSettingsStore, KEYWORD_PALETTE_ROWS } from "@/stores/settings-store";
+import { SharedTagsSaveDeferredError, saveSharedTags, sharedTagsKey } from "@/stores/shared-tags-store";
+import { toast } from "@/stores/toast-store";
+import { MetadataTooLargeError } from "@/lib/jmap/bulwark-metadata";
 import { buildKeywordTree, chooseKeywordId, isKeywordNameTaken, MAX_KEYWORD_ID_LENGTH, type KeywordNode } from "@/lib/keyword-nesting";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
-import { useAccountTags, type TagScope } from "@/hooks/use-account-tags";
+import { useRestriction } from "@/hooks/use-restriction";
+import {
+  TagScopeContext,
+  clientForLogin,
+  maySetSharedTags,
+  useAccountTags,
+  useInboxRights,
+  type TagScope,
+} from "@/hooks/use-account-tags";
 
 /** Below this many tags a filter box costs more room than it saves. */
 const SEARCH_THRESHOLD = 10;
@@ -51,29 +62,58 @@ export function TagPicker({
 }) {
   const t = useTranslations("email_viewer");
   const tShared = useTranslations("shared_tags");
+  const contextScope = useContext(TagScopeContext);
+  const effectiveScope = scope === undefined ? contextScope : scope;
   const { definitions: keywords, shared } = useAccountTags(scope);
   const nestedTags = useSettingsStore((state) => state.nestedTags);
   const { tagName, tagColor } = useKeywordFormat(scope);
   const [query, setQuery] = useState("");
   const addKeyword = useSettingsStore((state) => state.addKeyword);
   // "New tag" right here (MAIL-31): a name field in the picker; the tag gets
-  // the next colour of the palette and goes straight onto the message.
+  // the next colour of the palette and goes straight onto the message. It
+  // joins the list on offer: the user's own tags, or in a group account the
+  // group's shared tags. A personal tag would show there to nobody by its
+  // name, so a member who may not change the shared tags gets no "New tag".
+  const { locked: sharedLocked } = useRestriction("sharedTags");
+  const inboxRights = useInboxRights(effectiveScope, shared);
+  const mayCreate = !shared || (!sharedLocked && maySetSharedTags(inboxRights));
   const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newName, setNewName] = useState("");
-  const personalKeywords = useSettingsStore((state) => state.emailKeywords);
-  // The tag goes into the personal definitions, so their ids are taken too.
-  const newId = chooseKeywordId(null, newName, [...keywords, ...personalKeywords].map((k) => k.id));
+  const newId = chooseKeywordId(null, newName, keywords.map((k) => k.id));
   const newError = !newName.trim() ? null
     : isKeywordNameTaken(keywords, null, newName) ? t("tag_exists")
     : newId.length > MAX_KEYWORD_ID_LENGTH ? t("tag_name_invalid")
     : null;
-  const createTag = () => {
-    if (!newName.trim() || newError) return;
+  const createTag = async () => {
+    if (!newName.trim() || newError || saving || !mayCreate) return;
     const palette = KEYWORD_PALETTE_ROWS[1];
-    addKeyword({ id: newId, label: newName.trim(), color: palette[keywords.length % palette.length] });
+    const tag = { id: newId, label: newName.trim(), color: palette[keywords.length % palette.length] };
+    if (shared) {
+      const client = effectiveScope ? clientForLogin(effectiveScope.loginId) : null;
+      if (!effectiveScope || !client) return;
+      setSaving(true);
+      try {
+        await saveSharedTags(sharedTagsKey(effectiveScope.loginId, effectiveScope.accountId), effectiveScope.accountId, client, [
+          { id: tag.id, value: { label: tag.label, color: tag.color } },
+        ]);
+      } catch (error) {
+        if (error instanceof SharedTagsSaveDeferredError) {
+          // Kept and shown; sent again when the server answers.
+          toast.warning(tShared("save_failed"));
+        } else {
+          toast.error(error instanceof MetadataTooLargeError ? tShared("too_many") : tShared("save_failed"));
+          return;
+        }
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      addKeyword(tag);
+    }
     setCreating(false);
     setNewName("");
-    onToggle(newId);
+    onToggle(tag.id);
   };
 
   const trimmedQuery = query.trim().toLowerCase();
@@ -189,8 +229,8 @@ export function TagPicker({
           </>
         )}
       </div>
-      <div className="h-px bg-border my-1" />
-      {creating ? (
+      {mayCreate && <div className="h-px bg-border my-1" />}
+      {!mayCreate ? null : creating ? (
         <div className={cn(touch ? "px-3 pb-2" : "px-2 pb-1")}>
           <input
             type="text"
@@ -198,11 +238,13 @@ export function TagPicker({
             value={newName}
             onChange={(event) => setNewName(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") { event.preventDefault(); createTag(); }
+              if (event.key === "Enter") { event.preventDefault(); void createTag(); }
             }}
             placeholder={t("new_tag_placeholder")}
             aria-label={t("new_tag_placeholder")}
             aria-invalid={!!newError}
+            aria-busy={saving || undefined}
+            readOnly={saving}
             className={cn(
               "w-full px-2 py-1 text-sm bg-background border rounded-md focus:outline-hidden",
               newError ? "border-destructive" : "border-border",

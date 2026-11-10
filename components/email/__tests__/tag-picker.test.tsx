@@ -1,7 +1,12 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { TagPicker } from '../tag-picker';
 import { useSettingsStore, type KeywordDefinition } from '@/stores/settings-store';
+import { useAuthStore } from '@/stores/auth-store';
+import { useEmailStore } from '@/stores/email-store';
+import { usePolicyStore } from '@/stores/policy-store';
+import { resetSharedTags, useSharedTagsStore } from '@/stores/shared-tags-store';
+import { DEFAULT_POLICY } from '@/lib/admin/types';
 
 const TAGS: KeywordDefinition[] = [
   { id: 'work', label: 'Work', color: 'blue' },
@@ -168,5 +173,107 @@ describe('TagPicker new tag', () => {
     fireEvent.click(screen.getByTestId('tag-picker-new'));
     fireEvent.change(screen.getByRole('textbox', { name: 'new_tag_placeholder' }), { target: { value: 'счета 1' } });
     expect(screen.getByRole('alert')).toHaveTextContent('tag_exists');
+  });
+});
+
+// #1613: in a group account the picker offers the group's shared tags, but
+// "New tag" made a personal tag, which the group showed by its raw id.
+describe('TagPicker new tag in a group account', () => {
+  const SCOPE = { loginId: 'login-1', accountId: 'team' };
+  let stored: Record<string, unknown>;
+  const client = {
+    getAccountId: () => 'me',
+    getPrincipalTypes: async () => ({ team: 'group' }),
+    advertisesBulwarkMetadata: () => true,
+    supportsBulwarkMetadata: () => true,
+    getBulwarkMetadata: vi.fn(async () => ({ tags: stored })),
+    patchBulwarkMetadata: vi.fn(async (_id: string | undefined, _key: string, patches: Array<{ path: string[]; value: unknown }>) => {
+      const tags = { ...((stored.tags ?? {}) as Record<string, unknown>) };
+      for (const { path, value } of patches) tags[path[1]] = value;
+      stored = { tags };
+      return { newState: 'sX' };
+    }),
+    discoverKeywords: async () => ({ keywords: {}, scanned: 0, total: 0, complete: true }),
+    getMailboxes: vi.fn(async () => []),
+  };
+
+  const setInbox = (rights: Record<string, boolean>) =>
+    useEmailStore.setState({ mailboxes: [{ id: 'team:a', name: 'Inbox', role: 'inbox', accountId: 'team', isShared: true, myRights: rights } as never] });
+
+  beforeEach(() => {
+    resetSharedTags();
+    stored = { tags: { urgent: { label: 'Urgent', color: 'red' } } };
+    client.patchBulwarkMetadata.mockClear();
+    useSettingsStore.setState({ emailKeywords: [{ id: 'work', label: 'Work', color: 'blue' }], nestedTags: false });
+    useAuthStore.setState({
+      client: client as never,
+      activeAccountId: 'login-1',
+      getClientForAccount: ((id: string) => (id === 'login-1' ? client : undefined)) as never,
+    });
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, restrictions: {} } });
+    setInbox({ mayRename: true, maySetMetadata: true });
+  });
+
+  afterEach(() => {
+    resetSharedTags();
+    useEmailStore.setState({ mailboxes: [] });
+    useAuthStore.setState({ client: null, activeAccountId: null });
+    usePolicyStore.setState({ policy: DEFAULT_POLICY });
+  });
+
+  it('adds the new tag to the group\'s shared tags, not to the personal ones', async () => {
+    const onToggle = vi.fn();
+    render(<TagPicker selectedIds={[]} onToggle={onToggle} scope={SCOPE} />);
+    expect(await screen.findByText('Urgent')).toBeInTheDocument();
+    expect(screen.queryByText('Work')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('tag-picker-new'));
+    const field = screen.getByRole('textbox', { name: 'new_tag_placeholder' });
+    fireEvent.change(field, { target: { value: 'urgent' } });
+    expect(screen.getByRole('alert')).toHaveTextContent('tag_exists');
+
+    fireEvent.change(field, { target: { value: 'Work' } });
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.keyDown(field, { key: 'Enter' });
+
+    await waitFor(() => expect(onToggle).toHaveBeenCalledWith('work'));
+    expect(client.patchBulwarkMetadata).toHaveBeenCalledWith('team', 'tags', [
+      { path: ['tags', 'work'], value: { label: 'Work', color: expect.any(String) } },
+    ]);
+    expect(useSettingsStore.getState().emailKeywords).toEqual([{ id: 'work', label: 'Work', color: 'blue' }]);
+    expect(await screen.findByText('Work')).toBeInTheDocument();
+  });
+
+  it('offers no new tag to a member who may not change the group\'s tags', async () => {
+    setInbox({ mayRename: false, maySetMetadata: false });
+    render(<TagPicker selectedIds={[]} onToggle={() => {}} scope={SCOPE} />);
+    expect(await screen.findByText('Urgent')).toBeInTheDocument();
+    expect(screen.queryByTestId('tag-picker-new')).not.toBeInTheDocument();
+  });
+
+  it('offers no new tag when the organisation locked the shared tags', async () => {
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, restrictions: { sharedTags: { locked: true } } } });
+    render(<TagPicker selectedIds={[]} onToggle={() => {}} scope={SCOPE} />);
+    expect(await screen.findByText('Urgent')).toBeInTheDocument();
+    expect(screen.queryByTestId('tag-picker-new')).not.toBeInTheDocument();
+  });
+
+  it('still makes a personal tag where the group has no shared tags to offer', async () => {
+    client.advertisesBulwarkMetadata = () => false;
+    try {
+      const onToggle = vi.fn();
+      render(<TagPicker selectedIds={[]} onToggle={onToggle} scope={SCOPE} />);
+      await waitFor(() => expect(useSharedTagsStore.getState().entries['login-1|team']?.status).toBe('unsupported'));
+      expect(screen.getByText('Work')).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('tag-picker-new'));
+      const field = screen.getByRole('textbox', { name: 'new_tag_placeholder' });
+      fireEvent.change(field, { target: { value: 'Receipts' } });
+      fireEvent.keyDown(field, { key: 'Enter' });
+      expect(useSettingsStore.getState().emailKeywords.map((k) => k.id)).toEqual(['work', 'receipts']);
+      expect(onToggle).toHaveBeenCalledWith('receipts');
+      expect(client.patchBulwarkMetadata).not.toHaveBeenCalled();
+    } finally {
+      client.advertisesBulwarkMetadata = () => true;
+    }
   });
 });

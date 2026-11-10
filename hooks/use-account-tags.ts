@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo } from "react";
-import type { Email } from "@/lib/jmap/types";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import type { Email, MailboxRights } from "@/lib/jmap/types";
 import { groupAccountTags } from "@/lib/shared-tags";
 import { useAuthStore } from "@/stores/auth-store";
 import { resolveEmailBlobContext, useEmailStore } from "@/stores/email-store";
@@ -82,6 +82,37 @@ export function clientForLogin(loginId: string): SharedTagsClient | null {
   const auth = useAuthStore.getState();
   return (auth.getClientForAccount?.(loginId) as SharedTagsClient | undefined)
     ?? (loginId === auth.activeAccountId ? (auth.client as SharedTagsClient | null) : null);
+}
+
+/** Whether the rights on a group's Inbox let the user change its metadata. */
+export function maySetSharedTags(rights: Partial<MailboxRights> | null | undefined): boolean {
+  if (!rights) return false;
+  // Stalwart 1.0 names the right; a server that doesn't counts renaming.
+  return typeof rights.maySetMetadata === "boolean" ? rights.maySetMetadata : rights.mayRename === true;
+}
+
+/**
+ * The user's rights on the Inbox of a confirmed group account, from the
+ * folder list or asked once; undefined while not known. Nothing is asked
+ * when not `enabled`.
+ */
+export function useInboxRights(scope: TagScope | null, enabled: boolean): Partial<MailboxRights> | null | undefined {
+  const accountId = enabled ? scope?.accountId : undefined;
+  const loginId = scope?.loginId;
+  const fromStore = useEmailStore((state) =>
+    accountId ? state.mailboxes.find((mailbox) => mailbox.accountId === accountId && mailbox.role === "inbox")?.myRights : undefined);
+  const [fetched, setFetched] = useState<Partial<MailboxRights> | null | undefined>(undefined);
+  useEffect(() => {
+    if (!accountId || !loginId || fromStore) return;
+    let cancelled = false;
+    const client = clientForLogin(loginId) as unknown as { getMailboxes?: (accountId?: string) => Promise<Array<{ role?: string; myRights?: MailboxRights }>> } | null;
+    if (!client?.getMailboxes) return;
+    client.getMailboxes(accountId)
+      .then((mailboxes) => { if (!cancelled) setFetched(mailboxes.find((m) => m.role === "inbox")?.myRights ?? null); })
+      .catch(() => { if (!cancelled) setFetched(null); });
+    return () => { cancelled = true; };
+  }, [accountId, loginId, fromStore]);
+  return accountId ? fromStore ?? fetched : undefined;
 }
 
 /** Starts loading a scope's shared tags (once per sign-in). */

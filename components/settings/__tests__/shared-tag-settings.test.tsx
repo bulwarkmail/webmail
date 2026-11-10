@@ -7,7 +7,8 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
 }));
 
-import { SharedTagSettings, maySetSharedTags } from '../shared-tag-settings';
+import { SharedTagSettings } from '../shared-tag-settings';
+import { maySetSharedTags } from '@/hooks/use-account-tags';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';

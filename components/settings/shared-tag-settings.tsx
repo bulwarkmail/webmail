@@ -4,10 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Loader2, Pencil, Plus, Trash2, Users, X } from "@/components/icons";
 import { TagBadge } from "@/components/email/tag-badge";
-import { useAccountTags, TagScopeContext, clientForLogin, type TagScope } from "@/hooks/use-account-tags";
+import { useAccountTags, useInboxRights, maySetSharedTags, TagScopeContext, clientForLogin, type TagScope } from "@/hooks/use-account-tags";
 import { useRestriction } from "@/hooks/use-restriction";
 import { MetadataTooLargeError } from "@/lib/jmap/bulwark-metadata";
-import type { MailboxRights } from "@/lib/jmap/types";
 import { chooseKeywordId, isKeywordNameTaken, MAX_KEYWORD_ID_LENGTH } from "@/lib/keyword-nesting";
 import { MAX_SHARED_TAG_LABEL, groupAccountTags, type SharedTagChange } from "@/lib/shared-tags";
 import { cn } from "@/lib/utils";
@@ -20,34 +19,6 @@ import { toUnicodeEmail } from "@/lib/idn";
 import { KeywordColorPicker } from "./keyword-settings";
 import { OrgLockedNote } from "./org-locked-note";
 import { SettingsSection } from "./settings-section";
-
-/** Whether the rights on a group's Inbox let the user change its metadata. */
-export function maySetSharedTags(rights: Partial<MailboxRights> | null | undefined): boolean {
-  if (!rights) return false;
-  // Stalwart 1.0 names the right; a server that doesn't counts renaming.
-  return typeof rights.maySetMetadata === "boolean" ? rights.maySetMetadata : rights.mayRename === true;
-}
-
-/**
- * The user's rights on the Inbox of a confirmed group account, from the
- * folder list or asked once. Nothing is asked for any other account.
- */
-function useInboxRights(scope: TagScope, enabled: boolean): Partial<MailboxRights> | null | undefined {
-  const fromStore = useEmailStore((state) =>
-    state.mailboxes.find((mailbox) => mailbox.accountId === scope.accountId && mailbox.role === "inbox")?.myRights);
-  const [fetched, setFetched] = useState<Partial<MailboxRights> | null | undefined>(undefined);
-  useEffect(() => {
-    if (!enabled || fromStore) return;
-    let cancelled = false;
-    const client = clientForLogin(scope.loginId) as unknown as { getMailboxes?: (accountId?: string) => Promise<Array<{ role?: string; myRights?: MailboxRights }>> } | null;
-    if (!client?.getMailboxes) return;
-    client.getMailboxes(scope.accountId)
-      .then((mailboxes) => { if (!cancelled) setFetched(mailboxes.find((m) => m.role === "inbox")?.myRights ?? null); })
-      .catch(() => { if (!cancelled) setFetched(null); });
-    return () => { cancelled = true; };
-  }, [enabled, fromStore, scope.loginId, scope.accountId]);
-  return enabled ? fromStore ?? fetched : undefined;
-}
 
 function SharedTagForm({
   initial,

@@ -78,6 +78,7 @@ vi.mock('@/stores/email-store', () => {
   const state = {
     draftSaveEnabled: false,
     sendRawEmail: async () => ({ sent: true }),
+    mailboxes: [] as unknown[],
   };
   const hook = (sel?: (s: typeof state) => unknown) =>
     typeof sel === 'function' ? sel(state) : state;
@@ -375,5 +376,45 @@ describe('Composer Tags menu', () => {
     openTagsMenu();
     expect(screen.getByText('Team review')).toBeInTheDocument();
     expect(screen.queryByText('Work')).not.toBeInTheDocument();
+  });
+
+  // #1613: "New tag" there made a personal tag, which the group's messages
+  // showed by its raw id. With no right to change the group's tags (here not
+  // known at all) there is no "New tag".
+  it('offers no new tag in a group account whose tags the user may not change', () => {
+    blobContext.mockReturnValue({
+      client: { getAccountId: () => 'own-account' },
+      accountId: 'team-account',
+      clientAccountId: 'login-1',
+    });
+    useSharedTagsStore.setState({
+      entries: {
+        [sharedTagsKey('login-1', 'team-account')]: {
+          status: 'ready',
+          tags: [{ id: 'team-review', label: 'Team review', color: 'green' }],
+          stored: null,
+          pending: [],
+          discovered: {},
+          loadedAt: 0,
+          discoveredAt: 0,
+          readFailedAt: null,
+        },
+      },
+    });
+    render(
+      <EmailComposer
+        mode="reply"
+        replyTo={{
+          from: [{ email: 'bob@example.com' }],
+          subject: 'Re: Team Project',
+          body: 'Hi team',
+          sourceAccountId: 'team-account',
+          sourceClientAccountId: 'login-1',
+        }}
+      />
+    );
+    openTagsMenu();
+    expect(screen.getByText('Team review')).toBeInTheDocument();
+    expect(screen.queryByText('New tag')).not.toBeInTheDocument();
   });
 });
