@@ -2869,7 +2869,6 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         <CreateCalendarModal
           client={client}
           onClose={() => setShowCreateCalendar(false)}
-          targetAccountId={activeLocalAccountId ?? undefined}
         />
       )}
 

@@ -14,10 +14,9 @@ import { toast } from "@/stores/toast-store";
 interface CreateCalendarModalProps {
   client: IJMAPClient;
   onClose: () => void;
-  targetAccountId?: string;
 }
 
-export function CreateCalendarModal({ client, onClose, targetAccountId }: CreateCalendarModalProps) {
+export function CreateCalendarModal({ client, onClose }: CreateCalendarModalProps) {
   const t = useTranslations("calendar.management");
   const tCommon = useTranslations("common");
   const createCalendar = useCalendarStore((s) => s.createCalendar);
@@ -37,7 +36,7 @@ export function CreateCalendarModal({ client, onClose, targetAccountId }: Create
     if (!trimmed) return;
     setIsSubmitting(true);
     try {
-      const created = await createCalendar(client, { name: trimmed, color }, { components: CALENDAR_KIND_COMPONENTS[kind] }, targetAccountId);
+      const created = await createCalendar(client, { name: trimmed, color }, { components: CALENDAR_KIND_COMPONENTS[kind] });
       if (created) {
         toast.success(t("calendar_created"));
         onClose();
@@ -49,7 +48,7 @@ export function CreateCalendarModal({ client, onClose, targetAccountId }: Create
     } finally {
       setIsSubmitting(false);
     }
-  }, [name, color, kind, client, createCalendar, onClose, t, targetAccountId]);
+  }, [name, color, kind, client, createCalendar, onClose, t]);
 
   // Nothing closes it while the calendar is being created.
   const close = useCallback(() => {
