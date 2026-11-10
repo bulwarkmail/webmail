@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { toast } from "@/stores/toast-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TimeField } from "@/components/ui/time-field";
 import { LinkifiedText } from "@/components/ui/linkified-text";
 import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
@@ -1409,11 +1410,10 @@ export function EventModal({
             {!allDay && (
               <div>
                 <label htmlFor={labelFor("start_time")} className="text-sm font-medium mb-1 block">{t("form.start_time")}</label>
-                <input
+                <TimeField
                   id={labelFor("start_time")}
-                  type="time"
                   value={startTime}
-                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  onChange={handleStartTimeChange}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
                 />
               </div>
@@ -1431,11 +1431,10 @@ export function EventModal({
             {!allDay && (
               <div>
                 <label htmlFor={labelFor("end_time")} className="text-sm font-medium mb-1 block">{t("form.end_time")}</label>
-                <input
+                <TimeField
                   id={labelFor("end_time")}
-                  type="time"
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
+                  onChange={setEndTime}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
                 />
               </div>

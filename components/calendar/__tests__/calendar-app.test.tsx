@@ -905,7 +905,7 @@ describe('CalendarApp after saving', () => {
       expect(screen.queryAllByRole('button', { name: /01:00$/ })).toHaveLength(0);
       fireEvent.keyDown(document.body, { key: 'n', code: 'KeyN' });
       fireEvent.change(screen.getByPlaceholderText('form.title'), { target: { value: 'Night train' } });
-      fireEvent.change(document.querySelector('input[type="time"]')!, { target: { value: '01:00' } });
+      fireEvent.change(screen.getByLabelText('form.start_time'), { target: { value: '01:00' } });
       fireEvent.click(screen.getByRole('button', { name: 'form.save' }));
       await waitFor(() => expect(store.createEvent).toHaveBeenCalled());
       await waitFor(() => expect(screen.getAllByRole('button', { name: /01:00$/ }).length).toBeGreaterThan(0));

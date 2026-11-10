@@ -5,6 +5,7 @@ import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TimeField } from "@/components/ui/time-field";
 import { IconButton } from "@/components/ui/icon-button";
 import { X, Trash2, CalendarDays, Bell, Flag } from "@/components/icons";
 import { format, parseISO } from "date-fns";
@@ -278,7 +279,7 @@ export function TaskModal({
             <CalendarDays className="h-3.5 w-3.5" />
             {t("tasks.due_date")}
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               id={`${id}-due`}
               type="date"
@@ -298,12 +299,11 @@ export function TaskModal({
               </label>
             )}
             {showTime && (
-              <input
-                type="time"
+              <TimeField
                 aria-labelledby={`${id}-due-label`}
                 value={dueTime}
-                onChange={(e) => setDueTime(e.target.value)}
-                className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                onChange={setDueTime}
+                className="w-28 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
               />
             )}
           </div>

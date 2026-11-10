@@ -17,7 +17,7 @@ describe('event editor fields have labels', () => {
     render(<EventModal calendars={calendars} onSave={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getByRole('textbox', { name: 'form.title' })).toBeInTheDocument();
     expect(screen.getByLabelText('form.start_date')).toHaveAttribute('type', 'date');
-    expect(screen.getByLabelText('form.end_time')).toHaveAttribute('type', 'time');
+    expect(screen.getByRole('textbox', { name: 'form.end_time' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'form.calendar_select' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'recurrence.title' })).toBeInTheDocument();
     expect(unnamedFields()).toEqual([]);
