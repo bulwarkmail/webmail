@@ -1718,7 +1718,6 @@ async function adoptProviderSession(
   // preferred_username claim rather than the real email address.
   // Prefer the email from the primary identity when available.
   const username = typed || primaryIdentity?.email || jmapUsername;
-  initializeFeatureStores(client);
 
   const accountId = generateAccountId(username, ssoServerUrl);
   boundAccountId = accountId;
@@ -1728,6 +1727,9 @@ async function adoptProviderSession(
     snapshotAccount(prevAccountId);
     clearAllStores();
   }
+  // After the clear, which would otherwise reset the new account's feature
+  // flags and drop the loads just started (#1618).
+  initializeFeatureStores(client);
 
   await checkStoreOwner(accountId, client.getAccountId(), ssoServerUrl);
   holdClient(accountId, client);
@@ -2349,7 +2351,6 @@ export const useAuthStore = create<AuthState>()(
             nameLiteRefreshToken(slot, username);
             unnamedLiteSlot = null;
           }
-          initializeFeatureStores(client);
 
           // Register in account store
           const accountId = generateAccountId(username, serverUrl);
@@ -2362,6 +2363,9 @@ export const useAuthStore = create<AuthState>()(
             snapshotAccount(prevAccountId);
             clearAllStores();
           }
+          // After the clear, which would otherwise reset the new account's
+          // feature flags and drop the loads just started (#1618).
+          initializeFeatureStores(client);
 
           await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           holdClient(accountId, client);
