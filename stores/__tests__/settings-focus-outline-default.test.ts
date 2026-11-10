@@ -53,6 +53,20 @@ describe('focus outline default', () => {
     expect(useSettingsStore.getState().focusRing).toBe('normal');
   });
 
+  it('marks Off on <html> as chosen once the user picks it, and as the default again after a reset', () => {
+    const html = document.documentElement;
+    expect(html.dataset.focusRing).toBe('off');
+    expect(html.dataset.focusRingChosen).toBeUndefined();
+
+    useSettingsStore.getState().updateSetting('focusRing', 'off');
+    expect(html.dataset.focusRing).toBe('off');
+    expect(html.dataset.focusRingChosen).toBe('on');
+
+    useSettingsStore.getState().resetSettings(['focusRing']);
+    expect(html.dataset.focusRing).toBe('off');
+    expect(html.dataset.focusRingChosen).toBeUndefined();
+  });
+
   it('keeps Normal once the user picks it', () => {
     useSettingsStore.getState().updateSetting('focusRing', 'normal');
     const exported = JSON.parse(useSettingsStore.getState().exportSettings()) as Record<string, unknown>;

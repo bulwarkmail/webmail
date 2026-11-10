@@ -66,6 +66,20 @@ describe('applyAccessibilityTo', () => {
     applyAccessibilityTo(root(), { focusRing: 'off' });
     expect(root().dataset.focusRing).toBe('off');
   });
+
+  // A Windows contrast theme keeps the outline unless Off was chosen.
+  it('tells an Off the user chose from Off as the default', () => {
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', explicitSettings: [] });
+    expect(root().dataset.focusRing).toBe('off');
+    expect(root().dataset.focusRingChosen).toBeUndefined();
+
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', explicitSettings: ['fontSize', 'focusRing'] });
+    expect(root().dataset.focusRing).toBe('off');
+    expect(root().dataset.focusRingChosen).toBe('on');
+
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', explicitSettings: ['fontSize'] });
+    expect(root().dataset.focusRingChosen).toBeUndefined();
+  });
 });
 
 describe('accessibilityBootScript', () => {
@@ -81,6 +95,16 @@ describe('accessibilityBootScript', () => {
     expect(root().style.getPropertyValue('--font-size-base')).toBe('150%');
     expect(root().dataset.contrast).toBe('more');
     expect(root().dataset.motion).toBe('reduce');
+  });
+
+  it('marks a chosen focus outline before React loads', () => {
+    localStorage.setItem('settings-storage', JSON.stringify({
+      state: { fontSize: 'medium', focusRing: 'off', explicitSettings: ['focusRing'] },
+      version: 16,
+    }));
+    (0, eval)(accessibilityBootScript());
+    expect(root().dataset.focusRing).toBe('off');
+    expect(root().dataset.focusRingChosen).toBe('on');
   });
 
   it('does nothing without stored settings', () => {

@@ -217,7 +217,11 @@ export type AccessibilityDomState = Pick<AccessibilitySettings,
   'contrast' | 'reduceTransparency' | 'underlineLinks' | 'appFont' | 'lineSpacing' | 'letterSpacing' | 'wordSpacing'
   | 'paragraphSpacing' | 'readingWidth' | 'reduceMotion' | 'focusRing' | 'focusAlwaysVisible' | 'largeTargets'
   | 'largeCursor' | 'nativeScrollbars' | 'simpleMode' | 'unreadCountStyle' | 'colorBlindPalette' | 'showColorNames'
-> & { fontSize: FontSize };
+> & {
+  fontSize: FontSize;
+  /** The settings the user chose (the settings store's), to tell a chosen focus outline from the default. */
+  explicitSettings: readonly string[];
+};
 
 /**
  * Writes the visual accessibility settings onto `root` (normally <html>).
@@ -253,6 +257,9 @@ export function applyAccessibilityTo(root: HTMLElement, s: Partial<Accessibility
   set('paragraph-spacing', s.paragraphSpacing && s.paragraphSpacing !== 'normal' ? s.paragraphSpacing : null);
   set('reading-width', s.readingWidth === 'comfortable' ? 'comfortable' : null);
   set('focus-ring', s.focusRing && s.focusRing !== 'normal' ? s.focusRing : null);
+  // Off is the default, and a Windows contrast theme (forced colours) keeps
+  // the outline unless the user chose Off themselves (app/accessibility.css).
+  set('focus-ring-chosen', Array.isArray(s.explicitSettings) && s.explicitSettings.indexOf('focusRing') !== -1 ? 'on' : null);
   set('focus-always', s.focusAlwaysVisible ? 'on' : null);
   set('large-targets', s.largeTargets === 'on' ? 'on' : s.largeTargets === 'off' ? 'off' : null);
   set('large-cursor', s.largeCursor ? 'on' : null);

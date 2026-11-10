@@ -240,6 +240,62 @@ describe('focus outline off', () => {
     document.body.innerHTML = '';
   });
 
+  /**
+   * Every rule that takes an outline off while the focus outline is Off, with
+   * the @media it sits in (null at the top level).
+   */
+  function outlineOffRules(): { media: string | null; selectors: string[] }[] {
+    const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    const out: { media: string | null; selectors: string[] }[] = [];
+    const stack: string[] = [];
+    let start = 0;
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === '{') {
+        stack.push(text.slice(start, i).trim());
+        start = i + 1;
+      } else if (text[i] === '}') {
+        const prelude = stack.pop()!;
+        const body = text.slice(start, i);
+        start = i + 1;
+        if (prelude.startsWith('@') || !prelude.includes('[data-focus-ring="off"]') || !/outline: none/.test(body)) continue;
+        const media = stack.filter((p) => p.startsWith('@media')).pop() ?? null;
+        out.push({ media, selectors: prelude.split(/,\s*\n/).map((s) => s.trim()) });
+      }
+    }
+    return out;
+  }
+
+  /** Whether some Off rule takes the outline off a focused button. */
+  function outlineRemoved(forcedColors: boolean): boolean {
+    document.body.innerHTML = '<button>Send</button>';
+    const button = document.body.firstElementChild!;
+    const applies = (media: string | null) =>
+      media === null || media === `@media (forced-colors: ${forcedColors ? 'active' : 'none'})`;
+    const removed = outlineOffRules()
+      .filter((r) => applies(r.media))
+      .some((r) => r.selectors.some((s) => button.matches(s.replace(/(:focus-visible|:focus)+/g, '*'))));
+    document.body.innerHTML = '';
+    return removed;
+  }
+
+  it('keeps the outline in a Windows contrast theme unless the user chose Off', () => {
+    const html = document.documentElement;
+    expect(outlineOffRules().length).toBeGreaterThan(0);
+    for (const r of outlineOffRules()) {
+      expect([null, '@media (forced-colors: none)', '@media (forced-colors: active)']).toContain(r.media);
+    }
+    html.dataset.focusRing = 'off';
+    // Off as the default.
+    expect(outlineRemoved(false)).toBe(true);
+    expect(outlineRemoved(true)).toBe(false);
+    // Off the user chose.
+    html.dataset.focusRingChosen = 'on';
+    expect(outlineRemoved(false)).toBe(true);
+    expect(outlineRemoved(true)).toBe(true);
+    delete html.dataset.focusRingChosen;
+    delete html.dataset.focusRing;
+  });
+
   it("takes the writing area's bar off, its forced-colors outline, and the outline round a recipient field", () => {
     const rule = ruleAt('html:root[data-focus-ring="off"] [data-composer-writing]');
     expect(rule.selectors).toEqual([

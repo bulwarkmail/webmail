@@ -1780,6 +1780,8 @@ export const useSettingsStore = create<SettingsState>()(
           const { explicitSettings } = get();
           if (hasOwn(DEFAULT_SETTINGS, key) && key !== 'explicitSettings' && !explicitSettings.includes(key)) {
             set({ explicitSettings: [...explicitSettings, key] });
+            // Whether the focus outline was chosen shows on <html> too.
+            if (ACCESSIBILITY_DOM_KEYS.has(key)) applyAccessibility(get());
           }
         });
       },
@@ -2547,7 +2549,7 @@ const ACCESSIBILITY_DOM_KEYS: ReadonlySet<string> = new Set([
   'largeCursor', 'nativeScrollbars', 'simpleMode', 'unreadCountStyle', 'colorBlindPalette', 'showColorNames',
 ]);
 
-function applyAccessibility(state: { fontSize: FontSize } & AccessibilitySettings) {
+function applyAccessibility(state: { fontSize: FontSize; explicitSettings: readonly string[] } & AccessibilitySettings) {
   if (typeof document === 'undefined') return;
   applyAccessibilityTo(document.documentElement, state);
 }
