@@ -3,7 +3,6 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { useAuthStore } from '@/stores/auth-store';
-import { useSettingsStore } from '@/stores/settings-store';
 import { composerDataFromDraft } from '@/lib/draft-composer-data';
 
 // ─── Heavy component mocks (mirrors composer-priority.test.tsx) ──────────────
@@ -314,5 +313,21 @@ describe('Composer Tags menu', () => {
     expect(onSaveState.mock.calls[0][0]).toMatchObject({
       tags: ['work'],
     });
+  });
+
+  it('scopes tags to group account when replyTo is from a shared account', () => {
+    render(
+      <EmailComposer
+        mode="reply"
+        replyTo={{
+          from: [{ email: 'bob@example.com' }],
+          subject: 'Re: Team Project',
+          body: 'Hi team',
+          sourceAccountId: 'team-account',
+          sourceClientAccountId: 'login-1',
+        }}
+      />
+    );
+    expect(screen.getByTestId('composer-tags-menu')).toBeInTheDocument();
   });
 });

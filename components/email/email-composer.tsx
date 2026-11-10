@@ -559,6 +559,8 @@ interface EmailComposerProps {
     htmlBody?: string;
     receivedAt?: string;
     accountId?: string;
+    sourceAccountId?: string;
+    sourceClientAccountId?: string;
     // sourceAccountId: login holding this part, when it differs per part
     // (a batch forward across accounts); otherwise the original's login.
     attachments?: Array<{ blobId: string; name?: string; type: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string }>;
@@ -1438,8 +1440,14 @@ export function EmailComposer({
   composerClientRef.current = composerClient;
   const currentIdentityRawId = currentIdentityParts.rawId ?? currentIdentity?.id;
   const tagScope = useMemo(
-    () => (replyTo?.accountId ? tagScopeOf({ sourceAccountId: replyTo.accountId, sourceClientAccountId: replyTo.accountId } as any) : null),
-    [replyTo?.accountId],
+    () =>
+      replyTo?.sourceAccountId
+        ? tagScopeOf({
+            sourceAccountId: replyTo.sourceAccountId,
+            sourceClientAccountId: replyTo.sourceClientAccountId,
+          })
+        : null,
+    [replyTo?.sourceAccountId, replyTo?.sourceClientAccountId],
   );
 
   // The login a save or send for an identity of `localAccountId` goes
