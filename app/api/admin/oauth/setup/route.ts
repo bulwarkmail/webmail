@@ -9,6 +9,11 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { configWriteErrorResponse } from '@/lib/admin/config-read-only-response';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
+import {
+  LOGIN_BUDGET_RETRY_AFTER_SECONDS,
+  reserveAdminSignInAttempt,
+  type BudgetRefund,
+} from '@/lib/auth/verify-budget';
 import { locales as ALL_LOCALES } from '@/i18n/routing';
 import {
   STALWART_SCOPE_FULL,
@@ -41,17 +46,24 @@ interface JmapMethodResponse {
 type ServerCreds = Pick<StalwartCredentials, 'serverUrl' | 'authHeader' | 'trusted'> & {
   /** Sent with every request, for the admin's own sign-in (X-Forwarded-For). */
   headers?: Record<string, string>;
+  /**
+   * The admin's own sign-in, typed in for this request: it has its own
+   * failure budget here instead of the one for stored cookie credentials.
+   */
+  typedIn?: boolean;
 };
 
 async function fetchWithTimeout(
   url: string,
   init: Parameters<typeof fetch>[1],
-  trusted: boolean,
+  creds: Pick<ServerCreds, 'trusted' | 'typedIn'>,
 ): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), JMAP_TIMEOUT_MS);
   try {
-    return await fetchJmapServer(url, { ...init, signal: controller.signal }, trusted);
+    return await fetchJmapServer(url, { ...init, signal: controller.signal }, creds.trusted, {
+      storedCredential: !creds.typedIn,
+    });
   } finally {
     clearTimeout(timer);
   }
@@ -65,7 +77,7 @@ async function jmapCall(
     method: 'POST',
     headers: { ...creds.headers, 'Authorization': creds.authHeader, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  }, creds.trusted);
+  }, creds);
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`JMAP HTTP ${res.status} ${text.slice(0, 200)}`);
@@ -81,7 +93,7 @@ async function getStalwartAccount(creds: ServerCreds): Promise<JmapSessionAccoun
   const res = await fetchWithTimeout(`${creds.serverUrl}/.well-known/jmap`, {
     method: 'GET',
     headers: { ...creds.headers, 'Authorization': creds.authHeader },
-  }, creds.trusted);
+  }, creds);
   if (!res.ok) return { ok: false, status: res.status };
   const session = await res.json() as { primaryAccounts?: Record<string, string>; username?: unknown };
   const accountId = session.primaryAccounts?.['urn:stalwart:jmap']
@@ -206,7 +218,7 @@ async function hasStalwartScopes(creds: ServerCreds): Promise<boolean> {
   try {
     const res = await fetchWithTimeout(`${creds.serverUrl}/.well-known/oauth-authorization-server`, {
       method: 'GET',
-    }, creds.trusted);
+    }, creds);
     if (!res.ok) return false;
     const metadata = await res.json() as { scopes_supported?: unknown };
     return Array.isArray(metadata.scopes_supported) && metadata.scopes_supported.includes(STALWART_SCOPE_FULL);
@@ -287,6 +299,9 @@ const CREDENTIAL_REFUSED =
   'Stalwart did not accept this sign-in. With two-step verification on, the password alone does not work: '
   + 'create an app password or API key in the Stalwart web admin and enter that instead.';
 
+const TOO_MANY_SIGN_INS =
+  'Too many Stalwart sign-ins failed from your address. Wait 15 minutes, then try again.';
+
 /** Which mail account the setup would run as, so the page can say before it starts. */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminAuth(request);
@@ -361,6 +376,7 @@ export async function POST(request: NextRequest) {
         authHeader: adminCredentialHeader(adminUsername, adminSecret),
         trusted: true,
         headers: forwardedClientHeaders(ip),
+        typedIn: true,
       };
     } else if (session) {
       creds = session;
@@ -368,7 +384,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: NOT_SIGNED_IN, needsAdminCredential: true }, { status: 400 });
     }
 
+    // Each try of the admin's sign-in is a login at Stalwart from this
+    // server's address, so wrong ones are limited per client.
+    let refundSignIn: BudgetRefund | null = null;
+    if (creds.typedIn) {
+      refundSignIn = await reserveAdminSignInAttempt(ip);
+      if (!refundSignIn) {
+        return NextResponse.json(
+          { error: TOO_MANY_SIGN_INS, needsAdminCredential: true },
+          { status: 429, headers: { 'Retry-After': String(LOGIN_BUDGET_RETRY_AFTER_SECONDS) } },
+        );
+      }
+    }
+
     const account = await getStalwartAccount(creds);
+    // Stalwart took the sign-in: only refused ones use up the budget.
+    if (account.ok) await refundSignIn?.();
     if (!account.ok) {
       if (adminSecret && (account.status === 401 || account.status === 403)) {
         return NextResponse.json({ error: CREDENTIAL_REFUSED, needsAdminCredential: true }, { status: 403 });

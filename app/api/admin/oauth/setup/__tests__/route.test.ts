@@ -17,8 +17,9 @@ let storedConfig: Record<string, string> = {};
 // Registry ids of the clients Stalwart already has, by client id.
 let existing: Record<string, string> = {};
 const jmapCalls: Array<[string, Record<string, unknown>]> = [];
-// Every request to Stalwart: where it went and what it carried.
-const requests: Array<{ url: string; headers: Record<string, string> }> = [];
+// Every request to Stalwart: where it went, what it carried and how it was sent.
+const requests: Array<{ url: string; headers: Record<string, string>; options?: { storedCredential?: boolean } }> = [];
+let clientIp = '203.0.113.7';
 // A 1.0.3 session token carries only the data scopes and is refused the
 // OAuthClient objects even for a superuser (#1611).
 let sessionTokenRefused = false;
@@ -27,7 +28,7 @@ let acceptedAdminAuth: string[] = [];
 
 vi.mock('@/lib/admin/session', () => ({
   requireAdminAuth: async () => ({ ok: true }),
-  getClientIP: () => '203.0.113.7',
+  getClientIP: () => clientIp,
 }));
 let sessionServer = { serverUrl: 'https://mail.example.org', trusted: true };
 vi.mock('@/lib/stalwart/credentials', () => ({
@@ -55,9 +56,14 @@ vi.mock('@/lib/admin/config-manager', () => ({
 }));
 vi.mock('@/lib/admin/audit', () => ({ auditLog: async () => {} }));
 vi.mock('@/lib/stalwart/server-fetch', () => ({
-  fetchJmapServer: async (url: string, init: { body?: string; headers?: Record<string, string> }) => {
+  fetchJmapServer: async (
+    url: string,
+    init: { body?: string; headers?: Record<string, string> },
+    _trusted: boolean,
+    options?: { storedCredential?: boolean },
+  ) => {
     const headers = { ...init.headers };
-    requests.push({ url, headers });
+    requests.push({ url, headers, options });
     const auth = headers.Authorization;
     if (auth && auth !== 'Basic x' && !acceptedAdminAuth.includes(auth)) {
       return new Response('Unauthorized', { status: 401 });
@@ -141,7 +147,13 @@ beforeEach(() => {
   sessionTokenRefused = false;
   acceptedAdminAuth = [];
   sessionServer = { serverUrl: 'https://mail.example.org', trusted: true };
+  clientIp = '203.0.113.7';
 });
+
+// The sign-in budget lives for the whole file: each test that counts on it
+// signs in from an address of its own.
+let nextAddress = 1;
+const freshAddress = () => `198.51.100.${nextAddress++}`;
 
 const setCalls = () => jmapCalls.filter(([name]) => name === 'x:OAuthClient/set').map(([, args]) => args);
 
@@ -373,6 +385,42 @@ describe('POST /api/admin/oauth/setup', () => {
       expect(body.needsAdminCredential).toBe(true);
       expect(body.error).toMatch(/app password or API key/);
       expect(setCalls()).toEqual([]);
+    });
+
+    it('keeps the typed-in sign-in out of the budget for stored cookie credentials', async () => {
+      clientIp = freshAddress();
+      acceptedAdminAuth = [basic('root@example.org', 'secret')];
+      await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'secret' });
+      const signedIn = requests.filter(({ headers }) => headers.Authorization === basic('root@example.org', 'secret'));
+      expect(signedIn.length).toBeGreaterThan(0);
+      expect(signedIn.every(({ options }) => options?.storedCredential === false)).toBe(true);
+    });
+
+    it('stops asking Stalwart after five refused sign-ins from one address', async () => {
+      clientIp = freshAddress();
+      for (let i = 0; i < 5; i++) {
+        const res = await setup({ stalwartUsername: 'root@example.org', stalwartSecret: `wrong-${i}` });
+        expect(res.status).toBe(403);
+      }
+      requests.length = 0;
+      const res = await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'wrong-5' });
+      expect(res.status).toBe(429);
+      expect(res.headers.get('Retry-After')).toBe('900');
+      const body = await res.json();
+      expect(body.error).toMatch(/Too many Stalwart sign-ins failed/);
+      expect(requests).toEqual([]);
+
+      // Another address still gets an answer from Stalwart.
+      clientIp = freshAddress();
+      expect((await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'wrong' })).status).toBe(403);
+    });
+
+    it('counts no sign-in that Stalwart accepted', async () => {
+      clientIp = freshAddress();
+      acceptedAdminAuth = [basic('root@example.org', 'secret')];
+      for (let i = 0; i < 6; i++) {
+        expect((await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'secret' })).status).toBe(200);
+      }
     });
   });
 
