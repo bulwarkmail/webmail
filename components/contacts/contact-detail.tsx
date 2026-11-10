@@ -14,6 +14,7 @@ import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoRef, useC
 import { findRelatedContact } from "@/lib/contact-related";
 import { ContactActivity } from "./contact-activity";
 import { toast } from "@/stores/toast-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { ContactContextMenu } from "./contact-context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ToolbarButton } from "@/components/ui/toolbar";
@@ -89,6 +90,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
   const tRoot = useTranslations();
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const dateLocale = useSettingsStore((s) => s.dateLocale);
   // The ⋮ shows the contact's menu, the one right-click shows in the list (R6).
   const moreMenu = useContextMenu<ContactCard>();
   const label = (labelKey: string) => (labelKey.startsWith("ux_pim_contact.") ? tRoot(labelKey) : t(labelKey));
@@ -351,7 +353,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
                 return (
                   <FieldRow key={`an${i}`} icon={Cake} label={t(`detail.anniversary_${ann.kind}`)}>
                     <div className="text-sm">
-                      {formatContactDate(ann.date, locale)}
+                      {formatContactDate(ann.date, locale, dateLocale)}
                       {years !== null && (
                         <span className="text-muted-foreground"> · {t(suffixKey, { count: years })}</span>
                       )}
@@ -512,8 +514,8 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
 
         {(contact.created || contact.updated) && (
           <div className="py-4 text-xs text-muted-foreground space-y-1">
-            {contact.created && <div>{t("detail.created")}: {formatContactDate(contact.created, locale)}</div>}
-            {contact.updated && <div>{t("detail.updated")}: {formatContactDate(contact.updated, locale)}</div>}
+            {contact.created && <div>{t("detail.created")}: {formatContactDate(contact.created, locale, dateLocale)}</div>}
+            {contact.updated && <div>{t("detail.updated")}: {formatContactDate(contact.updated, locale, dateLocale)}</div>}
           </div>
         )}
       </div>
