@@ -24,7 +24,7 @@ import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-m
 import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { useAccountStore } from '@/stores/account-store';
-import { groupCalendarsByAccount } from '@/lib/calendar-targets';
+import { groupCalendarsByAccount, accountAddress, CalendarGroup } from '@/lib/calendar-targets';
 import { useProMultiAccountCalendars } from '@/hooks/use-pro-multi-account-calendars';
 import { apiFetch } from '@/lib/browser-navigation';
 import { CALENDAR_COLORS, sharedCalendarColorKey } from '@/lib/shared-calendar-colors';
@@ -335,8 +335,50 @@ export function CalendarManagementSettings() {
   // `client` talks to get their recipients named.
   const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
   const localAccounts = useAccountStore((s) => s.accounts);
-  // Under each account's address when several are signed in (pim-p2-3).
-  const calendarGroups = groupCalendarsByAccount(listedCalendars, localAccounts, activeLocalAccountId);
+
+  // Group calendars by account. In managed account mode, group by accountId
+  // (the managed account) instead of localAccountId.
+  const calendarGroups = useMemo(() => {
+    if (managedAccountId) {
+      // In managed account mode, all calendars belong to the managed account.
+      // Group by accountId (which is the managedAccountId for all listed calendars).
+      const byAccountId = new Map<string, Calendar[]>();
+      for (const cal of listedCalendars) {
+        const key = cal.accountId || managedAccountId;
+        byAccountId.set(key, [...(byAccountId.get(key) ?? []), cal]);
+      }
+      // Match normal mode: if only one group, no label (production behavior)
+      if (byAccountId.size <= 1) {
+        const [key = '', calendars = []] = [...byAccountId.entries()][0] ?? ['', []];
+        return [{ key, label: null, calendars }];
+      }
+      const account = localAccounts.find(a => a.id === managedAccountId);
+      return Array.from(byAccountId.entries()).map(([key, calendars]) => ({
+        key,
+        label: accountAddress(account) || key,
+        calendars,
+      }));
+    }
+    // Normal mode: separate own calendars (group by localAccountId) from shared
+    // calendars (group by accountId, like the sidebar does).
+    const ownCalendars = listedCalendars.filter(c => !c.isShared);
+    const sharedCalendars = listedCalendars.filter(c => c.isShared);
+    const ownGroups = groupCalendarsByAccount(ownCalendars, localAccounts, activeLocalAccountId);
+    // Shared calendars grouped by accountId (the owner account)
+    const sharedGroups: CalendarGroup<Calendar>[] = [];
+    if (sharedCalendars.length > 0) {
+      const byAccountId = new Map<string, Calendar[]>();
+      for (const cal of sharedCalendars) {
+        const key = cal.accountId || cal.accountName || cal.id;
+        byAccountId.set(key, [...(byAccountId.get(key) ?? []), cal]);
+      }
+      for (const [key, calendars] of byAccountId.entries()) {
+        sharedGroups.push({ key, label: calendars[0].accountName || key, calendars });
+      }
+    }
+    return [...ownGroups, ...sharedGroups];
+  }, [listedCalendars, localAccounts, activeLocalAccountId, managedAccountId]);
+
   const resolvesShares = (cal: Calendar) => !cal.localAccountId || cal.localAccountId === activeLocalAccountId;
   const shareLabels = useShareRecipientLabels(
     client,
@@ -466,7 +508,7 @@ export function CalendarManagementSettings() {
         color: data.color,
         isVisible: true,
         isSubscribed: true,
-      }, { components: data.components });
+      }, { components: data.components }, managedAccountId ?? undefined);
       setIsCreating(false);
       toast.success(t('calendar_created'));
     } catch {
@@ -654,7 +696,7 @@ export function CalendarManagementSettings() {
     );
   };
 
-  return (
+return (
     <SettingsSection id="calendars" title={t('title')} description={touch ? t('description_touch') : t('description')}>
       {renderRowMenu()}
       <div className="space-y-2">
@@ -665,8 +707,8 @@ export function CalendarManagementSettings() {
                 {group.label}
               </h4>
             )}
-        {group.calendars.map((cal) => {
-          const color = (cal.isShared && sharedCalendarColors[sharedCalendarColorKey(cal)]) || cal.color || '#3b82f6';
+            {group.calendars.map((cal) => {
+              const color = (cal.isShared && sharedCalendarColors[sharedCalendarColorKey(cal)]) || cal.color || '#3b82f6';
           // Up and down step over the neighbours of the same account.
           const siblings = cal.isShared ? [] : orderableCalendars.filter(c => calendarAccountKey(c) === calendarAccountKey(cal));
           const isOrderable = siblings.length > 1;

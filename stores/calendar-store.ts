@@ -974,17 +974,17 @@ interface CalendarStore {
   reorderCalendars: (client: IJMAPClient, orderedIds: string[]) => Promise<void>;
   setDefaultCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
   shareCalendar: (client: IJMAPClient, calendarId: string, principalId: string, rights: CalendarRights | null) => Promise<void>;
-  createCalendar: (client: IJMAPClient, calendar: Partial<Calendar>, options?: CreateCalendarOptions) => Promise<Calendar | null>;
+  createCalendar: (client: IJMAPClient, calendar: Partial<Calendar>, options?: CreateCalendarOptions, targetAccountId?: string) => Promise<Calendar | null>;
   removeCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
   clearCalendarEvents: (client: IJMAPClient, calendarId: string) => Promise<number>;
   setSelectedDate: (date: Date) => void;
   setViewMode: (mode: CalendarViewMode) => void;
   toggleCalendarVisibility: (calendarId: string) => void;
-  /**
-   * Task lists the tasks view leaves out. The tasks view filters by these,
-   * not by the grid's calendar selection, so a task-only list (which the
-   * grid never shows) has its tasks listed (pim-1).
-   */
+/**
+    * Task lists the tasks view leaves out. The tasks view filters by these,
+    * not by the grid's calendar selection, so a task-only list (which the
+    * grid never shows) has its tasks listed (pim-1).
+    */
   hiddenTaskListIds: string[];
   toggleTaskListVisibility: (calendarId: string) => void;
   /**
@@ -1815,10 +1815,32 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      createCalendar: async (client, calendar, options) => {
+      createCalendar: async (client, calendar, options, targetAccountId?: string) => {
         set({ error: null });
         try {
-          const made = await client.createCalendar(withNextSortOrder(client, get().calendars, calendar), undefined, options);
+          const state = get();
+          let targetClient = client;
+
+          if (targetAccountId) {
+            // Explicit target account (managed account or multi-account)
+            if (state.accountClients && state.accountClientsActiveId) {
+              const accountClient = state.accountClients.find((ac) => ac.localAccountId === state.accountClientsActiveId);
+              if (accountClient && accountClient.client.getAccountId() === targetAccountId) {
+                targetClient = accountClient.client;
+              }
+            }
+          } else if (state.accountClients && state.accountClientsActiveId) {
+            const accountClient = state.accountClients.find((ac) => ac.localAccountId === state.accountClientsActiveId);
+            if (accountClient) {
+              targetClient = accountClient.client;
+              targetAccountId = targetClient.getAccountId();
+            }
+          } else {
+            targetAccountId = client.getAccountId();
+          }
+
+          const made = await targetClient.createCalendar(withNextSortOrder(targetClient, state.calendars, calendar), targetAccountId, options);
+
           // A calendar asked to hold tasks is one from now on, though it is
           // empty and the server won't say so (#1595). One for tasks alone
           // stays off the grid, as it will once it holds a task.
@@ -1829,15 +1851,30 @@ export const useCalendarStore = create<CalendarStore>()(
           const created: Calendar = kind
             ? { ...made, takesTasks: true, ...(kind === 'tasks' ? { isTasksOnly: true } : {}) }
             : made;
+
+          // The server response doesn't include accountId/localAccountId, so we add them
+          // based on the account we created the calendar in.
+          // Don't set localAccountId (invariant: namespaced iff it carries localAccountId).
+          const isManagedAccount = targetAccountId !== undefined && targetAccountId !== client.getAccountId();
+          const isShared = !!isManagedAccount || !!(state.accountClients && state.accountClientsActiveId && targetAccountId !== targetClient.getAccountId());
+          const enrichedCreated = {
+            ...(created as Calendar),
+            accountId: targetAccountId,
+            // Don't set localAccountId - server doesn't return it for new calendars.
+            // The store invariant is: namespaced iff localAccountId is present.
+            originalId: created.id,
+            isShared,
+          } as Calendar;
+
           // Added with its raw id; the next aggregated refetch namespaces it and
           // reconcileSelectedIds() remaps the selection so it stays visible.
-          set((state) => ({
-            calendars: sortCalendars([...state.calendars, created]),
-            selectedCalendarIds: created.isTasksOnly ? state.selectedCalendarIds : [...state.selectedCalendarIds, created.id],
-            ...(kind ? { taskCalendarKinds: { ...state.taskCalendarKinds, [taskKindKey(subscriptionOwner(client), made.id)]: kind } } : {}),
+          set((newState) => ({
+            calendars: sortCalendars([...newState.calendars, enrichedCreated]),
+            selectedCalendarIds: enrichedCreated.isTasksOnly ? newState.selectedCalendarIds : [...newState.selectedCalendarIds, enrichedCreated.id],
+            ...(kind ? { taskCalendarKinds: { ...newState.taskCalendarKinds, [taskKindKey(subscriptionOwner(targetClient), made.id)]: kind } } : {}),
           }));
-          void calendarHooks.onCalendarChange.emit({ calendarId: created.id, change: 'created' });
-          return created;
+          void calendarHooks.onCalendarChange.emit({ calendarId: enrichedCreated.id, change: 'created' });
+          return enrichedCreated;
         } catch (error) {
           debug.error('Failed to create calendar:', error);
           set({ error: 'Failed to create calendar' });
