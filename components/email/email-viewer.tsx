@@ -1051,6 +1051,7 @@ export function MvExpandedConversationCard({
               className="text-sm font-semibold"
               name={sender?.name || sender?.email || ''}
               address={compact ? null : sender?.email}
+              badge={<BrandVerifiedBadge domain={brandDomain} />}
             />
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6875rem] font-medium bg-primary/10 text-primary shrink-0">
@@ -1058,7 +1059,6 @@ export function MvExpandedConversationCard({
                 {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
               </span>
             )}
-            <BrandVerifiedBadge domain={brandDomain} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <ReceivedLabelChip email={email} className="self-center" />
             <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
@@ -5413,18 +5413,21 @@ export function EmailViewer({
                         addressNode={inConversation && sender.name
                           ? <AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />
                           : undefined}
+                        badge={<BrandVerifiedBadge domain={brandDomain} />}
                       />
                     ) : sender?.email ? (
-                      <RecipientPopover
-                        name={sender?.name}
-                        email={sender.email}
-                        onViewContact={handleViewContactSidebar}
-                        className="font-semibold text-start"
-                      />
+                      <>
+                        <RecipientPopover
+                          name={sender?.name}
+                          email={sender.email}
+                          onViewContact={handleViewContactSidebar}
+                          className="font-semibold text-start"
+                        />
+                        <BrandVerifiedBadge domain={brandDomain} />
+                      </>
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
                     )}
-                    <BrandVerifiedBadge domain={brandDomain} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                     <ReceivedLabelChip email={email} />
                     <EmailIdentityBadge email={email} identities={identities} />
@@ -5830,18 +5833,13 @@ export function EmailViewer({
                   <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
                   <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                     <Row label={t('from')}>
-                      <div className="flex flex-wrap items-center gap-1">
+                      {/* The name and the address are lines of their own, so
+                          the check mark and chips follow the name, not the
+                          longer address under it. */}
+                      <div className="flex flex-wrap items-center gap-1" data-details-from-name="">
                         <RecipientPopover
                           name={sender?.name}
                           email={sender?.email || ''}
-                          label={sender?.name && sender?.email ? (
-                            <>
-                              <bdi className="block">{sender.name}</bdi>
-                              <bdi className="block text-muted-foreground" title={sender.email}>
-                                <BreakableAddress text={sender.email} />
-                              </bdi>
-                            </>
-                          ) : undefined}
                           onViewContact={handleViewContactSidebar}
                           className="text-sm text-start"
                         />
@@ -5863,6 +5861,19 @@ export function EmailViewer({
                           </span>
                         )}
                       </div>
+                      {sender?.name && sender?.email && (
+                        <RecipientPopover
+                          name={sender.name}
+                          email={sender.email}
+                          label={(
+                            <bdi className="block text-muted-foreground" title={sender.email}>
+                              <BreakableAddress text={sender.email} />
+                            </bdi>
+                          )}
+                          onViewContact={handleViewContactSidebar}
+                          className="block text-sm text-start"
+                        />
+                      )}
                     </Row>
                     {replyToDifferent && (
                       <Row label={t('reply_to_label').replace(':', '')}>
