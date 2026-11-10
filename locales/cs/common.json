@@ -2079,6 +2079,10 @@
         "label": "Zobrazovat ověřovací kódy",
         "description": "Nabízet kód z přihlašovacích a potvrzovacích e-mailů ke zkopírování jedním kliknutím, v seznamu po dobu jednoho dne a ve zprávě"
       },
+      "show_attachment_chips": {
+        "label": "Zobrazit štítky příloh",
+        "description": "Zobrazovat štítky příloh v seznamu zpráv"
+      },
       "plain_text_mode": {
         "label": "Pouze prostý text",
         "description": "Zakázat editor formátovaného textu a odesílat všechny e-maily pouze jako prostý text, včetně odpovědí a přeposílání"

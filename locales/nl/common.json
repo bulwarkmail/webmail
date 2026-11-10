@@ -2122,6 +2122,10 @@
         "label": "Verificatiecodes tonen",
         "description": "De code uit aanmeld- en bevestigingsmails aanbieden om met één klik te kopiëren, een dag lang in de lijst en in het bericht"
       },
+      "show_attachment_chips": {
+        "label": "Bijlage-chips tonen",
+        "description": "Bijlage-chips in de berichtenlijst tonen"
+      },
       "attachment_click_action": {
         "label": "Actie bij klikken op bijlagen",
         "description": "Kies of een klik op een bijlage een voorbeeld opent of direct downloadt",

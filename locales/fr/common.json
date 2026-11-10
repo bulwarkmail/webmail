@@ -2122,6 +2122,10 @@
         "label": "Afficher les codes de vérification",
         "description": "Proposer le code des e-mails de connexion et de confirmation pour le copier en un clic, dans la liste pendant un jour et dans le message"
       },
+      "show_attachment_chips": {
+        "label": "Afficher les badges de pièces jointes",
+        "description": "Afficher les badges de pièces jointes dans la liste des messages"
+      },
       "attachment_click_action": {
         "label": "Action au clic sur les pièces jointes",
         "description": "Choisissez si un clic sur une pièce jointe ouvre un aperçu ou lance immédiatement le téléchargement",

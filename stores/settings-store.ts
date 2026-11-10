@@ -730,6 +730,7 @@ interface SettingsState extends AccessibilitySettings {
   searchDefaultScope: SearchDefaultScope; // Where a new search looks: all folders, or only the open one (#1485)
   showPreview: boolean;
   showVerificationCodes: boolean; // Offer the one-time code of a sign-in mail as a copy chip in the list and the reader
+  showAttachmentChips: boolean; // Show attachment chips in the message list
   mailLayout: MailLayout;
   listColumns: boolean; // One-line list rows as a table: From, Subject, Date and Size columns under a header (#262)
   emailsPerPage: number;
@@ -1092,6 +1093,7 @@ const DEFAULT_SETTINGS = {
   searchDefaultScope: 'all' as SearchDefaultScope,
   showPreview: true,
   showVerificationCodes: true,
+  showAttachmentChips: true,
   mailLayout: 'split' as MailLayout,
   listColumns: false,
   emailsPerPage: 50,
@@ -1599,6 +1601,7 @@ export const useSettingsStore = create<SettingsState>()(
           searchDefaultScope: state.searchDefaultScope,
           showPreview: state.showPreview,
           showVerificationCodes: state.showVerificationCodes,
+          showAttachmentChips: state.showAttachmentChips,
           mailLayout: state.mailLayout,
           listColumns: state.listColumns,
           emailsPerPage: state.emailsPerPage,

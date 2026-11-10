@@ -2082,6 +2082,10 @@
         "label": "顯示驗證碼",
         "description": "提供登入與確認郵件中的驗證碼，一鍵複製（在清單中顯示一天，在郵件中始終顯示）"
       },
+      "show_attachment_chips": {
+        "label": "顯示附件標籤",
+        "description": "在郵件清單中顯示附件標籤"
+      },
       "plain_text_mode": {
         "label": "僅純文字",
         "description": "停用富文字編輯器，並將所有郵件（包括回覆和轉寄）以純文字傳送"

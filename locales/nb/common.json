@@ -2082,6 +2082,10 @@
         "label": "Vis bekreftelseskoder",
         "description": "Tilby koden fra innloggings- og bekreftelses-e-poster for kopiering med ett klikk, i listen i ett døgn og i meldingen"
       },
+      "show_attachment_chips": {
+        "label": "Vis vedleggsbrikker",
+        "description": "Vis vedleggsbrikker i meldingslisten"
+      },
       "plain_text_mode": {
         "label": "Kun ren tekst",
         "description": "Deaktiver redigering av formatert tekst, og send all e-post som ren tekst, også svar og videresendinger"

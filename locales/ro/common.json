@@ -2082,6 +2082,10 @@
         "label": "Afișează codurile de verificare",
         "description": "Oferă codul din e-mailurile de autentificare și confirmare pentru copiere cu un clic, în listă timp de o zi și în mesaj"
       },
+      "show_attachment_chips": {
+        "label": "Afișează etichetele anexelor",
+        "description": "Afișează etichetele anexelor în lista de mesaje"
+      },
       "plain_text_mode": {
         "label": "Numai text simplu",
         "description": "Dezactivați editorul de text formatat și trimiteți toate e-mailurile doar ca text simplu, inclusiv răspunsurile și redirecționările"

@@ -2090,6 +2090,10 @@
         "label": "Vis stadfestingskodar",
         "description": "Tilby koden frå innloggings- og stadfestingsmeldingar for kopiering med eitt klikk, i lista i eit døgn og i meldinga"
       },
+      "show_attachment_chips": {
+        "label": "Vis vedleggsbrikker",
+        "description": "Vis vedleggsbrikker i meldingslista"
+      },
       "plain_text_mode": {
         "label": "Berre ren tekst",
         "description": "Slå av rikteksteditoren og send all e-post som ren tekst, òg svar og vidaresendingar"

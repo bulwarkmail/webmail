@@ -2082,6 +2082,10 @@
         "label": "Vis bekræftelseskoder",
         "description": "Tilbyd koden fra login- og bekræftelsesmails til kopiering med ét klik, i listen i en dag og i beskeden"
       },
+      "show_attachment_chips": {
+        "label": "Vis vedhæftningschips",
+        "description": "Vis vedhæftningschips i beskedlisten"
+      },
       "plain_text_mode": {
         "label": "Kun almindelig tekst",
         "description": "Deaktivér den rige teksteditor og send alle e-mails som ren tekst, inklusive svar og videresendelser"

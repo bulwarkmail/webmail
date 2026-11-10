@@ -2079,6 +2079,10 @@
         "label": "Doğrulama kodlarını göster",
         "description": "Giriş ve onay e-postalarındaki kodu tek tıkla kopyalamak için sun; listede bir gün boyunca ve iletide"
       },
+      "show_attachment_chips": {
+        "label": "Ek çiplerini göster",
+        "description": "İleti listesinde ek çiplerini göster"
+      },
       "plain_text_mode": {
         "label": "Yalnızca Düz Metin",
         "description": "Zengin metin düzenleyicisini devre dışı bırak ve yanıtlar ve iletmeler dahil tüm e-postaları yalnızca düz metin olarak gönder"
