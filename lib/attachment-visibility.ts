@@ -78,6 +78,7 @@ export interface AttachmentPartLike {
   cid?: string | null;
   type?: string | null;
   disposition?: string | null;
+  size?: number | null;
 }
 
 /**
@@ -85,17 +86,28 @@ export interface AttachmentPartLike {
  * the attachment list while "hide inline images" is on.
  *
  * - Declared inline images hide as before, referenced or not.
- * - An explicit `attachment` disposition always keeps its chip - the sender
- *   asked for a download, even if the body also references the part.
+ * - An explicit `attachment` disposition keeps its chip - the sender asked
+ *   for a download, even if the body also references the part - unless the
+ *   part only repeats an image the body embeds (isCopyOfEmbeddedImage).
  * - Otherwise a part hides only when the body actually references it AND it
  *   is an image or generically typed (`application/octet-stream`, no type):
  *   a referenced part with a real non-image type keeps its chip, because that
  *   chip is its only download.
+ *
+ * `parts` are all of the message's attachment parts, `att` among them;
+ * without them no part counts as such a copy.
  */
 export function isEmbeddedInBody(
   att: AttachmentPartLike,
   referencedCids: ReadonlySet<string>,
+  parts: readonly AttachmentPartLike[] = [],
 ): boolean {
+  if (att.disposition === 'attachment') return isCopyOfEmbeddedImage(att, referencedCids, parts);
+  return embedsItself(att, referencedCids);
+}
+
+/** Whether the body embeds the part by its own declaration or reference. */
+function embedsItself(att: AttachmentPartLike, referencedCids: ReadonlySet<string>): boolean {
   if (!att.cid) return false;
   const type = (att.type || '').toLowerCase();
   const isImage = type.startsWith('image/');
@@ -104,4 +116,29 @@ export function isEmbeddedInBody(
   const genericType = !type || type === 'application/octet-stream';
   if (!isImage && !genericType) return false;
   return referencedCids.has(normalizeCid(att.cid));
+}
+
+/**
+ * Some senders (seen from Exchange Online) attach each image of the body a
+ * second time: an `attachment` part with the Content-ID, type and size of the
+ * embedded one, the very same file. Such a copy goes wherever the image it
+ * repeats goes: it hides as well, but only when the body references that
+ * Content-ID and another part of the message is the embedded image itself.
+ * Two attachments never make each other copies.
+ */
+function isCopyOfEmbeddedImage(
+  att: AttachmentPartLike,
+  referencedCids: ReadonlySet<string>,
+  parts: readonly AttachmentPartLike[],
+): boolean {
+  if (!att.cid || typeof att.size !== 'number' || att.size <= 0) return false;
+  const type = (att.type || '').toLowerCase();
+  if (!type.startsWith('image/')) return false;
+  const cid = normalizeCid(att.cid);
+  if (!referencedCids.has(cid)) return false;
+  return parts.some((part) => part !== att
+    && !!part.cid && normalizeCid(part.cid) === cid
+    && (part.type || '').toLowerCase() === type
+    && part.size === att.size
+    && embedsItself(part, referencedCids));
 }

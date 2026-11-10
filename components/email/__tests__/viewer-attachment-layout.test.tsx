@@ -78,6 +78,19 @@ const inlineOnly = () => mail({
   ] as Email['attachments'],
 });
 
+// Inline images plus a copy of each declared as an attachment, with the same
+// Content-ID, type and size (seen from Exchange Online).
+const inlineWithCopies = (withInvoice = false) => mail({
+  bodyValues: { '1': { value: '<p>Regards</p><img src="cid:image001.png"><img src="cid:image002.png">', isTruncated: false } } as Email['bodyValues'],
+  attachments: [
+    { partId: '2', blobId: 'blob-image1', name: 'image001.png', type: 'image/png', size: 23567, disposition: 'inline', cid: 'image001.png' },
+    { partId: '3', blobId: 'blob-image2', name: 'image002.png', type: 'image/png', size: 26526, disposition: 'inline', cid: 'image002.png' },
+    { partId: '4', blobId: 'blob-image1-copy', name: 'image001.png', type: 'image/png', size: 23567, disposition: 'attachment', cid: 'image001.png' },
+    { partId: '5', blobId: 'blob-image2-copy', name: 'image002.png', type: 'image/png', size: 26526, disposition: 'attachment', cid: 'image002.png' },
+    ...(withInvoice ? [{ partId: '6', blobId: 'blob-pdf', name: 'Invoice-2026-089.pdf', type: 'application/pdf', size: 51200, disposition: 'attachment' }] : []),
+  ] as Email['attachments'],
+});
+
 // Reported as phishing, from a sender whose domain failed DMARC.
 const dangerous = () => mail({
   keywords: { $seen: true, [PHISHING_KEYWORD]: true },
@@ -149,6 +162,28 @@ describe('the reader (reading pane, pop-outs, Pro tabs)', () => {
     expect(container.querySelector('[data-testid="reader-attachments"]')).toBeNull();
     expect(container.querySelector('[data-reader-attachments-strip]')).toBeNull();
   });
+
+  it('draws no strip for a message whose attachments only repeat its inline images', async () => {
+    const { container } = render(<EmailViewer email={inlineWithCopies()} mailboxes={mailboxes} selectedMailbox="inbox" />);
+    await waitFor(() => expect(container.querySelector('iframe')).not.toBeNull());
+    expect(container.querySelector('[data-testid="reader-attachments"]')).toBeNull();
+    expect(container.querySelector('[data-reader-attachments-strip]')).toBeNull();
+  });
+
+  it('lists only the real file next to such copies', async () => {
+    const { container } = render(<EmailViewer email={inlineWithCopies(true)} mailboxes={mailboxes} selectedMailbox="inbox" />);
+    await waitFor(() => expect(container.querySelector('[data-testid="reader-attachments"]')).not.toBeNull());
+    const chips = container.querySelectorAll('[data-testid="reader-attachments"] [data-testid="attachment"]');
+    expect(chips).toHaveLength(1);
+    expect(chips[0].textContent).toContain('Invoice-2026-089.pdf');
+  });
+
+  it('lists the copies with the inline images when the user shows inline images', async () => {
+    useSettingsStore.setState({ hideInlineImageAttachments: false });
+    const { container } = render(<EmailViewer email={inlineWithCopies()} mailboxes={mailboxes} selectedMailbox="inbox" />);
+    await waitFor(() => expect(container.querySelector('[data-testid="reader-attachments"]')).not.toBeNull());
+    expect(container.querySelectorAll('[data-testid="reader-attachments"] [data-testid="attachment"]')).toHaveLength(4);
+  });
 });
 
 describe('a conversation message (phone thread, Mountain View)', () => {
@@ -171,6 +206,21 @@ describe('a conversation message (phone thread, Mountain View)', () => {
     await waitFor(() => expect(container.querySelector('iframe')).not.toBeNull());
     expect(container.querySelector('[data-conversation-attachments]')).toBeNull();
     expect(container.textContent).not.toContain('logo.png');
+  });
+
+  it('draws no strip for a message whose attachments only repeat its inline images', async () => {
+    const { container } = render(<ConversationEmailBody email={inlineWithCopies()} allowExternal={false} onAllowExternal={() => {}} />);
+    await waitFor(() => expect(container.querySelector('iframe')).not.toBeNull());
+    expect(container.querySelector('[data-conversation-attachments]')).toBeNull();
+    expect(screen.queryByText('image001.png')).toBeNull();
+  });
+
+  it('lists only the real file next to such copies', async () => {
+    const { container } = render(<ConversationEmailBody email={inlineWithCopies(true)} allowExternal={false} onAllowExternal={() => {}} />);
+    await screen.findByText('Invoice-2026-089.pdf');
+    expect(container.querySelectorAll('[data-conversation-attachments] [data-row-item]')).toHaveLength(1);
+    expect(screen.queryByText('image001.png')).toBeNull();
+    expect(screen.queryByText('image002.png')).toBeNull();
   });
 
   it('keeps many attachments to one line, the rest behind "Show N more"', () => {
@@ -246,5 +296,17 @@ describe('the printout', () => {
     render(<EmailViewer email={email} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
     await waitFor(() => expect(write).toHaveBeenCalled());
     expect(write.mock.calls[0][0]).not.toContain('data-print-attachments');
+  });
+
+  it('prints only the real file next to copies of inline images', async () => {
+    const { write, win } = fakePrintWindow();
+    const email = inlineWithCopies(true);
+    usePrintRequestStore.getState().setRequest({ key: emailKeyFor(email), win });
+    render(<EmailViewer email={email} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
+    await waitFor(() => expect(write).toHaveBeenCalled());
+    const html = write.mock.calls[0][0] as string;
+    const list = html.indexOf('data-print-attachments');
+    expect(list).toBeGreaterThan(0);
+    expect(html.slice(list)).toMatch(/^[^<]*<strong>attachments:<\/strong> Invoice-2026-089\.pdf \(50 KB\)<\/div>/);
   });
 });
