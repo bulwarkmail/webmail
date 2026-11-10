@@ -5937,6 +5937,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           messageId: composerSourceEmail.messageId,
           inReplyTo: composerSourceEmail.inReplyTo,
           references: composerSourceEmail.references,
+          keywords: composerSourceEmail.keywords,
           // Its label, for the reply's or forward's classification label.
           headers: labelSourceHeaders(composerSourceEmail.headers),
           quoteHeaderHtml: composerQuoteHeader?.html,

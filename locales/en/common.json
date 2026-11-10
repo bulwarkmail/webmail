@@ -1085,6 +1085,7 @@
     "templates_menu": "Templates",
     "insert_template": "Insert template…",
     "options": "Options",
+    "tags": "Tags",
     "option_plain_text": "Plain text",
     "option_plain_text_hint": "Send without formatting",
     "option_read_receipt": "Request read receipt",

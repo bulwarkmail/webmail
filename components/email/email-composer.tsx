@@ -49,8 +49,12 @@ import {
   UserPen,
   ArrowLeftRight,
   UserPlus,
+  Tag,
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
+import { TagPicker } from "./tag-picker";
+import { KEYWORD_PREFIX, getEmailTagIds } from "@/lib/thread-utils";
+import { tagScopeOf } from "@/hooks/use-account-tags";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { ComposerHeaderPluginActions } from "@/components/email/composer-header-plugin-actions";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
@@ -354,6 +358,8 @@ export interface ComposerDraftData {
    * null for "no label", absent when the draft says nothing.
    */
   classification?: string | null;
+  /** Tags applied to the message (tag IDs). */
+  tags?: string[];
   /**
    * Handed to the host when the composer went away with edits the server may
    * not have: the composer opened again with it counts them as unsaved, so
@@ -575,6 +581,10 @@ interface EmailComposerProps {
     phishingMarked?: boolean;
     /** The original's From, when `from` is left out (a forward as attachment): whether its label counts. */
     originalFrom?: { email?: string; name?: string }[];
+    /** Keywords on the source email: replies/forwards inherit its tags. */
+    keywords?: Record<string, boolean>;
+    /** Explicit tag IDs on the source email. */
+    tags?: string[];
   };
 }
 
@@ -1337,6 +1347,20 @@ export function EmailComposer({
   // Open proofreading issues, once a checker asked to warn about them.
   const proofreadingConfirmedRef = useRef(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(() => {
+    if (initialData?.tags !== undefined) return initialData.tags;
+    if (replyTo) {
+      if (replyTo.tags) return replyTo.tags;
+      if (replyTo.keywords) return getEmailTagIds(replyTo.keywords);
+    }
+    return [];
+  });
+  const handleToggleTag = (tagId: string) => {
+    markEdited();
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    );
+  };
   // Asks before sending at once when the account can't hold a message back.
   const { dialogProps: noDelayDialogProps, confirm: confirmNoDelay } = useConfirmDialog();
   const { dialogProps: sendConfirmDialogProps, confirm: confirmSend } = useConfirmDialog();
@@ -1413,6 +1437,10 @@ export function EmailComposer({
   const composerClientRef = useRef(composerClient);
   composerClientRef.current = composerClient;
   const currentIdentityRawId = currentIdentityParts.rawId ?? currentIdentity?.id;
+  const tagScope = useMemo(
+    () => (replyTo?.accountId ? tagScopeOf({ sourceAccountId: replyTo.accountId, sourceClientAccountId: replyTo.accountId } as any) : null),
+    [replyTo?.accountId],
+  );
 
   // The login a save or send for an identity of `localAccountId` goes
   // through: that account's, or the active one, as composerClient and the
@@ -2000,8 +2028,8 @@ export function EmailComposer({
     }));
 
   // Keep a ref to current state for the unmount save
-  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode });
-  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode };
+  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode, tags: selectedTagIds });
+  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode, tags: selectedTagIds };
 
   // Track initial values for dirty detection (captured once on first render)
   const initialValuesRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, attachmentCount: attachments.length });
@@ -2018,7 +2046,7 @@ export function EmailComposer({
       return;
     }
     changeVersionRef.current += 1;
-  }, [toStr, ccStr, bccStr, subject, body, attachments.length]);
+  }, [toStr, ccStr, bccStr, subject, body, attachments.length, selectedTagIds]);
   // Handed-in text and files aren't the user's until they touch them. Nothing
   // counts as dirty until then, so autosave, the page-close save and the flush
   // before a sign-out all leave them alone.
@@ -2045,6 +2073,8 @@ export function EmailComposer({
   if (priority !== initialPriorityRef.current) isDirtyRef.current = true;
   const initialLabelChoiceRef = useRef(classification.choice);
   if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
+  const initialTagsRef = useRef(selectedTagIds);
+  if (selectedTagIds !== initialTagsRef.current) isDirtyRef.current = true;
   // Text the host handed in is no edit to hand back: it has its own copy, and a
   // stand-in mounted before the edits arrived must not overwrite them.
   const hasEditsRef = useRef(false);
@@ -2061,10 +2091,11 @@ export function EmailComposer({
     if (!uneditedRef.current) return;
     const start = initialValuesRef.current;
     if (toStr !== start.to || ccStr !== start.cc || bccStr !== start.bcc || subject !== start.subject
-      || attachments.length !== start.attachmentCount || priority !== initialPriorityRef.current) {
+      || attachments.length !== start.attachmentCount || priority !== initialPriorityRef.current
+      || selectedTagIds !== initialTagsRef.current) {
       markEdited();
     }
-  }, [toStr, ccStr, bccStr, subject, attachments.length, priority, markEdited]);
+  }, [toStr, ccStr, bccStr, subject, attachments.length, priority, selectedTagIds, markEdited]);
   const firstLabelRunRef = useRef(true);
   useEffect(() => {
     if (firstLabelRunRef.current) {
@@ -2130,6 +2161,7 @@ export function EmailComposer({
     replyTo,
     priority: priorityRef.current,
     classification: classificationRef.current.draftChoice,
+    tags: selectedTagIds,
     // Edits the last save didn't cover; a minimised composer with
     // none needs no save before an automatic sign-out.
     unsaved: !uneditedRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current),
@@ -3295,7 +3327,7 @@ export function EmailComposer({
     // draft version (below), and hashing them would mark each save dirty
     // again - an endless save loop. Name+type+size identifies an attachment
     // for change detection.
-    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments.map(({ name, type, size, cid }) => ({ name, type, size, cid })), identityId: selectedIdentityId, subAddressTag, priority });
+    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments.map(({ name, type, size, cid }) => ({ name, type, size, cid })), identityId: selectedIdentityId, subAddressTag, priority, tags: [...selectedTagIds].sort() });
 
     // Only save if data has changed
     if (currentData === lastSavedDataRef.current) {
@@ -3369,7 +3401,7 @@ export function EmailComposer({
         savedDraft.htmlBody,
         replyThreadingHeaders?.inReplyTo,
         replyThreadingHeaders?.references,
-        { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice },
+        { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice, ...(selectedTagIds.length > 0 ? { keywords: selectedTagIds.map((id) => KEYWORD_PREFIX + id) } : {}) },
       );
       if (replacedElsewhere) {
         if (isStandInId(savedDraftId) && savingLogin) {
@@ -4580,10 +4612,11 @@ export function EmailComposer({
           inReplyTo: threadingHeaders?.inReplyTo?.[0],
           ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
           // Plugins with email:write add keywords for the Sent copy here.
-          keywords: [],
+          keywords: selectedTagIds.map((id) => KEYWORD_PREFIX + id),
         };
         const outgoing = await emailHooks.onTransformOutgoingEmail.transform(transformInput);
-        const outgoingKeywords = cleanOutgoingKeywords(outgoing.keywords);
+        const tagKeywords = selectedTagIds.map((id) => KEYWORD_PREFIX + id);
+        const outgoingKeywords = cleanOutgoingKeywords([...tagKeywords, ...(outgoing.keywords ?? [])]);
         // A plugin that adds or changes recipients after the send checks
         // (an automatic Bcc) could take the message outside after an
         // "only outside the organisation" rule passed: check it again for
@@ -4702,8 +4735,9 @@ export function EmailComposer({
       setSubAddressTag("");
       setValidationErrors({});
       setShowScheduleDialog(false);
+      setSelectedTagIds([]);
       // Clear ref so unmount effect doesn't re-save
-      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
       // The host closes the composer from onSend or onScheduledSendCreated;
       // a send the plugin made itself reaches neither (#1207). A window of
       // its own closes only now: closing it stops whatever is still running,
@@ -4790,7 +4824,7 @@ export function EmailComposer({
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
     emitClose();
   };
 
@@ -4881,7 +4915,7 @@ export function EmailComposer({
       }
       announceKeptDraft();
       explicitCloseRef.current = true;
-      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
       emitClose();
     } finally {
       if (saveCloseAttemptRef.current === attempt) {
@@ -5154,7 +5188,7 @@ export function EmailComposer({
         localAccountId: draftLocalAccountIdRef.current,
       });
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
     emitClose();
   };
 
@@ -6484,6 +6518,22 @@ export function EmailComposer({
                 <ComposerPluginMenuItems surface="composer-options-menu" context={composerActionContext} onSelect={close} separator />
                 <ComposerPluginMenuItems surface="composer-toolbar-actions" context={composerActionContext} onSelect={close} separator onlyWhenNarrow />
               </>}
+            </ComposerToolbarMenu>
+            <ComposerToolbarMenu
+              icon={Tag}
+              label={t('tags')}
+              activeCount={selectedTagIds.length}
+              testId="composer-tags-menu"
+            >
+              {() => (
+                <div className="w-56 max-w-[18rem]" data-testid="composer-tag-picker">
+                  <TagPicker
+                    selectedIds={selectedTagIds}
+                    onToggle={handleToggleTag}
+                    scope={tagScope}
+                  />
+                </div>
+              )}
             </ComposerToolbarMenu>
             <ComposerPluginToolbarButtons surface="composer-toolbar-actions" context={composerActionContext} />
             <ProofreadingStatus proofreading={proofreading} plainTextMode={plainTextMode} />

@@ -30,6 +30,8 @@ import { toInertBlob } from '@/lib/file-preview';
 import type { StorageQuota } from "@/lib/quota";
 import { buildDemoEml, demoEmlBlobId, demoEmlEmailId } from './demo-eml';
 import { stripMessageIdBrackets } from '@/lib/email-threading';
+import type { MessagePriority } from '@/lib/message-priority';
+import { outgoingKeywordMap } from '@/lib/outgoing/outgoing-keywords';
 
 // Fixture blobs with real bytes behind them, served from public/demo/ (see
 // fixtures/assets.ts for the list and the licences). Any other blob id falls
@@ -1052,6 +1054,7 @@ export class DemoJMAPClient implements IJMAPClient {
     htmlBody?: string,
     inReplyTo?: string[],
     references?: string[],
+    options?: { priority?: MessagePriority; accountId?: string; previousDraftAccountId?: string; classification?: string | null; keywords?: string[] },
   ): Promise<string> {
     const draftsMb = this.data.mailboxes.find(m => m.role === 'drafts');
     const id = draftId || generateDemoId('email');
@@ -1060,7 +1063,7 @@ export class DemoJMAPClient implements IJMAPClient {
     const email: Email = {
       id, threadId: this.threadFor(inReplyTo, references),
       mailboxIds: { [draftsMb?.id || this.data.mailboxes[0].id]: true },
-      keywords: { $seen: true, $draft: true },
+      keywords: { ...outgoingKeywordMap(options?.keywords), $seen: true, $draft: true },
       size: body.length,
       receivedAt: new Date().toISOString(),
       from: [this.fromAddress(_identityId, _fromEmail, _fromName)],
@@ -1109,6 +1112,7 @@ export class DemoJMAPClient implements IJMAPClient {
     references?: string[],
     delayedUntil?: string,
     _envelopeMailFrom?: string,
+    options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; headers?: Record<string, string>; draftAccountId?: string; noSentCopy?: boolean; labelHeaders?: Record<string, string>; keywords?: string[] },
   ): Promise<SendEmailResult> {
     // Remove draft if updating
     if (draftId) {
@@ -1118,7 +1122,9 @@ export class DemoJMAPClient implements IJMAPClient {
     const email: Email = {
       id: generateDemoId('email'), threadId: this.threadFor(inReplyTo, references),
       mailboxIds: { [delayedUntil ? (this.data.mailboxes.find(m => m.role === 'drafts')?.id || this.data.mailboxes[0].id) : (sentMb?.id || this.data.mailboxes[0].id)]: true },
-      keywords: delayedUntil ? { $seen: true, $draft: true } : { $seen: true },
+      keywords: delayedUntil
+        ? { ...outgoingKeywordMap(options?.keywords), $seen: true, $draft: true }
+        : { ...outgoingKeywordMap(options?.keywords), $seen: true },
       size: body.length + (htmlBody?.length || 0),
       receivedAt: new Date().toISOString(),
       from: [this.fromAddress(_identityId, _fromEmail, _fromName)],
