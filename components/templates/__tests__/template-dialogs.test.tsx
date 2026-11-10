@@ -124,6 +124,39 @@ describe('PlaceholderFillModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('starts a field with the auto-filled value or the template default, selected on focus until changed', () => {
+    const onConfirm = vi.fn();
+    render(
+      <PlaceholderFillModal
+        template={{ ...template, body: 'Hi {{recipient_name:Ada}}, see you at {{time:15:00}}' }}
+        placeholders={['recipient_name', 'time']}
+        autoFilled={{ recipient_name: 'Grace' }}
+        onConfirm={onConfirm}
+        onSkip={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const [name, time] = screen.getAllByPlaceholderText('enter_value') as HTMLInputElement[];
+    expect(name.value).toBe('Grace');
+    expect(time.value).toBe('15:00');
+
+    name.setSelectionRange(5, 5);
+    fireEvent.focus(name);
+    expect([name.selectionStart, name.selectionEnd]).toEqual([0, 5]);
+
+    time.setSelectionRange(5, 5);
+    fireEvent.focus(time);
+    expect([time.selectionStart, time.selectionEnd]).toEqual([0, 5]);
+
+    fireEvent.change(time, { target: { value: '17:00' } });
+    time.setSelectionRange(5, 5);
+    fireEvent.focus(time);
+    expect([time.selectionStart, time.selectionEnd]).toEqual([5, 5]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'insert_with_values' }));
+    expect(onConfirm).toHaveBeenCalledWith({ recipient_name: 'Grace', time: '17:00' });
+  });
+
   it('has an outline secondary button and the close X', () => {
     renderFill();
     expect(screen.getByRole('button', { name: 'insert_raw' }).className).toContain('border-input');

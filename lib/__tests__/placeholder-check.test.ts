@@ -141,6 +141,13 @@ describe('findUnfilledPlaceholders', () => {
     expect(findUnfilledPlaceholders('', 'Agenda: [TODO]', EN)).toEqual(['[TODO]']);
   });
 
+  it('finds a template placeholder with a default', () => {
+    expect(findUnfilledPlaceholders('Stay from {{arrival:Sat 13 Feb}}', 'Check-in at {{time:15:00}}.')).toEqual([
+      '{{arrival:Sat 13 Feb}}',
+      '{{time:15:00}}',
+    ]);
+  });
+
   it('lists each placeholder once', () => {
     expect(findUnfilledPlaceholders('{{name}}', 'Hi {{name}}, at [TIME] or [TIME]?')).toEqual([
       '{{name}}',
