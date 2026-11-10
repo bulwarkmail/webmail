@@ -218,6 +218,22 @@ describe('Composer Tags menu', () => {
     expect(screen.getByText('Urgent')).toBeInTheDocument();
   });
 
+  it('moves through the tags with the arrow keys, as every menu does', async () => {
+    render(<EmailComposer initialData={DRAFT} />);
+    openTagsMenu();
+    const work = screen.getByText('Work').closest('button')!;
+    const urgent = screen.getByText('Urgent').closest('button')!;
+    // The menu takes the focus on its first tag when it opens.
+    await waitFor(() => expect(document.activeElement).toBe(work));
+    fireEvent.keyDown(document, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(urgent);
+    fireEvent.keyDown(document, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(screen.getByTestId('tag-picker-new'));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByTestId('composer-tag-picker')).not.toBeInTheDocument());
+    expect(document.activeElement).toBe(screen.getByTestId('composer-tags-menu'));
+  });
+
   it('updates activeCount badge when a tag is selected', () => {
     render(<EmailComposer initialData={DRAFT} />);
     openTagsMenu();
