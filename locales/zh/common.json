@@ -1081,6 +1081,7 @@
     "templates_menu": "模板",
     "insert_template": "插入模板…",
     "options": "选项",
+    "tags": "标签",
     "option_plain_text": "纯文本",
     "option_plain_text_hint": "不带格式发送",
     "option_read_receipt": "请求已读回执",

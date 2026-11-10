@@ -5933,10 +5933,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           // The login that holds the message, so the reply
           // defaults to that account's identity (#1104).
           accountId: composerSourceEmail.sourceClientAccountId ?? viewingAccountId ?? undefined,
+          sourceAccountId: composerSourceEmail.sourceAccountId,
+          sourceClientAccountId: composerSourceEmail.sourceClientAccountId,
           attachments: composerSourceEmail.attachments,
           messageId: composerSourceEmail.messageId,
           inReplyTo: composerSourceEmail.inReplyTo,
           references: composerSourceEmail.references,
+          keywords: composerSourceEmail.keywords,
           // Its label, for the reply's or forward's classification label.
           headers: labelSourceHeaders(composerSourceEmail.headers),
           quoteHeaderHtml: composerQuoteHeader?.html,

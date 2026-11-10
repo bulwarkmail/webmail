@@ -1502,6 +1502,7 @@
     "templates_menu": "แม่แบบข้อความ",
     "insert_template": "แทรกแม่แบบ…",
     "options": "ตัวเลือก",
+    "tags": "ป้ายกำกับ",
     "option_plain_text": "ข้อความธรรมดา (Plain text)",
     "option_plain_text_hint": "ส่งโดยไม่มีการจัดรูปแบบ",
     "option_read_receipt": "ขอใบตอบรับการอ่าน (Read receipt)",

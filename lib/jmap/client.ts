@@ -5342,7 +5342,7 @@ export class JMAPClient implements IJMAPClient {
     references?: string[],
     // `classification`: the composer's label choice (an id, null for none),
     // kept in X-Bulwark-Label so a re-opened draft restores it.
-    options?: { priority?: MessagePriority; accountId?: string; previousDraftAccountId?: string; classification?: string | null },
+    options?: { priority?: MessagePriority; accountId?: string; previousDraftAccountId?: string; classification?: string | null; keywords?: string[] },
   ): Promise<string> {
     // A draft for a group identity belongs in the group's Drafts, like its
     // Sent copy (#1090).
@@ -5405,7 +5405,7 @@ export class JMAPClient implements IJMAPClient {
       cc: cc?.length ? cc.map(parseRecipientString) : undefined,
       bcc: bcc?.length ? bcc.map(parseRecipientString) : undefined,
       subject,
-      keywords: { "$seen": true, "$draft": true },
+      keywords: { ...outgoingKeywordMap(options?.keywords), "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
       bodyValues: htmlBody
         ? { "text": { value: body }, "html": { value: htmlBody } }

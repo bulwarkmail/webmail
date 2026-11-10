@@ -6,6 +6,7 @@ import { messagePriorityFromHeaders } from '@/lib/message-priority';
 import { reopenedLabelChoice } from '@/lib/outgoing/classification';
 import { formatRecipient, parseRecipientList } from '@/lib/email-composer-utils';
 import { buildReplyRecipients, type ReplySource } from '@/lib/reply-recipients';
+import { getEmailTagIds } from '@/lib/thread-utils';
 
 /**
  * Reply all on a message whose reply draft is resumed: the draft keeps what
@@ -87,6 +88,7 @@ export function composerDataFromDraft(
     inReplyTo: draft.inReplyTo ?? undefined,
     references: draft.references ?? undefined,
     priority: messagePriorityFromHeaders(draft.headers),
+    tags: getEmailTagIds(draft.keywords),
     // A sent message brought back (Undo, Cancel and edit) has no draft
     // marker: its SIO-Label says which label it went out with.
     classification: reopenedLabelChoice(draft.headers, localAccountId),
