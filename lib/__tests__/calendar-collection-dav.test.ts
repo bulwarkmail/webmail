@@ -239,3 +239,45 @@ describe('davComponentsFor', () => {
     expect(davComponentsFor(calendars[2], dav, calendars)).toBeUndefined();
   });
 });
+
+// Stalwart's Depth 1 listing of a calendar home also holds the collections
+// other accounts share with the user (recorded on Stalwart 0.16 and 1.0).
+describe('collections shared into the calendar home', () => {
+  const homeXml = `<?xml version="1.0" encoding="UTF-8"?><D:multistatus xmlns:D="DAV:" xmlns:A="urn:ietf:params:xml:ns:caldav">
+<D:response><D:href>/dav/cal/usera%40example.org/</D:href><D:propstat><D:prop><A:supported-calendar-component-set/></D:prop><D:status>HTTP/1.1 404 Not Found</D:status></D:propstat><D:propstat><D:prop><D:displayname>User A</D:displayname><D:resourcetype><D:collection/></D:resourcetype></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>
+<D:response><D:href>/dav/cal/usera%40example.org/default/</D:href><D:propstat><D:prop><D:displayname>Calendar</D:displayname><D:resourcetype><D:collection/><A:calendar/></D:resourcetype><A:supported-calendar-component-set><A:comp name="VEVENT"/><A:comp name="VTODO"/></A:supported-calendar-component-set></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>
+<D:response><D:href>/dav/cal/usera%40example.org/x1794141216003/</D:href><D:propstat><D:prop><D:displayname>Errands</D:displayname><D:resourcetype><D:collection/><A:calendar/></D:resourcetype><A:supported-calendar-component-set><A:comp name="VTODO"/></A:supported-calendar-component-set></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>
+<D:response><D:href>/dav/cal/team%40example.org/default/</D:href><D:propstat><D:prop><D:displayname>Errands</D:displayname><D:resourcetype><D:collection/><A:calendar/></D:resourcetype><A:supported-calendar-component-set><A:comp name="VTODO"/></A:supported-calendar-component-set></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>
+</D:multistatus>`;
+  const requestUri = 'https://mail.example.org/dav/cal/usera%40example.org/';
+  const calendars = [{ id: 'b', name: 'Calendar' }, { id: 'c', name: 'Errands' }];
+
+  it("keeps only the home's own collections when the home is known", () => {
+    const dav = parseCalendarCollectionComponents(homeXml, requestUri);
+    // The team's "default" doesn't overwrite the user's own.
+    expect(dav['default']).toEqual(['VEVENT', 'VTODO']);
+    // The team's "Errands" doesn't make the user's own one ambiguous.
+    expect(davComponentsFor(calendars[1], dav, calendars)).toEqual(['VTODO']);
+  });
+
+  it('reads the home from the proxy response', async () => {
+    fetchSpy.mockResolvedValueOnce(new Response(homeXml, {
+      status: 207,
+      headers: { 'X-WebDAV-Request-URI': requestUri },
+    }));
+    const dav = await fetchCalendarCollectionComponents();
+    expect(dav['default']).toEqual(['VEVENT', 'VTODO']);
+    expect(davComponentsFor(calendars[1], dav, calendars)).toEqual(['VTODO']);
+  });
+
+  it('finds the home behind a reverse proxy that mounts the server under a prefix', () => {
+    const dav = parseCalendarCollectionComponents(homeXml, 'https://example.org/mail/dav/cal/usera%40example.org/');
+    expect(dav['default']).toEqual(['VEVENT', 'VTODO']);
+    expect(davComponentsFor(calendars[1], dav, calendars)).toEqual(['VTODO']);
+  });
+
+  it('skips an href it cannot decode and reads the rest', () => {
+    const xml = homeXml.replace('/dav/cal/usera%40example.org/default/', '/dav/cal/usera%40example.org/bad%E0%A4%A/');
+    expect(parseCalendarCollectionComponents(xml, requestUri)['x1794141216003']).toEqual(['VTODO']);
+  });
+});

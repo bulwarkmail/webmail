@@ -79,6 +79,15 @@ describe('getAllCalendars CalDAV PROPFIND deduplication', () => {
     expect(fetchDavSpy).toHaveBeenCalledTimes(1);
   });
 
+  it("doesn't match a shared account's calendar against the login's own collections", async () => {
+    // The PROPFIND lists the login's own calendar home; a collection there
+    // whose path happens to equal a shared calendar's id says nothing about it.
+    const calendars = await client.getAllCalendars();
+    const shared = calendars.find((c) => (c.originalId ?? c.id) === 'cal-acct-shared-1');
+    expect(shared).toBeDefined();
+    expect(shared?.isTasksOnly).not.toBe(true);
+  });
+
   it('keeps scanning a calendar that advertises both VEVENT and VTODO to check its content', async () => {
     // When a collection has both components (e.g. Stalwart default), it must
     // still be scanned rather than discarded from detection.

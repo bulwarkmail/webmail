@@ -9044,14 +9044,16 @@ export class JMAPClient implements IJMAPClient {
     const calendarsToScan: string[] = [];
 
     try {
-      const davComponents = cachedDavComponents ?? await fetchCalendarCollectionComponents(
-        getAccountSlotHeadersFor(this.username, this.serverUrl),
-      );
+      // The PROPFIND reads the login's own calendar home, so it says nothing
+      // about the calendars of an account shared with the login.
       const ownAccount = accountId === this.getCalendarsAccountId();
+      const davComponents = ownAccount
+        ? cachedDavComponents ?? await fetchCalendarCollectionComponents(getAccountSlotHeadersFor(this.username, this.serverUrl))
+        : {};
       const named = rawCalendarsOrIds.map((c) => (typeof c === 'string' ? { id: c } : { id: c.id, name: c.name }));
       for (const cal of named) {
         const id = cal.id;
-        const comps = ownAccount ? davComponentsFor(cal, davComponents, named) : davComponents[id];
+        const comps = davComponentsFor(cal, davComponents, named);
         if (comps && comps.includes('VTODO') && !comps.includes('VEVENT')) {
           tasksOnly.add(id);
         } else {

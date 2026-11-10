@@ -73,16 +73,37 @@ export async function mkCalendarCollection(opts: {
 /** Key prefix of the entries parseCalendarCollectionComponents adds by display name. */
 const NAME_KEY = '\u0000name:';
 
+/** Decoded path segments of an href or URL, or null when it can't be read. */
+function davPathSegments(hrefOrUrl: string): string[] | null {
+  try {
+    return new URL(hrefOrUrl.trim(), 'http://dav.invalid/').pathname
+      .split('/')
+      .filter(Boolean)
+      .map((segment) => decodeURIComponent(segment));
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parses CalDAV multistatus PROPFIND XML response and extracts the
  * supported-calendar-component-set for each collection, keyed by its path
  * segment, and once more by its display name where no other collection has
  * that name (see davComponentsFor).
+ *
+ * `homePath` is the calendar home the PROPFIND asked for. Stalwart's Depth 1
+ * listing of a home also holds the collections other accounts share with the
+ * user (/dav/cal/team%40example.org/default/), which would clash with the
+ * user's own by path and by name; with `homePath` only the home's own
+ * collections are kept.
  */
-export function parseCalendarCollectionComponents(xml: string): Record<string, CalendarComponentType[]> {
+export function parseCalendarCollectionComponents(xml: string, homePath?: string): Record<string, CalendarComponentType[]> {
   const result: Record<string, CalendarComponentType[]> = {};
   if (!xml || typeof xml !== 'string') return result;
   const byName = new Map<string, CalendarComponentType[] | null>();
+  // Compared by its last two segments (cal/<user>): a reverse proxy may mount
+  // the server under a prefix that the server's own hrefs leave out.
+  const home = homePath === undefined ? undefined : davPathSegments(homePath)?.slice(-2).join('/');
 
   try {
     const parser = new DOMParser();
@@ -97,9 +118,9 @@ export function parseCalendarCollectionComponents(xml: string): Record<string, C
       const compNodes = resp.getElementsByTagNameNS('urn:ietf:params:xml:ns:caldav', 'comp');
       if (!compNodes || compNodes.length === 0) continue;
 
-      const href = decodeURIComponent(hrefEl.textContent).replace(/\/+$/, '');
-      const segments = href.split('/').filter(Boolean);
-      if (segments.length === 0) continue;
+      const segments = davPathSegments(hrefEl.textContent);
+      if (!segments || segments.length === 0) continue;
+      if (home !== undefined && segments.slice(0, -1).slice(-2).join('/') !== home) continue;
 
       const resTypeNode = resp.getElementsByTagNameNS('DAV:', 'resourcetype')[0];
       const hasCalendarType = Boolean(resTypeNode?.getElementsByTagNameNS('urn:ietf:params:xml:ns:caldav', 'calendar').length);
@@ -173,7 +194,7 @@ export async function fetchCalendarCollectionComponents(
     }
 
     const text = await response.text();
-    return parseCalendarCollectionComponents(text);
+    return parseCalendarCollectionComponents(text, response.headers.get('X-WebDAV-Request-URI') ?? undefined);
   } catch {
     return {};
   }
