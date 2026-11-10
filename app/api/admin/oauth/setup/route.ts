@@ -8,6 +8,7 @@ import { isConfigReadOnly, ConfigReadOnlyError } from '@/lib/admin/paths';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { configWriteErrorResponse } from '@/lib/admin/config-read-only-response';
+import { forwardedClientHeaders } from '@/lib/auth/client-address';
 import { locales as ALL_LOCALES } from '@/i18n/routing';
 import {
   STALWART_SCOPE_FULL,
@@ -37,7 +38,10 @@ interface JmapMethodResponse {
   methodResponses?: Array<[string, Record<string, unknown>, string]>;
 }
 
-type ServerCreds = Pick<StalwartCredentials, 'serverUrl' | 'authHeader' | 'trusted'>;
+type ServerCreds = Pick<StalwartCredentials, 'serverUrl' | 'authHeader' | 'trusted'> & {
+  /** Sent with every request, for the admin's own sign-in (X-Forwarded-For). */
+  headers?: Record<string, string>;
+};
 
 async function fetchWithTimeout(
   url: string,
@@ -59,7 +63,7 @@ async function jmapCall(
 ): Promise<JmapMethodResponse> {
   const res = await fetchWithTimeout(`${creds.serverUrl}/jmap/`, {
     method: 'POST',
-    headers: { 'Authorization': creds.authHeader, 'Content-Type': 'application/json' },
+    headers: { ...creds.headers, 'Authorization': creds.authHeader, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   }, creds.trusted);
   if (!res.ok) {
@@ -69,17 +73,51 @@ async function jmapCall(
   return res.json() as Promise<JmapMethodResponse>;
 }
 
-async function getStalwartAccountId(creds: ServerCreds): Promise<string | null> {
+type JmapSessionAccount =
+  | { ok: true; accountId: string; username?: string }
+  | { ok: false; status: number };
+
+async function getStalwartAccount(creds: ServerCreds): Promise<JmapSessionAccount> {
   const res = await fetchWithTimeout(`${creds.serverUrl}/.well-known/jmap`, {
     method: 'GET',
-    headers: { 'Authorization': creds.authHeader },
+    headers: { ...creds.headers, 'Authorization': creds.authHeader },
   }, creds.trusted);
-  if (!res.ok) return null;
-  const session = await res.json() as { primaryAccounts?: Record<string, string> };
-  return session.primaryAccounts?.['urn:stalwart:jmap']
+  if (!res.ok) return { ok: false, status: res.status };
+  const session = await res.json() as { primaryAccounts?: Record<string, string>; username?: unknown };
+  const accountId = session.primaryAccounts?.['urn:stalwart:jmap']
     ?? session.primaryAccounts?.['urn:ietf:params:jmap:mail']
-    ?? Object.values(session.primaryAccounts ?? {})[0]
-    ?? null;
+    ?? Object.values(session.primaryAccounts ?? {})[0];
+  if (!accountId) return { ok: false, status: res.status };
+  return { ok: true, accountId, username: typeof session.username === 'string' ? session.username : undefined };
+}
+
+/**
+ * The admin-configured Stalwart, the only server the admin's own sign-in is
+ * ever sent to: the session's when it is one of the configured servers,
+ * otherwise the main one.
+ */
+async function adminCredentialServer(session: StalwartCredentials | null): Promise<string | null> {
+  if (session?.trusted) return session.serverUrl;
+  await configManager.ensureLoaded();
+  const configured = configManager.get<string>('jmapServerUrl', '')
+    || process.env.JMAP_SERVER_URL
+    || process.env.NEXT_PUBLIC_JMAP_SERVER_URL
+    || '';
+  return configured ? configured.trim().replace(/\/+$/, '') : null;
+}
+
+/**
+ * Authorization for the admin's own Stalwart sign-in (#1611). A Stalwart API
+ * key ("API_...") is a bearer token; a password or app password goes with the
+ * username as Basic auth. Stalwart limits neither to OAuth scopes, so they
+ * reach the OAuthClient objects that a webmail session token, which carries
+ * only the data scopes, can't since 1.0.3. Basic auth has no field for a
+ * TOTP code: an account with two-step verification needs an app password or
+ * an API key.
+ */
+function adminCredentialHeader(username: string, secret: string): string {
+  if (secret.startsWith('API_')) return `Bearer ${secret}`;
+  return `Basic ${Buffer.from(`${username}:${secret}`, 'utf8').toString('base64')}`;
 }
 
 /**
@@ -100,6 +138,13 @@ interface SetupRequestBody {
   issuerUrl?: string;
   locales?: string[];
   oauthOnly?: boolean;
+  /**
+   * A Stalwart admin's own sign-in, used for this setup instead of the
+   * webmail session and never stored or logged (#1611).
+   */
+  stalwartUsername?: string;
+  /** Password, app password or API key of `stalwartUsername`. */
+  stalwartSecret?: string;
 }
 
 interface SetError {
@@ -224,11 +269,23 @@ function isValidOriginUrl(value: string): boolean {
   return /^https?:\/\/[^/]+$/.test(value);
 }
 
-// The setup acts as the mail account signed in to this webmail, not as the
-// admin: a login to the Stalwart web admin sets no cookie here.
+// Without an admin sign-in in the request, the setup acts as the mail
+// account signed in to this webmail: a login to the Stalwart web admin sets
+// no cookie here.
 const NOT_SIGNED_IN =
-  'Sign in to this webmail with a Stalwart admin account in this browser, then retry. '
+  'Sign in to this webmail with a Stalwart admin account in this browser, or enter a Stalwart admin sign-in below, then retry. '
   + 'A login to the Stalwart web admin does not count.';
+
+// Stalwart 1.0.3 lets a token manage OAuth clients only with the full scope,
+// which no webmail sign-in asks for until this setup has run.
+const SESSION_REFUSED =
+  'Stalwart refused the token of your webmail session for managing OAuth clients. '
+  + 'Since Stalwart 1.0.3 that needs full access, which the webmail sign-in does not have. '
+  + 'Enter a Stalwart admin sign-in below and try again.';
+
+const CREDENTIAL_REFUSED =
+  'Stalwart did not accept this sign-in. With two-step verification on, the password alone does not work: '
+  + 'create an app password or API key in the Stalwart web admin and enter that instead.';
 
 /** Which mail account the setup would run as, so the page can say before it starts. */
 export async function GET(request: NextRequest) {
@@ -254,10 +311,7 @@ export async function POST(request: NextRequest) {
     }
 
     const ip = getClientIP(request);
-    const creds = await getStalwartCredentials(request);
-    if (!creds) {
-      return NextResponse.json({ error: NOT_SIGNED_IN }, { status: 400 });
-    }
+    const session = await getStalwartCredentials(request);
 
     const body = await request.json() as SetupRequestBody;
     const origin = (body.origin ?? '').trim().replace(/\/+$/, '');
@@ -282,13 +336,51 @@ export async function POST(request: NextRequest) {
     }
     const oauthOnly = body.oauthOnly === true;
 
-    const accountId = await getStalwartAccountId(creds);
-    if (!accountId) {
+    // The admin's own sign-in, when the dialog sent one: for this request
+    // only, to the configured Stalwart only, never stored or logged.
+    const adminSecret = typeof body.stalwartSecret === 'string' ? body.stalwartSecret : '';
+    const adminUsername = typeof body.stalwartUsername === 'string' ? body.stalwartUsername.trim() : '';
+    const usesApiKey = adminSecret.startsWith('API_');
+    let creds: ServerCreds;
+    if (adminSecret) {
+      if (!usesApiKey && (!adminUsername || adminUsername.includes(':'))) {
+        return NextResponse.json(
+          { error: 'Enter the Stalwart username that goes with this password.', needsAdminCredential: true },
+          { status: 400 },
+        );
+      }
+      const serverUrl = await adminCredentialServer(session);
+      if (!serverUrl) {
+        return NextResponse.json(
+          { error: 'No Stalwart server is configured for this webmail, so the sign-in has nowhere to go.' },
+          { status: 400 },
+        );
+      }
+      creds = {
+        serverUrl,
+        authHeader: adminCredentialHeader(adminUsername, adminSecret),
+        trusted: true,
+        headers: forwardedClientHeaders(ip),
+      };
+    } else if (session) {
+      creds = session;
+    } else {
+      return NextResponse.json({ error: NOT_SIGNED_IN, needsAdminCredential: true }, { status: 400 });
+    }
+
+    const account = await getStalwartAccount(creds);
+    if (!account.ok) {
+      if (adminSecret && (account.status === 401 || account.status === 403)) {
+        return NextResponse.json({ error: CREDENTIAL_REFUSED, needsAdminCredential: true }, { status: 403 });
+      }
       return NextResponse.json(
         { error: 'Could not resolve Stalwart account from JMAP session.' },
         { status: 502 },
       );
     }
+    const { accountId } = account;
+    // Named as a contact of the clients it creates.
+    const owner = adminSecret ? (account.username || adminUsername) : (session?.username ?? '');
 
     const queryRes = await jmapCall(creds, {
       using: STALWART_USING,
@@ -301,10 +393,15 @@ export async function POST(request: NextRequest) {
 
     const queryEntry = queryRes.methodResponses?.[0];
     if (!queryEntry || queryEntry[0] === 'error') {
-      return NextResponse.json({
-        error: 'Stalwart denied OAuthClient/query - your Stalwart account likely lacks admin permissions.',
-        detail: queryEntry?.[1],
-      }, { status: 403 });
+      // A session token on Stalwart 1.0.3 or later is refused even for a
+      // superuser (#1611); the admin's own sign-in is not limited that way.
+      const error = adminSecret
+        ? 'Stalwart denied OAuthClient/query - this Stalwart account lacks admin permissions.'
+        : await hasStalwartScopes(creds)
+          ? SESSION_REFUSED
+          : 'Stalwart denied OAuthClient/query - your Stalwart account likely lacks admin permissions. '
+            + 'Enter a Stalwart admin sign-in below to run the setup as that account.';
+      return NextResponse.json({ error, detail: queryEntry?.[1], needsAdminCredential: true }, { status: 403 });
     }
     const existingIds = (queryEntry[1].ids as string[] | undefined) ?? [];
 
@@ -337,7 +434,7 @@ export async function POST(request: NextRequest) {
               description: CLIENT_DESCRIPTION,
               secret,
               redirectUris,
-              contacts: { [creds.username]: true },
+              contacts: { [owner]: true },
               ...extra,
             },
           },
@@ -427,7 +524,7 @@ export async function POST(request: NextRequest) {
     // webmail is set up by now, so a refused mobile client is reported, not
     // an error.
     const mobileClient = access !== NO_EXTRA_ACCESS
-      ? await setUpMobileClient(creds, accountId, creds.username, access)
+      ? await setUpMobileClient(creds, accountId, owner, access)
       : 'skipped';
 
     await auditLog('admin.oauth_setup', {
@@ -439,6 +536,7 @@ export async function POST(request: NextRequest) {
       oauthOnly,
       mobileClient,
       stalwartScopes: access.request,
+      signIn: adminSecret ? (usesApiKey ? 'apiKey' : 'password') : 'session',
     }, ip);
 
     logger.info('Admin OAuth setup', {

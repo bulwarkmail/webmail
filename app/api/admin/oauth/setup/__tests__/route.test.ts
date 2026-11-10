@@ -17,17 +17,24 @@ let storedConfig: Record<string, string> = {};
 // Registry ids of the clients Stalwart already has, by client id.
 let existing: Record<string, string> = {};
 const jmapCalls: Array<[string, Record<string, unknown>]> = [];
+// Every request to Stalwart: where it went and what it carried.
+const requests: Array<{ url: string; headers: Record<string, string> }> = [];
+// A 1.0.3 session token carries only the data scopes and is refused the
+// OAuthClient objects even for a superuser (#1611).
+let sessionTokenRefused = false;
+// Authorization headers Stalwart accepts besides the session's.
+let acceptedAdminAuth: string[] = [];
 
 vi.mock('@/lib/admin/session', () => ({
   requireAdminAuth: async () => ({ ok: true }),
-  getClientIP: () => '127.0.0.1',
+  getClientIP: () => '203.0.113.7',
 }));
+let sessionServer = { serverUrl: 'https://mail.example.org', trusted: true };
 vi.mock('@/lib/stalwart/credentials', () => ({
   getStalwartCredentials: async () => (signedIn
     ? {
-      serverUrl: 'https://mail.example.org',
+      ...sessionServer,
       authHeader: 'Basic x',
-      trusted: true,
       username: 'admin@example.org',
     }
     : null),
@@ -48,15 +55,27 @@ vi.mock('@/lib/admin/config-manager', () => ({
 }));
 vi.mock('@/lib/admin/audit', () => ({ auditLog: async () => {} }));
 vi.mock('@/lib/stalwart/server-fetch', () => ({
-  fetchJmapServer: async (url: string, init: { body?: string }) => {
+  fetchJmapServer: async (url: string, init: { body?: string; headers?: Record<string, string> }) => {
+    const headers = { ...init.headers };
+    requests.push({ url, headers });
+    const auth = headers.Authorization;
+    if (auth && auth !== 'Basic x' && !acceptedAdminAuth.includes(auth)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
     if (url.endsWith('/.well-known/jmap')) {
-      return Response.json({ primaryAccounts: { 'urn:stalwart:jmap': 'a' } });
+      return Response.json({
+        username: auth === 'Basic x' ? 'admin@example.org' : 'root@example.org',
+        primaryAccounts: { 'urn:stalwart:jmap': 'a' },
+      });
     }
     if (url.endsWith('/.well-known/oauth-authorization-server')) {
       return Response.json({ scopes_supported: stalwart103 ? SCOPES_1_0_3 : SCOPES_1_0_2 });
     }
     const [name, args] = JSON.parse(init.body!).methodCalls[0];
     jmapCalls.push([name, args]);
+    if (sessionTokenRefused && auth === 'Basic x') {
+      return Response.json({ methodResponses: [['error', { type: 'forbidden', description: 'You are not authorized to perform this action' }, '0']] });
+    }
     if (name === 'x:OAuthClient/query') {
       const id = existing[(args.filter as { clientId: string }).clientId];
       return Response.json({ methodResponses: [[name, { ids: id ? [id] : [] }, '0']] });
@@ -97,12 +116,14 @@ const SCOPES_1_0_3 = [
 ];
 const DATA_SCOPES = { mail: true, contacts: true, calendars: true, files: true };
 
-function setup() {
+function setup(extra: Record<string, unknown> = {}) {
   return POST(new NextRequest('http://localhost/api/admin/oauth/setup', {
     method: 'POST',
-    body: JSON.stringify({ origin: 'https://webmail.example.org', issuerUrl: 'https://mail.example.org' }),
+    body: JSON.stringify({ origin: 'https://webmail.example.org', issuerUrl: 'https://mail.example.org', ...extra }),
   }));
 }
+
+const basic = (user: string, secret: string) => `Basic ${Buffer.from(`${user}:${secret}`).toString('base64')}`;
 
 beforeEach(() => {
   readOnly = false;
@@ -116,6 +137,10 @@ beforeEach(() => {
   storedConfig = {};
   existing = {};
   jmapCalls.length = 0;
+  requests.length = 0;
+  sessionTokenRefused = false;
+  acceptedAdminAuth = [];
+  sessionServer = { serverUrl: 'https://mail.example.org', trusted: true };
 });
 
 const setCalls = () => jmapCalls.filter(([name]) => name === 'x:OAuthClient/set').map(([, args]) => args);
@@ -256,6 +281,98 @@ describe('POST /api/admin/oauth/setup', () => {
         'urn:stalwart:oauth:scope:security',
         'urn:stalwart:oauth:scope:settings',
       ]);
+    });
+  });
+
+  describe("with the admin's own Stalwart sign-in (#1611)", () => {
+    beforeEach(() => {
+      stalwart103 = true;
+      sessionTokenRefused = true;
+    });
+
+    it('asks for an admin sign-in when Stalwart 1.0.3 refuses the session token', async () => {
+      const res = await setup();
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.needsAdminCredential).toBe(true);
+      expect(body.error).toMatch(/Since Stalwart 1\.0\.3 that needs full access/);
+      expect(setCalls()).toEqual([]);
+    });
+
+    it('sets up the clients with the password as Basic auth, and stores no part of it', async () => {
+      acceptedAdminAuth = [basic('root@example.org', 'pa:ss wörd')];
+      const res = await setup({ stalwartUsername: ' root@example.org ', stalwartSecret: 'pa:ss wörd' });
+      expect(res.status).toBe(200);
+      const stalwartCalls = requests.filter(({ url }) => !url.endsWith('/oauth-authorization-server'));
+      expect(stalwartCalls.length).toBeGreaterThan(0);
+      expect(stalwartCalls.every(({ headers }) => headers.Authorization === basic('root@example.org', 'pa:ss wörd'))).toBe(true);
+      // The client is the admin's, named after the account Stalwart says it is.
+      const create = (setCalls()[0].create as Record<string, Record<string, unknown>>).new;
+      expect(create.contacts).toEqual({ 'root@example.org': true });
+      expect(create.scopes).toEqual({ ...DATA_SCOPES, full: true });
+      expect(JSON.stringify(savedConfig)).not.toContain('wörd');
+      expect(JSON.stringify(await res.json())).not.toContain('wörd');
+    });
+
+    it('sends an API key as a bearer token, with no username needed', async () => {
+      acceptedAdminAuth = ['Bearer API_abc'];
+      const res = await setup({ stalwartSecret: 'API_abc' });
+      expect(res.status).toBe(200);
+      expect(requests.find(({ url }) => url.endsWith('/jmap/'))?.headers.Authorization).toBe('Bearer API_abc');
+    });
+
+    it("forwards the admin's address, so Stalwart counts a wrong password against them", async () => {
+      acceptedAdminAuth = ['Bearer API_abc'];
+      await setup({ stalwartSecret: 'API_abc' });
+      expect(requests.find(({ url }) => url.endsWith('/jmap/'))?.headers['X-Forwarded-For']).toBe('203.0.113.7');
+    });
+
+    it('sends the sign-in only to the configured server, not to one the session user picked', async () => {
+      sessionServer = { serverUrl: 'https://picked.example.net', trusted: false };
+      storedConfig = { jmapServerUrl: 'https://mail.example.org/' };
+      acceptedAdminAuth = ['Bearer API_abc'];
+      const res = await setup({ stalwartSecret: 'API_abc' });
+      expect(res.status).toBe(200);
+      expect(requests.length).toBeGreaterThan(0);
+      expect(requests.every(({ url }) => url.startsWith('https://mail.example.org/'))).toBe(true);
+    });
+
+    it('works without a webmail session', async () => {
+      signedIn = false;
+      storedConfig = { jmapServerUrl: 'https://mail.example.org' };
+      acceptedAdminAuth = [basic('root@example.org', 'secret')];
+      const res = await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'secret' });
+      expect(res.status).toBe(200);
+    });
+
+    it('refuses to send the sign-in when no server is configured', async () => {
+      signedIn = false;
+      vi.stubEnv('JMAP_SERVER_URL', '');
+      vi.stubEnv('NEXT_PUBLIC_JMAP_SERVER_URL', '');
+      try {
+        const res = await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'secret' });
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toMatch(/No Stalwart server is configured/);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+      expect(requests).toEqual([]);
+    });
+
+    it('needs a username with a password', async () => {
+      const res = await setup({ stalwartSecret: 'secret' });
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toMatch(/username/);
+      expect(requests).toEqual([]);
+    });
+
+    it('says what to do when Stalwart refuses the sign-in, for example over two-step verification', async () => {
+      const res = await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'wrong' });
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.needsAdminCredential).toBe(true);
+      expect(body.error).toMatch(/app password or API key/);
+      expect(setCalls()).toEqual([]);
     });
   });
 
