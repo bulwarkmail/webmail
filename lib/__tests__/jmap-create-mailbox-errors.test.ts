@@ -63,13 +63,20 @@ describe('createMailbox preserves refusal diagnostics', () => {
     await expect(client().createMailbox('New')).rejects.toThrow('Create mailbox failed: no response');
   });
 
-  it('keeps per-record error type, properties and description formatting', async () => {
+  it('reports a per-record refusal in the words of the server, with its JMAP type and properties', async () => {
     mockReply(id => [['Mailbox/set', { notCreated: { [id]: {
       type: 'invalidProperties', properties: ['name', 'parentId'], description: 'This parent cannot contain that name',
     } } }, '0']]);
-    await expect(client().createMailbox('New', 'parent', 'shared')).rejects.toThrow(
-      'Failed to create mailbox: invalidProperties – properties=[name, parentId] – This parent cannot contain that name',
-    );
+    await expect(client().createMailbox('New', 'parent', 'shared')).rejects.toMatchObject({
+      message: 'This parent cannot contain that name', jmapType: 'invalidProperties', jmapProperties: ['name', 'parentId'],
+    });
+  });
+
+  it('names the type of a per-record refusal without a description', async () => {
+    mockReply(id => [['Mailbox/set', { notCreated: { [id]: { type: 'overQuota' } } }, '0']]);
+    await expect(client().createMailbox('New')).rejects.toMatchObject({
+      message: 'Failed to create mailbox: overQuota', jmapType: 'overQuota',
+    });
   });
 
   it('keeps the existing fallback for an untyped per-record refusal', async () => {
