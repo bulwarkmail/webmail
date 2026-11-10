@@ -124,7 +124,7 @@ describe('PlaceholderFillModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('starts a field with the template default, selected on focus until changed', () => {
+  it('starts a field with the auto-filled value or the template default, selected on focus until changed', () => {
     const onConfirm = vi.fn();
     render(
       <PlaceholderFillModal
@@ -139,6 +139,10 @@ describe('PlaceholderFillModal', () => {
     const [name, time] = screen.getAllByPlaceholderText('enter_value') as HTMLInputElement[];
     expect(name.value).toBe('Grace');
     expect(time.value).toBe('15:00');
+
+    name.setSelectionRange(5, 5);
+    fireEvent.focus(name);
+    expect([name.selectionStart, name.selectionEnd]).toEqual([0, 5]);
 
     time.setSelectionRange(5, 5);
     fireEvent.focus(time);
