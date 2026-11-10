@@ -75,6 +75,6 @@ describe('attachment chips setting in MessageListSettings', () => {
     const settingItem = label.closest('[data-search-label="show_attachment_chips.label"]');
     const toggleContainer = settingItem!.querySelector('div[inert]');
     expect(toggleContainer).not.toBeNull();
-    expect(settingItem!.querySelector('.text-amber-700, .text-amber-400, [data-testid="org-locked"]')).toBeDefined();
+    expect(settingItem!.querySelector('[data-org-locked]')).not.toBeNull();
   });
 });
