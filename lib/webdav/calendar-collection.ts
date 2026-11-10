@@ -106,8 +106,12 @@ export function parseCalendarCollectionComponents(xml: string, homePath?: string
   if (!xml || typeof xml !== 'string') return result;
   const byName = new Map<string, CalendarComponentType[] | null>();
   // Compared by its last two segments (cal/<user>): a reverse proxy may mount
-  // the server under a prefix that the server's own hrefs leave out.
-  const home = homePath === undefined ? undefined : davPathSegments(homePath)?.slice(-2).join('/');
+  // the server under a prefix that the server's own hrefs leave out. Decoded
+  // and in any case: the home carries the login as typed (Linus@Example.org),
+  // the server's hrefs its own spelling (linus%40example.org).
+  const homeKey = (segments: string[]) => segments.slice(-2).map((segment) => segment.toLowerCase());
+  const homeSegments = homePath === undefined ? null : davPathSegments(homePath);
+  const home = homeSegments ? homeKey(homeSegments) : undefined;
 
   try {
     const parser = new DOMParser();
@@ -124,7 +128,10 @@ export function parseCalendarCollectionComponents(xml: string, homePath?: string
 
       const segments = davPathSegments(hrefEl.textContent);
       if (!segments || segments.length === 0) continue;
-      if (home !== undefined && segments.slice(0, -1).slice(-2).join('/') !== home) continue;
+      if (home) {
+        const parent = homeKey(segments.slice(0, -1));
+        if (parent.length !== home.length || parent.some((segment, k) => segment !== home[k])) continue;
+      }
 
       const resTypeNode = resp.getElementsByTagNameNS('DAV:', 'resourcetype')[0];
       const hasCalendarType = Boolean(resTypeNode?.getElementsByTagNameNS('urn:ietf:params:xml:ns:caldav', 'calendar').length);

@@ -282,6 +282,27 @@ describe('collections shared into the calendar home', () => {
     expect(davComponentsFor(calendars[1], dav, calendars)).toEqual(['VTODO']);
   });
 
+  // The proxy builds the home from the login as typed; Stalwart writes its own spelling.
+  it('finds the home when the login is typed in other case or encoded otherwise', () => {
+    for (const uri of [
+      'https://mail.example.org/dav/cal/UserA%40Example.org/',
+      'https://mail.example.org/dav/cal/UserA@Example.org/',
+      'https://mail.example.org/DAV/Cal/usera%40example.org/',
+    ]) {
+      const dav = parseCalendarCollectionComponents(homeXml, uri);
+      expect(dav['default']).toEqual(['VEVENT', 'VTODO']);
+      expect(davComponentsFor(calendars[1], dav, calendars)).toEqual(['VTODO']);
+    }
+    const raw = homeXml.replace(/usera%40example\.org/g, 'usera@example.org');
+    expect(parseCalendarCollectionComponents(raw, 'https://mail.example.org/dav/cal/UserA%40example.org/')['x1794141216003']).toEqual(['VTODO']);
+  });
+
+  it('still leaves out the collections of another account in other case', () => {
+    const dav = parseCalendarCollectionComponents(homeXml, 'https://mail.example.org/dav/cal/Team%40Example.org/');
+    expect(dav['x1794141216003']).toBeUndefined();
+    expect(dav['default']).toEqual(['VTODO']);
+  });
+
   it('skips an href it cannot decode and reads the rest', () => {
     const xml = homeXml.replace('/dav/cal/usera%40example.org/default/', '/dav/cal/usera%40example.org/bad%E0%A4%A/');
     expect(parseCalendarCollectionComponents(xml, requestUri)['x1794141216003']).toEqual(['VTODO']);
