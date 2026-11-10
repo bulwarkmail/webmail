@@ -24,7 +24,7 @@ import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-m
 import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { useAccountStore } from '@/stores/account-store';
-import { groupCalendarsByAccount, accountAddress, CalendarGroup } from '@/lib/calendar-targets';
+import { groupCalendarsByAccount, type CalendarGroup } from '@/lib/calendar-targets';
 import { useProMultiAccountCalendars } from '@/hooks/use-pro-multi-account-calendars';
 import { apiFetch } from '@/lib/browser-navigation';
 import { CALENDAR_COLORS, sharedCalendarColorKey } from '@/lib/shared-calendar-colors';
@@ -110,6 +110,7 @@ export function CalendarEditForm({
   onCancel,
   isLoading,
   extraActions,
+  chooseKind = true,
 }: {
   initial?: { name: string; color: string };
   onSave: (data: { name: string; color: string; components?: CalendarComponentType[] }) => void;
@@ -117,6 +118,11 @@ export function CalendarEditForm({
   isLoading: boolean;
   /** More of the calendar's settings, under the colour (pim-20). */
   extraActions?: React.ReactNode;
+  /**
+   * Whether a new calendar's kind is asked for. Only the user's own account
+   * gets the kind (MKCALENDAR); another account's calendar takes everything.
+   */
+  chooseKind?: boolean;
 }) {
   const t = useTranslations('calendar.management');
   const [name, setName] = useState(initial?.name || '');
@@ -129,7 +135,7 @@ export function CalendarEditForm({
   const submit = () => onSave({
     name: name.trim(),
     color,
-    ...(initial ? {} : { components: CALENDAR_KIND_COMPONENTS[kind] }),
+    ...(initial || !chooseKind ? {} : { components: CALENDAR_KIND_COMPONENTS[kind] }),
   });
 
   return (
@@ -161,7 +167,7 @@ export function CalendarEditForm({
         <CalendarColorPicker value={color} onChange={setColor} allowCustom />
       </div>
 
-      {!initial && (
+      {!initial && chooseKind && (
         <CalendarKindPicker value={kind} onChange={setKind} disabled={isLoading} />
       )}
 
@@ -336,48 +342,32 @@ export function CalendarManagementSettings() {
   const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
   const localAccounts = useAccountStore((s) => s.accounts);
 
-  // Group calendars by account. In managed account mode, group by accountId
-  // (the managed account) instead of localAccountId.
-  const calendarGroups = useMemo(() => {
+  // The user's own calendars under each login's address when several are
+  // signed in (pim-p2-3), then each shared account's under its name, as in
+  // the sidebar. A managed account's calendars are one list.
+  const calendarGroups: CalendarGroup<Calendar>[] = (() => {
     if (managedAccountId) {
-      // In managed account mode, all calendars belong to the managed account.
-      // Group by accountId (which is the managedAccountId for all listed calendars).
-      const byAccountId = new Map<string, Calendar[]>();
-      for (const cal of listedCalendars) {
-        const key = cal.accountId || managedAccountId;
-        byAccountId.set(key, [...(byAccountId.get(key) ?? []), cal]);
-      }
-      // Match normal mode: if only one group, no label (production behavior)
-      if (byAccountId.size <= 1) {
-        const [key = '', calendars = []] = [...byAccountId.entries()][0] ?? ['', []];
-        return [{ key, label: null, calendars }];
-      }
-      const account = localAccounts.find(a => a.id === managedAccountId);
-      return Array.from(byAccountId.entries()).map(([key, calendars]) => ({
-        key,
-        label: accountAddress(account) || key,
-        calendars,
-      }));
+      return listedCalendars.length > 0 ? [{ key: managedAccountId, label: null, calendars: listedCalendars }] : [];
     }
-    // Normal mode: separate own calendars (group by localAccountId) from shared
-    // calendars (group by accountId, like the sidebar does).
-    const ownCalendars = listedCalendars.filter(c => !c.isShared);
-    const sharedCalendars = listedCalendars.filter(c => c.isShared);
-    const ownGroups = groupCalendarsByAccount(ownCalendars, localAccounts, activeLocalAccountId);
-    // Shared calendars grouped by accountId (the owner account)
-    const sharedGroups: CalendarGroup<Calendar>[] = [];
-    if (sharedCalendars.length > 0) {
-      const byAccountId = new Map<string, Calendar[]>();
-      for (const cal of sharedCalendars) {
-        const key = cal.accountId || cal.accountName || cal.id;
-        byAccountId.set(key, [...(byAccountId.get(key) ?? []), cal]);
-      }
-      for (const [key, calendars] of byAccountId.entries()) {
-        sharedGroups.push({ key, label: calendars[0].accountName || key, calendars });
-      }
+    const ownGroups = groupCalendarsByAccount(listedCalendars.filter(c => !c.isShared), localAccounts, activeLocalAccountId);
+    // Account ids repeat across servers: two logins' shared accounts stay apart.
+    const shared = new Map<string, Calendar[]>();
+    for (const cal of listedCalendars) {
+      if (!cal.isShared) continue;
+      const key = `${cal.localAccountId ?? ''}|${cal.accountId || cal.accountName || cal.id}`;
+      shared.set(key, [...(shared.get(key) ?? []), cal]);
     }
+    const sharedGroups = [...shared].map(([key, list]) => ({ key, label: list[0].accountName || list[0].accountId || key, calendars: list }));
     return [...ownGroups, ...sharedGroups];
-  }, [listedCalendars, localAccounts, activeLocalAccountId, managedAccountId]);
+  })();
+
+  // Stalwart lets a group's members make calendars in the group's account,
+  // but not someone a calendar was shared with (mayCreateCalendar: false).
+  const managedAccountInfo = managedAccountId ? client?.getAccountInfo(managedAccountId) : null;
+  const managedCalendarsCapability = managedAccountInfo?.accountCapabilities['urn:ietf:params:jmap:calendars'] as
+    { mayCreateCalendar?: unknown } | undefined;
+  const mayCreateCalendar = !managedAccountInfo
+    || (!managedAccountInfo.isReadOnly && managedCalendarsCapability?.mayCreateCalendar !== false);
 
   const resolvesShares = (cal: Calendar) => !cal.localAccountId || cal.localAccountId === activeLocalAccountId;
   const shareLabels = useShareRecipientLabels(
@@ -503,12 +493,17 @@ export function CalendarManagementSettings() {
     if (!client) return;
     setIsLoading(true);
     try {
-      await createCalendar(client, {
+      const created = await createCalendar(client, {
         name: data.name,
         color: data.color,
         isVisible: true,
         isSubscribed: true,
       }, { components: data.components }, managedAccountId ?? undefined);
+      // The store answers a refusal with null rather than throwing.
+      if (!created) {
+        toast.error(t('error_create'));
+        return;
+      }
       setIsCreating(false);
       toast.success(t('calendar_created'));
     } catch {
@@ -696,7 +691,7 @@ export function CalendarManagementSettings() {
     );
   };
 
-return (
+  return (
     <SettingsSection id="calendars" title={t('title')} description={touch ? t('description_touch') : t('description')}>
       {renderRowMenu()}
       <div className="space-y-2">
@@ -707,8 +702,8 @@ return (
                 {group.label}
               </h4>
             )}
-            {group.calendars.map((cal) => {
-              const color = (cal.isShared && sharedCalendarColors[sharedCalendarColorKey(cal)]) || cal.color || '#3b82f6';
+        {group.calendars.map((cal) => {
+          const color = (cal.isShared && sharedCalendarColors[sharedCalendarColorKey(cal)]) || cal.color || '#3b82f6';
           // Up and down step over the neighbours of the same account.
           const siblings = cal.isShared ? [] : orderableCalendars.filter(c => calendarAccountKey(c) === calendarAccountKey(cal));
           const isOrderable = siblings.length > 1;
@@ -883,19 +878,22 @@ return (
             onSave={handleCreate}
             onCancel={() => setIsCreating(false)}
             isLoading={isLoading}
+            chooseKind={!managedAccountId}
           />
         ) : (
           // Stacked on a phone: side by side the three labels wrapped. Too
           // narrow for all three in a row (800 px), the last one goes under.
           <div data-testid="calendar-create-buttons" className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setIsCreating(true)}
-              className="flex items-center gap-2 flex-1 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border border-dashed border-border transition-colors whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" />
-              {t('add_calendar')}
-            </button>
+            {mayCreateCalendar && (
+              <button
+                type="button"
+                onClick={() => setIsCreating(true)}
+                className="flex items-center gap-2 flex-1 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border border-dashed border-border transition-colors whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4" />
+                {t('add_calendar')}
+              </button>
+            )}
             {!demoMode && (
               <button
                 type="button"
