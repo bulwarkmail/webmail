@@ -1049,7 +1049,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           </div>
 
           {/* A key per page: a page opens at its top, not at the scroll offset of the one before. */}
-          <AppMain key={effectiveActiveTab} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto p-4">
+          <AppMain key={effectiveActiveTab} embedded={isEmbedded} label={activeTabLabel} className="relative flex-1 overflow-y-auto p-4">
             {renderTabContent()}
           </AppMain>
 
@@ -1087,7 +1087,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           onScroll={(e) => { mobileListScrollTop.current = e.currentTarget.scrollTop; }}
           embedded={isEmbedded}
           label={t('title')}
-          className="flex-1 overflow-y-auto"
+          className="relative flex-1 overflow-y-auto"
           data-tour="settings-tabs"
         >
           <div className="px-4 pt-3 pb-1">
@@ -1186,7 +1186,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
   // Desktop layout
   const settingsMain = (
-      <AppMain key={effectiveActiveTab} ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
+      <AppMain key={effectiveActiveTab} ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="relative flex-1 overflow-y-auto">
         <div className={effectiveActiveTab.startsWith(PLUGIN_PAGE_PREFIX) ? "px-6 py-6" : "max-w-3xl mx-auto px-6 py-6"}>
           {/* The page's heading for screen readers; the sidebar shows which
               page is open (the phone header has a visible one). */}
