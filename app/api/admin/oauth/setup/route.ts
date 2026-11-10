@@ -80,9 +80,27 @@ async function jmapCall(
   }, creds);
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`JMAP HTTP ${res.status} ${text.slice(0, 200)}`);
+    throw new StalwartHttpError(res.status, text.slice(0, 200));
   }
   return res.json() as Promise<JmapMethodResponse>;
+}
+
+/** Stalwart answered a JMAP call with an HTTP error. Its message holds no credential. */
+class StalwartHttpError extends Error {
+  constructor(readonly status: number, body: string) {
+    super(`JMAP HTTP ${status} ${body}`);
+    this.name = 'StalwartHttpError';
+  }
+}
+
+/**
+ * What of an error may be logged. Other errors can quote the request: a
+ * header error names the whole Authorization value, the admin's password
+ * or API key with it.
+ */
+function loggableError(error: unknown): string {
+  if (error instanceof StalwartHttpError) return error.message;
+  return error instanceof Error ? error.name : 'Unknown error';
 }
 
 type JmapSessionAccount =
@@ -270,9 +288,7 @@ async function setUpMobileClient(
     }
     return existingId ? 'updated' : 'created';
   } catch (error) {
-    logger.warn('Admin OAuth setup: mobile client failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.warn('Admin OAuth setup: mobile client failed', { error: loggableError(error) });
     return 'failed';
   }
 }
@@ -298,6 +314,9 @@ const SESSION_REFUSED =
 const CREDENTIAL_REFUSED =
   'Stalwart did not accept this sign-in. With two-step verification on, the password alone does not work: '
   + 'create an app password or API key in the Stalwart web admin and enter that instead.';
+
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARACTER = /[\x00-\x1f\x7f]/;
 
 const TOO_MANY_SIGN_INS =
   'Too many Stalwart sign-ins failed from your address. Wait 15 minutes, then try again.';
@@ -358,6 +377,14 @@ export async function POST(request: NextRequest) {
     const usesApiKey = adminSecret.startsWith('API_');
     let creds: ServerCreds;
     if (adminSecret) {
+      // An API key goes into the header as it is, and a header error would
+      // quote it.
+      if (CONTROL_CHARACTER.test(adminSecret) || CONTROL_CHARACTER.test(adminUsername)) {
+        return NextResponse.json(
+          { error: 'The Stalwart sign-in contains a line break or another control character. Enter it again without one.', needsAdminCredential: true },
+          { status: 400 },
+        );
+      }
       if (!usesApiKey && (!adminUsername || adminUsername.includes(':'))) {
         return NextResponse.json(
           { error: 'Enter the Stalwart username that goes with this password.', needsAdminCredential: true },
@@ -542,9 +569,7 @@ export async function POST(request: NextRequest) {
             using: STALWART_USING,
             methodCalls: [['x:OAuthClient/set', { accountId, destroy: [createdId] }, '0']],
           }).catch((rollbackError) => {
-            logger.error('Admin OAuth setup rollback failed', {
-              error: rollbackError instanceof Error ? rollbackError.message : 'Unknown error',
-            });
+            logger.error('Admin OAuth setup rollback failed', { error: loggableError(rollbackError) });
           });
         }
       }
@@ -595,9 +620,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const refused = configWriteErrorResponse(error);
     if (refused) return refused;
-    logger.error('Admin OAuth setup error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Admin OAuth setup error', { error: loggableError(error) });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      {
+        error: error instanceof StalwartHttpError
+          ? `Stalwart answered with HTTP ${error.status}.`
+          : 'The OAuth setup failed. The server log has the error type.',
+      },
       { status: 500 },
     );
   }

@@ -20,6 +20,8 @@ const jmapCalls: Array<[string, Record<string, unknown>]> = [];
 // Every request to Stalwart: where it went, what it carried and how it was sent.
 const requests: Array<{ url: string; headers: Record<string, string>; options?: { storedCredential?: boolean } }> = [];
 let clientIp = '203.0.113.7';
+// Thrown by every request to Stalwart instead of an answer.
+let fetchError: Error | null = null;
 // A 1.0.3 session token carries only the data scopes and is refused the
 // OAuthClient objects even for a superuser (#1611).
 let sessionTokenRefused = false;
@@ -64,6 +66,7 @@ vi.mock('@/lib/stalwart/server-fetch', () => ({
   ) => {
     const headers = { ...init.headers };
     requests.push({ url, headers, options });
+    if (fetchError) throw fetchError;
     const auth = headers.Authorization;
     if (auth && auth !== 'Basic x' && !acceptedAdminAuth.includes(auth)) {
       return new Response('Unauthorized', { status: 401 });
@@ -104,6 +107,7 @@ vi.mock('@/lib/stalwart/server-fetch', () => ({
 }));
 
 import { GET, POST } from '../route';
+import { logger } from '@/lib/logger';
 
 const SCOPES_1_0_2 = [
   'openid',
@@ -148,6 +152,7 @@ beforeEach(() => {
   acceptedAdminAuth = [];
   sessionServer = { serverUrl: 'https://mail.example.org', trusted: true };
   clientIp = '203.0.113.7';
+  fetchError = null;
 });
 
 // The sign-in budget lives for the whole file: each test that counts on it
@@ -413,6 +418,36 @@ describe('POST /api/admin/oauth/setup', () => {
       // Another address still gets an answer from Stalwart.
       clientIp = freshAddress();
       expect((await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'wrong' })).status).toBe(403);
+    });
+
+    it('refuses a sign-in with a line break or NUL before building any header', async () => {
+      for (const sign of [
+        { stalwartUsername: 'root@example.org', stalwartSecret: 'secret\r\nX-Injected: 1' },
+        { stalwartUsername: 'root\n@example.org', stalwartSecret: 'secret' },
+        { stalwartUsername: 'root@example.org', stalwartSecret: 'sec\0ret' },
+      ]) {
+        const res = await setup(sign);
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toMatch(/line break or another control character/);
+      }
+      expect(requests).toEqual([]);
+    });
+
+    it('keeps the text of an unexpected error out of the answer and the log', async () => {
+      // What `new Headers()` throws for a bad value: the whole header, secret included.
+      clientIp = freshAddress();
+      fetchError = new TypeError('Headers.append: "Bearer API_leaked\r\n" is an invalid header value.');
+      const logged = vi.spyOn(logger, 'error').mockImplementation(() => {});
+      try {
+        const res = await setup({ stalwartUsername: 'root@example.org', stalwartSecret: 'secret' });
+        expect(res.status).toBe(500);
+        expect(JSON.stringify(await res.json())).not.toContain('leaked');
+        expect(logged).toHaveBeenCalled();
+        expect(JSON.stringify(logged.mock.calls)).not.toContain('leaked');
+        expect(JSON.stringify(logged.mock.calls)).toContain('TypeError');
+      } finally {
+        logged.mockRestore();
+      }
     });
 
     it('counts no sign-in that Stalwart accepted', async () => {
