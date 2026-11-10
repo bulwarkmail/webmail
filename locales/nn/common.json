@@ -1814,7 +1814,7 @@
       "id_field": "Etikett-ID",
       "id_placeholder": "t.d. arbeid, privat",
       "color_field": "Farge",
-      "id_exists": "Denne etikett-ID-en finst allereie",
+      "name_exists": "Det finst allereie ein etikett med dette namnet",
       "edit": "Rediger etikett",
       "delete": "Slett etikett",
       "edit_tag": "Rediger {name}",

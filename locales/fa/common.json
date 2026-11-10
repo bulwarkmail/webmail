@@ -1806,7 +1806,7 @@
       "id_field": "شناسه برچسب",
       "id_placeholder": "مثال: work, personal",
       "color_field": "رنگ",
-      "id_exists": "این شناسه قبلاً وجود دارد",
+      "name_exists": "برچسبی با این نام از قبل وجود دارد",
       "edit": "ویرایش برچسب",
       "delete": "حذف برچسب",
       "edit_tag": "ویرایش {name}",

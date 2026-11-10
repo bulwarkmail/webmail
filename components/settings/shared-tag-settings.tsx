@@ -8,7 +8,7 @@ import { useAccountTags, TagScopeContext, clientForLogin, type TagScope } from "
 import { useRestriction } from "@/hooks/use-restriction";
 import { MetadataTooLargeError } from "@/lib/jmap/bulwark-metadata";
 import type { MailboxRights } from "@/lib/jmap/types";
-import { composeKeywordId, MAX_KEYWORD_ID_LENGTH } from "@/lib/keyword-nesting";
+import { chooseKeywordId, isKeywordNameTaken, MAX_KEYWORD_ID_LENGTH } from "@/lib/keyword-nesting";
 import { MAX_SHARED_TAG_LABEL, groupAccountTags, type SharedTagChange } from "@/lib/shared-tags";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -52,7 +52,7 @@ function useInboxRights(scope: TagScope, enabled: boolean): Partial<MailboxRight
 function SharedTagForm({
   initial,
   fixedId,
-  takenIds,
+  taken,
   saving,
   onSave,
   onCancel,
@@ -60,7 +60,8 @@ function SharedTagForm({
   initial?: KeywordDefinition;
   /** The id stays: an existing tag or one found on messages. */
   fixedId?: string;
-  takenIds: string[];
+  /** The account's other tags, whose ids and names a new tag can't have. */
+  taken: KeywordDefinition[];
   saving: boolean;
   /** `color` only when it was picked (or the tag is new), so a color this version doesn't know survives a rename. */
   onSave: (id: string, value: { label: string; color?: string }) => void;
@@ -70,8 +71,8 @@ function SharedTagForm({
   const [label, setLabel] = useState(initial?.label ?? "");
   const [color, setColor] = useState(initial?.color ?? "blue");
   const [colorPicked, setColorPicked] = useState(false);
-  const id = fixedId ?? composeKeywordId(null, label);
-  const duplicate = !fixedId && id.length > 0 && takenIds.includes(id.toLowerCase());
+  const id = fixedId ?? chooseKeywordId(null, label, taken.map((tag) => tag.id));
+  const duplicate = !fixedId && isKeywordNameTaken(taken, null, label);
   const tooLong = !fixedId && id.length > MAX_KEYWORD_ID_LENGTH;
   const valid = label.trim().length > 0 && id.length > 0 && !duplicate && !tooLong;
   const keepsColor = !!initial && !colorPicked;
@@ -159,7 +160,7 @@ function SharedAccountTagEditor({ scope, name }: { scope: TagScope; name: string
     const found = new Set(discoveredIds);
     return { shared: entry.tags, discovered: definitions.filter((tag) => found.has(tag.id)) };
   }, [status, entry, nested]);
-  const takenIds = useMemo(() => [...shared, ...discovered].map((tag) => tag.id.toLowerCase()), [shared, discovered]);
+  const taken = useMemo(() => [...shared, ...discovered], [shared, discovered]);
 
   // Back to the row's edit button once a change is saved.
   useEffect(() => {
@@ -228,7 +229,7 @@ function SharedAccountTagEditor({ scope, name }: { scope: TagScope; name: string
           key={tag.id}
           initial={initial}
           fixedId={tag.id}
-          takenIds={takenIds}
+          taken={taken}
           saving={saving}
           onCancel={() => { setEditing(null); setFocusId(tag.id); }}
           onSave={async (id, value) => {
@@ -317,7 +318,7 @@ function SharedAccountTagEditor({ scope, name }: { scope: TagScope; name: string
           </p>
         ) : editing && !editing.id ? (
           <SharedTagForm
-            takenIds={takenIds}
+            taken={taken}
             saving={saving}
             onCancel={() => setEditing(null)}
             onSave={async (id, value) => { if (await save({ id, value })) { setEditing(null); setFocusId(id); } }}

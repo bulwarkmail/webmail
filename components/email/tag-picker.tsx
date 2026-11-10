@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Check, Minus, Plus, Search } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useSettingsStore, KEYWORD_PALETTE_ROWS } from "@/stores/settings-store";
-import { buildKeywordTree, composeKeywordId, MAX_KEYWORD_ID_LENGTH, type KeywordNode } from "@/lib/keyword-nesting";
+import { buildKeywordTree, chooseKeywordId, isKeywordNameTaken, MAX_KEYWORD_ID_LENGTH, type KeywordNode } from "@/lib/keyword-nesting";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useAccountTags, type TagScope } from "@/hooks/use-account-tags";
 
@@ -60,10 +60,12 @@ export function TagPicker({
   // the next colour of the palette and goes straight onto the message.
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const newId = composeKeywordId(null, newName);
+  const personalKeywords = useSettingsStore((state) => state.emailKeywords);
+  // The tag goes into the personal definitions, so their ids are taken too.
+  const newId = chooseKeywordId(null, newName, [...keywords, ...personalKeywords].map((k) => k.id));
   const newError = !newName.trim() ? null
-    : keywords.some((k) => k.id === newId) ? t("tag_exists")
-    : newId.length > MAX_KEYWORD_ID_LENGTH || !newId ? t("tag_name_invalid")
+    : isKeywordNameTaken(keywords, null, newName) ? t("tag_exists")
+    : newId.length > MAX_KEYWORD_ID_LENGTH ? t("tag_name_invalid")
     : null;
   const createTag = () => {
     if (!newName.trim() || newError) return;

@@ -1803,7 +1803,7 @@
       "id_field": "标签ID",
       "id_placeholder": "例如工作、个人",
       "color_field": "颜色",
-      "id_exists": "此标签ID已存在",
+      "name_exists": "已有同名标签",
       "edit": "编辑标签",
       "delete": "删除标签",
       "edit_tag": "编辑 {name}",

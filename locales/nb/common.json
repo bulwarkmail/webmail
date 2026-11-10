@@ -1806,7 +1806,7 @@
       "id_field": "Etikett-ID",
       "id_placeholder": "f.eks. jobb, personlig",
       "color_field": "Farge",
-      "id_exists": "Denne etikett-ID-en finnes allerede",
+      "name_exists": "Det finnes allerede en etikett med dette navnet",
       "edit": "Rediger etikett",
       "delete": "Slett etikett",
       "edit_tag": "Rediger {name}",

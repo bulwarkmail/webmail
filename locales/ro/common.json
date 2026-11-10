@@ -1806,7 +1806,7 @@
       "id_field": "EtichetăID",
       "id_placeholder": "de exemplu: profesional, personal",
       "color_field": "Culoare",
-      "id_exists": "Această etichetă ID există deja",
+      "name_exists": "Există deja o etichetă cu acest nume",
       "edit": "Editați eticheta",
       "delete": "Șterge eticheta",
       "edit_tag": "Editați {name}",

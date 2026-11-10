@@ -1803,7 +1803,7 @@
       "id_field": "Etiket Kimliği",
       "id_placeholder": "ör. is, kisisel",
       "color_field": "Renk",
-      "id_exists": "Bu etiket kimliği zaten mevcut",
+      "name_exists": "Bu adda bir etiket zaten var",
       "edit": "Etiketi düzenle",
       "delete": "Etiketi sil",
       "edit_tag": "{name} düzenle",

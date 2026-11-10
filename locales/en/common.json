@@ -1806,7 +1806,7 @@
       "id_field": "Tag ID",
       "id_placeholder": "e.g. work, personal",
       "color_field": "Color",
-      "id_exists": "This tag ID already exists",
+      "name_exists": "A tag with this name already exists",
       "edit": "Edit tag",
       "delete": "Delete tag",
       "edit_tag": "Edit {name}",

@@ -1806,7 +1806,7 @@
       "id_field": "ID de l'etiqueta",
       "id_placeholder": "p. ex. feina, personal",
       "color_field": "Color",
-      "id_exists": "Aquest ID d'etiqueta ja existeix",
+      "name_exists": "Ja hi ha una etiqueta amb aquest nom",
       "edit": "Edita l'etiqueta",
       "delete": "Suprimeix l'etiqueta",
       "edit_tag": "Edita {name}",

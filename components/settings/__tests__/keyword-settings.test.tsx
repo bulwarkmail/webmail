@@ -77,15 +77,16 @@ describe('KeywordSettings', () => {
     expect(keywords[keywords.length - 1].id).toBe('important');
   });
 
-  it('prevents adding keyword with duplicate id', () => {
+  it('prevents adding a tag with a name that is already used', () => {
     render(<KeywordSettings />);
     fireEvent.click(screen.getByText('add_keyword'));
 
     const input = screen.getByPlaceholderText('label_placeholder');
-    fireEvent.change(input, { target: { value: 'Red' } });
+    fireEvent.change(input, { target: { value: 'red' } });
 
     // Should show duplicate warning
-    expect(screen.getByText('id_exists')).toBeInTheDocument();
+    expect(screen.getByText('name_exists')).toBeInTheDocument();
+    expect(screen.getByText('add')).toBeDisabled();
   });
 
   it('cancels add form when cancel clicked', () => {
@@ -435,5 +436,68 @@ describe('KeywordSettings editing', () => {
 
     expect(screen.queryByDisplayValue('Changed')).toBeNull();
     expect(useSettingsStore.getState().emailKeywords[0].label).toBe(DEFAULT_KEYWORDS[0].label);
+  });
+});
+
+// #1613: the id is a slug of the name, and a name with no Latin letters or
+// digits has none, so Save stayed disabled without a word.
+describe('KeywordSettings names in other scripts', () => {
+  const migrateKeyword = vi.fn();
+
+  beforeEach(() => {
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], nestedTags: false });
+    migrateKeyword.mockReset();
+    useAuthStore.setState({ client: { migrateKeyword, getTagCounts: vi.fn().mockResolvedValue({}) } as never });
+  });
+
+  const addTag = (name: string) => {
+    fireEvent.click(screen.getByText('add_keyword'));
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: name } });
+    fireEvent.click(screen.getByText('add'));
+  };
+
+  it('adds a tag named in Cyrillic under a valid keyword id', () => {
+    render(<KeywordSettings />);
+    addTag('Работа');
+
+    const added = useSettingsStore.getState().emailKeywords.at(-1);
+    expect(added?.label).toBe('Работа');
+    expect(added?.id).toMatch(/^tag-[0-9a-z]+$/);
+  });
+
+  it('adds two names whose slugs are the same as two tags', () => {
+    render(<KeywordSettings />);
+    addTag('Банк 1');
+    addTag('Счета 1');
+
+    const keywords = useSettingsStore.getState().emailKeywords;
+    expect(keywords).toHaveLength(DEFAULT_KEYWORDS.length + 2);
+    const [bank, bills] = keywords.slice(-2);
+    expect(bank).toMatchObject({ label: 'Банк 1', id: '1' });
+    expect(bills.label).toBe('Счета 1');
+    expect(bills.id).not.toBe('1');
+  });
+
+  it('renames a tag to a Cyrillic name without changing its id', async () => {
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getAllByTitle('edit')[0]);
+    fireEvent.change(screen.getByDisplayValue('Red'), { target: { value: 'Красный' } });
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() =>
+      expect(useSettingsStore.getState().emailKeywords.find((k) => k.id === 'red')?.label).toBe('Красный'),
+    );
+    expect(migrateKeyword).not.toHaveBeenCalled();
+  });
+
+  it('nests a tag with a Cyrillic name under its parent', () => {
+    useSettingsStore.setState({ emailKeywords: [{ id: 'work', label: 'Work', color: 'blue' }], nestedTags: true });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByText('add_keyword'));
+    fireEvent.change(screen.getByLabelText('parent_field'), { target: { value: 'work' } });
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: 'Клиенты' } });
+    fireEvent.click(screen.getByText('add'));
+
+    expect(useSettingsStore.getState().emailKeywords.at(-1)?.id).toMatch(/^work\/tag-[0-9a-z]+$/);
   });
 });

@@ -1806,7 +1806,7 @@
       "id_field": "Tag-ID",
       "id_placeholder": "f.eks. arbejde, privat",
       "color_field": "Farve",
-      "id_exists": "Dette tag-ID findes allerede",
+      "name_exists": "Der findes allerede et mærke med det navn",
       "edit": "Redigér tag",
       "delete": "Slet tag",
       "edit_tag": "Rediger {name}",

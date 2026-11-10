@@ -1803,7 +1803,7 @@
       "id_field": "ラベルID",
       "id_placeholder": "例：work、personal",
       "color_field": "色",
-      "id_exists": "このラベルIDは既に存在します",
+      "name_exists": "この名前のタグはすでにあります",
       "edit": "ラベルを編集",
       "delete": "ラベルを削除",
       "edit_tag": "{name} を編集",

@@ -1803,7 +1803,7 @@
       "id_field": "Taga identifikators",
       "id_placeholder": "piem., darbs, personigi",
       "color_field": "Krāsa",
-      "id_exists": "Šāds taga identifikators jau pastāv",
+      "name_exists": "Birka ar šādu nosaukumu jau pastāv",
       "edit": "Rediģēt tagu",
       "delete": "Dzēst tagu",
       "edit_tag": "Rediģēt {name}",

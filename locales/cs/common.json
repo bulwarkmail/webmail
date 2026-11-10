@@ -1803,7 +1803,7 @@
       "id_field": "ID štítku",
       "id_placeholder": "např. prace, osobni",
       "color_field": "Barva",
-      "id_exists": "Toto ID štítku již existuje",
+      "name_exists": "Štítek s tímto názvem už existuje",
       "edit": "Upravit štítek",
       "delete": "Odstranit štítek",
       "edit_tag": "Upravit {name}",

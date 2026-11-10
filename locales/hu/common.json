@@ -1806,7 +1806,7 @@
       "id_field": "Címke azonosító",
       "id_placeholder": "pl. munka, szemelyes",
       "color_field": "Szín",
-      "id_exists": "Ez a címke azonosító már létezik",
+      "name_exists": "Már van ilyen nevű címke",
       "edit": "Címke szerkesztése",
       "delete": "Címke törlése",
       "edit_tag": "{name} szerkesztése",

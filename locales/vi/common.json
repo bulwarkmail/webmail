@@ -1818,7 +1818,7 @@
       "id_field": "Mã nhãn",
       "id_placeholder": "Ví dụ: cong-viec, ca-nhan",
       "color_field": "Màu",
-      "id_exists": "Mã nhãn này đã tồn tại",
+      "name_exists": "Thẻ có tên này đã tồn tại",
       "edit": "Sửa nhãn",
       "delete": "Xóa nhãn",
       "edit_tag": "Sửa {name}",

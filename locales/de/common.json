@@ -1803,7 +1803,7 @@
       "id_field": "Label-ID",
       "id_placeholder": "z.B. arbeit, privat",
       "color_field": "Farbe",
-      "id_exists": "Diese Label-ID existiert bereits",
+      "name_exists": "Ein Schlagwort mit diesem Namen gibt es bereits",
       "edit": "Label bearbeiten",
       "delete": "Label löschen",
       "edit_tag": "{name} bearbeiten",

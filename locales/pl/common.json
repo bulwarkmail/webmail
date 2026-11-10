@@ -1803,7 +1803,7 @@
       "id_field": "ID etykiety",
       "id_placeholder": "np. praca, osobiste",
       "color_field": "Kolor",
-      "id_exists": "Ten ID etykiety już istnieje",
+      "name_exists": "Tag o tej nazwie już istnieje",
       "edit": "Edytuj etykietę",
       "delete": "Usuń etykietę",
       "edit_tag": "Edytuj {name}",

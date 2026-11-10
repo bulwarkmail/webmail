@@ -142,4 +142,31 @@ describe('TagPicker new tag', () => {
     expect(created[0].label).toBe('Receipts');
     expect(onToggle).toHaveBeenCalledWith(created[0].id);
   });
+
+  // #1613: refused as "Choose a shorter name" before.
+  it('creates a tag named in Cyrillic, and refuses the same name twice', async () => {
+    const { fireEvent, render, screen } = await import('@testing-library/react');
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    const { TagPicker } = await import('../tag-picker');
+    useSettingsStore.setState({ emailKeywords: [{ id: '1', label: 'Банк 1', color: 'blue' }] } as never);
+    const onToggle = vi.fn();
+    const { unmount } = render(<TagPicker selectedIds={[]} onToggle={onToggle} />);
+    fireEvent.click(screen.getByTestId('tag-picker-new'));
+    const field = screen.getByRole('textbox', { name: 'new_tag_placeholder' });
+
+    fireEvent.change(field, { target: { value: 'Счета 1' } });
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.keyDown(field, { key: 'Enter' });
+    const created = useSettingsStore.getState().emailKeywords;
+    expect(created).toHaveLength(2);
+    expect(created[1].label).toBe('Счета 1');
+    expect(created[1].id).toMatch(/^tag-[0-9a-z]+$/);
+    expect(onToggle).toHaveBeenCalledWith(created[1].id);
+    unmount();
+
+    render(<TagPicker selectedIds={[]} onToggle={onToggle} />);
+    fireEvent.click(screen.getByTestId('tag-picker-new'));
+    fireEvent.change(screen.getByRole('textbox', { name: 'new_tag_placeholder' }), { target: { value: 'счета 1' } });
+    expect(screen.getByRole('alert')).toHaveTextContent('tag_exists');
+  });
 });

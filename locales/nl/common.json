@@ -1803,7 +1803,7 @@
       "id_field": "Label-ID",
       "id_placeholder": "bijv. werk, persoonlijk",
       "color_field": "Kleur",
-      "id_exists": "Deze label-ID bestaat al",
+      "name_exists": "Er bestaat al een label met deze naam",
       "edit": "Label bewerken",
       "delete": "Label verwijderen",
       "edit_tag": "{name} bewerken",

@@ -1803,7 +1803,7 @@
       "id_field": "ID da etiqueta",
       "id_placeholder": "ex. trabalho, pessoal",
       "color_field": "Cor",
-      "id_exists": "Este ID de etiqueta já existe",
+      "name_exists": "Já existe uma etiqueta com este nome",
       "edit": "Editar etiqueta",
       "delete": "Eliminar etiqueta",
       "edit_tag": "Editar {name}",

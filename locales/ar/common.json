@@ -1806,7 +1806,7 @@
       "id_field": "معرّف الوسم",
       "id_placeholder": "مثال: work, personal",
       "color_field": "اللون",
-      "id_exists": "معرّف الوسم هذا موجود بالفعل",
+      "name_exists": "يوجد وسم بهذا الاسم بالفعل",
       "edit": "تعديل الوسم",
       "delete": "حذف الوسم",
       "edit_tag": "تعديل {name}",

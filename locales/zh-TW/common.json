@@ -1806,7 +1806,7 @@
       "id_field": "標籤 ID",
       "id_placeholder": "例如工作、個人",
       "color_field": "顏色",
-      "id_exists": "此標籤 ID 已存在",
+      "name_exists": "已有同名標籤",
       "edit": "編輯標籤",
       "delete": "刪除標籤",
       "edit_tag": "編輯 {name}",

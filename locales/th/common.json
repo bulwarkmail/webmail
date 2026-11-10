@@ -5048,7 +5048,7 @@
       "id_field": "รหัสแท็ก",
       "id_placeholder": "เช่น work, personal, urgent",
       "color_field": "สี",
-      "id_exists": "รหัสแท็กนี้มีอยู่แล้ว",
+      "name_exists": "มีแท็กชื่อนี้อยู่แล้ว",
       "edit": "แก้ไขแท็ก",
       "delete": "ลบแท็ก",
       "edit_tag": "แก้ไข {name}",
