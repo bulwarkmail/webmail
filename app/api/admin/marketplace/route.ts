@@ -12,6 +12,7 @@ import {
   type ServerTheme,
 } from '@/lib/admin/plugin-registry';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
+import { sealPluginSecrets } from '@/lib/admin/plugin-config';
 import type { InstallRecord } from '@/lib/admin/extension-history';
 import {
   EXTENSION_ID_RE,
@@ -395,7 +396,8 @@ export async function POST(request: NextRequest) {
     // that list, and the bundle (optional permissions included) can ask for more. The
     // listing names no hosts, paths, frame origins, credential servers or tier, so on a
     // first install all of those are asked about. Which stored secret each credential sends
-    // where is compared on an update only: before a first install nothing is stored. The
+    // where, and a setting that stops being a secret, are compared on an update only:
+    // before a first install nothing is stored. The
     // answer names each addition as the 409 listed it; an entry it names that was neither
     // asked about nor seen is refused. `force` is for withdrawn and older versions, and says
     // nothing about this.
@@ -458,6 +460,9 @@ export async function POST(request: NextRequest) {
       ...record,
     };
 
+    // What the admin stored under the installed version's secret fields stays a
+    // secret, whatever this version declares for those keys.
+    await sealPluginSecrets(slug, existingPlugin?.configSchema);
     await savePlugin(plugin, code);
     invalidateFrameOriginsCache();
     await auditLog(

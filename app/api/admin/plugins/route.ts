@@ -13,6 +13,7 @@ import {
 import { listDevPlugins } from '@/lib/admin/plugin-dev';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
 import { cleanUpDeletedPlugin } from '@/lib/admin/extension-cleanup';
+import { sealPluginSecrets } from '@/lib/admin/plugin-config';
 import { keptVersions, listHistory } from '@/lib/admin/extension-history';
 import { ExtensionPackageError, readPluginPackage, suspiciousCode } from '@/lib/extension-package';
 import { MAX_PLUGIN_SIZE } from '@/lib/plugin-types';
@@ -133,6 +134,9 @@ export async function POST(request: NextRequest) {
     const declaredHttpOrigins = plugin.httpOrigins ?? [];
     const declaredApiPostPaths = plugin.apiPostPaths ?? [];
 
+    // What the admin stored under the installed version's secret fields stays a
+    // secret, whatever the uploaded version declares for those keys.
+    await sealPluginSecrets(plugin.id, existing?.configSchema);
     await savePlugin(plugin, code);
     invalidateFrameOriginsCache();
     await auditLog('plugin.install', { id: plugin.id, name: plugin.name, version: plugin.version, frameOrigins: declaredFrameOrigins, httpOrigins: declaredHttpOrigins, apiPostPaths: declaredApiPostPaths }, ip);

@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { HistoryError, readHistoryEntry } from '@/lib/admin/extension-history';
 import { getPlugin, getTheme, savePlugin, saveTheme } from '@/lib/admin/plugin-registry';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
+import { sealPluginSecrets } from '@/lib/admin/plugin-config';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { EXTENSION_ID_RE } from '@/lib/extension-package';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
@@ -31,7 +32,8 @@ import {
  *
  * A kept version that may do more than the installed one (permissions,
  * hosts, POST paths, frame origins, credential servers, which stored secret
- * a credential sends where, the privileged tier, a theme's skin) is refused
+ * a credential sends where, a setting that stops being a secret, the
+ * privileged tier, a theme's skin) is refused
  * with 409 and `grantsAdded` until the request accepts it, the same question
  * an update asks (lib/admin/extension-grants.ts).
  */
@@ -106,6 +108,9 @@ export async function POST(
         installedAt: current.installedAt,
         updatedAt: now,
       };
+      // What the admin stored under the installed version's secret fields stays a
+      // secret, whatever the kept version declares for those keys.
+      await sealPluginSecrets(id, current.configSchema);
       await savePlugin(plugin, kept.code);
       invalidateFrameOriginsCache();
       await auditLog('plugin.rollback', {

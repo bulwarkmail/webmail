@@ -32,7 +32,10 @@ vi.mock('@/lib/admin/plugin-registry', () => ({
   deletePlugin: vi.fn(async (id: string) => registry.delete(id)),
   updatePluginMeta: vi.fn(async () => null),
 }));
-vi.mock('@/lib/admin/plugin-config', () => ({ deletePluginConfig: vi.fn(async () => {}) }));
+vi.mock('@/lib/admin/plugin-config', () => ({
+  deletePluginConfig: vi.fn(async () => {}),
+  sealPluginSecrets: vi.fn(async () => {}),
+}));
 vi.mock('@/lib/admin/plugin-dev', () => ({ listDevPlugins: vi.fn(async () => []) }));
 vi.mock('@/lib/admin/csp-frame-origins', async (orig) => ({
   ...(await orig<typeof import('@/lib/admin/csp-frame-origins')>()),

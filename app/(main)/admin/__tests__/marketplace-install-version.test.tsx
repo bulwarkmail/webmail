@@ -126,6 +126,17 @@ describe('installVersion', () => {
     expect(calls[1].body.acceptGrants).toEqual({ permissions: ['email:read', 'email:send'] });
   });
 
+  it('names a setting that stops being a secret, and sends it back as accepted', async () => {
+    const grantsAdded = { permissions: [], httpOrigins: [], apiPostPaths: [], frameOrigins: [], credentialOrigins: [], credentials: [], formerSecrets: ['apiKey'], privileged: false, skin: false };
+    responses = [json({ error: 'adds', permissionsAdded: [], grantsAdded, compared: 'installed' }, 409), json({ warnings: [] })];
+    const asked: string[] = [];
+    const result = await installVersion(BODY, (q) => { asked.push(q.message); return true; });
+    expect(asked[0]).toContain('Stops keeping the setting "apiKey" secret');
+    expect(asked[0]).toContain('The value stored so far stays sealed');
+    expect(calls[1].body.acceptGrants).toEqual({ formerSecrets: ['apiKey'] });
+    expect(result.ok).toBe(true);
+  });
+
   it('asks only once about permissions, and shows a second refusal as an error', async () => {
     responses = [
       json({ error: 'adds', permissionsAdded: ['keystore'] }, 409),

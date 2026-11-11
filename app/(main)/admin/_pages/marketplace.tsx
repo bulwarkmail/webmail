@@ -32,6 +32,7 @@ import {
   grantsAdded,
   grantsOf,
   notAccepted,
+  readGrants,
   type Grants,
 } from '@/lib/admin/extension-grants';
 import { offerToTurnOnPlugins, pluginsOffForUsers, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
@@ -212,7 +213,7 @@ export async function rollbackVersion(
 
 /** What a 409 says a version adds: `grantsAdded`, else `permissionsAdded` alone. */
 export function reportedGrants(data: { grantsAdded?: unknown; permissionsAdded?: unknown }): Grants | null {
-  if (data.grantsAdded && typeof data.grantsAdded === 'object') return grantsAdded({}, data.grantsAdded as Partial<Grants>);
+  if (data.grantsAdded && typeof data.grantsAdded === 'object') return readGrants(data.grantsAdded);
   if (Array.isArray(data.permissionsAdded)) return grantsAdded({}, { permissions: data.permissionsAdded });
   return null;
 }

@@ -47,6 +47,7 @@ vi.mock('@/lib/admin/csp-frame-origins', async (orig) => ({
 const savedConfig = new Map<string, Record<string, unknown>>();
 vi.mock('@/lib/admin/plugin-config', () => ({
   getPluginConfig: vi.fn(async (id: string) => savedConfig.get(id) ?? {}),
+  sealPluginSecrets: vi.fn(async () => {}),
 }));
 vi.mock('@/lib/plugin-secrets/vault', () => ({ getUserCredential: vi.fn(async () => null) }));
 

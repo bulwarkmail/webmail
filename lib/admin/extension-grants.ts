@@ -13,9 +13,9 @@
  * A grant is more than the permission list: the hosts a plugin may contact,
  * the app's own routes it may post to, the origins it may embed (they go into
  * the CSP of every page), the servers its credentials are sent to and which
- * stored secret goes to which of them, and the privileged tier, which runs it
- * on the app's own origin. For a theme it is its skin, which restyles every
- * part of the app.
+ * stored secret goes to which of them, a setting that stops being a secret,
+ * and the privileged tier, which runs it on the app's own origin. For a theme
+ * it is its skin, which restyles every part of the app.
  *
  * No server imports: the admin pages read and describe the same shapes.
  */
@@ -39,10 +39,29 @@ export interface Grants {
    * stored setting. Any change in a line is a new line.
    */
   credentials: string[];
+  /**
+   * Settings that stop being secrets: the version before declares them
+   * `secret`, this one with an ordinary kind, which any signed-in user and
+   * the plugin itself may read. The value stored so far stays sealed
+   * (lib/plugin-secrets/sealed.ts); what is entered afterwards does not.
+   */
+  formerSecrets: string[];
   /** The privileged tier: a frame on the app's own origin. */
   privileged: boolean;
   /** A theme's skin.css, which may style any part of the app. */
   skin: boolean;
+}
+
+/**
+ * What one version grants, and how it declares its settings. The settings
+ * are no grant by themselves: they count against the version before, see
+ * `formerSecrets`.
+ */
+export interface VersionGrants extends Grants {
+  /** The settings it declares `secret`. */
+  secretSettings: string[];
+  /** The settings it declares with any other kind. */
+  plainSettings: string[];
 }
 
 /** A validated manifest or a registry entry, as far as grants go. */
@@ -119,8 +138,16 @@ function credentialBindings(credentials: unknown): string[] {
   return [...out];
 }
 
+/** The setting keys of a configSchema that are, or are not, declared `secret`. */
+function settingsDeclared(configSchema: unknown, secret: boolean): string[] {
+  if (!configSchema || typeof configSchema !== 'object' || Array.isArray(configSchema)) return [];
+  return Object.entries(configSchema as Record<string, unknown>)
+    .filter(([, field]) => !!field && typeof field === 'object' && ((field as { type?: unknown }).type === 'secret') === secret)
+    .map(([key]) => key);
+}
+
 /** The grants of a validated manifest or a registry entry. */
-export function grantsOf(entry: GrantSource | null | undefined): Grants {
+export function grantsOf(entry: GrantSource | null | undefined): VersionGrants {
   return {
     permissions: strings(entry?.permissions),
     httpOrigins: strings(entry?.httpOrigins),
@@ -128,8 +155,11 @@ export function grantsOf(entry: GrantSource | null | undefined): Grants {
     frameOrigins: strings(entry?.frameOrigins),
     credentialOrigins: credentialOriginsOf(entry?.credentials, entry?.configSchema),
     credentials: credentialBindings(entry?.credentials),
+    formerSecrets: [],
     privileged: entry?.tier === 'privileged',
     skin: entry?.hasSkin === true,
+    secretSettings: settingsDeclared(entry?.configSchema, true),
+    plainSettings: settingsDeclared(entry?.configSchema, false),
   };
 }
 
@@ -161,9 +191,11 @@ function pathCovered(path: string, held: readonly string[]): boolean {
 
 /**
  * What `after` grants beyond `before`. Implicit permissions every plugin
- * holds are never an addition, and neither is anything `after` dropped.
+ * holds are never an addition, and neither is anything `after` dropped. A
+ * setting `before` declares `secret` and `after` with an ordinary kind is
+ * one, in whichever direction the versions run (an update or a rollback).
  */
-export function grantsAdded(before: Partial<Grants>, after: Partial<Grants>): Grants {
+export function grantsAdded(before: Partial<VersionGrants>, after: Partial<VersionGrants>): Grants {
   const held = new Set<string>([...strings(before.permissions), ...IMPLICIT_PERMISSIONS]);
   const origins = (want: unknown, have: unknown) => strings(want).filter((o) => !originCovered(o, strings(have)));
   return {
@@ -173,6 +205,7 @@ export function grantsAdded(before: Partial<Grants>, after: Partial<Grants>): Gr
     frameOrigins: origins(after.frameOrigins, before.frameOrigins),
     credentialOrigins: origins(after.credentialOrigins, before.credentialOrigins),
     credentials: strings(after.credentials).filter((c) => !strings(before.credentials).includes(c)),
+    formerSecrets: strings(after.plainSettings).filter((key) => strings(before.secretSettings).includes(key)),
     privileged: after.privileged === true && before.privileged !== true,
     skin: after.skin === true && before.skin !== true,
   };
@@ -180,7 +213,7 @@ export function grantsAdded(before: Partial<Grants>, after: Partial<Grants>): Gr
 
 export function anyGrants(grants: Grants): boolean {
   return grants.privileged || grants.skin
-    || [grants.permissions, grants.httpOrigins, grants.apiPostPaths, grants.frameOrigins, grants.credentialOrigins, grants.credentials]
+    || [grants.permissions, grants.httpOrigins, grants.apiPostPaths, grants.frameOrigins, grants.credentialOrigins, grants.credentials, grants.formerSecrets]
       .some((l) => l.length > 0);
 }
 
@@ -192,22 +225,32 @@ export function compactGrants(grants: Grants): Partial<Grants> {
 }
 
 /**
+ * Grants as a request or an answer carries them (`acceptGrants`, a 409's
+ * `grantsAdded`): each kind as it is named there. A list given as anything
+ * but a list counts for nothing, a flag only when it is `true`.
+ */
+export function readGrants(value: unknown): Grants {
+  const given = (value && typeof value === 'object' ? value : {}) as Partial<Record<keyof Grants, unknown>>;
+  return {
+    permissions: strings(given.permissions),
+    httpOrigins: strings(given.httpOrigins),
+    apiPostPaths: strings(given.apiPostPaths),
+    frameOrigins: strings(given.frameOrigins),
+    credentialOrigins: strings(given.credentialOrigins),
+    credentials: strings(given.credentials),
+    formerSecrets: strings(given.formerSecrets),
+    privileged: given.privileged === true,
+    skin: given.skin === true,
+  };
+}
+
+/**
  * What the admin accepted, from an install request body: `acceptPermissions`
  * (a list of permissions) and `acceptGrants` (an object of the shape above).
- * A list given as anything but a list counts for nothing.
  */
 export function acceptedGrants(body: { acceptPermissions?: unknown; acceptGrants?: unknown } | null | undefined): Grants {
-  const rest = (body?.acceptGrants && typeof body.acceptGrants === 'object' ? body.acceptGrants : {}) as Partial<Record<keyof Grants, unknown>>;
-  return {
-    permissions: [...new Set([...strings(body?.acceptPermissions), ...strings(rest.permissions)])],
-    httpOrigins: strings(rest.httpOrigins),
-    apiPostPaths: strings(rest.apiPostPaths),
-    frameOrigins: strings(rest.frameOrigins),
-    credentialOrigins: strings(rest.credentialOrigins),
-    credentials: strings(rest.credentials),
-    privileged: rest.privileged === true,
-    skin: rest.skin === true,
-  };
+  const rest = readGrants(body?.acceptGrants);
+  return { ...rest, permissions: [...new Set([...strings(body?.acceptPermissions), ...rest.permissions])] };
 }
 
 /**
@@ -224,6 +267,7 @@ export function notAccepted(added: Grants, accepted: Grants): Grants {
     frameOrigins: missing(added.frameOrigins, accepted.frameOrigins),
     credentialOrigins: missing(added.credentialOrigins, accepted.credentialOrigins),
     credentials: missing(added.credentials, accepted.credentials),
+    formerSecrets: missing(added.formerSecrets, accepted.formerSecrets),
     privileged: added.privileged && !accepted.privileged,
     skin: added.skin && !accepted.skin,
   };
@@ -244,6 +288,7 @@ export function unexpectedAccepted(accepted: Grants, added: Grants, seen: Partia
     frameOrigins: extra(accepted.frameOrigins, added.frameOrigins, seen.frameOrigins),
     credentialOrigins: extra(accepted.credentialOrigins, added.credentialOrigins, seen.credentialOrigins),
     credentials: extra(accepted.credentials, added.credentials, seen.credentials),
+    formerSecrets: extra(accepted.formerSecrets, added.formerSecrets, seen.formerSecrets),
     privileged: accepted.privileged && !added.privileged && seen.privileged !== true,
     skin: accepted.skin && !added.skin && seen.skin !== true,
   };
@@ -254,6 +299,7 @@ export function unexpectedMessage(unexpected: Grants): string {
   const entries = [
     ...unexpected.permissions, ...unexpected.httpOrigins, ...unexpected.apiPostPaths, ...unexpected.frameOrigins,
     ...unexpected.credentialOrigins, ...unexpected.credentials,
+    ...unexpected.formerSecrets.map((key) => `the setting "${key}"`),
     ...(unexpected.privileged ? ['the privileged tier'] : []), ...(unexpected.skin ? ['a skin'] : []),
   ];
   return `The answer accepts what was not asked about: ${entries.join(', ')}. Accept exactly what the question lists.`;
@@ -288,6 +334,14 @@ export function describeReachAdded(added: Grants, firstInstall = false): string[
   if (added.frameOrigins.length > 0) lines.push(`May${now} embed ${added.frameOrigins.join(', ')}.`);
   if (added.credentialOrigins.length > 0) lines.push(`May${now} send its credentials to ${added.credentialOrigins.join(', ')}.`);
   if (added.credentials.length > 0) lines.push(`Changes where stored credentials go: ${added.credentials.join('; ')}.`);
+  if (added.formerSecrets.length > 0) {
+    const names = added.formerSecrets.map((key) => `"${key}"`).join(', ');
+    lines.push(
+      `Stops keeping the ${added.formerSecrets.length === 1 ? 'setting' : 'settings'} ${names} secret: `
+      + 'what an admin enters there from now on can be read by the plugin and by every signed-in user. '
+      + 'The value stored so far stays sealed, and the setting reads as empty until a new one is entered.',
+    );
+  }
   if (added.privileged) lines.push('Runs with full access to the app.');
   if (added.skin) lines.push('Brings a skin that restyles every part of the app.');
   return lines;
