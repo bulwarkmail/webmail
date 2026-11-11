@@ -154,7 +154,8 @@ export function createMaskedEmailManager() {
         created?: Record<string, { id: string }>;
         notCreated?: Record<string, { type: string; description?: string }>;
       }>('x:MaskedEmail/set', { create: { new: {
-        description: input.description, forDomain: input.forDomain || null, [enabledProperty]: true,
+        // Stalwart refuses a present but empty string; no description is null.
+        description: input.description || null, forDomain: input.forDomain || null, [enabledProperty]: true,
       } } });
       const error = result.notCreated?.new;
       if (error) throw new MaskedEmailError(error.type, error.description);
@@ -165,8 +166,9 @@ export function createMaskedEmailManager() {
       assertCurrent();
       if (!ownedIds.has(id)) throw new MaskedEmailError('ownershipMismatch');
       // Copy only the two editable fields, including for untyped callers.
-      const patch: Record<string, string | boolean> = {};
-      if (typeof changes.description === 'string') patch.description = changes.description;
+      const patch: Record<string, string | boolean | null> = {};
+      // A cleared description is removed (null), as Stalwart refuses an empty one.
+      if (typeof changes.description === 'string') patch.description = changes.description || null;
       if (typeof changes.enabled === 'boolean') patch[enabledProperty] = changes.enabled;
       if (!Object.keys(patch).length) throw new MaskedEmailError('invalidProperties');
       const result = await request<{

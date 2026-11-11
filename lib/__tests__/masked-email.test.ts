@@ -63,6 +63,16 @@ describe.each(namespaces)('MaskedEmail contract: %s', namespace => {
     expect(requests[4].methodCalls[0][1]).toEqual({ accountId: 'personal', update: { mask: { description: 'Updated', [enabledProperty]: false } } });
     expect(JSON.stringify(requests)).not.toContain('destroy');
   });
+  it('sends no description as null on create and when it is cleared (#1641)', async () => {
+    const enabledProperty = namespace === namespaces[0] ? 'enable' : 'enabled';
+    const manager = createMaskedEmailManager()!;
+    await manager.list();
+    await manager.create({ description: '', forDomain: '' });
+    await manager.update('mask', { description: '' });
+    const requests = calls();
+    expect(requests[3].methodCalls[0][1]).toEqual({ accountId: 'personal', create: { new: { description: null, forDomain: null, [enabledProperty]: true } } });
+    expect(requests[4].methodCalls[0][1]).toEqual({ accountId: 'personal', update: { mask: { description: null } } });
+  });
   it('handles server-limited query pages and respects maxObjectsInGet', async () => {
     fetchMock.mockImplementation(async (_url, init) => {
       const [method, args] = JSON.parse(String(init?.body)).methodCalls[0];
