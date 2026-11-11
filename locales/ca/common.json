@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "La cerca no està disponible a la vista unificada"
   },
+  "account_routing": {
+    "group_members_one_account": "Un grup només pot contenir contactes d'un sol compte."
+  },
   "mail_import": {
     "menu_import": "Importa correu…",
     "settings_label": "Importa correu",

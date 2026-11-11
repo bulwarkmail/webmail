@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "整合檢視中無法使用搜尋"
   },
+  "account_routing": {
+    "group_members_one_account": "一個群組只能包含同一帳號的聯絡人。"
+  },
   "mail_import": {
     "menu_import": "匯入郵件…",
     "settings_label": "匯入郵件",

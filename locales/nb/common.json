@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "Søk er ikke tilgjengelig i den samlede visningen"
   },
+  "account_routing": {
+    "group_members_one_account": "En gruppe kan bare inneholde kontakter fra én konto."
+  },
   "mail_import": {
     "menu_import": "Importer e-post…",
     "settings_label": "Importer e-post",

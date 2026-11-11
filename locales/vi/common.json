@@ -6133,6 +6133,9 @@
   "unified_mailbox": {
     "search_unavailable": "Tìm kiếm không có sẵn trong chế độ xem hợp nhất"
   },
+  "account_routing": {
+    "group_members_one_account": "Một nhóm chỉ có thể chứa danh bạ của một tài khoản."
+  },
   "mail_import": {
     "menu_import": "Nhập thư…",
     "settings_label": "Nhập thư",

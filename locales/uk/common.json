@@ -5852,6 +5852,9 @@
   "unified_mailbox": {
     "search_unavailable": "Пошук недоступний в об'єднаному перегляді"
   },
+  "account_routing": {
+    "group_members_one_account": "Група може містити лише контакти одного облікового запису."
+  },
   "mail_import": {
     "menu_import": "Імпортувати пошту…",
     "settings_label": "Імпортувати пошту",

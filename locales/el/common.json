@@ -6133,6 +6133,9 @@
   "unified_mailbox": {
     "search_unavailable": "Η αναζήτηση δεν είναι διαθέσιμη στην ενοποιημένη προβολή"
   },
+  "account_routing": {
+    "group_members_one_account": "Μια ομάδα μπορεί να περιέχει επαφές μόνο από έναν λογαριασμό."
+  },
   "mail_import": {
     "menu_import": "Εισαγωγή αλληλογραφίας…",
     "settings_label": "Εισαγωγή αλληλογραφίας",

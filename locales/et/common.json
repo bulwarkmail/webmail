@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "Otsing pole ühendatud vaates saadaval"
   },
+  "account_routing": {
+    "group_members_one_account": "Grupis saavad olla ainult ühe konto kontaktid."
+  },
   "mail_import": {
     "menu_import": "Impordi kirju…",
     "settings_label": "Impordi kirju",

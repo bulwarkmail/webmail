@@ -5852,6 +5852,9 @@
   "unified_mailbox": {
     "search_unavailable": "Поиск недоступен в объединённом представлении"
   },
+  "account_routing": {
+    "group_members_one_account": "В группе могут быть только контакты одной учётной записи."
+  },
   "mail_import": {
     "menu_import": "Импортировать почту…",
     "settings_label": "Импортировать почту",

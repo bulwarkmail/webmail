@@ -5852,6 +5852,9 @@
   "unified_mailbox": {
     "search_unavailable": "A pesquisa não está disponível na vista unificada"
   },
+  "account_routing": {
+    "group_members_one_account": "Um grupo só pode conter contatos de uma conta."
+  },
   "mail_import": {
     "menu_import": "Importar e-mails…",
     "settings_label": "Importar e-mails",

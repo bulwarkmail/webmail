@@ -116,6 +116,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const tShell = useTranslations("shell");
   const tMerge = useTranslations("ux_pim_cimport");
   const tPc = useTranslations("ux_p3_pim_pc");
+  const tRouting = useTranslations("account_routing");
   const exportBusy = useContactExportBusy();
   useDocumentTitle(tSidebar("contacts"));
   useDesktopWindowName(tSidebar("contacts"), { withAccount: true });
@@ -988,23 +989,31 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
 
   const handleSaveGroup = useCallback(async (name: string, memberIds: string[]) => {
     const jmapClient = supportsSync && client ? client : null;
+    // A group holds cards of one login only; the form shows why it refuses.
+    const sayWhy = (error: unknown): never => {
+      if (error instanceof Error && error.name === 'MixedGroupAccountsError') throw new Error(tRouting("group_members_one_account"));
+      throw error;
+    };
     if (view === "group-edit" && selectedGroup) {
       await updateGroup(jmapClient, selectedGroup.id, name);
       // Use resolved member contact IDs for diff, not raw urn:uuid: keys
       const currentIds = selectedGroupMembers.map(m => m.id);
       const toAdd = memberIds.filter(id => !currentIds.includes(id));
       const toRemove = currentIds.filter(id => !memberIds.includes(id));
-      if (toAdd.length > 0) await addMembersToGroup(jmapClient, selectedGroup.id, toAdd);
+      if (toAdd.length > 0) await addMembersToGroup(jmapClient, selectedGroup.id, toAdd).catch(sayWhy);
       if (toRemove.length > 0) await removeMembersFromGroup(jmapClient, selectedGroup.id, toRemove);
       toast.success(t("toast.updated"));
       setView("group-detail");
     } else {
-      await createGroup(jmapClient, name, memberIds);
+      // With several logins listed, a group without members goes to the
+      // active one; one with members goes to theirs.
+      const login = multiAccountEnabled ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
+      await createGroup(jmapClient, name, memberIds, login).catch(sayWhy);
       toast.success(t("toast.created"));
       clearSelection();
       setView("list");
     }
-  }, [view, selectedGroup, selectedGroupMembers, supportsSync, client, createGroup, updateGroup, addMembersToGroup, removeMembersFromGroup, clearSelection, t]);
+  }, [view, selectedGroup, selectedGroupMembers, supportsSync, client, createGroup, updateGroup, addMembersToGroup, removeMembersFromGroup, clearSelection, t, tRouting, multiAccountEnabled]);
 
   const handleRemoveGroupMember = async (memberId: string) => {
     if (!selectedGroup) return;

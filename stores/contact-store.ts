@@ -192,6 +192,14 @@ function resolveAccountClient<T extends IJMAPClient>(active: T, localAccountId?:
   return lookup;
 }
 
+/** A contact group would hold cards of two logins; it is not created. */
+export class MixedGroupAccountsError extends Error {
+  constructor() {
+    super('Group members belong to different accounts');
+    this.name = 'MixedGroupAccountsError';
+  }
+}
+
 function stripLocalAccountPrefix(id: string, localAccountId?: string): string {
   if (!localAccountId) return id;
   const prefix = `${localAccountId}${CROSS_ACCOUNT_ID_DELIMITER}`;
@@ -581,7 +589,12 @@ interface ContactStore {
   getGroups: () => ContactCard[];
   getIndividuals: () => ContactCard[];
   getGroupMembers: (groupId: string) => ContactCard[];
-  createGroup: (client: IJMAPClient | null, name: string, memberIds: string[]) => Promise<void>;
+  /**
+   * Created in the login of its members; members of two logins are refused
+   * (MixedGroupAccountsError). `localAccountId`: the login for a group
+   * without members, where the list holds several logins' cards.
+   */
+  createGroup: (client: IJMAPClient | null, name: string, memberIds: string[], localAccountId?: string) => Promise<void>;
   updateGroup: (client: IJMAPClient | null, groupId: string, name: string) => Promise<void>;
   addMembersToGroup: (client: IJMAPClient | null, groupId: string, memberIds: string[]) => Promise<void>;
   removeMembersFromGroup: (client: IJMAPClient | null, groupId: string, memberIds: string[]) => Promise<void>;
@@ -1184,14 +1197,20 @@ export const useContactStore = create<ContactStore>()(
         });
       },
 
-      createGroup: async (client, name, memberIds) => {
+      createGroup: async (client, name, memberIds, localAccountId) => {
         const { contacts } = get();
         const members: Record<string, boolean> = {};
+        // The login the group goes to: its members' (their uids name cards of
+        // that login only), else the one the caller names.
+        const logins = new Set<string | undefined>();
         memberIds.forEach(id => {
           const contact = contacts.find(c => c.id === id);
+          logins.add(contact?.localAccountId);
           const key = contact?.uid || id;
           members[key] = true;
         });
+        if (logins.size > 1) throw new MixedGroupAccountsError();
+        const login = logins.size === 1 ? [...logins][0] : localAccountId;
 
         const groupData: Partial<ContactCard> = {
           kind: 'group',
@@ -1203,9 +1222,11 @@ export const useContactStore = create<ContactStore>()(
 
         let groupId: string;
         if (client && get().supportsSync) {
-          const created = await client.createContact(groupData);
-          set((state) => ({ contacts: [...state.contacts, created] }));
-          groupId = created.id;
+          const created = await resolveAccountClient(client, login).createContact(groupData);
+          // Under the id the listings give it, as createContact keeps a card.
+          const stored = login ? prefixContactsWithLocalAccount([created], login)[0] : created;
+          set((state) => ({ contacts: [...state.contacts, stored] }));
+          groupId = stored.id;
         } else {
           const localGroup: ContactCard = {
             id: `local-${generateUUID()}`,
@@ -1243,6 +1264,11 @@ export const useContactStore = create<ContactStore>()(
 
         const newMembers = { ...group.members };
         const added: string[] = [];
+        // Member uids name cards of the group's own login only.
+        if (memberIds.some(id => {
+          const contact = contacts.find(c => c.id === id);
+          return !!contact && contact.localAccountId !== group.localAccountId;
+        })) throw new MixedGroupAccountsError();
         memberIds.forEach(id => {
           const contact = contacts.find(c => c.id === id);
           const key = contact?.uid || contact?.originalId || id;

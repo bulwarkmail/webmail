@@ -5852,6 +5852,9 @@
   "unified_mailbox": {
     "search_unavailable": "Vyhledávání není ve sjednoceném zobrazení k dispozici"
   },
+  "account_routing": {
+    "group_members_one_account": "Skupina může obsahovat jen kontakty z jednoho účtu."
+  },
   "mail_import": {
     "menu_import": "Importovat poštu…",
     "settings_label": "Importovat poštu",

@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "Search is not available in the unified view"
   },
+  "account_routing": {
+    "group_members_one_account": "A group can only hold contacts from one account."
+  },
   "mail_import": {
     "menu_import": "Import mail…",
     "settings_label": "Import mail",

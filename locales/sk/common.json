@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "Vyhľadávanie nie je v zjednotenom zobrazení k dispozícii"
   },
+  "account_routing": {
+    "group_members_one_account": "Skupina môže obsahovať iba kontakty z jedného účtu."
+  },
   "mail_import": {
     "menu_import": "Importovať poštu…",
     "settings_label": "Importovať poštu",

@@ -6122,6 +6122,9 @@
   "unified_mailbox": {
     "search_unavailable": "חיפוש אינו זמין בתצוגה המאוחדת"
   },
+  "account_routing": {
+    "group_members_one_account": "קבוצה יכולה להכיל אנשי קשר מחשבון אחד בלבד."
+  },
   "mail_import": {
     "menu_import": "ייבוא דואר…",
     "settings_label": "ייבוא דואר",

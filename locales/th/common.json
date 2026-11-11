@@ -454,6 +454,9 @@
   "unified_mailbox": {
     "search_unavailable": "ไม่สามารถค้นหาในมุมมองรวมศูนย์ได้"
   },
+  "account_routing": {
+    "group_members_one_account": "กลุ่มหนึ่งมีได้เฉพาะผู้ติดต่อจากบัญชีเดียวเท่านั้น"
+  },
   "mail_import": {
     "menu_import": "นำเข้าอีเมล…",
     "settings_label": "นำเข้าอีเมล",

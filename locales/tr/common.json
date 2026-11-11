@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "Birleşik görünümde arama kullanılamaz"
   },
+  "account_routing": {
+    "group_members_one_account": "Bir grup yalnızca tek bir hesabın kişilerini içerebilir."
+  },
   "mail_import": {
     "menu_import": "E-posta içe aktar…",
     "settings_label": "E-posta içe aktar",

@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "Нэгдсэн харагдац дээр хайлт ашиглах боломжгүй"
   },
+  "account_routing": {
+    "group_members_one_account": "Групп зөвхөн нэг бүртгэлийн харилцагчдыг агуулна."
+  },
   "mail_import": {
     "menu_import": "Шуудан импортлох…",
     "settings_label": "Шуудан импортлох",

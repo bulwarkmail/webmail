@@ -5852,6 +5852,9 @@
   "unified_mailbox": {
     "search_unavailable": "Zoeken is niet beschikbaar in de gecombineerde weergave"
   },
+  "account_routing": {
+    "group_members_one_account": "Een groep kan alleen contacten van één account bevatten."
+  },
   "mail_import": {
     "menu_import": "E-mail importeren…",
     "settings_label": "E-mail importeren",

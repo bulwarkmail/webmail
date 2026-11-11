@@ -6121,6 +6121,9 @@
   "unified_mailbox": {
     "search_unavailable": "جستجو در نمای یکپارچه در دسترس نیست"
   },
+  "account_routing": {
+    "group_members_one_account": "یک گروه فقط می‌تواند مخاطبین یک حساب را داشته باشد."
+  },
   "mail_import": {
     "menu_import": "درون‌ریزی نامه…",
     "settings_label": "درون‌ریزی نامه",
