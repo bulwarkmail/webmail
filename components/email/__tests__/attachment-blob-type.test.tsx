@@ -92,9 +92,16 @@ const ATTACHED_MESSAGE = [
   '',
 ].join('\r\n');
 
+// UTF-8 text with letters outside ASCII.
+const UTF8_TEXT = enc('Grüße aus Köln, 你好');
+
 const BLOBS: Record<string, Uint8Array> = {
   'tnef-1': winmailDat(),
   'tnef-gif': winmailDat('image/gif', 'photo.gif'),
+  'tnef-text-utf8': winmailDat('text/plain; charset=utf-8', 'notes.txt', UTF8_TEXT),
+  'tnef-text-plain': winmailDat('text/plain', 'notes.txt', UTF8_TEXT),
+  // "café" in ISO-8859-1.
+  'tnef-text-latin1': winmailDat('text/plain; charset="ISO-8859-1"', 'notes.txt', [0x63, 0x61, 0x66, 0xe9]),
   'msg-1': new TextEncoder().encode(ATTACHED_MESSAGE),
 };
 
@@ -227,5 +234,20 @@ describe('downloads of attachments the reader holds as bytes', () => {
     fireEvent.click(chip.querySelector('button')!);
     expect(await savedDownload()).toEqual({ download: 'photo.gif', type: 'application/octet-stream' });
     expect(open).not.toHaveBeenCalled();
+  });
+});
+
+describe('plain text the reader holds as bytes', () => {
+  it.each([
+    ['text/plain; charset=utf-8', 'tnef-text-utf8', 'text/plain;charset=utf-8'],
+    ['text/plain', 'tnef-text-plain', 'text/plain;charset=utf-8'],
+    ['text/plain; charset="ISO-8859-1"', 'tnef-text-latin1', 'text/plain;charset=windows-1252'],
+  ])('a winmail.dat text entry tagged %j opens in a tab whose Blob is typed with its character set', async (_tag, blobId, expected) => {
+    render(<EmailViewer email={makeEmail({ partId: '2', blobId, name: 'winmail.dat', type: 'application/ms-tnef', size: 200, disposition: 'attachment' }, 'Notes attached.')} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onArchive={vi.fn()} onDelete={vi.fn()} />);
+    await clickChip('notes.txt');
+    await waitFor(() => expect(open).toHaveBeenCalledTimes(1));
+    const [url] = open.mock.calls[0] as [string];
+    expect(minted.get(url)?.type).toBe(expected);
+    expect(anchors).toEqual([]);
   });
 });
