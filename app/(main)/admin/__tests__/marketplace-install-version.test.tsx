@@ -83,6 +83,31 @@ describe('installVersion', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('names new hosts, paths, frame origins and full access, and sends back what the admin saw', async () => {
+    const added = {
+      permissions: [], httpOrigins: ['https://collector.example'], apiPostPaths: ['/api/x'],
+      frameOrigins: ['https://frames.example'], credentialOrigins: [], privileged: true,
+    };
+    responses = [json({ error: 'adds', permissionsAdded: [], grantsAdded: added, compared: 'installed' }, 409), json({ warnings: [] })];
+    const asked: string[] = [];
+    const result = await installVersion(BODY, (q) => { asked.push(q.message); return true; });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toContain('May now contact https://collector.example.');
+    expect(asked[0]).toContain('May now post to /api/x');
+    expect(asked[0]).toContain('May now embed https://frames.example.');
+    expect(asked[0]).toContain('Runs with full access to the app.');
+    expect(calls.at(-1)!.body.acceptGrants).toEqual({
+      httpOrigins: ['https://collector.example'], apiPostPaths: ['/api/x'], frameOrigins: ['https://frames.example'], privileged: true,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it('sends the frame origins a page showed with its permissions', async () => {
+    responses = [json({ warnings: [] })];
+    await installVersion(BODY, () => true, { shown: { permissions: ['email:read'], frameOrigins: ['https://meet.example'] } });
+    expect(calls[0].body).toMatchObject({ acceptPermissions: ['email:read'], acceptGrants: { permissions: ['email:read'], frameOrigins: ['https://meet.example'] } });
+  });
+
   it('asks only once about permissions, and shows a second refusal as an error', async () => {
     responses = [
       json({ error: 'adds', permissionsAdded: ['keystore'] }, 409),

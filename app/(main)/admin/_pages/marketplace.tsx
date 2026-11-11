@@ -25,6 +25,16 @@ import { Dialog } from '@/components/ui/dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ChangelogBadges, ChangelogEntries, anyFlag, type ChangelogEntry, type ChangelogFlags } from '@/components/admin/changelog';
 import { PluginPermissionList } from '@/components/plugins/plugin-permission-list';
+import {
+  anyGrants,
+  compactGrants,
+  describeReachAdded,
+  grantsAdded,
+  grantsOf,
+  mergeGrants,
+  notAccepted,
+  type Grants,
+} from '@/lib/admin/extension-grants';
 import { offerToTurnOnPlugins, pluginsOffForUsers, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
 import { pluginTypeLabel } from './plugin-type-label';
 
@@ -101,9 +111,10 @@ const pillClass = (active: boolean) => cn(
  * or one older than the installed version, comes back as 409; the admin is
  * asked (in the page's ConfirmDialog), and the install is repeated with
  * `force` if they insist. A version that asks for more than the admin saw
- * (more permissions than the installed version, or on a first install than
- * the directory's listing) comes back the same way, and is repeated with the
- * ones the admin was then shown. `shown`: what the calling page already
+ * (more permissions, hosts, POST paths, frame origins, credential servers or
+ * the privileged tier than the installed version, or on a first install than
+ * the directory's listing) comes back the same way, and is repeated with
+ * what the admin was then shown. `shown`: what the calling page already
  * showed for a first install, sent as accepted from the start. "Update all"
  * goes through here too, so it asks about each. Returns the error text to
  * show, or null.
@@ -115,46 +126,66 @@ export interface InstallQuestion {
   cancelText: string;
 }
 
+/** The question for a 409 that lists what a version adds (lib/admin/extension-grants.ts). */
+export function grantsQuestion(
+  name: string,
+  added: Grants,
+  compared: 'listing' | 'installed',
+): Omit<InstallQuestion, 'cancelText'> {
+  const names = added.permissions.join(', ');
+  const reach = describeReachAdded(added, compared === 'listing').join(' ');
+  if (compared === 'listing') {
+    const head = names
+      ? `${name} asks for permissions that the directory's listing did not show: ${names}.`
+      : `${name} may do more than the directory's listing shows.`;
+    return { title: 'Allow what the listing did not show?', message: `${head} ${reach}`.trim(), confirmText: 'Install' };
+  }
+  const head = names
+    ? `${name} asks for new permissions that the installed version doesn't have: ${names}.`
+    : `${name} may do more than the installed version.`;
+  return { title: 'Allow the new permissions?', message: `${head} ${reach}`.trim(), confirmText: 'Update' };
+}
+
+/** What a 409 says a version adds: `grantsAdded`, else `permissionsAdded` alone. */
+export function reportedGrants(data: { grantsAdded?: unknown; permissionsAdded?: unknown }): Grants | null {
+  if (data.grantsAdded && typeof data.grantsAdded === 'object') return grantsAdded({}, data.grantsAdded as Partial<Grants>);
+  if (Array.isArray(data.permissionsAdded)) return grantsAdded({}, { permissions: data.permissionsAdded });
+  return null;
+}
+
 export async function installVersion(
   body: { slug: string; version: string; type: 'plugin' | 'theme' },
   confirm: (question: InstallQuestion) => boolean | Promise<boolean>,
-  opts: { shown?: { permissions: readonly string[] } } = {},
+  opts: { shown?: { permissions: readonly string[]; frameOrigins?: readonly string[] } } = {},
 ): Promise<{ ok: true; warnings: string[]; signature: string | null; updated: boolean } | { ok: false; error: string }> {
   let force = false;
-  let acceptPermissions: string[] | undefined = opts.shown ? [...opts.shown.permissions] : undefined;
-  let askedPermissions = false;
+  let accepted: Grants | undefined = opts.shown ? grantsOf(opts.shown) : undefined;
+  let askedGrants = false;
   const send = () => apiFetch('/api/admin/marketplace', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...body, ...(force ? { force: true } : {}), ...(acceptPermissions ? { acceptPermissions } : {}) }),
+    body: JSON.stringify({
+      ...body,
+      ...(force ? { force: true } : {}),
+      ...(accepted ? { acceptPermissions: accepted.permissions, acceptGrants: compactGrants(accepted) } : {}),
+    }),
   });
   try {
     let res = await send();
-    // At most one of each question: withdrawn or older, then permissions.
+    // At most one of each question: withdrawn or older, then what it adds.
     for (let asked = 0; res.status === 409 && asked < 3; asked += 1) {
       const data = await res.json().catch(() => ({}));
-      if (Array.isArray(data.permissionsAdded) && !askedPermissions) {
-        askedPermissions = true;
-        const added = data.permissionsAdded as string[];
+      const added = reportedGrants(data);
+      if (added && !askedGrants) {
+        askedGrants = true;
         // What the calling page already showed is not asked about again.
-        const fresh = added.filter((p) => !acceptPermissions?.includes(p));
-        const names = (fresh.length > 0 ? fresh : added).join(', ');
-        const firstInstall = data.compared === 'listing';
-        const question = firstInstall
-          ? {
-              title: 'Allow what the listing did not show?',
-              message: `${body.slug} ${body.version} asks for permissions that the directory's listing did not show: ${names}.`,
-              confirmText: 'Install',
-            }
-          : {
-              title: 'Allow the new permissions?',
-              message: `${body.slug} ${body.version} asks for new permissions that the installed version doesn't have: ${names}.`,
-              confirmText: 'Update',
-            };
+        const fresh = accepted ? notAccepted(added, accepted) : added;
+        const compared = data.compared === 'listing' ? 'listing' : 'installed';
+        const question = grantsQuestion(`${body.slug} ${body.version}`, anyGrants(fresh) ? fresh : added, compared);
         if (!(await confirm({ ...question, cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        acceptPermissions = [...new Set([...(acceptPermissions ?? []), ...added])];
+        accepted = mergeGrants(accepted ?? {}, added);
       } else if (data.yanked && !force) {
         if (!(await confirm({ title: 'Install it anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };

@@ -102,10 +102,29 @@ describe('a first install grants only what the admin was shown', () => {
       httpOrigins: ['https://collector.example'],
     }), { permissions: ['ui:toolbar'] });
 
-    const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', acceptPermissions: ['email:read', 'http:fetch'] });
+    // The host is part of what the bundle grants beyond the listing, so it is accepted too.
+    const res = await install({
+      slug: 'pretty-dates', version: '1.0.0', type: 'plugin',
+      acceptPermissions: ['email:read', 'http:fetch'], acceptGrants: { httpOrigins: ['https://collector.example'] },
+    });
 
     expect(res.status).toBe(200);
     expect(registry.get('pretty-dates')!.permissions).toEqual(['ui:toolbar', 'email:read', 'http:fetch']);
+  });
+
+  it('is still refused when the permissions were accepted but the host was not', async () => {
+    directory(await bundle({
+      ...BASE, id: 'pretty-dates',
+      permissions: ['ui:toolbar'],
+      optionalPermissions: ['email:read', 'http:fetch'],
+      httpOrigins: ['https://collector.example'],
+    }), { permissions: ['ui:toolbar'] });
+
+    const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', acceptPermissions: ['email:read', 'http:fetch'] });
+
+    expect(res.status).toBe(409);
+    expect((await res.json()).grantsAdded).toMatchObject({ httpOrigins: ['https://collector.example'] });
+    expect(registry.has('pretty-dates')).toBe(false);
   });
 
   it('asks nothing when the listing and the bundle agree', async () => {
@@ -138,7 +157,9 @@ describe('a first install: what the answer names', () => {
     }), { permissions: ['ui:toolbar'] });
     const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' });
     expect(res.status).toBe(409);
-    expect((await res.json()).permissionsAdded).toContain('crypto:full');
+    const body = await res.json();
+    expect(body.permissionsAdded).toContain('crypto:full');
+    expect(body.grantsAdded.privileged).toBe(true);
     expect(registry.size).toBe(0);
   });
 
@@ -151,7 +172,7 @@ describe('a first install: what the answer names', () => {
   });
 });
 
-describe.skip('an update that widens reach without a new permission is asked about too', () => {
+describe('an update that widens reach without a new permission is asked about too', () => {
   const INSTALLED = {
     id: 'pretty-dates', name: 'Pretty Dates', version: '0.9.0', enabled: true,
     permissions: ['email:read', 'http:fetch', 'http:post', 'crypto:full'],
@@ -196,5 +217,110 @@ describe.skip('an update that widens reach without a new permission is asked abo
     registry.set('pretty-dates', { ...INSTALLED });
     directory(await bundle({ ...SAME }));
     expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
+  });
+
+  it('names each kind it adds, and installs once all of it was accepted', async () => {
+    registry.set('pretty-dates', { ...INSTALLED });
+    directory(await bundle({
+      ...SAME, tier: 'privileged',
+      httpOrigins: ['https://api.dates.example', 'https://collector.example'],
+      apiPostPaths: ['/api/dates', '/api/devices'],
+      frameOrigins: ['https://frames.example'],
+    }));
+    const refused = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' });
+    expect(refused.status).toBe(409);
+    const { grantsAdded: added, error } = await refused.json();
+    expect(added).toEqual({
+      permissions: [], httpOrigins: ['https://collector.example'], apiPostPaths: ['/api/devices'],
+      frameOrigins: ['https://frames.example'], credentialOrigins: [], privileged: true,
+    });
+    expect(error).toMatch(/May now contact https:\/\/collector\.example/);
+    expect(error).toMatch(/Runs with full access to the app/);
+
+    // Accepting part of it is not enough.
+    directory(await bundle({
+      ...SAME, tier: 'privileged',
+      httpOrigins: ['https://api.dates.example', 'https://collector.example'],
+      apiPostPaths: ['/api/dates', '/api/devices'],
+      frameOrigins: ['https://frames.example'],
+    }));
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', acceptGrants: { ...added, privileged: false } })).status).toBe(409);
+    expect(registry.get('pretty-dates')!.version).toBe('0.9.0');
+
+    const { auditLog } = await import('@/lib/admin/audit');
+    vi.mocked(auditLog).mockClear();
+    const ok = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', acceptGrants: added });
+    expect(ok.status).toBe(200);
+    expect(registry.get('pretty-dates')).toMatchObject({ version: '1.0.0', tier: 'privileged', httpOrigins: ['https://api.dates.example', 'https://collector.example'] });
+    // What was accepted is in the audit entry.
+    expect(vi.mocked(auditLog).mock.calls[0][1]).toMatchObject({
+      accepted: { httpOrigins: ['https://collector.example'], apiPostPaths: ['/api/devices'], frameOrigins: ['https://frames.example'], privileged: true },
+    });
+  });
+});
+
+describe('what counts as more', () => {
+  const INSTALLED = {
+    id: 'pretty-dates', name: 'Pretty Dates', version: '0.9.0', enabled: true,
+    permissions: ['http:fetch', 'http:post', 'http:proxy'],
+  };
+  const MANIFEST = { ...BASE, id: 'pretty-dates', permissions: INSTALLED.permissions };
+
+  async function update(installed: Record<string, unknown>, manifest: Record<string, unknown>) {
+    registry.set('pretty-dates', { ...INSTALLED, ...installed });
+    directory(await bundle({ ...MANIFEST, ...manifest }));
+    const res = await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' });
+    return { status: res.status, added: res.status === 409 ? (await res.json()).grantsAdded : null };
+  }
+
+  it('not an origin that differs only in case or a trailing slash', async () => {
+    expect((await update({ httpOrigins: ['https://API.Dates.example/'] }, { httpOrigins: ['https://api.dates.example'] })).status).toBe(200);
+    expect((await update({ frameOrigins: ['https://Frames.Example'] }, { frameOrigins: ['https://frames.example'] })).status).toBe(200);
+  });
+
+  it('a wildcard or a broader path in place of a narrower one', async () => {
+    const wider = await update({ httpOrigins: ['https://api.dates.example'] }, { httpOrigins: ['https://*.dates.example'] });
+    expect(wider.status).toBe(409);
+    expect(wider.added.httpOrigins).toEqual(['https://*.dates.example']);
+
+    const prefix = await update({ apiPostPaths: ['/api/dates/save'] }, { apiPostPaths: ['/api/dates/'] });
+    expect(prefix.status).toBe(409);
+    expect(prefix.added.apiPostPaths).toEqual(['/api/dates/']);
+
+    // The other way round is narrower, and asks nothing.
+    expect((await update({ httpOrigins: ['https://*.dates.example'] }, { httpOrigins: ['https://api.dates.example'] })).status).toBe(200);
+    expect((await update({ apiPostPaths: ['/api/dates/'] }, { apiPostPaths: ['/api/dates/save'] })).status).toBe(200);
+  });
+
+  it('a new secret setting whose credential goes to another server', async () => {
+    const res = await update({}, {
+      configSchema: { apiKey: { type: 'secret', label: 'API key' } },
+      credentials: { service: { label: 'Service', scope: 'admin', inject: { type: 'bearer' }, secretKey: 'apiKey', origin: 'https://collector.example' } },
+    });
+    expect(res.status).toBe(409);
+    expect(res.added.credentialOrigins).toEqual(['https://collector.example']);
+  });
+
+  it('a credential whose server field brings a new default', async () => {
+    const credentials = { service: { label: 'Service', scope: 'admin', inject: { type: 'bearer' }, secretKey: 'apiKey', originKey: 'baseUrl' } };
+    const schema = (url: string) => ({ apiKey: { type: 'secret', label: 'Key' }, baseUrl: { type: 'string', label: 'Server', default: url } });
+    const moved = await update(
+      { credentials, configSchema: schema('https://api.dates.example') },
+      { credentials, configSchema: schema('https://collector.example') },
+    );
+    expect(moved.status).toBe(409);
+    expect(moved.added.credentialOrigins).toEqual(['https://collector.example']);
+  });
+
+  it('nothing an update drops', async () => {
+    const res = await update(
+      {
+        permissions: [...INSTALLED.permissions, 'crypto:full'], tier: 'privileged',
+        httpOrigins: ['https://a.example', 'https://b.example'], apiPostPaths: ['/api/a', '/api/b'], frameOrigins: ['https://f.example'],
+        credentials: { service: { label: 'S', scope: 'user', inject: { type: 'basic' }, origin: 'https://c.example' } },
+      },
+      { httpOrigins: ['https://a.example'], apiPostPaths: ['/api/a'] },
+    );
+    expect(res.status).toBe(200);
   });
 });

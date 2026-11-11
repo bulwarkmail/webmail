@@ -43,7 +43,15 @@ import {
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
 import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
-import { acceptedGrants, anyGrants, grantsAdded, grantsOf, notAccepted } from '@/lib/admin/extension-grants';
+import {
+  acceptedGrants,
+  anyGrants,
+  compactGrants,
+  describeReachAdded,
+  grantsAdded,
+  grantsOf,
+  notAccepted,
+} from '@/lib/admin/extension-grants';
 import { createHash } from 'node:crypto';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
@@ -98,7 +106,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/admin/marketplace - Install one version of an extension
- * Body: { slug: string, version: string, type: 'plugin' | 'theme', force?: boolean, acceptPermissions?: string[] }
+ * Body: { slug: string, version: string, type: 'plugin' | 'theme', force?: boolean, acceptPermissions?: string[], acceptGrants?: object }
  *
  * The version is looked up on the directory first. A version the publisher
  * withdrew ("yanked") is refused with 409 unless `force` is set - the admin
@@ -109,9 +117,10 @@ export async function GET(request: NextRequest) {
  * version stays on disk for a rollback (lib/admin/extension-history.ts).
  *
  * A plugin bundle that grants more than the admin was shown (the listing on
- * a first install, the installed version on an update) is refused with 409
- * and `permissionsAdded` until `acceptPermissions` covers it
- * (lib/admin/extension-grants.ts).
+ * a first install, the installed version on an update) is refused with 409,
+ * `permissionsAdded` and `grantsAdded` (permissions, hosts, POST paths, frame
+ * origins, credential servers, the privileged tier) until `acceptPermissions`
+ * and `acceptGrants` cover it (lib/admin/extension-grants.ts).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -122,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     const ip = getClientIP(request);
-    const { slug, version, type, force, acceptPermissions } = await request.json();
+    const { slug, version, type, force, acceptPermissions, acceptGrants } = await request.json();
 
     if (!slug || !version || !type) {
       return NextResponse.json({ error: 'Missing slug, version, or type' }, { status: 400 });
@@ -348,16 +357,24 @@ export async function POST(request: NextRequest) {
 
     // Nothing is granted that nobody saw. What the admin saw is the installed version for an
     // update, and the directory's listing for a first install: the quick-install dialog shows
-    // that list, and the bundle (optional permissions included) can ask for more. `force` is
-    // for withdrawn and older versions, and says nothing about this.
+    // that list, and the bundle (optional permissions included) can ask for more. The
+    // listing names no hosts, paths, frame origins, credential servers or tier, so on a
+    // first install all of those are asked about. `force` is for withdrawn and older
+    // versions, and says nothing about this.
     const seen = isUpdate ? grantsOf(existingPlugin) : grantsOf({ permissions: meta.permissions });
     const added = grantsAdded(seen, grantsOf(manifest));
-    if (anyGrants(notAccepted(added, acceptedGrants({ acceptPermissions })))) {
-      const what = isUpdate ? 'new permissions' : 'permissions the directory did not list';
+    if (anyGrants(notAccepted(added, acceptedGrants({ acceptPermissions, acceptGrants })))) {
+      const parts = [
+        ...(added.permissions.length > 0
+          ? [`${isUpdate ? 'New permissions' : 'Permissions the directory did not list'}: ${added.permissions.join(', ')}.`]
+          : []),
+        ...describeReachAdded(added, !isUpdate),
+      ];
       return NextResponse.json(
         {
-          error: `Version ${version} asks for ${what}: ${added.permissions.join(', ')}.`,
+          error: `Version ${version} asks for more than ${isUpdate ? 'the installed version has' : 'the directory listed'}. ${parts.join(' ')}`,
           permissionsAdded: added.permissions,
+          grantsAdded: added,
           compared: isUpdate ? 'installed' : 'listing',
         },
         { status: 409 },
@@ -409,6 +426,8 @@ export async function POST(request: NextRequest) {
         apiPostPaths: plugin.apiPostPaths ?? [],
         signature: signature.status,
         ...(permissionsAdded.length > 0 ? { permissionsAdded } : {}),
+        // What the admin accepted beyond what they had seen.
+        ...(anyGrants(added) ? { accepted: compactGrants(added) } : {}),
         ...(meta.yanked ? { yanked: true } : {}),
         ...(isUpdate ? { previousVersion: existingPlugin.version } : {}),
       },

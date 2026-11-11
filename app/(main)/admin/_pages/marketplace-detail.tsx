@@ -201,10 +201,15 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
     const isUpdate = data.installed;
     setBusy(`install:${version}`);
     setMessage(null);
-    // A first install from here was shown the bundle's own permission list, so
-    // that much is not asked about again. An update still asks what it adds.
-    const shown = !isUpdate && data.bundle.manifest && data.preview?.version === version
-      ? { permissions: declaredPermissions(data.bundle.manifest) }
+    // A first install from here was shown the bundle's own permission list and
+    // frame origins, so that much is not asked about again. An update still
+    // asks what it adds.
+    const manifest = data.bundle.manifest;
+    const shown = !isUpdate && manifest && data.preview?.version === version
+      ? {
+          permissions: declaredPermissions(manifest),
+          frameOrigins: Array.isArray(manifest.frameOrigins) ? manifest.frameOrigins.filter((o): o is string => typeof o === 'string') : [],
+        }
       : undefined;
     const result = await installVersion({ slug: data.extension.slug, version, type: data.extension.type }, confirm, { shown });
     setBusy(null);
