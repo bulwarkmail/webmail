@@ -783,6 +783,24 @@ describe('Stalwart target: the entry document', () => {
     expect(readme).toMatch(/check that `resourceUrl` downloads before running\s+`UpdateApps`/);
   });
 
+  it('says that tokens are sealed and what shares the origin, with the headers a proxy should send', () => {
+    const readme = buildStalwartReadme({ version: '1.10.0', commit: 'abc1234', locales: ['en'], buildId: 'b' });
+    const security = readme.slice(readme.indexOf('## Security'), readme.indexOf('## Branding'));
+    expect(security).toContain('`/dav/`');
+    expect(security).toContain('`/jmap/download/`');
+    expect(security).toMatch(/```\nContent-Security-Policy: sandbox\nX-Content-Type-Options: nosniff\n```/);
+    expect(security).toMatch(/stored sealed/);
+    expect(security).toMatch(/must not limit `script-src`/);
+    expect(security).toMatch(/static zip on a host name of\s+its own is the safer choice/);
+    expect(readme).toMatch(/Either way it is stored sealed/);
+
+    const statics = buildReadme({ version: '1.10.0', commit: 'abc1234', basePath: '', locales: ['en'] });
+    expect(statics).not.toContain('a plain token');
+    expect(statics).not.toMatch(/Both are readable by\s+any script/);
+    expect(statics).toMatch(/Tokens are stored sealed/);
+    expect(statics).toMatch(/a host name of its\s+own/);
+  });
+
   it('names the web admin action, asks for HTTPS and keeps single sign-on off the missing list', () => {
     const readme = buildStalwartReadme({ version: '1.10.0', commit: 'abc1234', locales: ['en'], buildId: 'b' });
     expect(readme).toContain('**Actions > Update applications**');

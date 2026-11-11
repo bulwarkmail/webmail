@@ -920,11 +920,17 @@ OpenID provider are sent there, and setting the Application's
 
 - No cookies and no server session. Requests to the mail server carry the
   token or credentials of the signed-in account only.
-- "Remember me" keeps a Stalwart refresh token in the browser's localStorage
-  (a plain token, never the password). Without "remember me" the token lives
-  in sessionStorage and the session ends with the tab. Both are readable by
-  any script running on your Lite origin, so serve Lite from an origin you
-  control and keep the Content-Security-Policy from \`_headers\`.
+- "Remember me" keeps a Stalwart refresh token in the browser's localStorage,
+  never the password; without "remember me" it lives in sessionStorage and
+  the session ends with the tab. Tokens are stored sealed with a key the
+  browser keeps in IndexedDB and lets no script copy out, so a script that
+  reads web storage finds no token and what is stored is of no use outside
+  this browser profile. A script running on your Lite origin can still use
+  that key while the browser holds it, so serve Lite from a host name of its
+  own that you control (not one that also serves files people upload) and
+  keep the Content-Security-Policy from \`_headers\`. Where the browser can't
+  seal (a plain http:// address other than localhost, IndexedDB blocked) a
+  sign-in lasts only as long as the page.
 - Servers without Stalwart's token login (\`/api/auth\`) fall back to Basic
   auth. "Remember me" is then hidden; the credentials stay in sessionStorage
   for the lifetime of the tab so a reload does not sign you out. The same
@@ -1827,7 +1833,7 @@ build id.
 Passwords (and TOTP codes) go to Stalwart's \`/api/auth\` and are exchanged at
 \`/auth/token\` for an access token and a refresh token, all on the same
 origin. "Remember me" keeps the refresh token in localStorage, otherwise it
-lives with the tab.
+lives with the tab. Either way it is stored sealed (see Security below).
 
 Serve Stalwart over HTTPS. On a plain \`http://\` address other than
 \`localhost\`, browsers withhold the Web Crypto API this sign-in needs, so the
@@ -1875,6 +1881,38 @@ Stalwart's own login page and needs the \`.../oauth/callback\` URI registered
 as well if your server requires registered clients. Per-domain directories
 are a Stalwart Enterprise feature; the community edition has one directory
 for every account.
+
+## Security
+
+Stalwart sends no security headers for an Application, so the bundle
+carries its own Content-Security-Policy: scripts load from this origin
+only, and no inline script runs but the entry document's own. The entry
+also refuses to run inside another site's frame.
+
+The webmail shares its origin with everything else this Stalwart serves,
+including every file users keep in its file storage (\`/dav/\`) and every
+attachment the download endpoint returns (\`/jmap/download/\`). Stalwart
+serves those with the type they were stored with, so an HTML file there
+opens as a page on the webmail's origin. Sign-in tokens are stored sealed
+with a key the browser keeps in IndexedDB and lets no script copy out: a
+script that reads web storage finds no token, and what is stored is of no
+use outside the browser profile. A script running on the origin can still
+use that key while the browser holds it. So put a reverse proxy in front of
+Stalwart that sends these headers for \`/dav/\` and \`/jmap/download/\`:
+
+\`\`\`
+Content-Security-Policy: sandbox
+X-Content-Type-Options: nosniff
+\`\`\`
+
+For the mount path itself the proxy may add \`X-Frame-Options: SAMEORIGIN\`,
+\`X-Content-Type-Options: nosniff\` and \`Referrer-Policy\`. A
+Content-Security-Policy header there must not limit \`script-src\`: it would
+refuse the entry document's own script.
+
+On a server several organisations share, the static zip on a host name of
+its own is the safer choice: there the webmail's origin serves nothing but
+the webmail.
 
 ## Branding and settings
 
