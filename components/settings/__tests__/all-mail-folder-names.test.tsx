@@ -80,23 +80,26 @@ describe('unified view settings visibility', () => {
     useSettingsStore.setState({ [setting]: false });
     render(<MultipleAccountsSection />);
 
-    const toggle = screen.getByRole('switch', { name: label });
+    const actualLabel = setting === 'enableCrossAllView' ? label : label.replace('cross_', 'virtual_');
+    const toggle = screen.getByRole('switch', { name: actualLabel });
     expect(toggle).toHaveAttribute('aria-checked', 'false');
     fireEvent.click(toggle);
     expect(useSettingsStore.getState()[setting]).toBe(true);
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     for (const [otherGate, otherLabel] of views) {
-      if (otherGate !== gate) expect(screen.queryByRole('switch', { name: otherLabel })).toBeNull();
+      if (otherGate !== gate) expect(screen.queryByRole('switch', { name: otherLabel.replace('cross_unread', 'virtual_unread').replace('cross_starred', 'virtual_starred') })).toBeNull();
     }
   });
 
-  it('lets a single account enable Unified Mailbox before choosing a view', () => {
+  it('exposes virtual views while Unified is OFF and keeps All mail unified', () => {
     singleAccount();
     useSettingsStore.setState({ enableUnifiedMailbox: false });
     render(<MultipleAccountsSection />);
-    expect(screen.queryByRole('switch', { name: 'cross_unread.label' })).toBeNull();
+    expect(screen.getByRole('switch', { name: 'virtual_unread.label' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'virtual_starred.label' })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'cross_all.label' })).toBeNull();
     fireEvent.click(screen.getByRole('switch', { name: 'unified_mailbox.label' }));
-    expect(screen.getByRole('switch', { name: 'cross_unread.label' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'cross_all.label' })).toBeInTheDocument();
   });
 
   it('keeps cross-account and shared/group controls hidden without their accounts', () => {
@@ -126,12 +129,14 @@ describe('unified view settings visibility', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('hides the entire section when a single account has Unified Mailbox hidden and off', () => {
+  it('keeps virtual options reachable when Unified Mailbox is hidden and off', () => {
     singleAccount();
     useSettingsStore.setState({ enableUnifiedMailbox: false });
     usePolicyStore.setState({ isSettingHidden: (setting) => setting === 'enableUnifiedMailbox' });
-    const { container } = render(<MultipleAccountsSection />);
-    expect(container).toBeEmptyDOMElement();
+    render(<MultipleAccountsSection />);
+    expect(screen.getByRole('switch', { name: 'virtual_unread.label' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'virtual_starred.label' })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'cross_all.label' })).toBeNull();
   });
 
   it('preserves the multi-account controls and views', () => {

@@ -54,6 +54,17 @@ describe('the first screen catalog', () => {
     }
   });
 
+  it('includes the empty Smart Folder sidebar create entry before the full catalog loads', async () => {
+    for (const locale of ['en', 'de', 'ja']) {
+      const first = await loadFirstScreenCatalog(locale, '/en');
+      const full = await loadCatalog(locale);
+      expect((first.smart_folders as Record<string, unknown>).create, locale)
+        .toBe((full.smart_folders as Record<string, unknown>).create);
+      expect((first.smart_folders as Record<string, unknown>).create, locale).toBeTruthy();
+      expect(first.smart_folders, locale).toEqual(full.smart_folders);
+    }
+  });
+
   it('names only paths the catalog has', async () => {
     const en = await loadCatalog('en');
     const all = new Set(leaves(en));

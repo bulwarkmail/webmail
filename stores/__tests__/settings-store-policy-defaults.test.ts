@@ -264,3 +264,69 @@ describe('settings export', () => {
     expect(settings().appFont).toBe('default');
   });
 });
+
+
+describe('virtual view defaults', () => {
+  it('defaults Unread and Starred ON without enabling aggregation', () => {
+    expect(settings().enableCrossUnreadView).toBe(true);
+    expect(settings().enableCrossStarredView).toBe(true);
+    expect(settings().enableUnifiedMailbox).toBe(false);
+    expect(settings().enableCrossAllView).toBe(false);
+    expect(settings().unifiedCrossAccount).toBe(false);
+  });
+
+  it('preserves existing untouched v16 values locally and through server/import copies', async () => {
+    const old = { enableCrossUnreadView: false, enableCrossStarredView: false, explicitSettings: [] };
+    const migrated = migrateSettings({ ...old }, 16);
+    expect(migrated.enableCrossUnreadView).toBe(false);
+    expect(migrated.enableCrossStarredView).toBe(false);
+    expect(migrated.explicitSettings).toEqual([]);
+    localStorage.setItem('settings-storage', JSON.stringify({ state: old, version: 16 }));
+    await useSettingsStore.persist.rehydrate();
+    expect(settings().enableCrossUnreadView).toBe(false);
+    expect(settings().enableCrossStarredView).toBe(false);
+    settings().importSettings(JSON.stringify(old));
+    expect(settings().enableCrossUnreadView).toBe(false);
+    expect(settings().enableCrossStarredView).toBe(false);
+    serverFiles.existingUser = old;
+    localStorage.clear();
+    await signIn('existingUser');
+    expect(settings().enableCrossUnreadView).toBe(false);
+    expect(settings().enableCrossStarredView).toBe(false);
+  });
+
+  it.each(['enableCrossUnreadView', 'enableCrossStarredView'] as const)(
+    'preserves explicit OFF for %s through persistence, migration, export/import and server reload', async (key) => {
+      settings().updateSetting(key, false);
+      expect(settings().explicitSettings).toContain(key);
+      const saved = JSON.parse(localStorage.getItem('settings-storage')!);
+      expect(saved.state[key]).toBe(false);
+      const migrated = migrateSettings({ ...saved.state }, 16);
+      expect(migrated[key]).toBe(false);
+      // Real Zustand local-storage rehydrate, not just a migration helper.
+      useSettingsStore.setState({ [key]: true });
+      localStorage.setItem('settings-storage', JSON.stringify(saved));
+      await useSettingsStore.persist.rehydrate();
+      expect(settings()[key]).toBe(false);
+      expect(settings().explicitSettings).toContain(key);
+      const exported = settings().exportSettings();
+      settings().resetToDefaults();
+      settings().importSettings(exported);
+      expect(settings()[key]).toBe(false);
+      expect(settings().explicitSettings).toContain(key);
+      serverFiles.chosen = JSON.parse(exported);
+      settings().resetToDefaults();
+      // Simulate another browser: no newer local reset stamp may win.
+      localStorage.clear();
+      await signIn('chosen');
+      expect(settings()[key]).toBe(false);
+      expect(settings().explicitSettings).toContain(key);
+    },
+  );
+
+  it('still applies operator defaults to untouched views', () => {
+    loadPolicy({ defaults: { enableCrossUnreadView: false, enableCrossStarredView: false } });
+    expect(settings().enableCrossUnreadView).toBe(false);
+    expect(settings().enableCrossStarredView).toBe(false);
+  });
+});

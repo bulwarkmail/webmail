@@ -1761,6 +1761,14 @@
         "open_label": "Pro-Oberfläche öffnen",
         "back_to_standard": "Zurück zum Standard"
       },
+      "virtual_unread": {
+        "label": "Virtuelle Ansicht: Ungelesen",
+        "description": "Ungelesene Nachrichten im Ordnerbereich anzeigen."
+      },
+      "virtual_starred": {
+        "label": "Virtuelle Ansicht: Mit Stern",
+        "description": "Mit Stern markierte Nachrichten im Ordnerbereich anzeigen."
+      },
       "cross_unread": {
         "label": "Alle Konten: Ungelesen",
         "description": "Zeigt in der Sektion „All accounts“ einen Eintrag mit ungelesenen Mails über alle Konten und Ordner außer Junk, Gesendet, Archiv, Papierkorb und Entwürfe."
@@ -8280,5 +8288,32 @@
   "impersonation": {
     "return_notice": "Sie haben {mailbox} per Impersonation geöffnet.",
     "return_button": "Zurück zu meinem Konto"
-  }
+  },
+  "smart_folders": {
+  "title": "Smart Folders",
+  "create": "Smart Folder erstellen",
+  "edit": "Smart Folder bearbeiten",
+  "edit_named": "{name} bearbeiten",
+  "name": "Name",
+  "match": "Treffen",
+  "all": "Alle Bedingungen",
+  "any": "Eine der Bedingungen",
+  "condition": "Bedingung",
+  "value": "Wert",
+  "hasAttachment": "Mit Anhang",
+  "subject": "Betreff enthält",
+  "after": "Nach Datum",
+  "before": "Vor Datum",
+  "yes": "Ja",
+  "no": "Nein",
+  "save": "Speichern",
+  "cancel": "Abbrechen",
+  "delete": "Löschen",
+  "remove_condition": "Bedingung entfernen",
+  "add_condition": "Bedingung hinzufügen",
+  "invalid": "Name und gültige Bedingungen eingeben (höchstens 50 Smart Folders).",
+  "description": "Eine gespeicherte Ansicht des aktiven Accounts. Nachrichten werden weder verschoben noch verändert.",
+  "from": "Absender enthält",
+  "not": "Keine dieser Bedingungen"
+}
 }

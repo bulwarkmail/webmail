@@ -1,3 +1,6 @@
+import { isSmartFolderId, SMART_FOLDER_PREFIX } from '@/lib/smart-folder-types';
+import { compileSmartFolder } from '@/lib/smart-folder-query';
+import { combineMailFilters } from '@/lib/mail-view-filter';
 import { isSharedOut } from '@/lib/mailbox-shared-out';
 import { IncompleteDeleteError } from "@/lib/jmap/delete-error";
 import { rememberTrashOrigins } from "@/lib/trash-origin";
@@ -1360,6 +1363,15 @@ async function transformSearch(query: string, filters: SearchFilters): Promise<{
 
 /** Overlapping state-change runs share one syncing/idle cycle (onSyncStateChange). */
 let syncRuns = 0;
+
+async function querySmartFolder(client: IJMAPClient, mailboxId: string, state: Pick<EmailStore, 'searchQuery' | 'searchFilters'>, limit: number, position = 0) {
+  const folder = useSettingsStore.getState().smartFolders.find((f) =>
+    f.enabled && SMART_FOLDER_PREFIX + f.id === mailboxId);
+  if (!folder) throw new Error('Smart folder unavailable');
+  const filter = combineMailFilters(compileSmartFolder(folder), buildJMAPFilter(state.searchQuery, state.searchFilters, undefined));
+  const activeClient = useAuthStore.getState().client ?? client;
+  return activeClient.getEmails(undefined, undefined, limit, position, undefined, false, filter);
+}
 
 function resolveActionClient(passedClient: IJMAPClient): IJMAPClient {
   const viewingId = useEmailStore.getState().viewingAccountId;
@@ -3840,6 +3852,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     return {
       ...cancelEmailSearch(state),
       selectedMailbox: mailboxId,
+      ...(isSmartFolderId(mailboxId) ? { viewingAccountId: null, emailListSync: null, unreadSection: null } : {}),
       ...(scopeFollows
         ? { searchMailboxId: mailboxId }
         : scopeIsDefault ? { searchMailboxId: currentSearchScopeDefault(mailboxes, mailboxId) } : {}),
@@ -4098,6 +4111,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }); // Keep previous emails visible during transition
     try {
       const targetMailboxId = mailboxId || get().selectedMailbox;
+      if (isSmartFolderId(targetMailboxId)) {
+        const result = await querySmartFolder(client, targetMailboxId, get(), useSettingsStore.getState().emailsPerPage);
+        const emails = await emailHooks.onEmailsFetched.transform(result.emails);
+        if (!isCurrentView()) return;
+        shownFolderList = null;
+        set({ emails, hasMoreEmails: result.hasMore, totalEmails: result.total,
+          isLoading: false, listOrder: [], listKeepsServerTextOrder: false, emailListSync: null,
+          unreadSection: null, threadEmailsCache: new Map(), expandedThreadIds: new Set(),
+          ...threadCountsPatch(emails, result.threadCounts, new Map()), isLoadingThread: null });
+        return;
+      }
+
       if (targetMailboxId === VIRTUAL_SCHEDULED_MAILBOX_ID) {
         set({ isLoading: false, emails: [], hasMoreEmails: false, totalEmails: 0 });
         await get().fetchScheduledEmails(client);
@@ -4466,7 +4491,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const { searchFilters } = get();
       const hasFilters = !isFilterEmpty(searchFilters);
 
-      if ((searchQuery || hasFilters) && selectedKeyword) {
+      if (isSmartFolderId(selectedMailbox)) {
+        result = await querySmartFolder(client, selectedMailbox, get(), emailsPerPage, position);
+      } else if ((searchQuery || hasFilters) && selectedKeyword) {
         // Searching inside a tag view narrows the tag (see searchEmails), so
         // page 2 must carry the same keyword AND the same query — otherwise it
         // appends unrelated all-folders hits to a tag list.
@@ -5604,6 +5631,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   searchEmails: async (client, typedQuery) => {
+    if (isSmartFolderId(get().selectedMailbox)) {
+      set({ searchQuery: typedQuery });
+      await get().fetchEmails(client, get().selectedMailbox!);
+      return;
+    }
     const { searchAbortController } = get();
 
     if (searchAbortController) {
@@ -5743,6 +5775,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   advancedSearch: async (client, transformed) => {
+    if (isSmartFolderId(get().selectedMailbox)) {
+      if (transformed) set({ searchQuery: transformed.query, searchFilters: transformed.filters });
+      await get().fetchEmails(client, get().selectedMailbox!);
+      return;
+    }
     const { searchQuery: typedQuery, searchFilters: typedFilters, searchMailboxId, searchAbortController, isUnifiedView, unifiedRole, crossView, selectedKeyword } = get();
     const mailboxes = resolveActionMailboxes();
 
@@ -7263,7 +7300,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       let windowSize = emailsPerPage;
       // Set when the whole loaded list was re-queried in a keyword order.
       let keepOpenThread = false;
-      if (!selectedKeyword && isUnifiedView && crossView) {
+      if (!selectedKeyword && isSmartFolderId(selectedMailbox)) {
+        windowSize = Math.max(emailsPerPage, get().emails.length);
+        result = await querySmartFolder(client, selectedMailbox, get(), windowSize);
+      } else if (!selectedKeyword && isUnifiedView && crossView) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
         result = hasFilters
@@ -8186,6 +8226,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   emptyMailbox: async (client, mailboxId): Promise<boolean> => {
+    if (isSmartFolderId(mailboxId)) return false;
     const emptied = resolveActionMailboxes().find(mb => mb.id === mailboxId);
     if (emailHooks.onBeforeMailboxEmpty.size > 0
       && !(await emailHooks.onBeforeMailboxEmpty.intercept({ mailboxId, role: emptied?.role ?? null }))) {
@@ -8265,6 +8306,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   markMailboxAsRead: async (client, mailboxId) => {
+    if (isSmartFolderId(mailboxId)) return null;
     try {
       const mailbox = resolveActionMailboxes().find(mb => mb.id === mailboxId);
       const accountId = mailbox?.isShared ? mailbox.accountId : undefined;

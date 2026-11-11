@@ -1764,6 +1764,14 @@
         "open_label": "Open Pro interface",
         "back_to_standard": "Back to standard"
       },
+      "virtual_unread": {
+        "label": "Virtual view: Unread",
+        "description": "Show unread messages in the folder sidebar."
+      },
+      "virtual_starred": {
+        "label": "Virtual view: Starred",
+        "description": "Show starred messages in the folder sidebar."
+      },
       "cross_unread": {
         "label": "Unread",
         "description": "Show an Unread entry in the Unified Mailbox listing unread mail across the selected folders."
@@ -8280,5 +8288,32 @@
   "impersonation": {
     "return_notice": "You opened {mailbox} through impersonation.",
     "return_button": "Return to my account"
-  }
+  },
+  "smart_folders": {
+  "title": "Smart Folders",
+  "create": "Create Smart Folder",
+  "edit": "Edit Smart Folder",
+  "edit_named": "Edit {name}",
+  "name": "Name",
+  "match": "Match",
+  "all": "All conditions",
+  "any": "Any condition",
+  "condition": "Condition",
+  "value": "Value",
+  "hasAttachment": "Has attachment",
+  "subject": "Subject contains",
+  "after": "After date",
+  "before": "Before date",
+  "yes": "Yes",
+  "no": "No",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "remove_condition": "Remove condition",
+  "add_condition": "Add condition",
+  "invalid": "Enter a name and valid conditions (maximum 50 Smart Folders).",
+  "description": "A saved view of the active account. No messages are moved or changed.",
+  "from": "From contains",
+  "not": "None of these conditions"
+}
 }

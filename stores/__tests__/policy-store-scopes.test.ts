@@ -35,6 +35,20 @@ beforeEach(async () => {
 });
 
 describe('policy store scopes', () => {
+  it('keeps explicit admin virtual-view gates OFF after fetching policy', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      ...DEFAULT_POLICY,
+      features: { ...DEFAULT_POLICY.features, crossUnreadViewEnabled: false, crossStarredViewEnabled: false },
+    })));
+    await usePolicyStore.getState().fetchPolicy();
+    expect(usePolicyStore.getState().isFeatureEnabled('crossUnreadViewEnabled')).toBe(false);
+    expect(usePolicyStore.getState().isFeatureEnabled('crossStarredViewEnabled')).toBe(false);
+    expect(usePolicyStore.getState().rawPolicy.features.crossUnreadViewEnabled).toBe(false);
+    expect(usePolicyStore.getState().rawPolicy.features.crossStarredViewEnabled).toBe(false);
+    expect(usePolicyStore.getState().isFeatureEnabled('crossAllViewEnabled')).toBe(false);
+    expect(usePolicyStore.getState().isFeatureEnabled('unifiedCrossAccountEnabled')).toBe(false);
+  });
+
   it('resolves for the subject and again when it changes', () => {
     const store = usePolicyStore.getState();
     expect(store.isFeatureEnabled('calendarEnabled')).toBe(true);

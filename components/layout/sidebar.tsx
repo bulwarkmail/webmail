@@ -1,5 +1,7 @@
 "use client";
 
+import { SmartFolderSection } from "./smart-folder-section";
+
 import { hoverOpens } from "@/lib/open-on-hover";
 import { memo, createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef, useId, Fragment, ReactNode } from "react";
 import { useStableHandlers } from "@/hooks/use-stable-handlers";
@@ -145,7 +147,7 @@ interface SidebarProps {
   /** True when the unified view spans multiple login accounts (cross-account).
    *  Drives the section header: "All accounts" when true, else "Unified Mailbox". */
   crossAccountActive?: boolean;
-  /** Gated All mail / Unread / Starred entries in the "Unified Mailbox" section. */
+  /** Gated All mail / Unread / Starred entries; inline for a single own account. */
   showCrossUnread?: boolean;
   showCrossStarred?: boolean;
   /** Mountain View: open Starred from its own row under the Inbox. */
@@ -1760,6 +1762,9 @@ function SidebarImpl({
     ? activeAccountEntry.email || activeAccountEntry.username
     : "";
   const hasGroupInboxes = useMemo(() => mailboxes.some(m => m.isShared), [mailboxes]);
+  // These virtual lists already query the active account. With nothing to
+  // combine, show them with its folders instead of duplicating every role.
+  const inlineCrossViews = connectedAccounts.length === 1 && !crossAccountActive && !hasGroupInboxes;
   // Pro shell treats the unified mailbox as a core part of the multi-account
   // UI, so it ignores the user-facing `enableUnifiedMailbox` toggle. With a
   // single account we still surface unified when the user has opted into
@@ -1771,6 +1776,7 @@ function SidebarImpl({
   // the cross views must exist. A bare "2+ accounts" left an empty header. (#843)
   const anyCrossViewEnabled = showCrossUnread || showCrossStarred || showCrossAll;
   const showUnified =
+    !inlineCrossViews &&
     (multiAccountMode || enableUnifiedMailbox) &&
     (crossAccountActive || (includeGroupInUnified && hasGroupInboxes) || anyCrossViewEnabled);
   const { unifiedCounts } = useEmailStore(useShallow((state) => ({ unifiedCounts: state.unifiedCounts })));
@@ -1784,6 +1790,7 @@ function SidebarImpl({
     crossAccountActive, restoring: restoringAccounts, scope: unifiedScope, accounts,
   }), [crossAccountActive, restoringAccounts, accounts, unifiedScope]);
   const t = useTranslations('sidebar');
+  const tMailSections = useTranslations('email_list.sections');
   const tP2 = useTranslations('mail_p2_folders');
 
   // A pick in the tree "All folders" opened folds it away again. The names
@@ -1909,10 +1916,33 @@ function SidebarImpl({
   // it is: it shows icons only, and hiding half of them behind a word would
   // leave a control with no room to put it.
   const mvFlat = mvShell && !isCollapsed;
+  const renderCrossViews = (inline = false) => [
+    { show: showCrossUnread, id: CROSS_VIEW_IDS.unread, Icon: MailOpen, label: inline ? tMailSections('unread') : t('unified_all_unread'), unread: crossUnreadCount },
+    { show: showCrossStarred, id: CROSS_VIEW_IDS.starred, Icon: Star, label: inline ? t('mailboxes.starred') : t('unified_all_starred'), unread: undefined as number | undefined },
+    { show: showCrossAll, id: CROSS_VIEW_IDS.all, Icon: Mails, label: inline ? t('mailboxes.all_mail') : t('unified_all_mail'), unread: crossUnreadCount },
+  ].map(({ show, id, Icon, label, unread }) => {
+    if (!show) return null;
+    const isSelected = !selectedKeyword && selectedMailbox === id;
+    return (
+      <SidebarRow
+        key={id}
+        icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons)} />}
+        label={label}
+        testName={id}
+        testMailboxId={id}
+        depth={0}
+        isSelected={isSelected}
+        unread={unread}
+        onClick={() => onMailboxSelect?.(id)}
+        isCollapsed={isCollapsed}
+      />
+    );
+  });
+
   // Under the collapsible unified section the folders need a heading of their
   // own; without one they read as part of that section, and collapsing it
   // seemed to leave half of it behind (#1470).
-  const unifiedSectionShown = showUnified || anyCrossViewEnabled;
+  const unifiedSectionShown = showUnified || (!inlineCrossViews && anyCrossViewEnabled);
   const mvFoldersHeadless = mvFlat && !unifiedSectionShown;
   const isPrimaryFolder = (node: MailboxNode) =>
     node.role === 'inbox' || node.role === 'sent' || node.role === 'drafts';
@@ -2749,28 +2779,7 @@ function SidebarImpl({
                     />
                   );
                 })}
-                {[
-                  { show: showCrossUnread, id: CROSS_VIEW_IDS.unread, Icon: MailOpen, label: t('unified_all_unread'), unread: crossUnreadCount },
-                  { show: showCrossStarred, id: CROSS_VIEW_IDS.starred, Icon: Star, label: t('unified_all_starred'), unread: undefined as number | undefined },
-                  { show: showCrossAll, id: CROSS_VIEW_IDS.all, Icon: Mails, label: t('unified_all_mail'), unread: crossUnreadCount },
-                ].map(({ show, id, Icon, label, unread }) => {
-                  if (!show) return null;
-                  const isSelected = !selectedKeyword && selectedMailbox === id;
-                  return (
-                    <SidebarRow
-                      key={id}
-                      icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons)} />}
-                      label={label}
-                      testName={id}
-                      testMailboxId={id}
-                      depth={0}
-                      isSelected={isSelected}
-                      unread={unread}
-                      onClick={() => onMailboxSelect?.(id)}
-                      isCollapsed={isCollapsed}
-                    />
-                  );
-                })}
+                {renderCrossViews()}
               </>
             )}
           </div>
@@ -2871,6 +2880,7 @@ function SidebarImpl({
                   </div>
                 ) : (
                   <>
+                    {inlineCrossViews && !primaryTree.some((node) => node.role === 'inbox') && renderCrossViews(true)}
                     {primaryTree.map((node) => (
                       <Fragment key={node.id}>
                         <MailboxTreeItem
@@ -2884,8 +2894,9 @@ function SidebarImpl({
                           onContextMenu={treeHandlers.onMailboxContextMenu}
                         />
                         {node.role === 'drafts' && renderScheduledRow('scheduled')}
+                        {inlineCrossViews && node.role === 'inbox' && renderCrossViews(true)}
                         {/* Mountain View lists Starred right under the Inbox. */}
-                        {mvFlat && node.role === 'inbox' && onOpenStarred && (
+                        {mvFlat && !inlineCrossViews && node.role === 'inbox' && onOpenStarred && (
                           <SidebarRow
                             // Drawn like the "All starred" row it stands in for.
                             icon={<Star className={getIconClass(!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred, false, colorfulSidebarIcons)} />}
@@ -2937,6 +2948,8 @@ function SidebarImpl({
           selected: selectedKeyword ? "" : selectedMailbox,
           onSelect: onMailboxSelect,
         })}
+
+        <SmartFolderSection selectedMailbox={selectedMailbox} onSelect={onMailboxSelect} collapsed={isCollapsed} />
 
         {mvFlat && !useMultiAccount && (
           <div data-mv-labels="">
