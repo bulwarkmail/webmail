@@ -322,6 +322,16 @@ describe('api.tasks', () => {
     await expect(call(READ, 'tasks.list', { includeCompleted: 'yes' })).rejects.toThrow(/true or false/);
   });
 
+  it('lists only the calendars named by calendarIds', async () => {
+    await call(READ, 'tasks.list');
+    expect(client.getCalendarTasks).toHaveBeenLastCalledWith(undefined);
+    await call(READ, 'tasks.list', { calendarIds: ['c1', 'shared:c2'] });
+    expect(client.getCalendarTasks).toHaveBeenLastCalledWith(['c1', 'shared:c2']);
+    await expect(call(READ, 'tasks.list', { calendarIds: [] })).rejects.toThrow(/1 to 100 ids/);
+    await expect(call(READ, 'tasks.list', { calendarIds: 'c1' })).rejects.toThrow(/1 to 100 ids/);
+    await expect(call(READ, 'tasks.list', { calendarIds: [7] })).rejects.toThrow(/calendarIds\[0\]/);
+  });
+
   it('needs tasks:read and tasks:write', async () => {
     await expect(call(NONE, 'tasks.list')).rejects.toThrow(/lacks permission "tasks:read"/);
     await expect(call(READ, 'tasks.create', { title: 'x' })).rejects.toThrow(/lacks permission "tasks:write"/);
