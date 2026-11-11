@@ -4,17 +4,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // `downgrade` marker (the marketplace route). The admin is asked, like for
 // a withdrawn version, and only then is the install repeated with `force`.
 
-const calls: Array<{ body: Record<string, unknown> }> = [];
+const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
 let responses: Response[] = [];
 vi.mock('@/lib/browser-navigation', () => ({
-  apiFetch: vi.fn(async (_url: string, init?: RequestInit) => {
-    calls.push({ body: JSON.parse(String(init?.body ?? '{}')) });
+  apiFetch: vi.fn(async (url: string, init?: RequestInit) => {
+    calls.push({ url, body: JSON.parse(String(init?.body ?? '{}')) });
     return responses.shift() ?? new Response('{}', { status: 500 });
   }),
 }));
 vi.mock('next/link', () => ({ default: () => null }));
 
-import { installVersion } from '../_pages/marketplace';
+import { installVersion, rollbackVersion, withdrawnNote } from '../_pages/marketplace';
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
 const BODY = { slug: 'jitsi-meet', version: '2.0.9', type: 'plugin' as const };
@@ -142,5 +142,52 @@ describe('installVersion', () => {
     const result = await installVersion(BODY, () => true);
     expect(result).toEqual({ ok: false, error: 'The configuration is read-only' });
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe('rollbackVersion', () => {
+  const ROLLBACK = { kind: 'plugin' as const, id: 'pretty-dates', name: 'Pretty Dates', version: '1.0.0' };
+  const added = { permissions: ['email:send'], httpOrigins: ['https://old.example'], apiPostPaths: [], frameOrigins: [], credentialOrigins: [], privileged: false, skin: false };
+
+  it('says what comes back, and repeats with it accepted', async () => {
+    responses = [json({ error: 'more', permissionsAdded: ['email:send'], grantsAdded: added, compared: 'rollback' }, 409), json({ success: true })];
+    const asked: string[] = [];
+    const result = await rollbackVersion(ROLLBACK, (q) => { asked.push(`${q.title} ${q.message}`); return true; });
+    expect(result).toEqual({ ok: true });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toContain('brings back permissions');
+    expect(asked[0]).toContain('email:send');
+    expect(asked[0]).toContain('May now contact https://old.example.');
+    expect(calls.map((c) => c.url)).toEqual(['/api/admin/extensions/plugin/pretty-dates/rollback', '/api/admin/extensions/plugin/pretty-dates/rollback']);
+    expect(calls[0].body).toEqual({ version: '1.0.0' });
+    expect(calls[1].body).toEqual({ version: '1.0.0', acceptPermissions: ['email:send'], acceptGrants: { permissions: ['email:send'], httpOrigins: ['https://old.example'] } });
+  });
+
+  it('does not roll back when the admin declines', async () => {
+    responses = [json({ error: 'more', grantsAdded: added, compared: 'rollback' }, 409)];
+    expect(await rollbackVersion(ROLLBACK, () => false)).toEqual({ ok: false, error: 'Not rolled back.' });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('names a skin coming back for a theme', async () => {
+    responses = [json({ grantsAdded: { ...added, permissions: [], httpOrigins: [], skin: true }, compared: 'rollback' }, 409), json({ success: true })];
+    const asked: string[] = [];
+    await rollbackVersion({ ...ROLLBACK, kind: 'theme' }, (q) => { asked.push(q.message); return true; });
+    expect(asked[0]).toContain('restyles every part of the app');
+    expect(calls[1].body).toMatchObject({ acceptGrants: { skin: true } });
+  });
+
+  it('shows any other refusal as the error it is', async () => {
+    responses = [json({ error: 'No kept copy of pretty-dates 1.0.0 on this server' }, 404)];
+    expect(await rollbackVersion(ROLLBACK, () => true)).toEqual({ ok: false, error: 'No kept copy of pretty-dates 1.0.0 on this server' });
+  });
+});
+
+describe('withdrawnNote', () => {
+  it('names a version the directory had withdrawn, and one nobody knows about', () => {
+    expect(withdrawnNote('1.0.0', { reason: 'breaks replies' })).toBe(' The directory had withdrawn v1.0.0 when it was installed: breaks replies');
+    expect(withdrawnNote('1.0.0', { reason: null })).toBe(' The directory had withdrawn v1.0.0 when it was installed.');
+    expect(withdrawnNote('1.0.0', 'unknown')).toMatch(/not known/);
+    expect(withdrawnNote('1.0.0', undefined)).toBe('');
   });
 });

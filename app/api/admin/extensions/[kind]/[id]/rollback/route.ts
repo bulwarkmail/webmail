@@ -8,16 +8,31 @@ import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { EXTENSION_ID_RE } from '@/lib/extension-package';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
+import {
+  acceptedGrants,
+  anyGrants,
+  compactGrants,
+  describeReachAdded,
+  grantsAdded,
+  grantsOf,
+  notAccepted,
+  type Grants,
+} from '@/lib/admin/extension-grants';
 
 /**
  * POST /api/admin/extensions/[kind]/[id]/rollback
- * Body: { version: string }
+ * Body: { version: string, acceptPermissions?: string[], acceptGrants?: object }
  *
  * Puts a previously installed version back from the server's own copy
  * (lib/admin/extension-history.ts). The directory is not involved, so this
  * works offline and for versions the directory has since withdrawn. The
  * extension keeps whether it is enabled or forced; only the code and the
  * manifest-derived fields go back to what that version had.
+ *
+ * A kept version that may do more than the installed one (permissions,
+ * hosts, POST paths, frame origins, credential servers, the privileged tier,
+ * a theme's skin) is refused with 409 and `grantsAdded` until the request
+ * accepts it, the same question an update asks (lib/admin/extension-grants.ts).
  */
 export async function POST(
   request: NextRequest,
@@ -45,6 +60,21 @@ export async function POST(
     }
 
     const now = new Date().toISOString();
+    const accepted = acceptedGrants(body);
+    /** The 409 for a kept version that brings back more than is installed. */
+    const asks = (added: Grants, installed: string) => NextResponse.json(
+      {
+        error: [
+          `Version ${version} may do more than the installed ${installed}.`,
+          ...(added.permissions.length > 0 ? [`Permissions it brings back: ${added.permissions.join(', ')}.`] : []),
+          ...describeReachAdded(added),
+        ].join(' '),
+        permissionsAdded: added.permissions,
+        grantsAdded: added,
+        compared: 'rollback',
+      },
+      { status: 409 },
+    );
 
     if (kind === 'plugin') {
       const current = await getPlugin(id);
@@ -53,6 +83,8 @@ export async function POST(
         return NextResponse.json({ error: `Version ${version} is already installed` }, { status: 409 });
       }
       const kept = await readHistoryEntry('plugin', id, version);
+      const added = grantsAdded(grantsOf(current), grantsOf(kept.entry));
+      if (anyGrants(notAccepted(added, accepted))) return asks(added, current.version);
       const plugin = {
         ...kept.entry,
         id,
@@ -64,7 +96,10 @@ export async function POST(
       };
       await savePlugin(plugin, kept.code);
       invalidateFrameOriginsCache();
-      await auditLog('plugin.rollback', { id, from: current.version, to: version }, ip);
+      await auditLog('plugin.rollback', {
+        id, from: current.version, to: version,
+        ...(anyGrants(added) ? { accepted: compactGrants(added) } : {}),
+      }, ip);
       const saved = await getPlugin(id);
       return NextResponse.json({ success: true, plugin: saved ?? plugin });
     }
@@ -75,6 +110,8 @@ export async function POST(
       return NextResponse.json({ error: `Version ${version} is already installed` }, { status: 409 });
     }
     const kept = await readHistoryEntry('theme', id, version);
+    const added = grantsAdded(grantsOf(current), { skin: kept.skin !== null });
+    if (anyGrants(notAccepted(added, accepted))) return asks(added, current.version);
     const theme = {
       ...kept.entry,
       id,
@@ -84,7 +121,10 @@ export async function POST(
       updatedAt: now,
     };
     await saveTheme(theme, kept.css, kept.skin);
-    await auditLog('theme.rollback', { id, from: current.version, to: version }, ip);
+    await auditLog('theme.rollback', {
+      id, from: current.version, to: version,
+      ...(anyGrants(added) ? { accepted: compactGrants(added) } : {}),
+    }, ip);
     const saved = await getTheme(id);
     return NextResponse.json({ success: true, theme: saved ?? theme });
   } catch (error) {

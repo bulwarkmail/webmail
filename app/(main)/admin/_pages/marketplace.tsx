@@ -130,7 +130,7 @@ export interface InstallQuestion {
 export function grantsQuestion(
   name: string,
   added: Grants,
-  compared: 'listing' | 'installed',
+  compared: 'listing' | 'installed' | 'rollback',
 ): Omit<InstallQuestion, 'cancelText'> {
   const names = added.permissions.join(', ');
   const reach = describeReachAdded(added, compared === 'listing').join(' ');
@@ -140,10 +140,67 @@ export function grantsQuestion(
       : `${name} may do more than the directory's listing shows.`;
     return { title: 'Allow what the listing did not show?', message: `${head} ${reach}`.trim(), confirmText: 'Install' };
   }
+  if (compared === 'rollback') {
+    const head = names
+      ? `${name} brings back permissions that the installed version doesn't have: ${names}.`
+      : `${name} may do more than the installed version.`;
+    return { title: 'Allow what comes back?', message: `${head} ${reach}`.trim(), confirmText: 'Roll back' };
+  }
   const head = names
     ? `${name} asks for new permissions that the installed version doesn't have: ${names}.`
     : `${name} may do more than the installed version.`;
-  return { title: 'Allow the new permissions?', message: `${head} ${reach}`.trim(), confirmText: 'Update' };
+  return { title: names ? 'Allow the new permissions?' : 'Allow what it adds?', message: `${head} ${reach}`.trim(), confirmText: 'Update' };
+}
+
+/**
+ * What the rollback confirm says about whether the directory had withdrawn
+ * the kept version when it was installed (lib/admin/extension-history.ts).
+ */
+export function withdrawnNote(version: string, withdrawn: { reason: string | null } | 'unknown' | undefined): string {
+  if (withdrawn === 'unknown') {
+    return ` Whether the directory had withdrawn v${version} is not known: this copy was kept before that was recorded.`;
+  }
+  if (withdrawn) {
+    return ` The directory had withdrawn v${version} when it was installed${withdrawn.reason ? `: ${withdrawn.reason}` : '.'}`;
+  }
+  return '';
+}
+
+/**
+ * Rolls an extension back to a version kept on this server. A kept version
+ * that may do more than the installed one comes back as 409; the admin is
+ * asked what it brings back, and the rollback is repeated with that accepted.
+ * The caller asks first whether to roll back at all.
+ */
+export async function rollbackVersion(
+  body: { kind: 'plugin' | 'theme'; id: string; name: string; version: string },
+  confirm: (question: InstallQuestion) => boolean | Promise<boolean>,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  let accepted: Grants | undefined;
+  const send = () => apiFetch(`/api/admin/extensions/${body.kind}/${encodeURIComponent(body.id)}/rollback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      version: body.version,
+      ...(accepted ? { acceptPermissions: accepted.permissions, acceptGrants: compactGrants(accepted) } : {}),
+    }),
+  });
+  try {
+    let res = await send();
+    let data = await res.json().catch(() => ({}));
+    const added = res.status === 409 ? reportedGrants(data) : null;
+    if (added) {
+      const question = grantsQuestion(`"${body.name}" v${body.version}`, added, 'rollback');
+      if (!(await confirm({ ...question, cancelText: 'Cancel' }))) return { ok: false, error: 'Not rolled back.' };
+      accepted = added;
+      res = await send();
+      data = await res.json().catch(() => ({}));
+    }
+    if (!res.ok) return { ok: false, error: data.error || 'Rollback failed' };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'Rollback failed - network error' };
+  }
 }
 
 /** What a 409 says a version adds: `grantsAdded`, else `permissionsAdded` alone. */

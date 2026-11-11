@@ -29,13 +29,15 @@ vi.mock('@/lib/admin/config-manager', () => ({
 }));
 
 const registry = new Map<string, Record<string, unknown>>();
+const themes = new Map<string, Record<string, unknown>>();
 vi.mock('@/lib/admin/plugin-registry', () => ({
   savePlugin: vi.fn(async (p: Record<string, unknown>) => { registry.set(p.id as string, p); }),
-  saveTheme: vi.fn(async () => {}),
+  saveTheme: vi.fn(async (t: Record<string, unknown>, _css: string, skin: string | null) => { themes.set(t.id as string, { ...t, hasSkin: !!skin }); }),
   getPlugin: vi.fn(async (id: string) => registry.get(id) ?? null),
-  getTheme: vi.fn(async () => null),
+  getTheme: vi.fn(async (id: string) => themes.get(id) ?? null),
   getPluginRegistry: vi.fn(async () => ({ plugins: [...registry.values()] })),
-  getThemeRegistry: vi.fn(async () => ({ themes: [] })),
+  getThemeRegistry: vi.fn(async () => ({ themes: [...themes.values()] })),
+  themeCSSResolver: vi.fn(async () => () => null),
 }));
 vi.mock('@/lib/admin/csp-frame-origins', async (orig) => ({
   ...(await orig<typeof import('@/lib/admin/csp-frame-origins')>()),
@@ -74,7 +76,7 @@ function install(body: Record<string, unknown>) {
 
 const BASE = { name: 'Pretty Dates', version: '1.0.0', author: 'x', description: 'd', type: 'hook', entrypoint: 'index.js' };
 
-beforeEach(() => { registry.clear(); });
+beforeEach(() => { registry.clear(); themes.clear(); });
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('a first install grants only what the admin was shown', () => {
@@ -232,7 +234,7 @@ describe('an update that widens reach without a new permission is asked about to
     const { grantsAdded: added, error } = await refused.json();
     expect(added).toEqual({
       permissions: [], httpOrigins: ['https://collector.example'], apiPostPaths: ['/api/devices'],
-      frameOrigins: ['https://frames.example'], credentialOrigins: [], privileged: true,
+      frameOrigins: ['https://frames.example'], credentialOrigins: [], privileged: true, skin: false,
     });
     expect(error).toMatch(/May now contact https:\/\/collector\.example/);
     expect(error).toMatch(/Runs with full access to the app/);
@@ -322,5 +324,42 @@ describe('what counts as more', () => {
       { httpOrigins: ['https://a.example'], apiPostPaths: ['/api/a'] },
     );
     expect(res.status).toBe(200);
+  });
+});
+
+describe('a theme update', () => {
+  async function themeBundle(skin: string | null): Promise<ArrayBuffer> {
+    const zip = new JSZip();
+    zip.file('manifest.json', JSON.stringify({ id: 'night', name: 'Night', version: '1.0.0', author: 'x', type: 'theme', variants: ['dark'], apiVersion: 2 }));
+    zip.file('theme.css', ':root { --color-primary: #123456; }');
+    if (skin !== null) zip.file('skin.css', skin);
+    const buf = await zip.generateAsync({ type: 'uint8array' });
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+  }
+  const INSTALLED = { id: 'night', name: 'Night', version: '0.9.0', author: 'x', description: '', variants: ['dark'], enabled: true, installedAt: 'x', updatedAt: 'x' };
+
+  it('that brings a skin the installed version lacks is asked about', async () => {
+    themes.set('night', { ...INSTALLED, hasSkin: false });
+    directory(await themeBundle('.toolbar { color: red; }'));
+    const res = await install({ slug: 'night', version: '1.0.0', type: 'theme' });
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.grantsAdded).toMatchObject({ skin: true });
+    expect(body.error).toMatch(/restyles every part of the app/);
+    expect(themes.get('night')!.version).toBe('0.9.0');
+
+    directory(await themeBundle('.toolbar { color: red; }'));
+    expect((await install({ slug: 'night', version: '1.0.0', type: 'theme', acceptGrants: { skin: true } })).status).toBe(200);
+    expect(themes.get('night')).toMatchObject({ version: '1.0.0', hasSkin: true });
+  });
+
+  it('asks nothing when the installed version had a skin too, or on a first install', async () => {
+    themes.set('night', { ...INSTALLED, hasSkin: true });
+    directory(await themeBundle('.toolbar { color: blue; }'));
+    expect((await install({ slug: 'night', version: '1.0.0', type: 'theme' })).status).toBe(200);
+
+    themes.clear();
+    directory(await themeBundle('.toolbar { color: blue; }'));
+    expect((await install({ slug: 'night', version: '1.0.0', type: 'theme' })).status).toBe(200);
   });
 });

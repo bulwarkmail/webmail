@@ -26,6 +26,7 @@ import { permissionKey } from '@/lib/plugin-sandbox/permission-text';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ChangelogNotes } from '@/components/admin/changelog';
+import { rollbackVersion, withdrawnNote } from './marketplace';
 
 export interface ConfigField {
   type: 'string' | 'secret' | 'boolean' | 'number' | 'select';
@@ -64,6 +65,8 @@ export interface ExtensionEntry {
   changelog?: string;
   /** The changelogs of the kept versions that have one, by version. */
   previousChangelogs?: Record<string, string>;
+  /** Kept versions the directory had withdrawn when they were installed, or may have ('unknown'). */
+  previousWithdrawn?: Record<string, { reason: string | null } | 'unknown'>;
   /** Loaded from the dev plugins directory rather than installed. */
   dev?: boolean;
   configSchema?: Record<string, ConfigField>;
@@ -291,7 +294,8 @@ export function ExtensionDetailPage({ kind, id }: Props) {
     const ok = await confirm({
       title: `Roll back to v${version}?`,
       message: `"${entry.name}" v${version} replaces v${entry.version}. The copy kept on this server is used.`
-        + (entry.changelog ? ` What v${entry.version} changed, listed under Versions, is undone.` : ''),
+        + (entry.changelog ? ` What v${entry.version} changed, listed under Versions, is undone.` : '')
+        + withdrawnNote(version, entry.previousWithdrawn?.[version]),
       confirmText: 'Roll back',
       cancelText: 'Cancel',
     });
@@ -299,17 +303,12 @@ export function ExtensionDetailPage({ kind, id }: Props) {
     setBusy(`rollback:${version}`);
     setMessage(null);
     try {
-      const res = await apiFetch(`/api/admin/extensions/${kind}/${encodeURIComponent(id)}/rollback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ version }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
+      const result = await rollbackVersion({ kind, id, name: entry.name, version }, confirm);
+      if (result.ok) {
         setMessage({ type: 'success', text: `"${entry.name}" rolled back to v${version}` });
         await load();
       } else {
-        setMessage({ type: 'error', text: data.error || 'Rollback failed' });
+        setMessage({ type: 'error', text: result.error });
       }
     } finally {
       setBusy(null);

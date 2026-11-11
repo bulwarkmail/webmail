@@ -5,14 +5,15 @@
  * Every path that saves a plugin compares what the bundle grants with what
  * the admin was shown or already approved: a marketplace install with the
  * directory's listing (what the quick-install dialog shows), an update with
- * the installed version. Anything beyond it is answered with 409 and saved
- * only once the admin accepted it (`acceptPermissions` and `acceptGrants` in
- * the request).
+ * the installed version, a rollback with the installed version too. Anything
+ * beyond it is answered with 409 and saved only once the admin accepted it
+ * (`acceptPermissions` and `acceptGrants` in the request).
  *
  * A grant is more than the permission list: the hosts a plugin may contact,
  * the app's own routes it may post to, the origins it may embed (they go into
  * the CSP of every page), the servers its credentials are sent to, and the
- * privileged tier, which runs it on the app's own origin.
+ * privileged tier, which runs it on the app's own origin. For a theme it is
+ * its skin, which restyles every part of the app.
  *
  * No server imports: the admin pages read and describe the same shapes.
  */
@@ -32,6 +33,8 @@ export interface Grants {
   credentialOrigins: string[];
   /** The privileged tier: a frame on the app's own origin. */
   privileged: boolean;
+  /** A theme's skin.css, which may style any part of the app. */
+  skin: boolean;
 }
 
 /** A validated manifest or a registry entry, as far as grants go. */
@@ -43,6 +46,8 @@ export interface GrantSource {
   credentials?: unknown;
   configSchema?: unknown;
   tier?: unknown;
+  /** Themes: whether a skin comes with it. */
+  hasSkin?: unknown;
 }
 
 const strings = (value: unknown): string[] =>
@@ -86,6 +91,7 @@ export function grantsOf(entry: GrantSource | null | undefined): Grants {
     frameOrigins: strings(entry?.frameOrigins),
     credentialOrigins: credentialOriginsOf(entry?.credentials, entry?.configSchema),
     privileged: entry?.tier === 'privileged',
+    skin: entry?.hasSkin === true,
   };
 }
 
@@ -129,11 +135,12 @@ export function grantsAdded(before: Partial<Grants>, after: Partial<Grants>): Gr
     frameOrigins: origins(after.frameOrigins, before.frameOrigins),
     credentialOrigins: origins(after.credentialOrigins, before.credentialOrigins),
     privileged: after.privileged === true && before.privileged !== true,
+    skin: after.skin === true && before.skin !== true,
   };
 }
 
 export function anyGrants(grants: Grants): boolean {
-  return grants.privileged
+  return grants.privileged || grants.skin
     || [grants.permissions, grants.httpOrigins, grants.apiPostPaths, grants.frameOrigins, grants.credentialOrigins].some((l) => l.length > 0);
 }
 
@@ -147,6 +154,7 @@ export function mergeGrants(a: Partial<Grants>, b: Partial<Grants>): Grants {
     frameOrigins: both(a.frameOrigins, b.frameOrigins),
     credentialOrigins: both(a.credentialOrigins, b.credentialOrigins),
     privileged: a.privileged === true || b.privileged === true,
+    skin: a.skin === true || b.skin === true,
   };
 }
 
@@ -171,6 +179,7 @@ export function acceptedGrants(body: { acceptPermissions?: unknown; acceptGrants
     frameOrigins: strings(rest.frameOrigins),
     credentialOrigins: strings(rest.credentialOrigins),
     privileged: rest.privileged === true,
+    skin: rest.skin === true,
   };
 }
 
@@ -192,5 +201,6 @@ export function describeReachAdded(added: Grants, firstInstall = false): string[
   if (added.frameOrigins.length > 0) lines.push(`May${now} embed ${added.frameOrigins.join(', ')}.`);
   if (added.credentialOrigins.length > 0) lines.push(`May${now} send its credentials to ${added.credentialOrigins.join(', ')}.`);
   if (added.privileged) lines.push('Runs with full access to the app.');
+  if (added.skin) lines.push('Brings a skin that restyles every part of the app.');
   return lines;
 }

@@ -140,6 +140,18 @@ describe('POST /api/admin/marketplace', () => {
     expect(registry.has('pretty-dates')).toBe(true);
   });
 
+  it('keeps with the install whether the directory had withdrawn the version, for its rollback copy', async () => {
+    const bytes = await bundle({ ...MANIFEST, id: 'pretty-dates' });
+    directory(bytes, { yanked: { at: '2026-10-01T00:00:00.000Z', reason: 'breaks replies' } });
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin', force: true })).status).toBe(200);
+    expect(registry.get('pretty-dates')).toMatchObject({ yanked: { at: '2026-10-01T00:00:00.000Z', reason: 'breaks replies' } });
+
+    registry.clear();
+    directory(bytes);
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
+    expect(registry.get('pretty-dates')).toMatchObject({ yanked: null });
+  });
+
   it('refuses a version this Bulwark is too new or too old for', async () => {
     const bytes = await bundle({ ...MANIFEST, id: 'pretty-dates' });
     directory(bytes, { maxAppVersion: '1.14.0' });

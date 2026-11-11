@@ -38,7 +38,7 @@ import { AdminButtonLink } from '@/components/admin/button-link';
 import { Badge } from '@/components/admin/badge';
 import { ScreenshotGallery } from '@/components/admin/screenshot-gallery';
 import { useAdminFeedback } from '@/components/admin/feedback';
-import { installVersion } from './marketplace';
+import { installVersion, rollbackVersion, withdrawnNote } from './marketplace';
 import { offerToTurnOnPlugins, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
 import { pluginTypeLabel } from './plugin-type-label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -80,6 +80,8 @@ interface HistoryEntry {
   version: string;
   savedAt: string;
   contentHash: string;
+  /** Whether the directory had withdrawn it when it was installed (lib/admin/extension-history.ts). */
+  withdrawn?: { reason: string | null } | 'unknown';
 }
 
 interface PreviewData {
@@ -231,9 +233,10 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
 
   async function handleRollback(version: string) {
     if (!data) return;
+    const withdrawn = data.history.find((h) => h.version === version)?.withdrawn;
     const ok = await confirm({
       title: `Roll back to v${version}?`,
-      message: `"${data.extension.name}" v${version} replaces v${data.installedVersion}. The copy kept on this server is used; the directory is not asked.`,
+      message: `"${data.extension.name}" v${version} replaces v${data.installedVersion}. The copy kept on this server is used; the directory is not asked.${withdrawnNote(version, withdrawn)}`,
       confirmText: 'Roll back',
       cancelText: 'Cancel',
     });
@@ -241,20 +244,13 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
     setBusy(`rollback:${version}`);
     setMessage(null);
     try {
-      const res = await apiFetch(`/api/admin/extensions/${data.extension.type}/${encodeURIComponent(data.extension.slug)}/rollback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ version }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (res.ok) {
+      const result = await rollbackVersion({ kind: data.extension.type, id: data.extension.slug, name: data.extension.name, version }, confirm);
+      if (result.ok) {
         setMessage({ type: 'success', text: `"${data.extension.name}" rolled back to v${version}` });
         fetchPreview(selected ?? null);
       } else {
-        setMessage({ type: 'error', text: body.error || 'Rollback failed' });
+        setMessage({ type: 'error', text: result.error });
       }
-    } catch {
-      setMessage({ type: 'error', text: 'Rollback failed - network error' });
     } finally {
       setBusy(null);
     }

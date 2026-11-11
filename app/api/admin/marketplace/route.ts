@@ -12,6 +12,7 @@ import {
   type ServerTheme,
 } from '@/lib/admin/plugin-registry';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
+import type { InstallRecord } from '@/lib/admin/extension-history';
 import {
   EXTENSION_ID_RE,
   EXTENSION_VERSION_RE,
@@ -120,7 +121,10 @@ export async function GET(request: NextRequest) {
  * a first install, the installed version on an update) is refused with 409,
  * `permissionsAdded` and `grantsAdded` (permissions, hosts, POST paths, frame
  * origins, credential servers, the privileged tier) until `acceptPermissions`
- * and `acceptGrants` cover it (lib/admin/extension-grants.ts).
+ * and `acceptGrants` cover it (lib/admin/extension-grants.ts). A theme update
+ * that brings a skin the installed version didn't have is asked about the
+ * same way. Whether the directory had withdrawn the version is kept with the
+ * install, for its rollback copy.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -257,8 +261,14 @@ export async function POST(request: NextRequest) {
     }
 
     const source = { kind: 'marketplace' as const, slug, directoryUrl };
-    // Kept with the install, and so with its rollback copy later.
+    // Kept with the install, and so with its rollback copy later: the notes,
+    // and whether the directory had withdrawn this version (a rollback names it).
     const notes = typeof meta.changelog === 'string' && meta.changelog.trim() ? { changelog: meta.changelog.slice(0, 20_000) } : {};
+    const record: InstallRecord = {
+      yanked: meta.yanked
+        ? { at: String(meta.yanked.at ?? ''), reason: typeof meta.yanked.reason === 'string' ? meta.yanked.reason.slice(0, 500) : null }
+        : null,
+    };
     const installExtras = {
       signature: signature.status,
       channel: meta.channel,
@@ -286,7 +296,22 @@ export async function POST(request: NextRequest) {
       const existingTheme = await getTheme(resolvedId);
       const isUpdate = existingTheme !== null;
 
-      const theme: ServerTheme = {
+      // An update that brings a skin the installed version didn't have is asked
+      // about like a plugin update that grants more (lib/admin/extension-grants.ts).
+      const skinAdded = grantsAdded(grantsOf(existingTheme), isUpdate ? { skin: skin !== null } : {});
+      if (anyGrants(notAccepted(skinAdded, acceptedGrants({ acceptPermissions, acceptGrants })))) {
+        return NextResponse.json(
+          {
+            error: `Version ${version} asks for more than the installed version has. ${describeReachAdded(skinAdded).join(' ')}`,
+            permissionsAdded: [],
+            grantsAdded: skinAdded,
+            compared: 'installed',
+          },
+          { status: 409 },
+        );
+      }
+
+      const theme: ServerTheme & InstallRecord = {
         id: resolvedId,
         name: manifest.name || slug,
         // Prefer the directory-published version (what we requested) over
@@ -306,6 +331,7 @@ export async function POST(request: NextRequest) {
         updatedAt: now,
         source,
         ...notes,
+        ...record,
       };
 
       await saveTheme(theme, css, skin);
@@ -317,6 +343,7 @@ export async function POST(request: NextRequest) {
           version: theme.version,
           slug,
           signature: signature.status,
+          ...(anyGrants(skinAdded) ? { accepted: compactGrants(skinAdded) } : {}),
           ...(meta.yanked ? { yanked: true } : {}),
           ...(isUpdate ? { previousVersion: existingTheme.version } : {}),
         },
@@ -382,7 +409,7 @@ export async function POST(request: NextRequest) {
     }
     const permissionsAdded = added.permissions;
 
-    const plugin: ServerPlugin = {
+    const plugin: ServerPlugin & InstallRecord = {
       id: slug,
       name: manifest.name,
       // See theme branch: trust the directory-published version, not
@@ -410,6 +437,7 @@ export async function POST(request: NextRequest) {
       ...(manifest.credentials ? { credentials: manifest.credentials } : {}),
       source,
       ...notes,
+      ...record,
     };
 
     await savePlugin(plugin, code);
