@@ -126,12 +126,36 @@ describe('blob: URLs made for a download', () => {
     expect(anchors).toEqual([{ href: minted[0].url, download: 'drawing.svg' }]);
   });
 
-  it.each(['chrome', 'edge', 'androidChrome', 'desktopApp', 'firefox'] as const)('revokes the URL right after the click in %s', (browser) => {
+  it.each(['chrome', 'edge', 'androidChrome', 'desktopApp', 'firefox'] as const)('revokes the URL in the task after the click in %s', (browser) => {
+    vi.useFakeTimers();
     asBrowser(USER_AGENTS[browser]);
     saveBlobAs(new Blob(['x'], { type: 'image/png' }), 'photo.png', { kind: 'attachment' });
     expect(anchors).toHaveLength(1);
+    // Still there when the click's task ends, so the download can start from it.
+    expect(revoked).toEqual([]);
+    vi.advanceTimersByTime(0);
     expect(revoked).toEqual([minted[0].url]);
   });
+
+  it.each(Object.keys(USER_AGENTS) as Array<keyof typeof USER_AGENTS>)(
+    'in %s the URL is typed application/octet-stream for as long as it exists',
+    (browser) => {
+      vi.useFakeTimers();
+      asBrowser(USER_AGENTS[browser]);
+      for (const type of HOSTILE_TYPES) {
+        saveBlobAs(new Blob(['<script>1</script>'], { type }), 'page', { kind: 'attachment' });
+      }
+      expect(minted).toHaveLength(HOSTILE_TYPES.length);
+      // Every URL that is still there after the click, and until the last timer has run.
+      const live = () => minted.filter((entry) => !revoked.includes(entry.url));
+      expect(live()).toHaveLength(HOSTILE_TYPES.length);
+      for (const entry of live()) expect(entry.type).toBe('application/octet-stream');
+      vi.advanceTimersByTime(30_000);
+      for (const entry of live()) expect(entry.type).toBe('application/octet-stream');
+      vi.runAllTimers();
+      expect(live()).toEqual([]);
+    },
+  );
 
   it.each(['safari', 'iosChrome'] as const)('keeps the URL a minute in %s, where the download may start later', (browser) => {
     vi.useFakeTimers();
@@ -145,9 +169,12 @@ describe('blob: URLs made for a download', () => {
     expect(revoked).toEqual([minted[0].url]);
   });
 
-  it('revokes at once when the caller asks for it, in every browser', () => {
+  it('revokes in the task after the click when the caller asks for no delay, in every browser', () => {
+    vi.useFakeTimers();
     asBrowser(USER_AGENTS.safari);
     saveBlobAs(new Blob(['x'], { type: 'image/png' }), 'photo.png', { kind: 'attachment', revokeAfterMs: 0 });
+    expect(revoked).toEqual([]);
+    vi.advanceTimersByTime(0);
     expect(revoked).toEqual([minted[0].url]);
   });
 
