@@ -54,16 +54,10 @@ export const CREDENTIAL_ID_RE = /^[a-z][a-z0-9-]{0,39}$/;
 
 /**
  * The request headers a credential may put its secret into: `Authorization`
- * and the API-key headers of the services the official plugins talk to.
- * Names are compared without regard to case.
- *
- * The proxy hands some response headers back to the plugin, and a server or
- * a gateway in front of it may copy a request header into its answer (a
- * request id is the usual one). A credential that could name any header
- * could name one of those, and the plugin would read its own stored secret.
- * So the list holds only names that carry credentials and that the proxy
- * does not pass back; a service with another header gets its name added
- * here.
+ * and the API-key headers of the services the official plugins talk to,
+ * none of which the proxy hands back to a plugin. A name is letters, digits
+ * and hyphens, compared without regard to case. A service with another
+ * header gets its name added here.
  */
 export const CREDENTIAL_HEADER_NAMES: readonly string[] = [
   'Authorization', 'X-API-Key', 'X-Goog-Api-Key', 'DHL-API-Key', '17token', 'secretkey',
@@ -74,7 +68,7 @@ const HEADER_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
 
 /** Whether a credential may put its secret into the request header `name`. */
 export function isCredentialHeader(name: unknown): name is string {
-  return typeof name === 'string' && CREDENTIAL_HEADERS.has(name.toLowerCase());
+  return typeof name === 'string' && HEADER_NAME_RE.test(name) && CREDENTIAL_HEADERS.has(name.toLowerCase());
 }
 
 /**
@@ -221,7 +215,13 @@ export function checkCredentials(
   return { credentials: errors.length ? undefined : out, errors };
 }
 
-/** The header to add for a secret, or null when the credential adds none. */
+/**
+ * The header to add for a secret, or null when the credential adds none: it
+ * has no secret, it is of the `none` kind, or it names a header outside the
+ * list. The last one holds for a credential that was stored before the list
+ * existed (an installed plugin, an account a user connected): its request
+ * goes out without the secret, and the service answers as it does to anyone.
+ */
 export function authHeaderFor(
   inject: CredentialInject,
   secret: string | undefined,
@@ -234,6 +234,7 @@ export function authHeaderFor(
     case 'basic':
       return ['authorization', `Basic ${Buffer.from(`${username ?? ''}:${secret}`, 'utf8').toString('base64')}`];
     case 'header':
+      if (!isCredentialHeader(inject.name)) return null;
       return [inject.name.toLowerCase(), `${inject.prefix ?? ''}${secret}`];
   }
 }

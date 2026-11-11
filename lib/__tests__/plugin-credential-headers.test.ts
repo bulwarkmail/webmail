@@ -3,12 +3,10 @@
  *
  * The request header a credential puts its secret into comes from a short
  * list: `Authorization` and the API-key headers of the services the official
- * plugins talk to. The proxy hands some response headers back to the plugin
- * (lib/plugin-secrets/proxy.ts), and a server or a gateway in front of it may
- * copy a request header into its answer (a request id). A credential that
- * names such a header would give the stored secret to the plugin, so a
- * package that asks for a name outside the list is refused when it is
- * installed, updated or put back, with the name in the answer.
+ * plugins talk to, none of which the proxy hands back to a plugin
+ * (lib/plugin-secrets/proxy.ts). A package that asks for a name outside the
+ * list is refused when it is installed, updated or put back, with the name
+ * in the answer.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
