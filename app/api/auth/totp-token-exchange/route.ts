@@ -16,6 +16,7 @@ import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { writeSignInStamp } from '@/lib/auth/session-age';
+import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { isDesktopTrustedServer } from '@/lib/desktop/trusted-servers';
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
@@ -46,6 +47,7 @@ async function attemptLogin(
   upstreamTrusted: boolean,
   clientIp: string,
   rememberMe: boolean,
+  typedServer: boolean,
 ): Promise<NextResponse> {
   const base = upstreamUrl.replace(/\/+$/, '');
 
@@ -119,12 +121,17 @@ async function attemptLogin(
 
   logger.info('TOTP login succeeded');
   void recordLogin(username, base);
-  // The desktop app's servers are in no configured list, so the refresh has to
-  // be told where this token belongs and which client it was issued to.
-  const upstream = IS_DESKTOP_BUILD && !serverId
+  // A server the user typed (and every server of the desktop app) is in no
+  // configured list, so the refresh has to be told where this token belongs
+  // and which client it was issued to (lib/oauth/custom-upstream.ts). That
+  // record is sealed: without a session secret the refresh token isn't kept,
+  // or its renewal would go to the configured server.
+  const typed = (IS_DESKTOP_BUILD && !serverId) || typedServer;
+  const tokens = typed && !hasSessionSecret() ? { ...result.tokens, refresh_token: undefined } : result.tokens;
+  const upstream = typed && tokens.refresh_token
     ? { serverUrl: base, clientId: await stalwartDefaultClientId(base, clientId, upstreamTrusted) }
     : null;
-  return await storeAndRespond(result.tokens, slot, serverId, rememberMe, upstream);
+  return await storeAndRespond(tokens, slot, serverId, rememberMe, upstream);
 }
 
 function trimUrl(url: string): string {
@@ -168,6 +175,8 @@ export async function POST(request: NextRequest) {
     if (refusedByDevice) return refusedByDevice;
 
     let upstreamTrusted = true;
+    // A server the user typed rather than one configured here.
+    let typedServer = false;
     let resolvedServerId: string | null = null;
     const requestedEntry = findServerById(serverList, requestedServerId);
     const matchedEntry = requestedEntry || findServerByUrl(serverList, serverUrl);
@@ -181,6 +190,7 @@ export async function POST(request: NextRequest) {
     // Spelled out as in lib/admin/jmap-servers.ts, so other builds don't hold it.
     } else if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && isDesktopTrustedServer(serverUrl)) {
       upstreamUrl = serverUrl;
+      typedServer = true;
     } else if (allowCustomEndpoint) {
       if (!(await isPublicHttpUrl(serverUrl))) {
         logger.warn('TOTP login: rejected non-public server URL');
@@ -188,6 +198,7 @@ export async function POST(request: NextRequest) {
       }
       upstreamUrl = serverUrl;
       upstreamTrusted = false;
+      typedServer = true;
     } else {
       return NextResponse.json({ error: 'jmap_server_not_configured' }, { status: 500 });
     }
@@ -213,6 +224,7 @@ export async function POST(request: NextRequest) {
       loginClientAddress(request, upstreamUrl),
       // Clients from before the flag remembered every sign-in.
       rememberMe !== false,
+      typedServer,
     );
   } catch (error) {
     // The sign-in limit can't be counted without the shared store: refused.
@@ -238,7 +250,12 @@ async function storeAndRespond(
     const options = getSignInCookieOptions(rememberMe);
     cookieStore.set(cookieName, tokens.refresh_token, options);
     // The token is renewed and revoked only at the server that issued it.
-    writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token, serverId }, options);
+    writeSignInStamp(cookieStore, slot, {
+      signedInAt,
+      refreshToken: tokens.refresh_token,
+      serverId,
+      ...(upstream ? { customServer: upstream.serverUrl } : {}),
+    }, options);
   }
   const serverCookieName = refreshTokenServerCookieName(slot);
   if (serverId) {

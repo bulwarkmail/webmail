@@ -51,11 +51,10 @@ export async function renewPushAuthHeader(
   if (isPastMaxAge(age.signedInAt, maxHours)) return null;
   if (await limitsOnlyAPageEnforces()) return null;
 
-  // Only to the server that issued the token.
-  const bound = refreshTokenServer(cookieStore, slot, refreshToken);
+  // Only to the server that issued the token, a typed one included.
+  const bound = await refreshTokenServer(cookieStore, slot, refreshToken);
   if (!bound) return null;
-  const { serverId } = bound;
-  const redemption = await redeemRefreshToken(refreshToken, serverId, null);
+  const redemption = await redeemRefreshToken(refreshToken, bound.serverId, bound.upstream);
   if (redemption.kind !== 'issued' || !redemption.tokens.access_token) {
     // The page's own renewal clears the cookies of a refused grant.
     logger.warn('push preview: token renewal failed', {
@@ -74,7 +73,7 @@ export async function renewPushAuthHeader(
     cookieStore,
     slot,
     { ...redemption.tokens, access_token: redemption.tokens.access_token },
-    { remember, age, basePath, serverId },
+    { remember, age, basePath, server: bound },
   );
   return `Bearer ${accessToken}`;
 }

@@ -162,7 +162,12 @@ export async function POST(request: NextRequest) {
       cookieStore.set(cookieName, tokens.refresh_token, options);
       // The stamp also names the server that issued the token, which is
       // where it is renewed and revoked (lib/oauth/slot-renewal.ts).
-      writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token, serverId }, options);
+      writeSignInStamp(cookieStore, slot, {
+        signedInAt,
+        refreshToken: tokens.refresh_token,
+        serverId,
+        ...(customUpstream ? { customServer: customUpstream.serverUrl } : {}),
+      }, options);
     }
     const cachedAccessToken = cacheAccessToken(cookieStore, slot, tokens.access_token, tokens.expires_in || 3600, [tokens.refresh_token, serverId], remember);
     storeIdToken(cookieStore, slot, tokens.id_token, request.nextUrl.basePath, [tokens.refresh_token, cachedAccessToken, serverId], remember);
@@ -206,14 +211,14 @@ export async function PUT(request: NextRequest) {
     // The token only ever goes back to the server that issued it. When the
     // cookies can't say which one that was, the sign-in ends here and the
     // token goes nowhere.
-    const bound = refreshTokenServer(cookieStore, slot, refreshToken);
+    const bound = await refreshTokenServer(cookieStore, slot, refreshToken);
     if (!bound) {
       logger.warn('Token refresh: the refresh token is not bound to the server named for it; signing the slot out', { slot });
       await signOutSlot(cookieStore, slot, request.nextUrl.basePath, false);
       clearStalwartAuthContextInStore(cookieStore, slot);
       return NextResponse.json({ error: 'invalid_grant' }, { status: 401 });
     }
-    const { serverId } = bound;
+    const { serverId, upstream } = bound;
 
     // The organisation's maximum session length (lib/auth/session-age.ts).
     // A refresh token without a matching stamp (from before stamps, or one
@@ -241,6 +246,7 @@ export async function PUT(request: NextRequest) {
           ...(account ? { account } : {}),
           ...(age.stamp?.remember !== undefined ? { remember: age.stamp.remember } : {}),
           serverId,
+          ...(upstream ? { customServer: upstream.serverUrl } : {}),
         }, getSignInCookieOptions(age.stamp?.remember ?? remember));
       }
     }
@@ -268,7 +274,6 @@ export async function PUT(request: NextRequest) {
 
     // Discovery or the token endpoint out of reach is an outage: the client
     // waits it out. A 500 here would count toward signing the user out.
-    const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
     // The device's OS policy refuses this server for now. The cookies stay, so the
     // account comes back with no sign-in if the policy does.
     const refusedByDevice = upstream ? devicePolicyServerRefusal(upstream.serverUrl) : null;
@@ -309,7 +314,7 @@ export async function PUT(request: NextRequest) {
       remember,
       age,
       basePath: request.nextUrl.basePath,
-      serverId,
+      server: bound,
     });
 
     return NextResponse.json({
@@ -356,11 +361,11 @@ async function signOutSlot(
   // cookies can't say which one that was, nothing is sent anywhere and the
   // cookies are just cleared.
   const bound = refreshToken
-    ? refreshTokenServer(cookieStore, slot, refreshToken)
-    : { serverId: cookieStore.get(refreshTokenServerCookieName(slot))?.value || null };
+    ? await refreshTokenServer(cookieStore, slot, refreshToken)
+    : { serverId: cookieStore.get(refreshTokenServerCookieName(slot))?.value || null, upstream: await readCustomUpstream(cookieStore, slot) };
   const serverId = bound?.serverId ?? null;
+  const upstream = bound?.upstream ?? null;
   const idToken =cookieStore.get(idTokenCookieName(slot))?.value;
-  const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
 
   // With revocation off (#1388) the token is only dropped from the browser.
   const tokenToRevoke = refreshToken && isRevokeOnSignOutEnabled() ? refreshToken : undefined;
@@ -384,7 +389,7 @@ async function signOutSlot(
     if (cookieStore.get(name)) cookieStore.delete(name);
   }
   clearSignInStamp(cookieStore, slot);
-  if (IS_DESKTOP_BUILD) clearCustomUpstream(cookieStore, slot);
+  clearCustomUpstream(cookieStore, slot);
   if (idToken !== undefined) clearIdToken(cookieStore, slot, basePath);
   return endSessionUrl;
 }

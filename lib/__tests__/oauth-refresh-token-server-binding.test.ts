@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { createHash } from 'node:crypto';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
@@ -254,20 +255,102 @@ describe('a refresh token only goes to the server that issued it', () => {
     expect(sentTo('single.example', 'RT-ISSUED-BY-single.example')).toHaveLength(1);
   });
 
-  it.skip('not to the default server after a two-factor sign-in to a typed server', async () => {
+  it('not to the default server after a two-factor sign-in to a typed server', async () => {
     config = { jmapServerUrl: 'https://default.example', allowCustomJmapEndpoint: true };
-    const { POST } = await import('@/app/api/auth/totp-token-exchange/route');
-    const signIn = await POST(new NextRequest('https://webmail.example/api/auth/totp-token-exchange', {
+    await twoFactorSignIn('https://own.example');
+
+    received = [];
+    const res = await renew();
+
+    expect(sentTo('default.example', 'RT-OWN-SERVER')).toEqual([]);
+    // It is renewed where it came from, with no configured secret.
+    expect(res.status).toBe(200);
+    expect(sentTo('own.example', 'RT-OWN-SERVER')).toEqual([expect.objectContaining({ path: '/auth/token' })]);
+  });
+
+  it('is revoked at the typed server on sign-out', async () => {
+    config = { jmapServerUrl: 'https://default.example', allowCustomJmapEndpoint: true, oauthClientSecret: 'admin-secret' };
+    await twoFactorSignIn('https://own.example');
+    received = [];
+    const { DELETE } = await import('@/app/api/auth/token/route');
+    await DELETE(new NextRequest('https://webmail.example/api/auth/token?slot=0', { method: 'DELETE', headers: SAME_ORIGIN }));
+    expect(sentTo('default.example', 'RT-OWN-SERVER')).toEqual([]);
+    expect(sentTo('own.example', 'RT-OWN-SERVER')).toEqual([expect.objectContaining({ path: '/auth/revoke' })]);
+    expect(received.some((r) => r.body.includes('admin-secret'))).toBe(false);
+    expect(jar.has('jmap_rtu')).toBe(false);
+  });
+
+  it('is renewed nowhere once typed servers are no longer allowed, and the slot is signed out', async () => {
+    config = { jmapServerUrl: 'https://default.example', allowCustomJmapEndpoint: true };
+    await twoFactorSignIn('https://own.example');
+    config = { jmapServerUrl: 'https://default.example' };
+    received = [];
+    const res = await renew();
+    expect(res.status).toBe(401);
+    expect(sentAnywhere('RT-OWN-SERVER')).toEqual([]);
+    expect(jar.has('jmap_rt')).toBe(false);
+  });
+
+  it('is renewed nowhere when the record of the typed server is gone', async () => {
+    config = { jmapServerUrl: 'https://default.example', allowCustomJmapEndpoint: true };
+    await twoFactorSignIn('https://own.example');
+    jar.delete('jmap_rtu');
+    received = [];
+    expect((await renew()).status).toBe(401);
+    expect(sentAnywhere('RT-OWN-SERVER')).toEqual([]);
+  });
+
+  it('leaves a later sign-in to the configured server with the configured server', async () => {
+    config = { jmapServerUrl: 'https://default.example', allowCustomJmapEndpoint: true };
+    await twoFactorSignIn('https://own.example');
+    // The record of the typed server stays behind; the next sign-in is not one.
+    await twoFactorSignIn('https://default.example');
+    received = [];
+    expect((await renew()).status).toBe(200);
+    expect(sentTo('own.example', 'RT-OWN-SERVER')).toEqual([]);
+    expect(sentTo('default.example', 'RT-OWN-SERVER')).toHaveLength(1);
+  });
+
+  it("renews the desktop app's browser sign-in to a typed server at that server", async () => {
+    config = { jmapServerUrl: 'https://default.example', allowCustomJmapEndpoint: true };
+    const { stashHandoff } = await import('@/lib/auth/handoff-store');
+    const verifier = 'v'.repeat(64);
+    const code = await stashHandoff({
+      flow: 'desktop-tokens',
+      server_url: 'https://own.example',
+      server_id: null,
+      custom: true,
+      password_login: true,
+      username: 'me@own.example',
+      access_token: 'AT-OWN',
+      refresh_token: 'RT-OWN-SERVER',
+      expires_in: 3600,
+      signed_in_at: Date.now(),
+    }, { challenge: createHash('sha256').update(verifier, 'ascii').digest('base64url'), state: 's' });
+    const { POST } = await import('@/app/api/auth/desktop-handoff/redeem/route');
+    const redeemed = await POST(new NextRequest('https://webmail.example/api/auth/desktop-handoff/redeem', {
       method: 'POST',
       headers: SAME_ORIGIN,
-      body: JSON.stringify({ serverUrl: 'https://own.example', username: 'me@own.example', password: 'pw', totp: '123456', slot: 0 }),
+      body: JSON.stringify({ code, code_verifier: verifier, slot: 0, remember: true, allowed_servers: null, custom_servers_allowed: true }),
     }));
-    expect(signIn.status).toBe(200);
+    expect(redeemed.status).toBe(200);
     expect(jar.get('jmap_rt')).toBe('RT-OWN-SERVER');
 
     received = [];
-    await renew();
-
+    expect((await renew()).status).toBe(200);
     expect(sentTo('default.example', 'RT-OWN-SERVER')).toEqual([]);
+    expect(sentTo('own.example', 'RT-OWN-SERVER')).toHaveLength(1);
   });
 });
+
+/** A password + two-factor sign-in to `serverUrl`, which the stubbed server accepts. */
+async function twoFactorSignIn(serverUrl: string) {
+  const { POST } = await import('@/app/api/auth/totp-token-exchange/route');
+  const signIn = await POST(new NextRequest('https://webmail.example/api/auth/totp-token-exchange', {
+    method: 'POST',
+    headers: SAME_ORIGIN,
+    body: JSON.stringify({ serverUrl, username: 'me@own.example', password: 'pw', totp: '123456', slot: 0 }),
+  }));
+  expect(signIn.status).toBe(200);
+  expect(jar.get('jmap_rt')).toBe('RT-OWN-SERVER');
+}

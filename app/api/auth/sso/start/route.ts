@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       // no server to sign in at.
       const refreshToken = cookieStore.get(refreshTokenCookieName(reauthSlot))?.value;
       const bound = refreshToken
-        ? refreshTokenServer(cookieStore, reauthSlot, refreshToken)
+        ? await refreshTokenServer(cookieStore, reauthSlot, refreshToken)
         : { serverId: cookieStore.get(refreshTokenServerCookieName(reauthSlot))?.value || null };
       if (!bound) {
         logger.warn('SSO start: the slot\'s server cookie disagrees with its token');

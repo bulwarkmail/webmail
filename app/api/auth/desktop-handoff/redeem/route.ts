@@ -8,6 +8,7 @@ import { revokeParkedTokens } from '@/lib/auth/desktop-handoff-revoke';
 import { configManager } from '@/lib/admin/config-manager';
 import { isHandoffCode, isHandoffCodeVerifier, redeemHandoff, reserveHandoffRedeem } from '@/lib/auth/handoff-store';
 import { writeSignInStamp } from '@/lib/auth/session-age';
+import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import type { BudgetRefund } from '@/lib/auth/verify-budget';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
@@ -15,6 +16,9 @@ import { jmapServerAllowed } from '@/lib/desktop/policy-schema';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { storeIdToken } from '@/lib/oauth/end-session';
 import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
+import { writeCustomUpstream } from '@/lib/oauth/custom-upstream';
+import { DEFAULT_CLIENT_ID } from '@/lib/oauth/token-exchange';
+import { stalwartDefaultClientId } from '@/lib/auth/stalwart-password-login';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 
 // The desktop app's side of "Sign in with your browser", on an instance. The app's own
@@ -81,11 +85,33 @@ export async function POST(request: NextRequest) {
     }
 
     const cookieStore = await cookies();
-    if (parked.refresh_token) {
+    // A typed server's token is only kept where it can be sealed to that
+    // server: without a session secret its renewal would go to the configured one.
+    const refreshToken = parked.custom && !hasSessionSecret() ? undefined : parked.refresh_token;
+    if (refreshToken) {
       const options = getSignInCookieOptions(remember);
-      cookieStore.set(refreshTokenCookieName(slot), parked.refresh_token, options);
+      cookieStore.set(refreshTokenCookieName(slot), refreshToken, options);
+      // A server the user typed is in no configured list: the refresh is told
+      // where the token belongs and which client it was issued to, as the
+      // park route signed in (lib/oauth/custom-upstream.ts).
+      const upstream = parked.custom
+        ? {
+            serverUrl: parked.server_url.replace(/\/+$/, ''),
+            clientId: await stalwartDefaultClientId(
+              parked.server_url,
+              configManager.get<string>('oauthClientId', '') || process.env.OAUTH_CLIENT_ID || DEFAULT_CLIENT_ID,
+              false,
+            ),
+          }
+        : null;
+      if (upstream) writeCustomUpstream(cookieStore, slot, upstream, remember);
       // The token is renewed and revoked only at the server that issued it.
-      writeSignInStamp(cookieStore, slot, { signedInAt: parked.signed_in_at, refreshToken: parked.refresh_token, serverId: parked.server_id }, options);
+      writeSignInStamp(cookieStore, slot, {
+        signedInAt: parked.signed_in_at,
+        refreshToken,
+        serverId: parked.server_id,
+        ...(upstream ? { customServer: upstream.serverUrl } : {}),
+      }, options);
     }
     const serverCookie = refreshTokenServerCookieName(slot);
     if (parked.server_id) cookieStore.set(serverCookie, parked.server_id, getCookieOptions());
