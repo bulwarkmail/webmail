@@ -7,7 +7,7 @@
  */
 
 import { create } from 'zustand';
-import { DEFAULT_SCOPE, type StoreScope, type StoreUsage } from '@/lib/store/area';
+import { DEFAULT_SCOPE, NO_TOTAL_LIMIT, type StoreScope, type StoreUsage } from '@/lib/store/area';
 import type { ConflictEntry, LocalDraftRow, OutboxEntry, OutboxError } from './queue';
 import type { PersistState } from './storage-health';
 import type { SyncProgress } from './sync-progress';
@@ -20,6 +20,8 @@ export const OFFLINE_SCOPE_KEY = 'bulwark-offline-scope';
 export const OFFLINE_HEALTH_KEY = 'bulwark-offline-health';
 
 export interface UserChoice extends Partial<Pick<StoreScope, 'days' | 'attachments' | 'maxAttachmentBytes'>> {
+  /** Bytes for all attachments and kept files together. Null is no limit, which only the desktop app offers. */
+  maxTotalBytes?: number | null;
   /** Off here means the user turned it off: the desktop app's default doesn't turn it back on. */
   on?: boolean;
 }
@@ -219,7 +221,8 @@ export function writeEnabled(enabled: string[]): void {
 export function offlineScopeFor(account: string): StoreScope {
   try {
     const { on: _on, ...chosen } = (JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY) ?? '{}') as Record<string, UserChoice>)[account] ?? {};
-    return { ...DEFAULT_SCOPE, ...chosen };
+    const { maxTotalBytes, ...rest } = chosen;
+    return { ...DEFAULT_SCOPE, ...rest, ...(maxTotalBytes !== undefined && { maxTotalBytes: maxTotalBytes ?? NO_TOTAL_LIMIT }) };
   } catch {
     return DEFAULT_SCOPE;
   }

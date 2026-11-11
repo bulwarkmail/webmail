@@ -33,6 +33,9 @@ export const DEFAULT_SCOPE: StoreScope = {
   maxTotalBytes: 2 * 1024 * 1024 * 1024,
 };
 
+/** `maxTotalBytes` with no limit on the total (desktop app only). A plain number: it goes through JSON and SQL. */
+export const NO_TOTAL_LIMIT = Number.MAX_SAFE_INTEGER;
+
 /** The `area` of an error event for a write that failed: a full disk, the browser's quota. */
 export const STORAGE_ERROR_AREA = 'storage';
 

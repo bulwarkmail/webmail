@@ -6,7 +6,7 @@
  */
 
 import { getDesktopBridge, isDesktopApp } from '@/lib/desktop/bridge';
-import { DEFAULT_SCOPE, type StoreScope } from '@/lib/store/area';
+import { DEFAULT_SCOPE, NO_TOTAL_LIMIT, type StoreScope } from '@/lib/store/area';
 import type { DevicePolicy } from '@/lib/device-policy';
 import { useOfflineStore, type UserChoice } from './state';
 
@@ -16,6 +16,12 @@ const MB = 1024 * 1024;
 export const WINDOW_CHOICES: readonly (number | null)[] = [30, 90, 365, null];
 /** The largest attachment a user may keep, in MB. */
 export const ATTACHMENT_CAP_CHOICES: readonly number[] = [5, 25, 100, 500];
+/** The totals for attachments and kept files a browser offers, in MB. */
+export const BROWSER_TOTAL_CHOICES: readonly number[] = [1024, 2048];
+/** The desktop app has the disk to itself, so it goes higher. Null is no limit. */
+export const DESKTOP_TOTAL_CHOICES: readonly (number | null)[] = [1024, 2048, 5120, 10240, 25600, null];
+/** A browser may evict what a site keeps: no more than this there, whatever was stored. */
+const BROWSER_MAX_TOTAL_MB = 2048;
 
 /** What the old offline mode kept, for those who had it on before the local store. */
 export const LEGACY_CHOICE: UserChoice = { on: true, days: 30, attachments: true, maxAttachmentBytes: 5 * MB };
@@ -24,6 +30,8 @@ export interface PlatformDefault {
   on: boolean;
   /** The OS policy says so either way (desktop `OfflineEnabled`, forced): no user choice applies. */
   forced?: boolean | null;
+  /** The desktop app, which allows a larger total. */
+  desktop: boolean;
   scope: StoreScope;
 }
 
@@ -74,7 +82,7 @@ export function offlineDefaultOn(): boolean {
 export function platformDefault(): PlatformDefault {
   const setting = offlineEnabledPolicy();
   const forced = setting?.locked && typeof setting.value === 'boolean' ? setting.value : null;
-  return { on: offlineDefaultOn(), forced, scope: DEFAULT_SCOPE };
+  return { on: offlineDefaultOn(), forced, desktop: isDesktopApp(), scope: DEFAULT_SCOPE };
 }
 
 /** Null means everything, so any cap is lower. */
@@ -85,6 +93,12 @@ function cappedDays(days: number | null, cap: number): number | null {
 
 function cappedBytes(bytes: number, capMb: number): number {
   return capMb > 0 ? Math.min(bytes, capMb * MB) : bytes;
+}
+
+/** The user's total, within what the platform allows. */
+function chosenTotal(total: number | null | undefined, defaults: PlatformDefault): number {
+  const bytes = total === undefined ? defaults.scope.maxTotalBytes : total ?? NO_TOTAL_LIMIT;
+  return defaults.desktop ? bytes : Math.min(bytes, BROWSER_MAX_TOTAL_MB * MB);
 }
 
 export function effectiveScope(
@@ -103,7 +117,7 @@ export function effectiveScope(
       days: cappedDays(days, policy.offlineMaxDays),
       attachments: !policy.noOfflineAttachments && (choice.attachments ?? defaults.scope.attachments),
       maxAttachmentBytes: cappedBytes(maxAttachment, policy.offlineMaxAttachmentMb),
-      maxTotalBytes: cappedBytes(defaults.scope.maxTotalBytes, policy.offlineMaxTotalMb),
+      maxTotalBytes: cappedBytes(chosenTotal(choice.maxTotalBytes, defaults), policy.offlineMaxTotalMb),
       orgMaxFileBytes: policy.offlineMaxAttachmentMb > 0 ? policy.offlineMaxAttachmentMb * MB : null,
     },
     locked: {
@@ -142,6 +156,14 @@ export function attachmentCapOptions(capMb: number): number[] {
   if (!(capMb > 0)) return [...ATTACHMENT_CAP_CHOICES];
   const fit = ATTACHMENT_CAP_CHOICES.filter((mb) => mb < capMb);
   return [...fit, capMb];
+}
+
+/** The totals on offer, in MB, null for no limit. A cap only takes away: no limit goes, and it never raises the browser's. */
+export function totalCapOptions(capMb: number, desktop: boolean): (number | null)[] {
+  const choices = desktop ? DESKTOP_TOTAL_CHOICES : BROWSER_TOTAL_CHOICES;
+  if (!(capMb > 0)) return [...choices];
+  const fit = choices.filter((mb): mb is number => mb !== null && mb < capMb);
+  return desktop || capMb <= BROWSER_MAX_TOTAL_MB ? [...fit, capMb] : fit;
 }
 
 export function maxAttachmentMb(scope: StoreScope): number {
