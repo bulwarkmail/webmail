@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch, getPathPrefix, toRouterPath } from "@/lib/browser-navigation";
 import { buildSettingsPath } from "@/lib/deep-links";
 import { LITE_OAUTH_AVAILABLE, getLiteOAuthRedirectUri } from "@/lib/auth/lite-oauth";
+import { IS_LITE } from "@/lib/lite";
 import { AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
@@ -111,6 +112,14 @@ function OAuthCallbackInner() {
 
     const savedState = sessionStorage.getItem("oauth_state");
 
+    // Back from the app lands here again, with the code the sign-in already
+    // spent. Lite has no server-side flow to try it with: while that sign-in
+    // is on, go on to the app instead of saying the sign-in did not work.
+    if (!savedState && IS_LITE && useAuthStore.getState().isAuthenticated) {
+      router.replace(toRouterPath(`${getPathPrefix(params.locale as string)}/${params.locale}`));
+      return;
+    }
+
     if (savedState) {
       // Classic flow - sessionStorage has the PKCE state (same-tab OAuth)
       if (!state || state !== savedState) {
@@ -150,7 +159,9 @@ function OAuthCallbackInner() {
                 redirectTo = saved;
               }
             } catch { /* sessionStorage may be unavailable */ }
-            router.push(toRouterPath(redirectTo));
+            // The code is spent: the callback address leaves the history, so
+            // Back does not come here to try it again.
+            router.replace(toRouterPath(redirectTo));
           } else {
             setError("token_exchange_failed");
           }
@@ -268,7 +279,7 @@ function OAuthCallbackInner() {
                 redirectTo = saved;
               }
             } catch { /* sessionStorage may be unavailable */ }
-            router.push(toRouterPath(redirectTo));
+            router.replace(toRouterPath(redirectTo));
           } else {
             setError("token_exchange_failed");
           }

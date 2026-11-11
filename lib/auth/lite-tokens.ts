@@ -31,9 +31,18 @@ import {
  * /api/auth (older Stalwart, other JMAP servers) fall back to Basic auth;
  * those sessions can only survive a reload inside the same tab.
  *
- * Trade-off, documented in LITE-README.md: a refresh token in web storage is
- * readable by any script on the origin. That is the standard SPA position,
- * and strictly better than storing the password.
+ * Neither token is in web storage as text. Each is sealed (AES-GCM) with a
+ * key that is created non-extractable and kept in IndexedDB; web storage
+ * holds the sealed token and the fields around it (server, user name, client
+ * id), which stay readable. The page keeps the tokens it uses in memory and
+ * unseals a stored one when it has none, or when another tab stored a newer
+ * one. A browser that can't seal (no WebCrypto on a plain http:// address,
+ * IndexedDB blocked) keeps the session in the page's memory only.
+ *
+ * What that does, as LITE-README.md says: what web storage and IndexedDB hold
+ * is of no use outside this browser profile, and a script that reads web
+ * storage finds no token. A script running on the origin while the profile
+ * holds the key can still use the key the way this module does.
  */
 
 /**
@@ -97,6 +106,33 @@ interface StoredAccessToken {
   expiresAt: number;
 }
 
+/**
+ * A token as web storage holds it. `id` is new with every token, so a page can
+ * tell whether the token it holds in memory is still the stored one (another
+ * tab may have renewed it). `sealed` is the token sealed with the key, and
+ * null for the moment between saving and sealing.
+ */
+interface SealedRecord {
+  id: string;
+  sealed: string | null;
+}
+
+type RefreshRecord = Omit<StoredRefreshToken, 'refreshToken'> & SealedRecord;
+
+/**
+ * A slot's token as this page holds it. `pageOnly`: there is no record behind
+ * it, because this browser can't seal, so it ends with the page.
+ */
+interface Held<T> {
+  id: string;
+  value: T;
+  persistent: boolean;
+  pageOnly?: boolean;
+}
+
+const heldRefresh = new Map<number, Held<StoredRefreshToken>>();
+const heldAccess = new Map<number, Held<StoredAccessToken>>();
+
 /** A password (Basic auth) or the access token of a token login (Bearer auth). */
 type StoredBasicSession =
   | { serverUrl: string; username: string; password: string; token?: undefined }
@@ -136,11 +172,15 @@ function readJson<T>(store: Storage | null, key: string): T | null {
   }
 }
 
-function writeJson(store: Storage | null, key: string, value: unknown): void {
+/** Whether the value was written. */
+function writeJson(store: Storage | null, key: string, value: unknown): boolean {
   try {
-    store?.setItem(key, JSON.stringify(value));
+    if (!store) return false;
+    store.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
     // Storage full or blocked: the session simply won't survive a reload.
+    return false;
   }
 }
 
@@ -152,9 +192,265 @@ function remove(store: Storage | null, key: string): void {
   }
 }
 
+/** The slot's record under `prefix`: localStorage (remembered) first, then sessionStorage (this tab). */
+function findRecord(prefix: string, slot: number): { record: Record<string, unknown>; persistent: boolean } | null {
+  for (const persistent of [true, false]) {
+    const record = readJson<unknown>(storage(persistent ? 'local' : 'session'), `${prefix}${slot}`);
+    if (record && typeof record === 'object') return { record: record as Record<string, unknown>, persistent };
+  }
+  return null;
+}
+
+function removeRecords(prefix: string, slot: number): void {
+  remove(storage('local'), `${prefix}${slot}`);
+  remove(storage('session'), `${prefix}${slot}`);
+}
+
+/** Slots with a record under `prefix`, in either storage. */
+function slotsWithRecords(prefix: string): number[] {
+  const slots = new Set<number>();
+  for (const kind of ['local', 'session'] as const) {
+    const store = storage(kind);
+    try {
+      for (let i = 0; store && i < store.length; i++) {
+        const key = store.key(i);
+        if (!key?.startsWith(prefix)) continue;
+        const slot = Number(key.slice(prefix.length));
+        if (Number.isInteger(slot) && slot >= 0) slots.add(slot);
+      }
+    } catch {
+      // Unreadable storage holds nothing we can use.
+    }
+  }
+  return [...slots];
+}
+
+function isSealedRecord(record: Record<string, unknown>): record is Record<string, unknown> & SealedRecord {
+  return typeof record.id === 'string' && (record.sealed === null || typeof record.sealed === 'string');
+}
+
+/** A refresh token record from before tokens were sealed: the token in plain text. */
+function isPlainRefreshRecord(record: Record<string, unknown>): record is Record<string, unknown> & StoredRefreshToken {
+  return !isSealedRecord(record) && typeof record.refreshToken === 'string' && record.refreshToken !== '';
+}
+
+function refreshFields(record: RefreshRecord): Omit<StoredRefreshToken, 'refreshToken'> {
+  const { id: _id, sealed: _sealed, ...fields } = record;
+  return fields;
+}
+
+// ---------------------------------------------------------------------------
+// Sealing
+// ---------------------------------------------------------------------------
+
+const KEY_DB_NAME = 'bulwark-lite-keys';
+const KEY_STORE = 'keys';
+const TOKEN_KEY_ID = 'tokens';
+
+/** How long a page waits for another tab that is still sealing the token it just stored. */
+const SEAL_WAIT_MS = 50;
+const SEAL_WAIT_ATTEMPTS = 40;
+
+function canSeal(): boolean {
+  try {
+    return typeof indexedDB !== 'undefined' && !!indexedDB && typeof crypto !== 'undefined' && !!crypto.subtle;
+  } catch {
+    return false;
+  }
+}
+
+// One step at a time, so deleting the key never overtakes a seal or an unseal that came first.
+let keyQueue: Promise<unknown> = Promise.resolve();
+
+function inKeyQueue<T>(work: () => Promise<T>): Promise<T> {
+  const run = keyQueue.then(work, work);
+  keyQueue = run.catch(() => undefined);
+  return run;
+}
+
+function requestResult<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function withKeyDb<T>(fn: (db: IDBDatabase) => Promise<T>): Promise<T> {
+  const open = indexedDB.open(KEY_DB_NAME, 1);
+  open.onupgradeneeded = () => {
+    if (!open.result.objectStoreNames.contains(KEY_STORE)) open.result.createObjectStore(KEY_STORE);
+  };
+  const db = await requestResult(open);
+  try {
+    return await fn(db);
+  } finally {
+    db.close();
+  }
+}
+
+/** The sealing key, made on first use when `create`. Not extractable: script can use it here, but not copy it out. */
+function tokenKey(create: boolean): Promise<CryptoKey | null> {
+  return withKeyDb(async (db) => {
+    const found = await requestResult(db.transaction(KEY_STORE, 'readonly').objectStore(KEY_STORE).get(TOKEN_KEY_ID)) as CryptoKey | undefined;
+    if (found || !create) return found ?? null;
+    const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    const store = db.transaction(KEY_STORE, 'readwrite').objectStore(KEY_STORE);
+    // Another tab may have made one meanwhile: keep theirs.
+    const raced = await requestResult(store.get(TOKEN_KEY_ID)) as CryptoKey | undefined;
+    if (raced) return raced;
+    await requestResult(store.put(key, TOKEN_KEY_ID));
+    return key;
+  });
+}
+
+function toBase64(bytes: Uint8Array): string {
+  let text = '';
+  for (const byte of bytes) text += String.fromCharCode(byte);
+  return btoa(text);
+}
+
+function fromBase64(text: string): Uint8Array<ArrayBuffer> {
+  const raw = atob(text);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return bytes;
+}
+
+/** `text` sealed with the key (IV first), or null when this browser can't seal. */
+function seal(text: string): Promise<string | null> {
+  return inKeyQueue(async () => {
+    try {
+      const key = await tokenKey(true);
+      if (!key) return null;
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const data = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text)));
+      const out = new Uint8Array(iv.length + data.length);
+      out.set(iv);
+      out.set(data, iv.length);
+      return toBase64(out);
+    } catch {
+      return null;
+    }
+  });
+}
+
+/** The text of a sealed token, or null when the key is gone or the data is not ours. */
+function unseal(sealed: string): Promise<string | null> {
+  return inKeyQueue(async () => {
+    try {
+      const key = await tokenKey(false);
+      if (!key) return null;
+      const bytes = fromBase64(sealed);
+      return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(0, 12) }, key, bytes.slice(12)));
+    } catch {
+      return null;
+    }
+  });
+}
+
+/**
+ * Deletes the key once no slot here has a token record left. A tab of another
+ * window that keeps its session to itself (no "remember me") can't be seen
+ * from here: it keeps its session until it reloads.
+ */
+function forgetKeyIfUnused(): void {
+  if (!canSeal()) return;
+  void inKeyQueue(async () => {
+    if (slotsWithRecords(REFRESH_KEY_PREFIX).length > 0 || slotsWithRecords(ACCESS_KEY_PREFIX).length > 0) return;
+    await new Promise<void>((resolve) => {
+      try {
+        const request = indexedDB.deleteDatabase(KEY_DB_NAME);
+        request.onsuccess = () => resolve();
+        request.onerror = () => resolve();
+        request.onblocked = () => resolve();
+      } catch {
+        resolve();
+      }
+    });
+  });
+}
+
+function newRecordId(): string {
+  const bytes = new Uint8Array(12);
+  try {
+    crypto.getRandomValues(bytes);
+  } catch {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Stores a slot's token: the record without it at once, so the slot is taken
+ * and a copy from before is gone, then the sealed token once it is sealed, if
+ * the record is still this one. Resolves when that is done. Without sealing,
+ * the token stays in this page only.
+ */
+function storeSealed<T>(
+  prefix: string,
+  held: Map<number, Held<T>>,
+  slot: number,
+  value: T,
+  secret: string,
+  fields: object,
+  persistent: boolean,
+): Promise<void> {
+  const key = `${prefix}${slot}`;
+  const store = storage(persistent ? 'local' : 'session');
+  const id = newRecordId();
+  removeRecords(prefix, slot);
+  if (!canSeal() || !writeJson(store, key, { ...fields, id, sealed: null })) {
+    held.set(slot, { id, value, persistent, pageOnly: true });
+    return Promise.resolve();
+  }
+  held.set(slot, { id, value, persistent });
+  return seal(secret).then((sealed) => {
+    const current = readJson<Record<string, unknown>>(store, key);
+    if (current?.id !== id) return;
+    if (sealed && writeJson(store, key, { ...current, sealed })) return;
+    remove(store, key);
+    const mine = held.get(slot);
+    if (mine?.id === id) mine.pageOnly = true;
+  });
+}
+
+/** The slot's sealed record, waiting a little while another tab is still sealing it. */
+async function readSealedRecord(prefix: string, slot: number): Promise<{ record: Record<string, unknown> & SealedRecord & { sealed: string }; persistent: boolean } | null> {
+  for (let attempt = 0; ; attempt++) {
+    const found = findRecord(prefix, slot);
+    if (!found || !isSealedRecord(found.record)) return null;
+    const { record, persistent } = found;
+    if (typeof record.sealed === 'string') return { record: { ...record, sealed: record.sealed }, persistent };
+    if (attempt >= SEAL_WAIT_ATTEMPTS) return null;
+    await new Promise((resolve) => setTimeout(resolve, SEAL_WAIT_MS));
+  }
+}
+
+/** Whether the slot's stored record is the one `held` came from. */
+function holds<T>(held: Held<T> | undefined, record: Record<string, unknown>): held is Held<T> {
+  return !!held && !held.pageOnly && held.id === record.id;
+}
+
 // ---------------------------------------------------------------------------
 // Storage
 // ---------------------------------------------------------------------------
+
+let sweeping = false;
+
+/**
+ * Tokens a browser kept in plain form before they were sealed: sealed on the
+ * first read, the plain copies removed at once, so the user stays signed in.
+ */
+function sealPlainTokens(): void {
+  if (sweeping) return;
+  sweeping = true;
+  try {
+    for (const slot of slotsWithRecords(REFRESH_KEY_PREFIX)) readLiteRefreshToken(slot);
+    for (const slot of slotsWithRecords(ACCESS_KEY_PREFIX)) readLiteAccessToken(slot);
+  } finally {
+    sweeping = false;
+  }
+}
 
 /**
  * Persists a refresh token for an account slot. `persistent` (remember me)
@@ -165,39 +461,120 @@ export function saveLiteRefreshToken(
   entry: StoredRefreshToken,
   persistent: boolean,
 ): void {
-  const key = `${REFRESH_KEY_PREFIX}${slot}`;
-  remove(storage('local'), key);
-  remove(storage('session'), key);
-  writeJson(storage(persistent ? 'local' : 'session'), key, { ...entry, serverUrl: trimUrl(entry.serverUrl) });
+  void storeRefreshToken(slot, entry, persistent);
 }
 
+function storeRefreshToken(slot: number, entry: StoredRefreshToken, persistent: boolean): Promise<void> {
+  const value = { ...entry, serverUrl: trimUrl(entry.serverUrl) };
+  const { refreshToken, ...fields } = value;
+  return storeSealed(REFRESH_KEY_PREFIX, heldRefresh, slot, value, refreshToken, fields, persistent);
+}
+
+/**
+ * The slot's refresh token, when this page holds the stored one: it saved or
+ * unsealed it. Null otherwise, including for a token another tab stored that
+ * this page has not unsealed yet (liteRefreshTokens does that).
+ */
 export function readLiteRefreshToken(slot: number): StoredRefreshToken | null {
-  const key = `${REFRESH_KEY_PREFIX}${slot}`;
-  const entry = readJson<StoredRefreshToken>(storage('local'), key) ?? readJson<StoredRefreshToken>(storage('session'), key);
-  return entry && typeof entry.refreshToken === 'string' && entry.refreshToken ? entry : null;
+  sealPlainTokens();
+  const found = findRecord(REFRESH_KEY_PREFIX, slot);
+  const held = heldRefresh.get(slot);
+  if (!found) return held?.pageOnly ? held.value : null;
+  const { record, persistent } = found;
+  if (isPlainRefreshRecord(record)) {
+    const { serverUrl, username, refreshToken, clientId, tokenEndpoint, revocationEndpoint } = record;
+    const entry: StoredRefreshToken = {
+      serverUrl, username, refreshToken,
+      ...(clientId !== undefined ? { clientId } : {}),
+      ...(tokenEndpoint !== undefined ? { tokenEndpoint } : {}),
+      ...(revocationEndpoint !== undefined ? { revocationEndpoint } : {}),
+    };
+    void storeRefreshToken(slot, entry, persistent);
+    return heldRefresh.get(slot)?.value ?? entry;
+  }
+  if (!isSealedRecord(record) || !holds(held, record)) return null;
+  return { ...refreshFields(record as unknown as RefreshRecord), refreshToken: held.value.refreshToken };
+}
+
+/**
+ * How the slot's account signed in, from the readable fields of its record:
+ * an OAuth sign-in (lib/auth/lite-oauth.ts) records the endpoint its token is
+ * renewed at, a password sign-in at Stalwart's own login does not. Both end
+ * as a token session, so the auth store calls either one `oauth`. Null when
+ * the slot holds no refresh token.
+ */
+export function liteSignInMethod(slot: number): 'password' | 'oauth' | null {
+  const found = findRecord(REFRESH_KEY_PREFIX, slot);
+  const held = heldRefresh.get(slot);
+  const fields: Record<string, unknown> | undefined = found?.record ?? (held?.pageOnly ? { ...held.value } : undefined);
+  if (!fields) return null;
+  return typeof fields.tokenEndpoint === 'string' && fields.tokenEndpoint ? 'oauth' : 'password';
+}
+
+/** {@link readLiteRefreshToken}, unsealing the stored token when this page doesn't hold it. */
+async function loadLiteRefreshToken(slot: number): Promise<StoredRefreshToken | null> {
+  const known = readLiteRefreshToken(slot);
+  if (known) return known;
+  const found = await readSealedRecord(REFRESH_KEY_PREFIX, slot);
+  if (!found) return null;
+  const token = await unseal(found.record.sealed);
+  if (!token) return null;
+  const entry = { ...refreshFields(found.record as unknown as RefreshRecord), refreshToken: token };
+  const now = findRecord(REFRESH_KEY_PREFIX, slot);
+  if (now && now.record.id === found.record.id) heldRefresh.set(slot, { id: found.record.id, value: entry, persistent: now.persistent });
+  return entry;
+}
+
+/**
+ * The slot's refresh token for a sign-out or a replacement: what this page
+ * holds, a token from before sealing, or the stored one unsealed. Read before
+ * the slot is cleared, so the unsealing is queued before the key can go.
+ */
+function takeLiteRefreshToken(slot: number): Promise<StoredRefreshToken | null> {
+  const found = findRecord(REFRESH_KEY_PREFIX, slot);
+  const held = heldRefresh.get(slot);
+  if (!found) return Promise.resolve(held?.pageOnly ? held.value : null);
+  const { record } = found;
+  if (isPlainRefreshRecord(record)) return Promise.resolve(record);
+  if (!isSealedRecord(record)) return Promise.resolve(null);
+  const fields = refreshFields(record as unknown as RefreshRecord);
+  if (holds(held, record)) return Promise.resolve({ ...fields, refreshToken: held.value.refreshToken });
+  if (typeof record.sealed !== 'string') return Promise.resolve(null);
+  return unseal(record.sealed).then((token) => (token ? { ...fields, refreshToken: token } : null));
 }
 
 /** Where the slot's refresh token currently lives, so a rotation stays put. */
 function refreshTokenIsPersistent(slot: number): boolean {
-  return readJson<StoredRefreshToken>(storage('local'), `${REFRESH_KEY_PREFIX}${slot}`) !== null;
+  const found = findRecord(REFRESH_KEY_PREFIX, slot);
+  return found ? found.persistent : heldRefresh.get(slot)?.persistent ?? false;
 }
 
 /**
  * Records whose refresh token the slot holds. An OAuth sign-in stores the
- * token before it knows the account: only the JMAP session names it.
+ * token before it knows the account: only the JMAP session names it. The
+ * name is one of the readable fields, so the sealed token stays as it is.
  */
 export function nameLiteRefreshToken(slot: number, username: string): void {
-  const stored = readLiteRefreshToken(slot);
-  if (!stored || stored.username === username) return;
-  saveLiteRefreshToken(slot, { ...stored, username }, refreshTokenIsPersistent(slot));
+  readLiteRefreshToken(slot);
+  const found = findRecord(REFRESH_KEY_PREFIX, slot);
+  const held = heldRefresh.get(slot);
+  if (!found) {
+    if (held?.pageOnly) held.value = { ...held.value, username };
+    return;
+  }
+  const { record, persistent } = found;
+  if (!isSealedRecord(record)) return;
+  if (record.username !== username) writeJson(storage(persistent ? 'local' : 'session'), `${REFRESH_KEY_PREFIX}${slot}`, { ...record, username });
+  if (holds(held, record)) held.value = { ...held.value, username };
 }
 
 /** Forgets the slot's refresh token and the access token cached beside it. */
 export function clearLiteRefreshToken(slot: number): void {
-  for (const key of [`${REFRESH_KEY_PREFIX}${slot}`, `${ACCESS_KEY_PREFIX}${slot}`]) {
-    remove(storage('local'), key);
-    remove(storage('session'), key);
-  }
+  removeRecords(REFRESH_KEY_PREFIX, slot);
+  removeRecords(ACCESS_KEY_PREFIX, slot);
+  heldRefresh.delete(slot);
+  heldAccess.delete(slot);
+  forgetKeyIfUnused();
 }
 
 /**
@@ -206,22 +583,60 @@ export function clearLiteRefreshToken(slot: number): void {
  * `nbf` (Rauthy: iat + access token lifetime - 60s) refuse an early renewal,
  * and a refused renewal ends the session (#552). `persistent` follows the
  * refresh token: a remembered session reopened in a new tab needs it too.
+ * Stored sealed like the refresh token; this page keeps it in memory.
  */
 export function saveLiteAccessToken(slot: number, accessToken: string, expiresIn: number, persistent: boolean): void {
-  const key = `${ACCESS_KEY_PREFIX}${slot}`;
-  remove(storage('local'), key);
-  remove(storage('session'), key);
-  const entry: StoredAccessToken = { accessToken, expiresAt: Math.floor(Date.now() / 1000) + expiresIn };
-  writeJson(storage(persistent ? 'local' : 'session'), key, entry);
+  void storeAccessToken(slot, accessToken, expiresIn, persistent);
 }
 
-/** The slot's cached access token, while it has more than a minute to live. */
-export function readLiteAccessToken(slot: number): { accessToken: string; expiresIn: number } | null {
-  const key = `${ACCESS_KEY_PREFIX}${slot}`;
-  const entry = readJson<StoredAccessToken>(storage('local'), key) ?? readJson<StoredAccessToken>(storage('session'), key);
-  if (!entry || typeof entry.accessToken !== 'string' || !entry.accessToken || !Number.isFinite(entry.expiresAt)) return null;
+function storeAccessToken(slot: number, accessToken: string, expiresIn: number, persistent: boolean): Promise<void> {
+  const value: StoredAccessToken = { accessToken, expiresAt: Math.floor(Date.now() / 1000) + expiresIn };
+  return storeSealed(ACCESS_KEY_PREFIX, heldAccess, slot, value, accessToken, { expiresAt: value.expiresAt }, persistent);
+}
+
+function usableAccessToken(entry: Partial<StoredAccessToken> | null | undefined): { accessToken: string; expiresIn: number } | null {
+  if (!entry || typeof entry.accessToken !== 'string' || !entry.accessToken || typeof entry.expiresAt !== 'number' || !Number.isFinite(entry.expiresAt)) return null;
   const expiresIn = entry.expiresAt - Math.floor(Date.now() / 1000);
   return expiresIn >= ACCESS_TOKEN_MIN_REMAINING_SECONDS ? { accessToken: entry.accessToken, expiresIn } : null;
+}
+
+/**
+ * The slot's cached access token, while it has more than a minute to live and
+ * this page holds the stored one. A token another tab stored is unsealed by
+ * liteRefreshTokens.
+ */
+export function readLiteAccessToken(slot: number): { accessToken: string; expiresIn: number } | null {
+  sealPlainTokens();
+  const found = findRecord(ACCESS_KEY_PREFIX, slot);
+  const held = heldAccess.get(slot);
+  if (!found) return usableAccessToken(held?.pageOnly ? held.value : null);
+  const { record, persistent } = found;
+  if (!isSealedRecord(record)) {
+    // From before sealing: the plain copy goes now, a token with life left is sealed.
+    removeRecords(ACCESS_KEY_PREFIX, slot);
+    const plain = usableAccessToken(record as Partial<StoredAccessToken>);
+    if (plain) void storeAccessToken(slot, plain.accessToken, plain.expiresIn, persistent);
+    return plain;
+  }
+  return usableAccessToken(holds(held, record) ? held.value : null);
+}
+
+/**
+ * A stored access token this page doesn't hold yet, unsealed: after a reload,
+ * or when another tab has just renewed. Null when this page already holds the
+ * stored one, so a renewal it asks for goes ahead.
+ */
+async function adoptStoredAccessToken(slot: number): Promise<{ accessToken: string; expiresIn: number } | null> {
+  const found = await readSealedRecord(ACCESS_KEY_PREFIX, slot);
+  if (!found || holds(heldAccess.get(slot), found.record)) return null;
+  const expiresAt = found.record.expiresAt;
+  if (!usableAccessToken({ accessToken: '-', expiresAt: expiresAt as number })) return null;
+  const token = await unseal(found.record.sealed);
+  if (!token) return null;
+  const value: StoredAccessToken = { accessToken: token, expiresAt: expiresAt as number };
+  const now = findRecord(ACCESS_KEY_PREFIX, slot);
+  if (now && now.record.id === found.record.id) heldAccess.set(slot, { id: found.record.id, value, persistent: now.persistent });
+  return usableAccessToken(value);
 }
 
 /**
@@ -301,8 +716,9 @@ async function revokeRefreshToken(entry: StoredRefreshToken): Promise<void> {
  * Stalwart 1.0 keeps the consent for the next sign-in (#1388).
  */
 export async function revokeLiteSlot(slot: number, revoke = true): Promise<void> {
-  const entry = readLiteRefreshToken(slot);
+  const taken = takeLiteRefreshToken(slot);
   clearLiteSlot(slot);
+  const entry = await taken;
   if (entry && revoke) await revokeRefreshToken(entry);
 }
 
@@ -338,49 +754,38 @@ function retireRefreshToken(entry: StoredRefreshToken | null, revoke: boolean, k
  * before (the same account signing in again) is revoked. `revoke` is
  * config.json `oauthRevokeOnSignOut`.
  */
-export function replaceLiteRefreshToken(
+export async function replaceLiteRefreshToken(
   slot: number,
   entry: StoredRefreshToken,
   persistent: boolean,
   revoke: boolean,
 ): Promise<void> {
-  const previous = readLiteRefreshToken(slot);
-  saveLiteRefreshToken(slot, entry, persistent);
-  return retireRefreshToken(previous, revoke, entry.refreshToken);
+  const previous = takeLiteRefreshToken(slot);
+  const stored = storeRefreshToken(slot, entry, persistent);
+  const [replaced] = await Promise.all([previous, stored]);
+  return retireRefreshToken(replaced, revoke, entry.refreshToken);
 }
 
 /** {@link clearLiteRefreshToken}, revoking the token it forgets. */
 export function retireLiteRefreshToken(slot: number, revoke: boolean): Promise<void> {
-  const previous = readLiteRefreshToken(slot);
+  const previous = takeLiteRefreshToken(slot);
   clearLiteRefreshToken(slot);
-  return retireRefreshToken(previous, revoke);
+  return previous.then((entry) => retireRefreshToken(entry, revoke));
 }
 
 /** {@link clearLiteSlot} for a slot no account holds any more, revoking its token. */
 export function retireLiteSlot(slot: number, revoke: boolean): Promise<void> {
-  const previous = readLiteRefreshToken(slot);
+  const previous = takeLiteRefreshToken(slot);
   clearLiteSlot(slot);
-  return retireRefreshToken(previous, revoke);
+  return previous.then((entry) => retireRefreshToken(entry, revoke));
 }
 
 /** {@link revokeLiteSlot} for every slot. */
 export async function revokeAllLiteSessions(revoke = true): Promise<void> {
-  const entries: StoredRefreshToken[] = [];
-  for (const kind of ['local', 'session'] as const) {
-    const store = storage(kind);
-    if (!store) continue;
-    try {
-      for (let i = 0; i < store.length; i++) {
-        const key = store.key(i);
-        if (!key?.startsWith(REFRESH_KEY_PREFIX)) continue;
-        const entry = readJson<StoredRefreshToken>(store, key);
-        if (entry && typeof entry.refreshToken === 'string' && entry.refreshToken) entries.push(entry);
-      }
-    } catch {
-      continue;
-    }
-  }
+  const slots = new Set([...slotsWithRecords(REFRESH_KEY_PREFIX), ...heldRefresh.keys()]);
+  const taken = [...slots].map(takeLiteRefreshToken);
   clearAllLiteSessions();
+  const entries = (await Promise.all(taken)).filter((entry): entry is StoredRefreshToken => entry !== null);
   if (revoke) await Promise.all(entries.map(revokeRefreshToken));
 }
 
@@ -399,6 +804,9 @@ export function clearAllLiteSessions(): void {
     }
     keys.forEach((key) => remove(store, key));
   }
+  heldRefresh.clear();
+  heldAccess.clear();
+  forgetKeyIfUnused();
 }
 
 // ---------------------------------------------------------------------------
@@ -586,8 +994,13 @@ export async function liteExchangeAuthorizationCode(params: {
  * callers treat it as an outage, not a sign-out.
  */
 export async function liteRefreshTokens(slot: number, clientIdOverride?: string): Promise<LiteTokens> {
-  const stored = readLiteRefreshToken(slot);
+  const stored = await loadLiteRefreshToken(slot);
   if (!stored) throw new LiteLoginError('refresh_rejected', 401, 'no refresh token');
+  // A reload starts with no access token in memory, and another tab may have
+  // renewed a moment ago: a stored token this page has not used yet saves a
+  // renewal, which a provider can refuse this soon (#552).
+  const adopted = await adoptStoredAccessToken(slot);
+  if (adopted) return { accessToken: adopted.accessToken, expiresIn: adopted.expiresIn, refreshToken: stored.refreshToken };
   const clientId = clientIdOverride || stored.clientId || getLiteClientId();
 
   const response = await fetch(stored.tokenEndpoint || `${stored.serverUrl}/auth/token`, {
@@ -614,11 +1027,13 @@ export async function liteRefreshTokens(slot: number, clientIdOverride?: string)
     throw new LiteLoginError('refresh_rejected', response.status || 401, tokens.error);
   }
   const persistent = refreshTokenIsPersistent(slot);
-  if (tokens.refresh_token && tokens.refresh_token !== stored.refreshToken) {
-    saveLiteRefreshToken(slot, { ...stored, refreshToken: tokens.refresh_token }, persistent);
-  }
   const expiresIn = tokens.expires_in || 3600;
-  saveLiteAccessToken(slot, tokens.access_token, expiresIn, persistent);
+  const writes = [storeAccessToken(slot, tokens.access_token, expiresIn, persistent)];
+  if (tokens.refresh_token && tokens.refresh_token !== stored.refreshToken) {
+    writes.push(storeRefreshToken(slot, { ...stored, refreshToken: tokens.refresh_token }, persistent));
+  }
+  // Stored before the renewal lock is let go, so the next tab finds the new tokens.
+  await Promise.all(writes);
   return {
     accessToken: tokens.access_token,
     expiresIn,
@@ -661,4 +1076,15 @@ export function probeLiteTokenLogin(serverUrl: string): Promise<boolean | null> 
 /** Test hook. */
 export function resetLiteProbeCache(): void {
   probeCache.clear();
+}
+
+/** Test hook: resolves once every token store, seal and unseal started so far is done. */
+export async function settleLiteTokenStorage(): Promise<void> {
+  await inKeyQueue(async () => undefined);
+}
+
+/** Test hook: forgets the tokens this page holds in memory, as a reload does. */
+export function forgetLiteTokenMemory(): void {
+  heldRefresh.clear();
+  heldAccess.clear();
 }
