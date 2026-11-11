@@ -113,7 +113,46 @@ const INLINE_SAFE_MIME_TYPES = [
   'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska',
   'video/mpeg', 'video/3gpp',
   'application/pdf', 'text/plain',
-];
+] as const;
+
+/**
+ * The extension a download of each type on the list is saved with when its
+ * name has none (downloadNameForType()). A download's blob: URL is always
+ * octet-stream, so the browser no longer derives one from the type.
+ */
+const DOWNLOAD_EXTENSIONS: Readonly<Record<(typeof INLINE_SAFE_MIME_TYPES)[number], string>> = {
+  'image/png': 'png',
+  'image/apng': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'image/bmp': 'bmp',
+  'image/x-icon': 'ico',
+  'image/vnd.microsoft.icon': 'ico',
+  'image/tiff': 'tiff',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+  'audio/mpeg': 'mp3',
+  'audio/mp4': 'm4a',
+  'audio/aac': 'aac',
+  'audio/ogg': 'ogg',
+  'audio/opus': 'opus',
+  'audio/wav': 'wav',
+  'audio/flac': 'flac',
+  'audio/webm': 'weba',
+  'audio/3gpp': '3gp',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/ogg': 'ogv',
+  'video/quicktime': 'mov',
+  'video/x-msvideo': 'avi',
+  'video/x-matroska': 'mkv',
+  'video/mpeg': 'mpeg',
+  'video/3gpp': '3gp',
+  'application/pdf': 'pdf',
+  'text/plain': 'txt',
+};
 
 /**
  * The types a Blob may carry when it gets a blob: URL, keyed by every
@@ -322,6 +361,30 @@ export function toInertBlob(blob: Blob): Blob {
  */
 export function isInlineSafeBlob(blob: Blob): boolean {
   return inlineSafeType(blob.type) === blob.type;
+}
+
+// A name's extension: a dot and at least one character that is neither a dot
+// nor white space, at its end. ".gitignore" has one.
+const NAME_EXTENSION = /\.[^.\s]+$/;
+
+/**
+ * The name a download of a Blob typed `type` is saved under. A name with an
+ * extension stays as it is, whatever the type. A name without one gets the
+ * extension DOWNLOAD_EXTENSIONS holds for the type when the type names one
+ * type on INLINE_SAFE_TYPES (trailing dots and spaces go first: "invoice."
+ * becomes "invoice.pdf"); any other type adds nothing, and so does a name
+ * that is only dots and spaces.
+ */
+export function downloadNameForType(name: string, type?: string): string {
+  // A loop, not a regular expression: names come from senders and can be long.
+  let end = name.length;
+  while (end > 0 && (name[end - 1] === '.' || /\s/.test(name[end - 1]))) end--;
+  const stem = name.slice(0, end);
+  if (!stem || NAME_EXTENSION.test(stem)) return name;
+  const listed = inlineSafeType(type);
+  if (listed === undefined) return name;
+  const extension: string | undefined = DOWNLOAD_EXTENSIONS[listed.split(';', 1)[0] as keyof typeof DOWNLOAD_EXTENSIONS];
+  return extension ? `${stem}.${extension}` : name;
 }
 
 /**
