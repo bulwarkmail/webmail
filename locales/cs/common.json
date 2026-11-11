@@ -7369,6 +7369,8 @@
       "title": "Okna aplikace",
       "double_click_label": "Otevírat zprávy v novém okně dvojitým kliknutím",
       "double_click_description": "Jedním kliknutím se zpráva dál otevře vedle seznamu.",
+      "compose_window_label": "Vždy psát zprávy v novém okně",
+      "compose_window_description": "Nové zprávy, odpovědi, přeposlání a koncepty se otevírají ve vlastním okně místo v hlavním okně.",
       "restore_label": "Při spuštění znovu otevřít okna",
       "restore_description": "Okna zpráv a konceptů otevřená při ukončení se znovu otevřou."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Aplikace se po přihlášení spustí sama.",
     "start_minimized_label": "Spustit v oznamovací oblasti",
     "start_minimized_description": "Po přihlášení se neotevře žádné okno. Otevřete ji ikonou v oznamovací oblasti.",
+    "reopen_after_restart_label": "Znovu otevřít po restartu",
+    "reopen_after_restart_description": "Pokud je aplikace otevřená, když se počítač restartuje nebo se odhlásíte, po opětovném přihlášení se znovu otevře na stejné složce, zprávě nebo stránce.",
     "attention_label": "Při nové poště blikat na hlavním panelu",
     "attention_mac_label": "Při nové poště poskakovat ikonou v Docku",
     "attention_description": "Jen když aplikace není v popředí.",

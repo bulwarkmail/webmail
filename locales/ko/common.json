@@ -7369,6 +7369,8 @@
       "title": "앱 창",
       "double_click_label": "두 번 클릭하면 메시지를 새 창에서 열기",
       "double_click_description": "한 번 클릭하면 지금처럼 목록 옆에 메시지가 열립니다.",
+      "compose_window_label": "메시지를 항상 새 창에서 작성",
+      "compose_window_description": "새 메시지, 답장, 전달, 임시보관 메시지가 기본 창 대신 별도의 창에서 열립니다.",
       "restore_label": "시작할 때 창 다시 열기",
       "restore_description": "종료할 때 열려 있던 메시지와 임시보관 창이 다시 열립니다."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "로그인하면 앱이 자동으로 시작됩니다.",
     "start_minimized_label": "트레이에서 시작",
     "start_minimized_description": "로그인할 때 창이 열리지 않습니다. 트레이 아이콘으로 여세요.",
+    "reopen_after_restart_label": "다시 시작한 후 다시 열기",
+    "reopen_after_restart_description": "컴퓨터가 다시 시작되거나 로그아웃할 때 앱이 열려 있었다면, 다시 로그인할 때 같은 폴더, 메시지 또는 페이지로 다시 열립니다.",
     "attention_label": "새 메일이 오면 작업 표시줄 깜박이기",
     "attention_mac_label": "새 메일이 오면 Dock 아이콘 튀기기",
     "attention_description": "앱이 앞에 있지 않을 때만 작동합니다.",

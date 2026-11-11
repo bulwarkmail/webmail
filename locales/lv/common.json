@@ -7369,6 +7369,8 @@
       "title": "Lietotnes logi",
       "double_click_label": "Atvērt ziņojumus jaunā logā ar dubultklikšķi",
       "double_click_description": "Viens klikšķis joprojām atver ziņojumu blakus sarakstam.",
+      "compose_window_label": "Vienmēr rakstīt ziņojumus jaunā logā",
+      "compose_window_description": "Jauni ziņojumi, atbildes, pārsūtījumi un melnraksti tiek atvērti atsevišķā logā, nevis galvenajā logā.",
       "restore_label": "Startējot atkal atvērt logus",
       "restore_description": "Ziņojumu un melnrakstu logi, kas bija atvērti izejot, atgriežas."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Lietotne sākas pati, kad piesakāties.",
     "start_minimized_label": "Sākt teknē",
     "start_minimized_description": "Piesakoties logs neatveras. Atveriet to ar teknes ikonu.",
+    "reopen_after_restart_label": "Atvērt atkārtoti pēc restartēšanas",
+    "reopen_after_restart_description": "Ja lietotne ir atvērta, kad dators tiek restartēts vai jūs izrakstāties, tā atkal tiek atvērta, kad pierakstāties, tajā pašā mapē, ziņojumā vai lapā.",
     "attention_label": "Mirgot uzdevumjoslā, pienākot pastam",
     "attention_mac_label": "Lēkāt Dock ikonai, pienākot pastam",
     "attention_description": "Tikai tad, ja lietotne nav priekšplānā.",

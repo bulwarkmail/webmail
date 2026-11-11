@@ -7369,6 +7369,8 @@
       "title": "Appens vinduer",
       "double_click_label": "Åpne meldinger i et nytt vindu ved dobbeltklikk",
       "double_click_description": "Et enkelt klikk åpner fortsatt meldingen ved siden av listen.",
+      "compose_window_label": "Skriv alltid meldinger i et nytt vindu",
+      "compose_window_description": "Nye meldinger, svar, videresendinger og utkast åpnes i sitt eget vindu i stedet for i hovedvinduet.",
       "restore_label": "Åpne vinduer på nytt ved start",
       "restore_description": "Meldings- og utkastvinduer som var åpne da du avsluttet, kommer tilbake."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Appen starter av seg selv når du logger på.",
     "start_minimized_label": "Start i systemstatusfeltet",
     "start_minimized_description": "Det åpnes ikke noe vindu ved pålogging. Åpne appen med ikonet i systemstatusfeltet.",
+    "reopen_after_restart_label": "Åpne igjen etter en omstart",
+    "reopen_after_restart_description": "Hvis appen er åpen når datamaskinen starter på nytt eller du logger av, åpnes den igjen når du logger på, i samme mappe, melding eller side.",
     "attention_label": "Blink i oppgavelinjen ved ny e-post",
     "attention_mac_label": "La Dock-ikonet sprette ved ny e-post",
     "attention_description": "Bare når appen ikke er foran.",

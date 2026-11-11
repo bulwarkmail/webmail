@@ -7369,6 +7369,8 @@
       "title": "Ventanas de la aplicación",
       "double_click_label": "Abrir mensajes en una ventana nueva con doble clic",
       "double_click_description": "Un solo clic sigue abriendo el mensaje junto a la lista.",
+      "compose_window_label": "Escribir siempre los mensajes en una ventana nueva",
+      "compose_window_description": "Los mensajes nuevos, las respuestas, los reenvíos y los borradores se abren en su propia ventana en lugar de en la ventana principal.",
       "restore_label": "Volver a abrir las ventanas al iniciar",
       "restore_description": "Las ventanas de mensajes y borradores abiertas al salir vuelven a aparecer."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "La aplicación se inicia sola cuando entras.",
     "start_minimized_label": "Iniciar en la bandeja",
     "start_minimized_description": "No se abre ninguna ventana al entrar. Ábrela con el icono de la bandeja.",
+    "reopen_after_restart_label": "Volver a abrir tras reiniciar",
+    "reopen_after_restart_description": "Si la aplicación está abierta cuando el equipo se reinicia o cierras sesión, se vuelve a abrir al iniciar sesión, en la misma carpeta, mensaje o página.",
     "attention_label": "Hacer parpadear la barra de tareas con correo nuevo",
     "attention_mac_label": "Hacer rebotar el icono del Dock con correo nuevo",
     "attention_description": "Solo cuando la aplicación no está delante.",

@@ -7369,6 +7369,8 @@
       "title": "Az alkalmazás ablakai",
       "double_click_label": "Üzenetek megnyitása új ablakban dupla kattintással",
       "double_click_description": "Egy kattintás továbbra is a lista mellett nyitja meg az üzenetet.",
+      "compose_window_label": "Üzenetek írása mindig új ablakban",
+      "compose_window_description": "Az új üzenetek, válaszok, továbbítások és piszkozatok saját ablakban nyílnak meg a főablak helyett.",
       "restore_label": "Ablakok újranyitása indításkor",
       "restore_description": "A kilépéskor nyitva lévő üzenet- és piszkozatablakok visszatérnek."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Az alkalmazás bejelentkezéskor magától elindul.",
     "start_minimized_label": "Indítás a tálcán",
     "start_minimized_description": "Bejelentkezéskor nem nyílik ablak. A tálcaikonnal nyithatja meg.",
+    "reopen_after_restart_label": "Újranyitás újraindítás után",
+    "reopen_after_restart_description": "Ha az alkalmazás nyitva van, amikor a számítógép újraindul vagy kijelentkezik, a következő bejelentkezéskor újra megnyílik ugyanazon a mappán, üzeneten vagy oldalon.",
     "attention_label": "Tálca villogtatása új levélnél",
     "attention_mac_label": "Dock-ikon ugráltatása új levélnél",
     "attention_description": "Csak ha az alkalmazás nincs előtérben.",

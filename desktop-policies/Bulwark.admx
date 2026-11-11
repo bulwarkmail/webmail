@@ -262,5 +262,17 @@
       <text id="FilesDriveLetter_Value" valueName="FilesDriveLetter" required="true" maxLength="8"/>
     </elements>
   </policy>
+  <policy name="ComposeInNewWindow" class="Both" displayName="$(string.ComposeInNewWindow)" explainText="$(string.ComposeInNewWindow_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="ComposeInNewWindow">
+    <parentCategory ref="Bulwark_Desktop_system"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="ComposeInNewWindow_Recommended" class="Both" displayName="$(string.ComposeInNewWindow)" explainText="$(string.ComposeInNewWindow_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="ComposeInNewWindow">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
   </policies>
 </policyDefinitions>

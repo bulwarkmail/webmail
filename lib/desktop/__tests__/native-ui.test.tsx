@@ -156,7 +156,7 @@ describe('a pop-out closing itself', () => {
 
 describe('window settings', () => {
   it('both default to on, and stay on this computer', () => {
-    expect(readDesktopPrefs()).toEqual({ openOnDoubleClick: true, restoreWindows: true, dictionaryDownload: 'ask' });
+    expect(readDesktopPrefs()).toEqual({ openOnDoubleClick: true, composeInWindow: null, restoreWindows: true, dictionaryDownload: 'ask' });
     setDesktopPref('restoreWindows', false);
     resetDesktopPrefsCache();
     expect(readDesktopPrefs().restoreWindows).toBe(false);

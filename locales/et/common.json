@@ -7369,6 +7369,8 @@
       "title": "Rakenduse aknad",
       "double_click_label": "Ava kirjad topeltklõpsuga uues aknas",
       "double_click_description": "Üks klõps avab kirja endiselt loendi kõrval.",
+      "compose_window_label": "Kirjuta kirju alati uues aknas",
+      "compose_window_description": "Uued kirjad, vastused, edasisaatmised ja mustandid avanevad oma aknas, mitte põhiaknas.",
       "restore_label": "Ava aknad käivitamisel uuesti",
       "restore_description": "Kirja- ja mustandiaknad, mis olid väljumisel avatud, tulevad tagasi."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Rakendus käivitub sisselogimisel ise.",
     "start_minimized_label": "Käivita salves",
     "start_minimized_description": "Sisselogimisel akent ei avata. Ava rakendus salve ikoonist.",
+    "reopen_after_restart_label": "Ava pärast taaskäivitust uuesti",
+    "reopen_after_restart_description": "Kui rakendus on avatud, kui arvuti taaskäivitub või sa välja logid, avaneb see uuesti, kui sisse logid, samas kaustas, kirjal või lehel.",
     "attention_label": "Vilguta tegumiriba uue kirja korral",
     "attention_mac_label": "Põrgata Docki ikooni uue kirja korral",
     "attention_description": "Ainult siis, kui rakendus pole esiplaanil.",

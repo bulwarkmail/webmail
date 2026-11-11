@@ -7370,6 +7370,8 @@
       "title": "חלונות האפליקציה",
       "double_click_label": "פתיחת הודעות בחלון חדש בלחיצה כפולה",
       "double_click_description": "לחיצה אחת עדיין פותחת את ההודעה ליד הרשימה.",
+      "compose_window_label": "תמיד לכתוב הודעות בחלון חדש",
+      "compose_window_description": "הודעות חדשות, תשובות, העברות וטיוטות נפתחות בחלון משלהן במקום בחלון הראשי.",
       "restore_label": "פתיחה מחדש של חלונות בהפעלה",
       "restore_description": "חלונות הודעות וטיוטות שהיו פתוחים ביציאה חוזרים."
     },
@@ -7777,6 +7779,8 @@
     "start_at_login_description": "היישום מופעל מעצמו כשנכנסים.",
     "start_minimized_label": "להפעיל במגש המערכת",
     "start_minimized_description": "בכניסה לא נפתח חלון. פותחים אותו מהסמל במגש המערכת.",
+    "reopen_after_restart_label": "פתיחה מחדש אחרי הפעלה מחדש",
+    "reopen_after_restart_description": "אם האפליקציה פתוחה כשהמחשב מופעל מחדש או כשאתם מתנתקים, היא נפתחת שוב כשאתם מתחברים, באותה תיקייה, הודעה או עמוד.",
     "attention_label": "הבהוב בשורת המשימות בדואר חדש",
     "attention_mac_label": "קפיצת סמל ה-Dock בדואר חדש",
     "attention_description": "רק כשהיישום לא בחזית.",

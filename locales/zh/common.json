@@ -7369,6 +7369,8 @@
       "title": "应用窗口",
       "double_click_label": "双击时在新窗口中打开邮件",
       "double_click_description": "单击仍会在列表旁打开邮件。",
+      "compose_window_label": "始终在新窗口中撰写邮件",
+      "compose_window_description": "新邮件、回复、转发和草稿会在单独的窗口中打开，而不是在主窗口中。",
       "restore_label": "启动时重新打开窗口",
       "restore_description": "退出时打开的邮件和草稿窗口会恢复。"
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "你登录时应用会自动启动。",
     "start_minimized_label": "在托盘中启动",
     "start_minimized_description": "登录时不打开窗口。请通过托盘图标打开。",
+    "reopen_after_restart_label": "重启后重新打开",
+    "reopen_after_restart_description": "如果电脑重启或你注销时应用处于打开状态，下次登录时它会重新打开，并回到同一个文件夹、邮件或页面。",
     "attention_label": "有新邮件时闪烁任务栏",
     "attention_mac_label": "有新邮件时让 Dock 图标跳动",
     "attention_description": "仅在应用不在前台时。",

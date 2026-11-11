@@ -7369,6 +7369,8 @@
       "title": "Uygulama pencereleri",
       "double_click_label": "İletileri çift tıklamayla yeni pencerede aç",
       "double_click_description": "Tek tıklama iletiyi yine listenin yanında açar.",
+      "compose_window_label": "İletileri her zaman yeni pencerede yaz",
+      "compose_window_description": "Yeni iletiler, yanıtlar, iletmeler ve taslaklar ana pencere yerine kendi pencerelerinde açılır.",
       "restore_label": "Başlangıçta pencereleri yeniden aç",
       "restore_description": "Çıkarken açık olan ileti ve taslak pencereleri geri gelir."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Oturum açtığınızda uygulama kendiliğinden başlar.",
     "start_minimized_label": "Sistem tepsisinde başlat",
     "start_minimized_description": "Oturum açarken pencere açılmaz. Sistem tepsisindeki simgeyle açın.",
+    "reopen_after_restart_label": "Yeniden başlatmadan sonra tekrar aç",
+    "reopen_after_restart_description": "Bilgisayar yeniden başlatıldığında veya oturumu kapattığınızda uygulama açıksa, yeniden oturum açtığınızda aynı klasörde, iletide veya sayfada tekrar açılır.",
     "attention_label": "Yeni postada görev çubuğunu yanıp söndür",
     "attention_mac_label": "Yeni postada Dock simgesini zıplat",
     "attention_description": "Yalnızca uygulama önde değilken.",

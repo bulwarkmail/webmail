@@ -118,6 +118,15 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
           <ToggleSwitch checked={settings.startMinimized} onChange={(startMinimized) => change({ startMinimized })} />
         </SettingItem>
       )}
+      {typeof settings.reopenAfterRestart === "boolean" && (
+        <SettingItem label={t("reopen_after_restart_label")} description={t("reopen_after_restart_description")}>
+          <ToggleSwitch
+            checked={settings.reopenAfterRestart}
+            onChange={(reopenAfterRestart) => change({ reopenAfterRestart })}
+            testId="desktop-reopen-after-restart"
+          />
+        </SettingItem>
+      )}
       <SettingItem label={t("close_to_tray_label")} description={t("close_to_tray_description")}>
         <ToggleSwitch checked={settings.closeToTray} onChange={(closeToTray) => change({ closeToTray })} />
       </SettingItem>

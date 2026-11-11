@@ -210,7 +210,8 @@ import { onOpenEmail, type OpenEmailHandler, type OpenEmailOutcome } from "@/lib
 import { mailtoComposerDraft } from "./mailto-draft";
 import { useOpenEmailInWindow, usePopoutsAvailable } from "@/hooks/use-popouts-available";
 import { openComposerWindow } from "@/lib/popout/open";
-import { onRescuedDraft, takeRescuedDraft } from "@/lib/popout/rescued-drafts";
+import { openComposerInWindow } from "@/lib/popout/compose-in-window";
+import { keepRescuedDraft, onRescuedDraft, takeRescuedDraft } from "@/lib/popout/rescued-drafts";
 import { answerWhenComposerOpens, onReturnedComposer, takeReturnedComposer } from "@/lib/popout/return-to-main";
 import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
@@ -364,6 +365,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [resumedReplySession, setResumedReplySession] = useState<number | null>(null);
   const showComposerRef = useRef(showComposer);
   showComposerRef.current = showComposer;
+  // "Always write messages in a new window": the next composer opens here all the same
+  // (it came back from its window, or opens to save before a sign-out), and the session
+  // of the one that does.
+  const composerStaysHereRef = useRef(false);
+  const composerHereSessionRef = useRef<number | null>(null);
   // Fields a plugin filled in through onBeforeCompose for the composer about
   // to open. Dropped once the composer hands its own state back, so a
   // remount restores what the user wrote instead.
@@ -2080,6 +2086,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       const { payload } = returned;
       answerWhenComposerOpens(returned);
+      composerStaysHereRef.current = true;
       setComposerSessionId((id) => id + 1);
       setHandedOffSource({ session: composerSessionId + 1, emailId: payload.sourceEmailId ?? undefined, source: payload.sourceEmailSource ?? undefined });
       setPendingDraft(payload.initialData ?? null);
@@ -2765,6 +2772,112 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const answeredEmailSource = handedOffToSession ? handedOffToSession.source : composerSource;
 
   const popoutsOn = usePopoutsAvailable();
+
+  // What the composer answers: the draft's own, or the message it was opened on.
+  const inlineComposerReplyTo = pendingDraft !== null ? pendingDraft.replyTo : (composerSourceEmail ? {
+    from: composerSourceEmail.from,
+    replyToAddresses: composerSourceEmail.replyTo,
+    to: composerSourceEmail.to,
+    cc: composerSourceEmail.cc,
+    bcc: composerSourceEmail.bcc,
+    deliveredTo: deliveryAddresses(composerSourceEmail.headers),
+    subject: composerSourceEmail.subject,
+    phishingMarked: phishingMarkedNow(composerSourceEmail),
+    ...getQuoteBodies(composerSourceEmail),
+    receivedAt: composerSourceEmail.receivedAt,
+    // The login that holds the message, so the reply
+    // defaults to that account's identity (#1104).
+    accountId: composerSourceEmail.sourceClientAccountId ?? viewingAccountId ?? undefined,
+    sourceAccountId: composerSourceEmail.sourceAccountId,
+    sourceClientAccountId: composerSourceEmail.sourceClientAccountId,
+    attachments: composerSourceEmail.attachments,
+    messageId: composerSourceEmail.messageId,
+    inReplyTo: composerSourceEmail.inReplyTo,
+    references: composerSourceEmail.references,
+    keywords: composerSourceEmail.keywords,
+    // Its label, for the reply's or forward's classification label.
+    headers: labelSourceHeaders(composerSourceEmail.headers),
+    quoteHeaderHtml: composerQuoteHeader?.html,
+    quoteHeaderText: composerQuoteHeader?.text,
+    quoteWrapInBlockquote: composerQuoteHeader?.wrapInBlockquote,
+  } : undefined);
+
+  // "Always write messages in a new window" (desktop app): a composer opening here opens in
+  // a window of its own instead. Before paint, so it never shows here first. Should the
+  // window not show it, it opens here after all. Pro's tabs go through openComposeTab.
+  useLayoutEffect(() => {
+    if (!showComposer) {
+      composerHereSessionRef.current = null;
+      return;
+    }
+    if (isEmbedded) return;
+    const session = composerSessionId;
+    if (composerStaysHereRef.current) {
+      composerStaysHereRef.current = false;
+      composerHereSessionRef.current = session;
+      return;
+    }
+    if (composerHereSessionRef.current === session) return;
+    const kept = {
+      mode: composerMode,
+      draftText: composerDraftText,
+      draft: pendingDraft,
+      prefill: composerPrefill,
+      files: composerInitialFiles,
+      quoteHeader: composerQuoteHeader,
+    };
+    const opened = openComposerInWindow({
+      mode: pendingDraft?.mode ?? composerMode,
+      replyTo: inlineComposerReplyTo,
+      initialDraftText: composerDraftText,
+      initialData: pendingDraft,
+      prefill: composerPrefill,
+      ...(composerInitialFiles?.length ? { initialFiles: composerInitialFiles } : {}),
+      sourceEmailId: answeredEmailId ?? null,
+      sourceEmailSource: answeredEmailSource ?? null,
+      composeFromAccountEmail: resolveComposeAccountEmail(
+        mailboxes,
+        selectedMailbox,
+        useAccountStore.getState().getAccountById(viewingAccountId ?? activeAccountId ?? '')?.email,
+      ),
+    }, {
+      localAccountId: activeAccountId,
+      notShown: () => {
+        // Another composer opened here meanwhile: it keeps its place, and unsaved text
+        // waits in the "Continue draft" slot.
+        if (composerSessionRef.current !== session || showComposerRef.current) {
+          if (kept.draft?.unsaved) keepRescuedDraft(kept.draft);
+          toast.error(t('pwaWindows.window_not_ready'));
+          return;
+        }
+        composerHereSessionRef.current = session;
+        setComposerMode(kept.mode);
+        setComposerDraftText(kept.draftText);
+        setPendingDraft(kept.draft);
+        setComposerPrefill(kept.prefill);
+        setComposerInitialFiles(kept.files);
+        setComposerQuoteHeader(kept.quoteHeader);
+        setShowComposer(true);
+        if (isMobile) setActiveView('viewer');
+        toast.error(t('pwaWindows.window_not_ready'));
+      },
+    });
+    if (!opened) {
+      composerHereSessionRef.current = session;
+      return;
+    }
+    setShowComposer(false);
+    setComposerMode('compose');
+    setComposerDraftText('');
+    setPendingDraft(null);
+    setComposerPrefill(null);
+    setComposerInitialFiles(null);
+    setComposerQuoteHeader(null);
+    if (isMobile && !useEmailStore.getState().selectedEmail) setActiveView('list');
+    // Only the rising edge and a new session: what it reads is the state they opened with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showComposer, composerSessionId, isEmbedded]);
+
   const desktopDoubleClick = useDesktopPrefs().openOnDoubleClick && hasDesktopWindows() && !isMobile && !!openEmailInWindow;
   // Text from a closing pop-out that couldn't be saved: the "Continue draft"
   // slot, once it is free.
@@ -3088,7 +3201,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // A minimised composer's edits live only in pendingDraft. Before an
   // automatic sign-out it is opened again and saves them itself.
-  useMinimisedComposerFlush(!showComposer && pendingDraft?.unsaved === true, () => setShowComposer(true));
+  useMinimisedComposerFlush(!showComposer && pendingDraft?.unsaved === true, () => {
+    composerStaysHereRef.current = true;
+    setShowComposer(true);
+  });
 
   // Reply on a message with a reply draft opens that draft (compose-p2-6).
   // After a composer closed (it may have saved that very draft under a new
@@ -5929,33 +6045,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             .getState()
             .getAccountById(viewingAccountId ?? activeAccountId ?? '')?.email,
         )}
-        replyTo={pendingDraft !== null ? pendingDraft.replyTo : (composerSourceEmail ? {
-          from: composerSourceEmail.from,
-          replyToAddresses: composerSourceEmail.replyTo,
-          to: composerSourceEmail.to,
-          cc: composerSourceEmail.cc,
-          bcc: composerSourceEmail.bcc,
-          deliveredTo: deliveryAddresses(composerSourceEmail.headers),
-          subject: composerSourceEmail.subject,
-          phishingMarked: phishingMarkedNow(composerSourceEmail),
-          ...getQuoteBodies(composerSourceEmail),
-          receivedAt: composerSourceEmail.receivedAt,
-          // The login that holds the message, so the reply
-          // defaults to that account's identity (#1104).
-          accountId: composerSourceEmail.sourceClientAccountId ?? viewingAccountId ?? undefined,
-          sourceAccountId: composerSourceEmail.sourceAccountId,
-          sourceClientAccountId: composerSourceEmail.sourceClientAccountId,
-          attachments: composerSourceEmail.attachments,
-          messageId: composerSourceEmail.messageId,
-          inReplyTo: composerSourceEmail.inReplyTo,
-          references: composerSourceEmail.references,
-          keywords: composerSourceEmail.keywords,
-          // Its label, for the reply's or forward's classification label.
-          headers: labelSourceHeaders(composerSourceEmail.headers),
-          quoteHeaderHtml: composerQuoteHeader?.html,
-          quoteHeaderText: composerQuoteHeader?.text,
-          quoteWrapInBlockquote: composerQuoteHeader?.wrapInBlockquote,
-        } : undefined)}
+        replyTo={inlineComposerReplyTo}
         initialDraftText={composerDraftText}
         initialData={pendingDraft}
         prefill={composerPrefill}

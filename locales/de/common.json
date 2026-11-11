@@ -7369,6 +7369,8 @@
       "title": "Fenster der App",
       "double_click_label": "Nachrichten per Doppelklick in einem neuen Fenster öffnen",
       "double_click_description": "Ein einfacher Klick öffnet die Nachricht weiterhin neben der Liste.",
+      "compose_window_label": "Nachrichten immer in einem neuen Fenster schreiben",
+      "compose_window_description": "Neue Nachrichten, Antworten, Weiterleitungen und Entwürfe öffnen sich in einem eigenen Fenster statt im Hauptfenster.",
       "restore_label": "Fenster beim Start wieder öffnen",
       "restore_description": "Nachrichten- und Entwurfsfenster, die beim Beenden offen waren, werden wieder geöffnet."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Die App startet von selbst, wenn Sie sich anmelden.",
     "start_minimized_label": "Im Infobereich starten",
     "start_minimized_description": "Beim Anmelden öffnet sich kein Fenster. Öffnen Sie die App über das Symbol im Infobereich.",
+    "reopen_after_restart_label": "Nach einem Neustart wieder öffnen",
+    "reopen_after_restart_description": "Ist die App offen, wenn der Computer neu startet oder Sie sich abmelden, öffnet sie sich beim nächsten Anmelden wieder, im selben Ordner, auf derselben Nachricht oder Seite.",
     "attention_label": "Taskleiste bei neuen E-Mails blinken lassen",
     "attention_mac_label": "Dock-Symbol bei neuen E-Mails hüpfen lassen",
     "attention_description": "Nur wenn die App nicht im Vordergrund ist.",

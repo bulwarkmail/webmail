@@ -7369,6 +7369,8 @@
       "title": "Appens vinduer",
       "double_click_label": "Åbn beskeder i et nyt vindue ved dobbeltklik",
       "double_click_description": "Et enkelt klik åbner stadig beskeden ved siden af listen.",
+      "compose_window_label": "Skriv altid beskeder i et nyt vindue",
+      "compose_window_description": "Nye beskeder, svar, videresendelser og kladder åbnes i deres eget vindue i stedet for i hovedvinduet.",
       "restore_label": "Åbn vinduer igen ved start",
       "restore_description": "Besked- og kladdevinduer, der var åbne, da du lukkede, kommer tilbage."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Appen starter selv, når du logger på.",
     "start_minimized_label": "Start i systembakken",
     "start_minimized_description": "Der åbnes intet vindue ved logon. Åbn appen med ikonet i systembakken.",
+    "reopen_after_restart_label": "Åbn igen efter en genstart",
+    "reopen_after_restart_description": "Hvis appen er åben, når computeren genstarter, eller du logger af, åbnes den igen, når du logger på, i den samme mappe, besked eller side.",
     "attention_label": "Blink i proceslinjen ved ny post",
     "attention_mac_label": "Lad Dock-ikonet hoppe ved ny post",
     "attention_description": "Kun når appen ikke er forrest.",

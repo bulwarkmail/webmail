@@ -7369,6 +7369,8 @@
       "title": "Vensters van de app",
       "double_click_label": "Berichten openen in een nieuw venster met dubbelklikken",
       "double_click_description": "Eén klik opent het bericht nog steeds naast de lijst.",
+      "compose_window_label": "Berichten altijd in een nieuw venster schrijven",
+      "compose_window_description": "Nieuwe berichten, antwoorden, doorgestuurde berichten en concepten openen in een eigen venster in plaats van in het hoofdvenster.",
       "restore_label": "Vensters opnieuw openen bij het starten",
       "restore_description": "Bericht- en conceptvensters die open waren bij het afsluiten, komen terug."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "De app start vanzelf als je je aanmeldt.",
     "start_minimized_label": "Starten in het systeemvak",
     "start_minimized_description": "Bij het aanmelden opent geen venster. Open de app met het pictogram in het systeemvak.",
+    "reopen_after_restart_label": "Opnieuw openen na een herstart",
+    "reopen_after_restart_description": "Als de app open is wanneer de computer opnieuw opstart of je je afmeldt, opent hij weer wanneer je je aanmeldt, in dezelfde map, hetzelfde bericht of dezelfde pagina.",
     "attention_label": "Taakbalk laten knipperen bij nieuwe mail",
     "attention_mac_label": "Dock-pictogram laten stuiteren bij nieuwe mail",
     "attention_description": "Alleen als de app niet vooraan staat.",

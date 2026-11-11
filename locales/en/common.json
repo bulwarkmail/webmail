@@ -7369,6 +7369,8 @@
       "title": "App windows",
       "double_click_label": "Open messages in a new window on double-click",
       "double_click_description": "A single click still opens the message next to the list.",
+      "compose_window_label": "Always write messages in a new window",
+      "compose_window_description": "New messages, replies, forwards and drafts open in a window of their own instead of in the main window.",
       "restore_label": "Reopen windows at start",
       "restore_description": "Message and draft windows that were open when you quit come back."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "The app starts by itself when you sign in.",
     "start_minimized_label": "Start in the tray",
     "start_minimized_description": "No window opens at sign-in. Use the tray icon to open it.",
+    "reopen_after_restart_label": "Open again after a restart",
+    "reopen_after_restart_description": "If the app is open when the computer restarts or you sign out, it opens again when you sign back in, on the same folder, message or page.",
     "attention_label": "Flash the taskbar on new mail",
     "attention_mac_label": "Bounce the Dock icon on new mail",
     "attention_description": "Only when the app is not in front.",

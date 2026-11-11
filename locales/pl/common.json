@@ -7369,6 +7369,8 @@
       "title": "Okna aplikacji",
       "double_click_label": "Otwieraj wiadomości w nowym oknie po dwukrotnym kliknięciu",
       "double_click_description": "Pojedyncze kliknięcie nadal otwiera wiadomość obok listy.",
+      "compose_window_label": "Zawsze pisz wiadomości w nowym oknie",
+      "compose_window_description": "Nowe wiadomości, odpowiedzi, przekazania i wersje robocze otwierają się we własnym oknie zamiast w oknie głównym.",
       "restore_label": "Otwieraj okna ponownie przy starcie",
       "restore_description": "Okna wiadomości i wersji roboczych otwarte przy zamykaniu wrócą."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "Aplikacja uruchamia się sama po zalogowaniu.",
     "start_minimized_label": "Uruchamiaj w zasobniku",
     "start_minimized_description": "Po zalogowaniu nie otwiera się okno. Otwórz je ikoną w zasobniku.",
+    "reopen_after_restart_label": "Otwórz ponownie po ponownym uruchomieniu",
+    "reopen_after_restart_description": "Jeśli aplikacja jest otwarta, gdy komputer uruchamia się ponownie lub się wylogowujesz, otworzy się znowu po zalogowaniu, w tym samym folderze, przy tej samej wiadomości lub stronie.",
     "attention_label": "Migaj na pasku zadań przy nowej poczcie",
     "attention_mac_label": "Podskakuj ikoną w Docku przy nowej poczcie",
     "attention_description": "Tylko gdy aplikacja nie jest na wierzchu.",

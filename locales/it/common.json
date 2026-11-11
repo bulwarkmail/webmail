@@ -7369,6 +7369,8 @@
       "title": "Finestre dell'app",
       "double_click_label": "Apri i messaggi in una nuova finestra con il doppio clic",
       "double_click_description": "Un solo clic apre comunque il messaggio accanto all’elenco.",
+      "compose_window_label": "Scrivi sempre i messaggi in una nuova finestra",
+      "compose_window_description": "Nuovi messaggi, risposte, inoltri e bozze si aprono in una finestra propria invece che nella finestra principale.",
       "restore_label": "Riapri le finestre all’avvio",
       "restore_description": "Le finestre di messaggi e bozze aperte all’uscita tornano."
     },
@@ -7776,6 +7778,8 @@
     "start_at_login_description": "L'app si avvia da sola quando accedi.",
     "start_minimized_label": "Avvia nell'area di notifica",
     "start_minimized_description": "All'accesso non si apre alcuna finestra. Aprila con l'icona nell'area di notifica.",
+    "reopen_after_restart_label": "Riapri dopo un riavvio",
+    "reopen_after_restart_description": "Se l’app è aperta quando il computer si riavvia o esci dalla sessione, si riapre al prossimo accesso, sulla stessa cartella, messaggio o pagina.",
     "attention_label": "Fai lampeggiare la barra delle applicazioni con nuova posta",
     "attention_mac_label": "Fai rimbalzare l'icona del Dock con nuova posta",
     "attention_description": "Solo quando l'app non è in primo piano.",
