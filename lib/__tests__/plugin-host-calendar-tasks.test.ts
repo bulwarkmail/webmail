@@ -332,6 +332,14 @@ describe('api.tasks', () => {
     await expect(call(READ, 'tasks.list', { calendarIds: [7] })).rejects.toThrow(/calendarIds\[0\]/);
   });
 
+  it('never asks the server for the birthday calendar, and reads nothing when it is the only one named', async () => {
+    await call(READ, 'tasks.list', { calendarIds: ['c1', BIRTHDAY_CALENDAR_ID, 'c1'] });
+    expect(client.getCalendarTasks).toHaveBeenLastCalledWith(['c1']);
+    client.getCalendarTasks.mockClear();
+    await expect(call(READ, 'tasks.list', { calendarIds: [BIRTHDAY_CALENDAR_ID] })).resolves.toEqual([]);
+    expect(client.getCalendarTasks).not.toHaveBeenCalled();
+  });
+
   it('needs tasks:read and tasks:write', async () => {
     await expect(call(NONE, 'tasks.list')).rejects.toThrow(/lacks permission "tasks:read"/);
     await expect(call(READ, 'tasks.create', { title: 'x' })).rejects.toThrow(/lacks permission "tasks:write"/);

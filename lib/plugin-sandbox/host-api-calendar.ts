@@ -905,7 +905,12 @@ export async function doTasksList(options: unknown): Promise<TaskView[]> {
     if (!Array.isArray(opts.calendarIds) || opts.calendarIds.length === 0 || opts.calendarIds.length > 100) {
       throw new Error(`${method}: calendarIds must be an array of 1 to 100 ids`);
     }
-    calendarIds = opts.calendarIds.map((id, i) => readId(id, method, `calendarIds[${i}]`));
+    const named = opts.calendarIds.map((id, i) => readId(id, method, `calendarIds[${i}]`));
+    // The birthday calendar comes from listCalendars but holds no tasks and
+    // isn't on the server. An empty list would mean every calendar to the
+    // client, so a call that names only it gets no tasks.
+    calendarIds = [...new Set(named)].filter((id) => id !== BIRTHDAY_CALENDAR_ID);
+    if (calendarIds.length === 0) return [];
   }
   const tasks = await sessionClient(method).getCalendarTasks(calendarIds);
   return tasks
