@@ -496,6 +496,21 @@ export function readLiteRefreshToken(slot: number): StoredRefreshToken | null {
   return { ...refreshFields(record as unknown as RefreshRecord), refreshToken: held.value.refreshToken };
 }
 
+/**
+ * How the slot's account signed in, from the readable fields of its record:
+ * an OAuth sign-in (lib/auth/lite-oauth.ts) records the endpoint its token is
+ * renewed at, a password sign-in at Stalwart's own login does not. Both end
+ * as a token session, so the auth store calls either one `oauth`. Null when
+ * the slot holds no refresh token.
+ */
+export function liteSignInMethod(slot: number): 'password' | 'oauth' | null {
+  const found = findRecord(REFRESH_KEY_PREFIX, slot);
+  const held = heldRefresh.get(slot);
+  const fields: Record<string, unknown> | undefined = found?.record ?? (held?.pageOnly ? { ...held.value } : undefined);
+  if (!fields) return null;
+  return typeof fields.tokenEndpoint === 'string' && fields.tokenEndpoint ? 'oauth' : 'password';
+}
+
 /** {@link readLiteRefreshToken}, unsealing the stored token when this page doesn't hold it. */
 async function loadLiteRefreshToken(slot: number): Promise<StoredRefreshToken | null> {
   const known = readLiteRefreshToken(slot);
