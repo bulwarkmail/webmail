@@ -67,14 +67,19 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   // Pane-scoped: in a phone-narrow pane there is no room for a reading pane.
   const { isMobile } = useDeviceDetection();
 
-  const client = useMemo(
-    () => (data.accountId ? getClientForAccount(data.accountId) ?? activeClient : activeClient),
-    [data.accountId, getClientForAccount, activeClient],
-  );
-  // The login `client` belongs to. A message of this folder is read again
-  // through it, and a draft reopened from it is saved over and removed
-  // through it: the same ids name other messages on another server.
-  const clientLogin = (data.accountId && getClientForAccount(data.accountId) ? data.accountId : activeAccountId) ?? undefined;
+  // The folder's login: the one the tab names, else the active one (a tab
+  // that names none follows the active login). The folder is listed, read
+  // and written through that login's client only, and a message of it is
+  // read again, and a draft reopened from it saved over and removed, through
+  // it: folder and message ids repeat across logins, so through another login
+  // the tab would show another account's folder. A login without a client
+  // shows nothing (see below); the lookup runs again whenever the connected
+  // logins change.
+  useAuthStore((s) => s.connectedAccountsRevision);
+  const clientLogin = (data.accountId || activeAccountId) ?? undefined;
+  const client = data.accountId
+    ? getClientForAccount(data.accountId) ?? (data.accountId === activeAccountId ? activeClient : null)
+    : activeClient;
 
   // The folder's metadata, resolved from whichever account's mailbox list it
   // was dragged from. Shared folders are namespaced in the store, so JMAP
@@ -490,6 +495,15 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     (email: Email) => (archiveInbox ? handleMoveEmail(email, archiveInbox.id) : Promise.resolve()),
     [archiveInbox, handleMoveEmail],
   );
+
+  // A login without a client shows nothing of its folder.
+  if (!client) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-background p-6">
+        <p className="text-center text-sm text-muted-foreground">{tNotifications('not_connected')}</p>
+      </div>
+    );
+  }
 
   // Sent/Drafts show the recipient - the sender is always "me" there.
   const showRecipient = mailbox?.role === 'sent' || mailbox?.role === 'drafts';
