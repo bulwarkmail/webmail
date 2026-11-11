@@ -180,7 +180,8 @@ async function openViewer(route: Route = 'secondary-stamped', parts = attachment
     expect(downloads).toEqual([{ href: 'blob:download-all', name: 'attachments_Download test.zip', connected: true, notifications: 0 }]);
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
     const blob = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob;
-    expect(blob.type).toBe('application/zip');
+    // Every download is saved from a URL typed octet-stream; the name ends in .zip.
+    expect(blob.type).toBe('application/octet-stream');
     const zip = await JSZip.loadAsync(await readBlob(blob), { checkCRC32: true });
     expect(Object.keys(zip.files)).toEqual(names);
     for (let i = 0; i < names.length; i++) {

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 
@@ -7,7 +7,8 @@ import type { Email, Mailbox } from '@/lib/jmap/types';
 // browser reads a Blob's type like a Content-Type header, where after a comma
 // the last type counts, so "image/gif,text/html" is an HTML page once its
 // blob: URL is opened on its own. Neither the thumbnail nor the chip may mint
-// a blob: URL of such a type, and nothing of that type opens in a new tab.
+// a blob: URL of such a type, and nothing of that type opens in a new tab. A
+// download, whatever the type, is saved from a URL typed octet-stream.
 
 vi.mock('@/lib/offline/availability', async (original) => ({
   ...(await original<typeof import('@/lib/offline/availability')>()),
@@ -34,13 +35,15 @@ vi.stubGlobal('ResizeObserver', NoopResizeObserver);
 
 const { EmailViewer } = await import('../email-viewer');
 const { useAuthStore } = await import('@/stores/auth-store');
+const { useSettingsStore } = await import('@/stores/settings-store');
+const initialSettings = useSettingsStore.getState();
 
 const LIST_TYPE = 'image/gif,text/html';
 const GIF_BASE64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const GIF = [...atob(GIF_BASE64)].map((c) => c.charCodeAt(0));
 
-// A winmail.dat with one attachment whose MIME tag is LIST_TYPE (the writer
-// mirrors lib/__tests__/tnef.test.ts).
+// A winmail.dat with one attachment whose MIME tag is LIST_TYPE unless given
+// (the writer mirrors lib/__tests__/tnef.test.ts).
 class W {
   private bytes: number[] = [];
   u8(n: number) { this.bytes.push(n & 0xff); return this; }
@@ -58,12 +61,12 @@ function mapiStringProp(propId: number, str: string): number[] {
   for (let i = 0; i < (4 - (val.length % 4)) % 4; i++) w.u8(0);
   return [...w.build()];
 }
-function winmailDat(): Uint8Array {
+function winmailDat(type = LIST_TYPE, name = 'invoice.gif', data = GIF): Uint8Array {
   const w = new W().u32(0x223e9f78).u16(0);
   record(w, 0x02, 0x00069002, [0, 0]);
-  record(w, 0x02, 0x00018010, enc('invoice.gif\0'));
-  record(w, 0x02, 0x0006800f, GIF);
-  record(w, 0x02, 0x00069005, mapiStringProp(0x370e, LIST_TYPE));
+  record(w, 0x02, 0x00018010, enc(`${name}\0`));
+  record(w, 0x02, 0x0006800f, data);
+  record(w, 0x02, 0x00069005, mapiStringProp(0x370e, type));
   return w.build();
 }
 
@@ -91,6 +94,7 @@ const ATTACHED_MESSAGE = [
 
 const BLOBS: Record<string, Uint8Array> = {
   'tnef-1': winmailDat(),
+  'tnef-gif': winmailDat('image/gif', 'photo.gif'),
   'msg-1': new TextEncoder().encode(ATTACHED_MESSAGE),
 };
 
@@ -129,9 +133,11 @@ const DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'image/svg
 
 let minted: Map<string, Blob>;
 let open: ReturnType<typeof vi.fn>;
+let anchors: Array<{ href: string; download: string }>;
 
 beforeEach(() => {
   minted = new Map();
+  anchors = [];
   vi.spyOn(URL, 'createObjectURL').mockImplementation((blob: Blob | MediaSource) => {
     const url = `blob:http://localhost/${minted.size + 1}`;
     minted.set(url, blob as Blob);
@@ -139,7 +145,9 @@ beforeEach(() => {
   });
   vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
   // A download is an <a download> click; jsdom cannot follow it.
-  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+    anchors.push({ href: this.getAttribute('href') ?? '', download: this.download });
+  });
   open = vi.fn(() => null);
   vi.stubGlobal('open', open);
   useAuthStore.setState({ activeAccountId: 'acct', client: fakeClient } as never);
@@ -151,14 +159,19 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.stubGlobal('ResizeObserver', NoopResizeObserver);
   useAuthStore.setState({ activeAccountId: null, client: null } as never);
+  useSettingsStore.setState(initialSettings);
 });
 
-async function clickChip(name: string): Promise<void> {
-  const tile = await waitFor(() => {
+async function findChip(name: string): Promise<HTMLElement> {
+  return waitFor(() => {
     const found = screen.getAllByTestId('attachment').find((el) => el.getAttribute('data-attachment-name') === name);
     if (!found) throw new Error(`no chip for ${name}`);
     return found;
   });
+}
+
+async function clickChip(name: string): Promise<void> {
+  const tile = await findChip(name);
   const before = minted.size;
   fireEvent.click(tile.querySelector('button')!);
   await waitFor(() => expect(minted.size).toBeGreaterThan(before));
@@ -187,5 +200,32 @@ describe('attachments the reader holds as bytes, typed as a list of types', () =
     render(<EmailViewer email={makeEmail({ partId: '2', blobId: 'msg-1', name: 'forwarded.eml', type: 'message/rfc822', size: 600, disposition: 'attachment' }, '')} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onArchive={vi.fn()} onDelete={vi.fn()} />);
     await clickChip('photo.gif');
     expectNothingOpensAsADocument();
+  });
+});
+
+describe('downloads of attachments the reader holds as bytes', () => {
+  /** The one download started, and the type of the Blob behind its URL. */
+  async function savedDownload(): Promise<{ download: string; type: string | undefined }> {
+    await waitFor(() => expect(anchors).toHaveLength(1));
+    return { download: anchors[0].download, type: minted.get(anchors[0].href)?.type };
+  }
+
+  it.each([
+    ['a winmail.dat entry', 'tnef-1', 'winmail.dat', 'application/ms-tnef', 'invoice.gif'],
+    ['a part of an attached message', 'msg-1', 'forwarded.eml', 'message/rfc822', 'photo.gif'],
+  ])('%s is saved by its Download button from a URL typed application/octet-stream', async (_what, blobId, name, type, entry) => {
+    render(<EmailViewer email={makeEmail({ partId: '2', blobId, name, type, size: 600, disposition: 'attachment' }, '')} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onArchive={vi.fn()} onDelete={vi.fn()} />);
+    const chip = await findChip(entry);
+    fireEvent.click(within(chip).getByTitle('download'));
+    expect(await savedDownload()).toEqual({ download: entry, type: 'application/octet-stream' });
+  });
+
+  it('a winmail.dat entry of a listed type is saved by a click on the chip from a URL typed application/octet-stream', async () => {
+    useSettingsStore.setState({ mailAttachmentAction: 'download' });
+    render(<EmailViewer email={makeEmail({ partId: '2', blobId: 'tnef-gif', name: 'winmail.dat', type: 'application/ms-tnef', size: 200, disposition: 'attachment' }, 'Photo attached.')} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onArchive={vi.fn()} onDelete={vi.fn()} />);
+    const chip = await findChip('photo.gif');
+    fireEvent.click(chip.querySelector('button')!);
+    expect(await savedDownload()).toEqual({ download: 'photo.gif', type: 'application/octet-stream' });
+    expect(open).not.toHaveBeenCalled();
   });
 });

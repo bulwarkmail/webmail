@@ -52,9 +52,34 @@ export function downloadAllowed(kind: DownloadKind, subject?: DownloadSubject): 
   return allowed;
 }
 
+/** The type of every object URL a download is saved from. */
+const DOWNLOAD_BLOB_TYPE = 'application/octet-stream';
+
+/**
+ * Whether the browser may start a download only after the click has
+ * returned: WebKit (Safari, and every browser on iOS), the first time also
+ * after its "Allow downloads" prompt. Chromium (also the desktop app) and
+ * Firefox have the download under way when the click returns.
+ */
+function downloadMayStartLater(): boolean {
+  const agent = typeof navigator === 'undefined' ? '' : navigator.userAgent ?? '';
+  return /AppleWebKit/.test(agent) && !/Chrome\/|Chromium\/|Edg\//.test(agent);
+}
+
 /**
  * Saves `blob` (or an object URL) as `filename` through an `<a download>`.
  * False, and nothing saved, when a device policy forbids it.
+ *
+ * A Blob is saved from an object URL of its own typed
+ * application/octet-stream, whatever type the Blob carries. While that URL
+ * lives it can be loaded on its own (the browser's downloads list keeps it as
+ * the file's address), and a browser that ignores `download` opens it in the
+ * tab: either way the browser saves the file again rather than showing it as
+ * a document of the webmail origin. The file keeps its name, which is what
+ * the operating system opens it by. The URL is revoked right after the
+ * click, which has started the download by then, or after a minute in a
+ * browser that may start it later; `revokeAfterMs` sets another delay. An
+ * object URL passed in is the caller's and keeps its type and its lifetime.
  */
 export function saveBlobAs(
   data: Blob | string,
@@ -63,7 +88,9 @@ export function saveBlobAs(
 ): boolean {
   if (!downloadAllowed(options.kind, options.subject)) return false;
   if (typeof document === 'undefined') return false;
-  const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+  const url = typeof data === 'string'
+    ? data
+    : URL.createObjectURL(data.type === DOWNLOAD_BLOB_TYPE ? data : data.slice(0, data.size, DOWNLOAD_BLOB_TYPE));
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
@@ -71,10 +98,10 @@ export function saveBlobAs(
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  // 0 revokes at once (the click has started the download by then).
   if (typeof data !== 'string') {
-    if (options.revokeAfterMs === 0) URL.revokeObjectURL(url);
-    else setTimeout(() => URL.revokeObjectURL(url), options.revokeAfterMs ?? 60_000);
+    const revokeAfterMs = options.revokeAfterMs ?? (downloadMayStartLater() ? 60_000 : 0);
+    if (revokeAfterMs === 0) URL.revokeObjectURL(url);
+    else setTimeout(() => URL.revokeObjectURL(url), revokeAfterMs);
   }
   return true;
 }
