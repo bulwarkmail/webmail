@@ -92,11 +92,18 @@ function serializeUnit(unit: string): string {
   return /^[eE](?:[0-9]|[+-][0-9])/.test(unit) ? hexEscape(unit[0]) + ident.slice(1) : ident;
 }
 
-interface ReadToken { kind: 'comment' | 'space' | 'other'; plain: string; text: string }
+/** One token of a stylesheet: as written (`plain`) and in its canonical form (`text`). */
+export interface CssToken {
+  kind: 'comment' | 'space' | 'other';
+  plain: string;
+  text: string;
+  /** Set on a token that opens or closes a bracket: `(` (also a function's `name(`), `[`, `{`, `)`, `]`, `}`. */
+  bracket?: string;
+}
 
-function tokenizeCSS(s: string): ReadToken[] {
-  const tokens: ReadToken[] = [];
-  const push = (kind: ReadToken['kind'], start: number, end: number, canonical?: () => string) => {
+function tokenizeCSS(s: string): CssToken[] {
+  const tokens: CssToken[] = [];
+  const push = (kind: CssToken['kind'], start: number, end: number, canonical?: () => string) => {
     const plain = s.slice(start, end);
     tokens.push({ kind, plain, text: canonical && plain.includes('\\') ? canonical() : plain });
   };
@@ -226,6 +233,7 @@ function tokenizeCSS(s: string): ReadToken[] {
         if (s[k] !== '"' && s[k] !== "'") return url(start, end + 1);
       }
       push('other', start, end + 1, () => `${serializeIdent(name)}(`);
+      tokens[tokens.length - 1].bracket = '(';
       return end + 1;
     }
     push('other', start, end, () => serializeIdent(name));
@@ -279,37 +287,48 @@ function tokenizeCSS(s: string): ReadToken[] {
       // Any other character stands for itself, a pair of surrogates as one.
       const width = charAt(i).length;
       push('other', i, i + width);
+      if (width === 1 && '()[]{}'.includes(c)) tokens[tokens.length - 1].bracket = c;
       i += width;
     }
   }
   return tokens;
 }
 
+const CLOSING_BRACKET: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
+
 /**
- * A stylesheet as the browser reads it. `text` has every escape resolved
- * (see above) and no comments; `plain` is the same sheet with each token as
- * written. A comment between two tokens that would otherwise run together
- * stays as an empty one. Null when the sheet doesn't read cleanly: an
- * unterminated comment, string or url, a line break inside a string, a
- * backslash before a line break or at the end, an escape that names no
- * character, or a NUL.
+ * The tokens of a sheet that reads cleanly, without its comments: a comment
+ * between two tokens that would otherwise run together stays as an empty
+ * one. Null when the sheet doesn't read cleanly: an unterminated
+ * comment, string or url, a line break inside a string, a backslash before a
+ * line break or at the end, an escape that names no character, a NUL, or
+ * brackets that don't pair up (a block or a bracket left open, or closed by
+ * another kind or never opened). A browser recovers from each of these by
+ * its own rules and reads the rest of the sheet differently from any simpler
+ * reading, so nothing is taken from such a sheet.
  */
-export function readStylesheet(css: string): { text: string; plain: string } | null {
+export function readCssTokens(css: string): CssToken[] | null {
   if (css.includes('\0')) return null;
-  let tokens: ReadToken[];
+  let tokens: CssToken[];
   try {
     tokens = tokenizeCSS(css);
   } catch (error) {
     if (error instanceof UnreadableCSS) return null;
     throw error;
   }
-  let text = '';
-  let plain = '';
+  const open: string[] = [];
+  for (const token of tokens) {
+    if (!token.bracket) continue;
+    if (CLOSING_BRACKET[token.bracket]) open.push(CLOSING_BRACKET[token.bracket]);
+    else if (open.pop() !== token.bracket) return null;
+  }
+  if (open.length > 0) return null;
+
+  const out: CssToken[] = [];
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     if (token.kind !== 'comment') {
-      text += token.text;
-      plain += token.plain;
+      out.push(token);
       continue;
     }
     let next = i;
@@ -317,30 +336,94 @@ export function readStylesheet(css: string): { text: string; plain: string } | n
     const before = tokens[i - 1];
     const after = tokens[next + 1];
     if (before && after && before.kind !== 'space' && after.kind !== 'space') {
-      text += '/**/';
-      plain += '/**/';
+      out.push({ kind: 'comment', plain: '/**/', text: '/**/' });
     }
     i = next;
   }
-  return { text, plain };
+  return out;
 }
 
-const countMatches = (text: string, pattern: RegExp) => (text.match(new RegExp(pattern.source, 'gi')) ?? []).length;
+/** The text of a run of tokens, as it is checked and written back. */
+export const cssTextOf = (tokens: readonly CssToken[]): string => tokens.map((token) => token.text).join('');
 
-function stripComments(css: string): string {
-  return css.replace(/\/\*[\s\S]*?\*\//g, ' ');
+/**
+ * A stylesheet as the browser reads it. `text` has every escape resolved
+ * (see above) and no comments; `plain` is the same sheet with each token as
+ * written. Null when the sheet doesn't read cleanly (readCssTokens).
+ */
+export function readStylesheet(css: string): { text: string; plain: string } | null {
+  const tokens = readCssTokens(css);
+  if (!tokens) return null;
+  return { text: cssTextOf(tokens), plain: tokens.map((token) => token.plain).join('') };
+}
+
+/** A rule of a sheet or of a block: what stands before its `{}` block, and the block's content. */
+export interface CssRule {
+  prelude: CssToken[];
+  /** Null for a statement that has no block (`@charset "x";`, or text the sheet ends in). */
+  body: CssToken[] | null;
+}
+
+/** Index of the token closing the bracket that `tokens[start]` opens. The brackets pair up (readCssTokens). */
+function closingIndex(tokens: readonly CssToken[], start: number): number {
+  let depth = 0;
+  for (let i = start; i < tokens.length; i++) {
+    const bracket = tokens[i].bracket;
+    if (!bracket) continue;
+    if (CLOSING_BRACKET[bracket]) depth++;
+    else if (--depth === 0) return i;
+  }
+  return tokens.length - 1;
 }
 
 /**
- * Every check runs on the sheet as the browser reads it (readStylesheet), and
- * that reading is what comes back. A sheet that can't be read cleanly, or that
- * spells a removed construct with escapes, is dropped whole: neither has an
- * honest use.
+ * The rules of a sheet, or of a block's content: a rule runs to the first
+ * `{}` block outside parentheses and brackets, a statement to a `;` there.
+ * A string or a comment is one token here, so nothing inside one can open or
+ * close a rule. Each rule is judged and written back by itself, so text in
+ * front of a `;` (what is left of a removed `@import`) costs only itself.
+ */
+export function splitCssRules(tokens: readonly CssToken[]): CssRule[] {
+  const rules: CssRule[] = [];
+  let prelude: CssToken[] = [];
+  const hasText = () => prelude.some((token) => token.kind === 'other');
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.bracket === '{') {
+      const end = closingIndex(tokens, i);
+      rules.push({ prelude, body: tokens.slice(i + 1, end) });
+      prelude = [];
+      i = end;
+    } else if (token.bracket === '(' || token.bracket === '[') {
+      const end = closingIndex(tokens, i);
+      prelude.push(...tokens.slice(i, end + 1));
+      i = end;
+    } else if (token.text === ';') {
+      if (hasText()) rules.push({ prelude, body: null });
+      prelude = [];
+    } else {
+      prelude.push(token);
+    }
+  }
+  if (hasText()) rules.push({ prelude, body: null });
+  return rules;
+}
+
+const UNREADABLE = 'it could not be read cleanly (an unterminated comment, string, url or block, or a broken escape)';
+
+const countMatches = (text: string, pattern: RegExp) => (text.match(new RegExp(pattern.source, 'gi')) ?? []).length;
+
+/**
+ * The removed constructs are looked for in the sheet as the browser reads it
+ * (readStylesheet), and that reading is what comes back. A sheet that can't
+ * be read cleanly, or that spells a removed construct with escapes, is
+ * dropped whole: neither has an honest use. What comes back is text again:
+ * a caller reads it once more before it takes rules from it or hands it on.
  */
 function stripDisallowedPatterns(css: string, label: string): { css: string; warnings: string[] } {
   const read = readStylesheet(css);
   if (!read) {
-    return { css: '', warnings: [`${label}removed the stylesheet: it could not be read cleanly (an unterminated comment, string or url, or a broken escape)`] };
+    return { css: '', warnings: [`${label}removed the stylesheet: ${UNREADABLE}`] };
   }
   if (DISALLOWED_CSS_PATTERNS.some((pattern) => countMatches(read.text, pattern) > countMatches(read.plain, pattern))) {
     return { css: '', warnings: [`${label}removed the stylesheet: it hides a disallowed pattern behind CSS escapes`] };
@@ -414,54 +497,25 @@ const THEME_SELECTORS = new Set([':root', '.dark']);
 const OPAQUE_AT_RULES = /^@(?:-webkit-)?keyframes\b|^@font-face\b/i;
 const NESTING_AT_RULES = /^@(?:media|supports)\b/i;
 
-/** Index of the `}` closing the block opened just before `start`, or -1. */
-function findBlockEnd(css: string, start: number): number {
-  let depth = 1;
-  for (let i = start; i < css.length; i++) {
-    const c = css[i];
-    if (c === '\\') {
-      i++;
-    } else if (c === '"' || c === "'") {
-      for (i++; i < css.length && css[i] !== c; i++) {
-        if (css[i] === '\\') i++;
-      }
-    } else if (c === '{') {
-      depth++;
-    } else if (c === '}' && --depth === 0) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-function filterThemeRules(css: string, warnings: string[]): string {
+function filterThemeRules(tokens: readonly CssToken[], warnings: string[]): string {
   const out: string[] = [];
-  let i = 0;
-  while (i < css.length) {
-    const open = css.indexOf('{', i);
-    const semi = css.indexOf(';', i);
-    if (open === -1 || (semi !== -1 && semi < open)) {
+  for (const rule of splitCssRules(tokens)) {
+    // Compared and written back without the empty comments that only kept two tokens apart.
+    const prelude = cssTextOf(rule.prelude.filter((token) => token.kind !== 'comment')).trim();
+    if (!rule.body) {
       // A statement without a block (`@charset`, `@namespace`, stray text).
-      const end = semi === -1 ? css.length : semi + 1;
-      const statement = css.slice(i, end).trim();
-      if (statement && statement !== ';') warnings.push(`Removed "${statement.slice(0, 60)}" - themes only set :root and .dark variables`);
-      i = end;
+      warnings.push(`Removed "${prelude.slice(0, 60)}" - themes only set :root and .dark variables`);
       continue;
     }
-    const close = findBlockEnd(css, open + 1);
-    if (close === -1) {
-      warnings.push('Removed an unterminated rule');
-      break;
-    }
-    const prelude = css.slice(i, open).trim();
-    const body = css.slice(open + 1, close);
-    i = close + 1;
-
+    const body = cssTextOf(rule.body);
     if (OPAQUE_AT_RULES.test(prelude)) {
       out.push(`${prelude} {${body}}`);
     } else if (NESTING_AT_RULES.test(prelude)) {
-      out.push(`${prelude} {${filterThemeRules(body, warnings)}}`);
-    } else if (prelude.split(',').every((selector) => THEME_SELECTORS.has(selector.trim())) && !body.includes('{')) {
+      out.push(`${prelude} {${filterThemeRules(rule.body, warnings)}}`);
+    } else if (
+      prelude.split(',').every((selector) => THEME_SELECTORS.has(selector.trim()))
+      && !rule.body.some((token) => token.bracket === '{')
+    ) {
       out.push(`${prelude} {${body}}`);
     } else {
       warnings.push(`Removed rule for "${prelude.slice(0, 60)}" - themes only set :root and .dark variables`);
@@ -476,10 +530,16 @@ function filterThemeRules(css: string, warnings: string[]): string {
  * wrapping such rules. Theme CSS is injected into the app document; any
  * other selector could restyle or hide real UI, or read form state through
  * attribute selectors. Component-level styling belongs in a v2 skin.
+ *
+ * The rules are taken from the sheet's tokens (readCssTokens), so a string,
+ * a comment or an escape is read here as the browser reads it. Nothing is
+ * kept of a sheet that doesn't read cleanly.
  */
 export function restrictThemeSelectors(css: string): { css: string; warnings: string[] } {
+  const tokens = readCssTokens(css);
+  if (!tokens) return { css: '', warnings: [`removed the stylesheet: ${UNREADABLE}`] };
   const warnings: string[] = [];
-  const filtered = filterThemeRules(stripComments(css), warnings);
+  const filtered = filterThemeRules(tokens, warnings);
   return { css: filtered, warnings };
 }
 
@@ -631,6 +691,11 @@ export function sanitizeSkinCSS(css: string): { css: string; warnings: string[] 
     return '/* [removed] */';
   });
 
+  // What is left has to read cleanly too: a removal that cut into a string
+  // would leave a sheet the browser reads its own way.
+  if (!readCssTokens(cleaned)) {
+    return { css: '', warnings: [...warnings, `Skin: removed the stylesheet: ${UNREADABLE}`] };
+  }
   return { css: cleaned, warnings };
 }
 
@@ -648,7 +713,7 @@ export function validateThemeCSSSafety(css: string): { valid: boolean; errors: s
   // Check the sheet as the browser reads it, so escapes hide nothing.
   const read = readStylesheet(css);
   if (!read) {
-    errors.push('Theme CSS could not be read cleanly (an unterminated comment, string or url, or a broken escape)');
+    errors.push('Theme CSS could not be read cleanly (an unterminated comment, string, url or block, or a broken escape)');
     return { valid: false, errors };
   }
   for (const pattern of DISALLOWED_CSS_PATTERNS) {
