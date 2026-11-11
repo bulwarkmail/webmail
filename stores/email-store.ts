@@ -2796,6 +2796,37 @@ function resolveMoveDestination(passedClient: IJMAPClient, storeId: string, loca
 }
 
 /**
+ * The folder `toMailboxId` of a plain folder view when it is in another
+ * account of the browsed login than the folder on screen (the team's from
+ * the own Inbox, or the own one from the team's), with what the move across
+ * accounts needs. Null when both folders are in one account, or the folder
+ * is not one of the view's.
+ */
+function otherAccountFolder(passedClient: IJMAPClient, toMailboxId: string): {
+  login: string; mailboxId: string; destJmapAccountId?: string; sourceJmapAccountId?: string;
+} | null {
+  const destination = resolveActionMailboxes().find((mb) => mb.id === toMailboxId);
+  if (!destination) return null;
+  let own: string;
+  try {
+    own = resolveActionClient(passedClient).getAccountId();
+  } catch {
+    // No client for the browsed login: the move is refused where it is made.
+    return null;
+  }
+  const viewAccount = resolveViewAccountId();
+  if ((viewAccount ?? own) === (destination.accountId ?? own)) return null;
+  const login = useEmailStore.getState().viewingAccountId ?? useAuthStore.getState().activeAccountId;
+  if (!login) return null;
+  return {
+    login,
+    mailboxId: destination.originalId || destination.id,
+    destJmapAccountId: destination.isShared ? destination.accountId : undefined,
+    sourceJmapAccountId: viewAccount,
+  };
+}
+
+/**
  * Moves the messages of an aggregate list into one folder. Only the messages
  * of the login and account that own the folder change folders in place: a
  * mailbox id means nothing in another account, where the same id - Stalwart
@@ -6724,6 +6755,28 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const targetIds = target ? new Set(target.emailIds) : null;
     const emailIdsArray = targetIds ? Array.from(targetIds) : selectedEmails.map(e => e.id);
     if (emailIdsArray.length === 0 && !(selection && isAggregateListView() && selection.unknown.length > 0)) return true;
+    // A plain folder view's "Move to" offers the folders of every account of
+    // the browsed login. Folder ids repeat across accounts, so a folder of
+    // another account is reached by the move across accounts (a copy into
+    // it, then the originals go), never by its id in the selection's account.
+    if (!target && !isAggregateListView()) {
+      const across = otherAccountFolder(client, toMailboxId);
+      if (across) {
+        try {
+          return await get().crossAccountMoveEmails(
+            new Map([[across.login, emailIdsArray]]),
+            across.login,
+            across.mailboxId,
+            across.destJmapAccountId,
+            across.sourceJmapAccountId,
+            ...(receipts ? [{ receipts }] : []),
+          );
+        } catch {
+          // The move across accounts reported why (error).
+          return false;
+        }
+      }
+    }
     const hookMailboxes = resolveActionMailboxes();
     const move = {
       emailIds: [...new Set(emailIdsArray)],
