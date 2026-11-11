@@ -180,11 +180,16 @@ function prefixContactsWithLocalAccount(
  * Lookup goes through `client-registry` (not a direct auth-store import)
  * to avoid a top-level cycle: auth-store already imports this module to
  * bootstrap feature stores after login.
+ *
+ * Throws "Not connected" when that login has no client: card and address
+ * book ids repeat across accounts, so through another login the same id is
+ * another card.
  */
 function resolveAccountClient<T extends IJMAPClient>(active: T, localAccountId?: string): T {
   if (!localAccountId) return active;
   const lookup = getClientByLocalAccountId(localAccountId) as T | undefined;
-  return lookup ?? active;
+  if (!lookup) throw new Error('Not connected');
+  return lookup;
 }
 
 function stripLocalAccountPrefix(id: string, localAccountId?: string): string {
@@ -1987,5 +1992,25 @@ useContactStore.subscribe((state, prev) => {
   if (sameIdSet(next, prev.selectedContactIds ?? new Set<string>())) return;
   void contactHooks.onContactSelectionChange.emit({ contactIds: [...next] });
 });
+
+/**
+ * Drops the cards and address books of login `localAccountId` (the Pro shell
+ * lists every login's): it was removed, or has no client for longer, so
+ * nothing done to them could reach its server.
+ */
+export function forgetLoginContacts(localAccountId: string): void {
+  const ofLogin = (item: { localAccountId?: string }) => item.localAccountId === localAccountId;
+  const state = useContactStore.getState();
+  if (!state.contacts.some(ofLogin) && !state.addressBooks.some(ofLogin)) return;
+  useContactStore.setState((s) => {
+    const gone = new Set(s.contacts.filter(ofLogin).map((contact) => contact.id));
+    return {
+      contacts: s.contacts.filter((contact) => !ofLogin(contact)),
+      addressBooks: s.addressBooks.filter((book) => !ofLogin(book)),
+      selectedContactId: s.selectedContactId && gone.has(s.selectedContactId) ? null : s.selectedContactId,
+      selectedContactIds: new Set([...s.selectedContactIds].filter((id) => !gone.has(id))),
+    };
+  });
+}
 
 export type { ContactName };

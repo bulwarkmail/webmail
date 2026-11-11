@@ -1056,9 +1056,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }
 
     // A hit from another login (global search) is fetched through that
-    // login's client - the active one can't see it (#847).
-    const reachingClient = (link.login ? getClientByLocalAccountId(link.login) : null) ?? client;
-    if (!reachingClient) return;
+    // login's client - the active one can't see it (#847), and asked for the
+    // same id it may answer with another event.
+    const reachingClient = link.login ? getClientByLocalAccountId(link.login) : client;
+    if (!reachingClient) {
+      if (link.login) toast.error(tDeepLink('event_not_found'));
+      return;
+    }
     void (async () => {
       try {
         const event = await reachingClient.getCalendarEvent(link.id, link.accountId);
@@ -1763,7 +1767,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     if (!client) { toast.error(t("notifications.event_error")); return; }
     let source = event;
     if (event.recurrenceId && event.recurrenceRules?.length && event.originalId) {
-      const sourceClient = (event.localAccountId ? useAuthStore.getState().getClientForAccount(event.localAccountId) : null) ?? client;
+      // From its own login only: the same id is another event elsewhere.
+      const sourceClient = event.localAccountId ? useAuthStore.getState().getClientForAccount(event.localAccountId) : client;
+      if (!sourceClient) { toast.error(t("notifications.event_error")); return; }
       const isSharedSource = calendars.some((c) => event.calendarIds?.[c.id] && c.isShared);
       const master = await sourceClient.getCalendarEvent(event.originalId, isSharedSource ? event.accountId : undefined).catch(() => null);
       if (master) source = master;

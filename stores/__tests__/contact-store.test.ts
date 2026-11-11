@@ -177,8 +177,18 @@ describe('contact-store', () => {
   });
 
   describe('setDefaultAddressBook', () => {
-    const makeClient = () => ({
-      setDefaultAddressBook: vi.fn().mockResolvedValue(undefined),
+    // The client is the one of every login the books name: a write to a
+    // login without a client is refused.
+    const makeClient = () => {
+      const client = {
+        setDefaultAddressBook: vi.fn().mockResolvedValue(undefined),
+      };
+      setClientLookup(() => client as unknown as IJMAPClient);
+      return client;
+    };
+
+    afterEach(() => {
+      setClientLookup(() => undefined);
     });
 
     it('should move the default flag to the chosen book', async () => {
@@ -1206,11 +1216,21 @@ describe('contact-store', () => {
   });
 
   describe('address-book id namespacing on mutations (#133, #1043)', () => {
-    const makeClient = () => ({
-      getContactsAccountId: vi.fn(() => 'acct-primary'),
-      createContact: vi.fn(async (c: Partial<ContactCard>) => ({ ...makeContact(), ...c, id: 'created-id' })),
-      updateContact: vi.fn().mockResolvedValue(undefined),
-      deleteContact: vi.fn().mockResolvedValue(undefined),
+    // The client is the one of every login the cards and books name: a
+    // write to a login without a client is refused.
+    const makeClient = () => {
+      const client = {
+        getContactsAccountId: vi.fn(() => 'acct-primary'),
+        createContact: vi.fn(async (c: Partial<ContactCard>) => ({ ...makeContact(), ...c, id: 'created-id' })),
+        updateContact: vi.fn().mockResolvedValue(undefined),
+        deleteContact: vi.fn().mockResolvedValue(undefined),
+      };
+      setClientLookup(() => client as unknown as IJMAPClient);
+      return client;
+    };
+
+    afterEach(() => {
+      setClientLookup(() => undefined);
     });
 
     it('strips the local-account prefix from a personal book on update', async () => {

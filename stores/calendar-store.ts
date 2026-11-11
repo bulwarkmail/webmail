@@ -55,8 +55,10 @@ import { sentByPatchValue } from '@/lib/calendar-delegate';
  * account, the entity carries a `localAccountId` pointing back to the
  * owning JMAP client. Mutations need to use *that* client - the active
  * client (passed in by the page) could be on a different server entirely.
- * Falls back to the active client when `localAccountId` is unset or no
- * matching client is registered.
+ * The active client is used when `localAccountId` is unset. When no client
+ * is registered for it, this throws "Not connected": calendar and event ids
+ * repeat across accounts, so through another login the same id is another
+ * calendar or event.
  *
  * Lookup goes through `client-registry` (not a direct auth-store import)
  * to avoid a top-level cycle: auth-store already imports this module to
@@ -65,7 +67,8 @@ import { sentByPatchValue } from '@/lib/calendar-delegate';
 function resolveAccountClient<T extends IJMAPClient>(active: T, localAccountId?: string): T {
   if (!localAccountId) return active;
   const lookup = getClientByLocalAccountId(localAccountId) as T | undefined;
-  return lookup ?? active;
+  if (!lookup) throw new Error('Not connected');
+  return lookup;
 }
 
 /**
@@ -76,7 +79,7 @@ function resolveAccountClient<T extends IJMAPClient>(active: T, localAccountId?:
 function withNextSortOrder<T extends Partial<Calendar>>(client: IJMAPClient, calendars: Calendar[], calendar: T): T {
   if (calendar.sortOrder !== undefined) return calendar;
   const highest = Math.max(0, ...calendars
-    .filter((c) => !c.isShared && resolveAccountClient(client, c.localAccountId) === client)
+    .filter((c) => !c.isShared && (c.localAccountId ? getClientByLocalAccountId(c.localAccountId) : client) === client)
     .map((c) => c.sortOrder ?? 0));
   return highest > 0 ? { ...calendar, sortOrder: highest + 1 } : calendar;
 }
@@ -2658,4 +2661,26 @@ registerCalendarSubscriptionSyncBridge(
     }
   })
 );
+
+/**
+ * Drops the calendars, events and client of login `localAccountId` (the Pro
+ * shell lists every login's): it was removed, or has no client for longer,
+ * so nothing done to them could reach its server.
+ */
+export function forgetLoginCalendars(localAccountId: string): void {
+  const ofLogin = (item: { localAccountId?: string }) => item.localAccountId === localAccountId;
+  const state = useCalendarStore.getState();
+  if (!state.calendars.some(ofLogin) && !state.events.some(ofLogin) && !state.accountClients?.some(ofLogin)) return;
+  useCalendarStore.setState((s) => {
+    const goneCalendars = new Set(s.calendars.filter(ofLogin).map((calendar) => calendar.id));
+    const goneEvents = new Set(s.events.filter(ofLogin).map((event) => event.id));
+    return {
+      calendars: s.calendars.filter((calendar) => !ofLogin(calendar)),
+      events: s.events.filter((event) => !ofLogin(event)),
+      selectedCalendarIds: s.selectedCalendarIds.filter((id) => !goneCalendars.has(id)),
+      selectedEventId: s.selectedEventId && goneEvents.has(s.selectedEventId) ? null : s.selectedEventId,
+      accountClients: s.accountClients ? s.accountClients.filter((account) => !ofLogin(account)) : s.accountClients,
+    };
+  });
+}
 
