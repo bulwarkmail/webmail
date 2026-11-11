@@ -6123,7 +6123,8 @@
   },
   "account_routing": {
     "group_members_one_account": "Grupis saavad olla ainult ühe konto kontaktid.",
-    "link_names_no_account": "See link ei ütle, millises kontos sõnum on, seega seda ei avatud."
+    "link_names_no_account": "See link ei ütle, millises kontos sõnum on, seega seda ei avatud.",
+    "group_member_gone": "Üht valitud kontaktidest pole enam olemas. Vali liikmed uuesti."
   },
   "mail_import": {
     "menu_import": "Impordi kirju…",

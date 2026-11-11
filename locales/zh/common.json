@@ -5854,7 +5854,8 @@
   },
   "account_routing": {
     "group_members_one_account": "一个群组只能包含同一账户的联系人。",
-    "link_names_no_account": "此链接没有指出邮件所在的账户，因此未打开。"
+    "link_names_no_account": "此链接没有指出邮件所在的账户，因此未打开。",
+    "group_member_gone": "所选的其中一位联系人已不存在。请重新选择成员。"
   },
   "mail_import": {
     "menu_import": "导入邮件…",

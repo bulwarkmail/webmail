@@ -6123,7 +6123,8 @@
   },
   "account_routing": {
     "group_members_one_account": "En gruppe kan bare inneholde kontakter fra én konto.",
-    "link_names_no_account": "Denne lenken sier ikke hvilken konto meldingen ligger i, så den ble ikke åpnet."
+    "link_names_no_account": "Denne lenken sier ikke hvilken konto meldingen ligger i, så den ble ikke åpnet.",
+    "group_member_gone": "En av de valgte kontaktene finnes ikke lenger. Velg medlemmene på nytt."
   },
   "mail_import": {
     "menu_import": "Importer e-post…",

@@ -6123,7 +6123,8 @@
   },
   "account_routing": {
     "group_members_one_account": "Bir grup yalnızca tek bir hesabın kişilerini içerebilir.",
-    "link_names_no_account": "Bu bağlantı iletinin hangi hesapta olduğunu belirtmiyor, bu yüzden açılmadı."
+    "link_names_no_account": "Bu bağlantı iletinin hangi hesapta olduğunu belirtmiyor, bu yüzden açılmadı.",
+    "group_member_gone": "Seçilen kişilerden biri artık yok. Üyeleri yeniden seçin."
   },
   "mail_import": {
     "menu_import": "E-posta içe aktar…",

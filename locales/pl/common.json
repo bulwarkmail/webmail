@@ -5854,7 +5854,8 @@
   },
   "account_routing": {
     "group_members_one_account": "Grupa może zawierać tylko kontakty z jednego konta.",
-    "link_names_no_account": "Ten link nie wskazuje, na którym koncie jest wiadomość, więc nie został otwarty."
+    "link_names_no_account": "Ten link nie wskazuje, na którym koncie jest wiadomość, więc nie został otwarty.",
+    "group_member_gone": "Jeden z wybranych kontaktów już nie istnieje. Wybierz członków ponownie."
   },
   "mail_import": {
     "menu_import": "Importuj pocztę…",

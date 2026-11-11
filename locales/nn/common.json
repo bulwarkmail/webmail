@@ -6131,7 +6131,8 @@
   },
   "account_routing": {
     "group_members_one_account": "Ei gruppe kan berre innehalde kontaktar frå éin konto.",
-    "link_names_no_account": "Denne lenkja seier ikkje kva konto meldinga ligg i, så ho vart ikkje opna."
+    "link_names_no_account": "Denne lenkja seier ikkje kva konto meldinga ligg i, så ho vart ikkje opna.",
+    "group_member_gone": "Ein av dei valde kontaktane finst ikkje lenger. Vel medlemmene på nytt."
   },
   "mail_import": {
     "menu_import": "Importer e-post …",

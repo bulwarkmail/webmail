@@ -6123,7 +6123,8 @@
   },
   "account_routing": {
     "group_members_one_account": "Un grup només pot contenir contactes d'un sol compte.",
-    "link_names_no_account": "Aquest enllaç no indica en quin compte és el missatge, així que no s'ha obert."
+    "link_names_no_account": "Aquest enllaç no indica en quin compte és el missatge, així que no s'ha obert.",
+    "group_member_gone": "Un dels contactes triats ja no existeix. Torna a triar els membres."
   },
   "mail_import": {
     "menu_import": "Importa correu…",

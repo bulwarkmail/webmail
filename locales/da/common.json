@@ -6123,7 +6123,8 @@
   },
   "account_routing": {
     "group_members_one_account": "En gruppe kan kun indeholde kontakter fra én konto.",
-    "link_names_no_account": "Dette link siger ikke, hvilken konto beskeden ligger i, så det blev ikke åbnet."
+    "link_names_no_account": "Dette link siger ikke, hvilken konto beskeden ligger i, så det blev ikke åbnet.",
+    "group_member_gone": "En af de valgte kontakter findes ikke længere. Vælg medlemmerne igen."
   },
   "mail_import": {
     "menu_import": "Importér mail…",

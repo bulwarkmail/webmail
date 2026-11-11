@@ -989,9 +989,10 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
 
   const handleSaveGroup = useCallback(async (name: string, memberIds: string[]) => {
     const jmapClient = supportsSync && client ? client : null;
-    // A group holds cards of one login only; the form shows why it refuses.
+    // A group holds listed cards of one login only; the form shows why it refuses.
     const sayWhy = (error: unknown): never => {
       if (error instanceof Error && error.name === 'MixedGroupAccountsError') throw new Error(tRouting("group_members_one_account"));
+      if (error instanceof Error && error.name === 'GroupMemberGoneError') throw new Error(tRouting("group_member_gone"));
       throw error;
     };
     if (view === "group-edit" && selectedGroup) {

@@ -200,6 +200,18 @@ export class MixedGroupAccountsError extends Error {
   }
 }
 
+/**
+ * A member picked for a group is no longer listed (deleted, or its login
+ * signed out, while the form was open). Its id names no card here, so it
+ * can't say which login the group goes to: nothing is written.
+ */
+export class GroupMemberGoneError extends Error {
+  constructor() {
+    super('A group member is no longer listed');
+    this.name = 'GroupMemberGoneError';
+  }
+}
+
 function stripLocalAccountPrefix(id: string, localAccountId?: string): string {
   if (!localAccountId) return id;
   const prefix = `${localAccountId}${CROSS_ACCOUNT_ID_DELIMITER}`;
@@ -1201,7 +1213,10 @@ export const useContactStore = create<ContactStore>()(
         const { contacts } = get();
         const members: Record<string, boolean> = {};
         // The login the group goes to: its members' (their uids name cards of
-        // that login only), else the one the caller names.
+        // that login only), else the one the caller names. On a server every
+        // member must be a listed card; a local group keeps the ids it gets.
+        const syncing = !!client && get().supportsSync;
+        if (syncing && memberIds.some(id => !contacts.some(c => c.id === id))) throw new GroupMemberGoneError();
         const logins = new Set<string | undefined>();
         memberIds.forEach(id => {
           const contact = contacts.find(c => c.id === id);
@@ -1264,6 +1279,10 @@ export const useContactStore = create<ContactStore>()(
 
         const newMembers = { ...group.members };
         const added: string[] = [];
+        // On a server every new member must be a listed card.
+        if (client && get().supportsSync && memberIds.some(id => !contacts.some(c => c.id === id))) {
+          throw new GroupMemberGoneError();
+        }
         // Member uids name cards of the group's own login only.
         if (memberIds.some(id => {
           const contact = contacts.find(c => c.id === id);

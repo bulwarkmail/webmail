@@ -5854,7 +5854,8 @@
   },
   "account_routing": {
     "group_members_one_account": "Eine Gruppe kann nur Kontakte aus einem Konto enthalten.",
-    "link_names_no_account": "Dieser Link gibt nicht an, in welchem Konto die Nachricht liegt, deshalb wurde er nicht geöffnet."
+    "link_names_no_account": "Dieser Link gibt nicht an, in welchem Konto die Nachricht liegt, deshalb wurde er nicht geöffnet.",
+    "group_member_gone": "Einer der gewählten Kontakte existiert nicht mehr. Wählen Sie die Mitglieder erneut aus."
   },
   "mail_import": {
     "menu_import": "E-Mails importieren…",

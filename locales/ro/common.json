@@ -6123,7 +6123,8 @@
   },
   "account_routing": {
     "group_members_one_account": "Un grup poate conține doar contacte dintr-un singur cont.",
-    "link_names_no_account": "Acest link nu spune în ce cont se află mesajul, așa că nu a fost deschis."
+    "link_names_no_account": "Acest link nu spune în ce cont se află mesajul, așa că nu a fost deschis.",
+    "group_member_gone": "Unul dintre contactele alese nu mai există. Alegeți din nou membrii."
   },
   "mail_import": {
     "menu_import": "Importă e-mailuri…",

@@ -5854,7 +5854,8 @@
   },
   "account_routing": {
     "group_members_one_account": "그룹에는 한 계정의 연락처만 넣을 수 있어요.",
-    "link_names_no_account": "이 링크에는 메시지가 있는 계정이 나와 있지 않아 열지 않았어요."
+    "link_names_no_account": "이 링크에는 메시지가 있는 계정이 나와 있지 않아 열지 않았어요.",
+    "group_member_gone": "선택한 연락처 중 하나가 더 이상 없어요. 멤버를 다시 선택해 주세요."
   },
   "mail_import": {
     "menu_import": "메일 가져오기…",
