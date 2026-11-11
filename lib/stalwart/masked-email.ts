@@ -30,8 +30,22 @@ export function maskedEmailErrorType(error: unknown): string | undefined {
   return e?.status === 403 ? 'forbidden' : e?.methodError?.type;
 }
 
+/**
+ * Stalwart Community answers every call on an Enterprise-only registry
+ * object (MaskedEmail among them) with `forbidden` and this detail
+ * (`assert_enterprise_object`, crates/jmap/src/registry/mod.rs). Any other
+ * `forbidden` is a permission the session lacks.
+ */
+function enterpriseOnly(error: unknown): boolean {
+  if (maskedEmailErrorType(error) !== 'forbidden') return false;
+  const description = error instanceof MaskedEmailError ? error.message
+    : (error as { methodError?: { description?: string } } | null)?.methodError?.description;
+  return typeof description === 'string' && /only available in the enterprise edition/i.test(description);
+}
+
 export function maskedEmailUnavailable(error: unknown): boolean {
-  return ['unknownMethod', 'unknownCapability', 'notImplemented', 'unsupported'].includes(maskedEmailErrorType(error) || '');
+  return ['unknownMethod', 'unknownCapability', 'notImplemented', 'unsupported'].includes(maskedEmailErrorType(error) || '') ||
+    enterpriseOnly(error);
 }
 
 /** One authenticated account and cookie slot; callers cannot supply an owner. */

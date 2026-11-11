@@ -226,6 +226,19 @@ describe.each(namespaces)('MaskedEmail permissions and account isolation: %s', n
     expect(maskedEmailUnavailable(error)).toBe(type !== 'forbidden');
     expect(calls()).toHaveLength(1);
   });
+  const enterprise = 'This feature is only available in the Enterprise edition. Obtain your trial license at https://license.stalw.art/trial.';
+  it.each(['query', 'get'])('counts the Enterprise-only refusal of %s as unavailable, not as a permission (#1624)', async step => {
+    if (step === 'get') fetchMock.mockResolvedValueOnce(reply('x:MaskedEmail/query', { ids: [] }));
+    fetchMock.mockResolvedValueOnce(reply('error', { type: 'forbidden', description: enterprise }));
+    const error = await createMaskedEmailManager()!.list().catch(e => e);
+    expect(maskedEmailErrorType(error)).toBe('forbidden');
+    expect(maskedEmailUnavailable(error)).toBe(true);
+  });
+  it('keeps any other forbidden detail a permission problem', async () => {
+    fetchMock.mockResolvedValue(reply('error', { type: 'forbidden', description: 'Missing permission sysMaskedEmailGet' }));
+    const error = await createMaskedEmailManager()!.list().catch(e => e);
+    expect(maskedEmailUnavailable(error)).toBe(false);
+  });
   it.each(['forbidden', 'overQuota', 'rateLimit'])('surfaces per-object create refusal (%s) without a retry', async type => {
     fetchMock.mockResolvedValue(reply('x:MaskedEmail/set', { notCreated: { new: { type } } }));
     await expect(createMaskedEmailManager()!.create({ description: '', forDomain: '' })).rejects.toMatchObject({ type });

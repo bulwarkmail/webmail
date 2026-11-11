@@ -154,6 +154,14 @@ describe('Masked Addresses Security UI', () => {
     await act(async () => {});
     expect(container).toBeEmptyDOMElement();
   });
+  it('stays hidden on Stalwart Community, which refuses the Enterprise-only object (#1624)', async () => {
+    fetchMock.mockResolvedValue(reply('error', { type: 'forbidden',
+      description: 'This feature is only available in the Enterprise edition. Obtain your trial license at https://license.stalw.art/trial.' }));
+    const { container } = render(<MaskedAddressesSection />);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    await act(async () => {});
+    expect(container).toBeEmptyDOMElement();
+  });
   it('renders nothing without an account management capability', () => {
     state.client = client('unsupported');
     const { container } = render(<MaskedAddressesSection />);
