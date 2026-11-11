@@ -6815,6 +6815,10 @@
         "title": "Başka web sitelerine bağlanma",
         "body": "Şu sitelere istek gönderme. Eklentinin okuyabildiği her şey oraya gönderilebilir:"
       },
+      "links_check": {
+        "title": "Açtığınız bağlantıları denetleme",
+        "body": "Açtığınız her web bağlantısını metniyle birlikte görme ve onu durdurma ya da yerine başka bir adres açma."
+      },
       "admin_config": {
         "title": "Yöneticinizin ayarlarını okuma",
         "body": "Yöneticinizin bu eklenti için kaydettiği ayarları okuma."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Bildirim gösterme",
-        "body": "Cihazınızda bildirim gösterme ya da bildirimlere izin vermediyseniz uygulama içinde gösterme. Her bildirimde eklentinin adı yer alır."
+        "body": "Cihazınızda bildirim gösterme ya da bildirimlere izin vermediyseniz uygulama içinde gösterme. Her bildirimde eklentinin adı yer alır. Eklenti, uygulamanın size gösterdiği bildirimleri de görür."
       },
       "ui_message_list": {
         "title": "İleti listesine öğe ekleme",

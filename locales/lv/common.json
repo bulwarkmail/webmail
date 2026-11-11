@@ -6815,6 +6815,10 @@
         "title": "Savienoties ar citām vietnēm",
         "body": "Sūtīt pieprasījumus uz šīm vietnēm. Uz turieni var nosūtīt visu, ko spraudnis var nolasīt:"
       },
+      "links_check": {
+        "title": "Pārbaudīt saites, ko atverat",
+        "body": "Redzēt katru tīmekļa saiti, ko atverat, kopā ar tās tekstu, un apturēt to vai tās vietā atvērt citu adresi."
+      },
       "admin_config": {
         "title": "Lasīt savus iestatījumus no administratora",
         "body": "Lasīt iestatījumus, ko jūsu administrators saglabājis šim spraudnim."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Rādīt paziņojumus",
-        "body": "Rādīt paziņojumus jūsu ierīcē vai lietotnē, ja neesat tos atļāvis. Katrā ir spraudņa nosaukums."
+        "body": "Rādīt paziņojumus jūsu ierīcē vai lietotnē, ja neesat tos atļāvis. Katrā ir spraudņa nosaukums. Spraudnis redz arī paziņojumus, ko jums rāda lietotne."
       },
       "ui_message_list": {
         "title": "Papildināt vēstuļu sarakstu",

@@ -6815,6 +6815,10 @@
         "title": "Mit anderen Websites verbinden",
         "body": "Anfragen an diese Websites senden. Alles, was das Plugin lesen kann, kann dorthin gesendet werden:"
       },
+      "links_check": {
+        "title": "Links prüfen, die Sie öffnen",
+        "body": "Jeden Weblink sehen, den Sie öffnen, mit seinem Text, und ihn stoppen oder stattdessen eine andere Adresse öffnen."
+      },
       "admin_config": {
         "title": "Seine Einstellungen von Ihrem Administrator lesen",
         "body": "Die Einstellungen lesen, die Ihr Administrator für dieses Plugin gespeichert hat."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Benachrichtigungen anzeigen",
-        "body": "Benachrichtigungen auf Ihrem Gerät anzeigen oder in der App, wenn Sie sie nicht erlaubt haben. Jede nennt den Namen des Plugins."
+        "body": "Benachrichtigungen auf Ihrem Gerät anzeigen oder in der App, wenn Sie sie nicht erlaubt haben. Jede nennt den Namen des Plugins. Das Plugin sieht auch die Hinweise, die die App Ihnen anzeigt."
       },
       "ui_message_list": {
         "title": "Zur Nachrichtenliste hinzufügen",

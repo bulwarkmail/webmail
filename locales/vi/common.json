@@ -6827,6 +6827,10 @@
         "title": "Kết nối với các trang web khác",
         "body": "Gửi yêu cầu đến các trang web này. Mọi thứ plugin có thể đọc đều có thể được gửi ở đó:"
       },
+      "links_check": {
+        "title": "Kiểm tra các liên kết bạn mở",
+        "body": "Xem mọi liên kết web bạn mở cùng văn bản của nó, và chặn liên kết đó hoặc mở một địa chỉ khác thay thế."
+      },
       "admin_config": {
         "title": "Đọc cài đặt plugin từ quản trị viên",
         "body": "Đọc cài đặt quản trị viên đã lưu cho plugin này."
@@ -6961,7 +6965,7 @@
       },
       "ui_notifications": {
         "title": "Hiển thị thông báo",
-        "body": "Hiển thị thông báo trên thiết bị, hoặc trong ứng dụng nếu bạn chưa cấp quyền thông báo. Mỗi thông báo đều ghi tên plugin."
+        "body": "Hiển thị thông báo trên thiết bị, hoặc trong ứng dụng nếu bạn chưa cấp quyền thông báo. Mỗi thông báo đều ghi tên plugin. Plugin cũng thấy các thông báo mà ứng dụng hiển thị cho bạn."
       }
     },
     "forward_approval": {

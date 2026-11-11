@@ -6815,6 +6815,10 @@
         "title": "Connect to other websites",
         "body": "Send requests to these sites. Anything the plugin can read may be sent there:"
       },
+      "links_check": {
+        "title": "Check the links you open",
+        "body": "See every web link you open, with its text, and stop it or open another address instead."
+      },
       "admin_config": {
         "title": "Read its settings from your administrator",
         "body": "Read the settings your administrator saved for this plugin."
@@ -6949,7 +6953,7 @@
       },
       "ui_notifications": {
         "title": "Show notifications",
-        "body": "Show notifications on your device, or in the app if you haven't allowed them. Each one names the plugin."
+        "body": "Show notifications on your device, or in the app if you haven't allowed them. Each one names the plugin. It also sees the notices the app shows you."
       }
     },
     "forward_approval": {

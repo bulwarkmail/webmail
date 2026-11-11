@@ -24,6 +24,8 @@ export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   'email:render-takeover',
   'http:fetch',
   'http:post',
+  // Sees every link the user opens and can send the click to another address.
+  'links:check',
   'filters:write',
   'http:proxy',
   // Reads everything the user writes, as they write it, and may send it on.

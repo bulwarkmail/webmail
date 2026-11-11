@@ -6815,6 +6815,10 @@
         "title": "Pripájať sa k iným webom",
         "body": "Odosiela požiadavky na tieto weby. Čokoľvek, čo doplnok môže čítať, tam môže byť odoslané:"
       },
+      "links_check": {
+        "title": "Kontrolovať odkazy, ktoré otvárate",
+        "body": "Vidí každý webový odkaz, ktorý otvoríte, aj s jeho textom, a môže ho zastaviť alebo namiesto neho otvoriť inú adresu."
+      },
       "admin_config": {
         "title": "Čítať nastavenia od správcu",
         "body": "Číta nastavenia, ktoré pre tento doplnok uložil váš správca."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Zobrazovať upozornenia",
-        "body": "Zobrazuje upozornenia vo vašom zariadení alebo v aplikácii, ak ste ich nepovolili. Každé uvádza názov doplnku."
+        "body": "Zobrazuje upozornenia vo vašom zariadení alebo v aplikácii, ak ste ich nepovolili. Každé uvádza názov doplnku. Doplnok tiež vidí upozornenia, ktoré vám aplikácia zobrazuje."
       },
       "ui_message_list": {
         "title": "Pridávať obsah do zoznamu správ",

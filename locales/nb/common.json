@@ -6815,6 +6815,10 @@
         "title": "Koble til andre nettsteder",
         "body": "Sende forespørsler til disse nettstedene. Alt tillegget kan lese, kan bli sendt dit:"
       },
+      "links_check": {
+        "title": "Sjekke lenkene du åpner",
+        "body": "Se hver nettlenke du åpner, med teksten, og stoppe den eller åpne en annen adresse i stedet."
+      },
       "admin_config": {
         "title": "Lese innstillingene sine fra administratoren din",
         "body": "Lese innstillingene administratoren din har lagret for dette tillegget."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Vise varsler",
-        "body": "Vise varsler på enheten din, eller i appen hvis du ikke har tillatt dem. Hvert varsel viser navnet på tillegget."
+        "body": "Vise varsler på enheten din, eller i appen hvis du ikke har tillatt dem. Hvert varsel viser navnet på tillegget. Tillegget ser også meldingene appen viser deg."
       },
       "ui_message_list": {
         "title": "Legge til i meldingslisten",

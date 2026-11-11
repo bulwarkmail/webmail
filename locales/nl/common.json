@@ -6815,6 +6815,10 @@
         "title": "Verbinding maken met andere websites",
         "body": "Verzoeken naar deze sites sturen. Alles wat de plug-in kan lezen, kan daarheen worden gestuurd:"
       },
+      "links_check": {
+        "title": "Links controleren die je opent",
+        "body": "Elke weblink zien die je opent, met de tekst ervan, en die tegenhouden of in plaats daarvan een ander adres openen."
+      },
       "admin_config": {
         "title": "Zijn instellingen van je beheerder lezen",
         "body": "De instellingen lezen die je beheerder voor deze plug-in heeft opgeslagen."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Meldingen tonen",
-        "body": "Meldingen op je apparaat tonen, of in de app als je ze niet hebt toegestaan. Elke melding noemt de naam van de plug-in."
+        "body": "Meldingen op je apparaat tonen, of in de app als je ze niet hebt toegestaan. Elke melding noemt de naam van de plug-in. De plug-in ziet ook de meldingen die de app je toont."
       },
       "ui_message_list": {
         "title": "Toevoegen aan de berichtenlijst",

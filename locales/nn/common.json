@@ -6823,6 +6823,10 @@
         "title": "Kople til andre nettstader",
         "body": "Send førespurnader til desse nettstadane. Alt som plugin-en kan lese, kan verte sendt dit:"
       },
+      "links_check": {
+        "title": "Sjekke lenkjene du opnar",
+        "body": "Sjå kvar nettlenkje du opnar, med teksten, og stoppe ho eller opne ei anna adresse i staden."
+      },
       "admin_config": {
         "title": "Les innstillingane frå administratoren din",
         "body": "Les innstillingane administratoren din har lagra for denne appen."
@@ -6957,7 +6961,7 @@
       },
       "ui_notifications": {
         "title": "Vis varsel",
-        "body": "Vis varsel på eininga di, eller i appen om du ikkje har late det vere. Kvar einskild viser kva plugin det er."
+        "body": "Vis varsel på eininga di, eller i appen om du ikkje har late det vere. Kvar einskild viser kva plugin det er. Pluginen ser òg meldingane som appen viser deg."
       }
     },
     "forward_approval": {

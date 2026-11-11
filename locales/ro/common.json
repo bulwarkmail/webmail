@@ -6815,6 +6815,10 @@
         "title": "Conectarea la alte site-uri",
         "body": "Trimite cereri către aceste site-uri. Orice poate citi pluginul poate fi trimis acolo:"
       },
+      "links_check": {
+        "title": "Verificarea linkurilor pe care le deschideți",
+        "body": "Vede fiecare link web pe care îl deschideți, împreună cu textul lui, și îl poate opri sau poate deschide în loc o altă adresă."
+      },
       "admin_config": {
         "title": "Citirea setărilor de la administrator",
         "body": "Citește setările pe care administratorul le-a salvat pentru acest plugin."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Afișarea notificărilor",
-        "body": "Afișează notificări pe dispozitiv sau în aplicație, dacă nu le-ați permis. Fiecare indică numele pluginului."
+        "body": "Afișează notificări pe dispozitiv sau în aplicație, dacă nu le-ați permis. Fiecare indică numele pluginului. Pluginul vede și notificările pe care vi le afișează aplicația."
       },
       "ui_message_list": {
         "title": "Adăugarea în lista de mesaje",

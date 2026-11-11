@@ -6815,6 +6815,10 @@
         "title": "Kapcsolódás más webhelyekhez",
         "body": "Kéréseket küld ezekre a webhelyekre. Bármi, amit a bővítmény olvashat, ide is eljuthat:"
       },
+      "links_check": {
+        "title": "A megnyitott linkek ellenőrzése",
+        "body": "Látja az összes megnyitott webes linket a szövegükkel együtt, és leállíthatja őket, vagy helyettük másik címet nyithat meg."
+      },
       "admin_config": {
         "title": "A rendszergazdától kapott beállítások olvasása",
         "body": "Olvassa a beállításokat, amelyeket a rendszergazda mentett ehhez a bővítményhez."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Értesítések megjelenítése",
-        "body": "Értesítéseket jelenít meg az eszközödön, vagy az alkalmazásban, ha nem engedélyezted őket. Mindegyiken szerepel a bővítmény neve."
+        "body": "Értesítéseket jelenít meg az eszközödön, vagy az alkalmazásban, ha nem engedélyezted őket. Mindegyiken szerepel a bővítmény neve. A bővítmény az alkalmazás által megjelenített értesítéseket is látja."
       },
       "ui_message_list": {
         "title": "Tartalom az üzenetlistában",

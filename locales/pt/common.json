@@ -6815,6 +6815,10 @@
         "title": "Conectar-se a outros sites",
         "body": "Enviar solicitações a estes sites. Tudo o que o plugin pode ler pode ser enviado para lá:"
       },
+      "links_check": {
+        "title": "Verificar os links que você abre",
+        "body": "Ver cada link da web que você abre, com o texto dele, e bloqueá-lo ou abrir outro endereço no lugar."
+      },
       "admin_config": {
         "title": "Ler as configurações do seu administrador",
         "body": "Ler as configurações que seu administrador salvou para este plugin."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Mostrar notificações",
-        "body": "Mostrar notificações no seu dispositivo, ou dentro do aplicativo se você não as permitiu. Cada uma indica o nome do plugin."
+        "body": "Mostrar notificações no seu dispositivo, ou dentro do aplicativo se você não as permitiu. Cada uma indica o nome do plugin. O plugin também vê os avisos que o aplicativo mostra para você."
       },
       "ui_message_list": {
         "title": "Adicionar à lista de mensagens",
