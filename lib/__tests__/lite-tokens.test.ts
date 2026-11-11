@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LiteLoginError,
@@ -20,6 +21,7 @@ import {
   saveLiteAccessToken,
   saveLiteBasicSession,
   saveLiteRefreshToken,
+  settleLiteTokenStorage,
 } from '@/lib/auth/lite-tokens';
 
 type FetchInput = Parameters<typeof fetch>[0];
@@ -37,15 +39,19 @@ describe('lite token storage', () => {
     sessionStorage.clear();
   });
 
-  it('keeps a remembered refresh token in localStorage and a tab-only one in sessionStorage', () => {
-    saveLiteRefreshToken(0, { serverUrl: `${SERVER}/`, username: 'alice', refreshToken: 'r0' }, true);
-    saveLiteRefreshToken(1, { serverUrl: SERVER, username: 'bob', refreshToken: 'r1' }, false);
+  it('keeps a remembered refresh token in localStorage and a tab-only one in sessionStorage, sealed', async () => {
+    saveLiteRefreshToken(0, { serverUrl: `${SERVER}/`, username: 'alice', refreshToken: 'refresh-r0' }, true);
+    saveLiteRefreshToken(1, { serverUrl: SERVER, username: 'bob', refreshToken: 'refresh-r1' }, false);
+    await settleLiteTokenStorage();
 
-    expect(JSON.parse(localStorage.getItem('bulwark-lite:refresh:0')!)).toEqual({ serverUrl: SERVER, username: 'alice', refreshToken: 'r0' });
+    // The record names the account; the token itself is only there sealed.
+    expect(JSON.parse(localStorage.getItem('bulwark-lite:refresh:0')!)).toEqual({ serverUrl: SERVER, username: 'alice', id: expect.any(String), sealed: expect.any(String) });
+    expect(localStorage.getItem('bulwark-lite:refresh:0')).not.toContain('refresh-r0');
     expect(localStorage.getItem('bulwark-lite:refresh:1')).toBeNull();
-    expect(JSON.parse(sessionStorage.getItem('bulwark-lite:refresh:1')!).refreshToken).toBe('r1');
-    expect(readLiteRefreshToken(0)?.refreshToken).toBe('r0');
-    expect(readLiteRefreshToken(1)?.refreshToken).toBe('r1');
+    expect(JSON.parse(sessionStorage.getItem('bulwark-lite:refresh:1')!)).toMatchObject({ username: 'bob', sealed: expect.any(String) });
+    expect(sessionStorage.getItem('bulwark-lite:refresh:1')).not.toContain('refresh-r1');
+    expect(readLiteRefreshToken(0)?.refreshToken).toBe('refresh-r0');
+    expect(readLiteRefreshToken(1)?.refreshToken).toBe('refresh-r1');
     expect(readLiteRefreshToken(2)).toBeNull();
   });
 
@@ -101,7 +107,8 @@ describe('lite access token cache (#552)', () => {
     saveLiteAccessToken(1, 'AT1', 600, false);
 
     expect(localStorage.getItem('bulwark-lite:access:1')).toBeNull();
-    expect(JSON.parse(sessionStorage.getItem('bulwark-lite:access:1')!).accessToken).toBe('AT1');
+    expect(sessionStorage.getItem('bulwark-lite:access:1')).not.toBeNull();
+    expect(sessionStorage.getItem('bulwark-lite:access:1')).not.toContain('accessToken');
     vi.advanceTimersByTime(300_000);
     expect(readLiteAccessToken(0)).toEqual({ accessToken: 'AT0', expiresIn: 1500 });
     expect(readLiteAccessToken(1)).toEqual({ accessToken: 'AT1', expiresIn: 300 });
@@ -293,10 +300,14 @@ describe('liteRefreshTokens', () => {
     const tokens = await liteRefreshTokens(2);
 
     expect(tokens).toEqual({ accessToken: 'AT2', expiresIn: 900, refreshToken: 'RT2' });
-    expect(JSON.parse(localStorage.getItem('bulwark-lite:refresh:2')!).refreshToken).toBe('RT2');
+    expect(readLiteRefreshToken(2)?.refreshToken).toBe('RT2');
+    expect(JSON.parse(localStorage.getItem('bulwark-lite:refresh:2')!)).toMatchObject({ username: 'alice', sealed: expect.any(String) });
+    expect(localStorage.getItem('bulwark-lite:refresh:2')).not.toContain('refreshToken');
     expect(sessionStorage.getItem('bulwark-lite:refresh:2')).toBeNull();
-    // The new access token is cached beside it for the next reload.
-    expect(JSON.parse(localStorage.getItem('bulwark-lite:access:2')!).accessToken).toBe('AT2');
+    // The new access token is cached beside it for the next reload, sealed.
+    expect(readLiteAccessToken(2)?.accessToken).toBe('AT2');
+    expect(JSON.parse(localStorage.getItem('bulwark-lite:access:2')!)).toMatchObject({ sealed: expect.any(String) });
+    expect(localStorage.getItem('bulwark-lite:access:2')).not.toContain('accessToken');
   });
 
   it('keeps a tab-only token in sessionStorage after rotation', async () => {
