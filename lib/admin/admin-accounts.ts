@@ -30,8 +30,18 @@ function findConfiguredUrl(serverUrls: string[], url: string): string | undefine
   return serverUrls.find((u) => normalizeUrl(u) === target);
 }
 
+/**
+ * The form two account names are compared in. Only ASCII letters fold:
+ * `toLowerCase()` would also turn a Kelvin sign (U+212A) into "k", so a
+ * mailbox named with one could pass for a listed "kim". A name with other
+ * letters must match as written.
+ */
+function foldAccountName(name: string): string {
+  return name.trim().replace(/[A-Z]+/g, (letters) => letters.toLowerCase());
+}
+
 function entryKey(entry: AdminAccountEntry): string {
-  return `${normalizeUrl(entry.serverUrl)}\0${entry.account.toLowerCase()}`;
+  return `${normalizeUrl(entry.serverUrl)}\0${foldAccountName(entry.account)}`;
 }
 
 /**
@@ -81,7 +91,7 @@ export function isListedAdminAccount(
   const server = normalizeUrl(serverUrl);
   const wanted = names
     .filter((n): n is string => typeof n === 'string' && n.trim().length > 0)
-    .map((n) => n.trim().toLowerCase());
+    .map(foldAccountName);
   if (wanted.length === 0) return false;
-  return entries.some((e) => normalizeUrl(e.serverUrl) === server && wanted.includes(e.account.toLowerCase()));
+  return entries.some((e) => normalizeUrl(e.serverUrl) === server && wanted.includes(foldAccountName(e.account)));
 }

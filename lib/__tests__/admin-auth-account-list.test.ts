@@ -184,6 +184,18 @@ describe('admin auth route - listed admin accounts', () => {
     expect(body).toMatchObject({ stalwartAdmin: true, stalwartAutoLogin: true });
   });
 
+  it('folds only ASCII case: a Kelvin sign does not pass for a listed "k"', async () => {
+    state.config.adminAccounts = [{ serverUrl: MAIL, account: 'kim@example.com' }];
+    // U+212A lower-cases to a plain "k" with toLowerCase().
+    Object.assign(session, { username: 'Kim@example.com', accountName: 'Kim@example.com' });
+    const { body } = await callGet();
+    expect(body).toMatchObject({ stalwartAdmin: false, stalwartAutoLogin: false });
+
+    const login = await callPost({ stalwartAuth: true });
+    expect(login.status).toBe(403);
+    expect(setAdminSessionCookie).not.toHaveBeenCalled();
+  });
+
   it('matches the name of the primary mail account', async () => {
     session.username = 'alice';
     state.config.adminAccounts = [{ serverUrl: MAIL, account: 'alice@example.com' }];
