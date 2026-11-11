@@ -20,7 +20,7 @@ import { batched, batchedBySize, itemsPerRequest } from "./request-limits";
 import { keywordPointer, pointerToken } from "./patch-pointer";
 import { FirstTouchGate } from "./first-touch-gate";
 import { debug } from "@/lib/debug";
-import { normalizeCalendarEventLike, parseDurationSeconds } from "@/lib/calendar-event-normalization";
+import { normalizeCalendarEventLike, normalizeStalwartPropertyNames, parseDurationSeconds } from "@/lib/calendar-event-normalization";
 import { SYNTHETIC_ID_PROBE, RECURRENCE_BASE_PROPERTIES, hydrateRecurrenceInstances, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
 import { isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-component-detection";
 import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName, fetchCalendarCollectionComponents, davComponentsFor } from "@/lib/webdav/calendar-collection";
@@ -813,7 +813,10 @@ const TASK_PROGRESS_NORMALIZATION = new Map<string, CalendarTask['progress']>([
   ['canceled', 'cancelled'],
 ]);
 
-function normalizeCalendarTask(task: CalendarTask): CalendarTask {
+function normalizeCalendarTask(raw: CalendarTask): CalendarTask {
+  // Stalwart names the rule recurrenceRule (one object); the task list and
+  // the calendar read recurrenceRules, as for events.
+  const task = normalizeStalwartPropertyNames(raw as unknown as Partial<CalendarEvent>) as unknown as CalendarTask;
   const progress = task.progress as unknown;
   if (typeof progress !== 'string') return task;
 
@@ -10495,6 +10498,9 @@ export class JMAPClient implements IJMAPClient {
       taskData.calendarIds = resolved.calendarIds;
     }
     const cleanTask = { ...completeBareTaskDates(taskData), '@type': 'Task', uid: taskData.uid || generateUUID() };
+    // A task moved to another login carries recurrenceRules, which Stalwart
+    // refuses (0.16) or drops (1.0) under that name.
+    cleanRecurrenceRules(cleanTask as Record<string, unknown>);
 
     debug.group('CalendarTask/create', 'tasks');
     debug.log('tasks', 'CalendarTask/create accountId', accountId);

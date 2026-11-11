@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JMAPClient } from '../jmap/client';
+import type { CalendarTask } from '../jmap/types';
 
 const SESSION = {
   capabilities: {
@@ -164,5 +165,36 @@ describe('JMAP calendar task progress compatibility', () => {
 
     expect(future.progress as unknown).toBe('constructor');
     expect(numeric.progress as unknown).toBe(42);
+  });
+
+  // Stalwart names the rule recurrenceRule (one object) both ways: it refuses
+  // recurrenceRules on 0.16 and drops it on 1.0.
+  it("reads a recurring task's recurrenceRule as recurrenceRules", async () => {
+    const recurring = { ...task('daily', 'needs-action'), due: '2026-11-16T09:00:00', recurrenceRule: { frequency: 'daily', count: 5 } };
+    fetchSpy
+      .mockResolvedValueOnce(json({ methodResponses: [['CalendarEvent/query', { ids: ['daily'] }, '0']] }))
+      .mockResolvedValueOnce(json({ methodResponses: [['CalendarEvent/get', { list: [recurring], notFound: [] }, '0']] }));
+
+    const [read] = await client.getCalendarTasks();
+
+    expect(read.recurrenceRules).toEqual([{ frequency: 'daily', count: 5 }]);
+    expect(read).not.toHaveProperty('recurrenceRule');
+  });
+
+  it("creates a task with recurrenceRules under Stalwart's recurrenceRule", async () => {
+    fetchSpy
+      .mockResolvedValueOnce(json({ methodResponses: [['CalendarEvent/set', { created: { 'new-task': { id: 'created-id' } } }, '0']] }))
+      .mockResolvedValueOnce(json({ methodResponses: [['CalendarEvent/get', { list: [task('created-id', 'needs-action')], notFound: [] }, '0']] }));
+
+    await client.createCalendarTask({
+      title: 'moved task',
+      calendarIds: { personal: true },
+      recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly', interval: 1 } as NonNullable<CalendarTask['recurrenceRules']>[number]],
+    });
+
+    const body = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    const sent = body.methodCalls[0][1].create['new-task'];
+    expect(sent.recurrenceRule).toEqual({ '@type': 'RecurrenceRule', frequency: 'weekly', interval: 1 });
+    expect(sent).not.toHaveProperty('recurrenceRules');
   });
 });
