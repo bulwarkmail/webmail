@@ -18,17 +18,40 @@ import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
  * from /api/bimi with its native HTTP client and no webmail session. For
  * anyone else these routes would make this server ask DNS and outside hosts
  * about names the caller picks, and fill the caches all users share.
+ *
+ * The server can't tell the app from another client that sends the same
+ * request, and a client address is whatever a caller with many addresses
+ * (or, on a server reached without a reverse proxy, with an
+ * X-Forwarded-For of its own) makes it. So all callers without a session
+ * together get a small share that signed-in users never draw on: the
+ * ceilings here and in lib/bimi/lookup.ts (SESSIONLESS_MAX_IN_FLIGHT,
+ * SESSIONLESS_MAX_DRAWINGS, SESSIONLESS_CACHE_MAX).
  */
 
 /** Uncached lookups one signed-in mailbox may start per minute, per route. */
 export const LOOKUPS_PER_MINUTE = 60;
-/** The same for a client without a session (the mobile app), per client address. */
+/**
+ * The same for a client without a session (the mobile app), per client
+ * address. Keeps one app, or several behind one address, from using up the
+ * minute of all the others below.
+ */
 export const SESSIONLESS_LOOKUPS_PER_MINUTE = 30;
+/**
+ * Uncached lookups all clients without a session may start per minute,
+ * whatever addresses they come from. Protects the DNS servers and logo
+ * hosts this server would otherwise ask on a stranger's behalf without
+ * bound, and its own outbound connections.
+ */
+export const SESSIONLESS_LOOKUPS_PER_MINUTE_TOTAL = 60;
 /**
  * Lookups one caller may have running at once, per route: well below what
  * the routes run in all (64), so one caller can't take every slot.
  */
 export const RUNNING_PER_CALLER = 16;
+/**
+ * The same for one client address without a session. All of them together
+ * run at most SESSIONLESS_MAX_IN_FLIGHT (lib/bimi/lookup.ts).
+ */
 export const SESSIONLESS_RUNNING_PER_CALLER = 4;
 /** A running lookup that is never given back (a crash) stops counting after this. */
 const RUNNING_WINDOW_MS = 5 * 60_000;
@@ -36,8 +59,19 @@ const RUNNING_WINDOW_MS = 5 * 60_000;
 /** For refusals and for "nothing looked up yet": never kept by a cache. */
 export const NO_STORE = { 'Cache-Control': 'no-store' } as const;
 
-/** Headers every request a browser page or frame makes carries one of; a native HTTP client sends none. */
+/**
+ * Headers by which a browser says where a request comes from. A native
+ * HTTP client sends none of them. A browser leaves them all out of an image
+ * request when it has no fetch metadata to send (a webmail on plain http,
+ * an older browser) and the page asked for no referrer.
+ */
 const BROWSER_CONTEXT_HEADERS = ['origin', 'referer', 'sec-fetch-site', 'sec-fetch-mode', 'sec-fetch-dest'];
+/**
+ * How every browser's User-Agent starts. A page or frame can't change it on
+ * a request to another origin; the app's HTTP clients (OkHttp, CFNetwork)
+ * send their own.
+ */
+const BROWSER_USER_AGENT = /^\s*mozilla\//i;
 
 export interface SenderIconCaller {
   /** Whose budgets a lookup spends, hashed: every mailbox (and the admin) signed in, or one client address. */
@@ -85,10 +119,11 @@ async function sessionOwners(request: NextRequest): Promise<string[]> {
  * its session alone. The session is checked as /api/plugins checks it.
  *
  * Without a session, /api/bimi still serves a request that carries none of
- * the headers a browser page or frame sends (Origin, Referer, Sec-Fetch-*):
- * that is the mobile app, counted per client address as the sign-in limits
- * count it. Another site's page, or a sandboxed frame (Origin "null"),
- * always sends one of them.
+ * the headers a browser page or frame sends (Origin, Referer, Sec-Fetch-*)
+ * and no browser's User-Agent: that is the mobile app, or a client built to
+ * look like it. It is counted per client address as the sign-in limits
+ * count it, and with every other such caller against the ceilings they
+ * share.
  */
 export async function senderIconAccess(request: NextRequest, route: 'bimi' | 'favicon'): Promise<SenderIconAccess> {
   const site = request.headers.get('sec-fetch-site');
@@ -98,7 +133,11 @@ export async function senderIconAccess(request: NextRequest, route: 'bimi' | 'fa
     // No owner only where no session can be told apart (no session secret).
     return { caller: { owners: owners.length > 0 ? owners : [ownerKey(`address:${loginClientAddress(request)}`)], sessionless: false } };
   }
-  if (route === 'bimi' && BROWSER_CONTEXT_HEADERS.every((name) => !request.headers.has(name))) {
+  if (
+    route === 'bimi'
+    && BROWSER_CONTEXT_HEADERS.every((name) => !request.headers.has(name))
+    && !BROWSER_USER_AGENT.test(request.headers.get('user-agent') ?? '')
+  ) {
     return { caller: { owners: [ownerKey(`sessionless:${loginClientAddress(request)}`)], sessionless: true } };
   }
   return { refusal: new NextResponse(null, { status: 401, headers: NO_STORE }) };
@@ -107,7 +146,8 @@ export async function senderIconAccess(request: NextRequest, route: 'bimi' | 'fa
 export interface LookupLease {
   /**
    * Whether the caller may start one more uncached lookup now: within every
-   * owner's budget for the minute and under its count of running lookups.
+   * owner's budget for the minute and under its count of running lookups,
+   * and for a caller without a session within the minute all of them share.
    * When the counts can't be kept (the shared store is down) the answer is no.
    */
   take(): Promise<boolean>;
@@ -123,6 +163,8 @@ export function lookupLease(caller: SenderIconCaller, route: 'bimi' | 'favicon')
   return {
     async take() {
       const budgets = caller.owners.map((owner) => ({ key: `sender-icon-lookups:${route}:${owner}`, max: perMinute, windowMs: 60_000 }));
+      // One reservation covers every count: when the shared minute is spent, no address's counter is touched.
+      if (caller.sessionless) budgets.push({ key: `sender-icon-lookups:${route}:sessionless`, max: SESSIONLESS_LOOKUPS_PER_MINUTE_TOTAL, windowMs: 60_000 });
       const counts = caller.owners.map((owner) => ({ key: `sender-icon-running:${route}:${owner}`, max: running, windowMs: RUNNING_WINDOW_MS }));
       try {
         const result = await getStore().counters.reserve([...budgets, ...counts]);

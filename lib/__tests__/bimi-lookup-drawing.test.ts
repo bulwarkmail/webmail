@@ -28,7 +28,7 @@ vi.mock('@/lib/bimi/certificate', () => ({
 }));
 
 import { rasterize } from '@/lib/bimi/svg';
-import { createBimiResolver } from '@/lib/bimi/lookup';
+import { createBimiResolver, SESSIONLESS_CACHE_MAX, SESSIONLESS_MAX_IN_FLIGHT } from '@/lib/bimi/lookup';
 
 const T0 = Date.UTC(2026, 9, 29);
 
@@ -152,5 +152,151 @@ describe('a logo out of a mark certificate', () => {
     await finishAll(all);
     expect((await all).every((indicator) => indicator?.status === 'verified')).toBe(true);
     expect(state.most).toBe(2);
+  });
+});
+
+// Lookups for callers without a session (the third argument of answer) run in a pool of their own.
+describe('lookups for callers without a session', () => {
+  /** Every domain has a logo with the domain as its title; drawings are finished by hand, by that name. */
+  function setupNamed() {
+    const resolver = createBimiResolver({
+      resolveTxt: async (name: string) => (name.startsWith('_dmarc.')
+        ? [['v=DMARC1; p=reject']]
+        : [[`v=BIMI1; l=https://cdn.${name.replace(/^default\._bimi\./, '')}/logo.svg`]]),
+      fetchBytes: async (url: string) => new Uint8Array(Buffer.from(LOGO.replace('Brand', new URL(url).hostname.replace(/^cdn\./, '')))),
+      roots: () => [],
+      now: () => T0,
+    });
+    /** The domains whose logos were handed to the drawing, in that order. */
+    const drawn: string[] = [];
+    const finishers = new Map<string, () => void>();
+    drawing.impl = (svg, onStopped) => new Promise((resolve) => {
+      const name = /<title>([^<]*)<\/title>/.exec(svg)![1];
+      drawn.push(name);
+      finishers.set(name, () => {
+        onStopped();
+        resolve(PNG);
+      });
+    });
+    const finish = (name: string) => finishers.get(name)!();
+    /** Time for a lookup that may draw to get there. */
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
+    return { resolver, drawn, finish, settle };
+  }
+
+  it('draw one logo at a time and leave the other slot to signed-in users', async () => {
+    const { resolver, drawn, finish, settle } = setupNamed();
+    const app = ['app1.example', 'app2.example', 'app3.example'].map((domain) => resolver.answer(domain, undefined, true));
+    await settle();
+    expect(drawn).toEqual(['app1.example']);
+    // A signed-in lookup draws at once, next to it.
+    const mail = resolver.answer('mail1.example');
+    await settle();
+    expect(drawn).toEqual(['app1.example', 'mail1.example']);
+    finish('mail1.example');
+    await settle();
+    // The free slot is not theirs: the second one draws when the first is done.
+    expect(drawn).toEqual(['app1.example', 'mail1.example']);
+    finish('app1.example');
+    await settle();
+    expect(drawn).toEqual(['app1.example', 'mail1.example', 'app2.example']);
+    finish('app2.example');
+    await settle();
+    finish('app3.example');
+    expect((await Promise.all([...app, mail])).every((answer) => answer.indicator?.status === 'self-asserted')).toBe(true);
+  });
+
+  it('never draw while a signed-in lookup waits for a slot', async () => {
+    const { resolver, drawn, finish, settle } = setupNamed();
+    const first = [resolver.answer('mail1.example'), resolver.answer('mail2.example')];
+    await settle();
+    expect(drawn).toEqual(['mail1.example', 'mail2.example']);
+    // Both slots are busy. The app's lookup asks first, a signed-in one after it.
+    const app = resolver.answer('app1.example', undefined, true);
+    await settle();
+    const third = resolver.answer('mail3.example');
+    await settle();
+    finish('mail1.example');
+    await settle();
+    expect(drawn).toEqual(['mail1.example', 'mail2.example', 'mail3.example']);
+    finish('mail2.example');
+    await settle();
+    expect(drawn).toEqual(['mail1.example', 'mail2.example', 'mail3.example', 'app1.example']);
+    finish('mail3.example');
+    finish('app1.example');
+    expect((await Promise.all([...first, app, third])).every((answer) => answer.indicator?.status === 'self-asserted')).toBe(true);
+  });
+
+  it('are answered from the cache of signed-in lookups, and can neither empty it nor renew an entry in it', async () => {
+    const asked = new Map<string, number>();
+    const clock = { now: T0 };
+    const resolver = createBimiResolver({
+      // No DMARC record anywhere: every lookup ends as "no logo".
+      resolveTxt: async (name: string) => {
+        asked.set(name, (asked.get(name) ?? 0) + 1);
+        return [];
+      },
+      fetchBytes: async () => null,
+      roots: () => [],
+      now: () => clock.now,
+    });
+    const lookups = (domain: string) => asked.get(`_dmarc.${domain}`) ?? 0;
+    const total = () => [...asked.values()].reduce((sum, n) => sum + n, 0);
+
+    // As many names as the cache of signed-in lookups holds, then more than that for the app.
+    const mail = Array.from({ length: 2000 }, (_, i) => `mail${i}.example`);
+    for (const domain of mail) await resolver.answer(domain);
+    const app = Array.from({ length: 300 }, (_, i) => `app${i}.example`);
+    for (const domain of app) await resolver.answer(domain, undefined, true);
+    expect(total()).toBe(mail.length + app.length);
+
+    // Every name a signed-in user asked about is still known, to both kinds of caller.
+    for (const domain of mail) await resolver.answer(domain);
+    expect(await resolver.answer(mail[0], undefined, true)).toEqual({ indicator: null, deferred: false });
+    expect(total()).toBe(mail.length + app.length);
+    // The app's own answers are few: the oldest was dropped, the newest is kept.
+    expect(SESSIONLESS_CACHE_MAX).toBeLessThan(app.length);
+    await resolver.answer(app[0], undefined, true);
+    await resolver.answer(app[app.length - 1], undefined, true);
+    expect([lookups(app[0]), lookups(app[app.length - 1])]).toEqual([2, 1]);
+    // A signed-in caller does not take the app's answer for its own.
+    await resolver.answer(app[app.length - 1]);
+    expect(lookups(app[app.length - 1])).toBe(2);
+
+    // An entry of the signed-in cache that ran out is renewed by a signed-in lookup only.
+    clock.now += 7 * 60 * 60 * 1000;
+    await resolver.answer(mail[5], undefined, true);
+    await resolver.answer(mail[5], undefined, true);
+    expect(lookups(mail[5])).toBe(2);
+    await resolver.answer(mail[5]);
+    expect(lookups(mail[5])).toBe(3);
+    await resolver.answer(mail[5]);
+    await resolver.answer(mail[5], undefined, true);
+    expect(lookups(mail[5])).toBe(3);
+  });
+
+  it('run a few at once, next to all the lookups signed-in users may run', async () => {
+    const held: Array<() => void> = [];
+    const resolver = createBimiResolver({
+      resolveTxt: (name: string) => new Promise((resolve) => {
+        if (name.startsWith('_dmarc.')) held.push(() => resolve([]));
+        else resolve([]);
+      }),
+      fetchBytes: async () => null,
+      roots: () => [],
+      now: () => T0,
+    });
+    const app = Array.from({ length: 20 }, (_, i) => resolver.answer(`app${i}.example`, undefined, true));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(held).toHaveLength(SESSIONLESS_MAX_IN_FLIGHT);
+    const mail = Array.from({ length: 70 }, (_, i) => resolver.answer(`mail${i}.example`));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(held).toHaveLength(SESSIONLESS_MAX_IN_FLIGHT + 64);
+    // The app's lookup for a name a signed-in lookup is already asking about waits for that one.
+    const joined = resolver.answer('mail0.example', undefined, true);
+    for (const go of held.splice(0)) go();
+    expect(await joined).toEqual({ indicator: null, deferred: false });
+    const answers = await Promise.all([...app, ...mail]);
+    expect(answers.filter((answer) => answer.deferred)).toHaveLength(20 - SESSIONLESS_MAX_IN_FLIGHT + 70 - 64);
   });
 });

@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
   const lease = lookupLease(access.caller, 'bimi');
   let answer: BimiAnswer;
   try {
-    answer = await bimiResolver().answer(domain, () => lease.take());
+    answer = await bimiResolver().answer(domain, () => lease.take(), access.caller.sessionless);
   } finally {
     await lease.release();
   }

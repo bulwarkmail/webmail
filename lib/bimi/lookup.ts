@@ -41,13 +41,41 @@ const CRL_TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_MAX = 2000;
 const CRL_CACHE_MAX = 50;
 /**
- * Concurrent uncached lookups; over it a domain is simply missing for now.
- * One caller may run a quarter of them (RUNNING_PER_CALLER in
- * lib/sender-icon-access.ts), so no one caller holds them all.
+ * Concurrent uncached lookups of signed-in callers; over it a domain is
+ * simply missing for now. One caller may run a quarter of them
+ * (RUNNING_PER_CALLER in lib/sender-icon-access.ts), so no one caller holds
+ * them all.
  */
 const MAX_IN_FLIGHT = 64;
 /** How long a lookup waits for one of the MAX_DRAWINGS drawing slots. */
 const DRAW_SLOT_WAIT_MS = 15_000;
+
+/*
+ * Callers without a session (the mobile app's logo request, and whoever
+ * else sends a request of that shape) are served from a pool of their own.
+ * Signed-in callers take nothing from it and wait for nothing in it, so
+ * however it is used, the mail view keeps its lookups, its drawings and
+ * its cache.
+ */
+/**
+ * Lookups started by callers without a session that run at once, all such
+ * callers together. Protects the MAX_IN_FLIGHT lookups of signed-in users:
+ * those are counted apart and never taken by a sessionless caller.
+ */
+export const SESSIONLESS_MAX_IN_FLIGHT = 4;
+/**
+ * Drawing slots (of MAX_DRAWINGS) such lookups hold at once; they also wait
+ * while any signed-in lookup waits for a slot. Protects the drawing of the
+ * logos signed-in users asked for.
+ */
+export const SESSIONLESS_MAX_DRAWINGS = 1;
+/**
+ * Answers kept for the names only sessionless callers asked about. Protects
+ * the cache of CACHE_MAX answers that signed-in lookups fill: sessionless
+ * callers read it and never write it, so they can't push an entry out of
+ * it or replace one.
+ */
+export const SESSIONLESS_CACHE_MAX = 200;
 
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -67,41 +95,57 @@ class BusyError extends Error {}
 /**
  * At most `max` holders at once; the others wait in turn, up to `waitMs`.
  * A slot is given back by the release function `acquire` resolves with, or
- * null when the wait ran out.
+ * null when the wait ran out. Sessionless lookups hold at most
+ * `sessionlessMax` of the slots, and get a free one only when no other
+ * lookup waits for it.
  */
-function drawingSlots(max: number, waitMs: number) {
+function drawingSlots(max: number, sessionlessMax: number, waitMs: number) {
+  type Waiter = (release: () => void) => void;
   let running = 0;
-  const waiting: Array<(release: () => void) => void> = [];
-  const release = () => {
-    const next = waiting.shift();
-    if (next) next(once());
-    else running--;
-  };
-  const once = () => {
+  let sessionlessRunning = 0;
+  const waiting: Waiter[] = [];
+  const sessionlessWaiting: Waiter[] = [];
+  const hold = (sessionless: boolean) => {
+    running++;
+    if (sessionless) sessionlessRunning++;
     let done = false;
     return () => {
       if (done) return;
       done = true;
-      release();
+      running--;
+      if (sessionless) sessionlessRunning--;
+      handOut();
     };
   };
-  return {
-    acquire(): Promise<(() => void) | null> {
-      if (running < max) {
-        running++;
-        return Promise.resolve(once());
+  /** Free slots go to the waiting lookups of signed-in callers first. */
+  const handOut = () => {
+    while (running < max) {
+      const next = waiting.shift();
+      if (next) {
+        next(hold(false));
+        continue;
       }
+      if (sessionlessRunning >= sessionlessMax) return;
+      const sessionless = sessionlessWaiting.shift();
+      if (!sessionless) return;
+      sessionless(hold(true));
+    }
+  };
+  return {
+    acquire(sessionless = false): Promise<(() => void) | null> {
+      const queue = sessionless ? sessionlessWaiting : waiting;
       return new Promise((resolve) => {
-        const take = (slot: () => void) => {
+        const take: Waiter = (slot) => {
           clearTimeout(timer);
           resolve(slot);
         };
         const timer = setTimeout(() => {
-          const at = waiting.indexOf(take);
-          if (at !== -1) waiting.splice(at, 1);
+          const at = queue.indexOf(take);
+          if (at !== -1) queue.splice(at, 1);
           resolve(null);
         }, waitMs);
-        waiting.push(take);
+        queue.push(take);
+        handOut();
       });
     },
   };
@@ -200,15 +244,22 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   const cache = new Map<string, CacheEntry>();
   const crlCache = new Map<string, { bytes: Uint8Array | null; expiresAt: number }>();
   const inFlight = new Map<string, Promise<BimiAnswer>>();
+  // The same two for the lookups that callers without a session started.
+  const sessionlessCache = new Map<string, CacheEntry>();
+  const sessionlessInFlight = new Map<string, Promise<BimiAnswer>>();
   // Drawing is the expensive step; only a few run at once, whatever the
   // number of lookups waiting for one.
-  const drawing = drawingSlots(MAX_DRAWINGS, DRAW_SLOT_WAIT_MS);
+  const drawing = drawingSlots(MAX_DRAWINGS, SESSIONLESS_MAX_DRAWINGS, DRAW_SLOT_WAIT_MS);
 
-  function remember(domain: string, indicator: BimiIndicator | null, ttl: number) {
-    cache.delete(domain);
+  function remember(domain: string, indicator: BimiIndicator | null, ttl: number, sessionless: boolean) {
+    const into = sessionless ? sessionlessCache : cache;
+    const max = sessionless ? SESSIONLESS_CACHE_MAX : CACHE_MAX;
+    into.delete(domain);
     // Map keeps insertion order: the first key is the oldest.
-    while (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value!);
-    cache.set(domain, { indicator, expiresAt: deps.now() + ttl });
+    while (into.size >= max) into.delete(into.keys().next().value!);
+    into.set(domain, { indicator, expiresAt: deps.now() + ttl });
+    // From now on the answer of the signed-in lookup is the one to serve.
+    if (!sessionless) sessionlessCache.delete(domain);
   }
 
   async function txt(name: string): Promise<string[]> {
@@ -248,7 +299,7 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
     }
   }
 
-  async function lookup(domain: string): Promise<{ indicator: BimiIndicator | null; ttl: number }> {
+  async function lookup(domain: string, sessionless: boolean): Promise<{ indicator: BimiIndicator | null; ttl: number }> {
     const none = { indicator: null, ttl: NEGATIVE_TTL_MS };
     const organizational = getRootDomain(domain);
     const isSubdomain = organizational !== domain;
@@ -306,7 +357,7 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
     }
     // The certified logo goes through the same check above and the same
     // bounded drawing here. What is drawn is the checked document.
-    const release = await drawing.acquire();
+    const release = await drawing.acquire(sessionless);
     if (!release) throw new BusyError(`no free drawing slot for ${domain}`);
     let png: Buffer;
     try {
@@ -331,28 +382,45 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
    * A new lookup starts only when fewer than MAX_IN_FLIGHT run and
    * `mayStart` (asked only then) agrees; otherwise the answer is what the
    * cache had, `deferred`, and worth asking for again later.
+   *
+   * A `sessionless` caller is answered from what signed-in lookups cached
+   * or have under way, and otherwise from the pool of its kind: at most
+   * SESSIONLESS_MAX_IN_FLIGHT lookups, a cache of their own, one drawing
+   * slot. A signed-in caller reads and waits for nothing in that pool.
    */
-  async function answer(rawDomain: string, mayStart?: () => Promise<boolean>): Promise<BimiAnswer> {
+  async function answer(rawDomain: string, mayStart?: () => Promise<boolean>, sessionless = false): Promise<BimiAnswer> {
     const domain = normalizeBimiDomain(rawDomain);
     if (!domain) return { indicator: null, deferred: false };
-    const cached = cache.get(domain);
-    if (cached && cached.expiresAt > deps.now()) return { indicator: cached.indicator, deferred: false };
-    const deferred = { indicator: cached?.indicator ?? null, deferred: true };
-    const joined = inFlight.get(domain);
+    const fresh = (): CacheEntry | undefined => {
+      const now = deps.now();
+      const entry = cache.get(domain);
+      if (entry && entry.expiresAt > now) return entry;
+      const own = sessionless ? sessionlessCache.get(domain) : undefined;
+      return own && own.expiresAt > now ? own : undefined;
+    };
+    const underWay = () => inFlight.get(domain) ?? (sessionless ? sessionlessInFlight.get(domain) : undefined);
+    const pool = sessionless ? sessionlessInFlight : inFlight;
+    const poolMax = sessionless ? SESSIONLESS_MAX_IN_FLIGHT : MAX_IN_FLIGHT;
+
+    const cached = fresh();
+    if (cached) return { indicator: cached.indicator, deferred: false };
+    const stale = (sessionless ? sessionlessCache.get(domain) : undefined) ?? cache.get(domain);
+    const deferred = { indicator: stale?.indicator ?? null, deferred: true };
+    const joined = underWay();
     if (joined) return joined;
-    if (inFlight.size >= MAX_IN_FLIGHT) return deferred;
+    if (pool.size >= poolMax) return deferred;
     if (mayStart && !(await mayStart())) return deferred;
     // Another caller may have looked it up, started it, or filled the slots meanwhile.
-    const done = cache.get(domain);
-    if (done && done.expiresAt > deps.now()) return { indicator: done.indicator, deferred: false };
-    const pending = inFlight.get(domain);
+    const done = fresh();
+    if (done) return { indicator: done.indicator, deferred: false };
+    const pending = underWay();
     if (pending) return pending;
-    if (inFlight.size >= MAX_IN_FLIGHT) return deferred;
+    if (pool.size >= poolMax) return deferred;
 
     const run = (async (): Promise<BimiAnswer> => {
       try {
-        const { indicator, ttl } = await lookup(domain);
-        remember(domain, indicator, ttl);
+        const { indicator, ttl } = await lookup(domain, sessionless);
+        remember(domain, indicator, ttl, sessionless);
         return { indicator, deferred: false };
       } catch (err) {
         // The server was busy: nothing is remembered, and the answer is "not now".
@@ -363,14 +431,14 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
         if (err instanceof TemporaryError) logger.debug('BIMI lookup failed, retrying later', { domain, error: err.message });
         else logger.warn('BIMI lookup failed', { domain, error: (err as Error).message });
         // Keep showing what we had; otherwise ask again after a short pause.
-        const fallback = cached?.indicator ?? null;
-        remember(domain, fallback, ERROR_TTL_MS);
+        const fallback = stale?.indicator ?? null;
+        remember(domain, fallback, ERROR_TTL_MS, sessionless);
         return { indicator: fallback, deferred: false };
       } finally {
-        inFlight.delete(domain);
+        pool.delete(domain);
       }
     })();
-    inFlight.set(domain, run);
+    pool.set(domain, run);
     return run;
   }
 
@@ -379,7 +447,7 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
     return (await answer(rawDomain)).indicator;
   }
 
-  return { answer, resolve, clear: () => { cache.clear(); crlCache.clear(); } };
+  return { answer, resolve, clear: () => { cache.clear(); sessionlessCache.clear(); crlCache.clear(); } };
 }
 
 let shared: ReturnType<typeof createBimiResolver> | null = null;
