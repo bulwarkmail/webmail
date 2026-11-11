@@ -353,13 +353,38 @@ describe('a theme update', () => {
     expect(themes.get('night')).toMatchObject({ version: '1.0.0', hasSkin: true });
   });
 
-  it('asks nothing when the installed version had a skin too, or on a first install', async () => {
+  it('asks nothing when the installed version had a skin too', async () => {
     themes.set('night', { ...INSTALLED, hasSkin: true });
     directory(await themeBundle('.toolbar { color: blue; }'));
     expect((await install({ slug: 'night', version: '1.0.0', type: 'theme' })).status).toBe(200);
+  });
+});
 
-    themes.clear();
+describe('a first theme install', () => {
+  async function themeBundle(skin: string | null): Promise<ArrayBuffer> {
+    const zip = new JSZip();
+    zip.file('manifest.json', JSON.stringify({ id: 'night', name: 'Night', version: '1.0.0', author: 'x', type: 'theme', variants: ['dark'], apiVersion: 2 }));
+    zip.file('theme.css', ':root { --color-primary: #123456; }');
+    if (skin !== null) zip.file('skin.css', skin);
+    const buf = await zip.generateAsync({ type: 'uint8array' });
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+  }
+
+  it('with a skin says so first, since the listing does not', async () => {
     directory(await themeBundle('.toolbar { color: blue; }'));
+    const res = await install({ slug: 'night', version: '1.0.0', type: 'theme' });
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body).toMatchObject({ compared: 'listing', grantsAdded: { skin: true } });
+    expect(themes.size).toBe(0);
+
+    directory(await themeBundle('.toolbar { color: blue; }'));
+    expect((await install({ slug: 'night', version: '1.0.0', type: 'theme', acceptGrants: { skin: true } })).status).toBe(200);
+    expect(themes.get('night')).toMatchObject({ hasSkin: true });
+  });
+
+  it('without a skin asks nothing', async () => {
+    directory(await themeBundle(null));
     expect((await install({ slug: 'night', version: '1.0.0', type: 'theme' })).status).toBe(200);
   });
 });

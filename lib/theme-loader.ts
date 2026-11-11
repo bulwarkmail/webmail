@@ -51,7 +51,8 @@ function stripDisallowedPatterns(css: string, label: string): { css: string; war
 
 /**
  * Replace each match with a comment. A match that opens a function
- * (`url(`, `image-set(`) takes its arguments along, up to the closing `)`.
+ * (`url(`, `image-set(`, `image(`, `src(`) takes its arguments along, up to
+ * the closing `)`.
  */
 function removeMatches(css: string, pattern: RegExp): string {
   let out = '';
@@ -91,8 +92,9 @@ function findParenEnd(css: string, start: number): number {
 
 /**
  * Sanitize theme CSS: strip dangerous patterns like @import, url(),
- * image-set(), JavaScript expressions and -moz-binding, then drop every
- * rule whose selector is not `:root` or `.dark` (see restrictThemeSelectors).
+ * image-set(), image(), src(), JavaScript expressions and -moz-binding, then
+ * drop every rule whose selector is not `:root` or `.dark` (see
+ * restrictThemeSelectors).
  */
 export function sanitizeThemeCSS(css: string): { css: string; warnings: string[] } {
   const stripped = stripDisallowedPatterns(css, '');
@@ -306,7 +308,7 @@ export function removeThemeSkinCSS(): void {
  * Sanitize a theme *skin* - looser than `sanitizeThemeCSS` because skins
  * intentionally target real component selectors (toolbars, lists, buttons),
  * not just `:root`/`.dark`. The same script-injection / external-resource
- * prohibitions still apply.
+ * prohibitions still apply: no value in a skin may carry an address.
  */
 export function sanitizeSkinCSS(css: string): { css: string; warnings: string[] } {
   const stripped = stripDisallowedPatterns(css, 'Skin: ');

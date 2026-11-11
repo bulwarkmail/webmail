@@ -1760,6 +1760,11 @@ export const DISALLOWED_CSS_PATTERNS = [
   /url\s*\(\s*(?!['"]?\s*#)/i,
   // Takes plain strings, so it loads remote images without any url().
   /image-set\s*\(/i,
+  // image("…") and src("…") take the address as a plain string too (CSS
+  // Images 4, Values 4). cross-fade() and element() name no address of their
+  // own; what they wrap goes through these same patterns.
+  /\bimage\s*\(/i,
+  /\bsrc\s*\(/i,
   /expression\s*\(/i,
   /javascript\s*:/i,
   /-moz-binding/i,

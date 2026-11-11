@@ -121,10 +121,10 @@ export async function GET(request: NextRequest) {
  * a first install, the installed version on an update) is refused with 409,
  * `permissionsAdded` and `grantsAdded` (permissions, hosts, POST paths, frame
  * origins, credential servers, the privileged tier) until `acceptPermissions`
- * and `acceptGrants` cover it (lib/admin/extension-grants.ts). A theme update
- * that brings a skin the installed version didn't have is asked about the
- * same way. Whether the directory had withdrawn the version is kept with the
- * install, for its rollback copy.
+ * and `acceptGrants` cover it (lib/admin/extension-grants.ts). A theme with a
+ * skin is asked about the same way, on a first install and on an update when
+ * the installed version had none. Whether the directory had withdrawn the
+ * version is kept with the install, for its rollback copy.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -296,16 +296,18 @@ export async function POST(request: NextRequest) {
       const existingTheme = await getTheme(resolvedId);
       const isUpdate = existingTheme !== null;
 
-      // An update that brings a skin the installed version didn't have is asked
-      // about like a plugin update that grants more (lib/admin/extension-grants.ts).
-      const skinAdded = grantsAdded(grantsOf(existingTheme), isUpdate ? { skin: skin !== null } : {});
+      // A skin restyles every part of the app, so one the admin hasn't seen is asked
+      // about first, like a plugin that grants more (lib/admin/extension-grants.ts): on an
+      // update when the installed version had none, on a first install always, since the
+      // listing doesn't say.
+      const skinAdded = grantsAdded(grantsOf(existingTheme), { skin: skin !== null });
       if (anyGrants(notAccepted(skinAdded, acceptedGrants({ acceptPermissions, acceptGrants })))) {
         return NextResponse.json(
           {
-            error: `Version ${version} asks for more than the installed version has. ${describeReachAdded(skinAdded).join(' ')}`,
+            error: `Version ${version} ${isUpdate ? 'asks for more than the installed version has' : 'may do more than the directory listed'}. ${describeReachAdded(skinAdded, !isUpdate).join(' ')}`,
             permissionsAdded: [],
             grantsAdded: skinAdded,
-            compared: 'installed',
+            compared: isUpdate ? 'installed' : 'listing',
           },
           { status: 409 },
         );

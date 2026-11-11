@@ -126,6 +126,9 @@ export interface InstallQuestion {
   cancelText: string;
 }
 
+/** What the install question says about a theme's skin. */
+export const SKIN_NOTE = 'A theme with a skin restyles every part of the app, not only its colours.';
+
 /** The question for a 409 that lists what a version adds (lib/admin/extension-grants.ts). */
 export function grantsQuestion(
   name: string,
@@ -134,6 +137,11 @@ export function grantsQuestion(
 ): Omit<InstallQuestion, 'cancelText'> {
   const names = added.permissions.join(', ');
   const reach = describeReachAdded(added, compared === 'listing').join(' ');
+  if (added.skin && !anyGrants({ ...added, skin: false })) {
+    if (compared === 'listing') return { title: 'Install a theme with a skin?', message: `${name} comes with a skin. ${SKIN_NOTE}`, confirmText: 'Install' };
+    if (compared === 'rollback') return { title: 'Bring the skin back?', message: `${name} brings back a skin. ${SKIN_NOTE}`, confirmText: 'Roll back' };
+    return { title: 'Allow the new skin?', message: `${name} adds a skin. ${SKIN_NOTE}`, confirmText: 'Update' };
+  }
   if (compared === 'listing') {
     const head = names
       ? `${name} asks for permissions that the directory's listing did not show: ${names}.`

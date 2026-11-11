@@ -102,6 +102,16 @@ describe('installVersion', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('says what a skin does before a theme with one is installed', async () => {
+    const skin = { permissions: [], httpOrigins: [], apiPostPaths: [], frameOrigins: [], credentialOrigins: [], privileged: false, skin: true };
+    responses = [json({ error: 'skin', permissionsAdded: [], grantsAdded: skin, compared: 'listing' }, 409), json({ warnings: [] })];
+    const asked: string[] = [];
+    const result = await installVersion({ slug: 'bolt', version: '1.0.0', type: 'theme' }, (q) => { asked.push(`${q.title} ${q.message}`); return true; });
+    expect(asked).toEqual(['Install a theme with a skin? bolt 1.0.0 comes with a skin. A theme with a skin restyles every part of the app, not only its colours.']);
+    expect(calls.at(-1)!.body).toMatchObject({ acceptGrants: { skin: true } });
+    expect(result.ok).toBe(true);
+  });
+
   it('sends the frame origins a page showed with its permissions', async () => {
     responses = [json({ warnings: [] })];
     await installVersion(BODY, () => true, { shown: { permissions: ['email:read'], frameOrigins: ['https://meet.example'] } });
