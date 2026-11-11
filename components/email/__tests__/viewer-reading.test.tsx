@@ -214,16 +214,18 @@ describe('mail in the app font and colours', () => {
 });
 
 describe('reading width', () => {
-  it('keeps HTML mail to about 80 characters a line when comfortable', async () => {
+  it('keeps HTML mail to about 80 characters a line, centred, when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
-    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('body{max-width:80ch!important}');
+    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('body{max-width:80ch!important;margin-inline:auto!important}');
   });
 
-  it('keeps plain text to about 80 characters a line when comfortable', async () => {
+  it('keeps plain text to about 80 characters a line, centred, when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     await show(message({ text: 'Plain words here' }));
-    expect((screen.getByText('Plain words here').closest('.email-content-text') as HTMLElement).style.maxWidth).toBe('80ch');
+    const body = screen.getByText('Plain words here').closest('.email-content-text') as HTMLElement;
+    expect(body.style.maxWidth).toBe('80ch');
+    expect(body.style.marginInline).toBe('auto');
   });
 
   it('uses the full width by default', async () => {

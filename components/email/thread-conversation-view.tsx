@@ -1277,7 +1277,7 @@ export function ConversationEmailBody({
               "[&_table]:border-collapse [&_td]:p-2 [&_th]:p-2",
               "[&_img]:max-w-full [&_img]:h-auto"
             )}
-            style={{ whiteSpace: 'pre-wrap', ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }), fontSize: reading.plainFontSize(13), ...(reading.comfortableWidth && { maxWidth: '80ch' }) }}
+            style={{ whiteSpace: 'pre-wrap', ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }), fontSize: reading.plainFontSize(13), ...(reading.comfortableWidth && { maxWidth: '80ch', marginInline: 'auto' }) }}
             data-plugin-source="email-body"
             data-email-id={email.id}
             onContextMenu={(e) => selectionMenu.onElementContextMenu(e, email.id)}
