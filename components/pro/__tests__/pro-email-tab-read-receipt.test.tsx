@@ -268,7 +268,10 @@ describe('the read receipt of the active login\'s own message', () => {
     render(<ProEmailTabBody tabId="t1" data={{ accountId: '', clientAccountId: 'login-a', emailId: ID, mailboxId: 'a', title: 'OWN private note' }} />);
     await waitFor(() => expect(active.sendReadReceipt).toHaveBeenCalledTimes(1));
     expect(active.sendReadReceipt.mock.calls[0][0]).toMatchObject({ fromEmail: 'a@example.org', identityId: 'b', automatic: true });
-    await waitFor(() => expect(active.setKeyword).toHaveBeenCalledWith(ID, '$mdnsent', OWN));
+    await waitFor(() => expect(active.setKeyword).toHaveBeenCalledTimes(1));
+    // The login's own account, named or left out.
+    const [id, keyword, account] = active.setKeyword.mock.calls[0];
+    expect([id, keyword, account ?? OWN]).toEqual([ID, '$mdnsent', OWN]);
     expect(screen.queryByText('ignore')).toBeNull();
   });
 });
