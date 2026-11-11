@@ -7276,7 +7276,11 @@
   },
   "sender_trust": {
     "cancel_not_organizer": "Aquesta cancel·lació s'ha enviat des de {sender}, però l'organitzador d'aquest esdeveniment al vostre calendari és {organizer}. Només l'organitzador el pot cancel·lar. Elimineu-lo vosaltres mateixos si confieu en aquest missatge.",
-    "cancel_unverified": "No s'ha pogut verificar que aquesta cancel·lació vingui de l'organitzador. Elimineu l'esdeveniment vosaltres mateixos si confieu en aquest missatge."
+    "cancel_unverified": "No s'ha pogut verificar que aquesta cancel·lació vingui de l'organitzador. Elimineu l'esdeveniment vosaltres mateixos si confieu en aquest missatge.",
+    "card_sender": "de {domain}",
+    "card_sender_title": "El servidor de correu ha confirmat que aquest missatge ve de {domain}.",
+    "outside_link": "Un altre lloc",
+    "outside_link_title": "Aquest enllaç porta a {host}, fora de {domain}, el domini del remitent."
   },
   "proofreading": {
     "kind": {

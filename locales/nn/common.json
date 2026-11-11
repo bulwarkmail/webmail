@@ -7284,7 +7284,11 @@
   },
   "sender_trust": {
     "cancel_not_organizer": "Denne avlysinga vart send frå {sender}, men arrangøren av hendinga i kalenderen din er {organizer}. Berre arrangøren kan avlyse ho. Fjern ho sjølv dersom du stolar på denne meldinga.",
-    "cancel_unverified": "Det kunne ikkje stadfestast at denne avlysinga kjem frå arrangøren. Fjern hendinga sjølv dersom du stolar på denne meldinga."
+    "cancel_unverified": "Det kunne ikkje stadfestast at denne avlysinga kjem frå arrangøren. Fjern hendinga sjølv dersom du stolar på denne meldinga.",
+    "card_sender": "frå {domain}",
+    "card_sender_title": "E-posttenaren har stadfesta at denne meldinga kjem frå {domain}.",
+    "outside_link": "Anna nettstad",
+    "outside_link_title": "Denne lenkja går til {host}, utanfor {domain}, domenet til avsendaren."
   },
   "proofreading": {
     "kind": {

@@ -7276,7 +7276,11 @@
   },
   "sender_trust": {
     "cancel_not_organizer": "To odwołanie zostało wysłane z {sender}, ale organizatorem tego wydarzenia w Twoim kalendarzu jest {organizer}. Tylko organizator może je odwołać. Usuń je samodzielnie, jeśli ufasz tej wiadomości.",
-    "cancel_unverified": "Nie udało się potwierdzić, że to odwołanie pochodzi od organizatora. Usuń wydarzenie samodzielnie, jeśli ufasz tej wiadomości."
+    "cancel_unverified": "Nie udało się potwierdzić, że to odwołanie pochodzi od organizatora. Usuń wydarzenie samodzielnie, jeśli ufasz tej wiadomości.",
+    "card_sender": "od {domain}",
+    "card_sender_title": "Serwer poczty potwierdził, że ta wiadomość pochodzi z {domain}.",
+    "outside_link": "Inna witryna",
+    "outside_link_title": "Ten link prowadzi do {host}, poza {domain}, domenę nadawcy."
   },
   "proofreading": {
     "kind": {

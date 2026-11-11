@@ -7276,7 +7276,11 @@
   },
   "sender_trust": {
     "cancel_not_organizer": "Questo annullamento è stato inviato da {sender}, ma l'organizzatore di questo evento nel tuo calendario è {organizer}. Solo l'organizzatore può annullarlo. Rimuovilo tu se ti fidi di questo messaggio.",
-    "cancel_unverified": "Non è stato possibile verificare che questo annullamento provenga dall'organizzatore. Rimuovi tu l'evento se ti fidi di questo messaggio."
+    "cancel_unverified": "Non è stato possibile verificare che questo annullamento provenga dall'organizzatore. Rimuovi tu l'evento se ti fidi di questo messaggio.",
+    "card_sender": "da {domain}",
+    "card_sender_title": "Il server di posta ha confermato che questo messaggio proviene da {domain}.",
+    "outside_link": "Altro sito",
+    "outside_link_title": "Questo link porta a {host}, fuori da {domain}, il dominio del mittente."
   },
   "proofreading": {
     "kind": {

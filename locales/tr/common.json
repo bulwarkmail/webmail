@@ -7276,7 +7276,11 @@
   },
   "sender_trust": {
     "cancel_not_organizer": "Bu iptal {sender} tarafından gönderildi; ancak takviminizdeki bu etkinliğin organizatörü {organizer}. Etkinliği yalnızca organizatör iptal edebilir. Bu iletiye güveniyorsanız etkinliği kendiniz kaldırın.",
-    "cancel_unverified": "Bu iptalin organizatörden geldiği doğrulanamadı. Bu iletiye güveniyorsanız etkinliği kendiniz kaldırın."
+    "cancel_unverified": "Bu iptalin organizatörden geldiği doğrulanamadı. Bu iletiye güveniyorsanız etkinliği kendiniz kaldırın.",
+    "card_sender": "{domain} adresinden",
+    "card_sender_title": "E-posta sunucusu bu iletinin {domain} alan adından geldiğini doğruladı.",
+    "outside_link": "Başka site",
+    "outside_link_title": "Bu bağlantı, gönderenin alan adı olan {domain} dışında, {host} adresine gider."
   },
   "proofreading": {
     "kind": {

@@ -7276,7 +7276,11 @@
   },
   "sender_trust": {
     "cancel_not_organizer": "See tühistamine saadeti aadressilt {sender}, kuid sinu kalendris oleva sündmuse korraldaja on {organizer}. Ainult korraldaja saab selle tühistada. Eemalda see ise, kui usaldad seda kirja.",
-    "cancel_unverified": "Ei õnnestunud kinnitada, et see tühistamine tuleb korraldajalt. Eemalda sündmus ise, kui usaldad seda kirja."
+    "cancel_unverified": "Ei õnnestunud kinnitada, et see tühistamine tuleb korraldajalt. Eemalda sündmus ise, kui usaldad seda kirja.",
+    "card_sender": "saatja {domain}",
+    "card_sender_title": "Meiliserver kinnitas, et see kiri tuleb domeenilt {domain}.",
+    "outside_link": "Muu sait",
+    "outside_link_title": "See link viib aadressile {host}, väljapoole saatja domeeni {domain}."
   },
   "proofreading": {
     "kind": {

@@ -7276,7 +7276,11 @@
   },
   "sender_trust": {
     "cancel_not_organizer": "Toto zrušení bylo odesláno z {sender}, ale organizátorem události ve vašem kalendáři je {organizer}. Zrušit ji může jen organizátor. Pokud této zprávě důvěřujete, odstraňte ji sami.",
-    "cancel_unverified": "Nepodařilo se ověřit, že toto zrušení pochází od organizátora. Pokud této zprávě důvěřujete, odstraňte událost sami."
+    "cancel_unverified": "Nepodařilo se ověřit, že toto zrušení pochází od organizátora. Pokud této zprávě důvěřujete, odstraňte událost sami.",
+    "card_sender": "od {domain}",
+    "card_sender_title": "Poštovní server ověřil, že tato zpráva pochází z {domain}.",
+    "outside_link": "Jiný web",
+    "outside_link_title": "Tento odkaz vede na {host}, mimo {domain}, doménu odesílatele."
   },
   "proofreading": {
     "kind": {

@@ -3,7 +3,9 @@
 import type { ComponentType, ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ExternalLink } from "@/components/icons";
+import { toAsciiDomain } from "@/lib/idn";
 import { openExternalLink } from "@/lib/plugin-hook-result";
+import { getRootDomain } from "@/lib/root-domain";
 import { formatMoment, formatMomentTime, isOtherZone, isWebLink, type FormatOptions } from "@/lib/structured-mail/format";
 import type { Link, Moment, ReservationStatus } from "@/lib/structured-mail/types";
 import { resolveTimeZone } from "@/lib/timezone";
@@ -75,20 +77,73 @@ export function BookingStatusPill({ status }: { status?: ReservationStatus }) {
   return <span className={cn(PILL_CLASS, STATUS_TONE[status])}>{label}</span>;
 }
 
+/** A host name in ASCII form, lower case, without a trailing dot. */
+function asciiHost(host: string): string {
+  return (toAsciiDomain(host) ?? host).toLowerCase().replace(/\.$/, "");
+}
+
+/**
+ * The domain of a card's sender, in ASCII form: the From domain the receiving
+ * server verified (a card shows only for such a message, see
+ * lib/structured-mail/trust.ts). Empty without a From address.
+ */
+export function cardSenderDomain(from: { email?: string | null }[] | null | undefined): string {
+  const address = from?.[0]?.email ?? "";
+  const at = address.lastIndexOf("@");
+  return at >= 0 ? asciiHost(address.slice(at + 1).trim()) : "";
+}
+
+/**
+ * Whether `host` lies outside the sender's domain: neither the From domain
+ * nor below it, and not under the same registrable domain either
+ * (lib/root-domain.ts; a list of common suffixes, so that is the wider match
+ * only). Without a sender domain every host is outside.
+ */
+export function isOutsideSender(host: string, senderDomain: string): boolean {
+  if (!senderDomain) return true;
+  const target = asciiHost(host);
+  if (!target) return true;
+  if (target === senderDomain || target.endsWith(`.${senderDomain}`)) return false;
+  return getRootDomain(target) !== getRootDomain(senderDomain);
+}
+
+/** Domain names written in text ("Book at airline.example"); only the start of a long text is read. */
+const DOMAIN_IN_TEXT = /(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,63}(?![\p{L}\p{N}-])/gu;
+const BRAND_TEXT_SCAN = 200;
+
+/**
+ * Brand text from the markup (a provider, merchant, carrier or venue name) as
+ * the card may show it: undefined when it names a domain outside the sender's,
+ * so a sender cannot present a card as coming from another domain.
+ */
+export function brandText(text: string | undefined, senderDomain: string): string | undefined {
+  const value = text?.trim();
+  if (!value) return undefined;
+  for (const match of value.slice(0, BRAND_TEXT_SCAN).matchAll(DOMAIN_IN_TEXT)) {
+    if (isOutsideSender(match[0], senderDomain)) return undefined;
+  }
+  return value;
+}
+
 /**
  * A link from the mail with its host beside the label ("Track · dhl.de").
- * Opens like a link in the message body: plugins may stop or redirect it,
- * then a new tab without opener or referrer.
+ * A host outside the sender's domain carries a mark. Opens like a link in the
+ * message body: plugins may stop or redirect it, then a new tab without
+ * opener or referrer.
  */
-export function CardLink({ link, label, icon: Icon = ExternalLink, emailId }: { link?: Link; label: string; icon?: IconType; emailId?: string }) {
+export function CardLink({ link, label, icon: Icon = ExternalLink, emailId, senderDomain }: { link?: Link; label: string; icon?: IconType; emailId?: string; senderDomain: string }) {
+  const tTrust = useTranslations("sender_trust");
   if (!link || !isWebLink(link)) return null;
+  const outside = isOutsideSender(link.host, senderDomain);
   return (
     <a
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
+      title={outside ? tTrust("outside_link_title", { host: link.host, domain: senderDomain }) : undefined}
       className={cn(ACTION_CLASS, "flex-wrap gap-y-0")}
       data-testid="structured-mail-link"
+      data-outside={outside || undefined}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -105,6 +160,11 @@ export function CardLink({ link, label, icon: Icon = ExternalLink, emailId }: { 
       <span className="whitespace-nowrap">{label}</span>
       {/* The host is how a reader judges the link: wrapped, never cut off. */}
       <span className="max-w-full [overflow-wrap:anywhere] text-muted-foreground/80">· {link.host}</span>
+      {outside && (
+        <span className={cn(PILL_CLASS, "bg-warning/15 text-warning")} data-testid="structured-mail-outside-link">
+          {tTrust("outside_link")}
+        </span>
+      )}
     </a>
   );
 }
@@ -123,10 +183,13 @@ interface CardShellProps {
   children?: ReactNode;
   actions?: ReactNode;
   kind: string;
+  /** The verified sender domain (cardSenderDomain), named next to the brand the markup claims. */
+  senderDomain: string;
 }
 
 /** The banner layout every card shares (CalendarInvitationBanner's look). */
-export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title, titleLabel, pills, children, actions, kind }: CardShellProps) {
+export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title, titleLabel, pills, children, actions, kind, senderDomain }: CardShellProps) {
+  const tTrust = useTranslations("sender_trust");
   return (
     <section aria-label={name} className="flex items-start gap-3 min-w-0" data-testid="structured-mail-card" data-kind={kind}>
       <div
@@ -140,7 +203,21 @@ export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title,
       </div>
       <div className="flex-1 min-w-0 space-y-2">
         <div className="min-w-0">
-          <div className="text-[0.6875rem] font-semibold text-muted-foreground break-words">{eyebrow}</div>
+          <div className="text-[0.6875rem] font-semibold text-muted-foreground break-words">
+            {eyebrow}
+            {senderDomain && (
+              <>
+                {" · "}
+                <span
+                  className="font-normal [overflow-wrap:anywhere]"
+                  title={tTrust("card_sender_title", { domain: senderDomain })}
+                  data-testid="structured-mail-sender-domain"
+                >
+                  {tTrust("card_sender", { domain: senderDomain })}
+                </span>
+              </>
+            )}
+          </div>
           <h3 className={cn("text-sm font-semibold leading-snug break-words", cancelled ? "line-through text-muted-foreground" : "text-foreground")}>
             {titleLabel ? (
               <>
@@ -158,8 +235,11 @@ export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title,
   );
 }
 
-/** "Flight · Lufthansa"; the kind alone when the provider is missing or already the title. */
-export function eyebrowText(kind: string, provider: string | undefined, title: string): string {
-  const p = provider?.trim();
+/**
+ * "Flight · Lufthansa"; the kind alone when the provider is missing, already
+ * the title, or names a domain outside the sender's (brandText).
+ */
+export function eyebrowText(kind: string, provider: string | undefined, title: string, senderDomain: string): string {
+  const p = brandText(provider, senderDomain);
   return p && p.toLowerCase() !== title.trim().toLowerCase() ? `${kind} · ${p}` : kind;
 }
