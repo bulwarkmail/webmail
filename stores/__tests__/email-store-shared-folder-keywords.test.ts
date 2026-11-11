@@ -181,6 +181,16 @@ describe('non-unified shared-folder keyword routing', () => {
     expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$answered', 'owner-x');
   });
 
+  it('markEmailKeyword with a source that names only an account writes there, not to the listed row with the id', async () => {
+    // The source of a message read outside the list (a reader that was not
+    // told its login): the own account, while the group folder is listed and
+    // holds an e1 too.
+    await useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$mdnsent', { accountId: 'account-a-primary' });
+
+    expect(activeClient.setKeyword).toHaveBeenCalledTimes(1);
+    expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$mdnsent', 'account-a-primary');
+  });
+
   it('markEmailKeyword writes nothing when the login the reply started from is gone', async () => {
     await expect(useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered', { clientAccountId: 'account-b', accountId: 'owner-x' }))
       .rejects.toThrow('Not connected');

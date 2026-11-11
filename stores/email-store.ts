@@ -6241,9 +6241,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       && !(await emailHooks.onBeforeEmailKeywordChange.intercept({ emailIds: [emailId], added: [keyword], removed: [] }))) {
       return;
     }
-    const { client: actionClient, accountId } = source?.clientAccountId
-      ? { client: stampedClient(source.clientAccountId), accountId: source.accountId }
-      : resolveKeywordActionContext(emailId, client);
+    // A source says where the message is: its login's client, or the caller's
+    // for a source that names an account only. The list is asked only when
+    // the caller knows nothing but the id: a listed row with that id may be
+    // another account's message.
+    let target: { client: IJMAPClient; accountId: string | undefined };
+    if (source?.clientAccountId) {
+      const own = loginClient(source.clientAccountId);
+      if (!own) throw new Error('Not connected');
+      target = { client: own, accountId: source.accountId };
+    } else if (source) target = { client, accountId: source.accountId };
+    else target = resolveKeywordActionContext(emailId, client);
+    const { client: actionClient, accountId } = target;
     await actionClient.setKeyword(emailId, keyword, accountId);
     void emailHooks.onEmailKeywordChange.emit({ emailIds: [emailId], added: [keyword], removed: [] });
   },

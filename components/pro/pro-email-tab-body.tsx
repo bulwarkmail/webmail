@@ -290,8 +290,14 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         : state.emails.find((e) => e.id === emailId);
       // Folder/search panes supply their own context. A primary folder must
       // not inherit an unrelated globally selected shared folder's owner.
-      const source = accountId || clientOverride
-        ? { client, accountId: accountId ?? client.getAccountId() }
+      // The source names the host's login: what the reader routes by it (a
+      // read receipt and its flag) goes to that login, not to the Mail tab's
+      // row with the same id.
+      const source: EmailBlobContext = accountId || clientOverride
+        ? {
+            client, accountId: accountId ?? client.getAccountId(),
+            ...(clientOverride && clientAccountId ? { clientAccountId } : {}),
+          }
         : resolveEmailBlobContext(ref ?? null, client);
       load = {
         emailId, clientOverride, accountId, blobSource: source, applied: false,
