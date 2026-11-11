@@ -702,8 +702,13 @@ describe('Stalwart target: the entry document', () => {
   // Stalwart sends no security headers for an Application: the entry carries
   // its own policy and refuses to run in another origin's frame.
   it('carries a CSP ahead of its script and refuses foreign frames', () => {
-    const csp = buildStalwartEntryCsp();
-    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    // No inline script runs but the entry's own, allowed by its hash: the
+    // shells it writes in load their scripts as files.
+    const hashes = inlineScriptHashes(html);
+    expect(hashes).toHaveLength(1);
+    const csp = buildStalwartEntryCsp(hashes);
+    expect(csp).toContain(`script-src 'self' ${hashes[0]};`);
+    expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'self'");
     expect(csp).not.toContain('frame-ancestors'); // ignored in a <meta>

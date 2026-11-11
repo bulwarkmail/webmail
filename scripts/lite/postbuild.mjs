@@ -5,14 +5,14 @@
 //
 // The Stalwart target (`LITE_TARGET=stalwart`) writes a different set: the
 // entry document Stalwart serves for every route, config/policy/manifest that
-// follow the runtime mount, no host snippets, no 404.html - and packs out/
-// into bulwark-lite-stalwart.zip.
+// follow the runtime mount, no host snippets, no 404.html - moves the inline
+// scripts of its shells into files, and packs out/ into bulwark-lite-stalwart.zip.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
-  STALWART_EXCLUDED_DIRS, STALWART_EXCLUDED_FILES, STALWART_ZIP_NAME,
+  STALWART_BOOT_FILE, STALWART_EXCLUDED_DIRS, STALWART_EXCLUDED_FILES, STALWART_ZIP_NAME,
   buildCaddyExample, buildConnectorCapabilities, buildHeaders, buildLiteConfig, buildLitePolicy, buildManifest, buildNginxExample, buildNotFoundShim, buildReadme, readNotFoundMessages, buildRedirects, buildRootRedirect,
-  buildStalwartAppManifest, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, normalizeBasePath, parseLiteTarget, resolveRepoRoot,
+  buildStalwartAppManifest, buildStalwartBootScript, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, moveShellScriptsToFiles, normalizeBasePath, parseLiteTarget, resolveRepoRoot,
   withScriptHashCsp,
 } from "./lib.mjs";
 import { hintPageScripts } from "../compile-hints.mjs";
@@ -49,8 +49,8 @@ export function runPostbuild({ root = repoRoot, env = process.env, log = console
   for (const [name, content] of Object.entries(files)) {
     writeFileSync(join(outDir, name), content);
   }
-  // The Stalwart target rewrites its shells at runtime, so their scripts
-  // cannot be hashed at build time (see buildStalwartEntryCsp).
+  // The Stalwart target rewrites its shells for the mount at runtime, so it
+  // moves their scripts into files below (see buildStalwartEntryCsp).
   if (target === "static") {
     // With the switch on at build time the page policy also fences off
     // outside hosts (#903). config.json can still be edited afterwards; a
@@ -69,6 +69,8 @@ export function runPostbuild({ root = repoRoot, env = process.env, log = console
 
   let zipPath = null;
   if (target === "stalwart") {
+    const moved = moveStalwartShellScripts(outDir, { buildId });
+    log(`[lite] moved the inline scripts of ${moved.pages} pages into ${moved.files} files`);
     zipPath = join(root, STALWART_ZIP_NAME);
     const zip = buildZip(collectZipEntries(outDir));
     writeFileSync(zipPath, zip);
@@ -124,6 +126,38 @@ function stalwartFiles({ outDir, config, locales, defaultLocale, version, commit
     "stalwart-app.json": JSON.stringify(buildStalwartAppManifest({ version }), null, 2) + "\n",
     "LITE-README.md": buildStalwartReadme({ version, commit, locales, buildId, demoMode: config.demoMode }),
   };
+}
+
+/**
+ * The Stalwart target: every HTML file but the entry gets its inline scripts
+ * moved into files and the target's policy (moveShellScriptsToFiles), and the
+ * boot script the entry puts first into each shell is written. Returns how
+ * many pages and script files.
+ */
+export function moveStalwartShellScripts(outDir, { buildId }) {
+  const files = { [STALWART_BOOT_FILE]: buildStalwartBootScript() };
+  const entry = join(outDir, "index.html");
+  let pages = 0;
+  const walk = (dir) => {
+    for (const item of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, item.name);
+      if (item.isDirectory()) {
+        if (item.name !== "_next") walk(path);
+      } else if (item.name.endsWith(".html") && path !== entry) {
+        const moved = moveShellScriptsToFiles(readFileSync(path, "utf8"), { buildId });
+        writeFileSync(path, moved.html);
+        Object.assign(files, moved.files);
+        pages++;
+      }
+    }
+  };
+  walk(outDir);
+  for (const [name, content] of Object.entries(files)) {
+    const path = join(outDir, ...name.split("/"));
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, content);
+  }
+  return { pages, files: Object.keys(files).length };
 }
 
 /** Add each HTML file's script-hash policy (withScriptHashCsp); returns how many. */

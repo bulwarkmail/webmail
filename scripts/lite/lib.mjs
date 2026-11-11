@@ -544,14 +544,19 @@ export function buildCsp({ connectSrc = "*", noThirdParty = false } = {}) {
   ].join("; ");
 }
 
+/** Whether a `<script>` tag with these attributes runs its own text (no src, not a data block). */
+function runsInlineText(attrs) {
+  if (/\bsrc\s*=/i.test(attrs)) return false;
+  // Data blocks (JSON, templates) never execute.
+  const type = /\btype\s*=\s*["']?([^"'\s>]+)/i.exec(attrs)?.[1]?.toLowerCase();
+  return !type || type === "module" || /^(text|application)\/(x-)?(java|ecma)script$/.test(type);
+}
+
 /** The `'sha256-...'` source for every inline script in an HTML document. */
 export function inlineScriptHashes(html) {
   const hashes = new Set();
   for (const [, attrs, body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
-    if (/\bsrc\s*=/i.test(attrs)) continue;
-    // Data blocks (JSON, templates) never execute.
-    const type = /\btype\s*=\s*["']?([^"'\s>]+)/i.exec(attrs)?.[1]?.toLowerCase();
-    if (type && type !== "module" && !/^(text|application)\/(x-)?(java|ecma)script$/.test(type)) continue;
+    if (!runsInlineText(attrs)) continue;
     // Browsers normalise newlines before the script text is hashed.
     const text = body.replace(/\r\n?/g, "\n");
     hashes.add(`'sha256-${createHash("sha256").update(text, "utf8").digest("base64")}'`);
@@ -596,7 +601,12 @@ export function noThirdPartyDirectives(connectSrc = "*") {
  * 1024 bytes), else as early in the document as possible.
  */
 export function withScriptHashCsp(html, options = {}) {
-  const meta = `<meta http-equiv="Content-Security-Policy" content="${buildScriptHashCsp(inlineScriptHashes(html), options)}"/>`;
+  return withMetaCsp(html, buildScriptHashCsp(inlineScriptHashes(html), options));
+}
+
+/** `html` with a <meta> carrying `policy`, placed as withScriptHashCsp places it. */
+function withMetaCsp(html, policy) {
+  const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}"/>`;
   // Without a <head> the parser still places a leading <meta> in the implied one.
   const anchor = /<meta\s+charset\s*=[^>]*>/i.exec(html) ?? /<head\b[^>]*>/i.exec(html)
     ?? /<html\b[^>]*>/i.exec(html) ?? /<!doctype[^>]*>/i.exec(html);
@@ -605,17 +615,21 @@ export function withScriptHashCsp(html, options = {}) {
 }
 
 /**
- * The policy of the Stalwart target's entry document. Stalwart sends no
- * security headers for an Application, so this <meta> is all there is. The
- * shells it writes in are rewritten for the mount at runtime, which rules
- * out build-time hashes; it still forbids plugins, eval, foreign scripts and
- * a moved <base>. frame-ancestors cannot be set from a <meta>: the entry
- * refuses to run in a frame of another origin instead.
+ * The policy of the Stalwart target. Stalwart sends no security headers for
+ * an Application, so the entry document's <meta> is all there is, and every
+ * document the app opens on its origin inherits it. Scripts come from this
+ * origin only: `scriptHashes` names the entry's own inline script, and the
+ * shells it writes in carry no inline script at all (their scripts are files,
+ * moveShellScriptsToFiles), so nothing that depends on the mount or the
+ * client id has to be hashed. It also forbids plugins, eval and a moved
+ * <base>. frame-ancestors cannot be set from a <meta>: the entry refuses to
+ * run in a frame of another origin instead.
  */
-export function buildStalwartEntryCsp() {
+export function buildStalwartEntryCsp(scriptHashes = []) {
   return buildCsp({ connectSrc: "*" })
     .split("; ")
     .filter((directive) => !directive.startsWith("frame-ancestors"))
+    .map((directive) => (directive.startsWith("script-src ") ? `script-src 'self'${scriptHashes.map((h) => ` ${h}`).join("")}` : directive))
     .join("; ");
 }
 
@@ -1253,6 +1267,96 @@ export function inlineJson(value) {
     .replace(PARAGRAPH_SEPARATOR, BACKSLASH + "u2029");
 }
 
+/** A JavaScript string literal in plain ASCII, so a script file reads the same whatever charset it is decoded with. */
+function asciiStringLiteral(value) {
+  const json = JSON.stringify(value);
+  let out = "";
+  for (let i = 0; i < json.length; i++) {
+    const code = json.charCodeAt(i);
+    out += code > 0x7e || code === 0x3c ? BACKSLASH + "u" + code.toString(16).padStart(4, "0") : json[i];
+  }
+  return out;
+}
+
+/** The global the entry sets to the runtime mount; the shells' script files read it. */
+export const STALWART_MOUNT_GLOBAL = "__BULWARK_LITE_MOUNT__";
+/** Where the Stalwart target keeps the scripts its shells held inline, and the boot script. */
+export const STALWART_SCRIPT_DIR = "_next/lite";
+export const STALWART_BOOT_FILE = `${STALWART_SCRIPT_DIR}/boot.js`;
+
+/** The root-absolute URLs rewriteShellForMount points at the mount. */
+const SHELL_URL_NEEDLES = ['"/_next/', '"/manifest.webmanifest"', '"/branding/'];
+// Stands for the mount while a script is rebuilt: private-use characters no payload holds.
+const MOUNT_MARK = String.fromCharCode(0xe000) + "bulwark-lite-mount" + String.fromCharCode(0xe001);
+
+/**
+ * The file content for one inline script of a prerendered shell. A script
+ * without a root-absolute URL stays as it is. Next's RSC payload pushes
+ * (`self.__next_f.push([1,"..."])`) name chunks and assets by URL: the file
+ * builds that string with the mount the entry set, so it pushes exactly the
+ * value rewriteShellForMount gave the inline script. Any other script with
+ * such a URL stops the build, since it could not follow the mount.
+ */
+export function stalwartShellScriptFile(body, buildId) {
+  if (!SHELL_URL_NEEDLES.some((needle) => body.includes(needle))) return body;
+  const push = /^self\.__next_f\.push\(\[1,("(?:[^"\\]|\\[\s\S])*")\]\)$/.exec(body);
+  let value = null;
+  if (push && !body.includes(MOUNT_MARK)) {
+    try {
+      value = JSON.parse(rewriteShellForMount(push[1], MOUNT_MARK, buildId, ""));
+    } catch {
+      value = null;
+    }
+  }
+  if (typeof value !== "string") {
+    throw new Error(`[lite] a shell's inline script holds a root-absolute URL the Stalwart target cannot point at the mount: ${body.slice(0, 120)}`);
+  }
+  const mount = `(self[${JSON.stringify(STALWART_MOUNT_GLOBAL)}]||"")`;
+  return `self.__next_f.push([1,${value.split(MOUNT_MARK).map(asciiStringLiteral).join(`+${mount}+`)}])`;
+}
+
+/**
+ * A prerendered shell of the Stalwart target with every inline script moved
+ * into a file under STALWART_SCRIPT_DIR, in the same place and order (a
+ * parser-blocking script runs where the inline one did), and the target's
+ * policy ahead of them. Files are named by their content, so one copy serves
+ * every shell that has the script. Data blocks stay inline: they never run.
+ * Returns the new HTML and the files to write, by path below out/.
+ */
+export function moveShellScriptsToFiles(html, { buildId }) {
+  const files = {};
+  const moved = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi, (tag, attrs, body) => {
+    if (!runsInlineText(attrs)) return tag;
+    const content = stalwartShellScriptFile(body.replace(/\r\n?/g, "\n"), buildId);
+    const name = `${STALWART_SCRIPT_DIR}/${createHash("sha256").update(content, "utf8").digest("hex").slice(0, 20)}.js`;
+    files[name] = content;
+    // async and defer mean nothing on an inline script, but would on a file.
+    const kept = attrs.replace(/\s(?:async|defer)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>]+))?(?=\s|$)/gi, "");
+    return `<script${kept} src="/${name}"></script>`;
+  });
+  return { html: withMetaCsp(moved, buildStalwartEntryCsp()), files };
+}
+
+/**
+ * boot.js, the first script of every shell the entry writes in. The entry
+ * puts the mount, client id and build id into its data- attributes; it sets
+ * the globals and the fetch shim again in case a browser gives the written
+ * document a fresh global.
+ */
+export function buildStalwartBootScript() {
+  return `(function (w, d) {
+  var s = d.currentScript;
+  if (!s) return;
+  var mount = s.getAttribute("data-mount") || "";
+  var buildId = s.getAttribute("data-build") || "";
+  w[${inlineJson(STALWART_MOUNT_GLOBAL)}] = mount;
+  w.__BULWARK_LITE_OAUTH_CLIENT_ID__ = s.getAttribute("data-client-id") || "";
+  w.TURBOPACK_CHUNK_BASE_PATH = mount + "/_next/";
+  (${installStalwartFetchShim.toString()})(w, mount, buildId, ${rewriteFlightForMount.toString()});
+})(window, document);
+`;
+}
+
 /**
  * The root index.html of the Stalwart bundle, the only document Stalwart
  * ever serves for a route. It reads the mount from the rewritten
@@ -1271,8 +1375,9 @@ export function buildStalwartEntry({ locales, shells, defaultLocale = "en", buil
   var LOCALES = ${inlineJson(locales)};
   var SHELLS = ${inlineJson(shells)};
   var FALLBACK = ${inlineJson(fallback)};
-  var MOUNT_GLOBAL = "__BULWARK_LITE_MOUNT__";
+  var MOUNT_GLOBAL = ${inlineJson(STALWART_MOUNT_GLOBAL)};
   var CLIENT_ID_GLOBAL = "__BULWARK_LITE_OAUTH_CLIENT_ID__";
+  var BOOT_FILE = ${inlineJson(STALWART_BOOT_FILE)};
   var ENTRY_MARKER = ${inlineJson(STALWART_ENTRY_MARKER)};
   var resolveStalwartBoot = ${resolveStalwartBoot.toString()};
   var rewriteShellForMount = ${rewriteShellForMount.toString()};
@@ -1346,11 +1451,14 @@ export function buildStalwartEntry({ locales, shells, defaultLocale = "en", buil
   window.TURBOPACK_CHUNK_BASE_PATH = mount + "/_next/";
   installStalwartFetchShim(window, mount, BUILD_ID, rewriteFlightForMount);
 
-  // Repeated inside the written shell, in case a browser gives it a fresh global.
-  var bootScript = "<scr" + "ipt>(function(w){w[" + JSON.stringify(MOUNT_GLOBAL) + "]=" + JSON.stringify(mount) +
-    ";w[" + JSON.stringify(CLIENT_ID_GLOBAL) + "]=" + JSON.stringify(clientId).replace(/</g, "\\\\u003c") +
-    ";w.TURBOPACK_CHUNK_BASE_PATH=" + JSON.stringify(mount + "/_next/") +
-    ";(" + installStalwartFetchShim.toString() + ")(w," + JSON.stringify(mount) + "," + JSON.stringify(BUILD_ID) + "," + rewriteFlightForMount.toString() + ");})(window)</scr" + "ipt>";
+  // Repeated inside the written shell, in case a browser gives it a fresh
+  // global. A file, not inline: this document's policy runs no inline script
+  // but its own, and it stays on the document the shell is written into.
+  function attr(value) {
+    return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  var bootScript = '<scr' + 'ipt src="' + attr(mount + "/" + BOOT_FILE + "?v=" + encodeURIComponent(BUILD_ID)) +
+    '" data-mount="' + attr(mount) + '" data-client-id="' + attr(clientId) + '" data-build="' + attr(BUILD_ID) + '"></scr' + 'ipt>';
 
   fetch(mount + "/" + boot.shell + "?v=" + encodeURIComponent(BUILD_ID), { credentials: "same-origin" })
     .then(function (res) {
@@ -1370,11 +1478,13 @@ export function buildStalwartEntry({ locales, shells, defaultLocale = "en", buil
     });
 })();
 `;
+  // The one inline script of the bundle: its hash is the only inline script the policy allows.
+  const scriptTag = `<script>${script}</script>`;
   return `<!doctype html>
 <html lang="en" ${STALWART_ENTRY_MARKER}="">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="${buildStalwartEntryCsp()}" />
+<meta http-equiv="Content-Security-Policy" content="${buildStalwartEntryCsp(inlineScriptHashes(scriptTag))}" />
 ${STALWART_BASE_HREF_LITERAL} />
 ${STALWART_OAUTH_META_LITERAL} />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -1387,7 +1497,7 @@ ${STALWART_OAUTH_META_LITERAL} />
   #bulwark-lite-boot { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; text-align: center; }
   #bulwark-lite-boot p { max-width: 36rem; opacity: .8; line-height: 1.5; }
 </style>
-<script>${script}</script>
+${scriptTag}
 </head>
 <body>
 <div id="bulwark-lite-boot" aria-busy="true"><noscript><p>Bulwark Webmail needs JavaScript.</p></noscript></div>
@@ -1440,6 +1550,37 @@ export function stalwartEntryProblems(html) {
   for (const absolute of ['"/_next/static', '"/config.json', '"/policy.json']) {
     if (html.includes(absolute)) problems.push(`index.html references ${absolute.slice(1)} absolutely; it must follow the runtime mount`);
   }
+  problems.push(...stalwartPolicyProblems(html).map((p) => `index.html ${p}`));
+  return problems;
+}
+
+/**
+ * What is wrong with the <meta> policy of an HTML file of the Stalwart bundle
+ * (empty = fine): missing, open to any inline script, or missing the hash of
+ * one of the file's own inline scripts.
+ */
+function stalwartPolicyProblems(html) {
+  const policy = /<meta http-equiv="Content-Security-Policy" content="([^"]*)"/.exec(html)?.[1];
+  if (!policy) return ["carries no script policy"];
+  const scriptSrc = policy.split(";").map((d) => d.trim()).find((d) => d.startsWith("script-src ")) ?? "";
+  const problems = [];
+  if (!scriptSrc) problems.push("has a policy without script-src");
+  if (/'unsafe-inline'|'unsafe-eval'/.test(scriptSrc)) problems.push(`has a policy that lets any inline script run (${scriptSrc})`);
+  for (const hash of inlineScriptHashes(html)) {
+    if (!scriptSrc.includes(hash)) problems.push(`has an inline script its policy does not allow (${hash})`);
+  }
+  return problems;
+}
+
+/**
+ * Problems with a shell (any HTML file but the entry) of the Stalwart bundle
+ * (empty = fine). It must hold no inline script, since the entry's policy
+ * stays on the document the shell is written into, and must carry that policy
+ * itself for when it is opened by its own address.
+ */
+export function stalwartShellProblems(html) {
+  const problems = stalwartPolicyProblems(html);
+  if (inlineScriptHashes(html).length > 0) problems.push("has inline scripts; they belong in files under " + STALWART_SCRIPT_DIR);
   return problems;
 }
 
