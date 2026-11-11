@@ -287,19 +287,45 @@ export function onStoreOwnerChanged(listener: (account: string) => Promise<void>
 }
 
 /**
- * A sign-in, once the server has said who this is and before the account is added. A store waiting
- * for this address that belongs to another JMAP account or another server isn't theirs: an address
- * can be given to someone new, and a host can run a second server on another port. Its data goes
- * first, and they start with nothing. The id itself doesn't include the port, because every store,
- * setting and server-side record of an existing account is keyed by it.
+ * A sign-in, once the server has said who this is and before the account is added. What the device
+ * keeps under this id for another server isn't theirs: a host can run a second server on another
+ * port or path, under the same user name. Its data goes first, and they start with nothing, whether
+ * the store waited for a sign-in or not. A store waiting for this address that belongs to another
+ * JMAP account isn't theirs either: an address can be given to someone new. The id itself doesn't
+ * include the port, because every store, setting and server-side record of an existing account is
+ * keyed by it.
  */
 export async function checkStoreOwner(account: string, jmap: string, serverUrl: string): Promise<void> {
   const known = readStoreOwners()[account];
-  const server = originOf(serverUrl);
-  if (known && isEvicted(account) && (known.jmap !== jmap || known.server !== server)) await storeOwnerChanged?.(account);
+  const server = mailServerKey(serverUrl);
+  const otherServer = !!known && !sameStoreServer(known.server, server);
+  if (known && (otherServer || (isEvicted(account) && known.jmap !== jmap))) await storeOwnerChanged?.(account);
   if (known?.jmap !== jmap || known?.server !== server) {
     writeRecord(OFFLINE_OWNERS_KEY, { ...readStoreOwners(), [account]: { jmap, server } });
   }
+}
+
+/**
+ * The mail server a URL names: its origin and the path it is mounted at. Two servers on one host
+ * (another port, another path) are two servers; two spellings of one origin (a default port
+ * written out, an upper-case host name) are one.
+ */
+export function mailServerKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname.replace(/\/+$/, '')}`;
+  } catch {
+    return url.replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+/**
+ * Whether the server a store was recorded for is `server` (mailServerKey). A record that names an
+ * origin only, as every record did before paths were noted, matches any path on that origin.
+ */
+function sameStoreServer(known: string, server: string): boolean {
+  if (known === server) return true;
+  return known === originOf(known) && known === originOf(server);
 }
 
 export function forgetStoreOwner(account: string): void {
