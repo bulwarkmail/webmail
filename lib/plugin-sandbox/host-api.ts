@@ -1617,6 +1617,8 @@ function assertKeywordFields(
       `${method}: definitions[${index}].label must be 1-${MAX_PLUGIN_KEYWORD_LABEL_LENGTH} characters`,
     );
   }
+  // Palette keys only. A tag the user coloured in settings may hold a custom
+  // #rrggbb, which keywords.list passes on as stored.
   if (
     color !== undefined &&
     (typeof color !== 'string' || !Object.prototype.hasOwnProperty.call(KEYWORD_PALETTE, color))

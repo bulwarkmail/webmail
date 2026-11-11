@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   EMPTY_SHARED_TAGS,
+  applySharedTagChanges,
   groupAccountTags,
   parseSharedTags,
   planSharedTagsSave,
@@ -49,6 +50,16 @@ describe('sharedDefinitions', () => {
     ]);
     expect(parseSharedTags({ tags: { x: { color: 'blue' } } })).toEqual([{ id: 'x', label: 'x', color: 'blue' }]);
   });
+
+  it('keeps a #rrggbb color, lowercased, and shows other codes as grey', () => {
+    expect(parseSharedTags({ tags: {
+      a: { label: 'A', color: '#1a73e8' },
+      b: { label: 'B', color: '#1A73E8' },
+      c: { label: 'C', color: '#abc' },
+      d: { label: 'D', color: 'red' },
+      e: { label: 'E', color: 'not-a-key' },
+    } }).map((tag) => tag.color)).toEqual(['#1a73e8', '#1a73e8', 'gray', 'red', 'gray']);
+  });
 });
 
 describe('planSharedTagsSave', () => {
@@ -67,6 +78,13 @@ describe('planSharedTagsSave', () => {
   it('keeps the fields of a changed tag it doesn\'t know, and its color unless one was picked', () => {
     const { patches } = planSharedTagsSave(readSharedTags(MAP), [{ id: 'other', value: { label: 'Renamed' } }]);
     expect(patches).toEqual([{ path: ['tags', 'other'], value: { label: 'Renamed', color: 'chartreuse', icon: 'flame' } }]);
+  });
+
+  it('writes a hex color as given and keeps it through a rename', () => {
+    const picked = applySharedTagChanges(readSharedTags(MAP), [{ id: 'urgent', value: { label: 'Urgent', color: '#1a73e8' } }]);
+    expect(picked.entries.urgent).toEqual({ label: 'Urgent', color: '#1a73e8' });
+    const renamed = applySharedTagChanges(picked, [{ id: 'urgent', value: { label: 'Now' } }]);
+    expect(renamed.entries.urgent).toEqual({ label: 'Now', color: '#1a73e8' });
   });
 
   it('writes an earlier shape once, whole, as the map', () => {

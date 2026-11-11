@@ -551,3 +551,106 @@ describe('KeywordSettings names in other scripts', () => {
     expect(useSettingsStore.getState().emailKeywords.at(-1)?.id).toMatch(/^work\/tag-[0-9a-z]+$/);
   });
 });
+
+describe('KeywordSettings custom colors', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], nestedTags: false });
+  });
+
+  const openAddForm = (name = 'Custom') => {
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByText('add_keyword'));
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: name } });
+  };
+  const added = () => useSettingsStore.getState().emailKeywords.find((k) => k.id === 'custom');
+
+  it('shows a custom color row with a native picker and a code field', () => {
+    openAddForm();
+    expect(screen.getByText('custom_color')).toBeInTheDocument();
+    expect(screen.getByTestId('tag-color-native')).toHaveAttribute('aria-label', 'pick_custom_color');
+    expect(screen.getByTestId('tag-color-hex')).toHaveAttribute('aria-label', 'color_code');
+  });
+
+  it('stores a typed code as lowercase #rrggbb', () => {
+    openAddForm();
+    fireEvent.change(screen.getByTestId('tag-color-hex'), { target: { value: '#1A73E8' } });
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('#1a73e8');
+  });
+
+  it('expands a three-digit code, and shows it in full after blur', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '0a0' } });
+    expect(field).toHaveValue('0a0');
+    fireEvent.blur(field);
+    expect(field).toHaveValue('#00aa00');
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('#00aa00');
+  });
+
+  it('saves with Enter in the code field', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '#123456' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(added()?.color).toBe('#123456');
+  });
+
+  it('refuses an incomplete code and disables Add', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '#12' } });
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('invalid_color')).toBeInTheDocument();
+    expect(screen.getByText('add').closest('button')).toBeDisabled();
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(added()).toBeUndefined();
+
+    // An empty field is no error.
+    fireEvent.change(field, { target: { value: '' } });
+    expect(field).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByText('invalid_color')).toBeNull();
+    expect(screen.getByText('add').closest('button')).toBeEnabled();
+  });
+
+  it('fills the code field from the native picker', () => {
+    openAddForm();
+    fireEvent.change(screen.getByTestId('tag-color-native'), { target: { value: '#ff8800' } });
+    expect(screen.getByTestId('tag-color-hex')).toHaveValue('#ff8800');
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('#ff8800');
+  });
+
+  it('goes back to a palette color and clears the code field when a swatch is clicked', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '#1a73e8' } });
+    fireEvent.click(screen.getByRole('button', { name: 'teal' }));
+    expect(field).toHaveValue('');
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('teal');
+  });
+
+  it('opens a tag with a hex color with the code in both inputs and no swatch ringed', () => {
+    useSettingsStore.setState({ emailKeywords: [{ id: 'custom', label: 'Custom', color: '#1a73e8' }] });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByTitle('edit'));
+    expect(screen.getByTestId('tag-color-hex')).toHaveValue('#1a73e8');
+    expect(screen.getByTestId('tag-color-native')).toHaveValue('#1a73e8');
+    expect(document.querySelector('.ring-2')).toBeNull();
+  });
+
+  it('offers no custom row on a tag found on messages', async () => {
+    const discoverKeywords = vi.fn().mockResolvedValue({ keywords: { '$label:q3-invoices': 7 }, scanned: 9, total: 9, complete: true });
+    useAuthStore.setState({ client: { discoverKeywords, getTagCounts: vi.fn().mockResolvedValue({}) } as never });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByText('unrecognized.scan'));
+    await screen.findByDisplayValue('Q3 Invoices');
+    fireEvent.click(screen.getByRole('button', { name: 'color_field' }));
+    expect(screen.getByRole('button', { name: 'teal' })).toBeInTheDocument();
+    expect(screen.queryByTestId('tag-color-hex')).toBeNull();
+    expect(screen.queryByTestId('tag-color-native')).toBeNull();
+    useAuthStore.setState({ client: null });
+  });
+});

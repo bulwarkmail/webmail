@@ -404,6 +404,7 @@ function changePreference(key: string, value: unknown, previous: unknown, apply:
   });
 }
 
+// The colour goes out as stored: a palette key, or a custom #rrggbb picked in settings.
 function toKeywordViews(keywords: KeywordDefinition[]): { id: string; name: string; color: string }[] {
   return keywords.map((k) => ({ id: k.id, name: k.label, color: k.color }));
 }
@@ -575,7 +576,7 @@ export type KeywordVisibility = 'show' | 'hide' | 'unread';
 export interface KeywordDefinition {
   id: string;     // Used as JMAP keyword suffix: $label:<id>
   label: string;  // Display name
-  color: string;  // Key from KEYWORD_PALETTE
+  color: string;  // Key from KEYWORD_PALETTE, or a custom lowercase #rrggbb (lib/tag-hex-color.ts)
   visibility?: KeywordVisibility; // Absent on tags stored before this was configurable
   addedBy?: string; // Id of the plugin that added it with keywords.add; only that plugin may update or remove it
 }
