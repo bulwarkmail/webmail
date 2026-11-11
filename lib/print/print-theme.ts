@@ -14,7 +14,7 @@
  * Nothing set and Standard picked: the printout looks as it always did.
  */
 
-import { cssTextOf, readCssTokens, sanitizeSkinCSS, splitCssRules, type CssToken } from '@/lib/theme-loader';
+import { cssTextOf, isCheckedStylesheet, readCssTokens, sanitizeSkinCSS, splitCssRules, type CssToken } from '@/lib/theme-loader';
 
 /** The variables a theme may set for printouts, with what each changes. */
 export const PRINT_THEME_VARS = [
@@ -186,22 +186,26 @@ function filterRules(tokens: readonly CssToken[], state: FilterState, nested: bo
  * messages (the calendar views fill one sheet each). Every other at-rule goes.
  * Nothing is kept of a sheet that doesn't read cleanly (an unterminated
  * comment, string or block).
+ *
+ * The order matters. A `<` is taken out of the text first, before anything
+ * reads it, so every check sees the text without it. The last step looks at
+ * the text exactly as it is returned and changes nothing: a sheet that still
+ * holds a `<` there (one written as an escape), or that spells a removed
+ * construct once its escapes are resolved, is refused whole.
  */
 export function sanitizePrintThemeCss(css: string): { css: string; pageMargin: string | null; warnings: string[] } {
   if (css.length > MAX_CSS) return { css: '', pageMargin: null, warnings: [`the CSS is larger than ${MAX_CSS / 1024} KB`] };
-  const stripped = sanitizeSkinCSS(css);
-  const warnings = [...stripped.warnings];
-  let text = stripped.css;
-  if (text.includes('<')) {
-    warnings.push('removed "<" characters');
-    text = text.replace(/</g, '');
-  }
-  // Read once more, as it stands now: the rules are taken from exactly the
-  // text the removals left.
-  const tokens = readCssTokens(text);
-  if (!tokens) {
-    return { css: '', pageMargin: null, warnings: [...warnings, 'removed the stylesheet: it could not be read cleanly'] };
-  }
+  const refused = (warnings: string[], why: string) => ({ css: '', pageMargin: null, warnings: [...warnings, `removed the stylesheet: ${why}`] });
+
+  const lessThan = css.includes('<');
+  const stripped = sanitizeSkinCSS(lessThan ? css.replace(/</g, '') : css);
+  const warnings = [...stripped.warnings, ...(lessThan ? ['removed "<" characters'] : [])];
+  const tokens = readCssTokens(stripped.css);
+  if (!tokens) return refused(warnings, 'it could not be read cleanly');
   const state: FilterState = { warnings, pageMargin: null };
-  return { css: filterRules(tokens, state, false), pageMargin: state.pageMargin, warnings };
+  const scoped = filterRules(tokens, state, false);
+
+  if (scoped.includes('<')) return refused(warnings, 'it holds a "<" written as an escape');
+  if (!isCheckedStylesheet(scoped)) return refused(warnings, 'it names an address or a script construct, or could not be read cleanly');
+  return { css: scoped, pageMargin: state.pageMargin, warnings };
 }

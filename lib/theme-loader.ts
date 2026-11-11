@@ -414,6 +414,17 @@ const UNREADABLE = 'it could not be read cleanly (an unterminated comment, strin
 const countMatches = (text: string, pattern: RegExp) => (text.match(new RegExp(pattern.source, 'gi')) ?? []).length;
 
 /**
+ * Whether a sheet, exactly as it stands, reads cleanly and spells none of
+ * the removed constructs, as written or with its escapes resolved. For the
+ * last step of a sanitiser that changed the text after the removals: asked
+ * of what it is about to return, with nothing done to the text afterwards.
+ */
+export function isCheckedStylesheet(css: string): boolean {
+  const read = readStylesheet(css);
+  return !!read && !DISALLOWED_CSS_PATTERNS.some((pattern) => pattern.test(read.text) || pattern.test(css));
+}
+
+/**
  * The removed constructs are looked for in the sheet as the browser reads it
  * (readStylesheet), and that reading is what comes back. A sheet that can't
  * be read cleanly, or that spells a removed construct with escapes, is
