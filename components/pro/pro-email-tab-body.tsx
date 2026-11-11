@@ -6,7 +6,7 @@ import { EmailViewer } from "@/components/email/email-viewer";
 import { MoveToDialog } from "@/components/email/move-to-dialog";
 import { ErrorBoundary, EmailViewerErrorFallback } from "@/components/error";
 import { useAuthStore } from "@/stores/auth-store";
-import { useEmailStore, resolveEmailBlobContext, bulkDeleteIsPermanent, restoreBatchesFor, type EmailBlobContext, type EmailWriteSource } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, bulkDeleteIsPermanent, restoreBatchesFor, type EmailActionSource, type EmailBlobContext, type EmailWriteSource } from "@/stores/email-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -191,7 +191,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const markAsRead = useEmailStore((s) => s.markAsRead);
   const toggleStar = useEmailStore((s) => s.toggleStar);
   const moveToMailbox = useEmailStore((s) => s.moveToMailbox);
-  const setEmailKeywordsLocal = useEmailStore((s) => s.setEmailKeywordsLocal);
+  const patchEmailKeywords = useEmailStore((s) => s.patchEmailKeywords);
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const identities = useIdentityStore((s) => s.identities);
   const multiAccountIdentities = useProMultiAccountIdentities();
@@ -207,6 +207,31 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     clientAccountId: blobSource.clientAccountId ?? (clientOverride ? localAccountId : activeAccountId ?? undefined),
     accountId: blobSource.accountId,
   }), [blobSource, clientOverride, localAccountId, activeAccountId]);
+  // Delete, Archive, Move, Star, Mark read and tags go to that login and
+  // account too, whatever the Mail tab lists: ids repeat across accounts, and
+  // the folder open there says nothing about this message.
+  const actionSource = useMemo<Omit<EmailActionSource, 'email'> | null>(() => (writeSource.clientAccountId
+    ? { clientAccountId: writeSource.clientAccountId, accountId: writeSource.accountId }
+    : null), [writeSource]);
+  const accountMailboxes = useEmailStore((s) => s.accountMailboxes);
+  const sourceClient = blobSource.client ?? client;
+  // That account's folders, as its login lists them: where Delete, Archive
+  // and Move take the message, and the folder it is in now.
+  const sourceFolders = useMemo<Mailbox[]>(() => {
+    if (!actionSource) return [];
+    const own = sourceClient?.getAccountId?.();
+    const account = actionSource.accountId ?? own;
+    const cached = accountMailboxes?.[`${actionSource.clientAccountId}|${account}`];
+    if (cached) return cached;
+    const list = actionSource.clientAccountId === activeAccountId ? mailboxes : accountMailboxes?.[actionSource.clientAccountId];
+    return (list ?? []).filter((mb) => (mb.accountId ? mb.accountId === account : !mb.isShared && account === own));
+  }, [actionSource, sourceClient, accountMailboxes, mailboxes, activeAccountId]);
+  // Undo puts the message back in that account.
+  const restoreSource = useMemo(() => {
+    if (!sourceClient) return undefined;
+    const account = actionSource?.accountId;
+    return { client: sourceClient, accountId: account && account !== sourceClient.getAccountId?.() ? account : undefined };
+  }, [sourceClient, actionSource]);
   // A reader owns its load, including an in-flight one across account switches.
   // Only a different message or explicit tab context starts a new load.
   const loadRef = useRef<{
@@ -310,11 +335,8 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
 
   const currentMailboxRole = useMemo(() => {
     if (!email) return undefined;
-    const mb = email.mailboxIds
-      ? Object.keys(email.mailboxIds).map((id) => mailboxes.find((m) => m.id === id)).find(Boolean)
-      : undefined;
-    return mb?.role;
-  }, [email, mailboxes]);
+    return sourceFolders.find((m) => emailInMailbox(email, m))?.role;
+  }, [email, sourceFolders]);
 
   const replyToMessage = useCallback((target: Email, draftText?: string) => {
     openComposeTab({
@@ -427,11 +449,13 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       await onTrashEmail(email);
       return;
     }
+    if (!actionSource) return;
     // The folder the message is in: the one browsed when it is there, else
-    // its own (a message window has no list, mail-p3-1).
+    // its own (a message window has no list, mail-p3-1). Only a folder of
+    // the message's own account.
     const { selectedMailbox } = useEmailStore.getState();
-    const current = mailboxes.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
-      ?? mailboxes.find((m) => emailInMailbox(email, m));
+    const current = sourceFolders.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
+      ?? sourceFolders.find((m) => emailInMailbox(email, m));
     // In Trash (and wherever deleting destroys mail) this is a delete for
     // good: ask the main window's question first, and tell the store so, or
     // it "moves" the message to the Trash it is already in.
@@ -448,10 +472,10 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       return;
     }
     // Where it was, for Undo; a delete for good has none.
-    const restore = permanent ? null : restoreBatchesFor([email], client);
+    const restore = permanent ? null : restoreBatchesFor([email], client, restoreSource);
     try {
       // false: not deleted (a plugin stopped it), so the tab stays open.
-      if (await deleteEmail(client, email.id, permanent, emailKeyFor(email))) {
+      if (await deleteEmail(client, email.id, permanent, emailKeyFor(email), { ...actionSource, email })) {
         await offerMoveUndo('delete', client, restore, t, isPopoutWindow());
         onClose();
       }
@@ -459,7 +483,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       console.error('Delete failed:', err);
       toast.error(tNotifications('error_deleting'));
     }
-  }, [client, email, mailboxes, deleteEmail, onClose, onTrashEmail, t, tNotifications, tP3, tActions, confirmDialog, tRemove]);
+  }, [client, email, actionSource, sourceFolders, restoreSource, deleteEmail, onClose, onTrashEmail, t, tNotifications, tP3, tActions, confirmDialog, tRemove]);
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;
@@ -467,15 +491,17 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       await onArchiveEmail(email);
       return;
     }
+    if (!actionSource) return;
     // In Archive the same action brings it back to the Inbox (mail-p3-4).
+    // Both in the message's own account.
     const { selectedMailbox } = useEmailStore.getState();
-    const current = mailboxes.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
-      ?? mailboxes.find((m) => emailInMailbox(email, m));
-    const archiveInbox = archiveInboxTarget(mailboxes, current?.id);
+    const current = sourceFolders.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
+      ?? sourceFolders.find((m) => emailInMailbox(email, m));
+    const archiveInbox = archiveInboxTarget(sourceFolders, current?.id);
     if (archiveInbox) {
-      const restore = restoreBatchesFor([email], client);
+      const restore = restoreBatchesFor([email], client, restoreSource);
       try {
-        if (!(await moveToMailbox(client, email.id, archiveInbox.id, emailKeyFor(email)))) return;
+        if (!(await moveToMailbox(client, email.id, archiveInbox.id, emailKeyFor(email), { ...actionSource, email }))) return;
         await offerMoveUndo('move', client, restore, t, isPopoutWindow());
         onClose();
       } catch (err) {
@@ -483,23 +509,23 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       }
       return;
     }
-    const archiveMb = mailboxes.find((m) => m.role === 'archive');
+    const archiveMb = sourceFolders.find((m) => m.role === 'archive');
     if (!archiveMb) return;
     if (!(await confirmMailRemoval('archive', 1, confirmDialog, tRemove))) return;
-    const restore = restoreBatchesFor([email], client);
+    const restore = restoreBatchesFor([email], client, restoreSource);
     try {
-      if (!(await moveToMailbox(client, email.id, archiveMb.id, emailKeyFor(email)))) return;
+      if (!(await moveToMailbox(client, email.id, archiveMb.id, emailKeyFor(email), { ...actionSource, email }))) return;
       await offerMoveUndo('archive', client, restore, t, isPopoutWindow());
       onClose();
     } catch (err) {
       console.error('Archive failed:', err);
     }
-  }, [client, email, mailboxes, moveToMailbox, onClose, onArchiveEmail, t, confirmDialog, tRemove]);
+  }, [client, email, actionSource, sourceFolders, restoreSource, moveToMailbox, onClose, onArchiveEmail, t, confirmDialog, tRemove]);
 
   const handleToggleStar = useCallback(async () => {
-    if (!client || !email) return;
+    if (!client || !email || !actionSource) return;
     try {
-      if (!(await toggleStar(client, email.id, emailKeyFor(email)))) return;
+      if (!(await toggleStar(client, email.id, emailKeyFor(email), { ...actionSource, email }))) return;
       onMailChanged?.();
       // Reflect locally - the viewer re-reads from email-store's selectedEmail
       // shape only for the mail tab; here we update our local copy too.
@@ -514,12 +540,21 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       console.error('Toggle star failed:', err);
       toast.error(tNotifications('error_updating'));
     }
-  }, [client, email, toggleStar, tNotifications, onMailChanged]);
+  }, [client, email, actionSource, toggleStar, tNotifications, onMailChanged]);
 
+  // The message as shown, for Mark read without a new callback on every
+  // change: the reader's delayed mark restarts when its callback changes.
+  const shownEmailRef = useRef(email);
+  shownEmailRef.current = email;
   const handleMarkAsRead = useCallback(async (emailIdToMark: string, read: boolean, opts?: { automatic?: boolean }) => {
-    if (!client) return;
+    if (!client || !actionSource) return;
+    // A folder host marks the row it shows read itself, on the same delay:
+    // its automatic mark from here only keeps a Mail tab row of this message
+    // in step.
+    const listedOnly = !!opts?.automatic && !!onMoveEmail;
     try {
-      if (!(await markAsRead(client, emailIdToMark, read))) return;
+      const shown = shownEmailRef.current?.id === emailIdToMark ? shownEmailRef.current : undefined;
+      if (!(await markAsRead(client, emailIdToMark, read, undefined, { ...actionSource, email: shown, listedOnly }))) return;
       onMailChanged?.();
       setEmail((prev) => prev && prev.id === emailIdToMark ? {
         ...prev,
@@ -530,17 +565,18 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       // A refused mark-as-read on opening needs no notice (see EmailViewer).
       if (!opts?.automatic) toast.error(tNotifications('error_updating'));
     }
-  }, [client, markAsRead, tNotifications, onMailChanged]);
+  }, [client, actionSource, onMoveEmail, markAsRead, tNotifications, onMailChanged]);
 
   const handleSetTag = useCallback((emailIdToTag: string, tagId: string | null) => {
-    if (!email || email.id !== emailIdToTag) return;
-    // Toggle one tag, or clear them all. Matches the mail page's local
-    // optimistic update, down to reaching tags this client cannot name.
-    const keywords = { ...(email.keywords ?? {}) };
+    if (!client || !email || email.id !== emailIdToTag || !actionSource) return;
+    // Toggle one tag, or clear them all, as the mail page does, down to
+    // reaching tags this client cannot name. Only the tag keywords change.
+    const keywords = email.keywords ?? {};
+    const changes: Record<string, boolean> = {};
     if (tagId === null) {
       for (const key of Object.keys(keywords)) {
-        if (key.startsWith(KEYWORD_PREFIX) || key.startsWith(KEYWORD_PREFIX_LEGACY)) {
-          keywords[key] = false;
+        if (keywords[key] && (key.startsWith(KEYWORD_PREFIX) || key.startsWith(KEYWORD_PREFIX_LEGACY))) {
+          changes[key] = false;
         }
       }
     } else {
@@ -548,15 +584,24 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         .filter(key => keywords[key]);
       if (activeKeys.length > 0) {
         for (const key of activeKeys) {
-          keywords[key] = false;
+          changes[key] = false;
         }
       } else {
-        keywords[KEYWORD_PREFIX + tagId] = true;
+        changes[KEYWORD_PREFIX + tagId] = true;
       }
     }
-    setEmailKeywordsLocal(emailIdToTag, keywords);
-    setEmail({ ...email, keywords });
-  }, [email, setEmailKeywordsLocal]);
+    const tagged = { ...email, keywords: { ...keywords, ...changes } };
+    void patchEmailKeywords(client, email.id, changes, emailKeyFor(email), { ...actionSource, email })
+      .then((done) => {
+        if (!done) return;
+        onMailChanged?.();
+        setEmail((prev) => (prev && prev.id === tagged.id ? { ...prev, keywords: tagged.keywords } : prev));
+      })
+      .catch((err) => {
+        console.error('Tagging failed:', err);
+        toast.error(tNotifications('tag_failed'));
+      });
+  }, [client, email, actionSource, patchEmailKeywords, onMailChanged, tNotifications]);
 
   // In a pop-out this message is all there is, so the menu bar's Message menu means it.
   const inOwnWindow = typeof window !== 'undefined' && isPopoutWindow();
@@ -598,16 +643,17 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       await onMoveEmail(email, mailboxId);
       return;
     }
-    const restore = restoreBatchesFor([email], client);
+    if (!actionSource) return;
+    const restore = restoreBatchesFor([email], client, restoreSource);
     try {
-      if (await moveToMailbox(client, email.id, mailboxId, emailKeyFor(email))) {
+      if (await moveToMailbox(client, email.id, mailboxId, emailKeyFor(email), { ...actionSource, email })) {
         await offerMoveUndo('move', client, restore, t, isPopoutWindow());
         onClose();
       }
     } catch (err) {
       console.error('Move failed:', err);
     }
-  }, [client, email, moveToMailbox, onClose, onMoveEmail, t]);
+  }, [client, email, actionSource, restoreSource, moveToMailbox, onClose, onMoveEmail, t]);
 
   // This view's message answers the same keys as a message in the mail tab,
   // while its tab is the one in front. c comes from the mail page, as on any tab.
@@ -767,7 +813,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
           currentUserEmail={client?.getUsername()}
           currentUserName={client?.getUsername()?.split('@')[0]}
           currentMailboxRole={currentMailboxRole}
-          mailboxes={moveMailboxes ?? mailboxes}
+          mailboxes={moveMailboxes ?? sourceFolders}
           className="flex-1"
           withListSelection={false}
         />
@@ -777,7 +823,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       {inOwnWindow && (
         <MoveToDialog
           emails={moveDialogOpen && email ? [email] : []}
-          mailboxes={moveMailboxes ?? mailboxes}
+          mailboxes={moveMailboxes ?? sourceFolders}
           selectedMailbox=""
           onClose={() => setMoveDialogOpen(false)}
           onMove={(mailboxId) => void handleMoveToMailbox(mailboxId)}
