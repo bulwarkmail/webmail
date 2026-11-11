@@ -6815,6 +6815,10 @@
         "title": "Connectar-se a altres llocs web",
         "body": "Enviar peticions a aquests llocs. Qualsevol cosa que el connector pugui llegir s'hi pot enviar:"
       },
+      "links_check": {
+        "title": "Comprovar els enllaços que obriu",
+        "body": "Veure cada enllaç web que obriu, amb el seu text, i aturar-lo o obrir una altra adreça en el seu lloc."
+      },
       "admin_config": {
         "title": "Llegir la configuració que li ha posat l'administrador",
         "body": "Llegir la configuració que l'administrador ha desat per a aquest connector."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Mostrar notificacions",
-        "body": "Mostrar notificacions al dispositiu, o dins l'aplicació si no les heu permeses. Cadascuna indica el nom del connector."
+        "body": "Mostrar notificacions al dispositiu, o dins l'aplicació si no les heu permeses. Cadascuna indica el nom del connector. El connector també veu els avisos que l'aplicació us mostra."
       },
       "ui_message_list": {
         "title": "Afegir elements a la llista de missatges",

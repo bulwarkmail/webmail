@@ -1700,8 +1700,11 @@ export const ALL_PERMISSIONS = [
   'ui:email-details',
   'ui:download-file',
   // Show a system notification, or a toast when the user hasn't allowed them
-  // (api.notifications.show).
+  // (api.notifications.show), and see the app's own toasts (onToastShow).
   'ui:notifications',
+  // See every web link the user opens, with its text, and stop it or open
+  // another address instead (onBeforeExternalLink).
+  'links:check',
   // Register native message-list category tabs (Gmail-style inbox tabs).
   'ui:message-list-tabs',
   'ui:composer-toolbar', 'ui:composer-sidebar',
@@ -1757,6 +1760,11 @@ export const DISALLOWED_CSS_PATTERNS = [
   /url\s*\(\s*(?!['"]?\s*#)/i,
   // Takes plain strings, so it loads remote images without any url().
   /image-set\s*\(/i,
+  // image("…") and src("…") take the address as a plain string too (CSS
+  // Images 4, Values 4). cross-fade() and element() name no address of their
+  // own; what they wrap goes through these same patterns.
+  /\bimage\s*\(/i,
+  /\bsrc\s*\(/i,
   /expression\s*\(/i,
   /javascript\s*:/i,
   /-moz-binding/i,

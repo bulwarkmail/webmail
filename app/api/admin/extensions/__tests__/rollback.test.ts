@@ -89,16 +89,34 @@ describe('POST /api/admin/extensions/[kind]/[id]/rollback', () => {
     expect((await call('plugin', '../demo', { version: '1.0.0' })).status).toBe(400);
   });
 
-  it('rolls a theme back with its skin', async () => {
+  it('rolls a theme back with its skin, once the skin coming back was accepted', async () => {
     const registry = await import('@/lib/admin/plugin-registry');
     const THEME = { id: 'night', name: 'Night', version: '1.0.0', author: 'a', description: '', variants: ['dark'], enabled: true, installedAt: 'x', updatedAt: 'x' };
     await registry.saveTheme(THEME, 'body{}', ':root{--a:1}');
     await registry.saveTheme({ ...THEME, version: '2.0.0' }, 'body{color:red}', null);
 
-    const res = await call('theme', 'night', { version: '1.0.0' });
+    // 2.0.0 dropped the skin, so going back brings one back.
+    const asked = await call('theme', 'night', { version: '1.0.0' });
+    expect(asked.status).toBe(409);
+    expect((await asked.json()).grantsAdded).toMatchObject({ skin: true });
+    expect((await registry.getTheme('night'))!.version).toBe('2.0.0');
+
+    const res = await call('theme', 'night', { version: '1.0.0', acceptGrants: { skin: true } });
     expect(res.status).toBe(200);
     expect((await registry.getTheme('night'))!.version).toBe('1.0.0');
     expect(await registry.getThemeCSS('night')).toBe('body{}');
     expect(await registry.getThemeSkin('night')).toBe(':root{--a:1}');
+  });
+
+  it('rolls a theme back without asking when both have a skin, or the kept one has none', async () => {
+    const registry = await import('@/lib/admin/plugin-registry');
+    const THEME = { id: 'night', name: 'Night', version: '1.0.0', author: 'a', description: '', variants: ['dark'], enabled: true, installedAt: 'x', updatedAt: 'x' };
+    await registry.saveTheme(THEME, 'body{}', ':root{--a:1}');
+    await registry.saveTheme({ ...THEME, version: '2.0.0' }, 'body{color:red}', ':root{--a:2}');
+    expect((await call('theme', 'night', { version: '1.0.0' })).status).toBe(200);
+
+    await registry.saveTheme({ ...THEME, version: '3.0.0' }, 'body{}', null);
+    await registry.saveTheme({ ...THEME, version: '4.0.0' }, 'body{}', ':root{--a:4}');
+    expect((await call('theme', 'night', { version: '3.0.0' })).status).toBe(200);
   });
 });

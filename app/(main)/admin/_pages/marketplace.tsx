@@ -25,6 +25,16 @@ import { Dialog } from '@/components/ui/dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ChangelogBadges, ChangelogEntries, anyFlag, type ChangelogEntry, type ChangelogFlags } from '@/components/admin/changelog';
 import { PluginPermissionList } from '@/components/plugins/plugin-permission-list';
+import {
+  anyGrants,
+  compactGrants,
+  describeReachAdded,
+  grantsAdded,
+  grantsOf,
+  notAccepted,
+  readGrants,
+  type Grants,
+} from '@/lib/admin/extension-grants';
 import { offerToTurnOnPlugins, pluginsOffForUsers, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
 import { pluginTypeLabel } from './plugin-type-label';
 
@@ -100,9 +110,14 @@ const pillClass = (active: boolean) => cn(
  * Installs one version of an extension. A version the publisher withdrew,
  * or one older than the installed version, comes back as 409; the admin is
  * asked (in the page's ConfirmDialog), and the install is repeated with
- * `force` if they insist. An update that asks for more permissions comes back
- * the same way, and is repeated with the ones the admin saw. "Update all" goes
- * through here too, so it asks about each. Returns the error text to show, or null.
+ * `force` if they insist. A version that asks for more than the admin saw
+ * (more permissions, hosts, POST paths, frame origins, credential servers or
+ * the privileged tier than the installed version, or on a first install than
+ * the directory's listing) comes back the same way, and is repeated with
+ * what the admin was then shown. `shown`: what the calling page already
+ * showed for a first install, sent as accepted from the start. "Update all"
+ * goes through here too, so it asks about each. Returns the error text to
+ * show, or null.
  */
 export interface InstallQuestion {
   title: string;
@@ -111,29 +126,132 @@ export interface InstallQuestion {
   cancelText: string;
 }
 
-export async function installVersion(
-  body: { slug: string; version: string; type: 'plugin' | 'theme' },
+/** What the install question says about a theme's skin. */
+export const SKIN_NOTE = 'A theme with a skin restyles every part of the app, not only its colours.';
+
+/** The question for a 409 that lists what a version adds (lib/admin/extension-grants.ts). */
+export function grantsQuestion(
+  name: string,
+  added: Grants,
+  compared: 'listing' | 'installed' | 'rollback',
+): Omit<InstallQuestion, 'cancelText'> {
+  const names = added.permissions.join(', ');
+  const reach = describeReachAdded(added, compared === 'listing').join(' ');
+  if (added.skin && !anyGrants({ ...added, skin: false })) {
+    if (compared === 'listing') return { title: 'Install a theme with a skin?', message: `${name} comes with a skin. ${SKIN_NOTE}`, confirmText: 'Install' };
+    if (compared === 'rollback') return { title: 'Bring the skin back?', message: `${name} brings back a skin. ${SKIN_NOTE}`, confirmText: 'Roll back' };
+    return { title: 'Allow the new skin?', message: `${name} adds a skin. ${SKIN_NOTE}`, confirmText: 'Update' };
+  }
+  if (compared === 'listing') {
+    const head = names
+      ? `${name} asks for permissions that the directory's listing did not show: ${names}.`
+      : `${name} may do more than the directory's listing shows.`;
+    return { title: 'Allow what the listing did not show?', message: `${head} ${reach}`.trim(), confirmText: 'Install' };
+  }
+  if (compared === 'rollback') {
+    const head = names
+      ? `${name} brings back permissions that the installed version doesn't have: ${names}.`
+      : `${name} may do more than the installed version.`;
+    return { title: 'Allow what comes back?', message: `${head} ${reach}`.trim(), confirmText: 'Roll back' };
+  }
+  const head = names
+    ? `${name} asks for new permissions that the installed version doesn't have: ${names}.`
+    : `${name} may do more than the installed version.`;
+  return { title: names ? 'Allow the new permissions?' : 'Allow what it adds?', message: `${head} ${reach}`.trim(), confirmText: 'Update' };
+}
+
+/**
+ * What the rollback confirm says about whether the directory had withdrawn
+ * the kept version when it was installed (lib/admin/extension-history.ts).
+ */
+export function withdrawnNote(version: string, withdrawn: { reason: string | null } | 'unknown' | undefined): string {
+  if (withdrawn === 'unknown') {
+    return ` Whether the directory had withdrawn v${version} is not known: this copy was kept before that was recorded.`;
+  }
+  if (withdrawn) {
+    return ` The directory had withdrawn v${version} when it was installed${withdrawn.reason ? `: ${withdrawn.reason}` : '.'}`;
+  }
+  return '';
+}
+
+/**
+ * Rolls an extension back to a version kept on this server. A kept version
+ * that may do more than the installed one comes back as 409; the admin is
+ * asked what it brings back, and the rollback is repeated with that accepted.
+ * The caller asks first whether to roll back at all.
+ */
+export async function rollbackVersion(
+  body: { kind: 'plugin' | 'theme'; id: string; name: string; version: string },
   confirm: (question: InstallQuestion) => boolean | Promise<boolean>,
-): Promise<{ ok: true; warnings: string[]; signature: string | null; updated: boolean } | { ok: false; error: string }> {
-  let force = false;
-  let acceptPermissions: string[] | undefined;
-  const send = () => apiFetch('/api/admin/marketplace', {
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  let accepted: Grants | undefined;
+  const send = () => apiFetch(`/api/admin/extensions/${body.kind}/${encodeURIComponent(body.id)}/rollback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...body, ...(force ? { force: true } : {}), ...(acceptPermissions ? { acceptPermissions } : {}) }),
+    body: JSON.stringify({
+      version: body.version,
+      ...(accepted ? { acceptPermissions: accepted.permissions, acceptGrants: compactGrants(accepted) } : {}),
+    }),
   });
   try {
     let res = await send();
-    // At most one of each question: withdrawn or older, then permissions.
+    let data = await res.json().catch(() => ({}));
+    const added = res.status === 409 ? reportedGrants(data) : null;
+    if (added) {
+      const question = grantsQuestion(`"${body.name}" v${body.version}`, added, 'rollback');
+      if (!(await confirm({ ...question, cancelText: 'Cancel' }))) return { ok: false, error: 'Not rolled back.' };
+      accepted = added;
+      res = await send();
+      data = await res.json().catch(() => ({}));
+    }
+    if (!res.ok) return { ok: false, error: data.error || 'Rollback failed' };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'Rollback failed - network error' };
+  }
+}
+
+/** What a 409 says a version adds: `grantsAdded`, else `permissionsAdded` alone. */
+export function reportedGrants(data: { grantsAdded?: unknown; permissionsAdded?: unknown }): Grants | null {
+  if (data.grantsAdded && typeof data.grantsAdded === 'object') return readGrants(data.grantsAdded);
+  if (Array.isArray(data.permissionsAdded)) return grantsAdded({}, { permissions: data.permissionsAdded });
+  return null;
+}
+
+export async function installVersion(
+  body: { slug: string; version: string; type: 'plugin' | 'theme' },
+  confirm: (question: InstallQuestion) => boolean | Promise<boolean>,
+  opts: { shown?: { permissions: readonly string[]; frameOrigins?: readonly string[] } } = {},
+): Promise<{ ok: true; warnings: string[]; signature: string | null; updated: boolean } | { ok: false; error: string }> {
+  let force = false;
+  let accepted: Grants | undefined = opts.shown ? grantsOf(opts.shown) : undefined;
+  let askedGrants = false;
+  const send = () => apiFetch('/api/admin/marketplace', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...body,
+      ...(force ? { force: true } : {}),
+      ...(accepted ? { acceptPermissions: accepted.permissions, acceptGrants: compactGrants(accepted) } : {}),
+    }),
+  });
+  try {
+    let res = await send();
+    // At most one of each question: withdrawn or older, then what it adds.
     for (let asked = 0; res.status === 409 && asked < 3; asked += 1) {
       const data = await res.json().catch(() => ({}));
-      if (Array.isArray(data.permissionsAdded) && !acceptPermissions) {
-        const names = (data.permissionsAdded as string[]).join(', ');
-        const message = `${body.slug} ${body.version} asks for new permissions that the installed version doesn't have: ${names}.`;
-        if (!(await confirm({ title: 'Allow the new permissions?', message, confirmText: 'Update', cancelText: 'Cancel' }))) {
+      const added = reportedGrants(data);
+      if (added && !askedGrants) {
+        askedGrants = true;
+        // What the calling page already showed is not asked about again.
+        const fresh = accepted ? notAccepted(added, accepted) : added;
+        const compared = data.compared === 'listing' ? 'listing' : 'installed';
+        const question = grantsQuestion(`${body.slug} ${body.version}`, anyGrants(fresh) ? fresh : added, compared);
+        if (!(await confirm({ ...question, cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        acceptPermissions = data.permissionsAdded;
+        // The answer names exactly what the question listed, nothing more.
+        accepted = added;
       } else if (data.yanked && !force) {
         if (!(await confirm({ title: 'Install it anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };

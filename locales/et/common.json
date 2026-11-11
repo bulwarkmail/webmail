@@ -6815,6 +6815,10 @@
         "title": "Ühendu teiste veebisaitidega",
         "body": "Saata päringuid neile saitidele. Kõik, mida pistikprogramm lugeda saab, võidakse sinna saata:"
       },
+      "links_check": {
+        "title": "Avatavate linkide kontrollimine",
+        "body": "Näha iga veebilinki, mille avad, koos selle tekstiga, ning see peatada või avada selle asemel mõni muu aadress."
+      },
       "admin_config": {
         "title": "Loe oma seadeid administraatorilt",
         "body": "Lugeda seadeid, mille administraator selle pistikprogrammi jaoks salvestas."
@@ -6949,7 +6953,7 @@
       },
       "ui_notifications": {
         "title": "Näita märguandeid",
-        "body": "Näidata märguandeid sinu seadmes või rakenduses, kui pole neid lubanud. Iga märguanne nimetab pistikprogrammi."
+        "body": "Näidata märguandeid sinu seadmes või rakenduses, kui pole neid lubanud. Iga märguanne nimetab pistikprogrammi. Pistikprogramm näeb ka teateid, mida rakendus sulle näitab."
       }
     },
     "forward_approval": {

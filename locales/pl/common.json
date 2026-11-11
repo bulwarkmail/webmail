@@ -6815,6 +6815,10 @@
         "title": "Łączenie z innymi witrynami",
         "body": "Wysyła żądania do tych witryn. Wszystko, co wtyczka może odczytać, może tam zostać wysłane:"
       },
+      "links_check": {
+        "title": "Sprawdzanie otwieranych linków",
+        "body": "Widzi każdy otwierany link internetowy wraz z jego tekstem i może go zablokować lub otworzyć zamiast niego inny adres."
+      },
       "admin_config": {
         "title": "Odczyt ustawień od administratora",
         "body": "Odczytuje ustawienia, które administrator zapisał dla tej wtyczki."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Wyświetlanie powiadomień",
-        "body": "Wyświetla powiadomienia na urządzeniu lub w aplikacji, jeśli ich nie zezwolono. Każde podaje nazwę wtyczki."
+        "body": "Wyświetla powiadomienia na urządzeniu lub w aplikacji, jeśli ich nie zezwolono. Każde podaje nazwę wtyczki. Wtyczka widzi też komunikaty, które wyświetla aplikacja."
       },
       "ui_message_list": {
         "title": "Elementy na liście wiadomości",

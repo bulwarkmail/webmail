@@ -6815,6 +6815,10 @@
         "title": "Připojovat se k jiným webům",
         "body": "Odesílá požadavky na tyto weby. Cokoli, co plugin může číst, tam může být odesláno:"
       },
+      "links_check": {
+        "title": "Kontrolovat odkazy, které otevíráte",
+        "body": "Vidí každý webový odkaz, který otevřete, i s jeho textem, a může ho zastavit nebo místo něj otevřít jinou adresu."
+      },
       "admin_config": {
         "title": "Číst nastavení od správce",
         "body": "Čte nastavení, která pro tento plugin uložil váš správce."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Zobrazovat oznámení",
-        "body": "Zobrazuje oznámení ve vašem zařízení, nebo v aplikaci, pokud jste je nepovolili. Každé uvádí název pluginu."
+        "body": "Zobrazuje oznámení ve vašem zařízení, nebo v aplikaci, pokud jste je nepovolili. Každé uvádí název pluginu. Plugin také vidí upozornění, která vám aplikace zobrazuje."
       },
       "ui_message_list": {
         "title": "Přidávat obsah do seznamu zpráv",

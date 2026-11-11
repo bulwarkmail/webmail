@@ -6815,6 +6815,10 @@
         "title": "Forbinde til andre websteder",
         "body": "Sende forespørgsler til disse websteder. Alt, hvad pluginnet kan læse, kan blive sendt dertil:"
       },
+      "links_check": {
+        "title": "Tjekke de links, du åbner",
+        "body": "Se hvert weblink, du åbner, med dets tekst, og stoppe det eller åbne en anden adresse i stedet."
+      },
       "admin_config": {
         "title": "Læse sine indstillinger fra din administrator",
         "body": "Læse de indstillinger, din administrator har gemt for dette plugin."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Vise notifikationer",
-        "body": "Vise notifikationer på din enhed eller i appen, hvis du ikke har tilladt dem. Hver af dem nævner pluginets navn."
+        "body": "Vise notifikationer på din enhed eller i appen, hvis du ikke har tilladt dem. Hver af dem nævner pluginets navn. Pluginet ser også de beskeder, appen viser dig."
       },
       "ui_message_list": {
         "title": "Tilføje til beskedlisten",

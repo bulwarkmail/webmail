@@ -6815,6 +6815,10 @@
         "title": "Conectarse a otros sitios web",
         "body": "Enviar solicitudes a estos sitios. Todo lo que el complemento pueda leer se puede enviar allí:"
       },
+      "links_check": {
+        "title": "Comprobar los enlaces que abres",
+        "body": "Ver cada enlace web que abres, con su texto, y bloquearlo o abrir otra dirección en su lugar."
+      },
       "admin_config": {
         "title": "Leer su configuración de tu administrador",
         "body": "Leer la configuración que tu administrador guardó para este complemento."
@@ -6921,7 +6925,7 @@
       },
       "ui_notifications": {
         "title": "Mostrar notificaciones",
-        "body": "Mostrar notificaciones en tu dispositivo, o dentro de la aplicación si no las has permitido. Cada una indica el nombre del complemento."
+        "body": "Mostrar notificaciones en tu dispositivo, o dentro de la aplicación si no las has permitido. Cada una indica el nombre del complemento. El complemento también ve los avisos que la aplicación te muestra."
       },
       "ui_message_list": {
         "title": "Añadir a la lista de mensajes",

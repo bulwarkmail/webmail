@@ -14,7 +14,7 @@
  * Nothing set and Standard picked: the printout looks as it always did.
  */
 
-import { sanitizeSkinCSS } from '@/lib/theme-loader';
+import { cssTextOf, isCheckedStylesheet, readCssTokens, sanitizeSkinCSS, splitCssRules, type CssToken } from '@/lib/theme-loader';
 
 /** The variables a theme may set for printouts, with what each changes. */
 export const PRINT_THEME_VARS = [
@@ -84,48 +84,28 @@ const MAX_CSS = 64 * 1024;
 const NESTING_AT_RULES = /^@(?:media|supports)\b/i;
 const PAGE_RULE = /^@page\b/i;
 
-/** Index of the `}` closing the block opened just before `start`, or -1. */
-function blockEnd(css: string, start: number): number {
-  let depth = 1;
-  for (let i = start; i < css.length; i++) {
-    const c = css[i];
-    if (c === '\\') i++;
-    else if (c === '"' || c === "'") {
-      for (i++; i < css.length && css[i] !== c; i++) if (css[i] === '\\') i++;
-    } else if (c === '{') depth++;
-    else if (c === '}' && --depth === 0) return i;
+/** The selectors of a rule: its tokens divided at the commas outside parentheses and brackets. */
+function splitSelectors(prelude: readonly CssToken[]): CssToken[][] {
+  const out: CssToken[][] = [[]];
+  let depth = 0;
+  for (const token of prelude) {
+    if (token.bracket === '(' || token.bracket === '[') depth++;
+    else if (token.bracket === ')' || token.bracket === ']') depth--;
+    if (token.text === ',' && depth === 0) out.push([]);
+    else out[out.length - 1].push(token);
   }
-  return -1;
+  return out.filter((selector) => selector.some((token) => token.kind === 'other'));
 }
 
-/** Splits at commas outside brackets and parentheses. */
-function splitSelectors(prelude: string): string[] {
-  const out: string[] = [];
+/** Whether a selector has a sibling or namespace combinator outside parentheses and brackets, where it would leave the scope. */
+function leavesScope(selector: readonly CssToken[]): boolean {
   let depth = 0;
-  let start = 0;
-  for (let i = 0; i < prelude.length; i++) {
-    const c = prelude[i];
-    if (c === '(' || c === '[') depth++;
-    else if (c === ')' || c === ']') depth--;
-    else if (c === ',' && depth === 0) {
-      out.push(prelude.slice(start, i));
-      start = i + 1;
-    }
+  for (const token of selector) {
+    if (token.bracket === '(' || token.bracket === '[') depth++;
+    else if (token.bracket === ')' || token.bracket === ']') depth--;
+    else if (depth === 0 && (token.text === '~' || token.text === '+' || token.text === '|')) return true;
   }
-  out.push(prelude.slice(start));
-  return out.map((s) => s.trim()).filter(Boolean);
-}
-
-/** The selector outside parentheses and brackets, where a sibling combinator would leave the scope. */
-function topLevel(selector: string): string {
-  let depth = 0;
-  let out = '';
-  for (const c of selector) {
-    if (c === '(' || c === '[') depth++;
-    else if (c === ')' || c === ']') depth--;
-    else if (depth === 0) out += c;
-  }
-  return out;
+  return false;
 }
 
 /**
@@ -133,9 +113,9 @@ function topLevel(selector: string): string {
  * printout itself, anything else is looked for inside it. Null when it could
  * reach outside: a sibling combinator, a shadow-tree or page selector.
  */
-function scopeSelector(selector: string): string | null {
-  const top = topLevel(selector);
-  if (/[~+|]/.test(top) || /::?(?:host|slotted|part)\b/i.test(selector) || /&/.test(selector)) return null;
+function scopeSelector(tokens: readonly CssToken[]): string | null {
+  const selector = cssTextOf(tokens).trim();
+  if (leavesScope(tokens) || /::?(?:host|slotted|part)\b/i.test(selector) || /&/.test(selector)) return null;
   const root = /^(?::root|html|body)(?:\s*>?\s*body)?(?=$|[\s>])/i;
   if (root.test(selector)) {
     const rest = selector.replace(root, '').trim();
@@ -150,28 +130,21 @@ interface FilterState {
   pageMargin: string | null;
 }
 
-function filterRules(css: string, state: FilterState, nested: boolean): string {
+/**
+ * The rules of a sheet, or of an `@media` or `@supports` block, each moved
+ * inside the scope. They are taken from the sheet's tokens, so a string, a
+ * comment or an escape is read here as the browser reads it.
+ */
+function filterRules(tokens: readonly CssToken[], state: FilterState, nested: boolean): string {
   const { warnings } = state;
   const out: string[] = [];
-  let i = 0;
-  while (i < css.length) {
-    const open = css.indexOf('{', i);
-    const semi = css.indexOf(';', i);
-    if (open === -1 || (semi !== -1 && semi < open)) {
-      const end = semi === -1 ? css.length : semi + 1;
-      const statement = css.slice(i, end).trim();
-      if (statement && statement !== ';') warnings.push(`removed "${statement.slice(0, 60)}"`);
-      i = end;
+  for (const rule of splitCssRules(tokens)) {
+    const prelude = cssTextOf(rule.prelude).trim();
+    if (!rule.body) {
+      warnings.push(`removed "${prelude.slice(0, 60)}"`);
       continue;
     }
-    const close = blockEnd(css, open + 1);
-    if (close === -1) {
-      warnings.push('removed an unterminated rule');
-      break;
-    }
-    const prelude = css.slice(i, open).trim();
-    const body = css.slice(open + 1, close);
-    i = close + 1;
+    const body = cssTextOf(rule.body);
 
     if (PAGE_RULE.test(prelude) && !nested) {
       if (prelude !== '@page') {
@@ -185,14 +158,14 @@ function filterRules(css: string, state: FilterState, nested: boolean): string {
         else warnings.push(`removed "@page { ${decl.slice(0, 40)} }": only a margin in plain lengths`);
       }
     } else if (NESTING_AT_RULES.test(prelude)) {
-      const inner = filterRules(body, state, true);
+      const inner = filterRules(rule.body, state, true);
       if (inner.trim()) out.push(`${prelude} {${inner}}`);
     } else if (prelude.startsWith('@')) {
       warnings.push(`removed "${prelude.slice(0, 60)}": at-rules other than @media, @supports and @page aren't allowed`);
-    } else if (body.includes('{')) {
+    } else if (rule.body.some((token) => token.bracket === '{')) {
       warnings.push(`removed the rule for "${prelude.slice(0, 60)}": nested rules aren't allowed`);
     } else {
-      const scoped = splitSelectors(prelude).map(scopeSelector);
+      const scoped = splitSelectors(rule.prelude).map(scopeSelector);
       if (scoped.length === 0 || scoped.some((s) => s === null)) {
         warnings.push(`removed the rule for "${prelude.slice(0, 60)}": it could reach outside the printout`);
         continue;
@@ -211,16 +184,28 @@ function filterRules(css: string, state: FilterState, nested: boolean): string {
  * the app around it. `@media` and `@supports` stay, with their rules scoped
  * too. A top-level `@page { margin }` comes back as `pageMargin`, for printed
  * messages (the calendar views fill one sheet each). Every other at-rule goes.
+ * Nothing is kept of a sheet that doesn't read cleanly (an unterminated
+ * comment, string or block).
+ *
+ * The order matters. A `<` is taken out of the text first, before anything
+ * reads it, so every check sees the text without it. The last step looks at
+ * the text exactly as it is returned and changes nothing: a sheet that still
+ * holds a `<` there (one written as an escape), or that spells a removed
+ * construct once its escapes are resolved, is refused whole.
  */
 export function sanitizePrintThemeCss(css: string): { css: string; pageMargin: string | null; warnings: string[] } {
   if (css.length > MAX_CSS) return { css: '', pageMargin: null, warnings: [`the CSS is larger than ${MAX_CSS / 1024} KB`] };
-  const stripped = sanitizeSkinCSS(css.replace(/\/\*[\s\S]*?\*\//g, ' '));
-  const warnings = [...stripped.warnings];
-  let text = stripped.css.replace(/\/\*[\s\S]*?\*\//g, ' ');
-  if (text.includes('<')) {
-    warnings.push('removed "<" characters');
-    text = text.replace(/</g, '');
-  }
+  const refused = (warnings: string[], why: string) => ({ css: '', pageMargin: null, warnings: [...warnings, `removed the stylesheet: ${why}`] });
+
+  const lessThan = css.includes('<');
+  const stripped = sanitizeSkinCSS(lessThan ? css.replace(/</g, '') : css);
+  const warnings = [...stripped.warnings, ...(lessThan ? ['removed "<" characters'] : [])];
+  const tokens = readCssTokens(stripped.css);
+  if (!tokens) return refused(warnings, 'it could not be read cleanly');
   const state: FilterState = { warnings, pageMargin: null };
-  return { css: filterRules(text, state, false), pageMargin: state.pageMargin, warnings };
+  const scoped = filterRules(tokens, state, false);
+
+  if (scoped.includes('<')) return refused(warnings, 'it holds a "<" written as an escape');
+  if (!isCheckedStylesheet(scoped)) return refused(warnings, 'it names an address or a script construct, or could not be read cleanly');
+  return { css: scoped, pageMargin: state.pageMargin, warnings };
 }
