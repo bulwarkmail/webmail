@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { decryptPayload } from '@/lib/auth/crypto';
 import { exchangeCodeForTokens, getRequiredConfig, getTokenEndpoint, hasClientSecret } from '@/lib/oauth/token-exchange';
+import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
 import { pairingOwner, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { stashGrant } from '@/lib/auth/pairing-store';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
   if (crossOrigin) return crossOrigin;
   const cookieStore = await cookies();
   try {
-    const { code, state } = await request.json();
+    const { code, state, iss } = await request.json();
     if (!code || !state) {
       return NextResponse.json({ error: 'Missing code or state' }, { status: 400 });
     }
@@ -83,6 +84,13 @@ export async function POST(request: NextRequest) {
       && pending.slot >= 0 && pending.slot < MAX_ACCOUNT_SLOTS ? pending.slot : 0;
     if (!codeVerifier || !redirectUri) {
       return NextResponse.json({ error: 'Invalid re-auth session data' }, { status: 400 });
+    }
+    // RFC 9207: only the issuer the step-up was sent to may answer it. The
+    // callback page passes `iss` on, so a missing one is refused when the
+    // provider says it sends it.
+    if (!callbackIssuerAccepted(iss, pending.issuer, pending.iss_required === true)) {
+      logger.warn('Reauth complete: the answer came from another issuer than the one asked');
+      return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });
     }
 
     const context = await readCurrentStalwartAuthContext(cookieStore, slot);

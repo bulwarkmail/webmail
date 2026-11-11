@@ -57,6 +57,9 @@ function OAuthCallbackInner() {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const errorParam = searchParams.get("error");
+    // RFC 9207: the issuer that answered, passed on so the server can refuse a
+    // code from another one than the sign-in was sent to.
+    const iss = searchParams.get("iss");
 
     if (errorParam) {
       setError(errorParam === "access_denied" ? "access_denied" : "token_exchange_failed");
@@ -88,7 +91,7 @@ function OAuthCallbackInner() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ code, state }),
+            body: JSON.stringify({ code, state, ...(iss ? { iss } : {}) }),
           });
           if (!res.ok) {
             setError("token_exchange_failed");
@@ -192,7 +195,7 @@ function OAuthCallbackInner() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
-              body: JSON.stringify({ code, state }),
+              body: JSON.stringify({ code, state, ...(iss ? { iss } : {}) }),
             });
             if (!res.ok) {
               setError("token_exchange_failed");

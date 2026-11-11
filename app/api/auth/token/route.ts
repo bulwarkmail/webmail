@@ -16,7 +16,7 @@ import {
   defaultClientOptions,
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
-import type { OAuthMetadata } from '@/lib/oauth/discovery';
+import { callbackIssuerAccepted, type OAuthMetadata } from '@/lib/oauth/discovery';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import {
   buildEndSessionUrl,
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
   try {
-    const { code, code_verifier, redirect_uri, slot: bodySlot, server_id: bodyServerId, remember: bodyRemember, custom_server_url: customServerUrl, client_id: bodyClientId } = await request.json();
+    const { code, code_verifier, redirect_uri, slot: bodySlot, server_id: bodyServerId, remember: bodyRemember, custom_server_url: customServerUrl, client_id: bodyClientId, iss } = await request.json();
     // "Remember me" left unticked: the cookies end with the browser session.
     // Clients from before the choice remembered every sign-in.
     const remember = bodyRemember !== false;
@@ -142,6 +142,18 @@ export async function POST(request: NextRequest) {
     const customUpstream = IS_DESKTOP_BUILD && !serverId ? await resolveCustomUpstream(customServerUrl, bodyClientId) : null;
     if (IS_DESKTOP_BUILD && !serverId && !customUpstream) {
       return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
+    }
+
+    // RFC 9207: a code answered by another issuer than the server this sign-in
+    // names is refused before the code or the verifier goes anywhere. A
+    // missing `iss` is let through: the auth store's exchangeOAuthCode doesn't
+    // pass the callback's on.
+    if (iss !== undefined) {
+      const metadata = await getMetadata(serverId, customUpstream ? { upstream: customUpstream } : undefined);
+      if (!callbackIssuerAccepted(iss, metadata?.issuer, false)) {
+        logger.warn('Token exchange: the answer came from another issuer than the one asked');
+        return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });
+      }
     }
 
     const tokens = await exchangeCodeForTokens(code, code_verifier, redirect_uri, serverId, customUpstream ? { upstream: customUpstream } : undefined);

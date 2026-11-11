@@ -156,6 +156,9 @@ export async function POST(request: NextRequest) {
       redirect_uri,
       created_at: Date.now(),
       ...(serverId ? { server_id: serverId } : {}),
+      // Who must answer (RFC 9207): /complete refuses a code from another issuer.
+      ...(typeof metadata.issuer === 'string' && metadata.issuer ? { issuer: metadata.issuer } : {}),
+      ...(metadata.authorization_response_iss_parameter_supported ? { iss_required: true } : {}),
       ...(mobileRedirectUri ? { mobile_redirect_uri: mobileRedirectUri } : {}),
       ...(mobileState ? { mobile_state: mobileState } : {}),
       ...(mobileCodeChallenge ? { mobile_code_challenge: mobileCodeChallenge } : {}),

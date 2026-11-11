@@ -18,6 +18,7 @@ import { storeIdToken } from '@/lib/oauth/end-session';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { writeSignInStamp } from '@/lib/auth/session-age';
+import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
 
   try {
-    const { code, state, slot: bodySlot } = await request.json();
+    const { code, state, slot: bodySlot, iss } = await request.json();
 
     if (!code || !state) {
       return NextResponse.json({ error: 'Missing code or state' }, { status: 400 });
@@ -135,6 +136,17 @@ export async function POST(request: NextRequest) {
     if (!codeVerifier || !redirectUri) {
       cookieStore.delete(SSO_PENDING_COOKIE);
       return NextResponse.json({ error: 'Invalid SSO session data' }, { status: 400 });
+    }
+
+    // RFC 9207: a code answered by another issuer than the one this sign-in
+    // was sent to is refused before the code or the verifier goes anywhere.
+    // The callback page passes `iss` on for the hand-offs it completes; the
+    // app's own sign-in (loginWithServerSso) sends none, so only for those
+    // hand-offs is a missing one refused when the provider says it sends it.
+    if (!callbackIssuerAccepted(iss, pending.issuer, isMobileFlow && pending.iss_required === true)) {
+      logger.warn('SSO complete: the answer came from another issuer than the one asked');
+      cookieStore.delete(SSO_PENDING_COOKIE);
+      return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });
     }
 
     // Exchange code for tokens

@@ -6,6 +6,23 @@ export interface OAuthMetadata {
   end_session_endpoint?: string;
   scopes_supported?: string[];
   registration_endpoint?: string;
+  /** RFC 9207: the provider names itself (`iss`) in every authorization answer. */
+  authorization_response_iss_parameter_supported?: boolean;
+}
+
+/**
+ * Whether the `iss` of an authorization callback (RFC 9207) fits the issuer
+ * the sign-in was sent to. Another issuer is refused, and so is a missing one
+ * when `required` (the provider says it always sends one, and the callback was
+ * passed on with it). Trailing slashes don't count. Without a recorded issuer
+ * there is nothing to compare against.
+ */
+export function callbackIssuerAccepted(iss: unknown, expected: unknown, required: boolean): boolean {
+  if (iss === undefined || iss === null || iss === '') return !required;
+  if (typeof iss !== 'string') return false;
+  if (typeof expected !== 'string' || !expected) return true;
+  const trim = (value: string) => value.replace(/\/+$/, '');
+  return trim(iss) === trim(expected);
 }
 
 // Validates that a discovered endpoint URL is safe to follow. Server-side
@@ -153,6 +170,9 @@ async function attemptDiscovery(
           ...(typeof data.registration_endpoint === 'string' ? { registration_endpoint: data.registration_endpoint } : {}),
           ...(Array.isArray(data.scopes_supported)
             ? { scopes_supported: data.scopes_supported.filter((s: unknown): s is string => typeof s === 'string') }
+            : {}),
+          ...(data.authorization_response_iss_parameter_supported === true
+            ? { authorization_response_iss_parameter_supported: true }
             : {}),
         };
       }
