@@ -5856,7 +5856,8 @@
     "group_members_one_account": "Um grupo só pode conter contatos de uma conta.",
     "link_names_no_account": "Este link não indica em qual conta a mensagem está, por isso não foi aberto.",
     "group_member_gone": "Um dos contatos escolhidos não existe mais. Escolha os membros novamente.",
-    "invitation_other_account": "Este convite está noutra conta. Mude para essa conta para lhe responder ou adicioná-lo a um calendário."
+    "invitation_other_account": "Este convite está noutra conta. Mude para essa conta para lhe responder ou adicioná-lo a um calendário.",
+    "tab_names_no_account": "Este separador foi guardado sem a sua conta, por isso não foi aberto. Feche-o e volte a abri-lo a partir da conta a que pertence."
   },
   "mail_import": {
     "menu_import": "Importar e-mails…",

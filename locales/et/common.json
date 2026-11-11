@@ -6125,7 +6125,8 @@
     "group_members_one_account": "Grupis saavad olla ainult ühe konto kontaktid.",
     "link_names_no_account": "See link ei ütle, millises kontos sõnum on, seega seda ei avatud.",
     "group_member_gone": "Üht valitud kontaktidest pole enam olemas. Vali liikmed uuesti.",
-    "invitation_other_account": "See kutse on teises kontos. Sellele vastamiseks või selle kalendrisse lisamiseks lülituge sellele kontole."
+    "invitation_other_account": "See kutse on teises kontos. Sellele vastamiseks või selle kalendrisse lisamiseks lülituge sellele kontole.",
+    "tab_names_no_account": "See vahekaart salvestati ilma kontota, seega seda ei avatud. Sulgege see ja avage uuesti kontolt, kuhu see kuulub."
   },
   "mail_import": {
     "menu_import": "Impordi kirju…",

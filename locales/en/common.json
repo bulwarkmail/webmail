@@ -6125,7 +6125,8 @@
     "group_members_one_account": "A group can only hold contacts from one account.",
     "link_names_no_account": "This link doesn't say which account the message is in, so it wasn't opened.",
     "group_member_gone": "One of the chosen contacts no longer exists. Choose the members again.",
-    "invitation_other_account": "This invitation is in another account. Switch to that account to answer it or add it to a calendar."
+    "invitation_other_account": "This invitation is in another account. Switch to that account to answer it or add it to a calendar.",
+    "tab_names_no_account": "This tab was saved without its account, so it wasn't opened. Close it and open it again from the account it belongs to."
   },
   "mail_import": {
     "menu_import": "Import mail…",

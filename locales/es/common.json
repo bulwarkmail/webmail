@@ -5856,7 +5856,8 @@
     "group_members_one_account": "Un grupo solo puede contener contactos de una misma cuenta.",
     "link_names_no_account": "Este enlace no indica en qué cuenta está el mensaje, así que no se abrió.",
     "group_member_gone": "Uno de los contactos elegidos ya no existe. Vuelve a elegir los miembros.",
-    "invitation_other_account": "Esta invitación está en otra cuenta. Cambia a esa cuenta para responderla o añadirla a un calendario."
+    "invitation_other_account": "Esta invitación está en otra cuenta. Cambia a esa cuenta para responderla o añadirla a un calendario.",
+    "tab_names_no_account": "Esta pestaña se guardó sin su cuenta, así que no se abrió. Ciérrala y vuelve a abrirla desde la cuenta a la que pertenece."
   },
   "mail_import": {
     "menu_import": "Importar correo…",

@@ -6125,7 +6125,8 @@
     "group_members_one_account": "Egy csoport csak egy fiók névjegyeit tartalmazhatja.",
     "link_names_no_account": "Ez a link nem mondja meg, melyik fiókban van az üzenet, ezért nem nyílt meg.",
     "group_member_gone": "Az egyik kiválasztott névjegy már nem létezik. Válaszd ki újra a tagokat.",
-    "invitation_other_account": "Ez a meghívó egy másik fiókban van. Váltson arra a fiókra, ha válaszolni szeretne rá, vagy hozzá szeretné adni egy naptárhoz."
+    "invitation_other_account": "Ez a meghívó egy másik fiókban van. Váltson arra a fiókra, ha válaszolni szeretne rá, vagy hozzá szeretné adni egy naptárhoz.",
+    "tab_names_no_account": "Ez a lap a fiókja nélkül lett elmentve, ezért nem nyílt meg. Zárja be, és nyissa meg újra abból a fiókból, amelyhez tartozik."
   },
   "mail_import": {
     "menu_import": "Levelek importálása…",

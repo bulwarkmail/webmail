@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
+import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
-import { droppedEmailTabs, emailTabPath, mailTabPath } from '../pro-tab-address';
+import { droppedEmailTabs, droppedFolderTab, emailTabPath, mailTabPath } from '../pro-tab-address';
 
 // The Pro shell's address names a message with its login and account, so a
 // reload opens that message and not one of another account or login with
@@ -17,9 +18,10 @@ const folders = [
 const row = (stamps: Partial<Email> = {}) => ({ id: ID, threadId: 't', subject: 'Order', receivedAt: '2026-11-11T10:00:00Z', keywords: {}, mailboxIds: { a: true }, ...stamps }) as Email;
 const clientOf = (account: string) => ({ getAccountId: () => account });
 
-const original = { auth: useAuthStore.getState(), email: useEmailStore.getState() };
+const original = { auth: useAuthStore.getState(), email: useEmailStore.getState(), accounts: useAccountStore.getState().accounts };
 
 beforeEach(() => {
+  useAccountStore.setState({ accounts: [] });
   const a = clientOf('cf');
   useAuthStore.setState({
     activeAccountId: 'login-a', client: a as never,
@@ -33,6 +35,7 @@ beforeEach(() => {
 afterEach(() => {
   useAuthStore.setState(original.auth);
   useEmailStore.setState(original.email);
+  useAccountStore.setState({ accounts: original.accounts });
 });
 
 describe('the address of a Pro message tab', () => {
@@ -43,8 +46,33 @@ describe('the address of a Pro message tab', () => {
       .toBe(`/mail/message/${ID}?account=login-b`);
   });
 
-  it('names the active login for a tab that came without one', () => {
+  it('names the only login for a tab that came without one', () => {
     expect(emailTabPath({ accountId: '', emailId: ID, mailboxId: null, title: '' })).toBe(`/mail/message/${ID}?account=login-a`);
+  });
+
+  it('names no login for such a tab while several logins are signed in', () => {
+    useAccountStore.setState({ accounts: [{ id: 'login-a' }, { id: 'login-b' }] as never });
+    expect(emailTabPath({ accountId: '', emailId: ID, mailboxId: null, title: '' })).toBe(`/mail/message/${ID}`);
+    // A tab that names its login is not affected.
+    expect(emailTabPath({ accountId: '', clientAccountId: 'login-b', emailId: ID, mailboxId: null, title: '' }))
+      .toBe(`/mail/message/${ID}?account=login-b`);
+  });
+});
+
+describe('a folder dragged from the sidebar onto the Pro shell', () => {
+  it('opens a tab that names the active login for one of its own folders', () => {
+    expect(droppedFolderTab({ mailboxId: 'a', name: 'Inbox', accountId: null }))
+      .toEqual({ accountId: 'login-a', mailboxId: 'a', title: 'Inbox' });
+  });
+
+  it('keeps the login the sidebar named for another login\'s folder', () => {
+    expect(droppedFolderTab({ mailboxId: 'a', name: 'Inbox', accountId: 'login-b' }))
+      .toEqual({ accountId: 'login-b', mailboxId: 'a', title: 'Inbox' });
+  });
+
+  it('opens nothing while no login is active', () => {
+    useAuthStore.setState({ activeAccountId: null } as never);
+    expect(droppedFolderTab({ mailboxId: 'a', name: 'Inbox', accountId: null })).toBeNull();
   });
 });
 

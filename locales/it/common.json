@@ -5856,7 +5856,8 @@
     "group_members_one_account": "Un gruppo può contenere solo contatti di un unico account.",
     "link_names_no_account": "Questo link non indica in quale account si trova il messaggio, quindi non è stato aperto.",
     "group_member_gone": "Uno dei contatti scelti non esiste più. Scegli di nuovo i membri.",
-    "invitation_other_account": "Questo invito si trova in un altro account. Passa a quell'account per rispondere o aggiungerlo a un calendario."
+    "invitation_other_account": "Questo invito si trova in un altro account. Passa a quell'account per rispondere o aggiungerlo a un calendario.",
+    "tab_names_no_account": "Questa scheda è stata salvata senza il suo account, quindi non è stata aperta. Chiudila e riaprila dall'account a cui appartiene."
   },
   "mail_import": {
     "menu_import": "Importa posta…",

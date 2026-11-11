@@ -58,7 +58,7 @@ vi.mock('@/stores/settings-store', () => ({
   useSettingsStore: selectorStore({ emailsPerPage: 50 }),
   getMessageListOrderFor: () => [],
 }));
-const tabs = vi.hoisted(() => ({ openEmailTab: vi.fn(), updateTabTitle: vi.fn() }));
+const tabs = vi.hoisted(() => ({ openEmailTab: vi.fn(), updateTabTitle: vi.fn(), nameTabLogin: vi.fn() }));
 vi.mock('@/stores/pro-tab-store', () => ({ useProTabStore: selectorStore(tabs) }));
 
 import { ProFolderTabBody } from '../pro-folder-tab-body';

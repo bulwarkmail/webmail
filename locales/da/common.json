@@ -6125,7 +6125,8 @@
     "group_members_one_account": "En gruppe kan kun indeholde kontakter fra én konto.",
     "link_names_no_account": "Dette link siger ikke, hvilken konto beskeden ligger i, så det blev ikke åbnet.",
     "group_member_gone": "En af de valgte kontakter findes ikke længere. Vælg medlemmerne igen.",
-    "invitation_other_account": "Denne invitation ligger i en anden konto. Skift til den konto for at svare på den eller tilføje den til en kalender."
+    "invitation_other_account": "Denne invitation ligger i en anden konto. Skift til den konto for at svare på den eller tilføje den til en kalender.",
+    "tab_names_no_account": "Denne fane blev gemt uden sin konto, så den blev ikke åbnet. Luk den, og åbn den igen fra den konto, den hører til."
   },
   "mail_import": {
     "menu_import": "Importér mail…",

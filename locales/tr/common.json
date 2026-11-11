@@ -6125,7 +6125,8 @@
     "group_members_one_account": "Bir grup yalnızca tek bir hesabın kişilerini içerebilir.",
     "link_names_no_account": "Bu bağlantı iletinin hangi hesapta olduğunu belirtmiyor, bu yüzden açılmadı.",
     "group_member_gone": "Seçilen kişilerden biri artık yok. Üyeleri yeniden seçin.",
-    "invitation_other_account": "Bu davet başka bir hesapta. Yanıtlamak veya bir takvime eklemek için o hesaba geçin."
+    "invitation_other_account": "Bu davet başka bir hesapta. Yanıtlamak veya bir takvime eklemek için o hesaba geçin.",
+    "tab_names_no_account": "Bu sekme hesabı olmadan kaydedilmiş, bu yüzden açılmadı. Kapatıp ait olduğu hesaptan yeniden açın."
   },
   "mail_import": {
     "menu_import": "E-posta içe aktar…",

@@ -13,6 +13,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { bulkDeleteIsPermanent, captureListedMove, emailRestorePoint, ensureArchiveMailbox, findArchiveMailbox, findTrashMailbox, TrashMailboxNotFoundError, useEmailStore, type EmailRestoreBatch } from "@/stores/email-store";
 import { getMessageListOrderFor, useSettingsStore } from "@/stores/settings-store";
 import { useProTabStore, type ProFolderTabData } from "@/stores/pro-tab-store";
+import { useTabLogin } from "@/components/pro/pro-tab-login";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneId } from "@/hooks/use-pane-context";
 import type { Email, Mailbox } from "@/lib/jmap/types";
@@ -54,6 +55,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   const tSidebar = useTranslations('sidebar');
   const tRemove = useTranslations('email_list.confirm_remove');
   const tNotifications = useTranslations('notifications');
+  const tRouting = useTranslations('account_routing');
   const { confirm, dialogProps } = useConfirmDialog();
 
   const activeClient = useAuthStore((s) => s.client);
@@ -67,26 +69,49 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   // Pane-scoped: in a phone-narrow pane there is no room for a reading pane.
   const { isMobile } = useDeviceDetection();
 
-  // The folder's login: the one the tab names, else the active one (a tab
-  // that names none follows the active login). The folder is listed, read
+  // The folder's login: the one the tab names. The folder is listed, read
   // and written through that login's client only, and a message of it is
   // read again, and a draft reopened from it saved over and removed, through
   // it: folder and message ids repeat across logins, so through another login
-  // the tab would show another account's folder. A login without a client
-  // shows nothing (see below); the lookup runs again whenever the connected
-  // logins change.
+  // the tab would show another account's folder. It never follows the active
+  // login. A tab that names none (kept from before tabs did) is the only
+  // login's, or nobody's (useTabLogin). No login, or a login without a
+  // client, shows nothing (see below); the lookup runs again whenever the
+  // connected logins change.
   useAuthStore((s) => s.connectedAccountsRevision);
-  const clientLogin = (data.accountId || activeAccountId) ?? undefined;
-  const client = data.accountId
-    ? getClientForAccount(data.accountId) ?? (data.accountId === activeAccountId ? activeClient : null)
-    : activeClient;
+  const clientLogin = useTabLogin(tabId, data.accountId);
+  // The client the login table holds for that login; for the active login
+  // the auth store's own while the table has none.
+  const client = clientLogin
+    ? getClientForAccount(clientLogin) ?? (clientLogin === activeAccountId ? activeClient : null)
+    : null;
+  // That login's folder list now: the store's own while it is the active
+  // login, else the list kept for it.
+  const loginFolders = useCallback((state: { mailboxes: Mailbox[]; accountMailboxes: Record<string, Mailbox[]> }): Mailbox[] => {
+    if (!clientLogin) return [];
+    return clientLogin === useAuthStore.getState().activeAccountId ? state.mailboxes : state.accountMailboxes[clientLogin] ?? [];
+  }, [clientLogin]);
+  // Whether `client` is still that login's client, for a write: the login
+  // table holds it, and for the active login the auth store agrees.
+  const loginHoldsClient = useCallback(() => {
+    if (!client || !clientLogin) return false;
+    const auth = useAuthStore.getState();
+    if (auth.getClientForAccount(clientLogin) !== client) return false;
+    return clientLogin !== auth.activeAccountId || auth.client === client;
+  }, [client, clientLogin]);
+  const refreshLoginFolders = useCallback(async () => {
+    if (!client || !clientLogin) return;
+    const store = useEmailStore.getState();
+    if (clientLogin === useAuthStore.getState().activeAccountId) await store.fetchMailboxes(client);
+    else await store.fetchAccountMailboxes(client, clientLogin);
+  }, [client, clientLogin]);
 
-  // The folder's metadata, resolved from whichever account's mailbox list it
-  // was dragged from. Shared folders are namespaced in the store, so JMAP
-  // calls need originalId + the owner accountId (mirrors fetchEmails).
+  // The folder's metadata, resolved from that login's mailbox list. Shared
+  // folders are namespaced in the store, so JMAP calls need originalId + the
+  // owner accountId (mirrors fetchEmails).
   const folderMailboxes = useMemo(
-    () => data.accountId ? accountMailboxes[data.accountId] ?? [] : activeMailboxes,
-    [data.accountId, accountMailboxes, activeMailboxes],
+    () => (clientLogin === activeAccountId ? activeMailboxes : (clientLogin ? accountMailboxes[clientLogin] : undefined) ?? []),
+    [clientLogin, activeAccountId, accountMailboxes, activeMailboxes],
   );
   const mailbox: Mailbox | undefined = folderMailboxes.find((m) => m.id === data.mailboxId);
   const jmapMailboxId = mailbox?.originalId || data.mailboxId;
@@ -112,7 +137,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     selected: null as RowReadIntent | null,
     // A context change starts a fresh scope even though its values are not stored here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [client, clientLogin, data.accountId, data.mailboxId, jmapMailboxId, jmapAccountId]);
+  }), [client, clientLogin, data.mailboxId, jmapMailboxId, jmapAccountId]);
 
   useEffect(() => {
     rowReads.active = true;
@@ -296,18 +321,11 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     const intent = rowReads.selected;
     if (!client || !mailbox || !intent || intent.email.id !== email.id || isFiling(email.id)) return;
     const accountId = jmapAccountId ?? client.getAccountId();
-    const readFolders = () => {
-      const state = useEmailStore.getState();
-      return (data.accountId ? state.accountMailboxes[data.accountId] ?? [] : state.mailboxes)
-        .filter((m) => m.accountId ? m.accountId === accountId : !m.isShared && accountId === client.getAccountId());
-    };
-    // A tab on another login doesn't depend on which login Mail shows.
-    const isCurrent = () => {
-      const auth = useAuthStore.getState();
-      return rowReads.active && rowReads.selected === intent
-        && (!clientLogin || auth.getClientForAccount(clientLogin) === client)
-        && (!!data.accountId || (auth.client === client && auth.activeAccountId === clientLogin));
-    };
+    const readFolders = () => loginFolders(useEmailStore.getState())
+      .filter((m) => m.accountId ? m.accountId === accountId : !m.isShared && accountId === client.getAccountId());
+    // The tab's own login still holds this client; which login Mail shows
+    // does not matter.
+    const isCurrent = () => rowReads.active && rowReads.selected === intent && loginHoldsClient();
     const eligible = () => {
       const source = readFolders().find((m) => m.id === mailbox.id);
       return !!source && useSettingsStore.getState().deleteAction !== 'permanent'
@@ -352,7 +370,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     } finally {
       rowReads.trashing.delete(email.id);
     }
-  }, [client, clientLogin, mailbox, jmapAccountId, rowReads, data.accountId, confirm, tRemove, tNotifications, t, isFiling, offerUndo, restorePoint]);
+  }, [client, clientLogin, mailbox, jmapAccountId, rowReads, loginFolders, loginHoldsClient, confirm, tRemove, tNotifications, t, isFiling, offerUndo, restorePoint]);
 
   // The folder owns these rows. The list-based moveToMailbox deliberately
   // refuses a message absent from the global list, and may name another
@@ -364,12 +382,8 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
       || isFiling(email.id) || !isArchiveActionEnabled()) return;
     const existing = findArchiveMailbox(folderMailboxes, mailbox.id, jmapAccountId);
     if (mailbox.myRights?.mayRemoveItems === false || existing?.myRights?.mayAddItems === false) return;
-    const isCurrent = () => rowReads.active && rowReads.selected === intent
-      && (!data.accountId || useAuthStore.getState().getClientForAccount(data.accountId) === client);
-    const readFolders = () => {
-      const state = useEmailStore.getState();
-      return data.accountId ? state.accountMailboxes[data.accountId] ?? [] : state.mailboxes;
-    };
+    const isCurrent = () => rowReads.active && rowReads.selected === intent && loginHoldsClient();
+    const readFolders = () => loginFolders(useEmailStore.getState());
     rowReads.archiving.add(email.id);
     try {
       if (!(await confirmMailRemoval('archive', 1, confirm, tRemove)) || !isCurrent()) return;
@@ -377,9 +391,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
       const archive = existing ?? await ensureArchiveMailbox({
         client, mailboxes: folderMailboxes, selectedMailboxId: mailbox.id, accountId: jmapAccountId,
         refresh: async () => {
-          const store = useEmailStore.getState();
-          if (data.accountId) await store.fetchAccountMailboxes(client, data.accountId);
-          else await store.fetchMailboxes(client);
+          await refreshLoginFolders();
           return readFolders();
         },
       });
@@ -405,8 +417,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
           parentId: m.parentId?.startsWith(`${m.accountId}:`) ? m.parentId.slice(m.accountId.length + 1) : m.parentId,
         } : m));
         await client.batchArchiveEmails([{ id: email.id, receivedAt: email.receivedAt }], archive.originalId || archive.id, mode, serverFolders, accountId);
-        const store = useEmailStore.getState();
-        void (data.accountId ? store.fetchAccountMailboxes(client, data.accountId) : store.fetchMailboxes(client));
+        void refreshLoginFolders();
       }
       completeListedArchive();
       if (isCurrent()) {
@@ -430,7 +441,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     } finally {
       rowReads.archiving.delete(email.id);
     }
-  }, [client, clientLogin, mailbox, folderMailboxes, jmapAccountId, rowReads, data.accountId, confirm, tRemove, t, isFiling, offerUndo, restorePoint]);
+  }, [client, clientLogin, mailbox, folderMailboxes, jmapAccountId, rowReads, loginFolders, loginHoldsClient, refreshLoginFolders, confirm, tRemove, t, isFiling, offerUndo, restorePoint]);
 
   // Only this login's folders in the message's owning JMAP account. The
   // reader's default mailbox list belongs to Mail, not necessarily this tab.
@@ -445,15 +456,9 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     const destination = moveMailboxes.find((m) => m.id === destinationId);
     if (!destination || destination.id === mailbox.id || !destination.myRights?.mayAddItems
       || mailbox.myRights?.mayRemoveItems === false) return;
-    const isCurrent = () => {
-      const auth = useAuthStore.getState();
-      return rowReads.active && rowReads.selected === intent
-        && (data.accountId ? auth.getClientForAccount(data.accountId) === client
-          : auth.client === client && auth.activeAccountId === clientLogin);
-    };
+    const isCurrent = () => rowReads.active && rowReads.selected === intent && loginHoldsClient();
     const canMove = () => {
-      const state = useEmailStore.getState();
-      const boxes = data.accountId ? state.accountMailboxes[data.accountId] ?? [] : state.mailboxes;
+      const boxes = loginFolders(useEmailStore.getState());
       return boxes.some((m) => m.id === mailbox.id && m.myRights?.mayRemoveItems !== false)
         && boxes.find((m) => m.id === destination.id)?.myRights?.mayAddItems === true;
     };
@@ -486,7 +491,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     } finally {
       rowReads.moving.delete(email.id);
     }
-  }, [client, clientLogin, mailbox, moveMailboxes, jmapAccountId, rowReads, data.accountId, t, isFiling, offerUndo, restorePoint]);
+  }, [client, clientLogin, mailbox, moveMailboxes, jmapAccountId, rowReads, loginFolders, loginHoldsClient, t, isFiling, offerUndo, restorePoint]);
 
   // In Archive the filing action brings the message back to the Inbox
   // (mail-p3-4), from the keyboard and the Message menu too.
@@ -496,11 +501,14 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     [archiveInbox, handleMoveEmail],
   );
 
-  // A login without a client shows nothing of its folder.
+  // A tab that belongs to no login, or to one without a client, shows
+  // nothing of its folder.
   if (!client) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-background p-6">
-        <p className="text-center text-sm text-muted-foreground">{tNotifications('not_connected')}</p>
+        <p className="text-center text-sm text-muted-foreground" data-tab-without-login={clientLogin ? undefined : ''}>
+          {clientLogin ? tNotifications('not_connected') : tRouting('tab_names_no_account')}
+        </p>
       </div>
     );
   }

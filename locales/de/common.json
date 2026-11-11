@@ -5856,7 +5856,8 @@
     "group_members_one_account": "Eine Gruppe kann nur Kontakte aus einem Konto enthalten.",
     "link_names_no_account": "Dieser Link gibt nicht an, in welchem Konto die Nachricht liegt, deshalb wurde er nicht geöffnet.",
     "group_member_gone": "Einer der gewählten Kontakte existiert nicht mehr. Wählen Sie die Mitglieder erneut aus.",
-    "invitation_other_account": "Diese Einladung liegt in einem anderen Konto. Wechseln Sie zu diesem Konto, um sie zu beantworten oder einem Kalender hinzuzufügen."
+    "invitation_other_account": "Diese Einladung liegt in einem anderen Konto. Wechseln Sie zu diesem Konto, um sie zu beantworten oder einem Kalender hinzuzufügen.",
+    "tab_names_no_account": "Dieser Tab wurde ohne sein Konto gespeichert, deshalb wurde er nicht geöffnet. Schließen Sie ihn und öffnen Sie ihn erneut aus dem Konto, zu dem er gehört."
   },
   "mail_import": {
     "menu_import": "E-Mails importieren…",

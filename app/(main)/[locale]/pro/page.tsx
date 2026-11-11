@@ -22,7 +22,8 @@ import { GlobalSearchPalette } from "@/components/global-search/global-search-pa
 import { SearchTabBody } from "@/components/global-search/search-tab-body";
 import { useGlobalSearchStore } from "@/stores/global-search-store";
 import { ProTabBar } from "@/components/pro/pro-tab-bar";
-import { droppedEmailTabs, emailTabPath, mailTabPath } from "@/components/pro/pro-tab-address";
+import { droppedEmailTabs, droppedFolderTab, emailTabPath, mailTabPath } from "@/components/pro/pro-tab-address";
+import { tabLogin } from "@/components/pro/pro-tab-login";
 import {
   PRO_TAB_DRAG_MIME,
   EMAIL_IDS_DRAG_MIME,
@@ -110,11 +111,11 @@ function openDroppedFolder(
   side: ProSplitSide | undefined,
 ) {
   const { setSplitSide, openFolderTab } = useProTabStore.getState();
+  // With its login named, the active one's too (droppedFolderTab).
+  const data = droppedFolderTab(payload);
+  if (!data) return;
   if (side) setSplitSide(side);
-  openFolderTab(
-    { accountId: payload.accountId, mailboxId: payload.mailboxId, title: payload.name },
-    { pane },
-  );
+  openFolderTab(data, { pane });
 }
 
 interface PaneProps {
@@ -309,9 +310,14 @@ export default function ProHome() {
       case 'folder': {
         const data = focusedActiveTab.folderData;
         if (!data) return null;
-        const list = data.accountId ? accountMailboxes[data.accountId] ?? [] : mailboxes;
+        // The folder's login: the store's own list while it is the active
+        // one, else the list kept for it. A tab that names none and has
+        // several logins to choose from has no address of its own.
+        const login = tabLogin(data.accountId);
+        if (!login) return appPath('/pro');
+        const list = login === activeAccountId ? mailboxes : accountMailboxes[login] ?? [];
         const path = appPath(buildMailPath({ mailboxId: data.mailboxId, emailId: null, threadId: null }, list));
-        return data.accountId ? `${path}?account=${encodeURIComponent(data.accountId)}` : path;
+        return `${path}?account=${encodeURIComponent(login)}`;
       }
       case 'compose':
       case 'search':

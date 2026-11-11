@@ -6125,7 +6125,8 @@
     "group_members_one_account": "Un grup només pot contenir contactes d'un sol compte.",
     "link_names_no_account": "Aquest enllaç no indica en quin compte és el missatge, així que no s'ha obert.",
     "group_member_gone": "Un dels contactes triats ja no existeix. Torna a triar els membres.",
-    "invitation_other_account": "Aquesta invitació és en un altre compte. Canvia a aquell compte per respondre-la o afegir-la a un calendari."
+    "invitation_other_account": "Aquesta invitació és en un altre compte. Canvia a aquell compte per respondre-la o afegir-la a un calendari.",
+    "tab_names_no_account": "Aquesta pestanya es va desar sense el seu compte, així que no s'ha obert. Tanca-la i torna-la a obrir des del compte al qual pertany."
   },
   "mail_import": {
     "menu_import": "Importa correu…",

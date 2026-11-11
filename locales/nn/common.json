@@ -6133,7 +6133,8 @@
     "group_members_one_account": "Ei gruppe kan berre innehalde kontaktar frå éin konto.",
     "link_names_no_account": "Denne lenkja seier ikkje kva konto meldinga ligg i, så ho vart ikkje opna.",
     "group_member_gone": "Ein av dei valde kontaktane finst ikkje lenger. Vel medlemmene på nytt.",
-    "invitation_other_account": "Denne invitasjonen ligg i ein annan konto. Byt til den kontoen for å svare på han eller leggje han til i ein kalender."
+    "invitation_other_account": "Denne invitasjonen ligg i ein annan konto. Byt til den kontoen for å svare på han eller leggje han til i ein kalender.",
+    "tab_names_no_account": "Denne fana vart lagra utan kontoen sin, så ho vart ikkje opna. Lukk ho og opne ho på nytt frå kontoen ho høyrer til."
   },
   "mail_import": {
     "menu_import": "Importer e-post …",

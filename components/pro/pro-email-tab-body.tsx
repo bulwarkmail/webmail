@@ -16,6 +16,7 @@ import { deliveryAddresses } from "@/lib/reply-identity";
 import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 import { useProTabStore, type ProComposeTabData, type ProEmailTabData, type ProReplyContext } from "@/stores/pro-tab-store";
+import { useTabLogin } from "@/components/pro/pro-tab-login";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { composeOptionsFor, runBeforeCompose, type ComposePrefill } from "@/lib/plugin-compose-gate";
 import type { Email, Mailbox } from "@/lib/jmap/types";
@@ -856,6 +857,7 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   const getClientForAccount = useAuthStore((s) => s.getClientForAccount);
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const tNotifications = useTranslations('notifications');
+  const tRouting = useTranslations('account_routing');
 
   const handleLoaded = useCallback((email: Email) => {
     if (email.subject) updateTabTitle(tabId, email.subject);
@@ -873,22 +875,25 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   }, [mailboxes, data.mailboxId]);
 
   // A message tab names its login: the one it was opened with (a list row,
-  // a search hit of another login, #847), else the active one (a tab that
-  // came without). Its message is read and written through that login only,
-  // in the account the tab names (the login's own when none), and never
-  // looked up by its id in the Mail tab's list.
+  // a search hit, a link, #847). Its message is read and written through
+  // that login only, in the account the tab names (the login's own when
+  // none), and never looked up by its id in the Mail tab's list. It never
+  // follows the active login. A tab that names none (kept from before tabs
+  // did) is the only login's, or nobody's (useTabLogin).
   useAuthStore((s) => s.connectedAccountsRevision);
   const activeClient = useAuthStore((s) => s.client);
-  const login = data.clientAccountId ?? activeAccountId ?? undefined;
+  const login = useTabLogin(tabId, data.clientAccountId);
   const loginClient = login
     ? getClientForAccount(login) ?? (login === activeAccountId ? activeClient : null)
     : null;
-  // That login without a client shows nothing: through any other login the
-  // same id is another message.
+  // No login, or that login without a client, shows nothing: through any
+  // other login the same id is another message.
   if (!login || !loginClient) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-background p-6">
-        <p className="text-sm text-muted-foreground text-center">{tNotifications('not_connected')}</p>
+        <p className="text-sm text-muted-foreground text-center" data-tab-without-login={login ? undefined : ''}>
+          {login ? tNotifications('not_connected') : tRouting('tab_names_no_account')}
+        </p>
       </div>
     );
   }

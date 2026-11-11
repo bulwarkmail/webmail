@@ -4,7 +4,8 @@ import { isFilterEmpty } from "@/lib/jmap/search-utils";
 import type { Email, Mailbox } from "@/lib/jmap/types";
 import { useAuthStore } from "@/stores/auth-store";
 import { emailLinkSource, resolveUnstampedEmailAccountId, useEmailStore } from "@/stores/email-store";
-import type { ProEmailTabData } from "@/stores/pro-tab-store";
+import type { ProEmailTabData, ProFolderTabData } from "@/stores/pro-tab-store";
+import { tabLogin } from "./pro-tab-login";
 
 // The Pro shell's address names a message by its id, its login and the JMAP
 // account it is in when that is not the login's own: ids repeat across
@@ -17,10 +18,25 @@ export function emailTabPath(data: ProEmailTabData): string {
     mailboxId: null,
     threadId: null,
     emailId: data.emailId,
-    loginId: data.clientAccountId ?? useAuthStore.getState().activeAccountId ?? null,
+    // The tab's login. A tab that names none and has several logins to
+    // choose from gets an address without one, which opens nothing.
+    loginId: tabLogin(data.clientAccountId) ?? null,
     // A tab without an account reads the login's own (ProEmailTabBody).
     ownerAccountId: data.accountId || null,
   });
+}
+
+/**
+ * The folder tab for a folder dragged from the sidebar onto the Pro shell.
+ * The sidebar names the login for another login's folder and none for the
+ * active one's: that is the login active at the drop, and the tab names it,
+ * so it stays that login's folder when another login becomes the active one.
+ * Null while no login is active.
+ */
+export function droppedFolderTab(payload: { mailboxId: string; name: string; accountId: string | null }): ProFolderTabData | null {
+  const login = payload.accountId ?? useAuthStore.getState().activeAccountId;
+  if (!login) return null;
+  return { accountId: login, mailboxId: payload.mailboxId, title: payload.name };
 }
 
 /** The address of the Mail tab: its folder, or the message open in it. */

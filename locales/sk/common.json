@@ -6125,7 +6125,8 @@
     "group_members_one_account": "Skupina môže obsahovať iba kontakty z jedného účtu.",
     "link_names_no_account": "Tento odkaz neuvádza, v ktorom účte je správa, preto sa neotvoril.",
     "group_member_gone": "Jeden z vybraných kontaktov už neexistuje. Vyberte členov znova.",
-    "invitation_other_account": "Táto pozvánka je v inom účte. Prepnite na ten účet, ak na ňu chcete odpovedať alebo ju pridať do kalendára."
+    "invitation_other_account": "Táto pozvánka je v inom účte. Prepnite na ten účet, ak na ňu chcete odpovedať alebo ju pridať do kalendára.",
+    "tab_names_no_account": "Táto karta bola uložená bez svojho účtu, preto sa neotvorila. Zatvorte ju a otvorte znova z účtu, ku ktorému patrí."
   },
   "mail_import": {
     "menu_import": "Importovať poštu…",
