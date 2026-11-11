@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { WebDAVClient, type WebDAVResource } from '@/lib/webdav/client';
+import { imageBlobUrl } from '@/lib/file-preview';
 
 interface UploadProgress {
   name: string;
@@ -328,7 +329,9 @@ export const useWebDAVStore = create<WebDAVState>((set, get) => ({
 
     const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
     const { blob } = await webdavClient.downloadFile(fullPath);
-    return URL.createObjectURL(blob);
+    // The type is whatever the server answers with: shown through imageBlobUrl
+    // like the Files app's own images.
+    return imageBlobUrl(blob);
   },
 
   getFileContent: async (name: string) => {
