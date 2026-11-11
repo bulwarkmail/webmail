@@ -100,9 +100,13 @@ const pillClass = (active: boolean) => cn(
  * Installs one version of an extension. A version the publisher withdrew,
  * or one older than the installed version, comes back as 409; the admin is
  * asked (in the page's ConfirmDialog), and the install is repeated with
- * `force` if they insist. An update that asks for more permissions comes back
- * the same way, and is repeated with the ones the admin saw. "Update all" goes
- * through here too, so it asks about each. Returns the error text to show, or null.
+ * `force` if they insist. A version that asks for more than the admin saw
+ * (more permissions than the installed version, or on a first install than
+ * the directory's listing) comes back the same way, and is repeated with the
+ * ones the admin was then shown. `shown`: what the calling page already
+ * showed for a first install, sent as accepted from the start. "Update all"
+ * goes through here too, so it asks about each. Returns the error text to
+ * show, or null.
  */
 export interface InstallQuestion {
   title: string;
@@ -114,9 +118,11 @@ export interface InstallQuestion {
 export async function installVersion(
   body: { slug: string; version: string; type: 'plugin' | 'theme' },
   confirm: (question: InstallQuestion) => boolean | Promise<boolean>,
+  opts: { shown?: { permissions: readonly string[] } } = {},
 ): Promise<{ ok: true; warnings: string[]; signature: string | null; updated: boolean } | { ok: false; error: string }> {
   let force = false;
-  let acceptPermissions: string[] | undefined;
+  let acceptPermissions: string[] | undefined = opts.shown ? [...opts.shown.permissions] : undefined;
+  let askedPermissions = false;
   const send = () => apiFetch('/api/admin/marketplace', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -127,13 +133,28 @@ export async function installVersion(
     // At most one of each question: withdrawn or older, then permissions.
     for (let asked = 0; res.status === 409 && asked < 3; asked += 1) {
       const data = await res.json().catch(() => ({}));
-      if (Array.isArray(data.permissionsAdded) && !acceptPermissions) {
-        const names = (data.permissionsAdded as string[]).join(', ');
-        const message = `${body.slug} ${body.version} asks for new permissions that the installed version doesn't have: ${names}.`;
-        if (!(await confirm({ title: 'Allow the new permissions?', message, confirmText: 'Update', cancelText: 'Cancel' }))) {
+      if (Array.isArray(data.permissionsAdded) && !askedPermissions) {
+        askedPermissions = true;
+        const added = data.permissionsAdded as string[];
+        // What the calling page already showed is not asked about again.
+        const fresh = added.filter((p) => !acceptPermissions?.includes(p));
+        const names = (fresh.length > 0 ? fresh : added).join(', ');
+        const firstInstall = data.compared === 'listing';
+        const question = firstInstall
+          ? {
+              title: 'Allow what the listing did not show?',
+              message: `${body.slug} ${body.version} asks for permissions that the directory's listing did not show: ${names}.`,
+              confirmText: 'Install',
+            }
+          : {
+              title: 'Allow the new permissions?',
+              message: `${body.slug} ${body.version} asks for new permissions that the installed version doesn't have: ${names}.`,
+              confirmText: 'Update',
+            };
+        if (!(await confirm({ ...question, cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        acceptPermissions = data.permissionsAdded;
+        acceptPermissions = [...new Set([...(acceptPermissions ?? []), ...added])];
       } else if (data.yanked && !force) {
         if (!(await confirm({ title: 'Install it anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };

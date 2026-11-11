@@ -48,7 +48,8 @@ async function bundle(manifest: Record<string, unknown>, code = 'module.exports 
 /**
  * A directory that lists one version (1.0.0 unless `meta` says otherwise) and
  * serves `bytes` for it. The route asks about the version first, then
- * downloads the bundle; both answers come from here, routed by URL.
+ * downloads the bundle; both answers come from here, routed by URL. The
+ * listing names MANIFEST's permissions unless `meta` says otherwise.
  */
 function directory(bytes: ArrayBuffer | Uint8Array, meta: Record<string, unknown> = {}, opts: { missing?: boolean } = {}) {
   const sha256 = createHash('sha256').update(new Uint8Array(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes))).digest('hex');
@@ -58,7 +59,7 @@ function directory(bytes: ArrayBuffer | Uint8Array, meta: Record<string, unknown
     calls.push(u);
     if (u.includes('/api/v2/extensions/') && u.includes('/versions/') && !u.endsWith('/bundle')) {
       if (opts.missing) return Response.json({ error: { message: 'Version not found', code: 'not_found' } }, { status: 404 });
-      return Response.json({ data: { version: '1.0.0', channel: 'stable', publishedAt: null, minAppVersion: null, maxAppVersion: null, permissions: [], size: 0, sha256, yanked: null, downloadUrl: '', ...meta } });
+      return Response.json({ data: { version: '1.0.0', channel: 'stable', publishedAt: null, minAppVersion: null, maxAppVersion: null, permissions: ['email:read'], size: 0, sha256, yanked: null, downloadUrl: '', ...meta } });
     }
     return new Response(bytes instanceof Uint8Array ? (bytes.slice().buffer as ArrayBuffer) : bytes);
   }));
@@ -252,12 +253,12 @@ describe('an update that asks for more than the installed version', () => {
     expect(registry.get('pretty-dates')!.permissions).toEqual(['email:read', 'email:send', 'email:raw-send']);
   });
 
-  it('asks nothing when nothing is added, or on a first install', async () => {
+  it('asks nothing when nothing is added, or on a first install whose listing names what the bundle grants', async () => {
     registry.set('pretty-dates', { ...INSTALLED });
     directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }));
     expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
     registry.clear();
-    directory(await bundle({ ...MANIFEST, id: 'pretty-dates', permissions: ['email:read', 'email:send'] }));
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates', permissions: ['email:read', 'email:send'] }), { permissions: ['email:read', 'email:send'] });
     expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
   });
 });

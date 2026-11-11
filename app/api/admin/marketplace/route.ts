@@ -42,7 +42,8 @@ import {
   type DirectorySummary,
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
-import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE, IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
+import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
+import { acceptedGrants, anyGrants, grantsAdded, grantsOf, notAccepted } from '@/lib/admin/extension-grants';
 import { createHash } from 'node:crypto';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/admin/marketplace - Install one version of an extension
- * Body: { slug: string, version: string, type: 'plugin' | 'theme', force?: boolean }
+ * Body: { slug: string, version: string, type: 'plugin' | 'theme', force?: boolean, acceptPermissions?: string[] }
  *
  * The version is looked up on the directory first. A version the publisher
  * withdrew ("yanked") is refused with 409 unless `force` is set - the admin
@@ -106,6 +107,11 @@ export async function GET(request: NextRequest) {
  * signature checked, and it is installed under the directory slug, keeping
  * the enabled and forced flags of whatever was installed before. The replaced
  * version stays on disk for a rollback (lib/admin/extension-history.ts).
+ *
+ * A plugin bundle that grants more than the admin was shown (the listing on
+ * a first install, the installed version on an update) is refused with 409
+ * and `permissionsAdded` until `acceptPermissions` covers it
+ * (lib/admin/extension-grants.ts).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -340,19 +346,24 @@ export async function POST(request: NextRequest) {
     const existingPlugin = await getPlugin(slug);
     const isUpdate = existingPlugin !== null;
 
-    // An update must not widen what a plugin may do with nobody seeing it. `force` is for
-    // withdrawn and older versions, and says nothing about this.
-    const implicit = new Set<string>(IMPLICIT_PERMISSIONS);
-    const permissionsAdded = isUpdate
-      ? manifest.permissions.filter((p) => !existingPlugin.permissions?.includes(p) && !implicit.has(p))
-      : [];
-    const accepted = Array.isArray(acceptPermissions) ? acceptPermissions : [];
-    if (permissionsAdded.some((p) => !accepted.includes(p))) {
+    // Nothing is granted that nobody saw. What the admin saw is the installed version for an
+    // update, and the directory's listing for a first install: the quick-install dialog shows
+    // that list, and the bundle (optional permissions included) can ask for more. `force` is
+    // for withdrawn and older versions, and says nothing about this.
+    const seen = isUpdate ? grantsOf(existingPlugin) : grantsOf({ permissions: meta.permissions });
+    const added = grantsAdded(seen, grantsOf(manifest));
+    if (anyGrants(notAccepted(added, acceptedGrants({ acceptPermissions })))) {
+      const what = isUpdate ? 'new permissions' : 'permissions the directory did not list';
       return NextResponse.json(
-        { error: `Version ${version} asks for new permissions: ${permissionsAdded.join(', ')}.`, permissionsAdded },
+        {
+          error: `Version ${version} asks for ${what}: ${added.permissions.join(', ')}.`,
+          permissionsAdded: added.permissions,
+          compared: isUpdate ? 'installed' : 'listing',
+        },
         { status: 409 },
       );
     }
+    const permissionsAdded = added.permissions;
 
     const plugin: ServerPlugin = {
       id: slug,

@@ -60,6 +60,39 @@ describe('installVersion', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('on a first install, says the listing left them out', async () => {
+    responses = [json({ error: 'unlisted', permissionsAdded: ['email:read'], compared: 'listing' }, 409), json({ warnings: [] })];
+    const asked: string[] = [];
+    const result = await installVersion(BODY, (q) => { asked.push(`${q.title} ${q.message} ${q.confirmText}`); return true; });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toContain("listing did not show: email:read");
+    expect(asked[0]).toContain('Install');
+    expect(calls.map((c) => c.body.acceptPermissions)).toEqual([undefined, ['email:read']]);
+    expect(result.ok).toBe(true);
+  });
+
+  it('sends what the page already showed, and asks only about the rest', async () => {
+    responses = [json({ error: 'unlisted', permissionsAdded: ['email:read', 'email:send'], compared: 'listing' }, 409), json({ warnings: [] })];
+    const asked: string[] = [];
+    const result = await installVersion(BODY, (q) => { asked.push(q.message); return true; }, { shown: { permissions: ['email:read'] } });
+    expect(calls[0].body.acceptPermissions).toEqual(['email:read']);
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toContain('email:send');
+    expect(asked[0]).not.toContain('email:read');
+    expect(calls.at(-1)!.body.acceptPermissions).toEqual(['email:read', 'email:send']);
+    expect(result.ok).toBe(true);
+  });
+
+  it('asks only once about permissions, and shows a second refusal as an error', async () => {
+    responses = [
+      json({ error: 'adds', permissionsAdded: ['keystore'] }, 409),
+      json({ error: 'adds more', permissionsAdded: ['keystore', 'email:send'] }, 409),
+    ];
+    const result = await installVersion(BODY, () => true);
+    expect(result).toEqual({ ok: false, error: 'adds more' });
+    expect(calls).toHaveLength(2);
+  });
+
   it('does not update past new permissions the admin declined', async () => {
     responses = [json({ error: 'adds', permissionsAdded: ['keystore'] }, 409)];
     expect(await installVersion(BODY, () => false)).toEqual({ ok: false, error: 'Not installed.' });
