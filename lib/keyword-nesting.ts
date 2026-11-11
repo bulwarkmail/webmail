@@ -34,6 +34,26 @@ export const MAX_KEYWORD_LENGTH = 128;
 /** What is left for the id once the `$label:` prefix is spent. */
 export const MAX_KEYWORD_ID_LENGTH = MAX_KEYWORD_LENGTH - KEYWORD_PREFIX.length;
 
+/** Longest tag name a plugin or an admin default may set. */
+export const MAX_KEYWORD_LABEL_LENGTH = 255;
+
+/** RFC 8621 keyword syntax, applied to the complete `$label:<id>` value. */
+export function isValidKeywordDefinitionId(id: string): boolean {
+  const keyword = KEYWORD_PREFIX + id;
+  if (id.length === 0 || keyword.length > MAX_KEYWORD_LENGTH) return false;
+  for (let i = 0; i < keyword.length; i++) {
+    const code = keyword.charCodeAt(i);
+    if (
+      code < 0x21 || code > 0x7e ||
+      code === 0x28 || code === 0x29 || code === 0x7b || code === 0x7d ||
+      code === 0x5d || code === 0x25 || code === 0x2a || code === 0x22 || code === 0x5c
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /** A tag definition placed in the hierarchy its id describes. */
 export interface KeywordNode extends KeywordDefinition {
   children: KeywordNode[];

@@ -1798,6 +1798,7 @@
       "title": "E-pasta tagi",
       "description": "Izveidojiet tagus, lai kārtotu vēstules. Tagi tiek saglabāti kopā ar vēstulēm serverī.",
       "add_keyword": "Pievienot tagu",
+      "empty": "Tagu vēl nav.",
       "label_field": "Redzamais nosaukums",
       "label_placeholder": "piem., Darbs, Personīgi, Steidzami",
       "id_field": "Taga identifikators",

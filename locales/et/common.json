@@ -1801,6 +1801,7 @@
       "title": "E-kirjade sildid",
       "description": "Loo sildid, et kirju sorteerida. Sildid salvestatakse koos kirjadega serveris.",
       "add_keyword": "Lisa silt",
+      "empty": "Silte veel pole.",
       "label_field": "Kuvatav nimi",
       "label_placeholder": "nt Töö, Isiklik, Kiireloomuline",
       "id_field": "Sildi ID",

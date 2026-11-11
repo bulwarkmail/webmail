@@ -1798,6 +1798,7 @@
       "title": "メールラベル",
       "description": "ラベルを作ってメッセージを整理します。ラベルはメッセージと一緒にサーバーに保存されます。",
       "add_keyword": "ラベルを追加",
+      "empty": "ラベルはまだありません。",
       "label_field": "表示名",
       "label_placeholder": "例：仕事、個人、緊急",
       "id_field": "ラベルID",

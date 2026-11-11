@@ -1813,6 +1813,7 @@
       "title": "Nhãn thư",
       "description": "Tạo thẻ để sắp xếp thư. Các thẻ được lưu cùng thư trên máy chủ.",
       "add_keyword": "Nhãn mới",
+      "empty": "Chưa có nhãn nào.",
       "label_field": "Tên hiển thị",
       "label_placeholder": "Ví dụ: Công việc, Cá nhân, Khẩn cấp",
       "id_field": "Mã nhãn",

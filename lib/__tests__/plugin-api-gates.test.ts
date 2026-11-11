@@ -161,6 +161,27 @@ describe('native keyword extension API', () => {
       .toMatch(/lacks permission "settings:write"/);
   });
 
+  it.each([
+    ['keywords.add', [[{ id: 'fairs', label: 'Fairs', color: 'blue' }]]],
+    ['keywords.update', [[{ id: 'mine', label: 'Mine too' }]]],
+    ['keywords.remove', [['mine']]],
+    ['keywords.reorder', [['work', 'mine']]],
+  ])('makes the tag list the user\'s own with %s, so no admin default wipes it (#1612)', async (method, args) => {
+    useSettingsStore.setState({
+      emailKeywords: [
+        { id: 'mine', label: 'Mine', color: 'green', addedBy: 'p1' },
+        { id: 'work', label: 'Work', color: 'blue' },
+      ],
+      explicitSettings: ['density'],
+    });
+    const writer = plugin({ permissions: ['settings:write'], grantedPermissions: ['settings:write'] });
+
+    await dispatchApiCall(writer, method, args);
+
+    expect(useSettingsStore.getState().explicitSettings).toEqual(['density', 'emailKeywords']);
+    useSettingsStore.setState({ explicitSettings: [] });
+  });
+
   it('records the plugin that added a definition, whatever the input says', async () => {
     useSettingsStore.setState({ emailKeywords: [] });
     const writer = plugin({ permissions: ['settings:write'], grantedPermissions: ['settings:write'] });

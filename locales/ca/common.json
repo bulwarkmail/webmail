@@ -1801,6 +1801,7 @@
       "title": "Etiquetes de correu",
       "description": "Creeu etiquetes per ordenar els missatges. Les etiquetes es desen amb els missatges al servidor.",
       "add_keyword": "Afegeix una etiqueta",
+      "empty": "Encara no hi ha cap etiqueta.",
       "label_field": "Nom mostrat",
       "label_placeholder": "p. ex. Feina, Personal, Urgent",
       "id_field": "ID de l'etiqueta",

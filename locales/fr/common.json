@@ -1798,6 +1798,7 @@
       "title": "Étiquettes de messagerie",
       "description": "Créez des étiquettes pour trier vos messages. Les étiquettes sont enregistrées avec vos messages sur le serveur.",
       "add_keyword": "Ajouter une étiquette",
+      "empty": "Aucune étiquette pour le moment.",
       "label_field": "Nom d'affichage",
       "label_placeholder": "ex. Travail, Personnel, Urgent",
       "id_field": "ID d'étiquette",

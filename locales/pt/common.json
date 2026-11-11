@@ -1798,6 +1798,7 @@
       "title": "Etiquetas de e-mail",
       "description": "Crie etiquetas para organizar as suas mensagens. As etiquetas são guardadas com as mensagens no servidor.",
       "add_keyword": "Adicionar etiqueta",
+      "empty": "Ainda não há etiquetas.",
       "label_field": "Nome de exibição",
       "label_placeholder": "ex. Trabalho, Pessoal, Urgente",
       "id_field": "ID da etiqueta",

@@ -1798,6 +1798,7 @@
       "title": "E-maillabels",
       "description": "Maak labels om uw berichten te ordenen. De labels worden met uw berichten op de server opgeslagen.",
       "add_keyword": "Label toevoegen",
+      "empty": "Nog geen labels.",
       "label_field": "Weergavenaam",
       "label_placeholder": "bijv. Werk, Persoonlijk, Urgent",
       "id_field": "Label-ID",

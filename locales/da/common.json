@@ -1801,6 +1801,7 @@
       "title": "E-mail-tags",
       "description": "Lav tags til at sortere dine beskeder. Taggene gemmes sammen med beskederne på serveren.",
       "add_keyword": "Tilføj tag",
+      "empty": "Ingen tags endnu.",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. Arbejde, Privat, Vigtigt",
       "id_field": "Tag-ID",

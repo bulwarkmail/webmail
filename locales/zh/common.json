@@ -1798,6 +1798,7 @@
       "title": "电子邮件标签",
       "description": "创建标签来整理邮件。标签与邮件一起保存在服务器上。",
       "add_keyword": "添加标签",
+      "empty": "暂无标签。",
       "label_field": "显示名称",
       "label_placeholder": "例如工作、个人、紧急",
       "id_field": "标签ID",

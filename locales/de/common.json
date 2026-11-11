@@ -1798,6 +1798,7 @@
       "title": "E-Mail-Labels",
       "description": "Erstellen Sie Labels, um Ihre E-Mails zu ordnen. Die Labels werden mit Ihren E-Mails auf dem Server gespeichert.",
       "add_keyword": "Label hinzufügen",
+      "empty": "Noch keine Labels.",
       "label_field": "Anzeigename",
       "label_placeholder": "z.B. Arbeit, Privat, Dringend",
       "id_field": "Label-ID",
