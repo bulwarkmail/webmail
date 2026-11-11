@@ -5,7 +5,8 @@ import { Loader2, Sparkles } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
-import { DEFAULT_OAUTH_SCOPES, STALWART_SCOPE_FULL } from '@/lib/oauth/scopes';
+import { DEFAULT_OAUTH_SCOPES } from '@/lib/oauth/scopes';
+import { oauthSetupSuccessMessage } from '@/lib/admin/oauth-setup-message';
 import { isStalwartApiKey } from '@/lib/stalwart/api-key';
 import { SettingsSection, SettingItem, SectionNav } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
@@ -180,19 +181,7 @@ export function AuthPage() {
       const data = await res.json();
       if (data.needsAdminCredential) setSetupNeedsCredential(true);
       if (res.ok) {
-        const mobile = data.mobileClient === 'created' || data.mobileClient === 'updated'
-          ? ` Bulwark Mobile client ${data.mobileClient} (${data.mobileClientId}, ${data.mobileRedirectUri}).`
-          : data.mobileClient === 'failed'
-            ? ` Stalwart refused the Bulwark Mobile client (${data.mobileClientId}); the app registers its own instead, without access to account settings.`
-            : '';
-        const scopes: string[] = Array.isArray(data.stalwartScopes) ? data.stalwartScopes : [];
-        const limited = scopes.length > 0 && !scopes.includes(STALWART_SCOPE_FULL)
-          ? ' Only a Stalwart superuser can allow full access, so the client got security and settings access; the admin panel stays out of reach through SSO.'
-          : '';
-        setMessage({
-          type: 'success',
-          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}${limited}`,
-        });
+        setMessage({ type: 'success', text: oauthSetupSuccessMessage(data) });
         setEdits({});
         closeSetupDialog();
         await fetchConfig();
