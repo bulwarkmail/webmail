@@ -2957,9 +2957,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // on its own server, and an unknown id makes the server fall back to the
     // active account's primary identity - which then signs the message with
     // the wrong DKIM key (#461). The draft was saved against the same account.
-    const sendClient = data.localAccountId
-      ? (useAuthStore.getState().getClientForAccount(data.localAccountId) ?? client)
-      : client;
+    const sendClient = data.localAccountId ? loginClientOf(data.localAccountId) : client;
+    // That login has no client: nothing leaves through another login, which
+    // would send it as its own user. The composer keeps the message.
+    if (!sendClient) {
+      toast.error(t('notifications.error_sending'), t('notifications.not_connected'));
+      return false;
+    }
 
     // Separates "the submission failed" from "a follow-up step failed". Only the
     // former may propagate: the composer treats a resolved onSend as a delivered

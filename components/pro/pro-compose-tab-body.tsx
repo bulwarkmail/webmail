@@ -67,9 +67,16 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     // valid on its own server, and submitting on the active account's session
     // makes the server sign with the wrong DKIM key (#461). The draft was
     // already saved against the same account by the composer.
+    const auth = useAuthStore.getState();
     const sendClient = sendData.localAccountId
-      ? (useAuthStore.getState().getClientForAccount(sendData.localAccountId) ?? client)
+      ? auth.getClientForAccount(sendData.localAccountId) ?? (sendData.localAccountId === auth.activeAccountId ? client : undefined)
       : client;
+    // That login has no client: nothing leaves through another login, which
+    // would send it as its own user. The composer keeps the message.
+    if (!sendClient) {
+      toast.error(t('notifications.error_sending'), t('notifications.not_connected'));
+      return false;
+    }
     // See the inline composer's handleEmailSend: a resolved onSend tells the
     // composer the message is gone and it clears itself, so a genuine send
     // failure has to propagate rather than be logged away (#702).
