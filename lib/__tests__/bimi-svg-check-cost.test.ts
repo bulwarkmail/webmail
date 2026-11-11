@@ -1,9 +1,12 @@
 // checkSvg runs on the server's own thread for every sender logo it fetches, before anything is
-// cached. Its cost must grow in step with the logo's size. The test compares an input with one four
+// cached, and splitPem for every mark certificate. Their cost must grow in step with the input's size. The test compares an input with one four
 // times as large: linear work takes about 4 times as long, quadratic work about 16 times. It asserts
 // on that factor only, never on milliseconds.
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { checkSvg, MAX_SELF_ASSERTED_BYTES } from '@/lib/bimi/svg';
+import { splitPem } from '@/lib/bimi/certificate';
 
 /** Best of three runs, in ms. */
 function best(run: () => void): number {
@@ -58,5 +61,24 @@ describe('checkSvg on a self-published logo up to the size limit', () => {
   it('still accepts an ordinary Tiny PS logo', () => {
     const logo = '<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 100 100"><title>Brand</title><rect width="100" height="100" fill="#06c"/></svg>';
     expect(checkSvg(logo, { strictProfile: true })).toBeNull();
+  });
+});
+
+describe('splitPem on a mark certificate bundle up to the size limit', () => {
+  // What the lookup reads from an evidence address at most (MAX_PEM_BYTES in lookup.ts).
+  const cap = 128 * 1024;
+  const BEGIN = '-----BEGIN CERTIFICATE-----\n';
+
+  it('costs in step with the size: many BEGIN lines with no END', () => {
+    const make = (n: number) => BEGIN.repeat(Math.floor(n / BEGIN.length));
+    expect(Buffer.byteLength(make(cap))).toBeLessThanOrEqual(cap);
+    const factor = growthFactor((n) => { splitPem(make(n)); }, 2000, cap);
+    expect(factor).toBeLessThan(8);
+  });
+
+  // Control: a bundle still splits into its certificates.
+  it('still reads every certificate of a bundle', () => {
+    const fixture = (name: string) => readFileSync(path.join(__dirname, 'fixtures', 'bimi', `${name}.pem`), 'utf8');
+    expect(splitPem(`${fixture('leaf')}\n${fixture('intermediate')}`)).toHaveLength(2);
   });
 });
