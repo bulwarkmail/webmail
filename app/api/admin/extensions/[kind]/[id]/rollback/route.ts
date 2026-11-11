@@ -30,9 +30,10 @@ import {
  * manifest-derived fields go back to what that version had.
  *
  * A kept version that may do more than the installed one (permissions,
- * hosts, POST paths, frame origins, credential servers, the privileged tier,
- * a theme's skin) is refused with 409 and `grantsAdded` until the request
- * accepts it, the same question an update asks (lib/admin/extension-grants.ts).
+ * hosts, POST paths, frame origins, credential servers, which stored secret
+ * a credential sends where, the privileged tier, a theme's skin) is refused
+ * with 409 and `grantsAdded` until the request accepts it, the same question
+ * an update asks (lib/admin/extension-grants.ts).
  */
 export async function POST(
   request: NextRequest,

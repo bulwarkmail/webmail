@@ -120,7 +120,8 @@ export async function GET(request: NextRequest) {
  * A plugin bundle that grants more than the admin was shown (the listing on
  * a first install, the installed version on an update) is refused with 409,
  * `permissionsAdded` and `grantsAdded` (permissions, hosts, POST paths, frame
- * origins, credential servers, the privileged tier) until `acceptPermissions`
+ * origins, credential servers and on an update which stored secret a
+ * credential sends where, the privileged tier) until `acceptPermissions`
  * and `acceptGrants` cover it (lib/admin/extension-grants.ts). A theme with a
  * skin is asked about the same way, on a first install and on an update when
  * the installed version had none. Whether the directory had withdrawn the
@@ -388,10 +389,14 @@ export async function POST(request: NextRequest) {
     // update, and the directory's listing for a first install: the quick-install dialog shows
     // that list, and the bundle (optional permissions included) can ask for more. The
     // listing names no hosts, paths, frame origins, credential servers or tier, so on a
-    // first install all of those are asked about. `force` is for withdrawn and older
-    // versions, and says nothing about this.
-    const seen = isUpdate ? grantsOf(existingPlugin) : grantsOf({ permissions: meta.permissions });
-    const added = grantsAdded(seen, grantsOf(manifest));
+    // first install all of those are asked about. Which stored secret each credential sends
+    // where is compared on an update only: before a first install nothing is stored. `force`
+    // is for withdrawn and older versions, and says nothing about this.
+    const granted = grantsOf(manifest);
+    const seen = isUpdate
+      ? grantsOf(existingPlugin)
+      : { ...grantsOf({ permissions: meta.permissions }), credentials: granted.credentials };
+    const added = grantsAdded(seen, granted);
     if (anyGrants(notAccepted(added, acceptedGrants({ acceptPermissions, acceptGrants })))) {
       const parts = [
         ...(added.permissions.length > 0

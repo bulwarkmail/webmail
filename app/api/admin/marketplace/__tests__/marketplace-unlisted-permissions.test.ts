@@ -234,7 +234,7 @@ describe('an update that widens reach without a new permission is asked about to
     const { grantsAdded: added, error } = await refused.json();
     expect(added).toEqual({
       permissions: [], httpOrigins: ['https://collector.example'], apiPostPaths: ['/api/devices'],
-      frameOrigins: ['https://frames.example'], credentialOrigins: [], privileged: true, skin: false,
+      frameOrigins: ['https://frames.example'], credentialOrigins: [], credentials: [], privileged: true, skin: false,
     });
     expect(error).toMatch(/May now contact https:\/\/collector\.example/);
     expect(error).toMatch(/Runs with full access to the app/);

@@ -11,9 +11,10 @@
  *
  * A grant is more than the permission list: the hosts a plugin may contact,
  * the app's own routes it may post to, the origins it may embed (they go into
- * the CSP of every page), the servers its credentials are sent to, and the
- * privileged tier, which runs it on the app's own origin. For a theme it is
- * its skin, which restyles every part of the app.
+ * the CSP of every page), the servers its credentials are sent to and which
+ * stored secret goes to which of them, and the privileged tier, which runs it
+ * on the app's own origin. For a theme it is its skin, which restyles every
+ * part of the app.
  *
  * No server imports: the admin pages read and describe the same shapes.
  */
@@ -31,6 +32,12 @@ export interface Grants {
   frameOrigins: string[];
   /** Servers its credentials go to, where the manifest names them. */
   credentialOrigins: string[];
+  /**
+   * What each credential sends where, one line per credential: which stored
+   * secret (and user name) goes to which server, or to the server in which
+   * stored setting. Any change in a line is a new line.
+   */
+  credentials: string[];
   /** The privileged tier: a frame on the app's own origin. */
   privileged: boolean;
   /** A theme's skin.css, which may style any part of the app. */
@@ -82,6 +89,35 @@ function credentialOriginsOf(credentials: unknown, configSchema: unknown): strin
   return [...out];
 }
 
+/**
+ * One line per credential with every field that decides which stored value
+ * goes to which server (lib/plugin-secrets/proxy.ts, resolveCredential): the
+ * scope, the setting holding the secret, the one holding the user name when
+ * it is sent (basic auth), and the server, fixed or read from a setting. Its
+ * label and how the secret is put into the request (a header name) are left
+ * out: they move nothing.
+ */
+function credentialBindings(credentials: unknown): string[] {
+  if (!credentials || typeof credentials !== 'object' || Array.isArray(credentials)) return [];
+  const out = new Set<string>();
+  for (const [id, spec] of Object.entries(credentials as Record<string, unknown>)) {
+    if (!spec || typeof spec !== 'object') continue;
+    const s = spec as { scope?: unknown; secretKey?: unknown; usernameKey?: unknown; origin?: unknown; originKey?: unknown; inject?: { type?: unknown } };
+    if (s.scope === 'user') {
+      out.add(`${id}: the user's own account, sent to ${urlOrigin(s.origin) ?? 'the server the user enters'}`);
+      continue;
+    }
+    const inject = s.inject && typeof s.inject === 'object' ? s.inject.type : undefined;
+    const what = inject === 'none'
+      ? 'no secret'
+      : `the secret in setting "${String(s.secretKey)}"`
+        + (inject === 'basic' && typeof s.usernameKey === 'string' ? ` with the user name in setting "${s.usernameKey}"` : '');
+    const where = urlOrigin(s.origin) ?? (typeof s.originKey === 'string' ? `the server in setting "${s.originKey}"` : 'no server');
+    out.add(`${id}: ${what}, sent to ${where}`);
+  }
+  return [...out];
+}
+
 /** The grants of a validated manifest or a registry entry. */
 export function grantsOf(entry: GrantSource | null | undefined): Grants {
   return {
@@ -90,6 +126,7 @@ export function grantsOf(entry: GrantSource | null | undefined): Grants {
     apiPostPaths: strings(entry?.apiPostPaths),
     frameOrigins: strings(entry?.frameOrigins),
     credentialOrigins: credentialOriginsOf(entry?.credentials, entry?.configSchema),
+    credentials: credentialBindings(entry?.credentials),
     privileged: entry?.tier === 'privileged',
     skin: entry?.hasSkin === true,
   };
@@ -134,6 +171,7 @@ export function grantsAdded(before: Partial<Grants>, after: Partial<Grants>): Gr
     apiPostPaths: strings(after.apiPostPaths).filter((p) => !pathCovered(p, strings(before.apiPostPaths))),
     frameOrigins: origins(after.frameOrigins, before.frameOrigins),
     credentialOrigins: origins(after.credentialOrigins, before.credentialOrigins),
+    credentials: strings(after.credentials).filter((c) => !strings(before.credentials).includes(c)),
     privileged: after.privileged === true && before.privileged !== true,
     skin: after.skin === true && before.skin !== true,
   };
@@ -141,7 +179,8 @@ export function grantsAdded(before: Partial<Grants>, after: Partial<Grants>): Gr
 
 export function anyGrants(grants: Grants): boolean {
   return grants.privileged || grants.skin
-    || [grants.permissions, grants.httpOrigins, grants.apiPostPaths, grants.frameOrigins, grants.credentialOrigins].some((l) => l.length > 0);
+    || [grants.permissions, grants.httpOrigins, grants.apiPostPaths, grants.frameOrigins, grants.credentialOrigins, grants.credentials]
+      .some((l) => l.length > 0);
 }
 
 /** Both together: what someone saw in two places. */
@@ -153,6 +192,7 @@ export function mergeGrants(a: Partial<Grants>, b: Partial<Grants>): Grants {
     apiPostPaths: both(a.apiPostPaths, b.apiPostPaths),
     frameOrigins: both(a.frameOrigins, b.frameOrigins),
     credentialOrigins: both(a.credentialOrigins, b.credentialOrigins),
+    credentials: both(a.credentials, b.credentials),
     privileged: a.privileged === true || b.privileged === true,
     skin: a.skin === true || b.skin === true,
   };
@@ -178,6 +218,7 @@ export function acceptedGrants(body: { acceptPermissions?: unknown; acceptGrants
     apiPostPaths: strings(rest.apiPostPaths),
     frameOrigins: strings(rest.frameOrigins),
     credentialOrigins: strings(rest.credentialOrigins),
+    credentials: strings(rest.credentials),
     privileged: rest.privileged === true,
     skin: rest.skin === true,
   };
@@ -200,6 +241,7 @@ export function describeReachAdded(added: Grants, firstInstall = false): string[
   if (added.apiPostPaths.length > 0) lines.push(`May${now} post to ${added.apiPostPaths.join(', ')} with the user's login.`);
   if (added.frameOrigins.length > 0) lines.push(`May${now} embed ${added.frameOrigins.join(', ')}.`);
   if (added.credentialOrigins.length > 0) lines.push(`May${now} send its credentials to ${added.credentialOrigins.join(', ')}.`);
+  if (added.credentials.length > 0) lines.push(`Changes where stored credentials go: ${added.credentials.join('; ')}.`);
   if (added.privileged) lines.push('Runs with full access to the app.');
   if (added.skin) lines.push('Brings a skin that restyles every part of the app.');
   return lines;
