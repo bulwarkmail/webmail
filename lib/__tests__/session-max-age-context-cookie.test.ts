@@ -68,8 +68,12 @@ function mailServer(input: RequestInfo | URL, init?: RequestInit): Promise<Respo
       primaryAccounts: { 'urn:ietf:params:jmap:mail': 'acc' },
     }));
   }
+  // Every method answers with an empty result.
+  const calls = typeof init?.body === 'string'
+    ? (JSON.parse(init.body) as { methodCalls?: Array<[string, unknown, string]> }).methodCalls ?? []
+    : [];
   return Promise.resolve(Response.json({
-    methodResponses: [['Email/query', { accountId: 'acc', ids: ['m1', 'm2'] }, '0']],
+    methodResponses: calls.map(([name, , id]) => [name, { accountId: 'acc', ids: [], list: [], total: 0 }, id]),
   }));
 }
 
