@@ -7,19 +7,20 @@ import type { Email } from "@/lib/jmap/types";
 
 /**
  * The From domain whose BIMI logo a message may show (see
- * brandIndicatorDomain): one it passed DMARC for, or one of the
+ * brandIndicatorDomain): one it passed DMARC for on receipt, or one of the
  * organisation's own when the message was handed in on the same server.
  */
 export function useBrandDomain(
-  email: Pick<Email, "from" | "authenticationResults" | "sourceClientAccountId"> | null | undefined,
+  email: Pick<Email, "from" | "authenticationResults" | "authenticationResultsOnReceipt" | "sourceClientAccountId"> | null | undefined,
 ): string | undefined {
   const from = email?.from;
   const authenticationResults = email?.authenticationResults;
+  const authenticationResultsOnReceipt = email?.authenticationResultsOnReceipt;
   // Only mail without the header goes by the organisation's domains; the rest
   // costs no lookup of another account's identities.
   const internalDomains = useInternalMailDomains(email?.sourceClientAccountId, !!from?.[0]?.email && !authenticationResults);
   return useMemo(
-    () => brandIndicatorDomain({ from, authenticationResults }, internalDomains),
-    [from, authenticationResults, internalDomains],
+    () => brandIndicatorDomain({ from, authenticationResults, authenticationResultsOnReceipt }, internalDomains),
+    [from, authenticationResults, authenticationResultsOnReceipt, internalDomains],
   );
 }

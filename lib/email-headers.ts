@@ -192,22 +192,41 @@ export function authenticationResultsOnReceipt(headers: readonly { name: string;
 }
 
 /**
+ * Whether a pass in the message's Authentication-Results may earn it
+ * anything: false when the full fetch found the topmost header without a
+ * receipt line above it (authenticationResultsOnReceipt). A message fetched
+ * without the header order (a list row) leaves the flag out and keeps its
+ * results. The invitation trust and the sender logo ask this; the booking
+ * cards also refuse a message whose flag is not known
+ * (lib/structured-mail/trust.ts).
+ */
+export function authenticationResultsUsable(email: { authenticationResultsOnReceipt?: boolean } | undefined): boolean {
+  return email?.authenticationResultsOnReceipt !== false;
+}
+
+/**
  * The From domain whose BIMI logo this message may show, or undefined. BIMI
  * needs a DMARC pass for the very domain in From: an aligned SPF or DKIM
  * pass without a DMARC verdict isn't enough, and neither is a pass that the
- * receiving server recorded for another header.from. Whether the domain
- * enforces DMARC and publishes a logo is /api/bimi's to find out.
+ * receiving server recorded for another header.from, or one in a header that
+ * was not written on receipt (authenticationResultsUsable). Whether the
+ * domain enforces DMARC and publishes a logo is /api/bimi's to find out.
  *
  * Mail a signed-in user handed in to the same server never gets a DMARC
  * verdict: Stalwart writes Authentication-Results only on what arrives from
- * outside, and lets a user send only from their own addresses. So a message
- * with no such header at all counts as well when its From domain is one of
- * `internalDomains`, the organisation's own (lib/external-mail.ts
+ * outside. It does not compare the From header of a submission with the
+ * user's addresses, so a user of the same server can write any From. A
+ * message with no such header at all still counts when its From domain is
+ * one of `internalDomains`, the organisation's own (lib/external-mail.ts
  * internalDomains, in ASCII form; a domain covers its subdomains). The same
  * domain's mail from outside carries the header and still needs the pass.
  */
 export function brandIndicatorDomain(
-  email: { from?: { email?: string | null }[] | null; authenticationResults?: AuthenticationResults } | undefined,
+  email: {
+    from?: { email?: string | null }[] | null;
+    authenticationResults?: AuthenticationResults;
+    authenticationResultsOnReceipt?: boolean;
+  } | undefined,
   internalDomains: readonly string[] = [],
 ): string | undefined {
   const auth = email?.authenticationResults;
@@ -219,6 +238,7 @@ export function brandIndicatorDomain(
     const ascii = toAsciiDomain(domain) ?? domain;
     return internalDomains.some((entry) => ascii === entry || ascii.endsWith(`.${entry}`)) ? domain : undefined;
   }
+  if (!authenticationResultsUsable(email)) return undefined;
   if (auth.dmarc?.result !== 'pass' || isAuthenticationSpoofed(auth)) return undefined;
   const checked = auth.dmarc.domain ? domainOf(`@${auth.dmarc.domain}`) : domain;
   return checked === domain ? domain : undefined;
