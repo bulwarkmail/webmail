@@ -111,6 +111,17 @@ describe('/api/bimi', () => {
     expect(res.headers.get('x-bulwark-bimi')).toBe('self-asserted');
   });
 
+  // The mobile app loads logos with its native HTTP client and no webmail session.
+  it('serves the logo, and only the logo, to a client without a session that sends no browser headers', async () => {
+    session.signedIn = false;
+    resolve.mockResolvedValue(selfAsserted);
+    const res = await get('domain=brand.org', null);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-bulwark-bimi')).toBe('self-asserted');
+    expect(res.headers.get('cache-control')).toBe('private, max-age=21600');
+    expect((await get('domain=brand.org&format=json', null)).status).toBe(401);
+  });
+
   it('drops self-published logos when the admin requires a mark certificate', async () => {
     await setConfig({ bimiRequireCertificate: true });
     resolve.mockResolvedValue(selfAsserted);

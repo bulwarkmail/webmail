@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { configManager } from '@/lib/admin/config-manager';
 import { isNoThirdPartyTrafficOn, thirdPartyRefusal } from '@/lib/admin/third-party-mode';
-import { bimiResolver, normalizeBimiDomain, type BimiIndicator } from '@/lib/bimi/lookup';
+import { bimiResolver, normalizeBimiDomain, type BimiAnswer, type BimiIndicator } from '@/lib/bimi/lookup';
 import type { BimiInfo } from '@/lib/bimi/types';
-import { NO_STORE, refuseSenderIconRequest, takeLookupBudget } from '@/lib/sender-icon-access';
+import { lookupLease, NO_STORE, senderIconAccess } from '@/lib/sender-icon-access';
 
 /**
  * BIMI sender logos. GET ?domain=<From domain> answers the logo as a PNG, or
@@ -15,8 +15,9 @@ import { NO_STORE, refuseSenderIconRequest, takeLookupBudget } from '@/lib/sende
  * brandIndicatorDomain in lib/email-headers.ts): the logo says who the domain
  * is, not that a given message came from it.
  *
- * Only for the webmail's own signed-in pages (lib/sender-icon-access.ts), so
- * answers may be kept by the browser but never by a cache shared by users.
+ * For the webmail's own signed-in pages, and the logo itself for the mobile
+ * app (lib/sender-icon-access.ts), so answers may be kept by the client but
+ * never by a cache shared by users.
  */
 
 const TRANSPARENT_PNG = Buffer.from(
@@ -49,20 +50,30 @@ function info(indicator: BimiIndicator | null): BimiInfo {
 export async function GET(request: NextRequest) {
   // The lookups reach the sender's DNS and whatever hosts its record names.
   if (await isNoThirdPartyTrafficOn()) return thirdPartyRefusal('Brand logos');
-  const refusal = await refuseSenderIconRequest(request);
-  if (refusal) return refusal;
+  const access = await senderIconAccess(request, 'bimi');
+  if ('refusal' in access) return access.refusal;
 
   const domain = normalizeBimiDomain(request.nextUrl.searchParams.get('domain'));
   const asJson = request.nextUrl.searchParams.get('format') === 'json';
+  // What backs a logo is for the signed-in message view; the app shows the logo only.
+  if (asJson && access.caller.sessionless) {
+    return new NextResponse(null, { status: 401, headers: NO_STORE });
+  }
   if (!domain) {
     return new NextResponse(null, { status: 400, headers: NO_STORE });
   }
 
-  const answer = await bimiResolver().answer(domain, () => takeLookupBudget(request, 'bimi'));
+  const lease = lookupLease(access.caller, 'bimi');
+  let answer: BimiAnswer;
+  try {
+    answer = await bimiResolver().answer(domain, () => lease.take());
+  } finally {
+    await lease.release();
+  }
   let indicator = answer.indicator;
   if (indicator && indicator.status !== 'verified' && await requireCertificate()) indicator = null;
-  // Nothing was looked up yet (too many lookups running, or this user's
-  // budget is spent): the next request asks again.
+  // Not now (too many lookups running, this caller's budget or running
+  // lookups are used up, or the drawing was busy): the next request asks again.
   const cacheControl = (maxAge: number) => (answer.deferred ? NO_STORE['Cache-Control'] : `private, max-age=${maxAge}`);
 
   if (asJson) {

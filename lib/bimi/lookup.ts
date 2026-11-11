@@ -40,8 +40,12 @@ const ERROR_TTL_MS = 10 * 60 * 1000;
 const CRL_TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_MAX = 2000;
 const CRL_CACHE_MAX = 50;
-/** Concurrent uncached lookups; over it a domain is simply missing for now. */
-const MAX_IN_FLIGHT = 16;
+/**
+ * Concurrent uncached lookups; over it a domain is simply missing for now.
+ * One caller may run a quarter of them (RUNNING_PER_CALLER in
+ * lib/sender-icon-access.ts), so no one caller holds them all.
+ */
+const MAX_IN_FLIGHT = 64;
 /** How long a lookup waits for one of the MAX_DRAWINGS drawing slots. */
 const DRAW_SLOT_WAIT_MS = 15_000;
 

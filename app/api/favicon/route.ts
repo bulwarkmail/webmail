@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isNoThirdPartyTrafficOn, thirdPartyRefusal } from '@/lib/admin/third-party-mode';
 import { getRootDomain } from '@/lib/root-domain';
 import { readBodyCapped } from '@/lib/security/capped-body';
-import { NO_STORE, refuseSenderIconRequest, takeLookupBudget } from '@/lib/sender-icon-access';
+import { lookupLease, NO_STORE, senderIconAccess } from '@/lib/sender-icon-access';
 
 // In-memory LRU cache: domain -> { data, contentType, fetchedAt }
 const CACHE_MAX_SIZE = 1000;
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
-/** Concurrent upstream icon fetches across all callers (see GET). */
-const MAX_UPSTREAM_IN_FLIGHT = 16;
+/**
+ * Concurrent upstream icon fetches across all callers (see GET). One caller
+ * may run a quarter of them (RUNNING_PER_CALLER in lib/sender-icon-access.ts).
+ */
+const MAX_UPSTREAM_IN_FLIGHT = 64;
 let upstreamInFlight = 0;
 /** Icons are a few KB; a larger answer is not one. */
 const MAX_ICON_BYTES = 256 * 1024;
@@ -27,8 +30,8 @@ const cache = new Map<string, CacheEntry>();
 const negativeCache = new Map<string, NegativeCacheEntry>();
 const NEGATIVE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 const NEGATIVE_CACHE_MAX_SIZE = 2000;
-// A refresh request (?v=<ms>) refetches a domain at most this often, so the
-// unauthenticated route can't be used to hammer the upstream icon service.
+// A refresh request (?v=<ms>) refetches a domain at most this often, so
+// refresh stamps can't be used to hammer the upstream icon service.
 const MIN_REFRESH_INTERVAL_MS = 60 * 1000;
 
 // 1x1 transparent PNG. Returned with HTTP 200 (instead of 404) when no
@@ -44,8 +47,8 @@ const MISSING_FAVICON_HEADERS = {
   'Cache-Control': 'private, max-age=86400', // 1 day
   'X-Bulwark-Favicon': 'missing',
 };
-// Nothing was fetched yet (busy, or this user's budget is spent): the next
-// request asks again.
+// Nothing was fetched yet (busy, or this caller's budget or running fetches
+// are used up): the next request asks again.
 const NOT_YET_HEADERS = { ...MISSING_FAVICON_HEADERS, ...NO_STORE };
 
 // Strict domain validation to prevent SSRF
@@ -87,8 +90,9 @@ export async function GET(request: NextRequest) {
   if (await isNoThirdPartyTrafficOn()) return thirdPartyRefusal('Sender icons');
   // Only for the webmail's own signed-in pages (lib/sender-icon-access.ts),
   // so answers may be kept by the browser but never by a cache shared by users.
-  const refusal = await refuseSenderIconRequest(request);
-  if (refusal) return refusal;
+  // The mobile app asks DuckDuckGo itself and never calls this route.
+  const access = await senderIconAccess(request, 'favicon');
+  if ('refusal' in access) return access.refusal;
 
   const domain = request.nextUrl.searchParams.get('domain');
 
@@ -115,13 +119,18 @@ export async function GET(request: NextRequest) {
   }
 
   // Keyed by domain, so without a ceiling on concurrent upstream fetches,
-  // and a budget per user, one caller could have this instance open one
-  // connection per made-up domain name. Over either the icon is simply
-  // missing for now; the browser asks again later.
+  // and a budget and running count per caller, one caller could have this
+  // instance open one connection per made-up domain name. Over any of them
+  // the icon is simply missing for now; the browser asks again later.
   if (upstreamInFlight >= MAX_UPSTREAM_IN_FLIGHT) {
     return new NextResponse(TRANSPARENT_PNG, { headers: NOT_YET_HEADERS });
   }
-  if (!(await takeLookupBudget(request, 'favicon')) || upstreamInFlight >= MAX_UPSTREAM_IN_FLIGHT) {
+  const lease = lookupLease(access.caller, 'favicon');
+  if (!(await lease.take())) {
+    return new NextResponse(TRANSPARENT_PNG, { headers: NOT_YET_HEADERS });
+  }
+  if (upstreamInFlight >= MAX_UPSTREAM_IN_FLIGHT) {
+    await lease.release();
     return new NextResponse(TRANSPARENT_PNG, { headers: NOT_YET_HEADERS });
   }
   upstreamInFlight++;
@@ -177,6 +186,7 @@ export async function GET(request: NextRequest) {
     });
   } finally {
     upstreamInFlight--;
+    await lease.release();
   }
 }
 
