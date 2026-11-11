@@ -6122,7 +6122,8 @@
     "search_unavailable": "A keresés nem érhető el az egységes nézetben"
   },
   "account_routing": {
-    "group_members_one_account": "Egy csoport csak egy fiók névjegyeit tartalmazhatja."
+    "group_members_one_account": "Egy csoport csak egy fiók névjegyeit tartalmazhatja.",
+    "link_names_no_account": "Ez a link nem mondja meg, melyik fiókban van az üzenet, ezért nem nyílt meg."
   },
   "mail_import": {
     "menu_import": "Levelek importálása…",

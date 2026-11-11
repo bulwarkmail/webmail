@@ -6122,7 +6122,8 @@
     "search_unavailable": "整合檢視中無法使用搜尋"
   },
   "account_routing": {
-    "group_members_one_account": "一個群組只能包含同一帳號的聯絡人。"
+    "group_members_one_account": "一個群組只能包含同一帳號的聯絡人。",
+    "link_names_no_account": "此連結沒有指出郵件所在的帳號，因此沒有開啟。"
   },
   "mail_import": {
     "menu_import": "匯入郵件…",

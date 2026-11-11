@@ -5853,7 +5853,8 @@
     "search_unavailable": "統合ビューでは検索を利用できません"
   },
   "account_routing": {
-    "group_members_one_account": "グループに入れられるのは 1 つのアカウントの連絡先だけです。"
+    "group_members_one_account": "グループに入れられるのは 1 つのアカウントの連絡先だけです。",
+    "link_names_no_account": "このリンクにはメッセージのあるアカウントが示されていないため、開きませんでした。"
   },
   "mail_import": {
     "menu_import": "メールをインポート…",

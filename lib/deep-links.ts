@@ -149,7 +149,7 @@ export interface MailLinkState {
    * the login's own: email ids repeat across accounts (#1351).
    */
   ownerAccountId?: string | null;
-  /** The login (AccountEntry.id) reaching it, when not the active one. */
+  /** The login (AccountEntry.id) reaching it. */
   loginId?: string | null;
   /** Open a message link alone, without sidebar and list. */
   fullscreen?: boolean;

@@ -5853,7 +5853,8 @@
     "search_unavailable": "Zoeken is niet beschikbaar in de gecombineerde weergave"
   },
   "account_routing": {
-    "group_members_one_account": "Een groep kan alleen contacten van één account bevatten."
+    "group_members_one_account": "Een groep kan alleen contacten van één account bevatten.",
+    "link_names_no_account": "Deze link zegt niet in welk account het bericht staat, dus is hij niet geopend."
   },
   "mail_import": {
     "menu_import": "E-mail importeren…",

@@ -5853,7 +5853,8 @@
     "search_unavailable": "통합 보기에서는 검색을 사용할 수 없습니다"
   },
   "account_routing": {
-    "group_members_one_account": "그룹에는 한 계정의 연락처만 넣을 수 있어요."
+    "group_members_one_account": "그룹에는 한 계정의 연락처만 넣을 수 있어요.",
+    "link_names_no_account": "이 링크에는 메시지가 있는 계정이 나와 있지 않아 열지 않았어요."
   },
   "mail_import": {
     "menu_import": "메일 가져오기…",

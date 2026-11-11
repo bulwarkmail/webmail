@@ -6122,7 +6122,8 @@
     "search_unavailable": "Funcția de căutare nu este disponibilă în vizualizarea unificată"
   },
   "account_routing": {
-    "group_members_one_account": "Un grup poate conține doar contacte dintr-un singur cont."
+    "group_members_one_account": "Un grup poate conține doar contacte dintr-un singur cont.",
+    "link_names_no_account": "Acest link nu spune în ce cont se află mesajul, așa că nu a fost deschis."
   },
   "mail_import": {
     "menu_import": "Importă e-mailuri…",

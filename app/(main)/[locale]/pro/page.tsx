@@ -22,6 +22,7 @@ import { GlobalSearchPalette } from "@/components/global-search/global-search-pa
 import { SearchTabBody } from "@/components/global-search/search-tab-body";
 import { useGlobalSearchStore } from "@/stores/global-search-store";
 import { ProTabBar } from "@/components/pro/pro-tab-bar";
+import { droppedEmailTabs, emailTabPath, mailTabPath } from "@/components/pro/pro-tab-address";
 import {
   PRO_TAB_DRAG_MIME,
   EMAIL_IDS_DRAG_MIME,
@@ -94,25 +95,12 @@ function openDroppedEmails(
   fallbackTitle: string,
 ) {
   const { setSplitSide, openEmailTab } = useProTabStore.getState();
-  const known = useEmailStore.getState().emails;
-  const targets = emailIds
-    .map((id) => known.find((e) => e.id === id))
-    .filter((e): e is NonNullable<typeof e> => !!e)
-    .slice(0, 10);
+  // Each with the login and account its row was listed from (droppedEmailTabs).
+  const targets = droppedEmailTabs(emailIds, fallbackTitle).slice(0, 10);
   if (targets.length === 0) return;
   if (side) setSplitSide(side);
   const reuseReader = targets.length === 1;
-  for (const email of targets) {
-    openEmailTab(
-      {
-        accountId: email.accountId ?? '',
-        emailId: email.id,
-        mailboxId: null,
-        title: email.subject?.trim() || fallbackTitle,
-      },
-      { pane, reuseReader },
-    );
-  }
+  for (const data of targets) openEmailTab(data, { pane, reuseReader });
 }
 
 /** Open a dragged sidebar folder as a folder tab in `pane`. */
@@ -303,22 +291,21 @@ export default function ProHome() {
   // own, more precise paths via useDeepLinkUrl gated on ProTabFocusContext.
   // replaceState only, and ProInterfaceRedirect doesn't observe it - a reload
   // of the shown URL goes through the redirect's handoff and restores the view.
+  // A message is named with its login and account (pro-tab-address), so a
+  // reload opens that message or nothing.
   const selectedMailbox = useEmailStore((s) => s.selectedMailbox);
-  const selectedEmailId = useEmailStore((s) => s.selectedEmail?.id ?? null);
+  const selectedEmail = useEmailStore((s) => s.selectedEmail);
+  const viewingAccountId = useEmailStore((s) => s.viewingAccountId);
+  const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const accountMailboxes = useEmailStore((s) => s.accountMailboxes);
   const reflectedPath = useMemo(() => {
     if (!isAuthenticated || !client || !focusedActiveTab) return null;
     switch (focusedActiveTab.kind) {
       case 'mail':
-        return appPath(buildMailPath(
-          { mailboxId: selectedMailbox || null, emailId: selectedEmailId, threadId: null },
-          mailboxes,
-        ));
+        return appPath(mailTabPath(selectedMailbox || null, selectedEmail, mailboxes));
       case 'email':
-        return focusedActiveTab.emailData
-          ? appPath(buildMailPath({ mailboxId: null, emailId: focusedActiveTab.emailData.emailId, threadId: null }))
-          : null;
+        return focusedActiveTab.emailData ? appPath(emailTabPath(focusedActiveTab.emailData)) : null;
       case 'folder': {
         const data = focusedActiveTab.folderData;
         if (!data) return null;
@@ -335,7 +322,9 @@ export default function ProHome() {
       default:
         return null;
     }
-  }, [isAuthenticated, client, focusedActiveTab, selectedMailbox, selectedEmailId, mailboxes, accountMailboxes]);
+    // viewingAccountId and activeAccountId: the login an open message is named with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, client, focusedActiveTab, selectedMailbox, selectedEmail, viewingAccountId, activeAccountId, mailboxes, accountMailboxes]);
   useDeepLinkUrl(reflectedPath);
 
   // Global search shortcuts: Ctrl/⌘+K toggles the palette, Ctrl+Shift+F

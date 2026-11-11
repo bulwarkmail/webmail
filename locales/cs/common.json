@@ -5853,7 +5853,8 @@
     "search_unavailable": "Vyhledávání není ve sjednoceném zobrazení k dispozici"
   },
   "account_routing": {
-    "group_members_one_account": "Skupina může obsahovat jen kontakty z jednoho účtu."
+    "group_members_one_account": "Skupina může obsahovat jen kontakty z jednoho účtu.",
+    "link_names_no_account": "Tento odkaz neuvádí, ve kterém účtu zpráva je, proto nebyl otevřen."
   },
   "mail_import": {
     "menu_import": "Importovat poštu…",

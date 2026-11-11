@@ -6123,7 +6123,8 @@
     "search_unavailable": "חיפוש אינו זמין בתצוגה המאוחדת"
   },
   "account_routing": {
-    "group_members_one_account": "קבוצה יכולה להכיל אנשי קשר מחשבון אחד בלבד."
+    "group_members_one_account": "קבוצה יכולה להכיל אנשי קשר מחשבון אחד בלבד.",
+    "link_names_no_account": "הקישור הזה לא מציין באיזה חשבון נמצאת ההודעה, ולכן הוא לא נפתח."
   },
   "mail_import": {
     "menu_import": "ייבוא דואר…",

@@ -5853,7 +5853,8 @@
     "search_unavailable": "Meklēšana nav pieejama apvienotajā skatā"
   },
   "account_routing": {
-    "group_members_one_account": "Grupā var būt tikai viena konta kontakti."
+    "group_members_one_account": "Grupā var būt tikai viena konta kontakti.",
+    "link_names_no_account": "Šī saite nenorāda, kurā kontā ir ziņojums, tāpēc tā netika atvērta."
   },
   "mail_import": {
     "menu_import": "Importēt pastu…",

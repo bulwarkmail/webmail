@@ -6122,7 +6122,8 @@
     "search_unavailable": "La cerca no està disponible a la vista unificada"
   },
   "account_routing": {
-    "group_members_one_account": "Un grup només pot contenir contactes d'un sol compte."
+    "group_members_one_account": "Un grup només pot contenir contactes d'un sol compte.",
+    "link_names_no_account": "Aquest enllaç no indica en quin compte és el missatge, així que no s'ha obert."
   },
   "mail_import": {
     "menu_import": "Importa correu…",

@@ -5853,7 +5853,8 @@
     "search_unavailable": "Wyszukiwanie jest niedostępne w widoku ujednoliconym"
   },
   "account_routing": {
-    "group_members_one_account": "Grupa może zawierać tylko kontakty z jednego konta."
+    "group_members_one_account": "Grupa może zawierać tylko kontakty z jednego konta.",
+    "link_names_no_account": "Ten link nie wskazuje, na którym koncie jest wiadomość, więc nie został otwarty."
   },
   "mail_import": {
     "menu_import": "Importuj pocztę…",

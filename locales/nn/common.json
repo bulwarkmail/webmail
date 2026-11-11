@@ -6130,7 +6130,8 @@
     "search_unavailable": "Søk er ikkje tilgjengeleg i den samla visinga"
   },
   "account_routing": {
-    "group_members_one_account": "Ei gruppe kan berre innehalde kontaktar frå éin konto."
+    "group_members_one_account": "Ei gruppe kan berre innehalde kontaktar frå éin konto.",
+    "link_names_no_account": "Denne lenkja seier ikkje kva konto meldinga ligg i, så ho vart ikkje opna."
   },
   "mail_import": {
     "menu_import": "Importer e-post …",

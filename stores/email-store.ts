@@ -1764,15 +1764,16 @@ export function emailWriteSource(email: Pick<Email, 'sourceClientAccountId' | 's
 
 /**
  * What a link to a row in the view on screen names besides its id, as ids
- * repeat across accounts and logins (#1351): the JMAP account when it is not
- * the login's own, the login when it is not the active one.
+ * repeat across accounts and logins (#1351): the login it is read through,
+ * the active one's too, and the JMAP account when it is not the login's own.
+ * The Pro shell opens no message from an address that names no login.
  */
 export function emailLinkSource(email: Pick<Email, 'sourceClientAccountId' | 'sourceAccountId'>): { ownerAccountId: string | null; loginId: string | null } {
   const auth = useAuthStore.getState();
   const { client, accountId, clientAccountId } = resolveEmailBlobContext(email, auth.client);
   return {
     ownerAccountId: accountId && accountId !== client?.getAccountId() ? accountId : null,
-    loginId: clientAccountId && clientAccountId !== auth.activeAccountId ? clientAccountId : null,
+    loginId: clientAccountId ?? auth.activeAccountId ?? null,
   };
 }
 

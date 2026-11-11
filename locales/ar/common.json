@@ -6122,7 +6122,8 @@
     "search_unavailable": "البحث غير متاح في العرض الموحّد"
   },
   "account_routing": {
-    "group_members_one_account": "لا يمكن أن تضم المجموعة إلا جهات اتصال من حساب واحد."
+    "group_members_one_account": "لا يمكن أن تضم المجموعة إلا جهات اتصال من حساب واحد.",
+    "link_names_no_account": "لا يذكر هذا الرابط الحساب الذي توجد فيه الرسالة، لذلك لم يُفتح."
   },
   "mail_import": {
     "menu_import": "استيراد البريد…",

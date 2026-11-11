@@ -6122,7 +6122,8 @@
     "search_unavailable": "Søgning er ikke tilgængelig i den samlede visning"
   },
   "account_routing": {
-    "group_members_one_account": "En gruppe kan kun indeholde kontakter fra én konto."
+    "group_members_one_account": "En gruppe kan kun indeholde kontakter fra én konto.",
+    "link_names_no_account": "Dette link siger ikke, hvilken konto beskeden ligger i, så det blev ikke åbnet."
   },
   "mail_import": {
     "menu_import": "Importér mail…",

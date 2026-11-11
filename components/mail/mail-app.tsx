@@ -1067,13 +1067,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const open = useEmailStore.getState().selectedEmail;
     const shown = open && (open.id === state.emailId || (!!state.threadId && open.threadId === state.threadId)) ? open : null;
     // The shared account of the open message, so a reload opens it again
-    // (#1351). Not another login's: a reload must not switch the login.
+    // (#1351). A message of another login is left out: a reload must not
+    // switch the login, and through the active one its id names another
+    // message.
     const source = shown ? emailLinkSource(shown) : null;
+    const otherLogin = !!source?.loginId && source.loginId !== useAuthStore.getState().activeAccountId;
     return appPath(
       buildMailPath(
         {
-          mailboxId: state.mailboxId, emailId: state.emailId, threadId: state.threadId,
-          ownerAccountId: source && !source.loginId ? source.ownerAccountId : null,
+          mailboxId: state.mailboxId,
+          emailId: otherLogin ? null : state.emailId,
+          threadId: otherLogin ? null : state.threadId,
+          ownerAccountId: source && !otherLogin ? source.ownerAccountId : null,
           // Keep the marker while fullscreen is active, so reloading the dragged-out
           // tab reopens the message fullscreen instead of in the normal layout.
           fullscreen: fullscreenReading,
@@ -2371,7 +2376,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       selectEmail(email);
     }
   };
-  const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean; replyText?: string }) => {
+  const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean; replyText?: string; fromAddress?: boolean }) => {
     // The folder list before an account switch, if one happened: until the
     // new mailbox's folders arrive the store still holds these (or nothing).
     let switchedFrom: Mailbox[] | null = null;
@@ -2382,6 +2387,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const linkAccountId = link.accountId ?? (link.slot !== undefined
       ? useAccountStore.getState().accounts.find((a) => a.cookieSlot === link.slot)?.id ?? `slot:${link.slot}`
       : undefined);
+    // An address of the Pro shell names the login of its message tab and the
+    // account the message is in. One that names no login (written before it
+    // did, or by hand) opens nothing there: through the active login its id
+    // can name another message.
+    if (isEmbedded && opts?.fromAddress && link.kind === 'message' && !linkAccountId) {
+      toast.error(t('account_routing.link_names_no_account'));
+      return;
+    }
     const switchesAccount = !!linkAccountId && linkAccountId !== useAuthStore.getState().activeAccountId;
     if (switchesAccount) {
       const startedOn = useAuthStore.getState().activeAccountId;
@@ -2563,7 +2576,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!isEmbedded) return;
     return subscribePendingDeepLink('mail', (segments, search) => {
       const link = parseMailPath(segments, new URLSearchParams(search ?? window.location.search));
-      if (link) void applyMailDeepLinkRef.current(link);
+      if (link) void applyMailDeepLinkRef.current(link, { fromAddress: true });
     });
   }, [isEmbedded]);
 
@@ -2637,7 +2650,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     deepLinkHandledRef.current = true;
 
     if (link) {
-      void applyMailDeepLinkRef.current(link, { onLoad: true }).finally(() => setDeepLinkPane(null));
+      void applyMailDeepLinkRef.current(link, { onLoad: true, fromAddress: true }).finally(() => setDeepLinkPane(null));
       return;
     }
 

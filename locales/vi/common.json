@@ -6134,7 +6134,8 @@
     "search_unavailable": "Tìm kiếm không có sẵn trong chế độ xem hợp nhất"
   },
   "account_routing": {
-    "group_members_one_account": "Một nhóm chỉ có thể chứa danh bạ của một tài khoản."
+    "group_members_one_account": "Một nhóm chỉ có thể chứa danh bạ của một tài khoản.",
+    "link_names_no_account": "Liên kết này không cho biết thư nằm trong tài khoản nào nên không được mở."
   },
   "mail_import": {
     "menu_import": "Nhập thư…",

@@ -6122,7 +6122,8 @@
     "search_unavailable": "Birleşik görünümde arama kullanılamaz"
   },
   "account_routing": {
-    "group_members_one_account": "Bir grup yalnızca tek bir hesabın kişilerini içerebilir."
+    "group_members_one_account": "Bir grup yalnızca tek bir hesabın kişilerini içerebilir.",
+    "link_names_no_account": "Bu bağlantı iletinin hangi hesapta olduğunu belirtmiyor, bu yüzden açılmadı."
   },
   "mail_import": {
     "menu_import": "E-posta içe aktar…",
