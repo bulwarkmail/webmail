@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { validateMarkCertificate, type MarkType } from './certificate';
 import { dmarcAllowsBimi, pickBimiRecord, pickDmarcRecord } from './records';
 import { bimiRoots } from './roots';
-import { checkSvg, rasterize, MAX_SELF_ASSERTED_BYTES } from './svg';
+import { checkSvg, rasterize, MAX_DRAWINGS, MAX_SELF_ASSERTED_BYTES } from './svg';
 
 /**
  * The receiver side of BIMI, which Stalwart doesn't do: for a From domain,
@@ -42,6 +42,8 @@ const CACHE_MAX = 2000;
 const CRL_CACHE_MAX = 50;
 /** Concurrent uncached lookups; over it a domain is simply missing for now. */
 const MAX_IN_FLIGHT = 16;
+/** How long a lookup waits for one of the MAX_DRAWINGS drawing slots. */
+const DRAW_SLOT_WAIT_MS = 15_000;
 
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -55,6 +57,49 @@ export function normalizeBimiDomain(domain: string | null | undefined): string |
 }
 
 class TemporaryError extends Error {}
+
+/**
+ * At most `max` holders at once; the others wait in turn, up to `waitMs`.
+ * A slot is given back by the release function `acquire` resolves with, or
+ * null when the wait ran out.
+ */
+function drawingSlots(max: number, waitMs: number) {
+  let running = 0;
+  const waiting: Array<(release: () => void) => void> = [];
+  const release = () => {
+    const next = waiting.shift();
+    if (next) next(once());
+    else running--;
+  };
+  const once = () => {
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      release();
+    };
+  };
+  return {
+    acquire(): Promise<(() => void) | null> {
+      if (running < max) {
+        running++;
+        return Promise.resolve(once());
+      }
+      return new Promise((resolve) => {
+        const take = (slot: () => void) => {
+          clearTimeout(timer);
+          resolve(slot);
+        };
+        const timer = setTimeout(() => {
+          const at = waiting.indexOf(take);
+          if (at !== -1) waiting.splice(at, 1);
+          resolve(null);
+        }, waitMs);
+        waiting.push(take);
+      });
+    },
+  };
+}
 
 export interface BimiResolverDeps {
   resolveTxt: (name: string) => Promise<string[][]>;
@@ -139,6 +184,9 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   const cache = new Map<string, CacheEntry>();
   const crlCache = new Map<string, { bytes: Uint8Array | null; expiresAt: number }>();
   const inFlight = new Map<string, Promise<BimiIndicator | null>>();
+  // Drawing is the expensive step; only a few run at once, whatever the
+  // number of lookups waiting for one.
+  const drawing = drawingSlots(MAX_DRAWINGS, DRAW_SLOT_WAIT_MS);
 
   function remember(domain: string, indicator: BimiIndicator | null, ttl: number) {
     cache.delete(domain);
@@ -240,10 +288,21 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
       logger.debug('BIMI logo rejected', { domain, reason: problem });
       return none;
     }
+    // The certified logo goes through the same check above and the same
+    // bounded drawing here.
+    const release = await drawing.acquire();
+    if (!release) throw new TemporaryError(`no free drawing slot for ${domain}`);
     let png: Buffer;
     try {
-      png = await rasterize(svg);
-    } catch {
+      png = await rasterize(svg, { onStopped: release });
+    } catch (err) {
+      // A logo that fails to draw or draws past the deadline is cached as no
+      // logo like any other refused one; a drawing that never started is
+      // tried again soon.
+      if ((err as { temporary?: unknown }).temporary === true) {
+        throw new TemporaryError(`BIMI logo not drawn for ${domain}: ${(err as Error).message}`);
+      }
+      logger.debug('BIMI logo not drawn', { domain, reason: (err as Error).message });
       return none;
     }
     return { indicator: { ...indicator, png }, ttl };
