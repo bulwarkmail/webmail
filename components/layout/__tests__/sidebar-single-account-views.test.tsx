@@ -8,7 +8,8 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore } from '@/stores/policy-store';
-import { useSettingsStore } from '@/stores/settings-store';
+import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
+import { useSettingsStore, migrateSettings } from '@/stores/settings-store';
 import { useUIStore } from '@/stores/ui-store';
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
@@ -129,7 +130,12 @@ describe('single-account virtual sidebar views', () => {
     expect(useSettingsStore.getState().explicitSettings).toContain(setting);
   });
 
-  it('shows new-account defaults without enabling Unified, All mail or cross-account', () => {
+  it('shows stock feature-gate and new-account defaults without enabling Unified, All mail or cross-account', () => {
+    usePolicyStore.setState({ policy: DEFAULT_POLICY, demoFeatureOverrides: {} });
+    expect(DEFAULT_FEATURE_GATES.crossUnreadViewEnabled).toBe(true);
+    expect(DEFAULT_FEATURE_GATES.crossStarredViewEnabled).toBe(true);
+    expect(DEFAULT_FEATURE_GATES.crossAllViewEnabled).toBe(false);
+    expect(DEFAULT_FEATURE_GATES.unifiedCrossAccountEnabled).toBe(false);
     useSettingsStore.getState().resetToDefaults();
     useSettingsStore.setState({ enableUnifiedMailbox: false });
     render(<MailSidebar />);
@@ -192,6 +198,18 @@ describe('single-account virtual sidebar views', () => {
 });
 
 describe('existing merged sidebar presentation', () => {
+  it('does not add Unified virtual rows for existing multi-account settings on upgrade', () => {
+    useAccountStore.setState({ accounts: [account('a'), account('b')] } as never);
+    const existing = migrateSettings({ enableUnifiedMailbox: true, unifiedCrossAccount: true, enableCrossUnreadView: false,
+      enableCrossStarredView: false, explicitSettings: [] }, 16);
+    useSettingsStore.setState(existing);
+    render(<MailSidebar crossAccountActive />);
+    expect(ids()).not.toContain(CROSS_VIEW_IDS.unread);
+    expect(ids()).not.toContain(CROSS_VIEW_IDS.starred);
+    expect(screen.getByText('all_accounts')).toBeInTheDocument();
+    expect(screen.getByText('unified_sent')).toBeInTheDocument();
+  });
+
   it.each([false, true])('preserves two-account rows with cross-account=%s', (crossAccountActive) => {
     useAccountStore.setState({ accounts: [account('a'), account('b')] } as never);
     render(<MailSidebar crossAccountActive={crossAccountActive} />);

@@ -266,7 +266,7 @@ describe('settings export', () => {
 });
 
 
-describe('virtual view defaults (v17)', () => {
+describe('virtual view defaults', () => {
   it('defaults Unread and Starred ON without enabling aggregation', () => {
     expect(settings().enableCrossUnreadView).toBe(true);
     expect(settings().enableCrossStarredView).toBe(true);
@@ -275,19 +275,24 @@ describe('virtual view defaults (v17)', () => {
     expect(settings().unifiedCrossAccount).toBe(false);
   });
 
-  it('upgrades untouched v16 values locally and through server/import copies', async () => {
+  it('preserves existing untouched v16 values locally and through server/import copies', async () => {
     const old = { enableCrossUnreadView: false, enableCrossStarredView: false, explicitSettings: [] };
     const migrated = migrateSettings({ ...old }, 16);
-    expect(migrated.enableCrossUnreadView).toBe(true);
-    expect(migrated.enableCrossStarredView).toBe(true);
+    expect(migrated.enableCrossUnreadView).toBe(false);
+    expect(migrated.enableCrossStarredView).toBe(false);
     expect(migrated.explicitSettings).toEqual([]);
+    localStorage.setItem('settings-storage', JSON.stringify({ state: old, version: 16 }));
+    await useSettingsStore.persist.rehydrate();
+    expect(settings().enableCrossUnreadView).toBe(false);
+    expect(settings().enableCrossStarredView).toBe(false);
     settings().importSettings(JSON.stringify(old));
-    expect(settings().enableCrossUnreadView).toBe(true);
-    expect(settings().enableCrossStarredView).toBe(true);
-    serverFiles.newUser = old;
-    await signIn('newUser');
-    expect(settings().enableCrossUnreadView).toBe(true);
-    expect(settings().enableCrossStarredView).toBe(true);
+    expect(settings().enableCrossUnreadView).toBe(false);
+    expect(settings().enableCrossStarredView).toBe(false);
+    serverFiles.existingUser = old;
+    localStorage.clear();
+    await signIn('existingUser');
+    expect(settings().enableCrossUnreadView).toBe(false);
+    expect(settings().enableCrossStarredView).toBe(false);
   });
 
   it.each(['enableCrossUnreadView', 'enableCrossStarredView'] as const)(

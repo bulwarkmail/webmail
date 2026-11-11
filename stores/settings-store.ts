@@ -1884,7 +1884,6 @@ export const useSettingsStore = create<SettingsState>()(
           migrateCalendarTasksDefault(settings);
           migrateUndoSendDefault(settings);
           migrateTrustedSendersBookDefault(settings);
-          migrateVirtualViewDefaults(settings);
           migrateFocusOutlineDefault(settings);
           dropAttachmentPosition(settings);
 
@@ -2451,7 +2450,6 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateCalendarTasksDefault(state);
         migrateUndoSendDefault(state);
         migrateTrustedSendersBookDefault(state);
-        migrateVirtualViewDefaults(state);
         migrateFocusOutlineDefault(state);
         // v15: attachments always sit under the header; the setting is gone.
         dropAttachmentPosition(state);
@@ -2569,18 +2567,6 @@ export function migrateTrustedSendersBookDefault(state: Record<string, unknown>)
   if (!('trustedSendersAddressBook' in state) || state.trustedSendersAddressBook === true) return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('trustedSendersAddressBook');
   if (!chosen || typeof state.trustedSendersAddressBook !== 'boolean') state.trustedSendersAddressBook = true;
-}
-
-/** v17: untouched Unread/Starred settings follow the new defaults.
- * Like the existing default migrations, explicitSettings is authoritative.
- * Apply to persisted state and imported/server copies, without marking a default
- * as a user choice or enabling unified/cross-account/All mail.
- */
-export function migrateVirtualViewDefaults(state: Record<string, unknown>): void {
-  for (const key of ['enableCrossUnreadView', 'enableCrossStarredView']) {
-    const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes(key);
-    if (key in state && (!chosen || typeof state[key] !== 'boolean')) state[key] = true;
-  }
 }
 
 // Helper functions to apply settings to DOM
