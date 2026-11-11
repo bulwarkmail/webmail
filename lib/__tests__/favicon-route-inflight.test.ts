@@ -2,9 +2,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// The favicon route is unauthenticated and keyed by domain, so without a
-// ceiling any visitor could have this instance open one upstream connection
-// per made-up domain name.
+// The favicon route is keyed by domain, so without a ceiling its callers
+// could have this instance open one upstream connection per made-up domain
+// name.
+
+// The session check /api/plugins uses: the mail view's requests are signed in.
+vi.mock('@/lib/auth/instance-details', () => ({ canSeeInstanceDetails: vi.fn(async () => true) }));
 
 let pending: Array<() => void>;
 const fetchMock = vi.fn(

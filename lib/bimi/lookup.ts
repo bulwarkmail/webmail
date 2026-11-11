@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { validateMarkCertificate, type MarkType } from './certificate';
 import { dmarcAllowsBimi, pickBimiRecord, pickDmarcRecord } from './records';
 import { bimiRoots } from './roots';
-import { checkSvg, rasterize, MAX_SELF_ASSERTED_BYTES } from './svg';
+import { checkedSvg, rasterize, MAX_DRAWINGS, MAX_SELF_ASSERTED_BYTES } from './svg';
 
 /**
  * The receiver side of BIMI, which Stalwart doesn't do: for a From domain,
@@ -40,8 +40,44 @@ const ERROR_TTL_MS = 10 * 60 * 1000;
 const CRL_TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_MAX = 2000;
 const CRL_CACHE_MAX = 50;
-/** Concurrent uncached lookups; over it a domain is simply missing for now. */
-const MAX_IN_FLIGHT = 16;
+/**
+ * Concurrent uncached lookups of signed-in callers; over it a domain is
+ * simply missing for now. One caller may run a quarter of them
+ * (RUNNING_PER_CALLER in lib/sender-icon-access.ts), so no one caller holds
+ * them all.
+ */
+const MAX_IN_FLIGHT = 64;
+/** How long a lookup waits for one of the MAX_DRAWINGS drawing slots. */
+const DRAW_SLOT_WAIT_MS = 15_000;
+/** How often the log says that the drawing process doesn't start; every lookup with a logo runs into it. */
+const DRAWING_NOT_STARTED_WARN_MS = 60_000;
+
+/*
+ * Callers without a session (the mobile app's logo request, and whoever
+ * else sends a request of that shape) are served from a pool of their own.
+ * Signed-in callers take nothing from it and wait for nothing in it, so
+ * however it is used, the mail view keeps its lookups, its drawings and
+ * its cache.
+ */
+/**
+ * Lookups started by callers without a session that run at once, all such
+ * callers together. Protects the MAX_IN_FLIGHT lookups of signed-in users:
+ * those are counted apart and never taken by a sessionless caller.
+ */
+export const SESSIONLESS_MAX_IN_FLIGHT = 4;
+/**
+ * Drawing slots (of MAX_DRAWINGS) such lookups hold at once; they also wait
+ * while any signed-in lookup waits for a slot. Protects the drawing of the
+ * logos signed-in users asked for.
+ */
+export const SESSIONLESS_MAX_DRAWINGS = 1;
+/**
+ * Answers kept for the names only sessionless callers asked about. Protects
+ * the cache of CACHE_MAX answers that signed-in lookups fill: sessionless
+ * callers read it and never write it, so they can't push an entry out of
+ * it or replace one.
+ */
+export const SESSIONLESS_CACHE_MAX = 200;
 
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -55,6 +91,67 @@ export function normalizeBimiDomain(domain: string | null | undefined): string |
 }
 
 class TemporaryError extends Error {}
+/** The logo couldn't be drawn just now for reasons of this server's own: nothing to remember. */
+class BusyError extends Error {}
+
+/**
+ * At most `max` holders at once; the others wait in turn, up to `waitMs`.
+ * A slot is given back by the release function `acquire` resolves with, or
+ * null when the wait ran out. Sessionless lookups hold at most
+ * `sessionlessMax` of the slots, and get a free one only when no other
+ * lookup waits for it.
+ */
+function drawingSlots(max: number, sessionlessMax: number, waitMs: number) {
+  type Waiter = (release: () => void) => void;
+  let running = 0;
+  let sessionlessRunning = 0;
+  const waiting: Waiter[] = [];
+  const sessionlessWaiting: Waiter[] = [];
+  const hold = (sessionless: boolean) => {
+    running++;
+    if (sessionless) sessionlessRunning++;
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      running--;
+      if (sessionless) sessionlessRunning--;
+      handOut();
+    };
+  };
+  /** Free slots go to the waiting lookups of signed-in callers first. */
+  const handOut = () => {
+    while (running < max) {
+      const next = waiting.shift();
+      if (next) {
+        next(hold(false));
+        continue;
+      }
+      if (sessionlessRunning >= sessionlessMax) return;
+      const sessionless = sessionlessWaiting.shift();
+      if (!sessionless) return;
+      sessionless(hold(true));
+    }
+  };
+  return {
+    acquire(sessionless = false): Promise<(() => void) | null> {
+      const queue = sessionless ? sessionlessWaiting : waiting;
+      return new Promise((resolve) => {
+        const take: Waiter = (slot) => {
+          clearTimeout(timer);
+          resolve(slot);
+        };
+        const timer = setTimeout(() => {
+          const at = queue.indexOf(take);
+          if (at !== -1) queue.splice(at, 1);
+          resolve(null);
+        }, waitMs);
+        queue.push(take);
+        handOut();
+      });
+    },
+  };
+}
 
 export interface BimiResolverDeps {
   resolveTxt: (name: string) => Promise<string[][]>;
@@ -134,17 +231,48 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+export interface BimiAnswer {
+  indicator: BimiIndicator | null;
+  /**
+   * The answer is "not now", not "no logo": no lookup could start for an
+   * uncached domain (busy, or the caller's budget is spent), or the logo
+   * couldn't be drawn because this server was busy. Nothing was remembered.
+   */
+  deferred: boolean;
+}
+
 export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   const deps = { ...defaultDeps, ...overrides };
   const cache = new Map<string, CacheEntry>();
   const crlCache = new Map<string, { bytes: Uint8Array | null; expiresAt: number }>();
-  const inFlight = new Map<string, Promise<BimiIndicator | null>>();
+  const inFlight = new Map<string, Promise<BimiAnswer>>();
+  // The same two for the lookups that callers without a session started.
+  const sessionlessCache = new Map<string, CacheEntry>();
+  const sessionlessInFlight = new Map<string, Promise<BimiAnswer>>();
+  // Lookups of each kind that wait to hear whether their caller may start them.
+  const asking = { signedIn: 0, sessionless: 0 };
+  // Drawing is the expensive step; only a few run at once, whatever the
+  // number of lookups waiting for one.
+  const drawing = drawingSlots(MAX_DRAWINGS, SESSIONLESS_MAX_DRAWINGS, DRAW_SLOT_WAIT_MS);
+  let drawingNotStartedWarnedAt = -Infinity;
 
-  function remember(domain: string, indicator: BimiIndicator | null, ttl: number) {
-    cache.delete(domain);
+  /** While the drawing process doesn't start, no sender has a logo: said as a warning, once per interval. */
+  function drawingNotStarted(domain: string, reason: string) {
+    const now = deps.now();
+    if (now - drawingNotStartedWarnedAt < DRAWING_NOT_STARTED_WARN_MS) return;
+    drawingNotStartedWarnedAt = now;
+    logger.warn('BIMI logos are not shown: the process that draws them does not start', { domain, reason });
+  }
+
+  function remember(domain: string, indicator: BimiIndicator | null, ttl: number, sessionless: boolean) {
+    const into = sessionless ? sessionlessCache : cache;
+    const max = sessionless ? SESSIONLESS_CACHE_MAX : CACHE_MAX;
+    into.delete(domain);
     // Map keeps insertion order: the first key is the oldest.
-    while (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value!);
-    cache.set(domain, { indicator, expiresAt: deps.now() + ttl });
+    while (into.size >= max) into.delete(into.keys().next().value!);
+    into.set(domain, { indicator, expiresAt: deps.now() + ttl });
+    // From now on the answer of the signed-in lookup is the one to serve.
+    if (!sessionless) sessionlessCache.delete(domain);
   }
 
   async function txt(name: string): Promise<string[]> {
@@ -184,7 +312,7 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
     }
   }
 
-  async function lookup(domain: string): Promise<{ indicator: BimiIndicator | null; ttl: number }> {
+  async function lookup(domain: string, sessionless: boolean): Promise<{ indicator: BimiIndicator | null; ttl: number }> {
     const none = { indicator: null, ttl: NEGATIVE_TTL_MS };
     const organizational = getRootDomain(domain);
     const isSubdomain = organizational !== domain;
@@ -235,54 +363,118 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
       indicator = { status: 'self-asserted' };
     }
 
-    const problem = checkSvg(svg, { strictProfile: indicator.status === 'self-asserted' });
-    if (problem) {
-      logger.debug('BIMI logo rejected', { domain, reason: problem });
+    const checked = checkedSvg(svg, { strictProfile: indicator.status === 'self-asserted' });
+    if (!checked.ok) {
+      logger.debug('BIMI logo rejected', { domain, reason: checked.reason });
       return none;
     }
+    // The certified logo goes through the same check above and the same
+    // bounded drawing here. What is drawn is the checked document.
+    const release = await drawing.acquire(sessionless);
+    if (!release) throw new BusyError(`no free drawing slot for ${domain}`);
     let png: Buffer;
     try {
-      png = await rasterize(svg);
-    } catch {
+      png = await rasterize(checked.svg, { onStopped: release });
+    } catch (err) {
+      // A logo that fails to draw or draws past its own deadline is cached as
+      // no logo like any other refused one. A drawing that didn't run its
+      // course because of this server (it couldn't start, or the server was
+      // too busy to hear back in time) says nothing about the logo.
+      if ((err as { temporary?: unknown }).temporary === true) {
+        if ((err as { neverStarted?: unknown }).neverStarted === true) drawingNotStarted(domain, (err as Error).message);
+        throw new BusyError(`BIMI logo not drawn for ${domain}: ${(err as Error).message}`);
+      }
+      logger.debug('BIMI logo not drawn', { domain, reason: (err as Error).message });
       return none;
     }
     return { indicator: { ...indicator, png }, ttl };
   }
 
   /**
-   * The indicator for a From domain, or null. Cached per domain; concurrent
-   * calls for one domain share a lookup.
+   * The indicator for a From domain, and whether the answer had to be put
+   * off. Cached per domain; concurrent calls for one domain share a lookup.
+   * A new lookup starts only when fewer than MAX_IN_FLIGHT run and
+   * `mayStart` (asked only then) agrees; otherwise the answer is what the
+   * cache had, `deferred`, and worth asking for again later.
+   *
+   * A `sessionless` caller is answered from what signed-in lookups cached
+   * or have under way, and otherwise from the pool of its kind: at most
+   * SESSIONLESS_MAX_IN_FLIGHT lookups, a cache of their own, one drawing
+   * slot. A signed-in caller reads and waits for nothing in that pool.
    */
-  async function resolve(rawDomain: string): Promise<BimiIndicator | null> {
+  async function answer(rawDomain: string, mayStart?: () => Promise<boolean>, sessionless = false): Promise<BimiAnswer> {
     const domain = normalizeBimiDomain(rawDomain);
-    if (!domain) return null;
-    const cached = cache.get(domain);
-    if (cached && cached.expiresAt > deps.now()) return cached.indicator;
-    const pending = inFlight.get(domain);
-    if (pending) return pending;
-    if (inFlight.size >= MAX_IN_FLIGHT) return cached?.indicator ?? null;
+    if (!domain) return { indicator: null, deferred: false };
+    const fresh = (): CacheEntry | undefined => {
+      const now = deps.now();
+      const entry = cache.get(domain);
+      if (entry && entry.expiresAt > now) return entry;
+      const own = sessionless ? sessionlessCache.get(domain) : undefined;
+      return own && own.expiresAt > now ? own : undefined;
+    };
+    const underWay = () => inFlight.get(domain) ?? (sessionless ? sessionlessInFlight.get(domain) : undefined);
+    const kind = sessionless ? 'sessionless' : 'signedIn';
+    const pool = sessionless ? sessionlessInFlight : inFlight;
+    const poolMax = sessionless ? SESSIONLESS_MAX_IN_FLIGHT : MAX_IN_FLIGHT;
 
-    const run = (async () => {
+    const cached = fresh();
+    if (cached) return { indicator: cached.indicator, deferred: false };
+    const stale = (sessionless ? sessionlessCache.get(domain) : undefined) ?? cache.get(domain);
+    const deferred = { indicator: stale?.indicator ?? null, deferred: true };
+    const joined = underWay();
+    if (joined) return joined;
+    // A lookup that is asking `mayStart` keeps its place among the running
+    // ones meanwhile, so a caller is only asked (and its budget only
+    // charged) for a lookup that has room to run.
+    if (pool.size + asking[kind] >= poolMax) return deferred;
+    if (mayStart) {
+      asking[kind]++;
+      let allowed: boolean;
       try {
-        const { indicator, ttl } = await lookup(domain);
-        remember(domain, indicator, ttl);
-        return indicator;
+        allowed = await mayStart();
+      } finally {
+        asking[kind]--;
+      }
+      if (!allowed) return deferred;
+    }
+    // Another caller may have looked it up or started it meanwhile.
+    const done = fresh();
+    if (done) return { indicator: done.indicator, deferred: false };
+    const pending = underWay();
+    if (pending) return pending;
+    if (pool.size >= poolMax) return deferred;
+
+    const run = (async (): Promise<BimiAnswer> => {
+      try {
+        const { indicator, ttl } = await lookup(domain, sessionless);
+        remember(domain, indicator, ttl, sessionless);
+        return { indicator, deferred: false };
       } catch (err) {
+        // The server was busy: nothing is remembered, and the answer is "not now".
+        if (err instanceof BusyError) {
+          logger.debug('BIMI logo put off', { domain, error: err.message });
+          return deferred;
+        }
         if (err instanceof TemporaryError) logger.debug('BIMI lookup failed, retrying later', { domain, error: err.message });
         else logger.warn('BIMI lookup failed', { domain, error: (err as Error).message });
         // Keep showing what we had; otherwise ask again after a short pause.
-        const fallback = cached?.indicator ?? null;
-        remember(domain, fallback, ERROR_TTL_MS);
-        return fallback;
+        const fallback = stale?.indicator ?? null;
+        remember(domain, fallback, ERROR_TTL_MS, sessionless);
+        return { indicator: fallback, deferred: false };
       } finally {
-        inFlight.delete(domain);
+        pool.delete(domain);
       }
     })();
-    inFlight.set(domain, run);
+    pool.set(domain, run);
     return run;
   }
 
-  return { resolve, clear: () => { cache.clear(); crlCache.clear(); } };
+  /** The indicator for a From domain, or null. */
+  async function resolve(rawDomain: string): Promise<BimiIndicator | null> {
+    return (await answer(rawDomain)).indicator;
+  }
+
+  return { answer, resolve, clear: () => { cache.clear(); sessionlessCache.clear(); crlCache.clear(); } };
 }
 
 let shared: ReturnType<typeof createBimiResolver> | null = null;

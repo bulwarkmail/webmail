@@ -63,10 +63,25 @@ export interface CertificateOptions {
   fetchCrl?: (url: string) => Promise<Uint8Array | null>;
 }
 
-const PEM_BLOCK = /-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g;
+const PEM_BEGIN = '-----BEGIN CERTIFICATE-----';
+const PEM_END = '-----END CERTIFICATE-----';
 
+/**
+ * The certificates in a PEM bundle, each from a BEGIN line to the next END
+ * line. Reads the text once: a BEGIN with no END after it ends the bundle.
+ */
 export function splitPem(pem: string): X509Certificate[] {
-  return (pem.match(PEM_BLOCK) ?? []).map((block) => new X509Certificate(block));
+  const certificates: X509Certificate[] = [];
+  let pos = 0;
+  for (;;) {
+    const begin = pem.indexOf(PEM_BEGIN, pos);
+    if (begin === -1) break;
+    const end = pem.indexOf(PEM_END, begin + PEM_BEGIN.length);
+    if (end === -1) break;
+    pos = end + PEM_END.length;
+    certificates.push(new X509Certificate(pem.slice(begin, pos)));
+  }
+  return certificates;
 }
 
 function hasBimiEku(cert: X509Certificate): boolean {
