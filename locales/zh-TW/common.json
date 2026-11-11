@@ -6124,7 +6124,8 @@
   "account_routing": {
     "group_members_one_account": "一個群組只能包含同一帳號的聯絡人。",
     "link_names_no_account": "此連結沒有指出郵件所在的帳號，因此沒有開啟。",
-    "group_member_gone": "所選的其中一位聯絡人已不存在。請重新選擇成員。"
+    "group_member_gone": "所選的其中一位聯絡人已不存在。請重新選擇成員。",
+    "invitation_other_account": "此邀請在另一個帳號中。請切換到該帳號再回覆或新增到行事曆。"
   },
   "mail_import": {
     "menu_import": "匯入郵件…",

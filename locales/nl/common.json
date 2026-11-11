@@ -5855,7 +5855,8 @@
   "account_routing": {
     "group_members_one_account": "Een groep kan alleen contacten van één account bevatten.",
     "link_names_no_account": "Deze link zegt niet in welk account het bericht staat, dus is hij niet geopend.",
-    "group_member_gone": "Een van de gekozen contacten bestaat niet meer. Kies de leden opnieuw."
+    "group_member_gone": "Een van de gekozen contacten bestaat niet meer. Kies de leden opnieuw.",
+    "invitation_other_account": "Deze uitnodiging staat in een ander account. Schakel over naar dat account om erop te antwoorden of haar aan een agenda toe te voegen."
   },
   "mail_import": {
     "menu_import": "E-mail importeren…",

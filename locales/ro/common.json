@@ -6124,7 +6124,8 @@
   "account_routing": {
     "group_members_one_account": "Un grup poate conține doar contacte dintr-un singur cont.",
     "link_names_no_account": "Acest link nu spune în ce cont se află mesajul, așa că nu a fost deschis.",
-    "group_member_gone": "Unul dintre contactele alese nu mai există. Alegeți din nou membrii."
+    "group_member_gone": "Unul dintre contactele alese nu mai există. Alegeți din nou membrii.",
+    "invitation_other_account": "Această invitație se află în alt cont. Treci la acel cont ca să răspunzi la ea sau să o adaugi într-un calendar."
   },
   "mail_import": {
     "menu_import": "Importă e-mailuri…",

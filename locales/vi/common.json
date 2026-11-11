@@ -6136,7 +6136,8 @@
   "account_routing": {
     "group_members_one_account": "Một nhóm chỉ có thể chứa danh bạ của một tài khoản.",
     "link_names_no_account": "Liên kết này không cho biết thư nằm trong tài khoản nào nên không được mở.",
-    "group_member_gone": "Một trong các liên hệ đã chọn không còn tồn tại. Hãy chọn lại thành viên."
+    "group_member_gone": "Một trong các liên hệ đã chọn không còn tồn tại. Hãy chọn lại thành viên.",
+    "invitation_other_account": "Lời mời này nằm trong tài khoản khác. Chuyển sang tài khoản đó để trả lời hoặc thêm vào lịch."
   },
   "mail_import": {
     "menu_import": "Nhập thư…",

@@ -58,6 +58,7 @@ import { sanitizeColor } from '@/components/calendar/event-card';
 import { RecipientPopover } from './recipient-popover';
 import { useCalendarErrorMessage } from '@/hooks/use-calendar-error-message';
 import { useAccountOwner } from '@/components/calendar/answer-bars';
+import { cachedIdentitiesForAccount } from '@/hooks/use-pro-multi-account-identities';
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { resolveTimeZone } from '@/lib/timezone';
 import { buildRecurrenceSummary } from '@/components/calendar/recurrence-editor';
@@ -395,8 +396,10 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const describeError = useCalendarErrorMessage();
   const locale = useLocale();
   const router = useRouter();
-  const client = useAuthStore((s) => s.client);
+  const tRouting = useTranslations('account_routing');
+  const activeClient = useAuthStore((s) => s.client);
   const getClientForAccount = useAuthStore((s) => s.getClientForAccount);
+  const activeLocalAccountId = useAuthStore((s) => s.activeAccountId);
   const viewingAccountId = useEmailStore((s) => s.viewingAccountId);
   const selectedMailboxId = useEmailStore((s) => s.selectedMailbox);
   const viewMailboxes = useEmailStore((s) => (
@@ -406,10 +409,18 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   // the login the message is reachable from - its source stamp in aggregate
   // views, the per-account sidebar's viewing account otherwise - and against its
   // owning JMAP account. Against any other account Stalwart answers
-  // CalendarEvent/parse with an error. Calendar actions (import / RSVP) keep
-  // using the active client, whose calendars the calendar store holds. (#867)
+  // CalendarEvent/parse with an error. Never through another login: the same
+  // blob id is another file there. (#867)
   const sourceClientId = email.sourceClientAccountId ?? viewingAccountId ?? null;
-  const parseClient = (sourceClientId ? getClientForAccount?.(sourceClientId) : undefined) ?? client;
+  const parseClient = sourceClientId
+    ? getClientForAccount?.(sourceClientId) ?? (sourceClientId === activeLocalAccountId ? activeClient : null)
+    : activeClient;
+  // The calendar actions (import, RSVP, remove) work on the calendar store,
+  // which holds the active login's calendars. An invitation in another
+  // login's message belongs in that login's calendar: it is shown, and
+  // nothing for it is read from or written to the active login's calendar.
+  const otherLogin = !!sourceClientId && parseClient !== activeClient;
+  const client = otherLogin ? null : activeClient;
   // An undecorated message opened directly in a shared/group folder (the
   // "Shared" sidebar section) has no source stamp, but its blob lives in the
   // folder owner's account, reached through the viewing client - mirrors
@@ -419,13 +430,19 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const sharedOwnerAccountId = viewedMailbox?.isShared ? viewedMailbox.accountId : undefined;
   const blobAccountId = email.sourceAccountId ?? sharedOwnerAccountId ?? parseClient?.getAccountId();
   // Every address the user sends as, primary first: an invite may be
-  // addressed to an alias identity (#1283).
-  const identityEmails = useAuthStore(useShallow((s) => {
+  // addressed to an alias identity (#1283). For a message of another login,
+  // that login's addresses as last read.
+  const activeIdentityEmails = useAuthStore(useShallow((s) => {
     const emails = [s.primaryIdentity?.email, ...s.identities.map((identity) => identity.email)]
       .filter((address): address is string => Boolean(address))
       .map((address) => address.toLowerCase());
     return Array.from(new Set(emails));
   }));
+  const identityEmails = useMemo(() => {
+    if (!otherLogin) return activeIdentityEmails;
+    const ofLogin = (sourceClientId ? cachedIdentitiesForAccount(sourceClientId) : undefined) ?? [];
+    return Array.from(new Set(ofLogin.map((identity) => identity.email?.toLowerCase()).filter((address): address is string => Boolean(address))));
+  }, [otherLogin, sourceClientId, activeIdentityEmails]);
   // The organisation's other domains, for the message's own account.
   const internalMailDomains = useInternalMailDomains(email.sourceClientAccountId);
   const calendarInvitationParsingEnabled = useSettingsStore((s) => s.calendarInvitationParsingEnabled);
@@ -459,9 +476,9 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   // The user's zone, as getEffectiveTimeZone resolves it.
   const userTimeZone = resolveTimeZone(useSettingsStore((s) => s.timeZone));
-  const { calendars: allCalendars, supportsCalendar, importEvents, rsvpEvent, updateEvent, deleteEvent, events: storeEvents, setSelectedDate } = useCalendarStore(useShallow((state) => ({
+  const { calendars: allCalendars, storeSupportsCalendar, importEvents, rsvpEvent, updateEvent, deleteEvent, events: storeEvents, setSelectedDate } = useCalendarStore(useShallow((state) => ({
     calendars: state.calendars,
-    supportsCalendar: state.supportsCalendar,
+    storeSupportsCalendar: state.supportsCalendar,
     importEvents: state.importEvents,
     rsvpEvent: state.rsvpEvent,
     updateEvent: state.updateEvent,
@@ -470,10 +487,12 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     setSelectedDate: state.setSelectedDate,
   })));
 
+  // No calendar to act on for a message of another login (see otherLogin).
+  const supportsCalendar = storeSupportsCalendar && !otherLogin;
+
   // Where an invitation can go: the calendars of the account on screen that show
   // in the grid. A task list would hide the event, and another login's calendar
   // would put the meeting in the wrong account (pim-p2-2).
-  const activeLocalAccountId = useAuthStore((s) => s.activeAccountId);
   const calendars = useMemo(() => {
     const mine = allCalendars.filter((c) => !c.localAccountId || c.localAccountId === activeLocalAccountId);
     const targets = eventTargets(mine);
@@ -507,7 +526,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const attachment = findCalendarAttachment(email);
 
   const parseEvent = useCallback(async () => {
-    if (!client || !parseClient || !blobAccountId || !attachment || !calendarInvitationParsingEnabled) return;
+    if (!parseClient || !blobAccountId || !attachment || !calendarInvitationParsingEnabled) return;
     setState('loading');
     setActionNotice(null);
     setActionError(null);
@@ -552,7 +571,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       if (parsed.uid && supportsCalendar && sharedMailAccount) {
         // The copy in the shared or group account the message belongs to.
         void loadSharedCopyRef.current(parsed.uid).catch(() => { /* ignore lookup failure */ });
-      } else if (parsed.uid && supportsCalendar) {
+      } else if (parsed.uid && supportsCalendar && client) {
         const storeHasIt = useCalendarStore.getState().events.some((e) => e.uid === parsed.uid);
         if (!storeHasIt) {
           client.queryCalendarEvents({ uid: parsed.uid })
@@ -671,8 +690,9 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   // someone invited too holds that person's copy under the same uid, and
   // answering there would answer for them (or, on Stalwart 0.16, for
   // whichever address it picks; the duplicate attendees and wrong senders of
-  // #634).
-  const storedCopy = parsedEvent?.uid
+  // #634). None for a message of another login: the store's copy with that
+  // uid is the active login's.
+  const storedCopy = parsedEvent?.uid && !otherLogin
     ? storeEvents.find((e) => e.uid === parsedEvent.uid && (sharedMailAccount ? e.accountId === sharedMailAccount : !e.isShared))
     : null;
   const existingEvent = seriesMaster ?? storedCopy;
@@ -721,7 +741,9 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
         : '',
     })
     : null;
-  const bannerInfo = answeredInfo ?? getBannerInfo(t, method, userIsOrganizer, supportsCalendar);
+  // A message of another login: what the invitation is, as usual; the actions
+  // row says why there are none.
+  const bannerInfo = answeredInfo ?? getBannerInfo(t, method, userIsOrganizer, supportsCalendar || otherLogin);
   // "You declined Nov 3": the weeks answered no on their own, by their date.
   const declinedOccurrences = seriesMaster && method === 'request' && !rsvpStatus
     ? seriesAnswers(seriesMaster, actingEmails).declined
@@ -1380,7 +1402,9 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           )}
 
           {!supportsCalendar && (
-            <span className="text-xs text-muted-foreground italic">{t('no_calendar')}</span>
+            <span className="text-xs text-muted-foreground italic" data-invitation-other-account={otherLogin ? '' : undefined}>
+              {otherLogin ? tRouting('invitation_other_account') : t('no_calendar')}
+            </span>
           )}
 
           {isProcessing && (

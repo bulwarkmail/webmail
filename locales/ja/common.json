@@ -5855,7 +5855,8 @@
   "account_routing": {
     "group_members_one_account": "グループに入れられるのは 1 つのアカウントの連絡先だけです。",
     "link_names_no_account": "このリンクにはメッセージのあるアカウントが示されていないため、開きませんでした。",
-    "group_member_gone": "選んだ連絡先の 1 つがもう存在しません。メンバーを選び直してください。"
+    "group_member_gone": "選んだ連絡先の 1 つがもう存在しません。メンバーを選び直してください。",
+    "invitation_other_account": "この招待は別のアカウントにあります。返信したりカレンダーに追加したりするには、そのアカウントに切り替えてください。"
   },
   "mail_import": {
     "menu_import": "メールをインポート…",
