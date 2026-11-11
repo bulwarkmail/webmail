@@ -41,6 +41,7 @@ import {
 import { clearStalwartAuthContextInStore, readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
+import { revokeWopiTokens } from '@/lib/wopi/revocation';
 import {
   clearCustomUpstream,
   readCustomUpstream,
@@ -212,6 +213,8 @@ export async function PUT(request: NextRequest) {
       const maxHours = await maxSessionHoursFor(account);
       if (isPastMaxAge(age.signedInAt, maxHours)) {
         await signOutSlot(cookieStore, slot, request.nextUrl.basePath, false);
+        // Office editors this session opened in this browser end with it.
+        await revokeWopiTokens(cookieStore, slot);
         clearStalwartAuthContextInStore(cookieStore, slot);
         return NextResponse.json({ error: SESSION_TOO_OLD, maxHours }, { status: 401 });
       }

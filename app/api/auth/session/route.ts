@@ -81,7 +81,8 @@ function getSlot(request: NextRequest): number {
  * recorded counts as signed in when the server first enforced the limits,
  * a fixed time, so a kept copy of it runs out like any other. Returns the
  * sign-in time, or the limit when the session is too old: its cookies are
- * cleared then.
+ * cleared then, and the office editors it opened in this browser stop
+ * working.
  */
 async function checkSessionAge(
   cookieStore: Awaited<ReturnType<typeof cookies>>,
@@ -92,6 +93,7 @@ async function checkSessionAge(
   // An impersonation login is `target%master`; the policy is the target's.
   const maxHours = await maxSessionHoursFor(credentials.username.split('%', 1)[0]);
   if (isPastMaxAge(signedInAt, maxHours)) {
+    await revokeWopiTokens(cookieStore, slot);
     cookieStore.delete(sessionCookieName(slot));
     clearStalwartAuthContextInStore(cookieStore, slot);
     return { maxHours };

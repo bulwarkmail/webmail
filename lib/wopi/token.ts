@@ -58,6 +58,12 @@ export interface WopiTokenPayload {
    */
   bid?: string;
   slot?: number;
+  /**
+   * When the session that opened the editor signed in (ms). The token is
+   * refused once that session is past the organisation's maximum length
+   * (see lib/wopi/request.ts). Tokens minted without it just expire.
+   */
+  signedInAt?: number;
   /** Expiry, ms since epoch. */
   exp: number;
 }
@@ -121,6 +127,7 @@ export function verifyWopiToken(token: string | null, documentId: string): WopiT
   if (p.kind !== undefined && p.kind !== 'file' && p.kind !== 'attachment') return null;
   if (p.bid !== undefined && typeof p.bid !== 'string') return null;
   if (p.slot !== undefined && typeof p.slot !== 'number') return null;
+  if (p.signedInAt !== undefined && (typeof p.signedInAt !== 'number' || !Number.isFinite(p.signedInAt))) return null;
   if (p.postMessageOrigin !== undefined && typeof p.postMessageOrigin !== 'string') return null;
   if (p.uploadAccountId !== undefined && (typeof p.uploadAccountId !== 'string' || !p.uploadAccountId)) return null;
   if (wopiDocumentId(p) !== documentId) return null;

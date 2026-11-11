@@ -4,6 +4,7 @@ import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, readSignInStamp 
 import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { refreshTokenCookieName } from '@/lib/oauth/tokens';
+import { revokeWopiTokens } from '@/lib/wopi/revocation';
 
 const STALWART_AUTH_CONTEXT_COOKIE = 'jmap_stalwart_ctx';
 
@@ -93,8 +94,9 @@ function contextAccount(context: StalwartAuthContext): string {
 /**
  * The slot's context, or null when there is none or its session has
  * outlived the organisation's maximum session length. A context past the
- * maximum is cleared. Every route that acts with the stored credential reads
- * it through this; without a maximum it is the plain read.
+ * maximum is cleared, and the office editors that session opened in this
+ * browser stop working with it. Every route that acts with the stored
+ * credential reads it through this; without a maximum it is the plain read.
  */
 export async function readCurrentStalwartAuthContext(
   cookieStore: CookieStore,
@@ -105,6 +107,7 @@ export async function readCurrentStalwartAuthContext(
   const maxHours = await maxSessionHoursFor(contextAccount(context));
   if (!maxHours) return context;
   if (!isPastMaxAge(context.signedInAt ?? await limitsEnforcedSince(), maxHours)) return context;
+  await revokeWopiTokens(cookieStore, slot);
   clearStalwartAuthContextInStore(cookieStore, slot);
   return null;
 }

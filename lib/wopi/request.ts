@@ -1,8 +1,20 @@
 import type { NextRequest } from 'next/server';
+import { isPastMaxAge, maxSessionHoursFor } from '@/lib/auth/session-age';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import type { WopiJmapContext } from '@/lib/wopi/files';
 import { verifyWopiToken, type WopiTokenPayload } from '@/lib/wopi/token';
 import { isWopiTokenRevoked } from '@/lib/wopi/revocation';
+
+/**
+ * Whether the session that opened the editor is past the organisation's
+ * maximum length now. A token that doesn't say when its session signed in
+ * ends with its own expiry.
+ */
+async function sessionPastMaxAge(payload: WopiTokenPayload): Promise<boolean> {
+  if (payload.signedInAt === undefined) return false;
+  // An impersonation login is `target%master`; the policy is the target's.
+  return isPastMaxAge(payload.signedInAt, await maxSessionHoursFor(payload.username.split('%', 1)[0]));
+}
 
 /**
  * Authenticate an incoming WOPI request (called by the editor
@@ -17,6 +29,8 @@ export async function wopiContext(
   if (!payload) return null;
   // Signed out since the editor was opened.
   if (await isWopiTokenRevoked(payload)) return null;
+  // The session that opened it has outlived the maximum session length.
+  if (await sessionPastMaxAge(payload)) return null;
   // Trust is re-derived from the current config, not persisted in the token
   // (mirrors lib/stalwart/server-fetch.ts): removing a server from the config
   // immediately drops its tokens to the rebinding-safe fetch path. A server on

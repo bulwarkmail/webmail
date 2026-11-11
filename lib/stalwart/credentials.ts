@@ -24,6 +24,12 @@ export interface StalwartCredentials {
    * `fetchJmapServer` in `@/lib/stalwart/server-fetch`.
    */
   trusted: boolean;
+  /**
+   * When the session holding this credential signed in (ms), for whatever it
+   * hands on (an office editor token) to end with that session. Absent for a
+   * context written before sign-in times were recorded.
+   */
+  signedInAt?: number;
 }
 
 function parseSlot(raw: string | null): number | null {
@@ -59,6 +65,7 @@ export async function getStalwartCredentials(request: NextRequest): Promise<Stal
       hasSessionCookie: !!cookieStore.get(sessionCookieName(slot))?.value,
       slot,
       trusted: await isTrustedJmapServerUrl(serverUrl),
+      ...(context.signedInAt !== undefined ? { signedInAt: context.signedInAt } : {}),
     };
   }
 
