@@ -7777,6 +7777,8 @@
     "start_at_login_description": "برنامه هنگام ورود خودش شروع می‌شود.",
     "start_minimized_label": "شروع در سینی سیستم",
     "start_minimized_description": "هنگام ورود پنجره‌ای باز نمی‌شود. با نماد سینی سیستم آن را باز کنید.",
+    "reopen_after_restart_label": "باز کردن دوباره پس از راه‌اندازی مجدد",
+    "reopen_after_restart_description": "اگر برنامه هنگام راه‌اندازی مجدد رایانه یا خروج شما از حساب باز باشد، هنگام ورود دوباره در همان پوشه، پیام یا صفحه باز می‌شود.",
     "attention_label": "چشمک نوار وظیفه هنگام نامه جدید",
     "attention_mac_label": "جهش نماد Dock هنگام نامه جدید",
     "attention_description": "فقط وقتی برنامه در جلو نیست.",

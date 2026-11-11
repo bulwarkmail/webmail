@@ -7777,6 +7777,8 @@
     "start_at_login_description": "Az alkalmazás bejelentkezéskor magától elindul.",
     "start_minimized_label": "Indítás a tálcán",
     "start_minimized_description": "Bejelentkezéskor nem nyílik ablak. A tálcaikonnal nyithatja meg.",
+    "reopen_after_restart_label": "Újranyitás újraindítás után",
+    "reopen_after_restart_description": "Ha az alkalmazás nyitva van, amikor a számítógép újraindul vagy kijelentkezik, a következő bejelentkezéskor újra megnyílik ugyanazon a mappán, üzeneten vagy oldalon.",
     "attention_label": "Tálca villogtatása új levélnél",
     "attention_mac_label": "Dock-ikon ugráltatása új levélnél",
     "attention_description": "Csak ha az alkalmazás nincs előtérben.",

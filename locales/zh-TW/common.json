@@ -7777,6 +7777,8 @@
     "start_at_login_description": "您登入時應用程式會自動啟動。",
     "start_minimized_label": "在系統匣中啟動",
     "start_minimized_description": "登入時不開啟視窗。請透過系統匣圖示開啟。",
+    "reopen_after_restart_label": "重新開機後再次開啟",
+    "reopen_after_restart_description": "如果電腦重新開機或你登出時應用程式正在開啟，下次登入時會再次開啟，並回到同一個資料夾、郵件或頁面。",
     "attention_label": "有新郵件時閃爍工作列",
     "attention_mac_label": "有新郵件時讓 Dock 圖示跳動",
     "attention_description": "僅在應用程式不在前景時。",

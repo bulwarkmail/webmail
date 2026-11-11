@@ -7777,6 +7777,8 @@
     "start_at_login_description": "Aplikacja uruchamia się sama po zalogowaniu.",
     "start_minimized_label": "Uruchamiaj w zasobniku",
     "start_minimized_description": "Po zalogowaniu nie otwiera się okno. Otwórz je ikoną w zasobniku.",
+    "reopen_after_restart_label": "Otwórz ponownie po ponownym uruchomieniu",
+    "reopen_after_restart_description": "Jeśli aplikacja jest otwarta, gdy komputer uruchamia się ponownie lub się wylogowujesz, otworzy się znowu po zalogowaniu, w tym samym folderze, przy tej samej wiadomości lub stronie.",
     "attention_label": "Migaj na pasku zadań przy nowej poczcie",
     "attention_mac_label": "Podskakuj ikoną w Docku przy nowej poczcie",
     "attention_description": "Tylko gdy aplikacja nie jest na wierzchu.",

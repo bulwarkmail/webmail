@@ -7777,6 +7777,8 @@
     "start_at_login_description": "サインインするとアプリが自動で起動します。",
     "start_minimized_label": "トレイで起動",
     "start_minimized_description": "サインイン時にウィンドウは開きません。トレイのアイコンから開いてください。",
+    "reopen_after_restart_label": "再起動後にもう一度開く",
+    "reopen_after_restart_description": "コンピューターの再起動時やサインアウト時にアプリが開いていた場合、次にサインインしたときに同じフォルダー、メッセージ、ページで再び開きます。",
     "attention_label": "新着メールでタスクバーを点滅",
     "attention_mac_label": "新着メールで Dock アイコンを跳ねさせる",
     "attention_description": "アプリが前面にないときのみ。",

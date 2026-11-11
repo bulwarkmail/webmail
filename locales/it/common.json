@@ -7777,6 +7777,8 @@
     "start_at_login_description": "L'app si avvia da sola quando accedi.",
     "start_minimized_label": "Avvia nell'area di notifica",
     "start_minimized_description": "All'accesso non si apre alcuna finestra. Aprila con l'icona nell'area di notifica.",
+    "reopen_after_restart_label": "Riapri dopo un riavvio",
+    "reopen_after_restart_description": "Se l’app è aperta quando il computer si riavvia o esci dalla sessione, si riapre al prossimo accesso, sulla stessa cartella, messaggio o pagina.",
     "attention_label": "Fai lampeggiare la barra delle applicazioni con nuova posta",
     "attention_mac_label": "Fai rimbalzare l'icona del Dock con nuova posta",
     "attention_description": "Solo quando l'app non è in primo piano.",

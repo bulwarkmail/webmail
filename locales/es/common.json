@@ -7777,6 +7777,8 @@
     "start_at_login_description": "La aplicación se inicia sola cuando entras.",
     "start_minimized_label": "Iniciar en la bandeja",
     "start_minimized_description": "No se abre ninguna ventana al entrar. Ábrela con el icono de la bandeja.",
+    "reopen_after_restart_label": "Volver a abrir tras reiniciar",
+    "reopen_after_restart_description": "Si la aplicación está abierta cuando el equipo se reinicia o cierras sesión, se vuelve a abrir al iniciar sesión, en la misma carpeta, mensaje o página.",
     "attention_label": "Hacer parpadear la barra de tareas con correo nuevo",
     "attention_mac_label": "Hacer rebotar el icono del Dock con correo nuevo",
     "attention_description": "Solo cuando la aplicación no está delante.",

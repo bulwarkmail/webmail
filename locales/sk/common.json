@@ -7777,6 +7777,8 @@
     "start_at_login_description": "Aplikácia sa po prihlásení spustí sama.",
     "start_minimized_label": "Spustiť v oblasti oznámení",
     "start_minimized_description": "Po prihlásení sa neotvorí žiadne okno. Otvorte ju ikonou v oblasti oznámení.",
+    "reopen_after_restart_label": "Znova otvoriť po reštarte",
+    "reopen_after_restart_description": "Ak je aplikácia otvorená, keď sa počítač reštartuje alebo sa odhlásite, po prihlásení sa znova otvorí na rovnakom priečinku, správe alebo stránke.",
     "attention_label": "Pri novej pošte blikať na paneli úloh",
     "attention_mac_label": "Pri novej pošte poskakovať ikonou v Docku",
     "attention_description": "Len keď aplikácia nie je v popredí.",

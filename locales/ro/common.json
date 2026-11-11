@@ -7777,6 +7777,8 @@
     "start_at_login_description": "Aplicația pornește singură când te conectezi.",
     "start_minimized_label": "Pornește în zona de notificări",
     "start_minimized_description": "La conectare nu se deschide nicio fereastră. Deschide-o din pictograma din zona de notificări.",
+    "reopen_after_restart_label": "Redeschide după o repornire",
+    "reopen_after_restart_description": "Dacă aplicația este deschisă când computerul repornește sau vă deconectați, se redeschide la următoarea conectare, pe același dosar, mesaj sau pagină.",
     "attention_label": "Clipește în bara de activități la e-mail nou",
     "attention_mac_label": "Sare pictograma din Dock la e-mail nou",
     "attention_description": "Doar când aplicația nu este în față.",

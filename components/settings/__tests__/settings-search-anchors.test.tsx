@@ -95,7 +95,7 @@ const DESKTOP_BRIDGE = {
   os: {
     getStatus: async () => ({
       settings: {
-        closeToTray: false, startAtLogin: false, startMinimized: false, attentionOnNewMail: false,
+        closeToTray: false, startAtLogin: false, startMinimized: false, reopenAfterRestart: false, attentionOnNewMail: false,
         quietHoursEnabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00', showShortcut: null,
       },
       pausedUntil: null,

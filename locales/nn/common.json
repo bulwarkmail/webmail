@@ -7785,6 +7785,8 @@
     "start_at_login_description": "Appen startar av seg sjølv når du loggar inn.",
     "start_minimized_label": "Start i systemfeltet",
     "start_minimized_description": "Ingen vindauge opnar seg ved innlogging. Bruk systemikonet for å opne det.",
+    "reopen_after_restart_label": "Opne igjen etter ein omstart",
+    "reopen_after_restart_description": "Viss appen er open når datamaskina startar på nytt eller du loggar av, opnar han seg igjen når du loggar på, i same mappe, melding eller side.",
     "attention_label": "Lyser opp oppgåvelinja ved ny e-post",
     "attention_mac_label": "Hopp med Dock-ikonet når ny e-post kjem",
     "attention_description": "Berre når appen ikkje er i framgrunnen.",

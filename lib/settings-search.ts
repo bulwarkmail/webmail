@@ -120,6 +120,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings_reorg.sections.start', when: 'desktop' },
     { label: 'desktopOs.close_to_tray_label', when: 'desktop', synonyms: syn2('tray') },
     { label: 'desktopOs.start_at_login_label', when: 'desktop', synonyms: syn2('autostart') },
+    { label: 'desktopOs.reopen_after_restart_label', when: 'desktop' },
     { label: 'desktopUi.settings.title', when: 'desktop' },
     { label: 'desktopUi.settings.double_click_label', when: 'desktop' },
     { label: 'desktopUi.settings.compose_window_label', when: 'desktop' },

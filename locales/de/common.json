@@ -7777,6 +7777,8 @@
     "start_at_login_description": "Die App startet von selbst, wenn Sie sich anmelden.",
     "start_minimized_label": "Im Infobereich starten",
     "start_minimized_description": "Beim Anmelden öffnet sich kein Fenster. Öffnen Sie die App über das Symbol im Infobereich.",
+    "reopen_after_restart_label": "Nach einem Neustart wieder öffnen",
+    "reopen_after_restart_description": "Ist die App offen, wenn der Computer neu startet oder Sie sich abmelden, öffnet sie sich beim nächsten Anmelden wieder, im selben Ordner, auf derselben Nachricht oder Seite.",
     "attention_label": "Taskleiste bei neuen E-Mails blinken lassen",
     "attention_mac_label": "Dock-Symbol bei neuen E-Mails hüpfen lassen",
     "attention_description": "Nur wenn die App nicht im Vordergrund ist.",

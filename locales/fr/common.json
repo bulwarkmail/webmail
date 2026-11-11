@@ -7777,6 +7777,8 @@
     "start_at_login_description": "L'application démarre seule quand vous ouvrez votre session.",
     "start_minimized_label": "Démarrer dans la zone de notification",
     "start_minimized_description": "Aucune fenêtre ne s'ouvre à l'ouverture de session. Ouvrez-la avec l'icône de la zone de notification.",
+    "reopen_after_restart_label": "Rouvrir après un redémarrage",
+    "reopen_after_restart_description": "Si l'application est ouverte quand l'ordinateur redémarre ou que vous vous déconnectez, elle se rouvre à votre prochaine connexion, sur le même dossier, message ou page.",
     "attention_label": "Faire clignoter la barre des tâches à l'arrivée de courrier",
     "attention_mac_label": "Faire rebondir l'icône du Dock à l'arrivée de courrier",
     "attention_description": "Seulement quand l'application n'est pas au premier plan.",

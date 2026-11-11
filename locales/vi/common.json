@@ -7789,6 +7789,8 @@
     "start_at_login_description": "Ứng dụng tự khởi động khi bạn đăng nhập.",
     "start_minimized_label": "Khởi động ở khay hệ thống",
     "start_minimized_description": "Không có cửa sổ nào mở khi đăng nhập. Mở bằng biểu tượng ở khay hệ thống.",
+    "reopen_after_restart_label": "Mở lại sau khi khởi động lại",
+    "reopen_after_restart_description": "Nếu ứng dụng đang mở khi máy tính khởi động lại hoặc bạn đăng xuất, ứng dụng sẽ mở lại khi bạn đăng nhập, tại cùng thư mục, thư hoặc trang.",
     "attention_label": "Nhấp nháy thanh tác vụ khi có thư mới",
     "attention_mac_label": "Làm biểu tượng Dock nảy khi có thư mới",
     "attention_description": "Chỉ khi ứng dụng không ở phía trước.",

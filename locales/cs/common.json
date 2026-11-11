@@ -7777,6 +7777,8 @@
     "start_at_login_description": "Aplikace se po přihlášení spustí sama.",
     "start_minimized_label": "Spustit v oznamovací oblasti",
     "start_minimized_description": "Po přihlášení se neotevře žádné okno. Otevřete ji ikonou v oznamovací oblasti.",
+    "reopen_after_restart_label": "Znovu otevřít po restartu",
+    "reopen_after_restart_description": "Pokud je aplikace otevřená, když se počítač restartuje nebo se odhlásíte, po opětovném přihlášení se znovu otevře na stejné složce, zprávě nebo stránce.",
     "attention_label": "Při nové poště blikat na hlavním panelu",
     "attention_mac_label": "Při nové poště poskakovat ikonou v Docku",
     "attention_description": "Jen když aplikace není v popředí.",

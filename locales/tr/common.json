@@ -7777,6 +7777,8 @@
     "start_at_login_description": "Oturum açtığınızda uygulama kendiliğinden başlar.",
     "start_minimized_label": "Sistem tepsisinde başlat",
     "start_minimized_description": "Oturum açarken pencere açılmaz. Sistem tepsisindeki simgeyle açın.",
+    "reopen_after_restart_label": "Yeniden başlatmadan sonra tekrar aç",
+    "reopen_after_restart_description": "Bilgisayar yeniden başlatıldığında veya oturumu kapattığınızda uygulama açıksa, yeniden oturum açtığınızda aynı klasörde, iletide veya sayfada tekrar açılır.",
     "attention_label": "Yeni postada görev çubuğunu yanıp söndür",
     "attention_mac_label": "Yeni postada Dock simgesini zıplat",
     "attention_description": "Yalnızca uygulama önde değilken.",
