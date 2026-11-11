@@ -43,7 +43,7 @@ const FAKE = 'fake-key-for-the-test';
 
 beforeAll(async () => {
   process.env.SESSION_SECRET = 'test-secret-for-the-plugin-vault-0123456789';
-  vaultDir = mkdtempSync(path.join(tmpdir(), 'rv3-vault-'));
+  vaultDir = mkdtempSync(path.join(tmpdir(), 'bw-credential-headers-vault-'));
   process.env.PLUGIN_SECRETS_DIR = vaultDir;
   server = http.createServer((req, res) => {
     received.push(...Object.values(req.headers).flat().filter((value): value is string => typeof value === 'string'));
