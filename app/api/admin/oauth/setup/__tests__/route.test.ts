@@ -430,7 +430,7 @@ describe('POST /api/admin/oauth/setup', () => {
       expect(res.status).toBe(403);
       const body = await res.json();
       expect(body.needsAdminCredential).toBe(true);
-      expect(body.error).toMatch(/app password or API key/);
+      expect(body.error).toMatch(/app password in Stalwart under \/account > Credentials/);
       expect(setCalls()).toEqual([]);
     });
 

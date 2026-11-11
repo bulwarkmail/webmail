@@ -355,7 +355,7 @@ export function AuthPage() {
                   className={cn(inputClass, 'w-full')}
                 />
                 <p className="text-[0.6875rem] text-muted-foreground mt-1">
-                  With two-step verification on, the password alone won’t work: create an app password or API key for your account in the Stalwart web admin and use that. An API key needs no username.
+                  With two-factor authentication on, the password alone won’t work: create an app password in Stalwart under <code>/account</code> &gt; Credentials, use it here, and delete it after the setup. An API key works too and needs no username.
                 </p>
               </div>
             </div>

@@ -339,8 +339,8 @@ const SESSION_REFUSED =
   + 'Enter a Stalwart admin sign-in below and try again.';
 
 const CREDENTIAL_REFUSED =
-  'Stalwart did not accept this sign-in. With two-step verification on, the password alone does not work: '
-  + 'create an app password or API key in the Stalwart web admin and enter that instead.';
+  'Stalwart did not accept this sign-in. With two-factor authentication on, the password alone does not work: '
+  + 'create an app password in Stalwart under /account > Credentials (or an API key) and enter that instead.';
 
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTER = /[\x00-\x1f\x7f]/;
