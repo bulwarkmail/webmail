@@ -7368,6 +7368,8 @@
       "title": "Az alkalmazás ablakai",
       "double_click_label": "Üzenetek megnyitása új ablakban dupla kattintással",
       "double_click_description": "Egy kattintás továbbra is a lista mellett nyitja meg az üzenetet.",
+      "compose_window_label": "Üzenetek írása mindig új ablakban",
+      "compose_window_description": "Az új üzenetek, válaszok, továbbítások és piszkozatok saját ablakban nyílnak meg a főablak helyett.",
       "restore_label": "Ablakok újranyitása indításkor",
       "restore_description": "A kilépéskor nyitva lévő üzenet- és piszkozatablakok visszatérnek."
     },

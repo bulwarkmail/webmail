@@ -7368,6 +7368,8 @@
       "title": "Lietotnes logi",
       "double_click_label": "Atvērt ziņojumus jaunā logā ar dubultklikšķi",
       "double_click_description": "Viens klikšķis joprojām atver ziņojumu blakus sarakstam.",
+      "compose_window_label": "Vienmēr rakstīt ziņojumus jaunā logā",
+      "compose_window_description": "Jauni ziņojumi, atbildes, pārsūtījumi un melnraksti tiek atvērti atsevišķā logā, nevis galvenajā logā.",
       "restore_label": "Startējot atkal atvērt logus",
       "restore_description": "Ziņojumu un melnrakstu logi, kas bija atvērti izejot, atgriežas."
     },

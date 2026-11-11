@@ -7368,6 +7368,8 @@
       "title": "Ferestrele aplicației",
       "double_click_label": "Deschide mesajele într-o fereastră nouă la dublu clic",
       "double_click_description": "Un singur clic deschide în continuare mesajul lângă listă.",
+      "compose_window_label": "Scrie mereu mesajele într-o fereastră nouă",
+      "compose_window_description": "Mesajele noi, răspunsurile, redirecționările și ciornele se deschid într-o fereastră proprie în loc de fereastra principală.",
       "restore_label": "Redeschide ferestrele la pornire",
       "restore_description": "Ferestrele de mesaje și ciorne deschise la ieșire revin."
     },

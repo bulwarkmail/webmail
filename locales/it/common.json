@@ -7368,6 +7368,8 @@
       "title": "Finestre dell'app",
       "double_click_label": "Apri i messaggi in una nuova finestra con il doppio clic",
       "double_click_description": "Un solo clic apre comunque il messaggio accanto all’elenco.",
+      "compose_window_label": "Scrivi sempre i messaggi in una nuova finestra",
+      "compose_window_description": "Nuovi messaggi, risposte, inoltri e bozze si aprono in una finestra propria invece che nella finestra principale.",
       "restore_label": "Riapri le finestre all’avvio",
       "restore_description": "Le finestre di messaggi e bozze aperte all’uscita tornano."
     },

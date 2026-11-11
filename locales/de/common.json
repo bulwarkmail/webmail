@@ -7368,6 +7368,8 @@
       "title": "Fenster der App",
       "double_click_label": "Nachrichten per Doppelklick in einem neuen Fenster öffnen",
       "double_click_description": "Ein einfacher Klick öffnet die Nachricht weiterhin neben der Liste.",
+      "compose_window_label": "Nachrichten immer in einem neuen Fenster schreiben",
+      "compose_window_description": "Neue Nachrichten, Antworten, Weiterleitungen und Entwürfe öffnen sich in einem eigenen Fenster statt im Hauptfenster.",
       "restore_label": "Fenster beim Start wieder öffnen",
       "restore_description": "Nachrichten- und Entwurfsfenster, die beim Beenden offen waren, werden wieder geöffnet."
     },

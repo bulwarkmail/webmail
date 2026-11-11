@@ -5,19 +5,26 @@
  */
 
 import { useSyncExternalStore } from 'react';
+import { getDesktopPolicy, useDesktopPolicy } from './policy';
+import { DEFAULT_POLICY_SNAPSHOT, effectivePolicyValue, type PolicySnapshot } from './policy-schema';
 
 const STORAGE_KEY = 'bulwark-desktop-window-prefs';
 
 export interface DesktopWindowPrefs {
   /** Double-clicking a message opens it in its own window. */
   openOnDoubleClick: boolean;
+  /**
+   * Every composer opens in a window of its own. Null: the user hasn't chosen, so the
+   * ComposeInNewWindow policy's recommendation, or off. A forced policy wins either way.
+   */
+  composeInWindow: boolean | null;
   /** The windows open at quit come back at the next start. */
   restoreWindows: boolean;
   /** Spellcheck dictionaries from Google, for a language the OS has no checker for. Asked once. */
   dictionaryDownload: 'ask' | 'yes' | 'no';
 }
 
-const DEFAULTS: DesktopWindowPrefs = { openOnDoubleClick: true, restoreWindows: true, dictionaryDownload: 'ask' };
+const DEFAULTS: DesktopWindowPrefs = { openOnDoubleClick: true, composeInWindow: null, restoreWindows: true, dictionaryDownload: 'ask' };
 
 let cached: DesktopWindowPrefs | null = null;
 const listeners = new Set<() => void>();
@@ -33,6 +40,7 @@ export function readDesktopPrefs(): DesktopWindowPrefs {
   }
   cached = {
     openOnDoubleClick: typeof stored.openOnDoubleClick === 'boolean' ? stored.openOnDoubleClick : DEFAULTS.openOnDoubleClick,
+    composeInWindow: typeof stored.composeInWindow === 'boolean' ? stored.composeInWindow : DEFAULTS.composeInWindow,
     restoreWindows: typeof stored.restoreWindows === 'boolean' ? stored.restoreWindows : DEFAULTS.restoreWindows,
     dictionaryDownload: stored.dictionaryDownload === 'yes' || stored.dictionaryDownload === 'no' ? stored.dictionaryDownload : DEFAULTS.dictionaryDownload,
   };
@@ -66,6 +74,23 @@ function subscribe(listener: () => void): () => void {
 
 export function useDesktopPrefs(): DesktopWindowPrefs {
   return useSyncExternalStore(subscribe, readDesktopPrefs, () => DEFAULTS);
+}
+
+/** Whether composers open in their own window: the user's choice under the ComposeInNewWindow policy. */
+export function composeInWindowNow(): boolean {
+  return effectivePolicyValue(composePolicy(getDesktopPolicy()), readDesktopPrefs().composeInWindow) === true;
+}
+
+/** A shell older than the policy doesn't send it: not set. */
+function composePolicy(snapshot: PolicySnapshot): PolicySnapshot['ComposeInNewWindow'] {
+  return snapshot.ComposeInNewWindow ?? DEFAULT_POLICY_SNAPSHOT.ComposeInNewWindow;
+}
+
+/** The same, live, with whether a forced policy holds it. */
+export function useComposeInWindow(): { on: boolean; locked: boolean } {
+  const choice = useDesktopPrefs().composeInWindow;
+  const entry = composePolicy(useDesktopPolicy());
+  return { on: effectivePolicyValue(entry, choice) === true, locked: entry.locked };
 }
 
 /** Test helper. */

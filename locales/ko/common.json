@@ -7368,6 +7368,8 @@
       "title": "앱 창",
       "double_click_label": "두 번 클릭하면 메시지를 새 창에서 열기",
       "double_click_description": "한 번 클릭하면 지금처럼 목록 옆에 메시지가 열립니다.",
+      "compose_window_label": "메시지를 항상 새 창에서 작성",
+      "compose_window_description": "새 메시지, 답장, 전달, 임시보관 메시지가 기본 창 대신 별도의 창에서 열립니다.",
       "restore_label": "시작할 때 창 다시 열기",
       "restore_description": "종료할 때 열려 있던 메시지와 임시보관 창이 다시 열립니다."
     },

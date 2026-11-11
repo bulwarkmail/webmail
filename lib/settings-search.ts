@@ -122,6 +122,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'desktopOs.start_at_login_label', when: 'desktop', synonyms: syn2('autostart') },
     { label: 'desktopUi.settings.title', when: 'desktop' },
     { label: 'desktopUi.settings.double_click_label', when: 'desktop' },
+    { label: 'desktopUi.settings.compose_window_label', when: 'desktop' },
     { label: 'desktopUi.settings.restore_label', when: 'desktop' },
     { label: 'desktopMenuBar.always_show_label', when: 'desktopMenuBar', synonyms: syn2('menu_bar') },
     { label: 'settings_reorg.sections.shortcuts', when: 'desktop' },

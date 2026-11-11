@@ -7368,6 +7368,8 @@
       "title": "Rakenduse aknad",
       "double_click_label": "Ava kirjad topeltklõpsuga uues aknas",
       "double_click_description": "Üks klõps avab kirja endiselt loendi kõrval.",
+      "compose_window_label": "Kirjuta kirju alati uues aknas",
+      "compose_window_description": "Uued kirjad, vastused, edasisaatmised ja mustandid avanevad oma aknas, mitte põhiaknas.",
       "restore_label": "Ava aknad käivitamisel uuesti",
       "restore_description": "Kirja- ja mustandiaknad, mis olid väljumisel avatud, tulevad tagasi."
     },

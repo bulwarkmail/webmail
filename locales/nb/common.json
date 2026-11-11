@@ -7368,6 +7368,8 @@
       "title": "Appens vinduer",
       "double_click_label": "Åpne meldinger i et nytt vindu ved dobbeltklikk",
       "double_click_description": "Et enkelt klikk åpner fortsatt meldingen ved siden av listen.",
+      "compose_window_label": "Skriv alltid meldinger i et nytt vindu",
+      "compose_window_description": "Nye meldinger, svar, videresendinger og utkast åpnes i sitt eget vindu i stedet for i hovedvinduet.",
       "restore_label": "Åpne vinduer på nytt ved start",
       "restore_description": "Meldings- og utkastvinduer som var åpne da du avsluttet, kommer tilbake."
     },

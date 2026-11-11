@@ -7368,6 +7368,8 @@
       "title": "Vensters van de app",
       "double_click_label": "Berichten openen in een nieuw venster met dubbelklikken",
       "double_click_description": "Eén klik opent het bericht nog steeds naast de lijst.",
+      "compose_window_label": "Berichten altijd in een nieuw venster schrijven",
+      "compose_window_description": "Nieuwe berichten, antwoorden, doorgestuurde berichten en concepten openen in een eigen venster in plaats van in het hoofdvenster.",
       "restore_label": "Vensters opnieuw openen bij het starten",
       "restore_description": "Bericht- en conceptvensters die open waren bij het afsluiten, komen terug."
     },

@@ -7368,6 +7368,8 @@
       "title": "应用窗口",
       "double_click_label": "双击时在新窗口中打开邮件",
       "double_click_description": "单击仍会在列表旁打开邮件。",
+      "compose_window_label": "始终在新窗口中撰写邮件",
+      "compose_window_description": "新邮件、回复、转发和草稿会在单独的窗口中打开，而不是在主窗口中。",
       "restore_label": "启动时重新打开窗口",
       "restore_description": "退出时打开的邮件和草稿窗口会恢复。"
     },

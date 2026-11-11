@@ -7368,6 +7368,8 @@
       "title": "App windows",
       "double_click_label": "Open messages in a new window on double-click",
       "double_click_description": "A single click still opens the message next to the list.",
+      "compose_window_label": "Always write messages in a new window",
+      "compose_window_description": "New messages, replies, forwards and drafts open in a window of their own instead of in the main window.",
       "restore_label": "Reopen windows at start",
       "restore_description": "Message and draft windows that were open when you quit come back."
     },

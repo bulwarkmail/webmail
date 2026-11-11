@@ -88,6 +88,7 @@ export interface PolicyValues {
   FilesDriveEnabled: boolean;
   FilesFolderSyncEnabled: boolean;
   FilesDriveLetter: string | null;
+  ComposeInNewWindow: boolean;
 }
 
 export type PolicyKey = keyof PolicyValues;
@@ -559,6 +560,18 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
       de: 'Nur unter Windows. Ein Buchstabe von D bis Z gibt dem Laufwerk Dateien für jeden Benutzer diesen Buchstaben, und Benutzer können ihn nicht ändern. Geben Sie none ein, damit es nie einen Buchstaben bekommt. Wenn nicht konfiguriert, wählen Benutzer in den Einstellungen, und bis dahin gibt es keinen Buchstaben. Ein Wert, den die App nicht lesen kann, gilt als none.',
     },
   },
+  ComposeInNewWindow: {
+    category: 'system',
+    type: 'boolean',
+    default: false,
+    onInvalid: false,
+    sample: true,
+    title: { en: 'Write messages in a new window', de: 'Nachrichten in einem neuen Fenster schreiben' },
+    description: {
+      en: 'When enabled, every new message, reply, forward and draft opens in a window of its own instead of inside the main window. When disabled, they open inside the main window, and "Open in new window" still moves one out. Forced, the setting is locked. As a recommendation, it is the starting value of the setting under Settings, which people can change. When not configured, the setting is off until the user turns it on.',
+      de: 'Wenn aktiviert, öffnet sich jede neue Nachricht, Antwort, Weiterleitung und jeder Entwurf in einem eigenen Fenster statt im Hauptfenster. Wenn deaktiviert, öffnen sie sich im Hauptfenster, und „In neuem Fenster öffnen“ verschiebt sie weiterhin in ein eigenes Fenster. Erzwungen ist die Einstellung gesperrt. Als Empfehlung ist es der Anfangswert der Einstellung in den Einstellungen, den Benutzer ändern können. Wenn nicht konfiguriert, ist die Einstellung aus, bis der Benutzer sie einschaltet.',
+    },
+  },
 };
 
 export const POLICY_KEYS = Object.keys(POLICY_SCHEMA) as PolicyKey[];
@@ -1028,6 +1041,7 @@ const PAGE_POLICY_KEYS: readonly PolicyKey[] = [
   'RecentFilesInAttach',
   'FilesDriveEnabled',
   'FilesFolderSyncEnabled',
+  'ComposeInNewWindow',
 ];
 
 /**
@@ -1084,6 +1098,7 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   FilesDriveEnabled: { repo: 'shell', file: 'src/main/features/files-drive.ts' },
   FilesFolderSyncEnabled: { repo: 'shell', file: 'src/main/features/files-folders.ts' },
   FilesDriveLetter: { repo: 'shell', file: 'src/main/features/files-drive.ts' },
+  ComposeInNewWindow: { repo: 'webmail', file: 'lib/desktop/preferences.ts' },
 };
 
 /** The part the embedded server enforces. Sent to it by message. */

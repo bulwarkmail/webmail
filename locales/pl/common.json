@@ -7368,6 +7368,8 @@
       "title": "Okna aplikacji",
       "double_click_label": "Otwieraj wiadomości w nowym oknie po dwukrotnym kliknięciu",
       "double_click_description": "Pojedyncze kliknięcie nadal otwiera wiadomość obok listy.",
+      "compose_window_label": "Zawsze pisz wiadomości w nowym oknie",
+      "compose_window_description": "Nowe wiadomości, odpowiedzi, przekazania i wersje robocze otwierają się we własnym oknie zamiast w oknie głównym.",
       "restore_label": "Otwieraj okna ponownie przy starcie",
       "restore_description": "Okna wiadomości i wersji roboczych otwarte przy zamykaniu wrócą."
     },

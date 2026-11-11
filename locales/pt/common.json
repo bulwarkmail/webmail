@@ -7368,6 +7368,8 @@
       "title": "Janelas da aplicação",
       "double_click_label": "Abrir mensagens numa nova janela com duplo clique",
       "double_click_description": "Um único clique continua a abrir a mensagem junto à lista.",
+      "compose_window_label": "Escrever sempre as mensagens numa nova janela",
+      "compose_window_description": "As novas mensagens, respostas, reencaminhamentos e rascunhos abrem numa janela própria em vez da janela principal.",
       "restore_label": "Reabrir janelas ao iniciar",
       "restore_description": "As janelas de mensagens e rascunhos abertas ao sair voltam a aparecer."
     },

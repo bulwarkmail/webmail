@@ -7368,6 +7368,8 @@
       "title": "Uygulama pencereleri",
       "double_click_label": "İletileri çift tıklamayla yeni pencerede aç",
       "double_click_description": "Tek tıklama iletiyi yine listenin yanında açar.",
+      "compose_window_label": "İletileri her zaman yeni pencerede yaz",
+      "compose_window_description": "Yeni iletiler, yanıtlar, iletmeler ve taslaklar ana pencere yerine kendi pencerelerinde açılır.",
       "restore_label": "Başlangıçta pencereleri yeniden aç",
       "restore_description": "Çıkarken açık olan ileti ve taslak pencereleri geri gelir."
     },

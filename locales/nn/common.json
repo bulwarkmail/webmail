@@ -7376,6 +7376,8 @@
       "title": "App-vindauge",
       "double_click_label": "Opne meldingar i eit nytt vindauge med dobbeltklikk",
       "double_click_description": "Einkvar klikk opnar framleis meldinga ved sida av lista.",
+      "compose_window_label": "Skriv alltid meldingar i eit nytt vindauge",
+      "compose_window_description": "Nye meldingar, svar, vidaresendingar og utkast opnar seg i eit eige vindauge i staden for i hovudvindauget.",
       "restore_label": "Opne att vindauge ved oppstart",
       "restore_description": "Meldingar og utkast som var opne då du avslutta, kjem tilbake."
     },

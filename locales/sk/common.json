@@ -7368,6 +7368,8 @@
       "title": "Okná aplikácie",
       "double_click_label": "Otvárať správy v novom okne dvojitým kliknutím",
       "double_click_description": "Jedným kliknutím sa správa stále otvorí vedľa zoznamu.",
+      "compose_window_label": "Vždy písať správy v novom okne",
+      "compose_window_description": "Nové správy, odpovede, preposlania a koncepty sa otvárajú vo vlastnom okne namiesto hlavného okna.",
       "restore_label": "Pri spustení znova otvoriť okná",
       "restore_description": "Okná správ a konceptov otvorené pri ukončení sa vrátia."
     },

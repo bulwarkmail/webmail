@@ -7368,6 +7368,8 @@
       "title": "Fenêtres de l'application",
       "double_click_label": "Ouvrir les messages dans une nouvelle fenêtre par double-clic",
       "double_click_description": "Un simple clic ouvre toujours le message à côté de la liste.",
+      "compose_window_label": "Toujours rédiger les messages dans une nouvelle fenêtre",
+      "compose_window_description": "Les nouveaux messages, réponses, transferts et brouillons s'ouvrent dans leur propre fenêtre plutôt que dans la fenêtre principale.",
       "restore_label": "Rouvrir les fenêtres au démarrage",
       "restore_description": "Les fenêtres de messages et de brouillons ouvertes à la fermeture reviennent."
     },

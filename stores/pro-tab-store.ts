@@ -5,6 +5,8 @@ import type { ComposePrefill } from '@/lib/plugin-compose-gate';
 import type { EmailWriteSource } from '@/stores/email-store';
 import type { SearchScope } from '@/lib/global-search/query-parser';
 import { useOfflineStore } from '@/lib/offline/state';
+import { openComposerInWindow } from '@/lib/popout/compose-in-window';
+import type { ComposePopoutPayload } from '@/lib/popout/compose-payload';
 
 export type ProTabKind =
   | 'mail' | 'calendar' | 'contacts' | 'files' | 'settings'
@@ -74,6 +76,20 @@ export interface ProComposeTabData {
   /** The login and account of that message, for its $answered / $forwarded flag. */
   sourceEmailSource?: EmailWriteSource | null;
   title: string;
+}
+
+/** What a composer window starts from: the same as a compose tab. */
+function composePayloadOf(data: ProComposeTabData): ComposePopoutPayload {
+  return {
+    mode: data.mode,
+    replyTo: data.replyTo,
+    initialDraftText: data.initialDraftText,
+    initialData: data.initialData ?? null,
+    prefill: data.prefill ?? null,
+    ...(data.initialFiles?.length ? { initialFiles: data.initialFiles } : {}),
+    sourceEmailId: data.sourceEmailId ?? null,
+    sourceEmailSource: data.sourceEmailSource ?? null,
+  };
 }
 
 export interface ProEmailTabData {
@@ -175,7 +191,10 @@ export interface ProTabCoreState {
 
 interface ProTabState extends ProTabCoreState {
   openTab: (kind: ProAppTabKind) => string;
+  /** A compose tab, or a window of its own with "Always write messages in a new window": then ''. */
   openComposeTab: (data: ProComposeTabData) => string;
+  /** A compose tab, whatever that setting says. */
+  openComposeTabHere: (data: ProComposeTabData) => string;
   openEmailTab: (data: ProEmailTabData, opts?: OpenEmailTabOptions) => string;
   /**
    * Open a mailbox in its own tab (sidebar folder dragged onto a tab strip
@@ -455,6 +474,14 @@ export const useProTabStore = create<ProTabState>()(
         },
 
         openComposeTab: (data) => {
+          // "Always write messages in a new window": the window instead of a tab, and the
+          // tab after all when the window doesn't show it.
+          const addTab = () => get().openComposeTabHere(data);
+          if (openComposerInWindow(composePayloadOf(data), { notShown: addTab })) return '';
+          return addTab();
+        },
+
+        openComposeTabHere: (data) => {
           const newTab: ProTab = {
             id: makeId(),
             kind: 'compose',

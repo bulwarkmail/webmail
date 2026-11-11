@@ -7368,6 +7368,8 @@
       "title": "Finestres de l'aplicació",
       "double_click_label": "Obre els missatges en una finestra nova amb doble clic",
       "double_click_description": "Un sol clic continua obrint el missatge al costat de la llista.",
+      "compose_window_label": "Escriu sempre els missatges en una finestra nova",
+      "compose_window_description": "Els missatges nous, les respostes, els reenviaments i els esborranys s'obren en una finestra pròpia en lloc de la finestra principal.",
       "restore_label": "Torna a obrir les finestres en iniciar",
       "restore_description": "Les finestres de missatges i esborranys obertes en sortir tornen a aparèixer."
     },

@@ -7368,6 +7368,8 @@
       "title": "Appens vinduer",
       "double_click_label": "Åbn beskeder i et nyt vindue ved dobbeltklik",
       "double_click_description": "Et enkelt klik åbner stadig beskeden ved siden af listen.",
+      "compose_window_label": "Skriv altid beskeder i et nyt vindue",
+      "compose_window_description": "Nye beskeder, svar, videresendelser og kladder åbnes i deres eget vindue i stedet for i hovedvinduet.",
       "restore_label": "Åbn vinduer igen ved start",
       "restore_description": "Besked- og kladdevinduer, der var åbne, da du lukkede, kommer tilbage."
     },

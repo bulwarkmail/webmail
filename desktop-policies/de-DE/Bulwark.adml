@@ -79,6 +79,8 @@
       <string id="FilesFolderSyncEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer einen Ordner auf dem Computer und einen Ordner in Dateien in beide Richtungen gleich halten. Wenn deaktiviert, wird dies nicht angeboten, und Ordner, die gerade synchronisiert werden, hören damit auf. Die Dateien in diesen Ordnern bleiben, wo sie sind.</string>
       <string id="FilesDriveLetter">Laufwerksbuchstabe für Dateien</string>
       <string id="FilesDriveLetter_Explain">Nur unter Windows. Ein Buchstabe von D bis Z gibt dem Laufwerk Dateien für jeden Benutzer diesen Buchstaben, und Benutzer können ihn nicht ändern. Geben Sie none ein, damit es nie einen Buchstaben bekommt. Wenn nicht konfiguriert, wählen Benutzer in den Einstellungen, und bis dahin gibt es keinen Buchstaben. Ein Wert, den die App nicht lesen kann, gilt als none.</string>
+      <string id="ComposeInNewWindow">Nachrichten in einem neuen Fenster schreiben</string>
+      <string id="ComposeInNewWindow_Explain">Wenn aktiviert, öffnet sich jede neue Nachricht, Antwort, Weiterleitung und jeder Entwurf in einem eigenen Fenster statt im Hauptfenster. Wenn deaktiviert, öffnen sie sich im Hauptfenster, und „In neuem Fenster öffnen“ verschiebt sie weiterhin in ein eigenes Fenster. Erzwungen ist die Einstellung gesperrt. Als Empfehlung ist es der Anfangswert der Einstellung in den Einstellungen, den Benutzer ändern können. Wenn nicht konfiguriert, ist die Einstellung aus, bis der Benutzer sie einschaltet.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Adresse des Bulwark-Servers</label></textBox></presentation>

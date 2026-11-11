@@ -7380,6 +7380,8 @@
       "title": "Cửa sổ ứng dụng",
       "double_click_label": "Mở thư trong cửa sổ mới khi nhấp đúp",
       "double_click_description": "Nhấp một lần vẫn mở thư bên cạnh danh sách.",
+      "compose_window_label": "Luôn soạn thư trong cửa sổ mới",
+      "compose_window_description": "Thư mới, thư trả lời, thư chuyển tiếp và bản nháp mở trong cửa sổ riêng thay vì trong cửa sổ chính.",
       "restore_label": "Mở lại cửa sổ khi khởi động",
       "restore_description": "Các cửa sổ thư và bản nháp đang mở khi thoát sẽ trở lại."
     },
