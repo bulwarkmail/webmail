@@ -63,7 +63,7 @@ import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { descriptionWithNote } from "@/lib/calendar-description";
-import { filterTasksByCalendars } from "@/lib/calendar-tasks";
+import { filterTasksByCalendars, taskSeriesId } from "@/lib/calendar-tasks";
 import { baseEventStoreId, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
 import { deleteOccurrence, saveOccurrenceEdit, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
@@ -831,10 +831,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const openEditTaskModal = useCallback((task: CalendarTask) => whenEditorsDiscarded(() => {
     closeEventPanelForTask();
-    const master = task.originalId ? taskStore.tasks.find((t) => t.id === task.originalId) || task : task;
+    // An occurrence on the grid opens the task it repeats.
+    const seriesId = taskSeriesId(task);
+    const master = seriesId === task.id ? task : useTaskStore.getState().tasks.find((t) => t.id === seriesId) ?? task;
     setEditTask(master);
     setShowTaskModal(true);
-  }), [closeEventPanelForTask, whenEditorsDiscarded, taskStore.tasks]);
+  }), [closeEventPanelForTask, whenEditorsDiscarded]);
 
   // A plugin drawing the task view opens a task in the editor
   // (api.ui.openTask), as a click in Bulwark's list does.

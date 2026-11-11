@@ -69,7 +69,8 @@ function addOccurrence(
     ...task,
     ...(override || {}),
     id: `${task.id}:${recurrenceId}`,
-    originalId: task.originalId || task.id,
+    // originalId stays the shared account's own id of the task (#1204).
+    seriesId: task.id,
     recurrenceId,
     due: override?.due || (task.showWithoutTime ? key : format(date, "yyyy-MM-dd'T'HH:mm:ss")),
   };
@@ -77,6 +78,11 @@ function addOccurrence(
   const existing = map.get(dayKey);
   if (existing) existing.push(occTask);
   else map.set(dayKey, [occTask]);
+}
+
+/** The id of the task an expanded occurrence repeats, else the task's own id. */
+export function taskSeriesId(task: CalendarTask): string {
+  return task.seriesId ?? task.id;
 }
 
 /** recurrenceOverrides key of an occurrence, or of the task's own due date when it is not an expanded occurrence. */

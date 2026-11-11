@@ -152,7 +152,7 @@ describe('task-store recurring toggleTaskComplete', () => {
     const occurrence: CalendarTask = {
       ...master,
       id: 't-walk:2026-09-27T07:00:00',
-      originalId: 't-walk',
+      seriesId: 't-walk',
       recurrenceId: '2026-09-27T07:00:00',
       due: '2026-09-27T07:00:00',
     };
@@ -194,7 +194,7 @@ describe('task-store recurring toggleTaskComplete', () => {
     const occurrence: CalendarTask = {
       ...master,
       id: 't-walk:2026-09-27T07:00:00',
-      originalId: 't-walk',
+      seriesId: 't-walk',
       recurrenceId: '2026-09-27T07:00:00',
       due: '2026-09-27T07:00:00',
       progress: 'completed',
@@ -223,7 +223,7 @@ describe('task-store recurring toggleTaskComplete', () => {
     const occurrence: CalendarTask = {
       ...master,
       id: 't-bin:2026-09-27T00:00:00',
-      originalId: 't-bin',
+      seriesId: 't-bin',
       recurrenceId: '2026-09-27T00:00:00',
       due: '2026-09-27',
     };
@@ -251,7 +251,7 @@ describe('task-store recurring toggleTaskComplete', () => {
     const current: CalendarTask = {
       ...master,
       id: 't-bin:2026-09-20T00:00:00',
-      originalId: 't-bin',
+      seriesId: 't-bin',
       recurrenceId: '2026-09-20T00:00:00',
     };
 
@@ -265,6 +265,40 @@ describe('task-store recurring toggleTaskComplete', () => {
     expect(useTaskStore.getState().tasks[0].recurrenceOverrides?.['2026-09-20T00:00:00']).toMatchObject({
       progress: 'completed',
     });
+  });
+});
+
+// A shared account's task has the id `<accountId>:<id>` and its own id there
+// in originalId (#1204).
+describe('task-store toggleTaskComplete for tasks in a shared calendar', () => {
+  const sharedFields = { calendarIds: { 'acct-2:cal-s': true }, originalId: 't-shared', accountId: 'acct-2', isShared: true };
+
+  it('completes a shared task under its namespaced id', async () => {
+    const shared = makeTask({ id: 'acct-2:t-shared', ...sharedFields });
+    useTaskStore.setState({ tasks: [shared] });
+    const client = { updateCalendarTask: vi.fn().mockResolvedValue(undefined) } as Partial<IJMAPClient>;
+
+    await useTaskStore.getState().toggleTaskComplete(client as IJMAPClient, shared);
+
+    expect(client.updateCalendarTask).toHaveBeenCalledWith('acct-2:t-shared', { progress: 'completed' });
+    expect(useTaskStore.getState().tasks[0].progress).toBe('completed');
+  });
+
+  it('completes an occurrence of a shared series on the series', async () => {
+    const series = makeTask({
+      id: 'acct-2:t-shared', ...sharedFields,
+      due: '2026-09-20', recurrenceRules: [createRecurrenceRule('daily')],
+    });
+    useTaskStore.setState({ tasks: [series] });
+    const client = { updateCalendarTask: vi.fn().mockResolvedValue(undefined) } as Partial<IJMAPClient>;
+    const [occurrence] = groupTasksByDueDay([series], { start: new Date(2026, 8, 22), end: new Date(2026, 8, 22) }).get('2026-09-22')!;
+
+    await useTaskStore.getState().toggleTaskComplete(client as IJMAPClient, occurrence);
+
+    expect(client.updateCalendarTask).toHaveBeenCalledWith('acct-2:t-shared', {
+      recurrenceOverrides: { '2026-09-22T00:00:00': { progress: 'completed' } },
+    });
+    expect(useTaskStore.getState().tasks[0].recurrenceOverrides?.['2026-09-22T00:00:00']).toEqual({ progress: 'completed' });
   });
 });
 

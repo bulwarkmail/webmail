@@ -8,7 +8,7 @@ import { taskToView } from '@/lib/plugin-projection';
 import { applyPatchObject, patchedProperties } from '@/lib/jmap/patch-object';
 import { getClientByLocalAccountId } from './client-registry';
 import { getNextRecurrenceDate } from '@/lib/recurrence-expansion';
-import { findTaskOverride, occurrenceRecurrenceId, overridePatch } from '@/lib/calendar-tasks';
+import { findTaskOverride, occurrenceRecurrenceId, overridePatch, taskSeriesId } from '@/lib/calendar-tasks';
 
 /**
  * One signed-in login whose tasks the list shows next to the others'
@@ -248,9 +248,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   toggleTaskComplete: async (client, task) => {
     // Expanded occurrences carry recurrenceId and their master's id in
-    // originalId; a `:` in the id is no sign of one, other logins' ids have it.
-    const isOccurrence = !!task.recurrenceId;
-    const masterId = task.originalId || task.id;
+    // seriesId; a `:` in the id is no sign of one, other logins' and shared
+    // accounts' ids have it. originalId is a shared task's id in its account.
+    const isOccurrence = !!task.recurrenceId && !!task.seriesId;
+    const masterId = taskSeriesId(task);
     const master = get().tasks.find((t) => t.id === masterId) || task;
     const recurrenceId = occurrenceRecurrenceId(task);
 
@@ -282,7 +283,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           };
         }),
       });
-      void taskHooks.onTaskToggleComplete.emit({ taskId: task.id, complete: newProgress === 'completed' });
+      // Plugins know the series' id, not the occurrence's.
+      void taskHooks.onTaskToggleComplete.emit({ taskId: masterId, complete: newProgress === 'completed' });
       return;
     }
 

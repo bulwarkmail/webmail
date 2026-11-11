@@ -56,7 +56,7 @@ describe('groupTasksByDueDay recurrence expansion', () => {
     const day21 = map.get('2026-09-21');
     expect(day21).toHaveLength(1);
     expect(day21![0].id).toBe('walk:2026-09-21T00:00:00');
-    expect(day21![0].originalId).toBe('walk');
+    expect(day21![0].seriesId).toBe('walk');
     expect(day21![0].recurrenceId).toBe('2026-09-21T00:00:00');
     expect(day21![0].due).toBe('2026-09-21');
   });

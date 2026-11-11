@@ -919,7 +919,10 @@ export interface CalendarTask {
   created: string | null;
   updated: string;
   recurrenceRules: CalendarRecurrenceRule[] | null;
+  /** Client-only, on an occurrence the calendar expanded: its LocalDateTime key in the series' recurrenceOverrides. */
   recurrenceId?: string;
+  /** Client-only, on an occurrence the calendar expanded: the id of the task it repeats. */
+  seriesId?: string;
   recurrenceOverrides?: Record<string, Partial<CalendarTask> & { excluded?: boolean }> | null;
   // While on, Stalwart 1.0 fills the calendar's default alerts into `alerts`.
   useDefaultAlerts?: boolean;
