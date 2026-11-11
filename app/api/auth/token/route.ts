@@ -40,6 +40,7 @@ import {
   writeSignInStamp,
 } from '@/lib/auth/session-age';
 import { clearStalwartAuthContextInStore, readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { accountSlotFromBody } from '@/lib/stalwart/credentials';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 import { revokeWopiTokens } from '@/lib/wopi/revocation';
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : getSlot(request);
+    const slot = accountSlotFromBody(bodySlot) ?? getSlot(request);
     const serverId = typeof bodyServerId === 'string' && bodyServerId ? bodyServerId : null;
 
     // The desktop app signs in to a server the user typed, with a client it

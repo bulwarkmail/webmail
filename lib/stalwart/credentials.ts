@@ -38,6 +38,17 @@ function parseSlot(raw: string | null): number | null {
   return Number.isNaN(slot) || slot < 0 || slot >= MAX_ACCOUNT_SLOTS ? null : slot;
 }
 
+/**
+ * The cookie slot a sign-in request's body names: a whole number from 0 below
+ * MAX_ACCOUNT_SLOTS, or null. Cookie names carry the slot as written, and
+ * every reader and sign-out walks whole numbers only.
+ */
+export function accountSlotFromBody(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value >= MAX_ACCOUNT_SLOTS) return null;
+  // -0 is slot 0.
+  return value + 0;
+}
+
 const ALL_SLOTS = Array.from({ length: MAX_ACCOUNT_SLOTS }, (_, i) => i);
 
 function getCandidateSlots(request: NextRequest): number[] {

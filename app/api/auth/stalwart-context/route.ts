@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import { cookies } from 'next/headers';
 import { setStalwartAuthContext } from '@/lib/stalwart/auth-context';
+import { accountSlotFromBody } from '@/lib/stalwart/credentials';
 import { readSignInStamp, writeSignInStamp } from '@/lib/auth/session-age';
 import { refreshTokenCookieName } from '@/lib/oauth/tokens';
 import { configManager } from '@/lib/admin/config-manager';
@@ -19,9 +20,8 @@ import { recordStoredCredentialStatus } from '@/lib/stalwart/stored-credential-b
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
-  if (typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS) {
-    return bodySlot;
-  }
+  const fromBody = accountSlotFromBody(bodySlot);
+  if (fromBody !== null) return fromBody;
 
   const raw = request.nextUrl.searchParams.get('slot');
   if (raw === null) return 0;

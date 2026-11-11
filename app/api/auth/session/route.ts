@@ -9,6 +9,7 @@ import {
   clearStalwartAuthContextInStore,
   setStalwartAuthContextInStore,
 } from '@/lib/stalwart/auth-context';
+import { accountSlotFromBody } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'JMAP server not configured' }, { status: 500 });
     }
 
-    const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : getSlot(request);
+    const slot = accountSlotFromBody(bodySlot) ?? getSlot(request);
     const cookieName = sessionCookieName(slot);
     const authHeader = accessToken
       ? `Bearer ${accessToken}`
