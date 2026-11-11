@@ -1,10 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { Email } from "@/lib/jmap/types";
 import type { Booking, StructuredCard } from "@/lib/structured-mail/types";
 import { EventCard, LodgingCard, RentalCarCard, RestaurantCard, TransportCard } from "./booking-cards";
-import { cardSenderDomain } from "./card-parts";
+import { cardForDisplay, cardSenderDomain } from "./card-parts";
 import { ShipmentCard } from "./shipment-card";
 
 export interface StructuredMailCardsProps {
@@ -22,13 +22,18 @@ export interface StructuredMailCardsProps {
   calendarActions?: (booking: Booking) => ReactNode;
 }
 
-/** The booking, parcel and order cards shown above an open message. */
+/**
+ * The booking, parcel and order cards shown above an open message. Every text
+ * of a card is shown as cardForDisplay leaves it: nothing that names a domain
+ * outside the sender's.
+ */
 export function StructuredMailCards({ cards, email, allowRemoteImages, calendarActions }: StructuredMailCardsProps) {
-  if (cards.length === 0) return null;
   const senderDomain = cardSenderDomain(email.from);
+  const shown = useMemo(() => cards.map((card) => cardForDisplay(card, senderDomain)), [cards, senderDomain]);
+  if (shown.length === 0) return null;
   return (
     <div className="flex flex-col gap-3 min-w-0" data-testid="structured-mail-cards">
-      {cards.map((card, i) => {
+      {shown.map((card, i) => {
         const props = { emailId: email.id, calendarActions, senderDomain };
         switch (card.kind) {
           case "flight":

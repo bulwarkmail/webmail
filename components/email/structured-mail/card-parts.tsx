@@ -7,7 +7,7 @@ import { toAsciiDomain } from "@/lib/idn";
 import { openExternalLink } from "@/lib/plugin-hook-result";
 import { getRootDomain } from "@/lib/root-domain";
 import { formatMoment, formatMomentTime, isOtherZone, isWebLink, type FormatOptions } from "@/lib/structured-mail/format";
-import type { Link, Moment, ReservationStatus } from "@/lib/structured-mail/types";
+import type { Link, Moment, ReservationStatus, StructuredCard } from "@/lib/structured-mail/types";
 import { resolveTimeZone } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -107,22 +107,98 @@ export function isOutsideSender(host: string, senderDomain: string): boolean {
   return getRootDomain(target) !== getRootDomain(senderDomain);
 }
 
-/** Domain names written in text ("Book at airline.example"); only the start of a long text is read. */
-const DOMAIN_IN_TEXT = /(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,63}(?![\p{L}\p{N}-])/gu;
-const BRAND_TEXT_SCAN = 200;
+const chars = (...codes: number[]) => String.fromCodePoint(...codes);
+const span = (from: number, to: number) => `${chars(from)}-${chars(to)}`;
 
 /**
- * Brand text from the markup (a provider, merchant, carrier or venue name) as
- * the card may show it: undefined when it names a domain outside the sender's,
- * so a sender cannot present a card as coming from another domain.
+ * Characters a reader does not see: every format character (category Cf:
+ * zero width space and joiners, soft hyphen, word joiner, byte order mark,
+ * direction marks), the combining grapheme joiner, variation selectors and
+ * the Hangul fillers.
+ */
+const INVISIBLE = new RegExp(
+  `[\\p{Cf}${chars(0x34f, 0x115f, 0x1160, 0x3164, 0xffa0)}${span(0x180b, 0x180f)}${span(0xfe00, 0xfe0f)}${span(0xe0100, 0xe01ef)}]`,
+  "gu",
+);
+
+/**
+ * Full stops that read as the dot of a domain name and survive NFKC: the
+ * ideographic one and other scripts' (the fullwidth and small full stop and
+ * the one dot leader become a plain dot under NFKC already).
+ */
+const DOT_LIKE = new RegExp(`[${chars(0x3002, 0x06d4, 0x0701, 0x0702, 0x1362, 0x2e3c, 0xa4ff, 0xa60e, 0xa6f3)}]`, "gu");
+
+/** Anything that cannot be part of a host name ends a word. */
+const NOT_IN_HOST = /[^\p{L}\p{N}\p{M}.-]+/u;
+const STARTS_WITH_LETTER = /^\p{L}/u;
+
+/** The text as it reads on screen, in one spelling: NFKC, no invisible characters, plain dots, lower case. */
+function comparableText(text: string): string {
+  return text.normalize("NFKC").replace(INVISIBLE, "").replace(DOT_LIKE, ".").toLowerCase();
+}
+
+/**
+ * Whether a text from the mail names a domain outside the sender's. Every
+ * word of the text in its comparable spelling that has a dot between two
+ * labels and ends in a label of two or more characters starting with a
+ * letter is read as a host name ("bigbank.example", "bigbank.example-secure",
+ * "www.bigbank.example" in an address). One pass over the text.
+ */
+export function namesOtherDomain(text: string, senderDomain: string): boolean {
+  for (const word of comparableText(text).split(NOT_IN_HOST)) {
+    const labels = word.replace(/^[.-]+|[.-]+$/g, "").split(".").filter(Boolean);
+    if (labels.length < 2) continue;
+    const last = labels[labels.length - 1];
+    if (last.length < 2 || !STARTS_WITH_LETTER.test(last)) continue;
+    if (isOutsideSender(labels.join("."), senderDomain)) return true;
+  }
+  return false;
+}
+
+/**
+ * Text from the markup as the card may show it: undefined when it names a
+ * domain outside the sender's (namesOtherDomain), so a sender cannot present
+ * a card as coming from another domain.
  */
 export function brandText(text: string | undefined, senderDomain: string): string | undefined {
   const value = text?.trim();
-  if (!value) return undefined;
-  for (const match of value.slice(0, BRAND_TEXT_SCAN).matchAll(DOMAIN_IN_TEXT)) {
-    if (isOutsideSender(match[0], senderDomain)) return undefined;
+  if (!value || namesOtherDomain(value, senderDomain)) return undefined;
+  return value;
+}
+
+/** Strings in a card that are values of the app's own, never the sender's text as written. */
+const MACHINE_KEYS = new Set(["key", "kind", "source", "status", "modified", "date", "time", "utc", "zone", "country", "currency", "amount"]);
+
+function isCardLink(value: object): value is Link {
+  const link = value as Partial<Link>;
+  return typeof link.url === "string" && typeof link.host === "string";
+}
+
+function textForDisplay(value: unknown, senderDomain: string, key?: string): unknown {
+  if (typeof value === "string") {
+    return key !== undefined && MACHINE_KEYS.has(key) ? value : namesOtherDomain(value, senderDomain) ? "" : value;
+  }
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => typeof item !== "string" || !namesOtherDomain(item, senderDomain))
+      .map((item) => textForDisplay(item, senderDomain));
+  }
+  if (value && typeof value === "object") {
+    // A link's host is where the button leads, shown as such and marked when it is outside.
+    if (isCardLink(value)) return value;
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, textForDisplay(v, senderDomain, k)]));
   }
   return value;
+}
+
+/**
+ * The card as it is shown: every text the sender wrote into it (names,
+ * places, passengers, items, numbers) goes through namesOtherDomain, and a
+ * text that names a domain outside the sender's is left out (an empty
+ * string, or dropped from a list). Links stay as they are.
+ */
+export function cardForDisplay<T extends StructuredCard>(card: T, senderDomain: string): T {
+  return textForDisplay(card, senderDomain) as T;
 }
 
 /**
