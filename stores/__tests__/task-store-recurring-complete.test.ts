@@ -98,6 +98,31 @@ describe('task-store recurring toggleTaskComplete', () => {
     });
   });
 
+  it('moves the start of a series without a due date to its next occurrence', async () => {
+    const task = makeTask({
+      id: 't-start',
+      due: null,
+      start: '2026-09-20T08:00:00',
+      showWithoutTime: false,
+      recurrenceRules: [createRecurrenceRule('weekly')],
+    });
+    useTaskStore.setState({ tasks: [task] });
+
+    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+
+    expect(mockClient.updateCalendarTask).toHaveBeenCalledWith('t-start', { progress: 'needs-action', start: '2026-09-27T08:00:00' });
+    expect(useTaskStore.getState().tasks[0].start).toBe('2026-09-27T08:00:00');
+  });
+
+  it('completes a series that has neither a due date nor a start', async () => {
+    const task = makeTask({ id: 't-undated', due: null, start: null, recurrenceRules: [createRecurrenceRule('daily')] });
+    useTaskStore.setState({ tasks: [task] });
+
+    await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+
+    expect(mockClient.updateCalendarTask).toHaveBeenCalledWith('t-undated', { progress: 'completed' });
+  });
+
   it('uses up one occurrence of a counted series per completion, so the series still ends', async () => {
     const task = makeTask({
       id: 't-count',

@@ -290,9 +290,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
     let updates: Partial<CalendarTask>;
 
-    if (task.progress !== 'completed' && task.recurrenceRules?.length) {
-      const refDateStr = task.due || task.start;
-      const refDate = refDateStr ? parseISO(refDateStr) : new Date();
+    const refDateStr = task.due || task.start;
+    if (task.progress !== 'completed' && task.recurrenceRules?.length && refDateStr) {
+      const refDate = parseISO(refDateStr);
       const nextDate = !isNaN(refDate.getTime())
         ? getNextRecurrenceDate(refDate, task.recurrenceRules[0])
         : null;
@@ -301,7 +301,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         // LocalDateTime also for all-day tasks: keeps consistency across serializations
         const dateFormat = task.showWithoutTime ? "yyyy-MM-dd'T'00:00:00" : "yyyy-MM-dd'T'HH:mm:ss";
         const newDue = task.due ? format(nextDate, dateFormat) : null;
-        let newStart = task.start;
+        // A series without a due date repeats by its start.
+        let newStart = task.start && !task.due ? format(nextDate, dateFormat) : task.start;
         if (task.start && task.due) {
           const oldDue = parseISO(task.due);
           const oldStart = parseISO(task.start);
