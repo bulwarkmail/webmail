@@ -5,7 +5,8 @@ import { encryptPayload } from '@/lib/auth/crypto';
 import { generateCodeVerifierServer, generateCodeChallengeServer, generateStateServer } from '@/lib/oauth/pkce-server';
 import { getRequiredConfig, getDiscoveryValidator } from '@/lib/oauth/token-exchange';
 import { discoverOAuth } from '@/lib/oauth/discovery';
-import { getOauthScopes, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
+import { getOauthScopes, refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
+import { refreshTokenServer } from '@/lib/oauth/slot-renewal';
 import { withProviderDataScopes } from '@/lib/oauth/scopes';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
@@ -106,7 +107,18 @@ export async function POST(request: NextRequest) {
       typeof rawSlot === 'number' && Number.isInteger(rawSlot) && rawSlot >= 0 && rawSlot < MAX_ACCOUNT_SLOTS ? rawSlot : 0;
     let serverId = typeof bodyServerId === 'string' && bodyServerId ? bodyServerId : null;
     if (!serverId && isReauth) {
-      serverId = cookieStore.get(refreshTokenServerCookieName(reauthSlot))?.value || null;
+      // The server that issued the slot's refresh token, as its sealed stamp
+      // says (lib/oauth/slot-renewal.ts). Cookies that disagree with it name
+      // no server to sign in at.
+      const refreshToken = cookieStore.get(refreshTokenCookieName(reauthSlot))?.value;
+      const bound = refreshToken
+        ? refreshTokenServer(cookieStore, reauthSlot, refreshToken)
+        : { serverId: cookieStore.get(refreshTokenServerCookieName(reauthSlot))?.value || null };
+      if (!bound) {
+        logger.warn('SSO start: the slot\'s server cookie disagrees with its token');
+        return NextResponse.json({ error: 'not_signed_in' }, { status: 401 });
+      }
+      serverId = bound.serverId;
     }
 
     // Validate redirect_uri origin matches the request origin to prevent open redirects

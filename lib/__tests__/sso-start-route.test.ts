@@ -57,6 +57,7 @@ vi.mock('@/lib/oauth/discovery', () => ({
 
 vi.mock('@/lib/oauth/tokens', () => ({
   getOauthScopes: () => provider.scopes,
+  refreshTokenCookieName: (slot: number) => `jmap_rt_${slot}`,
   refreshTokenServerCookieName: (slot: number) => `jmap_rt_server_${slot}`,
 }));
 

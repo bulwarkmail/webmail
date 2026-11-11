@@ -2,13 +2,8 @@ import type { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { isPastMaxAge, maxSessionHoursFor, tokenSignedInAt } from '@/lib/auth/session-age';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
-import { redeemRefreshToken, storeRenewedTokens, wasSignedOut } from '@/lib/oauth/slot-renewal';
-import {
-  accessTokenCookieName,
-  decodeCachedAccessToken,
-  refreshTokenCookieName,
-  refreshTokenServerCookieName,
-} from '@/lib/oauth/tokens';
+import { redeemRefreshToken, refreshTokenServer, storeRenewedTokens, wasSignedOut } from '@/lib/oauth/slot-renewal';
+import { accessTokenCookieName, decodeCachedAccessToken, refreshTokenCookieName } from '@/lib/oauth/tokens';
 import type { StalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { limitsOnlyAPageEnforces } from '@/lib/stalwart/push-auth-context';
 
@@ -31,6 +26,7 @@ type CookieStore = Awaited<ReturnType<typeof cookies>>;
  * - the stamp doesn't say whether the sign-in was remembered, which decides
  *   how long the rotated refresh token is kept (the page's next renewal
  *   records it)
+ * - which server issued the token can't be told (lib/oauth/slot-renewal.ts)
  * - the provider refused or is out of reach
  */
 export async function renewPushAuthHeader(
@@ -55,7 +51,10 @@ export async function renewPushAuthHeader(
   if (isPastMaxAge(age.signedInAt, maxHours)) return null;
   if (await limitsOnlyAPageEnforces()) return null;
 
-  const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
+  // Only to the server that issued the token.
+  const bound = refreshTokenServer(cookieStore, slot, refreshToken);
+  if (!bound) return null;
+  const { serverId } = bound;
   const redemption = await redeemRefreshToken(refreshToken, serverId, null);
   if (redemption.kind !== 'issued' || !redemption.tokens.access_token) {
     // The page's own renewal clears the cookies of a refused grant.
@@ -75,7 +74,7 @@ export async function renewPushAuthHeader(
     cookieStore,
     slot,
     { ...redemption.tokens, access_token: redemption.tokens.access_token },
-    { remember, age, basePath },
+    { remember, age, basePath, serverId },
   );
   return `Bearer ${accessToken}`;
 }

@@ -27,7 +27,7 @@ import {
   isRevokeOnSignOutEnabled,
   storeIdToken,
 } from '@/lib/oauth/end-session';
-import { cacheAccessToken, noteSignedOut, redeemRefreshToken, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
+import { cacheAccessToken, noteSignedOut, redeemRefreshToken, refreshTokenServer, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import {
@@ -160,7 +160,9 @@ export async function POST(request: NextRequest) {
       const cookieName = refreshTokenCookieName(slot);
       const options = getSignInCookieOptions(remember);
       cookieStore.set(cookieName, tokens.refresh_token, options);
-      writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token }, options);
+      // The stamp also names the server that issued the token, which is
+      // where it is renewed and revoked (lib/oauth/slot-renewal.ts).
+      writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token, serverId }, options);
     }
     const cachedAccessToken = cacheAccessToken(cookieStore, slot, tokens.access_token, tokens.expires_in || 3600, [tokens.refresh_token, serverId], remember);
     storeIdToken(cookieStore, slot, tokens.id_token, request.nextUrl.basePath, [tokens.refresh_token, cachedAccessToken, serverId], remember);
@@ -192,7 +194,6 @@ export async function PUT(request: NextRequest) {
     const cookieName = refreshTokenCookieName(slot);
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(cookieName)?.value;
-    const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
     // A sign-in without "Remember me": the rotated token keeps ending with
     // the browser session instead of turning into a 30-day cookie.
     const remember = request.nextUrl.searchParams.get('remember') !== 'false';
@@ -201,6 +202,18 @@ export async function PUT(request: NextRequest) {
       cookieStore.delete(accessTokenCookieName(slot));
       return NextResponse.json({ error: 'No refresh token' }, { status: 401 });
     }
+
+    // The token only ever goes back to the server that issued it. When the
+    // cookies can't say which one that was, the sign-in ends here and the
+    // token goes nowhere.
+    const bound = refreshTokenServer(cookieStore, slot, refreshToken);
+    if (!bound) {
+      logger.warn('Token refresh: the refresh token is not bound to the server named for it; signing the slot out', { slot });
+      await signOutSlot(cookieStore, slot, request.nextUrl.basePath, false);
+      clearStalwartAuthContextInStore(cookieStore, slot);
+      return NextResponse.json({ error: 'invalid_grant' }, { status: 401 });
+    }
+    const { serverId } = bound;
 
     // The organisation's maximum session length (lib/auth/session-age.ts).
     // A refresh token without a matching stamp (from before stamps, or one
@@ -219,8 +232,17 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: SESSION_TOO_OLD, maxHours }, { status: 401 });
       }
       // Bind the time to this token from now on, and record whether the
-      // sign-in is remembered where a stamp from before doesn't say (#1509).
-      if (!age.stamp || age.stamp.remember === undefined) writeSignInStamp(cookieStore, slot, { signedInAt: age.signedInAt, refreshToken, ...(account ? { account } : {}) }, getSignInCookieOptions(remember));
+      // sign-in is remembered (#1509) and which server issued the token
+      // where a stamp from before doesn't say.
+      if (!age.stamp || age.stamp.remember === undefined || age.stamp.serverId === undefined) {
+        writeSignInStamp(cookieStore, slot, {
+          signedInAt: age.signedInAt,
+          refreshToken,
+          ...(account ? { account } : {}),
+          ...(age.stamp?.remember !== undefined ? { remember: age.stamp.remember } : {}),
+          serverId,
+        }, getSignInCookieOptions(age.stamp?.remember ?? remember));
+      }
     }
     const signedIn = age ? { signed_in_at: age.signedInAt } : {};
 
@@ -287,6 +309,7 @@ export async function PUT(request: NextRequest) {
       remember,
       age,
       basePath: request.nextUrl.basePath,
+      serverId,
     });
 
     return NextResponse.json({
@@ -329,14 +352,20 @@ async function signOutSlot(
   // A push preview renewing with this token right now must not write the
   // rotated one back after this answer cleared it (#1509).
   if (refreshToken) noteSignedOut(refreshToken);
-  const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
+  // A refresh token is revoked only at the server that issued it. When the
+  // cookies can't say which one that was, nothing is sent anywhere and the
+  // cookies are just cleared.
+  const bound = refreshToken
+    ? refreshTokenServer(cookieStore, slot, refreshToken)
+    : { serverId: cookieStore.get(refreshTokenServerCookieName(slot))?.value || null };
+  const serverId = bound?.serverId ?? null;
   const idToken =cookieStore.get(idTokenCookieName(slot))?.value;
   const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
 
   // With revocation off (#1388) the token is only dropped from the browser.
   const tokenToRevoke = refreshToken && isRevokeOnSignOutEnabled() ? refreshToken : undefined;
   let endSessionUrl: string | null = null;
-  if (tokenToRevoke || endSession) {
+  if (bound && (tokenToRevoke || endSession)) {
     const metadata = await getMetadata(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
       logger.warn('Failed to discover OAuth metadata during logout', {
         error: err instanceof Error ? err.message : 'Unknown error',

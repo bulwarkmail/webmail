@@ -49,6 +49,7 @@ vi.mock('@/lib/oauth/discovery', () => ({
 let configuredScopes = 'openid email profile';
 vi.mock('@/lib/oauth/tokens', () => ({
   getOauthScopes: () => configuredScopes,
+  refreshTokenCookieName: (slot: number) => (slot === 0 ? 'jmap_rt' : `jmap_rt_${slot}`),
   refreshTokenServerCookieName: (slot: number) => (slot === 0 ? 'jmap_rt_server' : `jmap_rt_server_${slot}`),
 }));
 

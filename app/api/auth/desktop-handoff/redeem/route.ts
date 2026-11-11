@@ -84,7 +84,8 @@ export async function POST(request: NextRequest) {
     if (parked.refresh_token) {
       const options = getSignInCookieOptions(remember);
       cookieStore.set(refreshTokenCookieName(slot), parked.refresh_token, options);
-      writeSignInStamp(cookieStore, slot, { signedInAt: parked.signed_in_at, refreshToken: parked.refresh_token }, options);
+      // The token is renewed and revoked only at the server that issued it.
+      writeSignInStamp(cookieStore, slot, { signedInAt: parked.signed_in_at, refreshToken: parked.refresh_token, serverId: parked.server_id }, options);
     }
     const serverCookie = refreshTokenServerCookieName(slot);
     if (parked.server_id) cookieStore.set(serverCookie, parked.server_id, getCookieOptions());

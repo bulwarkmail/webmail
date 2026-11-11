@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
         refreshToken,
         account: accountName,
         ...(stamp.remember !== undefined ? { remember: stamp.remember } : {}),
+        ...(stamp.serverId !== undefined ? { serverId: stamp.serverId } : {}),
       });
     }
 

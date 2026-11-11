@@ -110,6 +110,16 @@ describe('the maximum session length and the context cookie', () => {
   const stateDir = mkdtempSync(path.join(tmpdir(), 'bw-session-age-'));
   afterAll(() => rmSync(stateDir, { recursive: true, force: true }));
   beforeAll(() => { process.env.ADMIN_STATE_DIR = stateDir; });
+  // Loaded once up front, so no single test spends its time limit on it.
+  beforeAll(async () => {
+    await Promise.all([
+      import('@/app/api/auth/session/route'),
+      import('@/app/api/account/stalwart/jmap/route'),
+      import('@/app/api/webdav/route'),
+      import('@/app/api/push/preview/route'),
+      import('@/app/api/push/action/route'),
+    ]);
+  }, 60_000);
 
   beforeEach(async () => {
     jar = new Map();

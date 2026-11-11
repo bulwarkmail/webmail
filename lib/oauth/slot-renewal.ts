@@ -1,6 +1,9 @@
 import type { cookies } from 'next/headers';
+import { configManager } from '@/lib/admin/config-manager';
+import { findServerById, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { observeUpstream } from '@/lib/metrics/upstream';
-import { refreshTokenHash, writeSignInStamp, type SignInStamp } from '@/lib/auth/session-age';
+import { readSignInStamp, refreshTokenHash, writeSignInStamp, type SignInStamp } from '@/lib/auth/session-age';
+import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { idTokenCookieName, storeIdToken } from '@/lib/oauth/end-session';
 import { fitsSetCookieBudget } from '@/lib/oauth/set-cookie-budget';
@@ -10,7 +13,12 @@ import {
   getTokenEndpoint,
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
-import { accessTokenCookieName, encodeCachedAccessToken, refreshTokenCookieName } from '@/lib/oauth/tokens';
+import {
+  accessTokenCookieName,
+  encodeCachedAccessToken,
+  refreshTokenCookieName,
+  refreshTokenServerCookieName,
+} from '@/lib/oauth/tokens';
 import type { CustomUpstream } from '@/lib/oauth/custom-upstream';
 
 /**
@@ -62,6 +70,35 @@ export function cacheAccessToken(
   // The value carries its own expiry, so a session cookie needs no maxAge.
   cookieStore.set(name, value, remember ? { ...getCookieOptions(), maxAge: expiresIn } : getSignInCookieOptions(false));
   return value;
+}
+
+/**
+ * The server a slot's refresh token is renewed and revoked at: the one that
+ * issued it, as the token's sign-in stamp records it (lib/auth/session-age.ts).
+ * The stamp is sealed and bound to the token; the `jmap_rts` cookie only
+ * repeats it. Null, and nothing may be sent anywhere, when:
+ * - the cookie names another server than the stamp;
+ * - the stamp names a server that is no longer listed;
+ * - there is no readable stamp and the instance lists servers, so which one
+ *   issued the token can't be known.
+ * A stamp written before it recorded the server takes the cookie's word; the
+ * renewal then records it (storeRenewedTokens). Without a session secret
+ * nothing is sealed and the cookie decides.
+ */
+export function refreshTokenServer(
+  cookieStore: CookieStore,
+  slot: number,
+  refreshToken: string,
+): { serverId: string | null } | null {
+  const named = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
+  if (!hasSessionSecret()) return { serverId: named };
+  const servers = parseJmapServers(configManager.get<unknown>('jmapServers', []));
+  const stamp = readSignInStamp(cookieStore, slot, refreshToken);
+  const serverId = stamp?.serverId !== undefined ? stamp.serverId : stamp ? named : null;
+  if (stamp?.serverId !== undefined && stamp.serverId !== named) return null;
+  if (!stamp && servers.length > 0) return null;
+  if (serverId !== null && !findServerById(servers, serverId)) return null;
+  return { serverId };
 }
 
 async function redeem(refreshToken: string, serverId: string | null, upstream: CustomUpstream | null): Promise<Redemption> {
@@ -172,6 +209,7 @@ export function resetRedemptionsForTests(): void {
  * Keep what a renewal issued: the rotated refresh token and the sign-in stamp
  * that follows it, the access token cache, and a reissued id token. Each
  * request that shared a redemption writes the same values to its own response.
+ * `serverId` is the server the token was renewed at (refreshTokenServer).
  */
 export function storeRenewedTokens(
   cookieStore: CookieStore,
@@ -181,18 +219,20 @@ export function storeRenewedTokens(
     remember: boolean;
     age: { signedInAt: number; stamp: SignInStamp | null } | null;
     basePath: string | undefined;
+    serverId: string | null;
   },
 ): { accessToken: string; expiresIn: number } {
-  const { remember, age, basePath } = opts;
+  const { remember, age, basePath, serverId } = opts;
   if (tokens.refresh_token) {
     const options = getSignInCookieOptions(remember);
     cookieStore.set(refreshTokenCookieName(slot), tokens.refresh_token, options);
-    // The stamp follows the rotated token, with the same sign-in time and lifetime.
+    // The stamp follows the rotated token, with the same sign-in time, server and lifetime.
     if (age) {
       writeSignInStamp(cookieStore, slot, {
         signedInAt: age.signedInAt,
         refreshToken: tokens.refresh_token,
         ...(age.stamp?.account ? { account: age.stamp.account } : {}),
+        serverId,
       }, options);
     }
   }

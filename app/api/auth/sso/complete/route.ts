@@ -152,8 +152,9 @@ export async function POST(request: NextRequest) {
         // Without "Remember me" the sign-in ends with the browser session.
         const options = getSignInCookieOptions(remember);
         cookieStore.set(cookieName, tokens.refresh_token, options);
-        // A sign-in: the maximum session length counts from here (lib/auth/session-age.ts).
-        writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token }, options);
+        // A sign-in: the maximum session length counts from here (lib/auth/session-age.ts),
+        // and the token is renewed and revoked only at this server.
+        writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token, serverId: pendingServerId }, options);
       }
       const serverCookieName = refreshTokenServerCookieName(slot);
       if (pendingServerId) {

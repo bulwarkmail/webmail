@@ -237,7 +237,8 @@ async function storeAndRespond(
     // Without "Remember me" the sign-in ends with the browser session.
     const options = getSignInCookieOptions(rememberMe);
     cookieStore.set(cookieName, tokens.refresh_token, options);
-    writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token }, options);
+    // The token is renewed and revoked only at the server that issued it.
+    writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token, serverId }, options);
   }
   const serverCookieName = refreshTokenServerCookieName(slot);
   if (serverId) {
