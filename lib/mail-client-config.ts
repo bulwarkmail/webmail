@@ -57,10 +57,29 @@ function davUrl(raw: string | undefined): string | undefined {
 }
 
 /**
+ * Fills the Mozilla autoconfig placeholders from the address the document
+ * was asked for. Stalwart writes `%EMAILADDRESS%` as the username whatever
+ * address it was asked for. A username with a placeholder left over is
+ * dropped, so the caller shows its own.
+ */
+function fillPlaceholders(value: string | undefined, emailAddress: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const at = emailAddress ? emailAddress.lastIndexOf('@') : -1;
+  const filled = emailAddress && at > 0
+    ? value.replace(/%EMAILADDRESS%|%EMAILLOCALPART%|%EMAILDOMAIN%/g, (placeholder) =>
+      placeholder === '%EMAILADDRESS%' ? emailAddress
+        : placeholder === '%EMAILLOCALPART%' ? emailAddress.slice(0, at) : emailAddress.slice(at + 1))
+    : value;
+  return /%[A-Z]+%/.test(filled) ? undefined : filled;
+}
+
+/**
  * The parts of an autoconfig document a person needs to set up another app.
  * Returns null for anything that isn't a clientConfig with at least one server.
+ * `emailAddress` is the address the document was asked for; it fills the
+ * username placeholders.
  */
-export function parseMailClientConfig(xml: string): MailClientConfig | null {
+export function parseMailClientConfig(xml: string, emailAddress?: string): MailClientConfig | null {
   let doc: Document;
   try {
     doc = new DOMParser().parseFromString(xml, 'application/xml');
@@ -79,7 +98,7 @@ export function parseMailClientConfig(xml: string): MailClientConfig | null {
   const contactsEl = Array.from(root.getElementsByTagName('addressBook')).find((el) => el.getAttribute('type') === 'carddav');
 
   const config: MailClientConfig = {
-    username: text(imapEl, 'username') ?? text(smtpEl, 'username'),
+    username: fillPlaceholders(text(imapEl, 'username') ?? text(smtpEl, 'username'), emailAddress),
     imap: endpoint(imapEl),
     smtp: endpoint(smtpEl),
     caldav: davUrl(text(calendarEl, 'serverURL')),
@@ -110,7 +129,7 @@ export async function fetchMailClientConfig(
       signal,
     });
     if (!response.ok) return null;
-    return parseMailClientConfig(await response.text());
+    return parseMailClientConfig(await response.text(), emailAddress);
   } catch {
     return null;
   }
