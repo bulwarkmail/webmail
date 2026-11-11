@@ -149,6 +149,17 @@ describe('an office editor token and the session that opened it', () => {
   const stateDir = mkdtempSync(path.join(tmpdir(), 'bw-wopi-session-age-'));
   afterAll(() => rmSync(stateDir, { recursive: true, force: true }));
   beforeAll(() => { process.env.ADMIN_STATE_DIR = stateDir; });
+  // Loaded once up front, so no single test spends its time limit on it.
+  beforeAll(async () => {
+    await Promise.all([
+      import('@/app/api/auth/session/route'),
+      import('@/app/api/auth/token/route'),
+      import('@/app/api/account/stalwart/jmap/route'),
+      import('@/app/api/wopi/launch/route'),
+      import('@/app/api/wopi/files/[fileId]/route'),
+      import('@/app/api/wopi/files/[fileId]/contents/route'),
+    ]);
+  }, 60_000);
 
   beforeEach(async () => {
     jar = new Map();
