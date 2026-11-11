@@ -17,6 +17,9 @@ import { withEdit } from '@/lib/admin/edits';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { ConfigTextItem, ConfigToggleItem, ConfigSelectItem, inputClass } from '@/components/admin/config-items';
 import { cn } from '@/lib/utils';
+import type { AdminAccountEntry } from '@/lib/admin/admin-accounts';
+import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
+import { AdminAccountsSection, type AdminAccountServerOption } from './_admin-accounts-section';
 
 interface ConfigEntry {
   // Sensitive keys (sessionSecret, oauthClientSecret) come back with
@@ -196,6 +199,15 @@ export function AuthPage() {
   // An API key names its account; a password needs the username with it.
   const setupCredentialReady = !setupNeedsCredential
     || (setupSecret.length > 0 && (isStalwartApiKey(setupSecret) || setupUsername.trim().length > 0));
+
+  // The mail servers an admin account entry can be tied to.
+  const adminAccountServers: AdminAccountServerOption[] = [];
+  const globalServerUrl = typeof config.jmapServerUrl?.value === 'string' ? config.jmapServerUrl.value.trim() : '';
+  if (globalServerUrl) adminAccountServers.push({ url: globalServerUrl, label: globalServerUrl });
+  for (const server of Array.isArray(config.jmapServers?.value) ? config.jmapServers.value as JmapServerEntry[] : []) {
+    if (!server?.url || adminAccountServers.some((s) => s.url === server.url)) continue;
+    adminAccountServers.push({ url: server.url, label: server.label || server.url });
+  }
 
   const hasEdits = Object.keys(edits).length > 0;
 
@@ -407,6 +419,14 @@ export function AuthPage() {
             ]}
             onChange={handleChange}
             onRevert={handleRevert}
+          />
+          <AdminAccountsSection
+            value={Array.isArray(currentValue('adminAccounts')) ? currentValue('adminAccounts') as AdminAccountEntry[] : []}
+            source={config.adminAccounts?.source}
+            servers={adminAccountServers}
+            mode={String(currentValue('stalwartAdminAccess') ?? 'auto')}
+            onChange={(next) => handleChange('adminAccounts', next)}
+            onRevert={() => handleRevert('adminAccounts')}
           />
         </SettingsSection>
 

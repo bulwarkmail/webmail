@@ -9,6 +9,7 @@ import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStalwartAdminAccessMode, type StalwartAdminAccessMode } from '@/lib/admin/stalwart-admin-access';
 import { isStoreUnavailable } from '@/lib/admin/admin-store';
+import { configuredServerUrls, isListedAdminAccount, readAdminAccounts } from '@/lib/admin/admin-accounts';
 
 /**
  * The shared store (#1066) can't be reached: the login limits can't be
@@ -35,19 +36,35 @@ function signInUnavailable(): NextResponse {
  * (GHSA-v6hr). A result means superuser; a method error (typically
  * `forbidden`) means anyone else.
  *
- * Results are cached briefly per (server, user) — the admin panel's
- * layout and dashboard page between them trigger this three times on
- * every navigation, and admin status does not change on that timescale.
- * Per instance (#1066): a demoted Stalwart admin keeps auto-login for up to
- * 60 s on each. At most ADMIN_CHECK_CACHE_MAX entries, so one entry per
- * credential that ever asked can't grow it without bound.
+ * An account the admin listed in `adminAccounts` for this server passes too.
+ * It is matched on the names the JMAP session reports for the credential,
+ * never on the username the caller put in the sign-in context.
+ *
+ * What the server said is cached briefly per (server, credential): the
+ * admin panel's layout and dashboard page between them trigger this three
+ * times on every navigation, and admin status does not change on that
+ * timescale. Per instance (#1066): a demoted Stalwart admin keeps
+ * auto-login for up to 60 s on each. The list is checked against the
+ * current config on every call, so removing an entry takes effect at once.
+ * At most ADMIN_CHECK_CACHE_MAX entries, so one entry per credential that
+ * ever asked can't grow it without bound.
  */
 const ADMIN_CHECK_CACHE_MS = 60_000;
 const ADMIN_CHECK_CACHE_MAX = 1000;
 const ADMIN_CHECK_TIMEOUT_MS = 10_000;
-const adminCheckCache = new Map<string, { value: boolean; expires: number }>();
 
-function rememberAdminCheck(key: string, value: boolean): void {
+/** What the mail server said about one credential. */
+interface StalwartSessionFacts {
+  superuser: boolean;
+  /** The JMAP session's `username`. */
+  username?: string;
+  /** The `name` of the session's primary mail account. */
+  accountName?: string;
+}
+
+const adminCheckCache = new Map<string, { value: StalwartSessionFacts; expires: number }>();
+
+function rememberAdminCheck(key: string, value: StalwartSessionFacts): void {
   const now = Date.now();
   adminCheckCache.delete(key);
   if (adminCheckCache.size >= ADMIN_CHECK_CACHE_MAX) {
@@ -68,25 +85,28 @@ async function fetchWithTimeout(url: string, init: Parameters<typeof fetch>[1]):
   }
 }
 
-async function checkStalwartAdmin(request: NextRequest, mode: StalwartAdminAccessMode): Promise<boolean> {
+/** Why the request counts as a Stalwart admin, or null when it doesn't. */
+type StalwartAdminVia = 'superuser' | 'account_list' | null;
+
+async function checkStalwartAdmin(request: NextRequest, mode: StalwartAdminAccessMode): Promise<StalwartAdminVia> {
   // Operators who keep Stalwart and Bulwark administration separate (#870)
   // turn the check off entirely: no shield, no auto-login, and nothing
   // about the Stalwart account influences the Bulwark admin dashboard.
-  if (mode === 'off') return false;
+  if (mode === 'off') return null;
 
   // When users may connect to arbitrary JMAP servers, the cookie-stored
   // serverUrl is attacker-controllable — trusting an admin-status response
   // from such a server would let anyone mint an admin session by standing
   // up a JMAP-shaped endpoint. Require the password login in that mode.
   await configManager.ensureLoaded();
-  if (configManager.get<boolean>('allowCustomJmapEndpoint', false)) return false;
+  if (configManager.get<boolean>('allowCustomJmapEndpoint', false)) return null;
 
   const creds = await getStalwartCredentials(request);
-  if (!creds) return false;
+  if (!creds) return null;
   // The switch above only reflects today's config. A context cookie minted
   // while custom endpoints were on keeps naming the server it was minted
   // for, so ask only a server the admin configured.
-  if (!creds.trusted) return false;
+  if (!creds.trusted) return null;
 
   // Key on a hash of the actual authHeader, not the cookie-claimed username.
   // The username field is caller-supplied in /api/auth/stalwart-context and
@@ -96,16 +116,29 @@ async function checkStalwartAdmin(request: NextRequest, mode: StalwartAdminAcces
   const credHash = createHash('sha256').update(creds.authHeader).digest('base64url');
   const cacheKey = `${creds.serverUrl}\0${credHash}`;
   const cached = adminCheckCache.get(cacheKey);
-  if (cached && cached.expires > Date.now()) return cached.value;
+  let facts: StalwartSessionFacts;
+  if (cached && cached.expires > Date.now()) {
+    facts = cached.value;
+  } else {
+    facts = await runStalwartAdminCheck(creds);
+    rememberAdminCheck(cacheKey, facts);
+  }
+  if (facts.superuser) return 'superuser';
 
-  const isAdmin = await runStalwartAdminCheck(creds);
-  rememberAdminCheck(cacheKey, isAdmin);
-  return isAdmin;
+  // For the same reason, only the names the server reported count here.
+  const entries = readAdminAccounts(
+    configManager.get<unknown>('adminAccounts', []),
+    configuredServerUrls(configManager.get<unknown>('jmapServerUrl', ''), configManager.get<unknown>('jmapServers', [])),
+  );
+  if (!isListedAdminAccount(entries, creds.serverUrl, [facts.username, facts.accountName])) return null;
+  logger.info('Stalwart admin check (account list)', { username: facts.username, isAdmin: true });
+  return 'account_list';
 }
 
 async function runStalwartAdminCheck(
   creds: { serverUrl: string; authHeader: string; username: string },
-): Promise<boolean> {
+): Promise<StalwartSessionFacts> {
+  const facts: StalwartSessionFacts = { superuser: false };
   try {
     const sessionRes = await fetchWithTimeout(`${creds.serverUrl}/.well-known/jmap`, {
       method: 'GET',
@@ -113,18 +146,25 @@ async function runStalwartAdminCheck(
     });
     if (!sessionRes.ok) {
       logger.info('Stalwart admin check (session)', { username: creds.username, status: sessionRes.status, isAdmin: false });
-      return false;
+      return facts;
     }
 
     const session = await sessionRes.json() as {
+      username?: unknown;
       primaryAccounts?: Record<string, string>;
+      accounts?: Record<string, { name?: unknown } | undefined>;
     };
+    if (typeof session.username === 'string') facts.username = session.username;
+    const mailAccountId = session.primaryAccounts?.['urn:ietf:params:jmap:mail'];
+    const mailAccountName = mailAccountId ? session.accounts?.[mailAccountId]?.name : undefined;
+    if (typeof mailAccountName === 'string') facts.accountName = mailAccountName;
+
     const accountId = session.primaryAccounts?.['urn:stalwart:jmap']
-      ?? session.primaryAccounts?.['urn:ietf:params:jmap:mail']
+      ?? mailAccountId
       ?? (session.primaryAccounts ? Object.values(session.primaryAccounts)[0] : undefined);
     if (!accountId) {
       logger.info('Stalwart admin check (no account)', { username: creds.username, isAdmin: false });
-      return false;
+      return facts;
     }
 
     // Hit the externally-reachable URL, not session.apiUrl — Stalwart
@@ -144,19 +184,19 @@ async function runStalwartAdminCheck(
 
     if (!jmapRes.ok) {
       logger.info('Stalwart admin check (jmap)', { username: creds.username, status: jmapRes.status, isAdmin: false });
-      return false;
+      return facts;
     }
 
     const data = await jmapRes.json() as {
       methodResponses?: Array<[string, Record<string, unknown>, string]>;
     };
     const first = data.methodResponses?.[0];
-    const isAdmin = !!first && first[0] === 'x:Tenant/query';
-    logger.info('Stalwart admin check', { username: creds.username, isAdmin });
-    return isAdmin;
+    facts.superuser = !!first && first[0] === 'x:Tenant/query';
+    logger.info('Stalwart admin check', { username: creds.username, isAdmin: facts.superuser });
+    return facts;
   } catch (error) {
     logger.debug('Stalwart admin check error', { error: error instanceof Error ? error.message : 'Unknown' });
-    return false;
+    return facts;
   }
 }
 
@@ -180,15 +220,15 @@ export async function POST(request: NextRequest) {
         await auditLog('admin.login_failed', { method: 'stalwart', reason: 'auto_login_disabled', mode }, ip);
         return NextResponse.json({ error: 'Stalwart admin sign-in is disabled; use the admin password' }, { status: 403 });
       }
-      const isStalwartAdmin = await checkStalwartAdmin(request, mode);
-      if (!isStalwartAdmin) {
+      const via = await checkStalwartAdmin(request, mode);
+      if (!via) {
         await auditLog('admin.login_failed', { method: 'stalwart' }, ip);
         return NextResponse.json({ error: 'Not a Stalwart admin' }, { status: 403 });
       }
 
       await setAdminSessionCookie(request);
       await setAdminDeviceCookie(request);
-      await auditLog('admin.login', { method: 'stalwart' }, ip);
+      await auditLog('admin.login', via === 'account_list' ? { method: 'stalwart', via } : { method: 'stalwart' }, ip);
       return NextResponse.json({ ok: true });
     }
 
@@ -250,7 +290,7 @@ export async function GET(request: NextRequest) {
     await initAdminPassword();
     const adminEnabled = isAdminEnabled();
     const mode = await getStalwartAdminAccessMode();
-    const isStalwartAdmin = await checkStalwartAdmin(request, mode);
+    const isStalwartAdmin = (await checkStalwartAdmin(request, mode)) !== null;
     const stalwartAutoLogin = isStalwartAdmin && mode === 'auto';
 
     // If neither password-based admin nor Stalwart auto-login, admin is disabled

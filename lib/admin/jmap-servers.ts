@@ -190,7 +190,8 @@ export function findServerById(servers: JmapServerEntry[], id: string | null | u
   return servers.find((s) => s.id === id);
 }
 
-function normalizeUrl(url: string): string {
+/** The form two server URLs are compared in: host lower-cased, no trailing slash. */
+export function normalizeUrl(url: string): string {
   try {
     const u = new URL(trimUrl(url));
     return `${u.protocol}//${u.host.toLowerCase()}${u.pathname.replace(/\/+$/, '')}`;
