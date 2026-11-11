@@ -79,7 +79,7 @@ function mockRequest(body: Record<string, unknown>): unknown {
     json: async () => body,
     headers: {
       get: (k: string) =>
-        k === 'origin' ? 'https://mail.example.com' : k === 'host' ? 'mail.example.com' : null,
+        k === 'origin' ? 'https://mail.example.com' : k === 'host' ? 'mail.example.com' : k === 'content-type' ? 'application/json' : null,
     },
     nextUrl: { origin: 'https://mail.example.com' },
   };

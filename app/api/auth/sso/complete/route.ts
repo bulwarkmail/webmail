@@ -16,6 +16,7 @@ import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oaut
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { storeIdToken } from '@/lib/oauth/end-session';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { writeSignInStamp } from '@/lib/auth/session-age';
 import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
@@ -68,6 +69,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   const cookieStore = await cookies();
 
   try {

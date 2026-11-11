@@ -20,6 +20,7 @@ import { writeCustomUpstream } from '@/lib/oauth/custom-upstream';
 import { DEFAULT_CLIENT_ID } from '@/lib/oauth/token-exchange';
 import { stalwartDefaultClientId } from '@/lib/auth/stalwart-password-login';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 
 // The desktop app's side of "Sign in with your browser", on an instance. The app's own
 // page posts the code its loopback listener received, with the PKCE verifier behind the
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
   if (IS_DESKTOP_BUILD) return answer('Not found', 404);
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   await configManager.ensureLoaded();
   if (!desktopHandoffEnabled()) return answer('disabled', 403);
   let refund: BudgetRefund | null = null;

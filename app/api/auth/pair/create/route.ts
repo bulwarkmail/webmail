@@ -14,6 +14,7 @@ import { findServerByUrl, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 
 // Desktop side of "Link mobile app". Returns a one-time pairing code for the
@@ -91,6 +92,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   try {
     // The step-up proof, the session context and the phone's sealed refresh
     // token are all encrypted under SESSION_SECRET.

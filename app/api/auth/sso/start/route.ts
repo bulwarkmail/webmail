@@ -13,6 +13,7 @@ import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { configManager } from '@/lib/admin/config-manager';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { desktopHandoffTarget, isMobileCodeChallenge, mobileHandoffTarget } from '@/lib/auth/mobile-handoff';
 import { desktopHandoffEnabled } from '@/lib/auth/desktop-handoff-server';
 
@@ -42,6 +43,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   try {
     if (!hasSessionSecret()) {
       return NextResponse.json({ error: 'SESSION_SECRET is required for SSO' }, { status: 500 });

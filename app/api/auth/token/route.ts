@@ -31,6 +31,7 @@ import {
 import { cacheAccessToken, noteSignedOut, redeemRefreshToken, refreshTokenServer, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import {
   clearSignInStamp,
   isPastMaxAge,
@@ -126,6 +127,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   try {
     const { code, code_verifier, redirect_uri, slot: bodySlot, server_id: bodyServerId, remember: bodyRemember, custom_server_url: customServerUrl, client_id: bodyClientId, iss } = await request.json();
     // "Remember me" left unticked: the cookies end with the browser session.

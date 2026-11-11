@@ -12,6 +12,7 @@ import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 
 // Completes the step-up re-authentication for device pairing. The user was
 // sent to the IdP with prompt=login (see /api/auth/sso/start with
@@ -46,6 +47,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   const cookieStore = await cookies();
   try {
     const { code, state, iss } = await request.json();
