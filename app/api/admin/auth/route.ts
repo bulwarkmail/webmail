@@ -112,7 +112,7 @@ async function runStalwartAdminCheck(
       headers: { 'Authorization': creds.authHeader },
     });
     if (!sessionRes.ok) {
-      logger.info('Stalwart admin check (session)', { username: creds.username, status: sessionRes.status, isAdmin: false });
+      logger.info('Stalwart admin check (session)', { username: creds.username, status: sessionRes.status, tokenCanAdmin: false });
       return false;
     }
 
@@ -123,7 +123,7 @@ async function runStalwartAdminCheck(
       ?? session.primaryAccounts?.['urn:ietf:params:jmap:mail']
       ?? (session.primaryAccounts ? Object.values(session.primaryAccounts)[0] : undefined);
     if (!accountId) {
-      logger.info('Stalwart admin check (no account)', { username: creds.username, isAdmin: false });
+      logger.info('Stalwart admin check (no account)', { username: creds.username, tokenCanAdmin: false });
       return false;
     }
 
@@ -143,7 +143,7 @@ async function runStalwartAdminCheck(
     });
 
     if (!jmapRes.ok) {
-      logger.info('Stalwart admin check (jmap)', { username: creds.username, status: jmapRes.status, isAdmin: false });
+      logger.info('Stalwart admin check (jmap)', { username: creds.username, status: jmapRes.status, tokenCanAdmin: false });
       return false;
     }
 
@@ -152,7 +152,10 @@ async function runStalwartAdminCheck(
     };
     const first = data.methodResponses?.[0];
     const isAdmin = !!first && first[0] === 'x:Tenant/query';
-    logger.info('Stalwart admin check', { username: creds.username, isAdmin });
+    // Says what this sign-in's token may do, not what the account is: since
+    // Stalwart 1.0.3 a superuser's webmail token carries only the data
+    // scopes and is refused here too (#1611).
+    logger.info('Stalwart admin check', { username: creds.username, tokenCanAdmin: isAdmin });
     return isAdmin;
   } catch (error) {
     logger.debug('Stalwart admin check error', { error: error instanceof Error ? error.message : 'Unknown' });

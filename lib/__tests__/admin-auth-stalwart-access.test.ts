@@ -14,8 +14,9 @@ vi.mock('next/server', () => ({
   },
 }));
 
+const logInfo = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/logger', () => ({
-  logger: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
+  logger: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: logInfo },
 }));
 
 const state = {
@@ -155,6 +156,14 @@ describe('admin auth route - stalwartAdminAccess modes (#870)', () => {
       const login = await callPost({ stalwartAuth: true });
       expect(login.status).toBe(403);
       expect(setAdminSessionCookie).not.toHaveBeenCalled();
+    });
+
+    it("logs what the token may do, not that the account isn't an admin (#1611)", async () => {
+      // The same refusal hits a superuser whose webmail token has only the
+      // data scopes, so the log must not read as "not an admin".
+      await callGet();
+      expect(logInfo).toHaveBeenCalledWith('Stalwart admin check', { username: 'admin@example.com', tokenCanAdmin: false });
+      expect(JSON.stringify(logInfo.mock.calls)).not.toContain('isAdmin');
     });
   });
 
