@@ -426,7 +426,7 @@ export function PolicyPage() {
             title="Recipient directory"
             description="Which server accounts people see in Bulwark: the contacts directory, recipient suggestions, sharing, delegation and free/busy. Stalwart itself still lists every account to a client that asks for them."
           >
-            <SettingItem label="Own domains only" description="Show only accounts in the domains of the signed-in account's addresses, aliases included.">
+            <SettingItem label="Own domains only" description="Show only accounts in the domains of the signed-in account's addresses, aliases included. Accounts whose name isn't an address (name@domain) are left out.">
               <ToggleSwitch checked={!!policy.directorySameDomainOnly} onChange={toggleDirectorySameDomain} />
             </SettingItem>
             <SettingItem label="Hidden accounts" description="Account names before the @, separated by commas, hidden from everyone. For function accounts such as noreply.">

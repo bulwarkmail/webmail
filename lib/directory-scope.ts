@@ -38,6 +38,18 @@ function domainsOf(identities: ReadonlyArray<{ email?: string | null }>): string
 }
 
 /**
+ * The address a principal is matched by: its email, else a name that holds
+ * one. Stalwart reports the account's name in both, so an account named
+ * without a domain has no address to match.
+ */
+export function principalAddress(principal: { email?: string | null; name?: string | null }): string {
+  const email = principal.email?.trim();
+  if (email) return email;
+  const name = principal.name?.trim() ?? '';
+  return name.includes('@') ? name : '';
+}
+
+/**
  * The domains of the account's identities. Stalwart keeps one identity per
  * address of the account and adds or drops them as aliases come and go, so
  * these are the account's domains, aliases included. Asked for once per
@@ -63,7 +75,7 @@ function identityDomainsOf(client: IJMAPClient): Promise<string[]> {
  */
 export async function directoryScopeFor(
   client: IJMAPClient,
-  principals: ReadonlyArray<{ id: string; email?: string | null }> = [],
+  principals: ReadonlyArray<{ id: string; email?: string | null; name?: string | null }> = [],
 ): Promise<DirectoryScope | null> {
   // The public policy from before the sign-in carries no directory rules.
   if (usePolicyStore.getState().partial) await usePolicyStore.getState().refreshIfPartial();
@@ -81,7 +93,8 @@ export async function directoryScopeFor(
   if (login) ownDomains.add(login);
   for (const domain of await identityDomainsOf(client)) ownDomains.add(domain);
   const accountId = typeof client.getAccountId === 'function' ? client.getAccountId() : null;
-  const own = domainOf(principals.find((p) => p.id === accountId)?.email);
+  const self = principals.find((p) => p.id === accountId);
+  const own = self ? domainOf(principalAddress(self)) : '';
   if (own) ownDomains.add(own);
   return { ownDomains: [...ownDomains], hiddenLocalparts };
 }
@@ -109,7 +122,7 @@ export async function loadScopedPrincipalDirectory(client: IJMAPClient): Promise
   try {
     const scope = await directoryScopeFor(client, listing.principals);
     if (!scope) return listing;
-    return { ...listing, principals: listing.principals.filter((p) => inDirectoryScope(p.email, scope)) };
+    return { ...listing, principals: listing.principals.filter((p) => inDirectoryScope(principalAddress(p), scope)) };
   } catch {
     return { principals: [], status: 'error' };
   }

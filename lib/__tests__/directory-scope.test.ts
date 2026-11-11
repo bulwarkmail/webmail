@@ -87,6 +87,17 @@ describe('the directory rules of the admin policy', () => {
     expect(await shown(makeClient('me@example.org'))).not.toContain(null);
   });
 
+  it('match an entry without an email by the address in its name, as the plugin lookup does', async () => {
+    setRules({ directorySameDomainOnly: true });
+    const client = makeClient('me@example.org');
+    client.listPrincipals = vi.fn(async () => ({
+      principals: [person('zoe', null), { ...person('zed', null), name: 'zed@example.org' }, { ...person('xo', null), name: 'xo@example.net' }],
+      status: 'ok' as const,
+    }));
+    const listing = await loadScopedPrincipalDirectory(client as unknown as IJMAPClient);
+    expect(listing.principals.map((p) => p.name)).toEqual(['zed@example.org']);
+  });
+
   it('keep no one under the domain rule when no address of the account has a domain', async () => {
     setRules({ directorySameDomainOnly: true });
     expect(await shown(makeClient('me', [], 'nobody'))).toEqual([]);
@@ -136,7 +147,8 @@ describe('every list of the server accounts', () => {
     'lib/demo/demo-client.ts': 'the demo server',
     'lib/jmap/principal-directory.ts': 'the shared listing the rules narrow',
     'lib/directory-scope.ts': 'applies the rules',
-    'lib/jmap/principal-cache.ts': 'names sharees already granted, lists no one',
+    'lib/jmap/principal-cache.ts': 'keeps the listing for the names of sharees already granted',
+    'hooks/use-share-recipient-labels.ts': 'names sharees already granted, lists no one',
     'lib/plugin-sandbox/host-api-account.ts': 'applies the rules itself',
   };
 
@@ -152,7 +164,7 @@ describe('every list of the server accounts', () => {
         } else if (/\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name)) {
           const file = relative(root, path).split('\\').join('/');
           const source = readFileSync(path, 'utf8');
-          if (!(file in ALLOWED) && /\bloadPrincipalDirectory\b|\.listPrincipals\(|\.getPrincipals\(/.test(source)) offenders.push(file);
+          if (!(file in ALLOWED) && /\bloadPrincipalDirectory\b|\.listPrincipals\(|\.getPrincipals\(|\bcachedPrincipals\b/.test(source)) offenders.push(file);
         }
       }
     };

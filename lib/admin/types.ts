@@ -227,7 +227,8 @@ export interface SettingsPolicy {
    * aliases included, wherever Bulwark lists the server's accounts: contacts
    * directory, recipient suggestions, sharing, delegation, free/busy and the
    * plugins' lookups (lib/directory-scope.ts). It narrows what Bulwark shows,
-   * not what the server answers.
+   * not what the server answers. Stalwart reports an account's name as its
+   * address, so accounts named without a domain are left out.
    */
   directorySameDomainOnly?: boolean;
   /**
