@@ -680,9 +680,9 @@ export const KEYWORD_PALETTE_ROWS: string[][] = [
 export const FALLBACK_KEYWORD_COLOR = 'gray';
 
 /**
- * The seven colour tags every account started with before #1612. New
- * accounts now start with none (or the admin's `defaults.emailKeywords`);
- * the admin console offers these as ready-made tags.
+ * The seven colour tags a new account starts with, unless the admin sets
+ * `defaults.emailKeywords` (#1612). The admin console offers them as
+ * ready-made tags.
  */
 export const DEFAULT_KEYWORDS: KeywordDefinition[] = [
   { id: 'red', label: 'Red', color: 'red' },
@@ -1254,8 +1254,9 @@ const DEFAULT_SETTINGS = {
   folderCountModes: {} as Record<string, FolderCountMode>,
 
   // Keywords
-  // No tags until the user (or the admin's default) makes some (#1612).
-  emailKeywords: USING_MOCK_SERVER ? DEV_KEYWORDS : ([] as KeywordDefinition[]),
+  // The admin's defaults.emailKeywords replaces these for users who haven't
+  // chosen their tags (#1612).
+  emailKeywords: USING_MOCK_SERVER ? DEV_KEYWORDS : DEFAULT_KEYWORDS,
   nestedTags: USING_MOCK_SERVER,
   emailKeywordsChoiceTracked: true,
 
@@ -2501,8 +2502,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         if (version < 8 || !Array.isArray(state.explicitSettings)) {
           state.explicitSettings = legacyExplicitSettings(state);
         }
-        // v17: new accounts start with no tags (#1612). A tag list stored
-        // before is the user's, even the seven that were the default then.
+        // v17: an admin may set the tags new users start with (#1612). A tag
+        // list stored before is the user's, even the untouched seven.
         if (version < 17) {
           if (Array.isArray(state.emailKeywords)) {
             state.explicitSettings = [...new Set([...(state.explicitSettings as string[]), 'emailKeywords'])];
@@ -2514,9 +2515,9 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
 }
 
 /**
- * New accounts start with no tags (#1612). A server copy or export from an
- * earlier build holds the tags that account had, even the seven that were
- * the default then, so its list counts as chosen and no admin default
+ * An admin may set the tags new users start with (#1612). A server copy or
+ * export from an earlier build holds the tags that account had, even the
+ * untouched seven, so its list counts as chosen and no admin default
  * replaces it. A copy from before explicitSettings existed gets the list the
  * import would work out for it, plus the tags.
  */

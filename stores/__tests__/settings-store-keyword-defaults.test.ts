@@ -16,7 +16,7 @@ import {
 import { usePolicyStore } from '../policy-store';
 import { DEFAULT_POLICY, type SettingsPolicy } from '@/lib/admin/types';
 
-// #1612: new accounts start with no tags; an admin may give them some.
+// #1612: new accounts start with the seven colour tags, or the admin's list.
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -60,10 +60,11 @@ afterEach(() => {
 });
 
 describe('the built-in tag list', () => {
-  it('is empty for a new account, and the user can make a tag', () => {
-    expect(settings().emailKeywords).toEqual([]);
+  it('gives a new account the seven colour tags when the admin sets none', () => {
+    expect(settings().emailKeywords).toEqual(SEVEN);
+    expect(settings().explicitSettings).not.toContain('emailKeywords');
     settings().addKeyword({ id: 'work', label: 'Work', color: 'blue' });
-    expect(settings().emailKeywords).toEqual([{ id: 'work', label: 'Work', color: 'blue' }]);
+    expect(settings().emailKeywords).toEqual([...SEVEN, { id: 'work', label: 'Work', color: 'blue' }]);
   });
 
   it('keeps the seven colour tags as a constant', () => {
@@ -73,7 +74,7 @@ describe('the built-in tag list', () => {
   it('exports the marker that tag choices are recorded', () => {
     const exported = JSON.parse(settings().exportSettings());
     expect(exported.emailKeywordsChoiceTracked).toBe(true);
-    expect(exported.emailKeywords).toEqual([]);
+    expect(exported.emailKeywords).toEqual(SEVEN);
   });
 });
 
@@ -91,12 +92,12 @@ describe('defaults.emailKeywords', () => {
     expect(settings().emailKeywords).toEqual([{ id: 'clients', label: 'Clients', color: 'teal' }]);
   });
 
-  it('follows the admin changing the list and goes back to no tags when it is removed', () => {
+  it('follows the admin changing the list and goes back to the seven when it is removed', () => {
     loadPolicy({ defaults: { emailKeywords: ADMIN_TAGS } });
     loadPolicy({ defaults: { emailKeywords: [ADMIN_TAGS[1]] } });
     expect(settings().emailKeywords).toEqual([ADMIN_TAGS[1]]);
     loadPolicy({ defaults: {} });
-    expect(settings().emailKeywords).toEqual([]);
+    expect(settings().emailKeywords).toEqual(SEVEN);
   });
 
   it.each([
@@ -119,7 +120,7 @@ describe('defaults.emailKeywords', () => {
   it('skips an invalid list with a warning and keeps the built-in one', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     loadPolicy({ defaults: { emailKeywords: [{ id: 'a', label: 'A', color: 'chartreuse' }] } });
-    expect(settings().emailKeywords).toEqual([]);
+    expect(settings().emailKeywords).toEqual(SEVEN);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('defaults.emailKeywords'));
   });
 
@@ -163,10 +164,10 @@ describe('defaults.emailKeywords', () => {
       .toEqual({});
   });
 
-  it('puts the built-in empty list back when the admin list goes', () => {
+  it('puts the seven back when the admin list goes', () => {
     const state = { emailKeywords: ADMIN_TAGS.map((k) => ({ ...k })), explicitSettings: [] };
     expect(adminPolicyReleasePatch(state, { defaults: { emailKeywords: ADMIN_TAGS } }, { defaults: {} }))
-      .toEqual({ emailKeywords: [] });
+      .toEqual({ emailKeywords: SEVEN });
     // A list the user has since chosen, or one that no longer matches, stays.
     expect(adminPolicyReleasePatch({ ...state, explicitSettings: ['emailKeywords'] }, { defaults: { emailKeywords: ADMIN_TAGS } }, { defaults: {} }))
       .toEqual({});
@@ -191,8 +192,8 @@ describe('sameSettingValue', () => {
   });
 
   it('lets a stored tag list count as chosen when it differs from the built-in one', () => {
-    expect(legacyExplicitSettings({ emailKeywords: SEVEN })).toEqual(['emailKeywords']);
-    expect(legacyExplicitSettings({ emailKeywords: [] })).toEqual([]);
+    expect(legacyExplicitSettings({ emailKeywords: ADMIN_TAGS })).toEqual(['emailKeywords']);
+    expect(legacyExplicitSettings({ emailKeywords: SEVEN })).toEqual([]);
   });
 });
 
@@ -211,6 +212,17 @@ describe('tags stored by earlier builds', () => {
     expect(settings().emailKeywords).toEqual(SEVEN);
   });
 
+  it('keeps no tags for a version 16 user who deleted them all, whatever the admin default', () => {
+    const migrated = migrateSettings({ emailKeywords: [], explicitSettings: [], preferredIdentityIds: {}, allMailFolderIds: {} }, 16);
+    expect(migrated.explicitSettings).toEqual(['emailKeywords']);
+
+    useSettingsStore.setState({ emailKeywords: migrated.emailKeywords, explicitSettings: migrated.explicitSettings });
+    loadPolicy({ defaults: { emailKeywords: ADMIN_TAGS } });
+    expect(settings().emailKeywords).toEqual([]);
+    loadPolicy({ defaults: {} });
+    expect(settings().emailKeywords).toEqual([]);
+  });
+
   it('marks nothing for local state from version 16 without a tag list', () => {
     const migrated = migrateSettings({ explicitSettings: [], preferredIdentityIds: {}, allMailFolderIds: {} }, 16);
     expect(migrated.explicitSettings).toEqual([]);
@@ -225,7 +237,8 @@ describe('tags stored by earlier builds', () => {
   });
 
   it('counts the tags of a blob from before explicitSettings as chosen', () => {
-    const blob: Record<string, unknown> = { emailKeywords: [], density: 'compact', showSharedMailAccounts: true };
+    // The untouched seven equal the built-in list, so only the marker step makes them chosen.
+    const blob: Record<string, unknown> = { emailKeywords: SEVEN, density: 'compact', showSharedMailAccounts: true };
     migrateUntrackedKeywords(blob);
     expect(blob.explicitSettings).toEqual(['density', 'emailKeywords']);
   });

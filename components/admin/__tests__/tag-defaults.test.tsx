@@ -48,7 +48,7 @@ describe('Tags defaults', () => {
     render(<Harness initial={policyWith()} />);
     const tagsBlock = screen.getByTestId('defaults-tags');
     expect(tagsBlock.compareDocumentPosition(screen.getByText('Other settings')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(block().getByText('Built-in: no tags')).toBeInTheDocument();
+    expect(block().getByText('Built-in: the seven colour tags')).toBeInTheDocument();
     expect(rows()).toHaveLength(0);
 
     fireEvent.click(block().getByRole('button', { name: 'Set default tags' }));
@@ -120,7 +120,7 @@ describe('Tags defaults', () => {
     render(<Harness initial={policyWith({ defaults: { emailKeywords: [{ id: 'a', label: 'A', color: 'red' }] } })} />);
     fireEvent.click(block().getByRole('button', { name: 'Remove the default' }));
     expect('emailKeywords' in latest.defaults).toBe(false);
-    expect(block().getByText('Built-in: no tags')).toBeInTheDocument();
+    expect(block().getByText('Built-in: the seven colour tags')).toBeInTheDocument();
     expect(rows()).toHaveLength(0);
   });
 

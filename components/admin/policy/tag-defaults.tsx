@@ -211,12 +211,12 @@ export function TagDefaults({ policy, scopeId, onChange }: { policy: SettingsPol
     <div data-testid="defaults-tags">
       <p className={subLabelClass}>Tags</p>
       <p className={cn(noteClass, 'mt-1')}>
-        The tags new users start with. Users who already have tags keep theirs, and anyone can change their own tags afterwards.
+        The tags new users start with, in place of the seven colour tags. Users who signed in before this update, or have edited their tags, keep theirs.
       </p>
       {!preset.own ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <p className={noteClass}>
-            {scoped && preset.everyone !== undefined ? `From Everyone: ${describeCount(preset.everyone)}` : 'Built-in: no tags'}
+            {scoped && preset.everyone !== undefined ? `From Everyone: ${describeCount(preset.everyone)}` : 'Built-in: the seven colour tags'}
           </p>
           <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => update([])}>
             <Plus className="h-3.5 w-3.5" /> Set default tags
@@ -226,7 +226,7 @@ export function TagDefaults({ policy, scopeId, onChange }: { policy: SettingsPol
         <div className="mt-2 space-y-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge tone="accent">set</Badge>
-            <span className={noteClass}>Built-in: no tags</span>
+            <span className={noteClass}>Built-in: the seven colour tags</span>
             <RevertButton onClick={revert} title={scoped ? "Use Everyone's value" : 'Remove the default'} />
           </div>
           {rows.length === 0 && <p className={noteClass}>No tags: new users start without any.</p>}
