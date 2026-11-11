@@ -12,7 +12,7 @@ import { dirname, join } from "node:path";
 import {
   STALWART_BOOT_FILE, STALWART_EXCLUDED_DIRS, STALWART_EXCLUDED_FILES, STALWART_ZIP_NAME,
   buildCaddyExample, buildConnectorCapabilities, buildHeaders, buildLiteConfig, buildLitePolicy, buildManifest, buildNginxExample, buildNotFoundShim, buildReadme, readNotFoundMessages, buildRedirects, buildRootRedirect,
-  buildStalwartAppManifest, buildStalwartBootScript, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, moveShellScriptsToFiles, normalizeBasePath, parentOriginOf, parseLiteTarget, resolveRepoRoot,
+  buildStalwartAppManifest, buildStalwartBootScript, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, moveShellScriptsToFiles, normalizeBasePath, parentOriginOf, parseLiteTarget, readConnectorTargets, resolveRepoRoot,
   withFrameGuard, withScriptHashCsp,
 } from "./lib.mjs";
 import { hintPageScripts } from "../compile-hints.mjs";
@@ -38,6 +38,11 @@ export function runPostbuild({ root = repoRoot, env = process.env, log = console
   }
   const commit = (env.GIT_COMMIT ?? "").trim().slice(0, 7) || "local";
   const buildId = (env.NEXT_PUBLIC_LITE_BUILD_ID ?? "").trim() || makeBuildId({ version, commit });
+
+  // A connector page for a target the export can't open would only lead to its 404.
+  for (const { name, lite } of readConnectorTargets()) {
+    if (!lite) rmSync(join(outDir, "connector", name), { recursive: true, force: true });
+  }
 
   const config = buildLiteConfig(env, { target });
   const files = target === "stalwart"

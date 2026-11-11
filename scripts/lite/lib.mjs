@@ -211,6 +211,34 @@ export function buildLiteConfig(env = {}, { target = "static" } = {}) {
   };
 }
 
+/**
+ * The connector targets of lib/connector/registry.ts (its source: these
+ * scripts can't import TypeScript), each with whether a Lite export can open
+ * it. One that needs the admin session (`admin: true`) can't, nor can one
+ * whose path leads into a route the export leaves out (LITE_REMOVED_PATHS,
+ * such as /setup). A target added to the registry later is judged the same
+ * way.
+ */
+export function connectorTargetsFromSource(source) {
+  const starts = [...source.matchAll(/^\s{4}name: '([a-z0-9_]+)',$/gm)];
+  if (starts.length === 0) throw new Error("no connector targets found in lib/connector/registry.ts");
+  const listEnd = source.indexOf("] as const;", starts[starts.length - 1].index);
+  const removed = LITE_REMOVED_PATHS
+    .filter((path) => path.startsWith("app/(main)/"))
+    .map((path) => `/${path.slice("app/(main)/".length)}`);
+  return starts.map((match, i) => {
+    const block = source.slice(match.index, i + 1 < starts.length ? starts[i + 1].index : listEnd === -1 ? undefined : listEnd);
+    const paths = [...block.matchAll(/['"`](\/[^'"`$?]*)/g)].map((m) => m[1]);
+    const admin = /\badmin:\s*true\b/.test(block);
+    const missing = paths.some((path) => removed.some((route) => path === route || path.startsWith(`${route}/`)));
+    return { name: match[1], lite: !admin && !missing };
+  });
+}
+
+export function readConnectorTargets(root = resolveRepoRoot(import.meta.url)) {
+  return connectorTargetsFromSource(readFileSync(join(root, "lib", "connector", "registry.ts"), "utf8"));
+}
+
 /** policy.json: only the gates Lite must pin; the app merges the rest over its defaults. */
 /**
  * What `/api/connector/capabilities` answers on a server build, as a file.
@@ -221,17 +249,11 @@ export function buildLiteConfig(env = {}, { target = "static" } = {}) {
  *
  * The target names are read out of lib/connector/registry.ts rather than
  * duplicated here: a list that drifts would have this build telling connectors
- * it can resolve links it cannot.
+ * it can resolve links it cannot. Only the targets a Lite export can open are
+ * listed (readConnectorTargets).
  */
 export function buildConnectorCapabilities({ appName, version, basePath = "" }) {
-  const source = readFileSync(
-    join(resolveRepoRoot(import.meta.url), "lib", "connector", "registry.ts"),
-    "utf8",
-  );
-  const targets = [...source.matchAll(/^\s{4}name: '([a-z0-9_]+)',$/gm)].map((m) => m[1]);
-  if (targets.length === 0) {
-    throw new Error("no connector targets found in lib/connector/registry.ts");
-  }
+  const targets = readConnectorTargets().filter((target) => target.lite).map((target) => target.name);
   return (
     JSON.stringify(
       {
