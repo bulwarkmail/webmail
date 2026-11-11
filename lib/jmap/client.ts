@@ -62,6 +62,7 @@ import { outgoingKeywordMap } from "@/lib/outgoing/outgoing-keywords";
 import { draftLabelProperty } from "@/lib/classification/labels";
 import { attachmentParts, HTML_PART_ID, relatedBodyStructure, repointAttachments, TEXT_PART_ID, type OutgoingBodyPart, type SavedPart } from "./outgoing-body";
 import { addBodyMediaToAttachments } from "./body-media-attachments";
+import { isThreadingMessageId } from "@/lib/email-threading";
 
 // Cap for the follow-up Email/get issued when a displayed body part comes
 // back truncated at the normal 256000-byte limit (see refetchTruncatedBodyValues
@@ -5390,9 +5391,10 @@ export class JMAPClient implements IJMAPClient {
 
     const sanitizedFromName = sanitizeIdentityDisplayName(fromName);
     // A reply draft keeps its thread: re-opened or re-sent after Undo, it has
-    // nothing else to rebuild In-Reply-To / References from.
-    const draftInReplyTo = inReplyTo?.map(stripMessageIdBrackets).filter(Boolean);
-    const draftReferences = references?.map(stripMessageIdBrackets).filter(Boolean);
+    // nothing else to rebuild In-Reply-To / References from. An id with white
+    // space or a control character in it is dropped (isThreadingMessageId).
+    const draftInReplyTo = inReplyTo?.map(stripMessageIdBrackets).filter(isThreadingMessageId);
+    const draftReferences = references?.map(stripMessageIdBrackets).filter(isThreadingMessageId);
     const emailData: EmailDraft = {
       // Fixed here: when the connection breaks on the way, this is how the
       // device later finds out whether the server took the draft after all.
@@ -5641,8 +5643,10 @@ export class JMAPClient implements IJMAPClient {
 
     // Per RFC 8621 §4.1.2.3 inReplyTo/references are arrays of bare msg-ids
     // (no angle brackets). Stalwart may return them either way, so normalize.
-    const normalizedInReplyTo = inReplyTo?.map(stripMessageIdBrackets).filter(Boolean);
-    const normalizedReferences = references?.map(stripMessageIdBrackets).filter(Boolean);
+    // The server writes them into the header as they are: an id with white
+    // space or a control character in it is dropped (isThreadingMessageId).
+    const normalizedInReplyTo = inReplyTo?.map(stripMessageIdBrackets).filter(isThreadingMessageId);
+    const normalizedReferences = references?.map(stripMessageIdBrackets).filter(isThreadingMessageId);
 
     const sanitizedFromName = sanitizeIdentityDisplayName(fromEmail ? fromName : fromName || identityName);
     // Always create a new email with the final body content
