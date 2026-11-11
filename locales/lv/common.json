@@ -3971,6 +3971,8 @@
     "delete_folder": "Dzēst mapi",
     "refresh": "Atjaunināt",
     "hide_shared_account": "Paslēpt no sānjoslas",
+    "move_shared_account_up": "Pārvietot uz augšu",
+    "move_shared_account_down": "Pārvietot uz leju",
     "mute_notifications": "Izslēgt paziņojumus",
     "unmute_notifications": "Ieslēgt paziņojumus",
     "mute_account_notifications": "Izslēgt šī konta paziņojumus",

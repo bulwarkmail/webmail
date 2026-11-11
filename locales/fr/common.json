@@ -3971,6 +3971,8 @@
     "delete_folder": "Supprimer le dossier",
     "refresh": "Actualiser",
     "hide_shared_account": "Masquer de la barre latérale",
+    "move_shared_account_up": "Monter",
+    "move_shared_account_down": "Descendre",
     "mute_notifications": "Désactiver les notifications",
     "unmute_notifications": "Réactiver les notifications",
     "mute_account_notifications": "Désactiver les notifications de ce compte",

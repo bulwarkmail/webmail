@@ -3983,6 +3983,8 @@
     "delete_folder": "Xóa thư mục",
     "refresh": "Làm mới",
     "hide_shared_account": "Ẩn khỏi thanh bên",
+    "move_shared_account_up": "Di chuyển lên",
+    "move_shared_account_down": "Di chuyển xuống",
     "mute_notifications": "Tắt tiếng thông báo",
     "unmute_notifications": "Bật tiếng thông báo",
     "mute_account_notifications": "Ẩn thông báo cho tài khoản này",

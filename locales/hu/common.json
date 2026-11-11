@@ -3971,6 +3971,8 @@
     "delete_folder": "Mappa törlése",
     "refresh": "Frissítés",
     "hide_shared_account": "Elrejtés az oldalsávról",
+    "move_shared_account_up": "Mozgatás fel",
+    "move_shared_account_down": "Mozgatás le",
     "mute_notifications": "Értesítések némítása",
     "unmute_notifications": "Értesítések bekapcsolása",
     "mute_account_notifications": "Fiók értesítéseinek némítása",

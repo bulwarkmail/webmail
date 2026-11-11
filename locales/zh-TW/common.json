@@ -3971,6 +3971,8 @@
     "delete_folder": "刪除信件匣",
     "refresh": "重新整理",
     "hide_shared_account": "從側邊欄隱藏",
+    "move_shared_account_up": "上移",
+    "move_shared_account_down": "下移",
     "mute_notifications": "靜音通知",
     "unmute_notifications": "取消靜音通知",
     "mute_account_notifications": "靜音此帳號的通知",

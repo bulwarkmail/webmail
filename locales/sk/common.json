@@ -3971,6 +3971,8 @@
     "delete_folder": "Zmazať priečinok",
     "refresh": "Obnoviť",
     "hide_shared_account": "Skryť z bočného panela",
+    "move_shared_account_up": "Posunúť nahor",
+    "move_shared_account_down": "Posunúť nadol",
     "mute_notifications": "Stlmiť upozornenia",
     "unmute_notifications": "Zapnúť upozornenia",
     "mute_account_notifications": "Stlmiť upozornenia tohto účtu",

@@ -3971,6 +3971,8 @@
     "delete_folder": "Удалить папку",
     "refresh": "Обновить",
     "hide_shared_account": "Скрыть с боковой панели",
+    "move_shared_account_up": "Переместить вверх",
+    "move_shared_account_down": "Переместить вниз",
     "mute_notifications": "Отключить уведомления",
     "unmute_notifications": "Включить уведомления",
     "mute_account_notifications": "Отключить уведомления для этого аккаунта",

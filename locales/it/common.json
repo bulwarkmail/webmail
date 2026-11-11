@@ -3971,6 +3971,8 @@
     "delete_folder": "Elimina cartella",
     "refresh": "Aggiorna",
     "hide_shared_account": "Nascondi dalla barra laterale",
+    "move_shared_account_up": "Sposta su",
+    "move_shared_account_down": "Sposta giù",
     "mute_notifications": "Disattiva notifiche",
     "unmute_notifications": "Riattiva notifiche",
     "mute_account_notifications": "Disattiva notifiche per questo account",

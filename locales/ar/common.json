@@ -3971,6 +3971,8 @@
     "delete_folder": "حذف المجلد",
     "refresh": "تحديث",
     "hide_shared_account": "إخفاء من الشريط الجانبي",
+    "move_shared_account_up": "نقل لأعلى",
+    "move_shared_account_down": "نقل لأسفل",
     "mute_notifications": "كتم الإشعارات",
     "unmute_notifications": "إلغاء كتم الإشعارات",
     "mute_account_notifications": "كتم إشعارات هذا الحساب",

@@ -3971,6 +3971,8 @@
     "delete_folder": "Smazat složku",
     "refresh": "Obnovit",
     "hide_shared_account": "Skrýt z postranního panelu",
+    "move_shared_account_up": "Posunout nahoru",
+    "move_shared_account_down": "Posunout dolů",
     "mute_notifications": "Ztlumit oznámení",
     "unmute_notifications": "Zapnout oznámení",
     "mute_account_notifications": "Ztlumit oznámení tohoto účtu",

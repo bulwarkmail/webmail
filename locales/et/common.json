@@ -3971,6 +3971,8 @@
     "delete_folder": "Kustuta kaust",
     "refresh": "Värskenda",
     "hide_shared_account": "Peida külgribalt",
+    "move_shared_account_up": "Liiguta üles",
+    "move_shared_account_down": "Liiguta alla",
     "mute_notifications": "Vaigista märguanded",
     "unmute_notifications": "Lõpeta märguannete vaigistus",
     "mute_account_notifications": "Vaigista selle konto märguanded",

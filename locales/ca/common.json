@@ -3971,6 +3971,8 @@
     "delete_folder": "Suprimeix la carpeta",
     "refresh": "Actualitza",
     "hide_shared_account": "Amaga de la barra lateral",
+    "move_shared_account_up": "Mou amunt",
+    "move_shared_account_down": "Mou avall",
     "mute_notifications": "Silencia les notificacions",
     "unmute_notifications": "Activa les notificacions",
     "mute_account_notifications": "Silencia les notificacions d'aquest compte",

@@ -3979,6 +3979,8 @@
     "delete_folder": "Slett mappe",
     "refresh": "Oppdater",
     "hide_shared_account": "Gøym frå sidefeltet",
+    "move_shared_account_up": "Flytt opp",
+    "move_shared_account_down": "Flytt ned",
     "mute_notifications": "Demp varsel",
     "unmute_notifications": "Slå på varsel igjen",
     "mute_account_notifications": "Demp varsel for denne kontoen",

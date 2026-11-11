@@ -3971,6 +3971,8 @@
     "delete_folder": "حذف پوشه",
     "refresh": "بازنشانی",
     "hide_shared_account": "پنهان کردن از نوار کناری",
+    "move_shared_account_up": "انتقال به بالا",
+    "move_shared_account_down": "انتقال به پایین",
     "mute_notifications": "بی‌صدا کردن اعلان‌ها",
     "unmute_notifications": "فعال کردن اعلان‌ها",
     "mute_account_notifications": "بی‌صدا کردن اعلان‌های این حساب",

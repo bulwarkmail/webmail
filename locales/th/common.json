@@ -1059,6 +1059,8 @@
     "delete_folder": "ลบโฟลเดอร์",
     "refresh": "รีเฟรช",
     "hide_shared_account": "ซ่อนจากแถบด้านข้าง",
+    "move_shared_account_up": "ย้ายขึ้น",
+    "move_shared_account_down": "ย้ายลง",
     "mute_notifications": "ปิดการแจ้งเตือน",
     "unmute_notifications": "เปิดการแจ้งเตือน",
     "mute_account_notifications": "ปิดการแจ้งเตือนสำหรับบัญชีนี้",

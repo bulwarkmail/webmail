@@ -60,3 +60,6 @@ export function moveSharedMailAccount(
   const absent = sharedMailOrderIds(orderMap, loginId).filter((id) => !currentIds.includes(id));
   return { ...orderMap, [loginId]: [...next, ...absent] };
 }
+
+/** Drag payload of a shared account being reordered in the sidebar. */
+export const SHARED_ACCOUNT_DRAG_MIME = 'application/x-bulwark-shared-account';

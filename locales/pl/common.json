@@ -3971,6 +3971,8 @@
     "delete_folder": "Usuń folder",
     "refresh": "Odśwież",
     "hide_shared_account": "Ukryj na pasku bocznym",
+    "move_shared_account_up": "Przenieś w górę",
+    "move_shared_account_down": "Przenieś w dół",
     "mute_notifications": "Wycisz powiadomienia",
     "unmute_notifications": "Włącz powiadomienia",
     "mute_account_notifications": "Wycisz powiadomienia tego konta",
