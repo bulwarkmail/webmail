@@ -61,7 +61,8 @@ export interface WopiTokenPayload {
   /**
    * When the session that opened the editor signed in (ms). The token is
    * refused once that session is past the organisation's maximum length
-   * (see lib/wopi/request.ts). Tokens minted without it just expire.
+   * (see lib/wopi/request.ts) or ends (lib/wopi/revocation.ts). A token
+   * without it, from before it was recorded, is refused.
    */
   signedInAt?: number;
   /** Expiry, ms since epoch. */

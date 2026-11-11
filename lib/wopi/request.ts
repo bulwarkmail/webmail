@@ -7,11 +7,12 @@ import { isWopiTokenRevoked } from '@/lib/wopi/revocation';
 
 /**
  * Whether the session that opened the editor is past the organisation's
- * maximum length now. A token that doesn't say when its session signed in
- * ends with its own expiry.
+ * maximum length now. Every token names its session's sign-in time; one that
+ * doesn't can be neither checked nor revoked with its sign-in, so it counts
+ * as ended and the editor has to be opened again.
  */
 async function sessionPastMaxAge(payload: WopiTokenPayload): Promise<boolean> {
-  if (payload.signedInAt === undefined) return false;
+  if (payload.signedInAt === undefined) return true;
   // An impersonation login is `target%master`; the policy is the target's.
   return isPastMaxAge(payload.signedInAt, await maxSessionHoursFor(payload.username.split('%', 1)[0]));
 }

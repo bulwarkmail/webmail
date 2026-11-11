@@ -4,7 +4,7 @@ import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, readSignInStamp 
 import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { refreshTokenCookieName } from '@/lib/oauth/tokens';
-import { revokeWopiTokens } from '@/lib/wopi/revocation';
+import { revokeWopiTokens, type WopiSignIn } from '@/lib/wopi/revocation';
 
 const STALWART_AUTH_CONTEXT_COOKIE = 'jmap_stalwart_ctx';
 
@@ -94,9 +94,9 @@ function contextAccount(context: StalwartAuthContext): string {
 /**
  * The slot's context, or null when there is none or its session has
  * outlived the organisation's maximum session length. A context past the
- * maximum is cleared, and the office editors that session opened in this
- * browser stop working with it. Every route that acts with the stored
- * credential reads it through this; without a maximum it is the plain read.
+ * maximum is cleared, and the office editors that session opened stop
+ * working with it. Every route that acts with the stored credential reads it
+ * through this; without a maximum it is the plain read.
  */
 export async function readCurrentStalwartAuthContext(
   cookieStore: CookieStore,
@@ -106,10 +106,23 @@ export async function readCurrentStalwartAuthContext(
   if (!context) return null;
   const maxHours = await maxSessionHoursFor(contextAccount(context));
   if (!maxHours) return context;
-  if (!isPastMaxAge(context.signedInAt ?? await limitsEnforcedSince(), maxHours)) return context;
-  await revokeWopiTokens(cookieStore, slot);
+  const signedInAt = context.signedInAt ?? await limitsEnforcedSince();
+  if (!isPastMaxAge(signedInAt, maxHours)) return context;
+  await revokeWopiTokens(cookieStore, slot, [{ username: context.username, signedInAt }]);
   clearStalwartAuthContextInStore(cookieStore, slot);
   return null;
+}
+
+/**
+ * The sign-in a slot's office editor tokens belong to, as the editor launch
+ * records it: the context's login and sign-in time, which counts from when
+ * the limits were first enforced when the context has none. Null without a
+ * context.
+ */
+export async function wopiSignInOf(cookieStore: CookieStore, slot: number): Promise<WopiSignIn | null> {
+  const context = readStalwartAuthContextFromStore(cookieStore, slot);
+  if (!context) return null;
+  return { username: context.username, signedInAt: context.signedInAt ?? await limitsEnforcedSince() };
 }
 
 /**

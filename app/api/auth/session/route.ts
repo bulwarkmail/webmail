@@ -8,6 +8,7 @@ import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verif
 import {
   clearStalwartAuthContextInStore,
   setStalwartAuthContextInStore,
+  wopiSignInOf,
 } from '@/lib/stalwart/auth-context';
 import { accountSlotFromBody } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
@@ -22,7 +23,7 @@ import { readImpersonationConfig } from '@/lib/impersonation/master-config';
 import { revokeImpersonationGrant } from '@/lib/impersonation/revoke-grant';
 import { discardRestore } from '@/lib/impersonation/restore';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
-import { revokeWopiTokens } from '@/lib/wopi/revocation';
+import { revokeWopiTokens, type WopiSignIn } from '@/lib/wopi/revocation';
 import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
@@ -95,12 +96,28 @@ async function checkSessionAge(
   // An impersonation login is `target%master`; the policy is the target's.
   const maxHours = await maxSessionHoursFor(credentials.username.split('%', 1)[0]);
   if (isPastMaxAge(signedInAt, maxHours)) {
-    await revokeWopiTokens(cookieStore, slot);
+    await revokeWopiTokens(cookieStore, slot, [{ username: credentials.username, signedInAt }]);
     cookieStore.delete(sessionCookieName(slot));
     clearStalwartAuthContextInStore(cookieStore, slot);
     return { maxHours };
   }
   return { signedInAt };
+}
+
+/**
+ * The sign-ins `slots` hold, from their contexts and remembered sessions,
+ * with the times the office editor launch records for them.
+ */
+async function signInsIn(cookieStore: Awaited<ReturnType<typeof cookies>>, slots: number[]): Promise<WopiSignIn[]> {
+  const signIns: WopiSignIn[] = [];
+  for (const slot of slots) {
+    const fromContext = await wopiSignInOf(cookieStore, slot);
+    if (fromContext) signIns.push(fromContext);
+    const token = cookieStore.get(sessionCookieName(slot))?.value;
+    const remembered = token ? decryptSession(token) : null;
+    if (remembered) signIns.push({ username: remembered.username, signedInAt: remembered.signedInAt ?? await limitsEnforcedSince() });
+  }
+  return signIns;
 }
 
 function sessionTooOld(maxHours: number) {
@@ -344,8 +361,10 @@ export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const all = request.nextUrl.searchParams.get('all') === 'true';
-    // Office editors opened from here stop working with the session.
-    await revokeWopiTokens(cookieStore, all ? 'all' : getSlot(request));
+    // Office editors opened from here stop working with the session, and so
+    // do those of the sign-ins it holds, wherever they were opened.
+    const slots = all ? Array.from({ length: MAX_ACCOUNT_SLOTS }, (_, i) => i) : [getSlot(request)];
+    await revokeWopiTokens(cookieStore, all ? 'all' : slots[0], await signInsIn(cookieStore, slots));
 
     if (all) {
       // Delete all session cookies across every slot.

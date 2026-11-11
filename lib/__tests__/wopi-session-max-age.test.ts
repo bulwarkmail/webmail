@@ -20,6 +20,11 @@ vi.mock('@/lib/logger', () => ({
   logger: { warn: () => {}, error: () => {}, info: () => {}, debug: () => {} },
 }));
 vi.mock('@/lib/telemetry/login-tracker', () => ({ recordLogin: () => {} }));
+// An office server that edits .docx.
+vi.mock('@/lib/wopi/discovery', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/wopi/discovery')>()),
+  getWopiActions: async () => ({ edit: { docx: 'https://office.example/cool.html?' }, view: {} }),
+}));
 
 const SERVER = 'https://mail.example.org';
 const MAX_HOURS = 8;
@@ -199,13 +204,14 @@ describe('an office editor token and the session that opened it', () => {
     expect((await checkFileInfo(editor)).status).toBe(200);
   });
 
+  // The revocation cases mint the token with a later sign-in time than the
+  // session's, so at 16:00:01 only the revocation can end it.
   it('is revoked when restoring the session finds it past the maximum', async () => {
     await signIn();
     at('12:00:00');
-    // Minted without a sign-in time: only the revocation can end it early.
-    const editor = await editorToken(0);
+    const editor = await editorToken(0, Date.now());
     await signIn(1);
-    const other = await editorToken(1);
+    const other = await editorToken(1, Date.now());
     at('16:00:01');
     expect((await checkFileInfo(editor)).status).toBe(200);
 
@@ -224,7 +230,7 @@ describe('an office editor token and the session that opened it', () => {
   it('is revoked when a cookie-authed route finds the context past the maximum', async () => {
     await signIn();
     at('12:00:00');
-    const editor = await editorToken(0);
+    const editor = await editorToken(0, Date.now());
     at('16:00:01');
     expect((await checkFileInfo(editor)).status).toBe(200);
     const { POST } = await import('@/app/api/account/stalwart/jmap/route');
@@ -243,7 +249,7 @@ describe('an office editor token and the session that opened it', () => {
     jar.set('jmap_rt', 'refresh-token');
     writeSignInStamp(store as never, 0, { signedInAt: Date.now(), refreshToken: 'refresh-token' });
     at('12:00:00');
-    const editor = await editorToken(0);
+    const editor = await editorToken(0, Date.now());
     at('16:00:01');
     expect((await checkFileInfo(editor)).status).toBe(200);
     const { PUT } = await import('@/app/api/auth/token/route');
@@ -255,12 +261,80 @@ describe('an office editor token and the session that opened it', () => {
   it('is revoked in every slot by signing out everywhere (control)', async () => {
     await signIn();
     await signIn(1);
-    const first = await editorToken(0);
-    const second = await editorToken(1);
+    const first = await editorToken(0, Date.now());
+    const second = await editorToken(1, Date.now());
     at('09:00:00');
     const { DELETE } = await import('@/app/api/auth/session/route');
     await DELETE(new NextRequest('https://webmail.example/api/auth/session?all=true', { method: 'DELETE', headers: SAME_ORIGIN }));
     expect((await checkFileInfo(first)).status).toBe(401);
     expect((await checkFileInfo(second)).status).toBe(401);
   });
+
+  it('carries the sign-in time from the launch, so an editor of a session past the maximum is refused everywhere', async () => {
+    await signIn();
+    at('12:00:00');
+    const editor = await launch();
+    at('15:59:59');
+    expect((await checkFileInfo(editor)).status).toBe(200);
+    at('16:00:01');
+    upstream = [];
+    expect((await checkFileInfo(editor)).status).toBe(401);
+    expect((await getFile(editor)).status).toBe(401);
+    expect((await putFile(editor)).status).toBe(401);
+    expect(upstream).toEqual([]);
+  });
+
+  it('refuses a token that names no sign-in time, as tokens minted before it was recorded', async () => {
+    await signIn();
+    const editor = await editorToken(0);
+    at('09:00:00');
+    upstream = [];
+    expect((await checkFileInfo(editor)).status).toBe(401);
+    expect((await getFile(editor)).status).toBe(401);
+    expect((await putFile(editor)).status).toBe(401);
+    expect(upstream).toEqual([]);
+  });
+
+  it("ends the slot's editors on a sign-out that arrives without the browser's cookie", async () => {
+    await signIn();
+    at('08:30:00');
+    await signIn(1);
+    at('09:00:00');
+    const editor = await launch(0);
+    const other = await launch(1);
+    expect((await checkFileInfo(editor)).status).toBe(200);
+    jar.delete('bulwark_wopi');
+    const { DELETE } = await import('@/app/api/auth/session/route');
+    await DELETE(new NextRequest('https://webmail.example/api/auth/session?slot=0', { method: 'DELETE', headers: SAME_ORIGIN }));
+    expect((await checkFileInfo(editor)).status).toBe(401);
+    // Only the sign-in that was signed out.
+    expect((await checkFileInfo(other)).status).toBe(200);
+  });
+
+  it('ends every editor on signing out everywhere without the browser\'s cookie', async () => {
+    await signIn();
+    await signIn(1);
+    at('09:00:00');
+    const first = await launch(0);
+    const second = await launch(1);
+    jar.delete('bulwark_wopi');
+    const { DELETE } = await import('@/app/api/auth/session/route');
+    await DELETE(new NextRequest('https://webmail.example/api/auth/session?all=true', { method: 'DELETE', headers: SAME_ORIGIN }));
+    expect((await checkFileInfo(first)).status).toBe(401);
+    expect((await checkFileInfo(second)).status).toBe(401);
+  });
 });
+
+/** An editor opened from the app: POST /api/wopi/launch for the file, as the slot's session. */
+async function launch(slot = 0): Promise<Editor> {
+  const { POST } = await import('@/app/api/wopi/launch/route');
+  const res = await POST(new NextRequest('https://webmail.example/api/wopi/launch', {
+    method: 'POST',
+    headers: { ...SAME_ORIGIN, 'content-type': 'application/json', 'X-JMAP-Cookie-Slot': String(slot) },
+    body: JSON.stringify({ fileId: 'f1', accountId: 'acc' }),
+  }));
+  expect(res.status).toBe(200);
+  const { url, accessToken } = await res.json() as { url: string; accessToken: string };
+  const wopiSrc = new URL(url).searchParams.get('WOPISrc') ?? '';
+  return { token: accessToken, documentId: wopiSrc.split('/').pop() ?? '' };
+}
