@@ -454,7 +454,7 @@ function stripDisallowedPatterns(css: string, label: string): { css: string; war
 /**
  * Replace each match with a comment. A match that opens a function
  * (`url(`, `image-set(`, `image(`, `src(`) takes its arguments along, up to
- * the closing `)`.
+ * the closing `)`, also when white space follows the opening bracket.
  */
 function removeMatches(css: string, pattern: RegExp): string {
   let out = '';
@@ -462,7 +462,8 @@ function removeMatches(css: string, pattern: RegExp): string {
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(css)) !== null) {
     let end = match.index + match[0].length;
-    if (match[0].endsWith('(')) end = findParenEnd(css, end);
+    const bracket = match[0].indexOf('(');
+    if (bracket !== -1) end = Math.max(end, findParenEnd(css, match.index + bracket + 1));
     out += css.slice(last, match.index) + '/* [removed] */';
     last = end;
     pattern.lastIndex = Math.max(end, match.index + 1);
@@ -470,7 +471,12 @@ function removeMatches(css: string, pattern: RegExp): string {
   return out + css.slice(last);
 }
 
-/** Index just past the `)` closing a call whose arguments start at `start`. */
+/**
+ * Index just past the `)` closing a call whose arguments start at `start`.
+ * The brackets of the text pair up (readCssTokens), so that `)` is there. An
+ * address written without quotes may hold `;`, `{` and `}` (a data: address
+ * has a `;`); they are part of it and go with it.
+ */
 function findParenEnd(css: string, start: number): number {
   let depth = 1;
   for (let i = start; i < css.length; i++) {
@@ -485,8 +491,6 @@ function findParenEnd(css: string, start: number): number {
       depth++;
     } else if (c === ')' && --depth === 0) {
       return i + 1;
-    } else if (c === ';' || c === '}' || c === '{') {
-      return i;
     }
   }
   return css.length;
