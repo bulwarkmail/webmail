@@ -4748,9 +4748,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const selected = get().selectedEmail;
       let listEmail = selected?.id === emailId ? selected : get().emails.find(e => e.id === emailId);
       let { client: actionClient, accountId } = resolveEmailBlobContext(listEmail ?? null, client);
-      // A link names the account of a message outside the login's own; a
-      // listed row with its id from another account is not that message.
-      if (ownerAccountId && accountId !== ownerAccountId) {
+      // A link names the account of its message, the login's own one too; a
+      // listed row with its id is that message only when it is in that
+      // account through this client.
+      if (ownerAccountId && (actionClient !== client || (accountId ?? client.getAccountId()) !== ownerAccountId)) {
         listEmail = undefined;
         actionClient = client;
         accountId = ownerAccountId;

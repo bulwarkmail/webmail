@@ -2335,18 +2335,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   useEffect(() => { mailAppMountedRef.current = true; return () => { mailAppMountedRef.current = false; }; }, []);
   // Point the list at a folder that actually holds a linked message, so the
   // pane behind it shows real context and "back" lands somewhere useful.
-  const showInOwningFolder = async (activeClient: Parameters<typeof fetchEmails>[0], email: Email) => {
+  // Only a folder of the message's own JMAP account (`accountId`): folder ids
+  // repeat across accounts, and the open folder decides the account of what
+  // is done to the open message.
+  const showInOwningFolder = async (activeClient: Parameters<typeof fetchEmails>[0], email: Email, accountId: string) => {
     const state = useEmailStore.getState();
-    const owning = Object.keys(email.mailboxIds ?? {}).find((id) =>
-      state.mailboxes.some((mb) => mb.id === id || mb.originalId === id),
-    );
-    if (owning && owning !== state.selectedMailbox) {
-      const mailbox = state.mailboxes.find((mb) => mb.id === owning || mb.originalId === owning);
-      if (mailbox) {
-        await fetchEmails(activeClient, mailbox.id, { background: true });
-        selectMailbox(mailbox.id);
-        selectEmail(email);
-      }
+    const own = activeClient.getAccountId();
+    const holds = (id: string) => (mb: Mailbox) =>
+      (mb.accountId ? mb.accountId === accountId : !mb.isShared && accountId === own)
+      && (mb.id === id || mb.originalId === id);
+    const owning = Object.keys(email.mailboxIds ?? {}).find((id) => state.mailboxes.some(holds(id)));
+    const mailbox = owning ? state.mailboxes.find(holds(owning)) : undefined;
+    if (mailbox && mailbox.id !== state.selectedMailbox) {
+      await fetchEmails(activeClient, mailbox.id, { background: true });
+      selectMailbox(mailbox.id);
+      selectEmail(email);
     }
   };
   const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean; replyText?: string }) => {
@@ -2420,9 +2423,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // In the Pro shell a message permalink opens as its own fullscreen
       // email tab - the tab body fetches the message and retitles itself.
       if (isEmbedded) {
-        // A shared account's message is fetched from that account through
-        // the active login (#1351).
-        const loginId = link.ownerAccountId ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
+        // Through the active login, from the account the link names (#1351),
+        // else the login's own: the tab names the login, or it reads the id
+        // through the mail list, which may hold another account's message
+        // with that id.
+        const loginId = useAuthStore.getState().activeAccountId ?? undefined;
         // A notification's Reply: the tab opens its composer once it has the message.
         if (link.reply) requestTabReply(link.id, opts?.replyText ?? await consumePendingReplyText(link.id));
         useProTabStore.getState().openEmailTab({
@@ -2439,17 +2444,25 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // With the conversation in the reader, the message waits for it, as on
         // a click: shown alone first, it would move down once it came.
         const withConversation = readerConversationView && !cursorOnly;
+        // A link without an owner is to the login's own account: the store
+        // is told so, or a listed row with the id from another account is
+        // taken for it.
+        const owner = link.ownerAccountId ?? activeClient.getAccountId();
         const email = withConversation
-          ? await fetchEmailContent(activeClient, link.id, link.ownerAccountId, { select: false })
-          : await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
+          ? await fetchEmailContent(activeClient, link.id, owner, { select: false })
+          : await fetchEmailContent(activeClient, link.id, owner);
         if (!email) {
           toast.error(t('deep_link.message_not_found'));
           return;
         }
         if (withConversation) {
-          const source = resolveEmailBlobContext(email, activeClient);
+          // The conversation of the link's account, not of the folder on screen.
+          const source: EmailBlobContext = {
+            client: activeClient, clientAccountId: useAuthStore.getState().activeAccountId ?? undefined,
+            accountId: owner === activeClient.getAccountId() ? undefined : owner,
+          };
           const conversation = await Promise.race([
-            loadMvConversation(email, activeClient),
+            loadMvConversation(email, activeClient, source),
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
           if (conversation !== undefined) {
@@ -2460,7 +2473,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           }
           useEmailStore.setState({ selectedEmail: email });
         }
-        await showInOwningFolder(activeClient, email);
+        await showInOwningFolder(activeClient, email, owner);
         if (link.fullscreen && !isMobile) {
           // The owning-folder branch above may have skipped selecting (the
           // folder was already current) - fullscreen needs the message open.
@@ -2503,10 +2516,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails(threadEmails);
         setActiveView('viewer');
       } else {
-        const email = await fetchEmailContent(activeClient, group.latestEmail.id, link.ownerAccountId);
-        // A shared account's conversation needs its folder open: the open
+        // The own account when the link names none (as for a message).
+        const owner = link.ownerAccountId ?? activeClient.getAccountId();
+        const email = await fetchEmailContent(activeClient, group.latestEmail.id, owner);
+        // The conversation needs a folder of its account open: the open
         // message is acted on in the account of the folder on screen.
-        if (email && link.ownerAccountId) await showInOwningFolder(activeClient, email);
+        if (email) await showInOwningFolder(activeClient, email, owner);
       }
     } finally {
       setLoadingEmail(false);
@@ -5360,8 +5375,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Fetches the conversation around `ref`, oldest first. Opening a message
   // starts this next to the message fetch, and the effect below picks up that
   // same request rather than sending a second one.
-  const loadMvConversation = (ref: Email, fallback: NonNullable<typeof client>): Promise<Email[] | null> => {
-    const { threadClient, accountId } = mvConversationRoute(ref, fallback);
+  // `source`: where `ref` is, when the caller knows it better than the view
+  // on screen (a link names its account).
+  const loadMvConversation = (ref: Email, fallback: NonNullable<typeof client>, source?: EmailBlobContext): Promise<Email[] | null> => {
+    const { threadClient, accountId } = source ? { threadClient: source.client, accountId: source.accountId } : mvConversationRoute(ref, fallback);
     if (!threadClient) return Promise.resolve(null);
     const pending = mvConversationLoadRef.current;
     // Bare ids overlap across shared owners and across connected clients.
