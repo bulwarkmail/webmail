@@ -8,38 +8,321 @@ const THEME_STYLE_ID = 'active-theme';
 const THEME_SKIN_STYLE_ID = 'active-theme-skin';
 const THEME_SKIN_BODY_ATTR = 'data-theme-skin';
 
-/**
- * Resolve CSS escapes (`\69mport`, `\75rl(`, `\:`) so a keyword spelled with
- * escapes is recognised for what the browser will read. For detection only:
- * the output is not safe to inject, since a decoded `\"` would end a string.
- */
-function decodeCssEscapes(css: string): string {
-  return css.replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?|\\([^\n\r\f0-9a-fA-F])/g, (_match, hex: string | undefined, ch: string | undefined) => {
-    if (hex === undefined) return ch ?? '';
-    const codePoint = parseInt(hex, 16);
-    return codePoint > 0 && codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : '�';
-  });
+// ─── Reading a stylesheet the way the browser does ──────────────
+//
+// A tokenizer after CSS Syntax Level 3 (section 4), as far as checking needs it.
+// Every token is written back in a canonical form: escapes resolved, and a
+// character escaped again only where it can't stand plainly (a `/` or `:` in
+// a class name, a leading digit, a quote in a string). In that text every
+// function, at-rule and property name is spelled out, so a check on it sees
+// what the browser sees. A token without a backslash is kept as written.
+
+class UnreadableCSS extends Error {}
+
+const isNewline = (c: string | undefined) => c === '\n' || c === '\r' || c === '\f';
+const isWhitespace = (c: string | undefined) => isNewline(c) || c === ' ' || c === '\t';
+const isDigit = (c: string | undefined) => c !== undefined && c >= '0' && c <= '9';
+const isHexDigit = (c: string | undefined) => c !== undefined && /^[0-9A-Fa-f]$/.test(c);
+const isNameStart = (c: string | undefined) => c !== undefined && c !== '' && (/^[A-Za-z_]$/.test(c) || c.charCodeAt(0) >= 0x80);
+const isNameChar = (c: string | undefined) => isNameStart(c) || isDigit(c) || c === '-';
+const isNonPrintable = (code: number) => code <= 8 || code === 0x0b || (code >= 0x0e && code <= 0x1f) || code === 0x7f;
+
+/** `\XX ` for a character that has to be written as a hex escape. */
+const hexEscape = (ch: string) => `\\${ch.codePointAt(0)!.toString(16)} `;
+
+/** An identifier as CSSOM serialises one: escapes only where a character can't stand plainly. */
+function serializeIdent(name: string): string {
+  const chars = [...name];
+  return chars.map((ch, i) => {
+    const code = ch.codePointAt(0)!;
+    if (code <= 0x1f || code === 0x7f || (i === 0 && isDigit(ch)) || (i === 1 && isDigit(ch) && chars[0] === '-')) return hexEscape(ch);
+    if (i === 0 && ch === '-' && chars.length === 1) return '\\-';
+    if (code >= 0x80 || ch === '-' || ch === '_' || /^[0-9A-Za-z]$/.test(ch)) return ch;
+    return `\\${ch}`;
+  }).join('');
 }
+
+/** A name after `#`, where a digit may come first. */
+function serializeName(name: string): string {
+  return [...name].map((ch) => {
+    const code = ch.codePointAt(0)!;
+    if (code <= 0x1f || code === 0x7f) return hexEscape(ch);
+    return isNameChar(ch) ? ch : `\\${ch}`;
+  }).join('');
+}
+
+function serializeString(value: string, quote: string): string {
+  return quote + [...value].map((ch) => {
+    const code = ch.codePointAt(0)!;
+    if (ch === '\\' || ch === quote) return `\\${ch}`;
+    if (isNewline(ch) || isNonPrintable(code)) return hexEscape(ch);
+    return ch;
+  }).join('') + quote;
+}
+
+function serializeUrl(value: string): string {
+  return [...value].map((ch) => {
+    const code = ch.codePointAt(0)!;
+    if (ch === '\\' || ch === '"' || ch === "'" || ch === '(' || ch === ')') return `\\${ch}`;
+    if (isWhitespace(ch) || isNonPrintable(code)) return hexEscape(ch);
+    return ch;
+  }).join('');
+}
+
+/** A dimension's unit; an `e` that would read as an exponent is escaped. */
+function serializeUnit(unit: string): string {
+  const ident = serializeIdent(unit);
+  return /^[eE](?:[0-9]|[+-][0-9])/.test(unit) ? hexEscape(unit[0]) + ident.slice(1) : ident;
+}
+
+interface ReadToken { kind: 'comment' | 'space' | 'other'; plain: string; text: string }
+
+function tokenizeCSS(s: string): ReadToken[] {
+  const tokens: ReadToken[] = [];
+  const push = (kind: ReadToken['kind'], start: number, end: number, canonical?: () => string) => {
+    const plain = s.slice(start, end);
+    tokens.push({ kind, plain, text: canonical && plain.includes('\\') ? canonical() : plain });
+  };
+  const validEscape = (i: number) => s[i] === '\\' && i + 1 < s.length && !isNewline(s[i + 1]);
+  const charAt = (i: number) => String.fromCodePoint(s.codePointAt(i)!);
+
+  /** The character a valid escape (its backslash at i - 1) stands for, and where it ends. */
+  const consumeEscape = (i: number): [string, number] => {
+    if (isHexDigit(s[i])) {
+      let j = i;
+      while (j < s.length && j - i < 6 && isHexDigit(s[j])) j++;
+      const code = parseInt(s.slice(i, j), 16);
+      if (s[j] === '\r' && s[j + 1] === '\n') j += 2;
+      else if (isWhitespace(s[j])) j++;
+      if (code === 0 || (code >= 0xd800 && code <= 0xdfff) || code > 0x10ffff) throw new UnreadableCSS();
+      return [String.fromCodePoint(code), j];
+    }
+    const ch = charAt(i);
+    return [ch, i + ch.length];
+  };
+  const consumeName = (i: number): [string, number] => {
+    let name = '';
+    let j = i;
+    for (;;) {
+      if (isNameChar(s[j])) {
+        const ch = charAt(j);
+        name += ch;
+        j += ch.length;
+      } else if (validEscape(j)) {
+        const [ch, end] = consumeEscape(j + 1);
+        name += ch;
+        j = end;
+      } else {
+        return [name, j];
+      }
+    }
+  };
+  const startsIdent = (i: number) => {
+    if (s[i] === '-') return isNameStart(s[i + 1]) || s[i + 1] === '-' || validEscape(i + 1);
+    if (isNameStart(s[i])) return true;
+    return validEscape(i);
+  };
+  const startsNumber = (i: number) => {
+    if (s[i] === '+' || s[i] === '-') return isDigit(s[i + 1]) || (s[i + 1] === '.' && isDigit(s[i + 2]));
+    if (s[i] === '.') return isDigit(s[i + 1]);
+    return isDigit(s[i]);
+  };
+  const numeric = (start: number): number => {
+    let j = start;
+    if (s[j] === '+' || s[j] === '-') j++;
+    while (isDigit(s[j])) j++;
+    if (s[j] === '.' && isDigit(s[j + 1])) { j++; while (isDigit(s[j])) j++; }
+    if ((s[j] === 'e' || s[j] === 'E') && (isDigit(s[j + 1]) || ((s[j + 1] === '+' || s[j + 1] === '-') && isDigit(s[j + 2])))) {
+      j += isDigit(s[j + 1]) ? 1 : 2;
+      while (isDigit(s[j])) j++;
+    }
+    const number = s.slice(start, j);
+    if (startsIdent(j)) {
+      const [unit, end] = consumeName(j);
+      push('other', start, end, () => number + serializeUnit(unit));
+      return end;
+    }
+    if (s[j] === '%') j++;
+    push('other', start, j);
+    return j;
+  };
+  const string = (start: number): number => {
+    const quote = s[start];
+    let value = '';
+    let j = start + 1;
+    for (;;) {
+      const c = s[j];
+      if (c === undefined || isNewline(c)) throw new UnreadableCSS();
+      if (c === quote) { j++; break; }
+      if (c === '\\') {
+        if (j + 1 >= s.length) throw new UnreadableCSS();
+        if (isNewline(s[j + 1])) { j += s[j + 1] === '\r' && s[j + 2] === '\n' ? 3 : 2; continue; }
+        const [ch, end] = consumeEscape(j + 1);
+        value += ch;
+        j = end;
+        continue;
+      }
+      const ch = charAt(j);
+      value += ch;
+      j += ch.length;
+    }
+    push('other', start, j, () => serializeString(value, quote));
+    return j;
+  };
+  const url = (start: number, from: number): number => {
+    let j = from;
+    while (isWhitespace(s[j])) j++;
+    let value = '';
+    for (;;) {
+      const c = s[j];
+      if (c === undefined) throw new UnreadableCSS();
+      if (c === ')') { j++; break; }
+      if (isWhitespace(c)) {
+        while (isWhitespace(s[j])) j++;
+        if (s[j] !== ')') throw new UnreadableCSS();
+        j++;
+        break;
+      }
+      if (c === '"' || c === "'" || c === '(' || isNonPrintable(c.charCodeAt(0))) throw new UnreadableCSS();
+      if (c === '\\') {
+        if (!validEscape(j)) throw new UnreadableCSS();
+        const [ch, end] = consumeEscape(j + 1);
+        value += ch;
+        j = end;
+        continue;
+      }
+      const ch = charAt(j);
+      value += ch;
+      j += ch.length;
+    }
+    push('other', start, j, () => `url(${serializeUrl(value)})`);
+    return j;
+  };
+  const identLike = (start: number): number => {
+    const [name, end] = consumeName(start);
+    if (s[end] === '(') {
+      if (name.toLowerCase() === 'url') {
+        let k = end + 1;
+        while (isWhitespace(s[k])) k++;
+        if (s[k] !== '"' && s[k] !== "'") return url(start, end + 1);
+      }
+      push('other', start, end + 1, () => `${serializeIdent(name)}(`);
+      return end + 1;
+    }
+    push('other', start, end, () => serializeIdent(name));
+    return end;
+  };
+
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === '/' && s[i + 1] === '*') {
+      const end = s.indexOf('*/', i + 2);
+      if (end === -1) throw new UnreadableCSS();
+      tokens.push({ kind: 'comment', plain: '', text: '' });
+      i = end + 2;
+    } else if (isWhitespace(c)) {
+      const start = i;
+      while (isWhitespace(s[i])) i++;
+      push('space', start, i);
+    } else if (c === '"' || c === "'") {
+      i = string(i);
+    } else if (c === '#' && (isNameChar(s[i + 1]) || validEscape(i + 1))) {
+      const [name, end] = consumeName(i + 1);
+      push('other', i, end, () => `#${serializeName(name)}`);
+      i = end;
+    } else if ((c === '+' || c === '.' || c === '-') && startsNumber(i)) {
+      i = numeric(i);
+    } else if (c === '-' && s.startsWith('-->', i)) {
+      push('other', i, i + 3);
+      i += 3;
+    } else if (c === '-' && startsIdent(i)) {
+      i = identLike(i);
+    } else if (c === '<' && s.startsWith('<!--', i)) {
+      push('other', i, i + 4);
+      i += 4;
+    } else if (c === '@' && startsIdent(i + 1)) {
+      const [name, end] = consumeName(i + 1);
+      push('other', i, end, () => `@${serializeIdent(name)}`);
+      i = end;
+    } else if (c === '\\') {
+      if (!validEscape(i)) throw new UnreadableCSS();
+      i = identLike(i);
+    } else if (isDigit(c)) {
+      i = numeric(i);
+    } else if (isNameStart(c)) {
+      i = identLike(i);
+    } else {
+      push('other', i, i + 1);
+      i += 1;
+    }
+  }
+  return tokens;
+}
+
+/**
+ * A stylesheet as the browser reads it. `text` has every escape resolved
+ * (see above) and no comments; `plain` is the same sheet with each token as
+ * written. A comment between two tokens that would otherwise run together
+ * stays as an empty one. Null when the sheet doesn't read cleanly: an
+ * unterminated comment, string or url, a line break inside a string, a
+ * backslash before a line break or at the end, an escape that names no
+ * character, or a NUL.
+ */
+export function readStylesheet(css: string): { text: string; plain: string } | null {
+  if (css.includes('\0')) return null;
+  let tokens: ReadToken[];
+  try {
+    tokens = tokenizeCSS(css);
+  } catch (error) {
+    if (error instanceof UnreadableCSS) return null;
+    throw error;
+  }
+  let text = '';
+  let plain = '';
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.kind !== 'comment') {
+      text += token.text;
+      plain += token.plain;
+      continue;
+    }
+    let next = i;
+    while (tokens[next + 1]?.kind === 'comment') next++;
+    const before = tokens[i - 1];
+    const after = tokens[next + 1];
+    if (before && after && before.kind !== 'space' && after.kind !== 'space') {
+      text += '/**/';
+      plain += '/**/';
+    }
+    i = next;
+  }
+  return { text, plain };
+}
+
+const countMatches = (text: string, pattern: RegExp) => (text.match(new RegExp(pattern.source, 'gi')) ?? []).length;
 
 function stripComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, ' ');
 }
 
-/** A disallowed construct that only appears once escapes are resolved. */
-function hasEscapedDisallowedPattern(css: string): boolean {
-  const decoded = decodeCssEscapes(stripComments(css));
-  return DISALLOWED_CSS_PATTERNS.some((pattern) => pattern.test(decoded) && !pattern.test(css));
-}
-
+/**
+ * Every check runs on the sheet as the browser reads it (readStylesheet), and
+ * that reading is what comes back. A sheet that can't be read cleanly, or that
+ * spells a removed construct with escapes, is dropped whole: neither has an
+ * honest use.
+ */
 function stripDisallowedPatterns(css: string, label: string): { css: string; warnings: string[] } {
-  // Escapes that spell out a banned construct have no honest use, and where
-  // the construct ends can't be found without a full parser: drop it all.
-  if (hasEscapedDisallowedPattern(css)) {
+  const read = readStylesheet(css);
+  if (!read) {
+    return { css: '', warnings: [`${label}removed the stylesheet: it could not be read cleanly (an unterminated comment, string or url, or a broken escape)`] };
+  }
+  if (DISALLOWED_CSS_PATTERNS.some((pattern) => countMatches(read.text, pattern) > countMatches(read.plain, pattern))) {
     return { css: '', warnings: [`${label}removed the stylesheet: it hides a disallowed pattern behind CSS escapes`] };
   }
 
   const warnings: string[] = [];
-  let cleaned = css;
+  let cleaned = read.text;
   for (const pattern of DISALLOWED_CSS_PATTERNS) {
     if (pattern.test(cleaned)) {
       warnings.push(`${label}removed disallowed pattern: ${pattern.source}`);
@@ -337,14 +620,18 @@ export function validateThemeCSSSafety(css: string): { valid: boolean; errors: s
     return { valid: false, errors };
   }
 
-  // Check for dangerous patterns, also when spelled with CSS escapes
-  const decoded = decodeCssEscapes(stripComments(css));
+  // Check the sheet as the browser reads it, so escapes hide nothing.
+  const read = readStylesheet(css);
+  if (!read) {
+    errors.push('Theme CSS could not be read cleanly (an unterminated comment, string or url, or a broken escape)');
+    return { valid: false, errors };
+  }
   for (const pattern of DISALLOWED_CSS_PATTERNS) {
-    if (pattern.test(decoded)) {
+    if (pattern.test(read.text)) {
       errors.push(`Contains disallowed pattern: ${pattern.source}`);
     }
   }
-  errors.push(...restrictThemeSelectors(css).warnings);
+  errors.push(...restrictThemeSelectors(read.text).warnings);
 
   // Check the CSS actually sets some variables
   if (!css.includes('--color-')) {
