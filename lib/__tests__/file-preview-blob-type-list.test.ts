@@ -68,6 +68,9 @@ const NOT_ONE_LISTED_TYPE = [
   'image/gif;,text/html',
   'image/gif;x=y,text/html',
   'image/png; name="a,b.png"',
+  'text/plain; charset=iso-8859-2,utf-8',
+  'text/plain; charset="utf-8,text/html"',
+  'text/plain;charset=utf-8,text/html',
   // No single type at all.
   '',
   'image',
@@ -116,14 +119,15 @@ const HONEST_TYPES: Array<[string, string]> = [
   ['video/mp4', 'video/mp4'],
   ['video/webm', 'video/webm'],
   ['application/pdf', 'application/pdf'],
-  ['text/plain', 'text/plain'],
+  // Plain text carries its character set, UTF-8 when it names none.
+  ['text/plain', 'text/plain;charset=utf-8'],
   // Upper and mixed case, surrounding spaces and parameters are no reason to refuse.
   ['IMAGE/PNG', 'image/png'],
   ['Image/Jpeg', 'image/jpeg'],
   [' image/png', 'image/png'],
   ['image/png ', 'image/png'],
   ['image/jpeg; name=a.jpg', 'image/jpeg'],
-  ['text/plain; charset=utf-8', 'text/plain'],
+  ['text/plain; charset=utf-8', 'text/plain;charset=utf-8'],
   // Other names for the same formats come out in the list's spelling.
   ['image/jpg', 'image/jpeg'],
   ['audio/x-wav', 'audio/wav'],
@@ -263,5 +267,130 @@ describe('a Blob that gets a blob: URL carries the list\'s type or octet-stream'
     ['photo.jpg', 'image/jpeg; name=photo.jpg', '', 'image/jpeg'],
   ])('previewBlobType(%j, %j, %j) is %j', (name, declared, served, expected) => {
     expect(previewBlobType(name, declared, served)).toBe(expected);
+  });
+});
+
+const UTF8 = 'text/plain;charset=utf-8';
+
+// Plain text keeps the character set it names, in the list's own spelling.
+// What the list doesn't know, and a charset parameter that is anything but
+// one token with nothing else after the type, is read as UTF-8: never what
+// the value would name.
+const TEXT_TYPES: Array<[string, string]> = [
+  ['text/plain; charset=utf-8', UTF8],
+  ['text/plain;charset=utf-8', UTF8],
+  ['TEXT/PLAIN; CHARSET=UTF-8', UTF8],
+  ['text/plain; charset="utf-8"', UTF8],
+  ['text/plain; charset=utf8', UTF8],
+  ['text/plain;charset="ISO-8859-1"', 'text/plain;charset=windows-1252'],
+  ['text/plain; charset=us-ascii', 'text/plain;charset=windows-1252'],
+  ['text/plain; charset=windows-1252', 'text/plain;charset=windows-1252'],
+  ['text/plain; charset=iso-8859-2', 'text/plain;charset=iso-8859-2'],
+  ['text/plain; charset=ISO-8859-15', 'text/plain;charset=iso-8859-15'],
+  ['text/plain; charset=iso-8859-9', 'text/plain;charset=windows-1254'],
+  ['text/plain; charset=windows-1251', 'text/plain;charset=windows-1251'],
+  ['text/plain; charset=KOI8-R', 'text/plain;charset=koi8-r'],
+  ['text/plain; charset=Shift_JIS', 'text/plain;charset=shift_jis'],
+  ['text/plain; charset=euc-jp', 'text/plain;charset=euc-jp'],
+  ['text/plain; charset=ISO-2022-JP', 'text/plain;charset=iso-2022-jp'],
+  ['text/plain; charset=gb2312', 'text/plain;charset=gbk'],
+  ['text/plain; charset=GB18030', 'text/plain;charset=gb18030'],
+  ['text/plain; charset=Big5', 'text/plain;charset=big5'],
+  ['text/plain; charset=ks_c_5601-1987', 'text/plain;charset=euc-kr'],
+  ['text/plain; charset=utf-16', 'text/plain;charset=utf-16le'],
+  ['text/plain; charset=UTF-16BE', 'text/plain;charset=utf-16be'],
+  [' text/plain ; charset = "koi8-u" ', 'text/plain;charset=koi8-u'],
+  // No charset, an empty one, or one the list doesn't know.
+  ['text/plain', UTF8],
+  ['Text/Plain', UTF8],
+  ['text/plain;', UTF8],
+  ['text/plain; charset=', UTF8],
+  ['text/plain; charset=""', UTF8],
+  ['text/plain; charset=x-unknown', UTF8],
+  ['text/plain; charset=iso-8859-12', UTF8],
+  ['text/plain; format=flowed', UTF8],
+  // UTF-7 never.
+  ['text/plain; charset=utf-7', UTF8],
+  ['text/plain; charset="UTF-7"', UTF8],
+  ['text/plain; charset=x-utf-7', UTF8],
+  // A value that isn't one token: a space, a semicolon, a quote in the middle.
+  ['text/plain; charset=iso 8859-2', UTF8],
+  ['text/plain; charset=iso-8859-2 x', UTF8],
+  ['text/plain; charset="iso-8859-2;"', UTF8],
+  ['text/plain; charset=iso-8859-2;', UTF8],
+  ['text/plain; charset=iso-"8859-2"', UTF8],
+  ['text/plain; charset="iso-8859-2', UTF8],
+  ['text/plain; charset=iso-8859-2"', UTF8],
+  ["text/plain; charset='iso-8859-2'", UTF8],
+  // A second charset parameter, another parameter after it or before it.
+  ['text/plain; charset=iso-8859-2; charset=iso-8859-2', UTF8],
+  ['text/plain; charset=iso-8859-2; charset=utf-7', UTF8],
+  ['text/plain; charset=iso-8859-2; format=flowed', UTF8],
+  ['text/plain; format=flowed; charset=iso-8859-2', UTF8],
+  // Not the charset parameter.
+  ['text/plain; charset*=iso-8859-2', UTF8],
+  ['text/plain; xcharset=iso-8859-2', UTF8],
+  ['text/plain; name=iso-8859-2', UTF8],
+];
+
+// The strings a text/plain Blob may carry, one per character set on the list.
+const TEXT_LIST_TYPES = [
+  'utf-8', 'utf-16le', 'utf-16be', 'windows-1252', 'iso-8859-2', 'iso-8859-8-i', 'iso-8859-16', 'windows-874',
+  'windows-1250', 'windows-1258', 'koi8-r', 'koi8-u', 'shift_jis', 'euc-jp', 'iso-2022-jp', 'gbk', 'gb18030',
+  'big5', 'euc-kr',
+].map((charset) => `text/plain;charset=${charset}`);
+
+describe('plain text keeps its character set', () => {
+  it.each(TEXT_TYPES)('types %j as %j', (declared, expected) => {
+    expect(isMimeTypeSafeForInlinePreview(declared)).toBe(true);
+    expect(inertBlobType(declared)).toBe(expected);
+    // A real Blob, as the reader makes it from the declared type.
+    const minted = toInertBlob(new Blob(['Grüße'], { type: declared }));
+    expect(minted.type).toBe(expected);
+    expect(isInlineSafeBlob(minted)).toBe(true);
+    expect(isInlineSafeBlob(new Blob(['Grüße'], { type: expected }))).toBe(true);
+  });
+
+  it.each(TEXT_TYPES.filter(([declared, expected]) => declared.toLowerCase() !== expected))(
+    'does not open a Blob typed %j as written in a window of its own',
+    (declared) => {
+      expect(isInlineSafeBlob(new Blob(['Grüße'], { type: declared }))).toBe(false);
+    },
+  );
+
+  it.each(TEXT_TYPES)('shows %j through an object URL typed %j', async (declared, expected) => {
+    const created = captureObjectUrls();
+    await imageBlobUrl(new Blob(['x'], { type: declared }));
+    await imageBlobUrl(new Blob(['x']), declared);
+    expect(created.map((blob) => blob.type)).toEqual([expected, expected]);
+  });
+
+  it.each(TEXT_LIST_TYPES)('a Blob keeps %j as written, and it counts as on the list', (type) => {
+    const blob = new Blob(['x'], { type });
+    expect(blob.type).toBe(type);
+    expect(blob.slice(0, 1, type).type).toBe(type);
+    expect(isInlineSafeBlob(blob)).toBe(true);
+    expect(inertBlobType(type)).toBe(type);
+    expect(toInertBlob(blob)).toBe(blob);
+  });
+
+  it('counts no other text/plain spelling, and no other type with a parameter, as on the list', () => {
+    for (const type of [
+      'text/plain',
+      'text/plain; charset=utf-8',
+      'text/plain;charset="utf-8"',
+      'text/plain;charset=utf8',
+      'text/plain;charset=iso-8859-1',
+      'text/plain;charset=utf-7',
+      'text/plain;charset=utf-8;format=flowed',
+      'text/plain;charset=utf-8 ',
+      'text/plain;charset=x-unknown',
+      'text/plain;format=flowed',
+      'image/png;charset=utf-8',
+      'application/pdf;charset=utf-8',
+      'text/html;charset=utf-8',
+    ]) {
+      expect(isInlineSafeBlob(new Blob([], { type })), type).toBe(false);
+    }
   });
 });

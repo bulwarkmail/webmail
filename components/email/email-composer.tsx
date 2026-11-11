@@ -80,6 +80,7 @@ import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay, sanitizeEmailHtml, escapeHtml, sanitizePluginBodyHtml } from "@/lib/email-sanitization";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
+import { saveBlobAs } from "@/lib/download-guard";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
@@ -3190,14 +3191,8 @@ export function EmailComposer({
   const handlePreviewAttachmentDownload = useCallback(async () => {
     if (!previewAttachment) return;
     if (previewAttachment.file) {
-      const url = URL.createObjectURL(previewAttachment.file);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = previewAttachment.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Asks the active account's device policy, as the preview's Download button does.
+      saveBlobAs(previewAttachment.file, previewAttachment.name, { kind: 'attachment', subject: null });
       return;
     }
     if (composerClient && previewAttachment.blobId) {

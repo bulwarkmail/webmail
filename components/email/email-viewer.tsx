@@ -3305,20 +3305,20 @@ export function EmailViewer({
       // The MIME tag inside winmail.dat is free text: the Blob gets the
       // inline-safe list's own type or octet-stream, never the tag itself.
       const blob = new Blob([buffer], { type: inertBlobType(attachment.type) });
-      const objectUrl = URL.createObjectURL(blob);
 
       if (opensPreview) {
+        const objectUrl = URL.createObjectURL(blob);
         const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
         const previewUrl = transformed.previewUrl || objectUrl;
         if (!openPreviewInNewWindow(previewUrl, email, previewUrl === objectUrl ? blob : undefined)) {
           setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
         }
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
       } else if (downloadAllowed('attachment', email)) {
         emailHooks.onAttachmentDownload.emit(info);
-        saveBlobAs(objectUrl, downloadName, { kind: 'attachment', subject: email });
+        // A download gets an object URL of its own (lib/download-guard.ts).
+        saveBlobAs(blob, downloadName, { kind: 'attachment', subject: email });
       }
-
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
       return;
     }
 
@@ -3334,20 +3334,19 @@ export function EmailViewer({
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
     // A part of an attached or decrypted message: its type is the sender's text.
     const blob = new Blob([buffer], { type: inertBlobType(attachment.type) });
-    const objectUrl = URL.createObjectURL(blob);
 
     if (opensPreview) {
+      const objectUrl = URL.createObjectURL(blob);
       const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
       const previewUrl = transformed.previewUrl || objectUrl;
       if (!openPreviewInNewWindow(previewUrl, email, previewUrl === objectUrl ? blob : undefined)) {
         setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
       }
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } else if (downloadAllowed('attachment', email)) {
       emailHooks.onAttachmentDownload.emit(info);
-      saveBlobAs(objectUrl, downloadName, { kind: 'attachment', subject: email });
+      saveBlobAs(blob, downloadName, { kind: 'attachment', subject: email });
     }
-
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }, [mailAttachmentAction, downloadsOff, onDownloadAttachment, email, resolveAttachmentName]);
 
   const handleEffectiveAttachmentDownload = useCallback((attachment: EffectiveAttachment) => {

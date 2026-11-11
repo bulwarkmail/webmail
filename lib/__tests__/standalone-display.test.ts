@@ -91,7 +91,7 @@ describe('openPreviewInNewWindow', () => {
     expect(openSpy).not.toHaveBeenCalled();
   });
 
-  it.each(['image/png', 'image/jpeg', 'video/mp4', 'audio/mpeg', 'application/pdf', 'text/plain'])('opens a blob: URL of a Blob typed %j', (type) => {
+  it.each(['image/png', 'image/jpeg', 'video/mp4', 'audio/mpeg', 'application/pdf', 'text/plain;charset=utf-8'])('opens a blob: URL of a Blob typed %j', (type) => {
     expect(openPreviewInNewWindow('blob:https://mail.example/abc', undefined, new Blob(['x'], { type }))).toBe(true);
     expect(openSpy).toHaveBeenCalledTimes(1);
   });
