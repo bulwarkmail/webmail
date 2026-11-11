@@ -42,10 +42,12 @@ export const MAX_DRAWINGS = IN_PROCESS ? 1 : 2;
  * A drawing that didn't produce a PNG. `temporary` when the logo isn't to
  * blame (no slot, the child couldn't start or load sharp, or it was given up
  * on from here because the server was busy), so it is worth another try
- * soon and is not remembered as "no logo".
+ * soon and is not remembered as "no logo". `neverStarted` when no drawing
+ * process came up at all: until that is put right no logo is drawn, which
+ * the operator has to hear about.
  */
 export class LogoDrawingError extends Error {
-  constructor(message: string, readonly temporary: boolean) {
+  constructor(message: string, readonly temporary: boolean, readonly neverStarted = false) {
     super(message);
     this.name = 'LogoDrawingError';
   }
@@ -131,7 +133,7 @@ function drawInChild(svg: string, onStopped: () => void): Promise<Buffer> {
       });
     } catch (err) {
       stop();
-      reject(new LogoDrawingError(`drawing could not start: ${(err as Error).message}`, true));
+      reject(new LogoDrawingError(`drawing could not start: ${(err as Error).message}`, true, true));
       return;
     }
 
@@ -152,15 +154,15 @@ function drawInChild(svg: string, onStopped: () => void): Promise<Buffer> {
         resolve(png!);
       }
     };
-    timer = setTimeout(() => finish(new LogoDrawingError('drawing did not start in time', true)), START_DEADLINE_MS);
+    timer = setTimeout(() => finish(new LogoDrawingError('drawing did not start in time', true, true)), START_DEADLINE_MS);
 
     child.on('error', (err) => {
-      finish(new LogoDrawingError(`drawing could not start: ${err.message}`, true));
+      finish(new LogoDrawingError(`drawing could not start: ${err.message}`, true, stage === 'starting'));
       stop();
     });
     child.on('close', (code, signal) => {
       if (code === 0 && stage === 'picture' && received > 0) finish(null, Buffer.concat(chunks));
-      else if (code === 3) finish(new LogoDrawingError('sharp could not be loaded for drawing', true));
+      else if (code === 3) finish(new LogoDrawingError('sharp could not be loaded for drawing', true, true));
       // It failed on the logo, or ended itself past its own deadline.
       else finish(new LogoDrawingError(`drawing failed (${code ?? signal})`, false));
       stop();

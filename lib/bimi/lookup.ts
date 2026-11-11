@@ -49,6 +49,8 @@ const CRL_CACHE_MAX = 50;
 const MAX_IN_FLIGHT = 64;
 /** How long a lookup waits for one of the MAX_DRAWINGS drawing slots. */
 const DRAW_SLOT_WAIT_MS = 15_000;
+/** How often the log says that the drawing process doesn't start; every lookup with a logo runs into it. */
+const DRAWING_NOT_STARTED_WARN_MS = 60_000;
 
 /*
  * Callers without a session (the mobile app's logo request, and whoever
@@ -250,6 +252,15 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   // Drawing is the expensive step; only a few run at once, whatever the
   // number of lookups waiting for one.
   const drawing = drawingSlots(MAX_DRAWINGS, SESSIONLESS_MAX_DRAWINGS, DRAW_SLOT_WAIT_MS);
+  let drawingNotStartedWarnedAt = -Infinity;
+
+  /** While the drawing process doesn't start, no sender has a logo: said as a warning, once per interval. */
+  function drawingNotStarted(domain: string, reason: string) {
+    const now = deps.now();
+    if (now - drawingNotStartedWarnedAt < DRAWING_NOT_STARTED_WARN_MS) return;
+    drawingNotStartedWarnedAt = now;
+    logger.warn('BIMI logos are not shown: the process that draws them does not start', { domain, reason });
+  }
 
   function remember(domain: string, indicator: BimiIndicator | null, ttl: number, sessionless: boolean) {
     const into = sessionless ? sessionlessCache : cache;
@@ -368,6 +379,7 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
       // course because of this server (it couldn't start, or the server was
       // too busy to hear back in time) says nothing about the logo.
       if ((err as { temporary?: unknown }).temporary === true) {
+        if ((err as { neverStarted?: unknown }).neverStarted === true) drawingNotStarted(domain, (err as Error).message);
         throw new BusyError(`BIMI logo not drawn for ${domain}: ${(err as Error).message}`);
       }
       logger.debug('BIMI logo not drawn', { domain, reason: (err as Error).message });

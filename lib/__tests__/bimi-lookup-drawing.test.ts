@@ -27,6 +27,7 @@ vi.mock('@/lib/bimi/certificate', () => ({
   })),
 }));
 
+import { logger } from '@/lib/logger';
 import { rasterize } from '@/lib/bimi/svg';
 import { createBimiResolver, SESSIONLESS_CACHE_MAX, SESSIONLESS_MAX_IN_FLIGHT } from '@/lib/bimi/lookup';
 
@@ -120,6 +121,33 @@ describe('the resolver draws', () => {
     // Asked again at once: drawn now, not "no logo" from the first try.
     expect((await resolver.answer('d0.example')).indicator?.status).toBe('self-asserted');
     expect(rasterize).toHaveBeenCalledTimes(2);
+  });
+
+  it('warns once a minute while the drawing process does not start, and not for a busy moment', async () => {
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    try {
+      const { resolver, clock } = setup();
+      const notStarted = () => Object.assign(new Error('drawing could not start: spawn EPERM'), { temporary: true, neverStarted: true });
+      const warnings = () => warn.mock.calls.filter(([message]) => /does not start/.test(String(message)));
+
+      drawing.impl = async (_svg, onStopped) => { onStopped(); throw failure(true); };
+      expect(await resolver.answer('d0.example')).toEqual({ indicator: null, deferred: true });
+      expect(warnings()).toHaveLength(0);
+
+      drawing.impl = async (_svg, onStopped) => { onStopped(); throw notStarted(); };
+      for (const domain of ['d1.example', 'd2.example', 'd3.example']) {
+        expect(await resolver.answer(domain)).toEqual({ indicator: null, deferred: true });
+      }
+      expect(warnings()).toHaveLength(1);
+      expect(warnings()[0][1]).toEqual({ domain: 'd1.example', reason: 'drawing could not start: spawn EPERM' });
+
+      clock.now += 61_000;
+      await resolver.answer('d4.example');
+      await resolver.answer('d5.example');
+      expect(warnings()).toHaveLength(2);
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it('draws the checked document, not the text that came in', async () => {

@@ -63,17 +63,18 @@ function originInHttpOrigins(url: URL, httpOrigins: readonly string[]): boolean 
  * host the plugin declared in httpOrigins while it holds http:fetch: the
  * consent dialog shows those hosts as what that permission reaches, and
  * only then. Anything else counts as no answer. Where the browser goes
- * after that host (a redirect) is the host's choice.
+ * after that host (a redirect) is the host's choice. What is handed on is
+ * the address as it was tested, without white space around it.
  */
 function avatarAnswerFor(plugin: InstalledPlugin, result: unknown): unknown {
   if (result === undefined || result === null || result === false) return result;
   if (typeof result !== 'string') return undefined;
   const value = result.trim();
-  if (/^data:image\/[a-z0-9.+-]+[;,]/i.test(value) || /^blob:/i.test(value)) return result;
+  if (/^data:image\/[a-z0-9.+-]+[;,]/i.test(value) || /^blob:/i.test(value)) return value;
   if (!pluginHasPermission(plugin, 'http:fetch')) return undefined;
   let url: URL;
   try { url = new URL(value); } catch { return undefined; }
-  return originInHttpOrigins(url, plugin.httpOrigins ?? []) ? result : undefined;
+  return originInHttpOrigins(url, plugin.httpOrigins ?? []) ? value : undefined;
 }
 
 /**

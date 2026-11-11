@@ -21,7 +21,7 @@ vi.mock('node:child_process', async (importOriginal) => {
   return { ...actual, spawn, default: { ...actual, spawn } };
 });
 
-import { DRAW_DEADLINE_MS, rasterize } from '@/lib/bimi/draw';
+import { DRAW_DEADLINE_MS, LogoDrawingError, rasterize } from '@/lib/bimi/draw';
 
 const LOGO = '<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 100 100"><title>Brand</title><rect width="100" height="100" fill="#06c"/></svg>';
 
@@ -57,5 +57,23 @@ describe('the drawing deadline', () => {
     expect(error?.temporary).toBe(false);
     expect(error?.message).toContain('gave up');
     await vi.waitFor(() => expect(stopped).toEqual([true]));
+  }, 30_000);
+
+  // No drawing process at all is the server's trouble, and worth telling apart from a busy moment.
+  it('says so when the drawing process could not be started', async () => {
+    afterReady.run = null;
+    const node = process.execPath;
+    process.execPath = `${node}-is-not-here`;
+    let error: { temporary?: boolean; neverStarted?: boolean; message: string } | null;
+    try {
+      error = await rasterize(LOGO).then(() => null, (err) => err);
+    } finally {
+      process.execPath = node;
+    }
+    expect(error?.message).toContain('could not start');
+    expect(error?.temporary).toBe(true);
+    expect(error?.neverStarted).toBe(true);
+    // A logo that ran out its own time did start.
+    expect(new LogoDrawingError('gave up', false).neverStarted).toBe(false);
   }, 30_000);
 });

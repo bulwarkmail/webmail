@@ -51,6 +51,14 @@ describe('onAvatarResolve: where a plugin may point the host', () => {
     expect(hookResultFor(plugin('initials', ['email:read']), 'onAvatarResolve', ARGS, blob)).toBe(blob);
   });
 
+  it('hands on the address it tested, without the white space around it', () => {
+    const gravatar = 'https://gravatar.com/avatar/0bc83cb571cd1c50ba6f3e8a78ef1346?s=80&d=404';
+    // A no-break space in front: the browser would read such a src as a path on the webmail itself.
+    expect(hookResultFor(gravatarPlugin, 'onAvatarResolve', ARGS, String.fromCharCode(0xa0) + gravatar + '\n')).toBe(gravatar);
+    const data = 'data:image/png;base64,iVBORw0KGgo=';
+    expect(hookResultFor(plugin('initials', ['email:read']), 'onAvatarResolve', ARGS, ` ${data} `)).toBe(data);
+  });
+
   it('drops a data: answer that is not a picture', () => {
     expect(hookResultFor(plugin('initials', ['email:read']), 'onAvatarResolve', ARGS, 'data:text/html,<b>x</b>') == null).toBe(true);
   });
