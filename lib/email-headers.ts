@@ -192,16 +192,32 @@ export function authenticationResultsOnReceipt(headers: readonly { name: string;
 }
 
 /**
+ * The keyword the mail import sets on every message it puts into the
+ * mailbox from a file (lib/mail-import). The server stores such a message
+ * as the file has it, Received and Authentication-Results lines included,
+ * and never checked it itself.
+ */
+export const IMPORTED_KEYWORD = '$imported';
+
+/** Whether the message came into the mailbox from an imported file (IMPORTED_KEYWORD). */
+export function isImportedMessage(email: { keywords?: Record<string, boolean> | null } | undefined): boolean {
+  return email?.keywords?.[IMPORTED_KEYWORD] === true;
+}
+
+/**
  * Whether a pass in the message's Authentication-Results may earn it
  * anything: false when the full fetch found the topmost header without a
- * receipt line above it (authenticationResultsOnReceipt). A message fetched
- * without the header order (a list row) leaves the flag out and keeps its
- * results. The invitation trust and the sender logo ask this; the booking
- * cards also refuse a message whose flag is not known
+ * receipt line above it (authenticationResultsOnReceipt), and for a message
+ * from an imported file, whose headers this server never wrote. A message
+ * fetched without the header order (a list row) leaves the flag out and
+ * keeps its results. The invitation trust and the sender logo ask this; the
+ * booking cards also refuse a message whose flag is not known
  * (lib/structured-mail/trust.ts).
  */
-export function authenticationResultsUsable(email: { authenticationResultsOnReceipt?: boolean } | undefined): boolean {
-  return email?.authenticationResultsOnReceipt !== false;
+export function authenticationResultsUsable(
+  email: { authenticationResultsOnReceipt?: boolean; keywords?: Record<string, boolean> | null } | undefined,
+): boolean {
+  return email?.authenticationResultsOnReceipt !== false && !isImportedMessage(email);
 }
 
 /**
@@ -220,12 +236,14 @@ export function authenticationResultsUsable(email: { authenticationResultsOnRece
  * one of `internalDomains`, the organisation's own (lib/external-mail.ts
  * internalDomains, in ASCII form; a domain covers its subdomains). The same
  * domain's mail from outside carries the header and still needs the pass.
+ * A message from an imported file was not handed in here and earns nothing.
  */
 export function brandIndicatorDomain(
   email: {
     from?: { email?: string | null }[] | null;
     authenticationResults?: AuthenticationResults;
     authenticationResultsOnReceipt?: boolean;
+    keywords?: Record<string, boolean> | null;
   } | undefined,
   internalDomains: readonly string[] = [],
 ): string | undefined {
@@ -234,6 +252,7 @@ export function brandIndicatorDomain(
   if (!fromEmail) return undefined;
   const domain = domainOf(fromEmail);
   if (!domain) return undefined;
+  if (isImportedMessage(email)) return undefined;
   if (!auth) {
     const ascii = toAsciiDomain(domain) ?? domain;
     return internalDomains.some((entry) => ascii === entry || ascii.endsWith(`.${entry}`)) ? domain : undefined;

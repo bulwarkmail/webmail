@@ -9,6 +9,7 @@ import {
   authenticationResultsOnReceipt,
   getSenderVerification,
   hasAlignedAuthenticationPass,
+  isImportedMessage,
 } from '@/lib/email-headers';
 import type { Email, EmailBodyPart } from '@/lib/jmap/types';
 import { hasForwardPrefix } from '@/lib/subject-prefix';
@@ -16,6 +17,7 @@ import { hasForwardPrefix } from '@/lib/subject-prefix';
 export type UntrustedReason =
   | 'no_authentication_results'
   | 'not_written_on_receipt'
+  | 'imported'
   | 'sender'
   | 'sender_not_verified'
   | 'personal_mailbox'
@@ -25,7 +27,8 @@ export type UntrustedReason =
 
 export type StructuredMailTrust = { trusted: true } | { trusted: false; reason: UntrustedReason };
 
-export type TrustInput = Pick<Email, 'from' | 'subject' | 'authenticationResults' | 'authenticationResultsOnReceipt' | 'headers' | 'htmlBody' | 'textBody' | 'bodyValues' | 'bodyStructure'>;
+export type TrustInput = Pick<Email, 'from' | 'subject' | 'authenticationResults' | 'authenticationResultsOnReceipt' | 'headers' | 'htmlBody' | 'textBody' | 'bodyValues' | 'bodyStructure'>
+  & Partial<Pick<Email, 'keywords'>>;
 
 /**
  * Personal mailbox providers. A booking mail from one of these is someone
@@ -140,6 +143,9 @@ function headerList(headers: TrustInput['headers']): { name: string; value: stri
 export function getStructuredMailTrust(email: TrustInput): StructuredMailTrust {
   const auth = email.authenticationResults;
   if (!auth) return { trusted: false, reason: 'no_authentication_results' };
+  // A message from an imported file carries the lines some other server, or
+  // the file's author, wrote; this server never checked it.
+  if (isImportedMessage(email)) return { trusted: false, reason: 'imported' };
 
   const list = headerList(email.headers);
   const onReceipt = email.authenticationResultsOnReceipt ?? (list ? authenticationResultsOnReceipt(list) : false);

@@ -1,6 +1,6 @@
 import type { Email, Attachment, CalendarEvent, CalendarParticipant, EmailBodyPart } from '@/lib/jmap/types';
 import { normalizeCalendarEventLike } from '@/lib/calendar-event-normalization';
-import { authenticationResultsUsable, hasAlignedAuthenticationPass } from '@/lib/email-headers';
+import { authenticationResultsUsable, hasAlignedAuthenticationPass, isImportedMessage } from '@/lib/email-headers';
 import { fromWallClock, getTimeZoneOffsetMs, isValidTimeZone, parseLocalDateTime, type WallClock } from '@/lib/timezone';
 import { applyOverridePatch } from '@/lib/recurrence-instances';
 
@@ -235,16 +235,20 @@ export function storedOrganizerEmail(events: readonly Partial<CalendarEvent>[]):
   return null;
 }
 
+/** What the trust assessment reads of the message. */
+type TrustEmail = Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt'> & Partial<Pick<Email, 'keywords'>>;
+
 /**
  * Whether the server's checks tie the message to its From domain. Only an
  * aligned pass counts: a sender passes SPF for their own envelope domain, or
  * signs with their own DKIM key, and still writes the organizer's address in
  * From. With no DMARC policy on that domain the verdict is `dmarc=none`, and
  * the bare `spf=pass` made the forged invitation look trusted. A pass in a
- * header that was not written on receipt counts for nothing, as for the
- * booking cards (authenticationResultsUsable).
+ * header that was not written on receipt, or in a message from an imported
+ * file, counts for nothing, as for the booking cards
+ * (authenticationResultsUsable).
  */
-function hasVerifiedAuthentication(email?: Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt'>): boolean {
+function hasVerifiedAuthentication(email?: TrustEmail): boolean {
   if (!authenticationResultsUsable(email)) return false;
   return hasAlignedAuthenticationPass(email?.authenticationResults, getPrimaryAddressEmail(email?.from) ?? undefined);
 }
@@ -449,11 +453,12 @@ export function getInvitationMethod(
  * missing header stays the condition, so a listed domain hosted elsewhere,
  * whose mail arrives on port 25, is still checked. A message with a header
  * that was not written on receipt is not internal, and its pass does not
- * verify it (hasVerifiedAuthentication).
+ * verify it (hasVerifiedAuthentication). Neither is a message from an
+ * imported file: it was not handed in here.
  */
 export function getInvitationTrustAssessment(
   event: Partial<CalendarEvent>,
-  email?: Pick<Email, 'from' | 'replyTo' | 'authenticationResults' | 'authenticationResultsOnReceipt'>,
+  email?: TrustEmail & Pick<Email, 'replyTo'>,
   method: InvitationMethod = getInvitationMethod(event),
   ownAddresses: string[] = [],
   internalMailDomains: readonly string[] = []
@@ -469,7 +474,7 @@ export function getInvitationTrustAssessment(
   const authenticationFailure = hasAuthenticationFailure(email, verifiedAuthentication);
   const senderMismatch = Boolean(senderEmail && expectedEmail && senderEmail !== expectedEmail);
   const senderDomain = senderEmail?.split('@').pop();
-  const internal = Boolean(email && !email.authenticationResults && senderDomain
+  const internal = Boolean(email && !email.authenticationResults && !isImportedMessage(email) && senderDomain
     && (ownAddresses.some((address) => address.toLowerCase().split('@').pop() === senderDomain)
       || internalMailDomains.some((domain) => senderDomain === domain || senderDomain.endsWith(`.${domain}`))));
   const expectsAuthenticatedTransport = method !== 'unknown' && !internal;
