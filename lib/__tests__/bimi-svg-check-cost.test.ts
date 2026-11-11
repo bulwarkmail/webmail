@@ -43,6 +43,12 @@ const cases: Record<string, (n: number) => string> = {
   'a comment that never closes': (n) => `${ROOT}<!--${'a-'.repeat(n / 2)}`,
   'a CDATA section that never closes': (n) => `${ROOT}<title><![CDATA[${'a]'.repeat(n / 2)}`,
   'many attributes on one tag': (n) => `${ROOT}<rect${Array.from({ length: Math.floor(n / 12) }, (_, i) => ` a${i}="1"`).join('')}/></svg>`,
+  'a style with a string that never closes': (n) => `${ROOT}<rect style="font-family:'${'/*'.repeat(n / 2)}"/></svg>`,
+  'a style of many comments': (n) => `${ROOT}<rect style="fill:#06c${'/**/'.repeat(n / 4)}"/></svg>`,
+  'a style of many escapes': (n) => `${ROOT}<rect style="font-family:${'\\41 '.repeat(n / 4)}"/></svg>`,
+  'a style of many declarations': (n) => `${ROOT}<rect style="${'fill:#06c;'.repeat(n / 10)}"/></svg>`,
+  'a style with a long list': (n) => `${ROOT}<rect style="stroke-dasharray:${'1,'.repeat(n / 2)}1"/></svg>`,
+  'a style of functions that never close': (n) => `${ROOT}<rect style="fill:${'rgb('.repeat(n / 4)}"/></svg>`,
 };
 
 describe('checkSvg on a self-published logo up to the size limit', () => {

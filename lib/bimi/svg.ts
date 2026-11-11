@@ -8,10 +8,14 @@
  * The check parses the document as XML once, front to back, resolving
  * character references the way an XML parser does (there is no DTD, so no
  * other entities), and judges the parsed elements and attribute values.
- * What gets drawn is that parsed document written out again (checkedSvg),
- * so the drawing library reads exactly what was checked. The cost grows
- * with the size of the logo and nothing else.
+ * A style attribute is read as CSS and reduced to a few plain properties
+ * (style.ts); style sheets are not part of the profile. What gets drawn is
+ * that parsed document written out again (checkedSvg), each style attribute
+ * as its checked declarations, so the drawing library reads exactly what
+ * was checked. The cost grows with the size of the logo and nothing else.
  */
+
+import { checkedStyle } from './style';
 
 export { INDICATOR_SIZE, LogoDrawingError, MAX_DRAWINGS, rasterize, type RasterizeOptions } from './draw';
 
@@ -32,9 +36,8 @@ const ALLOWED_ELEMENTS = new Set([
 /** Logos are a few dozen elements; this is far above any real one. */
 const MAX_ELEMENTS = 1000;
 const MAX_USES = 100;
-/** Attributes and style properties that point at effects the profile doesn't have. */
+/** Attributes that point at effects the profile doesn't have. */
 const EFFECT_ATTRIBUTES = new Set(['filter', 'mask', 'clip-path', 'marker', 'marker-start', 'marker-mid', 'marker-end']);
-const EFFECT_PROPERTY = /(?:^|[\s;{])(?:filter|mask|clip-path|marker(?:-start|-mid|-end)?)\s*:/i;
 /** Characters XML doesn't allow anywhere: control characters but tab and line breaks, U+FFFE, U+FFFF. */
 const NOT_XML_CHARACTER = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(8)}${String.fromCharCode(0x0b, 0x0c)}${String.fromCharCode(0x0e)}-${String.fromCharCode(0x1f)}${String.fromCharCode(0xfffe, 0xffff)}]`);
 /** The entities XML has without a DTD. */
@@ -114,31 +117,29 @@ function decodeReferences(raw: string): string | null {
   }
 }
 
-/**
- * A style value as a CSS parser reads it: comments dropped and escapes
- * decoded. Dropping a comment joins what was on either side, which can only
- * make the check stricter.
- */
-function cssDecoded(value: string): string {
-  let text = '';
-  let pos = 0;
-  for (;;) {
-    const open = value.indexOf('/*', pos);
-    if (open === -1) {
-      text += value.slice(pos);
-      break;
-    }
-    text += value.slice(pos, open);
-    const close = value.indexOf('*/', open + 2);
-    // An unclosed comment runs to the end.
-    if (close === -1) break;
-    pos = close + 2;
-  }
-  return text.replace(/\\(?:([0-9a-fA-F]{1,6})(?:\r\n|[ \t\n\r\f])?|\r\n|[\n\r\f]|([\s\S]))/g, (_m, hex: string | undefined, char: string | undefined) => {
+/** An attribute value with its CSS escapes resolved. Nothing is cut out of it. */
+function cssUnescaped(value: string): string {
+  return value.replace(/\\(?:([0-9a-fA-F]{1,6})(?:\r\n|[ \t\n\r\f])?|\r\n|[\n\r\f]|([\s\S]))/g, (_m, hex: string | undefined, char: string | undefined) => {
     if (hex === undefined) return char ?? '';
     const code = parseInt(hex, 16);
     return code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff) ? String.fromCodePoint(code) : String.fromCharCode(0xfffd);
   });
+}
+
+/**
+ * Whether an attribute value names something outside the document: a
+ * url(...) that is not a "#" reference, or an @import. Looked for in the
+ * value as written and with its escapes resolved, whatever stands around it.
+ */
+function pointsOutside(value: string): boolean {
+  if (!/[(@\\]/.test(value)) return false;
+  for (const text of value.includes('\\') ? [value, cssUnescaped(value)] : [value]) {
+    for (const m of text.matchAll(/url\(\s*['"]?\s*([^)'"\s]*)/gi)) {
+      if (!m[1].startsWith('#')) return true;
+    }
+    if (/@import/i.test(text)) return true;
+  }
+  return false;
 }
 
 /** The start tag at `lt`, or why it is malformed. Reads each character once. */
@@ -182,20 +183,26 @@ function readTag(svg: string, lt: number): Tag | string {
   }
 }
 
-/** Why one start tag can't be shown, or null. Judges the decoded values. */
+/**
+ * Why one start tag can't be shown, or null. Judges the decoded values, and
+ * replaces a style attribute's value by its checked declarations.
+ */
 function checkTag(tag: Tag): string | null {
   if (!ALLOWED_ELEMENTS.has(tag.name)) return `forbidden element <${tag.name.toLowerCase()}>`;
-  for (const [name, value] of tag.byName) {
+  for (const attribute of tag.attributes) {
+    const name = attribute[0].toLowerCase();
+    const value = attribute[1];
     if (name.startsWith('on')) return 'event handler';
     if ((name === 'href' || name.endsWith(':href')) && !value.trim().startsWith('#')) return 'external reference';
     if (EFFECT_ATTRIBUTES.has(name)) return `forbidden property ${name}`;
-    const css = cssDecoded(value);
-    if (name === 'style' && EFFECT_PROPERTY.test(css)) return 'forbidden property style';
     // url(...) may only point inside the document, however it is spelled.
-    for (const m of css.matchAll(/url\(\s*['"]?\s*([^)'"\s]*)/gi)) {
-      if (!m[1].startsWith('#')) return 'external reference';
+    if (pointsOutside(value)) return 'external reference';
+    if (name === 'style' || name.endsWith(':style')) {
+      const checked = checkedStyle(value);
+      if (!checked.ok) return checked.reason;
+      attribute[1] = checked.style;
+      tag.byName.set(name, checked.style);
     }
-    if (/@import/i.test(css)) return 'external reference';
   }
   return null;
 }
