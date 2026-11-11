@@ -37,7 +37,8 @@ import {
  * id), which stay readable. The page keeps the tokens it uses in memory and
  * unseals a stored one when it has none, or when another tab stored a newer
  * one. A browser that can't seal (no WebCrypto on a plain http:// address,
- * IndexedDB blocked) keeps the session in the page's memory only.
+ * IndexedDB blocked, failing or not answering in time) keeps the session in
+ * the page's memory only, and a sealed token it can't open counts as gone.
  *
  * What that does, as LITE-README.md says: what web storage and IndexedDB hold
  * is of no use outside this browser profile, and a script that reads web
@@ -251,7 +252,30 @@ const TOKEN_KEY_ID = 'tokens';
 const SEAL_WAIT_MS = 50;
 const SEAL_WAIT_ATTEMPTS = 40;
 
+/**
+ * How long one step on the key database may take. Some browsers take the
+ * request and never answer (a broken profile, a private mode, another tab
+ * holding the database open for a version change).
+ */
+const KEY_DB_TIMEOUT_MS = 5000;
+
+/**
+ * Set once the key database failed or did not answer in time. This page then
+ * keeps tokens in memory only, and a stored sealed token counts as gone: the
+ * renewal is refused and the user signs in again.
+ */
+let keyDbUnavailable = false;
+
+/** The key database failed, refused or did not answer in time. */
+class KeyDbUnavailableError extends Error {
+  constructor(readonly reason?: unknown) {
+    super('The key database is not available');
+    this.name = 'KeyDbUnavailableError';
+  }
+}
+
 function canSeal(): boolean {
+  if (keyDbUnavailable) return false;
   try {
     return typeof indexedDB !== 'undefined' && !!indexedDB && typeof crypto !== 'undefined' && !!crypto.subtle;
   } catch {
@@ -259,11 +283,24 @@ function canSeal(): boolean {
   }
 }
 
-// One step at a time, so deleting the key never overtakes a seal or an unseal that came first.
+/** `work`, or a KeyDbUnavailableError once it has taken longer than the key database may. */
+function withinKeyDbTime<T>(work: Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new KeyDbUnavailableError('timeout')), KEY_DB_TIMEOUT_MS);
+    work.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); },
+    );
+  });
+}
+
+// One step at a time, so deleting the key never overtakes a seal or an unseal
+// that came first. Every step has a time limit, so none can hold up the rest.
 let keyQueue: Promise<unknown> = Promise.resolve();
 
 function inKeyQueue<T>(work: () => Promise<T>): Promise<T> {
-  const run = keyQueue.then(work, work);
+  const step = () => withinKeyDbTime(Promise.resolve().then(work));
+  const run = keyQueue.then(step, step);
   keyQueue = run.catch(() => undefined);
   return run;
 }
@@ -275,14 +312,36 @@ function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   });
 }
 
+/** Resolves when a write is on disk; rejects when the transaction aborts (a quota error among others). */
+function transactionDone(tx: IDBTransaction): Promise<void> {
+  const done = new Promise<void>((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onabort = () => reject(tx.error ?? new DOMException('The transaction was aborted', 'AbortError'));
+    tx.onerror = () => reject(tx.error ?? new DOMException('The transaction failed', 'UnknownError'));
+  });
+  // Whoever waits on a request of the transaction hears of the failure first.
+  done.catch(() => undefined);
+  return done;
+}
+
 async function withKeyDb<T>(fn: (db: IDBDatabase) => Promise<T>): Promise<T> {
-  const open = indexedDB.open(KEY_DB_NAME, 1);
-  open.onupgradeneeded = () => {
-    if (!open.result.objectStoreNames.contains(KEY_STORE)) open.result.createObjectStore(KEY_STORE);
-  };
-  const db = await requestResult(open);
+  let db: IDBDatabase;
+  try {
+    const open = indexedDB.open(KEY_DB_NAME, 1);
+    open.onupgradeneeded = () => {
+      if (!open.result.objectStoreNames.contains(KEY_STORE)) open.result.createObjectStore(KEY_STORE);
+    };
+    // Blocked by another tab: the open waits, within the step's time limit.
+    db = await requestResult(open);
+  } catch (error) {
+    throw new KeyDbUnavailableError(error);
+  }
+  // Never hold up another tab's version change.
+  db.onversionchange = () => db.close();
   try {
     return await fn(db);
+  } catch (error) {
+    throw new KeyDbUnavailableError(error);
   } finally {
     db.close();
   }
@@ -294,13 +353,22 @@ function tokenKey(create: boolean): Promise<CryptoKey | null> {
     const found = await requestResult(db.transaction(KEY_STORE, 'readonly').objectStore(KEY_STORE).get(TOKEN_KEY_ID)) as CryptoKey | undefined;
     if (found || !create) return found ?? null;
     const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-    const store = db.transaction(KEY_STORE, 'readwrite').objectStore(KEY_STORE);
+    const tx = db.transaction(KEY_STORE, 'readwrite');
+    const done = transactionDone(tx);
+    const store = tx.objectStore(KEY_STORE);
     // Another tab may have made one meanwhile: keep theirs.
     const raced = await requestResult(store.get(TOKEN_KEY_ID)) as CryptoKey | undefined;
     if (raced) return raced;
     await requestResult(store.put(key, TOKEN_KEY_ID));
+    // Only a key that is on disk may seal what a later page load has to open.
+    await done;
     return key;
   });
+}
+
+/** Counts a failure of the key database for the rest of this page. */
+function noteKeyDbFailure(error: unknown): void {
+  if (error instanceof Error && error.name === 'KeyDbUnavailableError') keyDbUnavailable = true;
 }
 
 function toBase64(bytes: Uint8Array): string {
@@ -318,33 +386,40 @@ function fromBase64(text: string): Uint8Array<ArrayBuffer> {
 
 /** `text` sealed with the key (IV first), or null when this browser can't seal. */
 function seal(text: string): Promise<string | null> {
+  if (!canSeal()) return Promise.resolve(null);
   return inKeyQueue(async () => {
-    try {
-      const key = await tokenKey(true);
-      if (!key) return null;
-      const iv = crypto.getRandomValues(new Uint8Array(12));
-      const data = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text)));
-      const out = new Uint8Array(iv.length + data.length);
-      out.set(iv);
-      out.set(data, iv.length);
-      return toBase64(out);
-    } catch {
-      return null;
-    }
+    const key = await tokenKey(true);
+    if (!key) return null;
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const data = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text)));
+    const out = new Uint8Array(iv.length + data.length);
+    out.set(iv);
+    out.set(data, iv.length);
+    return toBase64(out);
+  }).catch((error: unknown) => {
+    noteKeyDbFailure(error);
+    return null;
   });
 }
 
-/** The text of a sealed token, or null when the key is gone or the data is not ours. */
+/**
+ * The text of a sealed token, or null when the key is gone, the data is not
+ * ours, or the key database is not available.
+ */
 function unseal(sealed: string): Promise<string | null> {
+  if (!canSeal()) return Promise.resolve(null);
   return inKeyQueue(async () => {
+    const key = await tokenKey(false);
+    if (!key) return null;
     try {
-      const key = await tokenKey(false);
-      if (!key) return null;
       const bytes = fromBase64(sealed);
       return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(0, 12) }, key, bytes.slice(12)));
     } catch {
       return null;
     }
+  }).catch((error: unknown) => {
+    noteKeyDbFailure(error);
+    return null;
   });
 }
 
@@ -367,6 +442,8 @@ function forgetKeyIfUnused(): void {
         resolve();
       }
     });
+  }).catch(() => {
+    // Not answered in time: the key stays until the next sign-out tries again.
   });
 }
 
@@ -1083,8 +1160,9 @@ export async function settleLiteTokenStorage(): Promise<void> {
   await inKeyQueue(async () => undefined);
 }
 
-/** Test hook: forgets the tokens this page holds in memory, as a reload does. */
+/** Test hook: forgets what this page holds in memory, as a reload does: the tokens, and a key database that failed. */
 export function forgetLiteTokenMemory(): void {
   heldRefresh.clear();
   heldAccess.clear();
+  keyDbUnavailable = false;
 }
