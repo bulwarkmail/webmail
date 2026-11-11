@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { TimeField } from "@/components/ui/time-field";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopOsDefaultAppStatus, DesktopOsSettings as Settings, DesktopOsStatus } from "@/lib/desktop/types";
 import { describeAccelerator, showShortcutDefault } from "@/lib/desktop/shortcut-keys";
@@ -64,20 +65,18 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
         {settings.quietHoursEnabled && (
           <SettingItem nested label={t("quiet_hours_from")}>
             <div className="flex items-center gap-2">
-              <input
-                type="time"
+              <TimeField
                 aria-label={t("quiet_hours_from")}
                 value={settings.quietHoursStart}
-                onChange={(event) => change({ quietHoursStart: event.target.value })}
-                className="rounded-md border border-border bg-background px-2 py-1 text-sm"
+                onChange={(quietHoursStart) => change({ quietHoursStart })}
+                className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm"
               />
               <span className="text-sm text-muted-foreground">{t("quiet_hours_to")}</span>
-              <input
-                type="time"
+              <TimeField
                 aria-label={t("quiet_hours_to")}
                 value={settings.quietHoursEnd}
-                onChange={(event) => change({ quietHoursEnd: event.target.value })}
-                className="rounded-md border border-border bg-background px-2 py-1 text-sm"
+                onChange={(quietHoursEnd) => change({ quietHoursEnd })}
+                className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm"
               />
             </div>
           </SettingItem>

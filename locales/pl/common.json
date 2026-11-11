@@ -1082,6 +1082,7 @@
     "templates_menu": "Szablony",
     "insert_template": "Wstaw szablon…",
     "options": "Opcje",
+    "tags": "Etykiety",
     "option_plain_text": "Zwykły tekst",
     "option_plain_text_hint": "Wyślij bez formatowania",
     "option_read_receipt": "Poproś o potwierdzenie przeczytania",
@@ -1803,7 +1804,7 @@
       "id_field": "ID etykiety",
       "id_placeholder": "np. praca, osobiste",
       "color_field": "Kolor",
-      "id_exists": "Ten ID etykiety już istnieje",
+      "name_exists": "Tag o tej nazwie już istnieje",
       "edit": "Edytuj etykietę",
       "delete": "Usuń etykietę",
       "edit_tag": "Edytuj {name}",
@@ -2080,9 +2081,17 @@
         "label": "Pokazuj kody weryfikacyjne",
         "description": "Oferuj kod z e-maili logowania i potwierdzenia do skopiowania jednym kliknięciem, na liście przez jeden dzień i w wiadomości"
       },
+      "show_attachment_chips": {
+        "label": "Pokazuj załączniki na liście",
+        "description": "Pokazuj załączone pliki pod każdą wiadomością, aby można je było otworzyć prosto z listy. Spinacz jest widoczny w każdym przypadku."
+      },
       "plain_text_mode": {
         "label": "Tylko zwykły tekst",
         "description": "Wyłącz edytor tekstu sformatowanego i wysyłaj wszystkie wiadomości e-mail tylko jako zwykły tekst, w tym odpowiedzi i przekazywanie dalej"
+      },
+      "reply_under_message": {
+        "label": "Odpowiedzi pod wiadomością",
+        "description": "Odpowiedź lub przekazanie otwiera się pod swoją wiadomością, która pozostaje czytelna powyżej. Po wyłączeniu zajmuje cały panel czytania, jak nowa wiadomość."
       },
       "quick_reply": {
         "label": "Szybka odpowiedź",
@@ -3395,7 +3404,8 @@
         "description": "Ramka wokół przycisku, linku lub pola, na którym jest klawiatura.",
         "normal": "Normalna",
         "thick": "Gruba",
-        "extra": "Bardzo gruba"
+        "extra": "Bardzo gruba",
+        "off": "Wyłączone"
       },
       "focus_always": {
         "label": "Zawsze pokazuj fokus",

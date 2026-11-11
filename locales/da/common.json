@@ -1084,6 +1084,7 @@
     "templates_menu": "Skabeloner",
     "insert_template": "Indsæt skabelon…",
     "options": "Indstillinger",
+    "tags": "Tags",
     "option_plain_text": "Ren tekst",
     "option_plain_text_hint": "Send uden formatering",
     "option_read_receipt": "Anmod om læsekvittering",
@@ -1806,7 +1807,7 @@
       "id_field": "Tag-ID",
       "id_placeholder": "f.eks. arbejde, privat",
       "color_field": "Farve",
-      "id_exists": "Dette tag-ID findes allerede",
+      "name_exists": "Der findes allerede et mærke med det navn",
       "edit": "Redigér tag",
       "delete": "Slet tag",
       "edit_tag": "Rediger {name}",
@@ -2083,9 +2084,17 @@
         "label": "Vis bekræftelseskoder",
         "description": "Tilbyd koden fra login- og bekræftelsesmails til kopiering med ét klik, i listen i en dag og i beskeden"
       },
+      "show_attachment_chips": {
+        "label": "Vis vedhæftede filer i listen",
+        "description": "Vis vedhæftede filer under hver besked, så du kan åbne dem direkte fra listen. Papirclipsen vises under alle omstændigheder."
+      },
       "plain_text_mode": {
         "label": "Kun almindelig tekst",
         "description": "Deaktivér den rige teksteditor og send alle e-mails som ren tekst, inklusive svar og videresendelser"
+      },
+      "reply_under_message": {
+        "label": "Svar under beskeden",
+        "description": "Et svar eller en videresendelse åbner under sin besked, som forbliver læsbar ovenover. Når det er slået fra, fylder det hele læseruden ligesom en ny besked."
       },
       "quick_reply": {
         "label": "Hurtigt svar",
@@ -3395,7 +3404,8 @@
         "description": "Rammen om den knap, det link eller det felt, tastaturet står på.",
         "normal": "Normal",
         "thick": "Tyk",
-        "extra": "Ekstra tyk"
+        "extra": "Ekstra tyk",
+        "off": "Fra"
       },
       "focus_always": {
         "label": "Vis altid fokus",

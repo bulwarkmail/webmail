@@ -578,6 +578,9 @@ export function NavigationRail({
 
   return (
     <div
+      // The whole column, logo included: on macOS it makes room for the traffic
+      // lights at its top (app/globals.css).
+      data-window-rail=""
       className={cn(
         // On a short window (a phone on its side) the whole rail scrolls: the
         // pinned group at the bottom left the apps room for two icons.
@@ -600,7 +603,6 @@ export function NavigationRail({
       })()}
 
       <nav
-        data-window-rail=""
         className={cn(
           "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden [@media(max-height:32rem)]:flex-none [@media(max-height:32rem)]:overflow-visible",
           collapsed ? "items-center gap-1 py-3 px-1" : "gap-0.5 py-2 px-2",

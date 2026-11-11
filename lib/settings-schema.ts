@@ -214,6 +214,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   ]),
   bool('tintListRowsByTag', 'message_list', `${AP}tint_list_rows.label`),
   bool('showVerificationCodes', 'message_list', `${EB}show_verification_codes.label`),
+  bool('showAttachmentChips', 'message_list', `${EB}show_attachment_chips.label`),
   // Both make the server fetch the sender's domain: the assistant may only switch them off.
   bool('senderFavicons', 'privacy', 'settings.advanced.sender_favicons.label', { thirdParty: true, only: false }),
   bool('showAvatarsInJunk', 'privacy', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true, only: false }),
@@ -269,6 +270,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('mentionAddsRecipientTo', 'composing', `${EB}mention_adds_recipient.label`,
     opts(`${EB}mention_adds_recipient.`, ['to', 'cc', 'off'])),
   bool('rtlEditingSupport', 'composing', `${EB}rtl_editing.label`),
+  bool('replyUnderMessage', 'composing', `${EB}reply_under_message.label`),
   bool('quickReplyEnabled', 'composing', `${EB}quick_reply.label`),
   bool('autoSelectReplyIdentity', 'composing', 'compose_words.reply_from_received.label'),
   // The page shows it only while the composer may rewrite From.

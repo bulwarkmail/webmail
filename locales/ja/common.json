@@ -1082,6 +1082,7 @@
     "templates_menu": "テンプレート",
     "insert_template": "テンプレートを挿入…",
     "options": "オプション",
+    "tags": "タグ",
     "option_plain_text": "プレーンテキスト",
     "option_plain_text_hint": "書式なしで送信",
     "option_read_receipt": "開封確認を要求",
@@ -1803,7 +1804,7 @@
       "id_field": "ラベルID",
       "id_placeholder": "例：work、personal",
       "color_field": "色",
-      "id_exists": "このラベルIDは既に存在します",
+      "name_exists": "この名前のタグはすでにあります",
       "edit": "ラベルを編集",
       "delete": "ラベルを削除",
       "edit_tag": "{name} を編集",
@@ -2075,6 +2076,10 @@
         "label": "プレーンテキストのみ",
         "description": "リッチテキストエディターを無効にし、返信や転送を含むすべてのメールをプレーンテキストのみで送信します"
       },
+      "reply_under_message": {
+        "label": "返信をメッセージの下に開く",
+        "description": "返信や転送は元のメッセージの下に開き、メッセージはその上で読めるままになります。オフにすると、新規メッセージと同じように閲覧パネル全体に表示されます。"
+      },
       "quick_reply": {
         "label": "クイック返信",
         "description": "メッセージの下にクイック返信欄を表示します。"
@@ -2122,6 +2127,10 @@
       "show_verification_codes": {
         "label": "確認コードを表示",
         "description": "サインインや確認のメールに含まれるコードをワンクリックでコピーできるようにします（一覧では1日間、メッセージ内では常に）"
+      },
+      "show_attachment_chips": {
+        "label": "一覧に添付ファイルを表示",
+        "description": "各メッセージの下に添付ファイルを表示し、一覧から直接開けるようにします。クリップのアイコンはどちらの場合も表示されます。"
       },
       "attachment_click_action": {
         "label": "添付ファイルクリック時の動作",
@@ -3395,7 +3404,8 @@
         "description": "キーボードで選択中のボタン、リンク、入力欄を囲む枠です。",
         "normal": "標準",
         "thick": "太い",
-        "extra": "さらに太い"
+        "extra": "さらに太い",
+        "off": "オフ"
       },
       "focus_always": {
         "label": "フォーカスを常に表示",

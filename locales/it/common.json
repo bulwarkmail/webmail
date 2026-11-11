@@ -1082,6 +1082,7 @@
     "templates_menu": "Modelli",
     "insert_template": "Inserisci modello…",
     "options": "Opzioni",
+    "tags": "Etichette",
     "option_plain_text": "Testo semplice",
     "option_plain_text_hint": "Invia senza formattazione",
     "option_read_receipt": "Richiedi conferma di lettura",
@@ -1803,7 +1804,7 @@
       "id_field": "ID etichetta",
       "id_placeholder": "es. lavoro, personale",
       "color_field": "Colore",
-      "id_exists": "Questo ID etichetta esiste già",
+      "name_exists": "Esiste già un'etichetta con questo nome",
       "edit": "Modifica etichetta",
       "delete": "Elimina etichetta",
       "edit_tag": "Modifica {name}",
@@ -2075,6 +2076,10 @@
         "label": "Solo testo normale",
         "description": "Disabilita l'editor di testo formattato e invia tutte le email solo come testo normale, incluse risposte e inoltri"
       },
+      "reply_under_message": {
+        "label": "Risposte sotto il messaggio",
+        "description": "Una risposta o un inoltro si apre sotto il suo messaggio, che resta leggibile sopra. Se disattivato, occupa l'intero pannello di lettura, come un nuovo messaggio."
+      },
       "quick_reply": {
         "label": "Risposta rapida",
         "description": "Mostra la casella di risposta rapida sotto i messaggi."
@@ -2122,6 +2127,10 @@
       "show_verification_codes": {
         "label": "Mostra codici di verifica",
         "description": "Offri il codice delle email di accesso e conferma da copiare con un clic, nell'elenco per un giorno e nel messaggio"
+      },
+      "show_attachment_chips": {
+        "label": "Mostra gli allegati nell'elenco",
+        "description": "Mostra i file allegati sotto ogni messaggio per aprirli direttamente dall'elenco. La graffetta resta visibile in ogni caso."
       },
       "attachment_click_action": {
         "label": "Azione al clic sugli allegati",
@@ -3395,7 +3404,8 @@
         "description": "Il contorno intorno al pulsante, link o campo su cui si trova la tastiera.",
         "normal": "Normale",
         "thick": "Spesso",
-        "extra": "Molto spesso"
+        "extra": "Molto spesso",
+        "off": "Disattivo"
       },
       "focus_always": {
         "label": "Mostra sempre il focus",

@@ -1082,6 +1082,7 @@
     "templates_menu": "Veidnes",
     "insert_template": "Ievietot veidni…",
     "options": "Opcijas",
+    "tags": "Tagi",
     "option_plain_text": "Vienkāršs teksts",
     "option_plain_text_hint": "Sūtīt bez formatējuma",
     "option_read_receipt": "Pieprasīt izlasīšanas apstiprinājumu",
@@ -1803,7 +1804,7 @@
       "id_field": "Taga identifikators",
       "id_placeholder": "piem., darbs, personigi",
       "color_field": "Krāsa",
-      "id_exists": "Šāds taga identifikators jau pastāv",
+      "name_exists": "Birka ar šādu nosaukumu jau pastāv",
       "edit": "Rediģēt tagu",
       "delete": "Dzēst tagu",
       "edit_tag": "Rediģēt {name}",
@@ -2075,6 +2076,10 @@
         "label": "Tikai parasts teksts",
         "description": "Izslēgt formatētā teksta redaktoru un sūtīt vēstules tikai kā parastu tekstu"
       },
+      "reply_under_message": {
+        "label": "Atbildes zem ziņas",
+        "description": "Atbilde vai pārsūtīšana atveras zem savas ziņas, kas virs tās paliek salasāma. Ja izslēgts, tā aizņem visu lasīšanas rūti kā jauna ziņa."
+      },
       "quick_reply": {
         "label": "Ātrā atbilde",
         "description": "Rādīt ātrās atbildes lauku zem ziņojumiem."
@@ -2122,6 +2127,10 @@
       "show_verification_codes": {
         "label": "Rādīt verifikācijas kodus",
         "description": "Piedāvāt kodu no pieteikšanās un apstiprinājuma e-pastiem kopēšanai ar vienu klikšķi, sarakstā vienu dienu un ziņojumā"
+      },
+      "show_attachment_chips": {
+        "label": "Rādīt pielikumus sarakstā",
+        "description": "Rādīt pievienotos failus zem katras vēstules, lai tos varētu atvērt tieši no saraksta. Saspraudes ikona tiek rādīta jebkurā gadījumā."
       },
       "attachment_click_action": {
         "label": "Darbība, noklikšķinot uz pielikuma",
@@ -3395,7 +3404,8 @@
         "description": "Apvadījums ap pogu, saiti vai lauku, kurā atrodas tastatūra.",
         "normal": "Parasts",
         "thick": "Biezs",
-        "extra": "Ļoti biezs"
+        "extra": "Ļoti biezs",
+        "off": "Izslēgts"
       },
       "focus_always": {
         "label": "Vienmēr rādīt fokusu",

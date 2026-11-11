@@ -285,28 +285,32 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
         <Icon className={cn("w-[18px] h-[18px] flex-shrink-0 mt-px", iconStyles[toast.type])} />
       )}
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 pt-px">
-        <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug">{toast.title}</p>
-        {toast.message && (
-          <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug">{toast.message}</p>
-        )}
-        {toast.tertiaryAction && (
-          <div className="flex flex-wrap items-center gap-1 mt-1.5 -ms-1.5">
-            {actionButton(toast.tertiaryAction)}
+      {/* Content, with the actions next to it while the text keeps a readable
+          width. Longer labels (other languages) take the line below instead
+          of squeezing the text to a word per line. */}
+      <div data-toast-body="" className="flex-1 min-w-0 flex flex-wrap items-start gap-x-4 gap-y-1.5">
+        <div className="flex-1 min-w-[6rem] pt-px">
+          <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug">{toast.title}</p>
+          {toast.message && (
+            <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug">{toast.message}</p>
+          )}
+          {toast.tertiaryAction && (
+            <div className="flex flex-wrap items-center gap-1 mt-1.5 -ms-1.5">
+              {actionButton(toast.tertiaryAction)}
+              {toast.secondaryAction && actionButton(toast.secondaryAction)}
+              {toast.action && actionButton(toast.action)}
+              {toast.extraActions?.map((action) => <span key={action.label} className="contents">{actionButton(action)}</span>)}
+            </div>
+          )}
+        </div>
+
+        {!toast.tertiaryAction && (toast.action || toast.secondaryAction) && (
+          <div data-toast-actions="" className="flex flex-wrap items-center gap-1 max-w-full -ms-1.5">
             {toast.secondaryAction && actionButton(toast.secondaryAction)}
             {toast.action && actionButton(toast.action)}
-            {toast.extraActions?.map((action) => <span key={action.label} className="contents">{actionButton(action)}</span>)}
           </div>
         )}
       </div>
-
-      {!toast.tertiaryAction && (toast.action || toast.secondaryAction) && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {toast.secondaryAction && actionButton(toast.secondaryAction)}
-          {toast.action && actionButton(toast.action)}
-        </div>
-      )}
 
       {/* Close button. Phones swipe the toast away instead. A toast that stays
           until closed shows it all the time: that's the only way it goes. */}

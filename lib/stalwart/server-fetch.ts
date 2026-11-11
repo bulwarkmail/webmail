@@ -44,6 +44,14 @@ export async function isTrustedJmapServerUrl(serverUrl: string): Promise<boolean
 
 export type ServerFetchInit = RequestInit & { duplex?: 'half' };
 
+export interface JmapServerFetchOptions {
+  /**
+   * False when the Authorization header is not a stored credential but one
+   * typed in for this request: it then skips the stored-credential budget.
+   */
+  storedCredential?: boolean;
+}
+
 function headersToRecord(init: HeadersInit | undefined): Record<string, string> {
   const out: Record<string, string> = {};
   if (!init) return out;
@@ -66,12 +74,19 @@ function headersToRecord(init: HeadersInit | undefined): Record<string, string> 
  *
  * A credential the server refused is not sent again for a while; the call
  * gets a 401 without a request (lib/stalwart/stored-credential-budget.ts).
+ * That budget is for credentials replayed from a context cookie. A caller
+ * sending one that was typed in for this request passes
+ * `{ storedCredential: false }` and rate-limits it itself.
  */
 export async function fetchJmapServer(
   url: string,
   givenInit: ServerFetchInit = {},
   trusted: boolean | undefined,
+  options: JmapServerFetchOptions = {},
 ): Promise<Response> {
+  if (options.storedCredential === false) {
+    return observeUpstream('stalwart', (trace) => fetchUnbudgeted(url, withTraceHeaders(givenInit, trace), trusted));
+  }
   const authHeader = new Headers(givenInit.headers).get('authorization');
   if (authHeader && (await isStoredCredentialRefused(authHeader))) return refusedCredentialResponse();
   // With tracing on, Stalwart gets the trace context and its spans join ours.

@@ -1,5 +1,91 @@
 # Changelog
 
+## 1.21.1 (2026-11-11)
+
+1.21.1 lists your masked addresses under Settings > Security on servers that offer them, adds a Tags menu to the composer and default values for template placeholders, and has a setting to open replies in the whole reading pane again. The focus outline is off by default now. Admins can return to their own account after impersonating a user, let an unticked sign-in last until the browser closes, and run Auto-configure OAuth on Stalwart 1.0.3 and later before any client exists. Times follow the 12- or 24-hour setting everywhere, tags with Cyrillic and other non-Latin names can be saved, and a calendar made for a shared account lands in that account.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@systemflair](https://github.com/systemflair)
+- Anonymous
+- [@bultester](https://github.com/bultester)
+
+**Monthly**
+
+- [@comexos](https://github.com/comexos)
+- [@Monarobase](https://github.com/Monarobase)
+- [@Focus-On-Agency](https://github.com/Focus-On-Agency)
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Changes
+
+- **Accessibility**: The focus outline is off by default, since most people click into fields with the mouse and find a box round each one distracting. An outline you picked yourself stays, and so does the outline of anyone who turned on Always show focus. Windows contrast themes keep the outline unless you chose Off. To turn it on, pick a Focus outline under Settings > Accessibility or in the accessibility panel (Alt+Shift+A)
+
+### Features
+
+- **Security**: Settings > Security lists your masked addresses on servers that offer them, such as Stalwart Enterprise and Inbuxa. You can create one, copy it, give it a description, turn it off so new mail to it is rejected, or delete it for good (#1534, thanks @StefanSa)
+- **Security**: The account security settings also work on Inbuxa servers (#1522, thanks @StefanSa)
+- **Compose**: A Tags menu next to Options tags the message you write. Replies and forwards start with the original's tags, a group account offers the group's shared tags, drafts keep them and the sent copy carries them (#1610, thanks @tobiasge)
+- **Compose**: "Replies under the message" in Settings > Composing > Replying is on by default. Turned off, a reply or forward takes the whole reading pane like a new message, as it did before 1.21. Admins can preset or lock it (#1606, thanks @dealerweb)
+- **Templates**: A placeholder can carry a default, such as `{{checkin_time:15:00}}`. The fill dialog starts the field with it, selected, so typing replaces it and Tab keeps it (#1609, thanks @shadow1runner)
+- **Mail**: "Show attachments in the list" under Settings > Message list turns off the attachment chips under each row. The paperclip and the verification code chip stay (#1604, thanks @tobiasge)
+- **Accessibility**: Focus outline has an Off choice, in the settings, the accessibility panel and the admin defaults (#1603, thanks @dealerweb)
+- **Calendar**: Task-only lists show below the calendars in the month, week and day views, with the same tick as in Tasks, and their tasks show on the grid (#1589, thanks @sanitz)
+- **Calendar**: Task lists made in other CalDAV apps such as iOS, Thunderbird or DAVx5, and empty ones, are recognised as task lists (#1605, thanks @sanitz)
+- **Sign-in**: With the Remember me box shown, admins can let a sign-in made with it unticked last until the browser closes instead of ending at the next reload, with "Keep unticked sign-ins until the browser closes" or `BROWSER_SESSION_SIGN_IN`. It needs `SESSION_SECRET` (#1559, thanks @ghozty)
+- **Admin**: After impersonating a user, "Return to my account" in the notice at the top ends that session and signs you back in to your own account. Plugins with the `auth:impersonation-return` permission can draw that notice themselves and call `api.user.returnToOwnAccount` (#1538, thanks @fdisamuel)
+- **Plugins**: `tasks.create` and `tasks.update` write a task's keywords, so a plugin can mark the tasks it makes (#1585, thanks @HOLOEYE-JZ)
+- **Plugins**: In the desktop app, a plugin's own sign-in opens in an app window instead of the system browser, so it finishes inside the app, also under a base path (#1587, thanks @HOLOEYE-JZ)
+
+### Fixes
+
+- **Admin**: Auto-configure OAuth works on Stalwart 1.0.3 and later before any OAuth client exists. When the webmail session can't manage clients, it asks once for a Stalwart admin sign-in with a password, app password or API key, which goes only to the configured Stalwart server and isn't stored (#1611, thanks @tvaril)
+- **Sign-in**: Stalwart scopes listed under Extra scopes reach providers such as Pocket ID that grant them per resource, so Account security shows app passwords and API keys again after a single sign-on (#1583, thanks @kavdau)
+- **Pro**: Move, Delete, delete with mark as read, Undo and the archive key work on a message opened from a folder tab (#1575, #1584, thanks @VasilisNtovolos)
+- **Folders**: A rename the server refuses keeps the old name and shows the server's reason instead of reporting success, a failed role change shows the server's folders again, and a refused new folder shows the server's own words (#1601, #1615, thanks @VasilisNtovolos)
+- **Compose**: Recipient suggestions from an older lookup no longer replace newer ones or reopen the list after you picked an address (#1596, thanks @VasilisNtovolos)
+- **Compose**: The Undo send toast stays readable when its button labels are long, as in Russian (#1599, thanks @Aclz), and the focus outline goes round the whole To field instead of over the address being typed
+- **Times**: The 12- or 24-hour setting applies to the event and task editors, contact events, missed reminders, search previews, the outbox, mail transfers and settings lists, and contact birthdays and anniversaries follow the date order setting. Time fields read times typed as 1430 or 2:30 pm, also in full-width or Arabic-Indic digits (#1616, thanks @madsmh)
+- **Tags**: Tags named in Cyrillic or other non-Latin letters can be saved, changing only a tag's colour or the case of its name keeps the tag on its mail, and a tag made in a group account's tag picker joins the group's shared tags (#1613, thanks @DerFolder)
+- **Calendar**: A calendar made while managing a shared or group account in the settings is created in that account and listed under it, the settings group shared calendars by account, and a new calendar is offered only where the account allows one (#1617, thanks @chris-russell773)
+- **Calendar**: A new calendar made for tasks is offered as a task list while it is still empty (#1595, thanks @madsmh), and the calendar of an account added second shows without a reload (#1618, thanks @SystemFuchs)
+- **Calendar**: The event popup stays open while its More menu is open (#1598, thanks @tobiasge)
+- **Calendar**: Invitations between two of the organisation's own domains on the same server no longer warn about missing authentication. The domains are the ones the External sender chip counts as internal (#1593, thanks @beja19)
+- **Contacts**: Related contacts show by name instead of an id and open from the contact (#1578, thanks @spysz)
+- **Mail**: Images a sender attaches a second time, as Exchange Online does, no longer show as attachments next to the picture they repeat, and the plain-text view lists the inline images it leaves out (#1614, thanks @dealerweb)
+- **Mail**: The BIMI logo shows on mail between the organisation's own domains on the same server, and the verified check mark sits right after the sender's name
+- **Mail**: Rows in the message list keep their measured height, so the row below no longer covers their chips
+- **Avatars**: A person gets the same initials and colour in every avatar, and Han-character names show the given name, so 王阳明 shows 阳明 (#1581, thanks @ibayue)
+- **Notifications**: The push notification prompts name the app in their title (#1577, thanks @alyyousuf7)
+- **Settings**: The unified view settings show for a single account when the admin allows one of the views (#1594, thanks @StefanSa). The settings page no longer scrolls the window past the app, and Mountain View's settings search leaves out rows that layout doesn't show
+- **Admin**: Admin pages keep their scroll position after saving or uploading
+- **Desktop**: Questions in the Windows app's windows are no longer blank white cards (#1588, thanks @HOLOEYE-JZ), and the logo in the rail stays clear of the macOS window buttons
+- **Plugins**: An inline slot's frame no longer shows scrollbars at fractional display scaling such as 125 % (#1602, thanks @HOLOEYE-JZ)
+
 ## 1.21.0 (2026-11-07)
 
 1.21.0 can keep mail, calendars, contacts and files in an encrypted database on the device, so Bulwark opens at once and you can read, search, write and file mail with no connection. The new Bulwark desktop app for Windows, macOS and Linux is built on this release and is out as a [public beta](https://github.com/bulwarkmail/desktop/releases). The reading pane shows whole conversations, menus are the same everywhere, and files can be dropped onto any screen. Undo send is on by default, and an app lock with a PIN, a passkey or Windows Hello locks the app and the mail kept on the device. Admins can set the login page's background and layout, cap what devices keep offline and wipe a lost device. Push notifications open the right message and show sender and subject after the browser was closed. A first visit opens the sign-in page about 0.45 s sooner, and Greek and Norwegian Nynorsk are new languages.

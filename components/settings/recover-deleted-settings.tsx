@@ -8,6 +8,7 @@ import { SettingsSection } from "@/components/settings/settings-section";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useRecoveryStore } from "@/stores/recovery-store";
 import { toast } from "@/stores/toast-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { useDeletedItemsRecovery } from "@/hooks/use-deleted-items-recovery";
 import { cn } from "@/lib/utils";
 import { classifyArchiveError, visibleArchivedItems, type ArchivedEmail } from "@/lib/recovery/archived-items";
@@ -36,6 +37,7 @@ const NO_OUTCOME: Outcome = { restored: 0, failed: 0, gone: 0 };
 export function RecoverDeletedSettings() {
   const t = useTranslations("recover_deleted");
   const format = useFormatter();
+  const hour12 = useSettingsStore((s) => s.timeFormat) === "12h";
   const { available, client, key } = useDeletedItemsRecovery();
   const days = usePolicyStore((s) => s.getOrganisation().recovery.days);
   const record = useRecoveryStore((s) => s.record);
@@ -146,7 +148,7 @@ export function RecoverDeletedSettings() {
     }
   };
 
-  const dateOf = (iso: string | null) => (iso ? format.dateTime(new Date(iso), { dateStyle: "medium", timeStyle: "short" }) : "");
+  const dateOf = (iso: string | null) => (iso ? format.dateTime(new Date(iso), { dateStyle: "medium", timeStyle: "short", hour12 }) : "");
   const outcomeLines = [
     outcome.restored > 0 ? t("restored", { count: outcome.restored }) : null,
     outcome.gone > 0 ? t("restore_gone", { count: outcome.gone }) : null,

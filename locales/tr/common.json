@@ -1085,6 +1085,7 @@
     "templates_menu": "Şablonlar",
     "insert_template": "Şablon ekle…",
     "options": "Seçenekler",
+    "tags": "Etiketler",
     "option_plain_text": "Düz metin",
     "option_plain_text_hint": "Biçimlendirmeden gönder",
     "option_read_receipt": "Okundu bilgisi iste",
@@ -1803,7 +1804,7 @@
       "id_field": "Etiket Kimliği",
       "id_placeholder": "ör. is, kisisel",
       "color_field": "Renk",
-      "id_exists": "Bu etiket kimliği zaten mevcut",
+      "name_exists": "Bu adda bir etiket zaten var",
       "edit": "Etiketi düzenle",
       "delete": "Etiketi sil",
       "edit_tag": "{name} düzenle",
@@ -2080,9 +2081,17 @@
         "label": "Doğrulama kodlarını göster",
         "description": "Giriş ve onay e-postalarındaki kodu tek tıkla kopyalamak için sun; listede bir gün boyunca ve iletide"
       },
+      "show_attachment_chips": {
+        "label": "Ekleri listede göster",
+        "description": "Ekli dosyaları her iletinin altında göster, böylece doğrudan listeden açılabilsinler. Ataç simgesi her durumda görünür."
+      },
       "plain_text_mode": {
         "label": "Yalnızca Düz Metin",
         "description": "Zengin metin düzenleyicisini devre dışı bırak ve yanıtlar ve iletmeler dahil tüm e-postaları yalnızca düz metin olarak gönder"
+      },
+      "reply_under_message": {
+        "label": "Yanıtlar iletinin altında",
+        "description": "Bir yanıt veya iletme kendi iletisinin altında açılır ve ileti üstte okunabilir kalır. Kapalıyken yeni bir ileti gibi tüm okuma bölmesini kaplar."
       },
       "quick_reply": {
         "label": "Hızlı yanıt",
@@ -3395,7 +3404,8 @@
         "description": "Klavyenin üzerinde olduğu düğmenin, bağlantının veya alanın çevresindeki çerçeve.",
         "normal": "Normal",
         "thick": "Kalın",
-        "extra": "Çok kalın"
+        "extra": "Çok kalın",
+        "off": "Kapalı"
       },
       "focus_always": {
         "label": "Odağı her zaman göster",

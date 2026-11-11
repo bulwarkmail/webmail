@@ -154,6 +154,17 @@ function receiptPoint(receipt: CrossAccountMoveReceipt, batches: EmailRestoreBat
   return undefined;
 }
 
+/** All original memberships and read state, with the owning server's folder ids. */
+export function emailRestorePoint(email: Email, accountId?: string): EmailRestorePoint {
+  const prefix = accountId ? `${accountId}:` : null;
+  return {
+    id: email.id,
+    mailboxIds: Object.fromEntries(Object.entries(email.mailboxIds ?? {}).filter(([, inIt]) => inIt)
+      .map(([id]) => [prefix && id.startsWith(prefix) ? id.slice(prefix.length) : id, true])),
+    seen: !!email.keywords?.$seen,
+  };
+}
+
 /**
  * Where `emails` are now, so the toast's Undo can put them back after a
  * delete to Trash, an archive, a move or "remove from folder". Taken before
@@ -169,20 +180,14 @@ export function restoreBatchesFor(emails: Email[], client: IJMAPClient): EmailRe
     } catch {
       continue;
     }
-    const prefix = context.accountId ? `${context.accountId}:` : null;
-    const mailboxIds: Record<string, boolean> = {};
-    for (const [id, inIt] of Object.entries(email.mailboxIds)) {
-      if (inIt) mailboxIds[prefix && id.startsWith(prefix) ? id.slice(prefix.length) : id] = true;
-    }
-    if (Object.keys(mailboxIds).length === 0) continue;
+    const point = emailRestorePoint(email, context.accountId);
+    if (Object.keys(point.mailboxIds).length === 0) continue;
     let batch = batches.find(b => b.client === context.client && b.accountId === context.accountId);
     if (!batch) {
       batch = { client: context.client, accountId: context.accountId, points: [] };
       batches.push(batch);
     }
-    if (!batch.points.some(p => p.id === email.id)) {
-      batch.points.push({ id: email.id, mailboxIds, seen: !!email.keywords?.$seen });
-    }
+    if (!batch.points.some(p => p.id === email.id)) batch.points.push(point);
   }
   return batches;
 }
@@ -2989,8 +2994,11 @@ function movedEmailState(
   email: Email,
   destinationMailboxId: string,
   isTarget: (email: Email) => boolean,
+  arrivesRead = false,
 ): Partial<EmailStore> {
   const isUnread = !email.keywords?.$seen;
+  // Marked read in the same request (Trash and mark as read).
+  const arrivesUnread = isUnread && !arrivesRead;
   // Counter changes go to the email's own account list; source and
   // destination live in the same account. (#281)
   const mailboxPatch = applyMailboxCounterUpdate(state, email, (mailbox) => {
@@ -3007,9 +3015,9 @@ function movedEmailState(
       return {
         ...mailbox,
         totalEmails: mailbox.totalEmails + 1,
-        unreadEmails: isUnread ? mailbox.unreadEmails + 1 : mailbox.unreadEmails,
+        unreadEmails: arrivesUnread ? mailbox.unreadEmails + 1 : mailbox.unreadEmails,
         totalThreads: mailbox.totalThreads + 1,
-        unreadThreads: isUnread ? mailbox.unreadThreads + 1 : mailbox.unreadThreads,
+        unreadThreads: arrivesUnread ? mailbox.unreadThreads + 1 : mailbox.unreadThreads,
       };
     }
     return mailbox;
@@ -3023,14 +3031,15 @@ function movedEmailState(
 }
 
 /**
- * Preserve Archive's existing global-list completion only for a message
+ * Preserve the existing global-list move completion only for a message
  * already listed in this login and owner account. This never dispatches a
  * mutation or hooks; the folder owns those, and its Undo, exactly once.
  */
-export function captureListedArchive(
+export function captureListedMove(
   emailId: string,
   source: { client: IJMAPClient; clientAccountId?: string; accountId: string },
   destinationMailboxId: string,
+  arrivesRead = false,
 ): () => void {
   const isCurrentView = captureEmailListView();
   const matchesSource = (email: Email) => {
@@ -3057,7 +3066,7 @@ export function captureListedArchive(
       const current = state.emails.find(isTarget);
       if (!current) return state;
       // Use current fields/counters after any same-view refresh or read.
-      return movedEmailState(state, { ...current, sourceClientAccountId: source.clientAccountId }, destinationMailboxId, isTarget);
+      return movedEmailState(state, { ...current, sourceClientAccountId: source.clientAccountId }, destinationMailboxId, isTarget, arrivesRead);
     });
   };
 }
@@ -3373,7 +3382,7 @@ function projectUnifiedCounts(
 // Find the trash mailbox for a given account scope. Prefers JMAP role, but
 // falls back to name matching ("trash" / "deleted") so users with custom or
 // pre-existing folders (e.g. "Deleted Items") aren't silently destroyed.
-function findTrashMailbox(
+export function findTrashMailbox(
   mailboxes: Mailbox[],
   scope: { accountId?: string; isShared?: boolean }
 ): Mailbox | undefined {
@@ -7881,16 +7890,40 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   renameMailbox: async (client, mailboxId, name): Promise<boolean> => {
+    // Resolution errors are synchronous; after dispatch, only the captured
+    // login/client and mailbox owner may receive success or failure state.
+    let isCurrentContext = () => true;
     try {
       const target = resolveMailboxMutationContext(client, mailboxId);
+      const epoch = currentStoreEpoch();
+      const auth = useAuthStore.getState();
+      const viewingId = get().viewingAccountId;
+      const actionClient = resolveActionClient(client);
+      const actionAccountId = actionClient.getAccountId();
+      const ownerAccountId = target.ownerAccountId ?? actionAccountId;
+      const previousName = resolveActionMailboxes().find(mb => mb.id === mailboxId)?.name ?? null;
+      isCurrentContext = () => {
+        const currentAuth = useAuthStore.getState();
+        if (currentStoreEpoch() !== epoch
+          || currentAuth.activeAccountId !== auth.activeAccountId
+          || currentAuth.client !== auth.client
+          || get().viewingAccountId !== viewingId
+          || resolveActionClient(client) !== actionClient
+          || actionClient.getAccountId() !== actionAccountId) return false;
+        const currentTarget = resolveMailboxAccountTarget(client, target.ownerAccountId);
+        const currentMailbox = resolveActionMailboxes().find(mb => mb.id === mailboxId);
+        return currentTarget.client === target.client && currentTarget.accountId === target.accountId
+          && (!currentMailbox || (currentMailbox.accountId ?? actionAccountId) === ownerAccountId);
+      };
       if (emailHooks.onBeforeMailboxRename.size > 0
         && !(await emailHooks.onBeforeMailboxRename.intercept({ mailboxId, name }))) {
         return false;
       }
-      const previousName = resolveActionMailboxes().find(mb => mb.id === mailboxId)?.name ?? null;
       await target.client.updateMailbox(target.mailboxId, { name }, target.accountId);
       void emailHooks.onMailboxRename.emit({ mailboxId, name, previousName });
-      const viewingId = get().viewingAccountId;
+      // The server succeeded even if an account switch made its view stale.
+      // The epoch also rejects A -> B -> A, without rejecting folder navigation.
+      if (!isCurrentContext()) return true;
       if (viewingId) {
         set((state) => ({
           accountMailboxes: {
@@ -7908,7 +7941,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         });
       }
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to rename folder' });
+      if (isCurrentContext()) set({ error: error instanceof Error ? error.message : 'Failed to rename folder' });
       throw error;
     }
     return true;
@@ -7982,6 +8015,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update folder role' });
+      // The role may already be off its old folder: show what the server has.
+      try {
+        if (get().viewingAccountId) {
+          await refreshMailboxesForViewingAccount(client);
+        } else {
+          await get().fetchMailboxes(client);
+        }
+      } catch { /* the role error is the one to report */ }
       throw error;
     }
   },

@@ -1,14 +1,26 @@
 import { format, parseISO } from "date-fns";
-import type { CalendarTask } from "@/lib/jmap/types";
+import type { Calendar, CalendarTask } from "@/lib/jmap/types";
 
 /**
  * Tasks shown on the calendar grid (#1107): only tasks with a due date, and
  * only those in a calendar the sidebar currently shows, the same rule the
- * events follow.
+ * events follow. A task-only list is never among the selected calendars, so
+ * its tasks follow the task list tick (hiddenTaskListIds) instead.
  */
-export function filterTasksByCalendars(tasks: CalendarTask[], selectedCalendarIds: string[]): CalendarTask[] {
-  const selected = new Set(selectedCalendarIds);
-  return tasks.filter((task) => Object.keys(task.calendarIds ?? {}).some((id) => selected.has(id)));
+export function filterTasksByCalendars(
+  tasks: CalendarTask[],
+  selectedCalendarIds: string[],
+  calendars: Pick<Calendar, "id" | "isTasksOnly">[] = [],
+  hiddenTaskListIds: string[] = [],
+): CalendarTask[] {
+  const visible = new Set(selectedCalendarIds);
+  const hidden = new Set(hiddenTaskListIds);
+  for (const cal of calendars) {
+    if (!cal.isTasksOnly) continue;
+    if (hidden.has(cal.id)) visible.delete(cal.id);
+    else visible.add(cal.id);
+  }
+  return tasks.filter((task) => Object.keys(task.calendarIds ?? {}).some((id) => visible.has(id)));
 }
 
 /** yyyy-MM-dd of the day a task is due, or null when it has no valid due date. */

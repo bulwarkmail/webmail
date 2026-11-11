@@ -1085,6 +1085,7 @@
     "templates_menu": "Sablonok",
     "insert_template": "Sablon beszúrása…",
     "options": "Beállítások",
+    "tags": "Címkék",
     "option_plain_text": "Egyszerű szöveg",
     "option_plain_text_hint": "Küldés formázás nélkül",
     "option_read_receipt": "Olvasási visszaigazolás kérése",
@@ -1806,7 +1807,7 @@
       "id_field": "Címke azonosító",
       "id_placeholder": "pl. munka, szemelyes",
       "color_field": "Szín",
-      "id_exists": "Ez a címke azonosító már létezik",
+      "name_exists": "Már van ilyen nevű címke",
       "edit": "Címke szerkesztése",
       "delete": "Címke törlése",
       "edit_tag": "{name} szerkesztése",
@@ -2083,9 +2084,17 @@
         "label": "Ellenőrző kódok megjelenítése",
         "description": "A bejelentkezési és megerősítő e-mailek kódjának felajánlása egy kattintásos másolásra, a listában egy napig és az üzenetben"
       },
+      "show_attachment_chips": {
+        "label": "Mellékletek megjelenítése a listában",
+        "description": "A csatolt fájlok megjelenítése minden üzenet alatt, hogy közvetlenül a listából megnyithassa őket. A gemkapocs ikon mindenképp látható."
+      },
       "plain_text_mode": {
         "label": "Csak szöveges mód",
         "description": "Rich text szerkesztő letiltása és az összes e-mail küldése csak szöveges formátumban, beleértve a válaszokat és továbbításokat"
+      },
+      "reply_under_message": {
+        "label": "Válaszok az üzenet alatt",
+        "description": "A válasz vagy továbbítás a saját üzenete alatt nyílik meg, amely fölötte olvasható marad. Kikapcsolva egy új üzenethez hasonlóan a teljes olvasóablakot elfoglalja."
       },
       "quick_reply": {
         "label": "Gyors válasz",
@@ -3395,7 +3404,8 @@
         "description": "A keret azon gomb, hivatkozás vagy mező körül, amelyen a billentyűzet áll.",
         "normal": "Normál",
         "thick": "Vastag",
-        "extra": "Extra vastag"
+        "extra": "Extra vastag",
+        "off": "Ki"
       },
       "focus_always": {
         "label": "Fókusz mindig látszik",

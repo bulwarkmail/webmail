@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import type { Email } from '@/lib/jmap/types';
 
@@ -19,9 +19,10 @@ vi.mock('@/stores/auth-store', () => {
 const { ThreadListItem } = await import('../thread-list-item');
 const { groupEmailsByThread } = await import('@/lib/thread-utils');
 
-const row = (id: string, hasAttachment: boolean) => ({
+const row = (id: string, hasAttachment: boolean, over: Partial<Email> = {}) => ({
   id, threadId: `t-${id}`, mailboxIds: { inbox: true }, keywords: { $seen: true }, size: 1,
   receivedAt: '2026-01-15T10:00:00Z', subject: id, from: [{ name: 'Ann', email: 'ann@example.com' }], hasAttachment,
+  ...over,
 }) as unknown as Email;
 
 describe('attachment chips in message rows', () => {
@@ -34,6 +35,27 @@ describe('attachment chips in message rows', () => {
       );
       expect(ListAttachmentChips.mock.calls.length > 0 ? 1 : 0).toBe(expected);
       unmount();
+    }
+  });
+
+  // With the chips turned off a row keeps its verification code and its
+  // paperclip, and mounts no loader for the chips.
+  it('keeps the code and the paperclip when attachment chips are off', async () => {
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    act(() => { useSettingsStore.setState({ showAttachmentChips: false }); });
+    try {
+      ListAttachmentChips.mockClear();
+      const email = row('with', true, { subject: 'Your verification code is 482913', receivedAt: new Date().toISOString() });
+      const [thread] = groupEmailsByThread([email]);
+      const { unmount } = render(
+        <ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={() => {}} onOpenAttachment={() => {}} />,
+      );
+      expect(ListAttachmentChips).not.toHaveBeenCalled();
+      expect(screen.getAllByText('482913').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('has_attachment').length).toBeGreaterThan(0);
+      unmount();
+    } finally {
+      act(() => { useSettingsStore.setState({ showAttachmentChips: true }); });
     }
   });
 });

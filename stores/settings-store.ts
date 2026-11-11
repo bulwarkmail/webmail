@@ -730,6 +730,7 @@ interface SettingsState extends AccessibilitySettings {
   searchDefaultScope: SearchDefaultScope; // Where a new search looks: all folders, or only the open one (#1485)
   showPreview: boolean;
   showVerificationCodes: boolean; // Offer the one-time code of a sign-in mail as a copy chip in the list and the reader
+  showAttachmentChips: boolean; // Show attachment chips in the message list
   mailLayout: MailLayout;
   listColumns: boolean; // One-line list rows as a table: From, Subject, Date and Size columns under a header (#262)
   emailsPerPage: number;
@@ -749,6 +750,7 @@ interface SettingsState extends AccessibilitySettings {
   // Composer
   sendConfirmation: boolean;
   quickReplyEnabled: boolean;
+  replyUnderMessage: boolean; // A reply or forward docks under its message; off, it takes the reading pane like a new message
   defaultReplyMode: ReplyMode;
   autoSelectReplyIdentity: boolean;
   replyIdentityMatch: ReplyIdentityMatch; // With autoSelectReplyIdentity on: 'exact' = configured identities only, 'domain' = also same-domain catch-all addresses (rewrites From) #1000
@@ -1092,6 +1094,7 @@ const DEFAULT_SETTINGS = {
   searchDefaultScope: 'all' as SearchDefaultScope,
   showPreview: true,
   showVerificationCodes: true,
+  showAttachmentChips: true,
   mailLayout: 'split' as MailLayout,
   listColumns: false,
   emailsPerPage: 50,
@@ -1111,6 +1114,7 @@ const DEFAULT_SETTINGS = {
   // Composer
   sendConfirmation: false,
   quickReplyEnabled: true,
+  replyUnderMessage: true,
   defaultReplyMode: 'reply' as ReplyMode,
   autoSelectReplyIdentity: false,
   replyIdentityMatch: 'domain' as ReplyIdentityMatch,
@@ -1599,6 +1603,7 @@ export const useSettingsStore = create<SettingsState>()(
           searchDefaultScope: state.searchDefaultScope,
           showPreview: state.showPreview,
           showVerificationCodes: state.showVerificationCodes,
+          showAttachmentChips: state.showAttachmentChips,
           mailLayout: state.mailLayout,
           listColumns: state.listColumns,
           emailsPerPage: state.emailsPerPage,
@@ -1617,6 +1622,7 @@ export const useSettingsStore = create<SettingsState>()(
           trustedSenders: state.trustedSenders,
           sendConfirmation: state.sendConfirmation,
           quickReplyEnabled: state.quickReplyEnabled,
+          replyUnderMessage: state.replyUnderMessage,
           defaultReplyMode: state.defaultReplyMode,
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           replyIdentityMatch: state.replyIdentityMatch,
@@ -1774,6 +1780,8 @@ export const useSettingsStore = create<SettingsState>()(
           const { explicitSettings } = get();
           if (hasOwn(DEFAULT_SETTINGS, key) && key !== 'explicitSettings' && !explicitSettings.includes(key)) {
             set({ explicitSettings: [...explicitSettings, key] });
+            // Whether the focus outline was chosen shows on <html> too.
+            if (ACCESSIBILITY_DOM_KEYS.has(key)) applyAccessibility(get());
           }
         });
       },
@@ -1853,6 +1861,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateCalendarTasksDefault(settings);
           migrateUndoSendDefault(settings);
           migrateTrustedSendersBookDefault(settings);
+          migrateFocusOutlineDefault(settings);
           dropAttachmentPosition(settings);
 
           // A server copy doesn't replace a setting changed here after that
@@ -2294,7 +2303,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 15,
+      version: 16,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -2412,6 +2421,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateCalendarTasksDefault(state);
         migrateUndoSendDefault(state);
         migrateTrustedSendersBookDefault(state);
+        migrateFocusOutlineDefault(state);
         // v15: attachments always sit under the header; the setting is gone.
         dropAttachmentPosition(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
@@ -2491,6 +2501,19 @@ export function migrateUndoSendDefault(state: Record<string, unknown>): void {
 }
 
 /**
+ * v16: the focus outline is off by default. Normal that the user never
+ * picked was only the old default and turns off; Normal they picked stays,
+ * and so do Thick and Extra thick. Someone who switched on Always show focus
+ * wants an outline, so theirs stays too. Imports and server copies from
+ * older builds still carry the old default and go through this too.
+ */
+export function migrateFocusOutlineDefault(state: Record<string, unknown>): void {
+  if (state.focusRing !== 'normal' || state.focusAlwaysVisible === true) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('focusRing');
+  if (!chosen) state.focusRing = 'off';
+}
+
+/**
  * Tasks are on by default (pim-8). Off that the user never chose was only
  * the old default and turns on; off they chose stays off. Imports and
  * server copies from older builds still carry the old default and go
@@ -2526,7 +2549,7 @@ const ACCESSIBILITY_DOM_KEYS: ReadonlySet<string> = new Set([
   'largeCursor', 'nativeScrollbars', 'simpleMode', 'unreadCountStyle', 'colorBlindPalette', 'showColorNames',
 ]);
 
-function applyAccessibility(state: { fontSize: FontSize } & AccessibilitySettings) {
+function applyAccessibility(state: { fontSize: FontSize; explicitSettings: readonly string[] } & AccessibilitySettings) {
   if (typeof document === 'undefined') return;
   applyAccessibilityTo(document.documentElement, state);
 }

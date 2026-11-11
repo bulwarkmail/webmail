@@ -1085,6 +1085,7 @@
     "templates_menu": "範本",
     "insert_template": "插入範本…",
     "options": "選項",
+    "tags": "標籤",
     "option_plain_text": "純文字",
     "option_plain_text_hint": "不帶格式傳送",
     "option_read_receipt": "要求讀取回條",
@@ -1806,7 +1807,7 @@
       "id_field": "標籤 ID",
       "id_placeholder": "例如工作、個人",
       "color_field": "顏色",
-      "id_exists": "此標籤 ID 已存在",
+      "name_exists": "已有同名標籤",
       "edit": "編輯標籤",
       "delete": "刪除標籤",
       "edit_tag": "編輯 {name}",
@@ -2083,9 +2084,17 @@
         "label": "顯示驗證碼",
         "description": "提供登入與確認郵件中的驗證碼，一鍵複製（在清單中顯示一天，在郵件中始終顯示）"
       },
+      "show_attachment_chips": {
+        "label": "在清單中顯示附件",
+        "description": "在每封郵件下方顯示附件，方便直接從清單中開啟。迴紋針圖示一律會顯示。"
+      },
       "plain_text_mode": {
         "label": "僅純文字",
         "description": "停用富文字編輯器，並將所有郵件（包括回覆和轉寄）以純文字傳送"
+      },
+      "reply_under_message": {
+        "label": "在郵件下方開啟回覆",
+        "description": "回覆或轉寄會在原郵件下方開啟，原郵件仍可在上方閱讀。關閉後，它會像新郵件一樣佔據整個閱讀區域。"
       },
       "quick_reply": {
         "label": "快速回覆",
@@ -3395,7 +3404,8 @@
         "description": "鍵盤目前所在的按鈕、連結或欄位周圍的外框。",
         "normal": "正常",
         "thick": "粗",
-        "extra": "特粗"
+        "extra": "特粗",
+        "off": "關"
       },
       "focus_always": {
         "label": "一律顯示焦點",

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CalendarManagementSettings } from '../calendar-management-settings';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -217,5 +217,91 @@ describe('CalendarManagementSettings opened with two accounts signed in', () => 
     await waitFor(() => expect(screen.getAllByTestId('calendar-settings-account').map((el) => el.textContent)).toEqual(['a@example.org', 'b@example.org']));
     useAccountStore.setState({ accounts: [], activeAccountId: null });
     useCalendarStore.getState().setAccountClients(null, null);
+  });
+});
+
+// #1617: with a group's account picked under Settings → Account, a new
+// calendar went to the user's own account.
+describe('CalendarManagementSettings for a managed shared account', () => {
+  const group = {
+    ...appleColored, id: 'group:c', originalId: 'c', name: 'Team', isDefault: false, isShared: true,
+    accountId: 'group', accountName: 'team@example.org',
+  } as unknown as Calendar;
+  const mine = { ...appleColored, accountId: 'own' } as Calendar;
+  const clientFor = (mayCreateCalendar: boolean) => ({
+    getAccountId: () => 'own',
+    getAccountInfo: (id: string) => id === 'group'
+      ? { name: 'team@example.org', isPersonal: false, isReadOnly: false, accountCapabilities: { 'urn:ietf:params:jmap:calendars': { mayCreateCalendar } } }
+      : null,
+  });
+
+  beforeEach(async () => {
+    const { useManagedAccountStore } = await import('@/stores/managed-account-store');
+    useManagedAccountStore.getState().setManagedAccount({ id: 'group', name: 'team@example.org', isPrimary: false } as never);
+  });
+
+  afterEach(async () => {
+    const { useManagedAccountStore } = await import('@/stores/managed-account-store');
+    useManagedAccountStore.getState().clear();
+    vi.restoreAllMocks();
+  });
+
+  it('creates the calendar in the managed account, without asking for a kind', async () => {
+    const createCalendar = vi.fn().mockResolvedValue(group);
+    useAuthStore.setState({ client: clientFor(true), serverUrl: null, username: null } as never);
+    useCalendarStore.setState({ calendars: [mine, group], icalSubscriptions: [], createCalendar } as never);
+
+    render(<CalendarManagementSettings />);
+    expect(screen.getAllByTestId('calendar-settings-item').map((el) => el.getAttribute('data-calendar-name'))).toEqual(['Team']);
+    fireEvent.click(screen.getByText('add_calendar'));
+    expect(screen.queryByText('kind')).toBeNull();
+    fireEvent.change(screen.getByLabelText('name'), { target: { value: 'Rota' } });
+    fireEvent.click(screen.getByText('create'));
+
+    await waitFor(() => expect(createCalendar).toHaveBeenCalledTimes(1));
+    expect(createCalendar.mock.calls[0][1]).toMatchObject({ name: 'Rota' });
+    expect(createCalendar.mock.calls[0][2]).toEqual({ components: undefined });
+    expect(createCalendar.mock.calls[0][3]).toBe('group');
+  });
+
+  it('says so when the server refuses, instead of reporting it created', async () => {
+    const { toast } = await import('@/stores/toast-store');
+    const success = vi.spyOn(toast, 'success');
+    const error = vi.spyOn(toast, 'error');
+    const createCalendar = vi.fn().mockResolvedValue(null);
+    useAuthStore.setState({ client: clientFor(true), serverUrl: null, username: null } as never);
+    useCalendarStore.setState({ calendars: [group], icalSubscriptions: [], createCalendar } as never);
+
+    render(<CalendarManagementSettings />);
+    fireEvent.click(screen.getByText('add_calendar'));
+    fireEvent.change(screen.getByLabelText('name'), { target: { value: 'Rota' } });
+    fireEvent.click(screen.getByText('create'));
+
+    await waitFor(() => expect(error).toHaveBeenCalledWith('error_create'));
+    expect(success).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('name')).toBeInTheDocument();
+  });
+
+  it('offers no new calendar where the account may not make one', () => {
+    useAuthStore.setState({ client: clientFor(false), serverUrl: null, username: null } as never);
+    useCalendarStore.setState({ calendars: [group], icalSubscriptions: [], createCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+    expect(screen.queryByText('add_calendar')).toBeNull();
+  });
+});
+
+describe('CalendarManagementSettings with shared calendars', () => {
+  it("lists the user's own calendars first, then each shared account's under its name", () => {
+    useAuthStore.setState({ client: { getAccountId: () => 'own' }, serverUrl: null, username: null } as never);
+    const team = { ...appleColored, id: 'group:c', name: 'Team', isDefault: false, isShared: true, accountId: 'group', accountName: 'team@example.org' } as Calendar;
+    const boss = { ...appleColored, id: 'boss:c', name: 'Boss', isDefault: false, isShared: true, accountId: 'boss', accountName: 'boss@example.org' } as Calendar;
+    useCalendarStore.setState({ calendars: [team, appleColored, boss], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    const groups = screen.getAllByTestId('calendar-settings-group');
+    expect(groups.map((g) => g.querySelector('[data-testid="calendar-settings-account"]')?.textContent ?? null)).toEqual([null, 'team@example.org', 'boss@example.org']);
+    expect(groups.map((g) => Array.from(g.querySelectorAll('[data-testid="calendar-settings-item"]')).map((el) => el.getAttribute('data-calendar-name')))).toEqual([['Home'], ['Team'], ['Boss']]);
   });
 });

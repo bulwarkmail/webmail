@@ -746,6 +746,35 @@ describe('CalendarApp event menu', () => {
     fireEvent.click(await screen.findByRole('menuitem', { name: 'events.edit' }));
     expect(await screen.findByPlaceholderText('form.title')).toHaveValue('Standup');
   });
+
+  it('keeps the event info popup open when opening its three-dot menu in month view', async () => {
+    renderApp();
+    const card = screen.getAllByRole('button', { name: /Standup/ })[0];
+    fireEvent.click(card);
+    const popup = await screen.findByRole('dialog', { name: 'Standup' });
+    expect(popup).toBeInTheDocument();
+
+    const moreButton = within(popup).getByRole('button', { name: 'toolbar.more' });
+    fireEvent.click(moreButton);
+
+    expect(await screen.findByRole('menuitem', { name: 'events.export_ics' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Standup' })).toBeInTheDocument();
+  });
+
+  it('keeps the event info popup open when copying title from the three-dot menu', async () => {
+    renderApp();
+    const card = screen.getAllByRole('button', { name: /Standup/ })[0];
+    fireEvent.click(card);
+    const popup = await screen.findByRole('dialog', { name: 'Standup' });
+    const moreButton = within(popup).getByRole('button', { name: 'toolbar.more' });
+    fireEvent.click(moreButton);
+
+    const copyTitle = await screen.findByRole('menuitem', { name: 'events.copy_title' });
+    fireEvent.click(copyTitle);
+
+    expect(screen.queryByRole('menuitem', { name: 'events.copy_title' })).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Standup' })).toBeInTheDocument();
+  });
 });
 
 describe('CalendarApp from the keyboard', () => {
@@ -876,7 +905,7 @@ describe('CalendarApp after saving', () => {
       expect(screen.queryAllByRole('button', { name: /01:00$/ })).toHaveLength(0);
       fireEvent.keyDown(document.body, { key: 'n', code: 'KeyN' });
       fireEvent.change(screen.getByPlaceholderText('form.title'), { target: { value: 'Night train' } });
-      fireEvent.change(document.querySelector('input[type="time"]')!, { target: { value: '01:00' } });
+      fireEvent.change(screen.getByLabelText('form.start_time'), { target: { value: '01:00' } });
       fireEvent.click(screen.getByRole('button', { name: 'form.save' }));
       await waitFor(() => expect(store.createEvent).toHaveBeenCalled());
       await waitFor(() => expect(screen.getAllByRole('button', { name: /01:00$/ }).length).toBeGreaterThan(0));
@@ -925,6 +954,32 @@ describe('CalendarApp day view tasks', () => {
       expect(screen.getByRole('heading', { name: 'tasks.edit' })).toBeInTheDocument();
     } finally {
       useSettingsStore.setState({ showTasksOnCalendar: false } as never);
+    }
+  });
+
+  // A task-only list is never among the selected calendars: its tasks follow
+  // the task list tick instead.
+  it.each([
+    [[], true],
+    [['todo'], false],
+  ])('draws the tasks of a task-only list by its task list tick (hidden: %j)', async (hiddenTaskListIds, shown) => {
+    setUp([], 'day');
+    const todo = { ...calendars[0], id: 'todo', name: 'To-do', isTasksOnly: true, isDefault: false };
+    const task = { id: 't2', '@type': 'Task', title: 'Water plants', calendarIds: { todo: true }, progress: 'needs-action', priority: 0, due: '2026-10-12', showWithoutTime: true } as never;
+    useCalendarStore.setState({ calendars: [...calendars, todo], hiddenTaskListIds } as never);
+    useSettingsStore.setState({ showTasksOnCalendar: true } as never);
+    useTaskStore.setState({ tasks: [task] } as never);
+    client.getCalendarTasks.mockResolvedValue([task]);
+    try {
+      renderApp();
+      if (shown) {
+        await waitFor(() => expect(document.querySelector('[data-calendar-task="t2"]')).not.toBeNull());
+      } else {
+        expect(document.querySelector('[data-calendar-task="t2"]')).toBeNull();
+      }
+    } finally {
+      useSettingsStore.setState({ showTasksOnCalendar: false } as never);
+      useCalendarStore.setState({ hiddenTaskListIds: [] } as never);
     }
   });
 });

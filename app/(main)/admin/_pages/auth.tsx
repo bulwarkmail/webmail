@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
 import { DEFAULT_OAUTH_SCOPES, STALWART_SCOPE_FULL } from '@/lib/oauth/scopes';
+import { isStalwartApiKey } from '@/lib/stalwart/api-key';
 import { SettingsSection, SettingItem, SectionNav } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
@@ -119,6 +120,12 @@ export function AuthPage() {
   const [setupOrigin, setSetupOrigin] = useState('');
   const [setupIssuer, setSetupIssuer] = useState('');
   const [setupOauthOnly, setSetupOauthOnly] = useState(false);
+  // A Stalwart admin's own sign-in, asked for when no mail account is signed
+  // in here or Stalwart refused the session's token (1.0.3 and later, #1611).
+  // Sent with this one request and never kept beyond the open dialog.
+  const [setupNeedsCredential, setSetupNeedsCredential] = useState(false);
+  const [setupUsername, setSetupUsername] = useState('');
+  const [setupSecret, setSetupSecret] = useState('');
 
   function openSetupDialog() {
     if (typeof window === 'undefined') return;
@@ -127,7 +134,15 @@ export function AuthPage() {
     setSetupOrigin(origin);
     setSetupIssuer(jmapUrl || origin);
     setSetupOauthOnly(currentValue('oauthOnly') === true);
+    setSetupNeedsCredential(setupSignIn?.signedIn === false);
+    setSetupUsername(setupSignIn?.username ?? '');
+    setSetupSecret('');
     setSetupOpen(true);
+  }
+
+  function closeSetupDialog() {
+    setSetupSecret('');
+    setSetupOpen(false);
   }
 
   async function handleAutoSetup() {
@@ -141,9 +156,13 @@ export function AuthPage() {
           origin: setupOrigin.trim().replace(/\/+$/, ''),
           issuerUrl: setupIssuer.trim().replace(/\/+$/, ''),
           oauthOnly: setupOauthOnly,
+          ...(setupNeedsCredential && setupSecret
+            ? { stalwartUsername: setupUsername.trim(), stalwartSecret: setupSecret }
+            : {}),
         }),
       });
       const data = await res.json();
+      if (data.needsAdminCredential) setSetupNeedsCredential(true);
       if (res.ok) {
         const mobile = data.mobileClient === 'created' || data.mobileClient === 'updated'
           ? ` Bulwark Mobile client ${data.mobileClient} (${data.mobileClientId}, ${data.mobileRedirectUri}).`
@@ -159,7 +178,7 @@ export function AuthPage() {
           text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}${limited}`,
         });
         setEdits({});
-        setSetupOpen(false);
+        closeSetupDialog();
         await fetchConfig();
       } else {
         const detail = data.detail ? ` (${typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail).slice(0, 200)})` : '';
@@ -174,6 +193,9 @@ export function AuthPage() {
 
   const setupOriginValid = /^https?:\/\/[^/]+$/.test(setupOrigin.trim().replace(/\/+$/, ''));
   const setupIssuerValid = /^https?:\/\/[^/]+$/.test(setupIssuer.trim().replace(/\/+$/, ''));
+  // An API key names its account; a password needs the username with it.
+  const setupCredentialReady = !setupNeedsCredential
+    || (setupSecret.length > 0 && (isStalwartApiKey(setupSecret) || setupUsername.trim().length > 0));
 
   const hasEdits = Object.keys(edits).length > 0;
 
@@ -196,14 +218,14 @@ export function AuthPage() {
           Escape and an outside click close it unless setup is running. */}
       <Dialog
         isOpen={setupOpen}
-        onClose={() => { if (!setupRunning) setSetupOpen(false); }}
+        onClose={() => { if (!setupRunning) closeSetupDialog(); }}
         preventOutsideClose={setupRunning}
         showClose={!setupRunning}
         title="Auto-configure OAuth"
         description="Verify the URLs below before continuing. The webmail and Stalwart can live on different domains."
         footer={
           <>
-            <Button type="button" variant="outline" size="sm" onClick={() => setSetupOpen(false)} disabled={setupRunning}>
+            <Button type="button" variant="outline" size="sm" onClick={closeSetupDialog} disabled={setupRunning}>
               Cancel
             </Button>
             <Button
@@ -211,7 +233,7 @@ export function AuthPage() {
               size="sm"
               className="gap-2"
               onClick={handleAutoSetup}
-              disabled={setupRunning || !setupOriginValid || !setupIssuerValid}
+              disabled={setupRunning || !setupOriginValid || !setupIssuerValid || !setupCredentialReady}
             >
               {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Sparkles className="w-4 h-4" aria-hidden="true" />}
               {setupRunning ? 'Configuring…' : 'Configure'}
@@ -270,6 +292,51 @@ export function AuthPage() {
             />
             Also enable “OAuth only” (hide password login)
           </label>
+          {setupNeedsCredential && (
+            <div className="space-y-3 rounded-md border border-border p-3">
+              <div>
+                <p className="text-xs font-medium text-foreground">Stalwart admin sign-in</p>
+                <p className="text-[0.6875rem] text-muted-foreground mt-1">
+                  {setupSignIn?.signedIn === false
+                    ? 'No mail account is signed in to this webmail in this browser, so the setup signs in to Stalwart as an admin instead.'
+                    : 'Since Stalwart 1.0.3 the webmail session can’t manage OAuth clients, so the setup signs in to Stalwart once as an admin.'}
+                  {' '}Sent only to your configured Stalwart server for this setup, and not stored.
+                </p>
+              </div>
+              <div>
+                <label htmlFor="setup-stalwart-username" className="block text-xs font-medium text-foreground mb-1">
+                  Stalwart username
+                </label>
+                <input
+                  id="setup-stalwart-username"
+                  type="text"
+                  autoComplete="username"
+                  value={setupUsername}
+                  onChange={(e) => setSetupUsername(e.target.value)}
+                  disabled={setupRunning}
+                  placeholder="admin@example.com"
+                  className={cn(inputClass, 'w-full')}
+                />
+              </div>
+              <div>
+                <label htmlFor="setup-stalwart-secret" className="block text-xs font-medium text-foreground mb-1">
+                  Password, app password or API key
+                </label>
+                <input
+                  id="setup-stalwart-secret"
+                  type="password"
+                  autoComplete="current-password"
+                  value={setupSecret}
+                  onChange={(e) => setSetupSecret(e.target.value)}
+                  disabled={setupRunning}
+                  className={cn(inputClass, 'w-full')}
+                />
+                <p className="text-[0.6875rem] text-muted-foreground mt-1">
+                  With two-step verification on, the password alone won’t work: create an app password or API key for your account in the Stalwart web admin and use that. An API key needs no username.
+                </p>
+              </div>
+            </div>
+          )}
           <p className="text-[0.6875rem] text-muted-foreground">
             On Stalwart 1.0 this also registers a client for Bulwark Mobile: <code>bulwark-mobile</code>, no secret, redirect URI <code>org.bulwarkmail.mobile:/auth/callback</code>.
           </p>
@@ -285,7 +352,7 @@ export function AuthPage() {
             description="Registers an OAuth client on the connected Stalwart server, generates a client secret, and saves the settings here. Requires your Stalwart account to have admin permissions."
           >
             <div className="flex flex-col items-start gap-1 sm:items-end">
-              <Button type="button" size="sm" className="gap-2" onClick={openSetupDialog} disabled={setupRunning || configReadOnly || setupSignIn?.signedIn === false}>
+              <Button type="button" size="sm" className="gap-2" onClick={openSetupDialog} disabled={setupRunning || configReadOnly}>
                 {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 {setupRunning ? 'Configuring…' : 'Set up with Stalwart'}
               </Button>
@@ -296,9 +363,9 @@ export function AuthPage() {
               )}
               {!configReadOnly && setupSignIn?.signedIn === false && (
                 <p className="max-w-xs text-xs text-muted-foreground sm:text-end">
-                  Only works while you are signed in to{' '}
+                  No mail account is signed in to{' '}
                   <a href="/" target="_blank" rel="noopener" className="text-primary hover:underline">this webmail</a>
-                  {' '}with a Stalwart admin account in this browser. A login to the Stalwart web admin does not count.
+                  {' '}in this browser, so the setup asks for a Stalwart admin sign-in.
                 </p>
               )}
               {!configReadOnly && setupSignIn?.signedIn && setupSignIn.username && (

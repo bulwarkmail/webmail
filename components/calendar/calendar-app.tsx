@@ -982,6 +982,16 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     openEventContextMenu(e, event);
   }, [closeDetail, openEventContextMenu]);
 
+  const handleMoreFromDetail = useCallback((e: React.MouseEvent) => {
+    setAnswersOnlyMenu(false);
+    const target = e.currentTarget instanceof HTMLElement ? e.currentTarget : null;
+    if (target && detailEvent) {
+      openEventContextMenuFrom(target, detailEvent, "end");
+    } else if (detailEvent) {
+      openEventContextMenu(e, detailEvent);
+    }
+  }, [detailEvent, openEventContextMenu, openEventContextMenuFrom]);
+
   const {
     contextMenu: emptyContextMenu,
     openContextMenu: openEmptyContextMenu,
@@ -1702,8 +1712,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   }, [detailEvent, client, updateEvent, describeError, t]);
 
   const handleDuplicateContextMenu = useCallback((event: CalendarEvent) => {
+    if (detailEvent?.id === event.id) closeDetail();
     handleDuplicateEvent(event);
-  }, [handleDuplicateEvent]);
+  }, [detailEvent, closeDetail, handleDuplicateEvent]);
 
   const handleExportICS = useCallback((event: CalendarEvent) => {
     try {
@@ -1735,9 +1746,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   }, [t]);
 
   const handleDeleteContextMenu = useCallback((event: CalendarEvent) => {
+    if (detailEvent?.id === event.id) closeDetail();
     const hasParticipants = event.participants && Object.keys(event.participants).length > 0;
     handleDeleteEvent(event.id, hasParticipants || undefined);
-  }, [handleDeleteEvent]);
+  }, [detailEvent, closeDetail, handleDeleteEvent]);
 
   // "Copy to <other account>" (pim-p2-16): an event can't move between
   // accounts, so the other one gets a copy, and the toast offers to delete
@@ -2020,11 +2032,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   );
 
   // Tasks on the month, week and day grids follow the calendar filter like
-  // the events do (#1107).
+  // the events do (#1107); tasks in task-only lists follow the task list tick.
   const calendarTasks = useMemo(() => {
     if (!enableCalendarTasks || !showTasksOnCalendar) return undefined;
-    return filterTasksByCalendars(taskStore.tasks, selectedCalendarIds);
-  }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds]);
+    return filterTasksByCalendars(taskStore.tasks, selectedCalendarIds, calendars, hiddenTaskListIds);
+  }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds, calendars, hiddenTaskListIds]);
 
   useEffect(() => {
     const hiddenEvents = events.filter((event) => {
@@ -2651,7 +2663,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onClose={closeEventContextMenu}
           menuRef={eventContextMenuRef}
           // Edit opens the form, as the card's pencil and `e` do.
-          onEdit={() => openEditModal(eventContextMenu.data!, true)}
+          onEdit={() => {
+            closeDetail();
+            openEditModal(eventContextMenu.data!, true);
+          }}
           onDuplicate={() => handleDuplicateContextMenu(eventContextMenu.data!)}
           onExportICS={() => handleExportICS(eventContextMenu.data!)}
           onCopyTitle={() => handleCopyTitle(eventContextMenu.data!)}
@@ -2662,6 +2677,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onRespond={gridAnswerFor(eventContextMenu.data) ? (status) => handleRespondFromGrid(eventContextMenu.data!, status) : undefined}
           responseStatus={gridAnswerFor(eventContextMenu.data)?.status}
           answersOnly={answersOnlyMenu}
+          overDialog={true}
           copyTo={answersOnlyMenu ? [] : copyTargetsOf(eventContextMenu.data).map((target) => ({
             address: accountAddress(target.account),
             onCopy: () => { void handleCopyToAccount(eventContextMenu.data!, target); },
@@ -2723,7 +2739,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onEdit={handleEditFromDetail}
           onDelete={handleDeleteFromDetail}
           onDuplicate={handleDuplicateFromDetail}
-          onMore={(e) => handleContextMenuEvent(e, detailEvent)}
+          onMore={handleMoreFromDetail}
           onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-event", event: detailEvent }); }}
           onClose={closeDetail}
           onSaveNote={handleSaveNoteFromDetail}

@@ -32,7 +32,7 @@ import { useThemeStore } from "@/stores/theme-store";
 import { useShallow } from "zustand/react/shallow";
 import { Avatar } from "@/components/ui/avatar";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
-import { brandIndicatorDomain } from "@/lib/email-headers";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
@@ -452,6 +452,7 @@ function EmailCard({
   const readerActions = usePluginActions("reader-actions", { mailboxRole: mailboxRole ?? null, ...targetFilter(plugin.actionTarget, undefined) });
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const formatAddress = useOwnDomainAddress();
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
@@ -490,7 +491,7 @@ function EmailCard({
             size="md"
             className="flex-shrink-0"
             senderWarning={senderWarning}
-            brandDomain={brandIndicatorDomain(email)}
+            brandDomain={brandDomain}
           />
         )}
         <div className="flex-1 min-w-0">
@@ -925,13 +926,15 @@ export function ConversationEmailBody({
   // Parts the body embeds via cid: stay out of the attachment row while the
   // user hides inline images - the desktop viewer's rule, shared through
   // lib/attachment-visibility.ts so the two views cannot drift apart. The
-  // report parts of a bounce or read receipt never show.
+  // report parts of a bounce or read receipt never show. Shown as plain text,
+  // the body embeds nothing, not even the images declared inline.
   const visibleAttachments = useMemo(() => {
     const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
     if (!hideInlineImageAttachments) return attachments;
-    const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
-    return attachments.filter(att => !isEmbeddedInBody(att, bodyCids));
-  }, [email, hideInlineImageAttachments]);
+    const plainText = mailViewMode === 'plain';
+    const bodyCids = collectReferencedCids(plainText ? null : getRenderableHtmlBody(email));
+    return attachments.filter(att => !isEmbeddedInBody(att, bodyCids, attachments, { plainText }));
+  }, [email, hideInlineImageAttachments, mailViewMode]);
   const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
   const attachmentRow = useFirstRowLimit(visibleAttachments.length, !attachmentsExpanded);
   const attachmentLimit = attachmentsExpanded ? null : attachmentRow.limit;

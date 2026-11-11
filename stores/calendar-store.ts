@@ -771,6 +771,64 @@ export function subscriptionOwner(client: Pick<IJMAPClient, 'getServerUrl' | 'ge
   return subscriptionOwnerFor(client.getServerUrl(), client.getUsername());
 }
 
+/** What a calendar was made to hold besides, or instead of, events. */
+export type TaskCalendarKind = 'tasks' | 'both';
+
+/** A calendar's key in taskCalendarKinds: ids repeat across logins. */
+function taskKindKey(owner: string, rawCalendarId: string): string {
+  return `${owner}\n${rawCalendarId}`;
+}
+
+/**
+ * Marks the calendars made here to hold tasks (#1595). Stalwart's
+ * Calendar/get doesn't name the components a calendar takes, so an empty
+ * "Tasks" calendar would show on the grid as an events calendar, and neither
+ * it nor an empty "Events and tasks" one would be offered for a task, and one
+ * for both would leave the grid as soon as tasks were all it held. Only
+ * a login's own calendars are marked. `ownerOf` names the login a calendar
+ * was loaded through, or undefined when that can't be told.
+ */
+function withTaskKinds(
+  calendars: Calendar[],
+  kinds: Record<string, TaskCalendarKind>,
+  ownerOf: (calendar: Calendar) => string | undefined,
+): Calendar[] {
+  if (Object.keys(kinds).length === 0) return calendars;
+  return calendars.map((calendar) => {
+    if (calendar.isShared || calendar.isCompany) return calendar;
+    const owner = ownerOf(calendar);
+    if (!owner) return calendar;
+    const rawId = calendar.originalId || stripLocalAccountPrefix(calendar.id, calendar.localAccountId);
+    const kind = kinds[taskKindKey(owner, rawId)];
+    if (!kind) return calendar;
+    // One for both stays on the grid while tasks are all it holds so far.
+    return { ...calendar, isTasksOnly: kind === 'tasks', takesTasks: true };
+  });
+}
+
+/**
+ * The remembered kinds without the ones whose calendar is gone from a login
+ * that was just listed: the server may hand a deleted calendar's id to a new
+ * one, which must not inherit the mark.
+ */
+function prunedTaskKinds(
+  kinds: Record<string, TaskCalendarKind>,
+  listedOwners: string[],
+  calendars: Calendar[],
+  ownerOf: (calendar: Calendar) => string | undefined,
+): Record<string, TaskCalendarKind> {
+  if (Object.keys(kinds).length === 0) return kinds;
+  const present = new Set<string>();
+  for (const calendar of calendars) {
+    const owner = ownerOf(calendar);
+    if (!owner || calendar.isShared) continue;
+    present.add(taskKindKey(owner, calendar.originalId || stripLocalAccountPrefix(calendar.id, calendar.localAccountId)));
+  }
+  const listed = listedOwners.map((owner) => `${owner}\n`);
+  const kept = Object.entries(kinds).filter(([key]) => present.has(key) || !listed.some((prefix) => key.startsWith(prefix)));
+  return kept.length === Object.keys(kinds).length ? kinds : Object.fromEntries(kept);
+}
+
 type CalendarStoreSet = (partial: Partial<CalendarStore> | ((state: CalendarStore) => Partial<CalendarStore>)) => void;
 
 /**
@@ -916,7 +974,7 @@ interface CalendarStore {
   reorderCalendars: (client: IJMAPClient, orderedIds: string[]) => Promise<void>;
   setDefaultCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
   shareCalendar: (client: IJMAPClient, calendarId: string, principalId: string, rights: CalendarRights | null) => Promise<void>;
-  createCalendar: (client: IJMAPClient, calendar: Partial<Calendar>, options?: CreateCalendarOptions) => Promise<Calendar | null>;
+  createCalendar: (client: IJMAPClient, calendar: Partial<Calendar>, options?: CreateCalendarOptions, targetAccountId?: string) => Promise<Calendar | null>;
   removeCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
   clearCalendarEvents: (client: IJMAPClient, calendarId: string) => Promise<number>;
   setSelectedDate: (date: Date) => void;
@@ -934,6 +992,11 @@ interface CalendarStore {
    * account): new events, quick create and imports preselect it (pim-p2-4).
    */
   lastEventCalendarIds: Record<string, string>;
+  /**
+   * Calendars made in this browser to hold tasks, by login and server id
+   * (taskKindKey). The server doesn't report it, see withTaskKinds.
+   */
+  taskCalendarKinds: Record<string, TaskCalendarKind>;
   rememberEventCalendar: (calendar: { id: string; localAccountId?: string }) => void;
   setSelectedEventId: (id: string | null) => void;
   clearState: () => void;
@@ -968,6 +1031,7 @@ const initialState = {
   knownCalendarIds: null as string[] | null,
   hiddenTaskListIds: [] as string[],
   lastEventCalendarIds: {} as Record<string, string>,
+  taskCalendarKinds: {} as Record<string, TaskCalendarKind>,
   accountClients: null as CalendarAccountClient[] | null,
   accountClientsActiveId: null as string | null,
   selectedEventId: null as string | null,
@@ -1048,7 +1112,11 @@ export const useCalendarStore = create<CalendarStore>()(
           // list and the selection as they were.
           const { calendars: fetched, failedAccountIds } = await client.getAllCalendarsWithFailures();
           if (currentStoreEpoch() !== epoch || seq !== calendarsLoadSeq) return;
-          const calendars = sortCalendars(fetched);
+          // The login is only asked for when a calendar was made for tasks here.
+          const knownKinds = get().taskCalendarKinds;
+          const owner = Object.keys(knownKinds).length > 0 ? subscriptionOwner(client) : '';
+          const taskCalendarKinds = owner ? prunedTaskKinds(knownKinds, [owner], fetched, () => owner) : knownKinds;
+          const calendars = sortCalendars(withTaskKinds(fetched, taskCalendarKinds, () => owner));
           // Default the visible selection to event calendars only - tasks-only
           // calendars stay out of the event grid.
           const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
@@ -1056,6 +1124,7 @@ export const useCalendarStore = create<CalendarStore>()(
           const unloadedPrefixes = failedAccountIds.map((accountId) => `${accountId}:`);
           set({
             calendars,
+            taskCalendarKinds,
             isLoading: false,
             ...withNewCalendars(
               selectionAfterFetch(
@@ -1144,11 +1213,19 @@ export const useCalendarStore = create<CalendarStore>()(
         try {
           // Id prefixes of the calendars that could not be loaded this time.
           const unloadedPrefixes: string[] = [];
+          // The logins whose own calendars were listed, for the task kinds.
+          // Only asked for when a calendar was made for tasks here.
+          const knownKinds = get().taskCalendarKinds;
+          const hasKinds = Object.keys(knownKinds).length > 0;
+          const listedOwners: string[] = [];
+          const owners = new Map(hasKinds ? accounts.map(({ client, localAccountId }) => [localAccountId, subscriptionOwner(client)]) : []);
+          const ownerOf = (calendar: Calendar) => (calendar.localAccountId ? owners.get(calendar.localAccountId) : undefined);
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
               const prefix = buildCrossAccountIdPrefix(localAccountId);
               try {
                 const { calendars: list, failedAccountIds } = await client.getAllCalendarsWithFailures();
+                if (hasKinds) listedOwners.push(owners.get(localAccountId) ?? '');
                 unloadedPrefixes.push(...failedAccountIds.map((accountId) => `${prefix}${accountId}:`));
                 return prefixCalendarsWithLocalAccount(list, localAccountId);
               } catch (error) {
@@ -1159,11 +1236,14 @@ export const useCalendarStore = create<CalendarStore>()(
             }),
           );
           if (currentStoreEpoch() !== epoch || seq !== calendarsLoadSeq) return;
-          const calendars = sortCalendars(withoutOwnedElsewhere(results.flat()));
+          const fetched = withoutOwnedElsewhere(results.flat());
+          const taskCalendarKinds = hasKinds ? prunedTaskKinds(knownKinds, listedOwners.filter(Boolean), fetched, ownerOf) : knownKinds;
+          const calendars = sortCalendars(withTaskKinds(fetched, taskCalendarKinds, ownerOf));
           // As for one account: tasks-only calendars stay out of the grid.
           const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
           set({
             calendars,
+            taskCalendarKinds,
             isLoading: false,
             ...withNewCalendars(
               selectionAfterFetch(
@@ -1735,15 +1815,49 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      createCalendar: async (client, calendar, options) => {
+      createCalendar: async (client, calendar, options, targetAccountId) => {
         set({ error: null });
         try {
-          const created = await client.createCalendar(withNextSortOrder(client, get().calendars, calendar), undefined, options);
-          // Added with its raw id; the next aggregated refetch namespaces it and
-          // reconcileSelectedIds() remaps the selection so it stays visible.
+          // A shared account (a group's, managed from Settings) when one is
+          // named; the login's own calendar account otherwise.
+          const sharedAccountId = targetAccountId && targetAccountId !== client.getCalendarsAccountId() ? targetAccountId : null;
+          // The user's own order doesn't reach into another account's calendars.
+          const made = sharedAccountId
+            ? await client.createCalendar(calendar, sharedAccountId, options)
+            : await client.createCalendar(withNextSortOrder(client, get().calendars, calendar), undefined, options);
+          // A calendar asked to hold tasks is one from now on, though it is
+          // empty and the server won't say so (#1595). One for tasks alone
+          // stays off the grid, as it will once it holds a task. Only the
+          // user's own calendars are marked (withTaskKinds).
+          const components = sharedAccountId ? [] : options?.components ?? [];
+          const kind: TaskCalendarKind | null = components.includes('VTODO')
+            ? (components.includes('VEVENT') ? 'both' : 'tasks')
+            : null;
+          let created: Calendar = kind
+            ? { ...made, takesTasks: true, ...(kind === 'tasks' ? { isTasksOnly: true } : {}) }
+            : made;
+          if (sharedAccountId) {
+            // As getAllCalendars() lists it: under its account, and with an id
+            // that can't be one of the user's own calendars' (ids repeat
+            // across accounts).
+            created = {
+              ...made,
+              id: `${sharedAccountId}:${made.id}`,
+              originalId: made.id,
+              accountId: sharedAccountId,
+              accountName: client.getAccountInfo(sharedAccountId)?.name || sharedAccountId,
+              isShared: true,
+            };
+            const localAccountId = get().accountClients?.find((a) => a.client === client)?.localAccountId;
+            if (localAccountId) created = prefixCalendarsWithLocalAccount([created], localAccountId)[0];
+          }
+          // The user's own one is added with its raw id; the next aggregated
+          // refetch namespaces it and reconcileSelectedIds() remaps the
+          // selection so it stays visible.
           set((state) => ({
             calendars: sortCalendars([...state.calendars, created]),
-            selectedCalendarIds: [...state.selectedCalendarIds, created.id],
+            selectedCalendarIds: created.isTasksOnly ? state.selectedCalendarIds : [...state.selectedCalendarIds, created.id],
+            ...(kind ? { taskCalendarKinds: { ...state.taskCalendarKinds, [taskKindKey(subscriptionOwner(client), made.id)]: kind } } : {}),
           }));
           void calendarHooks.onCalendarChange.emit({ calendarId: created.id, change: 'created' });
           return created;
@@ -2263,12 +2377,15 @@ export const useCalendarStore = create<CalendarStore>()(
         const preservedTombstones = get().deletedSubscriptionIds;
         // Keyed by account, so a switch keeps each account's last pick.
         const preservedPicks = get().lastEventCalendarIds;
+        // Keyed by login too.
+        const preservedTaskKinds = get().taskCalendarKinds;
         set({
           ...initialState,
           selectedDate: displayNow(),
           icalSubscriptions: preservedSubs,
           deletedSubscriptionIds: preservedTombstones,
           lastEventCalendarIds: preservedPicks,
+          taskCalendarKinds: preservedTaskKinds,
         });
         import('./calendar-notification-store').then(({ useCalendarNotificationStore }) => {
           useCalendarNotificationStore.getState().clearAll();
@@ -2290,6 +2407,9 @@ export const useCalendarStore = create<CalendarStore>()(
           lastEventCalendarIds: mergedState.lastEventCalendarIds && typeof mergedState.lastEventCalendarIds === 'object' && !Array.isArray(mergedState.lastEventCalendarIds)
             ? mergedState.lastEventCalendarIds
             : {},
+          taskCalendarKinds: mergedState.taskCalendarKinds && typeof mergedState.taskCalendarKinds === 'object' && !Array.isArray(mergedState.taskCalendarKinds)
+            ? mergedState.taskCalendarKinds
+            : {},
         };
       },
       partialize: (state) => ({
@@ -2298,6 +2418,7 @@ export const useCalendarStore = create<CalendarStore>()(
         knownCalendarIds: state.knownCalendarIds,
         hiddenTaskListIds: state.hiddenTaskListIds,
         lastEventCalendarIds: state.lastEventCalendarIds,
+        taskCalendarKinds: state.taskCalendarKinds,
         viewMode: state.viewMode,
         icalSubscriptions: state.icalSubscriptions,
         deletedSubscriptionIds: state.deletedSubscriptionIds,

@@ -3,13 +3,20 @@ import type { EmailTemplate } from './template-types';
 import { BUILT_IN_PLACEHOLDERS } from './template-types';
 import { generateUUID } from './utils';
 
-const PLACEHOLDER_REGEX = /\{\{(\w+)\}\}/g;
+// {{name}} or {{name:default}}. In a subject or a plain body the default is
+// text and may hold "<" and ">" ({{contact:Jane <jane@x.com>}}). In an HTML
+// body those are markup, so a default stops at a tag; a "<" typed in the
+// editor is stored as &lt; there.
+const TEXT_PLACEHOLDER_REGEX = /\{\{(\w+)(?::([^{}\n]*))?\}\}/g;
+const HTML_PLACEHOLDER_REGEX = /\{\{(\w+)(?::([^{}<>\n]*))?\}\}/g;
 const MAX_TEMPLATE_NAME_LENGTH = 200;
 
-export function extractPlaceholders(text: string): string[] {
+const placeholderRegex = (html?: boolean) => (html ? HTML_PLACEHOLDER_REGEX : TEXT_PLACEHOLDER_REGEX);
+
+export function extractPlaceholders(text: string, options: { html?: boolean } = {}): string[] {
   const matches = new Set<string>();
   let match: RegExpExecArray | null;
-  const regex = new RegExp(PLACEHOLDER_REGEX.source, 'g');
+  const regex = new RegExp(placeholderRegex(options.html).source, 'g');
   while ((match = regex.exec(text)) !== null) {
     matches.add(match[1]);
   }
@@ -25,14 +32,14 @@ export function substitutePlaceholders(
   values: Record<string, string>,
   options: { html?: boolean } = {},
 ): string {
-  return text.replace(PLACEHOLDER_REGEX, (full, name) => {
+  return text.replace(placeholderRegex(options.html), (full, name) => {
     if (values[name] === undefined) return full;
     return options.html ? escapeHtml(values[name]) : values[name];
   });
 }
 
-export function hasUnresolvedPlaceholders(text: string): boolean {
-  return new RegExp(PLACEHOLDER_REGEX.source).test(text);
+export function hasUnresolvedPlaceholders(text: string, options: { html?: boolean } = {}): boolean {
+  return new RegExp(placeholderRegex(options.html).source).test(text);
 }
 
 export function validateTemplateName(name: string): string | null {
@@ -72,8 +79,23 @@ export function getAutoFilledPlaceholders(
 }
 
 export function getPlaceholdersFromTemplate(template: EmailTemplate): string[] {
-  const combined = `${template.subject} ${template.body}`;
-  return extractPlaceholders(combined);
+  return Array.from(new Set([
+    ...extractPlaceholders(template.subject),
+    ...extractPlaceholders(template.body, { html: !!template.isHTML }),
+  ]));
+}
+
+export function getPlaceholderDefaults(template: EmailTemplate): Map<string, string> {
+  const defaults = new Map<string, string>();
+  const collect = (text: string, html: boolean) => {
+    for (const [, name, value] of text.matchAll(placeholderRegex(html))) {
+      if (value === undefined || defaults.has(name)) continue;
+      defaults.set(name, html ? new DOMParser().parseFromString(value, 'text/html').body.textContent ?? '' : value);
+    }
+  };
+  collect(template.subject, false);
+  collect(template.body, !!template.isHTML);
+  return defaults;
 }
 
 export function isBuiltInPlaceholder(name: string): boolean {

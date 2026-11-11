@@ -1086,6 +1086,7 @@
     "templates_menu": "Templates",
     "insert_template": "Insert template…",
     "options": "Options",
+    "tags": "Tags",
     "option_plain_text": "Plain text",
     "option_plain_text_hint": "Send without formatting",
     "option_read_receipt": "Request read receipt",
@@ -1806,7 +1807,7 @@
       "id_field": "Tag ID",
       "id_placeholder": "e.g. work, personal",
       "color_field": "Color",
-      "id_exists": "This tag ID already exists",
+      "name_exists": "A tag with this name already exists",
       "edit": "Edit tag",
       "delete": "Delete tag",
       "edit_tag": "Edit {name}",
@@ -2083,9 +2084,17 @@
         "label": "Show verification codes",
         "description": "Offer the code from sign-in and confirmation emails for one-click copying, in the list for a day and in the message"
       },
+      "show_attachment_chips": {
+        "label": "Show attachments in the list",
+        "description": "Show attached files under each message, to open them from the list. The paperclip shows either way."
+      },
       "plain_text_mode": {
         "label": "Plain text only",
         "description": "Disable the rich text editor and send all emails as plain text only, including replies and forwards"
+      },
+      "reply_under_message": {
+        "label": "Replies under the message",
+        "description": "A reply or forward opens under its message, which stays readable above it. When off, it takes the whole reading pane, like a new message."
       },
       "quick_reply": {
         "label": "Quick reply",
@@ -3395,7 +3404,8 @@
         "description": "The outline around the button, link or field the keyboard is on.",
         "normal": "Normal",
         "thick": "Thick",
-        "extra": "Extra thick"
+        "extra": "Extra thick",
+        "off": "Off"
       },
       "focus_always": {
         "label": "Always show focus",

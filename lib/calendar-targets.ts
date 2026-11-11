@@ -44,7 +44,8 @@ export function eventTargets(
 
 /**
  * Calendars a task can go into: task lists. A task list is a calendar that
- * holds only tasks, or one that holds tasks already (`holdingTasks`). An
+ * holds only tasks, one that holds tasks already (`holdingTasks`), or one
+ * made to take tasks that is still empty (`takesTasks`, #1595). An
  * account with neither keeps its default calendar, which is where both
  * Stalwarts put a task when nothing else is chosen; without it that account
  * couldn't take a task at all.
@@ -56,7 +57,7 @@ export function taskTargets(
 ): Calendar[] {
   const holding = new Set(options.holdingTasks ?? []);
   const writable = calendars.filter((c) => !c.isCompany && canCreateEventsIn(c, isSubscriptionCalendar));
-  const lists = writable.filter((c) => c.isTasksOnly || holding.has(c.id));
+  const lists = writable.filter((c) => c.isTasksOnly || c.takesTasks || holding.has(c.id));
   const covered = new Set(lists.map(calendarAccountKey));
   const fallbacks: Calendar[] = [];
   for (const cal of writable) {

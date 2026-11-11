@@ -40,7 +40,7 @@ import { SearchSnippetText } from "./search-snippet-text";
 import { PluginRowBadges } from "./plugin-row-badges";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
-import { brandIndicatorDomain } from "@/lib/email-headers";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { RowTranslatorsProvider, useRowTranslators } from "@/components/email/row-translators";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 
@@ -173,14 +173,16 @@ function RowChips({ email, loadAttachments, onOpenAttachment, mountainView, mvRo
   /** A one-line Mountain View row: the chips start under the subject, as in Gmail. */
   mvRow?: boolean;
 }) {
+  const showAttachmentChips = useSettingsStore((state) => state.showAttachmentChips);
   const variant = mountainView || mvRow ? "mountain-view" : "default";
   const code = useListVerificationCode(email);
   const leading = code ? <VerificationCodeChip code={code} variant={variant} /> : undefined;
   // The sender column is w-32 (lg:w-40) and the row line has gap-3 after it.
   const className = cn(variant === "mountain-view" ? "mt-2" : "mt-1.5", mvRow && "-mt-0.5 pb-2.5 ps-[8.75rem] lg:ps-[10.75rem]");
   // Most rows have no attachment: no loader for them, nor an empty chip row.
+  // With the chips turned off only the code is left (the paperclip stays).
   const mayHaveAttachments = email.hasAttachment || (email.attachments?.length ?? 0) > 0;
-  if (onOpenAttachment && mayHaveAttachments) {
+  if (showAttachmentChips && onOpenAttachment && mayHaveAttachments) {
     return <ListAttachmentChips email={email} load={loadAttachments} onOpen={onOpenAttachment} leading={leading} variant={variant} max={variant === "mountain-view" ? 3 : 2} className={className} />;
   }
   return leading ? <div className={cn("flex", className)}>{leading}</div> : null;
@@ -534,6 +536,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const showAccountDot = useShowAccountDot(tintListRowsByAccount);
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
     const senderWarning = useSenderWarning(showRecipient ? undefined : email);
+    const brandDomain = useBrandDomain(showRecipient ? undefined : email);
     // Show the originating folder in the aggregate "All …" views.
     const showSourceFolder = useShowSourceFolder(email.sourceFolder);
     const getAccountById = useAccountStore((state) => state.getAccountById);
@@ -827,7 +830,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   className="shadow-sm"
                   disableImages={hideJunkAvatarImages}
                   senderWarning={senderWarning}
-                  brandDomain={showRecipient ? undefined : brandIndicatorDomain(email)}
+                  brandDomain={brandDomain}
                   checked={isChecked}
                   onToggle={handleCheckboxClick}
                   selectLabel={selectRowLabel}
@@ -1226,6 +1229,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     });
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
     const senderWarning = useSenderWarning(showRecipient ? undefined : latestEmail);
+    const brandDomain = useBrandDomain(showRecipient ? undefined : latestEmail);
 
     const { dragHandlers, isDragging: isThreadDragging } = useEmailDrag({
       email: latestEmail,
@@ -1550,7 +1554,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                     className="shadow-sm"
                     disableImages={hideJunkAvatarImages}
                     senderWarning={senderWarning}
-                    brandDomain={showRecipient ? undefined : brandIndicatorDomain(latestEmail)}
+                    brandDomain={brandDomain}
                     checked={isChecked}
                     onToggle={handleThreadCheckboxClick}
                     selectLabel={selectRowLabel}

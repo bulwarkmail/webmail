@@ -141,6 +141,22 @@ describe('findUnfilledPlaceholders', () => {
     expect(findUnfilledPlaceholders('', 'Agenda: [TODO]', EN)).toEqual(['[TODO]']);
   });
 
+  it('finds a template placeholder with a default', () => {
+    expect(findUnfilledPlaceholders('Stay from {{arrival:Sat 13 Feb}}', 'Check-in at {{time:15:00}}.')).toEqual([
+      '{{arrival:Sat 13 Feb}}',
+      '{{time:15:00}}',
+    ]);
+  });
+
+  // The check reads the message's text, where an address in a default is
+  // just "<" and ">".
+  it('finds a template placeholder whose default holds an address', () => {
+    expect(findUnfilledPlaceholders('For {{contact:Jane <jane@x.com>}}', 'Write to {{to:Bob <bob@x.com>}} today.')).toEqual([
+      '{{contact:Jane <jane@x.com>}}',
+      '{{to:Bob <bob@x.com>}}',
+    ]);
+  });
+
   it('lists each placeholder once', () => {
     expect(findUnfilledPlaceholders('{{name}}', 'Hi {{name}}, at [TIME] or [TIME]?')).toEqual([
       '{{name}}',

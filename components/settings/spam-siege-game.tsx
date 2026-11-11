@@ -15,6 +15,7 @@ import {
   X,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { avatarInitials } from "@/components/ui/avatar";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { cn } from "@/lib/utils";
 
@@ -123,15 +124,6 @@ interface Result {
 
 function comboFor(streak: number): number {
   return Math.min(COMBO_MAX, 1 + Math.floor(streak / COMBO_STEP));
-}
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0))
-    .join("")
-    .toUpperCase();
 }
 
 function readBest(): number {
@@ -735,7 +727,7 @@ function MailCard({
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[0.625rem] font-semibold text-white"
           style={{ backgroundColor: tone }}
         >
-          {initials(sender.name)}
+          {avatarInitials(sender.name, sender.address)}
         </span>
       ) : (
         <span

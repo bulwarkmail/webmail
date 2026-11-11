@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
 import { memberKeys, planMerge, type MergePlan } from "@/lib/contacts/merge";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
+import { useSettingsStore } from "@/stores/settings-store";
 
 /** Lines of one value, shown with whitespace-pre-line. */
 const NEWLINE = String.fromCharCode(10);
@@ -52,6 +53,7 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
   const tc = useTranslations("contacts");
   const tm = useTranslations("ux_p2_pim_cm");
   const locale = useLocale();
+  const dateLocale = useSettingsStore((s) => s.dateLocale);
   const [cards, setCards] = useState<ContactCard[] | null>(initialCards && initialCards.length > 1 ? initialCards : null);
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
@@ -138,7 +140,7 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
     // Every date the kept card will have, each under its own name ("Birthday").
     ...(["birth", "wedding", "death", "other"] as const).map((kind) => ({
       label: tc(`detail.anniversary_${kind}`),
-      values: Object.values(r.anniversaries ?? {}).filter((a) => a.kind === kind && a.date).map((a) => formatContactDate(a.date, locale)),
+      values: Object.values(r.anniversaries ?? {}).filter((a) => a.kind === kind && a.date).map((a) => formatContactDate(a.date, locale, dateLocale)),
     })),
     {
       label: tc("detail.gender"),

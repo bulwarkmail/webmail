@@ -1082,6 +1082,7 @@
     "templates_menu": "Šablony",
     "insert_template": "Vložit šablonu…",
     "options": "Možnosti",
+    "tags": "Štítky",
     "option_plain_text": "Prostý text",
     "option_plain_text_hint": "Odeslat bez formátování",
     "option_read_receipt": "Vyžádat potvrzení o přečtení",
@@ -1803,7 +1804,7 @@
       "id_field": "ID štítku",
       "id_placeholder": "např. prace, osobni",
       "color_field": "Barva",
-      "id_exists": "Toto ID štítku již existuje",
+      "name_exists": "Štítek s tímto názvem už existuje",
       "edit": "Upravit štítek",
       "delete": "Odstranit štítek",
       "edit_tag": "Upravit {name}",
@@ -2080,9 +2081,17 @@
         "label": "Zobrazovat ověřovací kódy",
         "description": "Nabízet kód z přihlašovacích a potvrzovacích e-mailů ke zkopírování jedním kliknutím, v seznamu po dobu jednoho dne a ve zprávě"
       },
+      "show_attachment_chips": {
+        "label": "Zobrazit přílohy v seznamu",
+        "description": "Zobrazovat přiložené soubory pod každou zprávou, aby šly otevřít přímo ze seznamu. Ikona sponky se zobrazuje vždy."
+      },
       "plain_text_mode": {
         "label": "Pouze prostý text",
         "description": "Zakázat editor formátovaného textu a odesílat všechny e-maily pouze jako prostý text, včetně odpovědí a přeposílání"
+      },
+      "reply_under_message": {
+        "label": "Odpovědi pod zprávou",
+        "description": "Odpověď nebo přeposlání se otevře pod svou zprávou, která nad ní zůstane čitelná. Když je vypnuto, zabere celý panel čtení jako nová zpráva."
       },
       "quick_reply": {
         "label": "Rychlá odpověď",
@@ -3395,7 +3404,8 @@
         "description": "Obrys kolem tlačítka, odkazu nebo pole, na kterém je klávesnice.",
         "normal": "Normální",
         "thick": "Silný",
-        "extra": "Extra silný"
+        "extra": "Extra silný",
+        "off": "Vypnuto"
       },
       "focus_always": {
         "label": "Vždy zobrazovat zaměření",

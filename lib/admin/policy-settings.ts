@@ -127,7 +127,7 @@ export const ACCESSIBILITY_POLICY_SETTINGS: readonly PresettableSetting[] = [
     { key: 'singleKeyShortcuts', label: 'Single-key shortcuts', type: 'boolean', labelKey: `${A}.single_key_shortcuts.label` },
     {
       key: 'focusRing', label: 'Focus outline', type: 'enum', labelKey: `${A}.focus_ring.label`,
-      options: [{ value: 'normal', label: 'Normal' }, { value: 'thick', label: 'Thick' }, { value: 'extra', label: 'Extra thick' }],
+      options: [{ value: 'off', label: 'Off' }, { value: 'normal', label: 'Normal' }, { value: 'thick', label: 'Thick' }, { value: 'extra', label: 'Extra thick' }],
     },
     { key: 'focusAlwaysVisible', label: 'Always show focus', type: 'boolean', labelKey: `${A}.focus_always.label` },
   ]),

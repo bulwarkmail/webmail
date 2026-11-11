@@ -27,7 +27,14 @@ describe('applyAccessibilityTo', () => {
 
   it('writes nothing for "follow the system", so the media queries decide', () => {
     applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium' });
-    expect(root().getAttributeNames().filter((n) => n.startsWith('data-'))).toEqual([]);
+    // The focus outline is the one default that is not the stylesheet's own.
+    expect(root().getAttributeNames().filter((n) => n.startsWith('data-'))).toEqual(['data-focus-ring']);
+  });
+
+  it('leaves the focus outline off by default', () => {
+    expect(ACCESSIBILITY_DEFAULTS.focusRing).toBe('off');
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium' });
+    expect(root().dataset.focusRing).toBe('off');
   });
 
   it('marks explicit overrides either way', () => {
@@ -44,7 +51,7 @@ describe('applyAccessibilityTo', () => {
     expect(root().dataset.transparency).toBeUndefined();
   });
 
-  it('removes an attribute again when the option goes back to its default', () => {
+  it('removes an attribute again when the option goes back to what the stylesheet does unasked', () => {
     applyAccessibilityTo(root(), { appFont: 'lexend', focusRing: 'extra', underlineLinks: true });
     expect(root().dataset.appFont).toBe('lexend');
     expect(root().dataset.focusRing).toBe('extra');
@@ -53,6 +60,25 @@ describe('applyAccessibilityTo', () => {
     expect(root().dataset.appFont).toBeUndefined();
     expect(root().dataset.focusRing).toBeUndefined();
     expect(root().dataset.underlineLinks).toBeUndefined();
+  });
+
+  it('marks a focus outline that is turned off', () => {
+    applyAccessibilityTo(root(), { focusRing: 'off' });
+    expect(root().dataset.focusRing).toBe('off');
+  });
+
+  // A Windows contrast theme keeps the outline unless Off was chosen.
+  it('tells an Off the user chose from Off as the default', () => {
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', explicitSettings: [] });
+    expect(root().dataset.focusRing).toBe('off');
+    expect(root().dataset.focusRingChosen).toBeUndefined();
+
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', explicitSettings: ['fontSize', 'focusRing'] });
+    expect(root().dataset.focusRing).toBe('off');
+    expect(root().dataset.focusRingChosen).toBe('on');
+
+    applyAccessibilityTo(root(), { ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', explicitSettings: ['fontSize'] });
+    expect(root().dataset.focusRingChosen).toBeUndefined();
   });
 });
 
@@ -69,6 +95,16 @@ describe('accessibilityBootScript', () => {
     expect(root().style.getPropertyValue('--font-size-base')).toBe('150%');
     expect(root().dataset.contrast).toBe('more');
     expect(root().dataset.motion).toBe('reduce');
+  });
+
+  it('marks a chosen focus outline before React loads', () => {
+    localStorage.setItem('settings-storage', JSON.stringify({
+      state: { fontSize: 'medium', focusRing: 'off', explicitSettings: ['focusRing'] },
+      version: 16,
+    }));
+    (0, eval)(accessibilityBootScript());
+    expect(root().dataset.focusRing).toBe('off');
+    expect(root().dataset.focusRingChosen).toBe('on');
   });
 
   it('does nothing without stored settings', () => {

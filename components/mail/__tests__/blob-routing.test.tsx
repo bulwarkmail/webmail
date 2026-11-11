@@ -42,7 +42,8 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail' }) })
 vi.mock('@/hooks/use-identity-sync', () => ({ useIdentitySync: () => {} }));
 vi.mock('@/hooks/use-pro-multi-account-identities', () => ({
   useProMultiAccountIdentities: () => [],
-  cachedIdentitiesForAccount: () => undefined,
+  // Fetched already, as the mocked hook leaves them: a sender's avatar asks for no identities here.
+  cachedIdentitiesForAccount: () => [],
 }));
 vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMailboxes: () => {} }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));

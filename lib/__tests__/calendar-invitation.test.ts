@@ -584,6 +584,54 @@ describe('getInvitationTrustAssessment', () => {
       expect(result.reason).toBe('sender_mismatch_unverified');
     });
   });
+
+  // One server, several domains: the admin lists them as internal (#1593).
+  describe('mail from another of the organisation\'s domains', () => {
+    const event: Partial<CalendarEvent> = {
+      participants: {
+        org: makeParticipant({ roles: { owner: true }, email: 'alice@a.example' }),
+      },
+    };
+    const own = ['bob@b.example'];
+    const from = [{ email: 'alice@a.example' }];
+
+    it('cautions while the domain is not listed', () => {
+      const result = getInvitationTrustAssessment(event, makeEmail({ from }), 'request', own);
+      expect(result.reason).toBe('authentication_missing');
+    });
+
+    it('trusts an invitation without an Authentication-Results header from a listed domain', () => {
+      const result = getInvitationTrustAssessment(event, makeEmail({ from }), 'request', own, ['b.example', 'a.example']);
+      expect(result.level).toBe('trusted');
+    });
+
+    it('counts a subdomain of a listed domain, as the External chip does', () => {
+      const sub: Partial<CalendarEvent> = { participants: { org: makeParticipant({ roles: { owner: true }, email: 'alice@eu.a.example' }) } };
+      const result = getInvitationTrustAssessment(sub, makeEmail({ from: [{ email: 'alice@eu.a.example' }] }), 'request', own, ['a.example']);
+      expect(result.level).toBe('trusted');
+      const lookalike: Partial<CalendarEvent> = { participants: { org: makeParticipant({ roles: { owner: true }, email: 'alice@nota.example' }) } };
+      expect(getInvitationTrustAssessment(lookalike, makeEmail({ from: [{ email: 'alice@nota.example' }] }), 'request', own, ['a.example']).reason)
+        .toBe('authentication_missing');
+    });
+
+    it('still checks a listed domain whose mail came in from outside', () => {
+      const result = getInvitationTrustAssessment(event, makeEmail({
+        from,
+        authenticationResults: { dmarc: { result: 'none', domain: 'a.example' } },
+      }), 'request', own, ['a.example']);
+      expect(result.reason).toBe('authentication_missing');
+      const failed = getInvitationTrustAssessment(event, makeEmail({
+        from,
+        authenticationResults: { dmarc: { result: 'fail', domain: 'a.example' } },
+      }), 'request', own, ['a.example']);
+      expect(failed.reason).toBe('authentication_failed');
+    });
+
+    it('still warns when the sender is not the organizer', () => {
+      const result = getInvitationTrustAssessment(event, makeEmail({ from: [{ email: 'carol@a.example' }] }), 'request', own, ['a.example']);
+      expect(result.reason).toBe('sender_mismatch_unverified');
+    });
+  });
 });
 
 describe('findParticipantByEmail', () => {

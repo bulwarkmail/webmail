@@ -1086,6 +1086,7 @@
     "templates_menu": "Mallid",
     "insert_template": "Lisa mall…",
     "options": "Valikud",
+    "tags": "Sildid",
     "option_plain_text": "Lihttekst",
     "option_plain_text_hint": "Saada ilma vormindusteta",
     "option_read_receipt": "Küsi lugemiskinnitust",
@@ -1806,7 +1807,7 @@
       "id_field": "Sildi ID",
       "id_placeholder": "nt work, personal",
       "color_field": "Värv",
-      "id_exists": "See sildi ID on juba kasutusel",
+      "name_exists": "Sellise nimega silt on juba olemas",
       "edit": "Muuda silti",
       "delete": "Kustuta silt",
       "edit_tag": "Muuda {name}",
@@ -2083,9 +2084,17 @@
         "label": "Näita kinnituskoode",
         "description": "Paku sisselogimis- ja kinnituskirjade koodi ühe klõpsuga kopeerimiseks, nimekirjas ühe päeva jooksul ja kirjas endas"
       },
+      "show_attachment_chips": {
+        "label": "Näita manuseid loendis",
+        "description": "Näita manustatud faile iga kirja all, et neid saaks otse loendist avada. Kirjaklambri ikoon on nähtav igal juhul."
+      },
       "plain_text_mode": {
         "label": "Ainult lihttekst",
         "description": "Keela vormindatud teksti redaktor ja saada kõik kirjad ainult lihttekstina, sealhulgas vastused ja edastused"
+      },
+      "reply_under_message": {
+        "label": "Vastused kirja all",
+        "description": "Vastus või edasisaatmine avaneb oma kirja all ja kiri jääb selle kohal loetavaks. Väljalülitatuna täidab see uue kirja kombel kogu lugemispaani."
       },
       "quick_reply": {
         "label": "Kiirvastus",
@@ -3395,7 +3404,8 @@
         "description": "Raam nupu, lingi või välja ümber, kus klaviatuur parajasti on.",
         "normal": "Tavaline",
         "thick": "Paks",
-        "extra": "Eriti paks"
+        "extra": "Eriti paks",
+        "off": "Väljas"
       },
       "focus_always": {
         "label": "Näita fookust alati",

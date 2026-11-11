@@ -490,6 +490,7 @@ export function EmailList({
   const fontSize = useSettingsStore((state) => state.fontSize);
   const showPreview = useSettingsStore((state) => state.showPreview);
   const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
+  const showAttachmentChips = useSettingsStore((state) => state.showAttachmentChips);
   const { oneLine: isFocusedMailLayout, columns: listColumns } = useListRowShape();
   const showRecipientColumn = listFolder.role === 'sent' || listFolder.role === 'drafts';
   const footerHasMore = hasMore ?? hasMoreEmails;
@@ -523,9 +524,9 @@ export function EmailList({
     const latest = item.thread.latestEmail;
     const emptyPreview = !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
     const hasCode = showVerificationCodes && !!listVerificationCode(latest);
-    const chips = hasCode || (!!onOpenAttachment && listRowShowsChips(latest, loadAttachments));
+    const chips = hasCode || (showAttachmentChips && !!onOpenAttachment && listRowShowsChips(latest, loadAttachments));
     return { key: `${isFocusedMailLayout}|${density}|${fontSize}|${showPreview}|${emptyPreview}|${chips}`, emptyPreview, chips };
-  }, [density, fontSize, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+  }, [density, fontSize, isFocusedMailLayout, showPreview, showVerificationCodes, showAttachmentChips, items, onOpenAttachment, loadAttachments]);
   // The height rows of each kind measured at last. A new list (another
   // folder, a search) is placed with them, so its rows need no correction
   // when they are measured: a guess a pixel off moved every row and drew

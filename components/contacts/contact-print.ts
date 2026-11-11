@@ -6,6 +6,7 @@ import { blobToDataUri } from "@/lib/data-uri";
 import { contactPhotoKey, peekContactPhoto } from "@/lib/contact-photo-cache";
 import { getContactPhotoClient } from "@/hooks/use-contact-photo";
 import { requestPrint, type PrintTarget } from "@/stores/print-store";
+import { useSettingsStore } from "@/stores/settings-store";
 
 const PHOTO_TIMEOUT_MS = 5000;
 
@@ -105,7 +106,7 @@ export function contactSheetSections(contact: ContactCard, t: (key: string) => s
   })));
   add(t("detail.anniversaries"), values(contact.anniversaries).map((a) => ({
     label: t(`detail.anniversary_${["birth", "death", "wedding"].includes(a.kind || "") ? a.kind : "other"}`),
-    value: a.date ? formatContactDate(a.date, locale) : "",
+    value: a.date ? formatContactDate(a.date, locale, useSettingsStore.getState().dateLocale) : "",
   })));
   add(t("detail.notes"), values(contact.notes).map((n) => ({ label: "", value: n.note || "" })), true);
   return sections;

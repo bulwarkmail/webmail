@@ -332,6 +332,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const messageListPanelProps = useMessageListPanelProps(messageListPanelId);
   const mailLayout = useDrawnMailLayout();
   const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
+  const replyUnderMessage = useSettingsStore((state) => state.replyUnderMessage);
   // Phones present search full-screen from the header field rather than
   // giving it a permanent second bar under the header.
   const [mobileSearchOpen, setMobileSearchOpen] = useQuietState(false);
@@ -357,6 +358,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const composerHostRef = useRef('pane');
   // The compose session docked under its message (dockedReply).
   const [dockedSession, setDockedSession] = useState<number | null>(null);
+  // The reply session opened in the pane with Replies under the message off.
+  const [paneSession, setPaneSession] = useState<number | null>(null);
   // A reply draft opened again from its message (compose-p2-6): it docks too.
   const [resumedReplySession, setResumedReplySession] = useState<number | null>(null);
   const showComposerRef = useRef(showComposer);
@@ -5546,12 +5549,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
   // Elsewhere on a computer a reply or forward docks under the message it
   // answers, which stays readable above it, as in Gmail and Outlook. Not
-  // for a draft being edited: that message is the draft itself.
+  // for a draft being edited: that message is the draft itself, and not
+  // with Replies under the message off: then it takes the pane, as a new
+  // message does.
   // Decided as it opens and kept for the session: moving it would mount it
-  // anew when the message goes away (another folder opened meanwhile).
+  // anew when the message goes away (another folder opened meanwhile) or
+  // the setting changes while it is open.
   const dockCandidate = !mvShell && !isMobile && showComposer && !isEmbedded && !floatingComposer
     && ((pendingDraft?.mode ?? composerMode) !== 'compose' || resumedReplySession === composerSessionId);
-  const dockOnOpen = dockCandidate && Boolean(selectedEmail) && !selectedEmail?.keywords?.$draft;
+  const dockWanted = dockCandidate && Boolean(selectedEmail) && !selectedEmail?.keywords?.$draft;
+  if (dockWanted && !replyUnderMessage && dockedSession !== composerSessionId && paneSession !== composerSessionId) {
+    setPaneSession(composerSessionId);
+  }
+  const dockOnOpen = dockWanted && replyUnderMessage && paneSession !== composerSessionId;
   if (dockOnOpen && dockedSession !== composerSessionId) setDockedSession(composerSessionId);
   const dockedReply = dockCandidate && (dockOnOpen || dockedSession === composerSessionId);
   const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : dockedReply ? 'dock' : 'pane';
@@ -5933,10 +5943,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           // The login that holds the message, so the reply
           // defaults to that account's identity (#1104).
           accountId: composerSourceEmail.sourceClientAccountId ?? viewingAccountId ?? undefined,
+          sourceAccountId: composerSourceEmail.sourceAccountId,
+          sourceClientAccountId: composerSourceEmail.sourceClientAccountId,
           attachments: composerSourceEmail.attachments,
           messageId: composerSourceEmail.messageId,
           inReplyTo: composerSourceEmail.inReplyTo,
           references: composerSourceEmail.references,
+          keywords: composerSourceEmail.keywords,
           // Its label, for the reply's or forward's classification label.
           headers: labelSourceHeaders(composerSourceEmail.headers),
           quoteHeaderHtml: composerQuoteHeader?.html,

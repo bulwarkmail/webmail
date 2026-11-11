@@ -1082,6 +1082,7 @@
     "templates_menu": "템플릿",
     "insert_template": "템플릿 삽입…",
     "options": "옵션",
+    "tags": "태그",
     "option_plain_text": "일반 텍스트",
     "option_plain_text_hint": "서식 없이 보내기",
     "option_read_receipt": "읽음 확인 요청",
@@ -1803,7 +1804,7 @@
       "id_field": "태그 ID",
       "id_placeholder": "예: work, personal",
       "color_field": "색상",
-      "id_exists": "이 태그 ID는 이미 존재합니다",
+      "name_exists": "같은 이름의 태그가 이미 있어요",
       "edit": "태그 편집",
       "delete": "태그 삭제",
       "edit_tag": "{name} 편집",
@@ -2080,9 +2081,17 @@
         "label": "인증 코드 표시",
         "description": "로그인 및 확인 메일의 코드를 한 번의 클릭으로 복사할 수 있게 합니다(목록에서는 하루 동안, 메시지에서는 항상)"
       },
+      "show_attachment_chips": {
+        "label": "목록에 첨부파일 표시",
+        "description": "각 메시지 아래에 첨부파일을 표시해 목록에서 바로 열 수 있게 합니다. 클립 아이콘은 어느 경우든 표시됩니다."
+      },
       "plain_text_mode": {
         "label": "일반 텍스트만 사용",
         "description": "서식 있는 텍스트 편집기를 끄고, 답장이나 전달을 포함한 모든 메일을 일반 텍스트로만 보내요"
+      },
+      "reply_under_message": {
+        "label": "답장을 메시지 아래에 열기",
+        "description": "답장이나 전달이 원래 메시지 아래에 열리고, 메시지는 그 위에서 계속 읽을 수 있습니다. 끄면 새 메시지처럼 읽기 창 전체를 차지합니다."
       },
       "quick_reply": {
         "label": "빠른 답장",
@@ -3395,7 +3404,8 @@
         "description": "키보드가 가리키는 버튼, 링크, 입력란 둘레의 윤곽선이에요.",
         "normal": "보통",
         "thick": "굵게",
-        "extra": "아주 굵게"
+        "extra": "아주 굵게",
+        "off": "꺼짐"
       },
       "focus_always": {
         "label": "포커스 항상 표시",

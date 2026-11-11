@@ -3,8 +3,9 @@
 // behind, and markers like TODO.
 
 // Template syntax, as in template-utils. Spaces inside the braces are allowed
-// because templates pasted from other tools often have them.
-const TEMPLATE_PLACEHOLDER = /\{\{\s*[\w.-]+\s*\}\}/g;
+// because templates pasted from other tools often have them. This runs on
+// the message's text, so a default may hold "<" and ">".
+const TEMPLATE_PLACEHOLDER = /\{\{\s*[\w.-]+\s*(?::[^{}\n]*)?\}\}/g;
 
 // [TIME], [PRICE], [YOUR NAME]. Not followed by "(", which would make it a
 // Markdown link.

@@ -72,7 +72,7 @@ import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useAccountTags, useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds, emailKeyFor } from "@/lib/thread-utils";
-import { getSecurityStatus, extractListHeaders, getSenderVerification, brandIndicatorDomain } from "@/lib/email-headers";
+import { getSecurityStatus, extractListHeaders, getSenderVerification } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
 import type { EmailReadView, ExternalLinkContext } from "@/lib/plugin-types";
 import { ViewSourceDialog } from "./view-source-dialog";
@@ -211,6 +211,7 @@ import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useRemoteContentBlockedByOrg, useRemoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
@@ -894,6 +895,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
   const tSidebar = useTranslations('sidebar');
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const unread = !email.keywords?.$seen;
   return (
     <button
@@ -903,7 +905,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
       data-email-id={email.id}
       className={cn("w-full flex items-start py-3 border-t border-border text-start hover:bg-muted/40 transition-colors", compact ? "gap-3 px-4" : "gap-4 px-6")}
     >
-      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
+      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandDomain} />
       <span className="flex-1 min-w-0">
         <span className="flex items-baseline gap-2">
           <span dir="auto" className={cn("text-sm truncate", unread ? "font-bold" : "font-semibold")}>
@@ -1001,6 +1003,7 @@ export function MvExpandedConversationCard({
   const externalContent = useConversationExternalContent();
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const hasBody = !!email.bodyValues;
   const [showDetails, setShowDetails] = useState(false);
   const loadRequested = useRef(false);
@@ -1041,13 +1044,14 @@ export function MvExpandedConversationCard({
         data-mv-conversation-header=""
         className={cn("flex items-start pt-3 pb-2 cursor-pointer", compact ? "gap-3 px-4" : "gap-4 px-6")}
       >
-        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
+        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandDomain} />
         <span className="flex-1 min-w-0">
           <span className="flex items-baseline gap-2">
             <SenderNameLine
               className="text-sm font-semibold"
               name={sender?.name || sender?.email || ''}
               address={compact ? null : sender?.email}
+              badge={<BrandVerifiedBadge domain={brandDomain} />}
             />
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6875rem] font-medium bg-primary/10 text-primary shrink-0">
@@ -1055,7 +1059,6 @@ export function MvExpandedConversationCard({
                 {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
               </span>
             )}
-            <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <ReceivedLabelChip email={email} className="self-center" />
             <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
@@ -1546,6 +1549,7 @@ export function EmailViewer({
   // The policy of the message's own account: in the unified inbox or a Pro
   // tab that may be another signed-in account than the active one.
   const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email?.sourceClientAccountId);
+  const brandDomain = useBrandDomain(email);
   // Also true while the policy is still loading: trust can't unblock yet.
   const remoteHeldBack = useRemoteContentHeldBack(email?.sourceClientAccountId);
   const tThirdParty = useTranslations('third_party');
@@ -2968,6 +2972,12 @@ export function EmailViewer({
     };
   }, [client, blobClient, blobAccountId, email?.id, pluginRenderedAttachments, email?.attachments, setCidBlobUrls]);
 
+  // HTML mail as plain text: Settings > Accessibility for every message, or
+  // the reader's per-message switch.
+  const mailViewMode = useSettingsStore((state) => state.mailViewMode);
+  const [plainViewOverride, setPlainViewOverride] = useQuietState<boolean | null>(null);
+  const plainView = plainViewOverride ?? mailViewMode === 'plain';
+
   const effectiveAttachments = useMemo<EffectiveAttachment[]>(() => {
     if (pluginRenderedAttachments.length > 0) {
       const pluginCids = collectReferencedCids(hideInlineImageAttachments ? pluginRenderedHtml : null);
@@ -2991,10 +3001,11 @@ export function EmailViewer({
     const hasCalInvitation = calendarInvitationParsingEnabled && !!email && !!findCalendarAttachment(email);
     // Parts the rendered body embeds via cid: must not double as chips. The
     // scan reads the same HTML the body renders from (null when the message
-    // renders as plain text: nothing embedded, nothing hidden), so a part only
-    // recognisable by its reference - octet-stream, no disposition, no name -
-    // is caught as well (see lib/attachment-visibility.ts).
-    const bodyCids = collectReferencedCids(hideInlineImageAttachments && email ? getRenderableHtmlBody(email) : null);
+    // renders as plain text, or is shown as plain text: nothing embedded,
+    // nothing hidden), so a part only recognisable by its reference -
+    // octet-stream, no disposition, no name - is caught as well (see
+    // lib/attachment-visibility.ts).
+    const bodyCids = collectReferencedCids(hideInlineImageAttachments && email && !plainView ? getRenderableHtmlBody(email) : null);
     const jmapAttachments = (email?.attachments ?? [])
       // Hide winmail.dat when we have successfully extracted TNEF content or attachments
       .filter(att => !(tnefHtml || tnefText || tnefAttachments.length > 0) || !isTnefAttachment(att.name, att.type))
@@ -3004,9 +3015,9 @@ export function EmailViewer({
       // Hide calendar MIME parts (text/calendar, application/ics) when the invitation
       // banner is shown - prevents raw ICS files appearing as spurious attachments.
       .filter(att => !hasCalInvitation || !isCalendarMimeType(att.type))
-      // Hide body-embedded parts when the user has opted to keep them out of
-      // the attachment list (default on).
-      .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids)))
+      // Hide body-embedded parts, and attached copies of them, when the user
+      // has opted to keep them out of the attachment list (default on).
+      .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids, email?.attachments, { plainText: plainView })))
       // Hide machine-readable report parts (MDN read-receipts, DSN bounce
       // reports). These are required MIME parts, not real user attachments.
       .filter(att => !isReportPart(att.type))
@@ -3045,7 +3056,7 @@ export function EmailViewer({
     // the whole `email` object would rebuild the attachment list — and its
     // downstream layout measurement — on every email field change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
+  }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments, plainView]);
 
   // Whether external resources must be blocked for the message on screen.
   // Shared by every body path - the message's own HTML, TNEF, unwrapped
@@ -3215,13 +3226,9 @@ export function EmailViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cidBlobUrls, emailContent, shouldBlockExternal, pluginRenderedHtml, pluginRenderedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText, t]);
 
-  // HTML mail as plain text: Settings > Accessibility for every message, or
-  // the reader's per-message switch. The message's own text/plain part when
-  // it has one, otherwise a readable conversion that keeps link targets and
-  // image alt text.
-  const mailViewMode = useSettingsStore((state) => state.mailViewMode);
-  const [plainViewOverride, setPlainViewOverride] = useQuietState<boolean | null>(null);
-  const plainView = plainViewOverride ?? mailViewMode === 'plain';
+  // HTML mail as plain text (mailViewMode / plainViewOverride above): the
+  // message's own text/plain part when it has one, otherwise a readable
+  // conversion that keeps link targets and image alt text.
   const hasHtmlBody = decodedEmailContent.isHtml;
   // The decoded body as plain text: the text part, else the HTML converted.
   const readableText = useCallback(() => {
@@ -4816,7 +4823,7 @@ export function EmailViewer({
                 <MoveFolderList
                   model={moveModel}
                   onPick={(mailboxId) => { onMoveToMailbox(mailboxId); closeMoveMenu(); }}
-                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox }); } : undefined}
+                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox, mailboxes, selectedMailbox }); } : undefined}
                 />
               </div>
             </ContextMenu>
@@ -5381,7 +5388,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
-                brandDomain={brandIndicatorDomain(email)}
+                brandDomain={brandDomain}
               />
             </button>
 
@@ -5409,18 +5416,21 @@ export function EmailViewer({
                         addressNode={inConversation && sender.name
                           ? <AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />
                           : undefined}
+                        badge={<BrandVerifiedBadge domain={brandDomain} />}
                       />
                     ) : sender?.email ? (
-                      <RecipientPopover
-                        name={sender?.name}
-                        email={sender.email}
-                        onViewContact={handleViewContactSidebar}
-                        className="font-semibold text-start"
-                      />
+                      <>
+                        <RecipientPopover
+                          name={sender?.name}
+                          email={sender.email}
+                          onViewContact={handleViewContactSidebar}
+                          className="font-semibold text-start"
+                        />
+                        <BrandVerifiedBadge domain={brandDomain} />
+                      </>
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
                     )}
-                    <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                     <ReceivedLabelChip email={email} />
                     <EmailIdentityBadge email={email} identities={identities} />
@@ -5587,7 +5597,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
-                brandDomain={brandIndicatorDomain(email)}
+                brandDomain={brandDomain}
               />
             </button>
             <div className="flex-1 min-w-0">
@@ -5603,7 +5613,7 @@ export function EmailViewer({
                 ) : (
                   <span className="text-sm font-semibold text-foreground">{t('unknown_sender')}</span>
                 )}
-                <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
+                <BrandVerifiedBadge domain={brandDomain} />
                 <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                 <ReceivedLabelChip email={email} />
                 <EmailIdentityBadge email={email} identities={identities} />
@@ -5826,22 +5836,17 @@ export function EmailViewer({
                   <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
                   <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                     <Row label={t('from')}>
-                      <div className="flex flex-wrap items-center gap-1">
+                      {/* The name and the address are lines of their own, so
+                          the check mark and chips follow the name, not the
+                          longer address under it. */}
+                      <div className="flex flex-wrap items-center gap-1" data-details-from-name="">
                         <RecipientPopover
                           name={sender?.name}
                           email={sender?.email || ''}
-                          label={sender?.name && sender?.email ? (
-                            <>
-                              <bdi className="block">{sender.name}</bdi>
-                              <bdi className="block text-muted-foreground" title={sender.email}>
-                                <BreakableAddress text={sender.email} />
-                              </bdi>
-                            </>
-                          ) : undefined}
                           onViewContact={handleViewContactSidebar}
                           className="text-sm text-start"
                         />
-                        <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
+                        <BrandVerifiedBadge domain={brandDomain} />
                         <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                         <ReceivedLabelChip email={email} />
                         {senderVerification && (
@@ -5859,6 +5864,19 @@ export function EmailViewer({
                           </span>
                         )}
                       </div>
+                      {sender?.name && sender?.email && (
+                        <RecipientPopover
+                          name={sender.name}
+                          email={sender.email}
+                          label={(
+                            <bdi className="block text-muted-foreground" title={sender.email}>
+                              <BreakableAddress text={sender.email} />
+                            </bdi>
+                          )}
+                          onViewContact={handleViewContactSidebar}
+                          className="block text-sm text-start"
+                        />
+                      )}
                     </Row>
                     {replyToDifferent && (
                       <Row label={t('reply_to_label').replace(':', '')}>

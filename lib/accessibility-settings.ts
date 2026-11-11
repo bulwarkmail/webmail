@@ -25,7 +25,7 @@ export const FONT_SIZE_SCALE: Record<FontSize, number> = {
 /** Follow the operating system, or override it either way. */
 export type SystemToggle = 'system' | 'on' | 'off';
 export type ContrastMode = 'system' | 'more' | 'normal';
-export type FocusRing = 'normal' | 'thick' | 'extra';
+export type FocusRing = 'off' | 'normal' | 'thick' | 'extra';
 export type AppFont = 'default' | 'atkinson' | 'lexend' | 'opendyslexic';
 export type LineSpacing = 'normal' | 'relaxed' | 'loose';
 export type LetterSpacing = 'normal' | 'wide' | 'wider';
@@ -118,7 +118,10 @@ export const ACCESSIBILITY_DEFAULTS: AccessibilitySettings = {
   readingMask: false,
   reduceMotion: 'system',
   pauseAnimatedImages: 'system',
-  focusRing: 'normal',
+  // Off: most people use a pointer and find a box round every field they
+  // click into distracting. Whoever works by keyboard turns it on in the
+  // settings or the accessibility panel (Alt+Shift+A), which keeps its outline.
+  focusRing: 'off',
   focusAlwaysVisible: false,
   singleKeyShortcuts: true,
   largeTargets: 'system',
@@ -169,7 +172,7 @@ export const ACCESSIBILITY_ALLOWED: Partial<Record<string, readonly unknown[]>> 
   readingWidth: ['full', 'comfortable'],
   reduceMotion: SYSTEM_TOGGLE,
   pauseAnimatedImages: SYSTEM_TOGGLE,
-  focusRing: ['normal', 'thick', 'extra'],
+  focusRing: ['off', 'normal', 'thick', 'extra'],
   largeTargets: SYSTEM_TOGGLE,
   mailViewMode: ['html', 'plain'],
   mailTextScale: MAIL_TEXT_SCALES,
@@ -214,7 +217,11 @@ export type AccessibilityDomState = Pick<AccessibilitySettings,
   'contrast' | 'reduceTransparency' | 'underlineLinks' | 'appFont' | 'lineSpacing' | 'letterSpacing' | 'wordSpacing'
   | 'paragraphSpacing' | 'readingWidth' | 'reduceMotion' | 'focusRing' | 'focusAlwaysVisible' | 'largeTargets'
   | 'largeCursor' | 'nativeScrollbars' | 'simpleMode' | 'unreadCountStyle' | 'colorBlindPalette' | 'showColorNames'
-> & { fontSize: FontSize };
+> & {
+  fontSize: FontSize;
+  /** The settings the user chose (the settings store's), to tell a chosen focus outline from the default. */
+  explicitSettings: readonly string[];
+};
 
 /**
  * Writes the visual accessibility settings onto `root` (normally <html>).
@@ -250,6 +257,9 @@ export function applyAccessibilityTo(root: HTMLElement, s: Partial<Accessibility
   set('paragraph-spacing', s.paragraphSpacing && s.paragraphSpacing !== 'normal' ? s.paragraphSpacing : null);
   set('reading-width', s.readingWidth === 'comfortable' ? 'comfortable' : null);
   set('focus-ring', s.focusRing && s.focusRing !== 'normal' ? s.focusRing : null);
+  // Off is the default, and a Windows contrast theme (forced colours) keeps
+  // the outline unless the user chose Off themselves (app/accessibility.css).
+  set('focus-ring-chosen', Array.isArray(s.explicitSettings) && s.explicitSettings.indexOf('focusRing') !== -1 ? 'on' : null);
   set('focus-always', s.focusAlwaysVisible ? 'on' : null);
   set('large-targets', s.largeTargets === 'on' ? 'on' : s.largeTargets === 'off' ? 'off' : null);
   set('large-cursor', s.largeCursor ? 'on' : null);

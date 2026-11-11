@@ -1085,6 +1085,7 @@
     "templates_menu": "Maler",
     "insert_template": "Sett inn mal…",
     "options": "Alternativer",
+    "tags": "Etiketter",
     "option_plain_text": "Ren tekst",
     "option_plain_text_hint": "Send uten formatering",
     "option_read_receipt": "Be om lesebekreftelse",
@@ -1806,7 +1807,7 @@
       "id_field": "Etikett-ID",
       "id_placeholder": "f.eks. jobb, personlig",
       "color_field": "Farge",
-      "id_exists": "Denne etikett-ID-en finnes allerede",
+      "name_exists": "Det finnes allerede en etikett med dette navnet",
       "edit": "Rediger etikett",
       "delete": "Slett etikett",
       "edit_tag": "Rediger {name}",
@@ -2083,9 +2084,17 @@
         "label": "Vis bekreftelseskoder",
         "description": "Tilby koden fra innloggings- og bekreftelses-e-poster for kopiering med ett klikk, i listen i ett døgn og i meldingen"
       },
+      "show_attachment_chips": {
+        "label": "Vis vedlegg i listen",
+        "description": "Vis vedlagte filer under hver melding, så du kan åpne dem rett fra listen. Bindersen vises uansett."
+      },
       "plain_text_mode": {
         "label": "Kun ren tekst",
         "description": "Deaktiver redigering av formatert tekst, og send all e-post som ren tekst, også svar og videresendinger"
+      },
+      "reply_under_message": {
+        "label": "Svar under meldingen",
+        "description": "Et svar eller en videresending åpnes under meldingen sin, som forblir lesbar over. Når dette er slått av, fyller det hele leseruten, som en ny melding."
       },
       "quick_reply": {
         "label": "Hurtigsvar",
@@ -3395,7 +3404,8 @@
         "description": "Rammen rundt knappen, lenken eller feltet tastaturet står på.",
         "normal": "Normal",
         "thick": "Tykk",
-        "extra": "Ekstra tykk"
+        "extra": "Ekstra tykk",
+        "off": "Av"
       },
       "focus_always": {
         "label": "Vis alltid fokus",

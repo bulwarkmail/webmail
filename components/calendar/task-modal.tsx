@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, useId } from "react";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TimeField } from "@/components/ui/time-field";
 import { IconButton } from "@/components/ui/icon-button";
 import { X, Trash2, CalendarDays, Bell, Flag } from "@/components/icons";
 import { format, parseISO } from "date-fns";
@@ -214,6 +215,10 @@ export function TaskModal({
       setSaving(false);
     }
   }, [title, description, dueDate, dueTime, showTime, priority, progress, calendarId, alertOption, alertTouched, isEdit, task, onSave, onClose]);
+  const saveRef = useRef(handleSave);
+  useLayoutEffect(() => {
+    saveRef.current = handleSave;
+  });
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -222,9 +227,12 @@ export function TaskModal({
     }
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
-      handleSave();
+      // The due time field hands on its typed time on this Enter, and React
+      // renders it in a microtask queued before this one: save after that,
+      // not with the time from before it.
+      queueMicrotask(() => void saveRef.current());
     }
-  }, [requestClose, handleSave]);
+  }, [requestClose]);
 
   const close = (
     <IconButton label={tCommon("close")} onClick={requestClose}>
@@ -278,7 +286,7 @@ export function TaskModal({
             <CalendarDays className="h-3.5 w-3.5" />
             {t("tasks.due_date")}
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               id={`${id}-due`}
               type="date"
@@ -291,19 +299,22 @@ export function TaskModal({
                 <input
                   type="checkbox"
                   checked={showTime}
-                  onChange={(e) => setShowTime(e.target.checked)}
+                  onChange={(e) => {
+                    setShowTime(e.target.checked);
+                    // The field shows a time from the start, and that is the one saved.
+                    if (e.target.checked && !dueTime) setDueTime("09:00");
+                  }}
                   className="rounded"
                 />
                 {t("tasks.include_time")}
               </label>
             )}
             {showTime && (
-              <input
-                type="time"
+              <TimeField
                 aria-labelledby={`${id}-due-label`}
                 value={dueTime}
-                onChange={(e) => setDueTime(e.target.value)}
-                className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                onChange={setDueTime}
+                className="w-28 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
               />
             )}
           </div>

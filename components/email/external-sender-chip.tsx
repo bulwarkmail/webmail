@@ -14,33 +14,41 @@ import {
 } from '@/lib/external-mail';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 
 type FromList = readonly { email?: string | null }[] | null | undefined;
 
 /**
  * The context of the account a message belongs to: the active one from the
  * stores, another signed-in one (the unified inbox) resolved for that
- * account, so its own scopes and identities decide.
+ * account, so its own scopes and identities decide. Null while `enabled` is
+ * off: nothing is asked of another account then.
  */
-function useAccountContext(accountId: string | null | undefined): ExternalMailContext | null {
+function useAccountContext(accountId: string | null | undefined, need?: 'senderLabel', enabled = true): ExternalMailContext | null {
   const externalMail = usePolicyStore((s) => s.policy.organisation?.externalMail);
   const rawPolicy = usePolicyStore((s) => s.rawPolicy);
   const identities = useAuthStore((s) => s.identities);
-  const other = useAuthStore(() => isOtherAccount(accountId));
+  const other = useAuthStore(() => enabled && isOtherAccount(accountId));
   const [otherContext, setOtherContext] = useState<{ accountId: string; context: ExternalMailContext } | null>(null);
   useEffect(() => {
     if (!other || !accountId) return;
     let cancelled = false;
-    void externalMailContextFor(accountId, 'senderLabel').then((context) => {
+    void externalMailContextFor(accountId, need).then((context) => {
       if (!cancelled) setOtherContext({ accountId, context });
+    }).catch(() => {
+      // That account can't be asked: nobody counts as internal for it.
     });
     return () => { cancelled = true; };
-  }, [other, accountId, rawPolicy]);
+  }, [other, accountId, rawPolicy, need]);
   return useMemo(() => {
+    if (!enabled) return null;
     if (other) return otherContext && otherContext.accountId === accountId ? otherContext.context : null;
-    if (!externalMail) return null;
-    return { policy: externalMail, identityEmails: (identities ?? []).map((identity) => identity.email) };
-  }, [other, otherContext, accountId, externalMail, identities]);
+    // No policy loaded (yet, or the request failed): the identities' own domains still count.
+    return {
+      policy: externalMail ?? DEFAULT_ORGANISATION_POLICY.externalMail,
+      identityEmails: (identities ?? []).map((identity) => identity.email),
+    };
+  }, [enabled, other, otherContext, accountId, externalMail, identities]);
 }
 
 /**
@@ -49,11 +57,29 @@ function useAccountContext(accountId: string | null | undefined): ExternalMailCo
  * empty otherwise.
  */
 export function useExternalSenders(from: FromList, accountId?: string | null): ExternalSender[] {
-  const context = useAccountContext(accountId);
+  const context = useAccountContext(accountId, 'senderLabel');
   return useMemo(() => {
     if (!context?.policy.senderLabel) return [];
     return externalSenders(from, internalDomains(context.identityEmails, context.policy.domains));
   }, [context, from]);
+}
+
+const NO_DOMAINS: string[] = [];
+
+/**
+ * The organisation's own domains for the message's account: its identities'
+ * and the admin's list, whether or not the "External" label is on. The
+ * invitation banner trusts mail between them as it trusts mail within the
+ * reader's own domain (#1593), and sender logos count mail handed in on the
+ * same server by them (hooks/use-brand-domain.ts). Empty while `enabled` is
+ * off, for a caller that only needs them for some messages.
+ */
+export function useInternalMailDomains(accountId?: string | null, enabled = true): string[] {
+  const context = useAccountContext(accountId, undefined, enabled);
+  return useMemo(
+    () => (context ? internalDomains(context.identityEmails, context.policy.domains) : NO_DOMAINS),
+    [context],
+  );
 }
 
 /**

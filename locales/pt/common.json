@@ -1082,6 +1082,7 @@
     "templates_menu": "Modelos",
     "insert_template": "Inserir modelo…",
     "options": "Opções",
+    "tags": "Etiquetas",
     "option_plain_text": "Texto simples",
     "option_plain_text_hint": "Enviar sem formatação",
     "option_read_receipt": "Pedir confirmação de leitura",
@@ -1803,7 +1804,7 @@
       "id_field": "ID da etiqueta",
       "id_placeholder": "ex. trabalho, pessoal",
       "color_field": "Cor",
-      "id_exists": "Este ID de etiqueta já existe",
+      "name_exists": "Já existe uma etiqueta com este nome",
       "edit": "Editar etiqueta",
       "delete": "Eliminar etiqueta",
       "edit_tag": "Editar {name}",
@@ -2075,6 +2076,10 @@
         "label": "Apenas texto simples",
         "description": "Desativar o editor de texto formatado e enviar todos os e-mails apenas como texto simples, incluindo respostas e encaminhamentos"
       },
+      "reply_under_message": {
+        "label": "Respostas abaixo da mensagem",
+        "description": "Uma resposta ou um encaminhamento abre abaixo da sua mensagem, que continua legível acima. Quando desativado, ocupa todo o painel de leitura, como uma nova mensagem."
+      },
       "quick_reply": {
         "label": "Resposta rápida",
         "description": "Mostrar a caixa de resposta rápida abaixo das mensagens."
@@ -2122,6 +2127,10 @@
       "show_verification_codes": {
         "label": "Mostrar códigos de verificação",
         "description": "Oferecer o código dos e-mails de início de sessão e confirmação para copiar com um clique, na lista durante um dia e na mensagem"
+      },
+      "show_attachment_chips": {
+        "label": "Mostrar anexos na lista",
+        "description": "Mostrar os arquivos anexados abaixo de cada mensagem para abri-los direto da lista. O clipe aparece de qualquer forma."
       },
       "attachment_click_action": {
         "label": "Ação ao clicar em anexos",
@@ -3395,7 +3404,8 @@
         "description": "O contorno ao redor do botão, link ou campo em que o teclado está.",
         "normal": "Normal",
         "thick": "Grosso",
-        "extra": "Extragrosso"
+        "extra": "Extragrosso",
+        "off": "Desligado"
       },
       "focus_always": {
         "label": "Sempre mostrar o foco",

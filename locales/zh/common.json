@@ -1082,6 +1082,7 @@
     "templates_menu": "模板",
     "insert_template": "插入模板…",
     "options": "选项",
+    "tags": "标签",
     "option_plain_text": "纯文本",
     "option_plain_text_hint": "不带格式发送",
     "option_read_receipt": "请求已读回执",
@@ -1803,7 +1804,7 @@
       "id_field": "标签ID",
       "id_placeholder": "例如工作、个人",
       "color_field": "颜色",
-      "id_exists": "此标签ID已存在",
+      "name_exists": "已有同名标签",
       "edit": "编辑标签",
       "delete": "删除标签",
       "edit_tag": "编辑 {name}",
@@ -2080,9 +2081,17 @@
         "label": "显示验证码",
         "description": "提供登录和确认邮件中的验证码，一键复制（在列表中显示一天，在邮件中始终显示）"
       },
+      "show_attachment_chips": {
+        "label": "在列表中显示附件",
+        "description": "在每封邮件下方显示附件，方便直接从列表中打开。回形针图标始终显示。"
+      },
       "plain_text_mode": {
         "label": "仅纯文本",
         "description": "禁用富文本编辑器，并将所有邮件（包括回复和转发）以纯文本发送"
+      },
+      "reply_under_message": {
+        "label": "在邮件下方打开回复",
+        "description": "回复或转发会在原邮件下方打开，原邮件仍可在上方阅读。关闭后，它会像新邮件一样占据整个阅读区域。"
       },
       "quick_reply": {
         "label": "快速回复",
@@ -3395,7 +3404,8 @@
         "description": "键盘当前所在的按钮、链接或字段周围的轮廓。",
         "normal": "正常",
         "thick": "粗",
-        "extra": "特粗"
+        "extra": "特粗",
+        "off": "关"
       },
       "focus_always": {
         "label": "始终显示焦点",

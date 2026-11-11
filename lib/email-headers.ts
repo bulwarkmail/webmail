@@ -1,5 +1,6 @@
 import { AuthenticationResults } from './jmap/types';
 import { parseUnsubscribeUrls } from './validation';
+import { toAsciiDomain } from './idn';
 
 type SpfResult = 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror';
 type SpfEntry = NonNullable<NonNullable<AuthenticationResults['spf']>['all']>[number];
@@ -196,15 +197,29 @@ export function authenticationResultsOnReceipt(headers: readonly { name: string;
  * pass without a DMARC verdict isn't enough, and neither is a pass that the
  * receiving server recorded for another header.from. Whether the domain
  * enforces DMARC and publishes a logo is /api/bimi's to find out.
+ *
+ * Mail a signed-in user handed in to the same server never gets a DMARC
+ * verdict: Stalwart writes Authentication-Results only on what arrives from
+ * outside, and lets a user send only from their own addresses. So a message
+ * with no such header at all counts as well when its From domain is one of
+ * `internalDomains`, the organisation's own (lib/external-mail.ts
+ * internalDomains, in ASCII form; a domain covers its subdomains). The same
+ * domain's mail from outside carries the header and still needs the pass.
  */
 export function brandIndicatorDomain(
   email: { from?: { email?: string | null }[] | null; authenticationResults?: AuthenticationResults } | undefined,
+  internalDomains: readonly string[] = [],
 ): string | undefined {
   const auth = email?.authenticationResults;
   const fromEmail = email?.from?.[0]?.email ?? undefined;
-  if (!auth?.dmarc || auth.dmarc.result !== 'pass' || !fromEmail) return undefined;
+  if (!fromEmail) return undefined;
   const domain = domainOf(fromEmail);
-  if (!domain || isAuthenticationSpoofed(auth)) return undefined;
+  if (!domain) return undefined;
+  if (!auth) {
+    const ascii = toAsciiDomain(domain) ?? domain;
+    return internalDomains.some((entry) => ascii === entry || ascii.endsWith(`.${entry}`)) ? domain : undefined;
+  }
+  if (auth.dmarc?.result !== 'pass' || isAuthenticationSpoofed(auth)) return undefined;
   const checked = auth.dmarc.domain ? domainOf(`@${auth.dmarc.domain}`) : domain;
   return checked === domain ? domain : undefined;
 }

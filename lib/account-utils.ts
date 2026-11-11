@@ -80,21 +80,6 @@ export function accountTintKey(avatarColor: string | undefined): string {
   }
 }
 
-/** Get initials for an avatar from a display name or email */
-export function getInitials(name: string, email?: string): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return parts[0][0]?.toUpperCase() ?? '?';
-  }
-  if (email) {
-    return email[0]?.toUpperCase() ?? '?';
-  }
-  return '?';
-}
-
 /**
  * Hard upper bound on cookie slots. Each slot can hold up to ~3 cookies
  * (session, refresh token, server id, auth context), so 50 slots ≈ 125

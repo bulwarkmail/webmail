@@ -1085,6 +1085,7 @@
     "templates_menu": "Plantilles",
     "insert_template": "Insereix una plantilla…",
     "options": "Opcions",
+    "tags": "Etiquetes",
     "option_plain_text": "Text pla",
     "option_plain_text_hint": "Envia sense format",
     "option_read_receipt": "Demana confirmació de lectura",
@@ -1806,7 +1807,7 @@
       "id_field": "ID de l'etiqueta",
       "id_placeholder": "p. ex. feina, personal",
       "color_field": "Color",
-      "id_exists": "Aquest ID d'etiqueta ja existeix",
+      "name_exists": "Ja hi ha una etiqueta amb aquest nom",
       "edit": "Edita l'etiqueta",
       "delete": "Suprimeix l'etiqueta",
       "edit_tag": "Edita {name}",
@@ -2083,9 +2084,17 @@
         "label": "Mostra els codis de verificació",
         "description": "Ofereix el codi dels correus d'inici de sessió i de confirmació per copiar-lo amb un clic, a la llista durant un dia i al missatge"
       },
+      "show_attachment_chips": {
+        "label": "Mostra els fitxers adjunts a la llista",
+        "description": "Mostra els fitxers adjunts sota cada missatge per obrir-los des de la llista. El clip es mostra igualment."
+      },
       "plain_text_mode": {
         "label": "Només text sense format",
         "description": "Desactiva l'editor de text enriquit i envia tots els correus només com a text sense format, incloses les respostes i els reenviaments"
+      },
+      "reply_under_message": {
+        "label": "Respostes sota el missatge",
+        "description": "Una resposta o un reenviament s'obre sota el seu missatge, que continua llegible a sobre. Si està desactivat, ocupa tota la subfinestra de lectura, com un missatge nou."
       },
       "quick_reply": {
         "label": "Resposta ràpida",
@@ -3395,7 +3404,8 @@
         "description": "El contorn al voltant del botó, l'enllaç o el camp on és el teclat.",
         "normal": "Normal",
         "thick": "Gruixut",
-        "extra": "Molt gruixut"
+        "extra": "Molt gruixut",
+        "off": "Desactivat"
       },
       "focus_always": {
         "label": "Mostra sempre el focus",

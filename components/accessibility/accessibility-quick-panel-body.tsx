@@ -52,7 +52,8 @@ export function QuickPanel({ isOpen, onClose, signedIn }: { isOpen: boolean; onC
 
   return (
     <Dialog isOpen={isOpen} onClose={onClose} title={t('title')} description={t('description')} size="md" testId="accessibility-panel">
-      <div className="space-y-1">
+      {/* Keeps the focus outline while it is off elsewhere (accessibility.css). */}
+      <div className="space-y-1" data-keep-focus-outline>
         {/* What changes how a page looks or is used, the sign-in page included.
             The rest is on Settings > Accessibility. */}
         <SettingItem label={tA('text_size.label')} locked={isSettingLocked('fontSize')}>
@@ -93,6 +94,7 @@ export function QuickPanel({ isOpen, onClose, signedIn }: { isOpen: boolean; onC
             value={settings.focusRing}
             onChange={(value) => set('focusRing', value)}
             options={[
+              { value: 'off', label: tA('focus_ring.off') },
               { value: 'normal', label: tA('focus_ring.normal') },
               { value: 'thick', label: tA('focus_ring.thick') },
               { value: 'extra', label: tA('focus_ring.extra') },

@@ -167,8 +167,9 @@ function switchOnAnywhere(key: 'senderLabel' | 'recipientWarning'): boolean {
 
 /** Whether `localAccountId` names another signed-in account than the active one. */
 export function isOtherAccount(localAccountId: string | null | undefined): localAccountId is string {
+  if (!localAccountId) return false;
   const auth = useAuthStore.getState();
-  return !!localAccountId && localAccountId !== auth.activeAccountId && !!auth.getClientForAccount(localAccountId);
+  return localAccountId !== auth.activeAccountId && !!auth.getClientForAccount(localAccountId);
 }
 
 /**

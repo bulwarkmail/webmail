@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useLocale, useTranslations } from "next-intl";
@@ -49,8 +49,12 @@ import {
   UserPen,
   ArrowLeftRight,
   UserPlus,
+  Tag,
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
+import { TagPicker } from "./tag-picker";
+import { KEYWORD_PREFIX, getEmailTagIds } from "@/lib/thread-utils";
+import { tagScopeOf } from "@/hooks/use-account-tags";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { ComposerHeaderPluginActions } from "@/components/email/composer-header-plugin-actions";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
@@ -354,6 +358,8 @@ export interface ComposerDraftData {
    * null for "no label", absent when the draft says nothing.
    */
   classification?: string | null;
+  /** Tags applied to the message (tag IDs). */
+  tags?: string[];
   /**
    * Handed to the host when the composer went away with edits the server may
    * not have: the composer opened again with it counts them as unsaved, so
@@ -553,6 +559,8 @@ interface EmailComposerProps {
     htmlBody?: string;
     receivedAt?: string;
     accountId?: string;
+    sourceAccountId?: string;
+    sourceClientAccountId?: string;
     // sourceAccountId: login holding this part, when it differs per part
     // (a batch forward across accounts); otherwise the original's login.
     attachments?: Array<{ blobId: string; name?: string; type: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string }>;
@@ -575,6 +583,10 @@ interface EmailComposerProps {
     phishingMarked?: boolean;
     /** The original's From, when `from` is left out (a forward as attachment): whether its label counts. */
     originalFrom?: { email?: string; name?: string }[];
+    /** Keywords on the source email: replies/forwards inherit its tags. */
+    keywords?: Record<string, boolean>;
+    /** Explicit tag IDs on the source email. */
+    tags?: string[];
   };
 }
 
@@ -1337,6 +1349,20 @@ export function EmailComposer({
   // Open proofreading issues, once a checker asked to warn about them.
   const proofreadingConfirmedRef = useRef(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(() => {
+    if (initialData?.tags !== undefined) return initialData.tags;
+    if (replyTo) {
+      if (replyTo.tags) return replyTo.tags;
+      if (replyTo.keywords) return getEmailTagIds(replyTo.keywords);
+    }
+    return [];
+  });
+  const handleToggleTag = (tagId: string) => {
+    markEdited();
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    );
+  };
   // Asks before sending at once when the account can't hold a message back.
   const { dialogProps: noDelayDialogProps, confirm: confirmNoDelay } = useConfirmDialog();
   const { dialogProps: sendConfirmDialogProps, confirm: confirmSend } = useConfirmDialog();
@@ -1413,6 +1439,16 @@ export function EmailComposer({
   const composerClientRef = useRef(composerClient);
   composerClientRef.current = composerClient;
   const currentIdentityRawId = currentIdentityParts.rawId ?? currentIdentity?.id;
+  const tagScope = useMemo(
+    () =>
+      replyTo?.sourceAccountId
+        ? tagScopeOf({
+            sourceAccountId: replyTo.sourceAccountId,
+            sourceClientAccountId: replyTo.sourceClientAccountId,
+          })
+        : null,
+    [replyTo?.sourceAccountId, replyTo?.sourceClientAccountId],
+  );
 
   // The login a save or send for an identity of `localAccountId` goes
   // through: that account's, or the active one, as composerClient and the
@@ -2000,8 +2036,8 @@ export function EmailComposer({
     }));
 
   // Keep a ref to current state for the unmount save
-  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode });
-  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode };
+  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode, tags: selectedTagIds });
+  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, draftAccountId, draftLocalAccountId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode, tags: selectedTagIds };
 
   // Track initial values for dirty detection (captured once on first render)
   const initialValuesRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, attachmentCount: attachments.length });
@@ -2018,7 +2054,7 @@ export function EmailComposer({
       return;
     }
     changeVersionRef.current += 1;
-  }, [toStr, ccStr, bccStr, subject, body, attachments.length]);
+  }, [toStr, ccStr, bccStr, subject, body, attachments.length, selectedTagIds]);
   // Handed-in text and files aren't the user's until they touch them. Nothing
   // counts as dirty until then, so autosave, the page-close save and the flush
   // before a sign-out all leave them alone.
@@ -2045,6 +2081,8 @@ export function EmailComposer({
   if (priority !== initialPriorityRef.current) isDirtyRef.current = true;
   const initialLabelChoiceRef = useRef(classification.choice);
   if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
+  const initialTagsRef = useRef(selectedTagIds);
+  if (selectedTagIds !== initialTagsRef.current) isDirtyRef.current = true;
   // Text the host handed in is no edit to hand back: it has its own copy, and a
   // stand-in mounted before the edits arrived must not overwrite them.
   const hasEditsRef = useRef(false);
@@ -2061,10 +2099,11 @@ export function EmailComposer({
     if (!uneditedRef.current) return;
     const start = initialValuesRef.current;
     if (toStr !== start.to || ccStr !== start.cc || bccStr !== start.bcc || subject !== start.subject
-      || attachments.length !== start.attachmentCount || priority !== initialPriorityRef.current) {
+      || attachments.length !== start.attachmentCount || priority !== initialPriorityRef.current
+      || selectedTagIds !== initialTagsRef.current) {
       markEdited();
     }
-  }, [toStr, ccStr, bccStr, subject, attachments.length, priority, markEdited]);
+  }, [toStr, ccStr, bccStr, subject, attachments.length, priority, selectedTagIds, markEdited]);
   const firstLabelRunRef = useRef(true);
   useEffect(() => {
     if (firstLabelRunRef.current) {
@@ -2130,6 +2169,7 @@ export function EmailComposer({
     replyTo,
     priority: priorityRef.current,
     classification: classificationRef.current.draftChoice,
+    tags: selectedTagIds,
     // Edits the last save didn't cover; a minimised composer with
     // none needs no save before an automatic sign-out.
     unsaved: !uneditedRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current),
@@ -2278,6 +2318,22 @@ export function EmailComposer({
   const [autoResultsQuery, setAutoResultsQuery] = useState('');
   const [isSearchingServer, setIsSearchingServer] = useState(false);
   const autocompleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Each edit owns a distinct lookup, including A -> B -> A. Dismissal and
+  // unmount revoke that ownership even if a plugin is already awaiting I/O.
+  const autocompleteRequestRef = useRef<{ query: string; field: 'to' | 'cc' | 'bcc' } | null>(null);
+  const serverSearchRef = useRef<{ pending: boolean } | null>(null);
+  const serverSearchContextRef = useRef<object | null>(null);
+  useLayoutEffect(() => {
+    // A new context also distinguishes client A -> B -> A. Local contacts
+    // continue to use the shared pool regardless of the From identity.
+    serverSearchContextRef.current = {};
+    return () => { serverSearchContextRef.current = null; };
+  }, [composerClient]);
+
+  const invalidateAutocomplete = useCallback(() => {
+    autocompleteRequestRef.current = null;
+    if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current);
+  }, []);
   const toInputRef = useRef<HTMLInputElement>(null);
   const ccInputRef = useRef<HTMLInputElement>(null);
   const bccInputRef = useRef<HTMLInputElement>(null);
@@ -2376,10 +2432,7 @@ export function EmailComposer({
   }, [setTo, setCc, setBcc, setShowCc, setShowBcc]);
 
   const handleAutocomplete = useCallback((inputText: string, field: 'to' | 'cc' | 'bcc') => {
-    if (autocompleteTimeoutRef.current) {
-      clearTimeout(autocompleteTimeoutRef.current);
-    }
-
+    invalidateAutocomplete();
     const query = inputText.trim();
     if (query.length < 1) {
       setAutocompleteResults([]);
@@ -2388,6 +2441,8 @@ export function EmailComposer({
       setAutoQuery('');
       return;
     }
+    const request = { query, field };
+    autocompleteRequestRef.current = request;
     setAutoQuery(query);
 
     autocompleteTimeoutRef.current = setTimeout(async () => {
@@ -2395,6 +2450,7 @@ export function EmailComposer({
       // Let plugins contribute extra suggestions (Slack handles, GitHub, CRM, …).
       const initial: RecipientSuggestion[] = localResults.map(r => ({ name: r.name, email: r.email, group: r.group }));
       const merged = await contactHooks.onProvideRecipientSuggestions.transform(initial, { query });
+      if (autocompleteRequestRef.current !== request) return;
       setAutocompleteResults(merged.map(s => ({ name: s.name, email: s.email, group: s.group })));
       setAutoResultsQuery(query);
       // Keep the dropdown open even without local hits when a server search is
@@ -2402,17 +2458,26 @@ export function EmailComposer({
       setActiveAutoField(merged.length > 0 || canSearchServer ? field : null);
       setAutoSelectedIndex(-1);
     }, 200);
-  }, [getAutocomplete, canSearchServer]);
+  }, [getAutocomplete, canSearchServer, invalidateAutocomplete]);
 
   // On-demand: search the Sent folder server-side for recipients matching the
   // current query and merge fresh hits into the open dropdown (deduped by email).
   const handleServerSearch = useCallback(async () => {
     const query = autoQuery.trim();
-    if (!composerClient || !query || isSearchingServer) return;
+    const request = autocompleteRequestRef.current;
+    const context = serverSearchContextRef.current;
+    if (!composerClient || !query || !request || request.query !== query ||
+        isSearchingServer || serverSearchRef.current?.pending) return;
+    const search = { pending: true };
+    serverSearchRef.current = search;
+    const isCurrent = () => autocompleteRequestRef.current === request &&
+      serverSearchContextRef.current === context && serverSearchRef.current === search;
     setIsSearchingServer(true);
     try {
       const serverResults = await searchRecipients(composerClient, query);
+      if (!isCurrent()) return;
       setAutocompleteResults((prev) => {
+        if (!isCurrent()) return prev;
         const seen = new Set(prev.map((r) => r.email.toLowerCase()));
         const merged = [...prev];
         for (const r of serverResults) {
@@ -2427,7 +2492,13 @@ export function EmailComposer({
     } catch {
       // Best-effort: a failed lookup just leaves the local suggestions in place.
     } finally {
-      setIsSearchingServer(false);
+      // Input/client changes invalidate results, but keep the single-request
+      // guard until this operation settles. An abandoned mount cannot clear
+      // the pending state of a later operation.
+      if (serverSearchRef.current === search) {
+        search.pending = false;
+        setIsSearchingServer(false);
+      }
     }
   }, [autoQuery, composerClient, isSearchingServer, searchRecipients]);
 
@@ -2452,7 +2523,7 @@ export function EmailComposer({
   }, [validationErrors.to]);
 
   const insertAutocomplete = (suggestion: SuggestionItem, field: 'to' | 'cc' | 'bcc') => {
-    if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current);
+    invalidateAutocomplete();
     setAutoQuery('');
     const setter = field === 'to' ? setTo : field === 'cc' ? setCc : setBcc;
     const inputSetter = field === 'to' ? setToInput : field === 'cc' ? setCcInput : setBccInput;
@@ -2492,15 +2563,23 @@ export function EmailComposer({
     if (relatedTarget && dropdownRef.current?.contains(relatedTarget)) {
       return;
     }
+    if (autocompleteRequestRef.current?.field === field) invalidateAutocomplete();
     if (activeAutoField === field) {
       setActiveAutoField(null);
       setAutoSelectedIndex(-1);
     }
-  }, [activeAutoField]);
+  }, [activeAutoField, invalidateAutocomplete]);
 
   // `current` is the row shown highlighted, which before any arrow key is
   // the default pick (defaultSuggestionIndex) rather than autoSelectedIndex.
   const handleAutoKeyDown = (e: React.KeyboardEvent, field: 'to' | 'cc' | 'bcc', current = autoSelectedIndex) => {
+    if (e.key === 'Escape') {
+      invalidateAutocomplete();
+      setAutocompleteResults([]);
+      setActiveAutoField(null);
+      setAutoSelectedIndex(-1);
+      return;
+    }
     if (!activeAutoField || autocompleteResults.length === 0) return;
 
     if (e.key === 'ArrowDown') {
@@ -2512,10 +2591,6 @@ export function EmailComposer({
     } else if (e.key === 'Enter' && autoSelectedIndex >= 0) {
       e.preventDefault();
       insertAutocomplete(autocompleteResults[autoSelectedIndex], field);
-    } else if (e.key === 'Escape') {
-      setAutocompleteResults([]);
-      setActiveAutoField(null);
-      setAutoSelectedIndex(-1);
     }
   };
 
@@ -3260,7 +3335,7 @@ export function EmailComposer({
     // draft version (below), and hashing them would mark each save dirty
     // again - an endless save loop. Name+type+size identifies an attachment
     // for change detection.
-    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments.map(({ name, type, size, cid }) => ({ name, type, size, cid })), identityId: selectedIdentityId, subAddressTag, priority });
+    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments.map(({ name, type, size, cid }) => ({ name, type, size, cid })), identityId: selectedIdentityId, subAddressTag, priority, tags: [...selectedTagIds].sort() });
 
     // Only save if data has changed
     if (currentData === lastSavedDataRef.current) {
@@ -3334,7 +3409,7 @@ export function EmailComposer({
         savedDraft.htmlBody,
         replyThreadingHeaders?.inReplyTo,
         replyThreadingHeaders?.references,
-        { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice },
+        { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice, ...(selectedTagIds.length > 0 ? { keywords: selectedTagIds.map((id) => KEYWORD_PREFIX + id) } : {}) },
       );
       if (replacedElsewhere) {
         if (isStandInId(savedDraftId) && savingLogin) {
@@ -3879,11 +3954,10 @@ export function EmailComposer({
 
   useEffect(() => {
     return () => {
-      if (autocompleteTimeoutRef.current) {
-        clearTimeout(autocompleteTimeoutRef.current);
-      }
+      invalidateAutocomplete();
+      serverSearchRef.current = null;
     };
-  }, []);
+  }, [invalidateAutocomplete]);
 
   // Groups expand here so validation and every outgoing payload see the
   // actual member addresses.
@@ -4546,10 +4620,11 @@ export function EmailComposer({
           inReplyTo: threadingHeaders?.inReplyTo?.[0],
           ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
           // Plugins with email:write add keywords for the Sent copy here.
-          keywords: [],
+          keywords: selectedTagIds.map((id) => KEYWORD_PREFIX + id),
         };
         const outgoing = await emailHooks.onTransformOutgoingEmail.transform(transformInput);
-        const outgoingKeywords = cleanOutgoingKeywords(outgoing.keywords);
+        const tagKeywords = selectedTagIds.map((id) => KEYWORD_PREFIX + id);
+        const outgoingKeywords = cleanOutgoingKeywords([...tagKeywords, ...(outgoing.keywords ?? [])]);
         // A plugin that adds or changes recipients after the send checks
         // (an automatic Bcc) could take the message outside after an
         // "only outside the organisation" rule passed: check it again for
@@ -4668,8 +4743,9 @@ export function EmailComposer({
       setSubAddressTag("");
       setValidationErrors({});
       setShowScheduleDialog(false);
+      setSelectedTagIds([]);
       // Clear ref so unmount effect doesn't re-save
-      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
       // The host closes the composer from onSend or onScheduledSendCreated;
       // a send the plugin made itself reaches neither (#1207). A window of
       // its own closes only now: closing it stops whatever is still running,
@@ -4756,7 +4832,7 @@ export function EmailComposer({
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
     emitClose();
   };
 
@@ -4847,7 +4923,7 @@ export function EmailComposer({
       }
       announceKeptDraft();
       explicitCloseRef.current = true;
-      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
       emitClose();
     } finally {
       if (saveCloseAttemptRef.current === attempt) {
@@ -5120,7 +5196,7 @@ export function EmailComposer({
         localAccountId: draftLocalAccountIdRef.current,
       });
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode, tags: [] };
     emitClose();
   };
 
@@ -6451,6 +6527,22 @@ export function EmailComposer({
                 <ComposerPluginMenuItems surface="composer-toolbar-actions" context={composerActionContext} onSelect={close} separator onlyWhenNarrow />
               </>}
             </ComposerToolbarMenu>
+            <ComposerToolbarMenu
+              icon={Tag}
+              label={t('tags')}
+              activeCount={selectedTagIds.length}
+              testId="composer-tags-menu"
+            >
+              {() => (
+                <div className="w-56 max-w-[18rem]" data-testid="composer-tag-picker">
+                  <TagPicker
+                    selectedIds={selectedTagIds}
+                    onToggle={handleToggleTag}
+                    scope={tagScope}
+                  />
+                </div>
+              )}
+            </ComposerToolbarMenu>
             <ComposerPluginToolbarButtons surface="composer-toolbar-actions" context={composerActionContext} />
             <ProofreadingStatus proofreading={proofreading} plainTextMode={plainTextMode} />
           </div>
@@ -7027,12 +7119,18 @@ export function RecipientChipInput({
     if (valid.length === 0) return;
     e.preventDefault();
     onChipsChange([...chips, ...valid]);
-    onInputChange([inputText.trim(), invalid.join(' ')].filter(Boolean).join(' '));
+    const remaining = [inputText.trim(), invalid.join(' ')].filter(Boolean).join(' ');
+    onInputChange(remaining);
+    onAutocomplete(remaining, field);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && activeAutoField === field) {
+      onAutoKeyDown(e, field, highlightIndex);
+      return;
+    }
     if (dropdownOpen) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Escape') {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         onAutoKeyDown(e, field, highlightIndex);
         return;
       }
@@ -7238,10 +7336,15 @@ export function RecipientChipInput({
       <div
         className={cn(
           // A long list scrolls by itself, or a reply-all to 80 people leaves no room for the text.
-          "flex flex-wrap items-center gap-1 min-h-[32px] max-h-[min(30dvh,10rem)] overflow-y-auto p-0.5 -m-0.5 cursor-text",
-          validationError && "ring-2 ring-red-500 dark:ring-red-400 rounded",
-          isDragOver && "ring-2 ring-primary/50 rounded bg-accent/20"
+          "flex flex-wrap items-center gap-1 min-h-[32px] max-h-[min(30dvh,10rem)] overflow-y-auto p-0.5 -m-0.5 cursor-text rounded",
+          // The focus outline (below) goes round the error ring, not over it.
+          validationError && "ring-2 ring-red-500 dark:ring-red-400 outline-offset-2",
+          isDragOver && "ring-2 ring-primary/50 bg-accent/20"
         )}
+        // The chips and the input are one field: the focus outline goes round
+        // all of it (app/accessibility.css). Round the input alone it sat on
+        // the first letter typed, the input having no padding of its own.
+        data-recipient-field=""
         onClick={() => inputRef.current?.focus()}
         onDragOver={handleContainerDragOver}
         onDragLeave={handleContainerDragLeave}
@@ -7423,10 +7526,7 @@ export function RecipientChipInput({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onBlur={handleBlur}
-            // focus-inset: the keyboard focus ring goes inside the box. Drawn
-            // outside, the field's own scroller cut it to a line along the top
-            // and the end (compose-p2-18, a pop-out focuses To from a key).
-            className={cn("focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none", narrowInput && chips.length > 0 && "min-w-12")}
+            className={cn("flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none", narrowInput && chips.length > 0 && "min-w-12")}
             role="combobox"
             aria-expanded={activeAutoField === field && autocompleteResults.length > 0}
             aria-autocomplete="list"

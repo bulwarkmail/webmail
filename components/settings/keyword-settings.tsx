@@ -24,10 +24,11 @@ import { KEYWORD_PREFIX } from "@/lib/thread-utils";
 import { findUnrecognizedKeywords, type UnrecognizedKeyword } from "@/lib/keyword-discovery";
 import {
   buildKeywordTree,
-  composeKeywordId,
+  chooseKeywordId,
   getParentKeywordId,
   hasChildKeywords,
   isKeywordDescendant,
+  isKeywordNameTaken,
   type KeywordNode,
   MAX_KEYWORD_ID_LENGTH,
 } from "@/lib/keyword-nesting";
@@ -183,8 +184,17 @@ function KeywordEditForm({
   // tag that has children and allow the color to change.
   const isLocked = !!initial && hasChildKeywords(initial.id, keywords);
 
-  const normalizedId = isLocked && initial ? initial.id : composeKeywordId(parentId || null, label);
-  const isDuplicate = normalizedId.length > 0 && existingIds.includes(normalizedId);
+  // A name with no slug of its own (Cyrillic, Greek, CJK...) or one whose
+  // slug another tag has still gets an id; only the same name twice under
+  // one parent is refused, and only when the name or parent changes, so two
+  // same-named tags from before can still get a new colour.
+  // An edit that keeps the parent and the slug of the name (a colour, case
+  // or punctuation change) keeps the id, so no mail or filter is rewritten.
+  const normalizedId = isLocked && initial
+    ? initial.id
+    : chooseKeywordId(parentId || null, label, existingIds, initial?.id, initial ? initial.label ?? "" : undefined);
+  const keepsPlace = !!initial && label.trim() === (initial.label ?? "").trim() && (parentId || null) === getParentKeywordId(initial.id);
+  const isDuplicate = !isLocked && !keepsPlace && isKeywordNameTaken(keywords, parentId || null, label, initial?.id);
   // Only a new or changed id has to fit: a longer one that predates the limit
   // is already on the messages, and an edit that keeps it, such as a colour
   // change, leaves it as it is.
@@ -262,7 +272,7 @@ function KeywordEditForm({
           <p className="text-xs text-muted-foreground mt-1">{t("has_children_locked")}</p>
         )}
         {isDuplicate && (
-          <p className="text-xs text-destructive mt-1">{t("id_exists")}</p>
+          <p className="text-xs text-destructive mt-1">{t("name_exists")}</p>
         )}
         {isTooLong && (
           <p className="text-xs text-destructive mt-1">

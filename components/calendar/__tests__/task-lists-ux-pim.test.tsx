@@ -40,7 +40,7 @@ const work = cal('work', 'Work');
 beforeEach(() => {
   // The grid shows Home and Work, as fetchCalendars leaves it: never To-do.
   useCalendarStore.setState({ calendars: [home, todo, work], selectedCalendarIds: ['home', 'work'], hiddenTaskListIds: [], viewMode: 'tasks' } as never);
-  useSettingsStore.setState({ enableCalendarTasks: true } as never);
+  useSettingsStore.setState({ enableCalendarTasks: true, showTasksOnCalendar: true } as never);
   useTaskStore.setState({ tasks: [] } as never);
 });
 
@@ -98,8 +98,35 @@ describe('the sidebar in the tasks view (pim-1)', () => {
     expect(useCalendarStore.getState().selectedCalendarIds).toEqual(['home', 'work']);
   });
 
-  it('shows the event calendars again outside the tasks view', () => {
+  // Outside the tasks view a task-only list has no calendar tick, so it stays
+  // in the sidebar below the calendars with its task list tick; a calendar
+  // holding tasks keeps its calendar tick there.
+  it('shows the event calendars again outside the tasks view, the task-only lists below them', () => {
     useCalendarStore.setState({ viewMode: 'month' } as never);
+    render(<CalendarSidebarPanel calendars={[home, todo, work]} selectedCalendarIds={['home', 'work']} onToggleVisibility={() => {}} client={client} />);
+    const taskLists = screen.getByTestId('task-lists-section');
+    expect(screen.getAllByTestId('calendar-item').map((el) => el.dataset.calendarName)).toEqual(['Home', 'Work']);
+    expect(within(taskLists).getAllByRole('checkbox').map((el) => el.textContent?.trim())).toEqual(['To-do']);
+  });
+
+  it('hides a task-only list with its task list tick in the day view', () => {
+    useCalendarStore.setState({ viewMode: 'day' } as never);
+    render(<CalendarSidebarPanel calendars={[home, todo, work]} selectedCalendarIds={['home', 'work']} onToggleVisibility={() => {}} client={client} />);
+    fireEvent.click(within(screen.getByTestId('task-lists-section')).getByRole('checkbox', { name: /To-do/ }));
+    expect(useCalendarStore.getState().hiddenTaskListIds).toEqual(['todo']);
+    expect(useCalendarStore.getState().selectedCalendarIds).toEqual(['home', 'work']);
+  });
+
+  it('leaves the task-only lists out of the calendar views when tasks are not shown on the calendar', () => {
+    useSettingsStore.setState({ showTasksOnCalendar: false } as never);
+    useCalendarStore.setState({ viewMode: 'week' } as never);
+    render(<CalendarSidebarPanel calendars={[home, todo, work]} selectedCalendarIds={['home', 'work']} onToggleVisibility={() => {}} client={client} />);
+    expect(screen.queryByTestId('task-lists-section')).toBeNull();
+  });
+
+  // The agenda draws no tasks, so a tick there would steer nothing.
+  it('leaves the task-only lists out of the agenda', () => {
+    useCalendarStore.setState({ viewMode: 'agenda' } as never);
     render(<CalendarSidebarPanel calendars={[home, todo, work]} selectedCalendarIds={['home', 'work']} onToggleVisibility={() => {}} client={client} />);
     expect(screen.queryByTestId('task-lists-section')).toBeNull();
     expect(screen.getAllByTestId('calendar-item').map((el) => el.dataset.calendarName)).toEqual(['Home', 'Work']);

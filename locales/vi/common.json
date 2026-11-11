@@ -1086,6 +1086,7 @@
     "templates_menu": "Mẫu",
     "insert_template": "Chèn mẫu…",
     "options": "Tùy chọn",
+    "tags": "Thẻ",
     "option_plain_text": "Văn bản thuần",
     "option_plain_text_hint": "Gửi không kèm định dạng",
     "option_read_receipt": "Yêu cầu xác nhận đã đọc",
@@ -1818,7 +1819,7 @@
       "id_field": "Mã nhãn",
       "id_placeholder": "Ví dụ: cong-viec, ca-nhan",
       "color_field": "Màu",
-      "id_exists": "Mã nhãn này đã tồn tại",
+      "name_exists": "Thẻ có tên này đã tồn tại",
       "edit": "Sửa nhãn",
       "delete": "Xóa nhãn",
       "edit_tag": "Sửa {name}",
@@ -2095,9 +2096,17 @@
         "label": "Hiển thị mã xác minh",
         "description": "Cho phép sao chép mã trong thư đăng nhập và xác nhận chỉ bằng một lần nhấn; mã hiển thị trong danh sách một ngày và cả trong thư"
       },
+      "show_attachment_chips": {
+        "label": "Hiện tệp đính kèm trong danh sách",
+        "description": "Hiện các tệp đính kèm bên dưới mỗi thư để mở ngay từ danh sách. Biểu tượng kẹp giấy vẫn hiển thị trong mọi trường hợp."
+      },
       "plain_text_mode": {
         "label": "Chỉ dùng văn bản thuần",
         "description": "Tắt trình soạn thảo văn bản đa dạng thức và chỉ gửi thư dưới dạng văn bản thuần, kể cả thư trả lời và chuyển tiếp"
+      },
+      "reply_under_message": {
+        "label": "Mở thư trả lời bên dưới thư",
+        "description": "Thư trả lời hoặc chuyển tiếp mở bên dưới thư gốc, thư gốc vẫn đọc được ở phía trên. Khi tắt, nó chiếm toàn bộ ngăn đọc, giống như thư mới."
       },
       "quick_reply": {
         "label": "Trả lời nhanh",
@@ -3407,7 +3416,8 @@
         "description": "Đường viền quanh nút, liên kết hoặc trường đang nhận thao tác bàn phím.",
         "normal": "Bình thường",
         "thick": "Dày",
-        "extra": "Cực dày"
+        "extra": "Cực dày",
+        "off": "Tắt"
       },
       "focus_always": {
         "label": "Luôn hiển thị tiêu điểm",

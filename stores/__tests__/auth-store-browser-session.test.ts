@@ -48,7 +48,7 @@ vi.mock('@/lib/stalwart/principal', () => ({ fetchPrincipalDisplayName: async ()
 
 import * as nav from '@/lib/browser-navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { useAccountStore } from '@/stores/account-store';
+import { useAccountStore, type AccountEntry } from '@/stores/account-store';
 
 const SERVER = 'https://mail.x.test';
 // A new account per test: the store keeps each account's client between tests.
@@ -64,7 +64,7 @@ const account = (overrides: Record<string, unknown> = {}) => ({
 type Call = { method: string; url: string; body?: Record<string, unknown> };
 const calls: Call[] = [];
 /** What the cookies hold: a session cookie for slot 0, a refresh token, or neither. */
-const cookies = { session: true as boolean | 'refused', refreshToken: true };
+const cookies = { session: true as boolean | 'refused', refreshToken: true as boolean | 'refused' };
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -76,9 +76,10 @@ beforeAll(() => {
     if (url.startsWith('/api/auth/verify')) return json({ result: 'ok' });
     if (url.startsWith('/api/auth/session') && method === 'PUT') {
       if (cookies.session === 'refused') return json({ error: 'Invalid session' }, 401);
-      return cookies.session ? json({ serverUrl: SERVER, username: USER, password: 'pw' }) : json({ error: 'No session' }, 401);
+      return cookies.session ? json({ serverUrl: SERVER, username: USER, ...(useAccountStore.getState().getAccountById(ID)?.authMode === 'token' ? { token: 'tok' } : { password: 'pw' }) }) : json({ error: 'No session' }, 401);
     }
     if (url.startsWith('/api/auth/token') && method === 'PUT') {
+      if (cookies.refreshToken === 'refused') return json({ error: 'Invalid refresh token' }, 401);
       return cookies.refreshToken ? json({ access_token: 'at', expires_in: 3600 }) : json({ error: 'No refresh token' }, 401);
     }
     return json({ ok: true });
@@ -211,5 +212,64 @@ describe('after the browser was closed', () => {
     await reload(account());
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
     expect(sessionStorage.getItem('session_expired')).toBe('true');
+  });
+});
+
+describe.each(['basic', 'token', 'oauth'] as const)('%s account retention with browser-session sign-in', (authMode) => {
+  it('restores an unticked sign-in while its browser-session cookie is present', async () => {
+    setting.on = true;
+    await reload(account({ authMode }));
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(useAccountStore.getState().getAccountById(ID)).toMatchObject({ rememberMe: false, isConnected: true });
+  });
+
+  it('forgets the persisted address and server once the browser-session cookie is gone', async () => {
+    setting.on = true;
+    cookies.session = false;
+    cookies.refreshToken = false;
+    await reload(account({ authMode }));
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    const registry = localStorage.getItem('account-registry') ?? '';
+    expect(registry).not.toContain(USER);
+    expect(registry).not.toContain(SERVER);
+    await useAccountStore.persist.rehydrate();
+    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(sessionStorage.getItem('session_expired')).toBeNull();
+  });
+
+  it.each([false, true])('retains a rejected remembered account with the policy set to %s', async (on) => {
+    setting.on = on;
+    cookies.session = 'refused';
+    cookies.refreshToken = 'refused';
+    await reload(account({ authMode, rememberMe: true }));
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAccountStore.getState().getAccountById(ID)).toMatchObject({ awaitingSignIn: true, isConnected: false });
+    await useAccountStore.persist.rehydrate();
+    expect(useAccountStore.getState().getAccountById(ID)?.awaitingSignIn).toBe(true);
+    calls.length = 0;
+    await useAuthStore.getState().checkAuth();
+    expect(restores('/api/auth/session')).toEqual([]);
+    expect(restores('/api/auth/token')).toEqual([]);
+  });
+
+  it.each([false, true])('forgets an explicitly signed-out account with rememberMe=%s', async (rememberMe) => {
+    setting.on = true;
+    await reload(account({ authMode, rememberMe }));
+    await useAuthStore.getState().logout();
+    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(localStorage.getItem('account-registry')).toBeNull();
+    expect(calls).toContainEqual({ method: 'DELETE', url: '/api/auth/session?slot=0' });
+    if (authMode === 'oauth') expect(calls).toContainEqual({ method: 'DELETE', url: '/api/auth/token?slot=0' });
+  });
+
+  it('forgets an explicitly removed sign-in target after its remembered session was rejected', async () => {
+    setting.on = true;
+    cookies.session = 'refused';
+    cookies.refreshToken = 'refused';
+    await reload(account({ authMode, rememberMe: true }));
+    useAuthStore.getState().removeAccount(ID);
+    expect(useAccountStore.getState().getAccountById(ID)).toBeUndefined();
+    await useAccountStore.persist.rehydrate();
+    expect(useAccountStore.getState().accounts.map((entry: AccountEntry) => entry.id)).not.toContain(ID);
   });
 });

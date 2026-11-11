@@ -409,12 +409,20 @@ export function getInvitationMethod(
  * the reader's domains that carries no Authentication-Results header at all
  * was handed in by a signed-in user rather than received from outside:
  * Stalwart adds the header to everything that arrives on port 25 (#1374).
+ *
+ * `internalMailDomains` are the organisation's other domains, as the
+ * "External" sender chip counts them (lib/external-mail.ts internalDomains,
+ * in ASCII form; a domain covers its subdomains): a server that hosts
+ * several domains hands mail between them over the same way (#1593). The
+ * missing header stays the condition, so a listed domain hosted elsewhere,
+ * whose mail arrives on port 25, is still checked.
  */
 export function getInvitationTrustAssessment(
   event: Partial<CalendarEvent>,
   email?: Pick<Email, 'from' | 'replyTo' | 'authenticationResults'>,
   method: InvitationMethod = getInvitationMethod(event),
-  ownAddresses: string[] = []
+  ownAddresses: string[] = [],
+  internalMailDomains: readonly string[] = []
 ): InvitationTrustAssessment {
   const organizerEmail = getOrganizerEmail(event);
   const senderEmail = getPrimaryAddressEmail(email?.from) || getPrimaryAddressEmail(email?.replyTo);
@@ -428,7 +436,8 @@ export function getInvitationTrustAssessment(
   const senderMismatch = Boolean(senderEmail && expectedEmail && senderEmail !== expectedEmail);
   const senderDomain = senderEmail?.split('@').pop();
   const internal = Boolean(email && !email.authenticationResults && senderDomain
-    && ownAddresses.some((address) => address.toLowerCase().split('@').pop() === senderDomain));
+    && (ownAddresses.some((address) => address.toLowerCase().split('@').pop() === senderDomain)
+      || internalMailDomains.some((domain) => senderDomain === domain || senderDomain.endsWith(`.${domain}`))));
   const expectsAuthenticatedTransport = method !== 'unknown' && !internal;
   const addresses = { senderEmail, organizerEmail, attendeeEmail };
 
