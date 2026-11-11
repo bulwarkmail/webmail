@@ -98,4 +98,12 @@ describe('what the device kept for the first server', () => {
     expect(wiped).toEqual([]);
     expect(readStoreOwners()[ACCOUNT]).toEqual({ jmap: 'ee', server: `${FIRST}/jmap` });
   });
+
+  it('a record from before for the server at the root stays at the first sign-in there, and names the root only from then on', async () => {
+    localStorage.setItem('bulwark-offline-owners', JSON.stringify({ [ACCOUNT]: { jmap: 'ee', server: FIRST } }));
+    await checkStoreOwner(ACCOUNT, 'ee', FIRST);
+    expect(wiped).toEqual([]);
+    await checkStoreOwner(ACCOUNT, 'ee', `${FIRST}/second`);
+    expect(wiped).toEqual([ACCOUNT]);
+  });
 });

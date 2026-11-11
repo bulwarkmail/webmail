@@ -296,13 +296,49 @@ export function onStoreOwnerChanged(listener: (account: string) => Promise<void>
  * keyed by it.
  */
 export async function checkStoreOwner(account: string, jmap: string, serverUrl: string): Promise<void> {
+  const keptFromBefore = !!originOnlyOwners()[account];
   const known = readStoreOwners()[account];
   const server = mailServerKey(serverUrl);
-  const otherServer = !!known && !sameStoreServer(known.server, server);
+  const otherServer = !!known && !sameStoreServer(known.server, server, keptFromBefore);
   if (known && (otherServer || (isEvicted(account) && known.jmap !== jmap))) await storeOwnerChanged?.(account);
   if (known?.jmap !== jmap || known?.server !== server) {
     writeRecord(OFFLINE_OWNERS_KEY, { ...readStoreOwners(), [account]: { jmap, server } });
   }
+  // From this sign-in on the record names origin and path, and matches that path only.
+  if (keptFromBefore) dropOriginOnlyOwner(account);
+}
+
+/**
+ * localStorage: '2' once the owner records on this device were sorted: every record written since
+ * names the server's origin and mount path (mailServerKey), and the ones kept from before, which
+ * name the origin only, are listed under OFFLINE_ORIGIN_ONLY_OWNERS_KEY.
+ */
+export const OFFLINE_OWNERS_FORMAT_KEY = 'bulwark-offline-owners-format';
+/** localStorage: the accounts whose owner record is from before mount paths were noted. */
+export const OFFLINE_ORIGIN_ONLY_OWNERS_KEY = 'bulwark-offline-owners-origin-only';
+
+/** The accounts whose owner record names the origin only, sorting the records on the first call. */
+function originOnlyOwners(): Record<string, true> {
+  try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(OFFLINE_OWNERS_FORMAT_KEY) !== '2') {
+      const kept: Record<string, true> = {};
+      for (const [account, owner] of Object.entries(readStoreOwners())) {
+        if (owner?.server === originOf(owner.server)) kept[account] = true;
+      }
+      writeRecord(OFFLINE_ORIGIN_ONLY_OWNERS_KEY, kept);
+      localStorage.setItem(OFFLINE_OWNERS_FORMAT_KEY, '2');
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  return readRecord<true>(OFFLINE_ORIGIN_ONLY_OWNERS_KEY);
+}
+
+function dropOriginOnlyOwner(account: string): void {
+  const kept = readRecord<true>(OFFLINE_ORIGIN_ONLY_OWNERS_KEY);
+  if (!(account in kept)) return;
+  delete kept[account];
+  writeRecord(OFFLINE_ORIGIN_ONLY_OWNERS_KEY, kept);
 }
 
 /**
@@ -320,15 +356,18 @@ export function mailServerKey(url: string): string {
 }
 
 /**
- * Whether the server a store was recorded for is `server` (mailServerKey). A record that names an
- * origin only, as every record did before paths were noted, matches any path on that origin.
+ * Whether the server a store was recorded for is `server` (mailServerKey). A record kept from
+ * before paths were noted names an origin only: it matches any path on that origin, until the
+ * sign-in that rewrites it. Every other record matches its own origin and path only, a server at
+ * the root of the host included.
  */
-function sameStoreServer(known: string, server: string): boolean {
+function sameStoreServer(known: string, server: string, keptFromBefore: boolean): boolean {
   if (known === server) return true;
-  return known === originOf(known) && known === originOf(server);
+  return keptFromBefore && known === originOf(known) && known === originOf(server);
 }
 
 export function forgetStoreOwner(account: string): void {
+  dropOriginOnlyOwner(account);
   const owners = readStoreOwners();
   if (!(account in owners)) return;
   delete owners[account];
