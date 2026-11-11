@@ -193,6 +193,7 @@ async function bootEntry(prefix: string, clientId: string, shellHtml: string) {
   const location = { origin, pathname: `${prefix}/en/mail/`, search: '', hash: '' };
   win.top = win;
   win.self = win;
+  win.parent = win;
   new Function('window', 'document', 'location', 'history', 'navigator', 'localStorage', 'fetch', script)(
     win, document, location, { state: null, replaceState: () => {} }, { languages: ['en'] }, { getItem: () => null },
     (url: string, init: unknown) => (win.fetch as (u: string, i: unknown) => Promise<Response>)(url, init),

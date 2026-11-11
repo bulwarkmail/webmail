@@ -604,6 +604,89 @@ export function withScriptHashCsp(html, options = {}) {
   return withMetaCsp(html, buildScriptHashCsp(inlineScriptHashes(html), options));
 }
 
+/** What a page shows instead of itself inside another site's frame. */
+export const FOREIGN_FRAME_MESSAGE = "Bulwark Webmail cannot be shown inside another site's page. Open it directly.";
+
+/** Marks the frame refusal script, so checks can tell it from the page's own. */
+export const FRAME_GUARD_ATTRIBUTE = "data-bulwark-frame-guard";
+
+/**
+ * Whether `win` is inside a frame of another site: a frame above it is on
+ * another origin (whose location it can't even read). `allowed` names one
+ * other origin that may frame it, the portal a build is made for
+ * (NEXT_PUBLIC_PARENT_ORIGIN). Runs in the browser: the Stalwart entry and
+ * the static pages' refusal embed it with Function#toString.
+ */
+export function isForeignFrame(win, allowed) {
+  var foreign = false;
+  try {
+    for (var w = win; w !== w.parent; w = w.parent) {
+      if (w.parent.location.origin !== win.location.origin) { foreign = true; break; }
+    }
+  } catch {
+    foreign = true;
+  }
+  if (!foreign || !allowed) return foreign;
+  var origins = win.location.ancestorOrigins;
+  if (origins && origins.length) {
+    for (var i = 0; i < origins.length; i++) if (origins[i] !== win.location.origin && origins[i] !== allowed) return true;
+    return false;
+  }
+  try { return new URL(win.document.referrer).origin !== allowed; } catch { return true; }
+}
+
+/**
+ * The first script of every page of the static target. A <meta> policy can't
+ * carry frame-ancestors, and hosts such as GitHub Pages or a plain S3 bucket
+ * send no headers, so the page itself stops loading inside another site's
+ * frame and shows FOREIGN_FRAME_MESSAGE. Frames of its own origin load, and
+ * so does `parentOrigin` when the build names one.
+ */
+export function buildFrameGuardScript({ parentOrigin = "" } = {}) {
+  return `(function () {
+  var isForeignFrame = ${isForeignFrame.toString()};
+  if (!isForeignFrame(window, ${inlineJson(parentOrigin)})) return;
+  try { window.stop(); } catch (e) {}
+  // Built with the DOM, not markup: the build finds where the page policy goes
+  // by searching each page for its head and charset tags, this text included.
+  document.documentElement.replaceChildren(document.createElement("head"), document.createElement("body"));
+  var p = document.createElement("p");
+  p.textContent = ${inlineJson(FOREIGN_FRAME_MESSAGE)};
+  p.style.cssText = "font:16px/1.5 system-ui,sans-serif;max-width:36rem;margin:20vh auto 0;padding:1rem;text-align:center";
+  document.body.appendChild(p);
+})();`;
+}
+
+/** The origin of NEXT_PUBLIC_PARENT_ORIGIN, or "" when it names none. */
+export function parentOriginOf(value) {
+  try {
+    return value ? new URL(String(value).trim()).origin : "";
+  } catch {
+    return "";
+  }
+}
+
+/** `html` with the frame refusal as its first script: right after <meta charset>, else at the top of <head>. */
+export function withFrameGuard(html, options = {}) {
+  const script = `<script ${FRAME_GUARD_ATTRIBUTE}="">${buildFrameGuardScript(options)}</script>`;
+  const anchor = /<meta\s+charset\s*=[^>]*>/i.exec(html) ?? /<head\b[^>]*>/i.exec(html)
+    ?? /<html\b[^>]*>/i.exec(html) ?? /<!doctype[^>]*>/i.exec(html);
+  const at = anchor ? anchor.index + anchor[0].length : 0;
+  return html.slice(0, at) + script + html.slice(at);
+}
+
+/**
+ * Problems with the frame refusal of a static page (empty = fine): it must be
+ * the first script, and the page's own policy must allow it.
+ */
+export function frameGuardProblems(html) {
+  const first = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/i.exec(html);
+  if (!first || !first[1].includes(FRAME_GUARD_ATTRIBUTE)) return ["does not start with the frame refusal script"];
+  const policy = /<meta http-equiv="Content-Security-Policy" content="([^"]*)"/.exec(html)?.[1] ?? "";
+  const [hash] = inlineScriptHashes(first[0]);
+  return policy.includes(hash) ? [] : ["has a frame refusal its policy does not allow"];
+}
+
 /** `html` with a <meta> carrying `policy`, placed as withScriptHashCsp places it. */
 function withMetaCsp(html, policy) {
   const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}"/>`;
@@ -892,7 +975,8 @@ Deep links such as \`${basePath}/en/mail/thread/abc\` are served by the shell at
 - nginx: see \`nginx.conf.example\`.
 - Caddy: see \`Caddyfile.example\`.
 ${basePath ? `  Both examples serve root-relative paths, so unzip into \`<web root>${basePath}\`\n  (e.g. \`${exampleDocRoot(basePath).files}\`), not into the web root itself.\n` : ""}- GitHub Pages and other hosts without rewrites: \`404.html\` replays the link
-  in the browser. It works, with one extra page load.
+  in the browser. It works, with one extra page load. Such hosts usually send
+  none of the headers in \`_headers\` either (see Security notes).
 
 \`_headers\` also carries the recommended security headers. Adjust
 \`connect-src\` to your JMAP server's origin if you prefer a strict policy.
@@ -937,9 +1021,17 @@ OpenID provider are sent there, and setting the Application's
   fallback applies when a reverse proxy in front of Stalwart answers
   \`/api/auth\` without CORS headers: the login still works, but "remember me"
   then only lasts for the tab, so add the CORS rule from step 3 there too.
-- Because the export contains inline scripts, \`script-src\` must allow
-  \`'unsafe-inline'\`. Email HTML is still rendered sanitised in a sandboxed
-  frame, exactly as in the full build.
+- Every page carries a \`<meta>\` Content-Security-Policy that runs only its
+  own inline scripts (by hash) and scripts from its own origin, so the
+  \`'unsafe-inline'\` in the header policy changes nothing where both apply.
+  Each page also refuses to run inside another site's frame. Email HTML is
+  still rendered sanitised in a sandboxed frame, exactly as in the full build.
+- A \`<meta>\` can't carry the rest of \`_headers\`. Hosts that send no headers
+  of their own, such as GitHub Pages or a plain S3 bucket, go without
+  \`frame-ancestors\` and \`X-Frame-Options\` (the pages' own refusal stands in),
+  \`X-Content-Type-Options: nosniff\`, the \`connect-src\`, \`img-src\`,
+  \`frame-src\` and \`form-action\` limits, \`Referrer-Policy\` and
+  \`Permissions-Policy\`. Prefer a host that sends them.
 `;
 }
 
@@ -1397,10 +1489,10 @@ export function buildStalwartEntry({ locales, shells, defaultLocale = "en", buil
   } catch (e) {}
 
   // Stalwart sends no X-Frame-Options or frame-ancestors for an Application:
-  // inside another origin's frame the app would be open to clickjacking.
-  var foreignFrame = false;
-  try { foreignFrame = window.top !== window.self && window.top.location.origin !== location.origin; } catch (e) { foreignFrame = true; }
-  if (foreignFrame) return fail("Bulwark Webmail cannot be shown inside another site's page. Open it directly.");
+  // inside another origin's frame the app would be open to clickjacking. Every
+  // frame above counts, not only the top one.
+  var isForeignFrame = ${isForeignFrame.toString()};
+  if (isForeignFrame(window, "")) return fail(${inlineJson(FOREIGN_FRAME_MESSAGE)});
 
   function fail(message) {
     function show() {

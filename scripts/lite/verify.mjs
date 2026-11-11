@@ -11,7 +11,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
   LITE_PENDING_PATH_KEY, STALWART_BOOT_FILE, STALWART_EXCLUDED_FILES, STALWART_MAX_BUNDLE_BYTES, STALWART_SAFE_BUNDLE_BYTES, STALWART_SCRIPT_DIR, STALWART_ZIP_NAME,
-  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, inlineScriptHashes, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartShellProblems, stalwartZipEntryProblems, unexpectedApiStrings, unexpectedEngineFiles,
+  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, frameGuardProblems, inlineScriptHashes, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartShellProblems, stalwartZipEntryProblems, unexpectedApiStrings, unexpectedEngineFiles,
 } from "./lib.mjs";
 
 const repoRoot = resolveRepoRoot(import.meta.url);
@@ -76,6 +76,8 @@ export function verifyExport({ root = repoRoot, target, safeBundleBytes = STALWA
         else if (inlineScriptHashes(html).some((hash) => !policy.includes(hash))) {
           problems.push(`out/${locale}/${surface}/index.html has an inline script its policy does not allow`);
         }
+        // A <meta> can't carry frame-ancestors: the page refuses foreign frames itself.
+        for (const p of frameGuardProblems(html)) problems.push(`out/${locale}/${surface}/index.html ${p}; run postbuild`);
       }
     }
   }

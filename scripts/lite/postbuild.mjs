@@ -12,8 +12,8 @@ import { dirname, join } from "node:path";
 import {
   STALWART_BOOT_FILE, STALWART_EXCLUDED_DIRS, STALWART_EXCLUDED_FILES, STALWART_ZIP_NAME,
   buildCaddyExample, buildConnectorCapabilities, buildHeaders, buildLiteConfig, buildLitePolicy, buildManifest, buildNginxExample, buildNotFoundShim, buildReadme, readNotFoundMessages, buildRedirects, buildRootRedirect,
-  buildStalwartAppManifest, buildStalwartBootScript, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, moveShellScriptsToFiles, normalizeBasePath, parseLiteTarget, resolveRepoRoot,
-  withScriptHashCsp,
+  buildStalwartAppManifest, buildStalwartBootScript, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, moveShellScriptsToFiles, normalizeBasePath, parentOriginOf, parseLiteTarget, resolveRepoRoot,
+  withFrameGuard, withScriptHashCsp,
 } from "./lib.mjs";
 import { hintPageScripts } from "../compile-hints.mjs";
 
@@ -52,6 +52,8 @@ export function runPostbuild({ root = repoRoot, env = process.env, log = console
   // The Stalwart target rewrites its shells for the mount at runtime, so it
   // moves their scripts into files below (see buildStalwartEntryCsp).
   if (target === "static") {
+    // First script of every page, so its hash goes into the policy below.
+    applyFrameGuard(outDir, { parentOrigin: parentOriginOf(env.NEXT_PUBLIC_PARENT_ORIGIN) });
     // With the switch on at build time the page policy also fences off
     // outside hosts (#903). config.json can still be edited afterwards; a
     // switch turned on there relies on the in-app checks and the web
@@ -158,6 +160,24 @@ export function moveStalwartShellScripts(outDir, { buildId }) {
     writeFileSync(path, content);
   }
   return { pages, files: Object.keys(files).length };
+}
+
+/** Put the frame refusal first into each HTML file (withFrameGuard); returns how many. */
+export function applyFrameGuard(outDir, options = {}) {
+  let pages = 0;
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== "_next") walk(path);
+      } else if (entry.name.endsWith(".html")) {
+        writeFileSync(path, withFrameGuard(readFileSync(path, "utf8"), options));
+        pages++;
+      }
+    }
+  };
+  walk(outDir);
+  return pages;
 }
 
 /** Add each HTML file's script-hash policy (withScriptHashCsp); returns how many. */

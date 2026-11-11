@@ -715,8 +715,9 @@ describe('Stalwart target: the entry document', () => {
     const meta = `<meta http-equiv="Content-Security-Policy" content="${csp}" />`;
     expect(html.indexOf(meta)).toBeGreaterThan(-1);
     expect(html.indexOf(meta)).toBeLessThan(html.indexOf('<script>'));
-    expect(html).toContain('window.top.location.origin !== location.origin');
-    expect(html).toMatch(/if \(foreignFrame\) return fail\(/);
+    // Every frame above counts (isForeignFrame), not only the top one.
+    expect(html).toContain('w.parent.location.origin !== win.location.origin');
+    expect(html).toMatch(/if \(isForeignFrame\(window, ""\)\) return fail\(/);
   });
 
   it('survives both Stalwart rewrites, including the pre-0.16.19 replace-all', () => {
