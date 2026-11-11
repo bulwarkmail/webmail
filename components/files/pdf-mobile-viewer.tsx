@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, ExternalLink } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { liteMountedAssetUrl } from "@/lib/lite";
+import { isInlineSafeBlob } from "@/lib/file-preview";
 import { canOpenUrlInNewWindow } from "@/lib/standalone-display";
 
 // Real inline PDF preview for mobile browsers. Android Chrome / iOS WebKit have
@@ -29,8 +30,9 @@ const MAX_ZOOM = 4; // pinch can go a bit beyond the double-tap steps
 const DOUBLE_TAP_MS = 300;
 const DOUBLE_TAP_SLOP = 30; // px
 
-// `blob` is the document itself; `url` (a blob: URL for the same bytes) is only
-// used for the open-in-new-tab fallback. pdf.js must be fed the bytes, not the
+// `blob` is the document itself; `url` (a blob: URL of that Blob) is only
+// used for the open-in-new-tab fallback, offered when the Blob's type is on the
+// inline-safe list (lib/file-preview.ts). pdf.js must be fed the bytes, not the
 // URL: fetching a blob: URL is governed by CSP connect-src, which doesn't (and
 // shouldn't need to) allow blob:, so getDocument({ url }) is blocked (#871).
 export function PdfMobileViewer({ url, blob, allowNewTab = true }: { url: string; blob: Blob; /** False under a device policy without downloads. */ allowNewTab?: boolean }) {
@@ -220,7 +222,7 @@ export function PdfMobileViewer({ url, blob, allowNewTab = true }: { url: string
         // An installed app cannot open the blob: URL in a new window (#865),
         // so it only says so; the header's download button still works.
         <div className="flex justify-center py-10">
-          {allowNewTab && canOpenUrlInNewWindow(url) ? (
+          {allowNewTab && canOpenUrlInNewWindow(url) && isInlineSafeBlob(blob) ? (
             <Button
               variant="outline"
               size="sm"

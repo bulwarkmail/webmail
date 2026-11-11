@@ -102,7 +102,79 @@ const EXT_TO_MIME: Record<string, string> = {
   mkv: 'video/x-matroska',
 };
 
-const GENERIC_MIME_TYPES = new Set(['', 'application/octet-stream', 'binary/octet-stream']);
+const INERT_BLOB_TYPE = 'application/octet-stream';
+const SVG_MIME_TYPE = 'image/svg+xml';
+
+const INLINE_SAFE_MIME_TYPES = [
+  'image/png', 'image/apng', 'image/jpeg', 'image/gif', 'image/webp', 'image/avif', 'image/bmp',
+  'image/x-icon', 'image/vnd.microsoft.icon', 'image/tiff', 'image/heic', 'image/heif',
+  'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/ogg', 'audio/opus', 'audio/wav', 'audio/flac',
+  'audio/webm', 'audio/3gpp',
+  'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska',
+  'video/mpeg', 'video/3gpp',
+  'application/pdf', 'text/plain',
+];
+
+/**
+ * The types a Blob may carry when it gets a blob: URL, keyed by every
+ * spelling of each that is accepted, with the string the Blob gets. A blob:
+ * URL is a document of the webmail origin when it is opened on its own, and
+ * the browser decides what to do with it from the Blob's type alone. Raster
+ * images, audio, video, PDF and plain text are shown or downloaded; none of
+ * them runs script. SVG, HTML, XML and every type not named here are not on
+ * the list.
+ */
+const INLINE_SAFE_TYPES: ReadonlyMap<string, string> = new Map<string, string>([
+  ...INLINE_SAFE_MIME_TYPES.map((type): [string, string] => [type, type]),
+  // Other names mail clients give the same formats.
+  ['image/jpg', 'image/jpeg'],
+  ['image/pjpeg', 'image/jpeg'],
+  ['image/x-png', 'image/png'],
+  ['image/x-ms-bmp', 'image/bmp'],
+  ['image/x-bmp', 'image/bmp'],
+  ['audio/mp3', 'audio/mpeg'],
+  ['audio/x-mpeg', 'audio/mpeg'],
+  ['audio/x-wav', 'audio/wav'],
+  ['audio/wave', 'audio/wav'],
+  ['audio/vnd.wave', 'audio/wav'],
+  ['audio/x-m4a', 'audio/mp4'],
+  ['audio/m4a', 'audio/mp4'],
+  ['audio/x-aac', 'audio/aac'],
+  ['audio/x-flac', 'audio/flac'],
+  ['video/x-m4v', 'video/mp4'],
+  ['video/avi', 'video/x-msvideo'],
+  ['video/msvideo', 'video/x-msvideo'],
+]);
+
+// One type/subtype token pair.
+const MIME_ESSENCE = /^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/;
+
+/**
+ * The lower-case `type/subtype` of a declared MIME type that names exactly
+ * one type, without its parameters; undefined for anything else. A browser
+ * reads a Blob's type like a Content-Type header: a comma starts another
+ * type and the last one counts, and the type ends at the first space
+ * (Chromium also at "("). So a comma anywhere, or anything but one token
+ * pair before the parameters, names no single type. new Blob() empties a
+ * type with any character outside U+0020-U+007E, and Firefox sniffs an
+ * untyped blob: document, so such a type names none either.
+ */
+function mimeEssence(type?: string): string | undefined {
+  if (!type || !/^[\x20-\x7e]+$/.test(type) || type.includes(',')) return undefined;
+  const essence = type.split(';', 1)[0].trim().toLowerCase();
+  return MIME_ESSENCE.test(essence) ? essence : undefined;
+}
+
+/** The list's own string for a declared type that names one type on INLINE_SAFE_TYPES. */
+function inlineSafeType(type?: string): string | undefined {
+  const essence = mimeEssence(type);
+  return essence === undefined ? undefined : INLINE_SAFE_TYPES.get(essence);
+}
+
+function isSvgType(type?: string): boolean {
+  const essence = mimeEssence(type);
+  return essence === SVG_MIME_TYPE || essence === 'image/svg';
+}
 
 // Kinds the preview renders from the file's text, not from a blob: URL.
 const DOCUMENT_KINDS = new Set<FilePreviewKind>(['html', 'eml', 'text', 'markdown']);
@@ -123,68 +195,67 @@ const RENDERABLE_FOR_KIND: Partial<Record<FilePreviewKind, (mimeType: string) =>
  * every attachment) nor Stalwart's download response is reliably a type the
  * viewer accepts, so a PDF, image, audio or video preview takes the first
  * type its viewer can show: declared, then served, then the one the file
- * name implies. Every other preview keeps the declared type unless it is
- * generic.
+ * name implies. The result is always a type from INLINE_SAFE_TYPES in the
+ * list's spelling, or octet-stream, never the declared string; the one
+ * exception is image/svg+xml for an SVG image, which imageBlobUrl() shows
+ * from a data: URL.
  */
 export function previewBlobType(name: string | undefined, declaredType?: string, blobType?: string): string {
-  const declared = normalizeMimeType(declaredType);
-  const served = normalizeMimeType(blobType);
+  const declared = inlineSafeType(declaredType);
+  const served = inlineSafeType(blobType);
   const fromName = EXT_TO_MIME[getExtension(name)];
-  const kind = getFilePreviewKind(name, declared || served);
+  const kind = getFilePreviewKind(name, normalizeMimeType(declaredType) || normalizeMimeType(blobType));
   // Documents are previewed from their text (sanitised, in a srcdoc frame),
   // never from a blob: URL. Should one still be minted for them, it must be
   // nothing a browser would render as the webmail origin.
-  if (DOCUMENT_KINDS.has(kind)) return 'application/octet-stream';
+  if (DOCUMENT_KINDS.has(kind)) return INERT_BLOB_TYPE;
   const renderable = RENDERABLE_FOR_KIND[kind];
   if (renderable) {
-    const match = [declared, served, fromName].find((t): t is string => !!t && renderable(t));
+    const orSvg = (listed: string | undefined, type?: string) =>
+      listed ?? (kind === 'image' && isSvgType(type) ? SVG_MIME_TYPE : undefined);
+    const match = [orSvg(declared, declaredType), orSvg(served, blobType), fromName]
+      .find((t): t is string => !!t && renderable(t));
     if (match) return match;
   }
-  if (declaredType && !GENERIC_MIME_TYPES.has(declared)) return declaredType;
-  return fromName ?? blobType ?? '';
+  return declared ?? fromName ?? served ?? INERT_BLOB_TYPE;
 }
-
-const INLINE_PREVIEW_SAFE_MIME_PREFIXES = ['image/', 'audio/', 'video/'];
-const INLINE_PREVIEW_SAFE_MIME_TYPES = new Set(['application/pdf', 'text/plain']);
-const INLINE_PREVIEW_UNSAFE_MIME_TYPES = new Set([
-  'image/svg+xml',
-  'image/svg',
-]);
 
 // Whether a Blob with this MIME type is safe to open as a top-level navigation
-// (e.g. window.open on a blob: URL). Blob URLs inherit the creator's origin, so
-// script-bearing types like text/html, application/xhtml+xml, image/svg+xml, and
-// XML variants would execute in our origin. Only an explicit allowlist of inert
-// types is permitted; everything else must be downloaded.
+// (e.g. window.open on a blob: URL): the type names exactly one type from
+// INLINE_SAFE_TYPES. Blob URLs inherit the creator's origin, so script-bearing
+// types like text/html, application/xhtml+xml, image/svg+xml, and XML variants
+// would execute in our origin; everything off the list must be downloaded.
+// The Blob itself gets inertBlobType(type), never the declared string.
 export function isMimeTypeSafeForInlinePreview(type?: string): boolean {
-  // new Blob() drops a type with any character outside U+0020-U+007E to "",
-  // and Firefox sniffs an untyped blob: document. A winmail.dat MIME tag is
-  // free text, so judge only types the Blob keeps as written.
-  if (!type || !/^[\x20-\x7e]+$/.test(type)) return false;
-  const mimeType = type.split(';')[0]?.trim().toLowerCase() || '';
-  if (!mimeType) return false;
-  if (INLINE_PREVIEW_UNSAFE_MIME_TYPES.has(mimeType)) return false;
-  if (INLINE_PREVIEW_SAFE_MIME_TYPES.has(mimeType)) return true;
-  return INLINE_PREVIEW_SAFE_MIME_PREFIXES.some((prefix) => mimeType.startsWith(prefix));
+  return inlineSafeType(type) !== undefined;
 }
 
-const INERT_BLOB_TYPE = 'application/octet-stream';
-
 /**
- * MIME type for a Blob whose blob: URL ends up inside untrusted markup (the
- * cid: parts of a rendered message body). Blob URLs inherit the creating
- * document's origin, so a sender-declared text/html or image/svg+xml part
- * navigated to as a top-level document would run script as the webmail origin
- * (GHSA-xvjh-v9c6-qcvc). Inert types keep their MIME so img/video/audio keep
- * rendering them; anything else becomes octet-stream, which no browser executes.
+ * MIME type for a Blob that gets a blob: URL: an attachment, a file, a
+ * contact photo, the cid: parts of a rendered message body. Blob URLs
+ * inherit the creating document's origin, so a sender-declared text/html or
+ * image/svg+xml part navigated to as a top-level document would run script
+ * as the webmail origin (GHSA-xvjh-v9c6-qcvc). A type on INLINE_SAFE_TYPES
+ * comes back in the list's own spelling, without parameters, so img, video
+ * and audio keep rendering it; anything else becomes octet-stream, which no
+ * browser executes.
  */
 export function inertBlobType(type?: string): string {
-  return type && isMimeTypeSafeForInlinePreview(type) ? type : INERT_BLOB_TYPE;
+  return inlineSafeType(type) ?? INERT_BLOB_TYPE;
 }
 
 /** Re-type a fetched Blob per inertBlobType() without copying its bytes. */
 export function toInertBlob(blob: Blob): Blob {
-  return isMimeTypeSafeForInlinePreview(blob.type) ? blob : blob.slice(0, blob.size, INERT_BLOB_TYPE);
+  const type = inertBlobType(blob.type);
+  return blob.type === type ? blob : blob.slice(0, blob.size, type);
+}
+
+/**
+ * Whether a blob: URL of this Blob may be opened in a window of its own: the
+ * Blob's type is one from INLINE_SAFE_TYPES, spelled as the list spells it.
+ */
+export function isInlineSafeBlob(blob: Blob): boolean {
+  return inlineSafeType(blob.type) === blob.type;
 }
 
 /**
@@ -193,17 +264,18 @@ export function toInertBlob(blob: Blob): Blob {
  * shares the webmail origin, so an image/svg+xml one would run the
  * sender's script there. SVG is handed over as a data: URL instead - its
  * document gets an opaque origin - and every other type as an object URL
- * re-typed per inertBlobType(). Revoking the result is safe either way.
+ * typed per inertBlobType(). Revoking the result is safe either way.
  */
 export async function imageBlobUrl(blob: Blob, type?: string): Promise<string> {
-  const mimeType = (type || blob.type).split(';')[0].trim().toLowerCase();
-  if (INLINE_PREVIEW_UNSAFE_MIME_TYPES.has(mimeType)) {
+  const declared = type || blob.type;
+  if (isSvgType(declared)) {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
       reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob.slice(0, blob.size, 'image/svg+xml'));
+      reader.readAsDataURL(blob.slice(0, blob.size, SVG_MIME_TYPE));
     });
   }
-  return URL.createObjectURL(toInertBlob(type ? blob.slice(0, blob.size, type) : blob));
+  const inert = inertBlobType(declared);
+  return URL.createObjectURL(blob.type === inert ? blob : blob.slice(0, blob.size, inert));
 }

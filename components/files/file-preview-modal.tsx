@@ -7,7 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { PreviewShell, useBackdropClose, type PreviewNeighbours } from "@/components/files/preview-shell";
 import { IconButton } from "@/components/ui/icon-button";
 import { ZoomableImage } from "@/components/files/zoomable-image";
-import { getFilePreviewKind, imageBlobUrl, isMimeTypeSafeForInlinePreview, previewBlobType } from "@/lib/file-preview";
+import { getFilePreviewKind, imageBlobUrl, isInlineSafeBlob, previewBlobType, toInertBlob } from "@/lib/file-preview";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { EmlPreview, type EmlAttachment, type ParsedEml } from "@/components/files/eml-preview";
@@ -205,10 +205,11 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   const [error, setError] = useState(false);
   const [resolvedFileType, setResolvedFileType] = useState(() => getFilePreviewKind(name));
   const [pdfInlineSupported, setPdfInlineSupported] = useState(true);
-  // Whether the resolved blob MIME is inert enough to open as a top-level
-  // navigation. Blob URLs inherit our origin, so opening a script-bearing type
-  // (text/html, image/svg+xml, ...) in a new tab would execute it in-origin.
-  const [canOpenInNewTab, setCanOpenInNewTab] = useState(false);
+  // The Blob behind objectUrl when it may open as a top-level navigation.
+  // Blob URLs inherit our origin, so opening a script-bearing type
+  // (text/html, image/svg+xml, ...) in a new tab would execute it in-origin;
+  // only a Blob typed from the inline-safe list opens (isInlineSafeBlob).
+  const [newTabBlob, setNewTabBlob] = useState<Blob | null>(null);
   const [emlContent, setEmlContent] = useState<ParsedEml | null>(null);
   const [emlBlob, setEmlBlob] = useState<Blob | null>(null);
   // The PDF blob itself, kept alongside its object URL: the pdf.js mobile
@@ -265,7 +266,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
 
     setContent(null);
     setObjectUrl(null);
-    setCanOpenInNewTab(false);
+    setNewTabBlob(null);
     setEmlContent(null);
     setEmlBlob(null);
     setPdfBlob(null);
@@ -307,20 +308,24 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
           const typedBlob = blob.type !== effectiveType
             ? new Blob([blob], { type: effectiveType })
             : blob;
+          // What a blob: URL is made from: a type from the inline-safe list
+          // or octet-stream, whatever the file declared.
+          const urlBlob = toInertBlob(typedBlob);
           // "Open image in new tab" loads the <img> URL as a document of its
           // own, so an image gets one that stays inert there: a sender's SVG
           // must not run script as the webmail origin (GHSA-xvjh-v9c6-qcvc).
           const url = previewType === "image"
             ? await imageBlobUrl(typedBlob)
-            : URL.createObjectURL(typedBlob);
+            : URL.createObjectURL(urlBlob);
           if (cancelled) {
             URL.revokeObjectURL(url);
             return;
           }
           revokeUrl = url;
           setObjectUrl(url);
-          setCanOpenInNewTab(isMimeTypeSafeForInlinePreview(effectiveType));
-          if (previewType === "pdf") setPdfBlob(typedBlob);
+          // imageBlobUrl() mints the same type as urlBlob, or a data: URL for SVG.
+          setNewTabBlob(url.startsWith("blob:") && isInlineSafeBlob(urlBlob) ? urlBlob : null);
+          if (previewType === "pdf") setPdfBlob(urlBlob);
         }
       } catch {
         if (!cancelled) setError(true);
@@ -415,8 +420,8 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
               <Printer />
             </IconButton>
           )}
-          {objectUrl && canOpenInNewTab && !downloadsOff && canOpenUrlInNewWindow(objectUrl) && (
-            <IconButton label={t("open_in_new_tab")} onClick={() => window.open(objectUrl, "_blank", "noopener,noreferrer")}>
+          {objectUrl && newTabBlob && isInlineSafeBlob(newTabBlob) && !downloadsOff && canOpenUrlInNewWindow(objectUrl) && (
+            <IconButton label={t("open_in_new_tab")} onClick={() => { if (isInlineSafeBlob(newTabBlob)) window.open(objectUrl, "_blank", "noopener,noreferrer"); }}>
               <ExternalLink />
             </IconButton>
           )}

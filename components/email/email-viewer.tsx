@@ -3302,12 +3302,15 @@ export function EmailViewer({
         attachment.tnefData.byteOffset,
         attachment.tnefData.byteOffset + attachment.tnefData.byteLength,
       ) as ArrayBuffer;
-      const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
+      // The MIME tag inside winmail.dat is free text: the Blob gets the
+      // inline-safe list's own type or octet-stream, never the tag itself.
+      const blob = new Blob([buffer], { type: inertBlobType(attachment.type) });
       const objectUrl = URL.createObjectURL(blob);
 
       if (opensPreview) {
         const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
-        if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl, email)) {
+        const previewUrl = transformed.previewUrl || objectUrl;
+        if (!openPreviewInNewWindow(previewUrl, email, previewUrl === objectUrl ? blob : undefined)) {
           setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
         }
       } else if (downloadAllowed('attachment', email)) {
@@ -3329,12 +3332,14 @@ export function EmailViewer({
     }
 
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-    const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
+    // A part of an attached or decrypted message: its type is the sender's text.
+    const blob = new Blob([buffer], { type: inertBlobType(attachment.type) });
     const objectUrl = URL.createObjectURL(blob);
 
     if (opensPreview) {
       const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
-      if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl, email)) {
+      const previewUrl = transformed.previewUrl || objectUrl;
+      if (!openPreviewInNewWindow(previewUrl, email, previewUrl === objectUrl ? blob : undefined)) {
         setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
       }
     } else if (downloadAllowed('attachment', email)) {
@@ -3858,7 +3863,7 @@ export function EmailViewer({
       && isFilePreviewable(part.name, part.type)
       && isMimeTypeSafeForInlinePreview(part.type);
     if (opensPreview || (part && downloadsOffRef.current && isFilePreviewable(part.name, part.type) && isMimeTypeSafeForInlinePreview(part.type))) {
-      if (!openPreviewInNewWindow(href, guardEmailRef.current)) {
+      if (!openPreviewInNewWindow(href, guardEmailRef.current, part.blob)) {
         setInAppPreview({ name: part.name, downloadName: part.name, blob: part.blob, contentType: part.type || part.blob.type });
       }
       return;

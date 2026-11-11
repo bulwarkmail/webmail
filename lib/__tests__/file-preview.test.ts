@@ -34,7 +34,8 @@ describe('file preview detection', () => {
 describe('inert blob typing for cid: parts (GHSA-xvjh-v9c6-qcvc)', () => {
   it('keeps inert media types so inline images and media still render', () => {
     expect(inertBlobType('image/png')).toBe('image/png');
-    expect(inertBlobType('image/jpeg; name=a.jpg')).toBe('image/jpeg; name=a.jpg');
+    // Parameters are dropped: the Blob gets the list's own string.
+    expect(inertBlobType('image/jpeg; name=a.jpg')).toBe('image/jpeg');
     expect(inertBlobType('video/mp4')).toBe('video/mp4');
     expect(inertBlobType('application/pdf')).toBe('application/pdf');
   });
@@ -127,7 +128,9 @@ describe('previewBlobType', () => {
       for (const ext of extensions) {
         const name = `file.${ext}`;
         expect(getFilePreviewKind(name)).toBe(kind);
-        expect(previewBlobType(name, 'application/x-as400attachment', '')).toMatch(new RegExp(`^${kind}/`));
+        const type = previewBlobType(name, 'application/x-as400attachment', '');
+        expect(type).toMatch(new RegExp(`^${kind}/`));
+        expect(isMimeTypeSafeForInlinePreview(type)).toBe(true);
       }
     }
   });
@@ -141,7 +144,7 @@ describe('previewBlobType', () => {
   });
 
   it('never derives a script-capable type from the file name', () => {
-    expect(previewBlobType('drawing.svg', 'application/x-as400attachment', '')).toBe('application/x-as400attachment');
+    expect(previewBlobType('drawing.svg', 'application/x-as400attachment', '')).toBe('application/octet-stream');
   });
 
   it('types a document attachment so that a blob: URL of it would never render as the webmail', () => {
@@ -155,8 +158,9 @@ describe('previewBlobType', () => {
     expect(previewBlobType('notes.txt', 'text/plain', '')).toBe('application/octet-stream');
   });
 
-  it('leaves previews that do not render a blob by type as before', () => {
-    expect(previewBlobType('archive.zip', 'application/zip', '')).toBe('application/zip');
+  it('types previews that do not render a blob by type as octet-stream', () => {
+    // A type off the inline-safe list is never what a blob: URL carries.
+    expect(previewBlobType('archive.zip', 'application/zip', '')).toBe('application/octet-stream');
     expect(previewBlobType('archive.zip', 'application/octet-stream', 'application/octet-stream')).toBe('application/octet-stream');
   });
 });
