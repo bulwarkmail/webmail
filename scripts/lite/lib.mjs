@@ -1034,9 +1034,13 @@ OpenID provider are sent there, and setting the Application's
   this browser profile. A script running on your Lite origin can still use
   that key while the browser holds it, so serve Lite from a host name of its
   own that you control (not one that also serves files people upload) and
-  keep the Content-Security-Policy from \`_headers\`. Where the browser can't
-  seal (a plain http:// address other than localhost, IndexedDB blocked) a
-  sign-in lasts only as long as the page.
+  keep the Content-Security-Policy from \`_headers\`. Where IndexedDB is
+  blocked or does not answer, a sign-in lasts only as long as the page.
+- Serve Lite over HTTPS. On a plain http:// address other than localhost,
+  browsers withhold the Web Crypto API the token sign-in needs, so Lite falls
+  back to Basic auth with the password kept in sessionStorage for the tab (see
+  the next point), and they send no fetch metadata (\`Sec-Fetch-*\` headers)
+  with its requests. Several of the protections described here assume HTTPS.
 - Servers without Stalwart's token login (\`/api/auth\`) fall back to Basic
   auth. "Remember me" is then hidden; the credentials stay in sessionStorage
   for the lifetime of the tab so a reload does not sign you out. The same
