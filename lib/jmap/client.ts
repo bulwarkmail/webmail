@@ -2161,6 +2161,15 @@ export class JMAPClient implements IJMAPClient {
       }
 
       const session = await sessionResponse.json();
+      // A session without an accounts object, an API URL and a download URL
+      // is no sign-in: reading on would show an empty mailbox of account "0".
+      if (
+        !session || typeof session !== 'object'
+        || !session.accounts || typeof session.accounts !== 'object' || Array.isArray(session.accounts)
+        || typeof session.apiUrl !== 'string' || typeof session.downloadUrl !== 'string'
+      ) {
+        throw new Error('No mail account found in session');
+      }
       this.rewriteSessionUrls(session);
 
       this.session = session;
