@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isNoThirdPartyTrafficOn, thirdPartyRefusal } from '@/lib/admin/third-party-mode';
 import { getRootDomain } from '@/lib/root-domain';
+import { readBodyCapped } from '@/lib/security/capped-body';
+import { NO_STORE, refuseSenderIconRequest, takeLookupBudget } from '@/lib/sender-icon-access';
 
 // In-memory LRU cache: domain -> { data, contentType, fetchedAt }
 const CACHE_MAX_SIZE = 1000;
@@ -8,6 +10,8 @@ const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 /** Concurrent upstream icon fetches across all callers (see GET). */
 const MAX_UPSTREAM_IN_FLIGHT = 16;
 let upstreamInFlight = 0;
+/** Icons are a few KB; a larger answer is not one. */
+const MAX_ICON_BYTES = 256 * 1024;
 
 interface CacheEntry {
   data: ArrayBuffer;
@@ -37,9 +41,12 @@ const TRANSPARENT_PNG = Buffer.from(
 );
 const MISSING_FAVICON_HEADERS = {
   'Content-Type': 'image/png',
-  'Cache-Control': 'public, max-age=86400', // 1 day
+  'Cache-Control': 'private, max-age=86400', // 1 day
   'X-Bulwark-Favicon': 'missing',
 };
+// Nothing was fetched yet (busy, or this user's budget is spent): the next
+// request asks again.
+const NOT_YET_HEADERS = { ...MISSING_FAVICON_HEADERS, ...NO_STORE };
 
 // Strict domain validation to prevent SSRF
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
@@ -78,14 +85,15 @@ export async function GET(request: NextRequest) {
   // Sender icons come from DuckDuckGo: off, before anything else, while the
   // server must not contact outside services (#903).
   if (await isNoThirdPartyTrafficOn()) return thirdPartyRefusal('Sender icons');
+  // Only for the webmail's own signed-in pages (lib/sender-icon-access.ts),
+  // so answers may be kept by the browser but never by a cache shared by users.
+  const refusal = await refuseSenderIconRequest(request);
+  if (refusal) return refusal;
 
   const domain = request.nextUrl.searchParams.get('domain');
 
   if (!domain || !isValidDomain(domain)) {
-    return new NextResponse(null, {
-      status: 400,
-      headers: { 'Cache-Control': 'public, max-age=86400' },
-    });
+    return new NextResponse(null, { status: 400, headers: NO_STORE });
   }
 
   // Resolve to root domain so subdomains share the same favicon lookup
@@ -106,18 +114,23 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Unauthenticated and keyed by domain, so without a ceiling on concurrent
-  // upstream fetches any visitor could have this instance open one
-  // connection per made-up domain name. Over the ceiling the icon is simply
+  // Keyed by domain, so without a ceiling on concurrent upstream fetches,
+  // and a budget per user, one caller could have this instance open one
+  // connection per made-up domain name. Over either the icon is simply
   // missing for now; the browser asks again later.
   if (upstreamInFlight >= MAX_UPSTREAM_IN_FLIGHT) {
-    return new NextResponse(TRANSPARENT_PNG, { headers: MISSING_FAVICON_HEADERS });
+    return new NextResponse(TRANSPARENT_PNG, { headers: NOT_YET_HEADERS });
+  }
+  if (!(await takeLookupBudget(request, 'favicon')) || upstreamInFlight >= MAX_UPSTREAM_IN_FLIGHT) {
+    return new NextResponse(TRANSPARENT_PNG, { headers: NOT_YET_HEADERS });
   }
   upstreamInFlight++;
   try {
+    // The icon service answers directly; a redirect would send this server
+    // somewhere the admin never approved.
     const upstream = await fetch(
       `https://icons.duckduckgo.com/ip3/${encodeURIComponent(normalizedDomain)}.ico`,
-      { signal: AbortSignal.timeout(5000) }
+      { signal: AbortSignal.timeout(5000), redirect: 'error' }
     );
 
     if (!upstream.ok) {
@@ -135,10 +148,11 @@ export async function GET(request: NextRequest) {
       negativeCache.set(normalizedDomain, { fetchedAt: Date.now() });
       return new NextResponse(TRANSPARENT_PNG, { headers: MISSING_FAVICON_HEADERS });
     }
-    const data = await upstream.arrayBuffer();
+    const data = await readBodyCapped(upstream, MAX_ICON_BYTES);
 
-    // Don't cache empty/tiny responses (likely no real favicon)
-    if (data.byteLength < 10) {
+    // Don't cache empty/tiny responses (likely no real favicon), nor one too
+    // large to be an icon.
+    if (!data || data.byteLength < 10) {
       evictNegativeOldest();
       negativeCache.set(normalizedDomain, { fetchedAt: Date.now() });
       return new NextResponse(TRANSPARENT_PNG, { headers: MISSING_FAVICON_HEADERS });
@@ -159,7 +173,7 @@ export async function GET(request: NextRequest) {
     }
     return new NextResponse(null, {
       status: 502,
-      headers: { 'Cache-Control': 'public, max-age=300' }, // 5 min
+      headers: { 'Cache-Control': 'private, max-age=300' }, // 5 min
     });
   } finally {
     upstreamInFlight--;
@@ -201,7 +215,7 @@ function rasterFaviconType(header: string | null): string | null {
 function faviconHeaders(contentType: string): Record<string, string> {
   return {
     'Content-Type': contentType,
-    'Cache-Control': 'public, max-age=1209600', // 2 weeks
+    'Cache-Control': 'private, max-age=1209600', // 2 weeks
     'X-Content-Type-Options': 'nosniff',
     'Content-Security-Policy': "default-src 'none'; sandbox",
   };

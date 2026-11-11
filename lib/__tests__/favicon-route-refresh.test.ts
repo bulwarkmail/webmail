@@ -6,6 +6,9 @@ import { NextRequest } from 'next/server';
 // replaced their icon kept showing the old one; a ?v=<ms> refresh stamp newer
 // than the cached copy must fetch it again.
 
+// The session check /api/plugins uses: the mail view's requests are signed in.
+vi.mock('@/lib/auth/instance-details', () => ({ canSeeInstanceDetails: vi.fn(async () => true) }));
+
 const T0 = Date.UTC(2026, 9, 1);
 let now = T0;
 let icon = 1;

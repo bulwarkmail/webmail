@@ -3,6 +3,7 @@ import { configManager } from '@/lib/admin/config-manager';
 import { isNoThirdPartyTrafficOn, thirdPartyRefusal } from '@/lib/admin/third-party-mode';
 import { bimiResolver, normalizeBimiDomain, type BimiIndicator } from '@/lib/bimi/lookup';
 import type { BimiInfo } from '@/lib/bimi/types';
+import { NO_STORE, refuseSenderIconRequest, takeLookupBudget } from '@/lib/sender-icon-access';
 
 /**
  * BIMI sender logos. GET ?domain=<From domain> answers the logo as a PNG, or
@@ -13,6 +14,9 @@ import type { BimiInfo } from '@/lib/bimi/types';
  * Ask only for messages that passed DMARC for that domain (see
  * brandIndicatorDomain in lib/email-headers.ts): the logo says who the domain
  * is, not that a given message came from it.
+ *
+ * Only for the webmail's own signed-in pages (lib/sender-icon-access.ts), so
+ * answers may be kept by the browser but never by a cache shared by users.
  */
 
 const TRANSPARENT_PNG = Buffer.from(
@@ -45,27 +49,33 @@ function info(indicator: BimiIndicator | null): BimiInfo {
 export async function GET(request: NextRequest) {
   // The lookups reach the sender's DNS and whatever hosts its record names.
   if (await isNoThirdPartyTrafficOn()) return thirdPartyRefusal('Brand logos');
+  const refusal = await refuseSenderIconRequest(request);
+  if (refusal) return refusal;
 
   const domain = normalizeBimiDomain(request.nextUrl.searchParams.get('domain'));
   const asJson = request.nextUrl.searchParams.get('format') === 'json';
   if (!domain) {
-    return new NextResponse(null, { status: 400, headers: { 'Cache-Control': 'public, max-age=86400' } });
+    return new NextResponse(null, { status: 400, headers: NO_STORE });
   }
 
-  let indicator = await bimiResolver().resolve(domain);
+  const answer = await bimiResolver().answer(domain, () => takeLookupBudget(request, 'bimi'));
+  let indicator = answer.indicator;
   if (indicator && indicator.status !== 'verified' && await requireCertificate()) indicator = null;
+  // Nothing was looked up yet (too many lookups running, or this user's
+  // budget is spent): the next request asks again.
+  const cacheControl = (maxAge: number) => (answer.deferred ? NO_STORE['Cache-Control'] : `private, max-age=${maxAge}`);
 
   if (asJson) {
     return NextResponse.json(info(indicator), {
-      headers: { 'Cache-Control': `public, max-age=${indicator ? LOGO_MAX_AGE : MISSING_MAX_AGE}` },
+      headers: { 'Cache-Control': cacheControl(indicator ? LOGO_MAX_AGE : MISSING_MAX_AGE) },
     });
   }
   if (!indicator) {
     return new NextResponse(new Uint8Array(TRANSPARENT_PNG), {
-      headers: { ...IMAGE_HEADERS, 'Cache-Control': `public, max-age=${MISSING_MAX_AGE}`, 'X-Bulwark-Bimi': 'missing' },
+      headers: { ...IMAGE_HEADERS, 'Cache-Control': cacheControl(MISSING_MAX_AGE), 'X-Bulwark-Bimi': 'missing' },
     });
   }
   return new NextResponse(new Uint8Array(indicator.png), {
-    headers: { ...IMAGE_HEADERS, 'Cache-Control': `public, max-age=${LOGO_MAX_AGE}`, 'X-Bulwark-Bimi': indicator.status },
+    headers: { ...IMAGE_HEADERS, 'Cache-Control': cacheControl(LOGO_MAX_AGE), 'X-Bulwark-Bimi': indicator.status },
   });
 }

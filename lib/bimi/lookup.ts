@@ -179,6 +179,12 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+export interface BimiAnswer {
+  indicator: BimiIndicator | null;
+  /** No lookup could start for an uncached domain: busy, or the caller's budget is spent. */
+  deferred: boolean;
+}
+
 export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   const deps = { ...defaultDeps, ...overrides };
   const cache = new Map<string, CacheEntry>();
@@ -309,17 +315,28 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   }
 
   /**
-   * The indicator for a From domain, or null. Cached per domain; concurrent
-   * calls for one domain share a lookup.
+   * The indicator for a From domain, and whether the answer had to be put
+   * off. Cached per domain; concurrent calls for one domain share a lookup.
+   * A new lookup starts only when fewer than MAX_IN_FLIGHT run and
+   * `mayStart` (asked only then) agrees; otherwise the answer is what the
+   * cache had, `deferred`, and worth asking for again later.
    */
-  async function resolve(rawDomain: string): Promise<BimiIndicator | null> {
+  async function answer(rawDomain: string, mayStart?: () => Promise<boolean>): Promise<BimiAnswer> {
     const domain = normalizeBimiDomain(rawDomain);
-    if (!domain) return null;
+    if (!domain) return { indicator: null, deferred: false };
     const cached = cache.get(domain);
-    if (cached && cached.expiresAt > deps.now()) return cached.indicator;
+    if (cached && cached.expiresAt > deps.now()) return { indicator: cached.indicator, deferred: false };
+    const deferred = { indicator: cached?.indicator ?? null, deferred: true };
+    const joined = inFlight.get(domain);
+    if (joined) return { indicator: await joined, deferred: false };
+    if (inFlight.size >= MAX_IN_FLIGHT) return deferred;
+    if (mayStart && !(await mayStart())) return deferred;
+    // Another caller may have looked it up, started it, or filled the slots meanwhile.
+    const done = cache.get(domain);
+    if (done && done.expiresAt > deps.now()) return { indicator: done.indicator, deferred: false };
     const pending = inFlight.get(domain);
-    if (pending) return pending;
-    if (inFlight.size >= MAX_IN_FLIGHT) return cached?.indicator ?? null;
+    if (pending) return { indicator: await pending, deferred: false };
+    if (inFlight.size >= MAX_IN_FLIGHT) return deferred;
 
     const run = (async () => {
       try {
@@ -338,10 +355,15 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
       }
     })();
     inFlight.set(domain, run);
-    return run;
+    return { indicator: await run, deferred: false };
   }
 
-  return { resolve, clear: () => { cache.clear(); crlCache.clear(); } };
+  /** The indicator for a From domain, or null. */
+  async function resolve(rawDomain: string): Promise<BimiIndicator | null> {
+    return (await answer(rawDomain)).indicator;
+  }
+
+  return { answer, resolve, clear: () => { cache.clear(); crlCache.clear(); } };
 }
 
 let shared: ReturnType<typeof createBimiResolver> | null = null;
