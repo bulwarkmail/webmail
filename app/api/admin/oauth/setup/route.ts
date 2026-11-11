@@ -170,6 +170,26 @@ function buildRedirectUris(origin: string, localeList: readonly string[]): Recor
   return out;
 }
 
+/**
+ * The issuer Stalwart names in its discovery document. It can differ from
+ * the JMAP URL the webmail talks to, when Stalwart's public URL is another
+ * host. Null when there is none in the form the setup takes.
+ */
+async function discoverIssuer(serverUrl: string): Promise<string | null> {
+  try {
+    const res = await fetchWithTimeout(`${serverUrl}/.well-known/oauth-authorization-server`, {
+      method: 'GET',
+    }, { trusted: true });
+    if (!res.ok) return null;
+    const { issuer } = await res.json() as { issuer?: unknown };
+    if (typeof issuer !== 'string') return null;
+    const trimmed = issuer.trim().replace(/\/+$/, '');
+    return isValidOriginUrl(trimmed) ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
+
 interface SetupRequestBody {
   origin?: string;
   issuerUrl?: string;
@@ -328,12 +348,22 @@ const CONTROL_CHARACTER = /[\x00-\x1f\x7f]/;
 const TOO_MANY_SIGN_INS =
   'Too many Stalwart sign-ins failed from your address. Wait 15 minutes, then try again.';
 
-/** Which mail account the setup would run as, so the page can say before it starts. */
+/**
+ * Which mail account the setup would run as, so the page can say before it
+ * starts. With `?discover=issuer`, also the issuer the configured Stalwart
+ * names, to pre-fill the dialog with.
+ */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminAuth(request);
   if ('error' in auth) return auth.error;
   const creds = await getStalwartCredentials(request);
-  return NextResponse.json(creds ? { signedIn: true, username: creds.username } : { signedIn: false });
+  const answer: Record<string, unknown> = creds ? { signedIn: true, username: creds.username } : { signedIn: false };
+  if (request.nextUrl.searchParams.get('discover') === 'issuer') {
+    const server = await adminCredentialServer(creds);
+    const issuerUrl = server ? await discoverIssuer(server) : null;
+    if (issuerUrl) answer.issuerUrl = issuerUrl;
+  }
+  return NextResponse.json(answer);
 }
 
 export async function POST(request: NextRequest) {

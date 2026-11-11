@@ -27,6 +27,9 @@ let fetchError: Error | null = null;
 let sessionTokenRefused = false;
 // Authorization headers Stalwart accepts besides the session's.
 let acceptedAdminAuth: string[] = [];
+// The issuer in Stalwart's discovery document: its public URL, which can be
+// another host than the JMAP URL.
+let discoveredIssuer: unknown = 'https://auth.example.org';
 
 vi.mock('@/lib/admin/session', () => ({
   requireAdminAuth: async () => ({ ok: true }),
@@ -78,7 +81,7 @@ vi.mock('@/lib/stalwart/server-fetch', () => ({
       });
     }
     if (url.endsWith('/.well-known/oauth-authorization-server')) {
-      return Response.json({ scopes_supported: stalwart103 ? SCOPES_1_0_3 : SCOPES_1_0_2 });
+      return Response.json({ issuer: discoveredIssuer, scopes_supported: stalwart103 ? SCOPES_1_0_3 : SCOPES_1_0_2 });
     }
     const [name, args] = JSON.parse(init.body!).methodCalls[0];
     jmapCalls.push([name, args]);
@@ -152,6 +155,7 @@ beforeEach(() => {
   requests.length = 0;
   sessionTokenRefused = false;
   acceptedAdminAuth = [];
+  discoveredIssuer = 'https://auth.example.org';
   sessionServer = { serverUrl: 'https://mail.example.org', trusted: true };
   clientIp = '203.0.113.7';
   fetchError = null;
@@ -538,5 +542,45 @@ describe('GET /api/admin/oauth/setup', () => {
   it('never hands the credential to the page', async () => {
     const body = JSON.stringify(await (await check()).json());
     expect(body).not.toContain('Basic');
+  });
+
+  it('asks Stalwart for nothing unless the dialog wants the issuer', async () => {
+    await check();
+    expect(requests).toEqual([]);
+  });
+
+  describe('with ?discover=issuer', () => {
+    const discover = () => GET(new NextRequest('http://localhost/api/admin/oauth/setup?discover=issuer'));
+    beforeEach(() => { storedConfig = { jmapServerUrl: 'https://mail.example.org' }; });
+
+    it("names the issuer from the configured Stalwart's discovery document, not the JMAP URL", async () => {
+      const body = await (await discover()).json();
+      expect(body).toEqual({ signedIn: true, username: 'admin@example.org', issuerUrl: 'https://auth.example.org' });
+      expect(requests.map(({ url }) => url)).toEqual(['https://mail.example.org/.well-known/oauth-authorization-server']);
+      // Discovery needs no sign-in, so none is sent.
+      expect(requests[0].headers.Authorization).toBeUndefined();
+    });
+
+    it('asks the configured server, not one the session user picked', async () => {
+      sessionServer = { serverUrl: 'https://picked.example.net', trusted: false };
+      await discover();
+      expect(requests.map(({ url }) => url)).toEqual(['https://mail.example.org/.well-known/oauth-authorization-server']);
+    });
+
+    it('drops a trailing slash, as the setup does', async () => {
+      discoveredIssuer = 'https://auth.example.org/';
+      expect((await (await discover()).json()).issuerUrl).toBe('https://auth.example.org');
+    });
+
+    it('names no issuer the setup would refuse, or none at all when discovery fails', async () => {
+      for (const issuer of ['https://auth.example.org/realms/mail', 'javascript:alert(1)', 42, undefined]) {
+        discoveredIssuer = issuer;
+        expect(await (await discover()).json()).not.toHaveProperty('issuerUrl');
+      }
+      fetchError = new Error('ECONNREFUSED');
+      const res = await discover();
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ signedIn: true, username: 'admin@example.org' });
+    });
   });
 });

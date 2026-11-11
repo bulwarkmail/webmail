@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, Sparkles } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
@@ -119,6 +119,8 @@ export function AuthPage() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [setupOrigin, setSetupOrigin] = useState('');
   const [setupIssuer, setSetupIssuer] = useState('');
+  const [setupIssuerDiscovered, setSetupIssuerDiscovered] = useState(false);
+  const setupIssuerTyped = useRef(false);
   const [setupOauthOnly, setSetupOauthOnly] = useState(false);
   // A Stalwart admin's own sign-in, asked for when no mail account is signed
   // in here or Stalwart refused the session's token (1.0.3 and later, #1611).
@@ -131,8 +133,22 @@ export function AuthPage() {
     if (typeof window === 'undefined') return;
     const origin = window.location.origin;
     const jmapUrl = (currentValue('jmapServerUrl') as string | undefined)?.replace(/\/+$/, '') || '';
+    const guess = jmapUrl || origin;
     setSetupOrigin(origin);
-    setSetupIssuer(jmapUrl || origin);
+    setSetupIssuer(guess);
+    setSetupIssuerDiscovered(false);
+    setupIssuerTyped.current = false;
+    // Stalwart's public URL can be another host than the JMAP URL; its
+    // discovery document names the issuer. Replaces the guess unless the
+    // admin has typed over it by then.
+    apiFetch('/api/admin/oauth/setup?discover=issuer')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (typeof data?.issuerUrl !== 'string' || setupIssuerTyped.current) return;
+        setSetupIssuer(data.issuerUrl);
+        setSetupIssuerDiscovered(true);
+      })
+      .catch(() => {});
     setSetupOauthOnly(currentValue('oauthOnly') === true);
     setSetupNeedsCredential(setupSignIn?.signedIn === false);
     setSetupUsername(setupSignIn?.username ?? '');
@@ -270,13 +286,20 @@ export function AuthPage() {
               id="setup-issuer"
               type="url"
               value={setupIssuer}
-              onChange={(e) => setSetupIssuer(e.target.value)}
+              onChange={(e) => {
+                setupIssuerTyped.current = true;
+                setSetupIssuerDiscovered(false);
+                setSetupIssuer(e.target.value);
+              }}
               disabled={setupRunning}
               placeholder="https://mail.example.com"
               className={cn(inputClass, 'w-full')}
             />
             <p className="text-[0.6875rem] text-muted-foreground mt-1">
-              Where Stalwart serves <code>/.well-known/oauth-authorization-server</code>. Saved as <code>OAUTH_ISSUER_URL</code>. Pre-filled from your JMAP server URL.
+              Where Stalwart serves <code>/.well-known/oauth-authorization-server</code>. Saved as <code>OAUTH_ISSUER_URL</code>.{' '}
+              {setupIssuerDiscovered
+                ? 'Pre-filled with the issuer your Stalwart server names in its discovery document.'
+                : 'Pre-filled from your JMAP server URL.'}
             </p>
             {!setupIssuerValid && setupIssuer.length > 0 && (
               <p className="text-[0.6875rem] text-destructive mt-1">Must be like https://host with no path.</p>
