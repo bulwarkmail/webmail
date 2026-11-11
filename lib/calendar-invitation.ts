@@ -236,16 +236,16 @@ export function storedOrganizerEmail(events: readonly Partial<CalendarEvent>[]):
 }
 
 /** What the trust assessment reads of the message. */
-type TrustEmail = Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt'> & Partial<Pick<Email, 'keywords'>>;
+type TrustEmail = Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt'> & Partial<Pick<Email, 'keywords' | 'headers'>>;
 
 /**
  * Whether the server's checks tie the message to its From domain. Only an
  * aligned pass counts: a sender passes SPF for their own envelope domain, or
  * signs with their own DKIM key, and still writes the organizer's address in
  * From. With no DMARC policy on that domain the verdict is `dmarc=none`, and
- * the bare `spf=pass` made the forged invitation look trusted. A pass in a
- * header that was not written on receipt, or in a message from an imported
- * file, counts for nothing, as for the booking cards
+ * the bare `spf=pass` made the forged invitation look trusted. A pass counts
+ * only when the message shows its results were written on receipt, and never
+ * for a message from an imported file, as for the booking cards
  * (authenticationResultsUsable).
  */
 function hasVerifiedAuthentication(email?: TrustEmail): boolean {

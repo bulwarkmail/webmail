@@ -6,7 +6,7 @@
  * TypeScript on the Email shape; the admin gate is checked by the caller.
  */
 import {
-  authenticationResultsOnReceipt,
+  authenticationResultsUsable,
   getSenderVerification,
   hasAlignedAuthenticationPass,
   isImportedMessage,
@@ -136,10 +136,6 @@ function insideAttachedMessage(root: EmailBodyPart | undefined, partId: string |
   return walk(root, false) ?? false;
 }
 
-function headerList(headers: TrustInput['headers']): { name: string; value: string }[] | undefined {
-  return Array.isArray(headers) ? (headers as unknown as { name: string; value: string }[]) : undefined;
-}
-
 export function getStructuredMailTrust(email: TrustInput): StructuredMailTrust {
   const auth = email.authenticationResults;
   if (!auth) return { trusted: false, reason: 'no_authentication_results' };
@@ -147,9 +143,8 @@ export function getStructuredMailTrust(email: TrustInput): StructuredMailTrust {
   // the file's author, wrote; this server never checked it.
   if (isImportedMessage(email)) return { trusted: false, reason: 'imported' };
 
-  const list = headerList(email.headers);
-  const onReceipt = email.authenticationResultsOnReceipt ?? (list ? authenticationResultsOnReceipt(list) : false);
-  if (!onReceipt) return { trusted: false, reason: 'not_written_on_receipt' };
+  // The flag of the full fetch, else the headers in message order; nothing to go by is a no.
+  if (!authenticationResultsUsable(email)) return { trusted: false, reason: 'not_written_on_receipt' };
 
   const senders = email.from ?? [];
   const from = senders[0]?.email ?? '';

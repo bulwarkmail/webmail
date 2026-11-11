@@ -3569,6 +3569,9 @@ export class JMAPClient implements IJMAPClient {
     } as Email;
     addBodyMediaToAttachments(email);
     if (email.headers) await this.parseEmailHeaders(email);
+    // A message read from a file was never received by this server: whatever
+    // its own Received and Authentication-Results lines say earns it nothing.
+    email.authenticationResultsOnReceipt = false;
     return email;
   }
 

@@ -204,20 +204,35 @@ export function isImportedMessage(email: { keywords?: Record<string, boolean> | 
   return email?.keywords?.[IMPORTED_KEYWORD] === true;
 }
 
+/** The headers of a message when they are the list in message order (as Email/get returns `headers`). */
+function headersInOrder(headers: unknown): { name: string; value: string }[] | undefined {
+  if (!Array.isArray(headers)) return undefined;
+  return headers.every((header) => typeof header?.name === 'string' && typeof header?.value === 'string')
+    ? headers as { name: string; value: string }[]
+    : undefined;
+}
+
 /**
  * Whether a pass in the message's Authentication-Results may earn it
- * anything: false when the full fetch found the topmost header without a
- * receipt line above it (authenticationResultsOnReceipt), and for a message
- * from an imported file, whose headers this server never wrote. A message
- * fetched without the header order (a list row) leaves the flag out and
- * keeps its results. The invitation trust and the sender logo ask this; the
- * booking cards also refuse a message whose flag is not known
- * (lib/structured-mail/trust.ts).
+ * anything. Only on evidence that the results were written on receipt: the
+ * flag the full fetch sets (authenticationResultsOnReceipt), else the
+ * headers in message order when the message carries them (a conversation's
+ * messages do). Without either (a list row, a search result) the answer is
+ * no, and it is always no for a message from an imported file, whose headers
+ * this server never wrote. The sender logo, the invitation trust and the
+ * booking cards all ask this.
  */
 export function authenticationResultsUsable(
-  email: { authenticationResultsOnReceipt?: boolean; keywords?: Record<string, boolean> | null } | undefined,
+  email: {
+    authenticationResultsOnReceipt?: boolean;
+    keywords?: Record<string, boolean> | null;
+    headers?: unknown;
+  } | undefined,
 ): boolean {
-  return email?.authenticationResultsOnReceipt !== false && !isImportedMessage(email);
+  if (!email || isImportedMessage(email)) return false;
+  if (email.authenticationResultsOnReceipt !== undefined) return email.authenticationResultsOnReceipt === true;
+  const headers = headersInOrder(email.headers);
+  return headers ? authenticationResultsOnReceipt(headers) : false;
 }
 
 /**
@@ -244,6 +259,7 @@ export function brandIndicatorDomain(
     authenticationResults?: AuthenticationResults;
     authenticationResultsOnReceipt?: boolean;
     keywords?: Record<string, boolean> | null;
+    headers?: unknown;
   } | undefined,
   internalDomains: readonly string[] = [],
 ): string | undefined {

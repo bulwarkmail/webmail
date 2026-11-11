@@ -1464,7 +1464,7 @@ describe('CalendarInvitationBanner', () => {
         mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
         mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent()]);
 
-        render(<CalendarInvitationBanner email={cancelEmail({ authenticationResults: passesFor('example.com') })} />);
+        render(<CalendarInvitationBanner email={cancelEmail({ authenticationResults: passesFor('example.com'), authenticationResultsOnReceipt: true })} />);
 
         expect(await screen.findByText('remove_from_calendar')).toBeInTheDocument();
         expect(screen.queryByText('cancel_not_organizer')).not.toBeInTheDocument();
@@ -1478,6 +1478,7 @@ describe('CalendarInvitationBanner', () => {
         render(<CalendarInvitationBanner email={cancelEmail({
           from: [{ email: 'mallory@evil.example', name: 'Sender' }],
           authenticationResults: passesFor('evil.example'),
+          authenticationResultsOnReceipt: true,
         })} />);
 
         await planned();

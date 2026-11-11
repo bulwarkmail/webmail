@@ -4,8 +4,8 @@
 // and the sender logo must not be less careful: with the message's
 // `authenticationResultsOnReceipt` flag false, a pass in that header counts for nothing.
 //
-// Where the flag is not known (a list row, which is fetched without the header order) nothing
-// changes; the cases here set it.
+// Trust needs evidence: where neither the flag nor the headers in message order show the results
+// were written on receipt (a list row, a search result), a pass counts for nothing either.
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { authenticationResultsOnReceipt, brandIndicatorDomain, parseAuthenticationResults } from '@/lib/email-headers';
@@ -122,8 +122,7 @@ describe('a results header that was not written on receipt', () => {
   });
 });
 
-// Controls: mail that did arrive from outside keeps both, and so does a message whose header order
-// was not fetched.
+// Controls: mail that did arrive from outside keeps both.
 describe('a results header written on receipt', () => {
   it("still makes the organizer's invitation trusted", () => {
     expect(getInvitationTrustAssessment(invitation, message(onReceipt), 'request').level).toBe('trusted');
@@ -133,9 +132,9 @@ describe('a results header written on receipt', () => {
     expect(brandIndicatorDomain(message(onReceipt))).toBe('airline.example');
   });
 
-  it('keeps its meaning where the flag is not known', () => {
+  it('earns nothing where nothing shows it was written on receipt (a list row)', () => {
     const row = { from: [{ email: 'bookings@airline.example' }], authenticationResults: parseAuthenticationResults(RESULTS) } as unknown as Email;
-    expect(getInvitationTrustAssessment(invitation, row, 'request').level).toBe('trusted');
-    expect(brandIndicatorDomain(row)).toBe('airline.example');
+    expect(getInvitationTrustAssessment(invitation, row, 'request').level).not.toBe('trusted');
+    expect(brandIndicatorDomain(row)).toBeUndefined();
   });
 });
