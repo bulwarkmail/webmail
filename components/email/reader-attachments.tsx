@@ -73,6 +73,8 @@ interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
   downloadsOff?: boolean;
   /** Set when the Files app can take attachments. */
   onSaveToFiles?: (attachment: T) => void;
+  /** Renames the attachment for saving a copy; left out while downloads are off. */
+  onRename?: (attachment: T) => void;
   /** Plugin actions for one attachment; renders nothing when no plugin offers any. */
   pluginMenu?: (attachment: T) => ReactNode;
   /**
@@ -112,6 +114,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   downloadingAll,
   downloadsOff = false,
   onSaveToFiles,
+  onRename,
   pluginMenu,
   renderItem,
   className,
@@ -184,6 +187,11 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             {onSaveToFiles && attachment.blobId && (
               <IconButton label={t("save_to_files.title")} className="text-muted-foreground hover:text-foreground" onClick={() => onSaveToFiles(attachment)}>
                 <CloudUpload className="h-4 w-4" />
+              </IconButton>
+            )}
+            {!downloadsOff && onRename && (
+              <IconButton label={t("rename_named", { name })} title={t("rename")} className="text-muted-foreground hover:text-foreground" onClick={() => onRename(attachment)}>
+                <Pencil className="h-4 w-4" />
               </IconButton>
             )}
             {pluginMenu?.(attachment)}
@@ -294,6 +302,9 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           )}
           {!downloadsOff && (
             <ContextMenuItem icon={Download} label={tDesktop("save_as")} onClick={() => { menu.closeContextMenu(); onDownload(menuTarget); }} />
+          )}
+          {!downloadsOff && onRename && (
+            <ContextMenuItem icon={Pencil} label={t("rename_menu")} onClick={() => { menu.closeContextMenu(); onRename(menuTarget); }} />
           )}
           {!downloadsOff && onEdit && canEdit?.(menuTarget) && (
             <ContextMenuItem icon={Pencil} label={tEdit("edit")} onClick={() => { menu.closeContextMenu(); onEdit(menuTarget); }} />

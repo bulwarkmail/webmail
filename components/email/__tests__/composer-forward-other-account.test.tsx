@@ -364,6 +364,26 @@ describe('forwarding a message held by another account', () => {
     ]);
   });
 
+  it('keeps a renamed forwarded part under its new name when it is copied over', async () => {
+    multi.allIdentities = [ACTIVE_IDENTITY];
+    const { activeClient } = mockClients();
+    render(
+      <EmailComposer
+        mode="forward"
+        replyTo={{ subject: 'Scans', accountId: 'acct-src', attachments: [SCAN] }}
+        onClose={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('composer-rename'));
+    fireEvent.change(screen.getByRole('textbox', { name: 'rename_title' }), { target: { value: 'Signed contract' } });
+    fireEvent.click(screen.getByRole('button', { name: 'rename' }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+
+    expect(activeClient.createDraft.mock.calls[0][8]).toEqual([
+      { blobId: 'blob-copied', name: 'Signed contract.pdf', type: 'application/pdf', size: 5 },
+    ]);
+  });
+
   it('copies only the parts tagged with another account in a mixed batch forward', async () => {
     // Forward as attachments from the Unified Inbox: one message on the
     // active login, one on another. No single replyTo.accountId fits both.

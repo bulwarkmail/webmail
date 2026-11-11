@@ -222,3 +222,38 @@ describe('ReaderAttachments bar', () => {
     expect(container.querySelector('img')?.getAttribute('src')).toBe('blob:thumb');
   });
 });
+
+describe('renaming an attachment', () => {
+  afterEach(() => {
+    window.bulwarkDesktop = undefined;
+    cleanup();
+  });
+
+  it('has a Rename button in the tile actions that hands over the attachment', () => {
+    const onRename = vi.fn();
+    const props = renderBar([file('1', 'report.pdf')], { onRename });
+    fireEvent.click(screen.getByRole('button', { name: 'rename_named' }));
+    expect(onRename).toHaveBeenCalledWith(props.attachments[0]);
+  });
+
+  it('has no Rename button without the action', () => {
+    renderBar([file('1', 'report.pdf')]);
+    expect(screen.queryByRole('button', { name: 'rename_named' })).toBeNull();
+  });
+
+  it('has no Rename button with downloads off', () => {
+    renderBar([file('1', 'report.pdf')], { onRename: vi.fn(), downloadsOff: true });
+    expect(screen.queryByRole('button', { name: 'rename_named' })).toBeNull();
+  });
+
+  it('is in the desktop app right-click menu', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: () => {} } } as never;
+    const onRename = vi.fn();
+    const props = renderBar([file('1', 'report.pdf')], { onRename });
+    fireEvent.contextMenu(await screen.findByTestId('attachment'), { clientX: 5, clientY: 5 });
+    const menu = await screen.findByRole('menu');
+    const item = within(menu).getAllByRole('menuitem').find((el) => el.querySelector('[data-menu-label]')?.textContent === 'rename_menu');
+    fireEvent.click(item!);
+    await waitFor(() => expect(onRename).toHaveBeenCalledWith(props.attachments[0]));
+  });
+});
