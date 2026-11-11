@@ -249,6 +249,8 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   // The same two for the lookups that callers without a session started.
   const sessionlessCache = new Map<string, CacheEntry>();
   const sessionlessInFlight = new Map<string, Promise<BimiAnswer>>();
+  // Lookups of each kind that wait to hear whether their caller may start them.
+  const asking = { signedIn: 0, sessionless: 0 };
   // Drawing is the expensive step; only a few run at once, whatever the
   // number of lookups waiting for one.
   const drawing = drawingSlots(MAX_DRAWINGS, SESSIONLESS_MAX_DRAWINGS, DRAW_SLOT_WAIT_MS);
@@ -411,6 +413,7 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
       return own && own.expiresAt > now ? own : undefined;
     };
     const underWay = () => inFlight.get(domain) ?? (sessionless ? sessionlessInFlight.get(domain) : undefined);
+    const kind = sessionless ? 'sessionless' : 'signedIn';
     const pool = sessionless ? sessionlessInFlight : inFlight;
     const poolMax = sessionless ? SESSIONLESS_MAX_IN_FLIGHT : MAX_IN_FLIGHT;
 
@@ -420,9 +423,21 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
     const deferred = { indicator: stale?.indicator ?? null, deferred: true };
     const joined = underWay();
     if (joined) return joined;
-    if (pool.size >= poolMax) return deferred;
-    if (mayStart && !(await mayStart())) return deferred;
-    // Another caller may have looked it up, started it, or filled the slots meanwhile.
+    // A lookup that is asking `mayStart` keeps its place among the running
+    // ones meanwhile, so a caller is only asked (and its budget only
+    // charged) for a lookup that has room to run.
+    if (pool.size + asking[kind] >= poolMax) return deferred;
+    if (mayStart) {
+      asking[kind]++;
+      let allowed: boolean;
+      try {
+        allowed = await mayStart();
+      } finally {
+        asking[kind]--;
+      }
+      if (!allowed) return deferred;
+    }
+    // Another caller may have looked it up or started it meanwhile.
     const done = fresh();
     if (done) return { indicator: done.indicator, deferred: false };
     const pending = underWay();

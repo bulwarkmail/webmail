@@ -327,4 +327,38 @@ describe('lookups for callers without a session', () => {
     const answers = await Promise.all([...app, ...mail]);
     expect(answers.filter((answer) => answer.deferred)).toHaveLength(20 - SESSIONLESS_MAX_IN_FLIGHT + 70 - 64);
   });
+
+  it('ask a caller whether it may start a lookup only when the lookup has room to run', async () => {
+    const held: Array<() => void> = [];
+    const resolver = createBimiResolver({
+      resolveTxt: () => new Promise((resolve) => { held.push(() => resolve([])); }),
+      fetchBytes: async () => null,
+      roots: () => [],
+      now: () => T0,
+    });
+    // The answer takes a moment, as a count kept in the shared store does.
+    const asked = { app: 0, mail: 0 };
+    const mayStart = (who: 'app' | 'mail', allowed = true) => async () => {
+      asked[who]++;
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      return allowed;
+    };
+    // More new names at once than either kind of caller may have running.
+    const app = Array.from({ length: 20 }, (_, i) => resolver.answer(`app${i}.example`, mayStart('app'), true));
+    const mail = Array.from({ length: 70 }, (_, i) => resolver.answer(`mail${i}.example`, mayStart('mail')));
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(asked).toEqual({ app: SESSIONLESS_MAX_IN_FLIGHT, mail: 64 });
+    expect(held).toHaveLength(SESSIONLESS_MAX_IN_FLIGHT + 64);
+    for (const go of held.splice(0)) go();
+    await Promise.all([...app, ...mail]);
+
+    // A caller that may not start gives its place back: the next one is asked and runs.
+    const refused = await Promise.all(Array.from({ length: SESSIONLESS_MAX_IN_FLIGHT }, (_, i) => resolver.answer(`later${i}.example`, mayStart('app', false), true)));
+    expect(refused.every((answer) => answer.deferred)).toBe(true);
+    const next = resolver.answer('next.example', mayStart('app'), true);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(held).toHaveLength(1);
+    held[0]();
+    expect(await next).toEqual({ indicator: null, deferred: false });
+  });
 });

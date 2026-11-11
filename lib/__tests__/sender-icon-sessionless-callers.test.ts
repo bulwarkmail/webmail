@@ -238,6 +238,26 @@ describe('the pool that sessionless clients share', () => {
     expect(lookedUp('next-minute.example')).toBe(true);
   }, 30_000);
 
+  it('counts a new name against the minute only when its lookup starts', async () => {
+    const senders = slowSenders('slow-burst');
+    // Ten apps open their inbox at once: 40 new names, four per address.
+    const burst: Array<Promise<Response>> = [];
+    for (let a = 1; a <= 10; a++) {
+      for (let i = 0; i < 4; i++) burst.push(bimi(sessionless(`/api/bimi?domain=slow-burst${a}-${i}.example`, `2001:db8:3::${a}`, ANDROID)));
+    }
+    await settle();
+    expect(senders.held).toHaveLength(SESSIONLESS_MAX_IN_FLIGHT);
+    senders.release();
+    await Promise.all(burst);
+    // The rest of the minute is still there for the names asked after that.
+    const rest = SESSIONLESS_LOOKUPS_PER_MINUTE_TOTAL - SESSIONLESS_MAX_IN_FLIGHT;
+    for (let i = 0; i < rest; i++) {
+      await bimi(sessionless(`/api/bimi?domain=after-burst-${i}.example`, `198.51.100.${i}`, IOS));
+    }
+    expect(lookups()).toBe(SESSIONLESS_LOOKUPS_PER_MINUTE_TOTAL);
+    expect(lookedUp(`after-burst-${rest - 1}.example`)).toBe(true);
+  }, 30_000);
+
   it('answers a name that is already cached without a lookup, also when the minute is spent', async () => {
     await bimi(signedIn('/api/bimi?domain=known-sender.example', 'gus@example.org'));
     await bimi(sessionless('/api/bimi?domain=app-sender.example', '192.0.2.50', ANDROID));
