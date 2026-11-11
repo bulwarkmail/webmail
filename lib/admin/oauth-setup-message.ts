@@ -10,6 +10,7 @@ export interface OAuthSetupResult {
   mobileClientId?: string;
   mobileRedirectUri?: string;
   stalwartScopes?: unknown;
+  postLogoutRedirectUri?: string;
 }
 
 /** What the admin page says after "Set up with Stalwart" worked. */
@@ -23,9 +24,12 @@ export function oauthSetupSuccessMessage(data: OAuthSetupResult): string {
   const limited = scopes.length > 0 && !scopes.includes(STALWART_SCOPE_FULL)
     ? ' Only a Stalwart superuser can allow full access, so the client got security and settings access; the admin panel stays out of reach through SSO.'
     : '';
+  const logout = data.postLogoutRedirectUri
+    ? ` Signing out of SSO returns to ${data.postLogoutRedirectUri}.`
+    : '';
   // Sessions from before hold tokens of the old client set-up (another
   // client, secret or scopes). Stalwart refuses to renew them with
   // invalid_grant, which otherwise looks like something broke (#1611).
   const signInAgain = ' Everyone who is signed in has to sign in again.';
-  return `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}${limited}${signInAgain}`;
+  return `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}${limited}${logout}${signInAgain}`;
 }

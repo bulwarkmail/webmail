@@ -29,6 +29,12 @@ describe('oauthSetupSuccessMessage', () => {
     expect(text).not.toContain('Only a Stalwart superuser');
   });
 
+  it('says where signing out returns to, when the setup registered it', () => {
+    expect(oauthSetupSuccessMessage({ ...RESULT, postLogoutRedirectUri: 'https://webmail.example.org/login' }))
+      .toContain('Signing out of SSO returns to https://webmail.example.org/login.');
+    expect(oauthSetupSuccessMessage(RESULT)).not.toContain('Signing out');
+  });
+
   it('says when the client got less than full access', () => {
     const text = oauthSetupSuccessMessage({
       ...RESULT,
