@@ -1,5 +1,7 @@
 "use client";
 
+import { useSimpleSingleAccount } from '@/hooks/use-cross-views';
+
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Folder } from '@/components/icons';
@@ -191,10 +193,10 @@ export function MultipleAccountsSection() {
     return Array.from(byId, ([id, name]) => ({ id, name }));
   }, [mailboxes]);
   const connectedAccountCount = useMemo(() => accounts.filter(a => a.isConnected).length, [accounts]);
+  const simpleSingleAccount = useSimpleSingleAccount();
   const unifiedCrossAccountAllowed = isFeatureEnabled('unifiedCrossAccountEnabled');
-  // Unified Mailbox entries (All mail / Unread / Starred), each gated independently
-  // by the admin. Scope (single account vs. cross-account) is governed by
-  // unifiedCrossAccount; the folder picker below narrows which own folders feed them.
+  // Unread/Starred are ordinary virtual views for one own account.
+  // Aggregated views and All mail retain the unified mailbox controls.
   const crossViews = [
     { setting: 'enableCrossUnreadView', value: enableCrossUnreadView, allowed: isFeatureEnabled('crossUnreadViewEnabled'), labelKey: 'cross_unread.label', descKey: 'cross_unread.description' },
     { setting: 'enableCrossStarredView', value: enableCrossStarredView, allowed: isFeatureEnabled('crossStarredViewEnabled'), labelKey: 'cross_starred.label', descKey: 'cross_starred.description' },
@@ -232,11 +234,9 @@ export function MultipleAccountsSection() {
     ? t('all_mail.account_hint', { account: activeAccount.displayName || activeAccount.email })
     : null;
 
-  // Unread, Starred and All mail also work within a single account, so the
-  // section stays when the admin allows one of them and the user can reach
-  // it: through the Unified mailbox switch, or because that is already on.
-  const hasSingleAccountView = crossViews.some(({ allowed, setting }) => allowed && !isSettingHidden(setting)) &&
-    (enableUnifiedMailbox || !isSettingHidden('enableUnifiedMailbox'));
+  // Own-account virtual options remain reachable with Unified hidden or OFF.
+  const hasSingleAccountView = crossViews.some(({ allowed, setting }) => allowed && !isSettingHidden(setting) &&
+    ((simpleSingleAccount && setting !== 'enableCrossAllView') || enableUnifiedMailbox || !isSettingHidden('enableUnifiedMailbox')));
   if (connectedAccountCount < 2 && sharedMailAccounts.length === 0 && !hasGroupInboxes && !hasSingleAccountView) return null;
 
   return (
@@ -282,13 +282,13 @@ export function MultipleAccountsSection() {
         </SettingItem>
       )}
 
-      {enableUnifiedMailbox && anyCrossAllowed && crossViews.map(({ setting, value, allowed, labelKey, descKey }) => (
-        allowed && !isSettingHidden(setting) && (
+      {anyCrossAllowed && crossViews.map(({ setting, value, allowed, labelKey, descKey }) => (
+        (enableUnifiedMailbox || (simpleSingleAccount && setting !== 'enableCrossAllView')) && allowed && !isSettingHidden(setting) && (
           <SettingItem
             key={setting}
-            nested
-            label={t(labelKey)}
-            description={t(descKey)}
+            nested={!simpleSingleAccount || setting === 'enableCrossAllView'}
+            label={t(simpleSingleAccount && setting !== 'enableCrossAllView' ? (setting === 'enableCrossUnreadView' ? 'virtual_unread.label' : 'virtual_starred.label') : labelKey)}
+            description={t(simpleSingleAccount && setting !== 'enableCrossAllView' ? (setting === 'enableCrossUnreadView' ? 'virtual_unread.description' : 'virtual_starred.description') : descKey)}
             locked={isSettingLocked(setting)}
           >
             <ToggleSwitch

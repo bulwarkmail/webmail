@@ -166,6 +166,9 @@ import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIdentitySync } from "@/hooks/use-identity-sync";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
+import { useSmartFolder } from "@/hooks/use-smart-folder";
+import { isSmartFolderId } from "@/lib/smart-folder-types";
+import { useCrossViews } from "@/hooks/use-cross-views";
 import { takeHandedOffComposeDraft, useProTabStore } from "@/stores/pro-tab-store";
 import { useProMultiAccountMailboxes } from "@/hooks/use-pro-multi-account-mailboxes";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
@@ -827,18 +830,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const enableUnifiedMailbox = useSettingsStore((s) => s.enableUnifiedMailbox);
   const delayedSendSupported = client?.hasDelayedSend() ?? true;
 
-  // Cross-account "All accounts" views: a sub-feature of the unified mailbox, so
-  // they require Unified Mailbox to be enabled, plus the admin gate and the
-  // per-user setting. Hooks are called unconditionally.
-  const crossUnreadGate = usePolicyStore((s) => s.isFeatureEnabled('crossUnreadViewEnabled'));
-  const crossStarredGate = usePolicyStore((s) => s.isFeatureEnabled('crossStarredViewEnabled'));
-  const crossAllGate = usePolicyStore((s) => s.isFeatureEnabled('crossAllViewEnabled'));
-  const enableCrossUnreadView = useSettingsStore((s) => s.enableCrossUnreadView);
-  const enableCrossStarredView = useSettingsStore((s) => s.enableCrossStarredView);
-  const enableCrossAllView = useSettingsStore((s) => s.enableCrossAllView);
-  const showCrossUnread = enableUnifiedMailbox && crossUnreadGate && enableCrossUnreadView;
-  const showCrossStarred = enableUnifiedMailbox && crossStarredGate && enableCrossStarredView;
-  const showCrossAll = enableUnifiedMailbox && crossAllGate && enableCrossAllView;
+  // Own-account Unread/Starred are virtual views; aggregation and All mail
+  // retain the unified mailbox gate. Policy and user choices apply to both.
+  const { showCrossUnread, showCrossStarred, showCrossAll } = useCrossViews();
+  const smartFolder = useSmartFolder(selectedMailbox, client);
+
   // A shared account's "Scheduled" row narrows the (account-aggregated)
   // scheduled list to that account; the own row shows everything.
   const scopedScheduledEmails = useMemo(
@@ -1680,7 +1676,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const subject = selectedEmail ? selectedEmail.subject || t('email_viewer.no_subject') : null;
 
     // Mailbox view
-    let mailboxLine: string | null = null;
+    let mailboxLine: string | null = smartFolder?.name ?? null;
     const mailbox = selectedMailbox ? mailboxes.find(mb => mb.id === selectedMailbox) : undefined;
     if (mailbox) {
       const mailboxName = localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`));
@@ -1696,13 +1692,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const inDesktopApp = !!getDesktopBridge()?.windows;
     return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle, desktopWindow: inDesktopApp })
       ?? (inDesktopApp ? t('sidebar.mail') : null);
-  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle, otherAccountsUnread, isUnifiedView]);
+  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle, otherAccountsUnread, isUnifiedView, smartFolder?.name]);
   useDocumentTitle(titleContext);
   // The Window menu names this window by its folder, never by the open message (desktop-p2-5).
   const windowView = useMemo(() => {
     const mailbox = selectedMailbox ? mailboxes.find(mb => mb.id === selectedMailbox) : undefined;
-    return mailbox ? localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`)) : t('sidebar.mail');
-  }, [selectedMailbox, mailboxes, t]);
+    return mailbox ? localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`)) : smartFolder?.name ?? t('sidebar.mail');
+  }, [selectedMailbox, mailboxes, t, smartFolder?.name]);
   useDesktopWindowName(windowView, { withAccount: true });
 
   // When this page is rendered inside the Pro shell as the Mail tab body,
@@ -2645,7 +2641,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
   const folderMenuMarkRead = useCallback(() => folderMenuLatest.current.markRead(), []);
   // "Mark folder as read" is greyed out with nothing unread in the open folder.
-  const selectedFolderHasUnread = mailboxes.find((m) => m.id === selectedMailbox)?.unreadEmails !== 0;
+  const selectedFolderHasUnread = !isSmartFolderId(selectedMailbox) && mailboxes.find((m) => m.id === selectedMailbox)?.unreadEmails !== 0;
   const folderMenuMarkAllRead = useCallback(() => folderMenuLatest.current.markAllRead(), []);
   const folderMenuEmpty = useCallback(() => folderMenuLatest.current.empty(), []);
 
@@ -4441,6 +4437,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       return;
     }
 
+    if (isSmartFolderId(mailboxId)) {
+      setScheduledView(false);
+      if (isUnifiedView) exitUnifiedView();
+      clearSelection();
+      selectMailbox(mailboxId);
+      useEmailStore.getState().clearSearchFilters();
+      if (isMobile) { setSidebarOpen(false); setActiveView("list"); }
+      if (sameFolder && client) await fetchEmails(client, mailboxId);
+      // The definition effect loads once, and also handles subsequent edits/deletion.
+      return;
+    }
+
     if (isUnifiedMailboxId(mailboxId)) {
       setScheduledView(false);
       const role = UNIFIED_ROLE_BY_ID[mailboxId];
@@ -5651,7 +5659,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const mb = mailboxes.find(m => m.id === selectedMailbox);
         return mb
           ? localizeMailboxName(mb.role, mb.name, (k) => t(`sidebar.mailboxes.${k}`))
-          : "Inbox";
+          : smartFolder?.name ?? "Inbox";
       })();
   // A send in its Undo window isn't counted in Sent or Scheduled yet (mail-p2-8),
   // nor once its time has come and the server still lists it (mail-p3, p2-1).
@@ -6460,12 +6468,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 <MvListToolbar
                   loadedCount={activeEmails.length}
                   // A search's results are not the folder: count what came back.
-                  totalCount={searchQuery || !isFilterEmpty(searchFilters) ? undefined : mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails}
+                  totalCount={searchQuery || !isFilterEmpty(searchFilters) ? undefined : smartFolder ? listQueryTotal : mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails}
                   onRefresh={handleManualRefresh}
                   isRefreshing={isManualRefreshing}
                   onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                   onMarkAllFoldersRead={handleMarkAllFoldersRead}
-                  onEmptyFolder={selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
+                  onEmptyFolder={selectedMailbox && !isSmartFolderId(selectedMailbox) ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
                   onCreateFolder={() => handleCreateFolderFromContextMenu()}
                   disabled={isScheduledView}
                 />

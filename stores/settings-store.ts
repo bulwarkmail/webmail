@@ -1,3 +1,5 @@
+import { SMART_FOLDERS_VERSION, type SmartFolder } from '@/lib/smart-folder-types';
+import { isSmartFolder, validSmartFolders } from '@/lib/smart-folder-schema';
 import { create } from 'zustand';
 import { densityVarsFor } from '@/lib/density';
 import { persist } from 'zustand/middleware';
@@ -700,6 +702,10 @@ export const DEV_KEYWORDS: KeywordDefinition[] = [
 const USING_MOCK_SERVER = process.env.NEXT_PUBLIC_DEV_MOCK_JMAP === 'true';
 
 interface SettingsState extends AccessibilitySettings {
+  smartFoldersVersion: number;
+  smartFolders: SmartFolder[];
+  saveSmartFolder: (folder: SmartFolder) => boolean;
+  removeSmartFolder: (id: string) => void;
   // Appearance
   fontSize: FontSize;
   density: Density;
@@ -1065,6 +1071,8 @@ interface SettingsState extends AccessibilitySettings {
 }
 
 const DEFAULT_SETTINGS = {
+  smartFoldersVersion: SMART_FOLDERS_VERSION as number,
+  smartFolders: [] as SmartFolder[],
   // Appearance
   fontSize: 'medium' as FontSize,
   density: 'regular' as Density,
@@ -1216,8 +1224,8 @@ const DEFAULT_SETTINGS = {
   allMailFolderIds: {} as Record<string, string[]>,
   preferredIdentityIds: {} as Record<string, string>,
 
-  enableCrossUnreadView: false,
-  enableCrossStarredView: false,
+  enableCrossUnreadView: true,
+  enableCrossStarredView: true,
   enableCrossAllView: false,
 
   // Email Display
@@ -1583,6 +1591,8 @@ export const useSettingsStore = create<SettingsState>()(
         });
         const subscriptionSync = calendarSubscriptionSyncBridge?.getSyncedState();
         const settings = {
+          smartFoldersVersion: state.smartFoldersVersion,
+          smartFolders: state.smartFolders,
           fontSize: state.fontSize,
           density: state.density,
           interfaceLayout: state.interfaceLayout,
@@ -1768,8 +1778,21 @@ export const useSettingsStore = create<SettingsState>()(
 
       return {
       ...DEFAULT_SETTINGS,
+      saveSmartFolder: (folder) => {
+        if (!isSmartFolder(folder)) return false;
+        const folders = get().smartFolders.filter((f) => f.id !== folder.id);
+        const next = [...folders, folder].sort((a, b) => a.order - b.order);
+        if (!validSmartFolders(next)) return false;
+        get().updateSetting('smartFolders', next);
+        return true;
+      },
+      removeSmartFolder: (id) => {
+        get().updateSetting('smartFolders', get().smartFolders.filter((f) => f.id !== id));
+      },
 
       updateSetting: (key, value, opts) => {
+        if (key === 'smartFolders' && !validSmartFolders(value)) return;
+        if (key === 'smartFoldersVersion' && value !== SMART_FOLDERS_VERSION) return;
         if (opts?.internal || BOOKKEEPING_SETTING_KEYS.has(key)) {
           applySetting(key, value);
           return;
@@ -1861,6 +1884,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateCalendarTasksDefault(settings);
           migrateUndoSendDefault(settings);
           migrateTrustedSendersBookDefault(settings);
+          migrateVirtualViewDefaults(settings);
           migrateFocusOutlineDefault(settings);
           dropAttachmentPosition(settings);
 
@@ -1887,6 +1911,8 @@ export const useSettingsStore = create<SettingsState>()(
           };
           Object.keys(settings).forEach((key) => {
             if (key in DEFAULT_SETTINGS) {
+              if (key === 'smartFolders' && !validSmartFolders(settings[key], settings.smartFoldersVersion)) return;
+              if (key === 'smartFoldersVersion' && settings[key] !== SMART_FOLDERS_VERSION) return;
               // Merged below, once it is known which settings were taken over.
               if (key === 'explicitSettings') {
                 return;
@@ -2303,11 +2329,13 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 16,
+      version: 18,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
           if (state) {
+            if (!validSmartFolders(state.smartFolders, state.smartFoldersVersion)) state.smartFolders = [];
+            state.smartFoldersVersion = SMART_FOLDERS_VERSION;
             // Defensive: a legacy global array or any non-record value (e.g.
             // synced from an older client) is coerced to an empty map so
             // per-account consumers never see a non-record.
@@ -2352,6 +2380,8 @@ export const useSettingsStore = create<SettingsState>()(
  */
 export function migrateSettings(persisted: unknown, version: number): SettingsState {
   const state = persisted as Record<string, unknown>;
+  if (!validSmartFolders(state.smartFolders, state.smartFoldersVersion)) state.smartFolders = [];
+  state.smartFoldersVersion = SMART_FOLDERS_VERSION;
         if (version < 2 && state.listDensity) {
           state.density = state.listDensity;
           delete state.listDensity;
@@ -2421,6 +2451,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateCalendarTasksDefault(state);
         migrateUndoSendDefault(state);
         migrateTrustedSendersBookDefault(state);
+        migrateVirtualViewDefaults(state);
         migrateFocusOutlineDefault(state);
         // v15: attachments always sit under the header; the setting is gone.
         dropAttachmentPosition(state);
@@ -2538,6 +2569,18 @@ export function migrateTrustedSendersBookDefault(state: Record<string, unknown>)
   if (!('trustedSendersAddressBook' in state) || state.trustedSendersAddressBook === true) return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('trustedSendersAddressBook');
   if (!chosen || typeof state.trustedSendersAddressBook !== 'boolean') state.trustedSendersAddressBook = true;
+}
+
+/** v17: untouched Unread/Starred settings follow the new defaults.
+ * Like the existing default migrations, explicitSettings is authoritative.
+ * Apply to persisted state and imported/server copies, without marking a default
+ * as a user choice or enabling unified/cross-account/All mail.
+ */
+export function migrateVirtualViewDefaults(state: Record<string, unknown>): void {
+  for (const key of ['enableCrossUnreadView', 'enableCrossStarredView']) {
+    const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes(key);
+    if (key in state && (!chosen || typeof state[key] !== 'boolean')) state[key] = true;
+  }
 }
 
 // Helper functions to apply settings to DOM

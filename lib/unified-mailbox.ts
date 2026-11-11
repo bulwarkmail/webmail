@@ -1,3 +1,4 @@
+import { systemViewFilter } from './mail-view-filter';
 import type { Email, Mailbox, UnifiedMailboxRole, CrossView } from '@/lib/jmap/types';
 import { CROSS_EXCLUDED_ROLES } from '@/lib/jmap/types';
 import type { IJMAPClient, SearchEmailsResult, SearchRequestOptions } from '@/lib/jmap/client-interface';
@@ -418,7 +419,7 @@ export function buildCrossFilter(
     ? { inMailbox: jmapMailboxIds[0] }
     : { operator: 'OR', conditions: jmapMailboxIds.map((id) => ({ inMailbox: id })) };
   if (view === 'all') return inAny;
-  const keyword = view === 'unread' ? { notKeyword: '$seen' } : { hasKeyword: '$flagged' };
+  const keyword = systemViewFilter(view);
   return { operator: 'AND', conditions: [inAny, keyword] };
 }
 
