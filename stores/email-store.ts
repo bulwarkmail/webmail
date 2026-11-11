@@ -1151,7 +1151,8 @@ async function loadUnreadSection(client: IJMAPClient, mailbox: Mailbox, get: Sto
 
 function notifyNewInboxMail(client: IJMAPClient, mailbox: Mailbox, email: Email, get: StoreGet) {
   // A muted Inbox (or account) stays quiet in the app too (#1169).
-  const accountId = mailbox.accountId || resolveActionClient(client).getAccountId();
+  const accountId = mailbox.accountId || viewedClient(client)?.getAccountId();
+  if (!accountId) return;
   const muted = isMailboxMuted(
     useSettingsStore.getState().notificationMutes, accountId, mailbox.originalId || mailbox.id,
   );
@@ -1370,11 +1371,22 @@ async function transformSearch(query: string, filters: SearchFilters): Promise<{
 /** Overlapping state-change runs share one syncing/idle cycle (onSyncStateChange). */
 let syncRuns = 0;
 
-function resolveActionClient(passedClient: IJMAPClient): IJMAPClient {
+/**
+ * The client for the view on screen: the login browsed in the Pro sidebar
+ * (viewingAccountId), else the caller's. Undefined when the browsed login has
+ * no client: its message and folder ids name other things in any other login.
+ */
+function viewedClient(passedClient: IJMAPClient): IJMAPClient | undefined {
   const viewingId = useEmailStore.getState().viewingAccountId;
   if (!viewingId) return passedClient;
-  const c = useAuthStore.getState().getClientForAccount(viewingId);
-  return c ?? passedClient;
+  return loginClient(viewingId);
+}
+
+/** viewedClient, refused ("Not connected") when the browsed login has none. */
+function resolveActionClient(passedClient: IJMAPClient): IJMAPClient {
+  const client = viewedClient(passedClient);
+  if (!client) throw new Error('Not connected');
+  return client;
 }
 
 /**
@@ -2536,7 +2548,7 @@ function notFoundFailures(ids: string[]): BatchFailure[] {
  * login's client, which would write to the wrong server.
  */
 function sourceBatchClient(batch: SourceBatch, passedClient: IJMAPClient): IJMAPClient | undefined {
-  if (!batch.accountId) return resolveActionClient(passedClient);
+  if (!batch.accountId) return viewedClient(passedClient);
   return batch.clientAccountId ? useAuthStore.getState().getClientForAccount(batch.clientAccountId) : undefined;
 }
 
@@ -3012,8 +3024,9 @@ function resolveSelectionRows(): { rows: Email[]; unknown: string[] } {
  */
 async function refreshMailboxesForViewingAccount(fallbackClient: IJMAPClient): Promise<void> {
   const viewingId = useEmailStore.getState().viewingAccountId;
-  const client = resolveActionClient(fallbackClient);
   try {
+    // Never another login's folders under the browsed login's name.
+    const client = resolveActionClient(fallbackClient);
     const mailboxes = await client.getMailboxes();
     if (viewingId) {
       useEmailStore.setState((state) => ({
@@ -5161,7 +5174,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       return true;
     }
 
-    const { mailboxes } = resolveEmailActionContext(email, client);
+    // The folder lists only: the move itself goes through a login's client
+    // (moveToMailbox, crossAccountMoveEmails), which refuses a login without one.
+    const mailboxes = email.sourceClientAccountId && email.sourceAccountId
+      ? sourceMailboxes(state, email.sourceClientAccountId, email.sourceAccountId)
+      : resolveActionMailboxes();
     const find = (id: string) =>
       mailboxes.find((mb) => mb.id === id) ?? state.mailboxes.find((mb) => mb.id === id);
     const destMailbox = find(destinationMailboxId);
@@ -7833,10 +7850,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         mailboxes,
         selectedMailbox,
       });
-      let actionClient = resolveActionClient(client);
-      if (route.clientAccountId) {
-        actionClient = useAuthStore.getState().getClientForAccount(route.clientAccountId) ?? actionClient;
-      }
+      // The thread's own login, never another one's: thread ids repeat.
+      const routed = route.clientAccountId ? loginClient(route.clientAccountId) : resolveActionClient(client);
+      if (!routed) throw new Error('Not connected');
+      const actionClient = routed;
 
       // Fetch all emails in the thread
       const emails = await actionClient.getThreadEmails(threadId, route.accountId);

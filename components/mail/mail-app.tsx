@@ -309,6 +309,15 @@ function offlineNow(client: { getServerUrl?: () => string }): boolean {
   return (typeof navigator !== 'undefined' && navigator.onLine === false) || isOfflineNow(client.getServerUrl?.());
 }
 
+/**
+ * The client of `login`, never another login's: ids name other messages and
+ * folders there. Undefined while that login has none.
+ */
+function loginClientOf(login: string): IJMAPClient | undefined {
+  const auth = useAuthStore.getState();
+  return auth.getClientForAccount(login) ?? (login === auth.activeAccountId ? auth.client ?? undefined : undefined);
+}
+
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
@@ -3056,12 +3065,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               mailboxes: viewMailboxes,
               selectedMailbox: emailState.selectedMailbox,
             });
-            const threadClient = route.clientAccountId
-              ? (useAuthStore.getState().getClientForAccount(route.clientAccountId) ?? client)
-              : client;
+            // The thread's login: its stamp, else the login browsed. Never
+            // another one: thread ids repeat.
+            const threadLogin = route.clientAccountId ?? emailState.viewingAccountId;
+            const threadClient = threadLogin ? loginClientOf(threadLogin) : client;
+            if (!threadClient) return;
             const fullEmails = await threadClient.getThreadEmails(
               repliedEmail.threadId,
-              route.accountId ?? client.getAccountId(),
+              route.accountId ?? threadClient.getAccountId(),
             );
             if (fullEmails.length > 0) {
               useEmailStore.setState((state) => {
@@ -3291,7 +3302,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       viewingAccountId,
       activeAccountId,
     });
-    const draftClient = (localAccountId ? useAuthStore.getState().getClientForAccount(localAccountId) : undefined) ?? client;
+    const draftClient = localAccountId ? loginClientOf(localAccountId) : client;
+    if (!draftClient) {
+      toast.error(t('notifications.not_connected'));
+      return;
+    }
 
     // The email list only fetches limited properties (no bodyValues/htmlBody/bcc).
     // Fetch the full email so the composer gets all draft content.
@@ -3386,7 +3401,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     useOfflineStore.setState({ draftToOpen: null });
     const login = draftToOpen.account || undefined;
     const jmapAccount = draftToOpen.jmap || undefined;
-    const draftClient = (login ? useAuthStore.getState().getClientForAccount(login) : undefined) ?? client;
+    const draftClient = login ? loginClientOf(login) : client;
+    if (!draftClient) {
+      toast.error(t('notifications.not_connected'));
+      return;
+    }
     void draftClient.getEmail(draftToOpen.id, jmapAccount)
       .then((draft) => (draft ? handleEditDraft(draft, { accountId: jmapAccount, localAccountId: login }) : undefined))
       .catch((error) => console.error('Opening a draft kept on this device failed:', error));
@@ -4377,9 +4396,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // `activeClient` stands in for `client` when the caller has just switched
   // logins and this render's `client` is still the previous one.
   const handleAccountMailboxSelect = async (accountId: string | null, mailboxId: string, activeClient?: IJMAPClient) => {
+    // Only through that login: another login's folder with the same id is
+    // another folder.
     const viewingClient = accountId
-      ? useAuthStore.getState().getClientForAccount(accountId) ?? client
+      ? loginClientOf(accountId)
       : activeClient ?? client;
+    if (accountId && !viewingClient) {
+      toast.error(t('notifications.not_connected'));
+      return;
+    }
     selectAccountMailbox(accountId, mailboxId);
     selectEmail(null);
     if (isMobile) {
@@ -4994,7 +5019,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const source = auth.getClientForAccount(email.sourceClientAccountId);
         return source ? { source, accountId: email.sourceAccountId } : null;
       }
-      const source = (viewingAccountId ? auth.getClientForAccount(viewingAccountId) : undefined) ?? client;
+      // The login browsed, else the active one; none while it has no client.
+      const source = viewingAccountId ? loginClientOf(viewingAccountId) : client;
       if (!source) return null;
       const accountId = email.sourceAccountId
         ?? resolveUnstampedEmailAccountId({
@@ -5263,13 +5289,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           mailboxes: viewMailboxes,
           selectedMailbox: emailState.selectedMailbox,
         });
-        const threadClient = route.clientAccountId
-          ? (useAuthStore.getState().getClientForAccount(route.clientAccountId) ?? client)
-          : client;
+        // The thread's login: its stamp, else the login browsed. Never
+        // another one: thread ids repeat.
+        const threadLogin = route.clientAccountId ?? emailState.viewingAccountId;
+        const threadClient = threadLogin ? loginClientOf(threadLogin) : client;
+        if (!threadClient) return;
         try {
           const fullEmails = await threadClient.getThreadEmails(
             repliedEmail.threadId,
-            route.accountId ?? client.getAccountId(),
+            route.accountId ?? threadClient.getAccountId(),
           );
           if (fullEmails.length > 0) {
             useEmailStore.setState((state) => {

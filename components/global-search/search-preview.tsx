@@ -166,7 +166,9 @@ export interface SearchPreviewProps {
 /** Preview pane of the search tab: full mail view, summary card for the rest. */
 export function SearchPreview({ hit, onOpen, onClose }: SearchPreviewProps) {
   const t = useTranslations('global_search');
+  const tNotifications = useTranslations('notifications');
   const getClientForAccount = useAuthStore((s) => s.getClientForAccount);
+  const activeAccountId = useAuthStore((s) => s.activeAccountId);
 
   if (!hit) {
     return (
@@ -180,6 +182,15 @@ export function SearchPreview({ hit, onOpen, onClose }: SearchPreviewProps) {
     // The hit's own login, the active one too: the view names it, so a draft
     // reopened from here is saved over and removed through it.
     const clientOverride = getClientForAccount(hit.localAccountId) ?? undefined;
+    // Without that login's client there is nothing to show: through any
+    // other login the same id is another message.
+    if (!clientOverride && hit.localAccountId !== activeAccountId) {
+      return (
+        <div className="flex h-full items-center justify-center p-6">
+          <p className="text-sm text-muted-foreground text-center">{tNotifications('not_connected')}</p>
+        </div>
+      );
+    }
     return (
       <ProEmailView
         key={`${hit.localAccountId}-${hit.id}`}

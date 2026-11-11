@@ -36,7 +36,7 @@ vi.mock('@/lib/popout/moved-undo', () => ({ offerMoveUndo: async () => {} }));
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
-import { ProEmailView } from '../pro-email-tab-body';
+import { ProEmailTabBody, ProEmailView } from '../pro-email-tab-body';
 
 const OWN = 'ee'; // the active login's own JMAP account
 const GROUP = 'ed'; // a team mailbox the same login reaches
@@ -335,5 +335,21 @@ describe('the other actions of a Pro tab while the Mail tab lists a namesake', (
     await act(async () => { await viewer().onMarkAsRead(ID, false); });
     expect(accountsWritten(active, OWN)).toEqual([`markAsRead:${OWN}`]);
     expect((active.markAsRead.mock.calls[0] as unknown[])[1]).toBe(false);
+  });
+});
+
+describe('a Pro message tab of a login without a client', () => {
+  it('reads nothing through the active login and says the login is not connected', async () => {
+    const active = makeClient(OWN, { [OWN]: message('OWN private note') });
+    useAuthStore.setState({
+      activeAccountId: 'login-a',
+      client: active as never,
+      getClientForAccount: (id: string) => (id === 'login-a' ? active : undefined) as never,
+    } as never);
+    const view = render(<ProEmailTabBody tabId="t1" data={{ accountId: '', clientAccountId: 'login-b', emailId: ID, mailboxId: null, title: 'B payroll' }} />);
+    await act(async () => {});
+    expect(active.getEmail).not.toHaveBeenCalled();
+    expect(viewerProps.current).toBeNull();
+    expect(view.getByText('notifications.not_connected')).toBeTruthy();
   });
 });

@@ -52,4 +52,11 @@ describe('search preview of a mail hit', () => {
 
     expect(viewProps.current).toMatchObject({ client: clients.v10, clientAccountId: 'userb@v10', accountId: 'e' });
   });
+
+  it('shows nothing of a hit whose login has no client, and reads nothing through the active one', () => {
+    const view = render(<SearchPreview hit={hit('userb@gone')} onOpen={vi.fn()} onClose={vi.fn()} />);
+
+    expect(viewProps.current).toBeNull();
+    expect(view.getByText('not_connected')).toBeTruthy();
+  });
 });

@@ -4066,6 +4066,9 @@ export function applyDesktopServerPolicy(): void {
       clients.delete(id);
     }
     useAccountStore.getState().updateAccount(id, { isConnected: false });
+    // Its rows and its folder on screen go, as when it is removed: with no
+    // client, nothing done to them could reach its server.
+    if (id !== auth.activeAccountId) forgetAccountRows(id, auth.client);
   }
   const returned = [...refusedAccounts].filter((id) => !plan.refused.includes(id));
   refusedAccounts = new Set(plan.refused);

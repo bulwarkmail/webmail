@@ -851,6 +851,8 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   const updateTabTitle = useProTabStore((s) => s.updateTabTitle);
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const getClientForAccount = useAuthStore((s) => s.getClientForAccount);
+  const activeAccountId = useAuthStore((s) => s.activeAccountId);
+  const tNotifications = useTranslations('notifications');
 
   const handleLoaded = useCallback((email: Email) => {
     if (email.subject) updateTabTitle(tabId, email.subject);
@@ -870,7 +872,18 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   // A message opened with its login (a list row, a search hit of another
   // login) is fetched through that login's client, targeting the owner
   // accountId it came with (#847).
+  useAuthStore((s) => s.connectedAccountsRevision);
   const clientOverride = data.clientAccountId ? getClientForAccount(data.clientAccountId) ?? null : null;
+  // That login without a client shows nothing: through any other login the
+  // same id is another message.
+  const missingLogin = !!data.clientAccountId && !clientOverride && data.clientAccountId !== activeAccountId;
+  if (missingLogin) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-background p-6">
+        <p className="text-sm text-muted-foreground text-center">{tNotifications('not_connected')}</p>
+      </div>
+    );
+  }
 
   return (
     <ProEmailView
