@@ -23,7 +23,23 @@ const isNewline = (c: string | undefined) => c === '\n' || c === '\r' || c === '
 const isWhitespace = (c: string | undefined) => isNewline(c) || c === ' ' || c === '\t';
 const isDigit = (c: string | undefined) => c !== undefined && c >= '0' && c <= '9';
 const isHexDigit = (c: string | undefined) => c !== undefined && /^[0-9A-Fa-f]$/.test(c);
-const isNameStart = (c: string | undefined) => c !== undefined && c !== '' && (/^[A-Za-z_]$/.test(c) || c.charCodeAt(0) >= 0x80);
+/**
+ * The characters beyond ASCII that may stand in a name unescaped (CSS Syntax,
+ * "non-ASCII ident code point"). Any other one, such as a no-break space or a
+ * C1 control, is a character of its own to a browser that follows the list
+ * and part of the name to one that predates it. So it is read as written
+ * when it stands plainly, and written as an escape when it came as one:
+ * either way both kinds of browser read what they read before.
+ */
+function isNonAsciiIdentCodePoint(code: number): boolean {
+  return code === 0xb7 || (code >= 0xc0 && code <= 0xd6) || (code >= 0xd8 && code <= 0xf6) || (code >= 0xf8 && code <= 0x37d)
+    || (code >= 0x37f && code <= 0x1fff) || code === 0x200c || code === 0x200d || code === 0x203f || code === 0x2040
+    || (code >= 0x2070 && code <= 0x218f) || (code >= 0x2c00 && code <= 0x2fef) || (code >= 0x3001 && code <= 0xd7ff)
+    || (code >= 0xf900 && code <= 0xfdcf) || (code >= 0xfdf0 && code <= 0xfffd) || code >= 0x10000;
+}
+/** `c` is one whole character (both halves of a surrogate pair). */
+const isNameStart = (c: string | undefined) => c !== undefined && c !== ''
+  && (/^[A-Za-z_]$/.test(c) || isNonAsciiIdentCodePoint(c.codePointAt(0)!));
 const isNameChar = (c: string | undefined) => isNameStart(c) || isDigit(c) || c === '-';
 const isNonPrintable = (code: number) => code <= 8 || code === 0x0b || (code >= 0x0e && code <= 0x1f) || code === 0x7f;
 
@@ -37,16 +53,17 @@ function serializeIdent(name: string): string {
     const code = ch.codePointAt(0)!;
     if (code <= 0x1f || code === 0x7f || (i === 0 && isDigit(ch)) || (i === 1 && isDigit(ch) && chars[0] === '-')) return hexEscape(ch);
     if (i === 0 && ch === '-' && chars.length === 1) return '\\-';
-    if (code >= 0x80 || ch === '-' || ch === '_' || /^[0-9A-Za-z]$/.test(ch)) return ch;
+    if (code >= 0x80) return isNonAsciiIdentCodePoint(code) ? ch : hexEscape(ch);
+    if (ch === '-' || ch === '_' || /^[0-9A-Za-z]$/.test(ch)) return ch;
     return `\\${ch}`;
   }).join('');
 }
 
-/** A name after `#`, where a digit may come first. */
+/** A name after `#` that is no identifier (a colour such as `#1a2b3c`): a digit may come first. */
 function serializeName(name: string): string {
   return [...name].map((ch) => {
     const code = ch.codePointAt(0)!;
-    if (code <= 0x1f || code === 0x7f) return hexEscape(ch);
+    if (code <= 0x1f || code === 0x7f || (code >= 0x80 && !isNonAsciiIdentCodePoint(code))) return hexEscape(ch);
     return isNameChar(ch) ? ch : `\\${ch}`;
   }).join('');
 }
@@ -85,6 +102,8 @@ function tokenizeCSS(s: string): ReadToken[] {
   };
   const validEscape = (i: number) => s[i] === '\\' && i + 1 < s.length && !isNewline(s[i + 1]);
   const charAt = (i: number) => String.fromCodePoint(s.codePointAt(i)!);
+  /** The whole character at `i`, or undefined past the end. */
+  const peek = (i: number) => (i < s.length ? charAt(i) : undefined);
 
   /** The character a valid escape (its backslash at i - 1) stands for, and where it ends. */
   const consumeEscape = (i: number): [string, number] => {
@@ -104,7 +123,7 @@ function tokenizeCSS(s: string): ReadToken[] {
     let name = '';
     let j = i;
     for (;;) {
-      if (isNameChar(s[j])) {
+      if (isNameChar(peek(j))) {
         const ch = charAt(j);
         name += ch;
         j += ch.length;
@@ -118,8 +137,8 @@ function tokenizeCSS(s: string): ReadToken[] {
     }
   };
   const startsIdent = (i: number) => {
-    if (s[i] === '-') return isNameStart(s[i + 1]) || s[i + 1] === '-' || validEscape(i + 1);
-    if (isNameStart(s[i])) return true;
+    if (s[i] === '-') return isNameStart(peek(i + 1)) || s[i + 1] === '-' || validEscape(i + 1);
+    if (isNameStart(peek(i))) return true;
     return validEscape(i);
   };
   const startsNumber = (i: number) => {
@@ -227,9 +246,13 @@ function tokenizeCSS(s: string): ReadToken[] {
       push('space', start, i);
     } else if (c === '"' || c === "'") {
       i = string(i);
-    } else if (c === '#' && (isNameChar(s[i + 1]) || validEscape(i + 1))) {
+    } else if (c === '#' && (isNameChar(peek(i + 1)) || validEscape(i + 1))) {
+      // A name that starts as an identifier makes the hash an id (`#\31 st`
+      // selects id="1st"); written back it has to start as one again, or no
+      // selector takes it. Any other hash (a colour) may start with a digit.
+      const isId = startsIdent(i + 1);
       const [name, end] = consumeName(i + 1);
-      push('other', i, end, () => `#${serializeName(name)}`);
+      push('other', i, end, () => `#${isId ? serializeIdent(name) : serializeName(name)}`);
       i = end;
     } else if ((c === '+' || c === '.' || c === '-') && startsNumber(i)) {
       i = numeric(i);
@@ -250,11 +273,13 @@ function tokenizeCSS(s: string): ReadToken[] {
       i = identLike(i);
     } else if (isDigit(c)) {
       i = numeric(i);
-    } else if (isNameStart(c)) {
+    } else if (isNameStart(peek(i))) {
       i = identLike(i);
     } else {
-      push('other', i, i + 1);
-      i += 1;
+      // Any other character stands for itself, a pair of surrogates as one.
+      const width = charAt(i).length;
+      push('other', i, i + width);
+      i += width;
     }
   }
   return tokens;

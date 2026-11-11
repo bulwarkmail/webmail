@@ -102,7 +102,7 @@ describe('the sheet as the browser reads it', () => {
   it('writes escapes back only where a character cannot stand plainly, and reads its own output the same', () => {
     const css = '.\\32xl\\:p-4 { color: r\\65 d; content: "\\41 \\"b"; } #\\31 23 { width: 1\\65 3px; } .\\-x { color: blue; }';
     const out = sanitizeSkinCSS(css).css;
-    expect(out).toBe('.\\32 xl\\:p-4 { color: red; content: "A\\"b"; } #123 { width: 1\\65 3px; } .-x { color: blue; }');
+    expect(out).toBe('.\\32 xl\\:p-4 { color: red; content: "A\\"b"; } #\\31 23 { width: 1\\65 3px; } .-x { color: blue; }');
     expect(readStylesheet(out)!.text).toBe(out);
   });
 
