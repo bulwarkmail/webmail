@@ -20,6 +20,7 @@ import {
   refreshTokenServerCookieName,
 } from '@/lib/oauth/tokens';
 import { readCustomUpstream, type CustomUpstream } from '@/lib/oauth/custom-upstream';
+import { oauthErrorCode } from '@/lib/oauth/answer-summary';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
 /**
@@ -40,8 +41,8 @@ export interface IssuedTokens {
 export type Redemption =
   /** Discovery or the token endpoint out of reach: an outage, not a sign-out. */
   | { kind: 'unreachable'; message: string }
-  /** The token endpoint answered with an error. */
-  | { kind: 'refused'; status: number; errorText: string }
+  /** The token endpoint answered with an error: its OAuth `error` code, never the body. */
+  | { kind: 'refused'; status: number; error: string | null }
   | { kind: 'issued'; tokens: IssuedTokens };
 
 /**
@@ -146,7 +147,7 @@ async function redeem(refreshToken: string, serverId: string | null, upstream: C
   } catch (error) {
     return { kind: 'unreachable', message: error instanceof Error ? error.message : 'Unknown error' };
   }
-  if (!response.ok) return { kind: 'refused', status: response.status, errorText: await response.text() };
+  if (!response.ok) return { kind: 'refused', status: response.status, error: oauthErrorCode(await response.text()) };
   return { kind: 'issued', tokens: (await response.json()) as IssuedTokens };
 }
 

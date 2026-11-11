@@ -17,6 +17,7 @@ import {
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
 import { callbackIssuerAccepted, type OAuthMetadata } from '@/lib/oauth/discovery';
+import { answerFields } from '@/lib/oauth/answer-summary';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import {
   buildEndSessionUrl,
@@ -297,8 +298,9 @@ export async function PUT(request: NextRequest) {
     }
 
     if (redemption.kind === 'refused') {
-      const { status, errorText } = redemption;
-      logger.error('Token refresh failed', { status, error: errorText });
+      const { status, error } = redemption;
+      // The OAuth error code only: the body can repeat what was sent.
+      logger.error('Token refresh failed', { status, ...(error ? { error } : {}) });
       // Drop the refresh token only when the server definitively rejected it
       // (invalid/expired/revoked grant). A 5xx or 429 is an outage - keeping
       // the cookie lets the session resume once the server is back.
@@ -311,14 +313,15 @@ export async function PUT(request: NextRequest) {
         // Only invalid_grant says the login itself is over. invalid_client, or
         // a provider refusing an early refresh (#552), says nothing about it,
         // and the client keeps the account's local data for those.
-        return NextResponse.json({ error: oauthErrorCode(errorText) === 'invalid_grant' ? 'invalid_grant' : 'Refresh failed' }, { status: 401 });
+        return NextResponse.json({ error: error === 'invalid_grant' ? 'invalid_grant' : 'Refresh failed' }, { status: 401 });
       }
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
 
     const { tokens } = redemption;
     if (!tokens.access_token) {
-      logger.error('Refresh response missing access_token', { response: JSON.stringify(tokens).substring(0, 500) });
+      // Which fields came, not their values: the answer may still hold tokens.
+      logger.error('Refresh response missing access_token', { fields: answerFields(tokens) });
       return NextResponse.json({ error: 'Invalid token response' }, { status: 502 });
     }
 
@@ -341,15 +344,6 @@ export async function PUT(request: NextRequest) {
     // tells it to keep the session and try again.
     if (IS_DESKTOP_BUILD) return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-function oauthErrorCode(body: string): string | null {
-  try {
-    const code = (JSON.parse(body) as { error?: unknown }).error;
-    return typeof code === 'string' ? code : null;
-  } catch {
-    return null;
   }
 }
 

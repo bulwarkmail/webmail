@@ -9,6 +9,7 @@ import { parseJmapServers, findServerById } from '@/lib/admin/jmap-servers';
 import { stalwartDefaultClientId } from '@/lib/auth/stalwart-password-login';
 import { getOauthResource } from '@/lib/oauth/tokens';
 import type { CustomUpstream } from '@/lib/oauth/custom-upstream';
+import { answerFields, oauthErrorCode } from '@/lib/oauth/answer-summary';
 
 // Fallback OAuth client id used when no client is configured. The password+TOTP
 // login route mints tokens against the mail server's built-in OAuth with this
@@ -239,15 +240,17 @@ export async function exchangeCodeForTokens(
   }));
 
   if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    logger.error('Token exchange failed', { status: tokenResponse.status, error: errorText });
+    // The OAuth error code only: the body can repeat what was sent.
+    const error = oauthErrorCode(await tokenResponse.text());
+    logger.error('Token exchange failed', { status: tokenResponse.status, ...(error ? { error } : {}) });
     throw new Error('Token exchange failed');
   }
 
   const tokens = await tokenResponse.json();
 
   if (!tokens.access_token) {
-    logger.error('Token response missing access_token', { response: JSON.stringify(tokens).substring(0, 500) });
+    // Which fields came, not their values: the answer may still hold tokens.
+    logger.error('Token response missing access_token', { fields: answerFields(tokens) });
     throw new Error('Invalid token response');
   }
 
