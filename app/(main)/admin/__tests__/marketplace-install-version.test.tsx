@@ -118,6 +118,14 @@ describe('installVersion', () => {
     expect(calls[0].body).toMatchObject({ acceptPermissions: ['email:read'], acceptGrants: { permissions: ['email:read'], frameOrigins: ['https://meet.example'] } });
   });
 
+  it('answers a question with exactly what it listed', async () => {
+    responses = [json({ error: 'unlisted', permissionsAdded: ['email:read', 'email:send'], compared: 'listing' }, 409), json({ warnings: [] })];
+    await installVersion(BODY, () => true, { shown: { permissions: ['calendar:read', 'email:read'], frameOrigins: ['https://meet.example'] } });
+    expect(calls[0].body.acceptPermissions).toEqual(['calendar:read', 'email:read']);
+    expect(calls[1].body.acceptPermissions).toEqual(['email:read', 'email:send']);
+    expect(calls[1].body.acceptGrants).toEqual({ permissions: ['email:read', 'email:send'] });
+  });
+
   it('asks only once about permissions, and shows a second refusal as an error', async () => {
     responses = [
       json({ error: 'adds', permissionsAdded: ['keystore'] }, 409),

@@ -45,13 +45,13 @@ import {
 } from '@/lib/admin/marketplace-directory';
 import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
 import {
-  acceptedGrants,
   anyGrants,
   compactGrants,
   describeReachAdded,
   grantsAdded,
   grantsOf,
-  notAccepted,
+  judgeAnswer,
+  unexpectedMessage,
 } from '@/lib/admin/extension-grants';
 import { createHash } from 'node:crypto';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
@@ -301,14 +301,19 @@ export async function POST(request: NextRequest) {
       // about first, like a plugin that grants more (lib/admin/extension-grants.ts): on an
       // update when the installed version had none, on a first install always, since the
       // listing doesn't say.
-      const skinAdded = grantsAdded(grantsOf(existingTheme), { skin: skin !== null });
-      if (anyGrants(notAccepted(skinAdded, acceptedGrants({ acceptPermissions, acceptGrants })))) {
+      const skinSeen = grantsOf(existingTheme);
+      const skinAdded = grantsAdded(skinSeen, { skin: skin !== null });
+      const skinAnswer = judgeAnswer(skinAdded, skinSeen, { acceptPermissions, acceptGrants });
+      if (!skinAnswer.settled) {
         return NextResponse.json(
           {
-            error: `Version ${version} ${isUpdate ? 'asks for more than the installed version has' : 'may do more than the directory listed'}. ${describeReachAdded(skinAdded, !isUpdate).join(' ')}`,
+            error: skinAnswer.unexpected
+              ? unexpectedMessage(skinAnswer.unexpected)
+              : `Version ${version} ${isUpdate ? 'asks for more than the installed version has' : 'may do more than the directory listed'}. ${describeReachAdded(skinAdded, !isUpdate).join(' ')}`,
             permissionsAdded: [],
             grantsAdded: skinAdded,
             compared: isUpdate ? 'installed' : 'listing',
+            ...(skinAnswer.unexpected ? { unexpected: skinAnswer.unexpected } : {}),
           },
           { status: 409 },
         );
@@ -390,14 +395,17 @@ export async function POST(request: NextRequest) {
     // that list, and the bundle (optional permissions included) can ask for more. The
     // listing names no hosts, paths, frame origins, credential servers or tier, so on a
     // first install all of those are asked about. Which stored secret each credential sends
-    // where is compared on an update only: before a first install nothing is stored. `force`
-    // is for withdrawn and older versions, and says nothing about this.
+    // where is compared on an update only: before a first install nothing is stored. The
+    // answer names each addition as the 409 listed it; an entry it names that was neither
+    // asked about nor seen is refused. `force` is for withdrawn and older versions, and says
+    // nothing about this.
     const granted = grantsOf(manifest);
     const seen = isUpdate
       ? grantsOf(existingPlugin)
       : { ...grantsOf({ permissions: meta.permissions }), credentials: granted.credentials };
     const added = grantsAdded(seen, granted);
-    if (anyGrants(notAccepted(added, acceptedGrants({ acceptPermissions, acceptGrants })))) {
+    const answer = judgeAnswer(added, seen, { acceptPermissions, acceptGrants });
+    if (!answer.settled) {
       const parts = [
         ...(added.permissions.length > 0
           ? [`${isUpdate ? 'New permissions' : 'Permissions the directory did not list'}: ${added.permissions.join(', ')}.`]
@@ -406,10 +414,13 @@ export async function POST(request: NextRequest) {
       ];
       return NextResponse.json(
         {
-          error: `Version ${version} asks for more than ${isUpdate ? 'the installed version has' : 'the directory listed'}. ${parts.join(' ')}`,
+          error: answer.unexpected
+            ? unexpectedMessage(answer.unexpected)
+            : `Version ${version} asks for more than ${isUpdate ? 'the installed version has' : 'the directory listed'}. ${parts.join(' ')}`,
           permissionsAdded: added.permissions,
           grantsAdded: added,
           compared: isUpdate ? 'installed' : 'listing',
+          ...(answer.unexpected ? { unexpected: answer.unexpected } : {}),
         },
         { status: 409 },
       );

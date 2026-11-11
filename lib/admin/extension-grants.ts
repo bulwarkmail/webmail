@@ -7,7 +7,8 @@
  * directory's listing (what the quick-install dialog shows), an update with
  * the installed version, a rollback with the installed version too. Anything
  * beyond it is answered with 409 and saved only once the admin accepted it
- * (`acceptPermissions` and `acceptGrants` in the request).
+ * (`acceptPermissions` and `acceptGrants` in the request), entry by entry as
+ * the 409 listed it.
  *
  * A grant is more than the permission list: the hosts a plugin may contact,
  * the app's own routes it may post to, the origins it may embed (they go into
@@ -183,21 +184,6 @@ export function anyGrants(grants: Grants): boolean {
       .some((l) => l.length > 0);
 }
 
-/** Both together: what someone saw in two places. */
-export function mergeGrants(a: Partial<Grants>, b: Partial<Grants>): Grants {
-  const both = (x: unknown, y: unknown) => [...new Set([...strings(x), ...strings(y)])];
-  return {
-    permissions: both(a.permissions, b.permissions),
-    httpOrigins: both(a.httpOrigins, b.httpOrigins),
-    apiPostPaths: both(a.apiPostPaths, b.apiPostPaths),
-    frameOrigins: both(a.frameOrigins, b.frameOrigins),
-    credentialOrigins: both(a.credentialOrigins, b.credentialOrigins),
-    credentials: both(a.credentials, b.credentials),
-    privileged: a.privileged === true || b.privileged === true,
-    skin: a.skin === true || b.skin === true,
-  };
-}
-
 /** Only the kinds that hold something, for an audit entry. */
 export function compactGrants(grants: Grants): Partial<Grants> {
   return Object.fromEntries(
@@ -224,9 +210,69 @@ export function acceptedGrants(body: { acceptPermissions?: unknown; acceptGrants
   };
 }
 
-/** The part of `added` the admin has not accepted yet. */
+/**
+ * The part of `added` the admin has not accepted yet. Each entry has to be
+ * named as the question listed it: a wider host or path in the answer does
+ * not stand for a narrower one.
+ */
 export function notAccepted(added: Grants, accepted: Grants): Grants {
-  return grantsAdded(accepted, added);
+  const missing = (want: string[], have: string[]) => want.filter((x) => !have.includes(x));
+  return {
+    permissions: missing(added.permissions, accepted.permissions),
+    httpOrigins: missing(added.httpOrigins, accepted.httpOrigins),
+    apiPostPaths: missing(added.apiPostPaths, accepted.apiPostPaths),
+    frameOrigins: missing(added.frameOrigins, accepted.frameOrigins),
+    credentialOrigins: missing(added.credentialOrigins, accepted.credentialOrigins),
+    credentials: missing(added.credentials, accepted.credentials),
+    privileged: added.privileged && !accepted.privileged,
+    skin: added.skin && !accepted.skin,
+  };
+}
+
+/**
+ * What an answer accepts that the question did not list: anything that is
+ * neither an entry of `added` nor something the admin had already seen
+ * (`seen`, which a page may send along with what it showed). Such an answer is
+ * refused, not read as covering more.
+ */
+export function unexpectedAccepted(accepted: Grants, added: Grants, seen: Partial<Grants>): Grants {
+  const extra = (have: string[], ...allowed: unknown[]) => have.filter((x) => !allowed.some((list) => strings(list).includes(x)));
+  return {
+    permissions: extra(accepted.permissions, added.permissions, seen.permissions, IMPLICIT_PERMISSIONS),
+    httpOrigins: extra(accepted.httpOrigins, added.httpOrigins, seen.httpOrigins),
+    apiPostPaths: extra(accepted.apiPostPaths, added.apiPostPaths, seen.apiPostPaths),
+    frameOrigins: extra(accepted.frameOrigins, added.frameOrigins, seen.frameOrigins),
+    credentialOrigins: extra(accepted.credentialOrigins, added.credentialOrigins, seen.credentialOrigins),
+    credentials: extra(accepted.credentials, added.credentials, seen.credentials),
+    privileged: accepted.privileged && !added.privileged && seen.privileged !== true,
+    skin: accepted.skin && !added.skin && seen.skin !== true,
+  };
+}
+
+/** The error text for an answer that accepts what was not asked about. */
+export function unexpectedMessage(unexpected: Grants): string {
+  const entries = [
+    ...unexpected.permissions, ...unexpected.httpOrigins, ...unexpected.apiPostPaths, ...unexpected.frameOrigins,
+    ...unexpected.credentialOrigins, ...unexpected.credentials,
+    ...(unexpected.privileged ? ['the privileged tier'] : []), ...(unexpected.skin ? ['a skin'] : []),
+  ];
+  return `The answer accepts what was not asked about: ${entries.join(', ')}. Accept exactly what the question lists.`;
+}
+
+/**
+ * Whether an answer settles the question: it names every entry of `added`
+ * and nothing that was neither asked about nor seen before. When it names
+ * more, `unexpected` holds what, for the 409 that refuses it.
+ */
+export function judgeAnswer(
+  added: Grants,
+  seen: Partial<Grants>,
+  body: { acceptPermissions?: unknown; acceptGrants?: unknown },
+): { settled: true } | { settled: false; unexpected: Grants | null } {
+  const answer = acceptedGrants(body);
+  const unexpected = unexpectedAccepted(answer, added, seen);
+  if (anyGrants(unexpected)) return { settled: false, unexpected };
+  return anyGrants(notAccepted(added, answer)) ? { settled: false, unexpected: null } : { settled: true };
 }
 
 /**

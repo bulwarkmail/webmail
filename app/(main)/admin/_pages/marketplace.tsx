@@ -31,7 +31,6 @@ import {
   describeReachAdded,
   grantsAdded,
   grantsOf,
-  mergeGrants,
   notAccepted,
   type Grants,
 } from '@/lib/admin/extension-grants';
@@ -250,7 +249,8 @@ export async function installVersion(
         if (!(await confirm({ ...question, cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        accepted = mergeGrants(accepted ?? {}, added);
+        // The answer names exactly what the question listed, nothing more.
+        accepted = added;
       } else if (data.yanked && !force) {
         if (!(await confirm({ title: 'Install it anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };

@@ -9,13 +9,13 @@ import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { EXTENSION_ID_RE } from '@/lib/extension-package';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 import {
-  acceptedGrants,
   anyGrants,
   compactGrants,
   describeReachAdded,
   grantsAdded,
   grantsOf,
-  notAccepted,
+  judgeAnswer,
+  unexpectedMessage,
   type Grants,
 } from '@/lib/admin/extension-grants';
 
@@ -61,21 +61,30 @@ export async function POST(
     }
 
     const now = new Date().toISOString();
-    const accepted = acceptedGrants(body);
-    /** The 409 for a kept version that brings back more than is installed. */
-    const asks = (added: Grants, installed: string) => NextResponse.json(
-      {
-        error: [
-          `Version ${version} may do more than the installed ${installed}.`,
-          ...(added.permissions.length > 0 ? [`Permissions it brings back: ${added.permissions.join(', ')}.`] : []),
-          ...describeReachAdded(added),
-        ].join(' '),
-        permissionsAdded: added.permissions,
-        grantsAdded: added,
-        compared: 'rollback',
-      },
-      { status: 409 },
-    );
+    /**
+     * The 409 for a kept version that brings back more than is installed, unless the
+     * request accepted each addition as listed (and nothing else that wasn't installed).
+     */
+    const question = (added: Grants, seen: Grants, installed: string) => {
+      const answer = judgeAnswer(added, seen, body ?? {});
+      if (answer.settled) return null;
+      return NextResponse.json(
+        {
+          error: answer.unexpected
+            ? unexpectedMessage(answer.unexpected)
+            : [
+                `Version ${version} may do more than the installed ${installed}.`,
+                ...(added.permissions.length > 0 ? [`Permissions it brings back: ${added.permissions.join(', ')}.`] : []),
+                ...describeReachAdded(added),
+              ].join(' '),
+          permissionsAdded: added.permissions,
+          grantsAdded: added,
+          compared: 'rollback',
+          ...(answer.unexpected ? { unexpected: answer.unexpected } : {}),
+        },
+        { status: 409 },
+      );
+    };
 
     if (kind === 'plugin') {
       const current = await getPlugin(id);
@@ -84,8 +93,10 @@ export async function POST(
         return NextResponse.json({ error: `Version ${version} is already installed` }, { status: 409 });
       }
       const kept = await readHistoryEntry('plugin', id, version);
-      const added = grantsAdded(grantsOf(current), grantsOf(kept.entry));
-      if (anyGrants(notAccepted(added, accepted))) return asks(added, current.version);
+      const installed = grantsOf(current);
+      const added = grantsAdded(installed, grantsOf(kept.entry));
+      const asked = question(added, installed, current.version);
+      if (asked) return asked;
       const plugin = {
         ...kept.entry,
         id,
@@ -111,8 +122,10 @@ export async function POST(
       return NextResponse.json({ error: `Version ${version} is already installed` }, { status: 409 });
     }
     const kept = await readHistoryEntry('theme', id, version);
-    const added = grantsAdded(grantsOf(current), { skin: kept.skin !== null });
-    if (anyGrants(notAccepted(added, accepted))) return asks(added, current.version);
+    const installed = grantsOf(current);
+    const added = grantsAdded(installed, { skin: kept.skin !== null });
+    const asked = question(added, installed, current.version);
+    if (asked) return asked;
     const theme = {
       ...kept.entry,
       id,
