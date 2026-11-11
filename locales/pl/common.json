@@ -7274,6 +7274,10 @@
       "added_from_subject": "Dodano z wiadomości „{subject}” od {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "To odwołanie zostało wysłane z {sender}, ale organizatorem tego wydarzenia w Twoim kalendarzu jest {organizer}. Tylko organizator może je odwołać. Usuń je samodzielnie, jeśli ufasz tej wiadomości.",
+    "cancel_unverified": "Nie udało się potwierdzić, że to odwołanie pochodzi od organizatora. Usuń wydarzenie samodzielnie, jeśli ufasz tej wiadomości."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Pisownia",

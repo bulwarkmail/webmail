@@ -7274,6 +7274,10 @@
       "added_from_subject": "Aggiunto dall’e-mail «{subject}» di {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Questo annullamento è stato inviato da {sender}, ma l'organizzatore di questo evento nel tuo calendario è {organizer}. Solo l'organizzatore può annullarlo. Rimuovilo tu se ti fidi di questo messaggio.",
+    "cancel_unverified": "Non è stato possibile verificare che questo annullamento provenga dall'organizzatore. Rimuovi tu l'evento se ti fidi di questo messaggio."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Ortografia",

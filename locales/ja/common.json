@@ -7274,6 +7274,10 @@
       "added_from_subject": "{domain} からのメール「{subject}」から追加"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "このキャンセルは {sender} から送信されましたが、カレンダー上のこのイベントの主催者は {organizer} です。キャンセルできるのは主催者だけです。このメッセージを信頼できる場合は、ご自身で削除してください。",
+    "cancel_unverified": "このキャンセルが主催者から送信されたことを確認できませんでした。このメッセージを信頼できる場合は、ご自身でイベントを削除してください。"
+  },
   "proofreading": {
     "kind": {
       "spelling": "スペル",

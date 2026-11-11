@@ -7274,6 +7274,10 @@
       "added_from_subject": "Přidáno z e-mailu „{subject}“ od {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Toto zrušení bylo odesláno z {sender}, ale organizátorem události ve vašem kalendáři je {organizer}. Zrušit ji může jen organizátor. Pokud této zprávě důvěřujete, odstraňte ji sami.",
+    "cancel_unverified": "Nepodařilo se ověřit, že toto zrušení pochází od organizátora. Pokud této zprávě důvěřujete, odstraňte událost sami."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Pravopis",

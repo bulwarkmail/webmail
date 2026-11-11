@@ -7275,6 +7275,10 @@
       "added_from_subject": "נוסף מההודעה ״{subject}״ מ-{domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "ביטול זה נשלח מ-{sender}, אך המארגן של האירוע ביומן שלך הוא {organizer}. רק המארגן יכול לבטל אותו. הסר אותו בעצמך אם אתה סומך על ההודעה הזו.",
+    "cancel_unverified": "לא ניתן לאמת שהביטול הזה הגיע מהמארגן. הסר את האירוע בעצמך אם אתה סומך על ההודעה הזו."
+  },
   "proofreading": {
     "kind": {
       "spelling": "איות",

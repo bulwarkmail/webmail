@@ -7274,6 +7274,10 @@
       "added_from_subject": "{domain}에서 보낸 메일 “{subject}”에서 추가함"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "이 취소는 {sender}님이 보냈지만, 캘린더에 있는 이 일정의 주최자는 {organizer}님이에요. 일정은 주최자만 취소할 수 있어요. 이 메시지를 신뢰한다면 직접 삭제하세요.",
+    "cancel_unverified": "이 취소가 주최자에게서 왔는지 확인할 수 없어요. 이 메시지를 신뢰한다면 일정을 직접 삭제하세요."
+  },
   "proofreading": {
     "kind": {
       "spelling": "맞춤법",

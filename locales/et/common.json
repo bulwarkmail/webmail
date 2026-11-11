@@ -7274,6 +7274,10 @@
       "added_from_subject": "Lisatud kirjast „{subject}“, mille saatis {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "See tühistamine saadeti aadressilt {sender}, kuid sinu kalendris oleva sündmuse korraldaja on {organizer}. Ainult korraldaja saab selle tühistada. Eemalda see ise, kui usaldad seda kirja.",
+    "cancel_unverified": "Ei õnnestunud kinnitada, et see tühistamine tuleb korraldajalt. Eemalda sündmus ise, kui usaldad seda kirja."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Õigekiri",

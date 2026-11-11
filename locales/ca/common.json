@@ -7274,6 +7274,10 @@
       "added_from_subject": "Afegit des del correu «{subject}» de {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Aquesta cancel·lació s'ha enviat des de {sender}, però l'organitzador d'aquest esdeveniment al vostre calendari és {organizer}. Només l'organitzador el pot cancel·lar. Elimineu-lo vosaltres mateixos si confieu en aquest missatge.",
+    "cancel_unverified": "No s'ha pogut verificar que aquesta cancel·lació vingui de l'organitzador. Elimineu l'esdeveniment vosaltres mateixos si confieu en aquest missatge."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Ortografia",

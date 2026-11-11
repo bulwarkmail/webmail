@@ -7274,6 +7274,10 @@
       "added_from_subject": "{domain} adresinden gelen “{subject}” e-postasından eklendi"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Bu iptal {sender} tarafından gönderildi; ancak takviminizdeki bu etkinliğin organizatörü {organizer}. Etkinliği yalnızca organizatör iptal edebilir. Bu iletiye güveniyorsanız etkinliği kendiniz kaldırın.",
+    "cancel_unverified": "Bu iptalin organizatörden geldiği doğrulanamadı. Bu iletiye güveniyorsanız etkinliği kendiniz kaldırın."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Yazım",

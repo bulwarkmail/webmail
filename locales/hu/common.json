@@ -7274,6 +7274,10 @@
       "added_from_subject": "Hozzáadva a(z) {domain} által küldött „{subject}” levélből"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Ezt a lemondást {sender} küldte, de a naptáradban lévő esemény szervezője {organizer}. Csak a szervező mondhatja le. Ha megbízol ebben az üzenetben, távolítsd el magad.",
+    "cancel_unverified": "Nem sikerült ellenőrizni, hogy ez a lemondás a szervezőtől származik. Ha megbízol ebben az üzenetben, távolítsd el magad az eseményt."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Helyesírás",

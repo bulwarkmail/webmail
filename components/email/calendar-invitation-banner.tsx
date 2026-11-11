@@ -43,6 +43,8 @@ import {
   invitationAnsweredKey,
   findParticipantByEmails,
   isSeriesInvitation,
+  isFromOrganizerOf,
+  storedOrganizerEmail,
   seriesAnswers,
   extractMethodFromRawIcs,
   type EventSummary,
@@ -66,6 +68,13 @@ interface InvitationChangeItem {
   label: string;
   before: string;
   after: string;
+}
+
+/** The stored events a cancellation's removal would delete or change. */
+function cancellationTargets(stored: CalendarEvent[], removal: CancellationRemoval): CalendarEvent[] {
+  if (removal.kind === 'delete') return stored.filter((event) => removal.ids.includes(event.id));
+  if (removal.kind === 'exclude') return stored.filter((event) => event.id === removal.id);
+  return [];
 }
 
 function getBannerTitle(t: ReturnType<typeof useTranslations>, method: InvitationMethod): string {
@@ -392,6 +401,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const tEvent = useTranslations('ux_pim_event');
   const tCalendar = useTranslations('calendar');
   const tSeries = useTranslations('ux_p2_pim_calx');
+  const tTrust = useTranslations('sender_trust');
   const describeError = useCalendarErrorMessage();
   const locale = useLocale();
   const router = useRouter();
@@ -499,6 +509,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   // What removing a cancelled meeting from the calendar takes, read from the
   // events stored with its uid; null until known.
   const [cancelRemoval, setCancelRemoval] = useState<CancellationRemoval | null>(null);
+  // The stored events that removal would take out, for who organizes them.
+  const [cancelTargets, setCancelTargets] = useState<CalendarEvent[]>([]);
   // An invitation to a series is answered as a series (pim-p2-8): the series as
   // stored, with the occurrences answered on their own. The calendar holds the
   // occurrences, and the first of them was read as the answer.
@@ -617,11 +629,15 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
 
   useEffect(() => {
     setCancelRemoval(null);
+    setCancelTargets([]);
     if (!client || !supportsCalendar || !isCancellation || !parsedEvent?.uid) return;
     let current = true;
     client.queryCalendarEvents({ uid: parsedEvent.uid })
       .then((stored) => {
-        if (current) setCancelRemoval(planCancellationRemoval(stored, parsedEvent));
+        if (!current) return;
+        const removal = planCancellationRemoval(stored, parsedEvent);
+        setCancelRemoval(removal);
+        setCancelTargets(cancellationTargets(stored, removal));
       })
       .catch(() => { /* no remove action then */ });
     return () => { current = false; };
@@ -765,16 +781,25 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const proposalFromParticipant = Boolean(
     proposalTarget && senderAddress && findParticipantByEmails(proposalTarget, [senderAddress]),
   );
-  // A cancellation that fails authentication, or comes from someone other
-  // than the organizer without passing it, does not get to remove anything.
-  const canRemoveCancelled = Boolean(
+  // Only the organizer cancels a meeting: the removal is offered when the
+  // sender is the organizer of the stored events it removes and the message
+  // is verified as theirs (or was handed in on this server). Anyone else,
+  // authenticated or not, gets the notice without the button.
+  const cancelRemovable = Boolean(
     client
     && supportsCalendar
     && isCancellation
     && !userIsSender
-    && trustAssessment?.level !== 'warning'
     && (cancelRemoval?.kind === 'delete' || cancelRemoval?.kind === 'exclude')
   );
+  const cancelFromOrganizer = isFromOrganizerOf(cancelTargets, email);
+  const canRemoveCancelled = cancelRemovable && cancelFromOrganizer && trustAssessment?.level === 'trusted';
+  const cancelOrganizer = storedOrganizerEmail(cancelTargets);
+  const cancelNotice = !cancelRemovable || canRemoveCancelled
+    ? null
+    : !cancelFromOrganizer && cancelOrganizer
+      ? tTrust('cancel_not_organizer', { sender: senderAddress ?? '', organizer: cancelOrganizer })
+      : tTrust('cancel_unverified');
   const cancellationOutdated = isCancellation && cancelRemoval?.kind === 'outdated';
 
   const resolveExistingEventForRsvp = async () => {
@@ -939,8 +964,12 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     try {
       // Planned again on the events as they are now: the calendar may have
       // changed since the mail was opened.
-      const removal = planCancellationRemoval(await client.queryCalendarEvents({ uid: cancel.uid }), cancel);
+      const stored = await client.queryCalendarEvents({ uid: cancel.uid });
+      const removal = planCancellationRemoval(stored, cancel);
+      const targets = cancellationTargets(stored, removal);
       setCancelRemoval(removal);
+      setCancelTargets(targets);
+      if (!isFromOrganizerOf(targets, email)) return;
       // No scheduling messages: the organizer cancelled it, there is no one
       // to tell.
       if (removal.kind === 'delete') {
@@ -1205,6 +1234,14 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           )}>
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span className="flex-1">{trustMessage}</span>
+          </div>
+        )}
+
+        {/* A cancellation that may not remove the meeting */}
+        {showDetails && cancelNotice && (
+          <div className="flex items-start gap-2 text-sm rounded-md px-3 py-2 border bg-warning/10 text-warning border-warning/30">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span className="flex-1">{cancelNotice}</span>
           </div>
         )}
 

@@ -206,6 +206,35 @@ function getOrganizerEmail(event: Partial<CalendarEvent>): string | null {
   return null;
 }
 
+/** The organizer of a stored event: its ORGANIZER address first, as the server keeps it. */
+function storedEventOrganizer(event: Partial<CalendarEvent>): string | null {
+  return normalizeEmailAddress(event.organizerCalendarAddress) ?? getOrganizerEmail(event);
+}
+
+/**
+ * Whether the message's From address is the organizer of every one of
+ * `events`, the stored copies a cancellation would remove. Only the
+ * organizer cancels a meeting (RFC 5546 3.2.5), and the organizer named
+ * inside the cancellation is the sender's own text, so the stored events
+ * decide. An event without an organizer has nobody who could cancel it.
+ */
+export function isFromOrganizerOf(
+  events: readonly Partial<CalendarEvent>[],
+  email: Pick<Email, 'from'> | undefined,
+): boolean {
+  const sender = getPrimaryAddressEmail(email?.from);
+  return !!sender && events.length > 0 && events.every((event) => storedEventOrganizer(event) === sender);
+}
+
+/** The organizer of the first of `events` that names one, for the notice that names both addresses. */
+export function storedOrganizerEmail(events: readonly Partial<CalendarEvent>[]): string | null {
+  for (const event of events) {
+    const organizer = storedEventOrganizer(event);
+    if (organizer) return organizer;
+  }
+  return null;
+}
+
 /**
  * Whether the server's checks tie the message to its From domain. Only an
  * aligned pass counts: a sender passes SPF for their own envelope domain, or

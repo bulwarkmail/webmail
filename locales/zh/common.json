@@ -7274,6 +7274,10 @@
       "added_from_subject": "添加自 {domain} 发来的邮件“{subject}”"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "此取消通知由 {sender} 发送，但你日历中此活动的组织者是 {organizer}。只有组织者才能取消活动。如果你信任这封邮件，请自行删除。",
+    "cancel_unverified": "无法确认此取消通知来自组织者。如果你信任这封邮件，请自行删除该活动。"
+  },
   "proofreading": {
     "kind": {
       "spelling": "拼写",

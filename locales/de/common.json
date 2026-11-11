@@ -7274,6 +7274,10 @@
       "added_from_subject": "Hinzugefügt aus der E-Mail „{subject}“ von {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Diese Absage wurde von {sender} gesendet, aber der Organisator dieses Termins in Ihrem Kalender ist {organizer}. Nur der Organisator kann ihn absagen. Entfernen Sie ihn selbst, wenn Sie dieser Nachricht vertrauen.",
+    "cancel_unverified": "Es konnte nicht bestätigt werden, dass diese Absage vom Organisator kommt. Entfernen Sie den Termin selbst, wenn Sie dieser Nachricht vertrauen."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Rechtschreibung",

@@ -7286,6 +7286,10 @@
       "added_from_subject": "Được thêm từ thư “{subject}” của {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Thông báo hủy này được gửi từ {sender}, nhưng người tổ chức sự kiện này trong lịch của bạn là {organizer}. Chỉ người tổ chức mới có thể hủy sự kiện. Hãy tự xóa nếu bạn tin tưởng thư này.",
+    "cancel_unverified": "Không thể xác minh thông báo hủy này đến từ người tổ chức. Hãy tự xóa sự kiện nếu bạn tin tưởng thư này."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Chính tả",

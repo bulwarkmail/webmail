@@ -7274,6 +7274,10 @@
       "added_from_subject": "Lagt til fra e-posten «{subject}» fra {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Denne avlysningen ble sendt fra {sender}, men arrangøren av hendelsen i kalenderen din er {organizer}. Bare arrangøren kan avlyse den. Fjern den selv hvis du stoler på denne meldingen.",
+    "cancel_unverified": "Det kunne ikke bekreftes at denne avlysningen kommer fra arrangøren. Fjern hendelsen selv hvis du stoler på denne meldingen."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Stavemåte",
