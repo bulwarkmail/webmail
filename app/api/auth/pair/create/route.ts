@@ -7,7 +7,7 @@ import { mintGrantWithPassword } from '@/lib/auth/pair-grant';
 import { appAcceptsServerUrl } from '@/lib/auth/pair-bundle';
 import { pairAttemptKey, reservePairStepUp, settlePairStepUp } from '@/lib/auth/pair-attempts';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { configManager } from '@/lib/admin/config-manager';
 import { findServerByUrl, parseJmapServers } from '@/lib/admin/jmap-servers';
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'impersonation' }, { status: 403 });
     }
 
-    const context = readStalwartAuthContextFromStore(cookieStore, slot);
+    const context = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (!context) {
       return NextResponse.json({ error: 'not_signed_in' }, { status: 401 });
     }

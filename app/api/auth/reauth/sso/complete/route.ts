@@ -6,7 +6,7 @@ import { exchangeCodeForTokens, getRequiredConfig, getTokenEndpoint, hasClientSe
 import { pairingOwner, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { stashGrant } from '@/lib/auth/pairing-store';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid re-auth session data' }, { status: 400 });
     }
 
-    const context = readStalwartAuthContextFromStore(cookieStore, slot);
+    const context = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (!context) {
       return NextResponse.json({ error: 'not_signed_in' }, { status: 401 });
     }

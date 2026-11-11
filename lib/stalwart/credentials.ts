@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 
@@ -45,7 +45,9 @@ export async function getStalwartCredentials(request: NextRequest): Promise<Stal
   const cookieStore = await cookies();
 
   for (const slot of getCandidateSlots(request)) {
-    const context = readStalwartAuthContextFromStore(cookieStore, slot);
+    // A context whose session is past the organisation's maximum length is
+    // refused (and cleared) like a missing one.
+    const context = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (!context) continue;
 
     const serverUrl = context.serverUrl.replace(/\/+$/, '');

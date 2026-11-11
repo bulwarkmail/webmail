@@ -21,10 +21,11 @@ vi.mock('@/lib/logger', () => ({
 
 vi.mock('@/lib/account-utils', () => ({ MAX_ACCOUNT_SLOTS: 2 }));
 
-vi.mock('@/lib/stalwart/auth-context', () => ({
-  readStalwartAuthContextFromStore: (_store: unknown, slot: number) =>
-    slot === 0 ? { serverUrl: 'https://mail.example.com/', authHeader: 'Bearer tok' } : null,
-}));
+vi.mock('@/lib/stalwart/auth-context', () => {
+  const read = (_store: unknown, slot: number) =>
+    slot === 0 ? { serverUrl: 'https://mail.example.com/', authHeader: 'Bearer tok' } : null;
+  return { readStalwartAuthContextFromStore: read, readCurrentStalwartAuthContext: async (store: unknown, slot: number) => read(store, slot) };
+});
 
 vi.mock('@/lib/stalwart/credentials', () => ({
   getStalwartCredentials: vi.fn(),
