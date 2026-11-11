@@ -59,15 +59,18 @@ function originInHttpOrigins(url: URL, httpOrigins: readonly string[]): boolean 
 /**
  * An avatar address becomes the src of an <img> in the host page, which may
  * load from any https host. So a plugin's answer is kept only when it is a
- * picture the plugin made (a data: image or a blob:) or an address on a host
- * the plugin declared in httpOrigins; anything else counts as no answer.
- * Where the browser goes after that host (a redirect) is the host's choice.
+ * picture the plugin made (a data: image or a blob:), or an address on a
+ * host the plugin declared in httpOrigins while it holds http:fetch: the
+ * consent dialog shows those hosts as what that permission reaches, and
+ * only then. Anything else counts as no answer. Where the browser goes
+ * after that host (a redirect) is the host's choice.
  */
 function avatarAnswerFor(plugin: InstalledPlugin, result: unknown): unknown {
   if (result === undefined || result === null || result === false) return result;
   if (typeof result !== 'string') return undefined;
   const value = result.trim();
   if (/^data:image\/[a-z0-9.+-]+[;,]/i.test(value) || /^blob:/i.test(value)) return result;
+  if (!pluginHasPermission(plugin, 'http:fetch')) return undefined;
   let url: URL;
   try { url = new URL(value); } catch { return undefined; }
   return originInHttpOrigins(url, plugin.httpOrigins ?? []) ? result : undefined;
