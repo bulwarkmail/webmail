@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { validateMarkCertificate, type MarkType } from './certificate';
 import { dmarcAllowsBimi, pickBimiRecord, pickDmarcRecord } from './records';
 import { bimiRoots } from './roots';
-import { checkSvg, rasterize, MAX_DRAWINGS, MAX_SELF_ASSERTED_BYTES } from './svg';
+import { checkedSvg, rasterize, MAX_DRAWINGS, MAX_SELF_ASSERTED_BYTES } from './svg';
 
 /**
  * The receiver side of BIMI, which Stalwart doesn't do: for a From domain,
@@ -57,6 +57,8 @@ export function normalizeBimiDomain(domain: string | null | undefined): string |
 }
 
 class TemporaryError extends Error {}
+/** The logo couldn't be drawn just now for reasons of this server's own: nothing to remember. */
+class BusyError extends Error {}
 
 /**
  * At most `max` holders at once; the others wait in turn, up to `waitMs`.
@@ -181,7 +183,11 @@ interface CacheEntry {
 
 export interface BimiAnswer {
   indicator: BimiIndicator | null;
-  /** No lookup could start for an uncached domain: busy, or the caller's budget is spent. */
+  /**
+   * The answer is "not now", not "no logo": no lookup could start for an
+   * uncached domain (busy, or the caller's budget is spent), or the logo
+   * couldn't be drawn because this server was busy. Nothing was remembered.
+   */
   deferred: boolean;
 }
 
@@ -189,7 +195,7 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
   const deps = { ...defaultDeps, ...overrides };
   const cache = new Map<string, CacheEntry>();
   const crlCache = new Map<string, { bytes: Uint8Array | null; expiresAt: number }>();
-  const inFlight = new Map<string, Promise<BimiIndicator | null>>();
+  const inFlight = new Map<string, Promise<BimiAnswer>>();
   // Drawing is the expensive step; only a few run at once, whatever the
   // number of lookups waiting for one.
   const drawing = drawingSlots(MAX_DRAWINGS, DRAW_SLOT_WAIT_MS);
@@ -289,24 +295,25 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
       indicator = { status: 'self-asserted' };
     }
 
-    const problem = checkSvg(svg, { strictProfile: indicator.status === 'self-asserted' });
-    if (problem) {
-      logger.debug('BIMI logo rejected', { domain, reason: problem });
+    const checked = checkedSvg(svg, { strictProfile: indicator.status === 'self-asserted' });
+    if (!checked.ok) {
+      logger.debug('BIMI logo rejected', { domain, reason: checked.reason });
       return none;
     }
     // The certified logo goes through the same check above and the same
-    // bounded drawing here.
+    // bounded drawing here. What is drawn is the checked document.
     const release = await drawing.acquire();
-    if (!release) throw new TemporaryError(`no free drawing slot for ${domain}`);
+    if (!release) throw new BusyError(`no free drawing slot for ${domain}`);
     let png: Buffer;
     try {
-      png = await rasterize(svg, { onStopped: release });
+      png = await rasterize(checked.svg, { onStopped: release });
     } catch (err) {
-      // A logo that fails to draw or draws past the deadline is cached as no
-      // logo like any other refused one; a drawing that never started is
-      // tried again soon.
+      // A logo that fails to draw or draws past its own deadline is cached as
+      // no logo like any other refused one. A drawing that didn't run its
+      // course because of this server (it couldn't start, or the server was
+      // too busy to hear back in time) says nothing about the logo.
       if ((err as { temporary?: unknown }).temporary === true) {
-        throw new TemporaryError(`BIMI logo not drawn for ${domain}: ${(err as Error).message}`);
+        throw new BusyError(`BIMI logo not drawn for ${domain}: ${(err as Error).message}`);
       }
       logger.debug('BIMI logo not drawn', { domain, reason: (err as Error).message });
       return none;
@@ -328,34 +335,39 @@ export function createBimiResolver(overrides: Partial<BimiResolverDeps> = {}) {
     if (cached && cached.expiresAt > deps.now()) return { indicator: cached.indicator, deferred: false };
     const deferred = { indicator: cached?.indicator ?? null, deferred: true };
     const joined = inFlight.get(domain);
-    if (joined) return { indicator: await joined, deferred: false };
+    if (joined) return joined;
     if (inFlight.size >= MAX_IN_FLIGHT) return deferred;
     if (mayStart && !(await mayStart())) return deferred;
     // Another caller may have looked it up, started it, or filled the slots meanwhile.
     const done = cache.get(domain);
     if (done && done.expiresAt > deps.now()) return { indicator: done.indicator, deferred: false };
     const pending = inFlight.get(domain);
-    if (pending) return { indicator: await pending, deferred: false };
+    if (pending) return pending;
     if (inFlight.size >= MAX_IN_FLIGHT) return deferred;
 
-    const run = (async () => {
+    const run = (async (): Promise<BimiAnswer> => {
       try {
         const { indicator, ttl } = await lookup(domain);
         remember(domain, indicator, ttl);
-        return indicator;
+        return { indicator, deferred: false };
       } catch (err) {
+        // The server was busy: nothing is remembered, and the answer is "not now".
+        if (err instanceof BusyError) {
+          logger.debug('BIMI logo put off', { domain, error: err.message });
+          return deferred;
+        }
         if (err instanceof TemporaryError) logger.debug('BIMI lookup failed, retrying later', { domain, error: err.message });
         else logger.warn('BIMI lookup failed', { domain, error: (err as Error).message });
         // Keep showing what we had; otherwise ask again after a short pause.
         const fallback = cached?.indicator ?? null;
         remember(domain, fallback, ERROR_TTL_MS);
-        return fallback;
+        return { indicator: fallback, deferred: false };
       } finally {
         inFlight.delete(domain);
       }
     })();
     inFlight.set(domain, run);
-    return { indicator: await run, deferred: false };
+    return run;
   }
 
   /** The indicator for a From domain, or null. */

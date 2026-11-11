@@ -7,8 +7,10 @@ import sharp from 'sharp';
  * a long time, and sharp draws on the libuv pool that every file read, DNS
  * lookup and zlib call of this process needs; a worker thread shares that
  * pool and can't be stopped while librsvg runs. So each logo is drawn in a
- * child process of its own, which is killed when it draws past the
- * deadline. The caller limits how many run at once (MAX_DRAWINGS).
+ * child process of its own. The child counts the drawing's time itself,
+ * from when it has the logo, and ends itself when the logo draws past
+ * DRAW_DEADLINE_MS: a server that is busy for a moment doesn't count
+ * against the logo. The caller limits how many run at once (MAX_DRAWINGS).
  *
  * The desktop app runs this server in an Electron utility process, which
  * can't start Node children (its runAsNode fuse is off). There the logo is
@@ -23,6 +25,12 @@ export const INDICATOR_SIZE = 192;
 export const DRAW_DEADLINE_MS = 2000;
 /** How long the child may take to load sharp before the drawing starts. */
 const START_DEADLINE_MS = 10_000;
+/**
+ * How much longer than its own deadline a child may go without an answer
+ * before it is ended from here. A child does that only when something
+ * other than the logo held it up, so that counts as "try again later".
+ */
+const STOP_MARGIN_MS = 5000;
 /** A 192 px PNG is far below this. */
 const MAX_PNG_BYTES = 1024 * 1024;
 
@@ -31,9 +39,10 @@ const IN_PROCESS = typeof process.versions.electron === 'string';
 export const MAX_DRAWINGS = IN_PROCESS ? 1 : 2;
 
 /**
- * A drawing that didn't produce a PNG. `temporary` when it never started
- * (no slot, the child couldn't start or load sharp), so the logo itself
- * isn't to blame and is worth another try soon.
+ * A drawing that didn't produce a PNG. `temporary` when the logo isn't to
+ * blame (no slot, the child couldn't start or load sharp, or it was given up
+ * on from here because the server was busy), so it is worth another try
+ * soon and is not remembered as "no logo".
  */
 export class LogoDrawingError extends Error {
   constructor(message: string, readonly temporary: boolean) {
@@ -43,12 +52,14 @@ export class LogoDrawingError extends Error {
 }
 
 /**
- * The child: loads sharp, says "R", reads the SVG from stdin and writes the
- * PNG to stdout. The same steps as drawPng below. A string, because the
- * server bundle can't hand a file of its own to a child process.
+ * The child: loads sharp, says "R", reads the SVG from stdin, and answers
+ * "P" and the PNG. Past its own deadline it says "T" and ends at once (an
+ * exit would wait for librsvg). The same steps as drawPng below. A string,
+ * because the server bundle can't hand a file of its own to a child process.
  */
 const CHILD_SOURCE = `
   const { createRequire } = require('node:module');
+  const fs = require('node:fs');
   const path = require('node:path');
   let sharp = null;
   for (const dir of JSON.parse(process.argv[1])) {
@@ -58,9 +69,14 @@ const CHILD_SOURCE = `
   sharp.cache(false);
   sharp.concurrency(1);
   const size = Number(process.argv[2]);
+  const limit = Number(process.argv[3]);
   const chunks = [];
   process.stdin.on('data', (chunk) => chunks.push(chunk));
   process.stdin.on('end', () => {
+    const timer = setTimeout(() => {
+      try { fs.writeSync(1, 'T'); } catch {}
+      process.kill(process.pid, 'SIGKILL');
+    }, limit);
     const input = Buffer.concat(chunks);
     sharp(input).metadata().then((meta) => {
       const intrinsic = Math.max(1, Math.min(meta.width ?? size, meta.height ?? size));
@@ -69,7 +85,13 @@ const CHILD_SOURCE = `
         .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
         .png()
         .toBuffer();
-    }).then((png) => process.stdout.write(png, () => process.exit(0)), () => process.exit(2));
+    }).then((png) => {
+      clearTimeout(timer);
+      process.stdout.write(Buffer.concat([Buffer.from('P'), png]), () => process.exit(0));
+    }, () => {
+      clearTimeout(timer);
+      process.exit(2);
+    });
   });
   process.stdout.write('R');
 `;
@@ -100,7 +122,9 @@ function drawInChild(svg: string, onStopped: () => void): Promise<Buffer> {
     };
     let child: ReturnType<typeof spawn>;
     try {
-      child = spawn(process.execPath, ['--max-old-space-size=128', '-e', CHILD_SOURCE, JSON.stringify(sharpSearchDirs()), String(INDICATOR_SIZE)], {
+      child = spawn(process.execPath, [
+        '--max-old-space-size=128', '-e', CHILD_SOURCE, JSON.stringify(sharpSearchDirs()), String(INDICATOR_SIZE), String(DRAW_DEADLINE_MS),
+      ], {
         stdio: ['pipe', 'pipe', 'ignore'],
         env: childEnv(),
         windowsHide: true,
@@ -113,7 +137,8 @@ function drawInChild(svg: string, onStopped: () => void): Promise<Buffer> {
 
     const chunks: Buffer[] = [];
     let received = 0;
-    let ready = false;
+    // What the child has said: nothing yet, "R" (ready), then "P" (the PNG follows).
+    let stage: 'starting' | 'drawing' | 'picture' = 'starting';
     let settled = false;
     let timer: ReturnType<typeof setTimeout>;
     const finish = (error: LogoDrawingError | null, png?: Buffer) => {
@@ -133,26 +158,43 @@ function drawInChild(svg: string, onStopped: () => void): Promise<Buffer> {
       finish(new LogoDrawingError(`drawing could not start: ${err.message}`, true));
       stop();
     });
-    child.on('close', (code) => {
-      if (code === 0 && ready && received > 0) finish(null, Buffer.concat(chunks));
+    child.on('close', (code, signal) => {
+      if (code === 0 && stage === 'picture' && received > 0) finish(null, Buffer.concat(chunks));
       else if (code === 3) finish(new LogoDrawingError('sharp could not be loaded for drawing', true));
-      else finish(new LogoDrawingError(`drawing failed (${code ?? 'killed'})`, false));
+      // It failed on the logo, or ended itself past its own deadline.
+      else finish(new LogoDrawingError(`drawing failed (${code ?? signal})`, false));
       stop();
     });
     // The child exits without reading the rest when it fails.
     child.stdin!.on('error', () => {});
     child.stdout!.on('data', (data: Buffer) => {
       let chunk = data;
-      if (!ready) {
+      if (stage === 'starting' && chunk.length > 0) {
         if (chunk[0] !== 0x52) {
           finish(new LogoDrawingError('drawing answered something else', false));
           return;
         }
-        ready = true;
+        stage = 'drawing';
         clearTimeout(timer);
-        timer = setTimeout(() => finish(new LogoDrawingError(`gave up drawing after ${DRAW_DEADLINE_MS} ms`, false)), DRAW_DEADLINE_MS);
+        timer = setTimeout(
+          () => finish(new LogoDrawingError('the drawing did not answer in time', true)),
+          DRAW_DEADLINE_MS + STOP_MARGIN_MS,
+        );
         chunk = chunk.subarray(1);
       }
+      if (stage === 'drawing' && chunk.length > 0) {
+        if (chunk[0] === 0x54) {
+          finish(new LogoDrawingError(`gave up drawing after ${DRAW_DEADLINE_MS} ms`, false));
+          return;
+        }
+        if (chunk[0] !== 0x50) {
+          finish(new LogoDrawingError('drawing answered something else', false));
+          return;
+        }
+        stage = 'picture';
+        chunk = chunk.subarray(1);
+      }
+      if (stage !== 'picture') return;
       received += chunk.length;
       if (received > MAX_PNG_BYTES) {
         finish(new LogoDrawingError('drawing too large', false));
@@ -183,10 +225,29 @@ function drawInProcess(svg: string, onStopped: () => void): Promise<Buffer> {
   const work = drawPng(svg);
   work.then(onStopped, onStopped);
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new LogoDrawingError(`gave up drawing after ${DRAW_DEADLINE_MS} ms`, false)), DRAW_DEADLINE_MS);
+    let settled = false;
+    const timer = setTimeout(() => {
+      // When this process was busy, the finished picture may be waiting
+      // behind this timer: its callback runs before setImmediate's.
+      setImmediate(() => {
+        if (settled) return;
+        settled = true;
+        reject(new LogoDrawingError(`gave up drawing after ${DRAW_DEADLINE_MS} ms`, false));
+      });
+    }, DRAW_DEADLINE_MS);
     work.then(
-      (png) => { clearTimeout(timer); resolve(png); },
-      (err: Error) => { clearTimeout(timer); reject(new LogoDrawingError(`drawing failed: ${err.message}`, false)); },
+      (png) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(png);
+      },
+      (err: Error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(new LogoDrawingError(`drawing failed: ${err.message}`, false));
+      },
     );
   });
 }

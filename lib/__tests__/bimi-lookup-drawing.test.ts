@@ -33,7 +33,7 @@ import { createBimiResolver } from '@/lib/bimi/lookup';
 const T0 = Date.UTC(2026, 9, 29);
 
 /** Domains d0.example ... with DMARC and a self-published logo, or a certificate when `certified`. */
-function setup({ certified = false } = {}) {
+function setup({ certified = false, logo = LOGO } = {}) {
   const clock = { now: T0 };
   const resolver = createBimiResolver({
     resolveTxt: async (name: string) => {
@@ -41,7 +41,7 @@ function setup({ certified = false } = {}) {
       const domain = name.replace(/^default\._bimi\./, '');
       return [[certified ? `v=BIMI1; l=; a=https://cdn.${domain}/vmc.pem` : `v=BIMI1; l=https://cdn.${domain}/logo.svg`]];
     },
-    fetchBytes: async (url: string) => new Uint8Array(Buffer.from(url.endsWith('.pem') ? 'PEM' : LOGO)),
+    fetchBytes: async (url: string) => new Uint8Array(Buffer.from(url.endsWith('.pem') ? 'PEM' : logo)),
     roots: () => [],
     now: () => clock.now,
   });
@@ -110,6 +110,28 @@ describe('the resolver draws', () => {
     drawing.impl = async (_svg, onStopped) => { onStopped(); return PNG; };
     expect((await resolver.resolve('d0.example'))?.status).toBe('self-asserted');
     expect(rasterize).toHaveBeenCalledTimes(2);
+  });
+
+  it('answers "not now" and remembers nothing when the server was too busy to finish the drawing', async () => {
+    const { resolver } = setup();
+    drawing.impl = async (_svg, onStopped) => { onStopped(); throw failure(true); };
+    expect(await resolver.answer('d0.example')).toEqual({ indicator: null, deferred: true });
+    drawing.impl = async (_svg, onStopped) => { onStopped(); return PNG; };
+    // Asked again at once: drawn now, not "no logo" from the first try.
+    expect((await resolver.answer('d0.example')).indicator?.status).toBe('self-asserted');
+    expect(rasterize).toHaveBeenCalledTimes(2);
+  });
+
+  it('draws the checked document, not the text that came in', async () => {
+    const logo = '<?xml version="1.0"?><!-- tool --><svg version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+      + '<title>Brand</title><rect id="&#115;q" width="10" height="10" fill="#c00"/></svg>';
+    const { resolver } = setup({ logo });
+    drawing.impl = async (_svg, onStopped) => { onStopped(); return PNG; };
+    expect((await resolver.resolve('d0.example'))?.status).toBe('self-asserted');
+    const drawn = vi.mocked(rasterize).mock.calls[0][0];
+    expect(drawn).not.toContain('<!--');
+    expect(drawn).not.toContain('<?xml');
+    expect(drawn).toContain('id="sq"');
   });
 });
 
