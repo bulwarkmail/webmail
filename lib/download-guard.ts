@@ -58,10 +58,11 @@ export function downloadAllowed(kind: DownloadKind, subject?: DownloadSubject): 
 const DOWNLOAD_BLOB_TYPE = 'application/octet-stream';
 
 /**
- * Whether the browser may start a download only after the click has
- * returned: WebKit (Safari, and every browser on iOS), the first time also
- * after its "Allow downloads" prompt. Chromium (also the desktop app) and
- * Firefox have the download under way when the click returns.
+ * Whether the browser may start a download long after the click: WebKit
+ * (Safari, and every browser on iOS), the first time only after its "Allow
+ * downloads" prompt. Chromium (also the desktop app) and Firefox start it
+ * from a task the click queues, which runs once the page's current task is
+ * done; Firefox loses the download when the URL is revoked before that.
  */
 function downloadMayStartLater(): boolean {
   const agent = typeof navigator === 'undefined' ? '' : navigator.userAgent ?? '';
@@ -80,11 +81,11 @@ function downloadMayStartLater(): boolean {
  * a document of the webmail origin. The file keeps its name, which is what
  * the operating system opens it by; a name without an extension gets the
  * one of the Blob's type when that type is on the inline-safe list
- * (downloadNameForType() in lib/file-preview.ts). The URL is revoked right
- * after the click, which has started the download by then, or after a minute
- * in a browser that may start it later; `revokeAfterMs` sets another delay.
- * An object URL passed in is the caller's and keeps its type, its name and
- * its lifetime.
+ * (downloadNameForType() in lib/file-preview.ts). The URL is never revoked
+ * in the click's own task: it goes in a zero timeout, or after a minute in a
+ * browser that may start the download later. `revokeAfterMs` sets another
+ * delay, 0 being the zero timeout. An object URL passed in is the caller's
+ * and keeps its type, its name and its lifetime.
  */
 export function saveBlobAs(
   data: Blob | string,
@@ -105,8 +106,7 @@ export function saveBlobAs(
   anchor.remove();
   if (typeof data !== 'string') {
     const revokeAfterMs = options.revokeAfterMs ?? (downloadMayStartLater() ? 60_000 : 0);
-    if (revokeAfterMs === 0) URL.revokeObjectURL(url);
-    else setTimeout(() => URL.revokeObjectURL(url), revokeAfterMs);
+    setTimeout(() => URL.revokeObjectURL(url), revokeAfterMs);
   }
   return true;
 }
