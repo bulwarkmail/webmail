@@ -98,10 +98,10 @@ describe('Pro message tab of an own message while another account\'s folder is l
     tabEmail = stampProSource(loaded, { client, accountId: OWN }, LOGIN);
   });
 
-  it('the tab leaves an own message of the active login unstamped, so its key is the bare id', () => {
-    // Not an assertion about correct behaviour: it records the state the bug needs.
-    expect(tabEmail.sourceAccountId).toBeUndefined();
-    expect(emailKeyFor(tabEmail)).toBe(ID);
+  it('the tab stamps an own message of the active login with its login and account', () => {
+    expect(tabEmail).toMatchObject({ sourceClientAccountId: LOGIN, sourceAccountId: OWN });
+    // So its key is not the bare id the group's unstamped row has.
+    expect(emailKeyFor(tabEmail)).not.toBe(ID);
   });
 
   it('Delete does not move the group mailbox\'s same-id message to Trash', async () => {

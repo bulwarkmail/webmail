@@ -115,21 +115,18 @@ interface ProEmailViewProps {
 }
 
 /**
- * A message the tab read through another login, or from a shared or group
- * account, carries where it came from (sourceClientAccountId,
- * sourceAccountId), as rows of the unified inbox do: then actions that
- * route by the message (Report phishing, the remote-content lock of that
- * account) reach its own account. A message of the active login's own
- * account stays as it is.
+ * A message the tab read carries where it came from (sourceClientAccountId,
+ * sourceAccountId), as rows of the unified inbox do, the active login's own
+ * messages too: every action that routes by the message (Report phishing,
+ * the remote-content lock of that account) reaches its own login and
+ * account, whatever the Mail tab lists.
  */
 export function stampProSource(email: Email, source: EmailBlobContext, loginId: string | undefined): Email {
   if (email.sourceClientAccountId && email.sourceAccountId) return email;
   const activeLogin = useAuthStore.getState().activeAccountId ?? undefined;
   const login = loginId ?? source.clientAccountId ?? activeLogin;
-  const ownAccount = source.client?.getAccountId?.();
-  const account = source.accountId ?? ownAccount;
-  const foreign = (!!login && login !== activeLogin) || (!!account && !!ownAccount && account !== ownAccount);
-  if (!foreign || !login || !account) return email;
+  const account = source.accountId ?? source.client?.getAccountId?.();
+  if (!login || !account) return email;
   return { ...email, sourceClientAccountId: login, sourceAccountId: account };
 }
 
@@ -860,24 +857,29 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
 
   const handleClose = useCallback(() => closeTab(tabId), [closeTab, tabId]);
 
-  // Messages opened out of a shared/group folder must be fetched with the
-  // owner's accountId - fetchEmailContent's fallback derives it from the
-  // globally selected mailbox, which is unrelated to this tab.
+  // A tab that came without a login and account: the owner of the shared or
+  // group folder it was opened from, by that folder (not the folder the Mail
+  // tab has selected, which is unrelated to this tab).
   const ownerAccountId = useMemo(() => {
     if (!data.mailboxId) return undefined;
     const mb = mailboxes.find((m) => m.id === data.mailboxId);
     return mb?.isShared ? mb.accountId : undefined;
   }, [mailboxes, data.mailboxId]);
 
-  // A message opened with its login (a list row, a search hit of another
-  // login) is fetched through that login's client, targeting the owner
-  // accountId it came with (#847).
+  // A message tab names its login: the one it was opened with (a list row,
+  // a search hit of another login, #847), else the active one (a tab that
+  // came without). Its message is read and written through that login only,
+  // in the account the tab names (the login's own when none), and never
+  // looked up by its id in the Mail tab's list.
   useAuthStore((s) => s.connectedAccountsRevision);
-  const clientOverride = data.clientAccountId ? getClientForAccount(data.clientAccountId) ?? null : null;
+  const activeClient = useAuthStore((s) => s.client);
+  const login = data.clientAccountId ?? activeAccountId ?? undefined;
+  const loginClient = login
+    ? getClientForAccount(login) ?? (login === activeAccountId ? activeClient : null)
+    : null;
   // That login without a client shows nothing: through any other login the
   // same id is another message.
-  const missingLogin = !!data.clientAccountId && !clientOverride && data.clientAccountId !== activeAccountId;
-  if (missingLogin) {
+  if (!login || !loginClient) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-background p-6">
         <p className="text-sm text-muted-foreground text-center">{tNotifications('not_connected')}</p>
@@ -888,9 +890,9 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   return (
     <ProEmailView
       emailId={data.emailId}
-      client={clientOverride ?? undefined}
-      clientAccountId={clientOverride ? data.clientAccountId : undefined}
-      accountId={clientOverride ? (data.accountId || undefined) : ownerAccountId}
+      client={loginClient}
+      clientAccountId={login}
+      accountId={data.accountId || (data.clientAccountId ? undefined : ownerAccountId)}
       onLoaded={handleLoaded}
       onClose={handleClose}
       className="w-full"

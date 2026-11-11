@@ -1670,8 +1670,14 @@ interface SourceActionContext {
   accountId: string | undefined;
   /** The folders of that account as this login lists them; empty when they are not loaded. */
   mailboxes: Mailbox[];
-  /** Matches the list rows that are this message. */
+  /** Matches the list rows that are this message, in the list as it was when the action started. */
   isTarget: (email: Email) => boolean;
+  /**
+   * The same for a later state of the list: by the time the request comes
+   * back another folder may be listed, where a row with the id is another
+   * message. Patches apply to the list as it is then.
+   */
+  matcherFor: (state: EmailStore) => (email: Email) => boolean;
   /** The listed row that is this message, if one is listed. */
   row: Email | undefined;
 }
@@ -1725,12 +1731,14 @@ function resolveSourceActionContext(source: EmailActionSource, emailId: string):
   if (!client) throw new Error('Not connected');
   const own = client.getAccountId();
   const account = source.accountId ?? own;
-  const isTarget = sourceRowMatcher(state, emailId, source.clientAccountId, account);
+  const matcherFor = (current: EmailStore) => sourceRowMatcher(current, emailId, source.clientAccountId, account);
+  const isTarget = matcherFor(state);
   return {
     client,
     accountId: account === own ? undefined : account,
     mailboxes: accountFolders(state, source.clientAccountId, account, own),
     isTarget,
+    matcherFor,
     row: state.emails.find(isTarget),
   };
 }
@@ -4891,10 +4899,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       let mailboxes: Mailbox[];
       let accountId: string | undefined;
       let currentMailbox: Mailbox | undefined;
+      // With a source: the rows that are the message in the list as it is
+      // when the request comes back.
+      let matcherFor: SourceActionContext['matcherFor'] | null = null;
       if (source) {
         // Read outside the list: its own login and account, whatever is listed.
         const context = resolveSourceActionContext(source, emailId);
-        ({ isTarget, row, client: effectiveClient, accountId } = context);
+        ({ isTarget, row, client: effectiveClient, accountId, matcherFor } = context);
         mailboxes = await sourceActionFolders(context);
         const message = source.email ?? row;
         email = { id: emailId, keywords: message?.keywords ?? {}, mailboxIds: message?.mailboxIds ?? {} };
@@ -4953,8 +4964,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           // Remove from local state (email moved to trash, not in current view).
           // Counter changes go to the email's own account list (#281). Source and
           // trash live in the same account. Only a listed row moves the counters.
-          const listedRow = row;
           set((state) => {
+            const target = matcherFor ? matcherFor(state) : isTarget;
+            const listedRow = matcherFor ? state.emails.find(target) : row;
             const mailboxPatch = listedRow?.mailboxIds
               ? applyMailboxCounterUpdate(state, listedRow, (mailbox) => {
                   if (emailInMailbox(listedRow, mailbox)) {
@@ -4980,8 +4992,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
               : {};
 
             return {
-              emails: state.emails.filter(e => !isTarget(e)),
-              selectedEmail: getNextSelectedEmailAfterRemovingRow(state, isTarget),
+              emails: state.emails.filter(e => !target(e)),
+              selectedEmail: getNextSelectedEmailAfterRemovingRow(state, target),
               ...mailboxPatch,
             };
           });
@@ -4999,8 +5011,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // Remove from local state and update mailbox counters (in the email's own
       // account list). Unread emails also decrement the unread counters. (#281)
-      const listedRow = row;
       set((state) => {
+        const target = matcherFor ? matcherFor(state) : isTarget;
+        const listedRow = matcherFor ? state.emails.find(target) : row;
         const mailboxPatch = listedRow?.mailboxIds
           ? applyMailboxCounterUpdate(state, listedRow, (mailbox) =>
               emailInMailbox(listedRow, mailbox)
@@ -5015,8 +5028,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           : {};
 
         return {
-          emails: state.emails.filter(e => !isTarget(e)),
-          selectedEmail: getNextSelectedEmailAfterRemovingRow(state, isTarget),
+          emails: state.emails.filter(e => !target(e)),
+          selectedEmail: getNextSelectedEmailAfterRemovingRow(state, target),
           ...mailboxPatch,
         };
       });
@@ -5080,12 +5093,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // Update local state including mailbox counters
       set((state) => {
+        // The rows that are the message in the list as it is now.
+        const target = context ? context.matcherFor(state) : isTarget;
         // Remove from processing set
         const newProcessingSet = new Set(state.processingReadStatus);
         newProcessingSet.delete(processingKey);
 
         // Only update counters if the state is actually changing
-        const emailInState = state.emails.find(isTarget);
+        const emailInState = state.emails.find(target);
         if (!emailInState) return { processingReadStatus: newProcessingSet };
 
         const wasRead = emailInState.keywords?.$seen ?? false;
@@ -5118,9 +5133,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
         return {
           emails: state.emails.map(e =>
-            isTarget(e) ? { ...e, keywords: { ...e.keywords, $seen: read } } : e
+            target(e) ? { ...e, keywords: { ...e.keywords, $seen: read } } : e
           ),
-          selectedEmail: (!!state.selectedEmail && isTarget(state.selectedEmail))
+          selectedEmail: (!!state.selectedEmail && target(state.selectedEmail))
             ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $seen: read } }
             : state.selectedEmail,
           retainedInViewIds,
@@ -5136,7 +5151,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             let updated = false;
             const newCache = new Map(state.threadEmailsCache);
             for (const [tid, cachedEmails] of newCache) {
-              const idx = cachedEmails.findIndex(isTarget);
+              const idx = cachedEmails.findIndex(target);
               if (idx !== -1) {
                 newCache.set(tid, cachedEmails.map((e, i) =>
                   i === idx ? { ...e, keywords: { ...e.keywords, $seen: read } } : e
@@ -5246,11 +5261,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       let mailboxes: Mailbox[];
       let accountId: string | undefined;
       let fromMailboxId: string | null;
+      let matcherFor: SourceActionContext['matcherFor'] | null = null;
       if (source) {
         // Read outside the list: its own login and account, whatever is
         // listed, and a destination among that account's folders only.
         const context = resolveSourceActionContext(source, emailId);
-        ({ isTarget, row, client: actionClient, accountId } = context);
+        ({ isTarget, row, client: actionClient, accountId, matcherFor } = context);
         mailboxes = await sourceActionFolders(context);
         if (!mailboxes.some(mb => mb.id === destinationMailboxId)) {
           throw new Error('The folder is not in this message\'s account');
@@ -5275,8 +5291,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       await actionClient.moveEmail(emailId, jmapDestId, accountId);
 
-      const listedRow = row;
-      if (listedRow) set((state) => movedEmailState(state, listedRow, destinationMailboxId, isTarget));
+      if (matcherFor) {
+        // The row that is the message in the list as it is now, if any.
+        const sameMessage = matcherFor;
+        set((state) => {
+          const target = sameMessage(state);
+          const current = state.emails.find(target);
+          return current ? movedEmailState(state, current, destinationMailboxId, target) : {};
+        });
+      } else if (row) {
+        const listedRow = row;
+        set((state) => movedEmailState(state, listedRow, destinationMailboxId, isTarget));
+      }
       emitEmailMove(move, mailboxes);
     } catch (error) {
       set({
@@ -6143,23 +6169,26 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
       await actionClient.toggleStar(emailId, !isFlagged, accountId);
 
-      // Update local state
-      set((state) => ({
-        emails: state.emails.map(e =>
-          isTarget(e) ? { ...e, keywords: { ...e.keywords, $flagged: !isFlagged } } : e
-        ),
-        selectedEmail: (!!state.selectedEmail && isTarget(state.selectedEmail))
-          ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $flagged: !isFlagged } }
-          : state.selectedEmail,
-        // In the starred cross view, un-starring drops the mail out of the
-        // hasKeyword:$flagged filter. Retain the row so it stays visible until the
-        // view is re-opened; re-starring makes it match again, so drop retention.
-        retainedInViewIds: updateRetainedForView(
-          state.retainedInViewIds,
-          retainingCrossView(state) === 'starred' ? (isFlagged ? 'add' : 'remove') : 'none',
-          emailId,
-        ),
-      }));
+      // Update local state: the rows that are the message in the list as it is now.
+      set((state) => {
+        const target = context ? context.matcherFor(state) : isTarget;
+        return {
+          emails: state.emails.map(e =>
+            target(e) ? { ...e, keywords: { ...e.keywords, $flagged: !isFlagged } } : e
+          ),
+          selectedEmail: (!!state.selectedEmail && target(state.selectedEmail))
+            ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $flagged: !isFlagged } }
+            : state.selectedEmail,
+          // In the starred cross view, un-starring drops the mail out of the
+          // hasKeyword:$flagged filter. Retain the row so it stays visible until the
+          // view is re-opened; re-starring makes it match again, so drop retention.
+          retainedInViewIds: updateRetainedForView(
+            state.retainedInViewIds,
+            retainingCrossView(state) === 'starred' ? (isFlagged ? 'add' : 'remove') : 'none',
+            emailId,
+          ),
+        };
+      });
       void emailHooks.onEmailStarToggle.emit(hookPayload);
       refillAfterKeywordChange(get, client, ['$flagged']);
     } catch (error) {

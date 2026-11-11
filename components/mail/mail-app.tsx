@@ -6941,9 +6941,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onMarkAsRead={async (emailId, read) => {
                   // Only ever the mark-as-read on expanding a message: a refusal
                   // (a read-only shared folder) just leaves it unread.
-                  if (client) {
+                  // In the conversation's own login and account, whatever the
+                  // list shows: its older messages are not listed.
+                  const login = conversationBlobSource?.clientAccountId ?? activeAccountId;
+                  if (client && login) {
                     const target = conversationEmails.find((e) => e.id === emailId);
-                    await markAsRead(client, emailId, read, target ? emailKeyFor(target) : undefined).catch((error) => {
+                    await markAsRead(client, emailId, read, target ? emailKeyFor(target) : undefined, {
+                      clientAccountId: login, accountId: conversationBlobSource?.accountId, email: target,
+                    }).catch((error) => {
                       debug.warn('email', '[Mark as Read] Failed:', error);
                     });
                   }
