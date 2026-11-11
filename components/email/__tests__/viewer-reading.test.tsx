@@ -228,6 +228,17 @@ describe('reading width', () => {
     expect(body.style.marginInline).toBe('auto');
   });
 
+  it('centres the reader view text at about 80 characters a line when comfortable', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    await show(message({ html: '<p>Read this in peace.</p>' }));
+    await act(async () => { screen.getByRole('button', { name: 'more_actions' }).click(); });
+    const readerItem = screen.getAllByRole('menuitem').find((el) => el.textContent?.includes('reader_view'))!;
+    await act(async () => { readerItem.click(); });
+    const body = screen.getByTestId('reader-view-body');
+    expect(body.style.maxWidth).toBe('80ch');
+    expect(body.style.marginInline).toBe('auto');
+  });
+
   it('uses the full width by default', async () => {
     const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
     expect(container.querySelector('iframe')!.getAttribute('srcdoc')).not.toContain('80ch');
