@@ -318,6 +318,25 @@ function loginClientOf(login: string): IJMAPClient | undefined {
   return auth.getClientForAccount(login) ?? (login === auth.activeAccountId ? auth.client ?? undefined : undefined);
 }
 
+/**
+ * The login a message in the reader is read and written through: its stamp,
+ * else the login whose folder is browsed. Null when no login is named.
+ */
+function readerLoginOf(email: Pick<Email, 'sourceClientAccountId'> | null | undefined): string | null {
+  return email?.sourceClientAccountId ?? useEmailStore.getState().viewingAccountId ?? useAuthStore.getState().activeAccountId ?? null;
+}
+
+/**
+ * Whether the reader can show `email` as `login`'s message: it still reads
+ * as that login's, and that login still has its client. A login that went
+ * away takes its messages with it, since through any other login their ids
+ * name other messages.
+ */
+function stillLoginsMessage(email: Pick<Email, 'sourceClientAccountId'> | null | undefined, login: string | null): boolean {
+  if (readerLoginOf(email) !== login) return false;
+  return login ? !!loginClientOf(login) : !!useAuthStore.getState().client;
+}
+
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
@@ -5816,6 +5835,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // they are looking at nor end its loading state.
     const openSeq = ++emailOpenSeqRef.current;
     const previousEmail = useEmailStore.getState().selectedEmail;
+    // The logins of the message on screen and of the one opening. A login
+    // signed out (or dropped) while this open is on its way takes its
+    // messages with it: the reader neither goes back to its message nor
+    // shows the one arriving, and the browsed folder has moved on anyway.
+    const previousLogin = readerLoginOf(previousEmail);
+    const openingLogin = readerLoginOf(listEmail);
+    const fallbackEmail = () => (previousEmail && stillLoginsMessage(previousEmail, previousLogin) ? previousEmail : null);
+    const openStillHolds = () => stillLoginsMessage(listEmail, openingLogin);
     // Paint the header from the row at once (subject, sender and date are in
     // hand) and let the body follow; the viewer shows a row without body
     // values as loading. Mountain View shows the message inside its
@@ -5838,7 +5865,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const { client: fetchClient, accountId } = source;
       if (!fetchClient) {
         console.warn('[mail-app] No connected client for email source');
-        if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(previousEmail);
+        if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(fallbackEmail());
         return new Error('no connected login reaches the account');
       }
 
@@ -5855,6 +5882,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // The request a mouse press on the row already started, if any.
       const fullEmail = await requestEmailContent(fetchClient, email.id, accountId);
       if (openSeq !== emailOpenSeqRef.current) return fullEmail ? 'opened' : 'missing';
+      if (!openStillHolds()) {
+        abandonOpenEmail(fallbackEmail());
+        return new Error('the login of the message went away');
+      }
       if (fullEmail) {
         const scheduledSubmissionByEmailId = useEmailStore.getState().scheduledSubmissionByEmailId;
         const annotated = annotateScheduledEmail(fullEmail, scheduledSubmissionByEmailId);
@@ -5893,6 +5924,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
           if (openSeq !== emailOpenSeqRef.current) return 'opened';
+          if (!openStillHolds()) {
+            abandonOpenEmail(fallbackEmail());
+            return new Error('the login of the message went away');
+          }
           if (conversation !== undefined) {
             setMvConversationResult(conversation ? {
               emails: conversation, source, threadId: fullEmail.threadId,
@@ -5914,7 +5949,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setOpenFailure({ target: email, offline: true });
         return new Error('offline');
       }
-      abandonOpenEmail(previousEmail);
+      abandonOpenEmail(fallbackEmail());
       return 'missing';
     } catch (error) {
       console.error('Failed to fetch email content:', error);
@@ -5922,8 +5957,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // Offline the reader says why instead of going blank or back to the
         // last message; another failure says so too when there's nothing to go back to.
         const offline = offlineNow(client);
-        abandonOpenEmail(offline ? null : previousEmail);
-        if (offline || !previousEmail) setOpenFailure({ target: email, offline });
+        const back = offline ? null : fallbackEmail();
+        abandonOpenEmail(back);
+        if (offline || !back) setOpenFailure({ target: email, offline });
       }
       return error instanceof Error ? error : new Error(String(error));
     }

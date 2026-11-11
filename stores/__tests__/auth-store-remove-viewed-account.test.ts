@@ -3,7 +3,7 @@ import { useAuthStore } from '../auth-store';
 import { useAccountStore } from '../account-store';
 import { useEmailStore } from '../email-store';
 import { useSettingsStore } from '../settings-store';
-import { emailKeyFor } from '@/lib/thread-utils';
+import { emailKeyFor, threadKeyFor } from '@/lib/thread-utils';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
@@ -104,5 +104,23 @@ describe('removing a login that is not the active one', () => {
     expect(state.selectedEmail).toBeNull();
     expect([...state.selectedEmailKeys]).toEqual([emailKeyFor(own)]);
     expect(fetchEmails).not.toHaveBeenCalled();
+  });
+
+  it('closes its open conversations in a list that mixes accounts, keeping the active login\'s', () => {
+    const own = message({ sourceClientAccountId: a, sourceAccountId: 'br' });
+    const gone = message({ sourceClientAccountId: b, sourceAccountId: 'bs' });
+    useEmailStore.setState({
+      viewingAccountId: null, isUnifiedView: true, selectedMailbox: '__unified_inbox__',
+      emails: [own], selectedEmail: own,
+      expandedThreadIds: new Set([threadKeyFor(own), threadKeyFor(gone)]),
+      threadEmailsCache: new Map([[threadKeyFor(own), [own]], [threadKeyFor(gone), [gone]]]),
+    });
+
+    useAuthStore.getState().removeAccount(b);
+
+    const state = useEmailStore.getState();
+    expect([...state.expandedThreadIds]).toEqual([threadKeyFor(own)]);
+    expect([...state.threadEmailsCache.keys()]).toEqual([threadKeyFor(own)]);
+    expect(state.selectedEmail).toBe(own);
   });
 });

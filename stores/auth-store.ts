@@ -889,12 +889,15 @@ const endingRefused = new Set<string>();
  * A login that is removed, or has no client for longer: its mail rows, cards,
  * calendars, events and tasks leave the lists. Ids repeat across logins, so
  * nothing done to them could go anywhere but to another login's namesakes.
+ * Views that hold one of its messages or folders themselves (Pro tabs) look
+ * up their login's client again on the revision and show nothing of it.
  */
 function forgetLoginRows(accountId: string, activeClient: IJMAPClient | null): void {
   forgetAccountRows(accountId, activeClient);
   forgetLoginContacts(accountId);
   forgetLoginCalendars(accountId);
   forgetLoginTasks(accountId);
+  useAuthStore.setState((state) => ({ connectedAccountsRevision: state.connectedAccountsRevision + 1 }));
 }
 
 /** A client that's connected: what the server said on the way there is over. */
@@ -3982,10 +3985,17 @@ export const useAuthStore = create<AuthState>()(
         } finally {
           skipLocalCopy = false;
         }
-        return offline.every(([id]) => {
+        const swapped = offline.every(([id]) => {
           const client = clients.get(id);
           return !!client && !client.isOfflineOnly();
         });
+        // A login that came back without a client is gone from here on: its
+        // rows and views go, as when it is removed.
+        const { activeAccountId, client: activeClient } = get();
+        for (const [id] of offline) {
+          if (!clients.has(id) && id !== activeAccountId) forgetLoginRows(id, activeClient);
+        }
+        return swapped;
       },
     }),
     {
