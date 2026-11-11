@@ -4706,8 +4706,16 @@ export function EmailComposer({
           composerId: pluginComposerIdRef.current ?? undefined,
           ...(outgoingKeywords.length > 0 ? { keywords: outgoingKeywords } : {}),
         }, handedToHost);
-        // Not when nothing went: no host, or one that sent nothing.
-        if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);
+        if (outcome === false) {
+          // The host sent nothing (no connection, or the login of the From
+          // address has none) and said why. The message stays here as it
+          // was, recipients, text and draft included, and the composer open.
+          explicitCloseRef.current = false;
+          sentRef.current = false;
+          return;
+        }
+        // Not when nothing went: no host.
+        if (draftElsewhere && onSend) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);
 
         // Replying trusts the recipients, but not while the organisation
         // blocks remote content: the list would take effect the moment the

@@ -5144,6 +5144,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleQuickReply = async (body: string, extra?: { composerId?: string }): Promise<boolean> => {
     if (!client || !selectedEmail) return false;
 
+    // The quick reply sends through the active login, from its identities.
+    // A message of another login (a row of the unified inbox, that login's
+    // folder in the Pro sidebar) is answered in the full composer with the
+    // typed text, where the From address shows which login it leaves from;
+    // a login without a connection sends nothing and the text stays here.
+    const messageLogin = readerLoginOf(selectedEmail);
+    if (messageLogin && messageLogin !== activeAccountId) {
+      if (!loginClientOf(messageLogin)) {
+        toast.error(t('notifications.error_sending'), t('notifications.not_connected'));
+        return false;
+      }
+      await handleReply(body);
+      return true;
+    }
+
     // Quick reply follows the composer's addressing rules and sends from the
     // address the message was delivered to (lib/outgoing/quick-reply-envelope.ts).
     const { recipients, sendingIdentity, primaryIdentity } = quickReplyEnvelope(selectedEmail, identities);
@@ -6184,6 +6199,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         }}
         onSend={async (data, state) => {
           const outcome = await handleEmailSend(data, state);
+          // Refused: nothing went, and the composer keeps the message as it was.
+          if (outcome === false) return outcome;
           setPendingDraft(null);
           setComposerPrefill(null);
           scanReplyDrafts();
