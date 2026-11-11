@@ -21,6 +21,7 @@
  */
 
 import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
+import { isSealed } from '@/lib/plugin-secrets/sealed';
 
 /** What a plugin is granted, or what the admin was shown or approved. */
 export interface Grants {
@@ -161,6 +162,21 @@ export function grantsOf(entry: GrantSource | null | undefined): VersionGrants {
     secretSettings: settingsDeclared(entry?.configSchema, true),
     plainSettings: settingsDeclared(entry?.configSchema, false),
   };
+}
+
+/**
+ * The installed version's grants with what is stored for it taken into
+ * account: a setting whose stored value is a secret (it comes sealed from
+ * the config store) counts among the secret settings, also when the
+ * installed version does not declare its key at all. A version that declares
+ * such a key with an ordinary kind is then asked about like any other
+ * setting that stops being a secret. A key the installed version itself
+ * declares with an ordinary kind is left out: that change was asked about
+ * when it came, and nothing changes for it now.
+ */
+export function withSealedSettings(installed: VersionGrants, stored: Record<string, unknown>): VersionGrants {
+  const sealed = Object.keys(stored).filter((key) => isSealed(stored[key]) && !installed.plainSettings.includes(key));
+  return { ...installed, secretSettings: [...new Set([...installed.secretSettings, ...sealed])] };
 }
 
 /** An origin as compared: host case, a trailing slash and https' own port make no difference. */

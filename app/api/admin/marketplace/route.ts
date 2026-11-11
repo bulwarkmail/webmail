@@ -12,7 +12,7 @@ import {
   type ServerTheme,
 } from '@/lib/admin/plugin-registry';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
-import { sealPluginSecrets } from '@/lib/admin/plugin-config';
+import { getPluginConfig, sealPluginSecrets } from '@/lib/admin/plugin-config';
 import type { InstallRecord } from '@/lib/admin/extension-history';
 import {
   EXTENSION_ID_RE,
@@ -53,6 +53,7 @@ import {
   grantsOf,
   judgeAnswer,
   unexpectedMessage,
+  withSealedSettings,
 } from '@/lib/admin/extension-grants';
 import { createHash } from 'node:crypto';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
@@ -397,13 +398,17 @@ export async function POST(request: NextRequest) {
     // listing names no hosts, paths, frame origins, credential servers or tier, so on a
     // first install all of those are asked about. Which stored secret each credential sends
     // where, and a setting that stops being a secret, are compared on an update only:
-    // before a first install nothing is stored. The
+    // a first install starts with nothing stored (what an earlier plugin left under the
+    // id is removed before it is saved). For an update the stored settings are put in
+    // order first, so a setting whose stored value is a secret counts as one even when
+    // the installed version no longer declares it. The
     // answer names each addition as the 409 listed it; an entry it names that was neither
     // asked about nor seen is refused. `force` is for withdrawn and older versions, and says
     // nothing about this.
     const granted = grantsOf(manifest);
+    if (isUpdate) await sealPluginSecrets(slug, existingPlugin);
     const seen = isUpdate
-      ? grantsOf(existingPlugin)
+      ? withSealedSettings(grantsOf(existingPlugin), await getPluginConfig(slug))
       : { ...grantsOf({ permissions: meta.permissions }), credentials: granted.credentials };
     const added = grantsAdded(seen, granted);
     const answer = judgeAnswer(added, seen, { acceptPermissions, acceptGrants });
@@ -460,9 +465,9 @@ export async function POST(request: NextRequest) {
       ...record,
     };
 
-    // What the admin stored under the installed version's secret fields stays a
-    // secret, whatever this version declares for those keys.
-    await sealPluginSecrets(slug, existingPlugin?.configSchema);
+    // What is stored keeps its standing through the save: a secret stays one whatever
+    // this version declares for its key, and a first install starts clean.
+    await sealPluginSecrets(slug, existingPlugin);
     await savePlugin(plugin, code);
     invalidateFrameOriginsCache();
     await auditLog(

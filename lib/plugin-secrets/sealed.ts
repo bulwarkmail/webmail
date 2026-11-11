@@ -1,9 +1,12 @@
-// A plugin setting that was stored as a secret.
+// A plugin setting that is stored as a secret.
 //
-// The admin enters a value into a `secret` field of a plugin's settings. From
-// then on the stored value is a secret whatever a later version of the plugin
-// declares for that key: the store marks it (lib/admin/plugin-config.ts) and
-// hands it to readers sealed. A sealed value does not serialise (JSON, string
+// A stored value is a secret unless it is known to be plain: entered into a
+// field that was declared with an ordinary kind at that moment. A value
+// entered into a `secret` field, one whose key the installed version does
+// not declare, and one left behind with nothing installed are secrets, and
+// stay so whatever a later version of the plugin declares for the key. The
+// store keeps the mark with the value (lib/admin/plugin-config.ts) and
+// hands a secret to readers sealed. A sealed value does not serialise (JSON, string
 // conversion and logging give nothing), so a reader that passes settings on
 // cannot hand it out by accident. Only `settingForServer` opens it, and only
 // while the installed version still declares the field `secret`: for the
@@ -44,6 +47,17 @@ export function declarationOf<T extends SettingDeclaration>(
   key: string,
 ): T | undefined {
   return schema && Object.hasOwn(schema, key) ? schema[key] : undefined;
+}
+
+const ORDINARY_KINDS = new Set(['string', 'boolean', 'number', 'select']);
+
+/**
+ * Whether a setting is declared with an ordinary kind: one whose value the
+ * plugin and any signed-in user may read. A `secret` field, a kind this
+ * version doesn't know and a key that isn't declared at all are not.
+ */
+export function isOrdinarySetting(declaration: SettingDeclaration | undefined): boolean {
+  return !!declaration && typeof declaration.type === 'string' && ORDINARY_KINDS.has(declaration.type);
 }
 
 /** The keys a settings schema declares as `secret`. */

@@ -6,7 +6,7 @@ import { requireAdminAuth } from '@/lib/admin/session';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
-import { adminSettings, declarationOf, ordinarySettings } from '@/lib/plugin-secrets/sealed';
+import { adminSettings, declarationOf, isOrdinarySetting, ordinarySettings } from '@/lib/plugin-secrets/sealed';
 
 /** Resolve a plugin from the persisted registry first, then PLUGIN_DEV_DIR. */
 async function resolvePlugin(id: string) {
@@ -126,9 +126,10 @@ export async function PUT(
       );
     }
 
-    // Stored with how the field is declared now, so the value stays a secret
-    // if a later version declares the key differently.
-    const kind = declarationOf(plugin.configSchema, body.key)?.type === 'secret' ? 'secret' : 'plain';
+    // Stored with how the field is declared now: plain only into a field of
+    // an ordinary kind, a secret otherwise, and it stays what it was stored as
+    // when a later version declares the key differently.
+    const kind = isOrdinarySetting(declarationOf(plugin.configSchema, body.key)) ? 'plain' : 'secret';
     await setPluginConfig(id, body.key, body.value, kind);
     return NextResponse.json({ ok: true });
   } catch (error) {

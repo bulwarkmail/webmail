@@ -134,9 +134,9 @@ export async function POST(request: NextRequest) {
     const declaredHttpOrigins = plugin.httpOrigins ?? [];
     const declaredApiPostPaths = plugin.apiPostPaths ?? [];
 
-    // What the admin stored under the installed version's secret fields stays a
-    // secret, whatever the uploaded version declares for those keys.
-    await sealPluginSecrets(plugin.id, existing?.configSchema);
+    // What is stored keeps its standing through the save: a secret stays one whatever
+    // the uploaded version declares for its key, and a first install starts clean.
+    await sealPluginSecrets(plugin.id, existing);
     await savePlugin(plugin, code);
     invalidateFrameOriginsCache();
     await auditLog('plugin.install', { id: plugin.id, name: plugin.name, version: plugin.version, frameOrigins: declaredFrameOrigins, httpOrigins: declaredHttpOrigins, apiPostPaths: declaredApiPostPaths }, ip);

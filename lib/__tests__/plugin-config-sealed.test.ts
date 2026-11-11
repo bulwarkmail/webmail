@@ -66,7 +66,9 @@ vi.mock('@/lib/admin/csp-frame-origins', async (orig) => ({
   invalidateFrameOriginsCache: vi.fn(),
 }));
 vi.mock('@/lib/desktop/server-policy', () => ({ devicePolicyPluginRefusal: () => null }));
-vi.mock('@/lib/admin/plugin-dev', () => ({ getDevPlugin: vi.fn(async () => null), listDevPlugins: vi.fn(async () => []) }));
+// A plugin loaded from PLUGIN_DEV_DIR, when a case sets one.
+let devPlugin: { plugin: Record<string, unknown> } | null = null;
+vi.mock('@/lib/admin/plugin-dev', () => ({ getDevPlugin: vi.fn(async () => devPlugin), listDevPlugins: vi.fn(async () => []) }));
 vi.mock('@/lib/admin/plugin-approvals', () => ({ listApprovals: vi.fn(async () => []) }));
 vi.mock('@/lib/stalwart/credentials', () => ({
   getStalwartCredentials: vi.fn(async () => ({ accountName: 'alice@example.org', serverUrl: 'https://mail.example.org' })),
@@ -143,6 +145,7 @@ beforeEach(async () => {
   vault.clear();
   audit.mockClear();
   kept = {};
+  devPlugin = null;
   await deletePluginConfig(ID);
 });
 afterEach(() => { vi.unstubAllGlobals(); });
@@ -231,7 +234,8 @@ describe('a value stored as a secret, when the installed version declares its ke
     expect(await adminEnters('apiKey', 'a public site key')).toBe(200);
     expect(await pluginReads()).toEqual({ apiKey: 'a public site key' });
     expect(JSON.stringify(onDisk())).not.toContain(FAKE);
-    expect(onDisk()).toEqual({ apiKey: 'a public site key' });
+    // An empty list: every value in the file is known to be plain.
+    expect(onDisk()).toEqual({ apiKey: 'a public site key', $secret: [] });
   });
 
   it('removing the setting removes its mark, and the file with the last key', async () => {
@@ -391,12 +395,12 @@ describe('a key stored before marks existed, when another version is saved', () 
 
   it('writes nothing when no secret is stored, or all of them are marked already', async () => {
     await deletePluginConfig(ID);
-    await sealPluginSecrets(ID, V1.configSchema);
+    await sealPluginSecrets(ID, V1);
     expect(existsSync(storedFile())).toBe(false);
 
     await adminEnters('apiKey', FAKE);
     const before = readFileSync(storedFile(), 'utf-8');
-    await sealPluginSecrets(ID, V1.configSchema);
+    await sealPluginSecrets(ID, V1);
     expect(readFileSync(storedFile(), 'utf-8')).toBe(before);
   });
 });
@@ -453,6 +457,111 @@ describe('the question about a setting that stops being a secret', () => {
       configSchema: { note: { type: 'secret', label: 'Note' }, greeting: { type: 'string', label: 'Greeting' } },
     });
     expect(res.status).toBe(200);
+  });
+});
+
+describe('a file from before the list of secrets: plain is only what is known to be plain', () => {
+  const MIXED = {
+    ...BASE, version: '1.0.0',
+    configSchema: { apiKey: secretField, greeting: { type: 'string', label: 'Greeting' }, retries: { type: 'number', label: 'Retries' } },
+    credentials: { svc },
+  };
+
+  it('the first read sorts it by the installed version and writes the list', async () => {
+    installed(MIXED);
+    storedBeforeMarks({ apiKey: FAKE, greeting: 'hello', retries: 3, leftover: 'from-a-setting-an-update-dropped' });
+    expect(await pluginReads()).toEqual({ greeting: 'hello', retries: 3 });
+    expect(onDisk()).toEqual({ apiKey: FAKE, greeting: 'hello', retries: 3, leftover: 'from-a-setting-an-update-dropped', $secret: ['apiKey', 'leftover'] });
+    // The admin's page gets the secret of a field that is one, and nothing for the key no field declares.
+    expect(await adminReads()).toEqual({ apiKey: FAKE, greeting: 'hello', retries: 3 });
+    expect(await resolveCredential(user, ID, 'svc')).toMatchObject({ secret: FAKE });
+  });
+
+  it('a key the installed version does not declare: an update that declares it as plain text is asked about, and it stays sealed', async () => {
+    installed({ ...BASE, version: '1.1.0', configSchema: { greeting: { type: 'string', label: 'Greeting' } } });
+    storedBeforeMarks({ apiKey: FAKE, greeting: 'hello' });
+
+    const v2 = { ...manifestOf(BASE), version: '1.2.0', configSchema: { greeting: { type: 'string', label: 'Greeting' }, apiKey: plainField } };
+    const asked = await update(v2);
+    expect(asked.status).toBe(409);
+    expect(asked.body.grantsAdded.formerSecrets).toEqual(['apiKey']);
+    expect(asked.body.error).toContain('Stops keeping the setting "apiKey" secret');
+    expect((await update(v2, { acceptGrants: asked.body.grantsAdded })).status).toBe(200);
+    expect(await pluginReads()).toEqual({ greeting: 'hello' });
+    expect(await adminReads()).toEqual({ greeting: 'hello' });
+
+    // The next update keeps the key plain: nothing changes for it, so nothing is asked.
+    expect((await update({ ...v2, version: '1.3.0' })).status).toBe(200);
+    expect(await pluginReads()).toEqual({ greeting: 'hello' });
+
+    // A new value entered now is an ordinary setting.
+    expect(await adminEnters('apiKey', 'a public site key')).toBe(200);
+    expect(await pluginReads()).toEqual({ greeting: 'hello', apiKey: 'a public site key' });
+  });
+
+  it('the same key through a rollback to a version that declared it as plain text', async () => {
+    installed({ ...BASE, version: '1.1.0' });
+    storedBeforeMarks({ apiKey: FAKE });
+    kept = { ...BASE, version: '0.9.0', configSchema: { apiKey: plainField } };
+    const asked = await rollback({ version: '0.9.0' });
+    expect(asked.status).toBe(409);
+    expect(asked.body.grantsAdded.formerSecrets).toEqual(['apiKey']);
+    expect((await rollback({ version: '0.9.0', acceptGrants: asked.body.grantsAdded })).status).toBe(200);
+    expect(await pluginReads()).toEqual({});
+  });
+
+  it('nothing installed: a first install starts clean, also one that declares the old key a secret again', async () => {
+    storedBeforeMarks({ apiKey: FAKE, greeting: 'hello' });
+    // Another package under the id, with a credential of its own for the key.
+    const other = { ...manifestOf(V1), version: '3.0.0', credentials: { svc: { ...svc, origin: 'https://collector.example' } } };
+    const asked = await update(other);
+    expect(asked.status).toBe(409);
+    // Not installed yet: what was left is still there, and nobody can read it (nothing is installed).
+    expect(onDisk()).toEqual({ apiKey: FAKE, greeting: 'hello' });
+    expect((await readConfig(new NextRequest(`http://localhost/api/admin/plugins/${ID}/config?public=1`), params)).status).toBe(404);
+
+    expect((await update(other, { acceptGrants: asked.body.grantsAdded })).status).toBe(200);
+    expect(existsSync(storedFile())).toBe(false);
+    // The old key is not sent to the new package's server.
+    expect(await resolveCredential(user, ID, 'svc')).toBeNull();
+    expect(await adminReads()).toEqual({});
+  });
+
+  it('a value entered under a key no field declares is a secret from the start', async () => {
+    installed({ ...BASE, version: '1.0.0' });
+    expect(await adminEnters('scratch', FAKE)).toBe(200);
+    expect(onDisk()).toEqual({ scratch: FAKE, $secret: ['scratch'] });
+    expect(await adminReads()).toEqual({});
+    installed({ ...BASE, version: '1.1.0', configSchema: { scratch: { type: 'string', label: 'Scratch' } } });
+    expect(await pluginReads()).toEqual({});
+  });
+
+  it('a change to one setting sorts the rest of an old file first', async () => {
+    installed(MIXED);
+    storedBeforeMarks({ apiKey: FAKE, greeting: 'hello' });
+    expect(await adminEnters('retries', 5)).toBe(200);
+    expect(onDisk()).toEqual({ apiKey: FAKE, greeting: 'hello', retries: 5, $secret: ['apiKey'] });
+    expect((await removeConfig(json('DELETE', { key: 'greeting' }), params)).status).toBe(200);
+    expect(onDisk()).toEqual({ apiKey: FAKE, retries: 5, $secret: ['apiKey'] });
+  });
+
+  it('a plugin from the dev folder is sorted by its own manifest', async () => {
+    devPlugin = { plugin: { ...MIXED } };
+    storedBeforeMarks({ apiKey: FAKE, greeting: 'hello' });
+    expect(await pluginReads()).toEqual({ greeting: 'hello' });
+    expect(onDisk().$secret).toEqual(['apiKey']);
+  });
+
+  it('a file that cannot be read stops the save instead of being taken for empty', async () => {
+    installed(V1);
+    // A folder where the file should be: reading it fails.
+    mkdirSync(storedFile(), { recursive: true });
+    try {
+      expect((await upload(manifestOf(V2_PLAIN))).status).toBe(500);
+      expect(registry.get(ID)!.version).toBe('1.0.0');
+    } finally {
+      rmSync(storedFile(), { recursive: true, force: true });
+    }
   });
 });
 

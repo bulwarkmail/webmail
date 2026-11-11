@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 import { HistoryError, readHistoryEntry } from '@/lib/admin/extension-history';
 import { getPlugin, getTheme, savePlugin, saveTheme } from '@/lib/admin/plugin-registry';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
-import { sealPluginSecrets } from '@/lib/admin/plugin-config';
+import { getPluginConfig, sealPluginSecrets } from '@/lib/admin/plugin-config';
 import { CREDENTIAL_HEADER_NAMES, unlistedCredentialHeaders } from '@/lib/plugin-secrets/credentials';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { EXTENSION_ID_RE } from '@/lib/extension-package';
@@ -18,6 +18,7 @@ import {
   grantsOf,
   judgeAnswer,
   unexpectedMessage,
+  withSealedSettings,
   type Grants,
 } from '@/lib/admin/extension-grants';
 
@@ -108,7 +109,11 @@ export async function POST(
           { status: 400 },
         );
       }
-      const installed = grantsOf(current);
+      // The stored settings are put in order first, so a setting whose stored
+      // value is a secret counts as one even when the installed version no
+      // longer declares it.
+      await sealPluginSecrets(id, current);
+      const installed = withSealedSettings(grantsOf(current), await getPluginConfig(id));
       const added = grantsAdded(installed, grantsOf(kept.entry));
       const asked = question(added, installed, current.version);
       if (asked) return asked;
@@ -121,9 +126,9 @@ export async function POST(
         installedAt: current.installedAt,
         updatedAt: now,
       };
-      // What the admin stored under the installed version's secret fields stays a
-      // secret, whatever the kept version declares for those keys.
-      await sealPluginSecrets(id, current.configSchema);
+      // What is stored keeps its standing through the save: a secret stays one
+      // whatever the kept version declares for its key.
+      await sealPluginSecrets(id, current);
       await savePlugin(plugin, kept.code);
       invalidateFrameOriginsCache();
       await auditLog('plugin.rollback', {
