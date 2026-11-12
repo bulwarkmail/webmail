@@ -26,6 +26,8 @@ import type { MessageActionKey } from "./message-actions";
  */
 export interface ConversationActions {
   mailboxes: Mailbox[];
+  /** Whose folders `mailboxes` are, when not the active login's: Move shows it above them. */
+  moveHeading?: string;
   selectedMailbox: string;
   currentMailboxRole?: string;
   onArchive?: () => void;
@@ -54,11 +56,11 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
   const { copyTargets, copyToAccount } = useCopyToAccount(email, moreMenu.contextMenu.isOpen);
   const exportEmail = useEmailExport();
   const [showSource, setShowSource] = useState(false);
-  const { mailboxes, selectedMailbox, onArchive, onDelete, onMoveToMailbox } = actions;
+  const { mailboxes, moveHeading, selectedMailbox, onArchive, onDelete, onMoveToMailbox } = actions;
 
   const ownerAccountId = resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox);
   const moveEmails = useMemo(() => [email], [email]);
-  const moveModel = useMoveMenu(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId, emails: moveEmails });
+  const moveModel = useMoveMenu(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId, emails: moveEmails, heading: moveHeading });
   const canMove = !!onMoveToMailbox && !moveMenuIsEmpty(moveModel);
   const chooseMoveFolder = useChooseMoveFolder();
 

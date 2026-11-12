@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { moveFoldersFor, useEmailStore } from '../email-store';
 import { useAuthStore } from '../auth-store';
+import { useAccountStore } from '../account-store';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
@@ -76,6 +77,18 @@ describe('a move of a message of another login browsed in the sidebar', () => {
 
   it('is offered that login\'s folders', () => {
     expect(moveFoldersFor([row]).mailboxes.map((m) => m.name)).toEqual(['inbox', 'Payroll']);
+  });
+
+  it('is offered them named by that login\'s address; the active login\'s own folders by none', () => {
+    const original = useAccountStore.getState().accounts;
+    useAccountStore.setState({ accounts: [{ id: 'login-a', email: 'a@example.org' }, { id: 'login-b', email: 'b@example.org' }] } as never);
+    try {
+      expect(moveFoldersFor([row]).owner).toBe('b@example.org');
+      useEmailStore.setState({ viewingAccountId: null } as never);
+      expect(moveFoldersFor([row]).owner).toBeUndefined();
+    } finally {
+      useAccountStore.setState({ accounts: original } as never);
+    }
   });
 
   it('goes into that login\'s folder, through that login', async () => {

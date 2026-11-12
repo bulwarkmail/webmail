@@ -10,6 +10,7 @@ import { KEYWORD_PREFIX } from '@/lib/thread-utils';
 const { MvListToolbar } = await import('../mv-list-toolbar');
 const { useEmailStore } = await import('@/stores/email-store');
 const { useAuthStore } = await import('@/stores/auth-store');
+const { useAccountStore } = await import('@/stores/account-store');
 const { useSettingsStore } = await import('@/stores/settings-store');
 
 const rights = {
@@ -58,6 +59,9 @@ describe('MvListToolbar filing actions', () => {
     toolbar();
 
     fireEvent.click(screen.getByLabelText('move_to'));
+    // One login: no account named above its folders.
+    expect(document.querySelector('[data-move-folder-list]')).not.toBeNull();
+    expect(document.querySelector('[data-move-heading]')).toBeNull();
     fireEvent.click(screen.getByText('Receipts'));
 
     await waitFor(() => expect(batchMoveToMailbox).toHaveBeenCalledWith({}, 'receipts', undefined, []));
@@ -128,8 +132,11 @@ describe('MvListToolbar filing actions', () => {
     });
     afterEach(() => {
       useAuthStore.setState(original.auth);
+      useAccountStore.setState({ accounts: originalAccounts } as never);
       useEmailStore.setState({ viewingAccountId: null, accountMailboxes: {}, isUnifiedView: false } as never);
     });
+    const originalAccounts = useAccountStore.getState().accounts;
+    const account = (id: string, email: string) => ({ id, email, label: email, username: email, serverUrl: 'https://mail.example', isConnected: true });
 
     it('offers the folders of the login browsed, not the active login\'s with the same ids', () => {
       useEmailStore.setState({
@@ -140,6 +147,29 @@ describe('MvListToolbar filing actions', () => {
       fireEvent.click(screen.getByLabelText('move_to'));
       expect(screen.getByText('Payroll')).toBeInTheDocument();
       expect(screen.queryByText('Receipts')).toBeNull();
+    });
+
+    it('says whose folders they are, by that login\'s address, above them', () => {
+      useAccountStore.setState({ accounts: [account('login-a', 'ann@example.org'), account('login-b', 'bob@example.net')] } as never);
+      useEmailStore.setState({
+        viewingAccountId: 'login-b',
+        accountMailboxes: { 'login-b': [mailbox('inbox', 'Inbox', 'inbox'), mailbox('receipts', 'Payroll')] },
+      } as never);
+      toolbar();
+      fireEvent.click(screen.getByLabelText('move_to'));
+      const heading = document.querySelector('[data-move-heading]');
+      expect(heading).toHaveTextContent('bob@example.net');
+      // Above the folders.
+      expect(heading!.compareDocumentPosition(screen.getByText('Payroll')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('names no account above the active login\'s own folders', () => {
+      useAccountStore.setState({ accounts: [account('login-a', 'ann@example.org'), account('login-b', 'bob@example.net')] } as never);
+      toolbar();
+      fireEvent.click(screen.getByLabelText('move_to'));
+      expect(screen.getByText('Receipts')).toBeInTheDocument();
+      expect(document.querySelector('[data-move-heading]')).toBeNull();
+      expect(screen.queryByText('ann@example.org')).toBeNull();
     });
 
     it('offers no folders for a selection of two logins, and says why', () => {

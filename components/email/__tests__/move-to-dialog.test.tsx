@@ -2,6 +2,7 @@ import { act, fireEvent, render, renderHook, screen } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useToastStore } from '@/stores/toast-store';
 import { MoveToDialogHost, useChooseMoveFolder, useMoveDialogStore } from '../move-to-dialog';
@@ -47,6 +48,8 @@ describe('the Move dialog', () => {
     act(() => useMoveDialogStore.getState().open({ emails: [email], onMove }));
 
     expect(screen.getByTestId('move-to:inbox')).toBeDisabled();
+    // The active login's own folders: no account named above them.
+    expect(document.querySelector('[data-move-heading]')).toBeNull();
     fireEvent.change(screen.getByTestId('move-filter'), { target: { value: 'tra' } });
     expect(screen.queryByTestId('move-to:work')).toBeNull();
     fireEvent.click(screen.getByTestId('move-to:travel'));
@@ -91,6 +94,19 @@ describe('the Move dialog with two logins', () => {
     expect(screen.getByText('Payroll')).toBeInTheDocument();
     expect(screen.queryByText('Work')).toBeNull();
     expect(screen.queryByText('Travel')).toBeNull();
+  });
+
+  it('says whose folders they are, by that login\'s address', () => {
+    const originalAccounts = useAccountStore.getState().accounts;
+    useAccountStore.setState({ accounts: [{ id: 'login-a', email: 'ann@example.org' }, { id: 'login-b', email: 'bob@example.net' }] } as never);
+    try {
+      useEmailStore.setState({ viewingAccountId: 'login-b', accountMailboxes: { 'login-b': theirs } } as never);
+      render(<MoveToDialogHost selectedMailbox="inbox" />);
+      act(() => useMoveDialogStore.getState().open({ emails: [email], onMove: vi.fn() }));
+      expect(document.querySelector('[data-move-heading]')).toHaveTextContent('bob@example.net');
+    } finally {
+      useAccountStore.setState({ accounts: originalAccounts } as never);
+    }
   });
 
   it('opens nothing for messages of two logins, and says why', () => {

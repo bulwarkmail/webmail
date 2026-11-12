@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -36,6 +37,7 @@ vi.mock('next-intl', () => ({
 
 let viewerFolders: string[] | null = null;
 let viewerMoveHint: string | undefined;
+let viewerMoveHeading: string | undefined;
 vi.mock('next/dynamic', () => ({ default: (load: () => Promise<React.ComponentType<Record<string, unknown>>>) => {
   const Component = lazy(async () => ({ default: await load() }));
   return function Dynamic(props: Record<string, unknown>) {
@@ -43,9 +45,10 @@ vi.mock('next/dynamic', () => ({ default: (load: () => Promise<React.ComponentTy
   };
 } }));
 vi.mock('@/components/email/email-viewer', () => ({
-  EmailViewer: ({ mailboxes, onMoveToMailbox, moveUnavailableHint }: { mailboxes?: Mailbox[]; onMoveToMailbox?: (id: string) => void; moveUnavailableHint?: string }) => {
+  EmailViewer: ({ mailboxes, onMoveToMailbox, moveUnavailableHint, moveHeading }: { mailboxes?: Mailbox[]; onMoveToMailbox?: (id: string) => void; moveUnavailableHint?: string; moveHeading?: string }) => {
     viewerFolders = onMoveToMailbox ? (mailboxes ?? []).map((m) => m.name) : [];
     viewerMoveHint = moveUnavailableHint;
+    viewerMoveHeading = moveHeading;
     return (
       <div>
         reader
@@ -228,5 +231,32 @@ describe('"Move to" with one login, and in a team folder of the active login', (
     await screen.findByText('reader', {}, { timeout: 5000 });
     expect(viewerFolders).toEqual(['inbox', 'trash', 'Projects']);
     expect(viewerMoveHint).toBeUndefined();
+  });
+});
+
+describe('whose folders "Move to" shows', () => {
+  const originalAccounts = useAccountStore.getState().accounts;
+  beforeEach(() => {
+    viewerMoveHeading = undefined;
+    useAccountStore.setState({ accounts: [
+      { id: 'login-a', email: 'a@example.org', label: 'a@example.org' },
+      { id: 'login-b', email: 'b@example.org', label: 'b@example.org' },
+    ] } as never);
+  });
+  afterEach(() => useAccountStore.setState({ accounts: originalAccounts } as never));
+
+  it('names the login browsed, by its address, above its folders in the reader', async () => {
+    render(<MailApp />);
+    await screen.findByText('reader', {}, { timeout: 5000 });
+    expect(viewerFolders).toContain('Payroll');
+    expect(viewerMoveHeading).toBe('b@example.org');
+  });
+
+  it('names no account above the active login\'s own folders', async () => {
+    useEmailStore.setState({ viewingAccountId: null, accountMailboxes: {} } as never);
+    render(<MailApp />);
+    await screen.findByText('reader', {}, { timeout: 5000 });
+    expect(viewerFolders).toContain('Projects');
+    expect(viewerMoveHeading).toBeUndefined();
   });
 });

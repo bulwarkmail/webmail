@@ -292,6 +292,8 @@ export interface EmailViewerProps {
    * unavailable, with this as its hint.
    */
   moveUnavailableHint?: string;
+  /** Whose folders `mailboxes` are, when not the active login's: Move shows it above them (moveFoldersFor's `owner`). */
+  moveHeading?: string;
   /**
    * Take the message out of the open folder only (#615). Passed only when
    * the message is also in another folder.
@@ -1284,6 +1286,8 @@ interface ReaderMoreMenuProps {
   options: MessageActionOptions;
   label: string;
   mailboxes: Mailbox[];
+  /** Whose folders `mailboxes` are, when not the active login's. */
+  moveHeading?: string;
   selectedMailbox: string;
   onMoveToMailbox?: (mailboxId: string) => void;
   onSetTag?: (tagId: string | null) => void;
@@ -1292,7 +1296,7 @@ interface ReaderMoreMenuProps {
 }
 
 /** The reader's ⋮ on a desktop: the row's context menu, anchored to the button (R6). */
-function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMoveToMailbox, onSetTag, pluginEntries }: ReaderMoreMenuProps) {
+function ReaderMoreMenu({ menu, options, label, mailboxes, moveHeading, selectedMailbox, onMoveToMailbox, onSetTag, pluginEntries }: ReaderMoreMenuProps) {
   const { email } = options;
   const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
   return (
@@ -1304,6 +1308,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       menuRef={menu.menuRef}
       label={label}
       mailboxes={mailboxes}
+      moveHeading={moveHeading}
       moveUnavailableHint={options.moveUnavailableHint}
       selectedMailbox={selectedMailbox}
       currentMailboxRole={options.currentMailboxRole}
@@ -1505,6 +1510,7 @@ export function EmailViewer({
   onUndoSpam,
   onMoveToMailbox,
   moveUnavailableHint,
+  moveHeading,
   onRemoveFromFolder,
   onTogglePinned,
   onBack,
@@ -2249,6 +2255,7 @@ export function EmailViewer({
     currentMailboxId: selectedMailbox,
     ownerAccountId: moveOwnerAccountId,
     emails: moveEmails,
+    heading: moveHeading,
   });
   const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
   const chooseMoveFolder = useChooseMoveFolder();
@@ -4880,7 +4887,7 @@ export function EmailViewer({
                 <MoveFolderList
                   model={moveModel}
                   onPick={(mailboxId) => { onMoveToMailbox(mailboxId); closeMoveMenu(); }}
-                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox, mailboxes, selectedMailbox }); } : undefined}
+                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox, mailboxes, selectedMailbox, heading: moveHeading }); } : undefined}
                 />
               </div>
             </ContextMenu>
@@ -5096,6 +5103,7 @@ export function EmailViewer({
               options={readerActionOptions}
               label={t('more_actions')}
               mailboxes={mailboxes}
+              moveHeading={moveHeading}
               selectedMailbox={selectedMailbox}
               onMoveToMailbox={onMoveToMailbox}
               onSetTag={onSetTag ? (tagId) => onSetTag(email.id, tagId) : undefined}
