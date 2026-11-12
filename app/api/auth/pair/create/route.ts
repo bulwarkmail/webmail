@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { createPairingCode, isGrantAvailable, stashGrant } from '@/lib/auth/pairing-store';
 import { pairingOwner, readPairReauthFromStore, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { mintGrantWithPassword } from '@/lib/auth/pair-grant';
@@ -84,7 +85,7 @@ const STEP_UP_ERRORS = {
 
 // The answer stands; a count that couldn't be settled stays a failure (the safe side).
 function settleFailed(error: unknown): void {
-  logger.warn('Pair step-up attempt not settled', { error: error instanceof Error ? error.message : 'Unknown error' });
+  logger.warn('Pair step-up attempt not settled', { error: loggableError(error) });
 }
 
 export async function POST(request: NextRequest) {
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Attempts can't be counted, nor grants kept, without the shared store.
     if (isStoreUnavailable(error)) return storeUnavailableResponse({ 'Cache-Control': 'no-store' });
-    logger.error('Pair create error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Pair create error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { redeemPairingCode } from '@/lib/auth/pairing-store';
 import { PAIR_TOKEN_PROXY_PATH, buildRedeemBundle } from '@/lib/auth/pair-bundle';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Nothing is redeemed without the shared store; the code stays valid.
     if (isStoreUnavailable(error)) return storeUnavailableResponse(NO_STORE);
-    logger.error('Pair redeem error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Pair redeem error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: NO_STORE });
   }
 }

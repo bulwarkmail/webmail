@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import {
   isHandoffCode,
   isHandoffCodeVerifier,
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       if (refund) await refund();
       return storeUnavailableResponse(NO_STORE);
     }
-    logger.error('Mobile hand-off redeem error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Mobile hand-off redeem error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: NO_STORE });
   }
 }

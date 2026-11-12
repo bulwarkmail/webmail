@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { encryptSession, decryptSession, sessionAuthHeader, type SessionCredentials } from '@/lib/auth/crypto';
 import { SESSION_COOKIE_MAX_AGE, sessionCookieName } from '@/lib/auth/session-cookie';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
@@ -251,7 +252,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.error('Session store error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session store error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -291,7 +292,7 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } },
     );
   } catch (error) {
-    logger.error('Session read error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session read error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -348,7 +349,7 @@ export async function PUT(request: NextRequest) {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (error) {
-    logger.error('Session read error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session read error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -391,7 +392,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    logger.error('Session clear error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session clear error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

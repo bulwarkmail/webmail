@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { getPasswordLoginScope, refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { readFileEnv } from '@/lib/read-file-env';
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // The sign-in limit can't be counted without the shared store: refused.
     if (isStoreUnavailable(error)) return storeUnavailableResponse();
-    logger.error('TOTP login error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('TOTP login error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

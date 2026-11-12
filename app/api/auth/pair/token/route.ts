@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { openPhoneRefreshToken, sealPhoneRefreshToken, type SealedRefresh } from '@/lib/auth/pair-bundle';
 import { DEFAULT_CLIENT_ID, getClientSecret, getTokenEndpoint } from '@/lib/oauth/token-exchange';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       : (await fetchPublicUrl(sealed.tokenEndpoint, init)) as unknown as Response;
   } catch (error) {
     logger.warn('Pair token proxy: provider unreachable', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: loggableError(error),
     });
     return oauthError('temporarily_unavailable', 503);
   }

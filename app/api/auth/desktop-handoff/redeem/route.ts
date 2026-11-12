@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { desktopHandoffEnabled } from '@/lib/auth/desktop-handoff-server';
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
       if (refund) await refund();
       return storeUnavailableResponse(NO_STORE);
     }
-    logger.error('Desktop hand-off redeem error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Desktop hand-off redeem error', { error: loggableError(error) });
     return answer('Internal server error', 500);
   }
 }
