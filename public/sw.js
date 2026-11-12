@@ -1412,8 +1412,19 @@ function getReusableClientScore(state) {
 function buildClickUrl(data, reply) {
   if (!data) return `${BASE_PATH}/`;
   if (data.kind === "calendar-reminder") {
-    // The page's address, with its language. Only ever a path on this origin.
-    return typeof data.url === "string" && /^\/(?!\/)/.test(data.url) ? data.url : `${BASE_PATH}/calendar`;
+    // The page's address, with its language. Only ever a path on this origin: the address
+    // is resolved as a browser would, and opened only when it stays here.
+    const calendar = `${BASE_PATH}/calendar`;
+    if (typeof data.url !== "string" || !data.url) return calendar;
+    let target;
+    try {
+      target = new URL(data.url, self.location.origin);
+    } catch (_) {
+      return calendar;
+    }
+    // A path starting with two slashes would name another host once opened.
+    if (target.origin !== self.location.origin || target.pathname.startsWith("//")) return calendar;
+    return target.pathname + target.search + target.hash;
   }
   const params = new URLSearchParams();
   if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
