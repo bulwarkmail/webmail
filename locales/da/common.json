@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Liste fra pluginet {name}",
-    "dropdown_list_labelled": "{label}, liste fra pluginet {name}"
+    "dropdown_list_labelled": "{label}, liste fra pluginet {name}",
+    "oauth_failed": "Tjenesten gennemførte ikke login. Luk dette vindue, og prøv igen."
   },
   "command_palette": {
     "title": "Kommandopalet",

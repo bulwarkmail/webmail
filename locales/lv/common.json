@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Saraksts no spraudņa {name}",
-    "dropdown_list_labelled": "{label}, saraksts no spraudņa {name}"
+    "dropdown_list_labelled": "{label}, saraksts no spraudņa {name}",
+    "oauth_failed": "Pakalpojums nepabeidza pierakstīšanos. Aizveriet šo logu un mēģiniet vēlreiz."
   },
   "command_palette": {
     "title": "Komandu palete",

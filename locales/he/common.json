@@ -7079,7 +7079,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "רשימה מהתוסף {name}",
-    "dropdown_list_labelled": "{label}, רשימה מהתוסף {name}"
+    "dropdown_list_labelled": "{label}, רשימה מהתוסף {name}",
+    "oauth_failed": "השירות לא השלים את הכניסה. סגרו חלון זה ונסו שוב."
   },
   "command_palette": {
     "title": "לוח פקודות",

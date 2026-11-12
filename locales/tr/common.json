@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "{name} eklentisinden liste",
-    "dropdown_list_labelled": "{label}, {name} eklentisinden liste"
+    "dropdown_list_labelled": "{label}, {name} eklentisinden liste",
+    "oauth_failed": "Hizmet oturum açmayı tamamlamadı. Bu pencereyi kapatıp yeniden deneyin."
   },
   "command_palette": {
     "title": "Komut paleti",

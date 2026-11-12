@@ -7090,7 +7090,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Danh sách từ plugin {name}",
-    "dropdown_list_labelled": "{label}, danh sách từ plugin {name}"
+    "dropdown_list_labelled": "{label}, danh sách từ plugin {name}",
+    "oauth_failed": "Dịch vụ chưa hoàn tất đăng nhập. Hãy đóng cửa sổ này và thử lại."
   },
   "command_palette": {
     "title": "Bảng lệnh",

@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Elenco dal plugin {name}",
-    "dropdown_list_labelled": "{label}, elenco dal plugin {name}"
+    "dropdown_list_labelled": "{label}, elenco dal plugin {name}",
+    "oauth_failed": "Il servizio non ha completato l'accesso. Chiudi questa finestra e riprova."
   },
   "command_palette": {
     "title": "Tavolozza comandi",

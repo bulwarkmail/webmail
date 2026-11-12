@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "プラグイン {name} のリスト",
-    "dropdown_list_labelled": "{label}(プラグイン {name} のリスト)"
+    "dropdown_list_labelled": "{label}(プラグイン {name} のリスト)",
+    "oauth_failed": "サービスでサインインが完了しませんでした。このウィンドウを閉じて、もう一度お試しください。"
   },
   "command_palette": {
     "title": "コマンドパレット",

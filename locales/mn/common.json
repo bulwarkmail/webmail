@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "{name} залгаасын жагсаалт",
-    "dropdown_list_labelled": "{label}, {name} залгаасын жагсаалт"
+    "dropdown_list_labelled": "{label}, {name} залгаасын жагсаалт",
+    "oauth_failed": "Үйлчилгээ нэвтрэлтийг дуусгасангүй. Энэ цонхыг хаагаад дахин оролдоно уу."
   },
   "command_palette": {
     "title": "Командын самбар",

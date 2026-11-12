@@ -7086,7 +7086,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Liste frå plugin {name}",
-    "dropdown_list_labelled": "{label}, liste frå plugin {name}"
+    "dropdown_list_labelled": "{label}, liste frå plugin {name}",
+    "oauth_failed": "Tenesta fullførte ikkje innlogginga. Lukk dette vindauget og prøv igjen."
   },
   "command_palette": {
     "title": "Kommando-palett",

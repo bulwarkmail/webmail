@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Liste fra tillegget {name}",
-    "dropdown_list_labelled": "{label}, liste fra tillegget {name}"
+    "dropdown_list_labelled": "{label}, liste fra tillegget {name}",
+    "oauth_failed": "Tjenesten fullførte ikke påloggingen. Lukk dette vinduet og prøv igjen."
   },
   "command_palette": {
     "title": "Kommandopalett",

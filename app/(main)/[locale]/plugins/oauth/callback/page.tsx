@@ -37,9 +37,13 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+/** An OAuth error code (RFC 6749 4.1.2.1: `access_denied`, `invalid_scope`, ...). */
+const OAUTH_ERROR_CODE = /^[a-z0-9_.-]{1,64}$/i;
+
 function PluginOAuthCallbackInner() {
   const searchParams = useSearchParams();
   const t = useTranslations("plugins");
+  const tSurfaces = useTranslations("plugin_surfaces");
   const [status, setStatus] = useState<"waiting" | "ok" | "error">("waiting");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -61,10 +65,15 @@ function PluginOAuthCallbackInner() {
         error_description: errorDescription ?? undefined,
         receivedAt: Date.now(),
       };
+      // The card names `error` only when it is an error code; other text gets
+      // the page's own sentence, and error_description is never shown. The
+      // plugin still gets both as the provider sent them.
       errorMessageText =
         errorParam === "access_denied"
           ? t("oauth_callback.denied")
-          : t("oauth_callback.failed_detail", { error: errorParam });
+          : OAUTH_ERROR_CODE.test(errorParam)
+            ? t("oauth_callback.failed_detail", { error: errorParam })
+            : tSurfaces("oauth_failed");
     } else if (!code || !state) {
       payload = { state: state ?? undefined, error: "invalid_request", receivedAt: Date.now() };
       errorMessageText = t("oauth_callback.missing_params");
@@ -106,7 +115,7 @@ function PluginOAuthCallbackInner() {
       setStatus("error");
       setErrorMessage(t("oauth_callback.delivery_failed"));
     }
-  }, [searchParams, t]);
+  }, [searchParams, t, tSurfaces]);
 
   return (
     <OAuthStatusCard

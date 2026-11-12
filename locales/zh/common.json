@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "来自插件 {name} 的列表",
-    "dropdown_list_labelled": "{label},来自插件 {name} 的列表"
+    "dropdown_list_labelled": "{label},来自插件 {name} 的列表",
+    "oauth_failed": "该服务未完成登录。请关闭此窗口后重试。"
   },
   "command_palette": {
     "title": "命令面板",

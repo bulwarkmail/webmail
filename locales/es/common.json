@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Lista del complemento {name}",
-    "dropdown_list_labelled": "{label}, lista del complemento {name}"
+    "dropdown_list_labelled": "{label}, lista del complemento {name}",
+    "oauth_failed": "El servicio no completó el inicio de sesión. Cierre esta ventana e inténtelo de nuevo."
   },
   "command_palette": {
     "title": "Paleta de comandos",

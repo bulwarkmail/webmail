@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Liste vom Plugin {name}",
-    "dropdown_list_labelled": "{label}, Liste vom Plugin {name}"
+    "dropdown_list_labelled": "{label}, Liste vom Plugin {name}",
+    "oauth_failed": "Der Dienst hat die Anmeldung nicht abgeschlossen. Schließen Sie dieses Fenster und versuchen Sie es erneut."
   },
   "command_palette": {
     "title": "Befehlspalette",

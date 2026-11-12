@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Список від плагіна {name}",
-    "dropdown_list_labelled": "{label}, список від плагіна {name}"
+    "dropdown_list_labelled": "{label}, список від плагіна {name}",
+    "oauth_failed": "Сервіс не завершив вхід. Закрийте це вікно й спробуйте ще раз."
   },
   "command_palette": {
     "title": "Палітра команд",

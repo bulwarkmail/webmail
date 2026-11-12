@@ -7078,7 +7078,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "Loend pistikprogrammilt {name}",
-    "dropdown_list_labelled": "{label}, loend pistikprogrammilt {name}"
+    "dropdown_list_labelled": "{label}, loend pistikprogrammilt {name}",
+    "oauth_failed": "Teenus ei lõpetanud sisselogimist. Sulge see aken ja proovi uuesti."
   },
   "command_palette": {
     "title": "Käsupalett",

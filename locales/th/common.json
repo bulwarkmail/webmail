@@ -2526,7 +2526,8 @@
   },
   "plugin_surfaces": {
     "dropdown_list": "รายการจากปลั๊กอิน {name}",
-    "dropdown_list_labelled": "{label}, รายการจากปลั๊กอิน {name}"
+    "dropdown_list_labelled": "{label}, รายการจากปลั๊กอิน {name}",
+    "oauth_failed": "บริการลงชื่อเข้าใช้ไม่สำเร็จ ปิดหน้าต่างนี้แล้วลองอีกครั้ง"
   },
   "tour": {
     "step_counter": "ขั้นตอนที่ {current} จาก {total}",
