@@ -276,9 +276,9 @@ describe('a key stored before the upgrade, in the other orders', () => {
     // every page that loads the plugin. That read sorts the file. A file nobody has read
     // yet says nothing about its keys, and neither does a registry entry that is gone.
     expect(await pluginReads()).toEqual({});
-    expect(onDisk()).toEqual({ apiKey: FAKE, $secret: ['apiKey'] });
     registry.set(ID, PLAIN);
     expect({ plugin: await pluginReads(), user: await userReads() }).toEqual({ plugin: {}, user: {} });
+    expect(onDisk()).toEqual({ apiKey: FAKE, $secret: ['apiKey'] });
   });
 
   it('control: the same file under a version that always declared the key as plain text stays readable', async () => {

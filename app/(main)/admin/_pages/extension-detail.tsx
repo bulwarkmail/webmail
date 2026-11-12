@@ -319,7 +319,10 @@ export function ExtensionDetailPage({ kind, id }: Props) {
     if (!entry) return;
     const ok = await confirm({
       title: `Remove "${entry.name}"?`,
-      message: 'It is removed for every user, with the versions kept on this server. This cannot be undone.',
+      // A plugin's settings and stored keys go with it; a theme has neither.
+      message: kind === 'plugin'
+        ? 'It is removed for every user, with the versions kept on this server. Its settings and stored keys are deleted. This cannot be undone.'
+        : 'It is removed for every user, with the versions kept on this server. This cannot be undone.',
       confirmText: 'Remove',
       cancelText: 'Cancel',
       variant: 'destructive',
