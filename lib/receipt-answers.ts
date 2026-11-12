@@ -20,7 +20,7 @@ const STORAGE_KEY = 'bulwark-receipt-checked';
 /** The most recent answers kept; older ones go first. */
 const MAX_KEPT = 2000;
 
-/** The login (an AccountEntry id) and JMAP account a message is in, as the view on screen resolves them. */
+/** The login (an AccountEntry id) and the JMAP account a message is in; the account is empty for a message of the login's own view. */
 export interface ReceiptAnswerAccount {
   login: string;
   accountId: string;

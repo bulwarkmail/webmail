@@ -6,13 +6,7 @@ import { useInternalMailDomains } from "@/components/email/external-sender-chip"
 import { receiptAnswerKey, useReceiptAnswers, type ReceiptAnswerAccount } from "@/lib/receipt-answers";
 import type { Email } from "@/lib/jmap/types";
 import { useAuthStore } from "@/stores/auth-store";
-import { resolveEmailBlobContext } from "@/stores/email-store";
-
-/** The login and JMAP account a message is in (resolveEmailBlobContext), the login's own account named by its id. */
-function answerAccount(sourceClientAccountId: string | undefined, sourceAccountId: string | undefined): ReceiptAnswerAccount {
-  const { client, accountId, clientAccountId } = resolveEmailBlobContext({ sourceClientAccountId, sourceAccountId }, useAuthStore.getState().client);
-  return { login: clientAccountId ?? "", accountId: accountId ?? client?.getAccountId() ?? "" };
-}
+import { useEmailStore } from "@/stores/email-store";
 
 /**
  * The From domain whose BIMI logo a message may show (see
@@ -24,8 +18,8 @@ function answerAccount(sourceClientAccountId: string | undefined, sourceAccountI
  * message gave when it was shown (lib/receipt-answers.ts), and a message
  * shown in full with results written on receipt leaves that answer there.
  * Answers are kept per login and JMAP account: the ones a message is stamped
- * with in a list that mixes accounts, else the ones on screen when the hook
- * first sees the message.
+ * with in a list that mixes accounts, else the login on screen (the viewed or
+ * the active one) when the hook first sees the message, with its own account.
  */
 export function useBrandDomain(
   email: (Pick<Email, "from" | "authenticationResults" | "authenticationResultsOnReceipt" | "sourceClientAccountId"> & Partial<Pick<Email, "keywords" | "headers" | "blobId" | "size" | "sourceAccountId">>) | null | undefined,
@@ -37,13 +31,18 @@ export function useBrandDomain(
   const headers = email?.headers;
   // Worked out from the flag or the headers in message order, as the cards do.
   const evidence = useMemo(() => authenticationResultsEvidence({ authenticationResultsOnReceipt: flag, headers }), [flag, headers]);
+  const viewingLogin = useEmailStore((state) => state.viewingAccountId);
+  const activeLogin = useAuthStore((state) => state.activeAccountId);
   // Taken again only for another message: one still on screen keeps its login and account
   // when another login is opened meanwhile, and leaves no answer under that one.
   const blobId = email?.blobId;
   const size = email?.size;
   const sourceLogin = email?.sourceClientAccountId;
   const sourceAccount = email?.sourceAccountId;
-  const account = useMemo(() => answerAccount(sourceLogin, sourceAccount), [blobId, size, sourceLogin, sourceAccount]); // eslint-disable-line react-hooks/exhaustive-deps
+  const account = useMemo<ReceiptAnswerAccount>(
+    () => ({ login: sourceLogin ?? viewingLogin ?? activeLogin ?? "", accountId: sourceAccount ?? "" }),
+    [blobId, size, sourceLogin, sourceAccount], // eslint-disable-line react-hooks/exhaustive-deps
+  );
   const answerKey = receiptAnswerKey(email, account);
   // Only a message with nothing of its own to go by borrows an answer.
   const remembered = useReceiptAnswers((state) => evidence === undefined && answerKey !== null && state.known.has(answerKey));
