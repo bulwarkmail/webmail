@@ -22,6 +22,7 @@
       "totp_required": "Wymagany jest kod uwierzytelniania dwuskładnikowego. Wprowadź kod poniżej.",
       "totp_invalid": "Nieprawidłowy kod uwierzytelniania. Sprawdź aplikację uwierzytelniającą i spróbuj ponownie.",
       "oauth_discovery_failed": "SSO jest włączone, ale nie można połączyć się z dostawcą tożsamości. Sprawdź konfigurację OAuth.",
+      "oauth_issuer_mismatch": "Logowanie przez tego dostawcę nie jest poprawnie skonfigurowane. Administrator musi ustawić jego adres wystawcy (issuer).",
       "token_exchange_failed": "Hasło i kod zostały zaakceptowane, ale serwer poczty odmówił rozpoczęcia sesji dla tej aplikacji. Poproś administratora o sprawdzenie ustawień klienta OAuth."
     },
     "show_password": "Pokaż hasło",

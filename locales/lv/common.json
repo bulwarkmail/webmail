@@ -21,6 +21,7 @@
       "generic": "Notikusi neparedzēta kļūda. Ja tā atkārtojas, sazinieties ar administratoru.",
       "totp_invalid": "Nepareizs autentifikācijas kods. Pārbaudiet lietotni un mēģiniet vēlreiz.",
       "oauth_discovery_failed": "SSO ir iespējots, bet autentifikācijas pakalpojums nav pieejams. Pārbaudiet OAuth iestatījumus.",
+      "oauth_issuer_mismatch": "Pieteikšanās ar šo pakalpojumu sniedzēju nav pareizi iestatīta. Administratoram jānorāda tā izdevēja (issuer) adrese.",
       "token_exchange_failed": "Parole un kods tika pieņemti, taču pasta serveris atteicās sākt sesiju šai lietotnei. Lūdziet administratoram pārbaudīt OAuth klienta iestatījumus.",
       "totp_required": "Nepieciešams divu faktoru autentifikācijas kods. Lūdzu, ievadiet kodu zemāk."
     },

@@ -22,6 +22,7 @@
       "totp_required": "Cần có mã xác thực hai yếu tố. Vui lòng nhập mã của bạn dưới đây.",
       "totp_invalid": "Mã xác thực không hợp lệ. Vui lòng kiểm tra ứng dụng xác thực của bạn và thử lại.",
       "oauth_discovery_failed": "SSO đã được bật nhưng không thể liên lạc được với nhà cung cấp danh tính. Kiểm tra cấu hình OAuth của bạn.",
+      "oauth_issuer_mismatch": "Đăng nhập qua nhà cung cấp này chưa được thiết lập đúng. Quản trị viên cần đặt địa chỉ issuer của nhà cung cấp.",
       "token_exchange_failed": "Mật khẩu và mã của bạn đã được chấp nhận nhưng máy chủ thư từ chối bắt đầu phiên cho ứng dụng này. Yêu cầu quản trị viên của bạn kiểm tra cài đặt ứng dụng khách OAuth của nó."
     },
     "show_password": "Hiển thị mật khẩu",

@@ -11,6 +11,7 @@
       "totp_required": "Tài khoản của bạn cần thêm một mã để đăng nhập. Hãy mở ứng dụng xác thực và nhập mã gồm 6 chữ số bên dưới.",
       "totp_invalid": "Mã này không đúng hoặc đã hết hạn. Hãy nhập mã hiện đang hiển thị trong ứng dụng xác thực.",
       "oauth_discovery_failed": "Hiện không thể đăng nhập thông qua tổ chức của bạn. Hãy thử lại sau hoặc liên hệ quản trị viên.",
+      "oauth_issuer_mismatch": "Đăng nhập thông qua tổ chức của bạn chưa được thiết lập đúng. Hãy báo cho quản trị viên.",
       "token_exchange_failed": "Mật khẩu và mã của bạn đúng nhưng máy chủ thư không cho phép ứng dụng này truy cập. Hãy nhờ quản trị viên kiểm tra cài đặt đăng nhập cho ứng dụng này."
     },
     "token_hint": "Một số nhà cung cấp thư cho phép dùng mã truy cập thay cho mật khẩu. Hãy tạo mã trong cài đặt của nhà cung cấp thư, sao chép rồi dán vào đây.",

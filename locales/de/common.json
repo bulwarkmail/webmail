@@ -22,6 +22,7 @@
       "totp_required": "Ein Zwei-Faktor-Authentifizierungscode ist erforderlich. Bitte geben Sie Ihren Code unten ein.",
       "totp_invalid": "Ungültiger Authentifizierungscode. Überprüfen Sie Ihre Authenticator-App.",
       "oauth_discovery_failed": "SSO ist aktiviert, aber der Identitätsanbieter ist nicht erreichbar. Überprüfen Sie Ihre OAuth-Konfiguration.",
+      "oauth_issuer_mismatch": "Die Anmeldung über diesen Anbieter ist nicht richtig eingerichtet. Die Administration muss seine Issuer-Adresse eintragen.",
       "token_exchange_failed": "Passwort und Code wurden akzeptiert, aber der Mailserver hat für diese App keine Sitzung gestartet. Bitten Sie Ihre Administration, die OAuth-Client-Einstellungen zu prüfen."
     },
     "show_password": "Passwort anzeigen",

@@ -22,6 +22,7 @@
       "totp_required": "Un code d'authentification à deux facteurs est requis. Veuillez saisir votre code ci-dessous.",
       "totp_invalid": "Code d'authentification invalide. Vérifiez votre application d'authentification.",
       "oauth_discovery_failed": "Le SSO est activé mais le fournisseur d'identité est injoignable. Vérifiez votre configuration OAuth.",
+      "oauth_issuer_mismatch": "La connexion avec ce fournisseur n'est pas configurée correctement. L'administrateur doit définir son adresse d'émetteur (issuer).",
       "token_exchange_failed": "Votre mot de passe et votre code ont été acceptés, mais le serveur de messagerie a refusé d'ouvrir une session pour cette application. Demandez à votre administrateur de vérifier les paramètres de son client OAuth."
     },
     "show_password": "Afficher le mot de passe",

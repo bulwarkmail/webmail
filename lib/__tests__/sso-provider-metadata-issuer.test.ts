@@ -345,6 +345,21 @@ describe('the discovery answers for the login page, the mobile app and the deskt
     expect((await metadata()).status).toBe(502);
   });
 
+  it('names the issuer refusal as such on every load, and logs it once', async () => {
+    config = { jmapServers: TWO_SERVERS };
+    for (let load = 0; load < 3; load++) {
+      expect(await metadata('other')).toEqual({ status: 502, body: { error: 'issuer_mismatch' } });
+    }
+    const refusals = vi.mocked(console.error).mock.calls.map((call) => String(call[0])).filter((line) => line.includes('https://other.example'));
+    expect(refusals).toHaveLength(1);
+    expect(refusals[0]).toContain('oauth.issuerUrl');
+
+    // A provider that answers with no usable document keeps the old answer.
+    vi.resetModules();
+    config = { jmapServerUrl: 'http://bare:8080', oauthClientId: 'webmail', jmapServers: TWO_SERVERS };
+    expect(await metadata()).toEqual({ status: 502, body: { error: 'OAuth discovery failed' } });
+  });
+
   it("gives the desktop app no sign-in for a typed server whose metadata names another server's issuer", async () => {
     config = {};
     expect(await desktopDiscovery('https://other.example')).toEqual({ status: 404, body: { error: 'no_oauth' } });

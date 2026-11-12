@@ -22,6 +22,7 @@
       "totp_required": "È richiesto un codice di autenticazione a due fattori. Inserisci il codice qui sotto.",
       "totp_invalid": "Codice di autenticazione non valido. Controlla la tua app di autenticazione.",
       "oauth_discovery_failed": "SSO è abilitato ma il provider di identità non è raggiungibile. Controlla la configurazione OAuth.",
+      "oauth_issuer_mismatch": "L'accesso con questo provider non è configurato correttamente. L'amministratore deve impostarne l'indirizzo dell'emittente (issuer).",
       "token_exchange_failed": "Password e codice sono stati accettati, ma il server di posta ha rifiutato di avviare una sessione per questa app. Chiedi all'amministratore di controllare le impostazioni del client OAuth."
     },
     "show_password": "Mostra password",

@@ -22,6 +22,7 @@
       "totp_required": "Du må skrive inn en tofaktorautentiseringskode nedenfor.",
       "totp_invalid": "Ugyldig autentiseringskode. Sjekk autentiseringsappen din og prøv igjen.",
       "oauth_discovery_failed": "SSO er aktivert, men identitetsleverandøren kunne ikke nås. Sjekk OAuth-konfigurasjonen.",
+      "oauth_issuer_mismatch": "Innlogging med denne leverandøren er ikke satt opp riktig. Administratoren må angi leverandørens issuer-adresse.",
       "token_exchange_failed": "Passordet og koden ble godtatt, men e-postserveren nektet å starte en økt for denne appen. Be administratoren din om å sjekke OAuth-klientinnstillingene."
     },
     "show_password": "Vis passord",

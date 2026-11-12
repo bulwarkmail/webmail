@@ -21,10 +21,10 @@ vi.mock('@/lib/admin/config-manager', () => ({
   configManager: { ensureLoaded: vi.fn().mockResolvedValue(undefined), get: (_key: string, fallback: unknown) => fallback },
 }));
 
-const getMetadata = vi.fn();
+const discoverSignIn = vi.fn();
 const getRequiredConfig = vi.fn();
 vi.mock('@/lib/oauth/token-exchange', () => ({
-  getMetadata: (...args: unknown[]) => getMetadata(...args),
+  discoverSignIn: (...args: unknown[]) => discoverSignIn(...args),
   getRequiredConfig: (...args: unknown[]) => getRequiredConfig(...args),
 }));
 
@@ -59,15 +59,24 @@ describe('oauth metadata route', () => {
   });
 
   it('returns discovered metadata for the resolved server', async () => {
-    getMetadata.mockResolvedValue(VALID_METADATA);
+    discoverSignIn.mockResolvedValue({ metadata: VALID_METADATA });
 
     const { status, body, headers } = await callRoute('server-1');
 
     expect(status).toBe(200);
     expect(body).toEqual(VALID_METADATA);
     expect(headers['Cache-Control']).toContain('max-age=600');
-    // With the issuer rule of a sign-in: no server is configured in this test, so the single-server one.
-    expect(getMetadata).toHaveBeenCalledWith('server-1', undefined, 'named');
+    // Discovery as for a sign-in, with its issuer rule.
+    expect(discoverSignIn).toHaveBeenCalledWith('server-1');
+  });
+
+  it('says when the provider names another issuer than a sign-in may take', async () => {
+    discoverSignIn.mockResolvedValue({ metadata: null, refusal: 'issuer_mismatch' });
+
+    const { status, body } = await callRoute('server-1');
+
+    expect(status).toBe(502);
+    expect(body).toEqual({ error: 'issuer_mismatch' });
   });
 
   it('returns 404 when OAuth is not configured', async () => {
@@ -79,11 +88,11 @@ describe('oauth metadata route', () => {
 
     expect(status).toBe(404);
     expect(body).toEqual({ error: 'OAuth not configured' });
-    expect(getMetadata).not.toHaveBeenCalled();
+    expect(discoverSignIn).not.toHaveBeenCalled();
   });
 
   it('returns 502 when discovery yields no usable endpoints', async () => {
-    getMetadata.mockResolvedValue(null);
+    discoverSignIn.mockResolvedValue({ metadata: null, refusal: 'unavailable' });
 
     const { status, body } = await callRoute();
 
@@ -92,7 +101,7 @@ describe('oauth metadata route', () => {
   });
 
   it('returns 502 when discovery throws', async () => {
-    getMetadata.mockRejectedValue(new Error('network down'));
+    discoverSignIn.mockRejectedValue(new Error('network down'));
 
     const { status, body } = await callRoute();
 

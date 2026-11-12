@@ -61,29 +61,40 @@ export interface DiscoverOAuthOptions {
   issuerRule?: IssuerRule;
 }
 
-/** Discovery addresses whose differing issuer was already logged under 'named'. */
-const differingIssuersLogged = new Set<string>();
+/**
+ * The issuer findings already logged, by rule, discovery address and issuer
+ * named: each is logged once per process, not on every login page load.
+ */
+const issuerFindingsLogged = new Set<string>();
+
+/** Whether this finding still has to be logged (and marks it logged). */
+function firstTime(base: string, rule: IssuerRule, issuer: string): boolean {
+  const key = `${rule}\n${base}\n${issuer}`;
+  if (issuerFindingsLogged.has(key)) return false;
+  issuerFindingsLogged.add(key);
+  return true;
+}
 
 /** The issuer a document names, for a log line. */
 const quotedIssuer = (issuer: string) => JSON.stringify(issuer.slice(0, 200));
 
-function passesIssuerRule(metadata: OAuthMetadata, base: string, rule: IssuerRule): boolean {
+function issuerVerdict(metadata: OAuthMetadata, base: string, rule: IssuerRule): 'ok' | 'unavailable' | 'issuer_mismatch' {
   if (typeof metadata.issuer !== 'string' || !metadata.issuer) {
-    console.error(`[OAuth] Metadata from ${base} names no issuer, so it can't be used to sign in`);
-    return false;
+    if (firstTime(base, rule, '')) console.error(`[OAuth] Metadata from ${base} names no issuer, so it can't be used to sign in`);
+    return 'unavailable';
   }
-  if (isOwnIssuer(metadata.issuer, base)) return true;
+  if (isOwnIssuer(metadata.issuer, base)) return 'ok';
   const named = quotedIssuer(metadata.issuer);
   if (rule === 'named') {
-    const key = `${base}\n${metadata.issuer}`;
-    if (!differingIssuersLogged.has(key)) {
-      differingIssuersLogged.add(key);
+    if (firstTime(base, rule, metadata.issuer)) {
       console.warn(`[OAuth] Metadata from ${base} names ${named} as its issuer. Set OAUTH_ISSUER_URL (admin setting oauthIssuerUrl), or oauth.issuerUrl on the server's jmapServers entry, to ${named}; as soon as a second sign-in server is configured, sign-in through ${base} is refused until then`);
     }
-    return true;
+    return 'ok';
   }
-  console.error(`[OAuth] Metadata from ${base} names ${named} as its issuer, not ${base}, and this instance has more than one sign-in server. Set oauth.issuerUrl on the server's jmapServers entry, or OAUTH_ISSUER_URL (admin setting oauthIssuerUrl) for the configured server, to ${named}`);
-  return false;
+  if (firstTime(base, rule, metadata.issuer)) {
+    console.error(`[OAuth] Metadata from ${base} names ${named} as its issuer, not ${base}, and this instance has more than one sign-in server, so sign-in through it is refused. Set oauth.issuerUrl on the server's jmapServers entry, or OAUTH_ISSUER_URL (admin setting oauthIssuerUrl) for the configured server, to ${named}`);
+  }
+  return 'issuer_mismatch';
 }
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -235,13 +246,33 @@ async function attemptDiscovery(
   return null;
 }
 
+/**
+ * What discovery for a sign-in found: usable metadata, or why there is none.
+ * `issuer_mismatch`: the metadata names another issuer than the address it
+ * was fetched from while the rule is 'own', which the admin fixes by setting
+ * that server's issuer URL. Everything else (no answer, no usable document,
+ * no issuer at all) is `unavailable`.
+ */
+export type SignInDiscovery =
+  | { metadata: OAuthMetadata; refusal?: undefined }
+  | { metadata: null; refusal: 'unavailable' | 'issuer_mismatch' };
+
+export async function discoverSignInMetadata(
+  serverUrl: string,
+  options?: DiscoverOAuthOptions,
+): Promise<SignInDiscovery> {
+  const metadata = await fetchMetadata(serverUrl, options);
+  if (!metadata) return { metadata: null, refusal: 'unavailable' };
+  const verdict = options?.issuerRule ? issuerVerdict(metadata, serverUrl, options.issuerRule) : 'ok';
+  if (verdict !== 'ok') return { metadata: null, refusal: verdict };
+  return { metadata };
+}
+
 export async function discoverOAuth(
   serverUrl: string,
   options?: DiscoverOAuthOptions,
 ): Promise<OAuthMetadata | null> {
-  const metadata = await fetchMetadata(serverUrl, options);
-  if (metadata && options?.issuerRule && !passesIssuerRule(metadata, serverUrl, options.issuerRule)) return null;
-  return metadata;
+  return (await discoverSignInMetadata(serverUrl, options)).metadata;
 }
 
 async function fetchMetadata(

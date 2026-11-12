@@ -22,6 +22,7 @@
       "totp_required": "Este necesar un cod de autentificare în doi pași. Vă rugăm să introduceți codul mai jos.",
       "totp_invalid": "Cod de autentificare invalid. Vă rugăm să verificați aplicația de autentificare și să încercați din nou.",
       "oauth_discovery_failed": "SSO este activată, dar furnizorul de identitate nu a putut fi contactat. Verificați configurația OAuth.",
+      "oauth_issuer_mismatch": "Autentificarea prin acest furnizor nu este configurată corect. Administratorul trebuie să seteze adresa emitentului (issuer) acestuia.",
       "token_exchange_failed": "Parola și codul au fost acceptate, dar serverul de e-mail a refuzat să pornească o sesiune pentru această aplicație. Cereți administratorului să verifice setările clientului OAuth."
     },
     "show_password": "Afișează parola",

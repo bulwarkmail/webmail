@@ -22,6 +22,7 @@
       "totp_required": "Vajalik on kaheastmelise autentimise kood. Palun sisesta kood allpool.",
       "totp_invalid": "Vale autentimiskood. Palun kontrolli autentimisrakendust ja proovi uuesti.",
       "oauth_discovery_failed": "SSO on lubatud, kuid identiteedipakkujaga ei saadud ühendust. Kontrolli OAuth seadistust.",
+      "oauth_issuer_mismatch": "Selle pakkuja kaudu sisselogimine pole õigesti seadistatud. Administraator peab määrama selle väljastaja (issuer) aadressi.",
       "token_exchange_failed": "Sinu parool ja kood võeti vastu, aga meiliserver keeldus sellele rakendusele seansi algatamisest. Palu administraatoril kontrollida selle OAuth-kliendi seadeid."
     },
     "show_password": "Näita parooli",
