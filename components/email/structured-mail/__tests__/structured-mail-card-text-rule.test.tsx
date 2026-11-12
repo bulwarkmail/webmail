@@ -8,7 +8,9 @@
 //    is not one of the joiners honest text uses (dashes, slash, apostrophes, &, +, :, comma, brackets,
 //    arrow, underscore), and a single letter of another script than the letters on both sides of it.
 // 3. A run of labels names a domain when its last label is a real top-level domain, or a reserved
-//    one, compared in ASCII form; and, whatever it ends in, when it mixes scripts.
+//    one, compared in ASCII form; and, whatever it ends in, when a label mixes scripts or the run
+//    holds a letter of Cherokee, Lisu, Coptic, Deseret or Osage. Greek and Cyrillic letters that
+//    draw like Latin ones are also read as those Latin letters.
 import { act, render, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -172,6 +174,75 @@ describe('step 3: a top-level domain is a real one', () => {
     }
     // Japanese, Chinese and Korean are written next to Latin.
     expect(named('ANAクラウンプラザホテル・大阪')).toBe(false);
+  });
+});
+
+// Greek and Cyrillic letters that draw like Latin ones, by the Latin letter they draw like.
+const GREEK: Record<string, number> = { A: 0x391, M: 0x39c, Z: 0x396, O: 0x39f, N: 0x39d, C: 0x3f9, k: 0x3ba, i: 0x3b9, p: 0x3c1, v: 0x3bd, u: 0x3c5 };
+const CYRILLIC: Record<string, number> = { A: 0x410, M: 0x41c, O: 0x41e, C: 0x421, T: 0x422, E: 0x415, S: 0x405, a: 0x430, o: 0x43e };
+/** `latin` with the letters in `only` (all by default) written in the look-alikes of `table`. */
+const drawnLike = (table: Record<string, number>, latin: string, only?: string) =>
+  [...latin].map((ch) => (table[ch] && (!only || only.includes(ch)) ? cp(table[ch]) : ch)).join('');
+/** Latin small letters in a block of letter forms that starts at `a`. */
+const inForm = (a: number, latin: string) => [...latin].map((ch) => (/[a-z]/.test(ch) ? cp(a + ch.charCodeAt(0) - 97) : ch)).join('');
+
+describe('letters of other scripts that draw like Latin ones', () => {
+  it.each<[string, string]>([
+    ['Greek capitals', drawnLike(GREEK, 'AMAZON.COM')],
+    ['Greek small letters', drawnLike(GREEK, 'kip.vu')],
+    ['Cyrillic and Latin letters mixed', drawnLike(CYRILLIC, 'amazon.com', 'ao')],
+    ['Cyrillic capitals around a Latin Z and N', drawnLike(CYRILLIC, 'AMAZON.COM', 'AMOC')],
+    ['Cyrillic letters only', drawnLike(CYRILLIC, 'TESCO.COM')],
+    // NFKC folds these into the Greek capitals Α Μ Ζ Ο Ν Κ: AMAZON.KZ.
+    ['mathematical bold Greek capitals', `${cp(0x1d6a8, 0x1d6b3, 0x1d6a8, 0x1d6ad, 0x1d6b6, 0x1d6b4)}.${cp(0x1d6b1, 0x1d6ad)}`],
+  ])('reads a name in %s as the Latin domain it draws like', (_name, text) => {
+    expect(text).not.toMatch(/^[\x20-\x7e]*$/);
+    expect(named(text)).toBe(true);
+  });
+
+  it.each<[string, string]>([
+    ['Cherokee', `${cp(0x13e3, 0x13b3, 0x13a9)}.${cp(0x13df, 0x13be, 0x13b7)}`],
+    ['Lisu', `${cp(0xa4ee, 0xa4df, 0xa4ee, 0xa4dc, 0xa4f3, 0xa4e0)}.${cp(0xa4da, 0xa4f3, 0xa4df)}`],
+    ['Coptic', `${cp(0x2c95, 0x2c9f, 0x2c99)}.${cp(0x2c81, 0x2c9f)}`],
+    ['Deseret', `${cp(0x10400, 0x10401)}.${cp(0x10402, 0x10403)}`],
+    ['Osage', `${cp(0x104b0, 0x104b1)}.${cp(0x104b2, 0x104b3)}`],
+  ])('reads any dotted run with a letter of %s as a domain, whatever it ends in', (_name, text) => {
+    expect(named(text)).toBe(true);
+    // A word of that script without a dot is no domain.
+    expect(named(text.split('.')[0])).toBe(false);
+  });
+
+  it('reads the mathematical, enclosed and fullwidth forms as the letters NFKC folds them into, and leaves out what it does not fold', () => {
+    for (const text of [inForm(0x1d41a, 'bigbank.example'), inForm(0x24d0, 'bigbank.example'), inForm(0xff41, 'bigbank.example')]) {
+      expect(text.normalize('NFKC'), text).toBe('bigbank.example');
+      expect(named(text), text).toBe(true);
+    }
+    // NEGATIVE CIRCLED LATIN CAPITAL LETTERs stay as they are under NFKC: symbols, which step 1 leaves out.
+    const negative = [...'BIGBANK'].map((ch) => cp(0x1f150 + ch.charCodeAt(0) - 65)).join('');
+    expect(negative.normalize('NFKC')).toBe(negative);
+    expect(named(`${negative}.example`)).toBe(true);
+    expect(named(`Hotel ${negative}`)).toBe(true);
+  });
+
+  it('shows Greek and Russian names with an abbreviation', () => {
+    for (const text of ['ул.Ленина', 'пр.Мира', 'г.Новосибирск', 'ст.м.Арбатская', 'κ.Παπαδόπουλος', 'Αθ.Διάκου', 'Λεωφ.Συγγρού']) {
+      expect(named(text), text).toBe(false);
+    }
+    // "москва" is itself a top-level domain (xn--80adxhks): "г.Москва" ends in one and stays left out,
+    // as it was; the look-alikes change nothing there.
+    expect(named('г.Москва')).toBe(true);
+  });
+
+  it('still reads a run in two scripts as a look-alike, for endings the table cannot read as Latin', () => {
+    // An Armenian ending that draws like "org", and a Cyrillic one with м, which is not in the table.
+    expect(named(`bigbank.${cp(0x0585, 0x0580, 0x0563)}`)).toBe(true);
+    expect(named(`bigbank.${cp(0x0441, 0x043e, 0x043c)}`)).toBe(true);
+    // An Armenian o at the start of a label, and one standing for a dot.
+    expect(named(`bigbank.${cp(0x0585)}rg`)).toBe(true);
+    expect(named(`bigbank.c${cp(0x0585)}m`)).toBe(true);
+    // The cost: a Latin brand next to a Cyrillic or Greek word with a dot is left out too.
+    expect(named('Samsung.Чехол')).toBe(true);
+    expect(named('Café.Πλάκα')).toBe(true);
   });
 });
 

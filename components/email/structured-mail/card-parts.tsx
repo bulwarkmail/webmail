@@ -121,7 +121,9 @@ export function isOutsideSender(host: string, senderDomain: string): boolean {
  *    letter that letterDots finds.
  * 3. A run of labels names a domain when its last label is a top-level domain
  *    (lib/top-level-domains.ts), or, whatever it ends in, when it reads as a
- *    look-alike (runNamesOtherDomain).
+ *    look-alike (runNamesOtherDomain). A text is also read with the Greek and
+ *    Cyrillic letters that draw like Latin ones as those Latin letters
+ *    (namesOtherDomain).
  */
 
 type CodeRange = number | readonly [number, number];
@@ -371,22 +373,94 @@ function isTopLevelDomain(label: string): boolean {
  * is a punycode label.
  */
 function topLevelPart(label: string): string {
-  const bare = label.replace(LEADING_MARKS, "");
+  const bare = label.replace(LEADING_MARKS, "").toLowerCase();
   return bare.startsWith("xn--") ? bare : bare.split(HYPHEN)[0];
 }
 
 /**
- * Whether a run of two or more labels names a domain outside the sender's.
- * It reads as a look-alike of a domain, whatever its last label, when its
- * letters are written in two scripts ("bigbank.cоm" with a Cyrillic о at the
- * start of a label, "BIGBANK.СОМ") or when a letter stands for one of two or
- * more dots. Otherwise the longest part of it that ends in a top-level domain
- * is the domain it names ("pay.shop.example", "bigbank.example-secure").
+ * Greek and Cyrillic letters that draw like a Latin letter in common fonts,
+ * each with the Latin letter it draws like. This is what the eye reads, not a
+ * transliteration: Greek Η stands for the Latin H here, and Cyrillic Р for P.
+ * A capital and its small letter can draw like different Latin letters (Ν is
+ * N, ν is v), so the text keeps its case until it is compared.
  */
-function runNamesOtherDomain(labels: readonly string[], letterSeparators: number, senderDomain: string): boolean {
-  if ((letterSeparators > 0 && labels.length > 2) || scriptCount(labels) > 1) {
-    return isOutsideSender(labels.join("."), senderDomain);
+const LATIN_LOOKALIKES: ReadonlyMap<string, string> = new Map(
+  ([
+    // Greek capitals Α Β Ε Ζ Η Ι Κ Μ Ν Ο Ρ Τ Υ Χ, lunate sigma Ϲ, yot Ϳ
+    [0x0391, "A"], [0x0392, "B"], [0x0395, "E"], [0x0396, "Z"], [0x0397, "H"], [0x0399, "I"], [0x039a, "K"],
+    [0x039c, "M"], [0x039d, "N"], [0x039f, "O"], [0x03a1, "P"], [0x03a4, "T"], [0x03a5, "Y"], [0x03a7, "X"],
+    [0x03f9, "C"], [0x037f, "J"],
+    // Greek small letters ο ν ρ υ ι κ, lunate sigma ϲ, yot ϳ
+    [0x03bf, "o"], [0x03bd, "v"], [0x03c1, "p"], [0x03c5, "u"], [0x03b9, "i"], [0x03ba, "k"], [0x03f2, "c"], [0x03f3, "j"],
+    // Cyrillic capitals А В Е К М Н О Р С Т У Х, dze Ѕ, dotted І, je Ј, komi de Ԁ, qa Ԛ, we Ԝ, shha Һ, palochka Ӏ, straight u Ү
+    [0x0410, "A"], [0x0412, "B"], [0x0415, "E"], [0x041a, "K"], [0x041c, "M"], [0x041d, "H"], [0x041e, "O"],
+    [0x0420, "P"], [0x0421, "C"], [0x0422, "T"], [0x0423, "Y"], [0x0425, "X"], [0x0405, "S"], [0x0406, "I"],
+    [0x0408, "J"], [0x0500, "D"], [0x051a, "Q"], [0x051c, "W"], [0x04ba, "H"], [0x04c0, "I"], [0x04ae, "Y"],
+    // Cyrillic small letters а е о р с у х, dze ѕ, dotted і, je ј, komi de ԁ, qa ԛ, we ԝ, shha һ, palochka ӏ, straight u ү
+    [0x0430, "a"], [0x0435, "e"], [0x043e, "o"], [0x0440, "p"], [0x0441, "c"], [0x0443, "y"], [0x0445, "x"],
+    [0x0455, "s"], [0x0456, "i"], [0x0458, "j"], [0x0501, "d"], [0x051b, "q"], [0x051d, "w"], [0x04bb, "h"],
+    [0x04cf, "l"], [0x04af, "y"],
+  ] as const).map(([code, latin]) => [String.fromCodePoint(code), latin]),
+);
+const ASCII_LABEL = /^[A-Za-z0-9-]+$/;
+
+/**
+ * Scripts with many letters that draw like Latin ones and no honest use for
+ * a dotted name on a card: Cherokee, Lisu, Coptic, Deseret and Osage; and the
+ * mathematical alphanumeric, enclosed and fullwidth forms. NFKC folds those
+ * forms into plain letters and step 1 leaves out the symbols among them, so
+ * the blocks only catch what a later Unicode version adds without a fold.
+ */
+const NO_HONEST_USE = new RegExp(
+  `[\\p{Script=Cherokee}\\p{Script=Lisu}\\p{Script=Coptic}\\p{Script=Deseret}\\p{Script=Osage}${charClass([[0x1d400, 0x1d7ff], [0x2460, 0x24ff], [0x1f100, 0x1f1ff], [0xff00, 0xffef]])}]`,
+  "u",
+);
+
+/** Two or more labels next to each other in a word, and the single characters between them. */
+interface LabelRun {
+  labels: string[];
+  separators: string[];
+  /** How many of the separators are letters (letterDots). */
+  letterSeparators: number;
+}
+
+/** The runs of labels in a word: split at every dot, a label is a stretch with at least one letter. */
+function runsOf(word: readonly string[]): LabelRun[] {
+  const dots = letterDots(word);
+  const segments = [""];
+  const separators: string[] = [];
+  const separatorIsLetter: boolean[] = [];
+  word.forEach((ch, i) => {
+    if (dots.has(i) || !LABEL_CHAR.test(ch)) {
+      separators.push(ch);
+      separatorIsLetter.push(dots.has(i));
+      segments.push("");
+    } else {
+      segments[segments.length - 1] += ch;
+    }
+  });
+  const runs: LabelRun[] = [];
+  let start = 0;
+  for (let end = 0; end <= segments.length; end += 1) {
+    if (end < segments.length && LETTER.test(segments[end])) continue;
+    if (end - start >= 2) {
+      runs.push({
+        labels: segments.slice(start, end),
+        separators: separators.slice(start, end - 1),
+        letterSeparators: separatorIsLetter.slice(start, end - 1).filter(Boolean).length,
+      });
+    }
+    start = end + 1;
   }
+  return runs;
+}
+
+/**
+ * Whether labels name a domain outside the sender's by their end: the longest
+ * part of them that ends in a top-level domain ("pay.shop.example",
+ * "bigbank.example-secure").
+ */
+function endsInOtherDomain(labels: readonly string[], senderDomain: string): boolean {
   for (let end = labels.length; end >= 2; end -= 1) {
     const top = topLevelPart(labels[end - 1]);
     if (isTopLevelDomain(top)) return isOutsideSender([...labels.slice(0, end - 1), top].join("."), senderDomain);
@@ -394,51 +468,79 @@ function runNamesOtherDomain(labels: readonly string[], letterSeparators: number
   return false;
 }
 
-/** Whether a word (text between spaces and word joiners, in lower case) names a domain outside the sender's. */
-function wordNamesOtherDomain(word: readonly string[], senderDomain: string): boolean {
-  const dots = letterDots(word);
-  // Split at every dot; a label is a stretch with at least one letter, and labels next to each other form a run.
-  const segments = [""];
-  const separatorIsLetter: boolean[] = [];
-  word.forEach((ch, i) => {
-    if (dots.has(i) || !LABEL_CHAR.test(ch)) {
-      separatorIsLetter.push(dots.has(i));
-      segments.push("");
-    } else {
-      segments[segments.length - 1] += ch;
-    }
-  });
-  let start = 0;
-  for (let end = 0; end <= segments.length; end += 1) {
-    if (end < segments.length && LETTER.test(segments[end])) continue;
-    if (end - start >= 2) {
-      const letterSeparators = separatorIsLetter.slice(start, end - 1).filter(Boolean).length;
-      if (runNamesOtherDomain(segments.slice(start, end), letterSeparators, senderDomain)) return true;
-    }
-    start = end + 1;
+/**
+ * Whether a run of labels names a domain outside the sender's. It reads as a
+ * look-alike of a domain, whatever its last label, when it holds a letter of
+ * a script in NO_HONEST_USE, when its letters are written in two scripts
+ * (Latin and the East Asian scripts count as one), or when a letter stands
+ * for one of two or more dots ("bigbank.cօm" with an Armenian օ). Two scripts
+ * also catch what LATIN_LOOKALIKES cannot: an ending in Armenian letters that
+ * draw like Latin ones ("bigbank.օրգ"), and a Cyrillic or Greek one with a
+ * letter outside the table ("bigbank.сом", Cyrillic м). Otherwise the run
+ * names the domain it ends in (endsInOtherDomain).
+ */
+function runNamesOtherDomain(run: LabelRun, senderDomain: string): boolean {
+  if (
+    NO_HONEST_USE.test(run.labels.join("") + run.separators.join(""))
+    || scriptCount(run.labels) > 1
+    || (run.letterSeparators > 0 && run.labels.length > 2)
+  ) {
+    return isOutsideSender(run.labels.join("."), senderDomain);
   }
-  return false;
+  return endsInOtherDomain(run.labels, senderDomain);
 }
 
 /**
- * Whether a text from the mail may not be shown on the card of a message
- * from `senderDomain`: it holds a character outside the expected set, or a
- * run of labels in it names a domain outside the sender's. The sender's own
- * domain and the ones below it may be named. One pass over the text.
+ * Whether a word (text between spaces and word joiners) names a domain
+ * outside the sender's. In the reading with Latin look-alikes (asLatin), only
+ * a run that is all Latin letters, digits and hyphens counts, by the domain
+ * it ends in.
  */
-export function namesOtherDomain(text: string, senderDomain: string): boolean {
-  const normal = text.normalize("NFKC");
-  if (!CARD_TEXT.test(normal) || IGNORABLE.test(normal)) return true;
+function wordNamesOtherDomain(word: readonly string[], senderDomain: string, asLatin: boolean): boolean {
+  return runsOf(word).some((run) => (asLatin
+    ? run.labels.every((label) => ASCII_LABEL.test(label)) && endsInOtherDomain(run.labels, senderDomain)
+    : runNamesOtherDomain(run, senderDomain)));
+}
+
+/** Whether a text (after step 1) names a domain outside the sender's, word by word. */
+function wordsNameOtherDomain(text: string, senderDomain: string, asLatin: boolean): boolean {
   let word: string[] = [];
-  for (const ch of normal.toLowerCase()) {
+  for (const ch of text) {
     if (ch === " " || WORD_JOINERS.has(ch)) {
-      if (word.length > 0 && wordNamesOtherDomain(word, senderDomain)) return true;
+      if (word.length > 0 && wordNamesOtherDomain(word, senderDomain, asLatin)) return true;
       word = [];
     } else {
       word.push(ch);
     }
   }
-  return word.length > 0 && wordNamesOtherDomain(word, senderDomain);
+  return word.length > 0 && wordNamesOtherDomain(word, senderDomain, asLatin);
+}
+
+/** The text with the Greek and Cyrillic letters that draw like Latin ones written as those Latin letters. */
+const asLatinLetters = (text: string) => Array.from(text, (ch) => LATIN_LOOKALIKES.get(ch) ?? ch).join("");
+const hasLatinLookalike = (text: string) => Array.from(text).some((ch) => LATIN_LOOKALIKES.has(ch));
+
+/**
+ * Whether a text from the mail may not be shown on the card of a message
+ * from `senderDomain`: it holds a character outside the expected set, or a
+ * run of labels in it names a domain outside the sender's. The sender's own
+ * domain and the ones below it may be named.
+ *
+ * A text with Greek or Cyrillic letters that draw like Latin ones is read a
+ * second time with those letters as the Latin ones they draw like
+ * (LATIN_LOOKALIKES): a run that becomes all Latin letters, digits and
+ * hyphens that way names the domain it ends in ("ΑΜΑΖΟΝ.ϹΟΜ"). A run that
+ * keeps any other Greek or Cyrillic letter is judged as written
+ * ("г.Новосибирск", "κ.Παπαδόπουλος"). The letters are replaced before NFKC,
+ * which turns the lunate sigma Ϲ, drawn like C, into Σ, and again after it,
+ * for forms it folds into one of them.
+ */
+export function namesOtherDomain(text: string, senderDomain: string): boolean {
+  const normal = text.normalize("NFKC");
+  if (!CARD_TEXT.test(normal) || IGNORABLE.test(normal)) return true;
+  if (wordsNameOtherDomain(normal, senderDomain, false)) return true;
+  if (!hasLatinLookalike(text) && !hasLatinLookalike(normal)) return false;
+  return wordsNameOtherDomain(asLatinLetters(asLatinLetters(text).normalize("NFKC")), senderDomain, true);
 }
 
 /**
