@@ -831,9 +831,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const openEditTaskModal = useCallback((task: CalendarTask) => whenEditorsDiscarded(() => {
     closeEventPanelForTask();
-    setEditTask(task);
+    const master = task.originalId ? taskStore.tasks.find((t) => t.id === task.originalId) || task : task;
+    setEditTask(master);
     setShowTaskModal(true);
-  }), [closeEventPanelForTask, whenEditorsDiscarded]);
+  }), [closeEventPanelForTask, whenEditorsDiscarded, taskStore.tasks]);
 
   // A plugin drawing the task view opens a task in the editor
   // (api.ui.openTask), as a click in Bulwark's list does.
