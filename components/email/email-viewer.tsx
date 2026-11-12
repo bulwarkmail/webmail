@@ -1852,7 +1852,6 @@ export function EmailViewer({
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [imageThumbUrls, setImageThumbUrls] = useQuietState<Record<string, string>>(NO_URLS);
   const [allowExternalContent, setAllowExternalContent] = useState(false);
-  const [hasBlockedContent, setHasBlockedContent] = useQuietState(false);
   const [cidBlobUrls, setCidBlobUrls] = useQuietState<Record<string, string>>(NO_URLS);
   // blob: URL -> the cid: part behind it, so a click on a link the body points
   // at a part can be routed through the attachment preview/download gate
@@ -2583,7 +2582,6 @@ export function EmailViewer({
   useEffect(() => {
     // 'allow' = always allow, 'block' = always block, 'ask' = user decides per email
     setAllowExternalContent(externalContentPolicy === 'allow');
-    setHasBlockedContent(false);
     setQuickReplyText("");
     setIsQuickReplyFocused(false);
     setShowSourceModal(false);
@@ -3112,14 +3110,13 @@ export function EmailViewer({
         const { html: cleanHtml, blockedExternalContent } =
           sanitizeEmailBodyForIframe(htmlContent, shouldBlockExternal);
 
-        // Update blocked content state
-        if (blockedExternalContent && !hasBlockedContent) {
-          setHasBlockedContent(true);
-        }
-
         return {
           html: cleanHtml,
           isHtml: true,
+          // Drives the "blocked" banner. Part of the result, not state set
+          // here: a reset effect on a new message ran after this and hid the
+          // banner when the body was already loaded (#1639).
+          blockedContent: blockedExternalContent,
           hasStyleTag: /<style[\s>]/i.test(htmlContent),
           // Drives the strict iframe CSP: when we're in blocking mode the
           // iframe forbids external img/media/font fetches entirely, so any
@@ -3173,7 +3170,6 @@ export function EmailViewer({
     // "Load images" / "Trust sender" buttons (both flip allowExternalContent)
     // intentionally trigger a fresh srcDoc - `shouldBlockExternal` carries that
     // change in, and re-reads the trust selectors on the way.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, shouldBlockExternal, cidBlobUrls, t]);
 
   // Override email content with S/MIME decrypted content when available
@@ -3190,12 +3186,10 @@ export function EmailViewer({
     const renderHtml = (html: string) => {
       const { html: cleanHtml, blockedExternalContent } =
         sanitizeEmailBodyForIframe(html, shouldBlockExternal);
-      if (blockedExternalContent && !hasBlockedContent) {
-        setHasBlockedContent(true);
-      }
       return {
         html: cleanHtml,
         isHtml: true,
+        blockedContent: blockedExternalContent,
         hasStyleTag: /<style[\s>]/i.test(html),
         externalBlocked: shouldBlockExternal,
       };
@@ -3221,10 +3215,9 @@ export function EmailViewer({
       return { html: plainToHtml(embeddedEmailText), isHtml: false, hasStyleTag: false, externalBlocked: false };
     }
     return emailContent;
-    // `hasBlockedContent` is only read to avoid a redundant setState; including
-    // it would re-run the whole sanitize pass the moment the banner appears.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cidBlobUrls, emailContent, shouldBlockExternal, pluginRenderedHtml, pluginRenderedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText, t]);
+  // The sanitizer held back external content of the body shown (the banner).
+  const hasBlockedContent = decodedEmailContent.blockedContent === true;
 
   // HTML mail as plain text (mailViewMode / plainViewOverride above): the
   // message's own text/plain part when it has one, otherwise a readable
