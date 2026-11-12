@@ -339,6 +339,14 @@
     "show_on_mobile": "Mostra al mòbil"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Avui",
+      "yesterday": "Ahir",
+      "last_week": "La setmana passada",
+      "last_month": "El mes passat",
+      "older": "Més antics"
+    },
+    "group_by_date": "Agrupa per data",
     "sections": {
       "unread": "No llegits",
       "everything_else": "Tota la resta",
@@ -2290,6 +2298,10 @@
       "rtl_editing": {
         "label": "Compatibilitat amb edició de dreta a esquerra",
         "description": "Afegeix un botó de direcció a la barra d'eines del redactor perquè pugueu establir els paràgrafs d'esquerra a dreta o de dreta a esquerra"
+      },
+      "group_by_date": {
+        "label": "Agrupa per data",
+        "description": "Mostra els missatges sota capçaleres de data com Avui, Ahir i La setmana passada. Només s'aplica quan la llista està ordenada per data."
       },
       "group_conversations": {
         "label": "Agrupa els missatges per conversa",

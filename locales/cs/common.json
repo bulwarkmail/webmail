@@ -339,6 +339,14 @@
     "show_on_mobile": "Zobrazit na mobilu"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Dnes",
+      "yesterday": "Včera",
+      "last_week": "Minulý týden",
+      "last_month": "Minulý měsíc",
+      "older": "Starší"
+    },
+    "group_by_date": "Seskupit podle data",
     "sections": {
       "unread": "Nepřečtené",
       "everything_else": "Vše ostatní",
@@ -2287,6 +2295,10 @@
       "rtl_editing": {
         "label": "Podpora psaní zprava doleva",
         "description": "Přidá do panelu nástrojů editoru tlačítko směru textu, kterým lze odstavce nastavit zleva doprava nebo zprava doleva"
+      },
+      "group_by_date": {
+        "label": "Seskupit podle data",
+        "description": "Zobrazí zprávy pod záhlavími data, jako Dnes, Včera a Minulý týden. Platí jen tehdy, když je seznam řazen podle data."
       },
       "group_conversations": {
         "label": "Seskupovat zprávy podle konverzace",

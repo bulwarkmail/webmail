@@ -77,6 +77,12 @@ import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
 import { unreadSectionRowCount } from "@/lib/unread-first";
 import type { OpenableEmail } from "@/lib/plugin-sandbox/open-email";
 import { MvListSectionHeader } from "./mv-list-section-header";
+import { ListDateGroupHeader, LIST_DATE_GROUP_HEADER_HEIGHT } from "./list-date-group-header";
+import { sortChoiceFor } from "./mail-list-menus";
+import { listDateGroupLabel, sectionThreadsByDate, type ListDateSection } from "@/lib/list-date-groups";
+import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
+import { getEffectiveLocale } from "@/i18n/detect-locale";
+import { resolveDateLocale } from "@/lib/utils";
 import { PluginSearchResults } from "./plugin-search-results";
 import { commonTagScope } from "@/hooks/use-account-tags";
 import { FolderRetentionLine } from "./retention-notice";
@@ -146,12 +152,15 @@ interface EmailListProps {
 }
 
 /**
- * What the virtual list draws: a row, or in the "Unread first" inbox a
- * section's header and the line an empty Unread section shows.
+ * What the virtual list draws: a row, in the "Unread first" inbox a
+ * section's header and the line an empty Unread section shows, or with
+ * "Group by date" a date group's header.
  */
 type ListItem =
   | { kind: 'row'; thread: ThreadGroup }
   | { kind: 'header'; section: 'unread' | 'rest' }
+  // `id` tells apart two runs of the same group, should the order ever split one.
+  | { kind: 'date-header'; group: ListDateSection['key']; id: string }
   | { kind: 'unread-empty' };
 
 /** The most messages "Select all N conversations" loads to tick them (mail-p2-11). */
@@ -173,6 +182,9 @@ function LoadingSkeleton({ shape, density, preview }: { shape: MailRowShape; den
   // draws while it loads is the one the server painted before it started.
   return <MailListRowsSkeleton shape={shape} density={density} preview={preview} className="contents" />;
 }
+
+/** No folded date groups. */
+const NO_GROUPS: ReadonlySet<string> = new Set();
 
 /** Rows per page in simple mode's paged list. */
 const LIST_PAGE_SIZE = 50;
@@ -361,11 +373,65 @@ export function EmailList({
     }
     return { unread, rest };
   }, [allThreadGroups, unreadSection]);
-  const threadGroups = useMemo(() => (
-    sections
-      ? [...(unreadCollapsed ? [] : sections.unread), ...(restCollapsed ? [] : sections.rest)]
-      : allThreadGroups
-  ), [sections, unreadCollapsed, restCollapsed, allThreadGroups]);
+
+  // What the list shows: another folder, tag, account, unified view or
+  // plugin tab, or another search, is another view.
+  const searching = !!searchQuery.trim() || !isFilterEmpty(searchFilters);
+  const viewKey = JSON.stringify([
+    activeAccountId,
+    viewingAccountId,
+    selectedMailbox,
+    selectedKeyword,
+    selectedKeywordAccountId,
+    isUnifiedView && (crossView ?? unifiedRole),
+    isScheduledView,
+    activeTabId,
+    // The scope only matters while a search runs; the dropdown alone does not
+    // change the list.
+    searching && [searchQuery, searchFilters, searchMailboxId],
+  ]);
+
+  // "Group by date": headers for Today, Yesterday, the weekdays, Last week,
+  // Last month and Older, only while the list runs by date. Search, filter
+  // and cross-account lists are always newest first. The "Unread first"
+  // sections, the Scheduled view and simple mode's paged list keep their rows.
+  const groupListByDate = useSettingsStore((state) => state.groupListByDate);
+  const paged = useSettingsStore((state) => state.simpleMode && state.simpleModePagedList);
+  const timeZoneSetting = useSettingsStore((state) => state.timeZone);
+  const dateLocale = useSettingsStore((state) => state.dateLocale);
+  const listDateOrder = searchQuery || crossView || !isFilterEmpty(searchFilters) ? 'newest' : sortChoiceFor(fetchedListOrder);
+  const dateGrouped = groupListByDate && !unreadSection && !isScheduledView && !paged
+    && (listDateOrder === 'newest' || listDateOrder === 'oldest');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- follows the setting
+  const dateTimeZone = useMemo(() => getEffectiveTimeZone(), [timeZoneSetting]);
+  // Weekday names follow the date locale setting, else the UI language.
+  const uiLocale = getEffectiveLocale();
+  const dateGroupLocale = resolveDateLocale(dateLocale, uiLocale === 'en' ? 'en-US' : uiLocale);
+  // The groups move on at midnight, with the first render after it.
+  const today = dateGrouped ? Object.values(getWallClock(new Date(), dateTimeZone)).slice(0, 3).join('-') : '';
+  const dateSections = useMemo(
+    () => (dateGrouped
+      ? sectionThreadsByDate(allThreadGroups, { now: new Date(), timeZone: dateTimeZone, oldestFirst: listDateOrder === 'oldest' })
+      : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `today` stands for the date taken inside
+    [dateGrouped, allThreadGroups, dateTimeZone, listDateOrder, today],
+  );
+  // Folded date groups, for the view they were folded in: another folder,
+  // search or tab opens with every group open.
+  const [foldedDates, setFoldedDates] = useState<{ view: string; groups: ReadonlySet<string> }>({ view: '', groups: NO_GROUPS });
+  const collapsedDateGroups = foldedDates.view === viewKey ? foldedDates.groups : NO_GROUPS;
+  const toggleDateGroup = useCallback((group: string) => {
+    setFoldedDates((prev) => {
+      const groups = new Set(prev.view === viewKey ? prev.groups : []);
+      if (!groups.delete(group)) groups.add(group);
+      return { view: viewKey, groups };
+    });
+  }, [viewKey]);
+  const threadGroups = useMemo(() => {
+    if (sections) return [...(unreadCollapsed ? [] : sections.unread), ...(restCollapsed ? [] : sections.rest)];
+    if (dateSections) return dateSections.flatMap((section) => (collapsedDateGroups.has(section.key) ? [] : section.threads));
+    return allThreadGroups;
+  }, [sections, unreadCollapsed, restCollapsed, dateSections, collapsedDateGroups, allThreadGroups]);
   const { items, itemOfThread } = useMemo(() => {
     const items: ListItem[] = [];
     const itemOfThread: number[] = [];
@@ -375,6 +441,16 @@ export function EmailList({
         items.push({ kind: 'row', thread });
       }
     };
+    if (dateSections) {
+      const runs = new Map<string, number>();
+      for (const section of dateSections) {
+        const run = runs.get(section.key) ?? 0;
+        runs.set(section.key, run + 1);
+        items.push({ kind: 'date-header', group: section.key, id: run ? `${section.key}:${run}` : section.key });
+        if (!collapsedDateGroups.has(section.key)) addRows(section.threads);
+      }
+      return { items, itemOfThread };
+    }
     if (!sections) {
       addRows(threadGroups);
       return { items, itemOfThread };
@@ -387,7 +463,7 @@ export function EmailList({
     items.push({ kind: 'header', section: 'rest' });
     if (!restCollapsed) addRows(sections.rest);
     return { items, itemOfThread };
-  }, [sections, threadGroups, unreadCollapsed, restCollapsed]);
+  }, [sections, dateSections, collapsedDateGroups, threadGroups, unreadCollapsed, restCollapsed]);
   const sectionRowCount = useMemo(() => unreadSectionRowCount(emails, unreadSection), [emails, unreadSection]);
   const totalEmails = useEmailStore((state) => state.totalEmails);
 
@@ -537,6 +613,7 @@ export function EmailList({
   const estimateSize = useCallback((index: number) => {
     const item = items[index];
     if (item?.kind === 'header' || item?.kind === 'unread-empty') return 48;
+    if (item?.kind === 'date-header') return LIST_DATE_GROUP_HEADER_HEIGHT;
     const shape = rowShapeOf(index);
     const measured = shape ? measuredRowHeights.current.get(shape.key) : undefined;
     if (measured !== undefined) return measured;
@@ -576,6 +653,7 @@ export function EmailList({
       const item = items[index];
       if (item?.kind === 'row') return item.thread.threadKey;
       if (item?.kind === 'header') return `section:${item.section}`;
+      if (item?.kind === 'date-header') return `date:${item.id}`;
       return item ? 'section:unread-empty' : String(index);
     },
     [items],
@@ -612,23 +690,10 @@ export function EmailList({
 
 
   // Another folder, tag, account, unified view or plugin tab - or another
-  // search - opens at the top. The scroll container outlives the switch, so
-  // the new list would otherwise open wherever the last one was scrolled to.
-  // Refreshes, new mail and loading more keep the view and so the position.
-  const searching = !!searchQuery.trim() || !isFilterEmpty(searchFilters);
-  const viewKey = JSON.stringify([
-    activeAccountId,
-    viewingAccountId,
-    selectedMailbox,
-    selectedKeyword,
-    selectedKeywordAccountId,
-    isUnifiedView && (crossView ?? unifiedRole),
-    isScheduledView,
-    activeTabId,
-    // The scope only matters while a search runs; the dropdown alone does not
-    // change the list.
-    searching && [searchQuery, searchFilters, searchMailboxId],
-  ]);
+  // search - opens at the top (viewKey). The scroll container outlives the
+  // switch, so the new list would otherwise open wherever the last one was
+  // scrolled to. Refreshes, new mail and loading more keep the view and so
+  // the position.
   const shownViewKey = useRef(viewKey);
   useLayoutEffect(() => {
     if (shownViewKey.current === viewKey) return;
@@ -1164,8 +1229,10 @@ export function EmailList({
   const lastVirtualItemIndex = virtualItems[virtualItems.length - 1]?.index;
   const loadMoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // A folded "Everything else" has nothing below to load into.
-  const loadsMore = !(sections && restCollapsed);
+  // A folded "Everything else", or a folded last date group, has nothing
+  // below to load into.
+  const lastDateSection = dateSections?.[dateSections.length - 1];
+  const loadsMore = !(sections && restCollapsed) && !(lastDateSection && collapsedDateGroups.has(lastDateSection.key));
   useEffect(() => {
     if (lastVirtualItemIndex === undefined || !loadsMore) return;
     if (lastVirtualItemIndex >= items.length - 5) {
@@ -1241,6 +1308,13 @@ export function EmailList({
             />
           )
         )}
+        {listItem?.kind === 'date-header' && (
+          <ListDateGroupHeader
+            title={listDateGroupLabel(listItem.group, t, dateGroupLocale)}
+            collapsed={collapsedDateGroups.has(listItem.group)}
+            onToggle={() => toggleDateGroup(listItem.group)}
+          />
+        )}
         {listItem?.kind === 'unread-empty' && (
           <p className="flex h-12 items-center border-b border-border px-6 text-sm text-muted-foreground">
             {t('sections.unread_empty')}
@@ -1277,7 +1351,7 @@ export function EmailList({
 
   // Simple mode's paged list (SR-21): pages of 50 rows with Previous and
   // Next instead of endless scrolling, which a screen reader handles better.
-  const paged = useSettingsStore((state) => state.simpleMode && state.simpleModePagedList);
+  // (`paged` is read above, with the date groups.)
   const [page, setPage] = useState(0);
   const pageCount = Math.max(1, Math.ceil(itemOfThread.length / LIST_PAGE_SIZE));
   const pageItems = useMemo(

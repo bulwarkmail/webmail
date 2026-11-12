@@ -339,6 +339,14 @@
     "show_on_mobile": "モバイルで表示"
   },
   "email_list": {
+    "date_groups": {
+      "today": "今日",
+      "yesterday": "昨日",
+      "last_week": "先週",
+      "last_month": "先月",
+      "older": "それ以前"
+    },
+    "group_by_date": "日付でグループ化",
     "sections": {
       "unread": "未読",
       "everything_else": "その他すべて",
@@ -2287,6 +2295,10 @@
       "rtl_editing": {
         "label": "右から左への編集サポート",
         "description": "エディターのツールバーに文字方向ボタンを追加し、段落を左から右または右から左に設定できます"
+      },
+      "group_by_date": {
+        "label": "日付でグループ化",
+        "description": "メッセージを「今日」「昨日」「先週」などの日付見出しの下に表示します。リストが日付順のときのみ適用されます。"
       },
       "group_conversations": {
         "label": "メッセージをスレッドにまとめる",

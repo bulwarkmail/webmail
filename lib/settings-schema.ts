@@ -203,6 +203,7 @@ const ENTRIES: SettingSchemaEntry[] = [
 
   // --- Message list ---
   bool('disableThreading', 'message_list', `${EB}group_conversations.label`, { inverted: true }),
+  bool('groupListByDate', 'message_list', `${EB}group_by_date.label`),
   bool('showPreview', 'message_list', `${EB}show_preview.label`),
   bool('listColumns', 'message_list', `${EB}list_columns.label`),
   choice('mvInboxType', 'message_list', `${EB}inbox_type.label`,

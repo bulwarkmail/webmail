@@ -339,6 +339,14 @@
     "show_on_mobile": "在行動裝置上顯示"
   },
   "email_list": {
+    "date_groups": {
+      "today": "今天",
+      "yesterday": "昨天",
+      "last_week": "上週",
+      "last_month": "上個月",
+      "older": "更早"
+    },
+    "group_by_date": "依日期分組",
     "sections": {
       "unread": "未讀",
       "everything_else": "其他所有郵件",
@@ -2290,6 +2298,10 @@
       "rtl_editing": {
         "label": "支援從右至左編輯",
         "description": "在編輯器工具列中新增方向按鈕，可將段落設定為從左到右或從右到左"
+      },
+      "group_by_date": {
+        "label": "依日期分組",
+        "description": "在「今天」「昨天」「上週」等日期標題下顯示郵件。僅在清單依日期排序時適用。"
       },
       "group_conversations": {
         "label": "依對話分組郵件",

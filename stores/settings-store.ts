@@ -738,6 +738,7 @@ interface SettingsState extends AccessibilitySettings {
   showPreview: boolean;
   showVerificationCodes: boolean; // Offer the one-time code of a sign-in mail as a copy chip in the list and the reader
   showAttachmentChips: boolean; // Show attachment chips in the message list
+  groupListByDate: boolean; // Date headers (Today, Yesterday, Last week...) while the list is sorted by date
   mailLayout: MailLayout;
   listColumns: boolean; // One-line list rows as a table: From, Subject, Date and Size columns under a header (#262)
   emailsPerPage: number;
@@ -1110,6 +1111,7 @@ const DEFAULT_SETTINGS = {
   showPreview: true,
   showVerificationCodes: true,
   showAttachmentChips: true,
+  groupListByDate: false,
   mailLayout: 'split' as MailLayout,
   listColumns: false,
   emailsPerPage: 50,
@@ -1676,6 +1678,7 @@ export const useSettingsStore = create<SettingsState>()(
           showPreview: state.showPreview,
           showVerificationCodes: state.showVerificationCodes,
           showAttachmentChips: state.showAttachmentChips,
+          groupListByDate: state.groupListByDate,
           mailLayout: state.mailLayout,
           listColumns: state.listColumns,
           emailsPerPage: state.emailsPerPage,

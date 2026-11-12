@@ -339,6 +339,14 @@
     "show_on_mobile": "Weergeven op mobiel"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "last_week": "Vorige week",
+      "last_month": "Vorige maand",
+      "older": "Ouder"
+    },
+    "group_by_date": "Groeperen op datum",
     "sections": {
       "unread": "Ongelezen",
       "everything_else": "Al het andere",
@@ -2287,6 +2295,10 @@
       "rtl_editing": {
         "label": "Ondersteuning voor rechts-naar-links bewerken",
         "description": "Voegt een richtingsknop toe aan de werkbalk van de editor waarmee alinea's links-naar-rechts of rechts-naar-links kunnen worden ingesteld"
+      },
+      "group_by_date": {
+        "label": "Groeperen op datum",
+        "description": "Toon berichten onder datumkoppen zoals Vandaag, Gisteren en Vorige week. Geldt alleen als de lijst op datum is gesorteerd."
       },
       "group_conversations": {
         "label": "Berichten groeperen per gesprek",

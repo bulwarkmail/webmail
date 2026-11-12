@@ -125,7 +125,7 @@ import { useMailStatusAnnouncements } from "@/hooks/use-mail-status-announcement
 import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
-import { stepListEmail } from "@/lib/list-step";
+import { shownListEmails, stepListEmail } from "@/lib/list-step";
 import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
 import { refreshRepliedThread } from "@/lib/replied-thread";
 import {
@@ -1183,13 +1183,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Keyboard shortcuts handlers
   // j / k go on from the open message, or from the last one opened once the
   // reader is closed (Escape), not from the top. With the conversation in the
-  // reading pane they step by conversation, as the list's rows do.
-  const stepFrom = (direction: 1 | -1) => stepListEmail(
-    activeEmails,
-    selectedEmail ? emailKeyFor(selectedEmail) : lastOpenedKeyRef.current,
-    direction,
-    paneConversationView ? useEmailStore.getState().listRows : null,
-  );
+  // reading pane they step by conversation, as the list's rows do. Rows
+  // folded away under a list header (a date group) are passed by.
+  const stepFrom = (direction: 1 | -1) => {
+    const listRows = useEmailStore.getState().listRows;
+    return stepListEmail(
+      shownListEmails(activeEmails, listRows),
+      selectedEmail ? emailKeyFor(selectedEmail) : lastOpenedKeyRef.current,
+      direction,
+      paneConversationView ? listRows : null,
+    );
+  };
   const keyboardHandlers = useMemo(() => ({
     onNextEmail: () => {
       const next = stepFrom(1);

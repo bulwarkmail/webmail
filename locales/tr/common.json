@@ -339,6 +339,14 @@
     "show_on_mobile": "Mobilde göster"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Bugün",
+      "yesterday": "Dün",
+      "last_week": "Geçen hafta",
+      "last_month": "Geçen ay",
+      "older": "Daha eski"
+    },
+    "group_by_date": "Tarihe göre grupla",
     "sections": {
       "unread": "Okunmamış",
       "everything_else": "Diğer her şey",
@@ -2287,6 +2295,10 @@
       "rtl_editing": {
         "label": "Sağdan sola düzenleme desteği",
         "description": "Düzenleyici araç çubuğuna paragrafları soldan sağa veya sağdan sola ayarlayabileceğiniz bir yön düğmesi ekler"
+      },
+      "group_by_date": {
+        "label": "Tarihe göre grupla",
+        "description": "İletileri Bugün, Dün ve Geçen hafta gibi tarih başlıkları altında gösterir. Yalnızca liste tarihe göre sıralandığında geçerlidir."
       },
       "group_conversations": {
         "label": "İletileri konuşmaya göre grupla",

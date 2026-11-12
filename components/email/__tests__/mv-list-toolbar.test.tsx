@@ -230,6 +230,18 @@ describe('MvListToolbar overflow menu', () => {
     expect(screen.getByRole('menuitem', { name: 'mark_all_folders_read' }).className).toContain('pointer-coarse:min-h-11');
   });
 
+  it('offers Group by date, ticked while the setting is on', () => {
+    useSettingsStore.setState({ groupListByDate: false } as never);
+    render(<MvListToolbar loadedCount={1} onRefresh={() => {}} />);
+    open();
+
+    const item = screen.getByTestId('mail-group-by-date');
+    expect(item.getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(item);
+    expect(useSettingsStore.getState().groupListByDate).toBe(true);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
   it('withholds emptying the folder outside spam and the bin', () => {
     render(<MvListToolbar loadedCount={1} onRefresh={() => {}} onEmptyFolder={() => {}} />);
     open();

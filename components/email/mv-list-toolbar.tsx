@@ -32,6 +32,7 @@ import { toast } from "@/stores/toast-store";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuHeader } from "@/components/ui/context-menu";
+import { MailGroupByDateItem } from "@/components/email/mail-list-menus";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TagPicker } from "@/components/email/tag-picker";
@@ -415,6 +416,8 @@ export function MvListToolbar({
         </button>
         <ContextMenu ref={overflowMenu.menuRef} isOpen={menuOpen} position={overflowMenu.contextMenu.position} onClose={closeMenu}>
           <div className="min-w-56" data-mv-overflow-menu="">
+            <MailGroupByDateItem onPicked={closeMenu} />
+            <ContextMenuSeparator />
             <ContextMenuItem
               icon={MailOpen}
               label={tFolder("mark_folder_read")}

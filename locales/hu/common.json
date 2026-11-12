@@ -339,6 +339,14 @@
     "show_on_mobile": "Megjelenítés mobilon"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Ma",
+      "yesterday": "Tegnap",
+      "last_week": "Múlt héten",
+      "last_month": "Múlt hónapban",
+      "older": "Régebbi"
+    },
+    "group_by_date": "Csoportosítás dátum szerint",
     "sections": {
       "unread": "Olvasatlan",
       "everything_else": "Minden más",
@@ -2290,6 +2298,10 @@
       "rtl_editing": {
         "label": "Jobbról balra írás támogatása",
         "description": "Iránygombot ad a szerkesztő eszköztárához, amellyel a bekezdések balról jobbra vagy jobbról balra állíthatók"
+      },
+      "group_by_date": {
+        "label": "Csoportosítás dátum szerint",
+        "description": "Az üzenetek dátumfejlécek, például Ma, Tegnap és Múlt héten alatt jelennek meg. Csak akkor érvényes, ha a lista dátum szerint van rendezve."
       },
       "group_conversations": {
         "label": "Üzenetek csoportosítása beszélgetés szerint",
