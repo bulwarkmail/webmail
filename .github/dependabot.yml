@@ -17,6 +17,15 @@ updates:
       # covers the per-platform @swc/core-* packages that come with it.
       - dependency-name: next-intl
       - dependency-name: "@swc/core*"
+    groups:
+      # These packages require each other at the exact same version, so a
+      # bump of one alone fails `npm ci`. One PR moves the whole family.
+      tiptap:
+        patterns:
+          - "@tiptap/*"
+      opentelemetry:
+        patterns:
+          - "@opentelemetry/*"
 
   # Base images of Dockerfile and Dockerfile.lite.
   - package-ecosystem: docker
