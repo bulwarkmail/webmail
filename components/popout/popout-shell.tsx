@@ -110,11 +110,11 @@ export function PopoutSkeleton({ label }: { label: string }) {
   );
 }
 
-export function PopoutNotice({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {
+export function PopoutNotice({ title, body, children }: { title: string; body?: string; children?: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center" data-popout-notice="">
       <h1 className="text-lg font-semibold text-foreground">{title}</h1>
-      <p className="max-w-md text-sm text-muted-foreground">{body}</p>
+      {body && <p className="max-w-md text-sm text-muted-foreground">{body}</p>}
       {children && <div className="mt-2 flex items-center gap-2">{children}</div>}
     </div>
   );
