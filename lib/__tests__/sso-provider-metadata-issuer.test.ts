@@ -48,6 +48,8 @@ vi.mock('next/headers', () => ({
 const SAME_ORIGIN = { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'content-type': 'application/json', origin: 'https://webmail.example' };
 const CALLBACK = 'https://webmail.example/en/auth/callback';
 const KEYCLOAK = 'https://id.example/realms/mail';
+const INTERNAL = 'http://stalwart:8080';
+const PUBLIC_NAME = 'https://mail.example';
 
 let tokenRequests: Array<{ host: string; path: string; body: string }>;
 /** What other.example names as its issuer: honest.example's, or nothing at all. */
@@ -60,6 +62,16 @@ let otherIssuer: string | undefined;
  */
 function providers(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = new URL(String(input));
+  // A Stalwart reached by an internal address publishes its public name,
+  // or (bare) no issuer at all.
+  if (url.pathname.includes('/.well-known/') && (url.host === 'stalwart:8080' || url.host === 'bare:8080')) {
+    return Promise.resolve(Response.json({
+      ...(url.host === 'stalwart:8080' ? { issuer: PUBLIC_NAME } : {}),
+      authorization_endpoint: `${PUBLIC_NAME}/authorize`,
+      token_endpoint: `${PUBLIC_NAME}/token`,
+      authorization_response_iss_parameter_supported: true,
+    }));
+  }
   if (url.pathname.includes('/.well-known/')) {
     const base = `${url.origin}${url.pathname.replace(/\/\.well-known\/.*$/, '')}`;
     return Promise.resolve(Response.json({
@@ -70,6 +82,8 @@ function providers(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
     }));
   }
   tokenRequests.push({ host: url.host, path: url.pathname, body: String(init?.body ?? '') });
+  // The public Stalwart issues tokens; every other provider refuses the code.
+  if (url.host === 'mail.example') return Promise.resolve(Response.json({ access_token: 'AT', refresh_token: 'RT', expires_in: 3600 }));
   return Promise.resolve(Response.json({ error: 'invalid_grant' }, { status: 400 }));
 }
 
@@ -193,5 +207,73 @@ describe('an identity provider on another host than the mail server', () => {
     const { state } = await started.json();
     expect((await complete({ code: 'CODE-FROM-KEYCLOAK', state, iss: KEYCLOAK })).status).toBe(400);
     expect(tokenRequests).toEqual([]);
+  });
+});
+
+// With one sign-in server there is no other server whose codes could be
+// collected, so an issuer that differs from the discovery address is taken
+// (and logged once). With a second one the issuer URL has to name it.
+describe('a mail server reached by an internal address whose metadata names its public name', () => {
+  let warn: ReturnType<typeof vi.spyOn>;
+  let error: ReturnType<typeof vi.spyOn>;
+  const logged = (spy: ReturnType<typeof vi.spyOn>) => spy.mock.calls.map((call: unknown[]) => String(call[0]));
+  beforeEach(() => {
+    vi.resetModules();
+    jar = new Map();
+    tokenRequests = [];
+    vi.stubGlobal('fetch', vi.fn(providers));
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    warn.mockRestore();
+    error.mockRestore();
+  });
+
+  it('signs in on an install with only that server, and says once which setting would name the issuer', async () => {
+    config = { jmapServerUrl: INTERNAL, oauthClientId: 'webmail' };
+    const started = await start(null);
+    expect(started.status).toBe(200);
+    const { state } = await started.json();
+    expect((await complete({ code: 'CODE-SERVER-SIDE', state, iss: PUBLIC_NAME })).status).toBe(200);
+    expect(codeSentTo('mail.example', 'CODE-SERVER-SIDE')).toHaveLength(1);
+
+    expect((await exchange({ code: 'CODE-PAGE-DRIVEN', iss: PUBLIC_NAME })).status).toBe(200);
+    expect(codeSentTo('mail.example', 'CODE-PAGE-DRIVEN')).toHaveLength(1);
+
+    const notes = logged(warn).filter((line) => line.includes('OAUTH_ISSUER_URL'));
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toContain(PUBLIC_NAME);
+    expect(notes[0]).toContain('oauth.issuerUrl');
+  });
+
+  it('still refuses metadata that names no issuer on such an install', async () => {
+    config = { jmapServerUrl: 'http://bare:8080', oauthClientId: 'webmail' };
+    expect((await start(null)).status).toBe(502);
+    expect((await exchange({ code: 'CODE-BARE' })).ok).toBe(false);
+    expect(tokenRequests).toEqual([]);
+  });
+
+  it('refuses it beside a second listed server until the issuer URL names the issuer, and tells the admin which setting to set', async () => {
+    const second = { id: 'other', label: 'Other', url: 'https://other.example', oauth: { clientId: 'webmail' } };
+    config = { jmapServerUrl: INTERNAL, oauthClientId: 'webmail', jmapServers: [second] };
+    expect((await start(null)).status).toBe(502);
+    expect((await exchange({ code: 'CODE-REFUSED', iss: PUBLIC_NAME })).ok).toBe(false);
+    expect(tokenRequests).toEqual([]);
+    const refusal = logged(error).find((line) => line.includes(INTERNAL));
+    expect(refusal).toContain('OAUTH_ISSUER_URL');
+    expect(refusal).toContain('oauthIssuerUrl');
+    expect(refusal).toContain('oauth.issuerUrl');
+    expect(refusal).toContain(PUBLIC_NAME);
+
+    // With the issuer URL set to the public name, discovery runs against it.
+    vi.resetModules();
+    config = { jmapServerUrl: INTERNAL, oauthIssuerUrl: PUBLIC_NAME, oauthClientId: 'webmail', jmapServers: [second] };
+    const started = await start(null);
+    expect(started.status).toBe(200);
+    const { state } = await started.json();
+    expect((await complete({ code: 'CODE-WITH-ISSUER-URL', state, iss: PUBLIC_NAME })).status).toBe(200);
+    expect(codeSentTo('mail.example', 'CODE-WITH-ISSUER-URL')).toHaveLength(1);
   });
 });

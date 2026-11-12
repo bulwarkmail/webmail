@@ -5,6 +5,7 @@ import { encryptPayload } from '@/lib/auth/crypto';
 import { generateCodeVerifierServer, generateCodeChallengeServer, generateStateServer } from '@/lib/oauth/pkce-server';
 import { getRequiredConfig, getDiscoveryValidator } from '@/lib/oauth/token-exchange';
 import { discoverOAuth } from '@/lib/oauth/discovery';
+import { signInIssuerRule } from '@/lib/oauth/sign-in-servers';
 import { getOauthScopes, refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { refreshTokenServer } from '@/lib/oauth/slot-renewal';
 import { withProviderDataScopes } from '@/lib/oauth/scopes';
@@ -137,9 +138,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { clientId, discoveryUrl, resource } = getRequiredConfig(serverId);
-    // Only metadata that names this server as its issuer: /complete checks the
-    // callback's `iss` against it.
-    const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), requireOwnIssuer: true });
+    // Only metadata whose issuer passes the sign-in rule (signInIssuerRule):
+    // /complete checks the callback's `iss` against it.
+    const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), issuerRule: signInIssuerRule() });
 
     if (!metadata?.authorization_endpoint) {
       return NextResponse.json({ error: 'OAuth discovery failed' }, { status: 502 });

@@ -45,14 +45,45 @@ export function isOwnIssuer(issuer: unknown, base: string): boolean {
 // and an SSRF check isn't meaningful there.
 export type EndpointValidator = (url: string) => Promise<boolean>;
 
+/**
+ * Which metadata `issuer` a sign-in takes; it is what the callback's `iss` is
+ * checked against. Metadata that names no issuer is refused under both.
+ * - 'own': the address discovery ran against (isOwnIssuer), anything else is
+ *   refused;
+ * - 'named': any issuer; one that differs from that address is logged once.
+ * Which one applies is lib/oauth/sign-in-servers.ts signInIssuerRule.
+ */
+export type IssuerRule = 'own' | 'named';
+
 export interface DiscoverOAuthOptions {
   validateEndpoint?: EndpointValidator;
-  /**
-   * Refuse metadata that doesn't name the server it was fetched from as its
-   * issuer (isOwnIssuer). A sign-in relies on that issuer: it is what the
-   * callback's `iss` is checked against.
-   */
-  requireOwnIssuer?: boolean;
+  /** For a sign-in: which `issuer` the metadata must name. Unchecked without it. */
+  issuerRule?: IssuerRule;
+}
+
+/** Discovery addresses whose differing issuer was already logged under 'named'. */
+const differingIssuersLogged = new Set<string>();
+
+/** The issuer a document names, for a log line. */
+const quotedIssuer = (issuer: string) => JSON.stringify(issuer.slice(0, 200));
+
+function passesIssuerRule(metadata: OAuthMetadata, base: string, rule: IssuerRule): boolean {
+  if (typeof metadata.issuer !== 'string' || !metadata.issuer) {
+    console.error(`[OAuth] Metadata from ${base} names no issuer, so it can't be used to sign in`);
+    return false;
+  }
+  if (isOwnIssuer(metadata.issuer, base)) return true;
+  const named = quotedIssuer(metadata.issuer);
+  if (rule === 'named') {
+    const key = `${base}\n${metadata.issuer}`;
+    if (!differingIssuersLogged.has(key)) {
+      differingIssuersLogged.add(key);
+      console.warn(`[OAuth] Metadata from ${base} names ${named} as its issuer. Set OAUTH_ISSUER_URL (admin setting oauthIssuerUrl), or oauth.issuerUrl on the server's jmapServers entry, to ${named}; as soon as a second sign-in server is configured, sign-in through ${base} is refused until then`);
+    }
+    return true;
+  }
+  console.error(`[OAuth] Metadata from ${base} names ${named} as its issuer, not ${base}, and this instance has more than one sign-in server. Set oauth.issuerUrl on the server's jmapServers entry, or OAUTH_ISSUER_URL (admin setting oauthIssuerUrl) for the configured server, to ${named}`);
+  return false;
 }
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -209,11 +240,7 @@ export async function discoverOAuth(
   options?: DiscoverOAuthOptions,
 ): Promise<OAuthMetadata | null> {
   const metadata = await fetchMetadata(serverUrl, options);
-  if (metadata && options?.requireOwnIssuer && !isOwnIssuer(metadata.issuer, serverUrl)) {
-    const named = typeof metadata.issuer === 'string' ? JSON.stringify(metadata.issuer.slice(0, 200)) : 'no issuer';
-    console.error(`[OAuth] Metadata from ${serverUrl} names ${named} as its issuer, not ${serverUrl}; set the server's issuer URL to the provider's issuer`);
-    return null;
-  }
+  if (metadata && options?.issuerRule && !passesIssuerRule(metadata, serverUrl, options.issuerRule)) return null;
   return metadata;
 }
 

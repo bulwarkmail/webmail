@@ -16,6 +16,7 @@ import {
   defaultClientOptions,
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
+import { signInIssuerRule } from '@/lib/oauth/sign-in-servers';
 import { callbackIssuerAccepted, type OAuthMetadata } from '@/lib/oauth/discovery';
 import { answerFields, loggableError } from '@/lib/oauth/answer-summary';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
@@ -152,11 +153,11 @@ export async function POST(request: NextRequest) {
     // RFC 9207: a code answered by another issuer than the server this sign-in
     // names is refused before the code or the verifier goes anywhere, and so
     // is one without `iss` from a provider that says it always sends it. The
-    // issuer is the one of metadata that names the server it came from;
+    // issuer is that of metadata passing the sign-in rule (signInIssuerRule);
     // without such metadata the exchange below finds no token endpoint. The
     // desktop app's own sign-in to a server it typed (lib/desktop/browser-sign-in.ts)
     // checks `iss` itself before it gets here and sends none.
-    const metadata = await getMetadata(serverId, customUpstream ? { upstream: customUpstream } : undefined, !customUpstream);
+    const metadata = await getMetadata(serverId, customUpstream ? { upstream: customUpstream } : undefined, customUpstream ? undefined : signInIssuerRule());
     const issRequired = !customUpstream && metadata?.authorization_response_iss_parameter_supported === true;
     if (!callbackIssuerAccepted(iss, metadata?.issuer, issRequired)) {
       logger.warn('Token exchange: the answer came from another issuer than the one asked');
