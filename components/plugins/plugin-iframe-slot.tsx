@@ -23,10 +23,14 @@ import type { SandboxInstance } from '@/lib/plugin-sandbox/host-bridge';
 import { loadHostBridge } from '@/lib/plugin-sandbox/load-host-bridge';
 import type { FloatingDropdownOption, FloatingDropdownRect } from '@/lib/plugin-sandbox/protocol';
 import { slotPropsFor } from '@/lib/plugin-sandbox/permissions';
-import { isInlineSlot } from '@/lib/plugin-sandbox/slot-layout';
+import { isInlineSlot, maxSlotHeight } from '@/lib/plugin-sandbox/slot-layout';
 import { snapshotHostTheme } from '@/lib/plugin-sandbox/host-theme';
 import { useThemeStore } from '@/stores/theme-store';
-import { Check } from '@/components/icons';
+import { usePluginStore } from '@/stores/plugin-store';
+import { usePolicyStore } from '@/stores/policy-store';
+import { ContextMenu, ContextMenuItem } from '@/components/ui/context-menu';
+import { useContextMenu } from '@/hooks/use-context-menu';
+import { Check, Power, Puzzle } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -247,20 +251,31 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, min
   }, [resolvedTheme, activeThemeId]);
 
   if (show !== true) return null;
+  const wrapper = (
+    <div
+      ref={wrapperRef}
+      style={inline
+        ? { display: 'inline-block', verticalAlign: 'middle', height, width: width ?? 0, maxWidth: '100%', overflow: 'hidden' }
+        // Never taller than the slot's limit, whatever the frame says.
+        : fill ? { flex: '1 1 0%', minHeight: minFillHeight ?? 0 } : { height, minHeight: height, maxHeight: maxSlotHeight(slot), overflow: 'hidden' }}
+      // A frame with nothing to show must not be a stop for Tab, where the
+      // focus would vanish. Not visibility: hidden, because the browser stops
+      // rendering an isolated frame then, and only its rendering reports a height.
+      inert={!fill && height === 0}
+      data-plugin-iframe-slot={`${pluginId}:${slot}`}
+      data-plugin-iframe-fill={fill || undefined}
+    />
+  );
   return (
     <>
-      <div
-        ref={wrapperRef}
-        style={inline
-          ? { display: 'inline-block', verticalAlign: 'middle', height, width: width ?? 0, maxWidth: '100%', overflow: 'hidden' }
-          : fill ? { flex: '1 1 0%', minHeight: minFillHeight ?? 0 } : { height, minHeight: height }}
-        // A frame with nothing to show must not be a stop for Tab, where the
-        // focus would vanish. Not visibility: hidden, because the browser stops
-        // rendering an isolated frame then, and only its rendering reports a height.
-        inert={!fill && height === 0}
-        data-plugin-iframe-slot={`${pluginId}:${slot}`}
-        data-plugin-iframe-fill={fill || undefined}
-      />
+      {slot === 'app-top-banner' ? (
+        // The top banner is on every page and looks like part of the app:
+        // the host names its plugin beside it, with the way to turn it off.
+        <div className="flex items-start" data-plugin-top-banner={pluginId}>
+          <div className="min-w-0 flex-1">{wrapper}</div>
+          {height > 0 && <TopBannerControl pluginId={pluginId} />}
+        </div>
+      ) : wrapper}
       {floatingDropdown && (
         <FloatingDropdownPortal
           dropdown={floatingDropdown}
@@ -299,6 +314,61 @@ function shallowEqual(a: Record<string, unknown> | undefined, b: Record<string, 
   const keys = Object.keys(a);
   if (keys.length !== Object.keys(b).length) return false;
   return keys.every((k) => Object.prototype.hasOwnProperty.call(b, k) && Object.is(a[k], b[k]));
+}
+
+/**
+ * Beside a plugin's top banner: the plugin's name, which its frame can't
+ * cover or change, and a menu to turn the plugin off. A plugin the
+ * administrator turned on for everyone can't be turned off here, so it gets
+ * the name only.
+ */
+function TopBannerControl({ pluginId }: { pluginId: string }) {
+  const t = useTranslations('plugins.dialog');
+  const installed = usePluginStore((s) => s.plugins.find((p) => p.id === pluginId));
+  const forcedByPolicy = usePolicyStore((s) => s.isPluginForceEnabled(pluginId));
+  const disablePlugin = usePluginStore((s) => s.disablePlugin);
+  const menu = useContextMenu<null>();
+  const open = menu.contextMenu.isOpen;
+  const name = installed?.name || getActivePlugin(pluginId)?.plugin.name || pluginId;
+  const forced = installed?.forceEnabled === true || forcedByPolicy;
+  const chip = (
+    <>
+      <Puzzle className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+      <span className="hidden max-w-[10rem] truncate sm:inline">{name}</span>
+    </>
+  );
+  const chipClass = 'inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground';
+
+  if (forced) {
+    return (
+      <span role="note" className={cn(chipClass, 'm-1 flex-shrink-0')} title={t('from_plugin', { name })} aria-label={t('from_plugin', { name })} data-plugin-banner-source="">
+        {chip}
+      </span>
+    );
+  }
+  return (
+    <div className="relative m-1 flex-shrink-0" data-plugin-banner-source="">
+      <button
+        type="button"
+        onClick={(e) => (open ? menu.closeContextMenu() : menu.openContextMenuFrom(e.currentTarget, null, 'end'))}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t('plugin_menu', { name })}
+        title={t('from_plugin', { name })}
+        className={cn(chipClass, 'transition-colors duration-150 hover:bg-muted hover:text-foreground', open && 'bg-muted text-foreground')}
+      >
+        {chip}
+      </button>
+      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={menu.closeContextMenu} label={t('plugin_menu', { name })}>
+        <ContextMenuItem
+          icon={Power}
+          label={t('turn_off', { name })}
+          destructive
+          onClick={() => { menu.closeContextMenu(); disablePlugin(pluginId); }}
+        />
+      </ContextMenu>
+    </div>
+  );
 }
 
 export interface Box { left: number; top: number; right: number; bottom: number }
