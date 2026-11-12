@@ -1867,6 +1867,10 @@ export const useContactStore = create<ContactStore>()(
         // The book the cards landed in, as the server filed the first one.
         let addressBookId = '';
         const book = targetBookId ? get().addressBooks.find(b => b.id === targetBookId) : undefined;
+        // A chosen book that is no longer listed (its login was signed out
+        // while the import was open) takes nothing: the cards do not go into
+        // another account's default book instead.
+        if (client && supportsSync && targetBookId && !book) throw new Error('Address book not found');
         // The chosen book as the server knows it, and the login and account it belongs to.
         const target = book ? resolveRawAddressBookIds({ [book.id]: true }, get().addressBooks) : undefined;
 
