@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Sie haben {mailbox} per Impersonation geöffnet.",
     "return_button": "Zurück zu meinem Konto"
+  },
+  "admin_access": {
+    "label": "Superuser dieses Servers dürfen das Admin-Dashboard öffnen",
+    "help": "Superuser dieses Servers melden sich ohne das Admin-Passwort im Admin-Dashboard an, wie die des Haupt-JMAP-Servers. Schalten Sie dies nur für einen Server ein, den Sie selbst betreiben."
   }
 }

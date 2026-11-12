@@ -7,6 +7,7 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
+import { grantsAdminAccess, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { getStalwartAdminAccessMode, type StalwartAdminAccessMode } from '@/lib/admin/stalwart-admin-access';
 import { isStoreUnavailable } from '@/lib/admin/admin-store';
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
@@ -82,6 +83,14 @@ async function fetchWithTimeout(url: string, init: RequestInit, trusted: boolean
   }
 }
 
+/** The instance's own mail server, as lib/stalwart/server-fetch.ts reads it. */
+function configuredServerUrl(): string {
+  return configManager.get<string>('jmapServerUrl', '')
+    || process.env.JMAP_SERVER_URL
+    || process.env.NEXT_PUBLIC_JMAP_SERVER_URL
+    || '';
+}
+
 async function checkStalwartAdmin(
   request: NextRequest,
   mode: StalwartAdminAccessMode,
@@ -105,6 +114,12 @@ async function checkStalwartAdmin(
   // while custom endpoints were on keeps naming the server it was minted
   // for, so ask only a server the admin configured.
   if (!creds.trusted) return false;
+  // Of those, only the instance's own server, or one the admin marked with
+  // `adminAccess`: another listed server may be run by someone else, whose
+  // superuser would get this whole console.
+  if (!grantsAdminAccess(creds.serverUrl, configuredServerUrl(), parseJmapServers(configManager.get<unknown>('jmapServers', [])))) {
+    return false;
+  }
 
   // Key on a hash of the actual authHeader, not the cookie-claimed username.
   // The username field is caller-supplied in /api/auth/stalwart-context and

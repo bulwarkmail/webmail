@@ -8308,5 +8308,9 @@
   "impersonation": {
     "return_notice": "Du opna {mailbox} via imitering.",
     "return_button": "Tilbake til kontoen min"
+  },
+  "admin_access": {
+    "label": "Superbrukarar på denne tenaren kan opne administrasjonspanelet",
+    "help": "Superbrukarar på denne tenaren loggar inn på administrasjonspanelet utan administratorpassordet, slik som dei på hovud-JMAP-tenaren. Slå det berre på for ein tenar du driv sjølv."
   }
 }

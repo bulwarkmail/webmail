@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Has obert {mailbox} mitjançant una suplantació.",
     "return_button": "Torna al meu compte"
+  },
+  "admin_access": {
+    "label": "Els superusuaris d’aquest servidor poden obrir el tauler d’administració",
+    "help": "Els superusuaris d’aquest servidor inicien la sessió al tauler d’administració sense la contrasenya d’administrador, com els del servidor JMAP principal. Activa-ho només per a un servidor que gestionis tu mateix."
   }
 }

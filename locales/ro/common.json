@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Ați deschis {mailbox} prin impersonare.",
     "return_button": "Înapoi la contul meu"
+  },
+  "admin_access": {
+    "label": "Superutilizatorii acestui server pot deschide panoul de administrare",
+    "help": "Superutilizatorii acestui server se conectează la panoul de administrare fără parola de administrator, la fel ca cei ai serverului JMAP principal. Activați această opțiune doar pentru un server pe care îl administrați dumneavoastră."
   }
 }

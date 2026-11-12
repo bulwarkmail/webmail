@@ -8312,5 +8312,9 @@
   "impersonation": {
     "return_notice": "Bạn đã mở {mailbox} bằng cách mạo danh.",
     "return_button": "Quay lại tài khoản của tôi"
+  },
+  "admin_access": {
+    "label": "Siêu người dùng của máy chủ này có thể mở bảng điều khiển quản trị",
+    "help": "Siêu người dùng của máy chủ này đăng nhập vào bảng điều khiển quản trị mà không cần mật khẩu quản trị, giống như siêu người dùng của máy chủ JMAP chính. Chỉ bật cho máy chủ do chính bạn vận hành."
   }
 }

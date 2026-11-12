@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "A(z) {mailbox} postafiókot megszemélyesítéssel nyitotta meg.",
     "return_button": "Vissza a saját fiókomhoz"
+  },
+  "admin_access": {
+    "label": "A kiszolgáló szuperfelhasználói megnyithatják az adminisztrációs felületet",
+    "help": "A kiszolgáló szuperfelhasználói az adminisztrátori jelszó nélkül jelentkeznek be az adminisztrációs felületre, ahogy a fő JMAP-kiszolgáló szuperfelhasználói is. Csak olyan kiszolgálónál kapcsolja be, amelyet Ön üzemeltet."
   }
 }

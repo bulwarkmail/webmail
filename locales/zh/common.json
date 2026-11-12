@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "你通过模拟登录打开了 {mailbox}。",
     "return_button": "返回我的账户"
+  },
+  "admin_access": {
+    "label": "此服务器的超级用户可以打开管理面板",
+    "help": "此服务器的超级用户无需管理员密码即可登录管理面板，与主 JMAP 服务器的超级用户相同。仅对你自己运营的服务器开启。"
   }
 }

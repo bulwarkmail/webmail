@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Vous avez ouvert {mailbox} par usurpation d'identité.",
     "return_button": "Revenir à mon compte"
+  },
+  "admin_access": {
+    "label": "Les superutilisateurs de ce serveur peuvent ouvrir le tableau de bord d’administration",
+    "help": "Les superutilisateurs de ce serveur se connectent au tableau de bord d’administration sans le mot de passe administrateur, comme ceux du serveur JMAP principal. N’activez cette option que pour un serveur que vous gérez vous-même."
   }
 }

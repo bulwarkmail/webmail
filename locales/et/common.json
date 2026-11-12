@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Avasid postkasti {mailbox} kasutaja asendamise kaudu.",
     "return_button": "Tagasi minu kontole"
+  },
+  "admin_access": {
+    "label": "Selle serveri superkasutajad võivad avada halduspaneeli",
+    "help": "Selle serveri superkasutajad logivad halduspaneeli sisse ilma administraatori paroolita, nagu peamise JMAP-serveri superkasutajad. Lülita see sisse ainult serveri puhul, mida haldad ise."
   }
 }

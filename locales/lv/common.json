@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Jūs atvērāt {mailbox}, uzdodoties par lietotāju.",
     "return_button": "Atgriezties manā kontā"
+  },
+  "admin_access": {
+    "label": "Šī servera superlietotāji var atvērt administrēšanas paneli",
+    "help": "Šī servera superlietotāji piesakās administrēšanas panelī bez administratora paroles, tāpat kā galvenā JMAP servera superlietotāji. Ieslēdziet to tikai serverim, ko uzturat paši."
   }
 }

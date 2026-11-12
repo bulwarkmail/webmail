@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Skrzynka {mailbox} została otwarta przez podszywanie się.",
     "return_button": "Wróć do mojego konta"
+  },
+  "admin_access": {
+    "label": "Superużytkownicy tego serwera mogą otwierać panel administracyjny",
+    "help": "Superużytkownicy tego serwera logują się do panelu administracyjnego bez hasła administratora, tak jak superużytkownicy głównego serwera JMAP. Włącz tylko dla serwera, którym zarządzasz samodzielnie."
   }
 }

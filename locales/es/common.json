@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Has abierto {mailbox} mediante suplantación.",
     "return_button": "Volver a mi cuenta"
+  },
+  "admin_access": {
+    "label": "Los superusuarios de este servidor pueden abrir el panel de administración",
+    "help": "Los superusuarios de este servidor inician sesión en el panel de administración sin la contraseña de administrador, como los del servidor JMAP principal. Actívalo solo para un servidor que administres tú mismo."
   }
 }

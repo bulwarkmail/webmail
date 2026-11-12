@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "You opened {mailbox} through impersonation.",
     "return_button": "Return to my account"
+  },
+  "admin_access": {
+    "label": "This server’s superusers may open the admin dashboard",
+    "help": "Superusers of this server sign in to the admin dashboard without the admin password, like those of the main JMAP server. Turn this on only for a server you run yourself."
   }
 }

@@ -22,7 +22,8 @@ vi.mock('@/lib/admin/config-manager', () => ({
   configManager: {
     ensureLoaded: vi.fn().mockResolvedValue(undefined),
     // Defaults: stalwartAdminAccess = auto, allowCustomJmapEndpoint = false.
-    get: (_key: string, fallback?: unknown) => fallback,
+    // The instance's own server is the one asked.
+    get: (key: string, fallback?: unknown) => (key === 'jmapServerUrl' ? 'https://mail.example.org' : fallback),
   },
 }));
 vi.mock('@/lib/admin/password', () => ({

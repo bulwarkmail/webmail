@@ -11,7 +11,7 @@ vi.mock('next/server', () => ({
 }));
 vi.mock('@/lib/logger', () => ({ logger: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() } }));
 vi.mock('@/lib/admin/config-manager', () => ({
-  configManager: { ensureLoaded: vi.fn(async () => {}), get: (_key: string, d?: unknown) => d },
+  configManager: { ensureLoaded: vi.fn(async () => {}), get: (key: string, d?: unknown) => (key === 'jmapServerUrl' ? 'https://mail.example.com' : d) },
 }));
 vi.mock('@/lib/admin/password', () => ({
   initAdminPassword: vi.fn(async () => true),

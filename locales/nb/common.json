@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "Du åpnet {mailbox} via imitering.",
     "return_button": "Tilbake til kontoen min"
+  },
+  "admin_access": {
+    "label": "Superbrukere på denne serveren kan åpne administrasjonspanelet",
+    "help": "Superbrukere på denne serveren logger på administrasjonspanelet uten administratorpassordet, slik som de på hoved-JMAP-serveren. Slå det bare på for en server du drifter selv."
   }
 }

@@ -8300,5 +8300,9 @@
   "impersonation": {
     "return_notice": "你透過模擬登入開啟了 {mailbox}。",
     "return_button": "返回我的帳戶"
+  },
+  "admin_access": {
+    "label": "此伺服器的超級使用者可以開啟管理儀表板",
+    "help": "此伺服器的超級使用者無需管理員密碼即可登入管理儀表板，與主要 JMAP 伺服器的超級使用者相同。僅對你自己營運的伺服器開啟。"
   }
 }
