@@ -2227,45 +2227,51 @@ export async function dispatchApiCall(
     case 'admin.setConfig':    refuseServerField(plugin, args[0], 'admin.setConfig'); await adminSet(plugin.id, args[0] as string, args[1]); return undefined;
     case 'admin.deleteConfig': refuseServerField(plugin, args[0], 'admin.deleteConfig'); await adminDelete(plugin.id, args[0] as string); return undefined;
 
+    // The dialog cases take text only where they expect text (anything else
+    // gets the default); host-dialog.ts cuts the lengths, the number of
+    // prompt fields and the width before the dialog is queued.
     case 'ui.confirm': {
-      const opts = (args[0] ?? {}) as { title?: string; message?: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean };
+      const opts = (args[0] ?? {}) as { title?: unknown; message?: unknown; confirmLabel?: unknown; cancelLabel?: unknown; danger?: boolean };
       return awaitDialog({
         pluginId: plugin.id,
         kind: 'confirm',
-        title: String(opts.title ?? plugin.name ?? 'Confirm'),
-        message: String(opts.message ?? ''),
+        title: typeof opts.title === 'string' ? opts.title : (plugin.name ?? 'Confirm'),
+        message: typeof opts.message === 'string' ? opts.message : '',
         confirmLabel: typeof opts.confirmLabel === 'string' ? opts.confirmLabel : undefined,
         cancelLabel: typeof opts.cancelLabel === 'string' ? opts.cancelLabel : undefined,
         danger: !!opts.danger,
       });
     }
     case 'ui.alert': {
-      const opts = (args[0] ?? {}) as { title?: string; message?: string; confirmLabel?: string };
+      const opts = (args[0] ?? {}) as { title?: unknown; message?: unknown; confirmLabel?: unknown };
       await awaitDialog({
         pluginId: plugin.id,
         kind: 'alert',
-        title: String(opts.title ?? plugin.name ?? 'Notice'),
-        message: String(opts.message ?? ''),
+        title: typeof opts.title === 'string' ? opts.title : (plugin.name ?? 'Notice'),
+        message: typeof opts.message === 'string' ? opts.message : '',
         confirmLabel: typeof opts.confirmLabel === 'string' ? opts.confirmLabel : undefined,
       });
       return undefined;
     }
     case 'ui.prompt': {
-      const opts = (args[0] ?? {}) as { title?: string; message?: string; confirmLabel?: string; cancelLabel?: string; fields?: PromptField[] };
+      const opts = (args[0] ?? {}) as { title?: unknown; message?: unknown; confirmLabel?: unknown; cancelLabel?: unknown; fields?: unknown };
+      // A field needs a name; only the known parts of it are kept.
       const fields: PromptField[] = Array.isArray(opts.fields)
-        ? opts.fields.map((f) => ({
-            name: String(f.name),
-            label: String(f.label),
-            type: f.type === 'password' ? 'password' : 'text',
-            placeholder: typeof f.placeholder === 'string' ? f.placeholder : undefined,
-            required: !!f.required,
-          }))
+        ? opts.fields
+            .filter((f): f is Record<string, unknown> => !!f && typeof f === 'object' && typeof (f as { name?: unknown }).name === 'string')
+            .map((f) => ({
+              name: f.name as string,
+              label: typeof f.label === 'string' ? f.label : '',
+              type: f.type === 'password' ? 'password' : 'text',
+              placeholder: typeof f.placeholder === 'string' ? f.placeholder : undefined,
+              required: !!f.required,
+            }))
         : [];
       return awaitPrompt({
         pluginId: plugin.id,
         kind: 'prompt',
-        title: String(opts.title ?? plugin.name ?? 'Enter details'),
-        message: String(opts.message ?? ''),
+        title: typeof opts.title === 'string' ? opts.title : (plugin.name ?? 'Enter details'),
+        message: typeof opts.message === 'string' ? opts.message : '',
         confirmLabel: typeof opts.confirmLabel === 'string' ? opts.confirmLabel : undefined,
         cancelLabel: typeof opts.cancelLabel === 'string' ? opts.cancelLabel : undefined,
         fields,
@@ -2276,13 +2282,13 @@ export async function dispatchApiCall(
       // real app-root overlay, instead of a fixed confirm/prompt form - see
       // the 'plugin-dialog' SlotName / host-dialog.ts comments for why this
       // exists (a small toolbar/row slot can't show a large custom UI).
-      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number; fill?: boolean; anchor?: unknown };
+      const opts = (args[0] ?? {}) as { title?: unknown; slot?: string; extraProps?: Record<string, unknown>; width?: number; fill?: boolean; anchor?: unknown };
       if (!opts.slot || typeof opts.slot !== 'string') {
         throw new Error('ui.openDialog requires a "slot" name');
       }
       return awaitCustomDialog({
         pluginId: plugin.id,
-        title: String(opts.title ?? plugin.name ?? ''),
+        title: typeof opts.title === 'string' ? opts.title : (plugin.name ?? ''),
         message: '',
         slot: opts.slot,
         extraProps: (opts.extraProps && typeof opts.extraProps === 'object') ? opts.extraProps : {},

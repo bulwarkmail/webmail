@@ -41,13 +41,30 @@ import { DialogSurfacePortal, useDialogSurface } from '@/components/ui/dialog-su
 import { PluginIframeSlot } from './plugin-iframe-slot';
 import type { SlotName } from '@/lib/plugin-types';
 
+/**
+ * How many ** delimiters a message's bold runs use at most (an even number,
+ * so the text after them is plain). The rest shows as written, ** and all:
+ * one element per run would let a message of nothing but ** fill the page
+ * with elements.
+ */
+const MAX_BOLD_DELIMITERS = 64;
+
 // Lightweight **bold** support in plugin dialog messages. Everything else is
 // rendered literally (newlines come from the parent's white-space: pre-wrap).
 // Splitting on the ** delimiter yields alternating plain/bold segments (odd
-// indices are bold). Plugins control these strings, so the delimiters balance.
+// indices are bold), up to MAX_BOLD_DELIMITERS of them.
 function renderMessage(message?: string): React.ReactNode {
   if (!message) return null;
-  return message.split('**').map((seg, i) =>
+  const segments: string[] = [];
+  let from = 0;
+  while (segments.length < MAX_BOLD_DELIMITERS) {
+    const at = message.indexOf('**', from);
+    if (at < 0) break;
+    segments.push(message.slice(from, at));
+    from = at + 2;
+  }
+  segments.push(message.slice(from));
+  return segments.map((seg, i) =>
     i % 2 === 1
       ? <strong key={i}>{seg}</strong>
       : <React.Fragment key={i}>{seg}</React.Fragment>,
