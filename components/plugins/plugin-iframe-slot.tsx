@@ -18,8 +18,8 @@
 // never covers a row where the host names a plugin (a dialog's header, a
 // banner's name chip), and in a plugin's dialog it stays below the frame's
 // top; its first row names the plugin; it is drawn in the layer of the plugin
-// dialog the frame is in. It closes on any click outside it, on scrolling and
-// on resizing.
+// dialog the frame is in. It closes on any click outside it, on scrolling, on
+// resizing, and when the frame stops showing.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -76,7 +76,8 @@ interface FloatingDropdownState {
 /**
  * The host's open layers: its dialogs, the app's own and the plugins' alike
  * (modal or a popover like the event details), and its menus (ContextMenu and
- * the menus the app draws itself). They are in the document only while open.
+ * the menus the app draws itself). They are in the document while open; one
+ * kept there while closed is inert or hidden.
  */
 const OPEN_LAYER_SELECTOR = '[aria-modal="true"], [role="alertdialog"], [role="dialog"], [role="menu"]';
 /**
@@ -266,6 +267,8 @@ class FrameFocus {
 
 /** The frame's message can come in before the app hears that the focus moved into it. */
 const FOCUS_ARRIVAL_MS = 100;
+/** How often an open list checks that its frame still shows. */
+const FRAME_CHECK_MS = 250;
 
 export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked = false, minFillHeight, onShownChange, onHeightChange }: Props) {
   const fill = fillAsked && isFillableSlot(slot);
@@ -460,23 +463,30 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
   }, [show]);
 
   // An open list closes when a dialog, popover or menu opens that the frame
-  // is not inside, or when the frame is taken out of the page.
+  // is not inside, or when the frame stops showing: taken out of the page,
+  // hidden by a style or class change, or left with no room by the layout.
   const openDropdownId = floatingDropdown?.id ?? null;
   useEffect(() => {
     if (openDropdownId === null || typeof MutationObserver === 'undefined') return;
-    const closeIfCovered = () => {
+    const closeIfGone = () => {
       focusRef.current?.observe();
-      if (!hostLayerOutside(wrapperRef.current)) return;
+      const frame = wrapperRef.current?.querySelector('iframe') ?? wrapperRef.current;
+      if (frame && frameShows(frame) && !hostLayerOutside(wrapperRef.current)) return;
       instanceRef.current?.sendFloatingDropdownEvent({ type: 'floating-dropdown-dismiss', id: openDropdownId });
       setFloatingDropdown((prev) => (prev?.id === openDropdownId ? null : prev));
     };
-    const observer = new MutationObserver(closeIfCovered);
+    const observer = new MutationObserver(closeIfGone);
     observer.observe(document.body, {
       childList: true, subtree: true, attributes: true,
-      attributeFilter: ['aria-modal', 'role', 'aria-expanded', 'aria-haspopup', 'inert', 'hidden'],
+      attributeFilter: ['aria-modal', 'role', 'aria-expanded', 'aria-haspopup', 'inert', 'hidden', 'style', 'class'],
     });
-    closeIfCovered();
-    return () => observer.disconnect();
+    // The layout can take the frame's room with no change in those attributes.
+    const timer = setInterval(closeIfGone, FRAME_CHECK_MS);
+    closeIfGone();
+    return () => {
+      observer.disconnect();
+      clearInterval(timer);
+    };
   }, [openDropdownId]);
 
   // Re-theme the live slot iframe when the host theme changes (dark/light
