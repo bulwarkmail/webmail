@@ -138,7 +138,11 @@ export function AccountStorage({ account, primary, heading }: { account: string;
   };
   const caps = attachmentCapOptions(devices.offlineMaxAttachmentMb);
   const currentCap = maxAttachmentMb(scope);
-  const totals = totalCapOptions(devices.offlineMaxTotalMb, isDesktopApp());
+  const desktop = isDesktopApp();
+  const totals = totalCapOptions(devices.offlineMaxTotalMb, desktop);
+  // The organisation's total is only news when it takes something away: a
+  // browser stops at 2 GB whatever the cap above that.
+  const totalCapped = locked.maxTotal && totals.join() !== totalCapOptions(0, desktop).join();
   const unlimited = scope.maxTotalBytes >= NO_TOTAL_LIMIT;
   const currentTotal = unlimited ? null : Math.round(scope.maxTotalBytes / MB);
   // An odd cap still shows what's in force; no limit sorts last.
@@ -240,7 +244,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
             />
           </SettingItem>
           {/* With attachments on, the total's select below says this. */}
-          {locked.maxTotal && !locked.attachments && !scope.attachments && (
+          {totalCapped && !locked.attachments && !scope.attachments && (
             <p className="flex items-center gap-1 pb-2 text-xs text-muted-foreground" data-testid={testId('offline-total-locked')}>
               <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
               {tStorage('total_locked', { size: formatFileSize(scope.maxTotalBytes) })}
@@ -266,7 +270,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
                   onChange={(value) => chooseScope(account, { maxTotalBytes: value === ALL ? null : Number(value) * MB })}
                   options={totalOptions.map((mb) => ({ value: mb === null ? ALL : String(mb), label: mb === null ? tStorage('total_cap_unlimited') : formatFileSize(mb * MB) }))}
                 />
-                {locked.maxTotal && totals.length > 1 && <OrgLockedNote />}
+                {totalCapped && totals.length > 1 && <OrgLockedNote />}
               </div>
             </SettingItem>
           )}

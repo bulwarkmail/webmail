@@ -133,6 +133,18 @@ describe('what an account keeps', () => {
     expect(offline.chooseScope).toHaveBeenCalledWith('acc', { maxTotalBytes: 1024 ** 3 });
   });
 
+  // A browser stops at 2 GB anyway: a higher cap takes nothing away.
+  it('names no organisation for a cap above what a browser offers', () => {
+    setDevices({ offlineMaxTotalMb: 5000 });
+    render(<OfflineSettings />);
+    expect([...totalSelect().options].map((o) => o.value)).toEqual(['1024', '2048']);
+    expect(within(screen.getByTestId('offline-total-cap')).queryByText('org_locked')).toBeNull();
+    cleanup();
+    useOfflineStore.setState({ choices: { acc: { on: true, attachments: false } } });
+    render(<OfflineSettings />);
+    expect(screen.queryByTestId('offline-total-locked')).toBeNull();
+  });
+
   it('uses a stored no limit as 2 GB in a browser', () => {
     useOfflineStore.setState({ choices: { acc: { on: true, maxTotalBytes: null } } });
     render(<OfflineSettings />);
