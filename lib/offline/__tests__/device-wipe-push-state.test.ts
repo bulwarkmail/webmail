@@ -178,8 +178,9 @@ describe("what a wipe of one login takes from the worker's store", () => {
       applicationServerKey: 'KEY',
       entries: { a: { relay: 'https://relay.example', subscriptionId: 'd1', accountLabel: 'alice' }, b: { relay: 'https://relay.example', subscriptionId: 'd2', accountLabel: 'bob' } },
     });
-    await put('notified/a', { ids: ['m1'] });
-    await put('notified/b', { ids: ['m2'] });
+    // The announced lists go under the login the push names (public/sw.js notifiedIdsKey).
+    await put('notified/alice/a', { ids: ['m1'] });
+    await put('notified/bob/b', { ids: ['m2'] });
 
     await wipe.wipeAccountFromDevice(ALICE, 'admin');
 
@@ -188,8 +189,8 @@ describe("what a wipe of one login takes from the worker's store", () => {
       applicationServerKey: 'KEY',
       entries: { b: { relay: 'https://relay.example', subscriptionId: 'd2', accountLabel: 'bob' } },
     });
-    expect(await stored('notified/a')).toBeUndefined();
-    expect(await stored('notified/b')).toEqual({ ids: ['m2'] });
+    expect(await stored('notified/alice/a')).toBeUndefined();
+    expect(await stored('notified/bob/b')).toEqual({ ids: ['m2'] });
     expect(await stored('app-lock')).toEqual({ state: 'unlocked', clients: ['app'] });
     expect(await stored('prefs')).toEqual({ sound: false });
     expect(await stored('actions')).toEqual({ archiveEnabled: true });

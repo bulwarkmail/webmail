@@ -642,7 +642,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // state-change path, a junk delivery wakes us while an unread message we
   // already announced is still sitting in the Inbox - without this we would
   // re-buzz for that old message.
-  const notified = await readNotifiedIds(accountId);
+  const notified = await readNotifiedIds(accountId, accountLabel);
   const freshIds = emailIds.filter((id) => !notified.includes(id));
   const groupTag = "bulwark-mail:" + (accountId || "default");
   if (emailIds.length > 0 && freshIds.length === 0) {
@@ -653,7 +653,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // Email notifications off, or do not disturb on: a browser still wants a
   // notification for the push, so one comes and goes with nothing on it.
   if (!(await showPreference(accountLabel))) {
-    if (freshIds.length > 0) await writeNotifiedIds(accountId, notified.concat(freshIds));
+    if (freshIds.length > 0) await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
     await showWithoutAlert(groupTag);
     return;
   }
@@ -816,7 +816,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   });
 
   if (announced.length > 0) {
-    await writeNotifiedIds(accountId, notified.concat(announced));
+    await writeNotifiedIds(accountId, accountLabel, notified.concat(announced));
   }
 }
 
@@ -1107,21 +1107,28 @@ async function withinQuietWindow(accountId) {
   return false;
 }
 
-// Per-account list of message ids we have already shown a notification for.
+// Per login and account, the message ids we have already shown a notification for.
 // Service workers have no localStorage; the Cache API is the cheapest durable
 // store that survives the worker being killed between pushes. Failures are
 // swallowed - dedupe is a nicety, delivering the notification is not.
 const PUSH_STATE_CACHE = "bulwark-push-state-v1";
 const NOTIFIED_IDS_LIMIT = 200;
 
-function notifiedIdsKey(accountId) {
-  return `${self.location.origin}${BASE_PATH}/__push-state/notified/${encodeURIComponent(accountId || "default")}`;
+/**
+ * Account ids repeat across servers, so the list goes under the login the push names
+ * (its label, the user name), and a wipe of one login takes its own lists only
+ * (lib/offline/device-wipe.ts). A push without a label keeps the list per account.
+ */
+function notifiedIdsKey(accountId, login) {
+  const account = encodeURIComponent(accountId || "default");
+  const owner = login ? `${encodeURIComponent(login)}/` : "";
+  return `${self.location.origin}${BASE_PATH}/__push-state/notified/${owner}${account}`;
 }
 
-async function readNotifiedIds(accountId) {
+async function readNotifiedIds(accountId, login) {
   try {
     const cache = await caches.open(PUSH_STATE_CACHE);
-    const res = await cache.match(notifiedIdsKey(accountId));
+    const res = await cache.match(notifiedIdsKey(accountId, login));
     if (!res) return [];
     const data = await res.json();
     return Array.isArray(data.ids) ? data.ids.filter((id) => typeof id === "string") : [];
@@ -1130,12 +1137,12 @@ async function readNotifiedIds(accountId) {
   }
 }
 
-async function writeNotifiedIds(accountId, ids) {
+async function writeNotifiedIds(accountId, login, ids) {
   try {
     const cache = await caches.open(PUSH_STATE_CACHE);
     const unique = Array.from(new Set(ids)).slice(-NOTIFIED_IDS_LIMIT);
     await cache.put(
-      notifiedIdsKey(accountId),
+      notifiedIdsKey(accountId, login),
       new Response(JSON.stringify({ ids: unique }), {
         headers: { "Content-Type": "application/json" },
       }),
@@ -1686,13 +1693,16 @@ async function askOpenClients(message, allClients) {
   return { result: silentHolder ? "failed" : "declined", client: null };
 }
 
-/** Keeps a typed reply for the page the click is about to open; it's not for a URL. */
-async function keepPendingReply(emailId, text) {
+/**
+ * Keeps a typed reply for the page the click is about to open; it's not for a URL. With
+ * the notification's login, so a wipe of that login takes it (lib/offline/device-wipe.ts).
+ */
+async function keepPendingReply(emailId, text, login) {
   try {
     const cache = await caches.open(PUSH_STATE_CACHE);
     await cache.put(
       pendingReplyKey(),
-      new Response(JSON.stringify({ emailId, text, at: Date.now() }), {
+      new Response(JSON.stringify({ emailId, text, login: typeof login === "string" ? login : undefined, at: Date.now() }), {
         headers: { "Content-Type": "application/json" },
       }),
     );
@@ -1760,7 +1770,7 @@ async function runNotificationAction(action, data, reply, allClients) {
     return true;
   }
   if (action === "reply") {
-    if (text) await keepPendingReply(data.emailId, text);
+    if (text) await keepPendingReply(data.emailId, text, data.login);
     return false;
   }
   // A tab with this login tried and failed, or stayed silent: the route won't
