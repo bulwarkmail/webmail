@@ -186,4 +186,15 @@ describe('a message from a file in its own window', () => {
     expect(screen.getByText('open_failed')).toBeTruthy();
     expect(screen.getByText('letter.eml')).toBeTruthy();
   });
+
+  // The file was uploaded through login b, which has no client in this
+  // window any more. Its blob id is another file, or none, for login a.
+  it('uploaded through a login that has no client here is not read through the active login', async () => {
+    render(<PopoutSavedMessage blobId="blob-1" name="letter.eml" accountId="login-b" openCompose={openCompose} onImported={onImported} />);
+    await settle();
+    expect(client.parseEmailBlob).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().fetchMailboxes).not.toHaveBeenCalled();
+    expect(viewer).toBeNull();
+    expect(screen.getByText('session_ended_title')).toBeTruthy();
+  });
 });

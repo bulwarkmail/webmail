@@ -12,6 +12,7 @@ import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import type { Email } from "@/lib/jmap/types";
+import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { ProComposeTabData } from "@/stores/pro-tab-store";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { announceMailChanged, openPopoutChannel } from "@/lib/popout/channel";
@@ -89,10 +90,10 @@ type LiveState = Pick<Email, "keywords" | "mailboxIds">;
 
 /**
  * Whether the message still exists, and in which folders. A JMAP move keeps
- * the id, so moved mail stays readable here; only its folders change.
+ * the id, so moved mail stays readable here; only its folders change. Asked
+ * through `client`, the client of the window's own login, or not at all.
  */
-function useMessagePresence(emailId: string, ownerAccountId: string | undefined): { presence: Presence; mailboxIds: string[] | null; liveState: LiveState | null } {
-  const client = useAuthStore((s) => s.client);
+function useMessagePresence(emailId: string, ownerAccountId: string | undefined, client: IJMAPClient | null): { presence: Presence; mailboxIds: string[] | null; liveState: LiveState | null } {
   const [presence, setPresence] = useState<Presence>("present");
   const [mailboxIds, setMailboxIds] = useState<string[] | null>(null);
   const [liveState, setLiveState] = useState<LiveState | null>(null);
@@ -146,7 +147,14 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
   const t = useTranslations("pwaWindows");
   const tSidebar = useTranslations("sidebar");
   const login = useAuthStore((s) => accountId ?? s.activeAccountId ?? undefined);
-  const client = useAuthStore((s) => (login ? s.getClientForAccount(login) : undefined) ?? s.client);
+  // The window's own login only (the auth store's client while the login
+  // table has no entry for the active one). When that login has no client
+  // the window shows nothing of the message: through another login the same
+  // id is another message, with other folders.
+  useAuthStore((s) => s.connectedAccountsRevision);
+  const client: IJMAPClient | null = useAuthStore((s) => (login
+    ? s.getClientForAccount(login) ?? (login === s.activeAccountId ? s.client : null)
+    : null));
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const [subject, setSubject] = useState<string | null>(null);
   const subjectInTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled("tabTitleSubjectEnabled"));
@@ -171,7 +179,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
-  const { presence, mailboxIds, liveState } = useMessagePresence(emailId, ownerAccountId);
+  const { presence, mailboxIds, liveState } = useMessagePresence(emailId, ownerAccountId, client);
   const firstMailboxIds = useRef<string | null>(null);
   if (mailboxIds && firstMailboxIds.current === null) firstMailboxIds.current = mailboxIds.join();
   const moved = !!mailboxIds && firstMailboxIds.current !== mailboxIds.join();
@@ -192,6 +200,14 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
   }, []);
 
   const openCompose = useComposeWindow(login);
+
+  if (!client) {
+    return (
+      <PopoutNotice title={t("session_ended_title")} body={t("session_ended_body")}>
+        <Button onClick={closePopoutWindow}>{t("close_window")}</Button>
+      </PopoutNotice>
+    );
+  }
 
   if (!foldersReady) return <PopoutSkeleton label={t("opening")} />;
 
@@ -214,7 +230,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
       )}
       <ProEmailView
         emailId={emailId}
-        client={client ?? undefined}
+        client={client}
         clientAccountId={login}
         accountId={ownerAccountId}
         onLoaded={handleLoaded}
