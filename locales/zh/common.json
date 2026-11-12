@@ -3972,6 +3972,8 @@
     "delete_folder": "删除文件夹",
     "refresh": "刷新",
     "hide_shared_account": "从侧边栏隐藏",
+    "move_shared_account_up": "上移",
+    "move_shared_account_down": "下移",
     "mute_notifications": "静音通知",
     "unmute_notifications": "取消静音通知",
     "mute_account_notifications": "静音此账户的通知",

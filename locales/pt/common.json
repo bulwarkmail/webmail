@@ -3972,6 +3972,8 @@
     "delete_folder": "Excluir pasta",
     "refresh": "Atualizar",
     "hide_shared_account": "Ocultar da barra lateral",
+    "move_shared_account_up": "Mover para cima",
+    "move_shared_account_down": "Mover para baixo",
     "mute_notifications": "Silenciar notificações",
     "unmute_notifications": "Reativar notificações",
     "mute_account_notifications": "Silenciar notificações desta conta",

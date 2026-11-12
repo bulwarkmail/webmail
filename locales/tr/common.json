@@ -3972,6 +3972,8 @@
     "delete_folder": "Klasörü sil",
     "refresh": "Yenile",
     "hide_shared_account": "Kenar çubuğundan gizle",
+    "move_shared_account_up": "Yukarı taşı",
+    "move_shared_account_down": "Aşağı taşı",
     "mute_notifications": "Bildirimleri sessize al",
     "unmute_notifications": "Bildirimleri aç",
     "mute_account_notifications": "Bu hesabın bildirimlerini sessize al",

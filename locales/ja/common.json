@@ -3972,6 +3972,8 @@
     "delete_folder": "フォルダーを削除",
     "refresh": "更新",
     "hide_shared_account": "サイドバーから非表示",
+    "move_shared_account_up": "上へ移動",
+    "move_shared_account_down": "下へ移動",
     "mute_notifications": "通知をミュート",
     "unmute_notifications": "通知のミュートを解除",
     "mute_account_notifications": "このアカウントの通知をミュート",

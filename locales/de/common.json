@@ -3972,6 +3972,8 @@
     "delete_folder": "Ordner löschen",
     "refresh": "Aktualisieren",
     "hide_shared_account": "In Seitenleiste ausblenden",
+    "move_shared_account_up": "Nach oben verschieben",
+    "move_shared_account_down": "Nach unten verschieben",
     "mute_notifications": "Benachrichtigungen stummschalten",
     "unmute_notifications": "Benachrichtigungen einschalten",
     "mute_account_notifications": "Benachrichtigungen für dieses Konto stummschalten",

@@ -3972,6 +3972,8 @@
     "delete_folder": "Хавтас устгах",
     "refresh": "Сэргээх",
     "hide_shared_account": "Хажуугийн самбараас нуух",
+    "move_shared_account_up": "Дээш зөөх",
+    "move_shared_account_down": "Доош зөөх",
     "mute_notifications": "Мэдэгдлийг хаах",
     "unmute_notifications": "Мэдэгдлийг нээх",
     "mute_account_notifications": "Энэ бүртгэлийн мэдэгдлийг хаах",

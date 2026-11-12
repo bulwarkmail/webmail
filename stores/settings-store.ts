@@ -509,7 +509,7 @@ const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
  * Maps keyed by account id. Every account's server copy carries one, and a
  * server load takes only the loading account's entry.
  */
-const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts']);
+const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder']);
 
 /** A map of plugin id → boolean, whatever came in (sync, import, storage). */
 function booleanRecord(value: unknown): Record<string, boolean> {
@@ -936,6 +936,9 @@ interface SettingsState extends AccessibilitySettings {
   // Shared accounts whose mail folders are hidden one by one, keyed by
   // AccountEntry.id -> JMAP accountIds, since those ids are per server.
   hiddenSharedMailAccounts: Record<string, string[]>;
+  // The shared accounts' order in the sidebar, keyed by AccountEntry.id ->
+  // JMAP accountIds in display order. Accounts not listed follow, by name.
+  sharedMailAccountOrder: Record<string, string[]>;
 
   // Folders
   folderIcons: Record<string, string>; // mailboxId -> icon name
@@ -1248,6 +1251,7 @@ const DEFAULT_SETTINGS = {
   showSharedMailAccounts: true,
   compactSharedMailboxes: false,
   hiddenSharedMailAccounts: {} as Record<string, string[]>,
+  sharedMailAccountOrder: {} as Record<string, string[]>,
 
   // Folders
   folderIcons: {} as Record<string, string>,
@@ -1771,6 +1775,7 @@ export const useSettingsStore = create<SettingsState>()(
           showSharedMailAccounts: state.showSharedMailAccounts,
           compactSharedMailboxes: state.compactSharedMailboxes,
           hiddenSharedMailAccounts: state.hiddenSharedMailAccounts,
+          sharedMailAccountOrder: state.sharedMailAccountOrder,
           folderIcons: state.folderIcons,
           folderCountModes: state.folderCountModes,
           emailKeywords: state.emailKeywords,
@@ -1999,7 +2004,7 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'writingLanguage' && !isWritingLanguage(settings[key])) {
                 return;
               }
-              if (key === 'hiddenSharedMailAccounts' && !isPlainRecord(settings[key])) {
+              if ((key === 'hiddenSharedMailAccounts' || key === 'sharedMailAccountOrder') && !isPlainRecord(settings[key])) {
                 return;
               }
               if (key === 'signatureDetails') {
@@ -2394,6 +2399,9 @@ export const useSettingsStore = create<SettingsState>()(
             if (!isWritingLanguage(state.writingLanguage)) state.writingLanguage = 'auto';
             if (!isPlainRecord(state.hiddenSharedMailAccounts)) {
               state.hiddenSharedMailAccounts = {};
+            }
+            if (!isPlainRecord(state.sharedMailAccountOrder)) {
+              state.sharedMailAccountOrder = {};
             }
             if (!Array.isArray(state.explicitSettings)) {
               state.explicitSettings = [];

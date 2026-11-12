@@ -3972,6 +3972,8 @@
     "delete_folder": "Delete folder",
     "refresh": "Refresh",
     "hide_shared_account": "Hide from sidebar",
+    "move_shared_account_up": "Move up",
+    "move_shared_account_down": "Move down",
     "mute_notifications": "Mute notifications",
     "unmute_notifications": "Unmute notifications",
     "mute_account_notifications": "Mute notifications for this account",

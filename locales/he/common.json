@@ -5793,6 +5793,8 @@
     "delete_folder": "מחק תיקייה",
     "refresh": "רענן",
     "hide_shared_account": "הסתרה מסרגל הצד",
+    "move_shared_account_up": "הזזה למעלה",
+    "move_shared_account_down": "הזזה למטה",
     "mute_notifications": "השתקת התראות",
     "unmute_notifications": "ביטול השתקת התראות",
     "mute_account_notifications": "השתקת התראות לחשבון זה",

@@ -3972,6 +3972,8 @@
     "delete_folder": "Map verwijderen",
     "refresh": "Vernieuwen",
     "hide_shared_account": "Verbergen in zijbalk",
+    "move_shared_account_up": "Omhoog verplaatsen",
+    "move_shared_account_down": "Omlaag verplaatsen",
     "mute_notifications": "Meldingen dempen",
     "unmute_notifications": "Meldingen inschakelen",
     "mute_account_notifications": "Meldingen voor dit account dempen",

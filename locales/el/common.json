@@ -3984,6 +3984,8 @@
     "delete_folder": "Διαγραφή φακέλου",
     "refresh": "Ανανέωση",
     "hide_shared_account": "Απόκρυψη από την πλαϊνή στήλη",
+    "move_shared_account_up": "Μετακίνηση πάνω",
+    "move_shared_account_down": "Μετακίνηση κάτω",
     "mute_notifications": "Σίγαση ειδοποιήσεων",
     "unmute_notifications": "Κατάργηση σίγασης ειδοποιήσεων",
     "mute_account_notifications": "Σίγαση ειδοποιήσεων αυτού του λογαριασμού",

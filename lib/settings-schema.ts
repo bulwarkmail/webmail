@@ -429,7 +429,7 @@ export const DENIED_SETTINGS: readonly string[] = [
   // A browser voice id the model can't know.
   'readAloudVoice',
   // Maps and lists keyed by server ids.
-  'allMailFolderIds', 'hiddenSharedMailAccounts', 'notificationMutes', 'hiddenCompanyCalendars', 'sharedCalendarColors',
+  'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'notificationMutes', 'hiddenCompanyCalendars', 'sharedCalendarColors',
   'folderIcons', 'folderCountModes', 'preferredIdentityIds',
   // App bookkeeping and UI state, not preferences.
   'onboardingCompleted', 'tourCompleted', 'emailKeywordsChoiceTracked', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',

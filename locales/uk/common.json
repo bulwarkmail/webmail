@@ -3972,6 +3972,8 @@
     "delete_folder": "Видалити папку",
     "refresh": "Оновити",
     "hide_shared_account": "Приховати з бічної панелі",
+    "move_shared_account_up": "Перемістити вгору",
+    "move_shared_account_down": "Перемістити вниз",
     "mute_notifications": "Вимкнути сповіщення",
     "unmute_notifications": "Увімкнути сповіщення",
     "mute_account_notifications": "Вимкнути сповіщення для цього облікового запису",
