@@ -7087,7 +7087,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Liste frå plugin {name}",
     "dropdown_list_labelled": "{label}, liste frå plugin {name}",
-    "oauth_failed": "Tenesta fullførte ikkje innlogginga. Lukk dette vindauget og prøv igjen."
+    "oauth_failed": "Tenesta fullførte ikkje innlogginga. Lukk dette vindauget og prøv igjen.",
+    "banners_more": "Fleire bannerar ({count}): {names}",
+    "banners_fewer": "Færre bannerar"
   },
   "command_palette": {
     "title": "Kommando-palett",

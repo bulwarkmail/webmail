@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Liste fra pluginet {name}",
     "dropdown_list_labelled": "{label}, liste fra pluginet {name}",
-    "oauth_failed": "Tjenesten gennemførte ikke login. Luk dette vindue, og prøv igen."
+    "oauth_failed": "Tjenesten gennemførte ikke login. Luk dette vindue, og prøv igen.",
+    "banners_more": "Flere bannere ({count}): {names}",
+    "banners_fewer": "Færre bannere"
   },
   "command_palette": {
     "title": "Kommandopalet",

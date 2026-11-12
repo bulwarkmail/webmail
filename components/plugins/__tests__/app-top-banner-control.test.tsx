@@ -80,18 +80,29 @@ describe('the host\'s control beside a plugin\'s top banner', () => {
     expect(disablePlugin).toHaveBeenCalledWith('agenda');
   });
 
+  it('heads its menu with the plugin\'s name, which a narrow window hides from the chip', async () => {
+    install();
+    await mount('app-top-banner', 40);
+    fireEvent.click(screen.getByRole('button', { name: 'plugin_menu Calendar agenda' }));
+    const menu = screen.getByRole('menu');
+    expect(menu.querySelector('[data-context-menu-header]')?.textContent).toBe('from_plugin Calendar agenda');
+  });
+
   it('gives a plugin the administrator turned on for everyone the name only', async () => {
     install({ forceEnabled: true });
     await mount('app-top-banner', 40);
 
-    expect(screen.getByLabelText('from_plugin Calendar agenda')).toBeTruthy();
+    const note = screen.getByLabelText('from_plugin Calendar agenda');
     expect(screen.queryByRole('button', { name: /plugin_menu/ })).toBeNull();
+    // With no menu, the name itself shows at every width.
+    expect(note.textContent).toBe('Calendar agenda');
+    expect(note.querySelector('.hidden')).toBeNull();
   });
 
-  it('shows nothing beside a banner that has nothing to show', async () => {
+  it('names the plugin beside a banner that shows nothing too', async () => {
     install();
     await mount('app-top-banner', 0);
-    expect(screen.queryByRole('button', { name: /plugin_menu/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'plugin_menu Calendar agenda' })).toBeTruthy();
   });
 
   it('adds no control to the reader\'s banners', async () => {
@@ -106,5 +117,16 @@ describe('the host\'s control beside a plugin\'s top banner', () => {
     const wrapper = container.querySelector<HTMLElement>('[data-plugin-iframe-slot="agenda:app-top-banner"]')!;
     expect(wrapper.style.maxHeight).toBe('120px');
     expect(wrapper.style.overflow).toBe('hidden');
+  });
+
+  it('never lets a top banner fill its panel, even when asked to', async () => {
+    install();
+    const { container } = render(<PluginIframeSlot pluginId="agenda" slot="app-top-banner" extraProps={{}} fill />);
+    await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
+    expect(createSlotInstance.mock.calls[0][0]).not.toMatchObject({ fill: true });
+    act(() => createSlotInstance.mock.calls[0][0].onResize(2000));
+    const wrapper = container.querySelector<HTMLElement>('[data-plugin-iframe-slot="agenda:app-top-banner"]')!;
+    expect(wrapper.hasAttribute('data-plugin-iframe-fill')).toBe(false);
+    expect(wrapper.style.maxHeight).toBe('120px');
   });
 });

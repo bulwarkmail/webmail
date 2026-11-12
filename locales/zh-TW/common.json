@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "來自外掛程式 {name} 的清單",
     "dropdown_list_labelled": "{label},來自外掛程式 {name} 的清單",
-    "oauth_failed": "該服務未完成登入。請關閉此視窗後再試一次。"
+    "oauth_failed": "該服務未完成登入。請關閉此視窗後再試一次。",
+    "banners_more": "更多橫幅（{count}）：{names}",
+    "banners_fewer": "收起橫幅"
   },
   "command_palette": {
     "title": "命令面板",

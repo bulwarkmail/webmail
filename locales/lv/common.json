@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Saraksts no spraudņa {name}",
     "dropdown_list_labelled": "{label}, saraksts no spraudņa {name}",
-    "oauth_failed": "Pakalpojums nepabeidza pierakstīšanos. Aizveriet šo logu un mēģiniet vēlreiz."
+    "oauth_failed": "Pakalpojums nepabeidza pierakstīšanos. Aizveriet šo logu un mēģiniet vēlreiz.",
+    "banners_more": "Vairāk reklāmjoslu ({count}): {names}",
+    "banners_fewer": "Mazāk reklāmjoslu"
   },
   "command_palette": {
     "title": "Komandu palete",

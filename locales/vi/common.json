@@ -7091,7 +7091,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Danh sách từ plugin {name}",
     "dropdown_list_labelled": "{label}, danh sách từ plugin {name}",
-    "oauth_failed": "Dịch vụ chưa hoàn tất đăng nhập. Hãy đóng cửa sổ này và thử lại."
+    "oauth_failed": "Dịch vụ chưa hoàn tất đăng nhập. Hãy đóng cửa sổ này và thử lại.",
+    "banners_more": "Thêm biểu ngữ ({count}): {names}",
+    "banners_fewer": "Bớt biểu ngữ"
   },
   "command_palette": {
     "title": "Bảng lệnh",

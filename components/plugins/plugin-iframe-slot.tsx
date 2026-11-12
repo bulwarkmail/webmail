@@ -28,12 +28,12 @@ import type { SandboxInstance } from '@/lib/plugin-sandbox/host-bridge';
 import { loadHostBridge } from '@/lib/plugin-sandbox/load-host-bridge';
 import type { FloatingDropdownOption, FloatingDropdownRect } from '@/lib/plugin-sandbox/protocol';
 import { slotPropsFor } from '@/lib/plugin-sandbox/permissions';
-import { isInlineSlot, maxSlotHeight } from '@/lib/plugin-sandbox/slot-layout';
+import { isFillableSlot, isInlineSlot, maxSlotHeight } from '@/lib/plugin-sandbox/slot-layout';
 import { snapshotHostTheme } from '@/lib/plugin-sandbox/host-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import { usePolicyStore } from '@/stores/policy-store';
-import { ContextMenu, ContextMenuItem } from '@/components/ui/context-menu';
+import { ContextMenu, ContextMenuHeader, ContextMenuItem } from '@/components/ui/context-menu';
 import { useContextMenu } from '@/hooks/use-context-menu';
 import { Check, Power, Puzzle } from '@/components/icons';
 import { cn } from '@/lib/utils';
@@ -42,7 +42,10 @@ interface Props {
   pluginId: string;
   slot: SlotName;
   extraProps?: Record<string, unknown>;
-  /** The frame fills its panel and scrolls inside, instead of growing with its content. */
+  /**
+   * The frame fills its panel and scrolls inside, instead of growing with its
+   * content. Only in a slot made for that (slot-layout.ts FILLABLE_SLOTS).
+   */
   fill?: boolean;
   /** With `fill`: the height the frame keeps however little room its panel has. */
   minFillHeight?: number;
@@ -53,6 +56,8 @@ interface Props {
    * draw its own part again.
    */
   onShownChange?: (shown: boolean) => void;
+  /** Told the frame's height (as the host sizes it) whenever it changes. */
+  onHeightChange?: (height: number) => void;
 }
 
 interface FloatingDropdownState {
@@ -83,11 +88,14 @@ export function dialogOutside(el: Element | null): boolean {
   return false;
 }
 
-export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, minFillHeight, onShownChange }: Props) {
+export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked = false, minFillHeight, onShownChange, onHeightChange }: Props) {
+  const fill = fillAsked && isFillableSlot(slot);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<SandboxInstance | null>(null);
   const onShownChangeRef = useRef(onShownChange);
   useEffect(() => { onShownChangeRef.current = onShownChange; }, [onShownChange]);
+  const onHeightChangeRef = useRef(onHeightChange);
+  useEffect(() => { onHeightChangeRef.current = onHeightChange; }, [onHeightChange]);
   const [height, setHeight] = useState<number>(0);
   const [width, setWidth] = useState<number | undefined>(undefined);
   const [floatingDropdown, setFloatingDropdown] = useState<FloatingDropdownState | null>(null);
@@ -160,6 +168,7 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, min
         onResize: (h, w) => {
           setHeight(h);
           if (w !== undefined) setWidth(w);
+          onHeightChangeRef.current?.(Math.min(h, maxSlotHeight(slot)));
         },
         onFloatingDropdown: (msg) => {
           if (msg.type === 'floating-dropdown-open') {
@@ -275,10 +284,11 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, min
     <>
       {slot === 'app-top-banner' ? (
         // The top banner is on every page and looks like part of the app:
-        // the host names its plugin beside it, with the way to turn it off.
+        // the host names its plugin beside it, with the way to turn it off,
+        // also while the frame shows nothing.
         <div className="flex items-start" data-plugin-top-banner={pluginId}>
           <div className="min-w-0 flex-1">{wrapper}</div>
-          {height > 0 && <TopBannerControl pluginId={pluginId} />}
+          <TopBannerControl pluginId={pluginId} />
         </div>
       ) : wrapper}
       {floatingDropdown && (
@@ -323,9 +333,10 @@ function shallowEqual(a: Record<string, unknown> | undefined, b: Record<string, 
 
 /**
  * Beside a plugin's top banner: the plugin's name, which its frame can't
- * cover or change, and a menu to turn the plugin off. A plugin the
- * administrator turned on for everyone can't be turned off here, so it gets
- * the name only.
+ * cover or change, and a menu to turn the plugin off, headed by the name
+ * (below 640 px the chip shows only its icon, so the menu says whose it is).
+ * A plugin the administrator turned on for everyone can't be turned off
+ * here, so it gets the name only, shown at every width.
  */
 function TopBannerControl({ pluginId }: { pluginId: string }) {
   const t = useTranslations('plugins.dialog');
@@ -336,21 +347,22 @@ function TopBannerControl({ pluginId }: { pluginId: string }) {
   const open = menu.contextMenu.isOpen;
   const name = installed?.name || getActivePlugin(pluginId)?.plugin.name || pluginId;
   const forced = installed?.forceEnabled === true || forcedByPolicy;
+  const chipClass = 'inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground';
+
+  if (forced) {
+    return (
+      <span role="note" className={cn(chipClass, 'm-1 flex-shrink-0')} title={t('from_plugin', { name })} aria-label={t('from_plugin', { name })} data-plugin-banner-source="">
+        <Puzzle className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+        <span className="max-w-[6rem] truncate sm:max-w-[10rem]">{name}</span>
+      </span>
+    );
+  }
   const chip = (
     <>
       <Puzzle className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
       <span className="hidden max-w-[10rem] truncate sm:inline">{name}</span>
     </>
   );
-  const chipClass = 'inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground';
-
-  if (forced) {
-    return (
-      <span role="note" className={cn(chipClass, 'm-1 flex-shrink-0')} title={t('from_plugin', { name })} aria-label={t('from_plugin', { name })} data-plugin-banner-source="">
-        {chip}
-      </span>
-    );
-  }
   return (
     <div className="relative m-1 flex-shrink-0" data-plugin-banner-source="">
       <button
@@ -365,6 +377,7 @@ function TopBannerControl({ pluginId }: { pluginId: string }) {
         {chip}
       </button>
       <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={menu.closeContextMenu} label={t('plugin_menu', { name })}>
+        <ContextMenuHeader>{t('from_plugin', { name })}</ContextMenuHeader>
         <ContextMenuItem
           icon={Power}
           label={t('turn_off', { name })}

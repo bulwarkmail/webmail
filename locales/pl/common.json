@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Lista od wtyczki {name}",
     "dropdown_list_labelled": "{label}, lista od wtyczki {name}",
-    "oauth_failed": "Usługa nie dokończyła logowania. Zamknij to okno i spróbuj ponownie."
+    "oauth_failed": "Usługa nie dokończyła logowania. Zamknij to okno i spróbuj ponownie.",
+    "banners_more": "Więcej banerów ({count}): {names}",
+    "banners_fewer": "Mniej banerów"
   },
   "command_palette": {
     "title": "Paleta poleceń",

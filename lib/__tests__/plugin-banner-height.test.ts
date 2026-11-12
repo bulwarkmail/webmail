@@ -90,6 +90,17 @@ describe('how tall a plugin\'s top banner may get', () => {
     expect(parseFloat(first.inst.iframe.style.height)).toBe(TOP_BANNER_MAX);
     expect(parseFloat(second.inst.iframe.style.height)).toBe(TOP_BANNER_MAX);
   });
+
+  it('lets a banner taller than the limit scroll inside its frame, with the scrollbar shown', () => {
+    // impersonation-notice with both buttons needs 195 px at 390 px width and 275 px at 360.
+    const { inst } = frameOf('app-top-banner');
+    post(inst.iframe.contentWindow, { type: 'slot-resize', height: 275 });
+    expect(parseFloat(inst.iframe.style.height)).toBe(TOP_BANNER_MAX);
+    expect(inst.iframe.getAttribute('scrolling')).toBe('yes');
+    // Once the content fits again, the frame scrolls only as it needs.
+    post(inst.iframe.contentWindow, { type: 'slot-resize', height: 49 });
+    expect(inst.iframe.getAttribute('scrolling')).toBe('auto');
+  });
 });
 
 describe('how tall a banner in the reader or over the message list may get', () => {

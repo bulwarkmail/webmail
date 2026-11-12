@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "{name} eklentisinden liste",
     "dropdown_list_labelled": "{label}, {name} eklentisinden liste",
-    "oauth_failed": "Hizmet oturum açmayı tamamlamadı. Bu pencereyi kapatıp yeniden deneyin."
+    "oauth_failed": "Hizmet oturum açmayı tamamlamadı. Bu pencereyi kapatıp yeniden deneyin.",
+    "banners_more": "Diğer başlıklar ({count}): {names}",
+    "banners_fewer": "Daha az başlık"
   },
   "command_palette": {
     "title": "Komut paleti",

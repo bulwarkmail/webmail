@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Liste fra tillegget {name}",
     "dropdown_list_labelled": "{label}, liste fra tillegget {name}",
-    "oauth_failed": "Tjenesten fullførte ikke påloggingen. Lukk dette vinduet og prøv igjen."
+    "oauth_failed": "Tjenesten fullførte ikke påloggingen. Lukk dette vinduet og prøv igjen.",
+    "banners_more": "Flere bannere ({count}): {names}",
+    "banners_fewer": "Færre bannere"
   },
   "command_palette": {
     "title": "Kommandopalett",

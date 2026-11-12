@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Список від плагіна {name}",
     "dropdown_list_labelled": "{label}, список від плагіна {name}",
-    "oauth_failed": "Сервіс не завершив вхід. Закрийте це вікно й спробуйте ще раз."
+    "oauth_failed": "Сервіс не завершив вхід. Закрийте це вікно й спробуйте ще раз.",
+    "banners_more": "Ще банери ({count}): {names}",
+    "banners_fewer": "Менше банерів"
   },
   "command_palette": {
     "title": "Палітра команд",

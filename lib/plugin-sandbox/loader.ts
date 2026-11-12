@@ -25,6 +25,7 @@ import { cancelPluginDialogs } from './host-api';
 import { hasDialogFor, whenNoDialogFor } from './host-dialog';
 import { registerShortcuts } from './shortcuts';
 import { mayOfferSlot, mayReceiveHookCall, mayRegisterHook, pluginHasPermission, slotPropsFor } from './permissions';
+import { isFillableSlot } from './slot-layout';
 import { clearPluginActions, setActionDispatcher } from './actions';
 import { clearPluginCheckers, setCheckerDispatcher } from './checkers';
 import { clearDayLabels } from './day-labels';
@@ -184,12 +185,40 @@ export function forgetSlotOffers(pluginId: string): void {
   try { localStorage.removeItem(SLOT_CACHE_PREFIX + pluginId); } catch { /* ignore */ }
 }
 
+/**
+ * The slots a plugin's frame says it offers, as the host takes them. The
+ * frame reports them, and the plugin's own code runs in that frame, so the
+ * host decides: a slot needs its permission, one plugin offers a slot once
+ * (later entries are ignored), and a frame fills its panel only in a slot
+ * made for that (slot-layout.ts FILLABLE_SLOTS).
+ */
 function permittedOffers(plugin: InstalledPlugin, slots: InitDoneInfo['slots'], warn: boolean): SlotOffer[] {
-  return slots.filter((offer) => {
-    if (mayOfferSlot(plugin, offer.name)) return true;
-    if (warn) console.warn(`[plugin-sandbox] Plugin "${plugin.id}" lacks the permission for slot "${offer.name}"; not rendered`);
-    return false;
-  });
+  const out: SlotOffer[] = [];
+  const seen = new Set<string>();
+  for (const offer of Array.isArray(slots) ? slots : []) {
+    if (!offer || typeof offer.name !== 'string') continue;
+    if (!mayOfferSlot(plugin, offer.name)) {
+      if (warn) console.warn(`[plugin-sandbox] Plugin "${plugin.id}" lacks the permission for slot "${offer.name}"; not rendered`);
+      continue;
+    }
+    if (seen.has(offer.name)) {
+      if (warn) console.warn(`[plugin-sandbox] Plugin "${plugin.id}" lists slot "${offer.name}" more than once; only the first is used`);
+      continue;
+    }
+    seen.add(offer.name);
+    const fill = offer.fill === true && isFillableSlot(offer.name);
+    if (offer.fill === true && !fill && warn) {
+      console.warn(`[plugin-sandbox] Plugin "${plugin.id}": slot "${offer.name}" can't fill its panel; it grows with its content`);
+    }
+    out.push({
+      name: offer.name,
+      order: typeof offer.order === 'number' && Number.isFinite(offer.order) ? offer.order : 100,
+      hasShouldShow: offer.hasShouldShow === true,
+      ...(fill ? { fill: true } : {}),
+      ...(offer.startFolded === true ? { startFolded: true } : {}),
+    });
+  }
+  return out;
 }
 
 // ─── Load ─────────────────────────────────────────────────────

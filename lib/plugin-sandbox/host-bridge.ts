@@ -575,6 +575,9 @@ export class SandboxInstance {
         if (height === null) return;
         const width = this.inline ? clampSlotWidth(msg.width) : null;
         this.iframe.style.height = `${height}px`;
+        // Content taller than the slot's limit scrolls inside the frame, with
+        // its scrollbar shown, so every control in it stays in reach.
+        if (!this.inline) this.iframe.setAttribute('scrolling', (msg.height as number) > height ? 'yes' : 'auto');
         if (width !== null) this.iframe.style.width = `${width}px`;
         this.slotResizeCb?.(height, width ?? undefined);
         return;

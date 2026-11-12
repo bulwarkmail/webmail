@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "Loend pistikprogrammilt {name}",
     "dropdown_list_labelled": "{label}, loend pistikprogrammilt {name}",
-    "oauth_failed": "Teenus ei lõpetanud sisselogimist. Sulge see aken ja proovi uuesti."
+    "oauth_failed": "Teenus ei lõpetanud sisselogimist. Sulge see aken ja proovi uuesti.",
+    "banners_more": "Veel ribasid ({count}): {names}",
+    "banners_fewer": "Vähem ribasid"
   },
   "command_palette": {
     "title": "Käsupalett",

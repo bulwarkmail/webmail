@@ -7079,7 +7079,9 @@
   "plugin_surfaces": {
     "dropdown_list": "플러그인 {name}의 목록",
     "dropdown_list_labelled": "{label}, 플러그인 {name}의 목록",
-    "oauth_failed": "서비스에서 로그인을 완료하지 못했습니다. 이 창을 닫고 다시 시도하세요."
+    "oauth_failed": "서비스에서 로그인을 완료하지 못했습니다. 이 창을 닫고 다시 시도하세요.",
+    "banners_more": "배너 더 보기 ({count}): {names}",
+    "banners_fewer": "배너 접기"
   },
   "command_palette": {
     "title": "명령 팔레트",

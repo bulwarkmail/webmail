@@ -154,10 +154,10 @@ describe('a frame that shows nothing', () => {
     return opts;
   }
 
-  it('gets no list when the top banner reports 0 px (and so has no name beside it)', async () => {
+  it('gets no list when the top banner reports 0 px', async () => {
     const opts = await banner(0, { left: 0, top: 0, right: 1024, bottom: 0 });
-    // Nothing of the banner is on screen, and the host draws no name chip beside it.
-    expect(screen.queryByRole('button', { name: /^plugin_menu / })).toBeNull();
+    // Nothing of the banner's frame is on screen; the host still names the plugin beside it.
+    expect(screen.getByRole('button', { name: /^plugin_menu / })).toBeTruthy();
 
     act(() => opts.onFloatingDropdown({
       type: 'floating-dropdown-open', id: 'l2',
