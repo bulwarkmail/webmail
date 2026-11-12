@@ -1,5 +1,134 @@
 # Changelog
 
+## 1.21.2 (2026-11-13)
+
+1.21.2 has the fixes from a security review of sign-in, multi-account actions, plugin installs, themes and the deploy files. Admins should read Breaking Changes before updating: a shared store needs a password, the repository's compose file publishes port 3000 on 127.0.0.1 only, and single sign-on with several sign-in servers checks each provider's issuer. The release can also group the message list under date headers such as Today, Yesterday and Last week, lets you rename an attachment before you send it or save it, and gives tags any colour. Shared accounts can be put in any order in the sidebar, the desktop app can keep more than 2 GB of attachments offline, and repeating tasks show on every day they are due in the calendar. Admins can pick the tags new users start with, name mail accounts that get into the admin dashboard like a Stalwart admin, and keep the account directory to the organisation's own domains.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@systemflair](https://github.com/systemflair)
+- Anonymous
+- [@bultester](https://github.com/bultester)
+
+**Monthly**
+
+- [@comexos](https://github.com/comexos)
+- [@Monarobase](https://github.com/Monarobase)
+- [@Focus-On-Agency](https://github.com/Focus-On-Agency)
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Breaking Changes
+
+- **Several instances**: Bulwark refuses a shared store address (`REDIS_URL` or `REDIS_URL_FILE`) without a password and doesn't start serving until it has one: every page answers 503 with the reason and the setting to change. Set a password on the store, or `SHARED_STORE_ALLOW_NO_PASSWORD=true` if only your replicas can reach it (GHSA-wv93-3w8m-44vc)
+- **Kubernetes**: The manifests stop the store without `VALKEY_PASSWORD` and the webmail without `SESSION_SECRET`, with a message in the pod log. Only the Bulwark pods may connect to the store (a NetworkPolicy), and no pod mounts a service account token (GHSA-wv93-3w8m-44vc)
+- **Docker**: The repository's `docker-compose.yml` publishes port 3000 on 127.0.0.1 only, for a reverse proxy on the same machine; point nginx at `proxy_pass http://127.0.0.1:3000`. Write `"3000:3000"` to reach it from other machines
+- **Single sign-on**: With more than one sign-in server (several providers in the server list, a list beside a configured server at another address, custom servers allowed, or the desktop app), each provider's metadata must name, as its issuer, exactly the address it was discovered at. When the provider isn't the mail server, or the webmail reaches the mail server by an internal address, set the issuer URL: `oauth.issuerUrl` on the server's `jmapServers` entry, or `OAUTH_ISSUER_URL` (admin setting `oauthIssuerUrl`) for the configured server. Until then SSO through that server stops and the login page says the provider isn't set up correctly. An install with one sign-in server keeps working and logs once which issuer it found
+- **Admin**: Only superusers of the main mail server (JMAP server URL) can open the admin dashboard as Stalwart admins. For another server on the sign-in list, turn on "This server's superusers may open the admin dashboard" in its entry, or set `"adminAccess": true` in `JMAP_SERVERS`. Until then, its admins sign in with the admin password (GHSA-w9cm-24r9-3mq6)
+
+### Security
+
+- **Sessions**: The maximum session length is enforced by the server too. Past it, every route that uses the stored sign-in refuses it (mail, files, push, settings sync, the account archive, plugin approval requests), renewing a provider token is refused, and office editors opened in that session stop working, also in a browser left open or closed without signing out. Sessions from before the update count from when the server first enforced the limits (GHSA-c4wh-3943-pqfr)
+- **Sign-in**: A refresh token is renewed and revoked only at the server that issued it, and a sign-in to a server the user typed is renewed there and nowhere else. Turning off custom servers (`allowCustomJmapEndpoint`), or removing a server from the server list, signs its users out at their next renewal (GHSA-xfhq-ghjr-5mvf)
+- **Sign-in**: Single sign-on completes only with the provider it was sent to: the issuer a provider names in its answer is checked against the issuer its metadata names, and a callback that repeats its code, state or issuer is refused. The desktop app shows the password page in the system browser for a typed server whose metadata names another issuer (GHSA-xfhq-ghjr-5mvf)
+- **Sign-in**: Token answers, request bodies and stored sign-in records no longer reach the server log
+- **Settings sync**: Synced settings of users who sign in with an access token and a user name without a domain are kept under their full address, so two such users with the same name on one server no longer share them. An older copy kept under the short name is no longer read; an admin can delete it from the settings directory (`SETTINGS_DATA_DIR`, by default `data/settings`), where it is the file `<sha256 of "name:server URL">.enc` (GHSA-4w85-7mp8-f37h)
+- **Multi-account**: Every action on a message, contact, event or task goes to the login and account it was read from, or doesn't happen: Pro tabs, message windows, search preview, read receipts and unsubscribe mails, invitations, Archive, tags, drag and drop, dropped message files, contact groups and repeating events. An action on an account that isn't connected says "This account isn't connected" instead of going to another account, and a message whose From account is signed out stays in the composer (GHSA-4cgp-4pcq-4m7f)
+- **Multi-account**: With several accounts signed in, a link or bookmark to a message has to name its account (links copied from Bulwark do); an older link opens nothing and says so. With one account signed in, old links open as before, also in the Pro interface
+- **Offline**: A second mail server on the same host is a new owner on this device: what the device kept for the first one (offline mail, outbox, local drafts) is removed at the first sign-in to the second. The same happens when a server moves from http to https, to another port or to another path
+- **Mail**: The sender logo and a trusted invitation show only for messages whose authentication results were written when they arrived. The message list shows an outside sender's logo once you have opened one of the sender's messages in the same account and it passed the sender check. Mail imported from a file is marked `$imported` and never shows a brand logo, a booking card or a verified invitation (GHSA-prh8-7whf-3x6r)
+- **Booking cards**: A card names the domain that passed the mail server's sender check ("from shop.example") and marks buttons that lead to another site "Other site". It leaves out text that names another site or holds characters a card doesn't use, and shows only in the opened message and the conversation view. Checking a large mail for a forwarded booking no longer freezes the tab (GHSA-2c3h-qq57-gjfh)
+- **Calendar**: The offer to remove a cancelled meeting appears only when the organizer sent the cancellation
+- **Sender logos**: Sender logos and icons are served only to users signed in to this webmail, from its own pages; the mobile app gets brand logos through a small shared allowance. Logos are checked and drawn in a separate process with a deadline, and a logo whose styling holds anything but plain colours, strokes, fonts and transforms shows the site icon or initials instead. A crafted logo or mark certificate no longer stalls the server (GHSA-4p5p-7m2r-9jf2)
+- **Attachments**: Preview, "Open in new tab" and WebDAV image thumbnails work only for types on a fixed list of images, audio, video, PDF and plain text; other files download. Every download is saved as a plain file and keeps its extension or gets the one of its type, and text attachments open with the right characters (GHSA-gv97-42f5-436q)
+- **Plugins**: A marketplace install asks before it grants anything the listing didn't show: optional permissions, the hosts a plugin may contact, the app's routes it may post to, sites it may embed, servers its credentials go to, the privileged tier and a theme's skin. An update asks about what it adds, a rollback about what it brings back (and says when the directory had withdrawn that version), and both ask before they change which stored secret a plugin sends where. Uploading a ZIP asks nothing (GHSA-hj38-fjgj-f7hm)
+- **Plugins**: A plugin that checks the links you open needs the new `links:check` permission, shown to the user and marked as needing care. `onToastShow` and `onToastDismiss` need `ui:notifications`. External Link Warning 2.0.0 keeps working when an admin installed it; installed by a user, it stops checking links until a release that declares `links:check`. A plugin's remote avatars load only from hosts it declared, and only when it may reach the network (GHSA-8w24-2h45-hr5f)
+- **Plugins**: Stored plugin settings that aren't known to be plain stay sealed, a credential can use only a header from the list of credential headers, and a plugin installed under an id that held another plugin's settings starts without them. Settings kept from a removal before 1.15.0 no longer come back, and a setting of a kind other than text, secret, yes/no, number or choice reads as empty (GHSA-hj38-fjgj-f7hm, GHSA-8w24-2h45-hr5f)
+- **Themes**: Theme, skin and print styles are checked as the browser reads them. `image()` and `src()` are removed, an unquoted address is taken out, and a sheet with an unterminated string, comment or block, or a print style with an escaped `<`, is refused whole. Installing a skin says what it does first (GHSA-8w24-2h45-hr5f)
+- **App lock**: While the app lock is on, a push notification says only "New mail (account)", with no sender, subject or buttons, unless an unlocked Bulwark tab is open in this browser; where the service worker has no Web Locks it always does. Mail notifications and calendar reminders already on screen close when the app locks and when everyone signs out (GHSA-77fg-h3vg-rfr8)
+- **Accounts**: Wiping one login from the device takes all of its notification state and keeps the app lock and do not disturb of the logins that stay. When everyone signs out, rescued drafts, the notification list and old file lists go too, and a calendar reminder's notification opens only a page of this site (GHSA-77fg-h3vg-rfr8)
+- **Lite**: Lite served by Stalwart runs only the bundle's own scripts, and the static pages refuse to run inside another site's frame. Sign-in tokens are kept sealed in browser storage; where the key database is blocked or doesn't answer, a sign-in lasts as long as the page. A sign-in whose session lacks accounts or its API and download URLs is refused, the SSO return page leaves the history, a password sign-in is named as such in the account settings, and an export lists only the connector targets it can open (GHSA-94gv-pmv6-3wxm)
+- **Admin**: The admin status check (the shield in the app) no longer sends a sign-in the mail server already refused, and counts its refusals with every other request. When several requests carry a sign-in the mail server no longer accepts, the webmail sends it once instead of once per request, so a page full of requests with a stale session can't get the webmail's address banned at the mail server (GHSA-gccm-j6rm-xjmf)
+- **Organisation policy**: The policy stops checking app tokens after 20 refused ones per 15 minutes across all clients, and never checks a value that can't be a token. Past the limit, a token the webmail has seen work in the last hour still gets the full policy; any other token gets "try again later" (503), so the app keeps the policy it has instead of falling back to the public one (GHSA-gccm-j6rm-xjmf)
+- **Admin**: Refused admin sign-ins no longer fill the audit log: an anonymous "Sign in as Stalwart admin" writes nothing, "too many attempts" is logged once per client, and signing out of the dashboard is logged only when a session was signed out. The Audit page also shows entries from the rotated log files
+- **Server**: Without a shared store, rate limits are no longer forgotten when many new clients show up at once, and new devices are counted per account for the hourly limit on device registrations
+- **Admin**: The dashboard can no longer remove the session secret the setup wizard stored
+- **Impersonation**: "Return to my account" keeps a sign-in without "Remember me" a sign-in that ends with the browser, and a failed hand-off deletes the app password it may have created and no longer logs text from the mail server's answer
+- **Plugins**: Plugin approval requests from users who sign in with an access token and a user name without a domain are filed under their full address
+- **Plugins**: A plugin's dropdown list shows only while you are in its frame and the page was touched lately, starts with a row naming the plugin, and never covers the app's dialogs and menus, the rows that name a plugin, the subject, sender line, message details, warnings, notices and cards, the reader toolbar, other plugins' banners in the reader, or the top bars (GHSA-qg6w-wcr7-wf79)
+- **Plugins**: A plugin's top banner stops at 120 px and its banners in the reader and above the message list at 400 px; taller content scrolls inside its frame. All top banners together take at most 30 % of the window; the first always shows, and the rest wait behind "More banners". Beside every top banner the app shows the plugin's name with a menu to turn it off (the name only for a plugin the admin turned on for everyone) (GHSA-qg6w-wcr7-wf79)
+- **Plugins**: Every toast a plugin shows says "From the plugin <name>", its errors and warnings stay in the bell under that name, and a file a plugin opens in the preview says "Opened by the plugin <name>"
+- **Plugins**: Plugin dialogs cut long titles, messages and fields to a size they can draw, the plugin sign-in return page shows only a known error code, a calendar plugin can set the meeting link only to an http or https link, and the remove dialog says that the plugin's settings and stored keys are deleted
+- **Builds**: Image and release builds take `@sentry/cli` from the lockfile and run its step in a build stage of its own, and use base images pinned by digest. Every workflow action is pinned to a commit, release jobs start from a read-only token and build without a restored cache, Lite source maps upload from a job pull requests never start, and CI checks the `kind` download against its published checksum
+
+### Changes
+
+- **Sign-in**: The sign-in and session routes take only JSON bodies (`Content-Type: application/json`) and answer 415 otherwise. The app's own pages already send JSON; a script of your own that posts to these routes needs the header
+- **Sign-in**: On instances with several sign-in servers or typed servers, a user whose sign-in stamp can't be read (a sign-in from before 1.19.0 not renewed since, or one sealed with an earlier session secret) and who signed in to a listed or typed server is signed out once at the next renewal. Users of the configured server keep renewing there. Without `SESSION_SECRET`, a sign-in to a typed server keeps no refresh token and lasts until its access token expires
+- **Office**: Office editors that were open during the update keep saving until their access expires, six hours at most
+- **Lite**: A tab still open from the previous version signs that account out once, at its next token renewal after the update, and the account's other tabs then ask for a sign-in at their next reload. Sign in again once
+- **Move to**: In the unified inbox, Move to moves another account's message within that account and lists that account's folders under its address. Messages of several accounts can't be moved together with Move to; to move a message into another account, drag it onto that account's folder in the sidebar
+- **Multi-account**: Switching accounts closes an open event or task editor and drops what was typed in it. Invitations and bookings in another account's mail are answered after switching to that account, and read receipts set to "Always send" go out automatically for the active account only
+- **Impersonation**: Support staff who signed in with "Remember me" before this release come back from their next impersonation with a sign-in that ends with the browser, once
+- **Install from source**: On Linux s390x, ppc64le or riscv64, run `npm ci` as `SENTRYCLI_SKIP_DOWNLOAD=1 npm ci`: the source map tool has no binary there. The Dockerfiles and setup.sh set it already
+
+### Features
+
+- **Mail**: "Group by date" in Settings > Message list, or in the ⋮ menu above the list, splits the list into Today, Yesterday, a weekday for the rest of the week, Last week, Last month and Older. Clicking a header folds its group, and j and k skip a folded group. Pinned threads sit under their own header above the dates. It is off by default and applies while the list is sorted by date
+- **Attachments**: An attachment can be renamed in the composer before it is sent, and in the reader before you download it or save it to Files. The extension stays as it is
+- **Tags**: Settings > Tags has a Custom color row under the swatches, so your own tags and a group account's shared tags can take any colour, from a colour code such as #1a73e8 or from the colour dialog
+- **Sidebar**: Shared accounts can be put in any order by dragging them in the Shared section, or with Move up and Move down in an account's menu. The order is saved per login and syncs with your other settings. Until you change it, they stay alphabetical
+- **Offline**: Settings > Offline has "Total size of kept attachments" for each account. The browser offers 1 GB and 2 GB, the desktop app also 5, 10 and 25 GB and No limit. The default stays 2 GB, and an admin's cap still applies (#1629, thanks @chodid)
+- **Calendar**: Repeating tasks, such as ones made in CalDAV apps or on Stalwart, show and print on every day they are due in the month, week and day views. Checking one off completes only that occurrence, and opening one edits the series (#1621, thanks @sanitz)
+- **Desktop**: "Always write messages in a new window" under Settings > App windows opens new messages, replies, forwards and drafts in a window of their own. Admins can preset or force it with the ComposeInNewWindow policy
+- **Desktop**: "Open again after a restart" under Settings > Desktop app opens Bulwark again when you sign back in after a restart or sign-out, on the same folder, message or page
+- **Admin**: Admins can pick the tags new users start with in the Defaults section of Admin > User policy, for everyone or per scope, or with `defaults.emailKeywords` in policy.json. An empty list gives new users no tags. Without a default, new users still get the seven colour tags, and accounts that already have tags keep them (#1612, thanks @DerFolder)
+- **Admin**: "Additional admin accounts" under Admin > Authentication > Admin access names mail accounts, each on one of the configured mail servers, that get into the admin dashboard like a Stalwart superuser. They get the admin shield and, with Stalwart admin accounts set to Automatic, sign in without the admin password. They need no admin role in Stalwart
+- **Admin**: The Recipient directory section in Admin > User policy can keep the accounts people see to the domains of their own addresses (Own domains only) and hide account names such as noreply (Hidden accounts). It covers the contacts directory, recipient suggestions, sharing, delegation, free/busy and plugin lookups. Stalwart itself still lists every account to a client that asks (#1635, thanks @dealerweb)
+- **Plugins**: `search.clear()` ends a search the plugin started, and top-bar actions can show as pressed toggles (#1619, thanks @HOLOEYE-JZ)
+- **Plugins**: `tasks.list` takes `calendarIds` to read only the calendars a plugin names instead of every calendar of every account (#1625, thanks @HOLOEYE-JZ)
+
+### Fixes
+
+- **Admin**: Auto-configure OAuth pre-fills the issuer URL from the Stalwart server's discovery document, registers Bulwark's login page as where SSO sign-out returns to, and says afterwards that everyone has to sign in again. When the admin sign-in needs an app password, it says to create one in Stalwart under /account > Credentials (#1611, thanks @tvaril)
+- **Offline**: The Docker image leaves the language out of URLs, as documented, and the app's pages are kept for an offline start also when the server adds the language to the URL. Offline start works again in the browser and in the desktop app's Instance mode (#1626, thanks @chodid)
+- **Desktop**: "Use my organisation's Bulwark instead" restarts the app on the step for the organisation's web address instead of the email address form (bulwarkmail/desktop#5, thanks @chodid)
+- **Desktop**: On macOS, the folder sidebar's top row starts right after the traffic lights instead of leaving a wide gap and cutting the account name short
+- **Desktop**: PDFs print from the file preview
+- **Mail**: The blocked-content banner shows on messages whose body was already loaded, not only after opening them in a new window (#1639, thanks @SystemFuchs)
+- **Mail**: With Reading width set to about 80 characters, the message sits in the middle of the reading pane instead of at its start edge (#1640, thanks @l4kr)
+- **Security**: Masked addresses are hidden on Stalwart Community instead of saying "not allowed" (#1624, thanks @DerFolder), and a masked address can be created without a description (#1641, thanks @fred-bloggs)
+- **Security**: The username for setting up mail apps shows the account address instead of %EMAILADDRESS% (#1633, thanks @caseyandgina)
+- **Contacts**: The contact editor is locked while a save is pending, so changes made in the meantime are no longer lost when it closes (#1636, thanks @VasilisNtovolos)
+- **Folders**: A folder the server refuses to delete stays in place and the failure is shown, instead of the folder disappearing with "Folder deleted" (#1634, thanks @VasilisNtovolos)
+- **Setup**: `setup.sh` writes `.env.local` so the app reads every value as typed: a client secret with `$` or `#`, a company name with `#` and a theme colour no longer come out cut or changed. A second run reads the file it wrote instead of stopping right after the start, keeps the branding values, and leaves no `docker-compose.yml.bak` behind. A value with a single quote, a line break or a trailing backslash is refused with a message
+- **Kubernetes**: The example generates the store password as hex, so it always fits in `REDIS_URL`; the store gets its password from a file instead of its command line
+- **Admin**: The server log warns once a minute when no sender logo can be drawn because the drawing process doesn't start, and the admin shield shows at once after an admin signs in again, even if the mail server refused that sign-in shortly before
+- **Compose**: A reply leaves out message ids with control characters or spaces when it threads to the original
+
 ## 1.21.1 (2026-11-11)
 
 1.21.1 lists your masked addresses under Settings > Security on servers that offer them, adds a Tags menu to the composer and default values for template placeholders, and has a setting to open replies in the whole reading pane again. The focus outline is off by default now. Admins can return to their own account after impersonating a user, let an unticked sign-in last until the browser closes, and run Auto-configure OAuth on Stalwart 1.0.3 and later before any client exists. Times follow the 12- or 24-hour setting everywhere, tags with Cyrillic and other non-Latin names can be saved, and a calendar made for a shared account lands in that account.
