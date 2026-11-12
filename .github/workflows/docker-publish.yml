@@ -121,10 +121,11 @@ jobs:
         run: bash scripts/upload-sourcemaps.sh sourcemaps
 
       - name: Export digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
+          touch "/tmp/digests/${DIGEST#sha256:}"
 
       - name: Upload digest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -173,15 +174,20 @@ jobs:
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
+        env:
+          IMAGE_NAME: ${{ needs.prepare.outputs.image_name }}
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ needs.prepare.outputs.image_name }}@sha256:%s ' *)
+            $(for digest in *; do printf '%s@sha256:%s ' "$IMAGE_NAME" "$digest"; done)
 
       - name: Inspect image
         id: inspect
+        env:
+          IMAGE_NAME: ${{ needs.prepare.outputs.image_name }}
+          VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          docker buildx imagetools inspect ${{ needs.prepare.outputs.image_name }}:${{ steps.meta.outputs.version }}
-          digest=$(docker buildx imagetools inspect ${{ needs.prepare.outputs.image_name }}:${{ steps.meta.outputs.version }} --format '{{json .Manifest}}' | jq -r .digest)
+          docker buildx imagetools inspect "$IMAGE_NAME:$VERSION"
+          digest=$(docker buildx imagetools inspect "$IMAGE_NAME:$VERSION" --format '{{json .Manifest}}' | jq -r .digest)
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       # Signed build provenance, pushed to GHCR next to the image:

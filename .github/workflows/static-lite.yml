@@ -104,13 +104,14 @@ jobs:
       - name: Package zip
         env:
           REF_NAME: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
         run: |
-          if [ "${{ matrix.target }}" = "stalwart" ]; then
+          if [ "$TARGET" = "stalwart" ]; then
             # postbuild already packed it (entries at the archive root, no
             # wrapping folder); the name stays version-less on purpose.
             ZIP="bulwark-lite-stalwart.zip"
           else
-            if [ "${{ github.event_name }}" = "release" ]; then
+            if [ "$GITHUB_EVENT_NAME" = "release" ]; then
               VERSION="${REF_NAME#v}"
             else
               VERSION="$(cat VERSION)-${GITHUB_SHA::7}"
