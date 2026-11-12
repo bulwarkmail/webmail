@@ -6,7 +6,7 @@
 //    and a fixed set of punctuation. A text with any other code point is left out whole.
 // 2. A dot is whatever stands where a dot would stand: any single character between two labels that
 //    is not one of the joiners honest text uses (dashes, slash, apostrophes, &, +, :, comma, brackets,
-//    arrow), and a single letter of another script than the letters on both sides of it.
+//    arrow, underscore), and a single letter of another script than the letters on both sides of it.
 // 3. A run of labels names a domain when its last label is a real top-level domain, or a reserved
 //    one, compared in ASCII form; and, whatever it ends in, when it mixes scripts.
 import { act, render, screen } from '@testing-library/react';
@@ -94,9 +94,14 @@ describe('step 2: a dot is whatever stands where a dot would stand', () => {
     ['a bullet', cp(0x2022)],
     ['a hyphenation point', cp(0x2027)],
     ['an at sign', '@'],
-    ['an underscore', '_'],
   ])('reads %s between two labels as a dot', (_name, dot) => {
     expect(named(`bigbank${dot}example`)).toBe(true);
+  });
+
+  it('keeps references joined with underscores: no host name has one, and it draws as no dot', () => {
+    for (const text of ['INV_DE_123', 'Order_No_DE5', 'BK_FLIGHT_DE', 'bigbank_example']) {
+      expect(named(text), text).toBe(false);
+    }
   });
 
   it.each<[string, number]>([

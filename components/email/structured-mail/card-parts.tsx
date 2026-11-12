@@ -187,10 +187,11 @@ const HYPHEN = new RegExp(`[${HYPHENS}]`, "u");
 /**
  * What honest text puts between two words without a space, and which does not
  * read as the dot of a domain: dashes, slash, apostrophes, ampersand, plus,
- * colon, comma, brackets and the arrow. Every other character between two
+ * colon, comma, brackets, the arrow, and the underscore of references such as
+ * "INV_DE_123" (no host name has one). Every other character between two
  * labels stands for a dot, the middle dot and the bullet among them.
  */
-const WORD_JOINERS = new Set([..."–—/'’&+:,()→"]);
+const WORD_JOINERS = new Set([..."–—/'’&+:,()→_"]);
 
 /**
  * Unicode's scripts, the ones card text uses most first. A name the browser
