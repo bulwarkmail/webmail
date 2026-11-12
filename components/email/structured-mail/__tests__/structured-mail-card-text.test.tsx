@@ -6,8 +6,13 @@
 //    `carrier` (lib/structured-mail/normalize.ts); the leg row prints the carrier.
 // 2. A domain can be spelled with characters a reader does not see next to the dot, with a dot
 //    look-alike, with a hyphen after the name, or after a long text.
+// 3. Some spellings are drawn as "bigbank.example" by the browser (Chromium, and so the desktop
+//    app) although the characters differ: a right-to-left override that runs part of the name
+//    backwards, default-ignorable code points (Khmer inherent vowels, unassigned ones) that draw as
+//    nothing, and LISU LETTER TONE MYA TI, a letter that draws as a full stop. An override left open
+//    in a name also runs on into the verified sender line next to it.
 import { render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
@@ -19,11 +24,14 @@ vi.mock('next-intl', () => ({
 
 import { loadAirportZones, readStructuredMail, resolveCards, type StructuredCard } from '@/lib/structured-mail';
 import { useSettingsStore } from '@/stores/settings-store';
-import { brandText, namesOtherDomain } from '../card-parts';
+import { brandText, loadTopLevelDomains, namesOtherDomain } from '../card-parts';
 import { StructuredMailCards } from '../structured-mail-cards';
 
 const char = (code: number) => String.fromCharCode(code);
+const cp = (...codes: number[]) => String.fromCodePoint(...codes);
 const OTHER = 'bigbank.example';
+const RLO = cp(0x202e);
+const PDF = cp(0x202c);
 const page = (...items: unknown[]) => `<html><head>${items.map((item) => `<script type="application/ld+json">${JSON.stringify(item)}</script>`).join('')}</head><body><p>Hello</p></body></html>`;
 
 async function cardsOf(...items: unknown[]): Promise<StructuredCard[]> {
@@ -54,7 +62,36 @@ const train = (company: string) => ({
   },
 });
 
+const order = (merchant: string) => ({ '@context': 'http://schema.org', '@type': 'Order', orderNumber: 'SO-1', merchant: { '@type': 'Organization', name: merchant } });
+
+/**
+ * The text as Chromium draws it, for these fixtures: a run from RLO to PDF in reverse, no
+ * default-ignorable code points, and the Lisu tone letter as the dot it looks like.
+ */
+function drawn(text: string): string {
+  const reordered = text.replace(new RegExp(`${RLO}([^${PDF}]*)(?:${PDF}|$)`, 'gu'), (_m, run: string) => [...run].reverse().join(''));
+  return reordered.replace(/\p{Default_Ignorable_Code_Point}/gu, '').replace(new RegExp(cp(0xa4f8), 'g'), '.').toLowerCase();
+}
+/** Each element's own text as drawn: an override ends with its block, so it is applied per element. */
+function drawnTexts(): string {
+  const root = screen.getByTestId('structured-mail-cards');
+  return Array.from(root.querySelectorAll('*')).map((el) => drawn(Array.from(el.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join(''))).join('\n')
+    + '\n' + drawn(root.textContent ?? '');
+}
+
+const SPELLINGS: [string, string][] = [
+  ['a right-to-left override that draws the name in order', `bigbank${RLO}elpmaxe.${PDF}`],
+  ['a Khmer inherent vowel (U+17B4) after the dot', `bigbank.${cp(0x17b4)}example`],
+  ['a Khmer inherent vowel (U+17B5) after the dot', `bigbank.${cp(0x17b5)}example`],
+  ['an unassigned default-ignorable (U+2065) before the dot', `bigbank${cp(0x2065)}.example`],
+  ['an unassigned default-ignorable (U+FFF0) before the dot', `bigbank${cp(0xfff0)}.example`],
+  ['an unassigned plane-14 code point (U+E0080) before the dot', `bigbank${cp(0xe0080)}.example`],
+  ['the Lisu tone letter MYA TI (U+A4F8) for the dot', `bigbank${cp(0xa4f8)}example`],
+];
+
 const initialSettings = useSettingsStore.getState();
+// The top-level domains load on demand; these cases read cards with the list in place.
+beforeAll(() => loadTopLevelDomains());
 beforeEach(() => { useSettingsStore.setState({ timeFormat: '24h', timeZone: 'Europe/Berlin' }); });
 afterEach(() => { useSettingsStore.setState(initialSettings, true); });
 
@@ -187,5 +224,48 @@ describe('every text a card shows', () => {
     const button = screen.getByRole('link', { name: /link_check_in/ });
     expect(button).toHaveTextContent(`checkin.${OTHER}`);
     expect(within(button).getByTestId('structured-mail-outside-link')).toBeInTheDocument();
+  });
+});
+
+// The spellings of point 3, checked against what the browser draws (drawn()), in the order's
+// merchant and in the airline, which a flight card prints in its heading and in the leg row.
+describe('spellings that are drawn as another domain', () => {
+  it('control: the drawn text of the sender\'s own names is kept, and the plain other domain is left out', async () => {
+    show(await cardsOf(order('Shop Outlet')));
+    expect(drawnTexts()).toContain('shop outlet');
+    expect(drawn(`bigbank${RLO}elpmaxe.${PDF}`)).toBe(OTHER);
+    expect(namesOtherDomain(OTHER, 'shop.example')).toBe(true);
+  });
+
+  it.each(SPELLINGS)('namesOtherDomain reads %s as another domain', (_name, text) => {
+    expect(drawn(text)).toBe(OTHER);
+    expect(namesOtherDomain(text, 'shop.example')).toBe(true);
+  });
+
+  it.each(SPELLINGS)('an order whose merchant is spelled with %s does not show that domain', async (_name, text) => {
+    const cards = await cardsOf(order(text));
+    expect(cards).toHaveLength(1);
+    show(cards);
+    expect(drawnTexts()).not.toContain(OTHER);
+  });
+
+  it.each(SPELLINGS)('a flight whose airline is spelled with %s shows that domain nowhere, the leg row included', async (_name, text) => {
+    const cards = await cardsOf(flight(`${text} Air`));
+    expect(cards).toHaveLength(1);
+    show(cards);
+    expect(drawnTexts()).not.toContain(OTHER);
+  });
+});
+
+// An override that is not closed runs to the end of its block. In the heading line the provider name
+// stands in the same block as the verified sender ("Flight · Shop Air · from shop.example"), so the
+// sender line would be drawn backwards: "elpmaxe.pohs morf".
+describe('the verified sender line', () => {
+  it('still reads "from shop.example" when the airline name ends in an unclosed override', async () => {
+    const cards = await cardsOf(flight(`Shop Air${RLO}`));
+    expect(cards).toHaveLength(1);
+    show(cards);
+    const line = screen.getByTestId('structured-mail-sender-domain').parentElement!;
+    expect(drawn(line.textContent ?? '')).toContain('card_sender{"domain":"shop.example"}');
   });
 });

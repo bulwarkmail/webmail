@@ -4,7 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import type { Email } from "@/lib/jmap/types";
 import type { Booking, StructuredCard } from "@/lib/structured-mail/types";
 import { EventCard, LodgingCard, RentalCarCard, RestaurantCard, TransportCard } from "./booking-cards";
-import { cardForDisplay, cardSenderDomain } from "./card-parts";
+import { cardForDisplay, cardSenderDomain, useTopLevelDomainsLoaded } from "./card-parts";
 import { ShipmentCard } from "./shipment-card";
 
 export interface StructuredMailCardsProps {
@@ -29,7 +29,9 @@ export interface StructuredMailCardsProps {
  */
 export function StructuredMailCards({ cards, email, allowRemoteImages, calendarActions }: StructuredMailCardsProps) {
   const senderDomain = cardSenderDomain(email.from);
-  const shown = useMemo(() => cards.map((card) => cardForDisplay(card, senderDomain)), [cards, senderDomain]);
+  // Until the top-level domains have loaded, every dotted name counts as a domain; the cards are checked again once they have.
+  const listLoaded = useTopLevelDomainsLoaded();
+  const shown = useMemo(() => cards.map((card) => cardForDisplay(card, senderDomain)), [cards, senderDomain, listLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
   if (shown.length === 0) return null;
   return (
     <div className="flex flex-col gap-3 min-w-0" data-testid="structured-mail-cards">

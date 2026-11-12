@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType, ReactNode } from "react";
+import { useSyncExternalStore, type ComponentType, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ExternalLink } from "@/components/icons";
 import { toAsciiDomain } from "@/lib/idn";
@@ -107,52 +107,337 @@ export function isOutsideSender(host: string, senderDomain: string): boolean {
   return getRootDomain(target) !== getRootDomain(senderDomain);
 }
 
-const chars = (...codes: number[]) => String.fromCodePoint(...codes);
-const span = (from: number, to: number) => `${chars(from)}-${chars(to)}`;
+/*
+ * What a card may show of the sender's text. A card is drawn for a message
+ * that passed the sender check for its From domain, so no text on it may read
+ * as another domain. namesOtherDomain decides for every text of every card
+ * (cardForDisplay), in three steps on the text after NFKC:
+ *
+ * 1. Only expected characters: letters, marks and numbers of any script, the
+ *    space, currency signs and CARD_PUNCTUATION. A text with any other code
+ *    point is left out whole.
+ * 2. A dot is whatever stands where a dot would stand: a single character
+ *    between two labels that is no word joiner (WORD_JOINERS), or a single
+ *    letter that letterDots finds.
+ * 3. A run of labels names a domain when its last label is a top-level domain
+ *    (lib/top-level-domains.ts), or, whatever it ends in, when it reads as a
+ *    look-alike (runNamesOtherDomain).
+ */
+
+type CodeRange = number | readonly [number, number];
+const codePoint = (code: number) => `\\u{${code.toString(16)}}`;
+const charClass = (ranges: readonly CodeRange[]) =>
+  ranges.map((r) => (typeof r === "number" ? codePoint(r) : `${codePoint(r[0])}-${codePoint(r[1])}`)).join("");
 
 /**
- * Characters a reader does not see: every format character (category Cf:
- * zero width space and joiners, soft hyphen, word joiner, byte order mark,
- * direction marks), the combining grapheme joiner, variation selectors and
- * the Hangul fillers.
+ * The punctuation and symbols a card text may hold besides letters, marks,
+ * numbers, currency signs and the space, as they are after NFKC. NFKC already
+ * turns the fullwidth forms into ASCII, the ellipsis into three dots, №, ™
+ * and ℃ into letters, ½ into 1⁄2, and the no-break and other width spaces
+ * into U+0020, so none of those needs an entry.
  */
-const INVISIBLE = new RegExp(
-  `[\\p{Cf}${chars(0x34f, 0x115f, 0x1160, 0x3164, 0xffa0)}${span(0x180b, 0x180f)}${span(0xfe00, 0xfe0f)}${span(0xe0100, 0xe01ef)}]`,
-  "gu",
-);
+const CARD_PUNCTUATION: readonly CodeRange[] = [
+  // ASCII punctuation and symbols
+  [0x21, 0x2f], [0x3a, 0x40], [0x5b, 0x60], [0x7b, 0x7e],
+  // Latin-1: ¡ ¢ £ ¤ ¥ ¦ § © « ¬ ® ° ± ¶ · » ¿ × ÷
+  [0xa1, 0xa7], 0xa9, 0xab, 0xac, 0xae, 0xb0, 0xb1, 0xb6, 0xb7, 0xbb, 0xbf, 0xd7, 0xf7,
+  // Hyphen, figure dash, en dash, em dash, horizontal bar
+  [0x2010, 0x2015],
+  // Quotes ‘ ’ ‚ ‛ “ ” „ ‟, daggers † ‡, bullet •, hyphenation point ‧
+  [0x2018, 0x2022], 0x2027,
+  // Per mille ‰, prime ′, single guillemets ‹ ›, fraction slash ⁄
+  0x2030, 0x2032, 0x2039, 0x203a, 0x2044,
+  // Arrows
+  [0x2190, 0x21ff],
+  // Minus −, ≈ ≠ ≤ ≥
+  0x2212, 0x2248, 0x2260, 0x2264, 0x2265,
+  // The stars of a hotel rating ★ ☆
+  0x2605, 0x2606,
+  // CJK comma, full stop and ditto mark, brackets, wave dash, katakana middle dot
+  [0x3001, 0x3003], [0x3008, 0x3011], [0x3014, 0x301f], 0x30fb,
+  // Arabic comma, semicolon, question mark, percent sign, decimal and thousands separator, full stop
+  0x060c, 0x061b, 0x061f, [0x066a, 0x066c], 0x06d4,
+  // Hebrew maqaf, geresh, gershayim
+  0x05be, 0x05f3, 0x05f4,
+  // Devanagari danda and double danda
+  0x0964, 0x0965,
+];
 
 /**
- * Full stops that read as the dot of a domain name and survive NFKC: the
- * ideographic one and other scripts' (the fullwidth and small full stop and
- * the one dot leader become a plain dot under NFKC already).
+ * Step 1: a card text after NFKC holds nothing else. That leaves out every
+ * format character (direction controls, zero width characters, the soft
+ * hyphen, tag characters), control, private use, unassigned and surrogate
+ * code point, line and paragraph separator, and emoji.
  */
-const DOT_LIKE = new RegExp(`[${chars(0x3002, 0x06d4, 0x0701, 0x0702, 0x1362, 0x2e3c, 0xa4ff, 0xa60e, 0xa6f3)}]`, "gu");
+const CARD_TEXT = new RegExp(`^[\\p{L}\\p{M}\\p{N}\\p{Sc} ${charClass(CARD_PUNCTUATION)}]*$`, "u");
+/** Letters and marks that draw as nothing (Hangul fillers, Khmer inherent vowels, variation selectors) are left out too. */
+const IGNORABLE = /\p{Default_Ignorable_Code_Point}/u;
 
-/** Anything that cannot be part of a host name ends a word. */
-const NOT_IN_HOST = /[^\p{L}\p{N}\p{M}.-]+/u;
-const STARTS_WITH_LETTER = /^\p{L}/u;
+/** The hyphen-minus and HYPHEN (U+2010, which NFKC also makes of the non-breaking hyphen). */
+const HYPHENS = `-${codePoint(0x2010)}`;
+/** A character of a label: a letter, mark or digit of any script, or a hyphen. */
+const LABEL_CHAR = new RegExp(`[${HYPHENS}\\p{L}\\p{M}\\p{N}]`, "u");
+const LETTER = /\p{L}/u;
+const NUMBER = /\p{N}/u;
+const CASED = /\p{Cased}/u;
+const ASCII_ONLY = /^\p{ASCII}*$/u;
+const LEADING_MARKS = /^\p{M}+/u;
+const HYPHEN = new RegExp(`[${HYPHENS}]`, "u");
 
-/** The text as it reads on screen, in one spelling: NFKC, no invisible characters, plain dots, lower case. */
-function comparableText(text: string): string {
-  return text.normalize("NFKC").replace(INVISIBLE, "").replace(DOT_LIKE, ".").toLowerCase();
+/**
+ * What honest text puts between two words without a space, and which does not
+ * read as the dot of a domain: dashes, slash, apostrophes, ampersand, plus,
+ * colon, comma, brackets and the arrow. Every other character between two
+ * labels stands for a dot, the middle dot and the bullet among them.
+ */
+const WORD_JOINERS = new Set([..."–—/'’&+:,()→"]);
+
+/**
+ * Unicode's scripts, the ones card text uses most first. A name the browser
+ * does not know is skipped, and its letters count as one unknown script.
+ */
+const SCRIPT_NAMES = (
+  "Latin Common Inherited Cyrillic Greek Han Hiragana Katakana Hangul Bopomofo Arabic Hebrew Thai Devanagari " +
+  "Bengali Gurmukhi Gujarati Oriya Tamil Telugu Kannada Malayalam Sinhala Georgian Armenian Ethiopic Lao Khmer " +
+  "Myanmar Tibetan Mongolian Syriac Thaana Nko Tifinagh Cherokee Canadian_Aboriginal Lisu Vai Bamum Coptic " +
+  "Glagolitic Gothic Runic Ogham Javanese Balinese Sundanese Batak Buginese Makasar Rejang Cham Tai_Le New_Tai_Lue " +
+  "Tai_Tham Tai_Viet Kayah_Li Lepcha Limbu Ol_Chiki Saurashtra Sharada Siddham Tirhuta Takri Khojki Khudawadi " +
+  "Mahajani Modi Multani Newa Dogra Grantha Kaithi Bhaiksuki Marchen Zanabazar_Square Soyombo Masaram_Gondi " +
+  "Gunjala_Gondi Chakma Meetei_Mayek Syloti_Nagri Brahmi Kharoshthi Adlam Bassa_Vah Mende_Kikakui Medefaidrin Miao " +
+  "Mro Nyiakeng_Puachue_Hmong Pahawh_Hmong Wancho Osage Osmanya Deseret Shavian Duployan SignWriting Yi Nushu " +
+  "Tangut Khitan_Small_Script Hanifi_Rohingya Yezidi Elbasan Caucasian_Albanian Vithkuqi Old_Hungarian Old_Italic " +
+  "Old_Permic Old_Persian Old_Sogdian Old_South_Arabian Old_North_Arabian Old_Turkic Old_Uyghur Sogdian Chorasmian " +
+  "Elymaic Avestan Carian Lycian Lydian Cypriot Cypro_Minoan Linear_A Linear_B Ugaritic Phoenician Samaritan " +
+  "Mandaic Manichaean Nabataean Palmyrene Hatran Imperial_Aramaic Inscriptional_Pahlavi Inscriptional_Parthian " +
+  "Psalter_Pahlavi Meroitic_Cursive Meroitic_Hieroglyphs Egyptian_Hieroglyphs Anatolian_Hieroglyphs Cuneiform " +
+  "Sora_Sompeng Tagalog Tagbanwa Hanunoo Buhid Phags_Pa Ahom Dives_Akuru Nandinagari Warang_Citi Pau_Cin_Hau Tangsa " +
+  "Toto Kawi Nag_Mundari Braille Garay Gurung_Khema Kirat_Rai Ol_Onal Sunuwar Todhri Tulu_Tigalari"
+).split(" ");
+/** Japanese, Chinese and Korean write these together in one word, and next to Latin. */
+const EAST_ASIAN = ["Han", "Hiragana", "Katakana", "Hangul", "Bopomofo"];
+
+let scriptTests: Map<string, { is: RegExp; uses: RegExp }> | undefined;
+function knownScripts(): Map<string, { is: RegExp; uses: RegExp }> {
+  if (!scriptTests) {
+    scriptTests = new Map();
+    for (const name of SCRIPT_NAMES) {
+      try {
+        scriptTests.set(name, { is: new RegExp(`\\p{Script=${name}}`, "u"), uses: new RegExp(`\\p{Script_Extensions=${name}}`, "u") });
+      } catch {
+        // A script this browser does not know yet.
+      }
+    }
+  }
+  return scriptTests;
+}
+
+const scriptCache = new Map<string, string>();
+/** The script of a character ("Latin", "Common", ...), "Unknown" when no known script holds it. */
+function scriptOf(ch: string): string {
+  let name = scriptCache.get(ch);
+  if (name === undefined) {
+    name = "Unknown";
+    for (const [script, test] of knownScripts()) {
+      if (test.is.test(ch)) {
+        name = script;
+        break;
+      }
+    }
+    if (scriptCache.size >= 4096) scriptCache.clear();
+    scriptCache.set(ch, name);
+  }
+  return name;
+}
+
+/** Whether a script uses a character: its own, or one it shares ("ー" in Katakana and Hiragana). */
+function usedIn(ch: string, script: string): boolean {
+  const test = knownScripts().get(script);
+  return test ? test.uses.test(ch) : scriptOf(ch) === script;
 }
 
 /**
- * Whether a text from the mail names a domain outside the sender's. Every
- * word of the text in its comparable spelling that has a dot between two
- * labels and ends in a label of two or more characters starting with a
- * letter is read as a host name ("bigbank.example", "bigbank.example-secure",
- * "www.bigbank.example" in an address). One pass over the text.
+ * The letters of a word that stand where a dot would stand, by position: a
+ * single letter, or a digit of a script of its own (ARABIC-INDIC DIGIT ZERO),
+ * of another script than the letters on both sides of it, which share one
+ * script ("bigbank" LISU LETTER TONE MYA TI "example"; Japanese, Chinese and
+ * Korean count as one script here); and an uncased letter between two cased
+ * ones (LATIN LETTER SINOLOGICAL DOT). Only letters within one stretch of
+ * label characters count as sides.
  */
-export function namesOtherDomain(text: string, senderDomain: string): boolean {
-  for (const word of comparableText(text).split(NOT_IN_HOST)) {
-    const labels = word.replace(/^[.-]+|[.-]+$/g, "").split(".").filter(Boolean);
-    if (labels.length < 2) continue;
-    const last = labels[labels.length - 1];
-    if (last.length < 2 || !STARTS_WITH_LETTER.test(last)) continue;
-    if (isOutsideSender(labels.join("."), senderDomain)) return true;
+function letterDots(word: readonly string[]): Set<number> {
+  const dots = new Set<number>();
+  if (ASCII_ONLY.test(word.join(""))) return dots;
+  const isLetter = word.map((ch) => LETTER.test(ch));
+  const before: number[] = [];
+  for (let i = 0, last = -1; i < word.length; i += 1) {
+    before[i] = last;
+    last = !LABEL_CHAR.test(word[i]) ? -1 : isLetter[i] ? i : last;
+  }
+  const after: number[] = [];
+  for (let i = word.length - 1, next = -1; i >= 0; i -= 1) {
+    after[i] = next;
+    next = !LABEL_CHAR.test(word[i]) ? -1 : isLetter[i] ? i : next;
+  }
+  for (let i = 0; i < word.length; i += 1) {
+    const ch = word[i];
+    if (before[i] < 0 || after[i] < 0) continue;
+    if (!isLetter[i] && !(NUMBER.test(ch) && scriptOf(ch) !== "Common")) continue;
+    const left = word[before[i]];
+    const right = word[after[i]];
+    if (isLetter[i] && !CASED.test(ch) && CASED.test(left) && CASED.test(right)) {
+      dots.add(i);
+      continue;
+    }
+    const script = scriptOf(left);
+    if (script === "Common" || script === "Inherited" || !usedIn(right, script) || usedIn(ch, script)) continue;
+    if (EAST_ASIAN.includes(script) && EAST_ASIAN.some((s) => usedIn(ch, s))) continue;
+    dots.add(i);
+  }
+  return dots;
+}
+
+/** How many scripts the letters of some labels are written in; Latin and the East Asian scripts count as one. */
+function scriptCount(labels: readonly string[]): number {
+  const all = labels.join("");
+  if (ASCII_ONLY.test(all)) return 1;
+  const groups = new Set<string>();
+  for (const ch of all) {
+    if (!LETTER.test(ch)) continue;
+    const script = scriptOf(ch);
+    if (script === "Common" || script === "Inherited") continue;
+    groups.add(script === "Latin" || EAST_ASIAN.includes(script) ? "Latin" : script);
+  }
+  return groups.size;
+}
+
+let topLevelDomains: ReadonlySet<string> | undefined;
+let topLevelDomainsLoad: Promise<void> | undefined;
+const topLevelDomainsListeners = new Set<() => void>();
+
+/**
+ * Loads the list of top-level domains (lib/top-level-domains.ts), once. It is
+ * only needed where cards are drawn, so it stays out of the first script of
+ * every page. Until it is there, every label counts as a top-level domain.
+ */
+export function loadTopLevelDomains(): Promise<void> {
+  topLevelDomainsLoad ??= import("@/lib/top-level-domains").then(
+    (mod) => {
+      topLevelDomains = mod.TOP_LEVEL_DOMAINS;
+      for (const listener of topLevelDomainsListeners) listener();
+    },
+    (error: unknown) => {
+      topLevelDomainsLoad = undefined;
+      throw error;
+    },
+  );
+  return topLevelDomainsLoad;
+}
+// Started with the card code, so the list is there by the time a card is drawn.
+loadTopLevelDomains().catch(() => {});
+
+function subscribeTopLevelDomains(onLoad: () => void): () => void {
+  topLevelDomainsListeners.add(onLoad);
+  return () => {
+    topLevelDomainsListeners.delete(onLoad);
+  };
+}
+const topLevelDomainsLoaded = () => topLevelDomains !== undefined;
+
+/** Whether the list of top-level domains has loaded; the component draws again when it does. */
+export function useTopLevelDomainsLoaded(): boolean {
+  return useSyncExternalStore(subscribeTopLevelDomains, topLevelDomainsLoaded, topLevelDomainsLoaded);
+}
+
+/**
+ * Whether a label is a top-level domain: delegated or reserved, compared in
+ * ASCII form, so "рф" matches "xn--p1ai". True for every label while the list
+ * is still loading.
+ */
+function isTopLevelDomain(label: string): boolean {
+  if (!label) return false;
+  if (!topLevelDomains) {
+    loadTopLevelDomains().catch(() => {});
+    return true;
+  }
+  if (/^[a-z0-9-]+$/.test(label)) return topLevelDomains.has(label);
+  const ascii = toAsciiDomain(`x.${label}`);
+  return !!ascii && topLevelDomains.has(ascii.slice(ascii.lastIndexOf(".") + 1));
+}
+
+/**
+ * The part of a label compared with the top-level domains: without leading
+ * marks, and up to its first hyphen ("example" of "example-secure") unless it
+ * is a punycode label.
+ */
+function topLevelPart(label: string): string {
+  const bare = label.replace(LEADING_MARKS, "");
+  return bare.startsWith("xn--") ? bare : bare.split(HYPHEN)[0];
+}
+
+/**
+ * Whether a run of two or more labels names a domain outside the sender's.
+ * It reads as a look-alike of a domain, whatever its last label, when its
+ * letters are written in two scripts ("bigbank.cоm" with a Cyrillic о at the
+ * start of a label, "BIGBANK.СОМ") or when a letter stands for one of two or
+ * more dots. Otherwise the longest part of it that ends in a top-level domain
+ * is the domain it names ("pay.shop.example", "bigbank.example-secure").
+ */
+function runNamesOtherDomain(labels: readonly string[], letterSeparators: number, senderDomain: string): boolean {
+  if ((letterSeparators > 0 && labels.length > 2) || scriptCount(labels) > 1) {
+    return isOutsideSender(labels.join("."), senderDomain);
+  }
+  for (let end = labels.length; end >= 2; end -= 1) {
+    const top = topLevelPart(labels[end - 1]);
+    if (isTopLevelDomain(top)) return isOutsideSender([...labels.slice(0, end - 1), top].join("."), senderDomain);
   }
   return false;
+}
+
+/** Whether a word (text between spaces and word joiners, in lower case) names a domain outside the sender's. */
+function wordNamesOtherDomain(word: readonly string[], senderDomain: string): boolean {
+  const dots = letterDots(word);
+  // Split at every dot; a label is a stretch with at least one letter, and labels next to each other form a run.
+  const segments = [""];
+  const separatorIsLetter: boolean[] = [];
+  word.forEach((ch, i) => {
+    if (dots.has(i) || !LABEL_CHAR.test(ch)) {
+      separatorIsLetter.push(dots.has(i));
+      segments.push("");
+    } else {
+      segments[segments.length - 1] += ch;
+    }
+  });
+  let start = 0;
+  for (let end = 0; end <= segments.length; end += 1) {
+    if (end < segments.length && LETTER.test(segments[end])) continue;
+    if (end - start >= 2) {
+      const letterSeparators = separatorIsLetter.slice(start, end - 1).filter(Boolean).length;
+      if (runNamesOtherDomain(segments.slice(start, end), letterSeparators, senderDomain)) return true;
+    }
+    start = end + 1;
+  }
+  return false;
+}
+
+/**
+ * Whether a text from the mail may not be shown on the card of a message
+ * from `senderDomain`: it holds a character outside the expected set, or a
+ * run of labels in it names a domain outside the sender's. The sender's own
+ * domain and the ones below it may be named. One pass over the text.
+ */
+export function namesOtherDomain(text: string, senderDomain: string): boolean {
+  const normal = text.normalize("NFKC");
+  if (!CARD_TEXT.test(normal) || IGNORABLE.test(normal)) return true;
+  let word: string[] = [];
+  for (const ch of normal.toLowerCase()) {
+    if (ch === " " || WORD_JOINERS.has(ch)) {
+      if (word.length > 0 && wordNamesOtherDomain(word, senderDomain)) return true;
+      word = [];
+    } else {
+      word.push(ch);
+    }
+  }
+  return word.length > 0 && wordNamesOtherDomain(word, senderDomain);
 }
 
 /**
