@@ -66,7 +66,7 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
   const source = resolveEmailBlobContext(email, client);
 
   return (
-    <div className="flex items-center flex-shrink-0 -me-2" data-testid="conversation-actions">
+    <div className="flex items-center flex-shrink-0 -me-2" data-testid="conversation-actions" data-plugin-list-avoid="">
       {onArchive && (
         <IconButton size="icon-lg" onClick={onArchive} label={t("context_menu.archive")}>
           <Archive />

@@ -2,8 +2,8 @@
 // `data-plugin-list-avoid`, so a list a plugin frame asks for never covers them
 // (components/plugins/plugin-iframe-slot.tsx): the subject, the sender line with its avatar, the
 // recipients and "Show details", the details' recipients and authentication rows, the app's own
-// warning and phishing banners, and the notices and cards block. The message body is not one of
-// them, nor the toolbar.
+// warning and phishing banners, the notices and cards block, and the toolbar (Reply, Archive,
+// Delete and the rest). The message body is not one of them.
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { parseAuthenticationResults } from '@/lib/email-headers';
@@ -98,12 +98,23 @@ describe('the reader\'s parts a plugin list never covers', () => {
     expect(marked(screen.getByRole('region', { name: 'region_shipment' }))).toBe(true);
   }, 30_000);
 
-  // Not trust parts: a list may still lie over the body and the toolbar.
-  it('leaves the message body and the toolbar unmarked', () => {
+  it('marks the toolbar: Reply, Archive, Delete and the rest of the bar', () => {
+    const { container } = viewer(mail('m7'));
+    const bar = container.querySelector('[data-viewer-top-toolbar]');
+    expect(bar).not.toBeNull();
+    expect(marked(bar)).toBe(true);
+    for (const name of [/^reply$/i, /^archive$/i, /^delete$/i]) {
+      const buttons = screen.getAllByRole('button', { name });
+      expect(buttons.length).toBeGreaterThan(0);
+      for (const button of buttons) expect(marked(button)).toBe(true);
+    }
+  }, 30_000);
+
+  // Not a trust part: a list may still lie over the body.
+  it('leaves the message body unmarked', () => {
     const { container } = viewer(mail('m6'));
     expect(container.querySelector('[data-reader-body]')).not.toBeNull();
     expect(marked(container.querySelector('[data-reader-body]'))).toBe(false);
-    expect(marked(screen.getAllByRole('button', { name: /^reply$/i })[0])).toBe(false);
   }, 30_000);
 });
 
@@ -122,6 +133,17 @@ describe('the conversation views', () => {
     const senders = document.querySelectorAll('[data-conversation-sender]');
     expect(senders.length).toBe(2);
     for (const sender of senders) expect(marked(sender)).toBe(true);
+    // The open message's Reply, Reply all, Forward and ⋮ row.
+    const actions = document.querySelector('[data-conversation-message-actions]');
+    expect(actions).not.toBeNull();
+    expect(marked(actions)).toBe(true);
+  }, 30_000);
+
+  it('marks the conversation header\'s actions where they stand on their own', async () => {
+    const { ConversationHeaderActions } = await import('../conversation-header-actions');
+    const newer = mail('h1');
+    render(<ConversationHeaderActions email={newer} actions={{ mailboxes, selectedMailbox: 'inbox', onArchive: () => {}, onDelete: () => {} }} />);
+    expect(marked(screen.getByTestId('conversation-actions'))).toBe(true);
   }, 30_000);
 
   it('marks the folded messages of a Mountain View conversation', () => {

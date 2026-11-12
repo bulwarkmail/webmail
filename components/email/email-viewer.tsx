@@ -5063,6 +5063,7 @@ export function EmailViewer({
   const topToolbar = (
     <div
       data-viewer-top-toolbar={liftToolbar ? "full-width" : "column"}
+      data-plugin-list-avoid=""
       className={cn(
         "bg-background flex-shrink-0",
         !mvViewer && "border-b border-border",
@@ -5329,7 +5330,7 @@ export function EmailViewer({
       {toolbarPosition === 'below-subject' && (
         <div className="bg-background border-b border-border">
           <div className="px-2 sm:px-4 lg:px-6 py-1 sm:py-1.5">
-            <div ref={toolbarRef} className="@container/reader-toolbar flex items-center justify-between gap-0.5 sm:gap-2">
+            <div ref={toolbarRef} data-plugin-list-avoid="" className="@container/reader-toolbar flex items-center justify-between gap-0.5 sm:gap-2">
               {renderToolbarItems(false)}
             </div>
           </div>
@@ -6607,7 +6608,7 @@ export function EmailViewer({
         viewport `sm:hidden` guard would otherwise hide it there, and
         `fixed` would span the whole app instead of the pane). */}
     {isMobile && !mvMobileViewer && (
-      <nav ref={bottomBarRef} className={cn(
+      <nav ref={bottomBarRef} data-plugin-list-avoid="" className={cn(
         "z-50 bg-background border-t border-border overflow-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
         isPaneScoped ? "absolute bottom-0 inset-x-0" : "fixed bottom-0 inset-x-0 sm:hidden",
       )}>

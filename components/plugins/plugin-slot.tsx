@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { SlotName } from '@/lib/plugin-types';
 import { PluginIframeSlot } from './plugin-iframe-slot';
+import { LIST_AVOID_ATTRIBUTE, READER_BANNER_SLOTS } from '@/lib/plugin-sandbox/list-avoid';
 import { isFillableSlot, isInlineSlot, MAX_TOP_BANNER_HEIGHT } from '@/lib/plugin-sandbox/slot-layout';
 import { get as getActivePlugin, type ResolvedSlotOffer } from '@/lib/plugin-sandbox/registry';
 import { usePluginSlotOffers } from '@/hooks/use-plugin-slot-offers';
@@ -68,6 +69,8 @@ export function PluginSlot({ name, className, extraProps }: PluginSlotProps) {
         ? cn('inline-flex flex-wrap items-center gap-1', className)
         : cn(className, fills && 'h-full flex flex-col min-h-0')}
       data-plugin-slot={name}
+      // The reader's banner slot as a whole: a list anchored outside it never lies over it.
+      {...(READER_BANNER_SLOTS.has(name) ? { [LIST_AVOID_ATTRIBUTE]: '' } : {})}
     >
       {offers.map((offer) => (
         <PluginIframeSlot

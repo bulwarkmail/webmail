@@ -34,6 +34,7 @@ import { loadHostBridge } from '@/lib/plugin-sandbox/load-host-bridge';
 import type { FloatingDropdownOption, FloatingDropdownRect } from '@/lib/plugin-sandbox/protocol';
 import { slotPropsFor } from '@/lib/plugin-sandbox/permissions';
 import { isFillableSlot, isInlineSlot, maxSlotHeight } from '@/lib/plugin-sandbox/slot-layout';
+import { LIST_AVOID_ATTRIBUTE, READER_BANNER_SLOTS } from '@/lib/plugin-sandbox/list-avoid';
 import { snapshotHostTheme } from '@/lib/plugin-sandbox/host-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -558,6 +559,8 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
       inert={!fill && height === 0}
       data-plugin-iframe-slot={`${pluginId}:${slot}`}
       data-plugin-iframe-fill={fill || undefined}
+      // Another plugin's list never lies over a banner in the reader.
+      {...(READER_BANNER_SLOTS.has(slot) ? { [LIST_AVOID_ATTRIBUTE]: '' } : {})}
     />
   );
   return (
@@ -705,19 +708,13 @@ export function minListHeight(options: number): number {
   return DROPDOWN_CHROME + Math.min(2, Math.max(1, options)) * DROPDOWN_ROW;
 }
 
-/**
- * Parts of the app a plugin's list never covers: the parts that tell the user
- * whose mail this is and what the app vouches for (the reader's subject,
- * sender, recipients and details, its own security and trust banners and
- * cards; the app's top bar and account switcher). Any element can opt in with
- * this one attribute.
- */
-export const LIST_AVOID_ATTRIBUTE = 'data-plugin-list-avoid';
+export { LIST_AVOID_ATTRIBUTE, READER_BANNER_SLOTS };
 
 /**
  * What the list must not cover: the rows where the host names a plugin (a
  * dialog's header and its parts, a banner's name chip) and the parts marked
- * with LIST_AVOID_ATTRIBUTE.
+ * with LIST_AVOID_ATTRIBUTE, except one that holds the list's own frame (the
+ * plugin's own banner and the slot it sits in).
  */
 const LIST_AVOID_SELECTOR = `[data-plugin-dialog-header], [data-plugin-dialog-source], [data-plugin-dialog-menu], [data-plugin-banner-source], [${LIST_AVOID_ATTRIBUTE}]`;
 
@@ -840,7 +837,12 @@ function placeForFrame(wrapperEl: HTMLElement | null, dropdown: Pick<FloatingDro
     area,
     { width: window.innerWidth, height: window.innerHeight },
     {
-      avoid: [...document.querySelectorAll(LIST_AVOID_SELECTOR)].filter((el) => !behindBackdrop || !!layer?.contains(el)).map(boxOf),
+      avoid: [...document.querySelectorAll(LIST_AVOID_SELECTOR)]
+        // A part that holds the frame is the plugin's own banner or slot: its
+        // list may open there. Every other marked part counts.
+        .filter((el) => !(wrapperEl && el.contains(wrapperEl)))
+        .filter((el) => !behindBackdrop || !!layer?.contains(el))
+        .map(boxOf),
       minHeight: minListHeight(dropdown.options.length),
       ...(layer ? { top: area.top } : {}),
     },
