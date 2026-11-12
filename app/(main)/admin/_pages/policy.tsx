@@ -438,7 +438,7 @@ export function PolicyPage() {
                 onChange={(e) => setDirectoryHiddenLocalparts(e.target.value)}
                 placeholder="noreply, spam"
                 aria-label="Hidden accounts"
-                className={cn(inputClass, 'w-64')}
+                className={cn(inputClass, 'w-full min-w-0 sm:w-64')}
               />
             </SettingItem>
           </SettingsSection>
