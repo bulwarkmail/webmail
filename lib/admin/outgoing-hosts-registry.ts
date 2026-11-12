@@ -209,6 +209,7 @@ export const BUILT_URL_FILES: readonly { file: string; why: string }[] = [
   { file: 'lib/calendar-subscription-sync.ts', why: "webcal:// rewritten to https:// for a feed the user subscribed to" },
   { file: 'lib/email-sanitization.ts', why: "comment about links in mail" },
   { file: 'lib/idn.ts', why: "parses a host name the user typed" },
+  { file: 'lib/offline/device-wipe.ts', why: "a wiped login's server URL rebuilt from its account id, only to name its push state; fetches nothing" },
   { file: 'lib/plugin-sandbox/connect-dialog.ts', why: "adds the scheme to a server address the user enters" },
   { file: 'lib/plugin-sandbox/host-api.ts', why: "WKD lookup at the recipient's domain (registered as wkd), and an error message" },
   { file: 'lib/validation.ts', why: "scheme checks" },
