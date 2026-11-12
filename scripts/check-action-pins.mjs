@@ -18,6 +18,12 @@
 //     write the Actions cache, so a release would ship what it left;
 //   - has no top-level `permissions:` block. With one, a job that sets none starts from it
 //     instead of from the repository default.
+// The Dockerfiles at the root and the shell scripts under scripts/ get the line rules of the
+// first point too: a build or an upload runs what the lockfile holds, nothing fetched fresh.
+// Every FROM in those Dockerfiles names its base image by digest (stages and scratch aside).
+//
+// A file fetched with curl or wget and then made executable needs a `sha256sum -c` (or another
+// shaNsum/shasum check) between the two, in the same step or script.
 //
 //   node scripts/check-action-pins.mjs [repo root]      default: the current directory
 //   node scripts/check-action-pins.mjs --self-test      runs the cases below
@@ -228,6 +234,27 @@ function workflowRunIsOutside(doc, byName) {
   });
 }
 
+// Lines of a script that make a file executable after a curl or wget download, with no
+// checksum check since that download.
+function uncheckedExecutables(text) {
+  const found = [];
+  let downloaded = false;
+  let checked = false;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^\s*#/.test(line)) continue;
+    if (/\b(sha(1|224|256|384|512)sum|shasum)\b[^#]*\s(-c|--check)\b/.test(line)) checked = true;
+    const curl = /\bcurl\b[^#|]*\s(-[a-zA-Z]*[oO]|--output|--remote-name)\b/.test(line) && !/\s-[a-zA-Z]*o\s+\/dev\/null\b/.test(line);
+    const wget = /\bwget\b/.test(line) && !/--spider\b/.test(line);
+    if (curl || wget) {
+      downloaded = true;
+      checked = false;
+    }
+    const executable = /\bchmod\s+(-\S+\s+)*([ugoa]*\+[rw]*x|[0-7]*[1357][0-7]*)\b/.test(line) || /\binstall\s+(-\S+\s+)*-m\s*[0-7]*[1357]/.test(line);
+    if (downloaded && !checked && executable) found.push(line.trim());
+  }
+  return found;
+}
+
 function check(files) {
   const problems = [];
   const parsed = [];
@@ -236,11 +263,29 @@ function check(files) {
     text.split(/\r?\n/).forEach((line, i) => {
       if (/^\s*#/.test(line) || /^\s*(?:-\s*)?uses:/.test(line)) return;
       if (/\b(curl|wget)\b[^|#]*\|\s*(sudo\s+)?(ba|z)?sh\b/.test(line)) problems.push(`${rel}:${i + 1}: pipes a download into a shell`);
-      if (/\bnpx\s+(--yes|-y)\b/.test(line)) problems.push(`${rel}:${i + 1}: npx --yes installs a package outside the lockfile`);
+      if (/\b(npx|npm\s+exec)\s+(--yes|-y)\b/.test(line)) problems.push(`${rel}:${i + 1}: npx --yes installs a package outside the lockfile`);
       if (/\bnpm\s+(i|install)\s+(?!.*--package-lock-only)[^#]*\s[@a-z][\w@/.-]*/.test(line) && !/npm\s+(i|install)\s+-g\s+npm@/.test(line)) {
         problems.push(`${rel}:${i + 1}: npm install of named packages outside the lockfile`);
       }
     });
+    if (/(^|\/)Dockerfile[^/]*$/.test(rel)) {
+      const stages = new Set(['scratch']);
+      text.split(/\r?\n/).forEach((line, i) => {
+        const m = line.match(/^\s*FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?/i);
+        if (!m) return;
+        if (!stages.has(m[1].toLowerCase()) && !/@sha256:[0-9a-f]{64}$/.test(m[1])) {
+          problems.push(`${rel}:${i + 1}: base image ${m[1]} is not pinned by digest`);
+        }
+        if (m[2]) stages.add(m[2].toLowerCase());
+      });
+    }
+    if (!/\.ya?ml$/.test(rel)) {
+      const lines = text.split(/\r?\n/);
+      for (const bad of uncheckedExecutables(text)) {
+        problems.push(`${rel}:${lines.findIndex((l) => l.trim() === bad) + 1}: makes a download executable without checking its sha256 first (sha256sum -c)`);
+      }
+      continue;
+    }
     try {
       parsed.push({ rel, ...parse(text), workflow: rel.startsWith('.github/workflows/') });
     } catch (e) {
@@ -255,6 +300,16 @@ function check(files) {
       if (!ref || ref.startsWith('./')) continue;
       const pinned = ref.startsWith('docker://') ? /@sha256:[0-9a-f]{64}$/.test(ref) : /@[0-9a-f]{40}$/.test(ref);
       if (!pinned) problems.push(`${rel}:${lineOf(node, ref)}: ${ref} is not pinned ${ref.startsWith('docker://') ? 'by digest' : 'to a commit'}`);
+    }
+  }
+
+  // Downloads made executable: per run: script, so a check in another step doesn't count.
+  for (const { rel, doc, lineOf } of parsed) {
+    for (const node of maps(doc)) {
+      if (typeof node.run !== 'string') continue;
+      for (const bad of uncheckedExecutables(node.run)) {
+        problems.push(`${rel}:${lineOf(node, bad)}: makes a download executable without checking its sha256 first (sha256sum -c)`);
+      }
     }
   }
 
@@ -673,12 +728,83 @@ jobs:
         run: ./deploy.sh
 `,
   }],
+  ['npx --yes in a Dockerfile and in a script', 2, {
+    Dockerfile: `
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
+RUN npm ci
+# npx --yes in a comment does not count
+RUN npx --yes "@sentry/cli@3.8.2" sourcemaps inject .next/static
+RUN npx --no-install sentry-cli sourcemaps inject .next/static
+`,
+    'scripts/upload-sourcemaps.sh': `#!/usr/bin/env bash
+npx -y @sentry/cli --url "$url" sourcemaps upload "$dir"
+npx --no-install sentry-cli --version
+`,
+  }],
+  ['downloads made executable without a checksum', 3, {
+    'x.yml': `
+on: push
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    env:
+      KIND_SHA256: 0000000000000000000000000000000000000000000000000000000000000000
+    steps:
+      - run: |
+          curl -fsSLo "$RUNNER_TEMP/bin/kind" "https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64"
+          chmod +x "$RUNNER_TEMP/bin/kind"
+      - run: echo "\${KIND_SHA256}  $RUNNER_TEMP/bin/kind" | sha256sum -c -
+      - run: |
+          wget -q https://example.com/tool
+          install -m 0755 tool /usr/local/bin/tool
+`,
+    'scripts/fetch-tool.sh': `#!/usr/bin/env bash
+curl -fsSL -o tool.tgz https://example.com/tool.tgz
+echo "$SHA  tool.tgz" | sha256sum -c -
+curl -fsSL -o tool https://example.com/tool
+chmod 755 tool
+`,
+  }],
+  ['downloads checked before they are made executable', 0, {
+    'x.yml': `
+on: push
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    env:
+      KIND_SHA256: 0000000000000000000000000000000000000000000000000000000000000000
+    steps:
+      - run: |
+          curl -fsSLo "$RUNNER_TEMP/bin/kind" "https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64"
+          echo "\${KIND_SHA256}  $RUNNER_TEMP/bin/kind" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/bin/kind"
+      - run: |
+          curl -fsS -o /dev/null http://localhost:3000/api/health
+          chmod +x ./scripts/local.sh
+          chmod 600 ~/.ssh/key
+`,
+  }],
+  ['base images without a digest', 2, {
+    'Dockerfile.lite': `
+FROM --platform=$BUILDPLATFORM node:24-alpine AS builder
+FROM builder AS debug-ids
+FROM scratch AS sourcemaps
+FROM nginxinc/nginx-unprivileged:1.30-alpine-slim
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS runner
+`,
+  }],
 ];
 
 function selfTest() {
   const failures = [];
   for (const [name, want, files] of CASES) {
-    const got = check(Object.entries(files).map(([file, text]) => ({ rel: `.github/workflows/${file}`, text })));
+    // A bare .yml name is a workflow; anything else is a path from the repo root.
+    const rel = (file) => (/^[\w.-]+\.ya?ml$/.test(file) ? `.github/workflows/${file}` : file);
+    const got = check(Object.entries(files).map(([file, text]) => ({ rel: rel(file), text })));
     if (got.length !== want) failures.push(`case "${name}": expected ${want}, got ${got.length}${got.length ? `\n    ${got.join('\n    ')}` : ''}`);
   }
   if (failures.length) {
@@ -707,6 +833,8 @@ if (process.argv.includes('--self-test')) {
     ...walk(path.join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)),
     ...walk(path.join(root, '.github', 'actions')).filter((f) => /(^|[\\/])action\.ya?ml$/.test(f)),
     ...['action.yml', 'action.yaml', 'action/action.yml'].map((f) => path.join(root, f)).filter(existsSync),
+    ...readdirSync(root).filter((f) => /^Dockerfile(\..+)?$/.test(f)).map((f) => path.join(root, f)),
+    ...walk(path.join(root, 'scripts')).filter((f) => /\.sh$/.test(f)),
   ];
   const problems = check(files.map((file) => ({ rel: path.relative(root, file).replace(/\\/g, '/'), text: readFileSync(file, 'utf8') })));
   if (problems.length) {
@@ -715,6 +843,6 @@ if (process.argv.includes('--self-test')) {
     process.exit(1);
   }
   console.log(
-    `ok: ${files.length} workflow and action file(s): actions pinned to a commit, no secret or write token where outside code runs, no cache in publishing jobs, top-level permissions in every workflow`,
+    `ok: ${files.length} workflow, action, Dockerfile and script file(s): actions pinned to a commit, base images by digest, nothing fetched outside the lockfile, no secret or write token where outside code runs, no cache in publishing jobs, top-level permissions in every workflow`,
   );
 }

@@ -5,9 +5,12 @@
 #
 #   docker build -f Dockerfile.lite -t bulwark-lite .
 
+# Base images by digest, so a build gets the image that was reviewed; the
+# Dependabot docker entry moves the digest when the tag gets a new image.
+#
 # The export is plain files, so it is built once on the build host's
 # architecture, whatever the target platform is.
-FROM --platform=$BUILDPLATFORM node:24-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -32,7 +35,7 @@ ARG GIT_COMMIT=unknown
 RUN LITE_TARGET=static NEXT_PUBLIC_BASE_PATH= npm run build:lite && \
     node scripts/lite/container.mjs /image
 
-FROM nginxinc/nginx-unprivileged:1.30-alpine-slim
+FROM nginxinc/nginx-unprivileged:1.30-alpine-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6
 
 LABEL org.opencontainers.image.title="Bulwark Webmail Lite"
 LABEL org.opencontainers.image.description="Bulwark Webmail as static files behind nginx; talks to the JMAP server straight from the browser"

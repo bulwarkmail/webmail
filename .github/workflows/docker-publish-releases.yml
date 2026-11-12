@@ -87,6 +87,19 @@ jobs:
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps
 
+      # sentry-cli for the upload, as package-lock.json locks it. No install
+      # script runs: the binary comes in its platform package.
+      - name: Setup Node.js
+        if: matrix.platform == 'linux/amd64'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Install the source map tool
+        if: matrix.platform == 'linux/amd64'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
       - name: Upload source maps to Bugsink
         if: matrix.platform == 'linux/amd64'
         env:
@@ -238,6 +251,19 @@ jobs:
             NEXT_PUBLIC_LOCALE_PREFIX=always
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps
+
+      # sentry-cli for the upload, as package-lock.json locks it. No install
+      # script runs: the binary comes in its platform package.
+      - name: Setup Node.js
+        if: matrix.platform == 'linux/amd64'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Install the source map tool
+        if: matrix.platform == 'linux/amd64'
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Upload source maps to Bugsink
         if: matrix.platform == 'linux/amd64'

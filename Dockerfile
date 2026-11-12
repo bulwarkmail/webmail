@@ -1,4 +1,6 @@
-FROM node:24-alpine AS builder
+# Base images by digest, so a build gets the image that was reviewed; the
+# Dependabot docker entry moves the digest when the tag gets a new image.
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -47,21 +49,28 @@ RUN rm -rf "app/api/dev-jmap" && \
     node scripts/standalone-guard.mjs
 
 # webpack has no debug IDs of its own, so sentry-cli adds them to the
-# chunks; then every map moves to /sourcemaps (exported with
-# `--target sourcemaps`) and the check fails the build if one would ship.
-# https://bulwarkmail.org/docs/deployment/monitoring
-ARG SENTRY_CLI_VERSION=3.8.2
+# chunks: the @sentry/cli devDependency, as package-lock.json locks it. It
+# runs in a stage of its own, and the next stage takes back only
+# .next/static, the folder it is meant to change. Anything it writes
+# elsewhere stays in this stage and never reaches the image.
+FROM builder AS debug-ids
 RUN if [ "$BULWARK_SOURCE_MAPS" = "1" ]; then \
-      npx --yes "@sentry/cli@${SENTRY_CLI_VERSION}" sourcemaps inject .next/static; \
-    fi && \
-    node scripts/sourcemaps.mjs collect --out /sourcemaps .next/static .next/standalone && \
+      npx --no-install sentry-cli sourcemaps inject .next/static; \
+    fi
+
+# Every map moves to /sourcemaps (exported with `--target sourcemaps`) and
+# the check fails the build if one would ship.
+# https://bulwarkmail.org/docs/deployment/monitoring
+FROM builder AS bundle
+COPY --from=debug-ids /app/.next/static ./.next/static
+RUN node scripts/sourcemaps.mjs collect --out /sourcemaps .next/static .next/standalone && \
     node scripts/sourcemaps.mjs check .next/static .next/standalone public
 
 # Only the maps, for CI to upload: never part of the image.
 FROM scratch AS sourcemaps
-COPY --from=builder /sourcemaps /
+COPY --from=bundle /sourcemaps /
 
-FROM node:24-alpine AS runner
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS runner
 
 LABEL org.opencontainers.image.title="Bulwark Webmail"
 LABEL org.opencontainers.image.description="Modern webmail client built with Next.js and the JMAP protocol"
@@ -81,10 +90,10 @@ RUN apk upgrade --no-cache && \
 # The app stays root's and read-only for the runtime user, so a bug that
 # lets it write a file can't replace server.js or a bundle and run code on
 # the next start. It writes only to Next's cache and the data dirs.
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/scripts/healthcheck.mjs ./healthcheck.mjs
+COPY --from=bundle /app/public ./public
+COPY --from=bundle /app/.next/standalone ./
+COPY --from=bundle /app/.next/static ./.next/static
+COPY --from=bundle /app/scripts/healthcheck.mjs ./healthcheck.mjs
 # Every data dir exists up front and belongs to the runtime user, so a fresh
 # volume on /app/data (Docker copies these into it) or on any one of them is
 # writable. plugin-secrets holds users' plugin credentials, version-check the

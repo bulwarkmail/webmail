@@ -34,6 +34,8 @@ spec:
       labels:
         app.kubernetes.io/name: valkey
     spec:
+      # Nothing in the pod talks to the Kubernetes API.
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -44,11 +46,16 @@ spec:
       containers:
         - name: valkey
           image: valkey/valkey:8-alpine
+          # Stops with a message when VALKEY_PASSWORD is empty. The password
+          # reaches the server in a config file in memory (/tmp), not on its
+          # command line, which every process in the pod can read.
           command: ["sh", "-c"]
           args:
             - >-
-              exec valkey-server
-              --requirepass "$VALKEY_PASSWORD"
+              : "${VALKEY_PASSWORD:?is empty. Set it in base/secrets.env or in the bulwark-secrets Secret: the store does not start without a password}";
+              conf="$(mktemp)";
+              printf 'requirepass "%s"\n' "$(printf '%s' "$VALKEY_PASSWORD" | sed 's/[\\"]/\\&/g')" > "$conf";
+              exec valkey-server "$conf"
               --appendonly yes
               --maxmemory 512mb
               --maxmemory-policy noeviction
@@ -85,6 +92,13 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
   volumeClaimTemplates:
     - metadata:
         name: data
