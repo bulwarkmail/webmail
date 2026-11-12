@@ -1250,8 +1250,15 @@ export function startAppLock(): () => void {
   // A tab still asking whether the lock holds tells the worker once it knows (openUp, lockedFromNow, settleNoFile).
   if (phase !== 'checking') tellServiceWorkerAppLock();
   if (readAppLockFile().on) void dropHelloIfNotAllowed();
+  // A new worker that takes over has heard nothing from this tab yet.
+  const onNewWorker = () => {
+    if (phase !== 'checking') tellServiceWorkerAppLock();
+  };
+  const workers = typeof navigator !== 'undefined' ? navigator.serviceWorker : undefined;
+  workers?.addEventListener?.('controllerchange', onNewWorker);
   return () => {
     channel?.close();
+    workers?.removeEventListener?.('controllerchange', onNewWorker);
     window.removeEventListener('storage', onStorage);
     stopDesktop?.();
     stopPolicy();

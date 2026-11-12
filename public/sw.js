@@ -62,7 +62,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches(), sweepHandoffsOnActivate()]));
+  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches(), sweepHandoffsOnActivate(), queueAppLockStep(assumeAppLockOnAtTakeover)]));
 });
 
 // ---- Offline mode (#523): the app shell ----
@@ -925,6 +925,18 @@ async function rememberAppLockOn(on) {
 async function appLockWasOn() {
   const cache = await caches.open(SW_STATE_CACHE);
   return !!(await cache.match(APP_LOCK_ON_KEY));
+}
+
+/**
+ * A worker that takes over has heard no page yet, and the stored word may come from the
+ * worker before it. Unless that word is "off", the lock counts as on should the word be
+ * deleted before a page speaks (a page of an older version deletes the whole store when
+ * it wipes one login). Pages tell a worker that takes over their word at once
+ * (lib/app-lock/controller.ts), and a page with the lock off says "off".
+ */
+async function assumeAppLockOnAtTakeover() {
+  const stored = await readAppLockState().catch(() => null);
+  if (!stored || stored.state !== "off") await rememberAppLockOn(true);
 }
 
 async function readAppLockState() {

@@ -12,16 +12,15 @@ import { APP_LOCK_HOLDER, writeAppLockFile } from '../state';
 let posted: Array<Record<string, unknown>> = [];
 let held: Array<{ name: string }> = [];
 let stopTab: () => void = () => {};
+let workers: EventTarget;
 
 beforeEach(() => {
   posted = [];
   held = [];
   localStorage.clear();
   resetAppLockForTests();
-  Object.defineProperty(window.navigator, 'serviceWorker', {
-    configurable: true,
-    value: { controller: { postMessage: (message: Record<string, unknown>) => posted.push(message) } },
-  });
+  workers = Object.assign(new EventTarget(), { controller: { postMessage: (message: Record<string, unknown>) => posted.push(message) } });
+  Object.defineProperty(window.navigator, 'serviceWorker', { configurable: true, value: workers });
   Object.defineProperty(window.navigator, 'locks', {
     configurable: true,
     value: {
@@ -67,6 +66,26 @@ describe('what a tab tells the service worker', () => {
     expect(typeof at).toBe('number');
     expect(at as number).toBeGreaterThanOrEqual(before);
     expect(at as number).toBeLessThanOrEqual(Date.now());
+  });
+
+  it('tells a new worker that takes over what it told the one before', async () => {
+    writeAppLockFile({ on: true, locked: false });
+    held = [{ name: APP_LOCK_HOLDER }];
+    stopTab = startAppLock();
+    await vi.waitFor(() => expect(appLockMessages()).toEqual(['unlocked']));
+    workers.dispatchEvent(new Event('controllerchange'));
+    expect(appLockMessages()).toEqual(['unlocked', 'unlocked']);
+  });
+
+  it('tells it "off" with the lock off, and nothing more once the tab has stopped', async () => {
+    stopTab = startAppLock();
+    await vi.waitFor(() => expect(appLockMessages()).toEqual(['off']));
+    workers.dispatchEvent(new Event('controllerchange'));
+    expect(appLockMessages()).toEqual(['off', 'off']);
+    stopTab();
+    stopTab = () => {};
+    workers.dispatchEvent(new Event('controllerchange'));
+    expect(appLockMessages()).toEqual(['off', 'off']);
   });
 
   it('a tab that finds nobody holding the key says "locked"', async () => {
