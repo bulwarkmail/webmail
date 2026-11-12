@@ -57,6 +57,18 @@ describe('what a tab tells the service worker', () => {
     expect(getAppLockPhase()).toBe('open');
   });
 
+  it('each word carries the time it was sent, so the worker can tell a late one', async () => {
+    const before = Date.now();
+    writeAppLockFile({ on: true, locked: false });
+    held = [{ name: APP_LOCK_HOLDER }];
+    stopTab = startAppLock();
+    await vi.waitFor(() => expect(appLockMessages()).toEqual(['unlocked']));
+    const at = posted.find((message) => message.type === 'app-lock')?.at;
+    expect(typeof at).toBe('number');
+    expect(at as number).toBeGreaterThanOrEqual(before);
+    expect(at as number).toBeLessThanOrEqual(Date.now());
+  });
+
   it('a tab that finds nobody holding the key says "locked"', async () => {
     writeAppLockFile({ on: true, locked: false });
     stopTab = startAppLock();

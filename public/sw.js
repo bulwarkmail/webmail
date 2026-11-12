@@ -509,7 +509,8 @@ self.addEventListener("message", (event) => {
     return;
   }
   if (data.type === "app-lock") {
-    event.waitUntil(writeAppLockState(data.state, event.source && event.source.id));
+    const clientId = event.source && event.source.id;
+    event.waitUntil(queueAppLockStep(() => writeAppLockState(data.state, clientId, data.at)));
     return;
   }
   if (data.type === "offline-shell") {
@@ -932,15 +933,43 @@ async function readAppLockState() {
   return res ? await res.json() : null;
 }
 
+// The pages' words on the lock are applied one at a time, in the order they came: a
+// write that reads the store first must not land after one that came behind it.
+let appLockSteps = Promise.resolve();
+
+function queueAppLockStep(step) {
+  const run = appLockSteps.then(step);
+  appLockSteps = run.catch(() => {});
+  return run;
+}
+
+/**
+ * Whether a page's word may replace what's stored. Pages stamp each word with the time
+ * they sent it (`at`), and one sent before what's stored came too late. A lock always
+ * applies: it only makes things more locked. A word without a stamp (from an older
+ * page) can't be placed after a stamped one.
+ */
+function appLockWordApplies(state, at, before) {
+  if (state === "locked" || !before) return true;
+  const beforeAt = typeof before.at === "number" ? before.at : null;
+  if (beforeAt === null) return true;
+  if (at === null || at < beforeAt) return false;
+  return at > beforeAt || before.state !== "locked";
+}
+
 /**
  * What a page said, kept across the worker's restarts. With "unlocked" go the tabs
  * that said so since the lock last came, those of them still open: one of them has
  * to be there for it to count.
  */
-async function writeAppLockState(state, clientId) {
+async function writeAppLockState(state, clientId, sentAt) {
+  const at = typeof sentAt === "number" && Number.isFinite(sentAt) ? sentAt : null;
+  const before = await readAppLockState().catch(() => null);
+  if (!appLockWordApplies(state, at, before)) return;
   const record = { state };
+  const beforeAt = before && typeof before.at === "number" ? before.at : null;
+  if (at !== null || beforeAt !== null) record.at = Math.max(at === null ? -Infinity : at, beforeAt === null ? -Infinity : beforeAt);
   if (state === "unlocked") {
-    const before = await readAppLockState().catch(() => null);
     const said = before && before.state === "unlocked" && Array.isArray(before.clients) ? before.clients : [];
     const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     const openIds = new Set(open.map((client) => client.id));

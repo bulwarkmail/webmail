@@ -332,7 +332,7 @@ async function scrubPushState(account: string | null, leaving: AccountEntry | un
 
 /** The service worker hears the lock's state again from this page, as at each start (lib/app-lock/controller.ts). */
 function tellWorkerAppLock(): void {
-  const message = { type: 'app-lock', state: !readAppLockFile().on ? 'off' : isAppLockedNow() ? 'locked' : 'unlocked' };
+  const message = { type: 'app-lock', state: !readAppLockFile().on ? 'off' : isAppLockedNow() ? 'locked' : 'unlocked', at: Date.now() };
   try {
     const worker = navigator.serviceWorker;
     if (worker?.controller) worker.controller.postMessage(message);

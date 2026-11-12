@@ -314,10 +314,14 @@ function tellDesktopLocked(): void {
   getDesktopBridge()?.os?.setLocked(true);
 }
 
-/** The service worker shows push notifications with no page around. Kept across its restarts. */
+/**
+ * The service worker shows push notifications with no page around. Kept across its restarts.
+ * Stamped with the time it's sent: a word that reaches the worker after a later one (through
+ * `ready` while the page had no controller yet, say) doesn't count.
+ */
 function tellServiceWorker(state: 'locked' | 'unlocked' | 'off'): void {
   try {
-    const message = { type: 'app-lock', state };
+    const message = { type: 'app-lock', state, at: Date.now() };
     const worker = navigator.serviceWorker;
     if (!worker) return;
     if (worker.controller) worker.controller.postMessage(message);

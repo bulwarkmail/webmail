@@ -244,4 +244,13 @@ describe('what the page tells the worker after a wipe', () => {
     await wipe.wipeWholeDevice('admin');
     expect(lockStates(posted)).toEqual(['off']);
   });
+
+  it('stamped with the time it was sent, like every page word on the lock', async () => {
+    const posted = pageMessages();
+    const before = Date.now();
+    await wipe.wipeAccountFromDevice(ALICE, 'admin');
+    const at = posted.find((message) => message.type === 'app-lock')?.at;
+    expect(typeof at).toBe('number');
+    expect(at as number).toBeGreaterThanOrEqual(before);
+  });
 });
