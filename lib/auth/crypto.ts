@@ -26,9 +26,10 @@ function getKey(): Buffer {
  * `signedInAt`: when the user signed in (ms), for the organisation's maximum
  * session length (lib/auth/session-age.ts); absent in cookies written
  * before it was recorded. `accountName`: the account the mail server
- * resolved the credential to, when it differs from `username` (a token login
- * that claimed a bare local part), so a restored context keys per-user data
- * on it as the sign-in did; absent in cookies written before it was kept.
+ * resolved the credential to at sign-in, also when it equals `username`, so
+ * a restored context keys per-user data on it as the sign-in did (a token
+ * login may claim a bare local part); absent in cookies written before it
+ * was kept, and in sign-ins that resolved none.
  */
 export type SessionCredentials =
   | { serverUrl: string; username: string; password: string; token?: undefined; signedInAt?: number; accountName?: string }
@@ -52,7 +53,7 @@ export function encryptSession(
   const cipher = createCipheriv(ALGORITHM, key, iv);
 
   const credential = typeof secret === 'string' ? { password: secret } : { token: secret.token };
-  const account = accountName && accountName !== username ? { accountName } : {};
+  const account = accountName ? { accountName } : {};
   const payload = JSON.stringify({ v: 1, serverUrl, username, ...credential, signedInAt, ...account });
   const encrypted = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
