@@ -863,6 +863,21 @@ function completeBareTaskDates<T extends Partial<CalendarTask>>(task: T): T {
 }
 
 /**
+ * An RRULE needs a DTSTART (RFC 5545), and Stalwart drops a task's
+ * recurrenceRule without a `start`, silently. A recurring task the form
+ * sends with a due only starts at that due.
+ */
+function anchorRecurringTaskStart<T extends Partial<CalendarTask>>(task: T): T {
+  if (!task.recurrenceRules?.length || task.start || !task.due) return task;
+  return { ...task, start: task.due };
+}
+
+/** A task as Stalwart keeps it: dates as LocalDateTimes, a series with a start. */
+function prepareTaskDates<T extends Partial<CalendarTask>>(task: T): T {
+  return anchorRecurringTaskStart(completeBareTaskDates(task));
+}
+
+/**
  * Stalwart's calcard crate uses singular property names ("recurrenceRule")
  * instead of the RFC 8984 plural forms ("recurrenceRules").
  * JSCalendar 2.0 (jscalendarbis-15) defines recurrenceRule as a single object,
@@ -10497,7 +10512,7 @@ export class JMAPClient implements IJMAPClient {
       accountId = resolved.accountId;
       taskData.calendarIds = resolved.calendarIds;
     }
-    const cleanTask = { ...completeBareTaskDates(taskData), '@type': 'Task', uid: taskData.uid || generateUUID() };
+    const cleanTask = { ...prepareTaskDates(taskData), '@type': 'Task', uid: taskData.uid || generateUUID() };
     // A task moved to another login carries recurrenceRules, which Stalwart
     // refuses (0.16) or drops (1.0) under that name.
     cleanRecurrenceRules(cleanTask as Record<string, unknown>);
