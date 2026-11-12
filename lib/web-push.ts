@@ -79,6 +79,16 @@ const SUBSCRIPTION_REFRESH_THRESHOLD_DAYS = 7;
 // In-app sync uses a separate StateChange channel and is unaffected.
 const PUSH_TYPES = ['EmailDelivery'] as const;
 
+// When the server supports `urn:ietf:params:jmap:emailpush`, the server-side
+// delivery filter handles new mail arrivals directly (sending `jmap-email-push` with
+// message IDs). Subscribing to `EmailDelivery` state changes on such servers is
+// redundant and harmful, because mutations like draft creation (`Email/set create`)
+// also update `EmailDelivery` state in Stalwart, triggering unwanted state-change
+// pushes on every draft autosave (#1650).
+export function desiredPushTypes(desiredEmailPush: Record<string, EmailPushConfig> | null): readonly string[] {
+  return desiredEmailPush !== null ? [] : PUSH_TYPES;
+}
+
 // draft-ietf-jmap-emailpush (Stalwart >= 0.16.16). `EmailDelivery` alone
 // still fires for every ingested message - including spam the server files
 // straight into Junk - because the server can't know which folders a client
@@ -745,7 +755,8 @@ async function refreshSubscriptionExpires(
   // null when the server has no emailPush support - leave the property alone.
   desiredEmailPush: Record<string, EmailPushConfig> | null,
 ): Promise<false | { emailPush: Record<string, EmailPushConfig> | null }> {
-  const typesNeedUpdate = !sameTypes(sub.types, PUSH_TYPES);
+  const desiredTypes = desiredPushTypes(desiredEmailPush);
+  const typesNeedUpdate = !sameTypes(sub.types, desiredTypes);
   // Also re-sync the delivery filter: a subscription created before this
   // client learned about emailPush has none, and the Junk mailbox id can
   // change under us.
@@ -758,7 +769,7 @@ async function refreshSubscriptionExpires(
   const patch: { expires?: string; types?: string[] } = {
     expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS),
   };
-  if (typesNeedUpdate) patch.types = [...PUSH_TYPES];
+  if (typesNeedUpdate) patch.types = [...desiredTypes];
   try {
     const { emailPush } = await writeWithEmailPush(
       client,
@@ -961,11 +972,12 @@ async function enableWebPushForThisTab(
     }
   }
 
+  const desiredTypes = desiredPushTypes(emailPush);
   const create = () => writeWithEmailPush(params.client, emailPush, (filter) =>
     params.client.createPushSubscription({
       deviceClientId,
       url: buildRelayUrl(relayBaseUrl, `/api/push/jmap/${encodeURIComponent(deviceClientId)}`),
-      types: [...PUSH_TYPES],
+      types: [...desiredTypes],
       expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS),
       ...(filter ? { emailPush: filter } : {}),
     }),
