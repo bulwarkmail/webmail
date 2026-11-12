@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { firstStrongDirection } from "@/lib/bidi";
 
 interface PromptDialogProps {
   isOpen: boolean;
@@ -129,7 +130,9 @@ export function PromptDialog({
         </>
       }
     >
-      <div className="mt-4 flex items-center gap-2">
+      {/* With a suffix, the row runs the way the name reads, so an extension
+          follows a Latin name on its right even in an RTL interface. */}
+      <div className="mt-4 flex items-center gap-2" dir={suffix ? firstStrongDirection(value) ?? undefined : undefined} data-testid="prompt-row">
         <Input
           aria-label={title}
           ref={inputRef}

@@ -39,6 +39,16 @@ describe('PromptDialog with a suffix', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  // In an RTL interface the row would otherwise put ".pdf" before "report".
+  it('runs the row the way the name reads', () => {
+    const { input } = renderDialog();
+    expect(screen.getByTestId('prompt-row')).toHaveAttribute('dir', 'ltr');
+    fireEvent.change(input, { target: { value: 'تقرير' } });
+    expect(screen.getByTestId('prompt-row')).toHaveAttribute('dir', 'rtl');
+    fireEvent.change(input, { target: { value: '2024' } });
+    expect(screen.getByTestId('prompt-row')).not.toHaveAttribute('dir');
+  });
+
   it('shows no suffix when none is given', () => {
     render(<PromptDialog isOpen onClose={vi.fn()} onSubmit={vi.fn()} title="Rename" defaultValue="README" />);
     expect(screen.queryByTestId('prompt-suffix')).toBeNull();
