@@ -202,6 +202,7 @@ function VersionBadge() {
 function LoginPageContent() {
   const router = useRouter();
   const t = useTranslations("login");
+  const tSidebar = useTranslations("sidebar");
   const tDesktop = useTranslations("desktop_sign_in");
   const tBrowser = useTranslations("desktop_browser_sign_in");
   const tDesktopPolicy = useTranslations("desktop_policy");
@@ -225,6 +226,9 @@ function LoginPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const isAddAccountMode = searchParams.get("mode") === "add-account";
+  const accounts = useAccountStore((state) => state.accounts);
+  const [reauthenticateId, setReauthenticateId] = useState<string | null>(() => searchParams.get("account"));
+  const reauthenticateAccount = accounts.find((account) => account.id === reauthenticateId && account.awaitingSignIn);
   const [desktopPolicyNotice, setDesktopPolicyNotice] = useState<string | null>(null);
   // Whichever way someone got here: every account they have is on a server the device's
   // OS policy refuses for now. They wait, and come back when it's allowed again.
@@ -294,20 +298,25 @@ function LoginPageContent() {
   const [loginHint] = useState(() => loginHintFrom(searchParams.get("login_hint")));
   const [formData, setFormData] = useState({
     // An account restored from the list backup opens this form with its address.
-    username: (isAddAccountMode ? searchParams.get("username") : null) || loginHint,
+    username: reauthenticateAccount?.username || (isAddAccountMode ? searchParams.get("username") : null) || loginHint,
     password: "",
   });
+  // The account registry can hydrate after the first render of a direct link.
+  const reauthenticateUsername = reauthenticateAccount?.username;
+  useEffect(() => {
+    if (reauthenticateUsername) setFormData({ username: reauthenticateUsername, password: "" });
+  }, [reauthenticateId, reauthenticateUsername]);
   const [jmapEndpoint, setJmapEndpoint] = useState("");
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
   const [domainAutoLocked, setDomainAutoLocked] = useState(false);
 
   const hasServerList = jmapServers.length > 0;
   const selectedServer = hasServerList
-    ? jmapServers.find((s) => s.id === selectedServerId) ?? jmapServers[0]
+    ? (reauthenticateAccount ? jmapServers.find((s) => s.url === reauthenticateAccount.serverUrl) : jmapServers.find((s) => s.id === selectedServerId) ?? jmapServers[0])
     : undefined;
 
   // Effective values: per-server overrides win, then global config.
-  const serverUrl = selectedServer?.url || configuredServerUrl;
+  const serverUrl = reauthenticateAccount?.serverUrl || selectedServer?.url || configuredServerUrl;
   const effectiveOauthClientId = selectedServer?.oauth?.clientId || globalOauthClientId;
   // A selected server discovers against itself unless it has its own issuer;
   // the global issuer only applies without a server list (#952).
@@ -323,7 +332,7 @@ function LoginPageContent() {
   // well-known, SRV, then the admin's default). The field for it only opens when
   // nothing was found or the user wants another one. Lite has no server to ask
   // and keeps the field open.
-  const customServerMode = !hasServerList && allowCustomJmapEndpoint;
+  const customServerMode = !reauthenticateId && !hasServerList && allowCustomJmapEndpoint;
   const canLookUpServer = customServerMode && !IS_LITE;
   const [serverEditing, setServerEditing] = useState(false);
   // Change on a found server: another one is wanted, nothing failed.
@@ -836,6 +845,8 @@ function LoginPageContent() {
           sessionStorage.setItem("mobile_state", mobileState);
         } catch { /* sessionStorage unavailable */ }
       }
+      if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+      else sessionStorage.removeItem("oauth_reauthenticate_account");
       const res = await apiFetch('/api/auth/sso/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -882,7 +893,7 @@ function LoginPageContent() {
     } catch {
       setOauthLoading(false);
     }
-  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, isDesktopHandoff, searchParams, mobileRedirectUri, mobileState, mobileChallenge]);
+  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, isDesktopHandoff, searchParams, mobileRedirectUri, mobileState, mobileChallenge, reauthenticateId]);
 
   useEffect(() => {
     // After signing out, show the login page rather than signing straight
@@ -1080,7 +1091,9 @@ function LoginPageContent() {
     if (isAddAccountMode) {
       sessionStorage.setItem("oauth_add_account_mode", "true");
     }
-    sessionStorage.setItem("oauth_cookie_slot", useAccountStore.getState().getNextCookieSlot().toString());
+    if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+    else sessionStorage.removeItem("oauth_reauthenticate_account");
+    sessionStorage.setItem("oauth_cookie_slot", (reauthenticateAccount?.cookieSlot ?? useAccountStore.getState().getNextCookieSlot()).toString());
     saveLiteOAuthFlow({
       tokenEndpoint: discovery.metadata.token_endpoint,
       clientId,
@@ -1112,13 +1125,13 @@ function LoginPageContent() {
    * whichever server is selected so that "Sign in with Google" is one tap.
    */
   const handleOAuthLogin = async (target?: PublicJmapServerEntry) => {
-    const oauthTarget = (target ?? selectedServer)?.url || (allowCustomJmapEndpoint ? customServer || configuredServerUrl : configuredServerUrl);
+    const oauthTarget = reauthenticateAccount?.serverUrl || (target ?? selectedServer)?.url || (allowCustomJmapEndpoint ? customServer || configuredServerUrl : configuredServerUrl);
     if (oauthTarget && !jmapServerAllowedByDesktopPolicy(oauthTarget, desktopPolicy)) {
       setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
       return;
     }
     if (LITE_OAUTH_AVAILABLE && !target) {
-      await startLiteOAuth(probeTarget);
+      await startLiteOAuth(oauthTarget || probeTarget);
       return;
     }
     const server = target ?? selectedServer;
@@ -1160,7 +1173,7 @@ function LoginPageContent() {
 
     // Resolve the JMAP URL to send to the callback. Server-list entries win
     // over the custom-endpoint input, which wins over the global server URL.
-    const oauthServerUrl = server?.url
+    const oauthServerUrl = reauthenticateAccount?.serverUrl || server?.url
       || (allowCustomJmapEndpoint ? customServer || configuredServerUrl : configuredServerUrl);
 
     sessionStorage.setItem("oauth_code_verifier", verifier);
@@ -1184,7 +1197,9 @@ function LoginPageContent() {
     // tokens. getNextCookieSlot() returns 0 when no accounts exist (correct for
     // first sign-in) and the lowest unused slot otherwise (correct for "+ Add
     // Account").
-    const nextSlot = useAccountStore.getState().getNextCookieSlot();
+    if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+    else sessionStorage.removeItem("oauth_reauthenticate_account");
+    const nextSlot = reauthenticateAccount?.cookieSlot ?? useAccountStore.getState().getNextCookieSlot();
     sessionStorage.setItem("oauth_cookie_slot", nextSlot.toString());
 
     const authUrl = new URL(metadata.authorization_endpoint);
@@ -1224,12 +1239,14 @@ function LoginPageContent() {
 
   /** The server's or the instance's own sign-in page in the system browser. */
   const handleBrowserSignIn = async () => {
+    if (reauthenticateId) sessionStorage.setItem("oauth_reauthenticate_account", reauthenticateId);
+    else sessionStorage.removeItem("oauth_reauthenticate_account");
     setDesktopNotice(null);
     setDesktopPolicyNotice(null);
     // Spelled out, not IS_DESKTOP_BUILD: only this form keeps the route out of other
     // builds' bundles, which Lite's check on API strings relies on.
     if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1') {
-      let target = jmapEndpoint.trim();
+      let target = reauthenticateAccount?.serverUrl || jmapEndpoint.trim();
       if (customServerMode) {
         // The address first: the server is found from it. A server typed by hand needs none.
         if (!typedAddress && !serverFieldOpen) {
@@ -1251,14 +1268,14 @@ function LoginPageContent() {
       setDesktopWaiting(true);
       const outcome = await runDesktopBrowserSignIn({
         serverUrl: target,
-        slot: useAccountStore.getState().getNextCookieSlot(),
+        slot: reauthenticateAccount?.cookieSlot ?? useAccountStore.getState().getNextCookieSlot(),
         remember: persistProviderSession,
         addAccount: isAddAccountMode,
         fresh: freshLoginRequired(),
         loginHint: loginHintFrom(typedAddress),
         redeem: (server, code, verifier, redirectUri) => useAuthStore.getState().loginWithOAuth(server, code, verifier, redirectUri),
         tryPassword: async ({ username, password, totp }) => {
-          if (await useAuthStore.getState().login(target, username, password, totp, persistSession)) {
+          if (await useAuthStore.getState().login(target, username, password, totp, persistSession, ...(reauthenticateId ? [reauthenticateId] as const : []))) {
             if (!rememberMeEnabled || persistSession) saveUsername(username);
             return { ok: true };
           }
@@ -1316,7 +1333,7 @@ function LoginPageContent() {
 
     // Server-list entries always win - `allowCustomJmapEndpoint` is only honored
     // when the admin hasn't configured a server list.
-    let effectiveServerUrl = selectedServer?.url
+    let effectiveServerUrl = reauthenticateAccount?.serverUrl || selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
     if (customServerMode) {
       const resolved = await resolveCustomServer();
@@ -1396,7 +1413,7 @@ function LoginPageContent() {
       if (sessionStorage.getItem('redirect_after_login')) endSignInHold();
     } catch { /* sessionStorage unavailable */ }
     if (signInWithToken) {
-      if (await loginWithToken(effectiveServerUrl, accessToken, persistSession)) {
+      if (await loginWithToken(effectiveServerUrl, accessToken, persistSession, ...(reauthenticateId ? [reauthenticateId] as const : []))) {
         router.push('/');
       } else if (IS_DESKTOP_BUILD) {
         forgetDesktopServer(effectiveServerUrl, 'failed');
@@ -1432,7 +1449,8 @@ function LoginPageContent() {
       // Only persist credentials when the server actually supports it
       // (a SESSION_SECRET is configured). Prevents a broken cookie write
       // when the remember-me feature is disabled server-side.
-      persistSession
+      persistSession,
+      ...(reauthenticateId ? [reauthenticateId] as const : [])
     );
 
     if (success) {
@@ -1624,7 +1642,7 @@ function LoginPageContent() {
     </p>
   );
 
-  const serverPicker = hasServerList && jmapServers.length > 1 ? (
+  const serverPicker = !reauthenticateId && hasServerList && jmapServers.length > 1 ? (
     <div className="space-y-1.5">
       <label htmlFor="jmap-server-select" className="block text-sm font-medium text-foreground">
         {t("jmap_server_label")}
@@ -1889,6 +1907,33 @@ function LoginPageContent() {
           )}
 
           {desktopHandoffBanner}
+
+          {!isMobileHandoff && accounts.some((account) => account.awaitingSignIn) && (
+            <ul data-testid="pending-accounts" aria-label={t("recent_accounts")} className="mb-5 space-y-2">
+              {accounts.filter((account) => account.awaitingSignIn).map((account) => (
+                <li key={account.id} className="rounded-md border border-border p-3 space-y-2">
+                  <p className="text-sm wrap-anywhere" dir="auto">{account.username}</p>
+                  <p className="text-xs text-muted-foreground wrap-anywhere" dir="auto">{account.serverUrl}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" data-testid="pending-account-sign-in" disabled={isLoading || oauthLoading || accountRefusedByDesktopPolicy(account, desktopPolicy)} onClick={() => {
+                      setReauthenticateId(account.id);
+                      setFormData({ username: account.username, password: "" });
+                      setTotpCode("");
+                      setAccessToken("");
+                      clearError();
+                    }}>{tSidebar("sign_in_again")}</Button>
+                    <Button type="button" variant="ghost" data-testid="pending-account-remove" disabled={isLoading || oauthLoading} aria-label={t("remove_account_from_list", { username: account.username })} onClick={() => {
+                      useAuthStore.getState().removeAccount(account.id);
+                      if (reauthenticateId === account.id) {
+                        setReauthenticateId(null);
+                        setFormData({ username: "", password: "" });
+                      }
+                    }}>{t("remove_account_from_list", { username: account.username })}</Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
 
           {/* Dev Mode: One-click login */}
           {devMode ? (

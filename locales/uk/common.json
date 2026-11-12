@@ -137,6 +137,7 @@
     "filter_values_hint": "Кілька значень розділяйте комами."
   },
   "sidebar": {
+    "sign_in_again": "Увійти знову",
     "close": "Закрити",
     "compose": "Скласти",
     "compose_hint": "Скласти (с)",

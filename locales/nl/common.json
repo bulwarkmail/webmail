@@ -137,6 +137,7 @@
     "filter_values_hint": "Scheid meerdere waarden met komma's."
   },
   "sidebar": {
+    "sign_in_again": "Opnieuw aanmelden",
     "close": "Sluiten",
     "compose": "Nieuw bericht",
     "compose_hint": "Opstellen (c)",

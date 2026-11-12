@@ -337,7 +337,8 @@ describe('renewals in a main window', () => {
     useAuthStore.setState({ activeAccountId: 'bob' });
     release();
     await renewal;
-    expect(removeAccount).toHaveBeenCalledWith('alice', 'evicted');
+    expect(useAccountStore.getState().getAccountById('alice')).toMatchObject({ awaitingSignIn: true, isConnected: false });
+    expect(useAccountStore.getState().getAccountById('bob')?.awaitingSignIn).not.toBe(true);
     expect(logout).not.toHaveBeenCalled();
   });
 });

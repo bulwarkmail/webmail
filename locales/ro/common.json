@@ -137,6 +137,7 @@
     "filter_values_hint": "Separați mai multe valori prin virgule."
   },
   "sidebar": {
+    "sign_in_again": "Autentifică-te din nou",
     "close": "Închide",
     "compose": "Compune",
     "compose_hint": "Compune (c)",

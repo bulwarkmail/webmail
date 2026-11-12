@@ -772,27 +772,28 @@ describe('a refused login (lib/offline/credentials-rejected.ts)', () => {
       expect(wipeState.readPendingWipes()).toEqual({});
     });
 
-    it('invalid_grant fires it, signs out and hides: nothing is deleted', async () => {
+    it('invalid_grant fires it and wipes local data while retaining the sign-in target', async () => {
       wipe.registerDeviceWipe();
       token(() => json(401, { error: 'invalid_grant' }));
       await useAuthStore.getState().refreshAccessToken({ accountId: ALICE });
       expect(heard).toEqual([ALICE]);
-      await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
-      expect(state.isEvicted(ALICE)).toBe(true);
+      await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true));
+      await vi.waitFor(() => expect(store.removed).toEqual([ALICE]));
+      expect(state.isEvicted(ALICE)).toBe(false);
       expect(purge.files).toBe(0);
-      expect(store.removed).toEqual([]);
-      expect(state.useOfflineStore.getState().enabled).toEqual([ALICE]);
+      expect(state.useOfflineStore.getState().enabled).toEqual([]);
     });
 
-    it('the session limit hides too, as what it is, not as a refusal', async () => {
+    it('a renewal rejected at the session limit wipes only that account, recorded as a session limit', async () => {
       wipe.registerDeviceWipe();
       token(() => json(401, { error: 'session_expired', maxHours: 8 }));
       await useAuthStore.getState().refreshAccessToken({ accountId: ALICE });
       expect(heard).toEqual([ALICE]);
-      await vi.waitFor(() => expect(state.isEvicted(ALICE)).toBe(true));
-      await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
+      await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true));
+      await vi.waitFor(() => expect(store.removed).toEqual([ALICE]));
+      expect(state.isEvicted(ALICE)).toBe(false);
       expect(purge.files).toBe(0);
-      expect(store.removed).toEqual([]);
+      expect(state.useOfflineStore.getState().enabled).toEqual([]);
       expect(wipeState.readRefusedLogins()[ALICE]).toMatchObject({ kind: 'session' });
     });
   });
@@ -1468,7 +1469,7 @@ describe('the session timers', () => {
     const at = Date.now();
     await timerSignOut();
 
-    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true);
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
     expect(state.isEvicted(ALICE)).toBe(true);
     expect(state.visibleAccounts()).toEqual([]);

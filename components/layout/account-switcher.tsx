@@ -295,7 +295,7 @@ export function AccountSwitcher({
   // Outlook show. A single account's count is already on its Inbox in the folder list.
   const severalAccounts = accounts.length > 1;
   const unreadFor = (account: AccountEntry) =>
-    mvPopover || severalAccounts ? inboxUnread(unreadByAccount[account.id]) : undefined;
+    !account.awaitingSignIn && (mvPopover || severalAccounts) ? inboxUnread(unreadByAccount[account.id]) : undefined;
   // The server is only worth a line when it is what tells two rows apart.
   const sharesAddress = (account: AccountEntry) => accountSharesAddress(account, accounts);
   const connectedIds = accounts.filter((account) => account.isConnected).map((account) => account.id);
@@ -488,6 +488,7 @@ export function AccountSwitcher({
                         {toUnicodeEmail(text.subtitle)}
                       </p>
                     )}
+                    {account.awaitingSignIn && <p className="text-xs text-primary">{t("sign_in_again")}</p>}
                     {/* The server line: only for an account in trouble, or
                         when two accounts have the same address. */}
                     {(account.hasError || sharesAddress(account)) && (

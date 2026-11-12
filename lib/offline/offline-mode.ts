@@ -1105,7 +1105,7 @@ async function nameLost(scope: string, stillSignedIn: boolean): Promise<void> {
   if (stillSignedIn) notify({ kind: 'lost', subjects });
 }
 
-export async function wipeAccount(account: string, options: { justSignedOut?: boolean } = {}): Promise<void> {
+export async function wipeAccount(account: string, options: { justSignedOut?: boolean; accountOnly?: boolean } = {}): Promise<void> {
   clearDesktopSurfaces();
   const timer = syncTimers.get(account);
   if (timer) clearTimeout(timer);
@@ -1129,7 +1129,7 @@ export async function wipeAccount(account: string, options: { justSignedOut?: bo
   forgetAccountState(account);
   // Nobody keeps mail here any more: everything goes (and isn't opened
   // again, which would create it anew).
-  if (useOfflineStore.getState().enabled.length === 0) {
+  if (!options.accountOnly && useOfflineStore.getState().enabled.length === 0) {
     await wipeEverything();
     return;
   }

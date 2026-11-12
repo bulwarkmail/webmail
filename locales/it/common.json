@@ -137,6 +137,7 @@
     "filter_values_hint": "Per più valori, separali con virgole."
   },
   "sidebar": {
+    "sign_in_again": "Accedi di nuovo",
     "close": "Chiudi",
     "compose": "Scrivi",
     "compose_hint": "Scrivi (c)",

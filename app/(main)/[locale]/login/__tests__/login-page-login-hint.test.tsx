@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The desktop app's first screen already asked for the email address. The sign-in page
@@ -28,6 +28,7 @@ vi.mock('@/hooks/use-config', () => ({
     jmapServers: [],
     oauthEnabled: false,
     oauthOnly: false,
+    rememberMeEnabled: false,
     allowCustomJmapEndpoint: true,
     loginShowHeading: true,
     loginShowSubtitle: true,
@@ -69,6 +70,32 @@ const email = () => document.getElementById('username') as HTMLInputElement;
 const password = () => document.getElementById('password') as HTMLInputElement;
 
 describe('the address handed over in login_hint', () => {
+  it('offers expired accounts and signs in to the selected full server URL without discovery', async () => {
+    const saved = { ...entry('sam@example.org@mail.example.org', 'sam@example.org'), serverUrl: 'https://mail.example.org:8443/jmap', awaitingSignIn: true, isConnected: false };
+    useAccountStore.setState({ accounts: [saved] } as never);
+    const login = vi.fn(async () => false);
+    useAuthStore.setState({ login, isAuthenticated: false });
+    render(<LoginPage />);
+    const list = await screen.findByTestId('pending-accounts');
+    fireEvent.click(list.querySelector('[data-testid="pending-account-sign-in"]')!);
+    expect(email().value).toBe('sam@example.org');
+    fireEvent.change(password(), { target: { value: 'new-password' } });
+    fireEvent.submit(password().closest('form')!);
+    await waitFor(() => expect(login).toHaveBeenCalledWith(saved.serverUrl, saved.username, 'new-password', undefined, false, saved.id));
+    expect(lookups).toEqual([]);
+  });
+
+  it('can forget a pending account before any account signs in', async () => {
+    const saved = { ...entry('sam@example.org@mail.example.org', 'sam@example.org'), awaitingSignIn: true, isConnected: false };
+    useAccountStore.setState({ accounts: [saved] } as never);
+    useAuthStore.setState({ isAuthenticated: false, activeAccountId: null });
+    render(<LoginPage />);
+    const list = await screen.findByTestId('pending-accounts');
+    fireEvent.click(list.querySelector('[data-testid="pending-account-remove"]')!);
+    await waitFor(() => expect(useAccountStore.getState().accounts).toEqual([]));
+    expect(screen.queryByTestId('pending-accounts')).not.toBeInTheDocument();
+  });
+
   it('is filled in, its server is looked up at once, and the password field has the caret', async () => {
     query.value = 'login_hint=sam%2Bnews%40example.org';
     render(<LoginPage />);

@@ -137,6 +137,7 @@
     "filter_values_hint": "若要比對多個值，請以逗號分隔。"
   },
   "sidebar": {
+    "sign_in_again": "重新登入",
     "close": "關閉",
     "compose": "寫郵件",
     "compose_hint": "寫郵件 (c)",

@@ -2,9 +2,8 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createConfig } from '@/lib/__tests__/fixtures/config';
 
-// What an automatic sign-out does to the mail on this device. A real refusal of
-// the login wipes it, like a sign-out. An outage, or a refusal that says nothing
-// about the login, keeps it for the next sign-in.
+// A rejected renewal wipes the account's local mail. Server outages keep it
+// for the next sign-in; an older, already-evicted account is left alone.
 
 const purge = vi.hoisted(() => ({ files: 0 }));
 vi.mock('@/lib/store/client/purge', () => ({ purgeStoreFiles: async () => { purge.files += 1; }, deleteStorePool: async () => {} }));
@@ -78,6 +77,16 @@ function expectKept(): void {
   expect(lost.consumeLost()).toEqual([]);
 }
 
+async function expectWiped(): Promise<void> {
+  await vi.waitFor(() => expect(store.removed).toContain(ALICE));
+  expect(purge.files).toBe(0);
+  expect(store.removed).toContain(ALICE);
+  expect(store.stopped).toBe(0);
+  expect(state.useOfflineStore.getState().enabled).toEqual([]);
+  expect(store.has(ALICE)).toBe(false);
+  expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true);
+}
+
 describe('an automatic sign-out of the active account', () => {
   it('keeps the data through a run of 502s from a proxy', async () => {
     tokenAnswers(() => answer(502, '<html>Bad Gateway</html>'));
@@ -91,34 +100,34 @@ describe('an automatic sign-out of the active account', () => {
     expectKept();
   });
 
-  it('keeps the data on a refusal that says nothing about the login', async () => {
+  it('wipes the data when renewal is rejected without a specific reason', async () => {
     tokenAnswers(() => answer(401, { error: 'Refresh failed' }));
     await refresh();
-    expectKept();
+    await expectWiped();
   });
 
-  it('keeps the data on a refusal it can\'t read', async () => {
+  it('wipes the data when renewal is rejected with an unreadable reason', async () => {
     tokenAnswers(() => answer(401, 'nope'));
     await refresh();
-    expectKept();
+    await expectWiped();
   });
 
-  it('keeps the data on a real invalid_grant: a password changed elsewhere gets it back with the new one', async () => {
+  it('wipes the data on invalid_grant while retaining the sign-in target', async () => {
     tokenAnswers(() => answer(401, { error: 'invalid_grant' }));
     offline.startOfflineMode();
     await refresh();
-    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
-    expectKept();
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true));
+    await expectWiped();
     expect(lost.consumeLost()).toEqual([]);
   });
 
-  it('keeps the data at the organisation\'s session limit: that says nothing about the password', async () => {
+  it('wipes the data when renewal is rejected at the session limit', async () => {
     const { SESSION_TOO_OLD } = await import('@/lib/session-policy/constants');
     tokenAnswers(() => answer(401, { error: SESSION_TOO_OLD, maxHours: 8 }));
     offline.startOfflineMode();
     await refresh();
-    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
-    expectKept();
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)?.awaitingSignIn).toBe(true));
+    await expectWiped();
   });
 });
 
@@ -132,20 +141,33 @@ describe('a background account', () => {
     offline.startOfflineMode();
   });
 
-  it('keeps its data on an unknown refusal', async () => {
+  it('wipes only its data on an unknown refusal', async () => {
     tokenAnswers(() => answer(401, { error: 'Refresh failed' }));
     await token();
-    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined());
-    expect(state.isEvicted(BOB)).toBe(true);
-    expect(store.removed).toEqual([]);
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(BOB)?.awaitingSignIn).toBe(true));
+    await vi.waitFor(() => expect(store.removed).toEqual([BOB]));
+    expect(state.isEvicted(BOB)).toBe(false);
+    expect(store.removed).toEqual([BOB]);
+    expect(state.useOfflineStore.getState().enabled).toEqual([ALICE]);
   });
 
-  it('keeps its data on a real invalid_grant too', async () => {
+  it('wipes only its data on invalid_grant too', async () => {
     tokenAnswers(() => answer(401, { error: 'invalid_grant' }));
     await token();
-    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined());
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(BOB)?.awaitingSignIn).toBe(true));
+    await vi.waitFor(() => expect(store.removed).toEqual([BOB]));
+    expect(state.isEvicted(BOB)).toBe(false);
+    expect(store.removed).toEqual([BOB]);
+    expect(state.useOfflineStore.getState().enabled).toEqual([ALICE]);
+  });
+
+  it('keeps its mail and outbox through repeated server failures', async () => {
+    tokenAnswers(() => answer(502, '<html>Bad Gateway</html>'));
+    for (let attempt = 0; attempt < 5; attempt += 1) await token();
+    expect(useAccountStore.getState().getAccountById(BOB)?.awaitingSignIn).toBe(true);
     expect(state.isEvicted(BOB)).toBe(true);
     expect(store.removed).toEqual([]);
+    expect(state.useOfflineStore.getState().enabled).toEqual([ALICE, BOB]);
   });
 });
 
@@ -209,7 +231,8 @@ describe('a sign-out that has to drop another account', () => {
     offline.startOfflineMode();
     tokenAnswers(() => answer(200));
     await useAuthStore.getState().logout({ endProviderSession: false });
-    await vi.waitFor(() => expect(useAccountStore.getState().accounts).toEqual([]));
+    await vi.waitFor(() => expect(useAccountStore.getState().accounts.map((account) => account.id)).toEqual([BOB]));
+    expect(useAccountStore.getState().getAccountById(BOB)?.awaitingSignIn).toBe(true);
     await vi.waitFor(() => expect(store.removed).toEqual([ALICE]));
     expect(purge.files).toBe(0);
     expect(state.isEvicted(BOB)).toBe(true);

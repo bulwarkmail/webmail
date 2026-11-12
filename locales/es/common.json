@@ -137,6 +137,7 @@
     "filter_values_hint": "Para buscar varios valores, sepáralos con comas."
   },
   "sidebar": {
+    "sign_in_again": "Volver a iniciar sesión",
     "close": "Cerrar",
     "compose": "Redactar",
     "compose_hint": "Redactar (c)",

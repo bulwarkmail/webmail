@@ -205,7 +205,7 @@ describe('auth-store: token refresh is scoped to the account that needs it', () 
     }
   });
 
-  it('drops only the background account whose refresh token is refused', async () => {
+  it('requires sign-in only for the background account whose refresh token is refused', async () => {
     bCachedExpired = false;
     slot1Refused = true;
     vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -217,7 +217,9 @@ describe('auth-store: token refresh is scoped to the account that needs it', () 
 
       await vi.advanceTimersByTimeAsync(3600_000);
 
-      expect(useAccountStore.getState().accounts.map((a) => a.id)).toEqual(['A']);
+      expect(useAccountStore.getState().accounts.map((a) => a.id)).toEqual(['A', 'B']);
+      expect(useAccountStore.getState().getAccountById('B')).toMatchObject({ awaitingSignIn: true, isConnected: false });
+      expect(useAuthStore.getState().getClientForAccount('B')).toBeUndefined();
       expect(useAuthStore.getState().isAuthenticated).toBe(true);
       expect(useAuthStore.getState().activeAccountId).toBe('A');
       expect(deletedSessions).not.toContain('/api/auth/session?slot=0');

@@ -137,6 +137,7 @@
     "filter_values_hint": "Kilka wartości oddziel przecinkami."
   },
   "sidebar": {
+    "sign_in_again": "Zaloguj się ponownie",
     "close": "Zamknij",
     "compose": "Napisz",
     "compose_hint": "Napisz (c)",

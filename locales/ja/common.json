@@ -137,6 +137,7 @@
     "filter_values_hint": "複数の値はカンマで区切ります。"
   },
   "sidebar": {
+    "sign_in_again": "再ログイン",
     "close": "閉じる",
     "compose": "作成",
     "compose_hint": "作成 (c)",

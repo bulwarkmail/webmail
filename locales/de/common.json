@@ -137,6 +137,7 @@
     "filter_values_hint": "Mehrere Werte trennen Sie durch Kommas."
   },
   "sidebar": {
+    "sign_in_again": "Erneut anmelden",
     "close": "Schließen",
     "compose": "Verfassen",
     "compose_hint": "Verfassen (c)",

@@ -137,6 +137,7 @@
     "filter_values_hint": "Skil fleire verdiar med komma."
   },
   "sidebar": {
+    "sign_in_again": "Logg inn att",
     "close": "Lukk",
     "compose": "Skriv",
     "compose_hint": "Skriv (c)",

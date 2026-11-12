@@ -137,6 +137,7 @@
     "filter_values_hint": "برای چند مقدار، آن‌ها را با ویرگول جدا کنید."
   },
   "sidebar": {
+    "sign_in_again": "ورود دوباره",
     "close": "بستن",
     "compose": "ایمیل جدید",
     "compose_hint": "ایمیل جدید (c)",

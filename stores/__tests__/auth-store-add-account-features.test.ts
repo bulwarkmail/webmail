@@ -103,3 +103,29 @@ it.each(Object.entries(ADD_ACCOUNT))('gives an account added second over %s its 
   expect(useAuthStore.getState().activeAccountId).toBe(accountB);
   expect(featureFlags()).toEqual(ALL_ON);
 });
+
+it.each(Object.entries(ADD_ACCOUNT))('keeps the retained login name and feature flags when signing in again over %s', async (kind, signIn) => {
+  expect(await useAuthStore.getState().login(SERVER, 'active@example.com', 'pw', undefined, true)).toBe(true);
+  const activeId = useAuthStore.getState().activeAccountId!;
+  const accountStore = useAccountStore.getState();
+  // The login name differs from the server's primary identity address.
+  const username = kind === 'OAuth' ? 'alias-oauth@example.com' : 'alias-sso@example.com';
+  const targetId = accountStore.addAccount({
+    label: 'Retained account', serverUrl: SERVER, username, authMode: 'oauth',
+    rememberMe: true, displayName: 'B', email: 'b@example.com', lastLoginAt: 1,
+    isConnected: false, hasError: false, isDefault: false,
+  });
+  accountStore.updateAccount(targetId, { awaitingSignIn: true });
+  const slot = accountStore.getAccountById(targetId)!.cookieSlot;
+  sessionStorage.setItem('oauth_reauthenticate_account', targetId);
+
+  expect(await signIn()).toBe(true);
+  expect(useAuthStore.getState().activeAccountId).toBe(targetId);
+  expect(accountStore.getAccountById(targetId)).toMatchObject({ username, cookieSlot: slot });
+  expect(accountStore.getAccountById(targetId)?.awaitingSignIn).not.toBe(true);
+  expect(useAccountStore.getState().accounts).toHaveLength(2);
+  expect(featureFlags()).toEqual(ALL_ON);
+  await useAuthStore.getState().switchAccount(activeId);
+  await useAuthStore.getState().switchAccount(targetId);
+  expect(featureFlags()).toEqual(ALL_ON);
+});

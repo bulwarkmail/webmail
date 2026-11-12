@@ -137,6 +137,7 @@
     "filter_values_hint": "Több értéket vesszővel válasszon el."
   },
   "sidebar": {
+    "sign_in_again": "Bejelentkezés újra",
     "close": "Bezárás",
     "compose": "Új levél",
     "compose_hint": "Új levél (c)",

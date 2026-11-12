@@ -137,6 +137,7 @@
     "filter_values_hint": "Несколько значений разделяйте запятыми."
   },
   "sidebar": {
+    "sign_in_again": "Войти снова",
     "close": "Закрыть",
     "compose": "Создать",
     "compose_hint": "Создать (c)",

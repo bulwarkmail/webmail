@@ -137,6 +137,7 @@
     "filter_values_hint": "Vairākas vērtības atdaliet ar komatiem."
   },
   "sidebar": {
+    "sign_in_again": "Pierakstīties vēlreiz",
     "close": "Aizvērt",
     "compose": "Rakstīt",
     "compose_hint": "Rakstīt (c)",

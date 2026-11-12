@@ -137,6 +137,7 @@
     "filter_values_hint": "Để khớp nhiều giá trị, hãy phân tách bằng dấu phẩy."
   },
   "sidebar": {
+    "sign_in_again": "Đăng nhập lại",
     "close": "Đóng",
     "compose": "Soạn thư",
     "compose_hint": "Soạn thư (c)",

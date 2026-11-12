@@ -137,6 +137,7 @@
     "filter_values_hint": "Олон утгыг таслалаар тусгаарлана."
   },
   "sidebar": {
+    "sign_in_again": "Дахин нэвтрэх",
     "close": "Хаах",
     "compose": "Бичилэх",
     "compose_hint": "Бичих (c)",

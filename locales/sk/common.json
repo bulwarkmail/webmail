@@ -137,6 +137,7 @@
     "filter_values_hint": "Viac hodnôt oddeľte čiarkami."
   },
   "sidebar": {
+    "sign_in_again": "Prihlásiť sa znova",
     "unified_mailbox": "Zjednotená schránka",
     "close": "Zavrieť",
     "compose": "Napísať",

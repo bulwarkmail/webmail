@@ -137,6 +137,7 @@
     "filter_values_hint": "Birden fazla değeri virgülle ayırın."
   },
   "sidebar": {
+    "sign_in_again": "Yeniden giriş yap",
     "close": "Kapat",
     "compose": "Yeni E-posta",
     "compose_hint": "Yeni E-posta (c)",

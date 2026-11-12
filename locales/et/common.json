@@ -137,6 +137,7 @@
     "filter_values_hint": "Mitme väärtuse jaoks eralda need komadega."
   },
   "sidebar": {
+    "sign_in_again": "Logi uuesti sisse",
     "close": "Sulge",
     "compose": "Koosta",
     "compose_hint": "Koosta (c)",

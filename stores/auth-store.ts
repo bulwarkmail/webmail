@@ -44,7 +44,7 @@ import { requestWindowSession, type SharedAccountSession } from '@/lib/popout/ch
 import { closePopoutWindow, isPopoutWindow, mainWindowStorage } from '@/lib/popout/window-role';
 import { noteCredentialsRejected, type ForcedSignOutKind } from '@/lib/offline/credentials-rejected';
 import { CREDENTIALS_REFUSED_CONFIRM_MS, markLoginRefused, wipeWorkWaiting } from '@/lib/devices/wipe-state';
-import { checkStoreOwner, markEvicted, readEvicted, useOfflineStore } from '@/lib/offline/state';
+import { checkStoreOwner, clearEvicted, dropEvictedOwner, markEvicted, readEvicted, useOfflineStore } from '@/lib/offline/state';
 import { toAsciiEmail } from '@/lib/idn';
 import { flushComposers } from '@/lib/compose-flush-registry';
 import { sortIdentities } from '@/lib/identity-order';
@@ -104,14 +104,14 @@ interface AuthState {
    */
   restoringAccounts: boolean;
 
-  login: (serverUrl: string, username: string, password: string, totp?: string, rememberMe?: boolean) => Promise<boolean>;
+  login: (serverUrl: string, username: string, password: string, totp?: string, rememberMe?: boolean, accountId?: string) => Promise<boolean>;
   /**
    * Sign in with an access token instead of a password (Bearer auth), for
    * servers that hand out API tokens, such as Fastmail. The token names no
    * account: the JMAP session says whose it is. It is never renewed; once
    * the server stops accepting it, the user signs in again.
    */
-  loginWithToken: (serverUrl: string, token: string, rememberMe?: boolean) => Promise<boolean>;
+  loginWithToken: (serverUrl: string, token: string, rememberMe?: boolean, accountId?: string) => Promise<boolean>;
   loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string) => Promise<boolean>;
   loginWithServerSso: (code: string, state: string) => Promise<boolean>;
   /**
@@ -397,6 +397,15 @@ function renewalSignal(outer: AbortSignal): { signal: AbortSignal; done: () => v
 }
 
 const TIMED_OUT = Symbol('timed out');
+// A sign-out may stop waiting, but a new sign-in must wait for its actual DELETEs.
+const credentialCleanups = new Map<number, Promise<string | null>>();
+const accountDataCleanups = new Map<number, Promise<void>>();
+
+async function waitForCredentialCleanup(slot: number): Promise<void> {
+  while (credentialCleanups.has(slot) || accountDataCleanups.has(slot)) {
+    await Promise.all([credentialCleanups.get(slot), accountDataCleanups.get(slot)]);
+  }
+}
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof TIMED_OUT> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -798,9 +807,17 @@ async function clearClosingSlots(
   slots: ReadonlySet<number>,
   requests: () => Promise<string | null>,
 ): Promise<string | null> {
+  const previous = [...new Set([...slots].map((slot) => credentialCleanups.get(slot)).filter((work) => work !== undefined))];
+  const settled = settleSessionWrites(slots);
+  const currentCleanup = settled.then(requests);
+  const cleanup = Promise.all([...previous, currentCleanup]).then((answers) => answers[answers.length - 1]);
+  for (const slot of slots) credentialCleanups.set(slot, cleanup);
+  void cleanup.finally(() => {
+    for (const slot of slots) if (credentialCleanups.get(slot) === cleanup) credentialCleanups.delete(slot);
+  }).catch(() => {});
   try {
-    await settleSessionWrites(slots);
-    const result = await withTimeout(requests(), CREDENTIAL_CLEANUP_TIMEOUT_MS);
+    await settled;
+    const result = await withTimeout(currentCleanup, CREDENTIAL_CLEANUP_TIMEOUT_MS);
     if (result === TIMED_OUT) {
       console.warn('[auth] Sign-out cleanup is taking long; finishing it in the background');
       return null;
@@ -1536,6 +1553,58 @@ export function classifySessionMatch(
   return 'reject';
 }
 
+const signInGenerations = new Map<string, number>();
+const targetGenerations = new WeakMap<AccountEntry, number>();
+let trackingSignInTargets = false;
+
+function trackSignInTarget(account: AccountEntry): void {
+  if (!trackingSignInTargets) {
+    useAccountStore.subscribe((state, previous) => {
+      for (const entry of previous.accounts) {
+        if (!state.accounts.some((current) => current.id === entry.id)) {
+          signInGenerations.set(entry.id, (signInGenerations.get(entry.id) ?? 0) + 1);
+        }
+      }
+    });
+    trackingSignInTargets = true;
+  }
+  targetGenerations.set(account, signInGenerations.get(account.id) ?? 0);
+}
+
+function signInTarget(serverUrl: string, accountId?: string | null): AccountEntry | undefined {
+  if (!accountId) return undefined;
+  const account = useAccountStore.getState().getAccountById(accountId);
+  if (!account?.awaitingSignIn || account.serverUrl !== serverUrl) throw new Error('Invalid username or password');
+  trackSignInTarget(account);
+  return account;
+}
+
+/** A targeted sign-in must not revive a removed entry or reveal another login's mail. */
+async function verifySignInTarget(client: JMAPClient, target: AccountEntry | undefined): Promise<void> {
+  if (!target) return;
+  const candidates = await connectedAccountCandidates(client, target.serverUrl);
+  const accepted = new Set([target.id, ...(target.serverIdentifiers ?? []), generateAccountId(target.email, target.serverUrl)]);
+  const current = useAccountStore.getState().getAccountById(target.id);
+  if (!current?.awaitingSignIn || current.cookieSlot !== target.cookieSlot || current.serverUrl !== target.serverUrl
+    || targetGenerations.get(target) !== (signInGenerations.get(target.id) ?? 0)
+    || !candidates.some((id) => accepted.has(id))) {
+    client.disconnect();
+    const owner = useAccountStore.getState().accounts.find((account) => account.cookieSlot === target.cookieSlot);
+    if (!owner || (owner.id === target.id && owner.awaitingSignIn)) {
+      await clearSlotCredentials(target.cookieSlot, true);
+    }
+    throw new Error('Invalid username or password');
+  }
+}
+
+function verifyAdoptedSignIn(accountId: string, client: JMAPClient, target: AccountEntry | undefined): void {
+  if (!useAccountStore.getState().getAccountById(accountId) || clients.get(accountId) !== client
+    || (target && targetGenerations.get(target) !== (signInGenerations.get(accountId) ?? 0))) {
+    client.disconnect();
+    throw new Error('Invalid username or password');
+  }
+}
+
 function clearRefreshTimer(accountId?: string): void {
   if (accountId) {
     const timer = refreshTimers.get(accountId);
@@ -1622,6 +1691,42 @@ async function startLocalCopyClient(accountId: string, serverUrl: string, userna
 // While device-only clients get replaced, restoring goes straight to the server.
 let skipLocalCopy = false;
 
+function wipeExpiredAccountData(accountId: string, slot: number): Promise<void> {
+  const pending = accountDataCleanups.get(slot);
+  if (pending) return pending;
+  if (IS_LITE || !useOfflineStore.getState().enabled.includes(accountId)) return Promise.resolve();
+  // Expiry must not purge the shared store while another slot signs in.
+  const cleanup = import('@/lib/offline/offline-mode').then((offline) => offline.wipeAccount(accountId, { accountOnly: true }));
+  accountDataCleanups.set(slot, cleanup);
+  void cleanup.then(() => {
+    if (accountDataCleanups.get(slot) === cleanup) accountDataCleanups.delete(slot);
+  }, (error) => {
+    // Keep the failed barrier: a new session must not race an incomplete wipe.
+    debug.error('Failed to wipe expired account data:', error);
+  });
+  return cleanup;
+}
+
+/** Clear a failed session and its local data, retaining only its sign-in target. */
+async function requireAccountSignIn(accountId: string, options: { keepLocalData?: boolean } = {}): Promise<void> {
+  const accountStore = useAccountStore.getState();
+  const account = accountStore.getAccountById(accountId);
+  if (!account) return;
+  clearRefreshTimer(accountId);
+  const client = clients.get(accountId);
+  if (client) forgetCalendarSubscriptions(client);
+  try { client?.disconnect(); } catch { /* finish cleanup even if disconnected */ }
+  clients.delete(accountId);
+  evictAccount(accountId);
+  forgetAccountRows(accountId, useAuthStore.getState().client);
+  accountStore.requireSignIn(accountId);
+  forgetPrincipals(accountId);
+  clearPluginStorageForAccount(accountId);
+  closingSlots.add(account.cookieSlot);
+  void clearSlotCredentials(account.cookieSlot, account.authMode === 'oauth');
+  if (!options.keepLocalData) await wipeExpiredAccountData(accountId, account.cookieSlot);
+}
+
 function performFullLogout(set: (state: Partial<AuthState>) => void, options: SignOutCleanupOptions = {}): void {
   useSettingsStore.getState().disableSync();
   // With settings sync on, the local settings and templates are a copy of the
@@ -1660,7 +1765,10 @@ function performFullLogout(set: (state: Partial<AuthState>) => void, options: Si
   // Remove persisted state AFTER the final set() so the persist middleware
   // doesn't re-write stale values.
   try { localStorage.removeItem('auth-storage'); } catch { /* noop */ }
-  try { localStorage.removeItem('account-registry'); } catch { /* noop */ }
+  useAccountStore.setState({ activeAccountId: null });
+  if (useAccountStore.getState().accounts.length === 0) {
+    try { localStorage.removeItem('account-registry'); } catch { /* noop */ }
+  }
   // A dropped account's data outlives anyone else's sign-out. The account that
   // signed out takes its own along when it leaves the registry.
   purgeSignedOutData({ keepLocalStore: options.keepLocalStore || Object.keys(readEvicted()).length > 0 });
@@ -1709,15 +1817,18 @@ async function adoptProviderSession(
   const typed = session.typedUsername ? toAsciiEmail(session.typedUsername) : '';
   const accountStore = useAccountStore.getState();
   let boundAccountId: string | undefined;
+  const target = signInTarget(ssoServerUrl, sessionStorage.getItem('oauth_reauthenticate_account'));
+  await waitForCredentialCleanup(slot);
   const client = JMAPClient.withBearer(ssoServerUrl, access_token, typed, () => get().refreshAccessToken({ accountId: boundAccountId }));
   await client.connect();
 
   const jmapUsername = client.getUsername();
+  await verifySignInTarget(client, target);
   const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), typed || jmapUsername);
   // For SSO/OIDC, the JMAP session account name may be the
   // preferred_username claim rather than the real email address.
   // Prefer the email from the primary identity when available.
-  const username = typed || primaryIdentity?.email || jmapUsername;
+  const username = target?.username || typed || primaryIdentity?.email || jmapUsername;
 
   const accountId = generateAccountId(username, ssoServerUrl);
   boundAccountId = accountId;
@@ -1732,6 +1843,7 @@ async function adoptProviderSession(
   initializeFeatureStores(client);
 
   await checkStoreOwner(accountId, client.getAccountId(), ssoServerUrl);
+  await verifySignInTarget(client, target);
   holdClient(accountId, client);
   bindClientStatusHandlers(client, set, get, accountId);
 
@@ -1759,6 +1871,7 @@ async function adoptProviderSession(
   accountStore.setActiveAccount(accountId);
 
   await syncStalwartAuthContext(ssoServerUrl, username, client.getAuthHeader(), slot);
+  verifyAdoptedSignIn(accountId, client, target);
   void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
 
   set({
@@ -1845,7 +1958,7 @@ export const useAuthStore = create<AuthState>()(
       connectedAccountsRevision: 0,
       restoringAccounts: false,
 
-      login: async (serverUrl, typedUsername, password, totp, rememberMe) => {
+      login: async (serverUrl, typedUsername, password, totp, rememberMe, targetId) => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
         // The email store, at hand by the time the first mail requests go out
         // (below), so they're asked for in the same task as the rest.
@@ -1862,10 +1975,13 @@ export const useAuthStore = create<AuthState>()(
           // Resolve account/slot info up front so the TOTP exchange can target
           // the right per-account refresh-token cookie slot.
           const accountStore = useAccountStore.getState();
+          const target = signInTarget(serverUrl, targetId);
           const accountId = generateAccountId(username, serverUrl);
+          if (target && accountId !== target.id) throw new Error('Invalid username or password');
           const cookieSlot = accountStore.hasAccount(username, serverUrl)
             ? (accountStore.getAccountById(accountId)?.cookieSlot ?? accountStore.getNextCookieSlot())
             : accountStore.getNextCookieSlot();
+          await waitForCredentialCleanup(cookieSlot);
 
           let client: JMAPClient;
           let upgradedToOAuth = false;
@@ -1964,6 +2080,8 @@ export const useAuthStore = create<AuthState>()(
             await client.connect();
           }
 
+          await verifySignInTarget(client, target);
+
           // Snapshot/clear before kicking off any feature-store fetches so they
           // don't write into stores we're about to wipe.
           const prevAccountId = get().activeAccountId;
@@ -2001,6 +2119,7 @@ export const useAuthStore = create<AuthState>()(
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
 
           await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
+          await verifySignInTarget(client, target);
           // Store client in multi-account map
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
@@ -2101,13 +2220,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithToken: async (serverUrl, typedToken, rememberMe) => {
+      loginWithToken: async (serverUrl, typedToken, rememberMe, targetId) => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
 
         // Pasted tokens often come with the scheme or surrounding whitespace.
         const token = typedToken.trim().replace(/^Bearer\s+/i, '');
 
         try {
+          const target = signInTarget(serverUrl, targetId);
           if (!token || /\s/.test(token) || await precheckCredentials(serverUrl, { token })) {
             throw new Error('INVALID_TOKEN');
           }
@@ -2123,12 +2243,14 @@ export const useAuthStore = create<AuthState>()(
             throw err;
           }
 
-          const username = client.getSessionUsername() || client.getUsername();
+          await verifySignInTarget(client, target);
+          const username = target?.username || client.getSessionUsername() || client.getUsername();
           if (!username) throw new Error('The server did not name the account');
 
           const accountStore = useAccountStore.getState();
           const accountId = generateAccountId(username, serverUrl);
           const cookieSlot = accountStore.getAccountById(accountId)?.cookieSlot ?? accountStore.getNextCookieSlot();
+          await waitForCredentialCleanup(cookieSlot);
 
           const prevAccountId = get().activeAccountId;
           if (prevAccountId && prevAccountId !== accountId) {
@@ -2149,6 +2271,7 @@ export const useAuthStore = create<AuthState>()(
           initializeFeatureStores(client);
 
           await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
+          await verifySignInTarget(client, target);
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 
@@ -2316,15 +2439,17 @@ export const useAuthStore = create<AuthState>()(
           // Distinguishing rawSlot === null from a parsed 0 fixes that. The page
           // also writes oauth_cookie_slot before redirecting to the IdP.
           const accountStore = useAccountStore.getState();
+          const target = signInTarget(serverUrl, sessionStorage.getItem('oauth_reauthenticate_account'));
           const rawSlot = typeof window !== 'undefined'
             ? sessionStorage.getItem('oauth_cookie_slot')
             : null;
           const pendingSlot = rawSlot !== null ? parseInt(rawSlot, 10) : NaN;
-          const slot = !isNaN(pendingSlot) && pendingSlot >= 0 && pendingSlot < MAX_ACCOUNT_SLOTS
+          const slot = target?.cookieSlot ?? (!isNaN(pendingSlot) && pendingSlot >= 0 && pendingSlot < MAX_ACCOUNT_SLOTS
             ? pendingSlot
-            : accountStore.getNextCookieSlot();
+            : accountStore.getNextCookieSlot());
           // The login page parks "Remember me" here when the box is offered.
           const remember = typeof window === 'undefined' || sessionStorage.getItem('oauth_remember') !== 'false';
+          await waitForCredentialCleanup(slot);
 
           const tokenRes = await exchangeOAuthCode({ serverUrl, code, codeVerifier, redirectUri, slot, serverId, remember });
 
@@ -2342,11 +2467,12 @@ export const useAuthStore = create<AuthState>()(
           await client.connect();
 
           const jmapUsername = client.getUsername();
+          await verifySignInTarget(client, target);
           const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), jmapUsername);
           // For OAuth/OIDC, the JMAP session account name may be the
           // preferred_username claim rather than the real email address.
           // Prefer the email from the primary identity when available.
-          const username = primaryIdentity?.email || jmapUsername;
+          const username = target?.username || primaryIdentity?.email || jmapUsername;
           if (IS_LITE) {
             nameLiteRefreshToken(slot, username);
             unnamedLiteSlot = null;
@@ -2368,6 +2494,7 @@ export const useAuthStore = create<AuthState>()(
           initializeFeatureStores(client);
 
           await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
+          await verifySignInTarget(client, target);
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 
@@ -2404,6 +2531,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           await syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), slot);
+          verifyAdoptedSignIn(accountId, client, target);
           void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
 
           set({
@@ -2466,6 +2594,8 @@ export const useAuthStore = create<AuthState>()(
             client: null,
           });
           return false;
+        } finally {
+          sessionStorage.removeItem('oauth_reauthenticate_account');
         }
       },
 
@@ -2479,7 +2609,11 @@ export const useAuthStore = create<AuthState>()(
           // route hardcoded slot 0, which broke "+ Add Account" by overwriting the
           // first account's refresh-token cookie.
           const accountStore = useAccountStore.getState();
-          const slot = accountStore.getNextCookieSlot();
+          const targetId = sessionStorage.getItem('oauth_reauthenticate_account');
+          const target = targetId ? accountStore.getAccountById(targetId) : undefined;
+          if (targetId && !target?.awaitingSignIn) throw new Error('Invalid username or password');
+          const slot = target?.cookieSlot ?? accountStore.getNextCookieSlot();
+          await waitForCredentialCleanup(slot);
 
           // SSO token exchange and config fetch are independent - fire both
           // up front and let them resolve in parallel.
@@ -2522,6 +2656,8 @@ export const useAuthStore = create<AuthState>()(
             client: null,
           });
           return false;
+        } finally {
+          sessionStorage.removeItem('oauth_reauthenticate_account');
         }
       },
 
@@ -2529,7 +2665,11 @@ export const useAuthStore = create<AuthState>()(
         if (IS_LITE) return 'failed';
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
         try {
-          const slot = useAccountStore.getState().getNextCookieSlot();
+          const targetId = sessionStorage.getItem('oauth_reauthenticate_account');
+          const target = targetId ? useAccountStore.getState().getAccountById(targetId) : undefined;
+          if (targetId && !target?.awaitingSignIn) throw new Error('Invalid username or password');
+          const slot = target?.cookieSlot ?? useAccountStore.getState().getNextCookieSlot();
+          await waitForCredentialCleanup(slot);
           const res = await apiFetch('/api/auth/desktop-handoff/redeem', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2543,7 +2683,7 @@ export const useAuthStore = create<AuthState>()(
           const parked = await res.json();
           if (parked.flow === 'password') {
             // A password the browser checked a moment ago, down the same path as a typed one.
-            return (await get().login(parked.server_url, parked.username, parked.password, undefined, rememberPassword)) ? 'ok' : 'failed';
+            return (await get().login(parked.server_url, parked.username, parked.password, undefined, rememberPassword, ...(targetId ? [targetId] as const : []))) ? 'ok' : 'failed';
           }
           await adoptProviderSession(set, get, {
             serverUrl: parked.server_url,
@@ -2565,6 +2705,8 @@ export const useAuthStore = create<AuthState>()(
             client: null,
           });
           return 'failed';
+        } finally {
+          sessionStorage.removeItem('oauth_reauthenticate_account');
         }
       },
 
@@ -2589,6 +2731,8 @@ export const useAuthStore = create<AuthState>()(
         }
 
         const account = accountId ? useAccountStore.getState().getAccountById(accountId) : null;
+        if (account?.awaitingSignIn) return null;
+        const accountGeneration = account ? signInGenerations.get(account.id) ?? 0 : 0;
         const slot = account?.cookieSlot ?? 0;
         // The account is being signed out: a renewal now would only undo that.
         if (closingSlots.has(slot)) return null;
@@ -2604,7 +2748,9 @@ export const useAuthStore = create<AuthState>()(
             // Possibly a long wait for another window's renewal. A slot closing
             // or an account gone by now says nothing about any session, and a
             // refusal mustn't sign out whichever account is active by now.
-            if (closingSlots.has(slot) || (account && !useAccountStore.getState().getAccountById(account.id))) return null;
+            const current = account ? useAccountStore.getState().getAccountById(account.id) : null;
+            if (closingSlots.has(slot) || (account && (!current || current.awaitingSignIn
+              || (signInGenerations.get(account.id) ?? 0) !== accountGeneration))) return null;
             const isActive = !accountId || accountId === get().activeAccountId;
 
             if (!res.ok) {
@@ -2616,13 +2762,19 @@ export const useAuthStore = create<AuthState>()(
                 resetRefreshBackoff(accountId ?? undefined);
                 const forced = await forcedSignOutOf(res);
                 // Only this login's refresh token was refused.
-                if (accountId && !isActive) {
+                if (accountId && accountId !== get().activeAccountId) {
                   if (forced) noteRefusedLogin(accountId, true, forced);
-                  get().removeAccount(accountId, 'evicted');
+                  // The worker may be waiting for this auth answer before it can close.
+                  void requireAccountSignIn(accountId).catch((error) => debug.error('Account cleanup failed:', error));
                   return null;
                 }
                 await saveDraftsBeforeExpiry(slot);
                 if (forced && accountId) noteRefusedLogin(accountId, true, forced);
+                if (accountId && accountId !== get().activeAccountId) {
+                  void requireAccountSignIn(accountId).catch((error) => debug.error('Account cleanup failed:', error));
+                  return null;
+                }
+                if (accountId) void wipeExpiredAccountData(accountId, slot);
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 get().logout({ endProviderSession: false, keepLocalData: true });
@@ -2637,7 +2789,7 @@ export const useAuthStore = create<AuthState>()(
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 // removeAccount() on the active account would sign out as if the user asked to.
-                if (accountId && accountId !== get().activeAccountId) get().removeAccount(accountId, 'evicted');
+                if (accountId && accountId !== get().activeAccountId) void requireAccountSignIn(accountId, { keepLocalData: true });
                 else {
                   await saveDraftsBeforeExpiry(slot);
                   // An outage on our side says nothing against the mail on this device.
@@ -2738,7 +2890,8 @@ export const useAuthStore = create<AuthState>()(
         if (accountId) {
           clients.delete(accountId);
           evictAccount(accountId);
-          accountStore.removeAccount(accountId, keepLocalData ? 'evicted' : 'explicit');
+          if (keepLocalData && !wasDemoMode) accountStore.requireSignIn(accountId);
+          else accountStore.removeAccount(accountId);
           forgetPrincipals(accountId);
           if (!wasDemoMode) clearPluginStorageForAccount(accountId);
         }
@@ -2758,7 +2911,9 @@ export const useAuthStore = create<AuthState>()(
         // Prefer an account that is signed in here: one restored from the
         // account list backup (or otherwise not connected) has no client, and
         // picking it signs out every account left.
-        const remainingAccounts = useAccountStore.getState().accounts.filter((account) => !accountRefusedByDesktopPolicy(account));
+        const remainingAccounts = useAccountStore.getState().accounts.filter(
+          (account) => account.id !== accountId && !account.awaitingSignIn && !accountRefusedByDesktopPolicy(account),
+        );
         const nextAccount = wasDemoMode
           ? undefined
           : remainingAccounts.find((a) => clients.has(a.id)) ?? remainingAccounts[0];
@@ -2837,7 +2992,7 @@ export const useAuthStore = create<AuthState>()(
             evictAccount(remaining.id);
             // Dropped by this sign-out, not signed out by anyone: their unsent
             // mail never passed a question, so it waits for their next sign-in.
-            accountStore.removeAccount(remaining.id, 'evicted');
+            accountStore.requireSignIn(remaining.id);
           }
           clearDesktopCertificateChoices({ last: true });
         }
@@ -2936,12 +3091,12 @@ export const useAuthStore = create<AuthState>()(
         // Credentials are cleared before the page state - see logout().
         const endSessionUrl = await cleanup;
 
-        performFullLogout(set, { keepLocalStore: keepLocalData });
-
         // Clear all accounts from registry
         for (const account of allAccounts) {
-          accountStore.removeAccount(account.id, keepLocalData ? 'evicted' : 'explicit');
+          if (keepLocalData && account.serverUrl !== DEMO_SERVER_URL) accountStore.requireSignIn(account.id);
+          else accountStore.removeAccount(account.id);
         }
+        performFullLogout(set, { keepLocalStore: keepLocalData });
 
         clearKeystoreGrants();
         clearDesktopCertificateChoices({ last: true });
@@ -2967,7 +3122,7 @@ export const useAuthStore = create<AuthState>()(
         // Restored from the account list backup and never signed in here:
         // there is no session to resume, so ask for the password instead.
         if (targetAccount.awaitingSignIn && !clients.has(accountId)) {
-          replaceWindowLocation(`${getLocaleLoginPath()}?mode=add-account&username=${encodeURIComponent(targetAccount.username)}`);
+          replaceWindowLocation(`${getLocaleLoginPath()}?mode=add-account&account=${encodeURIComponent(accountId)}`);
           return;
         }
 
@@ -3070,9 +3225,8 @@ export const useAuthStore = create<AuthState>()(
           if (targetForced) noteRefusedLogin(accountId, true, targetForced);
           else if (refusedAtConnect.has(accountId)) noteRefusedLogin(accountId, false);
           refusedAtConnect.delete(accountId);
-          evictAccount(accountId);
-          accountStore.removeAccount(accountId, 'evicted');
-          void clearSlotCredentials(targetAccount.cookieSlot, targetAccount.authMode === 'oauth');
+          await requireAccountSignIn(accountId);
+          if (superseded()) return;
 
           // Restore the previous account if still available
           if (state.activeAccountId && state.activeAccountId !== accountId) {
@@ -3299,6 +3453,7 @@ export const useAuthStore = create<AuthState>()(
           // browser) ends them on purpose, so it is not reported as an
           // expired session.
           let forgottenAccounts = 0;
+          let expiredDuringRestore = false;
           const forgetAccount = (account: (typeof accounts)[number]) => {
             forgottenAccounts += 1;
             evictAccount(account.id);
@@ -3417,9 +3572,8 @@ export const useAuthStore = create<AuthState>()(
               if (forced) noteRefusedLogin(account.id, true, forced);
               else if (refusedAtConnect.has(account.id)) noteRefusedLogin(account.id, false);
               refusedAtConnect.delete(account.id);
-              evictAccount(account.id);
-              accountStore.removeAccount(account.id, 'evicted');
-              void clearSlotCredentials(account.cookieSlot, account.authMode === 'oauth');
+              expiredDuringRestore = true;
+              await requireAccountSignIn(account.id);
             }
           };
 
@@ -3452,7 +3606,8 @@ export const useAuthStore = create<AuthState>()(
             await restoreAccount(entry);
             const real = clients.get(entry.id);
             if (!real) {
-              if (useAccountStore.getState().getAccountById(entry.id)) {
+              const retained = useAccountStore.getState().getAccountById(entry.id);
+              if (retained && !retained.awaitingSignIn) {
                 holdClient(entry.id, local);
                 // A 5xx or a rate limit, with the server up otherwise. The app stays
                 // on the local copy, and says so, and leaves it when the server answers.
@@ -3461,6 +3616,9 @@ export const useAuthStore = create<AuthState>()(
               }
               if (get().activeAccountId !== entry.id) return;
               // Refused, and evicted by the restore. Whoever is left, or the login page.
+              local.disconnect();
+              clearAllStores();
+              markSessionExpired();
               set({ client: null, isAuthenticated: false, activeAccountId: null });
               if (useAccountStore.getState().accounts.length > 0) await get().checkAuth();
               else markSessionExpired();
@@ -3602,7 +3760,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           if (forgottenAccounts === accounts.length) saveRedirectAfterLogin();
-          else markSessionExpired();
+          else if (expiredDuringRestore) markSessionExpired();
           set({
             isAuthenticated: false,
             isLoading: false,
@@ -3798,11 +3956,16 @@ export const useAuthStore = create<AuthState>()(
         const accountStore = useAccountStore.getState();
         const account = accountStore.getAccountById(accountId);
         if (!account || account.authMode !== 'basic' || clients.has(accountId)) return false;
+        trackSignInTarget(account);
         const { serverUrl, username, cookieSlot } = account;
+        await waitForCredentialCleanup(cookieSlot);
         if (await precheckCredentials(serverUrl, { username, password })) return false;
         const client = new JMAPClient(serverUrl, username, password);
         try {
           await client.connect();
+          await verifySignInTarget(client, account);
+          await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
+          await verifySignInTarget(client, account);
         } catch (err) {
           debug.error(`Failed to sign in to restored account ${accountId}:`, err);
           client.disconnect();
@@ -3815,6 +3978,13 @@ export const useAuthStore = create<AuthState>()(
           rememberMe || IS_LITE || keepsUntickedSignInNow() ? persistSession(cookieSlot, { serverUrl, username, password }, rememberMe) : null,
           syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), cookieSlot),
         ]);
+        if (!useAccountStore.getState().getAccountById(accountId)?.awaitingSignIn
+          || targetGenerations.get(account) !== (signInGenerations.get(accountId) ?? 0)) {
+          client.disconnect();
+          return false;
+        }
+        clearEvicted(accountId);
+        dropEvictedOwner(accountId);
         holdClient(accountId, client);
         bindClientStatusHandlers(client, set, get, accountId);
         accountStore.updateAccount(accountId, {

@@ -58,7 +58,7 @@ it('says on the login page that a remembered session reached its maximum length'
   useAccountStore.setState({ accounts: [account('basic')] as never, activeAccountId: account('basic').id, defaultAccountId: account('basic').id });
 
   await useAuthStore.getState().checkAuth();
-  await vi.waitFor(() => expect(useAccountStore.getState().accounts).toHaveLength(0));
+  await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(account('basic').id)).toMatchObject({ awaitingSignIn: true, isConnected: false }));
 
   expect(consumeSessionEnd()).toEqual({ kind: 'max', hours: 8 });
 });
@@ -67,7 +67,7 @@ it('says so for a provider sign-in whose renewal the server refused', async () =
   useAccountStore.setState({ accounts: [account('oauth')] as never, activeAccountId: account('oauth').id, defaultAccountId: account('oauth').id });
 
   await useAuthStore.getState().checkAuth();
-  await vi.waitFor(() => expect(useAccountStore.getState().accounts).toHaveLength(0));
+  await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(account('oauth').id)).toMatchObject({ awaitingSignIn: true, isConnected: false }));
 
   expect(consumeSessionEnd()).toEqual({ kind: 'max', hours: 8 });
 });
@@ -88,8 +88,9 @@ it('says nothing when another account comes back, and takes the server sign-in t
   useAccountStore.setState({ accounts: [account('basic'), bob] as never, activeAccountId: account('basic').id, defaultAccountId: account('basic').id });
 
   await useAuthStore.getState().checkAuth();
-  await vi.waitFor(() => expect(useAccountStore.getState().accounts.map((a) => a.id)).toEqual([bob.id]));
-  await vi.waitFor(() => expect(useAccountStore.getState().accounts[0].signedInAt).toBe(1234));
+  expect(useAccountStore.getState().getAccountById(account('basic').id)?.awaitingSignIn).toBe(true);
+  await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(bob.id)?.signedInAt).toBe(1234));
+  expect(useAuthStore.getState().activeAccountId).toBe(bob.id);
 
   expect(consumeSessionEnd()).toBeNull();
 });

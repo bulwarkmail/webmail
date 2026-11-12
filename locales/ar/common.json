@@ -137,6 +137,7 @@
     "filter_values_hint": "لمطابقة عدة قيم، افصل بينها بفواصل."
   },
   "sidebar": {
+    "sign_in_again": "تسجيل الدخول مجددًا",
     "close": "إغلاق",
     "compose": "إنشاء رسالة",
     "compose_hint": "إنشاء رسالة (c)",

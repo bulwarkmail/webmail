@@ -11,7 +11,7 @@ export type AccountRemovalReason = 'explicit' | 'evicted' | 'wiped';
 
 const removalListeners = new Set<(accountId: string, reason: AccountRemovalReason) => void>();
 
-/** Told before an account leaves the registry, and why. */
+/** Told when an account's session is evicted or its entry leaves the registry. */
 export function onAccountRemoved(listener: (accountId: string, reason: AccountRemovalReason) => void): () => void {
   removalListeners.add(listener);
   return () => removalListeners.delete(listener);
@@ -101,6 +101,8 @@ interface AccountState {
    * offline data goes with it; 'evicted' when the app dropped it by itself.
    */
   removeAccount: (accountId: string, reason?: AccountRemovalReason) => void;
+  /** End a remembered session without forgetting its sign-in target. */
+  requireSignIn: (accountId: string) => void;
   setActiveAccount: (accountId: string) => void;
   setDefaultAccount: (accountId: string) => void;
   getDefaultAccount: () => AccountEntry | null;
@@ -173,6 +175,23 @@ export const useAccountStore = create<AccountState>()(
         void authHooks.onAccountAdd.emit({ accountId: id });
 
         return id;
+      },
+
+      requireSignIn: (accountId) => {
+        const account = get().getAccountById(accountId);
+        if (!account) return;
+        if (!account.rememberMe && !account.awaitingSignIn) {
+          get().removeAccount(accountId, 'evicted');
+          return;
+        }
+        if (!isEvicted(accountId)) markEvicted(accountId);
+        if (IS_DESKTOP_BUILD && isEvicted(accountId)) rememberEvictedOwner(accountId, account);
+        for (const listener of [...removalListeners]) listener(accountId, 'evicted');
+        get().updateAccount(accountId, {
+          awaitingSignIn: true, isConnected: false, hasError: false, errorMessage: undefined,
+          providerSession: false,
+        });
+        if (get().activeAccountId === accountId) set({ activeAccountId: null });
       },
 
       removeAccount: (accountId, reason = 'explicit') => {

@@ -136,6 +136,7 @@
     "filter_values_hint": "כדי להתאים לכמה ערכים, מפרידים ביניהם בפסיקים."
   },
   "sidebar": {
+    "sign_in_again": "כניסה מחדש",
     "unified_mailbox": "תיבת דואר מאוחדת",
     "close": "סגור",
     "compose": "כתיבה",

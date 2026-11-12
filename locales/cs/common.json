@@ -137,6 +137,7 @@
     "filter_values_hint": "Více hodnot oddělte čárkami."
   },
   "sidebar": {
+    "sign_in_again": "Přihlásit se znovu",
     "close": "Zavřít",
     "compose": "Napsat",
     "compose_hint": "Napsat (c)",

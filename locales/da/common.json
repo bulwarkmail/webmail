@@ -137,6 +137,7 @@
     "filter_values_hint": "Adskil flere værdier med kommaer."
   },
   "sidebar": {
+    "sign_in_again": "Log ind igen",
     "close": "Luk",
     "compose": "Ny besked",
     "compose_hint": "Ny besked (c)",

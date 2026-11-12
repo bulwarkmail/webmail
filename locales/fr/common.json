@@ -137,6 +137,7 @@
     "filter_values_hint": "Pour plusieurs valeurs, séparez-les par des virgules."
   },
   "sidebar": {
+    "sign_in_again": "Se reconnecter",
     "close": "Fermer",
     "compose": "Composer",
     "compose_hint": "Composer (c)",
