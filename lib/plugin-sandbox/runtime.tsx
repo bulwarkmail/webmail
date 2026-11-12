@@ -1212,7 +1212,7 @@ function buildCoreApi(manifest: PluginManifest) {
     // the way the user's own edits go.
     tasks: {
       /** Open tasks, or every task with includeCompleted. At most 1000. */
-      list: (options?: { includeCompleted?: boolean }) => callApi('tasks.list', [options]) as Promise<TaskView[]>,
+      list: (options?: { includeCompleted?: boolean; calendarIds?: string[] }) => callApi('tasks.list', [options]) as Promise<TaskView[]>,
       /** One task, or null. */
       get: (id: string) => callApi('tasks.get', [id]) as Promise<TaskView | null>,
       /** Resolves to the new task, or null when another plugin stopped it. */
