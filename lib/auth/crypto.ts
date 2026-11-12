@@ -25,11 +25,15 @@ function getKey(): Buffer {
  * token the user signed in with (Bearer auth, e.g. a Fastmail API token).
  * `signedInAt`: when the user signed in (ms), for the organisation's maximum
  * session length (lib/auth/session-age.ts); absent in cookies written
- * before it was recorded.
+ * before it was recorded. `accountName`: the account the mail server
+ * resolved the credential to at sign-in, also when it equals `username`, so
+ * a restored context keys per-user data on it as the sign-in did (a token
+ * login may claim a bare local part); absent in cookies written before it
+ * was kept, and in sign-ins that resolved none.
  */
 export type SessionCredentials =
-  | { serverUrl: string; username: string; password: string; token?: undefined; signedInAt?: number }
-  | { serverUrl: string; username: string; token: string; password?: undefined; signedInAt?: number };
+  | { serverUrl: string; username: string; password: string; token?: undefined; signedInAt?: number; accountName?: string }
+  | { serverUrl: string; username: string; token: string; password?: undefined; signedInAt?: number; accountName?: string };
 
 /** The Authorization header remembered credentials sign in with. */
 export function sessionAuthHeader(credentials: SessionCredentials): string {
@@ -42,13 +46,15 @@ export function encryptSession(
   username: string,
   secret: string | { token: string },
   signedInAt: number = Date.now(),
+  accountName?: string,
 ): string {
   const key = getKey();
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv);
 
   const credential = typeof secret === 'string' ? { password: secret } : { token: secret.token };
-  const payload = JSON.stringify({ v: 1, serverUrl, username, ...credential, signedInAt });
+  const account = accountName ? { accountName } : {};
+  const payload = JSON.stringify({ v: 1, serverUrl, username, ...credential, signedInAt, ...account });
   const encrypted = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
 
@@ -75,11 +81,14 @@ export function decryptSession(token: string): SessionCredentials | null {
     const signedInAt = typeof parsed.signedInAt === 'number' && Number.isFinite(parsed.signedInAt) && parsed.signedInAt > 0
       ? { signedInAt: parsed.signedInAt as number }
       : {};
+    const account = typeof parsed.accountName === 'string' && parsed.accountName
+      ? { accountName: parsed.accountName as string }
+      : {};
     if (typeof parsed.password === 'string' && parsed.password) {
-      return { serverUrl: parsed.serverUrl, username: parsed.username, password: parsed.password, ...signedInAt };
+      return { serverUrl: parsed.serverUrl, username: parsed.username, password: parsed.password, ...signedInAt, ...account };
     }
     if (typeof parsed.token === 'string' && parsed.token) {
-      return { serverUrl: parsed.serverUrl, username: parsed.username, token: parsed.token, ...signedInAt };
+      return { serverUrl: parsed.serverUrl, username: parsed.username, token: parsed.token, ...signedInAt, ...account };
     }
     return null;
   } catch (error) {

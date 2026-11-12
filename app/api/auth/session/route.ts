@@ -8,6 +8,7 @@ import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-con
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import {
   clearStalwartAuthContextInStore,
+  readStalwartAuthContextFromStore,
   setStalwartAuthContextInStore,
   wopiSignInOf,
 } from '@/lib/stalwart/auth-context';
@@ -103,6 +104,59 @@ async function checkSessionAge(
     return { maxHours };
   }
   return { signedInAt };
+}
+
+/**
+ * The account a restored context names, as the sign-in's context did
+ * (per-user data such as synced settings is keyed on it): the one the
+ * sign-in sealed into the remembered session, or, for a cookie from before
+ * it was kept, the slot's context when that holds the same credential and
+ * names one. A password, or a token login with a full address, proves the
+ * name it claims. A token login that claimed a bare local part and has
+ * neither is `unknown`: the restore asks nobody, and writes no context.
+ */
+function restoredAccount(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  slot: number,
+  credentials: SessionCredentials,
+): { accountName: string | undefined } | 'unknown' {
+  if (credentials.accountName) return { accountName: credentials.accountName };
+  const context = readStalwartAuthContextFromStore(cookieStore, slot);
+  if (context?.accountName && context.authHeader === sessionAuthHeader(credentials)
+    && context.username === credentials.username && context.serverUrl === credentials.serverUrl) {
+    return { accountName: context.accountName };
+  }
+  if (credentials.token === undefined || credentials.username.includes('@')) return { accountName: undefined };
+  return 'unknown';
+}
+
+/**
+ * Write the slot's context from its remembered session, with every field the
+ * sign-in's context had: server, login, credential, the account where it
+ * differs from the login (restoredAccount), and, through the writer, the
+ * session's sign-in time. With the account unknown the slot is left without
+ * a context: the page posts it to /api/auth/stalwart-context right after the
+ * restore, which resolves the account at the mail server through the login
+ * budget, and until then nothing keys per-user data on the bare name.
+ */
+function restoreContext(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  slot: number,
+  credentials: SessionCredentials,
+): void {
+  const account = restoredAccount(cookieStore, slot, credentials);
+  if (account === 'unknown') {
+    // A context already here names no account either (else it would have been taken).
+    clearStalwartAuthContextInStore(cookieStore, slot);
+    return;
+  }
+  const { accountName } = account;
+  setStalwartAuthContextInStore(cookieStore, slot, {
+    serverUrl: credentials.serverUrl,
+    username: credentials.username,
+    authHeader: sessionAuthHeader(credentials),
+    ...(accountName && accountName !== credentials.username ? { accountName } : {}),
+  });
 }
 
 /**
@@ -226,7 +280,9 @@ export async function POST(request: NextRequest) {
     await refund();
     // A sign-in kept here starts the maximum session length.
     const signedInAt = Date.now();
-    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt);
+    // The resolved account goes into the remembered session too, also when it
+    // is the login itself, so a restore names it as this sign-in does.
+    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt, accountName);
     const cookieStore = await cookies();
     cookieStore.set(cookieName, token, sessionCookieOptions(remember !== false));
     setStalwartAuthContextInStore(cookieStore, slot, {
@@ -278,11 +334,7 @@ export async function GET(request: NextRequest) {
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 
-    setStalwartAuthContextInStore(cookieStore, slot, {
-      serverUrl: credentials.serverUrl,
-      username: credentials.username,
-      authHeader: sessionAuthHeader(credentials),
-    });
+    restoreContext(cookieStore, slot, credentials);
 
     // Only return non-sensitive fields. Use PUT to retrieve full credentials.
     const { serverUrl, username } = credentials;
@@ -337,15 +389,13 @@ export async function PUT(request: NextRequest) {
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 
-    setStalwartAuthContextInStore(cookieStore, slot, {
-      serverUrl: credentials.serverUrl,
-      username: credentials.username,
-      authHeader: sessionAuthHeader(credentials),
-    });
+    restoreContext(cookieStore, slot, credentials);
 
     // The browser counts the maximum session length from the server's time.
+    // The account name stays on the server, as before it was kept.
     const impersonated = isImpersonationSession(cookieStore, slot, credentials);
-    return NextResponse.json({ ...credentials, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
+    const { accountName: _accountName, ...shared } = credentials;
+    return NextResponse.json({ ...shared, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (error) {
