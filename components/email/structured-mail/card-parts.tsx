@@ -116,9 +116,11 @@ export function isOutsideSender(host: string, senderDomain: string): boolean {
  * 1. Only expected characters: letters, marks and numbers of any script, the
  *    space, currency signs and CARD_PUNCTUATION. A text with any other code
  *    point is left out whole.
- * 2. A dot is whatever stands where a dot would stand: a single character
- *    between two labels that is no word joiner (WORD_JOINERS), or a single
- *    letter that letterDots finds.
+ * 2. A dot is whatever stands where a dot would stand: a character between
+ *    two labels that is no word joiner (WORD_JOINERS), a letter that
+ *    letterDots finds, or a space or joiner with combining marks on it
+ *    (SPACE_WITH_MARKS); two or more in a row are one dot. Spaces other than
+ *    U+0020 count as nothing.
  * 3. A run of labels names a domain when its last label is a top-level domain
  *    (lib/top-level-domains.ts), or, whatever it ends in, when it reads as a
  *    look-alike (runNamesOtherDomain). A text is also read with the Greek and
@@ -167,9 +169,10 @@ const CARD_PUNCTUATION: readonly CodeRange[] = [
 
 /**
  * Step 1: a card text after NFKC holds nothing else. That leaves out every
- * format character (direction controls, zero width characters, the soft
- * hyphen, tag characters), control, private use, unassigned and surrogate
- * code point, line and paragraph separator, and emoji.
+ * format character (direction controls, the zero width space and word joiner,
+ * tag characters; SOFT_INVISIBLES are taken out before), control, private
+ * use, unassigned and surrogate code point, line and paragraph separator, and
+ * emoji.
  */
 const CARD_TEXT = new RegExp(`^[\\p{L}\\p{M}\\p{N}\\p{Sc} ${charClass(CARD_PUNCTUATION)}]*$`, "u");
 /** Letters and marks that draw as nothing (Hangul fillers, Khmer inherent vowels, variation selectors) are left out too. */
@@ -194,6 +197,44 @@ const HYPHEN = new RegExp(`[${HYPHENS}]`, "u");
  * labels stands for a dot, the middle dot and the bullet among them.
  */
 const WORD_JOINERS = new Set([..."–—/'’&+:,()→_"]);
+
+/**
+ * SOFT HYPHEN, ZERO WIDTH NON-JOINER and ZERO WIDTH JOINER draw nothing
+ * between letters and carry no direction. The check reads a text without
+ * them; the card keeps the two joiners, which Persian and Sinhala spelling
+ * needs, and drops the soft hyphen (textForDisplay).
+ */
+const SOFT_INVISIBLES = new RegExp(`[${charClass([0xad, 0x200c, 0x200d])}]`, "gu");
+const SOFT_HYPHEN = new RegExp(charClass([0xad]), "gu");
+/**
+ * Spaces other than U+0020 (no-break, the narrow, thin and hair spaces,
+ * ideographic): some draw as almost nothing, so the check reads a text
+ * without them. The parser turns them into a full space for the card.
+ */
+const OTHER_SPACES = new RegExp(`[${charClass([0xa0, [0x2000, 0x200a], 0x202f, 0x205f, 0x3000])}]`, "gu");
+/**
+ * A space or word joiner with combining marks on it: the marks are drawn in
+ * the gap, some as a dot just below the baseline (THAI CHARACTER PHINTHU), so
+ * the check reads the whole as one dot. NFKC writes spacing diacritics (¸ ˛
+ * ´) as a space and a mark, which this covers after NFKC.
+ */
+const SPACE_WITH_MARKS = new RegExp(
+  `[\\p{Zs}${charClass([...WORD_JOINERS].map((ch) => ch.codePointAt(0) ?? 0))}]+\\p{M}+`,
+  "gu",
+);
+const MARK = /\p{M}/u;
+
+/**
+ * Scripts with many letters that draw like Latin ones and no honest use for
+ * a dotted name on a card: Cherokee, Lisu, Coptic, Deseret and Osage; and the
+ * mathematical alphanumeric, enclosed and fullwidth forms. NFKC folds those
+ * forms into plain letters and step 1 leaves out the symbols among them, so
+ * the blocks only catch what a later Unicode version adds without a fold.
+ */
+const NO_HONEST_USE = new RegExp(
+  `[\\p{Script=Cherokee}\\p{Script=Lisu}\\p{Script=Coptic}\\p{Script=Deseret}\\p{Script=Osage}${charClass([[0x1d400, 0x1d7ff], [0x2460, 0x24ff], [0x1f100, 0x1f1ff], [0xff00, 0xffef]])}]`,
+  "u",
+);
 
 /**
  * Unicode's scripts, the ones card text uses most first. A name the browser
@@ -263,9 +304,11 @@ function usedIn(ch: string, script: string): boolean {
  * single letter, or a digit of a script of its own (ARABIC-INDIC DIGIT ZERO),
  * of another script than the letters on both sides of it, which share one
  * script ("bigbank" LISU LETTER TONE MYA TI "example"; Japanese, Chinese and
- * Korean count as one script here); and an uncased letter between two cased
- * ones (LATIN LETTER SINOLOGICAL DOT). Only letters within one stretch of
- * label characters count as sides.
+ * Korean count as one script here); an uncased letter between two cased
+ * ones (LATIN LETTER SINOLOGICAL DOT); and any run of letters of a script in
+ * NO_HONEST_USE between letters of one other script (two Lisu tone letters,
+ * drawn as two dots). Only letters within one stretch of label characters
+ * count as sides.
  */
 function letterDots(word: readonly string[]): Set<number> {
   const dots = new Set<number>();
@@ -295,6 +338,21 @@ function letterDots(word: readonly string[]): Set<number> {
     if (script === "Common" || script === "Inherited" || !usedIn(right, script) || usedIn(ch, script)) continue;
     if (EAST_ASIAN.includes(script) && EAST_ASIAN.some((s) => usedIn(ch, s))) continue;
     dots.add(i);
+  }
+  const noHonestUse = (i: number) => isLetter[i] && NO_HONEST_USE.test(word[i]);
+  for (let start = 0; start < word.length; start += 1) {
+    if (!noHonestUse(start)) continue;
+    let end = start;
+    while (end + 1 < word.length && noHonestUse(end + 1)) end += 1;
+    const left = before[start] >= 0 ? word[before[start]] : undefined;
+    const right = after[end] >= 0 ? word[after[end]] : undefined;
+    if (left && right && !NO_HONEST_USE.test(left)) {
+      const script = scriptOf(left);
+      if (script !== "Common" && script !== "Inherited" && usedIn(right, script)) {
+        for (let i = start; i <= end; i += 1) dots.add(i);
+      }
+    }
+    start = end;
   }
   return dots;
 }
@@ -378,43 +436,45 @@ function topLevelPart(label: string): string {
 }
 
 /**
- * Greek and Cyrillic letters that draw like a Latin letter in common fonts,
- * each with the Latin letter it draws like. This is what the eye reads, not a
- * transliteration: Greek Η stands for the Latin H here, and Cyrillic Р for P.
- * A capital and its small letter can draw like different Latin letters (Ν is
- * N, ν is v), so the text keeps its case until it is compared.
+ * Letters that draw like a basic Latin letter upright in common fonts (the
+ * app's Segoe UI among them), each with the Latin letter it draws like: Greek,
+ * Cyrillic, Armenian, two CJK numerals, and Latin letters outside the basic
+ * alphabet. This is what the eye reads, not a transliteration: Greek Η stands
+ * for the Latin H here, and Cyrillic Р for P. A capital and its small letter
+ * can draw like different Latin letters (Ν is N, ν is v), so the text keeps
+ * its case until it is compared.
  */
 const LATIN_LOOKALIKES: ReadonlyMap<string, string> = new Map(
   ([
-    // Greek capitals Α Β Ε Ζ Η Ι Κ Μ Ν Ο Ρ Τ Υ Χ, lunate sigma Ϲ, yot Ϳ
+    // Greek capitals Α Β Ε Ζ Η Ι Κ Μ Ν Ο Ρ Τ Υ Χ, lunate sigma Ϲ, yot Ϳ, digamma Ϝ, san Ϻ
     [0x0391, "A"], [0x0392, "B"], [0x0395, "E"], [0x0396, "Z"], [0x0397, "H"], [0x0399, "I"], [0x039a, "K"],
     [0x039c, "M"], [0x039d, "N"], [0x039f, "O"], [0x03a1, "P"], [0x03a4, "T"], [0x03a5, "Y"], [0x03a7, "X"],
-    [0x03f9, "C"], [0x037f, "J"],
+    [0x03f9, "C"], [0x037f, "J"], [0x03dc, "F"], [0x03fa, "M"],
     // Greek small letters ο ν ρ υ ι κ, lunate sigma ϲ, yot ϳ
     [0x03bf, "o"], [0x03bd, "v"], [0x03c1, "p"], [0x03c5, "u"], [0x03b9, "i"], [0x03ba, "k"], [0x03f2, "c"], [0x03f3, "j"],
-    // Cyrillic capitals А В Е К М Н О Р С Т У Х, dze Ѕ, dotted І, je Ј, komi de Ԁ, qa Ԛ, we Ԝ, shha Һ, palochka Ӏ, straight u Ү
+    // Cyrillic capitals А В Е К М Н О Р С Т У Х, dze Ѕ, dotted І, je Ј, komi de Ԁ, qa Ԛ, we Ԝ, shha Һ, palochka Ӏ, straight u Ү, izhitsa Ѵ
     [0x0410, "A"], [0x0412, "B"], [0x0415, "E"], [0x041a, "K"], [0x041c, "M"], [0x041d, "H"], [0x041e, "O"],
     [0x0420, "P"], [0x0421, "C"], [0x0422, "T"], [0x0423, "Y"], [0x0425, "X"], [0x0405, "S"], [0x0406, "I"],
     [0x0408, "J"], [0x0500, "D"], [0x051a, "Q"], [0x051c, "W"], [0x04ba, "H"], [0x04c0, "I"], [0x04ae, "Y"],
-    // Cyrillic small letters а е о р с у х, dze ѕ, dotted і, je ј, komi de ԁ, qa ԛ, we ԝ, shha һ, palochka ӏ, straight u ү
+    [0x0474, "V"],
+    // Cyrillic small letters а е о р с у х, dze ѕ, dotted і, je ј, komi de ԁ, qa ԛ, we ԝ, shha һ, palochka ӏ, straight u ү, izhitsa ѵ
     [0x0430, "a"], [0x0435, "e"], [0x043e, "o"], [0x0440, "p"], [0x0441, "c"], [0x0443, "y"], [0x0445, "x"],
     [0x0455, "s"], [0x0456, "i"], [0x0458, "j"], [0x0501, "d"], [0x051b, "q"], [0x051d, "w"], [0x04bb, "h"],
-    [0x04cf, "l"], [0x04af, "y"],
+    [0x04cf, "l"], [0x04af, "y"], [0x0475, "v"],
+    // Armenian capitals Օ Ս, small letters օ ս ո հ ց զ
+    [0x0555, "O"], [0x054d, "S"], [0x0585, "o"], [0x057d, "u"], [0x0578, "n"], [0x0570, "h"], [0x0581, "g"], [0x0566, "q"],
+    // IDEOGRAPHIC NUMBER ZERO 〇, HANGZHOU NUMERAL ONE 〡 (a vertical stroke)
+    [0x3007, "O"], [0x3021, "l"],
+    // Latin small capitals ᴄ ᴏ ᴠ ᴡ ᴢ ꜱ, which are the small letters' shapes; script g ɡ (Segoe UI's own g);
+    // Latin iota ɩ; dental click ǀ (a vertical stroke)
+    [0x1d04, "c"], [0x1d0f, "o"], [0x1d20, "v"], [0x1d21, "w"], [0x1d22, "z"], [0xa731, "s"], [0x0261, "g"],
+    [0x0269, "i"], [0x01c0, "l"],
   ] as const).map(([code, latin]) => [String.fromCodePoint(code), latin]),
 );
 const ASCII_LABEL = /^[A-Za-z0-9-]+$/;
-
-/**
- * Scripts with many letters that draw like Latin ones and no honest use for
- * a dotted name on a card: Cherokee, Lisu, Coptic, Deseret and Osage; and the
- * mathematical alphanumeric, enclosed and fullwidth forms. NFKC folds those
- * forms into plain letters and step 1 leaves out the symbols among them, so
- * the blocks only catch what a later Unicode version adds without a fold.
- */
-const NO_HONEST_USE = new RegExp(
-  `[\\p{Script=Cherokee}\\p{Script=Lisu}\\p{Script=Coptic}\\p{Script=Deseret}\\p{Script=Osage}${charClass([[0x1d400, 0x1d7ff], [0x2460, 0x24ff], [0x1f100, 0x1f1ff], [0xff00, 0xffef]])}]`,
-  "u",
-);
+/** The text with the letters of LATIN_LOOKALIKES written as the Latin letters they draw like. */
+const asLatinLetters = (text: string) => Array.from(text, (ch) => LATIN_LOOKALIKES.get(ch) ?? ch).join("");
+const hasLatinLookalike = (text: string) => Array.from(text).some((ch) => LATIN_LOOKALIKES.has(ch));
 
 /** Two or more labels next to each other in a word, and the single characters between them. */
 interface LabelRun {
@@ -424,14 +484,25 @@ interface LabelRun {
   letterSeparators: number;
 }
 
-/** The runs of labels in a word: split at every dot, a label is a stretch with at least one letter. */
-function runsOf(word: readonly string[]): LabelRun[] {
-  const dots = letterDots(word);
+/**
+ * The runs of labels in a word: split at every dot, a label is a stretch with
+ * at least one letter. Two or more dots in a row are one dot ("bigbank..com"),
+ * and marks at the start of a label belong to the dot before it. Letter dots
+ * are looked for only in the text as written (`withLetterDots`): in the
+ * reading with Latin look-alikes, a letter left between two mapped ones is
+ * no dot.
+ */
+function runsOf(word: readonly string[], withLetterDots = true): LabelRun[] {
+  const dots = withLetterDots ? letterDots(word) : new Set<number>();
   const segments = [""];
   const separators: string[] = [];
   const separatorIsLetter: boolean[] = [];
   word.forEach((ch, i) => {
-    if (dots.has(i) || !LABEL_CHAR.test(ch)) {
+    const isSeparator = dots.has(i) || !LABEL_CHAR.test(ch);
+    if (separators.length > 0 && segments[segments.length - 1] === "" && (isSeparator || MARK.test(ch))) {
+      separators[separators.length - 1] += ch;
+      if (dots.has(i)) separatorIsLetter[separatorIsLetter.length - 1] = true;
+    } else if (isSeparator) {
       separators.push(ch);
       separatorIsLetter.push(dots.has(i));
       segments.push("");
@@ -458,12 +529,20 @@ function runsOf(word: readonly string[]): LabelRun[] {
 /**
  * Whether labels name a domain outside the sender's by their end: the longest
  * part of them that ends in a top-level domain ("pay.shop.example",
- * "bigbank.example-secure").
+ * "bigbank.example-secure"). A label also counts as the top-level domain it
+ * draws like when its letters, read through LATIN_LOOKALIKES on their own,
+ * spell one in basic Latin ("Сбербанк.СОМ", "bigbank.〇rg"), whatever the
+ * labels before it are written in.
  */
 function endsInOtherDomain(labels: readonly string[], senderDomain: string): boolean {
   for (let end = labels.length; end >= 2; end -= 1) {
-    const top = topLevelPart(labels[end - 1]);
-    if (isTopLevelDomain(top)) return isOutsideSender([...labels.slice(0, end - 1), top].join("."), senderDomain);
+    const label = labels[end - 1];
+    const latin = asLatinLetters(label);
+    for (const candidate of latin === label ? [label] : [label, latin]) {
+      const top = topLevelPart(candidate);
+      if (candidate === latin && candidate !== label && !ASCII_LABEL.test(top)) continue;
+      if (isTopLevelDomain(top)) return isOutsideSender([...labels.slice(0, end - 1), top].join("."), senderDomain);
+    }
   }
   return false;
 }
@@ -492,14 +571,11 @@ function runNamesOtherDomain(run: LabelRun, senderDomain: string): boolean {
 
 /**
  * Whether a word (text between spaces and word joiners) names a domain
- * outside the sender's. In the reading with Latin look-alikes (asLatin), only
- * a run that is all Latin letters, digits and hyphens counts, by the domain
- * it ends in.
+ * outside the sender's. In the reading with Latin look-alikes (asLatin), a run
+ * counts only by the domain it ends in.
  */
 function wordNamesOtherDomain(word: readonly string[], senderDomain: string, asLatin: boolean): boolean {
-  return runsOf(word).some((run) => (asLatin
-    ? run.labels.every((label) => ASCII_LABEL.test(label)) && endsInOtherDomain(run.labels, senderDomain)
-    : runNamesOtherDomain(run, senderDomain)));
+  return runsOf(word, !asLatin).some((run) => (asLatin ? endsInOtherDomain(run.labels, senderDomain) : runNamesOtherDomain(run, senderDomain)));
 }
 
 /** Whether a text (after step 1) names a domain outside the sender's, word by word. */
@@ -516,9 +592,8 @@ function wordsNameOtherDomain(text: string, senderDomain: string, asLatin: boole
   return word.length > 0 && wordNamesOtherDomain(word, senderDomain, asLatin);
 }
 
-/** The text with the Greek and Cyrillic letters that draw like Latin ones written as those Latin letters. */
-const asLatinLetters = (text: string) => Array.from(text, (ch) => LATIN_LOOKALIKES.get(ch) ?? ch).join("");
-const hasLatinLookalike = (text: string) => Array.from(text).some((ch) => LATIN_LOOKALIKES.has(ch));
+/** A text as it could be drawn: a space or joiner with marks on it as a dot, the other spaces as nothing. */
+const asDrawn = (text: string) => text.replace(SPACE_WITH_MARKS, ".").replace(OTHER_SPACES, "");
 
 /**
  * Whether a text from the mail may not be shown on the card of a message
@@ -526,21 +601,25 @@ const hasLatinLookalike = (text: string) => Array.from(text).some((ch) => LATIN_
  * run of labels in it names a domain outside the sender's. The sender's own
  * domain and the ones below it may be named.
  *
- * A text with Greek or Cyrillic letters that draw like Latin ones is read a
- * second time with those letters as the Latin ones they draw like
- * (LATIN_LOOKALIKES): a run that becomes all Latin letters, digits and
- * hyphens that way names the domain it ends in ("ΑΜΑΖΟΝ.ϹΟΜ"). A run that
- * keeps any other Greek or Cyrillic letter is judged as written
- * ("г.Новосибирск", "κ.Παπαδόπουλος"). The letters are replaced before NFKC,
+ * The text is read without SOFT_INVISIBLES, and, after step 1, as it could be
+ * drawn (asDrawn), before NFKC and again after it.
+ *
+ * A text with letters that draw like Latin ones is read a second time with
+ * those letters as the Latin ones (LATIN_LOOKALIKES): a run then names the
+ * domain it ends in ("ΑΜΑΖΟΝ.ϹΟΜ"). The letters are replaced before NFKC,
  * which turns the lunate sigma Ϲ, drawn like C, into Σ, and again after it,
- * for forms it folds into one of them.
+ * for forms it folds into one of them. A run whose end, read through the
+ * table, spells no top-level domain is judged as written ("г.Новосибирск",
+ * "κ.Παπαδόπουλος").
  */
 export function namesOtherDomain(text: string, senderDomain: string): boolean {
-  const normal = text.normalize("NFKC");
+  const read = text.replace(SOFT_INVISIBLES, "");
+  const normal = read.normalize("NFKC");
   if (!CARD_TEXT.test(normal) || IGNORABLE.test(normal)) return true;
-  if (wordsNameOtherDomain(normal, senderDomain, false)) return true;
-  if (!hasLatinLookalike(text) && !hasLatinLookalike(normal)) return false;
-  return wordsNameOtherDomain(asLatinLetters(asLatinLetters(text).normalize("NFKC")), senderDomain, true);
+  const drawn = asDrawn(asDrawn(read).normalize("NFKC"));
+  if (wordsNameOtherDomain(drawn, senderDomain, false)) return true;
+  if (!hasLatinLookalike(read) && !hasLatinLookalike(drawn)) return false;
+  return wordsNameOtherDomain(asDrawn(asLatinLetters(asLatinLetters(asDrawn(read)).normalize("NFKC"))), senderDomain, true);
 }
 
 /**
@@ -564,7 +643,9 @@ function isCardLink(value: object): value is Link {
 
 function textForDisplay(value: unknown, senderDomain: string, key?: string): unknown {
   if (typeof value === "string") {
-    return key !== undefined && MACHINE_KEYS.has(key) ? value : namesOtherDomain(value, senderDomain) ? "" : value;
+    if (key !== undefined && MACHINE_KEYS.has(key)) return value;
+    // The check read it without the soft hyphen; the card shows it without one too.
+    return namesOtherDomain(value, senderDomain) ? "" : value.replace(SOFT_HYPHEN, "");
   }
   if (Array.isArray(value)) {
     return value
