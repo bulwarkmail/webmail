@@ -19,7 +19,7 @@ import {
   refreshTokenCookieName,
   refreshTokenServerCookieName,
 } from '@/lib/oauth/tokens';
-import { customUpstreamCookieName, readCustomUpstream, type CustomUpstream } from '@/lib/oauth/custom-upstream';
+import { customUpstreamCookieName, readCustomUpstream, writeCustomUpstream, type CustomUpstream } from '@/lib/oauth/custom-upstream';
 import { oauthErrorCode } from '@/lib/oauth/answer-summary';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
@@ -86,9 +86,9 @@ export interface TokenServer {
  * The server a slot's refresh token is renewed and revoked at: the one that
  * issued it, as the token's sign-in stamp records it (lib/auth/session-age.ts).
  * The stamp is sealed and bound to the token; the `jmap_rts` cookie only
- * repeats it, and for a server the user typed, the sealed custom-upstream
- * record names it. Null, and nothing may be sent anywhere, when:
- * - the cookie names another server than the stamp;
+ * repeats it and is not read when the stamp names the server. For a server
+ * the user typed, the sealed custom-upstream record holds its address and
+ * client. Null, and nothing may be sent anywhere, when:
  * - the stamp names a typed server and the record is missing, names another
  *   one, or is no longer allowed (readCustomUpstream checks on every read);
  * - the stamp names a server that is no longer listed;
@@ -112,7 +112,8 @@ export async function refreshTokenServer(
   const stamp = readSignInStamp(cookieStore, slot, refreshToken);
   let server: TokenServer;
   if (stamp?.serverId !== undefined) {
-    if (stamp.serverId !== named) return null;
+    // The stamp decides: a missing or different `jmap_rts` is ignored, and
+    // the renewal writes it again (storeRenewedTokens).
     if (stamp.customServer && record?.serverUrl !== stamp.customServer) return null;
     // A record left behind by an earlier sign-in in this slot is not this token's.
     server = { serverId: stamp.serverId, upstream: stamp.customServer ? record : null };
@@ -237,10 +238,11 @@ export function resetRedemptionsForTests(): void {
 }
 
 /**
- * Keep what a renewal issued: the rotated refresh token and the sign-in stamp
- * that follows it, the access token cache, and a reissued id token. Each
- * request that shared a redemption writes the same values to its own response.
- * `server` is where the token was renewed (refreshTokenServer).
+ * Keep what a renewal issued: the rotated refresh token with the sign-in
+ * stamp, server cookie and typed-server record that follow it, the access
+ * token cache, and a reissued id token. Each request that shared a
+ * redemption writes the same values to its own response. `server` is where
+ * the token was renewed (refreshTokenServer).
  */
 export function storeRenewedTokens(
   cookieStore: CookieStore,
@@ -267,6 +269,11 @@ export function storeRenewedTokens(
         ...(server.upstream ? { customServer: server.upstream.serverUrl } : {}),
       }, options);
     }
+    // Written again with the token's lifetime, so neither runs out before it.
+    const serverCookie = refreshTokenServerCookieName(slot);
+    if (server.serverId) cookieStore.set(serverCookie, server.serverId, options);
+    else if (cookieStore.get(serverCookie)) cookieStore.delete(serverCookie);
+    if (server.upstream) writeCustomUpstream(cookieStore, slot, server.upstream, remember);
   }
 
   const expiresIn = tokens.expires_in || 3600;

@@ -141,4 +141,33 @@ describe('the cookies next to a refresh token', () => {
     await renew(1);
     expect(sentAnywhere('RT-ISSUED-BY-a.example').filter((r) => r.host !== 'a.example')).toEqual([]);
   });
+
+  it('keep a remembered sign-in at a listed server whose server cookie ran out, and write the cookie again', async () => {
+    config = TWO_SERVERS;
+    await signInAtA();
+    // The token and its stamp outlive the server cookie when only they are renewed.
+    jar.delete('jmap_rts');
+    received = [];
+    const res = await renew();
+    expect(res.status).toBe(200);
+    expect(sentTo('a.example', 'RT-ISSUED-BY-a.example')).toEqual([expect.objectContaining({ path: '/auth/token' })]);
+    expect(sentAnywhere('RT-ISSUED-BY-a.example').filter((r) => r.host !== 'a.example')).toEqual([]);
+    expect(jar.get('jmap_rts')).toBe('a');
+  });
+
+  it('write the record of a typed server again with each renewal', async () => {
+    config = { jmapServerUrl: 'https://default.example', oauthClientId: 'webmail', allowCustomJmapEndpoint: true };
+    const { writeSignInStamp } = await import('@/lib/auth/session-age');
+    const { writeCustomUpstream, readCustomUpstream } = await import('@/lib/oauth/custom-upstream');
+    const store = await (await import('next/headers')).cookies();
+    jar.set('jmap_rt', 'RT-OWN-SERVER');
+    writeSignInStamp(store as never, 0, { signedInAt: Date.now(), refreshToken: 'RT-OWN-SERVER', remember: true, serverId: null, customServer: 'https://own.example' });
+    writeCustomUpstream(store as never, 0, { serverUrl: 'https://own.example', clientId: 'own-client' }, true);
+    const written = jar.get('jmap_rtu');
+
+    expect((await renew()).status).toBe(200);
+    expect(sentTo('own.example', 'RT-OWN-SERVER')).toHaveLength(1);
+    expect(jar.get('jmap_rtu')).not.toBe(written);
+    expect(await readCustomUpstream(store as never, 0)).toEqual(expect.objectContaining({ serverUrl: 'https://own.example', clientId: 'own-client' }));
+  });
 });

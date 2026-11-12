@@ -110,6 +110,9 @@ async function signInAtA() {
   expect(jar.get('jmap_rts')).toBe('a');
 }
 
+// Every test loads the routes afresh (vi.resetModules), which takes a while.
+vi.setConfig({ testTimeout: 30_000 });
+
 describe('a refresh token only goes to the server that issued it', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -120,7 +123,7 @@ describe('a refresh token only goes to the server that issued it', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it('not to another listed server when the jmap_rts cookie is changed', async () => {
+  it('not to another listed server when the jmap_rts cookie is changed; the renewal sets the cookie back', async () => {
     config = TWO_SERVERS;
     await signInAtA();
 
@@ -130,23 +133,25 @@ describe('a refresh token only goes to the server that issued it', () => {
     const res = await renew();
 
     expect(sentTo('b.example', 'RT-ISSUED-BY-a.example')).toEqual([]);
-    expect(sentAnywhere('RT-ISSUED-BY-a.example')).toEqual([]);
-    expect(res.status).toBe(401);
-    expect(await res.json()).toEqual({ error: 'invalid_grant' });
-    expect(jar.has('jmap_rt')).toBe(false);
+    expect(res.status).toBe(200);
+    expect(sentTo('a.example', 'RT-ISSUED-BY-a.example')).toEqual([expect.objectContaining({ path: '/auth/token' })]);
+    expect(jar.get('jmap_rts')).toBe('a');
   });
 
-  it('renews at the server that issued it while the cookie agrees (control)', async () => {
+  it('renews at the server that issued it, also after its token rotated and the cookie changed', async () => {
     config = TWO_SERVERS;
     await signInAtA();
     received = [];
     expect((await renew()).status).toBe(200);
     expect(sentTo('a.example', 'RT-ISSUED-BY-a.example')).toHaveLength(1);
-    // The rotated token keeps the binding.
+    // The rotated token keeps the binding (the stub hands back the same token,
+    // so the kept redemption is dropped to make the second one go out).
+    (await import('@/lib/oauth/slot-renewal')).resetRedemptionsForTests();
     jar.set('jmap_rts', 'b');
     received = [];
-    expect((await renew()).status).toBe(401);
-    expect(sentAnywhere('RT-ISSUED-BY-a.example')).toEqual([]);
+    expect((await renew()).status).toBe(200);
+    expect(sentTo('b.example', 'RT-ISSUED-BY-a.example')).toEqual([]);
+    expect(sentTo('a.example', 'RT-ISSUED-BY-a.example')).toHaveLength(1);
   });
 
   it('is not revoked at another server when signing out with a changed cookie', async () => {
@@ -157,7 +162,8 @@ describe('a refresh token only goes to the server that issued it', () => {
     const { DELETE } = await import('@/app/api/auth/token/route');
     const res = await DELETE(new NextRequest('https://webmail.example/api/auth/token?slot=0', { method: 'DELETE', headers: SAME_ORIGIN }));
     expect(res.status).toBe(200);
-    expect(sentAnywhere('RT-ISSUED-BY-a.example')).toEqual([]);
+    expect(sentTo('b.example', 'RT-ISSUED-BY-a.example')).toEqual([]);
+    expect(sentTo('a.example', 'RT-ISSUED-BY-a.example')).toEqual([expect.objectContaining({ path: '/auth/revoke' })]);
     expect(jar.has('jmap_rt')).toBe(false);
   });
 
@@ -186,7 +192,7 @@ describe('a refresh token only goes to the server that issued it', () => {
 
     jar.set('jmap_rts', 'b');
     const changed = await reauth();
-    expect(changed.status).toBe(401);
+    expect(new URL((await changed.json()).authorize_url).host).toBe('a.example');
   });
 
   it('is not renewed at another server by the push preview', async () => {
@@ -201,8 +207,8 @@ describe('a refresh token only goes to the server that issued it', () => {
       username: 'me@a.example',
       authHeader: 'Bearer AT-a.example',
     }, undefined);
-    expect(renewed).toBeNull();
-    expect(sentAnywhere('RT-ISSUED-BY-a.example')).toEqual([]);
+    expect(renewed).toBe('Bearer AT2-a.example');
+    expect(sentTo('b.example', 'RT-ISSUED-BY-a.example')).toEqual([]);
   });
 
   it('takes the cookie once for a stamp from before it named the server, then keeps to it', async () => {
@@ -216,10 +222,12 @@ describe('a refresh token only goes to the server that issued it', () => {
     expect((await renew()).status).toBe(200);
     expect(sentTo('a.example', 'RT-ISSUED-BY-a.example')).toHaveLength(1);
 
+    (await import('@/lib/oauth/slot-renewal')).resetRedemptionsForTests();
     jar.set('jmap_rts', 'b');
     received = [];
-    expect((await renew()).status).toBe(401);
-    expect(sentAnywhere('RT-ISSUED-BY-a.example')).toEqual([]);
+    expect((await renew()).status).toBe(200);
+    expect(sentTo('b.example', 'RT-ISSUED-BY-a.example')).toEqual([]);
+    expect(sentTo('a.example', 'RT-ISSUED-BY-a.example')).toHaveLength(1);
   });
 
   it('is not sent anywhere without a stamp when its cookie names a listed server', async () => {
