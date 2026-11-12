@@ -338,6 +338,14 @@
     "show_on_mobile": "Show on mobile"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last_week": "Last week",
+      "last_month": "Last month",
+      "older": "Older"
+    },
+    "group_by_date": "Group by date",
     "sections": {
       "unread": "Unread",
       "everything_else": "Everything else",
@@ -2289,6 +2297,10 @@
       "rtl_editing": {
         "label": "Right-to-left editing support",
         "description": "Adds a direction button to the composer toolbar so you can set paragraphs left-to-right or right-to-left"
+      },
+      "group_by_date": {
+        "label": "Group by date",
+        "description": "Show messages under date headers such as Today, Yesterday and Last week. Only applies while the list is sorted by date."
       },
       "group_conversations": {
         "label": "Group messages by conversation",

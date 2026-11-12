@@ -338,6 +338,14 @@
     "show_on_mobile": "Hiển thị trên thiết bị di động"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "last_week": "Tuần trước",
+      "last_month": "Tháng trước",
+      "older": "Cũ hơn"
+    },
+    "group_by_date": "Nhóm theo ngày",
     "sections": {
       "unread": "Chưa đọc",
       "everything_else": "Các thư còn lại",
@@ -2301,6 +2309,10 @@
       "rtl_editing": {
         "label": "Hỗ trợ soạn thảo từ phải sang trái",
         "description": "Thêm nút chọn hướng vào thanh công cụ soạn thư để đặt hướng đoạn văn từ trái sang phải hoặc từ phải sang trái"
+      },
+      "group_by_date": {
+        "label": "Nhóm theo ngày",
+        "description": "Hiển thị thư dưới các tiêu đề ngày như Hôm nay, Hôm qua và Tuần trước. Chỉ áp dụng khi danh sách được sắp xếp theo ngày."
       },
       "group_conversations": {
         "label": "Nhóm thư theo cuộc trò chuyện",

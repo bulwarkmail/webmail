@@ -338,6 +338,14 @@
     "show_on_mobile": "Vis på mobil"
   },
   "email_list": {
+    "date_groups": {
+      "today": "I dag",
+      "yesterday": "I går",
+      "last_week": "Førre veke",
+      "last_month": "Førre månad",
+      "older": "Eldre"
+    },
+    "group_by_date": "Grupper etter dato",
     "sections": {
       "unread": "Ulesne",
       "everything_else": "Alt anna",
@@ -2297,6 +2305,10 @@
       "rtl_editing": {
         "label": "Støtte for redigering frå høgre mot venstre",
         "description": "Legg til ein retningsknapp i verktøylinja for skriving, slik at du kan setje avsnitt frå venstre mot høgre eller frå høgre mot venstre"
+      },
+      "group_by_date": {
+        "label": "Grupper etter dato",
+        "description": "Vis meldingar under datooverskrifter som I dag, I går og Førre veke. Gjeld berre når lista er sortert etter dato."
       },
       "group_conversations": {
         "label": "Grupper meldingar etter samtale",

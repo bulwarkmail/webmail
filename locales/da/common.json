@@ -338,6 +338,14 @@
     "show_on_mobile": "Vis på mobil"
   },
   "email_list": {
+    "date_groups": {
+      "today": "I dag",
+      "yesterday": "I går",
+      "last_week": "Sidste uge",
+      "last_month": "Sidste måned",
+      "older": "Ældre"
+    },
+    "group_by_date": "Gruppér efter dato",
     "sections": {
       "unread": "Ulæste",
       "everything_else": "Alt andet",
@@ -2289,6 +2297,10 @@
       "rtl_editing": {
         "label": "Understøttelse af højre-mod-venstre-redigering",
         "description": "Tilføjer en retningsknap til værktøjslinjen i editoren, så afsnit kan sættes venstre-mod-højre eller højre-mod-venstre"
+      },
+      "group_by_date": {
+        "label": "Gruppér efter dato",
+        "description": "Vis beskeder under datooverskrifter som I dag, I går og Sidste uge. Gælder kun, når listen er sorteret efter dato."
       },
       "group_conversations": {
         "label": "Gruppér beskeder efter samtale",

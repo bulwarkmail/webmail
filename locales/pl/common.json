@@ -338,6 +338,14 @@
     "show_on_mobile": "Pokaż na telefonie"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Dzisiaj",
+      "yesterday": "Wczoraj",
+      "last_week": "W zeszłym tygodniu",
+      "last_month": "W zeszłym miesiącu",
+      "older": "Starsze"
+    },
+    "group_by_date": "Grupuj według daty",
     "sections": {
       "unread": "Nieprzeczytane",
       "everything_else": "Wszystkie pozostałe",
@@ -2286,6 +2294,10 @@
       "rtl_editing": {
         "label": "Obsługa edycji od prawej do lewej",
         "description": "Dodaje przycisk kierunku do paska narzędzi edytora, pozwalający ustawić akapity od lewej do prawej lub od prawej do lewej"
+      },
+      "group_by_date": {
+        "label": "Grupuj według daty",
+        "description": "Pokazuj wiadomości pod nagłówkami dat, takimi jak Dzisiaj, Wczoraj i W zeszłym tygodniu. Działa tylko wtedy, gdy lista jest posortowana według daty."
       },
       "group_conversations": {
         "label": "Grupuj wiadomości w wątki",
