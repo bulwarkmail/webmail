@@ -259,6 +259,7 @@ async function settleNoFile(): Promise<void> {
     setLockedHere(false);
     const next = setupNeeded() ? 'setup' : 'open';
     setPhase(next);
+    tellServiceWorker('off');
     if (next === 'open') {
       hold?.release();
       hold = null;
@@ -324,6 +325,16 @@ function tellServiceWorker(state: 'locked' | 'unlocked' | 'off'): void {
   } catch {
     // No service worker, no push notifications.
   }
+}
+
+/**
+ * What this tab knows of the lock now, for the service worker. "Off" too: the worker
+ * takes a state it doesn't have for locked once the lock was on. A wipe tells it the
+ * same way (lib/offline/device-wipe.ts).
+ */
+function tellServiceWorkerAppLock(): void {
+  if (!readAppLockFile().on) tellServiceWorker('off');
+  else tellServiceWorker(isAppLockedNow() ? 'locked' : 'unlocked');
 }
 
 function startIdle(): void {
@@ -1232,11 +1243,9 @@ export function startAppLock(): () => void {
     startIdle();
     if (!heldKey) watchHolder();
   }
-  if (readAppLockFile().on) {
-    // A tab still asking whether another holds the key tells the worker once it knows (openUp, lockedFromNow).
-    if (phase !== 'checking') tellServiceWorker(isAppLockedNow() ? 'locked' : 'unlocked');
-    void dropHelloIfNotAllowed();
-  }
+  // A tab still asking whether the lock holds tells the worker once it knows (openUp, lockedFromNow, settleNoFile).
+  if (phase !== 'checking') tellServiceWorkerAppLock();
+  if (readAppLockFile().on) void dropHelloIfNotAllowed();
   return () => {
     channel?.close();
     window.removeEventListener('storage', onStorage);

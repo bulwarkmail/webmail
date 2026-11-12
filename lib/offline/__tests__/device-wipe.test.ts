@@ -1258,7 +1258,8 @@ describe('what else goes with a wipe', () => {
       'bulwark-delegate-names', 'calendar-notification-storage', 'webdav-favorites', 'webdav-recent-files', 'webdav-last-path', 'template-storage']) {
       expect([key, localStorage.getItem(key)]).not.toEqual([key, 'x']);
     }
-    expect(deletedCaches).toContain('bulwark-push-state-v1');
+    // The worker's store stays for the other login: only this one's entries go (device-wipe-push-state.test.ts).
+    expect(deletedCaches).not.toContain('bulwark-push-state-v1');
   });
 
   it('a wipe from settings takes them too', async () => {

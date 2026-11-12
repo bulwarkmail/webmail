@@ -7,6 +7,7 @@ import { APP_LOCK_HOLDER, writeAppLockFile } from '../state';
 // notifications with no page around and goes by it). The worker counts "unlocked"
 // only while a tab that said so is open, so every tab that opens with the lock on
 // says so, once it knows; a tab still asking whether another holds the key says nothing.
+// With the lock off a tab says "off".
 
 let posted: Array<Record<string, unknown>> = [];
 let held: Array<{ name: string }> = [];
@@ -48,6 +49,12 @@ describe('what a tab tells the service worker', () => {
     stopTab = startAppLock();
     await vi.waitFor(() => expect(getAppLockPhase()).toBe('open'));
     expect(appLockMessages()).toEqual(['unlocked']);
+  });
+
+  it('a tab with the lock off says "off": nothing stored in the worker then means the state was deleted', async () => {
+    stopTab = startAppLock();
+    await vi.waitFor(() => expect(appLockMessages()).toEqual(['off']));
+    expect(getAppLockPhase()).toBe('open');
   });
 
   it('a tab that finds nobody holding the key says "locked"', async () => {

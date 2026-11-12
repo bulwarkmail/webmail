@@ -901,9 +901,29 @@ const QUIET_WINDOW_MS = 30_000;
 
 /** The Web Lock the tab with the lock key holds for as long as it lives (lib/app-lock/state.ts). */
 const APP_LOCK_HOLDER = "bulwark-app-lock-holder";
+/**
+ * Set while the last word from a page was that the lock is on. Not in the push state, which
+ * a sign-out deletes: with that state gone the lock counts as on until a page says "off".
+ */
+const APP_LOCK_ON_KEY = "/__bulwark/app-lock-on";
 
 function appLockStateKey() {
   return `${self.location.origin}${BASE_PATH}/__push-state/app-lock`;
+}
+
+async function rememberAppLockOn(on) {
+  try {
+    const cache = await caches.open(SW_STATE_CACHE);
+    if (on) await cache.put(APP_LOCK_ON_KEY, new Response(JSON.stringify({ on: true }), { headers: { "Content-Type": "application/json" } }));
+    else await cache.delete(APP_LOCK_ON_KEY);
+  } catch (_) {
+    // The state itself is kept; only its loss would go unnoticed.
+  }
+}
+
+async function appLockWasOn() {
+  const cache = await caches.open(SW_STATE_CACHE);
+  return !!(await cache.match(APP_LOCK_ON_KEY));
 }
 
 async function readAppLockState() {
@@ -929,6 +949,7 @@ async function writeAppLockState(state, clientId) {
   }
   const cache = await caches.open(PUSH_STATE_CACHE);
   await cache.put(appLockStateKey(), new Response(JSON.stringify(record), { headers: { "Content-Type": "application/json" } }));
+  await rememberAppLockOn(state !== "off");
   if (state === "locked") await closeMailNotifications();
 }
 
@@ -962,12 +983,15 @@ async function appLockKeyHeld() {
  * The page says "locked" when it locks. It can't say so when its tab or the browser
  * closes, so a stored "unlocked" counts only while a tab holds the lock key and one
  * of the tabs that said "unlocked" is open. Any other window of the origin (a
- * picture, an attachment) runs no lock and counts for nothing.
+ * picture, an attachment) runs no lock and counts for nothing. Pages say "off" too, so
+ * nothing stored means no page has said anything since the state was deleted: locked if
+ * the lock was on before.
  */
 async function appLockHidesContent() {
   try {
     const stored = await readAppLockState();
-    if (!stored || stored.state === "off") return false;
+    if (!stored) return await appLockWasOn();
+    if (stored.state === "off") return false;
     if (stored.state !== "unlocked") return true;
     if (!(await appLockKeyHeld())) return true;
     const said = Array.isArray(stored.clients) ? stored.clients : [];
