@@ -11,10 +11,11 @@
 //     and such a job holds no write permission. A branch inside this repository gets the secrets
 //     on `pull_request` just like main does, so the `if:` is the only gate.
 //     `pull_request_target` is refused outright;
-//   - uses a cache (actions/cache, a `cache:` input, `cache-from`/`cache-to`, or `--cache-from`/
-//     `--cache-to` in a run: line) in a job that publishes (packages, contents or id-token
-//     write) or builds what such a job publishes. Any job on main can write the Actions cache,
-//     so a release would ship what it left;
+//   - uses a cache in a job that publishes (packages, contents or id-token write) or builds what
+//     such a job publishes: actions/cache, a `cache:` input, `cache-from`/`cache-to`,
+//     `--cache-from`/`--cache-to` in a run: line, or setup-node without
+//     `package-manager-cache: false` (it turns the npm cache on by itself). Any job on main can
+//     write the Actions cache, so a release would ship what it left;
 //   - has no top-level `permissions:` block. With one, a job that sets none starts from it
 //     instead of from the repository default.
 //
@@ -208,6 +209,11 @@ function cacheInputs(job, lineOf) {
     }
     const flag = textOf(step.run).match(/--cache-(from|to)\b/);
     if (flag) found.push({ what: `${flag[0]} in run`, line: lineOf(step, flag[0]), events: stepEvents });
+    // setup-node restores the npm cache by itself once package.json names npm in
+    // `packageManager`, unless the step says `package-manager-cache: false`.
+    if (/^actions\/setup-node@/.test(uses) && String(inputs['package-manager-cache']) !== 'false') {
+      found.push({ what: 'setup-node without package-manager-cache: false', line: lineOf(step, 'setup-node'), events: stepEvents });
+    }
   }
   return found;
 }
@@ -521,6 +527,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           cache: \${{ github.event_name == 'release' && 'npm' || '' }}
+          package-manager-cache: false
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
   push-only:
     runs-on: ubuntu-latest
@@ -528,6 +535,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           cache: \${{ github.event_name == 'push' && 'npm' || '' }}
+          package-manager-cache: false
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
   restores:
     runs-on: ubuntu-latest
@@ -565,6 +573,48 @@ jobs:
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           cache-from: type=gha
+` }],
+  ['setup-node that may turn the npm cache on by itself', 2, { 'x.yml': `
+on: [release, pull_request]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  build-off:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  build-expression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          package-manager-cache: \${{ github.event_name == 'pull_request' }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          cache: npm
+  release:
+    needs: [build, build-off, build-expression, test]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
 ` }],
   ['secrets kept away from pull requests', 0, { 'x.yml': `
 on: [push, pull_request, release]

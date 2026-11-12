@@ -61,12 +61,15 @@ jobs:
 
       # The npm cache only for the checks on pushes and pull requests. Release
       # and manual builds hand out their zips, and any job on main can write
-      # the cache, so they install from the registry.
+      # the cache, so they install from the registry. An explicit cache: wins
+      # over package-manager-cache, which only stops setup-node from turning
+      # the cache on by itself when package.json names npm in packageManager.
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && 'npm' || '' }}
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
