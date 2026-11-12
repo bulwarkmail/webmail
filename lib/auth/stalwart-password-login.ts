@@ -2,6 +2,7 @@ import { logger } from '@/lib/logger';
 import { DisallowedUrlError, fetchPublicUrl } from '@/lib/security/url-guard';
 import { generateCodeVerifier, generateCodeChallenge, generateState } from '@/lib/oauth/pkce';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import {
   STALWART_LOOPBACK_REDIRECT_URI,
   readStalwartLoginResponse,
@@ -292,7 +293,8 @@ async function requestLoginCode(
       logger.warn('Stalwart password login: rejected non-public server URL at connect time');
       return { ok: false, error: 'invalid_server_url' };
     }
-    logger.warn('Stalwart password login: /api/auth request failed', { error: err instanceof Error ? err.message : String(err) });
+    // The answer carries the authorization code; a parse error would quote it.
+    logger.warn('Stalwart password login: /api/auth request failed', { error: loggableError(err) });
     return { ok: false, error: 'login_unreachable' };
   }
 
@@ -368,7 +370,8 @@ export async function stalwartPasswordLogin(
 
     if (!tokenResponse.ok) {
       const detail = await upstreamDetail(tokenResponse, opts.trusted);
-      logger.warn('Stalwart password login: token exchange failed', { status: tokenResponse.status, detail });
+      // The status only: the body can repeat what was sent.
+      logger.warn('Stalwart password login: token exchange failed', { status: tokenResponse.status });
       return { ok: false, error: 'token_exchange_failed', status: tokenResponse.status, detail };
     }
 
@@ -378,7 +381,7 @@ export async function stalwartPasswordLogin(
       logger.warn('Stalwart password login: rejected non-public server URL at connect time');
       return { ok: false, error: 'invalid_server_url' };
     }
-    logger.warn('Stalwart password login: token endpoint failed', { error: err instanceof Error ? err.message : String(err) });
+    logger.warn('Stalwart password login: token endpoint failed', { error: loggableError(err) });
     return { ok: false, error: 'token_exchange_failed' };
   }
 

@@ -17,7 +17,7 @@ import {
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
 import { callbackIssuerAccepted, type OAuthMetadata } from '@/lib/oauth/discovery';
-import { answerFields } from '@/lib/oauth/answer-summary';
+import { answerFields, loggableError } from '@/lib/oauth/answer-summary';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import {
   buildEndSessionUrl,
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    logger.error('Token exchange error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Token exchange error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -345,7 +345,7 @@ export async function PUT(request: NextRequest) {
       ...signedIn,
     });
   } catch (error) {
-    logger.error('Token refresh error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Token refresh error', { error: loggableError(error) });
     // On the desktop this route runs on the user's machine, so an unreachable
     // mail server lands here. The client signs out after repeated 500s; a 503
     // tells it to keep the session and try again.
@@ -432,7 +432,7 @@ export async function DELETE(request: NextRequest) {
     const endSessionUrl = await signOutSlot(cookieStore, getSlot(request), basePath, params.get('end_session') === 'true');
     return NextResponse.json({ ok: true, ...(endSessionUrl && { end_session_url: endSessionUrl }) });
   } catch (error) {
-    logger.error('Token revocation error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Token revocation error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

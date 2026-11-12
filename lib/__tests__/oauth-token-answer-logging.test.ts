@@ -66,6 +66,9 @@ async function renew() {
   return PUT(new NextRequest('https://webmail.example/api/auth/token?slot=0&force=true', { method: 'PUT', headers: SAME_ORIGIN }));
 }
 
+// Every test loads the routes afresh (vi.resetModules), which takes a while.
+vi.setConfig({ testTimeout: 30_000 });
+
 describe('what goes into the log from a token answer', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -100,5 +103,67 @@ describe('what goes into the log from a token answer', () => {
     await expect(exchangeCodeForTokens('code', 'v'.repeat(43), 'https://webmail.example/en/auth/callback')).rejects.toThrow();
     for (const secret of SECRETS) expect(logText()).not.toContain(secret);
     expect(logText()).toContain('invalid_grant');
+  });
+
+  // A JSON parser's error message quotes the text around the fault, or all
+  // of it when it is short.
+  it('logs the status of a renewal answer that is not JSON, nothing of its body', async () => {
+    tokenAnswer = new Response('{"access_token":"AT-1","refresh_token":RT-ROTATED-SECRET-0123456789}', { status: 200, headers: { 'content-type': 'application/json' } });
+    await renew();
+    expect(logText()).not.toContain('RT-ROTATED');
+    expect(logText()).toContain('200');
+
+    logged.length = 0;
+    tokenAnswer = new Response('RT-ROTATED-SECRET', { status: 200 });
+    await renew();
+    expect(logText()).not.toContain('RT-ROTATED');
+  });
+
+  it('logs the status of a code exchange answer that is not JSON, nothing of its body', async () => {
+    const { exchangeCodeForTokens } = await import('@/lib/oauth/token-exchange');
+    tokenAnswer = new Response('{"access_token":AT-SECRET-0123456789}', { status: 200 });
+    await expect(exchangeCodeForTokens('code', 'v'.repeat(43), 'https://webmail.example/en/auth/callback')).rejects.toThrow();
+    expect(logText()).not.toContain('AT-SECRET');
+    expect(logText()).toContain('200');
+  });
+
+  it('logs nothing of a sign-in completion body that is not JSON', async () => {
+    const { POST } = await import('@/app/api/auth/sso/complete/route');
+    await POST(new NextRequest('https://webmail.example/api/auth/sso/complete', {
+      method: 'POST',
+      headers: { ...SAME_ORIGIN, origin: 'https://webmail.example' },
+      body: '{"code":CODE-SECRET-0123,"state":"s"}',
+    }));
+    const { POST: reauth } = await import('@/app/api/auth/reauth/sso/complete/route');
+    await reauth(new NextRequest('https://webmail.example/api/auth/reauth/sso/complete', {
+      method: 'POST',
+      headers: { ...SAME_ORIGIN, origin: 'https://webmail.example' },
+      body: '{"code":CODE-SECRET-0123,"state":"s"}',
+    }));
+    expect(logged.length).toBeGreaterThan(1);
+    expect(logText()).not.toContain('CODE-SECRET');
+  });
+
+  it("logs the status of a password sign-in's refused or garbled token answer, nothing of its body", async () => {
+    const { stalwartPasswordLogin } = await import('@/lib/auth/stalwart-password-login');
+    let answer = () => Response.json({ error: 'invalid_grant', error_description: 'the grant RT-SENT-SECRET was revoked' }, { status: 400 });
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => (String(input).endsWith('/api/auth')
+      ? Response.json({ type: 'authenticated', client_code: 'login-code', iss: 'https://mail.example' })
+      : answer())));
+    const login = () => stalwartPasswordLogin({
+      serverUrl: 'https://mail.example',
+      username: 'alice@mail.example',
+      password: 'hunter2',
+      totp: '123456',
+      clientId: 'webmail',
+      redirectUri: 'https://webmail.example/en/auth/callback',
+      trusted: true,
+    });
+    expect(await login()).toMatchObject({ ok: false, status: 400 });
+    answer = () => new Response('{"access_token":"AT","refresh_token":RT-ROTATED-SECRET}', { status: 200 });
+    expect(await login()).toMatchObject({ ok: false });
+    expect(logged.length).toBeGreaterThan(1);
+    for (const secret of SECRETS) expect(logText()).not.toContain(secret);
+    expect(logText()).toContain('400');
   });
 });

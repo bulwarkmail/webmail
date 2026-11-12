@@ -20,6 +20,7 @@ import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { writeSignInStamp } from '@/lib/auth/session-age';
 import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
+import { loggableError } from '@/lib/oauth/answer-summary';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
@@ -272,7 +273,7 @@ export async function POST(request: NextRequest) {
     cookieStore.delete(SSO_PENDING_COOKIE);
     // The mobile hand-off can't be parked without the shared store.
     if (isStoreUnavailable(error)) return storeUnavailableResponse();
-    logger.error('SSO complete error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('SSO complete error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Token exchange failed' }, { status: 401 });
   }
 }

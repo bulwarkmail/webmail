@@ -15,6 +15,16 @@ export function oauthErrorCode(body: string): string | null {
   }
 }
 
+/**
+ * What a catch-all logs of an error: its message, except a JSON parser's,
+ * which quotes the text it read (a token answer, or a request body that
+ * carries a code).
+ */
+export function loggableError(error: unknown): string {
+  if (error instanceof SyntaxError) return 'Not valid JSON';
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
 /** The field names of a parsed token answer. */
 export function answerFields(answer: unknown): string[] {
   if (!answer || typeof answer !== 'object' || Array.isArray(answer)) return [];

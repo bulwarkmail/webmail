@@ -156,7 +156,12 @@ async function redeem(refreshToken: string, serverId: string | null, upstream: C
     return { kind: 'unreachable', message: error instanceof Error ? error.message : 'Unknown error' };
   }
   if (!response.ok) return { kind: 'refused', status: response.status, error: oauthErrorCode(await response.text()) };
-  return { kind: 'issued', tokens: (await response.json()) as IssuedTokens };
+  try {
+    return { kind: 'issued', tokens: (await response.json()) as IssuedTokens };
+  } catch {
+    // The parser's message would quote the answer, tokens and all.
+    throw new Error(`The token endpoint answered ${response.status} with a body that is not JSON`);
+  }
 }
 
 /** How long an issued redemption is kept for requests that still carry the token it spent. */

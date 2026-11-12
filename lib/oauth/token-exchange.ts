@@ -254,9 +254,16 @@ export async function exchangeCodeForTokens(
     throw new Error('Token exchange failed');
   }
 
-  const tokens = await tokenResponse.json();
+  let tokens;
+  try {
+    tokens = await tokenResponse.json();
+  } catch {
+    // The parser's message would quote the answer, tokens and all.
+    logger.error('Token answer is not JSON', { status: tokenResponse.status });
+    throw new Error('Invalid token response');
+  }
 
-  if (!tokens.access_token) {
+  if (!tokens?.access_token) {
     // Which fields came, not their values: the answer may still hold tokens.
     logger.error('Token response missing access_token', { fields: answerFields(tokens) });
     throw new Error('Invalid token response');

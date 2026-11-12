@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 import { decryptPayload } from '@/lib/auth/crypto';
 import { exchangeCodeForTokens, getRequiredConfig, getTokenEndpoint, hasClientSecret } from '@/lib/oauth/token-exchange';
 import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { pairingOwner, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { stashGrant } from '@/lib/auth/pairing-store';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
     cookieStore.delete(SSO_PENDING_COOKIE);
     // The grant can't be kept without the shared store; the user tries again.
     if (isStoreUnavailable(error)) return storeUnavailableResponse();
-    logger.error('Reauth complete error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Reauth complete error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Re-authentication failed' }, { status: 401 });
   }
 }
