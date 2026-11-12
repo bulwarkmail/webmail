@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { configManager } from '@/lib/admin/config-manager';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { JmapAuthVerificationError, assertBasicAuthMatchesUsername, verifyJmapAuth } from '@/lib/auth/verify-jmap-auth';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { isStoredCredentialRefused, recordStoredCredentialStatus } from '@/lib/stalwart/stored-credential-budget';
@@ -46,7 +46,8 @@ async function verifiedOwner(request: NextRequest): Promise<ArchiveOwner | NextR
   } catch { return denied; }
   const store = await cookies();
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
-    const ctx = readStalwartAuthContextFromStore(store, slot);
+    // None past the maximum session length.
+    const ctx = await readCurrentStalwartAuthContext(store, slot);
     if (!ctx) continue;
     try { if (archiveIdentity(ctx) !== claimed) continue; } catch { continue; }
     try {

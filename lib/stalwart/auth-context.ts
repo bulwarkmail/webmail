@@ -114,6 +114,18 @@ export async function readCurrentStalwartAuthContext(
 }
 
 /**
+ * Whether a remembered session (the slot's session cookie) has outlived the
+ * organisation's maximum session length, for routes that take it as the
+ * signed-in identity. One without a sign-in time counts from
+ * limitsEnforcedSince(), as its restore does.
+ */
+export async function rememberedSessionPastMaxAge(session: { username: string; signedInAt?: number }): Promise<boolean> {
+  const maxHours = await maxSessionHoursFor(session.username.split('%', 1)[0]);
+  if (!maxHours) return false;
+  return isPastMaxAge(session.signedInAt ?? await limitsEnforcedSince(), maxHours);
+}
+
+/**
  * The sign-in a slot's office editor tokens belong to, as the editor launch
  * records it: the context's login and sign-in time, which counts from when
  * the limits were first enforced when the context has none. Null without a
