@@ -1,6 +1,6 @@
 # Base images by digest, so a build gets the image that was reviewed; the
 # Dependabot docker entry moves the digest when the tag gets a new image.
-FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 # @sentry/cli's install script looks for a binary for this platform and fails
@@ -73,7 +73,7 @@ RUN node scripts/sourcemaps.mjs collect --out /sourcemaps .next/static .next/sta
 FROM scratch AS sourcemaps
 COPY --from=bundle /sourcemaps /
 
-FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS runner
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS runner
 
 LABEL org.opencontainers.image.title="Bulwark Webmail"
 LABEL org.opencontainers.image.description="Modern webmail client built with Next.js and the JMAP protocol"
