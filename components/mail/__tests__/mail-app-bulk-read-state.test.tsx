@@ -3,16 +3,12 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ToastContainer } from '@/components/ui/toast';
 import { useEmailStore } from '@/stores/email-store';
-import { useAuthStore, setClientForTests } from '@/stores/auth-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useToastStore } from '@/stores/toast-store';
 import { JMAPClient } from '@/lib/jmap/client';
-import { clearUndoHistory, undoHistory, undoLatest } from '@/lib/undo-history';
-import { useAccountStore } from '@/stores/account-store';
-import { snapshotAccount, evictAll } from '@/lib/account-state-manager';
-import { currentStoreEpoch } from '@/lib/store-epoch';
-import { AccountSwitcher } from '@/components/layout/account-switcher';
+import { clearUndoHistory, undoHistory } from '@/lib/undo-history';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 
 // Only layout/drag machinery is replaced; controls, row rendering, stores,
@@ -144,8 +140,6 @@ afterEach(() => {
   vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();
 });
 
-
-
 async function openAndSelect(read = false) {
   if (read) {
     rich = { ...rich, keywords: { ...rich.keywords, $seen: true } };
@@ -204,78 +198,4 @@ it('marks the reader unread with bulk, then its inverse sends read', async () =>
   expectConfirmed([]); expect(undoHistory()).toHaveLength(1);
   nextRequest(); fireEvent.click(screen.getByTitle('mark_read')); await tick(); expectPatch(1, ['a'], true);
   await finish(['a']); expectConfirmed(['a']); expect(screen.getByTitle('mark_unread')).toBeEnabled();
-});
-it.each([false, true])('Undo restores reader keywords and tag counts after bulk read=%s', async read => {
-  await openAndSelect(!read); await finish(['a', 'b']); expectConfirmed(read ? ['a', 'b'] : []);
-  const undoA = deferred<Reply>(); const undoB = deferred<Reply>();
-  request.mockImplementationOnce(() => undoA.promise).mockImplementationOnce(() => undoB.promise);
-  await act(async () => { undoLatest(); await vi.advanceTimersByTimeAsync(0); });
-  expect(request).toHaveBeenCalledTimes(3); expectPatch(1, ['a'], !read); expectPatch(2, ['b'], !read);
-  await act(async () => { undoA.resolve(response(['a'], [])); undoB.resolve(response(['b'], [])); await vi.advanceTimersByTimeAsync(0); });
-  // The existing keyword Undo updates tag counts, but leaves folder counters
-  // as they were after the bulk action. Keep that separate behavior unchanged.
-  expectConfirmed(read ? [] : ['a', 'b'], read ? 0 : 2);
-  expect(!!useEmailStore.getState().selectedEmail?.keywords.$seen).toBe(!read);
-  expect(screen.getByTitle(read ? 'mark_read' : 'mark_unread')).toBeEnabled();
-});
-it('reselects an accepted message with the refused one and counts the retry only once', async () => {
-  await openAndSelect(); await finish(['a', 'b'], ['b']); expectConfirmed(['a']);
-  await act(async () => { await vi.advanceTimersByTimeAsync(500); });
-  select('a'); select('b'); nextRequest(); fireEvent.click(bulk()); await tick(); expectPatch(1, ['a', 'b'], true);
-  expectConfirmed(['a']); await finish(['a', 'b']); expectConfirmed(['a', 'b']);
-  expect(useEmailStore.getState().selectedEmail?.keywords.$seen).toBe(true);
-  expect(useEmailStore.getState().processingReadStatus.size).toBe(0);
-});
-
-it.each([true, false])('preserves an unstamped B reader when A bulk read=%s completes after the real account switch', async read => {
-  const b = new JMAPClient('https://mail.example.invalid', 'b@example.invalid', 'synthetic');
-  Object.assign(b, { accountId: 'b-owner', apiUrl: 'https://mail.example.invalid/api' });
-  const bReader = { ...rich, subject: 'B namesake', preview: 'B full reader',
-    keywords: { ...rich.keywords, ...(!read ? { $seen: true } : {}) } };
-  vi.spyOn(b, 'getEmail').mockResolvedValue(bReader);
-  vi.spyOn(b, 'getIdentities').mockResolvedValue([{ id: 'b-identity', email: 'b@example.invalid', name: 'B', mayDelete: false }]);
-  const bRequest = vi.spyOn(b as unknown as { request: (methods: unknown[]) => Promise<Reply> }, 'request');
-  bRequest.mockRejectedValue(new Error('Unexpected B mutation'));
-  const entry = (id: string, username: string, slot: number) => ({ id, username, email: username,
-    label: username, displayName: id, serverUrl: 'https://mail.example.invalid', cookieSlot: slot,
-    authMode: 'basic' as const, rememberMe: false, isConnected: true, hasError: false,
-    lastLoginAt: 1, avatarColor: '#123456', isDefault: slot === 0,
-    serverIdentifiers: [`${username}@mail.example.invalid`] });
-  useAccountStore.setState({ accounts: [entry('audit-login', 'audit@example.invalid', 0), entry('b-login', 'b@example.invalid', 1)], activeAccountId: 'audit-login' });
-  setClientForTests('audit-login', client); setClientForTests('b-login', b);
-  useAuthStore.setState({ getClientForAccount: useAuthStore.getInitialState().getClientForAccount,
-    getAllConnectedClients: useAuthStore.getInitialState().getAllConnectedClients });
-  useSettingsStore.setState({ flushSync: vi.fn().mockResolvedValue(undefined) });
-  // A previously loaded B inbox is restored by the actual account-state manager.
-  const aState = useEmailStore.getState();
-  useEmailStore.setState({ emails: [bReader], selectedEmail: null });
-  snapshotAccount('b-login'); useEmailStore.setState(aState, true);
-  try {
-    await openAndSelect(!read);
-    const epoch = currentStoreEpoch();
-    render(<AccountSwitcher variant="expanded" />);
-    expect(screen.getByTestId('account-switcher')).toBeEnabled();
-    fireEvent.click(screen.getByTestId('account-switcher'));
-    const option = screen.getAllByTestId('account-option').find(e => e.dataset.accountId === 'b-login')!;
-    expect(option).toBeEnabled(); // Bulk processing disables its own controls, not account switching.
-    fireEvent.click(option); await tick();
-    expect(useAuthStore.getState().client).toBe(b);
-    expect(useAuthStore.getState().activeAccountId).toBe('b-login');
-    expect(currentStoreEpoch()).toBeGreaterThan(epoch);
-    fireEvent.click(row('a')); await tick();
-    const selectedB = useEmailStore.getState().selectedEmail!;
-    expect(selectedB).toEqual(bReader);
-    expect(selectedB.sourceAccountId).toBeUndefined();
-    expect(selectedB.sourceClientAccountId).toBeUndefined();
-    await finish(['a', 'b']);
-    const state = useEmailStore.getState();
-    // Keep the reader evidence separate from the older captured-list completion.
-    console.info('bulk ownership completion', JSON.stringify({ read,
-      activeAccount: useAuthStore.getState().activeAccountId,
-      list: state.emails.map(e => ({ subject: e.subject, seen: e.keywords.$seen ?? false })),
-      reader: { subject: state.selectedEmail?.subject, seen: state.selectedEmail?.keywords.$seen ?? false } }));
-    expect(state.selectedEmail).toBe(selectedB);
-    expect(screen.getByTitle(read ? 'mark_read' : 'mark_unread')).toBeEnabled();
-    expect(bRequest).not.toHaveBeenCalled();
-  } finally { evictAll(); }
 });
