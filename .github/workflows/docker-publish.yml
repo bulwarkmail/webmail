@@ -81,6 +81,8 @@ jobs:
         with:
           images: ${{ needs.prepare.outputs.image_name }}
 
+      # No Actions cache: any job on main can write one, and this image is
+      # published. The builder starts empty on every run.
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -93,8 +95,6 @@ jobs:
             BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=image,name=${{ needs.prepare.outputs.image_name }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
       # The same build again, a cache hit on this builder, for the stage that
       # holds only the source maps (Dockerfile, "sourcemaps"); the image never
@@ -112,7 +112,6 @@ jobs:
             BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps
-          cache-from: type=gha,scope=${{ matrix.platform }}
 
       - name: Upload source maps to Bugsink
         if: matrix.platform == 'linux/amd64'

@@ -59,11 +59,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # The npm cache only for the checks on pushes and pull requests. Release
+      # and manual builds hand out their zips, and any job on main can write
+      # the cache, so they install from the registry.
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-          cache: npm
+          cache: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && 'npm' || '' }}
 
       - name: Install dependencies
         run: npm ci

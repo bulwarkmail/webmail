@@ -7,7 +7,10 @@
 //     requests in reads no secret but GITHUB_TOKEN, and such a job holds no
 //     write permission. A branch inside this repository gets the secrets on
 //     `pull_request` just like main does, so the `if:` is the only gate.
-//     `pull_request_target` is refused outright.
+//     `pull_request_target` is refused outright;
+//   - uses a cache in a job that publishes (packages, contents or
+//     id-token write) or builds what such a job publishes. Any job on main
+//     can write the Actions cache, so a release would ship what it left.
 //
 //   node scripts/check-action-pins.mjs [repo root]      default: the current directory
 //
@@ -314,10 +317,14 @@ function writeScopes(permissions) {
   return textOf(permissions).trim() === 'write-all' ? ['write-all'] : [];
 }
 
+const workflows = workflowFiles.map((file) => ({ rel: relOf(file), wf: parseYaml(readFileSync(file, 'utf8')) }));
+const stepsOf = (job) => {
+  const steps = get(job, 'steps');
+  return steps?.type === 'seq' ? steps.items : [];
+};
+
 // Pull request runs: no secret, no write token.
-for (const file of workflowFiles) {
-  const rel = relOf(file);
-  const wf = parseYaml(readFileSync(file, 'utf8'));
+for (const { rel, wf } of workflows) {
   const on = get(wf, 'on');
   const triggers = new Set(listOf(on));
   if (triggers.has('pull_request_target')) {
@@ -348,11 +355,75 @@ for (const file of workflowFiles) {
         problems.push(`${rel}:${line}: job ${id} reads secrets.${name} and runs on pull requests`);
       }
     }
-    const steps = get(job, 'steps');
-    for (const step of steps?.type === 'seq' ? steps.items : []) {
+    for (const step of stepsOf(job)) {
       if (!letsPullRequests(intersect(jobEvents, eventsOf(get(step, 'if'))))) continue;
       for (const { name, line } of secretReads(step)) {
         problems.push(`${rel}:${line}: reads secrets.${name} in a step that runs on pull requests (add if: github.event_name != 'pull_request')`);
+      }
+    }
+  }
+}
+
+// Jobs that publish restore no cache, since any job that ran on main before
+// could have written it: a job holding packages, contents or id-token write,
+// and a job whose artifacts such a job downloads, for the events the
+// publishing job runs on. Test jobs keep their caches.
+const PUBLISHES = new Set(['packages', 'contents', 'id-token', 'write-all']);
+const usesOf = (step) => textOf(get(step, 'uses')).trim();
+const overlap = (a, b) => {
+  const both = intersect(a, b);
+  return both.only ? both.only.size > 0 : true;
+};
+
+// The events a cache input is on for: `${{ <condition> && 'npm' || '' }}`
+// turns it on only where the condition holds; any other value always.
+function cacheEvents(value) {
+  const text = textOf(value).trim();
+  if (!text || text === 'false') return null;
+  const m = text.match(/^\$\{\{\s*([\s\S]+?)\s*&&\s*'[^']*'\s*\|\|\s*''\s*\}\}$/);
+  return m ? eventsOf({ type: 'scalar', value: m[1] }) : EVERY_EVENT;
+}
+
+function cacheInputs(job) {
+  const found = [];
+  const jobEvents = eventsOf(get(job, 'if'));
+  for (const step of stepsOf(job)) {
+    const stepEvents = intersect(jobEvents, eventsOf(get(step, 'if')));
+    const uses = usesOf(step);
+    if (/^actions\/cache(\/restore)?@/.test(uses)) found.push({ what: uses.split('@')[0], line: step.line, events: stepEvents });
+    for (const key of ['cache', 'cache-from', 'cache-to']) {
+      const value = get(get(step, 'with'), key);
+      const events = value && cacheEvents(value);
+      if (events) found.push({ what: `${key}: ${textOf(value).trim()}`, line: value.line, events: intersect(stepEvents, events) });
+    }
+  }
+  return found;
+}
+
+for (const { rel, wf } of workflows) {
+  const jobs = get(wf, 'jobs');
+  if (jobs?.type !== 'map') continue;
+  const publishScopes = (job) => writeScopes(get(job, 'permissions') ?? get(wf, 'permissions')).filter((s) => PUBLISHES.has(s));
+  for (const [id, job] of jobs.entries) {
+    const scopes = publishScopes(job);
+    if (!scopes.length) continue;
+    const events = eventsOf(get(job, 'if'));
+    for (const c of cacheInputs(job)) {
+      if (overlap(c.events, events)) problems.push(`${rel}:${c.line}: job ${id} holds ${scopes.join(', ')} write and uses a cache (${c.what})`);
+    }
+    if (!stepsOf(job).some((s) => /^actions\/download-artifact@/.test(usesOf(s)))) continue;
+    // The jobs it needs, directly or through others, that upload artifacts.
+    const seen = new Set();
+    const queue = listOf(get(job, 'needs'));
+    while (queue.length) {
+      const name = queue.shift();
+      const dep = jobs.entries.get(name);
+      if (seen.has(name) || !dep) continue;
+      seen.add(name);
+      queue.push(...listOf(get(dep, 'needs')));
+      if (publishScopes(dep).length || !stepsOf(dep).some((s) => /^actions\/upload-artifact@/.test(usesOf(s)))) continue;
+      for (const c of cacheInputs(dep)) {
+        if (overlap(c.events, events)) problems.push(`${rel}:${c.line}: job ${name} builds what job ${id} publishes and uses a cache (${c.what})`);
       }
     }
   }
@@ -363,4 +434,6 @@ if (problems.length) {
   console.error(`\n${problems.length} problem(s) in ${files.length} file(s).`);
   process.exit(1);
 }
-console.log(`ok: ${files.length} workflow and action file(s), every action pinned to a commit, no secret or write token on a pull request`);
+console.log(
+  `ok: ${files.length} workflow and action file(s), every action pinned to a commit, no secret or write token on a pull request, no cache in a publishing job`,
+);

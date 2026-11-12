@@ -164,7 +164,8 @@ jobs:
 
       # The export is built once on this runner (Dockerfile.lite pins the
       # builder to $BUILDPLATFORM) and the final stage only COPYs, so both
-      # platforms come out of one job without QEMU.
+      # platforms come out of one job without QEMU. No Actions cache here:
+      # any job on main can write one, and this image is published.
       - name: Build and push
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -177,8 +178,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_COMMIT=${{ github.sha }}
-          cache-from: type=gha,scope=lite
-          cache-to: type=gha,mode=max,scope=lite
 
       # No source maps for this image yet: with BULWARK_SOURCE_MAPS=1 the
       # multi-platform build stalled on the runner after the Lite build step

@@ -6,6 +6,9 @@ name: "Docker: Release image"
 #
 # Every manifest list gets a signed build provenance attestation, pushed to
 # GHCR next to it: `gh attestation verify oci://<image>:<tag> --owner bulwarkmail`.
+#
+# The images build on an empty builder, without the Actions cache: any job on
+# main can write that cache, and these images are published.
 on:
   release:
     types: [published]
@@ -62,8 +65,6 @@ jobs:
             BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
       # The same build again, a cache hit on this builder, for the stage that
       # holds only the source maps (Dockerfile, "sourcemaps"); the image never
@@ -81,7 +82,6 @@ jobs:
             BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps
-          cache-from: type=gha,scope=${{ matrix.platform }}
 
       - name: Upload source maps to Bugsink
         if: matrix.platform == 'linux/amd64'
@@ -216,8 +216,6 @@ jobs:
             NEXT_PUBLIC_LOCALE_PREFIX=always
             BULWARK_SOURCE_MAPS=1
           outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=always-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=always-${{ matrix.platform }}
 
       # The same build again, a cache hit on this builder, for the stage that
       # holds only the source maps (Dockerfile, "sourcemaps"); the image never
@@ -236,7 +234,6 @@ jobs:
             NEXT_PUBLIC_LOCALE_PREFIX=always
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps
-          cache-from: type=gha,scope=always-${{ matrix.platform }}
 
       - name: Upload source maps to Bugsink
         if: matrix.platform == 'linux/amd64'
