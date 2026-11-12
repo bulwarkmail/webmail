@@ -2419,12 +2419,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       : undefined);
     // An address names the login of its message or conversation, and the
     // account it is in. One that names no login (written before addresses
-    // did, or by hand) opens nothing in the Pro shell, and nothing in the
-    // standard layout while several logins are signed in: through the active
-    // login its id can name another message or conversation. With a single
-    // login the standard layout opens it, as that login's.
+    // did, copied from a single login's standard layout, or by hand) opens
+    // nothing while several logins are signed in, in the Pro shell and in the
+    // standard layout: through the active login its id can name another
+    // message or conversation. With a single login it opens, as that login's.
     if (opts?.fromAddress && (link.kind === 'message' || link.kind === 'thread') && !linkAccountId
-      && (isEmbedded || severalLogins())) {
+      && severalLogins()) {
       toast.error(t('account_routing.link_names_no_account'));
       return;
     }

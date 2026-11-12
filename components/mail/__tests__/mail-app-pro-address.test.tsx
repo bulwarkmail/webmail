@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -16,9 +17,11 @@ import { useProTabStore } from '@/stores/pro-tab-store';
 
 // The Pro shell's address of a message (a reload of it, or the same address
 // pasted) reaches the Pro mail surface through the handoff. It opens the
-// message tab of the login and account it names. An address that names no
-// login opens nothing: through the active login its id can name another
-// message, here the own one while the address was written for the team's.
+// message tab of the login and account it names. While two logins are signed
+// in, an address that names no login opens nothing: through the active login
+// its id can name another message, here the own one while the address was
+// written for the team's. With one login such an address opens as that
+// login's (mail-app-pro-address-one-login.test.tsx).
 // The harness is the one of mail-app-link-own-namesake.test.tsx.
 
 vi.mock('next/dynamic', () => ({ default: (load: () => Promise<React.ComponentType<Record<string, unknown>>>) => {
@@ -110,10 +113,15 @@ async function openAddress(search?: string) {
   });
 }
 
-describe('an address of the Pro shell that reaches its mail surface', () => {
+const entry = (id: string) => ({ id, label: id, email: id, username: id, serverUrl: 'https://mail.example', isConnected: true }) as never;
+
+describe('an address of the Pro shell that reaches its mail surface, while two logins are signed in', () => {
+  const originalAccounts = useAccountStore.getState().accounts;
   beforeEach(() => {
+    useAccountStore.setState({ accounts: [entry('login-a'), entry('login-b')] });
     useProTabStore.setState({ tabs: useProTabStore.getState().tabs.filter((tab) => tab.emailData?.emailId !== ID) });
   });
+  afterEach(() => useAccountStore.setState({ accounts: originalAccounts }));
 
   it('opens the message tab of the login and account it names', async () => {
     await openAddress('?account=login-a&owner=ce');

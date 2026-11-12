@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -16,10 +17,11 @@ import { useProTabStore } from '@/stores/pro-tab-store';
 
 // More addresses that reach the Pro mail surface through the handoff (a
 // reload, a pasted address) than mail-app-pro-address.test.tsx names, with
-// its harness. The rule: an address that names no login opens nothing and
-// reads nothing through the active login, whose ids name other messages and
-// conversations. A conversation address is such an address too: thread ids
-// repeat across accounts and logins exactly as message ids do.
+// its harness. The rule: while several logins are signed in, an address that
+// names no login opens nothing and reads nothing through the active login,
+// whose ids name other messages and conversations. A conversation address is
+// such an address too: thread ids repeat across accounts and logins exactly
+// as message ids do. With one login every such address opens, as before.
 //
 // Belongs in components/mail/__tests__/.
 
@@ -119,10 +121,16 @@ async function openAddress(segments: string[], search?: string, waitMs = 300) {
   });
 }
 
-describe('addresses of the Pro shell that name no login', () => {
+const entry = (id: string) => ({ id, label: id, email: id, username: id, serverUrl: 'https://mail.example', isConnected: true }) as never;
+const originalAccounts = useAccountStore.getState().accounts;
+const refusals = () => useToastStore.getState().toasts.filter((toast) => toast.title === 'account_routing.link_names_no_account');
+
+describe('addresses of the Pro shell that name no login, while two logins are signed in', () => {
   beforeEach(() => {
+    useAccountStore.setState({ accounts: [entry('login-a'), entry('login-b')] });
     useProTabStore.setState({ tabs: useProTabStore.getState().tabs.filter((tab) => tab.emailData?.emailId !== ID) });
   });
+  afterEach(() => useAccountStore.setState({ accounts: originalAccounts }));
 
   it('a conversation address opens nothing and reads nothing through the active login', async () => {
     await openAddress(['thread', THREAD]);
@@ -148,5 +156,31 @@ describe('addresses of the Pro shell that name no login', () => {
     await openAddress([], '?email=' + ID);
     expect(tabsOf(ID)).toEqual([]);
     expect(getEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('addresses of the Pro shell that name no login, with one login', () => {
+  beforeEach(() => {
+    useAccountStore.setState({ accounts: [entry('login-a')] });
+    useProTabStore.setState({ tabs: useProTabStore.getState().tabs.filter((tab) => tab.emailData?.emailId !== ID) });
+  });
+  afterEach(() => useAccountStore.setState({ accounts: originalAccounts }));
+
+  it('a conversation address opens that login\'s conversation, as before', async () => {
+    await openAddress(['thread', THREAD]);
+    expect(getThreadEmails).toHaveBeenCalledWith(THREAD, undefined);
+    expect(refusals()).toEqual([]);
+  });
+
+  it('a message address that names an owner account opens that login\'s tab of it', async () => {
+    await openAddress(['message', ID], '?owner=ce');
+    expect(tabsOf(ID).map((tab) => tab.emailData)).toEqual([expect.objectContaining({ clientAccountId: 'login-a', accountId: 'ce' })]);
+    expect(refusals()).toEqual([]);
+  });
+
+  it('the address form from before paths (?email=) opens that login\'s tab of it', async () => {
+    await openAddress([], '?email=' + ID);
+    expect(tabsOf(ID).map((tab) => tab.emailData)).toEqual([expect.objectContaining({ clientAccountId: 'login-a' })]);
+    expect(refusals()).toEqual([]);
   });
 });

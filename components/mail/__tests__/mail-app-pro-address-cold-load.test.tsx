@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -16,8 +17,9 @@ import { clearPendingDeepLinks } from '@/lib/deep-link-handoff';
 // Pro interface is on (a reload, a pasted old link). The route renders the
 // standard mail page first, under the Pro shell's takeover, before the
 // redirect to the shell. That page must leave the address to the shell, which
-// opens nothing from it: it must not read the id through the active login,
-// open the message in the reader or mark it read on its own.
+// decides about it (nothing while several logins are signed in, the only
+// login's message tab with one): it must not read the id through the active
+// login, open the message in the reader or mark it read on its own.
 //
 // Harness of mail-app-pro-address.test.tsx.
 
@@ -106,10 +108,15 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const entry = (id: string) => ({ id, label: id, email: id, username: id, serverUrl: 'https://mail.example', isConnected: true }) as never;
+const originalAccounts = useAccountStore.getState().accounts;
+
 describe('the standard mail page while the Pro shell takes over (cold load of an address)', () => {
   beforeEach(() => {
     useSettingsStore.setState({ proInterface: true } as never);
+    useAccountStore.setState({ accounts: [entry('login-a'), entry('login-b')] });
   });
+  afterEach(() => useAccountStore.setState({ accounts: originalAccounts }));
 
   it('does not open a message address that names no login by itself', async () => {
     render(<MailApp linkSegments={['message', ID]} />);
@@ -119,8 +126,19 @@ describe('the standard mail page while the Pro shell takes over (cold load of an
     expect(useEmailStore.getState().selectedEmail).toBeNull();
   });
 
+  it('with one login, leaves the address to the shell all the same, which opens that login\'s tab of it', async () => {
+    useAccountStore.setState({ accounts: [entry('login-a')] });
+    render(<MailApp linkSegments={['message', ID]} />);
+    await screen.findByText('message list', {}, { timeout: 5000 });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)); });
+    expect(getEmail).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().selectedEmail).toBeNull();
+  });
+
   it('control: with the Pro interface off, the same address opens the login’s own message', async () => {
     useSettingsStore.setState({ proInterface: false } as never);
+    // The standard layout opens an address without a login for a single login only.
+    useAccountStore.setState({ accounts: [entry('login-a')] });
     render(<MailApp linkSegments={['message', ID]} />);
     await screen.findByText('message list', {}, { timeout: 5000 });
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)); });
