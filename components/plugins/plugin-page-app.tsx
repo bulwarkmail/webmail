@@ -12,8 +12,10 @@ import { PhoneAppHeader } from "@/components/layout/phone-header-actions";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
+import { MvSidePanel } from "@/components/layout/mv-side-panel";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { PluginIframeSlot } from "@/components/plugins/plugin-iframe-slot";
+import { PluginSidePanel } from "@/components/plugins/plugin-side-panels";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsMobile } from "@/hooks/use-media-query";
@@ -144,7 +146,8 @@ export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
           activeAppId={inlineApp?.id ?? null}
         />
       )}
-      <div data-mv-card={mvShell ? "" : undefined} className={cn("flex flex-1 min-h-0 overflow-hidden", mvShell && "mb-4 mx-4")}>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div data-mv-card={mvShell ? "" : undefined} className={cn("flex flex-1 min-w-0 min-h-0 overflow-hidden", mvShell && "mb-4 mx-4")}>
         {!isMobile && !isEmbedded && !mvShell && (
           <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: "1px solid rgba(128, 128, 128, 0.3)" }}>
             <NavigationRail
@@ -175,6 +178,13 @@ export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
             />
           )}
         </div>
+      </div>
+      {/* The plugins' panels beside the page (the side-panel slot), as
+          beside the mail: the page narrows by the panel's width. One open
+          state with the mail's, and api.ui.openPanel('side-panel') answered
+          here too. */}
+      {mvShell && !inlineApp && <MvSidePanel />}
+      {!mvShell && !isMobile && !isEmbedded && !inlineApp && <PluginSidePanel />}
       </div>
       <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />
     </div>

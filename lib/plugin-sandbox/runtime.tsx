@@ -974,7 +974,7 @@ function buildCoreApi(manifest: PluginManifest) {
        * Open, close or toggle the panel this plugin's slot sits in:
        * 'composer-sidebar', 'composer-sidebar-right' (pass the composerId
        * from the click context or the slot's props), 'email-detail-sidebar'
-       * or 'side-panel' (this plugin's panel beside the mail). Resolve to
+       * or 'side-panel' (this plugin's panel beside the mail and its pages). Resolve to
        * whether the panel is open afterwards, or null when no such panel is
        * on screen (no composer or message open, or a phone), so the
        * plugin can fall back to a dialog. A panel opened this way gets a new
