@@ -1798,6 +1798,7 @@
       "title": "Etichette e-mail",
       "description": "Crea etichette per ordinare i messaggi. Le etichette vengono salvate con i messaggi sul server.",
       "add_keyword": "Aggiungi etichetta",
+      "empty": "Ancora nessuna etichetta.",
       "label_field": "Nome visualizzato",
       "label_placeholder": "es. Lavoro, Personale, Urgente",
       "id_field": "ID etichetta",

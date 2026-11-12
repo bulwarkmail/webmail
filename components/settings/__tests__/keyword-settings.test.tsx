@@ -50,6 +50,19 @@ describe('KeywordSettings', () => {
     expect(ids.slice(0, 2)).toEqual([second, first]);
   });
 
+  // #1612: new accounts start with no tags.
+  it('says there are no tags yet and still lets the user make one', () => {
+    useSettingsStore.setState({ emailKeywords: [] });
+    render(<KeywordSettings />);
+    expect(screen.getByText('empty')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('add_keyword'));
+    expect(screen.queryByText('empty')).toBeNull();
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: 'Work' } });
+    fireEvent.click(screen.getByText('add'));
+    expect(useSettingsStore.getState().emailKeywords).toEqual([{ id: 'work', label: 'Work', color: 'blue' }]);
+    expect(screen.queryByText('empty')).toBeNull();
+  });
+
   it('renders add keyword button', () => {
     render(<KeywordSettings />);
     expect(screen.getByText('add_keyword')).toBeInTheDocument();

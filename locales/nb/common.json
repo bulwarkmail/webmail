@@ -1801,6 +1801,7 @@
       "title": "E-postetiketter",
       "description": "Lag etiketter for å sortere meldingene dine. Etikettene lagres sammen med meldingene på serveren.",
       "add_keyword": "Legg til etikett",
+      "empty": "Ingen etiketter ennå.",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. arbeid, personlig, haster",
       "id_field": "Etikett-ID",

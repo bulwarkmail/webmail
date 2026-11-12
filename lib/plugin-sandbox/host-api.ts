@@ -33,6 +33,7 @@ import { useFilterStore } from '@/stores/filter-store';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import {
   KEYWORD_PALETTE,
+  emailKeywordsChosenPatch,
   useSettingsStore,
   type KeywordDefinition,
   type KeywordVisibility,
@@ -45,8 +46,8 @@ import { reportUploadProgress } from '../upload-progress';
 import { DEFAULT_KEYWORD_SCAN_LIMIT } from '../jmap/client';
 import { isServerSetKeyword } from '../jmap/server-keywords';
 import { suggestKeywordColor } from '../keyword-discovery';
-import { MAX_KEYWORD_LENGTH } from '../keyword-nesting';
-import { emailKeyFor, KEYWORD_PREFIX } from '../thread-utils';
+import { isValidKeywordDefinitionId, MAX_KEYWORD_LABEL_LENGTH } from '../keyword-nesting';
+import { emailKeyFor } from '../thread-utils';
 import { DEFAULT_SEARCH_FILTERS, isFilterEmpty, normalizePluginFilter } from '../jmap/search-utils';
 import { awaitDialog, awaitPrompt, awaitCustomDialog, type PromptField } from './host-dialog';
 import { triggerAnchor } from './dialog-anchor';
@@ -1561,30 +1562,13 @@ function patchThreadCache(isTarget: (email: Email) => boolean, changes: Record<s
 // ─── Native keyword definitions ──────────────────────────────
 
 const MAX_PLUGIN_KEYWORD_DEFINITIONS = 500;
-const MAX_PLUGIN_KEYWORD_LABEL_LENGTH = 255;
+const MAX_PLUGIN_KEYWORD_LABEL_LENGTH = MAX_KEYWORD_LABEL_LENGTH;
 const VALID_VISIBILITIES = new Set<KeywordVisibility>(['show', 'hide', 'unread']);
 
 type PluginKeywordDefinitionInput = Omit<KeywordDefinition, 'color'> & { color?: string };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** RFC 8621 keyword syntax, applied to the complete `$label:<id>` value. */
-function isValidKeywordDefinitionId(id: string): boolean {
-  const keyword = KEYWORD_PREFIX + id;
-  if (id.length === 0 || keyword.length > MAX_KEYWORD_LENGTH) return false;
-  for (let i = 0; i < keyword.length; i++) {
-    const code = keyword.charCodeAt(i);
-    if (
-      code < 0x21 || code > 0x7e ||
-      code === 0x28 || code === 0x29 || code === 0x7b || code === 0x7d ||
-      code === 0x5d || code === 0x25 || code === 0x2a || code === 0x22 || code === 0x5c
-    ) {
-      return false;
-    }
-  }
-  return true;
 }
 
 /** The fields of a definition a plugin may set; keywords.update sends only the ones it changes. */
@@ -1708,8 +1692,10 @@ function doKeywordsAdd(plugin: InstalledPlugin, value: unknown): { added: Keywor
   if (added.length > 0) {
     // One atomic append keeps concurrent plugin calls from partially
     // overwriting the list and triggers the normal persist/settings-sync path.
+    // A plugin's tags make the list chosen, so no admin default wipes them.
     useSettingsStore.setState((state) => ({
       emailKeywords: [...state.emailKeywords, ...added],
+      ...emailKeywordsChosenPatch(state),
     }));
   }
 
@@ -1733,7 +1719,7 @@ function doKeywordsUpdate(plugin: InstalledPlugin, value: unknown): { updated: K
       updated.push(next);
       return next;
     });
-    return updated.length > 0 ? { emailKeywords } : state;
+    return updated.length > 0 ? { emailKeywords, ...emailKeywordsChosenPatch(state) } : state;
   });
 
   const done = new Set(updated.map((keyword) => keyword.id.toLowerCase()));
@@ -1755,7 +1741,7 @@ function doKeywordsRemove(plugin: InstalledPlugin, value: unknown): { removed: s
       if (drop) removed.push(keyword.id);
       return !drop;
     });
-    return removed.length > 0 ? { emailKeywords } : state;
+    return removed.length > 0 ? { emailKeywords, ...emailKeywordsChosenPatch(state) } : state;
   });
 
   const done = new Set(removed.map((id) => id.toLowerCase()));
@@ -1815,7 +1801,7 @@ function doKeywordsReorder(value: unknown, rawOptions?: unknown): KeywordDefinit
     // Reuse the existing definitions verbatim so ordering cannot change a
     // label's name, colour, visibility, id casing, or any future metadata.
     result = reordered;
-    return { emailKeywords: reordered };
+    return { emailKeywords: reordered, ...emailKeywordsChosenPatch(state) };
   });
   return result.map((keyword) => ({ ...keyword }));
 }

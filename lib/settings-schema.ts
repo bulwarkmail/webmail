@@ -432,7 +432,7 @@ export const DENIED_SETTINGS: readonly string[] = [
   'allMailFolderIds', 'hiddenSharedMailAccounts', 'notificationMutes', 'hiddenCompanyCalendars', 'sharedCalendarColors',
   'folderIcons', 'folderCountModes', 'preferredIdentityIds',
   // App bookkeeping and UI state, not preferences.
-  'onboardingCompleted', 'tourCompleted', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',
+  'onboardingCompleted', 'tourCompleted', 'emailKeywordsChoiceTracked', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',
   'vacationCalendarBlocks', 'explicitSettings', 'proofreadingNoticeSeen',
   // Security, debugging and sync.
   'sessionTimeout', 'debugMode', 'debugCategories', 'settingsSyncDisabled',

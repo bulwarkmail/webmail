@@ -1801,6 +1801,7 @@
       "title": "電子郵件標籤",
       "description": "建立標籤來整理郵件。標籤會和郵件一起儲存在伺服器上。",
       "add_keyword": "新增標籤",
+      "empty": "尚無標籤。",
       "label_field": "顯示名稱",
       "label_placeholder": "例如工作、個人、緊急",
       "id_field": "標籤 ID",

@@ -1801,6 +1801,7 @@
       "title": "Email tags",
       "description": "Make tags to sort your messages. The tags are saved with your messages on the server.",
       "add_keyword": "New tag",
+      "empty": "No tags yet.",
       "label_field": "Display name",
       "label_placeholder": "e.g. Work, Personal, Urgent",
       "id_field": "Tag ID",

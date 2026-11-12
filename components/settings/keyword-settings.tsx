@@ -694,6 +694,9 @@ export function KeywordSettings() {
             {t("migrating")}
           </div>
         )}
+        {emailKeywords.length === 0 && !isAdding && (
+          <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        )}
         {emailKeywords.map((keyword, index) =>
           editingId === keyword.id ? (
             <KeywordEditForm
