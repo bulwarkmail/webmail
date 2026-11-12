@@ -10,7 +10,11 @@
  * - login routes accept the servers the user approved in the app
  *   (`isDesktopTrustedServer`, the list comes from the Electron main process)
  * - sign-in through the system browser for any server
- * - a per-slot record of the upstream for refresh tokens
+ * - a refresh token whose sign-in stamp predates server ids still renews at
+ *   the typed server its slot's record names (lib/oauth/slot-renewal.ts);
+ *   the record itself is written in any build that allows typed servers
+ * - every SSO sign-in follows the strict issuer rule, since users type their
+ *   own servers (lib/oauth/sign-in-servers.ts)
  * - a login budget per mail server rather than per client address
  * - pairing and hand-off routes are gone
  */
