@@ -19,7 +19,7 @@ import {
   refreshTokenCookieName,
   refreshTokenServerCookieName,
 } from '@/lib/oauth/tokens';
-import { readCustomUpstream, type CustomUpstream } from '@/lib/oauth/custom-upstream';
+import { customUpstreamCookieName, readCustomUpstream, type CustomUpstream } from '@/lib/oauth/custom-upstream';
 import { oauthErrorCode } from '@/lib/oauth/answer-summary';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
@@ -92,8 +92,9 @@ export interface TokenServer {
  * - the stamp names a typed server and the record is missing, names another
  *   one, or is no longer allowed (readCustomUpstream checks on every read);
  * - the stamp names a server that is no longer listed;
- * - there is no readable stamp and more than one server could have issued
- *   the token (servers are listed, or typed servers are allowed).
+ * - there is no readable stamp and the cookies name a listed entry or a typed
+ *   server (without a stamp, a slot that names neither renews at the
+ *   configured server, as on an instance with only that server).
  * A stamp written before it recorded the server takes the cookies' word (the
  * typed-server record only in the desktop build); the renewal then records it
  * (storeRenewedTokens). Without a session secret
@@ -120,8 +121,11 @@ export async function refreshTokenServer(
     // the server; elsewhere a record next to such a stamp is not this token's.
     server = { serverId: named, upstream: IS_DESKTOP_BUILD ? record : null };
   } else {
-    const typedServers = IS_DESKTOP_BUILD || configManager.get<boolean>('allowCustomJmapEndpoint', false);
-    if (servers.length > 0 || typedServers) return null;
+    // No readable stamp (a sign-in from before stamps, or a stamp sealed with
+    // an earlier session secret). Only the stamp could tell which listed
+    // entry or typed server issued the token, so a slot whose cookies name
+    // one is refused; any other renews at the configured server.
+    if (named || cookieStore.get(customUpstreamCookieName(slot))) return null;
     server = { serverId: null, upstream: null };
   }
   if (server.serverId !== null && !findServerById(servers, server.serverId)) return null;

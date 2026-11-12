@@ -222,13 +222,41 @@ describe('a refresh token only goes to the server that issued it', () => {
     expect(sentAnywhere('RT-ISSUED-BY-a.example')).toEqual([]);
   });
 
-  it('is not sent anywhere without a stamp when several servers are listed', async () => {
+  it('is not sent anywhere without a stamp when its cookie names a listed server', async () => {
     config = TWO_SERVERS;
     jar.set('jmap_rt', 'RT-ISSUED-BY-a.example');
     jar.set('jmap_rts', 'b');
     const res = await renew();
     expect(res.status).toBe(401);
     expect(sentAnywhere('RT-ISSUED-BY-a.example')).toEqual([]);
+  });
+
+  it('is not sent anywhere without a stamp when a typed server is recorded for the slot', async () => {
+    config = { jmapServerUrl: 'https://default.example', oauthClientId: 'webmail', allowCustomJmapEndpoint: true };
+    const { writeCustomUpstream } = await import('@/lib/oauth/custom-upstream');
+    const store = await (await import('next/headers')).cookies();
+    jar.set('jmap_rt', 'RT-OWN-SERVER');
+    writeCustomUpstream(store as never, 0, { serverUrl: 'https://own.example', clientId: 'bulwark-webmail' }, true);
+    const res = await renew();
+    expect(res.status).toBe(401);
+    expect(sentAnywhere('RT-OWN-SERVER')).toEqual([]);
+  });
+
+  it('renews at the configured server without a stamp when the slot names no other server', async () => {
+    // A sign-in from before stamps, or one whose stamp the session secret no longer opens.
+    config = { ...TWO_SERVERS, jmapServerUrl: 'https://default.example', oauthClientId: 'webmail', allowCustomJmapEndpoint: true };
+    jar.set('jmap_rt', 'RT-ISSUED-BY-default.example');
+    jar.set('jmap_signed_in', 'sealed-with-an-earlier-secret');
+    const res = await renew();
+    expect(res.status).toBe(200);
+    expect(sentTo('default.example', 'RT-ISSUED-BY-default.example')).toEqual([expect.objectContaining({ path: '/auth/token' })]);
+    expect(sentAnywhere('RT-ISSUED-BY-default.example').filter((r) => r.host !== 'default.example')).toEqual([]);
+
+    // The renewal stamps the token with the configured server; a cookie set afterwards changes nothing.
+    jar.set('jmap_rts', 'b');
+    received = [];
+    await renew();
+    expect(sentTo('b.example', 'RT-ISSUED-BY-default.example')).toEqual([]);
   });
 
   it('is not sent to the configured server once its own server is no longer listed', async () => {
