@@ -49,6 +49,12 @@ export interface RestoreRecord {
   credentialId: string;
   /** The slot-0 session cookie before the handoff, sealed as it was; null when there was none. */
   session: string | null;
+  /**
+   * Whether that sign-in asked to be remembered, so the cookie goes back
+   * with the same lifetime. Absent in records parked before it was kept:
+   * not remembered, the shorter life.
+   */
+  remembered?: boolean;
   /** The account list the page had before the handoff, attached once by the page. */
   registry: unknown;
   expiresAt: number;
@@ -130,9 +136,12 @@ export async function parkOwnSession(
 
   if (handle) await kv.del(storeKey(handle));
   if (!hasOwnSignIn(cookieStore)) return null;
+  const session = cookieStore.get(sessionCookieName(0))?.value ?? null;
   return put({
     credentialId,
-    session: cookieStore.get(sessionCookieName(0))?.value ?? null,
+    session,
+    // The cookie's own lifetime can't be read here; the sign-in sealed its choice.
+    remembered: session ? decryptSession(session)?.remember === true : false,
     registry: null,
     expiresAt,
   }, now);

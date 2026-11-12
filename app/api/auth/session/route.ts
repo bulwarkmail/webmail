@@ -281,10 +281,13 @@ export async function POST(request: NextRequest) {
     // A sign-in kept here starts the maximum session length.
     const signedInAt = Date.now();
     // The resolved account goes into the remembered session too, also when it
-    // is the login itself, so a restore names it as this sign-in does.
-    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt, accountName);
+    // is the login itself, so a restore names it as this sign-in does. So
+    // does the lifetime asked for: a cookie put back later (returning from an
+    // impersonation) keeps it.
+    const remembered = remember !== false;
+    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt, accountName, remembered);
     const cookieStore = await cookies();
-    cookieStore.set(cookieName, token, sessionCookieOptions(remember !== false));
+    cookieStore.set(cookieName, token, sessionCookieOptions(remembered));
     setStalwartAuthContextInStore(cookieStore, slot, {
       serverUrl: normalizedServerUrl,
       username,
@@ -392,9 +395,10 @@ export async function PUT(request: NextRequest) {
     restoreContext(cookieStore, slot, credentials);
 
     // The browser counts the maximum session length from the server's time.
-    // The account name stays on the server, as before it was kept.
+    // The account name and the sealed lifetime stay on the server, as before
+    // they were kept.
     const impersonated = isImpersonationSession(cookieStore, slot, credentials);
-    const { accountName: _accountName, ...shared } = credentials;
+    const { accountName: _accountName, remember: _remember, ...shared } = credentials;
     return NextResponse.json({ ...shared, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });

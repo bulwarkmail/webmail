@@ -116,7 +116,8 @@ async function sessionUsername(): Promise<string | null> {
 
 async function signedInAsAdmin() {
   const { encryptSession } = await import('@/lib/auth/crypto');
-  const token = encryptSession(SERVER, 'admin@example.org', 'admins-own-password');
+  // A remembered sign-in, as POST /api/auth/session seals one with "Remember me" ticked.
+  const token = encryptSession(SERVER, 'admin@example.org', 'admins-own-password', Date.now(), undefined, true);
   jar.set('jmap_session', token);
   return token;
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { SESSION_COOKIE_MAX_AGE, sessionCookieName } from '@/lib/auth/session-cookie';
-import { getCookieOptions } from '@/lib/oauth/cookie-config';
+import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { clearStalwartAuthContextInStore } from '@/lib/stalwart/auth-context';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
@@ -117,10 +117,15 @@ export async function POST(request: NextRequest) {
   cookieStore.delete(IMPERSONATION_MARKER_COOKIE);
 
   // The parked cookie is the one POST /api/auth/session wrote, sealed as it
-  // was: it goes back with that route's lifetime, and the session's own
-  // sign-in time still counts for the maximum session length.
+  // was: it goes back with the lifetime that sign-in asked for (30 days, or
+  // until the browser closes), and the session's own sign-in time still
+  // counts for the maximum session length.
   if (record.session) {
-    cookieStore.set(sessionCookieName(0), record.session, { ...getCookieOptions(), maxAge: SESSION_COOKIE_MAX_AGE });
+    cookieStore.set(
+      sessionCookieName(0),
+      record.session,
+      record.remembered === true ? { ...getCookieOptions(), maxAge: SESSION_COOKIE_MAX_AGE } : getSignInCookieOptions(false),
+    );
   }
 
   logger.info('Impersonation ended by returning to the own account', {

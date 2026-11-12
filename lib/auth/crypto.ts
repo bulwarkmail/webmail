@@ -29,11 +29,14 @@ function getKey(): Buffer {
  * resolved the credential to at sign-in, also when it equals `username`, so
  * a restored context keys per-user data on it as the sign-in did (a token
  * login may claim a bare local part); absent in cookies written before it
- * was kept, and in sign-ins that resolved none.
+ * was kept, and in sign-ins that resolved none. `remember`: whether the
+ * sign-in asked to be remembered (the cookie's 30 days); absent in cookies
+ * written before it was kept, which count as not remembered wherever the
+ * cookie is written again.
  */
 export type SessionCredentials =
-  | { serverUrl: string; username: string; password: string; token?: undefined; signedInAt?: number; accountName?: string }
-  | { serverUrl: string; username: string; token: string; password?: undefined; signedInAt?: number; accountName?: string };
+  | { serverUrl: string; username: string; password: string; token?: undefined; signedInAt?: number; accountName?: string; remember?: boolean }
+  | { serverUrl: string; username: string; token: string; password?: undefined; signedInAt?: number; accountName?: string; remember?: boolean };
 
 /** The Authorization header remembered credentials sign in with. */
 export function sessionAuthHeader(credentials: SessionCredentials): string {
@@ -47,6 +50,7 @@ export function encryptSession(
   secret: string | { token: string },
   signedInAt: number = Date.now(),
   accountName?: string,
+  remember?: boolean,
 ): string {
   const key = getKey();
   const iv = randomBytes(IV_LENGTH);
@@ -54,7 +58,8 @@ export function encryptSession(
 
   const credential = typeof secret === 'string' ? { password: secret } : { token: secret.token };
   const account = accountName ? { accountName } : {};
-  const payload = JSON.stringify({ v: 1, serverUrl, username, ...credential, signedInAt, ...account });
+  const remembered = remember !== undefined ? { remember } : {};
+  const payload = JSON.stringify({ v: 1, serverUrl, username, ...credential, signedInAt, ...account, ...remembered });
   const encrypted = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
 
@@ -84,11 +89,12 @@ export function decryptSession(token: string): SessionCredentials | null {
     const account = typeof parsed.accountName === 'string' && parsed.accountName
       ? { accountName: parsed.accountName as string }
       : {};
+    const remembered = typeof parsed.remember === 'boolean' ? { remember: parsed.remember as boolean } : {};
     if (typeof parsed.password === 'string' && parsed.password) {
-      return { serverUrl: parsed.serverUrl, username: parsed.username, password: parsed.password, ...signedInAt, ...account };
+      return { serverUrl: parsed.serverUrl, username: parsed.username, password: parsed.password, ...signedInAt, ...account, ...remembered };
     }
     if (typeof parsed.token === 'string' && parsed.token) {
-      return { serverUrl: parsed.serverUrl, username: parsed.username, token: parsed.token, ...signedInAt, ...account };
+      return { serverUrl: parsed.serverUrl, username: parsed.username, token: parsed.token, ...signedInAt, ...account, ...remembered };
     }
     return null;
   } catch (error) {
