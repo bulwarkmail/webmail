@@ -11,7 +11,7 @@ import { grantsAdminAccess, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { getStalwartAdminAccessMode, type StalwartAdminAccessMode } from '@/lib/admin/stalwart-admin-access';
 import { isStoreUnavailable } from '@/lib/admin/admin-store';
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
-import { isStoredCredentialRefused } from '@/lib/stalwart/stored-credential-budget';
+import { isBudgetRefusal, isStoredCredentialRefused } from '@/lib/stalwart/stored-credential-budget';
 import { forwardedClientHeaders, loginClientAddress } from '@/lib/auth/client-address';
 
 /**
@@ -136,16 +136,21 @@ async function checkStalwartAdmin(
   // the budget once it lets the credential through again.
   if (await isStoredCredentialRefused(creds.authHeader)) return false;
 
-  const { isAdmin, refused } = await runStalwartAdminCheck(creds, forwardedClientHeaders(loginClientAddress(request)));
-  rememberAdminCheck(cacheKey, isAdmin, refused ? ADMIN_CHECK_REFUSED_CACHE_MS : ADMIN_CHECK_CACHE_MS);
+  const { isAdmin, ttlMs } = await runStalwartAdminCheck(creds, forwardedClientHeaders(loginClientAddress(request)));
+  if (ttlMs !== null) rememberAdminCheck(cacheKey, isAdmin, ttlMs);
   return isAdmin;
 }
 
 async function runStalwartAdminCheck(
   creds: { serverUrl: string; authHeader: string; username: string; trusted: boolean },
   clientHeaders: Record<string, string>,
-): Promise<{ isAdmin: boolean; refused: boolean }> {
-  const notAdmin = (status?: number) => ({ isAdmin: false, refused: status === 401 });
+): Promise<{ isAdmin: boolean; ttlMs: number | null }> {
+  // The budget's own refusal (another request with this credential was just
+  // refused, or the ceiling is reached) is not cached, like the check above.
+  const notAdmin = (response?: Response) => ({
+    isAdmin: false,
+    ttlMs: response && isBudgetRefusal(response) ? null : response?.status === 401 ? ADMIN_CHECK_REFUSED_CACHE_MS : ADMIN_CHECK_CACHE_MS,
+  });
   try {
     const sessionRes = await fetchWithTimeout(`${creds.serverUrl}/.well-known/jmap`, {
       method: 'GET',
@@ -153,7 +158,7 @@ async function runStalwartAdminCheck(
     }, creds.trusted);
     if (!sessionRes.ok) {
       logger.info('Stalwart admin check (session)', { username: creds.username, status: sessionRes.status, isAdmin: false });
-      return notAdmin(sessionRes.status);
+      return notAdmin(sessionRes);
     }
 
     const session = await sessionRes.json() as {
@@ -185,7 +190,7 @@ async function runStalwartAdminCheck(
 
     if (!jmapRes.ok) {
       logger.info('Stalwart admin check (jmap)', { username: creds.username, status: jmapRes.status, isAdmin: false });
-      return notAdmin(jmapRes.status);
+      return notAdmin(jmapRes);
     }
 
     const data = await jmapRes.json() as {
@@ -194,7 +199,7 @@ async function runStalwartAdminCheck(
     const first = data.methodResponses?.[0];
     const isAdmin = !!first && first[0] === 'x:Tenant/query';
     logger.info('Stalwart admin check', { username: creds.username, isAdmin });
-    return { isAdmin, refused: false };
+    return { isAdmin, ttlMs: ADMIN_CHECK_CACHE_MS };
   } catch (error) {
     logger.debug('Stalwart admin check error', { error: error instanceof Error ? error.message : 'Unknown' });
     return notAdmin();
