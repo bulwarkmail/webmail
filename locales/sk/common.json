@@ -338,6 +338,14 @@
     "show_on_mobile": "Zobraziť na mobile"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Dnes",
+      "yesterday": "Včera",
+      "last_week": "Minulý týždeň",
+      "last_month": "Minulý mesiac",
+      "older": "Staršie"
+    },
+    "group_by_date": "Zoskupiť podľa dátumu",
     "sections": {
       "unread": "Neprečítané",
       "everything_else": "Všetko ostatné",
@@ -2289,6 +2297,10 @@
       "rtl_editing": {
         "label": "Podpora písania sprava doľava",
         "description": "Pridá do panela nástrojov editora tlačidlo smeru textu, ktorým možno odseky nastaviť zľava doprava alebo sprava doľava"
+      },
+      "group_by_date": {
+        "label": "Zoskupiť podľa dátumu",
+        "description": "Zobrazí správy pod hlavičkami dátumu, ako Dnes, Včera a Minulý týždeň. Platí len vtedy, keď je zoznam zoradený podľa dátumu."
       },
       "group_conversations": {
         "label": "Zoskupovať správy podľa konverzácie",

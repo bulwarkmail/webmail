@@ -338,6 +338,14 @@
     "show_on_mobile": "Näita mobiilis"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Täna",
+      "yesterday": "Eile",
+      "last_week": "Eelmisel nädalal",
+      "last_month": "Eelmisel kuul",
+      "older": "Vanemad"
+    },
+    "group_by_date": "Rühmita kuupäeva järgi",
     "sections": {
       "unread": "Lugemata",
       "everything_else": "Kõik muu",
@@ -2289,6 +2297,10 @@
       "rtl_editing": {
         "label": "Paremalt vasakule kirjutamise tugi",
         "description": "Lisab koostamise tööriistaribale suunanupu, millega saad määrata lõigud vasakult paremale või paremalt vasakule"
+      },
+      "group_by_date": {
+        "label": "Rühmita kuupäeva järgi",
+        "description": "Näita kirju kuupäevapäiste all, nagu Täna, Eile ja Eelmisel nädalal. Kehtib ainult siis, kui loend on sorditud kuupäeva järgi."
       },
       "group_conversations": {
         "label": "Rühmita kirjad vestluse kaupa",

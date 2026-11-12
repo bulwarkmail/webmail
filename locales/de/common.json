@@ -338,6 +338,14 @@
     "show_on_mobile": "Auf Mobilgerät anzeigen"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "last_week": "Letzte Woche",
+      "last_month": "Letzten Monat",
+      "older": "Älter"
+    },
+    "group_by_date": "Nach Datum gruppieren",
     "sections": {
       "unread": "Ungelesen",
       "everything_else": "Alles andere",
@@ -2286,6 +2294,10 @@
       "rtl_editing": {
         "label": "Unterstützung für Rechts-nach-links-Bearbeitung",
         "description": "Fügt der Editor-Symbolleiste eine Schreibrichtungs-Schaltfläche hinzu, mit der Absätze auf links-nach-rechts oder rechts-nach-links gestellt werden können"
+      },
+      "group_by_date": {
+        "label": "Nach Datum gruppieren",
+        "description": "Zeigt Nachrichten unter Datumsüberschriften wie Heute, Gestern und Letzte Woche. Gilt nur, solange die Liste nach Datum sortiert ist."
       },
       "group_conversations": {
         "label": "Nachrichten nach Unterhaltung gruppieren",

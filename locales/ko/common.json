@@ -338,6 +338,14 @@
     "show_on_mobile": "모바일에서 보기"
   },
   "email_list": {
+    "date_groups": {
+      "today": "오늘",
+      "yesterday": "어제",
+      "last_week": "지난주",
+      "last_month": "지난달",
+      "older": "이전"
+    },
+    "group_by_date": "날짜별로 그룹화",
     "sections": {
       "unread": "읽지 않음",
       "everything_else": "기타 모든 메일",
@@ -2286,6 +2294,10 @@
       "rtl_editing": {
         "label": "오른쪽에서 왼쪽 편집 지원",
         "description": "편집기 도구 모음에 방향 버튼을 추가하여 단락을 왼쪽에서 오른쪽 또는 오른쪽에서 왼쪽으로 설정할 수 있습니다"
+      },
+      "group_by_date": {
+        "label": "날짜별로 그룹화",
+        "description": "메시지를 오늘, 어제, 지난주 같은 날짜 머리글 아래에 표시합니다. 목록이 날짜순으로 정렬된 경우에만 적용됩니다."
       },
       "group_conversations": {
         "label": "메시지를 대화별로 묶기",

@@ -59,6 +59,7 @@ export function MessageListSettings() {
     showVerificationCodes,
     showAttachmentChips,
     disableThreading,
+    groupListByDate,
     emailsPerPage,
     archiveMode,
     hoverActions,
@@ -154,6 +155,19 @@ export function MessageListSettings() {
             onChange={(checked) => updateSetting('disableThreading', !checked)}
           />
         </SettingItem>
+
+        {!isSettingHidden('groupListByDate') && (
+        <SettingItem
+          label={t('group_by_date.label')}
+          description={t('group_by_date.description')}
+          locked={isSettingLocked('groupListByDate')}
+        >
+          <ToggleSwitch
+            checked={groupListByDate}
+            onChange={(checked) => updateSetting('groupListByDate', checked)}
+          />
+        </SettingItem>
+        )}
 
         {!isSettingHidden('showPreview') && (
         <SettingItem

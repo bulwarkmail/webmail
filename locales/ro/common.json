@@ -338,6 +338,14 @@
     "show_on_mobile": "Afișare pe mobil"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Astăzi",
+      "yesterday": "Ieri",
+      "last_week": "Săptămâna trecută",
+      "last_month": "Luna trecută",
+      "older": "Mai vechi"
+    },
+    "group_by_date": "Grupează după dată",
     "sections": {
       "unread": "Necitite",
       "everything_else": "Toate celelalte",
@@ -2289,6 +2297,10 @@
       "rtl_editing": {
         "label": "Suport pentru editare de la dreapta la stânga",
         "description": "Adaugă un buton de direcție în bara de instrumente a editorului, cu care paragrafele pot fi setate de la stânga la dreapta sau de la dreapta la stânga"
+      },
+      "group_by_date": {
+        "label": "Grupează după dată",
+        "description": "Afișează mesajele sub antete de dată precum Astăzi, Ieri și Săptămâna trecută. Se aplică doar când lista este sortată după dată."
       },
       "group_conversations": {
         "label": "Grupează mesajele pe conversații",

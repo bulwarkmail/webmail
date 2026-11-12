@@ -338,6 +338,14 @@
     "show_on_mobile": "Rādīt mobilajā ierīcē"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Šodien",
+      "yesterday": "Vakar",
+      "last_week": "Pagājušajā nedēļā",
+      "last_month": "Pagājušajā mēnesī",
+      "older": "Vecākas"
+    },
+    "group_by_date": "Grupēt pēc datuma",
     "sections": {
       "unread": "Nelasītie",
       "everything_else": "Viss pārējais",
@@ -2286,6 +2294,10 @@
       "rtl_editing": {
         "label": "Rakstīšanas no labās uz kreiso atbalsts",
         "description": "Pievieno redaktora rīkjoslai virziena pogu, ar kuru rindkopas var iestatīt no kreisās uz labo vai no labās uz kreiso"
+      },
+      "group_by_date": {
+        "label": "Grupēt pēc datuma",
+        "description": "Rādīt ziņojumus zem datuma virsrakstiem, piemēram, Šodien, Vakar un Pagājušajā nedēļā. Attiecas tikai tad, ja saraksts ir kārtots pēc datuma."
       },
       "group_conversations": {
         "label": "Grupēt ziņas pēc sarunas",

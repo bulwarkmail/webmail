@@ -338,6 +338,14 @@
     "show_on_mobile": "Mostrar no celular"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Hoje",
+      "yesterday": "Ontem",
+      "last_week": "Semana passada",
+      "last_month": "Mês passado",
+      "older": "Mais antigos"
+    },
+    "group_by_date": "Agrupar por data",
     "sections": {
       "unread": "Não lidas",
       "everything_else": "Todo o resto",
@@ -2286,6 +2294,10 @@
       "rtl_editing": {
         "label": "Suporte à edição da direita para a esquerda",
         "description": "Adiciona um botão de direção à barra de ferramentas do editor para definir parágrafos da esquerda para a direita ou da direita para a esquerda"
+      },
+      "group_by_date": {
+        "label": "Agrupar por data",
+        "description": "Mostra as mensagens sob cabeçalhos de data como Hoje, Ontem e Semana passada. Só se aplica quando a lista está ordenada por data."
       },
       "group_conversations": {
         "label": "Agrupar mensagens por conversa",
