@@ -1,224 +1,65 @@
 #!/usr/bin/env node
 // Fails (exit 1) while a workflow or composite action in the repo:
-//   - uses an action that is not pinned to a full commit SHA, or runs a tool
-//     straight off the network (`curl | sh`, `npx --yes`, `npm install <names>`);
-//   - hands a secret or a write token to a pull request run. In a workflow a
-//     pull request starts, a step whose `if:` (or its job's) lets pull
-//     requests in reads no secret but GITHUB_TOKEN, and such a job holds no
-//     write permission. A branch inside this repository gets the secrets on
-//     `pull_request` just like main does, so the `if:` is the only gate.
+//   - uses an action that is not pinned to a full commit SHA (or a docker:// image without a
+//     digest), in any YAML form, or runs a tool straight off the network (`curl | sh`,
+//     `npx --yes`, `npm install <names>`);
+//   - hands a secret or a write token to code from outside. The events that count: those that run
+//     a pull request's code (pull_request, pull_request_review, pull_request_review_comment),
+//     issue_comment (anyone can start it), and workflow_run when it follows a workflow one of
+//     those events starts, follows a workflow it can't find, or uses the triggering run's head.
+//     A step whose `if:` (or its job's) lets such an event in reads no secret but GITHUB_TOKEN,
+//     and such a job holds no write permission. A branch inside this repository gets the secrets
+//     on `pull_request` just like main does, so the `if:` is the only gate.
 //     `pull_request_target` is refused outright;
-//   - uses a cache in a job that publishes (packages, contents or
-//     id-token write) or builds what such a job publishes. Any job on main
-//     can write the Actions cache, so a release would ship what it left;
-//   - has no top-level `permissions:` block. With one, a job that sets none
-//     starts from it instead of from the repository default.
+//   - uses a cache (actions/cache, a `cache:` input, `cache-from`/`cache-to`, or `--cache-from`/
+//     `--cache-to` in a run: line) in a job that publishes (packages, contents or id-token
+//     write) or builds what such a job publishes. Any job on main can write the Actions cache,
+//     so a release would ship what it left;
+//   - has no top-level `permissions:` block. With one, a job that sets none starts from it
+//     instead of from the repository default.
 //
 //   node scripts/check-action-pins.mjs [repo root]      default: the current directory
+//   node scripts/check-action-pins.mjs --self-test      runs the cases below
 //
-// Run from the lint job of .github/workflows/tests.yml. No dependencies: the
-// workflows are read with the small YAML reader below, which knows the subset
-// workflow files use (maps, lists, block scalars, anchors).
+// Run from the lint job of .github/workflows/tests.yml after `npm ci`: the files are read with
+// js-yaml, which comes with eslint (through @eslint/eslintrc).
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { load } from 'js-yaml';
 
-const root = path.resolve(process.argv[2] ?? '.');
+const isMap = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const textOf = (v) => (v === undefined || v === null || typeof v === 'object' ? '' : String(v));
+const listOf = (v) => (Array.isArray(v) ? v.map(String) : isMap(v) ? Object.keys(v) : v == null ? [] : [String(v)]);
+const stepsOf = (job) => (isMap(job) && Array.isArray(job.steps) ? job.steps.filter(isMap) : []);
 
-function walk(dir, out = []) {
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name === '.git') continue;
-    const full = path.join(dir, name);
-    if (statSync(full).isDirectory()) walk(full, out);
-    else out.push(full);
-  }
-  return out;
-}
-
-const workflowFiles = walk(path.join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f));
-const files = [
-  ...workflowFiles,
-  ...walk(path.join(root, '.github', 'actions')).filter((f) => /(^|[\\/])action\.ya?ml$/.test(f)),
-  ...['action.yml', 'action.yaml', 'action/action.yml'].map((f) => path.join(root, f)).filter(existsSync),
-];
-
-const problems = [];
-const relOf = (file) => path.relative(root, file).replace(/\\/g, '/');
-
-// Pins and downloads: line by line.
-for (const file of files) {
-  const rel = relOf(file);
-  const lines = readFileSync(file, 'utf8').split(/\r?\n/);
-  lines.forEach((line, i) => {
-    if (/^\s*#/.test(line)) return;
-    const uses = line.match(/^\s*(?:-\s*)?uses:\s*["']?([^\s"'#]+)/);
-    if (uses) {
-      const ref = uses[1];
-      if (ref.startsWith('./')) return; // an action in this repo
-      if (ref.startsWith('docker://')) {
-        if (!/@sha256:[0-9a-f]{64}$/.test(ref)) problems.push(`${rel}:${i + 1}: ${ref} is not pinned by digest`);
+// Parses a file; spanOf(node) gives the 1-based lines a mapping or a list covers.
+function parse(text) {
+  const spans = new WeakMap();
+  const open = [];
+  const doc = load(text, {
+    listener(event, state) {
+      if (event === 'open') {
+        open.push(state.line + 1);
         return;
       }
-      if (!/@[0-9a-f]{40}$/.test(ref)) problems.push(`${rel}:${i + 1}: ${ref} is not pinned to a commit`);
-      return;
-    }
-    if (/\b(curl|wget)\b[^|#]*\|\s*(sudo\s+)?(ba|z)?sh\b/.test(line)) problems.push(`${rel}:${i + 1}: pipes a download into a shell`);
-    if (/\bnpx\s+(--yes|-y)\b/.test(line)) problems.push(`${rel}:${i + 1}: npx --yes installs a package outside the lockfile`);
-    if (/\bnpm\s+(i|install)\s+(?!.*--package-lock-only)[^#]*\s[@a-z][\w@/.-]*/.test(line) && !/npm\s+(i|install)\s+-g\s+npm@/.test(line)) {
-      problems.push(`${rel}:${i + 1}: npm install of named packages outside the lockfile`);
-    }
+      const start = open.pop();
+      if (state.result && typeof state.result === 'object' && !spans.has(state.result)) {
+        spans.set(state.result, { start, end: state.line + 1 });
+      }
+    },
   });
-}
-
-// ---------------------------------------------------------------------------
-// A YAML reader for workflow files. Nodes: {type: 'map', entries: Map, line},
-// {type: 'seq', items, line}, {type: 'scalar', value, line} and
-// {type: 'block', lines: [{text, line}], line} for `|` and `>` scalars.
-// Line numbers are 1-based.
-
-const KEY = /^("(?:[^"\\]|\\.)*"|'(?:[^']|'')*'|[^\s#'"[{-][^:#]*?)\s*:(?:\s+(.*))?$/;
-const isSeqItem = (text) => text === '-' || text.startsWith('- ');
-
-function cleanValue(value) {
-  const v = value.trim();
-  if (v.startsWith('"')) {
-    const m = v.match(/^"((?:[^"\\]|\\.)*)"/);
-    if (m) return { text: m[1], quoted: true };
-  }
-  if (v.startsWith("'")) {
-    const m = v.match(/^'((?:[^']|'')*)'/);
-    if (m) return { text: m[1].replace(/''/g, "'"), quoted: true };
-  }
-  const hash = v.search(/(^|\s)#/);
-  return { text: (hash === -1 ? v : v.slice(0, hash)).trim(), quoted: false };
-}
-
-function unquoteKey(key) {
-  if (key.startsWith('"')) return key.slice(1, -1);
-  if (key.startsWith("'")) return key.slice(1, -1).replace(/''/g, "'");
-  return key.trim();
-}
-
-function parseYaml(source) {
-  const lines = source.split(/\r?\n/).map((raw) => ({ raw, indent: raw.match(/^ */)[0].length, text: raw.trim() }));
-  const anchors = new Map();
-  let pos = 0;
-
-  const skippable = (l) => l.text === '' || l.text.startsWith('#') || l.text === '---';
-  function peek() {
-    while (pos < lines.length && skippable(lines[pos])) pos++;
-    return pos < lines.length ? lines[pos] : null;
-  }
-
-  function parseNode() {
-    const l = peek();
-    if (!l) return null;
-    return isSeqItem(l.text) ? parseSeq(l.indent) : parseMap(l.indent);
-  }
-
-  function parseBlockScalar(indent, at) {
-    const out = [];
-    let p = at + 1;
-    for (; p < lines.length; p++) {
-      const l = lines[p];
-      if (l.text !== '' && l.indent <= indent) break;
-      out.push({ text: l.raw, line: p + 1 });
-    }
-    while (out.length && out[out.length - 1].text.trim() === '') out.pop();
-    pos = p;
-    return { type: 'block', lines: out, line: at + 1 };
-  }
-
-  // The value after `key:` (or after `- `) on line `at`, whose key sits at `indent`.
-  function parseValue(rest, indent, at, inMap) {
-    let v = cleanValue(rest);
-    let anchor = null;
-    if (!v.quoted) {
-      const a = v.text.match(/^&([\w-]+)(?:\s+(.*))?$/);
-      if (a) {
-        anchor = a[1];
-        v = cleanValue(a[2] ?? '');
+  const raw = text.split(/\r?\n/);
+  // The line inside `node` that holds `needle` (a string or a RegExp), else where `node` starts.
+  const lineOf = (node, needle) => {
+    const span = spans.get(node) ?? { start: 1, end: raw.length };
+    if (needle !== undefined) {
+      for (let i = span.start - 1; i < Math.min(span.end, raw.length); i++) {
+        if (typeof needle === 'string' ? raw[i].includes(needle) : needle.test(raw[i])) return i + 1;
       }
     }
-    let node;
-    if (!v.quoted && /^\*[\w-]+$/.test(v.text)) {
-      node = anchors.get(v.text.slice(1)) ?? { type: 'scalar', value: v.text, line: at + 1 };
-    } else if (!v.quoted && /^[|>][-+0-9]*$/.test(v.text)) {
-      node = parseBlockScalar(indent, at);
-    } else if (!v.quoted && v.text === '') {
-      const n = peek();
-      if (n && n.indent > indent) node = parseNode();
-      else if (n && inMap && n.indent === indent && isSeqItem(n.text)) node = parseSeq(indent);
-      else node = { type: 'scalar', value: '', line: at + 1 };
-    } else {
-      let text = v.text;
-      if (!v.quoted) {
-        // A plain scalar may go on over more-indented lines.
-        for (let n = peek(); n && n.indent > indent && !KEY.test(n.text) && !isSeqItem(n.text); n = peek()) {
-          text += ` ${cleanValue(n.text).text}`;
-          pos++;
-        }
-      }
-      node = { type: 'scalar', value: text, line: at + 1 };
-    }
-    if (anchor) anchors.set(anchor, node);
-    return node;
-  }
-
-  function parseMap(indent) {
-    const node = { type: 'map', entries: new Map(), line: pos + 1 };
-    for (let l = peek(); l && l.indent >= indent; l = peek()) {
-      const at = pos;
-      const m = l.indent === indent && !isSeqItem(l.text) ? l.text.match(KEY) : null;
-      pos++;
-      if (!m) continue;
-      node.entries.set(unquoteKey(m[1]), parseValue(m[2] ?? '', indent, at, true));
-    }
-    return node;
-  }
-
-  function parseSeq(indent) {
-    const node = { type: 'seq', items: [], line: pos + 1 };
-    for (let l = peek(); l && l.indent === indent && isSeqItem(l.text); l = peek()) {
-      const at = pos;
-      const rest = l.text.slice(1).trimStart();
-      const contentIndent = indent + (l.text.length - rest.length);
-      if (rest !== '' && (KEY.test(rest) || isSeqItem(rest))) {
-        // `- key: value` opens a map (or `- - x` a list) at the column of its content.
-        lines[at] = { raw: l.raw, indent: contentIndent, text: rest };
-        node.items.push(isSeqItem(rest) ? parseSeq(contentIndent) : parseMap(contentIndent));
-        continue;
-      }
-      pos++;
-      node.items.push(parseValue(rest, indent, at, false));
-    }
-    return node;
-  }
-
-  return parseNode() ?? { type: 'map', entries: new Map(), line: 1 };
-}
-
-const get = (node, key) => (node?.type === 'map' ? node.entries.get(key) : undefined);
-const textOf = (node) =>
-  node?.type === 'scalar' ? node.value : node?.type === 'block' ? node.lines.map((l) => l.text.trim()).join('\n') : '';
-
-function listOf(node) {
-  if (!node) return [];
-  if (node.type === 'map') return [...node.entries.keys()];
-  if (node.type === 'seq') return node.items.map(textOf);
-  const t = textOf(node).trim();
-  if (t.startsWith('[')) return t.slice(1, -1).split(',').map((s) => cleanValue(s).text).filter(Boolean);
-  return t ? [t] : [];
-}
-
-// Every scalar under a node, with its line.
-function scalarsOf(node, out = []) {
-  if (!node) return out;
-  if (node.type === 'scalar') out.push({ text: node.value, line: node.line });
-  else if (node.type === 'block') out.push(...node.lines);
-  else if (node.type === 'map') for (const v of node.entries.values()) scalarsOf(v, out);
-  else if (node.type === 'seq') for (const v of node.items) scalarsOf(v, out);
-  return out;
+    return span.start;
+  };
+  return { doc, lineOf };
 }
 
 // ---------------------------------------------------------------------------
@@ -278,8 +119,9 @@ function intersect(a, b) {
   return { except: new Set([...a.except, ...b.except]) };
 }
 
-function eventsOf(ifNode) {
-  const text = textOf(ifNode).trim().replace(/^\$\{\{([\s\S]*)\}\}$/, '$1');
+function eventsOf(condition) {
+  if (condition === false) return { only: new Set() };
+  const text = textOf(condition).trim().replace(/^\$\{\{([\s\S]*)\}\}$/, '$1');
   if (!text) return EVERY_EVENT;
   let events = EVERY_EVENT;
   for (const part of splitTop(text, '&&')) {
@@ -296,86 +138,52 @@ function eventsOf(ifNode) {
 }
 
 const lets = (events, name) => (events.only ? events.only.has(name) : !events.except.has(name));
-
-// Secrets an expression reads, other than GITHUB_TOKEN.
-function secretReads(node) {
-  const hits = [];
-  for (const { text, line } of scalarsOf(node)) {
-    for (const [expr] of text.matchAll(/\$\{\{[\s\S]*?\}\}/g)) {
-      for (const m of expr.matchAll(/\bsecrets\b(?:\.([A-Za-z_][\w-]*)|\s*\[\s*'([^']+)'\s*\])?/g)) {
-        const name = m[1] ?? m[2] ?? '*';
-        if (name !== 'GITHUB_TOKEN') hits.push({ name, line });
-      }
-    }
-  }
-  return hits;
-}
-
-function writeScopes(permissions) {
-  if (!permissions) return [];
-  if (permissions.type === 'map') {
-    return [...permissions.entries].filter(([, v]) => textOf(v).trim() === 'write').map(([k]) => k);
-  }
-  return textOf(permissions).trim() === 'write-all' ? ['write-all'] : [];
-}
-
-const workflows = workflowFiles.map((file) => ({ rel: relOf(file), wf: parseYaml(readFileSync(file, 'utf8')) }));
-const stepsOf = (job) => {
-  const steps = get(job, 'steps');
-  return steps?.type === 'seq' ? steps.items : [];
-};
-
-// Pull request runs: no secret, no write token.
-for (const { rel, wf } of workflows) {
-  const on = get(wf, 'on');
-  const triggers = new Set(listOf(on));
-  if (triggers.has('pull_request_target')) {
-    problems.push(`${rel}:${on.line}: pull_request_target runs with the repository's secrets for any fork`);
-  }
-  const prEvents = ['pull_request', 'pull_request_target'].filter((e) => triggers.has(e));
-  if (!prEvents.length) continue;
-  const letsPullRequests = (events) => prEvents.some((e) => lets(events, e));
-
-  const workflowEnvReads = secretReads(get(wf, 'env'));
-  const jobs = get(wf, 'jobs');
-  if (jobs?.type !== 'map') continue;
-  for (const [id, job] of jobs.entries) {
-    const jobEvents = eventsOf(get(job, 'if'));
-    if (!letsPullRequests(jobEvents)) continue;
-
-    const write = writeScopes(get(job, 'permissions') ?? get(wf, 'permissions'));
-    if (write.length) {
-      problems.push(`${rel}:${job.line}: job ${id} holds ${write.join(', ')} write and runs on pull requests`);
-    }
-    for (const { name, line } of workflowEnvReads) {
-      problems.push(`${rel}:${line}: secrets.${name} in the workflow env reaches job ${id}, which runs on pull requests`);
-    }
-    for (const [key, value] of job.entries) {
-      if (key === 'steps' || key === 'if') continue;
-      if (key === 'secrets') problems.push(`${rel}:${value.line}: job ${id} passes secrets on and runs on pull requests`);
-      for (const { name, line } of secretReads(value)) {
-        problems.push(`${rel}:${line}: job ${id} reads secrets.${name} and runs on pull requests`);
-      }
-    }
-    for (const step of stepsOf(job)) {
-      if (!letsPullRequests(intersect(jobEvents, eventsOf(get(step, 'if'))))) continue;
-      for (const { name, line } of secretReads(step)) {
-        problems.push(`${rel}:${line}: reads secrets.${name} in a step that runs on pull requests (add if: github.event_name != 'pull_request')`);
-      }
-    }
-  }
-}
-
-// Jobs that publish restore no cache, since any job that ran on main before
-// could have written it: a job holding packages, contents or id-token write,
-// and a job whose artifacts such a job downloads, for the events the
-// publishing job runs on. Test jobs keep their caches.
-const PUBLISHES = new Set(['packages', 'contents', 'id-token', 'write-all']);
-const usesOf = (step) => textOf(get(step, 'uses')).trim();
 const overlap = (a, b) => {
   const both = intersect(a, b);
   return both.only ? both.only.size > 0 : true;
 };
+
+// Every string under a node.
+function strings(v, out = []) {
+  if (typeof v === 'string') out.push(v);
+  else if (Array.isArray(v)) v.forEach((x) => strings(x, out));
+  else if (isMap(v)) Object.values(v).forEach((x) => strings(x, out));
+  return out;
+}
+
+// Every mapping under a node, the node itself included.
+function maps(v, out = []) {
+  if (Array.isArray(v)) v.forEach((x) => maps(x, out));
+  else if (isMap(v)) {
+    out.push(v);
+    Object.values(v).forEach((x) => maps(x, out));
+  }
+  return out;
+}
+
+// Secrets the expressions under a node read, other than GITHUB_TOKEN.
+function secretReads(node) {
+  const names = [];
+  for (const text of strings(node)) {
+    for (const [expr] of text.matchAll(/\$\{\{[\s\S]*?\}\}/g)) {
+      for (const m of expr.matchAll(/\bsecrets\b(?:\.([A-Za-z_][\w-]*)|\s*\[\s*'([^']+)'\s*\])?/g)) {
+        const name = m[1] ?? m[2] ?? '*';
+        if (name !== 'GITHUB_TOKEN') names.push(name);
+      }
+    }
+  }
+  return names;
+}
+
+function writeScopes(permissions) {
+  if (isMap(permissions)) return Object.entries(permissions).filter(([, v]) => textOf(v).trim() === 'write').map(([k]) => k);
+  return textOf(permissions).trim() === 'write-all' ? ['write-all'] : [];
+}
+
+// Events that can run code nobody has merged yet, or that anyone can start.
+const OUTSIDE = ['pull_request', 'pull_request_review', 'pull_request_review_comment', 'issue_comment'];
+const PUBLISHES = new Set(['packages', 'contents', 'id-token', 'write-all']);
+const usesOf = (step) => textOf(step.uses).trim();
 
 // The events a cache input is on for: `${{ <condition> && 'npm' || '' }}`
 // turns it on only where the condition holds; any other value always.
@@ -383,63 +191,480 @@ function cacheEvents(value) {
   const text = textOf(value).trim();
   if (!text || text === 'false') return null;
   const m = text.match(/^\$\{\{\s*([\s\S]+?)\s*&&\s*'[^']*'\s*\|\|\s*''\s*\}\}$/);
-  return m ? eventsOf({ type: 'scalar', value: m[1] }) : EVERY_EVENT;
+  return m ? eventsOf(m[1]) : EVERY_EVENT;
 }
 
-function cacheInputs(job) {
+function cacheInputs(job, lineOf) {
   const found = [];
-  const jobEvents = eventsOf(get(job, 'if'));
+  const jobEvents = eventsOf(job.if);
   for (const step of stepsOf(job)) {
-    const stepEvents = intersect(jobEvents, eventsOf(get(step, 'if')));
+    const stepEvents = intersect(jobEvents, eventsOf(step.if));
     const uses = usesOf(step);
-    if (/^actions\/cache(\/restore)?@/.test(uses)) found.push({ what: uses.split('@')[0], line: step.line, events: stepEvents });
+    if (/^actions\/cache(\/(restore|save))?@/.test(uses)) found.push({ what: uses.split('@')[0], line: lineOf(step), events: stepEvents });
+    const inputs = isMap(step.with) ? step.with : {};
     for (const key of ['cache', 'cache-from', 'cache-to']) {
-      const value = get(get(step, 'with'), key);
-      const events = value && cacheEvents(value);
-      if (events) found.push({ what: `${key}: ${textOf(value).trim()}`, line: value.line, events: intersect(stepEvents, events) });
+      const events = key in inputs ? cacheEvents(inputs[key]) : null;
+      if (events) found.push({ what: `${key}: ${textOf(inputs[key]).trim()}`, line: lineOf(step, `${key}:`), events: intersect(stepEvents, events) });
     }
+    const flag = textOf(step.run).match(/--cache-(from|to)\b/);
+    if (flag) found.push({ what: `${flag[0]} in run`, line: lineOf(step, flag[0]), events: stepEvents });
   }
   return found;
 }
 
-for (const { rel, wf } of workflows) {
-  const jobs = get(wf, 'jobs');
-  if (jobs?.type !== 'map') continue;
-  const publishScopes = (job) => writeScopes(get(job, 'permissions') ?? get(wf, 'permissions')).filter((s) => PUBLISHES.has(s));
-  for (const [id, job] of jobs.entries) {
-    const scopes = publishScopes(job);
-    if (!scopes.length) continue;
-    const events = eventsOf(get(job, 'if'));
-    for (const c of cacheInputs(job)) {
-      if (overlap(c.events, events)) problems.push(`${rel}:${c.line}: job ${id} holds ${scopes.join(', ')} write and uses a cache (${c.what})`);
+// Workflows the `workflow_run` trigger follows, by name, and whether outside code can reach it.
+function workflowRunIsOutside(doc, byName) {
+  const upstream = listOf(isMap(doc.on) && isMap(doc.on.workflow_run) ? doc.on.workflow_run.workflows : undefined);
+  if (strings(doc.jobs).some((s) => /github\.event\.workflow_run\.head_/.test(s))) return true;
+  return upstream.length === 0 || upstream.some((name) => {
+    const triggers = byName.get(name);
+    return !triggers || [...OUTSIDE, 'pull_request_target', 'workflow_run'].some((e) => triggers.has(e));
+  });
+}
+
+function check(files) {
+  const problems = [];
+  const parsed = [];
+  for (const { rel, text } of files) {
+    // Downloads and installs: line by line.
+    text.split(/\r?\n/).forEach((line, i) => {
+      if (/^\s*#/.test(line) || /^\s*(?:-\s*)?uses:/.test(line)) return;
+      if (/\b(curl|wget)\b[^|#]*\|\s*(sudo\s+)?(ba|z)?sh\b/.test(line)) problems.push(`${rel}:${i + 1}: pipes a download into a shell`);
+      if (/\bnpx\s+(--yes|-y)\b/.test(line)) problems.push(`${rel}:${i + 1}: npx --yes installs a package outside the lockfile`);
+      if (/\bnpm\s+(i|install)\s+(?!.*--package-lock-only)[^#]*\s[@a-z][\w@/.-]*/.test(line) && !/npm\s+(i|install)\s+-g\s+npm@/.test(line)) {
+        problems.push(`${rel}:${i + 1}: npm install of named packages outside the lockfile`);
+      }
+    });
+    try {
+      parsed.push({ rel, ...parse(text), workflow: rel.startsWith('.github/workflows/') });
+    } catch (e) {
+      problems.push(`${rel}: does not parse as YAML (${e.reason ?? e.message})`);
     }
-    if (!stepsOf(job).some((s) => /^actions\/download-artifact@/.test(usesOf(s)))) continue;
-    // The jobs it needs, directly or through others, that upload artifacts.
-    const seen = new Set();
-    const queue = listOf(get(job, 'needs'));
-    while (queue.length) {
-      const name = queue.shift();
-      const dep = jobs.entries.get(name);
-      if (seen.has(name) || !dep) continue;
-      seen.add(name);
-      queue.push(...listOf(get(dep, 'needs')));
-      if (publishScopes(dep).length || !stepsOf(dep).some((s) => /^actions\/upload-artifact@/.test(usesOf(s)))) continue;
-      for (const c of cacheInputs(dep)) {
-        if (overlap(c.events, events)) problems.push(`${rel}:${c.line}: job ${name} builds what job ${id} publishes and uses a cache (${c.what})`);
+  }
+
+  // Pins: every `uses:`, block or flow style.
+  for (const { rel, doc, lineOf } of parsed) {
+    for (const node of maps(doc)) {
+      const ref = textOf(node.uses).trim();
+      if (!ref || ref.startsWith('./')) continue;
+      const pinned = ref.startsWith('docker://') ? /@sha256:[0-9a-f]{64}$/.test(ref) : /@[0-9a-f]{40}$/.test(ref);
+      if (!pinned) problems.push(`${rel}:${lineOf(node, ref)}: ${ref} is not pinned ${ref.startsWith('docker://') ? 'by digest' : 'to a commit'}`);
+    }
+  }
+
+  const workflows = parsed.filter((p) => p.workflow && isMap(p.doc));
+  const byName = new Map(workflows.filter((w) => w.doc.name).map((w) => [String(w.doc.name), new Set(listOf(w.doc.on))]));
+
+  // Outside code: no secret, no write token.
+  for (const { rel, doc, lineOf } of workflows) {
+    const triggers = new Set(listOf(doc.on));
+    if (triggers.has('pull_request_target')) {
+      problems.push(`${rel}:${lineOf(doc, 'pull_request_target')}: pull_request_target runs with the repository's secrets for any fork`);
+    }
+    const outside = OUTSIDE.filter((e) => triggers.has(e));
+    if (triggers.has('workflow_run') && workflowRunIsOutside(doc, byName)) outside.push('workflow_run');
+    if (!outside.length || !isMap(doc.jobs)) continue;
+    const reached = (events) => outside.filter((e) => lets(events, e));
+    const hint = (names) => `exclude ${names.join(', ')} in its if:`;
+    const workflowEnvReads = secretReads(doc.env);
+
+    for (const [id, job] of Object.entries(doc.jobs)) {
+      if (!isMap(job)) continue;
+      const jobEvents = eventsOf(job.if);
+      const jobReached = reached(jobEvents);
+      if (!jobReached.length) continue;
+      const on = jobReached.join(', ');
+      const write = writeScopes(job.permissions ?? doc.permissions);
+      if (write.length) {
+        const line = 'permissions' in job ? lineOf(job, 'permissions') : lineOf(doc, /^permissions\s*:/);
+        problems.push(`${rel}:${line}: job ${id} holds ${write.join(', ')} write and runs on ${on} (${hint(jobReached)})`);
+      }
+      for (const name of workflowEnvReads) {
+        problems.push(`${rel}:${lineOf(doc, `secrets.${name}`)}: secrets.${name} in the workflow env reaches job ${id}, which runs on ${on}`);
+      }
+      for (const [key, value] of Object.entries(job)) {
+        if (key === 'steps' || key === 'if') continue;
+        if (key === 'secrets') problems.push(`${rel}:${lineOf(job, 'secrets:')}: job ${id} passes secrets on and runs on ${on}`);
+        for (const name of secretReads(value)) {
+          problems.push(`${rel}:${lineOf(job, 'secrets')}: job ${id} reads secrets.${name} and runs on ${on} (${hint(jobReached)})`);
+        }
+      }
+      for (const step of stepsOf(job)) {
+        const stepReached = reached(intersect(jobEvents, eventsOf(step.if)));
+        if (!stepReached.length) continue;
+        for (const name of secretReads(step)) {
+          problems.push(`${rel}:${lineOf(step, 'secrets')}: reads secrets.${name} in a step that runs on ${stepReached.join(', ')} (${hint(stepReached)})`);
+        }
       }
     }
   }
+
+  // Jobs that publish restore no cache, since any job that ran on main before
+  // could have written it: a job holding packages, contents or id-token write,
+  // and a job whose artifacts such a job downloads, for the events the
+  // publishing job runs on. Test jobs keep their caches.
+  for (const { rel, doc, lineOf } of workflows) {
+    if (!isMap(doc.jobs)) continue;
+    const jobs = doc.jobs;
+    const publishScopes = (job) => writeScopes(job.permissions ?? doc.permissions).filter((s) => PUBLISHES.has(s));
+    for (const [id, job] of Object.entries(jobs)) {
+      if (!isMap(job)) continue;
+      const scopes = publishScopes(job);
+      if (!scopes.length) continue;
+      const events = eventsOf(job.if);
+      for (const c of cacheInputs(job, lineOf)) {
+        if (overlap(c.events, events)) problems.push(`${rel}:${c.line}: job ${id} holds ${scopes.join(', ')} write and uses a cache (${c.what})`);
+      }
+      if (!stepsOf(job).some((s) => /^actions\/download-artifact@/.test(usesOf(s)))) continue;
+      // The jobs it needs, directly or through others, that upload artifacts.
+      const seen = new Set();
+      const queue = listOf(job.needs);
+      while (queue.length) {
+        const name = queue.shift();
+        const dep = jobs[name];
+        if (seen.has(name) || !isMap(dep)) continue;
+        seen.add(name);
+        queue.push(...listOf(dep.needs));
+        if (publishScopes(dep).length || !stepsOf(dep).some((s) => /^actions\/upload-artifact@/.test(usesOf(s)))) continue;
+        for (const c of cacheInputs(dep, lineOf)) {
+          if (overlap(c.events, events)) problems.push(`${rel}:${c.line}: job ${name} builds what job ${id} publishes and uses a cache (${c.what})`);
+        }
+      }
+    }
+  }
+
+  for (const { rel, doc } of workflows) {
+    if (!('permissions' in doc)) problems.push(`${rel}:1: no top-level permissions: block (add permissions: contents: read)`);
+  }
+  return problems;
 }
 
-for (const { rel, wf } of workflows) {
-  if (!get(wf, 'permissions')) problems.push(`${rel}:1: no top-level permissions: block (add permissions: contents: read)`);
+// Each case: a name, the number of problems the check must report, and the workflow files.
+const CASES = [
+  ['write token on a pull request job, as a flow mapping', 1, { 'x.yml': `
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    permissions: { contents: write, packages: write }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: npm ci && npm run build
+` }],
+  ['--cache-from in a run: line of a publishing job', 1, { 'x.yml': `
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - run: docker buildx build --cache-from type=gha,scope=main --push -t ghcr.io/example/x:1 .
+` }],
+  ['secret in a pull_request_review job', 1, { 'x.yml': `
+on:
+  pull_request_review:
+    types: [submitted]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: npm ci && bash scripts/upload-sourcemaps.sh sourcemaps
+        env:
+          BUGSINK_AUTH_TOKEN: \${{ secrets.BUGSINK_AUTH_TOKEN }}
+` }],
+  ['secret in a workflow_run job that checks out the triggering head', 1, { 'x.yml': `
+on:
+  workflow_run:
+    workflows: ["CI: Unit tests"]
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: \${{ github.event.workflow_run.head_sha }}
+      - run: npm ci && npm run build
+        env:
+          BUGSINK_AUTH_TOKEN: \${{ secrets.BUGSINK_AUTH_TOKEN }}
+` }],
+  ['top-level write token as a flow mapping', 1, { 'x.yml': `
+on: pull_request
+permissions: { contents: write }
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: npm ci && npm test
+` }],
+  ['secret behind an if: that excludes one branch prefix', 1, { 'x.yml': `
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'warden/')
+        env:
+          TOKEN: \${{ secrets.BUGSINK_AUTH_TOKEN }}
+        run: bash scripts/upload-sourcemaps.sh sourcemaps
+` }],
+  ['secret by index in a with: input', 1, { 'x.yml': `
+on:
+  pull_request:
+    types: [opened, synchronize]
+permissions:
+  contents: read
+jobs:
+  j:
+    if: \${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: docker.io
+          password: \${{ secrets['DOCKERHUB_TOKEN'] }}
+` }],
+  ['docker:// image without a digest', 1, { 'x.yml': `
+on: push
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker://alpine:3.20
+      - uses: docker://alpine@sha256:0000000000000000000000000000000000000000000000000000000000000000
+` }],
+  ['short SHA, quoted tag and a flow-style step', 3, { 'x.yml': `
+on: push
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "actions/checkout@3d3c42e"
+      - uses: 'actions/setup-node@v7'
+      - {uses: actions/upload-artifact@v7}
+` }],
+  ['flow-style steps list', 1, { 'x.yml': `
+on: push
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps: [{ uses: actions/checkout@v7 }, { run: echo hi }]
+` }],
+  ['secret in an issue_comment job', 1, { 'x.yml': `
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOKEN: \${{ secrets.DEPLOY_TOKEN }}
+        run: ./deploy.sh
+` }],
+  ['pull_request_target', 1, { 'x.yml': `
+on: pull_request_target
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi
+` }],
+  ['no top-level permissions', 1, { 'x.yml': `
+on: push
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - run: echo hi
+` }],
+  ['caches in jobs that build what a release job publishes', 3, { 'x.yml': `
+on: [release, push]
+permissions:
+  contents: read
+jobs:
+  on-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          cache: \${{ github.event_name == 'release' && 'npm' || '' }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  push-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          cache: \${{ github.event_name == 'push' && 'npm' || '' }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  restores:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: x
+          key: y
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  middle:
+    needs: restores
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo middle
+  publish:
+    needs: [on-release, push-only, middle]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          cache: npm
+  image:
+    needs: gate
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          cache-from: type=gha
+` }],
+  ['secrets kept away from pull requests', 0, { 'x.yml': `
+on: [push, pull_request, release]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm ci
+      - if: github.event_name != 'pull_request'
+        env:
+          T: \${{ secrets.UPLOAD_TOKEN }}
+        run: ./upload.sh
+      - if: \${{ github.event_name == 'push' }}
+        env:
+          T: \${{ secrets.OTHER_TOKEN }}
+        run: ./upload.sh
+  release:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload x
+` }],
+  ['workflow_run after a release workflow', 0, {
+    'release.yml': `
+name: "Docker: Release image"
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
+`,
+    'deploy.yml': `
+on:
+  workflow_run:
+    workflows: ["Docker: Release image"]
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          KEY: \${{ secrets.DEPLOY_SSH_KEY }}
+        run: ./deploy.sh
+`,
+  }],
+];
+
+function selfTest() {
+  const failures = [];
+  for (const [name, want, files] of CASES) {
+    const got = check(Object.entries(files).map(([file, text]) => ({ rel: `.github/workflows/${file}`, text })));
+    if (got.length !== want) failures.push(`case "${name}": expected ${want}, got ${got.length}${got.length ? `\n    ${got.join('\n    ')}` : ''}`);
+  }
+  if (failures.length) {
+    console.error(failures.join('\n'));
+    process.exit(1);
+  }
+  console.log(`self-test: ${CASES.length} cases as expected`);
 }
 
-if (problems.length) {
-  console.error(problems.join('\n'));
-  console.error(`\n${problems.length} problem(s) in ${files.length} file(s).`);
-  process.exit(1);
+function walk(dir, out = []) {
+  if (!existsSync(dir)) return out;
+  for (const name of readdirSync(dir)) {
+    if (name === 'node_modules' || name === '.git') continue;
+    const full = path.join(dir, name);
+    if (statSync(full).isDirectory()) walk(full, out);
+    else out.push(full);
+  }
+  return out;
 }
-console.log(
-  `ok: ${files.length} workflow and action file(s): actions pinned to a commit, no secret or write token on pull requests, no cache in publishing jobs, top-level permissions in every workflow`,
-);
+
+if (process.argv.includes('--self-test')) {
+  selfTest();
+} else {
+  const root = path.resolve(process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '.');
+  const files = [
+    ...walk(path.join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)),
+    ...walk(path.join(root, '.github', 'actions')).filter((f) => /(^|[\\/])action\.ya?ml$/.test(f)),
+    ...['action.yml', 'action.yaml', 'action/action.yml'].map((f) => path.join(root, f)).filter(existsSync),
+  ];
+  const problems = check(files.map((file) => ({ rel: path.relative(root, file).replace(/\\/g, '/'), text: readFileSync(file, 'utf8') })));
+  if (problems.length) {
+    console.error(problems.join('\n'));
+    console.error(`\n${problems.length} problem(s) in ${files.length} file(s).`);
+    process.exit(1);
+  }
+  console.log(
+    `ok: ${files.length} workflow and action file(s): actions pinned to a commit, no secret or write token where outside code runs, no cache in publishing jobs, top-level permissions in every workflow`,
+  );
+}
