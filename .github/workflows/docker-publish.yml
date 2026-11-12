@@ -5,22 +5,20 @@ on:
     branches:
       - main
       - dev
+    # The image is built from `COPY . .` (minus .dockerignore), so every
+    # change builds it except the ones below that never reach it. A `!`
+    # pattern drops what the patterns before it matched; a later pattern
+    # takes a path back in.
     paths:
-      - "Dockerfile"
-      - ".dockerignore"
-      - "app/**"
-      - "components/**"
-      - "contexts/**"
-      - "hooks/**"
-      - "lib/**"
-      - "stores/**"
-      - "locales/**"
+      - "**"
+      - "!**.md"
+      - "!integration/**"
+      - "!deploy/**"
+      - "!screenshots/**"
+      - "!.github/**"
+      # public/ is copied into the image as is, markdown included.
       - "public/**"
-      - "package.json"
-      - "package-lock.json"
-      - "scripts/healthcheck.mjs"
-      - "scripts/sourcemaps.mjs"
-      - "scripts/upload-sourcemaps.sh"
+      - ".dockerignore"
       - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
 
@@ -65,13 +63,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -79,13 +77,15 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ needs.prepare.outputs.image_name }}
 
+      # No Actions cache: any job on main can write one, and this image is
+      # published. The builder starts empty on every run.
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -95,8 +95,6 @@ jobs:
             BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=image,name=${{ needs.prepare.outputs.image_name }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
       # The same build again, a cache hit on this builder, for the stage that
       # holds only the source maps (Dockerfile, "sourcemaps"); the image never
@@ -104,7 +102,7 @@ jobs:
       # https://bulwarkmail.org/docs/deployment/monitoring
       - name: Export source maps
         if: matrix.platform == 'linux/amd64'
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -114,7 +112,6 @@ jobs:
             BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps
-          cache-from: type=gha,scope=${{ matrix.platform }}
 
       - name: Upload source maps to Bugsink
         if: matrix.platform == 'linux/amd64'
@@ -123,13 +120,14 @@ jobs:
         run: bash scripts/upload-sourcemaps.sh sourcemaps
 
       - name: Export digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
+          touch "/tmp/digests/${DIGEST#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: digests-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           path: /tmp/digests/*
@@ -148,17 +146,17 @@ jobs:
 
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: /tmp/digests
           pattern: digests-*
           merge-multiple: true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -166,7 +164,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ needs.prepare.outputs.image_name }}
           tags: |
@@ -175,21 +173,26 @@ jobs:
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
+        env:
+          IMAGE_NAME: ${{ needs.prepare.outputs.image_name }}
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ needs.prepare.outputs.image_name }}@sha256:%s ' *)
+            $(for digest in *; do printf '%s@sha256:%s ' "$IMAGE_NAME" "$digest"; done)
 
       - name: Inspect image
         id: inspect
+        env:
+          IMAGE_NAME: ${{ needs.prepare.outputs.image_name }}
+          VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          docker buildx imagetools inspect ${{ needs.prepare.outputs.image_name }}:${{ steps.meta.outputs.version }}
-          digest=$(docker buildx imagetools inspect ${{ needs.prepare.outputs.image_name }}:${{ steps.meta.outputs.version }} --format '{{json .Manifest}}' | jq -r .digest)
+          docker buildx imagetools inspect "$IMAGE_NAME:$VERSION"
+          digest=$(docker buildx imagetools inspect "$IMAGE_NAME:$VERSION" --format '{{json .Manifest}}' | jq -r .digest)
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       # Signed build provenance, pushed to GHCR next to the image:
       # `gh attestation verify oci://<image>:<tag> --owner bulwarkmail`.
       - name: Attest build provenance
-        uses: actions/attest@v4
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ${{ needs.prepare.outputs.image_name }}
           subject-digest: ${{ steps.inspect.outputs.digest }}

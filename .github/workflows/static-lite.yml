@@ -57,13 +57,16 @@ jobs:
         target: [static, stalwart]
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # The npm cache only for the checks on pushes and pull requests. Release
+      # and manual builds hand out their zips, and any job on main can write
+      # the cache, so they install from the registry.
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-          cache: npm
+          cache: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && 'npm' || '' }}
 
       - name: Install dependencies
         run: npm ci
@@ -86,7 +89,11 @@ jobs:
         run: npm run build:lite
 
       # Each target is its own build with its own chunks, so each uploads.
+      # Pull requests never get the token, not even from a branch inside this
+      # repository, because the build runs scripts from a tree nobody has
+      # merged yet. Pushes to main, releases and manual runs upload.
       - name: Upload source maps to Bugsink
+        if: github.event_name != 'pull_request'
         env:
           BUGSINK_AUTH_TOKEN: ${{ secrets.BUGSINK_AUTH_TOKEN }}
         run: bash scripts/upload-sourcemaps.sh sourcemaps
@@ -100,13 +107,14 @@ jobs:
       - name: Package zip
         env:
           REF_NAME: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
         run: |
-          if [ "${{ matrix.target }}" = "stalwart" ]; then
+          if [ "$TARGET" = "stalwart" ]; then
             # postbuild already packed it (entries at the archive root, no
             # wrapping folder); the name stays version-less on purpose.
             ZIP="bulwark-lite-stalwart.zip"
           else
-            if [ "${{ github.event_name }}" = "release" ]; then
+            if [ "$GITHUB_EVENT_NAME" = "release" ]; then
               VERSION="${REF_NAME#v}"
             else
               VERSION="$(cat VERSION)-${GITHUB_SHA::7}"
@@ -121,7 +129,7 @@ jobs:
         run: node scripts/sourcemaps.mjs check "$ZIP"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: bulwark-lite-${{ matrix.target }}
           path: ${{ env.ZIP }}
@@ -140,7 +148,7 @@ jobs:
       attestations: write
     steps:
       - name: Download zips
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: bulwark-lite-*
           path: zips
@@ -151,7 +159,7 @@ jobs:
         run: for zip in *.zip; do sha256sum "$zip" > "$zip.sha256"; done
 
       - name: Attest build provenance
-        uses: actions/attest@v4
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: zips/*.zip
 
@@ -172,10 +180,10 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -201,7 +209,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lite-e2e-report
           path: playwright-report
@@ -217,10 +225,10 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -245,7 +253,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lite-e2e-stalwart-report
           path: playwright-report

@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # Workflows pin every action to a commit with the tag in a comment;
+  # Dependabot moves both together.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # Updated by hand: newer next-intl releases bring @swc/core 1.16, which
+      # does not load on the maintainer's Windows setup.
+      - dependency-name: next-intl
+      - dependency-name: "@swc/core"
+
+  # Base images of Dockerfile and Dockerfile.lite.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
