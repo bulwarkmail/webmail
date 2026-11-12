@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { observeUpstream } from '@/lib/metrics/upstream';
-import { discoverOAuth } from '@/lib/oauth/discovery';
-import type { EndpointValidator, IssuerRule, OAuthMetadata } from '@/lib/oauth/discovery';
+import { discoverOAuth, discoverSignInMetadata } from '@/lib/oauth/discovery';
+import type { EndpointValidator, IssuerRule, OAuthMetadata, SignInDiscovery } from '@/lib/oauth/discovery';
 import { configuredServer, discoveryBase, signInIssuerRule } from '@/lib/oauth/sign-in-servers';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { readFileEnv } from '@/lib/read-file-env';
@@ -164,6 +164,12 @@ export async function getTokenEndpoint(serverId?: string | null, options?: Clien
 export async function getMetadata(serverId?: string | null, options?: ClientConfigOptions, issuerRule?: IssuerRule): Promise<OAuthMetadata | null> {
   const { discoveryUrl } = getRequiredConfig(serverId, options);
   return discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), issuerRule });
+}
+
+/** A configured server's metadata under the sign-in rule, or why there is none (lib/oauth/discovery.ts). */
+export async function discoverSignIn(serverId?: string | null): Promise<SignInDiscovery> {
+  const { discoveryUrl } = getRequiredConfig(serverId);
+  return discoverSignInMetadata(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), issuerRule: signInIssuerRule() });
 }
 
 export function buildOAuthParams(base: Record<string, string>, serverId?: string | null, options?: ClientConfigOptions): URLSearchParams {

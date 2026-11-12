@@ -22,6 +22,7 @@
       "totp_required": "需要双重验证代码。请在下方输入验证码。",
       "totp_invalid": "验证码无效。请检查您的身份验证器应用，然后重试。",
       "oauth_discovery_failed": "SSO 已启用，但无法访问身份提供者。检查您的 OAuth 配置。",
+      "oauth_issuer_mismatch": "通过此身份提供者登录的配置不正确。管理员需要设置其颁发者（issuer）地址。",
       "token_exchange_failed": "密码和验证码已通过，但邮件服务器拒绝为此应用建立会话。请联系管理员检查其 OAuth 客户端设置。"
     },
     "show_password": "显示密码",

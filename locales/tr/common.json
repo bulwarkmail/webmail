@@ -22,6 +22,7 @@
       "totp_required": "İki faktörlü doğrulama kodu gereklidir. Lütfen kodunuzu aşağıya girin.",
       "totp_invalid": "Geçersiz doğrulama kodu. Lütfen doğrulama uygulamanızı kontrol edip tekrar deneyin.",
       "oauth_discovery_failed": "SSO etkin ancak kimlik sağlayıcısına ulaşılamıyor. OAuth yapılandırmanızı kontrol edin.",
+      "oauth_issuer_mismatch": "Bu sağlayıcıyla oturum açma doğru yapılandırılmamış. Yöneticinin sağlayıcının yayıncı (issuer) adresini ayarlaması gerekiyor.",
       "token_exchange_failed": "Parolanız ve kodunuz kabul edildi ancak posta sunucusu bu uygulama için oturum başlatmayı reddetti. Yöneticinizden OAuth istemci ayarlarını kontrol etmesini isteyin."
     },
     "show_password": "Şifreyi göster",

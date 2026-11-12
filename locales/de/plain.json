@@ -11,6 +11,7 @@
       "totp_required": "Ihr Konto braucht zur Anmeldung einen zweiten Code. Öffnen Sie Ihre Authenticator-App und geben Sie unten den 6-stelligen Code ein.",
       "totp_invalid": "Dieser Code ist falsch oder zu alt. Geben Sie den Code ein, den Ihre Authenticator-App gerade anzeigt.",
       "oauth_discovery_failed": "Die Anmeldung über Ihre Organisation funktioniert gerade nicht. Versuchen Sie es später noch einmal oder fragen Sie Ihre Administration.",
+      "oauth_issuer_mismatch": "Die Anmeldung über Ihre Organisation ist nicht richtig eingerichtet. Bitte sagen Sie Ihrer Administration Bescheid.",
       "token_exchange_failed": "Passwort und Code sind richtig, aber der Mailserver hat diese App nicht hereingelassen. Bitten Sie Ihre Administration, die Anmelde-Einstellungen für diese App zu prüfen."
     },
     "token_hint": "Manche Mailanbieter geben Ihnen ein Token statt eines Passworts. Erstellen Sie es in den Einstellungen Ihres Mailanbieters, kopieren Sie es und fügen Sie es hier ein.",

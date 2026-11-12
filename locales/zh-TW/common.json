@@ -22,6 +22,7 @@
       "totp_required": "需要雙因素驗證碼。請在下方輸入驗證碼。",
       "totp_invalid": "驗證碼無效。請檢查驗證器應用程式後再試一次。",
       "oauth_discovery_failed": "SSO 已啟用，但無法連線至身分提供者。請檢查 OAuth 設定。",
+      "oauth_issuer_mismatch": "透過此身分提供者登入的設定不正確。管理員需要設定其簽發者（issuer）位址。",
       "token_exchange_failed": "密碼與驗證碼已通過，但郵件伺服器拒絕為此應用程式建立工作階段。請聯絡管理員檢查其 OAuth 用戶端設定。"
     },
     "show_password": "顯示密碼",

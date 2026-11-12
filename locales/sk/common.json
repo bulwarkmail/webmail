@@ -22,6 +22,7 @@
       "totp_required": "Je vyžadovaný kód dvojfaktorového overenia. Zadajte kód nižšie.",
       "totp_invalid": "Neplatný overovací kód. Skontrolujte svoju overovaciu aplikáciu a skúste znova.",
       "oauth_discovery_failed": "SSO je povolené, ale poskytovateľa identity sa nepodarilo dosiahnuť. Skontrolujte konfiguráciu OAuth.",
+      "oauth_issuer_mismatch": "Prihlásenie cez tohto poskytovateľa nie je správne nastavené. Správca musí nastaviť jeho adresu vydavateľa (issuer).",
       "token_exchange_failed": "Heslo a kód boli prijaté, ale poštový server odmietol pre túto aplikáciu spustiť reláciu. Požiadajte správcu o kontrolu nastavení klienta OAuth."
     },
     "show_password": "Zobraziť heslo",

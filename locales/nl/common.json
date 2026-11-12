@@ -22,6 +22,7 @@
       "totp_required": "Een tweefactorauthenticatiecode is vereist. Voer uw code hieronder in.",
       "totp_invalid": "Ongeldige authenticatiecode. Controleer uw authenticator-app.",
       "oauth_discovery_failed": "SSO is ingeschakeld maar de identiteitsprovider is niet bereikbaar. Controleer uw OAuth-configuratie.",
+      "oauth_issuer_mismatch": "Aanmelden via deze provider is niet goed ingesteld. De beheerder moet het issuer-adres van de provider instellen.",
       "token_exchange_failed": "Uw wachtwoord en code zijn geaccepteerd, maar de mailserver weigerde een sessie voor deze app te starten. Vraag uw beheerder de OAuth-clientinstellingen te controleren."
     },
     "show_password": "Wachtwoord tonen",

@@ -91,7 +91,7 @@ async function revokeRefreshToken(token: string, serverId: string | null, metada
       logger.warn('Token revocation returned error', { status: revocationResponse.status });
     }
   } catch (err) {
-    logger.error('Token revocation network error', { error: err instanceof Error ? err.message : 'Unknown error' });
+    logger.error('Token revocation network error', { error: loggableError(err) });
   }
 }
 
@@ -386,9 +386,7 @@ async function signOutSlot(
   let endSessionUrl: string | null = null;
   if (bound && (tokenToRevoke || endSession)) {
     const metadata = await getMetadata(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
-      logger.warn('Failed to discover OAuth metadata during logout', {
-        error: err instanceof Error ? err.message : 'Unknown error',
-      });
+      logger.warn('Failed to discover OAuth metadata during logout', { error: loggableError(err) });
       return null;
     });
     if (tokenToRevoke) await revokeRefreshToken(tokenToRevoke, serverId, metadata, upstream);

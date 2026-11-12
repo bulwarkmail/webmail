@@ -20,7 +20,7 @@ import {
   refreshTokenServerCookieName,
 } from '@/lib/oauth/tokens';
 import { customUpstreamCookieName, readCustomUpstream, writeCustomUpstream, type CustomUpstream } from '@/lib/oauth/custom-upstream';
-import { oauthErrorCode } from '@/lib/oauth/answer-summary';
+import { loggableError, oauthErrorCode } from '@/lib/oauth/answer-summary';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
 /**
@@ -153,7 +153,7 @@ async function redeem(refreshToken: string, serverId: string | null, upstream: C
       redirect: 'error',
     }));
   } catch (error) {
-    return { kind: 'unreachable', message: error instanceof Error ? error.message : 'Unknown error' };
+    return { kind: 'unreachable', message: loggableError(error) };
   }
   if (!response.ok) return { kind: 'refused', status: response.status, error: oauthErrorCode(await response.text()) };
   try {

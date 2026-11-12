@@ -5,6 +5,7 @@ import { discoverOAuth } from '@/lib/oauth/discovery';
 import { DEFAULT_OAUTH_SCOPES, withProviderDataScopes } from '@/lib/oauth/scopes';
 import { getDiscoveryValidator } from '@/lib/oauth/token-exchange';
 import { discoveryBase, signInIssuerRule } from '@/lib/oauth/sign-in-servers';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { resolveCustomUpstream } from '@/lib/oauth/custom-upstream';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 
@@ -63,7 +64,7 @@ async function registerClient(endpoint: string, scope: string): Promise<{ client
       if (clientId) return { clientId, useScheme: true };
     }
   } catch (error) {
-    logger.warn('Desktop OAuth: client registration failed', { error: error instanceof Error ? error.message : String(error) });
+    logger.warn('Desktop OAuth: client registration failed', { error: loggableError(error) });
   }
   return { clientId: FALLBACK_CLIENT_ID, useScheme: false };
 }
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
       ...(useScheme ? { use_scheme: true } : {}),
     });
   } catch (error) {
-    logger.error('Desktop OAuth discovery failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Desktop OAuth discovery failed', { error: loggableError(error) });
     return NextResponse.json({ error: 'discovery_failed' }, { status: 503 });
   }
 }
