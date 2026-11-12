@@ -61,6 +61,7 @@ const MailboxShareDialog = lazyComponent(() => import("@/components/layout/mailb
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { ThreadGroup, Email, Mailbox, isUnifiedMailboxId, UNIFIED_MAILBOX_IDS, UNIFIED_ROLE_BY_ID, CROSS_VIEW_BY_ID, CROSS_VIEW_IDS, isCrossViewId } from "@/lib/jmap/types";
 import { useAccountStore, waitForConnectedAccount } from "@/stores/account-store";
+import { severalLogins, soleLogin } from "@/lib/sole-login";
 import { useShallow } from "zustand/react/shallow";
 import { usePolicyStore, whenPolicySettled } from "@/stores/policy-store";
 import { isArchiveActionEnabled, useArchiveActionEnabled } from "@/lib/archive-gate";
@@ -954,6 +955,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     mailboxes,
     selectedMailbox,
     selectedEmailId: selectedEmail?.id ?? null,
+    selectedEmailKey: selectedEmail ? emailKeyFor(selectedEmail) : null,
     conversationThreadId: null as string | null,
   });
   navRestoreStateRef.current.client = client;
@@ -961,6 +963,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   navRestoreStateRef.current.mailboxes = mailboxes;
   navRestoreStateRef.current.selectedMailbox = selectedMailbox;
   navRestoreStateRef.current.selectedEmailId = selectedEmail?.id ?? null;
+  navRestoreStateRef.current.selectedEmailKey = selectedEmail ? emailKeyFor(selectedEmail) : null;
   navRestoreStateRef.current.conversationThreadId = conversationThread?.threadId ?? null;
 
   const handleNavRestore = useCallback(async (state: NavSnapshot) => {
@@ -974,6 +977,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!state.composerOpen) {
       setShowComposer(false);
     }
+
+    // An entry's folder, message and conversation belong to the login it was
+    // taken in: through any other login the same ids are other things. One
+    // taken in another login than the one on screen (the login was switched
+    // since) brings back none of them, and one that names no login only
+    // where a single login can own it.
+    const shownLogin = useEmailStore.getState().viewingAccountId ?? useAuthStore.getState().activeAccountId ?? null;
+    const entryIsShownLogins = state.login !== undefined
+      ? (state.login ?? null) === shownLogin
+      : !shownLogin || soleLogin() === shownLogin;
+    if (!entryIsShownLogins) return;
 
     // Derive the mobile view from the saved snapshot. The view is a
     // function of which content the user is looking at: an email, a
@@ -1025,23 +1039,27 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     }
 
-    // Restore email selection.
-    if (state.emailId !== ctx.selectedEmailId) {
+    // Restore email selection. By the row's key where the entry has one: in
+    // a list that mixes accounts the id alone can be another account's row.
+    const entryKey = state.emailKey ?? null;
+    const alreadyOpen = entryKey !== null ? entryKey === ctx.selectedEmailKey : state.emailId === ctx.selectedEmailId;
+    if (!alreadyOpen) {
       if (state.emailId === null) {
         selectEmail(null);
       } else {
         // Try the in-memory list first; the existing useEffect will fetch
         // body content if it's missing.
-        const found = restoredEmails.find(e => e.id === state.emailId);
+        const found = restoredEmails.find(e => (entryKey !== null ? emailKeyFor(e) === entryKey : e.id === state.emailId));
         if (found) {
           selectEmail(found);
-        } else if (ctx.client) {
+        } else if (ctx.client && (entryKey === null || entryKey === state.emailId)) {
           // Email isn't in the current list (e.g. mailbox just changed).
-          // Fetch it directly.
+          // Fetch it directly, where the list is read: through the login
+          // browsed, in the account of the folder restored above. A row of
+          // a list that mixes accounts is not asked for by its id alone.
           try {
-            const mailbox = ctx.mailboxes.find(mb => mb.id === state.mailboxId);
-            const accountId = mailbox?.isShared ? mailbox.accountId : undefined;
-            const fullEmail = await ctx.client.getEmail(state.emailId, accountId);
+            const { client: source, accountId } = resolveEmailBlobContext(null, ctx.client);
+            const fullEmail = source ? await source.getEmail(state.emailId, accountId) : null;
             if (fullEmail) selectEmail(fullEmail);
           } catch (error) {
             debug.error('Failed to fetch email on history restore:', error);
@@ -1071,13 +1089,22 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // switch the login, and through the active one its id names another
     // message.
     const source = shown ? emailLinkSource(shown) : null;
-    const otherLogin = !!source?.loginId && source.loginId !== useAuthStore.getState().activeAccountId;
+    const activeLogin = useAuthStore.getState().activeAccountId;
+    // The login the message or conversation is read through: the open
+    // message's, else the login browsed.
+    const linkLogin = source?.loginId ?? useEmailStore.getState().viewingAccountId ?? activeLogin;
+    const otherLogin = !!linkLogin && linkLogin !== activeLogin;
+    // With several logins signed in the address says whose message it is, as
+    // a reload opens nothing from one that does not. A single login's
+    // address stays as short as it was.
+    const namesLogin = severalLogins() && !otherLogin && !!(state.emailId || state.threadId);
     return appPath(
       buildMailPath(
         {
           mailboxId: state.mailboxId,
           emailId: otherLogin ? null : state.emailId,
           threadId: otherLogin ? null : state.threadId,
+          loginId: namesLogin ? linkLogin : null,
           ownerAccountId: source && !otherLogin ? source.ownerAccountId : null,
           // Keep the marker while fullscreen is active, so reloading the dragged-out
           // tab reopens the message fullscreen instead of in the normal layout.
@@ -1094,6 +1121,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     threadId: conversationThread?.threadId ?? null,
     composerOpen: showComposer,
     sidebarOpen,
+    // Whose folder and message the entry names (see handleNavRestore).
+    login: viewingAccountId ?? activeAccountId ?? null,
+    emailKey: selectedEmail && !(mvShell && cursorOnly) ? emailKeyFor(selectedEmail) : null,
     onRestore: handleNavRestore,
     enabled: isAuthenticated && mailboxes.length > 0,
     buildUrl: buildMailUrl,
@@ -2387,11 +2417,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const linkAccountId = link.accountId ?? (link.slot !== undefined
       ? useAccountStore.getState().accounts.find((a) => a.cookieSlot === link.slot)?.id ?? `slot:${link.slot}`
       : undefined);
-    // An address of the Pro shell names the login of its message tab and the
-    // account the message is in. One that names no login (written before it
-    // did, or by hand) opens nothing there: through the active login its id
-    // can name another message.
-    if (isEmbedded && opts?.fromAddress && link.kind === 'message' && !linkAccountId) {
+    // An address names the login of its message or conversation, and the
+    // account it is in. One that names no login (written before addresses
+    // did, or by hand) opens nothing in the Pro shell, and nothing in the
+    // standard layout while several logins are signed in: through the active
+    // login its id can name another message or conversation. With a single
+    // login the standard layout opens it, as that login's.
+    if (opts?.fromAddress && (link.kind === 'message' || link.kind === 'thread') && !linkAccountId
+      && (isEmbedded || severalLogins())) {
       toast.error(t('account_routing.link_names_no_account'));
       return;
     }
@@ -2618,6 +2651,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   useEffect(() => {
     if (deepLinkHandledRef.current) return;
+    // The standard page that renders while the Pro shell takes over leaves
+    // the address to the shell's own mail surface, which gets it through the
+    // handoff: opened here it would be read through the active login, opened
+    // in the reader and marked read before the shell decides about it.
+    if (proTakingOver) return;
     if (!isAuthenticated || !client) return;
     if (mailboxes.length === 0) {
       // The account has no folders to open the link in: stop holding the reader open for it.
@@ -2659,7 +2697,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (newestUnread) {
       selectEmail(newestUnread);
     }
-  }, [isAuthenticated, client, mailboxes.length, emails, linkSegments, initialMailLoadDone, selectEmail]);
+  }, [isAuthenticated, client, mailboxes.length, emails, linkSegments, initialMailLoadDone, selectEmail, proTakingOver]);
 
   // The cursor only exists in Mountain View's desktop list. Narrower, the row it
   // is on would open in the reading pane as if it had been picked.
@@ -3043,8 +3081,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       } else {
         const sentId = result.emailId;
         const ownerAccountId = result.emailAccountId && result.emailAccountId !== sendClient.getAccountId() ? result.emailAccountId : undefined;
+        // "View" names the login the message went out through: by the time
+        // it is clicked another login may be the active one, where the id is
+        // another message.
+        const sentLogin = data.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined;
         progress.sent(sentId && sendClient === client
-          ? () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId })
+          ? () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId, ...(sentLogin ? { accountId: sentLogin } : {}) })
           : undefined);
       }
       // Sending an edited draft destroys it server-side - and every autosave
@@ -3693,7 +3735,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         sendingIn: (seconds) => t('email_viewer.sending_in', { seconds }),
         sent: t('compose_send.sent'),
         view: viewable
-          ? { label: t('compose_send.view'), onClick: () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId }) }
+          ? { label: t('compose_send.view'), onClick: () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId, ...(undoLogin ? { accountId: undoLogin } : {}) }) }
           : undefined,
       });
     }

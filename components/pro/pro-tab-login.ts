@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccountStore } from "@/stores/account-store";
+import { soleLogin } from "@/lib/sole-login";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProTabStore } from "@/stores/pro-tab-store";
 
@@ -11,17 +11,7 @@ import { useProTabStore } from "@/stores/pro-tab-store";
 // single login is signed in; with several it belongs to none of them, and
 // its body says so instead of following whichever login is active.
 
-/**
- * The login a tab without one belongs to: the only login there is, else
- * none. Signed-out entries of the account list count too: the tab may be
- * one of theirs.
- */
-export function soleLogin(): string | undefined {
-  const active = useAuthStore.getState().activeAccountId ?? undefined;
-  return useAccountStore.getState().accounts.length <= 1 ? active : undefined;
-}
-
-/** The login of a tab's data: the one it names, else soleLogin(). */
+/** The login of a tab's data: the one it names, else the only login there is (soleLogin). */
 export function tabLogin(named: string | null | undefined): string | undefined {
   return named || soleLogin();
 }

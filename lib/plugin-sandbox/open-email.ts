@@ -16,6 +16,7 @@ import { appPath, buildMailPath } from '../deep-links';
 import { goInApp } from './page-navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProTabStore } from '@/stores/pro-tab-store';
+import { severalLogins } from '@/lib/sole-login';
 import { readId, readObject, withinRate } from './host-api-input';
 
 /** A message as the reader opens one that is not a row of the list: the login reaching it and its account. */
@@ -64,7 +65,11 @@ export function onOpenEmail(handler: OpenEmailHandler): () => void {
   };
 }
 
-/** The permalink of a message, naming its login and account only when they are not the active login's own. */
+/**
+ * The permalink of a message. It names the account when that is not the
+ * login's own, and the login when it is not the active one or when several
+ * logins are signed in: an address without a login opens nothing then.
+ */
 function messagePath(email: OpenableEmail): string {
   const auth = useAuthStore.getState();
   const own = auth.getAllConnectedClients().get(email.sourceClientAccountId)?.getAccountId();
@@ -72,7 +77,7 @@ function messagePath(email: OpenableEmail): string {
     mailboxId: null,
     threadId: null,
     emailId: email.id,
-    loginId: email.sourceClientAccountId === auth.activeAccountId ? null : email.sourceClientAccountId,
+    loginId: email.sourceClientAccountId === auth.activeAccountId && !severalLogins() ? null : email.sourceClientAccountId,
     ownerAccountId: email.sourceAccountId === own ? null : email.sourceAccountId,
   });
 }
