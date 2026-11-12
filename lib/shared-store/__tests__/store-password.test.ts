@@ -26,7 +26,8 @@ vi.mock('ioredis', () => {
   return { default: FakeRedis };
 });
 
-import { getStore, setStoreForTests } from '../index';
+import { bootState, getStore, setBootState, setStoreForTests } from '../index';
+import { bootGateResponse } from '../boot-gate';
 
 const ENV = ['REDIS_URL', 'REDIS_URL_FILE', 'SHARED_STORE_ALLOW_NO_PASSWORD'] as const;
 let saved: Record<string, string | undefined>;
@@ -124,5 +125,54 @@ describe('without a shared store address', () => {
   it('runs on local files, as before', () => {
     expect(getStore().mode).toBe('local');
     expect(connections).toEqual([]);
+  });
+});
+
+describe('what a replica with a refused store answers', () => {
+  async function answer(pathname: string) {
+    const res = bootGateResponse(pathname);
+    expect(res?.status).toBe(503);
+    return { type: res!.headers.get('content-type'), text: await res!.text() };
+  }
+
+  it('is in the refused state, before boot and after boot set "starting", and never throws', () => {
+    process.env.REDIS_URL = 'redis://valkey.internal:6379/0';
+    expect(bootState()).toBe('refused');
+    setBootState('starting'); // as instrumentation leaves it once getStore() refused
+    expect(bootState()).toBe('refused');
+    expect(connections).toEqual([]);
+  });
+
+  it('says why and what to set, on pages and on the API, without the address', async () => {
+    process.env.REDIS_URL = 'redis://valkey.internal:6379/0';
+    const page = await answer('/en/mail');
+    expect(page.type).toMatch(/^text\/plain/);
+    expect(page.text).toMatch(/no password/);
+    expect(page.text).toMatch(/REDIS_URL/);
+    expect(page.text).toMatch(/SHARED_STORE_ALLOW_NO_PASSWORD=true/);
+    expect(page.text).not.toMatch(/is starting|valkey\.internal|6379/);
+    const api = JSON.parse((await answer('/api/config')).text);
+    expect(api).toEqual({ error: 'not_ready', state: 'refused', message: page.text });
+  });
+
+  it('names the URL problem for an address that is not a URL', async () => {
+    process.env.REDIS_URL = 'redis://:made/up+pass=@valkey.internal:6379/0';
+    expect(bootState()).toBe('refused');
+    const page = await answer('/');
+    expect(page.text).toMatch(/not a valid URL/);
+    expect(page.text).not.toMatch(/made\/up|valkey\.internal/);
+  });
+
+  it('leaves an accepted store as it was: starting, then serving', async () => {
+    process.env.REDIS_URL = 'redis://:a-made-up-password@valkey.internal:6379/0';
+    expect(bootState()).toBe('starting');
+    expect((await answer('/')).text).toBe('Bulwark is starting and connecting to its shared store.');
+    setBootState('ready');
+    expect(bootGateResponse('/')).toBeNull();
+  });
+
+  it('leaves local mode as it was: ready, no gate', () => {
+    expect(bootState()).toBe('ready');
+    expect(bootGateResponse('/')).toBeNull();
   });
 });

@@ -25,8 +25,13 @@ interface StoreGlobals {
  * changes.ts); the replica keeps its last loaded state and isn't ready.
  * blocked: this replica's local data conflicts with an already initialised
  * store (see boot.ts); it won't serve until an admin resolves it.
+ * refused: the configured store address is refused (storeRefusal); it never
+ * connects and won't serve until the address or the switch changes.
  */
-export type BootState = 'starting' | 'ready' | 'store-lost' | 'blocked';
+export type BootState = 'starting' | 'ready' | 'store-lost' | 'blocked' | 'refused';
+
+/** Why a store address is refused: it has no password, or it isn't a URL. */
+export type StoreRefusal = 'no-password' | 'invalid-url';
 
 const KEY = Symbol.for('bulwark.sharedStore');
 
@@ -62,26 +67,43 @@ function storeUrlPassword(url: string): string | undefined {
  * only this deployment can reach the store.
  */
 export function storeUrlRefusal(url: string): string | null {
-  const password = storeUrlPassword(url);
-  if (password === undefined) {
-    return 'The shared store address (REDIS_URL or REDIS_URL_FILE) is not a valid URL. A password with / ? # @ or % ' +
-      'in it has to be percent-encoded; openssl rand -hex 32 makes one that needs no encoding.';
-  }
-  if (password || process.env.SHARED_STORE_ALLOW_NO_PASSWORD?.trim().toLowerCase() === 'true') return null;
-  return 'The shared store address (REDIS_URL or REDIS_URL_FILE) has no password, so Bulwark does not connect. ' +
+  const refusal = refusalOf(url);
+  return refusal && REFUSAL_LOG[refusal];
+}
+
+const REFUSAL_LOG: Record<StoreRefusal, string> = {
+  'invalid-url':
+    'The shared store address (REDIS_URL or REDIS_URL_FILE) is not a valid URL. A password with / ? # @ or % ' +
+    'in it has to be percent-encoded; openssl rand -hex 32 makes one that needs no encoding.',
+  'no-password':
+    'The shared store address (REDIS_URL or REDIS_URL_FILE) has no password, so Bulwark does not connect. ' +
     'Set a password on the store and put it in the address (redis://:<password>@host:6379/0), or set ' +
-    'SHARED_STORE_ALLOW_NO_PASSWORD=true if nothing but this deployment can reach the store.';
+    'SHARED_STORE_ALLOW_NO_PASSWORD=true if nothing but this deployment can reach the store.',
+};
+
+function refusalOf(url: string): StoreRefusal | null {
+  const password = storeUrlPassword(url);
+  if (password === undefined) return 'invalid-url';
+  if (password || process.env.SHARED_STORE_ALLOW_NO_PASSWORD?.trim().toLowerCase() === 'true') return null;
+  return 'no-password';
+}
+
+/** Why the configured store address is refused, or null (also once a store is in use). Never throws. */
+export function storeRefusal(): StoreRefusal | null {
+  if (globals().store) return null;
+  const url = sharedStoreUrl();
+  return url ? refusalOf(url) : null;
 }
 
 export function getStore(): SharedStore {
   const g = globals();
   if (!g.store) {
     const url = sharedStoreUrl();
-    const refusal = url ? storeUrlRefusal(url) : null;
+    const refusal = url ? refusalOf(url) : null;
     if (refusal) {
-      if (!g.refusalLogged) logger.error(refusal);
+      if (!g.refusalLogged) logger.error(REFUSAL_LOG[refusal]);
       g.refusalLogged = true;
-      throw new Error(refusal);
+      throw new Error(REFUSAL_LOG[refusal]);
     }
     g.store = url
       ? createRedisStore({ url, keyPrefix: process.env.REDIS_KEY_PREFIX || 'bulwark:' })
@@ -105,10 +127,12 @@ export function replicaId(): string {
 /**
  * How far the boot chain got. Local mode starts out ready, as it always
  * has; shared mode is "starting" until instrumentation finished connecting,
- * importing and loading (see instrumentation.node.ts).
+ * importing and loading (see instrumentation.node.ts). A refused store
+ * address is "refused" whatever boot set, and asking never throws for it.
  */
 export function bootState(): BootState {
   const g = globals();
+  if (storeRefusal()) return 'refused';
   return g.boot ?? (isSharedMode() ? 'starting' : 'ready');
 }
 
