@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Clock, ExternalLink, Package, ShoppingBag, Truck } from "@/components/icons";
 import { formatMomentDate, formatMoney, isWebLink, shipmentItems, summarizeItems } from "@/lib/structured-mail/format";
@@ -69,7 +70,7 @@ function ParcelRows({ parcel, showExpected, senderDomain }: { parcel: Parcel; sh
       {(carrier || parcel.trackingNumber) && (
         <MetaRow icon={Truck}>
           <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0">
-            {carrier && <span className="text-foreground/90">{carrier}</span>}
+            {carrier && <bdi className="text-foreground/90">{carrier}</bdi>}
             {!carrier && parcel.trackingNumber && <span>{t("tracking_number")}</span>}
             {parcel.trackingNumber && <CopyValueChip
                 value={parcel.trackingNumber}
@@ -103,7 +104,7 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages, senderDomai
   const isParcel = !shipment.orderNumber && !shipment.merchant && shipment.parcels.length > 0;
   const kindLabel = isParcel ? t("kind_parcel") : t("kind_order");
   const title = merchant || carrier || kindLabel;
-  const eyebrow = merchant && carrier ? `${kindLabel} · ${carrier}` : kindLabel;
+  const eyebrow = merchant && carrier ? <>{kindLabel} · <bdi>{carrier}</bdi></> : kindLabel;
   const items = shipmentItems(shipment);
   const { shown, more, count } = summarizeItems(items);
   const total = shipment.total ? formatMoney(shipment.total, opts.locale) : undefined;
@@ -146,7 +147,14 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages, senderDomai
       )}
       {shown.length > 0 && (
         <MetaRow icon={Package}>
-          <span className="text-foreground/90">{shown.map((item) => item.name).join(", ")}</span>
+          <span className="text-foreground/90">
+            {shown.map((item, i) => (
+              <Fragment key={`${item.name}-${i}`}>
+                {i > 0 && ", "}
+                <bdi>{item.name}</bdi>
+              </Fragment>
+            ))}
+          </span>
           {more > 0 && <span> {t("items_more", { count: more })}</span>}
           {allowRemoteImages && <ItemImages items={shown} />}
         </MetaRow>

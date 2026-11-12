@@ -520,7 +520,7 @@ export function CardLink({ link, label, icon: Icon = ExternalLink, emailId, send
       <Icon aria-hidden="true" className="w-3.5 h-3.5 flex-shrink-0" />
       <span className="whitespace-nowrap">{label}</span>
       {/* The host is how a reader judges the link: wrapped, never cut off. */}
-      <span className="max-w-full [overflow-wrap:anywhere] text-muted-foreground/80">· {link.host}</span>
+      <span className="max-w-full [overflow-wrap:anywhere] text-muted-foreground/80">· <bdi dir="ltr">{link.host}</bdi></span>
       {outside && (
         <span className={cn(PILL_CLASS, "bg-warning/15 text-warning")} data-testid="structured-mail-outside-link">
           {tTrust("outside_link")}
@@ -536,7 +536,9 @@ interface CardShellProps {
   icon: IconType;
   /** Destructive tone and a struck-through title. */
   cancelled?: boolean;
-  eyebrow: string;
+  /** The kind, and the provider in a <bdi> (eyebrowText). */
+  eyebrow: ReactNode;
+  /** A title from the mail is drawn in a <bdi>; a route brings its own (RouteTitle). */
   title: ReactNode;
   /** What screen readers hear instead of a title drawn from parts (a route with arrow icons). */
   titleLabel?: string;
@@ -548,9 +550,15 @@ interface CardShellProps {
   senderDomain: string;
 }
 
-/** The banner layout every card shares (CalendarInvitationBanner's look). */
+/**
+ * The banner layout every card shares (CalendarInvitationBanner's look).
+ * Every text from the mail on a card is drawn in its own <bdi>, so right-to-
+ * left text in it cannot change the order of the text around it: the
+ * verified sender line, or another field.
+ */
 export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title, titleLabel, pills, children, actions, kind, senderDomain }: CardShellProps) {
   const tTrust = useTranslations("sender_trust");
+  const shownTitle = typeof title === "string" ? <bdi>{title}</bdi> : title;
   return (
     <section aria-label={name} className="flex items-start gap-3 min-w-0" data-testid="structured-mail-card" data-kind={kind}>
       <div
@@ -583,9 +591,9 @@ export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title,
             {titleLabel ? (
               <>
                 <span className="sr-only">{titleLabel}</span>
-                <span aria-hidden="true" data-testid="structured-mail-title-visual">{title}</span>
+                <span aria-hidden="true" data-testid="structured-mail-title-visual">{shownTitle}</span>
               </>
-            ) : title}
+            ) : shownTitle}
           </h3>
         </div>
         {pills && <div className="flex flex-wrap items-center gap-1.5">{pills}</div>}
@@ -597,10 +605,11 @@ export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title,
 }
 
 /**
- * "Flight · Lufthansa"; the kind alone when the provider is missing, already
- * the title, or names a domain outside the sender's (brandText).
+ * "Flight · Lufthansa", the provider in a <bdi>; the kind alone when the
+ * provider is missing, already the title, or names a domain outside the
+ * sender's (brandText).
  */
-export function eyebrowText(kind: string, provider: string | undefined, title: string, senderDomain: string): string {
+export function eyebrowText(kind: string, provider: string | undefined, title: string, senderDomain: string): ReactNode {
   const p = brandText(provider, senderDomain);
-  return p && p.toLowerCase() !== title.trim().toLowerCase() ? `${kind} · ${p}` : kind;
+  return p && p.toLowerCase() !== title.trim().toLowerCase() ? <>{kind} · <bdi>{p}</bdi></> : kind;
 }
