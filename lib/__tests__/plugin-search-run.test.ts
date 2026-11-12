@@ -123,6 +123,55 @@ describe('api.search.run (#1024)', () => {
   });
 });
 
+describe('api.search.clear', () => {
+  const own = { pluginId: 'related', label: 'Related mail', filter: { from: 'alice@example.com' } };
+
+  it('needs email:read', async () => {
+    await expect(dispatchApiCall(plugin({ permissions: [], grantedPermissions: [] }), 'search.clear', []))
+      .rejects.toThrow(/lacks permission "email:read"/);
+  });
+
+  it("ends the plugin's own search as clearing the chips does", async () => {
+    useEmailStore.setState({ searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS, pluginFilter: own } });
+
+    const { fetchEmails } = useEmailStore.getState();
+    const loadFolder = vi.fn(async () => {});
+    useEmailStore.setState({ fetchEmails: loadFolder });
+    try {
+      await expect(dispatchApiCall(plugin(), 'search.clear', [])).resolves.toBe(true);
+    } finally {
+      useEmailStore.setState({ fetchEmails });
+    }
+
+    expect(isFilterEmpty(useEmailStore.getState().searchFilters)).toBe(true);
+    // Nothing left to search for: the open folder's list again (#1430).
+    expect(advancedSearchEmails).not.toHaveBeenCalled();
+    expect(loadFolder).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a search the user typed', async () => {
+    await expect(dispatchApiCall(plugin(), 'search.clear', [])).resolves.toBe(false);
+    const state = useEmailStore.getState();
+    expect(state.searchQuery).toBe('typed text');
+    expect(state.searchFilters.subject).toBe('old');
+    expect(advancedSearchEmails).not.toHaveBeenCalled();
+  });
+
+  it("leaves another plugin's search", async () => {
+    const other = { ...own, pluginId: 'other' };
+    useEmailStore.setState({ searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS, pluginFilter: other } });
+    await expect(dispatchApiCall(plugin(), 'search.clear', [])).resolves.toBe(false);
+    expect(useEmailStore.getState().searchFilters.pluginFilter).toEqual(other);
+    expect(advancedSearchEmails).not.toHaveBeenCalled();
+  });
+
+  it('ends a search the plugin ran with search.run', async () => {
+    await dispatchApiCall(plugin(), 'search.run', [QUERY]);
+    await expect(dispatchApiCall(plugin(), 'search.clear', [])).resolves.toBe(true);
+    expect(isFilterEmpty(useEmailStore.getState().searchFilters)).toBe(true);
+  });
+});
+
 describe('plugin filter in SearchFilters', () => {
   const pluginFilter = { pluginId: 'related', label: 'Related', filter: { from: 'alice@example.com' } };
 

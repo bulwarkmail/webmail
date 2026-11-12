@@ -47,6 +47,27 @@ describe('Mountain View top bar', () => {
     await act(async () => { fireEvent.click(button); });
     expect(dispatch).toHaveBeenCalledWith('tr', 'top-bar-actions', 'go', {});
   });
+
+  it('draws a pressed action as a toggle that is on, and follows setActions', () => {
+    act(() => setPluginActions('fu', 'Follow-ups', 'top-bar-actions', [
+      { id: 'filter', label: 'Follow up', icon: 'flag', pressed: true },
+      { id: 'plain', label: 'Plain' },
+    ]));
+    render(<MvTopBar search={search} />);
+
+    const toggle = screen.getByRole('button', { name: 'Follow up' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(toggle.className).toContain('bg-primary/10');
+    // A button that is no toggle says nothing about being pressed.
+    expect(screen.getByRole('button', { name: 'Plain' })).not.toHaveAttribute('aria-pressed');
+
+    act(() => setPluginActions('fu', 'Follow-ups', 'top-bar-actions', [
+      { id: 'filter', label: 'Follow up', icon: 'flag', pressed: false },
+    ]));
+    const off = screen.getByRole('button', { name: 'Follow up' });
+    expect(off).toHaveAttribute('aria-pressed', 'false');
+    expect(off.className).not.toContain('bg-primary/10');
+  });
 });
 
 describe('phone header', () => {

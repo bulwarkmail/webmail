@@ -1182,6 +1182,12 @@ function buildCoreApi(manifest: PluginManifest) {
     search: {
       run: (query: unknown, options?: { label?: string }) =>
         callApi('search.run', [query, options]) as Promise<void>,
+      /**
+       * End this plugin's own search; the folder's list shows again.
+       * Resolves false, changing nothing, when the running search is not
+       * this plugin's (none, one the user typed, another plugin's).
+       */
+      clear: () => callApi('search.clear', []) as Promise<boolean>,
     },
     // Calendar events (permissions: calendar:read / calendar:write). Writes
     // go through the calendar the way the user's own edits do, so other

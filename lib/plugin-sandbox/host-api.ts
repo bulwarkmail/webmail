@@ -258,6 +258,7 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   // message-list search: the plugin never sees the results, but it decides
   // which messages the list shows.
   'search.run': 'email:read',
+  'search.clear': 'email:read',
   // OAuth with a third party: a state value bound to this plugin, and the
   // redirect URI the provider sends the user back to.
   'oauth.createState': 'http:fetch',
@@ -1945,6 +1946,20 @@ async function doSearchRun(plugin: InstalledPlugin, query: unknown, options: unk
   await store.advancedSearch(client);
 }
 
+/**
+ * End the plugin's own search as the chips' "clear all" does, so the folder's
+ * list shows again. A search the user typed or another plugin ran stays.
+ * Resolves whether it ended one.
+ */
+async function doSearchClear(plugin: InstalledPlugin): Promise<boolean> {
+  const store = useEmailStore.getState();
+  if (store.searchFilters.pluginFilter?.pluginId !== plugin.id) return false;
+  const client = requireClient();
+  store.clearSearchFilters();
+  await useEmailStore.getState().advancedSearch(client);
+  return true;
+}
+
 // ─── Sieve (delivery-time classification) ─────────────────────
 
 async function doSieveGetActiveScript(): Promise<{ id: string; name: string; content: string } | null> {
@@ -2379,6 +2394,7 @@ export async function dispatchApiCall(
     case 'tabs.categorize': return doTabsCategorize(args[0], args[1]);
 
     case 'search.run': return doSearchRun(plugin, args[0], args[1]);
+    case 'search.clear': return doSearchClear(plugin);
 
     case 'oauth.createState': return createOAuthState(plugin.id);
     case 'oauth.getRedirectUri': {
