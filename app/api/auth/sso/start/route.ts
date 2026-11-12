@@ -6,6 +6,7 @@ import { generateCodeVerifierServer, generateCodeChallengeServer, generateStateS
 import { getRequiredConfig, getDiscoveryValidator } from '@/lib/oauth/token-exchange';
 import { discoverOAuth } from '@/lib/oauth/discovery';
 import { signInIssuerRule } from '@/lib/oauth/sign-in-servers';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { getOauthScopes, refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { refreshTokenServer } from '@/lib/oauth/slot-renewal';
 import { withProviderDataScopes } from '@/lib/oauth/scopes';
@@ -221,7 +222,7 @@ export async function POST(request: NextRequest) {
       state,
     });
   } catch (error) {
-    logger.error('SSO start error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('SSO start error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

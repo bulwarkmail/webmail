@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { JmapAuthVerificationError, verifyJmapAuth } from '@/lib/auth/verify-jmap-auth';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
@@ -112,12 +113,12 @@ export async function POST(request: NextRequest) {
       }
       await refund();
       logger.debug('Login pre-check inconclusive', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: loggableError(error),
       });
       return respond('inconclusive');
     }
   } catch (error) {
-    logger.error('Login pre-check error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Login pre-check error', { error: loggableError(error) });
     return respond('inconclusive');
   }
 }

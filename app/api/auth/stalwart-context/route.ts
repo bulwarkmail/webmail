@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import { cookies } from 'next/headers';
 import { setStalwartAuthContext } from '@/lib/stalwart/auth-context';
@@ -150,9 +151,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.error('Failed to store Stalwart auth context', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.error('Failed to store Stalwart auth context', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

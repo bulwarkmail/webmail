@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
 import { getMetadata, getRequiredConfig } from '@/lib/oauth/token-exchange';
 import { signInIssuerRule } from '@/lib/oauth/sign-in-servers';
+import { loggableError } from '@/lib/oauth/answer-summary';
 
 /**
  * Same-origin OAuth metadata (discovery) proxy.
@@ -49,9 +50,7 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'private, max-age=600' },
     });
   } catch (error) {
-    logger.error('OAuth metadata discovery error', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.error('OAuth metadata discovery error', { error: loggableError(error) });
     return NextResponse.json({ error: 'OAuth discovery failed' }, { status: 502 });
   }
 }

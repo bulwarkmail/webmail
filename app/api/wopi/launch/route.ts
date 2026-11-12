@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { loginClientAddress } from '@/lib/auth/client-address';
@@ -151,9 +152,7 @@ export async function POST(request: NextRequest) {
       readOnly: !editable,
     });
   } catch (error) {
-    logger.error('WOPI launch failed', {
-      error: error instanceof Error ? error.message : 'Unknown',
-    });
+    logger.error('WOPI launch failed', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

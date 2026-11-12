@@ -14,6 +14,8 @@ const hoisted = vi.hoisted(() => ({
   garbled: () => new SyntaxError('Unexpected token \'T\', "{"t":TOKEN-SECRET}" is not valid JSON'),
   /** Reading these cookies fails like a garbled record. */
   explode: false,
+  /** Settings a case turns on. */
+  config: {} as Record<string, unknown>,
 }));
 
 vi.mock('@/lib/logger', () => {
@@ -24,7 +26,7 @@ vi.mock('@/lib/auth/session-secret', () => ({ getSessionSecret: () => 's'.repeat
 vi.mock('@/lib/admin/config-manager', () => ({
   configManager: {
     ensureLoaded: async () => {},
-    get: (key: string, fallback?: unknown) => (key === 'jmapServerUrl' ? 'https://mail.example' : fallback),
+    get: (key: string, fallback?: unknown) => (key in hoisted.config ? hoisted.config[key] : key === 'jmapServerUrl' ? 'https://mail.example' : fallback),
     getPolicy: () => ({}),
   },
 }));
@@ -93,23 +95,66 @@ const cases: Array<[string, () => Promise<Response>]> = [
   ['pairing redeem', async () => (await import('@/app/api/auth/pair/redeem/route')).POST(post('/api/auth/pair/redeem', { pairing_code: CODE }))],
   ['pairing status', async () => (await import('@/app/api/auth/pair/status/route')).GET(get(`/api/auth/pair/status?id=${'b'.repeat(32)}`))],
   ['pairing token proxy', async () => (await import('@/app/api/auth/pair/token/route')).POST(post('/api/auth/pair/token', 'grant_type=refresh_token&refresh_token=sealed', { ...SAME_ORIGIN, 'content-type': 'application/x-www-form-urlencoded' }))],
+  ['auth context, a body that is not JSON (it carries the Authorization value)', async () => (await import('@/app/api/auth/stalwart-context/route')).POST(post('/api/auth/stalwart-context', GARBLED_BODY))],
+  ['SSO start, a body that is not JSON', async () => (await import('@/app/api/auth/sso/start/route')).POST(post('/api/auth/sso/start', GARBLED_BODY))],
 ];
+
+/** Routes that answer without a 5xx and still log the error. */
+const answeringCases: Array<[string, () => Promise<Response>]> = [
+  ['sign-in pre-check, the mail server answer garbled', async () => (await import('@/app/api/auth/verify/route')).POST(post('/api/auth/verify', { serverUrl: 'https://mail.example', username: 'u', password: 'p' }))],
+  ['mail server lookup for an address, an answer garbled', async () => {
+    hoisted.config = { allowCustomJmapEndpoint: true };
+    return (await import('@/app/api/auth/discover-server/route')).POST(post('/api/auth/discover-server', { email: 'u@lookup.example' }));
+  }],
+];
+
+// The mail server's answer to the pre-check, and the domain's to the lookup, come garbled.
+vi.mock('@/lib/auth/verify-jmap-auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/auth/verify-jmap-auth')>()),
+  verifyJmapAuth: async () => { throw hoisted.garbled(); },
+}));
+vi.mock('@/lib/auth/discover-mail-server', () => ({
+  discoverMailServer: async () => { throw hoisted.garbled(); },
+}));
 
 // Every route is loaded once, on first use.
 vi.setConfig({ testTimeout: 30_000 });
+
+function expectFixedMessage() {
+  const text = JSON.stringify(hoisted.logged);
+  expect(hoisted.logged.length).toBeGreaterThan(0);
+  expect(text).not.toContain(SECRET);
+  expect(text).toContain('Not valid JSON');
+}
 
 describe('what a sign-in, session, hand-off or pairing route logs of a garbled body or record', () => {
   beforeEach(() => {
     hoisted.logged.length = 0;
     hoisted.explode = false;
+    hoisted.config = {};
   });
 
   it.each(cases)('%s: a fixed message, nothing of the text', async (_name, call) => {
     const res = await call();
     expect(res.status).toBeGreaterThanOrEqual(500);
-    const text = JSON.stringify(hoisted.logged);
-    expect(hoisted.logged.length).toBeGreaterThan(0);
-    expect(text).not.toContain(SECRET);
-    expect(text).toContain('Not valid JSON');
+    expectFixedMessage();
+  });
+
+  it.each(answeringCases)('%s: a fixed message, nothing of the text', async (_name, call) => {
+    await call();
+    expectFixedMessage();
+  });
+
+  it("the desktop app's discovery, a body that is not JSON: a fixed message, nothing of the text", async () => {
+    vi.stubEnv('NEXT_PUBLIC_BULWARK_DESKTOP', '1');
+    vi.resetModules();
+    try {
+      const res = await (await import('@/app/api/auth/desktop-oauth/route')).POST(post('/api/auth/desktop-oauth', GARBLED_BODY));
+      expect(res.status).toBe(503);
+      expectFixedMessage();
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });

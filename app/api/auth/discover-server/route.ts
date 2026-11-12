@@ -6,6 +6,7 @@ import { loginClientAddress } from '@/lib/auth/client-address';
 import { isStoreUnavailable } from '@/lib/auth/store-unavailable';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 
 /**
  * Finds the mail server of the address typed on the sign-in form, when the
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     return answer(await discoverMailServer(email));
   } catch (error) {
-    logger.warn('Mail server discovery failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.warn('Mail server discovery failed', { error: loggableError(error) });
     return answer(null);
   }
 }
