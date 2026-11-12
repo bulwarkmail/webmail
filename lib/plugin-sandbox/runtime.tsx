@@ -910,10 +910,19 @@ function buildCoreApi(manifest: PluginManifest) {
        *  height, and closes on Escape or a click outside (null). Hosts
        *  without it ignore the option.
        *
+       *  `anchor: 'frame'` draws the popover beside the frame that called
+       *  openDialog instead - at its end side (right in LTR, left in RTL),
+       *  its bottom lined up with the frame's bottom, inside the window. No
+       *  click needed, so it stands at the same place when opened by
+       *  keyboard or again after another dialog. Meant for a slot's own
+       *  flyout (a `navigation-rail-bottom` button); from the background
+       *  frame, which has no place, the dialog is centred. Any other value
+       *  is ignored (centred).
+       *
        *  `fill: true` gives the dialog (or the popover) a fixed height, as
        *  tall as the window lets it be up to 640 px, and the plugin's root
        *  fills it, for a chat whose input stays at the bottom. */
-      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger'; fill?: boolean }) =>
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger' | 'frame'; fill?: boolean }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Shows one of this plugin's OWN slots ('plugin-notice' unless `slot`
        *  names another) as a notice in the toasts' stack at the bottom end

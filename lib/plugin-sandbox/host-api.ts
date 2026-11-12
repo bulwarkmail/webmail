@@ -53,7 +53,7 @@ import { isValidKeywordDefinitionId, MAX_KEYWORD_LABEL_LENGTH } from '../keyword
 import { emailKeyFor } from '../thread-utils';
 import { DEFAULT_SEARCH_FILTERS, isFilterEmpty, normalizePluginFilter, type PluginListedEmail } from '../jmap/search-utils';
 import { awaitDialog, awaitPrompt, awaitCustomDialog, type PromptField } from './host-dialog';
-import { triggerAnchor } from './dialog-anchor';
+import { frameAnchor, triggerAnchor, type AnchorRect } from './dialog-anchor';
 import { fileStorage } from '../plugin-storage';
 import { generateUUID } from '../utils';
 import { AddressBook, ContactCard, Email, Identity } from '../jmap/types';
@@ -2156,12 +2156,29 @@ async function adminDelete(pluginId: string, key: string): Promise<void> {
 
 // ─── Dispatcher ──────────────────────────────────────────────
 
+/**
+ * Where ui.openDialog's popover stands, as the host decides it: `trigger`
+ * beside the last activation, `frame` beside the calling frame (its end
+ * side); none (centred) for anything else or when there is no such place.
+ */
+function dialogAnchor(asked: unknown, frame: Element | undefined): { anchor?: AnchorRect; anchorSide?: 'end' } {
+  if (asked === 'trigger') {
+    const anchor = triggerAnchor();
+    return anchor ? { anchor } : {};
+  }
+  if (asked === 'frame') {
+    const anchor = frameAnchor(frame);
+    return anchor ? { anchor, anchorSide: 'end' } : {};
+  }
+  return {};
+}
+
 /** Resolves an api-request method against the per-plugin permissions. */
 export async function dispatchApiCall(
   plugin: InstalledPlugin,
   method: string,
   args: unknown[],
-  opts?: { privileged?: boolean; sink?: StreamSink; eventSink?: EventStreamSink; toastSignal?: AbortSignal; frame?: 'background' | 'slot' },
+  opts?: { privileged?: boolean; sink?: StreamSink; eventSink?: EventStreamSink; toastSignal?: AbortSignal; frame?: 'background' | 'slot'; frameElement?: Element },
 ): Promise<unknown> {
   // Tier gate: privileged-only methods are refused for untrusted (null-origin)
   // instances even if the permission is somehow present. Defence-in-depth on
@@ -2188,6 +2205,7 @@ export async function dispatchApiCall(
 
   if (method in KEYSTORE_PERMS) return doKeystoreCall(plugin, method, args);
 
+  const callOpts = opts;
   switch (method) {
     case 'proxy.fetch': return proxyFetch(plugin, args, opts?.sink ?? null);
     case 'proxy.cancel': proxyCancel(plugin, args[0]); return undefined;
@@ -2403,7 +2421,9 @@ export async function dispatchApiCall(
         // Next to what the user just clicked, when the plugin asks and there
         // was such a click; the place is the host's, never the plugin's. With
         // fill the popover takes the filled dialog's height.
-        anchor: opts.anchor === 'trigger' ? triggerAnchor() ?? undefined : undefined,
+        // `frame`: beside the frame that asked (a rail button), no click
+        // needed; a background frame has no place, so it stays centred.
+        ...dialogAnchor(opts.anchor, callOpts?.frame === 'slot' ? callOpts.frameElement : undefined),
       });
     }
     case 'ui.showNotice': return showNotice(plugin, args[0], opts?.toastSignal);
