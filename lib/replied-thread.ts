@@ -36,8 +36,19 @@ export async function refreshRepliedThread(
 
   const place = placeOf(row);
   if (!place.client) return;
-  const fullEmails = await place.client.getThreadEmails(row.threadId, place.accountId ?? place.client.getAccountId());
-  if (fullEmails.length === 0) return;
+  const fetched = await place.client.getThreadEmails(row.threadId, place.accountId ?? place.client.getAccountId());
+  if (fetched.length === 0) return;
+  // The conversation's messages carry the row's stamps, as fetchThreadEmails
+  // gives them: what is done to one of them in the expanded conversation
+  // (a tag, Report spam, a move) routes by them, and Email/get returns none.
+  // A row of a folder of one account has none, and its messages get none.
+  const fullEmails = fetched.map((email) => ({
+    ...email,
+    accountId: row.accountId,
+    accountLabel: row.accountLabel,
+    sourceClientAccountId: row.sourceClientAccountId,
+    sourceAccountId: row.sourceAccountId,
+  }));
   useEmailStore.setState((current) => {
     const cache = new Map(current.threadEmailsCache);
     cache.set(threadKeyFor(row), fullEmails);
