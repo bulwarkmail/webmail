@@ -509,7 +509,7 @@ self.addEventListener("message", (event) => {
     return;
   }
   if (data.type === "app-lock") {
-    event.waitUntil(writeAppLockState(data.state));
+    event.waitUntil(writeAppLockState(data.state, event.source && event.source.id));
     return;
   }
   if (data.type === "offline-shell") {
@@ -863,11 +863,14 @@ async function showWithoutAlert(groupTag) {
   }
   try {
     if (existing) {
-      await showWithActions(existing.title, {
+      // Shown before a lock the worker didn't hear: again, it says nothing about the message.
+      const hidden = await appLockHidesContent();
+      const data = existing.data || {};
+      await showWithActions(hidden ? "New mail" : existing.title, {
         ...options,
         tag: groupTag,
-        body: existing.body,
-        data: existing.data,
+        body: hidden ? "You have new mail" : existing.body,
+        data: hidden ? { kind: "mail-list", accountId: data.accountId, slot: data.slot, ids: data.ids } : existing.data,
       });
       return;
     }
@@ -892,42 +895,84 @@ async function showWithoutAlert(groupTag) {
 const QUIET_WINDOW_MS = 30_000;
 
 // ---- App lock: while locked a notification says nothing about the message ----
+//
+// Message content and buttons only when the worker can tell the app is unlocked
+// now. Whatever it can't tell counts as locked.
+
+/** The Web Lock the tab with the lock key holds for as long as it lives (lib/app-lock/state.ts). */
+const APP_LOCK_HOLDER = "bulwark-app-lock-holder";
 
 function appLockStateKey() {
   return `${self.location.origin}${BASE_PATH}/__push-state/app-lock`;
 }
 
-async function writeAppLockState(state) {
+async function readAppLockState() {
   const cache = await caches.open(PUSH_STATE_CACHE);
-  await cache.put(appLockStateKey(), new Response(JSON.stringify({ state }), { headers: { "Content-Type": "application/json" } }));
+  const res = await cache.match(appLockStateKey());
+  return res ? await res.json() : null;
+}
+
+/**
+ * What a page said, kept across the worker's restarts. With "unlocked" go the tabs
+ * that said so since the lock last came, those of them still open: one of them has
+ * to be there for it to count.
+ */
+async function writeAppLockState(state, clientId) {
+  const record = { state };
+  if (state === "unlocked") {
+    const before = await readAppLockState().catch(() => null);
+    const said = before && before.state === "unlocked" && Array.isArray(before.clients) ? before.clients : [];
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const openIds = new Set(open.map((client) => client.id));
+    record.clients = said.filter((id) => openIds.has(id));
+    if (typeof clientId === "string" && clientId && !record.clients.includes(clientId)) record.clients.push(clientId);
+  }
+  const cache = await caches.open(PUSH_STATE_CACHE);
+  await cache.put(appLockStateKey(), new Response(JSON.stringify(record), { headers: { "Content-Type": "application/json" } }));
   if (state === "locked") await closeMailNotifications();
 }
 
-/** What's on screen from before the lock names senders and subjects. */
+/**
+ * What's on screen from before the lock names senders and subjects, or an event's
+ * title. Only the prompt to bring a mailto window forward says nothing of either.
+ */
 async function closeMailNotifications() {
   try {
     const shown = await self.registration.getNotifications();
     for (const notification of shown) {
-      if (typeof notification.tag === "string" && notification.tag.startsWith("bulwark-mail:")) notification.close();
+      const tag = typeof notification.tag === "string" ? notification.tag : "";
+      if (tag.startsWith("bulwark-mail:") || tag.startsWith("calendar-reminder:")) notification.close();
     }
   } catch (_) {
     // Nothing more a worker can do.
   }
 }
 
+/** Whether a tab holds the lock key now: what the page asks too (lib/app-lock/controller.ts holderAlive). */
+async function appLockKeyHeld() {
+  const locks = typeof navigator !== "undefined" && navigator ? navigator.locks : null;
+  // A worker without Web Locks can't tell: locked.
+  if (!locks || typeof locks.query !== "function") return false;
+  const snapshot = await locks.query();
+  const held = snapshot && Array.isArray(snapshot.held) ? snapshot.held : [];
+  return held.some((lock) => lock && lock.name === APP_LOCK_HOLDER);
+}
+
 /**
- * The page says "locked" when it locks. It can't say so when the browser just closes, so
- * "unlocked" only counts with a window open: the key is in a window's memory or nowhere.
+ * The page says "locked" when it locks. It can't say so when its tab or the browser
+ * closes, so a stored "unlocked" counts only while a tab holds the lock key and one
+ * of the tabs that said "unlocked" is open. Any other window of the origin (a
+ * picture, an attachment) runs no lock and counts for nothing.
  */
 async function appLockHidesContent() {
   try {
-    const cache = await caches.open(PUSH_STATE_CACHE);
-    const res = await cache.match(appLockStateKey());
-    const stored = res ? await res.json() : null;
+    const stored = await readAppLockState();
     if (!stored || stored.state === "off") return false;
     if (stored.state !== "unlocked") return true;
+    if (!(await appLockKeyHeld())) return true;
+    const said = Array.isArray(stored.clients) ? stored.clients : [];
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    return windows.length === 0;
+    return !windows.some((client) => said.includes(client.id));
   } catch (_) {
     // Can't tell: a generic notification loses little.
     return true;
@@ -1469,11 +1514,12 @@ function inlineReplySupported() {
   return typeof NotificationEvent !== "undefined" && "reply" in NotificationEvent.prototype;
 }
 
-/** The buttons for a notification. Only one message, with its login known, gets any. */
+/** The buttons for a notification. Only one message, with its login known, gets any, and none while locked. */
 async function notificationActions(data) {
   if (!data || data.kind !== "email" || !data.emailId || !data.accountId || !data.login) return [];
   const max = maxNotificationActions();
   if (max < 1) return [];
+  if (await appLockHidesContent()) return [];
   const prefs = await readNotificationActionPrefs();
   const offered = {
     "mark-read": { action: "mark-read", title: prefs.labels.markRead },

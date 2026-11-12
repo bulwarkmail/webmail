@@ -34,12 +34,20 @@ export interface ShownNotification {
   options: Record<string, unknown>;
 }
 
+/** The Web Lock the tab with the app lock's key holds (lib/app-lock/state.ts APP_LOCK_HOLDER). */
+const APP_LOCK_HOLDER = 'bulwark-app-lock-holder';
+
 export function loadWorker(opts: {
   buildId: string;
   caches: FakeCaches;
+  /**
+   * The open windows. The first one is the app tab that holds the app lock's key (a Web Lock),
+   * and it sent any `message` dispatched without a `source`. A test that needs other locks
+   * passes its own `navigator` in `globals`.
+   */
   clients: Array<{ id: string }>;
   fetch?: (input: unknown, init?: RequestInit) => Promise<Response>;
-  /** More globals of a real worker: Notification, NotificationEvent, MessageChannel. */
+  /** More globals of a real worker: Notification, NotificationEvent, MessageChannel, navigator. */
   globals?: Record<string, unknown>;
   openWindow?: (url: string) => Promise<unknown>;
   /** What showNotification does, after it was recorded in `shown`. */
@@ -63,11 +71,21 @@ export function loadWorker(opts: {
       getNotifications: async () => opts.notifications ?? [],
     },
   };
-  const context = vm.createContext({ self, caches: opts.caches, fetch: opts.fetch ?? (async () => { throw new TypeError('offline'); }), URL, URLSearchParams, Request, Response, Headers, Date, console, AbortController, setTimeout, clearTimeout, crypto: globalThis.crypto, TextEncoder, btoa, ...opts.globals });
+  const navigator = {
+    locks: {
+      query: async () => ({
+        held: opts.clients.slice(0, 1).map((client) => ({ name: APP_LOCK_HOLDER, mode: 'exclusive', clientId: client.id })),
+        pending: [],
+      }),
+    },
+  };
+  const context = vm.createContext({ self, caches: opts.caches, fetch: opts.fetch ?? (async () => { throw new TypeError('offline'); }), URL, URLSearchParams, Request, Response, Headers, Date, console, AbortController, setTimeout, clearTimeout, crypto: globalThis.crypto, TextEncoder, btoa, navigator, ...opts.globals });
   vm.runInContext(SW_SOURCE, context);
   async function dispatch(type: string, event: Record<string, unknown> = {}) {
     const waits: Promise<unknown>[] = [];
-    listeners.get(type)?.({ ...event, waitUntil: (p: Promise<unknown>) => waits.push(p) });
+    // A page's message always comes from its window.
+    const from = type === 'message' && !('source' in event) && opts.clients.length > 0 ? { source: opts.clients[0] } : {};
+    listeners.get(type)?.({ ...from, ...event, waitUntil: (p: Promise<unknown>) => waits.push(p) });
     await Promise.all(waits);
   }
   /** A fetch event: what the worker answered, or null when it left the request to the network. */

@@ -397,7 +397,11 @@ function openUp(): void {
   markDocument(false);
   setPhase('open');
   startIdle();
-  if (readAppLockFile().on && !heldKey) watchHolder();
+  if (readAppLockFile().on) {
+    if (!heldKey) watchHolder();
+    // The worker counts the app as unlocked only while a tab that said so is open.
+    tellServiceWorker('unlocked');
+  }
   hold?.release();
   hold = null;
 }
@@ -645,7 +649,6 @@ async function holdAndOpen(raw: Uint8Array): Promise<void> {
   writeAppLockFile({ ...readAppLockFile(), on: true, locked: false });
   noteUnlocked();
   postAppLockMessage({ type: 'unlocked' });
-  tellServiceWorker('unlocked');
   openUp();
   await deliverSealedDrafts(key);
 }
@@ -942,7 +945,6 @@ async function enable(pin: string): Promise<void> {
   }
   noteUnlocked();
   postAppLockMessage({ type: 'enabled' });
-  tellServiceWorker('unlocked');
   openUp();
   // Another tab has the store open and no key for what comes next. Everyone starts over.
   if (await ownerIsElsewhere()) lockEverywhere();
@@ -1231,7 +1233,8 @@ export function startAppLock(): () => void {
     if (!heldKey) watchHolder();
   }
   if (readAppLockFile().on) {
-    tellServiceWorker(isAppLockedNow() ? 'locked' : 'unlocked');
+    // A tab still asking whether another holds the key tells the worker once it knows (openUp, lockedFromNow).
+    if (phase !== 'checking') tellServiceWorker(isAppLockedNow() ? 'locked' : 'unlocked');
     void dropHelloIfNotAllowed();
   }
   return () => {
