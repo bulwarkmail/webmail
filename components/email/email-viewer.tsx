@@ -287,6 +287,12 @@ export interface EmailViewerProps {
   onUndoSpam?: () => void;
   onMoveToMailbox?: (mailboxId: string) => void;
   /**
+   * Why the message can't be moved from here, when the host offers no Move
+   * (its login's folders can't be had, see moveFoldersFor): Move shows,
+   * unavailable, with this as its hint.
+   */
+  moveUnavailableHint?: string;
+  /**
    * Take the message out of the open folder only (#615). Passed only when
    * the message is also in another folder.
    */
@@ -1298,6 +1304,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       menuRef={menu.menuRef}
       label={label}
       mailboxes={mailboxes}
+      moveUnavailableHint={options.moveUnavailableHint}
       selectedMailbox={selectedMailbox}
       currentMailboxRole={options.currentMailboxRole}
       onReply={options.onReply}
@@ -1434,10 +1441,14 @@ function ReaderMorePanelBody({
               aria-haspopup="menu"
               data-testid={entry.key === 'rules' ? 'viewer-rules' : `panel-${entry.key}`}
               onClick={() => openSub(entry.key)}
-              className={PANEL_ROW_CLASS}
+              disabled={entry.disabled}
+              className={cn(PANEL_ROW_CLASS, entry.disabled && "opacity-50")}
             >
               <Icon className="w-5 h-5" />
-              <span className="flex-1">{entry.label}</span>
+              <span className="flex-1">
+                {entry.label}
+                {entry.hint && <span className="block text-xs text-muted-foreground">{entry.hint}</span>}
+              </span>
               {entry.key === 'tag' && currentTagIds.length > 0 && (
                 <span className="flex -space-x-1 me-1" aria-hidden>
                   {sortedTagIds.slice(0, 3).map((tagId) => (
@@ -1493,6 +1504,7 @@ export function EmailViewer({
   onMarkAsSpam,
   onUndoSpam,
   onMoveToMailbox,
+  moveUnavailableHint,
   onRemoveFromFolder,
   onTogglePinned,
   onBack,
@@ -4591,6 +4603,7 @@ export function EmailViewer({
     email,
     currentMailboxRole,
     canMove: canMoveAnywhere && !!onMoveToMailbox,
+    moveUnavailableHint: onMoveToMailbox ? undefined : moveUnavailableHint,
     canRemoveFromFolder: !!onRemoveFromFolder,
     onReply: onReply ? () => onReply() : undefined,
     onReplyAll,
@@ -4871,6 +4884,23 @@ export function EmailViewer({
                 />
               </div>
             </ContextMenu>
+          </div>
+        )}
+        {/* Move, unavailable: the host says why (moveUnavailableHint) */}
+        {!onMoveToMailbox && moveUnavailableHint && (
+          <div data-overflow-item data-overflow-priority="5" className={cn("relative", mvViewer && "order-6")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+              title={moveUnavailableHint}
+              aria-label={`${t('move_to')}. ${moveUnavailableHint}`}
+              data-testid="reader-move-unavailable"
+            >
+              <FolderInput className="w-4 h-4" />
+              {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
+            </Button>
           </div>
         )}
         {/* Tag Picker - hidden on mobile, overflows to More menu */}

@@ -1571,11 +1571,60 @@ export function resolveUnstampedEmailAccountId(opts: {
   return mailbox?.isShared ? mailbox.accountId : undefined;
 }
 
-function mailboxesInView(state: Pick<EmailStore, 'viewingAccountId' | 'accountMailboxes' | 'mailboxes'>): Mailbox[] {
+/**
+ * The folders of the login on screen: the browsed login's list, else the
+ * active login's. Folder ids repeat across logins, so while another login's
+ * list isn't loaded there are none, never the active login's.
+ */
+export function mailboxesInView(state: Pick<EmailStore, 'viewingAccountId' | 'accountMailboxes' | 'mailboxes'>): Mailbox[] {
   if (state.viewingAccountId) {
-    return state.accountMailboxes[state.viewingAccountId] ?? state.mailboxes;
+    const own = state.viewingAccountId === useAuthStore.getState().activeAccountId;
+    return state.accountMailboxes[state.viewingAccountId] ?? (own ? state.mailboxes : []);
   }
   return state.mailboxes;
+}
+
+/** Why a Move picker offers nothing: the messages are in several logins, or their login's folders can't be had. */
+export type MoveUnavailableReason = 'several_logins' | 'not_connected';
+
+export type MoveFolders =
+  | { login: string | null; mailboxes: Mailbox[]; unavailable?: undefined }
+  | { login: null; mailboxes: Mailbox[]; unavailable: MoveUnavailableReason };
+
+/**
+ * The folders a "Move to" picker offers for `emails` (an open message, a
+ * row, a selection): the folder list of the login they are in, as the
+ * sidebar lists it (for the active login its own and team folders). A
+ * message's login is its stamp, else the login browsed, else the active one.
+ * Folder ids repeat across logins, so another login's list never stands in:
+ * messages of several logins, or of a login whose list isn't loaded or that
+ * has no client, get no folders and the reason.
+ */
+export function moveFoldersFor(
+  emails: ReadonlyArray<Pick<Email, 'sourceClientAccountId'>>,
+  state: Pick<EmailStore, 'viewingAccountId' | 'accountMailboxes' | 'mailboxes'> = useEmailStore.getState(),
+): MoveFolders {
+  const auth = useAuthStore.getState();
+  const loginOf = (email: Pick<Email, 'sourceClientAccountId'> | null) =>
+    email?.sourceClientAccountId ?? state.viewingAccountId ?? auth.activeAccountId ?? null;
+  const logins = new Set(emails.length > 0 ? emails.map(loginOf) : [loginOf(null)]);
+  if (logins.size > 1) return { login: null, mailboxes: [], unavailable: 'several_logins' };
+  const [login] = [...logins];
+  // No login named anywhere: the only folders there are.
+  if (!login) return { login: null, mailboxes: state.mailboxes };
+  const isActive = login === auth.activeAccountId;
+  const client = auth.getClientForAccount(login) ?? (isActive ? auth.client : null);
+  const list = isActive ? state.mailboxes : state.accountMailboxes[login];
+  if (!client || !list) return { login: null, mailboxes: [], unavailable: 'not_connected' };
+  return { login, mailboxes: list };
+}
+
+/** A move to a folder that is not among the folders of the message's login, or with that login gone. */
+export class MoveFolderUnavailableError extends Error {
+  constructor(readonly reason: MoveUnavailableReason) {
+    super(reason === 'several_logins' ? 'The messages are in several accounts' : 'The folder is not in this message\'s account');
+    this.name = 'MoveFolderUnavailableError';
+  }
 }
 
 /** The search scope `openMailboxId` starts with under the user's "Search in" setting (#1485). */
@@ -5219,14 +5268,20 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const email = state.emails.find(isTarget);
     if (!email) return false;
 
-    // A list that mixes accounts offers the viewed account's folders, and
-    // the message may be in any account (moveSourceBatches). Its own folder
-    // list would take the id for one of that account's folders.
+    // The Move pickers offer the folders of the message's own login
+    // (moveFoldersFor), and the folder is looked up there and nowhere else:
+    // the same id names another folder in any other login's list.
+    const offered = moveFoldersFor([email], state);
+    if (offered.unavailable) throw new MoveFolderUnavailableError(offered.unavailable);
+    if (!offered.mailboxes.some((mb) => mb.id === destinationMailboxId)) throw new MoveFolderUnavailableError('not_connected');
+
+    // A list that mixes accounts: the message may be in any account of its
+    // login (moveSourceBatches moves it in place or across accounts).
     if (isAggregateListView() && email.sourceAccountId) {
       const hookMailboxes = resolveActionMailboxes();
       const move = { emailIds: [email.id], fromMailboxId: moveSourceMailboxId([email], hookMailboxes), toMailboxId: destinationMailboxId };
       if (!(await allowEmailMove(move, hookMailboxes))) return false;
-      const failures = await moveRowsToMailbox([email], resolveMoveDestination(client, destinationMailboxId), client, receipts);
+      const failures = await moveRowsToMailbox([email], resolveMoveDestination(client, destinationMailboxId, offered.login), client, receipts);
       if (failures.length > 0) throw failures[0].error;
       emitEmailMove(move, hookMailboxes);
       return true;
@@ -5235,19 +5290,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // The folder lists only: the move itself goes through a login's client
     // (moveToMailbox, crossAccountMoveEmails), which refuses a login without one.
     const stamped = !!email.sourceClientAccountId && !!email.sourceAccountId;
-    const mailboxes = stamped
-      ? sourceMailboxes(state, email.sourceClientAccountId!, email.sourceAccountId!)
-      : resolveActionMailboxes();
-    const find = (id: string) =>
-      mailboxes.find((mb) => mb.id === id) ?? state.mailboxes.find((mb) => mb.id === id);
+    const mailboxes = offered.mailboxes;
+    const find = (id: string) => mailboxes.find((mb) => mb.id === id);
     const destMailbox = find(destinationMailboxId);
     // The login of the list the message and the folder were picked from: the
-    // row's own, else the login browsed; the active one's folder list otherwise.
+    // row's own, else the login browsed, else the active one.
     const viewLogin = state.viewingAccountId ?? useAuthStore.getState().activeAccountId;
     const listLogin = stamped ? email.sourceClientAccountId! : viewLogin;
-    const destListedBy = mailboxes.some((mb) => mb.id === destinationMailboxId)
-      ? listLogin
-      : useAuthStore.getState().activeAccountId;
+    const destListedBy = offered.login ?? listLogin;
     // A context-menu move acts on the visible list, so the source folder is the
     // one currently open.
     const sourceMailbox = find(state.selectedMailbox ?? '');
@@ -6805,8 +6855,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // in place; the others are moved across accounts (moveSourceBatches).
         // What could not be moved stays listed and selected, and so does a
         // selected row found neither listed nor in an expanded thread
-        // (resolveSelectionRows).
-        const failures = await moveRowsToMailbox(selectedEmails, resolveMoveDestination(client, toMailboxId), client, receipts);
+        // (resolveSelectionRows). The folder is one of the selection's own
+        // login (moveFoldersFor): a selection of several logins moves nothing.
+        const offered = moveFoldersFor(selectedEmails);
+        if (offered.unavailable || !offered.mailboxes.some((mb) => mb.id === toMailboxId)) {
+          throw new MoveFolderUnavailableError(offered.unavailable ?? 'not_connected');
+        }
+        const failures = await moveRowsToMailbox(selectedEmails, resolveMoveDestination(client, toMailboxId, offered.login), client, receipts);
         for (const failure of failures) failure.ids.forEach(id => notMoved.add(id));
         failures.push(...notFoundFailures(selection?.unknown ?? []));
         set({ isLoading: false, error: failures.length > 0 ? batchFailureMessage(failures, 'move') : null });
@@ -6822,6 +6877,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           // (`originalId`) since shared folders use namespaced store ids.
           const viewAccountId = resolveViewAccountId();
           const destMailbox = resolveActionMailboxes().find(mb => mb.id === toMailboxId);
+          // Another login browsed: the folder is one of its own, or the move
+          // is refused (its list not loaded); the bare id names another folder.
+          if (!destMailbox && get().viewingAccountId) throw new MoveFolderUnavailableError('not_connected');
           const jmapDestId = destMailbox?.originalId || toMailboxId;
           await resolveActionClient(client).batchMoveEmails(emailIdsArray, jmapDestId, viewAccountId);
         }

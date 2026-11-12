@@ -44,6 +44,7 @@ import { PluginActions } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
 import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
 import { commonTagScope } from "@/hooks/use-account-tags";
+import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
 
 interface MvListToolbarProps {
   /** Loaded conversation count, for the right-hand range readout. */
@@ -289,11 +290,15 @@ export function MvListToolbar({
   const selectionCanLeaveFolder = selectedEmails.length > 0
     && selectedEmails.every((email) => canRemoveFromFolder(email, folderToLeave));
 
-  // The same targets the row's own context menu offers, with the account of
-  // the selection leading (#1149).
-  const moveModel = useMoveMenu(mailboxes, {
+  // The same targets the row's own context menu offers: the folders of the
+  // login the selection is in (moveFoldersFor), with the selection's account
+  // leading (#1149). A selection of several logins, or of a login whose
+  // folders can't be had, is offered none, and Move says why.
+  const moveFolders = useMoveFolders(selectedEmails);
+  const moveUnavailable = useMoveUnavailableHint()(selectedEmails.length > 0 ? moveFolders.unavailable : undefined);
+  const moveModel = useMoveMenu(moveFolders.mailboxes, {
     currentMailboxId: selectedMailbox,
-    ownerAccountId: resolveMoveOwnerAccountId(selectedEmails[0], mailboxes, selectedMailbox),
+    ownerAccountId: resolveMoveOwnerAccountId(selectedEmails[0], moveFolders.mailboxes, selectedMailbox),
     emails: selectedEmails,
   });
   const chooseMoveFolder = useChooseMoveFolder();
@@ -517,6 +522,18 @@ export function MvListToolbar({
             disabled={isProcessing}
           />
           <div className="w-px h-6 bg-border mx-1 shrink-0" />
+          {moveUnavailable && (
+            <button
+              type="button"
+              disabled
+              title={moveUnavailable}
+              aria-label={`${tMenu("move_to")}. ${moveUnavailable}`}
+              data-mv-move-unavailable=""
+              className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground opacity-50 shrink-0"
+            >
+              <FolderInput className="w-[18px] h-[18px]" />
+            </button>
+          )}
           {!moveMenuIsEmpty(moveModel) && (
             <div className="relative shrink-0">
               <button

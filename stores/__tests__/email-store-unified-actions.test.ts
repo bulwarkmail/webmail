@@ -493,19 +493,33 @@ describe('unified-view batch actions with two logins that share account ids', ()
     expect(callsOf(client10.batchMoveEmails)).toEqual([[['m10'], 'k', 'e', false], [['t10'], 'q', 'c', false]]);
   });
 
-  // "Move to" offers the viewed login's folders. A folder id means nothing in
-  // another account: the team's `f` is its "Projects", and the 1.0 server's
-  // `e` has folders of its own.
-  it('moves a selection in place only in the folder\'s own login and account (0.16.23 and 1.0 logins)', async () => {
+  // "Move to" offers the folders of the login the selection is in, and only
+  // for a selection of one login. A folder id means nothing in another
+  // account: the team's `f` is its "Projects", and the 1.0 server's `e` has
+  // folders of its own.
+  const selectOnly016 = () => useEmailStore.setState({
+    selectedEmailKeys: new Set([keyOf('userb@v016', 'e', 'm016'), keyOf('userb@v016', 'c', 't016')]),
+  });
+
+  it('moves nothing for a selection of both logins (0.16.23 and 1.0), and says why', async () => {
+    expect(await useEmailStore.getState().batchMoveToMailbox(client016, 'f')).toBe(false);
+
+    expect(callsOf(client016.batchMoveEmails)).toEqual([]);
+    expect(callsOf(client10.batchMoveEmails)).toEqual([]);
+    expect(crossMoves()).toEqual([]);
+    expect(listed()).toHaveLength(4);
+    expect(useEmailStore.getState().error).toMatch(/several accounts/);
+  });
+
+  it('moves a selection of one login in place only in the folder\'s own account', async () => {
+    selectOnly016();
     await useEmailStore.getState().batchMoveToMailbox(client016, 'f');
 
     expect(callsOf(client016.batchMoveEmails)).toEqual([[['m016'], 'f', 'e']]);
     expect(callsOf(client10.batchMoveEmails)).toEqual([]);
-    // The others are moved across accounts, each from its own login and account.
+    // The team's message is moved across accounts, from its own account.
     expect(crossMoves()).toEqual([
-      [new Map([['userb@v10', ['m10']]]), 'userb@v016', 'f', undefined, 'e'],
       [new Map([['userb@v016', ['t016']]]), 'userb@v016', 'f', undefined, 'c'],
-      [new Map([['userb@v10', ['t10']]]), 'userb@v016', 'f', undefined, 'c'],
     ]);
     expect(listed()).not.toContain('userb@v016/e/m016');
     expect(useEmailStore.getState().error).toBeNull();
@@ -513,6 +527,7 @@ describe('unified-view batch actions with two logins that share account ids', ()
 
   it('moves a selection into a group folder in place only in that group account of the same login', async () => {
     useEmailStore.setState({ mailboxes: [...own016, ...team016] });
+    selectOnly016();
 
     await useEmailStore.getState().batchMoveToMailbox(client016, 'c:g');
 
@@ -520,8 +535,6 @@ describe('unified-view batch actions with two logins that share account ids', ()
     expect(callsOf(client10.batchMoveEmails)).toEqual([]);
     expect(crossMoves()).toEqual([
       [new Map([['userb@v016', ['m016']]]), 'userb@v016', 'g', 'c', 'e'],
-      [new Map([['userb@v10', ['m10']]]), 'userb@v016', 'g', 'c', 'e'],
-      [new Map([['userb@v10', ['t10']]]), 'userb@v016', 'g', 'c', 'c'],
     ]);
   });
 
@@ -529,11 +542,12 @@ describe('unified-view batch actions with two logins that share account ids', ()
     const refusal = jmapError('Failed to move emails: forbidden', { type: 'forbidden' });
     refusal.jmapFailedIds = ['m016'];
     (client016.batchMoveEmails as ReturnType<typeof vi.fn>).mockRejectedValue(refusal);
+    selectOnly016();
     // As crossAccountMoveEmails does: what it moved leaves the list and the selection.
     useEmailStore.setState({
       crossAccountMoveEmails: vi.fn(async (bySource: Map<string, string[]>) => {
         const [[login, ids]] = [...bySource];
-        if (login === 'userb@v10' && ids.includes('m10')) throw new Error('Failed to move email: Failed to import email');
+        if (login === 'userb@v016' && ids.includes('t016')) throw new Error('Failed to move email: Failed to import email');
         useEmailStore.setState((s) => {
           const gone = new Set(s.emails.filter((e) => e.sourceClientAccountId === login && ids.includes(e.id)).map(emailKeyFor));
           return {
@@ -547,8 +561,8 @@ describe('unified-view batch actions with two logins that share account ids', ()
     await useEmailStore.getState().batchMoveToMailbox(client016, 'f');
 
     const s = useEmailStore.getState();
-    expect(listed()).toEqual(['userb@v016/e/m016', 'userb@v10/e/m10']);
-    expect(s.selectedEmailKeys).toEqual(new Set([keyOf('userb@v016', 'e', 'm016'), keyOf('userb@v10', 'e', 'm10')]));
+    expect(listed()).toEqual(['userb@v016/e/m016', 'userb@v10/e/m10', 'userb@v016/c/t016', 'userb@v10/c/t10']);
+    expect(s.selectedEmailKeys).toEqual(new Set([keyOf('userb@v016', 'e', 'm016'), keyOf('userb@v016', 'c', 't016')]));
     expect(s.error).toBe('Failed to move 2 emails; first error: Failed to move emails: forbidden');
   });
 
@@ -836,24 +850,23 @@ describe('lists that mix accounts, without the unified views\' cache and after b
   });
 
   // Pro shell: a folder of the 1.0 login browsed, then "All Inboxes". The
-  // "Move to" menus list the active login's folders.
-  it('moves into the folder "Move to" offers, the active login\'s, after another login was browsed', async () => {
+  // "Move to" menus list the folders of the login the selection is in: for
+  // the active login's message its own, whichever login was browsed before.
+  it('moves into the folder "Move to" offers, the selection\'s login\'s, after another login was browsed', async () => {
     useEmailStore.setState({
       isUnifiedView: true,
       unifiedRole: 'inbox',
       selectedMailbox: '__unified_inbox',
       viewingAccountId: 'usera@v10',
       emails: [row('m016', 'usera@v016', 'd'), row('m10', 'usera@v10', 'd')],
-      selectedEmailKeys: new Set([keyOf('usera@v016', 'd', 'm016'), keyOf('usera@v10', 'd', 'm10')]),
+      selectedEmailKeys: new Set([keyOf('usera@v016', 'd', 'm016')]),
     });
 
     await useEmailStore.getState().batchMoveToMailbox(client016, 'f');
 
     expect(callsOf(client016.batchMoveEmails)).toEqual([[['m016'], 'f', 'd']]);
     expect(callsOf(client10.batchMoveEmails)).toEqual([]);
-    expect(callsOf(useEmailStore.getState().crossAccountMoveEmails)).toEqual([
-      [new Map([['usera@v10', ['m10']]]), 'usera@v016', 'f', undefined, 'd'],
-    ]);
+    expect(callsOf(useEmailStore.getState().crossAccountMoveEmails)).toEqual([]);
   });
 
   it('moves one dragged row, not the team\'s unrelated message with the same id', async () => {

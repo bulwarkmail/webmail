@@ -92,7 +92,16 @@ export type MessageActionEntry =
       destructive?: boolean;
       testId?: string;
     }
-  | { kind: "submenu"; key: MessageSubmenuKey; icon: Icon; label: string; testId?: string }
+  | {
+      kind: "submenu";
+      key: MessageSubmenuKey;
+      icon: Icon;
+      label: string;
+      testId?: string;
+      /** Shown but not offered; `hint` says why (Move where the folders can't be had). */
+      disabled?: boolean;
+      hint?: string;
+    }
   | { kind: "separator" };
 
 export interface MessageActionOptions {
@@ -100,6 +109,8 @@ export interface MessageActionOptions {
   currentMailboxRole?: string;
   /** Folders to move to exist and the host can move. */
   canMove?: boolean;
+  /** Without canMove: Move shows, not offered, with this as the reason (moveFoldersFor). */
+  moveUnavailableHint?: string;
   /** The message is also in another folder and the list shows one folder. */
   canRemoveFromFolder?: boolean;
   /** Another connected account can take a copy. */
@@ -265,7 +276,11 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       testId: isUnread ? "ctx-mark-read" : "ctx-mark-unread",
     });
     const move: MessageActionEntry[] = [
-      ...(o.canMove ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" } as const] : []),
+      ...(o.canMove
+        ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" } as const]
+        : o.moveUnavailableHint
+          ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to", disabled: true, hint: o.moveUnavailableHint } as const]
+          : []),
       ...(o.canRemoveFromFolder && o.onRemoveFromFolder
         ? [item("remove_from_folder", FolderX, t("remove_from_folder"), o.onRemoveFromFolder, { testId: "ctx-remove-from-folder" })]
         : []),
@@ -390,6 +405,8 @@ export interface SelectionActionOptions {
   emails: Email[];
   currentMailboxRole?: string;
   canMove?: boolean;
+  /** Without canMove: Move shows, not offered, with this as the reason (moveFoldersFor). */
+  moveUnavailableHint?: string;
   canRemoveFromFolder?: boolean;
   canCopyToAccount?: boolean;
   /** Offer the Tag submenu. */
@@ -444,7 +461,11 @@ export function useSelectionActionList(o: SelectionActionOptions): { top: Messag
     destructive: !mountainView,
     testId: "ctx-delete",
   });
-  const move: MessageActionEntry[] = o.canMove ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" }] : [];
+  const move: MessageActionEntry[] = o.canMove
+    ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" }]
+    : o.moveUnavailableHint
+      ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to", disabled: true, hint: o.moveUnavailableHint }]
+      : [];
   // A selection of read and unread mail gets both.
   const read = [
     ...(someUnread ? [item("read", MailOpen, t("mark_read"), () => o.onMarkAsRead?.(true), { testId: "ctx-mark-read" })] : []),

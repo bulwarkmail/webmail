@@ -70,7 +70,8 @@ import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { messagePriorityFromHeaders, type MessagePriority } from "@/lib/message-priority";
 import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
 import { lazyComponent } from "@/lib/lazy-component";
-import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt, moveFoldersFor, type MoveFolderUnavailableError } from "@/stores/email-store";
+import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
 import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type DraftSource } from "@/lib/draft-source";
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
@@ -819,10 +820,25 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Mailboxes of the account currently being browsed. Mirrors the store's
   // action-mailbox resolution so a lookup by `selectedMailbox` hits the same
   // list the email fetch used.
+  // While another login's list isn't loaded there are none: folder ids
+  // repeat across logins, and the active login's list names other folders.
   const viewMailboxes = useMemo(
-    () => (viewingAccountId ? (accountMailboxes[viewingAccountId] ?? mailboxes) : mailboxes),
-    [viewingAccountId, accountMailboxes, mailboxes],
+    () => (viewingAccountId
+      ? (accountMailboxes[viewingAccountId] ?? (viewingAccountId === activeAccountId ? mailboxes : []))
+      : mailboxes),
+    [viewingAccountId, accountMailboxes, mailboxes, activeAccountId],
   );
+  // "Move to" for the open message offers the folders of the login it is in
+  // (moveFoldersFor); none, with the reason, while those can't be had.
+  const readerMove = useMoveFolders(useMemo(() => (selectedEmail ? [selectedEmail] : []), [selectedEmail]));
+  const moveUnavailableHint = useMoveUnavailableHint();
+  // Move to… (the palette, the Move shortcut): the dialog for one message,
+  // or why it can't be moved from here.
+  const openMoveDialogFor = (email: Email) => {
+    const offered = moveFoldersFor([email]);
+    if (offered.unavailable) toast.error(t('notifications.move_failed'), moveUnavailableHint(offered.unavailable));
+    else setMoveDialogEmail(email);
+  };
 
   // Search panel's Folder dropdown: own folders flat, shared/group folders
   // under their owner account so a group's "Inbox" is not mistaken for the
@@ -1577,9 +1593,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), selectedEmailKeys.size, disableThreading);
     const restore = restoreBatchesForSelection(client);
     const receipts: CrossAccountMoveReceipt[] = [];
-    const destination = mailboxes.find((m) => m.id === mailboxId);
+    // The folder is one of the selection's own login (moveFoldersFor).
+    const offered = moveFoldersFor(resolveSelectedEmails(useEmailStore.getState()));
+    const destination = offered.mailboxes.find((m) => m.id === mailboxId);
     await runBatchEmailAction(() => useEmailStore.getState().batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-      success: batchToastTitle(t, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
+      success: batchToastTitle(t, 'move', rows, disableThreading, destination ? getMailboxPath(destination, offered.mailboxes) : undefined),
       error: tNotifications('move_failed'),
       undo: undoMoveAction(client, restore, undo, receipts),
     });
@@ -1623,7 +1641,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const picked = resolveSelectedEmails({ emails: state.emails, threadEmailsCache: state.threadEmailsCache, selectedEmailKeys });
         if (picked.length > 0) useMoveDialogStore.getState().open({ emails: picked, onMove: (mailboxId) => void moveSelectionTo(mailboxId) });
       } else if (selectedEmail) {
-        setMoveDialogEmail(selectedEmail);
+        openMoveDialogFor(selectedEmail);
       }
     },
     'message.archive': keyboardHandlers.onArchive ? () => void keyboardHandlers.onArchive?.() : undefined,
@@ -4299,12 +4317,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleMoveToMailbox = async (emailId: string, mailboxId: string, emailKey?: string) => {
     if (!client) return;
-    const destinationList = [mailboxes, ...Object.values(accountMailboxes)]
-      .find(list => list.some(m => m.id === mailboxId));
-    const destination = destinationList?.find(m => m.id === mailboxId);
     // Undo: back to its folders; a move to another account moves back the
     // same way (the receipts).
     const email = useEmailStore.getState().emails.find(e => (emailKey ? emailKeyFor(e) === emailKey : e.id === emailId));
+    // The folder is one of the message's own login (moveFoldersFor), the
+    // list the move looks it up in: the toast names the folder it went to.
+    const offered = moveFoldersFor(email ? [email] : []);
+    if (offered.unavailable) {
+      toast.error(t('notifications.move_failed'), moveUnavailableHint(offered.unavailable));
+      return;
+    }
+    const destinationList = offered.mailboxes;
+    const destination = destinationList.find(m => m.id === mailboxId);
     const restore = email ? restoreBatchesFor([email], client) : null;
     const receipts: CrossAccountMoveReceipt[] = [];
     if (email) leaveIfOpen(email);
@@ -4312,14 +4336,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (!(await moveToMailboxCrossAware(client, emailId, mailboxId, emailKey, receipts))) return;
       // One line: "Moved to Family", not "Email moved. Moved to Family." (mail-18)
       toastWithUndo(
-        destination && destinationList
+        destination
           ? t('mail_list_extra.moved_to', { mailbox: getMailboxPath(destination, destinationList) })
           : t('notifications.email_moved'),
         undoMoveAction(client, restore, undo, receipts),
       );
     } catch (error) {
       console.error("Failed to move email:", error);
-      toast.error(t('notifications.move_failed'), t('notifications.move_error'));
+      const reason = error instanceof Error && error.name === 'MoveFolderUnavailableError'
+        ? moveUnavailableHint((error as MoveFolderUnavailableError).reason)
+        : undefined;
+      toast.error(t('notifications.move_failed'), reason ?? t('notifications.move_error'));
     }
   };
 
@@ -5698,7 +5725,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     { id: 'delete', label: t('context_menu.delete'), icon: Trash2, shortcut: '#', when: hasPaletteEmail, run: () => void handleDelete(paletteEmail) },
     {
       id: 'move', label: t('context_menu.move_to_dialog'), icon: FolderInput, keywords: [t('context_menu.move_to')],
-      when: hasPaletteEmail, run: () => setMoveDialogEmail(paletteEmail),
+      when: hasPaletteEmail, run: () => { if (paletteEmail) openMoveDialogFor(paletteEmail); },
     },
     {
       id: 'mark-unread', label: t('context_menu.mark_unread'), icon: Mail, shortcut: 'u',
@@ -7034,13 +7061,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 actions={(() => {
                   const target = conversationThread.latestEmail;
                   const leaving = (run: () => unknown) => () => { handleMobileBack(); void run(); };
+                  // The folders of the conversation's own login (moveFoldersFor).
+                  const offered = moveFoldersFor([target]);
                   return {
-                    mailboxes,
+                    mailboxes: offered.mailboxes,
                     selectedMailbox,
                     currentMailboxRole: conversationRole,
                     onArchive: archiveActionEnabled ? leaving(() => handleArchive(target)) : undefined,
                     onDelete: leaving(() => handleDelete(target)),
-                    onMoveToMailbox: (mailboxId: string) => leaving(() => handleMoveToMailbox(target.id, mailboxId, emailKeyFor(target)))(),
+                    onMoveToMailbox: offered.unavailable
+                      ? undefined
+                      : (mailboxId: string) => leaving(() => handleMoveToMailbox(target.id, mailboxId, emailKeyFor(target)))(),
                     onForwardAsAttachment: () => void handleForwardAsAttachment(target),
                     onMarkAsRead: client ? (read: boolean) => {
                       const run = () => markReadWithUndo(target, read).catch(toastUpdateFailure);
@@ -7180,11 +7211,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
                     currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}
-                    mailboxes={mailboxes}
+                    mailboxes={readerMove.mailboxes}
                     selectedMailbox={selectedMailbox}
-                    onMoveToMailbox={async (mailboxId) => {
+                    onMoveToMailbox={readerMove.unavailable ? undefined : async (mailboxId) => {
                       if (selectedEmail) await handleMoveToMailbox(selectedEmail.id, mailboxId, emailKeyFor(selectedEmail));
                     }}
+                    moveUnavailableHint={moveUnavailableHint(readerMove.unavailable)}
                     onRemoveFromFolder={openEmailCanLeaveFolder ? () => {
                       if (!selectedEmail) return;
                       leaveIfOpen(selectedEmail);
@@ -7260,10 +7292,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
         <ConfirmDialog {...confirmDialogProps} />
-        <MoveToDialogHost mailboxes={mailboxes} selectedMailbox={selectedMailbox} />
+        <MoveToDialogHost selectedMailbox={selectedMailbox} />
         {moveDialogEmail && <MoveToDialog
           emails={[moveDialogEmail]}
-          mailboxes={mailboxes}
+          mailboxes={moveFoldersFor([moveDialogEmail]).mailboxes}
           selectedMailbox={selectedMailbox}
           onClose={() => setMoveDialogEmail(null)}
           onMove={(mailboxId) => {

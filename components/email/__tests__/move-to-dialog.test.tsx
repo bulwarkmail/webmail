@@ -1,10 +1,14 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
+import { useAuthStore } from '@/stores/auth-store';
+import { useEmailStore } from '@/stores/email-store';
+import { useToastStore } from '@/stores/toast-store';
 import { MoveToDialogHost, useChooseMoveFolder, useMoveDialogStore } from '../move-to-dialog';
 
 // "Choose folder…" at the end of a long Move menu opens this dialog: a native
-// menu has no filter field, the dialog has one.
+// menu has no filter field, the dialog has one. Without folders of its own,
+// a request lists the folders of the login its messages are in.
 
 const box = (id: string, name: string, extra: Partial<Mailbox> = {}) =>
   ({
@@ -14,9 +18,16 @@ const box = (id: string, name: string, extra: Partial<Mailbox> = {}) =>
 
 const mailboxes = [box('inbox', 'Inbox', { role: 'inbox' }), box('work', 'Work'), box('travel', 'Travel')];
 const email = { id: 'e1', mailboxIds: { inbox: true } } as unknown as Email;
+const original = { auth: useAuthStore.getState(), email: useEmailStore.getState() };
 
+beforeEach(() => {
+  useEmailStore.setState({ mailboxes, viewingAccountId: null, accountMailboxes: {} } as never);
+  useToastStore.setState({ toasts: [] });
+});
 afterEach(() => {
   act(() => useMoveDialogStore.setState({ request: null }));
+  useAuthStore.setState(original.auth);
+  useEmailStore.setState(original.email);
 });
 
 describe('the Move dialog', () => {
@@ -25,13 +36,13 @@ describe('the Move dialog', () => {
     expect(without.result.current).toBeUndefined();
     without.unmount();
 
-    render(<MoveToDialogHost mailboxes={mailboxes} selectedMailbox="inbox" />);
+    render(<MoveToDialogHost selectedMailbox="inbox" />);
     const withHost = renderHook(() => useChooseMoveFolder());
     expect(withHost.result.current).toBeTypeOf('function');
   });
 
   it('shows the folders with a filter, and moves to the one picked', () => {
-    render(<MoveToDialogHost mailboxes={mailboxes} selectedMailbox="inbox" />);
+    render(<MoveToDialogHost selectedMailbox="inbox" />);
     const onMove = vi.fn();
     act(() => useMoveDialogStore.getState().open({ emails: [email], onMove }));
 
@@ -47,7 +58,7 @@ describe('the Move dialog', () => {
   // A Pro folder tab's reader files within its own account: the dialog lists
   // the folders its Move menu listed, not the ones Mail has open.
   it('lists the folders the asking menu listed, not those of the host', () => {
-    render(<MoveToDialogHost mailboxes={mailboxes} selectedMailbox="inbox" />);
+    render(<MoveToDialogHost selectedMailbox="inbox" />);
     const other = [
       box('inbox', 'Inbox', { role: 'inbox', accountId: 'B' }),
       box('projects', 'Projects', { accountId: 'B' }),
@@ -59,5 +70,45 @@ describe('the Move dialog', () => {
     expect(screen.queryByTestId('move-to:travel')).toBeNull();
     fireEvent.click(screen.getByTestId('move-to:projects'));
     expect(onMove).toHaveBeenCalledWith('projects');
+  });
+});
+
+describe('the Move dialog with two logins', () => {
+  const theirs = [box('inbox', 'Inbox', { role: 'inbox', accountId: 'B' }), box('work', 'Payroll', { accountId: 'B' })];
+  beforeEach(() => {
+    const client = { getAccountId: () => 'A' };
+    const other = { getAccountId: () => 'B' };
+    useAuthStore.setState({
+      activeAccountId: 'login-a', client: client as never,
+      getClientForAccount: ((id: string) => (id === 'login-a' ? client : id === 'login-b' ? other : undefined)) as never,
+    });
+  });
+
+  it('lists the folders of the login the message is in, not the active login\'s with the same ids', () => {
+    useEmailStore.setState({ viewingAccountId: 'login-b', accountMailboxes: { 'login-b': theirs } } as never);
+    render(<MoveToDialogHost selectedMailbox="inbox" />);
+    act(() => useMoveDialogStore.getState().open({ emails: [email], onMove: vi.fn() }));
+    expect(screen.getByText('Payroll')).toBeInTheDocument();
+    expect(screen.queryByText('Work')).toBeNull();
+    expect(screen.queryByText('Travel')).toBeNull();
+  });
+
+  it('opens nothing for messages of two logins, and says why', () => {
+    useEmailStore.setState({ accountMailboxes: { 'login-b': theirs } } as never);
+    render(<MoveToDialogHost selectedMailbox="inbox" />);
+    const ofB = { ...email, id: 'e2', sourceClientAccountId: 'login-b', sourceAccountId: 'B' } as Email;
+    act(() => useMoveDialogStore.getState().open({ emails: [email, ofB], onMove: vi.fn() }));
+    expect(screen.queryByTestId('move-dialog')).toBeNull();
+    expect(useMoveDialogStore.getState().request).toBeNull();
+    expect(useToastStore.getState().toasts.map((toast) => toast.message)).toContain('rules.cross_account');
+  });
+
+  it('opens nothing while the login of the message has no folders loaded, and says why', () => {
+    useEmailStore.setState({ viewingAccountId: 'login-b', accountMailboxes: {} } as never);
+    render(<MoveToDialogHost selectedMailbox="inbox" />);
+    act(() => useMoveDialogStore.getState().open({ emails: [email], onMove: vi.fn() }));
+    expect(screen.queryByTestId('move-dialog')).toBeNull();
+    expect(screen.queryByText('Work')).toBeNull();
+    expect(useToastStore.getState().toasts.map((toast) => toast.message)).toContain('not_connected');
   });
 });

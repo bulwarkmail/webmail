@@ -6,7 +6,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import type { HoverAction } from "@/stores/settings-store";
 import { cn } from "@/lib/utils";
 import { Trash2, Star, Mail, MailOpen, Archive, Inbox, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
-import { useEmailStore } from "@/stores/email-store";
+import { mailboxesInView, useEmailStore } from "@/stores/email-store";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useArchiveActionEnabled, withoutArchiveIfOff } from "@/lib/archive-gate";
 import { useTranslations } from "next-intl";
@@ -171,8 +171,9 @@ export function EmailHoverActions({
   const t = useTranslations("context_menu");
   const tP3 = useTranslations("mail_p3_actions");
   // In Archive the archive button brings mail back to the Inbox, as the row
-  // menu's entry in its place does (mail-p3-4).
-  const archiveMovesToInbox = useEmailStore((state) => !!archiveInboxTarget(state.mailboxes, state.selectedMailbox));
+  // menu's entry in its place does (mail-p3-4). The folder on screen is one
+  // of the browsed login's (mailboxesInView), as Archive itself decides.
+  const archiveMovesToInbox = useEmailStore((state) => !!archiveInboxTarget(mailboxesInView(state), state.selectedMailbox));
   const isMobile = useIsMobile();
   // Buttons plugins add to the row (message-row-actions), after the app's own.
   // The row's badges too, for actions shown by a plugin's badge (hasBadge).

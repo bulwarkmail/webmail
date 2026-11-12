@@ -152,11 +152,11 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
         <Button
           key={entry.key}
           {...common}
-          title={entry.label}
+          title={entry.hint ? `${entry.label}. ${entry.hint}` : entry.label}
           aria-haspopup="menu"
           aria-expanded={entry.key === "tag" ? tagMenu.contextMenu.isOpen : undefined}
           data-testid={paneTestId(entry)}
-          disabled={disabled || isDisabled?.(entry.key)}
+          disabled={disabled || entry.disabled || isDisabled?.(entry.key)}
           onClick={(e) => open(e.currentTarget)}
         >
           <Icon className="size-4 shrink-0" />

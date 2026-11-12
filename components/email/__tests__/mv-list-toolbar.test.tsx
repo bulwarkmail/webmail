@@ -1,5 +1,5 @@
 import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { KEYWORD_PREFIX } from '@/lib/thread-utils';
 
@@ -112,6 +112,50 @@ describe('MvListToolbar filing actions', () => {
 
     fireEvent.click(screen.getByText('create_label'));
     expect(onCreateFolder).toHaveBeenCalledTimes(1);
+  });
+
+  // Another login browsed in the sidebar: its folders, whose ids repeat the
+  // active login's ("receipts" is that login's "Payroll").
+  describe('with two logins', () => {
+    const original = { auth: useAuthStore.getState() };
+    beforeEach(() => {
+      const a = { getAccountId: () => 'A' };
+      const b = { getAccountId: () => 'B' };
+      useAuthStore.setState({
+        activeAccountId: 'login-a', client: a as never,
+        getClientForAccount: ((id: string) => (id === 'login-a' ? a : id === 'login-b' ? b : undefined)) as never,
+      } as never);
+    });
+    afterEach(() => {
+      useAuthStore.setState(original.auth);
+      useEmailStore.setState({ viewingAccountId: null, accountMailboxes: {}, isUnifiedView: false } as never);
+    });
+
+    it('offers the folders of the login browsed, not the active login\'s with the same ids', () => {
+      useEmailStore.setState({
+        viewingAccountId: 'login-b',
+        accountMailboxes: { 'login-b': [mailbox('inbox', 'Inbox', 'inbox'), mailbox('receipts', 'Payroll')] },
+      } as never);
+      toolbar();
+      fireEvent.click(screen.getByLabelText('move_to'));
+      expect(screen.getByText('Payroll')).toBeInTheDocument();
+      expect(screen.queryByText('Receipts')).toBeNull();
+    });
+
+    it('offers no folders for a selection of two logins, and says why', () => {
+      const ofA = { ...message('a'), sourceClientAccountId: 'login-a', sourceAccountId: 'A' } as Email;
+      const ofB = { ...message('b'), sourceClientAccountId: 'login-b', sourceAccountId: 'B' } as Email;
+      useEmailStore.setState({
+        isUnifiedView: true, emails: [ofA, ofB], accountMailboxes: { 'login-b': [mailbox('receipts', 'Payroll')] },
+        selectedEmailKeys: new Set(['login-a/A:a', 'login-b/B:b']),
+      } as never);
+      toolbar();
+      expect(screen.queryByLabelText('move_to')).toBeNull();
+      const unavailable = document.querySelector('[data-mv-move-unavailable]');
+      expect(unavailable).not.toBeNull();
+      expect(unavailable).toBeDisabled();
+      expect(unavailable?.getAttribute('title')).toBe('rules.cross_account');
+    });
   });
 
   it('shows neither control until something is selected', () => {

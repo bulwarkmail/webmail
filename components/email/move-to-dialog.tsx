@@ -6,6 +6,8 @@ import { create } from "zustand";
 import { Dialog } from "@/components/ui/dialog";
 import type { Email, Mailbox } from "@/lib/jmap/types";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
+import { toast } from "@/stores/toast-store";
 import { MoveFolderList, useMoveMenu } from "./move-target-list";
 
 interface MoveDialogRequest {
@@ -84,22 +86,41 @@ export function MoveToDialog({ emails, mailboxes, selectedMailbox, onClose, onMo
   );
 }
 
-/** Shows the dialog a Move menu asked for. Mounted once, where the mail is. */
-export function MoveToDialogHost({ mailboxes, selectedMailbox }: { mailboxes: Mailbox[]; selectedMailbox: string }) {
+/**
+ * Shows the dialog a Move menu asked for. Mounted once, where the mail is.
+ * Without folders of its own, the request gets the folders of the login its
+ * messages are in (moveFoldersFor); where there are none to offer (several
+ * logins, or that login's list can't be had) it says why instead.
+ */
+export function MoveToDialogHost({ selectedMailbox }: { selectedMailbox: string }) {
   const request = useMoveDialogStore((s) => s.request);
   const close = useMoveDialogStore((s) => s.close);
+  const tNotifications = useTranslations("notifications");
+  const hint = useMoveUnavailableHint();
+  const offered = useMoveFolders(request?.emails ?? NO_EMAILS);
+  const refused = !!request && !request.mailboxes && !!offered.unavailable;
   useEffect(() => {
     useMoveDialogStore.setState((s) => ({ hosts: s.hosts + 1 }));
     return () => useMoveDialogStore.setState((s) => ({ hosts: s.hosts - 1, request: s.hosts <= 1 ? null : s.request }));
   }, []);
-  if (!request) return null;
+  const reason = offered.unavailable;
+  useEffect(() => {
+    if (!refused) return;
+    toast.error(tNotifications("move_failed"), hint(reason));
+    close();
+    // Once per refused request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refused]);
+  if (!request || refused) return null;
   return (
     <MoveToDialog
       emails={request.emails}
-      mailboxes={request.mailboxes ?? mailboxes}
+      mailboxes={request.mailboxes ?? offered.mailboxes}
       selectedMailbox={request.mailboxes ? request.selectedMailbox ?? "" : selectedMailbox}
       onClose={close}
       onMove={request.onMove}
     />
   );
 }
+
+const NO_EMAILS: Email[] = [];

@@ -51,7 +51,10 @@ interface EmailContextMenuProps {
   isOpen: boolean;
   onClose: () => void;
   menuRef: React.RefObject<HTMLDivElement | null>;
+  /** The folders Move offers: those of the login the message (or the selection) is in (moveFoldersFor). */
   mailboxes: Mailbox[];
+  /** Why Move is not offered, where those folders can't be had: Move shows, unavailable, with it. */
+  moveUnavailableHint?: string;
   selectedMailbox: string;
   currentMailboxRole?: string;
   isMultiSelect?: boolean;
@@ -161,6 +164,7 @@ export function EmailContextMenu({
   onClose,
   menuRef,
   mailboxes,
+  moveUnavailableHint,
   selectedMailbox,
   currentMailboxRole,
   isMultiSelect = false,
@@ -300,6 +304,7 @@ export function EmailContextMenu({
     email,
     currentMailboxRole,
     canMove: canMoveAnywhere,
+    moveUnavailableHint,
     canRemoveFromFolder: canRemove,
     canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
     onReply,
@@ -375,6 +380,7 @@ export function EmailContextMenu({
     emails: showBatchActions ? (batchEmails?.length ? batchEmails : [email]) : [],
     currentMailboxRole,
     canMove: canMoveAnywhere,
+    moveUnavailableHint,
     canRemoveFromFolder: canRemove,
     canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
     canTag: !!onBatchToggleTag,
@@ -393,8 +399,8 @@ export function EmailContextMenu({
     switch (entry.key) {
       case "move":
         return (
-          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId} disabled={!canChangeMail}>
-            {renderMoveList(batch ? onBatchMoveToMailbox : onMoveToMailbox)}
+          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId} disabled={!canChangeMail || entry.disabled} hint={entry.hint}>
+            {!entry.disabled && renderMoveList(batch ? onBatchMoveToMailbox : onMoveToMailbox)}
           </ContextMenuSubMenu>
         );
       case "copy_to_account":
