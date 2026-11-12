@@ -20,6 +20,7 @@
 //     instead of from the repository default.
 // The Dockerfiles at the root and the shell scripts under scripts/ get the line rules of the
 // first point too: a build or an upload runs what the lockfile holds, nothing fetched fresh.
+// Every FROM in those Dockerfiles names its base image by digest (stages and scratch aside).
 //
 //   node scripts/check-action-pins.mjs [repo root]      default: the current directory
 //   node scripts/check-action-pins.mjs --self-test      runs the cases below
@@ -243,6 +244,17 @@ function check(files) {
         problems.push(`${rel}:${i + 1}: npm install of named packages outside the lockfile`);
       }
     });
+    if (/(^|\/)Dockerfile[^/]*$/.test(rel)) {
+      const stages = new Set(['scratch']);
+      text.split(/\r?\n/).forEach((line, i) => {
+        const m = line.match(/^\s*FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?/i);
+        if (!m) return;
+        if (!stages.has(m[1].toLowerCase()) && !/@sha256:[0-9a-f]{64}$/.test(m[1])) {
+          problems.push(`${rel}:${i + 1}: base image ${m[1]} is not pinned by digest`);
+        }
+        if (m[2]) stages.add(m[2].toLowerCase());
+      });
+    }
     if (!/\.ya?ml$/.test(rel)) continue;
     try {
       parsed.push({ rel, ...parse(text), workflow: rel.startsWith('.github/workflows/') });
@@ -678,7 +690,7 @@ jobs:
   }],
   ['npx --yes in a Dockerfile and in a script', 2, {
     Dockerfile: `
-FROM node:24-alpine AS builder
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
 RUN npm ci
 # npx --yes in a comment does not count
 RUN npx --yes "@sentry/cli@3.8.2" sourcemaps inject .next/static
@@ -687,6 +699,15 @@ RUN npx --no-install sentry-cli sourcemaps inject .next/static
     'scripts/upload-sourcemaps.sh': `#!/usr/bin/env bash
 npx -y @sentry/cli --url "$url" sourcemaps upload "$dir"
 npx --no-install sentry-cli --version
+`,
+  }],
+  ['base images without a digest', 2, {
+    'Dockerfile.lite': `
+FROM --platform=$BUILDPLATFORM node:24-alpine AS builder
+FROM builder AS debug-ids
+FROM scratch AS sourcemaps
+FROM nginxinc/nginx-unprivileged:1.30-alpine-slim
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS runner
 `,
   }],
 ];
@@ -735,6 +756,6 @@ if (process.argv.includes('--self-test')) {
     process.exit(1);
   }
   console.log(
-    `ok: ${files.length} workflow, action, Dockerfile and script file(s): actions pinned to a commit, nothing fetched outside the lockfile, no secret or write token where outside code runs, no cache in publishing jobs, top-level permissions in every workflow`,
+    `ok: ${files.length} workflow, action, Dockerfile and script file(s): actions pinned to a commit, base images by digest, nothing fetched outside the lockfile, no secret or write token where outside code runs, no cache in publishing jobs, top-level permissions in every workflow`,
   );
 }
