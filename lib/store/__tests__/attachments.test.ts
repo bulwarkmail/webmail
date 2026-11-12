@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SCOPE, type StoreScope } from '../area';
+import { DEFAULT_SCOPE, NO_TOTAL_LIMIT, type StoreScope } from '../area';
 import { AccountEngine } from '../engine/account-engine';
 import { TransportError } from '../engine/transport';
 import { mailArea } from '../mail';
@@ -251,6 +251,18 @@ describe('the cap', () => {
     engine.setScope({ ...SCOPE, maxTotalBytes: 50 });
     expect(await kept(engine, 'b-old')).toBeNull();
     expect(await kept(engine, 'b-new')).not.toBeNull();
+  });
+
+  it('keeps everything with no limit on the total, and prunes nothing when it changes to that', async () => {
+    const server = new Files();
+    withFile(server, 'old', 'b-old', 40, 1);
+    withFile(server, 'new', 'b-new', 40, 20);
+    const { engine } = engineFor(server, { ...SCOPE, maxTotalBytes: 100 });
+    await engine.requestSync();
+    engine.setScope({ ...SCOPE, maxTotalBytes: NO_TOTAL_LIMIT });
+    withFile(server, 'newer', 'b-newer', 40, 25);
+    await engine.requestSync();
+    for (const blobId of ['b-old', 'b-new', 'b-newer']) expect(await kept(engine, blobId)).not.toBeNull();
   });
 
   it('applies a lowered size limit at once', async () => {
