@@ -36,7 +36,7 @@ import { WopiEditor } from "@/components/files/wopi-editor";
 import { UploadConflictDialog, type UploadConflictQuestion } from "@/components/files/upload-conflict-dialog";
 import { FileNoPreview } from "@/components/files/file-no-preview";
 import { sharedNodeLink } from "@/components/files/share-message";
-import { loadPrincipalDirectory } from "@/lib/jmap/principal-directory";
+import { loadScopedPrincipalDirectory } from "@/lib/directory-scope";
 import { savePendingMailto } from "@/lib/protocol-handlers/session";
 import { formatRecipient } from "@/lib/email-composer-utils";
 import { useRouter } from "@/i18n/navigation";
@@ -894,7 +894,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const router = useRouter();
   const handleShared = useCallback((resource: FileResource, principalId: string) => {
     if (!storeClient || !filesAccountId) return;
-    void loadPrincipalDirectory(storeClient).then(({ principals }) => {
+    void loadScopedPrincipalDirectory(storeClient).then(({ principals }) => {
       const person = principals.find((p) => p.id === principalId);
       const email = person?.email?.trim();
       if (!person || !email) return;

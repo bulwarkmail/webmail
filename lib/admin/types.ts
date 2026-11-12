@@ -222,6 +222,20 @@ export interface SettingsPolicy {
    * a client works with has none.
    */
   scopes?: PolicyScope[];
+  /**
+   * Show only accounts in the domains of the signed-in account's addresses,
+   * aliases included, wherever Bulwark lists the server's accounts: contacts
+   * directory, recipient suggestions, sharing, delegation, free/busy and the
+   * plugins' lookups (lib/directory-scope.ts). It narrows what Bulwark shows,
+   * not what the server answers. Stalwart reports an account's name as its
+   * address, so accounts named without a domain are left out.
+   */
+  directorySameDomainOnly?: boolean;
+  /**
+   * Account names (the part before the @) left out of those lists for
+   * everyone, such as noreply. Lowercase; sanitized on policy load and save.
+   */
+  directoryHiddenLocalparts?: string[];
 }
 
 /** Set to `public` on a policy answered with the pre-login subset. */
@@ -245,6 +259,8 @@ export const DEFAULT_POLICY: SettingsPolicy = {
   pushRelayUrl: '',
   pushRelayUrlLocked: false,
   defaultSidebarApps: [],
+  directorySameDomainOnly: false,
+  directoryHiddenLocalparts: [],
 };
 
 export interface AuditEntry {

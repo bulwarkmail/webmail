@@ -2,7 +2,9 @@
  * One principal listing per client, shared by everything that needs the
  * server's directory: the share dialog, recipient autocomplete and free/busy.
  * Each used to download the whole directory on its own - the share dialog on
- * every open - and a listing pages through up to 20,000 principals.
+ * every open - and a listing pages through up to 20,000 principals. Lists the
+ * user sees read it through loadScopedPrincipalDirectory
+ * (lib/directory-scope.ts), which applies the admin policy's directory rules.
  */
 
 import type { IJMAPClient } from "./client-interface";
