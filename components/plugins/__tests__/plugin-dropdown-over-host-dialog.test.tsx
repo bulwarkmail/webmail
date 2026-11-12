@@ -1,13 +1,13 @@
-// A plugin frame may ask the host to draw a dropdown for it (the UI kit's Select). The host draws
-// the list in its own document, with the plugin's texts. The rule these tests hold:
+// A plugin frame may ask the host to draw a dropdown for it (the UI kit's Combobox). The host
+// draws the list in its own document, with the plugin's texts. The rule these tests hold:
 //
 //   While a dialog is open that the plugin's frame is not inside, the host draws no dropdown for
 //   that frame, and closes one that is already open.
 //
 // So a list of a plugin's texts never lies over a question the host asks (forward approval,
-// connect an account, a password prompt's note). A Select inside a plugin's own dialog keeps
+// connect an account, a password prompt's note). A Combobox inside a plugin's own dialog keeps
 // working. The tests look at what is in the document, not at stacking numbers.
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import type { InstalledPlugin } from '@/lib/plugin-types';
 
@@ -141,7 +141,15 @@ beforeEach(() => {
   resetDialogLimits();
   createSlotInstance.mockClear();
   plugins.clear();
+  // jsdom has no layout. A frame gets a list only when it shows with a real size, so every
+  // frame (and its wrapper) is given a box; everything else stays 0 x 0 at the origin.
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+    const shows = this.tagName === 'IFRAME' || this.matches('[data-plugin-iframe-slot]');
+    const box = shows ? { left: 100, top: 100, right: 548, bottom: 400 } : { left: 0, top: 0, right: 0, bottom: 0 };
+    return { ...box, x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top, toJSON: () => box } as DOMRect;
+  });
 });
+afterEach(() => vi.restoreAllMocks());
 
 describe('a plugin dropdown and the host\'s own dialogs', () => {
   it('draws no dropdown for the frame of a plugin dialog while a host question is open on top of it', async () => {
@@ -277,6 +285,32 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     act(() => frameOptions('app-top-banner').onFloatingDropdown({ ...OPEN, id: 'list-2' }));
     expect(pluginLists()[0].getAttribute('aria-label')).toContain('Helpful plugin');
   });
+
+  it('names the plugin in the list\'s first row, apart from the plugin\'s options', async () => {
+    await mountBanner();
+    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    const [list] = pluginLists();
+    const first = list.firstElementChild!;
+    expect(first.getAttribute('role')).toBeNull();
+    expect(first.textContent).toBe('from_plugin Helpful plugin');
+    expect(list.querySelectorAll('[role="option"]')).toHaveLength(2);
+    expect(first.querySelector('[role="option"]')).toBeNull();
+  });
+
+  it('draws the list under the toasts, whose line names their plugin', async () => {
+    await mountBanner();
+    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    // The toast container stacks at 99999 (components/ui/toast.tsx).
+    expect(Number((pluginLists()[0] as HTMLElement).style.zIndex)).toBeLessThan(99999);
+  });
+
+  it('draws no list for a frame that is hidden', async () => {
+    await mountBanner();
+    const frame = document.querySelector<HTMLIFrameElement>('[data-plugin-iframe-slot="helper:app-top-banner"] iframe')!;
+    frame.style.visibility = 'hidden';
+    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    expect(pluginLists()).toHaveLength(0);
+  });
 });
 
 describe('where the host draws a frame\'s list', () => {
@@ -314,5 +348,31 @@ describe('where the host draws a frame\'s list', () => {
     // Scrolled out of its panel entirely: the shown part is empty.
     const area = { left: 300, top: 200, right: 800, bottom: -100 };
     expect(placeFloatingDropdown({ left: 0, top: 10, bottom: 30, width: 100, height: 20 }, { left: 300, top: -700 }, area, viewport)).toBeNull();
+    // A frame 0 px tall, or 0 px wide, shows nothing either.
+    expect(placeFloatingDropdown({ left: 0, top: 0, bottom: 0, width: 100, height: 0 }, { left: 0, top: 0 }, { left: 0, top: 0, right: 1400, bottom: 0 }, viewport)).toBeNull();
+    expect(placeFloatingDropdown({ left: 0, top: 0, bottom: 10, width: 100, height: 10 }, { left: 0, top: 0 }, { left: 0, top: 0, right: 0, bottom: 40 }, viewport)).toBeNull();
+  });
+
+  it('stops the list above a row naming a plugin, and draws none when too little room is left', () => {
+    const frame = { left: 0, top: 0, right: 600, bottom: 40 };
+    const anchor = { left: 0, top: 0, bottom: 30, width: 300, height: 30 };
+    // A banner's name chip 100 px under the anchor, in the list's column.
+    const shorter = placeFloatingDropdown(anchor, frame, frame, viewport, { avoid: [{ left: 200, top: 134, right: 320, bottom: 160 }] })!;
+    expect(shorter.top! + shorter.maxHeight).toBeLessThanOrEqual(134);
+    // Right under the anchor: no room.
+    expect(placeFloatingDropdown(anchor, frame, frame, viewport, { avoid: [{ left: 0, top: 40, right: 600, bottom: 80 }] })).toBeNull();
+    // Beside the list's column it doesn't count.
+    expect(placeFloatingDropdown(anchor, frame, frame, viewport, { avoid: [{ left: 400, top: 40, right: 600, bottom: 80 }] })!.maxHeight).toBe(DROPDOWN_MAX_HEIGHT);
+  });
+
+  it('keeps the list of a frame in a plugin dialog below the frame\'s top', () => {
+    // The frame from y 600 to 880, an anchor at its bottom: no room below, and above only within the frame.
+    const frame = { left: 0, top: 600, right: 500, bottom: 880 };
+    const anchor = { left: 0, top: 250, bottom: 270, width: 200, height: 20 };
+    const place = placeFloatingDropdown(anchor, frame, frame, viewport, { top: 600 })!;
+    expect(place.top).toBeUndefined();
+    expect(viewport.height - place.bottom! - place.maxHeight).toBeGreaterThanOrEqual(600);
+    // An anchor at the frame's top leaves no room at all.
+    expect(placeFloatingDropdown({ left: 0, top: 0, bottom: 280, width: 200, height: 280 }, frame, frame, viewport, { top: 600 })).toBeNull();
   });
 });

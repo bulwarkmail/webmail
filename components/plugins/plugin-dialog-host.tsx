@@ -387,7 +387,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           }}
           data-plugin-dialog={current.pluginId}
         >
-          <div className="flex items-center gap-1 border-b border-border ps-3 pe-1 py-0.5">
+          <div className="flex items-center gap-1 border-b border-border ps-3 pe-1 py-0.5" data-plugin-dialog-header="">
             <h2 id={titleId} className="sr-only">{current.title || name}</h2>
             <p className="flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground" data-plugin-dialog-source="">
               <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
@@ -430,7 +430,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       >
         {custom ? (
           <>
-            <div className="flex items-start gap-1 px-6 py-4 border-b border-border">
+            <div className="flex items-start gap-1 px-6 py-4 border-b border-border" data-plugin-dialog-header="">
               <div className="min-w-0 flex-1 pe-2">
                 <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
@@ -453,7 +453,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           </>
         ) : (
           <>
-            <div className="flex shrink-0 items-start gap-1 px-6 pt-6" data-dialog-drag="">
+            <div className="flex shrink-0 items-start gap-1 px-6 pt-6" data-dialog-drag="" data-plugin-dialog-header="">
               <div className="min-w-0 flex-1 pe-2">
                 <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
@@ -585,6 +585,7 @@ function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOf
         aria-expanded={open}
         aria-label={t('plugin_menu', { name })}
         title={t('plugin_menu', { name })}
+        data-plugin-dialog-menu=""
         className={cn(compact ? 'p-1' : 'p-1.5', 'rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground', open && 'bg-muted text-foreground')}
       >
         <MoreVertical className={compact ? 'w-4 h-4' : 'w-5 h-5'} />

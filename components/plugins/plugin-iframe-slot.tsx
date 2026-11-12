@@ -7,12 +7,17 @@
 // to a wrapper <div>.
 //
 // A frame may ask the host to draw a dropdown list for it (the UI kit's
-// Select). The host draws it in its own document, so it keeps to the frame:
-// it stands in the part of the window the frame takes up, plus its own
-// height; it is drawn in the layer of the plugin dialog the frame is in; and
-// while a dialog is open that the frame is not inside (a question the host
-// asks about the plugin, an app dialog, a plugin's prompt on top of its own
-// dialog), the host draws no list for the frame and closes an open one.
+// Combobox). The host draws it in its own document, so it keeps to the frame:
+// only a frame that is drawn with a real size gets one; it stands in the part
+// of the window the frame takes up, plus its own height; it never covers a
+// row where the host names a plugin (a dialog's header, a banner's name chip),
+// and in a plugin's dialog it stays below the frame's top; its first row
+// names the plugin; it is drawn in the layer of the plugin dialog the frame
+// is in; and while a dialog is open that the frame is not inside (a question
+// the host asks about the plugin, an app dialog, a plugin's prompt on top of
+// its own dialog), the host draws no list for the frame and closes an open
+// one. Outside modals it may lie over the app next to the frame, within its
+// 240 px: it closes on any click outside it, on scrolling and on resizing.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -383,11 +388,15 @@ export interface DropdownPlacement {
 }
 
 export const DROPDOWN_MAX_HEIGHT = 240;
-const DROPDOWN_MIN_HEIGHT = 120;
+/** Room for the row naming the plugin and one option; with less the list doesn't open. */
+export const DROPDOWN_MIN_HEIGHT = 64;
 /** Between the anchor and the list. */
 const DROPDOWN_GAP = 4;
 /** Kept free between the list and the window's edge. */
 const DROPDOWN_EDGE = 8;
+
+/** The rows where the host names a plugin: a dialog's header and its parts, a banner's name chip. */
+const PLUGIN_SOURCE_SELECTOR = '[data-plugin-dialog-header], [data-plugin-dialog-source], [data-plugin-dialog-menu], [data-plugin-banner-source]';
 
 function within(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), Math.max(min, max));
@@ -397,22 +406,22 @@ function intersect(a: Box, b: Box): Box {
   return { left: Math.max(a.left, b.left), top: Math.max(a.top, b.top), right: Math.min(a.right, b.right), bottom: Math.min(a.bottom, b.bottom) };
 }
 
+function boxOf(el: Element): Box {
+  const r = el.getBoundingClientRect();
+  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+}
+
+const CLIPPING = new Set(['hidden', 'clip', 'auto', 'scroll', 'overlay']);
+
 /**
  * The part of the window an element shows in: its box cut by the window and
  * by every ancestor that clips it (a scrolling panel), up to a fixed one.
  */
 function shownArea(el: Element): Box {
-  const r = el.getBoundingClientRect();
-  let area = intersect(
-    { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
-    { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight },
-  );
+  let area = intersect(boxOf(el), { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight });
   for (let p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
     const style = getComputedStyle(p);
-    if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
-      const c = p.getBoundingClientRect();
-      area = intersect(area, { left: c.left, top: c.top, right: c.right, bottom: c.bottom });
-    }
+    if (CLIPPING.has(style.overflowX) || CLIPPING.has(style.overflowY)) area = intersect(area, boxOf(p));
     if (style.position === 'fixed') break;
   }
   return area;
@@ -423,27 +432,55 @@ function shownArea(el: Element): Box {
  * coordinates, `frame` is the frame's box in the window and `area` the part
  * of the window the frame shows in. The anchor is moved into that area, the
  * list is no wider than it and opens below or above the anchor, so it never
- * stands further from the frame than its own height. Null when the frame
- * shows nowhere.
+ * stands further from the frame than its own height. `limits.avoid` are boxes
+ * the list must not cover (the host's rows naming a plugin), and
+ * `limits.top` the highest it may reach (a frame in a plugin's dialog keeps
+ * its list below its own top edge, out of the dialog's header). Null when the
+ * frame shows nowhere, or when neither direction leaves room for the list.
  */
 export function placeFloatingDropdown(
   anchor: FloatingDropdownRect,
   frame: Pick<Box, 'left' | 'top'>,
   area: Box,
   viewport: { width: number; height: number },
+  limits: { avoid?: Box[]; top?: number } = {},
 ): DropdownPlacement | null {
-  if (area.right < area.left || area.bottom < area.top) return null;
+  if (area.right - area.left <= 0 || area.bottom - area.top <= 0) return null;
   const anchorTop = within(frame.top + anchor.top, area.top, area.bottom);
   const anchorBottom = within(frame.top + anchor.bottom, anchorTop, area.bottom);
-  const width = Math.max(0, Math.min(anchor.width, area.right - area.left));
+  const width = Math.min(anchor.width, area.right - area.left);
+  if (!(width > 0)) return null;
   const left = within(frame.left + anchor.left, area.left, area.right - width);
-  const spaceBelow = viewport.height - anchorBottom - DROPDOWN_EDGE;
-  const spaceAbove = anchorTop - DROPDOWN_EDGE;
-  const upward = spaceBelow < 200 && spaceAbove > spaceBelow;
-  const maxHeight = Math.max(DROPDOWN_MIN_HEIGHT, Math.min(DROPDOWN_MAX_HEIGHT, upward ? spaceAbove : spaceBelow));
+  const right = left + width;
+  const blocking = (limits.avoid ?? []).filter((b) => b.right > b.left && b.bottom > b.top && b.right > left && b.left < right);
+
+  // Downward: from under the anchor to the window's edge or the first blocking row.
+  const downTop = anchorBottom + DROPDOWN_GAP;
+  let downEnd = viewport.height - DROPDOWN_EDGE;
+  for (const b of blocking) if (b.bottom > downTop) downEnd = Math.min(downEnd, b.top - DROPDOWN_GAP);
+  // Upward: from above the anchor to the window's edge, `limits.top` or the first blocking row.
+  const upBottom = anchorTop - DROPDOWN_GAP;
+  let upStart = Math.max(DROPDOWN_EDGE, limits.top ?? DROPDOWN_EDGE);
+  for (const b of blocking) if (b.top < upBottom) upStart = Math.max(upStart, b.bottom + DROPDOWN_GAP);
+
+  const below = Math.min(DROPDOWN_MAX_HEIGHT, downEnd - downTop);
+  const above = Math.min(DROPDOWN_MAX_HEIGHT, upBottom - upStart);
+  const upward = below < 200 && above > below;
+  const maxHeight = upward ? above : below;
+  if (maxHeight < DROPDOWN_MIN_HEIGHT) return null;
   return upward
-    ? { left, width, bottom: viewport.height - anchorTop + DROPDOWN_GAP, maxHeight }
-    : { left, width, top: anchorBottom + DROPDOWN_GAP, maxHeight };
+    ? { left, width, bottom: viewport.height - upBottom, maxHeight }
+    : { left, width, top: downTop, maxHeight };
+}
+
+/** Whether the element is drawn: not hidden by its own style or an ancestor's. */
+function isDrawn(el: Element): boolean {
+  for (let n: Element | null = el; n; n = n.parentElement) {
+    const style = getComputedStyle(n);
+    if (style.display === 'none') return false;
+    if (n === el && style.visibility === 'hidden') return false;
+  }
+  return true;
 }
 
 function FloatingDropdownPortal({
@@ -462,14 +499,26 @@ function FloatingDropdownPortal({
   onDismiss: () => void;
 }) {
   const t = useTranslations('plugin_surfaces');
+  const tSource = useTranslations('plugins.dialog');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // In window coordinates, inside the part of the window the frame shows in.
+  // In window coordinates, inside the part of the window the frame shows in,
+  // only for a frame that is drawn, and never over a row naming a plugin. In
+  // a plugin's dialog the list stays below the frame's top, out of the header.
   const iframe = wrapperEl?.querySelector('iframe') ?? wrapperEl;
-  const place = iframe && typeof window !== 'undefined'
-    ? placeFloatingDropdown(dropdown.rect, iframe.getBoundingClientRect(), shownArea(iframe), { width: window.innerWidth, height: window.innerHeight })
-    : null;
+  const inDialog = !!wrapperEl?.closest('[data-plugin-dialog-layer]');
+  let place: DropdownPlacement | null = null;
+  if (iframe && typeof window !== 'undefined' && isDrawn(iframe)) {
+    const area = shownArea(iframe);
+    place = placeFloatingDropdown(
+      dropdown.rect,
+      iframe.getBoundingClientRect(),
+      area,
+      { width: window.innerWidth, height: window.innerHeight },
+      { avoid: [...document.querySelectorAll(PLUGIN_SOURCE_SELECTOR)].map(boxOf), ...(inDialog ? { top: area.top } : {}) },
+    );
+  }
 
   // Auto-scroll highlighted option into view
   useEffect(() => {
@@ -525,10 +574,20 @@ function FloatingDropdownPortal({
         bottom: place.bottom !== undefined ? `${place.bottom}px` : undefined,
         width: `${place.width}px`,
         maxHeight: `${place.maxHeight}px`,
-        zIndex: 100010,
+        // Under the toasts (z-index 99999), so a toast's line naming its plugin stays readable.
+        zIndex: 99990,
       }}
       className="overflow-auto rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 focus:outline-none animate-in fade-in-50 zoom-in-95 duration-100"
     >
+      {/* Whose list it is, in a row the options scroll under and the plugin's text can't change. */}
+      <div
+        aria-hidden="true"
+        data-plugin-dropdown-source=""
+        className="sticky -top-1 z-[1] -mx-1 -mt-1 mb-1 flex items-center gap-1 border-b border-border bg-popover px-3 py-1 text-[0.6875rem] text-muted-foreground"
+      >
+        <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+        <span className="min-w-0 truncate">{tSource('from_plugin', { name: pluginName })}</span>
+      </div>
       {dropdown.options.length === 0 ? (
         <div className="px-2 py-2 text-xs text-muted-foreground text-center">
           No results
@@ -559,7 +618,8 @@ function FloatingDropdownPortal({
                 onHighlight(i);
               }}
               className={cn(
-                'relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm transition-colors',
+                // scroll-mt: an option scrolled to with the keys stays clear of the name row.
+                'relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm transition-colors scroll-mt-7',
                 isHighlighted ? 'bg-accent text-accent-foreground' : 'text-foreground',
                 isSelected && 'font-medium',
                 opt.disabled && 'pointer-events-none opacity-50',
