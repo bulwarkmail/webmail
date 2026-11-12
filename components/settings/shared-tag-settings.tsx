@@ -8,11 +8,11 @@ import { useAccountTags, useInboxRights, maySetSharedTags, TagScopeContext, clie
 import { useRestriction } from "@/hooks/use-restriction";
 import { MetadataTooLargeError } from "@/lib/jmap/bulwark-metadata";
 import { chooseKeywordId, isKeywordNameTaken, MAX_KEYWORD_ID_LENGTH } from "@/lib/keyword-nesting";
-import { MAX_SHARED_TAG_LABEL, groupAccountTags, type SharedTagChange } from "@/lib/shared-tags";
+import { MAX_SHARED_TAG_LABEL, groupAccountTags, knownSharedTagColor, type SharedTagChange } from "@/lib/shared-tags";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
-import { KEYWORD_PALETTE, useSettingsStore, type KeywordDefinition } from "@/stores/settings-store";
+import { useSettingsStore, type KeywordDefinition } from "@/stores/settings-store";
 import { SharedTagsSaveDeferredError, saveSharedTags, sharedTagsKey, useSharedTagsStore } from "@/stores/shared-tags-store";
 import { toast } from "@/stores/toast-store";
 import { toUnicodeEmail } from "@/lib/idn";
@@ -45,10 +45,15 @@ function SharedTagForm({
   const id = fixedId ?? chooseKeywordId(null, label, taken.map((tag) => tag.id));
   const duplicate = !fixedId && isKeywordNameTaken(taken, null, label);
   const tooLong = !fixedId && id.length > MAX_KEYWORD_ID_LENGTH;
-  const valid = label.trim().length > 0 && id.length > 0 && !duplicate && !tooLong;
+  const [colorInvalid, setColorInvalid] = useState(false);
+  const valid = label.trim().length > 0 && id.length > 0 && !duplicate && !tooLong && !colorInvalid;
   const keepsColor = !!initial && !colorPicked;
   const save = () => {
     if (valid && !saving) onSave(id, keepsColor ? { label: label.trim() } : { label: label.trim(), color });
+  };
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") save();
+    if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
   };
 
   return (
@@ -64,10 +69,7 @@ function SharedTagForm({
           onChange={(e) => setLabel(e.target.value)}
           maxLength={MAX_SHARED_TAG_LABEL}
           autoFocus
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
-            if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-          }}
+          onKeyDown={onKeyDown}
           className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-hidden"
         />
         {duplicate && <p className="mt-1 text-xs text-destructive">{t("exists")}</p>}
@@ -75,7 +77,13 @@ function SharedTagForm({
       </div>
       <div>
         <p className="mb-1.5 text-xs font-medium text-muted-foreground">{t("color")}</p>
-        <KeywordColorPicker value={color} onChange={(next) => { setColor(next); setColorPicked(true); }} />
+        <KeywordColorPicker
+          value={color}
+          onChange={(next) => { setColor(next); setColorPicked(true); }}
+          allowCustom
+          onInvalidChange={setColorInvalid}
+          onCodeKeyDown={onKeyDown}
+        />
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2">
         <button
@@ -194,7 +202,7 @@ function SharedAccountTagEditor({ scope, name }: { scope: TagScope; name: string
     if (editing && editing.id === tag.id) {
       const raw = entry?.stored?.entries[tag.id];
       // The form shows the stored color when this version knows it.
-      const initial = { ...tag, color: typeof raw?.color === "string" && KEYWORD_PALETTE[raw.color] ? raw.color : tag.color };
+      const initial = { ...tag, color: knownSharedTagColor(raw?.color) ?? tag.color };
       return (
         <SharedTagForm
           key={tag.id}

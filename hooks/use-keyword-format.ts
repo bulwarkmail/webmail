@@ -11,6 +11,7 @@ import { formatKeyword, formatKeywordLabels, keywordRenderings } from "@/lib/key
 import { suggestKeywordColor } from "@/lib/keyword-discovery";
 import { useAccountTags, type TagScope } from "@/hooks/use-account-tags";
 import { CVD_CLASSES, cvdHue } from "@/lib/cvd-palette";
+import { hexKeywordColor, isHexTagColor } from "@/lib/tag-hex-color";
 
 /**
  * Names and colours tags for the screen, bound to the user's tag settings.
@@ -50,17 +51,19 @@ export function useKeywordFormat(scope?: TagScope | null) {
        * undifferentiated colour. The hue is a pure function of the id, so it is
        * stable across reloads and devices, and it degrades to grey only when
        * the proposal names a colour the palette does not hold.
+       *
+       * A custom `#rrggbb` is drawn through generated classes (lib/tag-hex-color.ts).
        */
       tagColor: (id: string): KeywordColor => {
         const stored = keywords.find((keyword) => keyword.id === id)?.color;
         const suggested = suggestKeywordColor(id);
-        const color = stored && KEYWORD_PALETTE[stored]
+        const color = stored && (KEYWORD_PALETTE[stored] || isHexTagColor(stored))
           ? stored
           : KEYWORD_PALETTE[suggested] ? suggested : FALLBACK_KEYWORD_COLOR;
         // Colour-blind-safe colours: the same tag, drawn in the palette
         // colour nearest its own (lib/cvd-palette.ts). The stored colour stays.
         if (colorBlindPalette) return CVD_CLASSES[cvdHue(color) ?? "grey"];
-        return KEYWORD_PALETTE[color];
+        return KEYWORD_PALETTE[color] ?? hexKeywordColor(color);
       },
 
       /**
