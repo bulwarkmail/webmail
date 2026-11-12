@@ -49,7 +49,7 @@
     "@opentelemetry/api": "1.9.1",
     "@opentelemetry/core": "2.8.0",
     "@opentelemetry/exporter-trace-otlp-http": "0.219.0",
-    "@opentelemetry/resources": "2.8.0",
+    "@opentelemetry/resources": "3.1.0",
     "@opentelemetry/sdk-trace-node": "2.8.0",
     "@prometheus-io/client": "0.16.1",
     "@tabler/icons-react": "^3.50.0",
