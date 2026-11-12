@@ -216,7 +216,7 @@ describe('an identity provider on another host than the mail server', () => {
 describe('a mail server reached by an internal address whose metadata names its public name', () => {
   let warn: ReturnType<typeof vi.spyOn>;
   let error: ReturnType<typeof vi.spyOn>;
-  const logged = (spy: ReturnType<typeof vi.spyOn>) => spy.mock.calls.map((call: unknown[]) => String(call[0]));
+  const logged = (spy: ReturnType<typeof vi.spyOn>): string[] => spy.mock.calls.map((call: unknown[]) => String(call[0]));
   beforeEach(() => {
     vi.resetModules();
     jar = new Map();
