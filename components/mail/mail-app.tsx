@@ -4160,8 +4160,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
     if (!client || !emailToArchive) return;
     // In Archive, E and Archive's place in the menus bring it back to the
-    // Inbox instead (mail-p3-4).
-    const archiveInbox = isUnifiedView ? undefined : archiveInboxTarget(mailboxes, selectedMailbox);
+    // Inbox instead (mail-p3-4). The folder on screen is one of the browsed
+    // login's folders (viewMailboxes): the same id names another folder in
+    // the active login's list.
+    const archiveInbox = isUnifiedView ? undefined : archiveInboxTarget(viewMailboxes, selectedMailbox);
     if (archiveInbox) {
       await handleMoveToMailbox(emailToArchive.id, archiveInbox.id, emailKeyFor(emailToArchive));
       return;
@@ -4177,20 +4179,31 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // sources these resolve to the account itself, so behavior is unchanged. (#281)
     const archiveClientId = emailToArchive.sourceAccountId ? emailToArchive.sourceClientAccountId : undefined;
     const archiveAccountId = archiveClientId ? emailToArchive.sourceAccountId : undefined;
-    const archiveClient = archiveClientId ? useAuthStore.getState().getClientForAccount(archiveClientId) : client;
+    // An unstamped row of another login's folder (browsed in the Pro sidebar)
+    // is that login's message, and the move goes through that login (see
+    // resolveEmailActionContext): its Archive is found, or made, in that
+    // login's folders and through its client. Folder ids repeat across
+    // logins, so the active login's Archive id names another folder there.
+    const viewLogin = archiveClientId ? null : useEmailStore.getState().viewingAccountId;
+    const otherLogin = viewLogin && viewLogin !== useAuthStore.getState().activeAccountId ? viewLogin : null;
+    const archiveClient = archiveClientId
+      ? useAuthStore.getState().getClientForAccount(archiveClientId)
+      : otherLogin ? loginClientOf(otherLogin) : client;
     if (!archiveClient) {
       toast.error(t('notifications.error_archiving'), t('notifications.not_connected'));
       return;
     }
     // Read fresh mailboxes from the store – batch archive calls this in a loop,
     // and each iteration needs to see folders created by prior iterations.
-    const readMailboxes = () => archiveAccountId
+    const readMailboxes = () => archiveAccountId || otherLogin
       ? resolveEmailActionContext(emailToArchive, client).mailboxes
       : useEmailStore.getState().mailboxes;
     const refreshMailboxes = () =>
       archiveAccountId
         ? useEmailStore.getState().fetchAccountMailboxes(archiveClient, archiveAccountId, archiveClientId)
-        : fetchMailboxes(client);
+        : otherLogin
+          ? useEmailStore.getState().fetchAccountMailboxes(archiveClient, otherLogin)
+          : fetchMailboxes(client);
 
     const currentMailboxes = readMailboxes();
 
