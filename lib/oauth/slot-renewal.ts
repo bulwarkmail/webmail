@@ -94,8 +94,9 @@ export interface TokenServer {
  * - the stamp names a server that is no longer listed;
  * - there is no readable stamp and more than one server could have issued
  *   the token (servers are listed, or typed servers are allowed).
- * A stamp written before it recorded the server takes the cookies' word; the
- * renewal then records it (storeRenewedTokens). Without a session secret
+ * A stamp written before it recorded the server takes the cookies' word (the
+ * typed-server record only in the desktop build); the renewal then records it
+ * (storeRenewedTokens). Without a session secret
  * nothing is sealed and the cookies decide.
  */
 export async function refreshTokenServer(
@@ -115,7 +116,9 @@ export async function refreshTokenServer(
     // A record left behind by an earlier sign-in in this slot is not this token's.
     server = { serverId: stamp.serverId, upstream: stamp.customServer ? record : null };
   } else if (stamp) {
-    server = { serverId: named, upstream: record };
+    // Only the desktop build wrote typed-server records before stamps named
+    // the server; elsewhere a record next to such a stamp is not this token's.
+    server = { serverId: named, upstream: IS_DESKTOP_BUILD ? record : null };
   } else {
     const typedServers = IS_DESKTOP_BUILD || configManager.get<boolean>('allowCustomJmapEndpoint', false);
     if (servers.length > 0 || typedServers) return null;
