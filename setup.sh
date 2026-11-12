@@ -1347,7 +1347,9 @@ run_deployment() {
         "node")
             echo -e "  ${BOLD}Building...${RESET}"
             echo ""
-            (cd "$SCRIPT_DIR" && npm install --loglevel=warn) &
+            # @sentry/cli (for source map uploads) has no binary for some
+            # hosts (linux s390x, ppc64le, riscv64); its install script then fails.
+            (cd "$SCRIPT_DIR" && SENTRYCLI_SKIP_DOWNLOAD=1 npm install --loglevel=warn) &
             spinner $! "Installing npm packages"
 
             (cd "$SCRIPT_DIR" && npm run build 2>&1 | tail -5) &

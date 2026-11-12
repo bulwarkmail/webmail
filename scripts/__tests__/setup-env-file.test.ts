@@ -101,6 +101,63 @@ function lines(file: string): string[] {
   return readFileSync(file, 'utf8').split('\n');
 }
 
+/**
+ * What docker compose's env_file passes on, after compose-go's dotenv parser
+ * (dotenv/parser.go): a single-quoted value is taken as it is, except that a
+ * backslash before the quote escapes it. Double-quoted and unquoted values
+ * with a $ are interpolated, so they count as not read back.
+ */
+function composeRead(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of text.split('\n')) {
+    const m = line.match(/^\s*(?:export\s+)?([\w.\-[\]]+)[ \t]*[=:][ \t]*(.*)$/);
+    if (!m || line.trimStart().startsWith('#')) continue;
+    const [, key, rest] = m;
+    if (rest.startsWith("'")) {
+      let value = '';
+      let escaped = false;
+      let closed = false;
+      for (const c of rest.slice(1)) {
+        if (c === "'" && !escaped) { closed = true; break; }
+        if (c === '\\' && !escaped) { escaped = true; continue; }
+        if (escaped && c !== "'") value += '\\';
+        escaped = false;
+        value += c;
+      }
+      if (!closed) throw new Error(`compose: unterminated quoted value for ${key}`);
+      out[key] = value;
+    } else if (rest.startsWith('"') || rest.includes('$')) {
+      throw new Error(`compose: ${key} would be interpolated`);
+    } else {
+      out[key] = rest.split(' #')[0].trimEnd();
+    }
+  }
+  return out;
+}
+
+/**
+ * What `docker run --env-file` passes on (docker/cli pkg/kvfile): the line's
+ * leading whitespace goes, # lines are skipped, and everything after the
+ * first = is the value, quotes included.
+ */
+function dockerRead(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const raw of text.split('\n')) {
+    const line = raw.replace(/^\s+/, '');
+    const eq = line.indexOf('=');
+    if (!line || line.startsWith('#') || eq < 1) continue;
+    out[line.slice(0, eq)] = line.slice(eq + 1);
+  }
+  return out;
+}
+
+/** The typed values a reader didn't get back, as "KEY: typed …, read …". */
+function differences(read: Record<string, string | null | undefined>, typed: Record<string, string>): string[] {
+  return Object.entries(typed)
+    .filter(([name, value]) => read[KEY(name)] !== value)
+    .map(([name, value]) => `${KEY(name)}: typed ${JSON.stringify(value)}, read ${JSON.stringify(read[KEY(name)])}`);
+}
+
 // Made-up values: a client secret with $ and #, names with # and $PATH, and
 // the variants (backslashes, a trailing space, a value that starts with #).
 const TYPED = {
@@ -185,22 +242,20 @@ describe('setup.sh .env.local for npm start', SLOW, () => {
 });
 
 describe('setup.sh .env.local for docker compose and docker run', SLOW, () => {
-  it('quotes for compose, which takes a single-quoted value as it is', () => {
+  it('writes values that docker compose reads back unchanged', () => {
     const d = scratch();
     const file = posix(path.join(d, '.env.local'));
     expect(write(file, 'compose', TYPED).code).toBe(0);
-    const text = lines(file);
-    for (const [name, typed] of Object.entries(TYPED)) expect(text).toContain(`${KEY(name)}='${typed}'`);
+    expect(differences(composeRead(readFileSync(file, 'utf8')), TYPED)).toEqual([]);
     const res = run(['reload', file, 'compose', ...Object.keys(TYPED)]);
     for (const [name, typed] of Object.entries(TYPED)) expect(res.out).toContain(`${name}=${typed}\n`);
   });
 
-  it('leaves values bare for docker run --env-file, which keeps every character', () => {
+  it('writes values that docker run --env-file reads back unchanged', () => {
     const d = scratch();
     const file = posix(path.join(d, '.env.local'));
     expect(write(file, 'docker', TYPED).code).toBe(0);
-    const text = lines(file);
-    for (const [name, typed] of Object.entries(TYPED)) expect(text).toContain(`${KEY(name)}=${typed}`);
+    expect(differences(dockerRead(readFileSync(file, 'utf8')), TYPED)).toEqual([]);
     const res = run(['reload', file, 'docker', ...Object.keys(TYPED)]);
     for (const [name, typed] of Object.entries(TYPED)) expect(res.out).toContain(`${name}=${typed}\n`);
   });
