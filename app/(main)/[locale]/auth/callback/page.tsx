@@ -146,7 +146,7 @@ function OAuthCallbackInner() {
         ? getLiteOAuthRedirectUri()
         : `${window.location.origin}${prefix}/${params.locale}/auth/callback`;
 
-      loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId)
+      loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId, iss ?? undefined)
         .then((success) => {
           if (success) {
             sessionStorage.removeItem("oauth_state");
@@ -271,7 +271,7 @@ function OAuthCallbackInner() {
       }
 
       const ssoPrefix = getPathPrefix(params.locale as string);
-      loginWithServerSso(code, state)
+      loginWithServerSso(code, state, iss ?? undefined)
         .then((success) => {
           if (success) {
             let redirectTo = `${ssoPrefix}/${params.locale}`;

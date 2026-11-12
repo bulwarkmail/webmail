@@ -143,10 +143,9 @@ export async function POST(request: NextRequest) {
 
     // RFC 9207: a code answered by another issuer than the one this sign-in
     // was sent to is refused before the code or the verifier goes anywhere.
-    // The callback page passes `iss` on for the hand-offs it completes; the
-    // app's own sign-in (loginWithServerSso) sends none, so only for those
-    // hand-offs is a missing one refused when the provider says it sends it.
-    if (!callbackIssuerAccepted(iss, pending.issuer, isMobileFlow && pending.iss_required === true)) {
+    // The callback page passes `iss` on; a missing one is refused when the
+    // provider says it always sends it.
+    if (!callbackIssuerAccepted(iss, pending.issuer, pending.iss_required === true)) {
       logger.warn('SSO complete: the answer came from another issuer than the one asked');
       cookieStore.delete(SSO_PENDING_COOKIE);
       return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });

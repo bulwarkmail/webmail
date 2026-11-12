@@ -87,6 +87,9 @@ async function complete(body: Record<string, unknown>) {
 
 const codeSentTo = (host: string, code: string) => tokenRequests.filter((r) => r.host === host && r.body.includes(code));
 
+// Every test loads the routes afresh (vi.resetModules), which takes a while.
+vi.setConfig({ testTimeout: 30_000 });
+
 describe('an authorization code from another issuer than the one the sign-in started with', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -172,5 +175,74 @@ describe('an authorization code from another issuer than the one the sign-in sta
       body: JSON.stringify({ code: 'CODE-FROM-OTHER', code_verifier: 'v'.repeat(43), redirect_uri: CALLBACK, server_id: 'other', slot: 0, iss: 'https://other.example' }),
     }));
     expect(codeSentTo('other.example', 'CODE-FROM-OTHER')).toHaveLength(1);
+  });
+
+  it("refuses the browser's own sign-in when its callback lacks the iss its provider sends", async () => {
+    const state = await startAt('other');
+    const res = await complete({ code: 'CODE-NO-ISS', state, slot: 0 });
+    expect(res.status).toBe(400);
+    expect(tokenRequests).toEqual([]);
+  });
+
+  it('refuses a page-driven code exchange without the iss its provider sends, and takes one from a provider that never sends it', async () => {
+    const post = async (code: string) => {
+      const { POST: exchange } = await import('@/app/api/auth/token/route');
+      return exchange(new NextRequest('https://webmail.example/api/auth/token', {
+        method: 'POST',
+        headers: SAME_ORIGIN,
+        body: JSON.stringify({ code, code_verifier: 'v'.repeat(43), redirect_uri: CALLBACK, server_id: 'other', slot: 0 }),
+      }));
+    };
+    expect((await post('CODE-NO-ISS')).status).toBe(400);
+    expect(tokenRequests).toEqual([]);
+
+    // Fresh modules: discovery is cached per process.
+    issSupported = false;
+    vi.resetModules();
+    await post('CODE-FROM-QUIET-PROVIDER');
+    expect(codeSentTo('other.example', 'CODE-FROM-QUIET-PROVIDER')).toHaveLength(1);
+  });
+
+  it("still exchanges the desktop app's own sign-in, which checks iss itself and sends none", async () => {
+    vi.stubEnv('NEXT_PUBLIC_BULWARK_DESKTOP', '1');
+    try {
+      const { POST: exchange } = await import('@/app/api/auth/token/route');
+      await exchange(new NextRequest('https://webmail.example/api/auth/token', {
+        method: 'POST',
+        headers: SAME_ORIGIN,
+        body: JSON.stringify({
+          code: 'CODE-DESKTOP', code_verifier: 'v'.repeat(43), redirect_uri: 'http://127.0.0.1:51234/bulwark-desktop/callback', slot: 0,
+          custom_server_url: 'https://typed.example', client_id: 'registered-client',
+        }),
+      }));
+      expect(codeSentTo('typed.example', 'CODE-DESKTOP')).toHaveLength(1);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("completes the desktop app's hand-off when the callback names the provider asked", async () => {
+    const verifier = 'd'.repeat(64);
+    const state = await startAt('other', {
+      mobile_redirect_uri: 'http://127.0.0.1:51234/bulwark-desktop/callback',
+      mobile_state: 'app-state',
+      mobile_code_challenge: createHash('sha256').update(verifier, 'ascii').digest('base64url'),
+    });
+    await complete({ code: 'CODE-DESKTOP-HANDOFF', state, iss: 'https://other.example' });
+    expect(codeSentTo('other.example', 'CODE-DESKTOP-HANDOFF')).toHaveLength(1);
+  });
+
+  it('exchanges a pairing step-up whose callback names the provider asked', async () => {
+    const { setStalwartAuthContextInStore } = await import('@/lib/stalwart/auth-context');
+    const store = await (await import('next/headers')).cookies();
+    setStalwartAuthContextInStore(store as never, 0, { serverUrl: 'https://other.example', username: 'me@other.example', authHeader: 'Bearer desktop' });
+    const state = await startAt('other', { purpose: 'reauth', slot: 0 });
+    const { POST: reauthComplete } = await import('@/app/api/auth/reauth/sso/complete/route');
+    await reauthComplete(new NextRequest('https://webmail.example/api/auth/reauth/sso/complete', {
+      method: 'POST',
+      headers: SAME_ORIGIN,
+      body: JSON.stringify({ code: 'CODE-STEP-UP', state, iss: 'https://other.example' }),
+    }));
+    expect(codeSentTo('other.example', 'CODE-STEP-UP')).toHaveLength(1);
   });
 });

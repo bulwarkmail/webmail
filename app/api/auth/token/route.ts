@@ -150,15 +150,15 @@ export async function POST(request: NextRequest) {
     }
 
     // RFC 9207: a code answered by another issuer than the server this sign-in
-    // names is refused before the code or the verifier goes anywhere. A
-    // missing `iss` is let through: the auth store's exchangeOAuthCode doesn't
-    // pass the callback's on.
-    if (iss !== undefined) {
-      const metadata = await getMetadata(serverId, customUpstream ? { upstream: customUpstream } : undefined);
-      if (!callbackIssuerAccepted(iss, metadata?.issuer, false)) {
-        logger.warn('Token exchange: the answer came from another issuer than the one asked');
-        return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });
-      }
+    // names is refused before the code or the verifier goes anywhere, and so
+    // is one without `iss` from a provider that says it always sends it. The
+    // desktop app's own sign-in to a server it typed (lib/desktop/browser-sign-in.ts)
+    // checks `iss` itself before it gets here and sends none.
+    const metadata = await getMetadata(serverId, customUpstream ? { upstream: customUpstream } : undefined);
+    const issRequired = !customUpstream && metadata?.authorization_response_iss_parameter_supported === true;
+    if (!callbackIssuerAccepted(iss, metadata?.issuer, issRequired)) {
+      logger.warn('Token exchange: the answer came from another issuer than the one asked');
+      return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });
     }
 
     const tokens = await exchangeCodeForTokens(code, code_verifier, redirect_uri, serverId, customUpstream ? { upstream: customUpstream } : undefined);
