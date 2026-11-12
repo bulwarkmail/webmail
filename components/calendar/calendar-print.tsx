@@ -237,7 +237,13 @@ function MonthPrint({
   const gridDays = getMonthGridDays(periodDate);
   const weeks: Date[][] = [];
   for (let i = 0; i + 7 <= gridDays.length; i += 7) weeks.push(gridDays.slice(i, i + 7));
-  const tasksByDate = useMemo(() => groupTasksByDueDay(gridTasks), [gridTasks]);
+  // Repeating tasks on each day of the sheet, as on the grid.
+  const firstDay = gridDays[0]?.getTime();
+  const lastDay = gridDays[gridDays.length - 1]?.getTime();
+  const tasksByDate = useMemo(
+    () => groupTasksByDueDay(gridTasks, firstDay !== undefined && lastDay !== undefined ? { start: new Date(firstDay), end: new Date(lastDay) } : undefined),
+    [gridTasks, firstDay, lastDay],
+  );
   const capacity = monthCellCapacity(weeks.length, "landscape");
   const columns = { gridTemplateColumns: "repeat(7, minmax(0, 1fr))" };
 
@@ -437,7 +443,10 @@ function TimeGridPrint({
     ];
     return packWeekSegments(shownIndexByDay ? remapSegmentsToShownDays(segments, shownIndexByDay) : segments);
   }, [events, allDays, shownIndexByDay]);
-  const tasksByDay = useMemo(() => groupTasksByDueDay(tasks), [tasks]);
+  const tasksByDay = useMemo(
+    () => groupTasksByDueDay(tasks, allDays.length ? { start: allDays[0], end: allDays[allDays.length - 1] } : undefined),
+    [tasks, allDays],
+  );
   const dayEventLanes = days.map((_, index) => allDaySegments.reduce(
     (lanes, s) => (index >= s.startIndex && index < s.startIndex + s.span ? Math.max(lanes, s.row + 1) : lanes),
     0,
