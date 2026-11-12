@@ -40,6 +40,9 @@ jobs:
     timeout-minutes: 45
     env:
       KIND_VERSION: v0.29.0
+      # kind-linux-amd64 of that release, from its kind-linux-amd64.sha256sum.
+      # Change both together.
+      KIND_SHA256: c72eda46430f065fb45c5f70e7c957cc9209402ef309294821978677c8fb3284
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -58,6 +61,7 @@ jobs:
           # The runner's own kind in /usr/local/bin belongs to root; use a pinned one.
           mkdir -p "$RUNNER_TEMP/bin"
           curl -fsSLo "$RUNNER_TEMP/bin/kind" "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          echo "${KIND_SHA256}  $RUNNER_TEMP/bin/kind" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/bin/kind"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
           export PATH="$RUNNER_TEMP/bin:$PATH"

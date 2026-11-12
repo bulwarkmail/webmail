@@ -22,6 +22,9 @@
 // first point too: a build or an upload runs what the lockfile holds, nothing fetched fresh.
 // Every FROM in those Dockerfiles names its base image by digest (stages and scratch aside).
 //
+// A file fetched with curl or wget and then made executable needs a `sha256sum -c` (or another
+// shaNsum/shasum check) between the two, in the same step or script.
+//
 //   node scripts/check-action-pins.mjs [repo root]      default: the current directory
 //   node scripts/check-action-pins.mjs --self-test      runs the cases below
 //
@@ -231,6 +234,27 @@ function workflowRunIsOutside(doc, byName) {
   });
 }
 
+// Lines of a script that make a file executable after a curl or wget download, with no
+// checksum check since that download.
+function uncheckedExecutables(text) {
+  const found = [];
+  let downloaded = false;
+  let checked = false;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^\s*#/.test(line)) continue;
+    if (/\b(sha(1|224|256|384|512)sum|shasum)\b[^#]*\s(-c|--check)\b/.test(line)) checked = true;
+    const curl = /\bcurl\b[^#|]*\s(-[a-zA-Z]*[oO]|--output|--remote-name)\b/.test(line) && !/\s-[a-zA-Z]*o\s+\/dev\/null\b/.test(line);
+    const wget = /\bwget\b/.test(line) && !/--spider\b/.test(line);
+    if (curl || wget) {
+      downloaded = true;
+      checked = false;
+    }
+    const executable = /\bchmod\s+(-\S+\s+)*([ugoa]*\+[rw]*x|[0-7]*[1357][0-7]*)\b/.test(line) || /\binstall\s+(-\S+\s+)*-m\s*[0-7]*[1357]/.test(line);
+    if (downloaded && !checked && executable) found.push(line.trim());
+  }
+  return found;
+}
+
 function check(files) {
   const problems = [];
   const parsed = [];
@@ -255,7 +279,13 @@ function check(files) {
         if (m[2]) stages.add(m[2].toLowerCase());
       });
     }
-    if (!/\.ya?ml$/.test(rel)) continue;
+    if (!/\.ya?ml$/.test(rel)) {
+      const lines = text.split(/\r?\n/);
+      for (const bad of uncheckedExecutables(text)) {
+        problems.push(`${rel}:${lines.findIndex((l) => l.trim() === bad) + 1}: makes a download executable without checking its sha256 first (sha256sum -c)`);
+      }
+      continue;
+    }
     try {
       parsed.push({ rel, ...parse(text), workflow: rel.startsWith('.github/workflows/') });
     } catch (e) {
@@ -270,6 +300,16 @@ function check(files) {
       if (!ref || ref.startsWith('./')) continue;
       const pinned = ref.startsWith('docker://') ? /@sha256:[0-9a-f]{64}$/.test(ref) : /@[0-9a-f]{40}$/.test(ref);
       if (!pinned) problems.push(`${rel}:${lineOf(node, ref)}: ${ref} is not pinned ${ref.startsWith('docker://') ? 'by digest' : 'to a commit'}`);
+    }
+  }
+
+  // Downloads made executable: per run: script, so a check in another step doesn't count.
+  for (const { rel, doc, lineOf } of parsed) {
+    for (const node of maps(doc)) {
+      if (typeof node.run !== 'string') continue;
+      for (const bad of uncheckedExecutables(node.run)) {
+        problems.push(`${rel}:${lineOf(node, bad)}: makes a download executable without checking its sha256 first (sha256sum -c)`);
+      }
     }
   }
 
@@ -699,6 +739,53 @@ RUN npx --no-install sentry-cli sourcemaps inject .next/static
     'scripts/upload-sourcemaps.sh': `#!/usr/bin/env bash
 npx -y @sentry/cli --url "$url" sourcemaps upload "$dir"
 npx --no-install sentry-cli --version
+`,
+  }],
+  ['downloads made executable without a checksum', 3, {
+    'x.yml': `
+on: push
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    env:
+      KIND_SHA256: 0000000000000000000000000000000000000000000000000000000000000000
+    steps:
+      - run: |
+          curl -fsSLo "$RUNNER_TEMP/bin/kind" "https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64"
+          chmod +x "$RUNNER_TEMP/bin/kind"
+      - run: echo "\${KIND_SHA256}  $RUNNER_TEMP/bin/kind" | sha256sum -c -
+      - run: |
+          wget -q https://example.com/tool
+          install -m 0755 tool /usr/local/bin/tool
+`,
+    'scripts/fetch-tool.sh': `#!/usr/bin/env bash
+curl -fsSL -o tool.tgz https://example.com/tool.tgz
+echo "$SHA  tool.tgz" | sha256sum -c -
+curl -fsSL -o tool https://example.com/tool
+chmod 755 tool
+`,
+  }],
+  ['downloads checked before they are made executable', 0, {
+    'x.yml': `
+on: push
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    env:
+      KIND_SHA256: 0000000000000000000000000000000000000000000000000000000000000000
+    steps:
+      - run: |
+          curl -fsSLo "$RUNNER_TEMP/bin/kind" "https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64"
+          echo "\${KIND_SHA256}  $RUNNER_TEMP/bin/kind" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/bin/kind"
+      - run: |
+          curl -fsS -o /dev/null http://localhost:3000/api/health
+          chmod +x ./scripts/local.sh
+          chmod 600 ~/.ssh/key
 `,
   }],
   ['base images without a digest', 2, {
