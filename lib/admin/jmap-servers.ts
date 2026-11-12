@@ -19,6 +19,14 @@ export interface JmapServerEntry {
   label: string;
   url: string;
   domains?: string[];
+  /**
+   * The server's superusers may open the admin console without the admin
+   * password (stalwartAdminAccess "auto"), as those of the instance's own
+   * server (jmapServerUrl) may. Off unless the admin sets it: a listed server
+   * may be run by someone else. Never sent to the browser outside the admin
+   * dashboard.
+   */
+  adminAccess?: boolean;
   oauth?: JmapServerOAuthConfig & {
     /**
      * Set on the admin dashboard's view of an entry instead of the secret
@@ -110,9 +118,32 @@ export function parseJmapServers(raw: unknown): JmapServerEntry[] {
       url,
       ...(domains.length > 0 ? { domains } : {}),
       ...(oauth ? { oauth } : {}),
+      // Only an explicit true: anything else is the default, off.
+      ...(e.adminAccess === true ? { adminAccess: true } : {}),
     });
   }
   return out;
+}
+
+/**
+ * Whether a superuser of `serverUrl` counts as an admin of this webmail: the
+ * instance's own server (`globalServerUrl`; without one, the only entry of a
+ * list of one), or a listed server the admin marked with `adminAccess`. URLs
+ * compare like {@link findServerByUrl}: scheme, host in any letter case, path
+ * without trailing slashes.
+ */
+export function grantsAdminAccess(
+  serverUrl: string,
+  globalServerUrl: string | null | undefined,
+  servers: JmapServerEntry[],
+): boolean {
+  const target = normalizeUrl(serverUrl);
+  if (globalServerUrl) {
+    if (normalizeUrl(globalServerUrl) === target) return true;
+  } else if (servers.length === 1 && normalizeUrl(servers[0].url) === target) {
+    return true;
+  }
+  return servers.some((s) => s.adminAccess === true && normalizeUrl(s.url) === target);
 }
 
 /**

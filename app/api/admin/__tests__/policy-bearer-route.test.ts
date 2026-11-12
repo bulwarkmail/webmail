@@ -49,7 +49,7 @@ import { resetLocalStoreForTests } from '@/lib/shared-store/local';
 import { switchableSharedStore } from '@/lib/__tests__/helpers/shared-store-down';
 
 const SERVER = 'https://mail.example.org';
-const GOOD_TOKEN = 'good-token-abc';
+const GOOD_TOKEN = 'good-token-abc-0123456789';
 
 const fetchMock = vi.fn();
 
@@ -182,7 +182,7 @@ describe('GET /api/admin/policy with a Bearer token', () => {
   });
 
   it('stops checking tokens from a client after ten refused ones', async () => {
-    for (let i = 0; i < 10; i++) await get({ authorization: `Bearer wrong-${i}` });
+    for (let i = 0; i < 10; i++) await get({ authorization: `Bearer wrong-token-${i}-0123456789` });
     expect(fetchMock).toHaveBeenCalledTimes(10);
     const res = await get({ authorization: `Bearer ${GOOD_TOKEN}` });
     expect(res.body.organisation).toBeUndefined();

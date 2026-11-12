@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { logger } from '@/lib/logger';
 import { getStore, isSharedMode, type AppendLog, type LogOptions } from '@/lib/shared-store';
 import { ensureStateDir, getStatePath } from './paths';
@@ -61,9 +63,10 @@ const AUDIT_LOG_FILE = 'audit.log';
 
 /**
  * The audit log (#1066). Local mode: <state dir>/audit.log, rotated at
- * 10 MB to .1 … .3, of which only the current file is read, as before.
- * Shared mode: one log for every replica, keeping the newest 50 000
- * entries (about what one 10 MB file holds).
+ * 10 MB to .1 … .3; the admin page reads all four, so an entry stays in
+ * view until it is deleted from disk. Shared mode: one log for every
+ * replica, keeping the newest 50 000 entries (about what one 10 MB file
+ * holds).
  */
 export const AUDIT_LOG_OPTIONS: LogOptions = {
   local: { path: () => getStatePath(AUDIT_LOG_FILE), maxBytes: MAX_LOG_SIZE, rotations: MAX_ROTATIONS },
@@ -106,12 +109,27 @@ export async function auditLog(action: string, detail: Record<string, unknown>, 
   }
 }
 
+/** The rotated local files, oldest first (audit.log.3 … audit.log.1). */
+async function readRotatedLines(): Promise<string[]> {
+  const file = path.resolve(AUDIT_LOG_OPTIONS.local.path());
+  let lines: string[] = [];
+  for (let i = AUDIT_LOG_OPTIONS.local.rotations; i >= 1; i--) {
+    try {
+      lines = lines.concat((await readFile(`${file}.${i}`, 'utf-8')).split('\n').filter(Boolean));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+  }
+  return lines;
+}
+
 /**
  * Read audit log entries, newest first. Supports pagination.
  */
 export async function readAuditLog(page: number = 1, limit: number = 50, actionFilter?: string): Promise<{ entries: AuditEntry[]; total: number }> {
   try {
-    const lines = await auditStore().readAll();
+    const rotated = isSharedMode() ? [] : await readRotatedLines();
+    const lines = rotated.concat(await auditStore().readAll());
 
     let entries: AuditEntry[] = lines.map(line => {
       try { return JSON.parse(line); } catch { return null; }

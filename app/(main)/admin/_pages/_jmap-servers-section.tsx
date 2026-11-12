@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Plus, Trash2, ChevronDown, ChevronRight } from '@/components/icons';
 import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
 import { Button } from '@/components/ui/button';
 import { inputClass, RevertButton, SourceBadge } from '@/components/admin/config-items';
+import { ToggleSwitch } from '@/components/settings/settings-section';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -27,6 +29,8 @@ interface RowDraft {
   oauthButtonLabel: string;
   oauthEndSessionUrl: string;
   oauthExpanded: boolean;
+  /** Its superusers may open the admin dashboard without the admin password. */
+  adminAccess: boolean;
 }
 
 function entryToDraft(e: JmapServerEntry): RowDraft {
@@ -43,6 +47,7 @@ function entryToDraft(e: JmapServerEntry): RowDraft {
     oauthButtonLabel: e.oauth?.buttonLabel ?? '',
     oauthEndSessionUrl: e.oauth?.endSessionUrl ?? '',
     oauthExpanded: !!(e.oauth && (e.oauth.clientId || e.oauth.issuerUrl || hasClientSecret || e.oauth.endSessionUrl)),
+    adminAccess: e.adminAccess === true,
   };
 }
 
@@ -77,6 +82,7 @@ function draftToEntry(d: RowDraft): JmapServerEntry | null {
     url,
     ...(domains.length > 0 ? { domains } : {}),
     ...(oauth ? { oauth } : {}),
+    ...(d.adminAccess ? { adminAccess: true } : {}),
   };
 }
 
@@ -93,6 +99,7 @@ function emptyDraft(): RowDraft {
     oauthButtonLabel: '',
     oauthEndSessionUrl: '',
     oauthExpanded: false,
+    adminAccess: false,
   };
 }
 
@@ -100,6 +107,7 @@ const fieldLabelClass = 'block text-[0.6875rem] font-medium text-muted-foregroun
 const fieldClass = cn(inputClass, 'w-full');
 
 export function JmapServersSection({ value, source, onChange, onRevert }: Props) {
+  const tAdminAccess = useTranslations('admin_access');
   const [drafts, setDrafts] = useState<RowDraft[]>(() => value.map(entryToDraft));
   // Ids that tie each row's labels to its fields.
   const idBase = useId();
@@ -225,6 +233,22 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
                 onChange={(e) => update(i, { domains: e.target.value })}
                 placeholder="example.com, example.org"
                 className={fieldClass}
+              />
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <span className="block text-xs font-medium text-foreground">
+                  {tAdminAccess('label')}
+                </span>
+                <p className="mt-0.5 text-[0.6875rem] text-muted-foreground">
+                  {tAdminAccess('help')}
+                </p>
+              </div>
+              <ToggleSwitch
+                checked={d.adminAccess}
+                onChange={(checked) => update(i, { adminAccess: checked })}
+                ariaLabel={tAdminAccess('label')}
+                testId={`jmap-server-admin-access-${i}`}
               />
             </div>
             <button

@@ -8308,5 +8308,9 @@
   "impersonation": {
     "return_notice": "Du har åbnet {mailbox} via impersonering.",
     "return_button": "Tilbage til min konto"
+  },
+  "admin_access": {
+    "label": "Superbrugere på denne server må åbne administrationspanelet",
+    "help": "Superbrugere på denne server logger ind på administrationspanelet uden administratoradgangskoden, ligesom dem på JMAP-hovedserveren. Slå det kun til for en server, du selv driver."
   }
 }

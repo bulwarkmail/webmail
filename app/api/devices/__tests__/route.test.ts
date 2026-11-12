@@ -8,7 +8,7 @@ const creds = vi.hoisted(() => ({ value: null as null | { accountName: string; s
 vi.mock('@/lib/stalwart/credentials', () => ({ getStalwartCredentials: async () => creds.value }));
 
 const admin = vi.hoisted(() => ({ allowed: true }));
-// Rate limits are per address and outlive a test: each test is its own address.
+// Each test is its own address, and starts with no counters (new rows are counted per account).
 const client = vi.hoisted(() => ({ ip: '', count: 0 }));
 vi.mock('@/lib/admin/session', async (original) => ({
   ...await original<typeof import('@/lib/admin/session')>(),
@@ -22,6 +22,7 @@ import { POST as checkIn } from '../route';
 import { POST as wiped } from '../wiped/route';
 import { GET as adminList, POST as adminAct } from '../../admin/devices/route';
 import * as registry from '@/lib/devices/registry';
+import { resetLocalStoreForTests } from '@/lib/shared-store/local';
 
 let dir: string;
 
@@ -56,6 +57,7 @@ vi.setConfig({ testTimeout: 60_000 });
 beforeEach(() => {
   client.count += 1;
   client.ip = `203.0.113.${client.count}`;
+  resetLocalStoreForTests();
   dir = mkdtempSync(path.join(tmpdir(), 'bw-device-routes-'));
   vi.stubEnv('ADMIN_STATE_DIR', dir);
   admin.allowed = true;
@@ -132,6 +134,19 @@ describe('POST /api/devices', () => {
     await registry.requestDeviceWipe(id, 'admin');
     const answer = await checkIn(request('/api/devices', { id, secret: 'f'.repeat(64) }));
     expect(answer.status).toBe(404);
+  });
+
+  it('counts new rows per account, so changing addresses neither gets more nor fills the counter store', async () => {
+    creds.value = { accountName: 'bob@example.org', serverUrl: 'https://mail.example.org' };
+    const statuses: number[] = [];
+    for (let i = 0; i <= registry.REGISTER_PER_HOUR; i += 1) {
+      client.ip = `198.51.100.${i + 1}`;
+      statuses.push((await checkIn(request('/api/devices', { platform: 'x', appVersion: '1' }))).status);
+    }
+    expect(statuses.at(-1)).toBe(429);
+    // Another account from the last address is not held back by bob's count.
+    creds.value = { accountName: 'carol@example.org', serverUrl: 'https://mail.example.org' };
+    expect((await checkIn(request('/api/devices', { platform: 'x', appVersion: '1' }))).status).toBe(200);
   });
 
   it('turns down a new row past the cap when every row has a wipe waiting', async () => {

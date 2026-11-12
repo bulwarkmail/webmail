@@ -119,7 +119,8 @@ async function callPost(body: Record<string, unknown>) {
 describe('admin auth route - stalwartAdminAccess modes (#870)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    state.config = {};
+    // The instance's own server: only its superusers count.
+    state.config = { jmapServerUrl: 'https://mail.example.com' };
     state.adminPasswordConfigured = false;
     state.hasAdminSession = false;
     role.current = 'superuser';

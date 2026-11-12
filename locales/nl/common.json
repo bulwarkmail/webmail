@@ -8308,5 +8308,9 @@
   "impersonation": {
     "return_notice": "Je hebt {mailbox} geopend via impersonatie.",
     "return_button": "Terug naar mijn account"
+  },
+  "admin_access": {
+    "label": "Superusers van deze server mogen het beheerdashboard openen",
+    "help": "Superusers van deze server melden zich aan bij het beheerdashboard zonder het beheerderswachtwoord, net als die van de hoofd-JMAP-server. Zet dit alleen aan voor een server die je zelf beheert."
   }
 }

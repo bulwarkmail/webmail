@@ -8308,5 +8308,9 @@
   "impersonation": {
     "return_notice": "Schránku {mailbox} ste otvorili cez zosobnenie.",
     "return_button": "Späť na môj účet"
+  },
+  "admin_access": {
+    "label": "Superpoužívatelia tohto servera môžu otvoriť administráciu",
+    "help": "Superpoužívatelia tohto servera sa prihlasujú do administrácie bez hesla správcu, rovnako ako tí z hlavného servera JMAP. Zapnite to len pre server, ktorý sami prevádzkujete."
   }
 }

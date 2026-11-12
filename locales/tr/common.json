@@ -8308,5 +8308,9 @@
   "impersonation": {
     "return_notice": "{mailbox} posta kutusunu kimliğe bürünerek açtınız.",
     "return_button": "Hesabıma dön"
+  },
+  "admin_access": {
+    "label": "Bu sunucunun süper kullanıcıları yönetim panelini açabilir",
+    "help": "Bu sunucunun süper kullanıcıları, ana JMAP sunucusundakiler gibi yönetici parolası olmadan yönetim paneline giriş yapar. Bunu yalnızca kendi işlettiğiniz bir sunucu için açın."
   }
 }
