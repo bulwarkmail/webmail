@@ -7286,6 +7286,14 @@
       "added_from_subject": "Adăugat din e-mailul „{subject}” de la {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Această anulare a fost trimisă de la {sender}, dar organizatorul acestui eveniment din calendarul dumneavoastră este {organizer}. Doar organizatorul îl poate anula. Eliminați-l singur dacă aveți încredere în acest mesaj.",
+    "cancel_unverified": "Nu s-a putut verifica faptul că această anulare vine de la organizator. Eliminați singur evenimentul dacă aveți încredere în acest mesaj.",
+    "card_sender": "de la {domain}",
+    "card_sender_title": "Acest mesaj a trecut verificarea expeditorului făcută de serverul de e-mail pentru {domain}.",
+    "outside_link": "Alt site",
+    "outside_link_title": "Acest link duce la {host}, în afara {domain}, domeniul expeditorului."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Ortografie",

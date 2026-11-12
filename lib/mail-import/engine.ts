@@ -4,7 +4,7 @@ import { checkpointKey, deleteCheckpoint, readCheckpoint, writeCheckpoint } from
 import type { ImportDedupe } from "./dedupe";
 import { isNetworkFailure } from "@/lib/jmap/offline-hooks";
 import { holdLock } from "./locks";
-import { emlSource, maildirSource, mboxSource, zipSource, type ImportFormat, type ImportItem, type ItemSource, type MaildirFile, type SkipReason, type SourceOptions } from "./sources";
+import { emlSource, importedKeywords, maildirSource, mboxSource, zipSource, type ImportFormat, type ImportItem, type ItemSource, type MaildirFile, type SkipReason, type SourceOptions } from "./sources";
 
 /**
  * One engine for every mail import (EML, ZIP, mbox, PST): it reads messages
@@ -537,7 +537,8 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
           fileIndex,
           label: item.label,
           seenKey,
-          entry: { blobId, mailboxIds: { [mailboxId]: true }, keywords: item.keywords, receivedAt: item.receivedAt },
+          // Every source's messages, the PST's included, carry the import mark.
+          entry: { blobId, mailboxIds: { [mailboxId]: true }, keywords: importedKeywords(item.keywords), receivedAt: item.receivedAt },
         });
         return;
       } catch (error) {

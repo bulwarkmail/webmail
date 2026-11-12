@@ -7286,6 +7286,14 @@
       "added_from_subject": "添加自 {domain} 发来的邮件“{subject}”"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "此取消通知由 {sender} 发送，但你日历中此活动的组织者是 {organizer}。只有组织者才能取消活动。如果你信任这封邮件，请自行删除。",
+    "cancel_unverified": "无法确认此取消通知来自组织者。如果你信任这封邮件，请自行删除该活动。",
+    "card_sender": "来自 {domain}",
+    "card_sender_title": "此邮件已通过邮件服务器对 {domain} 的发件人检查。",
+    "outside_link": "其他网站",
+    "outside_link_title": "此链接指向 {host}，不在发件人的域名 {domain} 之内。"
+  },
   "proofreading": {
     "kind": {
       "spelling": "拼写",

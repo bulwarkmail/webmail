@@ -7286,6 +7286,14 @@
       "added_from_subject": "Ajouté depuis l’e-mail « {subject} » de {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Cette annulation a été envoyée depuis {sender}, mais l'organisateur de cet événement dans votre calendrier est {organizer}. Seul l'organisateur peut l'annuler. Supprimez-le vous-même si vous faites confiance à ce message.",
+    "cancel_unverified": "Impossible de vérifier que cette annulation vient de l'organisateur. Supprimez l'événement vous-même si vous faites confiance à ce message.",
+    "card_sender": "de {domain}",
+    "card_sender_title": "Ce message a réussi la vérification de l'expéditeur du serveur de messagerie pour {domain}.",
+    "outside_link": "Autre site",
+    "outside_link_title": "Ce lien mène à {host}, en dehors de {domain}, le domaine de l'expéditeur."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Orthographe",

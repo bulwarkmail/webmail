@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { CalendarInvitationBanner } from '../calendar-invitation-banner';
 import type { Email } from '@/lib/jmap/types';
@@ -1514,6 +1514,98 @@ describe('CalendarInvitationBanner', () => {
       await screen.findByRole('heading', { name: 'Planning' });
       await waitFor(() => expect(mocks.clientMock.queryCalendarEvents).toHaveBeenCalledWith({ uid: 'uid-c' }));
       expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+      expect(screen.queryByText('cancel_not_organizer')).not.toBeInTheDocument();
+    });
+
+    // A cancellation removes a meeting with one click. The organizer named
+    // inside its calendar data is the sender's own text, so the organizer of
+    // the stored meeting has to be the sender, however well the sender's own
+    // domain authenticates.
+    describe('from someone other than the organizer', () => {
+      /** What the server reports for a sender whose own domain is set up properly. */
+      const passesFor = (domain: string) => ({
+        spf: { result: 'pass', domain },
+        dkim: { result: 'pass', domain },
+        dmarc: { result: 'pass', domain, policy: 'reject' },
+      }) as Email['authenticationResults'];
+
+      /** Lets the removal plan arrive before looking for the button. */
+      async function planned() {
+        await screen.findByRole('heading', { name: 'Planning' });
+        await waitFor(() => expect(mocks.clientMock.queryCalendarEvents).toHaveBeenCalledWith({ uid: 'uid-c' }));
+        await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+      }
+
+      it("offers the removal for the organizer's own, authenticated cancellation", async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent()]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({ authenticationResults: passesFor('example.com'), authenticationResultsOnReceipt: true })} />);
+
+        expect(await screen.findByText('remove_from_calendar')).toBeInTheDocument();
+        expect(screen.queryByText('cancel_not_organizer')).not.toBeInTheDocument();
+      });
+
+      it('does not offer it to an outside sender who passes authentication for a domain of their own', async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent()]);
+        mocks.calendarState.events = [storedEvent()];
+
+        render(<CalendarInvitationBanner email={cancelEmail({
+          from: [{ email: 'mallory@evil.example', name: 'Sender' }],
+          authenticationResults: passesFor('evil.example'),
+          authenticationResultsOnReceipt: true,
+        })} />);
+
+        await planned();
+        expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+        expect(screen.getByText('cancel_not_organizer')).toBeInTheDocument();
+        expect(mocks.calendarState.deleteEvent).not.toHaveBeenCalled();
+      });
+
+      it('does not offer it to an attendee who names themselves the organizer of the cancellation', async () => {
+        const carol = {
+          '@type': 'Participant', email: 'carol@example.com', calendarAddress: 'mailto:carol@example.com',
+          roles: { attendee: true }, participationStatus: 'accepted',
+        };
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel({
+          organizerCalendarAddress: 'mailto:carol@example.com',
+          participants: { organizer: { ...carol, roles: { owner: true } }, me: ME },
+        })]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent({ participants: { organizer: ORGANIZER, me: ME, carol } })]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({ from: [{ email: 'carol@example.com', name: 'Carol' }] })} />);
+
+        await planned();
+        expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+        expect(screen.getByText('cancel_not_organizer')).toBeInTheDocument();
+      });
+
+      it("matches the organizer's address in another letter case and with a mailto: prefix", async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent({
+          organizerCalendarAddress: 'mailto:BOSS@example.com',
+          participants: { organizer: { ...ORGANIZER, email: undefined, calendarAddress: 'MAILTO:Boss@Example.com' }, me: ME },
+        })]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({ from: [{ email: 'Boss@Example.COM', name: 'Boss' }] })} />);
+
+        expect(await screen.findByText('remove_from_calendar')).toBeInTheDocument();
+      });
+
+      it("does not offer it for the organizer's address when the results header was not written on receipt", async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent()]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({
+          authenticationResults: passesFor('example.com'),
+          authenticationResultsOnReceipt: false,
+        })} />);
+
+        await planned();
+        expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+        expect(screen.getByText('cancel_unverified')).toBeInTheDocument();
+      });
     });
   });
 

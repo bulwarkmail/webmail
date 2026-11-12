@@ -98,7 +98,8 @@ describe('runExport', () => {
     expect(imported.imported).toBe(12);
     // Same bytes (the state headers the mbox carried are gone again), same order, state and arrival time.
     expect(back.imported.map((e) => e.text)).toEqual(messages.map((m) => m.raw));
-    expect(back.imported.map((e) => e.keywords)).toEqual(messages.map((m) => Object.fromEntries(Object.keys(m.keywords).map((k) => [k, true]))));
+    // The import adds its own mark to the state the file carried.
+    expect(back.imported.map((e) => e.keywords)).toEqual(messages.map((m) => ({ ...Object.fromEntries(Object.keys(m.keywords).map((k) => [k, true])), $imported: true })));
     expect(back.imported.map((e) => e.receivedAt)).toEqual(messages.map((m) => m.receivedAt));
   });
 

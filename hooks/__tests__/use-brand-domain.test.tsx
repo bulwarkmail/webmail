@@ -14,8 +14,9 @@ import { useBrandDomain } from '../use-brand-domain';
 
 const message = (from: string, header?: string) => ({
   from: [{ email: from }],
-  ...(header ? { authenticationResults: parseAuthenticationResults([header]) } : {}),
-}) as Pick<Email, 'from' | 'authenticationResults' | 'sourceClientAccountId'>;
+  // As the full fetch reads a header the server wrote on receipt.
+  ...(header ? { authenticationResults: parseAuthenticationResults([header]), authenticationResultsOnReceipt: true } : {}),
+}) as Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt' | 'sourceClientAccountId'>;
 
 function setListedDomains(domains: string[]) {
   usePolicyStore.setState({

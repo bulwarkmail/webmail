@@ -7286,6 +7286,14 @@
       "added_from_subject": "Pievienots no {domain} e-pasta “{subject}”"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Šo atcelšanu nosūtīja {sender}, bet pasākuma organizators jūsu kalendārā ir {organizer}. Atcelt to var tikai organizators. Ja uzticaties šim ziņojumam, noņemiet to pats.",
+    "cancel_unverified": "Neizdevās pārbaudīt, vai šī atcelšana nāk no organizatora. Ja uzticaties šim ziņojumam, noņemiet pasākumu pats.",
+    "card_sender": "no {domain}",
+    "card_sender_title": "Šis ziņojums izturēja pasta servera sūtītāja pārbaudi domēnam {domain}.",
+    "outside_link": "Cita vietne",
+    "outside_link_title": "Šī saite ved uz {host}, ārpus sūtītāja domēna {domain}."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Pareizrakstība",

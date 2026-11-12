@@ -4,6 +4,8 @@ import { brandIndicatorDomain, parseAuthenticationResults } from '@/lib/email-he
 const message = (from: string, ...headers: string[]) => ({
   from: [{ email: from }],
   authenticationResults: headers.length ? parseAuthenticationResults(headers) : undefined,
+  // As the full fetch reads headers the server wrote on receipt.
+  authenticationResultsOnReceipt: headers.length ? true : undefined,
 });
 
 describe('brandIndicatorDomain', () => {

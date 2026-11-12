@@ -32,6 +32,7 @@ const message = {
   subject: 'Your order', receivedAt: '2026-11-09T20:08:00Z', sentAt: '2026-11-09T20:08:00Z', preview: 'Ordered',
   hasAttachment: false, size: 100,
   authenticationResults: parseAuthenticationResults(['mx.example; dmarc=pass header.from=brand.example']),
+  authenticationResultsOnReceipt: true,
   textBody: [{ partId: '1', type: 'text/plain' }], htmlBody: [], attachments: [],
   bodyValues: { '1': { value: 'Ordered', isTruncated: false } },
 } as unknown as Email;

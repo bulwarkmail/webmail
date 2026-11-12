@@ -192,22 +192,86 @@ export function authenticationResultsOnReceipt(headers: readonly { name: string;
 }
 
 /**
+ * The keyword the mail import sets on every message it puts into the
+ * mailbox from a file (lib/mail-import). The server stores such a message
+ * as the file has it, Received and Authentication-Results lines included,
+ * and never checked it itself.
+ */
+export const IMPORTED_KEYWORD = '$imported';
+
+/** Whether the message came into the mailbox from an imported file (IMPORTED_KEYWORD). */
+export function isImportedMessage(email: { keywords?: Record<string, boolean> | null } | undefined): boolean {
+  return email?.keywords?.[IMPORTED_KEYWORD] === true;
+}
+
+/** The headers of a message when they are the list in message order (as Email/get returns `headers`). */
+function headersInOrder(headers: unknown): { name: string; value: string }[] | undefined {
+  if (!Array.isArray(headers)) return undefined;
+  return headers.every((header) => typeof header?.name === 'string' && typeof header?.value === 'string')
+    ? headers as { name: string; value: string }[]
+    : undefined;
+}
+
+/**
+ * What the message itself shows about its results: true or false from the
+ * flag the full fetch sets (authenticationResultsOnReceipt), else from the
+ * headers in message order when it carries them (a conversation's messages
+ * do), else undefined: nothing to go by (a list row, a search result).
+ */
+export function authenticationResultsEvidence(
+  email: { authenticationResultsOnReceipt?: unknown; headers?: unknown } | undefined,
+): boolean | undefined {
+  if (!email) return undefined;
+  if (email.authenticationResultsOnReceipt !== undefined) return email.authenticationResultsOnReceipt === true;
+  const headers = headersInOrder(email.headers);
+  return headers ? authenticationResultsOnReceipt(headers) : undefined;
+}
+
+/**
+ * Whether a pass in the message's Authentication-Results may earn it
+ * anything. Only on evidence that the results were written on receipt
+ * (authenticationResultsEvidence): without it the answer is no, and it is
+ * always no for a message from an imported file, whose headers this server
+ * never wrote. The sender logo, the invitation trust and the booking cards
+ * all ask this.
+ */
+export function authenticationResultsUsable(
+  email: {
+    authenticationResultsOnReceipt?: boolean;
+    keywords?: Record<string, boolean> | null;
+    headers?: unknown;
+  } | undefined,
+): boolean {
+  if (!email || isImportedMessage(email)) return false;
+  return authenticationResultsEvidence(email) === true;
+}
+
+/**
  * The From domain whose BIMI logo this message may show, or undefined. BIMI
  * needs a DMARC pass for the very domain in From: an aligned SPF or DKIM
  * pass without a DMARC verdict isn't enough, and neither is a pass that the
- * receiving server recorded for another header.from. Whether the domain
- * enforces DMARC and publishes a logo is /api/bimi's to find out.
+ * receiving server recorded for another header.from, or one in a header that
+ * was not written on receipt (authenticationResultsUsable). Whether the
+ * domain enforces DMARC and publishes a logo is /api/bimi's to find out.
  *
  * Mail a signed-in user handed in to the same server never gets a DMARC
  * verdict: Stalwart writes Authentication-Results only on what arrives from
- * outside, and lets a user send only from their own addresses. So a message
- * with no such header at all counts as well when its From domain is one of
- * `internalDomains`, the organisation's own (lib/external-mail.ts
+ * outside. It does not compare the From header of a submission with the
+ * user's addresses, so a user of the same server can write any From. A
+ * message with no such header at all still counts when its From domain is
+ * one of `internalDomains`, the organisation's own (lib/external-mail.ts
  * internalDomains, in ASCII form; a domain covers its subdomains). The same
  * domain's mail from outside carries the header and still needs the pass.
+ * A message from an imported file was not handed in here and earns nothing.
  */
 export function brandIndicatorDomain(
-  email: { from?: { email?: string | null }[] | null; authenticationResults?: AuthenticationResults } | undefined,
+  email: {
+    from?: { email?: string | null }[] | null;
+    authenticationResults?: AuthenticationResults;
+    authenticationResultsOnReceipt?: boolean;
+    keywords?: Record<string, boolean> | null;
+    headers?: unknown;
+  } | undefined,
   internalDomains: readonly string[] = [],
 ): string | undefined {
   const auth = email?.authenticationResults;
@@ -215,10 +279,12 @@ export function brandIndicatorDomain(
   if (!fromEmail) return undefined;
   const domain = domainOf(fromEmail);
   if (!domain) return undefined;
+  if (isImportedMessage(email)) return undefined;
   if (!auth) {
     const ascii = toAsciiDomain(domain) ?? domain;
     return internalDomains.some((entry) => ascii === entry || ascii.endsWith(`.${entry}`)) ? domain : undefined;
   }
+  if (!authenticationResultsUsable(email)) return undefined;
   if (auth.dmarc?.result !== 'pass' || isAuthenticationSpoofed(auth)) return undefined;
   const checked = auth.dmarc.domain ? domainOf(`@${auth.dmarc.domain}`) : domain;
   return checked === domain ? domain : undefined;

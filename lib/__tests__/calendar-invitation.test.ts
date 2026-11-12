@@ -10,6 +10,7 @@ import {
 } from '../calendar-invitation';
 import type { Email, CalendarEvent, CalendarParticipant } from '@/lib/jmap/types';
 
+// As the reader opens a message: the full fetch has found its results written on receipt.
 function makeEmail(overrides: Partial<Email> = {}): Email {
   return {
     id: 'e1',
@@ -19,6 +20,7 @@ function makeEmail(overrides: Partial<Email> = {}): Email {
     size: 1024,
     receivedAt: '2026-02-17T10:00:00Z',
     hasAttachment: false,
+    authenticationResultsOnReceipt: true,
     ...overrides,
   };
 }

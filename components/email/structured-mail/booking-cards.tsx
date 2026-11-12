@@ -37,6 +37,7 @@ import {
   MetaRow,
   PILL_CLASS,
   When,
+  brandText,
   eyebrowText,
   useCardFormat,
 } from "./card-parts";
@@ -47,6 +48,8 @@ export interface BookingCardProps<B extends Booking = Booking> {
   emailId?: string;
   /** Slot in the action row, for "Add to calendar". */
   calendarActions?: (booking: Booking) => ReactNode;
+  /** The verified sender domain (cardSenderDomain). */
+  senderDomain: string;
 }
 
 const TRANSPORT_ICON = { flight: Plane, train: Train, bus: Bus } as const;
@@ -60,12 +63,12 @@ interface CardLinkSpec {
  * The action row: reference chip, the links this card shows and the
  * calendar slot. Undefined when there is none of them, so no empty row.
  */
-function bookingActions(booking: Booking, calendarActions: BookingCardProps["calendarActions"], emailId: string | undefined, links: CardLinkSpec[]): ReactNode {
+function bookingActions(booking: Booking, calendarActions: BookingCardProps["calendarActions"], emailId: string | undefined, links: CardLinkSpec[], senderDomain: string): ReactNode {
   const shown = links.filter((l) => isWebLink(l.link));
   if (!booking.reference && !calendarActions && shown.length === 0) return undefined;
   return (
     <BookingActions booking={booking} calendarActions={calendarActions}>
-      {shown.map((l) => <CardLink key={l.label} link={l.link} label={l.label} emailId={emailId} />)}
+      {shown.map((l) => <CardLink key={l.label} link={l.link} label={l.label} emailId={emailId} senderDomain={senderDomain} />)}
     </BookingActions>
   );
 }
@@ -95,7 +98,12 @@ function PassengersRow({ names }: { names: string[] }) {
   return (
     <MetaRow icon={Users}>
       <span className="sr-only">{t("passengers")}: </span>
-      {names.join(", ")}
+      {names.map((name, i) => (
+        <Fragment key={`${name}-${i}`}>
+          {i > 0 && ", "}
+          <bdi>{name}</bdi>
+        </Fragment>
+      ))}
     </MetaRow>
   );
 }
@@ -104,6 +112,8 @@ function Leg({ leg, kind, bookingCancelled }: { leg: TransportLeg; kind: Transpo
   const t = useTranslations("email_viewer.structured_mail");
   const cancelled = leg.status === "cancelled";
   const service = legService(leg);
+  // The carrier and the number are two texts from the mail, each in its own <bdi>.
+  const number = legService({ ...leg, carrier: undefined });
   const Icon = TRANSPORT_ICON[kind];
   const arrival = leg.arrival;
 
@@ -114,7 +124,11 @@ function Leg({ leg, kind, bookingCancelled }: { leg: TransportLeg; kind: Transpo
           {service && (
             <span className={cn("flex items-center gap-1.5 min-w-0 font-medium text-foreground", cancelled && "line-through text-muted-foreground")}>
               <Icon aria-hidden="true" className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="break-words">{service}</span>
+              <span className="break-words">
+                {leg.carrier && <bdi>{leg.carrier}</bdi>}
+                {leg.carrier && number && " "}
+                {number && <bdi>{number}</bdi>}
+              </span>
             </span>
           )}
           {cancelled && !bookingCancelled && (
@@ -171,7 +185,7 @@ function RouteTitle({ runs }: { runs: string[][] }) {
   );
 }
 
-export function TransportCard({ booking, emailId, calendarActions }: BookingCardProps<TransportBooking>) {
+export function TransportCard({ booking, emailId, calendarActions, senderDomain }: BookingCardProps<TransportBooking>) {
   const t = useTranslations("email_viewer.structured_mail");
   const kindLabel = booking.kind === "flight" ? t("kind_flight") : booking.kind === "train" ? t("kind_train") : t("kind_bus");
   const name = booking.kind === "flight" ? t("region_flight") : booking.kind === "train" ? t("region_train") : t("region_bus");
@@ -184,11 +198,12 @@ export function TransportCard({ booking, emailId, calendarActions }: BookingCard
       name={name}
       icon={TRANSPORT_ICON[booking.kind]}
       cancelled={cancelled}
-      eyebrow={eyebrowText(kindLabel, booking.provider, title)}
+      senderDomain={senderDomain}
+      eyebrow={eyebrowText(kindLabel, booking.provider, title, senderDomain)}
       title={<RouteTitle runs={runs} />}
       titleLabel={runs.map((run) => run.reduce((from, to) => t("route", { from, to }))).join(", ")}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.checkin, label: t("link_check_in") }, { link: booking.links.manage, label: t("link_manage") }, { link: booking.links.ticket, label: t("link_ticket") }])}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.checkin, label: t("link_check_in") }, { link: booking.links.manage, label: t("link_manage") }, { link: booking.links.ticket, label: t("link_ticket") }], senderDomain)}
     >
       <div className="flex flex-col gap-2 min-w-0">
         {booking.legs.map((leg, i) => (
@@ -230,9 +245,10 @@ function LocalHint({ at }: { at: Moment }) {
   ) : null;
 }
 
-export function LodgingCard({ booking, emailId, calendarActions }: BookingCardProps<LodgingBooking>) {
+export function LodgingCard({ booking, emailId, calendarActions, senderDomain }: BookingCardProps<LodgingBooking>) {
   const t = useTranslations("email_viewer.structured_mail");
   const { opts } = useCardFormat();
+  const title = brandText(booking.name, senderDomain) ?? t("kind_lodging");
   const nights = nightsBetween(booking.checkin, booking.checkout);
   const address = formatAddress(booking.address, opts.locale);
   return (
@@ -241,24 +257,25 @@ export function LodgingCard({ booking, emailId, calendarActions }: BookingCardPr
       name={t("region_lodging")}
       icon={Bed}
       cancelled={booking.status === "cancelled"}
-      eyebrow={eyebrowText(t("kind_lodging"), booking.provider, booking.name)}
-      title={booking.name}
+      senderDomain={senderDomain}
+      eyebrow={eyebrowText(t("kind_lodging"), booking.provider, title, senderDomain)}
+      title={title}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }, { link: booking.links.checkin, label: t("link_check_in") }])}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }, { link: booking.links.checkin, label: t("link_check_in") }], senderDomain)}
     >
-      {address && <MetaRow icon={MapPin}>{address}</MetaRow>}
+      {address && <MetaRow icon={MapPin}><bdi>{address}</bdi></MetaRow>}
       <StayEnd label={t("check_in_label")} at={booking.checkin} edge="from" />
       <StayEnd label={t("check_out_label")} at={booking.checkout} edge="until" />
       {nights !== undefined && <MetaRow icon={Bed}>{t("nights", { count: nights })}</MetaRow>}
-      {booking.phone && <MetaRow icon={Phone}><span dir="ltr">{booking.phone}</span></MetaRow>}
+      {booking.phone && <MetaRow icon={Phone}><bdi dir="ltr">{booking.phone}</bdi></MetaRow>}
       <PassengersRow names={booking.passengers} />
     </CardShell>
   );
 }
 
-export function RentalCarCard({ booking, emailId, calendarActions }: BookingCardProps<RentalCarBooking>) {
+export function RentalCarCard({ booking, emailId, calendarActions, senderDomain }: BookingCardProps<RentalCarBooking>) {
   const t = useTranslations("email_viewer.structured_mail");
-  const title = booking.company?.trim() || t("kind_rentalcar");
+  const title = brandText(booking.company, senderDomain) || t("kind_rentalcar");
   const pickupPlace = formatPlace(booking.pickup.place);
   const dropoffPlace = formatPlace(booking.dropoff.place);
   return (
@@ -267,30 +284,32 @@ export function RentalCarCard({ booking, emailId, calendarActions }: BookingCard
       name={t("region_rentalcar")}
       icon={Car}
       cancelled={booking.status === "cancelled"}
-      eyebrow={eyebrowText(t("kind_rentalcar"), booking.provider, title)}
+      senderDomain={senderDomain}
+      eyebrow={eyebrowText(t("kind_rentalcar"), booking.provider, title, senderDomain)}
       title={title}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }])}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }], senderDomain)}
     >
       <MetaRow icon={Clock}>
         <span>{t("pickup")} </span>
         <When at={booking.pickup.at} />
-        {pickupPlace && <span> · {pickupPlace}</span>}
+        {pickupPlace && <span> · <bdi>{pickupPlace}</bdi></span>}
       </MetaRow>
       <MetaRow icon={ArrowRight}>
         <span>{t("dropoff")} </span>
         <When at={booking.dropoff.at} />
-        {dropoffPlace && <span> · {dropoffPlace}</span>}
+        {dropoffPlace && <span> · <bdi>{dropoffPlace}</bdi></span>}
       </MetaRow>
-      {booking.car && <MetaRow icon={Car}>{booking.car}</MetaRow>}
+      {booking.car && <MetaRow icon={Car}><bdi>{booking.car}</bdi></MetaRow>}
       <PassengersRow names={booking.passengers} />
     </CardShell>
   );
 }
 
-export function EventCard({ booking, emailId, calendarActions }: BookingCardProps<EventBooking>) {
+export function EventCard({ booking, emailId, calendarActions, senderDomain }: BookingCardProps<EventBooking>) {
   const t = useTranslations("email_viewer.structured_mail");
   const { opts } = useCardFormat();
+  const title = brandText(booking.name, senderDomain) ?? t("kind_event");
   const venueName = booking.venue?.name?.trim();
   const venueAddress = formatAddress(booking.venue?.address, opts.locale);
   // "Stadtpark, Parkweg 2, Hamburg"; the name alone, or the address alone, when that's all there is.
@@ -304,10 +323,11 @@ export function EventCard({ booking, emailId, calendarActions }: BookingCardProp
       name={t("region_event")}
       icon={Ticket}
       cancelled={booking.status === "cancelled"}
-      eyebrow={eyebrowText(t("kind_event"), booking.provider, booking.name)}
-      title={booking.name}
+      senderDomain={senderDomain}
+      eyebrow={eyebrowText(t("kind_event"), booking.provider, title, senderDomain)}
+      title={title}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.ticket, label: t("link_ticket") }, { link: booking.links.manage, label: t("link_manage") }])}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.ticket, label: t("link_ticket") }, { link: booking.links.manage, label: t("link_manage") }], senderDomain)}
     >
       <MetaRow icon={Clock}>
         <When at={booking.start} />
@@ -318,7 +338,7 @@ export function EventCard({ booking, emailId, calendarActions }: BookingCardProp
           </>
         )}
       </MetaRow>
-      {venue && <MetaRow icon={MapPin}>{venue}</MetaRow>}
+      {venue && <MetaRow icon={MapPin}><bdi>{venue}</bdi></MetaRow>}
       {booking.tickets.length > 0 && (
         <MetaRow icon={Ticket}>
           <span>{t("tickets")}: </span>
@@ -330,9 +350,10 @@ export function EventCard({ booking, emailId, calendarActions }: BookingCardProp
   );
 }
 
-export function RestaurantCard({ booking, emailId, calendarActions }: BookingCardProps<RestaurantBooking>) {
+export function RestaurantCard({ booking, emailId, calendarActions, senderDomain }: BookingCardProps<RestaurantBooking>) {
   const t = useTranslations("email_viewer.structured_mail");
   const { opts } = useCardFormat();
+  const title = brandText(booking.name, senderDomain) ?? t("kind_restaurant");
   const address = formatAddress(booking.address, opts.locale);
   return (
     <CardShell
@@ -340,13 +361,14 @@ export function RestaurantCard({ booking, emailId, calendarActions }: BookingCar
       name={t("region_restaurant")}
       icon={Restaurant}
       cancelled={booking.status === "cancelled"}
-      eyebrow={eyebrowText(t("kind_restaurant"), booking.provider, booking.name)}
-      title={booking.name}
+      senderDomain={senderDomain}
+      eyebrow={eyebrowText(t("kind_restaurant"), booking.provider, title, senderDomain)}
+      title={title}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }])}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }], senderDomain)}
     >
       <MetaRow icon={Clock}><When at={booking.start} /></MetaRow>
-      {address && <MetaRow icon={MapPin}>{address}</MetaRow>}
+      {address && <MetaRow icon={MapPin}><bdi>{address}</bdi></MetaRow>}
       {booking.partySize !== undefined && booking.partySize > 0 && (
         <MetaRow icon={Users}>{t("party_size", { count: booking.partySize })}</MetaRow>
       )}

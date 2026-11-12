@@ -104,6 +104,9 @@ export class DemoJMAPClient implements IJMAPClient {
     };
     const auth = header('authentication-results');
     if (auth && !email.authenticationResults) email.authenticationResults = parseAuthenticationResults(auth);
+    // The fixtures are the mail the demo server received: their results stand
+    // as written on receipt, which their unordered headers cannot show.
+    if (auth && email.authenticationResultsOnReceipt === undefined) email.authenticationResultsOnReceipt = true;
     const spam = header('x-spam-score') ?? header('x-spam-status');
     if (typeof spam === 'string' && email.spamScore === undefined) {
       const parsed = parseSpamScore(spam);

@@ -7286,6 +7286,14 @@
       "added_from_subject": "Hinzugefügt aus der E-Mail „{subject}“ von {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "Diese Absage wurde von {sender} gesendet, aber der Organisator dieses Termins in Ihrem Kalender ist {organizer}. Nur der Organisator kann ihn absagen. Entfernen Sie ihn selbst, wenn Sie dieser Nachricht vertrauen.",
+    "cancel_unverified": "Es konnte nicht bestätigt werden, dass diese Absage vom Organisator kommt. Entfernen Sie den Termin selbst, wenn Sie dieser Nachricht vertrauen.",
+    "card_sender": "von {domain}",
+    "card_sender_title": "Diese Nachricht hat die Absenderprüfung des Mailservers für {domain} bestanden.",
+    "outside_link": "Andere Website",
+    "outside_link_title": "Dieser Link führt zu {host}, außerhalb von {domain}, der Domain des Absenders."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Rechtschreibung",

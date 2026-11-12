@@ -7286,6 +7286,14 @@
       "added_from_subject": "Added from the mail “{subject}” from {domain}"
     }
   },
+  "sender_trust": {
+    "cancel_not_organizer": "This cancellation was sent from {sender}, but the event in your calendar is organized by {organizer}. Only the organizer can cancel it. Remove it yourself if you trust this message.",
+    "cancel_unverified": "This cancellation could not be verified as coming from the organizer. Remove the event yourself if you trust this message.",
+    "card_sender": "from {domain}",
+    "card_sender_title": "This message passed the mail server's sender check for {domain}.",
+    "outside_link": "Other site",
+    "outside_link_title": "This link leads to {host}, outside {domain}, the sender's domain."
+  },
   "proofreading": {
     "kind": {
       "spelling": "Spelling",

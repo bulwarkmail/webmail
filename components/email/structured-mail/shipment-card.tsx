@@ -1,11 +1,12 @@
 "use client";
 
+import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Clock, ExternalLink, Package, ShoppingBag, Truck } from "@/components/icons";
 import { formatMomentDate, formatMoney, isWebLink, shipmentItems, summarizeItems } from "@/lib/structured-mail/format";
 import type { Item, OrderStatus, Parcel, Shipment } from "@/lib/structured-mail/types";
 import { cn } from "@/lib/utils";
-import { CardLink, CardShell, MetaRow, PILL_CLASS, useCardFormat } from "./card-parts";
+import { CardLink, CardShell, MetaRow, PILL_CLASS, brandText, useCardFormat } from "./card-parts";
 import { CopyValueChip } from "./copy-value-chip";
 
 const STATUS_TONE: Record<OrderStatus, string> = {
@@ -58,18 +59,19 @@ function ItemImages({ items }: { items: Item[] }) {
 }
 
 /** Carrier, tracking number and expected date; no date once the order is delivered, returned or cancelled. */
-function ParcelRows({ parcel, showExpected }: { parcel: Parcel; showExpected: boolean }) {
+function ParcelRows({ parcel, showExpected, senderDomain }: { parcel: Parcel; showExpected: boolean; senderDomain: string }) {
   const t = useTranslations("email_viewer.structured_mail");
   const { opts } = useCardFormat();
   const expectedBy = showExpected ? parcel.expectedBy : undefined;
-  if (!parcel.carrier && !parcel.trackingNumber && !expectedBy) return null;
+  const carrier = brandText(parcel.carrier, senderDomain);
+  if (!carrier && !parcel.trackingNumber && !expectedBy) return null;
   return (
     <>
-      {(parcel.carrier || parcel.trackingNumber) && (
+      {(carrier || parcel.trackingNumber) && (
         <MetaRow icon={Truck}>
           <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0">
-            {parcel.carrier && <span className="text-foreground/90">{parcel.carrier}</span>}
-            {!parcel.carrier && parcel.trackingNumber && <span>{t("tracking_number")}</span>}
+            {carrier && <bdi className="text-foreground/90">{carrier}</bdi>}
+            {!carrier && parcel.trackingNumber && <span>{t("tracking_number")}</span>}
             {parcel.trackingNumber && <CopyValueChip
                 value={parcel.trackingNumber}
                 copyLabel={t("copy_tracking_number", { value: parcel.trackingNumber })}
@@ -89,16 +91,20 @@ interface ShipmentCardProps {
   shipment: Shipment;
   emailId?: string;
   allowRemoteImages: boolean;
+  /** The verified sender domain (cardSenderDomain). */
+  senderDomain: string;
 }
 
-export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentCardProps) {
+export function ShipmentCard({ shipment, emailId, allowRemoteImages, senderDomain }: ShipmentCardProps) {
   const t = useTranslations("email_viewer.structured_mail");
   const { opts } = useCardFormat();
-  const carrier = shipment.parcels.find((p) => p.carrier)?.carrier;
+  // Brand text naming a domain outside the sender's is left out (brandText).
+  const carrier = brandText(shipment.parcels.find((p) => p.carrier)?.carrier, senderDomain);
+  const merchant = brandText(shipment.merchant, senderDomain);
   const isParcel = !shipment.orderNumber && !shipment.merchant && shipment.parcels.length > 0;
   const kindLabel = isParcel ? t("kind_parcel") : t("kind_order");
-  const title = shipment.merchant?.trim() || carrier || kindLabel;
-  const eyebrow = shipment.merchant && carrier ? `${kindLabel} · ${carrier}` : kindLabel;
+  const title = merchant || carrier || kindLabel;
+  const eyebrow = merchant && carrier ? <>{kindLabel} · <bdi>{carrier}</bdi></> : kindLabel;
   const items = shipmentItems(shipment);
   const { shown, more, count } = summarizeItems(items);
   const total = shipment.total ? formatMoney(shipment.total, opts.locale) : undefined;
@@ -114,15 +120,16 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentC
       name={t("region_shipment")}
       icon={isParcel ? Truck : ShoppingBag}
       cancelled={cancelled}
+      senderDomain={senderDomain}
       eyebrow={eyebrow}
       title={title}
       pills={shipment.status ? <OrderStatusPill status={shipment.status} /> : undefined}
       actions={trackLinks.length > 0 || hasOrderLink ? (
         <>
           {trackLinks.map((link, i) => (
-            <CardLink key={`${link.url}-${i}`} link={link} label={t("link_track")} icon={Truck} emailId={emailId} />
+            <CardLink key={`${link.url}-${i}`} link={link} label={t("link_track")} icon={Truck} emailId={emailId} senderDomain={senderDomain} />
           ))}
-          <CardLink link={shipment.orderUrl} label={t("link_view_order")} icon={ExternalLink} emailId={emailId} />
+          <CardLink link={shipment.orderUrl} label={t("link_view_order")} icon={ExternalLink} emailId={emailId} senderDomain={senderDomain} />
         </>
       ) : undefined}
     >
@@ -140,7 +147,14 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentC
       )}
       {shown.length > 0 && (
         <MetaRow icon={Package}>
-          <span className="text-foreground/90">{shown.map((item) => item.name).join(", ")}</span>
+          <span className="text-foreground/90">
+            {shown.map((item, i) => (
+              <Fragment key={`${item.name}-${i}`}>
+                {i > 0 && ", "}
+                <bdi>{item.name}</bdi>
+              </Fragment>
+            ))}
+          </span>
           {more > 0 && <span> {t("items_more", { count: more })}</span>}
           {allowRemoteImages && <ItemImages items={shown} />}
         </MetaRow>
@@ -151,7 +165,7 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentC
             .filter(Boolean).join(" · ")}
         </div>
       )}
-      {shipment.parcels.map((parcel, i) => <ParcelRows key={`${parcel.trackingNumber ?? ""}-${i}`} parcel={parcel} showExpected={!ARRIVED_OR_STOPPED.has(shipment.status ?? "processing")} />)}
+      {shipment.parcels.map((parcel, i) => <ParcelRows key={`${parcel.trackingNumber ?? ""}-${i}`} parcel={parcel} showExpected={!ARRIVED_OR_STOPPED.has(shipment.status ?? "processing")} senderDomain={senderDomain} />)}
     </CardShell>
   );
 }
