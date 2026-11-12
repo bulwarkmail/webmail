@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { initAdminPassword, verifyAdminPassword, updateLastLogin, isAdminEnabled, getAdminMeta } from '@/lib/admin/password';
 import { setAdminSessionCookie, clearAdminSessionCookie, requireAdminAuth, getClientIP, isSameOriginRequest, getAdminDeviceId, setAdminDeviceCookie } from '@/lib/admin/session';
-import { checkRateLimit, checkDeviceRateLimit } from '@/lib/admin/rate-limit';
+import { checkRateLimit, checkDeviceRateLimit, claimBlockedAuditLine } from '@/lib/admin/rate-limit';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
-import { getStalwartCredentials } from '@/lib/stalwart/credentials';
+import { getStalwartCredentials, type StalwartCredentials } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStalwartAdminAccessMode, type StalwartAdminAccessMode } from '@/lib/admin/stalwart-admin-access';
 import { isStoreUnavailable } from '@/lib/admin/admin-store';
@@ -82,7 +82,11 @@ async function fetchWithTimeout(url: string, init: RequestInit, trusted: boolean
   }
 }
 
-async function checkStalwartAdmin(request: NextRequest, mode: StalwartAdminAccessMode): Promise<boolean> {
+async function checkStalwartAdmin(
+  request: NextRequest,
+  mode: StalwartAdminAccessMode,
+  knownCreds?: StalwartCredentials | null,
+): Promise<boolean> {
   // Operators who keep Stalwart and Bulwark administration separate (#870)
   // turn the check off entirely: no shield, no auto-login, and nothing
   // about the Stalwart account influences the Bulwark admin dashboard.
@@ -95,7 +99,7 @@ async function checkStalwartAdmin(request: NextRequest, mode: StalwartAdminAcces
   await configManager.ensureLoaded();
   if (configManager.get<boolean>('allowCustomJmapEndpoint', false)) return false;
 
-  const creds = await getStalwartCredentials(request);
+  const creds = knownCreds === undefined ? await getStalwartCredentials(request) : knownCreds;
   if (!creds) return false;
   // The switch above only reflects today's config. A context cookie minted
   // while custom endpoints were on keeps naming the server it was minted
@@ -183,6 +187,26 @@ async function runStalwartAdminCheck(
 }
 
 /**
+ * Count one sign-in attempt against the admin login limits, and answer 429
+ * when they are spent. A browser an admin signed in from before is limited
+ * on its own, so others using up the shared budget can't lock it out. A
+ * refusal is written to the audit log once per client and window, with a
+ * ceiling across clients (claimBlockedAuditLine).
+ */
+async function refusedAttemptLimit(ip: string): Promise<NextResponse | null> {
+  const deviceId = await getAdminDeviceId();
+  const limit = deviceId ? await checkDeviceRateLimit(deviceId) : await checkRateLimit(ip);
+  if (limit.allowed) return null;
+  if (await claimBlockedAuditLine(deviceId ? `device:${deviceId}` : ip)) {
+    await auditLog('admin.login_blocked', { reason: 'rate_limit' }, ip);
+  }
+  return NextResponse.json(
+    { error: 'Too many login attempts. Try again later.' },
+    { status: 429, headers: { 'Retry-After': String(Math.ceil(limit.retryAfterMs / 1000)) } },
+  );
+}
+
+/**
  * POST /api/admin/auth - Login
  */
 export async function POST(request: NextRequest) {
@@ -197,13 +221,24 @@ export async function POST(request: NextRequest) {
     // "password" keeps the shield but routes through the password form,
     // "off" ignores Stalwart admin status altogether (#870).
     if (body.stalwartAuth === true) {
+      // Without a mailbox session there is nothing to try: no audit line, so
+      // anonymous requests can't fill the log.
+      const creds = await getStalwartCredentials(request);
+      if (!creds) return NextResponse.json({ error: 'Not a Stalwart admin' }, { status: 403 });
+
       const mode = await getStalwartAdminAccessMode();
       if (mode !== 'auto') {
+        const blocked = await refusedAttemptLimit(ip);
+        if (blocked) return blocked;
         await auditLog('admin.login_failed', { method: 'stalwart', reason: 'auto_login_disabled', mode }, ip);
         return NextResponse.json({ error: 'Stalwart admin sign-in is disabled; use the admin password' }, { status: 403 });
       }
-      const isStalwartAdmin = await checkStalwartAdmin(request, mode);
+      const isStalwartAdmin = await checkStalwartAdmin(request, mode, creds);
       if (!isStalwartAdmin) {
+        // A refused attempt counts like a wrong admin password; a Stalwart
+        // admin's own sign-in doesn't, so others can't lock it out.
+        const blocked = await refusedAttemptLimit(ip);
+        if (blocked) return blocked;
         await auditLog('admin.login_failed', { method: 'stalwart' }, ip);
         return NextResponse.json({ error: 'Not a Stalwart admin' }, { status: 403 });
       }
@@ -220,18 +255,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin dashboard is not configured' }, { status: 404 });
     }
 
-    // Rate limit check. A browser an admin signed in from before is limited
-    // on its own, so others using up the shared budget can't lock it out.
-    const deviceId = await getAdminDeviceId();
-    const limit = deviceId ? await checkDeviceRateLimit(deviceId) : await checkRateLimit(ip);
-    if (!limit.allowed) {
-      const retryAfter = Math.ceil(limit.retryAfterMs / 1000);
-      await auditLog('admin.login_blocked', { reason: 'rate_limit' }, ip);
-      return NextResponse.json(
-        { error: 'Too many login attempts. Try again later.' },
-        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
-      );
-    }
+    const blocked = await refusedAttemptLimit(ip);
+    if (blocked) return blocked;
 
     const { password } = body;
 
