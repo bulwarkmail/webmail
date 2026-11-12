@@ -102,6 +102,23 @@ describe('browser code exchange', () => {
     expect(maxAge('jmap_rt')).toBeUndefined();
     expect(maxAge('jmap_signed_in')).toBeUndefined();
   });
+
+  it('keeps it a browser-session cookie when the renewal names no choice: the sign-in recorded it', async () => {
+    await exchange(post('/api/auth/token', { ...code, remember: false }));
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ access_token: 'at2', refresh_token: 'rt2', expires_in: 3600 })));
+    try {
+      const res = await renew(new NextRequest('https://webmail.example/api/auth/token?slot=0&force=true', {
+        method: 'PUT',
+        headers: { 'sec-fetch-site': 'same-origin' },
+      }));
+      expect(res.status).toBe(200);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(jar.get('jmap_rt')?.value).toBe('rt2');
+    expect(maxAge('jmap_rt')).toBeUndefined();
+    expect(maxAge('jmap_signed_in')).toBeUndefined();
+  });
 });
 
 describe('server-side SSO', () => {

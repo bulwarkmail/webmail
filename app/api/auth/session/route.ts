@@ -8,9 +8,11 @@ import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-con
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import {
   clearStalwartAuthContextInStore,
+  readStalwartAuthContextFromStore,
   setStalwartAuthContextInStore,
   wopiSignInOf,
 } from '@/lib/stalwart/auth-context';
+import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { accountSlotFromBody } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
@@ -103,6 +105,73 @@ async function checkSessionAge(
     return { maxHours };
   }
   return { signedInAt };
+}
+
+/**
+ * The account a restored context names, as the sign-in's context did
+ * (per-user data such as synced settings is keyed on it): the one sealed into
+ * the remembered session, or, for a cookie from before it was kept, the
+ * slot's context when that holds the same credential and names one. A token
+ * login that claimed a bare local part and has neither is resolved at the
+ * mail server again, as at sign-in. `refused`: the mail server no longer
+ * takes the credential. `unknown`: it could not be asked; no context is
+ * written then, so nothing is keyed on the bare name.
+ */
+async function restoredAccount(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  slot: number,
+  credentials: SessionCredentials,
+): Promise<{ accountName?: string } | 'refused' | 'unknown'> {
+  if (credentials.accountName) return { accountName: credentials.accountName };
+  const authHeader = sessionAuthHeader(credentials);
+  const context = readStalwartAuthContextFromStore(cookieStore, slot);
+  if (context?.accountName && context.authHeader === authHeader
+    && context.username === credentials.username && context.serverUrl === credentials.serverUrl) {
+    return { accountName: context.accountName };
+  }
+  // A password, or a token login with a full address, proves the name it claims.
+  if (credentials.token === undefined || credentials.username.includes('@')) return {};
+  try {
+    const { accountName } = await resolveJmapIdentity(credentials.serverUrl, authHeader, credentials.username, {
+      trusted: await isTrustedJmapServerUrl(credentials.serverUrl),
+    });
+    return accountName !== credentials.username ? { accountName } : {};
+  } catch (error) {
+    if (error instanceof JmapAuthVerificationError && (error.status === 401 || error.status === 403)) return 'refused';
+    logger.warn('Session restore: the account of a token sign-in could not be looked up', { error: loggableError(error) });
+    return 'unknown';
+  }
+}
+
+/**
+ * Write the slot's context from its remembered session, with every field the
+ * sign-in's context had: server, login, credential, account (restoredAccount)
+ * and, through the writer, the session's sign-in time. Returns the answer
+ * that ends the restore when the mail server refuses the credential.
+ */
+async function restoreContext(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  slot: number,
+  credentials: SessionCredentials,
+): Promise<NextResponse | null> {
+  const account = await restoredAccount(cookieStore, slot, credentials);
+  if (account === 'refused') {
+    cookieStore.delete(sessionCookieName(slot));
+    clearStalwartAuthContextInStore(cookieStore, slot);
+    return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+  }
+  if (account === 'unknown') {
+    // A context already here names no account either (else it would have been taken).
+    clearStalwartAuthContextInStore(cookieStore, slot);
+    return null;
+  }
+  setStalwartAuthContextInStore(cookieStore, slot, {
+    serverUrl: credentials.serverUrl,
+    username: credentials.username,
+    authHeader: sessionAuthHeader(credentials),
+    ...account,
+  });
+  return null;
 }
 
 /**
@@ -226,7 +295,8 @@ export async function POST(request: NextRequest) {
     await refund();
     // A sign-in kept here starts the maximum session length.
     const signedInAt = Date.now();
-    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt);
+    // The account goes into the remembered session too, so a restore names it as this sign-in does.
+    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt, accountName);
     const cookieStore = await cookies();
     cookieStore.set(cookieName, token, sessionCookieOptions(remember !== false));
     setStalwartAuthContextInStore(cookieStore, slot, {
@@ -278,11 +348,8 @@ export async function GET(request: NextRequest) {
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 
-    setStalwartAuthContextInStore(cookieStore, slot, {
-      serverUrl: credentials.serverUrl,
-      username: credentials.username,
-      authHeader: sessionAuthHeader(credentials),
-    });
+    const refused = await restoreContext(cookieStore, slot, credentials);
+    if (refused) return refused;
 
     // Only return non-sensitive fields. Use PUT to retrieve full credentials.
     const { serverUrl, username } = credentials;
@@ -337,15 +404,14 @@ export async function PUT(request: NextRequest) {
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 
-    setStalwartAuthContextInStore(cookieStore, slot, {
-      serverUrl: credentials.serverUrl,
-      username: credentials.username,
-      authHeader: sessionAuthHeader(credentials),
-    });
+    const refused = await restoreContext(cookieStore, slot, credentials);
+    if (refused) return refused;
 
     // The browser counts the maximum session length from the server's time.
+    // The account name stays on the server, as before it was kept.
     const impersonated = isImpersonationSession(cookieStore, slot, credentials);
-    return NextResponse.json({ ...credentials, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
+    const { accountName: _accountName, ...shared } = credentials;
+    return NextResponse.json({ ...shared, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (error) {

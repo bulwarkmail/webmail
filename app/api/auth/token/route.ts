@@ -334,7 +334,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const { expiresIn } = storeRenewedTokens(cookieStore, slot, { ...tokens, access_token: tokens.access_token }, {
-      remember,
+      // The sign-in's own choice, sealed in its stamp, before the page's word.
+      remember: age?.stamp?.remember ?? remember,
       age,
       basePath: request.nextUrl.basePath,
       server: bound,

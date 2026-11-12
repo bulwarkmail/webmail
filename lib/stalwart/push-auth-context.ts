@@ -48,5 +48,10 @@ export async function readPushAuthContext(cookieStore: CookieStore, slot: number
   const signedInAt = credentials.signedInAt ?? await limitsEnforcedSince();
   const maxHours = await maxSessionHoursFor(credentials.username.split('%', 1)[0]);
   if (isPastMaxAge(signedInAt, maxHours)) return null;
-  return { serverUrl: credentials.serverUrl, username: credentials.username, authHeader: sessionAuthHeader(credentials) };
+  return {
+    serverUrl: credentials.serverUrl,
+    username: credentials.username,
+    authHeader: sessionAuthHeader(credentials),
+    ...(credentials.accountName ? { accountName: credentials.accountName } : {}),
+  };
 }
