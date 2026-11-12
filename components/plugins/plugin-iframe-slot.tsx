@@ -268,6 +268,24 @@ class FrameFocus {
   }
 }
 
+/**
+ * Whether the page has a user activation now (`navigator.userActivation`): a
+ * click or a key in the app, or in one of its frames, within the last few
+ * seconds. Where the browser has no such API this says yes.
+ *
+ * A small extra, not the protection. It stops a frame that opens a list while
+ * the user only reads. It does not cover the five seconds or so after any
+ * click or key in the app (the click that opened the message, or the one that
+ * closed the frame's last list): the page counts as touched then, and a frame
+ * that takes the focus gets its list. What keeps the user's trust parts free
+ * is that a list never covers what carries LIST_AVOID_ATTRIBUTE.
+ */
+function pageRecentlyTouched(): boolean {
+  if (typeof navigator === 'undefined') return true;
+  const activation = (navigator as Navigator & { userActivation?: { isActive: boolean } }).userActivation;
+  return !activation || activation.isActive;
+}
+
 /** The frame's message can come in before the app hears that the focus moved into it. */
 const FOCUS_ARRIVAL_MS = 100;
 /** How often an open list checks that its frame still shows. */
@@ -390,6 +408,8 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
             const decide = (late: boolean) => {
               pendingOpenRef.current = null;
               if (!live) return;
+              // Nobody has touched the page for a few seconds: no list.
+              if (!late && !pageRecentlyTouched()) return refuse();
               // Not over a dialog, popover or menu the frame is not inside.
               if (hostLayerOutside(hostContainer)) return refuse();
               // Only while the user is in the frame.
