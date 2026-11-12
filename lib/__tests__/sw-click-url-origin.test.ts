@@ -10,7 +10,7 @@ import { FakeCaches, loadWorker } from './sw-harness';
 const ORIGIN = 'https://mail.example.com';
 
 function clickOn(data: Record<string, unknown>) {
-  const openWindow = vi.fn(async () => null);
+  const openWindow = vi.fn(async (_url: string) => null);
   const worker = loadWorker({ buildId: 'b', caches: new FakeCaches(), clients: [], openWindow });
   return worker
     .dispatch('notificationclick', { action: '', notification: { data, tag: 'calendar-reminder:x', close() {} } })
