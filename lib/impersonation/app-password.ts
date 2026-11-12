@@ -13,9 +13,13 @@ export const IMPERSONATION_SESSION_TTL_SEC = 8 * 60 * 60;
 export const IMPERSONATION_DESCRIPTION_PREFIX = 'Support session ';
 
 export class ImpersonationCredentialError extends Error {
-  constructor(message: string) {
+  /** The HTTP status of Stalwart's answer, when it answered with an error status. */
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
     super(message);
     this.name = 'ImpersonationCredentialError';
+    if (status !== undefined) this.status = status;
   }
 }
 
@@ -65,7 +69,7 @@ async function callStalwart(
     { trusted },
   );
   if (!response.ok) {
-    throw new ImpersonationCredentialError(`Stalwart answered HTTP ${response.status}`);
+    throw new ImpersonationCredentialError(`Stalwart answered HTTP ${response.status}`, response.status);
   }
   const data = (await response.json()) as { methodResponses?: [string, Record<string, unknown>, string][] };
   const result = data.methodResponses?.[0];
@@ -144,13 +148,33 @@ export async function mintImpersonationCredential(opts: {
   const expiresAt = utcDate(new Date(now.getTime() + IMPERSONATION_SESSION_TTL_SEC * 1000));
   const authHeader = masterAuthHeader(opts.mailbox, opts.masterUser, opts.masterPassword);
   await pruneExpiredImpersonationCredentials(opts.serverUrl, authHeader, now);
-  const created = await createAppPassword({
-    serverUrl: opts.serverUrl,
-    authHeader,
-    description: opts.description,
-    expiresAt,
-  });
-  return { ...created, expiresAt };
+  try {
+    const created = await createAppPassword({
+      serverUrl: opts.serverUrl,
+      authHeader,
+      description: opts.description,
+      expiresAt,
+    });
+    return { ...created, expiresAt };
+  } catch (error) {
+    // Stalwart may have created it all the same (an answer that couldn't be
+    // read, say), and nothing would ever delete it: find it by its description,
+    // which names this handoff alone.
+    await deleteByDescription(opts.serverUrl, authHeader, opts.description);
+    throw error;
+  }
+}
+
+/** Delete the mailbox's app passwords that carry exactly `description`. Best effort. */
+async function deleteByDescription(serverUrl: string, authHeader: string, description: string): Promise<void> {
+  try {
+    const result = await callStalwart(serverUrl, authHeader, ['x:AppPassword/get', { ids: null }, '0']);
+    const list = (result.list as { id?: string; description?: string }[] | undefined) ?? [];
+    const ids = list.filter((p) => p.id && p.description === description).map((p) => p.id as string);
+    if (ids.length > 0) await callStalwart(serverUrl, authHeader, ['x:AppPassword/set', { destroy: ids }, '0']);
+  } catch {
+    // Expires on its own (expiresAt), and carries the handoff's description.
+  }
 }
 
 /**
