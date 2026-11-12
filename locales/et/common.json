@@ -7076,6 +7076,10 @@
     "not_available_description": "Pistikprogramm, mis selle lisas, on välja lülitatud või enam paigaldamata.",
     "back_to_mail": "Tagasi postkasti"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Loend pistikprogrammilt {name}",
+    "dropdown_list_labelled": "{label}, loend pistikprogrammilt {name}"
+  },
   "command_palette": {
     "title": "Käsupalett",
     "open": "Ava käsupalett",

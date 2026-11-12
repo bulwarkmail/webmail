@@ -7076,6 +7076,10 @@
     "not_available_description": "De plug-in die hem heeft toegevoegd, staat uit of is niet meer geïnstalleerd.",
     "back_to_mail": "Terug naar mail"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Lijst van de plug-in {name}",
+    "dropdown_list_labelled": "{label}, lijst van de plug-in {name}"
+  },
   "command_palette": {
     "title": "Opdrachtenpalet",
     "open": "Opdrachtenpalet openen",

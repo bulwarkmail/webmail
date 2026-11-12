@@ -7076,6 +7076,10 @@
     "not_available_description": "Үүнийг нэмсэн залгаас унтарсан эсвэл суулгаагүй болсон байна.",
     "back_to_mail": "Мэйл рүү буцах"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "{name} залгаасын жагсаалт",
+    "dropdown_list_labelled": "{label}, {name} залгаасын жагсаалт"
+  },
   "command_palette": {
     "title": "Командын самбар",
     "open": "Командын самбарыг нээх",

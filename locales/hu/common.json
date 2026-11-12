@@ -7076,6 +7076,10 @@
     "not_available_description": "A bővítmény, amely hozzáadta, ki van kapcsolva, vagy már nincs telepítve.",
     "back_to_mail": "Vissza a levelekhez"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Lista a(z) {name} bővítménytől",
+    "dropdown_list_labelled": "{label}, lista a(z) {name} bővítménytől"
+  },
   "command_palette": {
     "title": "Parancspaletta",
     "open": "Parancspaletta megnyitása",

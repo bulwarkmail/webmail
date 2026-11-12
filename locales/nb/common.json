@@ -7076,6 +7076,10 @@
     "not_available_description": "Tillegget som la den til, er slått av eller ikke lenger installert.",
     "back_to_mail": "Tilbake til e-post"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Liste fra tillegget {name}",
+    "dropdown_list_labelled": "{label}, liste fra tillegget {name}"
+  },
   "command_palette": {
     "title": "Kommandopalett",
     "open": "Åpne kommandopaletten",

@@ -7076,6 +7076,10 @@
     "not_available_description": "Doplnok, ktorý ju pridal, je vypnutý alebo už nie je nainštalovaný.",
     "back_to_mail": "Späť na poštu"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Zoznam od doplnku {name}",
+    "dropdown_list_labelled": "{label}, zoznam od doplnku {name}"
+  },
   "command_palette": {
     "title": "Paleta príkazov",
     "open": "Otvoriť paletu príkazov",

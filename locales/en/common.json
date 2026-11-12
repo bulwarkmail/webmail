@@ -7076,6 +7076,10 @@
     "not_available_description": "The plugin that added it is turned off or no longer installed.",
     "back_to_mail": "Back to mail"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "List from the plugin {name}",
+    "dropdown_list_labelled": "{label}, list from the plugin {name}"
+  },
   "command_palette": {
     "title": "Command palette",
     "open": "Open the command palette",

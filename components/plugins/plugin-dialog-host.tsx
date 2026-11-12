@@ -354,6 +354,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           if (e.target === e.currentTarget) cancel();
         }}
         data-plugin-dialog-popover=""
+        // A list the frame asks for is drawn in here (plugin-iframe-slot.tsx).
+        data-plugin-dialog-layer=""
       >
         <div
           ref={panelRef}
@@ -398,6 +400,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       onMouseDown={inWindow ? undefined : (e) => {
         if (e.target === e.currentTarget) cancel();
       }}
+      // A list the frame asks for is drawn in here (plugin-iframe-slot.tsx).
+      data-plugin-dialog-layer=""
     >
       <div
         ref={panelRef}

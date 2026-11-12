@@ -7077,6 +7077,10 @@
     "not_available_description": "התוסף שהוסיף אותו כבוי או שאינו מותקן עוד.",
     "back_to_mail": "חזרה לדואר"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "רשימה מהתוסף {name}",
+    "dropdown_list_labelled": "{label}, רשימה מהתוסף {name}"
+  },
   "command_palette": {
     "title": "לוח פקודות",
     "open": "פתיחת לוח הפקודות",

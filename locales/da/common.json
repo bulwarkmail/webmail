@@ -7076,6 +7076,10 @@
     "not_available_description": "Det plugin, der tilføjede den, er slået fra eller ikke længere installeret.",
     "back_to_mail": "Tilbage til mail"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Liste fra pluginet {name}",
+    "dropdown_list_labelled": "{label}, liste fra pluginet {name}"
+  },
   "command_palette": {
     "title": "Kommandopalet",
     "open": "Åbn kommandopaletten",

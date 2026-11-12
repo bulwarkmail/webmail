@@ -7076,6 +7076,10 @@
     "not_available_description": "新增此頁面的外掛程式已關閉或已不再安裝。",
     "back_to_mail": "回到郵件"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "來自外掛程式 {name} 的清單",
+    "dropdown_list_labelled": "{label},來自外掛程式 {name} 的清單"
+  },
   "command_palette": {
     "title": "命令面板",
     "open": "開啟命令面板",

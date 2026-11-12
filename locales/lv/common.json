@@ -7076,6 +7076,10 @@
     "not_available_description": "Spraudnis, kas to pievienoja, ir izslēgts vai vairs nav instalēts.",
     "back_to_mail": "Atgriezties pie pasta"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Saraksts no spraudņa {name}",
+    "dropdown_list_labelled": "{label}, saraksts no spraudņa {name}"
+  },
   "command_palette": {
     "title": "Komandu palete",
     "open": "Atvērt komandu paleti",

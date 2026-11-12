@@ -7088,6 +7088,10 @@
     "not_available_description": "Το πρόσθετο που το πρόσθεσε είναι απενεργοποιημένο ή δεν είναι πλέον εγκατεστημένο.",
     "back_to_mail": "Επιστροφή στην αλληλογραφία"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Λίστα από το πρόσθετο {name}",
+    "dropdown_list_labelled": "{label}, λίστα από το πρόσθετο {name}"
+  },
   "command_palette": {
     "title": "Παλέτα εντολών",
     "open": "Ανοίξτε την παλέτα εντολών",

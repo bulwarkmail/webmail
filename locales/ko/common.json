@@ -7076,6 +7076,10 @@
     "not_available_description": "이 페이지를 추가한 플러그인이 꺼져 있거나 더 이상 설치되어 있지 않습니다.",
     "back_to_mail": "메일로 돌아가기"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "플러그인 {name}의 목록",
+    "dropdown_list_labelled": "{label}, 플러그인 {name}의 목록"
+  },
   "command_palette": {
     "title": "명령 팔레트",
     "open": "명령 팔레트 열기",

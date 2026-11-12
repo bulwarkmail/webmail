@@ -5,14 +5,23 @@
 // iframe renders the plugin's slot component using the plugin's bundle in a
 // null-origin context; its height is pushed back via postMessage and applied
 // to a wrapper <div>.
+//
+// A frame may ask the host to draw a dropdown list for it (the UI kit's
+// Select). The host draws it in its own document, so it keeps to the frame:
+// it stands in the part of the window the frame takes up, plus its own
+// height; it is drawn in the layer of the plugin dialog the frame is in; and
+// while a dialog is open that the frame is not inside (a question the host
+// asks about the plugin, an app dialog, a plugin's prompt on top of its own
+// dialog), the host draws no list for the frame and closes an open one.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import type { SlotName } from '@/lib/plugin-types';
 import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
 import type { SandboxInstance } from '@/lib/plugin-sandbox/host-bridge';
 import { loadHostBridge } from '@/lib/plugin-sandbox/load-host-bridge';
-import type { FloatingDropdownOption } from '@/lib/plugin-sandbox/protocol';
+import type { FloatingDropdownOption, FloatingDropdownRect } from '@/lib/plugin-sandbox/protocol';
 import { slotPropsFor } from '@/lib/plugin-sandbox/permissions';
 import { isInlineSlot } from '@/lib/plugin-sandbox/slot-layout';
 import { snapshotHostTheme } from '@/lib/plugin-sandbox/host-theme';
@@ -39,13 +48,30 @@ interface Props {
 
 interface FloatingDropdownState {
   id: string;
-  rect: { left: number; top: number; bottom: number; width: number; height: number };
+  rect: FloatingDropdownRect;
   options: FloatingDropdownOption[];
   multiple?: boolean;
   selectedValues: string[];
   singleValue?: string;
   highlightedIndex: number;
   ariaLabel?: string;
+}
+
+/** The host's open dialogs, the app's own and the plugins' alike. */
+const OPEN_DIALOG_SELECTOR = '[aria-modal="true"], [role="alertdialog"]';
+
+/**
+ * Whether a dialog is open that `el` is not inside. A list drawn for a
+ * frame in `el` would then lie over that dialog, which may be the host
+ * asking about this very plugin.
+ */
+export function dialogOutside(el: Element | null): boolean {
+  if (typeof document === 'undefined') return false;
+  if (!el) return true;
+  for (const dialog of document.querySelectorAll(OPEN_DIALOG_SELECTOR)) {
+    if (!dialog.contains(el)) return true;
+  }
+  return false;
 }
 
 export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, minFillHeight, onShownChange }: Props) {
@@ -128,6 +154,13 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, min
         },
         onFloatingDropdown: (msg) => {
           if (msg.type === 'floating-dropdown-open') {
+            // Not over a dialog the frame is not inside: the frame hears that
+            // its list closed.
+            if (dialogOutside(hostContainer)) {
+              instanceRef.current?.sendFloatingDropdownEvent({ type: 'floating-dropdown-dismiss', id: msg.id });
+              setFloatingDropdown(null);
+              return;
+            }
             setFloatingDropdown({
               id: msg.id,
               rect: msg.rect,
@@ -184,6 +217,21 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, min
     instanceRef.current?.updateProps(props);
   }, [props]);
 
+  // An open list closes when a dialog opens that the frame is not inside.
+  const openDropdownId = floatingDropdown?.id ?? null;
+  useEffect(() => {
+    if (openDropdownId === null || typeof MutationObserver === 'undefined') return;
+    const closeIfCovered = () => {
+      if (!dialogOutside(wrapperRef.current)) return;
+      instanceRef.current?.sendFloatingDropdownEvent({ type: 'floating-dropdown-dismiss', id: openDropdownId });
+      setFloatingDropdown((prev) => (prev?.id === openDropdownId ? null : prev));
+    };
+    const observer = new MutationObserver(closeIfCovered);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-modal', 'role'] });
+    closeIfCovered();
+    return () => observer.disconnect();
+  }, [openDropdownId]);
+
   // Re-theme the live slot iframe when the host theme changes (dark/light
   // toggle or custom theme switch), without tearing down the iframe. Reacting
   // to resolvedTheme + activeThemeId covers both; the snapshot reads the
@@ -216,6 +264,7 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, min
       {floatingDropdown && (
         <FloatingDropdownPortal
           dropdown={floatingDropdown}
+          pluginName={getActivePlugin(pluginId)?.plugin.name || pluginId}
           wrapperEl={wrapperRef.current}
           onSelect={(option) => {
             instanceRef.current?.sendFloatingDropdownEvent({
@@ -252,37 +301,105 @@ function shallowEqual(a: Record<string, unknown> | undefined, b: Record<string, 
   return keys.every((k) => Object.prototype.hasOwnProperty.call(b, k) && Object.is(a[k], b[k]));
 }
 
+export interface Box { left: number; top: number; right: number; bottom: number }
+
+export interface DropdownPlacement {
+  left: number;
+  width: number;
+  /** One of top and bottom is set: the list opens downward from top or upward from bottom. */
+  top?: number;
+  bottom?: number;
+  maxHeight: number;
+}
+
+export const DROPDOWN_MAX_HEIGHT = 240;
+const DROPDOWN_MIN_HEIGHT = 120;
+/** Between the anchor and the list. */
+const DROPDOWN_GAP = 4;
+/** Kept free between the list and the window's edge. */
+const DROPDOWN_EDGE = 8;
+
+function within(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function intersect(a: Box, b: Box): Box {
+  return { left: Math.max(a.left, b.left), top: Math.max(a.top, b.top), right: Math.min(a.right, b.right), bottom: Math.min(a.bottom, b.bottom) };
+}
+
+/**
+ * The part of the window an element shows in: its box cut by the window and
+ * by every ancestor that clips it (a scrolling panel), up to a fixed one.
+ */
+function shownArea(el: Element): Box {
+  const r = el.getBoundingClientRect();
+  let area = intersect(
+    { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
+    { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight },
+  );
+  for (let p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+    const style = getComputedStyle(p);
+    if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
+      const c = p.getBoundingClientRect();
+      area = intersect(area, { left: c.left, top: c.top, right: c.right, bottom: c.bottom });
+    }
+    if (style.position === 'fixed') break;
+  }
+  return area;
+}
+
+/**
+ * Where the host draws a frame's list. `anchor` is in the frame's own
+ * coordinates, `frame` is the frame's box in the window and `area` the part
+ * of the window the frame shows in. The anchor is moved into that area, the
+ * list is no wider than it and opens below or above the anchor, so it never
+ * stands further from the frame than its own height. Null when the frame
+ * shows nowhere.
+ */
+export function placeFloatingDropdown(
+  anchor: FloatingDropdownRect,
+  frame: Pick<Box, 'left' | 'top'>,
+  area: Box,
+  viewport: { width: number; height: number },
+): DropdownPlacement | null {
+  if (area.right < area.left || area.bottom < area.top) return null;
+  const anchorTop = within(frame.top + anchor.top, area.top, area.bottom);
+  const anchorBottom = within(frame.top + anchor.bottom, anchorTop, area.bottom);
+  const width = Math.max(0, Math.min(anchor.width, area.right - area.left));
+  const left = within(frame.left + anchor.left, area.left, area.right - width);
+  const spaceBelow = viewport.height - anchorBottom - DROPDOWN_EDGE;
+  const spaceAbove = anchorTop - DROPDOWN_EDGE;
+  const upward = spaceBelow < 200 && spaceAbove > spaceBelow;
+  const maxHeight = Math.max(DROPDOWN_MIN_HEIGHT, Math.min(DROPDOWN_MAX_HEIGHT, upward ? spaceAbove : spaceBelow));
+  return upward
+    ? { left, width, bottom: viewport.height - anchorTop + DROPDOWN_GAP, maxHeight }
+    : { left, width, top: anchorBottom + DROPDOWN_GAP, maxHeight };
+}
+
 function FloatingDropdownPortal({
   dropdown,
+  pluginName,
   wrapperEl,
   onSelect,
   onHighlight,
   onDismiss,
 }: {
   dropdown: FloatingDropdownState;
+  pluginName: string;
   wrapperEl: HTMLElement | null;
   onSelect: (option: FloatingDropdownOption) => void;
   onHighlight: (index: number) => void;
   onDismiss: () => void;
 }) {
+  const t = useTranslations('plugin_surfaces');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Compute screen coordinates relative to host viewport
+  // In window coordinates, inside the part of the window the frame shows in.
   const iframe = wrapperEl?.querySelector('iframe') ?? wrapperEl;
-  const iframeRect = iframe ? iframe.getBoundingClientRect() : { left: 0, top: 0 };
-  const hostLeft = iframeRect.left + dropdown.rect.left;
-  const hostTop = iframeRect.top + dropdown.rect.top;
-  const hostBottom = iframeRect.top + dropdown.rect.bottom;
-  const hostWidth = dropdown.rect.width;
-
-  const spaceBelow = typeof window !== 'undefined' ? window.innerHeight - hostBottom - 8 : 300;
-  const spaceAbove = hostTop - 8;
-  const openUpward = spaceBelow < 200 && spaceAbove > spaceBelow;
-  const maxHeight = Math.max(120, Math.min(240, openUpward ? spaceAbove : spaceBelow));
-  const left = typeof window !== 'undefined' ? Math.max(8, Math.min(hostLeft, window.innerWidth - hostWidth - 8)) : hostLeft;
-  const top = openUpward ? undefined : hostBottom + 4;
-  const bottom = openUpward && typeof window !== 'undefined' ? window.innerHeight - hostTop + 4 : undefined;
+  const place = iframe && typeof window !== 'undefined'
+    ? placeFloatingDropdown(dropdown.rect, iframe.getBoundingClientRect(), shownArea(iframe), { width: window.innerWidth, height: window.innerHeight })
+    : null;
 
   // Auto-scroll highlighted option into view
   useEffect(() => {
@@ -317,7 +434,12 @@ function FloatingDropdownPortal({
     };
   }, [onDismiss]);
 
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined' || !place) return null;
+  // A frame in a plugin dialog gets its list in that dialog's outer element
+  // (plugin-dialog-host.tsx), so a dialog drawn above that one is above the
+  // list too.
+  const layer = wrapperEl?.closest<HTMLElement>('[data-plugin-dialog-layer]') ?? document.body;
+  const label = dropdown.ariaLabel?.trim();
 
   return createPortal(
     <div
@@ -325,14 +447,14 @@ function FloatingDropdownPortal({
       id={`plugin-dropdown-${dropdown.id}`}
       role="listbox"
       aria-multiselectable={dropdown.multiple || undefined}
-      aria-label={dropdown.ariaLabel}
+      aria-label={label ? t('dropdown_list_labelled', { label, name: pluginName }) : t('dropdown_list', { name: pluginName })}
       style={{
         position: 'fixed',
-        left: `${left}px`,
-        top: top !== undefined ? `${top}px` : undefined,
-        bottom: bottom !== undefined ? `${bottom}px` : undefined,
-        width: `${hostWidth}px`,
-        maxHeight: `${maxHeight}px`,
+        left: `${place.left}px`,
+        top: place.top !== undefined ? `${place.top}px` : undefined,
+        bottom: place.bottom !== undefined ? `${place.bottom}px` : undefined,
+        width: `${place.width}px`,
+        maxHeight: `${place.maxHeight}px`,
         zIndex: 100010,
       }}
       className="overflow-auto rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 focus:outline-none animate-in fade-in-50 zoom-in-95 duration-100"
@@ -380,6 +502,6 @@ function FloatingDropdownPortal({
         })
       )}
     </div>,
-    document.body,
+    layer,
   );
 }

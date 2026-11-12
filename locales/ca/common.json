@@ -7076,6 +7076,10 @@
     "not_available_description": "El connector que l'ha afegida està desactivat o ja no està instal·lat.",
     "back_to_mail": "Torna al correu"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Llista del connector {name}",
+    "dropdown_list_labelled": "{label}, llista del connector {name}"
+  },
   "command_palette": {
     "title": "Paleta d'ordres",
     "open": "Obre la paleta d'ordres",

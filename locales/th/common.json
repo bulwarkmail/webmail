@@ -2524,6 +2524,10 @@
     "not_available_description": "ปลั๊กอินที่เพิ่มหน้านี้ถูกปิดใช้งานหรือไม่ได้ติดตั้งแล้ว",
     "back_to_mail": "กลับไปยังอีเมล"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "รายการจากปลั๊กอิน {name}",
+    "dropdown_list_labelled": "{label}, รายการจากปลั๊กอิน {name}"
+  },
   "tour": {
     "step_counter": "ขั้นตอนที่ {current} จาก {total}",
     "skip": "ข้ามการแนะนำ",

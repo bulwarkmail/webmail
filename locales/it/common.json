@@ -7076,6 +7076,10 @@
     "not_available_description": "Il plugin che l'ha aggiunta è disattivato o non è più installato.",
     "back_to_mail": "Torna alla posta"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Elenco dal plugin {name}",
+    "dropdown_list_labelled": "{label}, elenco dal plugin {name}"
+  },
   "command_palette": {
     "title": "Tavolozza comandi",
     "open": "Apri la tavolozza comandi",

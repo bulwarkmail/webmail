@@ -7076,6 +7076,10 @@
     "not_available_description": "Pluginul care a adăugat-o este dezactivat sau nu mai este instalat.",
     "back_to_mail": "Înapoi la e-mail"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Listă de la pluginul {name}",
+    "dropdown_list_labelled": "{label}, listă de la pluginul {name}"
+  },
   "command_palette": {
     "title": "Paleta de comenzi",
     "open": "Deschide paleta de comenzi",

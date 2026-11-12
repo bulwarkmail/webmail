@@ -7076,6 +7076,10 @@
     "not_available_description": "Плагин, который её добавил, выключен или больше не установлен.",
     "back_to_mail": "Вернуться к почте"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Список от плагина {name}",
+    "dropdown_list_labelled": "{label}, список от плагина {name}"
+  },
   "command_palette": {
     "title": "Палитра команд",
     "open": "Открыть палитру команд",

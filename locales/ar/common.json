@@ -7076,6 +7076,10 @@
     "not_available_description": "الإضافة التي أضافتها متوقفة أو لم تعد مثبتة.",
     "back_to_mail": "العودة إلى البريد"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "قائمة من الإضافة {name}",
+    "dropdown_list_labelled": "{label}، قائمة من الإضافة {name}"
+  },
   "command_palette": {
     "title": "لوحة الأوامر",
     "open": "فتح لوحة الأوامر",

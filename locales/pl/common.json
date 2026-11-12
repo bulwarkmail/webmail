@@ -7076,6 +7076,10 @@
     "not_available_description": "Wtyczka, która ją dodała, jest wyłączona lub nie jest już zainstalowana.",
     "back_to_mail": "Powrót do poczty"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Lista od wtyczki {name}",
+    "dropdown_list_labelled": "{label}, lista od wtyczki {name}"
+  },
   "command_palette": {
     "title": "Paleta poleceń",
     "open": "Otwórz paletę poleceń",

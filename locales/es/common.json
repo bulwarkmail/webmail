@@ -7076,6 +7076,10 @@
     "not_available_description": "El complemento que la añadió está desactivado o ya no está instalado.",
     "back_to_mail": "Volver al correo"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Lista del complemento {name}",
+    "dropdown_list_labelled": "{label}, lista del complemento {name}"
+  },
   "command_palette": {
     "title": "Paleta de comandos",
     "open": "Abrir la paleta de comandos",
