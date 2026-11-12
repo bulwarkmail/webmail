@@ -657,6 +657,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving || photoUploading) return;
     setError(null);
 
     // An organization name identifies the card just as well as a personal name.
@@ -878,7 +879,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
         {!closeFirst && close}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* Native disabled semantics cover fields, row actions and open category menus. */}
+      <fieldset disabled={isSaving} className="flex-1 min-w-0 overflow-y-auto">
         <div className="@container px-6 py-4 max-w-3xl">
           {error && (
             <div role="alert" className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md mb-4">
@@ -1431,14 +1433,15 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           </div>
         </div>
-      </div>
+      </fieldset>
 
       {/* Toasts sit above Save and Cancel, not on them. */}
       <div ref={footerRef} className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border flex-shrink-0">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
           {t("cancel")}
         </Button>
-        <Button type="submit" disabled={isSaving}>
+        {/* A photo read/resize must finish before its value can be submitted. */}
+        <Button type="submit" disabled={isSaving || photoUploading}>
           {isSaving ? (isEditing ? t("updating") : t("creating")) : t("save")}
         </Button>
       </div>
