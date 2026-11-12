@@ -126,7 +126,7 @@ import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { stepListEmail } from "@/lib/list-step";
 import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
-import { resolveThreadRoute } from "@/lib/thread-routing";
+import { refreshRepliedThread } from "@/lib/replied-thread";
 import {
   ErrorBoundary,
   SidebarErrorFallback,
@@ -3148,35 +3148,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
       const refreshRepliedThreadAfterSend = async (emailId: string | undefined) => {
         if (!emailId || !client) return;
-        const emailState = useEmailStore.getState();
-        const repliedEmail = emailState.emails.find(e => e.id === emailId);
-        if (repliedEmail?.threadId && emailState.expandedThreadIds.has(threadKeyFor(repliedEmail))) {
-          try {
-            const route = resolveThreadRoute({
-              isUnifiedView: emailState.isUnifiedView,
-              ref: repliedEmail,
-              mailboxes: viewMailboxes,
-              selectedMailbox: emailState.selectedMailbox,
-            });
-            // The thread's login: its stamp, else the login browsed. Never
-            // another one: thread ids repeat.
-            const threadLogin = route.clientAccountId ?? emailState.viewingAccountId;
-            const threadClient = threadLogin ? loginClientOf(threadLogin) : client;
-            if (!threadClient) return;
-            const fullEmails = await threadClient.getThreadEmails(
-              repliedEmail.threadId,
-              route.accountId ?? threadClient.getAccountId(),
-            );
-            if (fullEmails.length > 0) {
-              useEmailStore.setState((state) => {
-                const c = new Map(state.threadEmailsCache);
-                c.set(threadKeyFor(repliedEmail), fullEmails);
-                return { threadEmailsCache: c };
-              });
-            }
-          } catch (e) {
-            debug.error('Failed to refresh replied thread after send:', e);
-          }
+        try {
+          // The answered message's own conversation, by the login and
+          // account the reply was written to (refreshRepliedThread).
+          await refreshRepliedThread(emailId, answeredSource, client);
+        } catch (e) {
+          debug.error('Failed to refresh replied thread after send:', e);
         }
       };
 
@@ -5388,35 +5365,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     });
 
     const refreshInlineRepliedThread = async () => {
-      const emailState = useEmailStore.getState();
-      const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
-      if (repliedEmail?.threadId && emailState.expandedThreadIds.has(threadKeyFor(repliedEmail))) {
-        const route = resolveThreadRoute({
-          isUnifiedView: emailState.isUnifiedView,
-          ref: repliedEmail,
-          mailboxes: viewMailboxes,
-          selectedMailbox: emailState.selectedMailbox,
-        });
-        // The thread's login: its stamp, else the login browsed. Never
-        // another one: thread ids repeat.
-        const threadLogin = route.clientAccountId ?? emailState.viewingAccountId;
-        const threadClient = threadLogin ? loginClientOf(threadLogin) : client;
-        if (!threadClient) return;
-        try {
-          const fullEmails = await threadClient.getThreadEmails(
-            repliedEmail.threadId,
-            route.accountId ?? threadClient.getAccountId(),
-          );
-          if (fullEmails.length > 0) {
-            useEmailStore.setState((state) => {
-              const c = new Map(state.threadEmailsCache);
-              c.set(threadKeyFor(repliedEmail), fullEmails);
-              return { threadEmailsCache: c };
-            });
-          }
-        } catch (e) {
-          debug.error('Failed to refresh replied thread after send:', e);
-        }
+      try {
+        // The answered message's own conversation (refreshRepliedThread).
+        await refreshRepliedThread(originalEmailId, originalSource, client);
+      } catch (e) {
+        debug.error('Failed to refresh replied thread after send:', e);
       }
     };
 

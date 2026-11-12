@@ -11,7 +11,7 @@ import { resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { toast } from "@/stores/toast-store";
 import { useProTabStore, registerProTabCloseInterceptor, type ProComposeTabData } from "@/stores/pro-tab-store";
 import { debug } from "@/lib/debug";
-import { threadKeyFor } from "@/lib/thread-utils";
+import { refreshRepliedThread } from "@/lib/replied-thread";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { announceSent } from "@/lib/plugin-after-send";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
@@ -141,21 +141,9 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
       await refreshCurrentMailbox(client);
       // Re-fetch the replied thread's cross-folder data so the expanded
       // view shows the newly sent reply without collapsing.
-      if (data.sourceEmailId) {
-        const emailState = useEmailStore.getState();
-        const repliedEmail = emailState.emails.find(e => e.id === data.sourceEmailId);
-        if (repliedEmail?.threadId && emailState.expandedThreadIds.has(threadKeyFor(repliedEmail))) {
-          const accountId = client.getAccountId();
-          const fullEmails = await client.getThreadEmails(repliedEmail.threadId, accountId);
-          if (fullEmails.length > 0) {
-            useEmailStore.setState((state) => {
-              const c = new Map(state.threadEmailsCache);
-              c.set(threadKeyFor(repliedEmail), fullEmails);
-              return { threadEmailsCache: c };
-            });
-          }
-        }
-      }
+      // The answered message's own conversation, read where that message
+      // is: another row of the list with its id is another account's.
+      if (data.sourceEmailId) await refreshRepliedThread(data.sourceEmailId, data.sourceEmailSource, client);
       closeTab(tabIdRef.current);
     } catch (error) {
       console.error('Failed to send email:', error);
