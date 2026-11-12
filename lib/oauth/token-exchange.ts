@@ -1,7 +1,8 @@
 import { logger } from '@/lib/logger';
 import { observeUpstream } from '@/lib/metrics/upstream';
 import { discoverOAuth } from '@/lib/oauth/discovery';
-import type { EndpointValidator, OAuthMetadata } from '@/lib/oauth/discovery';
+import type { EndpointValidator, IssuerRule, OAuthMetadata } from '@/lib/oauth/discovery';
+import { configuredServer, discoveryBase, signInIssuerRule } from '@/lib/oauth/sign-in-servers';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { readFileEnv } from '@/lib/read-file-env';
 import { configManager } from '@/lib/admin/config-manager';
@@ -9,6 +10,7 @@ import { parseJmapServers, findServerById } from '@/lib/admin/jmap-servers';
 import { stalwartDefaultClientId } from '@/lib/auth/stalwart-password-login';
 import { getOauthResource } from '@/lib/oauth/tokens';
 import type { CustomUpstream } from '@/lib/oauth/custom-upstream';
+import { answerFields, oauthErrorCode } from '@/lib/oauth/answer-summary';
 
 // Fallback OAuth client id used when no client is configured. The password+TOTP
 // login route mints tokens against the mail server's built-in OAuth with this
@@ -81,32 +83,6 @@ function getServerEntry(serverId?: string | null) {
   return findServerById(servers, serverId);
 }
 
-/**
- * Strip a trailing JMAP session path so OAuth discovery hits the right base.
- *
- * `discoverOAuth` appends `/.well-known/...` to this base, so JMAP_SERVER_URL set to
- * the session URL (`.../jmap/session` or `.../.well-known/jmap`, common so the client
- * can skip the 307 redirect a preflighted CORS request cannot follow) makes discovery
- * fetch `<session-url>/.well-known/oauth-authorization-server`, get a 404, and refresh
- * fail with "OAuth token endpoint not found".
- *
- * Only the session suffix (and any query or fragment) is removed, not the whole path:
- * discovery also runs against OAUTH_ISSUER_URL, and a path-based issuer (for example a
- * Keycloak realm at `/realms/<name>`) must keep its path. So this is deliberately not
- * `new URL(url).origin`. (#971)
- */
-function discoveryBase(url: string): string {
-  try {
-    const u = new URL(url);
-    u.pathname = u.pathname.replace(/\/(?:jmap\/session|\.well-known\/jmap)\/*$/, '');
-    u.search = '';
-    u.hash = '';
-    return u.toString().replace(/\/+$/, '');
-  } catch {
-    return url;
-  }
-}
-
 export function getRequiredConfig(serverId?: string | null, options?: ClientConfigOptions) {
   if (options?.upstream) {
     const { clientId, serverUrl } = options.upstream;
@@ -115,8 +91,7 @@ export function getRequiredConfig(serverId?: string | null, options?: ClientConf
   const entry = getServerEntry(serverId);
 
   const globalClientId = configManager.get<string>('oauthClientId', '') || process.env.OAUTH_CLIENT_ID;
-  const globalServerUrl = configManager.get<string>('jmapServerUrl', '') || process.env.JMAP_SERVER_URL || process.env.NEXT_PUBLIC_JMAP_SERVER_URL;
-  const globalIssuerUrl = configManager.get<string>('oauthIssuerUrl', '') || process.env.OAUTH_ISSUER_URL;
+  const { serverUrl: globalServerUrl, issuerUrl: globalIssuerUrl } = configuredServer();
 
   const clientId = entry?.oauth?.clientId || globalClientId || options?.fallbackClientId;
   const serverUrl = entry?.url || globalServerUrl;
@@ -172,18 +147,23 @@ export function hasClientSecret(serverId?: string | null): boolean {
   return getClientSecret(serverId) !== '';
 }
 
-export async function getTokenEndpoint(serverId?: string | null, options?: ClientConfigOptions): Promise<string> {
+/**
+ * `issuerRule` (for a sign-in, lib/oauth/sign-in-servers.ts signInIssuerRule):
+ * which metadata `issuer` counts (lib/oauth/discovery.ts). Without it the
+ * issuer isn't checked, as for renewing and revoking tokens.
+ */
+export async function getTokenEndpoint(serverId?: string | null, options?: ClientConfigOptions, issuerRule?: IssuerRule): Promise<string> {
   const { discoveryUrl } = getRequiredConfig(serverId, options);
-  const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl) });
+  const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), issuerRule });
   if (!metadata?.token_endpoint) {
     throw new Error('OAuth token endpoint not found');
   }
   return metadata.token_endpoint;
 }
 
-export async function getMetadata(serverId?: string | null, options?: ClientConfigOptions): Promise<OAuthMetadata | null> {
+export async function getMetadata(serverId?: string | null, options?: ClientConfigOptions, issuerRule?: IssuerRule): Promise<OAuthMetadata | null> {
   const { discoveryUrl } = getRequiredConfig(serverId, options);
-  return discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl) });
+  return discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), issuerRule });
 }
 
 export function buildOAuthParams(base: Record<string, string>, serverId?: string | null, options?: ClientConfigOptions): URLSearchParams {
@@ -219,7 +199,11 @@ export async function exchangeCodeForTokens(
   serverId?: string | null,
   options?: ClientConfigOptions,
 ): Promise<TokenResult> {
-  const tokenEndpoint = await getTokenEndpoint(serverId, options);
+  // A code goes only to the token endpoint of metadata whose issuer passes the
+  // sign-in rule: the issuer the callback was checked against. The desktop
+  // app's server of its own (`upstream`) is the one the user typed; it checks
+  // the answer itself.
+  const tokenEndpoint = await getTokenEndpoint(serverId, options, options?.upstream ? undefined : signInIssuerRule());
 
   const params = buildOAuthParams({
     grant_type: 'authorization_code',
@@ -239,15 +223,24 @@ export async function exchangeCodeForTokens(
   }));
 
   if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    logger.error('Token exchange failed', { status: tokenResponse.status, error: errorText });
+    // The OAuth error code only: the body can repeat what was sent.
+    const error = oauthErrorCode(await tokenResponse.text());
+    logger.error('Token exchange failed', { status: tokenResponse.status, ...(error ? { error } : {}) });
     throw new Error('Token exchange failed');
   }
 
-  const tokens = await tokenResponse.json();
+  let tokens;
+  try {
+    tokens = await tokenResponse.json();
+  } catch {
+    // The parser's message would quote the answer, tokens and all.
+    logger.error('Token answer is not JSON', { status: tokenResponse.status });
+    throw new Error('Invalid token response');
+  }
 
-  if (!tokens.access_token) {
-    logger.error('Token response missing access_token', { response: JSON.stringify(tokens).substring(0, 500) });
+  if (!tokens?.access_token) {
+    // Which fields came, not their values: the answer may still hold tokens.
+    logger.error('Token response missing access_token', { fields: answerFields(tokens) });
     throw new Error('Invalid token response');
   }
 

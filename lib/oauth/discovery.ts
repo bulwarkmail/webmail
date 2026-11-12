@@ -6,6 +6,36 @@ export interface OAuthMetadata {
   end_session_endpoint?: string;
   scopes_supported?: string[];
   registration_endpoint?: string;
+  /** RFC 9207: the provider names itself (`iss`) in every authorization answer. */
+  authorization_response_iss_parameter_supported?: boolean;
+}
+
+const trimSlashes = (value: string) => value.replace(/\/+$/, '');
+
+/**
+ * Whether the `iss` of an authorization callback (RFC 9207) fits the issuer
+ * the sign-in was sent to. Another issuer is refused, and so is a missing one
+ * when `required` (the provider says it always sends one, and the callback was
+ * passed on with it). Trailing slashes don't count. An `iss` with no issuer
+ * to compare it with is refused.
+ */
+export function callbackIssuerAccepted(iss: unknown, expected: unknown, required: boolean): boolean {
+  if (iss === undefined || iss === null || iss === '') return !required;
+  if (typeof iss !== 'string') return false;
+  if (typeof expected !== 'string' || !expected) return false;
+  return trimSlashes(iss) === trimSlashes(expected);
+}
+
+/**
+ * Whether metadata fetched from `base` names `base` as its issuer (RFC 8414
+ * section 3.3: identical to the issuer identifier the well-known path was
+ * appended to). Only trailing slashes are forgiven. `base` is the discovery
+ * base as configured, which the URL parser has already given a lowercase host
+ * and no default port; an issuer that spells its host in capitals or names
+ * the default port is not identical and is refused.
+ */
+export function isOwnIssuer(issuer: unknown, base: string): boolean {
+  return typeof issuer === 'string' && issuer !== '' && trimSlashes(issuer) === trimSlashes(base);
 }
 
 // Validates that a discovered endpoint URL is safe to follow. Server-side
@@ -15,8 +45,45 @@ export interface OAuthMetadata {
 // and an SSRF check isn't meaningful there.
 export type EndpointValidator = (url: string) => Promise<boolean>;
 
+/**
+ * Which metadata `issuer` a sign-in takes; it is what the callback's `iss` is
+ * checked against. Metadata that names no issuer is refused under both.
+ * - 'own': the address discovery ran against (isOwnIssuer), anything else is
+ *   refused;
+ * - 'named': any issuer; one that differs from that address is logged once.
+ * Which one applies is lib/oauth/sign-in-servers.ts signInIssuerRule.
+ */
+export type IssuerRule = 'own' | 'named';
+
 export interface DiscoverOAuthOptions {
   validateEndpoint?: EndpointValidator;
+  /** For a sign-in: which `issuer` the metadata must name. Unchecked without it. */
+  issuerRule?: IssuerRule;
+}
+
+/** Discovery addresses whose differing issuer was already logged under 'named'. */
+const differingIssuersLogged = new Set<string>();
+
+/** The issuer a document names, for a log line. */
+const quotedIssuer = (issuer: string) => JSON.stringify(issuer.slice(0, 200));
+
+function passesIssuerRule(metadata: OAuthMetadata, base: string, rule: IssuerRule): boolean {
+  if (typeof metadata.issuer !== 'string' || !metadata.issuer) {
+    console.error(`[OAuth] Metadata from ${base} names no issuer, so it can't be used to sign in`);
+    return false;
+  }
+  if (isOwnIssuer(metadata.issuer, base)) return true;
+  const named = quotedIssuer(metadata.issuer);
+  if (rule === 'named') {
+    const key = `${base}\n${metadata.issuer}`;
+    if (!differingIssuersLogged.has(key)) {
+      differingIssuersLogged.add(key);
+      console.warn(`[OAuth] Metadata from ${base} names ${named} as its issuer. Set OAUTH_ISSUER_URL (admin setting oauthIssuerUrl), or oauth.issuerUrl on the server's jmapServers entry, to ${named}; as soon as a second sign-in server is configured, sign-in through ${base} is refused until then`);
+    }
+    return true;
+  }
+  console.error(`[OAuth] Metadata from ${base} names ${named} as its issuer, not ${base}, and this instance has more than one sign-in server. Set oauth.issuerUrl on the server's jmapServers entry, or OAUTH_ISSUER_URL (admin setting oauthIssuerUrl) for the configured server, to ${named}`);
+  return false;
 }
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -154,6 +221,9 @@ async function attemptDiscovery(
           ...(Array.isArray(data.scopes_supported)
             ? { scopes_supported: data.scopes_supported.filter((s: unknown): s is string => typeof s === 'string') }
             : {}),
+          ...(data.authorization_response_iss_parameter_supported === true
+            ? { authorization_response_iss_parameter_supported: true }
+            : {}),
         };
       }
       errors.push(`${url} response missing required endpoints`);
@@ -166,6 +236,15 @@ async function attemptDiscovery(
 }
 
 export async function discoverOAuth(
+  serverUrl: string,
+  options?: DiscoverOAuthOptions,
+): Promise<OAuthMetadata | null> {
+  const metadata = await fetchMetadata(serverUrl, options);
+  if (metadata && options?.issuerRule && !passesIssuerRule(metadata, serverUrl, options.issuerRule)) return null;
+  return metadata;
+}
+
+async function fetchMetadata(
   serverUrl: string,
   options?: DiscoverOAuthOptions,
 ): Promise<OAuthMetadata | null> {

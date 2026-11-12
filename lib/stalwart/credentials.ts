@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 
@@ -24,12 +24,29 @@ export interface StalwartCredentials {
    * `fetchJmapServer` in `@/lib/stalwart/server-fetch`.
    */
   trusted: boolean;
+  /**
+   * When the session holding this credential signed in (ms), for whatever it
+   * hands on (an office editor token) to end with that session. Absent for a
+   * context written before sign-in times were recorded.
+   */
+  signedInAt?: number;
 }
 
 function parseSlot(raw: string | null): number | null {
   if (raw === null) return null;
   const slot = parseInt(raw, 10);
   return Number.isNaN(slot) || slot < 0 || slot >= MAX_ACCOUNT_SLOTS ? null : slot;
+}
+
+/**
+ * The cookie slot a sign-in request's body names: a whole number from 0 below
+ * MAX_ACCOUNT_SLOTS, or null. Cookie names carry the slot as written, and
+ * every reader and sign-out walks whole numbers only.
+ */
+export function accountSlotFromBody(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value >= MAX_ACCOUNT_SLOTS) return null;
+  // -0 is slot 0.
+  return value + 0;
 }
 
 const ALL_SLOTS = Array.from({ length: MAX_ACCOUNT_SLOTS }, (_, i) => i);
@@ -45,7 +62,9 @@ export async function getStalwartCredentials(request: NextRequest): Promise<Stal
   const cookieStore = await cookies();
 
   for (const slot of getCandidateSlots(request)) {
-    const context = readStalwartAuthContextFromStore(cookieStore, slot);
+    // A context whose session is past the organisation's maximum length is
+    // refused (and cleared) like a missing one.
+    const context = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (!context) continue;
 
     const serverUrl = context.serverUrl.replace(/\/+$/, '');
@@ -57,6 +76,7 @@ export async function getStalwartCredentials(request: NextRequest): Promise<Stal
       hasSessionCookie: !!cookieStore.get(sessionCookieName(slot))?.value,
       slot,
       trusted: await isTrustedJmapServerUrl(serverUrl),
+      ...(context.signedInAt !== undefined ? { signedInAt: context.signedInAt } : {}),
     };
   }
 

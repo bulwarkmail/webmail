@@ -5,13 +5,16 @@ import { encryptPayload } from '@/lib/auth/crypto';
 import { generateCodeVerifierServer, generateCodeChallengeServer, generateStateServer } from '@/lib/oauth/pkce-server';
 import { getRequiredConfig, getDiscoveryValidator } from '@/lib/oauth/token-exchange';
 import { discoverOAuth } from '@/lib/oauth/discovery';
-import { getOauthScopes, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
+import { signInIssuerRule } from '@/lib/oauth/sign-in-servers';
+import { getOauthScopes, refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
+import { refreshTokenServer } from '@/lib/oauth/slot-renewal';
 import { withProviderDataScopes } from '@/lib/oauth/scopes';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { configManager } from '@/lib/admin/config-manager';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { desktopHandoffTarget, isMobileCodeChallenge, mobileHandoffTarget } from '@/lib/auth/mobile-handoff';
 import { desktopHandoffEnabled } from '@/lib/auth/desktop-handoff-server';
 
@@ -41,6 +44,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   try {
     if (!hasSessionSecret()) {
       return NextResponse.json({ error: 'SESSION_SECRET is required for SSO' }, { status: 500 });
@@ -106,7 +111,18 @@ export async function POST(request: NextRequest) {
       typeof rawSlot === 'number' && Number.isInteger(rawSlot) && rawSlot >= 0 && rawSlot < MAX_ACCOUNT_SLOTS ? rawSlot : 0;
     let serverId = typeof bodyServerId === 'string' && bodyServerId ? bodyServerId : null;
     if (!serverId && isReauth) {
-      serverId = cookieStore.get(refreshTokenServerCookieName(reauthSlot))?.value || null;
+      // The server that issued the slot's refresh token, as its sealed stamp
+      // says (lib/oauth/slot-renewal.ts). Cookies that disagree with it name
+      // no server to sign in at.
+      const refreshToken = cookieStore.get(refreshTokenCookieName(reauthSlot))?.value;
+      const bound = refreshToken
+        ? await refreshTokenServer(cookieStore, reauthSlot, refreshToken)
+        : { serverId: cookieStore.get(refreshTokenServerCookieName(reauthSlot))?.value || null };
+      if (!bound) {
+        logger.warn('SSO start: the slot\'s server cookie disagrees with its token');
+        return NextResponse.json({ error: 'not_signed_in' }, { status: 401 });
+      }
+      serverId = bound.serverId;
     }
 
     // Validate redirect_uri origin matches the request origin to prevent open redirects
@@ -122,7 +138,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { clientId, discoveryUrl, resource } = getRequiredConfig(serverId);
-    const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl) });
+    // Only metadata whose issuer passes the sign-in rule (signInIssuerRule):
+    // /complete checks the callback's `iss` against it.
+    const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), issuerRule: signInIssuerRule() });
 
     if (!metadata?.authorization_endpoint) {
       return NextResponse.json({ error: 'OAuth discovery failed' }, { status: 502 });
@@ -144,6 +162,9 @@ export async function POST(request: NextRequest) {
       redirect_uri,
       created_at: Date.now(),
       ...(serverId ? { server_id: serverId } : {}),
+      // Who must answer (RFC 9207): /complete refuses a code from another issuer.
+      ...(typeof metadata.issuer === 'string' && metadata.issuer ? { issuer: metadata.issuer } : {}),
+      ...(metadata.authorization_response_iss_parameter_supported ? { iss_required: true } : {}),
       ...(mobileRedirectUri ? { mobile_redirect_uri: mobileRedirectUri } : {}),
       ...(mobileState ? { mobile_state: mobileState } : {}),
       ...(mobileCodeChallenge ? { mobile_code_challenge: mobileCodeChallenge } : {}),

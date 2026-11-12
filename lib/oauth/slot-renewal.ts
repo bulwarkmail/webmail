@@ -1,6 +1,9 @@
 import type { cookies } from 'next/headers';
+import { configManager } from '@/lib/admin/config-manager';
+import { findServerById, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { observeUpstream } from '@/lib/metrics/upstream';
-import { refreshTokenHash, writeSignInStamp, type SignInStamp } from '@/lib/auth/session-age';
+import { readSignInStamp, refreshTokenHash, writeSignInStamp, type SignInStamp } from '@/lib/auth/session-age';
+import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { idTokenCookieName, storeIdToken } from '@/lib/oauth/end-session';
 import { fitsSetCookieBudget } from '@/lib/oauth/set-cookie-budget';
@@ -10,8 +13,15 @@ import {
   getTokenEndpoint,
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
-import { accessTokenCookieName, encodeCachedAccessToken, refreshTokenCookieName } from '@/lib/oauth/tokens';
-import type { CustomUpstream } from '@/lib/oauth/custom-upstream';
+import {
+  accessTokenCookieName,
+  encodeCachedAccessToken,
+  refreshTokenCookieName,
+  refreshTokenServerCookieName,
+} from '@/lib/oauth/tokens';
+import { customUpstreamCookieName, readCustomUpstream, writeCustomUpstream, type CustomUpstream } from '@/lib/oauth/custom-upstream';
+import { oauthErrorCode } from '@/lib/oauth/answer-summary';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
 /**
  * Renewing a slot's access token with the refresh token in its cookie. The
@@ -31,8 +41,8 @@ export interface IssuedTokens {
 export type Redemption =
   /** Discovery or the token endpoint out of reach: an outage, not a sign-out. */
   | { kind: 'unreachable'; message: string }
-  /** The token endpoint answered with an error. */
-  | { kind: 'refused'; status: number; errorText: string }
+  /** The token endpoint answered with an error: its OAuth `error` code, never the body. */
+  | { kind: 'refused'; status: number; error: string | null }
   | { kind: 'issued'; tokens: IssuedTokens };
 
 /**
@@ -64,6 +74,65 @@ export function cacheAccessToken(
   return value;
 }
 
+/** Where a slot's refresh token belongs. */
+export interface TokenServer {
+  /** The `jmapServers` entry that issued it, or null. */
+  serverId: string | null;
+  /** The server the user typed, when it came from one (lib/oauth/custom-upstream.ts). */
+  upstream: CustomUpstream | null;
+}
+
+/**
+ * The server a slot's refresh token is renewed and revoked at: the one that
+ * issued it, as the token's sign-in stamp records it (lib/auth/session-age.ts).
+ * The stamp is sealed and bound to the token; the `jmap_rts` cookie only
+ * repeats it and is not read when the stamp names the server. For a server
+ * the user typed, the sealed custom-upstream record holds its address and
+ * client. Null, and nothing may be sent anywhere, when:
+ * - the stamp names a typed server and the record is missing, names another
+ *   one, or is no longer allowed (readCustomUpstream checks on every read);
+ * - the stamp names a server that is no longer listed;
+ * - there is no readable stamp and the cookies name a listed entry or a typed
+ *   server (without a stamp, a slot that names neither renews at the
+ *   configured server, as on an instance with only that server).
+ * A stamp written before it recorded the server takes the cookies' word (the
+ * typed-server record only in the desktop build); the renewal then records it
+ * (storeRenewedTokens). Without a session secret
+ * nothing is sealed and the cookies decide.
+ */
+export async function refreshTokenServer(
+  cookieStore: CookieStore,
+  slot: number,
+  refreshToken: string,
+): Promise<TokenServer | null> {
+  const named = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
+  const record = await readCustomUpstream(cookieStore, slot);
+  if (!hasSessionSecret()) return { serverId: named, upstream: record };
+  const servers = parseJmapServers(configManager.get<unknown>('jmapServers', []));
+  const stamp = readSignInStamp(cookieStore, slot, refreshToken);
+  let server: TokenServer;
+  if (stamp?.serverId !== undefined) {
+    // The stamp decides: a missing or different `jmap_rts` is ignored, and
+    // the renewal writes it again (storeRenewedTokens).
+    if (stamp.customServer && record?.serverUrl !== stamp.customServer) return null;
+    // A record left behind by an earlier sign-in in this slot is not this token's.
+    server = { serverId: stamp.serverId, upstream: stamp.customServer ? record : null };
+  } else if (stamp) {
+    // Only the desktop build wrote typed-server records before stamps named
+    // the server; elsewhere a record next to such a stamp is not this token's.
+    server = { serverId: named, upstream: IS_DESKTOP_BUILD ? record : null };
+  } else {
+    // No readable stamp (a sign-in from before stamps, or a stamp sealed with
+    // an earlier session secret). Only the stamp could tell which listed
+    // entry or typed server issued the token, so a slot whose cookies name
+    // one is refused; any other renews at the configured server.
+    if (named || cookieStore.get(customUpstreamCookieName(slot))) return null;
+    server = { serverId: null, upstream: null };
+  }
+  if (server.serverId !== null && !findServerById(servers, server.serverId)) return null;
+  return server;
+}
+
 async function redeem(refreshToken: string, serverId: string | null, upstream: CustomUpstream | null): Promise<Redemption> {
   // The refresh token may have been minted by the password+TOTP login route,
   // which works without a configured OAuth client by falling back to the
@@ -86,8 +155,13 @@ async function redeem(refreshToken: string, serverId: string | null, upstream: C
   } catch (error) {
     return { kind: 'unreachable', message: error instanceof Error ? error.message : 'Unknown error' };
   }
-  if (!response.ok) return { kind: 'refused', status: response.status, errorText: await response.text() };
-  return { kind: 'issued', tokens: (await response.json()) as IssuedTokens };
+  if (!response.ok) return { kind: 'refused', status: response.status, error: oauthErrorCode(await response.text()) };
+  try {
+    return { kind: 'issued', tokens: (await response.json()) as IssuedTokens };
+  } catch {
+    // The parser's message would quote the answer, tokens and all.
+    throw new Error(`The token endpoint answered ${response.status} with a body that is not JSON`);
+  }
 }
 
 /** How long an issued redemption is kept for requests that still carry the token it spent. */
@@ -169,9 +243,11 @@ export function resetRedemptionsForTests(): void {
 }
 
 /**
- * Keep what a renewal issued: the rotated refresh token and the sign-in stamp
- * that follows it, the access token cache, and a reissued id token. Each
- * request that shared a redemption writes the same values to its own response.
+ * Keep what a renewal issued: the rotated refresh token with the sign-in
+ * stamp, server cookie and typed-server record that follow it, the access
+ * token cache, and a reissued id token. Each request that shared a
+ * redemption writes the same values to its own response. `server` is where
+ * the token was renewed (refreshTokenServer).
  */
 export function storeRenewedTokens(
   cookieStore: CookieStore,
@@ -181,20 +257,28 @@ export function storeRenewedTokens(
     remember: boolean;
     age: { signedInAt: number; stamp: SignInStamp | null } | null;
     basePath: string | undefined;
+    server: TokenServer;
   },
 ): { accessToken: string; expiresIn: number } {
-  const { remember, age, basePath } = opts;
+  const { remember, age, basePath, server } = opts;
   if (tokens.refresh_token) {
     const options = getSignInCookieOptions(remember);
     cookieStore.set(refreshTokenCookieName(slot), tokens.refresh_token, options);
-    // The stamp follows the rotated token, with the same sign-in time and lifetime.
+    // The stamp follows the rotated token, with the same sign-in time, server and lifetime.
     if (age) {
       writeSignInStamp(cookieStore, slot, {
         signedInAt: age.signedInAt,
         refreshToken: tokens.refresh_token,
         ...(age.stamp?.account ? { account: age.stamp.account } : {}),
+        serverId: server.serverId,
+        ...(server.upstream ? { customServer: server.upstream.serverUrl } : {}),
       }, options);
     }
+    // Written again with the token's lifetime, so neither runs out before it.
+    const serverCookie = refreshTokenServerCookieName(slot);
+    if (server.serverId) cookieStore.set(serverCookie, server.serverId, options);
+    else if (cookieStore.get(serverCookie)) cookieStore.delete(serverCookie);
+    if (server.upstream) writeCustomUpstream(cookieStore, slot, server.upstream, remember);
   }
 
   const expiresIn = tokens.expires_in || 3600;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { encryptSession, decryptSession, sessionAuthHeader, type SessionCredentials } from '@/lib/auth/crypto';
 import { SESSION_COOKIE_MAX_AGE, sessionCookieName } from '@/lib/auth/session-cookie';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
@@ -8,19 +9,22 @@ import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verif
 import {
   clearStalwartAuthContextInStore,
   setStalwartAuthContextInStore,
+  wopiSignInOf,
 } from '@/lib/stalwart/auth-context';
+import { accountSlotFromBody } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
 import { readImpersonationConfig } from '@/lib/impersonation/master-config';
 import { revokeImpersonationGrant } from '@/lib/impersonation/revoke-grant';
 import { discardRestore } from '@/lib/impersonation/restore';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
-import { revokeWopiTokens } from '@/lib/wopi/revocation';
+import { revokeWopiTokens, type WopiSignIn } from '@/lib/wopi/revocation';
 import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
@@ -81,7 +85,8 @@ function getSlot(request: NextRequest): number {
  * recorded counts as signed in when the server first enforced the limits,
  * a fixed time, so a kept copy of it runs out like any other. Returns the
  * sign-in time, or the limit when the session is too old: its cookies are
- * cleared then.
+ * cleared then, and the office editors it opened in this browser stop
+ * working.
  */
 async function checkSessionAge(
   cookieStore: Awaited<ReturnType<typeof cookies>>,
@@ -92,11 +97,28 @@ async function checkSessionAge(
   // An impersonation login is `target%master`; the policy is the target's.
   const maxHours = await maxSessionHoursFor(credentials.username.split('%', 1)[0]);
   if (isPastMaxAge(signedInAt, maxHours)) {
+    await revokeWopiTokens(cookieStore, slot, [{ username: credentials.username, signedInAt }]);
     cookieStore.delete(sessionCookieName(slot));
     clearStalwartAuthContextInStore(cookieStore, slot);
     return { maxHours };
   }
   return { signedInAt };
+}
+
+/**
+ * The sign-ins `slots` hold, from their contexts and remembered sessions,
+ * with the times the office editor launch records for them.
+ */
+async function signInsIn(cookieStore: Awaited<ReturnType<typeof cookies>>, slots: number[]): Promise<WopiSignIn[]> {
+  const signIns: WopiSignIn[] = [];
+  for (const slot of slots) {
+    const fromContext = await wopiSignInOf(cookieStore, slot);
+    if (fromContext) signIns.push(fromContext);
+    const token = cookieStore.get(sessionCookieName(slot))?.value;
+    const remembered = token ? decryptSession(token) : null;
+    if (remembered) signIns.push({ username: remembered.username, signedInAt: remembered.signedInAt ?? await limitsEnforcedSince() });
+  }
+  return signIns;
 }
 
 function sessionTooOld(maxHours: number) {
@@ -111,6 +133,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   let upstreamUrl = '';
   let upstreamTrusted = false;
   try {
@@ -160,7 +184,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'JMAP server not configured' }, { status: 500 });
     }
 
-    const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : getSlot(request);
+    const slot = accountSlotFromBody(bodySlot) ?? getSlot(request);
     const cookieName = sessionCookieName(slot);
     const authHeader = accessToken
       ? `Bearer ${accessToken}`
@@ -228,7 +252,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.error('Session store error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session store error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -268,7 +292,7 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } },
     );
   } catch (error) {
-    logger.error('Session read error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session read error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -325,7 +349,7 @@ export async function PUT(request: NextRequest) {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (error) {
-    logger.error('Session read error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session read error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -338,8 +362,10 @@ export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const all = request.nextUrl.searchParams.get('all') === 'true';
-    // Office editors opened from here stop working with the session.
-    await revokeWopiTokens(cookieStore, all ? 'all' : getSlot(request));
+    // Office editors opened from here stop working with the session, and so
+    // do those of the sign-ins it holds, wherever they were opened.
+    const slots = all ? Array.from({ length: MAX_ACCOUNT_SLOTS }, (_, i) => i) : [getSlot(request)];
+    await revokeWopiTokens(cookieStore, all ? 'all' : slots[0], await signInsIn(cookieStore, slots));
 
     if (all) {
       // Delete all session cookies across every slot.
@@ -366,7 +392,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    logger.error('Session clear error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session clear error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -15,6 +15,7 @@ type Login = { serverUrl: string; username: string; authHeader: string };
 let LOGINS: Array<Login | null> = [];
 vi.mock('@/lib/stalwart/auth-context', () => ({
   readStalwartAuthContextFromStore: (_store: unknown, slot: number) => LOGINS[slot] ?? null,
+  readCurrentStalwartAuthContext: async (_store: unknown, slot: number) => LOGINS[slot] ?? null,
 }));
 
 const ALICE: Login = { serverUrl: 'https://one.example/', username: 'alice@example.org', authHeader: 'Bearer alice' };

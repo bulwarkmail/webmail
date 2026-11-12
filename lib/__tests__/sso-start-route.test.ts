@@ -57,6 +57,7 @@ vi.mock('@/lib/oauth/discovery', () => ({
 
 vi.mock('@/lib/oauth/tokens', () => ({
   getOauthScopes: () => provider.scopes,
+  refreshTokenCookieName: (slot: number) => `jmap_rt_${slot}`,
   refreshTokenServerCookieName: (slot: number) => `jmap_rt_server_${slot}`,
 }));
 
@@ -78,7 +79,7 @@ function mockRequest(body: Record<string, unknown>): unknown {
     json: async () => body,
     headers: {
       get: (k: string) =>
-        k === 'origin' ? 'https://mail.example.com' : k === 'host' ? 'mail.example.com' : null,
+        k === 'origin' ? 'https://mail.example.com' : k === 'host' ? 'mail.example.com' : k === 'content-type' ? 'application/json' : null,
     },
     nextUrl: { origin: 'https://mail.example.com' },
   };

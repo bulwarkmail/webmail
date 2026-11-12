@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
 import { getMetadata, getRequiredConfig } from '@/lib/oauth/token-exchange';
+import { signInIssuerRule } from '@/lib/oauth/sign-in-servers';
 
 /**
  * Same-origin OAuth metadata (discovery) proxy.
@@ -34,7 +35,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const metadata = await getMetadata(serverId);
+    // The login page builds the authorize URL from this, and the mobile app
+    // compares its issuer with the configured issuer URL: the same rule as
+    // a sign-in here (signInIssuerRule).
+    const metadata = await getMetadata(serverId, undefined, signInIssuerRule());
     if (!metadata?.authorization_endpoint || !metadata.token_endpoint) {
       logger.warn('OAuth metadata discovery returned no usable endpoints', { discoveryUrl });
       return NextResponse.json({ error: 'OAuth discovery failed' }, { status: 502 });

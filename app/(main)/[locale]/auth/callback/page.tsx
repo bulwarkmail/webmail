@@ -57,6 +57,16 @@ function OAuthCallbackInner() {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const errorParam = searchParams.get("error");
+    // RFC 9207: the issuer that answered, passed on so the server can refuse a
+    // code from another one than the sign-in was sent to.
+    const iss = searchParams.get("iss");
+
+    // An authorization answer names each of these once (RFC 6749 section
+    // 4.1.2, RFC 9207); an address that repeats one is not taken.
+    if (["code", "state", "iss"].some((name) => searchParams.getAll(name).length > 1)) {
+      setError("token_exchange_failed");
+      return;
+    }
 
     if (errorParam) {
       setError(errorParam === "access_denied" ? "access_denied" : "token_exchange_failed");
@@ -88,7 +98,7 @@ function OAuthCallbackInner() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ code, state }),
+            body: JSON.stringify({ code, state, ...(iss ? { iss } : {}) }),
           });
           if (!res.ok) {
             setError("token_exchange_failed");
@@ -143,7 +153,7 @@ function OAuthCallbackInner() {
         ? getLiteOAuthRedirectUri()
         : `${window.location.origin}${prefix}/${params.locale}/auth/callback`;
 
-      loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId)
+      loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId, iss ?? undefined)
         .then((success) => {
           if (success) {
             sessionStorage.removeItem("oauth_state");
@@ -192,7 +202,7 @@ function OAuthCallbackInner() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
-              body: JSON.stringify({ code, state }),
+              body: JSON.stringify({ code, state, ...(iss ? { iss } : {}) }),
             });
             if (!res.ok) {
               setError("token_exchange_failed");
@@ -268,7 +278,7 @@ function OAuthCallbackInner() {
       }
 
       const ssoPrefix = getPathPrefix(params.locale as string);
-      loginWithServerSso(code, state)
+      loginWithServerSso(code, state, iss ?? undefined)
         .then((success) => {
           if (success) {
             let redirectTo = `${ssoPrefix}/${params.locale}`;

@@ -4,7 +4,7 @@ import { configManager } from '@/lib/admin/config-manager';
 import { cookies } from 'next/headers';
 import { decryptSession } from '@/lib/auth/crypto';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext, rememberedSessionPastMaxAge } from '@/lib/stalwart/auth-context';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { logger } from '@/lib/logger';
 import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
@@ -34,13 +34,14 @@ async function resolveUsername(): Promise<string | null> {
   const cookieStore = await cookies();
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
     // The context first: a token sign-in may have claimed a bare name, and
-    // only the context knows the account it resolved to.
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
+    // only the context knows the account it resolved to. Neither counts once
+    // its session is past the maximum session length.
+    const ctx = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (ctx?.username) return ctx.accountName ?? ctx.username;
     const token = cookieStore.get(sessionCookieName(slot))?.value;
     if (token) {
       const sess = decryptSession(token);
-      if (sess?.username) return sess.username;
+      if (sess?.username && !(await rememberedSessionPastMaxAge(sess))) return sess.username;
     }
   }
   return null;

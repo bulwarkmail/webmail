@@ -190,6 +190,19 @@ export interface SignInStamp {
    * stamps written before it was recorded.
    */
   remember?: boolean;
+  /**
+   * The server that issued the refresh token: the id of its `jmapServers`
+   * entry, or null for the configured server or a server the user typed.
+   * Renewal and revocation go only there (lib/oauth/slot-renewal.ts).
+   * Unknown in stamps written before it was recorded.
+   */
+  serverId?: string | null;
+  /**
+   * The address of the server the user typed, when the token came from one
+   * that is not configured; the slot's custom-upstream record
+   * (lib/oauth/custom-upstream.ts) must name the same one.
+   */
+  customServer?: string;
 }
 
 export function refreshTokenHash(refreshToken: string): string {
@@ -211,11 +224,15 @@ export function readSignInStamp(cookieStore: CookieStore, slot: number, refreshT
     if (payload?.tokenHash !== refreshTokenHash(refreshToken)) return null;
     const account = typeof payload.account === 'string' ? payload.account : undefined;
     const remember = typeof payload.remember === 'boolean' ? payload.remember : undefined;
+    const serverId = typeof payload.serverId === 'string' || payload.serverId === null ? payload.serverId : undefined;
+    const customServer = typeof payload.customServer === 'string' && payload.customServer ? payload.customServer : undefined;
     return {
       signedInAt,
       tokenHash: payload.tokenHash,
       ...(account ? { account } : {}),
       ...(remember !== undefined ? { remember } : {}),
+      ...(serverId !== undefined ? { serverId } : {}),
+      ...(customServer ? { customServer } : {}),
     };
   } catch {
     return null;
@@ -234,7 +251,7 @@ let missingSecretLogged = false;
 export function writeSignInStamp(
   cookieStore: CookieStore,
   slot: number,
-  stamp: { signedInAt: number; refreshToken: string; account?: string; remember?: boolean },
+  stamp: { signedInAt: number; refreshToken: string; account?: string; remember?: boolean; serverId?: string | null; customServer?: string },
   options?: Record<string, unknown>,
 ): void {
   if (!hasSessionSecret()) {
@@ -249,6 +266,8 @@ export function writeSignInStamp(
     if (stamp.account) payload.account = stamp.account;
     const remember = stamp.remember ?? (options ? options.maxAge !== undefined : undefined);
     if (remember !== undefined) payload.remember = remember;
+    if (stamp.serverId !== undefined) payload.serverId = stamp.serverId;
+    if (stamp.customServer) payload.customServer = stamp.customServer;
     cookieStore.set(signInStampCookieName(slot), encryptPayload(payload, 'session-age'), options ?? getCookieOptions());
   } catch (error) {
     logger.warn('Could not record the sign-in time', { error: error instanceof Error ? error.message : 'Unknown error' });

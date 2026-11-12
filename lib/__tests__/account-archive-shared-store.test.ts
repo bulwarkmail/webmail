@@ -21,7 +21,7 @@ vi.mock('@/lib/admin/config-manager', () => ({ configManager: {
 vi.mock('@/lib/auth/session-secret', () => ({ hasSessionSecret: () => true }));
 vi.mock('next/headers', () => ({ cookies: async () => ({}) }));
 vi.mock('@/lib/stalwart/auth-context', () => ({
-  readStalwartAuthContextFromStore: (_: unknown, slot: number) => mocks.contexts.get(slot) ?? null,
+  readCurrentStalwartAuthContext: async (_: unknown, slot: number) => mocks.contexts.get(slot) ?? null,
 }));
 vi.mock('@/lib/auth/verify-jmap-auth', async importOriginal => ({
   ...await importOriginal<typeof import('@/lib/auth/verify-jmap-auth')>(), verifyJmapAuth: mocks.verify,

@@ -15,8 +15,13 @@ vi.mock('@/lib/stalwart/credentials', () => ({
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: (name: string) => (state.jar.has(name) ? { value: state.jar.get(name) } : undefined) }),
 }));
-vi.mock('@/lib/auth/crypto', () => ({ decryptSession: (token: string) => (token === 'valid' ? {} : null) }));
+vi.mock('@/lib/auth/crypto', () => ({ decryptSession: (token: string) => (token === 'valid' ? { username: 'user@mail.example' } : null) }));
 vi.mock('@/lib/admin/session', () => ({ verifyCurrentAdminSession: async (token: string) => (token === 'admin' ? {} : null) }));
+// No maximum session length here (lib/__tests__/session-max-age-identity-routes.test.ts has one).
+vi.mock('@/lib/stalwart/auth-context', () => ({
+  readCurrentStalwartAuthContext: async () => null,
+  rememberedSessionPastMaxAge: async () => false,
+}));
 
 import { canSeeInstanceDetails } from '@/lib/auth/instance-details';
 

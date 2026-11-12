@@ -16,10 +16,11 @@ vi.mock('@/lib/logger', () => ({ logger: { warn: vi.fn(), error: vi.fn(), debug:
 vi.mock('@/lib/account-utils', () => ({ MAX_ACCOUNT_SLOTS: 1 }));
 
 const login = vi.hoisted(() => ({ username: 'alice@example.org' }));
-vi.mock('@/lib/stalwart/auth-context', () => ({
-  readStalwartAuthContextFromStore: (_store: unknown, slot: number) =>
-    slot === 0 ? { serverUrl: 'https://mail.example.org', authHeader: `Bearer ${login.username}`, username: login.username } : null,
-}));
+vi.mock('@/lib/stalwart/auth-context', () => {
+  const read = (_store: unknown, slot: number) =>
+    slot === 0 ? { serverUrl: 'https://mail.example.org', authHeader: `Bearer ${login.username}`, username: login.username } : null;
+  return { readStalwartAuthContextFromStore: read, readCurrentStalwartAuthContext: async (store: unknown, slot: number) => read(store, slot) };
+});
 vi.mock('@/lib/stalwart/credentials', () => ({ getStalwartCredentials: vi.fn() }));
 
 const policy = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));

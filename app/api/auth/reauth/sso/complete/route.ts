@@ -3,14 +3,17 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { decryptPayload } from '@/lib/auth/crypto';
 import { exchangeCodeForTokens, getRequiredConfig, getTokenEndpoint, hasClientSecret } from '@/lib/oauth/token-exchange';
+import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { pairingOwner, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { stashGrant } from '@/lib/auth/pairing-store';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 
 // Completes the step-up re-authentication for device pairing. The user was
 // sent to the IdP with prompt=login (see /api/auth/sso/start with
@@ -45,9 +48,11 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   const cookieStore = await cookies();
   try {
-    const { code, state } = await request.json();
+    const { code, state, iss } = await request.json();
     if (!code || !state) {
       return NextResponse.json({ error: 'Missing code or state' }, { status: 400 });
     }
@@ -84,8 +89,17 @@ export async function POST(request: NextRequest) {
     if (!codeVerifier || !redirectUri) {
       return NextResponse.json({ error: 'Invalid re-auth session data' }, { status: 400 });
     }
+    // RFC 9207: only the issuer the step-up was sent to may answer it. The
+    // callback page passes `iss` on, so a missing one is refused when the
+    // provider says it sends it. The recorded issuer is that of metadata that
+    // passes the sign-in rule (signInIssuerRule), and the code goes only to
+    // such metadata's token endpoint.
+    if (!callbackIssuerAccepted(iss, pending.issuer, pending.iss_required === true)) {
+      logger.warn('Reauth complete: the answer came from another issuer than the one asked');
+      return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });
+    }
 
-    const context = readStalwartAuthContextFromStore(cookieStore, slot);
+    const context = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (!context) {
       return NextResponse.json({ error: 'not_signed_in' }, { status: 401 });
     }
@@ -146,7 +160,7 @@ export async function POST(request: NextRequest) {
     cookieStore.delete(SSO_PENDING_COOKIE);
     // The grant can't be kept without the shared store; the user tries again.
     if (isStoreUnavailable(error)) return storeUnavailableResponse();
-    logger.error('Reauth complete error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Reauth complete error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Re-authentication failed' }, { status: 401 });
   }
 }

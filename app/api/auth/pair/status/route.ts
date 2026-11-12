@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPairingStatus } from '@/lib/auth/pairing-store';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 
 // Lets the desktop replace its QR with "Signed in on your phone" once the
 // code was redeemed. Polled with the separate status id pair/create returned,
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     // Not "unknown": the desktop would show the QR as expired.
     if (isStoreUnavailable(error)) return storeUnavailableResponse({ 'Cache-Control': 'no-store' });
-    logger.error('Pair status error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Pair status error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: { 'Cache-Control': 'no-store' } });
   }
 }

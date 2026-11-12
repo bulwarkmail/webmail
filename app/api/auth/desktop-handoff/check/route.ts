@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { resolveDesktopHandoffServer } from '@/lib/auth/desktop-handoff-server';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     if (isStoreUnavailable(error)) return storeUnavailableResponse(NO_STORE);
-    logger.error('Desktop hand-off check error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Desktop hand-off check error', { error: loggableError(error) });
     return answer('Internal server error', 500);
   }
 }

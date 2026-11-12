@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { confirmHandoff, isHandoffCode } from '@/lib/auth/handoff-store';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true }, { headers: NO_STORE });
   } catch (error) {
     if (isStoreUnavailable(error)) return storeUnavailableResponse(NO_STORE);
-    logger.error('Mobile hand-off confirm error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Mobile hand-off confirm error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: NO_STORE });
   }
 }

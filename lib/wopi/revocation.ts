@@ -18,6 +18,10 @@ import { WOPI_TOKEN_TTL_MS, type WopiTokenPayload } from '@/lib/wopi/token';
  * token minted before it is refused. Signing out on another device does not
  * touch this browser's editors.
  *
+ * Each token also records the sign-in it came from (login and sign-in time).
+ * Ending that sign-in revokes it too, so a sign-out that arrives without the
+ * browser's cookie still ends the editors of the session it signs out.
+ *
  * Revocations are kept in the state directory so they survive a restart and
  * reach every replica sharing the state volume; each one is dropped once
  * every token it could refuse has expired anyway. With a shared store
@@ -58,6 +62,17 @@ export function wopiBrowserBinding(cookieStore: CookieStore): string {
     cookieStore.set(WOPI_BROWSER_COOKIE, id, getCookieOptions());
   }
   return browserBinding(id);
+}
+
+/** A sign-in office editor tokens belong to: its login and when it signed in. */
+export interface WopiSignIn {
+  username: string;
+  signedInAt: number;
+}
+
+function signInKey(signIn: WopiSignIn): string {
+  const id = createHash('sha256').update(`${signIn.username.trim().toLowerCase()}\n${signIn.signedInAt}`).digest('base64url');
+  return `signin:${id.slice(0, 22)}`;
 }
 
 interface RevocationState {
@@ -134,22 +149,27 @@ function prune(revocations: Map<string, number>, nowMs: number): void {
 
 /**
  * Refuse every token this browser minted for `slot` (or for every slot)
- * until now. Call before the browser's cookies are cleared.
+ * until now, and every token of the sign-ins in `signIns` wherever it was
+ * minted. Call before the browser's cookies are cleared.
  */
 export async function revokeWopiTokens(
   cookieStore: CookieStore,
   slot: number | 'all',
+  signIns: readonly WopiSignIn[] = [],
   nowMs: number = Date.now(),
 ): Promise<void> {
+  const keys = signIns.map(signInKey);
   const id = cookieStore.get(WOPI_BROWSER_COOKIE)?.value;
-  if (!id) return; // This browser never opened an editor.
-  if (slot === 'all') cookieStore.delete(WOPI_BROWSER_COOKIE);
+  if (id) {
+    if (slot === 'all') cookieStore.delete(WOPI_BROWSER_COOKIE);
+    keys.push(`${browserBinding(id)}:${slot}`);
+  }
+  if (keys.length === 0) return; // Nothing this browser or sign-in could have opened.
 
-  const key = `${browserBinding(id)}:${slot}`;
   const shared = isSharedMode();
   if (!shared) await reloadLocal();
   const s = state();
-  s.revocations.set(key, nowMs);
+  for (const key of keys) s.revocations.set(key, nowMs);
   prune(s.revocations, nowMs);
 
   try {
@@ -159,7 +179,7 @@ export async function revokeWopiTokens(
     // Still refused by this process; with a shared store it is written as
     // soon as the store answers again, so other replicas refuse it too.
     if (shared) {
-      s.pending.set(key, nowMs);
+      for (const key of keys) s.pending.set(key, nowMs);
       startRetry();
     }
     logger.warn('Could not persist WOPI revocation', {
@@ -211,8 +231,11 @@ function startRetry(): void {
 
 /** Whether signing out has revoked this token since it was minted. */
 export async function isWopiTokenRevoked(payload: WopiTokenPayload): Promise<boolean> {
-  // Tokens minted before tokens were bound to a browser simply expire.
-  if (!payload.bid || typeof payload.slot !== 'number') return false;
+  const keys: string[] = [];
+  if (payload.bid && typeof payload.slot === 'number') keys.push(`${payload.bid}:all`, `${payload.bid}:${payload.slot}`);
+  if (typeof payload.signedInAt === 'number') keys.push(signInKey({ username: payload.username, signedInAt: payload.signedInAt }));
+  // Tokens bound to neither a browser nor a sign-in simply expire.
+  if (keys.length === 0) return false;
   if (isSharedMode()) {
     try {
       await reloadShared();
@@ -228,9 +251,6 @@ export async function isWopiTokenRevoked(payload: WopiTokenPayload): Promise<boo
   }
   const { revocations } = state();
   const mintedAt = payload.exp - WOPI_TOKEN_TTL_MS;
-  const revokedAt = Math.max(
-    revocations.get(`${payload.bid}:all`) ?? -Infinity,
-    revocations.get(`${payload.bid}:${payload.slot}`) ?? -Infinity,
-  );
+  const revokedAt = Math.max(...keys.map((key) => revocations.get(key) ?? -Infinity));
   return revokedAt >= mintedAt;
 }

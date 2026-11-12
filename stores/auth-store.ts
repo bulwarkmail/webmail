@@ -112,8 +112,8 @@ interface AuthState {
    * the server stops accepting it, the user signs in again.
    */
   loginWithToken: (serverUrl: string, token: string, rememberMe?: boolean) => Promise<boolean>;
-  loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string) => Promise<boolean>;
-  loginWithServerSso: (code: string, state: string) => Promise<boolean>;
+  loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string, iss?: string) => Promise<boolean>;
+  loginWithServerSso: (code: string, state: string, iss?: string) => Promise<boolean>;
   /**
    * The desktop app on an instance: the one-time code from its browser sign-in, with the
    * verifier it kept. `blocked` is the device's own list of servers saying no.
@@ -523,8 +523,9 @@ async function exchangeOAuthCode(params: {
   slot: number;
   serverId?: string;
   remember: boolean;
+  iss?: string;
 }): Promise<Response> {
-  const { serverUrl, code, codeVerifier, redirectUri, slot, serverId, remember } = params;
+  const { serverUrl, code, codeVerifier, redirectUri, slot, serverId, remember, iss } = params;
   if (!IS_LITE) {
     return apiFetch(`/api/auth/token?slot=${slot}`, {
       method: 'POST',
@@ -535,6 +536,7 @@ async function exchangeOAuthCode(params: {
         redirect_uri: redirectUri,
         slot,
         ...(serverId ? { server_id: serverId } : {}),
+        ...(iss ? { iss } : {}),
         remember,
         // The desktop app signs in to a server only it knows about.
         ...(IS_DESKTOP_BUILD ? { custom_server_url: serverUrl, client_id: sessionStorage.getItem(DESKTOP_CLIENT_ID_KEY) } : {}),
@@ -2300,7 +2302,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithOAuth: async (serverUrl, code, codeVerifier, redirectUri, serverId) => {
+      loginWithOAuth: async (serverUrl, code, codeVerifier, redirectUri, serverId, iss) => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
 
         // Lite: the slot whose refresh token this attempt wrote, until the
@@ -2326,7 +2328,7 @@ export const useAuthStore = create<AuthState>()(
           // The login page parks "Remember me" here when the box is offered.
           const remember = typeof window === 'undefined' || sessionStorage.getItem('oauth_remember') !== 'false';
 
-          const tokenRes = await exchangeOAuthCode({ serverUrl, code, codeVerifier, redirectUri, slot, serverId, remember });
+          const tokenRes = await exchangeOAuthCode({ serverUrl, code, codeVerifier, redirectUri, slot, serverId, remember, iss });
 
           if (!tokenRes.ok) {
             throw new Error('token_exchange_failed');
@@ -2469,7 +2471,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithServerSso: async (code, state) => {
+      loginWithServerSso: async (code, state, iss) => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
 
         try {
@@ -2488,7 +2490,7 @@ export const useAuthStore = create<AuthState>()(
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
-              body: JSON.stringify({ code, state, slot }),
+              body: JSON.stringify({ code, state, slot, ...(iss ? { iss } : {}) }),
             }).then((res) => noteSessionAnswer(res, slot)),
             fetchConfig(),
           ]);

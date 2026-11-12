@@ -81,7 +81,8 @@ describe('session cookie presented as an editor token', () => {
   it('round-trips on its own path', () => {
     const store = cookieStore();
     setStalwartAuthContextInStore(store, 0, CREDENTIALS);
-    expect(readStalwartAuthContextFromStore(store, 0)).toEqual(CREDENTIALS);
+    // With the sign-in time the writer adds for the maximum session length.
+    expect(readStalwartAuthContextFromStore(store, 0)).toEqual({ ...CREDENTIALS, signedInAt: expect.any(Number) });
   });
 });
 
