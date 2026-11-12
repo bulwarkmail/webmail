@@ -576,7 +576,7 @@ function EmailCard({
           {/* Action Buttons; plugin reader actions behind a "more" button, as
               in the single reader's More panel on phones. Long names (Arabic
               "Reply all") wrap to a second line instead of being cut. */}
-          <div className="px-4 pb-4 flex flex-wrap gap-2">
+          <div className="px-4 pb-4 flex flex-wrap gap-2" data-conversation-message-actions="" data-plugin-list-avoid="">
             {onEditDraft && (
               <Button
                 variant="outline"
