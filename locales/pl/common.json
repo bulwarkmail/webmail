@@ -2106,6 +2106,10 @@
         "label": "Pokazuj załączniki na liście",
         "description": "Pokazuj załączone pliki pod każdą wiadomością, aby można je było otworzyć prosto z listy. Spinacz jest widoczny w każdym przypadku."
       },
+      "show_tag_chips": {
+        "label": "Pokazuj etykiety na liście",
+        "description": "Pokazuj etykiety obok nadawcy lub tematu na liście wiadomości"
+      },
       "plain_text_mode": {
         "label": "Tylko zwykły tekst",
         "description": "Wyłącz edytor tekstu sformatowanego i wysyłaj wszystkie wiadomości e-mail tylko jako zwykły tekst, w tym odpowiedzi i przekazywanie dalej"

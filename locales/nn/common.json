@@ -2117,6 +2117,10 @@
         "label": "Vis vedlegg i lista",
         "description": "Vis vedlagde filer under kvar melding, så du kan opne dei rett frå lista. Bindersen blir vist uansett."
       },
+      "show_tag_chips": {
+        "label": "Vis etikettar i lista",
+        "description": "Vis etikettar ved sida av avsendar eller emne i meldingslista"
+      },
       "plain_text_mode": {
         "label": "Berre ren tekst",
         "description": "Slå av rikteksteditoren og send all e-post som ren tekst, òg svar og vidaresendingar"

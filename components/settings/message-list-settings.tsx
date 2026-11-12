@@ -58,6 +58,7 @@ export function MessageListSettings() {
     showPreview,
     showVerificationCodes,
     showAttachmentChips,
+    showTagChips,
     disableThreading,
     groupListByDate,
     emailsPerPage,
@@ -233,6 +234,19 @@ export function MessageListSettings() {
           <ToggleSwitch
             checked={showAttachmentChips}
             onChange={(checked) => updateSetting('showAttachmentChips', checked)}
+          />
+        </SettingItem>
+        )}
+
+        {!isSettingHidden('showTagChips') && (
+        <SettingItem
+          label={t('show_tag_chips.label')}
+          description={t('show_tag_chips.description')}
+          locked={isSettingLocked('showTagChips')}
+        >
+          <ToggleSwitch
+            checked={showTagChips}
+            onChange={(checked) => updateSetting('showTagChips', checked)}
           />
         </SettingItem>
         )}

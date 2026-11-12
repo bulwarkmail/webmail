@@ -2109,6 +2109,10 @@
         "label": "Vis vedhæftede filer i listen",
         "description": "Vis vedhæftede filer under hver besked, så du kan åbne dem direkte fra listen. Papirclipsen vises under alle omstændigheder."
       },
+      "show_tag_chips": {
+        "label": "Vis etiketter på listen",
+        "description": "Vis etiketter ved siden af afsender eller emne i meddelelseslisten"
+      },
       "plain_text_mode": {
         "label": "Kun almindelig tekst",
         "description": "Deaktivér den rige teksteditor og send alle e-mails som ren tekst, inklusive svar og videresendelser"

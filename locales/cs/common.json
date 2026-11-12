@@ -2106,6 +2106,10 @@
         "label": "Zobrazit přílohy v seznamu",
         "description": "Zobrazovat přiložené soubory pod každou zprávou, aby šly otevřít přímo ze seznamu. Ikona sponky se zobrazuje vždy."
       },
+      "show_tag_chips": {
+        "label": "Zobrazit štítky v seznamu",
+        "description": "Zobrazovat štítky vedle odesílatele nebo předmětu v seznamu zpráv"
+      },
       "plain_text_mode": {
         "label": "Pouze prostý text",
         "description": "Zakázat editor formátovaného textu a odesílat všechny e-maily pouze jako prostý text, včetně odpovědí a přeposílání"

@@ -244,6 +244,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.appearance.tint_list_rows.label' },
     { label: 'settings.email_behavior.show_verification_codes.label' },
     { label: 'settings.email_behavior.show_attachment_chips.label' },
+    { label: 'settings.email_behavior.show_tag_chips.label' },
     { label: 'settings.message_list.sections.actions' },
     { label: 'settings.email_behavior.hover_actions.label' },
     { label: 'settings.message_list.sections.delete', synonyms: syn2('empty_trash') },

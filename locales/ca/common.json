@@ -2109,6 +2109,10 @@
         "label": "Mostra els fitxers adjunts a la llista",
         "description": "Mostra els fitxers adjunts sota cada missatge per obrir-los des de la llista. El clip es mostra igualment."
       },
+      "show_tag_chips": {
+        "label": "Mostra les etiquetes a la llista",
+        "description": "Mostra les etiquetes al costat del remitent o assumpte a la llista de missatges"
+      },
       "plain_text_mode": {
         "label": "Només text sense format",
         "description": "Desactiva l'editor de text enriquit i envia tots els correus només com a text sense format, incloses les respostes i els reenviaments"

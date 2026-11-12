@@ -2153,6 +2153,10 @@
         "label": "Rādīt pielikumus sarakstā",
         "description": "Rādīt pievienotos failus zem katras vēstules, lai tos varētu atvērt tieši no saraksta. Saspraudes ikona tiek rādīta jebkurā gadījumā."
       },
+      "show_tag_chips": {
+        "label": "Rādīt birkas sarakstā",
+        "description": "Rādīt birkas blakus sūtītājam vai tematam ziņojumu sarakstā"
+      },
       "attachment_click_action": {
         "label": "Darbība, noklikšķinot uz pielikuma",
         "description": "Izvēlieties priekšskatījumu vai tūlītēju lejupielādi",

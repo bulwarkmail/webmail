@@ -2109,6 +2109,10 @@
         "label": "Show attachments in the list",
         "description": "Show attached files under each message, to open them from the list. The paperclip shows either way."
       },
+      "show_tag_chips": {
+        "label": "Show tags in the list",
+        "description": "Show tag badges next to the sender or subject in the message list"
+      },
       "plain_text_mode": {
         "label": "Plain text only",
         "description": "Disable the rich text editor and send all emails as plain text only, including replies and forwards"
