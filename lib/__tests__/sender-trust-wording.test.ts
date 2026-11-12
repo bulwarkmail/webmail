@@ -50,6 +50,10 @@ describe('the tooltip of the sender domain on a booking card', () => {
     expect(title('en')).toBe("This message passed the mail server's sender check for {domain}.");
   });
 
+  it('says in French that the message passed the check ("a réussi"), not that it sat it', () => {
+    expect(title('fr')).toBe("Ce message a réussi la vérification de l'expéditeur du serveur de messagerie pour {domain}.");
+  });
+
   it.each(langs)('is reworded and translated in %s', (lang) => {
     const value = title(lang);
     expect(value).toContain('{domain}');

@@ -6,22 +6,34 @@ import { onFullSignOut } from '@/lib/sign-out-cleanup';
  * they were shown in full (authenticationResultsEvidence in
  * lib/email-headers.ts). A list row is fetched without what that check needs,
  * so it shows a sender logo only for a message remembered here. A message is
- * named by its blob id and size: the answer depends on the message's own
- * headers, which a blob id stands for, so a row can only borrow the answer of
- * the very message that was checked. Only "yes" is kept; a row of a message
- * that failed the check, or was never opened, has nothing to borrow. Kept in
- * this browser across reloads, and forgotten when everyone signs out.
+ * named by the login and JMAP account it is in, its blob id and its size: the
+ * answer depends on the message's own headers, which a blob id stands for
+ * within one account, so a row can only borrow the answer of the very message
+ * that was checked, however a server builds its blob ids. Only "yes" is kept;
+ * a row of a message that failed the check, or was never opened, has nothing
+ * to borrow. Kept in this browser across reloads; a full sign-out, the wipe of
+ * an account (lib/sign-out-cleanup.ts) and the app lock (lib/app-lock/scrub.ts)
+ * remove it.
  */
 
 const STORAGE_KEY = 'bulwark-receipt-checked';
 /** The most recent answers kept; older ones go first. */
 const MAX_KEPT = 2000;
 
+/** The login (an AccountEntry id) and JMAP account a message is in, as the view on screen resolves them. */
+export interface ReceiptAnswerAccount {
+  login: string;
+  accountId: string;
+}
+
 /** The name of a message's answer, or null when the message has no blob id. */
-export function receiptAnswerKey(email: { blobId?: string | null; size?: number | null } | null | undefined): string | null {
+export function receiptAnswerKey(
+  email: { blobId?: string | null; size?: number | null } | null | undefined,
+  account: ReceiptAnswerAccount,
+): string | null {
   const blobId = email?.blobId;
   if (typeof blobId !== 'string' || blobId === '') return null;
-  return `${blobId}|${typeof email?.size === 'number' ? email.size : ''}`;
+  return `${account.login}|${account.accountId}|${blobId}|${typeof email?.size === 'number' ? email.size : ''}`;
 }
 
 function readStored(): string[] {
@@ -35,11 +47,13 @@ function readStored(): string[] {
   }
 }
 
-function writeStored(keys: string[]): void {
+function writeStored(key: string): void {
   if (typeof window === 'undefined') return;
   try {
-    // Another tab may have remembered messages since this one loaded.
-    const merged = [...new Set([...readStored(), ...keys])].slice(-MAX_KEPT);
+    // Only the new answer goes to what is stored now: another tab may have
+    // remembered messages since this one loaded, or emptied the storage at a
+    // sign-out or a lock, and what this tab still holds must not come back.
+    const merged = [...new Set([...readStored(), key])].slice(-MAX_KEPT);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
   } catch {
     /* storage unavailable or full: the answer lasts this page only */
@@ -58,7 +72,7 @@ export const useReceiptAnswers = create<ReceiptAnswersState>()((set, get) => ({
     if (get().known.has(key)) return;
     const next = [...get().known, key].slice(-MAX_KEPT);
     set({ known: new Set(next) });
-    writeStored(next);
+    writeStored(key);
   },
   reset: () => {
     set({ known: new Set() });

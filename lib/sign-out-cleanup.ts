@@ -49,6 +49,8 @@ const SIGNED_OUT_STORAGE_KEYS = [
   // What each account chose to keep, and what's known about its store.
   'bulwark-offline-scope',
   'bulwark-offline-health',
+  // Which opened messages passed the sender check (lib/receipt-answers.ts): their logins, accounts and blob ids.
+  'bulwark-receipt-checked',
 ];
 
 const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted', 'bulwark-offline-evicted-owners', 'bulwark-store-opened', 'bulwark-offline-scope', 'bulwark-offline-health']);
