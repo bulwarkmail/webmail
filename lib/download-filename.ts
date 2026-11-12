@@ -1,4 +1,5 @@
 import type { Email } from "@/lib/jmap/types";
+import { stripBidiControls } from "@/lib/bidi";
 
 // Allow any Unicode letter or digit (so umlauts, accents, CJK survive) plus a
 // small set of safe punctuation. Everything else - emojis, RTL/zero-width
@@ -218,6 +219,15 @@ export function attachmentDownloadFilename(
   if (!ext) return transformedStem;
   const transformedExt = opts.lowercase ? ext.toLocaleLowerCase() : ext;
   return `${transformedStem}.${transformedExt}`;
+}
+
+// The download name of an attachment the user renamed: their name as typed,
+// without the template or the transforms. Only what a file system can't take
+// (control characters and `<>:"/\|?*`) becomes `_`.
+export function renamedAttachmentFilename(name: string): string {
+  // eslint-disable-next-line no-control-regex
+  const cleaned = stripBidiControls(name).replace(/[\u0000-\u001f\u007f-\u009f<>:"/\\|?*]/g, "_").trim();
+  return cleaned || "attachment";
 }
 
 // Pick a name for `stem` + `ext` that is not already in `used`. First choice

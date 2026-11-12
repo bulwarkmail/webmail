@@ -221,6 +221,18 @@ describe('Download all attachments', () => {
     await p.assertZip(['report.txt', 'data.bin'], [alpha, beta]);
   });
 
+  it('names a renamed attachment in the ZIP as the user typed it', async () => {
+    const p = await openViewer('primary');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Rename report.txt' })[0]);
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Rename attachment' }), { target: { value: 'Q3 Summary' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Rename Q3 Summary.txt' }).length).toBeGreaterThan(0));
+    p.success(); p.click();
+    await waitFor(() => expect(p.downloads).toHaveLength(1));
+    await p.finish();
+    await p.assertZip(['Q3 Summary.txt', 'data.bin'], [alpha, beta]);
+  });
+
   it('preserves distinct bytes when attachment names collide', async () => {
     const p = await openViewer('shared', attachments.map(part => ({ ...part, name: 'report.txt' })));
     p.success(); p.click();

@@ -3,7 +3,7 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
-import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
+import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE, renamedAttachmentFilename } from "@/lib/download-filename";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
@@ -79,6 +79,7 @@ import { ViewSourceDialog } from "./view-source-dialog";
 import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
 import { useChooseMoveFolder } from "./move-to-dialog";
 import { SaveToFilesDialog, type SaveableAttachment } from "./save-to-files-dialog";
+import { RenameAttachmentDialog } from "./rename-attachment-dialog";
 import { usePolicyStore } from "@/stores/policy-store";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
 import {
@@ -249,6 +250,9 @@ const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
 // (a new {} each time drew the whole reader once more after its body came).
 // The resets on a new message go through useQuietState for the same reason.
 const NO_URLS: Record<string, string> = {};
+/** Attachment names the user changed, by attachment id, for the message they were changed in. */
+interface AttachmentRenames { emailId: string | undefined; names: Record<string, string> }
+const NO_RENAMES: AttachmentRenames = { emailId: undefined, names: {} };
 /** What a message from a file can't do: it is in no folder and has no address in the app. */
 const SAVED_FILE_OMIT: readonly MessageActionKey[] = [
   'edit_draft', 'forward_as_attachment', 'restore', 'archive', 'delete', 'remove_from_folder',
@@ -479,6 +483,14 @@ interface EffectiveAttachment {
   cid?: string;
   decryptedAttachment?: PostalMimeAttachment;
   tnefData?: Uint8Array;
+  /** The user renamed it in this reader: `name` is theirs, saved as typed. */
+  renamed?: boolean;
+}
+
+/** The name a saved copy of an attachment gets in a zip or a folder. */
+function attachmentCopyName(attachment: EffectiveAttachment): string {
+  if (attachment.renamed && attachment.name) return renamedAttachmentFilename(attachment.name);
+  return getAttachmentDisplayName(attachment.name, attachment.type);
 }
 
 function getPostalMimeAttachmentSize(attachment: PostalMimeAttachment): number {
@@ -3056,6 +3068,30 @@ export function EmailViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments, plainView]);
 
+  // Renamed attachments, for saving copies under another name. Only here:
+  // the message stays as it is, and another message (or this one opened
+  // again) shows the original names.
+  const [attachmentRenames, setAttachmentRenames] = useQuietState<AttachmentRenames>(NO_RENAMES);
+  useEffect(() => { setAttachmentRenames(NO_RENAMES); }, [email?.id, setAttachmentRenames]);
+  const [renameTarget, setRenameTarget] = useState<EffectiveAttachment | null>(null);
+  const listedAttachments = useMemo<EffectiveAttachment[]>(() => {
+    // Not yet reset for a new message: none of its names were changed.
+    if (attachmentRenames.emailId !== email?.id) return effectiveAttachments;
+    const { names } = attachmentRenames;
+    return effectiveAttachments.map((attachment) =>
+      names[attachment.id] !== undefined ? { ...attachment, name: names[attachment.id], renamed: true } : attachment);
+  }, [effectiveAttachments, attachmentRenames, email?.id]);
+  const renameAttachment = useCallback((attachment: EffectiveAttachment, name: string) => {
+    const original = effectiveAttachments.find((a) => a.id === attachment.id);
+    setAttachmentRenames((prev) => {
+      const names = { ...(prev.emailId === email?.id ? prev.names : {}) };
+      // Back to its own name: the download template applies again.
+      if (original && name === getAttachmentDisplayName(original.name, original.type)) delete names[attachment.id];
+      else names[attachment.id] = name;
+      return { emailId: email?.id, names };
+    });
+  }, [effectiveAttachments, email?.id, setAttachmentRenames]);
+
   // Whether external resources must be blocked for the message on screen.
   // Shared by every body path - the message's own HTML, TNEF, unwrapped
   // message/rfc822, and plugin-rendered (decrypted) bodies - so the user's
@@ -3256,6 +3292,8 @@ export function EmailViewer({
 
   const resolveAttachmentName = useCallback(
     (attachment: EffectiveAttachment) => {
+      // The user typed this name: no template, no transforms.
+      if (attachment.renamed && attachment.name) return renamedAttachmentFilename(attachment.name);
       const fallback = attachment.name || 'download';
       if (!email) return fallback;
       return attachmentDownloadFilename(email, { name: attachment.name, type: attachment.type }, attachmentFilenameOptions) || fallback;
@@ -3391,7 +3429,7 @@ export function EmailViewer({
   // Individual failures are skipped so a single bad blob doesn't sink the
   // whole archive.
   const handleDownloadAllAttachments = useCallback(async () => {
-    if (isDownloadingAll || effectiveAttachments.length === 0) return;
+    if (isDownloadingAll || listedAttachments.length === 0) return;
     if (!downloadAllowed('attachment', email)) return;
     setIsDownloadingAll(true);
     try {
@@ -3401,8 +3439,8 @@ export function EmailViewer({
       const uniqueName = createUniqueNamer();
 
       let added = 0;
-      for (const attachment of effectiveAttachments) {
-        const entryName = uniqueName(getAttachmentDisplayName(attachment.name, attachment.type));
+      for (const attachment of listedAttachments) {
+        const entryName = uniqueName(attachmentCopyName(attachment));
         try {
           const content = await readAttachmentContent(attachment, entryName);
           if (content) {
@@ -3422,7 +3460,7 @@ export function EmailViewer({
       const zipBlob = await zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
       // The policy may have changed while the attachments were fetched.
       if (!saveBlobAs(zipBlob, attachmentsBundleFilename(email), { kind: 'attachment', subject: email })) return;
-      const omitted = effectiveAttachments.length - added;
+      const omitted = listedAttachments.length - added;
       if (omitted > 0) toast.warning(t('download_all_partial', { count: omitted }));
     } catch (error) {
       console.error('Failed to download attachments:', error);
@@ -3430,13 +3468,13 @@ export function EmailViewer({
     } finally {
       setIsDownloadingAll(false);
     }
-  }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, email, t, tFiles]);
+  }, [isDownloadingAll, listedAttachments, readAttachmentContent, email, t, tFiles]);
 
   // Save every attachment into a folder the user picks. These writes don't
   // pass saveBlobAs, so the device policy is asked here: before the picker,
   // and before each file. A browser that refuses the picker gets the zip.
   const handleSaveAllToFolder = useCallback(async () => {
-    if (isDownloadingAll || effectiveAttachments.length === 0) return;
+    if (isDownloadingAll || listedAttachments.length === 0) return;
     if (!downloadAllowed('attachment', email)) return;
     let folder: FolderHandle;
     try {
@@ -3449,8 +3487,8 @@ export function EmailViewer({
     try {
       const result = await saveFilesToFolder(
         folder,
-        effectiveAttachments.map((attachment) => {
-          const name = getAttachmentDisplayName(attachment.name, attachment.type);
+        listedAttachments.map((attachment) => {
+          const name = attachmentCopyName(attachment);
           return { name, read: () => readAttachmentContent(attachment, name) };
         }),
         () => downloadAllowed('attachment', email),
@@ -3466,7 +3504,7 @@ export function EmailViewer({
     } finally {
       setIsDownloadingAll(false);
     }
-  }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, handleDownloadAllAttachments, email, tWindows]);
+  }, [isDownloadingAll, listedAttachments, readAttachmentContent, handleDownloadAllAttachments, email, tWindows]);
 
   // What the attachment bar and the attachment cards share.
   const desktopClipboard = getDesktopBridge()?.clipboard;
@@ -3474,7 +3512,7 @@ export function EmailViewer({
   const editAccount = editAccountOf(email);
   const { canEdit: canEditAttachment, edit: editAttachment } = useEditAttachment(editAccount);
   const readerAttachmentProps = {
-    attachments: effectiveAttachments,
+    attachments: listedAttachments,
     thumbUrls: imageThumbUrls,
     opensPreview: (attachment: EffectiveAttachment) => isAttachmentPreviewable(attachment) && (mailAttachmentAction === 'preview' || downloadsOff),
     onOpen: handleEffectiveAttachmentOpen,
@@ -3506,6 +3544,8 @@ export function EmailViewer({
     downloadsOff,
     // Save to Files would get around the policy: Files downloads are off too, but the copy would stay.
     onSaveToFiles: canSaveToFiles && !downloadsOff ? setSaveToFilesTarget : undefined,
+    // The name only matters for a copy, and there are none to save.
+    onRename: downloadsOff ? undefined : setRenameTarget,
     pluginMenu: (attachment: EffectiveAttachment) => <AttachmentPluginMenu emailId={email?.id} attachment={attachment} className="p-2 rounded-md" />,
     renderItem: (attachment: EffectiveAttachment, tile: (drag: AttachmentDragProps) => React.ReactNode) => (
       <DraggableAttachmentChip attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive && !downloadsOff} downloadName={resolveAttachmentName(attachment)}>
@@ -6573,6 +6613,13 @@ export function EmailViewer({
         />
       )}
 
+      <RenameAttachmentDialog
+        isOpen={renameTarget !== null}
+        name={renameTarget ? getAttachmentDisplayName(renameTarget.name, renameTarget.type) : ''}
+        onClose={() => setRenameTarget(null)}
+        onRename={(name) => { if (renameTarget) renameAttachment(renameTarget, name); }}
+        namespace="email_viewer"
+      />
       {canSaveToFiles && client && saveToFilesTarget && (
         <SaveToFilesDialog attachment={saveToFilesTarget} client={client} blobAccountId={blobAccountId} onClose={() => setSaveToFilesTarget(null)} />
       )}

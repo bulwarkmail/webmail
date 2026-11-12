@@ -498,6 +498,12 @@
     "save_pending": "Not saved yet. Bulwark tries again when the server answers."
   },
   "email_viewer": {
+    "rename": "Rename",
+    "rename_named": "Rename {name}",
+    "rename_menu": "Rename…",
+    "rename_title": "Rename attachment",
+    "rename_invalid_chars": "File names can't contain / or \\ or control characters",
+    "rename_too_long": "This name is too long",
     "read_receipt": {
       "prompt": "The sender asked to be notified when you open this message.",
       "send": "Send receipt",
@@ -1005,6 +1011,12 @@
     "received_hint": "Set by the sender's mail program. Anyone can set a label, so it proves nothing."
   },
   "email_composer": {
+    "rename": "Rename",
+    "rename_named": "Rename {name}",
+    "rename_menu": "Rename…",
+    "rename_title": "Rename attachment",
+    "rename_invalid_chars": "File names can't contain / or \\ or control characters",
+    "rename_too_long": "This name is too long",
     "select_from_directory": "Select from directory",
     "minimize": "Minimize",
     "maximize": "Full screen",
