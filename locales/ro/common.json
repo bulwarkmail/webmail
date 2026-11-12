@@ -1284,6 +1284,14 @@
       "plain_text": "[Imagine: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Redenumește",
+    "rename_named": "Redenumește {name}",
+    "rename_menu": "Redenumește…",
+    "rename_title": "Redenumește atașamentul",
+    "rename_invalid_chars": "Numele fișierelor nu pot conține / sau \\ sau caractere de control",
+    "rename_too_long": "Acest nume este prea lung"
+  },
   "compose_ux": {
     "draft_discarded": "Ciornă renunțată",
     "undo": "Anulează",

@@ -1284,6 +1284,14 @@
       "plain_text": "[Görsel: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Yeniden adlandır",
+    "rename_named": "{name} dosyasını yeniden adlandır",
+    "rename_menu": "Yeniden adlandır…",
+    "rename_title": "Eki yeniden adlandır",
+    "rename_invalid_chars": "Dosya adları / veya \\ ya da denetim karakterleri içeremez",
+    "rename_too_long": "Bu ad çok uzun"
+  },
   "compose_ux": {
     "draft_discarded": "Taslak silindi",
     "undo": "Geri al",

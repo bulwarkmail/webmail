@@ -1284,6 +1284,14 @@
       "plain_text": "[Attēls: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Pārdēvēt",
+    "rename_named": "Pārdēvēt {name}",
+    "rename_menu": "Pārdēvēt…",
+    "rename_title": "Pārdēvēt pielikumu",
+    "rename_invalid_chars": "Faila nosaukumā nedrīkst būt / vai \\ vai vadības rakstzīmes",
+    "rename_too_long": "Šis nosaukums ir pārāk garš"
+  },
   "compose_ux": {
     "draft_discarded": "Melnraksts atmests",
     "undo": "Atsaukt",

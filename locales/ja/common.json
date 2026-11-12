@@ -1284,6 +1284,14 @@
       "plain_text": "[画像: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "名前を変更",
+    "rename_named": "{name} の名前を変更",
+    "rename_menu": "名前を変更…",
+    "rename_title": "添付ファイルの名前を変更",
+    "rename_invalid_chars": "ファイル名に / や \\、制御文字は使えません",
+    "rename_too_long": "名前が長すぎます"
+  },
   "compose_ux": {
     "draft_discarded": "下書きを破棄しました",
     "undo": "元に戻す",

@@ -1228,6 +1228,14 @@
       "plain_text": "[תמונה: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "שנה שם",
+    "rename_named": "שנה את השם של {name}",
+    "rename_menu": "שנה שם…",
+    "rename_title": "שנה את שם הקובץ המצורף",
+    "rename_invalid_chars": "שמות קבצים לא יכולים להכיל / או \\ או תווי בקרה",
+    "rename_too_long": "השם הזה ארוך מדי"
+  },
   "compose_ux": {
     "draft_discarded": "הטיוטה נמחקה",
     "undo": "ביטול",

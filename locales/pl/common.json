@@ -1284,6 +1284,14 @@
       "plain_text": "[Obraz: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Zmień nazwę",
+    "rename_named": "Zmień nazwę {name}",
+    "rename_menu": "Zmień nazwę…",
+    "rename_title": "Zmień nazwę załącznika",
+    "rename_invalid_chars": "Nazwy plików nie mogą zawierać / ani \\ ani znaków sterujących",
+    "rename_too_long": "Ta nazwa jest za długa"
+  },
   "compose_ux": {
     "draft_discarded": "Wersja robocza odrzucona",
     "undo": "Cofnij",

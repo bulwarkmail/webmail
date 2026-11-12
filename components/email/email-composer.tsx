@@ -707,6 +707,7 @@ export function EmailComposer({
   const tClassification = useTranslations('classification');
   const tEdit = useTranslations('desktopEdit');
   const tFiles = useTranslations('files');
+  const tRename = useTranslations('attachment_rename');
   const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
   const tRecent = useTranslations('desktopAttachRecent');
@@ -6304,8 +6305,8 @@ export function EmailComposer({
                         type="button"
                         onClick={() => setRenameIndex(index)}
                         className={cn("-my-0.5 hover:text-foreground text-muted-foreground min-w-6 min-h-6 flex items-center justify-center", TOUCH_HIT_AREA)}
-                        title={t('rename')}
-                        aria-label={t('rename_named', { name: att.name })}
+                        title={tRename('rename')}
+                        aria-label={tRename('rename_named', { name: att.name })}
                         data-testid="composer-rename"
                       >
                         <Pencil className="w-3 h-3" />
@@ -6834,7 +6835,7 @@ export function EmailComposer({
         return (
           <ContextMenu ref={attachmentMenu.menuRef} isOpen={attachmentMenu.contextMenu.isOpen} position={attachmentMenu.contextMenu.position} onClose={attachmentMenu.closeContextMenu}>
             {canPreviewChip(att) && <ContextMenuItem icon={Eye} label={tFiles('preview')} onClick={pick(() => setPreviewAttachment(att))} />}
-            {canRenameChip(att) && <ContextMenuItem icon={Pencil} label={t('rename_menu')} onClick={pick(() => setRenameIndex(index))} />}
+            {canRenameChip(att) && <ContextMenuItem icon={Pencil} label={tRename('rename_menu')} onClick={pick(() => setRenameIndex(index))} />}
             {canRenameChip(att) && composerEdits.canEditChip(att) && (
               <ContextMenuItem icon={FilePen} label={tEdit('edit')} onClick={pick(() => void composerEdits.startEdit(att))} />
             )}
@@ -6847,7 +6848,6 @@ export function EmailComposer({
         name={(renameIndex !== null && (attachments[renameIndex]?.name || unnamedAttachmentName(attachments[renameIndex]?.type))) || ''}
         onClose={() => setRenameIndex(null)}
         onRename={(name) => { if (renameIndex !== null) renameAttachment(renameIndex, name); }}
-        namespace="email_composer"
       />
       {previewAttachment && (
         <FilePreviewModal

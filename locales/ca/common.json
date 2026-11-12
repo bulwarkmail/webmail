@@ -1284,6 +1284,14 @@
       "plain_text": "[Imatge: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Canvia el nom",
+    "rename_named": "Canvia el nom de {name}",
+    "rename_menu": "Canvia el nom…",
+    "rename_title": "Canvia el nom de l'adjunt",
+    "rename_invalid_chars": "Els noms de fitxer no poden contenir / ni \\ ni caràcters de control",
+    "rename_too_long": "Aquest nom és massa llarg"
+  },
   "compose_ux": {
     "draft_discarded": "Esborrany descartat",
     "undo": "Desfés",

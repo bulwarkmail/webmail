@@ -1284,6 +1284,14 @@
       "plain_text": "[Imagen: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Cambiar nombre",
+    "rename_named": "Cambiar el nombre de {name}",
+    "rename_menu": "Cambiar nombre…",
+    "rename_title": "Cambiar el nombre del adjunto",
+    "rename_invalid_chars": "Los nombres de archivo no pueden contener / ni \\ ni caracteres de control",
+    "rename_too_long": "Este nombre es demasiado largo"
+  },
   "compose_ux": {
     "draft_discarded": "Borrador descartado",
     "undo": "Deshacer",

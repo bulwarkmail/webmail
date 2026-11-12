@@ -6618,7 +6618,6 @@ export function EmailViewer({
         name={renameTarget ? getAttachmentDisplayName(renameTarget.name, renameTarget.type) : ''}
         onClose={() => setRenameTarget(null)}
         onRename={(name) => { if (renameTarget) renameAttachment(renameTarget, name); }}
-        namespace="email_viewer"
       />
       {canSaveToFiles && client && saveToFilesTarget && (
         <SaveToFilesDialog attachment={saveToFilesTarget} client={client} blobAccountId={blobAccountId} onClose={() => setSaveToFilesTarget(null)} />

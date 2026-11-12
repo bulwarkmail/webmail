@@ -1284,6 +1284,14 @@
       "plain_text": "[Obrázok: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Premenovať",
+    "rename_named": "Premenovať {name}",
+    "rename_menu": "Premenovať…",
+    "rename_title": "Premenovať prílohu",
+    "rename_invalid_chars": "Názvy súborov nesmú obsahovať / ani \\ ani riadiace znaky",
+    "rename_too_long": "Tento názov je príliš dlhý"
+  },
   "compose_ux": {
     "draft_discarded": "Koncept zahodený",
     "undo": "Späť",

@@ -1284,6 +1284,14 @@
       "plain_text": "[Bilde: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Gi nytt navn",
+    "rename_named": "Gi {name} nytt navn",
+    "rename_menu": "Gi nytt navn…",
+    "rename_title": "Gi vedlegget nytt navn",
+    "rename_invalid_chars": "Filnavn kan ikke inneholde / eller \\ eller kontrolltegn",
+    "rename_too_long": "Navnet er for langt"
+  },
   "compose_ux": {
     "draft_discarded": "Utkast forkastet",
     "undo": "Angre",

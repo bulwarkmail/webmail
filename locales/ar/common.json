@@ -1284,6 +1284,14 @@
       "plain_text": "[صورة: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "إعادة التسمية",
+    "rename_named": "إعادة تسمية {name}",
+    "rename_menu": "إعادة التسمية…",
+    "rename_title": "إعادة تسمية المرفق",
+    "rename_invalid_chars": "لا يمكن أن تحتوي أسماء الملفات على / أو \\ أو على أحرف تحكم",
+    "rename_too_long": "هذا الاسم طويل جدًا"
+  },
   "compose_ux": {
     "draft_discarded": "تم تجاهل المسودة",
     "undo": "تراجع",

@@ -1284,6 +1284,14 @@
       "plain_text": "[Afbeelding: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Naam wijzigen",
+    "rename_named": "Naam van {name} wijzigen",
+    "rename_menu": "Naam wijzigen…",
+    "rename_title": "Naam van bijlage wijzigen",
+    "rename_invalid_chars": "Bestandsnamen mogen geen / of \\ of stuurtekens bevatten",
+    "rename_too_long": "Deze naam is te lang"
+  },
   "compose_ux": {
     "draft_discarded": "Concept verwijderd",
     "undo": "Ongedaan maken",

@@ -1284,6 +1284,14 @@
       "plain_text": "[Imagem: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Renomear",
+    "rename_named": "Renomear {name}",
+    "rename_menu": "Renomear…",
+    "rename_title": "Renomear anexo",
+    "rename_invalid_chars": "Os nomes de ficheiro não podem conter / nem \\ nem caracteres de controlo",
+    "rename_too_long": "Este nome é demasiado longo"
+  },
   "compose_ux": {
     "draft_discarded": "Rascunho descartado",
     "undo": "Desfazer",

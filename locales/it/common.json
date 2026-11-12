@@ -1284,6 +1284,14 @@
       "plain_text": "[Immagine: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Rinomina",
+    "rename_named": "Rinomina {name}",
+    "rename_menu": "Rinomina…",
+    "rename_title": "Rinomina allegato",
+    "rename_invalid_chars": "I nomi dei file non possono contenere / o \\ o caratteri di controllo",
+    "rename_too_long": "Questo nome è troppo lungo"
+  },
   "compose_ux": {
     "draft_discarded": "Bozza eliminata",
     "undo": "Annulla",

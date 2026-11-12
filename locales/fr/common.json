@@ -1284,6 +1284,14 @@
       "plain_text": "[Image : {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Renommer",
+    "rename_named": "Renommer {name}",
+    "rename_menu": "Renommer…",
+    "rename_title": "Renommer la pièce jointe",
+    "rename_invalid_chars": "Les noms de fichier ne peuvent pas contenir / ni \\ ni de caractères de contrôle",
+    "rename_too_long": "Ce nom est trop long"
+  },
   "compose_ux": {
     "draft_discarded": "Brouillon supprimé",
     "undo": "Annuler",

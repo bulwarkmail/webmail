@@ -1284,6 +1284,14 @@
       "plain_text": "[Bild: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Umbenennen",
+    "rename_named": "{name} umbenennen",
+    "rename_menu": "Umbenennen…",
+    "rename_title": "Anhang umbenennen",
+    "rename_invalid_chars": "Dateinamen dürfen kein / oder \\ und keine Steuerzeichen enthalten",
+    "rename_too_long": "Dieser Name ist zu lang"
+  },
   "compose_ux": {
     "draft_discarded": "Entwurf verworfen",
     "undo": "Rückgängig",

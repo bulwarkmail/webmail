@@ -1292,6 +1292,14 @@
       "plain_text": "[Bilete: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Gi nytt namn",
+    "rename_named": "Gi {name} nytt namn",
+    "rename_menu": "Gi nytt namn…",
+    "rename_title": "Gi vedlegget nytt namn",
+    "rename_invalid_chars": "Filnamn kan ikkje innehalde / eller \\ eller kontrollteikn",
+    "rename_too_long": "Namnet er for langt"
+  },
   "compose_ux": {
     "draft_discarded": "Utkast forkasta",
     "undo": "Angre",

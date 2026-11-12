@@ -1284,6 +1284,14 @@
       "plain_text": "[圖片：{alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "重新命名",
+    "rename_named": "重新命名 {name}",
+    "rename_menu": "重新命名…",
+    "rename_title": "重新命名附件",
+    "rename_invalid_chars": "檔案名稱不能包含 / 或 \\ 或控制字元",
+    "rename_too_long": "名稱太長"
+  },
   "compose_ux": {
     "draft_discarded": "草稿已捨棄",
     "undo": "復原",

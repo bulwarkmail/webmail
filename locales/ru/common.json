@@ -1284,6 +1284,14 @@
       "plain_text": "[Изображение: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Переименовать",
+    "rename_named": "Переименовать {name}",
+    "rename_menu": "Переименовать…",
+    "rename_title": "Переименовать вложение",
+    "rename_invalid_chars": "Имя файла не может содержать / или \\ или управляющие символы",
+    "rename_too_long": "Это имя слишком длинное"
+  },
   "compose_ux": {
     "draft_discarded": "Черновик удалён",
     "undo": "Отменить",

@@ -1296,6 +1296,14 @@
       "plain_text": "[Εικόνα: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Μετονομασία",
+    "rename_named": "Μετονομασία {name}",
+    "rename_menu": "Μετονομασία…",
+    "rename_title": "Μετονομασία συνημμένου",
+    "rename_invalid_chars": "Τα ονόματα αρχείων δεν μπορούν να περιέχουν / ή \\ ή χαρακτήρες ελέγχου",
+    "rename_too_long": "Αυτό το όνομα είναι πολύ μεγάλο"
+  },
   "compose_ux": {
     "draft_discarded": "Το πρόχειρο απορρίφθηκε",
     "undo": "Αναίρεση",

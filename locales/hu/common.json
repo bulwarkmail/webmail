@@ -1284,6 +1284,14 @@
       "plain_text": "[Kép: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Átnevezés",
+    "rename_named": "{name} átnevezése",
+    "rename_menu": "Átnevezés…",
+    "rename_title": "Melléklet átnevezése",
+    "rename_invalid_chars": "A fájlnév nem tartalmazhat / vagy \\ jelet, sem vezérlőkaraktert",
+    "rename_too_long": "Ez a név túl hosszú"
+  },
   "compose_ux": {
     "draft_discarded": "Piszkozat elvetve",
     "undo": "Visszavonás",

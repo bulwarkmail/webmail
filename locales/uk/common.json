@@ -1284,6 +1284,14 @@
       "plain_text": "[Зображення: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Перейменувати",
+    "rename_named": "Перейменувати {name}",
+    "rename_menu": "Перейменувати…",
+    "rename_title": "Перейменувати вкладення",
+    "rename_invalid_chars": "Назва файлу не може містити / або \\ або керівні символи",
+    "rename_too_long": "Ця назва задовга"
+  },
   "compose_ux": {
     "draft_discarded": "Чернетку видалено",
     "undo": "Скасувати",

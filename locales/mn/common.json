@@ -1284,6 +1284,14 @@
       "plain_text": "[Зураг: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Нэр солих",
+    "rename_named": "{name}-н нэрийг солих",
+    "rename_menu": "Нэр солих…",
+    "rename_title": "Хавсралтын нэрийг солих",
+    "rename_invalid_chars": "Файлын нэрэнд / эсвэл \\ болон удирдлагын тэмдэгт байж болохгүй",
+    "rename_too_long": "Энэ нэр хэтэрхий урт байна"
+  },
   "compose_ux": {
     "draft_discarded": "Ноорог устгагдлаа",
     "undo": "Буцаах",

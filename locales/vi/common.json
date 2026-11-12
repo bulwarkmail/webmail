@@ -1296,6 +1296,14 @@
       "plain_text": "[Hình ảnh: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Đổi tên",
+    "rename_named": "Đổi tên {name}",
+    "rename_menu": "Đổi tên…",
+    "rename_title": "Đổi tên tệp đính kèm",
+    "rename_invalid_chars": "Tên tệp không được chứa / hoặc \\ hoặc ký tự điều khiển",
+    "rename_too_long": "Tên này quá dài"
+  },
   "compose_ux": {
     "draft_discarded": "Đã hủy bản nháp",
     "undo": "Hoàn tác",

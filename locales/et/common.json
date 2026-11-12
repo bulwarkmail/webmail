@@ -1284,6 +1284,14 @@
       "plain_text": "[Pilt: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Nimeta ümber",
+    "rename_named": "Nimeta {name} ümber",
+    "rename_menu": "Nimeta ümber…",
+    "rename_title": "Nimeta manus ümber",
+    "rename_invalid_chars": "Failinimes ei tohi olla / ega \\ ega juhtmärke",
+    "rename_too_long": "See nimi on liiga pikk"
+  },
   "compose_ux": {
     "draft_discarded": "Mustand loobutud",
     "undo": "Võta tagasi",

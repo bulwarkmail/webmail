@@ -125,6 +125,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const tWindows = useTranslations("pwaWindows");
   const tDesktop = useTranslations("desktopUi.attachment");
   const tEdit = useTranslations("desktopEdit");
+  const tRename = useTranslations("attachment_rename");
   const menu = useContextMenu<T>();
   const [desktopMenu, setDesktopMenu] = useState(false);
   useEffect(() => setDesktopMenu(isDesktopApp()), []);
@@ -190,7 +191,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
               </IconButton>
             )}
             {!downloadsOff && onRename && (
-              <IconButton label={t("rename_named", { name })} title={t("rename")} className="text-muted-foreground hover:text-foreground" onClick={() => onRename(attachment)}>
+              <IconButton label={tRename("rename_named", { name })} title={tRename("rename")} className="text-muted-foreground hover:text-foreground" onClick={() => onRename(attachment)}>
                 <Pencil className="h-4 w-4" />
               </IconButton>
             )}
@@ -304,7 +305,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             <ContextMenuItem icon={Download} label={tDesktop("save_as")} onClick={() => { menu.closeContextMenu(); onDownload(menuTarget); }} />
           )}
           {!downloadsOff && onRename && (
-            <ContextMenuItem icon={Pencil} label={t("rename_menu")} onClick={() => { menu.closeContextMenu(); onRename(menuTarget); }} />
+            <ContextMenuItem icon={Pencil} label={tRename("rename_menu")} onClick={() => { menu.closeContextMenu(); onRename(menuTarget); }} />
           )}
           {!downloadsOff && onEdit && canEdit?.(menuTarget) && (
             <ContextMenuItem icon={Pencil} label={tEdit("edit")} onClick={() => { menu.closeContextMenu(); onEdit(menuTarget); }} />

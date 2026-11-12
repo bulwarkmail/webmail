@@ -1284,6 +1284,14 @@
       "plain_text": "[تصویر: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "تغییر نام",
+    "rename_named": "تغییر نام {name}",
+    "rename_menu": "تغییر نام…",
+    "rename_title": "تغییر نام پیوست",
+    "rename_invalid_chars": "نام فایل نمی‌تواند / یا \\ یا نویسه‌های کنترلی داشته باشد",
+    "rename_too_long": "این نام خیلی طولانی است"
+  },
   "compose_ux": {
     "draft_discarded": "پیش‌نویس دور انداخته شد",
     "undo": "واگرد",

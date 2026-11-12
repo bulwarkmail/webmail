@@ -1284,6 +1284,14 @@
       "plain_text": "[Billede: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "Omdøb",
+    "rename_named": "Omdøb {name}",
+    "rename_menu": "Omdøb…",
+    "rename_title": "Omdøb vedhæftet fil",
+    "rename_invalid_chars": "Filnavne må ikke indeholde / eller \\ eller kontroltegn",
+    "rename_too_long": "Navnet er for langt"
+  },
   "compose_ux": {
     "draft_discarded": "Kladde kasseret",
     "undo": "Fortryd",

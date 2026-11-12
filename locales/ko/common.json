@@ -1284,6 +1284,14 @@
       "plain_text": "[이미지: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "이름 바꾸기",
+    "rename_named": "{name} 이름 바꾸기",
+    "rename_menu": "이름 바꾸기…",
+    "rename_title": "첨부 파일 이름 바꾸기",
+    "rename_invalid_chars": "파일 이름에는 / 나 \\ 또는 제어 문자를 쓸 수 없습니다",
+    "rename_too_long": "이름이 너무 깁니다"
+  },
   "compose_ux": {
     "draft_discarded": "임시 보관 메일을 삭제했습니다",
     "undo": "실행 취소",

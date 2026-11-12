@@ -12,16 +12,14 @@ interface RenameAttachmentDialogProps {
   onClose: () => void;
   /** Called with the new name, extension included; not when it is unchanged. */
   onRename: (name: string) => void;
-  /** Where the dialog's text comes from: the composer's or the reader's. */
-  namespace: "email_composer" | "email_viewer";
 }
 
 /**
  * Renames an attachment in the composer or the reader. Only the part before
  * the extension can be edited, so the file keeps its type.
  */
-export function RenameAttachmentDialog({ isOpen, name, onClose, onRename, namespace }: RenameAttachmentDialogProps) {
-  const t = useTranslations(namespace);
+export function RenameAttachmentDialog({ isOpen, name, onClose, onRename }: RenameAttachmentDialogProps) {
+  const t = useTranslations("attachment_rename");
   const [stem, ext] = splitAttachmentName(name);
   return (
     <PromptDialog

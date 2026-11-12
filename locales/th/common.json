@@ -1722,6 +1722,14 @@
       "plain_text": "[รูปภาพ: {alt}]"
     }
   },
+  "attachment_rename": {
+    "rename": "เปลี่ยนชื่อ",
+    "rename_named": "เปลี่ยนชื่อ {name}",
+    "rename_menu": "เปลี่ยนชื่อ…",
+    "rename_title": "เปลี่ยนชื่อไฟล์แนบ",
+    "rename_invalid_chars": "ชื่อไฟล์ต้องไม่มี / หรือ \\ หรืออักขระควบคุม",
+    "rename_too_long": "ชื่อนี้ยาวเกินไป"
+  },
   "compose_ux": {
     "draft_discarded": "ทิ้งฉบับร่างแล้ว",
     "undo": "เลิกทำ",
