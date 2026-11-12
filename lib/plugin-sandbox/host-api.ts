@@ -47,7 +47,7 @@ import { isServerSetKeyword } from '../jmap/server-keywords';
 import { suggestKeywordColor } from '../keyword-discovery';
 import { MAX_KEYWORD_LENGTH } from '../keyword-nesting';
 import { emailKeyFor, KEYWORD_PREFIX } from '../thread-utils';
-import { DEFAULT_SEARCH_FILTERS, normalizePluginFilter } from '../jmap/search-utils';
+import { DEFAULT_SEARCH_FILTERS, isFilterEmpty, normalizePluginFilter } from '../jmap/search-utils';
 import { awaitDialog, awaitPrompt, awaitCustomDialog, type PromptField } from './host-dialog';
 import { triggerAnchor } from './dialog-anchor';
 import { fileStorage } from '../plugin-storage';
@@ -1947,15 +1947,19 @@ async function doSearchRun(plugin: InstalledPlugin, query: unknown, options: unk
 }
 
 /**
- * End the plugin's own search as the chips' "clear all" does, so the folder's
- * list shows again. A search the user typed or another plugin ran stays.
- * Resolves whether it ended one.
+ * End the plugin's own search: its chip goes, as with the chip's ✕. Filters
+ * the user added on top stay and the search runs again with them; with
+ * nothing left it clears as "clear all" does, so the folder's list shows
+ * again. A search the user typed or another plugin ran stays. Resolves
+ * whether it ended one.
  */
 async function doSearchClear(plugin: InstalledPlugin): Promise<boolean> {
   const store = useEmailStore.getState();
   if (store.searchFilters.pluginFilter?.pluginId !== plugin.id) return false;
   const client = requireClient();
-  store.clearSearchFilters();
+  store.setSearchFilters({ pluginFilter: null });
+  const rest = useEmailStore.getState();
+  if (!rest.searchQuery.trim() && isFilterEmpty(rest.searchFilters)) rest.clearSearchFilters();
   await useEmailStore.getState().advancedSearch(client);
   return true;
 }

@@ -149,6 +149,15 @@ describe('api.search.clear', () => {
     expect(loadFolder).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps filters the user added on top and searches again with them', async () => {
+    useEmailStore.setState({ searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS, pluginFilter: own, hasAttachment: true } });
+    await expect(dispatchApiCall(plugin(), 'search.clear', [])).resolves.toBe(true);
+    const { searchFilters } = useEmailStore.getState();
+    expect(searchFilters.pluginFilter).toBeNull();
+    expect(searchFilters.hasAttachment).toBe(true);
+    expect(advancedSearchEmails).toHaveBeenCalledTimes(1);
+  });
+
   it('leaves a search the user typed', async () => {
     await expect(dispatchApiCall(plugin(), 'search.clear', [])).resolves.toBe(false);
     const state = useEmailStore.getState();
