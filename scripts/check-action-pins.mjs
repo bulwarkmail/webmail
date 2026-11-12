@@ -21,6 +21,8 @@
 // The Dockerfiles at the root and the shell scripts under scripts/ get the line rules of the
 // first point too: a build or an upload runs what the lockfile holds, nothing fetched fresh.
 // Every FROM in those Dockerfiles names its base image by digest (stages and scratch aside).
+// Their `npm ci`, and setup.sh's `npm install`, run with SENTRYCLI_SKIP_DOWNLOAD=1 (or
+// --ignore-scripts): @sentry/cli's install script fails on platforms it has no binary for.
 //
 // A file fetched with curl or wget and then made executable needs a `sha256sum -c` (or another
 // shaNsum/shasum check) between the two, in the same step or script.
@@ -259,6 +261,19 @@ function check(files) {
   const problems = [];
   const parsed = [];
   for (const { rel, text } of files) {
+    // Where an operator installs the dependencies (the Dockerfiles, setup.sh), @sentry/cli's
+    // install script is skipped: on a platform without a binary for it, it fails the install.
+    if (rel === 'setup.sh' || /(^|\/)Dockerfile[^/]*$/.test(rel)) {
+      text.split(/\r?\n/).forEach((line, i) => {
+        // Commands only: not comments, messages or text in double quotes (menu labels).
+        const code = line.replace(/"(?:\\.|[^"\\])*"/g, '""');
+        if (/^\s*(#|echo\b|printf\b)/.test(code) || !/\bnpm\s+(ci|i|install)\b/.test(code)) return;
+        if (!/SENTRYCLI_SKIP_DOWNLOAD=1|--ignore-scripts/.test(line)) {
+          problems.push(`${rel}:${i + 1}: npm install without SENTRYCLI_SKIP_DOWNLOAD=1 fails where @sentry/cli has no binary`);
+        }
+      });
+      if (rel === 'setup.sh') continue;
+    }
     // Downloads and installs: line by line.
     text.split(/\r?\n/).forEach((line, i) => {
       if (/^\s*#/.test(line) || /^\s*(?:-\s*)?uses:/.test(line)) return;
@@ -731,7 +746,7 @@ jobs:
   ['npx --yes in a Dockerfile and in a script', 2, {
     Dockerfile: `
 FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
-RUN npm ci
+RUN SENTRYCLI_SKIP_DOWNLOAD=1 npm ci
 # npx --yes in a comment does not count
 RUN npx --yes "@sentry/cli@3.8.2" sourcemaps inject .next/static
 RUN npx --no-install sentry-cli sourcemaps inject .next/static
@@ -788,6 +803,23 @@ jobs:
           chmod 600 ~/.ssh/key
 `,
   }],
+  ['dependency installs that run @sentry/cli\'s install script', 2, {
+    Dockerfile: `
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
+RUN npm ci
+RUN SENTRYCLI_SKIP_DOWNLOAD=1 npm ci
+RUN npm ci --ignore-scripts
+# RUN npm ci in a comment
+`,
+    'setup.sh': `#!/usr/bin/env bash
+echo -e "    Would run:  npm install"
+echo "(setup.sh was run on its own, e.g. via curl | bash)"
+menu_select "Choose:" \\
+    "Node.js - Build locally (npm install + npm run build + npm start)"
+(cd "$SCRIPT_DIR" && npm install --loglevel=warn) &
+(cd "$SCRIPT_DIR" && SENTRYCLI_SKIP_DOWNLOAD=1 npm install --loglevel=warn) &
+`,
+  }],
   ['base images without a digest', 2, {
     'Dockerfile.lite': `
 FROM --platform=$BUILDPLATFORM node:24-alpine AS builder
@@ -833,7 +865,7 @@ if (process.argv.includes('--self-test')) {
     ...walk(path.join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)),
     ...walk(path.join(root, '.github', 'actions')).filter((f) => /(^|[\\/])action\.ya?ml$/.test(f)),
     ...['action.yml', 'action.yaml', 'action/action.yml'].map((f) => path.join(root, f)).filter(existsSync),
-    ...readdirSync(root).filter((f) => /^Dockerfile(\..+)?$/.test(f)).map((f) => path.join(root, f)),
+    ...readdirSync(root).filter((f) => /^Dockerfile(\..+)?$/.test(f) || f === 'setup.sh').map((f) => path.join(root, f)),
     ...walk(path.join(root, 'scripts')).filter((f) => /\.sh$/.test(f)),
   ];
   const problems = check(files.map((file) => ({ rel: path.relative(root, file).replace(/\\/g, '/'), text: readFileSync(file, 'utf8') })));

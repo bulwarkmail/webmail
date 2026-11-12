@@ -3,7 +3,10 @@
 FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# @sentry/cli's install script looks for a binary for this platform and fails
+# where there is none (linux s390x, ppc64le, riscv64). It has nothing to do
+# anyway: the binary, where one exists, comes in its platform package.
+RUN SENTRYCLI_SKIP_DOWNLOAD=1 npm ci
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Optional: serve under a subpath like /webmail. Baked into emitted asset URLs
