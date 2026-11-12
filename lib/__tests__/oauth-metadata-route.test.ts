@@ -18,7 +18,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 vi.mock('@/lib/admin/config-manager', () => ({
-  configManager: { ensureLoaded: vi.fn().mockResolvedValue(undefined) },
+  configManager: { ensureLoaded: vi.fn().mockResolvedValue(undefined), get: (_key: string, fallback: unknown) => fallback },
 }));
 
 const getMetadata = vi.fn();
@@ -66,7 +66,8 @@ describe('oauth metadata route', () => {
     expect(status).toBe(200);
     expect(body).toEqual(VALID_METADATA);
     expect(headers['Cache-Control']).toContain('max-age=600');
-    expect(getMetadata).toHaveBeenCalledWith('server-1');
+    // With the issuer rule of a sign-in: no server is configured in this test, so the single-server one.
+    expect(getMetadata).toHaveBeenCalledWith('server-1', undefined, 'named');
   });
 
   it('returns 404 when OAuth is not configured', async () => {

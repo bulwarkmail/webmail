@@ -277,3 +277,79 @@ describe('a mail server reached by an internal address whose metadata names its 
     expect(codeSentTo('mail.example', 'CODE-WITH-ISSUER-URL')).toHaveLength(1);
   });
 });
+
+// The discovery answers other clients build a sign-in from follow the same
+// rule: the login page's and the mobile app's (/api/auth/oauth/metadata), and
+// the desktop app's for a server it typed (/api/auth/desktop-oauth).
+describe('the discovery answers for the login page, the mobile app and the desktop app', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    jar = new Map();
+    tokenRequests = [];
+    otherIssuer = 'https://honest.example';
+    vi.stubGlobal('fetch', vi.fn(providers));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  async function metadata(serverId?: string) {
+    const { GET } = await import('@/app/api/auth/oauth/metadata/route');
+    const res = await GET(new NextRequest(`https://webmail.example/api/auth/oauth/metadata${serverId ? `?server_id=${serverId}` : ''}`));
+    return { status: res.status, body: await res.json() as Record<string, unknown> };
+  }
+
+  async function desktopDiscovery(serverUrl: string) {
+    vi.stubEnv('NEXT_PUBLIC_BULWARK_DESKTOP', '1');
+    vi.resetModules();
+    const { POST } = await import('@/app/api/auth/desktop-oauth/route');
+    const res = await POST(new NextRequest('https://webmail.example/api/auth/desktop-oauth', {
+      method: 'POST',
+      headers: SAME_ORIGIN,
+      body: JSON.stringify({ serverUrl, redirectUri: 'http://127.0.0.1:51234/bulwark-desktop/callback' }),
+    }));
+    return { status: res.status, body: await res.json() as Record<string, unknown> };
+  }
+
+  it('gives an install with one server reached internally the metadata naming its public name', async () => {
+    config = { jmapServerUrl: INTERNAL, oauthClientId: 'webmail' };
+    expect(await metadata()).toEqual({ status: 200, body: expect.objectContaining({ issuer: PUBLIC_NAME, token_endpoint: `${PUBLIC_NAME}/token` }) });
+  });
+
+  it('gives the mobile app the issuer it compares with the configured issuer URL, with one server and with several', async () => {
+    // The app trusts an external provider's token endpoint only when this
+    // answer names the configured issuer URL as issuer and that endpoint.
+    config = { jmapServerUrl: INTERNAL, oauthIssuerUrl: KEYCLOAK, oauthClientId: 'webmail' };
+    expect(await metadata()).toEqual({ status: 200, body: expect.objectContaining({ issuer: KEYCLOAK, token_endpoint: `${KEYCLOAK}/token` }) });
+
+    vi.resetModules();
+    config = { ...config, jmapServers: TWO_SERVERS };
+    expect(await metadata()).toEqual({ status: 200, body: expect.objectContaining({ issuer: KEYCLOAK, token_endpoint: `${KEYCLOAK}/token` }) });
+  });
+
+  it('refuses metadata naming another issuer once there are several servers, and metadata naming none', async () => {
+    config = { jmapServers: TWO_SERVERS };
+    expect((await metadata('other')).status).toBe(502);
+    expect((await metadata('honest')).status).toBe(200);
+
+    vi.resetModules();
+    config = { jmapServerUrl: INTERNAL, oauthClientId: 'webmail', jmapServers: TWO_SERVERS };
+    expect((await metadata()).status).toBe(502);
+
+    vi.resetModules();
+    config = { jmapServerUrl: 'http://bare:8080', oauthClientId: 'webmail' };
+    expect((await metadata()).status).toBe(502);
+  });
+
+  it("gives the desktop app no sign-in for a typed server whose metadata names another server's issuer", async () => {
+    config = {};
+    expect(await desktopDiscovery('https://other.example')).toEqual({ status: 404, body: { error: 'no_oauth' } });
+    const honest = await desktopDiscovery('https://honest.example');
+    expect(honest.status).toBe(200);
+    expect(honest.body).toMatchObject({ issuer: 'https://honest.example', authorization_endpoint: 'https://honest.example/authorize' });
+  });
+});
