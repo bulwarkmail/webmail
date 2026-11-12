@@ -25,13 +25,17 @@ export interface StructuredMailCardsProps {
 /**
  * The booking, parcel and order cards shown above an open message. Every text
  * of a card is shown as cardForDisplay leaves it: nothing that names a domain
- * outside the sender's.
+ * outside the sender's. A card cardForDisplay does not draw is left out, and
+ * with no card left the message shows as it would without them.
  */
 export function StructuredMailCards({ cards, email, allowRemoteImages, calendarActions }: StructuredMailCardsProps) {
   const senderDomain = cardSenderDomain(email.from);
   // Until the top-level domains have loaded, every dotted name counts as a domain; the cards are checked again once they have.
   const listLoaded = useTopLevelDomainsLoaded();
-  const shown = useMemo(() => cards.map((card) => cardForDisplay(card, senderDomain)), [cards, senderDomain, listLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shown = useMemo(
+    () => cards.flatMap((card) => cardForDisplay(card, senderDomain) ?? []),
+    [cards, senderDomain, listLoaded], // eslint-disable-line react-hooks/exhaustive-deps
+  );
   if (shown.length === 0) return null;
   return (
     <div className="flex flex-col gap-3 min-w-0" data-testid="structured-mail-cards">

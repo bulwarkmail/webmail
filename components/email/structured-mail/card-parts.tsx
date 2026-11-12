@@ -7,7 +7,7 @@ import { toAsciiDomain } from "@/lib/idn";
 import { openExternalLink } from "@/lib/plugin-hook-result";
 import { getRootDomain } from "@/lib/root-domain";
 import { formatMoment, formatMomentTime, isOtherZone, isWebLink, type FormatOptions } from "@/lib/structured-mail/format";
-import type { Link, Moment, ReservationStatus, StructuredCard } from "@/lib/structured-mail/types";
+import { isTransport, type Item, type Link, type Moment, type Place, type ReservationStatus, type Shipment, type StructuredCard } from "@/lib/structured-mail/types";
 import { resolveTimeZone } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -476,14 +476,55 @@ function textForDisplay(value: unknown, senderDomain: string, key?: string): unk
   return value;
 }
 
+/** Whether a text the mail gave was left out. */
+const lost = (before: string | undefined, after: string | undefined) => !!before?.trim() && !after?.trim();
+/** Whether a place still says where: a name, a town or a code. */
+const placeNamed = (place: Place | undefined) => !!(place?.name?.trim() || place?.address?.locality?.trim() || place?.code?.trim());
+
 /**
- * The card as it is shown: every text the sender wrote into it (names,
- * places, passengers, items, numbers) goes through namesOtherDomain, and a
- * text that names a domain outside the sender's is left out (an empty
- * string, or dropped from a list). Links stay as they are.
+ * A leg or item that lost its text is left out as a whole, so a card never
+ * shows "Wien Hbf → ?", an empty entry in a list or a count that includes
+ * it: a leg whose departure or arrival place no longer says where, a seat
+ * whose number or passenger was left out, an item whose name was. A trip
+ * with no leg left, and an order or parcel with nothing left that says which
+ * one it is (merchant, order number, carrier, tracking number, item), is not
+ * drawn at all. Other cards keep their kind as the title when their name was
+ * left out (brandText).
  */
-export function cardForDisplay<T extends StructuredCard>(card: T, senderDomain: string): T {
-  return textForDisplay(card, senderDomain) as T;
+function withoutLostParts(card: StructuredCard, shown: StructuredCard): StructuredCard | null {
+  if (isTransport(card) && isTransport(shown)) {
+    const legs = shown.legs.flatMap((leg, i) => {
+      const before = card.legs[i];
+      if (placeNamed(before.departure.place) && !placeNamed(leg.departure.place)) return [];
+      if (before.arrival && placeNamed(before.arrival.place) && !placeNamed(leg.arrival?.place)) return [];
+      const seats = leg.seats.filter((seat, j) => !lost(before.seats[j]?.seat, seat.seat) && !lost(before.seats[j]?.passenger, seat.passenger));
+      return [{ ...leg, seats }];
+    });
+    return legs.length > 0 ? { ...shown, legs } : null;
+  }
+  if (card.kind === "shipment" && shown.kind === "shipment") {
+    const named = (items: Item[], before: Item[]) => items.filter((item, i) => !lost(before[i]?.name, item.name));
+    const result: Shipment = {
+      ...shown,
+      items: named(shown.items, card.items),
+      parcels: shown.parcels.map((parcel, i) => ({ ...parcel, items: named(parcel.items, card.parcels[i]?.items ?? []) })),
+    };
+    const saysWhich = (s: Shipment) => !!(s.merchant?.trim() || s.orderNumber?.trim() || s.items.length > 0
+      || s.parcels.some((p) => p.carrier?.trim() || p.trackingNumber?.trim() || p.items.length > 0));
+    return saysWhich(card) && !saysWhich(result) ? null : result;
+  }
+  return shown;
+}
+
+/**
+ * The card as it is shown, or null when it is not drawn: every text the
+ * sender wrote into it (names, places, passengers, items, numbers) goes
+ * through namesOtherDomain, and a text that names a domain outside the
+ * sender's is left out (an empty string, or dropped from a list), with the
+ * leg, seat or item it belonged to (withoutLostParts). Links stay as they are.
+ */
+export function cardForDisplay<T extends StructuredCard>(card: T, senderDomain: string): T | null {
+  return withoutLostParts(card, textForDisplay(card, senderDomain) as T) as T | null;
 }
 
 /**
