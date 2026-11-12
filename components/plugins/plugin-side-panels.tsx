@@ -1,13 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { iconForName, Puzzle, X, type AppIcon } from '@/components/icons';
 import { usePluginSlotOffers } from '@/hooks/use-plugin-slot-offers';
 import { useCloseBesideControls } from '@/hooks/use-close-beside-controls';
 import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
 import { onPanelRequest } from '@/lib/plugin-sandbox/panel-requests';
-import { sidePanelLooks, subscribeSidePanels } from '@/lib/plugin-sandbox/side-panels';
+import {
+  leaveSidePanelFrame,
+  requestSidePanelFocus,
+  setSidePanelFrame,
+  sidePanelFocusRequest,
+  sidePanelFrame,
+  sidePanelLooks,
+  subscribeSidePanelFrame,
+  subscribeSidePanels,
+} from '@/lib/plugin-sandbox/side-panels';
 import { cn } from '@/lib/utils';
 import { PluginIframeSlot } from './plugin-iframe-slot';
 
@@ -19,6 +28,13 @@ import { PluginIframeSlot } from './plugin-iframe-slot';
 // remembered in this browser. A plugin that set `rail: false` has no
 // button: its panel opens only on its request; a rail without buttons is
 // not drawn.
+//
+// The open panel's frame outlives the view drawing the panel: going from the
+// mail to a plugin page and back would start the plugin anew, and a frame
+// moved in the DOM loads anew too. So PluginSidePanelFrame, once in the
+// layout, keeps it and lays it over the slot of the panel on screen; with
+// none (calendar, settings) the frame is hidden, still running, until the
+// panel shows again or is closed.
 
 const STORAGE_KEY = 'plugin-side-panel-open';
 
@@ -70,12 +86,14 @@ export function usePluginSidePanelEntries(): SidePanelEntry[] {
 export function usePluginSidePanel(onOpen?: () => void) {
   const entries = usePluginSidePanelEntries();
   const [chosen, setChosen] = useState<string | null>(readStored);
-  const [focusRequest, setFocusRequest] = useState(0);
+  const focusRequest = useSyncExternalStore(subscribeSidePanelFrame, sidePanelFocusRequest, sidePanelFocusRequest);
   // A plugin that went away (disabled, removed) leaves its panel shut.
   const open = chosen && entries.some((e) => e.pluginId === chosen) ? chosen : null;
   const choose = useCallback((pluginId: string | null) => {
     setChosen(pluginId);
     writeStored(pluginId);
+    // Closed, or another plugin's: the kept frame ends.
+    if (sidePanelFrame()?.pluginId !== pluginId) setSidePanelFrame(null);
   }, []);
   const state = useRef({ entries, open, onOpen });
   state.current = { entries, open, onOpen };
@@ -86,7 +104,7 @@ export function usePluginSidePanel(onOpen?: () => void) {
     const wantOpen = request.mode === 'open' ? true : request.mode === 'close' ? false : !isOpen;
     if (wantOpen) {
       choose(request.pluginId);
-      setFocusRequest((n) => n + 1);
+      requestSidePanelFocus();
       state.current.onOpen?.();
     } else if (isOpen) {
       choose(null);
@@ -96,17 +114,24 @@ export function usePluginSidePanel(onOpen?: () => void) {
   return { entries, open, choose, focusRequest };
 }
 
-/** A plugin's panel: the host's header (title, close) over the plugin's frame, which fills the rest. */
+/** A plugin's panel: the host's header (title, close) over the plugin's frame (PluginSidePanelFrame), which fills the rest. */
 export function PluginSidePanelBody({ entry, focusRequest, onClose }: {
   entry: SidePanelEntry;
   focusRequest: number;
   onClose: () => void;
 }) {
   const tCommon = useTranslations('common');
-  const extraProps = useMemo(() => ({ focusRequest }), [focusRequest]);
   // Right under the window's own close, at the window's end: this one goes to the start.
   const [head, setHead] = useState<HTMLDivElement | null>(null);
   const closeFirst = useCloseBesideControls(head);
+  const [slot, setSlot] = useState<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    if (slot) setSidePanelFrame({ pluginId: entry.pluginId, fill: entry.fill, focusRequest, slot });
+  }, [slot, entry.pluginId, entry.fill, focusRequest]);
+  // Gone from the screen, the panel leaves its frame running, hidden.
+  useLayoutEffect(() => () => {
+    if (slot) leaveSidePanelFrame(slot);
+  }, [slot]);
   const close = (
     <button
       type="button"
@@ -125,13 +150,63 @@ export function PluginSidePanelBody({ entry, focusRequest, onClose }: {
         <div className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{entry.title}</div>
         {!closeFirst && close}
       </div>
-      <div
-        data-plugin-slot="side-panel"
-        className={cn('min-h-0 flex-1', entry.fill ? 'flex flex-col' : 'overflow-y-auto')}
-      >
-        <PluginIframeSlot key={entry.pluginId} pluginId={entry.pluginId} slot="side-panel" extraProps={extraProps} fill={entry.fill} />
-      </div>
+      <div ref={setSlot} data-plugin-slot="side-panel" aria-owns={FRAME_ID} className="min-h-0 flex-1" />
     </>
+  );
+}
+
+const FRAME_ID = 'plugin-side-panel-frame';
+const noFrame = () => null;
+
+type Box = Pick<DOMRect, 'top' | 'left' | 'width' | 'height'>;
+
+/** Where the slot is on screen, followed while it or the window resizes. */
+function useSlotBox(slot: HTMLElement | null): Box | null {
+  const [box, setBox] = useState<Box | null>(null);
+  useLayoutEffect(() => {
+    if (!slot) {
+      setBox(null);
+      return;
+    }
+    const measure = () => {
+      const { top, left, width, height } = slot.getBoundingClientRect();
+      setBox((prev) => (prev && prev.top === top && prev.left === left && prev.width === width && prev.height === height
+        ? prev
+        : { top, left, width, height }));
+    };
+    measure();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    observer?.observe(slot);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [slot]);
+  return box;
+}
+
+/**
+ * The open side panel's frame, rendered once in the layout: laid over the
+ * slot of the panel on screen (PluginSidePanelBody), hidden without one.
+ */
+export function PluginSidePanelFrame() {
+  const frame = useSyncExternalStore(subscribeSidePanelFrame, sidePanelFrame, noFrame);
+  const offers = usePluginSlotOffers('side-panel');
+  const box = useSlotBox(frame?.slot ?? null);
+  const focusRequest = frame?.focusRequest ?? 0;
+  const extraProps = useMemo(() => ({ focusRequest }), [focusRequest]);
+  // A plugin that went away takes its frame along.
+  if (!frame || !offers.some((o) => o.pluginId === frame.pluginId)) return null;
+  return (
+    <div
+      id={FRAME_ID}
+      data-plugin-side-panel-frame={frame.pluginId}
+      className={cn('fixed', frame.fill ? 'flex flex-col' : 'overflow-y-auto', !(frame.slot && box) && 'hidden')}
+      style={box ? { top: box.top, left: box.left, width: box.width, height: box.height } : undefined}
+    >
+      <PluginIframeSlot key={frame.pluginId} pluginId={frame.pluginId} slot="side-panel" extraProps={extraProps} fill={frame.fill} />
+    </div>
   );
 }
 

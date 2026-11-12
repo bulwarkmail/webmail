@@ -32,7 +32,7 @@ import { clearPrintThemes } from './print-themes';
 import { clearPluginListFilters } from './list-filters';
 import { clearPluginPages } from './pages';
 import { clearSectionTitle } from './section-titles';
-import { clearSidePanel } from './side-panels';
+import { clearSidePanel, dropSidePanelFrame } from './side-panels';
 import { closePluginFilesOf } from './file-viewer';
 import { cancelPluginProxyRequests } from './proxy-client';
 import { cancelConnectFor } from './connect-dialog';
@@ -480,6 +480,7 @@ export function unloadSandboxedPlugin(pluginId: string): void {
   clearPluginPages(pluginId);
   clearSectionTitle(pluginId);
   clearSidePanel(pluginId);
+  dropSidePanelFrame(pluginId);
   closePluginFilesOf(pluginId);
   cancelPluginProxyRequests(pluginId);
   cancelConnectFor(pluginId);
