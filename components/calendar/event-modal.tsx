@@ -44,6 +44,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { changesWhen, type EditorAttendee, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { textCallback } from "@/lib/plugin-sandbox/slot-callbacks";
 import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
@@ -1610,7 +1611,9 @@ export function EventModal({
                   uid: event?.uid,
                   attendees: attendees.map((a) => a.email),
                 },
-                setVirtualLocation,
+                // The plugin's frame calls this with whatever it sends: a link
+                // as text goes in, as long as the field takes; anything else is ignored.
+                setVirtualLocation: textCallback(setVirtualLocation, 2000),
               }}
             />
           </div>
