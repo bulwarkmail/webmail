@@ -60,6 +60,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'lib/demo/demo-utils.ts#demoIdCounter', class: 'per-process', why: 'demo mode ids, no real data' },
   { site: 'lib/oauth/discovery.ts#metadataCache', class: 'cache', why: 'OAuth/OIDC discovery documents, 10 min' },
   { site: 'lib/oauth/discovery.ts#negativeCache', class: 'cache', why: 'failed discovery, 15 s back-off' },
+  { site: 'lib/oauth/discovery.ts#issuerFindingsLogged', class: 'per-process', why: 'issuer findings of the sign-in discovery, logged once per process' },
   { site: 'lib/plugin-sandbox/sandbox-document.ts#cached', class: 'per-process', why: 'this build\'s sandbox asset manifest' },
   { site: 'lib/plugin-secrets/proxy.ts#windows', class: 'per-process', why: 'plugin proxy rate limit, documented as per replica (300 a minute each)' },
   { site: 'lib/plugin-secrets/proxy.ts#running', class: 'per-process', why: 'plugin proxy concurrency per replica' },
