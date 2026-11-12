@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState, DragEvent } from "react";
-import { useEmailStore } from "@/stores/email-store";
+import { emailWriteSource, useEmailStore } from "@/stores/email-store";
+import { emailKeyFor } from "@/lib/thread-utils";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
@@ -31,7 +32,7 @@ export function useTagDrop({ tagId, onSuccess, onError }: UseTagDropOptions): Us
   // The open folder is read on the drop: subscribed to, every folder click drew
   // every tag row again.
   const { fetchEmails, fetchTagCounts } = useEmailStore(useShallow((state) => ({ fetchEmails: state.fetchEmails, fetchTagCounts: state.fetchTagCounts })));
-  const { isDragging, endDrag, markDropped } = useDragDropContext();
+  const { isDragging, draggedEmails, endDrag, markDropped } = useDragDropContext();
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -77,25 +78,35 @@ export function useTagDrop({ tagId, onSuccess, onError }: UseTagDropOptions): Us
       const emailIds: string[] = JSON.parse(emailIdsJson);
       markDropped();
 
+      // The rows that were dragged, each tagged where it was listed from: its
+      // login and account in a list that mixes accounts, else the login
+      // browsed and the folder's account. The ids alone say neither: the same
+      // id is another message in every other account. An id that came without
+      // its row is left alone.
+      const wanted = new Set(emailIds);
+      const label = `$label:${tagId}`;
       // Emails that carry the tag afterwards; a plugin may stop some or all.
       const tagged: string[] = [];
-      for (const emailId of emailIds) {
+      const seen = new Set<string>();
+      for (const row of draggedEmails) {
+        const key = emailKeyFor(row);
+        if (!wanted.has(row.id) || seen.has(key)) continue;
+        seen.add(key);
         // Read fresh state to avoid stale closures
         const emailState = useEmailStore.getState();
-        const email = emailState.emails.find(em => em.id === emailId);
-        const keywords = { ...(email?.keywords || {}) };
-
-        if (keywords[`$label:${tagId}`]) {
-          tagged.push(emailId);
+        const listed = emailState.emails.find((em) => emailKeyFor(em) === key) ?? row;
+        if (listed.keywords?.[label]) {
+          tagged.push(row.id);
           continue;
         }
-        // Add the tag without removing existing ones
-        keywords[`$label:${tagId}`] = true;
-
-        // Routes the write to the email's own account - the email's source in an
-        // aggregate view, the selected folder's owner when a shared folder is
-        // open directly. (#281)
-        if (await emailState.setEmailKeywords(client, emailId, keywords)) tagged.push(emailId);
+        // Only this keyword is written, so tags set meanwhile stay. With the
+        // row's login named the store writes through that login or refuses;
+        // with no login known at all it routes by the listed row.
+        const where = emailWriteSource(row, client);
+        const source = where.clientAccountId
+          ? { clientAccountId: where.clientAccountId, accountId: where.accountId, email: listed }
+          : undefined;
+        if (await emailState.patchEmailKeywords(client, row.id, { [label]: true }, key, source)) tagged.push(row.id);
       }
       if (tagged.length === 0) return;
 
@@ -114,7 +125,7 @@ export function useTagDrop({ tagId, onSuccess, onError }: UseTagDropOptions): Us
     } finally {
       endDrag();
     }
-  }, [client, isDragging, tagId, fetchEmails, fetchTagCounts, endDrag, markDropped, onSuccess, onError]);
+  }, [client, isDragging, draggedEmails, tagId, fetchEmails, fetchTagCounts, endDrag, markDropped, onSuccess, onError]);
 
   return {
     dropHandlers: {

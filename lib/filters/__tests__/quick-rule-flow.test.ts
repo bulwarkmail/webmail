@@ -248,4 +248,31 @@ describe('running a rule over existing mail', () => {
       emailHooks.onBeforeEmailKeywordChange.removePlugin('t');
     }
   });
+
+  // The tag is written to the rule's account. In a list that mixes logins a
+  // row of another login can have the same id: it is another message and
+  // must not be shown with the tag.
+  it('shows the tag on the listed row of the rule\'s account only, not on another login\'s row with the same id', async () => {
+    const account = mockSieveAccount('a');
+    const other = mockSieveAccount('b');
+    account.client.batchUpdateKeywords = vi.fn(async () => {});
+    const ofA = { id: 'e1', keywords: {}, mailboxIds: { inbox: true }, sourceClientAccountId: 'login-a', sourceAccountId: 'a' };
+    const ofB = { id: 'e1', keywords: {}, mailboxIds: { inbox: true }, sourceClientAccountId: 'login-b', sourceAccountId: 'b' };
+    const before = { auth: useAuthStore.getState(), email: useEmailStore.getState() };
+    useAuthStore.setState({
+      client: account.client, activeAccountId: 'login-a',
+      getClientForAccount: ((id: string) => (id === 'login-a' ? account.client : id === 'login-b' ? other.client : undefined)) as never,
+    } as never);
+    // Login b's row is listed first.
+    useEmailStore.setState({ isUnifiedView: true, viewingAccountId: null, emails: [ofB, ofA] } as never);
+    try {
+      await executePlan(targetFor(account, 'a'), { ids: ['e1'], steps: [{ kind: 'keyword', ids: ['e1'], keyword: '$label:work' }] });
+      const rows = useEmailStore.getState().emails;
+      expect(rows.find((row) => row.sourceClientAccountId === 'login-a')?.keywords).toEqual({ '$label:work': true });
+      expect(rows.find((row) => row.sourceClientAccountId === 'login-b')?.keywords).toEqual({});
+    } finally {
+      useAuthStore.setState(before.auth);
+      useEmailStore.setState(before.email);
+    }
+  });
 });
