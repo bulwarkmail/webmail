@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
     // applied meanwhile must not pair this policy with a newer version.
     const { policy, version } = configManager.getPolicyWithVersion();
     if (!(await canSeeInstanceDetails(request))) {
-      const tokenIdentity = await bearerIdentity(request);
-      if (tokenIdentity) return userPolicyResponse(policy, tokenIdentity.addresses);
+      const token = await bearerIdentity(request);
+      if (token.identity) return userPolicyResponse(policy, token.identity.addresses);
       // The login page needs the theme policy and gates; the plugin lists,
       // push relays and sidebar app URLs map the deployment and are only
       // used after signing in, when the client fetches the policy again.
@@ -78,7 +78,14 @@ export async function GET(request: NextRequest) {
           organisation: undefined,
           scopes: [],
         },
-        { headers: { 'Cache-Control': 'no-store', [POLICY_SCOPE_HEADER]: 'public' } },
+        {
+          headers: {
+            'Cache-Control': 'no-store',
+            [POLICY_SCOPE_HEADER]: 'public',
+            // The token was not checked: too many refused tokens lately.
+            ...(token.retryAfterSeconds ? { 'Retry-After': String(token.retryAfterSeconds) } : {}),
+          },
+        },
       );
     }
     // Users get only the scopes for their own domains, so on an instance
