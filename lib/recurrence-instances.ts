@@ -120,6 +120,25 @@ export function baseEventStoreId(instance: EventIdentity): string | null {
 }
 
 /**
+ * The store id of the event with raw id `rawId` in the same login and account
+ * as `event`: `event`'s namespace prefix in front of it. An occurrence the
+ * browser expanded is `<base event's store id>:<recurrence id>`, and its base
+ * event is addressed by the first part. Null when `rawId` can't be placed
+ * there; the event's id then says nothing about where `rawId` lives.
+ */
+export function storeIdBeside(
+  event: Pick<CalendarEvent, 'id' | 'recurrenceId' | 'recurrenceRules'> & Partial<Pick<CalendarEvent, 'originalId' | 'baseEventId'>>,
+  rawId: string,
+): string | null {
+  const own = event.originalId ?? event.id;
+  if (isBrowserExpandedOccurrence(event)) {
+    const suffix = `:${event.recurrenceId}`;
+    return own === rawId && event.id.endsWith(suffix) ? event.id.slice(0, event.id.length - suffix.length) : null;
+  }
+  return event.id.endsWith(own) ? event.id.slice(0, event.id.length - own.length) + rawId : null;
+}
+
+/**
  * Whether a `CalendarEvent/set` failure is a pre-0.16.20 server refusing a
  * synthetic id ("Updating/Deleting synthetic ids is not yet supported.").
  */

@@ -13,6 +13,7 @@ import {
   isServerRecurrenceInstance,
   isSyntheticIdMutationUnsupported,
   resolveOverrideKey,
+  storeIdBeside,
   withNewOverrideDetails,
   withoutOverrideSeriesKeys,
 } from '../recurrence-instances';
@@ -79,6 +80,20 @@ describe('baseEventStoreId', () => {
   it('is null for anything that is not an expanded occurrence', () => {
     expect(baseEventStoreId({ id: 'b', baseEventId: 'b' })).toBeNull();
     expect(baseEventStoreId({ id: 'b:2026-09-08T10:00:00', originalId: 'b' })).toBeNull();
+  });
+});
+
+describe('storeIdBeside', () => {
+  it('puts another raw id under the namespace of an event', () => {
+    expect(storeIdBeside({ id: 'A@h::x', originalId: 'x', recurrenceId: '2026-09-08T10:00:00', recurrenceRules: null }, 'b')).toBe('A@h::b');
+    expect(storeIdBeside({ id: 'A@h::acct:x', originalId: 'x', recurrenceId: null, recurrenceRules: null }, 'b')).toBe('A@h::acct:b');
+    expect(storeIdBeside({ id: 'x', recurrenceId: null, recurrenceRules: null }, 'b')).toBe('b');
+  });
+
+  it('gives an occurrence the browser expanded its own base event\'s store id, and no other', () => {
+    const occurrence = { id: 'A@h::b:2026-09-08T10:00:00', originalId: 'b', recurrenceId: '2026-09-08T10:00:00', recurrenceRules: dailyRule };
+    expect(storeIdBeside(occurrence, 'b')).toBe('A@h::b');
+    expect(storeIdBeside(occurrence, 'other')).toBeNull();
   });
 });
 
