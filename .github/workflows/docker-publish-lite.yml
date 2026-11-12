@@ -34,6 +34,10 @@ on:
     paths: *paths
   workflow_dispatch:
 
+# Jobs that need more (the registry push, the attestation) say so themselves.
+permissions:
+  contents: read
+
 jobs:
   e2e:
     name: E2E (container)

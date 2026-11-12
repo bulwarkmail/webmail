@@ -10,7 +10,9 @@
 //     `pull_request_target` is refused outright;
 //   - uses a cache in a job that publishes (packages, contents or
 //     id-token write) or builds what such a job publishes. Any job on main
-//     can write the Actions cache, so a release would ship what it left.
+//     can write the Actions cache, so a release would ship what it left;
+//   - has no top-level `permissions:` block. With one, a job that sets none
+//     starts from it instead of from the repository default.
 //
 //   node scripts/check-action-pins.mjs [repo root]      default: the current directory
 //
@@ -429,11 +431,15 @@ for (const { rel, wf } of workflows) {
   }
 }
 
+for (const { rel, wf } of workflows) {
+  if (!get(wf, 'permissions')) problems.push(`${rel}:1: no top-level permissions: block (add permissions: contents: read)`);
+}
+
 if (problems.length) {
   console.error(problems.join('\n'));
   console.error(`\n${problems.length} problem(s) in ${files.length} file(s).`);
   process.exit(1);
 }
 console.log(
-  `ok: ${files.length} workflow and action file(s), every action pinned to a commit, no secret or write token on a pull request, no cache in a publishing job`,
+  `ok: ${files.length} workflow and action file(s): actions pinned to a commit, no secret or write token on pull requests, no cache in publishing jobs, top-level permissions in every workflow`,
 );

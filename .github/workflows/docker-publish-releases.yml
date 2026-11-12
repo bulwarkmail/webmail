@@ -14,6 +14,10 @@ on:
     types: [published]
   workflow_dispatch:
 
+# Jobs that need more (the registry push, the attestation) say so themselves.
+permissions:
+  contents: read
+
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
 
