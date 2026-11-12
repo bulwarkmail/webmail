@@ -86,7 +86,11 @@ jobs:
         run: npm run build:lite
 
       # Each target is its own build with its own chunks, so each uploads.
+      # Pull requests never get the token, not even from a branch inside this
+      # repository, because the build runs scripts from a tree nobody has
+      # merged yet. Pushes to main, releases and manual runs upload.
       - name: Upload source maps to Bugsink
+        if: github.event_name != 'pull_request'
         env:
           BUGSINK_AUTH_TOKEN: ${{ secrets.BUGSINK_AUTH_TOKEN }}
         run: bash scripts/upload-sourcemaps.sh sourcemaps
