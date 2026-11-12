@@ -211,6 +211,52 @@ describe('service worker with offline mode on', () => {
     expect(await worker.request({ url: `${ORIGIN}/mail`, mode: 'navigate' })).toBeNull();
   });
 
+  it('keeps a page the server redirects to its locale, and starts there offline (#1626)', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    let online = true;
+    // A build with NEXT_PUBLIC_LOCALE_PREFIX=always: /, /mail answer from /en, /en/mail.
+    const fetchMock = vi.fn(async (input: unknown) => {
+      if (!online) throw new TypeError('Failed to fetch');
+      const asked = new URL(String(input));
+      const final = asked.pathname.startsWith('/en') || asked.pathname.startsWith('/_next') ? asked : new URL(`/en${asked.pathname === '/' ? '' : asked.pathname}`, ORIGIN);
+      const res = sameOrigin(`<html>${final.pathname}</html>`);
+      Object.defineProperty(res, 'redirected', { value: final.href !== asked.href });
+      Object.defineProperty(res, 'url', { value: final.href });
+      return res;
+    });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: fetchMock as never });
+    await worker.dispatch('message', { data: { type: 'offline-shell', on: true, urls: ['/', '/mail'], buildId: 'a' } });
+    const shell = await caches.open('bulwark-shell-a');
+    await vi.waitFor(async () => expect(await shell.match(`${ORIGIN}/en/mail`)).toBeDefined());
+
+    online = false;
+    const start = await worker.request({ url: `${ORIGIN}/`, mode: 'navigate' });
+    expect(start?.status).toBe(302);
+    expect(start?.headers.get('location')).toBe(`${ORIGIN}/en`);
+    const landed = await worker.request({ url: `${ORIGIN}/en`, mode: 'navigate' });
+    expect(await landed!.text()).toBe('<html>/en</html>');
+    const mail = await worker.request({ url: `${ORIGIN}/mail`, mode: 'navigate' });
+    expect(mail?.headers.get('location')).toBe(`${ORIGIN}/en/mail`);
+    expect(await (await worker.request({ url: `${ORIGIN}/en/mail`, mode: 'navigate' }))!.text()).toBe('<html>/en/mail</html>');
+  });
+
+  it('keeps nothing for a page that redirects out of the app', async () => {
+    const caches = new FakeCaches();
+    const fetchMock = vi.fn(async () => {
+      const res = sameOrigin('<html>login</html>');
+      Object.defineProperty(res, 'redirected', { value: true });
+      Object.defineProperty(res, 'url', { value: `${ORIGIN}/admin/login` });
+      return res;
+    });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: fetchMock });
+    await worker.dispatch('message', { data: { type: 'offline-shell', on: true, urls: ['/mail'], buildId: 'a' } });
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    await settle();
+    const shell = await caches.open('bulwark-shell-a');
+    expect(await shell.keys()).toEqual([]);
+  });
+
   it('keeps the store\'s worker and database engine, so the store starts offline', async () => {
     const caches = new FakeCaches();
     await shellOn(caches, true);

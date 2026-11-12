@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ADMIN_PAGES, ADMIN_PAGE_IDS, adminPath, isAdminPageId, parseAdminPath } from '../admin-nav';
 
@@ -42,6 +44,14 @@ describe('admin page URLs', () => {
     expect(isAdminPageId('plugins')).toBe(true);
     expect(isAdminPageId('login')).toBe(false);
     expect(isAdminPageId(null)).toBe(false);
+  });
+
+  it('lists every section of the policy page, so the admin search finds it', () => {
+    const source = readFileSync(join(process.cwd(), 'app/(main)/admin/_pages/policy.tsx'), 'utf8');
+    const pageIds = [...source.matchAll(/<SettingsSection\s+id="([^"]+)"/g)].map((m) => m[1]);
+    expect(pageIds.length).toBeGreaterThan(0);
+    const navIds = ADMIN_PAGES.find((p) => p.id === 'policy')!.sections.map((s) => s.id);
+    for (const id of pageIds) expect(navIds).toContain(id);
   });
 
   it('registers every page once, with the detail flag only where a detail page exists', () => {

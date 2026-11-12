@@ -72,8 +72,9 @@ export async function GET(request: NextRequest) {
         );
       }
       // The login page needs the theme policy and gates; the plugin lists,
-      // push relays and sidebar app URLs map the deployment and are only
-      // used after signing in, when the client fetches the policy again.
+      // push relays, sidebar app URLs and hidden account names map the
+      // deployment and are only used after signing in, when the client fetches
+      // the policy again.
       return NextResponse.json(
         {
           ...policy,
@@ -87,6 +88,8 @@ export async function GET(request: NextRequest) {
           // and only apply once someone is signed in.
           organisation: undefined,
           scopes: [],
+          directorySameDomainOnly: false,
+          directoryHiddenLocalparts: [],
         },
         { headers: { 'Cache-Control': 'no-store', [POLICY_SCOPE_HEADER]: 'public' } },
       );

@@ -30,8 +30,22 @@ export function maskedEmailErrorType(error: unknown): string | undefined {
   return e?.status === 403 ? 'forbidden' : e?.methodError?.type;
 }
 
+/**
+ * Stalwart Community answers every call on an Enterprise-only registry
+ * object (MaskedEmail among them) with `forbidden` and this detail
+ * (`assert_enterprise_object`, crates/jmap/src/registry/mod.rs). Any other
+ * `forbidden` is a permission the session lacks.
+ */
+function enterpriseOnly(error: unknown): boolean {
+  if (maskedEmailErrorType(error) !== 'forbidden') return false;
+  const description = error instanceof MaskedEmailError ? error.message
+    : (error as { methodError?: { description?: string } } | null)?.methodError?.description;
+  return typeof description === 'string' && /only available in the enterprise edition/i.test(description);
+}
+
 export function maskedEmailUnavailable(error: unknown): boolean {
-  return ['unknownMethod', 'unknownCapability', 'notImplemented', 'unsupported'].includes(maskedEmailErrorType(error) || '');
+  return ['unknownMethod', 'unknownCapability', 'notImplemented', 'unsupported'].includes(maskedEmailErrorType(error) || '') ||
+    enterpriseOnly(error);
 }
 
 /** One authenticated account and cookie slot; callers cannot supply an owner. */
@@ -154,7 +168,8 @@ export function createMaskedEmailManager() {
         created?: Record<string, { id: string }>;
         notCreated?: Record<string, { type: string; description?: string }>;
       }>('x:MaskedEmail/set', { create: { new: {
-        description: input.description, forDomain: input.forDomain || null, [enabledProperty]: true,
+        // Stalwart refuses a present but empty string; no description is null.
+        description: input.description || null, forDomain: input.forDomain || null, [enabledProperty]: true,
       } } });
       const error = result.notCreated?.new;
       if (error) throw new MaskedEmailError(error.type, error.description);
@@ -165,8 +180,9 @@ export function createMaskedEmailManager() {
       assertCurrent();
       if (!ownedIds.has(id)) throw new MaskedEmailError('ownershipMismatch');
       // Copy only the two editable fields, including for untyped callers.
-      const patch: Record<string, string | boolean> = {};
-      if (typeof changes.description === 'string') patch.description = changes.description;
+      const patch: Record<string, string | boolean | null> = {};
+      // A cleared description is removed (null), as Stalwart refuses an empty one.
+      if (typeof changes.description === 'string') patch.description = changes.description || null;
       if (typeof changes.enabled === 'boolean') patch[enabledProperty] = changes.enabled;
       if (!Object.keys(patch).length) throw new MaskedEmailError('invalidProperties');
       const result = await request<{

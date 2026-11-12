@@ -43,7 +43,8 @@ describe('FilePreviewModal printing a PDF', () => {
   it('offers Print, which prints the PDF itself', async () => {
     await renderPdf();
     fireEvent.click(screen.getByTestId('preview-print'));
-    expect(hoisted.printPdfUrl).toHaveBeenCalledWith('blob:test-pdf');
+    // With the PDF's Blob: the desktop app can't fetch the blob: URL (CSP connect-src).
+    expect(hoisted.printPdfUrl).toHaveBeenCalledWith('blob:test-pdf', undefined, expect.any(Blob));
   });
 
   it('prints once by itself when asked to', async () => {

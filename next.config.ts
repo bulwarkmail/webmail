@@ -64,8 +64,18 @@ if (basePath && !basePath.startsWith("/")) {
 // Bulwark Lite (see lib/lite.ts and scripts/lite/): the same tree exported as
 // static files. `npm run build:lite` sets the flag; a plain `next build` never
 // sees it, so the standalone/Docker build is unaffected.
+// Locale prefix mode (i18n/routing.ts). Empty is unset, as the Dockerfile
+// passes "" without a build arg; anything but the three modes is a typo
+// that next-intl would quietly run as "always" (#1626).
+const localePrefix = process.env.NEXT_PUBLIC_LOCALE_PREFIX?.trim() || "never";
+if (!["never", "always", "as-needed"].includes(localePrefix)) {
+  throw new Error(
+    `NEXT_PUBLIC_LOCALE_PREFIX must be "never", "always" or "as-needed" (got: ${JSON.stringify(process.env.NEXT_PUBLIC_LOCALE_PREFIX)})`
+  );
+}
+
 const isLite = process.env.NEXT_PUBLIC_BULWARK_LITE === "1";
-if (isLite && (process.env.NEXT_PUBLIC_LOCALE_PREFIX ?? "never") !== "always") {
+if (isLite && localePrefix !== "always") {
   // Without the proxy nothing rewrites /mail to /<locale>/mail.
   throw new Error("Bulwark Lite requires NEXT_PUBLIC_LOCALE_PREFIX=always (use `npm run build:lite`)");
 }

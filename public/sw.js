@@ -244,10 +244,24 @@ async function precacheShell(urls, buildId) {
       try {
         const url = new URL(u, self.location.origin);
         if (url.origin !== self.location.origin) return;
-        const key = appPagePath(url) !== null && !staticPath(url) ? documentKey(url) : url.href;
+        const page = appPagePath(url) !== null && !staticPath(url);
+        const key = page ? documentKey(url) : url.href;
         if (await cache.match(key)) return;
         const response = await fetch(url.href, { credentials: "same-origin" });
-        if (response.ok && response.type === "basic" && !response.redirected) await cache.put(key, response);
+        if (!response.ok || response.type !== "basic") return;
+        if (!response.redirected) {
+          await cache.put(key, response);
+          return;
+        }
+        // A page that redirects to another page of the app (the locale
+        // prefix: /mail to /en/mail with NEXT_PUBLIC_LOCALE_PREFIX=always):
+        // keep that page under its own address and the redirect under this
+        // one, so an offline start at /mail lands there as it would online.
+        const target = new URL(response.url);
+        if (!page || target.origin !== self.location.origin || appPagePath(target) === null || staticPath(target)) return;
+        if (documentKey(target) === key) return;
+        await cache.put(documentKey(target), response);
+        await cache.put(key, Response.redirect(target.href, 302));
       } catch (_) {
         // Fetched again when the page asks next time.
       }

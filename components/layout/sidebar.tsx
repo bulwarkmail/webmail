@@ -93,6 +93,7 @@ import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } fro
 import { useTour } from "@/components/tour/tour-provider";
 import { toUnicodeEmail } from "@/lib/idn";
 import { hiddenSharedMailIds, isSharedMailAccountVisible, setSharedMailAccountHidden } from "@/lib/shared-mail-visibility";
+import { moveSharedMailAccount, sharedMailOrderIds, sortSharedMailAccounts, SHARED_ACCOUNT_DRAG_MIME } from "@/lib/shared-mail-order";
 import { compactSharedMailbox } from "@/lib/compact-shared-mailbox";
 import {
   isAccountMuted,
@@ -762,6 +763,8 @@ function SidebarSectionHeader({
   onAdd,
   addTitle,
   railKey,
+  dragProps,
+  className,
 }: {
   label: string;
   expanded: boolean;
@@ -780,6 +783,9 @@ function SidebarSectionHeader({
   status?: ReactNode;
   /** The folded column's item for the same thing (see SidebarRow). */
   railKey?: string;
+  /** Makes the header a drag source (a shared account being reordered). */
+  dragProps?: React.HTMLAttributes<HTMLDivElement> & { draggable?: boolean };
+  className?: string;
 }) {
   if (isCollapsed) {
     // One thin rule between sections. A sub-section (a shared account, the
@@ -802,12 +808,14 @@ function SidebarSectionHeader({
   const headerButtonClass = "-my-0.5 h-6 w-6 rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground";
   return (
     <div
+      {...dragProps}
       onContextMenu={onContextMenu}
       data-rail-key={railKey}
       className={cn(
         "group w-full flex items-center pb-1 select-none rounded-sm hover:bg-muted/40 transition-colors",
         paddingX,
-        paddingY
+        paddingY,
+        className
       )}
     >
       <button
@@ -911,6 +919,10 @@ interface MailboxTreeItemProps {
   /** Folded: several folders of one's own are listed, so each carries its
    *  first letter. One alone is a plain folder. */
   initials?: boolean;
+  /** Makes this row (not its subfolders) a drag source for reordering the
+   *  shared account it stands for, next to the folder-to-tab drag. */
+  onRowDragStart?: (e: React.DragEvent) => void;
+  onRowDragEnd?: () => void;
 }
 
 const MailboxTreeItem = memo(MailboxTreeItemRow, sameTreeItemProps);
@@ -929,6 +941,8 @@ function MailboxTreeItemRow({
   sharedAccountName,
   renderAfterChild,
   initials = false,
+  onRowDragStart,
+  onRowDragEnd,
 }: MailboxTreeItemProps) {
   const tNotifications = useTranslations('notifications');
   const tListExtra = useTranslations('mail_list_extra');
@@ -952,17 +966,22 @@ function MailboxTreeItemRow({
   // Pro shell only: folder rows are drag sources so a folder can be dropped
   // onto a tab strip / pane and open as its own tab. Native HTML5 DnD - the
   // Pro shell's drop targets live outside any dnd-kit context.
+  const tabDrag = isEmbedded && !isVirtualNode && !pickOnly;
   const folderDragHandlers: Record<string, unknown> | undefined =
-    isEmbedded && !isVirtualNode && !pickOnly
+    tabDrag || onRowDragStart
       ? {
           draggable: true,
           onDragStart: (e: React.DragEvent) => {
-            e.dataTransfer.setData(
-              MAILBOX_DRAG_MIME,
-              JSON.stringify({ mailboxId: node.id, name: label, accountId: dragAccountId }),
-            );
-            e.dataTransfer.effectAllowed = 'copy';
+            if (tabDrag) {
+              e.dataTransfer.setData(
+                MAILBOX_DRAG_MIME,
+                JSON.stringify({ mailboxId: node.id, name: label, accountId: dragAccountId }),
+              );
+              e.dataTransfer.effectAllowed = 'copy';
+            }
+            onRowDragStart?.(e);
           },
+          ...(onRowDragEnd ? { onDragEnd: onRowDragEnd } : {}),
         }
       : undefined;
 
@@ -1750,6 +1769,7 @@ function SidebarImpl({
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
   const compactSharedMailboxes = useSettingsStore(s => s.compactSharedMailboxes);
   const hiddenSharedMailAccounts = useSettingsStore(s => s.hiddenSharedMailAccounts);
+  const sharedMailAccountOrder = useSettingsStore(s => s.sharedMailAccountOrder);
   // Mountain View draws its navigation icons in the text colour.
   const colorfulSidebarIcons = useSettingsStore(s => s.colorfulSidebarIcons) && !mvShell;
   const tagCounts = useEmailStore(s => s.tagCounts);
@@ -1897,9 +1917,14 @@ function SidebarImpl({
   const mailboxTree = useMemo(() => buildMailboxTree(mailboxes), [mailboxes]);
   const ownTree = mailboxTree.filter(n => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n));
   const hiddenSharedIds = hiddenSharedMailIds(hiddenSharedMailAccounts, activeAccountId);
-  const sharedAccounts = mailboxTree.filter(n =>
-    n.id.startsWith('shared-account-')
-    && isSharedMailAccountVisible(n.accountId, showSharedMailAccounts, hiddenSharedIds));
+  // In the login's saved order, hidden ones included so that one hidden and
+  // shown again comes back to its place.
+  const allSharedAccounts = sortSharedMailAccounts(
+    mailboxTree.filter(n => n.id.startsWith('shared-account-')),
+    sharedMailOrderIds(sharedMailAccountOrder, activeAccountId),
+  );
+  const sharedAccounts = allSharedAccounts.filter(n =>
+    isSharedMailAccountVisible(n.accountId, showSharedMailAccounts, hiddenSharedIds));
 
   // Mountain View's navigation is one flat list of the few places mail
   // actually goes, with everything else - the folders you made, the shared
@@ -1975,9 +2000,12 @@ function SidebarImpl({
         const hiddenIds = hiddenSharedMailIds(hiddenSharedMailAccounts, account.id);
         const shared = isActive
           ? sharedAccounts
-          : buildMailboxTree(accountSharedMailboxes?.[account.id] ?? []).filter((n) =>
-            n.id.startsWith('shared-account-')
-            && isSharedMailAccountVisible(n.accountId, showSharedMailAccounts, hiddenIds));
+          : sortSharedMailAccounts(
+            buildMailboxTree(accountSharedMailboxes?.[account.id] ?? []).filter((n) =>
+              n.id.startsWith('shared-account-')
+              && isSharedMailAccountVisible(n.accountId, showSharedMailAccounts, hiddenIds)),
+            sharedMailOrderIds(sharedMailAccountOrder, account.id),
+          );
         return { account, isActive, tree, shared };
       })
     : [];
@@ -2089,6 +2117,9 @@ function SidebarImpl({
     },
   ) => {
     if (accounts.length === 0) return null;
+    // Only the active login's own section, unfolded, with something to swap.
+    const reorderable = active && !isCollapsed && accounts.length > 1;
+    const reorderIds = accounts.map((account) => sharedAccountMenuId(account.accountId));
     return (
       <div data-testid={sub ? "section-shared-in-account" : undefined}>
         <SidebarSectionHeader
@@ -2101,10 +2132,12 @@ function SidebarImpl({
         />
         {((expanded && !isCollapsed) || isCollapsed) && (
           <>
-            {accounts.map((account) => {
+            {accounts.map((account, index) => {
               const accountExpanded = expandedSharedAccounts.has(account.id);
               const menuAccountId = sharedAccountMenuId(account.accountId);
               const compact = compactSharedMailboxes ? compactSharedMailbox(account) : null;
+              const reorderId = reorderable ? menuAccountId : undefined;
+              const dropTarget = reorderId ? sharedAccountDropTarget(reorderId, index, reorderIds) : undefined;
               if (compact) {
                 // A row without folders below it has no chevron, so what
                 // else hangs below it (Scheduled, tags) stays shown.
@@ -2120,7 +2153,7 @@ function SidebarImpl({
                 // only, not the account's folders listed below the row.
                 const inboxHasSubfolders = (account.children.find((child) => child.id === compact.id)?.children.length ?? 0) > 0;
                 return (
-                  <div key={account.id} data-testid="compact-shared-mailbox">
+                  <div key={account.id} data-testid="compact-shared-mailbox" {...dropTarget?.handlers} className={dropTarget?.className}>
                     <MailboxTreeItem
                       node={compact}
                       sharedAccountName={account.name}
@@ -2133,6 +2166,8 @@ function SidebarImpl({
                       onContextMenu={active ? (e, node) => handleCompactSharedContextMenu(e, node, compact.id, menuAccountId, inboxHasSubfolders) : undefined}
                       pickOnly={!active}
                       renderAfterChild={(child) => child.role === 'drafts' && scheduledRow()}
+                      onRowDragStart={reorderId ? (e) => startSharedAccountDrag(e, reorderId) : undefined}
+                      onRowDragEnd={reorderId ? endSharedAccountDrag : undefined}
                     />
                     {compactExpanded && !hasDrafts && scheduledRow()}
                     {active && compactExpanded && menuAccountId && activeAccountId && (
@@ -2175,7 +2210,7 @@ function SidebarImpl({
                 );
               }
               return (
-                <div key={account.id}>
+                <div key={account.id} {...dropTarget?.handlers} className={dropTarget?.className}>
                   <SidebarSectionHeader
                     label={account.name}
                     expanded={accountExpanded}
@@ -2188,6 +2223,11 @@ function SidebarImpl({
                     onContextMenu={active && menuAccountId
                       ? (e) => handleSharedAccountContextMenu(e, menuAccountId)
                       : undefined}
+                    dragProps={reorderId ? {
+                      draggable: true,
+                      onDragStart: (e) => startSharedAccountDrag(e, reorderId),
+                      onDragEnd: endSharedAccountDrag,
+                    } : undefined}
                   />
                   {accountExpanded && !isCollapsed && (
                     <>
@@ -2447,6 +2487,72 @@ function SidebarImpl({
         toast.info(t("shared_account_hidden"));
       }
     : undefined;
+
+  // Reordering the active login's shared accounts: dragging one onto another
+  // in its Shared section, or Move up / Move down in its menu. The order
+  // covers the hidden ones too, so they keep their place.
+  const moveSharedAccount = (draggedId: string, targetId: string) => {
+    if (!activeAccountId) return;
+    const { sharedMailAccountOrder: order, updateSetting } = useSettingsStore.getState();
+    const currentIds = allSharedAccounts.flatMap((n) => sharedAccountMenuId(n.accountId) ?? []);
+    const next = moveSharedMailAccount(order, activeAccountId, currentIds, draggedId, targetId);
+    if (next !== order) updateSetting('sharedMailAccountOrder', next);
+  };
+  const visibleSharedIds = sharedAccounts.flatMap((n) => sharedAccountMenuId(n.accountId) ?? []);
+  const sharedNeighbour = (accountId: string, direction: 'up' | 'down') => {
+    const index = visibleSharedIds.indexOf(accountId);
+    return index < 0 ? undefined : visibleSharedIds[index + (direction === 'up' ? -1 : 1)];
+  };
+  const sharedAccountOrder = {
+    canMove: (accountId: string, direction: 'up' | 'down') => !!sharedNeighbour(accountId, direction),
+    move: (accountId: string, direction: 'up' | 'down') => {
+      const other = sharedNeighbour(accountId, direction);
+      if (other) moveSharedAccount(accountId, other);
+    },
+  };
+
+  const [sharedDragId, setSharedDragId] = useState<string | null>(null);
+  const [sharedDragOverId, setSharedDragOverId] = useState<string | null>(null);
+  const endSharedAccountDrag = () => { setSharedDragId(null); setSharedDragOverId(null); };
+  const startSharedAccountDrag = (e: React.DragEvent, accountId: string) => {
+    e.dataTransfer.setData(SHARED_ACCOUNT_DRAG_MIME, accountId);
+    // The compact row is also a folder-to-tab drag source ('copy').
+    e.dataTransfer.effectAllowed = 'copyMove';
+    setSharedDragId(accountId);
+  };
+  const carriesSharedAccount = (e: React.DragEvent) =>
+    Array.from(e.dataTransfer?.types ?? []).includes(SHARED_ACCOUNT_DRAG_MIME);
+  // The line goes on the side the account lands on: above when it moves up,
+  // below when it moves down.
+  const sharedAccountDropTarget = (accountId: string, index: number, ids: (string | undefined)[]) => {
+    const fromIndex = sharedDragId ? ids.indexOf(sharedDragId) : -1;
+    const over = sharedDragOverId === accountId && fromIndex >= 0 && sharedDragId !== accountId;
+    return {
+      className: cn(
+        sharedDragId === accountId && "opacity-50",
+        over && (fromIndex < index ? "border-b-2 border-primary" : "border-t-2 border-primary"),
+      ) || undefined,
+      handlers: {
+        onDragOver: (e: React.DragEvent) => {
+          if (!carriesSharedAccount(e) || !sharedDragId || !ids.includes(sharedDragId)) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (sharedDragOverId !== accountId) setSharedDragOverId(accountId);
+        },
+        onDragLeave: (e: React.DragEvent) => {
+          if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+          if (sharedDragOverId === accountId) setSharedDragOverId(null);
+        },
+        onDrop: (e: React.DragEvent) => {
+          if (!carriesSharedAccount(e)) return;
+          e.preventDefault();
+          const draggedId = e.dataTransfer.getData(SHARED_ACCOUNT_DRAG_MIME);
+          if (draggedId && draggedId !== accountId && ids.includes(draggedId)) moveSharedAccount(draggedId, accountId);
+          endSharedAccountDrag();
+        },
+      },
+    };
+  };
 
   // Muting only takes effect through the server's emailPush filter, so the
   // menu offers it only where that exists, like the "Inbox only" setting.
@@ -3022,6 +3128,7 @@ function SidebarImpl({
         onImportEmail={onImportEmail}
         onRefresh={onRefreshMailboxes}
         onHideSharedAccount={hideSharedAccount}
+        sharedAccountOrder={activeAccountId ? sharedAccountOrder : undefined}
         notifications={notificationActions}
       />
     </div>

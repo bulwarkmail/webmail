@@ -6,7 +6,7 @@ import { Loader2 } from "@/components/icons";
 import { useAuthStore } from "@/stores/auth-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { BusyPeriod, Principal } from "@/lib/jmap/types";
-import { loadPrincipalDirectory } from "@/lib/jmap/principal-directory";
+import { loadScopedPrincipalDirectory } from "@/lib/directory-scope";
 import { checkAvailabilityAccess, knownAvailabilityAccess, lookUpAvailability, revokeAvailabilityAccess } from "@/lib/jmap/free-busy";
 import { cn } from "@/lib/utils";
 
@@ -69,7 +69,7 @@ export interface AttendeeDirectory {
  * say so with `forbidden` on the lookup.
  */
 export async function loadAttendeeDirectory(client: IJMAPClient): Promise<AttendeeDirectory> {
-  const directory = await loadPrincipalDirectory(client);
+  const directory = await loadScopedPrincipalDirectory(client);
   const byEmail = new Map<string, Principal>();
   for (const p of directory.principals) {
     if (p.email) byEmail.set(p.email.toLowerCase(), p);

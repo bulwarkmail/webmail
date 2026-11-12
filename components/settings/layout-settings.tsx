@@ -6,11 +6,12 @@ import { Check, Folder } from '@/components/icons';
 import { useSettingsStore, effectiveMailLayout, type ToolbarPosition, type MailLayout, type InterfaceLayout } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
 import { LayoutPreview, useOptionPreview } from './layout-preview';
-import { cn } from '@/lib/utils';
+import { cn, buildMailboxTree } from '@/lib/utils';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { hiddenSharedMailIds, setSharedMailAccountHidden } from '@/lib/shared-mail-visibility';
+import { sharedMailOrderIds, sortSharedMailAccounts } from '@/lib/shared-mail-order';
 import { localizeMailboxName } from '@/lib/mailbox-label';
 
 const INTERFACE_LAYOUT_KEYS: Record<InterfaceLayout, string> = {
@@ -183,13 +184,13 @@ export function MultipleAccountsSection() {
   const compactSharedMailboxes = useSettingsStore(s => s.compactSharedMailboxes);
   const hiddenSharedMailAccounts = useSettingsStore(s => s.hiddenSharedMailAccounts);
   const hiddenSharedIds = hiddenSharedMailIds(hiddenSharedMailAccounts, activeAccountId);
+  const sharedMailAccountOrder = useSettingsStore(s => s.sharedMailAccountOrder);
+  // In the sidebar's order: by name, then the login's saved order.
   const sharedMailAccounts = useMemo(() => {
-    const byId = new Map<string, string>();
-    for (const m of mailboxes) {
-      if (m.isShared && m.accountId && !byId.has(m.accountId)) byId.set(m.accountId, m.accountName || m.accountId);
-    }
-    return Array.from(byId, ([id, name]) => ({ id, name }));
-  }, [mailboxes]);
+    const nodes = buildMailboxTree(mailboxes).filter(n => n.id.startsWith('shared-account-') && n.accountId && n.accountId !== 'unknown');
+    return sortSharedMailAccounts(nodes, sharedMailOrderIds(sharedMailAccountOrder, activeAccountId))
+      .map(n => ({ id: n.accountId!, name: n.name }));
+  }, [mailboxes, sharedMailAccountOrder, activeAccountId]);
   const connectedAccountCount = useMemo(() => accounts.filter(a => a.isConnected).length, [accounts]);
   const unifiedCrossAccountAllowed = isFeatureEnabled('unifiedCrossAccountEnabled');
   // Unified Mailbox entries (All mail / Unread / Starred), each gated independently

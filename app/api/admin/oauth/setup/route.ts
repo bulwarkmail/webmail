@@ -11,6 +11,7 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { configWriteErrorResponse } from '@/lib/admin/config-read-only-response';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
+import { getPostLogoutRedirectUri } from '@/lib/oauth/end-session';
 import {
   LOGIN_BUDGET_RETRY_AFTER_SECONDS,
   reserveAdminSignInAttempt,
@@ -170,6 +171,42 @@ function buildRedirectUris(origin: string, localeList: readonly string[]): Recor
   return out;
 }
 
+/**
+ * The issuer Stalwart names in its discovery document. It can differ from
+ * the JMAP URL the webmail talks to, when Stalwart's public URL is another
+ * host. Null when there is none in the form the setup takes.
+ */
+async function discoverIssuer(serverUrl: string): Promise<string | null> {
+  try {
+    const res = await fetchWithTimeout(`${serverUrl}/.well-known/oauth-authorization-server`, {
+      method: 'GET',
+    }, { trusted: true });
+    if (!res.ok) return null;
+    const { issuer } = await res.json() as { issuer?: unknown };
+    if (typeof issuer !== 'string') return null;
+    const trimmed = issuer.trim().replace(/\/+$/, '');
+    return isValidOriginUrl(trimmed) ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
+
+function isLoopbackHost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+}
+
+/**
+ * Where Stalwart sends the browser after an SSO sign-out: the login page.
+ * Without a locale, so it works in every NEXT_PUBLIC_LOCALE_PREFIX mode.
+ * Null for a plain-http origin, which getPostLogoutRedirectUri would ignore.
+ */
+function buildPostLogoutRedirectUri(origin: string): string | null {
+  const url = new URL(origin);
+  if (url.protocol !== 'https:' && !isLoopbackHost(url.hostname)) return null;
+  const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
+  return `${origin}${basePath}/login`;
+}
+
 interface SetupRequestBody {
   origin?: string;
   issuerUrl?: string;
@@ -319,8 +356,8 @@ const SESSION_REFUSED =
   + 'Enter a Stalwart admin sign-in below and try again.';
 
 const CREDENTIAL_REFUSED =
-  'Stalwart did not accept this sign-in. With two-step verification on, the password alone does not work: '
-  + 'create an app password or API key in the Stalwart web admin and enter that instead.';
+  'Stalwart did not accept this sign-in. With two-factor authentication on, the password alone does not work: '
+  + 'create an app password in Stalwart under /account > Credentials (or an API key) and enter that instead.';
 
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTER = /[\x00-\x1f\x7f]/;
@@ -328,12 +365,22 @@ const CONTROL_CHARACTER = /[\x00-\x1f\x7f]/;
 const TOO_MANY_SIGN_INS =
   'Too many Stalwart sign-ins failed from your address. Wait 15 minutes, then try again.';
 
-/** Which mail account the setup would run as, so the page can say before it starts. */
+/**
+ * Which mail account the setup would run as, so the page can say before it
+ * starts. With `?discover=issuer`, also the issuer the configured Stalwart
+ * names, to pre-fill the dialog with.
+ */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminAuth(request);
   if ('error' in auth) return auth.error;
   const creds = await getStalwartCredentials(request);
-  return NextResponse.json(creds ? { signedIn: true, username: creds.username } : { signedIn: false });
+  const answer: Record<string, unknown> = creds ? { signedIn: true, username: creds.username } : { signedIn: false };
+  if (request.nextUrl.searchParams.get('discover') === 'issuer') {
+    const server = await adminCredentialServer(creds);
+    const issuerUrl = server ? await discoverIssuer(server) : null;
+    if (issuerUrl) answer.issuerUrl = issuerUrl;
+  }
+  return NextResponse.json(answer);
 }
 
 export async function POST(request: NextRequest) {
@@ -472,13 +519,22 @@ export async function POST(request: NextRequest) {
 
     const secret = randomBytes(32).toString('base64url');
     const redirectUris = buildRedirectUris(origin, localeList);
+    // Sign-out ends on the login page instead of Stalwart's "You have been
+    // signed out" page. A post-logout redirect the admin set already keeps
+    // working: an update replaces the client's whole list.
+    const configuredLogoutRedirect = getPostLogoutRedirectUri();
+    const derivedLogoutRedirect = buildPostLogoutRedirectUri(origin);
+    const logoutUris = [configuredLogoutRedirect, derivedLogoutRedirect].filter((uri): uri is string => !!uri);
+    let postLogoutRedirectUris: Record<string, true> | null = logoutUris.length > 0
+      ? Object.fromEntries(logoutUris.map((uri) => [uri, true as const]))
+      : null;
 
     const action: 'created' | 'updated' = existingIds.length > 0 ? 'updated' : 'created';
     // See ClientAccess. 0.16 refuses firstParty as an invalid patch, and a
     // 1.0.3 admin who isn't a superuser the full scope, so the setup retries
     // with less there.
     const buildSetArgs = (access: ClientAccess): Record<string, unknown> => {
-      const extra = access.fields;
+      const extra = postLogoutRedirectUris ? { ...access.fields, postLogoutRedirectUris } : access.fields;
       return action === 'updated'
         ? {
           accountId,
@@ -505,10 +561,18 @@ export async function POST(request: NextRequest) {
           },
         };
     };
-    const callSet = (access: ClientAccess) => jmapCall(creds, {
-      using: STALWART_USING,
-      methodCalls: [['x:OAuthClient/set', buildSetArgs(access), '0']],
-    });
+    // A server that has no post-logout redirects on its clients gets the
+    // client without one; sign-out then stays on Stalwart's page.
+    const callSet = async (access: ClientAccess) => {
+      const call = () => jmapCall(creds, {
+        using: STALWART_USING,
+        methodCalls: [['x:OAuthClient/set', buildSetArgs(access), '0']],
+      });
+      const res = await call();
+      if (!postLogoutRedirectUris || !refusedProperty(res, 'postLogoutRedirectUris')) return res;
+      postLogoutRedirectUris = null;
+      return call();
+    };
 
     const [preferred, fallback, refusable]: [ClientAccess, ClientAccess, string] = await hasStalwartScopes(creds)
       ? [FULL_SCOPES, ACCOUNT_SCOPES, 'scopes']
@@ -553,6 +617,13 @@ export async function POST(request: NextRequest) {
       oauthIssuerUrl: issuerUrl,
     };
     if (oauthOnly) updates.oauthOnly = true;
+    // Only when none is set: the admin's own goes to the same client above.
+    const postLogoutRedirectUri = postLogoutRedirectUris
+      ? configuredLogoutRedirect ?? derivedLogoutRedirect
+      : null;
+    if (postLogoutRedirectUris && !configuredLogoutRedirect && derivedLogoutRedirect) {
+      updates.oauthPostLogoutRedirectUri = derivedLogoutRedirect;
+    }
     // Ask for the Stalwart scopes the client now allows, and none it doesn't.
     // An explicit scope list replaces the extra scopes, so they go there.
     if (access.request.length > 0) {
@@ -599,6 +670,7 @@ export async function POST(request: NextRequest) {
       oauthOnly,
       mobileClient,
       stalwartScopes: access.request,
+      postLogoutRedirect: postLogoutRedirectUri !== null,
       signIn: adminSecret ? (usesApiKey ? 'apiKey' : 'password') : 'session',
     }, ip);
 
@@ -623,6 +695,7 @@ export async function POST(request: NextRequest) {
       mobileClientId: MOBILE_CLIENT_ID,
       mobileRedirectUri: MOBILE_REDIRECT_URI,
       stalwartScopes: access.request,
+      ...(postLogoutRedirectUri ? { postLogoutRedirectUri } : {}),
     });
   } catch (error) {
     const refused = configWriteErrorResponse(error);

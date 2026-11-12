@@ -153,6 +153,19 @@ export function PolicyPage() {
     setMessage(null);
   }
 
+  function toggleDirectorySameDomain() {
+    setPolicy(prev => ({ ...prev, directorySameDomainOnly: !prev.directorySameDomainOnly }));
+    setDirty(true);
+    setMessage(null);
+  }
+
+  function setDirectoryHiddenLocalparts(value: string) {
+    // Kept as typed; saving trims, lowercases and drops the empty entries.
+    setPolicy(prev => ({ ...prev, directoryHiddenLocalparts: value.split(',') }));
+    setDirty(true);
+    setMessage(null);
+  }
+
   function updateDefaultApp(index: number, patch: Partial<AdminSidebarApp>) {
     setPolicy(prev => ({
       ...prev,
@@ -405,6 +418,28 @@ export function PolicyPage() {
 
             <SettingItem label="Pin users to the default relay" description="Lock the relay choice: users cannot pick another relay in their notification settings.">
               <ToggleSwitch checked={!!policy.pushRelayUrlLocked} onChange={togglePushRelayLocked} />
+            </SettingItem>
+          </SettingsSection>
+
+          <SettingsSection
+            id="recipient-directory"
+            title="Recipient directory"
+            description="Which server accounts people see in Bulwark: the contacts directory, recipient suggestions, sharing, delegation and free/busy. Stalwart itself still lists every account to a client that asks for them."
+          >
+            <SettingItem label="Own domains only" description="Show only accounts in the domains of the signed-in account's addresses, aliases included. Accounts whose name isn't an address (name@domain) are left out.">
+              <ToggleSwitch checked={!!policy.directorySameDomainOnly} onChange={toggleDirectorySameDomain} />
+            </SettingItem>
+            <SettingItem label="Hidden accounts" description="Account names before the @, separated by commas, hidden from everyone. For function accounts such as noreply.">
+              <input
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                value={(policy.directoryHiddenLocalparts ?? []).join(',')}
+                onChange={(e) => setDirectoryHiddenLocalparts(e.target.value)}
+                placeholder="noreply, spam"
+                aria-label="Hidden accounts"
+                className={cn(inputClass, 'w-full min-w-0 sm:w-64')}
+              />
             </SettingItem>
           </SettingsSection>
 

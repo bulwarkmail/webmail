@@ -33,6 +33,7 @@ import { useFilterStore } from '@/stores/filter-store';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import {
   KEYWORD_PALETTE,
+  emailKeywordsChosenPatch,
   useSettingsStore,
   type KeywordDefinition,
   type KeywordVisibility,
@@ -45,9 +46,9 @@ import { reportUploadProgress } from '../upload-progress';
 import { DEFAULT_KEYWORD_SCAN_LIMIT } from '../jmap/client';
 import { isServerSetKeyword } from '../jmap/server-keywords';
 import { suggestKeywordColor } from '../keyword-discovery';
-import { MAX_KEYWORD_LENGTH } from '../keyword-nesting';
-import { emailKeyFor, KEYWORD_PREFIX } from '../thread-utils';
-import { DEFAULT_SEARCH_FILTERS, normalizePluginFilter } from '../jmap/search-utils';
+import { isValidKeywordDefinitionId, MAX_KEYWORD_LABEL_LENGTH } from '../keyword-nesting';
+import { emailKeyFor } from '../thread-utils';
+import { DEFAULT_SEARCH_FILTERS, isFilterEmpty, normalizePluginFilter } from '../jmap/search-utils';
 import { awaitDialog, awaitPrompt, awaitCustomDialog, type PromptField } from './host-dialog';
 import { triggerAnchor } from './dialog-anchor';
 import { fileStorage } from '../plugin-storage';
@@ -258,6 +259,7 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   // message-list search: the plugin never sees the results, but it decides
   // which messages the list shows.
   'search.run': 'email:read',
+  'search.clear': 'email:read',
   // OAuth with a third party: a state value bound to this plugin, and the
   // redirect URI the provider sends the user back to.
   'oauth.createState': 'http:fetch',
@@ -1560,30 +1562,13 @@ function patchThreadCache(isTarget: (email: Email) => boolean, changes: Record<s
 // ─── Native keyword definitions ──────────────────────────────
 
 const MAX_PLUGIN_KEYWORD_DEFINITIONS = 500;
-const MAX_PLUGIN_KEYWORD_LABEL_LENGTH = 255;
+const MAX_PLUGIN_KEYWORD_LABEL_LENGTH = MAX_KEYWORD_LABEL_LENGTH;
 const VALID_VISIBILITIES = new Set<KeywordVisibility>(['show', 'hide', 'unread']);
 
 type PluginKeywordDefinitionInput = Omit<KeywordDefinition, 'color'> & { color?: string };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** RFC 8621 keyword syntax, applied to the complete `$label:<id>` value. */
-function isValidKeywordDefinitionId(id: string): boolean {
-  const keyword = KEYWORD_PREFIX + id;
-  if (id.length === 0 || keyword.length > MAX_KEYWORD_LENGTH) return false;
-  for (let i = 0; i < keyword.length; i++) {
-    const code = keyword.charCodeAt(i);
-    if (
-      code < 0x21 || code > 0x7e ||
-      code === 0x28 || code === 0x29 || code === 0x7b || code === 0x7d ||
-      code === 0x5d || code === 0x25 || code === 0x2a || code === 0x22 || code === 0x5c
-    ) {
-      return false;
-    }
-  }
-  return true;
 }
 
 /** The fields of a definition a plugin may set; keywords.update sends only the ones it changes. */
@@ -1617,6 +1602,8 @@ function assertKeywordFields(
       `${method}: definitions[${index}].label must be 1-${MAX_PLUGIN_KEYWORD_LABEL_LENGTH} characters`,
     );
   }
+  // Palette keys only. A tag the user coloured in settings may hold a custom
+  // #rrggbb, which keywords.list passes on as stored.
   if (
     color !== undefined &&
     (typeof color !== 'string' || !Object.prototype.hasOwnProperty.call(KEYWORD_PALETTE, color))
@@ -1707,8 +1694,10 @@ function doKeywordsAdd(plugin: InstalledPlugin, value: unknown): { added: Keywor
   if (added.length > 0) {
     // One atomic append keeps concurrent plugin calls from partially
     // overwriting the list and triggers the normal persist/settings-sync path.
+    // A plugin's tags make the list chosen, so no admin default wipes them.
     useSettingsStore.setState((state) => ({
       emailKeywords: [...state.emailKeywords, ...added],
+      ...emailKeywordsChosenPatch(state),
     }));
   }
 
@@ -1732,7 +1721,7 @@ function doKeywordsUpdate(plugin: InstalledPlugin, value: unknown): { updated: K
       updated.push(next);
       return next;
     });
-    return updated.length > 0 ? { emailKeywords } : state;
+    return updated.length > 0 ? { emailKeywords, ...emailKeywordsChosenPatch(state) } : state;
   });
 
   const done = new Set(updated.map((keyword) => keyword.id.toLowerCase()));
@@ -1754,7 +1743,7 @@ function doKeywordsRemove(plugin: InstalledPlugin, value: unknown): { removed: s
       if (drop) removed.push(keyword.id);
       return !drop;
     });
-    return removed.length > 0 ? { emailKeywords } : state;
+    return removed.length > 0 ? { emailKeywords, ...emailKeywordsChosenPatch(state) } : state;
   });
 
   const done = new Set(removed.map((id) => id.toLowerCase()));
@@ -1814,7 +1803,7 @@ function doKeywordsReorder(value: unknown, rawOptions?: unknown): KeywordDefinit
     // Reuse the existing definitions verbatim so ordering cannot change a
     // label's name, colour, visibility, id casing, or any future metadata.
     result = reordered;
-    return { emailKeywords: reordered };
+    return { emailKeywords: reordered, ...emailKeywordsChosenPatch(state) };
   });
   return result.map((keyword) => ({ ...keyword }));
 }
@@ -1943,6 +1932,24 @@ async function doSearchRun(plugin: InstalledPlugin, query: unknown, options: unk
     pluginFilter: { pluginId: plugin.id, label, filter },
   });
   await store.advancedSearch(client);
+}
+
+/**
+ * End the plugin's own search: its chip goes, as with the chip's ✕. Filters
+ * the user added on top stay and the search runs again with them; with
+ * nothing left it clears as "clear all" does, so the folder's list shows
+ * again. A search the user typed or another plugin ran stays. Resolves
+ * whether it ended one.
+ */
+async function doSearchClear(plugin: InstalledPlugin): Promise<boolean> {
+  const store = useEmailStore.getState();
+  if (store.searchFilters.pluginFilter?.pluginId !== plugin.id) return false;
+  const client = requireClient();
+  store.setSearchFilters({ pluginFilter: null });
+  const rest = useEmailStore.getState();
+  if (!rest.searchQuery.trim() && isFilterEmpty(rest.searchFilters)) rest.clearSearchFilters();
+  await useEmailStore.getState().advancedSearch(client);
+  return true;
 }
 
 // ─── Sieve (delivery-time classification) ─────────────────────
@@ -2385,6 +2392,7 @@ export async function dispatchApiCall(
     case 'tabs.categorize': return doTabsCategorize(args[0], args[1]);
 
     case 'search.run': return doSearchRun(plugin, args[0], args[1]);
+    case 'search.clear': return doSearchClear(plugin);
 
     case 'oauth.createState': return createOAuthState(plugin.id);
     case 'oauth.getRedirectUri': {

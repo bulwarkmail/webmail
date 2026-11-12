@@ -2,13 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ContactCard, AddressBook, AddressBookRights, ContactName, ContactMedia } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import { loadPrincipalDirectory } from '@/lib/jmap/principal-directory';
+import { loadScopedPrincipalDirectory } from '@/lib/directory-scope';
 import { generateUUID } from '@/lib/utils';
 import { debug } from '@/lib/debug';
 import { calendarHooks, contactHooks, settingsHooks } from '@/lib/plugin-hooks';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { useSettingsStore } from './settings-store';
 import { getClientByLocalAccountId } from './client-registry';
+import { usePolicyStore } from './policy-store';
 import { sanitizeDisplayName, splitMailbox } from '@/lib/rfc5322-mailbox';
 import { inlineContactMedia, writeContactWithNewPhoto, type ContactSaveOptions } from '@/lib/contact-media';
 import { contactToView } from '@/lib/plugin-projection';
@@ -802,8 +803,11 @@ export const useContactStore = create<ContactStore>()(
         const epoch = currentStoreEpoch();
         set({ directoryStatus: 'loading' });
         try {
-          // Shared with the share dialog and free/busy (loadPrincipalDirectory).
-          const { principals, status } = await loadPrincipalDirectory(client);
+          // The public policy from before the sign-in carries no directory rules.
+          await usePolicyStore.getState().refreshIfPartial();
+          // Shared with the share dialog and free/busy, narrowed by the admin
+          // policy's directory rules (lib/directory-scope.ts).
+          const { principals, status } = await loadScopedPrincipalDirectory(client);
           if (currentStoreEpoch() !== epoch) return;
           if (status === 'error') throw new PrincipalsRequestError(null);
           if (status !== 'ok') debug.log('contacts', `Directory listing is ${status}; autocomplete offers ${principals.length} principals`);

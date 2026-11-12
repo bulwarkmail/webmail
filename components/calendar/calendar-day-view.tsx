@@ -182,7 +182,15 @@ export function CalendarDayView({
     return map;
   }, [events]);
 
-  const tasksByDay = useMemo(() => groupTasksByDueDay(tasks), [tasks]);
+  const dayRange = useMemo(() => {
+    if (!days.length) return undefined;
+    return {
+      start: days[0],
+      end: days[days.length - 1],
+    };
+  }, [days]);
+
+  const tasksByDay = useMemo(() => groupTasksByDueDay(tasks, dayRange), [tasks, dayRange]);
 
   const {
     hours, hourHeight, canToggle: canToggleHours, configured: configuredHours, showAllHours, toggleAllHours, revealMinutes,

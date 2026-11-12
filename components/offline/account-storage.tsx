@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { formatFileSize } from '@/lib/utils';
 import { chooseScope, clearAccount, disableOffline, dismissStoreReset, enableOffline, scopeForAccount, unsentCount } from '@/lib/offline/offline-mode';
-import { attachmentCapOptions, maxAttachmentMb, windowOptions } from '@/lib/offline/scope';
+import { attachmentCapOptions, maxAttachmentMb, totalCapOptions, windowOptions } from '@/lib/offline/scope';
+import { isDesktopApp } from '@/lib/desktop/bridge';
+import { NO_TOTAL_LIMIT } from '@/lib/store/area';
 import { isOfflineNow, useOfflineStore } from '@/lib/offline/state';
 import { minutesLeft, progressWorthShowing, type SyncProgress } from '@/lib/offline/sync-progress';
 import { devicesForAccount } from '@/lib/device-policy';
@@ -136,6 +138,15 @@ export function AccountStorage({ account, primary, heading }: { account: string;
   };
   const caps = attachmentCapOptions(devices.offlineMaxAttachmentMb);
   const currentCap = maxAttachmentMb(scope);
+  const desktop = isDesktopApp();
+  const totals = totalCapOptions(devices.offlineMaxTotalMb, desktop);
+  // The organisation's total is only news when it takes something away: a
+  // browser stops at 2 GB whatever the cap above that.
+  const totalCapped = locked.maxTotal && totals.join() !== totalCapOptions(0, desktop).join();
+  const unlimited = scope.maxTotalBytes >= NO_TOTAL_LIMIT;
+  const currentTotal = unlimited ? null : Math.round(scope.maxTotalBytes / MB);
+  // An odd cap still shows what's in force; no limit sorts last.
+  const totalOptions = totals.includes(currentTotal) ? totals : [...totals, currentTotal].sort((a, b) => (a ?? Infinity) - (b ?? Infinity));
   const lostText = [
     unsent.messages > 0 ? tStorage('clear_confirm_unsent', { count: unsent.messages }) : null,
     unsent.changes > 0 ? tStorage('unsent_changes', { count: unsent.changes }) : null,
@@ -223,7 +234,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
           </SettingItem>
           <SettingItem
             label={tStorage('attachments_label')}
-            description={tStorage('attachments_description', { total: formatFileSize(scope.maxTotalBytes) })}
+            description={unlimited ? tStorage('attachments_description_unlimited') : tStorage('attachments_description', { total: formatFileSize(scope.maxTotalBytes) })}
             locked={locked.attachments}
           >
             <ToggleSwitch
@@ -232,7 +243,8 @@ export function AccountStorage({ account, primary, heading }: { account: string;
               onChange={(on) => chooseScope(account, { attachments: on })}
             />
           </SettingItem>
-          {locked.maxTotal && !locked.attachments && (
+          {/* With attachments on, the total's select below says this. */}
+          {totalCapped && !locked.attachments && !scope.attachments && (
             <p className="flex items-center gap-1 pb-2 text-xs text-muted-foreground" data-testid={testId('offline-total-locked')}>
               <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
               {tStorage('total_locked', { size: formatFileSize(scope.maxTotalBytes) })}
@@ -247,6 +259,18 @@ export function AccountStorage({ account, primary, heading }: { account: string;
                   options={(caps.includes(currentCap) ? caps : [...caps, currentCap].sort((a, b) => a - b)).map((mb) => ({ value: String(mb), label: formatFileSize(mb * MB) }))}
                 />
                 {locked.maxAttachment && caps.length > 1 && <OrgLockedNote />}
+              </div>
+            </SettingItem>
+          )}
+          {scope.attachments && (
+            <SettingItem label={tStorage('total_cap_label')} nested locked={totals.length <= 1}>
+              <div className="flex flex-col items-start gap-1 sm:items-end" data-testid={testId('offline-total-cap')}>
+                <Select
+                  value={currentTotal === null ? ALL : String(currentTotal)}
+                  onChange={(value) => chooseScope(account, { maxTotalBytes: value === ALL ? null : Number(value) * MB })}
+                  options={totalOptions.map((mb) => ({ value: mb === null ? ALL : String(mb), label: mb === null ? tStorage('total_cap_unlimited') : formatFileSize(mb * MB) }))}
+                />
+                {totalCapped && totals.length > 1 && <OrgLockedNote />}
               </div>
             </SettingItem>
           )}

@@ -222,6 +222,20 @@ export interface SettingsPolicy {
    * a client works with has none.
    */
   scopes?: PolicyScope[];
+  /**
+   * Show only accounts in the domains of the signed-in account's addresses,
+   * aliases included, wherever Bulwark lists the server's accounts: contacts
+   * directory, recipient suggestions, sharing, delegation, free/busy and the
+   * plugins' lookups (lib/directory-scope.ts). It narrows what Bulwark shows,
+   * not what the server answers. Stalwart reports an account's name as its
+   * address, so accounts named without a domain are left out.
+   */
+  directorySameDomainOnly?: boolean;
+  /**
+   * Account names (the part before the @) left out of those lists for
+   * everyone, such as noreply. Lowercase; sanitized on policy load and save.
+   */
+  directoryHiddenLocalparts?: string[];
 }
 
 /** Set to `public` on a policy answered with the pre-login subset. */
@@ -245,6 +259,8 @@ export const DEFAULT_POLICY: SettingsPolicy = {
   pushRelayUrl: '',
   pushRelayUrlLocked: false,
   defaultSidebarApps: [],
+  directorySameDomainOnly: false,
+  directoryHiddenLocalparts: [],
 };
 
 export interface AuditEntry {
@@ -255,7 +271,7 @@ export interface AuditEntry {
 }
 
 /** Config keys that map to environment variables */
-export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: string; fileKey?: string; type: 'string' | 'boolean' | 'url' | 'enum' | 'json'; defaultValue: unknown; enumValues?: string[] }> = {
+export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: string; fileKey?: string; type: 'string' | 'boolean' | 'url' | 'enum' | 'json'; defaultValue: unknown; enumValues?: string[] }> = {
   appName: { envVar: 'APP_NAME', type: 'string', defaultValue: 'Webmail' },
   appShortName: { envVar: 'APP_SHORT_NAME', type: 'string', defaultValue: '' },
   appDescription: { envVar: 'APP_DESCRIPTION', type: 'string', defaultValue: '' },
@@ -394,6 +410,11 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // "password" and "off" require an admin password to be configured, or the
   // dashboard would become unreachable.
   stalwartAdminAccess: { envVar: 'STALWART_ADMIN_ACCESS', type: 'enum', defaultValue: 'auto', enumValues: ['auto', 'password', 'off'] },
+  // Mail accounts, each on one configured server, that get what a Stalwart
+  // superuser gets under stalwartAdminAccess: [{ serverUrl, account }]. Set
+  // only in the dashboard, so it has no environment variable
+  // (lib/admin/admin-accounts.ts).
+  adminAccounts: { type: 'json', defaultValue: [] },
   jmapServers: { envVar: 'JMAP_SERVERS', type: 'json', defaultValue: [] },
   jmapServerAutoPickByDomain: { envVar: 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', type: 'boolean', defaultValue: false },
   domainBranding: { envVar: 'DOMAIN_BRANDING', type: 'json', defaultValue: [] },

@@ -78,6 +78,14 @@ describe('conversation message text size', () => {
     const body = screen.getByText('just text').closest('[data-plugin-source="email-body"]') as HTMLElement;
     expect(body.style.fontSize).toMatch(/0\.8125rem \* 2|1\.625rem/);
   });
+
+  it('plain text is centred at about 80 characters a line when the reading width is comfortable', () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    show([mail('a', { htmlBody: [], textBody: [{ partId: '1', type: 'text/plain' }], bodyValues: { '1': { value: 'just text' } } })]);
+    const body = screen.getByText('just text').closest('[data-plugin-source="email-body"]') as HTMLElement;
+    expect(body.style.maxWidth).toBe('80ch');
+    expect(body.style.marginInline).toBe('auto');
+  });
 });
 
 describe('conversation messages as plain text', () => {

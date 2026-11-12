@@ -1182,6 +1182,12 @@ function buildCoreApi(manifest: PluginManifest) {
     search: {
       run: (query: unknown, options?: { label?: string }) =>
         callApi('search.run', [query, options]) as Promise<void>,
+      /**
+       * End this plugin's own search; the folder's list shows again.
+       * Resolves false, changing nothing, when the running search is not
+       * this plugin's (none, one the user typed, another plugin's).
+       */
+      clear: () => callApi('search.clear', []) as Promise<boolean>,
     },
     // Calendar events (permissions: calendar:read / calendar:write). Writes
     // go through the calendar the way the user's own edits do, so other
@@ -1212,7 +1218,7 @@ function buildCoreApi(manifest: PluginManifest) {
     // the way the user's own edits go.
     tasks: {
       /** Open tasks, or every task with includeCompleted. At most 1000. */
-      list: (options?: { includeCompleted?: boolean }) => callApi('tasks.list', [options]) as Promise<TaskView[]>,
+      list: (options?: { includeCompleted?: boolean; calendarIds?: string[] }) => callApi('tasks.list', [options]) as Promise<TaskView[]>,
       /** One task, or null. */
       get: (id: string) => callApi('tasks.get', [id]) as Promise<TaskView | null>,
       /** Resolves to the new task, or null when another plugin stopped it. */

@@ -23,6 +23,19 @@ import {
 
 export type PolicySettingValue = boolean | number | string;
 
+/** One tag of `defaults.emailKeywords` (#1612). */
+export interface PolicyKeyword {
+  id: string;
+  label: string;
+  color: string;
+}
+
+/** What `policy.defaults` holds for a key: a plain value, or the tag list. */
+export type PolicyDefaultValue = PolicySettingValue | PolicyKeyword[];
+
+/** The tags new users start with; edited in their own block, never locked. */
+export const TAGS_DEFAULT_KEY = 'emailKeywords';
+
 export interface PolicySettingOption {
   value: PolicySettingValue;
   label: string;
@@ -387,7 +400,7 @@ export function defaultAt(policy: SettingsPolicy, scopeId: string, key: string):
 }
 
 /** The policy with `key` preset to `value` at the scope; `undefined` removes the preset. */
-export function withDefaultAt(policy: SettingsPolicy, scopeId: string, key: string, value: PolicySettingValue | undefined): SettingsPolicy {
+export function withDefaultAt(policy: SettingsPolicy, scopeId: string, key: string, value: PolicyDefaultValue | undefined): SettingsPolicy {
   const next = clonePolicy(policy);
   const scope = scopeOf(next, scopeId);
   const target = scope ? (scope.policy.defaults ??= {}) : (next.defaults = { ...(next.defaults ?? {}) });
@@ -396,11 +409,11 @@ export function withDefaultAt(policy: SettingsPolicy, scopeId: string, key: stri
   return next;
 }
 
-/** Keys preset at the scope (its own, not Everyone's) that the editor has no row for. */
+/** Keys preset at the scope (its own, not Everyone's) that the editor has no row or block for. */
 export function otherDefaultKeys(policy: SettingsPolicy, scopeId: string): string[] {
   const scope = scopeOf(policy, scopeId);
   const defaults = scope ? scope.policy.defaults ?? {} : policy.defaults ?? {};
-  return Object.keys(defaults).filter((key) => !BY_KEY.has(key));
+  return Object.keys(defaults).filter((key) => !BY_KEY.has(key) && key !== TAGS_DEFAULT_KEY);
 }
 
 /**

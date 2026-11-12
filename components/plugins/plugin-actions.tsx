@@ -3,9 +3,10 @@
 import { useMemo, useSyncExternalStore, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { iconForName, Puzzle } from '@/components/icons';
-import { ContextMenu, ContextMenuItem } from '@/components/ui/context-menu';
+import { ContextMenu, ContextMenuCheckItem, ContextMenuItem } from '@/components/ui/context-menu';
 import { useContextMenu } from '@/hooks/use-context-menu';
 import { cn } from '@/lib/utils';
+import { TOOLBAR_ACTIVE } from '@/components/ui/toolbar';
 import {
   actionApplies,
   actionsFor,
@@ -162,7 +163,18 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
   if (variant === 'menu') {
     return (
       <>
-        {actions.map((action) => (
+        {actions.map((action) => action.pressed !== undefined ? (
+          // A toggle of a button surface that landed in a menu: the phone
+          // header's, or a toolbar's "more". On or off as a tick.
+          <ContextMenuCheckItem
+            key={`${action.pluginId}:${action.id}`}
+            icon={iconForName(action.icon) ?? Puzzle}
+            label={action.label}
+            title={action.pluginName}
+            checked={action.pressed}
+            onClick={() => { void run(action); }}
+          />
+        ) : (
           <ContextMenuItem
             key={`${action.pluginId}:${action.id}`}
             icon={iconForName(action.icon) ?? Puzzle}
@@ -189,6 +201,7 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
             disabled={busy === key}
             title={compact ? `${action.label} (${action.pluginName})` : action.pluginName}
             aria-label={action.label}
+            aria-pressed={action.pressed}
             {...(overflowItems ? {
               'data-overflow-item': '',
               'data-overflow-priority': PLUGIN_OVERFLOW_PRIORITY_BASE + index,
@@ -200,6 +213,8 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
               'hover:bg-muted hover:text-foreground focus-visible:outline-hidden',
               'disabled:opacity-50',
               action.badge && 'bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary',
+              // As the header rows' own toggles that are on.
+              action.pressed && TOOLBAR_ACTIVE,
               action.danger && 'text-destructive hover:bg-destructive/10 hover:text-destructive',
             )}
           >

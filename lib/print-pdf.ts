@@ -18,9 +18,10 @@ import { desktopPrintPreviewAvailable, previewDesktopPdf } from './desktop/print
 const CLEANUP_MS = 60_000;
 const LOAD_TIMEOUT_MS = 15_000;
 
-export async function printPdfUrl(url: string, title?: string): Promise<boolean> {
+/** `blob`: the PDF behind `url`, which the desktop app takes as is (its CSP keeps the URL from being fetched). */
+export async function printPdfUrl(url: string, title?: string, blob?: Blob | null): Promise<boolean> {
   if (desktopPrintPreviewAvailable()) {
-    const outcome = await previewDesktopPdf(url, title);
+    const outcome = await previewDesktopPdf(blob ?? url, title);
     return outcome !== null && outcome !== 'refused' && outcome !== 'failed';
   }
   return printInFrame(url);

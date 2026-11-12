@@ -893,11 +893,26 @@ function isDone(task: CalendarTask): boolean {
 
 export async function doTasksList(options: unknown): Promise<TaskView[]> {
   const method = 'tasks.list';
-  const opts = readObject(options, method, 'options', ['includeCompleted'], true);
+  const opts = readObject(options, method, 'options', ['includeCompleted', 'calendarIds'], true);
   const includeCompleted = opts.includeCompleted === undefined
     ? false
     : readBoolean(opts.includeCompleted, method, 'includeCompleted');
-  const tasks = await sessionClient(method).getCalendarTasks();
+  // Without calendarIds every calendar of every account the user may read
+  // is listed, and Stalwart has no filter for tasks: each object comes,
+  // events too. A plugin that wants only some task lists names them.
+  let calendarIds: string[] | undefined;
+  if (opts.calendarIds !== undefined) {
+    if (!Array.isArray(opts.calendarIds) || opts.calendarIds.length === 0 || opts.calendarIds.length > 100) {
+      throw new Error(`${method}: calendarIds must be an array of 1 to 100 ids`);
+    }
+    const named = opts.calendarIds.map((id, i) => readId(id, method, `calendarIds[${i}]`));
+    // The birthday calendar comes from listCalendars but holds no tasks and
+    // isn't on the server. An empty list would mean every calendar to the
+    // client, so a call that names only it gets no tasks.
+    calendarIds = [...new Set(named)].filter((id) => id !== BIRTHDAY_CALENDAR_ID);
+    if (calendarIds.length === 0) return [];
+  }
+  const tasks = await sessionClient(method).getCalendarTasks(calendarIds);
   return tasks
     .filter((t) => includeCompleted || !isDone(t))
     .slice(0, MAX_PLUGIN_TASKS)

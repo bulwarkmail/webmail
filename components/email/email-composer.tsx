@@ -46,6 +46,7 @@ import {
   Lock,
   CloudOff,
   Pencil,
+  Eye,
   UserPen,
   ArrowLeftRight,
   UserPlus,
@@ -86,6 +87,7 @@ import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
+import { RenameAttachmentDialog } from "@/components/email/rename-attachment-dialog";
 import { discardWithUndo, openKeptDraft, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
 import { containsEmbeddedSignature } from "@/components/email/signature-markers";
@@ -707,6 +709,8 @@ export function EmailComposer({
   const tViewer = useTranslations('email_viewer');
   const tClassification = useTranslations('classification');
   const tEdit = useTranslations('desktopEdit');
+  const tFiles = useTranslations('files');
+  const tRename = useTranslations('attachment_rename');
   const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
   const tRecent = useTranslations('desktopAttachRecent');
@@ -1344,6 +1348,9 @@ export function EmailComposer({
   // Closing saves without asking; the question comes only when that save failed.
   const [closeSaveFailed, setCloseSaveFailed] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
+  // The chip being renamed, and the right-click menu on a chip; both by index.
+  const [renameIndex, setRenameIndex] = useState<number | null>(null);
+  const attachmentMenu = useContextMenu<number>();
   // What the checks before sending found (no subject, no text, placeholders,
   // a missing attachment, open proofreading issues), asked about in one dialog.
   // `schedule`: asked before the schedule dialog, which opens on "Schedule anyway".
@@ -2082,6 +2089,8 @@ export function EmailComposer({
     uneditedRef.current = false;
     setFirstEditSeen(true);
   }, []);
+  // A renamed attachment changes no count: it is an edit of its own.
+  const attachmentRenamedRef = useRef(false);
   const isDirtyRef = useRef(false);
   isDirtyRef.current = toStr !== initialValuesRef.current.to || ccStr !== initialValuesRef.current.cc ||
     bccStr !== initialValuesRef.current.bcc || subject !== initialValuesRef.current.subject ||
@@ -2095,6 +2104,7 @@ export function EmailComposer({
   if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
   const initialTagsRef = useRef(selectedTagIds);
   if (selectedTagIds !== initialTagsRef.current) isDirtyRef.current = true;
+  if (attachmentRenamedRef.current) isDirtyRef.current = true;
   // Text the host handed in is no edit to hand back: it has its own copy, and a
   // stand-in mounted before the edits arrived must not overwrite them.
   const hasEditsRef = useRef(false);
@@ -3043,6 +3053,25 @@ export function EmailComposer({
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  // A chip opens a preview once it has content (local File or an uploaded
+  // blob) and the type is previewable; never mid-upload.
+  const canPreviewChip = (att: ComposerAttachment) => !att.uploading && !att.error
+    && (!!att.file || !!att.blobId)
+    && isFilePreviewable(att.name, att.type);
+  // Renamed once it's there: not while it uploads, nor after it failed.
+  const canRenameChip = (att: ComposerAttachment) => !att.uploading && !att.error;
+
+  // The new name goes out with the message and into the draft; the content
+  // and its type stay as they are.
+  const renameAttachment = (index: number, name: string) => {
+    const att = attachments[index];
+    if (!att || !canRenameChip(att) || att.name === name) return;
+    attachmentRenamedRef.current = true;
+    changeVersionRef.current += 1;
+    markEdited();
+    setAttachments(prev => prev.map((a, i) => (i === index ? { ...a, name } : a)));
+  };
+
   // Lets a plugin attach a file it has already uploaded to the JMAP server
   // (via api.jmap.uploadBlob) without going through the local file-picker /
   // drag-drop path - e.g. a plugin that browses an external WebDAV store and
@@ -3463,6 +3492,9 @@ export function EmailComposer({
       // blobNotFound (#1243).
       // A part lives as long as its draft version does.
       const savedBlobIds = new Set(uploadedAttachments.map(att => att.blobId));
+      // The name each part was saved under: a chip renamed while the save ran
+      // still matches its part.
+      const savedNames = new Map(uploadedAttachments.map(att => [att.blobId, att.name]));
       if (savedBlobIds.size) {
         try {
           const freshDraft = await composerClient.getEmail(savedDraftId, draftAccountId);
@@ -3473,8 +3505,9 @@ export function EmailComposer({
               return list.map(att => {
                 // Uploads that finished during the save are not in this version.
                 if (!att.blobId || att.uploading || !savedBlobIds.has(att.blobId)) return att;
+                const savedName = savedNames.get(att.blobId) ?? att.name;
                 const idx = freshParts.findIndex((p, i) =>
-                  !claimed.has(i) && (p.name || unnamedAttachmentName(p.type)) === att.name && p.size === att.size);
+                  !claimed.has(i) && (p.name || unnamedAttachmentName(p.type)) === savedName && p.size === att.size);
                 if (idx === -1) return att;
                 claimed.add(idx);
                 return { ...att, blobId: freshParts[idx].blobId, fromDraftPart: true };
@@ -6232,11 +6265,7 @@ export function EmailComposer({
               data-testid="composer-attachments"
             >
               {attachmentsForDisplay(attachments).map(({ att, index }) => {
-                // Clickable to preview only once it has content (local File or an
-                // uploaded blob) and the type is previewable; never mid-upload.
-                const canPreview = !att.uploading && !att.error
-                  && (!!att.file || !!att.blobId)
-                  && isFilePreviewable(att.name, att.type);
+                const canPreview = canPreviewChip(att);
                 const label = (
                   <>
                     <span className="max-w-[150px] md:max-w-[200px] truncate">{att.name}</span>
@@ -6256,6 +6285,7 @@ export function EmailComposer({
                 return (
                 <div
                   key={index}
+                  onContextMenu={(e) => attachmentMenu.openContextMenu(e, index)}
                   className={cn(
                     "relative flex items-center gap-2 px-3 py-1.5 rounded-md text-sm overflow-hidden",
                     att.error ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-muted text-foreground"
@@ -6316,6 +6346,18 @@ export function EmailComposer({
                         data-testid="composer-edit-update"
                       >
                         {tEdit('update')}
+                      </button>
+                    )}
+                    {canRenameChip(att) && (
+                      <button
+                        type="button"
+                        onClick={() => setRenameIndex(index)}
+                        className={cn("-my-0.5 hover:text-foreground text-muted-foreground min-w-6 min-h-6 flex items-center justify-center", TOUCH_HIT_AREA)}
+                        title={tRename('rename')}
+                        aria-label={tRename('rename_named', { name: att.name })}
+                        data-testid="composer-rename"
+                      >
+                        <Pencil className="w-3 h-3" />
                       </button>
                     )}
                     {!att.uploading && !att.error && composerEdits.canEditChip(att) && (
@@ -6834,6 +6876,27 @@ export function EmailComposer({
         }
       />
 
+      {attachmentMenu.contextMenu.data !== null && attachments[attachmentMenu.contextMenu.data] && (() => {
+        const index = attachmentMenu.contextMenu.data;
+        const att = attachments[index];
+        const pick = (action: () => void) => () => { attachmentMenu.closeContextMenu(); action(); };
+        return (
+          <ContextMenu ref={attachmentMenu.menuRef} isOpen={attachmentMenu.contextMenu.isOpen} position={attachmentMenu.contextMenu.position} onClose={attachmentMenu.closeContextMenu}>
+            {canPreviewChip(att) && <ContextMenuItem icon={Eye} label={tFiles('preview')} onClick={pick(() => setPreviewAttachment(att))} />}
+            {canRenameChip(att) && <ContextMenuItem icon={Pencil} label={tRename('rename_menu')} onClick={pick(() => setRenameIndex(index))} />}
+            {canRenameChip(att) && composerEdits.canEditChip(att) && (
+              <ContextMenuItem icon={FilePen} label={tEdit('edit')} onClick={pick(() => void composerEdits.startEdit(att))} />
+            )}
+            <ContextMenuItem icon={X} label={att.uploading ? t('upload_cancel') : t('recipient_remove')} onClick={pick(() => removeAttachment(index))} />
+          </ContextMenu>
+        );
+      })()}
+      <RenameAttachmentDialog
+        isOpen={renameIndex !== null && !!attachments[renameIndex]}
+        name={(renameIndex !== null && (attachments[renameIndex]?.name || unnamedAttachmentName(attachments[renameIndex]?.type))) || ''}
+        onClose={() => setRenameIndex(null)}
+        onRename={(name) => { if (renameIndex !== null) renameAttachment(renameIndex, name); }}
+      />
       {previewAttachment && (
         <FilePreviewModal
           name={previewAttachment.name}

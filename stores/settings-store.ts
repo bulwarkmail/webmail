@@ -43,6 +43,7 @@ import {
 } from '@/lib/settings-sync-stamps';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { forgetSignedOutChoices, signedOutChoices } from '@/lib/signed-out-choices';
+import { isValidKeywordDefinitionId, MAX_KEYWORD_LABEL_LENGTH } from '@/lib/keyword-nesting';
 
 // Use console directly to avoid circular dependency with lib/debug.ts
 // (debug.ts imports useSettingsStore for debugMode check)
@@ -371,7 +372,7 @@ async function syncSettingsJob(job: SettingsSyncJob, retries = 1, opts?: { keepa
  * Imports, resets and server loads have their own hooks (onSettingsImport,
  * onSettingsReset, onSettingsSync) and do not fire per-key ones.
  */
-const BOOKKEEPING_SETTING_KEYS = new Set<string>(['onboardingCompleted', 'tourCompleted']);
+const BOOKKEEPING_SETTING_KEYS = new Set<string>(['onboardingCompleted', 'tourCompleted', 'emailKeywordsChoiceTracked']);
 
 /**
  * Runs a user's change to one preference through the plugin hooks: asks
@@ -404,6 +405,7 @@ function changePreference(key: string, value: unknown, previous: unknown, apply:
   });
 }
 
+// The colour goes out as stored: a palette key, or a custom #rrggbb picked in settings.
 function toKeywordViews(keywords: KeywordDefinition[]): { id: string; name: string; color: string }[] {
   return keywords.map((k) => ({ id: k.id, name: k.label, color: k.color }));
 }
@@ -508,7 +510,7 @@ const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
  * Maps keyed by account id. Every account's server copy carries one, and a
  * server load takes only the loading account's entry.
  */
-const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts']);
+const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder']);
 
 /** A map of plugin id → boolean, whatever came in (sync, import, storage). */
 function booleanRecord(value: unknown): Record<string, boolean> {
@@ -575,7 +577,7 @@ export type KeywordVisibility = 'show' | 'hide' | 'unread';
 export interface KeywordDefinition {
   id: string;     // Used as JMAP keyword suffix: $label:<id>
   label: string;  // Display name
-  color: string;  // Key from KEYWORD_PALETTE
+  color: string;  // Key from KEYWORD_PALETTE, or a custom lowercase #rrggbb (lib/tag-hex-color.ts)
   visibility?: KeywordVisibility; // Absent on tags stored before this was configurable
   addedBy?: string; // Id of the plugin that added it with keywords.add; only that plugin may update or remove it
 }
@@ -678,6 +680,11 @@ export const KEYWORD_PALETTE_ROWS: string[][] = [
 /** The colour a tag falls back to when its definition is gone. */
 export const FALLBACK_KEYWORD_COLOR = 'gray';
 
+/**
+ * The seven colour tags a new account starts with, unless the admin sets
+ * `defaults.emailKeywords` (#1612). The admin console offers them as
+ * ready-made tags.
+ */
 export const DEFAULT_KEYWORDS: KeywordDefinition[] = [
   { id: 'red', label: 'Red', color: 'red' },
   { id: 'orange', label: 'Orange', color: 'orange' },
@@ -930,6 +937,9 @@ interface SettingsState extends AccessibilitySettings {
   // Shared accounts whose mail folders are hidden one by one, keyed by
   // AccountEntry.id -> JMAP accountIds, since those ids are per server.
   hiddenSharedMailAccounts: Record<string, string[]>;
+  // The shared accounts' order in the sidebar, keyed by AccountEntry.id ->
+  // JMAP accountIds in display order. Accounts not listed follow, by name.
+  sharedMailAccountOrder: Record<string, string[]>;
 
   // Folders
   folderIcons: Record<string, string>; // mailboxId -> icon name
@@ -938,6 +948,11 @@ interface SettingsState extends AccessibilitySettings {
   // Keywords (labels/tags)
   emailKeywords: KeywordDefinition[];
   nestedTags: boolean; // Treat "/" in a tag id as a parent/child separator
+  /**
+   * Written by a build that records a tag edit in explicitSettings (#1612).
+   * A stored tag list without it predates that, and counts as chosen.
+   */
+  emailKeywordsChoiceTracked: boolean;
 
   // Attachment Reminder
   attachmentReminderEnabled: boolean;
@@ -1237,14 +1252,18 @@ const DEFAULT_SETTINGS = {
   showSharedMailAccounts: true,
   compactSharedMailboxes: false,
   hiddenSharedMailAccounts: {} as Record<string, string[]>,
+  sharedMailAccountOrder: {} as Record<string, string[]>,
 
   // Folders
   folderIcons: {} as Record<string, string>,
   folderCountModes: {} as Record<string, FolderCountMode>,
 
   // Keywords
+  // The admin's defaults.emailKeywords replaces these for users who haven't
+  // chosen their tags (#1612).
   emailKeywords: USING_MOCK_SERVER ? DEV_KEYWORDS : DEFAULT_KEYWORDS,
   nestedTags: USING_MOCK_SERVER,
+  emailKeywordsChoiceTracked: true,
 
   // Attachment Reminder
   attachmentReminderEnabled: true,
@@ -1324,26 +1343,65 @@ const builtInDefault = (key: string) => (DEFAULT_SETTINGS as Record<string, unkn
 
 /**
  * The list settings a policy may set too (#1564), with the entries each may
- * hold. Other lists and maps (tags, folder icons, per-account maps) stay the
- * user's own.
+ * hold. The tag list has its own check (policyKeywordList). Other lists and
+ * maps (folder icons, per-account maps) stay the user's own.
  */
 const POLICY_LIST_SETTINGS: Record<string, readonly string[]> = {
   hoverActions: ALL_HOVER_ACTIONS.map((action) => action.id),
 };
 
-/** Equal values, lists compared entry by entry. */
-function sameSettingValue(a: unknown, b: unknown): boolean {
+/** Settings a policy may give a default but never lock (#1612). */
+const POLICY_DEFAULT_ONLY_KEYS = new Set<string>(['emailKeywords']);
+
+/** The most tags a `defaults.emailKeywords` list may hold. */
+const MAX_POLICY_KEYWORDS = 50;
+
+/**
+ * A `defaults.emailKeywords` value (#1612), reduced to the id, label and
+ * colour of each tag, or null when it isn't one: at most 50 tags, each with
+ * a valid label id (unique without case, as servers fold keywords), a name
+ * and a palette colour. An empty list is valid.
+ */
+function policyKeywordList(value: unknown): KeywordDefinition[] | null {
+  if (!Array.isArray(value) || value.length > MAX_POLICY_KEYWORDS) return null;
+  const seen = new Set<string>();
+  const out: KeywordDefinition[] = [];
+  for (const entry of value) {
+    if (!isPlainRecord(entry)) return null;
+    const { id, label, color } = entry;
+    if (typeof id !== 'string' || !isValidKeywordDefinitionId(id) || seen.has(id.toLowerCase())) return null;
+    if (typeof label !== 'string' || label.trim().length === 0 || label.length > MAX_KEYWORD_LABEL_LENGTH) return null;
+    if (typeof color !== 'string' || !hasOwn(KEYWORD_PALETTE, color)) return null;
+    seen.add(id.toLowerCase());
+    out.push({ id, label: label.trim(), color });
+  }
+  return out;
+}
+
+/** A policy value as it is applied: a tag list without the fields it can't set. */
+function policyValueFor(key: string, value: unknown): unknown {
+  return key === 'emailKeywords' ? policyKeywordList(value) ?? value : value;
+}
+
+/** Same tag: id, name and colour. */
+function sameKeywordEntry(a: unknown, b: unknown): boolean {
+  return isPlainRecord(a) && isPlainRecord(b) && a.id === b.id && a.label === b.label && a.color === b.color;
+}
+
+/** Equal values, lists compared entry by entry (tags by id, name and colour). */
+export function sameSettingValue(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((entry, i) => entry === b[i]);
+  return Array.isArray(a) && Array.isArray(b) && a.length === b.length
+    && a.every((entry, i) => entry === b[i] || sameKeywordEntry(entry, b[i]));
 }
 
 /**
  * Settings an admin policy may set (#1248): plain values (boolean, number,
- * string), and the lists in POLICY_LIST_SETTINGS.
+ * string), the lists in POLICY_LIST_SETTINGS, and the tag list.
  */
 function isPolicySettingKey(key: string): boolean {
-  if (key === 'explicitSettings' || !hasOwn(DEFAULT_SETTINGS, key)) return false;
-  if (hasOwn(POLICY_LIST_SETTINGS, key)) return true;
+  if (key === 'explicitSettings' || key === 'emailKeywordsChoiceTracked' || !hasOwn(DEFAULT_SETTINGS, key)) return false;
+  if (hasOwn(POLICY_LIST_SETTINGS, key) || key === 'emailKeywords') return true;
   const type = typeof builtInDefault(key);
   return type === 'boolean' || type === 'number' || type === 'string';
 }
@@ -1355,6 +1413,7 @@ function isPolicySettingKey(key: string): boolean {
  */
 function isAllowedPolicyValue(key: string, value: unknown, restriction?: SettingRestriction): boolean {
   if (!isPolicySettingKey(key)) return false;
+  if (key === 'emailKeywords') return policyKeywordList(value) !== null;
   if (hasOwn(POLICY_LIST_SETTINGS, key)) {
     // Known entries only, each once; an empty list is a choice too.
     const known = POLICY_LIST_SETTINGS[key];
@@ -1433,18 +1492,21 @@ export function adminPolicyPatch(
   const explicit = new Set(Array.isArray(state.explicitSettings) ? (state.explicitSettings as string[]) : []);
   const defaults = withLegacyPolicyKeys(isPlainRecord(policy.defaults) ? policy.defaults : {});
   const restrictions = withLegacyPolicyKeys<SettingRestriction>(isPlainRecord(policy.restrictions) ? policy.restrictions : {});
-  const restrictionFor = (key: string) => (hasOwn(restrictions, key) ? restrictions[key] : undefined);
+  const restrictionFor = (key: string) =>
+    (hasOwn(restrictions, key) && !POLICY_DEFAULT_ONLY_KEYS.has(key) ? restrictions[key] : undefined);
   const patch: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(defaults)) {
+  for (const [key, raw] of Object.entries(defaults)) {
     if (explicit.has(key)) continue;
-    if (!isAllowedPolicyValue(key, value, restrictionFor(key))) {
+    if (!isAllowedPolicyValue(key, raw, restrictionFor(key))) {
       warnSkippedDefault(key);
       continue;
     }
+    const value = policyValueFor(key, raw);
     if (!sameSettingValue(state[key], value)) patch[key] = value;
   }
   for (const [key, restriction] of Object.entries(restrictions)) {
     if (!isPlainRecord(restriction) || restriction.locked !== true) continue;
+    if (POLICY_DEFAULT_ONLY_KEYS.has(key)) continue;
     const value = hasOwn(restriction, 'value') ? restriction.value : hasOwn(defaults, key) ? defaults[key] : undefined;
     if (!isAllowedPolicyValue(key, value, restriction)) continue;
     // Text size, contrast, motion and the other reading aids can't be
@@ -1473,9 +1535,9 @@ export function adminPolicyReleasePatch(
     const out = new Map<string, unknown>();
     const defaults = isPlainRecord(policy.defaults) ? policy.defaults : {};
     const restrictions = isPlainRecord(policy.restrictions) ? (policy.restrictions as Record<string, SettingRestriction>) : {};
-    for (const [key, value] of Object.entries(defaults)) out.set(key, value);
+    for (const [key, value] of Object.entries(defaults)) out.set(key, policyValueFor(key, value));
     for (const [key, restriction] of Object.entries(restrictions)) {
-      if (!isPlainRecord(restriction) || restriction.locked !== true) continue;
+      if (!isPlainRecord(restriction) || restriction.locked !== true || POLICY_DEFAULT_ONLY_KEYS.has(key)) continue;
       out.set(key, hasOwn(restriction, 'value') ? restriction.value : hasOwn(defaults, key) ? defaults[key] : undefined);
     }
     return out;
@@ -1488,6 +1550,16 @@ export function adminPolicyReleasePatch(
     if (sameSettingValue(state[key], value) && !sameSettingValue(value, builtInDefault(key))) patch[key] = builtInDefault(key);
   }
   return patch;
+}
+
+/**
+ * What marks the tag list as the user's choice (#1612), to go into the same
+ * write as the change to it. Plugins' keywords.* writes use it too.
+ */
+export function emailKeywordsChosenPatch(state: Pick<SettingsState, 'explicitSettings'>): Partial<SettingsState> {
+  return state.explicitSettings.includes('emailKeywords')
+    ? {}
+    : { explicitSettings: [...state.explicitSettings, 'emailKeywords'] };
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -1704,10 +1776,12 @@ export const useSettingsStore = create<SettingsState>()(
           showSharedMailAccounts: state.showSharedMailAccounts,
           compactSharedMailboxes: state.compactSharedMailboxes,
           hiddenSharedMailAccounts: state.hiddenSharedMailAccounts,
+          sharedMailAccountOrder: state.sharedMailAccountOrder,
           folderIcons: state.folderIcons,
           folderCountModes: state.folderCountModes,
           emailKeywords: state.emailKeywords,
           nestedTags: state.nestedTags,
+          emailKeywordsChoiceTracked: state.emailKeywordsChoiceTracked,
           attachmentReminderEnabled: state.attachmentReminderEnabled,
           attachmentReminderKeywords: state.attachmentReminderKeywords,
           emptySubjectWarningEnabled: state.emptySubjectWarningEnabled,
@@ -1863,6 +1937,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateTrustedSendersBookDefault(settings);
           migrateFocusOutlineDefault(settings);
           dropAttachmentPosition(settings);
+          migrateUntrackedKeywords(settings);
 
           // A server copy doesn't replace a setting changed here after that
           // copy was written, whose push never got through (a reload inside
@@ -1930,7 +2005,7 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'writingLanguage' && !isWritingLanguage(settings[key])) {
                 return;
               }
-              if (key === 'hiddenSharedMailAccounts' && !isPlainRecord(settings[key])) {
+              if ((key === 'hiddenSharedMailAccounts' || key === 'sharedMailAccountOrder') && !isPlainRecord(settings[key])) {
                 return;
               }
               if (key === 'signatureDetails') {
@@ -2122,35 +2197,38 @@ export const useSettingsStore = create<SettingsState>()(
         return get().trustedSenders.includes(emailAddress);
       },
 
-      // Keyword methods
+      // Keyword methods. Each edit makes the list the user's own, so an
+      // admin default no longer replaces it (#1612).
       addKeyword: (keyword: KeywordDefinition) => {
         const current = get().emailKeywords;
         if (current.some(k => k.id === keyword.id)) return;
-        set({ emailKeywords: [...current, keyword] });
+        set((state) => ({ emailKeywords: [...current, keyword], ...emailKeywordsChosenPatch(state) }));
       },
 
       updateKeyword: (id: string, updates: Partial<Omit<KeywordDefinition, 'id'>>) => {
-        set({
-          emailKeywords: get().emailKeywords.map(k =>
+        set((state) => ({
+          emailKeywords: state.emailKeywords.map(k =>
             k.id === id ? { ...k, ...updates } : k
           ),
-        });
+          ...emailKeywordsChosenPatch(state),
+        }));
       },
 
       renameKeyword: (oldId: string, newKeyword: KeywordDefinition) => {
-        set({
-          emailKeywords: get().emailKeywords.map(k =>
+        set((state) => ({
+          emailKeywords: state.emailKeywords.map(k =>
             k.id === oldId ? newKeyword : k
           ),
-        });
+          ...emailKeywordsChosenPatch(state),
+        }));
       },
 
       removeKeyword: (id: string) => {
-        set({ emailKeywords: get().emailKeywords.filter(k => k.id !== id) });
+        set((state) => ({ emailKeywords: state.emailKeywords.filter(k => k.id !== id), ...emailKeywordsChosenPatch(state) }));
       },
 
       reorderKeywords: (keywords: KeywordDefinition[]) => {
-        set({ emailKeywords: keywords });
+        set((state) => ({ emailKeywords: keywords, ...emailKeywordsChosenPatch(state) }));
       },
 
       getKeywordById: (id: string) => {
@@ -2303,7 +2381,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 16,
+      version: 17,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -2322,6 +2400,9 @@ export const useSettingsStore = create<SettingsState>()(
             if (!isWritingLanguage(state.writingLanguage)) state.writingLanguage = 'auto';
             if (!isPlainRecord(state.hiddenSharedMailAccounts)) {
               state.hiddenSharedMailAccounts = {};
+            }
+            if (!isPlainRecord(state.sharedMailAccountOrder)) {
+              state.sharedMailAccountOrder = {};
             }
             if (!Array.isArray(state.explicitSettings)) {
               state.explicitSettings = [];
@@ -2430,8 +2511,32 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         if (version < 8 || !Array.isArray(state.explicitSettings)) {
           state.explicitSettings = legacyExplicitSettings(state);
         }
+        // v17: an admin may set the tags new users start with (#1612). A tag
+        // list stored before is the user's, even the untouched seven.
+        if (version < 17) {
+          if (Array.isArray(state.emailKeywords)) {
+            state.explicitSettings = [...new Set([...(state.explicitSettings as string[]), 'emailKeywords'])];
+          }
+          state.emailKeywordsChoiceTracked = true;
+        }
         migrateAnimationsSetting(state);
         return state as unknown as SettingsState;
+}
+
+/**
+ * An admin may set the tags new users start with (#1612). A server copy or
+ * export from an earlier build holds the tags that account had, even the
+ * untouched seven, so its list counts as chosen and no admin default
+ * replaces it. A copy from before explicitSettings existed gets the list the
+ * import would work out for it, plus the tags.
+ */
+export function migrateUntrackedKeywords(state: Record<string, unknown>): void {
+  if (!Array.isArray(state.emailKeywords) || state.emailKeywordsChoiceTracked === true) return;
+  const explicit = Array.isArray(state.explicitSettings)
+    ? (state.explicitSettings as unknown[])
+    : legacyExplicitSettings(state);
+  state.explicitSettings = [...new Set([...explicit, 'emailKeywords'])];
+  state.emailKeywordsChoiceTracked = true;
 }
 
 /**

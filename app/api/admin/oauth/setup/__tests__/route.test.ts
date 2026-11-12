@@ -27,6 +27,11 @@ let fetchError: Error | null = null;
 let sessionTokenRefused = false;
 // Authorization headers Stalwart accepts besides the session's.
 let acceptedAdminAuth: string[] = [];
+// The issuer in Stalwart's discovery document: its public URL, which can be
+// another host than the JMAP URL.
+let discoveredIssuer: unknown = 'https://auth.example.org';
+// A Stalwart without post-logout redirects on its clients, refusing the field.
+let noPostLogout = false;
 
 vi.mock('@/lib/admin/session', () => ({
   requireAdminAuth: async () => ({ ok: true }),
@@ -78,7 +83,7 @@ vi.mock('@/lib/stalwart/server-fetch', () => ({
       });
     }
     if (url.endsWith('/.well-known/oauth-authorization-server')) {
-      return Response.json({ scopes_supported: stalwart103 ? SCOPES_1_0_3 : SCOPES_1_0_2 });
+      return Response.json({ issuer: discoveredIssuer, scopes_supported: stalwart103 ? SCOPES_1_0_3 : SCOPES_1_0_2 });
     }
     const [name, args] = JSON.parse(init.body!).methodCalls[0];
     jmapCalls.push([name, args]);
@@ -88,6 +93,9 @@ vi.mock('@/lib/stalwart/server-fetch', () => ({
     if (name === 'x:OAuthClient/query') {
       const id = existing[(args.filter as { clientId: string }).clientId];
       return Response.json({ methodResponses: [[name, { ids: id ? [id] : [] }, '0']] });
+    }
+    if (noPostLogout && JSON.stringify(args).includes('postLogoutRedirectUris')) {
+      return Response.json({ methodResponses: [[name, { notCreated: { new: { type: 'invalidPatch', description: 'Invalid property', properties: ['postLogoutRedirectUris'] } } }, '0']] });
     }
     if (mobileRefused && JSON.stringify(args).includes('bulwark-mobile')) {
       return Response.json({ methodResponses: [[name, { notCreated: { mobile: { type: 'invalidProperties', properties: ['redirectUris'] } } }, '0']] });
@@ -152,6 +160,8 @@ beforeEach(() => {
   requests.length = 0;
   sessionTokenRefused = false;
   acceptedAdminAuth = [];
+  discoveredIssuer = 'https://auth.example.org';
+  noPostLogout = false;
   sessionServer = { serverUrl: 'https://mail.example.org', trusted: true };
   clientIp = '203.0.113.7';
   fetchError = null;
@@ -219,6 +229,65 @@ describe('POST /api/admin/oauth/setup', () => {
     const uris = Object.keys((setCalls()[0].create as Record<string, Record<string, unknown>>).new.redirectUris as object);
     expect(uris).toContain('https://webmail.example.org/webmail/en/auth/callback');
     expect(uris.every((uri) => uri.startsWith('https://webmail.example.org/webmail/'))).toBe(true);
+  });
+
+  describe('post-logout redirect (#1611)', () => {
+    const webmailClient = () => (setCalls()[0].create as Record<string, Record<string, unknown>>).new;
+
+    it('registers the login page as where sign-out returns to, and saves it', async () => {
+      const res = await setup();
+      expect(res.status).toBe(200);
+      expect(webmailClient().postLogoutRedirectUris).toEqual({ 'https://webmail.example.org/login': true });
+      expect(savedConfig?.oauthPostLogoutRedirectUri).toBe('https://webmail.example.org/login');
+      expect((await res.json()).postLogoutRedirectUri).toBe('https://webmail.example.org/login');
+    });
+
+    it('puts it under NEXT_PUBLIC_BASE_PATH', async () => {
+      vi.stubEnv('NEXT_PUBLIC_BASE_PATH', '/webmail/');
+      try {
+        await setup();
+      } finally {
+        vi.unstubAllEnvs();
+      }
+      expect(webmailClient().postLogoutRedirectUris).toEqual({ 'https://webmail.example.org/webmail/login': true });
+    });
+
+    it("keeps the admin's own post-logout redirect working and leaves the setting alone", async () => {
+      storedConfig = { oauthPostLogoutRedirectUri: 'https://portal.example.org/bye' };
+      const res = await setup();
+      expect(webmailClient().postLogoutRedirectUris).toEqual({
+        'https://portal.example.org/bye': true,
+        'https://webmail.example.org/login': true,
+      });
+      expect(savedConfig).not.toHaveProperty('oauthPostLogoutRedirectUri');
+      expect((await res.json()).postLogoutRedirectUri).toBe('https://portal.example.org/bye');
+    });
+
+    it('sets none for a plain-http webmail, which sign-out would not send', async () => {
+      await setup({ origin: 'http://webmail.example.org' });
+      expect(webmailClient()).not.toHaveProperty('postLogoutRedirectUris');
+      expect(savedConfig).not.toHaveProperty('oauthPostLogoutRedirectUri');
+    });
+
+    it('sets up the client without it on a Stalwart that refuses the field', async () => {
+      noPostLogout = true;
+      for (const old of [false, true]) {
+        stalwart016 = old;
+        jmapCalls.length = 0;
+        savedConfig = null;
+        const res = await setup();
+        expect(res.status).toBe(200);
+        const sets = setCalls().filter((args) => 'new' in ((args.create as object) ?? {}));
+        expect(sets.at(-1)!.create).not.toHaveProperty('new.postLogoutRedirectUris');
+        expect(savedConfig).not.toHaveProperty('oauthPostLogoutRedirectUri');
+        expect(await res.json()).not.toHaveProperty('postLogoutRedirectUri');
+      }
+    });
+
+    it('gives the mobile client none: the app does not end the provider session', async () => {
+      await setup();
+      expect((setCalls()[1].create as Record<string, Record<string, unknown>>).mobile).not.toHaveProperty('postLogoutRedirectUris');
+    });
   });
 
   it('registers a first-party client, which Stalwart 1.0 gives full access', async () => {
@@ -426,7 +495,7 @@ describe('POST /api/admin/oauth/setup', () => {
       expect(res.status).toBe(403);
       const body = await res.json();
       expect(body.needsAdminCredential).toBe(true);
-      expect(body.error).toMatch(/app password or API key/);
+      expect(body.error).toMatch(/app password in Stalwart under \/account > Credentials/);
       expect(setCalls()).toEqual([]);
     });
 
@@ -538,5 +607,45 @@ describe('GET /api/admin/oauth/setup', () => {
   it('never hands the credential to the page', async () => {
     const body = JSON.stringify(await (await check()).json());
     expect(body).not.toContain('Basic');
+  });
+
+  it('asks Stalwart for nothing unless the dialog wants the issuer', async () => {
+    await check();
+    expect(requests).toEqual([]);
+  });
+
+  describe('with ?discover=issuer', () => {
+    const discover = () => GET(new NextRequest('http://localhost/api/admin/oauth/setup?discover=issuer'));
+    beforeEach(() => { storedConfig = { jmapServerUrl: 'https://mail.example.org' }; });
+
+    it("names the issuer from the configured Stalwart's discovery document, not the JMAP URL", async () => {
+      const body = await (await discover()).json();
+      expect(body).toEqual({ signedIn: true, username: 'admin@example.org', issuerUrl: 'https://auth.example.org' });
+      expect(requests.map(({ url }) => url)).toEqual(['https://mail.example.org/.well-known/oauth-authorization-server']);
+      // Discovery needs no sign-in, so none is sent.
+      expect(requests[0].headers.Authorization).toBeUndefined();
+    });
+
+    it('asks the configured server, not one the session user picked', async () => {
+      sessionServer = { serverUrl: 'https://picked.example.net', trusted: false };
+      await discover();
+      expect(requests.map(({ url }) => url)).toEqual(['https://mail.example.org/.well-known/oauth-authorization-server']);
+    });
+
+    it('drops a trailing slash, as the setup does', async () => {
+      discoveredIssuer = 'https://auth.example.org/';
+      expect((await (await discover()).json()).issuerUrl).toBe('https://auth.example.org');
+    });
+
+    it('names no issuer the setup would refuse, or none at all when discovery fails', async () => {
+      for (const issuer of ['https://auth.example.org/realms/mail', 'javascript:alert(1)', 42, undefined]) {
+        discoveredIssuer = issuer;
+        expect(await (await discover()).json()).not.toHaveProperty('issuerUrl');
+      }
+      fetchError = new Error('ECONNREFUSED');
+      const res = await discover();
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ signedIn: true, username: 'admin@example.org' });
+    });
   });
 });

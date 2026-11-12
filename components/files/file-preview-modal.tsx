@@ -375,8 +375,8 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   useEffect(() => {
     if (!autoPrint || autoPrinted.current || loading || error || !objectUrl || !canPrintPdf) return;
     autoPrinted.current = true;
-    void printPdfUrl(objectUrl);
-  }, [autoPrint, loading, error, objectUrl, canPrintPdf]);
+    void printPdfUrl(objectUrl, undefined, pdfBlob);
+  }, [autoPrint, loading, error, objectUrl, canPrintPdf, pdfBlob]);
 
   // In place of this frame, not on top of it: one frame at a time takes
   // Escape and the arrows. This one keeps its state and its Back entry.
@@ -422,7 +422,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
             </Button>
           )}
           {objectUrl && canPrintPdf && !loading && !error && (
-            <IconButton label={tCommon("print")} onClick={() => { void printPdfUrl(objectUrl); }} data-testid="preview-print">
+            <IconButton label={tCommon("print")} onClick={() => { void printPdfUrl(objectUrl, undefined, pdfBlob); }} data-testid="preview-print">
               <Printer />
             </IconButton>
           )}

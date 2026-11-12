@@ -34,15 +34,40 @@ import {
 } from "@/lib/keyword-nesting";
 import { formatKeyword } from "@/lib/keyword-format";
 import { TagBadge } from "@/components/email/tag-badge";
+import { isHexTagColor, parseHexColor } from "@/lib/tag-hex-color";
 
-/** Lighter, base and darker shade of each hue, one row per shade. */
+/**
+ * Lighter, base and darker shade of each hue, one row per shade. With
+ * `allowCustom`, a row under them takes any colour as a code or from the
+ * browser's colour dialog.
+ */
 export function KeywordColorPicker({
   value,
   onChange,
+  allowCustom = false,
+  onInvalidChange,
+  onCodeKeyDown,
 }: {
   value: string;
   onChange: (color: string) => void;
+  allowCustom?: boolean;
+  /** Whether the code field holds something that isn't a colour code, so the form can refuse to save. */
+  onInvalidChange?: (invalid: boolean) => void;
+  /** Keys in the code field, so Enter and Escape act as in the form's name field. */
+  onCodeKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
+  const t = useTranslations("settings.keywords");
+  const isHex = isHexTagColor(value);
+  // What the user typed, kept as typed until blur; empty for a palette colour.
+  const [code, setCode] = useState(isHex ? value : "");
+  // A native colour input can't be empty, so it keeps its last colour.
+  const [nativeValue, setNativeValue] = useState(isHex ? value : "#000000");
+  const invalid = code.trim().length > 0 && parseHexColor(code) === null;
+
+  useEffect(() => {
+    onInvalidChange?.(invalid);
+  }, [invalid, onInvalidChange]);
+
   return (
     <div className="space-y-1.5">
       {KEYWORD_PALETTE_ROWS.map((row, index) => (
@@ -51,7 +76,10 @@ export function KeywordColorPicker({
             <button
               key={colorKey}
               type="button"
-              onClick={() => onChange(colorKey)}
+              onClick={() => {
+                setCode("");
+                onChange(colorKey);
+              }}
               className={cn(
                 "w-6 h-6 rounded-full transition-transform hover:scale-110 focus-visible:outline-hidden",
                 KEYWORD_PALETTE[colorKey].dot,
@@ -62,6 +90,56 @@ export function KeywordColorPicker({
           ))}
         </div>
       ))}
+      {allowCustom && (
+        <div className="pt-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t("custom_color")}</span>
+            <input
+              type="color"
+              aria-label={t("pick_custom_color")}
+              data-testid="tag-color-native"
+              value={isHex ? value : nativeValue}
+              onChange={(e) => {
+                const hex = parseHexColor(e.target.value);
+                if (!hex) return;
+                setNativeValue(hex);
+                setCode(hex);
+                onChange(hex);
+              }}
+              className="h-8 w-10 shrink-0 cursor-pointer rounded-md border border-border bg-background p-0.5"
+            />
+            <input
+              type="text"
+              aria-label={t("color_code")}
+              aria-invalid={invalid || undefined}
+              data-testid="tag-color-hex"
+              placeholder="#1a73e8"
+              spellCheck={false}
+              autoComplete="off"
+              maxLength={7}
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                const hex = parseHexColor(e.target.value);
+                if (hex) {
+                  setNativeValue(hex);
+                  onChange(hex);
+                }
+              }}
+              onBlur={() => {
+                const hex = parseHexColor(code);
+                if (hex) setCode(hex);
+              }}
+              onKeyDown={onCodeKeyDown}
+              className={cn(
+                "w-28 px-2.5 py-1.5 text-sm font-mono rounded-md border bg-background focus:outline-hidden",
+                invalid ? "border-destructive" : "border-border",
+              )}
+            />
+          </div>
+          {invalid && <p className="text-xs text-destructive mt-1">{t("invalid_color")}</p>}
+        </div>
+      )}
     </div>
   );
 }
@@ -199,7 +277,8 @@ function KeywordEditForm({
   // is already on the messages, and an edit that keeps it, such as a colour
   // change, leaves it as it is.
   const isTooLong = normalizedId.length > MAX_KEYWORD_ID_LENGTH && normalizedId !== initial?.id;
-  const isValid = normalizedId.length > 0 && label.trim().length > 0 && !isDuplicate && !isTooLong;
+  const [colorInvalid, setColorInvalid] = useState(false);
+  const isValid = normalizedId.length > 0 && label.trim().length > 0 && !isDuplicate && !isTooLong && !colorInvalid;
 
   // Every tag is a candidate parent except the one being edited and anything
   // already below it, which would detach the branch from its own root.
@@ -220,6 +299,16 @@ function KeywordEditForm({
       return;
     }
     onSave({ id: normalizedId, label: label.trim(), color });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSave();
+    // Like folders, calendars and address books: Escape cancels.
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      onCancel();
+    }
   };
 
   return (
@@ -253,15 +342,7 @@ function KeywordEditForm({
           placeholder={t("label_placeholder")}
           autoFocus
           maxLength={30}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSave();
-            // Like folders, calendars and address books: Escape cancels.
-            if (e.key === "Escape") {
-              e.preventDefault();
-              e.stopPropagation();
-              onCancel();
-            }
-          }}
+          onKeyDown={handleKeyDown}
         />
         {nestedTags && normalizedId.length > 0 && (
           <p className="text-xs text-muted-foreground font-mono mt-1 break-all">
@@ -284,7 +365,13 @@ function KeywordEditForm({
         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
           {t("color_field")}
         </label>
-        <KeywordColorPicker value={color} onChange={setColor} />
+        <KeywordColorPicker
+          value={color}
+          onChange={setColor}
+          allowCustom
+          onInvalidChange={setColorInvalid}
+          onCodeKeyDown={handleKeyDown}
+        />
       </div>
       <div className="flex items-center gap-2 justify-end">
         <button
@@ -693,6 +780,9 @@ export function KeywordSettings() {
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             {t("migrating")}
           </div>
+        )}
+        {emailKeywords.length === 0 && !isAdding && (
+          <p className="text-sm text-muted-foreground">{t("empty")}</p>
         )}
         {emailKeywords.map((keyword, index) =>
           editingId === keyword.id ? (
