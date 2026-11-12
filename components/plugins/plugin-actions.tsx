@@ -3,7 +3,7 @@
 import { useMemo, useSyncExternalStore, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { iconForName, Puzzle } from '@/components/icons';
-import { ContextMenu, ContextMenuItem } from '@/components/ui/context-menu';
+import { ContextMenu, ContextMenuCheckItem, ContextMenuItem } from '@/components/ui/context-menu';
 import { useContextMenu } from '@/hooks/use-context-menu';
 import { cn } from '@/lib/utils';
 import { TOOLBAR_ACTIVE } from '@/components/ui/toolbar';
@@ -163,7 +163,18 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
   if (variant === 'menu') {
     return (
       <>
-        {actions.map((action) => (
+        {actions.map((action) => action.pressed !== undefined ? (
+          // A toggle of a button surface that landed in a menu: the phone
+          // header's, or a toolbar's "more". On or off as a tick.
+          <ContextMenuCheckItem
+            key={`${action.pluginId}:${action.id}`}
+            icon={iconForName(action.icon) ?? Puzzle}
+            label={action.label}
+            title={action.pluginName}
+            checked={action.pressed}
+            onClick={() => { void run(action); }}
+          />
+        ) : (
           <ContextMenuItem
             key={`${action.pluginId}:${action.id}`}
             icon={iconForName(action.icon) ?? Puzzle}

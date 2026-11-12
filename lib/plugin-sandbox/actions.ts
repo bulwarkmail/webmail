@@ -57,7 +57,8 @@ export interface PluginAction {
   /**
    * On button surfaces (the top bar, toolbars): draw the button as a toggle,
    * pressed or not, e.g. while the plugin's filter runs. The plugin updates
-   * it with setActions. Menus don't draw it; they have `checked`.
+   * it with setActions. Where a button lands in a menu (the phone header's,
+   * a toolbar's "more") it shows as a tick. Menu surfaces use `checked`.
    */
   pressed?: boolean;
   /** A second line under the label, on menu surfaces. Up to 120 characters. */

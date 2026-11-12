@@ -100,4 +100,17 @@ describe('phone header', () => {
     // The menu closes on the click.
     expect(screen.queryByRole('menu')).toBeNull();
   });
+
+  it('shows whether a pressed toggle is on in its overflow menu', async () => {
+    act(() => setPluginActions('fu', 'Follow-ups', 'top-bar-actions', [
+      { id: 'filter', label: 'Follow up', icon: 'flag', pressed: true },
+    ]));
+    render(<MobileHeader title="Inbox" />);
+    fireEvent.click(screen.getByRole('button', { name: 'more' }));
+
+    const item = screen.getByRole('menuitemcheckbox', { name: 'Follow up' });
+    expect(item).toHaveAttribute('aria-checked', 'true');
+    await act(async () => { fireEvent.click(item); });
+    expect(dispatch).toHaveBeenCalledWith('fu', 'top-bar-actions', 'filter', {});
+  });
 });
