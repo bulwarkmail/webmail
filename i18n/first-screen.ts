@@ -43,6 +43,8 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
  */
 export const READER_FIRST_SCREEN_MESSAGES: readonly string[] = [
   'compose_words', 'deep_link', 'email_viewer', 'mail_p2_conv', 'mail_p3_actions', 'reader_actions',
+  // The rename button on the reader's attachment chips.
+  'attachment_rename.rename', 'attachment_rename.rename_named', 'attachment_rename.rename_title',
 ];
 
 /** Whether `pathname` opens a message or conversation in the mail view. */
