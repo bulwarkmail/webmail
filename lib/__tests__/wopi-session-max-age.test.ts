@@ -72,17 +72,23 @@ function mailServer(input: RequestInfo | URL, init?: RequestInit): Promise<Respo
     }));
   }
   if (url.includes('/jmap/download/')) return Promise.resolve(new Response('document'));
+  // A save: the new content's blob, then the node pointed at it.
+  if (url.includes('/jmap/upload/')) return Promise.resolve(Response.json({ accountId: 'acc', blobId: 'b2', type: DOCX, size: 11 }));
   const calls = typeof init?.body === 'string'
     ? (JSON.parse(init.body) as { methodCalls?: Array<[string, unknown, string]> }).methodCalls ?? []
     : [];
   return Promise.resolve(Response.json({
-    methodResponses: calls.map(([name, , id]) => (name === 'FileNode/get'
-      ? [name, {
+    methodResponses: calls.map(([name, , id]) => {
+      if (name === 'FileNode/get') {
+        return [name, {
           accountId: 'acc',
           list: [{ id: 'f1', parentId: null, name: 'Report.docx', type: DOCX, blobId: 'b1', size: 8, modified: '2026-11-11T07:00:00Z' }],
           notFound: [],
-        }, id]
-      : [name, { accountId: 'acc', ids: [], list: [], total: 0 }, id])),
+        }, id];
+      }
+      if (name === 'FileNode/set') return [name, { accountId: 'acc', updated: { f1: { modified: new Date().toISOString() } } }, id];
+      return [name, { accountId: 'acc', ids: [], list: [], total: 0 }, id];
+    }),
   }));
 }
 
@@ -121,6 +127,29 @@ async function editorToken(slot: number, signedInAt?: number) {
 }
 
 type Editor = Awaited<ReturnType<typeof editorToken>>;
+
+/** A token as the launch minted it before sign-in times were recorded. */
+async function tokenFromBefore(slot: number): Promise<Editor> {
+  const { WOPI_TOKEN_TTL_MS, wopiDocumentId } = await import('@/lib/wopi/token');
+  const { wopiBrowserBinding } = await import('@/lib/wopi/revocation');
+  const { encryptPayload } = await import('@/lib/auth/crypto');
+  const store = await (await import('next/headers')).cookies();
+  const payload = {
+    serverUrl: SERVER,
+    authHeader: BASIC,
+    username: USER,
+    accountId: 'acc',
+    kind: 'file' as const,
+    fileId: 'f1',
+    uploadAccountId: 'acc',
+    canWrite: true,
+    origin: 'https://webmail.example',
+    bid: wopiBrowserBinding(store as never),
+    slot,
+  };
+  const sealed = encryptPayload({ v: 1, t: 'wopi', ...payload, exp: Date.now() + WOPI_TOKEN_TTL_MS }, 'wopi-token');
+  return { token: sealed.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), documentId: wopiDocumentId(payload) };
+}
 
 async function checkFileInfo({ token, documentId }: Editor) {
   const { GET } = await import('@/app/api/wopi/files/[fileId]/route');
@@ -295,7 +324,7 @@ describe('an office editor token and the session that opened it', () => {
     expect(upstream).toEqual([]);
   });
 
-  it('refuses a token that names no sign-in time, as tokens minted before it was recorded', async () => {
+  it('refuses a token minted here that names no sign-in time', async () => {
     await signIn();
     const editor = await editorToken(0);
     at('09:00:00');
@@ -304,6 +333,32 @@ describe('an office editor token and the session that opened it', () => {
     expect((await getFile(editor)).status).toBe(401);
     expect((await putFile(editor)).status).toBe(401);
     expect(upstream).toEqual([]);
+  });
+
+  // An editor opened before the upgrade holds a token from a version that
+  // recorded no sign-in time. It keeps saving until its own expiry, and
+  // signing out in its browser still ends it.
+  it('keeps saving with a token from a version that recorded no sign-in time, until it expires', async () => {
+    await signIn();
+    at('12:00:00');
+    const editor = await tokenFromBefore(0);
+    at('16:00:01');
+    upstream = [];
+    expect((await checkFileInfo(editor)).status).toBe(200);
+    expect((await putFile(editor)).status).toBe(200);
+    expect(upstream.some((call) => call.startsWith('POST') && call.includes('/jmap/upload/'))).toBe(true);
+    at('18:00:01');
+    expect((await putFile(editor)).status).toBe(401);
+  });
+
+  it('ends a token from a version that recorded no sign-in time when its browser signs the slot out', async () => {
+    await signIn();
+    const editor = await tokenFromBefore(0);
+    at('09:00:00');
+    expect((await checkFileInfo(editor)).status).toBe(200);
+    const { DELETE } = await import('@/app/api/auth/session/route');
+    await DELETE(new NextRequest('https://webmail.example/api/auth/session?slot=0', { method: 'DELETE', headers: SAME_ORIGIN }));
+    expect((await putFile(editor)).status).toBe(401);
   });
 
   it("ends the slot's editors on a sign-out that arrives without the browser's cookie", async () => {
