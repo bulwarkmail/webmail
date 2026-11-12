@@ -16,8 +16,11 @@
 // stops being so. Only a frame that is drawn with a real size gets one; it
 // stands in the part of the window the frame takes up, plus its own height; it
 // never covers a row where the host names a plugin (a dialog's header, a
-// banner's name chip), and in a plugin's dialog it stays below the frame's
-// top; its first row names the plugin; it is drawn in the layer of the plugin
+// banner's name chip) or a part of the app marked with LIST_AVOID_ATTRIBUTE
+// (the reader's subject, sender, details and trust banners, the top bar), and
+// isn't drawn where it can't keep clear of them with room for two options; in
+// a plugin's dialog it stays below the frame's top; its first row names the
+// plugin; it is drawn in the layer of the plugin
 // dialog the frame is in. It closes on any click outside it, on scrolling, on
 // resizing, and when the frame stops showing.
 
@@ -283,6 +286,10 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
   const [floatingDropdown, setFloatingDropdown] = useState<FloatingDropdownState | null>(null);
   const openDropdownRef = useRef<string | null>(null);
   openDropdownRef.current = floatingDropdown?.id ?? null;
+  const dropdownStateRef = useRef<FloatingDropdownState | null>(null);
+  dropdownStateRef.current = floatingDropdown;
+  // Bumped when an open list has to move (what it must not cover moved).
+  const [, setPlacementTick] = useState(0);
   // Whether the user is in the frame. When the focus leaves it, its list closes.
   const focusRef = useRef<FrameFocus | null>(null);
   focusRef.current ??= new FrameFocus(
@@ -392,6 +399,8 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
                 return;
               }
               if (focus !== 'yes') return refuse();
+              // No place that keeps clear of what the list must not cover.
+              if (!placeForFrame(hostContainer, msg)) return refuse();
               setFloatingDropdown({
                 id: msg.id,
                 rect: msg.rect,
@@ -465,20 +474,32 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
   // An open list closes when a dialog, popover or menu opens that the frame
   // is not inside, or when the frame stops showing: taken out of the page,
   // hidden by a style or class change, or left with no room by the layout.
+  // When a part it must not cover appears or moves, it moves, or closes when
+  // no place is left.
   const openDropdownId = floatingDropdown?.id ?? null;
   useEffect(() => {
     if (openDropdownId === null || typeof MutationObserver === 'undefined') return;
+    let drawnAt = '';
     const closeIfGone = () => {
       focusRef.current?.observe();
       const frame = wrapperRef.current?.querySelector('iframe') ?? wrapperRef.current;
-      if (frame && frameShows(frame) && !hostLayerOutside(wrapperRef.current)) return;
+      const dropdown = dropdownStateRef.current;
+      const place = frame && frameShows(frame) && !hostLayerOutside(wrapperRef.current) && dropdown?.id === openDropdownId
+        ? placeForFrame(wrapperRef.current, dropdown)
+        : null;
+      if (place) {
+        const at = JSON.stringify(place);
+        if (drawnAt && at !== drawnAt) setPlacementTick((n) => n + 1);
+        drawnAt = at;
+        return;
+      }
       instanceRef.current?.sendFloatingDropdownEvent({ type: 'floating-dropdown-dismiss', id: openDropdownId });
       setFloatingDropdown((prev) => (prev?.id === openDropdownId ? null : prev));
     };
     const observer = new MutationObserver(closeIfGone);
     observer.observe(document.body, {
       childList: true, subtree: true, attributes: true,
-      attributeFilter: ['aria-modal', 'role', 'aria-expanded', 'aria-haspopup', 'inert', 'hidden', 'style', 'class'],
+      attributeFilter: ['aria-modal', 'role', 'aria-expanded', 'aria-haspopup', 'inert', 'hidden', 'style', 'class', LIST_AVOID_ATTRIBUTE],
     });
     // The layout can take the frame's room with no change in those attributes.
     const timer = setInterval(closeIfGone, FRAME_CHECK_MS);
@@ -647,13 +668,38 @@ export interface DropdownPlacement {
 export const DROPDOWN_MAX_HEIGHT = 240;
 /** Room for the row naming the plugin and one option; with less the list doesn't open. */
 export const DROPDOWN_MIN_HEIGHT = 64;
+/** The list's border, padding and the row naming the plugin. */
+const DROPDOWN_CHROME = 36;
+/** One option row. */
+const DROPDOWN_ROW = 32;
 /** Between the anchor and the list. */
 const DROPDOWN_GAP = 4;
 /** Kept free between the list and the window's edge. */
 const DROPDOWN_EDGE = 8;
 
-/** The rows where the host names a plugin: a dialog's header and its parts, a banner's name chip. */
-const PLUGIN_SOURCE_SELECTOR = '[data-plugin-dialog-header], [data-plugin-dialog-source], [data-plugin-dialog-menu], [data-plugin-banner-source]';
+/**
+ * The height a frame's list needs at least: the row naming the plugin and two
+ * options (one for a list of one). With less room it isn't drawn.
+ */
+export function minListHeight(options: number): number {
+  return DROPDOWN_CHROME + Math.min(2, Math.max(1, options)) * DROPDOWN_ROW;
+}
+
+/**
+ * Parts of the app a plugin's list never covers: the parts that tell the user
+ * whose mail this is and what the app vouches for (the reader's subject,
+ * sender, recipients and details, its own security and trust banners and
+ * cards; the app's top bar and account switcher). Any element can opt in with
+ * this one attribute.
+ */
+export const LIST_AVOID_ATTRIBUTE = 'data-plugin-list-avoid';
+
+/**
+ * What the list must not cover: the rows where the host names a plugin (a
+ * dialog's header and its parts, a banner's name chip) and the parts marked
+ * with LIST_AVOID_ATTRIBUTE.
+ */
+const LIST_AVOID_SELECTOR = `[data-plugin-dialog-header], [data-plugin-dialog-source], [data-plugin-dialog-menu], [data-plugin-banner-source], [${LIST_AVOID_ATTRIBUTE}]`;
 
 function within(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), Math.max(min, max));
@@ -690,44 +736,95 @@ function shownArea(el: Element): Box {
  * of the window the frame shows in. The anchor is moved into that area, the
  * list is no wider than it and opens below or above the anchor, so it never
  * stands further from the frame than its own height. `limits.avoid` are boxes
- * the list must not cover (the host's rows naming a plugin), and
- * `limits.top` the highest it may reach (a frame in a plugin's dialog keeps
- * its list below its own top edge, out of the dialog's header). Null when the
- * frame shows nowhere, or when neither direction leaves room for the list.
+ * the list must not cover (the host's rows naming a plugin, the parts of the
+ * app marked as never covered), and `limits.top` the highest it may reach (a
+ * frame in a plugin's dialog keeps its list below its own top edge, out of
+ * the dialog's header). The list keeps clear of every avoided box: it opens
+ * the other way, is shortened, or moves sideways within the area; it needs
+ * `limits.minHeight` (default DROPDOWN_MIN_HEIGHT). Null when the frame shows
+ * nowhere, or when no place leaves that much room.
  */
 export function placeFloatingDropdown(
   anchor: FloatingDropdownRect,
   frame: Pick<Box, 'left' | 'top'>,
   area: Box,
   viewport: { width: number; height: number },
-  limits: { avoid?: Box[]; top?: number } = {},
+  limits: { avoid?: Box[]; top?: number; minHeight?: number } = {},
 ): DropdownPlacement | null {
   if (area.right - area.left <= 0 || area.bottom - area.top <= 0) return null;
   const anchorTop = within(frame.top + anchor.top, area.top, area.bottom);
   const anchorBottom = within(frame.top + anchor.bottom, anchorTop, area.bottom);
   const width = Math.min(anchor.width, area.right - area.left);
   if (!(width > 0)) return null;
-  const left = within(frame.left + anchor.left, area.left, area.right - width);
-  const right = left + width;
-  const blocking = (limits.avoid ?? []).filter((b) => b.right > b.left && b.bottom > b.top && b.right > left && b.left < right);
+  const avoid = (limits.avoid ?? []).filter((b) => b.right > b.left && b.bottom > b.top);
+  const minHeight = limits.minHeight ?? DROPDOWN_MIN_HEIGHT;
 
-  // Downward: from under the anchor to the window's edge or the first blocking row.
-  const downTop = anchorBottom + DROPDOWN_GAP;
-  let downEnd = viewport.height - DROPDOWN_EDGE;
-  for (const b of blocking) if (b.bottom > downTop) downEnd = Math.min(downEnd, b.top - DROPDOWN_GAP);
-  // Upward: from above the anchor to the window's edge, `limits.top` or the first blocking row.
-  const upBottom = anchorTop - DROPDOWN_GAP;
-  let upStart = Math.max(DROPDOWN_EDGE, limits.top ?? DROPDOWN_EDGE);
-  for (const b of blocking) if (b.top < upBottom) upStart = Math.max(upStart, b.bottom + DROPDOWN_GAP);
+  // In one column: open below or above the anchor, up to the window's edge,
+  // `limits.top` or the first avoided box.
+  const inColumn = (left: number): DropdownPlacement => {
+    const right = left + width;
+    const blocking = avoid.filter((b) => b.right > left && b.left < right);
+    const downTop = anchorBottom + DROPDOWN_GAP;
+    let downEnd = viewport.height - DROPDOWN_EDGE;
+    for (const b of blocking) if (b.bottom > downTop) downEnd = Math.min(downEnd, b.top - DROPDOWN_GAP);
+    const upBottom = anchorTop - DROPDOWN_GAP;
+    let upStart = Math.max(DROPDOWN_EDGE, limits.top ?? DROPDOWN_EDGE);
+    for (const b of blocking) if (b.top < upBottom) upStart = Math.max(upStart, b.bottom + DROPDOWN_GAP);
+    const below = Math.min(DROPDOWN_MAX_HEIGHT, downEnd - downTop);
+    const above = Math.min(DROPDOWN_MAX_HEIGHT, upBottom - upStart);
+    const upward = below < 200 && above > below;
+    const maxHeight = upward ? above : below;
+    return upward
+      ? { left, width, bottom: viewport.height - upBottom, maxHeight }
+      : { left, width, top: downTop, maxHeight };
+  };
 
-  const below = Math.min(DROPDOWN_MAX_HEIGHT, downEnd - downTop);
-  const above = Math.min(DROPDOWN_MAX_HEIGHT, upBottom - upStart);
-  const upward = below < 200 && above > below;
-  const maxHeight = upward ? above : below;
-  if (maxHeight < DROPDOWN_MIN_HEIGHT) return null;
-  return upward
-    ? { left, width, bottom: viewport.height - upBottom, maxHeight }
-    : { left, width, top: downTop, maxHeight };
+  const wanted = within(frame.left + anchor.left, area.left, area.right - width);
+  const first = inColumn(wanted);
+  if (first.maxHeight >= minHeight) return first;
+  // Moved sideways, just past an avoided box, still within the area: the
+  // place with the most room, the nearest to where it was asked for.
+  let best: DropdownPlacement | null = null;
+  for (const b of avoid) {
+    for (const candidate of [b.right + DROPDOWN_GAP, b.left - DROPDOWN_GAP - width]) {
+      const left = within(candidate, area.left, area.right - width);
+      if (left === wanted) continue;
+      const place = inColumn(left);
+      if (place.maxHeight < minHeight) continue;
+      if (!best || place.maxHeight > best.maxHeight
+        || (place.maxHeight === best.maxHeight && Math.abs(left - wanted) < Math.abs(best.left - wanted))) best = place;
+    }
+  }
+  return best;
+}
+
+/**
+ * Where a frame's list goes now, or null when it can't be drawn: the frame
+ * isn't drawn or shows nowhere, or no place keeps clear of the parts the list
+ * must not cover with room for two options.
+ */
+function placeForFrame(wrapperEl: HTMLElement | null, dropdown: Pick<FloatingDropdownState, 'rect' | 'options'>): DropdownPlacement | null {
+  if (typeof window === 'undefined') return null;
+  const iframe = wrapperEl?.querySelector('iframe') ?? wrapperEl;
+  if (!iframe || !isDrawn(iframe)) return null;
+  // In a plugin's dialog the list stays below the frame's top, out of the header.
+  const layer = wrapperEl?.closest('[data-plugin-dialog-layer]') ?? null;
+  // A modal plugin dialog lies over the page behind its backdrop: there only
+  // its own header counts. A popover dialog has no backdrop, so the page's
+  // marked parts around it count too.
+  const behindBackdrop = !!layer && !layer.hasAttribute('data-plugin-dialog-popover');
+  const area = shownArea(iframe);
+  return placeFloatingDropdown(
+    dropdown.rect,
+    iframe.getBoundingClientRect(),
+    area,
+    { width: window.innerWidth, height: window.innerHeight },
+    {
+      avoid: [...document.querySelectorAll(LIST_AVOID_SELECTOR)].filter((el) => !behindBackdrop || !!layer?.contains(el)).map(boxOf),
+      minHeight: minListHeight(dropdown.options.length),
+      ...(layer ? { top: area.top } : {}),
+    },
+  );
 }
 
 /** Whether the element is drawn: not hidden by its own style or an ancestor's. */
@@ -766,21 +863,9 @@ function FloatingDropdownPortal({
   const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // In window coordinates, inside the part of the window the frame shows in,
-  // only for a frame that is drawn, and never over a row naming a plugin. In
-  // a plugin's dialog the list stays below the frame's top, out of the header.
-  const iframe = wrapperEl?.querySelector('iframe') ?? wrapperEl;
-  const inDialog = !!wrapperEl?.closest('[data-plugin-dialog-layer]');
-  let place: DropdownPlacement | null = null;
-  if (iframe && typeof window !== 'undefined' && isDrawn(iframe)) {
-    const area = shownArea(iframe);
-    place = placeFloatingDropdown(
-      dropdown.rect,
-      iframe.getBoundingClientRect(),
-      area,
-      { width: window.innerWidth, height: window.innerHeight },
-      { avoid: [...document.querySelectorAll(PLUGIN_SOURCE_SELECTOR)].map(boxOf), ...(inDialog ? { top: area.top } : {}) },
-    );
-  }
+  // only for a frame that is drawn, and never over a row naming a plugin or a
+  // part of the app marked as never covered.
+  const place = placeForFrame(wrapperEl, dropdown);
 
   // Auto-scroll highlighted option into view
   useEffect(() => {

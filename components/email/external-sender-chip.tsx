@@ -137,7 +137,7 @@ export function ExternalSenderChip({ from, accountId, className, interactive = t
 
   if (!interactive) {
     return (
-      <span data-external-sender-chip="" title={description} className={cn(chipClass, 'cursor-help', className)}>
+      <span data-external-sender-chip="" data-plugin-list-avoid="" title={description} className={cn(chipClass, 'cursor-help', className)}>
         {content}
         <span className="sr-only">{` (${description})`}</span>
       </span>
@@ -145,7 +145,7 @@ export function ExternalSenderChip({ from, accountId, className, interactive = t
   }
 
   return (
-    <span ref={wrapRef} className={cn('relative inline-flex flex-shrink-0', className)}>
+    <span ref={wrapRef} data-plugin-list-avoid="" className={cn('relative inline-flex flex-shrink-0', className)}>
       <button
         type="button"
         data-external-sender-chip=""

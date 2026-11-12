@@ -310,6 +310,7 @@ export function AccountSwitcher({
         ref={buttonRef}
         onClick={() => setOpen(!open)}
         data-testid="account-switcher"
+        data-plugin-list-avoid=""
         data-active-account-id={activeAccountId ?? undefined}
         className={cn(
           // Round under Mountain View, like every other button in its top bar.

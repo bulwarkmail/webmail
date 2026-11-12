@@ -204,6 +204,7 @@ export function MvTopBar({
     <header
       className="mv-topbar flex items-center h-16 gap-2 ps-1 pe-4 shrink-0 bg-[var(--mv-canvas)]"
       data-mv-topbar=""
+      data-plugin-list-avoid=""
     >
       {/* Brand block: occupies the sidebar's own column width */}
       <div className={cn("flex items-center gap-1 shrink-0", !showMenuButton && "ps-3")}>
