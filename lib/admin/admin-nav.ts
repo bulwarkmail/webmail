@@ -100,7 +100,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     sections: [
       { id: 'oauth', title: 'OAuth / OpenID Connect', keywords: 'client id secret issuer scopes private endpoints auto configure stalwart' },
       { id: 'sso', title: 'Single sign-on', keywords: 'auto sso redirect end session logout provider post-logout' },
-      { id: 'admin-access', title: 'Admin access', keywords: 'stalwart admin dashboard password automatic' },
+      { id: 'admin-access', title: 'Admin access', keywords: 'stalwart admin dashboard password automatic additional admin accounts mail accounts list' },
       { id: 'session', title: 'Session and security', keywords: 'cookie samesite frame ancestors parent origin embed' },
     ],
   },
@@ -126,6 +126,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     sections: [
       { id: 'features', title: 'Features', keywords: 'calendar contacts files smime templates keywords sidebar apps unified mailbox archive custom from debug export' },
       { id: 'push-relays', title: 'Push relays', keywords: 'notifications relay url default lock' },
+      { id: 'recipient-directory', title: 'Recipient directory', keywords: 'directory accounts own domains hidden noreply suggestions sharing delegation free busy' },
       { id: 'sidebar-apps', title: 'Default sidebar apps', keywords: 'apps rail intranet inline tab icon' },
       { id: 'restrictions', title: 'Locked settings', keywords: 'restrict hide lock font size density layout delete action reply mode session timeout notifications debug' },
     ],
