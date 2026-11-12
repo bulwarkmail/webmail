@@ -6470,7 +6470,7 @@
     "attachment_cap_label": "Größter Anhang, der behalten wird",
     "total_cap_label": "Gesamtgröße der behaltenen Anhänge",
     "total_cap_unlimited": "Keine Begrenzung",
-    "attachments_description_unlimited": "Anhänge behaltener Nachrichten und die Dateien, die du offline behältst, ohne Begrenzung der Gesamtgröße.",
+    "attachments_description_unlimited": "Anhänge behaltener Nachrichten und die Dateien, die Sie offline behalten, ohne Begrenzung der Gesamtgröße.",
     "usage_mail": "Nachrichten und Suchindex",
     "usage_attachments": "Anhänge",
     "usage_calendar": "Kalender",
