@@ -118,7 +118,11 @@ function SendingWithUndo({ held, onUndone, onGone }: {
   const undo = async () => {
     const auth = useAuthStore.getState();
     // Never another login: the submission id names another submission there.
-    const client = held.localAccountId ? auth.getClientForAccount(held.localAccountId) : auth.client;
+    // The window's own login is the auth store's client while the login
+    // table has no entry for it.
+    const client = held.localAccountId
+      ? auth.getClientForAccount(held.localAccountId) ?? (held.localAccountId === auth.activeAccountId ? auth.client : null)
+      : auth.client;
     if (!client) {
       toast.error(tViewer("undo_send_signed_out"));
       return;

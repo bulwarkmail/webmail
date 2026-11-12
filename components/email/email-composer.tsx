@@ -122,7 +122,8 @@ import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
 import { offlineActive, offlineAllowed } from "@/lib/offline/offline-mode";
 import { useBrowserOnline } from "@/hooks/use-browser-online";
 import { appPath, buildSettingsPath } from "@/lib/deep-links";
-import type { FileNode } from "@/lib/jmap/types";
+import type { FileNode, Identity } from "@/lib/jmap/types";
+import { resolveComposerFrom } from "@/lib/composer-identity";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
 import { useTemplateSources } from "@/hooks/use-template-sources";
@@ -698,6 +699,7 @@ export function EmailComposer({
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
   const tMenu = useTranslations('menuAudit');
+  const tNotifications = useTranslations('notifications');
   const tCommon = useTranslations('common');
   const tWindows = useTranslations('pwaWindows');
   const tQuote = useTranslations('quote_header');
@@ -1389,21 +1391,30 @@ export function EmailComposer({
   const composerOwnClientRef = useRef(activeClient);
   if (onComposerAccount && activeClient) composerOwnClientRef.current = activeClient;
   const client = composerOwnClientRef.current;
-  const currentIdentity = selectedIdentityId
-    ? identities.find((identity) => identity.id === selectedIdentityId) || primaryIdentity
-    : primaryIdentity;
+  // The identity the chosen From stands for (resolveComposerFrom). One of
+  // another login that left the list (that login was signed out) stays the
+  // chosen one: the message is not moved to an address of this login.
+  const lastListedIdentityRef = useRef<Identity | null>(null);
+  const composerFrom = resolveComposerFrom(selectedIdentityId, identities, primaryIdentity, composerAccountIdRef.current, lastListedIdentityRef.current);
+  if (composerFrom.identity && !composerFrom.unlisted) lastListedIdentityRef.current = composerFrom.identity;
+  const currentIdentity = composerFrom.identity;
 
   // When the selected identity belongs to a non-active account (Pro
   // multi-account dropdown), `currentIdentity.id` carries a "<localId>::"
   // namespace and JMAP calls must be routed through that account's
   // client with the un-prefixed id. `composerClient` and
-  // `currentIdentityRawId` are what save/send code should use.
+  // `currentIdentityRawId` are what save/send code should use. A login
+  // without a client has none: the draft is not saved and nothing is
+  // uploaded through another login, whose server is another one.
   const currentIdentityParts = currentIdentity?.id
     ? stripCrossAccountIdentityPrefix(currentIdentity.id)
     : { localAccountId: null, rawId: undefined };
-  const composerClient = currentIdentityParts.localAccountId
-    ? (useAuthStore.getState().getClientForAccount(currentIdentityParts.localAccountId) ?? client)
+  const identityLogin = currentIdentityParts.localAccountId;
+  const composerClient = identityLogin
+    ? (useAuthStore.getState().getClientForAccount(identityLogin) ?? (identityLogin === composerAccountIdRef.current ? client : null))
     : client;
+  // The From address belongs to a login that is not connected.
+  const fromLoginGone = !!identityLogin && !composerClient;
   // The signed-in account the message goes out from, whose domain and group
   // scopes decide the organisation signature and disclaimer: the identity's
   // own account, else the one the composer was opened in.
@@ -1451,10 +1462,10 @@ export function EmailComposer({
   );
 
   // The login a save or send for an identity of `localAccountId` goes
-  // through: that account's, or the active one, as composerClient and the
-  // host's send fall back to.
+  // through: the identity's own, connected or not, else the one the composer
+  // was opened in. Never another one in its place.
   const loginFor = (localAccountId: string | null | undefined): string | undefined =>
-    (localAccountId && useAuthStore.getState().getClientForAccount(localAccountId) ? localAccountId : activeAccountId ?? undefined);
+    localAccountId ?? activeAccountId ?? undefined;
 
   // Removes a draft version through the login it was saved with (the
   // composing one when that is not known), never through another: the same
@@ -2598,6 +2609,12 @@ export function EmailComposer({
     file: File,
   ): Promise<{ src: string; cid: string } | null> => {
     if (!client) return null;
+    // Into the account the message is written from, or nowhere.
+    const uploadClient = composerClientRef.current;
+    if (!uploadClient) {
+      toast.error(t('upload_failed', { filename: file.name }), { message: tNotifications('not_connected') });
+      return null;
+    }
     try {
       const readAsDataUrl = new Promise<string | null>((resolve) => {
         const reader = new FileReader();
@@ -2606,7 +2623,7 @@ export function EmailComposer({
         reader.readAsDataURL(file);
       });
       const [{ blobId }, dataUrl] = await Promise.all([
-        (composerClientRef.current ?? client).uploadBlob(file),
+        uploadClient.uploadBlob(file),
         readAsDataUrl,
       ]);
       if (!dataUrl) throw new Error('Failed to read image as data URL');
@@ -2626,7 +2643,7 @@ export function EmailComposer({
       toast.error(t('upload_failed', { filename: file.name }));
       return null;
     }
-  }, [client, t]);
+  }, [client, t, tNotifications]);
 
   const handleTemplateSelect = useCallback(async (template: EmailTemplate, filledValues: Record<string, string>) => {
     let filledSubject = Object.keys(filledValues).length > 0
@@ -2760,6 +2777,12 @@ export function EmailComposer({
 
   const addFiles = useCallback(async (files: File[], opts?: { handedIn?: boolean }) => {
     if (!client || files.length === 0) return;
+    // Files go to the account the message is written from. While its login
+    // is not connected they go nowhere: another login's server is another one.
+    if (!composerClientRef.current) {
+      toast.error(tNotifications('not_connected'));
+      return;
+    }
 
     // Let plugins veto each upload before it's queued.
     const allowedFiles: File[] = [];
@@ -2778,7 +2801,7 @@ export function EmailComposer({
 
     // Refuse what the server would refuse after the upload (maxSizeUpload per
     // blob, maxSizeAttachmentsPerEmail per message) instead of failing late.
-    const uploadClient = composerClientRef.current ?? client;
+    const uploadClient = composerClientRef.current;
     const maxUpload = uploadClient.getMaxSizeUpload?.() ?? 0;
     const oversized = maxUpload > 0 ? files.find(f => f.size > maxUpload) : undefined;
     if (oversized) {
@@ -2885,7 +2908,10 @@ export function EmailComposer({
           // Content-Length but sends 0 bytes, and nginx answers 400.
           let blobId: string;
           try {
-            ({ blobId } = await (composerClientRef.current ?? client).uploadBlob(newFile, {
+            // The login may have gone since the files were added.
+            const target = composerClientRef.current;
+            if (!target) throw new Error('Not connected');
+            ({ blobId } = await target.uploadBlob(newFile, {
               onProgress: reportProgress,
               signal: controller?.signal,
             }));
@@ -2925,7 +2951,7 @@ export function EmailComposer({
         );
       }
     }
-  }, [client, t]);
+  }, [client, t, tNotifications]);
 
   useEffect(() => {
     if (!client || !initialFiles || initialFiles.length === 0 || attachedInitialFiles.has(initialFiles)) return;
@@ -2939,7 +2965,7 @@ export function EmailComposer({
   // The largest recent file worth offering: what the server takes per file,
   // and what the app reads (compose-p3-18).
   const recentFileLimit = () => {
-    const serverMax = (composerClientRef.current ?? client)?.getMaxSizeUpload?.() ?? 0;
+    const serverMax = composerClientRef.current?.getMaxSizeUpload?.() ?? 0;
     return serverMax > 0 ? Math.min(serverMax, RECENT_FILE_MAX_BYTES) : RECENT_FILE_MAX_BYTES;
   };
   const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
@@ -4471,8 +4497,8 @@ export function EmailComposer({
       // beyond the bodies (lib/outgoing/send-check-payload.ts) is worked out
       // after waiting for required checks that are still starting, and only
       // while a plugin listens.
-      const sendClient = composerClientRef.current ?? client;
-      const readBlob = (blobId: string, name: string, type: string, bytes: number) => (sendClient
+      const sendClient = composerClientRef.current;
+      const readBlob =(blobId: string, name: string, type: string, bytes: number) => (sendClient
         ? sendClient.fetchBlobArrayBuffer(blobId, name, type, undefined, bytes)
         : Promise.reject(new Error('No client')));
       // What is checked is what goes: a file added while the check waits or
@@ -4692,7 +4718,10 @@ export function EmailComposer({
           fromName,
           identityId: rawId,
           envelopeMailFrom,
-          localAccountId: identityLocalAccountId ?? undefined,
+          // Always the login the message is written from: the identity's,
+          // else the one the composer was opened in. The host sends through
+          // that login or not at all, also when another one is active by now.
+          localAccountId: identityLocalAccountId ?? composerAccountIdRef.current ?? undefined,
           attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
           inReplyTo: threadingHeaders?.inReplyTo,
           references: threadingHeaders?.references,
@@ -5699,7 +5728,7 @@ export function EmailComposer({
                 <select
                   data-testid="composer-from"
                   aria-label={t('from')}
-                  value={selectedIdentityId || primaryIdentity?.id || ''}
+                  value={currentIdentity?.id || ''}
                   onChange={(e) => {
                     // The sender's rarer options sit at the end of the list.
                     if (e.target.value === FROM_SUB_ADDRESS) {
@@ -5716,6 +5745,15 @@ export function EmailComposer({
                   }}
                   className="flex-1 bg-transparent text-sm text-foreground outline-none cursor-pointer hover:text-muted-foreground transition-colors min-w-0 truncate"
                 >
+                  {/* The chosen address of a login that left the list: still
+                      shown as the sender, and not to be picked again. */}
+                  {composerFrom.unlisted && currentIdentity && (
+                    <option value={currentIdentity.id} disabled dir="ltr" data-composer-from-unlisted="">
+                      {currentIdentity.email
+                        ? (currentIdentity.name ? `${currentIdentity.name} <${toUnicodeEmail(currentIdentity.email)}>` : toUnicodeEmail(currentIdentity.email))
+                        : toUnicodeEmail(useAccountStore.getState().getAccountById(identityLogin ?? '')?.email ?? identityLogin ?? '')}
+                    </option>
+                  )}
                   {identityGroups.length > 0
                     ? identityGroups.map((group) => (
                         <optgroup key={group.localAccountId} label={toUnicodeEmail(group.accountLabel)}>
@@ -5808,6 +5846,13 @@ export function EmailComposer({
           {overrideEnvelopeFallback && (
             <p className="ps-[4.5rem] md:ps-[5.5rem] pe-4 py-1.5 text-xs text-muted-foreground border-b border-border/50">
               {t('from_override.envelope_notice', { identity: overrideEnvelopeFallback })}
+            </p>
+          )}
+          {/* The account of the From address is not connected: the message
+              can't be saved or sent until it is, or another address is picked. */}
+          {fromLoginGone && (
+            <p role="status" data-composer-from-not-connected="" className="ps-[4.5rem] md:ps-[5.5rem] pe-4 py-1.5 text-xs text-destructive border-b border-border/50">
+              {tNotifications('not_connected')}
             </p>
           )}
 

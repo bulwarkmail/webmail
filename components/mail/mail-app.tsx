@@ -3620,7 +3620,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Never another login, also not once that one is gone: the submission id
     // names another submission there.
     const undoClient = pending.localAccountId
-      ? useAuthStore.getState().getClientForAccount(pending.localAccountId)
+      ? loginClientOf(pending.localAccountId)
       : client;
     const refuseSignedOut = () => toast.error(t('email_viewer.undo_send_signed_out'));
     // The login the draft is restored through. The classic shell leaves

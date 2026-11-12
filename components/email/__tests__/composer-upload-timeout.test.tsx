@@ -258,14 +258,15 @@ afterEach(async () => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
-  useAuthStore.setState({ client: null });
+  useAuthStore.setState({ client: null, getClientForAccount: (() => undefined) as never });
 });
 
 describe('composer XHR inactivity recovery', () => {
   it.each([0, 10])('releases stalled A after %i uploaded bytes, starts B, and permits removing/re-adding A', async loaded => {
     const client = uploadClient();
     const upload = vi.spyOn(client, 'uploadBlob');
-    useAuthStore.setState({ client: client as never });
+    // The login that owns the From identity is connected: uploads go through it.
+    useAuthStore.setState({ client: client as never, getClientForAccount: ((id: string) => (id === 'acct-2' ? client : undefined)) as never });
     render(<EmailComposer
       initialData={{ to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false,
         selectedIdentityId: 'acct-2::id-other', subAddressTag: '', mode: 'compose', draftId: null }}
