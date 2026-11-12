@@ -52,9 +52,12 @@ describe('what the plugin OAuth callback page says', () => {
     expect(shown('error=invalid_scope&state=x')).toContain('oauth_callback.failed_title');
   });
 
-  it('names an error code, in upper case too', () => {
+  it('names a defined error code as it is written, and no other spelling of it', () => {
     expect(shown('error=invalid_scope&state=x')).toContain('invalid_scope');
-    expect(shown('error=TEMPORARILY_UNAVAILABLE&state=x')).toContain('TEMPORARILY_UNAVAILABLE');
+    // The codes are defined in lower case; another spelling is no code.
+    const upper = shown('error=TEMPORARILY_UNAVAILABLE&state=x');
+    expect(upper).not.toContain('TEMPORARILY_UNAVAILABLE');
+    expect(upper).toContain('oauth_failed');
   });
 
   it('does not show a code followed by a sentence', () => {
