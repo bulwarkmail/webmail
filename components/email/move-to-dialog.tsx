@@ -21,6 +21,8 @@ interface MoveDialogRequest {
    */
   mailboxes?: Mailbox[];
   selectedMailbox?: string;
+  /** With `mailboxes`: whose folders they are, when not the active login's. */
+  heading?: string;
 }
 
 interface MoveDialogState {
@@ -53,6 +55,8 @@ interface MoveToDialogProps {
   emails: Email[];
   mailboxes: Mailbox[];
   selectedMailbox: string;
+  /** Whose folders `mailboxes` are, when not the active login's: shown above them. */
+  heading?: string;
   onClose: () => void;
   onMove: (mailboxId: string) => void;
 }
@@ -62,12 +66,13 @@ interface MoveToDialogProps {
  * dialog with a filter field. From the command palette, the Message menu and
  * "Choose folder…" in a long Move menu.
  */
-export function MoveToDialog({ emails, mailboxes, selectedMailbox, onClose, onMove }: MoveToDialogProps) {
+export function MoveToDialog({ emails, mailboxes, selectedMailbox, heading, onClose, onMove }: MoveToDialogProps) {
   const t = useTranslations("context_menu");
   const model = useMoveMenu(mailboxes, {
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(emails[0], mailboxes, selectedMailbox),
     emails,
+    heading,
   });
   return (
     <Dialog isOpen={emails.length > 0} onClose={onClose} title={t("move_to_dialog")} bodyClassName="px-2" size="sm">
@@ -117,6 +122,7 @@ export function MoveToDialogHost({ selectedMailbox }: { selectedMailbox: string 
       emails={request.emails}
       mailboxes={request.mailboxes ?? offered.mailboxes}
       selectedMailbox={request.mailboxes ? request.selectedMailbox ?? "" : selectedMailbox}
+      heading={request.mailboxes ? request.heading : offered.owner}
       onClose={close}
       onMove={request.onMove}
     />

@@ -878,6 +878,7 @@ export function EmailList({
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(selectedEmailsForRemoval[0], selectionFolders.mailboxes, selectedMailbox),
     emails: selectedEmailsForRemoval,
+    heading: selectionFolders.owner,
   });
   const chooseMoveFolder = useChooseMoveFolder();
   // One read/unread button: "Mark as read" while any selected message is unread.
@@ -1703,6 +1704,7 @@ export function EmailList({
           onClose={closeContextMenu}
           menuRef={menuRef}
           mailboxes={contextFolders.mailboxes}
+          moveHeading={contextFolders.owner}
           moveUnavailableHint={moveUnavailableHint(contextFolders.unavailable)}
           selectedMailbox={selectedMailbox}
           currentMailboxRole={effectiveMailboxRole}

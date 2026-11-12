@@ -53,6 +53,8 @@ interface EmailContextMenuProps {
   menuRef: React.RefObject<HTMLDivElement | null>;
   /** The folders Move offers: those of the login the message (or the selection) is in (moveFoldersFor). */
   mailboxes: Mailbox[];
+  /** Whose folders `mailboxes` are, when not the active login's: shown above them (moveFoldersFor's `owner`). */
+  moveHeading?: string;
   /** Why Move is not offered, where those folders can't be had: Move shows, unavailable, with it. */
   moveUnavailableHint?: string;
   selectedMailbox: string;
@@ -164,6 +166,7 @@ export function EmailContextMenu({
   onClose,
   menuRef,
   mailboxes,
+  moveHeading,
   moveUnavailableHint,
   selectedMailbox,
   currentMailboxRole,
@@ -250,6 +253,7 @@ export function EmailContextMenu({
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox),
     emails: movedEmails,
+    heading: moveHeading,
   });
   const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
   const chooseMoveFolder = useChooseMoveFolder();

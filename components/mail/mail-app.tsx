@@ -7065,6 +7065,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   const offered = moveFoldersFor([target]);
                   return {
                     mailboxes: offered.mailboxes,
+                    moveHeading: offered.owner,
                     selectedMailbox,
                     currentMailboxRole: conversationRole,
                     onArchive: archiveActionEnabled ? leaving(() => handleArchive(target)) : undefined,
@@ -7217,6 +7218,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       if (selectedEmail) await handleMoveToMailbox(selectedEmail.id, mailboxId, emailKeyFor(selectedEmail));
                     }}
                     moveUnavailableHint={moveUnavailableHint(readerMove.unavailable)}
+                    moveHeading={readerMove.owner}
                     onRemoveFromFolder={openEmailCanLeaveFolder ? () => {
                       if (!selectedEmail) return;
                       leaveIfOpen(selectedEmail);
@@ -7296,6 +7298,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {moveDialogEmail && <MoveToDialog
           emails={[moveDialogEmail]}
           mailboxes={moveFoldersFor([moveDialogEmail]).mailboxes}
+          heading={moveFoldersFor([moveDialogEmail]).owner}
           selectedMailbox={selectedMailbox}
           onClose={() => setMoveDialogEmail(null)}
           onMove={(mailboxId) => {

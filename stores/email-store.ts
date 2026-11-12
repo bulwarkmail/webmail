@@ -1588,8 +1588,14 @@ export function mailboxesInView(state: Pick<EmailStore, 'viewingAccountId' | 'ac
 export type MoveUnavailableReason = 'several_logins' | 'not_connected';
 
 export type MoveFolders =
-  | { login: string | null; mailboxes: Mailbox[]; unavailable?: undefined }
-  | { login: null; mailboxes: Mailbox[]; unavailable: MoveUnavailableReason };
+  | {
+      login: string | null;
+      mailboxes: Mailbox[];
+      /** The address of the login the folders are, when it isn't the active one: a picker shows it above them. */
+      owner?: string;
+      unavailable?: undefined;
+    }
+  | { login: null; mailboxes: Mailbox[]; owner?: undefined; unavailable: MoveUnavailableReason };
 
 /**
  * The folders a "Move to" picker offers for `emails` (an open message, a
@@ -1616,7 +1622,10 @@ export function moveFoldersFor(
   const client = auth.getClientForAccount(login) ?? (isActive ? auth.client : null);
   const list = isActive ? state.mailboxes : state.accountMailboxes[login];
   if (!client || !list) return { login: null, mailboxes: [], unavailable: 'not_connected' };
-  return { login, mailboxes: list };
+  if (isActive) return { login, mailboxes: list };
+  // Another login's folders: named by its address, as its sidebar group is.
+  const entry = useAccountStore.getState().getAccountById(login);
+  return { login, mailboxes: list, owner: entry?.email || entry?.label || login };
 }
 
 /** A move to a folder that is not among the folders of the message's login, or with that login gone. */

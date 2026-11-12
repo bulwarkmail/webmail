@@ -300,6 +300,7 @@ export function MvListToolbar({
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(selectedEmails[0], moveFolders.mailboxes, selectedMailbox),
     emails: selectedEmails,
+    heading: moveFolders.owner,
   });
   const chooseMoveFolder = useChooseMoveFolder();
 
