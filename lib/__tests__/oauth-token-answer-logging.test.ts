@@ -128,17 +128,19 @@ describe('what goes into the log from a token answer', () => {
   });
 
   it('logs nothing of a sign-in completion body that is not JSON', async () => {
+    // Short enough for the parser to quote it whole.
+    const body = '{"code":CODE-SECRET}';
     const { POST } = await import('@/app/api/auth/sso/complete/route');
     await POST(new NextRequest('https://webmail.example/api/auth/sso/complete', {
       method: 'POST',
       headers: { ...SAME_ORIGIN, origin: 'https://webmail.example' },
-      body: '{"code":CODE-SECRET-0123,"state":"s"}',
+      body,
     }));
     const { POST: reauth } = await import('@/app/api/auth/reauth/sso/complete/route');
     await reauth(new NextRequest('https://webmail.example/api/auth/reauth/sso/complete', {
       method: 'POST',
       headers: { ...SAME_ORIGIN, origin: 'https://webmail.example' },
-      body: '{"code":CODE-SECRET-0123,"state":"s"}',
+      body,
     }));
     expect(logged.length).toBeGreaterThan(1);
     expect(logText()).not.toContain('CODE-SECRET');
