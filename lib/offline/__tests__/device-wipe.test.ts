@@ -1216,8 +1216,10 @@ describe('what else goes with a wipe', () => {
     unsubscribed = 0;
     deletedCaches = [];
     plant();
+    // As in a browser, a closed notification is no longer on screen.
+    let onScreen = [{ title: 'From Eve', close() { closed.push(this.title); onScreen = onScreen.filter((shown) => shown !== this); } }];
     const registration = {
-      getNotifications: async () => [{ title: 'From Eve', close() { closed.push(this.title); } }],
+      getNotifications: async () => onScreen,
       pushManager: { getSubscription: async () => ({ unsubscribe: async () => { unsubscribed += 1; return true; } }) },
     };
     Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { getRegistration: async () => registration, controller: null } });

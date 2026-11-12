@@ -53,9 +53,8 @@ import { isAppLockedNow, readAppLockFile } from '@/lib/app-lock/state';
 import { clearSealed, VAULT_DB } from '@/lib/app-lock/vault';
 import { clearRescuedDrafts } from '@/lib/popout/rescued-drafts';
 import { isPopoutWindow } from '@/lib/popout/window-role';
-import { shownNotifications } from '@/lib/notifications/shown';
 import { PUSH_STATE_CACHE } from '@/lib/push-preferences';
-import { ACCOUNT_STORAGE_KEYS, onBeforeSignOut } from '@/lib/sign-out-cleanup';
+import { ACCOUNT_STORAGE_KEYS, closeShownNotifications, onBeforeSignOut, SIGNED_OUT_STORAGE_PREFIXES } from '@/lib/sign-out-cleanup';
 import {
   checkInWithInstance,
   registerWithInstance,
@@ -129,23 +128,18 @@ const APP_DATABASES = new Set([
 const KNOWN_PLUGIN_DATABASES = ['smime-plugin-store', 'bulwark-openpgp', 'smime-capability-probe', 'openpgp-capability-probe'];
 
 /**
- * What every account shared and can't be told apart by account, on top of what a
- * full sign-out removes. `template-storage` is here though a sign-out keeps it:
- * with settings sync off it's the user's own work and only here, which is why a
- * sign-out leaves it, but a template can hold anything, and a device told to remove
- * everything keeps no text. The question before a wipe from settings names it.
+ * What a sign-out keeps on purpose and a wipe takes. Anything of a user's belongs on the
+ * sign-out's list (lib/sign-out-cleanup.ts), and comes here from there. `template-storage`:
+ * with settings sync off it's the user's own work and only here, which is why a sign-out
+ * leaves it, but a template can hold anything, and a device told to remove everything keeps
+ * no text. The question before a wipe from settings names it. `webmail_usernames`: the
+ * login form's suggestions.
  */
-const SHARED_LOCAL_KEYS = [
-  ...ACCOUNT_STORAGE_KEYS,
-  'notification-center',
-  'plugin-oauth-states',
-  'webmail_usernames',
-  'global-search',
-  'favicon-refresh',
-  'template-storage',
-];
-/** The WebDAV area's favourites, recent files and last folder. */
-const SHARED_LOCAL_PREFIXES = ['webdav-'];
+const KEPT_BY_SIGN_OUT = ['webmail_usernames', 'template-storage'];
+
+/** What every account shared and can't be told apart by account. */
+export const SHARED_LOCAL_KEYS = [...ACCOUNT_STORAGE_KEYS, ...KEPT_BY_SIGN_OUT];
+export const SHARED_LOCAL_PREFIXES = SIGNED_OUT_STORAGE_PREFIXES;
 
 const running = new Map<string, Promise<void>>();
 
@@ -264,13 +258,6 @@ function removeLocalKeys(keys: string[], prefixes: string[]): void {
 async function pushRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
   return (await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => null)) ?? null;
-}
-
-/** A sender and a subject can sit on screen long after the mail is gone. */
-async function closeShownNotifications(): Promise<void> {
-  const registration = await pushRegistration();
-  if (!registration?.getNotifications) return;
-  for (const notification of await shownNotifications(registration) ?? []) notification.close();
 }
 
 /** The subscription is the browser's, shared by every account on this origin. */
