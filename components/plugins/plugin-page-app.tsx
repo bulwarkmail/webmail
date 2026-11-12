@@ -183,7 +183,7 @@ export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
           beside the mail: the page narrows by the panel's width. One open
           state with the mail's, and api.ui.openPanel('side-panel') answered
           here too. */}
-      {mvShell && !inlineApp && <MvSidePanel />}
+      {mvShell && !inlineApp && <MvSidePanel pluginsOnly />}
       {!mvShell && !isMobile && !isEmbedded && !inlineApp && <PluginSidePanel />}
       </div>
       <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />

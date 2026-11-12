@@ -30,6 +30,7 @@ const { PluginPageApp } = await import('../plugin-page-app');
 const registry = await import('@/lib/plugin-sandbox/registry');
 const pages = await import('@/lib/plugin-sandbox/pages');
 const { useAuthStore } = await import('@/stores/auth-store');
+const { useCalendarStore } = await import('@/stores/calendar-store');
 const { usePluginStore } = await import('@/stores/plugin-store');
 const { isFillableSlot } = await import('@/lib/plugin-sandbox/slot-layout');
 const { dispatchApiCall } = await import('@/lib/plugin-sandbox/host-api');
@@ -185,11 +186,15 @@ describe('plugin side panels on a plugin page', () => {
     expect(back.container.querySelector('[data-plugin-side-panel]')).toBeNull();
   });
 
-  it('puts it in Mountain View\'s side panel beside the card', async () => {
+  it('puts it in Mountain View\'s side panel beside the card, without the apps\' panels', async () => {
     mountainView = true;
-    useAuthStore.setState({ client: { supportsContacts: () => false } as never });
+    useAuthStore.setState({ client: { supportsContacts: () => true } as never });
+    useCalendarStore.setState({ supportsCalendar: true } as never);
     const plugin = showPage();
     const { container } = render(<PluginPageApp linkSegments={['kanban', 'board']} />);
+    // Mountain View's own panels act on the mail view, which a plugin page hasn't got.
+    expect(container.querySelector('[data-mv-side-rail] button[aria-label="calendar"]')).toBeNull();
+    expect(container.querySelector('[data-mv-side-rail] button[aria-label="contacts"]')).toBeNull();
     await act(async () => { await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open']); });
     const panel = container.querySelector('[data-plugin-side-panel="kanban"]')!;
     expect(panel).not.toBeNull();
