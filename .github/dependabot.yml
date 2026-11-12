@@ -13,9 +13,10 @@ updates:
       interval: weekly
     ignore:
       # Updated by hand: newer next-intl releases bring @swc/core 1.16, which
-      # does not load on the maintainer's Windows setup.
+      # does not load on the maintainer's Windows setup. The wildcard also
+      # covers the per-platform @swc/core-* packages that come with it.
       - dependency-name: next-intl
-      - dependency-name: "@swc/core"
+      - dependency-name: "@swc/core*"
 
   # Base images of Dockerfile and Dockerfile.lite.
   - package-ecosystem: docker

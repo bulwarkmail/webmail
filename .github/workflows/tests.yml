@@ -61,18 +61,26 @@ jobs:
           node-version: 22
           cache: npm
 
-      # Every action pinned to a commit, nothing run straight off the network,
-      # and no secret or write token in a job a pull request can start.
-      - name: Check action pins
-        run: node scripts/check-action-pins.mjs .
-
-      # Values from the event and from other steps reach a run: script
-      # through env:, never pasted into its text.
-      - name: Check run expressions
-        run: node scripts/check-run-expressions.mjs .
-
       - name: Install dependencies
         run: npm ci
+
+      # Both checks read the workflows with js-yaml, so they run after the
+      # install, and each runs its own cases first.
+      #
+      # Every action pinned to a commit, nothing run straight off the network,
+      # no secret or write token where outside code runs, no cache in a job
+      # that publishes, and a top-level permissions block in every workflow.
+      - name: Check action pins
+        run: |
+          node scripts/check-action-pins.mjs --self-test
+          node scripts/check-action-pins.mjs .
+
+      # Values from the event and from other steps reach a script through
+      # env:, never pasted into its text.
+      - name: Check run expressions
+        run: |
+          node scripts/check-run-expressions.mjs --self-test
+          node scripts/check-run-expressions.mjs .
 
       - name: Typecheck
         run: npm run typecheck

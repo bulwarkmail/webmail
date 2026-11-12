@@ -61,12 +61,15 @@ jobs:
 
       # The npm cache only for the checks on pushes and pull requests. Release
       # and manual builds hand out their zips, and any job on main can write
-      # the cache, so they install from the registry.
+      # the cache, so they install from the registry. An explicit cache: wins
+      # over package-manager-cache, which only stops setup-node from turning
+      # the cache on by itself when package.json names npm in packageManager.
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && 'npm' || '' }}
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
@@ -88,15 +91,16 @@ jobs:
           SOURCEMAPS_OUT: sourcemaps
         run: npm run build:lite
 
-      # Each target is its own build with its own chunks, so each uploads.
-      # Pull requests never get the token, not even from a branch inside this
-      # repository, because the build runs scripts from a tree nobody has
-      # merged yet. Pushes to main, releases and manual runs upload.
-      - name: Upload source maps to Bugsink
+      # The sourcemaps job sends these to Bugsink; this job never holds the
+      # token. Pull requests keep no maps.
+      - name: Keep source maps for the upload
         if: github.event_name != 'pull_request'
-        env:
-          BUGSINK_AUTH_TOKEN: ${{ secrets.BUGSINK_AUTH_TOKEN }}
-        run: bash scripts/upload-sourcemaps.sh sourcemaps
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sourcemaps-lite-${{ matrix.target }}
+          path: sourcemaps
+          if-no-files-found: error
+          retention-days: 1
 
       # Every host literal in the bundle must be a placeholder, the configured
       # JMAP server, a built-in host the no-third-party switch turns off, or a
@@ -135,10 +139,51 @@ jobs:
           path: ${{ env.ZIP }}
           retention-days: 7
 
+  sourcemaps:
+    name: Upload source maps
+    # The only job with the Bugsink token. It never runs for a pull request,
+    # not even from a branch inside this repository, and it builds nothing:
+    # the maps come from the build job as artifacts. Each target is its own
+    # build with its own chunks, so each folder uploads.
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # For scripts/upload-sourcemaps.sh at this commit.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Download source maps (static)
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sourcemaps-lite-static
+          path: sourcemaps/static
+
+      - name: Download source maps (stalwart)
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sourcemaps-lite-stalwart
+          path: sourcemaps/stalwart
+
+      - name: Upload source maps to Bugsink
+        env:
+          BUGSINK_AUTH_TOKEN: ${{ secrets.BUGSINK_AUTH_TOKEN }}
+        run: |
+          bash scripts/upload-sourcemaps.sh sourcemaps/static
+          bash scripts/upload-sourcemaps.sh sourcemaps/stalwart
+
   release:
     name: Attach to release
-    # The only job with a write token, and it runs no checked-out code.
-    needs: build
+    # The only job with a write token, and it runs no checked-out code. It
+    # waits for the source maps so a release never ships without them.
+    needs: [build, sourcemaps]
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     timeout-minutes: 10

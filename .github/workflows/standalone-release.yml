@@ -33,10 +33,13 @@ jobs:
 
       # No npm cache: any job on main can write one, and the tarball is
       # published. npm ci installs from the registry against the lockfile.
+      # package-manager-cache: false keeps setup-node from turning the cache
+      # on by itself when package.json names npm in packageManager.
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
