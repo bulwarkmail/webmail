@@ -91,6 +91,20 @@ function frameOptions(slot: string, pluginId = 'helper'): SlotOptions {
   return frameCall(slot, pluginId).opts;
 }
 
+/**
+ * The user goes into the plugin's frame (a click in its Combobox: the app had the focus, now the
+ * frame has it), and the frame asks for its list. The host draws a list only while the user is in
+ * the frame (plugin-dropdown-focus.test.tsx), so every request here comes with the user in it.
+ */
+function askForList(slot: string, pluginId = 'helper', msg: DropdownMsg = OPEN) {
+  const iframe = document.querySelector<HTMLIFrameElement>(`[data-plugin-iframe-slot="${pluginId}:${slot}"] iframe`)!;
+  const before = document.createElement('button');
+  document.body.appendChild(before);
+  act(() => { before.focus(); iframe.tabIndex = 0; iframe.focus(); });
+  before.remove();
+  act(() => frameOptions(slot, pluginId).onFloatingDropdown(msg));
+}
+
 /** A question the host asks about the plugin, as host-api-forward.ts does before a first forward. */
 function askHostQuestion() {
   act(() => {
@@ -159,7 +173,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
     askHostQuestion();
 
-    act(() => frameOptions('plugin-dialog').onFloatingDropdown(OPEN));
+    askForList('plugin-dialog');
 
     expect(pluginLists()).toHaveLength(0);
   });
@@ -168,7 +182,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     await mountBanner(<PluginDialogHost key="host" />);
     askHostQuestion();
 
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
 
     expect(pluginLists()).toHaveLength(0);
     // The frame hears that its list is closed, so its Select doesn't stay open.
@@ -177,7 +191,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
 
   it('closes a dropdown that is already open when a host question opens', async () => {
     await mountBanner(<PluginDialogHost key="host" />);
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     // With no dialog open a banner's Select works.
     expect(pluginLists()).toHaveLength(1);
 
@@ -193,7 +207,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     act(() => { void awaitCustomDialog({ pluginId: 'helper', title: 'Pick a folder', message: '', slot: 'plugin-dialog' }); });
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
 
-    act(() => frameOptions('plugin-dialog').onFloatingDropdown(OPEN));
+    askForList('plugin-dialog');
 
     expect(pluginLists()).toHaveLength(1);
     // Drawn in the plugin dialog's own layer, so a dialog drawn above that one is above the list.
@@ -202,25 +216,25 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
 
   it('draws no dropdown over the host\'s connect dialog, and closes one that was open', async () => {
     await mountBanner(<PluginConnectDialog key="connect" />);
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     expect(pluginLists()).toHaveLength(1);
 
     askToConnect();
     await waitFor(() => expect(pluginLists()).toHaveLength(0));
 
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     expect(pluginLists()).toHaveLength(0);
   });
 
   it('draws no dropdown over the host\'s consent dialog, and closes one that was open', async () => {
     await mountBanner(<PluginConsentDialog key="consent" />);
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     expect(pluginLists()).toHaveLength(1);
 
     askForConsent();
     await waitFor(() => expect(pluginLists()).toHaveLength(0));
 
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     expect(pluginLists()).toHaveLength(0);
   });
 
@@ -229,7 +243,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     render(<Dialog isOpen onClose={() => {}} title="Rename folder" />);
     expect(screen.getByRole('dialog', { name: 'Rename folder' })).toBeTruthy();
 
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
 
     expect(pluginLists()).toHaveLength(0);
   });
@@ -239,7 +253,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     render(<PluginDialogHost />);
     act(() => { void awaitCustomDialog({ pluginId: 'helper', title: 'Account', message: '', slot: 'plugin-dialog' }); });
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
-    act(() => frameOptions('plugin-dialog').onFloatingDropdown(OPEN));
+    askForList('plugin-dialog');
     expect(pluginLists()).toHaveLength(1);
 
     act(() => {
@@ -251,7 +265,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
 
     expect(screen.getByText(/^password_note /)).toBeTruthy();
     await waitFor(() => expect(pluginLists()).toHaveLength(0));
-    act(() => frameOptions('plugin-dialog').onFloatingDropdown(OPEN));
+    askForList('plugin-dialog');
     expect(pluginLists()).toHaveLength(0);
   });
 
@@ -266,7 +280,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     });
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalledTimes(1));
     // The second dialog waits behind the first: nothing covers the first one's frame.
-    act(() => frameOptions('plugin-dialog', 'first').onFloatingDropdown(OPEN));
+    askForList('plugin-dialog', 'first');
     expect(pluginLists()).toHaveLength(1);
 
     act(() => resolveHead('done'));
@@ -278,17 +292,17 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
 
   it('names the plugin in the list\'s label', async () => {
     await mountBanner();
-    act(() => frameOptions('app-top-banner').onFloatingDropdown({ ...OPEN, ariaLabel: 'Folder' }));
+    askForList('app-top-banner', 'helper', { ...OPEN, ariaLabel: 'Folder' });
     expect(pluginLists()[0].getAttribute('aria-label')).toContain('Helpful plugin');
     expect(pluginLists()[0].getAttribute('aria-label')).toContain('Folder');
 
-    act(() => frameOptions('app-top-banner').onFloatingDropdown({ ...OPEN, id: 'list-2' }));
+    askForList('app-top-banner', 'helper', { ...OPEN, id: 'list-2' });
     expect(pluginLists()[0].getAttribute('aria-label')).toContain('Helpful plugin');
   });
 
   it('names the plugin in the list\'s first row, apart from the plugin\'s options', async () => {
     await mountBanner();
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     const [list] = pluginLists();
     const first = list.firstElementChild!;
     expect(first.getAttribute('role')).toBeNull();
@@ -299,7 +313,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
 
   it('draws the list under the toasts, whose line names their plugin', async () => {
     await mountBanner();
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     // The toast container stacks at 99999 (components/ui/toast.tsx).
     expect(Number((pluginLists()[0] as HTMLElement).style.zIndex)).toBeLessThan(99999);
   });
@@ -308,7 +322,7 @@ describe('a plugin dropdown and the host\'s own dialogs', () => {
     await mountBanner();
     const frame = document.querySelector<HTMLIFrameElement>('[data-plugin-iframe-slot="helper:app-top-banner"] iframe')!;
     frame.style.visibility = 'hidden';
-    act(() => frameOptions('app-top-banner').onFloatingDropdown(OPEN));
+    askForList('app-top-banner');
     expect(pluginLists()).toHaveLength(0);
   });
 });

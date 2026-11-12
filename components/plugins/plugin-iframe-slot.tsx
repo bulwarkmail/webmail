@@ -8,16 +8,18 @@
 //
 // A frame may ask the host to draw a dropdown list for it (the UI kit's
 // Combobox). The host draws it in its own document, so it keeps to the frame:
-// only a frame that is drawn with a real size gets one; it stands in the part
-// of the window the frame takes up, plus its own height; it never covers a
-// row where the host names a plugin (a dialog's header, a banner's name chip),
-// and in a plugin's dialog it stays below the frame's top; its first row
-// names the plugin; it is drawn in the layer of the plugin dialog the frame
-// is in; and while a dialog is open that the frame is not inside (a question
-// the host asks about the plugin, an app dialog, a plugin's prompt on top of
-// its own dialog), the host draws no list for the frame and closes an open
-// one. Outside modals it may lie over the app next to the frame, within its
-// 240 px: it closes on any click outside it, on scrolling and on resizing.
+// it draws a frame's list only while the user is in that frame (the frame has
+// the focus, see FrameFocus), and never while a menu, popover or dialog of the
+// app is open that the frame is not inside (a question the host asks about the
+// plugin, an app dialog, a plugin's prompt on top of its own dialog, the menu
+// beside a banner that turns the plugin off); an open list closes when either
+// stops being so. Only a frame that is drawn with a real size gets one; it
+// stands in the part of the window the frame takes up, plus its own height; it
+// never covers a row where the host names a plugin (a dialog's header, a
+// banner's name chip), and in a plugin's dialog it stays below the frame's
+// top; its first row names the plugin; it is drawn in the layer of the plugin
+// dialog the frame is in. It closes on any click outside it, on scrolling and
+// on resizing.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -71,22 +73,199 @@ interface FloatingDropdownState {
   ariaLabel?: string;
 }
 
-/** The host's open dialogs, the app's own and the plugins' alike. */
-const OPEN_DIALOG_SELECTOR = '[aria-modal="true"], [role="alertdialog"]';
+/**
+ * The host's open layers: its dialogs, the app's own and the plugins' alike
+ * (modal or a popover like the event details), and its menus (ContextMenu and
+ * the menus the app draws itself). They are in the document only while open.
+ */
+const OPEN_LAYER_SELECTOR = '[aria-modal="true"], [role="alertdialog"], [role="dialog"], [role="menu"]';
+/**
+ * The button of an open popup. It also stands for a picker whose list has no
+ * menu or dialog role of its own (searchable-select.tsx, the composer's menus).
+ */
+const OPEN_POPUP_BUTTON_SELECTOR = '[aria-haspopup]:not([aria-haspopup="false"])[aria-expanded="true"]';
+
+/** A layer kept in the page while closed: the phone's reader menu slides out and turns inert. */
+function isOpenLayer(el: Element): boolean {
+  if (el.closest('[inert], [hidden]')) return false;
+  for (let n: Element | null = el; n; n = n.parentElement) {
+    if (getComputedStyle(n).display === 'none') return false;
+  }
+  return true;
+}
 
 /**
- * Whether a dialog is open that `el` is not inside. A list drawn for a
- * frame in `el` would then lie over that dialog, which may be the host
- * asking about this very plugin.
+ * Whether a dialog, popover or menu of the host is open that `el` is not
+ * inside. A list drawn for a frame in `el` would then lie over it, and it may
+ * be the host asking about this very plugin or the menu that turns it off.
  */
-export function dialogOutside(el: Element | null): boolean {
+export function hostLayerOutside(el: Element | null): boolean {
   if (typeof document === 'undefined') return false;
   if (!el) return true;
-  for (const dialog of document.querySelectorAll(OPEN_DIALOG_SELECTOR)) {
-    if (!dialog.contains(el)) return true;
+  for (const layer of document.querySelectorAll(OPEN_LAYER_SELECTOR)) {
+    if (!layer.contains(el) && isOpenLayer(layer)) return true;
+  }
+  // A frame inside a menu or a dialog is in the popup that the open button
+  // stands for; any other open popup has its own layer above.
+  if (!el.closest(OPEN_LAYER_SELECTOR)) {
+    for (const button of document.querySelectorAll(OPEN_POPUP_BUTTON_SELECTOR)) {
+      if (isOpenLayer(button)) return true;
+    }
   }
   return false;
 }
+
+/** Whether the frame shows: drawn, with some of it in the window. */
+function frameShows(el: Element): boolean {
+  if (!isDrawn(el)) return false;
+  const area = shownArea(el);
+  return area.right > area.left && area.bottom > area.top;
+}
+
+interface FocusStay {
+  /** The focus was seen coming into the frame from the app, in a focused window, while the frame showed and no menu or dialog of the app was open. */
+  counted: boolean;
+  /** The user closed the frame's list during this stay, with a click outside it. */
+  dismissed: boolean;
+}
+
+/** How long a press in the list may take before the focus counts again. */
+const PRESS_HOLD_MS = 1000;
+/** After the press: time for the frame to put the focus back into its field. */
+const PRESS_SETTLE_MS = 300;
+/** How often the focus is read while it is in the frame (no event says it left). */
+const FOCUS_POLL_MS = 200;
+
+/**
+ * Follows the focus for one frame, for the rule that the host draws a frame's
+ * list only while the user is in that frame.
+ *
+ * The user is in the frame while it has the focus: `document.activeElement`
+ * is its iframe and the window has the focus. A frame can take the focus by
+ * script, so that alone isn't enough. A stay in the frame counts only when
+ * the focus was seen coming into it from the app while the app's window had
+ * the focus, the frame showed and no menu, popover or dialog of the app was
+ * open outside it. A stay that starts otherwise (the window coming back to
+ * the front with the frame focused, a frame that took the focus while it
+ * showed nothing, or while the menu that turns it off was open) gets no list
+ * until the focus has left the frame and come back. A list the user closed with a click outside it isn't
+ * drawn again in the same stay.
+ *
+ * Browsers don't all tell the page when the focus moves into a frame of
+ * another origin, and none when it leaves the window from inside one, so the
+ * focus is read on the app's focus and input events, when the frame asks, and
+ * every 200 ms while it is in the frame.
+ */
+class FrameFocus {
+  private stay: FocusStay | null = null;
+  private last: { inFrame: boolean; windowFocused: boolean };
+  private holdUntil = 0;
+  private poll: ReturnType<typeof setInterval> | null = null;
+  private timers = new Set<ReturnType<typeof setTimeout>>();
+
+  constructor(
+    private readonly frame: () => HTMLIFrameElement | null,
+    private readonly onLeave: () => void,
+    /** A menu, popover or dialog of the app is open that the frame is not inside. */
+    private readonly covered: () => boolean,
+  ) {
+    this.last = { inFrame: false, windowFocused: typeof document !== 'undefined' && document.hasFocus() };
+  }
+
+  /** Reads where the focus is now; true while it is in the frame. */
+  observe = (): boolean => {
+    if (typeof document === 'undefined') return false;
+    // A press in the list: the pick goes to the frame first, then the frame
+    // puts the focus back into its field.
+    if (Date.now() < this.holdUntil) return this.stay !== null;
+    const frame = this.frame();
+    const windowFocused = document.hasFocus();
+    const inFrame = !!frame && windowFocused && document.activeElement === frame;
+    if (inFrame) {
+      if (!this.stay) {
+        // Taking the focus closes an open menu of the app (it closes when
+        // the window loses the focus): a stay that starts while one is open
+        // doesn't count either.
+        this.stay = {
+          counted: !this.last.inFrame && this.last.windowFocused && frameShows(frame) && !this.covered(),
+          dismissed: false,
+        };
+        this.poll ??= setInterval(this.observe, FOCUS_POLL_MS);
+      }
+    } else if (this.stay) {
+      this.stay = null;
+      this.stopPoll();
+      this.onLeave();
+    }
+    this.last = { inFrame, windowFocused };
+    return inFrame;
+  };
+
+  /** 'yes' when the frame may have a list now, 'away' when the focus isn't in it. */
+  allows(): 'yes' | 'away' | 'no' {
+    if (!this.observe()) return 'away';
+    return this.stay?.counted && !this.stay.dismissed ? 'yes' : 'no';
+  }
+
+  /** The user closed the list: none again until the focus has left the frame and come back. */
+  dismiss(): void {
+    if (this.stay) this.stay.dismissed = true;
+  }
+
+  /** A press in the list starts. */
+  hold = (): void => {
+    this.holdUntil = Date.now() + PRESS_HOLD_MS;
+    this.later(this.observe, PRESS_HOLD_MS + 20);
+  };
+
+  /** The press in the list ended (its click went to the frame). */
+  release = (): void => {
+    this.holdUntil = Date.now() + PRESS_SETTLE_MS;
+    this.later(this.observe, PRESS_SETTLE_MS + 20);
+  };
+
+  later(fn: () => void, ms: number): void {
+    const timer = setTimeout(() => {
+      this.timers.delete(timer);
+      fn();
+    }, ms);
+    this.timers.add(timer);
+  }
+
+  /** Listens to the app's focus and input; returns the cleanup. */
+  start(): () => void {
+    const now = this.observe;
+    // The focus moves after the input event, as its default action.
+    const soon = () => this.later(this.observe, 0);
+    window.addEventListener('focus', now);
+    window.addEventListener('blur', now);
+    document.addEventListener('focusin', now, true);
+    document.addEventListener('focusout', soon, true);
+    document.addEventListener('pointerdown', soon, true);
+    document.addEventListener('mousedown', soon, true);
+    document.addEventListener('keydown', soon, true);
+    return () => {
+      window.removeEventListener('focus', now);
+      window.removeEventListener('blur', now);
+      document.removeEventListener('focusin', now, true);
+      document.removeEventListener('focusout', soon, true);
+      document.removeEventListener('pointerdown', soon, true);
+      document.removeEventListener('mousedown', soon, true);
+      document.removeEventListener('keydown', soon, true);
+      this.stopPoll();
+      for (const timer of this.timers) clearTimeout(timer);
+      this.timers.clear();
+    };
+  }
+
+  private stopPoll(): void {
+    if (this.poll !== null) clearInterval(this.poll);
+    this.poll = null;
+  }
+}
+
+/** The frame's message can come in before the app hears that the focus moved into it. */
+const FOCUS_ARRIVAL_MS = 100;
 
 export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked = false, minFillHeight, onShownChange, onHeightChange }: Props) {
   const fill = fillAsked && isFillableSlot(slot);
@@ -99,6 +278,22 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
   const [height, setHeight] = useState<number>(0);
   const [width, setWidth] = useState<number | undefined>(undefined);
   const [floatingDropdown, setFloatingDropdown] = useState<FloatingDropdownState | null>(null);
+  const openDropdownRef = useRef<string | null>(null);
+  openDropdownRef.current = floatingDropdown?.id ?? null;
+  // Whether the user is in the frame. When the focus leaves it, its list closes.
+  const focusRef = useRef<FrameFocus | null>(null);
+  focusRef.current ??= new FrameFocus(
+    () => wrapperRef.current?.querySelector('iframe') ?? null,
+    () => {
+      const id = openDropdownRef.current;
+      if (id === null) return;
+      instanceRef.current?.sendFloatingDropdownEvent({ type: 'floating-dropdown-dismiss', id });
+      setFloatingDropdown((prev) => (prev?.id === id ? null : prev));
+    },
+    () => hostLayerOutside(wrapperRef.current),
+  );
+  // A list asked for just before the app heard that the focus moved into the frame.
+  const pendingOpenRef = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
   const inline = isInlineSlot(slot);
   // null = pending, true/false = decided
   const [show, setShow] = useState<boolean | null>(null);
@@ -166,29 +361,46 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
         fill,
         hostContainer,
         onResize: (h, w) => {
+          // Where the focus is, before the frame takes its new size: a frame
+          // that took the focus while it showed nothing doesn't count as shown.
+          focusRef.current?.observe();
           setHeight(h);
           if (w !== undefined) setWidth(w);
           onHeightChangeRef.current?.(Math.min(h, maxSlotHeight(slot)));
         },
         onFloatingDropdown: (msg) => {
           if (msg.type === 'floating-dropdown-open') {
-            // Not over a dialog the frame is not inside: the frame hears that
-            // its list closed.
-            if (dialogOutside(hostContainer)) {
+            if (pendingOpenRef.current) clearTimeout(pendingOpenRef.current.timer);
+            pendingOpenRef.current = null;
+            // Refused: the frame hears that its list closed.
+            const refuse = () => {
               instanceRef.current?.sendFloatingDropdownEvent({ type: 'floating-dropdown-dismiss', id: msg.id });
               setFloatingDropdown(null);
-              return;
-            }
-            setFloatingDropdown({
-              id: msg.id,
-              rect: msg.rect,
-              options: msg.options,
-              multiple: msg.multiple,
-              selectedValues: msg.selectedValues,
-              singleValue: msg.singleValue,
-              highlightedIndex: msg.highlightedIndex,
-              ariaLabel: msg.ariaLabel,
-            });
+            };
+            const decide = (late: boolean) => {
+              pendingOpenRef.current = null;
+              if (!live) return;
+              // Not over a dialog, popover or menu the frame is not inside.
+              if (hostLayerOutside(hostContainer)) return refuse();
+              // Only while the user is in the frame.
+              const focus = focusRef.current?.allows() ?? 'no';
+              if (focus === 'away' && !late) {
+                pendingOpenRef.current = { id: msg.id, timer: setTimeout(() => decide(true), FOCUS_ARRIVAL_MS) };
+                return;
+              }
+              if (focus !== 'yes') return refuse();
+              setFloatingDropdown({
+                id: msg.id,
+                rect: msg.rect,
+                options: msg.options,
+                multiple: msg.multiple,
+                selectedValues: msg.selectedValues,
+                singleValue: msg.singleValue,
+                highlightedIndex: msg.highlightedIndex,
+                ariaLabel: msg.ariaLabel,
+              });
+            };
+            decide(false);
           } else if (msg.type === 'floating-dropdown-update') {
             setFloatingDropdown((prev) => {
               if (!prev || prev.id !== msg.id) return prev;
@@ -203,6 +415,10 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
               };
             });
           } else if (msg.type === 'floating-dropdown-close') {
+            if (pendingOpenRef.current?.id === msg.id) {
+              clearTimeout(pendingOpenRef.current.timer);
+              pendingOpenRef.current = null;
+            }
             setFloatingDropdown((prev) => (prev?.id === msg.id ? null : prev));
           }
         },
@@ -221,6 +437,8 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
     });
     return () => {
       live = false;
+      if (pendingOpenRef.current) clearTimeout(pendingOpenRef.current.timer);
+      pendingOpenRef.current = null;
       try { inst?.destroy(); } catch { /* ignore */ }
       instanceRef.current = null;
       setFloatingDropdown(null);
@@ -235,17 +453,28 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
     instanceRef.current?.updateProps(props);
   }, [props]);
 
-  // An open list closes when a dialog opens that the frame is not inside.
+  // Follow the focus while the frame is up.
+  useEffect(() => {
+    if (show !== true) return;
+    return focusRef.current?.start();
+  }, [show]);
+
+  // An open list closes when a dialog, popover or menu opens that the frame
+  // is not inside, or when the frame is taken out of the page.
   const openDropdownId = floatingDropdown?.id ?? null;
   useEffect(() => {
     if (openDropdownId === null || typeof MutationObserver === 'undefined') return;
     const closeIfCovered = () => {
-      if (!dialogOutside(wrapperRef.current)) return;
+      focusRef.current?.observe();
+      if (!hostLayerOutside(wrapperRef.current)) return;
       instanceRef.current?.sendFloatingDropdownEvent({ type: 'floating-dropdown-dismiss', id: openDropdownId });
       setFloatingDropdown((prev) => (prev?.id === openDropdownId ? null : prev));
     };
     const observer = new MutationObserver(closeIfCovered);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-modal', 'role'] });
+    observer.observe(document.body, {
+      childList: true, subtree: true, attributes: true,
+      attributeFilter: ['aria-modal', 'role', 'aria-expanded', 'aria-haspopup', 'inert', 'hidden'],
+    });
     closeIfCovered();
     return () => observer.disconnect();
   }, [openDropdownId]);
@@ -310,13 +539,18 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill: fillAsked =
               index,
             });
           }}
-          onDismiss={() => {
+          onDismiss={(reason) => {
+            // Closed by the user with a click outside: not drawn again until
+            // they have left the frame and come back.
+            if (reason === 'outside') focusRef.current?.dismiss();
             instanceRef.current?.sendFloatingDropdownEvent({
               type: 'floating-dropdown-dismiss',
               id: floatingDropdown.id,
             });
             setFloatingDropdown(null);
           }}
+          onPressStart={focusRef.current.hold}
+          onPressEnd={focusRef.current.release}
         />
       )}
     </>
@@ -503,13 +737,18 @@ function FloatingDropdownPortal({
   onSelect,
   onHighlight,
   onDismiss,
+  onPressStart,
+  onPressEnd,
 }: {
   dropdown: FloatingDropdownState;
   pluginName: string;
   wrapperEl: HTMLElement | null;
   onSelect: (option: FloatingDropdownOption) => void;
   onHighlight: (index: number) => void;
-  onDismiss: () => void;
+  onDismiss: (reason: 'outside' | 'scroll' | 'resize') => void;
+  /** A press in the list starts and ends: the pick reaches the frame before the focus is read again. */
+  onPressStart: () => void;
+  onPressEnd: () => void;
 }) {
   const t = useTranslations('plugin_surfaces');
   const tSource = useTranslations('plugins.dialog');
@@ -545,16 +784,16 @@ function FloatingDropdownPortal({
   useEffect(() => {
     const onMouseDown = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        onDismiss();
+        onDismiss('outside');
       }
     };
     const onScroll = (e: Event) => {
       if (dropdownRef.current && dropdownRef.current.contains(e.target as Node)) {
         return; // Allow scroll inside the dropdown listbox itself
       }
-      onDismiss();
+      onDismiss('scroll');
     };
-    const onResize = () => onDismiss();
+    const onResize = () => onDismiss('resize');
 
     document.addEventListener('mousedown', onMouseDown, true);
     window.addEventListener('scroll', onScroll, true);
@@ -591,6 +830,9 @@ function FloatingDropdownPortal({
         zIndex: 99990,
       }}
       className="overflow-auto rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 focus:outline-none animate-in fade-in-50 zoom-in-95 duration-100"
+      onPointerDown={onPressStart}
+      onMouseDown={onPressStart}
+      onClick={onPressEnd}
     >
       {/* Whose list it is, in a row the options scroll under and the plugin's text can't change. */}
       <div

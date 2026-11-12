@@ -105,6 +105,19 @@ function overlaps(a: Box, b: Box): boolean {
 
 const OPTIONS = [{ value: 'a', label: 'Keep me signed in on this device' }];
 
+/**
+ * The user goes into the frame (a click in its Combobox: the app had the focus, now the frame has
+ * it). The host draws a list only while the user is in the frame (plugin-dropdown-focus.test.tsx),
+ * so every request here comes with the user in it.
+ */
+function enterFrame(slot: string) {
+  const iframe = document.querySelector<HTMLIFrameElement>(`[data-plugin-iframe-slot="helper:${slot}"] iframe`)!;
+  const before = document.createElement('button');
+  document.body.appendChild(before);
+  act(() => { before.focus(); iframe.tabIndex = 0; iframe.focus(); });
+  before.remove();
+}
+
 describe('the list of a frame in the plugin\'s own dialog', () => {
   it('does not lie over the dialog\'s header, where the host names the plugin', async () => {
     plugin();
@@ -128,6 +141,7 @@ describe('the list of a frame in the plugin\'s own dialog', () => {
 
     // The anchor covers the frame from its top to its bottom (the host keeps it inside the frame).
     const opts = createSlotInstance.mock.calls[0][0];
+    enterFrame('plugin-dialog');
     act(() => opts.onFloatingDropdown({
       type: 'floating-dropdown-open', id: 'l1',
       rect: { left: 0, top: 0, bottom: 600, width: 500, height: 600 },
@@ -159,6 +173,7 @@ describe('a frame that shows nothing', () => {
     // Nothing of the banner's frame is on screen; the host still names the plugin beside it.
     expect(screen.getByRole('button', { name: /^plugin_menu / })).toBeTruthy();
 
+    enterFrame('app-top-banner');
     act(() => opts.onFloatingDropdown({
       type: 'floating-dropdown-open', id: 'l2',
       rect: { left: 0, top: 0, bottom: 0, width: 1024, height: 0 },
@@ -170,6 +185,7 @@ describe('a frame that shows nothing', () => {
 
   it('gets no list when its panel is hidden (a box of 0 x 0)', async () => {
     const opts = await banner(40, { left: 0, top: 0, right: 0, bottom: 0 });
+    enterFrame('app-top-banner');
     act(() => opts.onFloatingDropdown({
       type: 'floating-dropdown-open', id: 'l3',
       rect: { left: 0, top: 0, bottom: 20, width: 300, height: 20 },
@@ -181,6 +197,7 @@ describe('a frame that shows nothing', () => {
   // Control: a banner that shows still gets its list.
   it('still gets a list when the banner shows', async () => {
     const opts = await banner(40, { left: 0, top: 0, right: 900, bottom: 40 });
+    enterFrame('app-top-banner');
     act(() => opts.onFloatingDropdown({
       type: 'floating-dropdown-open', id: 'l4',
       rect: { left: 0, top: 0, bottom: 30, width: 300, height: 30 },
