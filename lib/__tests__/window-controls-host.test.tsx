@@ -6,7 +6,7 @@ import { WindowControlsHost } from '@/components/layout/window-controls-host';
 import { WindowMenuBar } from '@/components/layout/window-menu-bar';
 import { menuKeyText } from '@/lib/desktop/menu-bar';
 import { desktopBootScript } from '@/lib/desktop/boot';
-import { CONTROLS_ATTRIBUTE, CONTROLS_LEFT_ATTRIBUTE, DRAWER_LEFT_ATTRIBUTE, DRAWER_RIGHT_ATTRIBUTE, ROW_ATTRIBUTE, ROW_LEFT_ATTRIBUTE, ROW_RIGHT_ATTRIBUTE, TITLEBAR_RIGHT_VAR, TITLEBAR_ROW_VAR, markWindowRows, readTitlebarArea, watchWindowRows } from '@/lib/window-controls-overlay';
+import { CONTROLS_ATTRIBUTE, CONTROLS_LEFT_ATTRIBUTE, DRAWER_LEFT_ATTRIBUTE, DRAWER_RIGHT_ATTRIBUTE, ROW_ATTRIBUTE, ROW_LEFT_ATTRIBUTE, ROW_LEFT_VAR, ROW_RIGHT_ATTRIBUTE, TITLEBAR_RIGHT_VAR, TITLEBAR_ROW_VAR, markWindowRows, readTitlebarArea, watchWindowRows } from '@/lib/window-controls-overlay';
 
 class FakeOverlay extends EventTarget {
   visible = true;
@@ -550,6 +550,63 @@ describe('which rows hold the controls', () => {
     expect(list.hasAttribute(ROW_RIGHT_ATTRIBUTE)).toBe(false);
   });
 
+  it('macOS: a row right of the rail makes room only for the part of the traffic lights over it', () => {
+    const sidebar = row('h-14', { left: 56, right: 300 });
+    const list = row('h-14', { left: 300, right: W });
+    markWindowRows({ x: 78, y: 0, width: W - 78, height: 56 });
+    expect(sidebar.style.getPropertyValue(ROW_LEFT_VAR)).toBe('22px');
+    expect(list.style.getPropertyValue(ROW_LEFT_VAR)).toBe('');
+  });
+
+  it('macOS: a row from the window\'s left edge makes room for all of the traffic lights', () => {
+    const dialogRow = row('h-12', { left: 0, right: W });
+    markWindowRows({ x: 78, y: 0, width: W - 78, height: 56 });
+    expect(dialogRow.style.getPropertyValue(ROW_LEFT_VAR)).toBe('78px');
+  });
+
+  it('macOS: rounds the room to whole pixels', () => {
+    const sidebar = row('h-14', { left: 55.6, right: 300 });
+    markWindowRows({ x: 78, y: 0, width: W - 78, height: 56 });
+    expect(sidebar.style.getPropertyValue(ROW_LEFT_VAR)).toBe('22px');
+  });
+
+  it('macOS: a row that moves right of the traffic lights loses its room', () => {
+    const sidebar = row('h-14', { left: 56, right: 300 });
+    const area = { x: 78, y: 0, width: W - 78, height: 56 };
+    markWindowRows(area);
+    expect(sidebar.style.getPropertyValue(ROW_LEFT_VAR)).toBe('22px');
+    sidebar.getBoundingClientRect = () => ({ left: 120, right: 360, top: 0, bottom: 56, width: 240, height: 56, x: 120, y: 0, toJSON: () => ({}) });
+    markWindowRows(area);
+    expect(sidebar.hasAttribute(ROW_LEFT_ATTRIBUTE)).toBe(false);
+    expect(sidebar.style.getPropertyValue(ROW_LEFT_VAR)).toBe('');
+  });
+
+  it('macOS: writing the room does not set off pass after pass', async () => {
+    const sidebar = row('h-14', { left: 56, right: 300 });
+    const measure = vi.spyOn(sidebar, 'getBoundingClientRect');
+    const stop = watchWindowRows({ x: 78, y: 0, width: W - 78, height: 56 });
+    expect(sidebar.style.getPropertyValue(ROW_LEFT_VAR)).toBe('22px');
+    const settle = async () => {
+      for (let i = 0; i < 5; i++) await Promise.resolve();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    };
+    await settle();
+    const passes = measure.mock.calls.length;
+    await settle();
+    await settle();
+    expect(measure.mock.calls.length).toBe(passes);
+    // At most the one pass the first write sets off.
+    expect(passes).toBeLessThanOrEqual(2);
+    // A pass with nothing new leaves the style alone: a browser reports every write
+    // to it, even of the same value, and that would run the next pass.
+    const write = vi.spyOn(sidebar.style, 'setProperty');
+    document.body.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await settle();
+    expect(measure.mock.calls.length).toBe(passes + 1);
+    expect(write).not.toHaveBeenCalled();
+    stop();
+  });
+
   it('a mark goes when the row no longer lies there', () => {
     const reader = row('h-14', { left: 700, right: W });
     markWindowRows(AREA);
@@ -598,6 +655,10 @@ describe('the page roots and the stylesheet', () => {
 
   it('does not key on the display-mode media query, which is false in Electron', () => {
     expect(css).not.toMatch(/display-mode:\s*window-controls-overlay/);
+  });
+
+  it('pads a row under the traffic lights by its own room, the window\'s inset where it has none', () => {
+    expect(css).toMatch(/\[data-window-row-left\] \{\s*padding-left: calc\(var\(--window-row-left-inset, var\(--titlebar-left-inset\)\) \+ 0\.5rem\) !important;/);
   });
 
   it('drags by the app\'s own rows, and leaves what\'s clickable alone', () => {

@@ -735,8 +735,12 @@ html[data-window-controls] [data-pane-strip] {
   align-items: flex-end;
 }
 
+/*
+ * As far as the traffic lights reach into the row, which lib/window-controls-overlay.ts
+ * sets on each: a row right of the rail needs only the part past the rail.
+ */
 html[data-window-controls] [data-window-row-left] {
-  padding-left: calc(var(--titlebar-left-inset) + 0.5rem) !important;
+  padding-left: calc(var(--window-row-left-inset, var(--titlebar-left-inset)) + 0.5rem) !important;
 }
 
 /*
