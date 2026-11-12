@@ -45,15 +45,30 @@ export function sharedStoreUrl(): string | null {
   return process.env.REDIS_URL || readFileEnv(process.env.REDIS_URL_FILE) || null;
 }
 
-/** The password in a store address, read as ioredis reads it; undefined when it isn't one. */
+/**
+ * The password ioredis will send for a store address, read the way its
+ * parseURL reads it (ioredis 5, built/utils/index.js): '' for none,
+ * undefined when ioredis can't read the address either.
+ */
 function storeUrlPassword(url: string): string | undefined {
+  // The last ?password= wins, as in ioredis' loop over the query.
+  const fromQuery = (query: string) => new URLSearchParams(query).getAll('password').pop() ?? '';
   try {
+    // A port number alone.
+    if (!Number.isNaN(Number(url)) && (parseFloat(url) | 0) === parseFloat(url)) return '';
     // A socket path takes its password from the query only.
     if (url.startsWith('/') && !url.startsWith('//')) {
-      return new URLSearchParams(url.split('?')[1] ?? '').get('password') ?? '';
+      const q = url.indexOf('?');
+      return q === -1 ? '' : fromQuery(url.slice(q + 1));
     }
     const parsed = new URL(/^rediss?:\/\//i.test(url) ? url : url.startsWith('//') ? `redis:${url}` : `redis://${url}`);
-    return decodeURIComponent(parsed.password) || parsed.searchParams.get('password') || '';
+    // A user or a password in the address wins, even an empty password: the
+    // query counts only when the address has neither.
+    if (parsed.username || parsed.password) {
+      decodeURIComponent(parsed.username);
+      return decodeURIComponent(parsed.password);
+    }
+    return fromQuery(parsed.search);
   } catch {
     return undefined;
   }

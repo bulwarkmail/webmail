@@ -2,6 +2,7 @@
  * @vitest-environment node
  */
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,8 +27,13 @@ vi.mock('ioredis', () => {
   return { default: FakeRedis };
 });
 
-import { bootState, getStore, setBootState, setStoreForTests } from '../index';
+import { bootState, getStore, setBootState, setStoreForTests, storeUrlRefusal } from '../index';
 import { bootGateResponse } from '../boot-gate';
+
+// ioredis' own URL reader, the one the store's client runs on the address (not mocked).
+const { parseURL } = createRequire(import.meta.url)('ioredis/built/utils/index.js') as {
+  parseURL: (url: string) => { password?: string | null };
+};
 
 const ENV = ['REDIS_URL', 'REDIS_URL_FILE', 'SHARED_STORE_ALLOW_NO_PASSWORD'] as const;
 let saved: Record<string, string | undefined>;
@@ -108,6 +114,31 @@ describe('a shared store address with a password', () => {
     process.env.REDIS_URL = url;
     expect(getStore().mode).toBe('redis');
     expect(connections).toEqual([url]);
+  });
+});
+
+describe('the password is the one ioredis will send', () => {
+  it.each([
+    'redis://valkey:6379/0',
+    'redis://:a-made-up-password@valkey:6379/0',
+    'redis://default:a-made-up-password@valkey:6379/0',
+    'redis://valkey:6379/0?password=a-made-up-password',
+    // A user in the address: ioredis takes the address' (empty) password and ignores the query.
+    'redis://default@valkey:6379/0?password=a-made-up-password',
+    // Neither user nor password in the address: the query counts.
+    'redis://:@valkey:6379/0?password=a-made-up-password',
+    // The last ?password= wins.
+    'redis://valkey:6379/0?password=a-made-up-password&password=',
+    'redis://valkey:6379/0?password=&password=a-made-up-password',
+    'valkey:6379?password=a-made-up-password',
+    '//valkey:6379?password=a-made-up-password',
+    '/run/valkey/valkey.sock?password=a-made-up-password',
+    '/run/valkey/valkey.sock',
+    '6379',
+    'rediss://:made%2Fup%40pass@valkey:6380/0',
+  ])('%s', (url) => {
+    const sends = parseURL(url).password ?? '';
+    expect({ url, refused: storeUrlRefusal(url) !== null }).toEqual({ url, refused: sends === '' });
   });
 });
 
