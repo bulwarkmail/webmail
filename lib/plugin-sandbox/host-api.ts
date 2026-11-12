@@ -2131,11 +2131,11 @@ export async function dispatchApiCall(
     case 'storage.remove': storageRemove(plugin.id, args[0] as string); return undefined;
     case 'storage.keys': return storageKeys(plugin.id);
 
-    case 'toast.success': showPluginToast(plugin.id, 'success', args[0]); return undefined;
-    case 'toast.error': showPluginToast(plugin.id, 'error', args[0]); return undefined;
-    case 'toast.info': showPluginToast(plugin.id, 'info', args[0]); return undefined;
-    case 'toast.warning': showPluginToast(plugin.id, 'warning', args[0]); return undefined;
-    case 'toast.progress': return showPluginProgressToast(plugin.id, args[0], opts?.toastSignal);
+    case 'toast.success': showPluginToast(plugin, 'success', args[0]); return undefined;
+    case 'toast.error': showPluginToast(plugin, 'error', args[0]); return undefined;
+    case 'toast.info': showPluginToast(plugin, 'info', args[0]); return undefined;
+    case 'toast.warning': showPluginToast(plugin, 'warning', args[0]); return undefined;
+    case 'toast.progress': return showPluginProgressToast(plugin, args[0], opts?.toastSignal);
     case 'toast.dismiss': dismissPluginToast(plugin.id, args[0], opts?.toastSignal); return undefined;
 
     case 'http.post':  return doHttpPost(plugin, args[0] as string, args[1], args[2] as PluginHttpPostOptions | undefined);

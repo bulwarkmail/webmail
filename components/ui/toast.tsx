@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useState, useCallback, useRef, useId } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Loader2 } from "@/components/icons";
+import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Loader2, Puzzle } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
 import { useContextMenuOpen } from "@/components/ui/context-menu";
@@ -56,6 +56,13 @@ export interface Toast {
    * to undo." for a toast whose Undo has a shortcut.
    */
   srHint?: string;
+  /**
+   * A plugin asked for the toast (api.toast.*): the toast names it in a line
+   * of its own under the text, which the plugin's text can't reach. The name
+   * is kept with the toast, so it still shows once the plugin is turned off.
+   */
+  pluginId?: string;
+  pluginName?: string;
 }
 
 interface ToastProps {
@@ -110,6 +117,7 @@ const SWIPE_DISMISS_DISTANCE = 72;
 
 export function ToastItem({ toast, onClose, held = false, stackHovered = false, onFocusLost }: ToastProps) {
   const tCommon = useTranslations("common");
+  const tPlugin = useTranslations("plugins.dialog");
   const Icon = icons[toast.type];
   const [exiting, setExiting] = useState(false);
   // Swipe to dismiss (touch only): how far it is dragged, and where it flew off to.
@@ -293,6 +301,12 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
           <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug">{toast.title}</p>
           {toast.message && (
             <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug">{toast.message}</p>
+          )}
+          {toast.pluginId && (
+            <p className="mt-1 flex items-center gap-1 text-[0.6875rem] text-muted-foreground" data-toast-source="">
+              <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{tPlugin("from_plugin", { name: toast.pluginName || toast.pluginId })}</span>
+            </p>
           )}
           {toast.tertiaryAction && (
             <div className="flex flex-wrap items-center gap-1 mt-1.5 -ms-1.5">
