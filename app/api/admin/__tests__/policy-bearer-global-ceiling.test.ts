@@ -5,13 +5,16 @@
 // address, and the client address the webmail keys its budget on can be made
 // up (X-Forwarded-For on an instance without a proxy in front) or rotated. So
 // refused tokens stop being checked past a ceiling across all addresses: 20
-// per 15 minutes, as for stored credentials. Past it the route answers the
-// public part of the policy with Retry-After, without asking the mail server.
-// A valid token is never counted. A value that can't be a token is not asked
-// about at all.
+// per 15 minutes, as for stored credentials. Past it a token that can't be
+// checked gets 503 with Retry-After, without asking the mail server: the app
+// keeps its cached full policy on an error, where a public answer would
+// replace it. A token that checked out before is remembered (up to its
+// lifetime or an hour) and still answered in full. A valid token is never
+// counted. A value that can't be a token is not asked about at all.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
+vi.mock('@/lib/auth/session-secret', () => ({ getSessionSecret: () => 's'.repeat(64), hasSessionSecret: () => true }));
 vi.mock('@/lib/auth/instance-details', () => ({
   canSeeInstanceDetails: async () => false,
   signedInIdentity: async () => null,
@@ -101,15 +104,64 @@ describe('refused Bearer tokens on GET /api/admin/policy', () => {
     expect(res.body.forceEnabledPlugins).toEqual(['acme-crm']);
   });
 
-  it('answers the public policy with Retry-After once the ceiling is reached, also for a valid token', async () => {
+  it('answers 503 with Retry-After for a token it can no longer check, never the public policy', async () => {
     for (let i = 0; i < 20; i++) await get(address(i), wrong(i));
     fetchMock.mockClear();
     const res = await get('198.51.100.78', GOOD_TOKEN);
-    expect(res.status).toBe(200);
-    expect(res.scope).toBe('public');
-    expect(res.body.forceEnabledPlugins).toEqual([]);
+    expect(res.status).toBe(503);
+    expect(res.scope).toBeNull();
+    expect(res.body.forceEnabledPlugins).toBeUndefined();
     expect(Number(res.retryAfter)).toBeGreaterThan(0);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('still answers a request without a token with the public policy (the login page)', async () => {
+    for (let i = 0; i < 20; i++) await get(address(i), wrong(i));
+    const res = await GET(new NextRequest('https://webmail.example/api/admin/policy', { headers: { 'x-forwarded-for': '198.51.100.80' } }));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-bulwark-policy-scope')).toBe('public');
+  });
+
+  it('answers a token that checked out before in full past the ceiling, without asking the mail server', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      expect((await get('198.51.100.81', GOOD_TOKEN)).scope).toBeNull();
+      // Past the minute the check is kept for, and past the ceiling.
+      vi.setSystemTime(Date.now() + 5 * 60_000);
+      for (let i = 0; i < 20; i++) await get(address(i), wrong(i));
+      fetchMock.mockClear();
+      const res = await get('198.51.100.81', GOOD_TOKEN);
+      expect(res.status).toBe(200);
+      expect(res.body.forceEnabledPlugins).toEqual(['acme-crm']);
+      expect(fetchMock).not.toHaveBeenCalled();
+      // Not past an hour.
+      vi.setSystemTime(Date.now() + 61 * 60_000);
+      for (let i = 0; i < 20; i++) await get(address(100 + i), wrong(100 + i));
+      expect((await get('198.51.100.81', GOOD_TOKEN)).status).toBe(503);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('remembers a token no longer than the end it names', async () => {
+    const b64 = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
+    const jwt = `${b64({ alg: 'none' })}.${b64({ exp: Math.floor(Date.now() / 1000) + 120 })}.c2lnbmF0dXJl`;
+    fetchMock.mockImplementation(async (_url: string, init: RequestInit) => {
+      if (new Headers(init.headers).get('authorization') !== `Bearer ${jwt}`) return new Response('', { status: 401 });
+      return new Response(JSON.stringify({
+        apiUrl: `${SERVER}/jmap/`, username: 'alice@example.org',
+        primaryAccounts: { 'urn:ietf:params:jmap:mail': 'a1' }, accounts: { a1: { name: 'alice@example.org' } },
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+    });
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      expect((await get('198.51.100.82', jwt)).status).toBe(200);
+      vi.setSystemTime(Date.now() + 3 * 60_000);
+      for (let i = 0; i < 20; i++) await get(address(i), wrong(i));
+      expect((await get('198.51.100.82', jwt)).status).toBe(503);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('does not count valid tokens against the ceiling', async () => {

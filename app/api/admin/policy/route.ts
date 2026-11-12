@@ -50,7 +50,8 @@ function ifMatchVersion(request: NextRequest): string | undefined {
  * `Authorization: Bearer <JMAP access token>` for the configured mail server
  * and get what a signed-in user of that account gets here
  * (lib/auth/bearer-identity.ts). A token that doesn't check out gets the
- * public subset, as without one.
+ * public subset, as without one; a token that couldn't be checked gets 503
+ * with Retry-After.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -61,6 +62,15 @@ export async function GET(request: NextRequest) {
     if (!(await canSeeInstanceDetails(request))) {
       const token = await bearerIdentity(request);
       if (token.identity) return userPolicyResponse(policy, token.identity.addresses);
+      // The token couldn't be checked (too many refused tokens lately). A
+      // public answer would replace the app's cached full policy, switching
+      // the organisation's rules off for it; on an error it keeps that copy.
+      if (token.retryAfterSeconds) {
+        return NextResponse.json(
+          { error: 'Too many requests with tokens that could not be checked; try again later' },
+          { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(token.retryAfterSeconds) } },
+        );
+      }
       // The login page needs the theme policy and gates; the plugin lists,
       // push relays and sidebar app URLs map the deployment and are only
       // used after signing in, when the client fetches the policy again.
@@ -78,14 +88,7 @@ export async function GET(request: NextRequest) {
           organisation: undefined,
           scopes: [],
         },
-        {
-          headers: {
-            'Cache-Control': 'no-store',
-            [POLICY_SCOPE_HEADER]: 'public',
-            // The token was not checked: too many refused tokens lately.
-            ...(token.retryAfterSeconds ? { 'Retry-After': String(token.retryAfterSeconds) } : {}),
-          },
-        },
+        { headers: { 'Cache-Control': 'no-store', [POLICY_SCOPE_HEADER]: 'public' } },
       );
     }
     // Users get only the scopes for their own domains, so on an instance

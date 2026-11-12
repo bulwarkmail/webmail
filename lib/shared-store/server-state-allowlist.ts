@@ -43,6 +43,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'lib/admin/paths.ts#cachedReadOnly', class: 'per-process', why: 'parsed ADMIN_CONFIG_READONLY env' },
   { site: 'lib/admin/plugin-approvals.ts#maxPackageBytes', class: 'per-process', why: 'a limit tests can lower' },
   { site: 'lib/auth/bearer-identity.ts#cache', class: 'cache', why: 'bearer token identities, 60 s valid / 30 s invalid, capped at 1000' },
+  { site: 'lib/auth/bearer-identity.ts#goodTokens', class: 'cache', why: 'bearer tokens that checked out, by HMAC, until they end or for an hour, capped at 5000; another replica checks again' },
   { site: 'lib/auth/bearer-identity.ts#refusedBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/client-address.ts#NOT_A_CLIENT', class: 'per-process', why: 'a constant address list built once' },
   { site: 'lib/auth/handoff-store.ts#createBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
