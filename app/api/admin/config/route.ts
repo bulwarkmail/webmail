@@ -17,6 +17,21 @@ import { parseNoThirdPartyEnv } from '@/lib/third-party-mode';
 // raw value to the client.
 const SENSITIVE_PLACEHOLDERS = new Set(['your-secret-key-here']);
 
+/** A key of the settings map itself, never one it inherits (`constructor`, `__proto__`). */
+function isConfigKey(key: string): boolean {
+  return Object.hasOwn(CONFIG_ENV_MAP, key);
+}
+
+/**
+ * The session secret is the key behind every session cookie and the
+ * synced-settings encryption. The dashboard hides its value for a reason;
+ * letting an admin session replace it with a value of its choosing would
+ * hand that session the key, and removing it would sign everyone out and
+ * orphan everything sealed with it. Only the setup wizard writes it, before
+ * any session exists.
+ */
+const SESSION_SECRET_REFUSED = 'sessionSecret cannot be changed from the dashboard. Set SESSION_SECRET in the environment instead.';
+
 /**
  * GET /api/admin/config - Get full config with sources (admin-protected)
  *
@@ -76,21 +91,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validate keys
-    const validKeys = Object.keys(CONFIG_ENV_MAP);
-    const invalidKeys = Object.keys(updates).filter(k => !validKeys.includes(k));
+    const invalidKeys = Object.keys(updates).filter(k => !isConfigKey(k));
     if (invalidKeys.length > 0) {
       return NextResponse.json({ error: `Unknown config keys: ${invalidKeys.join(', ')}` }, { status: 400 });
     }
 
-    // The session secret is the key behind every session cookie and the
-    // synced-settings encryption. The dashboard hides its value for a reason;
-    // letting an admin session replace it with a value of its choosing would
-    // hand that session the key (and sign everyone else out). Only the setup
-    // wizard writes it, before any session exists.
-    if ('sessionSecret' in updates) {
-      return NextResponse.json({
-        error: 'sessionSecret cannot be changed from the dashboard. Set SESSION_SECRET in the environment instead.',
-      }, { status: 400 });
+    if (Object.hasOwn(updates, 'sessionSecret')) {
+      return NextResponse.json({ error: SESSION_SECRET_REFUSED }, { status: 400 });
     }
 
     // The directory is fetched server-side on the admin's behalf and its JSON
@@ -220,8 +227,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Key is required' }, { status: 400 });
     }
 
-    if (!CONFIG_ENV_MAP[key]) {
+    if (!isConfigKey(key)) {
       return NextResponse.json({ error: `Unknown config key: ${key}` }, { status: 400 });
+    }
+
+    // Reverting the session secret removes the one the setup wizard stored.
+    if (key === 'sessionSecret') {
+      return NextResponse.json({ error: SESSION_SECRET_REFUSED }, { status: 400 });
     }
 
     const oldValue = configManager.get(key);
