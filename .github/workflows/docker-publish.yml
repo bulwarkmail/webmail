@@ -5,22 +5,20 @@ on:
     branches:
       - main
       - dev
+    # The image is built from `COPY . .` (minus .dockerignore), so every
+    # change builds it except the ones below that never reach it. A `!`
+    # pattern drops what the patterns before it matched; a later pattern
+    # takes a path back in.
     paths:
-      - "Dockerfile"
-      - ".dockerignore"
-      - "app/**"
-      - "components/**"
-      - "contexts/**"
-      - "hooks/**"
-      - "lib/**"
-      - "stores/**"
-      - "locales/**"
+      - "**"
+      - "!**.md"
+      - "!integration/**"
+      - "!deploy/**"
+      - "!screenshots/**"
+      - "!.github/**"
+      # public/ is copied into the image as is, markdown included.
       - "public/**"
-      - "package.json"
-      - "package-lock.json"
-      - "scripts/healthcheck.mjs"
-      - "scripts/sourcemaps.mjs"
-      - "scripts/upload-sourcemaps.sh"
+      - ".dockerignore"
       - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
 

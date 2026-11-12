@@ -15,21 +15,20 @@ on:
     types: [published]
   push:
     branches: [main]
+    # Dockerfile.lite builds from `COPY . .` (minus .dockerignore), so every
+    # change runs this except the ones below that never reach the image. A
+    # `!` pattern drops what the patterns before it matched; a later pattern
+    # takes a path back in.
     paths: &paths
-      - "Dockerfile.lite"
-      - ".dockerignore"
-      - "scripts/lite/**"
-      - "app/**"
-      - "components/**"
-      - "contexts/**"
-      - "hooks/**"
-      - "lib/**"
-      - "stores/**"
-      - "locales/**"
+      - "**"
+      - "!**.md"
+      - "!integration/**"
+      - "!deploy/**"
+      - "!screenshots/**"
+      - "!.github/**"
+      # public/ goes into the export as is, markdown included.
       - "public/**"
-      - "next.config.ts"
-      - "package.json"
-      - "package-lock.json"
+      - ".dockerignore"
       - ".github/workflows/docker-publish-lite.yml"
   pull_request:
     paths: *paths
