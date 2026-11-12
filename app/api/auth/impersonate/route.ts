@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { getClientIP } from '@/lib/admin/session';
 import { encryptSession } from '@/lib/auth/crypto';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { getCookieOptions } from '@/lib/oauth/cookie-config';
@@ -200,10 +201,9 @@ export async function GET(request: NextRequest) {
     iss: claims.iss,
     expires_at: credential.expiresAt,
     restorable: !!restoreHandle,
-    ip:
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      request.headers.get('x-real-ip') ||
-      null,
+    // The address the rate limits key on (TRUSTED_PROXY_DEPTH from the right),
+    // not the first X-Forwarded-For entry, which the client writes itself.
+    ip: getClientIP(request),
     referer: request.headers.get('referer'),
     user_agent: request.headers.get('user-agent'),
   });

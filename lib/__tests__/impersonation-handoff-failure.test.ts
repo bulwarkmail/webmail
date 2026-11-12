@@ -60,6 +60,8 @@ function mintJwt(mailbox: string) {
 let stored: { id: string; description: string }[] = [];
 /** How the create is answered after Stalwart made the app password. */
 let createAnswer: 'ok' | 'garbled' | 'no-id' | 'http-500' = 'ok';
+/** The listing fails with the new password in its body. */
+let listFails = false;
 
 function stalwart(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = String(input);
@@ -67,7 +69,10 @@ function stalwart(input: RequestInfo | URL, init?: RequestInit): Promise<Respons
     return Promise.resolve(Response.json({ apiUrl: `${SERVER}/jmap/`, accounts: { acc: {} }, primaryAccounts: { 'urn:ietf:params:jmap:mail': 'acc' } }));
   }
   const [name, args] = JSON.parse(String(init?.body)).methodCalls[0] as [string, Record<string, unknown>];
-  if (name === 'x:AppPassword/get') return Promise.resolve(Response.json({ methodResponses: [[name, { list: stored }, '0']] }));
+  if (name === 'x:AppPassword/get') {
+    if (listFails) return Promise.resolve(new Response(`broken ${NEW_PASSWORD}`, { status: 500 }));
+    return Promise.resolve(Response.json({ methodResponses: [[name, { list: stored }, '0']] }));
+  }
   if (args.create) {
     const entry = (args.create as Record<string, { description: string }>).imp;
     if (createAnswer === 'http-500') return Promise.resolve(new Response(`oops ${NEW_PASSWORD}`, { status: 500 }));
@@ -85,9 +90,9 @@ function stalwart(input: RequestInfo | URL, init?: RequestInit): Promise<Respons
   return Promise.resolve(Response.json({ methodResponses: [[name, { destroyed: destroy }, '0']] }));
 }
 
-async function handOff() {
+async function handOff(headers: Record<string, string> = {}) {
   const { GET } = await import('@/app/api/auth/impersonate/route');
-  return GET(new NextRequest(`https://webmail.example/api/auth/impersonate?token=${mintJwt('alice@example.org')}`));
+  return GET(new NextRequest(`https://webmail.example/api/auth/impersonate?token=${mintJwt('alice@example.org')}`, { headers }));
 }
 
 /** Every 6-character piece of the new password that shows up in the log. */
@@ -111,6 +116,7 @@ describe('an impersonation hand-off that fails', () => {
     jar = new Map();
     stored = [];
     createAnswer = 'ok';
+    listFails = false;
     logs.lines = [];
     secret.value = 's'.repeat(64);
     resetLocalStoreForTests();
@@ -163,5 +169,20 @@ describe('an impersonation hand-off that fails', () => {
     createAnswer = 'garbled';
     await handOff();
     expect(stored.map((p) => p.id)).toEqual(['users-own', 'cred-2']);
+  });
+
+  it('logs a fixed line with the status when the app password it may have made cannot be deleted', async () => {
+    createAnswer = 'garbled';
+    listFails = true;
+    expect((await handOff()).status).toBe(502);
+    const line = logs.lines.find(([message]) => String(message).startsWith('Impersonation app password not deleted'));
+    expect(line?.[1]).toEqual({ status: 500 });
+    expect(leakedPieces()).toEqual([]);
+  });
+
+  it('logs the client address the rate limits use, not the first forwarded entry', async () => {
+    expect((await handOff({ 'x-forwarded-for': '198.51.100.66, 203.0.113.9' })).status).toBe(303);
+    const line = logs.lines.find(([message]) => message === 'Impersonation session granted');
+    expect((line?.[1] as { ip?: string }).ip).toBe('203.0.113.9');
   });
 });

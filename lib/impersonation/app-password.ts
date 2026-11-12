@@ -1,4 +1,5 @@
 import { fetchJmapSession, postJmap, rebaseApiUrl } from '@/lib/stalwart/jmap-api';
+import { logger } from '@/lib/logger';
 
 const STALWART_USING = ['urn:ietf:params:jmap:core', 'urn:stalwart:jmap'];
 
@@ -172,8 +173,12 @@ async function deleteByDescription(serverUrl: string, authHeader: string, descri
     const list = (result.list as { id?: string; description?: string }[] | undefined) ?? [];
     const ids = list.filter((p) => p.id && p.description === description).map((p) => p.id as string);
     if (ids.length > 0) await callStalwart(serverUrl, authHeader, ['x:AppPassword/set', { destroy: ids }, '0']);
-  } catch {
+  } catch (error) {
     // Expires on its own (expiresAt), and carries the handoff's description.
+    // A fixed text and the status only: the error can quote Stalwart's answer.
+    logger.warn('Impersonation app password not deleted after a failed hand-off; it expires on its own', {
+      status: error instanceof ImpersonationCredentialError && error.status !== undefined ? error.status : null,
+    });
   }
 }
 
