@@ -7278,7 +7278,7 @@
     "cancel_not_organizer": "這則取消通知由 {sender} 傳送，但你行事曆中此活動的主辦人是 {organizer}。只有主辦人才能取消活動。如果你信任這封郵件，請自行移除。",
     "cancel_unverified": "無法確認這則取消通知來自主辦人。如果你信任這封郵件，請自行移除該活動。",
     "card_sender": "來自 {domain}",
-    "card_sender_title": "郵件伺服器已確認這封郵件來自 {domain}。",
+    "card_sender_title": "此郵件已通過郵件伺服器對 {domain} 的寄件者檢查。",
     "outside_link": "其他網站",
     "outside_link_title": "此連結會前往 {host}，不在寄件者的網域 {domain} 之內。"
   },

@@ -7290,7 +7290,7 @@
     "cancel_not_organizer": "Thông báo hủy này được gửi từ {sender}, nhưng người tổ chức sự kiện này trong lịch của bạn là {organizer}. Chỉ người tổ chức mới có thể hủy sự kiện. Hãy tự xóa nếu bạn tin tưởng thư này.",
     "cancel_unverified": "Không thể xác minh thông báo hủy này đến từ người tổ chức. Hãy tự xóa sự kiện nếu bạn tin tưởng thư này.",
     "card_sender": "từ {domain}",
-    "card_sender_title": "Máy chủ thư đã xác nhận thư này đến từ {domain}.",
+    "card_sender_title": "Thư này đã vượt qua bước kiểm tra người gửi của máy chủ thư cho {domain}.",
     "outside_link": "Trang khác",
     "outside_link_title": "Liên kết này dẫn tới {host}, nằm ngoài {domain}, tên miền của người gửi."
   },

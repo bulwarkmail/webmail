@@ -7278,7 +7278,7 @@
     "cancel_not_organizer": "Toto zrušenie bolo odoslané od {sender}, ale organizátorom udalosti vo vašom kalendári je {organizer}. Zrušiť ju môže iba organizátor. Ak tejto správe dôverujete, odstráňte ju sami.",
     "cancel_unverified": "Nepodarilo sa overiť, že toto zrušenie pochádza od organizátora. Ak tejto správe dôverujete, odstráňte udalosť sami.",
     "card_sender": "od {domain}",
-    "card_sender_title": "Poštový server overil, že táto správa pochádza z {domain}.",
+    "card_sender_title": "Táto správa prešla kontrolou odosielateľa na poštovom serveri pre {domain}.",
     "outside_link": "Iná stránka",
     "outside_link_title": "Tento odkaz vedie na {host}, mimo {domain}, doménu odosielateľa."
   },

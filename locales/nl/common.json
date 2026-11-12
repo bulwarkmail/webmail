@@ -7278,7 +7278,7 @@
     "cancel_not_organizer": "Deze annulering is verzonden vanaf {sender}, maar de organisator van dit evenement in je agenda is {organizer}. Alleen de organisator kan het annuleren. Verwijder het zelf als je dit bericht vertrouwt.",
     "cancel_unverified": "Er kon niet worden bevestigd dat deze annulering van de organisator komt. Verwijder het evenement zelf als je dit bericht vertrouwt.",
     "card_sender": "van {domain}",
-    "card_sender_title": "De mailserver heeft bevestigd dat dit bericht van {domain} komt.",
+    "card_sender_title": "Dit bericht heeft de afzendercontrole van de mailserver voor {domain} doorstaan.",
     "outside_link": "Andere site",
     "outside_link_title": "Deze link gaat naar {host}, buiten {domain}, het domein van de afzender."
   },

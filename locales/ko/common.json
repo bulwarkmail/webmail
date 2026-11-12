@@ -7278,7 +7278,7 @@
     "cancel_not_organizer": "이 취소는 {sender}님이 보냈지만, 캘린더에 있는 이 일정의 주최자는 {organizer}님이에요. 일정은 주최자만 취소할 수 있어요. 이 메시지를 신뢰한다면 직접 삭제하세요.",
     "cancel_unverified": "이 취소가 주최자에게서 왔는지 확인할 수 없어요. 이 메시지를 신뢰한다면 일정을 직접 삭제하세요.",
     "card_sender": "{domain}에서 보냄",
-    "card_sender_title": "메일 서버가 이 메시지가 {domain}에서 왔음을 확인했어요.",
+    "card_sender_title": "이 메시지는 {domain}에 대한 메일 서버의 발신자 확인을 통과했어요.",
     "outside_link": "다른 사이트",
     "outside_link_title": "이 링크는 보낸 사람의 도메인 {domain} 밖에 있는 {host}(으)로 연결돼요."
   },

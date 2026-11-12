@@ -7278,7 +7278,7 @@
     "cancel_not_organizer": "Ezt a lemondást {sender} küldte, de a naptáradban lévő esemény szervezője {organizer}. Csak a szervező mondhatja le. Ha megbízol ebben az üzenetben, távolítsd el magad.",
     "cancel_unverified": "Nem sikerült ellenőrizni, hogy ez a lemondás a szervezőtől származik. Ha megbízol ebben az üzenetben, távolítsd el magad az eseményt.",
     "card_sender": "feladó: {domain}",
-    "card_sender_title": "A levelezőszerver megerősítette, hogy ez az üzenet innen érkezett: {domain}.",
+    "card_sender_title": "Ez az üzenet átment a levelezőszerver feladó-ellenőrzésén erre a tartományra: {domain}.",
     "outside_link": "Másik webhely",
     "outside_link_title": "Ez a hivatkozás ide vezet: {host}, a feladó tartományán ({domain}) kívülre."
   },
