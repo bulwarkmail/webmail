@@ -155,9 +155,11 @@ export interface DesktopMenuBridge {
   onCommand?: (listener: (id: string) => void) => () => void;
   /**
    * File > Change connection…, once the page asked: restarts on the first screen. False
-   * where a policy forces the connection. An older shell has none.
+   * where a policy forces the connection. An older shell has none. `page` 'org': the first
+   * screen opens on the organisation's web address (desktop#5); a shell before that ignores
+   * it and opens on the email address.
    */
-  changeConnection?: () => Promise<boolean>;
+  changeConnection?: (page?: 'org') => Promise<boolean>;
   /** Shows a native menu. At the pointer when `at` is left out. Answers with the id picked, or null. */
   popup?: (items: DesktopNativeMenuItem[], at?: { x: number; y: number }) => Promise<string | null>;
   /** The strip that stands in for a menu bar in a window with no native bar. */

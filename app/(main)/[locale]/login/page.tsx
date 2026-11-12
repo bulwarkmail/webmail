@@ -2336,7 +2336,7 @@ function LoginPageContent() {
                     message: tP3("connection.message"),
                     confirm: tP3("connection.confirm"),
                     cancel: tCommonP3("cancel"),
-                  });
+                  }, "org");
                 }}
               >
                 {tP3("connection.org_link")}
