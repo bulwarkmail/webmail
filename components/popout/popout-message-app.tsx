@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useDesktopWindowName } from "@/lib/desktop/window-name";
+import { loginFingerprint } from "@/lib/pwa-notify/login-fingerprint";
+import { severalLogins } from "@/lib/sole-login";
+import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import type { Email } from "@/lib/jmap/types";
+import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { ProComposeTabData } from "@/stores/pro-tab-store";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { announceMailChanged, openPopoutChannel } from "@/lib/popout/channel";
@@ -58,6 +62,38 @@ function readLaunch(paramId: string): Launch {
   };
 }
 
+/** A login fingerprint (lib/pwa-notify/login-fingerprint.ts): 32 hex digits, where a login id has an "@". */
+const LOGIN_FINGERPRINT = /^[0-9a-f]{32}$/;
+
+/**
+ * The login a window's address names in `account=`. A login id is taken as
+ * it is. A login fingerprint, which is how a notification's or the desktop
+ * tray's context names a login, is matched against this browser's logins;
+ * one that matches none stays as it is, so the window says it is signed
+ * out, as for any login this browser doesn't hold. `pending` while a
+ * fingerprint is being matched.
+ */
+function useAddressLogin(named: string | undefined): { pending: boolean; login: string | undefined } {
+  const fingerprint = !!named && LOGIN_FINGERPRINT.test(named)
+    && !useAccountStore.getState().accounts.some((entry) => entry.id === named);
+  const [matched, setMatched] = useState<{ named: string; login: string } | null>(null);
+  useEffect(() => {
+    if (!fingerprint || !named) return;
+    let cancelled = false;
+    const entries = useAccountStore.getState().accounts;
+    void Promise.all(entries.map((entry) => loginFingerprint(entry.serverUrl, entry.username)))
+      .then((prints) => entries.find((_, at) => prints[at] === named)?.id ?? named, () => named)
+      .then((login) => {
+        if (!cancelled) setMatched({ named, login });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fingerprint, named]);
+  if (!fingerprint) return { pending: false, login: named };
+  return matched?.named === named ? { pending: false, login: matched.login } : { pending: true, login: undefined };
+}
+
 /** Reply and forward from a message window open a composer window of their own. */
 function useComposeWindow(login: string | undefined): (data: Omit<ProComposeTabData, "sessionId">) => Promise<boolean> {
   const t = useTranslations("pwaWindows");
@@ -89,10 +125,10 @@ type LiveState = Pick<Email, "keywords" | "mailboxIds">;
 
 /**
  * Whether the message still exists, and in which folders. A JMAP move keeps
- * the id, so moved mail stays readable here; only its folders change.
+ * the id, so moved mail stays readable here; only its folders change. Asked
+ * through `client`, the client of the window's own login, or not at all.
  */
-function useMessagePresence(emailId: string, ownerAccountId: string | undefined): { presence: Presence; mailboxIds: string[] | null; liveState: LiveState | null } {
-  const client = useAuthStore((s) => s.client);
+function useMessagePresence(emailId: string, ownerAccountId: string | undefined, client: IJMAPClient | null): { presence: Presence; mailboxIds: string[] | null; liveState: LiveState | null } {
   const [presence, setPresence] = useState<Presence>("present");
   const [mailboxIds, setMailboxIds] = useState<string[] | null>(null);
   const [liveState, setLiveState] = useState<LiveState | null>(null);
@@ -146,7 +182,14 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
   const t = useTranslations("pwaWindows");
   const tSidebar = useTranslations("sidebar");
   const login = useAuthStore((s) => accountId ?? s.activeAccountId ?? undefined);
-  const client = useAuthStore((s) => (login ? s.getClientForAccount(login) : undefined) ?? s.client);
+  // The window's own login only (the auth store's client while the login
+  // table has no entry for the active one). When that login has no client
+  // the window shows nothing of the message: through another login the same
+  // id is another message, with other folders.
+  useAuthStore((s) => s.connectedAccountsRevision);
+  const client: IJMAPClient | null = useAuthStore((s) => (login
+    ? s.getClientForAccount(login) ?? (login === s.activeAccountId ? s.client : null)
+    : null));
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const [subject, setSubject] = useState<string | null>(null);
   const subjectInTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled("tabTitleSubjectEnabled"));
@@ -171,7 +214,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
-  const { presence, mailboxIds, liveState } = useMessagePresence(emailId, ownerAccountId);
+  const { presence, mailboxIds, liveState } = useMessagePresence(emailId, ownerAccountId, client);
   const firstMailboxIds = useRef<string | null>(null);
   if (mailboxIds && firstMailboxIds.current === null) firstMailboxIds.current = mailboxIds.join();
   const moved = !!mailboxIds && firstMailboxIds.current !== mailboxIds.join();
@@ -192,6 +235,14 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
   }, []);
 
   const openCompose = useComposeWindow(login);
+
+  if (!client) {
+    return (
+      <PopoutNotice title={t("session_ended_title")} body={t("session_ended_body")}>
+        <Button onClick={closePopoutWindow}>{t("close_window")}</Button>
+      </PopoutNotice>
+    );
+  }
 
   if (!foldersReady) return <PopoutSkeleton label={t("opening")} />;
 
@@ -214,7 +265,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
       )}
       <ProEmailView
         emailId={emailId}
-        client={client ?? undefined}
+        client={client}
         clientAccountId={login}
         accountId={ownerAccountId}
         onLoaded={handleLoaded}
@@ -232,20 +283,36 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
 
 /** `/popout/message/<id>`: one message in its own window, with no rail, sidebar or list. */
 export function PopoutMessageApp({ id }: { id: string }) {
+  const t = useTranslations();
   const [launch, setLaunch] = useState(() => readLaunch(id));
-  const openCompose = useComposeWindow(launch.accountId);
+  const { pending, login } = useAddressLogin(launch.accountId);
+  const openCompose = useComposeWindow(login);
   // A message from a file went into a folder: from now on the window is that message's,
   // and a reload opens it there.
   const onImported = useCallback((target: { emailId: string; ownerAccountId?: string }) => {
-    window.history.replaceState(window.history.state, "", messagePopoutUrl({ emailId: target.emailId, localAccountId: launch.accountId, ownerAccountId: target.ownerAccountId }));
-    setLaunch({ emailId: target.emailId, accountId: launch.accountId, ownerAccountId: target.ownerAccountId });
-  }, [launch.accountId]);
+    window.history.replaceState(window.history.state, "", messagePopoutUrl({ emailId: target.emailId, localAccountId: login, ownerAccountId: target.ownerAccountId }));
+    setLaunch({ emailId: target.emailId, accountId: login, ownerAccountId: target.ownerAccountId });
+  }, [login]);
+  if (pending) return <PopoutSkeleton label={t("pwaWindows.opening")} />;
+  // Message and blob ids repeat across logins. An address that names no
+  // login (a link made without one, an old bookmark) is the only login's
+  // where there is one; with several it could be any of theirs, and the
+  // window opens nothing instead of the active login's message with that id.
+  if (!login && severalLogins()) {
+    return (
+      <PopoutShell kind="message">
+        <PopoutNotice title={t("account_routing.link_names_no_account")}>
+          <Button onClick={closePopoutWindow}>{t("pwaWindows.close_window")}</Button>
+        </PopoutNotice>
+      </PopoutShell>
+    );
+  }
   return (
-    <PopoutShell kind="message" accountId={launch.accountId}>
+    <PopoutShell kind="message" accountId={login}>
       {launch.blobId ? (
-        <PopoutSavedMessage blobId={launch.blobId} name={launch.fileName} accountId={launch.accountId} openCompose={openCompose} onImported={onImported} />
+        <PopoutSavedMessage blobId={launch.blobId} name={launch.fileName} accountId={login} openCompose={openCompose} onImported={onImported} />
       ) : (
-        <PopoutMessage key={launch.emailId} emailId={launch.emailId} accountId={launch.accountId} ownerAccountId={launch.ownerAccountId} fromLink={launch.fromLink} />
+        <PopoutMessage key={launch.emailId} emailId={launch.emailId} accountId={login} ownerAccountId={launch.ownerAccountId} fromLink={launch.fromLink} />
       )}
     </PopoutShell>
   );

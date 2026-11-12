@@ -5,7 +5,7 @@ import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { forgetDesktopServer } from '@/lib/desktop/bridge';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
-import { clearEvicted, dropEvictedOwner, isEvicted, markEvicted, rememberEvictedOwner } from '@/lib/offline/state';
+import { clearEvicted, dropEvictedOwner, isEvicted, mailServerKey, markEvicted, rememberEvictedOwner } from '@/lib/offline/state';
 
 export type AccountRemovalReason = 'explicit' | 'evicted' | 'wiped';
 
@@ -126,12 +126,17 @@ export const useAccountStore = create<AccountState>()(
         clearEvicted(id);
         dropEvictedOwner(id);
         if (state.accounts.some((a) => a.id === id)) {
-          // Already exists - update mutable fields and return existing id
+          // Already exists - update mutable fields and return existing id.
+          // The id leaves out the port and path, so it can be a second server
+          // on the same host: the entry names the server signed in to now
+          // (the sign-in wiped what the device kept for the other one,
+          // lib/offline/state.ts checkStoreOwner).
           set((s) => ({
             accounts: s.accounts.map((a) =>
               a.id === id
                 ? {
                     ...a,
+                    ...(mailServerKey(a.serverUrl) !== mailServerKey(entry.serverUrl) ? { serverUrl: entry.serverUrl } : {}),
                     rememberMe: entry.rememberMe,
                     isConnected: entry.isConnected,
                     hasError: entry.hasError,

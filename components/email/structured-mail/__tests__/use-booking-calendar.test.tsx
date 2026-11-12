@@ -110,6 +110,51 @@ async function settled(card: StructuredCard) {
 }
 
 describe('useBookingCalendar', () => {
+  // The calendar is the active login's. A booking in another login's mail
+  // belongs in that login's calendar, so it gets no calendar action here and
+  // the active login's calendar is not asked about it.
+  describe('for a message of another login than the active one', () => {
+    const other = { queryCalendarEvents: vi.fn(async () => []) };
+    const logins = () => useAuthStore.setState({
+      activeAccountId: 'login-a',
+      getClientForAccount: ((id: string) => (id === 'login-a' ? client : id === 'login-b' ? other : undefined)) as never,
+    });
+    const hidden = async (card: StructuredCard, email: Email) => {
+      const hook = renderHook(() => useBookingCalendar(card, email));
+      await act(async () => { await Promise.resolve(); });
+      expect(hook.result.current.status).toBe('hidden');
+      expect(client.queryCalendarEvents).not.toHaveBeenCalled();
+      expect(other.queryCalendarEvents).not.toHaveBeenCalled();
+      await act(() => hook.result.current.add('cal-default'));
+      expect(createEvent).not.toHaveBeenCalled();
+    };
+
+    it('stamped with that login (the unified inbox, a Pro tab): nothing is offered or looked up', async () => {
+      logins();
+      await hidden(await bookingFrom([OUT, BACK]), { ...EMAIL, sourceClientAccountId: 'login-b' } as Email);
+    });
+
+    it('in a folder of a login browsed in the sidebar: the same', async () => {
+      logins();
+      const { useEmailStore } = await import('@/stores/email-store');
+      const before = useEmailStore.getState().viewingAccountId;
+      useEmailStore.setState({ viewingAccountId: 'login-b' });
+      try {
+        await hidden(await bookingFrom([OUT, BACK]), EMAIL);
+      } finally {
+        useEmailStore.setState({ viewingAccountId: before });
+      }
+    });
+
+    it('control: a message stamped with the active login is offered as before', async () => {
+      logins();
+      const booking = await bookingFrom([OUT, BACK]);
+      const hook = renderHook(() => useBookingCalendar(booking, { ...EMAIL, sourceClientAccountId: 'login-a' } as Email));
+      await waitFor(() => expect(hook.result.current.status).toBe('add'));
+      expect(client.queryCalendarEvents).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('offers to add a booking the calendar lacks, and adds each live leg once', async () => {
     const booking = await bookingFrom([OUT, BACK]);
     const { result } = await settled(booking);

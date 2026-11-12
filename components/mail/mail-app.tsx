@@ -61,6 +61,7 @@ const MailboxShareDialog = lazyComponent(() => import("@/components/layout/mailb
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { ThreadGroup, Email, Mailbox, isUnifiedMailboxId, UNIFIED_MAILBOX_IDS, UNIFIED_ROLE_BY_ID, CROSS_VIEW_BY_ID, CROSS_VIEW_IDS, isCrossViewId } from "@/lib/jmap/types";
 import { useAccountStore, waitForConnectedAccount } from "@/stores/account-store";
+import { severalLogins, soleLogin } from "@/lib/sole-login";
 import { useShallow } from "zustand/react/shallow";
 import { usePolicyStore, whenPolicySettled } from "@/stores/policy-store";
 import { isArchiveActionEnabled, useArchiveActionEnabled } from "@/lib/archive-gate";
@@ -69,7 +70,8 @@ import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { messagePriorityFromHeaders, type MessagePriority } from "@/lib/message-priority";
 import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
 import { lazyComponent } from "@/lib/lazy-component";
-import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt, moveFoldersFor, type MoveFolderUnavailableError } from "@/stores/email-store";
+import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
 import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type DraftSource } from "@/lib/draft-source";
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
@@ -125,7 +127,7 @@ import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { stepListEmail } from "@/lib/list-step";
 import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
-import { resolveThreadRoute } from "@/lib/thread-routing";
+import { refreshRepliedThread } from "@/lib/replied-thread";
 import {
   ErrorBoundary,
   SidebarErrorFallback,
@@ -307,6 +309,34 @@ type DraftRequest = ParsedMailto & { initialFiles?: File[]; unedited?: boolean }
 /** No network, or this login's mail server can't be reached. */
 function offlineNow(client: { getServerUrl?: () => string }): boolean {
   return (typeof navigator !== 'undefined' && navigator.onLine === false) || isOfflineNow(client.getServerUrl?.());
+}
+
+/**
+ * The client of `login`, never another login's: ids name other messages and
+ * folders there. Undefined while that login has none.
+ */
+function loginClientOf(login: string): IJMAPClient | undefined {
+  const auth = useAuthStore.getState();
+  return auth.getClientForAccount(login) ?? (login === auth.activeAccountId ? auth.client ?? undefined : undefined);
+}
+
+/**
+ * The login a message in the reader is read and written through: its stamp,
+ * else the login whose folder is browsed. Null when no login is named.
+ */
+function readerLoginOf(email: Pick<Email, 'sourceClientAccountId'> | null | undefined): string | null {
+  return email?.sourceClientAccountId ?? useEmailStore.getState().viewingAccountId ?? useAuthStore.getState().activeAccountId ?? null;
+}
+
+/**
+ * Whether the reader can show `email` as `login`'s message: it still reads
+ * as that login's, and that login still has its client. A login that went
+ * away takes its messages with it, since through any other login their ids
+ * name other messages.
+ */
+function stillLoginsMessage(email: Pick<Email, 'sourceClientAccountId'> | null | undefined, login: string | null): boolean {
+  if (readerLoginOf(email) !== login) return false;
+  return login ? !!loginClientOf(login) : !!useAuthStore.getState().client;
 }
 
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
@@ -790,10 +820,25 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Mailboxes of the account currently being browsed. Mirrors the store's
   // action-mailbox resolution so a lookup by `selectedMailbox` hits the same
   // list the email fetch used.
+  // While another login's list isn't loaded there are none: folder ids
+  // repeat across logins, and the active login's list names other folders.
   const viewMailboxes = useMemo(
-    () => (viewingAccountId ? (accountMailboxes[viewingAccountId] ?? mailboxes) : mailboxes),
-    [viewingAccountId, accountMailboxes, mailboxes],
+    () => (viewingAccountId
+      ? (accountMailboxes[viewingAccountId] ?? (viewingAccountId === activeAccountId ? mailboxes : []))
+      : mailboxes),
+    [viewingAccountId, accountMailboxes, mailboxes, activeAccountId],
   );
+  // "Move to" for the open message offers the folders of the login it is in
+  // (moveFoldersFor); none, with the reason, while those can't be had.
+  const readerMove = useMoveFolders(useMemo(() => (selectedEmail ? [selectedEmail] : []), [selectedEmail]));
+  const moveUnavailableHint = useMoveUnavailableHint();
+  // Move to… (the palette, the Move shortcut): the dialog for one message,
+  // or why it can't be moved from here.
+  const openMoveDialogFor = (email: Email) => {
+    const offered = moveFoldersFor([email]);
+    if (offered.unavailable) toast.error(t('notifications.move_failed'), moveUnavailableHint(offered.unavailable));
+    else setMoveDialogEmail(email);
+  };
 
   // Search panel's Folder dropdown: own folders flat, shared/group folders
   // under their owner account so a group's "Inbox" is not mistaken for the
@@ -926,6 +971,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     mailboxes,
     selectedMailbox,
     selectedEmailId: selectedEmail?.id ?? null,
+    selectedEmailKey: selectedEmail ? emailKeyFor(selectedEmail) : null,
     conversationThreadId: null as string | null,
   });
   navRestoreStateRef.current.client = client;
@@ -933,6 +979,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   navRestoreStateRef.current.mailboxes = mailboxes;
   navRestoreStateRef.current.selectedMailbox = selectedMailbox;
   navRestoreStateRef.current.selectedEmailId = selectedEmail?.id ?? null;
+  navRestoreStateRef.current.selectedEmailKey = selectedEmail ? emailKeyFor(selectedEmail) : null;
   navRestoreStateRef.current.conversationThreadId = conversationThread?.threadId ?? null;
 
   const handleNavRestore = useCallback(async (state: NavSnapshot) => {
@@ -946,6 +993,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!state.composerOpen) {
       setShowComposer(false);
     }
+
+    // An entry's folder, message and conversation belong to the login it was
+    // taken in: through any other login the same ids are other things. One
+    // taken in another login than the one on screen (the login was switched
+    // since) brings back none of them, and one that names no login only
+    // where a single login can own it.
+    const shownLogin = useEmailStore.getState().viewingAccountId ?? useAuthStore.getState().activeAccountId ?? null;
+    const entryIsShownLogins = state.login !== undefined
+      ? (state.login ?? null) === shownLogin
+      : !shownLogin || soleLogin() === shownLogin;
+    if (!entryIsShownLogins) return;
 
     // Derive the mobile view from the saved snapshot. The view is a
     // function of which content the user is looking at: an email, a
@@ -997,23 +1055,27 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     }
 
-    // Restore email selection.
-    if (state.emailId !== ctx.selectedEmailId) {
+    // Restore email selection. By the row's key where the entry has one: in
+    // a list that mixes accounts the id alone can be another account's row.
+    const entryKey = state.emailKey ?? null;
+    const alreadyOpen = entryKey !== null ? entryKey === ctx.selectedEmailKey : state.emailId === ctx.selectedEmailId;
+    if (!alreadyOpen) {
       if (state.emailId === null) {
         selectEmail(null);
       } else {
         // Try the in-memory list first; the existing useEffect will fetch
         // body content if it's missing.
-        const found = restoredEmails.find(e => e.id === state.emailId);
+        const found = restoredEmails.find(e => (entryKey !== null ? emailKeyFor(e) === entryKey : e.id === state.emailId));
         if (found) {
           selectEmail(found);
-        } else if (ctx.client) {
+        } else if (ctx.client && (entryKey === null || entryKey === state.emailId)) {
           // Email isn't in the current list (e.g. mailbox just changed).
-          // Fetch it directly.
+          // Fetch it directly, where the list is read: through the login
+          // browsed, in the account of the folder restored above. A row of
+          // a list that mixes accounts is not asked for by its id alone.
           try {
-            const mailbox = ctx.mailboxes.find(mb => mb.id === state.mailboxId);
-            const accountId = mailbox?.isShared ? mailbox.accountId : undefined;
-            const fullEmail = await ctx.client.getEmail(state.emailId, accountId);
+            const { client: source, accountId } = resolveEmailBlobContext(null, ctx.client);
+            const fullEmail = source ? await source.getEmail(state.emailId, accountId) : null;
             if (fullEmail) selectEmail(fullEmail);
           } catch (error) {
             debug.error('Failed to fetch email on history restore:', error);
@@ -1039,13 +1101,27 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const open = useEmailStore.getState().selectedEmail;
     const shown = open && (open.id === state.emailId || (!!state.threadId && open.threadId === state.threadId)) ? open : null;
     // The shared account of the open message, so a reload opens it again
-    // (#1351). Not another login's: a reload must not switch the login.
+    // (#1351). A message of another login is left out: a reload must not
+    // switch the login, and through the active one its id names another
+    // message.
     const source = shown ? emailLinkSource(shown) : null;
+    const activeLogin = useAuthStore.getState().activeAccountId;
+    // The login the message or conversation is read through: the open
+    // message's, else the login browsed.
+    const linkLogin = source?.loginId ?? useEmailStore.getState().viewingAccountId ?? activeLogin;
+    const otherLogin = !!linkLogin && linkLogin !== activeLogin;
+    // With several logins signed in the address says whose message it is, as
+    // a reload opens nothing from one that does not. A single login's
+    // address stays as short as it was.
+    const namesLogin = severalLogins() && !otherLogin && !!(state.emailId || state.threadId);
     return appPath(
       buildMailPath(
         {
-          mailboxId: state.mailboxId, emailId: state.emailId, threadId: state.threadId,
-          ownerAccountId: source && !source.loginId ? source.ownerAccountId : null,
+          mailboxId: state.mailboxId,
+          emailId: otherLogin ? null : state.emailId,
+          threadId: otherLogin ? null : state.threadId,
+          loginId: namesLogin ? linkLogin : null,
+          ownerAccountId: source && !otherLogin ? source.ownerAccountId : null,
           // Keep the marker while fullscreen is active, so reloading the dragged-out
           // tab reopens the message fullscreen instead of in the normal layout.
           fullscreen: fullscreenReading,
@@ -1061,6 +1137,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     threadId: conversationThread?.threadId ?? null,
     composerOpen: showComposer,
     sidebarOpen,
+    // Whose folder and message the entry names (see handleNavRestore).
+    login: viewingAccountId ?? activeAccountId ?? null,
+    emailKey: selectedEmail && !(mvShell && cursorOnly) ? emailKeyFor(selectedEmail) : null,
     onRestore: handleNavRestore,
     enabled: isAuthenticated && mailboxes.length > 0,
     buildUrl: buildMailUrl,
@@ -1514,9 +1593,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), selectedEmailKeys.size, disableThreading);
     const restore = restoreBatchesForSelection(client);
     const receipts: CrossAccountMoveReceipt[] = [];
-    const destination = mailboxes.find((m) => m.id === mailboxId);
+    // The folder is one of the selection's own login (moveFoldersFor).
+    const offered = moveFoldersFor(resolveSelectedEmails(useEmailStore.getState()));
+    const destination = offered.mailboxes.find((m) => m.id === mailboxId);
     await runBatchEmailAction(() => useEmailStore.getState().batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-      success: batchToastTitle(t, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
+      success: batchToastTitle(t, 'move', rows, disableThreading, destination ? getMailboxPath(destination, offered.mailboxes) : undefined),
       error: tNotifications('move_failed'),
       undo: undoMoveAction(client, restore, undo, receipts),
     });
@@ -1560,7 +1641,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const picked = resolveSelectedEmails({ emails: state.emails, threadEmailsCache: state.threadEmailsCache, selectedEmailKeys });
         if (picked.length > 0) useMoveDialogStore.getState().open({ emails: picked, onMove: (mailboxId) => void moveSelectionTo(mailboxId) });
       } else if (selectedEmail) {
-        setMoveDialogEmail(selectedEmail);
+        openMoveDialogFor(selectedEmail);
       }
     },
     'message.archive': keyboardHandlers.onArchive ? () => void keyboardHandlers.onArchive?.() : undefined,
@@ -2326,21 +2407,24 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   useEffect(() => { mailAppMountedRef.current = true; return () => { mailAppMountedRef.current = false; }; }, []);
   // Point the list at a folder that actually holds a linked message, so the
   // pane behind it shows real context and "back" lands somewhere useful.
-  const showInOwningFolder = async (activeClient: Parameters<typeof fetchEmails>[0], email: Email) => {
+  // Only a folder of the message's own JMAP account (`accountId`): folder ids
+  // repeat across accounts, and the open folder decides the account of what
+  // is done to the open message.
+  const showInOwningFolder = async (activeClient: Parameters<typeof fetchEmails>[0], email: Email, accountId: string) => {
     const state = useEmailStore.getState();
-    const owning = Object.keys(email.mailboxIds ?? {}).find((id) =>
-      state.mailboxes.some((mb) => mb.id === id || mb.originalId === id),
-    );
-    if (owning && owning !== state.selectedMailbox) {
-      const mailbox = state.mailboxes.find((mb) => mb.id === owning || mb.originalId === owning);
-      if (mailbox) {
-        await fetchEmails(activeClient, mailbox.id, { background: true });
-        selectMailbox(mailbox.id);
-        selectEmail(email);
-      }
+    const own = activeClient.getAccountId();
+    const holds = (id: string) => (mb: Mailbox) =>
+      (mb.accountId ? mb.accountId === accountId : !mb.isShared && accountId === own)
+      && (mb.id === id || mb.originalId === id);
+    const owning = Object.keys(email.mailboxIds ?? {}).find((id) => state.mailboxes.some(holds(id)));
+    const mailbox = owning ? state.mailboxes.find(holds(owning)) : undefined;
+    if (mailbox && mailbox.id !== state.selectedMailbox) {
+      await fetchEmails(activeClient, mailbox.id, { background: true });
+      selectMailbox(mailbox.id);
+      selectEmail(email);
     }
   };
-  const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean; replyText?: string }) => {
+  const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean; replyText?: string; fromAddress?: boolean }) => {
     // The folder list before an account switch, if one happened: until the
     // new mailbox's folders arrive the store still holds these (or nothing).
     let switchedFrom: Mailbox[] | null = null;
@@ -2351,6 +2435,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const linkAccountId = link.accountId ?? (link.slot !== undefined
       ? useAccountStore.getState().accounts.find((a) => a.cookieSlot === link.slot)?.id ?? `slot:${link.slot}`
       : undefined);
+    // An address names the login of its message or conversation, and the
+    // account it is in. One that names no login (written before addresses
+    // did, copied from a single login's standard layout, or by hand) opens
+    // nothing while several logins are signed in, in the Pro shell and in the
+    // standard layout: through the active login its id can name another
+    // message or conversation. With a single login it opens, as that login's.
+    if (opts?.fromAddress && (link.kind === 'message' || link.kind === 'thread') && !linkAccountId
+      && severalLogins()) {
+      toast.error(t('account_routing.link_names_no_account'));
+      return;
+    }
     const switchesAccount = !!linkAccountId && linkAccountId !== useAuthStore.getState().activeAccountId;
     if (switchesAccount) {
       const startedOn = useAuthStore.getState().activeAccountId;
@@ -2411,9 +2506,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // In the Pro shell a message permalink opens as its own fullscreen
       // email tab - the tab body fetches the message and retitles itself.
       if (isEmbedded) {
-        // A shared account's message is fetched from that account through
-        // the active login (#1351).
-        const loginId = link.ownerAccountId ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
+        // Through the active login, from the account the link names (#1351),
+        // else the login's own: the tab names the login, or it reads the id
+        // through the mail list, which may hold another account's message
+        // with that id.
+        const loginId = useAuthStore.getState().activeAccountId ?? undefined;
         // A notification's Reply: the tab opens its composer once it has the message.
         if (link.reply) requestTabReply(link.id, opts?.replyText ?? await consumePendingReplyText(link.id));
         useProTabStore.getState().openEmailTab({
@@ -2430,17 +2527,25 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // With the conversation in the reader, the message waits for it, as on
         // a click: shown alone first, it would move down once it came.
         const withConversation = readerConversationView && !cursorOnly;
+        // A link without an owner is to the login's own account: the store
+        // is told so, or a listed row with the id from another account is
+        // taken for it.
+        const owner = link.ownerAccountId ?? activeClient.getAccountId();
         const email = withConversation
-          ? await fetchEmailContent(activeClient, link.id, link.ownerAccountId, { select: false })
-          : await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
+          ? await fetchEmailContent(activeClient, link.id, owner, { select: false })
+          : await fetchEmailContent(activeClient, link.id, owner);
         if (!email) {
           toast.error(t('deep_link.message_not_found'));
           return;
         }
         if (withConversation) {
-          const source = resolveEmailBlobContext(email, activeClient);
+          // The conversation of the link's account, not of the folder on screen.
+          const source: EmailBlobContext = {
+            client: activeClient, clientAccountId: useAuthStore.getState().activeAccountId ?? undefined,
+            accountId: owner === activeClient.getAccountId() ? undefined : owner,
+          };
           const conversation = await Promise.race([
-            loadMvConversation(email, activeClient),
+            loadMvConversation(email, activeClient, source),
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
           if (conversation !== undefined) {
@@ -2451,7 +2556,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           }
           useEmailStore.setState({ selectedEmail: email });
         }
-        await showInOwningFolder(activeClient, email);
+        await showInOwningFolder(activeClient, email, owner);
         if (link.fullscreen && !isMobile) {
           // The owning-folder branch above may have skipped selecting (the
           // folder was already current) - fullscreen needs the message open.
@@ -2494,10 +2599,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails(threadEmails);
         setActiveView('viewer');
       } else {
-        const email = await fetchEmailContent(activeClient, group.latestEmail.id, link.ownerAccountId);
-        // A shared account's conversation needs its folder open: the open
+        // The own account when the link names none (as for a message).
+        const owner = link.ownerAccountId ?? activeClient.getAccountId();
+        const email = await fetchEmailContent(activeClient, group.latestEmail.id, owner);
+        // The conversation needs a folder of its account open: the open
         // message is acted on in the account of the folder on screen.
-        if (email && link.ownerAccountId) await showInOwningFolder(activeClient, email);
+        if (email) await showInOwningFolder(activeClient, email, owner);
       }
     } finally {
       setLoadingEmail(false);
@@ -2520,7 +2627,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!isEmbedded) return;
     return subscribePendingDeepLink('mail', (segments, search) => {
       const link = parseMailPath(segments, new URLSearchParams(search ?? window.location.search));
-      if (link) void applyMailDeepLinkRef.current(link);
+      if (link) void applyMailDeepLinkRef.current(link, { fromAddress: true });
     });
   }, [isEmbedded]);
 
@@ -2562,6 +2669,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   useEffect(() => {
     if (deepLinkHandledRef.current) return;
+    // The standard page that renders while the Pro shell takes over leaves
+    // the address to the shell's own mail surface, which gets it through the
+    // handoff: opened here it would be read through the active login, opened
+    // in the reader and marked read before the shell decides about it.
+    if (proTakingOver) return;
     if (!isAuthenticated || !client) return;
     if (mailboxes.length === 0) {
       // The account has no folders to open the link in: stop holding the reader open for it.
@@ -2594,7 +2706,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     deepLinkHandledRef.current = true;
 
     if (link) {
-      void applyMailDeepLinkRef.current(link, { onLoad: true }).finally(() => setDeepLinkPane(null));
+      void applyMailDeepLinkRef.current(link, { onLoad: true, fromAddress: true }).finally(() => setDeepLinkPane(null));
       return;
     }
 
@@ -2603,7 +2715,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (newestUnread) {
       selectEmail(newestUnread);
     }
-  }, [isAuthenticated, client, mailboxes.length, emails, linkSegments, initialMailLoadDone, selectEmail]);
+  }, [isAuthenticated, client, mailboxes.length, emails, linkSegments, initialMailLoadDone, selectEmail, proTakingOver]);
 
   // The cursor only exists in Mountain View's desktop list. Narrower, the row it
   // is on would open in the reading pane as if it had been picked.
@@ -2948,9 +3060,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // on its own server, and an unknown id makes the server fall back to the
     // active account's primary identity - which then signs the message with
     // the wrong DKIM key (#461). The draft was saved against the same account.
-    const sendClient = data.localAccountId
-      ? (useAuthStore.getState().getClientForAccount(data.localAccountId) ?? client)
-      : client;
+    const sendClient = data.localAccountId ? loginClientOf(data.localAccountId) : client;
+    // That login has no client: nothing leaves through another login, which
+    // would send it as its own user. The composer keeps the message.
+    if (!sendClient) {
+      toast.error(t('notifications.error_sending'), t('notifications.not_connected'));
+      return false;
+    }
 
     // Separates "the submission failed" from "a follow-up step failed". Only the
     // former may propagate: the composer treats a resolved onSend as a delivered
@@ -2983,8 +3099,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       } else {
         const sentId = result.emailId;
         const ownerAccountId = result.emailAccountId && result.emailAccountId !== sendClient.getAccountId() ? result.emailAccountId : undefined;
+        // "View" names the login the message went out through: by the time
+        // it is clicked another login may be the active one, where the id is
+        // another message.
+        const sentLogin = data.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined;
         progress.sent(sentId && sendClient === client
-          ? () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId })
+          ? () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId, ...(sentLogin ? { accountId: sentLogin } : {}) })
           : undefined);
       }
       // Sending an edited draft destroys it server-side - and every autosave
@@ -3046,33 +3166,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
       const refreshRepliedThreadAfterSend = async (emailId: string | undefined) => {
         if (!emailId || !client) return;
-        const emailState = useEmailStore.getState();
-        const repliedEmail = emailState.emails.find(e => e.id === emailId);
-        if (repliedEmail?.threadId && emailState.expandedThreadIds.has(threadKeyFor(repliedEmail))) {
-          try {
-            const route = resolveThreadRoute({
-              isUnifiedView: emailState.isUnifiedView,
-              ref: repliedEmail,
-              mailboxes: viewMailboxes,
-              selectedMailbox: emailState.selectedMailbox,
-            });
-            const threadClient = route.clientAccountId
-              ? (useAuthStore.getState().getClientForAccount(route.clientAccountId) ?? client)
-              : client;
-            const fullEmails = await threadClient.getThreadEmails(
-              repliedEmail.threadId,
-              route.accountId ?? client.getAccountId(),
-            );
-            if (fullEmails.length > 0) {
-              useEmailStore.setState((state) => {
-                const c = new Map(state.threadEmailsCache);
-                c.set(threadKeyFor(repliedEmail), fullEmails);
-                return { threadEmailsCache: c };
-              });
-            }
-          } catch (e) {
-            debug.error('Failed to refresh replied thread after send:', e);
-          }
+        try {
+          // The answered message's own conversation, by the login and
+          // account the reply was written to (refreshRepliedThread).
+          await refreshRepliedThread(emailId, answeredSource, client);
+        } catch (e) {
+          debug.error('Failed to refresh replied thread after send:', e);
         }
       };
 
@@ -3291,7 +3390,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       viewingAccountId,
       activeAccountId,
     });
-    const draftClient = (localAccountId ? useAuthStore.getState().getClientForAccount(localAccountId) : undefined) ?? client;
+    const draftClient = localAccountId ? loginClientOf(localAccountId) : client;
+    if (!draftClient) {
+      toast.error(t('notifications.not_connected'));
+      return;
+    }
 
     // The email list only fetches limited properties (no bodyValues/htmlBody/bcc).
     // Fetch the full email so the composer gets all draft content.
@@ -3386,7 +3489,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     useOfflineStore.setState({ draftToOpen: null });
     const login = draftToOpen.account || undefined;
     const jmapAccount = draftToOpen.jmap || undefined;
-    const draftClient = (login ? useAuthStore.getState().getClientForAccount(login) : undefined) ?? client;
+    const draftClient = login ? loginClientOf(login) : client;
+    if (!draftClient) {
+      toast.error(t('notifications.not_connected'));
+      return;
+    }
     void draftClient.getEmail(draftToOpen.id, jmapAccount)
       .then((draft) => (draft ? handleEditDraft(draft, { accountId: jmapAccount, localAccountId: login }) : undefined))
       .catch((error) => console.error('Opening a draft kept on this device failed:', error));
@@ -3508,7 +3615,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Never another login, also not once that one is gone: the submission id
     // names another submission there.
     const undoClient = pending.localAccountId
-      ? useAuthStore.getState().getClientForAccount(pending.localAccountId)
+      ? loginClientOf(pending.localAccountId)
       : client;
     const refuseSignedOut = () => toast.error(t('email_viewer.undo_send_signed_out'));
     // The login the draft is restored through. The classic shell leaves
@@ -3623,7 +3730,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         sendingIn: (seconds) => t('email_viewer.sending_in', { seconds }),
         sent: t('compose_send.sent'),
         view: viewable
-          ? { label: t('compose_send.view'), onClick: () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId }) }
+          ? { label: t('compose_send.view'), onClick: () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId, ...(undoLogin ? { accountId: undoLogin } : {}) }) }
           : undefined,
       });
     }
@@ -4071,8 +4178,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
     if (!client || !emailToArchive) return;
     // In Archive, E and Archive's place in the menus bring it back to the
-    // Inbox instead (mail-p3-4).
-    const archiveInbox = isUnifiedView ? undefined : archiveInboxTarget(mailboxes, selectedMailbox);
+    // Inbox instead (mail-p3-4). The folder on screen is one of the browsed
+    // login's folders (viewMailboxes): the same id names another folder in
+    // the active login's list.
+    const archiveInbox = isUnifiedView ? undefined : archiveInboxTarget(viewMailboxes, selectedMailbox);
     if (archiveInbox) {
       await handleMoveToMailbox(emailToArchive.id, archiveInbox.id, emailKeyFor(emailToArchive));
       return;
@@ -4088,20 +4197,31 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // sources these resolve to the account itself, so behavior is unchanged. (#281)
     const archiveClientId = emailToArchive.sourceAccountId ? emailToArchive.sourceClientAccountId : undefined;
     const archiveAccountId = archiveClientId ? emailToArchive.sourceAccountId : undefined;
-    const archiveClient = archiveClientId ? useAuthStore.getState().getClientForAccount(archiveClientId) : client;
+    // An unstamped row of another login's folder (browsed in the Pro sidebar)
+    // is that login's message, and the move goes through that login (see
+    // resolveEmailActionContext): its Archive is found, or made, in that
+    // login's folders and through its client. Folder ids repeat across
+    // logins, so the active login's Archive id names another folder there.
+    const viewLogin = archiveClientId ? null : useEmailStore.getState().viewingAccountId;
+    const otherLogin = viewLogin && viewLogin !== useAuthStore.getState().activeAccountId ? viewLogin : null;
+    const archiveClient = archiveClientId
+      ? useAuthStore.getState().getClientForAccount(archiveClientId)
+      : otherLogin ? loginClientOf(otherLogin) : client;
     if (!archiveClient) {
       toast.error(t('notifications.error_archiving'), t('notifications.not_connected'));
       return;
     }
     // Read fresh mailboxes from the store – batch archive calls this in a loop,
     // and each iteration needs to see folders created by prior iterations.
-    const readMailboxes = () => archiveAccountId
+    const readMailboxes = () => archiveAccountId || otherLogin
       ? resolveEmailActionContext(emailToArchive, client).mailboxes
       : useEmailStore.getState().mailboxes;
     const refreshMailboxes = () =>
       archiveAccountId
         ? useEmailStore.getState().fetchAccountMailboxes(archiveClient, archiveAccountId, archiveClientId)
-        : fetchMailboxes(client);
+        : otherLogin
+          ? useEmailStore.getState().fetchAccountMailboxes(archiveClient, otherLogin)
+          : fetchMailboxes(client);
 
     const currentMailboxes = readMailboxes();
 
@@ -4197,12 +4317,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleMoveToMailbox = async (emailId: string, mailboxId: string, emailKey?: string) => {
     if (!client) return;
-    const destinationList = [mailboxes, ...Object.values(accountMailboxes)]
-      .find(list => list.some(m => m.id === mailboxId));
-    const destination = destinationList?.find(m => m.id === mailboxId);
     // Undo: back to its folders; a move to another account moves back the
     // same way (the receipts).
     const email = useEmailStore.getState().emails.find(e => (emailKey ? emailKeyFor(e) === emailKey : e.id === emailId));
+    // The folder is one of the message's own login (moveFoldersFor), the
+    // list the move looks it up in: the toast names the folder it went to.
+    const offered = moveFoldersFor(email ? [email] : []);
+    if (offered.unavailable) {
+      toast.error(t('notifications.move_failed'), moveUnavailableHint(offered.unavailable));
+      return;
+    }
+    const destinationList = offered.mailboxes;
+    const destination = destinationList.find(m => m.id === mailboxId);
     const restore = email ? restoreBatchesFor([email], client) : null;
     const receipts: CrossAccountMoveReceipt[] = [];
     if (email) leaveIfOpen(email);
@@ -4210,14 +4336,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (!(await moveToMailboxCrossAware(client, emailId, mailboxId, emailKey, receipts))) return;
       // One line: "Moved to Family", not "Email moved. Moved to Family." (mail-18)
       toastWithUndo(
-        destination && destinationList
+        destination
           ? t('mail_list_extra.moved_to', { mailbox: getMailboxPath(destination, destinationList) })
           : t('notifications.email_moved'),
         undoMoveAction(client, restore, undo, receipts),
       );
     } catch (error) {
       console.error("Failed to move email:", error);
-      toast.error(t('notifications.move_failed'), t('notifications.move_error'));
+      const reason = error instanceof Error && error.name === 'MoveFolderUnavailableError'
+        ? moveUnavailableHint((error as MoveFolderUnavailableError).reason)
+        : undefined;
+      toast.error(t('notifications.move_failed'), reason ?? t('notifications.move_error'));
     }
   };
 
@@ -4377,9 +4506,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // `activeClient` stands in for `client` when the caller has just switched
   // logins and this render's `client` is still the previous one.
   const handleAccountMailboxSelect = async (accountId: string | null, mailboxId: string, activeClient?: IJMAPClient) => {
+    // Only through that login: another login's folder with the same id is
+    // another folder.
     const viewingClient = accountId
-      ? useAuthStore.getState().getClientForAccount(accountId) ?? client
+      ? loginClientOf(accountId)
       : activeClient ?? client;
+    if (accountId && !viewingClient) {
+      toast.error(t('notifications.not_connected'));
+      return;
+    }
     selectAccountMailbox(accountId, mailboxId);
     selectEmail(null);
     if (isMobile) {
@@ -4994,7 +5129,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const source = auth.getClientForAccount(email.sourceClientAccountId);
         return source ? { source, accountId: email.sourceAccountId } : null;
       }
-      const source = (viewingAccountId ? auth.getClientForAccount(viewingAccountId) : undefined) ?? client;
+      // The login browsed, else the active one; none while it has no client.
+      const source = viewingAccountId ? loginClientOf(viewingAccountId) : client;
       if (!source) return null;
       const accountId = email.sourceAccountId
         ?? resolveUnstampedEmailAccountId({
@@ -5079,6 +5215,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // stopped before sending, so the quick-reply box keeps the text.
   const handleQuickReply = async (body: string, extra?: { composerId?: string }): Promise<boolean> => {
     if (!client || !selectedEmail) return false;
+
+    // The quick reply sends through the active login, from its identities.
+    // A message of another login (a row of the unified inbox, that login's
+    // folder in the Pro sidebar) is answered in the full composer with the
+    // typed text, where the From address shows which login it leaves from;
+    // a login without a connection sends nothing and the text stays here.
+    const messageLogin = readerLoginOf(selectedEmail);
+    if (messageLogin && messageLogin !== activeAccountId) {
+      if (!loginClientOf(messageLogin)) {
+        toast.error(t('notifications.error_sending'), t('notifications.not_connected'));
+        return false;
+      }
+      await handleReply(body);
+      return true;
+    }
 
     // Quick reply follows the composer's addressing rules and sends from the
     // address the message was delivered to (lib/outgoing/quick-reply-envelope.ts).
@@ -5254,33 +5405,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     });
 
     const refreshInlineRepliedThread = async () => {
-      const emailState = useEmailStore.getState();
-      const repliedEmail = emailState.emails.find(e => e.id === originalEmailId);
-      if (repliedEmail?.threadId && emailState.expandedThreadIds.has(threadKeyFor(repliedEmail))) {
-        const route = resolveThreadRoute({
-          isUnifiedView: emailState.isUnifiedView,
-          ref: repliedEmail,
-          mailboxes: viewMailboxes,
-          selectedMailbox: emailState.selectedMailbox,
-        });
-        const threadClient = route.clientAccountId
-          ? (useAuthStore.getState().getClientForAccount(route.clientAccountId) ?? client)
-          : client;
-        try {
-          const fullEmails = await threadClient.getThreadEmails(
-            repliedEmail.threadId,
-            route.accountId ?? client.getAccountId(),
-          );
-          if (fullEmails.length > 0) {
-            useEmailStore.setState((state) => {
-              const c = new Map(state.threadEmailsCache);
-              c.set(threadKeyFor(repliedEmail), fullEmails);
-              return { threadEmailsCache: c };
-            });
-          }
-        } catch (e) {
-          debug.error('Failed to refresh replied thread after send:', e);
-        }
+      try {
+        // The answered message's own conversation (refreshRepliedThread).
+        await refreshRepliedThread(originalEmailId, originalSource, client);
+      } catch (e) {
+        debug.error('Failed to refresh replied thread after send:', e);
       }
     };
 
@@ -5328,8 +5457,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Fetches the conversation around `ref`, oldest first. Opening a message
   // starts this next to the message fetch, and the effect below picks up that
   // same request rather than sending a second one.
-  const loadMvConversation = (ref: Email, fallback: NonNullable<typeof client>): Promise<Email[] | null> => {
-    const { threadClient, accountId } = mvConversationRoute(ref, fallback);
+  // `source`: where `ref` is, when the caller knows it better than the view
+  // on screen (a link names its account).
+  const loadMvConversation = (ref: Email, fallback: NonNullable<typeof client>, source?: EmailBlobContext): Promise<Email[] | null> => {
+    const { threadClient, accountId } = source ? { threadClient: source.client, accountId: source.accountId } : mvConversationRoute(ref, fallback);
     if (!threadClient) return Promise.resolve(null);
     const pending = mvConversationLoadRef.current;
     // Bare ids overlap across shared owners and across connected clients.
@@ -5594,7 +5725,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     { id: 'delete', label: t('context_menu.delete'), icon: Trash2, shortcut: '#', when: hasPaletteEmail, run: () => void handleDelete(paletteEmail) },
     {
       id: 'move', label: t('context_menu.move_to_dialog'), icon: FolderInput, keywords: [t('context_menu.move_to')],
-      when: hasPaletteEmail, run: () => setMoveDialogEmail(paletteEmail),
+      when: hasPaletteEmail, run: () => { if (paletteEmail) openMoveDialogFor(paletteEmail); },
     },
     {
       id: 'mark-unread', label: t('context_menu.mark_unread'), icon: Mail, shortcut: 'u',
@@ -5767,6 +5898,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // they are looking at nor end its loading state.
     const openSeq = ++emailOpenSeqRef.current;
     const previousEmail = useEmailStore.getState().selectedEmail;
+    // The logins of the message on screen and of the one opening. A login
+    // signed out (or dropped) while this open is on its way takes its
+    // messages with it: the reader neither goes back to its message nor
+    // shows the one arriving, and the browsed folder has moved on anyway.
+    const previousLogin = readerLoginOf(previousEmail);
+    const openingLogin = readerLoginOf(listEmail);
+    const fallbackEmail = () => (previousEmail && stillLoginsMessage(previousEmail, previousLogin) ? previousEmail : null);
+    const openStillHolds = () => stillLoginsMessage(listEmail, openingLogin);
     // Paint the header from the row at once (subject, sender and date are in
     // hand) and let the body follow; the viewer shows a row without body
     // values as loading. Mountain View shows the message inside its
@@ -5789,7 +5928,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const { client: fetchClient, accountId } = source;
       if (!fetchClient) {
         console.warn('[mail-app] No connected client for email source');
-        if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(previousEmail);
+        if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(fallbackEmail());
         return new Error('no connected login reaches the account');
       }
 
@@ -5806,6 +5945,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // The request a mouse press on the row already started, if any.
       const fullEmail = await requestEmailContent(fetchClient, email.id, accountId);
       if (openSeq !== emailOpenSeqRef.current) return fullEmail ? 'opened' : 'missing';
+      if (!openStillHolds()) {
+        abandonOpenEmail(fallbackEmail());
+        return new Error('the login of the message went away');
+      }
       if (fullEmail) {
         const scheduledSubmissionByEmailId = useEmailStore.getState().scheduledSubmissionByEmailId;
         const annotated = annotateScheduledEmail(fullEmail, scheduledSubmissionByEmailId);
@@ -5844,6 +5987,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
           if (openSeq !== emailOpenSeqRef.current) return 'opened';
+          if (!openStillHolds()) {
+            abandonOpenEmail(fallbackEmail());
+            return new Error('the login of the message went away');
+          }
           if (conversation !== undefined) {
             setMvConversationResult(conversation ? {
               emails: conversation, source, threadId: fullEmail.threadId,
@@ -5865,7 +6012,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setOpenFailure({ target: email, offline: true });
         return new Error('offline');
       }
-      abandonOpenEmail(previousEmail);
+      abandonOpenEmail(fallbackEmail());
       return 'missing';
     } catch (error) {
       console.error('Failed to fetch email content:', error);
@@ -5873,8 +6020,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // Offline the reader says why instead of going blank or back to the
         // last message; another failure says so too when there's nothing to go back to.
         const offline = offlineNow(client);
-        abandonOpenEmail(offline ? null : previousEmail);
-        if (offline || !previousEmail) setOpenFailure({ target: email, offline });
+        const back = offline ? null : fallbackEmail();
+        abandonOpenEmail(back);
+        if (offline || !back) setOpenFailure({ target: email, offline });
       }
       return error instanceof Error ? error : new Error(String(error));
     }
@@ -6099,6 +6247,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         }}
         onSend={async (data, state) => {
           const outcome = await handleEmailSend(data, state);
+          // Refused: nothing went, and the composer keeps the message as it was.
+          if (outcome === false) return outcome;
           setPendingDraft(null);
           setComposerPrefill(null);
           scanReplyDrafts();
@@ -6892,9 +7042,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onMarkAsRead={async (emailId, read) => {
                   // Only ever the mark-as-read on expanding a message: a refusal
                   // (a read-only shared folder) just leaves it unread.
-                  if (client) {
+                  // In the conversation's own login and account, whatever the
+                  // list shows: its older messages are not listed.
+                  const login = conversationBlobSource?.clientAccountId ?? activeAccountId;
+                  if (client && login) {
                     const target = conversationEmails.find((e) => e.id === emailId);
-                    await markAsRead(client, emailId, read, target ? emailKeyFor(target) : undefined).catch((error) => {
+                    await markAsRead(client, emailId, read, target ? emailKeyFor(target) : undefined, {
+                      clientAccountId: login, accountId: conversationBlobSource?.accountId, email: target,
+                    }).catch((error) => {
                       debug.warn('email', '[Mark as Read] Failed:', error);
                     });
                   }
@@ -6906,13 +7061,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 actions={(() => {
                   const target = conversationThread.latestEmail;
                   const leaving = (run: () => unknown) => () => { handleMobileBack(); void run(); };
+                  // The folders of the conversation's own login (moveFoldersFor).
+                  const offered = moveFoldersFor([target]);
                   return {
-                    mailboxes,
+                    mailboxes: offered.mailboxes,
                     selectedMailbox,
                     currentMailboxRole: conversationRole,
                     onArchive: archiveActionEnabled ? leaving(() => handleArchive(target)) : undefined,
                     onDelete: leaving(() => handleDelete(target)),
-                    onMoveToMailbox: (mailboxId: string) => leaving(() => handleMoveToMailbox(target.id, mailboxId, emailKeyFor(target)))(),
+                    onMoveToMailbox: offered.unavailable
+                      ? undefined
+                      : (mailboxId: string) => leaving(() => handleMoveToMailbox(target.id, mailboxId, emailKeyFor(target)))(),
                     onForwardAsAttachment: () => void handleForwardAsAttachment(target),
                     onMarkAsRead: client ? (read: boolean) => {
                       const run = () => markReadWithUndo(target, read).catch(toastUpdateFailure);
@@ -7052,11 +7211,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
                     currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}
-                    mailboxes={mailboxes}
+                    mailboxes={readerMove.mailboxes}
                     selectedMailbox={selectedMailbox}
-                    onMoveToMailbox={async (mailboxId) => {
+                    onMoveToMailbox={readerMove.unavailable ? undefined : async (mailboxId) => {
                       if (selectedEmail) await handleMoveToMailbox(selectedEmail.id, mailboxId, emailKeyFor(selectedEmail));
                     }}
+                    moveUnavailableHint={moveUnavailableHint(readerMove.unavailable)}
                     onRemoveFromFolder={openEmailCanLeaveFolder ? () => {
                       if (!selectedEmail) return;
                       leaveIfOpen(selectedEmail);
@@ -7132,10 +7292,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
         <ConfirmDialog {...confirmDialogProps} />
-        <MoveToDialogHost mailboxes={mailboxes} selectedMailbox={selectedMailbox} />
+        <MoveToDialogHost selectedMailbox={selectedMailbox} />
         {moveDialogEmail && <MoveToDialog
           emails={[moveDialogEmail]}
-          mailboxes={mailboxes}
+          mailboxes={moveFoldersFor([moveDialogEmail]).mailboxes}
           selectedMailbox={selectedMailbox}
           onClose={() => setMoveDialogEmail(null)}
           onMove={(mailboxId) => {

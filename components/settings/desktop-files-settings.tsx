@@ -308,10 +308,15 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
   );
 }
 
-/** The client of an account, connected now: the one on screen without one. */
+/**
+ * The client of an account, connected now; the one on screen when the page
+ * names none. Never another account's: its Files folder ids name other
+ * folders, and a folder made there would be made in the wrong account.
+ */
 function clientOf(account: string | null) {
   const auth = useAuthStore.getState();
-  return (account ? auth.getAllConnectedClients().get(account) : undefined) ?? auth.client;
+  if (!account) return auth.client;
+  return auth.getAllConnectedClients().get(account) ?? (account === auth.activeAccountId ? auth.client : null);
 }
 
 /** The folders of the account's own Files, for the picker: no trash, nothing shared. */

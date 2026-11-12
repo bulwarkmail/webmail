@@ -31,14 +31,19 @@ vi.mock('@/components/email/email-viewer', () => ({
     </div>
   ),
 }));
+const sendOutcome = vi.hoisted(() => ({ current: null as Promise<unknown> | null }));
 vi.mock('@/components/email/email-composer', () => ({
   EmailComposer: ({ onSend, onDiscardDraft }: {
-    onSend?: (data: unknown) => Promise<void>;
+    onSend?: (data: unknown) => Promise<unknown>;
     onDiscardDraft?: (id: string, draft?: { accountId?: string; localAccountId?: string }) => void;
   }) => (
     <div>
       <button onClick={() => { void onSend?.({ to: ['c@example.org'], cc: [], bcc: [], subject: 'Re: GRP one', body: 'Hi' }); }}>
         stub send
+      </button>
+      {/* From an identity of login B, which has no client. */}
+      <button onClick={() => { sendOutcome.current = onSend?.({ to: ['c@example.org'], cc: [], bcc: [], subject: 'Re: GRP one', body: 'Hi', identityId: 'b', fromEmail: 'b@example.org', localAccountId: 'login-b' }) ?? null; }}>
+        stub send as b
       </button>
       {/* A draft login B saved in its own account `cg`. */}
       <button onClick={() => onDiscardDraft?.('maaaaad', { accountId: 'cg', localAccountId: 'login-b' })}>stub discard</button>
@@ -151,6 +156,24 @@ describe('a reply to a message of the group\'s Inbox', () => {
 
     await waitFor(() => expect(setKeyword).toHaveBeenCalled());
     expect(setKeyword).toHaveBeenCalledWith('eaaaaab', '$answered', 'ce');
+  });
+});
+
+describe('a send from the identity of a login that has no client', () => {
+  it('sends nothing through the active login, keeps the composer and says why', async () => {
+    const sendEmail = vi.fn().mockResolvedValue({ scheduled: false });
+    useEmailStore.setState({ sendEmail } as never);
+    sendOutcome.current = null;
+
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub reply', {}, { timeout: 5000 }));
+    fireEvent.click(await screen.findByText('stub send as b', {}, { timeout: 5000 }));
+
+    await waitFor(() => expect(sendOutcome.current).not.toBeNull());
+    await expect(sendOutcome.current).resolves.toBe(false);
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(useToastStore.getState().toasts.map(t => t.title)).toContain('notifications.error_sending');
+    expect(screen.getByText('stub send as b')).toBeTruthy();
   });
 });
 

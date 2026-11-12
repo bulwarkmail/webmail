@@ -20,6 +20,7 @@ import {
 import type { StructuredCard } from '@/lib/structured-mail';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
+import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore } from '@/stores/policy-store';
 
 /**
@@ -110,14 +111,26 @@ function planFor(slots: BookingEventSlot[], existingOf: (uid: string) => Calenda
  * booking's event uids up in the primary calendar account
  * (CalendarEvent/query by uid), merges what it finds into the calendar
  * store, and never creates an event whose uid it found. Hidden unless the
- * account has calendars, the admin allows them and the booking isn't over.
+ * account has calendars, the admin allows them and the booking isn't over,
+ * and for a message of another login than the active one: the calendar here
+ * is the active login's, and the booking belongs in the calendar of the
+ * login that received it.
  */
-export function useBookingCalendar(booking: StructuredCard | null | undefined, email: Pick<Email, 'from' | 'subject'> | null | undefined): BookingCalendar {
+export function useBookingCalendar(
+  booking: StructuredCard | null | undefined,
+  email: Pick<Email, 'from' | 'subject' | 'sourceClientAccountId'> | null | undefined,
+): BookingCalendar {
   const t = useTranslations('structured_mail_calendar');
   const describeError = useCalendarErrorMessage();
   const router = useRouter();
   const client = useAuthStore((s) => s.client);
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
+  // The message's login: its stamp (a unified row, a Pro tab), else the login
+  // browsed in the sidebar.
+  const viewingAccountId = useEmailStore((s) => s.viewingAccountId);
+  const messageLogin = email?.sourceClientAccountId ?? viewingAccountId ?? null;
+  const otherLogin = useAuthStore((s) => !!messageLogin && messageLogin !== s.activeAccountId
+    && s.getClientForAccount?.(messageLogin) !== s.client);
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   const {
     calendars, supportsCalendar, storeEvents, icalSubscriptions,
@@ -167,7 +180,7 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
 
   const endsAt = booking && booking.kind !== 'shipment' ? bookingEndsAt(booking) : null;
   const over = endsAt === null || endsAt < Date.now();
-  const active = Boolean(client) && supportsCalendar && calendarEnabled && !over && slots.length > 0;
+  const active = Boolean(client) && supportsCalendar && calendarEnabled && !over && slots.length > 0 && !otherLogin;
 
   useEffect(() => {
     if (!active || !client || !uidKey) return;

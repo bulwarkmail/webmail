@@ -99,18 +99,20 @@ export interface ProEmailTabData {
   title: string;
   /**
    * Connected-account id (login) whose client fetches this email, with
-   * `accountId` the JMAP account there; unset = the active account. Set for
-   * a list row and a hit from another login (global search) - bare email ids
-   * are ambiguous across logins (#847).
+   * `accountId` the JMAP account there. Every opener names it - bare email
+   * ids are ambiguous across logins (#847). Unset only in a tab kept from a
+   * version that wrote none: it belongs to the only login there is, or to
+   * none (components/pro/pro-tab-login.ts).
    */
   clientAccountId?: string;
 }
 
 export interface ProFolderTabData {
   /**
-   * Connected-account id the folder belongs to (multi-account sidebar
-   * groups); null = the active account. Used to resolve the JMAP client the
-   * folder tab fetches through.
+   * Connected-account id (login) the folder belongs to, whose client the
+   * folder tab fetches through. Named when the tab is opened, the active
+   * login too. Null only in a tab kept from a version that wrote none for
+   * the active login (see ProEmailTabData.clientAccountId).
    */
   accountId: string | null;
   mailboxId: string;
@@ -240,6 +242,11 @@ interface ProTabState extends ProTabCoreState {
   collapseSplit: () => void;
 
   updateTabTitle: (id: string, title: string) => void;
+  /**
+   * Writes `login` into a message or folder tab that names none (one kept
+   * from before tabs named their login). A tab that names one keeps it.
+   */
+  nameTabLogin: (id: string, login: string) => void;
   updateComposeDraft: (id: string, draft: ComposerDraftData) => void;
 }
 
@@ -746,6 +753,21 @@ export const useProTabStore = create<ProTabState>()(
             tabs: get().tabs.map((tab) => (tab.id === id
               ? { ...tab, title, ...(tab.emailData ? { emailData: { ...tab.emailData, title } } : {}) }
               : tab)),
+          });
+        },
+
+        nameTabLogin: (id, login) => {
+          const tab = get().tabs.find((candidate) => candidate.id === id);
+          if (!tab || !login) return;
+          const unnamedEmail = tab.kind === 'email' && !!tab.emailData && !tab.emailData.clientAccountId;
+          const unnamedFolder = tab.kind === 'folder' && !!tab.folderData && !tab.folderData.accountId;
+          if (!unnamedEmail && !unnamedFolder) return;
+          set({
+            tabs: get().tabs.map((candidate) => {
+              if (candidate.id !== id) return candidate;
+              if (unnamedEmail) return { ...candidate, emailData: { ...candidate.emailData!, clientAccountId: login } };
+              return { ...candidate, folderData: { ...candidate.folderData!, accountId: login } };
+            }),
           });
         },
 

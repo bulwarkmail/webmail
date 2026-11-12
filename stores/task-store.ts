@@ -48,10 +48,16 @@ function stripCalendarIds(calendarIds: Record<string, boolean>): { localAccountI
   return { localAccountId, calendarIds: out };
 }
 
-/** The client of the login an id names, else `client`. */
+/**
+ * The client of the login an id names, else `client` for an id that names
+ * none. Throws "Not connected" while that login has no client: task ids
+ * repeat across accounts, so through another login the same id is another task.
+ */
 function clientOf(client: IJMAPClient, localAccountId: string | null): IJMAPClient {
   if (!localAccountId) return client;
-  return getClientByLocalAccountId(localAccountId) ?? client;
+  const owner = getClientByLocalAccountId(localAccountId);
+  if (!owner) throw new Error('Not connected');
+  return owner;
 }
 
 export type TaskViewFilter = 'all' | 'pending' | 'completed' | 'overdue';
@@ -263,3 +269,20 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     set({ tasks: [], selectedTaskId: null, error: null, isLoading: false });
   },
 }));
+
+/**
+ * Drops the tasks of login `localAccountId` (the calendar lists every
+ * login's): it was removed, or has no client for longer, so nothing done to
+ * them could reach its server.
+ */
+export function forgetLoginTasks(localAccountId: string): void {
+  const ofLogin = (task: CalendarTask) => task.localAccountId === localAccountId;
+  if (!useTaskStore.getState().tasks.some(ofLogin)) return;
+  useTaskStore.setState((s) => {
+    const gone = new Set(s.tasks.filter(ofLogin).map((task) => task.id));
+    return {
+      tasks: s.tasks.filter((task) => !ofLogin(task)),
+      selectedTaskId: s.selectedTaskId && gone.has(s.selectedTaskId) ? null : s.selectedTaskId,
+    };
+  });
+}

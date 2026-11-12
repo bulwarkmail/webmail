@@ -130,6 +130,21 @@ describe('useMailboxDrop', () => {
     expect(crossAccountMoveEmails).not.toHaveBeenCalled();
   });
 
+  // The 1.0 login is account `k` and browsed in the sidebar; its Inbox has the
+  // id of the active login's Inbox. The folder on screen is the browsed
+  // login's, so a drop onto that login's own Archive stays in its account.
+  it('moves a drop from a browsed login\'s folder onto that login\'s own folder in place', async () => {
+    useEmailStore.setState({
+      viewingAccountId: 'userb@v10',
+      accountMailboxes: { 'userb@v10': [mailbox({ id: 'a', name: 'Inbox', role: 'inbox', accountId: 'k' }), mailbox({ accountId: 'k' })] },
+    } as never);
+
+    await drop(mailbox({ accountId: 'k' }), ['m1'], 'userb@v10');
+
+    expect(moveEmailsToMailbox).toHaveBeenCalledWith(client016, ['m1'], 'f');
+    expect(crossAccountMoveEmails).not.toHaveBeenCalled();
+  });
+
   // mail-p3-7: the toast counts what the list shows, conversations when it groups them.
   it('counts the conversations dropped, or the emails with conversations off', async () => {
     drag.draggedEmails = [

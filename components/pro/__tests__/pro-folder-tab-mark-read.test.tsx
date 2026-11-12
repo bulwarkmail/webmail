@@ -26,7 +26,8 @@ const client = vi.hoisted(() => ({
 }));
 
 vi.mock('@/stores/auth-store', () => {
-  const state = { client, getClientForAccount: () => undefined };
+  // One login, signed in: the folder tab is that login's.
+  const state = { client, activeAccountId: 'login-a', getClientForAccount: () => undefined };
   const hook = (sel?: (s: typeof state) => unknown) => (typeof sel === 'function' ? sel(state) : state);
   hook.getState = () => state;
   return { useAuthStore: hook };

@@ -80,6 +80,7 @@ import { MvListSectionHeader } from "./mv-list-section-header";
 import { PluginSearchResults } from "./plugin-search-results";
 import { commonTagScope } from "@/hooks/use-account-tags";
 import { FolderRetentionLine } from "./retention-notice";
+import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
 import { canExport, canPrint } from "@/lib/device-policy";
 
 interface EmailListProps {
@@ -658,6 +659,17 @@ export function EmailList({
   // The rows the selection covers: what the bar, the pane and the toasts
   // count (mail-18). A conversation row ticks all its loaded messages.
   const selectionRows = selectionRowCount(selectedEmailsForRemoval, selectedEmailKeys.size, disableThreading);
+  // "Move to" offers the folders of the login the messages are in
+  // (moveFoldersFor): for a selection only while every message is in one.
+  const selectionFolders = useMoveFolders(selectedEmailsForRemoval);
+  const contextMoveEmails = useMemo(
+    () => (contextMenuEmail && selectedEmailKeys.has(emailKeyFor(contextMenuEmail)) && selectedEmailsForRemoval.length > 0
+      ? selectedEmailsForRemoval
+      : contextMenuEmail ? [contextMenuEmail] : []),
+    [contextMenuEmail, selectedEmailKeys, selectedEmailsForRemoval],
+  );
+  const contextFolders = useMoveFolders(contextMoveEmails);
+  const moveUnavailableHint = useMoveUnavailableHint();
   // Report phishing for the selection, one report per message (enterprise pack).
   const selectionPhishing = usePhishingReport(selectedEmailsForRemoval, effectiveMailboxRole);
   const tPhishing = useTranslations('phishing_report');
@@ -806,10 +818,12 @@ export function EmailList({
     const restore = restoreBatchesForSelection(client);
     const receipts: CrossAccountMoveReceipt[] = [];
     try {
-      const destination = mailboxes.find((m) => m.id === mailboxId);
+      // The selection's own login's folder list, the one the move uses.
+      const folders = selectionFolders.mailboxes;
+      const destination = folders.find((m) => m.id === mailboxId);
       await runBatchEmailAction(() => batchMoveToMailbox(client, mailboxId, undefined, receipts), {
         // "3 conversations moved to Family" (mail-18).
-        success: batchToastTitle(tRoot, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
+        success: batchToastTitle(tRoot, 'move', rows, disableThreading, destination ? getMailboxPath(destination, folders) : undefined),
         error: tNotifications('move_failed'),
         undo: undoMoveAction(client, restore, undo, receipts),
       });
@@ -860,9 +874,9 @@ export function EmailList({
   // Move on the selection bar (mail-10): the folders the selection's own
   // context menu offers, with the selection's account first (#1149).
   const moveMenu = useContextMenu<null>();
-  const selectionMoveModel = useMoveMenu(mailboxes, {
+  const selectionMoveModel = useMoveMenu(selectionFolders.mailboxes, {
     currentMailboxId: selectedMailbox,
-    ownerAccountId: resolveMoveOwnerAccountId(selectedEmailsForRemoval[0], mailboxes, selectedMailbox),
+    ownerAccountId: resolveMoveOwnerAccountId(selectedEmailsForRemoval[0], selectionFolders.mailboxes, selectedMailbox),
     emails: selectedEmailsForRemoval,
   });
   const chooseMoveFolder = useChooseMoveFolder();
@@ -873,12 +887,13 @@ export function EmailList({
   const shortcutOf = useMessageActionShortcut();
   const selectionUnread = selectedEmailsForRemoval.filter((email) => !email.keywords?.$seen).length;
   const selectionRestoreTo = effectiveMailboxRole === 'trash' && hasSelection
-    ? restoreTargetForAll(selectedEmailsForRemoval, mailboxes, selectedMailbox)
+    ? restoreTargetForAll(selectedEmailsForRemoval, selectionFolders.mailboxes, selectedMailbox)
     : undefined;
   const selectionActions = useSelectionActionList({
     emails: selectedEmailsForRemoval,
     currentMailboxRole: effectiveMailboxRole,
     canMove: !moveMenuIsEmpty(selectionMoveModel),
+    moveUnavailableHint: hasSelection ? moveUnavailableHint(selectionFolders.unavailable) : undefined,
     canRemoveFromFolder: selectionCanLeaveFolder,
     canTag: !isScheduledView,
     onRestore: selectionRestoreTo ? () => void handleBatchMoveToMailbox(selectionRestoreTo) : undefined,
@@ -1687,7 +1702,8 @@ export function EmailList({
           isOpen={contextMenu.isOpen}
           onClose={closeContextMenu}
           menuRef={menuRef}
-          mailboxes={mailboxes}
+          mailboxes={contextFolders.mailboxes}
+          moveUnavailableHint={moveUnavailableHint(contextFolders.unavailable)}
           selectedMailbox={selectedMailbox}
           currentMailboxRole={effectiveMailboxRole}
           isMultiSelect={selectedEmailKeys.has(emailKeyFor(contextMenuEmail))}

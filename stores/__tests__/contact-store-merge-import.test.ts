@@ -58,6 +58,17 @@ describe('importContacts into a chosen address book', () => {
     await useContactStore.getState().importContacts(null, [incoming], 'ab-2');
     expect(useContactStore.getState().contacts[0].addressBookIds).toEqual({ 'ab-2': true });
   });
+
+  // The book was another login's and left the list while the import dialog
+  // was open (that login was signed out). The cards are not filed in the
+  // active login's default book instead.
+  it('refuses a chosen book that is no longer listed, and creates nothing', async () => {
+    const client = makeClient();
+    await expect(useContactStore.getState().importContacts(client as unknown as IJMAPClient, [incoming], 'login-b::ab-1'))
+      .rejects.toThrow('Address book not found');
+    expect(client.createContact).not.toHaveBeenCalled();
+    expect(useContactStore.getState().contacts).toEqual([]);
+  });
 });
 
 describe('mergeContacts', () => {

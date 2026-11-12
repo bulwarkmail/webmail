@@ -153,9 +153,12 @@ export async function runNotificationAction(
     }
     if (request.action === 'delete') {
       const store = useEmailStore.getState();
-      // In the list: the store's own delete, with its hooks and the Delete setting.
+      // In the list: the store's own delete, with its hooks and the Delete
+      // setting, for this login and account's message, not a listed row of
+      // another account with its id.
       if (store.emails.some((row) => row.id === request.emailId && (row.sourceClientAccountId ?? entry.id) === entry.id)) {
-        answer(await store.deleteEmail(client, request.emailId) ? 'done' : 'failed');
+        const source = { clientAccountId: entry.id, accountId: request.accountId, email: email ?? undefined };
+        answer(await store.deleteEmail(client, request.emailId, false, undefined, source) ? 'done' : 'failed');
         return;
       }
       // Not in the list, so no store action can reach it, and plugins are never gone round.

@@ -50,7 +50,12 @@ export function PopoutSavedMessage({ blobId, name, accountId, openCompose, onImp
   const tDrop = useTranslations("fileDrop");
   const tWindows = useTranslations("pwaWindows");
   const login = useAuthStore((s) => accountId ?? s.activeAccountId ?? undefined);
-  const client = useAuthStore((s) => (login ? s.getClientForAccount(login) : undefined) ?? s.client);
+  // The login the file was uploaded through, and no other: its blob id is
+  // another file, or none, in any other login.
+  useAuthStore((s) => s.connectedAccountsRevision);
+  const client = useAuthStore((s) => (login
+    ? s.getClientForAccount(login) ?? (login === s.activeAccountId ? s.client : null)
+    : null));
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const identities = useIdentityStore((s) => s.identities);
   const [email, setEmail] = useState<Email | null>(null);
@@ -153,6 +158,13 @@ export function PopoutSavedMessage({ blobId, name, accountId, openCompose, onImp
     "message.forward": !!email,
   });
 
+  if (!client) {
+    return (
+      <PopoutNotice title={tWindows("session_ended_title")} body={tWindows("session_ended_body")}>
+        <Button onClick={closePopoutWindow}>{tWindows("close_window")}</Button>
+      </PopoutNotice>
+    );
+  }
   if (failed) {
     return (
       <PopoutNotice title={tLaunch("open_failed")} body={name ?? ""}>

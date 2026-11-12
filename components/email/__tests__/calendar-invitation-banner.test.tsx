@@ -301,6 +301,82 @@ describe('CalendarInvitationBanner', () => {
     expect(mocks.sourceClientMock.parseCalendarEvents).not.toHaveBeenCalled();
   });
 
+  // The calendar on screen is the active login's. An invitation in another
+  // login's message is shown, and nothing for it touches that calendar: the
+  // event belongs in the calendar of the login that was invited.
+  describe('an invitation in a message of another login', () => {
+    const invite = [{
+      uid: 'uid-other',
+      title: 'Invite in account B',
+      start: '2026-03-22T14:00:00Z',
+      participants: {
+        organizer: { '@type': 'Participant', email: 'boss@example.com', roles: { owner: true }, participationStatus: 'accepted' },
+        attendee: { '@type': 'Participant', email: 'user@example.com', roles: { attendee: true }, participationStatus: 'needs-action' },
+      },
+    }];
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+    it('offers no answer and no import, and says where to do it', async () => {
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail({ sourceClientAccountId: 'login-b', sourceAccountId: 'jmap-b' })} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+      await settle();
+
+      expect(screen.getByText('invitation_other_account')).toBeInTheDocument();
+      expect(screen.queryByText('Accept')).toBeNull();
+      expect(screen.queryByText('Decline')).toBeNull();
+      expect(screen.queryByText('Add to calendar')).toBeNull();
+      expect(screen.queryByText('View in calendar')).toBeNull();
+      expect(mocks.clientMock.queryCalendarEvents).not.toHaveBeenCalled();
+      expect(mocks.clientMock.getCalendarEvent).not.toHaveBeenCalled();
+      expect(mocks.calendarState.rsvpEvent).not.toHaveBeenCalled();
+      expect(mocks.calendarState.importEvents).not.toHaveBeenCalled();
+    });
+
+    it('the same for a message of a login browsed in the sidebar', async () => {
+      mocks.emailState.viewingAccountId = 'login-b';
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail()} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+      await settle();
+
+      expect(screen.getByText('invitation_other_account')).toBeInTheDocument();
+      expect(screen.queryByText('Accept')).toBeNull();
+      expect(mocks.clientMock.queryCalendarEvents).not.toHaveBeenCalled();
+    });
+
+    it('does not take the active login\'s event with the same uid for its own', async () => {
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      mocks.calendarState.events = [{ id: 'ev-a', uid: 'uid-other', title: 'Invite in account B', calendarIds: { 'cal-1': true }, participants: invite[0].participants }];
+      render(<CalendarInvitationBanner email={makeEmail({ sourceClientAccountId: 'login-b', sourceAccountId: 'jmap-b' })} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+      await settle();
+
+      expect(screen.queryByText('Already in your calendar')).toBeNull();
+      expect(mocks.calendarState.updateEvent).not.toHaveBeenCalled();
+      expect(mocks.calendarState.deleteEvent).not.toHaveBeenCalled();
+    });
+
+    it('whose login is not connected is not parsed through the active login', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail({ sourceClientAccountId: 'login-gone', sourceAccountId: 'jmap-gone' })} />);
+      await settle();
+
+      expect(mocks.clientMock.parseCalendarEvents).not.toHaveBeenCalled();
+      expect(mocks.clientMock.queryCalendarEvents).not.toHaveBeenCalled();
+      expect(screen.queryByText('Accept')).toBeNull();
+    });
+
+    it('control: the active login\'s own invitation still offers the answers', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail()} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+
+      expect(await screen.findByText('Accept')).toBeInTheDocument();
+      expect(screen.queryByText('invitation_other_account')).toBeNull();
+    });
+  });
+
   it('surfaces the underlying error when parsing fails', async () => {
     mocks.clientMock.parseCalendarEvents.mockRejectedValue(new Error('Failed to parse calendar file'));
 

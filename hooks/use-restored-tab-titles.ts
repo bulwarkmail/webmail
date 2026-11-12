@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { TITLE_UNTIL_LOADED, useProTabStore, type ProTab } from '@/stores/pro-tab-store';
+import { tabLogin, tabLoginClient } from '@/components/pro/pro-tab-login';
 
 /**
  * With the local store on, stored tabs have no subjects. A tab's body puts its
@@ -21,7 +22,10 @@ export function useRestoredTabTitles(tabs: readonly ProTab[]): void {
     let stale = false;
     for (const tab of waiting) {
       const data = tab.emailData!;
-      const owner = data.clientAccountId ? useAuthStore.getState().getClientForAccount(data.clientAccountId) : client;
+      // Through the tab's own login only. A tab that names none while
+      // several logins are signed in is asked nothing: its id is another
+      // message in each of them.
+      const owner = tabLoginClient(tabLogin(data.clientAccountId));
       // Its login is gone or not back yet. The next render asks again.
       if (!owner) continue;
       void owner.getEmail(data.emailId, data.accountId).then((email) => {

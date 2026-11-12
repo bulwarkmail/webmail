@@ -5853,6 +5853,13 @@
   "unified_mailbox": {
     "search_unavailable": "Meklēšana nav pieejama apvienotajā skatā"
   },
+  "account_routing": {
+    "group_members_one_account": "Grupā var būt tikai viena konta kontakti.",
+    "link_names_no_account": "Šī saite nenorāda, kurā kontā ir ziņojums, tāpēc tā netika atvērta.",
+    "group_member_gone": "Viens no izvēlētajiem kontaktiem vairs nepastāv. Izvēlieties dalībniekus vēlreiz.",
+    "invitation_other_account": "Šis uzaicinājums ir citā kontā. Pārslēdzieties uz to kontu, lai uz to atbildētu vai pievienotu to kalendāram.",
+    "tab_names_no_account": "Šī cilne tika saglabāta bez sava konta, tāpēc tā netika atvērta. Aizveriet to un atveriet vēlreiz no konta, kuram tā pieder."
+  },
   "mail_import": {
     "menu_import": "Importēt pastu…",
     "settings_label": "Importēt pastu",

@@ -5853,6 +5853,13 @@
   "unified_mailbox": {
     "search_unavailable": "Zoeken is niet beschikbaar in de gecombineerde weergave"
   },
+  "account_routing": {
+    "group_members_one_account": "Een groep kan alleen contacten van één account bevatten.",
+    "link_names_no_account": "Deze link zegt niet in welk account het bericht staat, dus is hij niet geopend.",
+    "group_member_gone": "Een van de gekozen contacten bestaat niet meer. Kies de leden opnieuw.",
+    "invitation_other_account": "Deze uitnodiging staat in een ander account. Schakel over naar dat account om erop te antwoorden of haar aan een agenda toe te voegen.",
+    "tab_names_no_account": "Dit tabblad is zonder zijn account opgeslagen, dus is het niet geopend. Sluit het en open het opnieuw vanuit het account waar het bij hoort."
+  },
   "mail_import": {
     "menu_import": "E-mail importeren…",
     "settings_label": "E-mail importeren",

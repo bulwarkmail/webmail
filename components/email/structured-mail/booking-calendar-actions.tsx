@@ -41,7 +41,7 @@ function colorDot(color: string): React.ComponentType<{ className?: string }> {
  * and "View in calendar". Renders nothing when the booking has no calendar
  * action (see useBookingCalendar).
  */
-export function BookingCalendarActions({ booking, email }: { booking: StructuredCard; email: Pick<Email, 'from' | 'subject'> }) {
+export function BookingCalendarActions({ booking, email }: { booking: StructuredCard; email: Pick<Email, 'from' | 'subject' | 'sourceClientAccountId'> }) {
   const shownName = useCollectionNames();
   const t = useTranslations('structured_mail_calendar');
   const calendar = useBookingCalendar(booking, email);

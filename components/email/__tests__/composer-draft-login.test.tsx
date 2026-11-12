@@ -390,4 +390,28 @@ describe('a draft and the login it was saved with', () => {
 
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-b1', { accountId: 'c', localAccountId: 'login-b' });
   });
+
+  // The From address belongs to login B, which has no client (signed out on
+  // its server, not reconnected yet). The draft is B's: it is not written
+  // into login A's Drafts, on another server, and the composer says why.
+  it('saves no draft through another login while the login of the From address is not connected', async () => {
+    useAuthStore.setState({ getClientForAccount: ((id: string) => (id === 'login-a' ? clientA : undefined)) as never });
+    const composer = open({ ...DRAFT, draftId: null, selectedIdentityId: 'login-b::id-b' });
+
+    await composer.editSubject('Hello', 'Hello 2');
+
+    expect(clientA.createDraft).not.toHaveBeenCalled();
+    expect(clientB.createDraft).not.toHaveBeenCalled();
+    expect(screen.getByText('not_connected')).toBeTruthy();
+  });
+
+  it('control: with that login connected the draft is saved through it', async () => {
+    const composer = open({ ...DRAFT, draftId: null, selectedIdentityId: 'login-b::id-b' });
+
+    await composer.editSubject('Hello', 'Hello 2');
+
+    expect(clientB.createDraft).toHaveBeenCalledTimes(1);
+    expect(clientA.createDraft).not.toHaveBeenCalled();
+    expect(screen.queryByText('not_connected')).toBeNull();
+  });
 });

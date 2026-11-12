@@ -64,7 +64,7 @@ import { ResizeHandle } from "@/components/layout/resize-handle";
 import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { descriptionWithNote } from "@/lib/calendar-description";
 import { filterTasksByCalendars } from "@/lib/calendar-tasks";
-import { baseEventStoreId, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
+import { baseEventStoreId, isServerRecurrenceInstance, storeIdBeside } from "@/lib/recurrence-instances";
 import { deleteOccurrence, saveOccurrenceEdit, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { getClientByLocalAccountId } from "@/stores/client-registry";
@@ -1056,9 +1056,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }
 
     // A hit from another login (global search) is fetched through that
-    // login's client - the active one can't see it (#847).
-    const reachingClient = (link.login ? getClientByLocalAccountId(link.login) : null) ?? client;
-    if (!reachingClient) return;
+    // login's client - the active one can't see it (#847), and asked for the
+    // same id it may answer with another event.
+    const reachingClient = link.login ? getClientByLocalAccountId(link.login) : client;
+    if (!reachingClient) {
+      if (link.login) toast.error(tDeepLink('event_not_found'));
+      return;
+    }
     void (async () => {
       try {
         const event = await reachingClient.getCalendarEvent(link.id, link.accountId);
@@ -1136,6 +1140,24 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setShowTaskModal(false);
     setEditTask(null);
   }, []);
+  // The editors, the event's card and the scope question hold the ids of the
+  // login they were opened under (the event, its calendar, the task), and the
+  // same ids name other events and tasks in every other login. When the
+  // active login changes they close, as the contact editor does, instead of
+  // saving through the new one.
+  const editorsLoginRef = useRef(activeAccountId);
+  useEffect(() => {
+    const before = editorsLoginRef.current;
+    editorsLoginRef.current = activeAccountId;
+    if (!before || before === activeAccountId) return;
+    eventEditorDirtyRef.current = false;
+    taskEditorDirtyRef.current = false;
+    closeEditors();
+    setCopySource(null);
+    setQuickDraft(null);
+    setPendingScopeAction(null);
+    closeDetail();
+  }, [activeAccountId, closeEditors, closeDetail]);
   const editorsInView = (showEventModal || showTaskModal) && (isEmbedded ? isFocusedProTab : !proInterfaceActive);
   useCloseOnBack({
     active: editorsInView,
@@ -1189,14 +1211,18 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     if ((occurrence.recurrenceRules?.length ?? 0) > 0 && !occurrence.recurrenceId) {
       return occurrence;
     }
+    // Only through the occurrence's own login, and nothing while that login
+    // has no client: through any other login the base event's id, or its
+    // uid, names another event or none.
+    const login = occurrence.localAccountId;
+    const loginClient = login ? getClientByLocalAccountId(login) ?? null : client;
     // An occurrence expanded by the server names its base event outright.
     // Fetch it through the occurrence's own account and hand it back under
     // the store id the base would have, so the store routes mutations on it
     // through the same account (see resolveMutationTarget).
     if (isServerRecurrenceInstance(occurrence) && occurrence.baseEventId) {
-      const accountClient = (occurrence.localAccountId && getClientByLocalAccountId(occurrence.localAccountId)) || client;
-      if (!accountClient) return null;
-      const master = await accountClient.getCalendarEvent(occurrence.baseEventId, occurrence.accountId);
+      if (!loginClient) return null;
+      const master = await loginClient.getCalendarEvent(occurrence.baseEventId, occurrence.accountId);
       if (!master) return null;
       return {
         ...master,
@@ -1210,14 +1236,33 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         isShared: occurrence.isShared,
       };
     }
+    // A uid is the same in every calendar that got the invitation: the series
+    // has to be in the occurrence's login and account too.
     const master = events.find(e =>
       e.uid === occurrence.uid && !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0
+      && e.localAccountId === login && e.accountId === occurrence.accountId
     );
     if (master) return master;
-    if (!client) return null;
+    if (!loginClient) return null;
     try {
-      const results = await client.queryCalendarEvents({ uid: occurrence.uid });
-      return results.find(e => !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0) || null;
+      const results = await loginClient.queryCalendarEvents({ uid: occurrence.uid }, undefined, undefined, login ? occurrence.accountId : undefined);
+      const found = results.find(e => !e.recurrenceId && (e.recurrenceRules?.length ?? 0) > 0);
+      if (!found || !login) return found ?? null;
+      // Under the store id it has in that login, so the store routes what is
+      // done to it there (see resolveMutationTarget).
+      const id = storeIdBeside(occurrence, found.id);
+      if (!id) return null;
+      return {
+        ...found,
+        id,
+        originalId: found.id,
+        originalCalendarIds: found.calendarIds,
+        calendarIds: occurrence.calendarIds,
+        accountId: occurrence.accountId,
+        accountName: occurrence.accountName,
+        localAccountId: login,
+        isShared: occurrence.isShared,
+      };
     } catch (error) {
       debug.error("Failed to query master event for UID:", occurrence.uid, error);
       throw error;
@@ -1763,7 +1808,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     if (!client) { toast.error(t("notifications.event_error")); return; }
     let source = event;
     if (event.recurrenceId && event.recurrenceRules?.length && event.originalId) {
-      const sourceClient = (event.localAccountId ? useAuthStore.getState().getClientForAccount(event.localAccountId) : null) ?? client;
+      // From its own login only: the same id is another event elsewhere.
+      const sourceClient = event.localAccountId ? useAuthStore.getState().getClientForAccount(event.localAccountId) : client;
+      if (!sourceClient) { toast.error(t("notifications.event_error")); return; }
       const isSharedSource = calendars.some((c) => event.calendarIds?.[c.id] && c.isShared);
       const master = await sourceClient.getCalendarEvent(event.originalId, isSharedSource ? event.accountId : undefined).catch(() => null);
       if (master) source = master;

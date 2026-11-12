@@ -5853,6 +5853,13 @@
   "unified_mailbox": {
     "search_unavailable": "통합 보기에서는 검색을 사용할 수 없습니다"
   },
+  "account_routing": {
+    "group_members_one_account": "그룹에는 한 계정의 연락처만 넣을 수 있어요.",
+    "link_names_no_account": "이 링크에는 메시지가 있는 계정이 나와 있지 않아 열지 않았어요.",
+    "group_member_gone": "선택한 연락처 중 하나가 더 이상 없어요. 멤버를 다시 선택해 주세요.",
+    "invitation_other_account": "이 초대는 다른 계정에 있어요. 응답하거나 캘린더에 추가하려면 그 계정으로 전환하세요.",
+    "tab_names_no_account": "이 탭은 계정 정보 없이 저장되어 열지 않았어요. 탭을 닫고 해당 계정에서 다시 여세요."
+  },
   "mail_import": {
     "menu_import": "메일 가져오기…",
     "settings_label": "메일 가져오기",

@@ -5853,6 +5853,13 @@
   "unified_mailbox": {
     "search_unavailable": "Wyszukiwanie jest niedostępne w widoku ujednoliconym"
   },
+  "account_routing": {
+    "group_members_one_account": "Grupa może zawierać tylko kontakty z jednego konta.",
+    "link_names_no_account": "Ten link nie wskazuje, na którym koncie jest wiadomość, więc nie został otwarty.",
+    "group_member_gone": "Jeden z wybranych kontaktów już nie istnieje. Wybierz członków ponownie.",
+    "invitation_other_account": "To zaproszenie jest na innym koncie. Przełącz się na to konto, aby na nie odpowiedzieć lub dodać je do kalendarza.",
+    "tab_names_no_account": "Ta karta została zapisana bez swojego konta, więc nie została otwarta. Zamknij ją i otwórz ponownie z konta, do którego należy."
+  },
   "mail_import": {
     "menu_import": "Importuj pocztę…",
     "settings_label": "Importuj pocztę",

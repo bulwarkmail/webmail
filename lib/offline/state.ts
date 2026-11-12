@@ -287,22 +287,87 @@ export function onStoreOwnerChanged(listener: (account: string) => Promise<void>
 }
 
 /**
- * A sign-in, once the server has said who this is and before the account is added. A store waiting
- * for this address that belongs to another JMAP account or another server isn't theirs: an address
- * can be given to someone new, and a host can run a second server on another port. Its data goes
- * first, and they start with nothing. The id itself doesn't include the port, because every store,
- * setting and server-side record of an existing account is keyed by it.
+ * A sign-in, once the server has said who this is and before the account is added. What the device
+ * keeps under this id for another server isn't theirs: a host can run a second server on another
+ * port or path, under the same user name. Its data goes first, and they start with nothing, whether
+ * the store waited for a sign-in or not. A store waiting for this address that belongs to another
+ * JMAP account isn't theirs either: an address can be given to someone new. The id itself doesn't
+ * include the port, because every store, setting and server-side record of an existing account is
+ * keyed by it.
  */
 export async function checkStoreOwner(account: string, jmap: string, serverUrl: string): Promise<void> {
+  const keptFromBefore = !!originOnlyOwners()[account];
   const known = readStoreOwners()[account];
-  const server = originOf(serverUrl);
-  if (known && isEvicted(account) && (known.jmap !== jmap || known.server !== server)) await storeOwnerChanged?.(account);
+  const server = mailServerKey(serverUrl);
+  const otherServer = !!known && !sameStoreServer(known.server, server, keptFromBefore);
+  if (known && (otherServer || (isEvicted(account) && known.jmap !== jmap))) await storeOwnerChanged?.(account);
   if (known?.jmap !== jmap || known?.server !== server) {
     writeRecord(OFFLINE_OWNERS_KEY, { ...readStoreOwners(), [account]: { jmap, server } });
   }
+  // From this sign-in on the record names origin and path, and matches that path only.
+  if (keptFromBefore) dropOriginOnlyOwner(account);
+}
+
+/**
+ * localStorage: '2' once the owner records on this device were sorted: every record written since
+ * names the server's origin and mount path (mailServerKey), and the ones kept from before, which
+ * name the origin only, are listed under OFFLINE_ORIGIN_ONLY_OWNERS_KEY.
+ */
+export const OFFLINE_OWNERS_FORMAT_KEY = 'bulwark-offline-owners-format';
+/** localStorage: the accounts whose owner record is from before mount paths were noted. */
+export const OFFLINE_ORIGIN_ONLY_OWNERS_KEY = 'bulwark-offline-owners-origin-only';
+
+/** The accounts whose owner record names the origin only, sorting the records on the first call. */
+function originOnlyOwners(): Record<string, true> {
+  try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(OFFLINE_OWNERS_FORMAT_KEY) !== '2') {
+      const kept: Record<string, true> = {};
+      for (const [account, owner] of Object.entries(readStoreOwners())) {
+        if (owner?.server === originOf(owner.server)) kept[account] = true;
+      }
+      writeRecord(OFFLINE_ORIGIN_ONLY_OWNERS_KEY, kept);
+      localStorage.setItem(OFFLINE_OWNERS_FORMAT_KEY, '2');
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  return readRecord<true>(OFFLINE_ORIGIN_ONLY_OWNERS_KEY);
+}
+
+function dropOriginOnlyOwner(account: string): void {
+  const kept = readRecord<true>(OFFLINE_ORIGIN_ONLY_OWNERS_KEY);
+  if (!(account in kept)) return;
+  delete kept[account];
+  writeRecord(OFFLINE_ORIGIN_ONLY_OWNERS_KEY, kept);
+}
+
+/**
+ * The mail server a URL names: its origin and the path it is mounted at. Two servers on one host
+ * (another port, another path) are two servers; two spellings of one origin (a default port
+ * written out, an upper-case host name) are one.
+ */
+export function mailServerKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname.replace(/\/+$/, '')}`;
+  } catch {
+    return url.replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+/**
+ * Whether the server a store was recorded for is `server` (mailServerKey). A record kept from
+ * before paths were noted names an origin only: it matches any path on that origin, until the
+ * sign-in that rewrites it. Every other record matches its own origin and path only, a server at
+ * the root of the host included.
+ */
+function sameStoreServer(known: string, server: string, keptFromBefore: boolean): boolean {
+  if (known === server) return true;
+  return keptFromBefore && known === originOf(known) && known === originOf(server);
 }
 
 export function forgetStoreOwner(account: string): void {
+  dropOriginOnlyOwner(account);
   const owners = readStoreOwners();
   if (!(account in owners)) return;
   delete owners[account];

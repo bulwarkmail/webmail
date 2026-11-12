@@ -8,6 +8,18 @@ export interface NavSnapshot {
   threadId: string | null;
   composerOpen: boolean;
   sidebarOpen: boolean;
+  /**
+   * The login the snapshot was taken in. Folder, message and conversation
+   * ids name other things in any other login, so the page restores them only
+   * while that login is the one on screen. Absent in entries written before
+   * snapshots named it.
+   */
+  login?: string | null;
+  /**
+   * The open message's key in the list: in a list that mixes accounts
+   * several rows can share an id.
+   */
+  emailKey?: string | null;
 }
 
 interface StoredNavState extends NavSnapshot {
@@ -39,7 +51,10 @@ function snapshotsEqual(
     a.emailId === b.emailId &&
     a.threadId === b.threadId &&
     a.composerOpen === b.composerOpen &&
-    a.sidebarOpen === b.sidebarOpen
+    a.sidebarOpen === b.sidebarOpen &&
+    // The same ids in another login are another view.
+    (a.login ?? null) === (b.login ?? null) &&
+    (a.emailKey ?? null) === (b.emailKey ?? null)
   );
 }
 
@@ -71,6 +86,8 @@ export function useBrowserNavigation({
   threadId,
   composerOpen,
   sidebarOpen,
+  login,
+  emailKey,
   onRestore,
   enabled = true,
   buildUrl,
@@ -150,6 +167,9 @@ export function useBrowserNavigation({
       threadId,
       composerOpen,
       sidebarOpen,
+      // Only when the page names them: a page that does not keeps its entries as they were.
+      ...(login !== undefined ? { login } : {}),
+      ...(emailKey !== undefined ? { emailKey } : {}),
     };
 
     const existing = readStoredState();
@@ -176,6 +196,8 @@ export function useBrowserNavigation({
           threadId: null,
           composerOpen: false,
           sidebarOpen,
+          ...(login !== undefined ? { login } : {}),
+          ...(emailKey !== undefined ? { emailKey: null } : {}),
         };
         const listStored: StoredNavState = {
           ...listSnapshot,
@@ -200,5 +222,5 @@ export function useBrowserNavigation({
     } else {
       window.history.pushState(newState, "", newUrl);
     }
-  }, [enabled, mailboxId, emailId, threadId, composerOpen, sidebarOpen]);
+  }, [enabled, mailboxId, emailId, threadId, composerOpen, sidebarOpen, login, emailKey]);
 }

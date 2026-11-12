@@ -4,9 +4,10 @@ import { JMAPClient, RateLimitError, RequestTimeoutError } from '@/lib/jmap/clie
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { useIdentityStore } from './identity-store';
 import { setClientLookup } from './client-registry';
-import { useContactStore } from './contact-store';
+import { forgetLoginContacts, useContactStore } from './contact-store';
 import { useVacationStore } from './vacation-store';
-import { subscriptionOwner, useCalendarStore } from './calendar-store';
+import { forgetLoginCalendars, subscriptionOwner, useCalendarStore } from './calendar-store';
+import { forgetLoginTasks } from './task-store';
 import { useFilterStore } from './filter-store';
 import { useSettingsStore } from './settings-store';
 import { useAccountStore, type AccountEntry, type AccountRemovalReason } from './account-store';
@@ -885,6 +886,21 @@ const refusedAtConnect = new Set<string>();
 /** errorMessage of an account the server refused as a whole (AccountUnavailableError). */
 const ACCOUNT_REFUSED = 'account_refused';
 const endingRefused = new Set<string>();
+
+/**
+ * A login that is removed, or has no client for longer: its mail rows, cards,
+ * calendars, events and tasks leave the lists. Ids repeat across logins, so
+ * nothing done to them could go anywhere but to another login's namesakes.
+ * Views that hold one of its messages or folders themselves (Pro tabs) look
+ * up their login's client again on the revision and show nothing of it.
+ */
+function forgetLoginRows(accountId: string, activeClient: IJMAPClient | null): void {
+  forgetAccountRows(accountId, activeClient);
+  forgetLoginContacts(accountId);
+  forgetLoginCalendars(accountId);
+  forgetLoginTasks(accountId);
+  useAuthStore.setState((state) => ({ connectedAccountsRevision: state.connectedAccountsRevision + 1 }));
+}
 
 /** A client that's connected: what the server said on the way there is over. */
 function holdClient(accountId: string, client: JMAPClient): void {
@@ -2887,7 +2903,7 @@ export const useAuthStore = create<AuthState>()(
         });
         clients.delete(accountId);
         evictAccount(accountId);
-        forgetAccountRows(accountId, get().client);
+        forgetLoginRows(accountId, get().client);
         accountStore.removeAccount(accountId, reason);
         clearDesktopCertificateChoices({ account: accountId });
         forgetPrincipals(accountId);
@@ -3971,10 +3987,17 @@ export const useAuthStore = create<AuthState>()(
         } finally {
           skipLocalCopy = false;
         }
-        return offline.every(([id]) => {
+        const swapped = offline.every(([id]) => {
           const client = clients.get(id);
           return !!client && !client.isOfflineOnly();
         });
+        // A login that came back without a client is gone from here on: its
+        // rows and views go, as when it is removed.
+        const { activeAccountId, client: activeClient } = get();
+        for (const [id] of offline) {
+          if (!clients.has(id) && id !== activeAccountId) forgetLoginRows(id, activeClient);
+        }
+        return swapped;
       },
     }),
     {
@@ -4068,6 +4091,9 @@ export function applyDesktopServerPolicy(): void {
       clients.delete(id);
     }
     useAccountStore.getState().updateAccount(id, { isConnected: false });
+    // Its rows and its folder on screen go, as when it is removed: with no
+    // client, nothing done to them could reach its server.
+    if (id !== auth.activeAccountId) forgetLoginRows(id, auth.client);
   }
   const returned = [...refusedAccounts].filter((id) => !plan.refused.includes(id));
   refusedAccounts = new Set(plan.refused);

@@ -283,7 +283,7 @@ describe('Files on this computer settings page', () => {
       { id: 'n-2026', name: '2026', parentId: 'n-proj', blobId: null },
       { id: 'n-file', name: 'a.txt', parentId: 'n-proj', blobId: 'b1' },
     ]);
-    useAuthStore.setState({ client: { listAllFileNodes } as never });
+    useAuthStore.setState({ client: { listAllFileNodes } as never, activeAccountId: 'acc' });
     setup({ roots: [] });
     renderPage();
     expect(screen.getByText('No folders are synced yet.')).toBeInTheDocument();
@@ -302,7 +302,7 @@ describe('Files on this computer settings page', () => {
   });
 
   it('says why a folder could not be added, and nothing when the picker was closed', async () => {
-    useAuthStore.setState({ client: { listAllFileNodes: vi.fn(async () => [{ id: 'n-proj', name: 'Projects', parentId: null, blobId: null }]) } as never });
+    useAuthStore.setState({ client: { listAllFileNodes: vi.fn(async () => [{ id: 'n-proj', name: 'Projects', parentId: null, blobId: null }]) } as never, activeAccountId: 'acc' });
     setup({ roots: [] });
     controller.addFolder.mockResolvedValueOnce({ ok: false, error: 'overlap' });
     renderPage();
@@ -480,7 +480,7 @@ describe('whose Files, and adding a folder with the one on this computer first (
       ]),
       createFileDirectory,
     };
-    useAuthStore.setState({ client: client as never });
+    useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });
     setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
     controller.chooseFolder = vi.fn(async () => ({ ok: true as const, value: { token: 'tok-1', name: 'Projects' } }));
     renderPage();
@@ -496,7 +496,7 @@ describe('whose Files, and adding a folder with the one on this computer first (
   it('makes a new Files folder from the picker, named like the folder here', async () => {
     const createFileDirectory = vi.fn(async (name: string, parentId: string | null) => ({ id: 'n-new', name, parentId }));
     const client = { listAllFileNodes: vi.fn(async () => [{ id: 'n-docs', name: 'Documents', parentId: null, blobId: null }]), createFileDirectory };
-    useAuthStore.setState({ client: client as never });
+    useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });
     setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
     controller.chooseFolder = vi.fn(async () => ({ ok: true as const, value: { token: 'tok-2', name: 'Photos' } }));
     renderPage();
@@ -509,6 +509,36 @@ describe('whose Files, and adding a folder with the one on this computer first (
     await waitFor(() => expect(within(dialog).getByRole('treeitem', { name: /Photos/ })).toHaveAttribute('aria-selected', 'true'));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Keep them the same' }));
     await waitFor(() => expect(controller.addFolder).toHaveBeenCalledWith('n-new', 'Photos', { account: 'acc', chosen: 'tok-2' }));
+  });
+});
+
+describe('the Files folders of another account than the one on screen', () => {
+  const own = { listAllFileNodes: vi.fn(async () => [{ id: 'n-proj', name: 'Projects', parentId: null, blobId: null }]), createFileDirectory: vi.fn() };
+  const theirs = { listAllFileNodes: vi.fn(async () => [{ id: 'n-work', name: 'Work', parentId: null, blobId: null }]), createFileDirectory: vi.fn() };
+
+  function showFilesOf(connected: Map<string, unknown>) {
+    own.listAllFileNodes.mockClear();
+    theirs.listAllFileNodes.mockClear();
+    useAuthStore.setState({ client: own as never, activeAccountId: 'acc', getAllConnectedClients: (() => connected) as never });
+    setup({ roots: [], accounts: [{ id: 'acc', label: 'ann@example.org' }, { id: 'acc2', label: 'bob@example.org' }] });
+    renderPage();
+    fireEvent.change(within(screen.getByTestId('files-sync-account')).getByRole('combobox', { name: 'Files of' }), { target: { value: 'acc2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add folder…' }));
+  }
+  afterEach(() => useAuthStore.setState({ client: null, activeAccountId: null }));
+
+  it('are read through that account\'s client', async () => {
+    showFilesOf(new Map<string, unknown>([['acc', own], ['acc2', theirs]]));
+    const dialog = await screen.findByRole('dialog');
+    await waitFor(() => expect(within(dialog).getByText('Work')).toBeInTheDocument());
+    expect(own.listAllFileNodes).not.toHaveBeenCalled();
+  });
+
+  it('are not offered from the account on screen while that account has no client', async () => {
+    showFilesOf(new Map<string, unknown>([['acc', own]]));
+    expect(await screen.findByRole('alert')).toHaveTextContent(en.files_sync.folders.load_failed);
+    expect(own.listAllFileNodes).not.toHaveBeenCalled();
+    expect(screen.queryByText('Projects')).toBeNull();
   });
 });
 

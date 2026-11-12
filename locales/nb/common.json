@@ -6122,6 +6122,13 @@
   "unified_mailbox": {
     "search_unavailable": "Søk er ikke tilgjengelig i den samlede visningen"
   },
+  "account_routing": {
+    "group_members_one_account": "En gruppe kan bare inneholde kontakter fra én konto.",
+    "link_names_no_account": "Denne lenken sier ikke hvilken konto meldingen ligger i, så den ble ikke åpnet.",
+    "group_member_gone": "En av de valgte kontaktene finnes ikke lenger. Velg medlemmene på nytt.",
+    "invitation_other_account": "Denne invitasjonen ligger i en annen konto. Bytt til den kontoen for å svare på den eller legge den til i en kalender.",
+    "tab_names_no_account": "Denne fanen ble lagret uten kontoen sin, så den ble ikke åpnet. Lukk den og åpne den på nytt fra kontoen den hører til."
+  },
   "mail_import": {
     "menu_import": "Importer e-post…",
     "settings_label": "Importer e-post",

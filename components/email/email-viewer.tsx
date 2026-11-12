@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { spamApplicableIn } from "@/lib/spam-applicable";
-import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
+import { Email, ContactCard, Identity, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
@@ -153,7 +153,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
-import { useEmailStore, resolveEmailBlobContext, emailWriteSource, bulkDeleteIsPermanent, type EmailBlobContext } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, bulkDeleteIsPermanent, type EmailBlobContext } from "@/stores/email-store";
 import { trashRestoreTarget } from "@/lib/trash-restore-target";
 import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
 import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
@@ -164,7 +164,7 @@ import { ReceivedLabelChip } from "./received-label-chip";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
 import { CalendarInvitationBanner } from "./calendar-invitation-banner";
 import { ReadReceiptBanner } from "./read-receipt-banner";
-import { stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
+import { cachedIdentitiesForAccount, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
@@ -286,6 +286,12 @@ export interface EmailViewerProps {
   onMarkAsSpam?: () => void;
   onUndoSpam?: () => void;
   onMoveToMailbox?: (mailboxId: string) => void;
+  /**
+   * Why the message can't be moved from here, when the host offers no Move
+   * (its login's folders can't be had, see moveFoldersFor): Move shows,
+   * unavailable, with this as its hint.
+   */
+  moveUnavailableHint?: string;
   /**
    * Take the message out of the open folder only (#615). Passed only when
    * the message is also in another folder.
@@ -1298,6 +1304,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       menuRef={menu.menuRef}
       label={label}
       mailboxes={mailboxes}
+      moveUnavailableHint={options.moveUnavailableHint}
       selectedMailbox={selectedMailbox}
       currentMailboxRole={options.currentMailboxRole}
       onReply={options.onReply}
@@ -1434,10 +1441,14 @@ function ReaderMorePanelBody({
               aria-haspopup="menu"
               data-testid={entry.key === 'rules' ? 'viewer-rules' : `panel-${entry.key}`}
               onClick={() => openSub(entry.key)}
-              className={PANEL_ROW_CLASS}
+              disabled={entry.disabled}
+              className={cn(PANEL_ROW_CLASS, entry.disabled && "opacity-50")}
             >
               <Icon className="w-5 h-5" />
-              <span className="flex-1">{entry.label}</span>
+              <span className="flex-1">
+                {entry.label}
+                {entry.hint && <span className="block text-xs text-muted-foreground">{entry.hint}</span>}
+              </span>
               {entry.key === 'tag' && currentTagIds.length > 0 && (
                 <span className="flex -space-x-1 me-1" aria-hidden>
                   {sortedTagIds.slice(0, 3).map((tagId) => (
@@ -1493,6 +1504,7 @@ export function EmailViewer({
   onMarkAsSpam,
   onUndoSpam,
   onMoveToMailbox,
+  moveUnavailableHint,
   onRemoveFromFolder,
   onTogglePinned,
   onBack,
@@ -1783,10 +1795,21 @@ export function EmailViewer({
   // inline images, export and attachment drag-out. Other viewer hosts keep
   // their existing fallback routing.
   const isUnifiedView = useEmailStore((s) => s.isUnifiedView);
+  // A stamped message's parts come through its own login only: the same blob
+  // id is another file in any other login.
   const legacyBlobClient = useMemo(() => {
     const scid = isUnifiedView ? email?.sourceClientAccountId : undefined;
-    return (scid ? useAuthStore.getState().getClientForAccount(scid) : null) ?? client;
-  }, [isUnifiedView, email?.sourceClientAccountId, client]);
+    if (!scid) return client;
+    return useAuthStore.getState().getClientForAccount(scid) ?? (scid === activeAccountId ? client : null);
+  }, [isUnifiedView, email?.sourceClientAccountId, client, activeAccountId]);
+  // Where the open message is: what the host says (a Pro tab, a message
+  // window, the Mail tab's reader), else its stamps or the login browsed.
+  // What the reader sends or notes for the message (a read receipt and its
+  // flag, the unsubscribe mail) goes through that login. No client there
+  // means the login is not connected, and nothing goes out.
+  const messageSource = email ? blobSource ?? resolveEmailBlobContext(email, client) : null;
+  const messageSourceRef = useRef(messageSource);
+  messageSourceRef.current = messageSource;
   const legacyBlobAccountId = isUnifiedView ? email?.sourceAccountId : undefined;
   const blobClient = blobSource ? blobSource.client : legacyBlobClient;
   const blobAccountId = blobSource ? blobSource.accountId : legacyBlobAccountId;
@@ -1803,15 +1826,13 @@ export function EmailViewer({
   // subscriber; sendEmail resolves the identity (with its own fallback to
   // the account default) from the address we pass.
   const handleSendMailtoUnsubscribe = async (fields: { to: string[]; subject?: string; body?: string }) => {
-    const sendClient = (email?.sourceClientAccountId
-      ? useAuthStore.getState().getClientForAccount(email.sourceClientAccountId)
-      : undefined) ?? client;
+    const sendClient = messageSourceRef.current?.client;
     if (!sendClient) throw new Error(tNotifications('not_connected'));
 
     const recipientAddresses = [...(email?.to ?? []), ...(email?.cc ?? [])].map(r => r.email?.toLowerCase());
-    // In unified views the owning account's identities are not loaded here -
-    // pass nothing and let its client fall back to its default identity.
-    const fromIdentity = email?.sourceClientAccountId
+    // Another login's identities are not loaded here - pass nothing and let
+    // its client fall back to its default identity.
+    const fromIdentity = sendClient !== client
       ? undefined
       : identities.find(i => i.email && recipientAddresses.includes(i.email.toLowerCase()));
 
@@ -4213,15 +4234,26 @@ export function EmailViewer({
     return addr || null;
   }, [email?.headers]);
 
+  // A receipt belongs to the login and account the message is in
+  // (messageSource): it goes out through that login, from one of its
+  // identities, and is noted on that message. No client there: no receipt.
+  const receiptClient = messageSource?.client ?? null;
+  const receiptFromActiveLogin = !!receiptClient && receiptClient === client;
+
   // The identity whose address received the original message — the MDN is sent
-  // "from" that address. Falls back to the primary identity.
-  const receiptIdentity = useMemo(() => {
-    if (!identities?.length) return null;
+  // "from" that address. Falls back to that login's primary identity.
+  const pickReceiptIdentity = useCallback((list: readonly Identity[] | null | undefined): Identity | null => {
+    if (!list?.length) return null;
     const recipients = [...(email?.to || []), ...(email?.cc || [])]
       .map(r => r.email?.toLowerCase())
       .filter(Boolean);
-    return identities.find(i => recipients.includes(i.email?.toLowerCase())) || identities[0];
-  }, [identities, email?.to, email?.cc]);
+    return list.find(i => recipients.includes(i.email?.toLowerCase())) || list[0];
+  }, [email?.to, email?.cc]);
+  // The auth store holds the active login's identities only.
+  const receiptIdentity = useMemo(
+    () => (receiptFromActiveLogin ? pickReceiptIdentity(identities) : null),
+    [receiptFromActiveLogin, pickReceiptIdentity, identities],
+  );
 
   const mdnAlreadyHandled = email?.keywords?.['$mdnsent'] === true;
   const [mdnHandledLocally, setMdnHandledLocally] = useQuietState(false);
@@ -4240,25 +4272,48 @@ export function EmailViewer({
     readReceiptResponse !== 'never' &&
     inReceiptEligibleFolder &&
     !isDraft &&
-    !!receiptIdentity;
+    // Another login's identities are read when the receipt is sent.
+    (receiptFromActiveLogin ? !!receiptIdentity : !!receiptClient);
+  // "Always send" is the active login's setting. A message of another login
+  // asks instead.
+  const askForReadReceipt = readReceiptResponse === 'ask'
+    || (readReceiptResponse === 'always' && !receiptFromActiveLogin);
 
   const sendReadReceiptNow = useCallback(async (automatic: boolean) => {
-    if (!client || !email || !readReceiptRequestedBy || !receiptIdentity) return;
     // Taken now: another folder may be open once the receipt is out.
-    const source = blobSource ?? emailWriteSource(email, client);
-    const { rawId } = stripCrossAccountIdentityPrefix(receiptIdentity.id);
+    const source = messageSourceRef.current;
+    const sendClient = source?.client;
+    if (!sendClient || !source || !email || !readReceiptRequestedBy) return;
+    let identity = receiptIdentity;
+    if (sendClient !== client) {
+      // The message's own login: its identities as last read, else asked now.
+      let ofLogin: Identity[] | undefined = source.clientAccountId
+        ? cachedIdentitiesForAccount(source.clientAccountId)
+        : undefined;
+      if (!ofLogin && typeof sendClient.getIdentities === 'function') {
+        ofLogin = await sendClient.getIdentities().catch(() => undefined);
+      }
+      identity = pickReceiptIdentity(ofLogin);
+    }
+    if (!identity) {
+      // No address of that login to send it from: nothing goes out, and never
+      // from another login's address.
+      if (!automatic) toast.error(t('read_receipt.send_failed'), { message: tNotifications('not_connected') });
+      throw new Error('No identity to send the read receipt from');
+    }
+    const { rawId } = stripCrossAccountIdentityPrefix(identity.id);
     try {
-      await client.sendReadReceipt({
+      await sendClient.sendReadReceipt({
         to: readReceiptRequestedBy,
-        fromEmail: receiptIdentity.email,
-        fromName: receiptIdentity.name,
-        identityId: rawId ?? receiptIdentity.id,
+        fromEmail: identity.email,
+        fromName: identity.name,
+        identityId: rawId ?? identity.id,
         originalMessageId: email.messageId,
         originalSubject: email.subject,
-        originalRecipient: receiptIdentity.email,
+        originalRecipient: identity.email,
         automatic,
         subject: t('read_receipt.mdn_subject', { subject: email.subject || '' }),
-        humanText: t('read_receipt.mdn_body', { recipient: receiptIdentity.email }),
+        humanText: t('read_receipt.mdn_body', { recipient: identity.email }),
       });
     } catch (err) {
       // Surface the failure instead of silently resetting the banner so we can
@@ -4272,21 +4327,22 @@ export function EmailViewer({
     // The receipt is out. Failing to flag that must not read as a failed
     // send, nor let the "always" mode send it again.
     try {
-      await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', source);
+      await useEmailStore.getState().markEmailKeyword(sendClient, email.id, '$mdnsent', source);
     } catch (err) {
       console.error('Read receipt sent, but setting $MDNSent failed:', err);
       setMdnHandledLocally(true);
     }
-  }, [client, email, blobSource, readReceiptRequestedBy, receiptIdentity, t, tComposer, setMdnHandledLocally]);
+  }, [client, email, readReceiptRequestedBy, receiptIdentity, pickReceiptIdentity, t, tComposer, tNotifications, setMdnHandledLocally]);
 
   const ignoreReadReceipt = useCallback(async () => {
     setMdnHandledLocally(true);
-    if (client && email) {
+    const source = messageSourceRef.current;
+    if (source?.client && email) {
       // $MDNSent is the RFC 3503 flag every IMAP/JMAP client honours, so the
       // request is suppressed everywhere - not just locally.
-      try { await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', blobSource ?? emailWriteSource(email, client)); } catch { /* best effort */ }
+      try { await useEmailStore.getState().markEmailKeyword(source.client, email.id, '$mdnsent', source); } catch { /* best effort */ }
     }
-  }, [client, email, blobSource, setMdnHandledLocally]);
+  }, [email, setMdnHandledLocally]);
 
   // "always" mode: auto-send the MDN once when the message is opened. A
   // failure is not retried while the message stays open: the attempt itself
@@ -4299,7 +4355,7 @@ export function EmailViewer({
     if (autoMdnRef.current !== email?.id) autoMdnRef.current = null;
   }, [email?.id]);
   useEffect(() => {
-    if (readReceiptResponse !== 'always' || noAutomaticActions) return;
+    if (readReceiptResponse !== 'always' || noAutomaticActions || askForReadReceipt) return;
     if (!shouldOfferReadReceipt || !email) return;
     if (autoMdnRef.current === email.id) return;
     autoMdnRef.current = email.id;
@@ -4307,7 +4363,7 @@ export function EmailViewer({
     // email is already captured via email?.id and sendReadReceiptNow (which
     // depends on `email`); the autoMdnRef guard prevents a double send.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readReceiptResponse, shouldOfferReadReceipt, email?.id, sendReadReceiptNow]);
+  }, [readReceiptResponse, askForReadReceipt, shouldOfferReadReceipt, email?.id, sendReadReceiptNow]);
 
   // The toolbar row with only the panel button: over the empty or loading
   // reader, and on top when the user put the toolbar below the subject. Same
@@ -4551,6 +4607,7 @@ export function EmailViewer({
     email,
     currentMailboxRole,
     canMove: canMoveAnywhere && !!onMoveToMailbox,
+    moveUnavailableHint: onMoveToMailbox ? undefined : moveUnavailableHint,
     canRemoveFromFolder: !!onRemoveFromFolder,
     onReply: onReply ? () => onReply() : undefined,
     onReplyAll,
@@ -4831,6 +4888,23 @@ export function EmailViewer({
                 />
               </div>
             </ContextMenu>
+          </div>
+        )}
+        {/* Move, unavailable: the host says why (moveUnavailableHint) */}
+        {!onMoveToMailbox && moveUnavailableHint && (
+          <div data-overflow-item data-overflow-priority="5" className={cn("relative", mvViewer && "order-6")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+              title={moveUnavailableHint}
+              aria-label={`${t('move_to')}. ${moveUnavailableHint}`}
+              data-testid="reader-move-unavailable"
+            >
+              <FolderInput className="w-4 h-4" />
+              {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
+            </Button>
           </div>
         )}
         {/* Tag Picker - hidden on mobile, overflows to More menu */}
@@ -6211,7 +6285,7 @@ export function EmailViewer({
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
         {((!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
           hasCalendarInvitation ||
-          (readReceiptResponse === 'ask' && shouldOfferReadReceipt) ||
+          (askForReadReceipt && shouldOfferReadReceipt) ||
           structuredCards.length > 0) && (
           <div className="border-b border-border bg-muted/30 isolate">
             <div className="px-6 py-1.5">
@@ -6275,7 +6349,7 @@ export function EmailViewer({
 
 
                 {/* Read-receipt (MDN) request banner — only in "ask" mode */}
-                {readReceiptResponse === 'ask' && shouldOfferReadReceipt && readReceiptRequestedBy && (
+                {askForReadReceipt && shouldOfferReadReceipt && readReceiptRequestedBy && (
                   <div className="py-1">
                     <ReadReceiptBanner
                       requestedBy={readReceiptRequestedBy}

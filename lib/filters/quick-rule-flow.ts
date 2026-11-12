@@ -5,7 +5,8 @@ import { keywordPointer, pointerToken } from '@/lib/jmap/patch-pointer';
 import { toast } from '@/stores/toast-store';
 import type { ToastAction } from '@/components/ui/toast';
 import { useAuthStore } from '@/stores/auth-store';
-import { useEmailStore, type BatchActionTarget } from '@/stores/email-store';
+import { resolveEmailBlobContext, useEmailStore, type BatchActionTarget } from '@/stores/email-store';
+import { emailKeyFor } from '@/lib/thread-utils';
 import { useFilterStore } from '@/stores/filter-store';
 import { emailHooks } from '@/lib/plugin-hooks';
 import { createMailboxWithHooks } from '@/lib/plugin-mail-hooks';
@@ -160,10 +161,15 @@ export async function executePlan(target: QuickRuleTarget, plan: RetroPlan): Pro
           return false;
         }
         await target.client.batchUpdateKeywords(step.ids, { [keywordPointer(step.keyword)]: true }, target.accountId);
-        const listed = new Map(store().emails.map(e => [e.id, e]));
-        for (const id of step.ids) {
-          const email = listed.get(id);
-          if (email) store().setEmailKeywordsLocal(id, { ...email.keywords, [step.keyword]: true });
+        // The rows of the rule's account in the list on screen, each by its
+        // own key: a row of another account or login with one of the ids is
+        // another message and keeps its keywords.
+        const ids = new Set(step.ids);
+        for (const row of store().emails) {
+          if (!ids.has(row.id)) continue;
+          const where = resolveEmailBlobContext(row, viewClient);
+          if (where.client !== target.client || (where.accountId ?? target.client.getAccountId()) !== target.accountId) continue;
+          store().setEmailKeywordsLocal(row.id, { ...row.keywords, [step.keyword]: true }, emailKeyFor(row));
         }
         void emailHooks.onEmailKeywordChange.emit(change);
         break;
