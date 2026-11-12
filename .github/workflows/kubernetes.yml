@@ -44,6 +44,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # No cluster needed: the store and the webmail refuse empty secrets, a
+      # network policy closes the store to other pods, and no pod mounts a
+      # service account token.
+      - name: Check the manifests
+        run: bash deploy/kubernetes/test/static-check.sh
+
       - name: Build the image
         run: docker build --build-arg "GIT_COMMIT=${GITHUB_SHA}" -t bulwark-local:ci .
 

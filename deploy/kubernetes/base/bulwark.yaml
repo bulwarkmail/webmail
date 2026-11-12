@@ -36,6 +36,8 @@ spec:
       labels:
         app.kubernetes.io/name: bulwark
     spec:
+      # Nothing in the pod talks to the Kubernetes API.
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
@@ -55,6 +57,13 @@ spec:
       containers:
         - name: bulwark
           image: ghcr.io/bulwarkmail/webmail
+          # The image's own command, after a check: every replica needs the
+          # same SESSION_SECRET, so the pods don't start with an empty one.
+          command: ["sh", "-c"]
+          args:
+            - >-
+              : "${SESSION_SECRET:?is empty. Set it in base/secrets.env or in the bulwark-secrets Secret: every replica needs the same one}";
+              exec node server.js
           ports:
             - name: http
               containerPort: 3000

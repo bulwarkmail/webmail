@@ -1198,10 +1198,10 @@ ENVEOF
 update_docker_compose_port() {
     if [[ "$CFG_PORT" != "3000" && -f "${SCRIPT_DIR}/docker-compose.yml" ]]; then
         if [[ "$DRY_RUN" == true ]]; then
-            echo -e "    ${DIM}[dry-run] Would update docker-compose.yml port --> ${CFG_PORT}:3000${RESET}"
+            echo -e "    ${DIM}[dry-run] Would update docker-compose.yml port --> 127.0.0.1:${CFG_PORT}:3000${RESET}"
             return
         fi
-        sed -i.bak "s/\"3000:3000\"/\"${CFG_PORT}:3000\"/" "${SCRIPT_DIR}/docker-compose.yml" 2>/dev/null || true
+        sed -i.bak "s/\"127\.0\.0\.1:3000:3000\"/\"127.0.0.1:${CFG_PORT}:3000\"/" "${SCRIPT_DIR}/docker-compose.yml" 2>/dev/null || true
         echo -e "    ${OK} Updated docker-compose.yml port mapping"
     fi
 }
