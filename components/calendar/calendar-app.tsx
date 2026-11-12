@@ -1140,6 +1140,24 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setShowTaskModal(false);
     setEditTask(null);
   }, []);
+  // The editors, the event's card and the scope question hold the ids of the
+  // login they were opened under (the event, its calendar, the task), and the
+  // same ids name other events and tasks in every other login. When the
+  // active login changes they close, as the contact editor does, instead of
+  // saving through the new one.
+  const editorsLoginRef = useRef(activeAccountId);
+  useEffect(() => {
+    const before = editorsLoginRef.current;
+    editorsLoginRef.current = activeAccountId;
+    if (!before || before === activeAccountId) return;
+    eventEditorDirtyRef.current = false;
+    taskEditorDirtyRef.current = false;
+    closeEditors();
+    setCopySource(null);
+    setQuickDraft(null);
+    setPendingScopeAction(null);
+    closeDetail();
+  }, [activeAccountId, closeEditors, closeDetail]);
   const editorsInView = (showEventModal || showTaskModal) && (isEmbedded ? isFocusedProTab : !proInterfaceActive);
   useCloseOnBack({
     active: editorsInView,
