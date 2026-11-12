@@ -212,4 +212,23 @@ describe('/api/admin/auth and the stored-credential budget', () => {
     await adminStatus();
     expect(seen.filter((s) => s.url.endsWith('/.well-known/jmap'))).toHaveLength(2);
   });
+
+  it('forgets a remembered refusal once a sign-in with the same credential worked', async () => {
+    let refuseAll = true;
+    vi.stubGlobal('fetch', vi.fn(async (url: RequestInfo | URL) => {
+      if (refuseAll) return new Response('', { status: 401 });
+      if (String(url).endsWith('/.well-known/jmap')) return Response.json({ primaryAccounts: { 'urn:stalwart:jmap': 'a1' } });
+      return Response.json({ methodResponses: [['x:Tenant/query', { ids: [] }, '0']] });
+    }));
+    current.authHeader = basic('the-admins-password');
+    // A passing refusal (the directory behind the mail server was down, say).
+    expect((await adminStatus()).body.stalwartAdmin).toBe(false);
+    refuseAll = false;
+    // Without a new sign-in the refusal is still remembered.
+    expect((await adminStatus()).body.stalwartAdmin).toBe(false);
+    // The admin signs in again with the same password: the sign-in records it as working.
+    const { recordStoredCredentialStatus } = await import('@/lib/stalwart/stored-credential-budget');
+    await recordStoredCredentialStatus(current.authHeader, 200);
+    expect((await adminStatus()).body.stalwartAdmin).toBe(true);
+  });
 });

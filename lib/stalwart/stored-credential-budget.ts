@@ -278,6 +278,27 @@ export async function recordStoredCredentialStatus(authHeader: string, status: n
   }
 }
 
+/**
+ * Whether `authHeader` got a successful answer within the window: in this
+ * process, or with a shared store on any replica. A refusal clears it, so a
+ * yes after a refusal means the credential worked again since (a new
+ * sign-in with it). Never for an access token (they aren't tracked).
+ */
+export async function storedCredentialWorkedLately(authHeader: string, now: number = Date.now()): Promise<boolean> {
+  const credential = keyOf(authHeader);
+  if (!credential) return false;
+  const local = state().succeeded.get(credential.key);
+  if (local !== undefined && now - local <= WINDOW_MS) return true;
+  if (!isSharedMode() || !credential.shareable) return false;
+  try {
+    const shared = Number(await withDeadline(getStore().kv.get(succeededKey(credential.key)), CHECK_DEADLINE_MS));
+    return shared > 0 && now - shared <= WINDOW_MS;
+  } catch (error) {
+    if (!isStoreUnavailableError(error)) throw error;
+    return false;
+  }
+}
+
 // ─── requests in flight ────────────────────────────────────────────────────
 
 /**

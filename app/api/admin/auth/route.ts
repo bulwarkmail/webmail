@@ -11,7 +11,7 @@ import { grantsAdminAccess, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { getStalwartAdminAccessMode, type StalwartAdminAccessMode } from '@/lib/admin/stalwart-admin-access';
 import { isStoreUnavailable } from '@/lib/admin/admin-store';
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
-import { isBudgetRefusal, isStoredCredentialRefused } from '@/lib/stalwart/stored-credential-budget';
+import { isBudgetRefusal, isStoredCredentialRefused, storedCredentialWorkedLately } from '@/lib/stalwart/stored-credential-budget';
 import { forwardedClientHeaders, loginClientAddress } from '@/lib/auth/client-address';
 
 /**
@@ -60,7 +60,8 @@ const ADMIN_CHECK_CACHE_MS = 60_000;
 const ADMIN_CHECK_REFUSED_CACHE_MS = 15 * 60_000;
 const ADMIN_CHECK_CACHE_MAX = 1000;
 const ADMIN_CHECK_TIMEOUT_MS = 10_000;
-const adminCheckCache = new Map<string, { value: boolean; expires: number }>();
+/** `refused`: the mail server refused the credential (the 15-minute entries). */
+const adminCheckCache = new Map<string, { value: boolean; expires: number; refused: boolean }>();
 
 function rememberAdminCheck(key: string, value: boolean, ttlMs: number): void {
   const now = Date.now();
@@ -70,7 +71,7 @@ function rememberAdminCheck(key: string, value: boolean, ttlMs: number): void {
   }
   // Still full: the oldest entries go first.
   while (adminCheckCache.size >= ADMIN_CHECK_CACHE_MAX) adminCheckCache.delete(adminCheckCache.keys().next().value!);
-  adminCheckCache.set(key, { value, expires: now + ttlMs });
+  adminCheckCache.set(key, { value, expires: now + ttlMs, refused: ttlMs === ADMIN_CHECK_REFUSED_CACHE_MS });
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit, trusted: boolean): Promise<Response> {
@@ -129,7 +130,12 @@ async function checkStalwartAdmin(
   const credHash = createHash('sha256').update(creds.authHeader).digest('base64url');
   const cacheKey = `${creds.serverUrl}\0${credHash}`;
   const cached = adminCheckCache.get(cacheKey);
-  if (cached && cached.expires > Date.now()) return cached.value;
+  if (cached && cached.expires > Date.now()) {
+    // A refusal is kept 15 minutes, but not past a new sign-in with the same
+    // credential that worked (the sign-in records it with the budget).
+    if (!cached.refused || !(await storedCredentialWorkedLately(creds.authHeader))) return cached.value;
+    adminCheckCache.delete(cacheKey);
+  }
 
   // Refused recently (here or by any other route), or the ceiling across all
   // credentials is reached: not asked, and not cached, so the answer follows
