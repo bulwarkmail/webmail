@@ -360,7 +360,7 @@ class ConfigManager {
 
     // Environment variable
     if (mapping) {
-      const envVal = process.env[mapping.envVar];
+      const envVal = mapping.envVar ? process.env[mapping.envVar] : undefined;
       if (envVal !== undefined) {
         return parseEnvValue(envVal, mapping.type) as T;
       }
@@ -406,7 +406,7 @@ class ConfigManager {
 
         result[key] = { value: mapping.defaultValue, source: 'default' };
       } else {
-        const envVal = process.env[mapping.envVar];
+        const envVal = mapping.envVar ? process.env[mapping.envVar] : undefined;
         if (envVal !== undefined) {
           result[key] = { value: parseEnvValue(envVal, mapping.type), source: 'env' };
           continue;

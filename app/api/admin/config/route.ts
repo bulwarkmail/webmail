@@ -5,6 +5,7 @@ import { auditLog } from '@/lib/admin/audit';
 import { CONFIG_ENV_MAP, SENSITIVE_CONFIG_KEYS } from '@/lib/admin/types';
 import { parseJmapServers, redactJmapServersForAdmin, withStoredClientSecrets } from '@/lib/admin/jmap-servers';
 import { parseDomainBranding } from '@/lib/admin/domain-branding';
+import { ADMIN_ACCOUNTS_INVALID_MESSAGE, configuredServerUrls, sanitizeAdminAccounts } from '@/lib/admin/admin-accounts';
 import { initAdminPassword, isAdminEnabled } from '@/lib/admin/password';
 import { logger } from '@/lib/logger';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
@@ -155,6 +156,23 @@ export async function PATCH(request: NextRequest) {
       // Saved on its own below, with the secrets of the stored list.
       jmapServers = Array.isArray(incoming) ? incoming : [];
       updates.jmapServers = sanitized;
+    }
+
+    // Admin accounts are each tied to a configured mail server: the ones in
+    // this request if it changes them, the stored ones otherwise.
+    if ('adminAccounts' in updates) {
+      if (!Array.isArray(updates.adminAccounts)) {
+        return NextResponse.json({ error: 'adminAccounts must be an array' }, { status: 400 });
+      }
+      const serverUrls = configuredServerUrls(
+        'jmapServerUrl' in updates ? updates.jmapServerUrl : configManager.get<unknown>('jmapServerUrl', ''),
+        'jmapServers' in updates ? updates.jmapServers : configManager.get<unknown>('jmapServers', []),
+      );
+      const sanitized = sanitizeAdminAccounts(updates.adminAccounts, serverUrls);
+      if (!sanitized) {
+        return NextResponse.json({ error: ADMIN_ACCOUNTS_INVALID_MESSAGE }, { status: 400 });
+      }
+      updates.adminAccounts = sanitized;
     }
 
     // Normalize domainBranding: drop entries with an invalid/missing host or
