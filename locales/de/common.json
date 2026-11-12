@@ -7084,6 +7084,14 @@
     "not_available_description": "Das Plugin, das sie hinzugefügt hat, ist ausgeschaltet oder nicht mehr installiert.",
     "back_to_mail": "Zurück zu E-Mails"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Liste vom Plugin {name}",
+    "dropdown_list_labelled": "{label}, Liste vom Plugin {name}",
+    "oauth_failed": "Der Dienst hat die Anmeldung nicht abgeschlossen. Schließen Sie dieses Fenster und versuchen Sie es erneut.",
+    "banners_more": "Weitere Banner ({count}): {names}",
+    "banners_fewer": "Weniger Banner",
+    "opened_by_plugin": "Geöffnet vom Plugin {name}"
+  },
   "command_palette": {
     "title": "Befehlspalette",
     "open": "Befehlspalette öffnen",

@@ -7084,6 +7084,14 @@
     "not_available_description": "Плагін, який її додав, вимкнено або більше не встановлено.",
     "back_to_mail": "Назад до пошти"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Список від плагіна {name}",
+    "dropdown_list_labelled": "{label}, список від плагіна {name}",
+    "oauth_failed": "Сервіс не завершив вхід. Закрийте це вікно й спробуйте ще раз.",
+    "banners_more": "Ще банери ({count}): {names}",
+    "banners_fewer": "Менше банерів",
+    "opened_by_plugin": "Відкрито плагіном {name}"
+  },
   "command_palette": {
     "title": "Палітра команд",
     "open": "Відкрити палітру команд",

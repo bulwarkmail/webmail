@@ -910,6 +910,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
       type="button"
       onClick={() => onOpen?.(email)}
       data-mv-conversation-card=""
+      data-plugin-list-avoid=""
       data-email-id={email.id}
       className={cn("w-full flex items-start py-3 border-t border-border text-start hover:bg-muted/40 transition-colors", compact ? "gap-3 px-4" : "gap-4 px-6")}
     >
@@ -961,7 +962,7 @@ function MvConversationDetails({ email, timeFormat, className }: { email: Email;
     [t('headers.message_id'), email.messageId],
   ];
   return (
-    <dl className={cn("grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 pb-3 text-xs", className)} data-mv-conversation-details="">
+    <dl className={cn("grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 pb-3 text-xs", className)} data-mv-conversation-details="" data-plugin-list-avoid="">
       {rows.filter(([, value]) => value).map(([label, value]) => (
         <Fragment key={label}>
           <dt className="text-muted-foreground">{label}</dt>
@@ -1050,6 +1051,7 @@ export function MvExpandedConversationCard({
           }
         }}
         data-mv-conversation-header=""
+        data-plugin-list-avoid=""
         className={cn("flex items-start pt-3 pb-2 cursor-pointer", compact ? "gap-3 px-4" : "gap-4 px-6")}
       >
         <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandDomain} />
@@ -5274,7 +5276,7 @@ export function EmailViewer({
       <PluginSlot name="reader-header" className="w-full bg-background" extraProps={pluginEmailProps} />
 
       {/* === SUBJECT BLOCK === data-reader-subject: a reply that takes the pane covers it and shows the subject in its bar. */}
-      <div data-reader-subject="" className={cn(
+      <div data-reader-subject="" data-plugin-list-avoid="" className={cn(
         "bg-background",
         !mvViewer && "border-b border-border",
         toolbarPosition === 'below-subject' && "max-desk:sticky max-desk:top-0 max-desk:z-10"
@@ -5454,6 +5456,7 @@ export function EmailViewer({
         className={cn("hidden desk:block bg-background px-6", !mvViewer && "border-b border-border", (mvViewer || conversationPane) && mvBefore.length > 0 && "border-t border-border", mvOpenIndex >= 0 && "cursor-pointer")}
         style={mvViewer ? { paddingBlock: '0.75rem 0.5rem' } : { paddingBlock: 'var(--density-header-py)' }}
         data-mv-open-header={mvOpenIndex >= 0 ? "" : undefined}
+        data-plugin-list-avoid=""
         onClick={mvOpenIndex >= 0 ? (e) => {
           // In a conversation, a click on the sender line folds the open
           // message, as Gmail does; its buttons and links keep their own job.
@@ -5665,6 +5668,7 @@ export function EmailViewer({
           className={cn("desk:hidden bg-background border-b border-border px-4", mvOpenIndex >= 0 && "cursor-pointer", mvOpenIndex >= 0 && mvBefore.length > 0 && "border-t")}
           style={{ paddingBlock: 'var(--density-header-py)' }}
           data-mv-open-header-mobile={mvOpenIndex >= 0 ? "" : undefined}
+          data-plugin-list-avoid=""
           onClick={mvOpenIndex >= 0 ? (e) => {
             if (isInteractiveClick(e.target, e.currentTarget)) return;
             if (window.getSelection()?.toString()) return;
@@ -5920,7 +5924,7 @@ export function EmailViewer({
               <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-10 gap-y-5">
                 <section className="min-w-0">
                   <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
-                  <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
+                  <dl data-plugin-list-avoid="" className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                     <Row label={t('from')}>
                       {/* The name and the address are lines of their own, so
                           the check mark and chips follow the name, not the
@@ -6010,7 +6014,7 @@ export function EmailViewer({
                 {hasAuthSection && (
                   <section className="min-w-0">
                     <SectionHeader>{t('details.authentication_security')}</SectionHeader>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1.5" data-plugin-list-avoid="">
                       {auth?.spf && (() => {
                         // When multiple identities (HELO + MAIL FROM) were
                         // evaluated, list each result in the tooltip for full
@@ -6073,7 +6077,7 @@ export function EmailViewer({
                       )}
                     </div>
                     {email.spamLLM && (
-                      <div className="mt-2 flex items-start gap-2 text-sm">
+                      <div className="mt-2 flex items-start gap-2 text-sm" data-plugin-list-avoid="">
                         {email.spamLLM.verdict === 'LEGITIMATE' ? <Brain className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-700 dark:text-green-400" /> :
                          email.spamLLM.verdict === 'SPAM' ? <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-700 dark:text-red-400" /> :
                          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-700 dark:text-amber-400" />}
@@ -6197,7 +6201,7 @@ export function EmailViewer({
             sender the server's checks don't back, a message reported as
             phishing, and the plugins' banners (S/MIME and PGP verdicts). === */}
         {senderVerification && (
-          <div className="border-b border-border bg-muted/30 isolate" data-reader-security-warnings="">
+          <div className="border-b border-border bg-muted/30 isolate" data-reader-security-warnings="" data-plugin-list-avoid="">
             <div className="px-6 py-1.5">
               <div className="flex items-start gap-3 py-1" data-testid="sender-check-warning">
                 <div className={cn(
@@ -6295,7 +6299,7 @@ export function EmailViewer({
           hasCalendarInvitation ||
           (askForReadReceipt && shouldOfferReadReceipt) ||
           structuredCards.length > 0) && (
-          <div className="border-b border-border bg-muted/30 isolate">
+          <div className="border-b border-border bg-muted/30 isolate" data-reader-notices="" data-plugin-list-avoid="">
             <div className="px-6 py-1.5">
               <div className="flex flex-col gap-3 isolate">
                 {/* External Content Controls */}

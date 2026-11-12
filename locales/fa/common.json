@@ -7084,6 +7084,14 @@
     "not_available_description": "افزونه‌ای که آن را اضافه کرده خاموش است یا دیگر نصب نیست.",
     "back_to_mail": "بازگشت به ایمیل"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "فهرست از افزونه {name}",
+    "dropdown_list_labelled": "{label}، فهرست از افزونه {name}",
+    "oauth_failed": "سرویس ورود را کامل نکرد. این پنجره را ببندید و دوباره تلاش کنید.",
+    "banners_more": "بنرهای بیشتر ({count}): {names}",
+    "banners_fewer": "بنرهای کمتر",
+    "opened_by_plugin": "باز شده توسط افزونه {name}"
+  },
   "command_palette": {
     "title": "پالت فرمان",
     "open": "باز کردن پالت فرمان",

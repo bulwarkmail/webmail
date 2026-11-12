@@ -7092,6 +7092,14 @@
     "not_available_description": "Appet som la til det er slått av eller ikkje lenger installert.",
     "back_to_mail": "Tilbake til e-post"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Liste frå plugin {name}",
+    "dropdown_list_labelled": "{label}, liste frå plugin {name}",
+    "oauth_failed": "Tenesta fullførte ikkje innlogginga. Lukk dette vindauget og prøv igjen.",
+    "banners_more": "Fleire bannerar ({count}): {names}",
+    "banners_fewer": "Færre bannerar",
+    "opened_by_plugin": "Opna av plugin {name}"
+  },
   "command_palette": {
     "title": "Kommando-palett",
     "open": "Opne kommando-paletten",

@@ -7084,6 +7084,14 @@
     "not_available_description": "Plugin, který ji přidal, je vypnutý nebo už není nainstalovaný.",
     "back_to_mail": "Zpět na poštu"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Seznam od pluginu {name}",
+    "dropdown_list_labelled": "{label}, seznam od pluginu {name}",
+    "oauth_failed": "Služba přihlášení nedokončila. Zavřete toto okno a zkuste to znovu.",
+    "banners_more": "Další bannery ({count}): {names}",
+    "banners_fewer": "Méně bannerů",
+    "opened_by_plugin": "Otevřeno pluginem {name}"
+  },
   "command_palette": {
     "title": "Paleta příkazů",
     "open": "Otevřít paletu příkazů",

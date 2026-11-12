@@ -59,6 +59,11 @@ interface ContextMenuProps {
   label?: string;
   /** Opened from inside a dialog: drawn above it (dialogs are at z-[60]). */
   overDialog?: boolean;
+  /**
+   * Drawn at this z-index instead of z-50 or z-[70]. The menu in a plugin
+   * dialog's own header uses it to stand above the plugin dialog layer.
+   */
+  zIndex?: number;
 }
 
 const VIEWPORT_MARGIN = 10;
@@ -325,7 +330,7 @@ function useMenuLevel(recentTouch: () => boolean): MenuLevel {
  * reach the app's shortcut handlers.
  */
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
-  ({ isOpen, position, onClose, children, label, overDialog = false }, ref) => {
+  ({ isOpen, position, onClose, children, label, overDialog = false, zIndex }, ref) => {
     // In the browser after hydration: a portal needs document.body. True from
     // the first render for a menu mounted later, so a closed menu that comes
     // with a row or a toolbar costs no second render pass.
@@ -610,7 +615,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           // jumps left (the ⋮ menu slid in).
           className={cn(
             "fixed w-max min-w-[200px] outline-none",
-            overDialog ? "z-[70]" : "z-50",
+            zIndex === undefined && (overDialog ? "z-[70]" : "z-50"),
             CONTEXT_MENU_PANEL_CLASS
           )}
           style={{
@@ -618,6 +623,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             top: renderPosition.y,
             maxWidth: MENU_MAX_WIDTH,
             visibility: isPositioned ? "visible" : "hidden",
+            zIndex,
           }}
           role="menu"
           aria-label={label}

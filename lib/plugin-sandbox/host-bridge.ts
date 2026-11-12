@@ -293,6 +293,8 @@ export class SandboxInstance {
   readonly privileged: boolean;
   /** An inline slot (toolbar row) sized to its content's width. */
   readonly inline: boolean;
+  /** The slot a slot frame renders; its height limit applies (slot-layout.ts). */
+  readonly slot: SlotName | null;
 
   readyPromise: Promise<void>;
   initPromise: Promise<InitDoneInfo>;
@@ -331,6 +333,7 @@ export class SandboxInstance {
     this.mode = initPayload.mode;
     this.privileged = initPayload.tier === 'privileged';
     this.inline = initPayload.mode === 'slot' && isInlineSlot(initPayload.slot);
+    this.slot = initPayload.mode === 'slot' ? initPayload.slot : null;
 
     // Slot iframes get `extraProps`; encode any function values now so the
     // structured-clone send doesn't drop them.
@@ -565,12 +568,16 @@ export class SandboxInstance {
         // The iframe has no intrinsic height - sync it to the content height
         // the sandbox reported, otherwise the wrapper reserves space but the
         // iframe stays at 0px and the slot appears blank. The plugin reports
-        // the numbers, so they are clamped: a slot whose content is 100vh
-        // tall would otherwise grow with every resize.
-        const height = clampSlotHeight(msg.height);
+        // the numbers, so they are clamped to the slot's limit: a slot whose
+        // content is 100vh tall would otherwise grow with every resize, and
+        // a top banner as tall as the window would push the app off screen.
+        const height = clampSlotHeight(msg.height, this.slot);
         if (height === null) return;
         const width = this.inline ? clampSlotWidth(msg.width) : null;
         this.iframe.style.height = `${height}px`;
+        // Content taller than the slot's limit scrolls inside the frame, with
+        // its scrollbar shown, so every control in it stays in reach.
+        if (!this.inline) this.iframe.setAttribute('scrolling', (msg.height as number) > height ? 'yes' : 'auto');
         if (width !== null) this.iframe.style.width = `${width}px`;
         this.slotResizeCb?.(height, width ?? undefined);
         return;

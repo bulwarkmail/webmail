@@ -41,13 +41,30 @@ import { DialogSurfacePortal, useDialogSurface } from '@/components/ui/dialog-su
 import { PluginIframeSlot } from './plugin-iframe-slot';
 import type { SlotName } from '@/lib/plugin-types';
 
+/**
+ * How many ** delimiters a message's bold runs use at most (an even number,
+ * so the text after them is plain). The rest shows as written, ** and all:
+ * one element per run would let a message of nothing but ** fill the page
+ * with elements.
+ */
+const MAX_BOLD_DELIMITERS = 64;
+
 // Lightweight **bold** support in plugin dialog messages. Everything else is
 // rendered literally (newlines come from the parent's white-space: pre-wrap).
 // Splitting on the ** delimiter yields alternating plain/bold segments (odd
-// indices are bold). Plugins control these strings, so the delimiters balance.
+// indices are bold), up to MAX_BOLD_DELIMITERS of them.
 function renderMessage(message?: string): React.ReactNode {
   if (!message) return null;
-  return message.split('**').map((seg, i) =>
+  const segments: string[] = [];
+  let from = 0;
+  while (segments.length < MAX_BOLD_DELIMITERS) {
+    const at = message.indexOf('**', from);
+    if (at < 0) break;
+    segments.push(message.slice(from, at));
+    from = at + 2;
+  }
+  segments.push(message.slice(from));
+  return segments.map((seg, i) =>
     i % 2 === 1
       ? <strong key={i}>{seg}</strong>
       : <React.Fragment key={i}>{seg}</React.Fragment>,
@@ -354,6 +371,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           if (e.target === e.currentTarget) cancel();
         }}
         data-plugin-dialog-popover=""
+        // A list the frame asks for is drawn in here (plugin-iframe-slot.tsx).
+        data-plugin-dialog-layer=""
       >
         <div
           ref={panelRef}
@@ -368,7 +387,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           }}
           data-plugin-dialog={current.pluginId}
         >
-          <div className="flex items-center gap-1 border-b border-border ps-3 pe-1 py-0.5">
+          <div className="flex items-center gap-1 border-b border-border ps-3 pe-1 py-0.5" data-plugin-dialog-header="">
             <h2 id={titleId} className="sr-only">{current.title || name}</h2>
             <p className="flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground" data-plugin-dialog-source="">
               <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
@@ -398,6 +417,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       onMouseDown={inWindow ? undefined : (e) => {
         if (e.target === e.currentTarget) cancel();
       }}
+      // A list the frame asks for is drawn in here (plugin-iframe-slot.tsx).
+      data-plugin-dialog-layer=""
     >
       <div
         ref={panelRef}
@@ -409,7 +430,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       >
         {custom ? (
           <>
-            <div className="flex items-start gap-1 px-6 py-4 border-b border-border">
+            <div className="flex items-start gap-1 px-6 py-4 border-b border-border" data-plugin-dialog-header="">
               <div className="min-w-0 flex-1 pe-2">
                 <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
@@ -432,7 +453,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           </>
         ) : (
           <>
-            <div className="flex shrink-0 items-start gap-1 px-6 pt-6" data-dialog-drag="">
+            <div className="flex shrink-0 items-start gap-1 px-6 pt-6" data-dialog-drag="" data-plugin-dialog-header="">
               <div className="min-w-0 flex-1 pe-2">
                 <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
@@ -550,6 +571,14 @@ function FooterIcon({ name }: { name?: string }) {
   return Glyph ? <Glyph className="w-4 h-4" aria-hidden="true" /> : null;
 }
 
+/**
+ * Where the menu in a plugin dialog's header stands: above every plugin
+ * dialog layer (z-index 100000, and 100001 for a dialog on top of another)
+ * and the lists drawn in them (plugin-iframe-slot.tsx). Nothing the plugin
+ * draws can cover "Turn off", however many dialogs it opens.
+ */
+export const PLUGIN_DIALOG_MENU_Z = 100002;
+
 /** The "⋯" menu in a plugin dialog's header: the way out of a plugin that keeps asking. */
 function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOff: () => void; compact?: boolean }) {
   const t = useTranslations('plugins.dialog');
@@ -564,11 +593,12 @@ function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOf
         aria-expanded={open}
         aria-label={t('plugin_menu', { name })}
         title={t('plugin_menu', { name })}
+        data-plugin-dialog-menu=""
         className={cn(compact ? 'p-1' : 'p-1.5', 'rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground', open && 'bg-muted text-foreground')}
       >
         <MoreVertical className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
       </button>
-      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={menu.closeContextMenu} label={t('plugin_menu', { name })}>
+      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={menu.closeContextMenu} label={t('plugin_menu', { name })} zIndex={PLUGIN_DIALOG_MENU_Z}>
         <ContextMenuItem
           icon={Power}
           label={t('turn_off', { name })}

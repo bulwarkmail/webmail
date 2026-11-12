@@ -7084,6 +7084,14 @@
     "not_available_description": "Bu sayfayı ekleyen eklenti kapalı veya artık yüklü değil.",
     "back_to_mail": "Postaya Dön"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "{name} eklentisinden liste",
+    "dropdown_list_labelled": "{label}, {name} eklentisinden liste",
+    "oauth_failed": "Hizmet oturum açmayı tamamlamadı. Bu pencereyi kapatıp yeniden deneyin.",
+    "banners_more": "Diğer başlıklar ({count}): {names}",
+    "banners_fewer": "Daha az başlık",
+    "opened_by_plugin": "{name} eklentisi tarafından açıldı"
+  },
   "command_palette": {
     "title": "Komut paleti",
     "open": "Komut paletini aç",

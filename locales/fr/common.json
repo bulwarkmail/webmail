@@ -7084,6 +7084,14 @@
     "not_available_description": "Le plugin qui l'a ajoutée est désactivé ou n'est plus installé.",
     "back_to_mail": "Retour aux emails"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Liste du plugin {name}",
+    "dropdown_list_labelled": "{label}, liste du plugin {name}",
+    "oauth_failed": "Le service n'a pas terminé la connexion. Fermez cette fenêtre et réessayez.",
+    "banners_more": "Autres bannières ({count}) : {names}",
+    "banners_fewer": "Moins de bannières",
+    "opened_by_plugin": "Ouvert par le plugin {name}"
+  },
   "command_palette": {
     "title": "Palette de commandes",
     "open": "Ouvrir la palette de commandes",

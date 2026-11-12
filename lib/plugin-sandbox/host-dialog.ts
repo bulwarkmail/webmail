@@ -68,6 +68,49 @@ export interface DialogRequest {
   resolve: (result: unknown) => void;
 }
 
+/**
+ * The most a dialog shows of what a plugin hands it. Longer texts are cut,
+ * not refused, so a plugin that passes a long list keeps working; without a
+ * limit one call could keep the page busy for minutes.
+ */
+export const MAX_DIALOG_TITLE = 1000;
+export const MAX_DIALOG_MESSAGE = 20_000;
+/** A button's label, and a prompt field's name, label and placeholder. */
+export const MAX_DIALOG_LABEL = 500;
+export const MAX_PROMPT_FIELDS = 100;
+/** The width a custom dialog may ask for, in px. */
+export const MIN_DIALOG_WIDTH = 280;
+export const MAX_DIALOG_WIDTH = 1200;
+
+function cutText(value: unknown, max: number): string {
+  const text = typeof value === 'string' ? value : String(value ?? '');
+  return text.length > max ? text.slice(0, max) : text;
+}
+
+/** The request with its texts, fields and width brought within the limits above. */
+function withinLimits(req: Omit<DialogRequest, 'id'>): Omit<DialogRequest, 'id'> {
+  const out: Omit<DialogRequest, 'id'> = {
+    ...req,
+    title: cutText(req.title, MAX_DIALOG_TITLE),
+    message: cutText(req.message, MAX_DIALOG_MESSAGE),
+  };
+  if (req.confirmLabel !== undefined) out.confirmLabel = cutText(req.confirmLabel, MAX_DIALOG_LABEL);
+  if (req.cancelLabel !== undefined) out.cancelLabel = cutText(req.cancelLabel, MAX_DIALOG_LABEL);
+  if (req.fields) {
+    out.fields = req.fields.slice(0, MAX_PROMPT_FIELDS).map((field) => ({
+      name: cutText(field.name, MAX_DIALOG_LABEL),
+      label: cutText(field.label, MAX_DIALOG_LABEL),
+      type: field.type === 'password' ? 'password' : 'text',
+      placeholder: field.placeholder === undefined ? undefined : cutText(field.placeholder, MAX_DIALOG_LABEL),
+      required: field.required === true,
+    }));
+  }
+  if (req.width !== undefined) {
+    out.width = Number.isFinite(req.width) ? Math.min(MAX_DIALOG_WIDTH, Math.max(MIN_DIALOG_WIDTH, req.width)) : undefined;
+  }
+  return out;
+}
+
 const queue: DialogRequest[] = [];
 const listeners = new Set<() => void>();
 
@@ -91,6 +134,7 @@ export class DialogLimitError extends Error {}
  * Queue a dialog. A plugin gets one dialog at a time and a limited number
  * per minute: with neither limit, a plugin that opens dialogs in a loop
  * covers the whole app and the user can't reach Settings to turn it off.
+ * What one dialog holds is cut to the limits above.
  */
 export function enqueueDialog(req: Omit<DialogRequest, 'id'>): { id: string } {
   // One dialog per plugin, except that a plugin's own large dialog (custom)
@@ -107,7 +151,7 @@ export function enqueueDialog(req: Omit<DialogRequest, 'id'>): { id: string } {
   }
   recent.push(now);
   recentByPlugin.set(req.pluginId, recent);
-  const entry: DialogRequest = { ...req, id: uid() };
+  const entry: DialogRequest = { ...withinLimits(req), id: uid() };
   queue.push(entry);
   notify();
   return { id: entry.id };

@@ -7084,6 +7084,14 @@
     "not_available_description": "このページを追加したプラグインがオフになっているか、インストールされていません。",
     "back_to_mail": "メールに戻る"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "プラグイン {name} のリスト",
+    "dropdown_list_labelled": "{label}(プラグイン {name} のリスト)",
+    "oauth_failed": "サービスでサインインが完了しませんでした。このウィンドウを閉じて、もう一度お試しください。",
+    "banners_more": "その他のバナー（{count}）: {names}",
+    "banners_fewer": "バナーを折りたたむ",
+    "opened_by_plugin": "プラグイン {name} が開きました"
+  },
   "command_palette": {
     "title": "コマンドパレット",
     "open": "コマンドパレットを開く",

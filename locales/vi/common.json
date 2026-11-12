@@ -7096,6 +7096,14 @@
     "not_available_description": "Plugin đã thêm nó đã bị tắt hoặc không còn được cài đặt.",
     "back_to_mail": "Quay lại thư"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Danh sách từ plugin {name}",
+    "dropdown_list_labelled": "{label}, danh sách từ plugin {name}",
+    "oauth_failed": "Dịch vụ chưa hoàn tất đăng nhập. Hãy đóng cửa sổ này và thử lại.",
+    "banners_more": "Thêm biểu ngữ ({count}): {names}",
+    "banners_fewer": "Bớt biểu ngữ",
+    "opened_by_plugin": "Được mở bởi plugin {name}"
+  },
   "command_palette": {
     "title": "Bảng lệnh",
     "open": "Mở bảng lệnh",

@@ -38,7 +38,7 @@ export function StructuredMailCards({ cards, email, allowRemoteImages, calendarA
   );
   if (shown.length === 0) return null;
   return (
-    <div className="flex flex-col gap-3 min-w-0" data-testid="structured-mail-cards">
+    <div className="flex flex-col gap-3 min-w-0" data-testid="structured-mail-cards" data-plugin-list-avoid="">
       {shown.map((card, i) => {
         const props = { emailId: email.id, calendarActions, senderDomain };
         switch (card.kind) {

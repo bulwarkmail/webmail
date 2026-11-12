@@ -2532,6 +2532,14 @@
     "not_available_description": "ปลั๊กอินที่เพิ่มหน้านี้ถูกปิดใช้งานหรือไม่ได้ติดตั้งแล้ว",
     "back_to_mail": "กลับไปยังอีเมล"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "รายการจากปลั๊กอิน {name}",
+    "dropdown_list_labelled": "{label}, รายการจากปลั๊กอิน {name}",
+    "oauth_failed": "บริการลงชื่อเข้าใช้ไม่สำเร็จ ปิดหน้าต่างนี้แล้วลองอีกครั้ง",
+    "banners_more": "แบนเนอร์เพิ่มเติม ({count}): {names}",
+    "banners_fewer": "แบนเนอร์น้อยลง",
+    "opened_by_plugin": "เปิดโดยปลั๊กอิน {name}"
+  },
   "tour": {
     "step_counter": "ขั้นตอนที่ {current} จาก {total}",
     "skip": "ข้ามการแนะนำ",

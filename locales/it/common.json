@@ -7084,6 +7084,14 @@
     "not_available_description": "Il plugin che l'ha aggiunta è disattivato o non è più installato.",
     "back_to_mail": "Torna alla posta"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Elenco dal plugin {name}",
+    "dropdown_list_labelled": "{label}, elenco dal plugin {name}",
+    "oauth_failed": "Il servizio non ha completato l'accesso. Chiudi questa finestra e riprova.",
+    "banners_more": "Altri banner ({count}): {names}",
+    "banners_fewer": "Meno banner",
+    "opened_by_plugin": "Aperto dal plugin {name}"
+  },
   "command_palette": {
     "title": "Tavolozza comandi",
     "open": "Apri la tavolozza comandi",

@@ -25,6 +25,32 @@ export function isInlineSlot(slot: SlotName | string | null | undefined): boolea
  */
 export const MAX_SLOT_HEIGHT = 2000;
 /**
+ * The top banner sits above every page, in a column as tall as the window:
+ * a few lines of text, like the app's own announcement bar, so the page and
+ * its navigation always stay on screen.
+ */
+export const MAX_TOP_BANNER_HEIGHT = 120;
+/** Banners in the reader and over the message list, so the message or the list stays in reach. */
+export const MAX_BANNER_HEIGHT = 400;
+
+/** Slots with a lower limit than MAX_SLOT_HEIGHT. */
+const SLOT_HEIGHT_LIMITS: Partial<Record<SlotName, number>> = {
+  'app-top-banner': MAX_TOP_BANNER_HEIGHT,
+  'reader-header': MAX_BANNER_HEIGHT,
+  'reader-below-subject': MAX_BANNER_HEIGHT,
+  'email-banner': MAX_BANNER_HEIGHT,
+  'reader-above-quote': MAX_BANNER_HEIGHT,
+  'message-list-header': MAX_BANNER_HEIGHT,
+};
+
+/** Tallest the frame of `slot` gets. */
+export function maxSlotHeight(slot?: SlotName | string | null): number {
+  return slot && Object.prototype.hasOwnProperty.call(SLOT_HEIGHT_LIMITS, slot)
+    ? SLOT_HEIGHT_LIMITS[slot as SlotName] ?? MAX_SLOT_HEIGHT
+    : MAX_SLOT_HEIGHT;
+}
+
+/**
  * Widest an inline slot gets, so one plugin can't push the host's buttons off
  * screen. Content past it is cut off, not scrolled.
  */
@@ -35,9 +61,12 @@ function clamp(value: unknown, max: number): number | null {
   return Math.min(max, Math.max(0, Math.ceil(value)));
 }
 
-/** A reported height the host can use, or null for garbage (NaN, strings). */
-export function clampSlotHeight(height: unknown): number | null {
-  return clamp(height, MAX_SLOT_HEIGHT);
+/**
+ * A reported height the host can use, at most the limit of `slot`, or null
+ * for garbage (NaN, strings).
+ */
+export function clampSlotHeight(height: unknown, slot?: SlotName | string | null): number | null {
+  return clamp(height, maxSlotHeight(slot));
 }
 
 export function clampSlotWidth(width: unknown): number | null {

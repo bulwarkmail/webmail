@@ -54,9 +54,13 @@ export const useToastStore = create<ToastStore>((set, get) => ({
     void toastHooks.onToastShow.emit({
       id, type: toast.type, title: toast.title, message: toast.message ?? "",
     });
-    // Errors and warnings stay in the bell's list after the toast is gone.
+    // Errors and warnings stay in the bell's list after the toast is gone,
+    // with the plugin that asked for one.
     if (toast.type === "error" || toast.type === "warning") {
-      recordNotification({ level: toast.type, title: toast.title, body: toast.message ?? "" });
+      recordNotification({
+        level: toast.type, title: toast.title, body: toast.message ?? "",
+        ...(toast.pluginId ? { pluginId: toast.pluginId, pluginName: toast.pluginName ?? toast.pluginId } : {}),
+      });
     }
     return id;
   },
@@ -88,6 +92,9 @@ interface ToastOptions {
   duration?: number;
   pauseOnHover?: boolean;
   srHint?: string;
+  /** A plugin's toast: see Toast.pluginId. */
+  pluginId?: string;
+  pluginName?: string;
 }
 
 function showToast(type: Toast["type"], title: string, options?: string | ToastOptions, defaultDuration?: number): string {
@@ -102,6 +109,7 @@ function showToast(type: Toast["type"], title: string, options?: string | ToastO
     duration: opts?.duration ?? defaultDuration,
     pauseOnHover: opts?.pauseOnHover,
     srHint: opts?.srHint,
+    ...(opts?.pluginId ? { pluginId: opts.pluginId, pluginName: opts.pluginName } : {}),
   });
 }
 

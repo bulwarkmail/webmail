@@ -7084,6 +7084,14 @@
     "not_available_description": "이 페이지를 추가한 플러그인이 꺼져 있거나 더 이상 설치되어 있지 않습니다.",
     "back_to_mail": "메일로 돌아가기"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "플러그인 {name}의 목록",
+    "dropdown_list_labelled": "{label}, 플러그인 {name}의 목록",
+    "oauth_failed": "서비스에서 로그인을 완료하지 못했습니다. 이 창을 닫고 다시 시도하세요.",
+    "banners_more": "배너 더 보기 ({count}): {names}",
+    "banners_fewer": "배너 접기",
+    "opened_by_plugin": "플러그인 {name}이(가) 열었습니다"
+  },
   "command_palette": {
     "title": "명령 팔레트",
     "open": "명령 팔레트 열기",

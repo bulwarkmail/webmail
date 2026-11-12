@@ -11,6 +11,7 @@ export function PhishingMarkBanner({ className }: { className?: string }) {
     <div
       role="note"
       data-testid="phishing-mark-banner"
+      data-plugin-list-avoid=""
       className={cn('flex items-start gap-2 border-b border-destructive/30 bg-destructive/10 px-6 py-2.5 text-sm text-destructive', className)}
     >
       <Fish className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />

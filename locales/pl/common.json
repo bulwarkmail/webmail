@@ -7084,6 +7084,14 @@
     "not_available_description": "Wtyczka, która ją dodała, jest wyłączona lub nie jest już zainstalowana.",
     "back_to_mail": "Powrót do poczty"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Lista od wtyczki {name}",
+    "dropdown_list_labelled": "{label}, lista od wtyczki {name}",
+    "oauth_failed": "Usługa nie dokończyła logowania. Zamknij to okno i spróbuj ponownie.",
+    "banners_more": "Więcej banerów ({count}): {names}",
+    "banners_fewer": "Mniej banerów",
+    "opened_by_plugin": "Otwarte przez wtyczkę {name}"
+  },
   "command_palette": {
     "title": "Paleta poleceń",
     "open": "Otwórz paletę poleceń",

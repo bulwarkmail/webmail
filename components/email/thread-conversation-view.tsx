@@ -312,7 +312,7 @@ export function ThreadConversationView({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
+      <div data-plugin-list-avoid="" className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
         <IconButton size="icon-lg" className="-ms-2 flex-shrink-0" onClick={onBack} label={t('email_viewer.back_to_list')}>
           <ArrowLeft />
         </IconButton>
@@ -478,6 +478,7 @@ function EmailCard({
       <button
         onClick={onToggleExpanded}
         aria-expanded={isExpanded}
+        data-plugin-list-avoid=""
         className={cn(
           "w-full flex items-start text-start transition-colors",
           !isExpanded && "hover:bg-muted/50"

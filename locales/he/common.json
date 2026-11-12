@@ -7085,6 +7085,14 @@
     "not_available_description": "התוסף שהוסיף אותו כבוי או שאינו מותקן עוד.",
     "back_to_mail": "חזרה לדואר"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "רשימה מהתוסף {name}",
+    "dropdown_list_labelled": "{label}, רשימה מהתוסף {name}",
+    "oauth_failed": "השירות לא השלים את הכניסה. סגרו חלון זה ונסו שוב.",
+    "banners_more": "באנרים נוספים ({count}): {names}",
+    "banners_fewer": "פחות באנרים",
+    "opened_by_plugin": "נפתח על ידי התוסף {name}"
+  },
   "command_palette": {
     "title": "לוח פקודות",
     "open": "פתיחת לוח הפקודות",

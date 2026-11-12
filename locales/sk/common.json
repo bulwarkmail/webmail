@@ -7084,6 +7084,14 @@
     "not_available_description": "Doplnok, ktorý ju pridal, je vypnutý alebo už nie je nainštalovaný.",
     "back_to_mail": "Späť na poštu"
   },
+  "plugin_surfaces": {
+    "dropdown_list": "Zoznam od doplnku {name}",
+    "dropdown_list_labelled": "{label}, zoznam od doplnku {name}",
+    "oauth_failed": "Služba nedokončila prihlásenie. Zatvorte toto okno a skúste to znova.",
+    "banners_more": "Ďalšie bannery ({count}): {names}",
+    "banners_fewer": "Menej bannerov",
+    "opened_by_plugin": "Otvorené doplnkom {name}"
+  },
   "command_palette": {
     "title": "Paleta príkazov",
     "open": "Otvoriť paletu príkazov",
