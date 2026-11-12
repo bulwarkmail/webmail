@@ -66,13 +66,16 @@ jobs:
       - name: Check action pins
         run: node scripts/check-action-pins.mjs .
 
-      # Values from the event and from other steps reach a run: script
-      # through env:, never pasted into its text.
-      - name: Check run expressions
-        run: node scripts/check-run-expressions.mjs .
-
       - name: Install dependencies
         run: npm ci
+
+      # Values from the event and from other steps reach a script through
+      # env:, never pasted into its text. Reads the workflows with js-yaml,
+      # so it runs after the install; the self-test runs its own cases first.
+      - name: Check run expressions
+        run: |
+          node scripts/check-run-expressions.mjs --self-test
+          node scripts/check-run-expressions.mjs .
 
       - name: Typecheck
         run: npm run typecheck
