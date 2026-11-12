@@ -7,7 +7,10 @@
 #   BUGSINK_AUTH_TOKEN  upload token; without it the upload is skipped with a notice
 #   BUGSINK_URL         default https://bugsink.internal.bulwarkmail.org/
 #   BUGSINK_PROJECTS    default "bulwark-instances bulwark-telemetry"
-#   SENTRY_CLI_VERSION  default 3.8.2
+#
+# sentry-cli is the @sentry/cli devDependency, at the version and integrity
+# package-lock.json holds: run `npm ci` (`--ignore-scripts` is enough) first.
+# Nothing is fetched here.
 #
 # https://bulwarkmail.org/docs/deployment/monitoring
 set -euo pipefail
@@ -22,13 +25,17 @@ if [ -z "$(find "$dir" -name '*.map' -print -quit 2>/dev/null)" ]; then
   exit 0
 fi
 
+if ! npx --no-install sentry-cli --version >/dev/null 2>&1; then
+  echo "::error::sentry-cli is not installed: run npm ci --ignore-scripts first (it comes from package-lock.json)"
+  exit 1
+fi
+
 url="${BUGSINK_URL:-https://bugsink.internal.bulwarkmail.org/}"
-cli="@sentry/cli@${SENTRY_CLI_VERSION:-3.8.2}"
 # Release builds upload in parallel and Bugsink sometimes answers one with a
 # 500, so each project gets three tries before the build fails.
 for project in ${BUGSINK_PROJECTS:-bulwark-instances bulwark-telemetry}; do
   for attempt in 1 2 3; do
-    if SENTRY_AUTH_TOKEN="$BUGSINK_AUTH_TOKEN" npx --yes "$cli" --url "$url" \
+    if SENTRY_AUTH_TOKEN="$BUGSINK_AUTH_TOKEN" npx --no-install sentry-cli --url "$url" \
       sourcemaps --org bugsinkhasnoorgs --project "$project" upload "$dir"; then
       break
     fi

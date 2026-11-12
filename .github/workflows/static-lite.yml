@@ -160,6 +160,11 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
+      # sentry-cli for the upload, as package-lock.json locks it. No install
+      # script runs: the binary comes in its platform package.
+      - name: Install the source map tool
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
       - name: Download source maps (static)
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:

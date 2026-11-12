@@ -18,6 +18,8 @@
 //     write the Actions cache, so a release would ship what it left;
 //   - has no top-level `permissions:` block. With one, a job that sets none starts from it
 //     instead of from the repository default.
+// The Dockerfiles at the root and the shell scripts under scripts/ get the line rules of the
+// first point too: a build or an upload runs what the lockfile holds, nothing fetched fresh.
 //
 //   node scripts/check-action-pins.mjs [repo root]      default: the current directory
 //   node scripts/check-action-pins.mjs --self-test      runs the cases below
@@ -236,11 +238,12 @@ function check(files) {
     text.split(/\r?\n/).forEach((line, i) => {
       if (/^\s*#/.test(line) || /^\s*(?:-\s*)?uses:/.test(line)) return;
       if (/\b(curl|wget)\b[^|#]*\|\s*(sudo\s+)?(ba|z)?sh\b/.test(line)) problems.push(`${rel}:${i + 1}: pipes a download into a shell`);
-      if (/\bnpx\s+(--yes|-y)\b/.test(line)) problems.push(`${rel}:${i + 1}: npx --yes installs a package outside the lockfile`);
+      if (/\b(npx|npm\s+exec)\s+(--yes|-y)\b/.test(line)) problems.push(`${rel}:${i + 1}: npx --yes installs a package outside the lockfile`);
       if (/\bnpm\s+(i|install)\s+(?!.*--package-lock-only)[^#]*\s[@a-z][\w@/.-]*/.test(line) && !/npm\s+(i|install)\s+-g\s+npm@/.test(line)) {
         problems.push(`${rel}:${i + 1}: npm install of named packages outside the lockfile`);
       }
     });
+    if (!/\.ya?ml$/.test(rel)) continue;
     try {
       parsed.push({ rel, ...parse(text), workflow: rel.startsWith('.github/workflows/') });
     } catch (e) {
@@ -673,12 +676,27 @@ jobs:
         run: ./deploy.sh
 `,
   }],
+  ['npx --yes in a Dockerfile and in a script', 2, {
+    Dockerfile: `
+FROM node:24-alpine AS builder
+RUN npm ci
+# npx --yes in a comment does not count
+RUN npx --yes "@sentry/cli@3.8.2" sourcemaps inject .next/static
+RUN npx --no-install sentry-cli sourcemaps inject .next/static
+`,
+    'scripts/upload-sourcemaps.sh': `#!/usr/bin/env bash
+npx -y @sentry/cli --url "$url" sourcemaps upload "$dir"
+npx --no-install sentry-cli --version
+`,
+  }],
 ];
 
 function selfTest() {
   const failures = [];
   for (const [name, want, files] of CASES) {
-    const got = check(Object.entries(files).map(([file, text]) => ({ rel: `.github/workflows/${file}`, text })));
+    // A bare .yml name is a workflow; anything else is a path from the repo root.
+    const rel = (file) => (/^[\w.-]+\.ya?ml$/.test(file) ? `.github/workflows/${file}` : file);
+    const got = check(Object.entries(files).map(([file, text]) => ({ rel: rel(file), text })));
     if (got.length !== want) failures.push(`case "${name}": expected ${want}, got ${got.length}${got.length ? `\n    ${got.join('\n    ')}` : ''}`);
   }
   if (failures.length) {
@@ -707,6 +725,8 @@ if (process.argv.includes('--self-test')) {
     ...walk(path.join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)),
     ...walk(path.join(root, '.github', 'actions')).filter((f) => /(^|[\\/])action\.ya?ml$/.test(f)),
     ...['action.yml', 'action.yaml', 'action/action.yml'].map((f) => path.join(root, f)).filter(existsSync),
+    ...readdirSync(root).filter((f) => /^Dockerfile(\..+)?$/.test(f)).map((f) => path.join(root, f)),
+    ...walk(path.join(root, 'scripts')).filter((f) => /\.sh$/.test(f)),
   ];
   const problems = check(files.map((file) => ({ rel: path.relative(root, file).replace(/\\/g, '/'), text: readFileSync(file, 'utf8') })));
   if (problems.length) {
@@ -715,6 +735,6 @@ if (process.argv.includes('--self-test')) {
     process.exit(1);
   }
   console.log(
-    `ok: ${files.length} workflow and action file(s): actions pinned to a commit, no secret or write token where outside code runs, no cache in publishing jobs, top-level permissions in every workflow`,
+    `ok: ${files.length} workflow, action, Dockerfile and script file(s): actions pinned to a commit, nothing fetched outside the lockfile, no secret or write token where outside code runs, no cache in publishing jobs, top-level permissions in every workflow`,
   );
 }
