@@ -360,19 +360,23 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
     }
     const ip = getClientIP(request);
+    let signedOut: boolean;
     try {
-      await clearAdminSessionCookie();
+      signedOut = await clearAdminSessionCookie();
     } catch (error) {
       if (!isStoreUnavailable(error)) throw error;
       // The cookie is gone from this browser, but the sign-out couldn't be
-      // stored, so a copy of the cookie isn't refused yet.
+      // stored, so a copy of the cookie isn't refused yet. Only reached with
+      // a real admin session token.
       await auditLog('admin.logout', { stored: false }, ip);
       return NextResponse.json(
         { error: 'Signed out in this browser, but the sign-out could not be saved, so a copy of the session still works until it expires. Try signing out again in a moment.' },
         { status: 503, headers: { 'Retry-After': '10' } },
       );
     }
-    await auditLog('admin.logout', {}, ip);
+    // A line only when an admin session was signed out: a request without
+    // one (or with a copy of one that already was) leaves nothing to log.
+    if (signedOut) await auditLog('admin.logout', {}, ip);
     return NextResponse.json({ ok: true });
   } catch (error) {
     logger.error('Admin logout error', { error: error instanceof Error ? error.message : 'Unknown error' });

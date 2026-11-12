@@ -256,13 +256,22 @@ export async function setAdminDeviceCookie(request?: Request): Promise<void> {
 
 /**
  * Clear the admin session cookie and sign its token out, so a copy of the
- * cookie stops working too.
+ * cookie stops working too. Resolves to true when a session that was still
+ * signed in was signed out; false when there was none, or only one that had
+ * expired or was signed out before (nothing for the audit log).
  */
-export async function clearAdminSessionCookie(): Promise<void> {
+export async function clearAdminSessionCookie(): Promise<boolean> {
   const cookieStore = await cookies();
-  const payload = verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? '');
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? '';
+  const payload = verifyAdminSession(token);
   cookieStore.delete(ADMIN_SESSION_COOKIE);
-  if (!payload) return;
+  if (!payload) return false;
+  try {
+    if (!(await verifyCurrentAdminSession(token))) return false;
+  } catch (error) {
+    // Can't tell whether it was signed out before: sign it out (again) below.
+    if (!isStoreUnavailable(error)) throw error;
+  }
   try {
     await revokeAdminSession(payload.sid, payload.exp);
   } catch (error) {
@@ -274,6 +283,7 @@ export async function clearAdminSessionCookie(): Promise<void> {
     // the cookie would work again until it expires, so the caller is told.
     if (isStoreUnavailable(error)) throw error;
   }
+  return true;
 }
 
 /**
