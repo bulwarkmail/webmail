@@ -115,7 +115,9 @@ export async function POST(request: NextRequest) {
 
     // A token sign-in's stamp (lib/auth/session-age.ts) knows no account:
     // the token routes never see one. The first verified account names it,
-    // so the maximum session length of its domain applies on renewal.
+    // so the maximum session length of its domain applies on renewal. The
+    // rest of the stamp stays as it is, the server that issued the token
+    // included (lib/oauth/slot-renewal.ts).
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(refreshTokenCookieName(slot))?.value;
     const stamp = refreshToken ? readSignInStamp(cookieStore, slot, refreshToken) : null;
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
         account: accountName,
         ...(stamp.remember !== undefined ? { remember: stamp.remember } : {}),
         ...(stamp.serverId !== undefined ? { serverId: stamp.serverId } : {}),
+        ...(stamp.customServer ? { customServer: stamp.customServer } : {}),
       });
     }
 

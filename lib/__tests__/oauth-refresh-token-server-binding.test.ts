@@ -33,6 +33,11 @@ vi.mock('@/lib/auth/stalwart-password-login', () => ({
   }),
   stalwartDefaultClientId: async (_serverUrl: string, clientId: string) => clientId,
 }));
+// The page then stores the sign-in context; the typed server knows the access token.
+vi.mock('@/lib/auth/verify-jmap-auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/auth/verify-jmap-auth')>()),
+  resolveJmapIdentity: async (serverUrl: string, _authHeader: string, username: string) => ({ serverUrl, accountName: username }),
+}));
 
 let config: Record<string, unknown> = {};
 vi.mock('@/lib/admin/config-manager', () => ({
@@ -301,6 +306,26 @@ describe('a refresh token only goes to the server that issued it', () => {
     expect(sentTo('default.example', 'RT-OWN-SERVER')).toEqual([]);
     // It is renewed where it came from, with no configured secret.
     expect(res.status).toBe(200);
+    expect(sentTo('own.example', 'RT-OWN-SERVER')).toEqual([expect.objectContaining({ path: '/auth/token' })]);
+  });
+
+  it('stays with the typed server after the page stores the sign-in context, which names the account in the stamp', async () => {
+    config = { jmapServerUrl: 'https://default.example', allowCustomJmapEndpoint: true };
+    await twoFactorSignIn('https://own.example');
+    const { POST } = await import('@/app/api/auth/stalwart-context/route');
+    const stored = await POST(new NextRequest('https://webmail.example/api/auth/stalwart-context', {
+      method: 'POST',
+      headers: SAME_ORIGIN,
+      body: JSON.stringify({ serverUrl: 'https://own.example', username: 'me@own.example', authHeader: 'Bearer AT-OWN', slot: 0 }),
+    }));
+    expect(stored.status).toBe(200);
+    const { readSignInStamp } = await import('@/lib/auth/session-age');
+    const store = await (await import('next/headers')).cookies();
+    expect(readSignInStamp(store as never, 0, 'RT-OWN-SERVER')).toMatchObject({ account: 'me@own.example', customServer: 'https://own.example' });
+
+    received = [];
+    expect((await renew()).status).toBe(200);
+    expect(sentTo('default.example', 'RT-OWN-SERVER')).toEqual([]);
     expect(sentTo('own.example', 'RT-OWN-SERVER')).toEqual([expect.objectContaining({ path: '/auth/token' })]);
   });
 
