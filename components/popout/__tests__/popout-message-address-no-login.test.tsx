@@ -125,7 +125,7 @@ describe('a message window from an address that names no login, while two logins
     window.history.replaceState(null, '', '/en/popout/message/eaaaaab?via=link');
     render(<PopoutMessageApp id="eaaaaab" />);
     await settle();
-    expect(screen.getByText('account_routing.link_names_no_account')).toBeInTheDocument();
+    expect(screen.getByText('link_names_no_account')).toBeInTheDocument();
     expect(view).toBeNull();
   });
 
@@ -134,7 +134,7 @@ describe('a message window from an address that names no login, while two logins
     render(<PopoutMessageApp id="_" />);
     await settle();
     expect(saved).toBeNull();
-    expect(screen.getByText('account_routing.link_names_no_account')).toBeInTheDocument();
+    expect(screen.getByText('link_names_no_account')).toBeInTheDocument();
   });
 });
 
@@ -174,7 +174,7 @@ describe('a message window from an address that names no login, with one login',
     await settle();
     expect(view?.client).toBe(active);
     expect(view?.clientAccountId).toBe(a);
-    expect(screen.queryByText('account_routing.link_names_no_account')).toBeNull();
+    expect(screen.queryByText('link_names_no_account')).toBeNull();
   });
 
   it('opens a message from a file, as before', async () => {
@@ -182,6 +182,6 @@ describe('a message window from an address that names no login, with one login',
     render(<PopoutMessageApp id="_" />);
     await settle();
     expect(screen.getByTestId('saved-message')).toBeInTheDocument();
-    expect(screen.queryByText('account_routing.link_names_no_account')).toBeNull();
+    expect(screen.queryByText('link_names_no_account')).toBeNull();
   });
 });

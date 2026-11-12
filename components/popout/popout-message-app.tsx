@@ -283,7 +283,8 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
 
 /** `/popout/message/<id>`: one message in its own window, with no rail, sidebar or list. */
 export function PopoutMessageApp({ id }: { id: string }) {
-  const t = useTranslations();
+  const t = useTranslations("pwaWindows");
+  const tRouting = useTranslations("account_routing");
   const [launch, setLaunch] = useState(() => readLaunch(id));
   const { pending, login } = useAddressLogin(launch.accountId);
   const openCompose = useComposeWindow(login);
@@ -293,7 +294,7 @@ export function PopoutMessageApp({ id }: { id: string }) {
     window.history.replaceState(window.history.state, "", messagePopoutUrl({ emailId: target.emailId, localAccountId: login, ownerAccountId: target.ownerAccountId }));
     setLaunch({ emailId: target.emailId, accountId: login, ownerAccountId: target.ownerAccountId });
   }, [login]);
-  if (pending) return <PopoutSkeleton label={t("pwaWindows.opening")} />;
+  if (pending) return <PopoutSkeleton label={t("opening")} />;
   // Message and blob ids repeat across logins. An address that names no
   // login (a link made without one, an old bookmark) is the only login's
   // where there is one; with several it could be any of theirs, and the
@@ -301,8 +302,8 @@ export function PopoutMessageApp({ id }: { id: string }) {
   if (!login && severalLogins()) {
     return (
       <PopoutShell kind="message">
-        <PopoutNotice title={t("account_routing.link_names_no_account")}>
-          <Button onClick={closePopoutWindow}>{t("pwaWindows.close_window")}</Button>
+        <PopoutNotice title={tRouting("link_names_no_account")}>
+          <Button onClick={closePopoutWindow}>{t("close_window")}</Button>
         </PopoutNotice>
       </PopoutShell>
     );
