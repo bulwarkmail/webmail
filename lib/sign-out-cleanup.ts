@@ -1,21 +1,27 @@
 import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
+import { SW_SCOPE } from '@/lib/app-update';
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
 import { clearDesktopSurfaces, getDesktopBridge } from '@/lib/desktop/bridge';
 import { sweepPrivateExports } from '@/lib/mail-export/sinks';
+import { shownNotifications } from '@/lib/notifications/shown';
+import { clearRescuedDrafts } from '@/lib/popout/rescued-drafts';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 
 /**
  * What a full sign-out removes from this browser beyond the stores that
  * clearAllStores() empties: once nobody is signed in, nothing the accounts
- * produced may be left for the next person at this computer.
+ * produced may be left for the next person at this computer. A device wipe
+ * takes the same, and only what's listed in its own file on top
+ * (lib/offline/device-wipe.ts).
  *
  * Kept on purpose: device preferences (`settings-storage`, `theme-storage`,
  * `locale-storage`, the Files view settings) and `template-storage`. With
  * settings sync off they exist only here, so deleting them would destroy
  * the user's own work rather than a cache. With sync on, the settings store
- * resets settings and templates itself (forgetSyncedSettings).
+ * resets settings and templates itself (forgetSyncedSettings). Also
+ * `webmail_usernames`, the login form's suggestions.
  */
 const SIGNED_OUT_STORAGE_KEYS = [
   'email-snapshot',
@@ -35,6 +41,18 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'files-path-stack',
   // Names of the people the user gave access to (Settings > Sharing).
   'bulwark-delegate-names',
+  // The bell's list (stores/notification-center-store.ts): file names, what plugins wrote.
+  // The store's memory goes in the same step (onFullSignOut there).
+  'notification-center',
+  // Plugin sign-ins still waiting for their provider (lib/plugin-oauth.ts), and a
+  // provider's answer no tab took yet.
+  'plugin-oauth-states',
+  'plugin-oauth-callback',
+  // The global search's last scope and when sender icons were last refreshed.
+  'global-search',
+  'favicon-refresh',
+  // Messages whose unsubscribe banner was dismissed (Message-IDs).
+  'dismissed-unsub-banners',
   // The last organisation policy (stores/policy-store.ts POLICY_CACHE_KEY):
   // its scopes, labels and notices are the signed-in user's.
   'bulwark-policy-last',
@@ -57,6 +75,18 @@ const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-e
 
 /** What's the accounts' but isn't the local store's: a wipe of one account that leaves others signed in takes these too. */
 export const ACCOUNT_STORAGE_KEYS = SIGNED_OUT_STORAGE_KEYS.filter((key) => !LOCAL_STORE_KEYS.has(key));
+
+/** The WebDAV area's favourites, recent files and last folder: file names and paths an older version kept. */
+export const SIGNED_OUT_STORAGE_PREFIXES = ['webdav-'];
+
+/**
+ * This tab's sessionStorage, which outlives the navigation to the login page: a
+ * mailto or webcal link waiting to be applied after the next sign-in, and a plugin
+ * provider's answer. `redirect_after_login` stays: the app's own sign-out at an
+ * expired session writes it right before, so that signing in again comes back to
+ * the same page. Rescued drafts go through their own module (clearRescuedDrafts).
+ */
+const SIGNED_OUT_SESSION_KEYS = ['bulwark:pending-mailto', 'bulwark:pending-webcal', 'plugin-oauth-callback'];
 
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';
 export { SIGNED_OUT_SIGNAL as SIGNED_OUT_KEY };
@@ -133,6 +163,17 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
       /* storage unavailable */
     }
   }
+  removeByPrefix(window.localStorage, SIGNED_OUT_STORAGE_PREFIXES);
+  for (const key of SIGNED_OUT_SESSION_KEYS) {
+    try {
+      window.sessionStorage.removeItem(key);
+    } catch {
+      /* storage unavailable */
+    }
+  }
+  // Text a closing pop-out couldn't save: the next sign-in in this tab would be offered it.
+  clearRescuedDrafts();
+  void closeShownNotifications().catch(() => {});
   // Attachment bytes a plugin staged for an upload that never started.
   void fileStorage.clearFiles().catch(() => {});
   // Company calendar events (lib/company-calendars.ts), also when the
@@ -173,6 +214,27 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
       /* one store failing must not keep the others' data */
     }
   }
+}
+
+function removeByPrefix(storage: Storage, prefixes: readonly string[]): void {
+  try {
+    const doomed: string[] = [];
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (key && prefixes.some((prefix) => key.startsWith(prefix))) doomed.push(key);
+    }
+    for (const key of doomed) storage.removeItem(key);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Senders, subjects and event titles can sit on screen, and in the system's list, long after the sign-out. */
+export async function closeShownNotifications(): Promise<void> {
+  if (typeof navigator === 'undefined' || typeof navigator.serviceWorker?.getRegistration !== 'function') return;
+  const registration = await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => undefined);
+  if (!registration?.getNotifications) return;
+  for (const notification of await shownNotifications(registration) ?? []) notification.close();
 }
 
 /** The service worker stops keeping the app shell and its copies go. */

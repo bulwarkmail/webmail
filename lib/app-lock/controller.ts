@@ -259,6 +259,7 @@ async function settleNoFile(): Promise<void> {
     setLockedHere(false);
     const next = setupNeeded() ? 'setup' : 'open';
     setPhase(next);
+    tellServiceWorker('off');
     if (next === 'open') {
       hold?.release();
       hold = null;
@@ -313,10 +314,14 @@ function tellDesktopLocked(): void {
   getDesktopBridge()?.os?.setLocked(true);
 }
 
-/** The service worker shows push notifications with no page around. Kept across its restarts. */
+/**
+ * The service worker shows push notifications with no page around. Kept across its restarts.
+ * Stamped with the time it's sent: a word that reaches the worker after a later one (through
+ * `ready` while the page had no controller yet, say) doesn't count.
+ */
 function tellServiceWorker(state: 'locked' | 'unlocked' | 'off'): void {
   try {
-    const message = { type: 'app-lock', state };
+    const message = { type: 'app-lock', state, at: Date.now() };
     const worker = navigator.serviceWorker;
     if (!worker) return;
     if (worker.controller) worker.controller.postMessage(message);
@@ -324,6 +329,16 @@ function tellServiceWorker(state: 'locked' | 'unlocked' | 'off'): void {
   } catch {
     // No service worker, no push notifications.
   }
+}
+
+/**
+ * What this tab knows of the lock now, for the service worker. "Off" too: the worker
+ * takes a state it doesn't have for locked once the lock was on. A wipe tells it the
+ * same way (lib/offline/device-wipe.ts).
+ */
+function tellServiceWorkerAppLock(): void {
+  if (!readAppLockFile().on) tellServiceWorker('off');
+  else tellServiceWorker(isAppLockedNow() ? 'locked' : 'unlocked');
 }
 
 function startIdle(): void {
@@ -397,7 +412,11 @@ function openUp(): void {
   markDocument(false);
   setPhase('open');
   startIdle();
-  if (readAppLockFile().on && !heldKey) watchHolder();
+  if (readAppLockFile().on) {
+    if (!heldKey) watchHolder();
+    // The worker counts the app as unlocked only while a tab that said so is open.
+    tellServiceWorker('unlocked');
+  }
   hold?.release();
   hold = null;
 }
@@ -645,7 +664,6 @@ async function holdAndOpen(raw: Uint8Array): Promise<void> {
   writeAppLockFile({ ...readAppLockFile(), on: true, locked: false });
   noteUnlocked();
   postAppLockMessage({ type: 'unlocked' });
-  tellServiceWorker('unlocked');
   openUp();
   await deliverSealedDrafts(key);
 }
@@ -942,7 +960,6 @@ async function enable(pin: string): Promise<void> {
   }
   noteUnlocked();
   postAppLockMessage({ type: 'enabled' });
-  tellServiceWorker('unlocked');
   openUp();
   // Another tab has the store open and no key for what comes next. Everyone starts over.
   if (await ownerIsElsewhere()) lockEverywhere();
@@ -1230,12 +1247,18 @@ export function startAppLock(): () => void {
     startIdle();
     if (!heldKey) watchHolder();
   }
-  if (readAppLockFile().on) {
-    tellServiceWorker(isAppLockedNow() ? 'locked' : 'unlocked');
-    void dropHelloIfNotAllowed();
-  }
+  // A tab still asking whether the lock holds tells the worker once it knows (openUp, lockedFromNow, settleNoFile).
+  if (phase !== 'checking') tellServiceWorkerAppLock();
+  if (readAppLockFile().on) void dropHelloIfNotAllowed();
+  // A new worker that takes over has heard nothing from this tab yet.
+  const onNewWorker = () => {
+    if (phase !== 'checking') tellServiceWorkerAppLock();
+  };
+  const workers = typeof navigator !== 'undefined' ? navigator.serviceWorker : undefined;
+  workers?.addEventListener?.('controllerchange', onNewWorker);
   return () => {
     channel?.close();
+    workers?.removeEventListener?.('controllerchange', onNewWorker);
     window.removeEventListener('storage', onStorage);
     stopDesktop?.();
     stopPolicy();
