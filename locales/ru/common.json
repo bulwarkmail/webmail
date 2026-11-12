@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, список от плагина {name}",
     "oauth_failed": "Сервис не завершил вход. Закройте это окно и попробуйте ещё раз.",
     "banners_more": "Ещё баннеры ({count}): {names}",
-    "banners_fewer": "Меньше баннеров"
+    "banners_fewer": "Меньше баннеров",
+    "opened_by_plugin": "Открыто плагином {name}"
   },
   "command_palette": {
     "title": "Палитра команд",

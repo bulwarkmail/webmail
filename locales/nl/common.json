@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, lijst van de plug-in {name}",
     "oauth_failed": "De dienst heeft het aanmelden niet afgerond. Sluit dit venster en probeer het opnieuw.",
     "banners_more": "Meer banners ({count}): {names}",
-    "banners_fewer": "Minder banners"
+    "banners_fewer": "Minder banners",
+    "opened_by_plugin": "Geopend door de plug-in {name}"
   },
   "command_palette": {
     "title": "Opdrachtenpalet",

@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label},来自插件 {name} 的列表",
     "oauth_failed": "该服务未完成登录。请关闭此窗口后重试。",
     "banners_more": "更多横幅（{count}）：{names}",
-    "banners_fewer": "收起横幅"
+    "banners_fewer": "收起横幅",
+    "opened_by_plugin": "由插件 {name} 打开"
   },
   "command_palette": {
     "title": "命令面板",

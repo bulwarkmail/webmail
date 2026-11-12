@@ -2529,7 +2529,8 @@
     "dropdown_list_labelled": "{label}, รายการจากปลั๊กอิน {name}",
     "oauth_failed": "บริการลงชื่อเข้าใช้ไม่สำเร็จ ปิดหน้าต่างนี้แล้วลองอีกครั้ง",
     "banners_more": "แบนเนอร์เพิ่มเติม ({count}): {names}",
-    "banners_fewer": "แบนเนอร์น้อยลง"
+    "banners_fewer": "แบนเนอร์น้อยลง",
+    "opened_by_plugin": "เปิดโดยปลั๊กอิน {name}"
   },
   "tour": {
     "step_counter": "ขั้นตอนที่ {current} จาก {total}",

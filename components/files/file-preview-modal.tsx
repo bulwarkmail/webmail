@@ -90,6 +90,11 @@ interface FilePreviewModalProps {
    * printing off.
    */
   autoPrint?: boolean;
+  /**
+   * Who opened the file, when it wasn't the user: shown under the name
+   * ("Opened by the plugin X", for a file a plugin opened or printed).
+   */
+  source?: string;
 }
 
 function SimpleMarkdown({ content }: { content: string }) {
@@ -183,7 +188,7 @@ function processInline(text: string): React.ReactNode {
   return parts.length === 1 ? parts[0] : <>{parts}</>;
 }
 
-export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction, autoPrint }: FilePreviewModalProps) {
+export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction, autoPrint, source }: FilePreviewModalProps) {
   const t = useTranslations("files");
   const tCommon = useTranslations("common");
   // No downloads: no download button, no new tab, no save from the
@@ -406,6 +411,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
       onClose={onClose}
       onDownload={downloadsOff ? undefined : download}
       neighbours={neighbours}
+      source={source}
       // An installed app hands the new window to the system browser, which
       // cannot load our blob: URL (#865): no dead button there.
       actions={(

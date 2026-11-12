@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, lista del complemento {name}",
     "oauth_failed": "El servicio no completó el inicio de sesión. Cierre esta ventana e inténtelo de nuevo.",
     "banners_more": "Más banners ({count}): {names}",
-    "banners_fewer": "Menos banners"
+    "banners_fewer": "Menos banners",
+    "opened_by_plugin": "Abierto por el complemento {name}"
   },
   "command_palette": {
     "title": "Paleta de comandos",

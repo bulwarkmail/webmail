@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, zoznam od doplnku {name}",
     "oauth_failed": "Služba nedokončila prihlásenie. Zatvorte toto okno a skúste to znova.",
     "banners_more": "Ďalšie bannery ({count}): {names}",
-    "banners_fewer": "Menej bannerov"
+    "banners_fewer": "Menej bannerov",
+    "opened_by_plugin": "Otvorené doplnkom {name}"
   },
   "command_palette": {
     "title": "Paleta príkazov",

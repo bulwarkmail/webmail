@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, liste fra tillegget {name}",
     "oauth_failed": "Tjenesten fullførte ikke påloggingen. Lukk dette vinduet og prøv igjen.",
     "banners_more": "Flere bannere ({count}): {names}",
-    "banners_fewer": "Færre bannere"
+    "banners_fewer": "Færre bannere",
+    "opened_by_plugin": "Åpnet av tillegget {name}"
   },
   "command_palette": {
     "title": "Kommandopalett",

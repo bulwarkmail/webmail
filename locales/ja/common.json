@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}(プラグイン {name} のリスト)",
     "oauth_failed": "サービスでサインインが完了しませんでした。このウィンドウを閉じて、もう一度お試しください。",
     "banners_more": "その他のバナー（{count}）: {names}",
-    "banners_fewer": "バナーを折りたたむ"
+    "banners_fewer": "バナーを折りたたむ",
+    "opened_by_plugin": "プラグイン {name} が開きました"
   },
   "command_palette": {
     "title": "コマンドパレット",

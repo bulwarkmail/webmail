@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, {name} залгаасын жагсаалт",
     "oauth_failed": "Үйлчилгээ нэвтрэлтийг дуусгасангүй. Энэ цонхыг хаагаад дахин оролдоно уу.",
     "banners_more": "Бусад баннер ({count}): {names}",
-    "banners_fewer": "Цөөн баннер"
+    "banners_fewer": "Цөөн баннер",
+    "opened_by_plugin": "{name} залгаас нээсэн"
   },
   "command_palette": {
     "title": "Командын самбар",

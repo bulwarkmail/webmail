@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, lista a(z) {name} bővítménytől",
     "oauth_failed": "A szolgáltatás nem fejezte be a bejelentkezést. Zárja be ezt az ablakot, és próbálja újra.",
     "banners_more": "További bannerek ({count}): {names}",
-    "banners_fewer": "Kevesebb banner"
+    "banners_fewer": "Kevesebb banner",
+    "opened_by_plugin": "A(z) {name} bővítmény nyitotta meg"
   },
   "command_palette": {
     "title": "Parancspaletta",

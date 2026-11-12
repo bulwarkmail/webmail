@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}، قائمة من الإضافة {name}",
     "oauth_failed": "لم تُكمل الخدمة تسجيل الدخول. أغلق هذه النافذة وحاول مرة أخرى.",
     "banners_more": "لافتات أخرى ({count}): {names}",
-    "banners_fewer": "لافتات أقل"
+    "banners_fewer": "لافتات أقل",
+    "opened_by_plugin": "فتحته الإضافة {name}"
   },
   "command_palette": {
     "title": "لوحة الأوامر",

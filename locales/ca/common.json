@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, llista del connector {name}",
     "oauth_failed": "El servei no ha completat l'inici de sessió. Tanqueu aquesta finestra i torneu-ho a provar.",
     "banners_more": "Més bàners ({count}): {names}",
-    "banners_fewer": "Menys bàners"
+    "banners_fewer": "Menys bàners",
+    "opened_by_plugin": "Obert pel connector {name}"
   },
   "command_palette": {
     "title": "Paleta d'ordres",

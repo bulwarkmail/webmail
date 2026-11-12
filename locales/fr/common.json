@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, liste du plugin {name}",
     "oauth_failed": "Le service n'a pas terminé la connexion. Fermez cette fenêtre et réessayez.",
     "banners_more": "Autres bannières ({count}) : {names}",
-    "banners_fewer": "Moins de bannières"
+    "banners_fewer": "Moins de bannières",
+    "opened_by_plugin": "Ouvert par le plugin {name}"
   },
   "command_palette": {
     "title": "Palette de commandes",

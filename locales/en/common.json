@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, list from the plugin {name}",
     "oauth_failed": "The service did not complete the sign-in. Close this window and try again.",
     "banners_more": "More banners ({count}): {names}",
-    "banners_fewer": "Fewer banners"
+    "banners_fewer": "Fewer banners",
+    "opened_by_plugin": "Opened by the plugin {name}"
   },
   "command_palette": {
     "title": "Command palette",

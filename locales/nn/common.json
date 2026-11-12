@@ -7089,7 +7089,8 @@
     "dropdown_list_labelled": "{label}, liste frå plugin {name}",
     "oauth_failed": "Tenesta fullførte ikkje innlogginga. Lukk dette vindauget og prøv igjen.",
     "banners_more": "Fleire bannerar ({count}): {names}",
-    "banners_fewer": "Færre bannerar"
+    "banners_fewer": "Færre bannerar",
+    "opened_by_plugin": "Opna av plugin {name}"
   },
   "command_palette": {
     "title": "Kommando-palett",

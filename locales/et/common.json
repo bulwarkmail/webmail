@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, loend pistikprogrammilt {name}",
     "oauth_failed": "Teenus ei lõpetanud sisselogimist. Sulge see aken ja proovi uuesti.",
     "banners_more": "Veel ribasid ({count}): {names}",
-    "banners_fewer": "Vähem ribasid"
+    "banners_fewer": "Vähem ribasid",
+    "opened_by_plugin": "Avas pistikprogramm {name}"
   },
   "command_palette": {
     "title": "Käsupalett",

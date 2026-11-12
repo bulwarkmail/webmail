@@ -3,19 +3,25 @@
 // The file preview for files plugins open (api.ui.openFile) or print as a PDF
 // (api.ui.print with `pdf`): the same preview attachments and Files use, so
 // the file has the app's Download and Print and nothing of the plugin's own.
-// See lib/plugin-sandbox/host-api-file-viewer.ts.
+// Under the file name the preview says which plugin opened it, in a line the
+// plugin's file name can't reach. See lib/plugin-sandbox/host-api-file-viewer.ts.
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useTranslations } from 'next-intl';
 import { saveBlobAs } from '@/lib/download-guard';
 import { closePluginFile, currentFileView, registerFileViewerHost, subscribeFileView } from '@/lib/plugin-sandbox/file-viewer';
+import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
+import { usePluginStore } from '@/stores/plugin-store';
 
 // Loaded with the first file a plugin opens, not with the page.
 const FilePreviewModal = dynamic(() => import('@/components/files/file-preview-modal').then((m) => m.FilePreviewModal), { ssr: false });
 
 export function PluginFileViewerHost() {
+  const t = useTranslations('plugin_surfaces');
   useEffect(() => registerFileViewerHost(), []);
   const view = useSyncExternalStore(subscribeFileView, currentFileView, () => null);
+  const installedName = usePluginStore((s) => (view ? s.plugins.find((p) => p.id === view.pluginId)?.name : undefined));
   // Stable per file: the preview loads again when this changes.
   const getFileContent = useMemo(
     () => (view ? async () => ({ blob: view.blob, contentType: view.blob.type }) : null),
@@ -23,6 +29,7 @@ export function PluginFileViewerHost() {
   );
   const close = useCallback(() => { if (view) closePluginFile(view.id); }, [view]);
   if (!view || !getFileContent) return null;
+  const pluginName = installedName || getActivePlugin(view.pluginId)?.plugin.name || view.pluginId;
   return (
     <FilePreviewModal
       key={view.id}
@@ -32,6 +39,7 @@ export function PluginFileViewerHost() {
       onDownload={() => { saveBlobAs(view.blob, view.name, { kind: 'attachment' }); }}
       getFileContent={getFileContent}
       autoPrint={view.print}
+      source={t('opened_by_plugin', { name: pluginName })}
     />
   );
 }

@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, elenco dal plugin {name}",
     "oauth_failed": "Il servizio non ha completato l'accesso. Chiudi questa finestra e riprova.",
     "banners_more": "Altri banner ({count}): {names}",
-    "banners_fewer": "Meno banner"
+    "banners_fewer": "Meno banner",
+    "opened_by_plugin": "Aperto dal plugin {name}"
   },
   "command_palette": {
     "title": "Tavolozza comandi",

@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, seznam od pluginu {name}",
     "oauth_failed": "Služba přihlášení nedokončila. Zavřete toto okno a zkuste to znovu.",
     "banners_more": "Další bannery ({count}): {names}",
-    "banners_fewer": "Méně bannerů"
+    "banners_fewer": "Méně bannerů",
+    "opened_by_plugin": "Otevřeno pluginem {name}"
   },
   "command_palette": {
     "title": "Paleta příkazů",

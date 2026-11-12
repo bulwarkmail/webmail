@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, Liste vom Plugin {name}",
     "oauth_failed": "Der Dienst hat die Anmeldung nicht abgeschlossen. Schließen Sie dieses Fenster und versuchen Sie es erneut.",
     "banners_more": "Weitere Banner ({count}): {names}",
-    "banners_fewer": "Weniger Banner"
+    "banners_fewer": "Weniger Banner",
+    "opened_by_plugin": "Geöffnet vom Plugin {name}"
   },
   "command_palette": {
     "title": "Befehlspalette",

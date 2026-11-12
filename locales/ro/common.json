@@ -7081,7 +7081,8 @@
     "dropdown_list_labelled": "{label}, listă de la pluginul {name}",
     "oauth_failed": "Serviciul nu a finalizat conectarea. Închide această fereastră și încearcă din nou.",
     "banners_more": "Mai multe bannere ({count}): {names}",
-    "banners_fewer": "Mai puține bannere"
+    "banners_fewer": "Mai puține bannere",
+    "opened_by_plugin": "Deschis de pluginul {name}"
   },
   "command_palette": {
     "title": "Paleta de comenzi",
