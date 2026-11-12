@@ -45,7 +45,7 @@ vi.mock('@/lib/oauth/token-exchange', () => ({
 }));
 vi.mock('@/lib/oauth/discovery', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  discoverOAuth: async () => ({ authorization_endpoint: 'https://idp.example.net/authorize', token_endpoint: 'https://idp.example.net/token' }),
+  discoverOAuth: async () => ({ issuer: 'https://idp.example.net', authorization_endpoint: 'https://idp.example.net/authorize', token_endpoint: 'https://idp.example.net/token' }),
 }));
 
 import { POST as exchange, PUT as renew } from '@/app/api/auth/token/route';

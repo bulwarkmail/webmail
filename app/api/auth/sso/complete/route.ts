@@ -144,7 +144,9 @@ export async function POST(request: NextRequest) {
     // RFC 9207: a code answered by another issuer than the one this sign-in
     // was sent to is refused before the code or the verifier goes anywhere.
     // The callback page passes `iss` on; a missing one is refused when the
-    // provider says it always sends it.
+    // provider says it always sends it. /start records the issuer of metadata
+    // that names its own server, and the code goes only to such metadata's
+    // token endpoint.
     if (!callbackIssuerAccepted(iss, pending.issuer, pending.iss_required === true)) {
       logger.warn('SSO complete: the answer came from another issuer than the one asked');
       cookieStore.delete(SSO_PENDING_COOKIE);

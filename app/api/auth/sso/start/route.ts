@@ -137,7 +137,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { clientId, discoveryUrl, resource } = getRequiredConfig(serverId);
-    const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl) });
+    // Only metadata that names this server as its issuer: /complete checks the
+    // callback's `iss` against it.
+    const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), requireOwnIssuer: true });
 
     if (!metadata?.authorization_endpoint) {
       return NextResponse.json({ error: 'OAuth discovery failed' }, { status: 502 });

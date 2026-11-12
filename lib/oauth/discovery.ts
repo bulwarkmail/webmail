@@ -10,19 +10,32 @@ export interface OAuthMetadata {
   authorization_response_iss_parameter_supported?: boolean;
 }
 
+const trimSlashes = (value: string) => value.replace(/\/+$/, '');
+
 /**
  * Whether the `iss` of an authorization callback (RFC 9207) fits the issuer
  * the sign-in was sent to. Another issuer is refused, and so is a missing one
  * when `required` (the provider says it always sends one, and the callback was
- * passed on with it). Trailing slashes don't count. Without a recorded issuer
- * there is nothing to compare against.
+ * passed on with it). Trailing slashes don't count. An `iss` with no issuer
+ * to compare it with is refused.
  */
 export function callbackIssuerAccepted(iss: unknown, expected: unknown, required: boolean): boolean {
   if (iss === undefined || iss === null || iss === '') return !required;
   if (typeof iss !== 'string') return false;
-  if (typeof expected !== 'string' || !expected) return true;
-  const trim = (value: string) => value.replace(/\/+$/, '');
-  return trim(iss) === trim(expected);
+  if (typeof expected !== 'string' || !expected) return false;
+  return trimSlashes(iss) === trimSlashes(expected);
+}
+
+/**
+ * Whether metadata fetched from `base` names `base` as its issuer (RFC 8414
+ * section 3.3: identical to the issuer identifier the well-known path was
+ * appended to). Only trailing slashes are forgiven. `base` is the discovery
+ * base as configured, which the URL parser has already given a lowercase host
+ * and no default port; an issuer that spells its host in capitals or names
+ * the default port is not identical and is refused.
+ */
+export function isOwnIssuer(issuer: unknown, base: string): boolean {
+  return typeof issuer === 'string' && issuer !== '' && trimSlashes(issuer) === trimSlashes(base);
 }
 
 // Validates that a discovered endpoint URL is safe to follow. Server-side
@@ -34,6 +47,12 @@ export type EndpointValidator = (url: string) => Promise<boolean>;
 
 export interface DiscoverOAuthOptions {
   validateEndpoint?: EndpointValidator;
+  /**
+   * Refuse metadata that doesn't name the server it was fetched from as its
+   * issuer (isOwnIssuer). A sign-in relies on that issuer: it is what the
+   * callback's `iss` is checked against.
+   */
+  requireOwnIssuer?: boolean;
 }
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -186,6 +205,19 @@ async function attemptDiscovery(
 }
 
 export async function discoverOAuth(
+  serverUrl: string,
+  options?: DiscoverOAuthOptions,
+): Promise<OAuthMetadata | null> {
+  const metadata = await fetchMetadata(serverUrl, options);
+  if (metadata && options?.requireOwnIssuer && !isOwnIssuer(metadata.issuer, serverUrl)) {
+    const named = typeof metadata.issuer === 'string' ? JSON.stringify(metadata.issuer.slice(0, 200)) : 'no issuer';
+    console.error(`[OAuth] Metadata from ${serverUrl} names ${named} as its issuer, not ${serverUrl}; set the server's issuer URL to the provider's issuer`);
+    return null;
+  }
+  return metadata;
+}
+
+async function fetchMetadata(
   serverUrl: string,
   options?: DiscoverOAuthOptions,
 ): Promise<OAuthMetadata | null> {

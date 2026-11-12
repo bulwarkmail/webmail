@@ -152,9 +152,11 @@ export async function POST(request: NextRequest) {
     // RFC 9207: a code answered by another issuer than the server this sign-in
     // names is refused before the code or the verifier goes anywhere, and so
     // is one without `iss` from a provider that says it always sends it. The
+    // issuer is the one of metadata that names the server it came from;
+    // without such metadata the exchange below finds no token endpoint. The
     // desktop app's own sign-in to a server it typed (lib/desktop/browser-sign-in.ts)
     // checks `iss` itself before it gets here and sends none.
-    const metadata = await getMetadata(serverId, customUpstream ? { upstream: customUpstream } : undefined);
+    const metadata = await getMetadata(serverId, customUpstream ? { upstream: customUpstream } : undefined, !customUpstream);
     const issRequired = !customUpstream && metadata?.authorization_response_iss_parameter_supported === true;
     if (!callbackIssuerAccepted(iss, metadata?.issuer, issRequired)) {
       logger.warn('Token exchange: the answer came from another issuer than the one asked');

@@ -90,7 +90,9 @@ export async function POST(request: NextRequest) {
     }
     // RFC 9207: only the issuer the step-up was sent to may answer it. The
     // callback page passes `iss` on, so a missing one is refused when the
-    // provider says it sends it.
+    // provider says it sends it. The recorded issuer is that of metadata that
+    // names its own server, and the code goes only to such metadata's token
+    // endpoint.
     if (!callbackIssuerAccepted(iss, pending.issuer, pending.iss_required === true)) {
       logger.warn('Reauth complete: the answer came from another issuer than the one asked');
       return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });

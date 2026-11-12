@@ -173,18 +173,22 @@ export function hasClientSecret(serverId?: string | null): boolean {
   return getClientSecret(serverId) !== '';
 }
 
-export async function getTokenEndpoint(serverId?: string | null, options?: ClientConfigOptions): Promise<string> {
+/**
+ * `requireOwnIssuer` (for a sign-in): only metadata that names the server it
+ * was fetched from as its issuer counts (lib/oauth/discovery.ts isOwnIssuer).
+ */
+export async function getTokenEndpoint(serverId?: string | null, options?: ClientConfigOptions, requireOwnIssuer = false): Promise<string> {
   const { discoveryUrl } = getRequiredConfig(serverId, options);
-  const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl) });
+  const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), requireOwnIssuer });
   if (!metadata?.token_endpoint) {
     throw new Error('OAuth token endpoint not found');
   }
   return metadata.token_endpoint;
 }
 
-export async function getMetadata(serverId?: string | null, options?: ClientConfigOptions): Promise<OAuthMetadata | null> {
+export async function getMetadata(serverId?: string | null, options?: ClientConfigOptions, requireOwnIssuer = false): Promise<OAuthMetadata | null> {
   const { discoveryUrl } = getRequiredConfig(serverId, options);
-  return discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl) });
+  return discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl), requireOwnIssuer });
 }
 
 export function buildOAuthParams(base: Record<string, string>, serverId?: string | null, options?: ClientConfigOptions): URLSearchParams {
@@ -220,7 +224,11 @@ export async function exchangeCodeForTokens(
   serverId?: string | null,
   options?: ClientConfigOptions,
 ): Promise<TokenResult> {
-  const tokenEndpoint = await getTokenEndpoint(serverId, options);
+  // A code goes only to the token endpoint of metadata that names its own
+  // server as issuer: the issuer the callback was checked against. The
+  // desktop app's server of its own (`upstream`) is the one the user typed;
+  // it checks the answer itself.
+  const tokenEndpoint = await getTokenEndpoint(serverId, options, !options?.upstream);
 
   const params = buildOAuthParams({
     grant_type: 'authorization_code',
