@@ -213,14 +213,27 @@ function headersInOrder(headers: unknown): { name: string; value: string }[] | u
 }
 
 /**
+ * What the message itself shows about its results: true or false from the
+ * flag the full fetch sets (authenticationResultsOnReceipt), else from the
+ * headers in message order when it carries them (a conversation's messages
+ * do), else undefined: nothing to go by (a list row, a search result).
+ */
+export function authenticationResultsEvidence(
+  email: { authenticationResultsOnReceipt?: unknown; headers?: unknown } | undefined,
+): boolean | undefined {
+  if (!email) return undefined;
+  if (email.authenticationResultsOnReceipt !== undefined) return email.authenticationResultsOnReceipt === true;
+  const headers = headersInOrder(email.headers);
+  return headers ? authenticationResultsOnReceipt(headers) : undefined;
+}
+
+/**
  * Whether a pass in the message's Authentication-Results may earn it
- * anything. Only on evidence that the results were written on receipt: the
- * flag the full fetch sets (authenticationResultsOnReceipt), else the
- * headers in message order when the message carries them (a conversation's
- * messages do). Without either (a list row, a search result) the answer is
- * no, and it is always no for a message from an imported file, whose headers
- * this server never wrote. The sender logo, the invitation trust and the
- * booking cards all ask this.
+ * anything. Only on evidence that the results were written on receipt
+ * (authenticationResultsEvidence): without it the answer is no, and it is
+ * always no for a message from an imported file, whose headers this server
+ * never wrote. The sender logo, the invitation trust and the booking cards
+ * all ask this.
  */
 export function authenticationResultsUsable(
   email: {
@@ -230,9 +243,7 @@ export function authenticationResultsUsable(
   } | undefined,
 ): boolean {
   if (!email || isImportedMessage(email)) return false;
-  if (email.authenticationResultsOnReceipt !== undefined) return email.authenticationResultsOnReceipt === true;
-  const headers = headersInOrder(email.headers);
-  return headers ? authenticationResultsOnReceipt(headers) : false;
+  return authenticationResultsEvidence(email) === true;
 }
 
 /**

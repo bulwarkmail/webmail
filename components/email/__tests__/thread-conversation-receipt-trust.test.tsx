@@ -10,15 +10,21 @@
 // - a message file opened in a window (parseEmailBlob): never received by this server
 // - the demo, whose fixtures are the mail its server received
 import { renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { JMAPClient } from '@/lib/jmap/client';
 import { brandIndicatorDomain } from '@/lib/email-headers';
 import { getInvitationTrustAssessment } from '@/lib/calendar-invitation';
 import { getStructuredMailTrust } from '@/lib/structured-mail/trust';
 import { useBrandDomain } from '@/hooks/use-brand-domain';
+import { useReceiptAnswers } from '@/lib/receipt-answers';
 import { DemoJMAPClient } from '@/lib/demo/demo-client';
 import { getDemoData } from '@/lib/demo/demo-data';
 import type { CalendarEvent, Email } from '@/lib/jmap/types';
+
+// Each case starts from messages nobody has shown in full yet (see lib/receipt-answers.ts).
+beforeEach(() => {
+  useReceiptAnswers.getState().reset();
+});
 
 type Call = [string, Record<string, unknown>, string];
 type Header = { name: string; value: string };

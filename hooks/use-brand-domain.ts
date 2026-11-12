@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { IMPORTED_KEYWORD, authenticationResultsUsable, brandIndicatorDomain, isImportedMessage } from "@/lib/email-headers";
+import { useEffect, useMemo } from "react";
+import { IMPORTED_KEYWORD, authenticationResultsEvidence, brandIndicatorDomain, isImportedMessage } from "@/lib/email-headers";
 import { useInternalMailDomains } from "@/components/email/external-sender-chip";
+import { receiptAnswerKey, useReceiptAnswers } from "@/lib/receipt-answers";
 import type { Email } from "@/lib/jmap/types";
 
 /**
@@ -10,11 +11,13 @@ import type { Email } from "@/lib/jmap/types";
  * brandIndicatorDomain): one it passed DMARC for on receipt, or one of the
  * organisation's own when the message was handed in on the same server.
  * Nothing for a message from an imported file, or one that does not show its
- * results were written on receipt (authenticationResultsUsable): a list row,
- * a search result.
+ * results were written on receipt (authenticationResultsEvidence). A list row
+ * or a search result shows none by itself; it borrows the answer the full
+ * message gave when it was shown (lib/receipt-answers.ts), and a message
+ * shown in full with results written on receipt leaves that answer there.
  */
 export function useBrandDomain(
-  email: (Pick<Email, "from" | "authenticationResults" | "authenticationResultsOnReceipt" | "sourceClientAccountId"> & Partial<Pick<Email, "keywords" | "headers">>) | null | undefined,
+  email: (Pick<Email, "from" | "authenticationResults" | "authenticationResultsOnReceipt" | "sourceClientAccountId"> & Partial<Pick<Email, "keywords" | "headers" | "blobId" | "size">>) | null | undefined,
 ): string | undefined {
   const from = email?.from;
   const authenticationResults = email?.authenticationResults;
@@ -22,10 +25,15 @@ export function useBrandDomain(
   const flag = email?.authenticationResultsOnReceipt;
   const headers = email?.headers;
   // Worked out from the flag or the headers in message order, as the cards do.
-  const authenticationResultsOnReceipt = useMemo(
-    () => authenticationResultsUsable({ authenticationResultsOnReceipt: flag, headers }),
-    [flag, headers],
-  );
+  const evidence = useMemo(() => authenticationResultsEvidence({ authenticationResultsOnReceipt: flag, headers }), [flag, headers]);
+  const answerKey = receiptAnswerKey(email);
+  // Only a message with nothing of its own to go by borrows an answer.
+  const remembered = useReceiptAnswers((state) => evidence === undefined && answerKey !== null && state.known.has(answerKey));
+  const remember = useReceiptAnswers((state) => state.remember);
+  useEffect(() => {
+    if (evidence === true && answerKey && !imported) remember(answerKey);
+  }, [evidence, answerKey, imported, remember]);
+  const authenticationResultsOnReceipt = evidence ?? remembered;
   // Only mail without the header goes by the organisation's domains; the rest
   // costs no lookup of another account's identities.
   const internalDomains = useInternalMailDomains(email?.sourceClientAccountId, !!from?.[0]?.email && !authenticationResults);
