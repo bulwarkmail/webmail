@@ -35,6 +35,14 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'files-path-stack',
   // Names of the people the user gave access to (Settings > Sharing).
   'bulwark-delegate-names',
+  // The bell's list (stores/notification-center-store.ts): file names, what plugins wrote.
+  // The store's memory goes in the same step (onFullSignOut there).
+  'notification-center',
+  // Plugin sign-ins still waiting for their provider (lib/plugin-oauth.ts).
+  'plugin-oauth-states',
+  // The global search's last scope and when sender icons were last refreshed.
+  'global-search',
+  'favicon-refresh',
   // The last organisation policy (stores/policy-store.ts POLICY_CACHE_KEY):
   // its scopes, labels and notices are the signed-in user's.
   'bulwark-policy-last',
