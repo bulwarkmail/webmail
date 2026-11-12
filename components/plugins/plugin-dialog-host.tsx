@@ -571,6 +571,14 @@ function FooterIcon({ name }: { name?: string }) {
   return Glyph ? <Glyph className="w-4 h-4" aria-hidden="true" /> : null;
 }
 
+/**
+ * Where the menu in a plugin dialog's header stands: above every plugin
+ * dialog layer (z-index 100000, and 100001 for a dialog on top of another)
+ * and the lists drawn in them (plugin-iframe-slot.tsx). Nothing the plugin
+ * draws can cover "Turn off", however many dialogs it opens.
+ */
+export const PLUGIN_DIALOG_MENU_Z = 100002;
+
 /** The "⋯" menu in a plugin dialog's header: the way out of a plugin that keeps asking. */
 function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOff: () => void; compact?: boolean }) {
   const t = useTranslations('plugins.dialog');
@@ -590,7 +598,7 @@ function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOf
       >
         <MoreVertical className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
       </button>
-      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={menu.closeContextMenu} label={t('plugin_menu', { name })}>
+      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={menu.closeContextMenu} label={t('plugin_menu', { name })} zIndex={PLUGIN_DIALOG_MENU_Z}>
         <ContextMenuItem
           icon={Power}
           label={t('turn_off', { name })}
