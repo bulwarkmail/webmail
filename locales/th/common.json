@@ -1664,6 +1664,7 @@
       "clear_formatting": "ล้างการจัดรูปแบบ",
       "undo": "เลิกทำ",
       "redo": "ทำซ้ำ",
+      "cell_background": "สีพื้นหลังของเซลล์",
       "add_row_above": "เพิ่มแถวด้านบน",
       "add_row_below": "เพิ่มแถวด้านล่าง",
       "add_column_before": "เพิ่มคอลัมน์ด้านหน้า",

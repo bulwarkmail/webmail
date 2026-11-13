@@ -1228,6 +1228,7 @@
       "clear_formatting": "Fjern formatering",
       "undo": "Angre",
       "redo": "Gjenta",
+      "cell_background": "Cellebakgrunn",
       "add_row_above": "Legg til rad over",
       "add_row_below": "Legg til rad nedenfor",
       "add_column_before": "Legg til kolonne før",

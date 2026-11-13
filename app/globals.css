@@ -1286,6 +1286,14 @@ html[data-window-controls-left] [data-window-rail] {
   overflow: hidden;
 }
 
+/* A pasted spreadsheet table keeps its source grid (fixed layout with
+   colgroup widths, see components/email/table-paste.ts), which can add up
+   to more than the composer's width. Scroll the wrapper instead of letting
+   the table stick out of the compose pane. */
+.tiptap .tableWrapper {
+  overflow-x: auto;
+}
+
 .tiptap table td,
 .tiptap table th {
   border: 1px solid var(--color-border);
@@ -1295,9 +1303,14 @@ html[data-window-controls-left] [data-window-rail] {
   min-width: 1em;
 }
 
+/* The theme look for header cells. Deliberately NOT !important: a cell
+   background set from the table menu (or pasted from a spreadsheet) is an
+   inline style, and inline only beats a class rule without !important.
+   With !important here the edit looked like a no-op in the composer and
+   only showed up in the sent mail. */
 .tiptap table th {
-  background-color: var(--color-muted) !important;
-  color: var(--color-foreground) !important;
+  background-color: var(--color-muted);
+  color: var(--color-foreground);
   font-weight: 600;
   text-align: left;
 }

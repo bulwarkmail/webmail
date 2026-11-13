@@ -1228,6 +1228,7 @@
       "clear_formatting": "Форматыг арилгах",
       "undo": "Буцах",
       "redo": "Дахин хийх",
+      "cell_background": "Нүдний дэвсгэр",
       "add_row_above": "Дээрх мөр нэмэх",
       "add_row_below": "Доор нэмэх",
       "add_column_before": "Өмнө нь багана нэмнэ үү",
