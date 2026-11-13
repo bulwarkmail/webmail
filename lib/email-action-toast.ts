@@ -1,5 +1,5 @@
 import { toast } from "@/stores/toast-store";
-import { useEmailStore, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, captureEmailListQuery, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
 import type { ToastAction } from "@/components/ui/toast";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Email } from "@/lib/jmap/types";
@@ -129,11 +129,13 @@ export async function markSelectionReadWithUndo(
   read: boolean,
   words: { success: string; error: string; labels: UndoLabels },
 ): Promise<void> {
+  const isCurrent = captureEmailListQuery();
   const points = keywordRestorePoints(resolveSelectedEmails(useEmailStore.getState()), ["$seen"], { $seen: read });
   await runBatchEmailAction(() => useEmailStore.getState().batchMarkAsRead(client, read), {
     success: words.success,
     error: words.error,
     undo: undoKeywordAction(client, points, words.labels),
+    isCurrent,
   });
 }
 
@@ -244,7 +246,7 @@ export function toastWithUndo(title: string, undo: UndoToastAction | undefined, 
  */
 export async function runBatchEmailAction(
   run: () => Promise<boolean | void>,
-  messages: { success?: string; error: string; describeError?: (error: unknown) => string | undefined; undo?: ToastAction },
+  messages: { success?: string; error: string; describeError?: (error: unknown) => string | undefined; undo?: ToastAction; isCurrent?: () => boolean },
 ): Promise<void> {
   // An error left over from an earlier action is not this action's outcome.
   useEmailStore.setState({ error: null });
@@ -252,11 +254,14 @@ export async function runBatchEmailAction(
   try {
     ran = await run();
   } catch (error) {
+    if (messages.isCurrent && !messages.isCurrent()) return;
     console.error(messages.error, error);
     const detail = messages.describeError?.(error) ?? (error instanceof Error ? error.message : undefined);
     toast.error(messages.error, detail);
     return;
   }
+  // Bulk read's old operation must not consume a newer view's error or Undo.
+  if (messages.isCurrent && !messages.isCurrent()) return;
   const storeError = useEmailStore.getState().error;
   if (storeError) {
     toast.error(messages.error, storeError);

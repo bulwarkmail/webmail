@@ -1941,7 +1941,7 @@ function captureEmailListRequest(): () => boolean {
 
 // Passive reads must still describe the query they dispatched. In particular,
 // quick search writes its query later, after a refresh/page may have started.
-function captureEmailListQuery(): () => boolean {
+export function captureEmailListQuery(): () => boolean {
   const isCurrentRequest = captureEmailListRequest();
   const { searchQuery, searchFilters, searchMailboxId } = useEmailStore.getState();
   return () => {
@@ -4041,6 +4041,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     crossView: null,
   })),
   fetchTagCounts: (client) => coalesceRefresh(client, 'tagCounts', async () => {
+    const epoch = currentStoreEpoch();
+    const auth = useAuthStore.getState();
     try {
       const keywords = useSettingsStore.getState().emailKeywords;
       if (keywords.length === 0) {
@@ -4064,6 +4066,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           counts[id] = { total: cur.total + c.total, unread: cur.unread + c.unread };
         }
       }
+      if (currentStoreEpoch() !== epoch || useAuthStore.getState().client !== auth.client
+        || useAuthStore.getState().activeAccountId !== auth.activeAccountId) return;
       set({ tagCounts: counts });
     } catch (error) {
       console.error('Failed to fetch tag counts:', error);
@@ -6403,8 +6407,44 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   // Batch operations
   batchMarkAsRead: async (client, read, target): Promise<boolean> => {
-    const { emails } = get();
+    const { emails, selectedEmailKeys } = get();
     const epoch = currentStoreEpoch();
+    const auth = useAuthStore.getState();
+    const viewingAccountId = get().viewingAccountId;
+    const viewClient = viewedClient(client);
+    const viewOwner = resolveViewAccountId();
+    const isCurrentList = captureEmailListQuery();
+    const isSameAccount = () => useAuthStore.getState().activeAccountId === auth.activeAccountId
+      && useAuthStore.getState().client === auth.client && get().viewingAccountId === viewingAccountId
+      && viewedClient(client) === viewClient && resolveViewAccountId() === viewOwner;
+    const ownsState = () => currentStoreEpoch() === epoch && isSameAccount();
+    const reconcileReturnedAccount = () => {
+      // A -> B -> A is a new view. Query it again rather than replaying the
+      // old selection/list or applying deltas to already-refreshed counters.
+      if (currentStoreEpoch() !== epoch && isSameAccount() && auth.client) {
+        const returnedClient = auth.client;
+        const returnedEpoch = currentStoreEpoch();
+        const isCurrent = () => currentStoreEpoch() === returnedEpoch && isSameAccount();
+        const refreshes = [
+          ['currentMailbox', () => get().refreshCurrentMailbox(returnedClient)],
+          ['mailboxes', () => get().fetchMailboxes(returnedClient)],
+          ['tagCounts', () => get().fetchTagCounts(returnedClient)],
+        ] as const;
+        for (const [key, refresh] of refreshes) {
+          void (async () => {
+            // Do not enqueue a replay of an older refresh: its next run could
+            // start in another account. Wait, then recheck this returned view.
+            let pending = inFlightRefreshes.get(returnedClient)?.get(key);
+            while (pending) {
+              await pending.promise;
+              if (!isCurrent()) return;
+              pending = inFlightRefreshes.get(returnedClient)?.get(key);
+            }
+            if (isCurrent()) await refresh();
+          })();
+        }
+      }
+    };
     // The selection is keyed by owning account; JMAP takes the bare ids of
     // exactly those emails, never the keys and never a lookup by id (which
     // is what let a namesake in another account ride along). A targeted call
@@ -6422,6 +6462,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       return false;
     }
 
+    // A plugin may have yielded before dispatch. Nothing has been sent yet.
+    if (!ownsState()) return false;
     set({ isLoading: true, error: null });
     try {
       // Each write names the rows it covers: by key for the selection, so a
@@ -6482,8 +6524,15 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const changed = (email: Email) => (targetIds ? changedIds.has(email.id) : changedKeys.has(emailKeyFor(email)));
       if (failure && (targetIds ? changedIds.size : changedKeys.size) === 0) throw failure;
 
-      // Update local state
-      const updatedEmails = emails.map(email =>
+      // The dispatched mutation still succeeded if its UI has gone away.
+      if (!ownsState()) {
+        if (changedIds.size > 0) void emailHooks.onEmailReadStateChange.emit({ emailIds: [...changedIds], read });
+        reconcileReturnedAccount();
+        return true;
+      }
+
+      // Patch the current copies: a newer folder/page owns their membership.
+      const updatedEmails = get().emails.map(email =>
         changed(email)
           ? { ...email, keywords: { ...email.keywords, $seen: read } }
           : email
@@ -6554,18 +6603,23 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         tagCounts,
         retainedInViewIds,
         threadEmailsCache,
-        // The user's own selection is not what a targeted call acted on.
-        selectedEmailKeys: target ? get().selectedEmailKeys : new Set(notFound),
-        isLoading: false,
-        error: failure ? (failure instanceof Error ? failure.message : "Failed to update emails") : null,
+        // Loading, errors and selection belong to the initiating list request.
+        ...(isCurrentList() ? {
+          selectedEmailKeys: target || get().selectedEmailKeys !== selectedEmailKeys
+            ? get().selectedEmailKeys : new Set(notFound),
+          isLoading: false,
+          error: failure ? (failure instanceof Error ? failure.message : "Failed to update emails") : null,
+        } : {}),
       });
       if (changedIds.size > 0) void emailHooks.onEmailReadStateChange.emit({ emailIds: [...changedIds], read });
       refillAfterKeywordChange(get, client, ['$seen']);
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : "Failed to update emails",
-        isLoading: false
-      });
+      if (ownsState() && isCurrentList()) {
+        set({
+          error: error instanceof Error ? error.message : "Failed to update emails",
+          isLoading: false
+        });
+      } else reconcileReturnedAccount();
       return false;
     }
     return true;
