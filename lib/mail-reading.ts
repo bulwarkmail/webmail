@@ -48,6 +48,15 @@ export function plainBodyFontSize(basePx: number, mailTextScale: number, fontSiz
 }
 
 /**
+ * Widest the message card gets with the reading width at about 80
+ * characters: the 80-character column at the mail's text size (a character
+ * of the body fonts is about 0.55em, so 44em) and its gutters, 1.25rem a side.
+ */
+export function readingCardWidth(mailTextScale: number, fontSize: FontSize, minPx: number): string {
+  return `calc(${plainBodyFontSize(MAIL_BASE_FONT_PX, mailTextScale, fontSize, minPx)} * 44 + 2.5rem)`;
+}
+
+/**
  * One element's text size after scaling by `factor` and raising it to the
  * minimum. A line height in px grows by the same ratio, so the enlarged text
  * doesn't overlap the next line; "normal" (null) needs nothing.

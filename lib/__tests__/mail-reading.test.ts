@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeFitScale } from '@/lib/email-fit-width';
-import { applyMailTextSize, mailFitOptions, mailFrameCss, mailOverrideActive, mailOverrideCss, mailTextFactor, plainBodyFontSize, resolveSystemToggle, scaledTextSize } from '@/lib/mail-reading';
+import { applyMailTextSize, mailFitOptions, mailFrameCss, mailOverrideActive, mailOverrideCss, mailTextFactor, plainBodyFontSize, readingCardWidth, resolveSystemToggle, scaledTextSize } from '@/lib/mail-reading';
 
 describe('mailTextFactor', () => {
   it('follows the app text size when the mail size is 0', () => {
@@ -23,6 +23,16 @@ describe('plainBodyFontSize', () => {
   });
   it('puts a floor under it', () => {
     expect(plainBodyFontSize(13, 0, 'medium', 16)).toBe('max(0.8125rem, 16px)');
+  });
+});
+
+describe('readingCardWidth', () => {
+  it('holds the 80-character column and its gutters at the mail text size', () => {
+    expect(readingCardWidth(0, 'medium', 0)).toBe('calc(0.875rem * 44 + 2.5rem)');
+  });
+  it('grows with the mail text size, as the column does', () => {
+    expect(readingCardWidth(1.5, 'x-large', 0)).toBe('calc(calc(0.875rem * 1.2) * 44 + 2.5rem)');
+    expect(readingCardWidth(0, 'medium', 16)).toBe('calc(max(0.875rem, 16px) * 44 + 2.5rem)');
   });
 });
 

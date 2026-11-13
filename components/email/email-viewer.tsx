@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
+import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId, type CSSProperties } from "react";
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Identity, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE, renamedAttachmentFilename } from "@/lib/download-filename";
@@ -3672,7 +3672,7 @@ export function EmailViewer({
   // Text size, minimum size and the other reading settings for the body. A
   // ref for the iframe setup, which runs from observers wired once per
   // document; the srcDoc changes with frameKey, so a new setting rebuilds it.
-  const reading = useMailReading();
+  const reading = useMailReading({ wide: !isMobile });
   const readingRef = useRef(reading);
   readingRef.current = reading;
   fitBodyToWidthRef.current = mailFitOptions(isMobile, reading.fitWidth);
@@ -3685,6 +3685,9 @@ export function EmailViewer({
   // inline colours written by our pass would only fight it. With the mail
   // shown in the app's own colours there is nothing left to recolour either.
   const recolorDark = isDark && !reading.forcedColors && !reading.overrideStyles;
+  // With lines of about 80 characters the message reads as a card on the
+  // pane, as wide as that column. Not on a phone: the column fills it anyway.
+  const readingCard = reading.card;
   const appFontSources = reading.fontSources.join(' ');
 
   // The body's language (Content-Language or the HTML's own lang), so a
@@ -5455,8 +5458,17 @@ export function EmailViewer({
       {/* Email Content Area. Mountain View reads the conversation on one plain
           sheet, so the reply buttons under the message sit on the page colour
           rather than on a tinted strip. */}
-      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
-      <div className="min-h-full flex flex-col">
+      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0", readingCard && "px-4")}>
+      {/* The card takes its surface, border, corners and shadow from the
+          theme. Inside it the page colour is the card colour, so the
+          message's sections and the element hosting the mail body are
+          painted in the card colour too: the colour a dark mail's canvas
+          has to match. */}
+      <div
+        className={cn("min-h-full flex flex-col", readingCard && "min-h-0 max-w-(--reading-card-width) mx-auto my-4 overflow-clip rounded-xl border border-border bg-card shadow-sm [--color-background:var(--color-card)]")}
+        style={readingCard ? { '--reading-card-width': reading.cardWidth } as CSSProperties : undefined}
+        data-reading-card={readingCard ? "" : undefined}
+      >
 
       {/* Above the messages of the open conversation. */}
       {mvOpenIndex >= 0 && (
@@ -6442,7 +6454,7 @@ export function EmailViewer({
             mvViewer && "lg:ps-[60px]",
             !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background"
           )}
-          style={isDark ? { backgroundColor: '#121212' } : undefined}>
+          style={isDark && !readingCard ? { backgroundColor: '#121212' } : undefined}>
             <ReadAloudBar state={readAloud.state} onPause={readAloud.pause} onResume={readAloud.resume} onStop={readAloud.stop} />
             <Watermark text={watermark} />
             {readingMaskOn && !isBodyLoading && (
