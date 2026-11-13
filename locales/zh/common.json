@@ -1228,6 +1228,7 @@
       "clear_formatting": "清除格式",
       "undo": "撤销",
       "redo": "重做",
+      "cell_background": "单元格背景色",
       "add_row_above": "在上方添加行",
       "add_row_below": "在下方添加行",
       "add_column_before": "在前面添加列",

@@ -1228,6 +1228,7 @@
       "clear_formatting": "서식 지우기",
       "undo": "실행 취소",
       "redo": "다시 실행",
+      "cell_background": "셀 배경색",
       "add_row_above": "위에 행 추가",
       "add_row_below": "아래에 행 추가",
       "add_column_before": "앞에 열 추가",

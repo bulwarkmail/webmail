@@ -2,6 +2,9 @@ import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import React from 'react';
 import type { Editor } from '@tiptap/core';
+// Top-level ESM import: require() would load the CJS copy and hand back a
+// different CellSelection class than the one the editor uses.
+import { CellSelection } from 'prosemirror-tables';
 
 import { RichTextEditor } from '../rich-text-editor';
 
@@ -56,6 +59,42 @@ describe('pasting an Office table into the real composer', () => {
     expect(Array.from(cols).map((c) => c.style.width)).toEqual(['64px', '64px']);
     editor.destroy();
   });
+
+  it('applies and clears cell background colour through the composer command', async () => {
+    const editor = await setup();
+    editor.commands.insertTable({ rows: 2, cols: 2, withHeaderRow: false });
+    // A cell selection across all four cells - what selecting the table in
+    // the composer produces.
+    const cellPositions: number[] = [];
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'tableCell') cellPositions.push(pos);
+    });
+    editor.view.dispatch(
+      editor.state.tr.setSelection(
+        CellSelection.create(editor.state.doc, cellPositions[0], cellPositions[3]),
+      ),
+    );
+    editor.commands.setCellBackground('#fff2cc');
+
+    expect(cellStyles(editor)).toHaveLength(4);
+
+    // It round-trips into the sent-mail HTML (jsdom serializes the colour
+    // as rgb()).
+    expect(editor.getHTML()).toMatch(/background-color:\s*rgb\(255,\s*242,\s*204\)/i);
+
+    // null clears it back off the style attribute.
+    editor.commands.setCellBackground(null);
+    expect(editor.getHTML()).not.toMatch(/background/i);
+    editor.destroy();
+  });
+
+  const cellStyles = (editor: Editor) => {
+    const styles: string[] = [];
+    editor.state.doc.descendants((node) => {
+      if (node.type.name === 'tableCell') styles.push(node.attrs.style ?? '');
+    });
+    return styles.filter((s) => /background-color:\s*#fff2cc/i.test(s));
+  };
 
   it('follows the column-width transaction the resize drag dispatches', async () => {
     const editor = await setup();

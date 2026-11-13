@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
+import { CellSelection } from 'prosemirror-tables';
 
 import {
   inlineClipboardStyles,
@@ -141,6 +142,59 @@ describe('inlineClipboardStyles', () => {
     const doc = new DOMParser().parseFromString(inlineClipboardStyles(html), 'text/html');
     expect(doc.querySelector('table')!.style.tableLayout).toBe('fixed');
     expect(doc.querySelector('td')!.style.whiteSpace).toBe('');
+  });
+
+  it('replaces the spreadsheet grid lines with the composer border', () => {
+    // WPS draws its own grid: .br1 has only a bottom line, the td rule sets
+    // no border at all. Every border declaration comes off the cells so the
+    // composer's default (TableCell's HTMLAttributes) draws one uniform
+    // grid - including on rows inserted after the paste.
+    const html = inlineClipboardStyles(`<html><head><meta name=ProgId content=Excel.Sheet>
+<style><!--
+.br0 {border:none;}
+.br1 {border-top:none;border-right:none;border-bottom:1.0pt solid windowtext;border-left:none;}
+td {border:none;border-color:#000000;}
+--></style></head><body>
+<table style='border-collapse:collapse;table-layout:fixed'>
+<tr><td class=br0>a</td><td class=br1>b</td></tr>
+</table></body></html>`);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    for (const td of doc.querySelectorAll('td')) {
+      expect(td.getAttribute('style') ?? '').not.toMatch(/border/i);
+    }
+  });
+
+  it('carries the font colour from the cell div to the cell', () => {
+    // WPS wraps the text in a div and puts the colour there (class rule or
+    // inline), while the cell carries only the background; the div's style
+    // is dropped at parse, so without the carry only the background arrives.
+    const html = inlineClipboardStyles(`<html><head><meta name=ProgId content=Excel.Sheet>
+<style><!--
+.cr1 {color:#FF0000;}
+--></style></head><body>
+<table style='border-collapse:collapse;table-layout:fixed'>
+<tr><td bgcolor="#DDDDDD"><div class=cr1>red text</div></td>
+<td><div style='color: rgb(0, 112, 192)'>blue text</div></td></tr>
+</table></body></html>`);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tds = doc.querySelectorAll('td');
+    expect(tds[0].getAttribute('style')).toMatch(/color:\s*#ff0000/i);
+    expect(tds[0].style.backgroundColor).toBeTruthy();
+    expect(tds[1].getAttribute('style')).toMatch(/color:\s*rgb\(0, ?112, ?192\)/i);
+    // The div keeps the rest of its own style, but not the carried parts.
+    expect(doc.querySelector('div')!.getAttribute('style') ?? '').not.toMatch(/color/i);
+  });
+
+  it('turns a font colour element into a span the text-style mark parses', () => {
+    const html = inlineClipboardStyles(`<html><head><meta name=ProgId content=Excel.Sheet></head><body>
+<table style='border-collapse:collapse;table-layout:fixed'>
+<tr><td><font color="#FF0000">part</font> and rest</td></tr>
+</table></body></html>`);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const span = doc.querySelector('span')!;
+    expect(span.textContent).toBe('part');
+    expect(span.getAttribute('style')).toMatch(/color:\s*#ff0000/i);
+    expect(doc.querySelector('font')).toBeNull();
   });
 });
 
@@ -289,6 +343,147 @@ describe('pasting an Office table into the composer', () => {
     expect(merged.attrs.colspan).toBe(2);
     expect(merged.attrs.rowspan).toBe(2);
     expect(merged.attrs.style).toMatch(/background-color/i);
+    editor.destroy();
+  });
+
+  it('inserts a row that inherits the current row\'s cell styles', () => {
+    const editor = makeEditor();
+    editor.commands.setContent(
+      '<table><tr><td style="background-color: #ffecb3">a</td><td>b</td></tr>'
+      + '<tr><td style="background-color: #ffecb3">c</td><td>d</td></tr></table>',
+    );
+    // Cursor in the second row; insert below and above.
+    editor.commands.setTextSelection(17);
+    editor.commands.addRowAfter();
+    let rows = editor.state.doc.firstChild!;
+    expect(rows.childCount).toBe(3);
+    expect(rows.child(2).child(0).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    expect(rows.child(2).child(1).attrs.style).toBeNull();
+
+    editor.commands.addRowBefore();
+    rows = editor.state.doc.firstChild!;
+    expect(rows.childCount).toBe(4);
+    // The new row sits at the cursor row's old index (1); "before"
+    // references the cursor's row, so its coloured cell is inherited.
+    expect(rows.child(1).child(0).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    expect(rows.child(1).child(1).attrs.style).toBeNull();
+    // The row the cursor stayed in shifted down, untouched by the insert.
+    expect(rows.child(2).child(0).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    expect(rows.child(0).child(1).attrs.style).toBeNull();
+    editor.destroy();
+  });
+
+  it('inserts a column that inherits the current column\'s cell styles', () => {
+    const editor = makeEditor();
+    editor.commands.setContent(
+      '<table><tr><td style="background-color: #ffecb3">a</td><td>b</td></tr>'
+      + '<tr><td style="background-color: #ffecb3">c</td><td>d</td></tr></table>',
+    );
+    editor.commands.setTextSelection(3);
+    editor.commands.addColumnAfter();
+    let rows = editor.state.doc.firstChild!;
+    expect(rows.child(0).childCount).toBe(3);
+    // New middle column copies the left (current) column in every row.
+    expect(rows.child(0).child(1).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    expect(rows.child(1).child(1).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    // The untouched columns keep what they had.
+    expect(rows.child(0).child(2).attrs.style).toBeNull();
+
+    editor.commands.addColumnBefore();
+    rows = editor.state.doc.firstChild!;
+    expect(rows.child(0).childCount).toBe(4);
+    // The new column sits at the cursor column's old index (0); "before"
+    // references the cursor's column, so the colour is inherited per row.
+    expect(rows.child(0).child(0).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    expect(rows.child(1).child(0).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    // The cursor's column (now index 1) is untouched by the insert.
+    expect(rows.child(0).child(1).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    editor.destroy();
+  });
+
+  it('leaves inserts alone when the reference cells carry no style', () => {
+    const editor = makeEditor();
+    editor.commands.setContent('<table><tr><td>a</td><td>b</td></tr></table>');
+    editor.commands.setTextSelection(3);
+    editor.commands.addRowAfter();
+    const rows = editor.state.doc.firstChild!;
+    expect(rows.child(1).child(0).attrs.style).toBeNull();
+    editor.destroy();
+  });
+
+  it('inserts through a command chain, as the table menu does', () => {
+    const editor = makeEditor();
+    editor.commands.setContent(
+      '<table><tr><td style="background-color: #ffecb3">a</td><td>b</td></tr></table>',
+    );
+    editor.commands.setTextSelection(3);
+    // The menu runs editor.chain().focus().addRowAfter().run() - the chain
+    // shares one transaction and the framework dispatches it, so the patch
+    // must ride the same tr rather than dispatch its own.
+    editor.chain().focus().addRowAfter().run();
+    const rows = editor.state.doc.firstChild!;
+    expect(rows.childCount).toBe(2);
+    expect(rows.child(1).child(0).attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+    editor.destroy();
+  });
+
+  it('sets and clears the background colour of the selected cells', () => {
+    const editor = makeEditor();
+    editor.commands.setContent('<table><tr><td>a</td><td>b</td></tr></table>');
+    editor.commands.setTextSelection(3);
+
+    editor.commands.setCellBackground('#ffecb3');
+    let cell = editor.state.doc.firstChild!.firstChild!.firstChild!;
+    expect(cell.attrs.style).toBe('background-color: #ffecb3');
+
+    // Setting another colour replaces, not stacks.
+    editor.commands.setCellBackground('#dbeafe');
+    cell = editor.state.doc.firstChild!.firstChild!.firstChild!;
+    expect(cell.attrs.style).toBe('background-color: #dbeafe');
+
+    // An existing unrelated declaration survives the merge.
+    editor.commands.setContent('<table><tr><td style="font-weight: 700">a</td><td>b</td></tr></table>');
+    editor.commands.setTextSelection(3);
+    editor.commands.setCellBackground('#ffecb3');
+    cell = editor.state.doc.firstChild!.firstChild!.firstChild!;
+    expect(cell.attrs.style).toMatch(/font-weight:\s*700/i);
+    expect(cell.attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+
+    // null clears only the background, and a style left empty round-trips null.
+    editor.commands.setCellBackground(null);
+    cell = editor.state.doc.firstChild!.firstChild!.firstChild!;
+    expect(cell.attrs.style).toBe('font-weight: 700');
+    editor.commands.setContent('<table><tr><td>a</td><td>b</td></tr></table>');
+    editor.commands.setTextSelection(3);
+    editor.commands.setCellBackground('#ffecb3');
+    editor.commands.setCellBackground(null);
+    cell = editor.state.doc.firstChild!.firstChild!.firstChild!;
+    expect(cell.attrs.style).toBeNull();
+    // The neighbouring cell was never touched.
+    expect(editor.state.doc.firstChild!.firstChild!.child(1).attrs.style).toBeNull();
+    editor.destroy();
+  });
+
+  it('sets the background over a cell selection, not just the caret cell', () => {
+    const editor = makeEditor();
+    editor.commands.setContent(
+      '<table><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>',
+    );
+    // Cell selection covering the whole table: anchor and head point at the
+    // cell nodes (their position, not a position inside them).
+    const cellPositions: number[] = [];
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'tableCell') cellPositions.push(pos);
+    });
+    editor.view.dispatch(
+      editor.state.tr.setSelection(CellSelection.create(editor.state.doc, cellPositions[0], cellPositions[3])),
+    );
+    editor.commands.setCellBackground('#ffecb3');
+    editor.state.doc.descendants((node) => {
+      if (node.type.name === 'tableCell') {
+        expect(node.attrs.style).toMatch(/background-color:\s*#ffecb3/i);
+      }
+    });
     editor.destroy();
   });
 });

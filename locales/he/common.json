@@ -1172,6 +1172,7 @@
       "clear_formatting": "ניקוי עיצוב",
       "undo": "ביטול",
       "redo": "ביצוע מחדש",
+      "cell_background": "רקע תא",
       "add_row_above": "הוספת שורה מעל",
       "add_row_below": "הוספת שורה מתחת",
       "add_column_before": "הוספת עמודה לפני",
