@@ -32,7 +32,7 @@ import { pluginHasPermission } from './permissions';
 import { eventToView, taskToView } from '../plugin-projection';
 import { expandRecurringEvents } from '../recurrence-expansion';
 import { buildParticipantMap } from '../calendar-participants';
-import { parseDurationSeconds } from '../calendar-event-normalization';
+import { locationsWithName, parseDurationSeconds } from '../calendar-event-normalization';
 import { parseAlertOffset, withOwnAlertIds } from '../calendar-alerts';
 import { plainDescriptionFields } from '../calendar-description';
 import { patchPath } from '../jmap/patch-object';
@@ -432,16 +432,6 @@ function recurrenceOf(value: unknown, method: string): CalendarEvent['recurrence
   return [createRecurrenceRule(r.frequency as CalendarRecurrenceRule['frequency'], overrides)];
 }
 
-function locationsOf(location: string): CalendarEvent['locations'] {
-  if (!location) return null;
-  return {
-    loc1: {
-      '@type': 'Location', name: location, description: null, locationTypes: null,
-      coordinates: null, timeZone: null, links: null, relativeTo: null,
-    },
-  } as CalendarEvent['locations'];
-}
-
 /** Attendees as stored on the event, with the user as organizer. No invitations are sent. */
 function participantsOf(value: unknown, method: string): Pick<CalendarEvent, 'participants' | 'organizerCalendarAddress'> {
   if (!Array.isArray(value)) throw new Error(`${method}: participants must be an array`);
@@ -499,7 +489,7 @@ export async function doCalendarCreateEvent(input: unknown, pluginId = 'unknown'
   }
   if (data.location !== undefined) {
     const location = readString(data.location, method, 'location', MAX_LOCATION, { trim: true });
-    if (location) event.locations = locationsOf(location);
+    if (location) event.locations = locationsWithName(location);
   }
   if (data.participants !== undefined) {
     const p = participantsOf(data.participants, method);
@@ -527,9 +517,7 @@ export async function doCalendarUpdateEvent(id: unknown, patch: unknown): Promis
   if (data.description !== undefined) {
     updates.description = readString(data.description, method, 'description', MAX_DESCRIPTION, { trim: true });
   }
-  if (data.location !== undefined) {
-    updates.locations = locationsOf(readString(data.location, method, 'location', MAX_LOCATION, { trim: true }));
-  }
+  const location = data.location !== undefined ? readString(data.location, method, 'location', MAX_LOCATION, { trim: true }) : undefined;
   if (data.participants !== undefined) Object.assign(updates, participantsOf(data.participants, method));
   if (data.repeat !== undefined) updates.recurrenceRules = recurrenceOf(data.repeat, method);
 
@@ -540,6 +528,8 @@ export async function doCalendarUpdateEvent(id: unknown, patch: unknown): Promis
   const existing = await eventForMutation(client, method, eventId);
   // A plugin writes plain text, also over an HTML description.
   if (updates.description !== undefined) Object.assign(updates, plainDescriptionFields(existing, updates.description));
+  // The location keeps the members it had besides its name.
+  if (location !== undefined) updates.locations = location ? locationsWithName(location, existing.locations) : null;
 
   const timeKeys = ['start', 'end', 'duration', 'timeZone', 'isAllDay'] as const;
   if (timeKeys.some((k) => data[k] !== undefined)) {

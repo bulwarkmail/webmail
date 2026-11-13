@@ -12,6 +12,7 @@ import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video,
 import { IconButton } from "@/components/ui/icon-button";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
 import { descriptionAsText, isHtmlDescription, plainDescriptionFields } from "@/lib/calendar-description";
+import { locationsWithName } from "@/lib/calendar-event-normalization";
 import { ParticipantStatusBadge } from "./rsvp-buttons";
 import { format, parseISO, addHours, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
@@ -894,18 +895,7 @@ export function EventModal({
     }
 
     if (location.trim()) {
-      data.locations = {
-        loc1: {
-          "@type": "Location",
-          name: location.trim(),
-          description: null,
-          locationTypes: null,
-          coordinates: null,
-          timeZone: null,
-          links: null,
-          relativeTo: null,
-        },
-      };
+      data.locations = locationsWithName(location.trim(), seed?.locations);
     } else if (event && event.locations && Object.keys(event.locations).length > 0) {
       data.locations = null;
     }

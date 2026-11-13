@@ -1,5 +1,5 @@
 import { parseISO } from 'date-fns';
-import type { CalendarEvent } from '@/lib/jmap/types';
+import type { CalendarEvent, CalendarLocation } from '@/lib/jmap/types';
 
 const DURATION_RE = /^P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
 
@@ -172,4 +172,20 @@ export function sanitizeOutgoingCalendarEventData<T extends Partial<CalendarEven
     duration: normalizeAllDayDurationValue(normalized.duration),
     timeZone: null,
   } as T;
+}
+/**
+ * The event's locations once the user typed `name` into its one location
+ * field. Only members with a value go out: Stalwart exports a location that
+ * has a description, locationTypes or links member, even a null one, as a
+ * VLOCATION without a LOCATION line, and Google Calendar and Outlook read only
+ * LOCATION, so guests saw no location (#1674). A location the event already
+ * had keeps its key and its other members.
+ */
+export function locationsWithName(
+  name: string,
+  previous?: CalendarEvent['locations'] | null,
+): NonNullable<CalendarEvent['locations']> {
+  const [key, before] = Object.entries(previous ?? {})[0] ?? ['loc1', undefined];
+  const kept = Object.fromEntries(Object.entries(before ?? {}).filter(([, value]) => value !== null && value !== undefined));
+  return { [key]: { ...kept, '@type': 'Location', name } as CalendarLocation };
 }
