@@ -116,6 +116,52 @@ describe('a calendar shared between two signed-in logins (pim-12)', () => {
   });
 });
 
+// #1676: a group's calendar both logins are members of was listed once per
+// login, and each of its events showed twice.
+describe("a group's calendar two signed-in logins are members of (#1676)", () => {
+  const groupCal = { id: 'g:c1', name: 'Team', accountId: 'g', accountName: 'info@example.org', originalId: 'c1', isShared: true };
+  const groupEvent = (id: string) => ({ id: `g:${id}`, originalId: id, uid: id, title: 'Stand-up', calendarIds: { 'g:c1': true }, start: '2026-11-04T10:00:00', duration: 'PT1H' });
+  const withServer = (client: IJMAPClient, url: string) => Object.assign(client, { getServerUrl: () => url });
+
+  beforeEach(() => {
+    useCalendarStore.setState({ calendars: [], events: [], selectedCalendarIds: [], knownCalendarIds: null, accountClients: null } as never);
+  });
+
+  it('shows it once, under the first login, with its events once', async () => {
+    const a = withServer(fakeClient('a', [], [{ id: 'c', name: 'A home', accountId: 'ea', originalId: 'c' }, groupCal]), 'https://mail.example.org');
+    const b = withServer(fakeClient('b', [], [{ id: 'c', name: 'B home', accountId: 'eb', originalId: 'c' }, groupCal]), 'https://mail.example.org/');
+    (a.queryAllCalendarEvents as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([groupEvent('e1')]);
+    (b.queryAllCalendarEvents as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([groupEvent('e1')]);
+    const accounts = [{ localAccountId: 'login-a', client: a }, { localAccountId: 'login-b', client: b }];
+
+    await useCalendarStore.getState().fetchAllAccountsCalendars(accounts, 'login-b');
+    expect(useCalendarStore.getState().calendars.map((c) => c.id).sort()).toEqual(['login-a::c', 'login-a::g:c1', 'login-b::c']);
+
+    await useCalendarStore.getState().fetchAllAccountsEvents(accounts, '2026-11-01T00:00:00', '2026-11-30T23:59:59');
+    expect(useCalendarStore.getState().events.map((e) => e.id)).toEqual(['login-a::g:e1']);
+  });
+
+  it('drops events already loaded under the other login once the calendars load', async () => {
+    const a = fakeClient('a', [], [groupCal]);
+    const b = fakeClient('b', [], [groupCal]);
+    useCalendarStore.setState({
+      events: [
+        { id: 'login-a::g:e1', calendarIds: { 'login-a::g:c1': true }, localAccountId: 'login-a' },
+        { id: 'login-b::g:e1', calendarIds: { 'login-b::g:c1': true }, localAccountId: 'login-b' },
+      ],
+    } as never);
+    await useCalendarStore.getState().fetchAllAccountsCalendars([{ localAccountId: 'login-a', client: a }, { localAccountId: 'login-b', client: b }], 'login-a');
+    expect(useCalendarStore.getState().events.map((e) => e.id)).toEqual(['login-a::g:e1']);
+  });
+
+  it('keeps a group on another server that has the same ids', async () => {
+    const a = withServer(fakeClient('a', [], [groupCal]), 'https://one.example.org');
+    const b = withServer(fakeClient('b', [], [groupCal]), 'https://two.example.org');
+    await useCalendarStore.getState().fetchAllAccountsCalendars([{ localAccountId: 'login-a', client: a }, { localAccountId: 'login-b', client: b }], 'login-a');
+    expect(useCalendarStore.getState().calendars.map((c) => c.id).sort()).toEqual(['login-a::g:c1', 'login-b::g:c1']);
+  });
+});
+
 describe("an event made in the other login's calendar (pim-12)", () => {
   it("goes through that login and is kept as that login's, though both logins use the same raw ids", async () => {
     const a = fakeClient('a', []);

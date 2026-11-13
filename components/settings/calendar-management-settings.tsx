@@ -24,6 +24,7 @@ import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-m
 import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { useAccountStore } from '@/stores/account-store';
+import { mailServerKey } from '@/lib/offline/state';
 import { groupCalendarsByAccount, type CalendarGroup } from '@/lib/calendar-targets';
 import { useProMultiAccountCalendars } from '@/hooks/use-pro-multi-account-calendars';
 import { apiFetch } from '@/lib/browser-navigation';
@@ -330,17 +331,28 @@ export function CalendarManagementSettings() {
   // The demo has no server to import into or subscribe from, as in Calendar.
   const { demoMode } = useConfig();
 
-  const listedCalendars = calendars
-    .filter(cal => !isSubscriptionCalendar(cal.id))
-    .filter(cal => !managedAccountId || cal.accountId === managedAccountId);
-  // Only the user's own calendars are offered for reordering; a shared
-  // calendar's order is left to its owner.
-  const orderableCalendars = listedCalendars.filter(cal => !cal.isShared);
-
   // Principal ids belong to one server: only calendars of the account
   // `client` talks to get their recipients named.
   const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
   const localAccounts = useAccountStore((s) => s.accounts);
+
+  // A managed account is on the server of the login it is managed from:
+  // account ids repeat across servers, so another server's calendars under
+  // the same id stay out (#1676).
+  const serverOfLogin = (localAccountId: string | undefined) => {
+    const url = localAccounts.find((a) => a.id === localAccountId)?.serverUrl;
+    return url ? mailServerKey(url) : null;
+  };
+  const managedServer = managedAccountId ? serverOfLogin(activeLocalAccountId ?? undefined) : null;
+  const listedCalendars = calendars
+    .filter(cal => !isSubscriptionCalendar(cal.id))
+    .filter(cal => !managedAccountId || (
+      cal.accountId === managedAccountId
+      && (!cal.localAccountId || !managedServer || serverOfLogin(cal.localAccountId) === managedServer)
+    ));
+  // Only the user's own calendars are offered for reordering; a shared
+  // calendar's order is left to its owner.
+  const orderableCalendars = listedCalendars.filter(cal => !cal.isShared);
 
   // The user's own calendars under each login's address when several are
   // signed in (pim-p2-3), then each shared account's under its name, as in

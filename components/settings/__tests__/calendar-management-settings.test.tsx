@@ -282,6 +282,27 @@ describe('CalendarManagementSettings for a managed shared account', () => {
     expect(screen.getByLabelText('name')).toBeInTheDocument();
   });
 
+  // #1676: account ids repeat across servers, so a calendar of a login on
+  // another server under the same id is not the managed account's.
+  it("leaves out another server's calendars under the same account id", async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login-a', email: 'a@one.example', username: 'a@one.example', serverUrl: 'https://one.example' },
+        { id: 'login-b', email: 'b@two.example', username: 'b@two.example', serverUrl: 'https://two.example' },
+      ] as never,
+      activeAccountId: 'login-a',
+    });
+    useAuthStore.setState({ client: clientFor(true), serverUrl: null, username: null } as never);
+    const ours = { ...group, id: 'login-a::group:c', localAccountId: 'login-a' } as Calendar;
+    const otherServer = { ...appleColored, id: 'login-b::c', name: 'Elsewhere', accountId: 'group', localAccountId: 'login-b' } as Calendar;
+    useCalendarStore.setState({ calendars: [ours, otherServer], icalSubscriptions: [], createCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+    expect(screen.getAllByTestId('calendar-settings-item').map((el) => el.getAttribute('data-calendar-name'))).toEqual(['Team']);
+    useAccountStore.setState({ accounts: [], activeAccountId: null });
+  });
+
   it('offers no new calendar where the account may not make one', () => {
     useAuthStore.setState({ client: clientFor(false), serverUrl: null, username: null } as never);
     useCalendarStore.setState({ calendars: [group], icalSubscriptions: [], createCalendar: vi.fn() } as never);

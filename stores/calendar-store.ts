@@ -37,6 +37,7 @@ import { explainServerAuthError } from '@/lib/server-auth-status';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { sortCalendars, sortOrderUpdates } from '@/lib/calendar-sort';
 import { getClientByLocalAccountId } from './client-registry';
+import { mailServerKey } from '@/lib/offline/state';
 import { calendarHooks } from '@/lib/plugin-hooks';
 import { eventToView } from '@/lib/plugin-projection';
 import {
@@ -611,13 +612,37 @@ const subscriptionsBeingAdded = new Set<string>();
 /**
  * A calendar one login sees as shared that another signed-in login owns
  * shows once, under its owner (pim-12): listed twice, each of its events
- * showed twice in the grid.
+ * showed twice in the grid. One shared with several signed-in logins and
+ * owned by none (a group's calendar, #1676) shows once, under the first of
+ * them, and is changed through that login. `serverOf` names a calendar's
+ * server: account ids repeat across servers.
  */
-function withoutOwnedElsewhere(calendars: Calendar[]): Calendar[] {
-  const owned = new Set(calendars
-    .filter((c) => !c.isShared && c.accountId)
-    .map((c) => `${c.accountId}|${c.accountName ?? ''}|${c.originalId ?? c.id}`));
-  return calendars.filter((c) => !c.isShared || !owned.has(`${c.accountId}|${c.accountName ?? ''}|${c.originalId ?? c.id}`));
+function withoutOwnedElsewhere(calendars: Calendar[], serverOf: (calendar: Calendar) => string = () => ''): Calendar[] {
+  const key = (c: Calendar) => `${serverOf(c)}|${c.accountId}|${c.accountName ?? ''}|${c.originalId ?? c.id}`;
+  const owned = new Set(calendars.filter((c) => !c.isShared && c.accountId).map(key));
+  const sharedSeen = new Set<string>();
+  return calendars.filter((c) => {
+    if (!c.isShared) return true;
+    if (!c.accountId) return true;
+    const k = key(c);
+    if (owned.has(k) || sharedSeen.has(k)) return false;
+    sharedSeen.add(k);
+    return true;
+  });
+}
+
+// Ids of the calendars withoutOwnedElsewhere left out of the last load of
+// several logins. Their events are the kept calendar's events as another
+// login sees them, so they stay out of the store too: the grid hides them
+// with the calendar, but reminders and search read every event.
+let duplicateCalendarIds = new Set<string>();
+
+function withoutDuplicateCalendarEvents(events: CalendarEvent[]): CalendarEvent[] {
+  if (duplicateCalendarIds.size === 0) return events;
+  return events.filter((event) => {
+    const ids = Object.keys(event.calendarIds ?? {});
+    return ids.length === 0 || ids.some((id) => !duplicateCalendarIds.has(id));
+  });
 }
 
 // Each calendar list load gets a number: only the latest one's answer is
@@ -1239,7 +1264,13 @@ export const useCalendarStore = create<CalendarStore>()(
             }),
           );
           if (currentStoreEpoch() !== epoch || seq !== calendarsLoadSeq) return;
-          const fetched = withoutOwnedElsewhere(results.flat());
+          const servers = new Map(accounts.map(({ client, localAccountId }) => [localAccountId, mailServerKey(client.getServerUrl?.() ?? '')]));
+          const all = results.flat();
+          const fetched = withoutOwnedElsewhere(all, (c) => servers.get(c.localAccountId ?? '') ?? '');
+          const keptIds = new Set(fetched.map((c) => c.id));
+          duplicateCalendarIds = new Set(all.filter((c) => !keptIds.has(c.id)).map((c) => c.id));
+          const shownEvents = get().events;
+          const events = withoutDuplicateCalendarEvents(shownEvents);
           const taskCalendarKinds = hasKinds ? prunedTaskKinds(knownKinds, listedOwners.filter(Boolean), fetched, ownerOf) : knownKinds;
           const calendars = sortCalendars(withTaskKinds(fetched, taskCalendarKinds, ownerOf));
           // As for one account: tasks-only calendars stay out of the grid.
@@ -1248,6 +1279,7 @@ export const useCalendarStore = create<CalendarStore>()(
             calendars,
             taskCalendarKinds,
             isLoading: false,
+            ...(events.length !== shownEvents.length ? { events } : {}),
             ...withNewCalendars(
               selectionAfterFetch(
                 get().selectedCalendarIds,
@@ -1306,7 +1338,7 @@ export const useCalendarStore = create<CalendarStore>()(
           );
           if (seq !== rangeLoadSeq || currentStoreEpoch() !== epoch) return;
           set({
-            events: results.flat(),
+            events: withoutDuplicateCalendarEvents(results.flat()),
             isLoadingEvents: false,
             eventsLoadError: failed,
             dateRange: { start, end },
