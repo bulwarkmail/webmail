@@ -73,6 +73,22 @@ describe('one menu component', () => {
     expect(missing).toEqual([]);
   }, 60_000);
 
+  // useContextMenu closes the menu on a click outside its menuRef. Without the
+  // ref it can't tell a click outside from a click on an item, so it doesn't
+  // close at all (#1646).
+  it('every menu hands its element to the hook that closes it', () => {
+    const missing: string[] = [];
+    for (const full of all()) {
+      if (relative(full) === 'components/ui/context-menu.tsx') continue;
+      const source = readFileSync(full, 'utf8');
+      for (const match of source.matchAll(/<ContextMenu\b((?:=>|[^>])*)>/g)) {
+        if (/\bref=\{/.test(match[1])) continue;
+        missing.push(`${relative(full)}:${source.slice(0, match.index).split(/\r?\n/).length}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  }, 60_000);
+
   it('a row that deletes or clears is drawn as destructive', () => {
     const plain: string[] = [];
     for (const full of all()) {
