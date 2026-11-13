@@ -15,9 +15,9 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
   useFormatter: () => ({ dateTime: (d: Date | string) => String(d), relativeTime: (d: Date | string) => String(d), number: (n: number) => String(n) }),
 }));
-const media = vi.hoisted(() => ({ matches: new Set<string>() }));
+const media = vi.hoisted(() => ({ matches: new Set<string>(), phone: false }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: false, isTablet: false, isDesktop: true }),
+  useDeviceDetection: () => ({ isMobile: media.phone, isTablet: false, isDesktop: !media.phone }),
   useMediaQuery: (query: string) => media.matches.has(query),
   useIsMobile: () => false,
   useIsDesktop: () => true,
@@ -73,6 +73,7 @@ async function show(email: Email) {
 beforeEach(() => {
   clearAllHooks();
   media.matches.clear();
+  media.phone = false;
   useSettingsStore.setState({ ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', emailAlwaysLightMode: false } as never);
   useThemeStore.setState({ resolvedTheme: 'light' });
 });
@@ -242,6 +243,76 @@ describe('reading width', () => {
   it('uses the full width by default', async () => {
     const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
     expect(container.querySelector('iframe')!.getAttribute('srcdoc')).not.toContain('80ch');
+  });
+});
+
+describe('message card', () => {
+  const card = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-reading-card]');
+
+  it('frames the message in a card on the pane when the reading width is about 80 characters', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    const frame = card(container)!;
+    expect(frame).not.toBeNull();
+    // The card holds the whole message: sender header and body.
+    expect(frame.contains(container.querySelector('iframe'))).toBe(true);
+    expect(frame).toHaveTextContent('Alice');
+    // Its look comes from the theme: surface, border and corner tokens.
+    expect(frame).toHaveClass('bg-card', 'border', 'border-border', 'rounded-xl');
+    // Centred, and no wider than the 80-character column it frames.
+    expect(frame).toHaveClass('mx-auto', 'max-w-(--reading-card-width)');
+    expect(frame.style.getPropertyValue('--reading-card-width')).toBe('calc(0.875rem * 44 + 2.5rem)');
+  });
+
+  it('puts the mail body on the card surface, also in dark mode', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    // Inside the card the page colour is the card colour, so the sections and
+    // the element that hosts the mail paint the card's surface...
+    expect(card(container)!.className).toContain('[--color-background:var(--color-card)]');
+    const host = container.querySelector<HTMLElement>('[data-reader-body]')!;
+    expect(host).toHaveClass('bg-background');
+    // ...and no fixed colour paints over it.
+    expect(host.style.backgroundColor).toBe('');
+  });
+
+  it('paints mail shown in the app colours with the card colour, not the page colour', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable', mailOverrideStyles: 'always' } as never);
+    document.documentElement.style.setProperty('--color-background', '#0a0a0a');
+    document.documentElement.style.setProperty('--color-card', '#141414');
+    try {
+      const { container } = await show(message({ html: '<p>Some text</p>' }));
+      expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('html{background:#141414!important}');
+      // The mail paints the card colour itself; painting it again behind the
+      // mail would show where the card colour is translucent (Aurora Glass).
+      expect(container.querySelector('[data-reader-body]')).toHaveClass('bg-transparent');
+    } finally {
+      document.documentElement.style.removeProperty('--color-background');
+      document.documentElement.style.removeProperty('--color-card');
+    }
+  });
+
+  it('leaves a full-width message on the pane as it was', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    expect(card(container)).toBeNull();
+    const pane = container.querySelector<HTMLElement>('[data-reader-scroll]')!;
+    expect(pane.className).toBe('flex-1 overflow-auto overscroll-contain bg-muted/30');
+    const wrapper = pane.firstElementChild as HTMLElement;
+    expect(wrapper.className).toBe('min-h-full flex flex-col');
+    expect(wrapper.getAttribute('style')).toBeNull();
+    expect(container.querySelector<HTMLElement>('[data-reader-body]')!.style.backgroundColor).toBe('rgb(18, 18, 18)');
+  });
+
+  it('draws no card on a phone, where the column already fills the screen', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    media.phone = true;
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    expect(card(container)).toBeNull();
+    const pane = container.querySelector<HTMLElement>('[data-reader-scroll]')!;
+    expect(pane).not.toHaveClass('px-4');
+    expect(pane.firstElementChild!.className).toBe('min-h-full flex flex-col');
   });
 });
 

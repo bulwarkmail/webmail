@@ -12,6 +12,7 @@ import {
   mailOverrideActive,
   mailTextFactor,
   plainBodyFontSize,
+  readingCardWidth,
   resolveSystemToggle,
   type MailOverride,
 } from "@/lib/mail-reading";
@@ -37,6 +38,10 @@ export interface MailReading {
   overrideStyles: boolean;
   /** Reading width "comfortable": lines of about 80 characters. */
   comfortableWidth: boolean;
+  /** The message reads as a card on the pane: comfortable width on a wide screen. */
+  card: boolean;
+  /** Widest the message card gets (CSS length). */
+  cardWidth: string;
   /** Scale mail wider than the pane down to fit, on any screen. */
   fitWidth: boolean;
   /** Font size for a plain-text body of `basePx` at 100 %. */
@@ -49,20 +54,24 @@ export interface MailReading {
   frameKey: string;
 }
 
-/** The app's colours and font right now, read from the page's own styles. */
-function readAppTheme(): Pick<MailOverride, 'fontFamily' | 'foreground' | 'background' | 'link'> {
+/**
+ * The app's colours and font right now, read from the page's own styles. The
+ * background is the surface the message sits on: the card's, on a card.
+ */
+function readAppTheme(card: boolean): Pick<MailOverride, 'fontFamily' | 'foreground' | 'background' | 'link'> {
   if (typeof document === 'undefined') return { fontFamily: '', foreground: '', background: '', link: '' };
   const root = getComputedStyle(document.documentElement);
   const body = document.body ? getComputedStyle(document.body) : null;
   return {
     fontFamily: body?.fontFamily || root.getPropertyValue('--font-sans'),
     foreground: root.getPropertyValue('--color-foreground') || body?.color || '',
-    background: root.getPropertyValue('--color-background') || '',
+    background: root.getPropertyValue(card ? '--color-card' : '--color-background') || '',
     link: root.getPropertyValue('--color-primary') || '',
   };
 }
 
-export function useMailReading(): MailReading {
+/** `wide`: the message is shown on a wide screen, where comfortable width puts it on a card. */
+export function useMailReading({ wide = false }: { wide?: boolean } = {}): MailReading {
   const s = useSettingsStore(useShallow((state) => ({
     fontSize: state.fontSize,
     mailTextScale: state.mailTextScale,
@@ -93,11 +102,13 @@ export function useMailReading(): MailReading {
     // "System" follows reduce motion, which itself may follow the OS.
     const pauseImages = resolveSystemToggle(s.pauseAnimatedImages, reduceMotion);
     const overrideStyles = mailOverrideActive(s.mailOverrideStyles, s.contrast, systemMoreContrast);
+    const comfortableWidth = s.readingWidth === 'comfortable';
+    const card = comfortableWidth && wide;
     let override: MailOverride | null = null;
     let fontFaces = { css: '', sources: [] as string[] };
     if (overrideStyles) {
       override = {
-        ...readAppTheme(),
+        ...readAppTheme(card),
         lineSpacing: s.lineSpacing,
         letterSpacing: s.letterSpacing,
         wordSpacing: s.wordSpacing,
@@ -108,11 +119,12 @@ export function useMailReading(): MailReading {
       const family = appFontFamilyName(s.appFont);
       if (family && typeof document !== 'undefined') fontFaces = collectFontFaces(document, family);
     }
-    const comfortableWidth = s.readingWidth === 'comfortable';
     return {
       textFactor,
       minFontSize,
       comfortableWidth,
+      card,
+      cardWidth: readingCardWidth(s.mailTextScale, s.fontSize, minFontSize),
       fitWidth: s.mailFitWidth,
       forcedColors,
       reduceMotion,
@@ -125,5 +137,5 @@ export function useMailReading(): MailReading {
     };
     // `theme` only marks that the page's colours changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s, forcedColors, systemReducedMotion, systemMoreContrast, theme]);
+  }, [s, wide, forcedColors, systemReducedMotion, systemMoreContrast, theme]);
 }
