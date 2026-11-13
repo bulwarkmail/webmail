@@ -37,7 +37,7 @@ ARG GIT_COMMIT=unknown
 RUN LITE_TARGET=static NEXT_PUBLIC_BASE_PATH= npm run build:lite && \
     node scripts/lite/container.mjs /image
 
-FROM nginxinc/nginx-unprivileged:1.30-alpine-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6
+FROM nginxinc/nginx-unprivileged:1.31-alpine-slim@sha256:a8cb0f33d51fa107c96fd2bd3a71aaf564ec131e9d2bdf8700944f0ed8b170d7
 
 LABEL org.opencontainers.image.title="Bulwark Webmail Lite"
 LABEL org.opencontainers.image.description="Bulwark Webmail as static files behind nginx; talks to the JMAP server straight from the browser"
