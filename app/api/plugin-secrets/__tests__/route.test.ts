@@ -6,14 +6,41 @@ import { NextRequest } from 'next/server';
 
 let signedIn = true;
 let pluginsEnabled = true;
+let stalwartFeatures = true;
+let impersonating = false;
 let sameOrigin = true;
 // A token sign-in may claim a bare name; the context then also names the account it resolved to.
 let claimed = { username: 'alice@example.org', accountName: 'alice@example.org' };
 vi.mock('@/lib/stalwart/credentials', () => ({
-  getStalwartCredentials: async () => (signedIn ? { ...claimed, serverUrl: 'https://mail.example.org', authHeader: 'x' } : null),
+  getStalwartCredentials: async () => (signedIn
+    ? { ...claimed, serverUrl: 'https://mail.example.org', authHeader: 'Bearer session', slot: 0, trusted: true, hasSessionCookie: true }
+    : null),
 }));
 vi.mock('@/lib/admin/config-manager', () => ({
-  configManager: { ensureLoaded: async () => {}, get: () => undefined, getPolicy: () => ({ features: { pluginsEnabled } }) },
+  configManager: {
+    ensureLoaded: async () => {},
+    getPolicy: () => ({ features: { pluginsEnabled } }),
+    get: (key: string, fallback: unknown) => (key === 'stalwartFeaturesEnabled' ? stalwartFeatures : fallback),
+  },
+}));
+vi.mock('next/headers', () => ({ cookies: async () => ({ get: () => ({ value: 'sealed' }) }) }));
+vi.mock('@/lib/impersonation/grant-cookie', () => ({
+  IMPERSONATION_GRANT_COOKIE: 'jmap_impersonation',
+  openImpersonationGrant: () => (impersonating ? { serverUrl: 'https://mail.example.org', mailbox: 'alice', credentialId: 'imp' } : null),
+}));
+// The app passwords the server made on the mail server, by id.
+const made = new Map<string, string>();
+const madeWith: unknown[] = [];
+let refuseAppPassword: string | null = null;
+vi.mock('@/lib/plugin-secrets/app-password', () => ({
+  makePluginAppPassword: vi.fn(async (_session: unknown, description: string, permissions: unknown) => {
+    if (refuseAppPassword) throw new Error(refuseAppPassword);
+    madeWith.push(permissions);
+    const id = `ap${made.size + 1}`;
+    made.set(id, description);
+    return { id, secret: `secret-of-${id}`, username: 'alice@login.example.org' };
+  }),
+  revokePluginAppPassword: vi.fn(async (_session: unknown, id: string) => { made.delete(id); }),
 }));
 vi.mock('@/lib/security/same-origin', async () => {
   const { NextResponse } = await import('next/server');
@@ -25,16 +52,29 @@ vi.mock('@/lib/plugin-secrets/vault', () => ({
   putUserCredential: vi.fn(async (_u: unknown, pluginId: string, credentialId: string, input: Record<string, unknown>) => {
     store.set(`${pluginId}/${credentialId}`, input);
   }),
+  getUserCredential: vi.fn(async (_u: unknown, pluginId: string, credentialId: string) => store.get(`${pluginId}/${credentialId}`) ?? null),
   listUserCredentials: vi.fn(async () => []),
-  deleteUserCredentials: vi.fn(async () => {}),
+  deleteUserCredentials: vi.fn(async (_u: unknown, pluginId: string) => {
+    const removed = [...store].filter(([key]) => key.startsWith(`${pluginId}/`));
+    for (const [key] of removed) store.delete(key);
+    return removed.map(([, value]) => value);
+  }),
 }));
 // What the server knows the plugins declare (lib/plugin-secrets/known-plugins).
-const declared: Record<string, { scope: 'user'; label: string; inject: { type: string }; origin?: string }> = {
+const CALENDAR = { permissions: ['jmapCalendarEventGet', 'jmapCalendarEventQuery'] };
+const declared: Record<string, { scope: 'user'; label: string; inject: { type: string }; origin?: string; appPassword?: unknown }> = {
   'nextcloud/cloud': { scope: 'user', label: 'Nextcloud', inject: { type: 'basic' } },
   'paperless/docs': { scope: 'user', label: 'Paperless', inject: { type: 'bearer' }, origin: 'https://paperless.example.com' },
+  'team-calendar/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: CALENDAR },
+  'elsewhere/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: CALENDAR, origin: 'https://other.example.org' },
+  // A manifest stored before app passwords took a permission list.
+  'older/stalwart': { scope: 'user', label: 'Stalwart', inject: { type: 'basic' }, appPassword: true },
 };
 vi.mock('@/lib/plugin-secrets/known-plugins', () => ({
-  declaredUserCredential: async (pluginId: string, credentialId: string) => declared[`${pluginId}/${credentialId}`] ?? null,
+  declaringPlugin: async (pluginId: string, credentialId: string) => {
+    const spec = declared[`${pluginId}/${credentialId}`];
+    return spec ? { name: pluginId === 'team-calendar' ? 'Teamkalender' : pluginId, spec } : null;
+  },
 }));
 const proxied: unknown[] = [];
 vi.mock('@/lib/plugin-secrets/proxy', async (orig) => {
@@ -47,7 +87,9 @@ vi.mock('@/lib/plugin-secrets/proxy', async (orig) => {
   };
 });
 
-import { GET as listCredentials, POST as saveCredential } from '../route';
+import { DELETE as disconnect, GET as listCredentials, POST as saveCredential } from '../route';
+import { putUserCredential, VaultFullError } from '@/lib/plugin-secrets/vault';
+import { revokePluginAppPassword } from '@/lib/plugin-secrets/app-password';
 import { POST as proxy } from '../../plugin-proxy/route';
 
 const VALID = {
@@ -63,12 +105,20 @@ function proxyCall(query: string, headers: Record<string, string> = {}) {
   return proxy(new NextRequest(`http://localhost/api/plugin-proxy?${query}`, { method: 'POST', headers }));
 }
 
+const TEAM = { pluginId: 'team-calendar', credentialId: 'stalwart', label: 'Stalwart', appPassword: true };
+
 beforeEach(() => {
   signedIn = true;
   pluginsEnabled = true;
+  stalwartFeatures = true;
+  impersonating = false;
   sameOrigin = true;
   claimed = { username: 'alice@example.org', accountName: 'alice@example.org' };
+  refuseAppPassword = null;
   store.clear();
+  made.clear();
+  madeWith.length = 0;
+  vi.mocked(revokePluginAppPassword).mockClear();
   proxied.length = 0;
 });
 
@@ -133,6 +183,93 @@ describe('POST /api/plugin-secrets', () => {
 
     expect((await save(VALID)).status).toBe(200);
     expect(vi.mocked(putUserCredential).mock.lastCall?.[0]).toEqual({ username: 'john@b.example', serverUrl: 'https://mail.example.org' });
+  });
+});
+
+describe('POST /api/plugin-secrets with appPassword', () => {
+  it('makes an app password on the signed-in server, named for the plugin, and keeps it from the browser', async () => {
+    const res = await save(TEAM);
+
+    expect(res.status).toBe(200);
+    expect(JSON.stringify(await res.json())).not.toContain('secret-of');
+    expect([...made]).toEqual([['ap1', 'Plugin: Teamkalender']]);
+    expect(madeWith).toEqual([CALENDAR.permissions]);
+    expect(store.get('team-calendar/stalwart')).toEqual({
+      origin: 'https://mail.example.org', inject: { type: 'basic' }, label: 'Stalwart',
+      username: 'alice@login.example.org', secret: 'secret-of-ap1', appPasswordId: 'ap1',
+    });
+  });
+
+  it('replaces the app password made before when connecting again', async () => {
+    await save(TEAM);
+    await save(TEAM);
+
+    expect([...made.keys()]).toEqual(['ap2']);
+    expect(store.get('team-calendar/stalwart')).toMatchObject({ appPasswordId: 'ap2' });
+  });
+
+  it.each([
+    ['a typed password for it', { ...VALID, pluginId: 'team-calendar', credentialId: 'stalwart', origin: 'https://mail.example.org' }],
+    ['it for a credential that takes a typed password', { ...TEAM, pluginId: 'nextcloud', credentialId: 'cloud' }],
+    ['anything sent along', { ...TEAM, secret: 'mine' }],
+    ['another server than the one the plugin names', { ...TEAM, pluginId: 'elsewhere' }],
+    ['a manifest that lists no permissions', { ...TEAM, pluginId: 'older' }],
+  ])('refuses %s', async (_name, body) => {
+    expect((await save(body)).status).toBe(400);
+    expect(made.size).toBe(0);
+    expect(store.size).toBe(0);
+  });
+
+  it('refuses without Stalwart features and in a support session', async () => {
+    stalwartFeatures = false;
+    expect((await save(TEAM)).status).toBe(403);
+    stalwartFeatures = true;
+    impersonating = true;
+    expect((await save(TEAM)).status).toBe(403);
+    expect(made.size).toBe(0);
+    expect(store.size).toBe(0);
+  });
+
+  it("says why when the mail server makes none, and stores nothing", async () => {
+    refuseAppPassword = 'forbidden';
+    const res = await save(TEAM);
+
+    expect(res.status).toBe(502);
+    expect((await res.json()).error).toMatch(/forbidden/);
+    expect(store.size).toBe(0);
+  });
+
+  it('deletes the app password again when it cannot be stored', async () => {
+    vi.mocked(putUserCredential).mockRejectedValueOnce(new VaultFullError());
+
+    expect((await save(TEAM)).status).toBe(409);
+    expect(made.size).toBe(0);
+  });
+});
+
+describe('DELETE /api/plugin-secrets', () => {
+  function remove(query: string) {
+    return disconnect(new NextRequest(`http://localhost/api/plugin-secrets?${query}`, { method: 'DELETE' }));
+  }
+
+  it('deletes the app password the server made, and only that', async () => {
+    await save(TEAM);
+    await save({ ...VALID, origin: 'https://mail.example.org' });
+
+    expect((await remove('plugin=team-calendar&credential=stalwart')).status).toBe(200);
+    expect(made.size).toBe(0);
+    expect((await remove('plugin=nextcloud')).status).toBe(200);
+    expect(store.size).toBe(0);
+    expect(revokePluginAppPassword).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves the mail server alone without Stalwart features', async () => {
+    await save(TEAM);
+    stalwartFeatures = false;
+
+    expect((await remove('plugin=team-calendar')).status).toBe(200);
+    expect(made.size).toBe(1);
+    expect(store.size).toBe(0);
   });
 });
 

@@ -18,6 +18,12 @@
 // read from an admin config field (`originKey`).
 // scope "user": the user connects their own account in a dialog the host
 // shows; the origin is fixed in the manifest or chosen by the user there.
+// With `appPassword: { permissions: [...] }` (and `inject: { type: "basic" }`)
+// the account is the one the user is signed in to: the server makes an app
+// password on it with only the listed Stalwart permissions and stores it with
+// the login name, so the user types nothing.
+
+import { checkAppPasswordPermissions } from './app-password-permissions';
 
 export type CredentialInject =
   | { type: 'none' }
@@ -45,6 +51,12 @@ export interface UserCredentialSpec {
   inject: CredentialInject;
   /** Fixed origin; when absent the user enters the server address. */
   origin?: string;
+  /**
+   * The server makes the secret: an app password on the mail server the user
+   * is signed in to, which is then also the origin, with only these Stalwart
+   * permissions (and sign-in). Only with `basic`.
+   */
+  appPassword?: { permissions: string[] };
 }
 
 export type CredentialSpec = AdminCredentialSpec | UserCredentialSpec;
@@ -183,10 +195,22 @@ export function checkCredentials(
       fixedOrigin = origin;
     }
     if (c.scope === 'user') {
-      out[id] = { label: c.label, scope: 'user', inject, ...(fixedOrigin ? { origin: fixedOrigin } : {}) };
+      let appPassword: { permissions: string[] } | undefined;
+      if (c.appPassword !== undefined) {
+        const checked = checkAppPasswordPermissions(c.appPassword);
+        if ('error' in checked) { errors.push(`${where}.${checked.error}`); continue; }
+        if (inject.type !== 'basic') { errors.push(`${where}.appPassword needs inject "basic"`); continue; }
+        appPassword = checked;
+      }
+      out[id] = {
+        label: c.label, scope: 'user', inject,
+        ...(fixedOrigin ? { origin: fixedOrigin } : {}),
+        ...(appPassword ? { appPassword } : {}),
+      };
       continue;
     }
     if (c.scope !== 'admin') { errors.push(`${where}.scope must be "admin" or "user"`); continue; }
+    if (c.appPassword !== undefined) { errors.push(`${where}.appPassword is only for scope "user"`); continue; }
     const field = (key: unknown, name: string, type?: string): string | null => {
       if (typeof key !== 'string' || !configSchema?.[key]) {
         errors.push(`${where}.${name} must name a configSchema field`);

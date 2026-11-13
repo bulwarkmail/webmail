@@ -1,8 +1,10 @@
 // Host-side "Connect account" requests. A plugin asks to connect one of the
 // user-scope credentials its manifest declares (api.proxy.connect); the host
 // shows its own dialog naming the plugin and the server, the user types the
-// password there, and it goes straight to /api/plugin-secrets. The plugin
-// only learns whether the account is connected.
+// password there, and it goes straight to /api/plugin-secrets. For a
+// credential that declares `appPassword` the user only confirms, and the
+// server makes an app password. The plugin only learns whether the account
+// is connected.
 
 import type { UserCredentialSpec } from '@/lib/plugin-secrets/credentials';
 import { apiFetch } from '../browser-navigation';
@@ -17,8 +19,10 @@ export interface ConnectRequest {
    * `password`: the user types a password or key here.
    * `signin`: only the server is approved here; the plugin then runs a
    * sign-in flow whose answer the proxy captures (Nextcloud Login Flow v2).
+   * `appPassword`: the user confirms, the server makes an app password on
+   * the mail account they are signed in to.
    */
-  mode: 'password' | 'signin';
+  mode: 'password' | 'signin' | 'appPassword';
   /** Server address to suggest when the manifest leaves it to the user. */
   suggestedOrigin?: string;
   suggestedUsername?: string;
@@ -73,15 +77,14 @@ export function cancelConnectFor(pluginId: string): void {
   if (current?.pluginId === pluginId) current.resolve({ connected: false });
 }
 
-export interface SaveCredentialInput {
+export type SaveCredentialInput = {
   pluginId: string;
   credentialId: string;
   label: string;
-  origin: string;
-  inject: UserCredentialSpec['inject'];
-  username?: string;
-  secret?: string;
-}
+} & (
+  | { origin: string; inject: UserCredentialSpec['inject']; username?: string; secret?: string }
+  | { appPassword: true }
+);
 
 /** POST to /api/plugin-secrets. Returns an error message, or null. */
 export async function saveCredential(input: SaveCredentialInput): Promise<string | null> {
