@@ -11,6 +11,7 @@ import { X, Trash2, CalendarDays, Bell, Flag, Repeat, Pencil } from "@/component
 import { format, parseISO } from "date-fns";
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
 import { createRecurrenceRule } from "@/lib/recurrence-rule";
+import { displayNow } from "@/lib/timezone";
 
 import type { CalendarTask, Calendar, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
 import { withOwnAlertIds } from "@/lib/calendar-alerts";
@@ -47,6 +48,12 @@ function priorityToLevel(p: number): PriorityLevel {
   if (p === 5) return "medium";
   if (p >= 6 && p <= 9) return "low";
   return "none";
+}
+
+/** Same LocalDateTime, where a bare date is its midnight. */
+function sameLocalDateTime(a: string, b: string): boolean {
+  const full = (s: string) => (s.length === 10 ? `${s}T00:00:00` : s);
+  return full(a) === full(b);
 }
 
 function levelToPriority(l: PriorityLevel): number {
@@ -215,20 +222,30 @@ export function TaskModal({
         calendarIds: { [calendarId]: true },
       };
 
-      if (recurrenceTouched) {
+      // A series repeats from its due date, or from its start when it has
+      // none; without either there is nothing to repeat from.
+      if (recurrenceTouched && (due || task?.start)) {
         if (recurrence === "custom" && customRule) {
           data.recurrenceRules = [customRule];
         } else if (recurrence !== "none" && recurrence !== "custom") {
           data.recurrenceRules = [createRecurrenceRule(recurrence)];
-        } else if (isEdit && task?.recurrenceRules?.length) {
+        } else if (recurrence === "none" && task?.recurrenceRules?.length) {
           data.recurrenceRules = null;
+          // Done or moved occurrences belong to the series that goes away.
+          if (task.recurrenceOverrides) data.recurrenceOverrides = null;
         }
 
         // An RRULE needs a DTSTART (RFC 5545). When making an existing task
         // that has no start recurring, anchor start at due.
-        if (recurrence !== "none" && !task?.start && due) {
+        if (data.recurrenceRules?.length && !task?.start && due) {
           data.start = due;
         }
+      }
+
+      // A start anchored at the due date moves with it, so the task doesn't
+      // come to span the days between them, or start after it is due.
+      if (task?.start && task.due && due && data.start === undefined && sameLocalDateTime(task.start, task.due) && !sameLocalDateTime(due, task.due)) {
+        data.start = due;
       }
 
       if (alertTouched) {
@@ -250,7 +267,7 @@ export function TaskModal({
         }
         // A task that uses its calendar's default alerts turns them off:
         // Stalwart 1.0 shows the defaults in `alerts` instead of the task's
-        // own while they are on, drops alerts under the default ids.
+        // own while they are on, and drops alerts under the default ids.
         const alerts = task?.useDefaultAlerts
           ? withOwnAlertIds(Object.values(merged), Object.keys(task.alerts ?? {}))
           : merged;
@@ -373,64 +390,65 @@ export function TaskModal({
           </div>
         </div>
 
-        {/* Recurrence */}
-        <div className="space-y-2">
-          <label htmlFor="task-recurrence-select" className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <Repeat className="h-3.5 w-3.5" />
-            {t("recurrence.title")}
-          </label>
-          <div className="flex items-center gap-2">
-            <select
-              id="task-recurrence-select"
-              aria-label={t("recurrence.title")}
-              value={recurrence}
-              onChange={(e) => {
-                const value = e.target.value as RecurrenceOption;
-                setRecurrenceTouched(true);
-                if (value === "custom") {
-                  recurrenceBeforeCustomRef.current = recurrence;
-                  setRecurrence("custom");
-                  setShowRecurrenceEditor(true);
-                } else {
-                  setRecurrence(value);
-                  setShowRecurrenceEditor(false);
-                }
-              }}
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
-            >
-              <option value="none">{t("recurrence.none")}</option>
-              <option value="daily">{t("recurrence.daily")}</option>
-              <option value="weekly">{t("recurrence.weekly")}</option>
-              <option value="monthly">{t("recurrence.monthly")}</option>
-              <option value="yearly">{t("recurrence.yearly")}</option>
-              <option value="custom">{customRuleSummary || t("recurrence.custom")}</option>
-            </select>
-            {recurrence === "custom" && !showRecurrenceEditor && (
-              <button
-                type="button"
-                onClick={() => setShowRecurrenceEditor(true)}
-                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                aria-label={t("recurrence.edit_custom")}
+        {/* Recurrence: a series repeats from its due date (or a start another app set). */}
+        {(dueDate || task?.start) && (
+          <div className="space-y-2">
+            <label htmlFor={`${id}-recurrence`} className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <Repeat className="h-3.5 w-3.5" />
+              {t("recurrence.title")}
+            </label>
+            <div className="flex items-center gap-2">
+              <select
+                id={`${id}-recurrence`}
+                value={recurrence}
+                onChange={(e) => {
+                  const value = e.target.value as RecurrenceOption;
+                  setRecurrenceTouched(true);
+                  if (value === "custom") {
+                    recurrenceBeforeCustomRef.current = recurrence;
+                    setRecurrence("custom");
+                    setShowRecurrenceEditor(true);
+                  } else {
+                    setRecurrence(value);
+                    setShowRecurrenceEditor(false);
+                  }
+                }}
+                className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
               >
-                <Pencil className="h-4 w-4" />
-              </button>
+                <option value="none">{t("recurrence.none")}</option>
+                <option value="daily">{t("recurrence.daily")}</option>
+                <option value="weekly">{t("recurrence.weekly")}</option>
+                <option value="monthly">{t("recurrence.monthly")}</option>
+                <option value="yearly">{t("recurrence.yearly")}</option>
+                <option value="custom">{customRuleSummary || t("recurrence.custom")}</option>
+              </select>
+              {recurrence === "custom" && !showRecurrenceEditor && (
+                <button
+                  type="button"
+                  onClick={() => setShowRecurrenceEditor(true)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label={t("recurrence.edit_custom")}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {showRecurrenceEditor && (
+              <RecurrenceEditor
+                rule={customRule}
+                eventStart={(() => {
+                  const from = dueDate
+                    ? (showTime && dueTime ? `${dueDate}T${dueTime}:00` : `${dueDate}T00:00:00`)
+                    : task?.start;
+                  const d = from ? parseISO(from) : null;
+                  return d && !isNaN(d.getTime()) ? d : displayNow();
+                })()}
+                onSave={handleRecurrenceEditorSave}
+                onCancel={handleRecurrenceEditorCancel}
+              />
             )}
           </div>
-          {showRecurrenceEditor && (
-            <RecurrenceEditor
-              rule={customRule}
-              eventStart={(() => {
-                if (dueDate) {
-                  const d = parseISO(showTime && dueTime ? `${dueDate}T${dueTime}:00` : `${dueDate}T00:00:00`);
-                  if (!isNaN(d.getTime())) return d;
-                }
-                return new Date();
-              })()}
-              onSave={handleRecurrenceEditorSave}
-              onCancel={handleRecurrenceEditorCancel}
-            />
-          )}
-        </div>
+        )}
 
         {/* Priority */}
         <div className="space-y-2">

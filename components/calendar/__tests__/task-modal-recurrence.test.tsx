@@ -49,6 +49,7 @@ describe('TaskModal recurrence handling', () => {
     render(<TaskModal calendars={calendars} onSave={onSave} onClose={vi.fn()} />);
 
     fireEvent.change(screen.getByPlaceholderText('tasks.title_placeholder'), { target: { value: 'Daily Jog' } });
+    fireEvent.change(screen.getByLabelText('tasks.due_date'), { target: { value: '2026-11-16' } });
     fireEvent.change(screen.getByLabelText(/recurrence\.title/i), { target: { value: 'daily' } });
     fireEvent.click(screen.getByText('tasks.save'));
 
@@ -126,6 +127,7 @@ describe('TaskModal recurrence handling', () => {
     render(<TaskModal calendars={calendars} onSave={onSave} onClose={vi.fn()} />);
 
     fireEvent.change(screen.getByPlaceholderText('tasks.title_placeholder'), { target: { value: 'Weekly Review' } });
+    fireEvent.change(screen.getByLabelText('tasks.due_date'), { target: { value: '2026-11-16' } });
     fireEvent.change(screen.getByLabelText(/recurrence\.title/i), { target: { value: 'weekly' } });
     fireEvent.click(screen.getByText('tasks.save'));
 
@@ -137,6 +139,64 @@ describe('TaskModal recurrence handling', () => {
       '@type': 'RecurrenceRule',
       frequency: 'weekly',
     });
+  });
+
+  it('offers recurrence only once the task has a due date to repeat from', () => {
+    render(<TaskModal calendars={calendars} onSave={vi.fn()} onClose={vi.fn()} />);
+
+    expect(screen.queryByLabelText(/recurrence\.title/i)).toBeNull();
+    fireEvent.change(screen.getByLabelText('tasks.due_date'), { target: { value: '2026-11-16' } });
+    expect(screen.getByLabelText(/recurrence\.title/i)).toBeInTheDocument();
+  });
+
+  it('sends no rule and no start while a custom rule is still unsaved in the editor', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<TaskModal task={makeTask()} calendars={calendars} onSave={onSave} onClose={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/recurrence\.title/i), { target: { value: 'custom' } });
+    fireEvent.click(screen.getByText('tasks.save'));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    const patch = onSave.mock.calls[0][0] as Partial<CalendarTask>;
+    expect(patch).not.toHaveProperty('recurrenceRules');
+    expect(patch).not.toHaveProperty('start');
+  });
+
+  it('moves a start anchored at the due date along when the due date changes', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const task = makeTask({
+      due: '2026-09-21T00:00:00',
+      start: '2026-09-21T00:00:00',
+      recurrenceRules: [createRecurrenceRule('weekly')],
+    });
+    render(<TaskModal task={task} calendars={calendars} onSave={onSave} onClose={vi.fn()} />);
+
+    fireEvent.change(screen.getByDisplayValue('2026-09-21'), { target: { value: '2026-09-23' } });
+    fireEvent.click(screen.getByText('tasks.save'));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    const patch = onSave.mock.calls[0][0] as Partial<CalendarTask>;
+    expect(patch.due).toBe('2026-09-23');
+    expect(patch.start).toBe('2026-09-23');
+    expect(patch).not.toHaveProperty('recurrenceRules');
+  });
+
+  it('drops the occurrences done or moved when the task stops repeating', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const task = makeTask({
+      start: '2026-09-21T00:00:00',
+      recurrenceRules: [createRecurrenceRule('daily')],
+      recurrenceOverrides: { '2026-09-22T00:00:00': { progress: 'completed' } },
+    } as Partial<CalendarTask>);
+    render(<TaskModal task={task} calendars={calendars} onSave={onSave} onClose={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/recurrence\.title/i), { target: { value: 'none' } });
+    fireEvent.click(screen.getByText('tasks.save'));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    const patch = onSave.mock.calls[0][0] as Partial<CalendarTask>;
+    expect(patch.recurrenceRules).toBeNull();
+    expect(patch.recurrenceOverrides).toBeNull();
   });
 
   it('keeps the modal open when onSave returns false (save failed)', async () => {
