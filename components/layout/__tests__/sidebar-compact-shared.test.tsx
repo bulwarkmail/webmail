@@ -140,6 +140,60 @@ describe('Sidebar compact shared mailboxes (#1342)', () => {
     expect(folderNames(sales())).toEqual(['Inbox', 'Requests', 'Sent', 'Junk', 'scheduled']);
   });
 
+  // #495: Stalwart can make a Scheduled folder in the shared account too. With
+  // the app's own Scheduled row shown, the server's one is left out.
+  const withServerScheduled = [
+    ...mailboxes.map((mb) => (mb.id === 'g1-drafts' ? { ...mb, totalEmails: 2 } : mb)),
+    shared('g1', 'sales@example.com', 'scheduled', { name: 'Scheduled', role: 'scheduled' as never, totalEmails: 1 }),
+  ];
+
+  it('lists Scheduled once when the server has a Scheduled folder too', () => {
+    render(
+      <Sidebar mailboxes={withServerScheduled} selectedMailbox="inbox" showScheduledMailbox scheduledTotalByAccount={{ g1: 3 }} />,
+    );
+
+    fireEvent.click(within(sales()).getByTestId('folder-expand-toggle'));
+
+    expect(folderNames(sales())).toEqual(['Inbox', 'Requests', 'Drafts', 'scheduled', 'Sent', 'Junk']);
+  });
+
+  it("keeps the server's Scheduled folder while no sends are pending", () => {
+    render(
+      <Sidebar mailboxes={withServerScheduled} selectedMailbox="inbox" showScheduledMailbox scheduledTotalByAccount={{ g1: 0 }} />,
+    );
+
+    fireEvent.click(within(sales()).getByTestId('folder-expand-toggle'));
+
+    expect(folderNames(sales())).toEqual(['Inbox', 'Requests', 'Drafts', 'Sent', 'Junk', 'Scheduled']);
+  });
+
+  const scheduledRowNames = () => screen.getAllByTestId('folder-row')
+    .filter((row) => row.getAttribute('data-folder-role') === 'scheduled')
+    .map((row) => row.getAttribute('data-folder-name'));
+
+  it('lists Scheduled once under the account header when the setting is off', () => {
+    useSettingsStore.setState({ compactSharedMailboxes: false } as never);
+    localStorage.setItem('sidebarExpandedSharedAccounts', '[]');
+    render(
+      <Sidebar mailboxes={withServerScheduled} selectedMailbox="inbox" showScheduledMailbox scheduledTotalByAccount={{ g1: 3 }} />,
+    );
+
+    fireEvent.click(screen.getByText('sales@example.com'));
+
+    // The user's own Scheduled row and the shared account's.
+    expect(scheduledRowNames()).toEqual(['scheduled', 'scheduled']);
+  });
+
+  it("keeps the server's Scheduled folder while the app shows none of its own", () => {
+    useSettingsStore.setState({ compactSharedMailboxes: false } as never);
+    localStorage.setItem('sidebarExpandedSharedAccounts', '[]');
+    render(<Sidebar mailboxes={withServerScheduled} selectedMailbox="inbox" />);
+
+    fireEvent.click(screen.getByText('sales@example.com'));
+
+    expect(scheduledRowNames()).toEqual(['Scheduled']);
+  });
+
   it('offers marking subfolders read only when the inbox has subfolders of its own', () => {
     const support = [...mailboxes, shared('g2', 'support@example.com', 'sent', { name: 'Sent', role: 'sent', totalEmails: 4 })];
     render(<Sidebar mailboxes={support} selectedMailbox="inbox" />);
