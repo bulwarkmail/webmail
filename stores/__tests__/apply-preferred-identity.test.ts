@@ -88,3 +88,73 @@ describe('applyPreferredIdentity (issue #507)', () => {
     expect(useSettingsStore.getState().preferredIdentityIds).toEqual({ 'acc-1': 'id-3' });
   });
 });
+
+// #1644: the browser-local default is one value for the whole browser, and
+// identity ids repeat across accounts ("b", "c"). Another account's "c" made
+// an alias the default of a newly added account.
+describe('the browser-local default of another account (#1644)', () => {
+  const account = (id: string, username: string) => ({ id, username, email: username, displayName: '', label: '' });
+  const own = makeIdentity({ id: 'b', name: 'Mikrotik', email: 'mikrotik@example.com' });
+  const alias = makeIdentity({ id: 'c', name: 'Cristi', email: 'x.cristi@example.com' });
+
+  beforeEach(() => {
+    useIdentityStore.setState({ identities: [own, alias], preferredPrimaryId: null, preferredPrimaryAccountId: null });
+    useAuthStore.setState({ identities: [own, alias], primaryIdentity: own });
+    useAccountStore.setState({
+      accounts: [account('acc-a', 'me@example.com'), account('acc-b', 'mikrotik@example.com')] as never,
+      activeAccountId: 'acc-b',
+    });
+    useSettingsStore.setState({ preferredIdentityIds: {} });
+  });
+
+  it('is not taken over by an account it was not chosen for', () => {
+    useIdentityStore.setState({ preferredPrimaryId: 'c', preferredPrimaryAccountId: 'acc-a' });
+    applyPreferredIdentity('acc-b');
+    expect(useAuthStore.getState().primaryIdentity?.id).toBe('b');
+    expect(useSettingsStore.getState().preferredIdentityIds).toEqual({});
+  });
+
+  it('is not taken over while several logins are in the browser and its account is unknown', () => {
+    useIdentityStore.setState({ preferredPrimaryId: 'c', preferredPrimaryAccountId: null });
+    applyPreferredIdentity('acc-b');
+    expect(useAuthStore.getState().primaryIdentity?.id).toBe('b');
+    expect(useSettingsStore.getState().preferredIdentityIds).toEqual({});
+  });
+
+  it('is taken over by the account it was chosen for', () => {
+    useIdentityStore.setState({ preferredPrimaryId: 'c', preferredPrimaryAccountId: 'acc-b' });
+    applyPreferredIdentity('acc-b');
+    expect(useAuthStore.getState().primaryIdentity?.id).toBe('c');
+    expect(useSettingsStore.getState().preferredIdentityIds).toEqual({ 'acc-b': 'c' });
+  });
+
+  it('does not order a newly added account\'s identities', async () => {
+    useIdentityStore.setState({ preferredPrimaryId: 'c', preferredPrimaryAccountId: 'acc-a' });
+    useAuthStore.setState({ client: { getIdentities: async () => [alias, own] } as never, username: 'mikrotik@example.com' });
+    await useAuthStore.getState().refreshIdentities();
+    expect(useAuthStore.getState().primaryIdentity?.id).toBe('b');
+    // Gone for this account, so nothing else (a plugin's From) picks it up.
+    expect(useIdentityStore.getState().preferredPrimaryId).toBeNull();
+    useAuthStore.setState({ client: null });
+  });
+
+  it('still orders the identities of the account it was chosen for', async () => {
+    useIdentityStore.setState({ preferredPrimaryId: 'c', preferredPrimaryAccountId: 'acc-b' });
+    useAuthStore.setState({ client: { getIdentities: async () => [own, alias] } as never, username: 'mikrotik@example.com' });
+    await useAuthStore.getState().refreshIdentities();
+    expect(useAuthStore.getState().primaryIdentity?.id).toBe('c');
+    useAuthStore.setState({ client: null });
+  });
+
+  it('puts the new default\'s address on the account, for the account switcher', () => {
+    useSettingsStore.setState({ preferredIdentityIds: { 'acc-b': 'c' } });
+    applyPreferredIdentity('acc-b');
+    expect(useAccountStore.getState().getAccountById('acc-b')?.email).toBe('x.cristi@example.com');
+
+    useIdentityStore.setState({ identities: [own, alias] });
+    useAuthStore.setState({ client: {} as never, activeAccountId: 'acc-b' });
+    useAuthStore.getState().syncIdentities();
+    expect(useAccountStore.getState().getAccountById('acc-b')?.email).toBe('mikrotik@example.com');
+    useAuthStore.setState({ client: null });
+  });
+});

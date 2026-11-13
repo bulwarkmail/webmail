@@ -83,6 +83,7 @@ export function snapshotAccount(accountId: string): void {
     identity: {
       identities: [...identityState.identities],
       preferredPrimaryId: identityState.preferredPrimaryId,
+      preferredPrimaryAccountId: identityState.preferredPrimaryAccountId,
     },
     vacation: {
       isEnabled: vacationState.isEnabled,

@@ -1012,13 +1012,35 @@ function bindClientStatusHandlers(
   });
 }
 
+/**
+ * Whether the browser-local default sender identity was chosen for the
+ * account `owns` picks. Identity ids repeat across accounts, so another
+ * account's "c" is any identity here (#1644). A value kept from before its
+ * account was recorded counts only while one login is in the browser.
+ */
+function localPreferredIdentityBelongsTo(owns: (account: Pick<AccountEntry, 'id' | 'username'>) => boolean): boolean {
+  const owner = useIdentityStore.getState().preferredPrimaryAccountId;
+  const accounts = useAccountStore.getState().accounts;
+  if (owner) {
+    const entry = accounts.find((a) => a.id === owner);
+    return owns(entry ?? { id: owner, username: '' });
+  }
+  return accounts.every(owns);
+}
+
 function loadIdentities(rawIdentities: Identity[], username: string): { identities: Identity[]; primaryIdentity: Identity | null } {
   // The synced per-account default sender identity (#507) is keyed by
   // AccountEntry.id and re-applied by applyPreferredIdentity() once
   // loadFromServer resolves (the accountId isn't known here). At load time we
   // only honour the browser-local fallback (identity-storage) so the ordering
-  // is stable before - or entirely without - settings sync.
-  const preferredPrimaryId = useIdentityStore.getState().preferredPrimaryId;
+  // is stable before - or entirely without - settings sync. It is honoured
+  // only for the account it was chosen for, and dropped for any other.
+  const login = username.trim().toLowerCase();
+  let preferredPrimaryId = useIdentityStore.getState().preferredPrimaryId;
+  if (preferredPrimaryId && !localPreferredIdentityBelongsTo((a) => a.username.trim().toLowerCase() === login)) {
+    preferredPrimaryId = null;
+    useIdentityStore.getState().setPreferredPrimary(null);
+  }
 
   const identities = sortIdentities(rawIdentities, username);
 
@@ -1083,7 +1105,9 @@ export function applyPreferredIdentity(accountId?: string | null): void {
   // it follows the user across devices.
   if (!preferred) {
     const legacy = idStore.preferredPrimaryId;
-    if (legacy) {
+    // Only the account the local value was chosen for: another account's
+    // id names some other identity here, often an alias (#1644).
+    if (legacy && localPreferredIdentityBelongsTo((a) => a.id === targetId)) {
       preferred = legacy;
       const current = useSettingsStore.getState().preferredIdentityIds;
       useSettingsStore.getState().updateSetting('preferredIdentityIds', { ...current, [targetId]: legacy }, { internal: true });
@@ -1091,7 +1115,7 @@ export function applyPreferredIdentity(accountId?: string | null): void {
   }
   if (!preferred) return;
 
-  idStore.setPreferredPrimary(preferred);
+  idStore.setPreferredPrimary(preferred, targetId);
   const ids = [...idStore.identities];
   const idx = ids.findIndex((i) => i.id === preferred);
   if (idx > 0) {
@@ -1100,6 +1124,19 @@ export function applyPreferredIdentity(accountId?: string | null): void {
     idStore.setIdentities(ids);
   }
   useAuthStore.setState({ identities: ids, primaryIdentity: ids[0] ?? null });
+  syncAccountEmail(targetId, ids[0]);
+}
+
+/**
+ * The account switcher and the sidebar header show the account's address,
+ * taken from its default identity at sign-in; it follows a new default
+ * (#1644).
+ */
+function syncAccountEmail(accountId: string, primary: Identity | null | undefined): void {
+  const email = primary?.email?.trim();
+  if (!email) return;
+  const entry = useAccountStore.getState().getAccountById(accountId);
+  if (entry && entry.email !== email) useAccountStore.getState().updateAccount(accountId, { email });
 }
 
 function getLocaleLoginPath(): string {
@@ -3853,6 +3890,7 @@ export const useAuthStore = create<AuthState>()(
         const { activeAccountId, client } = get();
         if (activeAccountId && client) {
           void syncAccountDisplayName(activeAccountId, client, primaryIdentity?.name);
+          syncAccountEmail(activeAccountId, primaryIdentity);
         }
       },
 

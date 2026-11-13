@@ -193,12 +193,12 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
   }, [client, refreshIdentities, t, tAddr, tNotif, confirmDialog]);
 
   const handleSetPrimary = useCallback((identity: Identity) => {
-    setPreferredPrimary(identity.id);
     // Persist the choice per account in the synced settings store so it
     // survives clearing site data, follows the user across devices, and shows
     // up in exported settings (issue #507). JMAP identity ids are account-
     // scoped, so the default is keyed by the active account.
     const activeAccountId = useAccountStore.getState().activeAccountId;
+    setPreferredPrimary(identity.id, activeAccountId);
     if (activeAccountId) {
       const current = useSettingsStore.getState().preferredIdentityIds;
       useSettingsStore.getState().updateSetting('preferredIdentityIds', {

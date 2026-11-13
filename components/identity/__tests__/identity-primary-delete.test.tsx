@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { IdentityManagerModal } from '@/components/identity/identity-manager-modal';
 import { useAuthStore } from '@/stores/auth-store';
 import { useIdentityStore } from '@/stores/identity-store';
+import { useAccountStore } from '@/stores/account-store';
 
 // settings-p3-20 (usability pass 3, 2026-11-04): "Your email addresses" offered Delete on
 // the primary address, also when it was the only one. Other addresses keep it.
@@ -36,5 +37,30 @@ describe('deleting addresses', () => {
     } as never);
     render(<IdentityManagerModal isOpen onClose={vi.fn()} />);
     expect(screen.getAllByRole('button', { name: 'delete_button' })).toHaveLength(1);
+  });
+});
+
+// #1644: identity ids repeat across accounts, so the browser-local default
+// records the account it was chosen for.
+describe('making an address the default', () => {
+  const initial = { auth: useAuthStore.getState(), identity: useIdentityStore.getState(), account: useAccountStore.getState() };
+  afterEach(() => {
+    useAuthStore.setState(initial.auth, true);
+    useIdentityStore.setState(initial.identity, true);
+    useAccountStore.setState(initial.account, true);
+  });
+
+  it('keeps the account it was chosen for with it', () => {
+    useAuthStore.setState({ client: null, refreshIdentities: vi.fn(), syncIdentities: vi.fn() } as never);
+    useAccountStore.setState({ activeAccountId: 'acc-b' });
+    useIdentityStore.setState({
+      identities: [
+        { id: 'b', name: 'Ann', email: 'ann@example.com', mayDelete: true },
+        { id: 'c', name: 'Sales', email: 'sales@example.com', mayDelete: true },
+      ],
+    } as never);
+    render(<IdentityManagerModal isOpen onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'set_as_primary' }));
+    expect(useIdentityStore.getState()).toMatchObject({ preferredPrimaryId: 'c', preferredPrimaryAccountId: 'acc-b' });
   });
 });

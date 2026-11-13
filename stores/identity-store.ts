@@ -19,6 +19,13 @@ interface IdentityStore {
   identities: Identity[];
   selectedIdentityId: string | null;
   preferredPrimaryId: string | null;
+  /**
+   * The account (AccountEntry.id) `preferredPrimaryId` was chosen for.
+   * Identity ids are short and repeat across accounts ("b", "c"), so the
+   * value means nothing for another account (#1644). null for a value kept
+   * from before this was recorded.
+   */
+  preferredPrimaryAccountId: string | null;
   isLoading: boolean;
   error: string | null;
 
@@ -31,7 +38,7 @@ interface IdentityStore {
   updateIdentityLocal: (identityId: string, updates: Partial<Identity>) => void;
   removeIdentity: (identityId: string) => void;
   selectIdentity: (identityId: string | null) => void;
-  setPreferredPrimary: (identityId: string | null) => void;
+  setPreferredPrimary: (identityId: string | null, accountId?: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearIdentities: () => void;
@@ -49,6 +56,7 @@ export const useIdentityStore = create<IdentityStore>()(
       identities: [],
       selectedIdentityId: null,
       preferredPrimaryId: null,
+      preferredPrimaryAccountId: null,
       isLoading: false,
       error: null,
       subAddress: {
@@ -85,7 +93,10 @@ export const useIdentityStore = create<IdentityStore>()(
 
       selectIdentity: (identityId) => set({ selectedIdentityId: identityId }),
 
-      setPreferredPrimary: (identityId) => set({ preferredPrimaryId: identityId }),
+      setPreferredPrimary: (identityId, accountId = null) => set({
+        preferredPrimaryId: identityId,
+        preferredPrimaryAccountId: identityId ? accountId : null,
+      }),
 
       setLoading: (loading) => set({ isLoading: loading }),
 
@@ -145,6 +156,7 @@ export const useIdentityStore = create<IdentityStore>()(
       partialize: (state) => ({
         subAddress: state.subAddress,
         preferredPrimaryId: state.preferredPrimaryId,
+        preferredPrimaryAccountId: state.preferredPrimaryAccountId,
       }),
     }
   )
