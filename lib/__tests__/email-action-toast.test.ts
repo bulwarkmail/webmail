@@ -44,3 +44,26 @@ describe('runBatchEmailAction', () => {
     expect(toast.success).toHaveBeenCalledWith('3 messages archived', undefined);
   });
 });
+
+it.each(['accepted', 'veto', 'thrown'])('abandoned-account bulk read feedback stays suppressed after %s completion', async outcome => {
+  const { markSelectionReadWithUndo } = await import('../email-action-toast');
+  const { clearAllStores } = await import('@/lib/account-state-manager');
+  let resolve!: (value: boolean) => void;
+  let reject!: (error: Error) => void;
+  const pending = new Promise<boolean>((yes, no) => { resolve = yes; reject = no; });
+  const original = useEmailStore.getState().batchMarkAsRead;
+  useEmailStore.setState({ emails: [], selectedEmailKeys: new Set(), batchMarkAsRead: () => pending });
+  try {
+    const running = markSelectionReadWithUndo({} as never, true, {
+      success: 'A marked read', error: 'A failed', labels: { undo: 'Undo', done: 'Done', failed: 'Failed' },
+    });
+    clearAllStores(); useEmailStore.setState({ error: 'B folder error', isLoading: true });
+    if (outcome === 'thrown') reject(new Error('A failure'));
+    else resolve(outcome === 'accepted');
+    await running;
+    expect(useEmailStore.getState()).toMatchObject({ error: 'B folder error', isLoading: true });
+    expect(toast.error).not.toHaveBeenCalled(); expect(toast.success).not.toHaveBeenCalled();
+  } finally {
+    useEmailStore.setState({ batchMarkAsRead: original });
+  }
+});
