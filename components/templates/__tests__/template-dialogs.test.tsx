@@ -42,6 +42,20 @@ describe('TemplateManagerModal', () => {
     expect(dialog).toBeTruthy();
   });
 
+  // #1642: the variable list opened under the dialog (z-[60]), so "+ Variable"
+  // looked like it did nothing.
+  it('draws the "+ Variable" list above the dialog', async () => {
+    render(<TemplateManagerModal isOpen onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'add' }));
+    for (const button of screen.getAllByRole('button', { name: 'placeholder' })) {
+      fireEvent.click(button);
+      expect(screen.getByRole('menu').className).toContain('z-[70]');
+      fireEvent.keyDown(window, { key: 'Escape' });
+      await flush();
+    }
+    expect(screen.getAllByRole('button', { name: 'placeholder' })).toHaveLength(2);
+  });
+
   it('asks before the X drops a template being written, and keeps it on Keep editing', async () => {
     const onClose = vi.fn();
     render(<TemplateManagerModal isOpen onClose={onClose} />);

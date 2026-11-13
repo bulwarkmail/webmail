@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { IconButton } from "@/components/ui/icon-button";
 import { X } from "@/components/icons";
-import { DialogSurfacePortal, useDialogSurface, useDialogSurfaceContext } from "@/components/ui/dialog-surface";
+import { DialogSurfacePortal, InDialogContext, useDialogSurface, useDialogSurfaceContext } from "@/components/ui/dialog-surface";
 import { cn } from "@/lib/utils";
 
 export type DialogSize = "sm" | "md" | "lg" | "full-on-phone";
@@ -185,13 +185,16 @@ export function Dialog({
     >
       {/* The strip above the title moves the window too. */}
       {inWindow && <div data-dialog-drag="" aria-hidden="true" className="absolute inset-x-0 top-0 h-6" />}
-      {onSubmit ? (
-        <form onSubmit={onSubmit} className="flex flex-col min-h-0 flex-1">
-          {body}
-        </form>
-      ) : (
-        body
-      )}
+      {/* Menus opened in it are drawn above it (context-menu.tsx). */}
+      <InDialogContext.Provider value={true}>
+        {onSubmit ? (
+          <form onSubmit={onSubmit} className="flex flex-col min-h-0 flex-1">
+            {body}
+          </form>
+        ) : (
+          body
+        )}
+      </InDialogContext.Provider>
       {showClose && (
         // Last in the tab order, so the focus starts in the content.
         <IconButton label={tCommon("close")} onClick={onClose} className="absolute top-3 end-3">
