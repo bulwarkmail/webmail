@@ -2153,6 +2153,10 @@
         "label": "Mostrar adjuntos en la lista",
         "description": "Mostrar los archivos adjuntos debajo de cada mensaje para abrirlos desde la lista. El clip se muestra de todos modos."
       },
+      "show_tag_chips": {
+        "label": "Mostrar etiquetas en la lista",
+        "description": "Mostrar las etiquetas junto al remitente o asunto en la lista de mensajes"
+      },
       "attachment_click_action": {
         "label": "Acción al hacer clic en adjuntos",
         "description": "Elige si al hacer clic en un archivo adjunto se abre una vista previa o se descarga de inmediato",

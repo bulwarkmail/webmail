@@ -2109,6 +2109,10 @@
         "label": "Afișează atașamentele în listă",
         "description": "Afișează fișierele atașate sub fiecare mesaj, ca să le puteți deschide direct din listă. Agrafa apare oricum."
       },
+      "show_tag_chips": {
+        "label": "Afișează etichetele în listă",
+        "description": "Afișează etichetele lângă expeditor sau subiect în lista de mesaje"
+      },
       "plain_text_mode": {
         "label": "Numai text simplu",
         "description": "Dezactivați editorul de text formatat și trimiteți toate e-mailurile doar ca text simplu, inclusiv răspunsurile și redirecționările"

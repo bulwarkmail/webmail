@@ -2109,6 +2109,10 @@
         "label": "Mellékletek megjelenítése a listában",
         "description": "A csatolt fájlok megjelenítése minden üzenet alatt, hogy közvetlenül a listából megnyithassa őket. A gemkapocs ikon mindenképp látható."
       },
+      "show_tag_chips": {
+        "label": "Címkék megjelenítése a listában",
+        "description": "Címkék megjelenítése a feladó vagy tárgy mellett az üzenetlistában"
+      },
       "plain_text_mode": {
         "label": "Csak szöveges mód",
         "description": "Rich text szerkesztő letiltása és az összes e-mail küldése csak szöveges formátumban, beleértve a válaszokat és továbbításokat"

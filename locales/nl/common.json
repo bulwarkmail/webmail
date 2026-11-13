@@ -2153,6 +2153,10 @@
         "label": "Bijlagen in de lijst tonen",
         "description": "Bijgevoegde bestanden onder elk bericht tonen, zodat je ze direct vanuit de lijst kunt openen. De paperclip blijft hoe dan ook zichtbaar."
       },
+      "show_tag_chips": {
+        "label": "Labels in de lijst tonen",
+        "description": "Labels naast de afzender of het onderwerp in de berichtenlijst tonen"
+      },
       "attachment_click_action": {
         "label": "Actie bij klikken op bijlagen",
         "description": "Kies of een klik op een bijlage een voorbeeld opent of direct downloadt",

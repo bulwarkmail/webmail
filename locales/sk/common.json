@@ -2109,6 +2109,10 @@
         "label": "Zobraziť prílohy v zozname",
         "description": "Zobrazovať priložené súbory pod každou správou, aby sa dali otvoriť priamo zo zoznamu. Ikona spinky sa zobrazuje vždy."
       },
+      "show_tag_chips": {
+        "label": "Zobraziť štítky v zozname",
+        "description": "Zobrazovať štítky vedľa odosielateľa alebo predmetu v zozname správ"
+      },
       "plain_text_mode": {
         "label": "Iba prostý text",
         "description": "Zakázať editor formátovaného textu a odosielať všetky e-maily iba ako prostý text"

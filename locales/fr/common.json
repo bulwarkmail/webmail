@@ -2153,6 +2153,10 @@
         "label": "Afficher les pièces jointes dans la liste",
         "description": "Afficher les fichiers joints sous chaque message pour les ouvrir directement depuis la liste. Le trombone reste affiché dans tous les cas."
       },
+      "show_tag_chips": {
+        "label": "Afficher les étiquettes dans la liste",
+        "description": "Afficher les étiquettes à côté de l'expéditeur ou de l'objet dans la liste des messages"
+      },
       "attachment_click_action": {
         "label": "Action au clic sur les pièces jointes",
         "description": "Choisissez si un clic sur une pièce jointe ouvre un aperçu ou lance immédiatement le téléchargement",

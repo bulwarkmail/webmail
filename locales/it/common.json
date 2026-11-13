@@ -2153,6 +2153,10 @@
         "label": "Mostra gli allegati nell'elenco",
         "description": "Mostra i file allegati sotto ogni messaggio per aprirli direttamente dall'elenco. La graffetta resta visibile in ogni caso."
       },
+      "show_tag_chips": {
+        "label": "Mostra le etichette nell'elenco",
+        "description": "Mostra le etichette accanto al mittente o all'oggetto nell'elenco dei messaggi"
+      },
       "attachment_click_action": {
         "label": "Azione al clic sugli allegati",
         "description": "Scegli se facendo clic su un allegato si apre un'anteprima o si avvia subito il download",

@@ -2106,6 +2106,10 @@
         "label": "Ekleri listede göster",
         "description": "Ekli dosyaları her iletinin altında göster, böylece doğrudan listeden açılabilsinler. Ataç simgesi her durumda görünür."
       },
+      "show_tag_chips": {
+        "label": "Etiketleri listede göster",
+        "description": "İleti listesinde gönderenin veya konunun yanında etiketleri göster"
+      },
       "plain_text_mode": {
         "label": "Yalnızca Düz Metin",
         "description": "Zengin metin düzenleyicisini devre dışı bırak ve yanıtlar ve iletmeler dahil tüm e-postaları yalnızca düz metin olarak gönder"

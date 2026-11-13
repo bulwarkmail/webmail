@@ -27,7 +27,7 @@ import { useAccountStore, type AccountEntry } from "@/stores/account-store";
 import { emailKeyFor, getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
-import { useRowTagDisplay, useTagDisplay } from "@/hooks/use-tag-display";
+import { useRowTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge, TAG_LOZENGE_CLASS } from "./tag-badge";
 import { ROW_TAG_GROUP_CLASS } from "./row-tag-classes";
 import { useEmailDrag } from "@/hooks/use-email-drag";
@@ -482,10 +482,11 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     // One subscription for the row's settings instead of one per setting: a
     // list draws fourteen or so of these rows at a time.
     const {
-      showPreview: showPreviewSetting, tintListRowsByTag, tintListRowsByAccount, density, timeFormat, showAvatarsInJunk,
+      showPreview: showPreviewSetting, showTagChips, tintListRowsByTag, tintListRowsByAccount, density, timeFormat, showAvatarsInJunk,
       interfaceLayout, announceRowPreview, showRowActionButton, swipeRightAction, swipeLeftAction,
     } = useSettingsStore(useShallow((state) => ({
       showPreview: state.showPreview,
+      showTagChips: state.showTagChips,
       tintListRowsByTag: state.tintListRowsByTag,
       tintListRowsByAccount: state.tintListRowsByAccount,
       density: state.density,
@@ -531,7 +532,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const tagScope = useEmailTagScope(email);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
     // Only a row with tags or a folder chip follows the list's width class.
-    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useRowTagDisplay(getEmailTagIds(email.keywords).length > 0 || !!email.sourceFolder);
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useRowTagDisplay((showTagChips && getEmailTagIds(email.keywords).length > 0) || !!email.sourceFolder);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
     const showAccountDot = useShowAccountDot(tintListRowsByAccount);
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
@@ -885,7 +886,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     ) : (sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown)}
                   </span>
                   <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
-                    {tagIds.length > 0 && (
+                    {showTagChips && tagIds.length > 0 && (
                       <span className={cn(ROW_TAG_GROUP_CLASS, mvRow && "me-2")}>
                         {tagIds.map((id) => (
                           <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
@@ -966,7 +967,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     )}>
                       {sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown}
                     </span>
-                    {tagPlacement === 'sender' && tagIds.length > 0 && (
+                    {showTagChips && tagPlacement === 'sender' && tagIds.length > 0 && (
                       <span className={ROW_TAG_GROUP_CLASS}>
                         {tagIds.map((id) => (
                           <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
@@ -1028,7 +1029,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                 </div>
 
                 <div className="mb-1 flex min-w-0 items-center gap-1.5">
-                  {tagPlacement === 'subject' && tagIds.length > 0 && (
+                  {showTagChips && tagPlacement === 'subject' && tagIds.length > 0 && (
                       <span className={ROW_TAG_GROUP_CLASS}>
                         {tagIds.map((id) => (
                           <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
@@ -1168,6 +1169,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     const { threads: t, viewer: tEmailViewer, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tNoSubject = tEmailViewer('no_subject');
     const showPreview = useSettingsStore((state) => state.showPreview);
+    const showTagChips = useSettingsStore((state) => state.showTagChips);
     const density = useSettingsStore((state) => state.density);
     const timeFormat = useSettingsStore((state) => state.timeFormat);
     const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
@@ -1298,13 +1300,13 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
 
     const tagScope = useEmailTagScope(latestEmail);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
+    // A collapsed row speaks for every message under it, so it carries their tags too.
+    const tagIds = sortTagIds(getThreadTagIds(thread.emails));
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useRowTagDisplay((showTagChips && tagIds.length > 0) || !!latestEmail.sourceFolder);
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
     const showAccountDot = useShowAccountDot(tintListRowsByAccount);
-    // A collapsed row speaks for every message under it, so it carries their tags too.
-    const tagIds = sortTagIds(getThreadTagIds(thread.emails));
     const threadTintSource = threadAccountColor
       ?? (latestEmail.sourceClientAccountId ? getAccountById(latestEmail.sourceClientAccountId)?.avatarColor : undefined)
       ?? (latestEmail.accountLabel ? generateAvatarColor(latestEmail.accountLabel) : undefined);
@@ -1675,7 +1677,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                     </span>
                     )}
                     <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
-                      {tagIds.length > 0 && (
+                      {showTagChips && tagIds.length > 0 && (
                         <span className={cn(ROW_TAG_GROUP_CLASS, mvRow && "me-2")}>
                           {tagIds.map((id) => (
                             <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
@@ -1768,7 +1770,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                       )}>
                         {displayNames.join(", ")}
                       </span>
-                      {tagPlacement === 'sender' && tagIds.length > 0 && (
+                      {showTagChips && tagPlacement === 'sender' && tagIds.length > 0 && (
                         <span className={ROW_TAG_GROUP_CLASS}>
                           {tagIds.map((id) => (
                             <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
@@ -1836,7 +1838,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                   </div>
 
                   <div className="mb-1 flex min-w-0 items-center gap-1.5">
-                    {tagPlacement === 'subject' && tagIds.length > 0 && (
+                    {showTagChips && tagPlacement === 'subject' && tagIds.length > 0 && (
                         <span className={ROW_TAG_GROUP_CLASS}>
                           {tagIds.map((id) => (
                             <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />

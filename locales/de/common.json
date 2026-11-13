@@ -2106,6 +2106,10 @@
         "label": "Anhänge in der Liste anzeigen",
         "description": "Angehängte Dateien unter jeder Nachricht zeigen, damit Sie sie direkt aus der Liste öffnen können. Die Büroklammer erscheint in jedem Fall."
       },
+      "show_tag_chips": {
+        "label": "Tags in der Liste anzeigen",
+        "description": "Schlagwörter neben dem Absender oder Betreff in der Nachrichtenliste anzeigen"
+      },
       "plain_text_mode": {
         "label": "Nur Klartext",
         "description": "Rich-Text-Editor deaktivieren und alle E-Mails nur als Klartext senden, einschließlich Antworten und Weiterleitungen"

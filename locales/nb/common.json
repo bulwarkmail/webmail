@@ -2109,6 +2109,10 @@
         "label": "Vis vedlegg i listen",
         "description": "Vis vedlagte filer under hver melding, så du kan åpne dem rett fra listen. Bindersen vises uansett."
       },
+      "show_tag_chips": {
+        "label": "Vis etiketter i listen",
+        "description": "Vis etiketter ved siden av avsender eller emne i meldingslisten"
+      },
       "plain_text_mode": {
         "label": "Kun ren tekst",
         "description": "Deaktiver redigering av formatert tekst, og send all e-post som ren tekst, også svar og videresendinger"

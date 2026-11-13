@@ -2109,6 +2109,10 @@
         "label": "Näita manuseid loendis",
         "description": "Näita manustatud faile iga kirja all, et neid saaks otse loendist avada. Kirjaklambri ikoon on nähtav igal juhul."
       },
+      "show_tag_chips": {
+        "label": "Kuva sildid loendis",
+        "description": "Kuva sildid kirjade loendis saatja või teema kõrval"
+      },
       "plain_text_mode": {
         "label": "Ainult lihttekst",
         "description": "Keela vormindatud teksti redaktor ja saada kõik kirjad ainult lihttekstina, sealhulgas vastused ja edastused"

@@ -2121,6 +2121,10 @@
         "label": "Hiện tệp đính kèm trong danh sách",
         "description": "Hiện các tệp đính kèm bên dưới mỗi thư để mở ngay từ danh sách. Biểu tượng kẹp giấy vẫn hiển thị trong mọi trường hợp."
       },
+      "show_tag_chips": {
+        "label": "Hiển thị nhãn trong danh sách",
+        "description": "Hiển thị huy hiệu nhãn bên cạnh người gửi hoặc chủ đề trong danh sách thư"
+      },
       "plain_text_mode": {
         "label": "Chỉ dùng văn bản thuần",
         "description": "Tắt trình soạn thảo văn bản đa dạng thức và chỉ gửi thư dưới dạng văn bản thuần, kể cả thư trả lời và chuyển tiếp"
