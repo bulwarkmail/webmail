@@ -6752,7 +6752,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div {...messageListPanelProps} className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <ErrorBoundary fallback={EmailListErrorFallback}>
               <EmailList
-                onFindFromSender={mvShell ? (sender) => void handleSelectContactSuggestion(sender, 'from') : undefined}
+                onFindFromSender={(sender) => void handleSelectContactSuggestion(sender, 'from')}
                 hideBatchToolbar={mvShell}
                 selectionPaneHost={emptyPaneBesideList ? selectionPaneHost : null}
                 emails={activeEmails}

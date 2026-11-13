@@ -335,7 +335,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
           ...draft, ...replies, ...restore, ...archive, del, SEPARATOR,
           ...move, ...copy, ...rules, SEPARATOR,
           read, star, ...pin, tag, SEPARATOR,
-          ...spam, ...reportPhishing, SEPARATOR,
+          ...spam, ...reportPhishing, ...find, SEPARATOR,
           ...openWindow, ...links, SEPARATOR,
           ...views, SEPARATOR,
           ...file,
