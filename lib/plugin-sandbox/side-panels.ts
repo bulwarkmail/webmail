@@ -70,3 +70,63 @@ export function subscribeSidePanels(listener: () => void): () => void {
   listeners.add(listener);
   return () => { listeners.delete(listener); };
 }
+
+// The open panel's frame, kept by PluginSidePanelFrame in the layout so it
+// outlives the view drawing the panel (the mail view, a plugin page): each
+// view's panel says where its frame goes (`slot`), null when it leaves the
+// screen; closing the panel drops the frame.
+
+export interface SidePanelFrame {
+  pluginId: string;
+  fill: boolean;
+  focusRequest: number;
+  /** Where the panel on screen wants the frame; null: no panel on screen. */
+  slot: HTMLElement | null;
+}
+
+let frame: SidePanelFrame | null = null;
+/** Counts the plugin's requests to open its panel while its frame lives, so a view switch never changes it. */
+let focusRequests = 0;
+const frameListeners = new Set<() => void>();
+
+function frameChanged(): void {
+  for (const l of frameListeners) {
+    try { l(); } catch { /* ignore */ }
+  }
+}
+
+export function sidePanelFrame(): SidePanelFrame | null {
+  return frame;
+}
+
+export function setSidePanelFrame(next: SidePanelFrame | null): void {
+  frame = next;
+  // A new frame starts counting again.
+  if (!next) focusRequests = 0;
+  frameChanged();
+}
+
+export function sidePanelFocusRequest(): number {
+  return focusRequests;
+}
+
+/** The plugin asked to open its panel: the frame is told to take the focus. */
+export function requestSidePanelFocus(): void {
+  focusRequests += 1;
+  frameChanged();
+}
+
+/** The panel on screen at `slot` went away: its frame stays, hidden. */
+export function leaveSidePanelFrame(slot: HTMLElement): void {
+  if (frame?.slot === slot) setSidePanelFrame({ ...frame, slot: null });
+}
+
+/** Ends the plugin's kept frame (the plugin unloaded). */
+export function dropSidePanelFrame(pluginId: string): void {
+  if (frame?.pluginId === pluginId) setSidePanelFrame(null);
+}
+
+export function subscribeSidePanelFrame(listener: () => void): () => void {
+  frameListeners.add(listener);
+  return () => { frameListeners.delete(listener); };
+}

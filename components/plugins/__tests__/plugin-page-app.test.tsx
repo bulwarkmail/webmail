@@ -34,8 +34,8 @@ const { useCalendarStore } = await import('@/stores/calendar-store');
 const { usePluginStore } = await import('@/stores/plugin-store');
 const { isFillableSlot } = await import('@/lib/plugin-sandbox/slot-layout');
 const { dispatchApiCall } = await import('@/lib/plugin-sandbox/host-api');
-const { clearSidePanel } = await import('@/lib/plugin-sandbox/side-panels');
-const { PluginSidePanel } = await import('../plugin-side-panels');
+const { clearSidePanel, dropSidePanelFrame } = await import('@/lib/plugin-sandbox/side-panels');
+const { PluginSidePanel, PluginSidePanelFrame } = await import('../plugin-side-panels');
 
 function activate(id: string, slots: string[], fill = false) {
   const permissions = ['ui:app-page', 'ui:sidebar-widget'];
@@ -63,6 +63,7 @@ beforeEach(() => {
 afterEach(() => {
   for (const p of registry.all()) {
     clearSidePanel(p.plugin.id);
+    dropSidePanelFrame(p.plugin.id);
     registry.deregister(p.plugin.id);
   }
   pages.resetPages();
@@ -144,7 +145,7 @@ describe('plugin side panels on a plugin page', () => {
 
   it('answers togglePanel("side-panel") and draws the panel beside the page, which narrows', async () => {
     const plugin = showPage();
-    const { container } = render(<PluginPageApp linkSegments={['kanban', 'board']} />);
+    const { container } = render(<><PluginPageApp linkSegments={['kanban', 'board']} /><PluginSidePanelFrame /></>);
     await act(async () => { await dispatchApiCall(plugin, 'ui.setSidePanel', [{ title: 'Upcoming for me', icon: 'flag', rail: false }]); });
     expect(container.querySelector('[data-plugin-side-panel]')).toBeNull();
 
@@ -184,6 +185,52 @@ describe('plugin side panels on a plugin page', () => {
     // ... and closed there, it is closed back in the mail.
     const back = render(<PluginSidePanel />);
     expect(back.container.querySelector('[data-plugin-side-panel]')).toBeNull();
+  });
+
+  it('keeps the panel\'s frame from the mail to the page and back, and from page to page', async () => {
+    const plugin = showPage();
+    act(() => pages.setPluginPages('kanban', 'Kanban', [{ id: 'board', title: 'Board' }, { id: 'list', title: 'List' }]));
+    const sidePanelFrames = () => createSlotInstance.mock.calls.filter((c) => (c[0] as { slot: string }).slot === 'side-panel');
+    render(<PluginSidePanelFrame />);
+    const mail = render(<PluginSidePanel />);
+    await act(async () => { await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open']); });
+    await waitFor(() => expect(sidePanelFrames()).toHaveLength(1));
+    const box = document.querySelector('[data-plugin-side-panel-frame="kanban"]')!;
+    const wrapper = box.querySelector('[data-plugin-iframe-slot]');
+    mail.unmount();
+
+    const board = render(<PluginPageApp linkSegments={['kanban', 'board']} />);
+    expect(board.container.querySelector('[data-plugin-side-panel="kanban"]')).not.toBeNull();
+    board.unmount();
+    const list = render(<PluginPageApp linkSegments={['kanban', 'list']} />);
+    expect(list.container.querySelector('[data-plugin-side-panel="kanban"]')).not.toBeNull();
+    list.unmount();
+    render(<PluginSidePanel />);
+
+    expect(box).not.toHaveClass('hidden');
+    expect(box.querySelector('[data-plugin-iframe-slot]')).toBe(wrapper);
+    expect(sidePanelFrames()).toHaveLength(1);
+  });
+
+  it('keeps the frame\'s focusRequest over a view switch, and counts on from there', async () => {
+    const plugin = showPage();
+    render(<PluginSidePanelFrame />);
+    const mail = render(<PluginSidePanel />);
+    await act(async () => { await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open']); });
+    await waitFor(() => expect(createSlotInstance.mock.calls.some((c) => (c[0] as { slot: string }).slot === 'side-panel')).toBe(true));
+    const index = createSlotInstance.mock.calls.findIndex((c) => (c[0] as { slot: string }).slot === 'side-panel');
+    expect((createSlotInstance.mock.calls[index][0] as { extraProps: unknown }).extraProps).toEqual({ focusRequest: 1 });
+    const instance = createSlotInstance.mock.results[index].value as { updateProps: ReturnType<typeof vi.fn> };
+    const seen = () => instance.updateProps.mock.calls.map((c) => (c[0] as { focusRequest: number }).focusRequest);
+
+    mail.unmount();
+    const page = render(<PluginPageApp linkSegments={['kanban', 'board']} />);
+    expect(page.container.querySelector('[data-plugin-side-panel="kanban"]')).not.toBeNull();
+    expect(seen().every((n) => n === 1)).toBe(true);
+
+    await act(async () => { await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open']); });
+    expect(seen().at(-1)).toBe(2);
+    expect(seen().every((n) => n === 1 || n === 2)).toBe(true);
   });
 
   it('puts it in Mountain View\'s side panel beside the card, without the apps\' panels', async () => {

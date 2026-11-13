@@ -8,11 +8,11 @@ vi.mock('@/lib/plugin-sandbox/host-bridge', () => ({
 }));
 vi.mock('@/lib/plugin-sandbox/host-theme', () => ({ snapshotHostTheme: () => ({}) }));
 
-const { PluginSidePanel } = await import('../plugin-side-panels');
+const { PluginSidePanel, PluginSidePanelFrame } = await import('../plugin-side-panels');
 const { MvSidePanel } = await import('@/components/layout/mv-side-panel');
 const registry = await import('@/lib/plugin-sandbox/registry');
 const { dispatchApiCall } = await import('@/lib/plugin-sandbox/host-api');
-const { clearSidePanel } = await import('@/lib/plugin-sandbox/side-panels');
+const { clearSidePanel, dropSidePanelFrame } = await import('@/lib/plugin-sandbox/side-panels');
 const { useCalendarStore } = await import('@/stores/calendar-store');
 const { useSettingsStore } = await import('@/stores/settings-store');
 
@@ -41,6 +41,7 @@ beforeEach(() => {
 afterEach(() => {
   for (const p of registry.all()) {
     clearSidePanel(p.plugin.id);
+    dropSidePanelFrame(p.plugin.id);
     registry.deregister(p.plugin.id);
   }
 });
@@ -54,7 +55,7 @@ describe('PluginSidePanel (default layout)', () => {
 
   it('gives each plugin a button in the rail that opens and closes its panel, filled by the frame', async () => {
     offer('fu', 'Follow-ups', { fill: true });
-    const { container } = render(<PluginSidePanel />);
+    const { container } = render(<><PluginSidePanel /><PluginSidePanelFrame /></>);
     const button = screen.getByRole('button', { name: 'Follow-ups' });
     expect(button).toHaveAttribute('aria-pressed', 'false');
     expect(container.querySelector('[data-plugin-side-panel]')).toBeNull();
@@ -112,7 +113,7 @@ describe('PluginSidePanel (default layout)', () => {
 
   it('opens on the plugin\'s request with a new focusRequest, and answers null without a panel on screen', async () => {
     const plugin = offer('fu', 'Follow-ups');
-    const { container, unmount } = render(<PluginSidePanel />);
+    const { container, unmount } = render(<><PluginSidePanel /><PluginSidePanelFrame /></>);
     let answer: unknown;
     await act(async () => { answer = await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open']); });
     expect(answer).toBe(true);
@@ -126,6 +127,77 @@ describe('PluginSidePanel (default layout)', () => {
 
     unmount();
     await expect(dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open'])).resolves.toBeNull();
+  });
+});
+
+// The frame lives in the layout (PluginSidePanelFrame), laid over the panel
+// on screen, so going from one view to another does not start it anew.
+describe('PluginSidePanelFrame', () => {
+  beforeEach(() => {
+    useCalendarStore.setState({ supportsCalendar: false } as never);
+    createSlotInstance.mockImplementation((...args: unknown[]) => {
+      (args[0] as { hostContainer: HTMLElement }).hostContainer.append(document.createElement('iframe'));
+      return { destroy: vi.fn(), updateProps: vi.fn(), setTheme: vi.fn() };
+    });
+  });
+  afterEach(() => {
+    createSlotInstance.mockImplementation(() => ({ destroy: vi.fn(), updateProps: vi.fn(), setTheme: vi.fn() }));
+  });
+
+  const frameBox = () => document.querySelector('[data-plugin-side-panel-frame]');
+
+  it('keeps the frame from one view\'s panel to the next, hidden while no panel is on screen', async () => {
+    offer('fu', 'Follow-ups', { fill: true });
+    render(<PluginSidePanelFrame />);
+    const mail = render(<PluginSidePanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups' }));
+    await waitFor(() => expect(frameBox()?.querySelector('iframe')).not.toBeNull());
+    const iframe = frameBox()!.querySelector('iframe');
+    expect(frameBox()).not.toHaveClass('hidden');
+    expect(mail.container.querySelector('[data-plugin-slot="side-panel"]')).toHaveAttribute('aria-owns', frameBox()!.id);
+
+    // No panel on screen (the calendar, say): the frame runs on, hidden.
+    mail.unmount();
+    expect(frameBox()).toHaveClass('hidden');
+    expect(iframe!.isConnected).toBe(true);
+
+    // Mountain View's panel takes the same frame.
+    const mv = render(<MvSidePanel />);
+    expect(mv.container.querySelector('[data-plugin-side-panel="fu"]')).not.toBeNull();
+    expect(frameBox()).not.toHaveClass('hidden');
+    expect(frameBox()!.querySelector('iframe')).toBe(iframe);
+    expect(createSlotInstance).toHaveBeenCalledTimes(1);
+    const instance = createSlotInstance.mock.results[0].value as { destroy: ReturnType<typeof vi.fn> };
+    expect(instance.destroy).not.toHaveBeenCalled();
+
+    // Closed, the frame ends.
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    expect(frameBox()).toBeNull();
+    expect(instance.destroy).toHaveBeenCalled();
+  });
+
+  it('starts another plugin\'s frame when the panel switches to it', async () => {
+    offer('fu', 'Follow-ups');
+    offer('jira', 'Jira');
+    render(<PluginSidePanelFrame />);
+    render(<PluginSidePanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups' }));
+    await waitFor(() => expect(createSlotInstance).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole('button', { name: 'Jira' }));
+    await waitFor(() => expect(createSlotInstance).toHaveBeenCalledTimes(2));
+    expect((createSlotInstance.mock.results[0].value as { destroy: ReturnType<typeof vi.fn> }).destroy).toHaveBeenCalled();
+    expect(frameBox()).toHaveAttribute('data-plugin-side-panel-frame', 'jira');
+  });
+
+  it('answers a plugin\'s request once, from the panel on screen', async () => {
+    const plugin = offer('fu', 'Follow-ups');
+    render(<PluginSidePanelFrame />);
+    await expect(dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open'])).resolves.toBeNull();
+    render(<PluginSidePanel />);
+    let answer: unknown;
+    await act(async () => { answer = await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'toggle']); });
+    expect(answer).toBe(true);
+    await waitFor(() => expect(createSlotInstance).toHaveBeenCalledTimes(1));
   });
 });
 
