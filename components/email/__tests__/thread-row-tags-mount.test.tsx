@@ -136,6 +136,29 @@ describe('tag chips in message rows', () => {
     expect(rowElement?.className).toContain('bg-red-50');
   });
 
+  it.each([true, false])('a collapsed conversation row follows showTagChips=%s', (showTagChips) => {
+    useSettingsStore.setState({ showTagChips });
+    const [thread] = groupEmailsByThread([
+      makeTaggedEmail(),
+      makeTaggedEmail({ id: 'e2', receivedAt: '2026-01-16T10:00:00Z', keywords: { $seen: true, '$label:urgent': true } }),
+    ]);
+    expect(thread.emailCount).toBe(2);
+
+    render(
+      <ThreadListItem
+        thread={thread}
+        isExpanded={false}
+        onToggleExpand={() => {}}
+        onEmailSelect={() => {}}
+      />
+    );
+
+    for (const label of ['Work', 'Urgent']) {
+      if (showTagChips) expect(screen.getByText(label)).toBeInTheDocument();
+      else expect(screen.queryByText(label)).toBeNull();
+    }
+  });
+
   it('hides tag badges in expanded child ThreadEmailItem when showTagChips is false', () => {
     useSettingsStore.setState({ showTagChips: false });
     const email = makeTaggedEmail();
