@@ -356,7 +356,9 @@ async function fetchIdentityEmails(
         ...forwardedClientHeaders(options.clientIp),
       },
       body: JSON.stringify({
-        using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
+        // Identity methods belong to the submission capability (RFC 8621
+        // section 1.3.2); Stalwart answers unknownMethod without it (#1643).
+        using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail', 'urn:ietf:params:jmap:submission'],
         methodCalls: [['Identity/get', { accountId, ids: null }, '0']],
       }),
       signal: controller.signal,
