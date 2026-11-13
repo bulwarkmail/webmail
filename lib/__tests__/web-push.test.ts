@@ -1304,7 +1304,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
 
     expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
     const params = (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(params.types).toEqual(['EmailDelivery']);
+    expect(params.types).toEqual([]);
     expect(params.emailPush).toEqual(EXPECTED_EMAIL_PUSH);
   });
 
@@ -1317,6 +1317,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
 
     const params = (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(params).not.toHaveProperty('emailPush');
+    expect(params.types).toEqual(['EmailDelivery']);
     expect(client.getAllMailboxes).not.toHaveBeenCalled();
   });
 
@@ -1336,6 +1337,23 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     );
   });
 
+  it('updates types from EmailDelivery to [] on existing subscription when emailPush is supported (#1650)', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient(
+      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: ['EmailDelivery'] })],
+      { emailPushCapability: true },
+    );
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(client.updatePushSubscription).toHaveBeenCalledWith(
+      'push-old',
+      expect.objectContaining({ types: [] }),
+    );
+  });
+
   it('re-syncs a filter whose Junk mailbox id went stale', async () => {
     localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
     localStorage.setItem(SUB_KEY, 'push-old');
@@ -1350,7 +1368,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
       },
     };
     const client = makeClient(
-      [sub('push-old', THIS_DEVICE, { emailPush: stale })],
+      [sub('push-old', THIS_DEVICE, { emailPush: stale, types: [] })],
       { emailPushCapability: true },
     );
     installFetch({});
@@ -1374,7 +1392,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
       filter: stored[ACCOUNT_ID].filter,
     };
     const client = makeClient(
-      [sub('push-old', THIS_DEVICE, { emailPush: stored })],
+      [sub('push-old', THIS_DEVICE, { emailPush: stored, types: [] })],
       { emailPushCapability: true },
     );
     installFetch({});
@@ -1530,7 +1548,7 @@ describe('enableWebPush with a mailbox shared by ACL', () => {
     localStorage.setItem(SUB_KEY, 'push-old');
     localStorage.setItem(REFUSED_KEY, JSON.stringify([ACL_ACCOUNT_ID]));
     const client = makeClient(
-      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH })],
+      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: [] })],
       { emailPushCapability: true, accounts: SESSION_0_16 },
     );
 
