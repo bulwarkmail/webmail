@@ -616,7 +616,8 @@ interface EmailStore {
 
   // Batch operations
   /** Acts on the selection, or on `target`'s messages when given. */
-  batchMarkAsRead: (client: IJMAPClient, read: boolean, target?: BatchActionTarget) => Promise<boolean>;
+  // onFailure reports this write independently of the view-scoped error field.
+  batchMarkAsRead: (client: IJMAPClient, read: boolean, target?: BatchActionTarget, onFailure?: (error: unknown) => void) => Promise<boolean>;
   /**
    * Put a tag on, or take it off, every selected message. Their other tags
    * and keywords stay as they are, and so does the selection, so several
@@ -6406,7 +6407,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   // Batch operations
-  batchMarkAsRead: async (client, read, target): Promise<boolean> => {
+  batchMarkAsRead: async (client, read, target, onFailure): Promise<boolean> => {
     const { emails, selectedEmailKeys } = get();
     const epoch = currentStoreEpoch();
     const auth = useAuthStore.getState();
@@ -6523,6 +6524,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
       const changed = (email: Email) => (targetIds ? changedIds.has(email.id) : changedKeys.has(emailKeyFor(email)));
       if (failure && (targetIds ? changedIds.size : changedKeys.size) === 0) throw failure;
+      if (failure) onFailure?.(failure);
 
       // The dispatched mutation still succeeded if its UI has gone away.
       if (!ownsState()) {
@@ -6614,6 +6616,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (changedIds.size > 0) void emailHooks.onEmailReadStateChange.emit({ emailIds: [...changedIds], read });
       refillAfterKeywordChange(get, client, ['$seen']);
     } catch (error) {
+      onFailure?.(error);
       if (ownsState() && isCurrentList()) {
         set({
           error: error instanceof Error ? error.message : "Failed to update emails",

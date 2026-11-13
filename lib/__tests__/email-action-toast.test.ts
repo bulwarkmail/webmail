@@ -45,7 +45,7 @@ describe('runBatchEmailAction', () => {
   });
 });
 
-it.each(['accepted', 'refused', 'thrown'])('bulk read feedback stays with its initiating view after %s completion', async outcome => {
+it.each(['accepted', 'veto', 'thrown'])('abandoned-account bulk read feedback stays suppressed after %s completion', async outcome => {
   const { markSelectionReadWithUndo } = await import('../email-action-toast');
   const { clearAllStores } = await import('@/lib/account-state-manager');
   let resolve!: (value: boolean) => void;
