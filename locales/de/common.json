@@ -2108,7 +2108,7 @@
       },
       "show_tag_chips": {
         "label": "Tags in der Liste anzeigen",
-        "description": "Schlagwörter neben dem Absender oder Betreff in der Nachrichtenliste anzeigen"
+        "description": "Tags neben dem Absender oder Betreff in der Nachrichtenliste anzeigen"
       },
       "plain_text_mode": {
         "label": "Nur Klartext",
