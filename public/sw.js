@@ -627,6 +627,14 @@ async function handlePush(event) {
   const withNewMail = emailIds.length > 0 || !changed
     ? []
     : Object.keys(changed).filter((id) => changed[id] && typeof changed[id] === "object" && "EmailDelivery" in changed[id]);
+  // A state change that names no EmailDelivery is not new mail: a subscription
+  // the server filled in with every type (Stalwart before 1.0.3, #1650), or an
+  // older one with broader types. A failed preview would turn it into a
+  // generic "New mail" that rings, so it doesn't get that far.
+  if (changed && emailIds.length === 0 && withNewMail.length === 0) {
+    await showWithoutAlert("bulwark-mail:" + (named || "default"));
+    return;
+  }
   // Previews still on their way after their notification was shown.
   const lingering = [];
   // Side by side: each has its own preview deadline, and Safari wants the
