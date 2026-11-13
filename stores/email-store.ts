@@ -6404,6 +6404,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   // Batch operations
   batchMarkAsRead: async (client, read, target): Promise<boolean> => {
     const { emails } = get();
+    const epoch = currentStoreEpoch();
     // The selection is keyed by owning account; JMAP takes the bare ids of
     // exactly those emails, never the keys and never a lookup by id (which
     // is what let a namesake in another account ride along). A targeted call
@@ -6534,8 +6535,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           : member));
       }
 
+      // Keep the current reader's full message, patching only the accepted
+      // read state. A targeted write has ids rather than scoped selection keys.
+      const selectedEmail = get().selectedEmail;
+      const selectedSource = target && selectedEmail ? resolveEmailBlobContext(selectedEmail, useAuthStore.getState().client) : null;
+      // An account switch invalidates even bare-id matches; folder navigation does not.
+      const selectedChanged = currentStoreEpoch() === epoch && selectedEmail && (target
+        ? changedIds.has(selectedEmail.id) && selectedSource?.client === target.client
+          && (selectedSource.accountId ?? target.client.getAccountId()) === (target.accountId ?? target.client.getAccountId())
+        : changedKeys.has(emailKeyFor(selectedEmail)));
+
       set({
         emails: updatedEmails,
+        selectedEmail: selectedEmail && selectedChanged
+          ? { ...selectedEmail, keywords: { ...selectedEmail.keywords, $seen: read } }
+          : selectedEmail,
         ...mailboxPatch,
         tagCounts,
         retainedInViewIds,
