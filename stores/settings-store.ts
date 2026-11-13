@@ -1080,6 +1080,14 @@ interface SettingsState extends AccessibilitySettings {
   forgetSyncedSettings: () => void;
 }
 
+/**
+ * German words for an attachment, added to the built-in list (#1672). The
+ * list is matched as text inside the message, so a word that is also part
+ * of other words stays out: "anlage" (Geldanlage, Solaranlage) and
+ * "anhänge" (Anhänger).
+ */
+const GERMAN_ATTACHMENT_KEYWORDS_1672 = ['beigefügt', 'beiliegend', 'angefügt', 'in der anlage', 'als anlage'];
+
 const DEFAULT_SETTINGS = {
   // Appearance
   fontSize: 'medium' as FontSize,
@@ -1273,7 +1281,7 @@ const DEFAULT_SETTINGS = {
     // English
     'attached', 'attachment', 'attachments', 'see attached', 'find attached', 'please find attached',
     // German
-    'angehängt', 'anhang', 'anbei', 'im anhang',
+    'angehängt', 'anhang', 'anbei', 'im anhang', ...GERMAN_ATTACHMENT_KEYWORDS_1672,
     // French
     'ci-joint', 'pièce jointe',
     // Spanish
@@ -1936,6 +1944,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateNotificationSoundDefault(settings);
           migrateTintListRowsDefault(settings);
           migrateCalendarTasksDefault(settings);
+          migrateAttachmentKeywordsDefault(settings);
           migrateUndoSendDefault(settings);
           migrateTrustedSendersBookDefault(settings);
           migrateFocusOutlineDefault(settings);
@@ -2412,6 +2421,7 @@ export const useSettingsStore = create<SettingsState>()(
             }
             // Stored before tasks were on by default; no version step of its own.
             migrateCalendarTasksDefault(state as unknown as Record<string, unknown>);
+            migrateAttachmentKeywordsDefault(state as unknown as Record<string, unknown>);
             state.notificationMutes = normalizeNotificationMutes(state.notificationMutes);
             state.messageListOrder = sanitizeSortLevels(state.messageListOrder);
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {
@@ -2503,6 +2513,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateNotificationSoundDefault(state);
         migrateTintListRowsDefault(state);
         migrateCalendarTasksDefault(state);
+        migrateAttachmentKeywordsDefault(state);
         migrateUndoSendDefault(state);
         migrateTrustedSendersBookDefault(state);
         migrateFocusOutlineDefault(state);
@@ -2631,6 +2642,20 @@ export function migrateCalendarTasksDefault(state: Record<string, unknown>): voi
   if (state.enableCalendarTasks !== false) return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('enableCalendarTasks');
   if (!chosen) state.enableCalendarTasks = true;
+}
+
+/**
+ * The attachment reminder's words, stored as the built-in list from before
+ * #1672 by a user who never changed them, become the current built-in list.
+ * A list the user changed stays as it is. No version step of its own.
+ */
+export function migrateAttachmentKeywordsDefault(state: Record<string, unknown>): void {
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('attachmentReminderKeywords');
+  if (chosen) return;
+  const before = DEFAULT_SETTINGS.attachmentReminderKeywords.filter((k) => !GERMAN_ATTACHMENT_KEYWORDS_1672.includes(k));
+  if (sameSettingValue(state.attachmentReminderKeywords, before)) {
+    state.attachmentReminderKeywords = [...DEFAULT_SETTINGS.attachmentReminderKeywords];
+  }
 }
 
 /**
