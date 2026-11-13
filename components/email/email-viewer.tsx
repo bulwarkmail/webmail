@@ -6452,7 +6452,10 @@ export function EmailViewer({
             (mvOpenFolded || mvAwaitingConversation) && "hidden",
             // Mountain View indents the body under the sender's name, as Gmail does.
             mvViewer && "lg:ps-[60px]",
-            !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background"
+            !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background",
+            // Mail in the app's colours paints the card colour itself; painted
+            // twice, a translucent card colour would show darker behind it.
+            readingCard && reading.overrideStyles && effectiveEmailContent.isHtml && "bg-transparent"
           )}
           style={isDark && !readingCard ? { backgroundColor: '#121212' } : undefined}>
             <ReadAloudBar state={readAloud.state} onPause={readAloud.pause} onResume={readAloud.resume} onStop={readAloud.stop} />

@@ -126,7 +126,7 @@ describe('mailOverrideCss', () => {
 
   it('puts the app font, size and colours on the mail', () => {
     const css = mailOverrideCss(base);
-    expect(css).toContain('html,body{background:#fafafa!important;color:#111111!important}');
+    expect(css).toContain('html{background:#fafafa!important}body{background:transparent!important}html,body{color:#111111!important}');
     expect(css).toContain('font-family:"Lexend", sans-serif!important;font-size:calc(0.875rem * 1.25)!important');
     expect(css).toMatch(/body \*:not\([^)]*\)\{font-family:inherit!important;font-size:1em!important[^}]*color:#111111!important;background-color:transparent!important;background-image:none!important/);
     expect(css).toContain('a[href],a[href] *{color:#1d4ed8!important}');

@@ -209,7 +209,9 @@ export function mailOverrideCss(o: MailOverride): string {
   // Everything that holds text; images and media keep their own look.
   const text = 'body *:not(svg,svg *,img,picture,video,canvas)';
   const parts = [
-    `html,body{background:${bg}!important;color:${fg}!important}`,
+    // The colour on <html> only: on both, a translucent one (a theme's card
+    // colour) would be painted twice.
+    `html{background:${bg}!important}body{background:transparent!important}html,body{color:${fg}!important}`,
     `body{font-family:${font}!important;font-size:${bodySize}!important;line-height:${LINE_HEIGHT[o.lineSpacing]}!important}`,
     // Sizes follow the body, headings keep a step above it.
     `${text}{font-family:inherit!important;font-size:1em!important;line-height:inherit!important;color:${fg}!important;background-color:transparent!important;background-image:none!important;text-shadow:none!important}`,

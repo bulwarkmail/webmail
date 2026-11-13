@@ -283,7 +283,10 @@ describe('message card', () => {
     document.documentElement.style.setProperty('--color-card', '#141414');
     try {
       const { container } = await show(message({ html: '<p>Some text</p>' }));
-      expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('html,body{background:#141414!important');
+      expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('html{background:#141414!important}');
+      // The mail paints the card colour itself; painting it again behind the
+      // mail would show where the card colour is translucent (Aurora Glass).
+      expect(container.querySelector('[data-reader-body]')).toHaveClass('bg-transparent');
     } finally {
       document.documentElement.style.removeProperty('--color-background');
       document.documentElement.style.removeProperty('--color-card');
