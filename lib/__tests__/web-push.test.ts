@@ -32,6 +32,7 @@ const OTHER_DEVICE = '11111111222222223333333344444444';
 const DEVICE_KEY = `bulwark.push.deviceClientId.v1.${ACCOUNT_ID}`;
 const SUB_KEY = `bulwark.push.subscriptionId.v1.${ACCOUNT_ID}`;
 const REFUSED_KEY = `bulwark.push.emailPushRefused.v1.${ACCOUNT_ID}`;
+const EMPTY_TYPES_TRIED_KEY = `bulwark.push.emptyTypesTried.v1.${ACCOUNT_ID}`;
 
 function sub(
   id: string,
@@ -290,6 +291,9 @@ function installFetch(activeByDevice: Record<string, boolean | 'unknown'>) {
 
 beforeEach(() => {
   localStorage.clear();
+  // This browser already tried the empty types list, so an existing
+  // subscription is refreshed, not replaced. The replacement has its own tests.
+  localStorage.setItem(EMPTY_TYPES_TRIED_KEY, '1');
   resetWebPushResyncState();
   installPushBrowser();
 });
@@ -1337,7 +1341,8 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     );
   });
 
-  it('updates types from EmailDelivery to [] on existing subscription when emailPush is supported (#1650)', async () => {
+  it('replaces a subscription made with EmailDelivery by one with an empty types list, once (#1650)', async () => {
+    localStorage.removeItem(EMPTY_TYPES_TRIED_KEY);
     localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
     localStorage.setItem(SUB_KEY, 'push-old');
     const client = makeClient(
@@ -1346,12 +1351,95 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     );
     installFetch({});
 
+    const result = await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(result.subscriptionId).toBe('push-new');
+    expect(createCalls(client)[0]).toMatchObject({ types: [], emailPush: EXPECTED_EMAIL_PUSH });
+    expect(client.destroyed).toEqual(['push-old']);
+
+    // Where the server gave it EmailDelivery back (before Stalwart 1.0.3), it stays.
+    const again = makeClient(
+      [sub('push-new', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: ['EmailDelivery'] })],
+      { emailPushCapability: true },
+    );
+    await enableWebPush({ client: again, relayBaseUrl: RELAY, inboxOnly: false });
+    expect(again.createPushSubscription).not.toHaveBeenCalled();
+    expect(again.destroyed).toEqual([]);
+  });
+
+  it('never empties the types list with an update, which silences Stalwart before 1.0.3 (#1650)', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient(
+      [sub('push-old', THIS_DEVICE, { types: ['EmailDelivery'], expires: new Date(Date.now() + 60_000).toISOString() })],
+      { emailPushCapability: true },
+    );
+    installFetch({});
+
     await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
 
-    expect(client.updatePushSubscription).toHaveBeenCalledWith(
-      'push-old',
-      expect.objectContaining({ types: [] }),
+    const patches = updateCalls(client) as Array<{ types?: string[] }>;
+    expect(patches.length).toBeGreaterThan(0);
+    for (const patch of patches) expect(patch.types).not.toEqual([]);
+  });
+
+  it('keeps an empty types list the server kept on a refresh', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient(
+      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: [], expires: new Date(Date.now() + 60_000).toISOString() })],
+      { emailPushCapability: true },
     );
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(client.updatePushSubscription).toHaveBeenCalledTimes(1);
+    expect(updateCalls(client)[0]).not.toHaveProperty('types');
+  });
+
+  it('sets EmailDelivery when the server filled the empty list with every type, as Stalwart before 1.0.3 does (#1650)', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    const client = makeClient([], { emailPushCapability: true });
+    (client.listPushSubscriptions as ReturnType<typeof vi.fn>).mockImplementation(async () =>
+      (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls.length > 0
+        ? [sub('push-new', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: ['Email', 'EmailDelivery', 'Mailbox', 'Thread'] })]
+        : []);
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(createCalls(client)[0]).toMatchObject({ types: [] });
+    expect(client.updatePushSubscription).toHaveBeenLastCalledWith('push-new', { types: ['EmailDelivery'] });
+  });
+
+  it('leaves an empty list the server kept as it is after creating', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    const client = makeClient([], { emailPushCapability: true });
+    (client.listPushSubscriptions as ReturnType<typeof vi.fn>).mockImplementation(async () =>
+      (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls.length > 0
+        ? [sub('push-new', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: [] })]
+        : []);
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('keeps EmailDelivery when the server took a narrower map than the one built', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    // Stalwart 0.16 refuses the group in the map; its mail still has to come.
+    const client = makeClient([], { emailPushCapability: true, members: [ACCOUNT_ID] });
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    const calls = createCalls(client) as Array<{ types: string[]; emailPush?: Record<string, EmailPushConfig> }>;
+    expect(calls[0].types).toEqual([]);
+    const accepted = calls[calls.length - 1];
+    expect(mapKeys(accepted.emailPush)).toEqual([ACCOUNT_ID]);
+    expect(accepted.types).toEqual(['EmailDelivery']);
   });
 
   it('re-syncs a filter whose Junk mailbox id went stale', async () => {
