@@ -1225,6 +1225,7 @@
       "link_text": "النص",
       "link_invalid": "يجب ألا يحتوي العنوان على مسافات",
       "table": "جدول",
+      "format_painter": "نسخ التنسيق",
       "clear_formatting": "مسح التنسيق",
       "undo": "تراجع",
       "redo": "إعادة",

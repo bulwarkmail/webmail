@@ -1225,6 +1225,7 @@
       "link_text": "Text",
       "link_invalid": "Die Adresse darf keine Leerzeichen enthalten",
       "table": "Tabelle",
+      "format_painter": "Format übertragen",
       "clear_formatting": "Formatierung löschen",
       "undo": "Rückgängig",
       "redo": "Wiederholen",

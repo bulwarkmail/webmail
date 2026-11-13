@@ -1239,6 +1239,7 @@
       "link_text": "Văn bản",
       "link_invalid": "Địa chỉ không được chứa dấu cách",
       "table": "Bảng",
+      "format_painter": "Sao chép định dạng",
       "clear_formatting": "Xóa định dạng",
       "undo": "Hoàn tác",
       "redo": "Làm lại",

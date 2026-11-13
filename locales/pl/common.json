@@ -1225,6 +1225,7 @@
       "link_text": "Tekst",
       "link_invalid": "Adres nie może zawierać spacji",
       "table": "Tabela",
+      "format_painter": "Malarz formatów",
       "clear_formatting": "Wyczyść formatowanie",
       "undo": "Cofnij",
       "redo": "Ponów",

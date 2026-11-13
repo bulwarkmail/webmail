@@ -1225,6 +1225,7 @@
       "link_text": "Teksts",
       "link_invalid": "Adresē nedrīkst būt atstarpju",
       "table": "Tabula",
+      "format_painter": "Kopēt formatējumu",
       "clear_formatting": "Notīrīt formatējumu",
       "undo": "Atsaukt",
       "redo": "Atkārtot",

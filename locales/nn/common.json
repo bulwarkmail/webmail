@@ -1235,6 +1235,7 @@
       "link_text": "Tekst",
       "link_invalid": "Adressa kan ikkje innehalde mellomrom",
       "table": "Tabell",
+      "format_painter": "Kopier formatering",
       "clear_formatting": "Fjern formatering",
       "undo": "Angre",
       "redo": "Gjer om",

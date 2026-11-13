@@ -1169,6 +1169,7 @@
       "link_text": "טקסט",
       "link_invalid": "הכתובת לא יכולה להכיל רווחים",
       "table": "טבלה",
+      "format_painter": "העתק עיצוב",
       "clear_formatting": "ניקוי עיצוב",
       "undo": "ביטול",
       "redo": "ביצוע מחדש",

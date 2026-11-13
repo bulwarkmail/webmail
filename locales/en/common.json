@@ -1227,6 +1227,7 @@
       "link_text": "Text",
       "link_invalid": "The address can't contain spaces",
       "table": "Table",
+      "format_painter": "Format painter",
       "clear_formatting": "Clear formatting",
       "undo": "Undo",
       "redo": "Redo",

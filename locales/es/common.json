@@ -1225,6 +1225,7 @@
       "link_text": "Texto",
       "link_invalid": "La dirección no puede contener espacios",
       "table": "Tabla",
+      "format_painter": "Copiar formato",
       "clear_formatting": "Borrar formato",
       "undo": "Deshacer",
       "redo": "Rehacer",

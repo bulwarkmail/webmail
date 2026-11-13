@@ -1225,6 +1225,7 @@
       "link_text": "Text",
       "link_invalid": "Adresa nesmie obsahovať medzery",
       "table": "Tabuľka",
+      "format_painter": "Kopírovať formát",
       "clear_formatting": "Vymazať formátovanie",
       "undo": "Späť",
       "redo": "Znova",

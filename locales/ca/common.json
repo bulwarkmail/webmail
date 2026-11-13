@@ -1225,6 +1225,7 @@
       "link_text": "Text",
       "link_invalid": "L'adreça no pot tenir espais",
       "table": "Taula",
+      "format_painter": "Copia el format",
       "clear_formatting": "Neteja el format",
       "undo": "Desfés",
       "redo": "Refés",

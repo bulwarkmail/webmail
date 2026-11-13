@@ -1225,6 +1225,7 @@
       "link_text": "Texte",
       "link_invalid": "L'adresse ne peut pas contenir d'espaces",
       "table": "Tableau",
+      "format_painter": "Reproduire la mise en forme",
       "clear_formatting": "Effacer la mise en forme",
       "undo": "Annuler",
       "redo": "Rétablir",

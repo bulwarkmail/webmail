@@ -1225,6 +1225,7 @@
       "link_text": "Tekst",
       "link_invalid": "Aadressis ei tohi olla tühikuid",
       "table": "Tabel",
+      "format_painter": "Vormingu kopeerimine",
       "clear_formatting": "Eemalda vormindus",
       "undo": "Võta tagasi",
       "redo": "Tee uuesti",

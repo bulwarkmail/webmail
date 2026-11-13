@@ -1225,6 +1225,7 @@
       "link_text": "Szöveg",
       "link_invalid": "A cím nem tartalmazhat szóközt",
       "table": "Táblázat",
+      "format_painter": "Formátum másolása",
       "clear_formatting": "Formázás törlése",
       "undo": "Visszavonás",
       "redo": "Újra",

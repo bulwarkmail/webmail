@@ -1225,6 +1225,7 @@
       "link_text": "Tekst",
       "link_invalid": "Adressen må ikke indeholde mellemrum",
       "table": "Tabel",
+      "format_painter": "Kopiér formatering",
       "clear_formatting": "Ryd formatering",
       "undo": "Fortryd",
       "redo": "Gentag",
