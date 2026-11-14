@@ -6358,7 +6358,16 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // a cleared keyword is removed (null), since a keyword map holds `true`
     // values only.
     const patch = Object.fromEntries(keys.map(key => [keywordPointer(key), changes[key] ? true : null]));
+    const epoch = currentStoreEpoch();
     await actionClient.batchUpdateKeywords([emailId], patch, accountId);
+
+    // An account switch can replace an unstamped row with another login's
+    // namesake. The write succeeded, but its local completion no longer owns
+    // these stores. Keep the confirmed outcome and hook without patching them.
+    if (currentStoreEpoch() !== epoch) {
+      void emailHooks.onEmailKeywordChange.emit({ emailIds: [emailId], ...keywordChangeLists(changes) });
+      return true;
+    }
 
     const previous = (context
       ? source?.email ?? get().emails.find(isTarget)
@@ -6382,12 +6391,27 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         : singleEmailMatcher(emailId, emailKey);
       // A message read outside the list changes only a row that is that message.
       if (source && !state.emails.some(isTarget) && !(state.selectedEmail && isTarget(state.selectedEmail))) return {};
-      // This patch replaces the whole keyword map, so it can flip $seen as well
-      // as labels. Only a genuine read-state change moves the tag unread counts.
-      const previous = state.emails.find(isTarget) ?? state.selectedEmail;
+      // Only this message can supply the old read state and folder membership.
+      const previous = state.emails.find(isTarget)
+        ?? (state.selectedEmail && isTarget(state.selectedEmail) ? state.selectedEmail : undefined);
       const wasRead = previous?.keywords?.$seen ?? false;
       const isRead = keywords.$seen ?? false;
-      const delta = wasRead === isRead ? 0 : (isRead ? -1 : 1);
+      const delta = !previous || wasRead === isRead ? 0 : (isRead ? -1 : 1);
+      // A confirmed keyword restore can change $seen too. Use the same folder
+      // counter convention as markAsRead, in the message's own login's list.
+      const mailboxPatch = previous && delta !== 0
+        ? applyMailboxCounterUpdate(state, {
+            ...previous,
+            sourceClientAccountId: previous.sourceClientAccountId ?? source?.clientAccountId
+              ?? state.viewingAccountId ?? undefined,
+          }, (mailbox) => emailInMailbox(previous, mailbox)
+            ? {
+                ...mailbox,
+                unreadEmails: Math.max(0, mailbox.unreadEmails + delta),
+                unreadThreads: Math.max(0, mailbox.unreadThreads + delta),
+              }
+            : mailbox)
+        : {};
 
       return {
         emails: state.emails.map(e =>
@@ -6396,6 +6420,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         selectedEmail: (!!state.selectedEmail && isTarget(state.selectedEmail))
           ? { ...state.selectedEmail, keywords: { ...keywords } }
           : state.selectedEmail,
+        ...mailboxPatch,
         tagCounts: applyTagCountReadDelta(state.tagCounts, [{ keywords, delta }]),
       };
     });
