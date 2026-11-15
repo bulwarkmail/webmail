@@ -167,7 +167,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.appearance.toolbar_labels.label', when: 'notMountainView' },
     { label: 'settings.appearance.sections.sidebar' },
     { label: 'settings.appearance.colorful_sidebar_icons.label' },
-    { label: 'settings.appearance.show_folder_total_count.label' },
+    { label: 'settings.appearance.show_folder_total_count.label', when: 'notMountainView' },
     { label: 'print_styles.title' },
     { label: 'print_styles.style_label' },
     { label: 'settings.appearance.sections.experimental', advanced: true },

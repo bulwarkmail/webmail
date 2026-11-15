@@ -125,7 +125,7 @@ export function LayoutSection() {
 export function SidebarSection() {
   const t = useTranslations('settings.appearance');
   const tP3 = useTranslations('mail_p3_conv');
-  const { sidebarAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
+  const { sidebarAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, interfaceLayout, updateSetting } = useSettingsStore();
   const accounts = useAccountStore(s => s.accounts);
   const multiAccount = accounts.length > 1;
 
@@ -146,12 +146,16 @@ export function SidebarSection() {
         />
       </SettingItem>
 
-      <SettingItem label={t('show_folder_total_count.label')} description={t('show_folder_total_count.description')}>
-        <ToggleSwitch
-          checked={showFolderTotalCount}
-          onChange={(checked) => updateSetting('showFolderTotalCount', checked)}
-        />
-      </SettingItem>
+      {/* Mountain View shows one count per folder, whatever this says (#1692):
+          the unread count, or the total where the folder's own counter is set to it. */}
+      {interfaceLayout !== 'mountain-view' && (
+        <SettingItem label={t('show_folder_total_count.label')} description={t('show_folder_total_count.description')}>
+          <ToggleSwitch
+            checked={showFolderTotalCount}
+            onChange={(checked) => updateSetting('showFolderTotalCount', checked)}
+          />
+        </SettingItem>
+      )}
 
       {/* The rail avatars only mean something with a second account. */}
       {multiAccount && (
