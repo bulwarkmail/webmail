@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "收件箱类型",
-        "description": "“未读优先”会在收件箱其余邮件上方的单独区域中显示最新的 25 封未读邮件",
+        "description": "“未读优先”会在收件箱其余邮件上方的单独区域中显示最新的未读邮件",
         "default": "默认",
         "unread_first": "未读优先"
+      },
+      "unread_section_size": {
+        "label": "显示的未读邮件数",
+        "description": "“未读优先”区域显示多少封最新的未读邮件",
+        "5": "5 封邮件",
+        "10": "10 封邮件",
+        "15": "15 封邮件",
+        "20": "20 封邮件",
+        "25": "25 封邮件",
+        "50": "50 封邮件"
       },
       "clear_search_on_folder_change": {
         "label": "切换文件夹时清除搜索",

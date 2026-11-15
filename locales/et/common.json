@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Postkasti tüüp",
-        "description": "„Lugemata ees“ näitab 25 uusimat lugemata kirja eraldi jaotises ülejäänud postkasti kohal",
+        "description": "„Lugemata ees“ näitab uusimaid lugemata kirju eraldi jaotises ülejäänud postkasti kohal",
         "default": "Vaikimisi",
         "unread_first": "Lugemata ees"
+      },
+      "unread_section_size": {
+        "label": "Näidatavad lugemata kirjad",
+        "description": "Mitu uusimat lugemata kirja jaotis „Lugemata ees“ näitab",
+        "5": "5 kirja",
+        "10": "10 kirja",
+        "15": "15 kirja",
+        "20": "20 kirja",
+        "25": "25 kirja",
+        "50": "50 kirja"
       },
       "clear_search_on_folder_change": {
         "label": "Tühjenda otsing kausta vahetamisel",

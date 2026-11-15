@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Typ doručené pošty",
-        "description": "„Nejdříve nepřečtené“ zobrazí 25 nejnovějších nepřečtených zpráv v samostatné sekci nad zbytkem doručené pošty",
+        "description": "„Nejdříve nepřečtené“ zobrazí nejnovější nepřečtené zprávy v samostatné sekci nad zbytkem doručené pošty",
         "default": "Výchozí",
         "unread_first": "Nejdříve nepřečtené"
+      },
+      "unread_section_size": {
+        "label": "Zobrazené nepřečtené zprávy",
+        "description": "Kolik nejnovějších nepřečtených zpráv zobrazí sekce „Nejdříve nepřečtené“",
+        "5": "5 zpráv",
+        "10": "10 zpráv",
+        "15": "15 zpráv",
+        "20": "20 zpráv",
+        "25": "25 zpráv",
+        "50": "50 zpráv"
       },
       "clear_search_on_folder_change": {
         "label": "Vymazat hledání při přepnutí složky",

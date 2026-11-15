@@ -2021,9 +2021,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Kiểu Hộp thư đến",
-        "description": "Chưa đọc trước sẽ hiển thị 25 thư chưa đọc mới nhất trong một mục phía trên các thư còn lại.",
+        "description": "Chưa đọc trước sẽ hiển thị các thư chưa đọc mới nhất trong một mục phía trên các thư còn lại.",
         "default": "Mặc định",
         "unread_first": "Chưa đọc trước"
+      },
+      "unread_section_size": {
+        "label": "Số thư chưa đọc hiển thị",
+        "description": "Số thư chưa đọc mới nhất hiển thị trong mục Chưa đọc trước",
+        "5": "5 thư",
+        "10": "10 thư",
+        "15": "15 thư",
+        "20": "20 thư",
+        "25": "25 thư",
+        "50": "50 thư"
       },
       "clear_search_on_folder_change": {
         "label": "Xóa tìm kiếm khi chuyển thư mục",

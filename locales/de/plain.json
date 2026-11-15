@@ -255,7 +255,7 @@
     },
     "email_behavior": {
       "inbox_type": {
-        "description": "Bei „Ungelesene zuerst“ stehen Ihre 25 neuesten ungelesenen E-Mails oben im Posteingang"
+        "description": "Bei „Ungelesene zuerst“ stehen Ihre neuesten ungelesenen E-Mails oben im Posteingang"
       },
       "clear_search_on_folder_change": {
         "description": "Wenn Sie einen anderen Ordner öffnen, endet Ihre Suche und Sie sehen den ganzen Ordner. Ist das aus, sucht die Suche im neuen Ordner weiter."

@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Gelen kutusu türü",
-        "description": "\"Önce okunmamışlar\", en yeni 25 okunmamış iletinizi gelen kutusunun geri kalanının üstündeki bir bölümde gösterir",
+        "description": "\"Önce okunmamışlar\", en yeni okunmamış iletilerinizi gelen kutusunun geri kalanının üstündeki bir bölümde gösterir",
         "default": "Varsayılan",
         "unread_first": "Önce okunmamışlar"
+      },
+      "unread_section_size": {
+        "label": "Gösterilen okunmamış iletiler",
+        "description": "\"Önce okunmamışlar\" bölümünün kaç yeni okunmamış ileti göstereceği",
+        "5": "5 ileti",
+        "10": "10 ileti",
+        "15": "15 ileti",
+        "20": "20 ileti",
+        "25": "25 ileti",
+        "50": "50 ileti"
       },
       "clear_search_on_folder_change": {
         "label": "Klasör değiştirirken aramayı temizle",

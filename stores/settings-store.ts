@@ -18,6 +18,7 @@ import type { FolderCountMode } from '@/lib/folder-counts';
 import { DEFAULT_FILES_SETTINGS, normalizeFilesSettings, type FilesSettings } from '@/lib/files-settings';
 import { orderForMailbox, sanitizeSortLevels, type MessageListOrderScope, type SortLevel } from '@/lib/message-list-order';
 import { isSearchDefaultScope, type SearchDefaultScope } from '@/lib/search-default-scope';
+import { UNREAD_SECTION_SIZE, isUnreadSectionSize } from '@/lib/unread-first';
 import { EMPTY_SIGNATURE_DETAILS, sanitizeSignatureDetails, type SignatureDetails } from '@/lib/org-signature';
 import {
   ACCESSIBILITY_DEFAULTS,
@@ -760,6 +761,8 @@ interface SettingsState extends AccessibilitySettings {
   density: Density;
   interfaceLayout: InterfaceLayout;
   mvInboxType: MvInboxType;
+  // How many unread messages the "Unread first" section shows (#1705).
+  mvUnreadSectionSize: number;
   // The folded sections of the "Unread first" inbox; per device.
   mvUnreadSectionCollapsed: boolean;
   mvEverythingElseCollapsed: boolean;
@@ -1150,6 +1153,7 @@ const DEFAULT_SETTINGS = {
   density: 'regular' as Density,
   interfaceLayout: 'default' as InterfaceLayout,
   mvInboxType: 'unread-first' as MvInboxType,
+  mvUnreadSectionSize: UNREAD_SECTION_SIZE,
   mvUnreadSectionCollapsed: false,
   mvEverythingElseCollapsed: false,
   // Settings > Accessibility (lib/accessibility-settings.ts)
@@ -1772,6 +1776,7 @@ export const useSettingsStore = create<SettingsState>()(
           density: state.density,
           interfaceLayout: state.interfaceLayout,
           mvInboxType: state.mvInboxType,
+          mvUnreadSectionSize: state.mvUnreadSectionSize,
           messageListOrder: state.messageListOrder,
           messageListOrderScope: state.messageListOrderScope,
           dateFormat: state.dateFormat,
@@ -2144,6 +2149,9 @@ export const useSettingsStore = create<SettingsState>()(
                 return;
               }
               if (key === 'messageListOrderScope' && settings[key] !== 'inbox' && settings[key] !== 'all') {
+                return;
+              }
+              if (key === 'mvUnreadSectionSize' && !isUnreadSectionSize(settings[key])) {
                 return;
               }
               if (key === 'searchDefaultScope' && !isSearchDefaultScope(settings[key])) {

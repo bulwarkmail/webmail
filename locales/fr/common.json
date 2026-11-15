@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Type de boîte de réception",
-        "description": "« Non lus en premier » affiche vos 25 messages non lus les plus récents dans une section au-dessus du reste de la boîte",
+        "description": "« Non lus en premier » affiche vos messages non lus les plus récents dans une section au-dessus du reste de la boîte",
         "default": "Par défaut",
         "unread_first": "Non lus en premier"
+      },
+      "unread_section_size": {
+        "label": "Messages non lus affichés",
+        "description": "Combien de vos messages non lus les plus récents la section « Non lus en premier » affiche",
+        "5": "5 messages",
+        "10": "10 messages",
+        "15": "15 messages",
+        "20": "20 messages",
+        "25": "25 messages",
+        "50": "50 messages"
       },
       "clear_search_on_folder_change": {
         "label": "Effacer la recherche lors du changement de dossier",

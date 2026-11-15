@@ -43,7 +43,7 @@ import { getOutboxHooks } from "@/lib/offline/outbox-hooks";
 import { isAppLockOn } from "@/lib/app-lock/state";
 import { useOfflineStore } from "@/lib/offline/state";
 import {
-  READ_FILTER, UNREAD_FILTER, UNREAD_SECTION_SIZE, andFilters, isUnreadFirstView, mergeUnreadSection,
+  READ_FILTER, UNREAD_FILTER, andFilters, unreadSectionSize, isUnreadFirstView, mergeUnreadSection,
   openSectionRows, sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
 } from "@/lib/unread-first";
 
@@ -1138,7 +1138,7 @@ async function loadUnreadSection(client: IJMAPClient, mailbox: Mailbox, get: Sto
   const result = await effectiveClient.getEmails(
     mailbox.originalId || mailbox.id,
     accountId,
-    UNREAD_SECTION_SIZE,
+    unreadSectionSize(useSettingsStore.getState().mvUnreadSectionSize),
     0,
     undefined,
     true,

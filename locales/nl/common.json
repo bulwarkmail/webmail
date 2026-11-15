@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Type inbox",
-        "description": "'Ongelezen eerst' toont je 25 nieuwste ongelezen berichten in een sectie boven de rest van de inbox",
+        "description": "'Ongelezen eerst' toont je nieuwste ongelezen berichten in een sectie boven de rest van de inbox",
         "default": "Standaard",
         "unread_first": "Ongelezen eerst"
+      },
+      "unread_section_size": {
+        "label": "Getoonde ongelezen berichten",
+        "description": "Hoeveel van je nieuwste ongelezen berichten de sectie 'Ongelezen eerst' toont",
+        "5": "5 berichten",
+        "10": "10 berichten",
+        "15": "15 berichten",
+        "20": "20 berichten",
+        "25": "25 berichten",
+        "50": "50 berichten"
       },
       "clear_search_on_folder_change": {
         "label": "Zoekopdracht wissen bij wisselen van map",

@@ -259,6 +259,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.swipe_right_action.label', when: 'touch' },
     { label: 'settings.email_behavior.swipe_left_action.label', when: 'touch' },
     { label: 'settings.email_behavior.inbox_type.label', when: 'mountainView' },
+    { label: 'settings.email_behavior.unread_section_size.label', when: 'mountainView' },
   ],
   reading: [
     { label: 'settings.email_behavior.mark_read.label' },

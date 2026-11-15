@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Typ skrzynki odbiorczej",
-        "description": "„Najpierw nieprzeczytane” pokazuje 25 najnowszych nieprzeczytanych wiadomości w sekcji nad resztą skrzynki",
+        "description": "„Najpierw nieprzeczytane” pokazuje najnowsze nieprzeczytane wiadomości w sekcji nad resztą skrzynki",
         "default": "Domyślny",
         "unread_first": "Najpierw nieprzeczytane"
+      },
+      "unread_section_size": {
+        "label": "Pokazywane nieprzeczytane wiadomości",
+        "description": "Ile najnowszych nieprzeczytanych wiadomości pokazuje sekcja „Najpierw nieprzeczytane”",
+        "5": "5 wiadomości",
+        "10": "10 wiadomości",
+        "15": "15 wiadomości",
+        "20": "20 wiadomości",
+        "25": "25 wiadomości",
+        "50": "50 wiadomości"
       },
       "clear_search_on_folder_change": {
         "label": "Czyść wyszukiwanie przy zmianie folderu",

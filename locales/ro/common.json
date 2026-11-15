@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Tipul inboxului",
-        "description": "„Întâi necitite” afișează cele mai noi 25 de mesaje necitite într-o secțiune deasupra restului inboxului",
+        "description": "„Întâi necitite” afișează cele mai noi mesaje necitite într-o secțiune deasupra restului inboxului",
         "default": "Implicit",
         "unread_first": "Întâi necitite"
+      },
+      "unread_section_size": {
+        "label": "Mesaje necitite afișate",
+        "description": "Câte dintre cele mai noi mesaje necitite afișează secțiunea „Întâi necitite”",
+        "5": "5 mesaje",
+        "10": "10 mesaje",
+        "15": "15 mesaje",
+        "20": "20 de mesaje",
+        "25": "25 de mesaje",
+        "50": "50 de mesaje"
       },
       "clear_search_on_folder_change": {
         "label": "Șterge căutarea la schimbarea folderului",

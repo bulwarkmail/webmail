@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Tipo de bandeja de entrada",
-        "description": "«No leídos primero» muestra tus 25 mensajes no leídos más recientes en una sección encima del resto de la bandeja",
+        "description": "«No leídos primero» muestra tus mensajes no leídos más recientes en una sección encima del resto de la bandeja",
         "default": "Predeterminado",
         "unread_first": "No leídos primero"
+      },
+      "unread_section_size": {
+        "label": "Mensajes no leídos mostrados",
+        "description": "Cuántos de tus mensajes no leídos más recientes muestra la sección «No leídos primero»",
+        "5": "5 mensajes",
+        "10": "10 mensajes",
+        "15": "15 mensajes",
+        "20": "20 mensajes",
+        "25": "25 mensajes",
+        "50": "50 mensajes"
       },
       "clear_search_on_folder_change": {
         "label": "Borrar la búsqueda al cambiar de carpeta",

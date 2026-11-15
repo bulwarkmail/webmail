@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Inbox type",
-        "description": "Unread first shows your 25 newest unread messages in a section above the rest of the inbox",
+        "description": "Unread first shows your newest unread messages in a section above the rest of the inbox",
         "default": "Default",
         "unread_first": "Unread first"
+      },
+      "unread_section_size": {
+        "label": "Unread messages shown",
+        "description": "How many of your newest unread messages the Unread first section shows",
+        "5": "5 messages",
+        "10": "10 messages",
+        "15": "15 messages",
+        "20": "20 messages",
+        "25": "25 messages",
+        "50": "50 messages"
       },
       "clear_search_on_folder_change": {
         "label": "Clear search when switching folders",

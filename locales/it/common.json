@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Tipo di posta in arrivo",
-        "description": "\"Prima i non letti\" mostra i 25 messaggi non letti più recenti in una sezione sopra il resto della posta in arrivo",
+        "description": "\"Prima i non letti\" mostra i messaggi non letti più recenti in una sezione sopra il resto della posta in arrivo",
         "default": "Predefinito",
         "unread_first": "Prima i non letti"
+      },
+      "unread_section_size": {
+        "label": "Messaggi non letti mostrati",
+        "description": "Quanti dei messaggi non letti più recenti mostra la sezione \"Prima i non letti\"",
+        "5": "5 messaggi",
+        "10": "10 messaggi",
+        "15": "15 messaggi",
+        "20": "20 messaggi",
+        "25": "25 messaggi",
+        "50": "50 messaggi"
       },
       "clear_search_on_folder_change": {
         "label": "Cancella la ricerca quando cambi cartella",

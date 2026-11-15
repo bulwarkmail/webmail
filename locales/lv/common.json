@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Iesūtnes veids",
-        "description": "“Vispirms nelasītie” rāda 25 jaunākos nelasītos ziņojumus atsevišķā sadaļā virs pārējās iesūtnes",
+        "description": "“Vispirms nelasītie” rāda jaunākos nelasītos ziņojumus atsevišķā sadaļā virs pārējās iesūtnes",
         "default": "Noklusējums",
         "unread_first": "Vispirms nelasītie"
+      },
+      "unread_section_size": {
+        "label": "Rādītās nelasītās vēstules",
+        "description": "Cik jaunāko nelasīto vēstuļu rāda sadaļa “Vispirms nelasītie”",
+        "5": "5 vēstules",
+        "10": "10 vēstules",
+        "15": "15 vēstules",
+        "20": "20 vēstules",
+        "25": "25 vēstules",
+        "50": "50 vēstules"
       },
       "clear_search_on_folder_change": {
         "label": "Notīrīt meklēšanu, mainot mapi",

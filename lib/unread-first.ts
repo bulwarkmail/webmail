@@ -14,8 +14,20 @@ import { compareEmails } from '@/lib/message-list-order';
  * server order of the main query, so paging leaves them out of its offset.
  */
 
-/** How many unread messages the section shows, as in Gmail. */
+/** How many unread messages the section shows by default, as in Gmail. */
 export const UNREAD_SECTION_SIZE = 25;
+
+/** The sizes Settings offers for the section (#1705). */
+export const UNREAD_SECTION_SIZES = [5, 10, 15, 20, 25, 50] as const;
+
+export function isUnreadSectionSize(value: unknown): value is number {
+  return (UNREAD_SECTION_SIZES as readonly unknown[]).includes(value);
+}
+
+/** The size the section loads: the setting, or the default for a value Settings doesn't offer. */
+export function unreadSectionSize(value: unknown): number {
+  return isUnreadSectionSize(value) ? value : UNREAD_SECTION_SIZE;
+}
 
 /** The main query of the view: what is not in the Unread section. */
 export const READ_FILTER: Record<string, unknown> = { hasKeyword: '$seen' };

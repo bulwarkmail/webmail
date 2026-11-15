@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Typ doručenej pošty",
-        "description": "„Najprv neprečítané“ zobrazí 25 najnovších neprečítaných správ v sekcii nad zvyškom doručenej pošty",
+        "description": "„Najprv neprečítané“ zobrazí najnovšie neprečítané správy v sekcii nad zvyškom doručenej pošty",
         "default": "Predvolené",
         "unread_first": "Najprv neprečítané"
+      },
+      "unread_section_size": {
+        "label": "Zobrazené neprečítané správy",
+        "description": "Koľko najnovších neprečítaných správ zobrazí sekcia „Najprv neprečítané“",
+        "5": "5 správ",
+        "10": "10 správ",
+        "15": "15 správ",
+        "20": "20 správ",
+        "25": "25 správ",
+        "50": "50 správ"
       },
       "clear_search_on_folder_change": {
         "label": "Vymazať hľadanie pri prepnutí priečinka",

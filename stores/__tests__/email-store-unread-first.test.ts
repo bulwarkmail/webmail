@@ -62,7 +62,7 @@ describe('the "Unread first" inbox', () => {
     useSettingsStore.setState({
       emailsPerPage: 25, messageListOrder: [], messageListOrderScope: 'inbox',
       notificationMutes: { accounts: [], mailboxes: {} },
-      interfaceLayout: 'mountain-view', mvInboxType: 'unread-first',
+      interfaceLayout: 'mountain-view', mvInboxType: 'unread-first', mvUnreadSectionSize: 25,
     });
     useEmailStore.setState({
       ...useEmailStore.getInitialState(),
@@ -83,6 +83,27 @@ describe('the "Unread first" inbox', () => {
     expect(state.emails.slice(3).every((e) => e.keywords.$seen)).toBe(true);
     expect(state.totalEmails).toBe(30);
     expect(state.hasMoreEmails).toBe(true);
+  });
+
+  it('shows as many unread messages as set in Settings (#1705)', async () => {
+    const rows: Email[] = [];
+    for (let i = 0; i < 40; i++) rows.push(email(`m${i}`, 100 - i, i >= 12));
+    const c = server(rows);
+    useSettingsStore.setState({ mvUnreadSectionSize: 10 });
+
+    await useEmailStore.getState().fetchEmails(c, 'inbox');
+
+    const state = useEmailStore.getState();
+    expect([...state.unreadSection!.ids]).toEqual(Array.from({ length: 10 }, (_, i) => `m${i}`));
+    expect(state.unreadSection!.total).toBe(12);
+    expect(state.emails.slice(10).every((e) => e.keywords.$seen)).toBe(true);
+  });
+
+  it('keeps the size Settings offers when an import brings another one', () => {
+    useSettingsStore.getState().importSettings(JSON.stringify({ mvUnreadSectionSize: 15 }));
+    expect(useSettingsStore.getState().mvUnreadSectionSize).toBe(15);
+    useSettingsStore.getState().importSettings(JSON.stringify({ mvUnreadSectionSize: 1000 }));
+    expect(useSettingsStore.getState().mvUnreadSectionSize).toBe(15);
   });
 
   it('pages the read mail from where it got to, not counting the section', async () => {

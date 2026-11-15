@@ -26,6 +26,7 @@ import {
   UNLOCKABLE_SETTING_KEYS,
 } from '@/lib/accessibility-settings';
 import { locales } from '@/i18n/routing';
+import { UNREAD_SECTION_SIZES } from '@/lib/unread-first';
 
 /** Which store holds the setting. */
 export type SettingsStoreName = 'settings' | 'theme' | 'locale' | 'calendar';
@@ -208,6 +209,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('listColumns', 'message_list', `${EB}list_columns.label`),
   choice('mvInboxType', 'message_list', `${EB}inbox_type.label`,
     opts(`${EB}inbox_type.`, ['default', 'unread-first'], { 'unread-first': 'unread_first' })),
+  choice('mvUnreadSectionSize', 'message_list', `${EB}unread_section_size.label`,
+    opts(`${EB}unread_section_size.`, UNREAD_SECTION_SIZES)),
   // A switch on the page: on = every folder.
   choice('messageListOrderScope', 'message_list', `${AP}message_list_order.scope.label`, [
     { value: 'inbox', label: OFF_LABEL },

@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "收件匣類型",
-        "description": "「未讀優先」會在收件匣其餘郵件上方的獨立區塊中顯示最新的 25 封未讀郵件",
+        "description": "「未讀優先」會在收件匣其餘郵件上方的獨立區塊中顯示最新的未讀郵件",
         "default": "預設",
         "unread_first": "未讀優先"
+      },
+      "unread_section_size": {
+        "label": "顯示的未讀郵件數",
+        "description": "「未讀優先」區塊顯示多少封最新的未讀郵件",
+        "5": "5 封郵件",
+        "10": "10 封郵件",
+        "15": "15 封郵件",
+        "20": "20 封郵件",
+        "25": "25 封郵件",
+        "50": "50 封郵件"
       },
       "clear_search_on_folder_change": {
         "label": "切換資料夾時清除搜尋",

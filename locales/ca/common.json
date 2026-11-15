@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Tipus de safata d'entrada",
-        "description": "«Primer els no llegits» mostra els 25 missatges no llegits més recents en una secció a sobre de la resta de la safata",
+        "description": "«Primer els no llegits» mostra els missatges no llegits més recents en una secció a sobre de la resta de la safata",
         "default": "Per defecte",
         "unread_first": "Primer els no llegits"
+      },
+      "unread_section_size": {
+        "label": "Missatges no llegits mostrats",
+        "description": "Quants dels missatges no llegits més recents mostra la secció «Primer els no llegits»",
+        "5": "5 missatges",
+        "10": "10 missatges",
+        "15": "15 missatges",
+        "20": "20 missatges",
+        "25": "25 missatges",
+        "50": "50 missatges"
       },
       "clear_search_on_folder_change": {
         "label": "Esborra la cerca en canviar de carpeta",

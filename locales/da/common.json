@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Indbakketype",
-        "description": "\"Ulæste først\" viser dine 25 nyeste ulæste beskeder i en sektion over resten af indbakken",
+        "description": "\"Ulæste først\" viser dine nyeste ulæste beskeder i en sektion over resten af indbakken",
         "default": "Standard",
         "unread_first": "Ulæste først"
+      },
+      "unread_section_size": {
+        "label": "Viste ulæste beskeder",
+        "description": "Hvor mange af dine nyeste ulæste beskeder sektionen \"Ulæste først\" viser",
+        "5": "5 beskeder",
+        "10": "10 beskeder",
+        "15": "15 beskeder",
+        "20": "20 beskeder",
+        "25": "25 beskeder",
+        "50": "50 beskeder"
       },
       "clear_search_on_folder_change": {
         "label": "Ryd søgningen ved skift af mappe",

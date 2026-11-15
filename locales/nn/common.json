@@ -2017,9 +2017,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Innbokstype",
-        "description": "Ulesne først viser dei 25 nyaste ulesne meldingane i ein seksjon over resten av innboksen",
+        "description": "Ulesne først viser dei nyaste ulesne meldingane i ein seksjon over resten av innboksen",
         "default": "Standard",
         "unread_first": "Ulesne først"
+      },
+      "unread_section_size": {
+        "label": "Ulesne meldingar som blir viste",
+        "description": "Kor mange av dei nyaste ulesne meldingane seksjonen Ulesne først viser",
+        "5": "5 meldingar",
+        "10": "10 meldingar",
+        "15": "15 meldingar",
+        "20": "20 meldingar",
+        "25": "25 meldingar",
+        "50": "50 meldingar"
       },
       "clear_search_on_folder_change": {
         "label": "Tøm søket når du byter mappe",

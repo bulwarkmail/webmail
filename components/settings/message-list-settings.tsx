@@ -18,6 +18,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { allowEmailMove, createMailboxWithHooks, emitEmailMove } from '@/lib/plugin-mail-hooks';
 import type { Mailbox } from '@/lib/jmap/types';
 import type { SearchDefaultScope } from '@/lib/search-default-scope';
+import { UNREAD_SECTION_SIZES, unreadSectionSize } from '@/lib/unread-first';
 
 /**
  * The Message list page: what the list shows, what one hover or swipe does,
@@ -70,6 +71,7 @@ export function MessageListSettings() {
     mailLayout,
     interfaceLayout,
     mvInboxType,
+    mvUnreadSectionSize,
     tintListRowsByTag,
     updateSetting,
   } = useSettingsStore();
@@ -205,6 +207,21 @@ export function MessageListSettings() {
               { value: 'default', label: t('inbox_type.default') },
               { value: 'unread-first', label: t('inbox_type.unread_first') },
             ]}
+          />
+        </SettingItem>
+        )}
+
+        {mountainView && mvInboxType === 'unread-first' && (
+        <SettingItem label={t('unread_section_size.label')} description={t('unread_section_size.description')}>
+          <Select
+            value={String(unreadSectionSize(mvUnreadSectionSize))}
+            onChange={(value) => {
+              updateSetting('mvUnreadSectionSize', Number(value));
+              const client = useAuthStore.getState().client;
+              const store = useEmailStore.getState();
+              if (client && store.selectedMailbox) void store.fetchEmails(client, store.selectedMailbox, { background: true });
+            }}
+            options={UNREAD_SECTION_SIZES.map((size) => ({ value: String(size), label: t(`unread_section_size.${size}`) }))}
           />
         </SettingItem>
         )}

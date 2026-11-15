@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Tipo de caixa de entrada",
-        "description": "\"Não lidas primeiro\" mostra as suas 25 mensagens não lidas mais recentes numa secção acima do resto da caixa",
+        "description": "\"Não lidas primeiro\" mostra as suas mensagens não lidas mais recentes numa secção acima do resto da caixa",
         "default": "Predefinido",
         "unread_first": "Não lidas primeiro"
+      },
+      "unread_section_size": {
+        "label": "Mensagens não lidas mostradas",
+        "description": "Quantas das suas mensagens não lidas mais recentes a secção \"Não lidas primeiro\" mostra",
+        "5": "5 mensagens",
+        "10": "10 mensagens",
+        "15": "15 mensagens",
+        "20": "20 mensagens",
+        "25": "25 mensagens",
+        "50": "50 mensagens"
       },
       "clear_search_on_folder_change": {
         "label": "Limpar a pesquisa ao mudar de pasta",

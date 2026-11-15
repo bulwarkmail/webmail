@@ -2006,9 +2006,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Posteingangstyp",
-        "description": "„Ungelesene zuerst“ zeigt Ihre 25 neuesten ungelesenen Nachrichten in einem eigenen Abschnitt über dem restlichen Posteingang",
+        "description": "„Ungelesene zuerst“ zeigt Ihre neuesten ungelesenen Nachrichten in einem eigenen Abschnitt über dem restlichen Posteingang",
         "default": "Standard",
         "unread_first": "Ungelesene zuerst"
+      },
+      "unread_section_size": {
+        "label": "Angezeigte ungelesene Nachrichten",
+        "description": "Wie viele Ihrer neuesten ungelesenen Nachrichten der Abschnitt „Ungelesene zuerst“ zeigt",
+        "5": "5 Nachrichten",
+        "10": "10 Nachrichten",
+        "15": "15 Nachrichten",
+        "20": "20 Nachrichten",
+        "25": "25 Nachrichten",
+        "50": "50 Nachrichten"
       },
       "clear_search_on_folder_change": {
         "label": "Suche beim Ordnerwechsel löschen",

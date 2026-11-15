@@ -256,7 +256,7 @@
     },
     "email_behavior": {
       "inbox_type": {
-        "description": "With \"Unread first\", your 25 newest unread messages are shown at the top of the inbox"
+        "description": "With \"Unread first\", your newest unread messages are shown at the top of the inbox"
       },
       "clear_search_on_folder_change": {
         "description": "When you open another folder, your search ends and you see the whole folder. When this is off, the search continues in the new folder."

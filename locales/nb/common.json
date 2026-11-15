@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Innbokstype",
-        "description": "«Uleste først» viser de 25 nyeste uleste meldingene i en egen del over resten av innboksen",
+        "description": "«Uleste først» viser de nyeste uleste meldingene i en egen del over resten av innboksen",
         "default": "Standard",
         "unread_first": "Uleste først"
+      },
+      "unread_section_size": {
+        "label": "Uleste meldinger som vises",
+        "description": "Hvor mange av de nyeste uleste meldingene delen «Uleste først» viser",
+        "5": "5 meldinger",
+        "10": "10 meldinger",
+        "15": "15 meldinger",
+        "20": "20 meldinger",
+        "25": "25 meldinger",
+        "50": "50 meldinger"
       },
       "clear_search_on_folder_change": {
         "label": "Tøm søket ved bytte av mappe",

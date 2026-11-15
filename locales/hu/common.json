@@ -2009,9 +2009,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Beérkezett üzenetek típusa",
-        "description": "Az „Olvasatlanok elöl” a 25 legújabb olvasatlan üzenetet külön szakaszban mutatja a többi üzenet felett",
+        "description": "Az „Olvasatlanok elöl” a legújabb olvasatlan üzeneteket külön szakaszban mutatja a többi üzenet felett",
         "default": "Alapértelmezett",
         "unread_first": "Olvasatlanok elöl"
+      },
+      "unread_section_size": {
+        "label": "Megjelenített olvasatlan üzenetek",
+        "description": "Hány legújabb olvasatlan üzenetet mutasson az „Olvasatlanok elöl” szakasz",
+        "5": "5 üzenet",
+        "10": "10 üzenet",
+        "15": "15 üzenet",
+        "20": "20 üzenet",
+        "25": "25 üzenet",
+        "50": "50 üzenet"
       },
       "clear_search_on_folder_change": {
         "label": "Keresés törlése mappaváltáskor",

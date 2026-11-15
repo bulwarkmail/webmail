@@ -256,7 +256,7 @@
     },
     "email_behavior": {
       "inbox_type": {
-        "description": "Với tùy chọn \"Chưa đọc trước\", 25 thư chưa đọc mới nhất sẽ xuất hiện ở đầu Hộp thư đến"
+        "description": "Với tùy chọn \"Chưa đọc trước\", các thư chưa đọc mới nhất sẽ xuất hiện ở đầu Hộp thư đến"
       },
       "clear_search_on_folder_change": {
         "description": "Khi mở thư mục khác, tìm kiếm sẽ kết thúc và bạn thấy toàn bộ thư mục. Khi tắt tùy chọn này, tìm kiếm sẽ tiếp tục trong thư mục mới."
