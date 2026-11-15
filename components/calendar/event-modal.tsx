@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TimeField } from "@/components/ui/time-field";
 import { LinkifiedText } from "@/components/ui/linkified-text";
-import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical } from "@/components/icons";
+import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical, Lock } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
 import { descriptionAsText, isHtmlDescription, plainDescriptionFields } from "@/lib/calendar-description";
@@ -128,18 +128,32 @@ export function shiftedEnd(oldStart: Date, oldEnd: Date, newStart: Date): Date |
   return new Date(newStart.getTime() + durationMs);
 }
 
+/** What the editor's Show as and Visibility fields hold. */
+export interface EventVisibilityChoice {
+  freeBusyStatus: CalendarEvent["freeBusyStatus"];
+  /** Undefined when the field isn't offered: only the calendar's owner sets privacy. */
+  privacy?: CalendarEvent["privacy"];
+}
+
 /**
- * Status, free/busy and privacy for a save. The editor has no controls for
- * them, so only a new event gets them (the defaults) and an edit keeps what
- * the event has. Every edit used to reset them to confirmed, busy and public,
- * and Stalwart 1.0 refuses an edit of one occurrence whose privacy differs
- * from its series'. Pure, for testing.
+ * Status, free/busy and privacy for a save. A new event is confirmed and
+ * gets what the editor holds. An edit sends free/busy and privacy only when
+ * the user changed them, and never the status, which the editor has no
+ * field for: Stalwart 1.0 refuses an edit of one occurrence whose privacy
+ * differs from its series', and an event without CLASS has no privacy at
+ * all. Pure, for testing.
  */
 export function savedStatusFields(
   event: CalendarEvent | null | undefined,
+  choice: EventVisibilityChoice = { freeBusyStatus: "busy", privacy: "public" },
 ): Partial<Pick<CalendarEvent, "status" | "freeBusyStatus" | "privacy">> {
-  if (event) return {};
-  return { status: "confirmed", freeBusyStatus: "busy", privacy: "public" };
+  if (!event) {
+    return { status: "confirmed", freeBusyStatus: choice.freeBusyStatus, privacy: choice.privacy ?? "public" };
+  }
+  const fields: Partial<Pick<CalendarEvent, "freeBusyStatus" | "privacy">> = {};
+  if (choice.freeBusyStatus !== (event.freeBusyStatus ?? "busy")) fields.freeBusyStatus = choice.freeBusyStatus;
+  if (choice.privacy && choice.privacy !== (event.privacy ?? "public")) fields.privacy = choice.privacy;
+  return fields;
 }
 
 function formatDateInput(d: Date): string {
@@ -413,6 +427,8 @@ export function EventModal({
   const [endDate, setEndDate] = useState(formatDateInput(initialEndWall));
   const [endTime, setEndTime] = useState(formatTimeInput(initialEndWall));
   const [allDay, setAllDay] = useState(seed?.showWithoutTime || defaultAllDay || false);
+  const [freeBusyStatus, setFreeBusyStatus] = useState<CalendarEvent["freeBusyStatus"]>(seed?.freeBusyStatus ?? "busy");
+  const [privacy, setPrivacy] = useState<CalendarEvent["privacy"]>(seed?.privacy ?? "public");
   // The zone the fields are on: none for an all-day event.
   const fieldZone = allDay ? null : timeZone;
   // The form's times on the user's clock, beside another zone's.
@@ -469,6 +485,9 @@ export function EventModal({
       .filter(c => !eventLogin.known || c.localAccountId === eventLogin.login),
     [calendars, isSubscriptionCalendar, eventLogin]
   );
+  // Only the calendar's owner sets an event's privacy (Stalwart answers a
+  // sharee's change with forbidden), so a shared calendar offers no field.
+  const privacyEditable = calendars.find((c) => c.id === calendarId)?.isShared !== true;
   const [recurrence, setRecurrence] = useState<RecurrenceOption>(() => {
     if (!seed?.recurrenceRules?.length) return "none";
     const rule = seed.recurrenceRules[0];
@@ -590,8 +609,10 @@ export function EventModal({
   const formState = useMemo(() => ({
     title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
+    freeBusyStatus, privacy,
   }), [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
-    calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations]);
+    calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
+    freeBusyStatus, privacy]);
   const [initialForm] = useState(formState);
   const isDirty = mode === "edit" && JSON.stringify(formState) !== JSON.stringify(initialForm);
   useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
@@ -605,6 +626,7 @@ export function EventModal({
     setCalendarId(f.calendarId); setRecurrence(f.recurrence); setCustomRule(f.customRule); setShowRecurrenceEditor(false);
     setUseDefaultAlerts(f.useDefaultAlerts); setAlertRows(f.alertRows); setPreservedAlerts(f.preservedAlerts); setRefreshDefaults(false);
     setAttendees(f.attendees); setSendInvitations(f.sendInvitations);
+    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy);
   }, [initialForm]);
 
   const { dialogProps: discardDialogProps, confirm: confirmDiscard } = useConfirmDialog();
@@ -873,7 +895,7 @@ export function EventModal({
       timeZone: allDay ? null : timeZone,
       showWithoutTime: allDay,
       calendarIds: { [calendarId]: true },
-      ...savedStatusFields(event),
+      ...savedStatusFields(event, { freeBusyStatus, privacy: privacyEditable ? privacy : undefined }),
     };
 
     // On an existing event the empty string is how a description gets cleared, but
@@ -1026,7 +1048,7 @@ export function EventModal({
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, currentUserEmails, userIsOrganizer, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1294,6 +1316,22 @@ export function EventModal({
               </div>
             )}
 
+            {/* Show as free, private or hidden */}
+            {(event.freeBusyStatus === "free" || (event.privacy && event.privacy !== "public")) && (
+              <div className="flex items-start gap-2.5" data-testid="event-visibility">
+                {event.privacy && event.privacy !== "public"
+                  ? <Lock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  : <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />}
+                <span className="text-sm text-foreground">
+                  {[
+                    event.freeBusyStatus === "free" ? t("form.shown_free") : null,
+                    event.privacy === "private" ? t("form.visibility_private") : null,
+                    event.privacy === "secret" ? t("form.visibility_secret") : null,
+                  ].filter(Boolean).join(" · ")}
+                </span>
+              </div>
+            )}
+
             {/* Reminder */}
             {alertLabel && (
               <div className="flex items-start gap-2.5">
@@ -1558,6 +1596,45 @@ export function EventModal({
               />
             </div>
           )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor={labelFor("show_as")} className="text-sm font-medium mb-1 block">{t("form.show_as")}</label>
+              <select
+                id={labelFor("show_as")}
+                value={freeBusyStatus}
+                onChange={(e) => setFreeBusyStatus(e.target.value as CalendarEvent["freeBusyStatus"])}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+              >
+                <option value="busy">{t("form.show_as_busy")}</option>
+                <option value="free">{t("form.show_as_free")}</option>
+              </select>
+            </div>
+            {privacyEditable && (
+              <div>
+                <label htmlFor={labelFor("visibility")} className="text-sm font-medium mb-1 block">{t("form.visibility")}</label>
+                <select
+                  id={labelFor("visibility")}
+                  value={privacy}
+                  onChange={(e) => setPrivacy(e.target.value as CalendarEvent["privacy"])}
+                  aria-describedby={labelFor("visibility_hint")}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                >
+                  <option value="public">{t("form.visibility_public")}</option>
+                  <option value="private">{t("form.visibility_private")}</option>
+                  <option value="secret">{t("form.visibility_secret")}</option>
+                </select>
+              </div>
+            )}
+            {privacyEditable && (
+              <p id={labelFor("visibility_hint")} className="sm:col-span-2 -mt-1 text-xs text-muted-foreground">
+                {privacy === "secret" ? t("form.visibility_hint_secret")
+                  : privacy === "private" ? t("form.visibility_hint_private")
+                  : t("form.visibility_hint_public")}
+                {recurrence !== "none" && <> {t("form.visibility_series")}</>}
+              </p>
+            )}
+          </div>
 
           <div>
             <label htmlFor={labelFor("location")} className="text-sm font-medium mb-1 block">{t("form.location")}</label>

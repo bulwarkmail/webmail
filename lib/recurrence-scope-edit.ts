@@ -1044,6 +1044,15 @@ export async function saveOccurrenceEdit(
   const { event, updates, sendScheduling } = edit;
   switch (scope) {
     case 'this': {
+      // Privacy is the whole series': Stalwart 1.0 refuses one occurrence
+      // whose privacy differs from its series'. The series takes it first,
+      // so the occurrence's write then carries its series' value.
+      if (updates.privacy !== undefined && updates.privacy !== (event.privacy ?? 'public')) {
+        const master = await findMasterEvent(event);
+        if (master && (master.privacy ?? 'public') !== updates.privacy) {
+          if (stopped(await updateEvent(client, master.id, { privacy: updates.privacy }, false))) return 'stopped';
+        }
+      }
       if (isServerRecurrenceInstance(event) || isBrowserExpandedOccurrence(event)) {
         // The store writes one occurrence through its own (synthetic) id, or
         // as a recurrence override on the base event it was expanded from.

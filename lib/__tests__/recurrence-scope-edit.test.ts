@@ -961,6 +961,40 @@ describe('saveOccurrenceEdit for every occurrence', () => {
   });
 });
 
+// Privacy is the series' own: Stalwart 1.0 refuses one occurrence whose
+// privacy differs from its series', so "This occurrence" with a new
+// visibility failed to save.
+describe('saveOccurrenceEdit with a new privacy for one occurrence', () => {
+  it('gives the series the privacy before writing the occurrence', async () => {
+    const occurrence = serverOccurrence('1.0');
+    const deps = actions(series('1.0'));
+
+    const saved = await saveOccurrenceEdit('this', {
+      event: occurrence, updates: { title: 'Planning', privacy: 'private' }, editor: editorOn(occurrence),
+      sendScheduling: true, userEmails: [ORGANIZER],
+    }, deps);
+
+    expect(saved).toBe(true);
+    expect(deps.updateEvent).toHaveBeenCalledTimes(2);
+    expect(deps.updateEvent.mock.calls[0]).toEqual([deps.client, 'b', { privacy: 'private' }, false]);
+    expect(deps.updateEvent.mock.calls[1][1]).toBe('maaaaac');
+  });
+
+  it('leaves the series alone when the privacy stays', async () => {
+    const occurrence = serverOccurrence('1.0');
+    const deps = actions(series('1.0'));
+
+    await saveOccurrenceEdit('this', {
+      event: occurrence, updates: { title: 'Planning, room 2' }, editor: editorOn(occurrence),
+      sendScheduling: true, userEmails: [ORGANIZER],
+    }, deps);
+
+    expect(deps.findMasterEvent).not.toHaveBeenCalled();
+    expect(deps.updateEvent).toHaveBeenCalledTimes(1);
+    expect(deps.updateEvent.mock.calls[0][1]).toBe('maaaaac');
+  });
+});
+
 // The calendar store resolves false when a plugin stopped a write and has
 // told the user why; the app must not report the change as saved.
 describe('occurrence changes a plugin stops', () => {
