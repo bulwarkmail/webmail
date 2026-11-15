@@ -193,9 +193,10 @@ function RowChips({ email, loadAttachments, onOpenAttachment, mountainView, mvRo
  * they sit on (see the [data-mv-row] rules in globals.css).
  */
 function mvHoverBackground(checked: boolean, unread: boolean, selected: boolean): string {
-  if (selected) return "bg-accent";
-  if (checked) return "bg-[var(--mv-nav-selected)]";
-  return unread ? "bg-background" : "bg-[var(--mv-row-read)]";
+  const own = checked ? "bg-[var(--mv-nav-selected)]" : unread ? "bg-background" : "bg-[var(--mv-row-read)]";
+  // The cursor fills the row in the dark theme only; the light one marks it
+  // with a bar and keeps the row's colour (globals.css, #1702).
+  return selected ? `${own} dark:bg-accent` : own;
 }
 
 /**
