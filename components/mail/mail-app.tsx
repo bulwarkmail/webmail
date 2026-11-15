@@ -6218,7 +6218,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Desktop Navigation Rail (hidden when embedded inside Pro shell, and
             under Mountain View, whose header carries the app grid instead) */}
         {!isMobile && !isEmbedded && !mvShell && (
-          <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+          <div className="relative w-14 pr-px bg-secondary flex flex-col flex-shrink-0" data-window-rail-column="">
             <StableNavigationRail
               collapsed
               quota={quota}

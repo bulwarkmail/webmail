@@ -868,6 +868,45 @@ html[data-window-controls-left] [data-window-rail] {
   padding-top: var(--titlebar-row-height);
 }
 
+/*
+ * The folder sidebar beside it leaves the same band empty, so the lights sit on one
+ * strip across both columns and the account switcher starts below them. The window
+ * is dragged by it, as by the rail's top. On a phone the sidebar is a drawer, which
+ * the [data-window-drawer] rules place.
+ */
+@media (width >= 37.5rem) {
+  html[data-window-controls-left] [data-window-sidebar] {
+    padding-top: var(--titlebar-row-height);
+  }
+
+  html[data-window-controls-left] [data-window-sidebar]::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: var(--titlebar-row-height);
+    pointer-events: none;
+    app-region: drag;
+    -webkit-app-region: drag;
+  }
+}
+
+/* The rule between the rail and what's beside it, below the band on macOS. */
+[data-window-rail-column]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(128, 128, 128, 0.3);
+  pointer-events: none;
+}
+
+html[data-window-controls-left] [data-window-rail-column]::after {
+  top: var(--titlebar-row-height);
+}
+
 /* Safe area insets for notched devices (iPhone X+, etc.) */
 .safe-area-inset-top {
   padding-top: env(safe-area-inset-top);

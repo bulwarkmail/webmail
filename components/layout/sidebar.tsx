@@ -1619,7 +1619,8 @@ function SidebarImpl({
     const target = e.target;
     lastPointer.current = { x: e.clientX, y: e.clientY, target };
     if (mvShell) { noteHoveredRailItem(); setRailHovered(true); return; }
-    if (target instanceof Element && target.closest('[data-sidebar-head]')) {
+    // The buttons at the column's top and bottom stay put under the pointer.
+    if (target instanceof Element && target.closest('[data-sidebar-head], [data-sidebar-foot]')) {
       if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
       railHoverTimer.current = null;
       return;
@@ -2584,6 +2585,22 @@ function SidebarImpl({
     onMailboxContextMenu: handleMailboxContextMenu,
   });
 
+  const collapseButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      // In the drawer it closes the drawer, as the phone's X does;
+      // docking the folders is the folded column's expand button.
+      onClick={isFolderDrawer ? closeRailPeek : toggleSidebarCollapsed}
+      className={cn("hidden desk:flex h-8 w-8 flex-shrink-0", SIDEBAR_HEAD_BUTTON)}
+      data-testid="sidebar-collapse"
+      title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
+    >
+      {/* The arrows point the way the column goes; the app's global RTL mirror turns them in RTL. */}
+      {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
+    </Button>
+  );
+
   return (
     <div
       ref={rootRef}
@@ -2649,6 +2666,8 @@ function SidebarImpl({
       data-folder-peek={isFolderDrawer ? "" : undefined}
       data-folder-drawer={isFolderDrawer ? "" : undefined}
       data-window-drawer={isFolderDrawer && !isEmbedded ? "" : undefined}
+      // macOS: an empty band under the traffic lights, level with the rail's (globals.css).
+      data-window-sidebar={!isEmbedded && !mvShell && !isFolderDrawer ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
         // Mountain View's navigation sits on the canvas, with no rule between
@@ -2678,13 +2697,15 @@ function SidebarImpl({
       )}
     >
       {/* Header - hidden in the Pro shell, which owns its own chrome and
-          would otherwise render an empty strip (no collapse, no switcher). */}
-      {!isEmbedded && !mvShell && (
+          would otherwise render an empty strip (no switcher). The collapse
+          button is at the bottom, so folded only Compose is left up here. */}
+      {!isEmbedded && !mvShell && (!isCollapsed || onCompose) && (
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
         <div className="border-b border-border" data-sidebar-head="">
-          {/* Folded, the buttons keep to the column's folded width, also while it shows its names. */}
-          <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "gap-1 px-2", railLabels && "w-[calc(100%-13rem)]")}>
+          {/* On a desktop the account switcher has the row to itself. */}
+          {!isCollapsed && (
+          <div className="flex items-center h-14 gap-1 px-2">
             <Button
               variant="ghost"
               size="icon"
@@ -2695,20 +2716,6 @@ function SidebarImpl({
               <X className="w-5 h-5" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              // In the drawer it closes the drawer, as the phone's X does;
-              // docking the folders is the folded column's expand button.
-              onClick={isFolderDrawer ? closeRailPeek : toggleSidebarCollapsed}
-              className={cn("hidden desk:flex h-8 w-8 flex-shrink-0", SIDEBAR_HEAD_BUTTON)}
-              data-testid="sidebar-collapse"
-              title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
-            >
-              {/* The arrows point the way the column goes; the app's global RTL mirror turns them in RTL. */}
-              {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
-            </Button>
-
             {/* The account switcher heads the folders by default, with
                 Compose under it on a desktop, as in Gmail and Outlook: a
                 round button over the list covered the rows under it while
@@ -2717,10 +2724,10 @@ function SidebarImpl({
                 the one account switcher (usability test 2026-11-04,
                 mail-27); phones keep the round button, since this pane is a
                 drawer there. */}
-            {!isCollapsed && sidebarAccountSwitcher && (
+            {sidebarAccountSwitcher && (
               <AccountSwitcher variant="expanded" className="flex-1" />
             )}
-            {!isCollapsed && !sidebarAccountSwitcher && !isDrawer && onCompose && (
+            {!sidebarAccountSwitcher && !isDrawer && onCompose && (
               <Button
                 onClick={onCompose}
                 // Pill corners for the main action, friendlier than the
@@ -2735,6 +2742,7 @@ function SidebarImpl({
               </Button>
             )}
           </div>
+          )}
           {!isCollapsed && sidebarAccountSwitcher && !isDrawer && onCompose && (
             <div className="px-2 pb-2">
               <Button
@@ -2750,7 +2758,7 @@ function SidebarImpl({
             </div>
           )}
           {isCollapsed && !isDrawer && onCompose && (
-            <div className={cn("flex justify-center pb-2", railLabels && "w-[calc(100%-13rem)]")}>
+            <div className={cn("flex justify-center py-2", railLabels && "w-[calc(100%-13rem)]")}>
               <IconButton
                 onClick={onCompose}
                 variant="default"
@@ -3093,8 +3101,10 @@ function SidebarImpl({
       </RailLabelsContext.Provider>
 
       {/* Folded: the whole tree, subfolders included, one click away (p2-9). */}
+      {/* The collapse button under it, at the column's bottom start in both
+          states, so the account switcher has the top row to itself. */}
       {isCollapsed && !mvShell && (
-        <div className="border-t border-border py-2">
+        <div className="border-t border-border py-2" data-sidebar-foot="">
           <div className={cn("flex justify-center", railLabels && "w-[calc(100%-13rem)]")}>
             <IconButton
               ref={allFoldersRef}
@@ -3105,6 +3115,16 @@ function SidebarImpl({
               <FolderSync />
             </IconButton>
           </div>
+          {!isEmbedded && (
+            <div className={cn("flex justify-center pt-1", railLabels && "w-[calc(100%-13rem)]")}>
+              {collapseButton}
+            </div>
+          )}
+        </div>
+      )}
+      {!isCollapsed && !isEmbedded && !mvShell && (
+        <div className="hidden desk:flex border-t border-border px-2 py-2" data-sidebar-foot="">
+          {collapseButton}
         </div>
       )}
 

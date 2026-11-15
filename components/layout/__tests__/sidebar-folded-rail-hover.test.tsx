@@ -130,9 +130,8 @@ describe('hovering the folded folder column (default layout)', () => {
     // The name is on screen now: no tooltip repeating it, and no corner counter.
     expect(inbox().getAttribute('title')).toBeNull();
     expect(inbox().querySelector('[data-testid="folded-unread"]')).toBeNull();
-    // The buttons above and below keep the folded column's width.
-    const head = screen.getByTestId('sidebar-collapse').parentElement!;
-    expect(head.className).toContain('w-[calc(100%-13rem)]');
+    // The buttons below keep the folded column's width.
+    expect(screen.getByTestId('sidebar-collapse').parentElement!.className).toContain('w-[calc(100%-13rem)]');
     expect(screen.getByTestId('folded-all-folders').parentElement!.className).toContain('w-[calc(100%-13rem)]');
   });
 

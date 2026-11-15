@@ -160,7 +160,7 @@ describe('the folded column\'s drawer (default layout)', () => {
 
   // A hover shows the names beside the folded items and never opens the
   // drawer (sidebar-folded-rail-hover.test.tsx).
-  it('does not show the names while the pointer is on the header\'s buttons, nor open the drawer on the folders', () => {
+  it('does not show the names while the pointer is on the column\'s own buttons, nor open the drawer on the folders', () => {
     vi.useFakeTimers();
     const { container } = render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
     const root = container.firstElementChild!;

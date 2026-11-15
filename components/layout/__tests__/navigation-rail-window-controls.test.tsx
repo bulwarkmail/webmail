@@ -46,3 +46,35 @@ describe('rail under the macOS traffic lights', () => {
     expect(css).toMatch(/html\[data-window-controls-left\] \[data-window-rail\] \{\s*padding-top: var\(--titlebar-row-height\);/);
   });
 });
+
+// The traffic lights also reached into the folder sidebar beside the rail, with
+// the rule between the two columns running between the lights. Both columns
+// leave the band empty now, and the rule starts below it.
+describe('the folder sidebar under the macOS traffic lights', () => {
+  const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
+  const desk = css.match(/@media \(width >= 37\.5rem\) \{\s*html\[data-window-controls-left\] \[data-window-sidebar\][\s\S]*?\n\}/)?.[0] ?? '';
+
+  it('pads the sidebar by the controls\' row on a desktop, where it is no drawer', () => {
+    expect(desk).toMatch(/html\[data-window-controls-left\] \[data-window-sidebar\] \{\s*padding-top: var\(--titlebar-row-height\);/);
+  });
+
+  it('drags the window by that band', () => {
+    const band = desk.match(/\[data-window-sidebar\]::before \{[^}]*\}/)?.[0] ?? '';
+    expect(band).toContain('height: var(--titlebar-row-height);');
+    expect(band).toContain('app-region: drag;');
+    expect(band).toContain('-webkit-app-region: drag;');
+    expect(band).toContain('pointer-events: none;');
+  });
+
+  it('runs the rule beside the rail full height, and below the band on macOS', () => {
+    expect(css).toMatch(/\n\[data-window-rail-column\]::after \{[^}]*top: 0;[^}]*bottom: 0;[^}]*width: 1px;[^}]*background: rgba\(128, 128, 128, 0\.3\);/);
+    expect(css).toMatch(/html\[data-window-controls-left\] \[data-window-rail-column\]::after \{\s*top: var\(--titlebar-row-height\);/);
+  });
+
+  it('draws Mail\'s rule with the stylesheet, not inline', () => {
+    const mail = readFileSync(join(process.cwd(), 'components/mail/mail-app.tsx'), 'utf8');
+    const column = mail.match(/<div className="[^"]*"[^>]*data-window-rail-column=""[^>]*>/)?.[0] ?? '';
+    expect(column).toContain('relative');
+    expect(column).not.toContain('borderRight');
+  });
+});

@@ -564,6 +564,13 @@ describe('which rows hold the controls', () => {
     expect(dialogRow.style.getPropertyValue(ROW_LEFT_VAR)).toBe('78px');
   });
 
+  it('macOS: the folder sidebar\'s row below the traffic lights\' band makes no room for them', () => {
+    const sidebar = row('h-14', { left: 56, right: 300, top: 56 });
+    markWindowRows({ x: 78, y: 0, width: W - 78, height: 56 });
+    expect(sidebar.hasAttribute(ROW_LEFT_ATTRIBUTE)).toBe(false);
+    expect(sidebar.style.getPropertyValue(ROW_LEFT_VAR)).toBe('');
+  });
+
   it('macOS: rounds the room to whole pixels', () => {
     const sidebar = row('h-14', { left: 55.6, right: 300 });
     markWindowRows({ x: 78, y: 0, width: W - 78, height: 56 });
