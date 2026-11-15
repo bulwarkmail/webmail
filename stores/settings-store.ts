@@ -3017,11 +3017,6 @@ if (typeof window !== 'undefined') {
 
   requestSync = triggerSync;
 
-  // The settings the mobile app shares also go through the account's
-  // metadata (stores/settings-metadata-sync). A chunk of its own: it is
-  // idle until an account with settings sync signs in.
-  import('./settings-metadata-sync').then((m) => m.startSettingsMetadataSync()).catch(() => {});
-
   // A reload, a closed tab or a tab sent to the background (where mobile
   // browsers may end it) sends the pending push now instead of after the
   // debounce. What still doesn't arrive stays marked and the next load keeps it.

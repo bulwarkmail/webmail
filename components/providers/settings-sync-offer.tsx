@@ -2,18 +2,23 @@
 
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useSettingsMetadataSyncStore } from "@/stores/settings-metadata-sync";
+import { startSettingsMetadataSync, useSettingsMetadataSyncStore } from "@/stores/settings-metadata-sync";
 import { toast } from "@/stores/toast-store";
 
 /**
- * Settings chosen in this browser before it kept change times that the
- * first sync with the account (and the mobile app) replaced: one toast with
- * the way back (stores/settings-metadata-sync).
+ * Starts syncing the settings the mobile app shares through the account's
+ * metadata (stores/settings-metadata-sync), and offers back settings chosen
+ * in this browser before it kept change times that the first sync with the
+ * account replaced: one toast with the way back.
  */
 export function SettingsSyncOffer() {
   const t = useTranslations("settings.advanced.settings_sync");
   const replaced = useSettingsMetadataSyncStore((s) => s.replaced);
   const shown = useRef<string | null>(null);
+
+  useEffect(() => {
+    startSettingsMetadataSync();
+  }, []);
 
   useEffect(() => {
     if (!replaced) {
