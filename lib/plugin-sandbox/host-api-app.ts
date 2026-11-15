@@ -145,7 +145,7 @@ export const SHARED_SETTINGS = [
   'unifiedCrossAccount', 'includeGroupInUnified', 'enableCrossUnreadView', 'enableCrossStarredView', 'enableCrossAllView',
   'tintListRowsByAccount', 'showAccountDot', 'showSharedMailAccounts', 'compactSharedMailboxes', 'showAdvancedSettings',
   'dateLocale', 'protocolOpenMode', 'showOnboardingOnNewDevices',
-  'mvInboxType', 'messageListOrderScope', 'tintListRowsByTag', 'senderFavicons', 'showAvatarsInJunk',
+  'mvInboxType', 'mvUnreadSectionSize', 'messageListOrderScope', 'tintListRowsByTag', 'senderFavicons', 'showAvatarsInJunk',
   'hoverActions', 'hoverActionsMode', 'hoverActionsCorner', 'swipeRightAction', 'swipeLeftAction',
   'searchDefaultScope', 'clearSearchOnFolderChange',
   'messageSpacing', 'attachmentImagePreviewsEnabled', 'hideInlineImageAttachments',
