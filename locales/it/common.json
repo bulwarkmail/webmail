@@ -2842,9 +2842,7 @@
       },
       "about": {
         "title": "Bulwark Webmail",
-        "source_code": "Codice sorgente",
-        "custom_build": "Build personalizzata",
-        "fork": "Fork personale"
+        "source_code": "Codice sorgente"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -3971,9 +3969,9 @@
       "block": "{count, plural, one {Blocca mittente} other {Blocca # mittenti}}",
       "no_junk": "Questo account non ha una cartella Posta indesiderata",
       "create": "Crea regola…",
-      "add_sender_to_rule": "Aggiungi {count, plural, one {mittente} other {mittenti}} a una regola esistente…",
-      "sender_already_present": "Il mittente è già presente in questa regola",
-      "none_editable": "Nessuna regola modificabile",
+      "add_sender_to_rule": "Aggiungi {sender} a una regola",
+      "sender_already_present": "Già presente in questa regola",
+      "no_rule_fits": "Nessuna regola a cui aggiungerlo",
       "manage": "Gestisci regole",
       "senders_count": "{count, plural, one {# mittente} other {# mittenti}}",
       "cross_account": "Seleziona messaggi di un solo account",

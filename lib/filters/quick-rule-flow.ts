@@ -27,6 +27,7 @@ import {
   insertRuleAtTop,
   isBulwarkRule,
   replaceOrInsertRule,
+  takesSenders,
   type QuickRuleOutcome,
   type QuickRulePreset,
   type QuickRuleSubject,
@@ -271,6 +272,11 @@ export async function openRuleWithSenders(
   const current = filters.parsed.rules.find(rule => rule.id === ruleId);
   if (!current || !isBulwarkRule(current)) {
     toast.error(text.menu('rules.load_failed'));
+    return;
+  }
+  // Changed since the menu listed it.
+  if (!takesSenders(current)) {
+    toast.info(text.menu('rules.no_rule_fits'));
     return;
   }
   const result = addSendersToRule(current, senders);

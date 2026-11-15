@@ -18,9 +18,11 @@ import {
   sharedDomain,
   sharedListId,
   stripSubjectPrefixes,
+  takesSenders,
   type QuickRuleSubject,
   type Translate,
 } from '../quick-rules';
+import { generateScript } from '@/lib/sieve/generator';
 
 /** Renders "key {a=1,b=2}" so assertions can see what was asked for. */
 const t: Translate = (key, values) =>
@@ -71,18 +73,63 @@ describe('addSendersToRule', () => {
     expect(original.conditions[0].value).toBe('anna@acme.com');
   });
 
-  it('adds a From condition when the rule has no exact sender condition and preserves AND/OR', () => {
+  it('adds a From condition as an alternative to a single other condition', () => {
     const original = rule({
       matchType: 'all',
       conditions: [{ field: 'subject', comparator: 'contains', value: 'invoice' }],
     });
     const result = addSendersToRule(original, [{ email: 'bob@acme.com' }]);
     expect(result.added).toEqual(['bob@acme.com']);
-    expect(result.rule.matchType).toBe('all');
+    // "all" of one condition is the same as "any"; "all" of two would only
+    // match Bob's invoices and drop everyone else's.
+    expect(result.rule.matchType).toBe('any');
     expect(result.rule.conditions).toEqual([
       { field: 'subject', comparator: 'contains', value: 'invoice' },
       { field: 'from', comparator: 'address_is', value: 'bob@acme.com' },
     ]);
+    expect(generateScript([result.rule])).toContain(
+      'if anyof(header :contains "Subject" "invoice", address :is "From" "bob@acme.com") {',
+    );
+  });
+
+  it('adds a From condition to a rule that matches any of several conditions', () => {
+    const original = rule({
+      matchType: 'any',
+      conditions: [
+        { field: 'subject', comparator: 'contains', value: 'invoice' },
+        { field: 'to', comparator: 'contains', value: 'billing@' },
+      ],
+    });
+    const result = addSendersToRule(original, [{ email: 'bob@acme.com' }]);
+    expect(result.rule.matchType).toBe('any');
+    expect(result.rule.conditions).toHaveLength(3);
+  });
+
+  it('leaves a rule that needs all of several conditions alone, unless it lists senders', () => {
+    const both = rule({
+      matchType: 'all',
+      conditions: [
+        { field: 'subject', comparator: 'contains', value: 'invoice' },
+        { field: 'to', comparator: 'contains', value: 'billing@' },
+      ],
+    });
+    expect(takesSenders(both)).toBe(false);
+    expect(addSendersToRule(both, [{ email: 'bob@acme.com' }])).toEqual({ rule: both, added: [] });
+    expect(takesSenders(rule({ matchType: 'any', conditions: [] }))).toBe(false);
+
+    const listed = rule({
+      matchType: 'all',
+      conditions: [
+        { field: 'from', comparator: 'address_is', value: 'anna@acme.com' },
+        { field: 'subject', comparator: 'contains', value: 'invoice' },
+      ],
+    });
+    expect(takesSenders(listed)).toBe(true);
+    const result = addSendersToRule(listed, [{ email: 'bob@acme.com' }]);
+    expect(result.rule.matchType).toBe('all');
+    expect(generateScript([result.rule])).toContain(
+      'if allof(address :is "From" ["anna@acme.com", "bob@acme.com"], header :contains "Subject" "invoice") {',
+    );
   });
 
   it('deduplicates case-insensitively and reports when every sender is already present', () => {

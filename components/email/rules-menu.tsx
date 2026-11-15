@@ -23,6 +23,7 @@ import {
   Settings,
   Tag,
   Trash2,
+  UserPlus,
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { buildMailboxTree, cn, generateUUID, type MailboxNode } from "@/lib/utils";
@@ -43,6 +44,7 @@ import {
   ruleTargetMailboxIds,
   rulesMenuAvailability,
   sharedDomain,
+  takesSenders,
   sharedListId,
   toRuleMailbox,
   type QuickRulePreset,
@@ -249,7 +251,10 @@ type SenderRuleListState =
   | { state: "opaque" }
   | { state: "ready"; rules: FilterRule[] };
 
-/** Read the account's current editable rules only when the sender picker opens. */
+/**
+ * The rules another sender can go into, read when the picker opens: Bulwark's
+ * own rules that list senders or match any of their conditions.
+ */
 function useSenderRuleList(target: QuickRuleTarget): SenderRuleListState {
   const [state, setState] = useState<SenderRuleListState>({ state: "loading" });
   useEffect(() => {
@@ -260,7 +265,7 @@ function useSenderRuleList(target: QuickRuleTarget): SenderRuleListState {
         if (cancelled) return;
         setState(parsed.isOpaque
           ? { state: "opaque" }
-          : { state: "ready", rules: parsed.rules.filter(isBulwarkRule) });
+          : { state: "ready", rules: parsed.rules.filter((rule) => isBulwarkRule(rule) && takesSenders(rule)) });
       })
       .catch(() => { if (!cancelled) setState({ state: "error" }); });
     return () => { cancelled = true; };
@@ -289,7 +294,7 @@ function SenderRuleMenuItems({
   if (state.state === "loading") return note("rules.loading", "rules:add-sender:loading");
   if (state.state === "error") return note("rules.load_failed", "rules:add-sender:error");
   if (state.state === "opaque") return note("rules.opaque_hint", "rules:add-sender:opaque");
-  if (state.rules.length === 0) return note("rules.none_editable", "rules:add-sender:empty");
+  if (state.rules.length === 0) return note("rules.no_rule_fits", "rules:add-sender:empty");
 
   return (
     <>
@@ -449,21 +454,10 @@ function ContextRulesContent({
         </ContextMenuSubMenu>
       )}
       {hasSenders && (
-        <ContextMenuItem
-          icon={Ban}
-          label={t("rules.block", { count: senders.length })}
-          title={model.senderTitle}
-          disabled={locked || !model.junk}
-          hint={model.junk ? undefined : t("rules.no_junk")}
-          destructive
-          testId="rules:block"
-          onClick={() => act(() => model.junk && model.run({ kind: "block", junk: toRuleMailbox(target.mailboxes, model.junk) }))}
-        />
-      )}
-      {hasSenders && (
         <ContextMenuSubMenu
-          icon={Plus}
-          label={t("rules.add_sender_to_rule", { count: senders.length })}
+          icon={UserPlus}
+          label={t("rules.add_sender_to_rule", { sender: model.senderLabel })}
+          title={model.senderTitle}
           disabled={locked}
           testId="rules:add-sender"
         >
@@ -474,6 +468,18 @@ function ContextRulesContent({
             onDone={onDone}
           />
         </ContextMenuSubMenu>
+      )}
+      {hasSenders && (
+        <ContextMenuItem
+          icon={Ban}
+          label={t("rules.block", { count: senders.length })}
+          title={model.senderTitle}
+          disabled={locked || !model.junk}
+          hint={model.junk ? undefined : t("rules.no_junk")}
+          destructive
+          testId="rules:block"
+          onClick={() => act(() => model.junk && model.run({ kind: "block", junk: toRuleMailbox(target.mailboxes, model.junk) }))}
+        />
       )}
       {(hasSenders || subject.listId) && <ContextMenuSeparator />}
       <ContextMenuItem
@@ -627,7 +633,7 @@ function SenderRulePanelItems({
   if (state.state === "loading") return note("rules.loading");
   if (state.state === "error") return note("rules.load_failed");
   if (state.state === "opaque") return note("rules.opaque_hint");
-  if (state.rules.length === 0) return note("rules.none_editable");
+  if (state.rules.length === 0) return note("rules.no_rule_fits");
 
   return (
     <>
@@ -688,7 +694,7 @@ function PanelContent({
         label={view === "tag"
           ? t("rules.tag_with")
           : view === "add_sender"
-            ? t("rules.add_sender_to_rule", { count: senders.length })
+            ? t("rules.add_sender_to_rule", { sender: model.senderLabel })
             : moveLabels[view]}
         onClick={() => setView("root")}
       />
@@ -850,6 +856,18 @@ function PanelContent({
       {hasSenders && (
         <PanelButton
           variant={variant}
+          icon={UserPlus}
+          label={t("rules.add_sender_to_rule", { sender: model.senderLabel })}
+          title={model.senderTitle}
+          disabled={locked}
+          chevron
+          testId="rules:add-sender"
+          onClick={() => setView("add_sender")}
+        />
+      )}
+      {hasSenders && (
+        <PanelButton
+          variant={variant}
           icon={Ban}
           label={t("rules.block", { count: senders.length })}
           title={model.senderTitle}
@@ -858,17 +876,6 @@ function PanelContent({
           destructive
           testId="rules:block"
           onClick={() => act(() => model.junk && model.run({ kind: "block", junk: toRuleMailbox(target.mailboxes, model.junk) }))}
-        />
-      )}
-      {hasSenders && (
-        <PanelButton
-          variant={variant}
-          icon={Plus}
-          label={t("rules.add_sender_to_rule", { count: senders.length })}
-          disabled={locked}
-          chevron
-          testId="rules:add-sender"
-          onClick={() => setView("add_sender")}
         />
       )}
       {(hasSenders || subject.listId) && <div className="h-px bg-border my-1" />}

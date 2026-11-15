@@ -98,14 +98,26 @@ describe('Rules entry of the message menu', () => {
     readAccountFilters.mockResolvedValue({
       parsed: {
         isOpaque: false,
-        rules: [existing, { ...existing, id: 'external', name: 'External', origin: 'external' }],
+        rules: [
+          existing,
+          { ...existing, id: 'external', name: 'External', origin: 'external' },
+          // Needs both: a From condition added here would narrow it to Anna's mail.
+          {
+            ...existing,
+            id: 'both',
+            name: 'Both',
+            conditions: [...existing.conditions, { field: 'to', comparator: 'contains', value: 'team@' }],
+          },
+        ],
       },
     } as never);
     renderMenu(email('e1'));
     openRules();
+    expect(screen.getByTestId('rules:add-sender').getAttribute('title')).toBe('anna@acme.com');
     fireEvent.mouseEnter(screen.getByTestId('rules:add-sender').parentElement!);
     const item = await screen.findByTestId('rules:add-sender:existing');
     expect(screen.queryByTestId('rules:add-sender:external')).toBeNull();
+    expect(screen.queryByTestId('rules:add-sender:both')).toBeNull();
     fireEvent.click(item);
     expect(openRuleWithSenders).toHaveBeenCalledWith(
       t,

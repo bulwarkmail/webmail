@@ -216,6 +216,21 @@ describe('quick rules from a message', () => {
     });
   });
 
+  it('does not open a rule that came to need all of several conditions after the menu listed it', async () => {
+    const both = rule('first', {
+      conditions: [
+        { field: 'subject', comparator: 'contains', value: 'invoice' },
+        { field: 'to', comparator: 'contains', value: 'billing@' },
+      ],
+    });
+    accountB = mockSieveAccount('b', [{ name: 'filters', content: generateScript([both]), isActive: true }]);
+    useQuickRuleStore.setState({ editor: null } as never);
+    await openRuleWithSenders(targetFor(accountB, 'b'), 'first', [{ email: 'bob@acme.com' }], 'inbox', text);
+
+    expect(useQuickRuleStore.getState().editor).toBeNull();
+    expect(lastToast().title).toBe('rules.no_rule_fits');
+  });
+
   it('saves "Create rule…" as built, at the top, without merging', async () => {
     accountB = mockSieveAccount('b', [{ name: 'filters', content: generateScript([rule('first')]), isActive: true }]);
     const target = targetFor(accountB, 'b');

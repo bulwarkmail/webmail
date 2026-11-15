@@ -2849,9 +2849,7 @@
       },
       "about": {
         "title": "Bulwark Webmail",
-        "source_code": "Source code",
-        "custom_build": "Custom build",
-        "fork": "Personal fork"
+        "source_code": "Source code"
       },
       "spam_siege": {
         "title": "Spam Siege",
@@ -3971,9 +3969,9 @@
       "block": "{count, plural, one {Block sender} other {Block # senders}}",
       "no_junk": "This account has no Junk folder",
       "create": "Create rule…",
-      "add_sender_to_rule": "Add {count, plural, one {sender} other {senders}} to an existing rule…",
-      "sender_already_present": "This sender is already included in this rule",
-      "none_editable": "No editable rules",
+      "add_sender_to_rule": "Add {sender} to a rule",
+      "sender_already_present": "Already in this rule",
+      "no_rule_fits": "No rules to add to",
       "manage": "Manage rules",
       "senders_count": "{count, plural, one {# sender} other {# senders}}",
       "cross_account": "Select messages from one account",
