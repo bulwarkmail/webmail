@@ -1228,6 +1228,7 @@
       "clear_formatting": "Biçimlendirmeyi temizle",
       "undo": "Geri al",
       "redo": "Yinele",
+      "cell_background": "Hücre arka planı",
       "add_row_above": "Üste satır ekle",
       "add_row_below": "Alta satır ekle",
       "add_column_before": "Öncesine sütun ekle",

@@ -1230,6 +1230,7 @@
       "clear_formatting": "Clear formatting",
       "undo": "Undo",
       "redo": "Redo",
+      "cell_background": "Cell background",
       "add_row_above": "Add row above",
       "add_row_below": "Add row below",
       "add_column_before": "Add column before",

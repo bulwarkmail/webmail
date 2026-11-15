@@ -1228,6 +1228,7 @@
       "clear_formatting": "Formázás törlése",
       "undo": "Visszavonás",
       "redo": "Újra",
+      "cell_background": "Cellaháttér",
       "add_row_above": "Sor beszúrása fölé",
       "add_row_below": "Sor beszúrása alá",
       "add_column_before": "Oszlop beszúrása elé",

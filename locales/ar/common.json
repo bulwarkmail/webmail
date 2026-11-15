@@ -1228,6 +1228,7 @@
       "clear_formatting": "مسح التنسيق",
       "undo": "تراجع",
       "redo": "إعادة",
+      "cell_background": "خلفية الخلية",
       "add_row_above": "إضافة صف بالأعلى",
       "add_row_below": "إضافة صف بالأسفل",
       "add_column_before": "إضافة عمود قبل",

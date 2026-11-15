@@ -1248,6 +1248,7 @@
       "add_column_after": "Προσθήκη στήλης μετά",
       "delete_row": "Διαγραφή γραμμής",
       "delete_column": "Διαγραφή στήλης",
+      "cell_background": "Φόντο κελιού",
       "toggle_header_row": "Εναλλαγή γραμμής επικεφαλίδας",
       "delete_table": "Διαγραφή πίνακα",
       "pick_size": "Επιλογή μεγέθους",

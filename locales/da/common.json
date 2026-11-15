@@ -1228,6 +1228,7 @@
       "clear_formatting": "Ryd formatering",
       "undo": "Fortryd",
       "redo": "Gentag",
+      "cell_background": "Cellebaggrund",
       "add_row_above": "Tilføj række over",
       "add_row_below": "Tilføj række under",
       "add_column_before": "Tilføj kolonne før",

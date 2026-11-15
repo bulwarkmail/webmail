@@ -1244,6 +1244,7 @@
       "add_column_after": "Legg til kolonne etter",
       "delete_row": "Slett rad",
       "delete_column": "Slett kolonne",
+      "cell_background": "Cellebakgrunn",
       "toggle_header_row": "Slå av eller på overskriftsrad",
       "delete_table": "Slett tabell",
       "pick_size": "Vel storleik",

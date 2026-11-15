@@ -19,10 +19,14 @@ import Color from "@tiptap/extension-color";
 import { FontSize, FONT_SIZES, composeTextStyleCss, type ComposeTextStyle } from "@/components/email/font-size";
 import { ResizableImage } from "@/components/email/resizable-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { TableCell } from "@tiptap/extension-table-cell";
+import {
+  StyledTable,
+  StyledTableRow,
+  StyledTableHeader,
+  StyledTableCell,
+  TablePaste,
+} from "@/components/email/table-paste";
+import { selectedRect } from "prosemirror-tables";
 import { ReplyQuoteCollapse } from "@/components/email/reply-quote-collapse";
 import { QuotedHtml, restoreCaretAfterContentSync, serializeEditorContent } from "@/components/email/quoted-html";
 import { keepLoadedParagraphSpacing, paragraphStyleWithoutSpacing, trailingParagraphBreakRule } from "@/components/email/paragraph-breaks";
@@ -71,6 +75,8 @@ import {
   Trash2,
   Rows3,
   Columns3,
+  Palette,
+  ChevronRight,
   ImageIcon,
   Ellipsis,
 } from "@/components/icons";
@@ -560,7 +566,7 @@ export function RichTextEditor({
       Placeholder.configure({
         placeholder,
       }),
-      Table.configure({
+      StyledTable.configure({
         resizable: true,
         HTMLAttributes: {
           border: "1",
@@ -570,13 +576,13 @@ export function RichTextEditor({
           style: "width:100%;border-collapse:collapse;",
         },
       }),
-      TableRow,
-      TableHeader.configure({
+      StyledTableRow,
+      StyledTableHeader.configure({
         HTMLAttributes: {
           style: "padding:6px 8px;border:1px solid #ccc;background-color:#f5f5f5;color:#1f2937;text-align:left;",
         },
       }),
-      TableCell.configure({
+      StyledTableCell.configure({
         HTMLAttributes: {
           style: "padding:6px 8px;border:1px solid #ccc;vertical-align:top;",
         },
@@ -592,6 +598,7 @@ export function RichTextEditor({
       SignatureBlock.configure({ editHint: tComposer('signature_edit_hint') }),
       TextDirection,
       PlainTextPaste,
+      TablePaste,
       // "@" offers the recipients and inserts a first name (see
       // recipient-mention.tsx). The editor is built once, so the candidates
       // and the list are reached through refs and a stable state setter.
@@ -811,6 +818,10 @@ export function RichTextEditor({
   const tWindows = useTranslations("compose_windows");
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
+  // Nested inside the table menu: the cell-background palette lives in its
+  // own submenu rather than flat in the menu.
+  const [cellBgMenuOpen, setCellBgMenuOpen] = useState(false);
+  const cellBgButtonRef = useRef<HTMLButtonElement>(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const colorWrapperRef = useRef<HTMLDivElement>(null);
   const [bgColorMenuOpen, setBgColorMenuOpen] = useState(false);
@@ -925,6 +936,11 @@ export function RichTextEditor({
     return () => document.removeEventListener("mousedown", handler);
   }, [tableMenuOpen]);
 
+  // The submenu's open state only makes sense while its parent menu is.
+  useEffect(() => {
+    if (!tableMenuOpen) setCellBgMenuOpen(false);
+  }, [tableMenuOpen]);
+
   if (!editor) {
     return (
       <div className={cn("min-h-[100px]", className)} />
@@ -972,6 +988,21 @@ export function RichTextEditor({
   const onToolbarFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (target instanceof HTMLButtonElement && target.hasAttribute("data-toolbar-item") && inRow(target)) syncToolbarTabStops(target);
+  };
+
+  // The background colour of the first selected cell (the caret's cell
+  // for a text selection), for the table menu's cell-background palette.
+  const currentCellBackground = () => {
+    if (!editor.isActive("table")) return null;
+    try {
+      const rect = selectedRect(editor.state);
+      const pos = rect.map.cellsInRect(rect)[0];
+      const cell = editor.state.doc.nodeAt(rect.tableStart + pos);
+      const match = /background-color\s*:\s*([^;]+)/i.exec(cell?.attrs?.style || "");
+      return match ? match[1].trim() : null;
+    } catch {
+      return null;
+    }
   };
 
   const renderPalette = (current: string | null, apply: (color: string) => void, removeLabel: string, remove: () => void) => (
@@ -1405,10 +1436,53 @@ export function RichTextEditor({
                   {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("add_row_below"), () => editor.chain().focus().addRowAfter().run())}
                   {tableMenuItem(<Columns3 className="w-4 h-4" aria-hidden />, tToolbar("add_column_before"), () => editor.chain().focus().addColumnBefore().run())}
                   {tableMenuItem(<Columns3 className="w-4 h-4" aria-hidden />, tToolbar("add_column_after"), () => editor.chain().focus().addColumnAfter().run())}
+                  {/* Cell background colour - its own submenu so the
+                      palette does not crowd the insert/delete items. The
+                      nested popover renders inside this menu's DOM, so
+                      clicking a swatch never reads as an outside click. */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      aria-haspopup="menu"
+                      aria-expanded={cellBgMenuOpen}
+                      ref={cellBgButtonRef}
+                      className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent focus-visible:bg-accent text-start w-full"
+                      onClick={() => setCellBgMenuOpen((v) => !v)}
+                    >
+                      <Palette className="w-4 h-4" aria-hidden /> {tToolbar("cell_background")}
+                      <ChevronRight className="w-3 h-3 ms-auto opacity-60" aria-hidden />
+                    </button>
+                    {cellBgMenuOpen && (
+                      <ToolbarPopover
+                        label={tToolbar("cell_background")}
+                        role="menu"
+                        columns={8}
+                        triggerRef={cellBgButtonRef}
+                        onClose={() => setCellBgMenuOpen(false)}
+                        className="p-2"
+                      >
+                        {renderPalette(
+                          currentCellBackground(),
+                          (color) => {
+                            editor.chain().focus().setCellBackground(color).run();
+                            setCellBgMenuOpen(false);
+                            setTableMenuOpen(false);
+                          },
+                          tToolbar("remove_background_color"),
+                          () => {
+                            editor.chain().focus().setCellBackground(null).run();
+                            setCellBgMenuOpen(false);
+                            setTableMenuOpen(false);
+                          }
+                        )}
+                      </ToolbarPopover>
+                    )}
+                  </div>
                   <div className="h-px bg-border my-1" role="separator" />
                   {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_row"), () => editor.chain().focus().deleteRow().run())}
                   {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_column"), () => editor.chain().focus().deleteColumn().run())}
-                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("toggle_header_row"), () => editor.chain().focus().toggleHeaderRow().run())}
+                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("toggle_header_row"), () => editor.chain().focus().toggleHeaderRowStyled().run())}
                   <div className="h-px bg-border my-1" role="separator" />
                   {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_table"), () => editor.chain().focus().deleteTable().run(), true)}
                 </div>
