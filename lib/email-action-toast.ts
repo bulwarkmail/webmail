@@ -1,5 +1,5 @@
 import { toast } from "@/stores/toast-store";
-import { useEmailStore, captureEmailListQuery, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
 import type { ToastAction } from "@/components/ui/toast";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Email } from "@/lib/jmap/types";
@@ -7,7 +7,6 @@ import { linkUndoToast, recordUndo, runUndo } from "@/lib/undo-history";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { emailKeyFor, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { announce } from "@/lib/announce";
-import { useAuthStore } from "@/stores/auth-store";
 import { currentStoreEpoch } from "@/lib/store-epoch";
 
 /** How long a toast with Undo stays, so there is time to reach the button. */
@@ -131,31 +130,16 @@ export async function markSelectionReadWithUndo(
   read: boolean,
   words: { success: string; error: string; labels: UndoLabels },
 ): Promise<void> {
-  const isCurrent = captureEmailListQuery();
   const epoch = currentStoreEpoch();
-  const auth = useAuthStore.getState();
-  const viewingAccountId = useEmailStore.getState().viewingAccountId;
-  const isCurrentAccount = () => currentStoreEpoch() === epoch
-    && useAuthStore.getState().activeAccountId === auth.activeAccountId
-    && useAuthStore.getState().client === auth.client
-    && useEmailStore.getState().viewingAccountId === viewingAccountId;
   const points = keywordRestorePoints(resolveSelectedEmails(useEmailStore.getState()), ["$seen"], { $seen: read });
-  let ran = false;
-  let failure: { error: unknown } | undefined;
-  try {
-    ran = await useEmailStore.getState().batchMarkAsRead(client, read, undefined, error => { failure = { error }; });
-  } catch (error) {
-    failure = { error };
-  }
-  // Failure belongs to the account epoch, even after its list was replaced.
-  // Leaving the account abandons feedback, including an A -> B -> A return.
-  if (!isCurrentAccount()) return;
-  if (failure) {
-    toast.error(words.error, failure.error instanceof Error ? failure.error.message : "Failed to update emails");
-  } else if (ran !== false && isCurrent()) {
-    // Success and Undo still belong to the original list, never its successor.
-    toastWithUndo(words.success, undoKeywordAction(client, points, words.labels));
-  }
+  await runBatchEmailAction(() => useEmailStore.getState().batchMarkAsRead(client, read), {
+    success: words.success,
+    error: words.error,
+    undo: undoKeywordAction(client, points, words.labels),
+    // Switched to another account meanwhile: its error is not this action's
+    // outcome, and Undo would act on the other account's list.
+    isCurrent: () => currentStoreEpoch() === epoch,
+  });
 }
 
 /**
@@ -273,14 +257,14 @@ export async function runBatchEmailAction(
   try {
     ran = await run();
   } catch (error) {
-    if (messages.isCurrent && !messages.isCurrent()) return;
+    if (messages.isCurrent?.() === false) return;
     console.error(messages.error, error);
     const detail = messages.describeError?.(error) ?? (error instanceof Error ? error.message : undefined);
     toast.error(messages.error, detail);
     return;
   }
-  // Bulk read's old operation must not consume a newer view's error or Undo.
-  if (messages.isCurrent && !messages.isCurrent()) return;
+  // `isCurrent` false: the view this action ran in is gone, so is its feedback.
+  if (messages.isCurrent?.() === false) return;
   const storeError = useEmailStore.getState().error;
   if (storeError) {
     toast.error(messages.error, storeError);

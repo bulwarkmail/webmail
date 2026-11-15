@@ -616,8 +616,7 @@ interface EmailStore {
 
   // Batch operations
   /** Acts on the selection, or on `target`'s messages when given. */
-  // onFailure reports this write independently of the view-scoped error field.
-  batchMarkAsRead: (client: IJMAPClient, read: boolean, target?: BatchActionTarget, onFailure?: (error: unknown) => void) => Promise<boolean>;
+  batchMarkAsRead: (client: IJMAPClient, read: boolean, target?: BatchActionTarget) => Promise<boolean>;
   /**
    * Put a tag on, or take it off, every selected message. Their other tags
    * and keywords stay as they are, and so does the selection, so several
@@ -1942,7 +1941,7 @@ function captureEmailListRequest(): () => boolean {
 
 // Passive reads must still describe the query they dispatched. In particular,
 // quick search writes its query later, after a refresh/page may have started.
-export function captureEmailListQuery(): () => boolean {
+function captureEmailListQuery(): () => boolean {
   const isCurrentRequest = captureEmailListRequest();
   const { searchQuery, searchFilters, searchMailboxId } = useEmailStore.getState();
   return () => {
@@ -4043,7 +4042,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   })),
   fetchTagCounts: (client) => coalesceRefresh(client, 'tagCounts', async () => {
     const epoch = currentStoreEpoch();
-    const auth = useAuthStore.getState();
     try {
       const keywords = useSettingsStore.getState().emailKeywords;
       if (keywords.length === 0) {
@@ -4067,8 +4065,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           counts[id] = { total: cur.total + c.total, unread: cur.unread + c.unread };
         }
       }
-      if (currentStoreEpoch() !== epoch || useAuthStore.getState().client !== auth.client
-        || useAuthStore.getState().activeAccountId !== auth.activeAccountId) return;
+      // Counted in an account that is no longer on screen.
+      if (currentStoreEpoch() !== epoch) return;
       set({ tagCounts: counts });
     } catch (error) {
       console.error('Failed to fetch tag counts:', error);
@@ -6407,45 +6405,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   // Batch operations
-  batchMarkAsRead: async (client, read, target, onFailure): Promise<boolean> => {
-    const { emails, selectedEmailKeys } = get();
+  batchMarkAsRead: async (client, read, target): Promise<boolean> => {
+    const { selectedEmailKeys } = get();
     const epoch = currentStoreEpoch();
-    const auth = useAuthStore.getState();
-    const viewingAccountId = get().viewingAccountId;
-    const viewClient = viewedClient(client);
-    const viewOwner = resolveViewAccountId();
-    const isCurrentList = captureEmailListQuery();
-    const isSameAccount = () => useAuthStore.getState().activeAccountId === auth.activeAccountId
-      && useAuthStore.getState().client === auth.client && get().viewingAccountId === viewingAccountId
-      && viewedClient(client) === viewClient && resolveViewAccountId() === viewOwner;
-    const ownsState = () => currentStoreEpoch() === epoch && isSameAccount();
-    const reconcileReturnedAccount = () => {
-      // A -> B -> A is a new view. Query it again rather than replaying the
-      // old selection/list or applying deltas to already-refreshed counters.
-      if (currentStoreEpoch() !== epoch && isSameAccount() && auth.client) {
-        const returnedClient = auth.client;
-        const returnedEpoch = currentStoreEpoch();
-        const isCurrent = () => currentStoreEpoch() === returnedEpoch && isSameAccount();
-        const refreshes = [
-          ['currentMailbox', () => get().refreshCurrentMailbox(returnedClient)],
-          ['mailboxes', () => get().fetchMailboxes(returnedClient)],
-          ['tagCounts', () => get().fetchTagCounts(returnedClient)],
-        ] as const;
-        for (const [key, refresh] of refreshes) {
-          void (async () => {
-            // Do not enqueue a replay of an older refresh: its next run could
-            // start in another account. Wait, then recheck this returned view.
-            let pending = inFlightRefreshes.get(returnedClient)?.get(key);
-            while (pending) {
-              await pending.promise;
-              if (!isCurrent()) return;
-              pending = inFlightRefreshes.get(returnedClient)?.get(key);
-            }
-            if (isCurrent()) await refresh();
-          })();
-        }
-      }
-    };
     // The selection is keyed by owning account; JMAP takes the bare ids of
     // exactly those emails, never the keys and never a lookup by id (which
     // is what let a namesake in another account ride along). A targeted call
@@ -6463,8 +6425,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       return false;
     }
 
-    // A plugin may have yielded before dispatch. Nothing has been sent yet.
-    if (!ownsState()) return false;
+    // A plugin may have yielded across an account switch. The writes below
+    // read the view's account, which is now another one's: send nothing.
+    if (currentStoreEpoch() !== epoch) return false;
     set({ isLoading: true, error: null });
     try {
       // Each write names the rows it covers: by key for the selection, so a
@@ -6524,17 +6487,17 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
       const changed = (email: Email) => (targetIds ? changedIds.has(email.id) : changedKeys.has(emailKeyFor(email)));
       if (failure && (targetIds ? changedIds.size : changedKeys.size) === 0) throw failure;
-      if (failure) onFailure?.(failure);
 
-      // The dispatched mutation still succeeded if its UI has gone away.
-      if (!ownsState()) {
+      // After an account switch the stores hold another account's mail: the
+      // write went through, but none of it is on screen any more.
+      if (currentStoreEpoch() !== epoch) {
         if (changedIds.size > 0) void emailHooks.onEmailReadStateChange.emit({ emailIds: [...changedIds], read });
-        reconcileReturnedAccount();
         return true;
       }
 
-      // Patch the current copies: a newer folder/page owns their membership.
-      const updatedEmails = get().emails.map(email =>
+      // Patch the rows on screen now: a folder opened meanwhile owns the list.
+      const { emails } = get();
+      const updatedEmails = emails.map(email =>
         changed(email)
           ? { ...email, keywords: { ...email.keywords, $seen: read } }
           : email
@@ -6605,24 +6568,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         tagCounts,
         retainedInViewIds,
         threadEmailsCache,
-        // Loading, errors and selection belong to the initiating list request.
-        ...(isCurrentList() ? {
-          selectedEmailKeys: target || get().selectedEmailKeys !== selectedEmailKeys
-            ? get().selectedEmailKeys : new Set(notFound),
-          isLoading: false,
-          error: failure ? (failure instanceof Error ? failure.message : "Failed to update emails") : null,
-        } : {}),
+        // The user's own selection is not what a targeted call acted on, and
+        // one made since (in another folder) is newer than this action.
+        selectedEmailKeys: target || get().selectedEmailKeys !== selectedEmailKeys
+          ? get().selectedEmailKeys : new Set(notFound),
+        isLoading: false,
+        error: failure ? (failure instanceof Error ? failure.message : "Failed to update emails") : null,
       });
       if (changedIds.size > 0) void emailHooks.onEmailReadStateChange.emit({ emailIds: [...changedIds], read });
       refillAfterKeywordChange(get, client, ['$seen']);
     } catch (error) {
-      onFailure?.(error);
-      if (ownsState() && isCurrentList()) {
-        set({
-          error: error instanceof Error ? error.message : "Failed to update emails",
-          isLoading: false
-        });
-      } else reconcileReturnedAccount();
+      if (currentStoreEpoch() !== epoch) return false;
+      set({
+        error: error instanceof Error ? error.message : "Failed to update emails",
+        isLoading: false
+      });
       return false;
     }
     return true;

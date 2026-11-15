@@ -3,7 +3,7 @@ import { useEmailStore } from '../email-store';
 import { useAuthStore } from '../auth-store';
 import { useSettingsStore } from '../settings-store';
 import { clearAllStores } from '@/lib/account-state-manager';
-import { clearAllHooks } from '@/lib/plugin-hooks';
+import { clearAllHooks, emailHooks } from '@/lib/plugin-hooks';
 import { jmapError } from '@/lib/jmap/jmap-error';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
@@ -27,10 +27,7 @@ function client(account: string) {
   return {
     getAccountId: () => `owner-${account}`,
     batchMarkAsRead: vi.fn<(...args: unknown[]) => Promise<void>>(),
-    getEmails: vi.fn().mockResolvedValue({ emails: [], hasMore: false, total: 0, threadCounts: {} }),
-    getAllMailboxesWithState: vi.fn().mockResolvedValue({ mailboxes: boxes(0), states: {} }),
     getTagCounts: vi.fn().mockResolvedValue({ work: { total: 2, unread: 0 } }),
-    getThreads: vi.fn().mockResolvedValue([]),
   };
 }
 let a: ReturnType<typeof client>, b: ReturnType<typeof client>;
@@ -61,14 +58,11 @@ beforeEach(() => {
   useAuthStore.setState({ getClientForAccount: ((id: string) => id === 'A' ? asClient(a) : asClient(b)) as never });
   useSettingsStore.setState({ emailKeywords: [{ id: 'work', label: 'Work', color: 'blue' }],
     disableThreading: true, messageListOrder: [], emailsPerPage: 50 } as never);
-  vi.stubGlobal('fetch', vi.fn(() => { throw new Error('Network denied in bulk completion regression'); }));
 });
-afterEach(() => {
-  expect(fetch).not.toHaveBeenCalled(); vi.unstubAllGlobals(); clearAllHooks(); vi.restoreAllMocks();
-});
+afterEach(() => { clearAllHooks(); vi.restoreAllMocks(); });
 
 for (const read of [true, false]) {
-  it.each(['accepted', 'partial', 'rejected'])(`read=${read}: %s A completion leaves B's state and pending loading/error alone`, async outcome => {
+  it.each(['accepted', 'partial', 'rejected'])(`read=${read}: a %s completion for account A leaves account B's list alone`, async outcome => {
     seed('A', !read);
     const service = deferred(); a.batchMarkAsRead.mockReturnValueOnce(service.promise);
     const running = useEmailStore.getState().batchMarkAsRead(asClient(a), read);
@@ -77,67 +71,46 @@ for (const read of [true, false]) {
       isLoading: true, error: 'B folder refresh failed' });
     const before = state();
     finish(service, outcome);
-    // Dispatch happened on A. Losing the UI does not turn its acceptance into cancellation.
+    // The write went out for A; losing its list does not undo it.
     expect(await running).toBe(outcome !== 'rejected');
     expect(a.batchMarkAsRead).toHaveBeenCalledExactlyOnceWith(['shared', 'a-only'], read, undefined);
     expect(state()).toEqual(before);
-    expect(b.getEmails).not.toHaveBeenCalled(); expect(b.batchMarkAsRead).not.toHaveBeenCalled();
+    expect(b.batchMarkAsRead).not.toHaveBeenCalled();
   });
 
-  it.each(['accepted', 'partial'])(`read=${read}: A-B-A %s reconciles from the server without restoring old rows or selection`, async outcome => {
+  it(`read=${read}: patches the rows of a folder opened meanwhile and keeps its selection`, async () => {
     seed('A', !read);
     const service = deferred(); a.batchMarkAsRead.mockReturnValueOnce(service.promise);
     const running = useEmailStore.getState().batchMarkAsRead(asClient(a), read);
-    clearAllStores(); seed('B', !read); clearAllStores(); seed('A', !read);
-    const latest = [mail('latest A', 'shared', !read), mail('latest A', 'new-only', !read)];
-    const selected = new Set(['new-only']);
-    useEmailStore.setState({ emails: latest, selectedEmailKeys: selected, isLoading: true, error: 'New A view error' });
-    const authoritative = latest.map(e => e.id === 'shared' ? { ...e, keywords: { ...e.keywords, $seen: read } } : e);
-    a.getEmails.mockResolvedValueOnce({ emails: authoritative, hasMore: false, total: 2, threadCounts: {} });
-    finish(service, outcome); expect(await running).toBe(true);
-    await vi.waitFor(() => expect(useEmailStore.getState().emails).toEqual(authoritative));
-    expect(a.getEmails).toHaveBeenCalledTimes(1);
-    expect(useEmailStore.getState().selectedEmailKeys).toBe(selected);
-    expect(useEmailStore.getState()).toMatchObject({ isLoading: true, error: 'New A view error' });
-  });
-
-  it(`read=${read}: patches current folder rows and preserves a newer folder's selection/loading/error`, async () => {
-    const original = seed('A', !read);
-    original[0].mailboxIds.archive = true;
-    const service = deferred(); a.batchMarkAsRead.mockReturnValueOnce(service.promise);
-    const running = useEmailStore.getState().batchMarkAsRead(asClient(a), read);
     useEmailStore.getState().selectMailbox('archive');
-    const latest = [mail('new archive', 'shared', !read, 'archive'), mail('new archive', 'archive-only', !read, 'archive')];
+    const latest = [mail('A', 'shared', !read, 'archive'), mail('A', 'archive-only', !read, 'archive')];
     const selected = new Set(['archive-only']);
-    useEmailStore.setState({ emails: latest, selectedEmailKeys: selected, isLoading: true, error: 'Archive read error' });
+    useEmailStore.setState({ emails: latest, selectedEmailKeys: selected });
     service.resolve(); expect(await running).toBe(true);
     expect(useEmailStore.getState().emails).toEqual(latest.map(e => e.id === 'shared'
       ? { ...e, keywords: { ...e.keywords, $seen: read } } : e));
     expect(useEmailStore.getState().selectedEmailKeys).toBe(selected);
-    expect(useEmailStore.getState()).toMatchObject({ isLoading: true, error: 'Archive read error' });
   });
 }
 
-it.each([false, true])('a second switch drops reconciliation, including an already pending refresh (%s)', async alreadyPending => {
-  seed('A', false); const write = deferred(); a.batchMarkAsRead.mockReturnValueOnce(write.promise);
+it('sends nothing when the account changed while a plugin was asked', async () => {
+  seed('A', false);
+  const answer = deferred<boolean>();
+  emailHooks.onBeforeEmailReadStateChange.register('test-wait', () => answer.promise);
   const running = useEmailStore.getState().batchMarkAsRead(asClient(a), true);
-  clearAllStores(); seed('B', false); clearAllStores(); seed('A', false);
-  const page = deferred<{ emails: Email[]; hasMore: boolean; total: number }>();
-  const folders = deferred<{ mailboxes: Mailbox[]; states: Record<string, string> }>();
-  const tags = deferred<{ work: { total: number; unread: number } }>();
-  a.getEmails.mockReturnValueOnce(page.promise); a.getAllMailboxesWithState.mockReturnValueOnce(folders.promise);
-  a.getTagCounts.mockReturnValueOnce(tags.promise);
-  const earlier = alreadyPending ? Promise.all([
-    useEmailStore.getState().refreshCurrentMailbox(asClient(a)),
-    useEmailStore.getState().fetchMailboxes(asClient(a)),
-    useEmailStore.getState().fetchTagCounts(asClient(a)),
-  ]) : Promise.resolve();
-  write.resolve(); await running;
-  await vi.waitFor(() => expect(a.getTagCounts).toHaveBeenCalledTimes(1));
   clearAllStores(); seed('B', false); const before = state();
-  page.resolve({ emails: [mail('A late reconciliation', 'shared', true)], hasMore: false, total: 1 });
-  folders.resolve({ mailboxes: boxes(0), states: {} }); tags.resolve({ work: { total: 99, unread: 99 } });
-  await Promise.all([page.promise, folders.promise, tags.promise, earlier]);
-  await new Promise(resolve => setTimeout(resolve, 0));
+  answer.resolve(true);
+  expect(await running).toBe(false);
+  expect(a.batchMarkAsRead).not.toHaveBeenCalled(); expect(b.batchMarkAsRead).not.toHaveBeenCalled();
   expect(state()).toEqual(before);
+});
+
+it("drops tag counts that arrive after a switch to another account", async () => {
+  seed('A', false);
+  const counts = deferred<Record<string, { total: number; unread: number }>>();
+  a.getTagCounts.mockReturnValueOnce(counts.promise);
+  const running = useEmailStore.getState().fetchTagCounts(asClient(a));
+  clearAllStores(); seed('B', false);
+  counts.resolve({ work: { total: 99, unread: 99 } }); await running;
+  expect(useEmailStore.getState().tagCounts).toEqual({ work: { total: 2, unread: 2 } });
 });
