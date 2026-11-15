@@ -14,7 +14,7 @@ import {
   selectedRect,
   tableNodeTypes,
   TableMap,
-} from "prosemirror-tables";
+} from "@tiptap/pm/tables";
 
 // Excel/WPS/Word put the clipboard table's styling where ProseMirror's
 // clipboard parser cannot reach it: class rules in a <head> <style> block

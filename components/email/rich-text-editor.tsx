@@ -26,7 +26,7 @@ import {
   StyledTableCell,
   TablePaste,
 } from "@/components/email/table-paste";
-import { selectedRect } from "prosemirror-tables";
+import { selectedRect } from "@tiptap/pm/tables";
 import { ReplyQuoteCollapse } from "@/components/email/reply-quote-collapse";
 import { QuotedHtml, restoreCaretAfterContentSync, serializeEditorContent } from "@/components/email/quoted-html";
 import { keepLoadedParagraphSpacing, paragraphStyleWithoutSpacing, trailingParagraphBreakRule } from "@/components/email/paragraph-breaks";

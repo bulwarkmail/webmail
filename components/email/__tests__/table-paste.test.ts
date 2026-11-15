@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { CellSelection } from 'prosemirror-tables';
+import { CellSelection } from '@tiptap/pm/tables';
 
 import {
   inlineClipboardStyles,

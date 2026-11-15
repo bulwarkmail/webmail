@@ -4,7 +4,7 @@ import React from 'react';
 import type { Editor } from '@tiptap/core';
 // Top-level ESM import: require() would load the CJS copy and hand back a
 // different CellSelection class than the one the editor uses.
-import { CellSelection } from 'prosemirror-tables';
+import { CellSelection } from '@tiptap/pm/tables';
 
 import { RichTextEditor } from '../rich-text-editor';
 
