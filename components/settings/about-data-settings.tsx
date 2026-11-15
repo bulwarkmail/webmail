@@ -24,7 +24,7 @@ import { DesktopUpdateSettings } from './desktop-update-settings';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
-const CUSTOM_SOURCE_URL = "https://github.com/maicardi/bulwark-webmail/tree/feature-add-sender-to-existing-filter";
+const UPSTREAM_SOURCE_URL = "https://github.com/bulwarkmail/webmail";
 
 function VersionUpdateTag() {
   const status = useUpdateStore((s) => s.status);
@@ -111,20 +111,17 @@ export function AboutFooter() {
             <p className="text-xs font-medium text-foreground truncate">{branded ? appName : t('about.title')}</p>
             <p className="text-[0.6875rem] text-muted-foreground truncate">
               v{APP_VERSION} <span className="text-muted-foreground">({GIT_COMMIT})</span>
-              <span className="ms-2 inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[0.625rem] font-medium text-primary align-middle">
-                {t('about.custom_build')}
-              </span>
               <VersionUpdateTag />
             </p>
           </div>
         </button>
         <a
-          href={sourceCodeUrl || CUSTOM_SOURCE_URL}
+          href={sourceCodeUrl || UPSTREAM_SOURCE_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="shrink-0 inline-flex items-center gap-1 text-[0.6875rem] text-muted-foreground hover:text-foreground transition-colors"
         >
-          {sourceCodeUrl ? t('about.source_code') : t('about.fork')} <ExternalLink className="w-3 h-3" />
+          {sourceCodeUrl ? t('about.source_code') : 'GitHub'} <ExternalLink className="w-3 h-3" />
         </a>
       </div>
     </div>
