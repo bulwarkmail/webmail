@@ -1003,10 +1003,13 @@ export function MvExpandedConversationCard({
   blobSource,
   compact,
   shortDates,
+  onCard,
 }: {
   email: Email;
   timeFormat: '12h' | '24h';
   compact?: boolean;
+  /** Inside the reader's message card (reading width about 80 characters). */
+  onCard?: boolean;
   /** The default layout's short date instead of Gmail's long one. */
   shortDates?: boolean;
   onCollapse: (email: Email) => void;
@@ -1158,6 +1161,7 @@ export function MvExpandedConversationCard({
           blobSource={blobSource}
           className={cn("pb-4", compact ? "px-4" : "ps-[80px] pe-6")}
           bodyStyle={{ paddingBlock: '0.25rem 0.5rem' }}
+          onCard={onCard}
         />
       ) : (
         <div className={cn("pb-4 pt-1 space-y-2 animate-pulse", compact ? "px-4" : "ps-[80px] pe-6")} data-mv-conversation-loading="">
@@ -1790,6 +1794,8 @@ export function EmailViewer({
         : blobSource ?? resolveEmailBlobContext(target, client)}
       onDownloadAttachment={(blobId, name, type, source) => onDownloadAttachment?.(blobId, name, type, false, source)}
       compact={mvMobileViewer}
+      // Called by the conversation run while it renders, after `readingCard` is set.
+      onCard={readingCard}
     />
   );
   // Mountain View's toolbars are icon-only, on the phone as on the desktop.
@@ -5466,7 +5472,10 @@ export function EmailViewer({
           has to match. */}
       <div
         className={cn("min-h-full flex flex-col", readingCard && "min-h-0 max-w-(--reading-card-width) mx-auto my-4 overflow-clip rounded-xl border border-border bg-card shadow-sm [--color-background:var(--color-card)]")}
-        style={readingCard ? { '--reading-card-width': reading.cardWidth } as CSSProperties : undefined}
+        // Mountain View indents the bodies under the sender's name (60px for
+        // the open message, 80px for the others); the card makes room for it
+        // so their lines still hold about 80 characters.
+        style={readingCard ? { '--reading-card-width': mvViewer ? `calc(${reading.cardWidth} + 4rem)` : reading.cardWidth } as CSSProperties : undefined}
         data-reading-card={readingCard ? "" : undefined}
       >
 

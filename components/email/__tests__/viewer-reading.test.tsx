@@ -36,6 +36,7 @@ class NoopResizeObserver {
 vi.stubGlobal('ResizeObserver', NoopResizeObserver);
 
 const { EmailViewer } = await import('../email-viewer');
+const { ConversationEmailBody } = await import('../thread-conversation-view');
 const { useSettingsStore } = await import('@/stores/settings-store');
 const { ACCESSIBILITY_DEFAULTS } = await import('@/lib/accessibility-settings');
 const { useThemeStore } = await import('@/stores/theme-store');
@@ -313,6 +314,33 @@ describe('message card', () => {
     const pane = container.querySelector<HTMLElement>('[data-reader-scroll]')!;
     expect(pane).not.toHaveClass('px-4');
     expect(pane.firstElementChild!.className).toBe('min-h-full flex flex-col');
+  });
+
+  it('makes room in Mountain View for the bodies indented under the sender', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable', interfaceLayout: 'mountain-view' } as never);
+    try {
+      const { container } = await show(message({ html: '<p>Some text</p>' }));
+      expect(card(container)!.style.getPropertyValue('--reading-card-width')).toBe('calc(calc(0.875rem * 44 + 2.5rem) + 4rem)');
+    } finally {
+      useSettingsStore.setState({ interfaceLayout: 'default' } as never);
+    }
+  });
+
+  it("paints a conversation message in the app's colours with the card colour inside the card", async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable', mailOverrideStyles: 'always' } as never);
+    document.documentElement.style.setProperty('--color-background', '#0a0a0a');
+    document.documentElement.style.setProperty('--color-card', '#141414');
+    try {
+      const body = (onCard: boolean) => render(
+        <ConversationEmailBody email={message({ html: '<p>Earlier</p>' })} allowExternal={false} onAllowExternal={() => {}} onCard={onCard} />,
+      ).container.querySelector('iframe')!.getAttribute('srcdoc');
+      expect(body(true)).toContain('html{background:#141414!important}');
+      // The phone's conversation view has no card: the page colour.
+      expect(body(false)).toContain('html{background:#0a0a0a!important}');
+    } finally {
+      document.documentElement.style.removeProperty('--color-background');
+      document.documentElement.style.removeProperty('--color-card');
+    }
   });
 });
 

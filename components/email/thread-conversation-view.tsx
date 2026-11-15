@@ -680,6 +680,8 @@ interface ConversationEmailBodyProps {
   /** Padding around the body; the phone card's density padding by default. */
   bodyStyle?: React.CSSProperties;
   className?: string;
+  /** Shown inside the reader's message card, whose colour mail in the app's colours takes. */
+  onCard?: boolean;
 }
 
 /**
@@ -696,6 +698,7 @@ export function ConversationEmailBody({
   blobSource,
   bodyStyle,
   className,
+  onCard = false,
 }: ConversationEmailBodyProps) {
   const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email.sourceClientAccountId);
   const t = useTranslations();
@@ -710,7 +713,7 @@ export function ConversationEmailBody({
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
   const emailAlwaysLightMode = useSettingsStore((state) => state.emailAlwaysLightMode);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
-  const reading = useMailReading();
+  const reading = useMailReading({ wide: onCard });
   // No dark recolouring in a forced-colours mode: the browser maps the mail
   // to the user's colours itself.
   const isDark = resolvedTheme === 'dark' && !emailAlwaysLightMode && !reading.forcedColors && !reading.overrideStyles;
