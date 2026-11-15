@@ -260,7 +260,14 @@ async function precacheShell(urls, buildId) {
         const target = new URL(response.url);
         if (!page || target.origin !== self.location.origin || appPagePath(target) === null || staticPath(target)) return;
         if (documentKey(target) === key) return;
-        await cache.put(documentKey(target), response);
+        // The fetched response is marked redirected, and a browser fails a
+        // navigation answered with one (net::ERR_FAILED): keep a fresh copy.
+        const kept = new Response(await response.blob(), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        });
+        await cache.put(documentKey(target), kept);
         await cache.put(key, Response.redirect(target.href, 302));
       } catch (_) {
         // Fetched again when the page asks next time.

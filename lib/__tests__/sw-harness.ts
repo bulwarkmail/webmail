@@ -6,6 +6,14 @@ import vm from 'node:vm';
 // memory and the events the worker listens to.
 const SW_SOURCE = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
 
+// The Cache API keeps a response's URL list, so a response that went through
+// a redirect comes back out with `redirected` still set; clone() in Node drops it.
+function cloneKept(res: Response): Response {
+  const copy = res.clone();
+  if (res.redirected) Object.defineProperty(copy, 'redirected', { value: true });
+  return copy;
+}
+
 export class FakeCaches {
   stores = new Map<string, Map<string, Response>>();
   async open(name: string) {
@@ -13,7 +21,10 @@ export class FakeCaches {
     const store = this.stores.get(name)!;
     const keyOf = (req: string | { url: string }) => (typeof req === 'string' ? req : req.url);
     return {
-      match: async (req: string | { url: string }) => store.get(keyOf(req))?.clone(),
+      match: async (req: string | { url: string }) => {
+        const hit = store.get(keyOf(req));
+        return hit ? cloneKept(hit) : undefined;
+      },
       put: async (req: string | { url: string }, res: Response) => { store.set(keyOf(req), res); },
       delete: async (req: string | { url: string }) => store.delete(keyOf(req)),
       keys: async () => [...store.keys()].map((url) => ({ url })),
@@ -24,7 +35,7 @@ export class FakeCaches {
   async has(name: string) { return this.stores.has(name); }
   async match(req: string | { url: string }) {
     const key = typeof req === 'string' ? req : req.url;
-    for (const store of this.stores.values()) if (store.has(key)) return store.get(key)!.clone();
+    for (const store of this.stores.values()) if (store.has(key)) return cloneKept(store.get(key)!);
     return undefined;
   }
 }

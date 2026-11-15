@@ -236,6 +236,9 @@ describe('service worker with offline mode on', () => {
     expect(start?.headers.get('location')).toBe(`${ORIGIN}/en`);
     const landed = await worker.request({ url: `${ORIGIN}/en`, mode: 'navigate' });
     expect(await landed!.text()).toBe('<html>/en</html>');
+    // A redirected response can't answer a navigation: the browser fails it.
+    expect(landed!.redirected).toBe(false);
+    expect(landed!.headers.get('content-type')).toBe('text/html');
     const mail = await worker.request({ url: `${ORIGIN}/mail`, mode: 'navigate' });
     expect(mail?.headers.get('location')).toBe(`${ORIGIN}/en/mail`);
     expect(await (await worker.request({ url: `${ORIGIN}/en/mail`, mode: 'navigate' }))!.text()).toBe('<html>/en/mail</html>');
