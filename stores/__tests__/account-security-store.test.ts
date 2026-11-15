@@ -196,6 +196,42 @@ describe('account-security-store', () => {
       const create = (sentCalls('x:PublicKey/set')[0].create as Record<string, Record<string, unknown>>).new1;
       expect(create.emailAddresses).toEqual({ 'a@example.com': true });
     });
+
+    const serverSetRefused = (properties: string[]) => ({
+      notCreated: { new1: { type: 'invalidPatch', description: 'Cannot modify server set property', properties } },
+    });
+    const sentCreates = () =>
+      sentCalls('x:PublicKey/set').map((args) => (args.create as Record<string, Record<string, unknown>>).new1);
+
+    it('drops addresses and expiry once when Stalwart 1.0.2 and later refuse them as server-set', async () => {
+      serve({
+        'x:PublicKey/set': (args) => {
+          const create = (args.create as Record<string, Record<string, unknown>>).new1;
+          // Like Stalwart 1.1.0, name only the first server-set property sent.
+          const sent = ['emailAddresses', 'expiresAt'].filter((p) => p in create);
+          return sent.length ? serverSetRefused(sent.slice(0, 1)) : { created: { new1: { id: 'pk1' } } };
+        },
+      });
+
+      const id = await useAccountSecurityStore.getState().createPublicKey({
+        description: 'Mine', key: 'ARMORED', emailAddresses: ['a@example.com'], expiresAt: '2030-01-01T00:00:00Z',
+      });
+
+      expect(id).toBe('pk1');
+      expect(sentCreates()).toEqual([
+        { description: 'Mine', key: 'ARMORED', emailAddresses: { 'a@example.com': true }, expiresAt: '2030-01-01T00:00:00Z' },
+        { description: 'Mine', key: 'ARMORED' },
+      ]);
+    });
+
+    it('does not retry when another property is refused', async () => {
+      serve({ 'x:PublicKey/set': () => serverSetRefused(['key']) });
+
+      await expect(
+        useAccountSecurityStore.getState().createPublicKey({ description: 'Mine', key: 'ARMORED', expiresAt: '2030-01-01T00:00:00Z' }),
+      ).rejects.toThrow('Cannot modify server set property');
+      expect(sentCreates()).toHaveLength(1);
+    });
   });
 
   describe('updateEncryptionAtRest', () => {
@@ -254,6 +290,15 @@ describe('account-security-store', () => {
         useAccountSecurityStore.getState().updateEncryptionAtRest({ type: 'Enabled', publicKeyId: 'missing' }),
       ).rejects.toThrow('The selected public key does not exist.');
       expect(sentTypes()).toEqual(['Enabled']);
+    });
+
+    it('retries a refused type only once', async () => {
+      serve({ 'x:AccountSettings/set': () => ({ notUpdated: { singleton: typeRefused } }) });
+
+      await expect(
+        useAccountSecurityStore.getState().updateEncryptionAtRest({ type: 'Aes256', publicKeyId: 'pk1' }),
+      ).rejects.toThrow("Missing or invalid '@type' property in object");
+      expect(sentTypes()).toEqual(['Enabled', 'Aes256']);
     });
 
     it('sends Disabled as is', async () => {

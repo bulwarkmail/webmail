@@ -201,6 +201,9 @@ function ipsToMap(ips?: string[]): Record<string, true> | undefined {
   return Object.fromEntries(ips.map((ip) => [ip, true]));
 }
 
+/** PublicKey properties Stalwart 1.0.2 and later take from the key itself. */
+const SERVER_SET_KEY_PROPERTIES = ['emailAddresses', 'expiresAt'];
+
 function emailsToMap(emails?: string[]): Record<string, true> | undefined {
   if (!emails || emails.length === 0) return undefined;
   return Object.fromEntries(emails.map((email) => [email, true]));
@@ -827,9 +830,11 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
         key: input.key,
       };
 
-      // Stalwart 1.1.0 reads the addresses from the key itself and
-      // reject any value here ("Cannot modify server set property"), even an
-      // empty one, so the property is only sent when a caller names addresses.
+      // Stalwart 1.0.2 and later read the addresses and the expiry from the
+      // key itself and refuse any value here ("Cannot modify server set
+      // property"), even an empty one. They are only sent when a caller names
+      // them, and both are dropped in one retry when the server refuses one
+      // (Stalwart names only the first refused property).
       const emailAddresses = emailsToMap(input.emailAddresses);
       if (emailAddresses) createPayload.emailAddresses = emailAddresses;
 
@@ -837,25 +842,31 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
         createPayload.expiresAt = input.expiresAt;
       }
 
-      const responses = await request([
-        [
-          'x:PublicKey/set',
-          {
-            accountId,
-            create: {
-              [tmpId]: createPayload,
-            },
-          },
-          '0',
-        ],
-      ]);
+      type SetError = { type: string; description?: string; properties?: string[] };
+      const send = async (payload: Record<string, unknown>) => {
+        const responses = await request([
+          ['x:PublicKey/set', { accountId, create: { [tmpId]: payload } }, '0'],
+        ]);
+        return requireResult<{
+          created?: Record<string, { id: string }>;
+          notCreated?: Record<string, SetError>;
+        }>(responses, 'x:PublicKey/set');
+      };
 
-      const result = requireResult<{
-        created?: Record<string, { id: string }>;
-        notCreated?: Record<string, { type: string; description?: string }>;
-      }>(responses, 'x:PublicKey/set');
+      let result = await send(createPayload);
+      let notCreated = result.notCreated?.[tmpId];
+      const refused = notCreated?.properties ?? [];
+      if (
+        notCreated?.type === 'invalidPatch' &&
+        refused.length > 0 &&
+        refused.every((p) => SERVER_SET_KEY_PROPERTIES.includes(p) && p in createPayload)
+      ) {
+        const retryPayload = { ...createPayload };
+        for (const p of SERVER_SET_KEY_PROPERTIES) delete retryPayload[p];
+        result = await send(retryPayload);
+        notCreated = result.notCreated?.[tmpId];
+      }
 
-      const notCreated = result.notCreated?.[tmpId];
       if (notCreated) {
         throw new Error(notCreated.description || notCreated.type || 'Failed to create public key');
       }
