@@ -189,6 +189,12 @@ function LoadingSkeleton({ shape, density, preview }: { shape: MailRowShape; den
 /** No folded date groups. */
 const NO_GROUPS: ReadonlySet<string> = new Set();
 
+/**
+ * How long the last folder's rows stay on screen while the next folder loads
+ * before the skeleton rows replace them.
+ */
+const SWITCH_SKELETON_DELAY_MS = 300;
+
 /** Rows per page in simple mode's paged list. */
 const LIST_PAGE_SIZE = 50;
 
@@ -381,7 +387,7 @@ export function EmailList({
   // What the list shows: another folder, tag, account, unified view or
   // plugin tab, or another search, is another view.
   const searching = !!searchQuery.trim() || !isFilterEmpty(searchFilters);
-  const viewKey = JSON.stringify([
+  const placeKey = JSON.stringify([
     activeAccountId,
     viewingAccountId,
     selectedMailbox,
@@ -390,10 +396,36 @@ export function EmailList({
     isUnifiedView && (crossView ?? unifiedRole),
     isScheduledView,
     activeTabId,
+  ]);
+  const viewKey = JSON.stringify([
+    placeKey,
     // The scope only matters while a search runs; the dropdown alone does not
     // change the list.
     searching && [searchQuery, searchFilters, searchMailboxId],
   ]);
+
+  // Rows loaded for the folder (tag, account, view) that was open before
+  // belong to that folder. While the next one loads they stay as they are
+  // for a moment, so a quick switch shows no spinner, and then give way to
+  // the skeleton rows. A reload of the open folder (after a delete or move)
+  // keeps its rows under the loading overlay. A new search in the same
+  // folder counts as a reload: its results replace the old ones in place.
+  // Rows belong to the folder that was open when they arrived; the folder
+  // changes a moment before its load starts, with the old rows still shown.
+  const [shownRows, setShownRows] = useState({ emails, placeKey });
+  if (!isLoading && emails !== shownRows.emails) setShownRows({ emails, placeKey });
+  const switchingPlace = isLoading && emails.length > 0 && placeKey !== shownRows.placeKey;
+  const [skeletonPlaceKey, setSkeletonPlaceKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!switchingPlace) {
+      setSkeletonPlaceKey(null);
+      return;
+    }
+    const timer = setTimeout(() => setSkeletonPlaceKey(placeKey), SWITCH_SKELETON_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [switchingPlace, placeKey]);
+  const showSkeleton = isLoading && (emails.length === 0 || (switchingPlace && skeletonPlaceKey === placeKey));
+  const showLoadingOverlay = isLoading && emails.length > 0 && !switchingPlace;
 
   // "Group by date": headers for Today, Yesterday, the weekdays, Last week,
   // Last month and Older, only while the list runs by date. Search, filter
@@ -1619,8 +1651,8 @@ export function EmailList({
         style={listColumns ? { scrollbarGutter: 'stable' } : undefined}
       >
         {/* Loading overlay */}
-        {isLoading && emails.length > 0 && (
-          <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center animate-in fade-in duration-150">
+        {showLoadingOverlay && (
+          <div data-testid="email-list-loading" className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center animate-in fade-in duration-150">
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background/90 px-4 py-2 rounded-full shadow-sm border border-border">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>{t('loading')}</span>
@@ -1628,7 +1660,7 @@ export function EmailList({
           </div>
         )}
 
-        {isLoading && emails.length === 0 ? (
+        {showSkeleton ? (
           <div data-testid="email-list-skeleton">
             <LoadingSkeleton
               shape={isFocusedMailLayout ? (mountainViewList ? 'mv' : 'one-line') : 'stacked'}
@@ -1689,7 +1721,7 @@ export function EmailList({
               // Rows report where they are in the whole list (useListboxFocus);
               // -1 while more can still load.
               data-setsize={footerHasMore ? -1 : itemOfThread.length}
-              className={cn("transition-opacity duration-200", isLoading && "opacity-50")}
+              className={cn("transition-opacity duration-200", showLoadingOverlay && "opacity-50")}
               style={{
                 height: `${virtualizer.getTotalSize()}px`,
                 width: '100%',
