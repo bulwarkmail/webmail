@@ -2132,9 +2132,18 @@ function SidebarImpl({
         />
         {((expanded && !isCollapsed) || isCollapsed) && (
           <>
-            {accounts.map((account, index) => {
+            {accounts.map((sharedAccount, index) => {
+              const menuAccountId = sharedAccountMenuId(sharedAccount.accountId);
+              // Where the account gets the app's own Scheduled row, its server
+              // Scheduled folder is left out, as in the user's own folders. A
+              // compact row shows the app's one only while sends are pending. (#495)
+              const goesCompact = compactSharedMailboxes && sharedAccount.children.some((child) => child.role === 'inbox');
+              const showsOwnScheduled = active && !!menuAccountId
+                && (!goesCompact || (scheduledTotalByAccount?.[menuAccountId] ?? 0) > 0);
+              const account = showsOwnScheduled && sharedAccount.children.some(isServerScheduledNode)
+                ? { ...sharedAccount, children: sharedAccount.children.filter((child) => !isServerScheduledNode(child)) }
+                : sharedAccount;
               const accountExpanded = expandedSharedAccounts.has(account.id);
-              const menuAccountId = sharedAccountMenuId(account.accountId);
               const compact = compactSharedMailboxes ? compactSharedMailbox(account) : null;
               const reorderId = reorderable ? menuAccountId : undefined;
               const dropTarget = reorderId ? sharedAccountDropTarget(reorderId, index, reorderIds) : undefined;
