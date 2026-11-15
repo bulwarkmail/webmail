@@ -4525,6 +4525,8 @@
       "role_label": "Ρόλος",
       "language_label": "Γλώσσα",
       "related_default_label": "Σχετικό",
+      "related_unknown": "Άγνωστη επαφή",
+      "related_remove": "Αφαίρεση από τις σχετικές επαφές",
       "more_actions": "Περισσότερες ενέργειες",
       "age_years": "{count, plural, one {1 έτους} other {# ετών}}",
       "years_since": "{count, plural, one {1 έτος} other {# έτη}}"

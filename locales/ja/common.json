@@ -4511,6 +4511,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "不明な連絡先",
+      "related_remove": "関連する連絡先から削除",
       "more_actions": "その他の操作",
       "age_years": "{count}歳",
       "years_since": "{count}年前"

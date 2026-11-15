@@ -4511,6 +4511,8 @@
       "role_label": "Rolle",
       "language_label": "Sprog",
       "related_default_label": "Relateret",
+      "related_unknown": "Ukendt kontakt",
+      "related_remove": "Fjern fra relaterede kontakter",
       "more_actions": "Flere handlinger",
       "age_years": "{count, plural, one {1 år gammel} other {# år gammel}}",
       "years_since": "{count, plural, one {1 år} other {# år}}"

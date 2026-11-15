@@ -86,7 +86,7 @@ describe('ContactDetail', () => {
     };
 
     afterEach(() => {
-      useContactStore.setState({ contacts: [] });
+      useContactStore.setState({ contacts: [], supportsSync: false, contactsLoaded: false });
     });
 
     it('shows the related card by name, and opens it', () => {
@@ -103,9 +103,38 @@ describe('ContactDetail', () => {
       useContactStore.setState({ contacts: [company] });
       render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onOpenContact={vi.fn()} />);
 
-      expect(screen.getByText('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00')).toBeInTheDocument();
       expect(screen.getByText('Max Mustermann')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Max Mustermann' })).toBeNull();
+    });
+
+    // #1707: the uid of a deleted card.
+    it('shows a uid no card has as an unknown contact that can be removed', () => {
+      useContactStore.setState({ contacts: [company], supportsSync: true, contactsLoaded: true });
+      const onRemoveRelated = vi.fn();
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onOpenContact={vi.fn()} onRemoveRelated={onRemoveRelated} />);
+
+      expect(screen.queryByText('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00')).toBeNull();
+      expect(screen.getByText('detail.related_unknown')).toHaveAttribute('title', '0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00');
+      const remove = screen.getAllByRole('button', { name: 'detail.related_remove' });
+      expect(remove).toHaveLength(1);
+      fireEvent.click(remove[0]);
+      expect(onRemoveRelated).toHaveBeenCalledExactlyOnceWith('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00');
+    });
+
+    it('offers no remove on a read-only card', () => {
+      useContactStore.setState({ contacts: [company], supportsSync: true, contactsLoaded: true });
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onRemoveRelated={vi.fn()} readOnly />);
+
+      expect(screen.getByText('detail.related_unknown')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'detail.related_remove' })).toBeNull();
+    });
+
+    it('shows the uid as stored while the contacts are still loading', () => {
+      useContactStore.setState({ contacts: [company], supportsSync: true, contactsLoaded: false });
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onRemoveRelated={vi.fn()} />);
+
+      expect(screen.getByText('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'detail.related_remove' })).toBeNull();
     });
 
     it('takes the card of the same account when two accounts have one with that uid', () => {

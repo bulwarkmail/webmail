@@ -4511,6 +4511,8 @@
       "role_label": "Função",
       "language_label": "Idioma",
       "related_default_label": "Relacionado",
+      "related_unknown": "Contato desconhecido",
+      "related_remove": "Remover dos contatos relacionados",
       "more_actions": "Mais ações",
       "age_years": "{count, plural, one {1 ano} other {# anos}}",
       "years_since": "{count, plural, one {há 1 ano} other {há # anos}}"

@@ -4503,6 +4503,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "Nezināms kontakts",
+      "related_remove": "Noņemt no saistītajiem kontaktiem",
       "more_actions": "Citas darbības",
       "age_years": "{count, plural, one {1 gads} other {# gadi}}",
       "years_since": "{count, plural, one {pirms 1 gada} other {pirms # gadiem}}"

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { contactDateParts, formatContactDate } from "@/lib/contact-dates";
-import { Mail, Phone, Building, MapPin, StickyNote, Pencil, BookUser, Copy, Send, Globe, Cake, KeyRound, Users, Briefcase, Heart, Languages, Calendar, UserCircle, MoreVertical, Printer } from "@/components/icons";
+import { Mail, Phone, Building, MapPin, StickyNote, Pencil, BookUser, Copy, Send, Globe, Cake, KeyRound, Users, Briefcase, Heart, Languages, Calendar, UserCircle, MoreVertical, Printer, X } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatAddressLines } from "@/lib/address-format";
 import type { ContactCard, AnniversaryDate } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoRef, useContactStore } from "@/stores/contact-store";
-import { findRelatedContact } from "@/lib/contact-related";
+import { findRelatedContact, looksLikeCardUid } from "@/lib/contact-related";
 import { ContactActivity } from "./contact-activity";
 import { toast } from "@/stores/toast-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -39,6 +39,8 @@ interface ContactDetailProps {
   onPrint?: () => void;
   /** Show another contact: a related contact's name leads to its card. */
   onOpenContact?: (contactId: string) => void;
+  /** Take an entry out of Related Contacts; offered for one that names no card. */
+  onRemoveRelated?: (key: string) => void;
   isMobile?: boolean;
   className?: string;
   /** In an address book shared read-only: no Edit, Move or Delete. */
@@ -83,9 +85,11 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 }
 
 
-export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, onOpenContact, isMobile, className, readOnly = false }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, onOpenContact, onRemoveRelated, isMobile, className, readOnly = false }: ContactDetailProps) {
   // Related contacts are stored by uid and shown by name (#1578).
   const loadedContacts = useContactStore((s) => s.contacts);
+  // Until the list is in, a uid no loaded card has may still be a contact.
+  const relatedResolvable = useContactStore((s) => s.contactsLoaded || !s.supportsSync);
   const t = useTranslations("contacts");
   const tRoot = useTranslations();
   const tCommon = useTranslations("common");
@@ -416,12 +420,31 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMerge
               {relatedTo.map(([uri, rel], i) => {
                 const relType = rel.relation ? Object.keys(rel.relation).find(k => rel.relation![k]) : undefined;
                 // The key is the related card's uid. A value no card has (a
-                // name, a URL from an import) is shown as stored.
+                // name, a URL from an import) is shown as stored; a uid no
+                // card has (a deleted contact, #1707) as "Unknown contact".
                 const related = findRelatedContact(uri, contact, loadedContacts);
                 const relatedName = related ? getContactDisplayName(related) : "";
+                const unknown = !related && relatedResolvable && looksLikeCardUid(uri);
                 return (
                   <FieldRow key={`rel${i}`} icon={Users} label={relType || t("detail.related_default_label")}>
-                    {related && relatedName && onOpenContact ? (
+                    {unknown ? (
+                      <div className="flex items-center gap-2 group">
+                        <span className="text-sm text-muted-foreground" title={uri}>{t("detail.related_unknown")}</span>
+                        {onRemoveRelated && !readOnly && (
+                          <RowActions>
+                            <button
+                              type="button"
+                              onClick={() => onRemoveRelated(uri)}
+                              className="p-1.5 rounded hover:bg-muted transition-colors touch-manipulation"
+                              title={t("detail.related_remove")}
+                              aria-label={t("detail.related_remove")}
+                            >
+                              <X className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                          </RowActions>
+                        )}
+                      </div>
+                    ) : related && relatedName && onOpenContact ? (
                       <button
                         type="button"
                         onClick={() => onOpenContact(related.id)}

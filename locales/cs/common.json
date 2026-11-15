@@ -4511,6 +4511,8 @@
       "role_label": "Role",
       "language_label": "Jazyk",
       "related_default_label": "Vztahy",
+      "related_unknown": "Neznámý kontakt",
+      "related_remove": "Odebrat ze souvisejících kontaktů",
       "more_actions": "Další akce",
       "age_years": "{count, plural, one {1 rok} few {# roky} other {# let}}",
       "years_since": "{count, plural, one {1 rok} few {# roky} other {# let}}"

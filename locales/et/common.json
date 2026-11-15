@@ -4513,6 +4513,8 @@
       "role_label": "Roll",
       "language_label": "Keel",
       "related_default_label": "Seotud",
+      "related_unknown": "Tundmatu kontakt",
+      "related_remove": "Eemalda seotud kontaktide hulgast",
       "more_actions": "Rohkem toiminguid",
       "age_years": "{count, plural, one {1-aastane} other {#-aastane}}",
       "years_since": "{count, plural, one {1 aasta} other {# aastat}}"

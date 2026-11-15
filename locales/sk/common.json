@@ -4513,6 +4513,8 @@
       "role_label": "Rola",
       "language_label": "Jazyk",
       "related_default_label": "Súvisiace",
+      "related_unknown": "Neznámy kontakt",
+      "related_remove": "Odstrániť zo súvisiacich kontaktov",
       "more_actions": "Viac akcií",
       "age_years": "{count, plural, one {1 rok} other {# rokov}}",
       "years_since": "{count, plural, one {1 rok} other {# rokov}}"

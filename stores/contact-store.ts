@@ -18,6 +18,7 @@ import { PartialAccountsError, partialAccounts, withFailedAccountsKept } from '@
 import type { Principal } from '@/lib/jmap/types';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { planGroupMoves, type MergePlan } from '@/lib/contacts/merge';
+import { planRelatedToCleanup } from '@/lib/contact-related';
 
 /** What a merge changed, to put it back with Undo. */
 export interface MergeUndo {
@@ -618,7 +619,8 @@ interface ContactStore {
   selectAllContacts: (ids: string[]) => void;
   clearSelection: () => void;
   /** false when a plugin stopped it (the plugin tells the user why). */
-  bulkDeleteContacts: (client: IJMAPClient | null, ids: string[]) => Promise<boolean>;
+  /** `replacementUid`: other cards' relations to the deleted cards move to this card (merging duplicates). */
+  bulkDeleteContacts: (client: IJMAPClient | null, ids: string[], replacementUid?: string) => Promise<boolean>;
   bulkAddToGroup: (client: IJMAPClient | null, groupId: string, contactIds: string[]) => Promise<void>;
   moveContactToAddressBook: (client: IJMAPClient, contactIds: string[], addressBook: AddressBook) => Promise<void>;
   createAddressBook: (client: IJMAPClient, name: string) => Promise<AddressBook>;
@@ -732,6 +734,30 @@ export const useContactStore = create<ContactStore>()(
           }
           return changed ? { ...c, members: newMembers } : c;
         });
+      }
+
+      // Other cards' relatedTo entries naming deleted cards are taken out, or
+      // pointed at `replacementUid` when duplicates were merged into it, so
+      // they don't list a contact that is gone (#1707). `before` is the list
+      // from before the delete. A card that fails to save keeps its entries;
+      // the delete stands either way.
+      async function cleanRelatedTo(client: IJMAPClient | null, before: ContactCard[], deletedIds: Set<string>, replacementUid?: string): Promise<void> {
+        if (deletedIds.size === 0) return;
+        const plan = planRelatedToCleanup(before, deletedIds, get().addressBooks, replacementUid);
+        const sync = !!client && get().supportsSync;
+        await Promise.all(plan.map(async ({ contact, relatedTo }) => {
+          if (sync) {
+            try {
+              const originalId = contact.originalId || stripLocalAccountPrefix(contact.id, contact.localAccountId);
+              const accountId = contact.isShared ? contact.accountId : undefined;
+              await resolveAccountClient(client!, contact.localAccountId).updateContact(originalId, { relatedTo }, accountId);
+            } catch (error) {
+              console.error(`Failed to update the related contacts of ${contact.id}:`, error);
+              return;
+            }
+          }
+          set((state) => ({ contacts: state.contacts.map(c => c.id === contact.id ? { ...c, relatedTo } : c) }));
+        }));
       }
 
       return ({
@@ -1023,14 +1049,16 @@ export const useContactStore = create<ContactStore>()(
           const accountId = contact?.isShared ? contact.accountId : undefined;
           client = resolveAccountClient(client, contact?.localAccountId);
           await client.deleteContact(originalId, accountId);
+          const before = get().contacts;
+          const removedIds = new Set([id]);
           set((state) => {
-            const removedIds = new Set([id]);
             const cleaned = cleanGroupMembers(state.contacts, removedIds);
             return {
               contacts: cleaned.filter(c => c.id !== id),
               selectedContactId: state.selectedContactId === id ? null : state.selectedContactId,
             };
           });
+          await cleanRelatedTo(client, before, removedIds);
           void contactHooks.onAfterContactDelete.emit({ contactIds: [id] });
           notifyBirthdayCalendarIfEnabled();
           return true;
@@ -1064,14 +1092,16 @@ export const useContactStore = create<ContactStore>()(
 
       deleteLocalContact: async (id) => {
         if (!(await contactHooks.onBeforeContactDelete.intercept({ contactIds: [id] }))) return false;
+        const before = get().contacts;
+        const removedIds = new Set([id]);
         set((state) => {
-          const removedIds = new Set([id]);
           const cleaned = cleanGroupMembers(state.contacts, removedIds);
           return {
             contacts: cleaned.filter(c => c.id !== id),
             selectedContactId: state.selectedContactId === id ? null : state.selectedContactId,
           };
         });
+        await cleanRelatedTo(null, before, removedIds);
         void contactHooks.onAfterContactDelete.emit({ contactIds: [id] });
         notifyBirthdayCalendarIfEnabled();
         return true;
@@ -1408,7 +1438,7 @@ export const useContactStore = create<ContactStore>()(
 
       clearSelection: () => set({ selectedContactIds: new Set<string>(), lastSelectedContactId: null }),
 
-      bulkDeleteContacts: async (client, ids) => {
+      bulkDeleteContacts: async (client, ids, replacementUid) => {
         if (ids.length === 0) return true;
         if (!(await contactHooks.onBeforeContactDelete.intercept({ contactIds: [...ids] }))) return false;
         set({ error: null });
@@ -1432,6 +1462,7 @@ export const useContactStore = create<ContactStore>()(
           }
         }
 
+        const before = get().contacts;
         set((state) => {
           const cleaned = cleanGroupMembers(state.contacts, deletedIds);
           return {
@@ -1440,6 +1471,7 @@ export const useContactStore = create<ContactStore>()(
             selectedContactIds: new Set<string>(),
           };
         });
+        await cleanRelatedTo(client, before, deletedIds, replacementUid);
         if (deletedIds.size > 0) {
           void contactHooks.onAfterContactDelete.emit({ contactIds: ids.filter(id => deletedIds.has(id)) });
           notifyBirthdayCalendarIfEnabled();
@@ -1960,7 +1992,7 @@ export const useContactStore = create<ContactStore>()(
           console.error('Failed to move group members while merging:', error);
           return { keepId: keep.id, before, others: [], groups, incomplete: true };
         }
-        await get().bulkDeleteContacts(sync ? client : null, others.map(o => o.id));
+        await get().bulkDeleteContacts(sync ? client : null, others.map(o => o.id), keep.uid);
         // A failed delete, or a plugin that stopped it, leaves cards in place:
         // Undo must not create those again.
         const left = new Set(get().contacts.map(c => c.id));

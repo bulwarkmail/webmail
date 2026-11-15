@@ -4511,6 +4511,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "Невідомий контакт",
+      "related_remove": "Прибрати з пов'язаних контактів",
       "more_actions": "Більше дій",
       "age_years": "{count, plural, one {# рік} few {# роки} many {# років} other {# років}}",
       "years_since": "{count, plural, one {# рік тому} few {# роки тому} many {# років тому} other {# років тому}}"

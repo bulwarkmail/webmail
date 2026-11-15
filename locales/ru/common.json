@@ -4511,6 +4511,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "Неизвестный контакт",
+      "related_remove": "Убрать из связанных контактов",
       "more_actions": "Другие действия",
       "age_years": "{count, plural, one {# год} few {# года} many {# лет} other {# лет}}",
       "years_since": "{count, plural, one {# год назад} few {# года назад} many {# лет назад} other {# лет назад}}"

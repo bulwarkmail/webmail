@@ -4513,6 +4513,8 @@
       "role_label": "الدور",
       "language_label": "اللغة",
       "related_default_label": "ذو صلة",
+      "related_unknown": "جهة اتصال غير معروفة",
+      "related_remove": "إزالة من جهات الاتصال ذات الصلة",
       "more_actions": "المزيد من الإجراءات",
       "age_years": "{count, plural, one {عمره سنة واحدة} other {عمره # سنة}}",
       "years_since": "{count, plural, one {سنة واحدة} other {# سنوات}}"

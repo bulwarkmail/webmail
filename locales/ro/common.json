@@ -4513,6 +4513,8 @@
       "role_label": "Rol",
       "language_label": "Limba",
       "related_default_label": "Legat de",
+      "related_unknown": "Contact necunoscut",
+      "related_remove": "Elimină din contactele asociate",
       "more_actions": "Alte acțiuni",
       "age_years": "{count, plural, one {1 an} few {# ani} other {# de ani}}",
       "years_since": "{count, plural, one {1 an} few {# ani} other {# de ani}}"

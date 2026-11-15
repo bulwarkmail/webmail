@@ -4513,6 +4513,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "Unknown contact",
+      "related_remove": "Remove from related contacts",
       "more_actions": "More actions",
       "age_years": "{count, plural, one {1 year old} other {# years old}}",
       "years_since": "{count, plural, one {1 year} other {# years}}"

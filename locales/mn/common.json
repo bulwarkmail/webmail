@@ -4513,6 +4513,8 @@
       "role_label": "Үүрэг",
       "language_label": "Хэл",
       "related_default_label": "Холбогдох",
+      "related_unknown": "Үл мэдэгдэх харилцагч",
+      "related_remove": "Холбогдох харилцагчдаас хасах",
       "more_actions": "Дэлгэрэнгүй үйлдэл",
       "age_years": "{count, plural, one {1 настай} other {# настай}}",
       "years_since": "{count, plural, one {1 жил} other {# жил}}"

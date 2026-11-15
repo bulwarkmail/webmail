@@ -4513,6 +4513,8 @@
       "role_label": "نقش",
       "language_label": "زبان",
       "related_default_label": "مرتبط",
+      "related_unknown": "مخاطب ناشناس",
+      "related_remove": "حذف از مخاطبین مرتبط",
       "more_actions": "عملیات بیشتر",
       "age_years": "{count, plural, one {۱ ساله} other {# ساله}}",
       "years_since": "{count, plural, one {۱ سال} other {# سال}}"

@@ -4513,6 +4513,8 @@
       "role_label": "Funció",
       "language_label": "Idioma",
       "related_default_label": "Relacionat",
+      "related_unknown": "Contacte desconegut",
+      "related_remove": "Treu dels contactes relacionats",
       "more_actions": "Més accions",
       "age_years": "{count, plural, one {1 any} other {# anys}}",
       "years_since": "{count, plural, one {1 any} other {# anys}}"

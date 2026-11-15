@@ -4511,6 +4511,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "Onbekend contact",
+      "related_remove": "Verwijderen uit gerelateerde contacten",
       "more_actions": "Meer acties",
       "age_years": "{count, plural, one {1 jaar} other {# jaar}}",
       "years_since": "{count, plural, one {1 jaar geleden} other {# jaar geleden}}"

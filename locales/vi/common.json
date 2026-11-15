@@ -4525,6 +4525,8 @@
       "role_label": "Vai trò",
       "language_label": "Ngôn ngữ",
       "related_default_label": "Liên quan",
+      "related_unknown": "Liên hệ không xác định",
+      "related_remove": "Xóa khỏi danh bạ liên quan",
       "more_actions": "Thêm hành động",
       "age_years": "{count, plural, one {1 tuổi} other {# tuổi}}",
       "years_since": "{count, plural, one {1 năm} other {# năm}}"

@@ -3915,6 +3915,8 @@
       "role_label": "บทบาท",
       "language_label": "ภาษา",
       "related_default_label": "ความสัมพันธ์",
+      "related_unknown": "ผู้ติดต่อที่ไม่รู้จัก",
+      "related_remove": "นำออกจากผู้ติดต่อที่เกี่ยวข้อง",
       "more_actions": "การดำเนินการเพิ่มเติม",
       "age_years": "{count, plural, one {อายุ 1 ปี} other {อายุ # ปี}}",
       "years_since": "{count, plural, one {1 ปี} other {# ปี}}"

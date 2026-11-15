@@ -4511,6 +4511,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "알 수 없는 연락처",
+      "related_remove": "관련 연락처에서 제거",
       "more_actions": "작업 더보기",
       "age_years": "{count}세",
       "years_since": "{count}년 전"

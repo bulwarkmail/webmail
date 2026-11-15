@@ -647,6 +647,20 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     setView("detail");
   };
 
+  // Takes one entry out of the card's Related Contacts, leaving the others.
+  const handleRemoveRelated = useCallback(async (contact: ContactCard, key: string) => {
+    const rest = { ...(contact.relatedTo ?? {}) };
+    delete rest[key];
+    const relatedTo = Object.keys(rest).length > 0 ? rest : undefined;
+    try {
+      if (supportsSync && client) await updateContact(client, contact.id, { relatedTo });
+      else await updateLocalContact(contact.id, { relatedTo });
+    } catch (error) {
+      console.error('Failed to remove the related contact:', error);
+      toast.error(t("toast.error_update"));
+    }
+  }, [supportsSync, client, updateContact, updateLocalContact, t]);
+
   const handleCreateNew = () => {
     setSelectedContact(null);
     // When a specific address book is being viewed, create the new contact in
@@ -1288,6 +1302,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             onMoveTo={selectedContact && canMoveContacts ? () => handleMoveContacts([selectedContact.id]) : undefined}
             onPrint={selectedContact && !printOff ? () => { void printContact(selectedContact); } : undefined}
             onOpenContact={handleSelectContact}
+            onRemoveRelated={selectedContact ? (key) => { void handleRemoveRelated(selectedContact, key); } : undefined}
             isMobile={isMobile}
             readOnly={selectedContact ? isContactReadOnly(selectedContact) : false}
           />

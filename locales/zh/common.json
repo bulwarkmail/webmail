@@ -4511,6 +4511,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "未知联系人",
+      "related_remove": "从相关联系人中移除",
       "more_actions": "更多操作",
       "age_years": "{count}岁",
       "years_since": "{count}年前"

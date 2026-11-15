@@ -4379,6 +4379,8 @@
       "role_label": "תפקיד",
       "language_label": "שפה",
       "related_default_label": "קשור",
+      "related_unknown": "איש קשר לא ידוע",
+      "related_remove": "הסרה מאנשי הקשר הקשורים",
       "more_actions": "פעולות נוספות",
       "age_years": "{count, plural, one {בן שנה} other {בן # שנים}}",
       "years_since": "{count, plural, one {שנה} other {# שנים}}"

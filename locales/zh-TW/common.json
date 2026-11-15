@@ -4513,6 +4513,8 @@
       "role_label": "角色",
       "language_label": "語言",
       "related_default_label": "相關聯絡人",
+      "related_unknown": "未知的聯絡人",
+      "related_remove": "從相關聯絡人中移除",
       "more_actions": "更多動作",
       "age_years": "{count} 歲",
       "years_since": "{count} 年"
