@@ -8,7 +8,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { useFilterStore } from '@/stores/filter-store';
 import { useToastStore } from '@/stores/toast-store';
 import { useQuickRuleStore } from '@/stores/quick-rule-store';
-import { executePlan, runPresetRule, saveEditorRule, type QuickRuleText } from '../quick-rule-flow';
+import { executePlan, openRuleWithSenders, runPresetRule, saveEditorRule, type QuickRuleText } from '../quick-rule-flow';
 import { emailHooks } from '@/lib/plugin-hooks';
 import type { QuickRuleTarget } from '../quick-rule-target';
 import { collectSenders, sharedDomain, type QuickRuleSubject } from '../quick-rules';
@@ -190,6 +190,30 @@ describe('quick rules from a message', () => {
   it('offers no apply action when nothing in the folder matches', async () => {
     await runPresetRule({ target: targetFor(accountB, 'b'), preset: { kind: 'move_sender', mailbox: news }, subject: subject('anna@acme.com'), sourceMailboxId: 'inbox', text });
     expect(lastToast().tertiaryAction).toBeUndefined();
+  });
+
+  it('opens the latest editable rule with the new sender prefilled and does not save yet', async () => {
+    accountB = mockSieveAccount('b', [{ name: 'filters', content: generateScript([rule('first')]), isActive: true }]);
+    await openRuleWithSenders(
+      targetFor(accountB, 'b'),
+      'first',
+      [{ email: 'bob@acme.com' }],
+      'inbox',
+      text,
+    );
+
+    expect(accountB.writes()).toBe(0);
+    expect(useQuickRuleStore.getState().editor).toMatchObject({
+      mode: 'edit',
+      rule: {
+        id: 'first',
+        conditions: [{
+          field: 'from',
+          comparator: 'address_is',
+          value: ['anna@acme.com', 'bob@acme.com'],
+        }],
+      },
+    });
   });
 
   it('saves "Create rule…" as built, at the top, without merging', async () => {
