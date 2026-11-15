@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import {
+  addSendersToRule,
   applyQuickRule,
   buildPrefillRule,
   buildPresetRule,
@@ -49,6 +50,53 @@ function rule(overrides: Partial<FilterRule>): FilterRule {
     ...overrides,
   };
 }
+
+describe('addSendersToRule', () => {
+  it('extends an existing exact From condition without changing the rest of the rule', () => {
+    const original = rule({ matchType: 'any', name: 'Receipts' });
+    const result = addSendersToRule(original, [
+      { email: 'ANNA@ACME.COM' },
+      { email: 'bob@acme.com' },
+    ]);
+    expect(result.added).toEqual(['bob@acme.com']);
+    expect(result.rule).toMatchObject({
+      id: original.id,
+      name: original.name,
+      enabled: original.enabled,
+      matchType: 'any',
+      actions: original.actions,
+      stopProcessing: original.stopProcessing,
+      conditions: [{ field: 'from', comparator: 'address_is', value: ['anna@acme.com', 'bob@acme.com'] }],
+    });
+    expect(original.conditions[0].value).toBe('anna@acme.com');
+  });
+
+  it('adds a From condition when the rule has no exact sender condition and preserves AND/OR', () => {
+    const original = rule({
+      matchType: 'all',
+      conditions: [{ field: 'subject', comparator: 'contains', value: 'invoice' }],
+    });
+    const result = addSendersToRule(original, [{ email: 'bob@acme.com' }]);
+    expect(result.added).toEqual(['bob@acme.com']);
+    expect(result.rule.matchType).toBe('all');
+    expect(result.rule.conditions).toEqual([
+      { field: 'subject', comparator: 'contains', value: 'invoice' },
+      { field: 'from', comparator: 'address_is', value: 'bob@acme.com' },
+    ]);
+  });
+
+  it('deduplicates case-insensitively and reports when every sender is already present', () => {
+    const original = rule({ conditions: [{
+      field: 'from', comparator: 'address_is', value: ['anna@acme.com', 'bob@acme.com'],
+    }] });
+    const result = addSendersToRule(original, [
+      { email: 'ANNA@ACME.COM' },
+      { email: 'Bob@Acme.com' },
+    ]);
+    expect(result.rule).toBe(original);
+    expect(result.added).toEqual([]);
+  });
+});
 
 describe('collectSenders', () => {
   it('keeps the display name and lower-cases the address', () => {

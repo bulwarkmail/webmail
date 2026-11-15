@@ -21,13 +21,16 @@ import {
   type FiltersChange,
 } from './account-filters';
 import {
+  addSendersToRule,
   applyQuickRule,
   buildPresetRule,
   insertRuleAtTop,
+  isBulwarkRule,
   replaceOrInsertRule,
   type QuickRuleOutcome,
   type QuickRulePreset,
   type QuickRuleSubject,
+  type RuleSender,
   type Translate,
 } from './quick-rules';
 import {
@@ -240,6 +243,48 @@ export async function runRuleOnFolder(
     toast.dismiss(progressId);
     toast.error(text.notifications('rule_apply_failed'), error instanceof Error ? error.message : undefined);
   }
+}
+
+/**
+ * Open an existing editable rule with the selected sender(s) already added.
+ * The rule is re-read from the server at selection time; nothing is saved
+ * until the user confirms in the normal rule editor.
+ */
+export async function openRuleWithSenders(
+  target: QuickRuleTarget,
+  ruleId: string,
+  senders: RuleSender[],
+  sourceMailboxId: string | null,
+  text: QuickRuleText,
+): Promise<void> {
+  let filters: Awaited<ReturnType<typeof readAccountFilters>>;
+  try {
+    filters = await readAccountFilters(target.client, target.sieveAccountId);
+  } catch (error) {
+    toast.error(text.menu('rules.load_failed'), error instanceof Error ? error.message : undefined);
+    return;
+  }
+  if (filters.parsed.isOpaque) {
+    reportWriteError(new OpaqueFiltersError(), target, text);
+    return;
+  }
+  const current = filters.parsed.rules.find(rule => rule.id === ruleId);
+  if (!current || !isBulwarkRule(current)) {
+    toast.error(text.menu('rules.load_failed'));
+    return;
+  }
+  const result = addSendersToRule(current, senders);
+  if (result.added.length === 0) {
+    toast.info(text.menu('rules.sender_already_present'));
+    return;
+  }
+  useQuickRuleStore.getState().openEditor({
+    mode: 'edit',
+    target,
+    rule: result.rule,
+    suggestions: [],
+    sourceMailboxId,
+  });
 }
 
 /**
