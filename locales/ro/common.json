@@ -1731,6 +1731,13 @@
         "label": "Comutator de conturi în partea de sus a barei laterale",
         "description": "Afișează comutatorul de conturi deasupra folderelor și butonul rotund Compune peste lista de mesaje. Dezactivați pentru a pune Compune deasupra folderelor."
       },
+      "compose_placement": {
+        "label": "Butonul Compune",
+        "description": "Unde stă butonul Compune pe un computer. Pe telefon este mereu deasupra listei de mesaje.",
+        "floating": "Deasupra listei de mesaje",
+        "sidebar": "Sus în bara de dosare",
+        "rail": "Sus în bara de navigare"
+      },
       "show_rail_account_list": {
         "label": "Afișați avatarurile conturilor în bara de navigare",
         "description": "Afișați cercurile conturilor individuale în partea de jos a barei de navigare pentru comutarea rapidă, cu un buton de deconectare sub acestea."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Afișează comutatorul de conturi deasupra folderelor, cu Compune sub el. Dezactivați pentru a pune Compune în locul lui."
+    "sidebar_account_switcher_description": "Afișează comutatorul de conturi deasupra dosarelor. Dezactivați pentru a schimba contul din avatarul de pe bara de navigare."
   },
   "mail_p2_conv": {
     "show_message": "Afișează mesajul",

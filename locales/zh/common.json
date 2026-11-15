@@ -1728,6 +1728,13 @@
         "label": "侧边栏顶部的账户切换器",
         "description": "在文件夹上方显示账户切换器，并在邮件列表上显示圆形的“写邮件”按钮。关闭后，“写邮件”会改为显示在文件夹上方。"
       },
+      "compose_placement": {
+        "label": "写邮件按钮",
+        "description": "在电脑上写邮件按钮的位置。手机上它始终位于邮件列表上方。",
+        "floating": "邮件列表上方",
+        "sidebar": "文件夹侧边栏顶部",
+        "rail": "导航栏顶部"
+      },
       "show_rail_account_list": {
         "label": "在导航导轨上显示账户头像",
         "description": "在导航栏底部显示账户头像，方便快速切换；下方会保留退出按钮。"
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器，下面是“写邮件”。关闭后，“写邮件”会显示在账户切换器的位置。"
+    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器。关闭后，用导航栏上的头像切换账户。"
   },
   "mail_p2_conv": {
     "show_message": "显示邮件",

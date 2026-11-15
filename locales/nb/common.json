@@ -1731,6 +1731,13 @@
         "label": "Kontobytter øverst i sidefeltet",
         "description": "Vis kontobytteren over mappene og den runde Skriv-knappen over meldingslisten. Slå av for å plassere Skriv over mappene i stedet."
       },
+      "compose_placement": {
+        "label": "Skriv-knappen",
+        "description": "Hvor Skriv-knappen er på en datamaskin. På telefonen ligger den alltid over meldingslisten.",
+        "floating": "Over meldingslisten",
+        "sidebar": "Øverst i mappefeltet",
+        "rail": "Øverst i navigasjonsfeltet"
+      },
       "show_rail_account_list": {
         "label": "Vis kontobilder i navigasjonsfeltet",
         "description": "Vis et kontobilde for hver konto nederst i navigasjonsfeltet, slik at du raskt kan bytte konto. En utloggingsknapp vises nedenfor."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Inntil du endrer det, følger det oppsettet: av når listen og meldingen står side om side, ellers på."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Vis kontobytteren over mappene, med Skriv under den. Slå av for å sette Skriv i stedet for den."
+    "sidebar_account_switcher_description": "Vis kontobytteren over mappene. Slå av for å bytte konto med avataren din i navigasjonsfeltet."
   },
   "mail_p2_conv": {
     "show_message": "Vis meldingen",

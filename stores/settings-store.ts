@@ -19,6 +19,7 @@ import { DEFAULT_FILES_SETTINGS, normalizeFilesSettings, type FilesSettings } fr
 import { orderForMailbox, sanitizeSortLevels, type MessageListOrderScope, type SortLevel } from '@/lib/message-list-order';
 import { isSearchDefaultScope, type SearchDefaultScope } from '@/lib/search-default-scope';
 import { UNREAD_SECTION_SIZE, isUnreadSectionSize } from '@/lib/unread-first';
+import { DEFAULT_COMPOSE_PLACEMENT, isComposePlacement, type ComposePlacement } from '@/lib/compose-placement';
 import { EMPTY_SIGNATURE_DETAILS, sanitizeSignatureDetails, type SignatureDetails } from '@/lib/org-signature';
 import {
   ACCESSIBILITY_DEFAULTS,
@@ -978,9 +979,11 @@ interface SettingsState extends AccessibilitySettings {
   toolbarPosition: ToolbarPosition;
   showToolbarLabels: boolean;
   hideAccountSwitcher: boolean;
-  // The account switcher at the head of the folder sidebar, with the round
-  // Compose button over the list. Off puts Compose at the sidebar's head.
+  // The account switcher at the head of the folder sidebar. Off leaves the
+  // rail's avatar as the one switcher.
   sidebarAccountSwitcher: boolean;
+  // Where Compose sits on a desktop in the default layout.
+  composePlacement: ComposePlacement;
   showRailAccountList: boolean;
   proInterface: boolean;
   // Settings marked `advanced` (power-user and integrator rows) stay hidden
@@ -1342,6 +1345,7 @@ const DEFAULT_SETTINGS = {
   showToolbarLabels: true,
   hideAccountSwitcher: false,
   sidebarAccountSwitcher: true,
+  composePlacement: DEFAULT_COMPOSE_PLACEMENT,
   showRailAccountList: false,
   proInterface: false,
   showAdvancedSettings: false,
@@ -1548,6 +1552,7 @@ function isAllowedPolicyValue(key: string, value: unknown, restriction?: Setting
   if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(value as string)) return false;
   if (key === 'messageListOrderScope' && value !== 'inbox' && value !== 'all') return false;
   if (key === 'searchDefaultScope' && !isSearchDefaultScope(value)) return false;
+  if (key === 'composePlacement' && !isComposePlacement(value)) return false;
   if (key === 'calendarMonthTimedEvents' && !MONTH_TIMED_EVENT_STYLES.includes(value as MonthTimedEventStyle)) return false;
   if (!isAllowedAccessibilityValue(key, value)) return false;
   if (restriction && typeof restriction === 'object') {
@@ -1925,6 +1930,7 @@ export const useSettingsStore = create<SettingsState>()(
           toolbarPosition: state.toolbarPosition,
           hideAccountSwitcher: state.hideAccountSwitcher,
           sidebarAccountSwitcher: state.sidebarAccountSwitcher,
+          composePlacement: state.composePlacement,
           showRailAccountList: state.showRailAccountList,
           showAdvancedSettings: state.showAdvancedSettings,
           // proInterface is intentionally omitted - it's a per-device choice
@@ -2205,6 +2211,9 @@ export const useSettingsStore = create<SettingsState>()(
                 return;
               }
               if (key === 'mvUnreadSectionSize' && !isUnreadSectionSize(settings[key])) {
+                return;
+              }
+              if (key === 'composePlacement' && !isComposePlacement(settings[key])) {
                 return;
               }
               if (key === 'searchDefaultScope' && !isSearchDefaultScope(settings[key])) {

@@ -1731,6 +1731,13 @@
         "label": "Kontovahetaja külgriba ülaosas",
         "description": "Näita kontovahetajat kaustade kohal ja ümmargust nuppu Koosta kirjade loendi kohal. Lülita see välja, et nupp Koosta oleks hoopis kaustade kohal."
       },
+      "compose_placement": {
+        "label": "Nupp Koosta",
+        "description": "Kus nupp Koosta arvutis asub. Telefonis on see alati kirjade loendi kohal.",
+        "floating": "Kirjade loendi kohal",
+        "sidebar": "Kaustade riba ülaosas",
+        "rail": "Navigeerimisriba ülaosas"
+      },
       "show_rail_account_list": {
         "label": "Näita kontode avatare navigeerimisribal",
         "description": "Kuva navigeerimisriba allosas eraldi kontoringid kiireks vahetamiseks ning nende all väljalogimise nupp."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Kuni te seda ei muuda, järgib see paigutust: väljas, kui loend ja sõnum on kõrvuti, muidu sees."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Näita kontovahetajat kaustade kohal ja selle all nuppu Koosta. Lülita see välja, et nupp Koosta oleks selle asemel."
+    "sidebar_account_switcher_description": "Näita kontovahetajat kaustade kohal. Lülita välja, et kontot vahetada navigeerimisriba avatariga."
   },
   "mail_p2_conv": {
     "show_message": "Näita kirja",

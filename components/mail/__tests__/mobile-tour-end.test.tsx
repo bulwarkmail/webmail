@@ -29,8 +29,9 @@ vi.mock('@/components/email/email-composer', () => ({
     return <p>stub composer</p>;
   },
 }));
-// A desktop has Compose in the folder sidebar, in place of the account
-// switcher or under it (mail-13, mail-p3-11); a phone the round button.
+// The folder sidebar's Compose, as with composePlacement 'sidebar', which
+// beforeEach sets so a desktop has one Compose button; a phone has the round
+// one over the list.
 vi.mock('@/components/layout/sidebar', () => ({
   Sidebar: ({ onCompose }: { onCompose?: () => void }) =>
     device.isMobile ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>,
@@ -97,7 +98,7 @@ beforeEach(() => {
     getClientForAccount: () => client as never,
     getAllConnectedClients: () => new Map([['login', client]]) as never,
   });
-  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', sendDelaySeconds: 0, sidebarAccountSwitcher: true } as never);
+  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', sendDelaySeconds: 0, sidebarAccountSwitcher: true, composePlacement: 'sidebar' } as never);
   sendEmail.mockReset().mockResolvedValue({});
   useUIStore.setState({ activeView: 'list', sidebarOpen: false });
   useEmailStore.setState({
@@ -129,22 +130,25 @@ describe('Mail after the tour on a phone', () => {
     expect(listHidden()).toBe(false);
   });
 
-  // Usability test 2026-11-04, mail-13 and mail-p3-11: on a desktop the round
-  // button sat on the list's rows and covered the one under it while
-  // scrolling. A desktop has Compose in the folder sidebar, with the account
-  // switcher there or not; the round button is a phone's.
-  it('draws the round Compose button on a phone only', () => {
+  // A phone always has the button over the list. A desktop has it there by
+  // default, with its label; set to the folder sidebar or the app rail,
+  // Compose leaves the list alone.
+  it('draws the floating Compose button where the setting puts Compose', () => {
+    useSettingsStore.setState({ composePlacement: 'sidebar' } as never);
     const view = render(<MailApp />);
-    expect(document.querySelectorAll('[data-tour="compose-button"]')).toHaveLength(1);
+    expect(document.querySelector('[data-floating-compose]')?.getAttribute('data-floating-compose')).toBe('phone');
 
     device.isMobile = false;
     view.rerender(<MailApp />);
-    expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();
-    expect(screen.getByRole('button', { name: 'sidebar.compose' })).toBeTruthy();
+    expect(document.querySelector('[data-floating-compose]')).toBeNull();
 
-    act(() => { useSettingsStore.setState({ sidebarAccountSwitcher: false } as never); });
-    expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();
-    expect(screen.getByRole('button', { name: 'sidebar.compose' })).toBeTruthy();
+    act(() => { useSettingsStore.setState({ composePlacement: 'rail' } as never); });
+    expect(document.querySelector('[data-floating-compose]')).toBeNull();
+
+    act(() => { useSettingsStore.setState({ composePlacement: useSettingsStore.getInitialState().composePlacement } as never); });
+    const floating = document.querySelector('[data-floating-compose]');
+    expect(floating?.getAttribute('data-floating-compose')).toBe('desktop');
+    expect(floating?.textContent).toBe('sidebar.compose');
   });
 
   // mail-27 kept the tablet from drawing the header's ⋮ and the list's ⋮ one

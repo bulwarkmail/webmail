@@ -27,6 +27,7 @@ import {
 } from '@/lib/accessibility-settings';
 import { locales } from '@/i18n/routing';
 import { UNREAD_SECTION_SIZES } from '@/lib/unread-first';
+import { COMPOSE_PLACEMENTS } from '@/lib/compose-placement';
 
 /** Which store holds the setting. */
 export type SettingsStoreName = 'settings' | 'theme' | 'locale' | 'calendar';
@@ -173,6 +174,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('colorfulSidebarIcons', 'appearance', `${AP}colorful_sidebar_icons.label`),
   bool('showFolderTotalCount', 'appearance', `${AP}show_folder_total_count.label`),
   bool('sidebarAccountSwitcher', 'appearance', `${AP}sidebar_account_switcher.label`),
+  choice('composePlacement', 'appearance', `${AP}compose_placement.label`,
+    opts(`${AP}compose_placement.`, COMPOSE_PLACEMENTS)),
   bool('showRailAccountList', 'appearance', `${AP}show_rail_account_list.label`),
   bool('proInterface', 'appearance', `${AP}pro_interface.label`),
   bool('enableUnifiedMailbox', 'appearance', `${AP}unified_mailbox.label`),

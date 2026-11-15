@@ -1739,6 +1739,13 @@
         "label": "Kontobytar øvst i sidefeltet",
         "description": "Vis kontobytaren over mappene og den runde Skriv-knappen over meldingslista. Slå av for å setje Skriv over mappene i staden."
       },
+      "compose_placement": {
+        "label": "Skriv-knappen",
+        "description": "Kvar Skriv-knappen er på ei datamaskin. På telefonen ligg han alltid over meldingslista.",
+        "floating": "Over meldingslista",
+        "sidebar": "Øvst i mappefeltet",
+        "rail": "Øvst i navigasjonsfeltet"
+      },
       "show_rail_account_list": {
         "label": "Vis kontoavatarar i navigasjonsfeltet",
         "description": "Vis enkeltkontoar som sirklar nedst i navigasjonsfeltet for rask byting, med ein utloggingsknapp under."
@@ -4163,7 +4170,7 @@
     "return_to_list_follows_layout": "Til du endrar det, følgjer dette oppsettet: av når lista og meldinga står side om side, elles på."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Vis kontobytaren over mappene, med Skriv under. Slå av for å setje Skriv i staden."
+    "sidebar_account_switcher_description": "Vis kontobytaren over mappene. Slå av for å byte konto med avataren din i navigasjonsfeltet."
   },
   "mail_p2_conv": {
     "show_message": "Vis meldinga",

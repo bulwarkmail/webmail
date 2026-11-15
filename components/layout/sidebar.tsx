@@ -208,6 +208,10 @@ const RailLabelsContext = createContext(false);
  */
 const SIDEBAR_HEAD_BUTTON = "text-muted-foreground hover:bg-muted hover:text-foreground";
 
+// Compose in the folder sidebar: pill corners for the main action, in a tint
+// of the primary colour so it doesn't outshine the folders.
+const SIDEBAR_COMPOSE = "min-w-0 h-9 justify-start gap-2 px-3 rounded-full bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary";
+
 /** Keeps Tab and Shift+Tab inside `root`, wrapping at either end. */
 function trapTab(e: React.KeyboardEvent, root: HTMLElement | null) {
   if (!root) return;
@@ -1764,6 +1768,9 @@ function SidebarImpl({
   const personalSelectedKeyword = selectedKeywordAccountId ? null : selectedKeyword;
   const isEmbedded = useIsEmbedded();
   const sidebarAccountSwitcher = useSettingsStore(s => s.sidebarAccountSwitcher);
+  // Compose is in this column only when the setting puts it here; by default
+  // it floats over the message list, or it heads the app rail.
+  const composeHere = useSettingsStore(s => s.composePlacement === 'sidebar') && !isDrawer && !!onCompose;
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
@@ -2718,23 +2725,20 @@ function SidebarImpl({
               {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
             </Button>
 
-            {/* The account switcher heads the folders by default, with
-                Compose under it on a desktop, as in Gmail and Outlook: a
-                round button over the list covered the rows under it while
-                scrolling (mail-13, mail-p3-11). With the setting off a
-                desktop puts Compose here instead, and the rail's avatar is
+            {/* The account switcher heads the folders by default. With
+                Compose set to the sidebar it sits under the switcher, or in
+                its place with the switcher off, where the rail's avatar is
                 the one account switcher (usability test 2026-11-04,
-                mail-27); phones keep the round button, since this pane is a
-                drawer there. */}
+                mail-27). Phones keep the round button over the list, since
+                this pane is a drawer there. */}
             {!isCollapsed && sidebarAccountSwitcher && (
               <AccountSwitcher variant="expanded" className="flex-1" />
             )}
-            {!isCollapsed && !sidebarAccountSwitcher && !isDrawer && onCompose && (
+            {!isCollapsed && !sidebarAccountSwitcher && composeHere && (
               <Button
                 onClick={onCompose}
-                // Pill corners for the main action, friendlier than the
-                // app-wide 6px. The colour stays the primary token's.
-                className="flex-1 min-w-0 h-9 justify-start gap-2 px-3 rounded-full"
+                variant="ghost"
+                className={cn("flex-1", SIDEBAR_COMPOSE)}
                 data-sidebar-compose=""
                 data-tour="compose-button"
                 title={t("compose_hint")}
@@ -2744,11 +2748,12 @@ function SidebarImpl({
               </Button>
             )}
           </div>
-          {!isCollapsed && sidebarAccountSwitcher && !isDrawer && onCompose && (
+          {!isCollapsed && sidebarAccountSwitcher && composeHere && (
             <div className="px-2 pb-2">
               <Button
                 onClick={onCompose}
-                className="w-full min-w-0 h-9 justify-start gap-2 px-3 rounded-full"
+                variant="ghost"
+                className={cn("w-full", SIDEBAR_COMPOSE)}
                 data-sidebar-compose=""
                 data-tour="compose-button"
                 title={t("compose_hint")}
@@ -2758,11 +2763,11 @@ function SidebarImpl({
               </Button>
             </div>
           )}
-          {isCollapsed && !isDrawer && onCompose && (
+          {isCollapsed && composeHere && (
             <div className={cn("flex justify-center pb-2", railLabels && "w-[calc(100%-13rem)]")}>
               <IconButton
                 onClick={onCompose}
-                variant="default"
+                className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
                 data-sidebar-compose=""
                 data-tour="compose-button"
                 label={t("compose")}

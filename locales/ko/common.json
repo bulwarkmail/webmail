@@ -1728,6 +1728,13 @@
         "label": "사이드바 상단의 계정 전환기",
         "description": "폴더 위에 계정 전환기를, 메일 목록 위에 둥근 메일 쓰기 버튼을 보여줘요. 끄면 메일 쓰기가 대신 폴더 위에 표시돼요."
       },
+      "compose_placement": {
+        "label": "메일 쓰기 버튼",
+        "description": "컴퓨터에서 메일 쓰기 버튼의 위치입니다. 휴대폰에서는 항상 메시지 목록 위에 있습니다.",
+        "floating": "메시지 목록 위",
+        "sidebar": "폴더 사이드바 상단",
+        "rail": "내비게이션 바 상단"
+      },
       "show_rail_account_list": {
         "label": "내비게이션 바에 계정 아바타 표시",
         "description": "내비게이션 바 아래에 계정 프로필을 표시해서 빠르게 전환할 수 있어요."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "변경하기 전까지는 레이아웃을 따릅니다. 목록과 메시지가 나란히 있으면 꺼지고, 그 밖에는 켜집니다."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "폴더 위에 계정 전환기를, 그 아래에 메일 쓰기를 보여줘요. 끄면 계정 전환기 자리에 메일 쓰기가 표시돼요."
+    "sidebar_account_switcher_description": "폴더 위에 계정 전환기를 표시합니다. 끄면 내비게이션 바의 아바타로 계정을 전환합니다."
   },
   "mail_p2_conv": {
     "show_message": "메시지 보기",

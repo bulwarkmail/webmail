@@ -143,13 +143,15 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
             {/* Compose in place of the account switcher (sidebarAccountSwitcher off). */}
             <Block className="hidden desk:boot-sidebar-compose:block desk:max-lg:hidden flex-1 min-w-0 h-9 rounded-md" />
           </div>
-          {/* Compose under the account switcher on a desktop (mail-p3-11). */}
-          <div className="hidden desk:block desk:max-lg:hidden desk:boot-sidebar-compose:hidden px-2 pb-2">
-            <Block className="w-full h-9 rounded-md" />
-          </div>
-          {/* The folded sidebar's Compose button. */}
-          <div className="hidden desk:max-lg:flex justify-center pb-2">
-            <Block className="w-10 h-10 rounded-md" />
+          {/* With Compose set to the sidebar: under the account switcher, and
+              the folded sidebar's own button. */}
+          <div className="hidden boot-compose-sidebar:contents">
+            <div className="hidden desk:block desk:max-lg:hidden desk:boot-sidebar-compose:hidden px-2 pb-2">
+              <Block className="w-full h-9 rounded-full" />
+            </div>
+            <div className="hidden desk:max-lg:flex justify-center pb-2">
+              <Block className="w-10 h-10 rounded-md" />
+            </div>
           </div>
         </div>
       )}
@@ -672,8 +674,9 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
               className={cn(
                 "absolute z-40 shadow-lg bottom-4 end-4 h-12 w-12 max-desk:h-14 max-desk:w-14",
                 "max-desk:mv:w-36 max-desk:mv:rounded-2xl",
-                // A desktop has Compose in the folder sidebar instead; a Pro pane keeps the round one.
-                !embedded && "desk:hidden",
+                // A desktop has it only with Compose set to float over the
+                // list, and then with its label; a Pro pane keeps the round one.
+                !embedded && "desk:hidden desk:boot-compose-floating:block desk:w-32",
               )}
             />
           </div>

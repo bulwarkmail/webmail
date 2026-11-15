@@ -1731,6 +1731,13 @@
         "label": "Kontoskifter øverst i sidepanelet",
         "description": "Vis kontoskifteren over mapperne og den runde Ny besked-knap over beskedlisten. Slå det fra for at placere Ny besked over mapperne i stedet."
       },
+      "compose_placement": {
+        "label": "Knappen Ny besked",
+        "description": "Hvor knappen Ny besked sidder på en computer. På telefonen ligger den altid over beskedlisten.",
+        "floating": "Over beskedlisten",
+        "sidebar": "Øverst i mappepanelet",
+        "rail": "Øverst på navigationslinjen"
+      },
       "show_rail_account_list": {
         "label": "Vis kontoavatarer på navigationslinje",
         "description": "Vis individuelle kontocirkler nederst på navigationslinjen for hurtig skift, med en log-ud-knap nedenunder."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Indtil du ændrer det, følger det layoutet: fra, når listen og beskeden står side om side, ellers til."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Vis kontoskifteren over mapperne med Ny besked under den. Slå det fra for at sætte Ny besked i stedet for den."
+    "sidebar_account_switcher_description": "Vis kontoskifteren over mapperne. Slå det fra for at skifte konto med din avatar på navigationslinjen."
   },
   "mail_p2_conv": {
     "show_message": "Vis beskeden",

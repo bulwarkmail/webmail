@@ -1728,6 +1728,13 @@
         "label": "Accountwisselaar boven in de zijbalk",
         "description": "Toont de accountwisselaar boven de mappen en de ronde knop Nieuw bericht boven de berichtenlijst. Zet dit uit om Nieuw bericht in plaats daarvan boven de mappen te zetten."
       },
+      "compose_placement": {
+        "label": "Knop Nieuw bericht",
+        "description": "Waar de knop Nieuw bericht op een computer staat. Op de telefoon staat hij altijd boven de berichtenlijst.",
+        "floating": "Boven de berichtenlijst",
+        "sidebar": "Boven in de mappenbalk",
+        "rail": "Boven in de navigatiebalk"
+      },
       "show_rail_account_list": {
         "label": "Accountavatars tonen op navigatiebalk",
         "description": "Toon individuele accountcirkels onderaan de navigatiebalk voor snel wisselen, met een afmeldknop eronder."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Toont de accountwisselaar boven de mappen, met Nieuw bericht eronder. Zet dit uit om Nieuw bericht op die plek te zetten."
+    "sidebar_account_switcher_description": "Toont de accountwisselaar boven de mappen. Zet dit uit om van account te wisselen met je avatar in de navigatiebalk."
   },
   "mail_p2_conv": {
     "show_message": "Bericht tonen",

@@ -30,6 +30,11 @@
   }
 }
 
+/* Where Compose sits on a desktop in the default layout (composePlacement). */
+@custom-variant boot-compose-floating (&:where([data-boot-compose="floating"] *));
+@custom-variant boot-compose-sidebar (&:where([data-boot-compose="sidebar"] *));
+@custom-variant boot-compose-rail (&:where([data-boot-compose="rail"] *));
+
 /* Compose heads the folder sidebar, in place of the account switcher. */
 @custom-variant boot-sidebar-compose (&:where([data-boot-sidebar-compose="on"] *));
 

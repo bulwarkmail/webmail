@@ -1731,6 +1731,13 @@
         "label": "Selector de comptes a la part superior de la barra lateral",
         "description": "Mostra el selector de comptes damunt de les carpetes i el botó rodó Redacta damunt de la llista de missatges. Desactiveu-ho per posar Redacta damunt de les carpetes."
       },
+      "compose_placement": {
+        "label": "Botó Redacta",
+        "description": "On és el botó Redacta en un ordinador. Al mòbil sempre és sobre la llista de missatges.",
+        "floating": "Sobre la llista de missatges",
+        "sidebar": "A dalt de la barra de carpetes",
+        "rail": "A dalt de la barra de navegació"
+      },
       "show_rail_account_list": {
         "label": "Mostra els avatars dels comptes a la barra de navegació",
         "description": "Mostra cercles individuals per a cada compte a la part inferior de la barra de navegació per canviar-hi ràpidament, amb un botó de tancament de sessió a sota."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Mentre no ho canviïs, segueix el disseny: desactivat quan la llista i el missatge són l'un al costat de l'altre, activat en els altres casos."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Mostra el selector de comptes damunt de les carpetes, amb Redacta a sota. Desactiveu-ho per posar Redacta al seu lloc."
+    "sidebar_account_switcher_description": "Mostra el selector de comptes sobre les carpetes. Desactiva-ho per canviar de compte amb el teu avatar a la barra de navegació."
   },
   "mail_p2_conv": {
     "show_message": "Mostra el missatge",

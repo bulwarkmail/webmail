@@ -155,6 +155,10 @@
       "hide_account_switcher": {
         "description": "Die Kontoauswahl oben in der Ordnerliste ausblenden. Sie können das Konto weiterhin unten in der linken Leiste wechseln."
       },
+      "compose_placement": {
+        "description": "Wo der Knopf für eine neue Nachricht auf einem Computer ist. Auf dem Handy ist er immer über der Nachrichtenliste.",
+        "rail": "Oben in der linken Leiste"
+      },
       "show_rail_account_list": {
         "label": "Ihre Konten in der linken Leiste zeigen",
         "description": "Unten in der linken Leiste für jedes Konto einen Kreis zeigen, damit Sie schnell wechseln können. Darunter ist ein Knopf zum Abmelden."
@@ -757,5 +761,8 @@
   },
   "recover_deleted": {
     "load_failed": "Gelöschte E-Mails konnten nicht geladen werden. Versuchen Sie es noch einmal."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Die Kontoliste über den Ordnern zeigen. Ausgeschaltet wechseln Sie das Konto über Ihr Bild in der linken Leiste."
   }
 }

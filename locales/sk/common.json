@@ -1731,6 +1731,13 @@
         "label": "Prepínač účtov hore v postrannom paneli",
         "description": "Zobrazí prepínač účtov nad priečinkami a okrúhle tlačidlo Napísať nad zoznamom správ. Po vypnutí bude tlačidlo Napísať nad priečinkami."
       },
+      "compose_placement": {
+        "label": "Tlačidlo Napísať",
+        "description": "Kde je tlačidlo Napísať na počítači. V telefóne je vždy nad zoznamom správ.",
+        "floating": "Nad zoznamom správ",
+        "sidebar": "Hore v paneli priečinkov",
+        "rail": "Hore na navigačnej lište"
+      },
       "show_rail_account_list": {
         "label": "Zobraziť avatáry účtov na navigačnej lište",
         "description": "Zobrazovať jednotlivé ikony účtov v dolnej časti navigačnej lišty pre rýchle prepínanie."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Zobrazí prepínač účtov nad priečinkami a pod ním tlačidlo Napísať. Po vypnutí bude na jeho mieste tlačidlo Napísať."
+    "sidebar_account_switcher_description": "Zobrazí prepínač účtov nad priečinkami. Po vypnutí prepínate účty avatarom na navigačnej lište."
   },
   "mail_p2_conv": {
     "show_message": "Zobraziť správu",

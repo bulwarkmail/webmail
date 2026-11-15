@@ -1728,6 +1728,13 @@
         "label": "Selettore account in cima alla barra laterale",
         "description": "Mostra il selettore account sopra le cartelle e il pulsante rotondo Scrivi sull'elenco dei messaggi. Disattivalo per mettere invece Scrivi sopra le cartelle."
       },
+      "compose_placement": {
+        "label": "Pulsante Scrivi",
+        "description": "Dove si trova il pulsante Scrivi su un computer. Sul telefono è sempre sopra l'elenco dei messaggi.",
+        "floating": "Sopra l'elenco dei messaggi",
+        "sidebar": "In cima alla barra delle cartelle",
+        "rail": "In cima alla barra di navigazione"
+      },
       "show_rail_account_list": {
         "label": "Mostra avatar account nella barra di navigazione",
         "description": "Visualizza i cerchi degli account individuali nella parte inferiore della barra di navigazione per un cambio rapido, con un pulsante di disconnessione sotto."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Mostra il selettore account sopra le cartelle, con Scrivi sotto. Disattivalo per mettere Scrivi al suo posto."
+    "sidebar_account_switcher_description": "Mostra il selettore account sopra le cartelle. Disattivalo per cambiare account con il tuo avatar nella barra di navigazione."
   },
   "mail_p2_conv": {
     "show_message": "Mostra il messaggio",

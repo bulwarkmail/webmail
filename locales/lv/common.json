@@ -1728,6 +1728,13 @@
         "label": "Kontu pārslēdzējs sānu joslas augšpusē",
         "description": "Rāda kontu pārslēdzēju virs mapēm un apaļo pogu Rakstīt virs ziņojumu saraksta. Izslēdziet, lai poga Rakstīt būtu virs mapēm."
       },
+      "compose_placement": {
+        "label": "Poga Rakstīt",
+        "description": "Kur poga Rakstīt atrodas datorā. Tālrunī tā vienmēr ir virs ziņojumu saraksta.",
+        "floating": "Virs ziņojumu saraksta",
+        "sidebar": "Mapju joslas augšpusē",
+        "rail": "Navigācijas joslas augšpusē"
+      },
       "show_rail_account_list": {
         "label": "Rādīt kontu avatarus navigācijas joslā",
         "description": "Rādīt kontu apļus navigācijas joslas apakšā ātrai pārslēgšanai."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Kamēr to nemaināt, tas seko izkārtojumam: izslēgts, ja saraksts un ziņa ir blakus, citādi ieslēgts."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Rāda kontu pārslēdzēju virs mapēm un zem tā pogu Rakstīt. Izslēdziet, lai poga Rakstīt būtu tā vietā."
+    "sidebar_account_switcher_description": "Rāda kontu pārslēdzēju virs mapēm. Izslēdziet, lai kontu pārslēgtu ar savu avataru navigācijas joslā."
   },
   "mail_p2_conv": {
     "show_message": "Rādīt ziņojumu",

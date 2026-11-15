@@ -1728,6 +1728,13 @@
         "label": "Seletor de conta no topo da barra lateral",
         "description": "Mostra o seletor de conta acima das pastas e o botão redondo Escrever sobre a lista de mensagens. Desative para colocar Escrever acima das pastas."
       },
+      "compose_placement": {
+        "label": "Botão Escrever",
+        "description": "Onde fica o botão Escrever num computador. No telemóvel fica sempre sobre a lista de mensagens.",
+        "floating": "Sobre a lista de mensagens",
+        "sidebar": "No topo da barra de pastas",
+        "rail": "No topo da barra de navegação"
+      },
       "show_rail_account_list": {
         "label": "Mostrar avatares de conta na barra de navegação",
         "description": "Exibir círculos de contas individuais na parte inferior da barra de navegação para troca rápida, com um botão de sair abaixo."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Enquanto não alterar, segue o layout: desligado quando a lista e a mensagem estão lado a lado, ligado nos outros casos."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Mostra o seletor de conta acima das pastas, com Escrever por baixo. Desative para colocar Escrever no lugar dele."
+    "sidebar_account_switcher_description": "Mostra o seletor de conta acima das pastas. Desative para mudar de conta com o seu avatar na barra de navegação."
   },
   "mail_p2_conv": {
     "show_message": "Mostrar a mensagem",

@@ -1731,6 +1731,13 @@
         "label": "Fiókváltó az oldalsáv tetején",
         "description": "A fiókváltó a mappák fölött, a kerek Új levél gomb pedig az üzenetlista fölött jelenik meg. Kikapcsolva az Új levél gomb kerül a mappák fölé."
       },
+      "compose_placement": {
+        "label": "Új levél gomb",
+        "description": "Hol van az Új levél gomb számítógépen. Telefonon mindig az üzenetlista fölött van.",
+        "floating": "Az üzenetlista fölött",
+        "sidebar": "A mappasáv tetején",
+        "rail": "A navigációs sáv tetején"
+      },
       "show_rail_account_list": {
         "label": "Fiók avatárok mutatása a navigációs sávon",
         "description": "Egyedi fiókkörök megjelenítése a navigációs sáv alján a gyors váltáshoz, kijelentkezés gombbal alatta."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "A fiókváltó a mappák fölött jelenik meg, alatta az Új levél gombbal. Kikapcsolva az Új levél gomb kerül a helyére."
+    "sidebar_account_switcher_description": "Megjeleníti a fiókváltót a mappák fölött. Kikapcsolva a navigációs sávon lévő avatárral válthat fiókot."
   },
   "mail_p2_conv": {
     "show_message": "Üzenet megjelenítése",

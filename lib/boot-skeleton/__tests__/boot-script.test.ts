@@ -143,13 +143,32 @@ describe('boot script: layout settings', () => {
     expect(attr('preview')).toBeNull();
   });
 
-  it('marks Compose at the head of the sidebar only when the account switcher is turned off', () => {
+  it('marks where Compose sits, floating over the list unless set otherwise', () => {
+    boot('/en/mail');
+    expect(attr('compose')).toBe('floating');
+    settings({ composePlacement: 'rail' });
+    boot('/en/mail');
+    expect(attr('compose')).toBe('rail');
+    settings({ composePlacement: 'sidebar' });
+    boot('/en/mail');
+    expect(attr('compose')).toBe('sidebar');
+    settings({ composePlacement: 'somewhere' });
+    boot('/en/mail');
+    expect(attr('compose')).toBe('floating');
+    // Mountain View has its own Compose button.
+    settings({ composePlacement: 'rail', interfaceLayout: 'mountain-view' });
+    boot('/en/mail');
+    expect(attr('compose')).toBeNull();
+  });
+
+  it('marks Compose at the head of the sidebar only when it is set there and the account switcher is off', () => {
+    settings({ composePlacement: 'sidebar' });
     boot('/en/mail');
     expect(attr('sidebar-compose')).toBeNull();
-    settings({ sidebarAccountSwitcher: false });
+    settings({ composePlacement: 'sidebar', sidebarAccountSwitcher: false });
     boot('/en/mail');
     expect(attr('sidebar-compose')).toBe('on');
-    settings({ sidebarAccountSwitcher: true });
+    settings({ composePlacement: 'floating', sidebarAccountSwitcher: false });
     boot('/en/mail');
     expect(attr('sidebar-compose')).toBeNull();
   });

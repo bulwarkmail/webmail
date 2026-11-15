@@ -156,6 +156,10 @@
       "hide_account_switcher": {
         "description": "Hide the account list at the top of the folder list. You can still change accounts at the bottom of the left bar."
       },
+      "compose_placement": {
+        "description": "Where the button to write a new message is on a computer. On a phone it is always over the message list.",
+        "rail": "Top of the left bar"
+      },
       "show_rail_account_list": {
         "label": "Show your accounts in the left bar",
         "description": "Show a circle for each account at the bottom of the left bar, so you can change accounts quickly. A button to sign out is below them."
@@ -765,5 +769,8 @@
   },
   "global_search": {
     "account_error": "{account} could not be searched"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Show the account list above the folders. Turn this off to change accounts with your picture in the left bar."
   }
 }

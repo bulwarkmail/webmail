@@ -24,7 +24,7 @@ import {
   Users,
 } from "@/components/icons";
 import { cn } from "@/lib/cn";
-import { Bar, Circle, SkeletonRegion, type SkeletonSurface } from "./kit";
+import { Bar, Block, Circle, SkeletonRegion, type SkeletonSurface } from "./kit";
 import { LoginSkeleton } from "./login-skeleton";
 import { ProFrameSkeleton } from "./pro-skeleton";
 import { PRO_SURFACES, type BootSurface } from "@/lib/boot-skeleton/surfaces";
@@ -86,6 +86,14 @@ export function RailSkeleton({
     <div aria-hidden="true" className={cn("w-14 bg-secondary flex-col flex-shrink-0", className)} style={RAIL_BORDER}>
       <div className="flex flex-col h-full items-center">
         <div className="flex flex-col flex-1 min-h-0 items-center gap-1 py-3 px-1">
+          {/* Compose at the top of the rail (composePlacement "rail"); not on
+              the Pro shell's rail or the admin panel's. */}
+          {search || active === "admin" ? null : (
+            <span className="hidden boot-compose-rail:flex flex-col items-center gap-1">
+              <Block className="w-10 h-10 rounded-xl" />
+              <span className="w-8 my-1 border-t" style={DIVIDER} />
+            </span>
+          )}
           {search ? (
             <span className={item(false)}>
               <Search className="w-[18px] h-[18px] flex-shrink-0" />

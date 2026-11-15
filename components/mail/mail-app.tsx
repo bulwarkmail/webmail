@@ -155,6 +155,7 @@ import { useSearchHistoryStore } from "@/stores/search-history-store";
 import { WelcomeBanner } from "@/components/ui/welcome-banner";
 import { FirstStartNoticeBar } from "@/components/ui/first-start-notice";
 import { NavigationRail } from "@/components/layout/navigation-rail";
+import { FloatingComposeButton } from "@/components/mail/floating-compose-button";
 import { AppMain } from "@/components/layout/app-landmarks";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { PluginActions } from "@/components/plugins/plugin-actions";
@@ -582,6 +583,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // one-pane flow, with Mountain View's own app chrome.
   const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isEmbedded;
   const mvMobile = interfaceLayout === 'mountain-view' && isMobile && !isEmbedded;
+  const composePlacement = useSettingsStore((state) => state.composePlacement);
   // Mountain View reads a thread as one conversation in the viewer, on the
   // phone as on the desktop, so both show the same order and details. (#1224)
   const mvConversationView = mvShell || mvMobile;
@@ -6378,6 +6380,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
             <StableNavigationRail
               collapsed
+              onCompose={composePlacement === 'rail' ? () => void handleCompose() : undefined}
               quota={quota}
               isPushConnected={isPushConnected}
               onLogout={handleLogout}
@@ -6903,30 +6906,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             </div>
             </div>
 
-            {/* Floating Compose Button, on phones and in a Pro pane only:
-                Mountain View has Compose in its rail, and a desktop at the top
-                of the folder sidebar, so the button doesn't sit on the rows
-                (mail-p3-11). */}
-            {!mvShell && (isMobile || isEmbedded) && <Button
-              onClick={() => {
-                void handleCompose();
-              }}
-              className={cn(
-                // Under the drawer's backdrop (z-40), which comes earlier in the page.
-                "absolute z-30 shadow-lg",
-                mvMobile
-                  ? "bottom-4 end-4 h-14 gap-3 rounded-2xl px-5"
-                  : isMobile
-                    ? "bottom-4 end-4 h-14 w-14 rounded-full"
-                    : "bottom-4 end-4 h-12 w-12 rounded-full"
-              )}
-              aria-label={t('sidebar.compose')}
-              title={t('sidebar.compose_hint')}
-              data-tour="compose-button"
-            >
-              <PenSquare className={isMobile ? "h-6 w-6" : "h-5 w-5"} />
-              {mvMobile && <span className="text-sm font-medium">{t('sidebar.compose')}</span>}
-            </Button>}
+            {/* Floating Compose Button: on phones, in a Pro pane, and on a
+                desktop unless Compose is set to the folder sidebar or the app
+                rail. Mountain View's desktop has it in its folder column. */}
+            {!mvShell && (isMobile || isEmbedded || composePlacement === 'floating') && (
+              <FloatingComposeButton
+                kind={mvMobile ? 'mv-phone' : isMobile ? 'phone' : isEmbedded ? 'pane' : 'desktop'}
+                onCompose={() => {
+                  void handleCompose();
+                }}
+              />
+            )}
           </section>
 
           {/* Email list resize handle (desktop only) */}

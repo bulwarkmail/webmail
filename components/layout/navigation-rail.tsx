@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Mail, CalendarEvent, ListTodo, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility } from "@/components/icons";
+import { Mail, CalendarEvent, ListTodo, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility, PenSquare } from "@/components/icons";
 import { openAccessibilityPanel } from "@/components/accessibility/accessibility-quick-panel";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";
@@ -38,6 +38,7 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 import { writeRailHints, type RailHint } from "@/lib/boot-skeleton/hints";
 import { usePrefetchAfterStart } from "@/hooks/use-prefetch-after-start";
+import { savePendingMailto } from "@/lib/protocol-handlers/session";
 
 /** The built-in apps and Settings, as the rail and its host name them. */
 export type RailItemId = 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings';
@@ -98,6 +99,12 @@ interface NavigationRailProps {
    * palette (#641) instead of navigating anywhere.
    */
   onOpenSearch?: () => void;
+  /**
+   * Opens the composer from the rail's Compose button, which the rail shows
+   * when Compose is set to sit there. The mail page passes it; other pages
+   * leave it out, and the button goes to the mail page and opens it there.
+   */
+  onCompose?: () => void;
 }
 
 function StorageQuotaCircle({ quota, usagePercent }: { quota: StorageQuota; usagePercent: number }) {
@@ -241,6 +248,7 @@ export function NavigationRail({
   onNavigate,
   activeItemId,
   onOpenSearch,
+  onCompose,
   adminActive = false,
 }: NavigationRailProps) {
   const t = useTranslations("sidebar");
@@ -275,6 +283,19 @@ export function NavigationRail({
   const showAccessibilityButton = useSettingsStore((s) => s.showAccessibilityButton);
   const simpleMode = useSettingsStore((s) => s.simpleMode);
   const mountainView = useSettingsStore((s) => s.interfaceLayout === 'mountain-view');
+  // Compose at the top of the rail (Settings > Appearance > Compose button).
+  // Not on the Pro shell's rail, whose panes have their own button, or the
+  // admin panel's.
+  const composeOnRail = useSettingsStore((s) => s.composePlacement === 'rail') && !mountainView && !onNavigate && !adminActive;
+  const handleRailCompose = useCallback(() => {
+    if (onCompose) {
+      onCompose();
+      return;
+    }
+    // The mail page opens a pending in-app draft when it mounts.
+    savePendingMailto({ to: [], cc: [], bcc: [], subject: "", body: "", inApp: true });
+    router.push("/");
+  }, [onCompose, router]);
   const sidebarAppsEnabled = usePolicyStore((s) => s.isFeatureEnabled('sidebarAppsEnabled'));
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
@@ -619,6 +640,31 @@ export function NavigationRail({
         role="navigation"
         aria-label={t("nav_label")}
       >
+        {composeOnRail && (
+          <>
+            <button
+              type="button"
+              onClick={handleRailCompose}
+              data-rail-compose=""
+              data-tour="compose-button"
+              className={cn(
+                "flex items-center gap-2.5 shrink-0 rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors duration-150",
+                collapsed ? "justify-center w-10 h-10" : "px-2.5 h-10 text-sm font-medium",
+                "tap:min-h-[44px]",
+              )}
+              aria-label={t("compose")}
+              title={t("compose_hint")}
+            >
+              <PenSquare className="w-[18px] h-[18px] flex-shrink-0" />
+              {!collapsed && <span className="truncate">{t("compose")}</span>}
+            </button>
+            <div
+              aria-hidden="true"
+              className={cn("border-t shrink-0", collapsed ? "w-8 mx-auto my-1" : "mx-2 my-1")}
+              style={{ borderColor: 'rgba(128, 128, 128, 0.3)' }}
+            />
+          </>
+        )}
         {onOpenSearch && (
           <button
             type="button"

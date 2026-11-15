@@ -13,6 +13,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { hiddenSharedMailIds, setSharedMailAccountHidden } from '@/lib/shared-mail-visibility';
 import { sharedMailOrderIds, sortSharedMailAccounts } from '@/lib/shared-mail-order';
 import { localizeMailboxName } from '@/lib/mailbox-label';
+import { COMPOSE_PLACEMENTS, type ComposePlacement } from '@/lib/compose-placement';
 
 const INTERFACE_LAYOUT_KEYS: Record<InterfaceLayout, string> = {
   default: 'default',
@@ -125,13 +126,23 @@ export function LayoutSection() {
 export function SidebarSection() {
   const t = useTranslations('settings.appearance');
   const tP3 = useTranslations('mail_p3_conv');
-  const { sidebarAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, interfaceLayout, updateSetting } = useSettingsStore();
+  const { sidebarAccountSwitcher, composePlacement, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, interfaceLayout, updateSetting } = useSettingsStore();
   const accounts = useAccountStore(s => s.accounts);
   const multiAccount = accounts.length > 1;
 
   return (
     <SettingsSection id="sidebar" title={t('sections.sidebar')}>
-      {/* Compose sits under the switcher now, not over the list (mail-p3-11). */}
+      {/* Mountain View has its own Compose button in the folder column. */}
+      {interfaceLayout !== 'mountain-view' && (
+        <SettingItem label={t('compose_placement.label')} description={t('compose_placement.description')}>
+          <RadioGroup
+            value={composePlacement}
+            onChange={(value) => updateSetting('composePlacement', value as ComposePlacement)}
+            options={COMPOSE_PLACEMENTS.map((value) => ({ value, label: t(`compose_placement.${value}`) }))}
+          />
+        </SettingItem>
+      )}
+
       <SettingItem label={t('sidebar_account_switcher.label')} description={tP3('sidebar_account_switcher_description')}>
         <ToggleSwitch
           checked={sidebarAccountSwitcher}

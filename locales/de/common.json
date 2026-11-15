@@ -1728,6 +1728,13 @@
         "label": "Kontoumschalter oben in der Seitenleiste",
         "description": "Zeigt den Kontoumschalter über den Ordnern und die runde Schaltfläche „Verfassen“ über der Nachrichtenliste. Ausgeschaltet steht „Verfassen“ stattdessen über den Ordnern."
       },
+      "compose_placement": {
+        "label": "Schaltfläche „Verfassen“",
+        "description": "Wo „Verfassen“ auf einem Computer steht. Auf dem Smartphone liegt sie immer über der Nachrichtenliste.",
+        "floating": "Über der Nachrichtenliste",
+        "sidebar": "Oben in der Ordnerleiste",
+        "rail": "Oben in der Navigationsleiste"
+      },
       "show_rail_account_list": {
         "label": "Konto-Avatare in der Navigationsleiste anzeigen",
         "description": "Individuelle Kontokreise am unteren Rand der Navigationsleiste für schnelles Umschalten anzeigen, mit einer Abmelde-Schaltfläche darunter."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Solange Sie es nicht ändern, richtet sich das nach dem Layout: aus, wenn Liste und Nachricht nebeneinander stehen, sonst an."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Zeigt den Kontoumschalter über den Ordnern, darunter „Verfassen“. Ausgeschaltet steht „Verfassen“ an seiner Stelle."
+    "sidebar_account_switcher_description": "Zeigt den Kontoumschalter über den Ordnern. Ausgeschaltet wechseln Sie das Konto über Ihr Bild in der Navigationsleiste."
   },
   "mail_p2_conv": {
     "show_message": "Nachricht anzeigen",

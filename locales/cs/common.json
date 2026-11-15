@@ -1728,6 +1728,13 @@
         "label": "Přepínač účtů nahoře v postranním panelu",
         "description": "Zobrazí přepínač účtů nad složkami a kulaté tlačítko Napsat nad seznamem zpráv. Po vypnutí bude tlačítko Napsat nad složkami."
       },
+      "compose_placement": {
+        "label": "Tlačítko Napsat",
+        "description": "Kde je tlačítko Napsat na počítači. V telefonu je vždy nad seznamem zpráv.",
+        "floating": "Nad seznamem zpráv",
+        "sidebar": "Nahoře v panelu složek",
+        "rail": "Nahoře v navigačním panelu"
+      },
       "show_rail_account_list": {
         "label": "Zobrazovat avatary účtů v navigačním panelu",
         "description": "Zobrazovat samostatné ikony účtů ve spodní části navigačního panelu pro rychlé přepínání, s tlačítkem odhlášení níže."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Dokud to nezměníte, řídí se to rozvržením: vypnuto, když jsou seznam a zpráva vedle sebe, jinak zapnuto."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Zobrazí přepínač účtů nad složkami a pod ním tlačítko Napsat. Po vypnutí bude na jeho místě tlačítko Napsat."
+    "sidebar_account_switcher_description": "Zobrazí přepínač účtů nad složkami. Po vypnutí přepínáte účty avatarem v navigačním panelu."
   },
   "mail_p2_conv": {
     "show_message": "Zobrazit zprávu",

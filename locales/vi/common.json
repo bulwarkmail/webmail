@@ -1743,6 +1743,13 @@
         "label": "Bộ chuyển tài khoản ở đầu thanh bên",
         "description": "Hiện bộ chuyển tài khoản phía trên các thư mục và nút Soạn thư hình tròn trên danh sách thư. Tắt tùy chọn này để đặt Soạn thư phía trên các thư mục."
       },
+      "compose_placement": {
+        "label": "Nút Soạn thư",
+        "description": "Vị trí nút Soạn thư trên máy tính. Trên điện thoại, nút luôn nằm trên danh sách thư.",
+        "floating": "Trên danh sách thư",
+        "sidebar": "Đầu thanh thư mục",
+        "rail": "Đầu thanh điều hướng"
+      },
       "show_rail_account_list": {
         "label": "Hiển thị ảnh đại diện tài khoản trên thanh điều hướng",
         "description": "Hiển thị ảnh đại diện từng tài khoản ở cuối thanh điều hướng để chuyển nhanh, cùng nút đăng xuất bên dưới."
@@ -4167,7 +4174,7 @@
     "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Hiện bộ chuyển tài khoản phía trên các thư mục, với Soạn thư bên dưới. Tắt tùy chọn này để đặt Soạn thư vào chỗ của nó."
+    "sidebar_account_switcher_description": "Hiển thị bộ chuyển tài khoản phía trên các thư mục. Tắt để chuyển tài khoản bằng ảnh đại diện trên thanh điều hướng."
   },
   "mail_p2_conv": {
     "show_message": "Hiện thư",

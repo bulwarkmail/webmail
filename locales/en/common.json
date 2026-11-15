@@ -1731,6 +1731,13 @@
         "label": "Account switcher at the top of the sidebar",
         "description": "Show the account switcher above the folders and the round Compose button over the message list. Turn this off to put Compose above the folders instead."
       },
+      "compose_placement": {
+        "label": "Compose button",
+        "description": "Where the Compose button sits on a computer. Phones always show it over the message list.",
+        "floating": "Over the message list",
+        "sidebar": "Top of the folder sidebar",
+        "rail": "Top of the navigation rail"
+      },
       "show_rail_account_list": {
         "label": "Show account avatars on the navigation rail",
         "description": "Display individual account circles at the bottom of the navigation rail for quick switching, with a sign-out button below."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Show the account switcher above the folders, with Compose under it. Turn this off to put Compose in its place."
+    "sidebar_account_switcher_description": "Show the account switcher above the folders. Turn this off to switch accounts with your avatar on the navigation rail."
   },
   "mail_p2_conv": {
     "show_message": "Show the message",

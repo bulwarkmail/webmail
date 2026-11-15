@@ -1728,6 +1728,13 @@
         "label": "Przełącznik kont u góry paska bocznego",
         "description": "Pokazuje przełącznik kont nad folderami i okrągły przycisk Napisz nad listą wiadomości. Po wyłączeniu przycisk Napisz będzie nad folderami."
       },
+      "compose_placement": {
+        "label": "Przycisk Napisz",
+        "description": "Gdzie jest przycisk Napisz na komputerze. Na telefonie zawsze jest nad listą wiadomości.",
+        "floating": "Nad listą wiadomości",
+        "sidebar": "U góry paska folderów",
+        "rail": "U góry paska nawigacyjnego"
+      },
       "show_rail_account_list": {
         "label": "Pokazuj awatary kont na pasku nawigacyjnym",
         "description": "Wyświetlaj osobne ikony kont na dole paska nawigacyjnego, aby szybko się przełączać, z przyciskiem wylogowania poniżej."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Dopóki tego nie zmienisz, ustawienie zależy od układu: wyłączone, gdy lista i wiadomość są obok siebie, w innych przypadkach włączone."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Pokazuje przełącznik kont nad folderami, a pod nim przycisk Napisz. Po wyłączeniu przycisk Napisz będzie w jego miejscu."
+    "sidebar_account_switcher_description": "Pokazuje przełącznik kont nad folderami. Wyłącz, aby zmieniać konto awatarem na pasku nawigacyjnym."
   },
   "mail_p2_conv": {
     "show_message": "Pokaż wiadomość",

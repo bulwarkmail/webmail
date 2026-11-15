@@ -156,6 +156,10 @@
       "hide_account_switcher": {
         "description": "Ẩn danh sách tài khoản phía trên danh sách thư mục. Bạn vẫn có thể đổi tài khoản ở cuối thanh bên trái."
       },
+      "compose_placement": {
+        "description": "Vị trí nút viết thư mới trên máy tính. Trên điện thoại, nút luôn nằm trên danh sách thư.",
+        "rail": "Đầu thanh bên trái"
+      },
       "show_rail_account_list": {
         "label": "Hiển thị tài khoản của bạn trên thanh bên trái",
         "description": "Hiển thị một hình tròn cho mỗi tài khoản ở cuối thanh bên trái để bạn đổi tài khoản nhanh chóng. Nút đăng xuất nằm bên dưới."
@@ -765,5 +769,8 @@
   },
   "global_search": {
     "account_error": "Không thể tìm kiếm trong {account}"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Hiển thị danh sách tài khoản phía trên các thư mục. Tắt để đổi tài khoản bằng ảnh của bạn trên thanh bên trái."
   }
 }

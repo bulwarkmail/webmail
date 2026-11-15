@@ -1728,6 +1728,13 @@
         "label": "Sélecteur de compte en haut de la barre latérale",
         "description": "Affiche le sélecteur de compte au-dessus des dossiers et le bouton rond Composer sur la liste des messages. Désactivez cette option pour placer Composer au-dessus des dossiers."
       },
+      "compose_placement": {
+        "label": "Bouton Composer",
+        "description": "Où se trouve le bouton Composer sur un ordinateur. Sur un téléphone, il est toujours sur la liste des messages.",
+        "floating": "Sur la liste des messages",
+        "sidebar": "En haut de la barre des dossiers",
+        "rail": "En haut de la barre de navigation"
+      },
       "show_rail_account_list": {
         "label": "Afficher les avatars de compte sur la barre de navigation",
         "description": "Afficher les cercles de comptes individuels en bas de la barre de navigation pour un changement rapide, avec un bouton de déconnexion en dessous."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Tant que vous ne le modifiez pas, ce réglage suit la disposition : désactivé quand la liste et le message sont côte à côte, activé sinon."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Affiche le sélecteur de compte au-dessus des dossiers, avec Composer en dessous. Désactivez cette option pour mettre Composer à sa place."
+    "sidebar_account_switcher_description": "Affiche le sélecteur de compte au-dessus des dossiers. Désactivez cette option pour changer de compte avec votre avatar dans la barre de navigation."
   },
   "mail_p2_conv": {
     "show_message": "Afficher le message",

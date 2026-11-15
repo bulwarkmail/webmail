@@ -1728,6 +1728,13 @@
         "label": "Selector de cuentas en la parte superior de la barra lateral",
         "description": "Muestra el selector de cuentas encima de las carpetas y el botón redondo Redactar sobre la lista de mensajes. Desactívelo para poner Redactar encima de las carpetas."
       },
+      "compose_placement": {
+        "label": "Botón Redactar",
+        "description": "Dónde está el botón Redactar en un ordenador. En el móvil siempre está sobre la lista de mensajes.",
+        "floating": "Sobre la lista de mensajes",
+        "sidebar": "Arriba en la barra de carpetas",
+        "rail": "Arriba en la barra de navegación"
+      },
       "show_rail_account_list": {
         "label": "Mostrar avatares de cuentas en la barra de navegación",
         "description": "Mostrar círculos de cuentas individuales en la parte inferior de la barra de navegación para un cambio rápido, con un botón de cerrar sesión debajo."
@@ -4155,7 +4162,7 @@
     "return_to_list_follows_layout": "Mientras no lo cambies, sigue el diseño: desactivado cuando la lista y el mensaje están uno al lado del otro, activado en los demás casos."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Muestra el selector de cuentas encima de las carpetas, con Redactar debajo. Desactívelo para poner Redactar en su lugar."
+    "sidebar_account_switcher_description": "Muestra el selector de cuentas sobre las carpetas. Desactívalo para cambiar de cuenta con tu avatar en la barra de navegación."
   },
   "mail_p2_conv": {
     "show_message": "Mostrar el mensaje",

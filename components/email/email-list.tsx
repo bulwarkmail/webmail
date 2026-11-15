@@ -254,6 +254,7 @@ export function EmailList({
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
   const isDesktopPane = useIsDesktop();
   const isEmbeddedList = useIsEmbedded();
+  const floatingCompose = useSettingsStore((state) => state.composePlacement === 'floating');
   const undo = undoLabels(tNotifications);
   const tRemove = useTranslations('email_list.confirm_remove');
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
@@ -1443,13 +1444,13 @@ export function EmailList({
     `${items.length}:${renderedRows[0]?.index ?? -1}-${renderedRows[renderedRows.length - 1]?.index ?? -1}:${expandedThreadIds.size}:${paged ? page : -1}`,
   );
 
-  // Room under the last row for the round Compose button, which would otherwise
-  // sit on that row's actions. Only phones and Pro panes have that button:
-  // Mountain View and the desktop have Compose in the folder sidebar
-  // (mail-p3-11). A spacer and not padding on the list: padding is a minimum
-  // height the list can't go under, and on a short screen it pushed the rows
-  // over the tab bar.
-  const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList) ? <div aria-hidden="true" className="h-20" /> : null;
+  // Room under the last row for the floating Compose button, which would
+  // otherwise sit on that row's actions. Phones and Pro panes always have that
+  // button, a desktop unless Compose is set to the folder sidebar or the app
+  // rail; Mountain View has Compose in its folder column. A spacer and not
+  // padding on the list: padding is a minimum height the list can't go under,
+  // and on a short screen it pushed the rows over the tab bar.
+  const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList || floatingCompose) ? <div aria-hidden="true" className="h-20" /> : null;
 
   return (
     <RowTranslatorsProvider>
