@@ -2,7 +2,7 @@ import { recordJmapCall, reportJmapFailure } from "@/lib/error-reporting/client"
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { onConnectionsReset } from '@/lib/desktop/connections-reset';
 import { desktopJmapBase, desktopJmapOrigin, isDesktopProxiedServer, withDesktopBlobType } from '@/lib/desktop/jmap-route';
-import { advertisesMailboxMetadata, bulwarkEntries, escapeMetadataPathSegment, MAX_METADATA_ENTRY_BYTES, METADATA_CAPABILITY, MetadataPatchError, MetadataRefusedError, MetadataTooLargeError, MetadataUnsupportedError, metadataValueBytes, namespaceFor } from "./bulwark-metadata";
+import { advertisesMailboxMetadata, advertisesPrivateMailboxMetadata, type BulwarkMetadataChange, bulwarkEntries, metadataChangePath,escapeMetadataPathSegment, MAX_METADATA_ENTRY_BYTES, METADATA_CAPABILITY, MetadataPatchError, MetadataRefusedError, MetadataTooLargeError, MetadataUnsupportedError, metadataValueBytes, namespaceFor } from "./bulwark-metadata";
 import { IncompleteDeleteError } from "./delete-error";
 import { downloadAllowed, saveBlobAs, type DownloadKind } from "@/lib/download-guard";
 import { ArchiveEmailsError } from "./archive-error";
@@ -8357,6 +8357,27 @@ export class JMAPClient implements IJMAPClient {
       update[[`metadata/${namespaceFor(key)}`, ...path.map(escapeMetadataPathSegment)].join("/")] = value;
     }
     return { newState: await this.updateInboxMetadata(id, update) };
+  }
+
+  /** Whether the account advertises the user's own (private) metadata on mailboxes. */
+  advertisesPrivateBulwarkMetadata(accountId?: string): boolean {
+    const id = accountId || this.accountId;
+    return advertisesPrivateMailboxMetadata(this.accounts[id]?.accountCapabilities as Record<string, unknown> | undefined);
+  }
+
+  /**
+   * Applies several changes to the account's Inbox metadata in one update,
+   * all or none: whole entries, or single members of entries that exist.
+   * Other entries and members stay as they are. Returns the Mailbox state
+   * after the change. Throws like patchBulwarkMetadata.
+   */
+  async updateBulwarkMetadata(accountId: string | undefined, changes: BulwarkMetadataChange[], options?: { private?: boolean }): Promise<{ newState?: string }> {
+    const id = accountId || this.accountId;
+    if (!this.supportsBulwarkMetadata(id)) throw new MetadataUnsupportedError();
+    if (changes.length === 0) return {};
+    const update: Record<string, unknown> = {};
+    for (const change of changes) update[metadataChangePath(change, options)] = change.value;
+    return { newState: await this.updateInboxMetadata(id, update, options) };
   }
 
   /** One Mailbox/set of the Inbox's metadata; answers the new Mailbox state. */

@@ -2806,7 +2806,9 @@
       },
       "settings_sync": {
         "label": "Synchronizácia nastavení",
-        "description": "Synchronizovať nastavenia medzi prehliadačmi a zariadeniami"
+        "description": "Synchronizovať nastavenia medzi prehliadačmi a zariadeniami",
+        "replaced": "{count, plural, one {# nastavenie v tomto prehliadači sa teraz riadi} few {# nastavenia v tomto prehliadači sa teraz riadia} other {# nastavení v tomto prehliadači sa teraz riadi}} vaším účtom.",
+        "keep_mine": "Použiť nastavenia tohto prehliadača"
       },
       "sender_favicons": {
         "label": "Favikony odosielateľov",

@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "設定の同期",
-        "description": "ブラウザーやデバイス間で設定を同期します"
+        "description": "ブラウザーやデバイス間で設定を同期します",
+        "replaced": "{count, plural, other {このブラウザーの # 件の設定}}がアカウントの設定に合わせられました。",
+        "keep_mine": "このブラウザーの設定を使う"
       },
       "sender_favicons": {
         "label": "送信者ファビコン",

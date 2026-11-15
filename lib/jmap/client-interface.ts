@@ -689,6 +689,8 @@ export interface IJMAPClient {
   setBulwarkMetadata?(accountId: string | undefined, key: string, value: unknown, options?: { private?: boolean }): Promise<void>;
   advertisesBulwarkMetadata?(accountId?: string): boolean;
   patchBulwarkMetadata?(accountId: string | undefined, key: string, patches: Array<{ path: string[]; value: unknown }>): Promise<{ newState?: string }>;
+  advertisesPrivateBulwarkMetadata?(accountId?: string): boolean;
+  updateBulwarkMetadata?(accountId: string | undefined, changes: Array<{ key: string; member?: string; value: unknown }>, options?: { private?: boolean }): Promise<{ newState?: string }>;
   setCalendarShare(calendarId: string, principalId: string, rights: CalendarRights | null, targetAccountId?: string): Promise<void>;
   setAddressBookShare(addressBookId: string, principalId: string, rights: AddressBookRights | null, targetAccountId?: string): Promise<void>;
   setFileNodeShare(fileNodeId: string, principalId: string, rights: FileNodeRights | null, targetAccountId?: string): Promise<void>;

@@ -2818,7 +2818,9 @@
       },
       "settings_sync": {
         "label": "Đồng bộ hóa cài đặt",
-        "description": "Đồng bộ hóa cài đặt của bạn trên các trình duyệt và thiết bị"
+        "description": "Đồng bộ hóa cài đặt của bạn trên các trình duyệt và thiết bị",
+        "replaced": "{count, plural, other {# cài đặt trong trình duyệt này}} giờ theo tài khoản của bạn.",
+        "keep_mine": "Dùng cài đặt của trình duyệt này"
       },
       "sender_favicons": {
         "label": "Favicon người gửi",

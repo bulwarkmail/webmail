@@ -2806,7 +2806,9 @@
       },
       "settings_sync": {
         "label": "Settings sync",
-        "description": "Sync your settings across browsers and devices"
+        "description": "Sync your settings across browsers and devices",
+        "replaced": "{count, plural, one {# setting in this browser now follows} other {# settings in this browser now follow}} your account.",
+        "keep_mine": "Use this browser's"
       },
       "sender_favicons": {
         "label": "Sender favicons",

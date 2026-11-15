@@ -2806,7 +2806,9 @@
       },
       "settings_sync": {
         "label": "Sincronizarea setărilor",
-        "description": "Sincronizați-vă setările între browsere și dispozitive"
+        "description": "Sincronizați-vă setările între browsere și dispozitive",
+        "replaced": "{count, plural, one {# setare din acest browser urmează} few {# setări din acest browser urmează} other {# de setări din acest browser urmează}} acum contul dvs.",
+        "keep_mine": "Folosește-le pe ale acestui browser"
       },
       "sender_favicons": {
         "label": "Favicon-uri ale expeditorului",

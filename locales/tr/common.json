@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "Ayar Senkronizasyonu",
-        "description": "Ayarlarınızı tarayıcılar ve cihazlar arasında senkronize edin"
+        "description": "Ayarlarınızı tarayıcılar ve cihazlar arasında senkronize edin",
+        "replaced": "{count, plural, one {Bu tarayıcıdaki # ayar} other {Bu tarayıcıdaki # ayar}} artık hesabınızı izliyor.",
+        "keep_mine": "Bu tarayıcınınkileri kullan"
       },
       "sender_favicons": {
         "label": "Gönderici Favorikonları",

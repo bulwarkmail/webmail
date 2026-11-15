@@ -42,6 +42,7 @@ import { WindowSyncHost } from "@/components/popout/window-sync-host";
 import {
   DeferredDesktopHost,
   DeferredAccountArchiveRestorePrompt,
+  DeferredSettingsSyncOffer,
   DeferredDesktopOsHost,
   DeferredEditedFilesHost,
   DeferredFileDropHost,
@@ -153,6 +154,7 @@ export default async function LocaleLayout({
                     <PushNotificationPrompt />
                     {/* Lite is a static bundle: no server keeps an archive there. */}
                     {!IS_LITE && <DeferredAccountArchiveRestorePrompt />}
+                    {!IS_LITE && <DeferredSettingsSyncOffer />}
                   </MainWindowOnly>
                 </ProtocolLaunchHandlerProvider>
               </TourProvider>

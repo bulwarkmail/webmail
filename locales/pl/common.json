@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "Synchronizacja ustawień",
-        "description": "Synchronizuj ustawienia między przeglądarkami i urządzeniami"
+        "description": "Synchronizuj ustawienia między przeglądarkami i urządzeniami",
+        "replaced": "{count, plural, one {# ustawienie w tej przeglądarce jest teraz zgodne} few {# ustawienia w tej przeglądarce są teraz zgodne} other {# ustawień w tej przeglądarce jest teraz zgodnych}} z Twoim kontem.",
+        "keep_mine": "Użyj ustawień tej przeglądarki"
       },
       "sender_favicons": {
         "label": "Favikony nadawców",

@@ -2780,7 +2780,9 @@
       },
       "settings_sync": {
         "label": "Iestatījumu sinhronizācija",
-        "description": "Sinhronizēt iestatījumus starp dažādiem pārlūkiem un ierīcēm"
+        "description": "Sinhronizēt iestatījumus starp dažādiem pārlūkiem un ierīcēm",
+        "replaced": "{count, plural, zero {# šīs pārlūkprogrammas iestatījumu tagad atbilst} one {# šīs pārlūkprogrammas iestatījums tagad atbilst} other {# šīs pārlūkprogrammas iestatījumi tagad atbilst}} jūsu kontam.",
+        "keep_mine": "Izmantot šīs pārlūkprogrammas iestatījumus"
       },
       "sender_favicons": {
         "label": "Sūtītāju ikonas",

@@ -2806,7 +2806,9 @@
       },
       "settings_sync": {
         "label": "Sincronització de la configuració",
-        "description": "Sincronitzeu la configuració entre navegadors i dispositius"
+        "description": "Sincronitzeu la configuració entre navegadors i dispositius",
+        "replaced": "{count, plural, one {# paràmetre d'aquest navegador segueix} other {# paràmetres d'aquest navegador segueixen}} ara el vostre compte.",
+        "keep_mine": "Utilitza els d'aquest navegador"
       },
       "sender_favicons": {
         "label": "Icones dels remitents",

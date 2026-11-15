@@ -2802,7 +2802,9 @@
       },
       "settings_sync": {
         "label": "Beállítások szinkronizálása",
-        "description": "Beállítások szinkronizálása a böngészők és eszközök között"
+        "description": "Beállítások szinkronizálása a böngészők és eszközök között",
+        "replaced": "{count, plural, one {# beállítás ebben a böngészőben} other {# beállítás ebben a böngészőben}} mostantól a fiókját követi.",
+        "keep_mine": "A böngésző sajátjainak használata"
       },
       "sender_favicons": {
         "label": "Feladó faviconok",

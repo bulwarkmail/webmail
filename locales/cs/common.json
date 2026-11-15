@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "Synchronizace nastavení",
-        "description": "Synchronizovat nastavení mezi prohlížeči a zařízeními"
+        "description": "Synchronizovat nastavení mezi prohlížeči a zařízeními",
+        "replaced": "{count, plural, one {# nastavení v tomto prohlížeči se nyní řídí} few {# nastavení v tomto prohlížeči se nyní řídí} other {# nastavení v tomto prohlížeči se nyní řídí}} vaším účtem.",
+        "keep_mine": "Použít nastavení tohoto prohlížeče"
       },
       "sender_favicons": {
         "label": "Favikony odesílatelů",

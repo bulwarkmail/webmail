@@ -2802,7 +2802,9 @@
       },
       "settings_sync": {
         "label": "Indstillingssynkronisering",
-        "description": "Synkronisér dine indstillinger på tværs af browsere og enheder"
+        "description": "Synkronisér dine indstillinger på tværs af browsere og enheder",
+        "replaced": "{count, plural, one {# indstilling i denne browser følger} other {# indstillinger i denne browser følger}} nu din konto.",
+        "keep_mine": "Brug denne browsers"
       },
       "sender_favicons": {
         "label": "Afsender-favicons",

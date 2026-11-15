@@ -132,5 +132,8 @@ export function DeferredOfflineHost() { return <AfterBoot name="OfflineHost"><Of
 export function DeferredPopoutHost() { return <AfterBoot name="PopoutHost"><PopoutHost /></AfterBoot>; }
 export function DeferredFileDropHost() { return <AfterBoot name="FileDropHost"><FileDropHost /></AfterBoot>; }
 export function DeferredNotificationActionsHost() { return <AfterBoot name="NotificationActionsHost"><NotificationActionsHost /></AfterBoot>; }
+const SettingsSyncOffer = dynamic(() => import("@/components/providers/settings-sync-offer").then((m) => m.SettingsSyncOffer), { ssr: false });
+/** The offer to keep settings chosen here that the first sync with the account replaced. */
+export function DeferredSettingsSyncOffer() { return <AfterBoot name="SettingsSyncOffer"><SettingsSyncOffer /></AfterBoot>; }
 /** The offer to bring back a saved account list: it waits for a sign-in and a lookup anyway. */
 export function DeferredAccountArchiveRestorePrompt() { return <AfterBoot name="AccountArchiveRestorePrompt"><AccountArchiveRestorePrompt /></AfterBoot>; }

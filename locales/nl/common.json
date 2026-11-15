@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "Instellingen synchroniseren",
-        "description": "Synchroniseer uw instellingen tussen browsers en apparaten"
+        "description": "Synchroniseer uw instellingen tussen browsers en apparaten",
+        "replaced": "{count, plural, one {# instelling in deze browser volgt} other {# instellingen in deze browser volgen}} nu je account.",
+        "keep_mine": "Die van deze browser gebruiken"
       },
       "sender_favicons": {
         "label": "Afzender-favicons",

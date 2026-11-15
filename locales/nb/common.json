@@ -2806,7 +2806,9 @@
       },
       "settings_sync": {
         "label": "Synkronisering av innstillinger",
-        "description": "Synkroniser innstillingene dine på tvers av nettlesere og enheter"
+        "description": "Synkroniser innstillingene dine på tvers av nettlesere og enheter",
+        "replaced": "{count, plural, one {# innstilling i denne nettleseren følger} other {# innstillinger i denne nettleseren følger}} nå kontoen din.",
+        "keep_mine": "Bruk denne nettleserens"
       },
       "sender_favicons": {
         "label": "Nettstedsikoner for avsendere",

@@ -84,6 +84,30 @@ export function advertisesMailboxMetadata(accountCapabilities: Record<string, un
   return cap?.dataTypes?.Mailbox?.supportsVendorNamespaces === true;
 }
 
+/** Whether the account also offers the user's own (private) metadata on mailboxes. */
+export function advertisesPrivateMailboxMetadata(accountCapabilities: Record<string, unknown> | undefined): boolean {
+  const cap = accountCapabilities?.[METADATA_CAPABILITY] as
+    | { dataTypes?: Record<string, { supportsVendorNamespaces?: boolean; supportsPrivate?: boolean }> }
+    | undefined;
+  const mailbox = cap?.dataTypes?.Mailbox;
+  return mailbox?.supportsVendorNamespaces === true && mailbox.supportsPrivate === true;
+}
+
+/** One change of a metadata update: a whole entry, or one member of an entry that exists. */
+export interface BulwarkMetadataChange {
+  key: string;
+  /** A member of the entry's object; the server refuses it when the entry doesn't exist. */
+  member?: string;
+  /** Null removes the entry or the member. */
+  value: unknown;
+}
+
+/** The Mailbox/set patch path of a change, in `metadata` or `privateMetadata`. */
+export function metadataChangePath(change: BulwarkMetadataChange, options?: { private?: boolean }): string {
+  const entry = `${options?.private ? 'privateMetadata' : 'metadata'}/${namespaceFor(change.key)}`;
+  return change.member === undefined ? entry : `${entry}/${escapeMetadataPathSegment(change.member)}`;
+}
+
 /** Bulwark's entries of a `metadata` or `privateMetadata` object, by key. */
 export function bulwarkEntries(metadata: unknown): Record<string, unknown> {
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return {};

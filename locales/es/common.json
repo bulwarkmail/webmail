@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "Sincronización de ajustes",
-        "description": "Sincronice sus ajustes entre navegadores y dispositivos"
+        "description": "Sincronice sus ajustes entre navegadores y dispositivos",
+        "replaced": "{count, plural, one {# ajuste de este navegador sigue} other {# ajustes de este navegador siguen}} ahora a tu cuenta.",
+        "keep_mine": "Usar los de este navegador"
       },
       "sender_favicons": {
         "label": "Favicons de remitente",

@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "Synchronisation des paramètres",
-        "description": "Synchronisez vos paramètres entre navigateurs et appareils"
+        "description": "Synchronisez vos paramètres entre navigateurs et appareils",
+        "replaced": "{count, plural, one {# paramètre de ce navigateur suit} other {# paramètres de ce navigateur suivent}} désormais votre compte.",
+        "keep_mine": "Utiliser ceux de ce navigateur"
       },
       "sender_favicons": {
         "label": "Favicons des expéditeurs",

@@ -2814,7 +2814,9 @@
       },
       "settings_sync": {
         "label": "Synkronisering av innstillingar",
-        "description": "Synkroniser innstillingane dine på tvers av nettlesarar og einingar"
+        "description": "Synkroniser innstillingane dine på tvers av nettlesarar og einingar",
+        "replaced": "{count, plural, one {# innstilling i denne nettlesaren følgjer} other {# innstillingar i denne nettlesaren følgjer}} no kontoen din.",
+        "keep_mine": "Bruk innstillingane til denne nettlesaren"
       },
       "sender_favicons": {
         "label": "Favikon for avsendarar",

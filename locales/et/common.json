@@ -2806,7 +2806,9 @@
       },
       "settings_sync": {
         "label": "Seadete sünkroonimine",
-        "description": "Sünkroni oma seaded brauserite ja seadmete vahel"
+        "description": "Sünkroni oma seaded brauserite ja seadmete vahel",
+        "replaced": "{count, plural, one {# selle brauseri seade järgib} other {# selle brauseri seadet järgivad}} nüüd teie kontot.",
+        "keep_mine": "Kasuta selle brauseri omi"
       },
       "sender_favicons": {
         "label": "Saatja favicon'id",

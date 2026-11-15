@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "설정 동기화",
-        "description": "여러 브라우저나 기기에서 내 설정을 동기화해요"
+        "description": "여러 브라우저나 기기에서 내 설정을 동기화해요",
+        "replaced": "{count, plural, other {이 브라우저의 설정 #개}}가 이제 계정을 따릅니다.",
+        "keep_mine": "이 브라우저의 설정 사용"
       },
       "sender_favicons": {
         "label": "보낸 사람 파비콘",

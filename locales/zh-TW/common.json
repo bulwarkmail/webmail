@@ -2806,7 +2806,9 @@
       },
       "settings_sync": {
         "label": "設定同步",
-        "description": "跨瀏覽器和裝置同步您的設定"
+        "description": "跨瀏覽器和裝置同步您的設定",
+        "replaced": "{count, plural, other {此瀏覽器中的 # 項設定}}現在跟隨您的帳戶。",
+        "keep_mine": "使用此瀏覽器的設定"
       },
       "sender_favicons": {
         "label": "寄件者圖示",

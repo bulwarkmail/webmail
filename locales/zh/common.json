@@ -2799,7 +2799,9 @@
       },
       "settings_sync": {
         "label": "设置同步",
-        "description": "跨浏览器和设备同步您的设置"
+        "description": "跨浏览器和设备同步您的设置",
+        "replaced": "{count, plural, other {此浏览器中的 # 项设置}}现在跟随您的帐户。",
+        "keep_mine": "使用此浏览器的设置"
       },
       "sender_favicons": {
         "label": "发件人图标",
