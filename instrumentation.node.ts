@@ -10,6 +10,7 @@ import { bootSharedMode } from "./lib/shared-store/boot";
 import { importLocalData } from "./lib/shared-store/import";
 import { exportSharedData } from "./lib/shared-store/export";
 import { logger, isJsonLogFormat } from "./lib/logger";
+import { installBodyBudget } from "./lib/security/request-body-budget";
 
 const pkg = JSON.parse(
   readFileSync(`${process.cwd()}/package.json`, "utf-8")
@@ -24,6 +25,10 @@ if (process.env.METRICS_TOKEN?.trim() || process.env.METRICS_TOKEN_FILE?.trim())
     if (installHttpMetrics()) logger.info("Metrics endpoint on at /api/metrics");
   });
 }
+
+// A ceiling on the request bodies held in memory at once, from the first
+// request on (lib/security/request-body-budget.ts).
+installBodyBudget();
 
 // With REDIS_URL every replica shares one store (#1066). Without it,
 // everything below runs exactly as it always has.
