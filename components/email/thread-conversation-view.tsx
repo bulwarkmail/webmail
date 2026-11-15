@@ -27,7 +27,7 @@ import { htmlToReadableText } from "@/lib/html-to-readable-text";
 import { pauseAnimatedImages } from "@/lib/animated-images";
 import { applyMailTextSize, mailFitOptions } from "@/lib/mail-reading";
 import { useMailReading } from "@/hooks/use-mail-reading";
-import { DARK_PENDING_CLASS, applyEmailDarkMode, emailDarkModeCss } from "@/lib/email-dark-mode";
+import { DARK_PENDING_CLASS, EMAIL_DARK_CANVAS, applyEmailDarkMode, emailDarkModeCss, readSurfaceColor } from "@/lib/email-dark-mode";
 import { useThemeStore } from "@/stores/theme-store";
 import { useShallow } from "zustand/react/shallow";
 import { Avatar } from "@/components/ui/avatar";
@@ -703,6 +703,7 @@ export function ConversationEmailBody({
   const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email.sourceClientAccountId);
   const t = useTranslations();
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const activeThemeId = useThemeStore((state) => state.activeThemeId);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
   // The device policies of the message's own account (Organisation > Devices).
   const devices = useDevicePolicy(email);
@@ -963,7 +964,7 @@ export function ConversationEmailBody({
     // for whatever the DOM walk above cannot see.
     const csp = emailIframeCsp(!allowExternal, appFontSources ? appFontSources.split(' ') : []);
     // Colours are rewritten after load (applyEmailDarkMode in handleIframeLoad).
-    return `<!DOCTYPE html><html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${isDark ? DARK_PENDING_CLASS : ''}"><head>
+    return `<!DOCTYPE html><html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${isDark ? DARK_PENDING_CLASS : ''}"${isDark ? ` data-surface="${encodeURIComponent(activeThemeId ?? '')}"` : ''}><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${csp}">
@@ -974,7 +975,7 @@ export function ConversationEmailBody({
      on a phone fitEmailBodyWidth() shrinks it to the screen first, so the pan is
      only left for content too wide to stay legible when scaled. */
   html { overflow: hidden; }
-  body { overflow-x: auto; overflow-y: hidden; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: #ffffff; word-wrap: break-word; overflow-wrap: break-word; }
+  body { overflow-x: auto; overflow-y: hidden; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: ${isDark ? 'transparent' : '#ffffff'}; word-wrap: break-word; overflow-wrap: break-word; }
   /* Only force the cap on images that set no width of their own: an
      !important 100% also overrides a sender's inline max-width, and an
      image sized by max-width + max-height + width:100% then grows to
@@ -995,7 +996,7 @@ export function ConversationEmailBody({
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${isDark ? emailDarkModeCss() : ''}
 </style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${emailContent.html}${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
-  }, [emailContent.isHtml, emailContent.html, allowExternal, isDark, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
+  }, [emailContent.isHtml, emailContent.html, allowExternal, isDark, activeThemeId, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
   useLayoutEffect(() => { setHtmlBodyEl(null); }, [emailIframeSrcDoc]);
   // One object per body: React writes innerHTML again whenever this object
   // changes, dropping whatever was mounted in the body.
@@ -1027,7 +1028,9 @@ export function ConversationEmailBody({
       if (reading.pauseImages) {
         pauseAnimatedImages(doc, { play: t('email_viewer.play_animation'), pause: t('email_viewer.pause_animation') });
       }
-      if (isDark) applyEmailDarkMode(doc, { remoteContentAllowed: allowExternal });
+      if (isDark) {
+        applyEmailDarkMode(doc, { remoteContentAllowed: allowExternal, canvas: readSurfaceColor(iframe, EMAIL_DARK_CANVAS) });
+      }
       const resize = () => {
         // Fit desktop-width mail to the screen before measuring: the transform
         // leaves the layout height untouched, so scale the box by hand.
@@ -1263,7 +1266,7 @@ export function ConversationEmailBody({
             title={frameTitle}
             className="w-full border-0 block"
             scrolling="no"
-            style={{ minHeight: '60px' }}
+            style={{ minHeight: '60px', colorScheme: 'light' }}
             onLoad={handleIframeLoad}
           />
         ) : (

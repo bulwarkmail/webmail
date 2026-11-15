@@ -56,6 +56,17 @@ export default [
     },
   },
   {
+    files: ["lib/email-dark-mode-engine.js"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+    rules: {
+      "no-unused-vars": ["error", { caughtErrors: "none" }],
+    },
+  },
+  {
     files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
     languageOptions: {
       globals: {
