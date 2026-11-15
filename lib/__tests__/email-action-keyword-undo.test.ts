@@ -46,7 +46,7 @@ describe('undo for read, flag and tag changes', () => {
 
     await markSelectionReadWithUndo(client, true, { success: '2 emails marked as read', error: 'Failed', labels });
 
-    expect(batchMarkAsRead).toHaveBeenCalledWith(client, true);
+    expect(batchMarkAsRead).toHaveBeenCalledWith(client, true, undefined, expect.any(Function));
     const shown = useToastStore.getState().toasts.at(-1)!;
     expect(shown.title).toBe('2 emails marked as read');
     expect(shown.action?.label).toBe('Undo');
