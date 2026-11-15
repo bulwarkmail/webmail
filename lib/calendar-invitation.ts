@@ -99,7 +99,7 @@ function extractMethodFromContentType(value?: string | null): InvitationMethod {
  * VCALENDAR data as a reliable fallback.
  */
 export function extractMethodFromRawIcs(rawText: string): InvitationMethod {
-  const match = rawText.match(/^METHOD:(\S+)/m);
+  const match = rawText.match(/^METHOD(?:;[^:\r\n]*)?:[ \t]*([A-Za-z-]+)/im);
   return match ? normalizeInvitationMethod(match[1]) : 'unknown';
 }
 
@@ -408,16 +408,35 @@ export function findCalendarAttachment(email: Email): Attachment | null {
   return null;
 }
 
+/**
+ * The iTIP method of an invitation message. The method the sender stated wins:
+ * the MIME part's method parameter, then the .ics METHOD (as CalendarEvent/parse
+ * reports it, or read from the raw file). Only without one is it guessed from
+ * the participants, which misreads a reply whose attendee has no roles, as
+ * Stalwart sends it (#1688).
+ */
 export function getInvitationMethod(
   event: Partial<CalendarEvent>,
   options?: {
     email?: Pick<Email, 'headers' | 'attachments' | 'textBody' | 'htmlBody'>;
     attachment?: Pick<Attachment, 'type'> | null;
+    /** The raw .ics text, for its METHOD line. */
+    rawIcs?: string | null;
   }
 ): InvitationMethod {
   const explicitMethod = getMethodFromEmail(options?.email, options?.attachment);
   if (explicitMethod !== 'unknown') {
     return explicitMethod;
+  }
+
+  const parsedMethod = normalizeInvitationMethod(event.method);
+  if (parsedMethod !== 'unknown') {
+    return parsedMethod;
+  }
+
+  const rawMethod = options?.rawIcs ? extractMethodFromRawIcs(options.rawIcs) : 'unknown';
+  if (rawMethod !== 'unknown') {
+    return rawMethod;
   }
 
   if (event.status === 'cancelled') {

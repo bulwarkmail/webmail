@@ -253,6 +253,48 @@ describe('getInvitationMethod', () => {
   });
 });
 
+// #1688: a reply as Stalwart 0.16 and 1.0 return it from CalendarEvent/parse
+// (checked on the test servers): the attendee has no roles, the organizer
+// has roles.owner, and the .ics METHOD comes back as `method`.
+describe('getInvitationMethod with a Stalwart reply', () => {
+  const stalwartReply = (method?: string): Partial<CalendarEvent> => ({
+    '@type': 'Event',
+    uid: 'reply-1688@example.org',
+    title: 'Planning',
+    organizerCalendarAddress: 'mailto:organizer@example.org',
+    participants: {
+      att: { '@type': 'Participant', calendarAddress: 'mailto:attendee@example.org', participationStatus: 'accepted' } as unknown as CalendarParticipant,
+      org: { '@type': 'Participant', calendarAddress: 'mailto:organizer@example.org', roles: { owner: true }, name: 'Organizer' } as unknown as CalendarParticipant,
+    },
+    ...(method ? { method } : {}),
+  });
+  const RAW_REPLY = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nMETHOD:REPLY\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+
+  it('takes the method CalendarEvent/parse reports', () => {
+    expect(getInvitationMethod(stalwartReply('reply'))).toBe('reply');
+  });
+
+  it('takes the METHOD of the raw .ics over the participant guess', () => {
+    expect(getInvitationMethod(stalwartReply(), { rawIcs: RAW_REPLY })).toBe('reply');
+    expect(getInvitationMethod(stalwartReply(), { rawIcs: 'method;x-a=b: reply\n' })).toBe('reply');
+  });
+
+  it('still guesses without a stated method', () => {
+    expect(getInvitationMethod(stalwartReply())).toBe('request');
+  });
+
+  it('lets the MIME method parameter win over the .ics', () => {
+    expect(getInvitationMethod(stalwartReply('reply'), { attachment: { type: 'text/calendar; method=CANCEL' } })).toBe('cancel');
+  });
+
+  it('compares the sender with the replying attendee, not the organizer', () => {
+    const event = stalwartReply('reply');
+    const email = makeEmail({ from: [{ email: 'attendee@example.org' }], authenticationResults: undefined, headers: {} } as Partial<Email>);
+    const result = getInvitationTrustAssessment(event, email, getInvitationMethod(event), ['organizer@example.org'], ['example.org']);
+    expect(result.reason).not.toBe('sender_mismatch_unverified');
+  });
+});
+
 describe('getInvitationActorSummary', () => {
   it('picks the attendee as actor for reply-like methods', () => {
     const event: Partial<CalendarEvent> = {

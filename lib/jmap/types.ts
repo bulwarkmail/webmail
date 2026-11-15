@@ -766,6 +766,8 @@ export interface CalendarEvent {
   locale: string | null;
   replyTo: Record<string, string> | null;
   organizerCalendarAddress: string | null;
+  /** The iTIP method ("request", "reply", ...) of a parsed .ics; only CalendarEvent/parse sets it. */
+  method?: string;
   participants: Record<string, CalendarParticipant> | null;
   mayInviteSelf: boolean;
   mayInviteOthers: boolean;

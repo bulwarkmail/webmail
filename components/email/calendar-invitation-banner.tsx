@@ -46,7 +46,6 @@ import {
   isFromOrganizerOf,
   storedOrganizerEmail,
   seriesAnswers,
-  extractMethodFromRawIcs,
   type EventSummary,
   type InvitationMethod,
   type InvitationTrustAssessment,
@@ -520,7 +519,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const [pickerPosition, setPickerPosition] = useState<{ top: number; left?: number; right?: number } | null>(null);
   const pickerTriggerRef = useRef<HTMLButtonElement>(null);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
-  const [rawIcsMethod, setRawIcsMethod] = useState<InvitationMethod>('unknown');
+  // The raw .ics, for its METHOD line (JMAP drops the Content-Type parameters).
+  const [rawIcs, setRawIcs] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   // Underlying failure shown under the generic parse error, so "wrong account"
   // or a network failure is distinguishable from an unparsable file.
@@ -567,12 +567,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       const parsed = events[0];
       setParsedEvent(parsed);
 
-      if (rawText) {
-        const icsMethod = extractMethodFromRawIcs(rawText);
-        if (icsMethod !== 'unknown') {
-          setRawIcsMethod(icsMethod);
-        }
-      }
+      setRawIcs(rawText);
 
       setState('parsed');
 
@@ -628,8 +623,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     };
   }, [showCalendarPicker]);
 
-  const detectedMethod = parsedEvent && attachment ? getInvitationMethod(parsedEvent, { email, attachment }) : 'unknown';
-  const method = detectedMethod !== 'unknown' ? detectedMethod : rawIcsMethod;
+  const method = parsedEvent && attachment ? getInvitationMethod(parsedEvent, { email, attachment, rawIcs }) : 'unknown';
   const isCancellation = method === 'cancel';
 
   const seriesUid = isSeriesInvitation(parsedEvent) ? parsedEvent?.uid ?? null : null;
