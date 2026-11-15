@@ -521,7 +521,7 @@ export function parseSettingsSection(segments: string[] = []): string | null {
 // Surface routing (shared by the Pro shell and the login round-trip)
 // ---------------------------------------------------------------------------
 
-export type AppSurface = 'mail' | 'calendar' | 'contacts' | 'files' | 'settings';
+export type AppSurface = 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings';
 
 /**
  * Which surface an app-relative path belongs to, plus the segments after it.
@@ -551,6 +551,7 @@ export function matchSurface(
   const [head, ...rest] = parts;
   if (head === 'mail') return { surface: 'mail', segments: rest };
   if (head === 'calendar') return { surface: 'calendar', segments: rest };
+  if (head === 'tasks') return { surface: 'tasks', segments: rest };
   if (head === 'contacts') return { surface: 'contacts', segments: rest };
   if (head === 'files') return { surface: 'files', segments: rest };
   if (head === 'settings') return { surface: 'settings', segments: rest };

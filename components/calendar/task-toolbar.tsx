@@ -16,6 +16,8 @@ interface TaskToolbarProps {
   taskIds?: string[];
   /** Icon-only plugin buttons (phones). */
   compact?: boolean;
+  /** The "New task" button; off where another one is on screen (the phone's floating "+"). */
+  showCreate?: boolean;
 }
 
 const NO_IDS: string[] = [];
@@ -28,6 +30,7 @@ export function TaskToolbar({
   onCreateTask,
   taskIds = NO_IDS,
   compact,
+  showCreate = true,
 }: TaskToolbarProps) {
   const t = useTranslations("calendar");
   const pluginContext = useMemo(() => ({ taskIds }), [taskIds]);
@@ -53,10 +56,12 @@ export function TaskToolbar({
 
       <div className="flex-1" />
 
-      <Button size="sm" onClick={onCreateTask}>
-        <Plus className="w-4 h-4 me-1" />
-        {t("tasks.create")}
-      </Button>
+      {showCreate && (
+        <Button size="sm" onClick={onCreateTask}>
+          <Plus className="w-4 h-4 me-1" />
+          {t("tasks.create")}
+        </Button>
+      )}
 
       <PluginActions surface="task-list-actions" context={pluginContext} compact={compact} />
     </div>

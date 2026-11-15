@@ -9,7 +9,7 @@ import { openComposerInWindow } from '@/lib/popout/compose-in-window';
 import type { ComposePopoutPayload } from '@/lib/popout/compose-payload';
 
 export type ProTabKind =
-  | 'mail' | 'calendar' | 'contacts' | 'files' | 'settings'
+  | 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings'
   | 'compose' | 'email' | 'folder' | 'search';
 
 export type ProAppTabKind = Exclude<ProTabKind, 'compose' | 'email' | 'folder' | 'search'>;
@@ -253,6 +253,7 @@ interface ProTabState extends ProTabCoreState {
 const TAB_BLUEPRINTS: Record<ProAppTabKind, { labelKey: string }> = {
   mail:     { labelKey: 'mail' },
   calendar: { labelKey: 'calendar' },
+  tasks:    { labelKey: 'tasks' },
   contacts: { labelKey: 'contacts' },
   files:    { labelKey: 'files' },
   settings: { labelKey: 'settings' },

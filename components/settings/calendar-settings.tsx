@@ -41,6 +41,7 @@ export function CalendarSettings() {
     calendarFreeScroll,
     enableCalendarTasks,
     showTasksOnCalendar,
+    showTasksApp,
     showBirthdayCalendar,
     calendarHoverPreview,
     calendarLimitHours,
@@ -300,6 +301,18 @@ export function CalendarSettings() {
           <ToggleSwitch
             checked={showTasksOnCalendar}
             onChange={(checked) => updateSetting('showTasksOnCalendar', checked)}
+          />
+        </SettingItem>
+      )}
+
+      {enableCalendarTasks && (
+        <SettingItem
+          label={t('show_tasks_app')}
+          description={t('show_tasks_app_desc')}
+        >
+          <ToggleSwitch
+            checked={showTasksApp}
+            onChange={(checked) => updateSetting('showTasksApp', checked)}
           />
         </SettingItem>
       )}

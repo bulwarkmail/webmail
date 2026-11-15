@@ -1,6 +1,7 @@
 import type { BootSurface } from "@/lib/boot-skeleton/surfaces";
 import { MailSkeletonBody } from "./mail-skeleton";
 import { CalendarSkeletonBody } from "./calendar-skeleton";
+import { TasksSkeletonBody } from "./tasks-skeleton";
 import { ContactsSkeletonBody } from "./contacts-skeleton";
 import { FilesSkeletonBody } from "./files-skeleton";
 import { SettingsSkeletonBody } from "./settings-skeleton";
@@ -13,6 +14,8 @@ export function SkeletonBody({ surface, embedded = true }: { surface: BootSurfac
   switch (surface) {
     case "calendar":
       return <CalendarSkeletonBody embedded={embedded} />;
+    case "tasks":
+      return <TasksSkeletonBody embedded={embedded} />;
     case "contacts":
       return <ContactsSkeletonBody embedded={embedded} />;
     case "files":

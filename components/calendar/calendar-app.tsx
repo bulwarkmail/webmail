@@ -23,6 +23,7 @@ import { useAccountPrincipalEmails } from "@/hooks/use-account-principal-emails"
 import { Button } from "@/components/ui/button";
 import { CalendarSkeleton, CalendarSkeletonBody, CalendarViewSkeleton, calendarSkeletonText } from "@/components/boot-skeleton/calendar-skeleton";
 import { SkeletonRegion } from "@/components/boot-skeleton/kit";
+import { TasksSkeleton, TasksSkeletonBody, TasksListSkeleton, tasksSkeletonText } from "@/components/boot-skeleton/tasks-skeleton";
 import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { CalendarToolbar } from "@/components/calendar/calendar-toolbar";
 import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
@@ -32,6 +33,8 @@ import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
 import { TaskListView, filterTasksForList, defaultTaskList } from "@/components/calendar/task-list-view";
 import { CalendarLoadErrorNotice } from "@/components/calendar/calendar-load-error-notice";
 import { TaskToolbar } from "@/components/calendar/task-toolbar";
+import { TasksSidebarFilters } from "@/components/calendar/tasks-sidebar-filters";
+import { PluginActions } from "@/components/plugins/plugin-actions";
 import { PluginTaskView, usePluginTaskView } from "@/components/plugins/plugin-task-view";
 import { onOpenTask } from "@/lib/plugin-sandbox/open-task";
 import { TaskModal } from "@/components/calendar/task-modal";
@@ -173,11 +176,20 @@ function isRecurringEvent(event: CalendarEvent): boolean {
 export interface CalendarAppProps {
   /** Path segments after `/calendar` (`['day', '2026-08-06']`). */
   linkSegments?: string[];
+  /**
+   * `tasks`: the Tasks app (/tasks, #1698). The calendar's task list, task
+   * editor and task lists, under its own name and without the calendar's
+   * views, dates and calendars.
+   */
+  surface?: "calendar" | "tasks";
 }
 
-export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = {}) {
+export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" }: CalendarAppProps = {}) {
+  const tasksSurface = surface === "tasks";
   // Static Lite build: the route params are empty, read the link from the URL.
-  const linkSegments = useLiteLinkSegments('calendar', routeSegments);
+  const liteLinkSegments = useLiteLinkSegments(tasksSurface ? 'tasks' : 'calendar', routeSegments);
+  // The Tasks app takes no permalinks of its own.
+  const linkSegments = tasksSurface ? undefined : liteLinkSegments;
   const shownName = useCollectionNames();
   const router = useRouter();
   const t = useTranslations("calendar");
@@ -187,8 +199,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const describeError = useCalendarErrorMessage();
   const tSidebar = useTranslations("sidebar");
   const tOffline = useTranslations("calendar_offline");
-  useDocumentTitle(tSidebar("calendar"));
-  useDesktopWindowName(tSidebar("calendar"), { withAccount: true });
+  const appName = tSidebar(tasksSurface ? "tasks" : "calendar");
+  useDocumentTitle(appName);
+  useDesktopWindowName(appName, { withAccount: true });
   const skeletonLabels = useSkeletonLabels();
   const { demoMode } = useConfig();
   // Subscriptions fetch the feed through /api/fetch-ical, which the demo has no
@@ -222,7 +235,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     calendars, events, selectedDate, viewMode, selectedCalendarIds,
     isLoading, isLoadingEvents, supportsCalendar, error, eventsLoadError,
     fetchCalendars, fetchEvents, createEvent, updateEvent, deleteEvent, rsvpEvent,
-    setSelectedDate, setViewMode, toggleCalendarVisibility, updateCalendar, shareCalendar,
+    setSelectedDate, setViewMode: storeSetViewMode, toggleCalendarVisibility, updateCalendar, shareCalendar,
     removeCalendar, clearCalendarEvents,
     refreshAllSubscriptions, icalSubscriptions, isSubscriptionCalendar,
   } = useCalendarStore();
@@ -236,7 +249,30 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const toggleTaskCompleteFn = useTaskStore(state => state.toggleTaskComplete);
   const { identities } = useIdentityStore();
   const contacts = useContactStore((s) => s.contacts);
-  const normalizedViewMode = isCalendarViewMode(viewMode) ? viewMode : "month";
+  // Settings > Calendar > Tasks as their own app (#1698): the calendar keeps
+  // its four views and the Tasks app shows the list.
+  const showTasksApp = useSettingsStore((s) => s.showTasksApp);
+  const tasksPolicyEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarTasksEnabled'));
+  const tasksAppOn = enableCalendarTasks && showTasksApp && tasksPolicyEnabled;
+  const storedViewMode = isCalendarViewMode(viewMode) ? viewMode : "month";
+  const normalizedViewMode: CalendarViewMode = tasksSurface
+    ? "tasks"
+    : tasksAppOn && storedViewMode === "tasks" ? "month" : storedViewMode;
+  // A view picked here: the calendar's views stay in the calendar, the task
+  // list opens in the Tasks app while that has its own icon.
+  const setViewMode = useCallback((mode: CalendarViewMode) => {
+    if (tasksSurface) {
+      if (mode === "tasks") return;
+      storeSetViewMode(mode);
+      router.push("/calendar");
+      return;
+    }
+    if (mode === "tasks" && tasksAppOn) {
+      router.push("/tasks");
+      return;
+    }
+    storeSetViewMode(mode);
+  }, [tasksSurface, tasksAppOn, storeSetViewMode, router]);
   const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
   const lastEventCalendarIds = useCalendarStore((s) => s.lastEventCalendarIds);
   const rememberEventCalendar = useCalendarStore((s) => s.rememberEventCalendar);
@@ -386,10 +422,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     } else if (client && !calendarEnabled) {
       // Calendar disabled by admin policy - send the user back to mail.
       router.push("/");
+    } else if (client && tasksSurface && !(enableCalendarTasks && tasksPolicyEnabled)) {
+      // Tasks turned off: the Tasks app has nothing to show.
+      router.replace("/calendar");
     } else if (client && !supportsCalendar && !pendingWebcalAccountChoice && !isProtocolAccountSwitching && !pendingSubscription && !hasPendingWebcal()) {
       router.push("/");
     }
-  }, [initialCheckDone, isAuthenticated, authLoading, client, calendarEnabled, supportsCalendar, pendingWebcalAccountChoice, isProtocolAccountSwitching, pendingSubscription, router]);
+  }, [initialCheckDone, isAuthenticated, authLoading, client, calendarEnabled, supportsCalendar, pendingWebcalAccountChoice, isProtocolAccountSwitching, pendingSubscription, router, tasksSurface, enableCalendarTasks, tasksPolicyEnabled]);
 
   useEffect(() => {
     if (error) {
@@ -1089,6 +1128,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   useEffect(() => {
     if (deepLinkHandledRef.current) return;
     if (!isAuthenticated || !client) return;
+    if (tasksSurface) return;
 
     const entry = linkSegments ? { segments: linkSegments } : consumePendingDeepLinkEntry('calendar');
     const segments = entry?.segments ?? [];
@@ -1096,31 +1136,34 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     deepLinkHandledRef.current = true;
     if (!link) return;
     applyCalendarDeepLinkRef.current(link);
-  }, [isAuthenticated, client, linkSegments]);
+  }, [isAuthenticated, client, linkSegments, tasksSurface]);
 
   // Pro shell only: this surface stays mounted for the whole session, so links
   // arriving after mount are delivered live instead of being parked forever.
   // Embedded-only: during a cold-load redirect the standard instance renders
   // briefly and must not steal the link parked for the Pro one.
   useEffect(() => {
-    if (!isEmbedded) return;
+    if (!isEmbedded || tasksSurface) return;
     return subscribePendingDeepLink('calendar', (segments, search) => {
       const link = parseCalendarPath(segments, new URLSearchParams(search ?? window.location.search));
       if (link) applyCalendarDeepLinkRef.current(link);
     });
-  }, [isEmbedded]);
+  }, [isEmbedded, tasksSurface]);
 
   // The permalink for what the calendar is currently showing. In the Pro
   // shell only the focused tab writes the address bar; the standard instance
   // that renders while Pro takes over a route stays silent.
   const isFocusedProTab = useIsFocusedProTab();
   const isPaneScoped = useIsPaneScoped();
+  // This app is the one on screen: in the Pro shell its focused tab, outside
+  // it the page (and not the standard page the Pro shell is taking over).
+  const inFront = isEmbedded ? isFocusedProTab : !proInterfaceActive;
   // The phone's full-screen task editor: Tab stays in it and the focus goes
   // back to the button that opened it. Escape is the editor's own (it asks
   // about unsaved changes).
   const mobileTaskEditorRef = useFocusTrap({ isActive: showTaskModal && isMobile, restoreFocus: true });
   const eventLinkId = showEventModal && editEvent ? editEvent.id : null;
-  const calendarLinkPath = appPath(buildCalendarPath({
+  const calendarLinkPath = appPath(tasksSurface ? "/tasks" : buildCalendarPath({
     view: normalizedViewMode,
     date: selectedDate,
     eventId: eventLinkId,
@@ -1859,9 +1902,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       if (isAppShortcutBlocked(e)) return;
       if (isContextMenuOpen()) return;
       if (showEventModal || showTaskModal || detailPinned) return;
+      if (!inFront) return;
 
       const action = calendarShortcutAction(e, useSettingsStore.getState().singleKeyShortcuts !== false);
       if (!action) return;
+      // The Tasks app has no dates or views to switch: N makes a task.
+      if (tasksSurface && action !== "new") return;
       // A slider, tabs or a menu keeps its own arrows.
       if ((action === "prev" || action === "next") && isArrowKeyWidgetTarget(e)) return;
       if (action !== "new" && action !== "search") leaveSearch();
@@ -1881,7 +1927,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [navigatePrev, navigateNext, goToToday, setViewMode, openCreateForView, openSearch, leaveSearch, showEventModal, showTaskModal, detailPinned, enableCalendarTasks]);
+  }, [navigatePrev, navigateNext, goToToday, setViewMode, openCreateForView, openSearch, leaveSearch, showEventModal, showTaskModal, detailPinned, enableCalendarTasks, inFront, tasksSurface]);
 
   // The command palette's Calendar group, while this calendar is the one in
   // front (in the Pro shell: its focused tab).
@@ -1895,11 +1941,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     { mode: "tasks", key: "k" },
   ];
   // File > New event and New task in the desktop app's menus, from any app.
-  useAppCommands({
+  useAppCommands(tasksSurface ? {
+    "new-task": () => { if (enableCalendarTasks) openCreateTaskModal(); },
+  } : {
     "new-event": () => openCreateModal(),
     "new-task": () => { if (enableCalendarTasks) openCreateTaskModal(); },
     "import-calendar": () => { if (!demoMode) setShowImportModal(true); },
-  }, true);
+  }, tasksSurface ? inFront : true);
   // Its View menu's Day, Week, Month and Agenda, Go's Today and periods, and Edit > Search events.
   const viewFromMenu = (mode: CalendarViewMode) => () => { setMobileReturnToMonth(false); leaveSearch(); setViewMode(mode); };
   useDesktopCommands({
@@ -1922,10 +1970,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     "view.calendar.agenda": { enabled: true, checked: normalizedViewMode === "agenda" },
     "edit.search": normalizedViewMode !== "tasks",
     "file.newTask": enableCalendarTasks,
-    "file.importCalendar": !demoMode,
-  });
+    "file.importCalendar": !demoMode && !tasksSurface,
+  }, tasksSurface ? inFront : true);
 
-  useRegisterCommands(tSidebar("calendar"), [
+  useRegisterCommands(appName, tasksSurface ? [
+    { id: "new-task", label: t("events.new_task"), icon: ListTodo, shortcut: "n", run: openCreateTaskModal },
+    { id: "refresh", label: tCommon("refresh"), icon: RefreshCw, shortcut: "F5", run: () => { void refreshCalendar(); } },
+  ] : [
     { id: "new-event", label: t("events.new_event"), icon: Plus, shortcut: "n", run: () => openCreateModal() },
     { id: "new-task", label: t("events.new_task"), icon: ListTodo, run: openCreateTaskModal, when: () => enableCalendarTasks },
     { id: "search-events", label: t("search.title"), icon: Search, shortcut: "/", run: openSearch },
@@ -1941,7 +1992,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     { id: "import", label: t("toolbar.import"), icon: Upload, run: () => setShowImportModal(true), when: () => !demoMode },
     { id: "subscribe", label: t("toolbar.subscribe"), icon: Globe, run: () => setShowSubscriptionModal(true), when: () => canSubscribe },
     { id: "refresh", label: tCommon("refresh"), icon: RefreshCw, shortcut: "F5", run: () => { void refreshCalendar(); } },
-  ], isEmbedded ? isFocusedProTab : !proInterfaceActive);
+  ], inFront);
 
   const birthdayEvents = useMemo(() => {
     if (!showBirthdayCalendar || !dateRange) return [];
@@ -2080,6 +2131,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     () => filterTasksForList(taskStore.tasks, hiddenTaskListIds, taskStore.filter).map((task) => task.id),
     [taskStore.tasks, hiddenTaskListIds, taskStore.filter],
   );
+  const taskPluginContext = useMemo(() => ({ taskIds: listedTaskIds }), [listedTaskIds]);
 
   // Tasks on the month, week and day grids follow the calendar filter like
   // the events do (#1107); tasks in task-only lists follow the task list tick.
@@ -2133,7 +2185,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // skeleton the server sent (components/boot-skeleton): the same markup, so
   // nothing moves while the sign-in is restored or the redirects decide.
   const skeletonText = calendarSkeletonText(t);
-  const skeleton = isEmbedded ? (
+  const tasksText = tasksSurface ? tasksSkeletonText(t, tSidebar) : undefined;
+  const skeleton = tasksSurface ? (isEmbedded ? (
+    <SkeletonRegion surface="tasks" label={skeletonLabels.label} className="flex flex-col h-full">
+      <TasksSkeletonBody embedded text={tasksText} />
+    </SkeletonRegion>
+  ) : (
+    <TasksSkeleton label={skeletonLabels.label} labels={skeletonLabels.labels} text={tasksText} />
+  )) : isEmbedded ? (
     <SkeletonRegion surface="calendar" label={skeletonLabels.label} className="flex flex-col h-full">
       <CalendarSkeletonBody embedded text={skeletonText} />
     </SkeletonRegion>
@@ -2149,6 +2208,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     // The calendars are loading: the view's grid in the skeleton's shapes,
     // where the real one is about to be drawn.
     if (isLoading && calendars.length === 0) {
+      if (tasksSurface) return <TasksListSkeleton label={t("status.loading_calendars")} text={tasksText} />;
       return <CalendarViewSkeleton view={normalizedViewMode} label={t("status.loading_calendars")} text={skeletonText} />;
     }
 
@@ -2305,13 +2365,16 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               {taskStore.error === TASKS_LOAD_ERROR && (
                 <CalendarLoadErrorNotice what="tasks" onRetry={() => { if (client) void fetchTasksFn(client); }} />
               )}
-              <TaskToolbar
-                filter={taskStore.filter}
-                onFilterChange={taskStore.setFilter}
-                onCreateTask={openCreateTaskModal}
-                taskIds={listedTaskIds}
-                compact={isMobile}
-              />
+              {(!tasksSurface || isMobile) && (
+                <TaskToolbar
+                  filter={taskStore.filter}
+                  onFilterChange={taskStore.setFilter}
+                  onCreateTask={openCreateTaskModal}
+                  taskIds={listedTaskIds}
+                  compact={isMobile}
+                  showCreate={!tasksSurface}
+                />
+              )}
               {/* A plugin may draw the list itself (the calendar-task-view
                   slot), with Bulwark's list back while its frame is not
                   drawn; the toolbar above stays Bulwark's. */}
@@ -2388,8 +2451,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       onViewModeChange={(mode) => { setMobileReturnToMonth(false); leaveSearch(); setViewMode(mode); }}
       onCreateEvent={openCreateForView}
       createLabel={createLabel}
-      onImport={demoMode ? undefined : () => setShowImportModal(true)}
-      onSubscribe={canSubscribe ? () => setShowSubscriptionModal(true) : undefined}
+      onImport={demoMode || tasksSurface ? undefined : () => setShowImportModal(true)}
+      onSubscribe={canSubscribe && !tasksSurface ? () => setShowSubscriptionModal(true) : undefined}
       onRefresh={() => { void refreshCalendar(); }}
       onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-view" }); }}
       isMobile={isMobile}
@@ -2397,7 +2460,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       calendars={toolbarCalendars}
       selectedCalendarIds={shownCalendarIds}
       onToggleVisibility={toggleShownCalendar}
-      enableCalendarTasks={enableCalendarTasks}
+      // With Tasks as its own app the calendar offers its four views.
+      enableCalendarTasks={enableCalendarTasks && !tasksAppOn}
+      title={tasksSurface ? appName : undefined}
+      showViewSwitcher={!tasksSurface}
+      actions={tasksSurface && !isMobile ? <PluginActions surface="task-list-actions" context={taskPluginContext} /> : undefined}
       onMenuClick={isNarrow ? () => setNarrowSidebarOpen(true) : isMobile ? undefined : toggleSidebarCollapsed}
       sidebarOpen={isNarrow ? narrowSidebarOpen : !sidebarCollapsed}
       menuTogglesSidebar={!isNarrow}
@@ -2433,8 +2500,17 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         onCreateEvent={() => { setNarrowSidebarOpen(false); openCreateForView(); }}
         createLabel={createLabel}
         tourTarget={!isNarrow}
+        title={tasksSurface ? appName : undefined}
       />
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">
+      <div className={cn("flex-1 overflow-y-auto overflow-x-hidden", tasksSurface ? "py-1" : "py-3")}>
+      {tasksSurface ? (
+        <TasksSidebarFilters
+          tasks={taskStore.tasks}
+          hiddenTaskListIds={hiddenTaskListIds}
+          filter={taskStore.filter}
+          onFilterChange={(filter) => { setNarrowSidebarOpen(false); taskStore.setFilter(filter); }}
+        />
+      ) : (
       <div className="px-3">
       <MiniCalendar
         selectedDate={selectedDate}
@@ -2446,7 +2522,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         showWeekNumbers={showWeekNumbers}
       />
       </div>
+      )}
       <CalendarSidebarPanel
+        viewMode={normalizedViewMode}
+        // The rail has the Tasks app; the calendar's sidebar needs no way there.
+        showTasksEntry={!tasksSurface && !tasksAppOn}
         calendars={allCalendars}
         selectedCalendarIds={shownCalendarIds}
         onToggleVisibility={toggleShownCalendar}
@@ -2598,7 +2678,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         </>
       )}
 
-      <AppMain embedded={isEmbedded} label={tSidebar("calendar")} className="flex flex-col flex-1 min-w-0 min-h-0">
+      <AppMain embedded={isEmbedded} label={appName} className="flex flex-col flex-1 min-w-0 min-h-0">
         {calendarToolbar}
 
         {/* isolate keeps the views' sticky headers (z-50) below the toolbar's

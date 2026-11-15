@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ComponentType, type DragEvent } from "react";
 import { shortcutKey } from "@/lib/keyboard";
 import { useTranslations } from "next-intl";
-import { NavigationRail } from "@/components/layout/navigation-rail";
+import { NavigationRail, type RailItemId } from "@/components/layout/navigation-rail";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
@@ -59,9 +59,15 @@ const DESKTOP_MIN_WIDTH = PHONE_BELOW;
 // Each surface renders the same component the standard routes do. Deep links
 // reach them through the handoff ProInterfaceRedirect parks (#733), not as
 // props - Pro tabs have no route of their own.
+// The Tasks app is the calendar's task surface (#1698).
+function TasksApp() {
+  return <CalendarApp surface="tasks" />;
+}
+
 const APP_TAB_COMPONENTS: Partial<Record<ProTabKind, ComponentType>> = {
   mail: MailApp,
   calendar: CalendarApp,
+  tasks: TasksApp,
   contacts: ContactsApp,
   files: FilesApp,
   settings: SettingsApp,
@@ -259,7 +265,7 @@ export default function ProHome() {
       const { tabs: allTabs, focusedPaneId: pane, activeTabId, activeSplitTabId } = useProTabStore.getState();
       const focusedId = pane === 'split' ? activeSplitTabId : activeTabId;
       const kind = allTabs.find((tab) => tab.id === focusedId)?.kind;
-      const surface = kind === 'calendar' || kind === 'contacts' || kind === 'files' || kind === 'settings'
+      const surface = kind === 'calendar' || kind === 'tasks' || kind === 'contacts' || kind === 'files' || kind === 'settings'
         ? `/${kind}`
         : '/';
       if (!proInterface) {
@@ -358,14 +364,14 @@ export default function ProHome() {
   const loadingTitle = t('common.loading');
   useEffect(() => onOpenEmail(proEmailTabOpener(loadingTitle)), [loadingTitle]);
 
-  const handleRailNavigate = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => {
+  const handleRailNavigate = (itemId: RailItemId) => {
     openTab(itemId);
     return true;
   };
 
-  const railActiveItemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings' | null =
+  const railActiveItemId: RailItemId | null =
     focusedActiveTab && (
-      focusedActiveTab.kind === 'mail' || focusedActiveTab.kind === 'calendar'
+      focusedActiveTab.kind === 'mail' || focusedActiveTab.kind === 'calendar' || focusedActiveTab.kind === 'tasks'
       || focusedActiveTab.kind === 'contacts' || focusedActiveTab.kind === 'files'
       || focusedActiveTab.kind === 'settings'
     ) ? focusedActiveTab.kind : null;

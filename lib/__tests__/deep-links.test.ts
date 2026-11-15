@@ -406,6 +406,11 @@ describe('matchSurface', () => {
     expect(matchSurface('/de')).toEqual({ surface: 'mail', segments: [] });
   });
 
+  it('maps /tasks to the Tasks app (#1698), not to the calendar', () => {
+    expect(matchSurface('/tasks')).toEqual({ surface: 'tasks', segments: [] });
+    expect(matchSurface('/de/tasks')).toEqual({ surface: 'tasks', segments: [] });
+  });
+
   it('strips query and hash', () => {
     expect(matchSurface('/contacts/c1?from=email#x'))
       .toEqual({ surface: 'contacts', segments: ['c1'] });

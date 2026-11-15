@@ -8,7 +8,7 @@ import { Check, ChevronDown, ChevronRight, Globe, ListTodo, MoreVertical, Pencil
 import { cn, formatDateTime } from "@/lib/utils";
 import type { Calendar } from "@/lib/jmap/types";
 import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";
-import { useCalendarStore } from "@/stores/calendar-store";
+import { useCalendarStore, type CalendarViewMode } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
 import { useAccountStore } from "@/stores/account-store";
@@ -77,6 +77,10 @@ interface CalendarSidebarPanelProps {
    * by their `localAccountId` and the active account is shown first.
    */
   multiAccountMode?: boolean;
+  /** The view on screen; the calendar's stored view unless given (the Tasks app shows its list whatever that is). */
+  viewMode?: CalendarViewMode;
+  /** The "Tasks" entry that opens the task list (off when Tasks is an app of its own). */
+  showTasksEntry?: boolean;
 }
 
 export function CalendarSidebarPanel({
@@ -94,6 +98,8 @@ export function CalendarSidebarPanel({
   onEditSubscription,
   client,
   multiAccountMode,
+  viewMode: viewModeProp,
+  showTasksEntry = true,
 }: CalendarSidebarPanelProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("calendar");
@@ -113,7 +119,8 @@ export function CalendarSidebarPanel({
   const removeICalSubscription = useCalendarStore((s) => s.removeICalSubscription);
   const setDefaultCalendar = useCalendarStore((s) => s.setDefaultCalendar);
   const updateCalendar = useCalendarStore((s) => s.updateCalendar);
-  const viewMode = useCalendarStore((s) => s.viewMode);
+  const storedViewMode = useCalendarStore((s) => s.viewMode);
+  const viewMode = viewModeProp ?? storedViewMode;
   const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
   const toggleTaskListVisibility = useCalendarStore((s) => s.toggleTaskListVisibility);
   const [renaming, setRenaming] = useState<Calendar | null>(null);
@@ -597,7 +604,7 @@ export function CalendarSidebarPanel({
 
   return (
     <div className="mt-4">
-      {enableCalendarTasks && (
+      {enableCalendarTasks && showTasksEntry && (
         <button
           onClick={() => setViewMode('tasks')}
           className="flex items-center gap-2 w-full px-3 mb-2 min-h-8 pointer-coarse:min-h-11 text-sm text-foreground hover:bg-muted transition-colors"

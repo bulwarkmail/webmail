@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl";
 import {
   CalendarEvent,
+  ListTodo,
   Folder,
   Users,
   Keyboard,
@@ -168,6 +169,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
   const touch = useMediaQuery("(pointer: coarse)");
   // With single-key shortcuts off, "r" or "#" does nothing: no hint for it.
   const singleKeys = useSettingsStore((s) => s.singleKeyShortcuts !== false);
+  const tasksAppShown = useSettingsStore((s) => s.enableCalendarTasks && s.showTasksApp);
   const hintKeys = (shortcut: string) => shortcutAlternatives(shortcut).filter((key) => singleKeys || !isSingleKeyHint(key));
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -199,6 +201,9 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
     list.push({ id: "go-mail", group: navigation, icon: Mail, label: t("go_to", { name: tSidebar("mail") }), run: go("/") });
     if (supportsCalendar && isFeatureEnabled("calendarEnabled")) {
       list.push({ id: "go-calendar", group: navigation, icon: CalendarEvent, label: t("go_to", { name: tSidebar("calendar") }), run: go("/calendar") });
+      if (tasksAppShown && isFeatureEnabled("calendarTasksEnabled")) {
+        list.push({ id: "go-tasks", group: navigation, icon: ListTodo, label: t("go_to", { name: tSidebar("tasks") }), run: go("/tasks") });
+      }
     }
     if ((client?.supportsContacts?.() ?? false) && isFeatureEnabled("contactsEnabled")) {
       list.push({ id: "go-contacts", group: navigation, icon: Users, label: t("go_to", { name: tSidebar("contacts") }), run: go("/contacts") });
@@ -283,7 +288,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
       });
     }
     return list;
-  }, [client, supportsCalendar, isFeatureEnabled, colorModeLocked, resolvedTheme, pluginActions, pluginPages, registeredGroups, accounts, activeAccountId, router, pathname, t, tSidebar, tGlobalSearch, onShowShortcuts, touch]);
+  }, [client, supportsCalendar, isFeatureEnabled, tasksAppShown, colorModeLocked, resolvedTheme, pluginActions, pluginPages, registeredGroups, accounts, activeAccountId, router, pathname, t, tSidebar, tGlobalSearch, onShowShortcuts, touch]);
 
   const needle = query.trim();
   const visible = needle

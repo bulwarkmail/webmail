@@ -931,6 +931,8 @@ interface SettingsState extends AccessibilitySettings {
   // Calendar Tasks
   enableCalendarTasks: boolean;
   showTasksOnCalendar: boolean;
+  /** Tasks get an app of their own in the app rail, at /tasks (#1698), and leave the calendar's views. */
+  showTasksApp: boolean;
 
   // Contact Birthday Calendar
   showBirthdayCalendar: boolean;
@@ -1303,6 +1305,7 @@ const DEFAULT_SETTINGS = {
   // of their own to check.
   enableCalendarTasks: true,
   showTasksOnCalendar: true,
+  showTasksApp: false,
 
   // Contact Birthday Calendar
   showBirthdayCalendar: false,
@@ -1895,6 +1898,7 @@ export const useSettingsStore = create<SettingsState>()(
           calendarInvitationParsingEnabled: state.calendarInvitationParsingEnabled,
           enableCalendarTasks: state.enableCalendarTasks,
           showTasksOnCalendar: state.showTasksOnCalendar,
+          showTasksApp: state.showTasksApp,
           showBirthdayCalendar: state.showBirthdayCalendar,
           birthdayCalendarColor: state.birthdayCalendarColor,
           sharedCalendarColors: state.sharedCalendarColors,

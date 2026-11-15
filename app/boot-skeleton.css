@@ -60,6 +60,7 @@
 @custom-variant boot-no-calendar (&:where([data-boot-rail]:not([data-boot-rail~="calendar"]) *));
 @custom-variant boot-no-contacts (&:where([data-boot-rail]:not([data-boot-rail~="contacts"]) *));
 @custom-variant boot-no-files (&:where([data-boot-rail]:not([data-boot-rail~="files"]) *));
+@custom-variant boot-rail-tasks (&:where([data-boot-rail~="tasks"] *));
 @custom-variant boot-rail-add-app (&:where([data-boot-rail~="add-app"] *));
 @custom-variant boot-rail-admin (&:where([data-boot-rail~="admin"] *));
 @custom-variant boot-rail-a11y (&:where([data-boot-rail~="a11y"] *));
@@ -177,12 +178,14 @@
 :root:not([data-boot-pro-split-kind]) [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
 :root[data-boot-pro-main-kind="mail"] [data-sk-pro-pane="main"] [data-sk-pro-body="mail"],
 :root[data-boot-pro-main-kind="calendar"] [data-sk-pro-pane="main"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-main-kind="tasks"] [data-sk-pro-pane="main"] [data-sk-pro-body="tasks"],
 :root[data-boot-pro-main-kind="contacts"] [data-sk-pro-pane="main"] [data-sk-pro-body="contacts"],
 :root[data-boot-pro-main-kind="files"] [data-sk-pro-pane="main"] [data-sk-pro-body="files"],
 :root[data-boot-pro-main-kind="settings"] [data-sk-pro-pane="main"] [data-sk-pro-body="settings"],
 :root[data-boot-pro-main-kind="other"] [data-sk-pro-pane="main"] [data-sk-pro-body="other"],
 :root[data-boot-pro-split-kind="mail"] [data-sk-pro-pane="split"] [data-sk-pro-body="mail"],
 :root[data-boot-pro-split-kind="calendar"] [data-sk-pro-pane="split"] [data-sk-pro-body="calendar"],
+:root[data-boot-pro-split-kind="tasks"] [data-sk-pro-pane="split"] [data-sk-pro-body="tasks"],
 :root[data-boot-pro-split-kind="contacts"] [data-sk-pro-pane="split"] [data-sk-pro-body="contacts"],
 :root[data-boot-pro-split-kind="files"] [data-sk-pro-pane="split"] [data-sk-pro-body="files"],
 :root[data-boot-pro-split-kind="settings"] [data-sk-pro-pane="split"] [data-sk-pro-body="settings"],
@@ -194,6 +197,7 @@
 :root:not([data-boot-pro-kind]) [data-pro-shell] [data-sk-rail="mail"],
 :root[data-boot-pro-kind="mail"] [data-pro-shell] [data-sk-rail="mail"],
 :root[data-boot-pro-kind="calendar"] [data-pro-shell] [data-sk-rail="calendar"],
+:root[data-boot-pro-kind="tasks"] [data-pro-shell] [data-sk-rail="tasks"],
 :root[data-boot-pro-kind="contacts"] [data-pro-shell] [data-sk-rail="contacts"],
 :root[data-boot-pro-kind="files"] [data-pro-shell] [data-sk-rail="files"],
 :root[data-boot-pro-kind="settings"] [data-pro-shell] [data-sk-rail="settings"] {

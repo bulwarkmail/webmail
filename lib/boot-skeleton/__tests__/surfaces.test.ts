@@ -33,6 +33,7 @@ describe('surfaceFromPath', () => {
     ['/en', 'mail'],
     ['/de/mail/folder/inbox', 'mail'],
     ['/en/calendar/week/2026-11-04', 'calendar'],
+    ['/en/tasks', 'tasks'],
     ['/ar/contacts/abc', 'contacts'],
     ['/en/files/de', 'files'],
     ['/en/apps/p/q', 'apps'],

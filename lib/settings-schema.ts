@@ -341,6 +341,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('showBirthdayCalendar', 'calendar', `${CAL}show_birthday_calendar`),
   bool('enableCalendarTasks', 'calendar', `${CAL}enable_tasks`, { gate: 'calendarTasksEnabled' }),
   bool('showTasksOnCalendar', 'calendar', `${CAL}show_tasks_on_calendar`, { gate: 'calendarTasksEnabled' }),
+  bool('showTasksApp', 'calendar', `${CAL}show_tasks_app`, { gate: 'calendarTasksEnabled' }),
 
   // --- Contacts ---
   bool('groupContactsByLetter', 'contacts', 'settings.contacts.group_by_letter_label'),

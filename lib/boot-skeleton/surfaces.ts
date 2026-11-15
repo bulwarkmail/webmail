@@ -10,6 +10,7 @@
 export type BootSurface =
   | 'mail'
   | 'calendar'
+  | 'tasks'
   | 'contacts'
   | 'files'
   | 'apps'
@@ -46,14 +47,14 @@ export const PROTOCOL_SURFACES: Record<string, BootSurface> = {
 };
 
 /** Surfaces the Pro interface takes over on a desktop (components/pro/pro-interface-redirect.tsx). */
-export const PRO_SURFACES: readonly BootSurface[] = ['mail', 'calendar', 'contacts', 'files', 'settings'];
+export const PRO_SURFACES: readonly BootSurface[] = ['mail', 'calendar', 'tasks', 'contacts', 'files', 'settings'];
 
 /** Surfaces a signed-out visitor is sent away from to /login. */
-export const SIGNED_IN_SURFACES: readonly BootSurface[] = ['mail', 'calendar', 'contacts', 'files', 'apps', 'settings', 'pro'];
+export const SIGNED_IN_SURFACES: readonly BootSurface[] = ['mail', 'calendar', 'tasks', 'contacts', 'files', 'apps', 'settings', 'pro'];
 
 export const CALENDAR_VIEWS = ['month', 'week', 'day', 'agenda', 'tasks'] as const;
 
-const PATH_SURFACES: readonly BootSurface[] = ['mail', 'calendar', 'contacts', 'files', 'apps', 'settings', 'pro', 'login', 'setup'];
+const PATH_SURFACES: readonly BootSurface[] = ['mail', 'calendar', 'tasks', 'contacts', 'files', 'apps', 'settings', 'pro', 'login', 'setup'];
 
 /**
  * The surface a pathname (as usePathname reports it: no base path, maybe a

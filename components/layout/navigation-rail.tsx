@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Mail, CalendarEvent, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility } from "@/components/icons";
+import { Mail, CalendarEvent, ListTodo, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility } from "@/components/icons";
 import { openAccessibilityPanel } from "@/components/accessibility/accessibility-quick-panel";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";
@@ -38,6 +38,9 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 import { writeRailHints, type RailHint } from "@/lib/boot-skeleton/hints";
 import { usePrefetchAfterStart } from "@/hooks/use-prefetch-after-start";
+
+/** The built-in apps and Settings, as the rail and its host name them. */
+export type RailItemId = 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings';
 
 interface NavItem {
   id: string;
@@ -78,13 +81,13 @@ interface NavigationRailProps {
    * Pro interface to open the route as a tab instead. The visual rail is
    * unchanged.
    */
-  onNavigate?: (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => boolean | void;
+  onNavigate?: (itemId: RailItemId) => boolean | void;
   /**
    * When `onNavigate` is in use, this controls which nav item the rail
    * highlights as active (since the URL alone no longer reflects the
    * active app).
    */
-  activeItemId?: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings' | null;
+  activeItemId?: RailItemId | null;
   /**
    * The admin panel's own rail: shows the Admin entry as the current one,
    * for password admins too, who are not Stalwart admins.
@@ -276,6 +279,11 @@ export function NavigationRail({
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
+  // Tasks as their own app (#1698): an entry of their own after the calendar.
+  const tasksPolicyEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarTasksEnabled'));
+  const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
+  const showTasksApp = useSettingsStore((s) => s.showTasksApp);
+  const tasksAppHidden = !supportsCalendar || !calendarEnabled || !tasksPolicyEnabled || !enableCalendarTasks || !showTasksApp;
   // Operator-provided apps (#931) plus the user's own; the gate above only
   // removes the user's, so a pinned set still shows when custom apps are off.
   const visibleSidebarApps = useResolvedSidebarApps();
@@ -319,6 +327,7 @@ export function NavigationRail({
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
     { id: "calendar", icon: CalendarEvent, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
+    { id: "tasks", icon: ListTodo, labelKey: "tasks", href: "/tasks", hidden: tasksAppHidden },
     { id: "contacts", icon: Users, labelKey: "contacts", href: "/contacts", hidden: !supportsContacts || !contactsEnabled },
     { id: "files", icon: Folder, labelKey: "files", href: "/files", hidden: !supportsFiles || !filesEnabled },
   ];
@@ -346,7 +355,7 @@ export function NavigationRail({
     writeRailHints(items);
     // navItems is rebuilt every render; its inputs are listed instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, supportsCalendar, calendarEnabled, supportsContacts, contactsEnabled, supportsFiles, filesEnabled, sidebarAppsEnabled, !!onManageApps, isStalwartAdmin, showAccessibilityButton, quotaShown]);
+  }, [client, supportsCalendar, calendarEnabled, tasksAppHidden, supportsContacts, contactsEnabled, supportsFiles, filesEnabled, sidebarAppsEnabled, !!onManageApps, isStalwartAdmin, showAccessibilityButton, quotaShown]);
 
   const getIsActive = (href: string, itemId: string) => {
     if (activeAppId) return false;
@@ -360,7 +369,7 @@ export function NavigationRail({
     return pathname.startsWith(href);
   };
 
-  const handleNavClick = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') =>
+  const handleNavClick = (itemId: RailItemId) =>
     (e: React.MouseEvent) => {
       if (interceptLeave(e)) return;
       if (onNavigate) {
@@ -412,7 +421,7 @@ export function NavigationRail({
               prefetch={prefetchLinks}
               key={item.id}
               href={item.href}
-              onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
+              onClick={handleNavClick(item.id as RailItemId)}
               data-tour={`nav-${item.id}`}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
@@ -636,7 +645,7 @@ export function NavigationRail({
               prefetch={prefetchLinks}
               key={item.id}
               href={item.href}
-              onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
+              onClick={handleNavClick(item.id as RailItemId)}
               data-tour={`nav-${item.id}`}
               className={cn(
                 "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",

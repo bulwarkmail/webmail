@@ -157,7 +157,7 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
     seg = [surface];
   } else if (first === '' || first === 'mail') surface = 'mail';
   else if (first === 'admin') surface = seg[1] === 'login' ? 'admin-login' : 'admin';
-  else if (['calendar', 'contacts', 'files', 'apps', 'settings', 'pro', 'login', 'setup'].indexOf(first) !== -1) surface = first;
+  else if (['calendar', 'tasks', 'contacts', 'files', 'apps', 'settings', 'pro', 'login', 'setup'].indexOf(first) !== -1) surface = first;
   mark('surface', surface);
   mark('via', via);
 

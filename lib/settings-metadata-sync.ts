@@ -50,7 +50,7 @@ export const METADATA_SETTING_NAMES: readonly string[] = [
   'enableCrossAllView', 'mailAttachmentAction', 'plainTextFont', 'messageSpacing', 'readReceiptResponse',
   'postExportAction', 'swipeLeftAction', 'swipeRightAction', 'archiveMode', 'firstDayOfWeek', 'showTimeInMonthView',
   'showWeekNumbers', 'calendarMonthTimedEvents', 'calendarFreeScroll', 'calendarHoverPreview', 'timeZone',
-  'showBirthdayCalendar', 'enableCalendarTasks', 'showTasksOnCalendar', 'calendarInvitationParsingEnabled',
+  'showBirthdayCalendar', 'enableCalendarTasks', 'showTasksOnCalendar', 'showTasksApp', 'calendarInvitationParsingEnabled',
   'sidebarApps', 'keepAppsLoaded', 'expandedFilterView', 'emailDownloadTemplate', 'attachmentDownloadTemplate',
   'filenameSpaceReplacement', 'filenameLowercase', 'filenameStripDiacritics', 'birthdayCalendarColor',
   'toastDuration', 'quickReplyEnabled', 'calendarTintedEvents', 'recipientMentionsEnabled', 'mentionAddsRecipientTo',

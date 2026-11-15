@@ -64,6 +64,12 @@ interface CalendarToolbarProps {
   onCloseSearch?: () => void;
   /** The plugin side panel's button, at the very end of the row (desktop and tablet). */
   panelToggle?: ReactNode;
+  /** The heading in place of the period, for an app that has none (the Tasks app). */
+  title?: string;
+  /** The view menu (desktop) and the view pills (phones). Off in the Tasks app. */
+  showViewSwitcher?: boolean;
+  /** More buttons before the ⋮ (desktop and tablet). */
+  actions?: ReactNode;
 }
 
 // Shortcut keys handled by the calendar app (see its keydown handler).
@@ -105,6 +111,9 @@ export function CalendarToolbar({
   mobileSearchField,
   onCloseSearch,
   panelToggle,
+  title,
+  showViewSwitcher = true,
+  actions,
 }: CalendarToolbarProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("calendar");
@@ -150,6 +159,7 @@ export function CalendarToolbar({
   // the selected day, the title describes what is on screen instead.
   const titleDate = visibleDate ?? selectedDate;
   const getDateLabel = (): string => {
+    if (title) return title;
     switch (viewMode) {
       case "month":
         return isMobile
@@ -258,7 +268,11 @@ export function CalendarToolbar({
                 </IconButton>
               )}
               <span
-                className="text-sm font-semibold text-center flex-1 select-none truncate max-[25rem]:order-first max-[25rem]:basis-full max-[25rem]:ps-1 max-[25rem]:text-start"
+                className={cn(
+                  "text-sm font-semibold text-center flex-1 select-none truncate",
+                  // A period title is long; a name fits beside the buttons.
+                  !title && "max-[25rem]:order-first max-[25rem]:basis-full max-[25rem]:ps-1 max-[25rem]:text-start",
+                )}
                 title={viewMode === "day" ? formatFullDate(titleDate) : getDateLabel()}
               >
                 {getDateLabel()}
@@ -281,6 +295,7 @@ export function CalendarToolbar({
             {/* Row 2: View switcher pills + calendar toggle */}
             {/* Each pill is as wide as its label plus an even share of the rest, so a
                 long label ("جدول الأعمال", "Aufgaben") neither wraps nor touches the edge. */}
+            {showViewSwitcher && (
             <div className="flex items-center gap-1.5">
               {/* Past the row's room (Finnish, a large text size) the pills scroll rather than slide under the buttons. */}
               <div className="flex flex-1 min-w-0 border border-border rounded-md overflow-x-auto scroll-hidden">
@@ -399,6 +414,7 @@ export function CalendarToolbar({
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
       </div>
@@ -455,8 +471,11 @@ export function CalendarToolbar({
 
       {searchField}
 
+      {actions}
+
       {moreButton}
 
+      {showViewSwitcher && (
       <div className="relative ms-1">
         <Button
           variant="outline"
@@ -484,6 +503,7 @@ export function CalendarToolbar({
           ))}
         </ContextMenu>
       </div>
+      )}
 
       {/* The row is px-3; the margin puts the button where the reader has it (px-4, lg:px-6). */}
       {panelToggle && <div className="flex items-center ms-1 me-1 lg:me-3" data-panel-toggle-slot="">{panelToggle}</div>}

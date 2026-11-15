@@ -15,6 +15,7 @@ export function useSkeletonLabels(): { label: string; labels: RailLabels } {
     labels: {
       mail: t("sidebar.mail"),
       calendar: t("sidebar.calendar"),
+      tasks: t("sidebar.tasks"),
       contacts: t("sidebar.contacts"),
       files: t("sidebar.files"),
       settings: t("sidebar.settings"),
