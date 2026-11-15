@@ -2558,6 +2558,7 @@
         "enable_tooltip": "Aktivér kryptering med denne nøgle",
         "configure_title": "Aktivér kryptering med denne nøgle",
         "enable_button": "Aktivér",
+        "in_use": "I brug",
         "disable_tooltip": "Deaktivér kryptering",
         "disable_title": "Slå kryptering af lagrede data fra?",
         "disable_message": "Ny post gemmes fra nu af uden kryptering.",

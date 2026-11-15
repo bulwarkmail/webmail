@@ -2484,6 +2484,7 @@
         "enable_tooltip": "הפעל הצפנה עם מפתח זה",
         "configure_title": "הפעל הצפנה עם מפתח זה",
         "enable_button": "הפעל",
+        "in_use": "בשימוש",
         "disable_tooltip": "השבת הצפנה",
         "disable_title": "לכבות את ההצפנה במנוחה?",
         "disable_message": "דואר חדש יישמר מעכשיו ללא הצפנה.",

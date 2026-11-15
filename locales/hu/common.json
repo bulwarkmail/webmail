@@ -2558,6 +2558,7 @@
         "enable_tooltip": "Titkosítás engedélyezése ezzel a kulccsal",
         "configure_title": "Titkosítás engedélyezése ezzel a kulccsal",
         "enable_button": "Engedélyezés",
+        "in_use": "Használatban",
         "disable_tooltip": "Titkosítás letiltása",
         "disable_title": "Kikapcsolja a tárolt adatok titkosítását?",
         "disable_message": "Az új leveleket mostantól titkosítás nélkül tárolja a szerver.",

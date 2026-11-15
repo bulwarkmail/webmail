@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Versleuteling met deze sleutel inschakelen",
         "configure_title": "Versleuteling met deze sleutel inschakelen",
         "enable_button": "Inschakelen",
+        "in_use": "In gebruik",
         "disable_tooltip": "Versleuteling uitschakelen",
         "disable_title": "Versleuteling in rust uitschakelen?",
         "disable_message": "Nieuwe e-mail wordt vanaf nu onversleuteld opgeslagen.",

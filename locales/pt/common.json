@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Ativar criptografia com esta chave",
         "configure_title": "Ativar criptografia com esta chave",
         "enable_button": "Ativar",
+        "in_use": "Em uso",
         "disable_tooltip": "Desativar criptografia",
         "disable_title": "Desativar a encriptação em repouso?",
         "disable_message": "A partir de agora, o correio novo é guardado sem encriptação.",

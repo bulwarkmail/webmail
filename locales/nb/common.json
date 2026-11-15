@@ -2562,6 +2562,7 @@
         "enable_tooltip": "Aktiver kryptering med denne nøkkelen",
         "configure_title": "Aktiver kryptering med denne nøkkelen",
         "enable_button": "Aktiver",
+        "in_use": "I bruk",
         "disable_tooltip": "Deaktiver kryptering",
         "disable_title": "Slå av kryptering av lagrede data?",
         "disable_message": "Ny e-post lagres heretter uten kryptering.",

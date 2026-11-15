@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Ieslēgt šifrēšanu ar šo atslēgu",
         "configure_title": "Ieslēgt šifrēšanu ar šo atslēgu",
         "enable_button": "Ieslēgt",
+        "in_use": "Tiek lietota",
         "disable_tooltip": "Izslēgt šifrēšanu",
         "disable_title": "Izslēgt glabāto datu šifrēšanu?",
         "disable_message": "Jaunais pasts turpmāk tiks glabāts bez šifrēšanas.",

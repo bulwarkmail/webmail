@@ -2562,6 +2562,7 @@
         "enable_tooltip": "Activa el xifratge amb aquesta clau",
         "configure_title": "Activa el xifratge amb aquesta clau",
         "enable_button": "Activa",
+        "in_use": "En ús",
         "disable_tooltip": "Desactiva el xifratge",
         "disable_title": "Voleu desactivar el xifratge en repòs?",
         "disable_message": "A partir d'ara, el correu nou es desa sense xifrar.",

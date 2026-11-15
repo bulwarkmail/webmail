@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Habilitar el cifrado con esta clave",
         "configure_title": "Habilitar el cifrado con esta clave",
         "enable_button": "Habilitar",
+        "in_use": "En uso",
         "disable_tooltip": "Deshabilitar el cifrado",
         "disable_title": "¿Desactivar el cifrado en reposo?",
         "disable_message": "A partir de ahora, el correo nuevo se guarda sin cifrar.",

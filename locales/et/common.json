@@ -2562,6 +2562,7 @@
         "enable_tooltip": "Luba krüpteerimine selle võtmega",
         "configure_title": "Luba krüpteerimine selle võtmega",
         "enable_button": "Luba",
+        "in_use": "Kasutusel",
         "disable_tooltip": "Keela krüpteerimine",
         "disable_title": "Lülitada salvestatud andmete krüpteerimine välja?",
         "disable_message": "Uued kirjad salvestatakse nüüdsest krüpteerimata.",

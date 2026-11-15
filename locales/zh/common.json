@@ -2555,6 +2555,7 @@
         "enable_tooltip": "使用此密钥启用加密",
         "configure_title": "使用此密钥启用加密",
         "enable_button": "启用",
+        "in_use": "使用中",
         "disable_tooltip": "禁用加密",
         "disable_title": "关闭静态加密?",
         "disable_message": "从现在起,新邮件将不加密存储。",

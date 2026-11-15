@@ -2562,6 +2562,7 @@
         "enable_tooltip": "Zapnúť šifrovanie týmto kľúčom",
         "configure_title": "Zapnúť šifrovanie týmto kľúčom",
         "enable_button": "Zapnúť",
+        "in_use": "Používa sa",
         "disable_tooltip": "Vypnúť šifrovanie",
         "disable_title": "Vypnúť šifrovanie uložených dát?",
         "disable_message": "Nová pošta sa odteraz ukladá bez šifrovania.",

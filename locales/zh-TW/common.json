@@ -2562,6 +2562,7 @@
         "enable_tooltip": "使用此金鑰啟用加密",
         "configure_title": "使用此金鑰啟用加密",
         "enable_button": "啟用",
+        "in_use": "使用中",
         "disable_tooltip": "停用加密",
         "disable_title": "關閉靜態加密?",
         "disable_message": "從現在起,新郵件將不加密儲存。",

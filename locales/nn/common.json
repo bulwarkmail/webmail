@@ -2570,6 +2570,7 @@
         "enable_tooltip": "Slå på kryptering med denne nøkkelen",
         "configure_title": "Slå på kryptering med denne nøkkelen",
         "enable_button": "Slå på",
+        "in_use": "I bruk",
         "disable_tooltip": "Slå av kryptering",
         "disable_title": "Slå av kryptering i kvile?",
         "disable_message": "Ny e-post vert lagra utan kryptering frå no av.",

@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Abilita la crittografia con questa chiave",
         "configure_title": "Abilita la crittografia con questa chiave",
         "enable_button": "Abilita",
+        "in_use": "In uso",
         "disable_tooltip": "Disabilita la crittografia",
         "disable_title": "Disattivare la crittografia a riposo?",
         "disable_message": "D'ora in poi la nuova posta viene salvata senza crittografia.",

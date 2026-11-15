@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Activer le chiffrement avec cette clé",
         "configure_title": "Activer le chiffrement avec cette clé",
         "enable_button": "Activer",
+        "in_use": "Utilisée",
         "disable_tooltip": "Désactiver le chiffrement",
         "disable_title": "Désactiver le chiffrement au repos ?",
         "disable_message": "Les nouveaux e-mails seront désormais stockés sans chiffrement.",

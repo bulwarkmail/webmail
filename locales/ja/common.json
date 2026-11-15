@@ -2555,6 +2555,7 @@
         "enable_tooltip": "この鍵で暗号化を有効にする",
         "configure_title": "この鍵で暗号化を有効にする",
         "enable_button": "有効にする",
+        "in_use": "使用中",
         "disable_tooltip": "暗号化を無効にする",
         "disable_title": "保存時の暗号化をオフにしますか?",
         "disable_message": "今後、新しいメールは暗号化されずに保存されます。",

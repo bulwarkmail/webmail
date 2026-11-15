@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Bu anahtarla şifrelemeyi etkinleştir",
         "configure_title": "Bu anahtarla şifrelemeyi etkinleştir",
         "enable_button": "Etkinleştir",
+        "in_use": "Kullanımda",
         "disable_tooltip": "Şifrelemeyi devre dışı bırak",
         "disable_title": "Bekleyen veri şifrelemesi kapatılsın mı?",
         "disable_message": "Yeni postalar bundan sonra şifrelenmeden saklanır.",

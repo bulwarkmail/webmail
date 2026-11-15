@@ -855,7 +855,11 @@ function PublicKeysSection() {
                     <span className="text-sm font-medium text-foreground truncate">{key.description || key.id}</span>
                     {isEncryptedWithThisKey && (
                       <span className="text-[0.625rem] bg-green-500/10 text-green-600 dark:text-green-400 font-medium px-1.5 py-0.5 rounded border border-green-500/20">
-                        {encryptionConfig.type}
+                        {encryptionConfig.type === 'Aes128'
+                          ? 'AES-128'
+                          : encryptionConfig.type === 'Aes256'
+                            ? 'AES-256'
+                            : t('encryption.in_use')}
                       </span>
                     )}
                   </div>

@@ -2562,6 +2562,7 @@
         "enable_tooltip": "Enable encryption with this key",
         "configure_title": "Enable encryption with this key",
         "enable_button": "Enable",
+        "in_use": "In use",
         "disable_tooltip": "Disable encryption",
         "disable_title": "Turn off encryption at rest?",
         "disable_message": "New mail is stored without encryption from now on.",

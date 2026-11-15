@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Włącz szyfrowanie tym kluczem",
         "configure_title": "Włącz szyfrowanie tym kluczem",
         "enable_button": "Włącz",
+        "in_use": "W użyciu",
         "disable_tooltip": "Wyłącz szyfrowanie",
         "disable_title": "Wyłączyć szyfrowanie danych w spoczynku?",
         "disable_message": "Nowa poczta będzie od teraz zapisywana bez szyfrowania.",

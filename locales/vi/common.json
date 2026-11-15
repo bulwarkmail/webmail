@@ -2574,6 +2574,7 @@
         "enable_tooltip": "Kích hoạt mã hóa bằng khóa này",
         "configure_title": "Kích hoạt mã hóa bằng khóa này",
         "enable_button": "Bật",
+        "in_use": "Đang dùng",
         "disable_tooltip": "Tắt mã hóa",
         "disable_title": "Tắt tính năng mã hóa khi lưu trữ?",
         "disable_message": "Thư mới được lưu trữ mà không cần mã hóa kể từ bây giờ.",

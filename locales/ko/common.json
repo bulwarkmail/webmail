@@ -2555,6 +2555,7 @@
         "enable_tooltip": "이 키로 암호화 사용",
         "configure_title": "이 키로 암호화 사용",
         "enable_button": "사용",
+        "in_use": "사용 중",
         "disable_tooltip": "암호화 사용 안 함",
         "disable_title": "저장 데이터 암호화를 끌까요?",
         "disable_message": "이제부터 새 메일은 암호화 없이 저장돼요.",

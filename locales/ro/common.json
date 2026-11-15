@@ -2562,6 +2562,7 @@
         "enable_tooltip": "Activați criptarea cu această cheie",
         "configure_title": "Activați criptarea cu această cheie",
         "enable_button": "Activați",
+        "in_use": "În uz",
         "disable_tooltip": "Dezactivați criptarea",
         "disable_title": "Dezactivați criptarea datelor stocate?",
         "disable_message": "E-mailurile noi vor fi stocate de acum fără criptare.",

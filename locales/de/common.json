@@ -2555,6 +2555,7 @@
         "enable_tooltip": "Verschlüsselung mit diesem Schlüssel aktivieren",
         "configure_title": "Verschlüsselung mit diesem Schlüssel aktivieren",
         "enable_button": "Aktivieren",
+        "in_use": "Wird verwendet",
         "disable_tooltip": "Verschlüsselung deaktivieren",
         "disable_title": "Verschlüsselung ruhender Daten ausschalten?",
         "disable_message": "Neue E-Mails werden ab jetzt unverschlüsselt gespeichert.",
