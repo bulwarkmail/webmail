@@ -111,7 +111,6 @@
     "@vitest/ui": "^5.0.5",
     "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
-    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.6",
     "globals": "^17.13.0",
