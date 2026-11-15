@@ -425,12 +425,14 @@ interface ThreadListItemProps {
   onEmailDoubleClick?: (email: Email) => void;
   /** A mouse was pressed on the row: the click that follows will open it. */
   onPrefetch?: (email: Email) => void;
-  onContextMenu?: (e: React.MouseEvent, email: Email) => void;
+  /** A conversation row adds its thread key: its read and unread entries cover the conversation. */
+  onContextMenu?: (e: React.MouseEvent, email: Email, conversationKey?: string) => void;
   onOpenConversation?: (thread: ThreadGroup) => void;
   /** The reading pane shows the conversation: the row opens it there and never unfolds. */
   conversationInReader?: boolean;
   onToggleStar?: (email: Email) => void;
-  onMarkAsRead?: (email: Email, read: boolean) => void;
+  /** A conversation row passes all of its messages: the change covers them all (#1683). */
+  onMarkAsRead?: (email: Email, read: boolean, conversation?: Email[]) => void;
   onDelete?: (email: Email) => void;
   onArchive?: (email: Email) => void;
   onSetTag?: (emailId: string, tagId: string | null, emailKey?: string) => void;
@@ -1244,22 +1246,24 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
       useCallback((pos) => {
         onContextMenu?.(
           { preventDefault: () => {}, stopPropagation: () => {}, clientX: pos.clientX, clientY: pos.clientY } as React.MouseEvent,
-          latestEmail
+          latestEmail,
+          thread.threadKey,
         );
-      }, [onContextMenu, latestEmail]),
+      }, [onContextMenu, latestEmail, thread.threadKey]),
       isMobile
     );
     const threadLongPressHandlers = { onTouchStart: threadOnTouchStart, onTouchEnd: threadOnTouchEnd, onTouchMove: threadOnTouchMove, onTouchCancel: threadOnTouchCancel };
 
     // The same swipe as a single message's row (MAIL-27), on what the row's
-    // actions act on: the newest message.
+    // actions act on: the newest message, or for read and unread the whole
+    // conversation, which keeps the row bold while any of it is unread.
     const threadSwipeRightAction = useSettingsStore((state) => state.swipeRightAction);
     const threadSwipeLeftAction = useSettingsStore((state) => state.swipeLeftAction);
     const runThreadSwipe = (action: SwipeAction) => {
       switch (action) {
         case 'archive': onArchive?.(latestEmail); break;
         case 'delete': onDelete?.(latestEmail); break;
-        case 'markRead': onMarkAsRead?.(latestEmail, hasUnread); break;
+        case 'markRead': onMarkAsRead?.(latestEmail, hasUnread, thread.emails); break;
         case 'star': onToggleStar?.(latestEmail); break;
         case 'spam': onMarkAsSpam?.(latestEmail); break;
         default: break;
@@ -1400,7 +1404,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
-      onContextMenu?.(e, latestEmail);
+      onContextMenu?.(e, latestEmail, thread.threadKey);
     };
 
     const threadSubject = latestEmail.subject || tNoSubject;
@@ -1892,9 +1896,10 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
             <div role="gridcell">
             <EmailHoverActions
               email={latestEmail}
+              unread={hasUnread}
               backgroundClassName={rowTint ? rowTint : mvRow ? mvHoverBackground(isChecked, hasUnread, isSelected) : ((isSelected || isChecked) ? "bg-accent" : "bg-muted")}
               onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
-              onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
+              onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read, thread.emails) : undefined}
               onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
               onArchive={onArchive ? () => onArchive(latestEmail) : undefined}
               onSetTag={onSetTag ? (color) => onSetTag(latestEmail.id, color, emailKeyFor(latestEmail)) : undefined}

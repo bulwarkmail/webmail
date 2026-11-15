@@ -120,6 +120,19 @@ export function groupEmailsByThread(
 }
 
 /**
+ * The messages a conversation row stands for, given one of them: every
+ * message of its conversation the list holds. A message the list doesn't
+ * hold stands alone.
+ */
+export function conversationInList(email: Email, listEmails: Email[]): Email[] {
+  if (!email.threadId) return [email];
+  const key = emailKeyFor(email);
+  const threadKey = threadKeyFor(email);
+  const members = listEmails.filter((e) => e.threadId && threadKeyFor(e) === threadKey);
+  return members.some((e) => emailKeyFor(e) === key) ? members : [email];
+}
+
+/**
  * Sorts thread groups to mirror the order the email list was fetched in.
  * Threads containing a pinned email ($pinned keyword) stay on top, mirroring
  * the server-side pinned-first sort of the email list. Below that, each thread

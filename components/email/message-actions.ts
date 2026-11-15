@@ -106,6 +106,11 @@ export type MessageActionEntry =
 
 export interface MessageActionOptions {
   email: Email;
+  /**
+   * Whether the row counts as unread, when that isn't the message's own state:
+   * a conversation row is unread while any of its messages is.
+   */
+  unread?: boolean;
   currentMailboxRole?: string;
   /** Folders to move to exist and the host can move. */
   canMove?: boolean;
@@ -190,7 +195,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   // the message's account. It sends mail, so it opens a confirm first.
   const phishing = usePhishingReport([email], o.currentMailboxRole);
 
-  const isUnread = !email.keywords?.$seen;
+  const isUnread = o.unread ?? !email.keywords?.$seen;
   const isStarred = !!email.keywords?.$flagged;
   const isPinned = email.keywords?.["$pinned"] === true;
   const isDraft = email.keywords?.["$draft"] === true;

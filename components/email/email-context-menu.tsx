@@ -47,6 +47,8 @@ export interface CopyTargetAccount {
 
 interface EmailContextMenuProps {
   email: Email;
+  /** A conversation row's unread state: unread while any of its messages is. */
+  unread?: boolean;
   position: Position;
   isOpen: boolean;
   onClose: () => void;
@@ -163,6 +165,7 @@ export function EmailContextMenu({
   email,
   position,
   isOpen,
+  unread,
   onClose,
   menuRef,
   mailboxes,
@@ -230,7 +233,7 @@ export function EmailContextMenu({
   // copies to another account always need the server.
   const { offline, canChangeMail } = useConnectionState();
   const tMenu = useTranslations("menuAudit");
-  const isUnread = !email.keywords?.$seen;
+  const isUnread = unread ?? !email.keywords?.$seen;
   const currentTagIds = getEmailTagIds(email.keywords);
   // The row's account names its tags; a selection uses batchTagScope.
   const tagScope = useEmailTagScope(email);
@@ -306,6 +309,7 @@ export function EmailContextMenu({
   // the phone panel show.
   const singleEntries = useMessageActionList({
     email,
+    unread,
     currentMailboxRole,
     canMove: canMoveAnywhere,
     moveUnavailableHint,

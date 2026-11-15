@@ -21,6 +21,11 @@ import { usePluginRowBadges } from "@/components/email/plugin-row-badges";
 
 interface EmailHoverActionsProps {
   email: Email;
+  /**
+   * Whether the row counts as unread, when that isn't the message's own state:
+   * a conversation row is unread while any of its messages is.
+   */
+  unread?: boolean;
   backgroundClassName?: string;
   onToggleStar?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -144,6 +149,7 @@ function reserveRowRoom(actions: HTMLDivElement | null): (() => void) | void {
 
 export function EmailHoverActions({
   email,
+  unread,
   backgroundClassName = "bg-muted",
   onToggleStar,
   onMarkAsRead,
@@ -191,7 +197,7 @@ export function EmailHoverActions({
   const tagMenu = useContextMenu<null>();
   const tagPickerOpen = tagMenu.contextMenu.isOpen;
 
-  const isUnread = !email.keywords?.$seen;
+  const isUnread = unread ?? !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
   const currentTagIds = getEmailTagIds(email.keywords);
   const hoverBackgroundClassName = backgroundClassName;

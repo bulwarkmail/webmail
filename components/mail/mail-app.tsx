@@ -124,7 +124,7 @@ import { useNewMailAlerts } from "@/hooks/use-new-mail-alerts";
 import { useMailStatusAnnouncements } from "@/hooks/use-mail-status-announcements";
 import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, conversationInList, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { shownListEmails, stepListEmail } from "@/lib/list-step";
 import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
 import { refreshRepliedThread } from "@/lib/replied-thread";
@@ -1154,16 +1154,30 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // A message the user marks read or unread, or stars: no toast, but Ctrl+Z
   // puts it back and a screen reader hears what happened. Not for the
-  // automatic mark-as-read on opening a message.
-  const markReadWithUndo = async (email: Email, read: boolean): Promise<void> => {
+  // automatic mark-as-read on opening a message. A conversation row passes
+  // all of its messages: it stays bold while any of them is unread (#1683).
+  const markReadWithUndo = async (target: Email | Email[], read: boolean): Promise<void> => {
     if (!client) return;
-    const points = keywordRestorePoints([email], ['$seen'], { $seen: read });
-    if (!(await markAsRead(client, email.id, read, emailKeyFor(email)))) return;
+    const emails = Array.isArray(target) ? target : [target];
+    const changing = emails.filter((email) => (email.keywords?.$seen ?? false) !== read);
+    // A single message already in that state still goes to the store, as before.
+    const sent = changing.length > 0 ? changing : emails.slice(0, 1);
+    const results = await Promise.all(sent.map((email) => markAsRead(client, email.id, read, emailKeyFor(email))));
+    const done = sent.filter((_, i) => results[i]);
+    if (done.length === 0) return;
+    const points = keywordRestorePoints(done, ['$seen'], { $seen: read });
     recordQuietUndo(
       t(read ? 'notifications.email_marked_read' : 'notifications.email_marked_unread'),
       undoKeywordAction(client, points, undo),
     );
   };
+  // What the list row of the open message stands for: with one row per
+  // conversation, every message of that conversation the list holds.
+  const selectedRowEmails = useMemo((): Email[] => {
+    if (!selectedEmail) return [];
+    if (!readerConversationView || disableThreading || isScheduledView) return [selectedEmail];
+    return conversationInList(selectedEmail, activeEmails);
+  }, [selectedEmail, readerConversationView, disableThreading, isScheduledView, activeEmails]);
   const toggleStarWithUndo = async (email: Email): Promise<void> => {
     if (!client) return;
     const wasStarred = email.keywords?.$flagged === true;
@@ -1322,7 +1336,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           labels: undo,
         });
       } else if (selectedEmail) {
-        await markReadWithUndo(selectedEmail, false).catch(toastUpdateFailure);
+        await markReadWithUndo(selectedRowEmails, false).catch(toastUpdateFailure);
       }
     },
     onMarkAsRead: async () => {
@@ -1335,7 +1349,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           labels: undo,
         });
       } else if (selectedEmail) {
-        await markReadWithUndo(selectedEmail, true).catch(toastUpdateFailure);
+        await markReadWithUndo(selectedRowEmails, true).catch(toastUpdateFailure);
       }
     },
     onToggleSpam: async () => {
@@ -1478,7 +1492,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled, deepLinkPane, disableThreading]);
+  }), [activeEmails, selectedEmail, selectedRowEmails, client, selectedMailbox, isMobile, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled, deepLinkPane, disableThreading]);
 
   // Initialize keyboard shortcuts
   // Mountain View keeps the ticked rows while a message is read (#1231). The
@@ -1669,8 +1683,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.reply': desktopSingle,
     'message.replyAll': desktopSingle,
     'message.forward': desktopSingle,
-    'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedEmail.keywords?.$seen),
-    'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && !selectedEmail.keywords?.$seen),
+    'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedRowEmails.every((e) => e.keywords?.$seen)),
+    'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedRowEmails.every((e) => !e.keywords?.$seen)),
     // Checked: the shell says "Remove star".
     'message.star': desktopMulti
       ? { enabled: desktopTarget && !isScheduledView, checked: selectionAllStarred }
@@ -6855,8 +6869,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onCompose={() => {
                   void handleCompose();
                 }}
-                onMarkAsRead={async (email, read) => {
-                  await markReadWithUndo(email, read).catch(toastUpdateFailure);
+                onMarkAsRead={async (email, read, conversation) => {
+                  await markReadWithUndo(conversation ?? email, read).catch(toastUpdateFailure);
                 }}
                 onToggleStar={async (email) => {
                   await toggleStarWithUndo(email).catch(toastUpdateFailure);

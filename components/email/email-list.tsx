@@ -31,7 +31,7 @@ import { emptyFolderLabelKey, emptyFolderPrompt } from "@/lib/empty-folder-text"
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { useAccountStore } from "@/stores/account-store";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, type MouseEvent as ReactMouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
@@ -120,7 +120,8 @@ interface EmailListProps {
   onClearSearch?: () => void;
   /** The empty Drafts folder's "Compose". */
   onCompose?: () => void;
-  onMarkAsRead?: (email: Email, read: boolean) => void;
+  /** `conversation`: every message of a conversation row, which the change covers. */
+  onMarkAsRead?: (email: Email, read: boolean, conversation?: Email[]) => void;
   onToggleStar?: (email: Email) => void;
   onTogglePinned?: (email: Email) => void;
   onDelete?: (email: Email) => void;
@@ -479,6 +480,21 @@ export function EmailList({
   // the menu would go to that namesake instead.
   const contextMenuEmail = contextMenu.data
     ? emails.find((email) => emailKeyFor(email) === emailKeyFor(contextMenu.data!)) ?? contextMenu.data
+    : null;
+  // A conversation row's menu marks the whole conversation read or unread, and
+  // offers what its bold type says: unread while any message is (#1683).
+  const [menuConversationKey, setMenuConversationKey] = useState<string | null>(null);
+  const openRowContextMenu = useCallback((e: ReactMouseEvent, email: Email, conversationKey?: string) => {
+    setMenuConversationKey(conversationKey ?? null);
+    openContextMenu(e, email);
+  }, [openContextMenu]);
+  const openMenuFrom: typeof openContextMenuFrom = (...args) => {
+    setMenuConversationKey(null);
+    openContextMenuFrom(...args);
+  };
+  const contextMenuConversation = menuConversationKey && contextMenuEmail
+    ? allThreadGroups.find((group) => group.threadKey === menuConversationKey
+      && group.emails.some((email) => emailKeyFor(email) === emailKeyFor(contextMenuEmail))) ?? null
     : null;
   /**
    * Whose sender the menu's Rules entry uses: every selected message, or the
@@ -1169,7 +1185,7 @@ export function EmailList({
     },
     onEmailDoubleClick,
     onPrefetch: onEmailPrefetch,
-    onContextMenu: openContextMenu,
+    onContextMenu: openRowContextMenu,
     onOpenConversation,
     onToggleStar,
     onMarkAsRead,
@@ -1464,7 +1480,7 @@ export function EmailList({
               disabled={isProcessing || selectedEmailsForRemoval.length === 0}
               onClick={(e) => {
                 const anchor = selectedEmailsForRemoval[0];
-                if (anchor) openContextMenuFrom(e.currentTarget, anchor, 'end');
+                if (anchor) openMenuFrom(e.currentTarget, anchor, 'end');
               }}
             >
               {isProcessing ? <Spinner size="sm" /> : <MoreVertical />}
@@ -1751,7 +1767,7 @@ export function EmailList({
             const anchor = selectedEmailsForRemoval[0];
             if (!anchor) return;
             setMenuSection('rules');
-            openContextMenuFrom(button, anchor, 'start');
+            openMenuFrom(button, anchor, 'start');
           }}
           shortcutOf={(entry) => (entry.key === 'star' ? undefined : shortcutOf(entry.key, entry.testId === 'ctx-mark-read'))}
           onMove={(button) => moveMenu.openContextMenuFrom(button, null, 'start')}
@@ -1759,7 +1775,7 @@ export function EmailList({
             const anchor = selectedEmailsForRemoval[0];
             if (!anchor) return;
             setMenuSection('more');
-            openContextMenuFrom(button, anchor, 'start');
+            openMenuFrom(button, anchor, 'start');
           }}
           onClear={clearSelection}
           tags={{ selectedIds: selectionTags.all, partialIds: selectionTags.some, scope: selectionTags.scope, onToggle: handleBatchToggleTag }}
@@ -1793,7 +1809,8 @@ export function EmailList({
             ? () => onFindFromSender({ name: contextMenuEmail!.from![0].name || '', email: contextMenuEmail!.from![0].email })
             : undefined}
           onBatchForwardAsAttachment={onBatchForwardAsAttachment}
-          onMarkAsRead={(read) => onMarkAsRead?.(contextMenuEmail!, read)}
+          unread={contextMenuConversation ? contextMenuConversation.hasUnread : undefined}
+          onMarkAsRead={(read) => onMarkAsRead?.(contextMenuEmail!, read, contextMenuConversation?.emails)}
           onToggleStar={() => onToggleStar?.(contextMenuEmail!)}
           onTogglePinned={onTogglePinned ? () => onTogglePinned(contextMenuEmail!) : undefined}
           onDelete={() => onDelete?.(contextMenuEmail!)}
