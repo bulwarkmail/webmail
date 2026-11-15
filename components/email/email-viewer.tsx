@@ -5346,7 +5346,10 @@ export function EmailViewer({
                     blocks below are h3 and h4, so no level is skipped. */}
                 <h2 dir="auto" className={cn(
                   // The header stays while the message scrolls: a very long subject scrolls by itself.
-                  "text-foreground break-words min-w-0 max-h-[35dvh] overflow-y-auto",
+                  // The padding, taken back by the margin, holds the font's ascent and descent where
+                  // they reach past the line height (Segoe UI at Mountain View's 22/28), which
+                  // otherwise put a scroll bar beside every one-line subject (#1704).
+                  "text-foreground break-words min-w-0 max-h-[35dvh] overflow-y-auto py-1 -my-1",
                   mvViewer ? "text-[1.375rem] leading-7 font-normal" : "text-lg lg:text-xl font-bold tracking-tight"
                 )}>
                   {email.subject || t('no_subject')}
