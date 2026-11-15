@@ -1,6 +1,8 @@
+import { shortcutKey } from "@/lib/keyboard";
+
 // The calendar's single-key shortcuts. A key held with Ctrl, ⌘, Alt or
-// Shift is left to the browser (Ctrl+A selects, Alt+← goes back), and
-// letters come from the physical key, so they work on any layout (R8).
+// Shift is left to the browser (Ctrl+A selects, Alt+← goes back). Letters
+// are the ones the key types, or its US place on a non-Latin layout (R8).
 
 export type CalendarShortcutAction =
   | "prev"
@@ -34,15 +36,13 @@ export function calendarShortcutAction(
   event: Pick<KeyboardEvent, "key" | "code" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">,
   singleKeys = true,
 ): CalendarShortcutAction | null {
-  if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return null;
+  if (event.ctrlKey || event.metaKey || event.altKey) return null;
+  const key = shortcutKey(event);
+  // `/` focuses the search, as in Mail (R8). AZERTY types it with Shift.
+  if (singleKeys && key === "/") return "search";
+  if (event.shiftKey) return null;
   if (event.key === "ArrowLeft") return "prev";
   if (event.key === "ArrowRight") return "next";
   if (!singleKeys) return null;
-  // `/` focuses the search, as in Mail (R8); on any layout, by its key.
-  if (event.code === "Slash" || (!event.code && event.key === "/")) return "search";
-  const code = event.code;
-  const letter = code && code.length === 4 && code.startsWith("Key")
-    ? code.charAt(3).toLowerCase()
-    : event.key.length === 1 ? event.key.toLowerCase() : "";
-  return LETTERS[letter] ?? null;
+  return LETTERS[key] ?? null;
 }

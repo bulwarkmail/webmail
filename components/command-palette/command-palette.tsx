@@ -38,7 +38,7 @@ import { COMMAND_PALETTE_OPEN_EVENT, KEYBOARD_SHORTCUTS_OPEN_EVENT, parkAppComma
 import { commandMatches, useRegisteredCommandGroups } from "@/lib/command-registry";
 import { shortcutAlternatives } from "@/lib/shortcut-keys";
 import { toUnicodeEmail } from "@/lib/idn";
-import { isEditableEventTarget, isKeyboardLayerOpen } from "@/lib/keyboard";
+import { isEditableEventTarget, isKeyboardLayerOpen, shortcutKey } from "@/lib/keyboard";
 import { isSingleKeyHint, isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -86,8 +86,7 @@ export function CommandPaletteHost() {
     if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
-      // event.code: the K key on any keyboard layout, Latin or not.
-      if (event.code !== "KeyK" && event.key.toLowerCase() !== "k") return;
+      if (shortcutKey(event) !== "k") return;
       if (isEditableEventTarget(event)) return;
       event.preventDefault();
       setOpen((v) => !v);
@@ -112,7 +111,7 @@ export function CommandPaletteHost() {
     if (!isAuthenticated) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
-      const question = event.key === "?" || (event.code === "Slash" && event.shiftKey);
+      const question = shortcutKey(event) === "?";
       if (!question || isEditableEventTarget(event) || isContextMenuOpen()) return;
       // Another dialog, a menu or a popup is open: the key belongs to it.
       if (event.defaultPrevented || isKeyboardLayerOpen()) return;
@@ -325,7 +324,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
     } else if (event.key === "Enter") {
       event.preventDefault();
       if (activeIndex >= 0) runCommand(visible[activeIndex]);
-    } else if ((event.ctrlKey || event.metaKey) && (event.code === "KeyK" || event.key.toLowerCase() === "k")) {
+    } else if ((event.ctrlKey || event.metaKey) && shortcutKey(event) === "k") {
       event.preventDefault();
       onClose();
     }

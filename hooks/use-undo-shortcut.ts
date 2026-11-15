@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { isEditableEventTarget } from "@/lib/keyboard";
+import { isEditableEventTarget, shortcutKey } from "@/lib/keyboard";
 import { clearUndoHistory, undoLatest } from "@/lib/undo-history";
 import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
@@ -14,8 +14,8 @@ import { toast } from "@/stores/toast-store";
  */
 export function isUndoKey(e: KeyboardEvent, singleKeyShortcuts: boolean): boolean {
   if (e.defaultPrevented || e.repeat) return false;
-  // The physical key, so it works on any keyboard layout.
-  const isZ = e.code ? e.code === "KeyZ" : e.key.toLowerCase() === "z";
+  // The Z the key types, or the Z place on a non-Latin layout.
+  const isZ = shortcutKey(e) === "z";
   if (!isZ || e.altKey || e.shiftKey) return false;
   const mod = e.ctrlKey || e.metaKey;
   if (!mod && !singleKeyShortcuts) return false;

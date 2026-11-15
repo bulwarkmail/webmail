@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from "react";
 import { Email } from "@/lib/jmap/types";
-import { isActivatableEventTarget, isAppShortcutBlocked, isEventInside, isSingleCharacterKey } from "@/lib/keyboard";
+import { isActivatableEventTarget, isAppShortcutBlocked, isEventInside, isSingleCharacterKey, shortcutKey } from "@/lib/keyboard";
 import { keyboardHooks } from "@/lib/plugin-hooks";
 
 export interface KeyboardShortcutHandlers {
@@ -85,29 +85,6 @@ export interface UseKeyboardShortcutsOptions {
   handlers: KeyboardShortcutHandlers;
 }
 
-// Shortcuts must fire regardless of the active keyboard layout (e.g. Cyrillic,
-// Greek). Derive the key from the PHYSICAL key (event.code) instead of the
-// layout-dependent event.key: letters from KeyA..KeyZ, and the symbol shortcuts
-// (/, ?, #, !) from their US-QWERTY positions so they stay reachable on non-Latin
-// layouts. Arrows/Enter/Escape keep event.key, which is already layout-neutral.
-function physicalShortcutKey(event: KeyboardEvent): string {
-  const code = event.code;
-  if (code && code.length === 4 && code.startsWith("Key")) {
-    return code.charAt(3).toLowerCase();
-  }
-  switch (code) {
-    case "Slash":
-      return event.shiftKey ? "?" : "/";
-    case "Digit1":
-      if (event.shiftKey) return "!";
-      break;
-    case "Digit3":
-      if (event.shiftKey) return "#";
-      break;
-  }
-  return event.key.toLowerCase();
-}
-
 export function useKeyboardShortcuts({
   enabled = true,
   mountainViewKeys = false,
@@ -147,7 +124,7 @@ export function useKeyboardShortcuts({
       if ((event.key === "ArrowDown" || event.key === "ArrowUp") && !isEventInside(event, listSelector)) return;
 
       const h = handlersRef.current;
-      const key = physicalShortcutKey(event);
+      const key = shortcutKey(event);
       const keyName = `${event.ctrlKey || event.metaKey ? "mod+" : ""}${event.shiftKey && key.length === 1 && /[a-z]/.test(key) ? "shift+" : ""}${key}`;
       // Runs a shortcut's action. Plugins may stop it first (onBeforeShortcut)
       // and hear about it after; with no plugin listening it runs at once.

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 
-import { isEditableEventTarget } from '../keyboard';
+import { isEditableEventTarget, shortcutKey } from '../keyboard';
 
 // Regression tests for #654: global single-key shortcuts fired while the user
 // was editing inside the QuotedHtml shadow-DOM island, because the shadow
@@ -76,5 +76,37 @@ describe('isEditableEventTarget', () => {
     shadow.appendChild(inner);
 
     expect(dispatchAndCheck(inner).editable).toBe(false);
+  });
+});
+
+// #1714: a shortcut is the key the user types. Colemak types "e" on the key
+// a US keyboard has F on; that is "e", not "f".
+describe('shortcutKey', () => {
+  const press = (key: string, code: string, shiftKey = false) => ({ key, code, shiftKey });
+
+  it('takes the typed letter on Latin layouts', () => {
+    expect(shortcutKey(press('e', 'KeyF'))).toBe('e'); // Colemak
+    expect(shortcutKey(press('a', 'KeyQ'))).toBe('a'); // AZERTY
+    expect(shortcutKey(press('R', 'KeyO', true))).toBe('r'); // Dvorak, Shift
+  });
+
+  it('takes the typed sign, wherever the layout has it', () => {
+    expect(shortcutKey(press('/', 'Period', true))).toBe('/'); // AZERTY Shift + :
+    expect(shortcutKey(press('!', 'Slash'))).toBe('!'); // AZERTY
+    expect(shortcutKey(press('?', 'Slash', true))).toBe('?');
+  });
+
+  it('falls back to the US place where the layout types no Latin character', () => {
+    expect(shortcutKey(press('у', 'KeyE'))).toBe('e'); // Russian
+    expect(shortcutKey(press('ε', 'KeyE'))).toBe('e'); // Greek
+    expect(shortcutKey(press('ק', 'KeyE'))).toBe('e'); // Hebrew
+    expect(shortcutKey(press('Å', 'KeyA', true))).toBe('a'); // macOS Option + Shift + A
+    expect(shortcutKey(press('Dead', 'KeyE'))).toBe('e'); // macOS Option + E
+    expect(shortcutKey(press('№', 'Digit3', true))).toBe('#'); // Russian Shift + 3
+  });
+
+  it('keeps named keys', () => {
+    expect(shortcutKey(press('ArrowDown', 'ArrowDown'))).toBe('arrowdown');
+    expect(shortcutKey(press('Delete', 'Delete'))).toBe('delete');
   });
 });

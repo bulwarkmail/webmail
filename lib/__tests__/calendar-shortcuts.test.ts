@@ -60,3 +60,21 @@ describe('Calendar shortcuts with single keys off', () => {
     expect(calendarShortcutAction(pressed('t', 'KeyT'))).toBe('today');
   });
 });
+
+// #1714: the letter the key types, and `/` however the layout types it.
+describe('Calendar shortcuts on other layouts', () => {
+  it('takes the typed letter', () => {
+    // Colemak types t where a US keyboard has G, and g on its T.
+    expect(calendarShortcutAction(pressed('t', 'KeyG'))).toBe('today');
+    expect(calendarShortcutAction(pressed('g', 'KeyT'))).toBeNull();
+  });
+
+  it('keeps the US place on a non-Latin layout', () => {
+    expect(calendarShortcutAction(pressed('е', 'KeyT'))).toBe('today');
+  });
+
+  it('opens the search with / typed with Shift (AZERTY)', () => {
+    expect(calendarShortcutAction({ ...pressed('/', 'Period'), shiftKey: true })).toBe('search');
+    expect(calendarShortcutAction(pressed('!', 'Slash'))).toBeNull();
+  });
+});

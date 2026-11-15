@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState, useCallback, useRef, useId } from "react";
+import { shortcutKey } from "@/lib/keyboard";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Loader2, Puzzle } from "@/components/icons";
@@ -81,7 +82,7 @@ interface ToastProps {
  * reached without tabbing through the page. Listed in lib/keyboard-shortcuts.
  */
 export function isFocusToastShortcut(e: KeyboardEvent): boolean {
-  return e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === "KeyN";
+  return e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && shortcutKey(e) === "n";
 }
 
 /** A modal dialog is open: keys and focus belong to it. */

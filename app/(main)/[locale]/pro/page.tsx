@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ComponentType, type DragEvent } from "react";
+import { shortcutKey } from "@/lib/keyboard";
 import { useTranslations } from "next-intl";
 import { NavigationRail } from "@/components/layout/navigation-rail";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
@@ -334,15 +335,15 @@ export default function ProHome() {
   useDeepLinkUrl(reflectedPath);
 
   // Global search shortcuts: Ctrl/⌘+K toggles the palette, Ctrl+Shift+F
-  // opens it (features doc §"Focus global search"). Window-level and keyed on
-  // event.code so they fire from inside inputs and on non-Latin layouts.
+  // opens it (features doc §"Focus global search"). Window-level so they fire
+  // from inside inputs; shortcutKey keeps them on non-Latin layouts.
   useEffect(() => {
     const onSearchShortcut = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-      if (event.code === 'KeyK' && !event.shiftKey) {
+      if (shortcutKey(event) === 'k' && !event.shiftKey) {
         event.preventDefault();
         useGlobalSearchStore.getState().togglePalette();
-      } else if (event.code === 'KeyF' && event.shiftKey) {
+      } else if (shortcutKey(event) === 'f' && event.shiftKey) {
         event.preventDefault();
         useGlobalSearchStore.getState().openPalette();
       }

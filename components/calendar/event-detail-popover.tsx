@@ -34,7 +34,7 @@ import { eventToView } from "@/lib/plugin-projection";
 import { ParticipantStatusBadge } from "./rsvp-buttons";
 import { AnswerBars, useAnswerView } from "./answer-bars";
 import type { AnswerTarget } from "@/lib/calendar-delegate";
-import { isEditableEventTarget } from "@/lib/keyboard";
+import { isEditableEventTarget, shortcutKey } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
@@ -324,7 +324,7 @@ export function EventDetailPopover({
       if (isEditableEventTarget(e)) return;
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       if (isSingleKeyShortcutOff(e)) return;
-      if (e.code === "KeyE" && !noteExpanded && canEditBody) {
+      if (shortcutKey(e) === "e" && !noteExpanded && canEditBody) {
         e.preventDefault();
         onEdit();
       }

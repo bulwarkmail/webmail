@@ -8,7 +8,7 @@
 // The listener ignores events when an editable element has focus, matching
 // the convention in `use-keyboard-shortcuts.ts`.
 
-import { isEditableEventTarget } from '@/lib/keyboard';
+import { isEditableEventTarget, shortcutKey } from '@/lib/keyboard';
 import type { SandboxInstance } from './host-bridge';
 
 interface Binding {
@@ -91,9 +91,10 @@ function eventMatches(ev: KeyboardEvent, combo: NormalisedCombo): boolean {
   if (combo.alt !== ev.altKey) return false;
   if (!combo.ctrl && combo.meta !== ev.metaKey) return false;
   if (ev.key.toLowerCase() === combo.key) return true;
-  // With Alt held, macOS types another character (Alt+A is "å"): match the
-  // physical key for letters and digits.
-  if (/^[a-z]$/.test(combo.key)) return ev.code === `Key${combo.key.toUpperCase()}`;
+  // A letter is the one the key types (Colemak, AZERTY). Where that is no
+  // ASCII character (Alt+A is "å" on macOS, a Cyrillic layout) the key's US
+  // place stands in. Digits keep their place: Shift or AZERTY types a symbol.
+  if (/^[a-z]$/.test(combo.key)) return shortcutKey(ev) === combo.key;
   if (/^[0-9]$/.test(combo.key)) return ev.code === `Digit${combo.key}`;
   return false;
 }

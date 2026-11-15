@@ -85,6 +85,25 @@ export function isSingleCharacterKey(event: Pick<KeyboardEvent, "key" | "ctrlKey
   return [...event.key].length === 1;
 }
 
+/**
+ * The key a shortcut matches for this press, lowercased: "e", "/", "#",
+ * "arrowdown". The character the key types wins, so `e` archives on Colemak,
+ * Dvorak and AZERTY where `e` is printed on the key (#1714). Where the layout
+ * types no ASCII character there (Cyrillic, Greek, Hebrew, Arabic, or a Mac's
+ * Option layer, where Alt+A types "å"), the key's place on a US keyboard
+ * stands in, so those layouts keep their shortcuts.
+ */
+export function shortcutKey(event: Pick<KeyboardEvent, "key" | "code" | "shiftKey">): string {
+  const key = event.key ?? "";
+  if (key.length === 1 && key > " " && key <= "~") return key.toLowerCase();
+  const code = event.code ?? "";
+  if (/^Key[A-Z]$/.test(code)) return code.charAt(3).toLowerCase();
+  if (code === "Slash") return event.shiftKey ? "?" : "/";
+  if (code === "Digit1" && event.shiftKey) return "!";
+  if (code === "Digit3" && event.shiftKey) return "#";
+  return key.toLowerCase();
+}
+
 /** Whether the key press started inside an element that matches `selector`. */
 export function isEventInside(event: Event, selector: string): boolean {
   const path =
