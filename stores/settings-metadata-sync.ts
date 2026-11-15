@@ -19,7 +19,7 @@
  */
 
 import { create } from 'zustand';
-import { MetadataPatchError, MetadataTooLargeError, metadataValueBytes } from '@/lib/jmap/bulwark-metadata';
+import { MetadataPatchError, MetadataRefusedError, MetadataTooLargeError, metadataValueBytes } from '@/lib/jmap/bulwark-metadata';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { subscribePushStateChanges } from '@/lib/push-events';
 import { isAllowedSettingValue, SETTINGS_SCHEMA } from '@/lib/settings-schema';
@@ -32,11 +32,16 @@ import { useAuthStore } from './auth-store';
 import { usePolicyStore } from './policy-store';
 import {
   acceptMetadataSettingValue, adoptSettingStamps, builtInSettingDefault, CROSS_ACCOUNT_VIEW_KEYS,
-  readLocalSettingStamps, registerMetadataSyncHooks, settingsSyncTarget, useSettingsStore,
+  noteSeenSettingStamps, readLocalSettingStamps, registerMetadataSyncHooks, settingsSyncTarget, useSettingsStore,
 } from './settings-store';
 import { useThemeStore } from './theme-store';
 
 const CHANGE_DELAY_MS = 2000;
+/**
+ * The part of the account's 16 KB of private metadata the lists may take
+ * up, as in the app: the rest stays for the plain settings.
+ */
+const LIST_BUDGET_BYTES = 12 * 1024;
 const SERVER_CHANGE_GAP_MS = 30_000;
 const RETRY_MS = 10 * 60_000;
 
@@ -192,8 +197,9 @@ async function round(): Promise<void> {
     store.setState({ status: 'unsupported' });
     return;
   }
-  // The admin policy says which settings are pinned: not before it is known.
-  if (!usePolicyStore.getState().loaded) return;
+  // The admin policy says which settings are pinned: not before the full one is known.
+  const policy = usePolicyStore.getState();
+  if (!policy.loaded || policy.partial) return;
   const key = `${target.serverUrl}\u0000${target.username}\u0000${accountId}`;
   if (refusedFor !== key) {
     refusedAt.clear();
@@ -224,11 +230,12 @@ async function round(): Promise<void> {
   }
   const unchanged = Object.fromEntries(Object.entries(plan.stamps).filter(([name]) => !changed.includes(name)));
   adoptSettingStamps(unchanged);
+  noteSeenSettingStamps(plan.seen, plan.stamps);
   if (Object.keys(plan.replaced).length > 0) {
     store.setState({ replaced: { ...(store.getState().replaced ?? {}), ...plan.replaced } });
   }
 
-  const outcome = await send(plan.push, remote.shards, target);
+  const outcome = await send(plan.push, remote.shards, entries, target);
   if (outcome === 'moved') return;
   if (outcome === 'retry') {
     // A shard another device removed meanwhile: read again, once.
@@ -255,6 +262,7 @@ async function round(): Promise<void> {
 async function send(
   push: SettingPush[],
   existingShards: ReadonlySet<number>,
+  entries: Record<string, unknown>,
   target: Target,
 ): Promise<'ok' | 'full' | 'unreachable' | 'moved' | 'retry'> {
   for (const name of [...refusedAt.keys()]) {
@@ -286,13 +294,23 @@ async function send(
         full = true;
       }
     }
+    // What the account's private entries take now, as the round read them.
+    let used = metadataValueBytes(entries);
     for (const value of writes.values) {
       if (!sameTarget(target, currentTarget())) return 'moved';
+      const before = value.change.key in entries ? metadataValueBytes(entries[value.change.key]) : 0;
+      const after = metadataValueBytes(value.change.value);
+      if (after > before && used - before + after > LIST_BUDGET_BYTES) {
+        refusedAt.set(value.name, value.at);
+        continue;
+      }
       try {
         await write([value.change]);
+        used += after - before;
       } catch (error) {
-        if (!(error instanceof MetadataTooLargeError)) throw error;
-        // Over 8 KB on its own, or more than the account has left: it stays here until it changes.
+        if (!(error instanceof MetadataTooLargeError) && !(error instanceof MetadataRefusedError)) throw error;
+        // Over 8 KB on its own, more than the account has left, or refused
+        // for another reason: it stays here until it changes.
         refusedAt.set(value.name, value.at);
       }
     }
@@ -318,7 +336,9 @@ export function startSettingsMetadataSync(): void {
   });
   // The policy loads after sign-in: rounds wait for it.
   usePolicyStore.subscribe((state, prev) => {
-    if (state.loaded && (!prev.loaded || state.policy !== prev.policy) && settingsSyncTarget()) requestSettingsMetadataSync(0);
+    if (state.loaded && !state.partial && (!prev.loaded || prev.partial || state.policy !== prev.policy) && settingsSyncTarget()) {
+      requestSettingsMetadataSync(0);
+    }
   });
   // Another device's write changes the account's mailboxes; so does new mail, hence the gap.
   subscribePushStateChanges((change, client) => {

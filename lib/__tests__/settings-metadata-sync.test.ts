@@ -139,7 +139,8 @@ describe('planSettingsSync', () => {
       [local({ name: 'showPreview', value: true, at: 100, chosen: true })],
       remoteOf({ 'settings.shard.0': { showPreview: { v: 'sometimes', at: 200 } } }),
     );
-    expect(plan).toEqual({ take: {}, reset: [], stamps: {}, push: [], replaced: {} });
+    // Its stamp is noted, so a change made here later beats it.
+    expect(plan).toEqual({ take: {}, reset: [], stamps: {}, push: [], replaced: {}, seen: { showPreview: 200 } });
   });
 
   it('leaves a locked setting alone both ways', () => {
@@ -147,7 +148,27 @@ describe('planSettingsSync', () => {
       [local({ name: 'showPreview', value: false, at: 300, chosen: true, locked: true })],
       remoteOf({ 'settings.shard.0': { showPreview: { v: true, at: 200 } } }),
     );
-    expect(plan).toEqual({ take: {}, reset: [], stamps: {}, push: [], replaced: {} });
+    expect(plan).toEqual({ take: {}, reset: [], stamps: {}, push: [], replaced: {}, seen: {} });
+    const newer = planSettingsSync(
+      [local({ name: 'showPreview', value: false, at: 100, chosen: true, locked: true })],
+      remoteOf({ 'settings.shard.0': { showPreview: { v: true, at: 200 } } }),
+    );
+    expect(newer).toEqual({ take: {}, reset: [], stamps: {}, push: [], replaced: {}, seen: { showPreview: 200 } });
+  });
+
+  it('keeps a value nobody chose here that it sent up as the default itself', () => {
+    // An admin default: sent as "the default" with its stamp, read back the next round.
+    const plan = planSettingsSync(
+      [local({ name: 'showPreview', value: false, defaultValue: true, at: 700, chosen: false, reset: true })],
+      remoteOf({ 'settings.shard.0': { showPreview: { at: 700 } } }),
+    );
+    expect(plan.reset).toEqual([]);
+    expect(plan.push).toEqual([]);
+    const unmarked = planSettingsSync(
+      [local({ name: 'showPreview', value: false, defaultValue: true, at: 700, chosen: false, reset: false })],
+      remoteOf({ 'settings.shard.0': { showPreview: { at: 700 } } }),
+    );
+    expect(unmarked.reset).toEqual([]);
   });
 });
 

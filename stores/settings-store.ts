@@ -148,16 +148,65 @@ function saveLocalStamps(local: LocalSettingStamps): void {
 
 function markLocalChange(keys: string[]): void {
   const local = getLocalStamps();
+  const seen = readSeenSettingStamps();
   const now = Date.now();
+  let seenChanged = false;
   for (const key of keys) {
     // Later than the stamp it replaces, even when that came from a device
     // whose clock runs ahead: the change made here is the newer one.
-    const at = nextStamp(local.stamps[key], now);
+    const at = nextStamp(Math.max(local.stamps[key] ?? 0, seen[key] ?? 0), now);
     local.stamps[key] = at;
     local.dirty[key] = at;
+    if (key in seen) {
+      delete seen[key];
+      seenChanged = true;
+    }
   }
   saveLocalStamps(local);
+  if (seenChanged) writeSeenSettingStamps(seen);
   metadataSyncHooks?.onLocalChange(keys);
+}
+
+// Newer stamps of the account's metadata that this browser saw but didn't
+// take (a value it can't use, a setting the admin pins): a change made here
+// is stamped after them (stores/settings-metadata-sync).
+const SETTINGS_SEEN_KEY = 'settings-sync-seen';
+
+function readSeenSettingStamps(): Record<string, number> {
+  try {
+    if (typeof window === 'undefined') return {};
+    return readStamps(JSON.parse(window.localStorage.getItem(SETTINGS_SEEN_KEY) ?? '{}'));
+  } catch {
+    return {};
+  }
+}
+
+function writeSeenSettingStamps(seen: Record<string, number>): void {
+  try {
+    if (typeof window === 'undefined') return;
+    if (Object.keys(seen).length > 0) window.localStorage.setItem(SETTINGS_SEEN_KEY, JSON.stringify(seen));
+    else window.localStorage.removeItem(SETTINGS_SEEN_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Note account stamps this browser saw but didn't take; drop the ones a taken stamp has passed. */
+export function noteSeenSettingStamps(seenNow: Record<string, number>, taken: Record<string, number>): void {
+  const seen = readSeenSettingStamps();
+  let changed = false;
+  for (const [key, at] of Object.entries(taken)) {
+    if (key in seen && seen[key] <= at) {
+      delete seen[key];
+      changed = true;
+    }
+  }
+  for (const [key, at] of Object.entries(seenNow)) {
+    if ((seen[key] ?? 0) >= at) continue;
+    seen[key] = at;
+    changed = true;
+  }
+  if (changed) writeSeenSettingStamps(seen);
 }
 
 // --- Settings in the account's metadata ----------------------------------------
@@ -2916,14 +2965,17 @@ if (typeof window !== 'undefined') {
   const stampsPaused =() => isLoadingFromServer || unstampedWrites > 0;
   useSettingsStore.subscribe((state, prev) => {
     if (stampsPaused() || !useSettingsStore.persist.hasHydrated()) return;
-    const changed: string[] = STAMPED_KEYS.filter((key) => state[key] !== prev[key]);
+    // A setting the admin pins keeps the pinned value: a reset or an import
+    // changing it for a moment is not the user's change.
+    const locked = (key: string) => usePolicyStore.getState().isSettingLocked(key);
+    const changed: string[] = STAMPED_KEYS.filter((key) => state[key] !== prev[key] && !locked(key as string));
     // A setting put back to its default that already had the default value
     // changes only its "chosen" mark, and that is a change all the same.
     if (state.explicitSettings !== prev.explicitSettings) {
       const before = new Set(prev.explicitSettings);
       const after = new Set(state.explicitSettings);
       for (const key of new Set([...before, ...after])) {
-        if (before.has(key) !== after.has(key) && STAMPED_KEY_SET.has(key) && !changed.includes(key)) changed.push(key);
+        if (before.has(key) !== after.has(key) && STAMPED_KEY_SET.has(key) && !changed.includes(key) && !locked(key)) changed.push(key);
       }
     }
     if (changed.length > 0) markLocalChange(changed);

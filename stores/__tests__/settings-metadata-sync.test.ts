@@ -23,10 +23,13 @@ let mailboxState = 0;
 let supportsPrivate = true;
 let reads = 0;
 let writes: Array<Record<string, unknown>> = [];
+/** Entries the fake refuses as a server rule it doesn't model would. */
+const refuseKeys = new Set<string>();
 
 function applyChanges(changes: Array<{ key: string; member?: string; value: unknown }>) {
   const next = structuredClone(entries);
   for (const { key, member, value } of changes) {
+    if (refuseKeys.has(key)) throw new m.errors.MetadataRefusedError('forbidden', 'Not today.');
     if (member === undefined) {
       if (value === null) delete next[key];
       else next[key] = structuredClone(value);
@@ -128,6 +131,7 @@ beforeEach(async () => {
   supportsPrivate = true;
   reads = 0;
   writes = [];
+  refuseKeys.clear();
   serverBlob = { explicitSettings: [] };
   posts = [];
   client.getBulwarkMetadata.mockClear();
@@ -297,6 +301,60 @@ describe('settings in the account metadata', () => {
     await m.settings.useSettingsStore.getState().loadFromServer(USER, SERVER);
     await round();
     expect(reads).toBe(0);
+  });
+
+  it('stamps a change made here after an account value it saw but could not use', async () => {
+    const ahead = Date.now() + 3_600_000;
+    entries[shardKey(shardOf('dateFormat'))] = { dateFormat: { v: 'stardate', at: ahead } };
+    await signIn();
+    m.settings.useSettingsStore.getState().updateSetting('dateFormat', 'full');
+    await round();
+    const sent = shard('dateFormat').dateFormat;
+    expect(sent.v).toBe('full');
+    expect(sent.at).toBeGreaterThan(ahead);
+  });
+
+  it('does not stamp settings the admin pins when everything is reset', async () => {
+    m.policy.usePolicyStore.setState((s) => ({ policy: { ...s.policy, restrictions: { showPreview: { locked: true, value: false } } } }));
+    m.settings.useSettingsStore.setState({ showPreview: false });
+    m.settings.useSettingsStore.getState().resetToDefaults();
+    expect(stamps().stamps?.showPreview).toBeUndefined();
+  });
+
+  it('waits for the full admin policy before the first round', async () => {
+    m.policy.usePolicyStore.setState({ partial: true });
+    await signIn();
+    expect(reads).toBe(0);
+    m.policy.usePolicyStore.setState({ partial: false });
+    await round();
+    expect(reads).toBe(1);
+  });
+
+  it('keeps room for the plain settings: lists together take at most 12 KB', async () => {
+    await signIn();
+    const words = Array.from({ length: 140 }, (_, i) => `${'k'.repeat(30)}${i}`);
+    m.settings.useSettingsStore.getState().updateSetting('attachmentReminderKeywords', words);
+    const apps = Array.from({ length: 60 }, (_, i) => ({
+      id: `app-${i}`, name: `App ${i}`, url: `https://app-${i}.example.org/start/page`, icon: 'Globe', openMode: 'tab' as const, showOnMobile: true,
+    }));
+    m.settings.useSettingsStore.getState().updateSetting('sidebarApps', apps);
+    await round();
+    // Both would fit the 16 KB, but not the 12 KB lists may take.
+    expect(metadataValueBytes(apps)).toBeLessThan(8000);
+    expect(metadataValueBytes(apps) + metadataValueBytes(words)).toBeLessThan(15_000);
+    expect(metadataValueBytes(apps) + metadataValueBytes(words)).toBeGreaterThan(12_300);
+    expect(entries['settings.value.attachment-reminder-keywords']).toBeDefined();
+    expect(entries['settings.value.sidebar-apps']).toBeUndefined();
+  });
+
+  it('keeps a list the server refuses for another reason here and syncs the rest', async () => {
+    await signIn();
+    refuseKeys.add('settings.value.attachment-reminder-keywords');
+    m.settings.useSettingsStore.getState().updateSetting('attachmentReminderKeywords', ['invoice']);
+    m.settings.useSettingsStore.getState().updateSetting('showPreview', false);
+    await round();
+    expect(shard('showPreview').showPreview.v).toBe(false);
+    expect(m.sync.useSettingsMetadataSyncStore.getState().status).toBe('synced');
   });
 
   it('keeps a list too long for the account here and sends the rest', async () => {
