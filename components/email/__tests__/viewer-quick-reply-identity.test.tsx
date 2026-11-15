@@ -61,7 +61,7 @@ beforeEach(() => {
   } as never);
 });
 
-async function startQuickReply(onQuickReply = vi.fn(async () => true)) {
+async function startQuickReply(onQuickReply = vi.fn(async (_text: string, _options?: { identityId?: string }) => true)) {
   render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={onQuickReply} onReply={vi.fn()} />);
   await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
   const box = screen.getByPlaceholderText(/^quick_reply_to/);

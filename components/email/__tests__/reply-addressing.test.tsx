@@ -80,7 +80,7 @@ vi.mock('@/stores/identity-store', () => {
     typeof sel === 'function' ? sel(state) : state;
   hook.getState = () => state;
   hook.setState = (p: Partial<typeof state>) => Object.assign(state, p);
-  return { useIdentityStore: hook };
+  return { useIdentityStore: hook, notifyIdentitySelected: () => {} };
 });
 
 vi.mock('@/stores/account-store', () => {
@@ -163,6 +163,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
     onIdentitySelect: { size: 0, emit: async () => {} },
+    onSelectReplyIdentity: { size: 0 },
   },
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },

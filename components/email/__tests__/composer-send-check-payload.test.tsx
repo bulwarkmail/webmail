@@ -189,6 +189,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
       transform: async (value: { html: string; text: string }) => ({ html: `${value.html}<p>PLUGIN</p>`, text: `${value.text} PLUGIN` }),
     },
     onIdentitySelect: { size: 0, emit: async () => {} },
+    onSelectReplyIdentity: { size: 0 },
   },
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },
