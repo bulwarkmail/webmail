@@ -53,6 +53,34 @@ describe('conversation view honours the remote-content block', () => {
   }, 30_000);
 });
 
+// The conversation view's frame gave every <td>/<th> 0.5rem of padding. That
+// beats cellpadding="0" and an inline style that sets no padding, so
+// table-built signatures and newsletters came out spaced apart, unlike in the
+// message viewer and in the composer.
+describe('conversation view keeps the sender\'s table layout', () => {
+  it('adds no padding to table cells', async () => {
+    const { ThreadConversationView } = await import('@/components/email/thread-conversation-view');
+    const email = {
+      id: 'e3', threadId: 't3', mailboxIds: { a: true }, keywords: { $seen: true },
+      from: [{ name: 'Sender', email: 'sender@t.example' }], to: [{ email: 'me@example.org' }],
+      subject: 's', receivedAt: '2026-09-26T10:00:00Z', size: 1, preview: 'sig', hasAttachment: false,
+      htmlBody: [{ partId: '1', type: 'text/html' }], textBody: [], attachments: [],
+      bodyValues: { '1': { value: '<table cellpadding="0" cellspacing="0"><tr><td>web</td><td>example.org</td></tr></table>' } },
+    };
+    const { container } = render(
+      <ThreadConversationView
+        thread={{ threadId: 't3', emails: [email], latestEmail: email } as never}
+        emails={[email] as never}
+        onBack={() => {}}
+      />,
+    );
+    const srcdoc = container.querySelector('iframe')!.getAttribute('srcdoc') ?? '';
+    const frameCss = /<style>([\s\S]*?)<\/style>/.exec(srcdoc)?.[1] ?? '';
+    expect(frameCss).toMatch(/td, th \{/);
+    expect(frameCss).not.toMatch(/td, th \{[^}]*padding/);
+  }, 30_000);
+});
+
 describe('conversation view header', () => {
   it('names the back button for screen readers', async () => {
     const { ThreadConversationView } = await import('@/components/email/thread-conversation-view');
