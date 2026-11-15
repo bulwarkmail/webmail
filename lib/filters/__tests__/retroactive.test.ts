@@ -279,6 +279,36 @@ describe('retroProperties and toRetroMessage', () => {
     expect(ruleMatches(r, message)).toBe(true);
   });
 
+  it('reads headers without a Text form in the Raw form only, which Stalwart 1.0 accepts (#1710)', () => {
+    const rawOnly = [
+      'List-Unsubscribe', 'List-Help', 'List-Subscribe', 'List-Post', 'List-Owner', 'List-Archive',
+      'Message-ID', 'In-Reply-To', 'References', 'Date', 'Resent-Date', 'Resent-Message-ID',
+      'Return-Path', 'Received', 'list-unsubscribe',
+    ];
+    for (const name of rawOnly) {
+      const r = rule([{ field: 'header', headerName: name, comparator: 'matches', value: '*' }]);
+      expect(retroProperties(r), name).toEqual(['mailboxIds', 'keywords', `header:${name}:all`]);
+    }
+    // Headers RFC 8621 allows as text keep the decoded form.
+    for (const name of ['Subject', 'Comments', 'Keywords', 'List-Id', 'X-Spam-Flag', 'Content-Type']) {
+      const r = rule([{ field: 'header', headerName: name, comparator: 'contains', value: 'x' }]);
+      expect(retroProperties(r), name).toContain(`header:${name}:asText:all`);
+    }
+  });
+
+  it('matches a raw-only header unfolded and trimmed, like the Sieve rule', () => {
+    const r = rule([{ field: 'header', headerName: 'List-Unsubscribe', comparator: 'starts_with', value: '<https://example.net/' }]);
+    const message = toRetroMessage({
+      id: 'e1',
+      'header:List-Unsubscribe:all': ['\r\n <https://example.net/unsubscribe>, <mailto:unsubscribe@example.net>'],
+    });
+    expect(message.headers['list-unsubscribe']).toEqual(['<https://example.net/unsubscribe>, <mailto:unsubscribe@example.net>']);
+    expect(ruleMatches(r, message)).toBe(true);
+    const any = rule([{ field: 'header', headerName: 'List-Unsubscribe', comparator: 'matches', value: '*' }]);
+    expect(ruleMatches(any, message)).toBe(true);
+    expect(ruleMatches(any, toRetroMessage({ id: 'e2', 'header:List-Unsubscribe:all': [] }))).toBe(false);
+  });
+
   it('falls back to the raw header where the server has no text form (Stalwart and List-Id)', () => {
     const message = toRetroMessage({
       id: 'e1',
