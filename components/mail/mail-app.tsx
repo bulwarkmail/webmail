@@ -128,6 +128,7 @@ import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, conversationInList, emailKeyFor,
 import { shownListEmails, stepListEmail } from "@/lib/list-step";
 import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
 import { refreshRepliedThread } from "@/lib/replied-thread";
+import { refreshMailView } from "@/lib/manual-mail-refresh";
 import {
   ErrorBoundary,
   SidebarErrorFallback,
@@ -1415,13 +1416,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setShowShortcutsModal(true);
     },
     onRefresh: async () => {
-      if (client && selectedMailbox) {
-        if (selectedMailbox === SCHEDULED_MAILBOX_ID) {
-          await fetchScheduledEmails(client);
-        } else {
-          await fetchEmails(client, selectedMailbox);
-        }
-      }
+      if (client) await refreshMailView(client);
     },
     onSelectAll: () => {
       if (isScheduledView) return;
@@ -1708,17 +1703,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!client) return;
     setIsManualRefreshing(true);
     try {
-      const state = useEmailStore.getState();
-      if (state.isScheduledView || state.selectedMailbox === SCHEDULED_MAILBOX_ID) {
-        await Promise.all([
-          state.fetchMailboxes(client),
-          state.fetchScheduledEmails(client),
-        ]);
-      } else {
-        await state.fetchMailboxes(client);
-        await state.refreshScheduledMetadata(client);
-        await (state.selectedMailbox ? state.fetchEmails(client, state.selectedMailbox) : state.fetchEmails(client));
-      }
+      await refreshMailView(client);
     } finally {
       setIsManualRefreshing(false);
     }
