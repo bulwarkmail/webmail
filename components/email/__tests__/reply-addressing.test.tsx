@@ -320,6 +320,37 @@ describe('composer reply addressing', () => {
     expect(identitySelect().value).toBe('id-me');
   });
 
+  // #1711: with the setting on, a new message from the account's own folders
+  // started as the login address. The callers pass the login when the folder
+  // is the account's own, and the primary identity is an alias here.
+  describe('new message with the setting on', () => {
+    const accountStore = useAccountStore as unknown as { setState: (p: Record<string, unknown>) => void };
+    const authStore = useAuthStore as unknown as { setState: (p: Record<string, unknown>) => void };
+
+    beforeEach(() => {
+      setAutoSelect(true);
+      authStore.setState({ activeAccountId: 'local-1' });
+      accountStore.setState({ accounts: [{ id: 'local-1', email: 'info@example.com', isConnected: true }] });
+    });
+
+    afterEach(() => {
+      setAutoSelect(false);
+      authStore.setState({ activeAccountId: null });
+      accountStore.setState({ accounts: [] });
+    });
+
+    it('keeps the primary identity when the folder is the account\'s own', () => {
+      render(<EmailComposer mode="compose" composeFromAccountEmail="INFO@example.com" />);
+      expect(identitySelect().value).toBe('id-me');
+    });
+
+    it('still starts from a shared mailbox\'s identity', () => {
+      accountStore.setState({ accounts: [{ id: 'local-1', email: 'login@example.com', isConnected: true }] });
+      render(<EmailComposer mode="compose" composeFromAccountEmail="info@example.com" />);
+      expect(identitySelect().value).toBe('id-info');
+    });
+  });
+
   // The catch-all From REWRITE is a different behaviour and stays opt-in: it
   // puts an address the user has NOT configured into From, and on a multi-user
   // domain that address can be a colleague's.

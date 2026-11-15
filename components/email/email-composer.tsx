@@ -544,10 +544,10 @@ interface EmailComposerProps {
    * Email of the mailbox/account the user is viewing when they start a new
    * message. When set, a fresh compose preselects the identity matching this
    * address instead of the primary identity, so "New message" from info@
-   * defaults its From to info@. It matches the user's OWN identities only and
-   * is therefore not gated on `autoSelectReplyIdentity`, which gates the
-   * catch-all From rewrite. Mirrors the reply-time identity match; ignored for
-   * reply/replyAll/forward (those resolve from the original recipients).
+   * defaults its From to info@. Used only while `autoSelectReplyIdentity` is
+   * on, and not when it is the composer account's own login address (the
+   * primary identity stands for that). Ignored for reply/replyAll/forward
+   * (those resolve from the original recipients).
    */
   composeFromAccountEmail?: string;
   replyTo?: {
@@ -1712,11 +1712,16 @@ export function EmailComposer({
     // viewing info@ sends as info@. Reply/forward fall through to the
     // recipient-based resolution below.
     if (mode === 'compose') {
-      // Still gated. `composeFromAccountEmail` falls back to `AccountEntry.email`,
-      // which is written once at first login, so resolving it unconditionally
-      // would override a user-chosen default sender identity (#507) on every
-      // new message.
       if (!autoSelectReplyIdentity) return;
+      // `composeFromAccountEmail` falls back to the composer account's login
+      // address (`AccountEntry.email`) when the open folder is the account's
+      // own. That folder's default is the primary identity, which the user may
+      // have set to an alias (#507, #1711), so only another mailbox's address
+      // (a shared folder's owner, another connected account) picks an identity.
+      const loginEmail = activeAccountId
+        ? useAccountStore.getState().getAccountById(activeAccountId)?.email?.trim().toLowerCase()
+        : undefined;
+      if (loginEmail && composeFromAccountEmail?.trim().toLowerCase() === loginEmail) return;
       const composeIdentityId = findComposeIdentityId(identities, composeFromAccountEmail);
       if (composeIdentityId) {
         setSelectedIdentityId(composeIdentityId);
