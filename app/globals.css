@@ -1303,16 +1303,19 @@ html[data-window-controls-left] [data-window-rail] {
   min-width: 1em;
 }
 
-/* The theme look for header cells. Deliberately NOT !important: a cell
-   background set from the table menu (or pasted from a spreadsheet) is an
-   inline style, and inline only beats a class rule without !important.
-   With !important here the edit looked like a no-op in the composer and
-   only showed up in the sent mail. */
+/* The theme look for header cells. !important because every th carries the
+   sent mail's light grey header look inline, which would glare in the dark
+   composer. A header cell with its own background (set from the table menu
+   or pasted from a spreadsheet) is marked data-cell-background in the
+   editor (table-paste.ts) and keeps its colours. */
 .tiptap table th {
-  background-color: var(--color-muted);
-  color: var(--color-foreground);
   font-weight: 600;
   text-align: left;
+}
+
+.tiptap table th:not([data-cell-background]) {
+  background-color: var(--color-muted) !important;
+  color: var(--color-foreground) !important;
 }
 
 .tiptap table p {

@@ -1,7 +1,9 @@
-import { Extension } from "@tiptap/core";
+import { Extension, mergeAttributes } from "@tiptap/core";
 import { Plugin, PluginKey, type EditorState, type Transaction } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import type { Node as PMNode } from "@tiptap/pm/model";
-import { Table } from "@tiptap/extension-table";
+import { Table, createColGroup } from "@tiptap/extension-table";
+import { decodeCssEscapes, styleHasExternalUrl } from "@/lib/email-sanitization";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
@@ -25,12 +27,66 @@ import {
 // pasted signatures (#198407ebf-style fix) - and TablePaste moves the
 // clipboard styles onto the elements' style attribute before the parse.
 
-const styleAttr = {
-  default: null as string | null,
-  parseHTML: (el: HTMLElement) => el.getAttribute("style"),
-  renderHTML: (attrs: Record<string, string | null>) =>
-    attrs.style ? { style: attrs.style } : {},
-};
+// Every style a table node takes in goes through sanitizeTableStyle, whether
+// it comes from a paste, a reopened draft or setContent: the attribute is
+// shown in the composer and sent as it is.
+//
+// `defaults` is a cell's configured HTMLAttributes style. renderHTML merges
+// it into every cell, so a saved draft carries it in each cell's style; on
+// the way back in, declarations equal to it are dropped again. Otherwise a
+// reopened header row keeps the grey header look as its own style, and
+// turning the header row off leaves grey cells that are sent.
+function styleAttr(defaults?: unknown) {
+  const own = typeof defaults === "string" ? defaults : null;
+  return {
+    default: null as string | null,
+    parseHTML: (el: HTMLElement) => withoutDefaults(sanitizeTableStyle(el.getAttribute("style")), own),
+    renderHTML: (attrs: Record<string, string | null>) =>
+      attrs.style ? { style: attrs.style } : {},
+  };
+}
+
+/** Whether a cell's own style sets a background (transparent doesn't count). */
+export function hasOwnBackground(style: string | null): boolean {
+  return !!style && /(^|;)\s*background(-color)?\s*:\s*(?!transparent\s*(;|$))/i.test(style);
+}
+
+/**
+ * Header cells whose own style sets a background, marked for the composer's
+ * theme rule for header cells (globals.css), which leaves them alone. A node
+ * decoration, so the marker exists in the editor only and never reaches the
+ * sent mail. Recomputed only when the document changes, and the walk skips
+ * the inside of paragraphs.
+ */
+function headerBackgroundDecorations(doc: PMNode): DecorationSet {
+  const decorations: Decoration[] = [];
+  doc.descendants((node, pos) => {
+    if (node.type.name === "tableHeader" && hasOwnBackground(node.attrs.style)) {
+      decorations.push(Decoration.node(pos, pos + node.nodeSize, { "data-cell-background": "" }));
+    }
+    return !node.isTextblock && !node.isAtom;
+  });
+  return DecorationSet.create(doc, decorations);
+}
+
+/** One declaration as the browser writes it back (colours as rgb(), etc.). */
+function normalizeDeclaration(declaration: string): string {
+  if (typeof document === "undefined") return declaration.replace(/\s+/g, " ").trim().toLowerCase();
+  const probe = document.createElement("div").style;
+  probe.cssText = declaration;
+  return probe.cssText.replace(/;\s*$/, "").trim().toLowerCase();
+}
+
+function withoutDefaults(style: string | null, defaults: string | null): string | null {
+  if (!style || !defaults) return style;
+  const known = new Set(splitDeclarations(defaults).map(normalizeDeclaration));
+  const kept = splitDeclarations(style).filter((d) => !known.has(normalizeDeclaration(d)));
+  return kept.length > 0 ? kept.join("; ") : null;
+}
+
+function splitDeclarations(style: string): string[] {
+  return style.split(";").map((d) => d.trim()).filter(Boolean);
+}
 
 /**
  * Table nodes that keep the inline style of pasted cells on edit and send.
@@ -44,7 +100,23 @@ const styleAttr = {
  */
 export const StyledTable = Table.extend({
   addAttributes() {
-    return { ...this.parent?.(), style: styleAttr };
+    return { ...this.parent?.(), style: styleAttr() };
+  },
+  /**
+   * The stock renderHTML gives a table with its own style that style
+   * instead of the summed column width. A pasted table always has a style
+   * (its fixed layout), so the sent mail got the composer's width:100% over
+   * the source's column widths, and the columns came out wider than in the
+   * composer. When every column has a width, the table gets their sum, as
+   * a stock table does.
+   */
+  renderHTML(props) {
+    const { tableWidth } = createColGroup(props.node, this.options.cellMinWidth);
+    const HTMLAttributes =
+      tableWidth && props.node.attrs.style
+        ? { ...props.HTMLAttributes, style: mergeAttributes({ style: props.HTMLAttributes.style }, { style: `width: ${tableWidth}` }).style }
+        : props.HTMLAttributes;
+    return this.parent!({ ...props, HTMLAttributes });
   },
   addCommands() {
     return {
@@ -134,17 +206,17 @@ export const StyledTable = Table.extend({
 });
 export const StyledTableRow = TableRow.extend({
   addAttributes() {
-    return { ...this.parent?.(), style: styleAttr };
+    return { ...this.parent?.(), style: styleAttr() };
   },
 });
 export const StyledTableHeader = TableHeader.extend({
   addAttributes() {
-    return { ...this.parent?.(), style: styleAttr };
+    return { ...this.parent?.(), style: styleAttr(this.options.HTMLAttributes?.style) };
   },
 });
 export const StyledTableCell = TableCell.extend({
   addAttributes() {
-    return { ...this.parent?.(), style: styleAttr };
+    return { ...this.parent?.(), style: styleAttr(this.options.HTMLAttributes?.style) };
   },
 });
 
@@ -153,14 +225,16 @@ const HAS_TABLE = /<table[\s>]/i;
 const HAS_STYLE_BLOCK = /<style[\s>]/i;
 const FIXED_LAYOUT = /table-layout\s*:\s*fixed/i;
 
-// Only presentation properties survive the inlining. A pasted <style> block
-// is attacker-controllable clipboard content, so anything that can move or
-// load content (position, url(), expression(), behavior) is dropped rather
-// than shipped inside the sent mail.
+// Only presentation properties survive, in a pasted <style> block and in a
+// style attribute alike. Both are attacker-controllable (clipboard content
+// from a web page, a draft written by another client), so anything that can
+// move or load content (position, url(), image-set(), expression(),
+// behavior) is dropped rather than shown in the composer and sent.
 const ALLOWED_PROPERTIES = new Set([
   "background-color", "background", "color",
   "font-weight", "font-style", "font-size", "font-family",
-  "text-align", "vertical-align",
+  "text-align", "vertical-align", "text-decoration", "white-space",
+  "table-layout", "min-width",
   "border", "border-collapse", "border-spacing",
   "border-style", "border-width", "border-color",
   "border-top", "border-right", "border-bottom", "border-left",
@@ -199,21 +273,95 @@ function parseStyleRules(css: string): StyleRule[] {
   return rules;
 }
 
-const DANGEROUS_VALUE = /(url\s*\(|expression\s*\(|behavior\s*:|@import|-moz-binding)/i;
+// A table node's style attribute also carries what the composer itself
+// writes there: the fixed layout of a pasted grid, a wrapping mode, and the
+// min-width the table extension renders.
+const ALLOWED_ATTRIBUTE_PROPERTIES = new Set([
+  ...ALLOWED_PROPERTIES,
+  "text-decoration", "white-space", "table-layout", "min-width",
+]);
+
+const DANGEROUS_VALUE = /(url\s*\(|image-set\s*\(|expression\s*\(|behavior\s*:|@import|-moz-binding|javascript:)/i;
+// Characters a decoded escape could smuggle in to end the declaration (or
+// the attribute) and start another one.
+// eslint-disable-next-line no-control-regex
+const BREAKS_OUT =/[;{}<>\\\u0000-\u001f\u007f]/;
+
+// The largest value each length property keeps, in px. A pasted grid can be
+// wide (the composer scrolls it), but not 99999px, and nothing may cover the
+// viewport.
+const LENGTH_LIMITS: Array<[RegExp, number]> = [
+  [/^(min-)?(width|height)$/, 4000],
+  [/^padding(-(top|right|bottom|left))?$/, 200],
+  [/^border(-(top|right|bottom|left))?(-width)?$/, 20],
+  [/^border-spacing$/, 50],
+  [/^font-size$/, 96],
+];
+const PX_PER_UNIT: Record<string, number> = {
+  "": 1, px: 1, pt: 4 / 3, pc: 16, in: 96, cm: 96 / 2.54, mm: 96 / 25.4, q: 96 / 101.6,
+  em: 16, rem: 16, ex: 8, ch: 8,
+};
+// A colour function (left as it is: its numbers aren't lengths), or a number
+// with an optional unit that isn't part of a word or a hex colour.
+const COLOUR_FUNCTION = /\b(?:rgba?|hsla?)\([^()]*\)/gi;
+const LENGTH_TOKEN = /(\b(?:rgba?|hsla?)\([^()]*\))|(?<![\w#.-])(-?(?:\d+\.?\d*|\.\d+))([a-z%]*)(?![\w.])/gi;
+
+/** The value with each length clamped to the property's limit; null drops it. */
+function clampLengths(property: string, value: string): string | null {
+  const limit = LENGTH_LIMITS.find(([pattern]) => pattern.test(property))?.[1];
+  if (limit === undefined) return value;
+  // calc(), var(), max() and the like could hide any length; Office never
+  // writes them on a table.
+  if (value.replace(COLOUR_FUNCTION, "").includes("(")) return null;
+  let dropped = false;
+  const clamped = value.replace(LENGTH_TOKEN, (token, colour: string | undefined, number: string, rawUnit: string) => {
+    if (colour) return token;
+    const unit = rawUnit.toLowerCase();
+    const amount = parseFloat(number);
+    if (amount < 0) dropped = true;
+    if (/^(vw|vh|vmin|vmax|vi|vb|svw|svh|lvw|lvh|dvw|dvh)$/.test(unit)) dropped = true;
+    if (unit === "%") return amount > 100 ? "100%" : token;
+    const perUnit = PX_PER_UNIT[unit];
+    if (perUnit === undefined) return token;
+    return amount * perUnit > limit ? `${limit}px` : token;
+  });
+  return dropped ? null : clamped;
+}
+
+/** One declaration if its property is allowed and its value is safe, else null. */
+function safeDeclaration(declaration: string, allowed: Set<string>): string | null {
+  const colon = declaration.indexOf(":");
+  if (colon <= 0) return null;
+  const property = decodeCssEscapes(declaration.slice(0, colon)).trim().toLowerCase();
+  const raw = declaration.slice(colon + 1).trim();
+  // Escapes are decoded before the checks (`\75rl(` is `url(`), and the
+  // decoded value is what is kept, so no escape survives to hide one.
+  const value = decodeCssEscapes(raw).replace(/\s*!important\s*$/i, "").trim();
+  if (!allowed.has(property)) return null;
+  if (!value || BREAKS_OUT.test(value) || DANGEROUS_VALUE.test(value)) return null;
+  if (styleHasExternalUrl(`${property}: ${value}`)) return null;
+  const clamped = clampLengths(property, value);
+  return clamped === null ? null : `${property}: ${clamped}`;
+}
 
 /** Only whitelisted properties with safe values, `;`-separated, order kept. */
-function filterDeclarations(declarations: string): string {
+function filterDeclarations(declarations: string, allowed: Set<string> = ALLOWED_PROPERTIES): string {
   const kept: string[] = [];
   for (const declaration of declarations.split(";")) {
-    const colon = declaration.indexOf(":");
-    if (colon <= 0) continue;
-    const property = declaration.slice(0, colon).trim().toLowerCase();
-    const value = declaration.slice(colon + 1).trim();
-    if (!ALLOWED_PROPERTIES.has(property)) continue;
-    if (!value || DANGEROUS_VALUE.test(value)) continue;
-    kept.push(`${property}: ${value}`);
+    const safe = safeDeclaration(declaration, allowed);
+    if (safe) kept.push(safe);
   }
   return kept.join("; ");
+}
+
+/**
+ * The style attribute of a table, row or cell as the editor keeps it: the
+ * same property allowlist as pasted class rules, no external or escaped
+ * url(), lengths clamped. null when nothing is left.
+ */
+export function sanitizeTableStyle(style: string | null): string | null {
+  if (!style) return null;
+  return filterDeclarations(style, ALLOWED_ATTRIBUTE_PROPERTIES) || null;
 }
 
 function appendStyle(el: Element, declarations: string) {
@@ -508,6 +656,39 @@ function carryFontStyles(doc: Document) {
   }
 }
 
+// The text colour a sheet gives every cell by default: Excel's WindowText,
+// WPS's #000000, "auto".
+const DEFAULT_TEXT_COLOUR = /^(black|windowtext|auto|#000(000)?|rgba?\(\s*0\s*,\s*0\s*,\s*0\s*(,\s*1(\.0*)?\s*)?\))$/i;
+
+/**
+ * Drops the black text colour from cells, runs and the table itself when
+ * nothing between them and the table sets a background. Excel and WPS give
+ * every cell black text through their sheet-wide rules; inlined, it made
+ * every pasted table unreadable in the dark composer. Without it, the text
+ * takes the composer's colour, and in the sent mail the reader's default,
+ * which is black on a white page. Black on a coloured cell stays.
+ */
+function dropDefaultTextColour(doc: Document) {
+  for (const table of Array.from(doc.querySelectorAll("table"))) {
+    for (const el of [table, ...Array.from(table.querySelectorAll("*"))]) {
+      const style = el.getAttribute("style");
+      if (!style || !/(^|;)\s*color\s*:/i.test(style)) continue;
+      // The last color declaration is the one that applies.
+      const declaration = splitDeclarations(style).filter((d) => /^color\s*:/i.test(d)).pop();
+      const value = declaration?.slice(declaration.indexOf(":") + 1).trim() ?? "";
+      if (!DEFAULT_TEXT_COLOUR.test(value)) continue;
+      let coloured = false;
+      for (let node: Element | null = el; node; node = node === table ? null : node.parentElement) {
+        if (hasOwnBackground(node.getAttribute("style")) || node.hasAttribute("bgcolor")) {
+          coloured = true;
+          break;
+        }
+      }
+      if (!coloured) stripStyleProperties(el, /^color$/i);
+    }
+  }
+}
+
 /**
  * Moves clipboard class rules onto the elements they style, maps legacy
  * bgcolor/width/height attributes, and returns HTML the table schema can
@@ -562,6 +743,8 @@ export function inlineClipboardStyles(html: string): string {
   expandColSpans(doc);
   applyContentLayout(doc);
   carryFontStyles(doc);
+  // Once the colours sit where they end up (a legacy bgcolor still counts).
+  dropDefaultTextColour(doc);
   for (const el of doc.querySelectorAll("table, tr, td, th")) {
     dropInvalidTextAlign(el);
     mapLegacyAttributes(el);
@@ -676,6 +859,18 @@ export const TablePaste = Extension.create({
         key: new PluginKey("tablePaste"),
         props: {
           transformPastedHTML: (html: string) => inlineClipboardStyles(html),
+        },
+      }),
+      new Plugin<DecorationSet>({
+        key: new PluginKey("tableHeaderBackground"),
+        state: {
+          init: (_config, state) => headerBackgroundDecorations(state.doc),
+          apply: (tr, old) => (tr.docChanged ? headerBackgroundDecorations(tr.doc) : old),
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state);
+          },
         },
       }),
     ];
