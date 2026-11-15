@@ -35,6 +35,12 @@ export interface AdminSessionPayload {
   sid: string;
   /** AdminStateData.sessionGeneration it was issued in. */
   gen: number;
+  /**
+   * Cookie slot of the Stalwart admin login that opened it without the admin
+   * password. Signing that login out of the webmail ends it. Absent for a
+   * session opened with the admin password.
+   */
+  slot?: number;
 }
 
 export interface SettingRestriction {

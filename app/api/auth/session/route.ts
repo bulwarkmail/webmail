@@ -32,6 +32,8 @@ import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/aut
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, SESSION_TOO_OLD } from '@/lib/auth/session-age';
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
+import { endAdminSessionOfSlots, getClientIP } from '@/lib/admin/session';
+import { auditLog } from '@/lib/admin/audit';
 
 /**
  * A remembered session keeps its cookie for 30 days. One signed in with
@@ -408,6 +410,21 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+/**
+ * End the admin dashboard session a Stalwart admin login in `slots` opened
+ * (#1718). The webmail sign-out goes ahead when the sign-out can't be stored:
+ * the cookie is gone from this browser either way.
+ */
+async function endAdminSessionOf(request: NextRequest, slots: number[]): Promise<void> {
+  try {
+    if (await endAdminSessionOfSlots(slots)) {
+      await auditLog('admin.logout', { reason: 'webmail_sign_out' }, getClientIP(request));
+    }
+  } catch (error) {
+    logger.warn('Could not sign the admin session out with the webmail sign-out', { error: loggableError(error) });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   // CSRF gate (GHSA-qvr9-m8cq-7wvg): cookies written here are SameSite=Lax,
   // so a cross-site top-level POST would otherwise reach this handler.
@@ -420,6 +437,7 @@ export async function DELETE(request: NextRequest) {
     // do those of the sign-ins it holds, wherever they were opened.
     const slots = all ? Array.from({ length: MAX_ACCOUNT_SLOTS }, (_, i) => i) : [getSlot(request)];
     await revokeWopiTokens(cookieStore, all ? 'all' : slots[0], await signInsIn(cookieStore, slots));
+    await endAdminSessionOf(request, slots);
 
     if (all) {
       // Delete all session cookies across every slot.

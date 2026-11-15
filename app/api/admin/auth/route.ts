@@ -319,7 +319,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Not a Stalwart admin' }, { status: 403 });
       }
 
-      await setAdminSessionCookie(request);
+      // Bound to the login that opened it: signing that login out of the
+      // webmail ends it (#1718).
+      await setAdminSessionCookie(request, { slot: creds.slot });
       await setAdminDeviceCookie(request);
       await auditLog('admin.login', via === 'account_list' ? { method: 'stalwart', via } : { method: 'stalwart' }, ip);
       return NextResponse.json({ ok: true });
