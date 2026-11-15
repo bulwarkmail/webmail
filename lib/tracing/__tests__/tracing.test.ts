@@ -1,14 +1,13 @@
 // @vitest-environment node
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { InMemorySpanExporter } from '@opentelemetry/sdk-trace-node';
-import { trace } from '@opentelemetry/api';
-import { W3CTraceContextPropagator } from '@opentelemetry/core';
+import { InMemorySpanExporter } from '@opentelemetry/sdk-trace';
+import { context, propagation, trace } from '@opentelemetry/api';
 
 vi.mock('@/lib/admin/config-manager', () => ({
   configManager: { ensureLoaded: async () => {}, get: (_key: string, fallback: unknown) => fallback },
 }));
 
-import { createProvider } from '../start';
+import { createProvider, registerProvider } from '../start';
 import { markTracingActive } from '../config';
 import { scrubAttributes, scrubSpanName } from '../scrub';
 import { observeUpstream } from '@/lib/metrics/upstream';
@@ -20,12 +19,14 @@ const provider = createProvider(exporter, false);
 const ADDRESS = 'ceo.private@acme-corp.example';
 
 beforeAll(() => {
-  provider.register({ propagator: new W3CTraceContextPropagator() });
+  registerProvider(provider);
   markTracingActive();
 });
 afterAll(async () => {
   await provider.shutdown();
   trace.disable();
+  context.disable();
+  propagation.disable();
 });
 beforeEach(() => exporter.reset());
 
