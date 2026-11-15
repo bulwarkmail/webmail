@@ -736,6 +736,32 @@ export interface IdentityView {
   textSignature: string;
 }
 
+/**
+ * Passed to onSelectReplyIdentity handlers when a reply, reply-all, forward
+ * or quick reply picks the identity it is sent from. A handler returns the id
+ * of one of `identities` to send from it, or nothing to keep Bulwark's pick.
+ * A From the user chose by hand always wins over the plugin's.
+ */
+export interface ReplyIdentityContext {
+  mode: 'reply' | 'reply-all' | 'forward' | 'quick-reply';
+  /** The message being answered or forwarded. */
+  email: {
+    id?: string;
+    from: { name: string; email: string }[];
+    to: { name: string; email: string }[];
+    cc: { name: string; email: string }[];
+    /** Only on messages the user sent. */
+    bcc: { name: string; email: string }[];
+    subject: string;
+    /** Addresses from Delivered-To, X-Original-To and similar headers. */
+    deliveredTo: string[];
+  };
+  /** The identities the reply can be sent from. */
+  identities: { id: string; name: string; email: string }[];
+  /** Bulwark's own pick, or a previous handler's; null when it would use the default identity. */
+  identityId: string | null;
+}
+
 export interface TaskView {
   id: string;
   uid: string;

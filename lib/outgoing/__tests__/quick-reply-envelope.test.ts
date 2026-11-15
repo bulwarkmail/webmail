@@ -33,6 +33,15 @@ describe('quick reply addressing', () => {
     } as unknown as Email;
     expect(quickReplyEnvelope(listMail, [me, team]).sendingIdentity?.id).toBe('id-team');
   });
+
+  // #1694: the identity a plugin picked wins over the delivery match.
+  it('sends from the identity a plugin picked', () => {
+    expect(quickReplyEnvelope(message, [me, team], 'id-me').sendingIdentity?.id).toBe('id-me');
+  });
+
+  it('ignores a plugin pick that is none of the identities', () => {
+    expect(quickReplyEnvelope(message, [me, team], 'id-gone').sendingIdentity?.id).toBe('id-team');
+  });
 });
 
 describe('saving a quick reply as a draft before an automatic sign-out', () => {
@@ -52,5 +61,13 @@ describe('saving a quick reply as a draft before an automatic sign-out', () => {
     expect(htmlBody).toBeUndefined();
     expect(inReplyTo).toEqual(['abc@example.org']);
     expect(references).toEqual(['root@example.org', 'abc@example.org']);
+  });
+
+  it('saves it from the identity a plugin picked', async () => {
+    const createDraft = vi.fn().mockResolvedValue('d1');
+    await saveQuickReplyDraft({ client: { createDraft } as never, email: message, identities: [me, team], body: 'On it.', replyPrefix: 'Re:', pluginIdentityId: 'id-me' });
+    const [, , , , , identityId, fromEmail] = createDraft.mock.calls[0];
+    expect(identityId).toBe('id-me');
+    expect(fromEmail).toBe('org-alice@example.org');
   });
 });

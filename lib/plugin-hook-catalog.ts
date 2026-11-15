@@ -249,6 +249,7 @@ export const HOOK_CATALOG = {
   onIdentityDelete: H('identities', 'observer', 'identity:read', '{ identityId }', 'after an identity was deleted'),
   onIdentitySelect: H('identities', 'observer', 'identity:read', 'IdentityView', 'when another From identity is chosen in the composer'),
   onSignatureRender: H('identities', 'transform', 'identity:read', '{ html, text }, { identityId }', 'when a signature is inserted into the composer'),
+  onSelectReplyIdentity: H('identities', 'transform', 'email:send', 'ReplyIdentityContext', 'when a reply, reply-all, forward or quick reply picks its From identity; return the id of one of the listed identities to send from it, or nothing to keep Bulwark\'s pick. A From the user picked by hand wins'),
 
   // ─── Filters ───────────────────────────────────────────────
   onFiltersLoaded: H('filters', 'observer', 'filters:read', 'FilterRuleView[]', 'after filter rules were loaded'),

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -201,6 +201,15 @@ vi.mock('@/components/email/quoted-html', () => ({
   serializeEditorContent: () => '',
 }));
 vi.mock('@/lib/template-utils', () => ({ substitutePlaceholders: (s: string) => s }));
+
+const replyIdentityPlugin = vi.hoisted(() => ({
+  listening: false,
+  ask: (async () => null) as (input: unknown) => Promise<string | null>,
+}));
+vi.mock('@/lib/plugin-reply-identity', () => ({
+  hasReplyIdentityPlugins: () => replyIdentityPlugin.listening,
+  askReplyIdentity: (input: unknown) => replyIdentityPlugin.ask(input),
+}));
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -661,5 +670,48 @@ describe('composer @-mention candidates', () => {
       />
     );
     expect(offered()).toEqual(['Max <max.mustermann@example.com>', 'Eva <eva.weber@example.com>']);
+  });
+});
+
+// #1694: a plugin picks the From of a reply after Bulwark made its own pick.
+describe('composer reply identity picked by a plugin', () => {
+  beforeEach(() => { setAutoSelect(false); replyIdentityPlugin.listening = true; });
+  afterEach(() => { replyIdentityPlugin.listening = false; replyIdentityPlugin.ask = async () => null; });
+
+  it("replies from the identity the plugin picked, told Bulwark's own pick", async () => {
+    const ask = vi.fn(async () => 'id-me');
+    replyIdentityPlugin.ask = ask;
+    render(<EmailComposer mode="reply" replyTo={{ ...RECEIVED_SHARED, deliveredTo: ['info@example.com'] }} />);
+    await waitFor(() => expect(identitySelect().value).toBe('id-me'));
+    expect(ask).toHaveBeenCalledTimes(1);
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'reply',
+      identityId: 'id-info',
+      source: expect.objectContaining({ deliveredTo: ['info@example.com'] }),
+    }));
+  });
+
+  it('keeps the From the user picked by hand while the plugin was answering', async () => {
+    let answer: (id: string) => void = () => {};
+    replyIdentityPlugin.ask = () => new Promise((resolve) => { answer = resolve; });
+    render(<EmailComposer mode="reply" replyTo={RECEIVED} />);
+    fireEvent.change(identitySelect(), { target: { value: 'id-info' } });
+    await act(async () => { answer('id-me'); });
+    expect(identitySelect().value).toBe('id-info');
+  });
+
+  it('drops the catch-all From rewrite for the identity the plugin picked', async () => {
+    setAutoSelect(true);
+    replyIdentityPlugin.ask = async () => 'id-info';
+    render(<EmailComposer mode="reply" replyTo={RECEIVED_CATCH_ALL} />);
+    await waitFor(() => expect(identitySelect().value).toBe('id-info'));
+    expect(screen.queryByDisplayValue('colleague@example.com')).toBeNull();
+  });
+
+  it('does not ask for a new message', () => {
+    const ask = vi.fn(async () => 'id-info');
+    replyIdentityPlugin.ask = ask;
+    render(<EmailComposer mode="compose" />);
+    expect(ask).not.toHaveBeenCalled();
   });
 });

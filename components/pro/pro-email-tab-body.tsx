@@ -718,9 +718,12 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   }, [handleReply]);
 
   // Before an automatic sign-out: the typed quick reply is kept as a draft.
-  const handleSaveQuickReplyDraft = useCallback(async (body: string) => {
+  const handleSaveQuickReplyDraft = useCallback(async (body: string, extra?: { identityId?: string }) => {
     if (!client || !email) return;
-    await saveQuickReplyDraft({ client, email, identities, body, replyPrefix: t('email_composer.prefix.reply') });
+    await saveQuickReplyDraft({
+      client, email, identities, body, replyPrefix: t('email_composer.prefix.reply'),
+      pluginIdentityId: extra?.identityId,
+    });
   }, [client, email, identities, t]);
 
   const handleEditDraft = useCallback(() => {

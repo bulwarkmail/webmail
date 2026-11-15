@@ -5209,14 +5209,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }, [previewAttachment]);
 
   // Before an automatic sign-out: the typed quick reply is kept as a draft.
-  const handleSaveQuickReplyDraft = async (body: string) => {
+  const handleSaveQuickReplyDraft = async (body: string, extra?: { identityId?: string }) => {
     if (!client || !selectedEmail) return;
-    await saveQuickReplyDraft({ client, email: selectedEmail, identities, body, replyPrefix: t('email_composer.prefix.reply') });
+    await saveQuickReplyDraft({
+      client, email: selectedEmail, identities, body, replyPrefix: t('email_composer.prefix.reply'),
+      pluginIdentityId: extra?.identityId,
+    });
   };
 
   // Resolves true once the reply went out (or was scheduled), false when it
   // stopped before sending, so the quick-reply box keeps the text.
-  const handleQuickReply = async (body: string, extra?: { composerId?: string }): Promise<boolean> => {
+  const handleQuickReply = async (body: string, extra?: { composerId?: string; identityId?: string }): Promise<boolean> => {
     if (!client || !selectedEmail) return false;
 
     // The quick reply sends through the active login, from its identities.
@@ -5235,8 +5238,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
 
     // Quick reply follows the composer's addressing rules and sends from the
-    // address the message was delivered to (lib/outgoing/quick-reply-envelope.ts).
-    const { recipients, sendingIdentity, primaryIdentity } = quickReplyEnvelope(selectedEmail, identities);
+    // address the message was delivered to (lib/outgoing/quick-reply-envelope.ts),
+    // or the one a plugin picked, which the box shows.
+    const { recipients, sendingIdentity, primaryIdentity } = quickReplyEnvelope(selectedEmail, identities, extra?.identityId);
     if (recipients.length === 0) {
       throw new Error("No sender email found");
     }

@@ -160,6 +160,7 @@ import { whenPolicySettled } from "@/stores/policy-store";
 import { ClassificationLabelPicker, type ClassificationPickerHandle } from "./classification-label-picker";
 import { useComposerClassification } from "./use-composer-classification";
 import { findComposeIdentityId, findDraftIdentityId, findReplyIdentityId, resolveReplyFrom } from "@/lib/reply-identity";
+import { askReplyIdentity, hasReplyIdentityPlugins } from "@/lib/plugin-reply-identity";
 import { buildReplyRecipients, isSelfSent, ownReplyAddresses } from "@/lib/reply-recipients";
 import { computeReplyThreadingHeaders, type ReplyThreadingHeaders } from "@/lib/email-threading";
 import { sendFailureMessage } from "@/lib/send-failure-message";
@@ -1309,6 +1310,16 @@ export function EmailComposer({
   const fromOverrideEnabled = customFromEnabled && fromOverrideChosen;
   const [fromOverrideEmail, setFromOverrideEmail] = useState<string>(initialData?.fromOverrideEmail ?? '');
   const [fromOverrideName, setFromOverrideName] = useState<string>(initialData?.fromOverrideName ?? '');
+  // For a plugin's From pick (onSelectReplyIdentity), which comes back after
+  // Bulwark settled on its own: it counts only while the From is still that
+  // one and the user hasn't picked or edited it by hand.
+  const replyIdentityAskedRef = useRef(false);
+  const autoFromOverrideRef = useRef(false);
+  const fromStateRef = useRef({ selectedIdentityId, identityPickedByUser, fromOverrideChosen });
+  fromStateRef.current = { selectedIdentityId, identityPickedByUser, fromOverrideChosen };
+  const replyToRef = useRef(replyTo);
+  replyToRef.current = replyTo;
+  const openedFromDraft = Boolean(initialData);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   // The Files account being browsed for attachments, fixed when the picker
   // opens so the picked blobs are tagged with the login that owns them.
@@ -1707,6 +1718,37 @@ export function EmailComposer({
   useEffect(() => {
     if (selectedIdentityId || initialData?.selectedIdentityId) return;
 
+    // Once Bulwark picked (`hostId`, null for the default identity), plugins
+    // may pick another, once per composer. Not for a draft, which keeps the
+    // From it was saved with.
+    const askPlugins = (hostId: string | null) => {
+      if (replyIdentityAskedRef.current || openedFromDraft || !hasReplyIdentityPlugins()) return;
+      if (mode !== 'reply' && mode !== 'replyAll' && mode !== 'forward') return;
+      if (sourceAccountIdentities.length === 0) return;
+      replyIdentityAskedRef.current = true;
+      void askReplyIdentity({
+        mode: mode === 'replyAll' ? 'reply-all' : mode,
+        source: replyToRef.current ?? {},
+        identities: sourceAccountIdentities,
+        identityId: hostId,
+      }).then((picked) => {
+        const now = fromStateRef.current;
+        if (!picked || now.identityPickedByUser || now.selectedIdentityId !== hostId) return;
+        if (now.fromOverrideChosen && !autoFromOverrideRef.current) return;
+        setSelectedIdentityId(picked);
+        if (autoFromOverrideRef.current) {
+          autoFromOverrideRef.current = false;
+          setFromOverrideEnabled(false);
+          setFromOverrideEmail('');
+          setFromOverrideName('');
+        }
+      }).catch(() => {});
+    };
+    const settle = (id: string) => {
+      setSelectedIdentityId(id);
+      askPlugins(id);
+    };
+
     // New message started from a specific mailbox/account: default the From to
     // that mailbox's identity instead of the primary one, so composing while
     // viewing info@ sends as info@. Reply/forward fall through to the
@@ -1749,7 +1791,7 @@ export function EmailComposer({
     if (isSelfSent({ from: replyTo?.from }, sourceAccountIdentities.map(i => i.email).filter(Boolean))) {
       const senderIdentityId = findDraftIdentityId(sourceAccountIdentities, replyTo?.from?.[0]);
       if (senderIdentityId) {
-        setSelectedIdentityId(senderIdentityId);
+        settle(senderIdentityId);
         return;
       }
     }
@@ -1768,7 +1810,7 @@ export function EmailComposer({
     // user's own configured addresses.
     const ownIdentityId = findReplyIdentityId(sourceAccountIdentities, recipients);
     if (ownIdentityId) {
-      setSelectedIdentityId(ownIdentityId);
+      settle(ownIdentityId);
       return;
     }
 
@@ -1783,12 +1825,13 @@ export function EmailComposer({
       const matchMode = customFromEnabled ? replyIdentityMatch : 'exact';
       const resolved = resolveReplyFrom(sourceAccountIdentities, { ...recipients, deliveredTo }, matchMode);
       if (resolved) {
-        setSelectedIdentityId(resolved.identityId);
         if (resolved.overrideEmail && !fromOverrideEnabled) {
+          autoFromOverrideRef.current = true;
           setFromOverrideEnabled(true);
           setFromOverrideEmail(resolved.overrideEmail);
           if (resolved.overrideName) setFromOverrideName(resolved.overrideName);
         }
+        settle(resolved.identityId);
         return;
       }
     }
@@ -1797,7 +1840,7 @@ export function EmailComposer({
     // like the own-identity match above.
     const deliveredIdentityId = findReplyIdentityId(sourceAccountIdentities, { deliveredTo });
     if (deliveredIdentityId) {
-      setSelectedIdentityId(deliveredIdentityId);
+      settle(deliveredIdentityId);
       return;
     }
 
@@ -1810,8 +1853,12 @@ export function EmailComposer({
       const accountIdentity = sourceAccountIdentities.find(
         (identity) => identity.email.trim().toLowerCase() === loginEmail
       ) ?? sourceAccountIdentities[0];
-      setSelectedIdentityId(accountIdentity.id);
+      settle(accountIdentity.id);
+      return;
     }
+
+    // The active account's default identity.
+    askPlugins(null);
   }, [
     autoSelectReplyIdentity,
     replyIdentityMatch,
@@ -1823,6 +1870,7 @@ export function EmailComposer({
     sourceAccountId,
     activeAccountId,
     initialData?.selectedIdentityId,
+    openedFromDraft,
     mode,
     replyTo?.bcc,
     replyTo?.cc,
