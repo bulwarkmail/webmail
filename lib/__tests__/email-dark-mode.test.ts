@@ -158,6 +158,36 @@ describe('applyEmailDarkMode', () => {
     expect(c(doc.defaultView!.getComputedStyle(doc.body).backgroundColor)).toEqual(c('rgb(20, 20, 20)'));
   });
 
+  // A sender's own dark block - an HTML signature card, a dark header - was
+  // lifted to grey to stand out from the darkened page, and its subtle frame
+  // and inner rules were mirrored to near white.
+  it('keeps a dark card that has its own border as sent', () => {
+    const doc = render(
+      '<table id="card" style="background:#0a0e16;border:1px solid #1d2430;border-left:3px solid #c6f24e">'
+      + '<tr><td><div id="rule" style="border-top:1px solid #1d2430">&nbsp;</div>'
+      + '<p id="name" style="color:#e7ecf3">Name</p></td></tr></table>',
+    );
+    const card = doc.getElementById('card')!;
+    expect(card.style.getPropertyPriority('background-color')).toBe('');
+    expect(c(doc.defaultView!.getComputedStyle(card).backgroundColor)).toEqual(c('rgb(10, 14, 22)'));
+    expect(doc.getElementById('rule')!.style.getPropertyPriority('border-top-color')).toBe('');
+    expect(doc.getElementById('name')!.style.getPropertyPriority('color')).toBe('');
+  });
+
+  it('lifts the frame of a dark card just enough to show on the dark page', () => {
+    const doc = render('<div id="card" style="background:#0a0e16;border:1px solid #1d2430">x</div>');
+    const frame = c(doc.getElementById('card')!.style.getPropertyValue('border-top-color'));
+    expect(contrastRatio(frame, c('rgb(20, 20, 20)'))).toBeGreaterThanOrEqual(1.6);
+    expect(lightness(frame)).toBeLessThan(110);
+    // Same hue: still bluer than it is red.
+    expect(frame.b).toBeGreaterThan(frame.r);
+  });
+
+  it('still lifts a borderless near-black button off the darkened page', () => {
+    const doc = render('<div style="background-color:#ffffff"><a id="btn" style="background-color:#111111;color:#ffffff">Go</a></div>');
+    expect(doc.getElementById('btn')!.style.getPropertyPriority('background-color')).toBe('important');
+  });
+
   it('un-hides the body', () => {
     const doc = render('<p>hi</p>');
     expect(doc.documentElement.classList.contains(DARK_PENDING_CLASS)).toBe(false);
