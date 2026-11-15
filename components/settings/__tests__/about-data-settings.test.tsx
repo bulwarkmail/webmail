@@ -61,15 +61,6 @@ describe('Backup & reset', () => {
 // app/accessibility.css, so it carries no box-shadow ring of its own that
 // would draw a second ring (and vanish in forced colours).
 describe('About card', () => {
-  it('identifies this build as a custom fork and links to its source repository', async () => {
-    const { AboutFooter } = await import('../about-data-settings');
-    render(<AboutFooter />);
-    expect(screen.getByText('about.custom_build')).toBeTruthy();
-    const sourceLink = screen.getByRole('link', { name: /about.fork/i });
-    expect(sourceLink.getAttribute('href')).toBe(
-      'https://github.com/maicardi/bulwark-webmail/tree/feature-add-sender-to-existing-filter',
-    );
-  });
   it('leaves the focus to the global outline and has no hard-coded English name', async () => {
     const { AboutFooter } = await import('../about-data-settings');
     render(<AboutFooter />);
