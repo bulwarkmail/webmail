@@ -1073,3 +1073,58 @@ describe('ThreadListItem for screen readers and keyboards (SR-01, MO-18)', () =>
     expect(screen.getByRole('button', { name: /expand_named/ })).toBeTruthy();
   });
 });
+
+// #1701: ticking a row is where Mountain View's j / k cursor goes next. The
+// row reports every tick made by hand; the app moves the cursor.
+describe('ThreadListItem reporting a tick', () => {
+  const conversation = () => [
+    makeEmail({ id: 'older', receivedAt: '2024-01-14T10:00:00Z' }),
+    makeEmail({ id: 'newer', receivedAt: '2024-01-15T10:00:00Z' }),
+  ];
+
+  function setup(emails: Email[], selected: string[] = []) {
+    useSettingsStore.setState({ interfaceLayout: 'mountain-view', mailLayout: 'split', density: 'regular' } as never);
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
+    useEmailStore.setState({ selectedEmailKeys: new Set(selected), selectedMailbox: 'inbox' });
+    const onTick = vi.fn();
+    const onEmailSelect = vi.fn();
+    const [thread] = groupEmailsByThread(emails);
+    render(
+      <ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={onEmailSelect} onTick={onTick} />,
+    );
+    return { onTick, onEmailSelect };
+  }
+
+  it('reports a message ticked from its checkbox', () => {
+    const { onTick, onEmailSelect } = setup([makeEmail()]);
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(onEmailSelect).not.toHaveBeenCalled();
+    expect(onTick).toHaveBeenCalledWith(expect.objectContaining({ id: 'email-1' }));
+  });
+
+  it('reports it unticked too', () => {
+    const { onTick } = setup([makeEmail()], ['email-1']);
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([]);
+    expect(onTick).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports a conversation ticked from its checkbox with its newest message', () => {
+    const { onTick } = setup(conversation());
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(onTick).toHaveBeenCalledWith(expect.objectContaining({ id: 'newer' }));
+  });
+
+  it('reports a Ctrl+click tick', () => {
+    const { onTick } = setup(conversation());
+    fireEvent.click(screen.getByText('Test Subject'), { ctrlKey: true });
+    expect(onTick).toHaveBeenCalledWith(expect.objectContaining({ id: 'newer' }));
+  });
+
+  it('reports nothing when the row is opened', () => {
+    const { onTick, onEmailSelect } = setup([makeEmail()]);
+    fireEvent.click(screen.getByText('Test Subject'));
+    expect(onEmailSelect).toHaveBeenCalledTimes(1);
+    expect(onTick).not.toHaveBeenCalled();
+  });
+});

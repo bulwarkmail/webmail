@@ -422,6 +422,8 @@ interface ThreadListItemProps {
   onToggleExpand: () => void;
   onCollapseAllThreads?: () => void;
   onEmailSelect: (email: Email) => void;
+  /** The row was ticked or unticked by hand: Mountain View's cursor moves there (#1701). */
+  onTick?: (email: Email) => void;
   onEmailDoubleClick?: (email: Email) => void;
   /** A mouse was pressed on the row: the click that follows will open it. */
   onPrefetch?: (email: Email) => void;
@@ -448,6 +450,7 @@ interface SingleEmailItemProps {
   email: Email;
   selected: boolean;
   onClick: () => void;
+  onTick?: () => void;
   onDoubleClick?: () => void;
   onPrefetch?: () => void;
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
@@ -477,7 +480,7 @@ const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: AppIcon; b
 };
 
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
-  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onPrefetch, onContextMenu, showPreview: showPreviewProp, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments, listFolder }, ref) {
+  function SingleEmailItem({ email, selected, onClick, onTick, onDoubleClick, onPrefetch, onContextMenu, showPreview: showPreviewProp, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments, listFolder }, ref) {
     const { viewer: t, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tUnknown = t('unknown_sender');
     const tNoSubject = t('no_subject');
@@ -650,6 +653,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       } else {
         toggleEmailSelection(email);
       }
+      onTick?.();
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
@@ -680,11 +684,14 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         toggleEmailSelection(email);
+        onTick?.();
       } else if (e.shiftKey) {
         e.preventDefault();
         selectRangeEmails(email);
+        onTick?.();
       } else if (togglesOnClick) {
         toggleEmailSelection(email);
+        onTick?.();
       } else {
         // Mountain View keeps the ticked rows while a message is read, as
         // Gmail does, so selecting can carry on afterwards. (#1231)
@@ -716,7 +723,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           selected,
           checked: isChecked,
           selectionMode: selecting,
-          onToggleCheck: () => toggleEmailSelection(email),
+          onToggleCheck: () => { toggleEmailSelection(email); onTick?.(); },
           onOpenMenu: onContextMenu ? handleContextMenu : undefined,
         })}
         className={cn(
@@ -1115,13 +1122,14 @@ const ThreadListItemRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     // afresh for another one (see useRowSlots).
     if (thread.emailCount !== 1) return <ConversationRow key={thread.threadKey} {...props} ref={ref} />;
     const { latestEmail } = thread;
-    const { onEmailSelect, onEmailDoubleClick, onPrefetch, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment } = props;
+    const { onEmailSelect, onTick, onEmailDoubleClick, onPrefetch, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment } = props;
     return (
       <SingleEmailItem
         ref={ref}
         email={latestEmail}
         selected={props.selectedEmailKey === emailKeyFor(latestEmail)}
         onClick={() => onEmailSelect(latestEmail)}
+        onTick={onTick ? () => onTick(latestEmail) : undefined}
         onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(latestEmail) : undefined}
         onPrefetch={onPrefetch ? () => onPrefetch(latestEmail) : undefined}
         onContextMenu={props.onContextMenu}
@@ -1154,6 +1162,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     onToggleExpand,
     onCollapseAllThreads,
     onEmailSelect,
+    onTick,
     onEmailDoubleClick,
     onPrefetch,
     onContextMenu,
@@ -1341,12 +1350,14 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
         }
       });
       useEmailStore.setState({ selectedEmailKeys: newSelection, lastSelectedEmailKey: emailKeyFor(latestEmail) });
+      onTick?.(latestEmail);
     };
 
     const handleThreadCheckboxClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (e.shiftKey) {
         selectRangeEmails(latestEmail);
+        onTick?.(latestEmail);
         return;
       }
       toggleThreadSelection();
@@ -1361,11 +1372,13 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
         e.preventDefault();
         // Ctrl+Click: toggle selection for all thread emails
         thread.emails.forEach(em => toggleEmailSelection(em));
+        onTick?.(latestEmail);
         return;
       }
       if (e.shiftKey) {
         e.preventDefault();
         selectRangeEmails(latestEmail);
+        onTick?.(latestEmail);
         return;
       }
 

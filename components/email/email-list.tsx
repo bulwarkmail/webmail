@@ -120,6 +120,8 @@ interface EmailListProps {
   onClearSearch?: () => void;
   /** The empty Drafts folder's "Compose". */
   onCompose?: () => void;
+  /** A row was ticked or unticked by hand (checkbox, Ctrl/Shift+click, a click in selection mode). */
+  onRowTick?: (email: Email) => void;
   /** `conversation`: every message of a conversation row, which the change covers. */
   onMarkAsRead?: (email: Email, read: boolean, conversation?: Email[]) => void;
   onToggleStar?: (email: Email) => void;
@@ -211,6 +213,7 @@ export function EmailList({
   onBatchForwardAsAttachment,
   onClearSearch,
   onCompose,
+  onRowTick,
   onMarkAsRead,
   onToggleStar,
   onTogglePinned,
@@ -1183,6 +1186,7 @@ export function EmailList({
       }
       onEmailSelect?.(email);
     },
+    onTick: onRowTick,
     onEmailDoubleClick,
     onPrefetch: onEmailPrefetch,
     onContextMenu: openRowContextMenu,
@@ -1346,6 +1350,7 @@ export function EmailList({
           onToggleExpand={toggleExpandFor(thread.threadKey)}
           onCollapseAllThreads={rowHandlers.onCollapseAllThreads}
           onEmailSelect={rowHandlers.onEmailSelect}
+          onTick={rowHandlers.onTick}
           onEmailDoubleClick={rowHandlers.onEmailDoubleClick}
           onPrefetch={rowHandlers.onPrefetch}
           onContextMenu={rowHandlers.onContextMenu}

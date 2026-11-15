@@ -6770,6 +6770,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 hideBatchToolbar={mvShell}
                 selectionPaneHost={emptyPaneBesideList ? selectionPaneHost : null}
                 emails={activeEmails}
+                // Mountain View's cursor goes to the row ticked last, as Gmail's
+                // does, so j / k go on from there (#1701). Not while a message
+                // is open: ticking a row beside it doesn't close it.
+                onRowTick={mvShell ? (email) => {
+                  const open = useEmailStore.getState().selectedEmail;
+                  if (open && (!cursorOnly || emailKeyFor(open) === emailKeyFor(email))) return;
+                  void handleEmailSelect(email);
+                  setCursorOnly(true);
+                } : undefined}
                 selectedEmailKey={selectedEmail ? emailKeyFor(selectedEmail) : undefined}
                 // Until the first page of the folder has arrived an empty list
                 // is not an empty folder: it draws its skeleton rows, not "no
