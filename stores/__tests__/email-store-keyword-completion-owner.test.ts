@@ -70,16 +70,7 @@ it.each([false, true])('keeps B unchanged after A keyword Undo confirms (restore
   expect(serverA.keywords.$seen).toBe(restoredRead);
   expect(cb.batchUpdateKeywords).not.toHaveBeenCalled();
   const after = snapshot();
-  if (process.env.KEYWORD_OWNERSHIP_OBSERVATIONS === '1') console.info('OWNERSHIP_OBSERVATION', JSON.stringify({
-    restoredRead, before, after, serverASeen: serverA.keywords.$seen, serverBSeen: serverB.keywords.$seen,
-    changed: Object.fromEntries(['folders', 'keywords', 'reader', 'tags'].map(k => [k, JSON.stringify(before[k]) !== JSON.stringify(after[k])])),
-  }));
-  // Separate assertions identify the introduced counter effect independently
-  // of the keyword/tag/reader corruption already present on audited production.
-  expect.soft(after.folders, 'folder counter completion ownership').toEqual(before.folders);
-  expect.soft(after.keywords, 'message keyword completion ownership').toEqual(before.keywords);
-  expect.soft(after.reader, 'reader completion ownership').toEqual(before.reader);
-  expect.soft(after.tags, 'tag completion ownership').toEqual(before.tags);
+  expect(after).toEqual(before);
 });
 
 it('keeps confirmed same-account restoration after folder navigation and matches a reader outside the list', async () => {

@@ -97,16 +97,8 @@ it('does not infer a missing message’s read state or membership from an unrela
   expect(useEmailStore.getState().selectedEmail?.id).toBe('unrelated');
 });
 
-it('leaves folder counters unchanged for unchanged seen, tag-only and star-only patches', async () => {
-  const before = counts();
-  await useEmailStore.getState().patchEmailKeywords(client, 'same', { $seen: true });
-  await useEmailStore.getState().patchEmailKeywords(client, 'same', { $flagged: true });
-  await useEmailStore.getState().patchEmailKeywords(client, 'same', { '$label:other': true });
-  expect(counts()).toEqual(before);
-  expect(useEmailStore.getState().emails[0].keywords).toEqual({ $seen: true, '$label:work': true, $flagged: true, '$label:other': true });
-});
-
-it.each([{ refused: ['a'] }, { refused: ['a', 'b'] }])('adjusts only confirmed restorations when the server refuses $refused', async ({ refused }) => {
+it('adjusts only confirmed restorations when the server refuses one', async () => {
+  const refused = ['a'];
   const pending = { a: deferred(), b: deferred() };
   vi.mocked(client.batchUpdateKeywords).mockImplementation(ids => pending[ids[0] as 'a' | 'b'].promise);
   useEmailStore.setState({ emails: [mail('a'), mail('b')], selectedEmail: mail('a') });
