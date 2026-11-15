@@ -21,6 +21,21 @@ import { gridReplyState } from "@/lib/calendar-reply-state";
 import { readableTextOn } from "@/lib/color-transform";
 import { useCollectionNames } from "@/hooks/use-collection-names";
 
+/**
+ * Where an agenda row's card opens. The row spans the whole list, so beside
+ * it the card found no room on the right and opened over the date column on
+ * the left, far from the event (#1715). A pointer opens it where it is, as
+ * the other views open it beside the event clicked; a key press just below
+ * the row's start.
+ */
+function agendaAnchor(e: React.MouseEvent<HTMLElement>, fromKeyboard = false): DOMRect {
+  const row = e.currentTarget.getBoundingClientRect();
+  const rtl = fromKeyboard && getComputedStyle(e.currentTarget).direction === "rtl";
+  const x = fromKeyboard ? (rtl ? row.right : row.left) : e.clientX;
+  const y = fromKeyboard ? row.bottom : e.clientY;
+  return { x, y, left: x, top: y, right: x, bottom: y, width: 0, height: 0, toJSON: () => ({}) } as DOMRect;
+}
+
 interface CalendarAgendaViewProps extends ScrollWindowViewProps {
   events: CalendarEvent[];
   calendars: Calendar[];
@@ -295,8 +310,8 @@ export function CalendarAgendaView({
                 <button
                   key={ev.id}
                   data-reply-state={replyState ?? undefined}
-                  onClick={(e) => onSelectEvent(ev, e.currentTarget.getBoundingClientRect())}
-                  onMouseEnter={(e) => onHoverEvent?.(ev, e.currentTarget.getBoundingClientRect())}
+                  onClick={(e) => onSelectEvent(ev, agendaAnchor(e, e.detail === 0))}
+                  onMouseEnter={(e) => onHoverEvent?.(ev, agendaAnchor(e))}
                   onMouseLeave={() => onHoverLeave?.()}
                   onContextMenu={onContextMenuEvent ? (e) => onContextMenuEvent(e, ev) : undefined}
                   className={cn(
