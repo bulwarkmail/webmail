@@ -693,6 +693,48 @@ describe('applyEmailDarkMode', () => {
     applyEmailDarkMode(doc, { canvas: surface });
     expect([bgOf(doc.getElementById('a')!), colorOf(doc.getElementById('t')!)]).toEqual(once);
   });
+
+  const onCanvas = (canvas: Rgba, body: string) => {
+    const doc = frameDoc();
+    doc.body.innerHTML = body;
+    applyEmailDarkMode(doc, { canvas });
+    return doc;
+  };
+  const side = (el: Element, which: string) => c(el.ownerDocument.defaultView!.getComputedStyle(el).getPropertyValue(`border-${which}-color`));
+  const SIGNATURE = '<table id="card" cellpadding="0" cellspacing="0" style="background-color:#0a0e16;border-top:1px solid #1d2430;border-right:1px solid #1d2430;border-bottom:1px solid #1d2430;border-left:3px solid #c6f24e"><tbody><tr><td style="padding:16px 20px">'
+    + '<div id="name" style="color:#e7ecf3">Jane Doe</div><div id="role" style="color:#c6f24e">Engineer</div>'
+    + '<div id="rule" style="border-top:1px solid #1d2430;margin:11px 0">&nbsp;</div></td></tr></tbody></table>';
+
+  it.each(CANVASES.slice(0, 2))('keeps a framed dark card and what the sender drew inside it on %s', (canvasCss) => {
+    const canvas = c(canvasCss);
+    const doc = onCanvas(canvas, SIGNATURE);
+    const card = doc.getElementById('card')!;
+    const fill = bgOf(card);
+    expect(lightness(fill)).toBeLessThan(lightness(c('rgb(10, 14, 22)')) + 6);
+    expect(side(doc.getElementById('rule')!, 'top')).toEqual(c('rgb(29, 36, 48)'));
+    expect(side(card, 'left')).toEqual(c('rgb(198, 242, 78)'));
+    expect(contrastRatio(colorOf(doc.getElementById('name')!), fill)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(colorOf(doc.getElementById('role')!), fill)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(CANVASES.slice(0, 2))('lifts the thin frame of a dark card in its own hue until it shows on %s', (canvasCss) => {
+    const canvas = c(canvasCss);
+    const doc = onCanvas(canvas, SIGNATURE);
+    const frame = side(doc.getElementById('card')!, 'top');
+    expect(contrastRatio(frame, canvas)).toBeGreaterThanOrEqual(1.6);
+    expect(lightness(frame)).toBeLessThan(110);
+    expect(frame.b).toBeGreaterThan(frame.r);
+  });
+
+  it.each(CANVASES.slice(0, 2))('keeps a borderless near-black button on a white card apart from the page on %s', (canvasCss) => {
+    const canvas = c(canvasCss);
+    const doc = onCanvas(canvas, '<div id="card" style="background-color:#fff;padding:20px"><a id="btn" href="#" style="display:inline-block;background-color:#111111;color:#fff;padding:10px 16px">Get started</a></div>');
+    const btn = doc.getElementById('btn')!;
+    const around = readSurfaceColor(doc.getElementById('card')!, canvas);
+    const fill = readSurfaceColor(btn, canvas);
+    expect(contrastRatio(fill, around)).toBeGreaterThanOrEqual(1.8);
+    expect(contrastRatio(colorOf(btn), fill)).toBeGreaterThanOrEqual(4.5);
+  });
 });
 
 // #693: cells coloured through the legacy bgcolor attribute stayed white in
