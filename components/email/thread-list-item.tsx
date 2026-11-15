@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { ListAttachmentChips, useListHasAttachment } from "./attachment-chips";
 import { VerificationCodeChip, useListVerificationCode } from "./verification-code-chip";
 import type { Attachment } from "@/lib/jmap/types";
+import { densityShowsAttachmentChips } from "@/lib/density";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
 import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert, MoreHorizontal } from "@/components/icons";
@@ -173,14 +174,15 @@ function RowChips({ email, loadAttachments, onOpenAttachment, mountainView, mvRo
   /** A one-line Mountain View row: the chips start under the subject, as in Gmail. */
   mvRow?: boolean;
 }) {
-  const showAttachmentChips = useSettingsStore((state) => state.showAttachmentChips);
+  const showAttachmentChips = useSettingsStore((state) => state.showAttachmentChips && densityShowsAttachmentChips(state.density));
   const variant = mountainView || mvRow ? "mountain-view" : "default";
   const code = useListVerificationCode(email);
   const leading = code ? <VerificationCodeChip code={code} variant={variant} /> : undefined;
   // The sender column is w-32 (lg:w-40) and the row line has gap-3 after it.
   const className = cn(variant === "mountain-view" ? "mt-2" : "mt-1.5", mvRow && "-mt-0.5 pb-2.5 ps-[8.75rem] lg:ps-[10.75rem]");
   // Most rows have no attachment: no loader for them, nor an empty chip row.
-  // With the chips turned off only the code is left (the paperclip stays).
+  // With the chips turned off, or in a compact density, only the code is left
+  // (the paperclip stays).
   const mayHaveAttachments = email.hasAttachment || (email.attachments?.length ?? 0) > 0;
   if (showAttachmentChips && onOpenAttachment && mayHaveAttachments) {
     return <ListAttachmentChips email={email} load={loadAttachments} onOpen={onOpenAttachment} leading={leading} variant={variant} max={variant === "mountain-view" ? 3 : 2} className={className} />;

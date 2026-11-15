@@ -49,7 +49,7 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useListRowShape } from "@/hooks/use-list-row-shape";
 import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
-import type { Density } from "@/lib/density";
+import { densityShowsAttachmentChips, type Density } from "@/lib/density";
 import { useUIStore } from "@/stores/ui-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
 import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
@@ -652,7 +652,7 @@ export function EmailList({
     const latest = item.thread.latestEmail;
     const emptyPreview = !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
     const hasCode = showVerificationCodes && !!listVerificationCode(latest);
-    const chips = hasCode || (showAttachmentChips && !!onOpenAttachment && listRowShowsChips(latest, loadAttachments));
+    const chips = hasCode || (showAttachmentChips && densityShowsAttachmentChips(density) && !!onOpenAttachment && listRowShowsChips(latest, loadAttachments));
     return { key: `${isFocusedMailLayout}|${density}|${fontSize}|${showPreview}|${emptyPreview}|${chips}`, emptyPreview, chips };
   }, [density, fontSize, isFocusedMailLayout, showPreview, showVerificationCodes, showAttachmentChips, items, onOpenAttachment, loadAttachments]);
   // The height rows of each kind measured at last. A new list (another

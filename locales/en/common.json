@@ -2108,7 +2108,7 @@
       },
       "show_attachment_chips": {
         "label": "Show attachments in the list",
-        "description": "Show attached files under each message, to open them from the list. The paperclip shows either way."
+        "description": "Show attached files under each message, to open them from the list. Compact and extra compact rows show only the paperclip."
       },
       "show_tag_chips": {
         "label": "Show tags in the list",

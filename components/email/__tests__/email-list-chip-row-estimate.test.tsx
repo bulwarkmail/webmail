@@ -81,8 +81,8 @@ afterEach(() => {
   useSettingsStore.setState(initialSettings, true);
 });
 
-function estimateFirstRow(showAttachmentChips: boolean): number {
-  useSettingsStore.setState({ showAttachmentChips });
+function estimateFirstRow(showAttachmentChips: boolean, density: 'regular' | 'compact' | 'extra-compact' = 'regular'): number {
+  useSettingsStore.setState({ showAttachmentChips, density });
   const { unmount } = render(<EmailList emails={[MAIL]} onOpenAttachment={() => {}} />);
   const estimate = virtualizerOptions.current!.estimateSize(0);
   unmount();
@@ -94,5 +94,12 @@ describe('row height guess with attachment chips turned off', () => {
     const withChips = estimateFirstRow(true);
     const withoutChips = estimateFirstRow(false);
     expect(withChips - withoutChips).toBe(24);
+  });
+});
+
+describe('row height guess in compact densities', () => {
+  // Compact rows draw no attachment chips (#1706), so the guess counts none.
+  it.each(['compact', 'extra-compact'] as const)('leaves out the chip row in %s rows', (density) => {
+    expect(estimateFirstRow(true, density)).toBe(estimateFirstRow(false, density));
   });
 });

@@ -58,4 +58,22 @@ describe('attachment chips in message rows', () => {
       act(() => { useSettingsStore.setState({ showAttachmentChips: true }); });
     }
   });
+
+  // Compact rows stay one line (#1706): no chips, the paperclip marks the attachment.
+  it.each(['compact', 'extra-compact'] as const)('draws no chips in %s rows', async (density) => {
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    act(() => { useSettingsStore.setState({ density }); });
+    try {
+      ListAttachmentChips.mockClear();
+      const [thread] = groupEmailsByThread([row('with', true)]);
+      const { unmount } = render(
+        <ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={() => {}} onOpenAttachment={() => {}} />,
+      );
+      expect(ListAttachmentChips).not.toHaveBeenCalled();
+      expect(screen.getAllByText('has_attachment').length).toBeGreaterThan(0);
+      unmount();
+    } finally {
+      act(() => { useSettingsStore.setState({ density: 'regular' }); });
+    }
+  });
 });
