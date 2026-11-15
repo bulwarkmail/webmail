@@ -2848,7 +2848,9 @@
       },
       "about": {
         "title": "Bulwark Webmail",
-        "source_code": "Source code"
+        "source_code": "Source code",
+        "custom_build": "Custom build",
+        "fork": "Personal fork"
       },
       "spam_siege": {
         "title": "Spam Siege",
