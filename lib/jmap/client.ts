@@ -1638,6 +1638,8 @@ export class JMAPClient implements IJMAPClient {
    * and the refresh timer renews it a minute before it expires.
    */
   private static readonly AUTH_ACCEPTED_FRESH_MS = 30_000;
+  /** Renew this long before the token's stated expiry: clocks differ, and requests take time. */
+  private static readonly TOKEN_EXPIRY_MARGIN_MS = 10_000;
 
   private serverUrl: string;
   private username: string;
@@ -1646,6 +1648,12 @@ export class JMAPClient implements IJMAPClient {
   private authHeader: string;
   private authMode: 'basic' | 'bearer' = 'basic';
   private onTokenRefresh?: () => Promise<string | null>;
+  /**
+   * When the access token runs out (epoch ms), 0 when not known. The refresh
+   * timer can't be relied on for this: a backgrounded iOS PWA or a sleeping
+   * machine freezes it, and the app wakes with a dead token.
+   */
+  private tokenExpiresAt = 0;
   /** When the server last answered a request without 401 (epoch ms). */
   private authAcceptedAt = 0;
   private onTotpRequired?: () => Promise<string | null>;
@@ -1754,11 +1762,12 @@ export class JMAPClient implements IJMAPClient {
     accessToken: string,
     username: string,
     onTokenRefresh?: () => Promise<string | null>,
+    expiresIn?: number,
   ): JMAPClient {
     const client = new JMAPClient(serverUrl, username, '');
     client.authMode = 'bearer';
-    client.authHeader = `Bearer ${accessToken}`;
     client.onTokenRefresh = onTokenRefresh;
+    client.updateAccessToken(accessToken, expiresIn);
     return client;
   }
 
@@ -1781,8 +1790,33 @@ export class JMAPClient implements IJMAPClient {
     return client;
   }
 
-  updateAccessToken(token: string): void {
-    this.authHeader = `Bearer ${token}`;
+  /** `expiresIn` in seconds, as the token endpoint gives it. Without it, a new token's expiry is unknown. */
+  updateAccessToken(token: string, expiresIn?: number): void {
+    const header = `Bearer ${token}`;
+    if (expiresIn && expiresIn > 0) this.tokenExpiresAt = Date.now() + expiresIn * 1000;
+    else if (header !== this.authHeader) this.tokenExpiresAt = 0;
+    this.authHeader = header;
+  }
+
+  /** Whether the access token has run out, or is about to, and can be renewed. */
+  private tokenRunOut(): boolean {
+    return this.authMode === 'bearer' && !!this.onTokenRefresh && this.tokenExpiresAt > 0
+      && Date.now() >= this.tokenExpiresAt - JMAPClient.TOKEN_EXPIRY_MARGIN_MS;
+  }
+
+  /**
+   * Renews an access token that has run out before a request goes out with it.
+   * Waking up, the app sends a burst of requests at once (push catch-up, sync,
+   * avatars); each one refused is a 401 in the server's logs, and enough of
+   * them in a second gets the address banned by fail2ban or CrowdSec (#1720).
+   * Concurrent callers share the one renewal (refreshAccessToken).
+   */
+  private async renewExpiredToken(): Promise<void> {
+    const token = await this.onTokenRefresh?.();
+    if (token) this.updateAccessToken(token);
+    // No token (offline, a server error): the request goes out as before and a
+    // 401 renews it. Forget the expiry so each request doesn't ask again.
+    else this.tokenExpiresAt = 0;
   }
 
   // Throws when the server does not answer: an empty result would read as
@@ -1959,8 +1993,12 @@ export class JMAPClient implements IJMAPClient {
       throw new RateLimitError(remaining);
     }
 
+    // Only awaited when there is something to renew, so any other request
+    // still starts in the same tick, as callers expect.
+    if (this.tokenRunOut()) await this.renewExpiredToken();
     const timeoutMs = opts?.timeoutMs ?? JMAPClient.REQUEST_TIMEOUT_MS;
-    const headers = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
+    const sentAuthHeader = this.authHeader;
+    const headers = { ...init?.headers as Record<string, string>, 'Authorization': sentAuthHeader };
     let response: Response;
 
     try {
@@ -1997,7 +2035,13 @@ export class JMAPClient implements IJMAPClient {
 
     let reauthRefused = false;
     if (response.status === 401) {
-      if (this.authMode === 'bearer' && this.onTokenRefresh) {
+      if (this.authMode === 'bearer' && this.authHeader !== sentAuthHeader) {
+        // Renewed while this request was on its way: the refusal was for the
+        // old token. Asking again would only spend another refresh.
+        const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
+        response = await this.timedFetch(url, init, retryHeaders, timeoutMs);
+        reauthRefused = true;
+      } else if (this.authMode === 'bearer' && this.onTokenRefresh) {
         const newToken = await this.onTokenRefresh();
         if (newToken) {
           this.updateAccessToken(newToken);
