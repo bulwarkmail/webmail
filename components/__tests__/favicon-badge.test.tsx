@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { FaviconBadge } from '@/components/favicon-badge';
 import { useFaviconBadge } from '@/hooks/use-favicon-badge';
 import { useAppBadge } from '@/hooks/use-app-badge';
+import { useAppBadgeWorkerState } from '@/hooks/use-app-badge-worker';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAccountStore } from '@/stores/account-store';
@@ -15,9 +16,13 @@ vi.mock('@/hooks/use-favicon-badge', () => ({
 vi.mock('@/hooks/use-app-badge', () => ({
   useAppBadge: vi.fn(),
 }));
+vi.mock('@/hooks/use-app-badge-worker', () => ({
+  useAppBadgeWorkerState: vi.fn(),
+}));
 
 const useFaviconBadgeMock = vi.mocked(useFaviconBadge);
 const useAppBadgeMock = vi.mocked(useAppBadge);
+const useAppBadgeWorkerStateMock = vi.mocked(useAppBadgeWorkerState);
 
 function mailbox(patch: Partial<Mailbox> & { id: string }): Mailbox {
   return {
@@ -67,6 +72,19 @@ describe('FaviconBadge', () => {
     expect(useFaviconBadgeMock).toHaveBeenCalledWith(7, true);
     expect(useAppBadgeMock).toHaveBeenCalledWith(7, true);
     expect(container.firstChild).toBeNull(); // renders no markup
+  });
+
+  // #1516: the service worker keeps the icon right on push from this number.
+  it('leaves the same number and setting for the service worker', () => {
+    useEmailStore.setState({
+      mailboxes: [mailbox({ id: 'inbox', role: 'inbox', unreadEmails: 7 })],
+    });
+    render(<FaviconBadge />);
+    expect(useAppBadgeWorkerStateMock).toHaveBeenCalledWith(7, true);
+
+    useSettingsStore.setState({ faviconUnreadBadge: false });
+    render(<FaviconBadge />);
+    expect(useAppBadgeWorkerStateMock).toHaveBeenLastCalledWith(7, false);
   });
 
   it('disables the badge when the setting is off', () => {

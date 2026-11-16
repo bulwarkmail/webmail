@@ -376,11 +376,15 @@ export async function GET(request: NextRequest) {
     let email: EmailLite | null = null;
     let delivered: EmailLite | null = null;
     let unreadTotal = 0;
+    // The Inbox's unread count as the server gave it, for the app badge
+    // (public/sw.js). Only a real total: the ids list stops at the limit.
+    let inboxUnread: number | undefined;
     for (const [method, body, callId] of data.methodResponses) {
       if (method === 'Email/query') {
         // A server that leaves out the optional total still lists the ids.
         const query = body as { total?: number; ids?: unknown[] };
         unreadTotal = typeof query.total === 'number' ? query.total : (query.ids?.length ?? 0);
+        if (typeof query.total === 'number') inboxUnread = query.total;
       }
       if (method === 'Email/get') {
         const list = (body as { list?: EmailLite[] }).list ?? [];
@@ -415,6 +419,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       email,
       unreadTotal,
+      ...(inboxUnread !== undefined ? { inboxUnread } : {}),
       ...(redacted ? { redacted: true } : {}),
       ...(target.slot !== undefined ? { slot: target.slot } : {}),
       // For the notification's buttons, which must not land on whoever signs

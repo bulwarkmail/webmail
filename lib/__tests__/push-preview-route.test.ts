@@ -168,7 +168,7 @@ describe('push preview JMAP failures', () => {
         ['Email/query', { ids: [], total: 0 }, 'eq'],
         ['Email/get', { list: [] }, 'eg'],
       ] }));
-    expect(await callRoute('a')).toEqual({ status: 200, body: { email: null, unreadTotal: 0, slot: 0 } });
+    expect(await callRoute('a')).toEqual({ status: 200, body: { email: null, unreadTotal: 0, inboxUnread: 0, slot: 0 } });
   });
 
   // `total` is optional in a JMAP Email/query response.
@@ -180,6 +180,7 @@ describe('push preview JMAP failures', () => {
         ['Email/query', { ids: [] }, 'eq'],
         ['Email/get', { list: [] }, 'eg'],
       ] }));
+    // No Inbox count for the app badge: the ids stop at the query's limit.
     expect(await callRoute('a')).toEqual({ status: 200, body: { email: null, unreadTotal: 0, slot: 0 } });
   });
 
@@ -209,7 +210,8 @@ it('previews a delivered message outside an empty Inbox', async () => {
       ['Email/get', { list: [{ id: 'filed', threadId: 't2' }] }, 'delivered'],
     ] }));
   expect(await callRoute('a', 'filed')).toEqual({
-    status: 200, body: { email: { id: 'filed', threadId: 't2' }, unreadTotal: 1, slot: 0, login: expect.any(String) },
+    // The app badge gets the Inbox as it is; the message filed elsewhere isn't in it.
+    status: 200, body: { email: { id: 'filed', threadId: 't2' }, unreadTotal: 1, inboxUnread: 0, slot: 0, login: expect.any(String) },
   });
 });
 
@@ -226,7 +228,7 @@ it('names no message when the delivered one cannot be read, rather than another'
       ['Email/get', { list: [] }, 'delivered'],
     ] }));
   expect(await callRoute('a', 'gone')).toEqual({
-    status: 200, body: { email: null, unreadTotal: 3, slot: 0 },
+    status: 200, body: { email: null, unreadTotal: 3, inboxUnread: 3, slot: 0 },
   });
 });
 

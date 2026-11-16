@@ -761,6 +761,12 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // notification must not land on whoever signed into the slot since.
   const login = preview && typeof preview.login === "string" ? preview.login : undefined;
 
+  // The installed app's icon follows this account's Inbox while no window is
+  // open to do it (#1516).
+  if (previewOk && preview && typeof preview.inboxUnread === "number") {
+    await queueAppBadgeStep(() => appBadgeFromPush(accountId, accountLabel, preview.inboxUnread));
+  }
+
   // Push subscription is scoped to EmailDelivery, but stragglers from the
   // older broader-types subscription, marking-as-read races and verification
   // pings can still wake us with no actual unread mail. When the preview API
@@ -1071,6 +1077,50 @@ async function appLockHidesContent() {
     // Can't tell: a generic notification loses little.
     return true;
   }
+}
+
+// ---- App badge (#1516) ----
+//
+// The page badges the installed app's icon with the unread count of the
+// inboxes it counts (components/favicon-badge.tsx) and leaves that number
+// here, with each login's share in it and the badge setting
+// (lib/app-badge-worker.ts). With no window open, a push for one of those
+// logins' own account replaces that login's share with its Inbox's unread
+// count now. Anything the page didn't count (another login while "count every
+// account" is off, a shared account, two logins with one user name) leaves
+// the badge as it is.
+
+function appBadgeKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/app-badge`;
+}
+
+let appBadgeSteps = Promise.resolve();
+
+// One push can name several accounts; their updates must not overwrite each other.
+function queueAppBadgeStep(step) {
+  const run = appBadgeSteps.then(step);
+  appBadgeSteps = run.catch(() => {});
+  return run.catch(() => {});
+}
+
+async function appBadgeFromPush(accountId, accountLabel, inboxUnread) {
+  const nav = self.navigator;
+  if (!accountLabel || !nav || typeof nav.setAppBadge !== "function") return;
+  if (!Number.isInteger(inboxUnread) || inboxUnread < 0) return;
+  // An open window badges the icon itself, from counts it keeps live.
+  const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  if (open.length > 0) return;
+  const cache = await caches.open(PUSH_STATE_CACHE);
+  const res = await cache.match(appBadgeKey());
+  const state = res ? await res.json() : null;
+  if (!state || state.enabled !== true || !Number.isInteger(state.total)) return;
+  const entry = state.logins && state.logins[accountLabel];
+  if (!entry || entry.accountId !== accountId || !Number.isInteger(entry.unread)) return;
+  const total = Math.max(0, state.total - entry.unread + inboxUnread);
+  const next = { ...state, total, logins: { ...state.logins, [accountLabel]: { ...entry, unread: inboxUnread } } };
+  await cache.put(appBadgeKey(), new Response(JSON.stringify(next), { headers: { "Content-Type": "application/json" } }));
+  if (total > 0) await nav.setAppBadge(total);
+  else if (typeof nav.clearAppBadge === "function") await nav.clearAppBadge();
 }
 
 function lastAlertKey() {
