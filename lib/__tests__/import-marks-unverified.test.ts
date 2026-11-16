@@ -15,7 +15,7 @@ import type { IJMAPClient, UploadedEmailImport } from '@/lib/jmap/client-interfa
 import type { CalendarEvent, Email, Mailbox } from '@/lib/jmap/types';
 
 const HEAD = [
-  'Received: from mx.bigbank.example (mx.bigbank.example [203.0.113.7]) by mail.example.org with ESMTPS id abc; Mon, 2 Nov 2026 09:00:00 +0000',
+  'Received: from mx.bigbank.example (mx.bigbank.example [203.0.113.7]) by mail.example.org (Stalwart SMTP) with ESMTPS id abc; Mon, 2 Nov 2026 09:00:00 +0000',
   'Authentication-Results: mail.example.org; dkim=pass header.d=bigbank.example header.s=s1; spf=pass smtp.mailfrom=bigbank.example; dmarc=pass header.from=bigbank.example',
   'From: Big Bank <service@bigbank.example>',
   'To: reader@example.org',

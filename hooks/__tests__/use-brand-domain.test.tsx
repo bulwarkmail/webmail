@@ -56,6 +56,11 @@ describe('useBrandDomain', () => {
     expect(brandDomain(message('news@brand.org'))).toBeUndefined();
   });
 
+  it('does not take mail whose results another server wrote for a colleague\'s (#1740)', () => {
+    // The client leaves out results it can't show the receiving server wrote and marks the message.
+    expect(brandDomain({ ...message('bob@example.org'), authenticationResultsIgnored: true })).toBeUndefined();
+  });
+
   it('gives nothing without a message', () => {
     expect(brandDomain(undefined)).toBeUndefined();
     expect(brandDomain(null)).toBeUndefined();

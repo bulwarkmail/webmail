@@ -102,10 +102,12 @@ describe('a message of a conversation, as getThreadEmails returns it', () => {
   it('carries its headers in order and the parsed results (the shape the cases below build on)', async () => {
     const { lone, received } = byId(await client().getThreadEmails('t1'));
     expect(Array.isArray(lone.headers)).toBe(true);
-    expect(lone.authenticationResults).toMatchObject({ dmarc: { result: 'pass' } });
+    // The lone header is no server's verdict: it gives none, a pass no more than a fail (#1740).
+    expect(lone.authenticationResults).toBeUndefined();
+    expect(lone.authenticationResultsIgnored).toBe(true);
     expect(received.authenticationResults).toMatchObject({ dmarc: { result: 'pass' } });
-    // The booking cards already refuse the lone header from this shape, and take the one on receipt.
-    expect(getStructuredMailTrust(lone)).toEqual({ trusted: false, reason: 'not_written_on_receipt' });
+    expect(received.authenticationResultsIgnored).toBeUndefined();
+    expect(getStructuredMailTrust(lone)).toEqual({ trusted: false, reason: 'no_authentication_results' });
     expect(getStructuredMailTrust(received)).toEqual({ trusted: true });
   });
 
@@ -150,7 +152,9 @@ describe('a message loaded without anything that shows its results were written 
 
   it('earns nothing as a message file opened in a window (parseEmailBlob), whatever its own lines say', async () => {
     const opened = (await client().parseEmailBlob('blob-m2'))!;
-    expect(opened.authenticationResults).toMatchObject({ dmarc: { result: 'pass' } });
+    // Its lines are kept out of the verdict altogether, as an imported file's are.
+    expect(opened.authenticationResults).toBeUndefined();
+    expect(opened.authenticationResultsIgnored).toBe(true);
     expect(logo(opened)).toBeUndefined();
     expect(trusted(opened)).toBe(false);
     expect(getStructuredMailTrust(opened).trusted).toBe(false);

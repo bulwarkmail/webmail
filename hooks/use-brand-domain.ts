@@ -22,10 +22,11 @@ import { useEmailStore } from "@/stores/email-store";
  * the active one) when the hook first sees the message, with its own account.
  */
 export function useBrandDomain(
-  email: (Pick<Email, "from" | "authenticationResults" | "authenticationResultsOnReceipt" | "sourceClientAccountId"> & Partial<Pick<Email, "keywords" | "headers" | "blobId" | "size" | "sourceAccountId">>) | null | undefined,
+  email: (Pick<Email, "from" | "authenticationResults" | "authenticationResultsOnReceipt" | "sourceClientAccountId"> & Partial<Pick<Email, "keywords" | "headers" | "blobId" | "size" | "sourceAccountId" | "authenticationResultsIgnored">>) | null | undefined,
 ): string | undefined {
   const from = email?.from;
   const authenticationResults = email?.authenticationResults;
+  const authenticationResultsIgnored = email?.authenticationResultsIgnored === true;
   const imported = isImportedMessage(email ?? undefined);
   const flag = email?.authenticationResultsOnReceipt;
   const headers = email?.headers;
@@ -53,12 +54,15 @@ export function useBrandDomain(
   const authenticationResultsOnReceipt = evidence ?? remembered;
   // Only mail without the header goes by the organisation's domains; the rest
   // costs no lookup of another account's identities.
-  const internalDomains = useInternalMailDomains(email?.sourceClientAccountId, !!from?.[0]?.email && !authenticationResults);
+  const internalDomains = useInternalMailDomains(
+    email?.sourceClientAccountId,
+    !!from?.[0]?.email && !authenticationResults && !authenticationResultsIgnored,
+  );
   return useMemo(
     () => brandIndicatorDomain(
-      { from, authenticationResults, authenticationResultsOnReceipt, keywords: imported ? { [IMPORTED_KEYWORD]: true } : undefined },
+      { from, authenticationResults, authenticationResultsOnReceipt, authenticationResultsIgnored, keywords: imported ? { [IMPORTED_KEYWORD]: true } : undefined },
       internalDomains,
     ),
-    [from, authenticationResults, authenticationResultsOnReceipt, imported, internalDomains],
+    [from, authenticationResults, authenticationResultsOnReceipt, authenticationResultsIgnored, imported, internalDomains],
   );
 }

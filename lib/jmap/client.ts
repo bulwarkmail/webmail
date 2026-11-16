@@ -53,7 +53,7 @@ import { stalwartChangeId } from "./stalwart-state";
 import { downloadNameSegment } from "./download-name";
 import { getOfflineHooks, isNetworkFailure, OfflineUnavailableError, SendNotStartedError } from "./offline-hooks";
 import { toInertBlob } from "@/lib/file-preview";
-import { parseAuthenticationResults } from "@/lib/email-headers";
+import { authenticationResultsOnReceipt, isImportedMessage, parseAuthenticationResults, topAuthenticationResultsOnReceipt } from "@/lib/email-headers";
 import { IS_LITE_STALWART } from "@/lib/lite";
 import { toStorageQuota, type JMAPQuota, type StorageQuota } from "@/lib/quota";
 import { messagePriorityHeaders, type MessagePriority } from "@/lib/message-priority";
@@ -535,20 +535,40 @@ const EMAIL_LIST_PROPERTIES = [
   // (#1439). Stalwart answers header properties from the stored raw headers,
   // not the message blob.
   "header:Authentication-Results:all",
+  // Whose those results are: only the receiving server's count (#1740).
+  "header:Received:all",
 ] as const;
+
+function headerStrings(raw: unknown): string[] | undefined {
+  return Array.isArray(raw) ? raw.filter((value): value is string => typeof value === "string") : undefined;
+}
 
 /**
  * Parse the Authentication-Results headers a list fetch asked for, as the
- * full message fetch does from `headers`, and drop the raw property.
+ * full message fetch does from `headers`, and drop the raw properties. Only
+ * results the receiving server wrote are kept (authenticationResultsOnReceipt
+ * when the row has its headers in order, else
+ * topAuthenticationResultsOnReceipt); the rest, and all of a message from an
+ * imported file, are left out and marked authenticationResultsIgnored. A row
+ * without the Received lines (the offline store keeps only what it synced)
+ * is judged by its results alone, as before.
  */
 function applyListAuthenticationResults(emails: Email[]): Email[] {
   for (const email of emails) {
     const record = email as unknown as Record<string, unknown>;
-    const raw = record["header:Authentication-Results:all"];
+    const headers = headerStrings(record["header:Authentication-Results:all"]);
+    const received = headerStrings(record["header:Received:all"]);
     delete record["header:Authentication-Results:all"];
-    if (!Array.isArray(raw)) continue;
-    const headers = raw.filter((value): value is string => typeof value === "string");
-    if (headers.length > 0) email.authenticationResults = parseAuthenticationResults(headers);
+    delete record["header:Received:all"];
+    if (!headers || headers.length === 0) continue;
+    const ordered = Array.isArray(email.headers) ? email.headers as unknown as JMAPEmailHeader[] : undefined;
+    const fromReceivingServer = !isImportedMessage(email) && (
+      ordered ? authenticationResultsOnReceipt(ordered)
+        : received ? topAuthenticationResultsOnReceipt(received, headers)
+          : true
+    );
+    if (fromReceivingServer) email.authenticationResults = parseAuthenticationResults(headers);
+    else email.authenticationResultsIgnored = true;
   }
   return emails;
 }
@@ -3644,9 +3664,9 @@ export class JMAPClient implements IJMAPClient {
       size: parsed.size ?? 0,
     } as Email;
     addBodyMediaToAttachments(email);
-    if (email.headers) await this.parseEmailHeaders(email);
     // A message read from a file was never received by this server: whatever
     // its own Received and Authentication-Results lines say earns it nothing.
+    if (email.headers) await this.parseEmailHeaders(email, true);
     email.authenticationResultsOnReceipt = false;
     return email;
   }
@@ -3745,8 +3765,8 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
-  private async parseEmailHeaders(email: Email): Promise<void> {
-    const { authenticationResultsOnReceipt, parseAuthenticationResults, parseSpamScore, parseSpamLLM } = await import('@/lib/email-headers');
+  private async parseEmailHeaders(email: Email, fromFile = false): Promise<void> {
+    const { parseSpamScore, parseSpamLLM } = await import('@/lib/email-headers');
 
     let headersRecord: Record<string, string | string[]>;
     if (Array.isArray(email.headers)) {
@@ -3772,9 +3792,16 @@ export class JMAPClient implements IJMAPClient {
 
     const authResultsHeader = headersRecord['Authentication-Results'];
     if (authResultsHeader) {
-      // Keep the headers apart and in message order: the topmost one is the
-      // receiving server's own, the rest may be forged by the sender.
-      email.authenticationResults = parseAuthenticationResults(authResultsHeader);
+      // Only results the receiving server wrote give a verdict (#1740): any
+      // other server's, the sender's own or an imported file's give none.
+      if (email.authenticationResultsOnReceipt === true && !isImportedMessage(email) && !fromFile) {
+        // Keep the headers apart and in message order: the topmost one is the
+        // receiving server's own, the rest may be forged by the sender.
+        email.authenticationResults = parseAuthenticationResults(authResultsHeader);
+      } else {
+        delete email.authenticationResults;
+        email.authenticationResultsIgnored = true;
+      }
     }
 
     for (const headerName of ['X-Spam-Score', 'X-Spam-Status', 'X-Spam-Result', 'X-Rspamd-Score']) {

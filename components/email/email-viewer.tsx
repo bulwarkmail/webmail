@@ -72,7 +72,7 @@ import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useAccountTags, useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds, emailKeyFor } from "@/lib/thread-utils";
-import { getSecurityStatus, extractListHeaders, getSenderVerification } from "@/lib/email-headers";
+import { getSecurityStatus, extractListHeaders, getSenderVerification, isImportedMessage } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { askReplyIdentity, hasReplyIdentityPlugins } from "@/lib/plugin-reply-identity";
 import { deliveryAddresses } from "@/lib/reply-identity";
@@ -4619,7 +4619,8 @@ export function EmailViewer({
   }
 
   const sender = email.from?.[0];
-  const senderVerification = getSenderVerification(email.authenticationResults, sender?.email);
+  // A message from an imported file was never checked by the user's server (#1740).
+  const senderVerification = isImportedMessage(email) ? null : getSenderVerification(email.authenticationResults, sender?.email);
   const senderVerificationLabel = senderVerification?.status === 'failed'
     ? t('sender_check.failed_label')
     : t('sender_check.unverified_label');
@@ -5946,7 +5947,8 @@ export function EmailViewer({
           const shownDate = (iso?: string) => iso
             ? <time dateTime={iso} title={fullDate(iso)}>{formatDateTime(iso, timeFormat, { year: 'numeric', month: 'short', day: 'numeric' })}</time>
             : '-';
-          const auth = email.authenticationResults;
+          // Only the receiving server's results, never an imported file's (#1740).
+          const auth = isImportedMessage(email) ? undefined : email.authenticationResults;
           const totalAttachmentSize = effectiveAttachments.reduce((s, a) => s + (a.size || 0), 0);
           const topMimeType = email.bodyStructure?.type;
           const SectionHeader = ({ children }: { children: React.ReactNode }) => (

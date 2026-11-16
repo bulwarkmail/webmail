@@ -67,6 +67,13 @@ export interface Email {
   authenticationResults?: AuthenticationResults;
   /** See authenticationResultsOnReceipt (lib/email-headers.ts); set by the full message fetch. */
   authenticationResultsOnReceipt?: boolean;
+  /**
+   * The message carries Authentication-Results, but none this server can be
+   * shown to have written (authenticationResultsOnReceipt), or it came from
+   * an imported file: they were left out of authenticationResults, so they
+   * give no verdict either way.
+   */
+  authenticationResultsIgnored?: boolean;
   spamScore?: number;
   spamStatus?: string;
   spamLLM?: {

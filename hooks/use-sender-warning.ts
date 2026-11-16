@@ -2,18 +2,22 @@
 
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { getSenderVerification } from "@/lib/email-headers";
+import { getSenderVerification, isImportedMessage } from "@/lib/email-headers";
 import type { Email } from "@/lib/jmap/types";
 
 /**
  * The sender-check label for a message whose From the receiving server's
  * checks don't back, the same verdict as the notice in the message view.
  * Avatars show it instead of the claimed sender's favicon or photo (#1439).
- * Undefined when the check passed or there are no results to judge by.
+ * Undefined when the check passed or there are no results to judge by,
+ * which a message from an imported file never has: no server of the user's
+ * checked it.
  */
-export function useSenderWarning(email: Pick<Email, "from" | "authenticationResults"> | undefined): string | undefined {
+export function useSenderWarning(
+  email: (Pick<Email, "from" | "authenticationResults"> & Partial<Pick<Email, "keywords">>) | undefined,
+): string | undefined {
   const t = useTranslations("email_viewer.sender_check");
-  const results = email?.authenticationResults;
+  const results = isImportedMessage(email) ? undefined : email?.authenticationResults;
   const sender = email?.from?.[0]?.email;
   // Every message row asks on every render; the headers only change with the message.
   const hasEmail = !!email;

@@ -167,13 +167,60 @@ export function getSenderVerification(
 const SUBMISSION_PROTOCOL_RE = /\bwith\s+(?:UTF8)?(?:E?SMTP|LMTP)S?A\b/i;
 
 /**
- * Whether the topmost Authentication-Results header looks like it was
- * written by a server that received the message, rather than by whoever
- * composed it. A receiving server writes its Received line first and its
- * Authentication-Results below it (Stalwart and Gmail both do), so: a
- * Received header must sit above the topmost Authentication-Results, and the
- * nearest one must not record an authenticated submission. Takes the headers
- * in message order.
+ * The host a Received line names as Stalwart's: Stalwart writes
+ * `by <hostname> (Stalwart SMTP) with ...` for mail it takes in over SMTP
+ * and for what its Sieve scripts generate, and the same hostname opens its
+ * Authentication-Results header. Nothing but `with <protocol> id <id>` and
+ * the date follow that clause, so it must end the line: a HELO name or an
+ * envelope address that another server copies into its own line can spell
+ * the same words, but never in the place of that server's id and date.
+ * Lower case, without a trailing dot.
+ */
+const STALWART_RECEIVED_RE = /\bby\s+([^\s;()]+)\s+\(Stalwart SMTP\)\s+with\s+[a-z0-9]+\s+id\s+[a-z0-9]+\s*(?:;[^;]*)?$/i;
+
+function stalwartReceivedHost(value: string): string | undefined {
+  const host = STALWART_RECEIVED_RE.exec(value)?.[1];
+  return host ? host.toLowerCase().replace(/\.$/, '') : undefined;
+}
+
+/**
+ * The authserv-id an Authentication-Results header opens with (RFC 8601
+ * 2.2), lower case and without a version. Undefined when the header opens
+ * with a result instead, as some Microsoft 365 hops write it.
+ */
+export function authservId(value: string | undefined): string | undefined {
+  const first = value ? splitResinfo(value)[0] : undefined;
+  if (!first || METHOD_RE.test(first)) return undefined;
+  const id = first.split(/\s+/)[0].replace(/^"(.*)"$/, '$1').toLowerCase().replace(/\.$/, '');
+  return id && !id.includes('=') ? id : undefined;
+}
+
+/**
+ * Whether a Received line, the topmost of a message, records Stalwart taking
+ * the message in from outside, and names the host the given
+ * Authentication-Results header was written by.
+ */
+function receivedByAuthservHost(received: string, results: string | undefined): boolean {
+  if (SUBMISSION_PROTOCOL_RE.test(received)) return false;
+  const host = stalwartReceivedHost(received);
+  return host !== undefined && host === authservId(results);
+}
+
+/**
+ * Whether the topmost Authentication-Results header was written by the
+ * server that received the message into this mailbox. RFC 8601 (sections 5
+ * and 7.1) lets a reader act only on results from an authserv-id it
+ * trusts: anyone can write this header into a message, the sender's own
+ * servers do on internal hops, and a mailbox filled over IMAP or from a
+ * relay that writes none holds only such headers. Without a configured
+ * list, the one id this client can trust is the receiving Stalwart's, which
+ * writes its Received line on top of the message and its
+ * Authentication-Results right below it, both with its hostname. So: every
+ * Received line above the topmost Authentication-Results must be Stalwart's
+ * for one and the same host (a Sieve redirect adds a second one), not an
+ * authenticated submission, and the header's authserv-id must be that host.
+ * Mail another server took in has that server's Received line on top, which
+ * the sender can't put anything above. Takes the headers in message order.
  *
  * This only catches a forged header on its own. Stalwart (0.16 and 1.0)
  * keeps both headers when a signed-in user writes them into a mail they
@@ -184,11 +231,26 @@ const SUBMISSION_PROTOCOL_RE = /\bwith\s+(?:UTF8)?(?:E?SMTP|LMTP)S?A\b/i;
 export function authenticationResultsOnReceipt(headers: readonly { name: string; value: string }[]): boolean {
   const index = headers.findIndex((header) => header.name.toLowerCase() === 'authentication-results');
   if (index < 0) return false;
-  for (let i = index - 1; i >= 0; i--) {
+  let top: string | undefined;
+  for (let i = 0; i < index; i++) {
     if (headers[i].name.toLowerCase() !== 'received') continue;
-    return !SUBMISSION_PROTOCOL_RE.test(headers[i].value);
+    if (!receivedByAuthservHost(headers[i].value, headers[index].value)) return false;
+    top ??= headers[i].value;
   }
-  return false;
+  return top !== undefined;
+}
+
+/**
+ * The same check for a list row, which gets each header's instances apart
+ * (`header:Received:all`, `header:Authentication-Results:all`, both in
+ * message order) and so can't see which comes first: the topmost Received
+ * line must be the receiving Stalwart's, for the host the topmost
+ * Authentication-Results header names. A forged header that passes this
+ * can only take a warning off the row, which a header the check turns down
+ * does too.
+ */
+export function topAuthenticationResultsOnReceipt(received: readonly string[], results: readonly string[]): boolean {
+  return received.length > 0 && receivedByAuthservHost(received[0], results[0]);
 }
 
 /**
@@ -261,14 +323,17 @@ export function authenticationResultsUsable(
  * message with no such header at all still counts when its From domain is
  * one of `internalDomains`, the organisation's own (lib/external-mail.ts
  * internalDomains, in ASCII form; a domain covers its subdomains). The same
- * domain's mail from outside carries the header and still needs the pass.
- * A message from an imported file was not handed in here and earns nothing.
+ * domain's mail from outside carries the header and still needs the pass,
+ * and so does one whose headers were all left out as not this server's
+ * (authenticationResultsIgnored). A message from an imported file was not
+ * handed in here and earns nothing.
  */
 export function brandIndicatorDomain(
   email: {
     from?: { email?: string | null }[] | null;
     authenticationResults?: AuthenticationResults;
     authenticationResultsOnReceipt?: boolean;
+    authenticationResultsIgnored?: boolean;
     keywords?: Record<string, boolean> | null;
     headers?: unknown;
   } | undefined,
@@ -281,6 +346,7 @@ export function brandIndicatorDomain(
   if (!domain) return undefined;
   if (isImportedMessage(email)) return undefined;
   if (!auth) {
+    if (email?.authenticationResultsIgnored) return undefined;
     const ascii = toAsciiDomain(domain) ?? domain;
     return internalDomains.some((entry) => ascii === entry || ascii.endsWith(`.${entry}`)) ? domain : undefined;
   }

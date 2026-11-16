@@ -236,7 +236,7 @@ export function storedOrganizerEmail(events: readonly Partial<CalendarEvent>[]):
 }
 
 /** What the trust assessment reads of the message. */
-type TrustEmail = Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt'> & Partial<Pick<Email, 'keywords' | 'headers'>>;
+type TrustEmail = Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt'> & Partial<Pick<Email, 'keywords' | 'headers' | 'authenticationResultsIgnored'>>;
 
 /**
  * Whether the server's checks tie the message to its From domain. Only an
@@ -471,7 +471,8 @@ export function getInvitationMethod(
  * several domains hands mail between them over the same way (#1593). The
  * missing header stays the condition, so a listed domain hosted elsewhere,
  * whose mail arrives on port 25, is still checked. A message with a header
- * that was not written on receipt is not internal, and its pass does not
+ * that was not written on receipt, or one left out as another server's
+ * (authenticationResultsIgnored), is not internal, and its pass does not
  * verify it (hasVerifiedAuthentication). Neither is a message from an
  * imported file: it was not handed in here.
  */
@@ -493,7 +494,7 @@ export function getInvitationTrustAssessment(
   const authenticationFailure = hasAuthenticationFailure(email, verifiedAuthentication);
   const senderMismatch = Boolean(senderEmail && expectedEmail && senderEmail !== expectedEmail);
   const senderDomain = senderEmail?.split('@').pop();
-  const internal = Boolean(email && !email.authenticationResults && !isImportedMessage(email) && senderDomain
+  const internal = Boolean(email && !email.authenticationResults && !email.authenticationResultsIgnored && !isImportedMessage(email) && senderDomain
     && (ownAddresses.some((address) => address.toLowerCase().split('@').pop() === senderDomain)
       || internalMailDomains.some((domain) => senderDomain === domain || senderDomain.endsWith(`.${domain}`))));
   const expectsAuthenticatedTransport = method !== 'unknown' && !internal;
