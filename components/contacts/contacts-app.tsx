@@ -21,6 +21,7 @@ import { ContactImportDialog } from "@/components/contacts/contact-import-dialog
 import { ContactMergeDialog } from "@/components/contacts/contact-merge-dialog";
 import { ContactDuplicatesView } from "@/components/contacts/contact-duplicates-view";
 import { findDuplicateGroups, ownerKey, planMerge, type MergePlan } from "@/lib/contacts/merge";
+import { collectOrganizationNames } from "@/lib/contacts/organization-names";
 import { AddressBookPickerDialog } from "@/components/contacts/address-book-picker-dialog";
 import { DirectoryBrowser, directoryKey, filterDirectory } from "@/components/contacts/directory-browser";
 import { DirectoryEntryDetail } from "@/components/contacts/directory-entry-detail";
@@ -456,6 +457,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
     return Array.from(kws).sort((a, b) => a.localeCompare(b));
   }, [individuals]);
+  const allOrganizations = useMemo(() => collectOrganizationNames(individuals, locale), [individuals, locale]);
 
   // Contacts to display based on active category
   const displayedContacts = useMemo(() => {
@@ -1157,7 +1159,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
     switch (view) {
       case "create":
-        return <ContactForm addressBooks={addressBooks} allKeywords={allKeywords} defaultAddressBookId={defaultBookIdForCreate} prefill={createPrefill} onSave={handleSaveNew} onCancel={guard(handleCancel)} onDirtyChange={setEditorDirty} />;
+        return <ContactForm addressBooks={addressBooks} allKeywords={allKeywords} allOrganizations={allOrganizations} defaultAddressBookId={defaultBookIdForCreate} prefill={createPrefill} onSave={handleSaveNew} onCancel={guard(handleCancel)} onDirtyChange={setEditorDirty} />;
 
       case "edit":
         if (!selectedContact) return null;
@@ -1166,6 +1168,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             contact={selectedContact}
             addressBooks={addressBooks}
             allKeywords={allKeywords}
+            allOrganizations={allOrganizations}
             onSave={handleSaveEdit}
             onCancel={guard(handleCancel)}
             onDirtyChange={setEditorDirty}

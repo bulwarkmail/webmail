@@ -16,6 +16,7 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import type { ContactCard, ContactOnlineService, ContactAnniversary, ContactPersonalInfo, AddressBook, AnniversaryDate, PartialDate, ContactAddress, ContactMedia } from "@/lib/jmap/types";
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
+import { matchOrganizationNames } from "@/lib/contacts/organization-names";
 
 // Each row of a list field keeps the `key` of the card's entry it was read
 // from, so Save can send an entry the user didn't touch back unchanged.
@@ -101,6 +102,8 @@ interface ContactFormProps {
   contact?: ContactCard | null;
   addressBooks?: AddressBook[];
   allKeywords?: string[];
+  /** Organization names the loaded cards use, offered while typing one. */
+  allOrganizations?: string[];
   defaultAddressBookId?: string;
   /** Prefills the create form (ignored when `contact` is set). */
   prefill?: { email?: string; name?: string };
@@ -327,7 +330,7 @@ function Select({ value, onChange, children, className, id, "aria-label": ariaLa
   );
 }
 
-export function ContactForm({ contact, addressBooks, allKeywords, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
+export function ContactForm({ contact, addressBooks, allKeywords, allOrganizations, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("contacts.form");
   const tx = useTranslations("ux_pim_contact");
@@ -1169,7 +1172,13 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
               {!isOrg && (
                 <div>
                   <label htmlFor={fieldId("organization")} className="text-xs text-muted-foreground mb-1 block">{t("organization")}</label>
-                  <Input id={fieldId("organization")} value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder={t("organization_placeholder")} />
+                  <OrganizationInput
+                    id={fieldId("organization")}
+                    value={organization}
+                    onChange={setOrganization}
+                    names={allOrganizations ?? []}
+                    placeholder={t("organization_placeholder")}
+                  />
                 </div>
               )}
               <div>
@@ -1446,6 +1455,104 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
         </Button>
       </div>
     </form>
+  );
+}
+
+/**
+ * The Organization field, offering the organization names other cards use as
+ * the user types (case-insensitive, anywhere in the name). Picking one takes
+ * its spelling; any other name can still be typed. (#1697)
+ */
+function OrganizationInput({
+  id,
+  value,
+  onChange,
+  names,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  names: readonly string[];
+  placeholder: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const listId = useId();
+  const suggestions = useMemo(() => matchOrganizationNames(names, value), [names, value]);
+  const open = isOpen && suggestions.length > 0;
+  const activeIndex = active < suggestions.length ? active : -1;
+
+  const pick = (name: string) => {
+    onChange(name);
+    setIsOpen(false);
+    setActive(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (e.key === "ArrowDown" && suggestions.length > 0) { e.preventDefault(); setIsOpen(true); setActive(0); }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((activeIndex + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(activeIndex <= 0 ? suggestions.length - 1 : activeIndex - 1);
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      pick(suggestions[activeIndex]);
+    } else if (e.key === "Escape") {
+      // Closes the list only, not the form around it.
+      e.stopPropagation();
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setIsOpen(true); setActive(-1); }}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setIsOpen(false)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        autoComplete="off"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        aria-activedescendant={open && activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
+      />
+      {open && (
+        <div
+          id={listId}
+          role="listbox"
+          className="absolute start-0 end-0 top-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-md z-50 max-h-48 overflow-y-auto py-1"
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {suggestions.map((name, index) => (
+            <div
+              key={name}
+              id={`${listId}-${index}`}
+              role="option"
+              aria-selected={index === activeIndex}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-accent pointer-coarse:min-h-11",
+                index === activeIndex && "bg-accent",
+              )}
+              onClick={() => pick(name)}
+            >
+              <Building className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="min-w-0 truncate">{name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
