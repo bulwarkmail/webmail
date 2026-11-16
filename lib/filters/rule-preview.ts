@@ -52,7 +52,8 @@ export interface RuleMatches {
 
 export const PREVIEW_SCAN = 1000;
 export const PREVIEW_SHOWN = 50;
-const NOT_RECEIVED = new Set(['trash', 'junk', 'sent', 'drafts']);
+/** Folders whose mail is never previewed or sorted: it was not received, or is on its way out. */
+export const NOT_RECEIVED = new Set(['trash', 'junk', 'sent', 'drafts']);
 const HEADER_COMPARATORS = new Set<FilterCondition['comparator']>([
   'contains', 'not_contains', 'is', 'not_is', 'starts_with', 'ends_with', 'matches', 'address_is', 'domain_is',
 ]);
@@ -138,10 +139,11 @@ function scopeFilters(rule: FilterRule, mailboxes: Mailbox[], folderId?: string)
   if (folderId) {
     const folder = mailboxes.find((m) => m.id === folderId);
     parts.push({ inMailbox: folder ? serverId(folder) : folderId });
-  } else {
-    const excluded = excludedMailboxes(mailboxes);
-    if (excluded.length > 0) parts.push({ operator: 'NOT', conditions: excluded.map((id) => ({ inMailbox: id })) });
   }
+  // Mail in Sent, Drafts, Trash or Spam is left out, also when it is in the
+  // chosen folder too, or the chosen folder is one of them.
+  const excluded = excludedMailboxes(mailboxes);
+  if (excluded.length > 0) parts.push({ operator: 'NOT', conditions: excluded.map((id) => ({ inMailbox: id })) });
   if (isPeriodBoundary(rule.activeFrom)) parts.push({ after: utcSeconds(Date.parse(rule.activeFrom)) });
   if (isPeriodBoundary(rule.activeUntil)) parts.push({ before: utcSeconds(Date.parse(rule.activeUntil) + 1000) });
   return parts;
@@ -193,7 +195,7 @@ export function previewPlan(rule: FilterRule, mailboxes: Mailbox[], folderId?: s
   const properties = new Set(['from', 'subject', 'receivedAt', 'mailboxIds', 'keywords']);
   for (const p of retroProperties({ ...rule, conditions: clientConditions.filter((c) => c.field !== 'attachment') })) properties.add(p);
   if (clientConditions.some((c) => c.field === 'attachment')) properties.add('attachments');
-  return { probes, properties: [...properties], excluded: folderId ? [] : excludedMailboxes(mailboxes) };
+  return { probes, properties: [...properties], excluded: excludedMailboxes(mailboxes) };
 }
 
 function verifies(rule: FilterRule, plan: PreviewPlan, verify: Verify, record: Record<string, unknown>, skipJunk: boolean): boolean {

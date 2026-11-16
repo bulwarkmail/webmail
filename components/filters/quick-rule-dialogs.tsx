@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { RuleEditor } from "@/components/filters/rule-editor";
-import { previewRule } from "@/lib/filters/rule-preview";
+import { NOT_RECEIVED, previewRule } from "@/lib/filters/rule-preview";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { useQuickRuleText } from "@/components/email/rules-menu";
 import { useQuickRuleStore } from "@/stores/quick-rule-store";
@@ -27,6 +28,10 @@ export function QuickRuleDialogs() {
   const newFolder = useQuickRuleStore((s) => s.newFolder);
   const closeEditor = useQuickRuleStore((s) => s.closeEditor);
   const closeNewFolder = useQuickRuleStore((s) => s.closeNewFolder);
+  const tSidebar = useTranslations("sidebar");
+  // "New mail and <folder>" is offered for the message's folder, unless that
+  // is one whose mail a rule never sorts (Sent, Drafts, Trash, Spam).
+  const sourceFolder = editor?.target.mailboxes.find((m) => m.id === editor.sourceMailboxId);
 
   // Where the rule runs among the account's rules, for the server's redirect
   // limit: "Create rule…" puts it first, an edit keeps it in place (one no
@@ -60,7 +65,9 @@ export function QuickRuleDialogs() {
           initialRule={editor.mode === "prefill" ? editor.rule : undefined}
           suggestions={editor.suggestions}
           offerApplyToExisting={editor.mode === "prefill"}
-          applyExistingFolder={editor.target.mailboxes.find((m) => m.id === editor.sourceMailboxId)?.name}
+          applyExistingFolder={sourceFolder && !NOT_RECEIVED.has(sourceFolder.role ?? "")
+            ? localizeMailboxName(sourceFolder.role, sourceFolder.name, (k) => tSidebar(`mailboxes.${k}`))
+            : undefined}
           mailboxes={editor.target.mailboxes}
           maxRedirects={editor.target.client.getSieveCapabilities(editor.target.sieveAccountId)?.maxNumberRedirects}
           forwardsBefore={forwards.before}

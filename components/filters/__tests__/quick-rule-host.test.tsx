@@ -129,3 +129,50 @@ describe('a rule made from a message, against the redirect limit', () => {
     expect(await screen.findByText('forward_limit')).toBeInTheDocument();
   });
 });
+
+describe('applying a rule made from a message to the mail already there', () => {
+  const folders = [
+    { id: 'inbox', name: 'Inbox', role: 'inbox' },
+    { id: 'sent', name: 'Sent', role: 'sent' },
+  ];
+  const starRule: FilterRule = { ...forwardRule('new'), actions: [{ type: 'star' }] };
+
+  function openFrom(sourceMailboxId: string) {
+    const server = account([]);
+    server.client.queryEmailFields.mockResolvedValue([{
+      id: 'm1',
+      mailboxIds: { inbox: true },
+      keywords: {},
+      'header:From:asAddresses:all': [[{ name: '', email: 'chef@example.com' }]],
+    }]);
+    useQuickRuleStore.getState().openEditor({
+      mode: 'prefill',
+      target: {
+        client: server.client,
+        clientAccountId: null,
+        key: 'login/b',
+        accountId: 'b',
+        sieveAccountId: 'b',
+        shared: false,
+        supportsSieve: true,
+        mailboxes: folders as never,
+      },
+      rule: starRule,
+      suggestions: [],
+      sourceMailboxId,
+    });
+    render(<QuickRuleDialogs />);
+  }
+
+  it("offers the message's folder", async () => {
+    openFrom('inbox');
+    const choice = (await screen.findByLabelText('apply_to', {}, { timeout: 3000 })) as HTMLSelectElement;
+    expect([...choice.options].map((o) => o.value)).toEqual(['new', 'folder', 'all']);
+  });
+
+  it('does not offer Sent when the message is in Sent, since sent mail is never sorted', async () => {
+    openFrom('sent');
+    const choice = (await screen.findByLabelText('apply_to', {}, { timeout: 3000 })) as HTMLSelectElement;
+    expect([...choice.options].map((o) => o.value)).toEqual(['new', 'all']);
+  });
+});

@@ -104,6 +104,20 @@ describe('applying a rule to mail already received', () => {
     expect(await applyRuleToScope(target, rule({ actions: [{ type: 'mark_read' }] }), 'all', null)).toBe(60000);
   });
 
+  it('leaves out Sent, Drafts, Trash and Spam when it runs on one folder, even on that folder itself', async () => {
+    const boxes = [...mailboxes, { id: 'sent', role: 'sent', name: 'Sent' }] as unknown as Mailbox[];
+    const from = { 'header:From:asAddresses:all': [[{ name: '', email: 'me@north.example' }]] };
+    const records = [
+      { id: 's1', mailboxIds: { sent: true }, keywords: {}, ...from },
+      { id: 'i1', mailboxIds: { inbox: true, junk: true }, keywords: {}, ...from },
+    ];
+    const queryEmailFields = vi.fn(async (_filter: unknown) => records);
+    const target = { client: { queryEmailFields }, accountId: 'acc', mailboxes: boxes } as unknown as QuickRuleTarget;
+    const deleting = rule({ actions: [{ type: 'discard' }] });
+    expect(await applyRuleToScope(target, deleting, 'folder', 'sent')).toBe(0);
+    expect(await applyRuleToScope(target, deleting, 'folder', 'inbox')).toBe(0);
+  });
+
   it('runs on all received mail when asked to', async () => {
     const queryEmailFields = vi.fn(async (_filter: unknown) => []);
     const target = { client: { queryEmailFields }, accountId: 'acc', mailboxes } as unknown as QuickRuleTarget;
