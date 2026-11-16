@@ -618,7 +618,6 @@
       "not_supported": "Your mail server can't use filter rules.",
       "match_all": "All conditions must be true",
       "match_any": "One condition is enough",
-      "stop_processing": "Don't check the rules below this one",
       "value_placeholder_multi": "Value (put commas between several)",
       "condition_fields": {
         "header": "Other header line",
@@ -649,11 +648,9 @@
         "validation_failed": "The code could not be checked. Try again."
       },
       "managed_by_tooltip": "{source} manages this. Change it in that app, or edit the rules as code.",
-      "apply_existing_unsupported": "Only some rules can also run on messages that are already here: rules that check the sender, recipients, subject or header lines, and that move, copy, mark as read, star or tag.",
       "validation_period_order": "The end date must come after the start date",
       "period_hint": "The rule works for messages that arrive in this time. Leave a field empty if there is no start or no end.",
-      "validation_period_invalid": "Enter a date with a time, or leave the field empty",
-      "apply_existing_period": "A rule with a time period only works for messages that arrive in that time. So it can't run on messages that are already here."
+      "validation_period_invalid": "Enter a date with a time, or leave the field empty"
     },
     "templates": {
       "description": "Save messages you write often and use them again. They can have gaps that you fill in each time.",

@@ -4,10 +4,7 @@ import React from 'react';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import type { RuleSuggestion } from '@/lib/filters/quick-rules';
 import type { Mailbox } from '@/lib/jmap/types';
-import { FilterRuleModal } from '../filter-rule-modal';
-
-// settings-13 and settings-9 (usability pass 2026-11-04): one way to stop
-// later rules, and a folder picker that names folders as the sidebar does.
+import { RuleEditor } from '../rule-editor';
 
 vi.mock('@/stores/toast-store', () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }));
 
@@ -37,33 +34,31 @@ function rule(actions: FilterRule['actions'], stopProcessing = false): FilterRul
   };
 }
 
-function openModal(props: Partial<React.ComponentProps<typeof FilterRuleModal>> = {}) {
+function openModal(props: Partial<React.ComponentProps<typeof RuleEditor>> = {}) {
   const onSave = vi.fn();
-  render(<FilterRuleModal mailboxes={mailboxes} onSave={onSave} onClose={vi.fn()} {...props} />);
+  render(<RuleEditor mailboxes={mailboxes} onSave={onSave} onClose={vi.fn()} {...props} />);
   return { onSave, saved: () => onSave.mock.calls[0][0] as FilterRule };
 }
 
-const actionTypeOptions = () =>
-  [...(screen.getAllByLabelText('actions')[0] as HTMLSelectElement).options].map((o) => o.value);
-const folderButton = () => screen.getByRole('button', { name: 'move_to_folder' });
-/** Opens the folder field's Move list and reads its rows. */
+const folderButton = (which: 'move' | 'copy' = 'move') =>
+  screen.getAllByRole('button', { name: 'move_to_folder' })[which === 'move' ? 0 : 1];
 const folderRows = () => {
   fireEvent.click(folderButton());
   return screen.getAllByTestId(/^rule-folder:/).map((el) => ({ value: el.getAttribute('data-testid')!.slice('rule-folder:'.length), text: el.textContent ?? '', el }));
 };
-const stopBox = () => screen.getByLabelText('stop_processing') as HTMLInputElement;
+const continueBox = () => screen.getByLabelText('continue_rules') as HTMLInputElement;
 
 describe('stopping later rules', () => {
   it('is no longer offered as an action, only as the checkbox', () => {
     openModal();
-    expect(actionTypeOptions()).not.toContain('stop');
-    expect(stopBox()).toBeInTheDocument();
+    expect(screen.queryByLabelText('action_types.stop')).toBeNull();
+    expect(continueBox().checked).toBe(true);
   });
 
   it('folds an old "stop" action into the checkbox and saves it that way', () => {
     const { saved } = openModal({ rule: rule([{ type: 'move', value: 'Work', mailboxId: 'work' }, { type: 'stop' }]) });
-    expect(stopBox().checked).toBe(true);
-    expect(actionTypeOptions()).not.toContain('stop');
+    expect(continueBox().checked).toBe(false);
+    expect(screen.queryByLabelText('action_types.stop')).toBeNull();
     fireEvent.click(screen.getByText('save'));
     expect(saved().stopProcessing).toBe(true);
     expect(saved().actions.map((a) => a.type)).toEqual(['move']);
@@ -78,7 +73,8 @@ describe('stopping later rules', () => {
 
   it('keeps the message in the inbox for a rule that only stopped', () => {
     const { saved } = openModal({ rule: rule([{ type: 'stop' }]) });
-    expect(stopBox().checked).toBe(true);
+    expect(continueBox().checked).toBe(false);
+    expect((screen.getByLabelText('action_types.keep') as HTMLInputElement).checked).toBe(true);
     fireEvent.click(screen.getByText('save'));
     expect(saved().stopProcessing).toBe(true);
     expect(saved().actions).toEqual([{ type: 'keep' }]);
@@ -86,15 +82,12 @@ describe('stopping later rules', () => {
 
   it('does not count the folded action as a change', async () => {
     const onClose = vi.fn();
-    render(<FilterRuleModal mailboxes={mailboxes} rule={rule([{ type: 'stop' }])} onSave={vi.fn()} onClose={onClose} />);
+    render(<RuleEditor mailboxes={mailboxes} rule={rule([{ type: 'stop' }])} onSave={vi.fn()} onClose={onClose} />);
     fireEvent.click(screen.getByText('cancel'));
-    // No "discard changes?" question: the dialog closes at once.
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 });
 
-// mail-p3-9: the folder field is the Move list every other folder choice
-// uses (Recent, nesting, the filter), not a native select with spaces.
 describe('the folder picker of Move to folder', () => {
   it('names role folders as the sidebar does and leaves out Drafts, Sent and Scheduled', () => {
     openModal({ initialRule: rule([{ type: 'move', value: '' }]) });
@@ -106,9 +99,7 @@ describe('the folder picker of Move to folder', () => {
     for (const hidden of ['Sent Items', 'Junk Mail', 'Deleted Items', 'mailboxes.sent', 'mailboxes.drafts', 'Drafts', 'Scheduled']) {
       expect(texts).not.toContain(hidden);
     }
-    // Drawn over the dialog (z-[60]), not under it.
     expect(screen.getByRole('menu', { name: 'move_to_folder' }).className).toContain('z-[70]');
-    // In the Move list's order: system folders first.
     expect(rows.map((o) => o.value)).toEqual(['inbox', 'junk', 'trash', 'work', 'acme']);
   });
 
@@ -129,8 +120,8 @@ describe('the folder picker of Move to folder', () => {
 
   it('still shows a hidden folder an existing rule files into', () => {
     openModal({ rule: rule([{ type: 'copy', value: 'Sent Items', mailboxId: 'sent' }]) });
-    expect(folderButton().getAttribute('data-value')).toBe('sent');
-    expect(folderButton()).toHaveTextContent('mailboxes.sent');
+    expect(folderButton('copy').getAttribute('data-value')).toBe('sent');
+    expect(folderButton('copy')).toHaveTextContent('mailboxes.sent');
   });
 
   it('shows the whole path of a subfolder', () => {
@@ -147,8 +138,6 @@ describe('the folder picker of Move to folder', () => {
   });
 });
 
-// mail-p3-9: a chip goes while the rule has its condition, and comes back
-// when that row goes, so the sender chip returns after the domain replaced it.
 describe('suggestion chips', () => {
   const suggestions: RuleSuggestion[] = [
     { id: 'sender', label: 'anna@acme.com', condition: { field: 'from', comparator: 'address_is', value: 'anna@acme.com' }, replaces: (c) => c.comparator === 'domain_is' },

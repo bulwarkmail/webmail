@@ -4,7 +4,7 @@ import React from 'react';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import { getBrowserTimeZone } from '@/lib/timezone';
 import { useSettingsStore } from '@/stores/settings-store';
-import { FilterRuleModal } from '../filter-rule-modal';
+import { RuleEditor } from '../rule-editor';
 
 vi.mock('@/stores/toast-store', () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }));
 
@@ -43,7 +43,7 @@ const rule: FilterRule = {
 
 it('reads a time the browser zone skips at its DST change on the clock of the user zone', () => {
   const onSave = vi.fn();
-  render(<FilterRuleModal mailboxes={[]} rule={rule} periodsSupported onSave={onSave} onClose={vi.fn()} />);
+  render(<RuleEditor mailboxes={[]} rule={rule} periodsSupported onSave={onSave} onClose={vi.fn()} />);
   fireEvent.click(screen.getByLabelText('period_toggle'));
   // 02:30 on 29 March does not exist in Berlin; in New York it is 02:30 EDT.
   fireEvent.change(screen.getByLabelText('period_end'), { target: { value: '2026-03-29T02:30' } });

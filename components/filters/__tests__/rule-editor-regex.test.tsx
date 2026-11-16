@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
-import { FilterRuleModal } from '../filter-rule-modal';
+import { RuleEditor } from '../rule-editor';
 import { useSettingsStore } from '@/stores/settings-store';
 
 vi.mock('@/stores/toast-store', () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }));
@@ -17,19 +17,18 @@ const rule: FilterRule = {
   stopProcessing: false,
 };
 
-function openModal(props: Partial<React.ComponentProps<typeof FilterRuleModal>> = {}) {
+function openModal(props: Partial<React.ComponentProps<typeof RuleEditor>> = {}) {
   const onSave = vi.fn();
-  render(<FilterRuleModal mailboxes={[]} initialRule={rule} onSave={onSave} onClose={vi.fn()} {...props} />);
+  render(<RuleEditor mailboxes={[]} initialRule={rule} onSave={onSave} onClose={vi.fn()} {...props} />);
   return { onSave, saved: () => onSave.mock.calls[0][0] as FilterRule };
 }
 
-const fieldSelect = () => screen.getByLabelText('conditions') as HTMLSelectElement;
-const comparatorSelect = () => screen.getByLabelText('comparators.contains') as HTMLSelectElement;
+const fieldSelect = () => screen.getByLabelText('condition_number') as HTMLSelectElement;
+const comparatorSelect = () => screen.getByLabelText('comparison') as HTMLSelectElement;
 const comparatorOptions = () => [...comparatorSelect().options].map((o) => o.value);
 const valueInput = () => screen.getByLabelText('condition_value') as HTMLInputElement;
 
 describe('the "matches regex" comparator', () => {
-  // Regular expressions are an advanced choice (settings-13).
   beforeEach(() => useSettingsStore.setState({ showAdvancedSettings: true }));
 
   it('is hidden while the advanced settings are off', () => {
