@@ -61,7 +61,25 @@ describe('bodyWeight', () => {
     expect(post(big, '/api/webdav')).toBe(0);
     expect(post(big, '/api/plugin-proxy?x=1')).toBe(0);
     expect(post(big, '/api/wopi/files/abc/contents')).toBe(0);
-    expect(post(big, '/webmail/api/webdav')).toBe(0);
+    expect(bodyWeight('POST', '/webmail/api/webdav', big, '/webmail')).toBe(0);
+    expect(bodyWeight('PUT', '/webmail/api/wopi/files/abc/contents', big, '/webmail')).toBe(0);
+  });
+
+  it('counts those routes anywhere but right after the base path, where the proxy runs', () => {
+    const big = { 'content-length': String(8 * MB) };
+    expect(post(big, '/x/api/webdav')).toBe(8 * MB);
+    expect(post(big, '/en/api/plugin-proxy')).toBe(8 * MB);
+    expect(post(big, '/webmail/api/webdav')).toBe(8 * MB);
+    expect(bodyWeight('POST', '/api/webdav', big, '/webmail')).toBe(8 * MB);
+    expect(bodyWeight('POST', '/webmail/x/api/webdav', big, '/webmail')).toBe(8 * MB);
+  });
+
+  it('counts OPTIONS and TRACE bodies, which Next copies for the proxy too', () => {
+    const big = { 'content-length': String(8 * MB) };
+    expect(bodyWeight('OPTIONS', '/api/config', big)).toBe(8 * MB);
+    expect(bodyWeight('trace', '/', { 'transfer-encoding': 'chunked' })).toBe(PER_REQUEST_MAX_BYTES);
+    // A CORS preflight has no body.
+    expect(bodyWeight('OPTIONS', '/api/config', {})).toBe(0);
   });
 
   it('counts a path that only looks like one of them', () => {
@@ -117,7 +135,11 @@ async function harness(budgetBytes: number | null): Promise<Harness> {
       bytes += chunk.length;
       read.set(request.url ?? '', bytes);
     });
+    // Answers before the body is in, as the proxy's CSRF refusal does, while
+    // the body is still copied (Next's clone listens to it the same way).
+    if (request.url?.startsWith('/api/refused')) response.writeHead(403).end('refused');
     request.on('end', () => {
+      if (response.writableEnded) return;
       response.writeHead(200, { 'Content-Type': 'text/plain' });
       response.end(`read ${bytes}`);
     });
@@ -231,6 +253,23 @@ describe('request body budget on a live server', () => {
     expect(h.budget.reserved()).toBe(0);
     // Room again for a large upload.
     expect(await post(h.port, '/api/settings', 2 * MB)).toEqual({ status: 200, body: `read ${2 * MB}` });
+  });
+
+  it('keeps the reservation while the body still arrives after an early answer', async () => {
+    const h = await harness(32 * MB);
+    const socket = await partial(h.port, '/api/refused', 10 * MB, 1024);
+    let text = '';
+    socket.on('data', (chunk) => (text += chunk.toString()));
+    await until(() => text.startsWith('HTTP/1.1 403 '));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(text.startsWith('HTTP/1.1 403 ')).toBe(true);
+    expect(h.budget.reserved()).toBe(10 * MB);
+
+    socket.write(Buffer.alloc(10 * MB - 1024, 0x41));
+    await until(() => h.budget.reserved() === 0);
+    expect(h.read.get('/api/refused')).toBe(10 * MB);
+    expect(h.budget.reserved()).toBe(0);
+    socket.destroy();
   });
 
   it('counts the requests of one keep-alive connection one after the other', async () => {

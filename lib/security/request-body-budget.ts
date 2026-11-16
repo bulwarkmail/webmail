@@ -38,9 +38,23 @@ const DEFAULT_BUDGET_BYTES = 128 * 1024 * 1024;
  * The routes proxy.ts does not run for (its `config.matcher`): they stream
  * their uploads and cap what they read themselves, so Next copies nothing.
  */
-const STREAMED_ROUTE = /\/api\/(?:webdav|plugin-proxy|wopi\/files\/[^/]+\/contents)$/;
+const STREAMED_ROUTE = /^\/api\/(?:webdav|plugin-proxy|wopi\/files\/[^/]+\/contents)$/;
 
-const BODYLESS_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'TRACE']);
+/**
+ * Whether the proxy is skipped for this path. Like the matcher, only right
+ * after the base path: the proxy runs for /anything/api/webdav, and Next
+ * copies that body.
+ */
+function isStreamedRoute(path: string, basePath: string): boolean {
+  if (basePath) {
+    if (!path.startsWith(`${basePath}/`)) return false;
+    path = path.slice(basePath.length);
+  }
+  return STREAMED_ROUTE.test(path);
+}
+
+/** Next hands the proxy a copy of the body for every other method, OPTIONS and TRACE too. */
+const BODYLESS_METHODS = new Set(['GET', 'HEAD']);
 
 /**
  * The budget in bytes from REQUEST_BODY_BUDGET_MB, or null when it is `0`
@@ -57,7 +71,12 @@ export function bodyBudgetBytes(raw: string | undefined = process.env.REQUEST_BO
  * The bytes Next may copy for a request with these headers, or 0 when it
  * copies nothing worth counting.
  */
-export function bodyWeight(method: string | undefined, url: string | undefined, headers: IncomingMessage['headers']): number {
+export function bodyWeight(
+  method: string | undefined,
+  url: string | undefined,
+  headers: IncomingMessage['headers'],
+  basePath: string = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').trim().replace(/\/+$/, ''),
+): number {
   if (BODYLESS_METHODS.has((method ?? 'GET').toUpperCase())) return 0;
   const path = (url ?? '/').split('?', 1)[0];
   let decoded = path;
@@ -66,7 +85,7 @@ export function bodyWeight(method: string | undefined, url: string | undefined, 
   } catch {
     // Not a path Next will route to a handler; counted as it stands.
   }
-  if (STREAMED_ROUTE.test(path) && STREAMED_ROUTE.test(decoded)) return 0;
+  if (isStreamedRoute(path, basePath) && isStreamedRoute(decoded, basePath)) return 0;
 
   let weight: number;
   if (headers['transfer-encoding'] !== undefined) {
@@ -141,12 +160,18 @@ export function createBodyBudget(options: { budgetBytes: () => number | null }):
       }
 
       reserved += weight;
-      // 'close' comes after the response was sent, and when the connection
-      // drops before there is one. Once per response, so nothing is left on
-      // a socket that serves many requests.
-      response.once('close', () => {
-        reserved = Math.max(0, reserved - weight);
-      });
+      // Given back once both have closed. The response closes when it was
+      // sent, or when the connection drops before there is one. The request
+      // closes when its body is in, or with the connection: a proxy that
+      // answers before reading (a CSRF refusal) leaves Next copying the rest
+      // of the body after the response is out. Both are per request, so
+      // nothing is left on a socket that serves many.
+      let open = 2;
+      const release = () => {
+        if (--open === 0) reserved = Math.max(0, reserved - weight);
+      };
+      response.once('close', release);
+      request.once('close', release);
     },
   };
 }
