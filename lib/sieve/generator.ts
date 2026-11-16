@@ -74,8 +74,24 @@ function generateCondition(condition: FilterCondition): string {
   const values = toValueList(value);
 
   if (field === 'body') {
-    const matchType = comparator === 'is' ? ':is' : comparator === 'regex' ? ':regex' : ':contains';
-    return `body ${matchType} ${formatStringArg(values)}`;
+    switch (comparator) {
+      case 'not_contains':
+        return `not body :contains ${formatStringArg(values)}`;
+      case 'is':
+        return `body :is ${formatStringArg(values)}`;
+      case 'not_is':
+        return `not body :is ${formatStringArg(values)}`;
+      case 'starts_with':
+        return `body :matches ${formatStringArg(values, (v) => `${v}*`)}`;
+      case 'ends_with':
+        return `body :matches ${formatStringArg(values, (v) => `*${v}`)}`;
+      case 'matches':
+        return `body :matches ${formatStringArg(values)}`;
+      case 'regex':
+        return `body :regex ${formatStringArg(values)}`;
+      default:
+        return `body :contains ${formatStringArg(values)}`;
+    }
   }
 
   if (field === 'attachment') {
