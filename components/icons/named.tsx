@@ -197,6 +197,7 @@ const CURATED: Record<string, TablerIcon> = {
   'aperture': IconAperture,
   'apple': IconApple,
   'archive': IconArchive,
+  'archive-upload': IconArchiveRestore,
   'atom': IconAtom,
   'award': IconAward,
   'beer': IconBeer,
