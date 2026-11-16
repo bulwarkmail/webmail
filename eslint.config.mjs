@@ -64,6 +64,23 @@ export default [
     },
     rules: {
       "no-unused-vars": ["error", { caughtErrors: "none" }],
+      // bulwarkmail/native embeds this file as a String.raw string that the
+      // WebView evaluates, so it stays ES5 (the export line is stripped there)
+      // and no string may hold a backtick or "${".
+      "no-restricted-syntax": [
+        "error",
+        ...[
+          "ArrowFunctionExpression", "TemplateLiteral", "TaggedTemplateExpression", "ClassDeclaration", "ClassExpression",
+          "VariableDeclaration[kind!='var']", "SpreadElement", "RestElement", "ObjectPattern", "ArrayPattern",
+          "AssignmentPattern", "ForOfStatement", "Property[shorthand=true]", "Property[method=true]",
+          "Property[computed=true]", "AwaitExpression", "YieldExpression", "FunctionDeclaration[async=true]",
+          "FunctionExpression[async=true]", "FunctionDeclaration[generator=true]", "FunctionExpression[generator=true]",
+          "ChainExpression", "LogicalExpression[operator='??']", "BinaryExpression[operator='**']",
+          "AssignmentExpression[operator=/^(\\*\\*|\\?\\?|&&|\\|\\|)=$/]", "MetaProperty", "ImportDeclaration",
+          "ImportExpression", "ExportNamedDeclaration", "Literal[bigint]",
+        ].map((selector) => ({ selector, message: "lib/email-dark-mode-engine.js must stay ES5 for bulwarkmail/native." })),
+        { selector: "Literal[raw=/`|\\$\\{/]", message: "bulwarkmail/native embeds this file in a String.raw template: no backtick or \"${\"." },
+      ],
     },
   },
   {
