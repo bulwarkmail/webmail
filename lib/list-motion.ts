@@ -174,6 +174,10 @@ const plus = (a: Pos, b: Pos): Pos => ({ left: a.left + b.left, top: a.top + b.t
 const minus = (a: Pos, b: Pos): Pos => ({ left: a.left - b.left, top: a.top - b.top });
 const still = (a: Pos) => Math.abs(a.left) < 0.5 && Math.abs(a.top) < 0.5;
 const translate = (p: Pos) => `translate(${p.left}px, ${p.top}px)`;
+const snap = (p: Pos): Pos => {
+  const r = typeof window !== "undefined" && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
+  return { left: Math.round(p.left * r) / r, top: Math.round(p.top * r) / r };
+};
 const running = (a: Animation) => a.playState === "running" || a.playState === "paused";
 
 function offsetOf(el: HTMLElement): Pos {
@@ -194,9 +198,9 @@ function forget(el: HTMLElement) {
 
 function rebase(el: HTMLElement, s: Shift, base: Pos) {
   const old = s.held;
-  s.base = base;
-  s.held = still(base) ? undefined : el.animate(
-    [{ translate: `${base.left}px ${base.top}px` }, { translate: `${base.left}px ${base.top}px` }],
+  s.base = snap(base);
+  s.held = still(s.base) ? undefined : el.animate(
+    [{ translate: `${s.base.left}px ${s.base.top}px` }, { translate: `${s.base.left}px ${s.base.top}px` }],
     { duration: 1, fill: "forwards" },
   );
   old?.cancel();
@@ -223,7 +227,8 @@ function join(el: HTMLElement, key: string | null, lead: Shift) {
   anim.onfinish = () => { if (shifts.get(el) === next && next.anim === anim) settleShift(el, next); };
 }
 
-function move(el: HTMLElement, key: string | null, seen: Pos, target: Pos, delay = 0) {
+function move(el: HTMLElement, key: string | null, seen: Pos, to: Pos, delay = 0) {
+  const target = snap(to);
   const s = shifts.get(el);
   if (s?.anim && running(s.anim)) {
     const d = minus(seen, offsetOf(el));

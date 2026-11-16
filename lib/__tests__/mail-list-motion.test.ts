@@ -204,6 +204,24 @@ describe('a message leaving the list', () => {
     expect(settled(below)).toBe(ROW_H);
   });
 
+  it('holds the rows below on whole device pixels while the server answers', async () => {
+    const dpr = window.devicePixelRatio;
+    Object.defineProperty(window, 'devicePixelRatio', { value: 2, configurable: true });
+    try {
+      document.querySelectorAll('[role="treegrid"] > *').forEach((el, i) => box(el, 260, i * 72.3, 700, 72.3));
+      useEmailStore.setState({ deleteEmail: () => new Promise(() => {}) } as never);
+      installMailMotion();
+      const below = row('e2');
+      void useEmailStore.getState().deleteEmail(client, 'e1');
+      paint();
+      const y = parse(lastOf(below, holding)?.keyframes[0].translate).y;
+      expect(y * 2).toBe(Math.round(y * 2));
+      expect(Math.abs(y + 72.3)).toBeLessThanOrEqual(0.25);
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', { value: dpr, configurable: true });
+    }
+  });
+
   it('closes the gap of every message of a batch at once', async () => {
     useEmailStore.setState({ batchArchive: () => { removeRows(['e1', 'e2']); return new Promise(() => {}); } } as never);
     installMailMotion();
