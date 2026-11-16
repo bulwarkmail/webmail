@@ -4042,6 +4042,7 @@
       "load_failed": "Kurallar yüklenemedi",
       "none": "Henüz kural yok",
       "new_mail_only": "Yalnızca yeni iletiler için",
+      "cannot_run": "Mevcut iletilere yalnızca taşıyan, kopyalayan, okundu işaretleyen, yıldızlayan, etiketleyen veya atan kurallar uygulanabilir; bunlar da gövdeyi, \"Teslim edilen adres\" alanını veya bir düzenli ifadeyi denetlemiyorsa.",
       "running": "\"{name}\" {folder} klasöründe çalıştırılıyor…"
     },
     "find_emails_from": "{name} adlı kişiden gelen e-postaları bul"

@@ -29,26 +29,47 @@ export interface NewFolderRequest {
   preset: (mailbox: RuleMailbox) => QuickRulePreset;
 }
 
+/** "Move N messages to Trash?" before a rule that discards runs on a folder. */
+export interface TrashQuestion {
+  count: number;
+  answer: (confirmed: boolean) => void;
+}
+
 interface QuickRuleStore {
   editor: QuickRuleEditor | null;
   newFolder: NewFolderRequest | null;
+  trashQuestion: TrashQuestion | null;
   /** Whether each account's script can be written, by QuickRuleTarget.key. */
   statuses: Record<string, { status: FiltersStatus; at: number }>;
   openEditor: (editor: QuickRuleEditor) => void;
   closeEditor: () => void;
   requestNewFolder: (request: NewFolderRequest) => void;
   closeNewFolder: () => void;
+  /** Resolves true when the user confirms; a second question cancels the first. */
+  askTrash: (count: number) => Promise<boolean>;
+  answerTrash: (confirmed: boolean) => void;
   setStatus: (key: string, status: FiltersStatus) => void;
 }
 
-export const useQuickRuleStore = create<QuickRuleStore>()((set) => ({
+export const useQuickRuleStore = create<QuickRuleStore>()((set, get) => ({
   editor: null,
   newFolder: null,
+  trashQuestion: null,
   statuses: {},
   openEditor: (editor) => set({ editor }),
   closeEditor: () => set({ editor: null }),
   requestNewFolder: (newFolder) => set({ newFolder }),
   closeNewFolder: () => set({ newFolder: null }),
+  askTrash: (count) => {
+    get().answerTrash(false);
+    return new Promise<boolean>((resolve) => set({ trashQuestion: { count, answer: resolve } }));
+  },
+  answerTrash: (confirmed) => {
+    const question = get().trashQuestion;
+    if (!question) return;
+    set({ trashQuestion: null });
+    question.answer(confirmed);
+  },
   setStatus: (key, status) =>
     set((state) => ({ statuses: { ...state.statuses, [key]: { status, at: Date.now() } } })),
 }));

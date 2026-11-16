@@ -4042,6 +4042,7 @@
       "load_failed": "無法載入規則",
       "none": "尚無規則",
       "new_mail_only": "僅限新郵件",
+      "cannot_run": "只有執行移動、複製、標示為已讀、加上星號、標籤或捨棄的規則才能套用到既有郵件，而且不能檢查內文、投遞到或規則運算式。",
       "running": "正在 {folder} 中執行「{name}」…"
     },
     "find_emails_from": "尋找來自 {name} 的郵件"

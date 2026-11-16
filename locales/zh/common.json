@@ -4042,6 +4042,7 @@
       "load_failed": "无法加载规则",
       "none": "暂无规则",
       "new_mail_only": "仅限新邮件",
+      "cannot_run": "只有执行移动、复制、标记为已读、加星标、添加标签或丢弃的规则才能应用于已有邮件，并且不能检查正文、投递到或正则表达式。",
       "running": "正在 {folder} 中运行“{name}”…"
     },
     "find_emails_from": "查找来自 {name} 的邮件"

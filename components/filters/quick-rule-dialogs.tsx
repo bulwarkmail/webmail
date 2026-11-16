@@ -6,6 +6,7 @@ import { RuleEditor } from "@/components/filters/rule-editor";
 import { NOT_RECEIVED, previewRule } from "@/lib/filters/rule-preview";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useQuickRuleText } from "@/components/email/rules-menu";
 import { useQuickRuleStore } from "@/stores/quick-rule-store";
 import { readAccountFilters } from "@/lib/filters/account-filters";
@@ -17,7 +18,8 @@ import { supportsRegex } from "@/lib/sieve/regex";
 /**
  * Draws what a rule made from a message opens: the rule editor ("Create
  * rule…", or "Edit rule" from a toast) and the folder-name prompt of "New
- * folder…". Mounted by QuickRuleHost while one of them is open.
+ * folder…", and the Trash question of "Run rules" on a folder. Mounted by
+ * QuickRuleHost while one of them is open.
  */
 export function QuickRuleDialogs() {
   const text = useQuickRuleText();
@@ -28,6 +30,10 @@ export function QuickRuleDialogs() {
   const newFolder = useQuickRuleStore((s) => s.newFolder);
   const closeEditor = useQuickRuleStore((s) => s.closeEditor);
   const closeNewFolder = useQuickRuleStore((s) => s.closeNewFolder);
+  const trashQuestion = useQuickRuleStore((s) => s.trashQuestion);
+  const answerTrash = useQuickRuleStore((s) => s.answerTrash);
+  const tFilters = useTranslations("settings.filters");
+  const tDelete = useTranslations("settings.email_behavior.delete_action");
   const tSidebar = useTranslations("sidebar");
   // "New mail and <folder>" is offered for the message's folder, unless that
   // is one whose mail a rule never sorts (Sent, Drafts, Trash, Spam).
@@ -92,6 +98,16 @@ export function QuickRuleDialogs() {
         title={tFolderTitle("new_folder_title")}
         message={tFolderMenu("prompt_new_folder")}
         placeholder={tFolderMenu("placeholder_folder_name")}
+      />
+      <ConfirmDialog
+        isOpen={!!trashQuestion}
+        onClose={() => answerTrash(false)}
+        onConfirm={() => answerTrash(true)}
+        title={tFilters("editor.trash_title")}
+        message={tFilters("editor.trash_confirm", { count: trashQuestion?.count ?? 0 })}
+        confirmText={tDelete("trash")}
+        cancelText={tFilters("cancel")}
+        variant="destructive"
       />
     </>
   );

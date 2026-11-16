@@ -4042,6 +4042,7 @@
       "load_failed": "Neizdevās ielādēt kārtulas",
       "none": "Vēl nav kārtulu",
       "new_mail_only": "Tikai jaunām ziņām",
+      "cannot_run": "Esošajām vēstulēm var piemērot tikai noteikumus, kas pārvieto, kopē, atzīmē kā izlasītu, ar zvaigznīti vai tagu vai dzēš, un tikai tad, ja tie nepārbauda tekstu, lauku „Piegādāts uz“ vai regulāro izteiksmi.",
       "running": "Izpilda “{name}” mapē {folder}…"
     },
     "find_emails_from": "Atrast e-pastus no {name}"

@@ -4042,6 +4042,7 @@
       "load_failed": "Reglerne kunne ikke indlæses",
       "none": "Ingen regler endnu",
       "new_mail_only": "Kun for nye beskeder",
+      "cannot_run": "Kun regler, der flytter, kopierer, markerer som læst, stjernemarkerer, tagger eller kasserer, kan anvendes på eksisterende beskeder, og kun hvis de ikke tjekker brødteksten, \"Leveret til\" eller et regulært udtryk.",
       "running": "Kører „{name}“ på {folder}…"
     },
     "find_emails_from": "Find e-mails fra {name}"

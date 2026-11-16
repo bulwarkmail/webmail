@@ -4042,6 +4042,7 @@
       "load_failed": "Reegleid ei õnnestunud laadida",
       "none": "Reegleid pole veel",
       "new_mail_only": "Ainult uutele kirjadele",
+      "cannot_run": "Olemasolevatele kirjadele saab rakendada ainult reegleid, mis liigutavad, kopeerivad, märgivad loetuks, tähistavad, sildistavad või hülgavad, ja ainult siis, kui need ei kontrolli sisu, välja „Kohale toimetatud aadressile“ ega regulaaravaldist.",
       "running": "Käivitan „{name}” kaustas {folder}…"
     },
     "find_emails_from": "Leia kirjad saatjalt {name}"

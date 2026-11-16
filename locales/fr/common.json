@@ -4042,6 +4042,7 @@
       "load_failed": "Impossible de charger les règles",
       "none": "Aucune règle pour l'instant",
       "new_mail_only": "Uniquement pour les nouveaux messages",
+      "cannot_run": "Seules les règles qui déplacent, copient, marquent comme lu, suivent, étiquettent ou suppriment peuvent s'appliquer aux messages existants, et seulement si elles ne vérifient ni le corps, ni « Distribué à », ni une expression régulière.",
       "running": "Exécution de « {name} » sur {folder}…"
     },
     "find_emails_from": "Rechercher les e-mails de {name}"

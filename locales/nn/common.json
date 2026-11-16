@@ -4050,6 +4050,7 @@
       "load_failed": "Klarte ikkje laste inn reglane",
       "none": "Ingen reglar enno",
       "new_mail_only": "Berre for nye meldingar",
+      "cannot_run": "Berre reglar som flyttar, kopierer, merkjer som lesen, stjernemerkjer, merkjer med etikett eller forkastar, kan køyrast på eksisterande meldingar, og berre om dei ikkje sjekkar meldingsteksten, «Levert til» eller eit regulært uttrykk.",
       "running": "Køyrer «{name}» på {folder}…"
     },
     "find_emails_from": "Finn e-post frå {name}"

@@ -4042,6 +4042,7 @@
       "load_failed": "Die Regeln konnten nicht geladen werden",
       "none": "Noch keine Regeln",
       "new_mail_only": "Nur für neue Nachrichten",
+      "cannot_run": "Auf vorhandene Nachrichten lassen sich nur Regeln anwenden, die verschieben, kopieren, als gelesen markieren, mit Stern markieren, mit Label versehen oder löschen, und nur, wenn sie weder den Nachrichtentext noch „Zugestellt an“ noch einen regulären Ausdruck prüfen.",
       "running": "„{name}“ wird auf {folder} angewendet…"
     },
     "find_emails_from": "E-Mails von {name} finden"

@@ -4042,6 +4042,7 @@
       "load_failed": "Nie udało się wczytać reguł",
       "none": "Brak reguł",
       "new_mail_only": "Tylko dla nowych wiadomości",
+      "cannot_run": "Do istniejących wiadomości można zastosować tylko reguły, które przenoszą, kopiują, oznaczają jako przeczytane, gwiazdką lub etykietą albo odrzucają, i tylko jeśli nie sprawdzają treści, pola „Dostarczono do” ani wyrażenia regularnego.",
       "running": "Uruchamianie „{name}” w folderze {folder}…"
     },
     "find_emails_from": "Znajdź e-maile od {name}"

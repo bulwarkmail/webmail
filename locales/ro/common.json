@@ -4042,6 +4042,7 @@
       "load_failed": "Regulile nu au putut fi încărcate",
       "none": "Nicio regulă încă",
       "new_mail_only": "Doar pentru mesajele noi",
+      "cannot_run": "Doar regulile care mută, copiază, marchează ca citit, marchează cu stea, etichetează sau ignoră pot fi aplicate mesajelor existente, și doar dacă nu verifică corpul mesajului, „Livrat la” sau o expresie regulată.",
       "running": "Se rulează „{name}” în {folder}…"
     },
     "find_emails_from": "Găsește e-mailurile de la {name}"

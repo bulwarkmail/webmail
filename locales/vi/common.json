@@ -4054,6 +4054,7 @@
       "load_failed": "Không thể tải quy tắc",
       "none": "Chưa có quy tắc nào",
       "new_mail_only": "Chỉ dành cho thư mới",
+      "cannot_run": "Chỉ có thể chạy trên thư hiện có các quy tắc di chuyển, sao chép, đánh dấu đã đọc, gắn dấu sao, gắn thẻ hoặc hủy, và chỉ khi chúng không kiểm tra nội dung thư, \"Đã gửi tới\" hay biểu thức chính quy.",
       "running": "Đang chạy \"{name}\" trên {folder}…"
     },
     "find_emails_from": "Tìm email từ {name}"

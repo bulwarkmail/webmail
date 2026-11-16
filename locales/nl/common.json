@@ -4042,6 +4042,7 @@
       "load_failed": "De regels konden niet worden geladen",
       "none": "Nog geen regels",
       "new_mail_only": "Alleen voor nieuwe berichten",
+      "cannot_run": "Alleen regels die verplaatsen, kopiëren, als gelezen markeren, een ster geven, labelen of verwijderen kunnen op bestaande berichten worden toegepast, en alleen als ze de inhoud, 'Afgeleverd aan' of een reguliere expressie niet controleren.",
       "running": "\"{name}\" wordt uitgevoerd op {folder}…"
     },
     "find_emails_from": "E-mails van {name} zoeken"

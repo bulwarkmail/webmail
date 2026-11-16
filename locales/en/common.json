@@ -4042,6 +4042,7 @@
       "load_failed": "Could not load the rules",
       "none": "No rules yet",
       "new_mail_only": "Only for new messages",
+      "cannot_run": "Only rules that move, copy, mark as read, star, tag or discard can run on existing messages, and only if they don't check the body, Delivered to or a regular expression.",
       "running": "Running \"{name}\" on {folder}…"
     },
     "find_emails_from": "Find emails from {name}"

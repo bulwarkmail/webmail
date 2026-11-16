@@ -4042,6 +4042,7 @@
       "load_failed": "No se pudieron cargar las reglas",
       "none": "Aún no hay reglas",
       "new_mail_only": "Solo para mensajes nuevos",
+      "cannot_run": "Solo las reglas que mueven, copian, marcan como leído, destacan, etiquetan o descartan se pueden aplicar a mensajes existentes, y solo si no comprueban el cuerpo, «Entregado a» ni una expresión regular.",
       "running": "Ejecutando «{name}» en {folder}…"
     },
     "find_emails_from": "Buscar correos de {name}"

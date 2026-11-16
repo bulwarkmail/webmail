@@ -70,7 +70,7 @@ import {
   type QuickRuleText,
 } from "@/lib/filters/quick-rule-flow";
 import { readAccountFilters } from "@/lib/filters/account-filters";
-import { retroactiveSupport } from "@/lib/filters/retroactive";
+import { canApplyToExisting } from "@/lib/filters/rule-scope";
 import type { FilterRule } from "@/lib/jmap/sieve-types";
 
 /** Translators for the rule flows, which outlive the menu that starts them. */
@@ -935,7 +935,6 @@ function FolderRulesContent({
   onDone: () => void;
 }) {
   const t = useTranslations("context_menu");
-  const tFilters = useTranslations("settings.filters");
   const tSidebar = useTranslations("sidebar");
   const text = useQuickRuleText();
   const router = useRouter();
@@ -966,15 +965,15 @@ function FolderRulesContent({
       {rules.state === "opaque" && note("rules.opaque_hint", "rules:opaque-hint")}
       {rules.state === "ready" && rules.rules.length === 0 && note("rules.none", "folder-rules:empty")}
       {rules.state === "ready" && rules.rules.map((rule) => {
-        const support = retroactiveSupport(rule);
+        const runs = canApplyToExisting(rule, target.mailboxes);
         return (
           <ContextMenuItem
             key={rule.id}
             icon={Play}
             label={rule.name}
-            title={support.ok ? undefined : tFilters(support.reason === "period" ? "apply_existing_period" : "apply_existing_unsupported")}
-            hint={support.ok ? undefined : t("rules.new_mail_only")}
-            disabled={!support.ok}
+            title={runs ? undefined : t("rules.cannot_run")}
+            hint={runs ? undefined : t("rules.new_mail_only")}
+            disabled={!runs}
             testId={`folder-rules:run:${rule.id}`}
             onClick={() => {
               void runRuleOnFolder(target, rule, mailbox.id, folderName, text);

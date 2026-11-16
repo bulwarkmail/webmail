@@ -4,7 +4,7 @@ import { toast } from '@/stores/toast-store';
 import { executePlan } from './quick-rule-flow';
 import type { QuickRuleTarget } from './quick-rule-target';
 import type { RetroPlan, RetroStep } from './retroactive';
-import { findRuleMatches } from './rule-preview';
+import { findRuleMatches, previewPlan } from './rule-preview';
 
 export type ApplyScope = 'new' | 'folder' | 'all';
 
@@ -35,6 +35,14 @@ function changesOldMail(action: FilterAction): boolean {
 export function appliesToExisting(rule: Pick<FilterRule, 'actions'> & { conditions?: FilterRule['conditions'] }): boolean {
   if (rule.conditions?.some((c) => c.field === 'body' || c.field === 'delivered_to')) return false;
   return rule.actions.some(changesOldMail) && !rule.actions.some(filesWithoutFolder);
+}
+
+/**
+ * Whether the rule can run on mail already received: it does something
+ * there, and every condition can be looked up on stored mail.
+ */
+export function canApplyToExisting(rule: FilterRule, mailboxes: Mailbox[]): boolean {
+  return appliesToExisting(rule) && previewPlan(rule, mailboxes) !== null;
 }
 
 export function skipsJunk(rule: Pick<FilterRule, 'actions' | 'includeSpam'>): boolean {
@@ -83,21 +91,46 @@ export function planMatched(rule: FilterRule, records: Matched[], mailboxes: Mai
   return { ids: [...changed], steps };
 }
 
+/**
+ * What the rule would change on the mail already in `scope`. Mail in Sent,
+ * Drafts, Trash and Spam is left out, a period limits it to the mail that
+ * arrived within it, and forward, reject and keep do nothing there.
+ */
+export async function planRuleForScope(
+  target: QuickRuleTarget,
+  rule: FilterRule,
+  scope: ApplyScope,
+  folderId: string | null,
+): Promise<RetroPlan> {
+  const nothing: RetroPlan = { ids: [], steps: [] };
+  if (scope === 'new' || !appliesToExisting(rule)) return nothing;
+  if (scope === 'folder' && !folderId) return nothing;
+  const matches = await findRuleMatches(target, rule, {
+    folderId: scope === 'folder' ? folderId! : undefined,
+    skipJunk: skipsJunk(rule),
+    limit: APPLY_LIMIT,
+  });
+  return matches ? planMatched(rule, matches.records, target.mailboxes) : nothing;
+}
+
+/** How many messages the plan moves to Trash. */
+export function trashedBy(plan: RetroPlan, mailboxes: Mailbox[]): number {
+  const trash = mailboxes.find((m) => m.role === 'trash');
+  if (!trash) return 0;
+  const ids = new Set<string>();
+  for (const step of plan.steps) {
+    if (step.kind === 'move' && step.mailboxId === trash.id) for (const id of step.ids) ids.add(id);
+  }
+  return ids.size;
+}
+
 export async function applyRuleToScope(
   target: QuickRuleTarget,
   rule: FilterRule,
   scope: ApplyScope,
   folderId: string | null,
 ): Promise<number | null> {
-  if (scope === 'new' || !appliesToExisting(rule)) return 0;
-  if (scope === 'folder' && !folderId) return 0;
-  const matches = await findRuleMatches(target, rule, {
-    folderId: scope === 'folder' ? folderId! : undefined,
-    skipJunk: skipsJunk(rule),
-    limit: APPLY_LIMIT,
-  });
-  if (!matches) return 0;
-  const plan = planMatched(rule, matches.records, target.mailboxes);
+  const plan = await planRuleForScope(target, rule, scope, folderId);
   if (!(await executePlan(target, plan))) return null;
   return plan.ids.length;
 }

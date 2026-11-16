@@ -4042,6 +4042,7 @@
       "load_failed": "No s'han pogut carregar les regles",
       "none": "Encara no hi ha regles",
       "new_mail_only": "Només per a missatges nous",
+      "cannot_run": "Només les regles que mouen, copien, marquen com a llegit, destaquen, etiqueten o descarten es poden aplicar a missatges existents, i només si no comproven el cos, «Lliurat a» ni una expressió regular.",
       "running": "S'està executant «{name}» a {folder}…"
     },
     "find_emails_from": "Cerca correus de {name}"

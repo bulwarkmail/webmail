@@ -4042,6 +4042,7 @@
       "load_failed": "Nem sikerült betölteni a szabályokat",
       "none": "Még nincsenek szabályok",
       "new_mail_only": "Csak új üzenetekre",
+      "cannot_run": "Meglévő üzenetekre csak olyan szabály alkalmazható, amely áthelyez, másol, olvasottnak jelöl, csillagoz, címkéz vagy elvet, és csak ha nem a törzset, a „Kézbesítve ide” mezőt vagy reguláris kifejezést vizsgál.",
       "running": "„{name}” futtatása itt: {folder}…"
     },
     "find_emails_from": "{name} e-mailjeinek keresése"

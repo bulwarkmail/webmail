@@ -4042,7 +4042,8 @@
       "load_failed": "Não foi possível carregar as regras",
       "none": "Ainda não há regras",
       "new_mail_only": "Apenas para mensagens novas",
-      "running": "Executando \"{name}\" em {folder}…"
+      "running": "Executando \"{name}\" em {folder}…",
+      "cannot_run": "Só regras que movem, copiam, marcam como lida, marcam com estrela, etiquetam ou descartam podem ser aplicadas a mensagens existentes, e só se não verificarem o corpo, \"Entregue para\" ou uma expressão regular."
     },
     "find_emails_from": "Encontrar e-mails de {name}"
   },

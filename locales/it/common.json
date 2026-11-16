@@ -4042,6 +4042,7 @@
       "load_failed": "Impossibile caricare le regole",
       "none": "Nessuna regola",
       "new_mail_only": "Solo per i nuovi messaggi",
+      "cannot_run": "Solo le regole che spostano, copiano, segnano come letto, contrassegnano con stella, etichettano o scartano si possono applicare ai messaggi esistenti, e solo se non controllano il corpo, «Consegnato a» o un'espressione regolare.",
       "running": "Esecuzione di «{name}» su {folder}…"
     },
     "find_emails_from": "Trova email da {name}"

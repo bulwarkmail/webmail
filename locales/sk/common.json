@@ -4042,6 +4042,7 @@
       "load_failed": "Pravidlá sa nepodarilo načítať",
       "none": "Zatiaľ žiadne pravidlá",
       "new_mail_only": "Len pre nové správy",
+      "cannot_run": "Na existujúce správy možno použiť len pravidlá, ktoré presúvajú, kopírujú, označujú ako prečítané, hviezdičkou alebo štítkom alebo zahadzujú, a len ak nekontrolujú telo správy, „Doručené na“ ani regulárny výraz.",
       "running": "Spúšťa sa „{name}“ v priečinku {folder}…"
     },
     "find_emails_from": "Nájsť e-maily od {name}"
