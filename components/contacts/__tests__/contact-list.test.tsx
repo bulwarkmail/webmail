@@ -263,6 +263,26 @@ describe('ContactList', () => {
     expect(document.activeElement).toBe(screen.getByPlaceholderText('search_placeholder'));
   });
 
+  it('filters a Timestamp birthday by its UTC month west of UTC', () => {
+    const originalTZ = process.env.TZ;
+    process.env.TZ = 'America/Toronto';
+    try {
+      const carol = makeContact({
+        id: '4',
+        name: { components: [{ kind: 'given', value: 'Carol' }], isOrdered: true },
+        anniversaries: { b1: { '@type': 'Anniversary', kind: 'birth', date: { '@type': 'Timestamp', utc: '1985-03-01T00:00:00Z' } } },
+      } as Partial<ContactCard> & { id: string });
+      render(<ContactList {...defaultProps} contacts={[alice, carol]} />);
+      fireEvent.click(screen.getByLabelText('filters.toggle'));
+      fireEvent.change(screen.getByLabelText('filters.birthday_month'), { target: { value: '3' } });
+      expect(screen.getByText('Carol')).toBeInTheDocument();
+      expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument();
+    } finally {
+      if (originalTZ === undefined) delete process.env.TZ;
+      else process.env.TZ = originalTZ;
+    }
+  });
+
   it("opens a contact's menu on long-press, with Select to start selecting", () => {
     vi.useFakeTimers();
     try {
