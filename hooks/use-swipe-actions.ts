@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type SwipeSide = "left" | "right";
 
@@ -10,6 +10,27 @@ const ACTIVATION = 12;
 export const SWIPE_COMMIT_DISTANCE = 96;
 /** The row stops following the finger past this distance. */
 const MAX_OFFSET = 140;
+const LEAN = 4;
+
+let mountedRows = 0;
+let blockThisMove = false;
+
+function holdScroll(e: TouchEvent) {
+  if (blockThisMove && e.cancelable) e.preventDefault();
+  blockThisMove = false;
+}
+
+function useScrollHold(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    if (mountedRows++ === 0) {
+      window.addEventListener("touchmove", holdScroll, { passive: false });
+    }
+    return () => {
+      if (--mountedRows === 0) window.removeEventListener("touchmove", holdScroll);
+    };
+  }, [enabled]);
+}
 
 /**
  * Dampen travel past the commit distance so the row feels elastic instead of
@@ -53,7 +74,7 @@ export interface UseSwipeActionsResult {
 /**
  * Gmail-style horizontal swipe actions for a list row. Pair with
  * `touch-action: pan-y` on the swiped element so vertical scrolling stays
- * native while horizontal drags are handled here (no preventDefault needed).
+ * native while horizontal drags are handled here.
  *
  * A right-swipe (finger moves right, `offsetX > 0`) maps to the caller's
  * "right" action; a left-swipe maps to "left". A side with no configured
@@ -69,6 +90,7 @@ export function useSwipeActions({
   const claimed = useRef(false);
   const justSwiped = useRef(false);
   const [offsetX, setOffsetX] = useState(0);
+  useScrollHold(enabled);
 
   const canGo = useCallback(
     (dx: number) => (dx < 0 ? hasLeft : hasRight),
@@ -87,6 +109,7 @@ export function useSwipeActions({
       const t = e.touches[0];
       start.current = { x: t.clientX, y: t.clientY };
       claimed.current = false;
+      blockThisMove = false;
     },
     [enabled],
   );
@@ -99,16 +122,24 @@ export function useSwipeActions({
       const dy = t.clientY - start.current.y;
 
       if (!claimed.current) {
-        if (Math.abs(dx) > ACTIVATION && Math.abs(dx) > Math.abs(dy)) {
+        const ax = Math.abs(dx);
+        const ay = Math.abs(dy);
+        if (ax > ACTIVATION && ax > ay) {
+          if (e.cancelable === false) {
+            start.current = null;
+            return;
+          }
           claimed.current = true;
-        } else if (Math.abs(dy) > ACTIVATION) {
+        } else if (ay > ACTIVATION) {
           // Vertical scroll — hand it back to the list.
           start.current = null;
           return;
         } else {
+          if (ax >= LEAN && ax > ay * 2) blockThisMove = true;
           return;
         }
       }
+      blockThisMove = true;
       // A swipe toward a side with no action resists to a token nudge.
       setOffsetX(canGo(dx) ? resist(dx) : dx * 0.15);
     },
