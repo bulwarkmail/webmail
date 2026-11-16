@@ -161,6 +161,15 @@ export function savedStatusFields(
   return fields;
 }
 
+/**
+ * What Show as starts at for a new event: an all-day one (a holiday, a
+ * birthday, a trip) doesn't block the day, a timed one does, as in Outlook
+ * and Google Calendar (#1684). Pure, for testing.
+ */
+export function defaultShowAs(allDay: boolean): CalendarEvent["freeBusyStatus"] {
+  return allDay ? "free" : "busy";
+}
+
 function formatDateInput(d: Date): string {
   return format(d, "yyyy-MM-dd");
 }
@@ -433,7 +442,16 @@ export function EventModal({
   const [endDate, setEndDate] = useState(formatDateInput(initialEndWall));
   const [endTime, setEndTime] = useState(formatTimeInput(initialEndWall));
   const [allDay, setAllDay] = useState(seed?.showWithoutTime || defaultAllDay || false);
-  const [freeBusyStatus, setFreeBusyStatus] = useState<CalendarEvent["freeBusyStatus"]>(seed?.freeBusyStatus ?? "busy");
+  // A new all-day event starts as free, a timed one as busy (#1684), until
+  // the user picks one under Show as.
+  const [freeBusyStatus, setFreeBusyStatus] = useState<CalendarEvent["freeBusyStatus"]>(
+    () => (seed ? seed.freeBusyStatus ?? "busy" : defaultShowAs(!!defaultAllDay)),
+  );
+  const showAsPickedRef = useRef(false);
+  const handleAllDayChange = (next: boolean) => {
+    setAllDay(next);
+    if (!seed && !showAsPickedRef.current) setFreeBusyStatus(defaultShowAs(next));
+  };
   const [privacy, setPrivacy] = useState<CalendarEvent["privacy"]>(seed?.privacy ?? "public");
   // The event's own colour; null paints it in its calendar's (#1668).
   const [color, setColor] = useState<string | null>(seed?.color || null);
@@ -634,7 +652,7 @@ export function EventModal({
     setCalendarId(f.calendarId); setRecurrence(f.recurrence); setCustomRule(f.customRule); setShowRecurrenceEditor(false);
     setUseDefaultAlerts(f.useDefaultAlerts); setAlertRows(f.alertRows); setPreservedAlerts(f.preservedAlerts); setRefreshDefaults(false);
     setAttendees(f.attendees); setSendInvitations(f.sendInvitations);
-    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy); setColor(f.color);
+    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy); setColor(f.color); showAsPickedRef.current = false;
   }, [initialForm]);
 
   const { dialogProps: discardDialogProps, confirm: confirmDiscard } = useConfirmDialog();
@@ -1482,7 +1500,7 @@ export function EventModal({
               type="checkbox"
               id="allDay"
               checked={allDay}
-              onChange={(e) => setAllDay(e.target.checked)}
+              onChange={(e) => handleAllDayChange(e.target.checked)}
               className="rounded border-input"
             />
             <label htmlFor="allDay" className="text-sm">{t("form.all_day_event")}</label>
@@ -1659,7 +1677,7 @@ export function EventModal({
               <select
                 id={labelFor("show_as")}
                 value={freeBusyStatus}
-                onChange={(e) => setFreeBusyStatus(e.target.value as CalendarEvent["freeBusyStatus"])}
+                onChange={(e) => { showAsPickedRef.current = true; setFreeBusyStatus(e.target.value as CalendarEvent["freeBusyStatus"]); }}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
               >
                 <option value="busy">{t("form.show_as_busy")}</option>

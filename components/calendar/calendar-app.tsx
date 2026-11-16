@@ -41,7 +41,7 @@ import { TaskModal } from "@/components/calendar/task-modal";
 import { dueFor, type TaskDueChoice } from "@/components/calendar/task-context-menu";
 import { MiniCalendar } from "@/components/calendar/mini-calendar";
 import { CalendarSidebarPanel } from "@/components/calendar/calendar-sidebar-panel";
-import { EventModal, type PendingEventPreview } from "@/components/calendar/event-modal";
+import { EventModal, defaultShowAs, type PendingEventPreview } from "@/components/calendar/event-modal";
 import { EventDetailPopover } from "@/components/calendar/event-detail-popover";
 import { EventContextMenu } from "@/components/calendar/event-context-menu";
 import { CopyToCalendarDialog } from "@/components/calendar/copy-to-calendar-dialog";
@@ -1542,7 +1542,8 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
         showWithoutTime: true,
         calendarIds: { [calendarId]: true },
         status: "confirmed",
-        freeBusyStatus: "busy",
+        // An all-day event doesn't block the day, as in the full editor (#1684).
+        freeBusyStatus: defaultShowAs(true),
         privacy: "public",
       });
       return;
@@ -1563,7 +1564,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
       showWithoutTime: false,
       calendarIds: { [calendarId]: true },
       status: "confirmed",
-      freeBusyStatus: "busy",
+      freeBusyStatus: defaultShowAs(false),
       privacy: "public",
     });
   }, [quickDraft, handleSaveEvent]);

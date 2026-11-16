@@ -610,6 +610,8 @@ describe('CalendarApp quick editor', () => {
     fireEvent.click(save);
     await waitFor(() => expect(store.createEvent).toHaveBeenCalledTimes(1));
     expect(store.createEvent.mock.calls[0][1]).toMatchObject({ title: '', showWithoutTime: false });
+    // A timed event blocks its time (#1684).
+    expect(store.createEvent.mock.calls[0][1].freeBusyStatus).toBe('busy');
   });
 });
 
@@ -627,6 +629,8 @@ describe('CalendarApp creating in the month view', () => {
     expect(store.createEvent.mock.calls[0][1]).toMatchObject({
       title: 'Holiday', start: '2026-10-15T00:00:00', duration: 'P1D', showWithoutTime: true,
     });
+    // An all-day event starts as free, as in the full editor (#1684).
+    expect(store.createEvent.mock.calls[0][1].freeBusyStatus).toBe('free');
   });
 
   // Usability report 2026-11-04: a drag over the month's days did nothing.
