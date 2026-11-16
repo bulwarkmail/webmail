@@ -4300,6 +4300,9 @@
       "visibility_hint_secret": "ผู้ที่คุณแชร์ปฏิทินด้วยจะไม่เห็นกิจกรรมนี้ และเวลายังคงว่าง",
       "visibility_series": "ใช้กับทุกครั้งที่เกิดซ้ำ",
       "color_calendar": "ใช้สีของปฏิทิน",
+      "overlap": "ซ้อนทับกับ {title} ({details})",
+      "overlap_plain": "ซ้อนทับกับ {title}",
+      "overlap_more": "และอีก {count} รายการ",
       "save": "บันทึก",
       "cancel": "ยกเลิก",
       "color": "สี"

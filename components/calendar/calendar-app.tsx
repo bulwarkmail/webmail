@@ -2735,6 +2735,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
                 isSubscriptionCalendar={isSubscriptionCalendar}
                 maxParticipants={maxParticipants}
                 isMobile={false}
+                overlapEvents={visibleEvents}
               />
             </div>
           )}
@@ -2910,6 +2911,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
           isSubscriptionCalendar={isSubscriptionCalendar}
           maxParticipants={maxParticipants}
           isMobile={true}
+          overlapEvents={visibleEvents}
         />
       )}
 

@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "People you share the calendar with don't see the event, and it doesn't block the time.",
       "visibility_series": "Applies to every occurrence.",
       "color_calendar": "Use calendar color",
+      "overlap": "Overlaps with {title} ({details})",
+      "overlap_plain": "Overlaps with {title}",
+      "overlap_more": "And {count} more",
       "save": "Save",
       "cancel": "Cancel",
       "color": "Color"

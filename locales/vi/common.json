@@ -4929,6 +4929,9 @@
       "visibility_hint_secret": "Những người bạn chia sẻ lịch sẽ không thấy sự kiện, và thời gian vẫn trống.",
       "visibility_series": "Áp dụng cho mọi lần lặp lại.",
       "color_calendar": "Dùng màu của lịch",
+      "overlap": "Trùng với {title} ({details})",
+      "overlap_plain": "Trùng với {title}",
+      "overlap_more": "Và {count} sự kiện khác",
       "save": "Lưu",
       "cancel": "Hủy",
       "color": "Màu sắc"

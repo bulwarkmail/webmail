@@ -4916,6 +4916,9 @@
       "visibility_hint_secret": "Cilvēki, ar kuriem kopīgojat kalendāru, notikumu neredz, un laiks paliek brīvs.",
       "visibility_series": "Attiecas uz visiem atkārtojumiem.",
       "color_calendar": "Izmantot kalendāra krāsu",
+      "overlap": "Pārklājas ar {title} ({details})",
+      "overlap_plain": "Pārklājas ar {title}",
+      "overlap_more": "Un vēl {count}",
       "save": "Saglabāt",
       "cancel": "Atcelt",
       "color": "Krāsa"

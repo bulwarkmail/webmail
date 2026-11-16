@@ -14,7 +14,7 @@ import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@
 import { descriptionAsText, isHtmlDescription, plainDescriptionFields } from "@/lib/calendar-description";
 import { locationsWithName } from "@/lib/calendar-event-normalization";
 import { ParticipantStatusBadge } from "./rsvp-buttons";
-import { format, parseISO, addHours, isSameDay } from "date-fns";
+import { format, parseISO, addDays, addHours, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
 import { AlertListEditor, AlertSummary, formatEventAlertsLabel } from "./alert-list-editor";
 import { alertRowToOffset, describeAlert, getCalendarDefaultAlerts, newAlertRow, withOwnAlertIds, type AlertAction, type AlertRow as EditableAlertRow, type AlertUnit } from "@/lib/calendar-alerts";
@@ -53,6 +53,8 @@ import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
+import { findOverlappingEvents } from "@/lib/calendar-overlaps";
 import { confirmInvitationRecipients } from "@/lib/outgoing/external-recipients";
 import {
   calendarFormHooks,
@@ -114,6 +116,8 @@ interface EventModalProps {
   /** The server's maxParticipantsPerEvent, for a warning; null when not advertised. */
   maxParticipants?: number | null;
   isMobile?: boolean;
+  /** The events loaded in the calendar: the form says which of them share its time (#1685). */
+  overlapEvents?: CalendarEvent[];
 }
 
 /**
@@ -297,6 +301,7 @@ export function EventModal({
   isSubscriptionCalendar,
   maxParticipants = null,
   isMobile = false,
+  overlapEvents,
 }: EventModalProps) {
   const t = useTranslations("calendar");
   const paint = useCvdColor();
@@ -724,6 +729,52 @@ export function EventModal({
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
   }, [title, description, startDate, startTime, endDate, endTime, allDay, location, virtualLocation, calendarId, event?.uid, attendees]);
+
+  // Loaded events that share the form's time (#1685): a notice, not a
+  // block. A free event takes no time, so it overlaps nothing.
+  const userEmailsForEvent = useEventUserEmails(currentUserEmails);
+  const overlaps = useMemo(() => {
+    if (mode !== "edit" || freeBusyStatus === "free" || !overlapEvents?.length) return [];
+    let window: { start: Date; end: Date; allDay: boolean };
+    if (allDay) {
+      const start = new Date(`${startDate}T00:00:00`);
+      const last = new Date(`${endDate}T00:00:00`);
+      window = { start, end: addDays(last < start ? start : last, 1), allDay: true };
+    } else {
+      // The fields are a wall clock in the form's zone, as for the grid preview.
+      const start = zoneWallToDisplay(new Date(`${startDate}T${startTime || "00:00"}:00`), fieldZone);
+      const end = zoneWallToDisplay(new Date(`${endDate}T${endTime || "00:00"}:00`), fieldZone);
+      window = { start, end: end < start ? addHours(start, 1) : end, allDay: false };
+    }
+    return findOverlappingEvents(window, overlapEvents, { excludeUid: event?.uid, userEmailsFor: userEmailsForEvent });
+  }, [mode, freeBusyStatus, overlapEvents, allDay, startDate, startTime, endDate, endTime, fieldZone, event?.uid, userEmailsForEvent]);
+  const overlapWarnings = useMemo<ConflictWarning[]>(() => {
+    const formDay = new Date(`${startDate}T00:00:00`);
+    const time = (d: Date) => format(d, timeDisplayFmt);
+    const shown: ConflictWarning[] = overlaps.slice(0, 3).map((other) => {
+      const details: string[] = [];
+      if (!other.showWithoutTime) {
+        const start = getEventStartDate(other);
+        const day = isSameDay(start, formDay) ? "" : `${new Intl.DateTimeFormat(locale, { weekday: "short" }).format(start)} `;
+        details.push(`${day}${time(start)}–${time(getEventEndDate(other))}`);
+      }
+      const otherCalendar = calendars.find((c) => other.calendarIds?.[c.id]);
+      if (otherCalendar) details.push(shownName.calendar(otherCalendar));
+      const otherTitle = other.title || t("events.no_title");
+      return {
+        key: `overlap:${other.id}`,
+        severity: "warning",
+        message: details.length > 0
+          ? t("form.overlap", { title: otherTitle, details: details.join(", ") })
+          : t("form.overlap_plain", { title: otherTitle }),
+      };
+    });
+    if (overlaps.length > 3) {
+      shown.push({ key: "overlap:more", severity: "warning", message: t("form.overlap_more", { count: overlaps.length - 3 }) });
+    }
+    return shown;
+  }, [overlaps, startDate, timeDisplayFmt, locale, calendars, shownName, t]);
+  const conflictWarnings = useMemo(() => [...overlapWarnings, ...pluginConflictWarnings], [overlapWarnings, pluginConflictWarnings]);
 
   // Plugins hear about an existing event opened for reading once per event,
   // and about the form each time it opens (new event, or view -> edit).
@@ -1519,9 +1570,9 @@ export function EventModal({
             </div>
           )}
 
-          {pluginConflictWarnings.length > 0 && (
-            <div className="space-y-1.5">
-              {pluginConflictWarnings.map(w => (
+          {conflictWarnings.length > 0 && (
+            <div className="space-y-1.5" data-testid="event-conflict-warnings">
+              {conflictWarnings.map(w => (
                 <div
                   key={w.key}
                   className={

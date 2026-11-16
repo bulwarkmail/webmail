@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Las personas con las que compartes el calendario no ven el evento, y no bloquea la hora.",
       "visibility_series": "Se aplica a todas las repeticiones.",
       "color_calendar": "Usar el color del calendario",
+      "overlap": "Se solapa con {title} ({details})",
+      "overlap_plain": "Se solapa con {title}",
+      "overlap_more": "Y {count} más",
       "save": "Guardar",
       "cancel": "Cancelar",
       "color": "Color"

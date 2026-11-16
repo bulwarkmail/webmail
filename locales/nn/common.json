@@ -4925,6 +4925,9 @@
       "visibility_hint_secret": "Dei du deler kalenderen med, ser ikkje hendinga, og tida held seg ledig.",
       "visibility_series": "Gjeld alle gjentakingar.",
       "color_calendar": "Bruk fargen til kalenderen",
+      "overlap": "Overlappar med {title} ({details})",
+      "overlap_plain": "Overlappar med {title}",
+      "overlap_more": "Og {count} til",
       "save": "Lagre",
       "cancel": "Avbryt",
       "color": "Farge"

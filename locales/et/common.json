@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Inimesed, kellega kalendrit jagad, sündmust ei näe ja aeg jääb vabaks.",
       "visibility_series": "Kehtib kõigile kordustele.",
       "color_calendar": "Kasuta kalendri värvi",
+      "overlap": "Kattub sündmusega {title} ({details})",
+      "overlap_plain": "Kattub sündmusega {title}",
+      "overlap_more": "Ja veel {count}",
       "save": "Salvesta",
       "cancel": "Tühista",
       "color": "Värv"

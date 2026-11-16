@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Те, с кем вы поделились календарём, не видят событие, и время остаётся свободным.",
       "visibility_series": "Применяется ко всем повторениям.",
       "color_calendar": "Использовать цвет календаря",
+      "overlap": "Пересекается с «{title}» ({details})",
+      "overlap_plain": "Пересекается с «{title}»",
+      "overlap_more": "И ещё {count}",
       "save": "Сохранить",
       "cancel": "Отмена",
       "color": "Цвет"

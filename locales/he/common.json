@@ -4786,6 +4786,9 @@
       "visibility_hint_secret": "מי שהלוח משותף איתו לא רואה את האירוע, והזמן נשאר פנוי.",
       "visibility_series": "חל על כל המופעים.",
       "color_calendar": "שימוש בצבע של לוח השנה",
+      "overlap": "חופף לאירוע {title} ({details})",
+      "overlap_plain": "חופף לאירוע {title}",
+      "overlap_more": "ועוד {count}",
       "save": "שמור",
       "cancel": "לְבַטֵל",
       "color": "צבע"

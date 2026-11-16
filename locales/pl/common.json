@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Osoby, którym udostępniasz kalendarz, nie widzą wydarzenia, a czas pozostaje wolny.",
       "visibility_series": "Dotyczy wszystkich powtórzeń.",
       "color_calendar": "Użyj koloru kalendarza",
+      "overlap": "Nakłada się na {title} ({details})",
+      "overlap_plain": "Nakłada się na {title}",
+      "overlap_more": "I jeszcze {count}",
       "save": "Zapisz",
       "cancel": "Anuluj",
       "color": "Kolor"

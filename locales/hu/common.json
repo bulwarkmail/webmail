@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Akikkel megosztja a naptárt, nem látják az eseményt, és az idő szabad marad.",
       "visibility_series": "Minden ismétlődésre vonatkozik.",
       "color_calendar": "A naptár színének használata",
+      "overlap": "Ütközik ezzel: {title} ({details})",
+      "overlap_plain": "Ütközik ezzel: {title}",
+      "overlap_more": "És még {count}",
       "save": "Mentés",
       "cancel": "Mégse",
       "color": "Szín"

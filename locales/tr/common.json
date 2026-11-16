@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Takvimi paylaştığınız kişiler etkinliği görmez ve zaman boş kalır.",
       "visibility_series": "Tüm tekrarlara uygulanır.",
       "color_calendar": "Takvimin rengini kullan",
+      "overlap": "{title} ile çakışıyor ({details})",
+      "overlap_plain": "{title} ile çakışıyor",
+      "overlap_more": "Ve {count} tane daha",
       "save": "Kaydet",
       "cancel": "İptal",
       "color": "Renk"

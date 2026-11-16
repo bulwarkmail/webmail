@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Ľudia, s ktorými zdieľate kalendár, udalosť nevidia a čas zostane voľný.",
       "visibility_series": "Platí pre všetky opakovania.",
       "color_calendar": "Použiť farbu kalendára",
+      "overlap": "Prekrýva sa s {title} ({details})",
+      "overlap_plain": "Prekrýva sa s {title}",
+      "overlap_more": "A ďalšie: {count}",
       "save": "Uložiť",
       "cancel": "Zrušiť",
       "color": "Farba"

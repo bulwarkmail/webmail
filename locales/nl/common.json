@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Mensen met wie je de agenda deelt, zien de afspraak niet, en de tijd blijft vrij.",
       "visibility_series": "Geldt voor alle herhalingen.",
       "color_calendar": "Kleur van de agenda gebruiken",
+      "overlap": "Overlapt met {title} ({details})",
+      "overlap_plain": "Overlapt met {title}",
+      "overlap_more": "En nog {count}",
       "save": "Opslaan",
       "cancel": "Annuleren",
       "color": "Kleur"

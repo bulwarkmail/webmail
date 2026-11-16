@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "カレンダーを共有している相手には表示されず、時間も空きのままになります。",
       "visibility_series": "すべての繰り返しに適用されます。",
       "color_calendar": "カレンダーの色を使う",
+      "overlap": "{title}と重なっています（{details}）",
+      "overlap_plain": "{title}と重なっています",
+      "overlap_more": "ほか{count}件",
       "save": "保存",
       "cancel": "キャンセル",
       "color": "色"

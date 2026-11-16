@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "Les persones amb qui comparteixes el calendari no veuen l'esdeveniment, i no bloqueja l'hora.",
       "visibility_series": "S'aplica a totes les repeticions.",
       "color_calendar": "Usa el color del calendari",
+      "overlap": "Se superposa amb {title} ({details})",
+      "overlap_plain": "Se superposa amb {title}",
+      "overlap_more": "I {count} més",
       "save": "Desa",
       "cancel": "Cancel·la",
       "color": "Color"

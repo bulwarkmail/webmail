@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "لا يرى من تشاركهم التقويم هذا الحدث، ولا يحجز الوقت.",
       "visibility_series": "ينطبق على كل التكرارات.",
       "color_calendar": "استخدام لون التقويم",
+      "overlap": "يتداخل مع {title} ({details})",
+      "overlap_plain": "يتداخل مع {title}",
+      "overlap_more": "و{count} أخرى",
       "save": "حفظ",
       "cancel": "إلغاء",
       "color": "اللون"

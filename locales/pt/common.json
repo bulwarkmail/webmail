@@ -4917,6 +4917,9 @@
       "visibility_hint_secret": "As pessoas com quem você compartilha o calendário não veem o evento, e o horário fica livre.",
       "visibility_series": "Aplica-se a todas as ocorrências.",
       "color_calendar": "Usar a cor do calendário",
+      "overlap": "Sobrepõe-se a {title} ({details})",
+      "overlap_plain": "Sobrepõe-se a {title}",
+      "overlap_more": "E mais {count}",
       "save": "Salvar",
       "cancel": "Cancelar",
       "color": "Cor"
