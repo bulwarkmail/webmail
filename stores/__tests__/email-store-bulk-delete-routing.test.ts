@@ -105,6 +105,29 @@ describe('bulk Delete/Trash authenticated-client routing', () => {
     expect(requests.filter(r => r.method === 'Mailbox/get').map(r => [r.login, r.args.accountId])).toEqual([['a', 'c'], ['b', 'c']]);
   });
 
+  it.each([
+    ['trash', {}],
+    ['junk', { permanentlyDeleteJunk: true }],
+  ] as const)('destroys in the unified %s, whose virtual id names no folder (#1738)', async (role, settings) => {
+    useEmailStore.setState({ unifiedRole: role, selectedMailbox: `__unified_${role}__` });
+    useSettingsStore.setState(settings);
+    folders.a.d = [mailbox('group-trash', 'd', true)];
+    const own = email('a', 'p'), group = email('a', 'q', 'd');
+    select([own, group]);
+    expect(await useEmailStore.getState().batchDelete(a)).toBe(true);
+    expect(writes().map(r => r.args)).toEqual([
+      { accountId: 'c', destroy: ['p'] },
+      { accountId: 'd', destroy: ['q'] },
+    ]);
+  });
+
+  it('still moves to Trash in the unified Junk without "permanently delete junk"', async () => {
+    useEmailStore.setState({ unifiedRole: 'junk', selectedMailbox: '__unified_junk__' });
+    select([email('a', 'p')]);
+    expect(await useEmailStore.getState().batchDelete(a)).toBe(true);
+    expectWrite('a', { accountId: 'c', update: { p: { mailboxIds: { 'trash-a': true } } } });
+  });
+
   it('resolves each Trash in the same login and owner, despite a colliding folder cache', async () => {
     const p = email('a', 'p'), unselected = email('a', 'q'), q = email('b', 'q');
     select([p, unselected, q], [p, q]);

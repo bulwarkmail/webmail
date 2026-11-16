@@ -39,7 +39,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useEmailStore, resolveEmailBlobContext, ArchiveMailboxNotFoundError, resolveSelectedEmails, bulkDeleteIsPermanent, shouldConfirmBulkDelete, removalFolder, canRemoveFromFolder, restoreBatchesForSelection, type ListRow , type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, ArchiveMailboxNotFoundError, resolveSelectedEmails, bulkDeleteIsPermanent, shouldConfirmBulkDelete, viewedFolder, removalFolder, canRemoveFromFolder, restoreBatchesForSelection, type ListRow , type CrossAccountMoveReceipt } from "@/stores/email-store";
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
@@ -952,7 +952,7 @@ export function EmailList({
   const handleBatchDelete = async () => {
     if (!client || isProcessing) return;
 
-    const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
+    const currentMailbox = viewedFolder(mailboxes, { selectedMailbox, isUnifiedView, unifiedRole });
     const isInTrash = bulkDeleteIsPermanent(currentMailbox);
 
     if (shouldConfirmBulkDelete(currentMailbox)) {

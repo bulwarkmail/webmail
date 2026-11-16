@@ -70,7 +70,7 @@ import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { messagePriorityFromHeaders, type MessagePriority } from "@/lib/message-priority";
 import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
 import { lazyComponent } from "@/lib/lazy-component";
-import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt, moveFoldersFor, type MoveFolderUnavailableError } from "@/stores/email-store";
+import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, viewedFolder, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt, moveFoldersFor, type MoveFolderUnavailableError } from "@/stores/email-store";
 import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
 import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type DraftSource } from "@/lib/draft-source";
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
@@ -1298,7 +1298,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         return;
       }
       if (shortcutsTargetSelection && client) {
-        const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
+        const currentMailbox = viewedFolder(mailboxes, { selectedMailbox, isUnifiedView, unifiedRole });
         const permanent = bulkDeleteIsPermanent(currentMailbox);
         if (shouldConfirmBulkDelete(currentMailbox)) {
           const confirmed = await confirmDialog({

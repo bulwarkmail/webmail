@@ -3650,6 +3650,18 @@ export function bulkDeleteIsPermanent(mailbox: { role?: string | null } | undefi
   return mailbox?.role === 'junk' && settings.permanentlyDeleteJunk;
 }
 
+// The folder the list shows, for deciding what a delete there does. A unified
+// role view ("All Trash") selects a virtual id that names no real folder, so
+// its role stands in: without it a delete in the unified Trash moved the mail
+// to the Trash it was already in. (#1738)
+export function viewedFolder(
+  mailboxes: readonly Mailbox[],
+  view: { selectedMailbox: string; isUnifiedView: boolean; unifiedRole: UnifiedMailboxRole | null },
+): { role?: string | null } | undefined {
+  return mailboxes.find(m => m.id === view.selectedMailbox)
+    ?? (view.isUnifiedView && view.unifiedRole ? { role: view.unifiedRole } : undefined);
+}
+
 // Whether deleting several selected emails asks first. A permanent delete
 // always does; moving them to the trash only while the user keeps the
 // prompt on. (#1225)
@@ -6742,7 +6754,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const { selectedEmailKeys, emails, selectedMailbox } = get();
     const mailboxes = resolveActionMailboxes();
     if (selectedEmailKeys.size === 0) return true;
-    if (permanent || bulkDeleteIsPermanent(mailboxes.find(m => m.id === selectedMailbox))) {
+    if (permanent || bulkDeleteIsPermanent(viewedFolder(mailboxes, get()))) {
       return permanentlyDeleteSelection(client);
     }
 
