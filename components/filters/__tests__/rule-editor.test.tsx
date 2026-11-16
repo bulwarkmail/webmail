@@ -97,6 +97,16 @@ describe('RuleEditor', () => {
     await waitFor(() => expect(screen.getByText('Your account statement is available')).toBeTruthy());
   });
 
+  it('announces the count in the live region that announced the search, so a screen reader hears it', async () => {
+    const previewMatches = vi.fn().mockResolvedValue({ items: [], total: 4, complete: true });
+    render(<RuleEditor rule={existing()} mailboxes={[]} previewMatches={previewMatches} onSave={() => {}} onClose={() => {}} />);
+    const region = screen.getByText(en.settings.filters.editor.checking).closest('[aria-live]');
+    expect(region).not.toBeNull();
+    await screen.findByText('4 messages match', {}, { timeout: 3000 });
+    expect(region!.isConnected).toBe(true);
+    expect(region!.textContent).toBe('4 messages match');
+  });
+
   it('offers to also apply the rule to the Inbox or to all mail, saying how many messages each covers', async () => {
     const onSave = vi.fn();
     const previewMatches = vi.fn().mockResolvedValue({ items: [], total: 7, complete: true, inFolder: 3 });

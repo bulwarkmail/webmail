@@ -460,7 +460,7 @@ export function RuleEditor({
                 <select
                   value={effectiveApply}
                   onChange={(e) => setApplyTo(e.target.value as ApplyScope)}
-                  className={selectClass}
+                  className={cn(selectClass, "max-w-full min-w-0")}
                   aria-label={tEditor("apply_to")}
                 >
                   <option value="new">{tEditor("apply_new")}</option>
@@ -638,9 +638,11 @@ export function RuleEditor({
                 <Plus className="w-3.5 h-3.5" />
                 {t("add_condition")}
               </button>
+              {/* One live region that stays, so a screen reader hears the count when it replaces "Looking…". */}
+              <div aria-live="polite" aria-atomic="true">
               {previewKey && (
                 previewCurrent === undefined ? (
-                  <span className="text-xs text-muted-foreground" aria-live="polite">{tEditor("checking")}</span>
+                  <span className="text-xs text-muted-foreground">{tEditor("checking")}</span>
                 ) : previewCurrent && (
                   <button
                     type="button"
@@ -648,7 +650,6 @@ export function RuleEditor({
                     disabled={previewCurrent.items.length === 0}
                     onClick={() => setPreviewOpen((open) => !open)}
                     className="flex items-center gap-1 text-xs text-muted-foreground enabled:hover:text-foreground"
-                    aria-live="polite"
                   >
                     {tEditor(previewCurrent.complete ? "matching" : "matching_partial", { count: previewCurrent.total })}
                     {previewCurrent.items.length > 0 && (
@@ -657,6 +658,7 @@ export function RuleEditor({
                   </button>
                 )
               )}
+              </div>
             </div>
             {previewOpen && previewCurrent && previewCurrent.items.length > 0 && (
               <ul className="mt-2 ms-9 max-h-56 overflow-y-auto rounded-md border border-border divide-y divide-border" data-testid="rule-preview">
