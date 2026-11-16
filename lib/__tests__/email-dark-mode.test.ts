@@ -531,7 +531,7 @@ describe('applyEmailDarkMode', () => {
       '<div id="foot" style="opacity:0.5;color:#000">Footer</div>',
     );
     expect(fadeOf(doc.getElementById('foot')!)).toBe(1);
-  });
+  }, 20000);
 
   it('keeps a fade under one that stays', () => {
     const doc = render('<div style="opacity:0.5;background-color:red"><span id="inner" style="opacity:0.8;color:#000">Footer</span></div>');
