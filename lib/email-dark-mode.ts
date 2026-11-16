@@ -219,6 +219,25 @@ export function ensureContrast(color: Rgba, bg: Rgba, minRatio: number): Rgba {
   return out;
 }
 
+/**
+ * Raises `color`'s lightness in its own hue until it reaches `minRatio`
+ * against the darker `bg`. Unlike {@link ensureContrast} it never mirrors a
+ * dark colour to a light one, so the frame of a dark card stays a dark frame.
+ */
+function liftToContrast(color: Rgba, bg: Rgba, minRatio: number): Rgba {
+  if (color.a === 0) return color;
+  const opaque = color.a < 1 ? composite(color, bg) : color;
+  if (contrastRatio(opaque, bg) >= minRatio) return color;
+  const lch = toLch(opaque);
+  let l = lch.l;
+  let out = opaque;
+  for (let i = 0; i < 50 && l < 1 && contrastRatio(out, bg) < minRatio; i++) {
+    l = Math.min(1, l + 0.02);
+    out = fromLch({ ...lch, l }, 1);
+  }
+  return out;
+}
+
 /** Rewrites every `rgb()`/`rgba()` in a computed gradient. */
 function mapGradientColors(value: string, map: (c: Rgba) => Rgba): string {
   return value.replace(/rgba?\([^)]*\)/gi, (m) => {
@@ -262,10 +281,12 @@ interface Surface {
 /**
  * Lifts a kept dark fill that stood out from its light surroundings (a
  * near-black button on a white card) but now sinks into the darkened
- * surface around it.
+ * surface around it. A fill with a border of its own (a dark card, an HTML
+ * signature) keeps its colour: the border separates it (see liftToContrast),
+ * and lifting the fill would turn the sender's dark design grey.
  */
-function keepSeparation(next: Rgba, original: Rgba, parent: Surface): Rgba {
-  if (next !== original || original.a < 0.9) return next;
+function keepSeparation(next: Rgba, original: Rgba, parent: Surface, framed: boolean): Rgba {
+  if (framed || next !== original || original.a < 0.9) return next;
   if (contrastRatio(original, parent.original) < 3) return next;
   const target = 1.8;
   if (contrastRatio(next, parent.bg) >= target) return next;
@@ -428,6 +449,9 @@ export function applyEmailDarkMode(doc: Document, options: EmailDarkModeOptions 
       const { el } = snap;
       const parent = el === body ? root : surfaceOf(el.parentElement);
       let surface = parent;
+      const framed = snap.borders.some((border) => border !== null && border.a > 0);
+      // The element's own dark fill was kept as sent (see keepSeparation).
+      let keptDarkFill = false;
 
       if (hasImage(snap.bgImage)) {
         // Picture background: keep the element's own fill (it shows wherever
@@ -449,7 +473,8 @@ export function applyEmailDarkMode(doc: Document, options: EmailDarkModeOptions 
           // The body has no surroundings to stand out from.
           const next = parent.onImage || el === body
             ? darkenBackground(original)
-            : keepSeparation(darkenBackground(original), original, parent);
+            : keepSeparation(darkenBackground(original), original, parent, framed);
+          keptDarkFill = next === original && original.a >= 0.9 && toLch(original).l <= BG_DARK_L;
           surface = {
             bg: composite(next, parent.bg),
             original: composite(original, parent.original),
@@ -468,11 +493,17 @@ export function applyEmailDarkMode(doc: Document, options: EmailDarkModeOptions 
       }
       snap.borders.forEach((border, i) => {
         if (!border || border.a === 0) return;
+        // A border inside a block the pass left as sent (a dark card, a
+        // signature, a brand banner) was drawn against that block's own fill.
+        if (sameColor(parent.bg, parent.original)) return;
         // Borders sit between the element and its parent; a light rule on a
         // light mail darkens with the backgrounds, a dark one is lifted just
-        // enough to stay visible.
+        // enough to stay visible - the frame of a kept dark fill in its own
+        // hue, so it stays the subtle edge the sender drew.
         const darkened = darkenBackground(border);
-        const next = darkened !== border ? darkened : ensureContrast(border, parent.bg, 1.6);
+        const next = darkened !== border
+          ? darkened
+          : keptDarkFill ? liftToContrast(border, parent.bg, 1.6) : ensureContrast(border, parent.bg, 1.6);
         if (next !== border) {
           writes.push(() => el.style.setProperty(`border-${BORDER_SIDES[i]}-color`, formatColor(next), 'important'));
         }

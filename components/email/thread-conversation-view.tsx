@@ -991,7 +991,10 @@ export function ConversationEmailBody({
   table:not([style*="max-width"]) { max-width: 100% !important; }
   table[style*="max-width"] { max-width: 100%; }
   table { table-layout: auto; overflow-wrap: break-word; }
-  td, th { word-break: break-word; padding: 0.5rem; }
+  /* Same as the message viewer: no padding of our own, which would beat the
+     mail's cellpadding="0" and space out table-built signatures, and
+     break-word so a column keeps its words whole. */
+  td, th { overflow-wrap: break-word; }
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${isDark ? emailDarkModeCss() : ''}
 </style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${emailContent.html}${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
