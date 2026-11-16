@@ -105,6 +105,33 @@ describe('a file leaving the list', () => {
     expect(slides().every((sl) => !sl.options.delay)).toBe(true);
   });
 
+  // Each style read after a copy is written forces another style recalc in
+  // the click task; the rig measured 13 instead of 4-5 for one row.
+  it('reads every leaving file before it writes the fading copies', () => {
+    file('a.txt').innerHTML = '<span>a</span><span>.txt</span>';
+    file('b.txt').innerHTML = '<span>b</span><span>.txt</span>';
+    const order: string[] = [];
+    const read = window.getComputedStyle;
+    const append = document.body.appendChild;
+    window.getComputedStyle = ((el: Element, p?: string | null) => {
+      if (!el.closest('[data-motion-ghost]') && el.closest('[data-resource]')) order.push('read');
+      return read.call(window, el, p);
+    }) as typeof window.getComputedStyle;
+    document.body.appendChild = function <T extends Node>(this: HTMLElement, n: T): T {
+      if (n instanceof HTMLElement && n.hasAttribute('data-motion-ghost')) order.push('write');
+      return append.call(this, n) as T;
+    };
+    try {
+      departFiles(['a.txt', 'b.txt']);
+    } finally {
+      window.getComputedStyle = read;
+      document.body.appendChild = append;
+    }
+    expect(order.filter((o) => o === 'write')).toHaveLength(2);
+    // No style read between the first and the last copy being written.
+    expect(order.slice(order.indexOf('write'), order.lastIndexOf('write'))).not.toContain('read');
+  });
+
   it('closes the gap at once, while the server still answers', () => {
     const jumps = watch();
     departFiles(['a.txt']);

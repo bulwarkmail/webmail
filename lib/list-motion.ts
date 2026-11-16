@@ -118,14 +118,33 @@ function fadeOut(el: HTMLElement, r: Box, look: Partial<CSSStyleDeclaration>, cl
   fade.onfinish = () => copy.remove();
 }
 
-function fadeAway(el: HTMLElement, surface: Surface): { copy: HTMLElement; delay: number } {
+type LeavingRow = {
+  el: HTMLElement;
+  r: Box;
+  fling: ReturnType<NonNullable<Surface["fling"]>> | null;
+  look: Partial<CSSStyleDeclaration>;
+  clip: Box;
+  layer: string;
+  painted: HTMLElement[];
+  backgrounds: string[];
+};
+
+// Everything fadeAway needs from the page, read before any copy is written,
+// so a batch costs one style recalc instead of one per node.
+function measureAway(el: HTMLElement, surface: Surface): LeavingRow {
   const r = el.getBoundingClientRect();
   const fling = surface.fling?.(el) ?? null;
-  const copy = copyAt(el, r, { ...lookOf(el), backgroundColor: backdrop(el) }, [...STRIP, ...surface.watch], clipOf(el), layerOf(el));
+  const look = { ...lookOf(el), backgroundColor: backdrop(el) };
   const painted = [el, ...el.querySelectorAll<HTMLElement>("*")];
+  const backgrounds = painted.map((n) => getComputedStyle(n).backgroundColor);
+  return { el, r, fling, look, clip: clipOf(el), layer: layerOf(el), painted, backgrounds };
+}
+
+function fadeAway(d: LeavingRow, surface: Surface): { copy: HTMLElement; delay: number } {
+  const { el, r, fling, painted } = d;
+  const copy = copyAt(el, r, d.look, [...STRIP, ...surface.watch], d.clip, d.layer);
   const copies = [copy, ...copy.querySelectorAll<HTMLElement>("*")];
-  painted.forEach((n, i) => {
-    const bg = getComputedStyle(n).backgroundColor;
+  d.backgrounds.forEach((bg, i) => {
     if (!clear(bg) && copies[i]) copies[i].style.backgroundColor = bg;
   });
   let delay = 0;
@@ -389,7 +408,8 @@ export function depart(leaving: HTMLElement[], surface: Surface): Departure {
     });
   }
 
-  const flights = items.map((el) => fadeAway(el, surface));
+  const departures = items.map((el) => measureAway(el, surface));
+  const flights = departures.map((d) => fadeAway(d, surface));
   const copies = flights.map((f) => f.copy);
   const delay = Math.max(0, ...flights.map((f) => f.delay));
   // show(returning): returning is false when the list now draws another item
