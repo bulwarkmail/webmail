@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Osoby, którym udostępniasz kalendarz, widzą tylko godzinę.",
       "visibility_hint_secret": "Osoby, którym udostępniasz kalendarz, nie widzą wydarzenia, a czas pozostaje wolny.",
       "visibility_series": "Dotyczy wszystkich powtórzeń.",
+      "color_calendar": "Użyj koloru kalendarza",
       "save": "Zapisz",
       "cancel": "Anuluj",
       "color": "Kolor"

@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "يرى من تشاركهم التقويم الوقت فقط.",
       "visibility_hint_secret": "لا يرى من تشاركهم التقويم هذا الحدث، ولا يحجز الوقت.",
       "visibility_series": "ينطبق على كل التكرارات.",
+      "color_calendar": "استخدام لون التقويم",
       "save": "حفظ",
       "cancel": "إلغاء",
       "color": "اللون"

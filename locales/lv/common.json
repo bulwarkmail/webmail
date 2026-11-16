@@ -4915,6 +4915,7 @@
       "visibility_hint_private": "Cilvēki, ar kuriem kopīgojat kalendāru, redz tikai laiku.",
       "visibility_hint_secret": "Cilvēki, ar kuriem kopīgojat kalendāru, notikumu neredz, un laiks paliek brīvs.",
       "visibility_series": "Attiecas uz visiem atkārtojumiem.",
+      "color_calendar": "Izmantot kalendāra krāsu",
       "save": "Saglabāt",
       "cancel": "Atcelt",
       "color": "Krāsa"

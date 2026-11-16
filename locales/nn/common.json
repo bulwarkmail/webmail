@@ -4924,6 +4924,7 @@
       "visibility_hint_private": "Dei du deler kalenderen med, ser berre tidspunktet.",
       "visibility_hint_secret": "Dei du deler kalenderen med, ser ikkje hendinga, og tida held seg ledig.",
       "visibility_series": "Gjeld alle gjentakingar.",
+      "color_calendar": "Bruk fargen til kalenderen",
       "save": "Lagre",
       "cancel": "Avbryt",
       "color": "Farge"

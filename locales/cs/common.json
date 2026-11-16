@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Lidé, se kterými kalendář sdílíte, vidí jen čas.",
       "visibility_hint_secret": "Lidé, se kterými kalendář sdílíte, událost nevidí a čas zůstane volný.",
       "visibility_series": "Platí pro všechny výskyty.",
+      "color_calendar": "Použít barvu kalendáře",
       "save": "Uložit",
       "cancel": "Zrušit",
       "color": "Barva"

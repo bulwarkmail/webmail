@@ -4928,6 +4928,7 @@
       "visibility_hint_private": "Những người bạn chia sẻ lịch chỉ thấy thời gian.",
       "visibility_hint_secret": "Những người bạn chia sẻ lịch sẽ không thấy sự kiện, và thời gian vẫn trống.",
       "visibility_series": "Áp dụng cho mọi lần lặp lại.",
+      "color_calendar": "Dùng màu của lịch",
       "save": "Lưu",
       "cancel": "Hủy",
       "color": "Màu sắc"

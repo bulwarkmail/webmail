@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "与你共享日历的人只能看到时间。",
       "visibility_hint_secret": "与你共享日历的人看不到此活动，该时间也显示为空闲。",
       "visibility_series": "适用于所有重复。",
+      "color_calendar": "使用日历颜色",
       "save": "保存",
       "cancel": "取消",
       "color": "颜色"

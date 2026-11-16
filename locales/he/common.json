@@ -4785,6 +4785,7 @@
       "visibility_hint_private": "מי שהלוח משותף איתו רואה רק את השעה.",
       "visibility_hint_secret": "מי שהלוח משותף איתו לא רואה את האירוע, והזמן נשאר פנוי.",
       "visibility_series": "חל על כל המופעים.",
+      "color_calendar": "שימוש בצבע של לוח השנה",
       "save": "שמור",
       "cancel": "לְבַטֵל",
       "color": "צבע"

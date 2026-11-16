@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Akikkel megosztja a naptárt, csak az időpontot látják.",
       "visibility_hint_secret": "Akikkel megosztja a naptárt, nem látják az eseményt, és az idő szabad marad.",
       "visibility_series": "Minden ismétlődésre vonatkozik.",
+      "color_calendar": "A naptár színének használata",
       "save": "Mentés",
       "cancel": "Mégse",
       "color": "Szín"

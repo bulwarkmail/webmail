@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Las personas con las que compartes el calendario solo ven la hora.",
       "visibility_hint_secret": "Las personas con las que compartes el calendario no ven el evento, y no bloquea la hora.",
       "visibility_series": "Se aplica a todas las repeticiones.",
+      "color_calendar": "Usar el color del calendario",
       "save": "Guardar",
       "cancel": "Cancelar",
       "color": "Color"

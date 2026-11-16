@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Inimesed, kellega kalendrit jagad, näevad ainult aega.",
       "visibility_hint_secret": "Inimesed, kellega kalendrit jagad, sündmust ei näe ja aeg jääb vabaks.",
       "visibility_series": "Kehtib kõigile kordustele.",
+      "color_calendar": "Kasuta kalendri värvi",
       "save": "Salvesta",
       "cancel": "Tühista",
       "color": "Värv"

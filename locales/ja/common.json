@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "カレンダーを共有している相手には時間だけが表示されます。",
       "visibility_hint_secret": "カレンダーを共有している相手には表示されず、時間も空きのままになります。",
       "visibility_series": "すべての繰り返しに適用されます。",
+      "color_calendar": "カレンダーの色を使う",
       "save": "保存",
       "cancel": "キャンセル",
       "color": "色"

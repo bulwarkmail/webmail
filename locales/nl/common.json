@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Mensen met wie je de agenda deelt, zien alleen de tijd.",
       "visibility_hint_secret": "Mensen met wie je de agenda deelt, zien de afspraak niet, en de tijd blijft vrij.",
       "visibility_series": "Geldt voor alle herhalingen.",
+      "color_calendar": "Kleur van de agenda gebruiken",
       "save": "Opslaan",
       "cancel": "Annuleren",
       "color": "Kleur"

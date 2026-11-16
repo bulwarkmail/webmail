@@ -19,7 +19,8 @@ import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, 
 import { AlertListEditor, AlertSummary, formatEventAlertsLabel } from "./alert-list-editor";
 import { alertRowToOffset, describeAlert, getCalendarDefaultAlerts, newAlertRow, withOwnAlertIds, type AlertAction, type AlertRow as EditableAlertRow, type AlertUnit } from "@/lib/calendar-alerts";
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
-import { parseDuration, getEventColor } from "./event-card";
+import { parseDuration, getEventColor, sanitizeColor } from "./event-card";
+import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";
 import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
 import { TimeZonePicker } from "@/components/settings/time-zone-picker";
@@ -47,7 +48,7 @@ import { changesWhen, type EditorAttendee, type EventEditorState } from "@/lib/r
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { linkCallback } from "@/lib/plugin-sandbox/slot-callbacks";
 import { useSettingsStore } from "@/stores/settings-store";
-import { generateUUID } from "@/lib/utils";
+import { cn, generateUUID } from "@/lib/utils";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
@@ -429,6 +430,8 @@ export function EventModal({
   const [allDay, setAllDay] = useState(seed?.showWithoutTime || defaultAllDay || false);
   const [freeBusyStatus, setFreeBusyStatus] = useState<CalendarEvent["freeBusyStatus"]>(seed?.freeBusyStatus ?? "busy");
   const [privacy, setPrivacy] = useState<CalendarEvent["privacy"]>(seed?.privacy ?? "public");
+  // The event's own colour; null paints it in its calendar's (#1668).
+  const [color, setColor] = useState<string | null>(seed?.color || null);
   // The zone the fields are on: none for an all-day event.
   const fieldZone = allDay ? null : timeZone;
   // The form's times on the user's clock, beside another zone's.
@@ -609,10 +612,10 @@ export function EventModal({
   const formState = useMemo(() => ({
     title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
-    freeBusyStatus, privacy,
+    freeBusyStatus, privacy, color,
   }), [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
-    freeBusyStatus, privacy]);
+    freeBusyStatus, privacy, color]);
   const [initialForm] = useState(formState);
   const isDirty = mode === "edit" && JSON.stringify(formState) !== JSON.stringify(initialForm);
   useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
@@ -626,7 +629,7 @@ export function EventModal({
     setCalendarId(f.calendarId); setRecurrence(f.recurrence); setCustomRule(f.customRule); setShowRecurrenceEditor(false);
     setUseDefaultAlerts(f.useDefaultAlerts); setAlertRows(f.alertRows); setPreservedAlerts(f.preservedAlerts); setRefreshDefaults(false);
     setAttendees(f.attendees); setSendInvitations(f.sendInvitations);
-    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy);
+    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy); setColor(f.color);
   }, [initialForm]);
 
   const { dialogProps: discardDialogProps, confirm: confirmDiscard } = useConfirmDialog();
@@ -897,6 +900,8 @@ export function EventModal({
       calendarIds: { [calendarId]: true },
       ...savedStatusFields(event, { freeBusyStatus, privacy: privacyEditable ? privacy : undefined }),
     };
+    // Sent only when it changed; null goes back to the calendar's colour.
+    if (event ? color !== (event.color || null) : !!color) data.color = color;
 
     // On an existing event the empty string is how a description gets cleared, but
     // sending it on creation writes a `DESCRIPTION:` with nothing after it — which
@@ -1048,7 +1053,7 @@ export function EventModal({
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, currentUserEmails, userIsOrganizer, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, color, currentUserEmails, userIsOrganizer, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1634,6 +1639,31 @@ export function EventModal({
                 {recurrence !== "none" && <> {t("form.visibility_series")}</>}
               </p>
             )}
+          </div>
+
+          {/* The event's own colour, or its calendar's (#1668). */}
+          <div>
+            <span id={labelFor("color")} className="text-sm font-medium mb-1 block">{t("form.color")}</span>
+            <div role="group" aria-labelledby={labelFor("color")} className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <button
+                type="button"
+                onClick={() => setColor(null)}
+                aria-pressed={color === null}
+                data-testid="event-color-calendar"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border border-input px-2 py-1 text-sm hover:bg-muted transition-colors",
+                  color === null && "ring-2 ring-offset-1 ring-offset-background ring-foreground",
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: paint(sanitizeColor(calendars.find((c) => c.id === calendarId)?.color)) }}
+                />
+                {t("form.color_calendar")}
+              </button>
+              <CalendarColorPicker value={color ?? ""} onChange={setColor} allowCustom />
+            </div>
           </div>
 
           <div>

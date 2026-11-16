@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Personen, mit denen Sie den Kalender teilen, sehen nur die Uhrzeit.",
       "visibility_hint_secret": "Personen, mit denen Sie den Kalender teilen, sehen den Termin nicht, und die Zeit bleibt frei.",
       "visibility_series": "Gilt für alle Termine der Serie.",
+      "color_calendar": "Farbe des Kalenders verwenden",
       "save": "Speichern",
       "cancel": "Abbrechen",
       "color": "Farbe"

@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "캘린더를 공유한 사람에게 시간만 보입니다.",
       "visibility_hint_secret": "캘린더를 공유한 사람에게 일정이 보이지 않으며, 시간도 비어 있는 것으로 표시됩니다.",
       "visibility_series": "모든 반복 일정에 적용됩니다.",
+      "color_calendar": "캘린더 색상 사용",
       "save": "저장",
       "cancel": "취소",
       "color": "색상"

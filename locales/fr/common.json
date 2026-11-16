@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "Les personnes avec qui vous partagez le calendrier ne voient que l'horaire.",
       "visibility_hint_secret": "Les personnes avec qui vous partagez le calendrier ne voient pas l'événement, et le créneau reste libre.",
       "visibility_series": "S'applique à toutes les occurrences.",
+      "color_calendar": "Utiliser la couleur du calendrier",
       "save": "Enregistrer",
       "cancel": "Annuler",
       "color": "Couleur"

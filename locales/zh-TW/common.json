@@ -4916,6 +4916,7 @@
       "visibility_hint_private": "與你共用行事曆的人只能看到時間。",
       "visibility_hint_secret": "與你共用行事曆的人看不到此活動，該時間也會顯示為有空。",
       "visibility_series": "套用到所有重複。",
+      "color_calendar": "使用行事曆顏色",
       "save": "儲存",
       "cancel": "取消",
       "color": "顏色"
