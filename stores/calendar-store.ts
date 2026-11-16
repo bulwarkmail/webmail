@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { mergeOnWriteStorage } from '@/lib/merge-on-write-storage';
 import type { CalendarEventUpdateOptions, IJMAPClient } from '@/lib/jmap/client-interface';
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarParticipantIdentity, CalendarRights, CreateCalendarOptions } from '@/lib/jmap/types';
 import { debug } from '@/lib/debug';
@@ -1006,7 +1007,14 @@ interface CalendarStore {
   removeCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
   clearCalendarEvents: (client: IJMAPClient, calendarId: string) => Promise<number>;
   setSelectedDate: (date: Date) => void;
+  /** The view picked by the user, kept as their calendar view. */
   setViewMode: (mode: CalendarViewMode) => void;
+  /**
+   * Shows a view in this tab without keeping it as the user's view: a link
+   * like /calendar/month/<date> (one a restored tab reloads with too) must not
+   * replace the view picked since (#1727).
+   */
+  showViewMode: (mode: CalendarViewMode) => void;
   toggleCalendarVisibility: (calendarId: string) => void;
   /**
    * Task lists the tasks view leaves out. The tasks view filters by these,
@@ -1090,6 +1098,11 @@ async function pluginFetchRange(start: string, end: string): Promise<{ start: st
   debug.error('onBeforeFetchEvents returned an invalid range', range);
   return { start, end };
 }
+
+// Several tabs share calendar-storage, and each writes its whole copy on any
+// change: a tab still on month put month back over the week picked in another
+// tab at its next event load (#1727).
+const calendarStorage = mergeOnWriteStorage<Partial<CalendarStore>>();
 
 export const useCalendarStore = create<CalendarStore>()(
   persist(
@@ -1739,6 +1752,15 @@ export const useCalendarStore = create<CalendarStore>()(
       setViewMode: (mode) => {
         const view = getSafeCalendarViewMode(mode);
         const previous = get().viewMode;
+        calendarStorage.claim('viewMode');
+        set({ viewMode: view });
+        if (previous !== view) void calendarHooks.onCalendarViewChange.emit({ view });
+      },
+
+      showViewMode: (mode) => {
+        const view = getSafeCalendarViewMode(mode);
+        const previous = get().viewMode;
+        calendarStorage.keep('viewMode', view);
         set({ viewMode: view });
         if (previous !== view) void calendarHooks.onCalendarViewChange.emit({ view });
       },
@@ -2429,6 +2451,7 @@ export const useCalendarStore = create<CalendarStore>()(
     }),
     {
       name: 'calendar-storage',
+      storage: calendarStorage,
       merge: (persistedState, currentState) => {
         const mergedState = {
           ...currentState,

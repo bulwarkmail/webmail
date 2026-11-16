@@ -235,7 +235,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
     calendars, events, selectedDate, viewMode, selectedCalendarIds,
     isLoading, isLoadingEvents, supportsCalendar, error, eventsLoadError,
     fetchCalendars, fetchEvents, createEvent, updateEvent, deleteEvent, rsvpEvent,
-    setSelectedDate, setViewMode: storeSetViewMode, toggleCalendarVisibility, updateCalendar, shareCalendar,
+    setSelectedDate, setViewMode: storeSetViewMode, showViewMode, toggleCalendarVisibility, updateCalendar, shareCalendar,
     removeCalendar, clearCalendarEvents,
     refreshAllSubscriptions, icalSubscriptions, isSubscriptionCalendar,
   } = useCalendarStore();
@@ -1092,7 +1092,10 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   // the copy that closes over the current client and handlers.
   const applyCalendarDeepLink = (link: CalendarDeepLink) => {
     if (link.kind === 'view') {
-      setViewMode(link.view);
+      // Shown in this tab only: an old address must not replace the view the
+      // user picked since, in this tab or another (#1727).
+      if (link.view === 'tasks' && tasksAppOn) router.push('/tasks');
+      else showViewMode(link.view);
       if (link.date) jumpTo(link.date);
       return;
     }
