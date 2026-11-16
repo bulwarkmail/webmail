@@ -3026,6 +3026,7 @@
         "from": "보낸 사람",
         "to": "받는 사람",
         "cc": "참조",
+        "delivered_to": "배달된 주소",
         "subject": "제목",
         "header": "사용자 지정 헤더",
         "size": "크기",
@@ -3200,7 +3201,8 @@
         "trash_title": "기존 메일을 휴지통으로 옮길까요?",
         "trash_confirm": "{count, plural, other {기존 메일 #개가 휴지통으로 이동합니다.}}",
         "trash_confirm_partial": "{count, plural, =0 {규칙에 맞는 기존 메일이 모두 휴지통으로 이동합니다.} other {기존 메일 #개 이상이 휴지통으로 이동합니다.}}",
-        "trash_button": "저장하고 휴지통으로 이동"
+        "trash_button": "저장하고 휴지통으로 이동",
+        "delivered_to_new_only": "이 규칙은 새 메일에만 적용됩니다. 배달된 메일에는 배달된 주소가 남지 않습니다."
       }
     },
     "templates": {

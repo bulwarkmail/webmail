@@ -3033,6 +3033,7 @@
         "from": "Fra",
         "to": "Til",
         "cc": "Kopi",
+        "delivered_to": "Levert til",
         "subject": "Emne",
         "header": "Egendefinert meldingshode",
         "size": "Størrelse",
@@ -3207,7 +3208,8 @@
         "trash_title": "Flytte eksisterende e-post til papirkurven?",
         "trash_confirm": "{count, plural, one {Dette flytter # eksisterende melding til papirkurven.} other {Dette flytter # eksisterende meldinger til papirkurven.}}",
         "trash_confirm_partial": "{count, plural, =0 {Dette flytter alle eksisterende meldinger som regelen passer på, til papirkurven.} other {Dette flytter #+ eksisterende meldinger til papirkurven.}}",
-        "trash_button": "Lagre og flytt til papirkurven"
+        "trash_button": "Lagre og flytt til papirkurven",
+        "delivered_to_new_only": "Denne regelen virker bare på ny e-post. Levert e-post tar ikke vare på adressen den ble levert til."
       }
     },
     "templates": {

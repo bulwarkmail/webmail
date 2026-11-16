@@ -3026,6 +3026,7 @@
         "from": "De",
         "to": "Para",
         "cc": "Cc",
+        "delivered_to": "Entregado a",
         "subject": "Asunto",
         "header": "Encabezado personalizado",
         "size": "Tamaño",
@@ -3200,7 +3201,8 @@
         "trash_title": "¿Mover el correo existente a la papelera?",
         "trash_confirm": "{count, plural, one {Esto mueve # mensaje existente a la papelera.} other {Esto mueve # mensajes existentes a la papelera.}}",
         "trash_confirm_partial": "{count, plural, =0 {Esto mueve a la papelera todos los mensajes existentes que coinciden con la regla.} other {Esto mueve #+ mensajes existentes a la papelera.}}",
-        "trash_button": "Guardar y mover a la papelera"
+        "trash_button": "Guardar y mover a la papelera",
+        "delivered_to_new_only": "Esta regla solo funciona con el correo nuevo. El correo entregado no guarda la dirección a la que se entregó."
       }
     },
     "templates": {

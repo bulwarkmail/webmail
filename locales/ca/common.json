@@ -3033,6 +3033,7 @@
         "from": "De",
         "to": "Per a",
         "cc": "CC",
+        "delivered_to": "Lliurat a",
         "subject": "Assumpte",
         "header": "Capçalera personalitzada",
         "size": "Mida",
@@ -3207,7 +3208,8 @@
         "trash_title": "Voleu moure el correu existent a la paperera?",
         "trash_confirm": "{count, plural, one {Això mou # missatge existent a la paperera.} other {Això mou # missatges existents a la paperera.}}",
         "trash_confirm_partial": "{count, plural, =0 {Això mou a la paperera tots els missatges existents que coincideixen amb la regla.} other {Això mou #+ missatges existents a la paperera.}}",
-        "trash_button": "Desa i mou a la paperera"
+        "trash_button": "Desa i mou a la paperera",
+        "delivered_to_new_only": "Aquesta regla només s'aplica al correu nou. El correu lliurat no conserva l'adreça a la qual es va lliurar."
       }
     },
     "templates": {

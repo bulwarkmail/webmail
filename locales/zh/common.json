@@ -3026,6 +3026,7 @@
         "from": "发件人",
         "to": "收件人",
         "cc": "抄送",
+        "delivered_to": "投递到",
         "subject": "主题",
         "header": "自定义标头",
         "size": "大小",
@@ -3200,7 +3201,8 @@
         "trash_title": "将现有邮件移到已删除？",
         "trash_confirm": "{count, plural, other {这会将 # 封现有邮件移到已删除。}}",
         "trash_confirm_partial": "{count, plural, =0 {这会将所有符合规则的现有邮件移到已删除。} other {这会将至少 # 封现有邮件移到已删除。}}",
-        "trash_button": "保存并移到已删除"
+        "trash_button": "保存并移到已删除",
+        "delivered_to_new_only": "此规则仅适用于新邮件。已投递的邮件不会保留其投递地址。"
       }
     },
     "templates": {

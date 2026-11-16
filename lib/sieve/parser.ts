@@ -497,6 +497,22 @@ function parseAtom(raw: string): FilterCondition | null {
     return { field, comparator: part === ':domain' ? 'domain_is' : 'address_is', value };
   }
 
+  // `envelope "to"` as the generator writes "Delivered to": `:is` on the
+  // whole address, `:domain :is`, or `:contains`. The address part and the
+  // match type may come in either order. Another envelope part (from), the
+  // local part, a negation or another match type stay opaque.
+  m = /^envelope\s+(?:(:all|:domain)\s+)?:(is|contains)\s+(?:(:all|:domain)\s+)?"((?:[^"\\]|\\.)*)"\s+([\s\S]+)$/.exec(s);
+  if (m) {
+    const [, partBefore, tag, partAfter, envelopePart, rawTail] = m;
+    if (negated || (partBefore && partAfter)) return null;
+    if (unescapeSieveString(envelopePart).toLowerCase() !== 'to') return null;
+    const value = parseValueTail(rawTail);
+    if (value === null) return null;
+    const domain = (partBefore ?? partAfter) === ':domain';
+    if (tag === 'contains') return domain ? null : { field: 'delivered_to', comparator: 'contains', value };
+    return { field: 'delivered_to', comparator: domain ? 'domain_is' : 'address_is', value };
+  }
+
   m = /^header\s+:(contains|is|matches|regex)\s+"((?:[^"\\]|\\.)*)"\s+([\s\S]+)$/.exec(s);
   if (m) {
     const [, tag, headerName, rawTail] = m;

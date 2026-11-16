@@ -3029,6 +3029,7 @@
         "from": "Fra",
         "to": "Til",
         "cc": "Cc",
+        "delivered_to": "Leveret til",
         "subject": "Emne",
         "header": "Brugerdefineret header",
         "size": "Størrelse",
@@ -3203,7 +3204,8 @@
         "trash_title": "Flyt eksisterende post til papirkurven?",
         "trash_confirm": "{count, plural, one {Det flytter # eksisterende besked til papirkurven.} other {Det flytter # eksisterende beskeder til papirkurven.}}",
         "trash_confirm_partial": "{count, plural, =0 {Det flytter alle eksisterende beskeder, som reglen passer på, til papirkurven.} other {Det flytter #+ eksisterende beskeder til papirkurven.}}",
-        "trash_button": "Gem og flyt til papirkurven"
+        "trash_button": "Gem og flyt til papirkurven",
+        "delivered_to_new_only": "Denne regel virker kun på ny post. Leveret post gemmer ikke den adresse, den blev leveret til."
       }
     },
     "templates": {

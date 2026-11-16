@@ -3026,6 +3026,7 @@
         "from": "差出人",
         "to": "宛先",
         "cc": "Cc",
+        "delivered_to": "配信先",
         "subject": "件名",
         "header": "カスタムヘッダー",
         "size": "サイズ",
@@ -3200,7 +3201,8 @@
         "trash_title": "既存のメールをゴミ箱に移動しますか？",
         "trash_confirm": "{count, plural, other {既存のメール # 件がゴミ箱に移動されます。}}",
         "trash_confirm_partial": "{count, plural, =0 {ルールに一致する既存のメールがすべてゴミ箱に移動されます。} other {既存のメール # 件以上がゴミ箱に移動されます。}}",
-        "trash_button": "保存してゴミ箱に移動"
+        "trash_button": "保存してゴミ箱に移動",
+        "delivered_to_new_only": "このルールは新着メールにのみ適用されます。配信済みのメールには配信先アドレスが残りません。"
       }
     },
     "templates": {

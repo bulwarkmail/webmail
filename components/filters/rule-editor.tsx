@@ -60,7 +60,7 @@ export interface RuleEditorProps {
 type ConditionKind = Exclude<FilterConditionField, "attachment"> | "attachment_any" | "attachment_type";
 
 const KINDS: ConditionKind[] = [
-  "from", "to", "cc", "subject", "body", "header", "size", "attachment_any", "attachment_type", "all",
+  "from", "to", "cc", "delivered_to", "subject", "body", "header", "size", "attachment_any", "attachment_type", "all",
 ];
 
 const TEXT_COMPARATORS: FilterComparator[] = [
@@ -70,6 +70,7 @@ const ADDRESS_COMPARATORS: FilterComparator[] = [...TEXT_COMPARATORS, "address_i
 const SIZE_COMPARATORS: FilterComparator[] = ["greater_than", "less_than"];
 const UNIT_KEYS: Record<SizeUnit, "bytes" | "kb" | "mb"> = { "": "bytes", K: "kb", M: "mb" };
 const BODY_COMPARATORS: FilterComparator[] = ["contains", "not_contains"];
+const DELIVERED_COMPARATORS: FilterComparator[] = ["address_is", "domain_is", "contains"];
 const PLAIN_COMPARATORS = new Set<FilterComparator>(["contains", "is", "address_is", "domain_is"]);
 
 function kindOf(c: FilterCondition): ConditionKind {
@@ -80,6 +81,7 @@ function kindOf(c: FilterCondition): ConditionKind {
 function comparatorsFor(kind: ConditionKind, regex: boolean): FilterComparator[] {
   if (kind === "size") return SIZE_COMPARATORS;
   if (kind === "attachment_any" || kind === "attachment_type" || kind === "all") return [];
+  if (kind === "delivered_to") return DELIVERED_COMPARATORS;
   const base = kind === "from" || kind === "to" || kind === "cc" ? ADDRESS_COMPARATORS : kind === "body" ? BODY_COMPARATORS : TEXT_COMPARATORS;
   return regex && REGEX_FIELDS.has(kind) ? [...base, "regex"] : base;
 }
@@ -299,7 +301,10 @@ export function RuleEditor({
   const guardJunk = skipsJunk({ actions, includeSpam: includeSpam && filing });
   const [preview, setPreview] = useState<{ key: string; result: RulePreview | null } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const previewKey = previewMatches && validConditions.length > 0 && !validConditions.some(regexInvalid) && activeFrom !== null && activeUntil !== null
+  // Mail that is already there no longer has its envelope, so a rule on
+  // "Delivered to" is for new mail only: no preview, no Apply to.
+  const newMailOnly = validConditions.some((c) => c.field === "delivered_to");
+  const previewKey = previewMatches && validConditions.length > 0 && !newMailOnly && !validConditions.some(regexInvalid) && activeFrom !== null && activeUntil !== null
     ? JSON.stringify([matchType, validConditions, guardJunk, activeFrom ?? null, activeUntil ?? null])
     : null;
   const previewRef = useRef(previewMatches);
@@ -656,6 +661,9 @@ export function RuleEditor({
               </button>
               {/* One live region that stays, so a screen reader hears the count when it replaces "Looking…". */}
               <div aria-live="polite" aria-atomic="true">
+              {newMailOnly && (
+                <span className="text-xs text-muted-foreground" data-testid="rule-new-mail-only">{tEditor("delivered_to_new_only")}</span>
+              )}
               {previewKey && (
                 previewCurrent === undefined ? (
                   <span className="text-xs text-muted-foreground">{tEditor("checking")}</span>

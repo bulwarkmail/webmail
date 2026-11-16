@@ -3033,6 +3033,7 @@
         "from": "From",
         "to": "To",
         "cc": "Cc",
+        "delivered_to": "Delivered to",
         "subject": "Subject",
         "header": "Custom header",
         "size": "Size",
@@ -3207,7 +3208,8 @@
         "trash_title": "Move existing mail to Trash?",
         "trash_confirm": "{count, plural, one {This moves # existing message to Trash.} other {This moves # existing messages to Trash.}}",
         "trash_confirm_partial": "{count, plural, =0 {This moves every existing message the rule matches to Trash.} other {This moves #+ existing messages to Trash.}}",
-        "trash_button": "Save and move to Trash"
+        "trash_button": "Save and move to Trash",
+        "delivered_to_new_only": "This rule works on new mail only. Delivered mail doesn't keep the address it was delivered to."
       }
     },
     "templates": {

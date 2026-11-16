@@ -33,7 +33,7 @@ function changesOldMail(action: FilterAction): boolean {
 }
 
 export function appliesToExisting(rule: Pick<FilterRule, 'actions'> & { conditions?: FilterRule['conditions'] }): boolean {
-  if (rule.conditions?.some((c) => c.field === 'body')) return false;
+  if (rule.conditions?.some((c) => c.field === 'body' || c.field === 'delivered_to')) return false;
   return rule.actions.some(changesOldMail) && !rule.actions.some(filesWithoutFolder);
 }
 

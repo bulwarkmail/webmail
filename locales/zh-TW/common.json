@@ -3033,6 +3033,7 @@
         "from": "寄件者",
         "to": "收件者",
         "cc": "副本",
+        "delivered_to": "投遞到",
         "subject": "主題",
         "header": "自訂標頭",
         "size": "大小",
@@ -3207,7 +3208,8 @@
         "trash_title": "要將現有郵件移到垃圾桶嗎？",
         "trash_confirm": "{count, plural, other {這會將 # 封現有郵件移到垃圾桶。}}",
         "trash_confirm_partial": "{count, plural, =0 {這會將所有符合規則的現有郵件移到垃圾桶。} other {這會將至少 # 封現有郵件移到垃圾桶。}}",
-        "trash_button": "儲存並移到垃圾桶"
+        "trash_button": "儲存並移到垃圾桶",
+        "delivered_to_new_only": "此規則只適用於新郵件。已投遞的郵件不會保留其投遞地址。"
       }
     },
     "templates": {

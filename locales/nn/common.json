@@ -3041,6 +3041,7 @@
         "from": "Frå",
         "to": "Til",
         "cc": "Kopi",
+        "delivered_to": "Levert til",
         "subject": "Emne",
         "header": "Eige hovud",
         "size": "Storleik",
@@ -3215,7 +3216,8 @@
         "trash_title": "Flytte eksisterande e-post til papirkorga?",
         "trash_confirm": "{count, plural, one {Dette flyttar # eksisterande melding til papirkorga.} other {Dette flyttar # eksisterande meldingar til papirkorga.}}",
         "trash_confirm_partial": "{count, plural, =0 {Dette flyttar alle eksisterande meldingar som regelen passar på, til papirkorga.} other {Dette flyttar #+ eksisterande meldingar til papirkorga.}}",
-        "trash_button": "Lagre og flytt til papirkorga"
+        "trash_button": "Lagre og flytt til papirkorga",
+        "delivered_to_new_only": "Denne regelen verkar berre på ny e-post. Levert e-post tek ikkje vare på adressa han vart levert til."
       }
     },
     "templates": {

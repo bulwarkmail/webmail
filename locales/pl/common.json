@@ -3026,6 +3026,7 @@
         "from": "Od",
         "to": "Do",
         "cc": "DW",
+        "delivered_to": "Dostarczono do",
         "subject": "Temat",
         "header": "Niestandardowy nagłówek",
         "size": "Rozmiar",
@@ -3200,7 +3201,8 @@
         "trash_title": "Przenieść istniejącą pocztę do kosza?",
         "trash_confirm": "{count, plural, one {Spowoduje to przeniesienie # istniejącej wiadomości do kosza.} few {Spowoduje to przeniesienie # istniejących wiadomości do kosza.} many {Spowoduje to przeniesienie # istniejących wiadomości do kosza.} other {Spowoduje to przeniesienie # istniejącej wiadomości do kosza.}}",
         "trash_confirm_partial": "{count, plural, =0 {Spowoduje to przeniesienie do kosza każdej istniejącej wiadomości, do której pasuje reguła.} other {Spowoduje to przeniesienie #+ istniejących wiadomości do kosza.}}",
-        "trash_button": "Zapisz i przenieś do kosza"
+        "trash_button": "Zapisz i przenieś do kosza",
+        "delivered_to_new_only": "Ta reguła działa tylko na nową pocztę. Dostarczona poczta nie przechowuje adresu, na który została dostarczona."
       }
     },
     "templates": {

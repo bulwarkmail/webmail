@@ -3026,6 +3026,7 @@
         "from": "No",
         "to": "Kam",
         "cc": "Kopija",
+        "delivered_to": "Piegādāts uz",
         "subject": "Temats",
         "header": "Pielāgota galvene",
         "size": "Izmērs",
@@ -3200,7 +3201,8 @@
         "trash_title": "Vai pārvietot esošās vēstules uz Mēstuli?",
         "trash_confirm": "{count, plural, zero {Tādējādi # esošu vēstuļu tiek pārvietots uz Mēstuli.} one {Tādējādi # esoša vēstule tiek pārvietota uz Mēstuli.} other {Tādējādi # esošas vēstules tiek pārvietotas uz Mēstuli.}}",
         "trash_confirm_partial": "{count, plural, =0 {Tādējādi katra esošā vēstule, kurai atbilst noteikums, tiek pārvietota uz Mēstuli.} other {Tādējādi #+ esošas vēstules tiek pārvietotas uz Mēstuli.}}",
-        "trash_button": "Saglabāt un pārvietot uz Mēstuli"
+        "trash_button": "Saglabāt un pārvietot uz Mēstuli",
+        "delivered_to_new_only": "Šis noteikums darbojas tikai ar jaunām vēstulēm. Piegādātā vēstule nesaglabā adresi, uz kuru tā tika piegādāta."
       }
     },
     "templates": {

@@ -3026,6 +3026,7 @@
         "from": "De",
         "to": "Para",
         "cc": "Cc",
+        "delivered_to": "Entregue para",
         "subject": "Assunto",
         "header": "Cabeçalho personalizado",
         "size": "Tamanho",
@@ -3200,7 +3201,8 @@
         "trash_title": "Mover as mensagens existentes para a Lixeira?",
         "trash_confirm": "{count, plural, one {Isso move # mensagem existente para a Lixeira.} other {Isso move # mensagens existentes para a Lixeira.}}",
         "trash_confirm_partial": "{count, plural, =0 {Isso move para a Lixeira todas as mensagens existentes que correspondem à regra.} other {Isso move #+ mensagens existentes para a Lixeira.}}",
-        "trash_button": "Salvar e mover para a Lixeira"
+        "trash_button": "Salvar e mover para a Lixeira",
+        "delivered_to_new_only": "Esta regra funciona só com mensagens novas. A mensagem entregue não guarda o endereço para o qual foi entregue."
       }
     },
     "templates": {

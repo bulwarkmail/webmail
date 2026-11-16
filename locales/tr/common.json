@@ -3026,6 +3026,7 @@
         "from": "Kimden",
         "to": "Kime",
         "cc": "Bilgi",
+        "delivered_to": "Teslim edilen adres",
         "subject": "Konu",
         "header": "Özel Başlık",
         "size": "Boyut",
@@ -3200,7 +3201,8 @@
         "trash_title": "Mevcut postalar Çöp Kutusu'na taşınsın mı?",
         "trash_confirm": "{count, plural, one {Bu işlem # mevcut iletiyi Çöp Kutusu'na taşır.} other {Bu işlem # mevcut iletiyi Çöp Kutusu'na taşır.}}",
         "trash_confirm_partial": "{count, plural, =0 {Bu işlem kuralla eşleşen tüm mevcut iletileri Çöp Kutusu'na taşır.} other {Bu işlem #+ mevcut iletiyi Çöp Kutusu'na taşır.}}",
-        "trash_button": "Kaydet ve Çöp Kutusu'na taşı"
+        "trash_button": "Kaydet ve Çöp Kutusu'na taşı",
+        "delivered_to_new_only": "Bu kural yalnızca yeni postalarda çalışır. Teslim edilmiş posta, teslim edildiği adresi saklamaz."
       }
     },
     "templates": {

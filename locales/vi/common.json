@@ -3045,6 +3045,7 @@
         "from": "Từ",
         "to": "Đến",
         "cc": "Cc",
+        "delivered_to": "Đã gửi tới",
         "subject": "Tiêu đề",
         "header": "Trường tiêu đề tùy chỉnh",
         "size": "Kích thước",
@@ -3219,7 +3220,8 @@
         "trash_title": "Chuyển thư hiện có vào Thùng rác?",
         "trash_confirm": "{count, plural, other {Thao tác này chuyển # thư hiện có vào Thùng rác.}}",
         "trash_confirm_partial": "{count, plural, =0 {Thao tác này chuyển mọi thư hiện có khớp với quy tắc vào Thùng rác.} other {Thao tác này chuyển #+ thư hiện có vào Thùng rác.}}",
-        "trash_button": "Lưu và chuyển vào Thùng rác"
+        "trash_button": "Lưu và chuyển vào Thùng rác",
+        "delivered_to_new_only": "Quy tắc này chỉ áp dụng cho thư mới. Thư đã gửi tới không giữ lại địa chỉ mà nó được gửi tới."
       }
     },
     "templates": {

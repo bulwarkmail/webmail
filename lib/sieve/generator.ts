@@ -94,6 +94,19 @@ function generateCondition(condition: FilterCondition): string {
     }
   }
 
+  if (field === 'delivered_to') {
+    // RFC 5228 §5.4: the envelope recipient, which a To or Cc header does
+    // not have to name (Bcc, lists, aliases).
+    switch (comparator) {
+      case 'address_is':
+        return `envelope :is "to" ${formatStringArg(values)}`;
+      case 'domain_is':
+        return `envelope :domain :is "to" ${formatStringArg(values)}`;
+      default:
+        return `envelope :contains "to" ${formatStringArg(values)}`;
+    }
+  }
+
   if (field === 'attachment') {
     // RFC 5703: :mime :anychild matches against headers of any MIME part.
     // has_any tests Content-Disposition for "attachment"; has_type matches
@@ -238,6 +251,7 @@ function computeRequires(
     for (const condition of rule.conditions) {
       if (condition.field === 'body') extensions.add('body');
       if (condition.field === 'attachment') extensions.add('mime');
+      if (condition.field === 'delivered_to') extensions.add('envelope');
       if (usesRegex(condition)) extensions.add('regex');
     }
     for (const action of rule.actions) {
@@ -363,10 +377,11 @@ export function generateScript(
   // good, the auto-reply goes to everyone. It leaves version 2 alone. A
   // forward that is off only loses its remembered address that way, so it
   // stays version 1: the native app still edits version 1 only. A regex
-  // condition would come back from those as a plain "contains".
+  // condition would come back from those as a plain "contains", and one on
+  // "Delivered to" would make their save fail.
   if (
     metadata.rules.some(hasPeriod) ||
-    metadata.rules.some(r => r.conditions.some(usesRegex)) ||
+    metadata.rules.some(r => r.conditions.some(c => usesRegex(c) || c.field === 'delivered_to')) ||
     metadata.vacationForward?.enabled ||
     metadata.vacationAudience
   ) {

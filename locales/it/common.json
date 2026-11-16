@@ -3026,6 +3026,7 @@
         "from": "Da",
         "to": "A",
         "cc": "Cc",
+        "delivered_to": "Consegnato a",
         "subject": "Oggetto",
         "header": "Intestazione personalizzata",
         "size": "Dimensione",
@@ -3200,7 +3201,8 @@
         "trash_title": "Spostare la posta esistente nel cestino?",
         "trash_confirm": "{count, plural, one {Così # messaggio esistente viene spostato nel cestino.} other {Così # messaggi esistenti vengono spostati nel cestino.}}",
         "trash_confirm_partial": "{count, plural, =0 {Così ogni messaggio esistente che corrisponde alla regola viene spostato nel cestino.} other {Così #+ messaggi esistenti vengono spostati nel cestino.}}",
-        "trash_button": "Salva e sposta nel cestino"
+        "trash_button": "Salva e sposta nel cestino",
+        "delivered_to_new_only": "Questa regola vale solo per la posta nuova. La posta consegnata non conserva l'indirizzo a cui è stata consegnata."
       }
     },
     "templates": {

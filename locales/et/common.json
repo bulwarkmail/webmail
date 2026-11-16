@@ -3033,6 +3033,7 @@
         "from": "Saatja",
         "to": "Saaja",
         "cc": "Koopia",
+        "delivered_to": "Kohale toimetatud aadressile",
         "subject": "Teema",
         "header": "Kohandatud päis",
         "size": "Suurus",
@@ -3207,7 +3208,8 @@
         "trash_title": "Kas teisaldada olemasolevad kirjad prügikasti?",
         "trash_confirm": "{count, plural, one {See teisaldab # olemasoleva kirja prügikasti.} other {See teisaldab # olemasolevat kirja prügikasti.}}",
         "trash_confirm_partial": "{count, plural, =0 {See teisaldab prügikasti kõik olemasolevad kirjad, mis reegliga sobivad.} other {See teisaldab #+ olemasolevat kirja prügikasti.}}",
-        "trash_button": "Salvesta ja teisalda prügikasti"
+        "trash_button": "Salvesta ja teisalda prügikasti",
+        "delivered_to_new_only": "See reegel toimib ainult uute kirjade puhul. Kohale toimetatud kiri ei säilita aadressi, kuhu see toimetati."
       }
     },
     "templates": {

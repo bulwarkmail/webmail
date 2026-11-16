@@ -176,6 +176,17 @@ describe('rule preview', () => {
     expect(preview!.total).toBe(0);
   });
 
+  it('gives no preview for "Delivered to", which delivered mail no longer has (#726)', () => {
+    expect(previewPlan(rule({ conditions: [{ field: 'delivered_to', comparator: 'address_is', value: 'shop@example.com' }] }), mailboxes)).toBeNull();
+    expect(previewPlan(rule({
+      matchType: 'any',
+      conditions: [
+        { field: 'from', comparator: 'contains', value: 'shop' },
+        { field: 'delivered_to', comparator: 'contains', value: 'shop' },
+      ],
+    }), mailboxes)).toBeNull();
+  });
+
   it('gives no preview for a regular expression on the body', () => {
     expect(previewPlan(rule({ conditions: [{ field: 'body', comparator: 'regex', value: 'a+' }] }), mailboxes)).toBeNull();
   });

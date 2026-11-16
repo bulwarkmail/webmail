@@ -72,6 +72,13 @@ describe('applying a rule to mail already received', () => {
     }))).toBe(false);
   });
 
+  it('does not offer to apply a rule on "Delivered to", which delivered mail no longer has (#726)', () => {
+    expect(appliesToExisting(rule({
+      conditions: [{ field: 'delivered_to', comparator: 'address_is', value: 'shop@example.com' }],
+      actions: [{ type: 'add_label', value: 'shop' }],
+    }))).toBe(false);
+  });
+
   it('can apply a rule that tags, files or deletes', () => {
     expect(appliesToExisting(rule({ actions: [{ type: 'add_label', value: 'work' }] }))).toBe(true);
     expect(appliesToExisting(rule({ actions: [{ type: 'move', value: 'News', mailboxId: 'news' }] }))).toBe(true);

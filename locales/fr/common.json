@@ -3026,6 +3026,7 @@
         "from": "De",
         "to": "À",
         "cc": "Cc",
+        "delivered_to": "Distribué à",
         "subject": "Objet",
         "header": "En-tête personnalisé",
         "size": "Taille",
@@ -3200,7 +3201,8 @@
         "trash_title": "Déplacer les messages existants dans la corbeille ?",
         "trash_confirm": "{count, plural, one {Cela déplace # message existant dans la corbeille.} other {Cela déplace # messages existants dans la corbeille.}}",
         "trash_confirm_partial": "{count, plural, =0 {Cela déplace dans la corbeille tous les messages existants qui correspondent à la règle.} other {Cela déplace #+ messages existants dans la corbeille.}}",
-        "trash_button": "Enregistrer et déplacer dans la corbeille"
+        "trash_button": "Enregistrer et déplacer dans la corbeille",
+        "delivered_to_new_only": "Cette règle ne s'applique qu'aux nouveaux messages. Un message distribué ne garde pas l'adresse à laquelle il a été distribué."
       }
     },
     "templates": {

@@ -3026,6 +3026,7 @@
         "from": "Van",
         "to": "Aan",
         "cc": "Cc",
+        "delivered_to": "Afgeleverd aan",
         "subject": "Onderwerp",
         "header": "Aangepaste header",
         "size": "Grootte",
@@ -3200,7 +3201,8 @@
         "trash_title": "Bestaande e-mail naar de prullenbak verplaatsen?",
         "trash_confirm": "{count, plural, one {Hiermee gaat # bestaand bericht naar de prullenbak.} other {Hiermee gaan # bestaande berichten naar de prullenbak.}}",
         "trash_confirm_partial": "{count, plural, =0 {Hiermee gaat elk bestaand bericht waarop de regel past naar de prullenbak.} other {Hiermee gaan #+ bestaande berichten naar de prullenbak.}}",
-        "trash_button": "Opslaan en naar prullenbak verplaatsen"
+        "trash_button": "Opslaan en naar prullenbak verplaatsen",
+        "delivered_to_new_only": "Deze regel werkt alleen voor nieuwe e-mail. Afgeleverde e-mail bewaart het adres niet waaraan hij is afgeleverd."
       }
     },
     "templates": {

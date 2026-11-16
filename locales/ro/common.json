@@ -3033,6 +3033,7 @@
         "from": "De la",
         "to": "Către",
         "cc": "Cc",
+        "delivered_to": "Livrat la",
         "subject": "Subiect",
         "header": "Antet personalizat",
         "size": "Dimensiune",
@@ -3207,7 +3208,8 @@
         "trash_title": "Mutați corespondența existentă în Coșul de gunoi?",
         "trash_confirm": "{count, plural, one {Astfel, # mesaj existent este mutat în Coșul de gunoi.} few {Astfel, # mesaje existente sunt mutate în Coșul de gunoi.} other {Astfel, # de mesaje existente sunt mutate în Coșul de gunoi.}}",
         "trash_confirm_partial": "{count, plural, =0 {Astfel, fiecare mesaj existent care se potrivește regulii este mutat în Coșul de gunoi.} other {Astfel, #+ mesaje existente sunt mutate în Coșul de gunoi.}}",
-        "trash_button": "Salvați și mutați în Coșul de gunoi"
+        "trash_button": "Salvați și mutați în Coșul de gunoi",
+        "delivered_to_new_only": "Această regulă funcționează doar pentru corespondența nouă. Corespondența livrată nu păstrează adresa la care a fost livrată."
       }
     },
     "templates": {

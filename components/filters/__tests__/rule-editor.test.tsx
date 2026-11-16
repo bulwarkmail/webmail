@@ -270,6 +270,38 @@ describe('RuleEditor', () => {
     expect(screen.queryByText(filters.editor.trash_title)).toBeNull();
   });
 
+  it('offers "Delivered to" with address, domain and contains, and saves it (#726)', () => {
+    const onSave = vi.fn();
+    render(<RuleEditor rule={existing()} mailboxes={[]} onSave={onSave} onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('Condition 1'), { target: { value: 'delivered_to' } });
+    const comparator = screen.getByLabelText('Comparison') as HTMLSelectElement;
+    expect([...comparator.options].map((o) => o.textContent)).toEqual(['is the address', 'has the domain', 'contains']);
+    fireEvent.change(comparator, { target: { value: 'address_is' } });
+    fireEvent.change(screen.getByLabelText('Condition value'), { target: { value: 'shop@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onSave.mock.calls[0][0].conditions).toEqual([{ field: 'delivered_to', comparator: 'address_is', value: 'shop@example.com' }]);
+  });
+
+  it('says a "Delivered to" rule is for new mail only, with no preview and no Apply to (#726)', async () => {
+    const previewMatches = vi.fn().mockResolvedValue({ items: [], total: 7, complete: true, inFolder: 3 });
+    render(
+      <RuleEditor
+        rule={existing({ conditions: [{ field: 'delivered_to', comparator: 'address_is', value: 'shop@example.com' }] })}
+        mailboxes={[]}
+        previewMatches={previewMatches}
+        offerApplyToExisting
+        applyExistingFolder="Inbox"
+        onSave={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByText(filters.editor.delivered_to_new_only)).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    expect(previewMatches).not.toHaveBeenCalled();
+    expect(screen.queryByText(filters.editor.checking)).toBeNull();
+    expect(screen.queryByLabelText('Apply to')).toBeNull();
+  });
+
   it('offers "contains" and "does not contain" for the message text', () => {
     render(<RuleEditor rule={existing()} mailboxes={[]} onSave={() => {}} onClose={() => {}} />);
     fireEvent.change(screen.getByLabelText('Condition 1'), { target: { value: 'body' } });

@@ -3029,6 +3029,7 @@
         "from": "Feladó",
         "to": "Címzett",
         "cc": "Másolat",
+        "delivered_to": "Kézbesítve ide",
         "subject": "Tárgy",
         "header": "Egyéni fejléc",
         "size": "Méret",
@@ -3203,7 +3204,8 @@
         "trash_title": "Áthelyezi a meglévő leveleket a Kukába?",
         "trash_confirm": "{count, plural, one {Ez # meglévő üzenetet helyez át a Kukába.} other {Ez # meglévő üzenetet helyez át a Kukába.}}",
         "trash_confirm_partial": "{count, plural, =0 {Ez minden meglévő üzenetet, amelyre a szabály illik, áthelyez a Kukába.} other {Ez #+ meglévő üzenetet helyez át a Kukába.}}",
-        "trash_button": "Mentés és áthelyezés a Kukába"
+        "trash_button": "Mentés és áthelyezés a Kukába",
+        "delivered_to_new_only": "Ez a szabály csak az új levelekre vonatkozik. A kézbesített levél nem őrzi meg a címet, ahová kézbesítették."
       }
     },
     "templates": {

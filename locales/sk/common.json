@@ -3033,6 +3033,7 @@
         "from": "Od",
         "to": "Komu",
         "cc": "Kópia",
+        "delivered_to": "Doručené na",
         "subject": "Predmet",
         "header": "Vlastná hlavička",
         "size": "Veľkosť",
@@ -3207,7 +3208,8 @@
         "trash_title": "Presunúť existujúcu poštu do koša?",
         "trash_confirm": "{count, plural, one {Tým sa presunie # existujúca správa do koša.} few {Tým sa presunú # existujúce správy do koša.} many {Tým sa presunie # existujúcej správy do koša.} other {Tým sa presunie # existujúcich správ do koša.}}",
         "trash_confirm_partial": "{count, plural, =0 {Tým sa presunie do koša každá existujúca správa, ktorej pravidlo zodpovedá.} other {Tým sa presunie #+ existujúcich správ do koša.}}",
-        "trash_button": "Uložiť a presunúť do koša"
+        "trash_button": "Uložiť a presunúť do koša",
+        "delivered_to_new_only": "Toto pravidlo platí len pre novú poštu. Doručená pošta si neuchováva adresu, na ktorú bola doručená."
       }
     },
     "templates": {

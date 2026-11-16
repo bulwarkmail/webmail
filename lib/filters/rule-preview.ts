@@ -83,6 +83,9 @@ function allOf(parts: Record<string, unknown>[]): Record<string, unknown> {
 function planCondition(condition: FilterCondition): Planned | null {
   const { field, comparator } = condition;
   if (field === 'all') return { kind: 'server', filter: null };
+  // The envelope recipient is gone once the mail is delivered; a
+  // Delivered-To header would only be a guess at it.
+  if (field === 'delivered_to') return null;
   if (field === 'size') {
     const bytes = sizeInBytes(values(condition)[0] ?? '');
     if (bytes === null) return null;
