@@ -74,6 +74,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'lib/third-party-mode.ts#state', class: 'per-process', why: 'browser-side state; the server only uses its parse helpers' },
   { site: 'lib/third-party-mode.ts#listeners', class: 'per-process', why: 'browser-side state; the server only uses its parse helpers' },
   { site: 'lib/timezone.ts#browserTimeZone', class: 'per-process', why: 'browser-side value' },
+  { site: 'lib/trusted-authserv.ts#trusted', class: 'per-process', why: 'browser-side copy of /api/config; the server only uses its parse helpers' },
   { site: 'lib/timezone.ts#validityCache', class: 'cache', why: 'time zone name checks, immutable' },
   { site: 'lib/timezone.ts#canonicalCache', class: 'cache', why: 'canonical time zone names, immutable' },
   { site: 'lib/timezone.ts#wallClockFormatterCache', class: 'cache', why: 'Intl formatters' },

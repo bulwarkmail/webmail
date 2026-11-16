@@ -13,6 +13,7 @@ import {
 } from '@/lib/admin/domain-branding';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
 import { browserErrorSettings } from '@/lib/error-reporting/settings';
+import { parseTrustedAuthservIds } from '@/lib/trusted-authserv';
 
 /**
  * Runtime configuration endpoint
@@ -116,6 +117,8 @@ export async function GET(request: NextRequest) {
       signLanguageUrl: httpUrlOrEmpty(branded<string>('signLanguageUrl', '')),
       accountManagementUrl: httpUrlOrPathOrEmpty(configManager.get<string>('accountManagementUrl', '')),
       accountManagementLabel: configManager.get<string>('accountManagementLabel', ''),
+      // Whose Authentication-Results the sender check acts on (lib/trusted-authserv.ts).
+      trustedAuthservIds: parseTrustedAuthservIds(configManager.get<string>('trustedAuthservIds', '')),
       // Browser-side switches of lib/outgoing-hosts.ts read this (#903).
       noThirdPartyTraffic: await isNoThirdPartyTrafficOn(),
       // Error reporting (lib/error-reporting/client.ts): off unless a DSN is

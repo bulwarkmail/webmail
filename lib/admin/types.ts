@@ -465,6 +465,11 @@ export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: stri
   // sender's DNS record and an enforcing DMARC policy; on also requires a
   // valid Verified Mark or Common Mark Certificate, as Gmail and Apple Mail do.
   bimiRequireCertificate: { envVar: 'BIMI_REQUIRE_CERTIFICATE', type: 'boolean', defaultValue: false },
+  // Hostnames, comma-separated, whose Authentication-Results the sender check
+  // acts on besides the receiving Stalwart's (lib/trusted-authserv.ts): other
+  // JMAP servers, mailboxes behind legacy-proxy, a filtering gateway. Exact
+  // match, no wildcards. Empty = only the receiving Stalwart's (#1740).
+  trustedAuthservIds: { envVar: 'TRUSTED_AUTHSERV_IDS', type: 'string', defaultValue: '' },
   // WOPI document editing (#425). `wopiClientUrl` is the editor's base URL
   // (Collabora Online / OnlyOffice / EuroOffice, ...); discovery is fetched
   // from `<url>/hosting/discovery` unless the URL already carries a path.

@@ -184,6 +184,13 @@ export function SettingsPage() {
           <ConfigToggleItem label="Require a mark certificate" description="Senders that publish a BIMI record and enforce DMARC get their logo as the sender icon. Off shows a logo that only the sender's DNS record backs, as Yahoo does. On shows only logos backed by a Verified Mark or Common Mark Certificate, as Gmail and Apple Mail do, so a lookalike domain can't put up someone else's logo." configKey="bimiRequireCertificate" value={currentValue('bimiRequireCertificate') as boolean} source={config.bimiRequireCertificate?.source} onChange={handleChange} onRevert={handleRevert} />
         </SettingsSection>
 
+        <SettingsSection id="sender-check" title="Sender check">
+          <ConfigTextItem label="Trusted mail servers" description="Hostnames, separated by commas, whose sender checks (the Authentication-Results header) Bulwark may show besides your Stalwart's own: another JMAP server, Gmail or an IMAP server behind legacy-proxy (mx.google.com), or a filtering gateway in front of Stalwart. Each must match the name the server writes at the start of that header exactly." configKey="trustedAuthservIds" value={currentValue('trustedAuthservIds') as string} source={config.trustedAuthservIds?.source} onChange={handleChange} onRevert={handleRevert} placeholder="mx.google.com, gateway.example.com" mono wide />
+          <ConfigNote>
+            A listed server&apos;s results only count when they are the newest in the message and no server outside the list handled the message after them, so a sender can&apos;t write them in. Mail from an imported file never gets a verdict. For a gateway, Stalwart must not add its own results to what the gateway relays, or those come first: in Stalwart&apos;s SMTP DATA Stage settings, under Add Headers, make Authentication-Results false for the gateway&apos;s addresses (<code className="text-[0.6875rem] bg-muted px-1 py-0.5 rounded">remote_ip</code>), and keep it on for everyone else or let only the gateway reach port 25.
+          </ConfigNote>
+        </SettingsSection>
+
         <SettingsSection id="logging" title="Logging">
           <ConfigSelectItem label="Format" configKey="logFormat" value={currentValue('logFormat') as string} source={config.logFormat?.source} options={['text', 'json']} onChange={handleChange} onRevert={handleRevert} />
           <ConfigSelectItem label="Level" configKey="logLevel" value={currentValue('logLevel') as string} source={config.logLevel?.source} options={['error', 'warn', 'info', 'debug']} onChange={handleChange} onRevert={handleRevert} />

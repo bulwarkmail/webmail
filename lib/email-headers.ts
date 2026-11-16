@@ -1,6 +1,7 @@
 import { AuthenticationResults } from './jmap/types';
 import { parseUnsubscribeUrls } from './validation';
 import { toAsciiDomain } from './idn';
+import { trustedAuthservIds } from './trusted-authserv';
 
 type SpfResult = 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror';
 type SpfEntry = NonNullable<NonNullable<AuthenticationResults['spf']>['all']>[number];
@@ -207,6 +208,62 @@ function receivedByAuthservHost(received: string, results: string | undefined): 
 }
 
 /**
+ * What a Received line says of itself, with its comments and its date left
+ * out (a HELO name, a reverse DNS name or an ASN name in a comment can spell
+ * anything): whether it has a `from` clause, which a server writes when it
+ * takes a message in from another one (RFC 5321 4.4), and the host its `by`
+ * clause names, lower case and without a trailing dot.
+ */
+function receivedClauses(value: string): { from: boolean; by?: string } {
+  const end = value.lastIndexOf(';');
+  let text = end >= 0 ? value.slice(0, end) : value;
+  for (let previous = ''; previous !== text;) {
+    previous = text;
+    text = text.replace(/\([^()]*\)/g, ' ');
+  }
+  const by = /(?:^|\s)by\s+([^\s;]+)/i.exec(text)?.[1];
+  return {
+    from: /^\s*from\s/i.test(text),
+    by: by ? by.toLowerCase().replace(/\.$/, '') : undefined,
+  };
+}
+
+/**
+ * Whether a Received line above a trusted server's Authentication-Results
+ * was written after that server checked the message, on its way into this
+ * mailbox: by the receiving Stalwart (`ownHost`, the one whose line is on
+ * top), by a server in the trusted list, or as a handoff inside a server
+ * that names no other server it came from (Gmail's own top lines read
+ * `by 2002:a05:... with SMTP id ...`). Any server outside the list that
+ * took the message in from another one writes a `from` clause with its own
+ * name after `by`, and below it the sender may have written anything. An
+ * authenticated submission never counts.
+ */
+function trustedHop(received: string, trusted: ReadonlySet<string>, ownHost: string | undefined): boolean {
+  if (SUBMISSION_PROTOCOL_RE.test(received)) return false;
+  const stalwart = stalwartReceivedHost(received);
+  if (stalwart !== undefined && (stalwart === ownHost || trusted.has(stalwart))) return true;
+  const { from, by } = receivedClauses(received);
+  if (!from) return true;
+  return by !== undefined && trusted.has(by);
+}
+
+/**
+ * Whether results with these Received lines above them (in message order)
+ * count: the receiving Stalwart's own, or those of a server in the trusted
+ * list with only trusted hops (trustedHop) above them.
+ */
+function resultsOnReceipt(above: readonly string[], results: string, trusted: readonly string[]): boolean {
+  if (above.length === 0) return false;
+  if (above.every((line) => receivedByAuthservHost(line, results))) return true;
+  const id = authservId(results);
+  const list = new Set(trusted);
+  if (id === undefined || !list.has(id)) return false;
+  const ownHost = stalwartReceivedHost(above[0]);
+  return above.every((line) => trustedHop(line, list, ownHost));
+}
+
+/**
  * Whether the topmost Authentication-Results header was written by the
  * server that received the message into this mailbox. RFC 8601 (sections 5
  * and 7.1) lets a reader act only on results from an authserv-id it
@@ -222,22 +279,31 @@ function receivedByAuthservHost(received: string, results: string | undefined): 
  * Mail another server took in has that server's Received line on top, which
  * the sender can't put anything above. Takes the headers in message order.
  *
+ * The admin can trust more servers (TRUSTED_AUTHSERV_IDS,
+ * lib/trusted-authserv.ts): another JMAP server, a mailbox behind
+ * legacy-proxy, a filtering gateway that relays to Stalwart. Their results
+ * count when they are the topmost Authentication-Results, the authserv-id
+ * is in the list and every Received line above them is a trusted hop
+ * (trustedHop): a header with a listed name below a server outside the list
+ * may be the sender's own. A gateway's results are only topmost when
+ * Stalwart writes none of its own for what the gateway relays.
+ *
  * This only catches a forged header on its own. Stalwart (0.16 and 1.0)
  * keeps both headers when a signed-in user writes them into a mail they
  * submit over JMAP, and adds nothing above them, so a forged Received line
  * followed by a forged "dkim=pass" arrives exactly like mail from outside.
  * Only the server can tell them apart.
  */
-export function authenticationResultsOnReceipt(headers: readonly { name: string; value: string }[]): boolean {
+export function authenticationResultsOnReceipt(
+  headers: readonly { name: string; value: string }[],
+  trusted: readonly string[] = trustedAuthservIds(),
+): boolean {
   const index = headers.findIndex((header) => header.name.toLowerCase() === 'authentication-results');
   if (index < 0) return false;
-  let top: string | undefined;
-  for (let i = 0; i < index; i++) {
-    if (headers[i].name.toLowerCase() !== 'received') continue;
-    if (!receivedByAuthservHost(headers[i].value, headers[index].value)) return false;
-    top ??= headers[i].value;
-  }
-  return top !== undefined;
+  const above = headers.slice(0, index)
+    .filter((header) => header.name.toLowerCase() === 'received')
+    .map((header) => header.value);
+  return resultsOnReceipt(above, headers[index].value, trusted);
 }
 
 /**
@@ -245,12 +311,17 @@ export function authenticationResultsOnReceipt(headers: readonly { name: string;
  * (`header:Received:all`, `header:Authentication-Results:all`, both in
  * message order) and so can't see which comes first: the topmost Received
  * line must be the receiving Stalwart's, for the host the topmost
- * Authentication-Results header names. A forged header that passes this
- * can only take a warning off the row, which a header the check turns down
- * does too.
+ * Authentication-Results header names, or a trusted hop (trustedHop) when
+ * that header's authserv-id is in the trusted list. A forged header that
+ * passes this can only take a warning off the row, which a header the check
+ * turns down does too.
  */
-export function topAuthenticationResultsOnReceipt(received: readonly string[], results: readonly string[]): boolean {
-  return received.length > 0 && receivedByAuthservHost(received[0], results[0]);
+export function topAuthenticationResultsOnReceipt(
+  received: readonly string[],
+  results: readonly string[],
+  trusted: readonly string[] = trustedAuthservIds(),
+): boolean {
+  return received.length > 0 && results.length > 0 && resultsOnReceipt(received.slice(0, 1), results[0], trusted);
 }
 
 /**

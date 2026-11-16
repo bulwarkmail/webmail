@@ -37,7 +37,7 @@ const MANAGED_ENV = [
   'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
   'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL', 'LOGIN_SHOW_REMEMBER_ME', 'BROWSER_SESSION_SIGN_IN',
   'ACCESSIBILITY_STATEMENT_URL', 'ACCESSIBILITY_FEEDBACK_URL', 'HELP_URL', 'EASY_READ_URL', 'SIGN_LANGUAGE_URL',
-  'LOGIN_USERNAME_PLACEHOLDER',
+  'LOGIN_USERNAME_PLACEHOLDER', 'TRUSTED_AUTHSERV_IDS',
 ] as const;
 
 describe('config API route', () => {
@@ -120,6 +120,12 @@ describe('config API route', () => {
 
     vi.stubEnv('JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'true');
     expect((await getConfig()).jmapServers[0].domains).toEqual(['acme.example']);
+  });
+
+  it('hands the trusted mail servers to the browser as a list of hostnames', async () => {
+    expect((await getConfig()).trustedAuthservIds).toEqual([]);
+    vi.stubEnv('TRUSTED_AUTHSERV_IDS', ' MX.Google.com., gateway.example.com,*.example.net mx.google.com');
+    expect((await getConfig()).trustedAuthservIds).toEqual(['mx.google.com', 'gateway.example.com']);
   });
 
   it('should use runtime env vars over defaults', async () => {

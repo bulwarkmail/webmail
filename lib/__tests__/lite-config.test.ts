@@ -17,6 +17,12 @@ describe('applyLiteConfig (config.json for the static build)', () => {
     expect(config.oauthRevokeOnSignOut).toBe(true);
   });
 
+  it('reads the trusted mail servers as a list or a comma-separated string', () => {
+    expect(applyLiteConfig({}).trustedAuthservIds).toEqual([]);
+    expect(applyLiteConfig({ trustedAuthservIds: 'MX.Google.com, gw.example.com' }).trustedAuthservIds).toEqual(['mx.google.com', 'gw.example.com']);
+    expect(applyLiteConfig({ trustedAuthservIds: ['mx.google.com', '*.example.com', 3] }).trustedAuthservIds).toEqual(['mx.google.com']);
+  });
+
   it('lets config.json keep refresh tokens valid on sign-out (#1388)', () => {
     expect(applyLiteConfig({ oauthRevokeOnSignOut: false }).oauthRevokeOnSignOut).toBe(false);
     expect(applyLiteConfig({ oauthRevokeOnSignOut: 'no' }).oauthRevokeOnSignOut).toBe(true);

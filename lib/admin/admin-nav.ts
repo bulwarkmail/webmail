@@ -87,6 +87,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
       { id: 'servers', title: 'JMAP servers', keywords: 'multi server domain auto pick list' },
       { id: 'wopi', title: 'Document editing', keywords: 'wopi collabora onlyoffice office files host url' },
       { id: 'bimi', title: 'Brand logos', keywords: 'bimi vmc cmc mark certificate sender logo icon dmarc' },
+      { id: 'sender-check', title: 'Sender check', keywords: 'trusted mail servers authserv authentication results unverified sender gateway spf dkim dmarc legacy proxy gmail' },
       { id: 'logging', title: 'Logging', keywords: 'log level format json text debug' },
       { id: 'sync', title: 'Settings sync', keywords: 'session secret devices' },
     ],

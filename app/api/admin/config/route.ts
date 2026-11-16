@@ -12,6 +12,7 @@ import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { checkExtensionDirectoryUrl } from '@/lib/admin/directory-url';
 import { parseNoThirdPartyEnv } from '@/lib/third-party-mode';
+import { invalidTrustedAuthservIds } from '@/lib/trusted-authserv';
 
 // Strings that count as "no real secret configured" - used so the dashboard
 // can warn about a placeholder session secret without us ever returning the
@@ -116,6 +117,18 @@ export async function PATCH(request: NextRequest) {
       }
       if (!updates.noThirdPartyTraffic && parseNoThirdPartyEnv(process.env.NO_THIRD_PARTY_TRAFFIC)) {
         return NextResponse.json({ error: 'NO_THIRD_PARTY_TRAFFIC is set in the environment; change it there.' }, { status: 409 });
+      }
+    }
+
+    // Trusted mail servers are matched exactly: an entry that isn't a
+    // hostname (a wildcard, a typo with a space) would trust nothing.
+    if ('trustedAuthservIds' in updates) {
+      if (typeof updates.trustedAuthservIds !== 'string') {
+        return NextResponse.json({ error: 'trustedAuthservIds must be a comma-separated list of hostnames' }, { status: 400 });
+      }
+      const invalid = invalidTrustedAuthservIds(updates.trustedAuthservIds);
+      if (invalid.length > 0) {
+        return NextResponse.json({ error: `Not a hostname: ${invalid.join(', ')}. List full hostnames, no wildcards.` }, { status: 400 });
       }
     }
 

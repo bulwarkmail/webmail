@@ -77,6 +77,8 @@ const configValidators = {
   accountManagementUrl: isString,
   accountManagementLabel: isString,
   noThirdPartyTraffic: isBoolean,
+  // Absent from servers before it existed.
+  trustedAuthservIds: (value): value is string[] | undefined => value === undefined || (Array.isArray(value) && value.every(isString)),
   // Lite only (lib/lite-config.ts); the server's response leaves it out.
   oauthRevokeOnSignOut: (value): value is boolean | undefined => value === undefined || typeof value === 'boolean',
   // Absent from Lite's config and from servers before 1.20.
