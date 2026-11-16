@@ -1644,3 +1644,36 @@ describe('contact display name', () => {
     } as never)).toBe('UX-cf Jürgen Müller');
   });
 });
+
+describe('searchRecipients', () => {
+  function fakeClient(sentId: string) {
+    return {
+      getEmails: vi.fn().mockResolvedValue({ emails: [] }),
+      getMailboxes: vi.fn().mockResolvedValue([
+        { id: 'inbox-' + sentId, role: 'inbox' },
+        { id: sentId, role: 'sent' },
+      ]),
+      searchSentRecipients: vi.fn().mockResolvedValue([{ name: 'F', email: 'fff@example.com' }]),
+    } as unknown as IJMAPClient & {
+      getMailboxes: ReturnType<typeof vi.fn>;
+      searchSentRecipients: ReturnType<typeof vi.fn>;
+    };
+  }
+
+  it('searches the Sent folder of the account it is given, not the one in view', async () => {
+    const viewed = fakeClient('e');
+    const other = fakeClient('l_SENT');
+    await useContactStore.getState().loadRecentRecipients(viewed, 'e');
+
+    await useContactStore.getState().searchRecipients(viewed, 'fff');
+    expect(viewed.searchSentRecipients).toHaveBeenCalledWith('fff', 'e');
+    expect(viewed.getMailboxes).not.toHaveBeenCalled();
+
+    const results = await useContactStore.getState().searchRecipients(other, 'fff');
+    expect(other.searchSentRecipients).toHaveBeenCalledWith('fff', 'l_SENT');
+    expect(results).toEqual([{ name: 'F', email: 'fff@example.com' }]);
+
+    await useContactStore.getState().searchRecipients(other, 'ggg');
+    expect(other.getMailboxes).toHaveBeenCalledTimes(1);
+  });
+});

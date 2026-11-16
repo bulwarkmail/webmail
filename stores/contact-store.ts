@@ -402,6 +402,27 @@ export const TRUSTED_SENDERS_BOOK_NAME = 'Trusted Senders';
 /** In-flight trusted senders load, shared by all callers to keep it single-flight. */
 let trustedSendersLoadPromise: Promise<void> | null = null;
 
+// The store's `sentMailboxId` is the Sent folder of the account in view, and
+// `sentMailboxOwner` the client it came from. A message composed from another
+// account's identity searches through that account's client, where the id
+// means nothing (the Gmail bridge rejects it: "Invalid Gmail object id"), so
+// such a client looks its own Sent folder up once.
+let sentMailboxOwner: IJMAPClient | null = null;
+const sentMailboxByClient = new WeakMap<IJMAPClient, Promise<string | null>>();
+
+function sentMailboxOf(client: IJMAPClient): Promise<string | null> {
+  let pending = sentMailboxByClient.get(client);
+  if (!pending) {
+    pending = client.getMailboxes().then(
+      (mailboxes) => mailboxes.find((m) => m.role === 'sent' && !m.isShared)?.id ?? null,
+    );
+    // A failed lookup is retried on the next search instead of sticking.
+    pending.catch(() => sentMailboxByClient.delete(client));
+    sentMailboxByClient.set(client, pending);
+  }
+  return pending;
+}
+
 /** Every e-mail address held by the given contacts, lowercased and de-duplicated. */
 export function collectContactEmails(contacts: ContactCard[]): string[] {
   const seen = new Set<string>();
@@ -1718,7 +1739,10 @@ export const useContactStore = create<ContactStore>()(
       },
 
       loadRecentRecipients: async (client, sentMailboxId) => {
-        if (sentMailboxId) set({ sentMailboxId });
+        if (sentMailboxId) {
+          set({ sentMailboxId });
+          sentMailboxOwner = client;
+        }
         if (get().recentRecipientsLoaded || !sentMailboxId) return;
         // One read of the Sent folder at a time: callers retry whenever the
         // folder list changes, which it does several times while signing in.
@@ -1750,10 +1774,14 @@ export const useContactStore = create<ContactStore>()(
       },
 
       searchRecipients: async (client, query) => {
-        const { sentMailboxId } = get();
         const q = query.trim();
-        if (!sentMailboxId || q.length < 1) return [];
+        if (q.length < 1) return [];
         try {
+          // The account in view searches at once: no lookup before the request.
+          const sentMailboxId = !sentMailboxOwner || client === sentMailboxOwner
+            ? get().sentMailboxId
+            : await sentMailboxOf(client);
+          if (!sentMailboxId) return [];
           return await client.searchSentRecipients(q, sentMailboxId);
         } catch (error) {
           debug.error('Recipient server search failed:', error);
