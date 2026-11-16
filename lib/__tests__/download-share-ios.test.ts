@@ -6,7 +6,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SHARE_NEEDS_TAP_EVENT, iosCanPreview, isAppleMobile, saveBlobAs, setDownloadGuard } from '../download-guard';
+import {
+  SHARE_NEEDS_TAP_EVENT, iosCanPreview, isAppleMobile, saveBlobAs, setDownloadGuard, shareAfterTap, type ShareNeedsTapDetail,
+} from '../download-guard';
 
 const UA = {
   iphone: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1',
@@ -48,10 +50,10 @@ describe('saveBlobAs on an iPhone', () => {
   let clicked: string[];
   let share: ReturnType<typeof vi.fn>;
   let canShare: ReturnType<typeof vi.fn>;
-  let tapAsked: File[];
+  let tapAsked: ShareNeedsTapDetail[];
   const originalCreate = URL.createObjectURL;
   const originalRevoke = URL.revokeObjectURL;
-  const onTap = (event: Event) => { tapAsked.push((event as CustomEvent<{ file: File }>).detail.file); };
+  const onTap = (event: Event) => { tapAsked.push((event as CustomEvent<ShareNeedsTapDetail>).detail); };
 
   beforeEach(() => {
     clicked = [];
@@ -101,13 +103,51 @@ describe('saveBlobAs on an iPhone', () => {
     expect(share).not.toHaveBeenCalled();
   });
 
-  it('asks the app for a tap when the click is too old for the sheet', async () => {
+  it('asks the app for a tap when the click is too old for the sheet, with what to check again', async () => {
     iphone();
     share.mockRejectedValueOnce(Object.assign(new Error('no activation'), { name: 'NotAllowedError' }));
+    saveBlobAs(zip(), 'Attachments.zip', { kind: 'attachment', subject: 'acc-2' });
+    await flush();
+    expect(tapAsked.map((d) => [d.file.name, d.kind, d.subject])).toEqual([['Attachments.zip', 'attachment', 'acc-2']]);
+    expect(clicked).toEqual([]);
+  });
+
+  it('saves through the <a download> when the sheet fails for another reason', async () => {
+    iphone();
+    share.mockRejectedValueOnce(Object.assign(new Error('bad file'), { name: 'DataError' }));
     saveBlobAs(zip(), 'Attachments.zip', { kind: 'attachment' });
     await flush();
-    expect(tapAsked.map((f) => f.name)).toEqual(['Attachments.zip']);
+    expect(tapAsked).toEqual([]);
+    expect(clicked).toEqual(['Attachments.zip']);
+  });
+
+  it('checks the device policy again when the waiting file is tapped', async () => {
+    iphone();
+    const file = new File(['PK'], 'Attachments.zip', { type: 'application/zip' });
+    let allowed = false;
+    setDownloadGuard((kind, subject) => { expect([kind, subject]).toEqual(['attachment', 'acc-2']); return allowed; });
+    shareAfterTap({ file, kind: 'attachment', subject: 'acc-2' });
+    expect(share).not.toHaveBeenCalled();
+    allowed = true;
+    shareAfterTap({ file, kind: 'attachment', subject: 'acc-2' });
+    expect(share).toHaveBeenCalledTimes(1);
+    expect((share.mock.calls[0][0] as { files: File[] }).files[0]).toBe(file);
+    await flush();
     expect(clicked).toEqual([]);
+  });
+
+  it('falls back to the <a download> when the tapped sheet fails, and not when it is closed', async () => {
+    iphone();
+    const file = new File(['PK'], 'Attachments.zip', { type: 'application/zip' });
+    share.mockRejectedValueOnce(Object.assign(new Error('closed'), { name: 'AbortError' }));
+    shareAfterTap({ file, kind: 'attachment' });
+    await flush();
+    expect(clicked).toEqual([]);
+    share.mockRejectedValueOnce(Object.assign(new Error('again too late'), { name: 'NotAllowedError' }));
+    shareAfterTap({ file, kind: 'attachment' });
+    await flush();
+    expect(clicked).toEqual(['Attachments.zip']);
+    expect(tapAsked).toEqual([]);
   });
 
   it('does nothing more when the sheet is closed', async () => {

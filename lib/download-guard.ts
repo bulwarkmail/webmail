@@ -59,9 +59,16 @@ const DOWNLOAD_BLOB_TYPE = 'application/octet-stream';
 
 /**
  * The event the app listens for when iOS wants a fresh tap before it opens
- * the share sheet (components/share-sheet-host.tsx); detail.file is the File.
+ * the share sheet (components/share-sheet-host.tsx), with a ShareNeedsTapDetail.
  */
 export const SHARE_NEEDS_TAP_EVENT = 'bulwark:share-needs-tap';
+
+/** The file waiting for a tap, and what saveBlobAs() was asked for, so the tap can be checked again. */
+export interface ShareNeedsTapDetail {
+  file: File;
+  kind: DownloadKind;
+  subject?: DownloadSubject;
+}
 
 /** An iPhone or iPad, the latter also when it asks for desktop sites and calls itself a Mac. */
 export function isAppleMobile(
@@ -92,6 +99,8 @@ function errorName(err: unknown): string {
   return err && typeof err === 'object' && 'name' in err ? String((err as { name: unknown }).name) : '';
 }
 
+type SaveOptions = { kind: DownloadKind; subject?: DownloadSubject; revokeAfterMs?: number; share?: boolean };
+
 /**
  * On an iPhone or iPad, a blob: download opens in a preview window, and
  * above all in a web app on the home screen, there is nothing else. What iOS
@@ -101,9 +110,10 @@ function errorName(err: unknown): string {
  * when it went there; false leaves it to the <a download>.
  *
  * The share sheet opens only straight after a tap. When fetching or zipping
- * took longer, SHARE_NEEDS_TAP_EVENT asks the app for one.
+ * took longer (NotAllowedError), SHARE_NEEDS_TAP_EVENT asks the app for one.
+ * Any other failure saves the file through the <a download> after all.
  */
-function shareOnAppleMobile(blob: Blob, filename: string): boolean {
+function shareOnAppleMobile(blob: Blob, filename: string, options: SaveOptions): boolean {
   if (typeof navigator === 'undefined' || !isAppleMobile() || iosCanPreview(filename, blob.type)) return false;
   if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false;
   const file = new File([blob], filename, { type: blob.type || DOWNLOAD_BLOB_TYPE });
@@ -111,11 +121,32 @@ function shareOnAppleMobile(blob: Blob, filename: string): boolean {
   navigator.share({ files: [file] }).catch((err: unknown) => {
     const why = errorName(err);
     if (why === 'AbortError') return; // the sheet was closed
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent(SHARE_NEEDS_TAP_EVENT, { detail: { file } }));
+    if (why === 'NotAllowedError' && typeof window !== 'undefined') {
+      const detail: ShareNeedsTapDetail = { file, kind: options.kind, subject: options.subject };
+      window.dispatchEvent(new CustomEvent(SHARE_NEEDS_TAP_EVENT, { detail }));
+      return;
     }
+    saveBlobAs(blob, filename, { ...options, share: false });
   });
   return true;
+}
+
+/**
+ * The tap SHARE_NEEDS_TAP_EVENT asked for (the Save button in
+ * ShareSheetHost). The device policy is asked again, as it may have changed
+ * while the file waited; then the share sheet, and the <a download> if the
+ * sheet fails.
+ */
+export function shareAfterTap(detail: ShareNeedsTapDetail): void {
+  if (!downloadAllowed(detail.kind, detail.subject)) return;
+  const fallBack = () => { saveBlobAs(detail.file, detail.file.name, { kind: detail.kind, subject: detail.subject, share: false }); };
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+    fallBack();
+    return;
+  }
+  navigator.share({ files: [detail.file] }).catch((err: unknown) => {
+    if (errorName(err) !== 'AbortError') fallBack();
+  });
 }
 
 /**
@@ -151,11 +182,12 @@ function downloadMayStartLater(): boolean {
 export function saveBlobAs(
   data: Blob | string,
   filename: string,
-  options: { kind: DownloadKind; subject?: DownloadSubject; revokeAfterMs?: number },
+  options: SaveOptions,
 ): boolean {
   if (!downloadAllowed(options.kind, options.subject)) return false;
   if (typeof document === 'undefined') return false;
-  if (typeof data !== 'string' && shareOnAppleMobile(data, downloadNameForType(filename, data.type))) return true;
+  if (typeof data !== 'string' && options.share !== false
+    && shareOnAppleMobile(data, downloadNameForType(filename, data.type), options)) return true;
   const url = typeof data === 'string'
     ? data
     : URL.createObjectURL(data.type === DOWNLOAD_BLOB_TYPE ? data : data.slice(0, data.size, DOWNLOAD_BLOB_TYPE));
