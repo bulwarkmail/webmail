@@ -58,6 +58,67 @@ export function downloadAllowed(kind: DownloadKind, subject?: DownloadSubject): 
 const DOWNLOAD_BLOB_TYPE = 'application/octet-stream';
 
 /**
+ * The event the app listens for when iOS wants a fresh tap before it opens
+ * the share sheet (components/share-sheet-host.tsx); detail.file is the File.
+ */
+export const SHARE_NEEDS_TAP_EVENT = 'bulwark:share-needs-tap';
+
+/** An iPhone or iPad, the latter also when it asks for desktop sites and calls itself a Mac. */
+export function isAppleMobile(
+  nav: Pick<Navigator, 'userAgent' | 'platform' | 'maxTouchPoints'> | undefined = typeof navigator === 'undefined' ? undefined : navigator,
+): boolean {
+  if (!nav) return false;
+  if (/iPhone|iPad|iPod/.test(nav.userAgent ?? '')) return true;
+  return nav.platform === 'MacIntel' && (nav.maxTouchPoints ?? 0) > 1;
+}
+
+/** Extensions iOS shows in its download preview: PDF, pictures, audio and video, text, Office and iWork files. */
+const IOS_PREVIEWABLE_EXT = new Set([
+  'pdf', 'jpg', 'jpeg', 'png', 'gif', 'heic', 'heif', 'webp', 'bmp', 'tif', 'tiff',
+  'mp4', 'mov', 'm4v', 'mp3', 'm4a', 'wav', 'aac',
+  'txt', 'csv', 'rtf',
+  'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pages', 'numbers', 'key',
+]);
+
+/** Whether iOS can show this file in its download preview, by its type or its name. */
+export function iosCanPreview(filename: string, type?: string): boolean {
+  const mime = (type || '').toLowerCase().split(';')[0].trim();
+  if (mime === 'application/pdf' || /^(image|video|audio)\//.test(mime) || mime === 'text/plain' || mime === 'text/csv') return true;
+  const dot = filename.lastIndexOf('.');
+  return dot >= 0 && IOS_PREVIEWABLE_EXT.has(filename.slice(dot + 1).toLowerCase());
+}
+
+function errorName(err: unknown): string {
+  return err && typeof err === 'object' && 'name' in err ? String((err as { name: unknown }).name) : '';
+}
+
+/**
+ * On an iPhone or iPad, a blob: download opens in a preview window, and
+ * above all in a web app on the home screen, there is nothing else. What iOS
+ * can preview is fine there. An archive (a "Download all" zip) or an unknown
+ * type comes up as a blank page with a file icon and no way to keep it. Such
+ * a file goes to the share sheet instead, where "Save to Files" works. True
+ * when it went there; false leaves it to the <a download>.
+ *
+ * The share sheet opens only straight after a tap. When fetching or zipping
+ * took longer, SHARE_NEEDS_TAP_EVENT asks the app for one.
+ */
+function shareOnAppleMobile(blob: Blob, filename: string): boolean {
+  if (typeof navigator === 'undefined' || !isAppleMobile() || iosCanPreview(filename, blob.type)) return false;
+  if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false;
+  const file = new File([blob], filename, { type: blob.type || DOWNLOAD_BLOB_TYPE });
+  if (!navigator.canShare({ files: [file] })) return false;
+  navigator.share({ files: [file] }).catch((err: unknown) => {
+    const why = errorName(err);
+    if (why === 'AbortError') return; // the sheet was closed
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(SHARE_NEEDS_TAP_EVENT, { detail: { file } }));
+    }
+  });
+  return true;
+}
+
+/**
  * Whether the browser may start a download long after the click: WebKit
  * (Safari, and every browser on iOS), the first time only after its "Allow
  * downloads" prompt. Chromium (also the desktop app) and Firefox start it
@@ -94,6 +155,7 @@ export function saveBlobAs(
 ): boolean {
   if (!downloadAllowed(options.kind, options.subject)) return false;
   if (typeof document === 'undefined') return false;
+  if (typeof data !== 'string' && shareOnAppleMobile(data, downloadNameForType(filename, data.type))) return true;
   const url = typeof data === 'string'
     ? data
     : URL.createObjectURL(data.type === DOWNLOAD_BLOB_TYPE ? data : data.slice(0, data.size, DOWNLOAD_BLOB_TYPE));

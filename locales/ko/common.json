@@ -1335,6 +1335,7 @@
     "success": "성공",
     "cancel": "취소",
     "save": "저장",
+    "ready_to_save": "저장할 준비가 되었습니다",
     "delete": "삭제",
     "edit": "수정",
     "close": "닫기",
