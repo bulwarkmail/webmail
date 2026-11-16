@@ -1,6 +1,6 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 
-import { isEditableEventTarget, shortcutKey } from '../keyboard';
+import { isEditableEventTarget, readKeyboardLayoutMap, resetKeyboardLayout, shortcutKey } from '../keyboard';
 
 // Regression tests for #654: global single-key shortcuts fired while the user
 // was editing inside the QuotedHtml shadow-DOM island, because the shadow
@@ -108,5 +108,47 @@ describe('shortcutKey', () => {
   it('keeps named keys', () => {
     expect(shortcutKey(press('ArrowDown', 'ArrowDown'))).toBe('arrowdown');
     expect(shortcutKey(press('Delete', 'Delete'))).toBe('delete');
+  });
+});
+
+// #1719: a Mac's Option layer types no letter, so the key's place stood in,
+// which on Colemak is another letter: Option+Shift+N went by the US N key.
+describe('shortcutKey with the Option layer on a non-QWERTY layout', () => {
+  afterEach(() => { resetKeyboardLayout(); vi.unstubAllGlobals(); });
+  const option = (key: string, code: string) => ({ key, code, shiftKey: true });
+
+  it('takes the letter the key typed when last pressed without a modifier', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', code: 'KeyJ' })); // Colemak
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'K', code: 'KeyN', shiftKey: true }));
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('n');
+    expect(shortcutKey(option('˜', 'KeyN'))).toBe('k');
+  });
+
+  it('learns nothing from a press with Option, Ctrl or ⌘, or from a dead key', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', code: 'KeyJ', altKey: true }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', code: 'KeyJ', metaKey: true }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Dead', code: 'KeyJ' }));
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('j');
+  });
+
+  it('goes back to the US place once the key types a non-Latin letter', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', code: 'KeyJ' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'о', code: 'KeyJ' })); // switched to Russian
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('j');
+  });
+
+  it('reads the layout from the browser where it has a layout map', async () => {
+    vi.stubGlobal('navigator', { ...navigator, keyboard: {
+      getLayoutMap: async () => new Map([['KeyJ', 'n'], ['KeyE', 'f'], ['KeyK', 'л']]),
+    } });
+    await readKeyboardLayoutMap();
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('n');
+    expect(shortcutKey(option('´', 'KeyE'))).toBe('f');
+    expect(shortcutKey(option('Dead', 'KeyK'))).toBe('k');
+  });
+
+  it('still takes the typed letter first', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', code: 'KeyJ' }));
+    expect(shortcutKey(option('J', 'KeyJ'))).toBe('j');
   });
 });

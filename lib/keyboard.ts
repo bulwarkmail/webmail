@@ -85,18 +85,75 @@ export function isSingleCharacterKey(event: Pick<KeyboardEvent, "key" | "ctrlKey
   return [...event.key].length === 1;
 }
 
+// The letter each key types on the user's layout, by its event.code: from the
+// browser's layout map where there is one (Chrome, Edge), and in every browser
+// from the user's own key presses without a modifier. Only Latin letters; a key
+// that last typed anything else has no entry. (#1719)
+const layoutLetters = new Map<string, string>();
+
+/** Remembers the letter a plain key press typed, for shortcutKey. */
+export function learnLayoutLetter(event: Pick<KeyboardEvent, "key" | "code" | "altKey" | "ctrlKey" | "metaKey">): void {
+  if (event.altKey || event.ctrlKey || event.metaKey || !event.code) return;
+  const key = event.key ?? "";
+  // "Dead", "Process", "Enter": no character typed.
+  if ([...key].length !== 1) return;
+  const letter = key.toLowerCase();
+  if (/^[a-z]$/.test(letter)) layoutLetters.set(event.code, letter);
+  else layoutLetters.delete(event.code);
+}
+
+type LayoutMapKeyboard = { getLayoutMap?: () => Promise<Map<string, string>> };
+
+/** Reads the active layout from the browser, where it tells (navigator.keyboard). */
+export async function readKeyboardLayoutMap(): Promise<void> {
+  const keyboard = typeof navigator === "undefined" ? undefined : (navigator as { keyboard?: LayoutMapKeyboard }).keyboard;
+  if (!keyboard?.getLayoutMap) return;
+  let map: Map<string, string>;
+  try {
+    map = await keyboard.getLayoutMap();
+  } catch {
+    // Not allowed here (a frame without the keyboard-map permission).
+    return;
+  }
+  layoutLetters.clear();
+  map.forEach((value, code) => {
+    if (/^[a-z]$/i.test(value)) layoutLetters.set(code, value.toLowerCase());
+  });
+}
+
+/** Forgets what was learnt about the layout. For tests. */
+export function resetKeyboardLayout(): void {
+  layoutLetters.clear();
+}
+
+let watchingLayout = false;
+/** Starts learning the layout: every key press, and the browser's map on load and on focus. */
+export function watchKeyboardLayout(): void {
+  if (watchingLayout || typeof window === "undefined") return;
+  watchingLayout = true;
+  window.addEventListener("keydown", learnLayoutLetter, true);
+  window.addEventListener("focus", () => void readKeyboardLayoutMap());
+  void readKeyboardLayoutMap();
+}
+
+// Every page that matches shortcuts loads this file, so it learns from the first key press.
+watchKeyboardLayout();
+
 /**
  * The key a shortcut matches for this press, lowercased: "e", "/", "#",
  * "arrowdown". The character the key types wins, so `e` archives on Colemak,
- * Dvorak and AZERTY where `e` is printed on the key (#1714). Where the layout
- * types no ASCII character there (Cyrillic, Greek, Hebrew, Arabic, or a Mac's
- * Option layer, where Alt+A types "å"), the key's place on a US keyboard
- * stands in, so those layouts keep their shortcuts.
+ * Dvorak and AZERTY where `e` is printed on the key (#1714). Where it types no
+ * ASCII character (a Mac's Option layer, where Option+Shift+N types "˜"), the
+ * letter that key types on the user's layout stands in (#1719), and failing
+ * that, as on Cyrillic, Greek, Hebrew or Arabic, its place on a US keyboard,
+ * so those layouts keep their shortcuts.
  */
 export function shortcutKey(event: Pick<KeyboardEvent, "key" | "code" | "shiftKey">): string {
   const key = event.key ?? "";
   if (key.length === 1 && key > " " && key <= "~") return key.toLowerCase();
   const code = event.code ?? "";
+  const layoutLetter = layoutLetters.get(code);
+  if (layoutLetter) return layoutLetter;
   if (/^Key[A-Z]$/.test(code)) return code.charAt(3).toLowerCase();
   if (code === "Slash") return event.shiftKey ? "?" : "/";
   if (code === "Digit1" && event.shiftKey) return "!";
