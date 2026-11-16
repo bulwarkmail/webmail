@@ -123,6 +123,56 @@ describe("protocol handlers", () => {
       expect(parsed?.to).toHaveLength(200);
       expect(parsed?.subject).toBe("HiBcc:evil@example.com");
     });
+
+    describe("In-Reply-To and References (#1732)", () => {
+      it("reads them in any case, without the angle brackets, as RFC 6068's example has them", () => {
+        expect(parseMailto("mailto:list@example.org?In-Reply-To=%3C3469A91.D10AF4C@example.com%3E")).toMatchObject({
+          inReplyTo: ["3469A91.D10AF4C@example.com"],
+          references: ["3469A91.D10AF4C@example.com"],
+        });
+        expect(parseMailto("mailto:a@example.org?subject=Re%3A%20test&in-reply-to=%3Cabc%40example.org%3E")?.inReplyTo)
+          .toEqual(["abc@example.org"]);
+      });
+
+      it("ends the References with the message answered", () => {
+        const parsed = parseMailto("mailto:a@example.org?REFERENCES=%3Croot@x.org%3E%20%3Cmid@x.org%3E&in-reply-to=%3Cparent@x.org%3E");
+        expect(parsed?.references).toEqual(["root@x.org", "mid@x.org", "parent@x.org"]);
+        const already = parseMailto("mailto:a@example.org?references=%3Croot@x.org%3E%3Cparent@x.org%3E&in-reply-to=%3Cparent@x.org%3E");
+        expect(already?.references).toEqual(["root@x.org", "parent@x.org"]);
+      });
+
+      it("leaves out ids that are not well-formed", () => {
+        const bad = [
+          "abc@example.org", // no angle brackets
+          "<abc>", // no @
+          "<a b@example.org>", // white space
+          "<a@b@example.org>",
+          "<.a@example.org>",
+          "<a@example.org\r\nBcc: evil@example.org>",
+          `<${"a".repeat(260)}@example.org>`,
+        ];
+        for (const value of bad) {
+          const parsed = parseMailto(`mailto:a@example.org?in-reply-to=${encodeURIComponent(value)}`);
+          expect(parsed).not.toHaveProperty("inReplyTo");
+          expect(parsed).not.toHaveProperty("references");
+        }
+        expect(parseMailto("mailto:a@example.org?in-reply-to=junk%3Cok@[127.0.0.1]%3E%3Cbad%20id@x%3E")?.inReplyTo)
+          .toEqual(["ok@[127.0.0.1]"]);
+      });
+
+      it("caps how many ids it takes, keeping the thread's start", () => {
+        const ids = Array.from({ length: 150 }, (_, i) => `%3Cm${i}@x.org%3E`).join("");
+        const parsed = parseMailto(`mailto:a@example.org?in-reply-to=${ids}&references=${ids}`);
+        expect(parsed?.inReplyTo).toHaveLength(10);
+        expect(parsed?.references).toHaveLength(100);
+        expect(parsed?.references?.[0]).toBe("m0@x.org");
+        expect(parsed?.references?.at(-1)).toBe("m149@x.org");
+      });
+
+      it("adds nothing to a link without them", () => {
+        expect(parseMailto("mailto:a@example.org?subject=Hi")).not.toHaveProperty("inReplyTo");
+      });
+    });
   });
 
   describe("parseWebcal", () => {
@@ -173,6 +223,21 @@ describe("protocol handlers", () => {
       serviceWorker.dispatch({ type: "mailto-request", id: "legacy", value: mailtoValue });
 
       expect(onMailto).toHaveBeenCalledWith(mailtoValue);
+      cleanup();
+    });
+
+    it("passes the threading ids on, and drops a message whose ids are not text (#1732)", () => {
+      const serviceWorker = installServiceWorkerMock();
+      const onMailto = vi.fn();
+      vi.spyOn(window, "focus").mockImplementation(() => undefined);
+
+      const cleanup = listenForMailtoRequests(onMailto, () => ({ path: "/", standalone: false }));
+      const threaded = { ...mailtoValue, inReplyTo: ["p@x.org"], references: ["r@x.org", "p@x.org"] };
+      serviceWorker.dispatch({ type: "mailto-request", id: "threaded", value: threaded });
+      serviceWorker.dispatch({ type: "mailto-request", id: "broken", value: { ...mailtoValue, inReplyTo: [{ evil: true }] } });
+
+      expect(onMailto).toHaveBeenCalledTimes(1);
+      expect(onMailto).toHaveBeenCalledWith(threaded);
       cleanup();
     });
 

@@ -2,6 +2,8 @@ import { render, screen, fireEvent, waitFor, act, within } from '@testing-librar
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
+import { parseMailto } from '@/lib/protocol-handlers/mailto';
+import { mailtoComposerDraft } from '@/components/mail/mailto-draft';
 
 // Accessibility of the composer: named fields, keyboard-reachable chips,
 // announcements, uploads, the send confirmation and the default font.
@@ -565,5 +567,16 @@ describe('alt text in the plain-text part (MA-02)', () => {
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
     const sent = onSend.mock.calls[0][0] as { body: string };
     expect(sent.body).toBe('Results image_alt.plain_text:Sales chart');
+  });
+});
+
+describe('a mailto: link that answers a message (#1732)', () => {
+  it('sends with its In-Reply-To and References', async () => {
+    const parsed = parseMailto('mailto:bob@example.com?subject=Re%3A%20test&body=Hi&in-reply-to=%3Cabc%40example.org%3E');
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={mailtoComposerDraft(parsed!, false)} onSend={onSend} />);
+    fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend.mock.calls[0][0]).toMatchObject({ inReplyTo: ['abc@example.org'], references: ['abc@example.org'] });
   });
 });

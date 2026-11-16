@@ -31,5 +31,10 @@ export function mailtoComposerDraft(pending: ParsedMailto, plainTextMode: boolea
     ...(isHtml ? { plainTextMode: false } : {}),
     ...(pending.attachments?.length ? { attachments: pending.attachments } : {}),
     ...(pending.linkParams ? { linkParams: pending.linkParams } : {}),
+    // A link that answers a message (RFC 6068 In-Reply-To): the composer sends
+    // these as the threading headers, as for a re-opened reply draft (#1732).
+    ...(pending.inReplyTo?.length
+      ? { inReplyTo: pending.inReplyTo, references: pending.references ?? pending.inReplyTo }
+      : {}),
   };
 }

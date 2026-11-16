@@ -81,7 +81,13 @@ function isParsedMailto(value: unknown): value is ParsedMailto {
     && Array.isArray(candidate.cc)
     && Array.isArray(candidate.bcc)
     && typeof candidate.subject === "string"
-    && typeof candidate.body === "string";
+    && typeof candidate.body === "string"
+    && isOptionalStringList(candidate.inReplyTo)
+    && isOptionalStringList(candidate.references);
+}
+
+function isOptionalStringList(value: unknown): boolean {
+  return value === undefined || (Array.isArray(value) && value.every(item => typeof item === "string"));
 }
 
 function isPendingMailtoRequest(value: unknown): value is PendingMailtoRequest {
