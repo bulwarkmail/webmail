@@ -33,6 +33,7 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
+import { ShareSheetHost } from "@/components/share-sheet-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { SessionTimeoutGuard } from "@/components/session/session-timeout-guard";
 import { AccountTemplateSync } from "@/components/templates/account-template-sync";
@@ -150,6 +151,7 @@ export default async function LocaleLayout({
                   {!IS_LITE && <DeferredOfflineHost />}
                   {!IS_LITE && <DeferredNotificationActionsHost />}
                   <DevicePolicyHost />
+                  <ShareSheetHost />
                   <MainWindowOnly>
                     <PushNotificationPrompt />
                     {/* Lite is a static bundle: no server keeps an archive there. */}

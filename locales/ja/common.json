@@ -1335,6 +1335,7 @@
     "success": "成功",
     "cancel": "キャンセル",
     "save": "保存",
+    "ready_to_save": "保存の準備ができました",
     "delete": "削除",
     "edit": "編集",
     "close": "閉じる",
