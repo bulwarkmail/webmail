@@ -3215,7 +3215,11 @@
         "apply_folder_count": "Thư mới và {folder} ({count})",
         "apply_all": "Thư mới và tất cả thư",
         "apply_all_count": "Thư mới và tất cả thư ({count})",
-        "applying": "Đang áp dụng “{name}”…"
+        "applying": "Đang áp dụng “{name}”…",
+        "trash_title": "Chuyển thư hiện có vào Thùng rác?",
+        "trash_confirm": "{count, plural, other {Thao tác này chuyển # thư hiện có vào Thùng rác.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Thao tác này chuyển mọi thư hiện có khớp với quy tắc vào Thùng rác.} other {Thao tác này chuyển #+ thư hiện có vào Thùng rác.}}",
+        "trash_button": "Lưu và chuyển vào Thùng rác"
       }
     },
     "templates": {

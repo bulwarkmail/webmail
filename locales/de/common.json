@@ -3196,7 +3196,11 @@
         "apply_folder_count": "Neue Nachrichten und {folder} ({count})",
         "apply_all": "Neue und alle vorhandenen Nachrichten",
         "apply_all_count": "Neue und alle vorhandenen Nachrichten ({count})",
-        "applying": "„{name}“ wird angewendet…"
+        "applying": "„{name}“ wird angewendet…",
+        "trash_title": "Vorhandene Nachrichten in den Papierkorb verschieben?",
+        "trash_confirm": "{count, plural, one {Damit wird # vorhandene Nachricht in den Papierkorb verschoben.} other {Damit werden # vorhandene Nachrichten in den Papierkorb verschoben.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Damit wird jede vorhandene Nachricht, auf die die Regel passt, in den Papierkorb verschoben.} other {Damit werden #+ vorhandene Nachrichten in den Papierkorb verschoben.}}",
+        "trash_button": "Speichern und in den Papierkorb verschieben"
       }
     },
     "templates": {

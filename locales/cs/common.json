@@ -3196,7 +3196,11 @@
         "apply_folder_count": "Novou poštu a {folder} ({count})",
         "apply_all": "Novou i veškerou poštu",
         "apply_all_count": "Novou i veškerou poštu ({count})",
-        "applying": "Používá se „{name}“…"
+        "applying": "Používá se „{name}“…",
+        "trash_title": "Přesunout existující poštu do koše?",
+        "trash_confirm": "{count, plural, one {Tím se přesune # existující zpráva do koše.} few {Tím se přesunou # existující zprávy do koše.} many {Tím se přesune # existující zprávy do koše.} other {Tím se přesune # existujících zpráv do koše.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Tím se přesune do koše každá existující zpráva, které pravidlo odpovídá.} other {Tím se přesune #+ existujících zpráv do koše.}}",
+        "trash_button": "Uložit a přesunout do koše"
       }
     },
     "templates": {

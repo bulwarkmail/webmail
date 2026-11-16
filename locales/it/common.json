@@ -3196,7 +3196,11 @@
         "apply_folder_count": "La posta nuova e {folder} ({count})",
         "apply_all": "La posta nuova e tutta la posta",
         "apply_all_count": "La posta nuova e tutta la posta ({count})",
-        "applying": "Applicazione di «{name}»…"
+        "applying": "Applicazione di «{name}»…",
+        "trash_title": "Spostare la posta esistente nel cestino?",
+        "trash_confirm": "{count, plural, one {Così # messaggio esistente viene spostato nel cestino.} other {Così # messaggi esistenti vengono spostati nel cestino.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Così ogni messaggio esistente che corrisponde alla regola viene spostato nel cestino.} other {Così #+ messaggi esistenti vengono spostati nel cestino.}}",
+        "trash_button": "Salva e sposta nel cestino"
       }
     },
     "templates": {

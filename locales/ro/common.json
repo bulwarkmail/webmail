@@ -3203,7 +3203,11 @@
         "apply_folder_count": "Corespondența nouă și {folder} ({count})",
         "apply_all": "Corespondența nouă și toată corespondența",
         "apply_all_count": "Corespondența nouă și toată corespondența ({count})",
-        "applying": "Se aplică „{name}”…"
+        "applying": "Se aplică „{name}”…",
+        "trash_title": "Mutați corespondența existentă în Coșul de gunoi?",
+        "trash_confirm": "{count, plural, one {Astfel, # mesaj existent este mutat în Coșul de gunoi.} few {Astfel, # mesaje existente sunt mutate în Coșul de gunoi.} other {Astfel, # de mesaje existente sunt mutate în Coșul de gunoi.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Astfel, fiecare mesaj existent care se potrivește regulii este mutat în Coșul de gunoi.} other {Astfel, #+ mesaje existente sunt mutate în Coșul de gunoi.}}",
+        "trash_button": "Salvați și mutați în Coșul de gunoi"
       }
     },
     "templates": {

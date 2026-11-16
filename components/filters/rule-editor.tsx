@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { ChevronDown, Plus, X } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { Dialog } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useDiscardChanges } from "@/components/settings/use-discard-changes";
 import type { FilterRule, FilterCondition, FilterConditionField, FilterComparator } from "@/lib/jmap/sieve-types";
 import type { Mailbox } from "@/lib/jmap/types";
@@ -202,6 +204,7 @@ export function RuleEditor({
   const [initialDraft] = useState(draft);
   const dirty = draft !== initialDraft;
   const { confirmDiscard, discardDialog } = useDiscardChanges();
+  const { dialogProps: trashDialogProps, confirm: confirmTrash } = useConfirmDialog();
   const requestClose = useCallback(async () => {
     if (await confirmDiscard(dirty)) onClose();
   }, [confirmDiscard, dirty, onClose]);
@@ -368,7 +371,7 @@ export function RuleEditor({
   const regexShown = (c: FilterCondition) => !!shown(errors.conditions) && (regexInvalid(c) || attachmentTypeInvalid(c));
   const actionInvalid = (key: ChecklistKey) => !!shown(errors.actions) && problem === key;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const halfFilled = periodOn &&
       (!!periodStartRef.current?.validity.badInput || !!periodEndRef.current?.validity.badInput);
     setHalfFilledPeriod(halfFilled);
@@ -378,6 +381,19 @@ export function RuleEditor({
         document.querySelector<HTMLElement>('[data-rule-error="true"]')?.focus();
       });
       return;
+    }
+    // On mail that is already there, Discard moves to Trash: say how much
+    // first, with the preview's count (a lower bound when the scan stopped).
+    if (effectiveApply !== "new" && actions.some((a) => a.type === "discard")) {
+      const count = (effectiveApply === "folder" ? previewCurrent?.inFolder : previewCurrent?.total) ?? 0;
+      const confirmed = await confirmTrash({
+        title: tEditor("trash_title"),
+        message: tEditor(partial ? "trash_confirm_partial" : "trash_confirm", { count }),
+        confirmText: tEditor("trash_button"),
+        cancelText: t("cancel"),
+        variant: "destructive",
+      });
+      if (!confirmed) return;
     }
     onSave({
       id: start?.id || generateUUID(),
@@ -479,7 +495,7 @@ export function RuleEditor({
               </Button>
             )}
             <Button variant="outline" onClick={() => void requestClose()}>{t("cancel")}</Button>
-            <Button onClick={handleSave}>{t("save")}</Button>
+            <Button onClick={() => void handleSave()}>{t("save")}</Button>
           </>
         }
       >
@@ -883,6 +899,7 @@ export function RuleEditor({
         </div>
       </Dialog>
       {discardDialog}
+      <ConfirmDialog {...trashDialogProps} />
     </>
   );
 }

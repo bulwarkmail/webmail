@@ -3196,7 +3196,11 @@
         "apply_folder_count": "Jaunām vēstulēm un mapei {folder} ({count})",
         "apply_all": "Jaunām un visām vēstulēm",
         "apply_all_count": "Jaunām un visām vēstulēm ({count})",
-        "applying": "Piemēro “{name}”…"
+        "applying": "Piemēro “{name}”…",
+        "trash_title": "Vai pārvietot esošās vēstules uz Mēstuli?",
+        "trash_confirm": "{count, plural, zero {Tādējādi # esošu vēstuļu tiek pārvietots uz Mēstuli.} one {Tādējādi # esoša vēstule tiek pārvietota uz Mēstuli.} other {Tādējādi # esošas vēstules tiek pārvietotas uz Mēstuli.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Tādējādi katra esošā vēstule, kurai atbilst noteikums, tiek pārvietota uz Mēstuli.} other {Tādējādi #+ esošas vēstules tiek pārvietotas uz Mēstuli.}}",
+        "trash_button": "Saglabāt un pārvietot uz Mēstuli"
       }
     },
     "templates": {

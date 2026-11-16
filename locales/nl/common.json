@@ -3196,7 +3196,11 @@
         "apply_folder_count": "Nieuwe e-mail en {folder} ({count})",
         "apply_all": "Nieuwe en alle e-mail",
         "apply_all_count": "Nieuwe en alle e-mail ({count})",
-        "applying": "‘{name}’ wordt toegepast…"
+        "applying": "‘{name}’ wordt toegepast…",
+        "trash_title": "Bestaande e-mail naar de prullenbak verplaatsen?",
+        "trash_confirm": "{count, plural, one {Hiermee gaat # bestaand bericht naar de prullenbak.} other {Hiermee gaan # bestaande berichten naar de prullenbak.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Hiermee gaat elk bestaand bericht waarop de regel past naar de prullenbak.} other {Hiermee gaan #+ bestaande berichten naar de prullenbak.}}",
+        "trash_button": "Opslaan en naar prullenbak verplaatsen"
       }
     },
     "templates": {

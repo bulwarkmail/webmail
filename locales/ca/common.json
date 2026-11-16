@@ -3203,7 +3203,11 @@
         "apply_folder_count": "El correu nou i {folder} ({count})",
         "apply_all": "El correu nou i tot el correu",
         "apply_all_count": "El correu nou i tot el correu ({count})",
-        "applying": "S'està aplicant «{name}»…"
+        "applying": "S'està aplicant «{name}»…",
+        "trash_title": "Voleu moure el correu existent a la paperera?",
+        "trash_confirm": "{count, plural, one {Això mou # missatge existent a la paperera.} other {Això mou # missatges existents a la paperera.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Això mou a la paperera tots els missatges existents que coincideixen amb la regla.} other {Això mou #+ missatges existents a la paperera.}}",
+        "trash_button": "Desa i mou a la paperera"
       }
     },
     "templates": {

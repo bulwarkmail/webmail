@@ -3196,7 +3196,11 @@
         "apply_folder_count": "Nouveaux messages et {folder} ({count})",
         "apply_all": "Nouveaux messages et tous les messages",
         "apply_all_count": "Nouveaux messages et tous les messages ({count})",
-        "applying": "Application de « {name} »…"
+        "applying": "Application de « {name} »…",
+        "trash_title": "Déplacer les messages existants dans la corbeille ?",
+        "trash_confirm": "{count, plural, one {Cela déplace # message existant dans la corbeille.} other {Cela déplace # messages existants dans la corbeille.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Cela déplace dans la corbeille tous les messages existants qui correspondent à la règle.} other {Cela déplace #+ messages existants dans la corbeille.}}",
+        "trash_button": "Enregistrer et déplacer dans la corbeille"
       }
     },
     "templates": {

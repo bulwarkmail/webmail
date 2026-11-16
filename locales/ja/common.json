@@ -3196,7 +3196,11 @@
         "apply_folder_count": "新着メールと{folder}（{count}）",
         "apply_all": "新着メールとすべてのメール",
         "apply_all_count": "新着メールとすべてのメール（{count}）",
-        "applying": "「{name}」を適用しています…"
+        "applying": "「{name}」を適用しています…",
+        "trash_title": "既存のメールをゴミ箱に移動しますか？",
+        "trash_confirm": "{count, plural, other {既存のメール # 件がゴミ箱に移動されます。}}",
+        "trash_confirm_partial": "{count, plural, =0 {ルールに一致する既存のメールがすべてゴミ箱に移動されます。} other {既存のメール # 件以上がゴミ箱に移動されます。}}",
+        "trash_button": "保存してゴミ箱に移動"
       }
     },
     "templates": {

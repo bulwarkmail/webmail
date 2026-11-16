@@ -3203,7 +3203,11 @@
         "apply_folder_count": "Uutele kirjadele ja kaustale {folder} ({count})",
         "apply_all": "Uutele ja kõigile kirjadele",
         "apply_all_count": "Uutele ja kõigile kirjadele ({count})",
-        "applying": "Reeglit „{name}“ rakendatakse…"
+        "applying": "Reeglit „{name}“ rakendatakse…",
+        "trash_title": "Kas teisaldada olemasolevad kirjad prügikasti?",
+        "trash_confirm": "{count, plural, one {See teisaldab # olemasoleva kirja prügikasti.} other {See teisaldab # olemasolevat kirja prügikasti.}}",
+        "trash_confirm_partial": "{count, plural, =0 {See teisaldab prügikasti kõik olemasolevad kirjad, mis reegliga sobivad.} other {See teisaldab #+ olemasolevat kirja prügikasti.}}",
+        "trash_button": "Salvesta ja teisalda prügikasti"
       }
     },
     "templates": {

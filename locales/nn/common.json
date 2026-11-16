@@ -3211,7 +3211,11 @@
         "apply_folder_count": "Ny e-post og {folder} ({count})",
         "apply_all": "Ny e-post og all e-post",
         "apply_all_count": "Ny e-post og all e-post ({count})",
-        "applying": "Brukar «{name}»…"
+        "applying": "Brukar «{name}»…",
+        "trash_title": "Flytte eksisterande e-post til papirkorga?",
+        "trash_confirm": "{count, plural, one {Dette flyttar # eksisterande melding til papirkorga.} other {Dette flyttar # eksisterande meldingar til papirkorga.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Dette flyttar alle eksisterande meldingar som regelen passar på, til papirkorga.} other {Dette flyttar #+ eksisterande meldingar til papirkorga.}}",
+        "trash_button": "Lagre og flytt til papirkorga"
       }
     },
     "templates": {

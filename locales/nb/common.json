@@ -3203,7 +3203,11 @@
         "apply_folder_count": "Ny e-post og {folder} ({count})",
         "apply_all": "Ny e-post og all e-post",
         "apply_all_count": "Ny e-post og all e-post ({count})",
-        "applying": "Bruker «{name}»…"
+        "applying": "Bruker «{name}»…",
+        "trash_title": "Flytte eksisterende e-post til papirkurven?",
+        "trash_confirm": "{count, plural, one {Dette flytter # eksisterende melding til papirkurven.} other {Dette flytter # eksisterende meldinger til papirkurven.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Dette flytter alle eksisterende meldinger som regelen passer på, til papirkurven.} other {Dette flytter #+ eksisterende meldinger til papirkurven.}}",
+        "trash_button": "Lagre og flytt til papirkurven"
       }
     },
     "templates": {

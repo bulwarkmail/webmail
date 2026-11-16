@@ -3203,7 +3203,11 @@
         "apply_folder_count": "新郵件和{folder}（{count}）",
         "apply_all": "新郵件和所有郵件",
         "apply_all_count": "新郵件和所有郵件（{count}）",
-        "applying": "正在套用「{name}」…"
+        "applying": "正在套用「{name}」…",
+        "trash_title": "要將現有郵件移到垃圾桶嗎？",
+        "trash_confirm": "{count, plural, other {這會將 # 封現有郵件移到垃圾桶。}}",
+        "trash_confirm_partial": "{count, plural, =0 {這會將所有符合規則的現有郵件移到垃圾桶。} other {這會將至少 # 封現有郵件移到垃圾桶。}}",
+        "trash_button": "儲存並移到垃圾桶"
       }
     },
     "templates": {

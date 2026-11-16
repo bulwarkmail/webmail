@@ -3196,7 +3196,11 @@
         "apply_folder_count": "새 메일과 {folder} ({count})",
         "apply_all": "새 메일과 모든 메일",
         "apply_all_count": "새 메일과 모든 메일 ({count})",
-        "applying": "‘{name}’ 적용 중…"
+        "applying": "‘{name}’ 적용 중…",
+        "trash_title": "기존 메일을 휴지통으로 옮길까요?",
+        "trash_confirm": "{count, plural, other {기존 메일 #개가 휴지통으로 이동합니다.}}",
+        "trash_confirm_partial": "{count, plural, =0 {규칙에 맞는 기존 메일이 모두 휴지통으로 이동합니다.} other {기존 메일 #개 이상이 휴지통으로 이동합니다.}}",
+        "trash_button": "저장하고 휴지통으로 이동"
       }
     },
     "templates": {

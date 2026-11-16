@@ -3196,7 +3196,11 @@
         "apply_folder_count": "Mensagens novas e {folder} ({count})",
         "apply_all": "Mensagens novas e todas as mensagens",
         "apply_all_count": "Mensagens novas e todas as mensagens ({count})",
-        "applying": "Aplicando “{name}”…"
+        "applying": "Aplicando “{name}”…",
+        "trash_title": "Mover as mensagens existentes para a Lixeira?",
+        "trash_confirm": "{count, plural, one {Isso move # mensagem existente para a Lixeira.} other {Isso move # mensagens existentes para a Lixeira.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Isso move para a Lixeira todas as mensagens existentes que correspondem à regra.} other {Isso move #+ mensagens existentes para a Lixeira.}}",
+        "trash_button": "Salvar e mover para a Lixeira"
       }
     },
     "templates": {

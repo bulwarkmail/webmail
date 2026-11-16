@@ -3199,7 +3199,11 @@
         "apply_folder_count": "Ny post og {folder} ({count})",
         "apply_all": "Ny post og al post",
         "apply_all_count": "Ny post og al post ({count})",
-        "applying": "Anvender “{name}”…"
+        "applying": "Anvender “{name}”…",
+        "trash_title": "Flyt eksisterende post til papirkurven?",
+        "trash_confirm": "{count, plural, one {Det flytter # eksisterende besked til papirkurven.} other {Det flytter # eksisterende beskeder til papirkurven.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Det flytter alle eksisterende beskeder, som reglen passer på, til papirkurven.} other {Det flytter #+ eksisterende beskeder til papirkurven.}}",
+        "trash_button": "Gem og flyt til papirkurven"
       }
     },
     "templates": {

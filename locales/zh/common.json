@@ -3196,7 +3196,11 @@
         "apply_folder_count": "新邮件和{folder}（{count}）",
         "apply_all": "新邮件和所有邮件",
         "apply_all_count": "新邮件和所有邮件（{count}）",
-        "applying": "正在应用“{name}”…"
+        "applying": "正在应用“{name}”…",
+        "trash_title": "将现有邮件移到已删除？",
+        "trash_confirm": "{count, plural, other {这会将 # 封现有邮件移到已删除。}}",
+        "trash_confirm_partial": "{count, plural, =0 {这会将所有符合规则的现有邮件移到已删除。} other {这会将至少 # 封现有邮件移到已删除。}}",
+        "trash_button": "保存并移到已删除"
       }
     },
     "templates": {

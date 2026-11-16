@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import en from '@/locales/en/common.json';
@@ -195,6 +195,79 @@ describe('RuleEditor', () => {
     await screen.findByText('No recent messages match', {}, { timeout: 3000 });
     const choice = screen.getByLabelText('Apply to') as HTMLSelectElement;
     expect([...choice.options].map((o) => o.textContent)).toEqual(['New mail only', 'New mail and Inbox', 'New mail and all mail']);
+  });
+
+  describe('a rule that discards, applied to existing mail', () => {
+    const discarding = () => existing({ actions: [{ type: 'discard' }] });
+    const renderWith = (preview: object, onSave = vi.fn()) => {
+      render(
+        <RuleEditor
+          rule={discarding()}
+          mailboxes={[]}
+          previewMatches={vi.fn().mockResolvedValue({ items: [], ...preview })}
+          offerApplyToExisting
+          applyExistingFolder="Inbox"
+          onSave={onSave}
+          onClose={() => {}}
+        />,
+      );
+      return onSave;
+    };
+
+    it('asks first, naming how many messages go to Trash, and saves only when confirmed', async () => {
+      const onSave = renderWith({ total: 7, complete: true, inFolder: 3 });
+      const choice = (await screen.findByLabelText('Apply to', {}, { timeout: 3000 })) as HTMLSelectElement;
+      fireEvent.change(choice, { target: { value: 'folder' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+      expect(await screen.findByText('This moves 3 existing messages to Trash.')).toBeTruthy();
+      expect(onSave).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Save and move to Trash' }));
+      await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+      expect(onSave.mock.calls[0][1]).toEqual({ applyTo: 'folder' });
+    });
+
+    it('does not save when the question is cancelled', async () => {
+      const onSave = renderWith({ total: 1, complete: true, inFolder: 1 });
+      const choice = (await screen.findByLabelText('Apply to', {}, { timeout: 3000 })) as HTMLSelectElement;
+      fireEvent.change(choice, { target: { value: 'all' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+      expect(await screen.findByText('This moves 1 existing message to Trash.')).toBeTruthy();
+      const dialog = screen.getByText(filters.editor.trash_title).closest('[role="dialog"], [role="alertdialog"]') as HTMLElement;
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+      await waitFor(() => expect(screen.queryByText(filters.editor.trash_title)).toBeNull());
+      expect(onSave).not.toHaveBeenCalled();
+    });
+
+    it('says the count is a lower bound when the scan stopped early', async () => {
+      renderWith({ total: 1000, complete: false, inFolder: 40 });
+      const choice = (await screen.findByLabelText('Apply to', {}, { timeout: 3000 })) as HTMLSelectElement;
+      fireEvent.change(choice, { target: { value: 'all' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      expect(await screen.findByText('This moves 1,000+ existing messages to Trash.')).toBeTruthy();
+    });
+
+    it('does not ask when the rule is for new mail only', async () => {
+      const onSave = renderWith({ total: 7, complete: true, inFolder: 3 });
+      await screen.findByLabelText('Apply to', {}, { timeout: 3000 });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ actions: [{ type: 'discard' }] }), { applyTo: 'new' });
+      expect(screen.queryByText(filters.editor.trash_title)).toBeNull();
+    });
+  });
+
+  it('does not ask before applying a rule that does not discard', async () => {
+    const onSave = vi.fn();
+    const previewMatches = vi.fn().mockResolvedValue({ items: [], total: 7, complete: true, inFolder: 3 });
+    render(
+      <RuleEditor rule={existing()} mailboxes={[]} previewMatches={previewMatches} offerApplyToExisting applyExistingFolder="Inbox" onSave={onSave} onClose={() => {}} />,
+    );
+    const choice = (await screen.findByLabelText('Apply to', {}, { timeout: 3000 })) as HTMLSelectElement;
+    fireEvent.change(choice, { target: { value: 'all' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onSave).toHaveBeenCalledWith(expect.anything(), { applyTo: 'all' });
+    expect(screen.queryByText(filters.editor.trash_title)).toBeNull();
   });
 
   it('offers "contains" and "does not contain" for the message text', () => {

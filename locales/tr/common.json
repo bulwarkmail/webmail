@@ -3196,7 +3196,11 @@
         "apply_folder_count": "Yeni postalara ve {folder} klasörüne ({count})",
         "apply_all": "Yeni postalara ve tüm postalara",
         "apply_all_count": "Yeni postalara ve tüm postalara ({count})",
-        "applying": "“{name}” uygulanıyor…"
+        "applying": "“{name}” uygulanıyor…",
+        "trash_title": "Mevcut postalar Çöp Kutusu'na taşınsın mı?",
+        "trash_confirm": "{count, plural, one {Bu işlem # mevcut iletiyi Çöp Kutusu'na taşır.} other {Bu işlem # mevcut iletiyi Çöp Kutusu'na taşır.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Bu işlem kuralla eşleşen tüm mevcut iletileri Çöp Kutusu'na taşır.} other {Bu işlem #+ mevcut iletiyi Çöp Kutusu'na taşır.}}",
+        "trash_button": "Kaydet ve Çöp Kutusu'na taşı"
       }
     },
     "templates": {

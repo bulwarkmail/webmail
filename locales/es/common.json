@@ -3196,7 +3196,11 @@
         "apply_folder_count": "El correo nuevo y {folder} ({count})",
         "apply_all": "El correo nuevo y todo el correo",
         "apply_all_count": "El correo nuevo y todo el correo ({count})",
-        "applying": "Aplicando «{name}»…"
+        "applying": "Aplicando «{name}»…",
+        "trash_title": "¿Mover el correo existente a la papelera?",
+        "trash_confirm": "{count, plural, one {Esto mueve # mensaje existente a la papelera.} other {Esto mueve # mensajes existentes a la papelera.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Esto mueve a la papelera todos los mensajes existentes que coinciden con la regla.} other {Esto mueve #+ mensajes existentes a la papelera.}}",
+        "trash_button": "Guardar y mover a la papelera"
       }
     },
     "templates": {

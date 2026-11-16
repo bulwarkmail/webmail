@@ -3199,7 +3199,11 @@
         "apply_folder_count": "Az új levelekre és ide: {folder} ({count})",
         "apply_all": "Az új és az összes levélre",
         "apply_all_count": "Az új és az összes levélre ({count})",
-        "applying": "„{name}” alkalmazása…"
+        "applying": "„{name}” alkalmazása…",
+        "trash_title": "Áthelyezi a meglévő leveleket a Kukába?",
+        "trash_confirm": "{count, plural, one {Ez # meglévő üzenetet helyez át a Kukába.} other {Ez # meglévő üzenetet helyez át a Kukába.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Ez minden meglévő üzenetet, amelyre a szabály illik, áthelyez a Kukába.} other {Ez #+ meglévő üzenetet helyez át a Kukába.}}",
+        "trash_button": "Mentés és áthelyezés a Kukába"
       }
     },
     "templates": {

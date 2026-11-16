@@ -3203,7 +3203,11 @@
         "apply_folder_count": "New mail and {folder} ({count})",
         "apply_all": "New mail and all mail",
         "apply_all_count": "New mail and all mail ({count})",
-        "applying": "Applying “{name}”…"
+        "applying": "Applying “{name}”…",
+        "trash_title": "Move existing mail to Trash?",
+        "trash_confirm": "{count, plural, one {This moves # existing message to Trash.} other {This moves # existing messages to Trash.}}",
+        "trash_confirm_partial": "{count, plural, =0 {This moves every existing message the rule matches to Trash.} other {This moves #+ existing messages to Trash.}}",
+        "trash_button": "Save and move to Trash"
       }
     },
     "templates": {

@@ -3097,7 +3097,11 @@
         "apply_folder_count": "דואר חדש ו{folder} ({count})",
         "apply_all": "דואר חדש וכל הדואר",
         "apply_all_count": "דואר חדש וכל הדואר ({count})",
-        "applying": "מחיל את „{name}”…"
+        "applying": "מחיל את „{name}”…",
+        "trash_title": "להעביר את הדואר הקיים לאשפה?",
+        "trash_confirm": "{count, plural, one {פעולה זו מעבירה הודעה קיימת אחת לאשפה.} two {פעולה זו מעבירה שתי הודעות קיימות לאשפה.} other {פעולה זו מעבירה # הודעות קיימות לאשפה.}}",
+        "trash_confirm_partial": "{count, plural, =0 {פעולה זו מעבירה לאשפה כל הודעה קיימת שתואמת לכלל.} other {פעולה זו מעבירה לפחות # הודעות קיימות לאשפה.}}",
+        "trash_button": "שמירה והעברה לאשפה"
       }
     },
     "templates": {
