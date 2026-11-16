@@ -188,6 +188,17 @@ describe('applyEmailDarkMode', () => {
     expect(doc.getElementById('btn')!.style.getPropertyPriority('background-color')).toBe('important');
   });
 
+  it('keeps a rule on a brand banner as sent, but darkens the frame of a light card on it', () => {
+    const doc = render(
+      '<div style="background:#1a73e8"><p id="rule" style="border-bottom:2px solid #ffffff">Rule</p>'
+      + '<div id="card" style="background:#ffffff;border:1px solid #dddddd">Card</div></div>',
+    );
+    expect(doc.getElementById('rule')!.style.getPropertyPriority('border-bottom-color')).toBe('');
+    const card = doc.getElementById('card')!;
+    expect(lightness(c(card.style.getPropertyValue('background-color')))).toBeLessThan(40);
+    expect(lightness(c(card.style.getPropertyValue('border-top-color')))).toBeLessThan(80);
+  });
+
   it('un-hides the body', () => {
     const doc = render('<p>hi</p>');
     expect(doc.documentElement.classList.contains(DARK_PENDING_CLASS)).toBe(false);

@@ -495,7 +495,8 @@ export function applyEmailDarkMode(doc: Document, options: EmailDarkModeOptions 
         if (!border || border.a === 0) return;
         // A border inside a block the pass left as sent (a dark card, a
         // signature, a brand banner) was drawn against that block's own fill.
-        if (sameColor(parent.bg, parent.original)) return;
+        // An element whose own fill was darkened keeps converting its frame.
+        if (sameColor(parent.bg, parent.original) && sameColor(surface.bg, surface.original)) return;
         // Borders sit between the element and its parent; a light rule on a
         // light mail darkens with the backgrounds, a dark one is lifted just
         // enough to stay visible - the frame of a kept dark fill in its own
