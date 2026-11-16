@@ -15,6 +15,7 @@ import { filesDropTarget, hasQueuedFilesUpload, setFilesDropTarget, subscribeQue
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
 import { isInternalDrag } from "@/components/files/file-item-parts";
 import { isTrashLocation } from "@/lib/files-trash";
+import { departing, namesOfNode } from "@/lib/file-list-motion";
 import { fileErrorKind, isPartialCopy } from "@/lib/file-errors";
 import { toast } from "@/stores/toast-store";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -484,7 +485,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       });
       if (!confirmed) return;
       try {
-        const count = await purgeResources(names);
+        const count = await departing(names, () => purgeResources(names));
         if (count > 0) toast.success(t("deleted_forever", { count }));
       } catch (err) {
         console.error("Failed to delete:", err);
@@ -494,7 +495,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (deletesToTrash(currentParentIdForDelete)) {
       try {
-        const count = await trashResources(names);
+        const count = await departing(names, () => trashResources(names));
         if (count > 0) {
           toast.success(t("moved_to_trash", { count }), {
             action: { label: t("undo"), onClick: handleUndo },
@@ -516,7 +517,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     });
     if (!confirmed) return;
     try {
-      if (names.length === 1 ? !await deleteResource(names[0]) : !await deleteResources(names)) return;
+      if (!await departing(names, () => names.length === 1 ? deleteResource(names[0]) : deleteResources(names))) return;
       toast.success(t("deleted_forever", { count: names.length }));
     } catch (err) {
       console.error("Failed to delete:", err);
@@ -528,7 +529,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const handleRestore = useCallback(async (names: string[]) => {
     try {
-      const count = await restoreResources(names);
+      const count = await departing(names, () => restoreResources(names));
       if (count > 0) toast.success(t("restored", { count }));
     } catch (err) {
       console.error("Failed to restore:", err);
@@ -647,7 +648,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const handleMoveTo = useCallback(async (names: string[], targetId: string | null) => {
     try {
-      if (!await moveToFolderId(names, targetId)) return;
+      if (!await departing(names, () => moveToFolderId(names, targetId))) return;
       toast.success(t("move_success", { count: names.length }), {
         action: { label: t("undo"), onClick: handleUndo },
       });
@@ -659,7 +660,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const handleMoveNode = useCallback(async (id: string, targetId: string | null) => {
     try {
-      if (!await moveNode(id, targetId)) return;
+      if (!await departing(namesOfNode(id), () => moveNode(id, targetId))) return;
       toast.success(t("move_success", { count: 1 }), {
         action: { label: t("undo"), onClick: handleUndo },
       });
@@ -773,7 +774,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     // A folder of the own drive goes to the trash; one of a shared drive is gone for good.
     if (deletesToTrash(id)) {
       try {
-        if (!await trashNode(id)) return;
+        if (!await departing(namesOfNode(id), () => trashNode(id))) return;
         toast.success(t("moved_to_trash", { count: 1 }), {
           action: { label: t("undo"), onClick: handleUndo },
         });
@@ -791,7 +792,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     });
     if (!confirmed) return;
     try {
-      if (!await deleteNode(id)) return;
+      if (!await departing(namesOfNode(id), () => deleteNode(id))) return;
       toast.success(t("deleted_forever", { count: 1 }));
     } catch (err) {
       console.error("Failed to delete:", err);
