@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (llista de tasques, no es mostra al calendari)",
     "copy_to_account": "Copia a {address}",
     "copied_to_account": "S'ha copiat a {address}",
-    "delete_original": "Suprimeix l'original"
+    "delete_original": "Suprimeix l'original",
+    "copy_to_calendar": "Copia a un calendari…",
+    "copy_to_calendar_title": "Copia a un calendari",
+    "copy_to_calendar_hint": "La còpia és un esdeveniment vostre. Els canvis a l'original no l'afecten.",
+    "copy_button": "Copia",
+    "copied_to_calendar": "S'ha copiat a {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."

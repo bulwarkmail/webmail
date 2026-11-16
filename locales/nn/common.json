@@ -5452,7 +5452,12 @@
     "task_list_not_in_calendar": "{name} (oppgåveliste, ikkje vist i kalenderen)",
     "copy_to_account": "Kopier til {address}",
     "copied_to_account": "Kopiert til {address}",
-    "delete_original": "Slett originalen"
+    "delete_original": "Slett originalen",
+    "copy_to_calendar": "Kopier til kalender…",
+    "copy_to_calendar_title": "Kopier til kalender",
+    "copy_to_calendar_hint": "Kopien er di eiga hending. Endringar i originalen endrar henne ikkje.",
+    "copy_button": "Kopier",
+    "copied_to_calendar": "Kopiert til {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Denne endringa krev tilkopling til tenaren. Endre berre denne hendinga for no, eller prøv igjen når du er på nett att."

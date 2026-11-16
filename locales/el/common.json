@@ -5456,7 +5456,12 @@
     "task_list_not_in_calendar": "{name} (λίστα εργασιών, δεν εμφανίζεται στο ημερολόγιο)",
     "copy_to_account": "Αντιγραφή στο {address}",
     "copied_to_account": "Αντιγράφηκε στο {address}",
-    "delete_original": "Διαγραφή πρωτοτύπου"
+    "delete_original": "Διαγραφή πρωτοτύπου",
+    "copy_to_calendar": "Αντιγραφή σε ημερολόγιο…",
+    "copy_to_calendar_title": "Αντιγραφή σε ημερολόγιο",
+    "copy_to_calendar_hint": "Το αντίγραφο είναι δικό σας συμβάν. Οι αλλαγές στο πρωτότυπο δεν το επηρεάζουν.",
+    "copy_button": "Αντιγραφή",
+    "copied_to_calendar": "Αντιγράφηκε στο {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Αυτή η αλλαγή χρειάζεται σύνδεση με τον διακομιστή. Αλλάξτε μόνο αυτό το συμβάν προς το παρόν ή δοκιμάστε ξανά όταν συνδεθείτε ξανά."

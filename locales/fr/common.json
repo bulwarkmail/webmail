@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (liste de tâches, non affichée dans le calendrier)",
     "copy_to_account": "Copier vers {address}",
     "copied_to_account": "Copié vers {address}",
-    "delete_original": "Supprimer l'original"
+    "delete_original": "Supprimer l'original",
+    "copy_to_calendar": "Copier dans un calendrier…",
+    "copy_to_calendar_title": "Copier dans un calendrier",
+    "copy_to_calendar_hint": "La copie est votre propre événement. Les modifications de l'original ne la changent pas.",
+    "copy_button": "Copier",
+    "copied_to_calendar": "Copié dans {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Cette modification nécessite une connexion au serveur. Modifiez seulement cet événement pour l'instant, ou réessayez une fois de nouveau en ligne."

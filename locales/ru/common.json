@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (список задач, не отображается в календаре)",
     "copy_to_account": "Копировать в {address}",
     "copied_to_account": "Скопировано в {address}",
-    "delete_original": "Удалить оригинал"
+    "delete_original": "Удалить оригинал",
+    "copy_to_calendar": "Копировать в календарь…",
+    "copy_to_calendar_title": "Копировать в календарь",
+    "copy_to_calendar_hint": "Копия станет вашим собственным событием. Изменения оригинала её не затронут.",
+    "copy_button": "Копировать",
+    "copied_to_calendar": "Скопировано в «{calendar}»"
   },
   "calendar_offline": {
     "split_needs_server": "Для этого изменения нужно подключение к серверу. Пока измените только это событие или повторите попытку, когда снова будете в сети."

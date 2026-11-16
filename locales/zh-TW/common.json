@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name}（工作清單，不會顯示在行事曆中）",
     "copy_to_account": "複製到 {address}",
     "copied_to_account": "已複製到 {address}",
-    "delete_original": "刪除原始活動"
+    "delete_original": "刪除原始活動",
+    "copy_to_calendar": "複製到行事曆…",
+    "copy_to_calendar_title": "複製到行事曆",
+    "copy_to_calendar_hint": "副本是您自己的活動。原活動的變更不會影響它。",
+    "copy_button": "複製",
+    "copied_to_calendar": "已複製到 {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "此變更需要連線到伺服器。請暫時只變更此活動，或在恢復連線後再試一次。"

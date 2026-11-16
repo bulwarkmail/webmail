@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (opgaveliste, vises ikke i kalenderen)",
     "copy_to_account": "Kopiér til {address}",
     "copied_to_account": "Kopieret til {address}",
-    "delete_original": "Slet originalen"
+    "delete_original": "Slet originalen",
+    "copy_to_calendar": "Kopiér til kalender…",
+    "copy_to_calendar_title": "Kopiér til kalender",
+    "copy_to_calendar_hint": "Kopien er din egen begivenhed. Ændringer i originalen påvirker den ikke.",
+    "copy_button": "Kopiér",
+    "copied_to_calendar": "Kopieret til {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Denne ændring kræver forbindelse til serveren. Ret kun denne begivenhed for nu, eller prøv igen, når du er online."

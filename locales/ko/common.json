@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (할 일 목록, 캘린더에 표시되지 않음)",
     "copy_to_account": "{address}(으)로 복사",
     "copied_to_account": "{address}(으)로 복사됨",
-    "delete_original": "원본 삭제"
+    "delete_original": "원본 삭제",
+    "copy_to_calendar": "캘린더에 복사…",
+    "copy_to_calendar_title": "캘린더에 복사",
+    "copy_to_calendar_hint": "복사본은 내 일정이 됩니다. 원본을 바꿔도 복사본은 바뀌지 않습니다.",
+    "copy_button": "복사",
+    "copied_to_calendar": "{calendar}에 복사했습니다"
   },
   "calendar_offline": {
     "split_needs_server": "이 변경에는 서버 연결이 필요합니다. 지금은 이 일정만 변경하거나 다시 온라인이 되면 다시 시도하세요."

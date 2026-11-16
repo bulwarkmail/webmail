@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (listă de sarcini, nu apare în calendar)",
     "copy_to_account": "Copiază în {address}",
     "copied_to_account": "Copiat în {address}",
-    "delete_original": "Șterge originalul"
+    "delete_original": "Șterge originalul",
+    "copy_to_calendar": "Copiază în calendar…",
+    "copy_to_calendar_title": "Copiază în calendar",
+    "copy_to_calendar_hint": "Copia este evenimentul dvs. Modificările originalului nu o schimbă.",
+    "copy_button": "Copiază",
+    "copied_to_calendar": "Copiat în {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Această modificare are nevoie de conexiune la server. Modifică deocamdată doar acest eveniment sau încearcă din nou când ești din nou online."

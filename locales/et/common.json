@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (ülesannete loend, kalendris ei näidata)",
     "copy_to_account": "Kopeeri kontole {address}",
     "copied_to_account": "Kopeeritud kontole {address}",
-    "delete_original": "Kustuta originaal"
+    "delete_original": "Kustuta originaal",
+    "copy_to_calendar": "Kopeeri kalendrisse…",
+    "copy_to_calendar_title": "Kopeeri kalendrisse",
+    "copy_to_calendar_hint": "Koopia on sinu oma sündmus. Originaali muudatused seda ei muuda.",
+    "copy_button": "Kopeeri",
+    "copied_to_calendar": "Kopeeritud kalendrisse {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "See muudatus vajab ühendust serveriga. Muuda praegu ainult seda sündmust või proovi uuesti, kui oled taas võrgus."

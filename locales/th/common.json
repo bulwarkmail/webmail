@@ -4827,7 +4827,12 @@
     "task_list_not_in_calendar": "{name} (รายการงาน ไม่แสดงในปฏิทิน)",
     "copy_to_account": "คัดลอกไปที่ {address}",
     "copied_to_account": "คัดลอกไปที่ {address} แล้ว",
-    "delete_original": "ลบต้นฉบับ"
+    "delete_original": "ลบต้นฉบับ",
+    "copy_to_calendar": "คัดลอกไปยังปฏิทิน…",
+    "copy_to_calendar_title": "คัดลอกไปยังปฏิทิน",
+    "copy_to_calendar_hint": "สำเนาจะเป็นกิจกรรมของคุณเอง การแก้ไขต้นฉบับจะไม่เปลี่ยนสำเนา",
+    "copy_button": "คัดลอก",
+    "copied_to_calendar": "คัดลอกไปยัง {calendar} แล้ว"
   },
   "calendar_offline": {
     "split_needs_server": "การเปลี่ยนแปลงนี้ต้องเชื่อมต่อกับเซิร์ฟเวอร์ ตอนนี้เปลี่ยนเฉพาะกิจกรรมนี้ หรือลองอีกครั้งเมื่อกลับมาออนไลน์"

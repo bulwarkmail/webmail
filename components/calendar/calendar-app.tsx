@@ -44,6 +44,7 @@ import { CalendarSidebarPanel } from "@/components/calendar/calendar-sidebar-pan
 import { EventModal, type PendingEventPreview } from "@/components/calendar/event-modal";
 import { EventDetailPopover } from "@/components/calendar/event-detail-popover";
 import { EventContextMenu } from "@/components/calendar/event-context-menu";
+import { CopyToCalendarDialog } from "@/components/calendar/copy-to-calendar-dialog";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { useStrictestDevices } from "@/hooks/use-device-policy";
 import { EmptySpaceContextMenu } from "@/components/calendar/empty-space-context-menu";
@@ -1853,28 +1854,42 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
     (event: CalendarEvent) => copyTargetsFor(event, writableCalendars, localAccounts),
     [writableCalendars, localAccounts],
   );
-  const handleCopyToAccount = useCallback(async (event: CalendarEvent, target: { account: { email?: string; username?: string; id: string }; calendar: Calendar }) => {
-    if (!client) { toast.error(t("notifications.event_error")); return; }
+  // An independent copy in another calendar, under a new UID; a series
+  // whole. False when it couldn't be made, after saying so.
+  const copyEventInto = useCallback(async (event: CalendarEvent, calendarId: string): Promise<boolean> => {
+    if (!client) { toast.error(t("notifications.event_error")); return false; }
     let source = event;
     if (event.recurrenceId && event.recurrenceRules?.length && event.originalId) {
       // From its own login only: the same id is another event elsewhere.
       const sourceClient = event.localAccountId ? useAuthStore.getState().getClientForAccount(event.localAccountId) : client;
-      if (!sourceClient) { toast.error(t("notifications.event_error")); return; }
+      if (!sourceClient) { toast.error(t("notifications.event_error")); return false; }
       const isSharedSource = calendars.some((c) => event.calendarIds?.[c.id] && c.isShared);
       const master = await sourceClient.getCalendarEvent(event.originalId, isSharedSource ? event.accountId : undefined).catch(() => null);
       if (master) source = master;
     }
-    const address = accountAddress(target.account);
     try {
-      const created = await createEvent(client, buildCopyToCalendarData(source, target.calendar.id));
-      if (!created) return;
-      toast.success(tP2Cal("copied_to_account", { address }), {
-        action: { label: tP2Cal("delete_original"), onClick: () => handleDeleteContextMenu(event) },
-      });
+      return !!(await createEvent(client, buildCopyToCalendarData(source, calendarId)));
     } catch (error) {
       toast.error(describeError(error, t("notifications.event_error")));
+      return false;
     }
-  }, [client, calendars, createEvent, describeError, t, tP2Cal, handleDeleteContextMenu]);
+  }, [client, calendars, createEvent, describeError, t]);
+  const handleCopyToAccount = useCallback(async (event: CalendarEvent, target: { account: { email?: string; username?: string; id: string }; calendar: Calendar }) => {
+    if (!(await copyEventInto(event, target.calendar.id))) return;
+    toast.success(tP2Cal("copied_to_account", { address: accountAddress(target.account) }), {
+      action: { label: tP2Cal("delete_original"), onClick: () => handleDeleteContextMenu(event) },
+    });
+  }, [copyEventInto, tP2Cal, handleDeleteContextMenu]);
+
+  // "Copy to calendar…" (#1513): a subscription's event, or another one the
+  // user can't change, kept as their own in a calendar they pick. Refreshing
+  // the subscription leaves the copy alone.
+  const [copyToCalendarEvent, setCopyToCalendarEvent] = useState<CalendarEvent | null>(null);
+  const handleCopyToCalendar = useCallback(async (event: CalendarEvent, calendar: Calendar) => {
+    setCopyToCalendarEvent(null);
+    if (!(await copyEventInto(event, calendar.id))) return;
+    toast.success(tP2Cal("copied_to_calendar", { calendar: shownName.calendar(calendar) }));
+  }, [copyEventInto, tP2Cal, shownName]);
 
   const handleRsvpFromDetail = useCallback(async (status: CalendarParticipant['participationStatus'], target?: AnswerTarget) => {
     if (!detailEvent || !client) return;
@@ -2082,6 +2097,12 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   const canEditEvent = useCallback(
     (event: CalendarEvent) => getEventEditability(event, editabilityContext) === "editable",
     [editabilityContext],
+  );
+  // An event the user can neither change nor answer can be copied into one
+  // of their calendars instead (#1513).
+  const canCopyToCalendar = useCallback(
+    (event: CalendarEvent) => writableCalendars.length > 0 && getEventEditability(event, editabilityContext) === "read-only",
+    [writableCalendars, editabilityContext],
   );
 
   // Answering an invitation from the grid (pim-9), as the login the event is
@@ -2816,6 +2837,19 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
             address: accountAddress(target.account),
             onCopy: () => { void handleCopyToAccount(eventContextMenu.data!, target); },
           }))}
+          onCopyToCalendar={!answersOnlyMenu && canCopyToCalendar(eventContextMenu.data) ? () => {
+            const event = eventContextMenu.data!;
+            setCopyToCalendarEvent(event);
+          } : undefined}
+        />
+      )}
+
+      {copyToCalendarEvent && (
+        <CopyToCalendarDialog
+          isOpen
+          calendars={writableCalendars}
+          onClose={() => setCopyToCalendarEvent(null)}
+          onCopy={(calendar) => { void handleCopyToCalendar(copyToCalendarEvent, calendar); }}
         />
       )}
 

@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (uzdevumu saraksts, kalendārā netiek rādīts)",
     "copy_to_account": "Kopēt uz {address}",
     "copied_to_account": "Nokopēts uz {address}",
-    "delete_original": "Dzēst oriģinālu"
+    "delete_original": "Dzēst oriģinālu",
+    "copy_to_calendar": "Kopēt uz kalendāru…",
+    "copy_to_calendar_title": "Kopēt uz kalendāru",
+    "copy_to_calendar_hint": "Kopija ir jūsu pašu notikums. Oriģināla izmaiņas to nemaina.",
+    "copy_button": "Kopēt",
+    "copied_to_calendar": "Nokopēts kalendārā {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."

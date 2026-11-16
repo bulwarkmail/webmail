@@ -57,6 +57,8 @@ interface EventContextMenuProps {
   answersOnly?: boolean;
   /** "Copy to <address>", one per other signed-in account (pim-p2-16). */
   copyTo?: Array<{ address: string; onCopy: () => void }>;
+  /** "Copy to calendar…" for an event the user can't change, such as a subscription's (#1513). */
+  onCopyToCalendar?: () => void;
   /** Opened over a dialog or popover: drawn at z-[70] rather than z-50. */
   overDialog?: boolean;
 }
@@ -79,6 +81,7 @@ export function EventContextMenu({
   responseStatus,
   answersOnly = false,
   copyTo = [],
+  onCopyToCalendar,
   overDialog = false,
 }: EventContextMenuProps) {
   const tP2 = useTranslations("ux_p2_pim_cal");
@@ -135,6 +138,14 @@ export function EventContextMenu({
           testId="event-copy-to-account"
         />
       ))}
+      {onCopyToCalendar && (
+        <ContextMenuItem
+          icon={CalendarPlus}
+          label={tP2("copy_to_calendar")}
+          onClick={handle(onCopyToCalendar)}
+          testId="event-copy-to-calendar"
+        />
+      )}
       <ContextMenuSeparator />
       <ContextMenuItem
         icon={Download}

@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name}（タスクリスト、カレンダーには表示されません）",
     "copy_to_account": "{address} にコピー",
     "copied_to_account": "{address} にコピーしました",
-    "delete_original": "元の予定を削除"
+    "delete_original": "元の予定を削除",
+    "copy_to_calendar": "カレンダーにコピー…",
+    "copy_to_calendar_title": "カレンダーにコピー",
+    "copy_to_calendar_hint": "コピーはあなた自身の予定になります。元の予定を変更してもコピーは変わりません。",
+    "copy_button": "コピー",
+    "copied_to_calendar": "{calendar}にコピーしました"
   },
   "calendar_offline": {
     "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"

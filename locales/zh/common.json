@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name}（任务列表，不在日历中显示）",
     "copy_to_account": "复制到 {address}",
     "copied_to_account": "已复制到 {address}",
-    "delete_original": "删除原日程"
+    "delete_original": "删除原日程",
+    "copy_to_calendar": "复制到日历…",
+    "copy_to_calendar_title": "复制到日历",
+    "copy_to_calendar_hint": "副本是你自己的日程。原日程的更改不会影响它。",
+    "copy_button": "复制",
+    "copied_to_calendar": "已复制到 {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "此更改需要连接到服务器。请暂时只更改此日程，或在恢复联网后重试。"

@@ -5313,7 +5313,12 @@
     "task_list_not_in_calendar": "{name} (רשימת משימות, לא מוצגת בלוח השנה)",
     "copy_to_account": "העתקה אל {address}",
     "copied_to_account": "הועתק אל {address}",
-    "delete_original": "מחיקת המקור"
+    "delete_original": "מחיקת המקור",
+    "copy_to_calendar": "העתקה ללוח שנה…",
+    "copy_to_calendar_title": "העתקה ללוח שנה",
+    "copy_to_calendar_hint": "העותק הוא אירוע שלך. שינויים במקור לא משנים אותו.",
+    "copy_button": "העתקה",
+    "copied_to_calendar": "הועתק אל {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."

@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (feladatlista, a naptárban nem látszik)",
     "copy_to_account": "Másolás ide: {address}",
     "copied_to_account": "Átmásolva ide: {address}",
-    "delete_original": "Eredeti törlése"
+    "delete_original": "Eredeti törlése",
+    "copy_to_calendar": "Másolás naptárba…",
+    "copy_to_calendar_title": "Másolás naptárba",
+    "copy_to_calendar_hint": "A másolat a saját eseménye. Az eredeti módosításai nem változtatják meg.",
+    "copy_button": "Másolás",
+    "copied_to_calendar": "Átmásolva ide: {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Ehhez a módosításhoz kapcsolat kell a kiszolgálóval. Egyelőre csak ezt az eseményt módosítsa, vagy próbálja újra, ha ismét online lesz."

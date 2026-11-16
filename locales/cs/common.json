@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (seznam úkolů, v kalendáři se nezobrazuje)",
     "copy_to_account": "Kopírovat do {address}",
     "copied_to_account": "Zkopírováno do {address}",
-    "delete_original": "Smazat originál"
+    "delete_original": "Smazat originál",
+    "copy_to_calendar": "Kopírovat do kalendáře…",
+    "copy_to_calendar_title": "Kopírovat do kalendáře",
+    "copy_to_calendar_hint": "Kopie je vaše vlastní událost. Změny originálu ji nezmění.",
+    "copy_button": "Kopírovat",
+    "copied_to_calendar": "Zkopírováno do {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Tato změna vyžaduje připojení k serveru. Prozatím změňte jen tuto událost, nebo to zkuste znovu po obnovení připojení."

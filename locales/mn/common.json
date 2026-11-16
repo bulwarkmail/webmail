@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (ажлын жагсаалт, хуанлид харагдахгүй)",
     "copy_to_account": "{address} руу хуулах",
     "copied_to_account": "{address} руу хуулсан",
-    "delete_original": "Эх хувийг устгах"
+    "delete_original": "Эх хувийг устгах",
+    "copy_to_calendar": "Хуанли руу хуулах…",
+    "copy_to_calendar_title": "Хуанли руу хуулах",
+    "copy_to_calendar_hint": "Хуулбар нь таны өөрийн үйл явдал болно. Эх хувийн өөрчлөлт түүнд нөлөөлөхгүй.",
+    "copy_button": "Хуулах",
+    "copied_to_calendar": "{calendar} руу хуулсан"
   },
   "calendar_offline": {
     "split_needs_server": "Энэ өөрчлөлтөд сервертэй холболт шаардлагатай. Одоохондоо зөвхөн энэ үйл явдлыг өөрчлөх эсвэл онлайн болсны дараа дахин оролдоно уу."

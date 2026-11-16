@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (elenco attività, non visibile nel calendario)",
     "copy_to_account": "Copia in {address}",
     "copied_to_account": "Copiato in {address}",
-    "delete_original": "Elimina l'originale"
+    "delete_original": "Elimina l'originale",
+    "copy_to_calendar": "Copia in un calendario…",
+    "copy_to_calendar_title": "Copia in un calendario",
+    "copy_to_calendar_hint": "La copia è un tuo evento. Le modifiche all'originale non la cambiano.",
+    "copy_button": "Copia",
+    "copied_to_calendar": "Copiato in {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Questa modifica richiede una connessione al server. Per ora modifica solo questo evento, oppure riprova quando sei di nuovo online."

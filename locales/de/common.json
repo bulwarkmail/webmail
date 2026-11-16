@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (Aufgabenliste, nicht im Kalender sichtbar)",
     "copy_to_account": "In {address} kopieren",
     "copied_to_account": "In {address} kopiert",
-    "delete_original": "Original löschen"
+    "delete_original": "Original löschen",
+    "copy_to_calendar": "In Kalender kopieren…",
+    "copy_to_calendar_title": "In Kalender kopieren",
+    "copy_to_calendar_hint": "Die Kopie ist Ihr eigener Termin. Änderungen am Original ändern sie nicht.",
+    "copy_button": "Kopieren",
+    "copied_to_calendar": "In {calendar} kopiert"
   },
   "calendar_offline": {
     "split_needs_server": "Für diese Änderung ist eine Verbindung zum Server nötig. Ändern Sie vorerst nur diesen Termin, oder versuchen Sie es erneut, wenn Sie wieder online sind."

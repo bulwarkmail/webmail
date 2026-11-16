@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (список завдань, не показується в календарі)",
     "copy_to_account": "Копіювати до {address}",
     "copied_to_account": "Скопійовано до {address}",
-    "delete_original": "Видалити оригінал"
+    "delete_original": "Видалити оригінал",
+    "copy_to_calendar": "Копіювати до календаря…",
+    "copy_to_calendar_title": "Копіювати до календаря",
+    "copy_to_calendar_hint": "Копія стане вашою власною подією. Зміни оригіналу її не змінять.",
+    "copy_button": "Копіювати",
+    "copied_to_calendar": "Скопійовано до «{calendar}»"
   },
   "calendar_offline": {
     "split_needs_server": "Для цієї зміни потрібне з'єднання із сервером. Поки що змініть лише цю подію або спробуйте ще раз, коли знову будете в мережі."

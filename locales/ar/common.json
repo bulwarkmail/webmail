@@ -5444,7 +5444,12 @@
     "task_list_not_in_calendar": "{name} (قائمة مهام، لا تظهر في التقويم)",
     "copy_to_account": "نسخ إلى {address}",
     "copied_to_account": "تم النسخ إلى {address}",
-    "delete_original": "حذف الأصل"
+    "delete_original": "حذف الأصل",
+    "copy_to_calendar": "نسخ إلى تقويم…",
+    "copy_to_calendar_title": "نسخ إلى تقويم",
+    "copy_to_calendar_hint": "النسخة حدث خاص بك. تغييرات الأصل لا تؤثر فيها.",
+    "copy_button": "نسخ",
+    "copied_to_calendar": "تم النسخ إلى {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."

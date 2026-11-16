@@ -5456,7 +5456,12 @@
     "task_list_not_in_calendar": "{name} (danh sách việc cần làm, không hiện trong lịch)",
     "copy_to_account": "Sao chép sang {address}",
     "copied_to_account": "Đã sao chép sang {address}",
-    "delete_original": "Xóa bản gốc"
+    "delete_original": "Xóa bản gốc",
+    "copy_to_calendar": "Sao chép vào lịch…",
+    "copy_to_calendar_title": "Sao chép vào lịch",
+    "copy_to_calendar_hint": "Bản sao là sự kiện của riêng bạn. Thay đổi ở bản gốc không ảnh hưởng đến nó.",
+    "copy_button": "Sao chép",
+    "copied_to_calendar": "Đã sao chép vào {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
