@@ -783,6 +783,32 @@ describe('when the action does not happen', () => {
     expect(hidden(el)).toBe(false);
     expect(on(el).some((a) => a.keyframes[0].opacity === 0 && a.keyframes.at(-1)!.opacity === 1)).toBe(false);
   });
+
+  it.each([['the row below', 2], ['the leaving row', 1]])(
+    'leaves the Tab stop and the focus to the list when another folder takes the rows, and the list picks %s',
+    async (_, pick) => {
+      const rows = ['e1', 'e2', 'e3'].map((id) => row(id).querySelector<HTMLElement>('[role="row"]')!);
+      const own = rows[1];
+      let answer!: (ok: boolean) => void;
+      useEmailStore.setState({ deleteEmail: () => new Promise<boolean>((r) => { answer = r; }) } as never);
+      installMailMotion();
+      own.setAttribute('tabindex', '0');
+      own.focus();
+      const p = useEmailStore.getState().deleteEmail(client, 'e2');
+      // Another folder opens while the server answers: the list draws its
+      // messages in the same rows and puts its Tab stop on one of them.
+      rows.forEach((r, i) => {
+        r.setAttribute('data-row-key', `n${i + 1}`);
+        r.setAttribute('tabindex', i === pick ? '0' : '-1');
+      });
+      await frame();
+      answer(true);
+      await p;
+      await frame();
+      expect(rows.map((r) => r.getAttribute('tabindex'))).toEqual(rows.map((_, i) => (i === pick ? '0' : '-1')));
+      expect(document.activeElement).not.toBe(own);
+    },
+  );
 });
 
 describe('the fading copy', () => {

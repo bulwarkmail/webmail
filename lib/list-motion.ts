@@ -392,34 +392,39 @@ export function depart(leaving: HTMLElement[], surface: Surface): Departure {
   const flights = items.map((el) => fadeAway(el, surface));
   const copies = flights.map((f) => f.copy);
   const delay = Math.max(0, ...flights.map((f) => f.delay));
-  const hiding = new Map<HTMLElement, { key: string | null; copy: HTMLElement; show: () => void }>();
+  // show(returning): returning is false when the list now draws another item
+  // in the element; the Tab stop and the focus are then the list's to place.
+  const hiding = new Map<HTMLElement, { key: string | null; copy: HTMLElement; show: (returning: boolean) => void }>();
   const handing: { el: HTMLElement; focused: HTMLElement | null; back?: () => void; done?: () => void; landed?: Element | null }[] = [];
   reflow(surface, false, () => { items.forEach((el, i) => {
     const key = surface.keyOf(el);
-    let show: () => void;
+    let show: (returning: boolean) => void;
     const active = document.activeElement;
     const focused = active instanceof HTMLElement && el.contains(active) ? active : null;
     const hand: (typeof handing)[number] = { el, focused };
     handing.push(hand);
+    const giveBack = (returning: boolean) => {
+      if (!returning) return;
+      hand.back?.();
+      given(el, focused, hand.landed);
+    };
     if (surface.closes === "layout" && listed.has(el)) {
       const display = el.style.display;
       el.style.display = "none";
-      show = () => {
+      show = (returning) => {
         el.style.display = display;
-        hand.back?.();
-        given(el, focused, hand.landed);
+        giveBack(returning);
       };
     } else {
       const hide = el.animate([{ opacity: 0 }, { opacity: 0 }], { duration: 1, fill: "forwards" });
       const ariaHidden = el.getAttribute("aria-hidden");
       el.setAttribute("inert", "");
       el.setAttribute("aria-hidden", "true");
-      show = () => {
+      show = (returning) => {
         hide.cancel();
         el.removeAttribute("inert");
         if (ariaHidden === null) el.removeAttribute("aria-hidden"); else el.setAttribute("aria-hidden", ariaHidden);
-        hand.back?.();
-        given(el, focused, hand.landed);
+        giveBack(returning);
       };
       if (listed.has(el) || nested.has(el)) waiting.set(el, key);
     }
@@ -436,13 +441,13 @@ export function depart(leaving: HTMLElement[], surface: Surface): Departure {
   });
   }, { delay });
 
-  const unhide = (el: HTMLElement, fadeIn: boolean) => {
+  const unhide = (el: HTMLElement, fadeIn: boolean, returning = true) => {
     const entry = hiding.get(el);
     if (!entry) return;
     hiding.delete(el);
     waiting.delete(el);
     el.removeAttribute(DEPARTING);
-    entry.show();
+    entry.show(returning);
     entry.copy.remove();
     if (fadeIn) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: RETURN_MS, easing: "ease-out" });
   };
@@ -469,7 +474,7 @@ export function depart(leaving: HTMLElement[], surface: Surface): Departure {
   const settle = () => {
     if (done) return;
     let changed = false;
-    hiding.forEach((_, el) => { if (el.isConnected && left(el)) { unhide(el, false); changed = true; } });
+    hiding.forEach((_, el) => { if (el.isConnected && left(el)) { unhide(el, false, false); changed = true; } });
     const out = [...hiding.keys()].filter(left);
     out.forEach((el) => waiting.delete(el));
     if (out.length > gone) changed = true;

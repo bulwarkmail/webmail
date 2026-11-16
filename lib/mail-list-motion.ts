@@ -73,6 +73,9 @@ const MAIL: Surface = {
     };
     const stops = new Set<HTMLElement>();
     let heir = heirOf();
+    // The list may draw another message in this row (another folder opened
+    // while the server answers); its Tab stop is then the list's again.
+    const shows = MAIL.keyOf(el);
     const pass = () => {
       const found = stopsIn();
       if (!found.length) return;
@@ -84,7 +87,7 @@ const MAIL: Surface = {
     const first = heir;
     pass();
     const keep = list && typeof MutationObserver === "function" ? new MutationObserver(() => {
-      if (el.isConnected && el.hasAttribute("inert")) pass(); else keep?.disconnect();
+      if (el.isConnected && el.hasAttribute("inert") && MAIL.keyOf(el) === shows) pass(); else keep?.disconnect();
     }) : null;
     keep?.observe(list!, { subtree: true, attributes: true, attributeFilter: ["tabindex"] });
     return {
