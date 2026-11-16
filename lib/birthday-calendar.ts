@@ -67,14 +67,15 @@ function parseBirthdayDate(date: string | PartialDate | Timestamp): { month: num
   }
 
   if ('utc' in date && date['@type'] === 'Timestamp') {
-    // Timestamp type
+    // Timestamp type. Its date is the UTC one: read in local time, a birthday
+    // stored as midnight UTC lands on the day before anywhere west of UTC.
     try {
       const parsed = parseISO(date.utc);
       if (!isNaN(parsed.getTime())) {
         return {
-          month: parsed.getMonth() + 1,
-          day: parsed.getDate(),
-          year: parsed.getFullYear(),
+          month: parsed.getUTCMonth() + 1,
+          day: parsed.getUTCDate(),
+          year: parsed.getUTCFullYear(),
         };
       }
     } catch {

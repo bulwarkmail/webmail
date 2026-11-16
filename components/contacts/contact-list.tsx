@@ -81,7 +81,7 @@ function getAnniversaryMonth(date: AnniversaryDate): number | null {
   if ("month" in date && date.month) return date.month;
   if ("utc" in date && date.utc) {
     const d = new Date(date.utc);
-    return isNaN(d.getTime()) ? null : d.getMonth() + 1;
+    return isNaN(d.getTime()) ? null : d.getUTCMonth() + 1;
   }
   return null;
 }

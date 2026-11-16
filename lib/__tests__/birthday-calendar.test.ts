@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import type { ContactCard } from '@/lib/jmap/types';
 import {
   createBirthdayCalendar,
@@ -61,6 +61,26 @@ describe('generateBirthdayEvents', () => {
     const c = contact({ anniversaries: { b1: { '@type': 'Anniversary', kind: 'birth', date: { '@type': 'Timestamp', utc: '1985-03-10T00:00:00Z' } } } });
     const events = generateBirthdayEvents([c], '2021-01-01', '2021-12-31');
     expect(events[0].start).toBe('2021-03-10T00:00:00');
+  });
+
+  describe('a Timestamp date, in the time zone of the person looking', () => {
+    const originalTZ = process.env.TZ;
+    afterEach(() => { process.env.TZ = originalTZ; });
+
+    it.each(['America/Toronto', 'America/Los_Angeles', 'Pacific/Auckland'])('keeps its UTC day in %s', (tz) => {
+      process.env.TZ = tz;
+      const c = contact({ anniversaries: { b1: { '@type': 'Anniversary', kind: 'birth', date: { '@type': 'Timestamp', utc: '1985-03-10T00:00:00Z' } } } });
+      const events = generateBirthdayEvents([c], '2021-01-01', '2021-12-31');
+      expect(events[0].start).toBe('2021-03-10T00:00:00');
+    });
+
+    it('keeps New Year\'s Day in the year it was given', () => {
+      process.env.TZ = 'America/Toronto';
+      const c = contact({ anniversaries: { b1: { '@type': 'Anniversary', kind: 'birth', date: { '@type': 'Timestamp', utc: '1990-01-01T00:00:00Z' } } } });
+      const events = generateBirthdayEvents([c], '2021-01-01', '2021-12-31');
+      expect(events.map((e) => e.start)).toEqual(['2021-01-01T00:00:00']);
+      expect(events[0].title).toContain('(31)');
+    });
   });
 
   it('parses a PartialDate anniversary date', () => {
