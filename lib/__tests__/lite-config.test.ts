@@ -94,6 +94,15 @@ describe('applyLiteConfig (config.json for the static build)', () => {
     expect(applyLiteConfig({ accountManagementLabel: 'Security' }).accountManagementLabel).toBe('Security');
   });
 
+  it('keeps a forgot password link only as an http(s) URL', () => {
+    expect(applyLiteConfig({}).loginForgotPasswordUrl).toBe('');
+    expect(applyLiteConfig({ loginForgotPasswordUrl: 'https://account.acme.example/forgot' }).loginForgotPasswordUrl)
+      .toBe('https://account.acme.example/forgot');
+    for (const value of ['javascript:alert(1)', '/forgot', 'account.acme.example/forgot', 42]) {
+      expect(applyLiteConfig({ loginForgotPasswordUrl: value }).loginForgotPasswordUrl).toBe('');
+    }
+  });
+
   it('reads the accessibility and help links and drops other schemes', () => {
     const config = applyLiteConfig({
       accessibilityStatementUrl: 'https://acme.example/accessibility',

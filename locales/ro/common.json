@@ -6,6 +6,7 @@
     "username_placeholder": "user@example.com",
     "password_label": "Parolă",
     "password_placeholder": "Introduceți parola",
+    "forgot_password": "Ați uitat parola?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server selectat din domeniul dvs. de e-mail.",
     "sign_in": "Autentificare",

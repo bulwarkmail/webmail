@@ -6,6 +6,7 @@
     "username_placeholder": "usuari@exemple.com",
     "password_label": "Contrasenya",
     "password_placeholder": "Introduïu la contrasenya",
+    "forgot_password": "Heu oblidat la contrasenya?",
     "jmap_server_label": "Servidor",
     "jmap_server_auto_picked": "Servidor seleccionat a partir del domini del vostre correu electrònic.",
     "sign_in": "Inicia la sessió",

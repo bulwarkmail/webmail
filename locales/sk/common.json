@@ -6,6 +6,7 @@
     "username_placeholder": "pouzivatel@example.com",
     "password_label": "Heslo",
     "password_placeholder": "Zadajte heslo",
+    "forgot_password": "Zabudli ste heslo?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server bol vybratý podľa domény vášho e-mailu.",
     "sign_in": "Prihlásiť sa",

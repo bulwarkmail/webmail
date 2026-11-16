@@ -6,6 +6,7 @@
     "username_placeholder": "benutzer@beispiel.de",
     "password_label": "Passwort",
     "password_placeholder": "Geben Sie Ihr Passwort ein",
+    "forgot_password": "Passwort vergessen?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server anhand Ihrer E-Mail-Domain ausgewählt.",
     "sign_in": "Anmelden",

@@ -85,6 +85,7 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     loginPrivacyPolicyUrl: str(input.loginPrivacyPolicyUrl, ''),
     loginWebsiteUrl: str(input.loginWebsiteUrl, ''),
     loginUsernamePlaceholder: str(input.loginUsernamePlaceholder, ''),
+    loginForgotPasswordUrl: httpUrlOrEmpty(input.loginForgotPasswordUrl),
     loginLogoMaxHeight: str(input.loginLogoMaxHeight, ''),
     loginLogoMaxWidth: str(input.loginLogoMaxWidth, ''),
     loginShowHeading: bool(input.loginShowHeading, true),

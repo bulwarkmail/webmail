@@ -28,6 +28,7 @@ export const BRANDING_OVERRIDE_KEYS = [
   'loginPrivacyPolicyUrl',
   'loginWebsiteUrl',
   'loginUsernamePlaceholder',
+  'loginForgotPasswordUrl',
   'loginLayout',
   'loginBackgroundLightUrl',
   'loginBackgroundDarkUrl',
@@ -82,6 +83,7 @@ export interface DomainBrandingEntry {
   loginPrivacyPolicyUrl?: string;
   loginWebsiteUrl?: string;
   loginUsernamePlaceholder?: string;
+  loginForgotPasswordUrl?: string;
   loginLayout?: string;
   loginBackgroundLightUrl?: string;
   loginBackgroundDarkUrl?: string;

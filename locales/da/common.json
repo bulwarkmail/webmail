@@ -6,6 +6,7 @@
     "username_placeholder": "bruger@example.com",
     "password_label": "Adgangskode",
     "password_placeholder": "Indtast din adgangskode",
+    "forgot_password": "Har du glemt din adgangskode?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server valgt ud fra din e-maildomæne.",
     "sign_in": "Log ind",
