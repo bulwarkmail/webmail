@@ -3165,7 +3165,39 @@
       "apply_existing_none": "Nog geen bericht in {folder} past bij deze regel.",
       "period_status_scheduled": "gepland",
       "period_status_active": "actief",
-      "period_status_expired": "verlopen"
+      "period_status_expired": "verlopen",
+      "editor": {
+        "if": "Als",
+        "match_all": "elke",
+        "match_any": "een",
+        "of_conditions": "van deze voorwaarden klopt",
+        "match_type": "Welke voorwaarden moeten kloppen",
+        "condition_number": "Voorwaarde {number}",
+        "comparison": "Vergelijking",
+        "size_unit": "Eenheid",
+        "has_attachment": "Heeft een bijlage",
+        "attachment_type": "Bijlage van type",
+        "size_units": {
+          "bytes": "bytes",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Andere regels blijven toepassen",
+        "skip_rule": "Deze regel overslaan",
+        "matching": "{count, plural, =0 {Geen berichten komen overeen} one {# bericht komt overeen} other {# berichten komen overeen}}",
+        "matching_partial": "{count, plural, =0 {Geen recente berichten komen overeen} other {#+ berichten komen overeen}}",
+        "checking": "Overeenkomende berichten zoeken…",
+        "tags": "Labels",
+        "attachment_type_invalid": "Vul een bestandsextensie in, bijvoorbeeld pdf",
+        "action_conflict": "Stilletjes verwijderen en Afwijzen gaan niet samen met Verplaatsen, Kopiëren of Houden, en ook niet met elkaar",
+        "apply_to": "Toepassen op",
+        "apply_new": "Alleen nieuwe e-mail",
+        "apply_folder": "Nieuwe e-mail en {folder}",
+        "apply_folder_count": "Nieuwe e-mail en {folder} ({count})",
+        "apply_all": "Nieuwe en alle e-mail",
+        "apply_all_count": "Nieuwe en alle e-mail ({count})",
+        "applying": "‘{name}’ wordt toegepast…"
+      }
     },
     "templates": {
       "title": "E-mailsjablonen",

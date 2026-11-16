@@ -3165,7 +3165,39 @@
       "apply_existing_none": "{folder}에 이 규칙에 맞는 메일이 아직 없습니다.",
       "period_status_scheduled": "예정",
       "period_status_active": "활성",
-      "period_status_expired": "만료"
+      "period_status_expired": "만료",
+      "editor": {
+        "if": "다음 조건 중",
+        "match_all": "모두",
+        "match_any": "하나라도",
+        "of_conditions": "충족하면",
+        "match_type": "충족해야 하는 조건",
+        "condition_number": "조건 {number}",
+        "comparison": "비교",
+        "size_unit": "단위",
+        "has_attachment": "첨부 파일 있음",
+        "attachment_type": "첨부 파일 형식",
+        "size_units": {
+          "bytes": "바이트",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "다른 규칙도 계속 적용",
+        "skip_rule": "이 규칙 건너뛰기",
+        "matching": "{count, plural, =0 {일치하는 메일 없음} other {메일 #개 일치}}",
+        "matching_partial": "{count, plural, =0 {일치하는 최근 메일 없음} other {메일 #개 이상 일치}}",
+        "checking": "일치하는 메일을 찾는 중…",
+        "tags": "태그",
+        "attachment_type_invalid": "pdf 같은 파일 확장자를 입력하세요",
+        "action_conflict": "삭제와 거부는 이동, 복사, 유지와 함께 쓰거나 서로 함께 쓸 수 없습니다",
+        "apply_to": "적용 대상",
+        "apply_new": "새 메일만",
+        "apply_folder": "새 메일과 {folder}",
+        "apply_folder_count": "새 메일과 {folder} ({count})",
+        "apply_all": "새 메일과 모든 메일",
+        "apply_all_count": "새 메일과 모든 메일 ({count})",
+        "applying": "‘{name}’ 적용 중…"
+      }
     },
     "templates": {
       "title": "이메일 템플릿",

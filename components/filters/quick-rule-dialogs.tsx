@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { FilterRuleModal } from "@/components/filters/filter-rule-modal";
+import { RuleEditor } from "@/components/filters/rule-editor";
+import { previewRule } from "@/lib/filters/rule-preview";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { useQuickRuleText } from "@/components/email/rules-menu";
 import { useQuickRuleStore } from "@/stores/quick-rule-store";
@@ -52,12 +53,14 @@ export function QuickRuleDialogs() {
   return (
     <>
       {editor && (
-        <FilterRuleModal
+        <RuleEditor
           key={`${editor.mode}:${editor.rule.id}`}
+          previewMatches={(r, o) => previewRule(editor.target, r, { ...o, folderId: editor.sourceMailboxId ?? undefined })}
           rule={editor.mode === "edit" ? editor.rule : undefined}
           initialRule={editor.mode === "prefill" ? editor.rule : undefined}
           suggestions={editor.suggestions}
-          offerApplyToExisting={editor.mode === "prefill" && !!editor.sourceMailboxId}
+          offerApplyToExisting={editor.mode === "prefill"}
+          applyExistingFolder={editor.target.mailboxes.find((m) => m.id === editor.sourceMailboxId)?.name}
           mailboxes={editor.target.mailboxes}
           maxRedirects={editor.target.client.getSieveCapabilities(editor.target.sieveAccountId)?.maxNumberRedirects}
           forwardsBefore={forwards.before}
@@ -66,7 +69,7 @@ export function QuickRuleDialogs() {
           regexSupported={supportsRegex(editor.target.client.getSieveCapabilities(editor.target.sieveAccountId)?.sieveExtensions)}
           onSave={(rule, options) => {
             closeEditor();
-            void saveEditorRule(editor, rule, options?.applyToExisting ?? false, text);
+            void saveEditorRule(editor, rule, options?.applyTo ?? "new", text);
           }}
           onClose={closeEditor}
         />

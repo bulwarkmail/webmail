@@ -6468,7 +6468,39 @@
       "apply_existing_none": "ยังไม่มีข้อความใน {folder} ที่ตรงกับกฎนี้",
       "period_status_scheduled": "กำหนดเวลาแล้ว",
       "period_status_active": "ใช้งานอยู่",
-      "period_status_expired": "หมดอายุแล้ว"
+      "period_status_expired": "หมดอายุแล้ว",
+      "editor": {
+        "if": "หากตรงกับเงื่อนไข",
+        "match_all": "ทั้งหมด",
+        "match_any": "ข้อใดข้อหนึ่ง",
+        "of_conditions": "ต่อไปนี้",
+        "match_type": "เงื่อนไขที่ต้องตรง",
+        "condition_number": "เงื่อนไข {number}",
+        "comparison": "การเปรียบเทียบ",
+        "size_unit": "หน่วย",
+        "has_attachment": "มีไฟล์แนบ",
+        "attachment_type": "ไฟล์แนบประเภท",
+        "size_units": {
+          "bytes": "ไบต์",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "ใช้กฎอื่นต่อไป",
+        "skip_rule": "ข้ามกฎนี้",
+        "matching": "{count, plural, =0 {ไม่มีข้อความที่ตรงกัน} other {ตรงกัน # ข้อความ}}",
+        "matching_partial": "{count, plural, =0 {ไม่มีข้อความล่าสุดที่ตรงกัน} other {ตรงกัน # ข้อความขึ้นไป}}",
+        "checking": "กำลังค้นหาข้อความที่ตรงกัน…",
+        "tags": "แท็ก",
+        "attachment_type_invalid": "ป้อนนามสกุลไฟล์ เช่น pdf",
+        "action_conflict": "ละทิ้งและปฏิเสธใช้ร่วมกับย้าย คัดลอก หรือเก็บไว้ไม่ได้ และใช้ร่วมกันเองก็ไม่ได้",
+        "apply_to": "ใช้กับ",
+        "apply_new": "เฉพาะอีเมลใหม่",
+        "apply_folder": "อีเมลใหม่และ {folder}",
+        "apply_folder_count": "อีเมลใหม่และ {folder} ({count})",
+        "apply_all": "อีเมลใหม่และอีเมลทั้งหมด",
+        "apply_all_count": "อีเมลใหม่และอีเมลทั้งหมด ({count})",
+        "applying": "กำลังใช้ “{name}”…"
+      }
     },
     "templates": {
       "title": "เทมเพลตอีเมล",

@@ -3165,7 +3165,39 @@
       "apply_existing_none": "У теці {folder} поки немає листів під це правило.",
       "period_status_scheduled": "заплановано",
       "period_status_active": "активне",
-      "period_status_expired": "завершено"
+      "period_status_expired": "завершено",
+      "editor": {
+        "if": "Якщо виконано",
+        "match_all": "кожну",
+        "match_any": "будь-яку",
+        "of_conditions": "з цих умов",
+        "match_type": "Які умови мають виконуватися",
+        "condition_number": "Умова {number}",
+        "comparison": "Порівняння",
+        "size_unit": "Одиниця",
+        "has_attachment": "Має вкладення",
+        "attachment_type": "Вкладення типу",
+        "size_units": {
+          "bytes": "байтів",
+          "kb": "КБ",
+          "mb": "МБ"
+        },
+        "continue_rules": "Застосовувати й інші правила",
+        "skip_rule": "Пропускати це правило",
+        "matching": "{count, plural, =0 {Відповідних листів немає} one {Відповідає # лист} few {Відповідають # листи} many {Відповідають # листів} other {Відповідають # листа}}",
+        "matching_partial": "{count, plural, =0 {Серед недавніх листів відповідних немає} other {Відповідають #+ листів}}",
+        "checking": "Пошук відповідних листів…",
+        "tags": "Мітки",
+        "attachment_type_invalid": "Введіть розширення файлу, наприклад pdf",
+        "action_conflict": "Відкидання й відхилення не можна поєднувати з переміщенням, копіюванням чи збереженням у вхідних, а також між собою",
+        "apply_to": "Застосувати до",
+        "apply_new": "Лише нових листів",
+        "apply_folder": "Нових листів і папки {folder}",
+        "apply_folder_count": "Нових листів і папки {folder} ({count})",
+        "apply_all": "Нових і всіх листів",
+        "apply_all_count": "Нових і всіх листів ({count})",
+        "applying": "Застосовується «{name}»…"
+      }
     },
     "templates": {
       "title": "Шаблони електронної пошти",

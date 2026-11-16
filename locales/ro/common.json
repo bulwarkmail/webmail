@@ -3172,7 +3172,39 @@
       "apply_existing_none": "Niciun mesaj din {folder} nu se potrivește încă acestei reguli.",
       "period_status_scheduled": "programată",
       "period_status_active": "activă",
-      "period_status_expired": "expirată"
+      "period_status_expired": "expirată",
+      "editor": {
+        "if": "Dacă este îndeplinită",
+        "match_all": "fiecare",
+        "match_any": "oricare",
+        "of_conditions": "dintre aceste condiții",
+        "match_type": "Ce condiții trebuie îndeplinite",
+        "condition_number": "Condiția {number}",
+        "comparison": "Comparație",
+        "size_unit": "Unitate",
+        "has_attachment": "Are un atașament",
+        "attachment_type": "Atașament de tipul",
+        "size_units": {
+          "bytes": "octeți",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Continuă să aplici celelalte reguli",
+        "skip_rule": "Omite această regulă",
+        "matching": "{count, plural, =0 {Niciun mesaj nu se potrivește} one {Se potrivește # mesaj} few {Se potrivesc # mesaje} other {Se potrivesc # de mesaje}}",
+        "matching_partial": "{count, plural, =0 {Niciun mesaj recent nu se potrivește} other {Se potrivesc #+ mesaje}}",
+        "checking": "Se caută mesajele care se potrivesc…",
+        "tags": "Etichete",
+        "attachment_type_invalid": "Introduceți o extensie de fișier, de exemplu pdf",
+        "action_conflict": "Ignorarea și respingerea nu se pot combina cu mutarea, copierea sau păstrarea și nici între ele",
+        "apply_to": "Aplică la",
+        "apply_new": "Doar corespondența nouă",
+        "apply_folder": "Corespondența nouă și {folder}",
+        "apply_folder_count": "Corespondența nouă și {folder} ({count})",
+        "apply_all": "Corespondența nouă și toată corespondența",
+        "apply_all_count": "Corespondența nouă și toată corespondența ({count})",
+        "applying": "Se aplică „{name}”…"
+      }
     },
     "templates": {
       "title": "Șabloane de e-mail",

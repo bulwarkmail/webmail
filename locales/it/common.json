@@ -3165,7 +3165,39 @@
       "apply_existing_none": "Nessun messaggio in {folder} corrisponde ancora a questa regola.",
       "period_status_scheduled": "programmata",
       "period_status_active": "attiva",
-      "period_status_expired": "scaduta"
+      "period_status_expired": "scaduta",
+      "editor": {
+        "if": "Se è soddisfatta",
+        "match_all": "ognuna",
+        "match_any": "una qualsiasi",
+        "of_conditions": "di queste condizioni",
+        "match_type": "Quali condizioni devono essere soddisfatte",
+        "condition_number": "Condizione {number}",
+        "comparison": "Confronto",
+        "size_unit": "Unità",
+        "has_attachment": "Ha un allegato",
+        "attachment_type": "Allegato di tipo",
+        "size_units": {
+          "bytes": "byte",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Continua ad applicare le altre regole",
+        "skip_rule": "Salta questa regola",
+        "matching": "{count, plural, =0 {Nessun messaggio corrisponde} one {# messaggio corrisponde} other {# messaggi corrispondono}}",
+        "matching_partial": "{count, plural, =0 {Nessun messaggio recente corrisponde} other {#+ messaggi corrispondono}}",
+        "checking": "Ricerca dei messaggi corrispondenti…",
+        "tags": "Etichette",
+        "attachment_type_invalid": "Inserisci un'estensione di file, ad esempio pdf",
+        "action_conflict": "Elimina silenziosamente e Rifiuta non si possono combinare con Sposta, Copia o Mantieni, né tra loro",
+        "apply_to": "Applica a",
+        "apply_new": "Solo la posta nuova",
+        "apply_folder": "La posta nuova e {folder}",
+        "apply_folder_count": "La posta nuova e {folder} ({count})",
+        "apply_all": "La posta nuova e tutta la posta",
+        "apply_all_count": "La posta nuova e tutta la posta ({count})",
+        "applying": "Applicazione di «{name}»…"
+      }
     },
     "templates": {
       "title": "Modelli email",

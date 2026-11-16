@@ -3165,7 +3165,39 @@
       "apply_existing_none": "Aucun message de {folder} ne correspond encore à cette règle.",
       "period_status_scheduled": "planifiée",
       "period_status_active": "active",
-      "period_status_expired": "expirée"
+      "period_status_expired": "expirée",
+      "editor": {
+        "if": "Si",
+        "match_all": "chacune",
+        "match_any": "l'une",
+        "of_conditions": "de ces conditions est remplie",
+        "match_type": "Conditions à remplir",
+        "condition_number": "Condition {number}",
+        "comparison": "Comparaison",
+        "size_unit": "Unité",
+        "has_attachment": "A une pièce jointe",
+        "attachment_type": "Pièce jointe de type",
+        "size_units": {
+          "bytes": "octets",
+          "kb": "Ko",
+          "mb": "Mo"
+        },
+        "continue_rules": "Continuer à appliquer les autres règles",
+        "skip_rule": "Ignorer cette règle",
+        "matching": "{count, plural, =0 {Aucun message ne correspond} one {# message correspond} other {# messages correspondent}}",
+        "matching_partial": "{count, plural, =0 {Aucun message récent ne correspond} other {#+ messages correspondent}}",
+        "checking": "Recherche des messages correspondants…",
+        "tags": "Étiquettes",
+        "attachment_type_invalid": "Saisissez une extension de fichier, par exemple pdf",
+        "action_conflict": "Supprimer silencieusement et Rejeter ne peuvent se combiner ni avec Déplacer, Copier ou Conserver, ni entre eux",
+        "apply_to": "Appliquer à",
+        "apply_new": "Nouveaux messages uniquement",
+        "apply_folder": "Nouveaux messages et {folder}",
+        "apply_folder_count": "Nouveaux messages et {folder} ({count})",
+        "apply_all": "Nouveaux messages et tous les messages",
+        "apply_all_count": "Nouveaux messages et tous les messages ({count})",
+        "applying": "Application de « {name} »…"
+      }
     },
     "templates": {
       "title": "Modèles d'e-mails",

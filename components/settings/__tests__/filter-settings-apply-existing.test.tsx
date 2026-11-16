@@ -94,31 +94,27 @@ async function fillRule(from: string, action: string) {
   fireEvent.click(screen.getByText('add_rule'));
   fireEvent.change(screen.getByLabelText('rule_name'), { target: { value: 'News' } });
   fireEvent.change(screen.getByLabelText('condition_value'), { target: { value: from } });
-  fireEvent.change(screen.getAllByLabelText('actions')[0], { target: { value: action } });
+  fireEvent.click(screen.getByLabelText(`action_types.${action}`));
 }
 
-// settings-p2-6: the offer is a box in the rule's dialog, with the number of
-// messages it would change, not a toast that is gone in a few seconds.
 describe('a rule in Settings › Filters', () => {
-  it('offers, in its dialog, to apply it to the messages already in the Inbox', async () => {
+  it('can also run on the messages already in the Inbox when saved', async () => {
     showSettings();
     await fillRule('news@example.org', 'star');
-    const box = await screen.findByRole('checkbox', { name: 'apply_existing_count' }, { timeout: 2000 });
-    expect(box).toBeEnabled();
-    expect(queryEmailFields).toHaveBeenCalled();
-    fireEvent.click(box);
+    const choice = (await screen.findByLabelText('apply_to', {}, { timeout: 2000 })) as HTMLSelectElement;
+    expect([...choice.options].find((o) => o.value === 'folder')?.disabled).toBe(false);
+    fireEvent.change(choice, { target: { value: 'folder' } });
     queryEmailFields.mockClear();
     fireEvent.click(screen.getByText('save'));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('rule_applied', expect.anything()));
-    // Saving ran the rule; no toast offered it.
-    expect(queryEmailFields).toHaveBeenCalled();
-    expect(toast.success.mock.calls.some(([, options]) => options?.action)).toBe(false);
+    expect(JSON.stringify(queryEmailFields.mock.calls[0][0])).toContain('"inMailbox":"inbox"');
+    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['e1'], expect.anything(), 'primary');
   });
 
-  it('runs nothing on old mail when the box is left empty', async () => {
+  it('runs nothing on old mail while "New mail only" stays chosen', async () => {
     showSettings();
     await fillRule('news@example.org', 'star');
-    await screen.findByRole('checkbox', { name: 'apply_existing_count' }, { timeout: 2000 });
+    await screen.findByLabelText('apply_to', {}, { timeout: 2000 });
     queryEmailFields.mockClear();
     fireEvent.click(screen.getByText('save'));
     await waitFor(() => expect(client.updateSieveScript).toHaveBeenCalled());
@@ -127,21 +123,18 @@ describe('a rule in Settings › Filters', () => {
     expect(toast.success).not.toHaveBeenCalled();
   });
 
-  it('greys the box when no message in the Inbox matches', async () => {
+  it('asks nothing when no message matches', async () => {
     showSettings();
     await fillRule('nobody@example.com', 'star');
-    await waitFor(() => expect(queryEmailFields).toHaveBeenCalled(), { timeout: 2000 });
-    await waitFor(() => expect(screen.getByText('apply_existing_none')).toBeInTheDocument());
-    expect(screen.getByRole('checkbox', { name: 'apply_existing_in' })).toBeDisabled();
+    await screen.findByText('matching', {}, { timeout: 2000 });
+    expect(screen.queryByLabelText('apply_to')).toBeNull();
   });
 
-  it('is greyed for a rule that can only act on arriving mail', async () => {
+  it('asks nothing for a rule that only forwards, so old mail is never sent on', async () => {
     showSettings();
-    await fillRule('news@example.org', 'discard');
-    expect(screen.getByRole('checkbox', { name: 'apply_existing_in' })).toBeDisabled();
-    expect(screen.getByText('apply_existing_unsupported')).toBeInTheDocument();
-    await new Promise((r) => setTimeout(r, 500));
-    expect(queryEmailFields).not.toHaveBeenCalled();
+    await fillRule('news@example.org', 'forward');
+    await screen.findByText('matching', {}, { timeout: 2000 });
+    expect(screen.queryByLabelText('apply_to')).toBeNull();
   });
 });
 

@@ -3165,7 +3165,39 @@
       "apply_existing_none": "Mapē {folder} vēl nav nevienas vēstules, kas atbilst šim noteikumam.",
       "period_status_scheduled": "ieplānots",
       "period_status_active": "aktīvs",
-      "period_status_expired": "beidzies"
+      "period_status_expired": "beidzies",
+      "editor": {
+        "if": "Ja izpildās",
+        "match_all": "katrs",
+        "match_any": "jebkurš",
+        "of_conditions": "no šiem nosacījumiem",
+        "match_type": "Kuriem nosacījumiem jāizpildās",
+        "condition_number": "{number}. nosacījums",
+        "comparison": "Salīdzinājums",
+        "size_unit": "Mērvienība",
+        "has_attachment": "Ir pielikums",
+        "attachment_type": "Pielikuma veids",
+        "size_units": {
+          "bytes": "baiti",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Turpināt piemērot citus noteikumus",
+        "skip_rule": "Izlaist šo noteikumu",
+        "matching": "{count, plural, =0 {Neviena vēstule neatbilst} zero {Atbilst # vēstuļu} one {Atbilst # vēstule} other {Atbilst # vēstules}}",
+        "matching_partial": "{count, plural, =0 {Neviena nesena vēstule neatbilst} other {Atbilst #+ vēstules}}",
+        "checking": "Meklē atbilstošās vēstules…",
+        "tags": "Tagi",
+        "attachment_type_invalid": "Ievadiet faila paplašinājumu, piemēram, pdf",
+        "action_conflict": "Dzēšanu un noraidīšanu nevar apvienot ar pārvietošanu, kopēšanu vai atstāšanu, ne arī savā starpā",
+        "apply_to": "Piemērot",
+        "apply_new": "Tikai jaunām vēstulēm",
+        "apply_folder": "Jaunām vēstulēm un mapei {folder}",
+        "apply_folder_count": "Jaunām vēstulēm un mapei {folder} ({count})",
+        "apply_all": "Jaunām un visām vēstulēm",
+        "apply_all_count": "Jaunām un visām vēstulēm ({count})",
+        "applying": "Piemēro “{name}”…"
+      }
     },
     "templates": {
       "title": "Vēstuļu veidnes",

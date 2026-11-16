@@ -119,7 +119,7 @@ describe('a rule made from a message, against the redirect limit', () => {
     // A message both match gets the new rule's forward first ...
     expect(await screen.findByText('forward_limit')).toBeInTheDocument();
     // ... unless the new rule stops.
-    fireEvent.click(screen.getByLabelText('stop_processing'));
+    fireEvent.click(screen.getByLabelText('continue_rules'));
     expect(screen.queryByText('forward_limit')).toBeNull();
   });
 

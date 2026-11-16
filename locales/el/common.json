@@ -3184,7 +3184,39 @@
       "apply_existing_none": "Κανένα μήνυμα στο {folder} δεν ταιριάζει ακόμα με αυτόν τον κανόνα.",
       "period_status_scheduled": "προγραμματισμένο",
       "period_status_active": "ενεργό",
-      "period_status_expired": "έληξε"
+      "period_status_expired": "έληξε",
+      "editor": {
+        "if": "Αν ισχύει",
+        "match_all": "καθεμία",
+        "match_any": "οποιαδήποτε",
+        "of_conditions": "από αυτές τις συνθήκες",
+        "match_type": "Ποιες συνθήκες πρέπει να ισχύουν",
+        "condition_number": "Συνθήκη {number}",
+        "comparison": "Σύγκριση",
+        "size_unit": "Μονάδα",
+        "has_attachment": "Έχει συνημμένο",
+        "attachment_type": "Συνημμένο τύπου",
+        "size_units": {
+          "bytes": "byte",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Συνέχιση με τους υπόλοιπους κανόνες",
+        "skip_rule": "Παράλειψη αυτού του κανόνα",
+        "matching": "{count, plural, =0 {Κανένα μήνυμα δεν ταιριάζει} one {# μήνυμα ταιριάζει} other {# μηνύματα ταιριάζουν}}",
+        "matching_partial": "{count, plural, =0 {Κανένα πρόσφατο μήνυμα δεν ταιριάζει} other {#+ μηνύματα ταιριάζουν}}",
+        "checking": "Αναζήτηση μηνυμάτων που ταιριάζουν…",
+        "tags": "Ετικέτες",
+        "attachment_type_invalid": "Γράψτε μια επέκταση αρχείου, π.χ. pdf",
+        "action_conflict": "Η απόρριψη και η άρνηση δεν συνδυάζονται με μετακίνηση, αντιγραφή ή διατήρηση, ούτε μεταξύ τους",
+        "apply_to": "Εφαρμογή σε",
+        "apply_new": "Μόνο νέα μηνύματα",
+        "apply_folder": "Νέα μηνύματα και {folder}",
+        "apply_folder_count": "Νέα μηνύματα και {folder} ({count})",
+        "apply_all": "Νέα και όλα τα υπάρχοντα μηνύματα",
+        "apply_all_count": "Νέα και όλα τα υπάρχοντα μηνύματα ({count})",
+        "applying": "Εφαρμογή του «{name}»…"
+      }
     },
     "templates": {
       "title": "Πρότυπα email",

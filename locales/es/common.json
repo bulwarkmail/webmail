@@ -3165,7 +3165,39 @@
       "apply_existing_none": "Ningún mensaje de {folder} coincide todavía con esta regla.",
       "period_status_scheduled": "programada",
       "period_status_active": "activa",
-      "period_status_expired": "caducada"
+      "period_status_expired": "caducada",
+      "editor": {
+        "if": "Si se cumple",
+        "match_all": "cada una",
+        "match_any": "alguna",
+        "of_conditions": "de estas condiciones",
+        "match_type": "Qué condiciones deben cumplirse",
+        "condition_number": "Condición {number}",
+        "comparison": "Comparación",
+        "size_unit": "Unidad",
+        "has_attachment": "Tiene un adjunto",
+        "attachment_type": "Adjunto de tipo",
+        "size_units": {
+          "bytes": "bytes",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Seguir aplicando las demás reglas",
+        "skip_rule": "Omitir esta regla",
+        "matching": "{count, plural, =0 {Ningún mensaje coincide} one {# mensaje coincide} other {# mensajes coinciden}}",
+        "matching_partial": "{count, plural, =0 {Ningún mensaje reciente coincide} other {#+ mensajes coinciden}}",
+        "checking": "Buscando correo que coincida…",
+        "tags": "Etiquetas",
+        "attachment_type_invalid": "Escribe una extensión de archivo, como pdf",
+        "action_conflict": "Descartar y Rechazar no se pueden combinar con Mover, Copiar o Mantener, ni entre sí",
+        "apply_to": "Aplicar a",
+        "apply_new": "Solo el correo nuevo",
+        "apply_folder": "El correo nuevo y {folder}",
+        "apply_folder_count": "El correo nuevo y {folder} ({count})",
+        "apply_all": "El correo nuevo y todo el correo",
+        "apply_all_count": "El correo nuevo y todo el correo ({count})",
+        "applying": "Aplicando «{name}»…"
+      }
     },
     "templates": {
       "title": "Plantillas de correo",

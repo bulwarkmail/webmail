@@ -3165,7 +3165,39 @@
       "apply_existing_none": "{folder} içinde bu kurala uyan ileti henüz yok.",
       "period_status_scheduled": "planlandı",
       "period_status_active": "etkin",
-      "period_status_expired": "süresi doldu"
+      "period_status_expired": "süresi doldu",
+      "editor": {
+        "if": "Bu koşulların",
+        "match_all": "tümü",
+        "match_any": "herhangi biri",
+        "of_conditions": "geçerliyse",
+        "match_type": "Hangi koşulların geçerli olması gerektiği",
+        "condition_number": "Koşul {number}",
+        "comparison": "Karşılaştırma",
+        "size_unit": "Birim",
+        "has_attachment": "Eki var",
+        "attachment_type": "Ek türü",
+        "size_units": {
+          "bytes": "bayt",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Diğer kurallar da uygulansın",
+        "skip_rule": "Bu kuralı atla",
+        "matching": "{count, plural, =0 {Eşleşen ileti yok} one {# ileti eşleşiyor} other {# ileti eşleşiyor}}",
+        "matching_partial": "{count, plural, =0 {Son iletilerden eşleşen yok} other {#+ ileti eşleşiyor}}",
+        "checking": "Eşleşen iletiler aranıyor…",
+        "tags": "Etiketler",
+        "attachment_type_invalid": "Bir dosya uzantısı girin, örneğin pdf",
+        "action_conflict": "At ve Reddet; Taşı, Kopyala veya Tut ile ya da birbiriyle birlikte kullanılamaz",
+        "apply_to": "Uygula",
+        "apply_new": "Yalnızca yeni postalara",
+        "apply_folder": "Yeni postalara ve {folder} klasörüne",
+        "apply_folder_count": "Yeni postalara ve {folder} klasörüne ({count})",
+        "apply_all": "Yeni postalara ve tüm postalara",
+        "apply_all_count": "Yeni postalara ve tüm postalara ({count})",
+        "applying": "“{name}” uygulanıyor…"
+      }
     },
     "templates": {
       "title": "E-posta Şablonları",

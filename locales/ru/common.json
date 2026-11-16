@@ -3165,7 +3165,39 @@
       "apply_existing_none": "В папке {folder} пока нет писем под это правило.",
       "period_status_scheduled": "запланировано",
       "period_status_active": "активно",
-      "period_status_expired": "истекло"
+      "period_status_expired": "истекло",
+      "editor": {
+        "if": "Если выполнено",
+        "match_all": "каждое",
+        "match_any": "любое",
+        "of_conditions": "из этих условий",
+        "match_type": "Какие условия должны выполняться",
+        "condition_number": "Условие {number}",
+        "comparison": "Сравнение",
+        "size_unit": "Единица",
+        "has_attachment": "Есть вложение",
+        "attachment_type": "Вложение типа",
+        "size_units": {
+          "bytes": "байт",
+          "kb": "КБ",
+          "mb": "МБ"
+        },
+        "continue_rules": "Применять и другие правила",
+        "skip_rule": "Пропускать это правило",
+        "matching": "{count, plural, =0 {Подходящих писем нет} one {Подходит # письмо} few {Подходят # письма} many {Подходят # писем} other {Подходят # письма}}",
+        "matching_partial": "{count, plural, =0 {Среди недавних писем подходящих нет} other {Подходят #+ писем}}",
+        "checking": "Поиск подходящих писем…",
+        "tags": "Теги",
+        "attachment_type_invalid": "Введите расширение файла, например pdf",
+        "action_conflict": "Удаление и отклонение нельзя сочетать с перемещением, копированием или оставлением во входящих, а также друг с другом",
+        "apply_to": "Применить к",
+        "apply_new": "Только новым письмам",
+        "apply_folder": "Новым письмам и папке {folder}",
+        "apply_folder_count": "Новым письмам и папке {folder} ({count})",
+        "apply_all": "Новым и всем письмам",
+        "apply_all_count": "Новым и всем письмам ({count})",
+        "applying": "Применяется «{name}»…"
+      }
     },
     "templates": {
       "title": "Шаблоны писем",

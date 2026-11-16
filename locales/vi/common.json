@@ -3184,7 +3184,39 @@
       "apply_existing_none": "Chưa có thư nào trong {folder} khớp với quy tắc này.",
       "period_status_scheduled": "Theo lịch trình",
       "period_status_active": "Hoạt động",
-      "period_status_expired": "Hết hạn"
+      "period_status_expired": "Hết hạn",
+      "editor": {
+        "if": "Nếu đúng với",
+        "match_all": "tất cả",
+        "match_any": "một trong các",
+        "of_conditions": "điều kiện này",
+        "match_type": "Những điều kiện cần đúng",
+        "condition_number": "Điều kiện {number}",
+        "comparison": "So sánh",
+        "size_unit": "Đơn vị",
+        "has_attachment": "Có tệp đính kèm",
+        "attachment_type": "Tệp đính kèm loại",
+        "size_units": {
+          "bytes": "byte",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Tiếp tục áp dụng các quy tắc khác",
+        "skip_rule": "Bỏ qua quy tắc này",
+        "matching": "{count, plural, =0 {Không có thư nào khớp} other {# thư khớp}}",
+        "matching_partial": "{count, plural, =0 {Không có thư gần đây nào khớp} other {#+ thư khớp}}",
+        "checking": "Đang tìm thư khớp…",
+        "tags": "Thẻ",
+        "attachment_type_invalid": "Nhập phần mở rộng tệp, ví dụ pdf",
+        "action_conflict": "Không thể kết hợp Hủy và Từ chối với Di chuyển, Sao chép hoặc Giữ, cũng như với nhau",
+        "apply_to": "Áp dụng cho",
+        "apply_new": "Chỉ thư mới",
+        "apply_folder": "Thư mới và {folder}",
+        "apply_folder_count": "Thư mới và {folder} ({count})",
+        "apply_all": "Thư mới và tất cả thư",
+        "apply_all_count": "Thư mới và tất cả thư ({count})",
+        "applying": "Đang áp dụng “{name}”…"
+      }
     },
     "templates": {
       "title": "Mẫu email",

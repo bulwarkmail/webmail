@@ -3066,7 +3066,39 @@
       "apply_existing_none": "עדיין אין הודעה בתיקייה {folder} שמתאימה לכלל הזה.",
       "period_status_scheduled": "מתוזמן",
       "period_status_active": "פעיל",
-      "period_status_expired": "פג תוקף"
+      "period_status_expired": "פג תוקף",
+      "editor": {
+        "if": "אם",
+        "match_all": "כל",
+        "match_any": "אחד",
+        "of_conditions": "התנאים האלה מתקיימים",
+        "match_type": "אילו תנאים צריכים להתקיים",
+        "condition_number": "תנאי {number}",
+        "comparison": "השוואה",
+        "size_unit": "יחידה",
+        "has_attachment": "יש קובץ מצורף",
+        "attachment_type": "קובץ מצורף מסוג",
+        "size_units": {
+          "bytes": "בתים",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "להמשיך להחיל כללים אחרים",
+        "skip_rule": "לדלג על הכלל הזה",
+        "matching": "{count, plural, =0 {אין הודעות תואמות} one {הודעה אחת תואמת} two {שתי הודעות תואמות} other {# הודעות תואמות}}",
+        "matching_partial": "{count, plural, =0 {אין הודעות אחרונות תואמות} other {לפחות # הודעות תואמות}}",
+        "checking": "מחפש הודעות תואמות…",
+        "tags": "תוויות",
+        "attachment_type_invalid": "יש להזין סיומת קובץ, למשל pdf",
+        "action_conflict": "אי אפשר לשלב מחיקה או דחייה עם העברה, העתקה או שמירה, וגם לא זו עם זו",
+        "apply_to": "להחיל על",
+        "apply_new": "רק דואר חדש",
+        "apply_folder": "דואר חדש ו{folder}",
+        "apply_folder_count": "דואר חדש ו{folder} ({count})",
+        "apply_all": "דואר חדש וכל הדואר",
+        "apply_all_count": "דואר חדש וכל הדואר ({count})",
+        "applying": "מחיל את „{name}”…"
+      }
     },
     "templates": {
       "title": "תבניות דואר אלקטרוני",

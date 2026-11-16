@@ -3165,7 +3165,39 @@
       "apply_existing_none": "Tomuto pravidlu zatím neodpovídá žádná zpráva ve složce {folder}.",
       "period_status_scheduled": "naplánováno",
       "period_status_active": "aktivní",
-      "period_status_expired": "vypršelo"
+      "period_status_expired": "vypršelo",
+      "editor": {
+        "if": "Pokud platí",
+        "match_all": "každá",
+        "match_any": "kterákoli",
+        "of_conditions": "z těchto podmínek",
+        "match_type": "Které podmínky musí platit",
+        "condition_number": "Podmínka {number}",
+        "comparison": "Porovnání",
+        "size_unit": "Jednotka",
+        "has_attachment": "Má přílohu",
+        "attachment_type": "Příloha typu",
+        "size_units": {
+          "bytes": "bajtů",
+          "kb": "kB",
+          "mb": "MB"
+        },
+        "continue_rules": "Pokračovat dalšími pravidly",
+        "skip_rule": "Přeskočit toto pravidlo",
+        "matching": "{count, plural, =0 {Žádná zpráva neodpovídá} one {Odpovídá # zpráva} few {Odpovídají # zprávy} many {Odpovídá # zprávy} other {Odpovídá # zpráv}}",
+        "matching_partial": "{count, plural, =0 {Žádná nedávná zpráva neodpovídá} other {Odpovídá #+ zpráv}}",
+        "checking": "Hledá se odpovídající pošta…",
+        "tags": "Štítky",
+        "attachment_type_invalid": "Zadejte příponu souboru, například pdf",
+        "action_conflict": "Zahodit a Odmítnout nejde kombinovat s Přesunout, Kopírovat ani Ponechat, ani spolu navzájem",
+        "apply_to": "Použít na",
+        "apply_new": "Jen novou poštu",
+        "apply_folder": "Novou poštu a {folder}",
+        "apply_folder_count": "Novou poštu a {folder} ({count})",
+        "apply_all": "Novou i veškerou poštu",
+        "apply_all_count": "Novou i veškerou poštu ({count})",
+        "applying": "Používá se „{name}“…"
+      }
     },
     "templates": {
       "title": "E-mailové šablony",

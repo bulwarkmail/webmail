@@ -3172,7 +3172,39 @@
       "apply_existing_none": "لا توجد رسالة في {folder} تطابق هذه القاعدة بعد.",
       "period_status_scheduled": "مجدولة",
       "period_status_active": "نشطة",
-      "period_status_expired": "منتهية"
+      "period_status_expired": "منتهية",
+      "editor": {
+        "if": "إذا تحقّق",
+        "match_all": "كلٌّ",
+        "match_any": "أيٌّ",
+        "of_conditions": "من هذه الشروط",
+        "match_type": "الشروط التي يجب أن تتحقق",
+        "condition_number": "الشرط {number}",
+        "comparison": "المقارنة",
+        "size_unit": "الوحدة",
+        "has_attachment": "يحتوي على مرفق",
+        "attachment_type": "مرفق من النوع",
+        "size_units": {
+          "bytes": "بايت",
+          "kb": "ك.ب",
+          "mb": "م.ب"
+        },
+        "continue_rules": "متابعة تطبيق القواعد الأخرى",
+        "skip_rule": "تخطي هذه القاعدة",
+        "matching": "{count, plural, =0 {لا توجد رسائل مطابقة} one {رسالة واحدة مطابقة} two {رسالتان مطابقتان} few {# رسائل مطابقة} many {# رسالة مطابقة} other {# رسالة مطابقة}}",
+        "matching_partial": "{count, plural, =0 {لا توجد رسائل حديثة مطابقة} other {# رسالة مطابقة على الأقل}}",
+        "checking": "جارٍ البحث عن الرسائل المطابقة…",
+        "tags": "الوسوم",
+        "attachment_type_invalid": "أدخل امتداد ملف، مثل pdf",
+        "action_conflict": "لا يمكن الجمع بين التجاهل والرفض، ولا بين أيٍّ منهما والنقل أو النسخ أو الإبقاء",
+        "apply_to": "تطبيق على",
+        "apply_new": "البريد الجديد فقط",
+        "apply_folder": "البريد الجديد و{folder}",
+        "apply_folder_count": "البريد الجديد و{folder} ({count})",
+        "apply_all": "البريد الجديد وكل البريد",
+        "apply_all_count": "البريد الجديد وكل البريد ({count})",
+        "applying": "جارٍ تطبيق «{name}»…"
+      }
     },
     "templates": {
       "title": "قوالب البريد",

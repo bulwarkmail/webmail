@@ -3172,7 +3172,39 @@
       "apply_existing_none": "{folder} дотор энэ дүрэмд тохирох захиа одоогоор алга.",
       "period_status_scheduled": "төлөвлөсөн",
       "period_status_active": "идэвхтэй",
-      "period_status_expired": "хугацаа дууссан"
+      "period_status_expired": "хугацаа дууссан",
+      "editor": {
+        "if": "Эдгээр нөхцлөөс",
+        "match_all": "бүгд",
+        "match_any": "аль нэг нь",
+        "of_conditions": "биелбэл",
+        "match_type": "Ямар нөхцөл биелэх ёстой",
+        "condition_number": "Нөхцөл {number}",
+        "comparison": "Харьцуулалт",
+        "size_unit": "Нэгж",
+        "has_attachment": "Хавсралттай",
+        "attachment_type": "Хавсралтын төрөл",
+        "size_units": {
+          "bytes": "байт",
+          "kb": "КБ",
+          "mb": "МБ"
+        },
+        "continue_rules": "Бусад дүрмийг үргэлжлүүлэн хэрэглэх",
+        "skip_rule": "Энэ дүрмийг алгасах",
+        "matching": "{count, plural, =0 {Тохирох захидал алга} one {# захидал тохирч байна} other {# захидал тохирч байна}}",
+        "matching_partial": "{count, plural, =0 {Тохирох сүүлийн захидал алга} other {#+ захидал тохирч байна}}",
+        "checking": "Тохирох захидлыг хайж байна…",
+        "tags": "Таг",
+        "attachment_type_invalid": "Файлын өргөтгөл оруулна уу, жишээ нь pdf",
+        "action_conflict": "Тайх ба татгалзахыг зөөх, хуулах, хадгалахтай болон хоорондоо хослуулж болохгүй",
+        "apply_to": "Хэрэглэх",
+        "apply_new": "Зөвхөн шинэ захидал",
+        "apply_folder": "Шинэ захидал ба {folder}",
+        "apply_folder_count": "Шинэ захидал ба {folder} ({count})",
+        "apply_all": "Шинэ болон бүх захидал",
+        "apply_all_count": "Шинэ болон бүх захидал ({count})",
+        "applying": "“{name}”-г хэрэглэж байна…"
+      }
     },
     "templates": {
       "title": "И-мэйл загварууд",

@@ -3168,7 +3168,39 @@
       "apply_existing_none": "Ingen beskeder i {folder} passer til reglen endnu.",
       "period_status_scheduled": "planlagt",
       "period_status_active": "aktiv",
-      "period_status_expired": "udløbet"
+      "period_status_expired": "udløbet",
+      "editor": {
+        "if": "Hvis",
+        "match_all": "hver",
+        "match_any": "en",
+        "of_conditions": "af disse betingelser er opfyldt",
+        "match_type": "Hvilke betingelser der skal være opfyldt",
+        "condition_number": "Betingelse {number}",
+        "comparison": "Sammenligning",
+        "size_unit": "Enhed",
+        "has_attachment": "Har en vedhæftet fil",
+        "attachment_type": "Vedhæftet fil af typen",
+        "size_units": {
+          "bytes": "byte",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Anvend også andre regler",
+        "skip_rule": "Spring denne regel over",
+        "matching": "{count, plural, =0 {Ingen beskeder passer} one {# besked passer} other {# beskeder passer}}",
+        "matching_partial": "{count, plural, =0 {Ingen nyere beskeder passer} other {#+ beskeder passer}}",
+        "checking": "Leder efter beskeder, der passer…",
+        "tags": "Tags",
+        "attachment_type_invalid": "Angiv en filtype, f.eks. pdf",
+        "action_conflict": "Kassér og Afvis kan ikke kombineres med Flyt, Kopier eller Behold eller med hinanden",
+        "apply_to": "Anvend på",
+        "apply_new": "Kun ny post",
+        "apply_folder": "Ny post og {folder}",
+        "apply_folder_count": "Ny post og {folder} ({count})",
+        "apply_all": "Ny post og al post",
+        "apply_all_count": "Ny post og al post ({count})",
+        "applying": "Anvender “{name}”…"
+      }
     },
     "templates": {
       "title": "E-mail-skabeloner",
