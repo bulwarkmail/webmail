@@ -1764,7 +1764,7 @@ async function adoptProviderSession(
   const typed = session.typedUsername ? toAsciiEmail(session.typedUsername) : '';
   const accountStore = useAccountStore.getState();
   let boundAccountId: string | undefined;
-  const client = JMAPClient.withBearer(ssoServerUrl, access_token, typed, () => get().refreshAccessToken({ accountId: boundAccountId }));
+  const client = JMAPClient.withBearer(ssoServerUrl, access_token, typed, () => get().refreshAccessToken({ accountId: boundAccountId }), expires_in);
   await client.connect();
 
   const jmapUsername = client.getUsername();
@@ -1989,7 +1989,7 @@ export const useAuthStore = create<AuthState>()(
             }
 
             if (bearerToken) {
-              client = JMAPClient.withBearer(serverUrl, bearerToken, username, () => get().refreshAccessToken({ accountId }));
+              client = JMAPClient.withBearer(serverUrl, bearerToken, username, () => get().refreshAccessToken({ accountId }), oauthExpiresIn);
               await client.connect();
               oauthAccessToken = bearerToken;
               upgradedToOAuth = true;
@@ -2393,7 +2393,7 @@ export const useAuthStore = create<AuthState>()(
           // The account id comes from the session, so the refresh hook reads
           // it once it is known below.
           let boundAccountId: string | undefined;
-          const client = JMAPClient.withBearer(serverUrl, access_token, '', () => get().refreshAccessToken({ accountId: boundAccountId }));
+          const client = JMAPClient.withBearer(serverUrl, access_token, '', () => get().refreshAccessToken({ accountId: boundAccountId }), expires_in);
           await client.connect();
 
           const jmapUsername = client.getUsername();
@@ -2714,7 +2714,7 @@ export const useAuthStore = create<AuthState>()(
             if (closingSlots.has(slot)) return null;
 
             const owner = (accountId ? clients.get(accountId) : undefined) ?? (isActive ? get().client : null);
-            owner?.updateAccessToken(access_token);
+            owner?.updateAccessToken(access_token, expires_in);
 
             if (account) {
               await syncStalwartAuthContext(
@@ -3056,7 +3056,7 @@ export const useAuthStore = create<AuthState>()(
               if (!res.ok && res.status === 401) targetForced = await forcedSignOutOf(res);
               if (res.ok) {
                 const { access_token, expires_in } = await res.json();
-                targetClient = JMAPClient.withBearer(targetAccount.serverUrl, access_token, targetAccount.username, () => get().refreshAccessToken({ accountId }));
+                targetClient = JMAPClient.withBearer(targetAccount.serverUrl, access_token, targetAccount.username, () => get().refreshAccessToken({ accountId }), expires_in);
                 bindClientStatusHandlers(targetClient, set, get, accountId);
                 await targetClient.connect();
                 holdClient(accountId, targetClient);
@@ -3390,7 +3390,7 @@ export const useAuthStore = create<AuthState>()(
                 const res = await fetchSlotAccessToken(account.cookieSlot, { remember: account.rememberMe });
                 if (res.ok) {
                   const { access_token, expires_in } = await res.json();
-                  const client = JMAPClient.withBearer(account.serverUrl, access_token, account.username, () => get().refreshAccessToken({ accountId: account.id }));
+                  const client = JMAPClient.withBearer(account.serverUrl, access_token, account.username, () => get().refreshAccessToken({ accountId: account.id }), expires_in);
                   bindClientStatusHandlers(client, set, get, account.id);
                   const contextSync = syncStalwartAuthContext(account.serverUrl, account.username, client.getAuthHeader(), account.cookieSlot);
                   await client.connect();
@@ -3923,9 +3923,9 @@ export const useAuthStore = create<AuthState>()(
             const res = await fetchSlotAccessToken(account.cookieSlot, { remember: account.rememberMe });
             if (res.status >= 500) throw new TransientAuthError('Token refresh failed', res.status);
             if (!res.ok) return null;
-            const { access_token } = await res.json();
+            const { access_token, expires_in } = await res.json();
             await syncStalwartAuthContext(account.serverUrl, account.username, `Bearer ${access_token}`, account.cookieSlot);
-            return JMAPClient.withBearer(account.serverUrl, access_token, account.username, () => get().refreshAccessToken({ accountId: account.id }));
+            return JMAPClient.withBearer(account.serverUrl, access_token, account.username, () => get().refreshAccessToken({ accountId: account.id }), expires_in);
           }
           if (!account.rememberMe && !IS_LITE && !(await keepsUntickedSignIn())) return null;
           const res = await fetchSlotSession(account.cookieSlot);

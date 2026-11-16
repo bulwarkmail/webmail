@@ -119,7 +119,7 @@ export interface IJMAPClient {
   // ── Session / auth accessors ──────────────────────────────────
   getServerUrl(): string;
   getAuthHeader(): string;
-  updateAccessToken(token: string): void;
+  updateAccessToken(token: string, expiresIn?: number): void;
   upgradeToBearer(accessToken: string, onRefresh?: () => Promise<string | null>): void;
   enableTotpReauth(basePassword: string, callback: () => Promise<string | null>): void;
   updateBasicAuth(newPassword: string): void;
