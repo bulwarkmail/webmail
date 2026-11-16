@@ -131,6 +131,8 @@ const nextConfig: NextConfig = {
   // that size before routing, so it stays at the 10 MB default. The routes
   // that take bigger uploads (WOPI saves, WebDAV, /api/plugin-proxy) are left
   // out of the proxy's matcher instead.
+  // How many such copies exist at once is bounded at the socket, before Next
+  // reads a body: lib/security/request-body-budget.ts.
   // Response headers are the host's job in a static export (see out/_headers).
   ...(isLite
     ? {}
