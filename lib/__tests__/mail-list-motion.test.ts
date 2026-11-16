@@ -785,6 +785,32 @@ describe('when the action does not happen', () => {
   });
 });
 
+describe('the fading copy', () => {
+  it('stays under what floats over the list, such as the Compose button', () => {
+    const list = document.getElementById('message-list')!;
+    list.style.position = 'relative';
+    list.insertAdjacentHTML('beforeend', '<button style="position: absolute; z-index: 30">Compose</button>');
+    useEmailStore.setState({ deleteEmail: () => new Promise(() => {}) } as never);
+    installMailMotion();
+    void useEmailStore.getState().deleteEmail(client, 'e2');
+    expect(copies()).toHaveLength(1);
+    expect(Number(copies()[0].style.zIndex)).toBeLessThan(30);
+  });
+
+  it('still shows when the list sits in a raised layer', () => {
+    const list = document.getElementById('message-list')!;
+    const pane = document.createElement('div');
+    pane.style.position = 'fixed';
+    pane.style.zIndex = '60';
+    list.replaceWith(pane);
+    pane.appendChild(list);
+    useEmailStore.setState({ deleteEmail: () => new Promise(() => {}) } as never);
+    installMailMotion();
+    void useEmailStore.getState().deleteEmail(client, 'e2');
+    expect(Number(copies()[0].style.zIndex)).toBeGreaterThanOrEqual(60);
+  });
+});
+
 describe('the store', () => {
   it('wraps each action once, however often it is installed', () => {
     fakeActions();

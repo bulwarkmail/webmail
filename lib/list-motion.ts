@@ -83,7 +83,21 @@ function inset(r: Box, c: Box): string {
   return sides.some((v) => v > 0) ? `inset(${sides.map((v) => `${v}px`).join(" ")})` : "";
 }
 
-function copyAt(el: HTMLElement, r: Box, look: Partial<CSSStyleDeclaration>, strip: string[], clip: Box): HTMLElement {
+// The copy goes on the body, so it takes the layer the item paints in: the
+// z-index of its outermost ancestor that sets one. Above that, what floats
+// over the list (the Compose button, menus, toasts) stays on top of it.
+function layerOf(el: Element): string {
+  let z = "0";
+  for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+    const s = getComputedStyle(n);
+    if (!s.zIndex || s.zIndex === "auto") continue;
+    const parent = n.parentElement ? getComputedStyle(n.parentElement).display : "";
+    if (s.position !== "static" || /flex|grid/.test(parent)) z = s.zIndex;
+  }
+  return z;
+}
+
+function copyAt(el: HTMLElement, r: Box, look: Partial<CSSStyleDeclaration>, strip: string[], clip: Box, layer: string): HTMLElement {
   const copy = el.cloneNode(true) as HTMLElement;
   [copy, ...copy.querySelectorAll<HTMLElement>("*")].forEach((n) => strip.forEach((a) => n.removeAttribute(a)));
   copy.setAttribute("aria-hidden", "true");
@@ -91,15 +105,15 @@ function copyAt(el: HTMLElement, r: Box, look: Partial<CSSStyleDeclaration>, str
   copy.setAttribute("data-motion-ghost", "");
   Object.assign(copy.style, look, {
     position: "fixed", left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`,
-    margin: "0", boxSizing: "border-box", zIndex: "2147483000", pointerEvents: "none", overflow: "hidden", transform: "none",
+    margin: "0", boxSizing: "border-box", zIndex: layer, pointerEvents: "none", overflow: "hidden", transform: "none",
     clipPath: inset(r, clip),
   });
   document.body.appendChild(copy);
   return copy;
 }
 
-function fadeOut(el: HTMLElement, r: Box, look: Partial<CSSStyleDeclaration>, clip: Box) {
-  const copy = copyAt(el, r, look, STRIP, clip);
+function fadeOut(el: HTMLElement, r: Box, look: Partial<CSSStyleDeclaration>, clip: Box, layer: string) {
+  const copy = copyAt(el, r, look, STRIP, clip, layer);
   const fade = copy.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE_MS, easing: "ease-out", fill: "both" });
   fade.onfinish = () => copy.remove();
 }
@@ -107,7 +121,7 @@ function fadeOut(el: HTMLElement, r: Box, look: Partial<CSSStyleDeclaration>, cl
 function fadeAway(el: HTMLElement, surface: Surface): { copy: HTMLElement; delay: number } {
   const r = el.getBoundingClientRect();
   const fling = surface.fling?.(el) ?? null;
-  const copy = copyAt(el, r, { ...lookOf(el), backgroundColor: backdrop(el) }, [...STRIP, ...surface.watch], clipOf(el));
+  const copy = copyAt(el, r, { ...lookOf(el), backgroundColor: backdrop(el) }, [...STRIP, ...surface.watch], clipOf(el), layerOf(el));
   const painted = [el, ...el.querySelectorAll<HTMLElement>("*")];
   const copies = [copy, ...copy.querySelectorAll<HTMLElement>("*")];
   painted.forEach((n, i) => {
@@ -144,7 +158,7 @@ function bezier(x1: number, y1: number, x2: number, y2: number) {
 const ease = bezier(0.3, 0.5, 0.2, 1);
 
 type Shift = { key: string | null; base: Pos; held?: Animation; anim?: Animation; from: Pos; to: Pos; delay?: number };
-type Place = { el: HTMLElement; pos: Pos; width: number; height: number; look: Partial<CSSStyleDeclaration>; clip?: Box };
+type Place = { el: HTMLElement; pos: Pos; width: number; height: number; look: Partial<CSSStyleDeclaration>; clip?: Box; layer?: string };
 
 const shifts = new WeakMap<HTMLElement, Shift>();
 const placesBySurface = new WeakMap<Surface, Map<string, Place>>();
@@ -307,7 +321,7 @@ function reflow(surface: Surface, committed: boolean, change: () => void = () =>
       if (next.has(key) || p.el.isConnected || !(surface.fades?.(key) ?? true)) return;
       const at = { ...plus(p.pos, keyOffset.get(key) ?? ZERO), width: p.width, height: p.height };
       const clip = p.clip ?? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
-      if (within(at, clip)) fadeOut(p.el, at, p.look, clip);
+      if (within(at, clip)) fadeOut(p.el, at, p.look, clip, p.layer ?? "0");
     });
   }
 }
@@ -330,7 +344,8 @@ function record(surface: Surface, now: ReturnType<typeof measure>) {
     const kept = old?.el === el && Object.keys(old.look).length > 0;
     const look = kept ? old.look : onScreen(r) && (surface.fades?.(key) ?? true) ? lookOf(el) : {};
     const clip = kept ? old.clip : Object.keys(look).length ? clipOf(el) : undefined;
-    next.set(key, { el, pos, width: r.width, height: r.height, look, clip });
+    const layer = kept ? old.layer : clip ? layerOf(el) : undefined;
+    next.set(key, { el, pos, width: r.width, height: r.height, look, clip, layer });
   });
   placesBySurface.set(surface, next);
   return next;
