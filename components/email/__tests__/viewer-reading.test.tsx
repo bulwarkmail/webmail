@@ -35,6 +35,18 @@ class NoopResizeObserver {
 }
 vi.stubGlobal('ResizeObserver', NoopResizeObserver);
 
+const darkPass = vi.hoisted(() => ({ calls: [] as Array<{ canvas?: unknown }> }));
+vi.mock('@/lib/email-dark-mode', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@/lib/email-dark-mode')>();
+  return {
+    ...real,
+    applyEmailDarkMode: (doc: Document, options: { canvas?: unknown }) => {
+      darkPass.calls.push(options);
+      real.applyEmailDarkMode(doc, options as never);
+    },
+  };
+});
+
 const { EmailViewer } = await import('../email-viewer');
 const { ConversationEmailBody } = await import('../thread-conversation-view');
 const { useSettingsStore } = await import('@/stores/settings-store');
@@ -76,7 +88,7 @@ beforeEach(() => {
   media.matches.clear();
   media.phone = false;
   useSettingsStore.setState({ ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', emailAlwaysLightMode: false } as never);
-  useThemeStore.setState({ resolvedTheme: 'light' });
+  useThemeStore.setState({ resolvedTheme: 'light', activeThemeId: null });
 });
 
 describe('message body frame', () => {
@@ -158,6 +170,81 @@ describe('forced colours', () => {
     const srcdoc = container.querySelector('iframe')!.getAttribute('srcdoc')!;
     expect(srcdoc).not.toContain(DARK_PENDING_CLASS);
     expect(srcdoc).not.toContain('forced-color-adjust');
+  });
+});
+
+describe('mail on the theme surface', () => {
+  const frame = (container: HTMLElement) => container.querySelector('iframe')!.getAttribute('srcdoc')!;
+  const wrapper = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-reader-body]')!;
+
+  it('paints no canvas of its own in dark mode, so the reader surface shows behind the mail', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(frame(container)).toContain('background: transparent');
+    expect(frame(container)).not.toContain('background: #ffffff');
+  });
+
+  it('keeps the white page of a mail in a light theme', async () => {
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(frame(container)).toContain('background: #ffffff');
+    expect(frame(container)).not.toContain('background: transparent');
+  });
+
+  it('sits on the theme surface in dark mode, not on a fixed grey', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(wrapper(container).style.backgroundColor).toBe('');
+    expect(wrapper(container).className).toContain('bg-background');
+  });
+
+  it('gives a mail shown dark in a light theme the dark surface of that theme', async () => {
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    act(() => { screen.getByTitle('view_in_dark_mode').click(); });
+    expect(wrapper(container).classList).toContain('dark');
+    expect(wrapper(container).classList).toContain('bg-background');
+    expect(wrapper(container).style.backgroundColor).toBe('');
+  });
+
+  it('leaves the light surface alone when the mail is not shown dark', async () => {
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(wrapper(container).classList).not.toContain('dark');
+  });
+
+  const loadFrame = async (container: HTMLElement) => {
+    const iframe = container.querySelector('iframe')!;
+    const host = document.createElement('iframe');
+    document.body.appendChild(host);
+    const doc = host.contentDocument!;
+    doc.body.innerHTML = '<p>Some <b>formatted</b> text</p>';
+    Object.defineProperty(doc, 'URL', { value: 'about:srcdoc' });
+    Object.defineProperty(iframe, 'contentDocument', { get: () => doc });
+    darkPass.calls.length = 0;
+    await act(async () => { iframe.dispatchEvent(new Event('load')); });
+    return darkPass.calls;
+  };
+
+  it('hands the dark pass the colour of the surface behind the frame', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    wrapper(container).style.backgroundColor = 'rgb(46, 52, 64)';
+    const calls = await loadFrame(container);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].canvas).toEqual({ r: 46, g: 52, b: 64, a: 1 });
+  });
+
+  it('falls back to a dark canvas when nothing behind the frame is painted', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    const calls = await loadFrame(container);
+    expect(calls[0].canvas).toEqual({ r: 20, g: 20, b: 20, a: 1 });
+  });
+
+  it('rebuilds the dark frame for another theme', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark', activeThemeId: null });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    const before = frame(container);
+    await act(async () => { useThemeStore.setState({ activeThemeId: 'builtin-nord' }); });
+    expect(frame(container)).not.toBe(before);
   });
 });
 
@@ -303,7 +390,9 @@ describe('message card', () => {
     const wrapper = pane.firstElementChild as HTMLElement;
     expect(wrapper.className).toBe('min-h-full flex flex-col');
     expect(wrapper.getAttribute('style')).toBeNull();
-    expect(container.querySelector<HTMLElement>('[data-reader-body]')!.style.backgroundColor).toBe('rgb(18, 18, 18)');
+    const body = container.querySelector<HTMLElement>('[data-reader-body]')!;
+    expect(body.style.backgroundColor).toBe('');
+    expect(body).toHaveClass('bg-background');
   });
 
   it('draws no card on a phone, where the column already fills the screen', async () => {

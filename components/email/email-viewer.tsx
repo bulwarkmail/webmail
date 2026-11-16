@@ -31,7 +31,7 @@ import { measureEmailFrameHeight } from "@/lib/email-frame-height";
 import { createFrameSizer } from "@/lib/email-frame-sizer";
 import { forwardFrameKeys } from "@/lib/email-frame-keys";
 import { addAddressToContacts } from "@/lib/contacts/add-from-address";
-import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
+import { DARK_PENDING_CLASS, EMAIL_DARK_CANVAS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, readSurfaceColor, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth, type FitOptions } from "@/lib/email-fit-width";
 import { hasFullBleedCanvas } from "@/lib/email-full-bleed";
 import { withBasePath } from "@/lib/browser-navigation";
@@ -1892,6 +1892,7 @@ export function EmailViewer({
     }
   }, [onRescheduleScheduled, t, tComposer, scheduledSendAt, timeFormat]);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const activeThemeId = useThemeStore((state) => state.activeThemeId);
   const { startTour } = useTour();
   // The details panel belongs to the message it was opened on: the next
   // message opens without it (mail-7).
@@ -3779,7 +3780,7 @@ export function EmailViewer({
     const iframeCsp = emailIframeCsp(effectiveEmailContent.externalBlocked, appFontSources ? appFontSources.split(' ') : []);
 
     return `<!DOCTYPE html>
-<html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${recolorDark ? DARK_PENDING_CLASS : ''}" style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${recolorDark ? DARK_PENDING_CLASS : ''}"${recolorDark ? ` data-surface="${encodeURIComponent(activeThemeId ?? '')}"` : ''} style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${iframeCsp}">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="x-dns-prefetch-control" content="off">
@@ -3808,7 +3809,7 @@ export function EmailViewer({
      verification email rendered as a logo-only 150px strip). Neutralise the
      full-height trick on any element so the body grows to its content. */
   [style*="height:100%"], [style*="height: 100%"] { height: auto !important; }
-  body { margin: 0; padding: ${bodyPadding}; overflow-x: auto; overflow-y: hidden; height: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: #ffffff; word-wrap: break-word; overflow-wrap: break-word; }
+  body { margin: 0; padding: ${bodyPadding}; overflow-x: auto; overflow-y: hidden; height: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: ${recolorDark ? 'transparent' : '#ffffff'}; word-wrap: break-word; overflow-wrap: break-word; }
   @media (max-width: 640px) { body { padding-left: ${mobileBodyPaddingX}; padding-right: ${mobileBodyPaddingX}; } }
   /* Only force the cap on images that set no width of their own: an
      !important 100% also overrides a sender's inline max-width, and an
@@ -3833,7 +3834,7 @@ export function EmailViewer({
   ${wordHtmlCSS}
   ${darkModeCSS}
 </style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${resolveColorSchemeMedia(effectiveEmailContent.html, recolorDark)}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}body{overflow-y:hidden!important}</style>${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
-  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, recolorDark, emailHasNativeDarkMode, messageSpacing, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
+  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, recolorDark, activeThemeId, emailHasNativeDarkMode, messageSpacing, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
   // toggling allowExternalContent (both "Load images" and "Trust sender" set
@@ -4015,7 +4016,10 @@ export function EmailViewer({
         // toggle is converted too. Reads the mail's computed colours and
         // un-hides the body when done.
         if (recolorDark) {
-          applyEmailDarkMode(doc, { remoteContentAllowed: !effectiveEmailContent.externalBlocked });
+          applyEmailDarkMode(doc, {
+            remoteContentAllowed: !effectiveEmailContent.externalBlocked,
+            canvas: readSurfaceColor(iframe, EMAIL_DARK_CANVAS),
+          });
         }
 
         // Auto-resize iframe to fit content
@@ -6502,9 +6506,9 @@ export function EmailViewer({
             !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background",
             // Mail in the app's colours paints the card colour itself; painted
             // twice, a translucent card colour would show darker behind it.
-            readingCard && reading.overrideStyles && effectiveEmailContent.isHtml && "bg-transparent"
-          )}
-          style={isDark && !readingCard ? { backgroundColor: '#121212' } : undefined}>
+            readingCard && reading.overrideStyles && effectiveEmailContent.isHtml && "bg-transparent",
+            isDark && resolvedTheme !== 'dark' && "dark"
+          )}>
             <ReadAloudBar state={readAloud.state} onPause={readAloud.pause} onResume={readAloud.resume} onStop={readAloud.stop} />
             <Watermark text={watermark} />
             {readingMaskOn && !isBodyLoading && (
