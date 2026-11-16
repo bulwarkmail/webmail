@@ -43,6 +43,7 @@ import {
   type RetroPlan,
 } from './retroactive';
 import type { QuickRuleTarget } from './quick-rule-target';
+import { applyRuleToScope, type ApplyScope } from './rule-scope';
 
 /** Translators for the namespaces the flow speaks in. */
 export interface QuickRuleText {
@@ -406,7 +407,7 @@ export async function runPresetRule(params: {
 export async function saveEditorRule(
   editor: QuickRuleEditor,
   rule: FilterRule,
-  applyToExisting: boolean,
+  applyToExisting: boolean | ApplyScope,
   text: QuickRuleText,
 ): Promise<void> {
   const { target, sourceMailboxId } = editor;
@@ -428,9 +429,11 @@ export async function saveEditorRule(
   }
 
   let applied: number | null = null;
-  if (applyToExisting) {
+  if (applyToExisting && applyToExisting !== 'new') {
     try {
-      applied = await applyRuleToExisting(target, rule, sourceMailboxId);
+      applied = typeof applyToExisting === 'string'
+        ? await applyRuleToScope(target, rule, applyToExisting, sourceMailboxId)
+        : await applyRuleToExisting(target, rule, sourceMailboxId);
     } catch (error) {
       toast.error(text.notifications('rule_apply_failed'), error instanceof Error ? error.message : undefined);
     }

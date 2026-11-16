@@ -3162,7 +3162,39 @@
       "apply_existing_none": "{folder}中还没有符合此规则的邮件。",
       "period_status_scheduled": "未开始",
       "period_status_active": "生效中",
-      "period_status_expired": "已过期"
+      "period_status_expired": "已过期",
+      "editor": {
+        "if": "如果满足以下",
+        "match_all": "全部",
+        "match_any": "任一",
+        "of_conditions": "条件",
+        "match_type": "需要满足的条件",
+        "condition_number": "条件 {number}",
+        "comparison": "比较方式",
+        "size_unit": "单位",
+        "has_attachment": "有附件",
+        "attachment_type": "附件类型",
+        "size_units": {
+          "bytes": "字节",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "继续应用其他规则",
+        "skip_rule": "跳过此规则",
+        "matching": "{count, plural, =0 {没有匹配的邮件} other {# 封邮件匹配}}",
+        "matching_partial": "{count, plural, =0 {最近的邮件中没有匹配的} other {至少 # 封邮件匹配}}",
+        "checking": "正在查找匹配的邮件…",
+        "tags": "标签",
+        "attachment_type_invalid": "请输入文件扩展名，例如 pdf",
+        "action_conflict": "丢弃和拒绝不能与移动、复制或保留一起使用，也不能彼此同时使用",
+        "apply_to": "应用于",
+        "apply_new": "仅新邮件",
+        "apply_folder": "新邮件和{folder}",
+        "apply_folder_count": "新邮件和{folder}（{count}）",
+        "apply_all": "新邮件和所有邮件",
+        "apply_all_count": "新邮件和所有邮件（{count}）",
+        "applying": "正在应用“{name}”…"
+      }
     },
     "templates": {
       "title": "邮件模板",

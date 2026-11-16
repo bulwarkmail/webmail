@@ -3162,7 +3162,39 @@
       "apply_existing_none": "Nenhuma mensagem em {folder} corresponde ainda a esta regra.",
       "period_status_scheduled": "agendada",
       "period_status_active": "ativa",
-      "period_status_expired": "expirada"
+      "period_status_expired": "expirada",
+      "editor": {
+        "if": "Se for cumprida",
+        "match_all": "cada uma",
+        "match_any": "qualquer uma",
+        "of_conditions": "destas condições",
+        "match_type": "Que condições têm de ser cumpridas",
+        "condition_number": "Condição {number}",
+        "comparison": "Comparação",
+        "size_unit": "Unidade",
+        "has_attachment": "Tem anexo",
+        "attachment_type": "Anexo do tipo",
+        "size_units": {
+          "bytes": "bytes",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Continuar a aplicar as outras regras",
+        "skip_rule": "Ignorar esta regra",
+        "matching": "{count, plural, =0 {Nenhuma mensagem corresponde} one {# mensagem corresponde} many {# mensagens correspondem} other {# mensagens correspondem}}",
+        "matching_partial": "{count, plural, =0 {Nenhuma mensagem recente corresponde} other {#+ mensagens correspondem}}",
+        "checking": "Procurando mensagens correspondentes…",
+        "tags": "Etiquetas",
+        "attachment_type_invalid": "Digite uma extensão de arquivo, como pdf",
+        "action_conflict": "Descartar e Rejeitar não podem ser combinados com Mover, Copiar ou Manter, nem entre si",
+        "apply_to": "Aplicar a",
+        "apply_new": "Somente o correio novo",
+        "apply_folder": "O correio novo e {folder}",
+        "apply_folder_count": "O correio novo e {folder} ({count})",
+        "apply_all": "O correio novo e todo o correio",
+        "apply_all_count": "O correio novo e todo o correio ({count})",
+        "applying": "Aplicando “{name}”…"
+      }
     },
     "templates": {
       "title": "Modelos de e-mail",

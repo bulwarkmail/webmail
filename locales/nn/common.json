@@ -3177,7 +3177,39 @@
       "apply_existing_none": "Ingen melding i {folder} samsvarar med denne regelen enno.",
       "period_status_scheduled": "planlagd",
       "period_status_active": "aktiv",
-      "period_status_expired": "utgått"
+      "period_status_expired": "utgått",
+      "editor": {
+        "if": "Viss",
+        "match_all": "kvar",
+        "match_any": "éin",
+        "of_conditions": "av desse vilkåra er oppfylt",
+        "match_type": "Kva vilkår som må vere oppfylte",
+        "condition_number": "Vilkår {number}",
+        "comparison": "Samanlikning",
+        "size_unit": "Eining",
+        "has_attachment": "Har vedlegg",
+        "attachment_type": "Vedlegg av typen",
+        "size_units": {
+          "bytes": "byte",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Bruk òg andre reglar",
+        "skip_rule": "Hopp over denne regelen",
+        "matching": "{count, plural, =0 {Ingen meldingar passar} one {# melding passar} other {# meldingar passar}}",
+        "matching_partial": "{count, plural, =0 {Ingen nyare meldingar passar} other {#+ meldingar passar}}",
+        "checking": "Ser etter meldingar som passar…",
+        "tags": "Etikettar",
+        "attachment_type_invalid": "Skriv inn ein filtype, til dømes pdf",
+        "action_conflict": "Forkast og Avvis kan ikkje kombinerast med Flytt, Kopier eller Behald, eller med kvarandre",
+        "apply_to": "Bruk på",
+        "apply_new": "Berre ny e-post",
+        "apply_folder": "Ny e-post og {folder}",
+        "apply_folder_count": "Ny e-post og {folder} ({count})",
+        "apply_all": "Ny e-post og all e-post",
+        "apply_all_count": "Ny e-post og all e-post ({count})",
+        "applying": "Brukar «{name}»…"
+      }
     },
     "templates": {
       "title": "E-postmalar",

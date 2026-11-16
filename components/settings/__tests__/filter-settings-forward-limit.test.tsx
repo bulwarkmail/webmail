@@ -67,7 +67,7 @@ function openSettings(rules: FilterRule[]) {
 }
 
 const forwardOption = (dialog: ReturnType<typeof within>) =>
-  dialog.getAllByRole('combobox', { name: 'actions' })[0].querySelector('option[value="forward"]') as HTMLOptionElement;
+  dialog.getByLabelText('action_types.forward') as HTMLInputElement;
 
 describe('the redirect limit on the settings page', () => {
   it('offers forwarding in a new rule below one that forwards and stops', () => {
@@ -137,7 +137,7 @@ describe('the redirect limit on the settings page', () => {
     // A message the new rule matches still reaches the one below it ...
     expect(forwardOption(dialog).disabled).toBe(true);
     // ... unless the new rule stops.
-    fireEvent.click(dialog.getByLabelText('stop_processing'));
+    fireEvent.click(dialog.getByLabelText('continue_rules'));
     expect(forwardOption(dialog).disabled).toBe(false);
   });
 
@@ -147,7 +147,7 @@ describe('the redirect limit on the settings page', () => {
     const dialog = within(screen.getByRole('dialog'));
     expect(dialog.queryByText('forward_limit')).toBeNull();
     // Without its stop, a vendor report also reaches the rule below.
-    fireEvent.click(dialog.getByLabelText('stop_processing'));
+    fireEvent.click(dialog.getByLabelText('continue_rules'));
     expect(dialog.getByText('forward_limit')).toBeInTheDocument();
   });
 });

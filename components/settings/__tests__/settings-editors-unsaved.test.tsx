@@ -43,7 +43,7 @@ describe('filter rule dialog', () => {
   it('ignores a click outside and asks before Escape drops a typed name', async () => {
     const onClose = vi.fn();
     render(<FilterRuleModal mailboxes={[]} onSave={vi.fn()} onClose={onClose} />);
-    fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'Newsletters' } });
+    fireEvent.change(screen.getByLabelText('rule_name'), { target: { value: 'Newsletters' } });
 
     clickOutside();
     expect(onClose).not.toHaveBeenCalled();

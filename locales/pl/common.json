@@ -3162,7 +3162,39 @@
       "apply_existing_none": "Żadna wiadomość w folderze {folder} nie pasuje jeszcze do tej reguły.",
       "period_status_scheduled": "zaplanowana",
       "period_status_active": "aktywna",
-      "period_status_expired": "wygasła"
+      "period_status_expired": "wygasła",
+      "editor": {
+        "if": "Jeśli spełniony jest",
+        "match_all": "każdy",
+        "match_any": "dowolny",
+        "of_conditions": "z tych warunków",
+        "match_type": "Które warunki muszą być spełnione",
+        "condition_number": "Warunek {number}",
+        "comparison": "Porównanie",
+        "size_unit": "Jednostka",
+        "has_attachment": "Ma załącznik",
+        "attachment_type": "Załącznik typu",
+        "size_units": {
+          "bytes": "bajtów",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Stosuj dalej pozostałe reguły",
+        "skip_rule": "Pomiń tę regułę",
+        "matching": "{count, plural, =0 {Żadna wiadomość nie pasuje} one {Pasuje # wiadomość} few {Pasują # wiadomości} many {Pasuje # wiadomości} other {Pasuje # wiadomości}}",
+        "matching_partial": "{count, plural, =0 {Żadna z ostatnich wiadomości nie pasuje} other {Pasuje #+ wiadomości}}",
+        "checking": "Szukanie pasujących wiadomości…",
+        "tags": "Etykiety",
+        "attachment_type_invalid": "Wpisz rozszerzenie pliku, na przykład pdf",
+        "action_conflict": "Odrzuć i Odrzuć z wiadomością nie łączą się z Przenieś, Kopiuj ani Pozostaw, ani ze sobą",
+        "apply_to": "Zastosuj do",
+        "apply_new": "Tylko nowej poczty",
+        "apply_folder": "Nowej poczty i folderu {folder}",
+        "apply_folder_count": "Nowej poczty i folderu {folder} ({count})",
+        "apply_all": "Nowej i całej poczty",
+        "apply_all_count": "Nowej i całej poczty ({count})",
+        "applying": "Stosowanie reguły „{name}”…"
+      }
     },
     "templates": {
       "title": "Szablony wiadomości e-mail",

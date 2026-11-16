@@ -9,7 +9,8 @@ import { TermInfo } from "@/components/ui/term";
 import { IconButton } from "@/components/ui/icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { FilterRuleModal } from "@/components/filters/filter-rule-modal";
+import { RuleEditor } from "@/components/filters/rule-editor";
+import { previewRule } from "@/lib/filters/rule-preview";
 import { SieveEditorModal } from "@/components/filters/sieve-editor-modal";
 import { useFilterStore } from "@/stores/filter-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -24,7 +25,7 @@ import { supportsRegex } from "@/lib/sieve/regex";
 import { formatDateTime } from "@/lib/utils";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
-import { planOnServer, runRuleOnFolder } from "@/lib/filters/quick-rule-flow";
+import { runRuleOnScope, type ApplyScope } from "@/lib/filters/rule-scope";
 import { resolveMailboxRuleTarget } from "@/lib/filters/quick-rule-target";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
@@ -212,7 +213,6 @@ export function VisualRuleSummary({ rule }: { rule: FilterRule }) {
 export function FilterSettings() {
   const t = useTranslations("settings.filters");
   const tNotifications = useTranslations("notifications");
-  const tMenu = useTranslations("context_menu");
   const tSidebar = useTranslations("sidebar");
   // The raw script editor is for people who asked for the advanced settings,
   // unless the script is one only it can edit. A search result shows it once.
@@ -396,13 +396,9 @@ export function FilterSettings() {
     const folder = localizeMailboxName(inbox.role, inbox.name, (k) => tSidebar(`mailboxes.${k}`));
     return { inbox, target, folder };
   }, [isPrimaryAccount, client, storeMailboxes, tSidebar]);
-  const countInInbox = useCallback(async (rule: FilterRule) => {
-    if (!inboxOffer) return 0;
-    return (await planOnServer(inboxOffer.target, rule, inboxOffer.inbox.id)).ids.length;
-  }, [inboxOffer]);
 
   const handleSaveRule = useCallback(
-    async (rule: FilterRule, options?: { applyToExisting: boolean }) => {
+    async (rule: FilterRule, options?: { applyTo: ApplyScope }) => {
       const previousRules = [...rules];
       if (editingRule) {
         updateRule(rule.id, rule);
@@ -421,18 +417,16 @@ export function FilterSettings() {
           return;
         }
         // The box in the dialog: run the saved rule over the Inbox now.
-        if (options?.applyToExisting && inboxOffer) {
-          void runRuleOnFolder(
-            inboxOffer.target,
-            rule,
-            inboxOffer.inbox.id,
-            inboxOffer.folder,
-            { notifications: tNotifications, filters: t, menu: tMenu },
-          );
+        if (options?.applyTo && options.applyTo !== "new" && inboxOffer) {
+          void runRuleOnScope(inboxOffer.target, rule, options.applyTo, inboxOffer.inbox.id, {
+            running: (name) => t("editor.applying", { name }),
+            applied: (count) => tNotifications("rule_applied", { count }),
+            failed: tNotifications("rule_apply_failed"),
+          });
         }
       }
     },
-    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications, inboxOffer, t, tMenu]
+    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications, inboxOffer, t]
   );
 
   const handleSaveSieve = useCallback(
@@ -828,8 +822,15 @@ export function FilterSettings() {
       </div>
 
       {showRuleModal && (
-        <FilterRuleModal
+        <RuleEditor
           rule={editingRule}
+          previewMatches={inboxOffer ? (r, o) => previewRule(inboxOffer.target, r, { ...o, folderId: inboxOffer.inbox.id }) : undefined}
+          onDelete={editingRule ? () => {
+            const id = editingRule.id;
+            setShowRuleModal(false);
+            setEditingRule(undefined);
+            void handleDelete(id);
+          } : undefined}
           mailboxes={mailboxes}
           maxRedirects={sieveCapabilities?.maxNumberRedirects}
           periodsSupported={supportsPeriods(sieveCapabilities?.sieveExtensions)}
@@ -838,7 +839,6 @@ export function FilterSettings() {
           forwardsAfter={forwardsOfEdited.after}
           offerApplyToExisting={!!inboxOffer}
           applyExistingFolder={inboxOffer?.folder}
-          countExisting={inboxOffer ? countInInbox : undefined}
           onSave={handleSaveRule}
           onClose={() => {
             setShowRuleModal(false);

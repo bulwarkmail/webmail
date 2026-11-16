@@ -3162,7 +3162,39 @@
       "apply_existing_none": "{folder} にこのルールに合うメッセージはまだありません。",
       "period_status_scheduled": "予定",
       "period_status_active": "有効",
-      "period_status_expired": "期限切れ"
+      "period_status_expired": "期限切れ",
+      "editor": {
+        "if": "次の",
+        "match_all": "すべて",
+        "match_any": "いずれか",
+        "of_conditions": "の条件に一致する場合",
+        "match_type": "一致させる条件",
+        "condition_number": "条件 {number}",
+        "comparison": "比較",
+        "size_unit": "単位",
+        "has_attachment": "添付ファイルあり",
+        "attachment_type": "添付ファイルの種類",
+        "size_units": {
+          "bytes": "バイト",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "ほかのルールも適用する",
+        "skip_rule": "このルールをスキップ",
+        "matching": "{count, plural, =0 {一致するメールはありません} other {# 件のメールが一致}}",
+        "matching_partial": "{count, plural, =0 {一致する最近のメールはありません} other {# 件以上のメールが一致}}",
+        "checking": "一致するメールを検索しています…",
+        "tags": "ラベル",
+        "attachment_type_invalid": "pdf などのファイル拡張子を入力してください",
+        "action_conflict": "サイレント削除と拒否は、移動・コピー・保持とも、互いにも組み合わせられません",
+        "apply_to": "適用先",
+        "apply_new": "新着メールのみ",
+        "apply_folder": "新着メールと{folder}",
+        "apply_folder_count": "新着メールと{folder}（{count}）",
+        "apply_all": "新着メールとすべてのメール",
+        "apply_all_count": "新着メールとすべてのメール（{count}）",
+        "applying": "「{name}」を適用しています…"
+      }
     },
     "templates": {
       "title": "メールテンプレート",

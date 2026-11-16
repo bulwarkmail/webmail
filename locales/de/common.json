@@ -3162,7 +3162,39 @@
       "apply_existing_none": "Noch keine Nachricht in {folder} passt zu dieser Regel.",
       "period_status_scheduled": "geplant",
       "period_status_active": "aktiv",
-      "period_status_expired": "abgelaufen"
+      "period_status_expired": "abgelaufen",
+      "editor": {
+        "if": "Wenn",
+        "match_all": "jede",
+        "match_any": "eine",
+        "of_conditions": "dieser Bedingungen zutrifft",
+        "match_type": "Welche Bedingungen zutreffen müssen",
+        "condition_number": "Bedingung {number}",
+        "comparison": "Vergleich",
+        "size_unit": "Einheit",
+        "has_attachment": "Hat einen Anhang",
+        "attachment_type": "Anhang vom Typ",
+        "size_units": {
+          "bytes": "Byte",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Weitere Regeln anwenden",
+        "skip_rule": "Diese Regel überspringen",
+        "matching": "{count, plural, =0 {Keine Nachricht passt} one {# Nachricht passt} other {# Nachrichten passen}}",
+        "matching_partial": "{count, plural, =0 {Keine neuere Nachricht passt} other {#+ Nachrichten passen}}",
+        "checking": "Passende Nachrichten werden gesucht…",
+        "tags": "Labels",
+        "attachment_type_invalid": "Geben Sie eine Dateiendung ein, zum Beispiel pdf",
+        "action_conflict": "Lautlos löschen und Ablehnen lassen sich weder mit Verschieben, Kopieren oder Behalten noch miteinander kombinieren",
+        "apply_to": "Anwenden auf",
+        "apply_new": "Nur neue Nachrichten",
+        "apply_folder": "Neue Nachrichten und {folder}",
+        "apply_folder_count": "Neue Nachrichten und {folder} ({count})",
+        "apply_all": "Neue und alle vorhandenen Nachrichten",
+        "apply_all_count": "Neue und alle vorhandenen Nachrichten ({count})",
+        "applying": "„{name}“ wird angewendet…"
+      }
     },
     "templates": {
       "title": "E-Mail-Vorlagen",

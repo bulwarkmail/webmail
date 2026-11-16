@@ -3169,7 +3169,39 @@
       "apply_existing_none": "{folder}中還沒有符合此規則的郵件。",
       "period_status_scheduled": "尚未開始",
       "period_status_active": "生效中",
-      "period_status_expired": "已過期"
+      "period_status_expired": "已過期",
+      "editor": {
+        "if": "如果符合以下",
+        "match_all": "全部",
+        "match_any": "任一",
+        "of_conditions": "條件",
+        "match_type": "需要符合的條件",
+        "condition_number": "條件 {number}",
+        "comparison": "比較方式",
+        "size_unit": "單位",
+        "has_attachment": "有附件",
+        "attachment_type": "附件類型",
+        "size_units": {
+          "bytes": "位元組",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "繼續套用其他規則",
+        "skip_rule": "略過此規則",
+        "matching": "{count, plural, =0 {沒有符合的郵件} other {# 封郵件符合}}",
+        "matching_partial": "{count, plural, =0 {最近的郵件中沒有符合的} other {至少 # 封郵件符合}}",
+        "checking": "正在尋找符合的郵件…",
+        "tags": "標籤",
+        "attachment_type_invalid": "請輸入副檔名，例如 pdf",
+        "action_conflict": "捨棄和拒絕不能與移動、複製或保留一起使用，也不能彼此同時使用",
+        "apply_to": "套用到",
+        "apply_new": "僅新郵件",
+        "apply_folder": "新郵件和{folder}",
+        "apply_folder_count": "新郵件和{folder}（{count}）",
+        "apply_all": "新郵件和所有郵件",
+        "apply_all_count": "新郵件和所有郵件（{count}）",
+        "applying": "正在套用「{name}」…"
+      }
     },
     "templates": {
       "title": "郵件範本",

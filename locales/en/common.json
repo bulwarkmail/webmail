@@ -3169,7 +3169,39 @@
       "apply_existing_none": "No message in {folder} matches this rule yet.",
       "period_status_scheduled": "scheduled",
       "period_status_active": "active",
-      "period_status_expired": "expired"
+      "period_status_expired": "expired",
+      "editor": {
+        "if": "If",
+        "match_all": "all",
+        "match_any": "any",
+        "of_conditions": "of these conditions apply",
+        "match_type": "Which conditions must apply",
+        "condition_number": "Condition {number}",
+        "comparison": "Comparison",
+        "size_unit": "Unit",
+        "has_attachment": "Has an attachment",
+        "attachment_type": "Attachment of type",
+        "size_units": {
+          "bytes": "bytes",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Continue to apply other rules",
+        "skip_rule": "Skip this rule",
+        "matching": "{count, plural, =0 {No messages match} one {# message matches} other {# messages match}}",
+        "matching_partial": "{count, plural, =0 {No recent messages match} other {#+ messages match}}",
+        "checking": "Looking for matching mail…",
+        "tags": "Tags",
+        "attachment_type_invalid": "Enter a file extension, such as pdf",
+        "action_conflict": "Discard and Reject cannot be combined with Move, Copy or Keep, or with each other",
+        "apply_to": "Apply to",
+        "apply_new": "New mail only",
+        "apply_folder": "New mail and {folder}",
+        "apply_folder_count": "New mail and {folder} ({count})",
+        "apply_all": "New mail and all mail",
+        "apply_all_count": "New mail and all mail ({count})",
+        "applying": "Applying “{name}”…"
+      }
     },
     "templates": {
       "title": "Email templates",

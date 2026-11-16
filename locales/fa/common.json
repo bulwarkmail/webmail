@@ -3169,7 +3169,39 @@
       "apply_existing_none": "هنوز هیچ پیامی در {folder} با این قانون جور نیست.",
       "period_status_scheduled": "زمان‌بندی‌شده",
       "period_status_active": "فعال",
-      "period_status_expired": "منقضی‌شده"
+      "period_status_expired": "منقضی‌شده",
+      "editor": {
+        "if": "اگر",
+        "match_all": "همهٔ",
+        "match_any": "یکی از",
+        "of_conditions": "این شرط‌ها برقرار باشد",
+        "match_type": "کدام شرط‌ها باید برقرار باشند",
+        "condition_number": "شرط {number}",
+        "comparison": "مقایسه",
+        "size_unit": "واحد",
+        "has_attachment": "پیوست دارد",
+        "attachment_type": "پیوست از نوع",
+        "size_units": {
+          "bytes": "بایت",
+          "kb": "کیلوبایت",
+          "mb": "مگابایت"
+        },
+        "continue_rules": "ادامهٔ اعمال قوانین دیگر",
+        "skip_rule": "رد کردن این قانون",
+        "matching": "{count, plural, =0 {هیچ پیامی مطابقت ندارد} one {# پیام مطابقت دارد} other {# پیام مطابقت دارند}}",
+        "matching_partial": "{count, plural, =0 {هیچ پیام اخیری مطابقت ندارد} other {دست‌کم # پیام مطابقت دارند}}",
+        "checking": "در حال جست‌وجوی پیام‌های مطابق…",
+        "tags": "برچسب‌ها",
+        "attachment_type_invalid": "یک پسوند فایل وارد کنید، مثلاً pdf",
+        "action_conflict": "دور انداختن و رد کردن را نمی‌توان با انتقال، کپی یا نگه داشتن، یا با یکدیگر ترکیب کرد",
+        "apply_to": "اعمال روی",
+        "apply_new": "فقط نامه‌های جدید",
+        "apply_folder": "نامه‌های جدید و {folder}",
+        "apply_folder_count": "نامه‌های جدید و {folder} ({count})",
+        "apply_all": "نامه‌های جدید و همهٔ نامه‌ها",
+        "apply_all_count": "نامه‌های جدید و همهٔ نامه‌ها ({count})",
+        "applying": "در حال اعمال «{name}»…"
+      }
     },
     "templates": {
       "title": "قالب‌های ایمیل",

@@ -3169,7 +3169,39 @@
       "apply_existing_none": "Kaustas {folder} pole veel ühtegi kirja, mis selle reegliga sobiks.",
       "period_status_scheduled": "ajastatud",
       "period_status_active": "aktiivne",
-      "period_status_expired": "aegunud"
+      "period_status_expired": "aegunud",
+      "editor": {
+        "if": "Kui",
+        "match_all": "iga",
+        "match_any": "mõni",
+        "of_conditions": "neist tingimustest on täidetud",
+        "match_type": "Millised tingimused peavad olema täidetud",
+        "condition_number": "Tingimus {number}",
+        "comparison": "Võrdlus",
+        "size_unit": "Ühik",
+        "has_attachment": "On manusega",
+        "attachment_type": "Manuse tüüp",
+        "size_units": {
+          "bytes": "baiti",
+          "kb": "kB",
+          "mb": "MB"
+        },
+        "continue_rules": "Rakenda ka teisi reegleid",
+        "skip_rule": "Jäta see reegel vahele",
+        "matching": "{count, plural, =0 {Ükski kiri ei sobi} one {# kiri sobib} other {# kirja sobib}}",
+        "matching_partial": "{count, plural, =0 {Ükski hiljutine kiri ei sobi} other {#+ kirja sobib}}",
+        "checking": "Sobivate kirjade otsimine…",
+        "tags": "Sildid",
+        "attachment_type_invalid": "Sisesta failitüüp, näiteks pdf",
+        "action_conflict": "Hülgamist ja tagasilükkamist ei saa kombineerida liigutamise, kopeerimise ega jätmisega ega omavahel",
+        "apply_to": "Rakenda",
+        "apply_new": "Ainult uutele kirjadele",
+        "apply_folder": "Uutele kirjadele ja kaustale {folder}",
+        "apply_folder_count": "Uutele kirjadele ja kaustale {folder} ({count})",
+        "apply_all": "Uutele ja kõigile kirjadele",
+        "apply_all_count": "Uutele ja kõigile kirjadele ({count})",
+        "applying": "Reeglit „{name}“ rakendatakse…"
+      }
     },
     "templates": {
       "title": "E-kirjade mallid",

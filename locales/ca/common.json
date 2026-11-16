@@ -3169,7 +3169,39 @@
       "apply_existing_none": "Encara cap missatge de {folder} no compleix aquesta regla.",
       "period_status_scheduled": "programada",
       "period_status_active": "activa",
-      "period_status_expired": "caducada"
+      "period_status_expired": "caducada",
+      "editor": {
+        "if": "Si es compleix",
+        "match_all": "cadascuna",
+        "match_any": "alguna",
+        "of_conditions": "d'aquestes condicions",
+        "match_type": "Quines condicions s'han de complir",
+        "condition_number": "Condició {number}",
+        "comparison": "Comparació",
+        "size_unit": "Unitat",
+        "has_attachment": "Té un fitxer adjunt",
+        "attachment_type": "Adjunt del tipus",
+        "size_units": {
+          "bytes": "bytes",
+          "kb": "kB",
+          "mb": "MB"
+        },
+        "continue_rules": "Continua aplicant les altres regles",
+        "skip_rule": "Omet aquesta regla",
+        "matching": "{count, plural, =0 {Cap missatge coincideix} one {# missatge coincideix} other {# missatges coincideixen}}",
+        "matching_partial": "{count, plural, =0 {Cap missatge recent coincideix} other {#+ missatges coincideixen}}",
+        "checking": "S'està cercant el correu que coincideix…",
+        "tags": "Etiquetes",
+        "attachment_type_invalid": "Escriviu una extensió de fitxer, com ara pdf",
+        "action_conflict": "Descarta i Rebutja no es poden combinar amb Mou, Copia o Mantén, ni entre si",
+        "apply_to": "Aplica a",
+        "apply_new": "Només el correu nou",
+        "apply_folder": "El correu nou i {folder}",
+        "apply_folder_count": "El correu nou i {folder} ({count})",
+        "apply_all": "El correu nou i tot el correu",
+        "apply_all_count": "El correu nou i tot el correu ({count})",
+        "applying": "S'està aplicant «{name}»…"
+      }
     },
     "templates": {
       "title": "Plantilles de correu",

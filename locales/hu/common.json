@@ -3165,7 +3165,39 @@
       "apply_existing_none": "Itt még egy üzenet sem felel meg ennek a szabálynak: {folder}.",
       "period_status_scheduled": "ütemezett",
       "period_status_active": "aktív",
-      "period_status_expired": "lejárt"
+      "period_status_expired": "lejárt",
+      "editor": {
+        "if": "Ha a feltételek közül",
+        "match_all": "mind",
+        "match_any": "bármelyik",
+        "of_conditions": "teljesül",
+        "match_type": "Mely feltételeknek kell teljesülniük",
+        "condition_number": "{number}. feltétel",
+        "comparison": "Összehasonlítás",
+        "size_unit": "Mértékegység",
+        "has_attachment": "Van melléklete",
+        "attachment_type": "Melléklet típusa",
+        "size_units": {
+          "bytes": "bájt",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "A többi szabály alkalmazása is",
+        "skip_rule": "A szabály kihagyása",
+        "matching": "{count, plural, =0 {Egy üzenet sem egyezik} one {# üzenet egyezik} other {# üzenet egyezik}}",
+        "matching_partial": "{count, plural, =0 {Egy friss üzenet sem egyezik} other {#+ üzenet egyezik}}",
+        "checking": "Egyező üzenetek keresése…",
+        "tags": "Címkék",
+        "attachment_type_invalid": "Adjon meg egy fájlkiterjesztést, például pdf",
+        "action_conflict": "Az elvetés és az elutasítás nem kombinálható az áthelyezéssel, a másolással vagy a megtartással, sem egymással",
+        "apply_to": "Alkalmazás",
+        "apply_new": "Csak az új levelekre",
+        "apply_folder": "Az új levelekre és ide: {folder}",
+        "apply_folder_count": "Az új levelekre és ide: {folder} ({count})",
+        "apply_all": "Az új és az összes levélre",
+        "apply_all_count": "Az új és az összes levélre ({count})",
+        "applying": "„{name}” alkalmazása…"
+      }
     },
     "templates": {
       "title": "E-mail sablonok",
