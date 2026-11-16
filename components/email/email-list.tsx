@@ -88,6 +88,7 @@ import { commonTagScope } from "@/hooks/use-account-tags";
 import { FolderRetentionLine } from "./retention-notice";
 import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
 import { canExport, canPrint } from "@/lib/device-policy";
+import "@/lib/mail-list-motion";
 
 interface EmailListProps {
   emails: Email[];
