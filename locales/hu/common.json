@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Minden olvasatlan üzenetet olvasottnak jelölsz a személyes fiókodban?",
     "empty_all_confirm_title": "Kuka ürítése minden fiókban",
     "empty_all_confirm_message": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} az összes fiókja kukájából? Ez nem vonható vissza.",
+    "empty_all_confirm_shared": "Ez a megosztott fiókokra is vonatkozik: {accounts}.",
+    "empty_all_confirm_kept": "A(z) {accounts} kukája változatlan marad, mert ott nem törölhetsz.",
     "toast_emptied_all": "A Kuka kiürült minden fiókban",
     "toast_error_empty_all_partial": "A Kuka kiürült, de néhány fióknál nem sikerült",
     "toast_error_empty_all": "Nem sikerült kiüríteni a Kukát",

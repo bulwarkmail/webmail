@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Oznaczyć wszystkie nieprzeczytane wiadomości na koncie osobistym jako przeczytane?",
     "empty_all_confirm_title": "Opróżnij kosz we wszystkich kontach",
     "empty_all_confirm_message": "Trwale usunąć {count, plural, one {wiadomość} few {wszystkie # wiadomości} many {wszystkie # wiadomości} other {wszystkie # wiadomości}} z kosza we wszystkich Twoich kontach? Nie można tego cofnąć.",
+    "empty_all_confirm_shared": "Dotyczy to także kont udostępnionych {accounts}.",
+    "empty_all_confirm_kept": "Kosz konta {accounts} zostaje bez zmian, bo nie możesz w nim usuwać.",
     "toast_emptied_all": "Opróżniono kosz we wszystkich kontach",
     "toast_error_empty_all_partial": "Opróżniono kosz, ale niektóre konta się nie powiodły",
     "toast_error_empty_all": "Nie udało się opróżnić kosza",

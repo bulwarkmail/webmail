@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Atzīmēt visas nelasītās ziņas jūsu personīgajā kontā kā lasītas?",
     "empty_all_confirm_title": "Iztukšot atkritni visos kontos",
     "empty_all_confirm_message": "Neatgriezeniski dzēst {count, plural, =1 {vēstuli} zero {visas # vēstules} one {visas # vēstuli} other {visas # vēstules}} visu jūsu kontu miskastēs? To nevar atsaukt.",
+    "empty_all_confirm_shared": "Tas attiecas arī uz kopīgotajiem kontiem {accounts}.",
+    "empty_all_confirm_kept": "Konta {accounts} miskaste paliek, kā ir, jo tur jūs nevarat dzēst.",
     "toast_emptied_all": "Atkritne iztukšota visos kontos",
     "toast_error_empty_all_partial": "Atkritne iztukšota, bet dažiem kontiem neizdevās",
     "toast_error_empty_all": "Neizdevās iztukšot atkritni",

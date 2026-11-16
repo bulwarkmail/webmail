@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "要將您個人帳號中的所有未讀郵件標示為已讀嗎？",
     "empty_all_confirm_title": "清空所有帳號的垃圾桶",
     "empty_all_confirm_message": "要永久刪除你所有帳號垃圾桶中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。",
+    "empty_all_confirm_shared": "這也包括共用帳號 {accounts}。",
+    "empty_all_confirm_kept": "{accounts} 的垃圾桶保持不變，因為你無權在那裡刪除。",
     "toast_emptied_all": "已清空所有帳號的垃圾桶",
     "toast_error_empty_all_partial": "垃圾桶已清空，但部分帳號失敗",
     "toast_error_empty_all": "清空垃圾桶失敗",

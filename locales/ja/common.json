@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "個人アカウントのすべての未読メッセージを既読にしますか？",
     "empty_all_confirm_title": "すべてのアカウントのゴミ箱を空にする",
     "empty_all_confirm_message": "すべてのアカウントのゴミ箱にある{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
+    "empty_all_confirm_shared": "共有アカウント {accounts} も対象です。",
+    "empty_all_confirm_kept": "{accounts} のゴミ箱は削除の権限がないため、そのまま残ります。",
     "toast_emptied_all": "すべてのアカウントでゴミ箱を空にしました",
     "toast_error_empty_all_partial": "ゴミ箱を空にしましたが、一部のアカウントで失敗しました",
     "toast_error_empty_all": "ゴミ箱を空にできませんでした",

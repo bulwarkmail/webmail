@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Markér alle ulæste beskeder på din personlige konto som læst?",
     "empty_all_confirm_title": "Tøm papirkurv for alle konti",
     "empty_all_confirm_message": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i papirkurven på alle dine konti for altid? Det kan ikke fortrydes.",
+    "empty_all_confirm_shared": "Det gælder også de delte konti {accounts}.",
+    "empty_all_confirm_kept": "Papirkurven i {accounts} forbliver, som den er, fordi du ikke kan slette der.",
     "toast_emptied_all": "Papirkurv tømt på tværs af alle konti",
     "toast_error_empty_all_partial": "Papirkurv tømt, men nogle konti mislykkedes",
     "toast_error_empty_all": "Kunne ikke tømme papirkurv",

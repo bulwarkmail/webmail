@@ -98,6 +98,46 @@ export function findMailboxByRole(
   return mailboxes.find((m) => m.role === role);
 }
 
+/**
+ * The folders "Empty trash (all accounts)" empties for `role`: each of the
+ * user's own logins' folder, and a group or delegated account's folder when
+ * the user may delete from it (mayRemoveItems). A shared folder in a login's
+ * own list is left to that account's own entry. `kept` are the shared
+ * accounts with such a folder that the user may not delete from. (#1738)
+ */
+export function unifiedEmptyTargets(
+  accounts: UnifiedAccountClient[],
+  role: UnifiedMailboxRole,
+): { targets: { account: UnifiedAccountClient; mailbox: Mailbox }[]; kept: UnifiedAccountClient[] } {
+  const targets: { account: UnifiedAccountClient; mailbox: Mailbox }[] = [];
+  const kept: UnifiedAccountClient[] = [];
+  for (const account of accounts) {
+    const mailbox = account.isShared
+      ? findMailboxByRole(account.mailboxes, role)
+      : account.mailboxes.find((m) => m.role === role && !m.isShared);
+    if (!mailbox) continue;
+    if (account.isShared && mailbox.myRights?.mayRemoveItems !== true) kept.push(account);
+    else targets.push({ account, mailbox });
+  }
+  return { targets, kept };
+}
+
+/**
+ * What the "Empty trash (all accounts)" dialog says: how many messages go,
+ * and which shared accounts it empties and which it keeps.
+ */
+export function unifiedEmptySummary(
+  accounts: UnifiedAccountClient[],
+  role: UnifiedMailboxRole,
+): { count: number; shared: string[]; kept: string[] } {
+  const { targets, kept } = unifiedEmptyTargets(accounts, role);
+  return {
+    count: targets.reduce((sum, { mailbox }) => sum + (mailbox.totalEmails ?? 0), 0),
+    shared: targets.filter(({ account }) => account.isShared).map(({ account }) => account.accountLabel),
+    kept: kept.map((account) => account.accountLabel),
+  };
+}
+
 /** The id a JMAP request names this entry's mailbox by (the owner's raw id for shared entries). */
 export function jmapMailboxIdOf(account: UnifiedAccountClient, mailbox: Mailbox): string {
   return account.isShared ? (mailbox.originalId ?? mailbox.id) : mailbox.id;

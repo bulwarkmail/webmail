@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Voleu marcar tots els missatges no llegits del vostre compte personal com a llegits?",
     "empty_all_confirm_title": "Buida la paperera de tots els comptes",
     "empty_all_confirm_message": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de la paperera de tots els teus comptes? No es pot desfer.",
+    "empty_all_confirm_shared": "Això inclou els comptes compartits {accounts}.",
+    "empty_all_confirm_kept": "La paperera de {accounts} es queda com està, perquè no hi pots eliminar res.",
     "toast_emptied_all": "S’ha buidat la paperera de tots els comptes",
     "toast_error_empty_all_partial": "S’ha buidat la paperera, però alguns comptes han fallat",
     "toast_error_empty_all": "No s’ha pogut buidar la paperera",

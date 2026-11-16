@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Jede ungelesene Nachricht in Ihrem persönlichen Konto als gelesen markieren?",
     "empty_all_confirm_title": "Papierkorb für alle Konten leeren",
     "empty_all_confirm_message": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Papierkorb aller Ihrer Konten endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "empty_all_confirm_shared": "Das gilt auch für die freigegebenen Konten {accounts}.",
+    "empty_all_confirm_kept": "Der Papierkorb von {accounts} bleibt, wie er ist, weil Sie dort nicht löschen dürfen.",
     "toast_emptied_all": "Papierkorb in allen Konten geleert",
     "toast_error_empty_all_partial": "Papierkorb geleert, aber bei einigen Konten fehlgeschlagen",
     "toast_error_empty_all": "Papierkorb konnte nicht geleert werden",

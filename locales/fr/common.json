@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Marquer tous les messages non lus de votre compte personnel comme lus ?",
     "empty_all_confirm_title": "Vider la corbeille de tous les comptes",
     "empty_all_confirm_message": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} de la corbeille de tous vos comptes ? Impossible de revenir en arrière.",
+    "empty_all_confirm_shared": "Cela inclut les comptes partagés {accounts}.",
+    "empty_all_confirm_kept": "La corbeille de {accounts} reste telle quelle, car vous ne pouvez pas y supprimer.",
     "toast_emptied_all": "Corbeille vidée sur tous les comptes",
     "toast_error_empty_all_partial": "Corbeille vidée, mais certains comptes ont échoué",
     "toast_error_empty_all": "Échec du vidage de la corbeille",

@@ -4046,6 +4046,8 @@
     "mark_all_confirm_message": "Merke alle ulesne meldingar i den personlege kontoen din som lesne?",
     "empty_all_confirm_title": "Tøm papirkorga for alle kontoar",
     "empty_all_confirm_message": "Slette {count, plural, one {meldinga} other {alle # meldingane}} i papirkorga til alle kontoane dine for alltid? Du kan ikkje angre dette.",
+    "empty_all_confirm_shared": "Dette gjeld òg dei delte kontoane {accounts}.",
+    "empty_all_confirm_kept": "Papirkorga i {accounts} blir som ho er, fordi du ikkje kan slette der.",
     "toast_emptied_all": "Papirkorga er tømd på tvers av alle kontoar",
     "toast_error_empty_all_partial": "Papirkorga er tømd, men nokre kontoar feila",
     "toast_error_empty_all": "Klarte ikkje tømme papirkorga",

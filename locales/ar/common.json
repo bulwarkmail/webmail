@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "هل تريد تمييز كل رسالة غير مقروءة في حسابك الشخصي كمقروءة؟",
     "empty_all_confirm_title": "إفراغ سلة المحذوفات لجميع الحسابات",
     "empty_all_confirm_message": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في المهملات في جميع حساباتك نهائيًا؟ لا يمكن التراجع عن ذلك.",
+    "empty_all_confirm_shared": "يشمل ذلك الحسابات المشتركة {accounts}.",
+    "empty_all_confirm_kept": "تبقى سلة المهملات في {accounts} كما هي، لأنك لا تستطيع الحذف هناك.",
     "toast_emptied_all": "تم إفراغ سلة المحذوفات في جميع الحسابات",
     "toast_error_empty_all_partial": "تم إفراغ سلة المحذوفات، لكن فشلت بعض الحسابات",
     "toast_error_empty_all": "فشل إفراغ سلة المحذوفات",

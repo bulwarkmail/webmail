@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Kişisel hesabınızdaki tüm okunmamış iletiler okundu olarak işaretlensin mi?",
     "empty_all_confirm_title": "Tüm hesaplar için çöp kutusunu boşalt",
     "empty_all_confirm_message": "Tüm hesaplarınızın Çöp Kutusundaki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "empty_all_confirm_shared": "Buna paylaşılan hesaplar da dahil: {accounts}.",
+    "empty_all_confirm_kept": "{accounts} hesabının çöp kutusu olduğu gibi kalır, çünkü orada silme izniniz yok.",
     "toast_emptied_all": "Çöp kutusu tüm hesaplarda boşaltıldı",
     "toast_error_empty_all_partial": "Çöp kutusu boşaltıldı, ancak bazı hesaplarda başarısız oldu",
     "toast_error_empty_all": "Çöp kutusu boşaltılamadı",

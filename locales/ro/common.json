@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Doriți să marcați toate mesajele necitite din contul dvs. personal ca fiind citite?",
     "empty_all_confirm_title": "Golește coșul de gunoi pentru toate conturile",
     "empty_all_confirm_message": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi al tuturor conturilor dvs.? Nu se poate anula.",
+    "empty_all_confirm_shared": "Sunt incluse și conturile partajate {accounts}.",
+    "empty_all_confirm_kept": "Coșul de gunoi din {accounts} rămâne cum este, pentru că nu poți șterge acolo.",
     "toast_emptied_all": "Coșul de gunoi a fost golit pe toate conturile",
     "toast_error_empty_all_partial": "Coșul de gunoi a fost golit, dar unele conturi au eșuat",
     "toast_error_empty_all": "Golirea coșului de gunoi a eșuat",

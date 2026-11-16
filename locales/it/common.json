@@ -4038,6 +4038,8 @@
     "mark_all_confirm_message": "Segnare tutti i messaggi non letti del tuo account personale come letti?",
     "empty_all_confirm_title": "Svuota il cestino di tutti gli account",
     "empty_all_confirm_message": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nel cestino di tutti i tuoi account? Non si può annullare.",
+    "empty_all_confirm_shared": "Sono inclusi anche gli account condivisi {accounts}.",
+    "empty_all_confirm_kept": "Il cestino di {accounts} resta com'è, perché lì non puoi eliminare.",
     "toast_emptied_all": "Cestino svuotato su tutti gli account",
     "toast_error_empty_all_partial": "Cestino svuotato, ma alcuni account non sono riusciti",
     "toast_error_empty_all": "Impossibile svuotare il cestino",

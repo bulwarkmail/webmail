@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState, useRef, useMemo, useCallback, useId } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Sidebar } from "@/components/layout/sidebar";
 import { EmailList } from "@/components/email/email-list";
 import { MvComposeInline, MvComposeWindow } from "@/components/email/mv-compose-window";
@@ -66,7 +66,7 @@ import { useShallow } from "zustand/react/shallow";
 import { usePolicyStore, whenPolicySettled } from "@/stores/policy-store";
 import { isArchiveActionEnabled, useArchiveActionEnabled } from "@/lib/archive-gate";
 import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
-import { connectedAccountsGrew } from "@/lib/unified-mailbox";
+import { connectedAccountsGrew, unifiedEmptySummary } from "@/lib/unified-mailbox";
 import { messagePriorityFromHeaders, type MessagePriority } from "@/lib/message-priority";
 import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
 import { lazyComponent } from "@/lib/lazy-component";
@@ -345,6 +345,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
   const t = useTranslations();
+  const locale = useLocale();
   // First-start notices wait until the welcome tips are closed: one thing at a time.
   // The page skeleton the gates below draw: the same one the server sent.
   const skeletonLabels = useSkeletonLabels();
@@ -4810,24 +4811,26 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all'));
       return;
     }
-    // The user's own logins only: with group accounts in the unified view the
-    // list also holds group and delegated owners, whose Trash isn't theirs.
-    const own = accounts.filter((a) => !a.isShared);
-    const count = own.reduce(
-      (sum, a) => sum + (a.mailboxes.find((m) => m.role === role && !m.isShared)?.totalEmails ?? 0),
-      0,
-    );
+    // The user's own logins, and the group and delegated accounts whose Trash
+    // they may delete from: the dialog names those, and the ones it keeps (#1738).
+    const { count, shared, kept } = unifiedEmptySummary(accounts, role);
+    const names = (list: string[]) => new Intl.ListFormat(locale, { type: 'conjunction' }).format(list);
+    const message = [
+      tCtxMenu('mailbox_context_menu.empty_all_confirm_message', { count }),
+      shared.length > 0 ? tCtxMenu('mailbox_context_menu.empty_all_confirm_shared', { accounts: names(shared) }) : '',
+      kept.length > 0 ? tCtxMenu('mailbox_context_menu.empty_all_confirm_kept', { accounts: names(kept) }) : '',
+    ].filter(Boolean).join(' ');
 
     const confirmed = await confirmDialog({
       title: tCtxMenu('mailbox_context_menu.empty_all_confirm_title'),
-      message: tCtxMenu('mailbox_context_menu.empty_all_confirm_message', { count }),
+      message,
       confirmText: tCtxMenu('mailbox_context_menu.empty_folder_all_accounts'),
       variant: "destructive",
     });
     if (!confirmed) return;
 
     try {
-      const { errors, emptied } = await emptyUnifiedMailbox(own, role);
+      const { errors, emptied } = await emptyUnifiedMailbox(accounts, role);
       if (errors.size > 0) {
         toast.error(tCtxMenu(emptied.length > 0
           ? 'mailbox_context_menu.toast_error_empty_all_partial'

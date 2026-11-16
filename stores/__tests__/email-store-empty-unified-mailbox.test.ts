@@ -94,18 +94,20 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
   });
 
   // With "include group accounts" the unified scope also lists group and
-  // delegated owners. Their Trash is someone else's and must stay as it is.
-  it('leaves a group or delegated owner’s Trash alone', async () => {
+  // delegated owners. Their Trash is emptied too where the user may delete
+  // from it, through the login that reaches it, and kept where not (#1738).
+  it('empties a group or delegated owner’s Trash the user may delete from, and keeps the rest', async () => {
     const client = makeClient(vi.fn().mockResolvedValue(1));
+    const readOnly = { ...makeMailbox().myRights, mayRemoveItems: false };
 
     const accounts: UnifiedAccountClient[] = [
       {
         accountId: 'account-a',
         accountLabel: 'A',
         client,
-        // A shared Trash in a login's own list is passed over too.
+        // A shared Trash in a login's own list is left to the owner's entry.
         mailboxes: [
-          makeMailbox({ id: 'owner-y:y-trash', originalId: 'y-trash', isShared: true, accountId: 'owner-y' }),
+          makeMailbox({ id: 'owner-x:x-trash', originalId: 'x-trash', isShared: true, accountId: 'owner-x' }),
           makeMailbox({ id: 'a-trash' }),
         ],
         clientAccountId: 'account-a',
@@ -120,13 +122,22 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
         jmapAccountId: 'owner-x',
         isShared: true,
       },
+      {
+        accountId: 'owner-y',
+        accountLabel: 'Owner Y',
+        client,
+        mailboxes: [makeMailbox({ id: 'owner-y:y-trash', originalId: 'y-trash', isShared: true, accountId: 'owner-y', myRights: readOnly })],
+        clientAccountId: 'account-a',
+        jmapAccountId: 'owner-y',
+        isShared: true,
+      },
     ];
 
-    const { total } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
+    const { total, emptied } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
 
-    expect(client.emptyMailbox).toHaveBeenCalledTimes(1);
-    expect(client.emptyMailbox).toHaveBeenCalledWith('a-trash', undefined);
-    expect(total).toBe(1);
+    expect(vi.mocked(client.emptyMailbox).mock.calls).toEqual([['a-trash', undefined], ['x-trash', 'owner-x']]);
+    expect(emptied).toEqual(['account-a', 'owner-x']);
+    expect(total).toBe(2);
   });
 
   it('collects a per-account failure instead of aborting the whole batch', async () => {

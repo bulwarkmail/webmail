@@ -25,7 +25,7 @@ import { emailInMailbox } from "@/lib/move-targets";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { provideSearchResults, type ProvidedSearchResult } from "@/lib/plugin-search-results";
-import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, resolveJmapTarget, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
+import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, resolveJmapTarget, unifiedEmptyTargets, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { defaultSearchScopeFor, isAllFoldersSearchScope, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { useAuthStore } from "@/stores/auth-store";
 import { pathNamesMailFolder } from "@/lib/deep-links";
@@ -717,8 +717,9 @@ interface EmailStore {
   loadMoreUnifiedEmails: (accounts: UnifiedAccountClient[]) => Promise<void>;
   refreshUnifiedCounts: (accounts: UnifiedAccountClient[]) => Promise<void>;
   // Empties the given role's mailbox (Trash) in every one of the user's own
-  // accounts that has one - the "All Trash" sidebar row's empty-folder action.
-  // Shared/group owners are left alone. Per-account failures are collected
+  // accounts that has one - the "All Trash" sidebar row's empty-folder action -
+  // and in the group/shared accounts the user may delete from
+  // (unifiedEmptyTargets). Per-account failures are collected
   // rather than aborting the whole batch. `emptied` lists the accounts whose
   // folder was emptied; one a plugin kept is in neither it nor `errors`.
   emptyUnifiedMailbox: (
@@ -8853,14 +8854,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const errors = new Map<string, string>();
     const activeId = useAuthStore.getState().activeAccountId;
 
-    // Only the user's own logins. With "include group accounts" the unified
-    // scope also holds group and delegated owners (isShared entries), and
-    // their Trash belongs to someone else.
+    // The user's own logins, and the group and delegated accounts in the
+    // unified scope whose Trash they may delete from (#1738).
     const targets: { account: UnifiedAccountClient; mailbox: Mailbox }[] = [];
-    for (const account of accounts) {
-      if (account.isShared) continue;
-      const mailbox = account.mailboxes.find((m) => m.role === role && !m.isShared);
-      if (!mailbox) continue;
+    for (const { account, mailbox } of unifiedEmptyTargets(accounts, role).targets) {
       // The same plugin gate as emptying one folder: a plugin can keep this
       // account's folder as it is. Asked one account at a time, so a plugin
       // that asks the user doesn't stack its prompts.
