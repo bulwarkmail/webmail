@@ -1649,11 +1649,12 @@ export class JMAPClient implements IJMAPClient {
   private authMode: 'basic' | 'bearer' = 'basic';
   private onTokenRefresh?: () => Promise<string | null>;
   /**
-   * When the access token runs out (epoch ms), 0 when not known. The refresh
-   * timer can't be relied on for this: a backgrounded iOS PWA or a sleeping
-   * machine freezes it, and the app wakes with a dead token.
+   * When the access token is to be renewed before a request (epoch ms): shortly
+   * before it runs out, 0 when that isn't known. The refresh timer can't be
+   * relied on for this: a backgrounded iOS PWA or a sleeping machine freezes
+   * it, and the app wakes with a dead token.
    */
-  private tokenExpiresAt = 0;
+  private tokenRenewAt = 0;
   /** When the server last answered a request without 401 (epoch ms). */
   private authAcceptedAt = 0;
   private onTotpRequired?: () => Promise<string | null>;
@@ -1793,15 +1794,19 @@ export class JMAPClient implements IJMAPClient {
   /** `expiresIn` in seconds, as the token endpoint gives it. Without it, a new token's expiry is unknown. */
   updateAccessToken(token: string, expiresIn?: number): void {
     const header = `Bearer ${token}`;
-    if (expiresIn && expiresIn > 0) this.tokenExpiresAt = Date.now() + expiresIn * 1000;
-    else if (header !== this.authHeader) this.tokenExpiresAt = 0;
+    if (expiresIn && expiresIn > 0) {
+      // A token that lives only seconds would otherwise count as run out the
+      // moment it arrives, and every request would renew it again.
+      const lifetimeMs = expiresIn * 1000;
+      this.tokenRenewAt = Date.now() + lifetimeMs - Math.min(JMAPClient.TOKEN_EXPIRY_MARGIN_MS, lifetimeMs / 2);
+    } else if (header !== this.authHeader) this.tokenRenewAt = 0;
     this.authHeader = header;
   }
 
   /** Whether the access token has run out, or is about to, and can be renewed. */
   private tokenRunOut(): boolean {
-    return this.authMode === 'bearer' && !!this.onTokenRefresh && this.tokenExpiresAt > 0
-      && Date.now() >= this.tokenExpiresAt - JMAPClient.TOKEN_EXPIRY_MARGIN_MS;
+    return this.authMode === 'bearer' && !!this.onTokenRefresh && this.tokenRenewAt > 0
+      && Date.now() >= this.tokenRenewAt;
   }
 
   /**
@@ -1812,11 +1817,11 @@ export class JMAPClient implements IJMAPClient {
    * Concurrent callers share the one renewal (refreshAccessToken).
    */
   private async renewExpiredToken(): Promise<void> {
-    const token = await this.onTokenRefresh?.();
+    const token = await this.onTokenRefresh?.().catch(() => null);
     if (token) this.updateAccessToken(token);
     // No token (offline, a server error): the request goes out as before and a
     // 401 renews it. Forget the expiry so each request doesn't ask again.
-    else this.tokenExpiresAt = 0;
+    else this.tokenRenewAt = 0;
   }
 
   // Throws when the server does not answer: an empty result would read as
@@ -6611,6 +6616,8 @@ export class JMAPClient implements IJMAPClient {
    * that one omits credentials, and an expired token is refreshed there.
    */
   private async confirmTokenBeforeXhr(): Promise<void> {
+    // The upload doesn't go through authenticatedFetch: renew a run-out token here.
+    if (this.tokenRunOut()) await this.renewExpiredToken();
     if (JMAP_FETCH_CREDENTIALS !== 'omit' || this.authMode !== 'bearer' || !this.onTokenRefresh) return;
     if (Date.now() - this.authAcceptedAt < JMAPClient.AUTH_ACCEPTED_FRESH_MS) return;
     await this.request([['Core/echo', {}, '0']]);

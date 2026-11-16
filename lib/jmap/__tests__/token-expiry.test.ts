@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JMAPClient } from '../client';
+import { UploadXHR } from '@/lib/__tests__/helpers/upload-xhr';
 
 // An app woken from the background (a frozen iOS PWA, a sleeping laptop) still
 // holds a token that ran out while its refresh timer was frozen. Every request
@@ -122,6 +123,43 @@ describe('an access token with a known expiry', () => {
 
     await client.ping();
     expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it('is not renewed before every request when it only lives a few seconds', async () => {
+    let issued = 0;
+    const refresh = vi.fn(async () => {
+      validToken = `short-${++issued}`;
+      client.updateAccessToken(validToken, 8);
+      return validToken;
+    });
+    const client = await connected(refresh, 8);
+    clients.push(client);
+
+    vi.setSystemTime(new Date(Date.now() + 9_000));
+    validToken = '';
+    await client.ping();
+    await client.ping();
+    await client.ping();
+
+    expect(refresh).toHaveBeenCalledOnce();
+    expect(refusedHeaders).toEqual([]);
+  });
+
+  it('is renewed before an upload with progress, which skips the request method', async () => {
+    const refresh = renewal('fresh');
+    const client = await connected(refresh, HOUR);
+    clients.push(client);
+    UploadXHR.instances = [];
+    vi.stubGlobal('XMLHttpRequest', UploadXHR);
+
+    vi.setSystemTime(new Date(Date.now() + 2 * HOUR * 1000));
+    const upload = client.uploadBlob(new File(['x'], 'a.txt', { type: 'text/plain' }), { onProgress: () => {} });
+    await vi.waitFor(() => expect(UploadXHR.instances).toHaveLength(1));
+    UploadXHR.instances[0].load();
+    await upload;
+
+    expect(refresh).toHaveBeenCalledOnce();
+    expect(UploadXHR.instances[0].headers.Authorization).toBe('Bearer fresh');
   });
 
   it('keeps its expiry when the same token is handed over again without one', async () => {
