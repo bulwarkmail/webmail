@@ -1825,6 +1825,8 @@
       "title": "이메일 태그",
       "description": "태그를 만들어 메일을 정리하세요. 태그는 메일과 함께 서버에 저장돼요.",
       "add_keyword": "태그 추가",
+      "sort_az": "이름순 정렬",
+      "sorted": "태그를 이름순으로 정렬했습니다",
       "empty": "아직 태그가 없습니다.",
       "label_field": "표시 이름",
       "label_placeholder": "예: 업무, 개인, 긴급",

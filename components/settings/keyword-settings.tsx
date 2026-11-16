@@ -2,7 +2,7 @@
 
 import { MoveButtons } from "@/components/ui/move-buttons";
 import React, { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "@/stores/toast-store";
 import {
   useSettingsStore,
@@ -16,7 +16,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useFilterStore } from "@/stores/filter-store";
 import { SettingsSection, SettingItem, ToggleSwitch, Select, AdvancedOnly } from './settings-section';
-import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search } from "@/components/icons";
+import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search, ArrowDownAZ } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,7 @@ import {
   isKeywordNameTaken,
   type KeywordNode,
   MAX_KEYWORD_ID_LENGTH,
+  sortKeywordsByName,
 } from "@/lib/keyword-nesting";
 import { formatKeyword } from "@/lib/keyword-format";
 import { TagBadge } from "@/components/email/tag-badge";
@@ -629,6 +630,7 @@ function UnrecognizedKeywords() {
 export function KeywordSettings() {
   const t = useTranslations("settings.keywords");
   const tNotifications = useTranslations("notifications");
+  const locale = useLocale();
   const { emailKeywords, nestedTags, addKeyword, updateKeyword, renameKeyword, removeKeyword, reorderKeywords, updateSetting } =
     useSettingsStore();
   const { client } = useAuthStore();
@@ -761,6 +763,27 @@ export function KeywordSettings() {
     });
   };
 
+  // A one-off sort: the result is the manual order from then on, so dragging
+  // and the move buttons go on working, and Undo puts the old order back.
+  const sortedKeywords = sortKeywordsByName(emailKeywords, locale);
+  const alreadySorted = sortedKeywords.every((keyword, index) => keyword === emailKeywords[index]);
+  const handleSort = () => {
+    const before = useSettingsStore.getState().emailKeywords.map((k) => k.id);
+    reorderKeywords(sortKeywordsByName(useSettingsStore.getState().emailKeywords, locale));
+    toast.success(t("sorted"), {
+      action: {
+        label: tNotifications("rule_undo"),
+        onClick: () => {
+          // Tags added or deleted since stay as they are now.
+          const now = useSettingsStore.getState().emailKeywords;
+          const rank = new Map(before.map((id, index) => [id, index]));
+          const position = (id: string) => rank.get(id) ?? before.length;
+          reorderKeywords([...now].sort((a, b) => position(a.id) - position(b.id)));
+        },
+      },
+    });
+  };
+
   const handleVisibilityChange = (id: string, visibility: KeywordVisibility) => {
     updateKeyword(id, { visibility });
   };
@@ -828,7 +851,7 @@ export function KeywordSettings() {
             onCancel={() => setIsAdding(false)}
           />
         ) : (
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button
               variant="outline"
               size="sm"
@@ -841,6 +864,19 @@ export function KeywordSettings() {
               <Plus />
               {t("add_keyword")}
             </Button>
+            {emailKeywords.length > 1 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSort}
+                disabled={alreadySorted}
+                className="text-muted-foreground hover:text-foreground"
+                data-testid="tags-sort-az"
+              >
+                <ArrowDownAZ />
+                {t("sort_az")}
+              </Button>
+            )}
           </div>
         )}
       </div>

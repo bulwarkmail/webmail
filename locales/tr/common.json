@@ -1825,6 +1825,8 @@
       "title": "E-posta Etiketleri",
       "description": "İletilerinizi düzenlemek için etiketler oluşturun. Etiketler iletilerinizle birlikte sunucuda saklanır.",
       "add_keyword": "Etiket Ekle",
+      "sort_az": "A–Z Sırala",
+      "sorted": "Etiketler A–Z sıralandı",
       "empty": "Henüz etiket yok.",
       "label_field": "Görünen Ad",
       "label_placeholder": "ör. İş, Kişisel, Acil",

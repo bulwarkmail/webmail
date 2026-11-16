@@ -1825,6 +1825,8 @@
       "title": "Étiquettes de messagerie",
       "description": "Créez des étiquettes pour trier vos messages. Les étiquettes sont enregistrées avec vos messages sur le serveur.",
       "add_keyword": "Ajouter une étiquette",
+      "sort_az": "Trier de A à Z",
+      "sorted": "Étiquettes triées de A à Z",
       "empty": "Aucune étiquette pour le moment.",
       "label_field": "Nom d'affichage",
       "label_placeholder": "ex. Travail, Personnel, Urgent",

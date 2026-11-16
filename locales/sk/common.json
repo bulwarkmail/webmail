@@ -1828,6 +1828,8 @@
       "title": "E-mailové štítky",
       "description": "Vytvorte štítky na triedenie správ. Štítky sa ukladajú so správami na serveri.",
       "add_keyword": "Pridať štítok",
+      "sort_az": "Zoradiť A–Z",
+      "sorted": "Štítky zoradené A–Z",
       "empty": "Zatiaľ nemáte žiadne štítky.",
       "label_field": "Zobrazovaný názov",
       "label_placeholder": "napr. Práca, Osobné, Naliehavé",

@@ -1828,6 +1828,8 @@
       "title": "電子郵件標籤",
       "description": "建立標籤來整理郵件。標籤會和郵件一起儲存在伺服器上。",
       "add_keyword": "新增標籤",
+      "sort_az": "依名稱排序",
+      "sorted": "已依名稱排序標籤",
       "empty": "尚無標籤。",
       "label_field": "顯示名稱",
       "label_placeholder": "例如工作、個人、緊急",

@@ -1825,6 +1825,8 @@
       "title": "Etykiety e-mail",
       "description": "Twórz etykiety, aby porządkować wiadomości. Etykiety są zapisywane razem z wiadomościami na serwerze.",
       "add_keyword": "Dodaj etykietę",
+      "sort_az": "Sortuj A–Z",
+      "sorted": "Etykiety posortowane A–Z",
       "empty": "Nie ma jeszcze etykiet.",
       "label_field": "Nazwa wyświetlana",
       "label_placeholder": "np. Praca, Osobiste, Pilne",

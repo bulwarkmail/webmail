@@ -1825,6 +1825,8 @@
       "title": "Etiquetas de correo",
       "description": "Crea etiquetas para ordenar tus mensajes. Las etiquetas se guardan con tus mensajes en el servidor.",
       "add_keyword": "Añadir etiqueta",
+      "sort_az": "Ordenar A–Z",
+      "sorted": "Etiquetas ordenadas de la A a la Z",
       "empty": "Todavía no hay etiquetas.",
       "label_field": "Nombre para mostrar",
       "label_placeholder": "ej. Trabajo, Personal, Urgente",

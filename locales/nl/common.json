@@ -1825,6 +1825,8 @@
       "title": "E-maillabels",
       "description": "Maak labels om uw berichten te ordenen. De labels worden met uw berichten op de server opgeslagen.",
       "add_keyword": "Label toevoegen",
+      "sort_az": "Sorteren A–Z",
+      "sorted": "Labels gesorteerd van A tot Z",
       "empty": "Nog geen labels.",
       "label_field": "Weergavenaam",
       "label_placeholder": "bijv. Werk, Persoonlijk, Urgent",

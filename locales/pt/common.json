@@ -1825,6 +1825,8 @@
       "title": "Etiquetas de e-mail",
       "description": "Crie etiquetas para organizar suas mensagens. As etiquetas são salvas com as mensagens no servidor.",
       "add_keyword": "Nova etiqueta",
+      "sort_az": "Ordenar A–Z",
+      "sorted": "Etiquetas ordenadas de A a Z",
       "empty": "Ainda não há etiquetas.",
       "label_field": "Nome de exibição",
       "label_placeholder": "ex.: Trabalho, Pessoal, Urgente",

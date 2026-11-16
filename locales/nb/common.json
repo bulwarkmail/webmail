@@ -1828,6 +1828,8 @@
       "title": "E-postetiketter",
       "description": "Lag etiketter for å sortere meldingene dine. Etikettene lagres sammen med meldingene på serveren.",
       "add_keyword": "Legg til etikett",
+      "sort_az": "Sorter A–Å",
+      "sorted": "Etiketter sortert A–Å",
       "empty": "Ingen etiketter ennå.",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. arbeid, personlig, haster",

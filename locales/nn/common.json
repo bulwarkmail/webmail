@@ -1836,6 +1836,8 @@
       "title": "E-postetikettar",
       "description": "Lag etikettar for å sortere meldingane dine. Etikettane vert lagra saman med meldingane dine på tenaren.",
       "add_keyword": "Ny etikett",
+      "sort_az": "Sorter A–Å",
+      "sorted": "Etikettar sorterte A–Å",
       "empty": "Ingen etikettar enno.",
       "label_field": "Visingsnamn",
       "label_placeholder": "t.d. Arbeid, Privat, Hasteleg",

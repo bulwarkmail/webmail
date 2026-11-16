@@ -218,6 +218,17 @@ export function buildKeywordTree(keywords: KeywordDefinition[]): KeywordNode[] {
 }
 
 /**
+ * The tags in alphabetical order of their names, as the language sorts them
+ * (numbers by value, case and accents ignored). Ties keep their order. The
+ * tree keeps the list's order within each level, so nested tags end up
+ * sorted inside their parent too.
+ */
+export function sortKeywordsByName(keywords: KeywordDefinition[], locale: string): KeywordDefinition[] {
+  const collator = new Intl.Collator(locale, { sensitivity: "base", numeric: true });
+  return [...keywords].sort((a, b) => collator.compare(a.label || a.id, b.label || b.id));
+}
+
+/**
  * Prunes a tag tree down to the nodes worth showing.
  *
  * A node survives when the predicate accepts it or when any of its descendants

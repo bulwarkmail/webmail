@@ -1840,6 +1840,8 @@
       "title": "Nhãn thư",
       "description": "Tạo thẻ để sắp xếp thư. Các thẻ được lưu cùng thư trên máy chủ.",
       "add_keyword": "Nhãn mới",
+      "sort_az": "Sắp xếp A–Z",
+      "sorted": "Đã sắp xếp nhãn A–Z",
       "empty": "Chưa có nhãn nào.",
       "label_field": "Tên hiển thị",
       "label_placeholder": "Ví dụ: Công việc, Cá nhân, Khẩn cấp",

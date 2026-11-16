@@ -1828,6 +1828,8 @@
       "title": "E-mail címkék",
       "description": "Hozzon létre címkéket az üzenetei rendezéséhez. A címkék az üzenetekkel együtt a szerveren tárolódnak.",
       "add_keyword": "Címke hozzáadása",
+      "sort_az": "Rendezés A–Z",
+      "sorted": "Címkék A–Z sorrendbe rendezve",
       "empty": "Még nincsenek címkék.",
       "label_field": "Megjelenített név",
       "label_placeholder": "pl. Munka, Személyes, Sürgős",

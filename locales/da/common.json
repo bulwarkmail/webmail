@@ -1828,6 +1828,8 @@
       "title": "E-mail-tags",
       "description": "Lav tags til at sortere dine beskeder. Taggene gemmes sammen med beskederne på serveren.",
       "add_keyword": "Tilføj tag",
+      "sort_az": "Sortér A–Å",
+      "sorted": "Tags sorteret A–Å",
       "empty": "Ingen tags endnu.",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. Arbejde, Privat, Vigtigt",
