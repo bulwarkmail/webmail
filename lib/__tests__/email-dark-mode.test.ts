@@ -776,6 +776,17 @@ describe('applyEmailDarkMode', () => {
     expect(contrastRatio(fill, around)).toBeGreaterThanOrEqual(1.8);
     expect(contrastRatio(colorOf(btn), fill)).toBeGreaterThanOrEqual(4.5);
   });
+
+  it.each(CANVASES.slice(0, 2))('keeps a rule on a brand banner as sent, but darkens the frame of a light card on it on %s', (canvasCss) => {
+    const doc = onCanvas(c(canvasCss),
+      '<div id="banner" style="background-color:#1a73e8"><p id="rule" style="border-bottom:2px solid #ffffff;color:#fff">Rule</p>'
+      + '<div id="card" style="background-color:#ffffff;border:1px solid #dddddd">Card</div></div>');
+    expect(bgOf(doc.getElementById('banner')!)).toEqual(c('rgb(26, 115, 232)'));
+    expect(side(doc.getElementById('rule')!, 'bottom')).toEqual(WHITE);
+    const card = doc.getElementById('card')!;
+    expect(lightness(bgOf(card))).toBeLessThan(80);
+    expect(lightness(side(card, 'top'))).toBeLessThan(110);
+  });
 });
 
 // #693: cells coloured through the legacy bgcolor attribute stayed white in
