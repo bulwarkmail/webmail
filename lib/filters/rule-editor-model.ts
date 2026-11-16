@@ -137,6 +137,33 @@ export function checklistToActions(state: Checklist): FilterAction[] {
   return actions;
 }
 
+/**
+ * Put `actions` in the order the rule had them in `before`, so a rule opened
+ * and saved again without edits keeps its script byte for byte. An action
+ * takes the place of the same action in `before`, else of the first unused
+ * one of its type; actions the rule did not have go last, in checklist order.
+ */
+export function keepActionOrder(actions: FilterAction[], before: FilterAction[]): FilterAction[] {
+  const used = new Set<number>();
+  const take = (index: number) => {
+    if (index === -1) return Number.POSITIVE_INFINITY;
+    used.add(index);
+    return index;
+  };
+  const key = (a: FilterAction) => JSON.stringify([a.type, a.value ?? '', a.mailboxId ?? '', !!a.keepCopy]);
+  const ranked = actions.map((action, position) => ({ action, position, rank: Number.POSITIVE_INFINITY }));
+  for (const entry of ranked) {
+    entry.rank = take(before.findIndex((b, i) => !used.has(i) && key(b) === key(entry.action)));
+  }
+  for (const entry of ranked) {
+    if (entry.rank !== Number.POSITIVE_INFINITY) continue;
+    entry.rank = take(before.findIndex((b, i) => !used.has(i) && b.type === entry.action.type));
+  }
+  return ranked
+    .sort((a, b) => (a.rank === b.rank ? a.position - b.position : a.rank - b.rank))
+    .map((entry) => entry.action);
+}
+
 const FILING: ChecklistKey[] = ['move', 'copy', 'keep'];
 
 function isOn(state: Checklist, key: ChecklistKey): boolean {

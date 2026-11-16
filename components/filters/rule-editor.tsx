@@ -25,6 +25,7 @@ import {
   checklistProblem,
   checklistToActions,
   formatSize,
+  keepActionOrder,
   parseSize,
   type Checklist,
   type ChecklistKey,
@@ -233,7 +234,10 @@ export function RuleEditor({
     };
     return { ...checklist, move: resolve(checklist.move), copy: resolve(checklist.copy) };
   }, [checklist, folderIdFor, mailboxPathMap]);
-  const actions = useMemo(() => checklistToActions(resolvedChecklist), [resolvedChecklist]);
+  const actions = useMemo(
+    () => keepActionOrder(checklistToActions(resolvedChecklist), folded.actions),
+    [resolvedChecklist, folded.actions],
+  );
   const blocked = blockedActions(checklist);
   const filing = checklist.move.on || checklist.copy.on;
 
