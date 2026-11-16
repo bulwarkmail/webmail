@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import { parseDuration } from "@/lib/calendar-event-normalization";
 import { format } from "date-fns";
-import { ChevronDown, ChevronUp, Users } from "@/components/icons";
+import { ChevronDown, ChevronUp, MapPin, Users } from "@/components/icons";
+import { primaryLocationName } from "@/lib/event-links";
 import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
 import { gridReplyState, type GridReplyState } from "@/lib/calendar-reply-state";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
@@ -179,6 +180,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
 
   const calendarName = calendar ? shownName.calendar(calendar) : "";
   const visibleCalendarName = showColorNames && calendarName ? calendarName : null;
+  // Where it is, on the tile too (#1686): the first location's name.
+  const locationName = primaryLocationName(event);
   const durationMinutes = parseDuration(event.duration);
   const endTime = getEventEndDate(event);
   const safeFormat = (d: Date, fmt: string) => {
@@ -248,7 +251,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       {marker}
     </div>
   ) : card;
-  const ariaLabel = `${event.title || t("events.no_title")}, ${spokenTime}${calendarName ? `, ${calendarName}` : ""}${statusLabel ? `, ${statusLabel}` : ""}`;
+  const ariaLabel = `${event.title || t("events.no_title")}, ${spokenTime}${locationName ? `, ${locationName}` : ""}${calendarName ? `, ${calendarName}` : ""}${statusLabel ? `, ${statusLabel}` : ""}`;
 
   // A click that ends a drag isn't one: no popover under the moved event (pim-p3-2).
   const dragEndedAt = useRef(0);
@@ -354,6 +357,12 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         {/* The whole width, aligned to the title's own start: a short English
             title in Arabic sat at the right, a cut one filled to the left. */}
         <span dir="auto" className={cn("flex-1 min-w-0 truncate text-start", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
+        {locationName && (
+          <span data-event-location className="ms-1 inline-flex items-center gap-0.5 min-w-0 max-w-[35%] shrink font-normal opacity-85">
+            <MapPin aria-hidden="true" className="w-3 h-3 flex-shrink-0" />
+            <span dir="auto" className="truncate">{locationName}</span>
+          </span>
+        )}
         {visibleCalendarName && (
           <span data-calendar-name dir="auto" className="ms-1 min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
         )}
@@ -401,6 +410,12 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
               )}
               <span className="hidden @min-[5.5rem]:inline flex-shrink-0 font-normal opacity-85">{safeFormat(startDate, timeFmt)}</span>
               <span dir="auto" className="flex-1 min-w-0 truncate text-start font-medium">{event.title || t("events.no_title")}</span>
+              {locationName && (
+                <span data-event-location className="hidden @min-[12rem]:inline-flex items-center gap-0.5 min-w-0 max-w-[35%] shrink font-normal opacity-85">
+                  <MapPin aria-hidden="true" className="w-3 h-3 flex-shrink-0" />
+                  <span dir="auto" className="truncate">{locationName}</span>
+                </span>
+              )}
               {visibleCalendarName && (
                 <span data-calendar-name dir="auto" className="hidden @min-[9rem]:inline min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
               )}
@@ -442,6 +457,12 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
               <span className="hidden @min-[5.5rem]:inline flex-shrink-0 font-normal opacity-85">{format(startDate, timeFmt)}</span>
             )}
             <span dir="auto" className={cn("flex-1 min-w-0 truncate text-start font-medium", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
+            {locationName && (
+              <span data-event-location className="hidden @min-[12rem]:inline-flex items-center gap-0.5 min-w-0 max-w-[35%] shrink font-normal opacity-85">
+                <MapPin aria-hidden="true" className="w-3 h-3 flex-shrink-0" />
+                <span dir="auto" className="truncate">{locationName}</span>
+              </span>
+            )}
             {visibleCalendarName && (
               <span data-calendar-name dir="auto" className="hidden @min-[9rem]:inline min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
             )}
@@ -512,6 +533,15 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         </div>
       )}
       </div>
+      {/* Same room as the time line: below 45 minutes the block has the title line only. */}
+      {locationName && durationMinutes >= 45 && (
+        <div className="@container">
+          <div data-event-location className="hidden @min-[4.25rem]:flex items-center gap-0.5 min-w-0 opacity-85 text-[0.65625rem]">
+            <MapPin aria-hidden="true" className="w-3 h-3 flex-shrink-0" />
+            <span dir="auto" className="truncate">{locationName}</span>
+          </div>
+        </div>
+      )}
       {visibleCalendarName && (
         <div data-calendar-name dir="auto" className="opacity-85 text-[0.65625rem] truncate">{visibleCalendarName}</div>
       )}
