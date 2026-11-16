@@ -84,7 +84,7 @@ import { runUndoSendCountdown, startSendProgress, UNDO_TOAST_SLACK_MS, undoEndsA
 import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
-import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBatchEmailAction, setSelectionStarredWithUndo, toastWithUndo, undoKeywordAction, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
+import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBatchEmailAction, setConversationTagsWithUndo, setSelectionStarredWithUndo, toastWithUndo, undoKeywordAction, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { ShareNotificationToaster } from "@/components/layout/share-notification-toaster";
 import { CalendarEventNotificationToaster } from "@/components/layout/calendar-event-notification-toaster";
@@ -124,7 +124,7 @@ import { useNewMailAlerts } from "@/hooks/use-new-mail-alerts";
 import { useMailStatusAnnouncements } from "@/hooks/use-mail-status-announcements";
 import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, conversationInList, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, conversationInList, emailKeyFor, getThreadTagIds, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { shownListEmails, stepListEmail } from "@/lib/list-step";
 import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
 import { refreshRepliedThread } from "@/lib/replied-thread";
@@ -4421,8 +4421,27 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
-  const handleSetTag = async (emailId: string, tagId: string | null, emailKey?: string) => {
+  // `conversation`: every message of a collapsed conversation row, which the
+  // change covers. The row shows a tag while any of them has it, so taking it
+  // off takes it off all of them, and putting it on puts it on all. (#460)
+  const handleSetTag = async (emailId: string, tagId: string | null, emailKey?: string, conversation?: Email[]) => {
     if (!client) return;
+
+    if (conversation && conversation.length > 1) {
+      try {
+        const current = getThreadTagIds(conversation);
+        const add = tagId !== null && !current.includes(tagId);
+        const tagIds = tagId === null ? current : [tagId];
+        await setConversationTagsWithUndo(client, conversation, tagIds, add, {
+          describe: () => t(add ? 'notifications.email_tagged' : 'notifications.tag_removed'),
+          labels: undo,
+        });
+      } catch (error) {
+        console.error("Failed to set tag:", error);
+        toast.error(t('notifications.tag_failed'));
+      }
+      return;
+    }
 
     try {
       // Remove any existing tag keywords. By the row's key when given: the bare

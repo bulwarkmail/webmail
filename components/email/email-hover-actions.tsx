@@ -26,6 +26,8 @@ interface EmailHoverActionsProps {
    * a conversation row is unread while any of its messages is.
    */
   unread?: boolean;
+  /** A conversation row's tags: every tag any of its messages has. */
+  tagIds?: string[];
   backgroundClassName?: string;
   onToggleStar?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -150,6 +152,7 @@ function reserveRowRoom(actions: HTMLDivElement | null): (() => void) | void {
 export function EmailHoverActions({
   email,
   unread,
+  tagIds,
   backgroundClassName = "bg-muted",
   onToggleStar,
   onMarkAsRead,
@@ -199,7 +202,7 @@ export function EmailHoverActions({
 
   const isUnread = unread ?? !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
-  const currentTagIds = getEmailTagIds(email.keywords);
+  const currentTagIds = tagIds ?? getEmailTagIds(email.keywords);
   const hoverBackgroundClassName = backgroundClassName;
 
   if (isMobile) return null;

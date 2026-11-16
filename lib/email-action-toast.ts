@@ -1,5 +1,5 @@
 import { toast } from "@/stores/toast-store";
-import { useEmailStore, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, resolveEmailActionContext, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
 import type { ToastAction } from "@/components/ui/toast";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Email } from "@/lib/jmap/types";
@@ -158,6 +158,49 @@ export async function setSelectionTagWithUndo(
   const points = keywordRestorePoints(resolveSelectedEmails(useEmailStore.getState()), names)
     .filter((p) => names.some((name) => p.changes[name]) !== add);
   const done = await useEmailStore.getState().batchSetTag(client, tagId, add);
+  if (done && points.length > 0) {
+    recordQuietUndo(words.describe(points.length), undoKeywordAction(client, points, words.labels));
+  }
+  return done;
+}
+
+/**
+ * Puts tags on every message of a conversation row or takes them off
+ * (batchSetTag with these messages as its target; rejects when a write
+ * fails), and keeps one Undo for Ctrl+Z. Each tag is one Email/set per
+ * account the messages live in, routed as a single message's tag change.
+ * The messages the change leaves alone are not put back.
+ */
+export async function setConversationTagsWithUndo(
+  client: IJMAPClient,
+  emails: Email[],
+  tagIds: string[],
+  add: boolean,
+  words: { describe: (count: number) => string; labels: UndoLabels },
+): Promise<boolean> {
+  if (emails.length === 0 || tagIds.length === 0) return true;
+  const names = tagIds.flatMap(tagKeywords);
+  const has = (changes: Record<string, boolean>, tagId: string) => tagKeywords(tagId).some((name) => changes[name]);
+  const points = keywordRestorePoints(emails, names)
+    .filter((p) => tagIds.some((tagId) => has(p.changes, tagId) !== add));
+
+  const groups = new Map<IJMAPClient, Map<string | undefined, Email[]>>();
+  for (const email of emails) {
+    const { client: actionClient, accountId } = resolveEmailActionContext(email, client);
+    const byAccount = groups.get(actionClient) ?? new Map<string | undefined, Email[]>();
+    groups.set(actionClient, byAccount);
+    byAccount.set(accountId, [...(byAccount.get(accountId) ?? []), email]);
+  }
+
+  let done = true;
+  for (const tagId of tagIds) {
+    for (const [actionClient, byAccount] of groups) {
+      for (const [accountId, group] of byAccount) {
+        const target = { emailIds: group.map((e) => e.id), client: actionClient, accountId, emails: group };
+        if (!(await useEmailStore.getState().batchSetTag(client, tagId, add, target))) done = false;
+      }
+    }
+  }
   if (done && points.length > 0) {
     recordQuietUndo(words.describe(points.length), undoKeywordAction(client, points, words.labels));
   }

@@ -52,7 +52,7 @@ import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skele
 import { densityShowsAttachmentChips, type Density } from "@/lib/density";
 import { useUIStore } from "@/stores/ui-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
-import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
+import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds, getThreadTagIds } from "@/lib/thread-utils";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
@@ -128,8 +128,11 @@ interface EmailListProps {
   onTogglePinned?: (email: Email) => void;
   onDelete?: (email: Email) => void;
   onArchive?: (email: Email) => void;
-  /** `emailKey` (emailKeyFor of the row) tells namesakes in other accounts apart. */
-  onSetTag?: (emailId: string, tagId: string | null, emailKey?: string) => void;
+  /**
+   * `emailKey` (emailKeyFor of the row) tells namesakes in other accounts apart.
+   * `conversation`: every message of a conversation row, which the change covers.
+   */
+  onSetTag?: (emailId: string, tagId: string | null, emailKey?: string, conversation?: Email[]) => void;
   onMoveToMailbox?: (emailId: string, mailboxId: string, emailKey?: string) => void;
   onMarkAsSpam?: (email: Email) => void;
   onUndoSpam?: (email: Email) => void;
@@ -1853,7 +1856,8 @@ export function EmailList({
           onTogglePinned={onTogglePinned ? () => onTogglePinned(contextMenuEmail!) : undefined}
           onDelete={() => onDelete?.(contextMenuEmail!)}
           onArchive={() => onArchive?.(contextMenuEmail!)}
-          onSetTag={(color) => onSetTag?.(contextMenuEmail!.id, color, emailKeyFor(contextMenuEmail!))}
+          tagIds={contextMenuConversation ? getThreadTagIds(contextMenuConversation.emails) : undefined}
+          onSetTag={(color) => onSetTag?.(contextMenuEmail!.id, color, emailKeyFor(contextMenuEmail!), contextMenuConversation?.emails)}
           onMoveToMailbox={(mailboxId) => onMoveToMailbox?.(contextMenuEmail!.id, mailboxId, emailKeyFor(contextMenuEmail!))}
           onRemoveFromFolder={() => void removeFromFolder([contextMenuEmail!])}
           onMarkAsSpam={() => onMarkAsSpam?.(contextMenuEmail!)}

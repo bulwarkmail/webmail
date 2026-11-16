@@ -440,7 +440,7 @@ interface ThreadListItemProps {
   onMarkAsRead?: (email: Email, read: boolean, conversation?: Email[]) => void;
   onDelete?: (email: Email) => void;
   onArchive?: (email: Email) => void;
-  onSetTag?: (emailId: string, tagId: string | null, emailKey?: string) => void;
+  onSetTag?: (emailId: string, tagId: string | null, emailKey?: string, conversation?: Email[]) => void;
   onMarkAsSpam?: (email: Email) => void;
   onUndoSpam?: (email: Email) => void;
   onOpenAttachment?: (email: Email, attachment: Attachment) => void;
@@ -1918,7 +1918,8 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
               onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read, thread.emails) : undefined}
               onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
               onArchive={onArchive ? () => onArchive(latestEmail) : undefined}
-              onSetTag={onSetTag ? (color) => onSetTag(latestEmail.id, color, emailKeyFor(latestEmail)) : undefined}
+              tagIds={tagIds}
+              onSetTag={onSetTag ? (color) => onSetTag(latestEmail.id, color, emailKeyFor(latestEmail), thread.emails) : undefined}
               onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
               onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
               isInJunk={currentMailboxRole === 'junk'}

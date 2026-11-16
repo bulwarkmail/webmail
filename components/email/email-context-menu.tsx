@@ -49,6 +49,8 @@ interface EmailContextMenuProps {
   email: Email;
   /** A conversation row's unread state: unread while any of its messages is. */
   unread?: boolean;
+  /** A conversation row's tags: every tag any of its messages has. */
+  tagIds?: string[];
   position: Position;
   isOpen: boolean;
   onClose: () => void;
@@ -166,6 +168,7 @@ export function EmailContextMenu({
   position,
   isOpen,
   unread,
+  tagIds,
   onClose,
   menuRef,
   mailboxes,
@@ -234,7 +237,7 @@ export function EmailContextMenu({
   const { offline, canChangeMail } = useConnectionState();
   const tMenu = useTranslations("menuAudit");
   const isUnread = unread ?? !email.keywords?.$seen;
-  const currentTagIds = getEmailTagIds(email.keywords);
+  const currentTagIds = tagIds ?? getEmailTagIds(email.keywords);
   // The row's account names its tags; a selection uses batchTagScope.
   const tagScope = useEmailTagScope(email);
   const showBatchActions = isMultiSelect && selectedCount > 1;
