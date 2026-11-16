@@ -3,6 +3,7 @@
 // newest message (your own reply as well) open at the bottom.
 import { describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { formatDate } from '@/lib/utils';
 
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => ({ enabled: false }), canWopiOpen: () => false }));
 vi.mock('@/hooks/use-own-domain-address', () => ({ useOwnDomainAddress: () => () => false }));
@@ -44,5 +45,16 @@ describe('phone conversation order', () => {
       .filter((el) => el.querySelector('[aria-expanded="true"]'))
       .map((el) => el.getAttribute('data-thread-email-id'));
     expect(expanded).toEqual(['e3']);
+  });
+});
+
+// #1699: each message shows when it arrived, as the list does.
+describe('conversation message dates', () => {
+  it('show when a held-up message arrived, not when it was written', () => {
+    const late = mail(3, { sentAt: '2026-10-21T10:00:00Z' });
+    const { container } = renderView([late, mail(2), mail(1)]);
+    const item = container.querySelector('[data-thread-email-id="e3"]')!;
+    expect(item.textContent).toContain(formatDate('2026-10-23T10:00:00Z'));
+    expect(item.textContent).not.toContain(formatDate('2026-10-21T10:00:00Z'));
   });
 });

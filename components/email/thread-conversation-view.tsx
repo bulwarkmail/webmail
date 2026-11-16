@@ -7,7 +7,7 @@ import { EMAIL_SANITIZE_CONFIG, TRANSPARENT_BLOCKED_PIXEL, blockExternalResource
 import { gateLinkClick, linkCheckActive, linkText, resolveExternalLink } from "@/lib/plugin-hook-result";
 import { stripBidiControls } from "@/lib/bidi";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
 import { VerificationCodeChip } from "./verification-code-chip";
@@ -532,7 +532,7 @@ function EmailCard({
                 {formatScheduledSendAt(email.scheduledSendAt, timeFormat)}
               </span>
             ) : (
-              formatDate(emailDisplayDate(email))
+              formatDate(emailListDate(email))
             )}
           </div>
           {!isExpanded && density !== 'extra-compact' && (

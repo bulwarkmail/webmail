@@ -49,11 +49,12 @@ export function emailDisplayDate<T extends DatedEmail>(email: T): DisplayDate<T>
 export const MAX_DELIVERY_DELAY_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Which timestamp the message list shows: when the mail arrived, as Gmail and
- * Outlook do. The list sorts by `receivedAt`, so a mail held up on the way
- * would otherwise show an older time between newer ones and the list would
- * look out of order. The reader and the details keep the sent time
- * (`emailDisplayDate`).
+ * Which timestamp the message list, the reader, the conversation view and a
+ * printed message show: when the mail arrived, as Gmail and Outlook do. The
+ * list sorts by `receivedAt`, so a mail held up on the way would otherwise
+ * show an older time between newer ones and the list would look out of order,
+ * and the reader shows the same time as the row it was opened from (#1699).
+ * The sender's `Date` header is in the reader's details.
  *
  * Mail that arrived much later than it was sent was imported or restored
  * (#891): its `receivedAt` is the import time, so it shows its own date.

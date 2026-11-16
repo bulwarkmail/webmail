@@ -65,7 +65,7 @@ import { planToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { emailInMailbox, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
 import { TagPicker } from "./tag-picker";
 import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
@@ -942,7 +942,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
               {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
             </span>
           )}
-          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
+          <ConversationDate date={emailListDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
         </span>
         <span className="block text-sm text-muted-foreground truncate">{cleanPreview(email.preview)}</span>
       </span>
@@ -1090,7 +1090,7 @@ export function MvExpandedConversationCard({
             )}
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <ReceivedLabelChip email={email} className="self-center" />
-            <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
+            <ConversationDate date={emailListDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
           </span>
           <button
             type="button"
@@ -5484,7 +5484,7 @@ export function EmailViewer({
                 in the details. */}
             <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && !inConversation && "sm:block")}>
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
-                {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                {formatDateTime(emailListDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
             </div>
           </div>
@@ -5635,7 +5635,7 @@ export function EmailViewer({
                     {(mvViewer || inConversation) && (
                       <span className="ms-auto ps-2 flex items-center gap-1 -my-2 -me-2" data-mv-sender-actions="">
                         <span className="me-1" data-mv-sender-date="">
-                          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={mvViewer ? 'mv' : 'short'} className="" />
+                          <ConversationDate date={emailListDate(email)} timeFormat={timeFormat} variant={mvViewer ? 'mv' : 'short'} className="" />
                         </span>
                         {mvViewer && !savedFile && (<button
                           type="button"
@@ -5874,8 +5874,8 @@ export function EmailViewer({
             <div className="sm:hidden flex-shrink-0 text-end ms-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {mvMobileViewer
-                  ? formatDate(emailDisplayDate(email))
-                  : formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                  ? formatDate(emailListDate(email))
+                  : formatDateTime(emailListDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
             </div>
             {/* Mountain View phone: reply from the top of the message, not
