@@ -98,6 +98,14 @@ export function findMailboxByRole(
   return mailboxes.find((m) => m.role === role);
 }
 
+/** The ids of the folders a unified role's row counts, one per account that has one. */
+export function unifiedRoleMailboxIds(
+  accounts: readonly Pick<UnifiedAccountClient, 'mailboxes'>[],
+  role: UnifiedMailboxRole,
+): string[] {
+  return accounts.flatMap((account) => findMailboxByRole(account.mailboxes, role)?.id ?? []);
+}
+
 /**
  * The folders "Empty trash (all accounts)" empties for `role`: each of the
  * user's own logins' folder, and a group or delegated account's folder when

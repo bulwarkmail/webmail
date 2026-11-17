@@ -83,7 +83,7 @@ import { useManagedAccountStore } from "@/stores/managed-account-store";
 import { useSettingsStore, getKeywordVisibility } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useEmailStore, buildTagViewAccountClients } from "@/stores/email-store";
-import { trashAndJunkIds } from "@/lib/unified-mailbox";
+import { trashAndJunkIds, unifiedRoleMailboxIds } from "@/lib/unified-mailbox";
 import { toast } from "@/stores/toast-store";
 import { toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { debug } from "@/lib/debug";
@@ -105,7 +105,7 @@ import {
   type NotificationMutes,
 } from "@/lib/notification-mutes";
 import { serverSupportsEmailPush } from "@/lib/web-push";
-import { resolveFolderCounts } from "@/lib/folder-counts";
+import { commonFolderCountMode, resolveFolderCounts, type FolderCountMode } from "@/lib/folder-counts";
 import { batchToastTitle } from "@/lib/selection-toast";
 
 interface SidebarProps {
@@ -291,19 +291,17 @@ function SidebarRowCounts({
   unread,
   total,
   role,
-  mailboxId,
+  countMode,
 }: {
   unread?: number;
   total?: number;
   role?: string | null;
-  mailboxId?: string;
+  countMode?: FolderCountMode;
   isSelected: boolean;
 }) {
   const tShell = useTranslations('shell');
   const showFolderTotalCount = useSettingsStore(s => s.showFolderTotalCount);
   const mountainView = useSettingsStore(s => s.interfaceLayout === 'mountain-view');
-  // Per-folder override from the folder settings (#982).
-  const countMode = useSettingsStore(s => (mailboxId ? s.folderCountModes?.[mailboxId] : undefined));
   // Settings > Accessibility: unread counts as numbers, as a dot, or hidden.
   const unreadCountStyle = useSettingsStore(s => s.unreadCountStyle);
   const resolved = resolveFolderCounts({
@@ -424,6 +422,9 @@ interface SidebarRowProps {
   /** Unread mail in subfolders that aren't shown under this row (folded to
    *  icons, or the folder closed), so it shows somewhere (mail-p3 p2-9). */
   subfolderUnread?: number;
+  /** The counter setting, for a row that is not one folder (the unified
+   *  "All …" rows); a folder's row reads its own from the settings. */
+  countMode?: FolderCountMode;
 }
 
 function SidebarRow({
@@ -450,6 +451,7 @@ function SidebarRow({
   testShared,
   railKey,
   subfolderUnread = 0,
+  countMode: countModeProp,
 }: SidebarRowProps) {
   const t = useTranslations('sidebar');
   const tShell = useTranslations('shell');
@@ -462,7 +464,9 @@ function SidebarRow({
   const unreadCountStyle = useSettingsStore(s => s.unreadCountStyle);
   const showFolderTotalCount = useSettingsStore(s => s.showFolderTotalCount);
   const mountainView = useSettingsStore(s => s.interfaceLayout === 'mountain-view');
-  const countMode = useSettingsStore(s => (testMailboxId ? s.folderCountModes?.[testMailboxId] : undefined));
+  // Per-folder override from the folder settings (#982).
+  const storedCountMode = useSettingsStore(s => (testMailboxId ? s.folderCountModes?.[testMailboxId] : undefined));
+  const countMode = countModeProp ?? storedCountMode;
   const unreadForName = unreadCountStyle === 'hidden' ? 0 : resolveFolderCounts({
     unread, total, role: testRole, mode: countMode, showTotalGlobally: showFolderTotalCount, mountainView,
   }).unread;
@@ -613,7 +617,7 @@ function SidebarRow({
             >
               {shortenedLabel}
             </span>
-            <SidebarRowCounts unread={unread} total={total} role={testRole} mailboxId={testMailboxId} isSelected={isSelected} />
+            <SidebarRowCounts unread={unread} total={total} role={testRole} countMode={countMode} isSelected={isSelected} />
             {subUnread > 0 && (
               <span
                 aria-hidden="true"
@@ -666,7 +670,7 @@ function SidebarRow({
           unread={unread}
           total={total}
           role={testRole}
-          mailboxId={testMailboxId}
+          countMode={countMode}
           isSelected={isSelected}
         />
       )}
@@ -1806,6 +1810,9 @@ function SidebarImpl({
   // is not read as the whole. Gone as soon as the restore finishes, whatever
   // became of the logins that did not make it.
   const unifiedScope = useEmailStore((s) => s.unifiedScope);
+  // An "All …" row counts as its folders are set to: hidden when each is set
+  // to "No counter" (#1691).
+  const folderCountModes = useSettingsStore((s) => s.folderCountModes);
   const restoringAccounts = useAuthStore((s) => s.restoringAccounts);
   const unifiedProgress = useMemo(() => unifiedLoadProgress({
     crossAccountActive, restoring: restoringAccounts, scope: unifiedScope, accounts,
@@ -2863,6 +2870,7 @@ function SidebarImpl({
                       isSelected={isSelected}
                       unread={count.unreadEmails}
                       total={count.totalEmails}
+                      countMode={commonFolderCountMode(folderCountModes, unifiedRoleMailboxIds(unifiedScope, count.role))}
                       onClick={() => onMailboxSelect?.(unifiedId)}
                       onContextMenu={(e) => handleUnifiedMailboxContextMenu(e, count)}
                       isCollapsed={isCollapsed}
