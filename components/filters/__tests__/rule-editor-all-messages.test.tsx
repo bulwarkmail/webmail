@@ -52,6 +52,7 @@ describe('the "all messages" condition', () => {
     expect(fieldSelect().value).toBe('all');
     expect(comparatorSelect()).toBeNull();
     expect(valueInput()).toBeNull();
+    // A second row left blank is dropped on save; this one is not.
     fireEvent.click(screen.getByText('add_condition'));
     fireEvent.click(screen.getByText('save'));
     expect(saved().conditions).toEqual([{ field: 'all', comparator: 'any', value: '' }]);
@@ -72,6 +73,7 @@ describe('the "all messages" condition', () => {
       initialRule: { ...rule, conditions: [{ field: 'all', comparator: 'any', value: '' }] },
       suggestions: [{ id: 'subject', label: 'Betreff Rechnung', condition: { field: 'subject', comparator: 'contains', value: 'Rechnung' } }],
     });
+    // Unlike a blank row, it takes no value and is not made way for.
     fireEvent.click(screen.getByText('Betreff Rechnung'));
     fireEvent.click(screen.getByText('save'));
     expect(saved().conditions).toEqual([

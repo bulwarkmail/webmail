@@ -100,6 +100,7 @@ describe('the folder picker of Move to folder', () => {
       expect(texts).not.toContain(hidden);
     }
     expect(screen.getByRole('menu', { name: 'move_to_folder' }).className).toContain('z-[70]');
+    // In the Move list's order: system folders first.
     expect(rows.map((o) => o.value)).toEqual(['inbox', 'junk', 'trash', 'work', 'acme']);
   });
 

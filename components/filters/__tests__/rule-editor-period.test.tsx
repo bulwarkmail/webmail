@@ -67,6 +67,7 @@ describe('filter rule period (dialog)', () => {
     const { onSave, saved } = openModal({ rule: rule(), periodsSupported: true });
     fireEvent.click(toggle());
     expect(screen.getByText('period_hint')).toBeInTheDocument();
+    // Berlin: CEST (+02:00) on 5 Oct, CET (+01:00) after the switch on 25 Oct.
     fireEvent.change(startInput(), { target: { value: '2026-10-05T08:00' } });
     fireEvent.change(endInput(), { target: { value: '2026-10-26T18:00' } });
     save();
@@ -107,6 +108,8 @@ describe('filter rule period (dialog)', () => {
     const { onSave } = openModal({ rule: rule(), periodsSupported: true });
     fireEvent.click(toggle());
     fireEvent.change(startInput(), { target: { value: '2026-10-05T08:00' } });
+    // A browser reads a field it holds half filled in as empty, often without
+    // an event; jsdom never holds one, so the field says so here.
     Object.defineProperty(endInput(), 'validity', { value: { badInput: true }, configurable: true });
     save();
     expect(onSave).not.toHaveBeenCalled();
@@ -122,6 +125,7 @@ describe('filter rule period (dialog)', () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toBe('validation_period_invalid');
 
+    // The last minute of 9999 in New York is year 10000 in UTC already.
     useSettingsStore.setState({ timeZone: 'America/New_York' });
     fireEvent.change(endInput(), { target: { value: '9999-12-31T23:59' } });
     save();
@@ -157,6 +161,8 @@ describe('filter rule period (dialog)', () => {
   });
 
   it('keeps a saved boundary exactly while it is left as shown', () => {
+    // 08:00:30, shown as 08:00; and 02:30 CEST on the night the clocks go
+    // back, when 02:30 comes twice.
     const period = { activeFrom: '2026-10-05T06:00:30.000Z', activeUntil: '2026-10-25T00:30:00.000Z' };
     const { saved } = openModal({ rule: rule(period), periodsSupported: true });
     expect(startInput().value).toBe('2026-10-05T08:00');
@@ -190,6 +196,7 @@ describe('filter rule period (dialog)', () => {
     const { saved } = openModal({ rule: rule({ activeUntil: '2026-10-16T16:00:00.000Z' }) });
     expect(toggle().checked).toBe(true);
     fireEvent.click(toggle());
+    // The switch stays where it was, so a slip can be undone.
     expect(toggle().checked).toBe(false);
     save();
     expect(saved().activeUntil).toBeUndefined();

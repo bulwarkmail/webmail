@@ -20,6 +20,9 @@ function headerRule(headerName: string): FilterRule {
   };
 }
 
+// Stalwart's Sieve compiler (sieve-rs, on 0.16 and 1.0) refuses a header name
+// outside [A-Za-z0-9_-], and with it the whole script, so every other rule
+// would stop running too. The dialog keeps such a rule from being saved.
 describe('RuleEditor header names', () => {
   beforeEach(() => {
     vi.mocked(toast.error).mockClear();
