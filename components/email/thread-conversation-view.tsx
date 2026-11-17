@@ -1014,12 +1014,12 @@ export function ConversationEmailBody({
     try {
       const doc = iframe.contentDocument;
       if (!doc?.body) return;
-      // Collapse the quoted original of a reply behind a "•••" toggle (#480),
-      // before the first resize so the height reflects the collapsed body.
+      // Set up the quoted-text toggle before the first resize, and remeasure
+      // after each user toggle.
       setupQuoteCollapse(doc, {
         show: t('email_viewer.show_quoted_text'),
         hide: t('email_viewer.hide_quoted_text'),
-      });
+      }, () => resize());
       // Text size and minimum size, before the first resize.
       applyMailTextSize(doc, {
         factor: reading.textFactor,
