@@ -18,7 +18,7 @@ import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
 import { useDisplayHours, type RevealTime } from "@/hooks/use-display-hours";
 import { useTimeGridFocus } from "@/hooks/use-time-grid-focus";
 import { useTimeGridInteractions, type MoveEventHandler } from "@/hooks/use-time-grid-interactions";
-import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
+import { useScrollWindow, useHiddenScrollKeeper, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
@@ -126,15 +126,19 @@ export function CalendarDayView({
     return root.clientWidth - gutterWidth;
   }, [gutterWidth]);
   const [colWidth, setColWidth] = useState(FALLBACK_COL_WIDTH);
+  // An inactive Pro tab is hidden, not unmounted (#1762).
+  const keeper = useHiddenScrollKeeper(rootRef);
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     setColWidth(measureColWidth(root));
     if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(() => setColWidth(measureColWidth(root)));
+    const observer = new ResizeObserver(() => {
+      if (!keeper.isHidden()) setColWidth(measureColWidth(root));
+    });
     observer.observe(root);
     return () => observer.disconnect();
-  }, [measureColWidth]);
+  }, [measureColWidth, keeper]);
 
   // Every scroll offset is computed with the column width that is rendered.
   // When that width changes (first measurement, resize) keep the same day
@@ -194,7 +198,7 @@ export function CalendarDayView({
 
   const {
     hours, hourHeight, canToggle: canToggleHours, configured: configuredHours, showAllHours, toggleAllHours, revealMinutes,
-  } = useDisplayHours({ scrollRef: rootRef, headerRef, minHourHeight: MIN_HOUR_HEIGHT, revealAt });
+  } = useDisplayHours({ scrollRef: rootRef, headerRef, minHourHeight: MIN_HOUR_HEIGHT, revealAt, isHidden: keeper.isHidden });
   const firstHour = hours.startMinutes / 60;
   const visibleHours = HOURS.slice(firstHour, hours.endMinutes / 60);
   const gridHeight = visibleHours.length * hourHeight;
@@ -234,8 +238,9 @@ export function CalendarDayView({
     const root = rootRef.current;
     if (!root) return;
     const index = Math.max(0, Math.min(colCount - 1, differenceInCalendarDays(focus.date, rangeStart)));
-    setScrollStart(root, "horizontal", index * colWidth);
-  }, [focus.date, colCount, rangeStart, colWidth]);
+    if (keeper.isHidden()) keeper.whenShown(() => setScrollStart(root, "horizontal", index * colWidth));
+    else setScrollStart(root, "horizontal", index * colWidth);
+  }, [focus.date, colCount, rangeStart, colWidth, keeper]);
 
   useScrollWindow({
     scrollRef: rootRef,
@@ -265,10 +270,12 @@ export function CalendarDayView({
   const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleStripScroll = useCallback(() => {
     if (snapTimerRef.current !== null) clearTimeout(snapTimerRef.current);
+    // Hidden, the position reads 0: that is no day the user scrolled to.
+    if (keeper.isHidden()) return;
     snapTimerRef.current = setTimeout(() => {
       snapTimerRef.current = null;
       const root = rootRef.current;
-      if (!root || colWidth <= 0) return;
+      if (!root || colWidth <= 0 || keeper.isHidden()) return;
       const start = getScrollStart(root, "horizontal");
       const snapped = Math.round(start / colWidth) * colWidth;
       if (Math.abs(snapped - start) > 1) scrollToStart(root, "horizontal", snapped);
@@ -277,7 +284,7 @@ export function CalendarDayView({
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = null;
       const root = rootRef.current;
-      if (!root || colWidth <= 0) return;
+      if (!root || colWidth <= 0 || keeper.isHidden()) return;
       const index = Math.max(0, Math.min(colCount - 1, Math.round(getScrollStart(root, "horizontal") / colWidth)));
       const day = days[index];
       if (!day) return;
@@ -287,7 +294,7 @@ export function CalendarDayView({
       setVisibleKey(key);
       onVisibleDateChange?.(day);
     });
-  }, [colWidth, colCount, days, onVisibleDateChange]);
+  }, [colWidth, colCount, days, onVisibleDateChange, keeper]);
   useEffect(() => () => {
     if (snapTimerRef.current !== null) clearTimeout(snapTimerRef.current);
     if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);

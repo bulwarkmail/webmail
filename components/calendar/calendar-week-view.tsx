@@ -20,7 +20,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useDisplayHours, type RevealTime } from "@/hooks/use-display-hours";
 import { useTimeGridFocus } from "@/hooks/use-time-grid-focus";
 import { useTimeGridInteractions, type MoveEventHandler } from "@/hooks/use-time-grid-interactions";
-import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
+import { useScrollWindow, useHiddenScrollKeeper, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
@@ -177,10 +177,13 @@ export function CalendarWeekView({
   const [colWidth, setColWidth] = useState(MOBILE_COL_WIDTH);
   // First day in view, reported by the scroll handler below (#1293)
   const [visibleDayKey, setVisibleDayKey] = useState<string | null>(null);
+  // An inactive Pro tab is hidden, not unmounted (#1762).
+  const keeper = useHiddenScrollKeeper(rootRef);
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const measure = () => {
+      if (keeper.isHidden()) return;
       setColWidth(measureColWidth(root));
       setViewportWidth(Math.max(0, root.clientWidth - gutterWidth));
     };
@@ -189,7 +192,7 @@ export function CalendarWeekView({
     const observer = new ResizeObserver(measure);
     observer.observe(root);
     return () => observer.disconnect();
-  }, [measureColWidth, gutterWidth]);
+  }, [measureColWidth, gutterWidth, keeper]);
 
   // Every scroll offset is computed with the column width that is rendered.
   // When that width changes (first measurement, resize) keep the same day at
@@ -236,7 +239,7 @@ export function CalendarWeekView({
 
   const {
     hours, hourHeight, canToggle: canToggleHours, configured: configuredHours, showAllHours, toggleAllHours, revealMinutes,
-  } = useDisplayHours({ scrollRef: rootRef, headerRef, minHourHeight: MIN_HOUR_HEIGHT, revealAt });
+  } = useDisplayHours({ scrollRef: rootRef, headerRef, minHourHeight: MIN_HOUR_HEIGHT, revealAt, isHidden: keeper.isHidden });
   const firstHour = hours.startMinutes / 60;
   const visibleHours = HOURS.slice(firstHour, hours.endMinutes / 60);
   const gridHeight = visibleHours.length * hourHeight;
@@ -353,8 +356,10 @@ export function CalendarWeekView({
     if (!root) return;
     // Three days a page start at the focused day, as on a phone.
     const target = isMobile || compact ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
-    setScrollStart(root, "horizontal", indexOfDayOnOrAfter(days, target) * colWidth);
-  }, [focus.date, isMobile, compact, weekStart, days, colWidth]);
+    const start = indexOfDayOnOrAfter(days, target) * colWidth;
+    if (keeper.isHidden()) keeper.whenShown(() => setScrollStart(root, "horizontal", start));
+    else setScrollStart(root, "horizontal", start);
+  }, [focus.date, isMobile, compact, weekStart, days, colWidth, keeper]);
 
   useScrollWindow({
     scrollRef: rootRef,
@@ -380,10 +385,12 @@ export function CalendarWeekView({
   const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleStripScroll = useCallback(() => {
     if (snapTimerRef.current !== null) clearTimeout(snapTimerRef.current);
+    // Hidden, the position reads 0: that is no day the user scrolled to.
+    if (keeper.isHidden()) return;
     snapTimerRef.current = setTimeout(() => {
       snapTimerRef.current = null;
       const root = rootRef.current;
-      if (!root || colWidth <= 0) return;
+      if (!root || colWidth <= 0 || keeper.isHidden()) return;
       const start = getScrollStart(root, "horizontal");
       const snapped = Math.round(start / colWidth) * colWidth;
       if (Math.abs(snapped - start) > 1) scrollToStart(root, "horizontal", snapped);
@@ -392,7 +399,7 @@ export function CalendarWeekView({
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = null;
       const root = rootRef.current;
-      if (!root || colWidth <= 0) return;
+      if (!root || colWidth <= 0 || keeper.isHidden()) return;
       const index = Math.max(0, Math.min(colCount - 1, Math.round(getScrollStart(root, "horizontal") / colWidth)));
       const day = days[index];
       if (!day) return;
@@ -402,7 +409,7 @@ export function CalendarWeekView({
       setVisibleDayKey(key);
       onVisibleDateChange?.(day);
     });
-  }, [colWidth, colCount, days, onVisibleDateChange]);
+  }, [colWidth, colCount, days, onVisibleDateChange, keeper]);
   useEffect(() => () => {
     if (snapTimerRef.current !== null) clearTimeout(snapTimerRef.current);
     if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);

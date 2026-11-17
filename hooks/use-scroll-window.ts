@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { scrollBehavior } from "@/lib/reduced-motion";
 
 export type ScrollAxis = "vertical" | "horizontal";
@@ -206,4 +206,64 @@ export function useScrollWindow({
   }, [contentKey, isLoading, onExtendStart, onExtendEnd, requestStart, requestEnd, axis, margin, scrollRef, startSentinelRef, endSentinelRef]);
 
   return { requestStart, requestEnd, pendingSide };
+}
+
+export interface HiddenScrollKeeper {
+  /** True while the container, after having been on screen, has no size. */
+  isHidden: () => boolean;
+  /** Runs `fn` once the container shows again, after its place is back (a navigation while hidden). */
+  whenShown: (fn: () => void) => void;
+}
+
+/**
+ * Keeps a scroll container's place while it is hidden. An inactive Pro tab
+ * stays mounted with display: none (#1762): its scroll container has no
+ * size, its scroll position reads 0 and is lost. Once it has been on screen,
+ * a zero width means hidden: the views then measure nothing and report no
+ * day, and the position it had is put back when it shows again. (A
+ * container that was never on screen, the first render or jsdom, counts
+ * as shown.)
+ */
+export function useHiddenScrollKeeper(scrollRef: RefObject<HTMLElement | null>): HiddenScrollKeeper {
+  const shownRef = useRef(false);
+  const hiddenRef = useRef(false);
+  const placeRef = useRef({ left: 0, top: 0 });
+  const pendingRef = useRef<(() => void) | null>(null);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const remember = () => {
+      if (el.clientWidth > 0 && !hiddenRef.current) placeRef.current = { left: el.scrollLeft, top: el.scrollTop };
+    };
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth === 0) {
+        if (shownRef.current) hiddenRef.current = true;
+        return;
+      }
+      shownRef.current = true;
+      if (!hiddenRef.current) return;
+      hiddenRef.current = false;
+      el.scrollLeft = placeRef.current.left;
+      el.scrollTop = placeRef.current.top;
+      const pending = pendingRef.current;
+      pendingRef.current = null;
+      pending?.();
+    });
+    observer.observe(el);
+    el.addEventListener("scroll", remember, { passive: true });
+    return () => {
+      observer.disconnect();
+      el.removeEventListener("scroll", remember);
+    };
+  }, [scrollRef]);
+
+  const isHidden = useCallback(() => {
+    const el = scrollRef.current;
+    return !!el && shownRef.current && el.clientWidth === 0;
+  }, [scrollRef]);
+  const whenShown = useCallback((fn: () => void) => {
+    pendingRef.current = fn;
+  }, []);
+  return useMemo(() => ({ isHidden, whenShown }), [isHidden, whenShown]);
 }
