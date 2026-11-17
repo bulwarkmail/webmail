@@ -66,4 +66,26 @@ describe("useSwipeActions scroll lock", () => {
     const row = setup(false);
     expect(fireEvent.touchMove(row, at(130, 104))).toBe(true);
   });
+
+  it("shares one window listener between all rows and drops it with the last one", () => {
+    const add = vi.spyOn(window, "addEventListener");
+    const remove = vi.spyOn(window, "removeEventListener");
+    const touchMoves = (spy: typeof add) => spy.mock.calls.filter(([type]) => type === "touchmove");
+    try {
+      const rows = [render(<Row />), render(<Row />), render(<Row />), render(<Row enabled={false} />)];
+      expect(touchMoves(add)).toHaveLength(1);
+      rows[0].unmount();
+      rows[3].unmount();
+      rows[1].unmount();
+      expect(touchMoves(remove)).toHaveLength(0);
+      rows[2].unmount();
+      expect(touchMoves(remove)).toHaveLength(1);
+      expect(touchMoves(remove)[0][1]).toBe(touchMoves(add)[0][1]);
+      render(<Row />);
+      expect(touchMoves(add)).toHaveLength(2);
+    } finally {
+      add.mockRestore();
+      remove.mockRestore();
+    }
+  });
 });
