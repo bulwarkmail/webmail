@@ -24,7 +24,8 @@
       "totp_invalid": "Neplatný overovací kód. Skontrolujte svoju overovaciu aplikáciu a skúste znova.",
       "oauth_discovery_failed": "SSO je povolené, ale poskytovateľa identity sa nepodarilo dosiahnuť. Skontrolujte konfiguráciu OAuth.",
       "oauth_issuer_mismatch": "Prihlásenie cez tohto poskytovateľa nie je správne nastavené. Správca musí nastaviť jeho adresu vydavateľa (issuer).",
-      "token_exchange_failed": "Heslo a kód boli prijaté, ale poštový server odmietol pre túto aplikáciu spustiť reláciu. Požiadajte správcu o kontrolu nastavení klienta OAuth."
+      "token_exchange_failed": "Heslo a kód boli prijaté, ale poštový server odmietol pre túto aplikáciu spustiť reláciu. Požiadajte správcu o kontrolu nastavení klienta OAuth.",
+      "login_refused": "Poštový server odmietol toto prihlásenie skôr, ako overil váš kód. Požiadajte správcu, aby skontroloval nastavenia klienta OAuth."
     },
     "show_password": "Zobraziť heslo",
     "hide_password": "Skryť heslo",

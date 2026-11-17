@@ -12,7 +12,8 @@
       "totp_invalid": "This code is wrong or too old. Type the code your authenticator app shows right now.",
       "oauth_discovery_failed": "Sign-in through your organisation does not work right now. Try again later or ask your administrator.",
       "oauth_issuer_mismatch": "Sign-in through your organisation is not set up correctly. Ask your administrator to fix it.",
-      "token_exchange_failed": "Your password and code are correct, but the mail server did not let this app in. Ask your administrator to check the sign-in settings for this app."
+      "token_exchange_failed": "Your password and code are correct, but the mail server did not let this app in. Ask your administrator to check the sign-in settings for this app.",
+      "login_refused": "The mail server did not let this app sign you in. It did not check your code. Ask your administrator to check the sign-in settings for this app."
     },
     "token_hint": "Some mail providers give you a token instead of a password. Create one in your mail provider's settings, copy it, and paste it here.",
     "config_error": {

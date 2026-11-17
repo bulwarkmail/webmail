@@ -24,7 +24,8 @@
       "totp_invalid": "Ugyldig godkendelseskode. Kontrollér din autentificeringsapp og prøv igen.",
       "oauth_discovery_failed": "SSO er aktiveret, men identitetsudbyderen kunne ikke nås. Kontrollér din OAuth-konfiguration.",
       "oauth_issuer_mismatch": "Login med denne udbyder er ikke sat korrekt op. Administratoren skal angive udbyderens issuer-adresse.",
-      "token_exchange_failed": "Din adgangskode og kode blev accepteret, men mailserveren nægtede at starte en session for denne app. Bed din administrator om at kontrollere OAuth-klientindstillingerne."
+      "token_exchange_failed": "Din adgangskode og kode blev accepteret, men mailserveren nægtede at starte en session for denne app. Bed din administrator om at kontrollere OAuth-klientindstillingerne.",
+      "login_refused": "Mailserveren afviste dette login, før den tjekkede din kode. Bed din administrator om at kontrollere OAuth-klientindstillingerne."
     },
     "show_password": "Vis adgangskode",
     "hide_password": "Skjul adgangskode",

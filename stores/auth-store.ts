@@ -197,10 +197,14 @@ const ERROR_PATTERNS: Array<{ key: string; matches: string[] }> = [
   { key: 'cors_blocked', matches: ['CORS_ERROR'] },
   { key: 'totp_required', matches: ['TOTP_REQUIRED'] },
   { key: 'token_exchange_failed', matches: ['TOKEN_EXCHANGE_FAILED'] },
+  { key: 'login_refused', matches: ['LOGIN_REFUSED'] },
   { key: 'invalid_credentials', matches: ['Invalid username or password', '401', 'Unauthorized'] },
   { key: 'connection_failed', matches: ['network', 'Failed to fetch', 'NetworkError', 'ECONNREFUSED', 'Load failed', 'cancelled'] },
   { key: 'server_error', matches: ['500', '502', '503', '504', 'Internal Server Error', 'Service Unavailable'] },
 ];
+
+/** The server's answer to a password + code token login, which ends the sign-in (no Basic fallback). */
+class TokenLoginAnswer extends Error {}
 
 function classifyLoginError(error: unknown): string {
   if (!(error instanceof Error)) return 'generic';
@@ -1979,9 +1983,23 @@ export const useAuthStore = create<AuthState>()(
                 if (totp && errorBody?.error === 'token_exchange_failed') {
                   throw new Error('TOKEN_EXCHANGE_FAILED');
                 }
+                // For the same reason, only a server without that endpoint
+                // (404) gets the code over Basic. Any other answer is the
+                // server's verdict: a refused authorization request (OAuth
+                // client, redirect URI or scope) would otherwise end as "This
+                // code is wrong" for a right code (#1750).
+                if (totp && tokenRes.status !== 404) {
+                  debug.warn('auth', 'TOTP login refused by the server:', tokenRes.status, errorBody);
+                  throw new TokenLoginAnswer(
+                    errorBody?.error === 'invalid_credentials' ? 'Invalid username or password'
+                      : errorBody?.error === 'login_failed' ? 'LOGIN_REFUSED'
+                        : `Token login failed: ${tokenRes.status}`,
+                  );
+                }
                 debug.warn('auth', 'TOTP login exchange failed, trying legacy basic auth:', tokenRes.status, errorBody);
               }
             } catch (err) {
+              if (err instanceof TokenLoginAnswer) throw err;
               if (err instanceof Error && (err.message === 'TOTP_REQUIRED' || err.message === 'TOKEN_EXCHANGE_FAILED')) throw err;
               // Unreachable (a server without /api/auth rarely answers CORS).
               tokenLoginUnavailable = true;
