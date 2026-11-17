@@ -1122,7 +1122,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {parsedEvent?.sequence != null && parsedEvent.sequence > 0 && (
+            {/* A reply or proposal carries the event's sequence too: it is no update (#1755). */}
+            {!isResponseOnly && parsedEvent?.sequence != null && parsedEvent.sequence > 0 && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-[0.625rem] font-medium text-muted-foreground whitespace-nowrap">
                 {t('event_updated', { sequence: parsedEvent.sequence })}
               </span>

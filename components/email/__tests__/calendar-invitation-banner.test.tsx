@@ -1244,6 +1244,31 @@ describe('CalendarInvitationBanner', () => {
     )).toBeInTheDocument());
   });
 
+  it('shows no update number on a reply, only who answered and how (#1755)', async () => {
+    const event = (sequence: number) => ({
+      uid: 'uid-16', title: 'Sync', start: '2026-03-27T09:00:00Z', duration: 'PT1H', sequence,
+      organizerCalendarAddress: 'mailto:user@example.com',
+      participants: {
+        a: { '@type': 'Participant', calendarAddress: 'mailto:user@example.com', roles: { owner: true, attendee: true }, participationStatus: 'accepted' },
+        b: { '@type': 'Participant', name: 'Alice', calendarAddress: 'mailto:alice@example.com', roles: { attendee: true }, participationStatus: 'accepted' },
+      },
+    });
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([event(1)]);
+    const { unmount } = render(<CalendarInvitationBanner email={makeEmail({
+      id: 'email-16', from: [{ email: 'alice@example.com' }],
+      attachments: [{ partId: '1', blobId: 'blob-16', size: 256, type: 'text/calendar; method=REPLY', name: 'reply.ics' }],
+    })} />);
+    await waitFor(() => expect(screen.getByText('Alice responded Accepted.')).toBeInTheDocument());
+    expect(screen.queryByText('event_updated')).toBeNull();
+    unmount();
+
+    // An updated invitation still says so.
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([event(2)]);
+    render(<CalendarInvitationBanner email={makeEmail({ id: 'email-17', from: [{ email: 'user@example.com' }] })} />);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Sync' })).toBeInTheDocument());
+    expect(screen.getByText('event_updated')).toBeInTheDocument();
+  });
+
   it('lets a proposal from an attendee Stalwart lists by calendar address be applied', async () => {
     mocks.calendarState.updateEvent = vi.fn().mockResolvedValue(true);
     // As 0.16 and 1.0 store and parse them: mailto: calendar addresses, no email.
