@@ -90,6 +90,8 @@ import { CreateCalendarModal } from "@/components/calendar/create-calendar-modal
 import { CalendarSidebarHeader } from "@/components/calendar/calendar-sidebar-header";
 import { getUserParticipantId, collectUserCalendarAddresses, userOrganizes, getParticipantList } from "@/lib/calendar-participants";
 import type { AnswerTarget } from "@/lib/calendar-delegate";
+import { gridAnswerTargets, useAccountOwners } from "./answer-bars";
+import { CalendarOwnersContext, ownerOfCalendar } from "@/hooks/use-reply-emails";
 import type { MoveEventHandler } from "@/hooks/use-time-grid-interactions";
 import type { RevealTime } from "@/hooks/use-display-hours";
 import { generateBirthdayEvents, createBirthdayCalendar, BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
@@ -172,6 +174,21 @@ function keepEventClearOfToast(eventId: string, toastId: string): void {
 
 function isRecurringEvent(event: CalendarEvent): boolean {
   return (event.recurrenceRules?.length ?? 0) > 0 || event.recurrenceId != null;
+}
+
+type RsvpStatus = CalendarParticipant['participationStatus'];
+
+/** The grid menu's answers: the user's own, and the owner's in a shared calendar (#1760). */
+function gridAnswerMenuProps(targets: AnswerTarget[] | null, respond: (target: AnswerTarget, status: RsvpStatus) => void) {
+  const self = targets?.find((target) => target.kind === "self");
+  const owner = targets?.find((target) => target.kind === "owner");
+  return {
+    onRespond: self ? (status: RsvpStatus) => respond(self, status) : undefined,
+    responseStatus: self?.status,
+    ownerAnswer: owner
+      ? { name: owner.ownerName ?? "", status: owner.status, onRespond: (status: RsvpStatus) => respond(owner, status) }
+      : undefined,
+  };
 }
 
 export interface CalendarAppProps {
@@ -2108,16 +2125,20 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
 
   // Answering an invitation from the grid (pim-9), as the login the event is
   // in, the popover's way (handleRsvp: a series asks "this event or all").
-  const gridAnswerFor = useCallback((event: CalendarEvent) => {
+  // In a calendar of another person's or a group's account, for its owner
+  // as the popover offers it (#1760, lib/calendar-delegate.ts).
+  const accountOwners = useAccountOwners(client, allCalendars);
+  const gridAnswerFor = useCallback((event: CalendarEvent): AnswerTarget[] | null => {
     const emails = userEmailsFor(event);
-    if (!canUserRsvp(event, { ...editabilityContext, userCalendarAddresses: emails })) return null;
-    const participantId = getUserParticipantId(event, emails);
-    return participantId ? { participantId, status: event.participants?.[participantId]?.participationStatus ?? null } : null;
-  }, [userEmailsFor, editabilityContext]);
-  const handleRespondFromGrid = useCallback((event: CalendarEvent, status: CalendarParticipant['participationStatus']) => {
-    const answer = gridAnswerFor(event);
-    if (answer) void handleRsvp(event.id, answer.participantId, status);
-  }, [gridAnswerFor, handleRsvp]);
+    const canRsvpSelf = canUserRsvp(event, { ...editabilityContext, userCalendarAddresses: emails });
+    const calendar = allCalendars.find((c) => event.calendarIds?.[c.id]);
+    const owner = ownerOfCalendar(accountOwners, calendar);
+    const targets = gridAnswerTargets({ event, calendar, userEmails: emails, canRsvpSelf, owner, events, client });
+    return targets.length > 0 ? targets : null;
+  }, [userEmailsFor, editabilityContext, allCalendars, accountOwners, events, client]);
+  const handleRespondFromGrid = useCallback((target: AnswerTarget, status: RsvpStatus) => {
+    void handleRsvp(target.eventId, target.participantId, status, target.sentBy);
+  }, [handleRsvp]);
   const handleReplyEvent = useCallback((anchor: HTMLElement, event: CalendarEvent) => {
     closeDetail();
     // Nothing to answer here (no right to): the event's card says why.
@@ -2423,7 +2444,10 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
         {eventsLoadError && normalizedViewMode !== "tasks" && (
           <CalendarLoadErrorNotice onRetry={retryEventsLoad} />
         )}
-        {viewContent}
+        {/* Shared calendars draw their owner's answers (#1760). */}
+        <CalendarOwnersContext.Provider value={accountOwners}>
+          {viewContent}
+        </CalendarOwnersContext.Provider>
         {/* The first events: the grid is drawn already and they fill in on
             it, so this is said rather than shown (a dimmed grid with a
             spinner flashed between the skeleton and the events). */}
@@ -2830,8 +2854,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
           onDelete={() => handleDeleteContextMenu(eventContextMenu.data!)}
           onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-event", event: eventContextMenu.data! }); }}
           editable={canEditEvent(eventContextMenu.data)}
-          onRespond={gridAnswerFor(eventContextMenu.data) ? (status) => handleRespondFromGrid(eventContextMenu.data!, status) : undefined}
-          responseStatus={gridAnswerFor(eventContextMenu.data)?.status}
+          {...gridAnswerMenuProps(gridAnswerFor(eventContextMenu.data), handleRespondFromGrid)}
           answersOnly={answersOnlyMenu}
           overDialog={true}
           copyTo={answersOnlyMenu ? [] : copyTargetsOf(eventContextMenu.data).map((target) => ({

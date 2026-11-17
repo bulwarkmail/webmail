@@ -16,7 +16,7 @@ import { useScrollWindow } from "@/hooks/use-scroll-window";
 import type { ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import { useCvdColor } from "@/hooks/use-cvd-color";
-import { useEventUserEmails } from "@/hooks/use-event-user-emails";
+import { useReplyEmailsFor } from "@/hooks/use-reply-emails";
 import { gridReplyState } from "@/lib/calendar-reply-state";
 import { readableTextOn } from "@/lib/color-transform";
 import { useCollectionNames } from "@/hooks/use-collection-names";
@@ -102,7 +102,7 @@ export function CalendarAgendaView({
   const shownName = useCollectionNames();
   const paint = useCvdColor();
   // An event of another signed-in login is read with that login's addresses.
-  const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
+  const replyEmailsFor = useReplyEmailsFor(currentUserEmails ?? []);
   // Grid days / event dates are display dates (local fields = wall-clock in
   // the user's zone); the app-wide formatter would shift them again (#755).
   const intlFormatter = useDisplayDateFormatter();
@@ -297,7 +297,7 @@ export function CalendarAgendaView({
               // iTIP CANCEL marks the attendee's copy with status "cancelled"
               // instead of deleting it (#572); a declined invitation stays
               // listed too (#1110).
-              const userEmails = userEmailsFor(ev);
+              const userEmails = replyEmailsFor(ev, calendar);
               const isInactive = ev.status === "cancelled" || isDeclinedByUser(ev, userEmails);
               // Not answered yet: a hollow dot and "Reply"; maybe: a dashed ring (pim-9).
               const replyState = isInactive ? null : gridReplyState(ev, userEmails);

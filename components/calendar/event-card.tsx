@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp, MapPin, Users } from "@/components/icons";
 import { primaryLocationName } from "@/lib/event-links";
 import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
 import { gridReplyState, type GridReplyState } from "@/lib/calendar-reply-state";
-import { useEventUserEmails } from "@/hooks/use-event-user-emails";
+import { useReplyEmailsFor } from "@/hooks/use-reply-emails";
 import { getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { useSettingsStore, type MonthTimedEventStyle } from "@/stores/settings-store";
 import { readableTextOn } from "@/lib/color-transform";
@@ -164,8 +164,9 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   const tEvent = useTranslations("ux_pim_event");
   const tGrid = useTranslations("ux_pim_grid");
   const shownName = useCollectionNames();
-  // The addresses of the login the event is in (pim-12, pim-9).
-  const userEmails = useEventUserEmails(currentUserEmails ?? [])(event);
+  // The addresses of the login the event is in (pim-12, pim-9), or of the
+  // calendar's owner in a shared one (#1760).
+  const userEmails = useReplyEmailsFor(currentUserEmails ?? [])(event, calendar);
   const [isBeingDragged, setIsBeingDragged] = useState(false);
   const paint = useCvdColor();
   const color = paint(getEventColor(event, calendar));

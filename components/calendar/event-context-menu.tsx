@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import {
   ContextMenu,
+  ContextMenuHeader,
   ContextMenuItem,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
@@ -53,6 +54,15 @@ interface EventContextMenuProps {
   onRespond?: (status: CalendarParticipant["participationStatus"]) => void;
   /** The answer given so far; its item is left out. */
   responseStatus?: CalendarParticipant["participationStatus"] | null;
+  /**
+   * Answer for the owner of a shared calendar (#1760), above the user's
+   * own answer, each under a heading.
+   */
+  ownerAnswer?: {
+    name: string;
+    status: CalendarParticipant["participationStatus"] | null;
+    onRespond: (status: CalendarParticipant["participationStatus"]) => void;
+  };
   /** Only the answers: the menu of the "?" / "Reply" marker. */
   answersOnly?: boolean;
   /** "Copy to <address>", one per other signed-in account (pim-p2-16). */
@@ -79,6 +89,7 @@ export function EventContextMenu({
   editable = true,
   onRespond,
   responseStatus,
+  ownerAnswer,
   answersOnly = false,
   copyTo = [],
   onCopyToCalendar,
@@ -88,6 +99,7 @@ export function EventContextMenu({
   const t = useTranslations("calendar");
   const tDeepLink = useTranslations("deep_link");
   const tP3 = useTranslations("ux_p3_pim_cal");
+  const tDelegate = useTranslations("calendar_delegate");
   const copyLink = useCopyLink();
 
   const handle = (fn: () => void) => () => {
@@ -97,19 +109,36 @@ export function EventContextMenu({
 
   const hasMeetingLink = !!findMeetingLink(event);
 
-  const answers = onRespond ? (
+  const answerItems = (
+    status: CalendarParticipant["participationStatus"] | null | undefined,
+    respond: (status: CalendarParticipant["participationStatus"]) => void,
+    testId: string,
+  ) => (
     <>
-      {responseStatus !== "accepted" && (
-        <ContextMenuItem icon={Check} label={t("participants.accept")} onClick={handle(() => onRespond("accepted"))} testId="grid-answer-accepted" />
+      {status !== "accepted" && (
+        <ContextMenuItem icon={Check} label={t("participants.accept")} onClick={handle(() => respond("accepted"))} testId={`${testId}-accepted`} />
       )}
-      {responseStatus !== "tentative" && (
-        <ContextMenuItem icon={HelpCircle} label={t("participants.maybe")} onClick={handle(() => onRespond("tentative"))} testId="grid-answer-tentative" />
+      {status !== "tentative" && (
+        <ContextMenuItem icon={HelpCircle} label={t("participants.maybe")} onClick={handle(() => respond("tentative"))} testId={`${testId}-tentative`} />
       )}
-      {responseStatus !== "declined" && (
-        <ContextMenuItem icon={X} label={t("participants.decline")} onClick={handle(() => onRespond("declined"))} testId="grid-answer-declined" />
+      {status !== "declined" && (
+        <ContextMenuItem icon={X} label={t("participants.decline")} onClick={handle(() => respond("declined"))} testId={`${testId}-declined`} />
       )}
     </>
-  ) : null;
+  );
+  const ownAnswers = onRespond ? answerItems(responseStatus, onRespond, "grid-answer") : null;
+  const answers = ownerAnswer ? (
+    <>
+      <ContextMenuHeader>{tDelegate("answer_for", { name: ownerAnswer.name })}</ContextMenuHeader>
+      {answerItems(ownerAnswer.status, ownerAnswer.onRespond, "grid-answer-owner")}
+      {ownAnswers && (
+        <>
+          <ContextMenuHeader>{t("participants.rsvp_label")}</ContextMenuHeader>
+          {ownAnswers}
+        </>
+      )}
+    </>
+  ) : ownAnswers;
 
   if (answersOnly && answers) {
     return (
