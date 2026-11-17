@@ -39,7 +39,10 @@ function Harness() {
 }
 
 async function renderSection() {
-  render(<Harness />);
+  // Finish loading the policy and the field's mount effects before typing.
+  await act(async () => {
+    render(<Harness />);
+  });
   await waitFor(() => expect(screen.getByTestId('org-phishing-address')).toBeInTheDocument());
 }
 
