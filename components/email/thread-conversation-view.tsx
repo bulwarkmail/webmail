@@ -685,6 +685,19 @@ interface ConversationEmailBodyProps {
 }
 
 /**
+ * The attachments a conversation message shows under its body. Parts the
+ * body embeds via cid: stay out while the user hides inline images, and the
+ * report parts of a bounce or read receipt never show. Shown as plain text,
+ * the body embeds nothing, not even the images declared inline.
+ */
+export function conversationVisibleAttachments(email: Email, hideInlineImageAttachments: boolean, plainText: boolean) {
+  const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
+  if (!hideInlineImageAttachments) return attachments;
+  const bodyCids = collectReferencedCids(plainText ? null : getRenderableHtmlBody(email));
+  return attachments.filter(att => !isEmbeddedInBody(att, bodyCids, attachments, { plainText }));
+}
+
+/**
  * One conversation message's body: the remote-content banner, the sanitized
  * body in a sandboxed iframe and its attachments. Shared by the phone thread
  * view and Mountain View's expanded conversation messages.
@@ -928,18 +941,12 @@ export function ConversationEmailBody({
     [shownContent, phishingMarked, tPhishing],
   );
 
-  // Parts the body embeds via cid: stay out of the attachment row while the
-  // user hides inline images - the desktop viewer's rule, shared through
-  // lib/attachment-visibility.ts so the two views cannot drift apart. The
-  // report parts of a bounce or read receipt never show. Shown as plain text,
-  // the body embeds nothing, not even the images declared inline.
-  const visibleAttachments = useMemo(() => {
-    const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
-    if (!hideInlineImageAttachments) return attachments;
-    const plainText = mailViewMode === 'plain';
-    const bodyCids = collectReferencedCids(plainText ? null : getRenderableHtmlBody(email));
-    return attachments.filter(att => !isEmbeddedInBody(att, bodyCids, attachments, { plainText }));
-  }, [email, hideInlineImageAttachments, mailViewMode]);
+  // The desktop viewer's rule, shared through lib/attachment-visibility.ts so
+  // the two views cannot drift apart.
+  const visibleAttachments = useMemo(
+    () => conversationVisibleAttachments(email, hideInlineImageAttachments, mailViewMode === 'plain'),
+    [email, hideInlineImageAttachments, mailViewMode],
+  );
   const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
   const attachmentRow = useFirstRowLimit(visibleAttachments.length, !attachmentsExpanded);
   const attachmentLimit = attachmentsExpanded ? null : attachmentRow.limit;
