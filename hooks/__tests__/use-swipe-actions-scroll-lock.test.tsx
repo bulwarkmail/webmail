@@ -46,6 +46,15 @@ describe("useSwipeActions scroll lock", () => {
     expect(Number(row.dataset.offset)).toBe(0);
   });
 
+  it("hands a touch that leans sideways and then turns vertical back to the list", () => {
+    const row = setup();
+    expect(fireEvent.touchMove(row, at(106, 101))).toBe(false);
+    expect(fireEvent.touchMove(row, at(107, 120))).toBe(true);
+    expect(fireEvent.touchMove(row, at(108, 160))).toBe(true);
+    expect(fireEvent.touchMove(row, at(150, 170))).toBe(true);
+    expect(Number(row.dataset.offset)).toBe(0);
+  });
+
   it("does not move the row once the browser has already started scrolling", () => {
     const row = setup();
     fireEvent.touchMove(row, { ...at(130, 110), cancelable: false });
