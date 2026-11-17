@@ -654,7 +654,7 @@ describe('hydrateRecurrenceInstances with an occurrence listed twice', () => {
       expect(merged.participants?.org.participationStatus).toBe('accepted');
     }
   });
-  
+
   it('takes the instants of an occurrence the organizer moved to another day', () => {
     // Stalwart 0.16.27 lists an occurrence the organizer moved from 2 to 16
     // March twice under one id: the series' occurrence and the moved one.
@@ -682,8 +682,14 @@ describe('hydrateRecurrenceInstances with an occurrence listed twice', () => {
   });
 
   it('keeps the series instants when the override does not move the occurrence', () => {
-    const [merged] = hydrateRecurrenceInstances([series, stub], bases);
-    expect(merged.utcStart).toBe(series.utcStart);
+    // The reply stub's own end comes from the server's wrong one-day
+    // duration; its patch only answers for an attendee.
+    const stubWithOwnEnd = { ...stub, utcEnd: '2026-09-09T08:00:00Z' } as CalendarEvent;
+    for (const order of [[series, stubWithOwnEnd], [stubWithOwnEnd, series]]) {
+      const [merged] = hydrateRecurrenceInstances(order, bases);
+      expect(merged.utcStart).toBe(series.utcStart);
+      expect(merged.utcEnd).toBe(series.utcEnd);
+    }
   });
 });
 

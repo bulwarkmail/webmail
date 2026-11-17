@@ -418,22 +418,20 @@ function collapseDuplicateInstances(
     const override = group.reduce((a, b) => (score(b) > score(a) ? b : a));
     const series = group.find((instance) => instance !== override) ?? first;
     const merged: Record<string, unknown> = { ...series };
-    for (const k of new Set(patchKeys.map(firstPointerSegment))) {
+    const touched = new Set(patchKeys.map(firstPointerSegment));
+    for (const k of touched) {
       merged[k] = k === 'participants'
         ? mergeOverrideParticipants(series.participants, override.participants)
         : (override as unknown as Record<string, unknown>)[k];
     }
-    
     // utcStart/utcEnd are computed by the server, so an override never lists
     // them; when it moves the occurrence (start, duration or zone), the
     // series' instants are stale and the grid, which places events by
     // utcStart, would draw the moved occurrence at its original slot.
-    const touched = new Set(patchKeys.map(firstPointerSegment));
     if (['start', 'duration', 'timeZone', 'showWithoutTime'].some((k) => touched.has(k))) {
       merged.utcStart = override.utcStart;
       merged.utcEnd = override.utcEnd;
     }
-    
     return merged as unknown as CalendarEvent;
   };
 
