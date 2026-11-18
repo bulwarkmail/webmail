@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
-import { FilterRuleModal } from '@/components/filters/filter-rule-modal';
+import { RuleEditor } from '@/components/filters/rule-editor';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useFilterStore } from '@/stores/filter-store';
@@ -39,9 +39,8 @@ function unnamedButtons(root: HTMLElement) {
 
 describe('names of settings controls', () => {
   it('names the remove buttons of a rule for what they remove', () => {
-    render(<FilterRuleModal rule={rule} mailboxes={[]} onSave={vi.fn()} onClose={vi.fn()} />);
+    render(<RuleEditor rule={rule} mailboxes={[]} onSave={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getAllByRole('button', { name: 'remove_condition' })).toHaveLength(2);
-    expect(screen.getAllByRole('button', { name: 'remove_action' })).toHaveLength(2);
     expect(screen.queryByRole('button', { name: 'delete_rule' })).toBeNull();
     expect(unnamedButtons(screen.getByRole('dialog'))).toEqual([]);
   });

@@ -26,6 +26,7 @@ import {
   checklistFromActions,
   checklistProblem,
   checklistToActions,
+  foldStopAction,
   formatSize,
   keepActionOrder,
   parseSize,
@@ -37,7 +38,6 @@ import type { RulePreview } from "@/lib/filters/rule-preview";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { RuleFolderPicker } from "./rule-folder-picker";
-import { foldStopAction } from "./filter-rule-modal";
 
 export interface RuleEditorProps {
   rule?: FilterRule;

@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import { toast } from '@/stores/toast-store';
-import { FilterRuleModal } from '../filter-rule-modal';
+import { RuleEditor } from '../rule-editor';
 
 vi.mock('@/stores/toast-store', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() },
@@ -20,27 +20,25 @@ function headerRule(headerName: string): FilterRule {
   };
 }
 
-// Stalwart's Sieve compiler (sieve-rs, on 0.16 and 1.0) refuses a header name
-// outside [A-Za-z0-9_-], and with it the whole script, so every other rule
-// would stop running too. The modal keeps such a rule from being saved.
-describe('FilterRuleModal header names', () => {
+describe('RuleEditor header names', () => {
   beforeEach(() => {
     vi.mocked(toast.error).mockClear();
   });
 
   it.each(['X-Spam Flag', 'X-Foo.Bar', ''])('blocks saving the header name %j', (headerName) => {
     const onSave = vi.fn();
-    render(<FilterRuleModal rule={headerRule(headerName)} mailboxes={[]} onSave={onSave} onClose={() => {}} />);
+    render(<RuleEditor rule={headerRule(headerName)} mailboxes={[]} onSave={onSave} onClose={() => {}} />);
 
     fireEvent.click(screen.getByText('save'));
 
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toBe('validation_header_name');
+    expect(screen.getByPlaceholderText('header_name').getAttribute('aria-invalid')).toBe('true');
   });
 
   it('saves a valid header name, trimmed', () => {
     const onSave = vi.fn();
-    render(<FilterRuleModal rule={headerRule(' X-Spam_Flag-2 ')} mailboxes={[]} onSave={onSave} onClose={() => {}} />);
+    render(<RuleEditor rule={headerRule(' X-Spam_Flag-2 ')} mailboxes={[]} onSave={onSave} onClose={() => {}} />);
 
     fireEvent.click(screen.getByText('save'));
 
@@ -53,7 +51,7 @@ describe('FilterRuleModal header names', () => {
 
   it('blocks a name typed into the header field', () => {
     const onSave = vi.fn();
-    render(<FilterRuleModal rule={headerRule('X-Ok')} mailboxes={[]} onSave={onSave} onClose={() => {}} />);
+    render(<RuleEditor rule={headerRule('X-Ok')} mailboxes={[]} onSave={onSave} onClose={() => {}} />);
 
     fireEvent.change(screen.getByPlaceholderText('header_name'), { target: { value: 'X-Mailer: Foo' } });
     fireEvent.click(screen.getByText('save'));
@@ -63,37 +61,32 @@ describe('FilterRuleModal header names', () => {
   });
 });
 
-// A new rule starts with "Move to folder" and no folder. Saving it says so
-// under the actions and marks the folder field, instead of a toast in a
-// corner of the window.
-describe('FilterRuleModal incomplete action', () => {
+describe('RuleEditor folder left out', () => {
   const mailboxes = [
     { id: 'inbox', name: 'Inbox', role: 'inbox', sortOrder: 0, myRights: { mayAddItems: true } },
     { id: 'news', name: 'News', sortOrder: 1, myRights: { mayAddItems: true } },
   ] as never;
-  // The folder field is a button that opens the Move list (mail-p3-9).
-  const folderFields = () => screen.getAllByRole('button', { name: 'move_to_folder' });
+  const moveField = () => screen.getAllByRole('button', { name: 'move_to_folder' })[0];
+  const copyField = () => screen.getAllByRole('button', { name: 'move_to_folder' })[1];
   const pickFolder = (field: HTMLElement, id: string) => {
     fireEvent.click(field);
     fireEvent.click(screen.getByTestId(`rule-folder:${id}`));
   };
 
-  it('points at the folder field when no folder was chosen', async () => {
+  it('points at the folder field when Move is ticked without a folder', () => {
     vi.mocked(toast.error).mockClear();
     const onSave = vi.fn();
-    render(<FilterRuleModal mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
-    fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'News' } });
+    render(<RuleEditor mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
     fireEvent.change(screen.getByPlaceholderText('filter_value_placeholder'), { target: { value: 'news@example.com' } });
+    fireEvent.click(screen.getByLabelText('action_types.move'));
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
 
     expect(onSave).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
-    // The row is there; what it misses is the folder, not "an action".
     expect(screen.getByRole('alert').textContent).toBe('validation_action_folder');
-    const folder = folderFields()[0];
-    expect(folder.getAttribute('aria-invalid')).toBe('true');
+    expect(moveField().getAttribute('aria-invalid')).toBe('true');
 
-    pickFolder(folder, 'news');
+    pickFolder(moveField(), 'news');
     expect(screen.queryByRole('alert')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
     expect(onSave.mock.calls[0][0].actions).toEqual([{ type: 'move', mailboxId: 'news', value: 'News' }]);
@@ -101,20 +94,17 @@ describe('FilterRuleModal incomplete action', () => {
 
   it('marks the empty condition too, and focuses the first field to fix', async () => {
     const onSave = vi.fn();
-    render(<FilterRuleModal mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
-    fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'News' } });
+    render(<RuleEditor mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
+    fireEvent.click(screen.getByLabelText('action_types.move'));
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
 
     const value = screen.getByRole('textbox', { name: 'condition_value' });
-    const folder = folderFields()[0];
     expect(value.getAttribute('aria-invalid')).toBe('true');
-    expect(folder.getAttribute('aria-invalid')).toBe('true');
+    expect(moveField().getAttribute('aria-invalid')).toBe('true');
     expect(screen.getAllByRole('alert').map((a) => a.textContent)).toEqual([
       'validation_empty_conditions',
       'validation_action_folder',
     ]);
-    // The condition comes first on the form, so focus goes there, not to
-    // the folder.
     await waitFor(() => expect(document.activeElement).toBe(value));
 
     fireEvent.change(value, { target: { value: 'news@example.com' } });
@@ -122,24 +112,16 @@ describe('FilterRuleModal incomplete action', () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('does not save a second action left without its folder', () => {
+  it('does not save a copy left without its folder next to a move that has one', () => {
     const onSave = vi.fn();
-    render(<FilterRuleModal mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
-    fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'News' } });
+    render(<RuleEditor mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
     fireEvent.change(screen.getByPlaceholderText('filter_value_placeholder'), { target: { value: 'news@example.com' } });
-    pickFolder(folderFields()[0], 'news');
-    fireEvent.click(screen.getByText('add_action'));
+    pickFolder(moveField(), 'news');
+    fireEvent.click(screen.getByLabelText('action_types.copy'));
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
 
     expect(onSave).not.toHaveBeenCalled();
-    const folders = folderFields();
-    expect(folders.map((f) => f.getAttribute('aria-invalid'))).toEqual(['false', 'true']);
+    expect([moveField(), copyField()].map((f) => f.getAttribute('aria-invalid'))).toEqual(['false', 'true']);
     expect(screen.getByRole('alert').textContent).toBe('validation_action_folder');
-  });
-
-  it('starts a changed action without a folder too, like a new row', () => {
-    render(<FilterRuleModal mailboxes={mailboxes} onSave={vi.fn()} onClose={() => {}} />);
-    fireEvent.change(screen.getByRole('combobox', { name: 'actions' }), { target: { value: 'copy' } });
-    expect(folderFields()[0].getAttribute('data-value')).toBe('');
   });
 });

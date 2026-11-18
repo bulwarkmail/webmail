@@ -1,11 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import { getBrowserTimeZone } from '@/lib/timezone';
 import { useSettingsStore } from '@/stores/settings-store';
-import { FilterRuleModal } from '../filter-rule-modal';
-import { RuleSummary, VisualRuleSummary } from '@/components/settings/filter-settings';
+import { RuleEditor } from '../rule-editor';
 
 const toastError = vi.hoisted(() => vi.fn());
 vi.mock('@/stores/toast-store', () => ({ toast: { error: toastError, success: vi.fn(), info: vi.fn() } }));
@@ -47,9 +46,9 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function openModal(props: Partial<React.ComponentProps<typeof FilterRuleModal>> = {}) {
+function openModal(props: Partial<React.ComponentProps<typeof RuleEditor>> = {}) {
   const onSave = vi.fn();
-  render(<FilterRuleModal mailboxes={[]} onSave={onSave} onClose={vi.fn()} {...props} />);
+  render(<RuleEditor mailboxes={[]} onSave={onSave} onClose={vi.fn()} {...props} />);
   return { onSave, saved: () => onSave.mock.calls[0][0] as FilterRule };
 }
 
@@ -68,7 +67,6 @@ describe('filter rule period (dialog)', () => {
     const { onSave, saved } = openModal({ rule: rule(), periodsSupported: true });
     fireEvent.click(toggle());
     expect(screen.getByText('period_hint')).toBeInTheDocument();
-    // Berlin: CEST (+02:00) on 5 Oct, CET (+01:00) after the switch on 25 Oct.
     fireEvent.change(startInput(), { target: { value: '2026-10-05T08:00' } });
     fireEvent.change(endInput(), { target: { value: '2026-10-26T18:00' } });
     save();
@@ -109,8 +107,6 @@ describe('filter rule period (dialog)', () => {
     const { onSave } = openModal({ rule: rule(), periodsSupported: true });
     fireEvent.click(toggle());
     fireEvent.change(startInput(), { target: { value: '2026-10-05T08:00' } });
-    // A browser reads a field it holds half filled in as empty, often without
-    // an event; jsdom never holds one, so the field says so here.
     Object.defineProperty(endInput(), 'validity', { value: { badInput: true }, configurable: true });
     save();
     expect(onSave).not.toHaveBeenCalled();
@@ -126,7 +122,6 @@ describe('filter rule period (dialog)', () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toBe('validation_period_invalid');
 
-    // The last minute of 9999 in New York is year 10000 in UTC already.
     useSettingsStore.setState({ timeZone: 'America/New_York' });
     fireEvent.change(endInput(), { target: { value: '9999-12-31T23:59' } });
     save();
@@ -162,8 +157,6 @@ describe('filter rule period (dialog)', () => {
   });
 
   it('keeps a saved boundary exactly while it is left as shown', () => {
-    // 08:00:30, shown as 08:00; and 02:30 CEST on the night the clocks go
-    // back, when 02:30 comes twice.
     const period = { activeFrom: '2026-10-05T06:00:30.000Z', activeUntil: '2026-10-25T00:30:00.000Z' };
     const { saved } = openModal({ rule: rule(period), periodsSupported: true });
     expect(startInput().value).toBe('2026-10-05T08:00');
@@ -197,66 +190,20 @@ describe('filter rule period (dialog)', () => {
     const { saved } = openModal({ rule: rule({ activeUntil: '2026-10-16T16:00:00.000Z' }) });
     expect(toggle().checked).toBe(true);
     fireEvent.click(toggle());
-    // The switch stays where it was, so a slip can be undone.
     expect(toggle().checked).toBe(false);
     save();
     expect(saved().activeUntil).toBeUndefined();
   });
 
-  it('does not run a rule with a period on existing messages', () => {
-    openModal({
-      initialRule: rule({ actions: [{ type: 'mark_read' }] }),
-      offerApplyToExisting: true,
-      periodsSupported: true,
-    });
-    const applyExisting = screen.getByLabelText('apply_existing') as HTMLInputElement;
-    expect(applyExisting.disabled).toBe(false);
+  it('previews, and so applies to, only mail received within the period', async () => {
+    const previewMatches = vi.fn().mockResolvedValue({ items: [], total: 3, complete: true, inFolder: 1 });
+    openModal({ initialRule: rule({ actions: [{ type: 'mark_read' }] }), periodsSupported: true, previewMatches, offerApplyToExisting: true });
     fireEvent.click(toggle());
-    expect(applyExisting.disabled).toBe(true);
-    expect(screen.getByText('apply_existing_period')).toBeInTheDocument();
-  });
-});
-
-describe('filter rule period (list)', () => {
-  // 14:00 in Berlin
-  beforeEach(() => vi.useFakeTimers({ now: new Date('2026-10-10T12:00:00.000Z'), toFake: ['Date'] }));
-
-  const periods = [
-    ['scheduled', { activeFrom: '2026-10-12T06:00:00.000Z', activeUntil: '2026-10-16T16:00:00.000Z' }, '12 Oct 2026, 08:00 – 16 Oct 2026, 18:00'],
-    ['active', { activeFrom: '2026-10-05T06:00:00.000Z', activeUntil: '2026-10-16T16:00:00.000Z' }, '5 Oct 2026, 08:00 – 16 Oct 2026, 18:00'],
-    ['expired', { activeFrom: '2026-10-01T06:00:00.000Z', activeUntil: '2026-10-09T16:00:00.000Z' }, '1 Oct 2026, 08:00 – 9 Oct 2026, 18:00'],
-    ['active', { activeUntil: '2026-10-16T16:00:00.000Z' }, '… – 16 Oct 2026, 18:00'],
-    ['scheduled', { activeFrom: '2026-10-12T06:00:00.000Z' }, '12 Oct 2026, 08:00 – …'],
-  ] as const;
-
-  it.each(periods)('shows a %s period in the detailed view', (status, period, range) => {
-    render(<VisualRuleSummary rule={rule(period)} />);
-    expect(screen.getByText('period_title')).toBeInTheDocument();
-    expect(screen.getByText(range)).toBeInTheDocument();
-    expect(screen.getByText(`(period_status_${status})`)).toBeInTheDocument();
-  });
-
-  it.each(periods)('shows a %s period in the compact view', (status, period, range) => {
-    render(<RuleSummary rule={rule(period)} />);
-    expect(screen.getByText(`· ${range} (period_status_${status})`)).toBeInTheDocument();
-  });
-
-  it('shows the period of a rule that is off without saying it is active', () => {
-    const off = rule({ enabled: false, activeFrom: '2026-10-05T06:00:00.000Z', activeUntil: '2026-10-16T16:00:00.000Z' });
-    const { unmount } = render(<VisualRuleSummary rule={off} />);
-    expect(screen.getByText('5 Oct 2026, 08:00 – 16 Oct 2026, 18:00')).toBeInTheDocument();
-    expect(screen.queryByText(/period_status_/)).toBeNull();
-    unmount();
-    render(<RuleSummary rule={off} />);
-    expect(screen.getByText('· 5 Oct 2026, 08:00 – 16 Oct 2026, 18:00')).toBeInTheDocument();
-    expect(screen.queryByText(/period_status_/)).toBeNull();
-  });
-
-  it('shows no period for a rule without one', () => {
-    const { unmount } = render(<VisualRuleSummary rule={rule()} />);
-    expect(screen.queryByText('period_title')).toBeNull();
-    unmount();
-    const { container } = render(<RuleSummary rule={rule()} />);
-    expect(container.textContent).not.toContain('·');
+    fireEvent.change(startInput(), { target: { value: '2026-10-05T08:00' } });
+    await waitFor(() => expect(previewMatches).toHaveBeenLastCalledWith(
+      expect.objectContaining({ activeFrom: '2026-10-05T06:00:00.000Z', activeUntil: undefined }),
+      expect.anything(),
+    ), { timeout: 3000 });
+    expect(await screen.findByLabelText('apply_to')).toBeInTheDocument();
   });
 });

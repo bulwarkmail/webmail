@@ -44,6 +44,22 @@ export function forwardAddresses(text: string): string[] {
   return text.split(/[\s,;]+/).map((a) => a.trim()).filter(Boolean);
 }
 
+/**
+ * A rule saved with the old "Stop processing" action opens with that action
+ * folded into the checkbox, so it keeps working and can be saved again. What
+ * came after the stop never ran, so it goes; a rule that did nothing before
+ * it keeps the message in the inbox, as it did.
+ */
+export function foldStopAction(actions: FilterAction[], stopProcessing: boolean): {
+  actions: FilterAction[];
+  stopProcessing: boolean;
+} {
+  const stopAt = actions.findIndex((a) => a.type === 'stop');
+  if (stopAt === -1) return { actions, stopProcessing };
+  const before = actions.slice(0, stopAt);
+  return { actions: before.length > 0 ? before : [{ type: 'keep' }], stopProcessing: true };
+}
+
 export function checklistFromActions(actions: FilterAction[]): Checklist {
   const state = emptyChecklist();
   let forwardSeen = false;

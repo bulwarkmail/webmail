@@ -618,7 +618,6 @@
       "not_supported": "Máy chủ thư không hỗ trợ quy tắc lọc.",
       "match_all": "Tất cả điều kiện phải đúng",
       "match_any": "Chỉ cần một điều kiện đúng",
-      "stop_processing": "Không kiểm tra các quy tắc phía dưới quy tắc này",
       "value_placeholder_multi": "Giá trị (phân tách nhiều giá trị bằng dấu phẩy)",
       "condition_fields": {
         "header": "Trường tiêu đề khác",
@@ -649,11 +648,9 @@
         "validation_failed": "Không thể kiểm tra mã. Hãy thử lại."
       },
       "managed_by_tooltip": "Do {source} quản lý. Hãy thay đổi trong ứng dụng đó hoặc chỉnh sửa quy tắc bằng mã.",
-      "apply_existing_unsupported": "Chỉ một số quy tắc có thể áp dụng cho thư hiện có: quy tắc kiểm tra người gửi, người nhận, tiêu đề thư hoặc trường tiêu đề, đồng thời thực hiện thao tác di chuyển, sao chép, đánh dấu đã đọc, gắn dấu sao hoặc gắn thẻ.",
       "validation_period_order": "Ngày kết thúc phải sau ngày bắt đầu",
       "period_hint": "Quy tắc áp dụng cho thư đến trong khoảng thời gian này. Để trống một trường nếu không giới hạn thời điểm bắt đầu hoặc kết thúc.",
-      "validation_period_invalid": "Nhập ngày kèm giờ hoặc để trống trường",
-      "apply_existing_period": "Quy tắc có giới hạn thời gian chỉ áp dụng cho thư đến trong khoảng đó nên không thể áp dụng cho các thư hiện có."
+      "validation_period_invalid": "Nhập ngày kèm giờ hoặc để trống trường"
     },
     "templates": {
       "description": "Lưu những thư bạn thường soạn để dùng lại. Mẫu thư có thể chứa các chỗ trống để bạn điền mỗi lần sử dụng.",
