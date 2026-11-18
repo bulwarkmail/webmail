@@ -6193,7 +6193,9 @@
     "answer_for": "Antwoorden namens {name}",
     "no_write": "Je ziet de uitnodigingen van {name}, maar kunt er niet namens hen op antwoorden. Vraag om bewerkrechten.",
     "also_invited": "Je bent zelf ook uitgenodigd en deze server kan jouw antwoord niet onderscheiden van dat van {name}. {name} moet deze zelf beantwoorden.",
-    "answered_by": "Beantwoord door {who}"
+    "answered_by": "Beantwoord door {who}",
+    "organizer_owner": "{name} (verzonden door jou)",
+    "organizer_me": "Jij"
   },
   "free_busy_share": {
     "button": "Mijn vrij/bezet delen met {group}",

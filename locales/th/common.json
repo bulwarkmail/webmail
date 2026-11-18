@@ -2989,7 +2989,9 @@
     "answer_for": "ตอบแทน {name}",
     "no_write": "คุณเห็นคำเชิญของ {name} แต่ตอบแทนไม่ได้ โปรดขอสิทธิ์แก้ไข",
     "also_invited": "คุณได้รับเชิญด้วย และเซิร์ฟเวอร์นี้แยกคำตอบของคุณกับของ {name} ไม่ได้ {name} ต้องตอบเอง",
-    "answered_by": "ตอบโดย {who}"
+    "answered_by": "ตอบโดย {who}",
+    "organizer_owner": "{name} (คุณส่งแทน)",
+    "organizer_me": "คุณ"
   },
   "free_busy_share": {
     "button": "แชร์เวลาว่าง/ไม่ว่างของฉันกับ {group}",

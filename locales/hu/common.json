@@ -5554,7 +5554,9 @@
     "answer_for": "Válasz {name} nevében",
     "no_write": "Látja {name} meghívóit, de nem válaszolhat a nevében. Kérjen szerkesztési jogot.",
     "also_invited": "Ön is meghívott, és ez a szerver nem tudja megkülönböztetni az Ön válaszát {name} válaszától. Erre {name} válaszoljon.",
-    "answered_by": "Válaszolt: {who}"
+    "answered_by": "Válaszolt: {who}",
+    "organizer_owner": "{name} (Ön küldi)",
+    "organizer_me": "Ön"
   },
   "free_busy_share": {
     "button": "Szabad/foglalt időim megosztása ezzel: {group}",

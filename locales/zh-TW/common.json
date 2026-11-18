@@ -5554,7 +5554,9 @@
     "answer_for": "代表 {name} 回覆",
     "no_write": "你能看到 {name} 的邀請，但不能代為回覆。請向對方申請編輯權限。",
     "also_invited": "你也被邀請了，此伺服器無法區分你和 {name} 的回覆。這一項需要 {name} 自己回覆。",
-    "answered_by": "由 {who} 回覆"
+    "answered_by": "由 {who} 回覆",
+    "organizer_owner": "{name}（由你代為傳送）",
+    "organizer_me": "你"
   },
   "free_busy_share": {
     "button": "與 {group} 共用我的忙碌/空閒時間",

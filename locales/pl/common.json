@@ -6193,7 +6193,9 @@
     "answer_for": "Odpowiedz w imieniu: {name}",
     "no_write": "Widzisz zaproszenia użytkownika {name}, ale nie możesz za niego odpowiadać. Poproś o prawo do edycji.",
     "also_invited": "Też jesteś zaproszony, a ten serwer nie odróżni Twojej odpowiedzi od odpowiedzi {name}. Na to zaproszenie musi odpowiedzieć {name}.",
-    "answered_by": "Odpowiedź od: {who}"
+    "answered_by": "Odpowiedź od: {who}",
+    "organizer_owner": "{name} (wysłane przez Ciebie)",
+    "organizer_me": "Ty"
   },
   "free_busy_share": {
     "button": "Udostępnij moją dostępność grupie {group}",

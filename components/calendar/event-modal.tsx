@@ -29,7 +29,7 @@ import { createRecurrenceRule, sameRecurrenceRules } from "@/lib/recurrence-rule
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
 import { ParticipantAvailability } from "./participant-availability";
 import { FindATime } from "./find-a-time";
-import { AnswerBars, useAnswerView } from "./answer-bars";
+import { AnswerBars, useAccountOwner, useAnswerView } from "./answer-bars";
 import type { AnswerTarget } from "@/lib/calendar-delegate";
 import {
   eventOrganizer,
@@ -37,6 +37,7 @@ import {
   getParticipantList,
   getStatusCounts,
   participantFieldsToSave,
+  type OrganizerOnBehalf,
   userOrganizes,
 } from "@/lib/calendar-participants";
 import { canUserRsvp, getEventEditability } from "@/lib/calendar-editability";
@@ -44,6 +45,7 @@ import { eventTargets, preferredTarget } from "@/lib/calendar-targets";
 import { CalendarSelect } from "@/components/calendar/calendar-select";
 import { useAccountStore } from "@/stores/account-store";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { changesWhen, type EditorAttendee, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { linkCallback } from "@/lib/plugin-sandbox/slot-callbacks";
@@ -319,6 +321,7 @@ export function EventModal({
   const labelFor = (key: string) => `${labelIdBase}-${key}`;
   const tCommon = useTranslations("common");
   const tEvent = useTranslations("ux_pim_event");
+  const tDelegate = useTranslations("calendar_delegate");
   const shownName = useCollectionNames();
   // The header's close goes to its start when the window's own close is at its end.
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
@@ -628,6 +631,39 @@ export function EventModal({
   });
   const [attendees, setAttendees] = useState<EditorAttendee[]>(initialAttendees);
   const [sendInvitations, setSendInvitations] = useState(true);
+
+  // In another person's or a group's calendar the user may write to, the
+  // user organizes for its owner (#1761): the owner is the organizer and the
+  // user's address goes in sentBy, as a delegate answers for them (#634).
+  const authClient = useAuthStore((s) => s.client);
+  const targetCalendar = calendars.find((c) => c.id === calendarId);
+  const targetShared = !!targetCalendar?.isShared && !!targetCalendar.myRights?.mayWriteAll;
+  const calendarOwner = useAccountOwner(authClient, targetShared ? targetCalendar?.accountId ?? null : null, targetCalendar?.accountName);
+  const ownerOrganizer = useMemo<OrganizerOnBehalf | null>(() => {
+    if (!targetShared || !calendarOwner) return null;
+    const mine = new Set(currentUserEmails.map((e) => e.trim().toLowerCase()));
+    // A person's own calendar seen through a share of their own: nothing to choose.
+    if (!calendarOwner.isGroup && calendarOwner.emails.some((e) => mine.has(e))) return null;
+    const delegate = currentUserEmails[0]?.trim();
+    return {
+      name: calendarOwner.name,
+      email: calendarOwner.emails[0],
+      ...(!calendarOwner.isGroup && delegate ? { sentBy: `mailto:${delegate}` } : {}),
+    };
+  }, [targetShared, calendarOwner, currentUserEmails]);
+  // Only an event without an organizer gets one: an existing meeting keeps its own.
+  const eventHasOrganizer = !!event && !!eventOrganizer(event);
+  const [organizeAsOwner, setOrganizeAsOwner] = useState(true);
+  const offerOrganizerChoice = !!ownerOrganizer && !eventHasOrganizer && userIsOrganizer && attendees.length > 0;
+  // The organizer the save writes for someone else: the owner picked above,
+  // or the owner who already organizes the event (its sentBy follows the
+  // user who changes it).
+  const organizerOnBehalf = useMemo<OrganizerOnBehalf | undefined>(() => {
+    if (!ownerOrganizer) return undefined;
+    if (!eventHasOrganizer) return organizeAsOwner ? ownerOrganizer : undefined;
+    const current = eventOrganizer(event!)?.email.trim().toLowerCase();
+    return current && calendarOwner?.emails.includes(current) ? { ...ownerOrganizer, email: eventOrganizer(event!)!.email } : undefined;
+  }, [ownerOrganizer, eventHasOrganizer, organizeAsOwner, event, calendarOwner]);
   const participantInputRef = useRef<ParticipantInputHandle>(null);
 
   // What the form holds against what it opened with: a form with changes
@@ -1061,6 +1097,7 @@ export function EventModal({
       Object.assign(data, participantFieldsToSave(event, effectiveAttendees, {
         userEmail: currentUserEmails[0],
         userEmails: currentUserEmails,
+        organizer: organizerOnBehalf,
         resolveName: resolveContactName,
         rescheduled: !!event && (changesWhen(event, when) || timeZoneChanged || (ruleChanged && !event.recurrenceId)),
       }));
@@ -1127,12 +1164,13 @@ export function EventModal({
         when,
         ruleChanged,
         ...(timeZoneChanged ? { timeZoneChanged } : {}),
+        ...(organizerOnBehalf ? { organizer: organizerOnBehalf } : {}),
       });
     } finally {
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, color, currentUserEmails, userIsOrganizer, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, color, currentUserEmails, userIsOrganizer, organizerOnBehalf, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1816,6 +1854,24 @@ export function EventModal({
               onToggleOptional={handleToggleOptional}
               disabled={!userIsOrganizer}
             />
+            {offerOrganizerChoice && ownerOrganizer && (
+              <div className="mt-2">
+                <label htmlFor={labelFor("organizer")} className="text-sm font-medium mb-1 block">{t("participants.organizer")}</label>
+                <select
+                  id={labelFor("organizer")}
+                  value={organizeAsOwner ? "owner" : "me"}
+                  onChange={(e) => setOrganizeAsOwner(e.target.value === "owner")}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                >
+                  <option value="owner">
+                    {ownerOrganizer.sentBy
+                      ? tDelegate("organizer_owner", { name: ownerOrganizer.name })
+                      : ownerOrganizer.name}
+                  </option>
+                  <option value="me">{tDelegate("organizer_me")}</option>
+                </select>
+              </div>
+            )}
             {/* Only a warning: 0.16 advertises the limit without enforcing
                 it, Stalwart 1.0 refuses to save more participants - the
                 organizer entry a save adds counts too. */}

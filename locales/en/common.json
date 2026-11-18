@@ -5554,7 +5554,9 @@
     "answer_for": "Answer for {name}",
     "no_write": "You can see {name}’s invitations but can’t answer for them. Ask them for edit access.",
     "also_invited": "You’re invited too, and this server can’t tell your answer from {name}’s. {name} has to answer this one.",
-    "answered_by": "Answered by {who}"
+    "answered_by": "Answered by {who}",
+    "organizer_owner": "{name} (sent by you)",
+    "organizer_me": "You"
   },
   "free_busy_share": {
     "button": "Share my free/busy with {group}",

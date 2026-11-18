@@ -6193,7 +6193,9 @@
     "answer_for": "Odpovědět za: {name}",
     "no_write": "Vidíte pozvánky uživatele {name}, ale nemůžete za něj odpovídat. Požádejte o přístup k úpravám.",
     "also_invited": "Jste pozváni také a tento server nerozliší vaši odpověď od odpovědi uživatele {name}. Na tuto musí odpovědět {name}.",
-    "answered_by": "Odpověděl(a): {who}"
+    "answered_by": "Odpověděl(a): {who}",
+    "organizer_owner": "{name} (odesláno vámi)",
+    "organizer_me": "Vy"
   },
   "free_busy_share": {
     "button": "Sdílet můj volný čas se skupinou {group}",

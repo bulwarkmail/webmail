@@ -6193,7 +6193,9 @@
     "answer_for": "{name} 대신 응답",
     "no_write": "{name}의 초대는 볼 수 있지만 대신 응답할 수는 없습니다. 편집 권한을 요청하세요.",
     "also_invited": "나도 초대되어 있어 이 서버는 내 응답과 {name}의 응답을 구분하지 못합니다. 이 초대는 {name}이(가) 직접 응답해야 합니다.",
-    "answered_by": "{who}이(가) 응답함"
+    "answered_by": "{who}이(가) 응답함",
+    "organizer_owner": "{name}(내가 대신 보냄)",
+    "organizer_me": "나"
   },
   "free_busy_share": {
     "button": "내 일정 가능 여부를 {group}과(와) 공유",

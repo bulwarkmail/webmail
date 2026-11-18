@@ -355,9 +355,13 @@ function participantsByAddress(
  *
  * An attendee is required unless marked `optional`. Roles the editor does
  * not show (chair, informational, contact; set in another client) stay.
+ *
+ * `organizer.sentBy`: the delegate who organizes for the organizer
+ * (`mailto:<delegate>`); Stalwart sends the invitations from the organizer
+ * with ORGANIZER;SENT-BY (live on 1.0.3, #1761).
  */
 export function buildParticipantMap(
-  organizer: { name: string; email: string },
+  organizer: { name: string; email: string; sentBy?: string },
   attendees: { name: string; email: string; optional?: boolean }[],
   existing?: CalendarEvent['participants'] | null,
   options: { askAgain?: boolean; userEmails?: string[] } = {},
@@ -389,6 +393,7 @@ export function buildParticipantMap(
     // scheduling emits the organizer as an ATTENDEE line in addition to the
     // ORGANIZER line, so the recipient sees the organizer listed twice.
     roles: { owner: true },
+    ...(organizer.sentBy ? { sentBy: organizer.sentBy } : {}),
     participationStatus: organizerStatus && organizerStatus !== 'needs-action' ? organizerStatus : 'accepted',
     scheduleAgent: 'server',
     expectReply: false,
@@ -477,9 +482,23 @@ export function movedEventUpdates<T extends Partial<CalendarEvent>>(
   return { updates: participants ? { ...updates, participants } : updates, sendSchedulingMessages: true };
 }
 
+/** Who organizes an event for someone else: a calendar's owner, with the delegate's address in `sentBy` (#1761). */
+export interface OrganizerOnBehalf {
+  name: string;
+  email: string;
+  /** `mailto:<delegate>`; none for a group account, whose members organize as the group. */
+  sentBy?: string;
+}
+
 export interface ParticipantSaveContext {
   /** The user's first calendar address: the organizer of an event that has none yet. */
   userEmail: string | undefined;
+  /**
+   * The organizer of an event that has none yet in place of the user: the
+   * owner of the calendar the user writes to as a delegate. When it already
+   * organizes the event, a save writes its `sentBy` again.
+   */
+  organizer?: OrganizerOnBehalf;
   /** All of the user's calendar addresses (identities, aliases): whether the user organizes the event. */
   userEmails?: string[];
   /** A name for an organizer the event data carries none for (the contact card). */
@@ -509,6 +528,8 @@ export interface ParticipantSaveContext {
  *
  * Without attendees, an event that had participants loses them, its
  * organizer and the retired `replyTo` older releases wrote.
+ *
+ * `context.organizer` organizes for someone else (see OrganizerOnBehalf).
  */
 export function participantFieldsToSave(
   event: CalendarEvent | null | undefined,
@@ -517,14 +538,18 @@ export function participantFieldsToSave(
 ): Partial<Pick<CalendarEvent, 'participants' | 'organizerCalendarAddress' | 'replyTo'>> {
   const { userEmail, resolveName } = context;
   if (attendees.length > 0 && userEmail) {
-    const organizer = (event ? eventOrganizer(event) : null) ?? { name: '', email: userEmail };
+    const onBehalf = context.organizer;
+    const organizer = (event ? eventOrganizer(event) : null) ?? onBehalf ?? { name: '', email: userEmail };
+    const sentBy = onBehalf?.sentBy && organizer.email.trim().toLowerCase() === onBehalf.email.trim().toLowerCase()
+      ? onBehalf.sentBy
+      : undefined;
     const userEmails = [userEmail, ...(context.userEmails ?? [])];
     const askAgain = !!context.rescheduled && (!event || userOrganizes(event, userEmails));
     const fields: Partial<Pick<CalendarEvent, 'participants' | 'organizerCalendarAddress'>> = {
       participants: buildParticipantMap(
         // A new event has no participants yet, so it would store an empty
         // organizer name.
-        { name: organizer.name || resolveName?.(organizer.email) || '', email: organizer.email },
+        { name: organizer.name || resolveName?.(organizer.email) || '', email: organizer.email, sentBy },
         attendees,
         event?.participants,
         { askAgain, userEmails },

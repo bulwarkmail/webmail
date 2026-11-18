@@ -5554,7 +5554,9 @@
     "answer_for": "Odpovedať za: {name}",
     "no_write": "Vidíte pozvánky používateľa {name}, ale nemôžete za neho odpovedať. Požiadajte o prístup na úpravy.",
     "also_invited": "Ste pozvaní aj vy a tento server nerozlíši vašu odpoveď od odpovede používateľa {name}. Na túto musí odpovedať {name}.",
-    "answered_by": "Odpovedal(a): {who}"
+    "answered_by": "Odpovedal(a): {who}",
+    "organizer_owner": "{name} (odoslané vami)",
+    "organizer_me": "Vy"
   },
   "free_busy_share": {
     "button": "Zdieľať môj voľný čas so skupinou {group}",

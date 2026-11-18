@@ -5554,7 +5554,9 @@
     "answer_for": "Svar for {name}",
     "no_write": "Du ser invitasjonene til {name}, men kan ikke svare for dem. Be om redigeringstilgang.",
     "also_invited": "Du er også invitert, og denne serveren kan ikke skille svaret ditt fra svaret til {name}. {name} må svare på denne selv.",
-    "answered_by": "Besvart av {who}"
+    "answered_by": "Besvart av {who}",
+    "organizer_owner": "{name} (sendt av deg)",
+    "organizer_me": "Deg"
   },
   "free_busy_share": {
     "button": "Del min ledig/opptatt med {group}",

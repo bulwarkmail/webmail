@@ -16,6 +16,7 @@ import {
   participantFieldsToSave,
   participantsAskedAgain,
   userOrganizes,
+  type OrganizerOnBehalf,
   type ParticipantSaveContext,
 } from '@/lib/calendar-participants';
 import {
@@ -66,6 +67,8 @@ export interface EventEditorState {
   ruleChanged?: boolean;
   /** The user picked another time zone: the times in the editor are on that zone's clock. */
   timeZoneChanged?: boolean;
+  /** The calendar owner the user organizes for as a delegate (#1761). */
+  organizer?: OrganizerOnBehalf;
 }
 
 /**
@@ -591,7 +594,7 @@ export function seriesUpdatesFromOccurrence(
   const when = seriesWhen(occurrence, master, updates, editor.when, editor.timeZoneChanged);
   Object.assign(series, when);
   const rescheduled = Object.keys(when).length > 0 || !!editor.ruleChanged;
-  const participants = seriesParticipants(master, editor, { ...context, rescheduled });
+  const participants = seriesParticipants(master, editor, { ...context, organizer: editor.organizer, rescheduled });
   Object.assign(series, participants);
   const overrides = seriesOverrides(occurrence, master, series, {
     ruleChanged: !!editor.ruleChanged,

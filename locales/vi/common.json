@@ -5566,7 +5566,9 @@
     "answer_for": "Trả lời thay {name}",
     "no_write": "Bạn xem được lời mời của {name} nhưng không thể trả lời thay. Hãy xin quyền chỉnh sửa.",
     "also_invited": "Bạn cũng được mời, và máy chủ này không phân biệt được câu trả lời của bạn với của {name}. {name} phải tự trả lời lời mời này.",
-    "answered_by": "Đã được {who} trả lời"
+    "answered_by": "Đã được {who} trả lời",
+    "organizer_owner": "{name} (do bạn gửi)",
+    "organizer_me": "Bạn"
   },
   "free_busy_share": {
     "button": "Chia sẻ lịch rảnh/bận của tôi với {group}",

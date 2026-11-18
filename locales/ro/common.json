@@ -5554,7 +5554,9 @@
     "answer_for": "Răspunde în numele {name}",
     "no_write": "Vedeți invitațiile lui {name}, dar nu puteți răspunde în numele său. Cereți acces de editare.",
     "also_invited": "Sunteți și dvs. invitat, iar acest server nu poate deosebi răspunsul dvs. de cel al lui {name}. {name} trebuie să răspundă la aceasta.",
-    "answered_by": "Răspuns de {who}"
+    "answered_by": "Răspuns de {who}",
+    "organizer_owner": "{name} (trimis de tine)",
+    "organizer_me": "Tu"
   },
   "free_busy_share": {
     "button": "Partajează disponibilitatea mea cu {group}",

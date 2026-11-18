@@ -6193,7 +6193,9 @@
     "answer_for": "Répondre pour {name}",
     "no_write": "Vous voyez les invitations de {name}, mais vous ne pouvez pas y répondre à sa place. Demandez-lui un accès en modification.",
     "also_invited": "Vous êtes aussi invité, et ce serveur ne distingue pas votre réponse de celle de {name}. {name} doit répondre lui-même à celle-ci.",
-    "answered_by": "Réponse de {who}"
+    "answered_by": "Réponse de {who}",
+    "organizer_owner": "{name} (envoyé par vous)",
+    "organizer_me": "Vous"
   },
   "free_busy_share": {
     "button": "Partager mes disponibilités avec {group}",

@@ -5562,7 +5562,9 @@
     "answer_for": "Svar for {name}",
     "no_write": "Du kan sjå invitasjonane til {name}, men ikkje svare for vedkommande. Be om redigeringstilgang.",
     "also_invited": "Du er invitert òg, og denne tenaren kan ikkje skilje svaret ditt frå svaret til {name}. {name} må svare på denne.",
-    "answered_by": "Svara av {who}"
+    "answered_by": "Svara av {who}",
+    "organizer_owner": "{name} (sendt av deg)",
+    "organizer_me": "Deg"
   },
   "free_busy_share": {
     "button": "Del ledig/oppteken for meg med {group}",

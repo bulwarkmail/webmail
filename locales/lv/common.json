@@ -6193,7 +6193,9 @@
     "answer_for": "Atbildēt {name} vārdā",
     "no_write": "Jūs redzat {name} ielūgumus, bet nevarat atbildēt viņa vārdā. Palūdziet rediģēšanas piekļuvi.",
     "also_invited": "Arī jūs esat uzaicināts, un šis serveris nevar atšķirt jūsu atbildi no {name} atbildes. Uz šo jāatbild {name}.",
-    "answered_by": "Atbildēja {who}"
+    "answered_by": "Atbildēja {who}",
+    "organizer_owner": "{name} (sūtāt jūs)",
+    "organizer_me": "Jūs"
   },
   "free_busy_share": {
     "button": "Kopīgot manu brīvs/aizņemts ar {group}",

@@ -6193,7 +6193,9 @@
     "answer_for": "代表 {name} 回复",
     "no_write": "你能看到 {name} 的邀请，但不能代为回复。请向对方申请编辑权限。",
     "also_invited": "你也被邀请了，此服务器无法区分你和 {name} 的回复。这一项需要 {name} 自己回复。",
-    "answered_by": "由 {who} 回复"
+    "answered_by": "由 {who} 回复",
+    "organizer_owner": "{name}（由你代发）",
+    "organizer_me": "你"
   },
   "free_busy_share": {
     "button": "与 {group} 共享我的忙闲时间",

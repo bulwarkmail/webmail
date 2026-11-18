@@ -6193,7 +6193,9 @@
     "answer_for": "Responder por {name}",
     "no_write": "Você pode ver os convites de {name}, mas não pode responder por essa pessoa. Peça acesso de edição.",
     "also_invited": "Você também foi convidado, e este servidor não distingue sua resposta da de {name}. {name} precisa responder a este convite.",
-    "answered_by": "Respondido por {who}"
+    "answered_by": "Respondido por {who}",
+    "organizer_owner": "{name} (enviado por você)",
+    "organizer_me": "Você"
   },
   "free_busy_share": {
     "button": "Compartilhar minha disponibilidade com {group}",

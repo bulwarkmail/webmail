@@ -5554,7 +5554,9 @@
     "answer_for": "Respon en nom de {name}",
     "no_write": "Podeu veure les invitacions de {name}, però no podeu respondre en nom seu. Demaneu-li accés d’edició.",
     "also_invited": "També esteu convidat, i aquest servidor no distingeix la vostra resposta de la de {name}. {name} ha de respondre aquesta.",
-    "answered_by": "Resposta de {who}"
+    "answered_by": "Resposta de {who}",
+    "organizer_owner": "{name} (enviat per vós)",
+    "organizer_me": "Vós"
   },
   "free_busy_share": {
     "button": "Comparteix la meva disponibilitat amb {group}",

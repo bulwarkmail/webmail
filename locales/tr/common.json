@@ -5554,7 +5554,9 @@
     "answer_for": "{name} adına yanıtla",
     "no_write": "{name} kişisinin davetlerini görebilirsiniz ama onun adına yanıtlayamazsınız. Düzenleme erişimi isteyin.",
     "also_invited": "Siz de davetlisiniz ve bu sunucu yanıtınızı {name} kişisinin yanıtından ayıramıyor. Bunu {name} yanıtlamalı.",
-    "answered_by": "Yanıtlayan: {who}"
+    "answered_by": "Yanıtlayan: {who}",
+    "organizer_owner": "{name} (sizin tarafınızdan gönderilir)",
+    "organizer_me": "Siz"
   },
   "free_busy_share": {
     "button": "Müsaitlik durumumu {group} ile paylaş",

@@ -6193,7 +6193,9 @@
     "answer_for": "Für {name} antworten",
     "no_write": "Sie sehen die Einladungen von {name}, können aber nicht dafür antworten. Bitten Sie um Bearbeitungszugriff.",
     "also_invited": "Sie sind ebenfalls eingeladen, und dieser Server kann Ihre Antwort nicht von der von {name} unterscheiden. {name} muss hier selbst antworten.",
-    "answered_by": "Beantwortet von {who}"
+    "answered_by": "Beantwortet von {who}",
+    "organizer_owner": "{name} (gesendet von Ihnen)",
+    "organizer_me": "Sie"
   },
   "free_busy_share": {
     "button": "Meine Frei/Gebucht-Zeiten für {group} freigeben",

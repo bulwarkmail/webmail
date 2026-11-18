@@ -6005,7 +6005,9 @@
     "answer_for": "השב בשם {name}",
     "no_write": "אפשר לראות את ההזמנות של {name}, אבל אי אפשר להשיב בשמו. בקשו הרשאת עריכה.",
     "also_invited": "גם אתם מוזמנים, והשרת הזה לא מבדיל בין התשובה שלכם לזו של {name}. {name} צריך להשיב בעצמו.",
-    "answered_by": "נענה על ידי {who}"
+    "answered_by": "נענה על ידי {who}",
+    "organizer_owner": "{name} (נשלח על ידך)",
+    "organizer_me": "את/ה"
   },
   "free_busy_share": {
     "button": "שתף את הזמינות שלי עם {group}",
