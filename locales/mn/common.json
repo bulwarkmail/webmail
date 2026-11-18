@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# үйл явдал олдлоо} other {# үйл явдал олдлоо}}"
     },
     "mini_has_events": "үйл явдалтай",
-    "mini_week_number": "{week}-р долоо хоног"
+    "mini_week_number": "{week}-р долоо хоног",
+    "move_confirm_organizer_title": "\"{title}\"-г {when} руу шилжүүлэх үү?",
+    "move_confirm_organizer_message": "Оролцогчид шинэчлэл хүлээн авч, шинэ цагийг зөвшөөрөхийг хүсэх болно.",
+    "move_confirm_organizer_confirm": "Шилжүүлж мэдэгдэх",
+    "move_confirm_attendee_title": "\"{title}\"-г зөвхөн таны хуанлид шилжүүлэх үү?",
+    "move_confirm_attendee_message": "Та зохион байгуулагч биш. Зохион байгуулагч болон бусад оролцогчдод уулзалт хуучин цагтаа үлдэх бөгөөд зохион байгуулагчийн дараагийн шинэчлэл таны өөрчлөлтийг дарж бичнэ.",
+    "move_confirm_attendee_confirm": "Миний хуулбарыг шилжүүлэх"
   },
   "ux_pim_calendar": {
     "task_lists": "Даалгаврын жагсаалт",

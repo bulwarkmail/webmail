@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# eveniment găsit} few {# evenimente găsite} other {# de evenimente găsite}}"
     },
     "mini_has_events": "are evenimente",
-    "mini_week_number": "Săptămâna {week}"
+    "mini_week_number": "Săptămâna {week}",
+    "move_confirm_organizer_title": "Muți „{title}” la {when}?",
+    "move_confirm_organizer_message": "Participanții primesc o actualizare și li se cere să accepte noua oră.",
+    "move_confirm_organizer_confirm": "Mută și anunță",
+    "move_confirm_attendee_title": "Muți „{title}” doar în calendarul tău?",
+    "move_confirm_attendee_message": "Nu ești organizatorul. Pentru organizator și ceilalți participanți întâlnirea rămâne la ora ei, iar următoarea actualizare a organizatorului îți va înlocui modificarea.",
+    "move_confirm_attendee_confirm": "Mută copia mea"
   },
   "ux_pim_calendar": {
     "task_lists": "Liste de sarcini",

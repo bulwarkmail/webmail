@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# événement trouvé} other {# événements trouvés}}"
     },
     "mini_has_events": "a des événements",
-    "mini_week_number": "Semaine {week}"
+    "mini_week_number": "Semaine {week}",
+    "move_confirm_organizer_title": "Déplacer « {title} » au {when} ?",
+    "move_confirm_organizer_message": "Les participants recevront une mise à jour et devront accepter le nouvel horaire.",
+    "move_confirm_organizer_confirm": "Déplacer et prévenir",
+    "move_confirm_attendee_title": "Déplacer « {title} » dans votre calendrier uniquement ?",
+    "move_confirm_attendee_message": "Vous n'êtes pas l'organisateur. La réunion garde son horaire pour l'organisateur et les autres participants, et la prochaine mise à jour de l'organisateur remplacera votre modification.",
+    "move_confirm_attendee_confirm": "Déplacer ma copie"
   },
   "ux_pim_calendar": {
     "task_lists": "Listes de tâches",

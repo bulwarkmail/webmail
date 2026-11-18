@@ -5457,7 +5457,13 @@
       "results": "{count, plural, other {# 件の予定が見つかりました}}"
     },
     "mini_has_events": "イベントあり",
-    "mini_week_number": "第{week}週"
+    "mini_week_number": "第{week}週",
+    "move_confirm_organizer_title": "「{title}」を{when}に移動しますか？",
+    "move_confirm_organizer_message": "参加者に更新が送られ、新しい時間の承諾を求められます。",
+    "move_confirm_organizer_confirm": "移動して通知",
+    "move_confirm_attendee_title": "「{title}」をあなたのカレンダーでだけ移動しますか？",
+    "move_confirm_attendee_message": "あなたは主催者ではありません。主催者と他の参加者の予定は元の時間のままで、主催者が次に更新するとあなたの変更は上書きされます。",
+    "move_confirm_attendee_confirm": "自分のコピーを移動"
   },
   "ux_pim_calendar": {
     "task_lists": "タスクリスト",

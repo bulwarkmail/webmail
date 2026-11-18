@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {Leiti # sündmus} other {Leiti # sündmust}}"
     },
     "mini_has_events": "on sündmusi",
-    "mini_week_number": "Nädal {week}"
+    "mini_week_number": "Nädal {week}",
+    "move_confirm_organizer_title": "Kas viia „{title}“ ajale {when}?",
+    "move_confirm_organizer_message": "Osalejad saavad uuenduse ja neil palutakse uus aeg vastu võtta.",
+    "move_confirm_organizer_confirm": "Vii üle ja teavita",
+    "move_confirm_attendee_title": "Kas viia „{title}“ üle ainult sinu kalendris?",
+    "move_confirm_attendee_message": "Sina ei ole korraldaja. Korraldaja ja teiste osalejate jaoks jääb kohtumine oma ajale ning korraldaja järgmine uuendus kirjutab sinu muudatuse üle.",
+    "move_confirm_attendee_confirm": "Vii minu koopia üle"
   },
   "ux_pim_calendar": {
     "task_lists": "Ülesannete loendid",

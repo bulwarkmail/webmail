@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {Nájdená # udalosť} few {Nájdené # udalosti} many {Nájdenej # udalosti} other {Nájdených # udalostí}}"
     },
     "mini_has_events": "má udalosti",
-    "mini_week_number": "Týždeň {week}"
+    "mini_week_number": "Týždeň {week}",
+    "move_confirm_organizer_title": "Presunúť „{title}“ na {when}?",
+    "move_confirm_organizer_message": "Účastníci dostanú aktualizáciu a budú požiadaní, aby nový čas prijali.",
+    "move_confirm_organizer_confirm": "Presunúť a oznámiť",
+    "move_confirm_attendee_title": "Presunúť „{title}“ len vo vašom kalendári?",
+    "move_confirm_attendee_message": "Nie ste organizátor. Pre organizátora a ostatných účastníkov zostane stretnutie v pôvodnom čase a ďalšia aktualizácia od organizátora vašu zmenu prepíše.",
+    "move_confirm_attendee_confirm": "Presunúť moju kópiu"
   },
   "ux_pim_calendar": {
     "task_lists": "Zoznamy úloh",

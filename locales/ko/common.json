@@ -5457,7 +5457,13 @@
       "results": "{count, plural, other {일정 #개를 찾았습니다}}"
     },
     "mini_has_events": "일정 있음",
-    "mini_week_number": "{week}주차"
+    "mini_week_number": "{week}주차",
+    "move_confirm_organizer_title": "\"{title}\" 일정을 {when}(으)로 옮길까요?",
+    "move_confirm_organizer_message": "참석자에게 변경 알림이 가고, 새 시간을 수락해 달라는 요청이 전송돼요.",
+    "move_confirm_organizer_confirm": "옮기고 알리기",
+    "move_confirm_attendee_title": "\"{title}\" 일정을 내 캘린더에서만 옮길까요?",
+    "move_confirm_attendee_message": "주최자가 아니에요. 주최자와 다른 참석자에게는 원래 시간 그대로이고, 주최자가 다음에 변경하면 내 변경 내용은 덮어써져요.",
+    "move_confirm_attendee_confirm": "내 일정만 옮기기"
   },
   "ux_pim_calendar": {
     "task_lists": "할 일 목록",

@@ -5469,7 +5469,13 @@
       "results": "{count, plural, one {# sự kiện được tìm thấy} other {Đã tìm thấy # sự kiện}}"
     },
     "mini_has_events": "Có sự kiện",
-    "mini_week_number": "Tuần {week}"
+    "mini_week_number": "Tuần {week}",
+    "move_confirm_organizer_title": "Chuyển \"{title}\" sang {when}?",
+    "move_confirm_organizer_message": "Người tham dự sẽ nhận được bản cập nhật và được yêu cầu chấp nhận thời gian mới.",
+    "move_confirm_organizer_confirm": "Chuyển và thông báo",
+    "move_confirm_attendee_title": "Chỉ chuyển \"{title}\" trong lịch của bạn?",
+    "move_confirm_attendee_message": "Bạn không phải người tổ chức. Với người tổ chức và những người tham dự khác, cuộc họp vẫn giữ thời gian cũ, và lần cập nhật tiếp theo của người tổ chức sẽ ghi đè thay đổi của bạn.",
+    "move_confirm_attendee_confirm": "Chuyển bản của tôi"
   },
   "ux_pim_calendar": {
     "task_lists": "Danh sách công việc",

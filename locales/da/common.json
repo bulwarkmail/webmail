@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# begivenhed fundet} other {# begivenheder fundet}}"
     },
     "mini_has_events": "har begivenheder",
-    "mini_week_number": "Uge {week}"
+    "mini_week_number": "Uge {week}",
+    "move_confirm_organizer_title": "Flyt \"{title}\" til {when}?",
+    "move_confirm_organizer_message": "Deltagerne får en opdatering og bliver bedt om at acceptere det nye tidspunkt.",
+    "move_confirm_organizer_confirm": "Flyt og giv besked",
+    "move_confirm_attendee_title": "Flyt \"{title}\" kun i din kalender?",
+    "move_confirm_attendee_message": "Du er ikke arrangør. Mødet beholder sit tidspunkt for arrangøren og de andre deltagere, og arrangørens næste opdatering overskriver din ændring.",
+    "move_confirm_attendee_confirm": "Flyt min kopi"
   },
   "ux_pim_calendar": {
     "task_lists": "Opgavelister",

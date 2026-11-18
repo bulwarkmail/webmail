@@ -5326,7 +5326,13 @@
       "results": "{count, plural, one {נמצא אירוע אחד} two {נמצאו שני אירועים} other {נמצאו # אירועים}}"
     },
     "mini_has_events": "יש אירועים",
-    "mini_week_number": "שבוע {week}"
+    "mini_week_number": "שבוע {week}",
+    "move_confirm_organizer_title": "להעביר את \"{title}\" אל {when}?",
+    "move_confirm_organizer_message": "המשתתפים יקבלו עדכון ויתבקשו לאשר את הזמן החדש.",
+    "move_confirm_organizer_confirm": "העברה ועדכון",
+    "move_confirm_attendee_title": "להעביר את \"{title}\" רק ביומן שלך?",
+    "move_confirm_attendee_message": "אינך המארגן. אצל המארגן ושאר המשתתפים הפגישה נשארת בזמנה, והעדכון הבא של המארגן ידרוס את השינוי שלך.",
+    "move_confirm_attendee_confirm": "העברת העותק שלי"
   },
   "ux_pim_calendar": {
     "task_lists": "רשימות משימות",

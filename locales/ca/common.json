@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# esdeveniment trobat} other {# esdeveniments trobats}}"
     },
     "mini_has_events": "té esdeveniments",
-    "mini_week_number": "Setmana {week}"
+    "mini_week_number": "Setmana {week}",
+    "move_confirm_organizer_title": "Voleu moure «{title}» a {when}?",
+    "move_confirm_organizer_message": "Els assistents rebran una actualització i hauran d'acceptar la nova hora.",
+    "move_confirm_organizer_confirm": "Mou i avisa",
+    "move_confirm_attendee_title": "Voleu moure «{title}» només al vostre calendari?",
+    "move_confirm_attendee_message": "No sou l'organitzador. La reunió es manté a la seva hora per a l'organitzador i els altres assistents, i la propera actualització de l'organitzador substituirà el vostre canvi.",
+    "move_confirm_attendee_confirm": "Mou la meva còpia"
   },
   "ux_pim_calendar": {
     "task_lists": "Llistes de tasques",

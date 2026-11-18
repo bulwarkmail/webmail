@@ -5457,7 +5457,13 @@
       "results": "{count, plural, zero {لم يُعثر على أي حدث} one {تم العثور على حدث واحد} two {تم العثور على حدثين} few {تم العثور على # أحداث} many {تم العثور على # حدثًا} other {تم العثور على # حدث}}"
     },
     "mini_has_events": "فيه أحداث",
-    "mini_week_number": "الأسبوع {week}"
+    "mini_week_number": "الأسبوع {week}",
+    "move_confirm_organizer_title": "نقل \"{title}\" إلى {when}؟",
+    "move_confirm_organizer_message": "سيتلقى الحضور تحديثًا، وسيُطلب منهم قبول الوقت الجديد.",
+    "move_confirm_organizer_confirm": "نقل وإشعار",
+    "move_confirm_attendee_title": "نقل \"{title}\" في تقويمك فقط؟",
+    "move_confirm_attendee_message": "لست المنظّم. يبقى الاجتماع في وقته لدى المنظّم والحضور الآخرين، وسيستبدل التحديث التالي من المنظّم تغييرك.",
+    "move_confirm_attendee_confirm": "نقل نسختي"
   },
   "ux_pim_calendar": {
     "task_lists": "قوائم المهام",

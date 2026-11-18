@@ -5465,7 +5465,13 @@
       "results": "{count, plural, one {Fann # hending} other {Fann # hendingar}}"
     },
     "mini_has_events": "har hendingar",
-    "mini_week_number": "Veke {week}"
+    "mini_week_number": "Veke {week}",
+    "move_confirm_organizer_title": "Flytte «{title}» til {when}?",
+    "move_confirm_organizer_message": "Deltakarane får ei oppdatering og vert bedne om å godta det nye tidspunktet.",
+    "move_confirm_organizer_confirm": "Flytt og varsle",
+    "move_confirm_attendee_title": "Flytte «{title}» berre i kalenderen din?",
+    "move_confirm_attendee_message": "Du er ikkje arrangør. Møtet held tidspunktet sitt for arrangøren og dei andre deltakarane, og den neste oppdateringa frå arrangøren skriv over endringa di.",
+    "move_confirm_attendee_confirm": "Flytt kopien min"
   },
   "ux_pim_calendar": {
     "task_lists": "Oppgåvelister",

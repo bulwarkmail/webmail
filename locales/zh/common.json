@@ -5457,7 +5457,13 @@
       "results": "{count, plural, other {找到 # 个活动}}"
     },
     "mini_has_events": "有事件",
-    "mini_week_number": "第 {week} 周"
+    "mini_week_number": "第 {week} 周",
+    "move_confirm_organizer_title": "将“{title}”移到 {when}？",
+    "move_confirm_organizer_message": "参与者会收到更新，并需要接受新的时间。",
+    "move_confirm_organizer_confirm": "移动并通知",
+    "move_confirm_attendee_title": "仅在你的日历中移动“{title}”？",
+    "move_confirm_attendee_message": "你不是组织者。对组织者和其他参与者来说，会议时间不变；组织者下次更新时会覆盖你的更改。",
+    "move_confirm_attendee_confirm": "移动我的副本"
   },
   "ux_pim_calendar": {
     "task_lists": "任务列表",

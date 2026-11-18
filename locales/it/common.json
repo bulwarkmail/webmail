@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# evento trovato} other {# eventi trovati}}"
     },
     "mini_has_events": "ha eventi",
-    "mini_week_number": "Settimana {week}"
+    "mini_week_number": "Settimana {week}",
+    "move_confirm_organizer_title": "Spostare «{title}» a {when}?",
+    "move_confirm_organizer_message": "I partecipanti riceveranno un aggiornamento e dovranno accettare il nuovo orario.",
+    "move_confirm_organizer_confirm": "Sposta e avvisa",
+    "move_confirm_attendee_title": "Spostare «{title}» solo nel tuo calendario?",
+    "move_confirm_attendee_message": "Non sei l'organizzatore. Per l'organizzatore e gli altri partecipanti la riunione resta all'orario previsto, e il prossimo aggiornamento dell'organizzatore sovrascriverà la tua modifica.",
+    "move_confirm_attendee_confirm": "Sposta la mia copia"
   },
   "ux_pim_calendar": {
     "task_lists": "Elenchi attività",

@@ -85,6 +85,7 @@ import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRights, Cale
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { SchedulingDeniedError } from "@/lib/jmap/scheduling-error";
 import { CreateCalendarModal } from "@/components/calendar/create-calendar-modal";
 import { CalendarSidebarHeader } from "@/components/calendar/calendar-sidebar-header";
@@ -145,9 +146,19 @@ import { useCollectionNames } from "@/hooks/use-collection-names";
 // `fromEditor`: asked on the way out of the event editor, which stays open
 // until a scope is picked, so Cancel goes back to it with the changes.
 type PendingScopeAction =
-  | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; editor?: EventEditorState; sendScheduling?: boolean; fromEditor?: boolean }
+  | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; editor?: EventEditorState; sendScheduling?: boolean; fromEditor?: boolean; note?: string }
   | { type: "delete"; event: CalendarEvent; sendScheduling?: boolean; fromEditor?: boolean }
   | { type: "rsvp"; event: CalendarEvent; participantId: string; status: CalendarParticipant["participationStatus"]; sentBy?: string };
+
+/**
+ * Who a drag or resize of `event` reaches (#1752): the user as its
+ * organizer moves it for its attendees, anyone else only their own copy.
+ * Null for an event without attendees, which moves at once.
+ */
+function moveAudience(event: CalendarEvent, userEmails: string[]): { organizes: boolean; attendees: number } | null {
+  const attendees = getParticipantList(event).filter((p) => !p.isOrganizer).length;
+  return attendees > 0 ? { organizes: userOrganizes(event, userEmails), attendees } : null;
+}
 
 /** How long a sideways scroll rests on a day before that day becomes the selection. */
 const VISIBLE_DATE_SETTLE_MS = 300;
@@ -1744,10 +1755,29 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
     }
   }, [client, pendingScopeAction, updateEvent, deleteEvent, createEvent, findMasterEvent, userEmailsFor, resolveContactName, refetchCurrentRange, submitRsvp, describeError, t, tOffline]);
 
+  // When a moved event happens, as the move question names it: its day,
+  // and its times for a timed one.
+  const formatEventDate = useFormatEventDate();
+  const movedWhen = useCallback((moved: CalendarEvent) => {
+    const start = getEventStartDate(moved);
+    if (moved.showWithoutTime) {
+      const last = getEventDisplayEndDate(moved);
+      return last.getTime() > start.getTime() ? `${formatEventDate(start)} – ${formatEventDate(last)}` : formatEventDate(start);
+    }
+    const time = timeFormat === "12h" ? "h:mm a" : "HH:mm";
+    return `${formatEventDate(start)}, ${format(start, time)}–${format(getEventEndDate(moved), time)}`;
+  }, [formatEventDate, timeFormat]);
+
   // A drag or resize. A series asks which occurrences it covers, as the
-  // editor does; one event moves at once and can be moved back.
+  // editor does; one event moves at once and can be moved back. With
+  // attendees, the user says first that the move goes out to them, or that
+  // only their own copy moves (#1752).
   const handleMoveEvent = useCallback<MoveEventHandler>(async (event, updates, sendScheduling, kind) => {
     if (!client) { toast.error(t("notifications.event_move_error")); return; }
+    const audience = moveAudience(event, userEmailsFor(event));
+    const audienceNote = audience
+      ? (audience.organizes ? t("move_confirm_organizer_message") : t("move_confirm_attendee_message"))
+      : undefined;
     if (isRecurringEvent(event)) {
       const moved = { ...event, ...updates };
       const allDay = !!event.showWithoutTime;
@@ -1767,8 +1797,26 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
           when: { allDay, start: getEventStartDate(moved), end: allDay ? getEventDisplayEndDate(moved) : getEventEndDate(moved) },
           ruleChanged: false,
         },
+        // The scope question says it too: one dialog, not two in a row.
+        note: audienceNote,
       });
       return;
+    }
+    if (audience) {
+      const moved = { ...event, ...updates } as CalendarEvent;
+      const title = event.title || t("events.no_title");
+      const confirmed = await confirmAction(audience.organizes
+        ? {
+            title: t("move_confirm_organizer_title", { title, when: movedWhen(moved) }),
+            message: audienceNote!,
+            confirmText: t("move_confirm_organizer_confirm"),
+          }
+        : {
+            title: t("move_confirm_attendee_title", { title }),
+            message: audienceNote!,
+            confirmText: t("move_confirm_attendee_confirm"),
+          });
+      if (!confirmed) return;
     }
     try {
       // false: a plugin stopped it and said why.
@@ -1790,7 +1838,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
       },
     });
     keepEventClearOfToast(event.id, shown);
-  }, [client, updateEvent, resolveContactName, describeError, t]);
+  }, [client, updateEvent, resolveContactName, describeError, t, userEmailsFor, confirmAction, movedWhen]);
 
   const handleRsvp = useCallback(async (eventId: string, participantId: string, status: CalendarParticipant['participationStatus'], sentBy?: string) => {
     if (!client) return;
@@ -3066,7 +3114,7 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
         note={pendingScopeAction?.type === "delete" && pendingScopeAction.sendScheduling
           && userOrganizes(pendingScopeAction.event, userEmailsFor(pendingScopeAction.event))
           ? t("participants.cancel_notification")
-          : undefined}
+          : pendingScopeAction?.type === "edit" ? pendingScopeAction.note : undefined}
         eventTitle={pendingScopeAction?.event.title || t("events.no_title")}
         onSelect={handleScopeSelect}
         onClose={() => setPendingScopeAction(null)}

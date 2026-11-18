@@ -4811,7 +4811,13 @@
       "results": "{count, plural, other {พบ # กิจกรรม}}"
     },
     "mini_has_events": "มีกิจกรรม",
-    "mini_week_number": "สัปดาห์ที่ {week}"
+    "mini_week_number": "สัปดาห์ที่ {week}",
+    "move_confirm_organizer_title": "ย้าย \"{title}\" ไปที่ {when} ไหม",
+    "move_confirm_organizer_message": "ผู้เข้าร่วมจะได้รับการอัปเดตและถูกขอให้ยอมรับเวลาใหม่",
+    "move_confirm_organizer_confirm": "ย้ายและแจ้ง",
+    "move_confirm_attendee_title": "ย้าย \"{title}\" เฉพาะในปฏิทินของคุณไหม",
+    "move_confirm_attendee_message": "คุณไม่ใช่ผู้จัด การประชุมยังคงเป็นเวลาเดิมสำหรับผู้จัดและผู้เข้าร่วมคนอื่น และการอัปเดตครั้งถัดไปจากผู้จัดจะเขียนทับการเปลี่ยนแปลงของคุณ",
+    "move_confirm_attendee_confirm": "ย้ายสำเนาของฉัน"
   },
   "ux_pim_calendar": {
     "task_lists": "รายการงาน",

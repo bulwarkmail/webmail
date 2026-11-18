@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# event found} other {# events found}}"
     },
     "mini_has_events": "has events",
-    "mini_week_number": "Week {week}"
+    "mini_week_number": "Week {week}",
+    "move_confirm_organizer_title": "Move \"{title}\" to {when}?",
+    "move_confirm_organizer_message": "The attendees get an update and are asked to accept the new time.",
+    "move_confirm_organizer_confirm": "Move and notify",
+    "move_confirm_attendee_title": "Move \"{title}\" in your calendar only?",
+    "move_confirm_attendee_message": "You aren't the organizer. The meeting keeps its time for the organizer and the other attendees, and the organizer's next update overwrites your change.",
+    "move_confirm_attendee_confirm": "Move my copy"
   },
   "ux_pim_calendar": {
     "task_lists": "Task lists",

@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {Znaleziono # wydarzenie} few {Znaleziono # wydarzenia} many {Znaleziono # wydarzeń} other {Znaleziono # wydarzenia}}"
     },
     "mini_has_events": "ma wydarzenia",
-    "mini_week_number": "Tydzień {week}"
+    "mini_week_number": "Tydzień {week}",
+    "move_confirm_organizer_title": "Przenieść „{title}” na {when}?",
+    "move_confirm_organizer_message": "Uczestnicy otrzymają aktualizację i zostaną poproszeni o zaakceptowanie nowego terminu.",
+    "move_confirm_organizer_confirm": "Przenieś i powiadom",
+    "move_confirm_attendee_title": "Przenieść „{title}” tylko w Twoim kalendarzu?",
+    "move_confirm_attendee_message": "Nie jesteś organizatorem. U organizatora i pozostałych uczestników spotkanie zostaje w dotychczasowym terminie, a następna aktualizacja od organizatora nadpisze Twoją zmianę.",
+    "move_confirm_attendee_confirm": "Przenieś moją kopię"
   },
   "ux_pim_calendar": {
     "task_lists": "Listy zadań",

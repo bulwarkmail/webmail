@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# رویداد پیدا شد} other {# رویداد پیدا شد}}"
     },
     "mini_has_events": "رویداد دارد",
-    "mini_week_number": "هفته {week}"
+    "mini_week_number": "هفته {week}",
+    "move_confirm_organizer_title": "«{title}» به {when} منتقل شود؟",
+    "move_confirm_organizer_message": "شرکت‌کنندگان به‌روزرسانی دریافت می‌کنند و از آن‌ها خواسته می‌شود زمان جدید را بپذیرند.",
+    "move_confirm_organizer_confirm": "انتقال و اطلاع‌رسانی",
+    "move_confirm_attendee_title": "«{title}» فقط در تقویم شما منتقل شود؟",
+    "move_confirm_attendee_message": "شما برگزارکننده نیستید. جلسه برای برگزارکننده و دیگر شرکت‌کنندگان در زمان خودش می‌ماند و به‌روزرسانی بعدی برگزارکننده تغییر شما را بازنویسی می‌کند.",
+    "move_confirm_attendee_confirm": "انتقال نسخه من"
   },
   "ux_pim_calendar": {
     "task_lists": "فهرست‌های وظایف",

@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# Termin gefunden} other {# Termine gefunden}}"
     },
     "mini_has_events": "hat Termine",
-    "mini_week_number": "Woche {week}"
+    "mini_week_number": "Woche {week}",
+    "move_confirm_organizer_title": "„{title}“ auf {when} verschieben?",
+    "move_confirm_organizer_message": "Die Teilnehmer erhalten eine Aktualisierung und werden gebeten, die neue Zeit zuzusagen.",
+    "move_confirm_organizer_confirm": "Verschieben und benachrichtigen",
+    "move_confirm_attendee_title": "„{title}“ nur in Ihrem Kalender verschieben?",
+    "move_confirm_attendee_message": "Sie sind nicht der Organisator. Für den Organisator und die anderen Teilnehmer bleibt der Termin, wo er ist, und die nächste Aktualisierung des Organisators überschreibt Ihre Änderung.",
+    "move_confirm_attendee_confirm": "Meine Kopie verschieben"
   },
   "ux_pim_calendar": {
     "task_lists": "Aufgabenlisten",

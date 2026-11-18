@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {Знайдено # подію} few {Знайдено # події} many {Знайдено # подій} other {Знайдено # події}}"
     },
     "mini_has_events": "є події",
-    "mini_week_number": "Тиждень {week}"
+    "mini_week_number": "Тиждень {week}",
+    "move_confirm_organizer_title": "Перенести «{title}» на {when}?",
+    "move_confirm_organizer_message": "Учасники отримають оновлення, і їх попросять прийняти новий час.",
+    "move_confirm_organizer_confirm": "Перенести й повідомити",
+    "move_confirm_attendee_title": "Перенести «{title}» лише у вашому календарі?",
+    "move_confirm_attendee_message": "Ви не організатор. В організатора й інших учасників зустріч залишиться в попередній час, а наступне оновлення від організатора перезапише вашу зміну.",
+    "move_confirm_attendee_confirm": "Перенести мою копію"
   },
   "ux_pim_calendar": {
     "task_lists": "Списки завдань",

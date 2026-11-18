@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# afspraak gevonden} other {# afspraken gevonden}}"
     },
     "mini_has_events": "heeft afspraken",
-    "mini_week_number": "Week {week}"
+    "mini_week_number": "Week {week}",
+    "move_confirm_organizer_title": "\"{title}\" verplaatsen naar {when}?",
+    "move_confirm_organizer_message": "De deelnemers krijgen een update en worden gevraagd de nieuwe tijd te accepteren.",
+    "move_confirm_organizer_confirm": "Verplaatsen en melden",
+    "move_confirm_attendee_title": "\"{title}\" alleen in je eigen agenda verplaatsen?",
+    "move_confirm_attendee_message": "Je bent niet de organisator. Voor de organisator en de andere deelnemers blijft de vergadering op dezelfde tijd, en de volgende update van de organisator overschrijft je wijziging.",
+    "move_confirm_attendee_confirm": "Mijn kopie verplaatsen"
   },
   "ux_pim_calendar": {
     "task_lists": "Takenlijsten",

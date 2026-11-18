@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# esemény található} other {# esemény található}}"
     },
     "mini_has_events": "vannak események",
-    "mini_week_number": "{week}. hét"
+    "mini_week_number": "{week}. hét",
+    "move_confirm_organizer_title": "Áthelyezi a(z) „{title}” eseményt erre: {when}?",
+    "move_confirm_organizer_message": "A résztvevők frissítést kapnak, és el kell fogadniuk az új időpontot.",
+    "move_confirm_organizer_confirm": "Áthelyezés és értesítés",
+    "move_confirm_attendee_title": "Csak a saját naptárában helyezi át a(z) „{title}” eseményt?",
+    "move_confirm_attendee_message": "Nem Ön a szervező. A szervezőnél és a többi résztvevőnél a megbeszélés marad az eredeti időpontban, és a szervező következő frissítése felülírja a módosítását.",
+    "move_confirm_attendee_confirm": "Saját példány áthelyezése"
   },
   "ux_pim_calendar": {
     "task_lists": "Feladatlisták",

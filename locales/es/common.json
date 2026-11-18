@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {# evento encontrado} other {# eventos encontrados}}"
     },
     "mini_has_events": "tiene eventos",
-    "mini_week_number": "Semana {week}"
+    "mini_week_number": "Semana {week}",
+    "move_confirm_organizer_title": "¿Mover «{title}» a {when}?",
+    "move_confirm_organizer_message": "Los participantes recibirán una actualización y tendrán que aceptar la nueva hora.",
+    "move_confirm_organizer_confirm": "Mover y avisar",
+    "move_confirm_attendee_title": "¿Mover «{title}» solo en tu calendario?",
+    "move_confirm_attendee_message": "No eres el organizador. La reunión mantiene su hora para el organizador y los demás participantes, y la próxima actualización del organizador sobrescribirá tu cambio.",
+    "move_confirm_attendee_confirm": "Mover mi copia"
   },
   "ux_pim_calendar": {
     "task_lists": "Listas de tareas",

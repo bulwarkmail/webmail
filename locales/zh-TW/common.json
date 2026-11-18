@@ -5457,7 +5457,13 @@
       "results": "{count, plural, other {找到 # 個活動}}"
     },
     "mini_has_events": "有活動",
-    "mini_week_number": "第 {week} 週"
+    "mini_week_number": "第 {week} 週",
+    "move_confirm_organizer_title": "將「{title}」移到 {when}？",
+    "move_confirm_organizer_message": "與會者會收到更新，並需要接受新的時間。",
+    "move_confirm_organizer_confirm": "移動並通知",
+    "move_confirm_attendee_title": "只在你的行事曆中移動「{title}」？",
+    "move_confirm_attendee_message": "你不是主辦人。對主辦人和其他與會者來說，會議時間不變；主辦人下次更新時會覆蓋你的變更。",
+    "move_confirm_attendee_confirm": "移動我的副本"
   },
   "ux_pim_calendar": {
     "task_lists": "任務清單",

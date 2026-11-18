@@ -5457,7 +5457,13 @@
       "results": "{count, plural, one {Найдено # событие} few {Найдено # события} many {Найдено # событий} other {Найдено # события}}"
     },
     "mini_has_events": "есть события",
-    "mini_week_number": "Неделя {week}"
+    "mini_week_number": "Неделя {week}",
+    "move_confirm_organizer_title": "Перенести «{title}» на {when}?",
+    "move_confirm_organizer_message": "Участники получат обновление, и их попросят принять новое время.",
+    "move_confirm_organizer_confirm": "Перенести и уведомить",
+    "move_confirm_attendee_title": "Перенести «{title}» только в вашем календаре?",
+    "move_confirm_attendee_message": "Вы не организатор. У организатора и других участников встреча останется в прежнее время, а следующее обновление от организатора перезапишет ваше изменение.",
+    "move_confirm_attendee_confirm": "Перенести мою копию"
   },
   "ux_pim_calendar": {
     "task_lists": "Списки задач",

@@ -545,6 +545,64 @@ describe('CalendarApp dragging', () => {
     await waitFor(() => expect(store.updateEvent).toHaveBeenCalledTimes(2));
     expect(store.updateEvent.mock.calls[1][2]).toMatchObject({ start: '2026-10-12T10:00:00', duration: 'PT1H' });
   });
+
+  // #1752: a drag of a meeting either goes out to its attendees or moves
+  // only the user's copy; both are asked first.
+  const person = (address: string, roles: Record<string, boolean>) => ({
+    '@type': 'Participant', email: address, calendarAddress: `mailto:${address}`, roles, participationStatus: 'accepted',
+  });
+  const meeting = (organizer: string, own: boolean) => makeEvent({
+    organizerCalendarAddress: `mailto:${organizer}`,
+    isOrigin: own,
+    participants: {
+      o: person(organizer, { owner: true }),
+      a: person('bob@example.org', { attendee: true }),
+    } as never,
+  });
+
+  it('asks the organizer before the move goes out to the attendees', async () => {
+    const event = meeting('me@example.com', true);
+    setUp([event], 'month');
+    renderApp();
+
+    dropOnMonthDay(/October 14, 2026/, event);
+    const ask = await screen.findByRole('alertdialog', { name: 'move_confirm_organizer_title' });
+    expect(within(ask).getByText('move_confirm_organizer_message')).toBeInTheDocument();
+    fireEvent.click(within(ask).getByRole('button', { name: 'cancel' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog', { name: 'move_confirm_organizer_title' })).toBeNull());
+    expect(store.updateEvent).not.toHaveBeenCalled();
+
+    dropOnMonthDay(/October 14, 2026/, event);
+    fireEvent.click(within(await screen.findByRole('alertdialog', { name: 'move_confirm_organizer_title' }))
+      .getByRole('button', { name: 'move_confirm_organizer_confirm' }));
+    await waitFor(() => expect(store.updateEvent).toHaveBeenCalledTimes(1));
+    expect(store.updateEvent.mock.calls[0][2]).toMatchObject({ start: '2026-10-14T10:00:00' });
+    expect(store.updateEvent.mock.calls[0][3]).toBe(true);
+  });
+
+  it('tells an attendee that only their copy moves', async () => {
+    const event = meeting('boss@example.org', false);
+    setUp([event], 'month');
+    renderApp();
+
+    dropOnMonthDay(/October 14, 2026/, event);
+    const ask = await screen.findByRole('alertdialog', { name: 'move_confirm_attendee_title' });
+    expect(within(ask).getByText('move_confirm_attendee_message')).toBeInTheDocument();
+    fireEvent.click(within(ask).getByRole('button', { name: 'move_confirm_attendee_confirm' }));
+    await waitFor(() => expect(store.updateEvent).toHaveBeenCalledTimes(1));
+    expect(store.updateEvent.mock.calls[0][3]).toBeUndefined();
+  });
+
+  it('says it in the scope question of a series, not in a second dialog', async () => {
+    const series = { ...meeting('me@example.com', true), recurrenceRules: weekly.recurrenceRules } as CalendarEvent;
+    setUp([series], 'month');
+    renderApp();
+
+    dropOnMonthDay(/October 14, 2026/, series);
+    const scope = await screen.findByRole('dialog', { name: 'edit_title' });
+    expect(within(scope).getByText('move_confirm_organizer_message')).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog', { name: 'move_confirm_organizer_title' })).toBeNull();
+  });
 });
 
 describe('CalendarApp task feedback', () => {

@@ -5457,7 +5457,13 @@
       "results": "{count, plural, zero {Atrasti # notikumi} one {Atrasts # notikums} other {Atrasti # notikumi}}"
     },
     "mini_has_events": "ir notikumi",
-    "mini_week_number": "{week}. nedēļa"
+    "mini_week_number": "{week}. nedēļa",
+    "move_confirm_organizer_title": "Pārvietot “{title}” uz {when}?",
+    "move_confirm_organizer_message": "Dalībnieki saņems atjauninājumu, un viņiem būs jāapstiprina jaunais laiks.",
+    "move_confirm_organizer_confirm": "Pārvietot un paziņot",
+    "move_confirm_attendee_title": "Pārvietot “{title}” tikai jūsu kalendārā?",
+    "move_confirm_attendee_message": "Jūs neesat organizators. Organizatoram un citiem dalībniekiem sapulce paliek tās laikā, un organizatora nākamais atjauninājums pārrakstīs jūsu izmaiņas.",
+    "move_confirm_attendee_confirm": "Pārvietot manu kopiju"
   },
   "ux_pim_calendar": {
     "task_lists": "Uzdevumu saraksti",
