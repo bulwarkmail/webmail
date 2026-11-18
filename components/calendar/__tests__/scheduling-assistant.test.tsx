@@ -7,6 +7,7 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { BusyPeriod, Principal } from '@/lib/jmap/types';
+import { availabilityWindow } from '@/lib/jmap/free-busy';
 
 vi.mock('../free-busy-share-button', () => ({ FreeBusyShareButton: () => createElement('div', { 'data-testid': 'share-button' }) }));
 
@@ -33,6 +34,10 @@ function fakeClient(periods: Record<string, BusyPeriod[]>, errors: Record<string
   };
   return { client: client as unknown as IJMAPClient, calls };
 }
+
+// The lookup asks for the machine's local days around the Berlin day, so the
+// expected start depends on where the tests run.
+const lookupStart = (dayStart: string, dayEnd: string) => availabilityWindow(new Date(dayStart), new Date(dayEnd)).start.toISOString();
 
 const busy = (utcStart: string, utcEnd: string, busyStatus: BusyPeriod['busyStatus'] = 'confirmed'): BusyPeriod => ({ utcStart, utcEnd, busyStatus });
 
@@ -100,7 +105,7 @@ describe('SchedulingAssistant', () => {
     expect(everyone.querySelectorAll('[data-everyone-free]').length).toBeGreaterThan(0);
     expect(screen.getByTestId('share-button')).toBeInTheDocument();
 
-    expect(calls).toEqual([{ ids: ['me', 'bob', 'carol', 'dan'], start: '2026-11-04T23:00:00.000Z' }]);
+    expect(calls).toEqual([{ ids: ['me', 'bob', 'carol', 'dan'], start: lookupStart('2026-11-04T23:00:00Z', '2026-11-05T23:00:00Z') }]);
   });
 
   it('moves the event with a click, a drag and the arrow keys, and hands the time to the editor', async () => {
@@ -148,7 +153,8 @@ describe('SchedulingAssistant', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     fireEvent.click(screen.getByTestId('scheduling-assistant-next'));
     await waitFor(() => expect(calls).toHaveLength(2));
-    expect(calls[1].start).toBe('2026-11-05T23:00:00.000Z');
+    expect(calls[1].start).toBe(lookupStart('2026-11-05T23:00:00Z', '2026-11-06T23:00:00Z'));
+    expect(calls[1].start).not.toBe(calls[0].start);
     // The event is on Thursday, not on the Friday shown.
     expect(slot()).toBeNull();
     await waitFor(() => expect(row('bob@example.org').getAttribute('data-row-state')).toBe('not_checked'));
