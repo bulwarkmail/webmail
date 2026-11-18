@@ -41,8 +41,8 @@ import { FreeBusyShareButton } from "./free-busy-share-button";
 export interface SchedulingAttendee {
   name: string;
   email: string;
-  /** JSCalendar roles; an `optional` attendee is drawn lighter and left out of "All attendees". */
-  roles?: Partial<Record<string, boolean>>;
+  /** An optional attendee (the editor's Optional switch) is drawn lighter and left out of "All attendees". */
+  optional?: boolean;
 }
 
 type Slot = { start: Date; end: Date };
@@ -83,7 +83,7 @@ export async function loadScheduleRows(
     const email = a.email.trim().toLowerCase();
     if (!email || seen.has(email)) continue;
     seen.add(email);
-    const optional = !!a.roles?.optional;
+    const optional = !!a.optional;
     const principal = directory.byEmail.get(email);
     if (principal) people.push({ email, name: a.name, optional, id: principal.id });
     else if (directory.complete) people.push({ email, name: a.name, optional, reason: "external" });
@@ -220,7 +220,7 @@ function SchedulingDialog({
   const dayKey = `${day.year}-${day.month}-${day.day}`;
   const [loaded, setLoaded] = useState<Loaded>(null);
   const visibleOwners = useMemo(() => visibleCalendarOwners(calendars), [calendars]);
-  const attendeesKey = attendees.map((a) => `${a.email.toLowerCase()}:${a.roles?.optional ? 1 : 0}`).join(",");
+  const attendeesKey = attendees.map((a) => `${a.email.toLowerCase()}:${a.optional ? 1 : 0}`).join(",");
 
   // One batched lookup per day shown, after a short pause so that paging
   // through the days doesn't spend a call per person on each day passed.
@@ -250,7 +250,7 @@ function SchedulingDialog({
     { email: "", name: "", you: true, optional: false, state: null },
     ...attendees
       .filter((a) => a.email.trim().toLowerCase() !== (client.getUsername()?.trim().toLowerCase() ?? ""))
-      .map((a) => ({ email: a.email.trim().toLowerCase(), name: a.name, you: false, optional: !!a.roles?.optional, state: null })),
+      .map((a) => ({ email: a.email.trim().toLowerCase(), name: a.name, you: false, optional: !!a.optional, state: null })),
   ];
   const working = workingSpan(day, workingDaySet(workingDaysSetting), searchHours(dayStartHour, dayEndHour));
   const shaded = outsideWorkingSpans(working);

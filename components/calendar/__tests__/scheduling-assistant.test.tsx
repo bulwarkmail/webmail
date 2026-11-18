@@ -46,7 +46,7 @@ function open(props: Partial<Parameters<typeof SchedulingAssistant>[0]> = {}) {
     attendees: [
       { name: 'Bob', email: 'bob@example.org' },
       { name: 'Carol', email: 'carol@example.org' },
-      { name: 'Dan', email: 'dan@example.org', roles: { attendee: true, optional: true } },
+      { name: 'Dan', email: 'dan@example.org', optional: true },
       { name: '', email: 'x@outside.com' },
     ],
     start: START,
