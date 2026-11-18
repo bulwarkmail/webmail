@@ -307,6 +307,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: stri
   // Placeholder of the email field on the login page, e.g. the company's own
   // address format. Empty uses the translation (login.username_placeholder).
   loginUsernamePlaceholder: { envVar: 'LOGIN_USERNAME_PLACEHOLDER', type: 'string', defaultValue: '' },
+  // Where users reset a forgotten password, e.g. the provider's account
+  // portal. The login page links there under the password field. Empty
+  // shows no link. Only http(s) URLs are used.
+  loginForgotPasswordUrl: { envVar: 'LOGIN_FORGOT_PASSWORD_URL', type: 'url', defaultValue: '' },
   // Where users get the source of the build they are running (AGPL-3.0 §13).
   // Operators of a modified build point it at their fork; the About card then
   // links there instead of the upstream repository (#1161). Empty = upstream.

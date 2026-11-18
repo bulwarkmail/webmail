@@ -6,6 +6,7 @@
     "username_placeholder": "gebruiker@voorbeeld.nl",
     "password_label": "Wachtwoord",
     "password_placeholder": "Voer je wachtwoord in",
+    "forgot_password": "Wachtwoord vergeten?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server geselecteerd op basis van je e-maildomein.",
     "sign_in": "Aanmelden",

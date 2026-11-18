@@ -46,6 +46,7 @@ const TEXT_FIELDS = [
   { key: 'loginPrivacyPolicyUrl', label: 'Privacy policy URL' },
   { key: 'loginWebsiteUrl', label: 'Company website URL' },
   { key: 'loginUsernamePlaceholder', label: 'Login email placeholder', placeholder: 'user@company.example' },
+  { key: 'loginForgotPasswordUrl', label: 'Forgot password URL', placeholder: 'https://...' },
 ] as const;
 
 // Accessibility and help links (OP-01): the app shows them on the login

@@ -27,6 +27,7 @@ export function createConfig(overrides: Partial<ConfigData> = {}): ConfigData {
     loginPrivacyPolicyUrl: '',
     loginWebsiteUrl: '',
     loginUsernamePlaceholder: '',
+    loginForgotPasswordUrl: '',
     loginLogoMaxHeight: '',
     loginLogoMaxWidth: '',
     loginShowHeading: true,

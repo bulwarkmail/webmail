@@ -90,6 +90,29 @@ describe('login page translations', () => {
     }
   }, 30_000);
 
+  it('links to the password reset page only when one is configured', async () => {
+    const { unmount } = render(<LoginPage />);
+    await screen.findByLabelText('username_label', {}, { timeout: 10000 });
+    expect(screen.queryByRole('link', { name: 'forgot_password' })).toBeNull();
+    unmount();
+
+    configOverrides.value = { loginForgotPasswordUrl: 'https://account.acme.example/forgot' };
+    try {
+      const view = render(<LoginPage />);
+      expect(await screen.findByRole('link', { name: 'forgot_password' }, { timeout: 10000 }))
+        .toHaveAttribute('href', 'https://account.acme.example/forgot');
+      view.unmount();
+
+      // A script URL from a config that skipped the server's check is not linked.
+      configOverrides.value = { loginForgotPasswordUrl: 'javascript:alert(1)' };
+      render(<LoginPage />);
+      await screen.findByLabelText('username_label', {}, { timeout: 10000 });
+      expect(screen.queryByRole('link', { name: 'forgot_password' })).toBeNull();
+    } finally {
+      configOverrides.value = {};
+    }
+  }, 30_000);
+
   it('swaps the OAuth-only card for the password form through the fallback link', async () => {
     configOverrides.value = { oauthOnly: true, oauthPasswordFallbackEnabled: true };
     try {

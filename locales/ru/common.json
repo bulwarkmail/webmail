@@ -6,6 +6,7 @@
     "username_placeholder": "user@пример.рф",
     "password_label": "Пароль",
     "password_placeholder": "Введите пароль",
+    "forgot_password": "Забыли пароль?",
     "jmap_server_label": "Сервер",
     "jmap_server_auto_picked": "Сервер выбран по домену вашей электронной почты.",
     "sign_in": "Войти",

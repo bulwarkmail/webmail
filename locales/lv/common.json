@@ -6,6 +6,7 @@
     "username_placeholder": "lietotajs@example.com",
     "password_label": "Parole",
     "password_placeholder": "Ievadiet paroli",
+    "forgot_password": "Aizmirsāt paroli?",
     "jmap_server_label": "Serveris",
     "jmap_server_auto_picked": "Serveris izvēlēts no jūsu e-pasta domēna.",
     "sign_in": "Pierakstīties",

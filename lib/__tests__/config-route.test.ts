@@ -37,7 +37,7 @@ const MANAGED_ENV = [
   'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
   'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL', 'LOGIN_SHOW_REMEMBER_ME', 'BROWSER_SESSION_SIGN_IN',
   'ACCESSIBILITY_STATEMENT_URL', 'ACCESSIBILITY_FEEDBACK_URL', 'HELP_URL', 'EASY_READ_URL', 'SIGN_LANGUAGE_URL',
-  'LOGIN_USERNAME_PLACEHOLDER', 'TRUSTED_AUTHSERV_IDS',
+  'LOGIN_USERNAME_PLACEHOLDER', 'TRUSTED_AUTHSERV_IDS', 'LOGIN_FORGOT_PASSWORD_URL',
 ] as const;
 
 describe('config API route', () => {
@@ -221,6 +221,16 @@ describe('config API route', () => {
     expect(config.signLanguageUrl).toBe('');
   });
 
+  it('serves the forgot password link only as an http(s) URL', async () => {
+    expect((await getConfig()).loginForgotPasswordUrl).toBe('');
+
+    vi.stubEnv('LOGIN_FORGOT_PASSWORD_URL', 'https://account.acme.com/forgot');
+    expect((await getConfig()).loginForgotPasswordUrl).toBe('https://account.acme.com/forgot');
+
+    vi.stubEnv('LOGIN_FORGOT_PASSWORD_URL', 'javascript:alert(1)');
+    expect((await getConfig()).loginForgotPasswordUrl).toBe('');
+  });
+
   it('leaves the accessibility and help links empty when unset', async () => {
     const config = await getConfig();
 
@@ -355,6 +365,18 @@ describe('config API route', () => {
 
       expect((await getConfig({ host: 'mail1.example.com' })).loginUsernamePlaceholder).toBe('name@one.example');
       expect((await getConfig({ host: 'other.example.com' })).loginUsernamePlaceholder).toBe('name@default.example');
+    });
+
+    it('overrides the forgot password link per domain, as an http(s) URL only', async () => {
+      vi.stubEnv('LOGIN_FORGOT_PASSWORD_URL', 'https://default.example/forgot');
+      vi.stubEnv('DOMAIN_BRANDING', JSON.stringify([
+        { host: 'mail1.example.com', loginForgotPasswordUrl: 'https://one.example/forgot' },
+        { host: 'mail2.example.com', loginForgotPasswordUrl: 'javascript:alert(1)' },
+      ]));
+
+      expect((await getConfig({ host: 'mail1.example.com' })).loginForgotPasswordUrl).toBe('https://one.example/forgot');
+      expect((await getConfig({ host: 'mail2.example.com' })).loginForgotPasswordUrl).toBe('');
+      expect((await getConfig({ host: 'other.example.com' })).loginForgotPasswordUrl).toBe('https://default.example/forgot');
     });
 
     it('falls through to the global value when the host has no entry', async () => {

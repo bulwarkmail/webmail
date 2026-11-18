@@ -36,6 +36,7 @@ export interface ConfigData {
   loginPrivacyPolicyUrl: string;
   loginWebsiteUrl: string;
   loginUsernamePlaceholder: string;
+  loginForgotPasswordUrl: string;
   loginLogoMaxHeight: string;
   loginLogoMaxWidth: string;
   loginShowHeading: boolean;
@@ -207,6 +208,7 @@ function configState(data: ConfigData): AppConfig {
       loginPrivacyPolicyUrl: data.loginPrivacyPolicyUrl,
       loginWebsiteUrl: data.loginWebsiteUrl,
       loginUsernamePlaceholder: data.loginUsernamePlaceholder,
+      loginForgotPasswordUrl: data.loginForgotPasswordUrl,
       loginLogoMaxHeight: data.loginLogoMaxHeight,
       loginLogoMaxWidth: data.loginLogoMaxWidth,
       loginShowHeading: data.loginShowHeading,
@@ -277,6 +279,7 @@ export function useConfig(): AppConfig {
     loginPrivacyPolicyUrl: configCache?.loginPrivacyPolicyUrl || '',
     loginWebsiteUrl: configCache?.loginWebsiteUrl || '',
     loginUsernamePlaceholder: configCache?.loginUsernamePlaceholder || '',
+    loginForgotPasswordUrl: configCache?.loginForgotPasswordUrl || '',
     loginLogoMaxHeight: configCache?.loginLogoMaxHeight || '',
     loginLogoMaxWidth: configCache?.loginLogoMaxWidth || '',
     loginShowHeading: configCache?.loginShowHeading ?? true,

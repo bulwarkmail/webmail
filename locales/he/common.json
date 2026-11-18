@@ -5,6 +5,7 @@
     "username_placeholder": "user@example.com",
     "password_label": "סיסמה",
     "password_placeholder": "הזן את הסיסמה שלך",
+    "forgot_password": "שכחת את הסיסמה?",
     "sign_in": "היכנס",
     "signing_in": "נכנס...",
     "loading": "טוען...",
