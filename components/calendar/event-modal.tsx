@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TimeField } from "@/components/ui/time-field";
 import { LinkifiedText } from "@/components/ui/linkified-text";
-import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical, Lock } from "@/components/icons";
+import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical, Lock, Maximize2, Minimize2 } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
 import { descriptionAsText, isHtmlDescription, plainDescriptionFields } from "@/lib/calendar-description";
@@ -118,6 +118,12 @@ interface EventModalProps {
   /** The server's maxParticipantsPerEvent, for a warning; null when not advertised. */
   maxParticipants?: number | null;
   isMobile?: boolean;
+  /**
+   * The desktop sheet shows as a large dialog (#1757); onToggleExpand
+   * switches it, and without it there is no button.
+   */
+  expanded?: boolean;
+  onToggleExpand?: () => void;
   /** The events loaded in the calendar: the form says which of them share its time (#1685). */
   overlapEvents?: CalendarEvent[];
 }
@@ -312,6 +318,8 @@ export function EventModal({
   isSubscriptionCalendar,
   maxParticipants = null,
   isMobile = false,
+  expanded = false,
+  onToggleExpand,
   overlapEvents,
 }: EventModalProps) {
   const t = useTranslations("calendar");
@@ -1196,8 +1204,10 @@ export function EventModal({
     (): HTMLElement | null => (mode === "edit" ? titleRef.current : primaryRef.current),
     [mode],
   );
-  // Full screen on the phone: a modal that holds the focus.
-  const modalRef = useFocusTrap({ isActive: !!isMobile, initialFocus: initialFocusTarget });
+  // Full screen on the phone, or expanded on a wide screen: a modal that
+  // holds the focus.
+  const isModal = !!isMobile || expanded;
+  const modalRef = useFocusTrap({ isActive: isModal, initialFocus: initialFocusTarget });
 
   // Beside the grid on wide screens: the focus moves in on open and with
   // each switch between summary and form, and goes back on close.
@@ -1222,6 +1232,11 @@ export function EventModal({
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (askingRef.current) return;
+        // Expanded first goes back to the sheet, as the composer's full screen does.
+        if (expanded && onToggleExpand) {
+          onToggleExpand();
+          return;
+        }
         if (mode === "edit" && isEdit) {
           backToView();
         } else {
@@ -1238,9 +1253,21 @@ export function EventModal({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [requestClose, backToView, canEditBody, mode, isEdit]);
+  }, [requestClose, backToView, canEditBody, mode, isEdit, expanded, onToggleExpand]);
 
   const hasParticipants = attendees.length > 0 || (event?.participants && Object.keys(event.participants).length > 0);
+
+  // Wide screens only: the phone's editor fills the screen already.
+  const expandButton = onToggleExpand && !isMobile ? (
+    <IconButton
+      label={expanded ? t("form.restore_size") : t("form.expand")}
+      onClick={onToggleExpand}
+      className="flex-shrink-0 text-muted-foreground"
+      data-testid="event-editor-expand"
+    >
+      {expanded ? <Minimize2 /> : <Maximize2 />}
+    </IconButton>
+  ) : null;
 
   // View mode: read-only display of event details with Edit button. An
   // invitation the user can only answer is shown by the same view, with a
@@ -1272,9 +1299,10 @@ export function EventModal({
         <X />
       </IconButton>
     );
+    const viewExpand = expandButton && <span className="mt-0.5 flex-shrink-0">{expandButton}</span>;
 
     return (
-      <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
+      <div ref={modalRef} role="dialog" aria-modal={isModal || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
         {/* Color accent bar */}
         <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: color }} />
 
@@ -1295,6 +1323,7 @@ export function EventModal({
               <MoreVertical />
             </IconButton>
           )}
+          {viewExpand}
           {!closeFirst && viewClose}
         </div>
 
@@ -1523,12 +1552,13 @@ export function EventModal({
   );
 
   return (
-    <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
+    <div ref={modalRef} role="dialog" aria-modal={isModal || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
       <div ref={setHeader} data-window-top-row="" className="flex items-center gap-2 px-6 py-4 border-b border-border flex-shrink-0">
         {closeFirst && editClose}
         <h2 className="min-w-0 flex-1 text-lg font-semibold">
           {isEdit ? t("events.edit") : t("events.create")}
         </h2>
+        {expandButton}
         {!closeFirst && editClose}
       </div>
 

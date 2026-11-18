@@ -4958,7 +4958,9 @@
       "overlap_more": "And {count} more",
       "save": "Save",
       "cancel": "Cancel",
-      "color": "Color"
+      "color": "Color",
+      "expand": "Expand",
+      "restore_size": "Restore"
     },
     "participants": {
       "availability": {

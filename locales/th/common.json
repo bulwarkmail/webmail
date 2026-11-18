@@ -4312,7 +4312,9 @@
       "overlap_more": "และอีก {count} รายการ",
       "save": "บันทึก",
       "cancel": "ยกเลิก",
-      "color": "สี"
+      "color": "สี",
+      "expand": "ขยาย",
+      "restore_size": "คืนขนาดเดิม"
     },
     "participants": {
       "availability": {

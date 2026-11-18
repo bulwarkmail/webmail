@@ -4970,7 +4970,9 @@
       "overlap_more": "Và {count} sự kiện khác",
       "save": "Lưu",
       "cancel": "Hủy",
-      "color": "Màu sắc"
+      "color": "Màu sắc",
+      "expand": "Mở rộng",
+      "restore_size": "Khôi phục kích thước"
     },
     "participants": {
       "availability": {

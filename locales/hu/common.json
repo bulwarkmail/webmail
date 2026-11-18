@@ -4958,7 +4958,9 @@
       "overlap_more": "És még {count}",
       "save": "Mentés",
       "cancel": "Mégse",
-      "color": "Szín"
+      "color": "Szín",
+      "expand": "Nagyítás",
+      "restore_size": "Eredeti méret"
     },
     "participants": {
       "availability": {

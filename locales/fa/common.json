@@ -4958,7 +4958,9 @@
       "overlap_more": "و {count} مورد دیگر",
       "save": "ذخیره",
       "cancel": "انصراف",
-      "color": "رنگ"
+      "color": "رنگ",
+      "expand": "بزرگ‌کردن",
+      "restore_size": "بازگرداندن اندازه"
     },
     "participants": {
       "availability": {

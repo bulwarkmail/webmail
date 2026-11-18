@@ -4958,7 +4958,9 @@
       "overlap_more": "另有 {count} 个",
       "save": "保存",
       "cancel": "取消",
-      "color": "颜色"
+      "color": "颜色",
+      "expand": "展开",
+      "restore_size": "还原"
     },
     "participants": {
       "availability": {

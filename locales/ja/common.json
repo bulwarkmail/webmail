@@ -4958,7 +4958,9 @@
       "overlap_more": "ほか{count}件",
       "save": "保存",
       "cancel": "キャンセル",
-      "color": "色"
+      "color": "色",
+      "expand": "拡大",
+      "restore_size": "元のサイズに戻す"
     },
     "participants": {
       "availability": {

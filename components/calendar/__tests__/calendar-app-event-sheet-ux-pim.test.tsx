@@ -81,3 +81,30 @@ describe('CalendarApp event editor (pim-25)', () => {
     expect(sheet.parentElement!.className).toMatch(/\brelative\b/);
   });
 });
+
+// #1757: the sheet's 400 px were cramped for a description and attendees.
+// Expand shows the same editor as a large dialog, with what was typed.
+describe('CalendarApp event editor expanded (#1757)', () => {
+  it('expands the sheet into a large dialog and back, keeping the form', async () => {
+    render(<CalendarApp />);
+    fireEvent.keyDown(document.body, { key: 'n', code: 'KeyN' });
+    const editor = await screen.findByRole('dialog', { name: 'events.create' });
+    const title = screen.getByLabelText('form.title');
+    fireEvent.change(title, { target: { value: 'Offsite planning' } });
+
+    fireEvent.click(screen.getByTestId('event-editor-expand'));
+    const panel = screen.getByTestId('event-panel');
+    expect(panel).toHaveAttribute('data-expanded');
+    expect(panel.className).not.toMatch(/\bw-\[400px\]/);
+    expect(editor).toHaveAttribute('aria-modal', 'true');
+    // The same form, not a new one.
+    expect(screen.getByLabelText('form.title')).toBe(title);
+    expect(title).toHaveValue('Offsite planning');
+
+    // Escape goes back to the sheet first, as the composer's full screen does.
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByTestId('event-panel')).not.toHaveAttribute('data-expanded');
+    expect(screen.getByTestId('event-panel').className).toMatch(/\bw-\[400px\]/);
+    expect(screen.getByRole('dialog', { name: 'events.create' })).toBe(editor);
+  });
+});

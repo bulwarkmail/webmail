@@ -4957,7 +4957,9 @@
       "overlap_more": "Un vēl {count}",
       "save": "Saglabāt",
       "cancel": "Atcelt",
-      "color": "Krāsa"
+      "color": "Krāsa",
+      "expand": "Palielināt",
+      "restore_size": "Atjaunot izmēru"
     },
     "participants": {
       "availability": {

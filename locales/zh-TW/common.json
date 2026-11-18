@@ -4958,7 +4958,9 @@
       "overlap_more": "另有 {count} 個",
       "save": "儲存",
       "cancel": "取消",
-      "color": "顏色"
+      "color": "顏色",
+      "expand": "展開",
+      "restore_size": "還原"
     },
     "participants": {
       "availability": {

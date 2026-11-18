@@ -4958,7 +4958,9 @@
       "overlap_more": "Ve {count} tane daha",
       "save": "Kaydet",
       "cancel": "İptal",
-      "color": "Renk"
+      "color": "Renk",
+      "expand": "Genişlet",
+      "restore_size": "Eski boyuta döndür"
     },
     "participants": {
       "availability": {

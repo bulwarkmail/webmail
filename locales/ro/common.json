@@ -4958,7 +4958,9 @@
       "overlap_more": "Și încă {count}",
       "save": "Salvare",
       "cancel": "Anulează",
-      "color": "Culoare"
+      "color": "Culoare",
+      "expand": "Extinde",
+      "restore_size": "Restabilește dimensiunea"
     },
     "participants": {
       "availability": {

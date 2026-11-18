@@ -4958,7 +4958,9 @@
       "overlap_more": "И ещё {count}",
       "save": "Сохранить",
       "cancel": "Отмена",
-      "color": "Цвет"
+      "color": "Цвет",
+      "expand": "Развернуть",
+      "restore_size": "Свернуть"
     },
     "participants": {
       "availability": {

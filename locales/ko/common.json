@@ -4958,7 +4958,9 @@
       "overlap_more": "외 {count}개",
       "save": "저장",
       "cancel": "취소",
-      "color": "색상"
+      "color": "색상",
+      "expand": "크게 보기",
+      "restore_size": "원래 크기로"
     },
     "participants": {
       "availability": {

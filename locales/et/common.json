@@ -4958,7 +4958,9 @@
       "overlap_more": "Ja veel {count}",
       "save": "Salvesta",
       "cancel": "Tühista",
-      "color": "Värv"
+      "color": "Värv",
+      "expand": "Suurenda",
+      "restore_size": "Taasta suurus"
     },
     "participants": {
       "availability": {

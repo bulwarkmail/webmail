@@ -4966,7 +4966,9 @@
       "overlap_more": "Og {count} til",
       "save": "Lagre",
       "cancel": "Avbryt",
-      "color": "Farge"
+      "color": "Farge",
+      "expand": "Utvid",
+      "restore_size": "Gjenopprett storleik"
     },
     "participants": {
       "availability": {

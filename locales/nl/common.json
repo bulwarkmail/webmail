@@ -4958,7 +4958,9 @@
       "overlap_more": "En nog {count}",
       "save": "Opslaan",
       "cancel": "Annuleren",
-      "color": "Kleur"
+      "color": "Kleur",
+      "expand": "Vergroten",
+      "restore_size": "Oorspronkelijke grootte"
     },
     "participants": {
       "availability": {

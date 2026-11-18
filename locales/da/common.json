@@ -4958,7 +4958,9 @@
       "overlap_more": "Og {count} mere",
       "save": "Gem",
       "cancel": "Annuller",
-      "color": "Farve"
+      "color": "Farve",
+      "expand": "Udvid",
+      "restore_size": "Gendan størrelse"
     },
     "participants": {
       "availability": {

@@ -4970,7 +4970,9 @@
       "overlap_more": "Και {count} ακόμη",
       "save": "Αποθήκευση",
       "cancel": "Ακύρωση",
-      "color": "Χρώμα"
+      "color": "Χρώμα",
+      "expand": "Μεγέθυνση",
+      "restore_size": "Επαναφορά μεγέθους"
     },
     "participants": {
       "availability": {

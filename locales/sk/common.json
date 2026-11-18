@@ -4958,7 +4958,9 @@
       "overlap_more": "A ďalšie: {count}",
       "save": "Uložiť",
       "cancel": "Zrušiť",
-      "color": "Farba"
+      "color": "Farba",
+      "expand": "Zväčšiť",
+      "restore_size": "Obnoviť veľkosť"
     },
     "participants": {
       "availability": {

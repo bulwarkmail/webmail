@@ -4958,7 +4958,9 @@
       "overlap_more": "I {count} més",
       "save": "Desa",
       "cancel": "Cancel·la",
-      "color": "Color"
+      "color": "Color",
+      "expand": "Amplia",
+      "restore_size": "Restaura la mida"
     },
     "participants": {
       "availability": {

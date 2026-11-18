@@ -4958,7 +4958,9 @@
       "overlap_more": "Бас {count}",
       "save": "Хадгалах",
       "cancel": "Цуцлах",
-      "color": "Өнгө"
+      "color": "Өнгө",
+      "expand": "Томруулах",
+      "restore_size": "Хэмжээг сэргээх"
     },
     "participants": {
       "availability": {

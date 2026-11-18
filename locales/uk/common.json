@@ -4958,7 +4958,9 @@
       "overlap_more": "І ще {count}",
       "save": "зберегти",
       "cancel": "Скасувати",
-      "color": "колір"
+      "color": "колір",
+      "expand": "Розгорнути",
+      "restore_size": "Згорнути"
     },
     "participants": {
       "availability": {

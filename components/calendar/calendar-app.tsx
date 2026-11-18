@@ -320,6 +320,13 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
   const resolveContactName = useContactNameResolver();
 
   const [showEventModal, setShowEventModal] = useState(false);
+  // The desktop editor as a large dialog (#1757). Like the composer's full
+  // screen it isn't remembered: each editor opens as the sheet.
+  const [eventEditorExpanded, setEventEditorExpanded] = useState(false);
+  const toggleEventEditorExpanded = useCallback(() => setEventEditorExpanded((v) => !v), []);
+  useEffect(() => {
+    if (!showEventModal) setEventEditorExpanded(false);
+  }, [showEventModal]);
   const [showImportModal, setShowImportModal] = useState(false);
   // Event search (CAL-16): the query in the toolbar box; on phones the box
   // opens as a row of its own.
@@ -2755,9 +2762,16 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
 
           {/* Desktop event panel: a sheet over the grid from the right, as
               on small screens, so the week keeps its width (pim-25). Above
-              the views' sticky headers (z-50) inside this isolated row. */}
+              the views' sticky headers (z-50) inside this isolated row.
+              Expanded (#1757), the same editor is a large dialog over the
+              views; only the frame changes, so the form keeps what it holds. */}
+          {!isMobile && showEventModal && eventEditorExpanded && (
+            <div aria-hidden="true" className="absolute inset-0 z-[55] bg-black/40" />
+          )}
           {!isMobile && showEventModal && (
-            <div data-testid="event-panel" data-end-sheet="" className="absolute inset-y-0 end-0 z-[55] w-[400px] max-w-full border-s border-border bg-background shadow-xl overflow-hidden">
+            <div data-testid="event-panel" data-end-sheet="" data-expanded={eventEditorExpanded || undefined} className={eventEditorExpanded
+              ? "absolute inset-0 z-[55] m-auto h-[min(56rem,calc(100%-2rem))] w-[min(48rem,calc(100%-2rem))] overflow-hidden rounded-lg border border-border bg-background shadow-2xl"
+              : "absolute inset-y-0 end-0 z-[55] w-[400px] max-w-full border-s border-border bg-background shadow-xl overflow-hidden"}>
               <EventModal
                 key={`${editEvent?.id ?? (copySource ? `copy:${copySource.id}` : 'new')}${modalStartsInEdit ? ':edit' : ''}`}
                 event={editEvent}
@@ -2781,6 +2795,8 @@ export function CalendarApp({ linkSegments: routeSegments, surface = "calendar" 
                 isSubscriptionCalendar={isSubscriptionCalendar}
                 maxParticipants={maxParticipants}
                 isMobile={false}
+                expanded={eventEditorExpanded}
+                onToggleExpand={toggleEventEditorExpanded}
                 overlapEvents={visibleEvents}
               />
             </div>

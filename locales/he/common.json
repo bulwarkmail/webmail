@@ -4827,7 +4827,9 @@
       "overlap_more": "ועוד {count}",
       "save": "שמור",
       "cancel": "לְבַטֵל",
-      "color": "צבע"
+      "color": "צבע",
+      "expand": "הרחבה",
+      "restore_size": "שחזור גודל"
     },
     "participants": {
       "availability": {
