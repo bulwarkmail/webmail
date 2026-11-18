@@ -5943,6 +5943,9 @@ export function EmailComposer({
             data-composer-to-row=""
             className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", dockCompact && "py-1 ps-3 pe-2", shakeField === 'to' && "animate-shake")}
             {...(dockCompact ? headerDropProps : {})}
+            // The field stops short of a wide row (below): a click in the
+            // space after its buttons still goes to the address input.
+            onClick={(e) => { if (e.target === e.currentTarget) toInputRef.current?.focus(); }}
           >
             {dockReplyType}
             <span id={fieldLabelId('to')} className={cn("text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap", dockCompact && "min-w-0 md:min-w-0")}>{t('to')}:</span>
@@ -5976,6 +5979,11 @@ export function EmailComposer({
               onTab={focusSubject}
               onMoveChip={handleMoveChip}
               narrowInput={dockCompact}
+              // On a wide screen the field stops at a readable width, so
+              // Contacts, Cc and Bcc stay next to the addresses instead of at
+              // the far edge (#1758). A docked reply and Mountain View's
+              // window keep their own To rows.
+              className={!dockCompact && !mvWindow ? 'max-w-[40rem]' : undefined}
             />
             {/* A narrow docked reply: From, Cc, Bcc and the address book in one menu, so the addresses keep their room. */}
             {dockCompact && (
@@ -7073,6 +7081,7 @@ export function RecipientChipInput({
   onTab,
   onMoveChip,
   narrowInput = false,
+  className,
 }: {
   /** The id of the field's visible label ("To:"), which names the input and the chip list. */
   labelId: string;
@@ -7102,6 +7111,8 @@ export function RecipientChipInput({
   onMoveChip: (recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc', toIndex?: number) => void;
   /** A narrow row (a docked reply's To): the typing space beside the chips may get small before it wraps under them. */
   narrowInput?: boolean;
+  /** Extra classes for the field's outer box, such as a maximum width. */
+  className?: string;
 }) {
   const t = useTranslations('email_composer');
   const { contextMenu, openContextMenu, openContextMenuFrom, closeContextMenu, menuRef } = useContextMenu<{ index: number; recipient: Recipient }>();
@@ -7496,7 +7507,7 @@ export function RecipientChipInput({
   return (
     // Not positioned, so the suggestion list is placed against the whole
     // recipient row instead of the input.
-    <div className="flex-1 min-w-0">
+    <div className={cn("flex-1 min-w-0", className)}>
       <div
         className={cn(
           // A long list scrolls by itself, or a reply-all to 80 people leaves no room for the text.
