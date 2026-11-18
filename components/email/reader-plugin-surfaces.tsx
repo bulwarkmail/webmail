@@ -172,7 +172,7 @@ export function PluginPanelEntries({
 export const QUOTE_ANCHOR_ATTR = "data-plugin-quote-anchor";
 
 /**
- * Puts an empty block right before the collapsed quote of a rendered body
+ * Puts an empty block right before the quote toggle of a rendered body
  * and returns it: before the "•••" toggle setupQuoteCollapse added (HTML
  * body in its iframe), or before the <details> collapsePlainTextQuotes
  * wrapped the quote in (plain-text body). Null when the body has no quote
@@ -201,7 +201,7 @@ export function insertQuoteAnchor(root: HTMLElement): HTMLElement | null {
  * over the iframe at the anchor's place and the anchor is grown to the
  * frame's height to make room for it.
  *
- * `root` is the body element the quote was collapsed in (null while the body
+ * `root` is the body element the quote toggle was added to (null while the body
  * isn't ready); `version` changes whenever that body is rendered anew.
  */
 export function ReaderAboveQuoteSlot({

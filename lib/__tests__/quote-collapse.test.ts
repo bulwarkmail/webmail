@@ -128,13 +128,193 @@ describe('setupQuoteCollapse', () => {
     expect(document.querySelector<HTMLElement>('.gmail_quote')!.style.display).toBe('');
   });
 
-  it('does not collapse an interleaved reply (content after the quote container)', () => {
+  it('keeps an interleaved reply visible and offers a manual quote toggle', () => {
     document.body.innerHTML = `
       <p>first point</p>
       <blockquote type="cite">their question</blockquote>
       <p>my answer below the quote</p>`;
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    expect(document.querySelector('blockquote')).toBeVisible();
+    expect(document.body.lastElementChild).toBeVisible();
+    expect(toggle()!.getAttribute('aria-expanded')).toBe('true');
+    expect(toggle()!.getAttribute('aria-label')).toBe(labels.hide);
+    expect(toggle()!.title).toBe(labels.hide);
+  });
+
+  it.each([
+    ['Bulwark', '<div data-quoted-html>original</div>'],
+    ['Gmail container', '<div class="gmail_quote_container">original</div>'],
+    ['Gmail', '<div class="gmail_quote">original</div>'],
+    ['Apple Mail', '<blockquote type="cite">original</blockquote>'],
+    ['Yahoo', '<div class="yahoo_quoted">original</div>'],
+    ['Proton blockquote', '<blockquote class="protonmail_quote">original</blockquote>'],
+    ['Proton div', '<div class="protonmail_quote">original</div>'],
+  ])('lets the user fold the %s container without hiding the reply after it', (_client, quotedHtml) => {
+    document.body.innerHTML = `<p id="reply">my answer</p>${quotedHtml}<p id="after">another answer below</p><style>body{height:auto}</style>`;
+    const quote = document.getElementById('reply')!.nextElementSibling as HTMLElement;
+    const content = quote.innerHTML;
+
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    const button = toggle()!;
+    expect(quote).toBeVisible();
+    expect(quote.hasAttribute(QUOTE_COLLAPSED_ATTR)).toBe(false);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.getAttribute('aria-label')).toBe(labels.hide);
+
+    button.click();
+    expect(quote).not.toBeVisible();
+    expect(document.getElementById('reply')).toBeVisible();
+    expect(document.getElementById('after')).toBeVisible();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(button.getAttribute('aria-label')).toBe(labels.show);
+    expect(button.title).toBe(labels.show);
+    expect(quote.innerHTML).toBe(content);
+
+    button.click();
+    expect(quote).toBeVisible();
+    expect(quote.hasAttribute(QUOTE_COLLAPSED_ATTR)).toBe(false);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.getAttribute('aria-label')).toBe(labels.hide);
+    expect(button.title).toBe(labels.hide);
+    expect(quote.innerHTML).toBe(content);
+  });
+
+  it('preserves a sanitized native quote and its trailing signature across manual toggles', () => {
+    document.body.innerHTML = sanitizeEmailHtml(`
+      <div><p>My answer</p><p>On Monday, Bob wrote:</p>
+        <div data-quoted-html style="display:flex;border-left:2px solid #ccc">
+          <p>Original message</p><blockquote type="cite">Earlier history</blockquote>
+          <img src="cid:original-image" alt="Original image">
+        </div>
+      </div><br><br>-- <br><div id="signature"><strong>Alice</strong><br>Example company</div>`);
+    const quote = document.querySelector<HTMLElement>('[data-quoted-html]')!;
+    const originalQuote = quote.innerHTML;
+    const originalSignature = document.getElementById('signature')!.outerHTML;
+    const originalText = document.body.textContent;
+
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    expect(quote.style.display).toBe('flex');
+    expect(document.getElementById('signature')).toBeVisible();
+    toggle()!.click();
+    expect(quote.style.display).toBe('none');
+    expect(document.getElementById('signature')).toBeVisible();
+    toggle()!.click();
+    expect(quote.style.display).toBe('flex');
+    expect(quote.innerHTML).toBe(originalQuote);
+    expect(document.getElementById('signature')!.outerHTML).toBe(originalSignature);
+    expect(document.querySelector('img')!.getAttribute('src')).toBe('cid:original-image');
+    toggle()!.remove();
+    expect(document.body.textContent).toBe(originalText);
+  });
+
+  it.each([
+    '<div data-quoted-html><p>Old question</p><p id="inline-answer">New inline answer</p></div>',
+    '<div class="gmail_quote"><blockquote>Old question</blockquote><p id="inline-answer">New inline answer</p></div>',
+  ])('keeps answers inside a quote visible until the user chooses to fold it', (quotedHtml) => {
+    document.body.innerHTML = `<p>Answers below</p>${quotedHtml}<p id="after">Regards</p>`;
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    expect(document.getElementById('inline-answer')).toBeVisible();
+    toggle()!.click();
+    expect(document.getElementById('inline-answer')).not.toBeVisible();
+    expect(document.getElementById('after')).toBeVisible();
+    toggle()!.click();
+    expect(document.getElementById('inline-answer')).toBeVisible();
+  });
+
+  it('folds only the first recognized container when replies separate multiple quotes', () => {
+    document.body.innerHTML = `
+      <p>Answers below</p><blockquote type="cite" id="first">First question</blockquote>
+      <p id="answer">First answer</p><blockquote type="cite" id="second">Second question</blockquote>
+      <p id="after">Second answer</p>`;
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    expect(document.getElementById('first')).toBeVisible();
+    expect(document.getElementById('second')).toBeVisible();
+    toggle()!.click();
+    expect(document.getElementById('first')).not.toBeVisible();
+    expect(document.getElementById('second')).toBeVisible();
+    expect(document.getElementById('answer')).toBeVisible();
+    expect(document.getElementById('after')).toBeVisible();
+  });
+
+  it('does not add a manual toggle to an ambiguous bare blockquote with a reply after it', () => {
+    document.body.innerHTML = '<p>Earlier:</p><blockquote>Original</blockquote><p>My answer below</p>';
     expect(setupQuoteCollapse(document, labels)).toBe(false);
     expect(toggle()).toBeNull();
+    expect(document.querySelector('blockquote')).toBeVisible();
+  });
+
+  it('does not add a manual toggle when a quote and signature have no preceding reply', () => {
+    document.body.innerHTML = '<div data-quoted-html>Original</div><p>-- Signature</p>';
+    expect(setupQuoteCollapse(document, labels)).toBe(false);
+    expect(toggle()).toBeNull();
+    expect(document.querySelector('[data-quoted-html]')).toBeVisible();
+  });
+
+  it('does not reset or duplicate a manual toggle when setup runs again', () => {
+    document.body.innerHTML = '<p>Reply</p><div data-quoted-html>Original</div><p>Signature</p>';
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    const button = toggle()!;
+    expect(setupQuoteCollapse(document, labels)).toBe(false);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    button.click();
+    expect(setupQuoteCollapse(document, labels)).toBe(false);
+    expect(document.querySelectorAll(`[${QUOTE_TOGGLE_ATTR}]`)).toHaveLength(1);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    button.click();
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(document.querySelector('[data-quoted-html]')).toBeVisible();
+  });
+
+  it.each([true, false])('notifies the reader after toggling, initially expanded: %s', (manual) => {
+    document.body.innerHTML = '<p>Reply</p><div data-quoted-html style="display:flex">Original</div>'
+      + (manual ? '<p>Signature</p>' : '');
+    const quote = document.querySelector<HTMLElement>('[data-quoted-html]')!;
+    const states: Array<{ expanded: string | null; display: string }> = [];
+    const onToggle = vi.fn(() => {
+      states.push({ expanded: toggle()!.getAttribute('aria-expanded'), display: quote.style.display });
+    });
+
+    expect(setupQuoteCollapse(document, labels, onToggle)).toBe(true);
+    expect(onToggle).not.toHaveBeenCalled();
+    toggle()!.click();
+    toggle()!.click();
+    expect(onToggle).toHaveBeenCalledTimes(2);
+    expect(states).toEqual(manual
+      ? [{ expanded: 'false', display: 'none' }, { expanded: 'true', display: 'flex' }]
+      : [{ expanded: 'true', display: 'flex' }, { expanded: 'false', display: 'none' }]);
+  });
+
+  it('ignores the reader stylesheet after a trailing quote when choosing its initial state', () => {
+    document.body.innerHTML = '<p>Reply</p><div class="gmail_quote">Original</div>'
+      + '<style>html,body{height:auto!important;min-height:0!important}body{overflow-y:hidden!important}</style>';
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    expect(document.querySelector('.gmail_quote')).not.toBeVisible();
+    expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('still folds the full run of adjacent cite quotes when a stylesheet follows it', () => {
+    document.body.innerHTML = '<p>Reply</p><blockquote type="cite">Attribution</blockquote>'
+      + '<blockquote type="cite">Original</blockquote><style>body{height:auto}</style>';
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    const quotes = document.querySelectorAll('blockquote');
+    expect(quotes[0]).not.toBeVisible();
+    expect(quotes[1]).not.toBeVisible();
+    expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('does not treat a stylesheet as a reply preceding a quote-only message', () => {
+    document.body.innerHTML = '<style>body{height:auto}</style><div class="gmail_quote">Forwarded original</div>';
+    expect(setupQuoteCollapse(document, labels)).toBe(false);
+    expect(toggle()).toBeNull();
+    expect(document.querySelector('.gmail_quote')).toBeVisible();
+  });
+
+  it('ignores a trailing stylesheet for an attributed bare blockquote', () => {
+    document.body.innerHTML = '<p>Reply</p><p>On Monday, Bob wrote:</p><blockquote>Original</blockquote>'
+      + '<style>body{height:auto}</style>';
+    expect(setupQuoteCollapse(document, labels)).toBe(true);
+    expect(document.querySelector('blockquote')).not.toBeVisible();
+    expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('ignores whitespace-only trailing content after the quote container', () => {

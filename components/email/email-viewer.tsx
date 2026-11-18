@@ -3988,13 +3988,13 @@ export function EmailViewer({
       if (initializedDocRef.current === doc) return;
       initializedDocRef.current = doc;
       {
-        // Collapse the quoted original of a reply behind a "•••" toggle
-        // (#480). Before the height wiring, so the initial measurement
-        // already reflects the collapsed body.
+        // Set up the quoted-text toggle before the first height measurement.
+        // Force a new measurement on clicks: folding can leave scrollHeight
+        // pinned to the old viewport, which the size cache would skip.
         setupQuoteCollapse(doc, {
           show: t('show_quoted_text'),
           hide: t('hide_quoted_text'),
-        });
+        }, () => applyHeight(true));
 
         // Text size and minimum size (Settings > Accessibility), before the
         // height wiring so the first measurement is already at the new size.

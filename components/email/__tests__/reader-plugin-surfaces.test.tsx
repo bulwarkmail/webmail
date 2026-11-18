@@ -5,6 +5,7 @@ import type { Email, Mailbox, ThreadGroup } from '@/lib/jmap/types';
 import { resetActions, setActionDispatcher, setPluginActions } from '@/lib/plugin-sandbox/actions';
 import { clearOffers, offerSlots, slotProps } from '@/components/plugins/__tests__/fake-plugin-offer';
 import { requestPanel } from '@/lib/plugin-sandbox/panel-requests';
+import { setupQuoteCollapse } from '@/lib/quote-collapse';
 
 // Plugin surfaces of the open message: frames above the subject, under the
 // sender, between new text and quote, above a conversation; buttons in the
@@ -332,6 +333,44 @@ describe('reader-above-quote', () => {
     expect(anchor.nextElementSibling).toBe(doc.querySelector('[data-quote-toggle]'));
     const overlay = document.querySelector('[data-plugin-quote-overlay]')!;
     expect(within(overlay as HTMLElement).getByTestId('slot-reader-above-quote')).toBeInTheDocument();
+    unmount();
+    expect(doc.querySelector(`[${QUOTE_ANCHOR_ATTR}]`)).toBeNull();
+    host.remove();
+  });
+
+  it('keeps the above-quote plugin visible while a user folds and reopens an initially expanded quote', () => {
+    offerSlots('p1', ['reader-above-quote']);
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const iframe = document.createElement('iframe');
+    host.appendChild(iframe);
+    const doc = iframe.contentDocument!;
+    doc.body.innerHTML = '<p>New text</p><div data-quoted-html style="display:flex">Old text</div><p id="after">New text below</p>';
+    expect(setupQuoteCollapse(doc, { show: 'Show quoted text', hide: 'Hide quoted text' })).toBe(true);
+    const button = doc.querySelector<HTMLButtonElement>('[data-quote-toggle]')!;
+    const quote = doc.querySelector<HTMLElement>('[data-quoted-html]')!;
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(quote.style.display).toBe('flex');
+
+    const { unmount } = render(
+      <ReaderAboveQuoteSlot root={doc.body} frame={iframe} extraProps={{ email: { id: 'e1' } }} />,
+      { container: host.appendChild(document.createElement('div')) },
+    );
+    const anchor = doc.querySelector(`[${QUOTE_ANCHOR_ATTR}]`)!;
+    expect(anchor.nextElementSibling).toBe(button);
+    const pluginFrame = screen.getByTestId('slot-reader-above-quote');
+    expect(pluginFrame).toBeVisible();
+
+    act(() => { button.click(); });
+    expect(quote.style.display).toBe('none');
+    expect(doc.getElementById('after')).toBeVisible();
+    expect(pluginFrame).toBeVisible();
+    expect(anchor.isConnected).toBe(true);
+
+    act(() => { button.click(); });
+    expect(quote.style.display).toBe('flex');
+    expect(pluginFrame).toBeVisible();
+    expect(doc.querySelectorAll(`[${QUOTE_ANCHOR_ATTR}]`)).toHaveLength(1);
     unmount();
     expect(doc.querySelector(`[${QUOTE_ANCHOR_ATTR}]`)).toBeNull();
     host.remove();
