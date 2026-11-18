@@ -654,6 +654,37 @@ describe('hydrateRecurrenceInstances with an occurrence listed twice', () => {
       expect(merged.participants?.org.participationStatus).toBe('accepted');
     }
   });
+  
+  it('takes the instants of an occurrence the organizer moved to another day', () => {
+    // Stalwart 0.16.27 lists an occurrence the organizer moved from 2 to 16
+    // March twice under one id: the series' occurrence and the moved one.
+    // The override lists start, not the server-computed utcStart/utcEnd the
+    // grid places events by.
+    const original = instance({
+      start: '2026-03-02T10:00:00', recurrenceId: '2026-03-02T10:00:00', timeZone: 'Europe/Warsaw',
+      utcStart: '2026-03-02T09:00:00Z', utcEnd: '2026-03-02T10:00:00Z',
+    } as Partial<CalendarEvent>);
+    const moved = instance({
+      start: '2026-03-16T10:00:00', recurrenceId: '2026-03-02T10:00:00', timeZone: 'Europe/Warsaw', sequence: 1,
+      utcStart: '2026-03-16T09:00:00Z', utcEnd: '2026-03-16T10:00:00Z',
+    } as Partial<CalendarEvent>);
+    const movedBases = new Map<string, Partial<CalendarEvent>>([['b', {
+      id: 'b', duration: 'PT1H', timeZone: 'Europe/Warsaw',
+      recurrenceOverrides: { '2026-03-02T10:00:00': { start: '2026-03-16T10:00:00', sequence: 1 } as Partial<CalendarEvent> },
+    }]]);
+    for (const order of [[original, moved], [moved, original]]) {
+      const [merged, ...rest] = hydrateRecurrenceInstances(order, movedBases);
+      expect(rest).toEqual([]);
+      expect(merged.start).toBe('2026-03-16T10:00:00');
+      expect(merged.utcStart).toBe('2026-03-16T09:00:00Z');
+      expect(merged.utcEnd).toBe('2026-03-16T10:00:00Z');
+    }
+  });
+
+  it('keeps the series instants when the override does not move the occurrence', () => {
+    const [merged] = hydrateRecurrenceInstances([series, stub], bases);
+    expect(merged.utcStart).toBe(series.utcStart);
+  });
 });
 
 
