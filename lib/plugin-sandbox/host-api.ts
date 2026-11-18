@@ -1314,8 +1314,13 @@ export async function doGetPublicKeyFromWKD(email: string): Promise<WkdResult> {
   const hash = await getWkdHash(localPart);
 
   const urls = [
-    `https://openpgpkey.${domain}/.well-known/openpgpkey/hu/${hash}?l=${encodeURIComponent(localPart)}`,
-    `https://${domain}/.well-known/openpgpkey/hu/${hash}?l=${encodeURIComponent(localPart)}`
+    // Advanced method (draft-koch-openpgp-webkey-service 3.1): the domain is part of the path.
+    `https://openpgpkey.${domain}/.well-known/openpgpkey/${domain}/hu/${hash}?l=${encodeURIComponent(localPart)}`,
+    // Direct method.
+    `https://${domain}/.well-known/openpgpkey/hu/${hash}?l=${encodeURIComponent(localPart)}`,
+    // Not in the spec: the direct layout on the openpgpkey subdomain, a common
+    // misconfiguration. Tried last so correctly configured hosts always win.
+    `https://openpgpkey.${domain}/.well-known/openpgpkey/hu/${hash}?l=${encodeURIComponent(localPart)}`
   ];
 
   for (const url of urls) {
