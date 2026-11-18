@@ -817,7 +817,8 @@
       "event_status_tentative": "Esialgne",
       "event_status_cancelled": "Tühistatud",
       "expand": "Näita üksikasju",
-      "collapse": "Peida üksikasjad"
+      "collapse": "Peida üksikasjad",
+      "optional_role": "Sinu osalemine on valikuline"
     },
     "send": "Saada",
     "more": "veel",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Sina oled osaleja",
       "no_participants": "Osalejaid pole",
       "limit_warning": "Rohkem kui {max, plural, one {# osaleja} other {# osalejat}}, korraldaja kaasa arvatud: server võib keelduda seda sündmust salvestamast. Administraator saab piirangut tõsta.",
-      "count":"{count, plural, one {# osaleja} other {# osalejat}}"
+      "count":"{count, plural, one {# osaleja} other {# osalejat}}",
+      "optional": "Valikuline",
+      "optional_role": "valikuline"
     },
     "recurrence": {
       "title": "Kordumine",
@@ -5662,7 +5665,8 @@
     "unknown_note": "Bulwark näeb hõivatud aegu ainult sinuga jagatud kalendrites. Nende inimeste puhul ei saa ta eristada vaba ajast jagamata kalendrit.",
     "directory_off": "Bulwark ei saa selles serveris inimesi otsida. Administraator saab Stalwartis kataloogipäringud sisse lülitada.",
     "not_looked_up": "Seda aadressi ei leitud",
-    "found": "Leitud vabu aegu: {count}"
+    "found": "Leitud vabu aegu: {count}",
+    "optional_ignored": "Valikuliste osalejate hõivatud aegu ei arvestata."
   },
   "share_notifications": {
     "someone": "Keegi",

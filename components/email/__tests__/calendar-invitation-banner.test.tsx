@@ -301,6 +301,25 @@ describe('CalendarInvitationBanner', () => {
     expect(mocks.sourceClientMock.parseCalendarEvents).not.toHaveBeenCalled();
   });
 
+  // #1753: ROLE=OPT-PARTICIPANT arrives as roles.optional on the user's entry.
+  it.each([
+    ['optional', { attendee: true, optional: true }, true],
+    ['required', { attendee: true }, false],
+  ])('tells a %s attendee whether they are optional', async (_label, roles, shown) => {
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([{
+      uid: 'uid-opt', title: 'Quarterly review', start: '2026-03-22T14:00:00Z',
+      participants: {
+        organizer: { '@type': 'Participant', email: 'boss@example.com', roles: { owner: true }, participationStatus: 'accepted' },
+        me: { '@type': 'Participant', email: 'user@example.com', roles, participationStatus: 'needs-action' },
+      },
+    }]);
+
+    render(<CalendarInvitationBanner email={makeEmail()} />);
+
+    await waitFor(() => expect(screen.getByText('Quarterly review')).toBeInTheDocument());
+    expect(screen.queryByTestId('invitation-optional') !== null).toBe(shown);
+  });
+
   // The calendar on screen is the active login's. An invitation in another
   // login's message is shown, and nothing for it touches that calendar: the
   // event belongs in the calendar of the login that was invited.

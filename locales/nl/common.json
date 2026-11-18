@@ -790,7 +790,8 @@
       "event_status_tentative": "Voorlopig",
       "event_status_cancelled": "Geannuleerd",
       "collapse": "Details verbergen",
-      "expand": "Details tonen"
+      "expand": "Details tonen",
+      "optional_role": "Je aanwezigheid is optioneel"
     },
     "previous": "Vorige",
     "next": "Volgende",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Je bent een deelnemer",
       "no_participants": "Geen deelnemers",
       "limit_warning": "Meer dan {max, plural, one {# deelnemer} other {# deelnemers}}, de organisator meegeteld: de server kan weigeren dit evenement op te slaan. Een beheerder kan de limiet verhogen.",
-      "count": "{count, plural, one {# deelnemer} other {# deelnemers}}"
+      "count": "{count, plural, one {# deelnemer} other {# deelnemers}}",
+      "optional": "Optioneel",
+      "optional_role": "optioneel"
     },
     "recurrence": {
       "title": "Herhaling",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark ziet bezette tijden alleen in agenda’s die met je zijn gedeeld. Bij deze mensen kan het vrij niet onderscheiden van niet gedeeld.",
     "directory_off": "Bulwark kan op deze server geen mensen opzoeken. Je beheerder kan directoryquery’s aanzetten in Stalwart.",
     "not_looked_up": "Dit adres kon niet worden opgezocht",
-    "found": "Vrije tijden gevonden: {count}"
+    "found": "Vrije tijden gevonden: {count}",
+    "optional_ignored": "Bezette tijden van optionele deelnemers tellen niet mee."
   },
   "share_notifications": {
     "someone": "Iemand",

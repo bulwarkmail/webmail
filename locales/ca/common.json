@@ -817,7 +817,8 @@
       "event_status_tentative": "Provisional",
       "event_status_cancelled": "Cancel·lat",
       "expand": "Mostra els detalls",
-      "collapse": "Amaga els detalls"
+      "collapse": "Amaga els detalls",
+      "optional_role": "La vostra assistència és opcional"
     },
     "send": "Envia",
     "more": "més",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Sou un assistent",
       "no_participants": "Cap participant",
       "limit_warning": "Més de {max, plural, one {# participant} other {# participants}}, inclòs l'organitzador: és possible que el servidor es negui a desar aquest esdeveniment. Un administrador pot augmentar el límit.",
-      "count": "{count, plural, one {# participant} other {# participants}}"
+      "count": "{count, plural, one {# participant} other {# participants}}",
+      "optional": "Opcional",
+      "optional_role": "opcional"
     },
     "recurrence": {
       "title": "Repetició",
@@ -5662,7 +5665,8 @@
     "unknown_note": "Bulwark només veu les hores ocupades dels calendaris compartits amb vós. Per a aquestes persones no pot distingir lliure de no compartit.",
     "directory_off": "Bulwark no pot cercar persones en aquest servidor. L’administrador pot activar les consultes de directori a Stalwart.",
     "not_looked_up": "No s’ha pogut cercar aquesta adreça",
-    "found": "Horaris lliures trobats: {count}"
+    "found": "Horaris lliures trobats: {count}",
+    "optional_ignored": "No es tenen en compte les hores ocupades dels assistents opcionals."
   },
   "share_notifications": {
     "someone": "Algú",

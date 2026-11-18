@@ -11,6 +11,7 @@ import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "
 interface Participant {
   name: string;
   email: string;
+  optional?: boolean;
 }
 
 interface ParticipantSuggestion extends Participant {
@@ -21,6 +22,8 @@ interface ParticipantInputProps {
   participants: Participant[];
   onAdd: (participant: Participant) => void;
   onRemove: (email: string) => void;
+  /** Switches an attendee between required and optional; without it the chips have no switch. */
+  onToggleOptional?: (email: string) => void;
   disabled?: boolean;
   /** The field's id, for the label above it. */
   id?: string;
@@ -32,7 +35,7 @@ export interface ParticipantInputHandle {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantInputProps>(function ParticipantInput({ participants, onAdd, onRemove, disabled, id }, ref) {
+export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantInputProps>(function ParticipantInput({ participants, onAdd, onRemove, onToggleOptional, disabled, id }, ref) {
   const t = useTranslations("calendar.participants");
   const tContacts = useTranslations("contacts");
   const [query, setQuery] = useState("");
@@ -227,7 +230,7 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
           {participants.map((p, i) => (
             <span
               key={`${p.email}-${i}`}
-              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-muted text-foreground max-w-[200px]"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-muted text-foreground max-w-[260px]"
             >
               {!disabled ? (
                 <button
@@ -245,6 +248,25 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
                 </button>
               ) : (
                 <span className="truncate" title={p.email}>{p.name || p.email}</span>
+              )}
+              {/* Required unless switched on: pressed reads "optional". */}
+              {onToggleOptional && !disabled ? (
+                <button
+                  type="button"
+                  onClick={() => onToggleOptional(p.email)}
+                  aria-pressed={!!p.optional}
+                  aria-label={`${t("optional")} ${p.name || p.email}`}
+                  data-testid="participant-optional-toggle"
+                  className={`flex-shrink-0 rounded-full px-1.5 text-[0.6875rem] leading-4 transition-colors ${
+                    p.optional
+                      ? "bg-foreground/15 text-foreground"
+                      : "text-muted-foreground/70 hover:bg-muted-foreground/20 hover:text-foreground"
+                  }`}
+                >
+                  {t("optional")}
+                </button>
+              ) : p.optional && (
+                <span className="flex-shrink-0 text-[0.6875rem] text-muted-foreground">{t("optional")}</span>
               )}
               {!disabled && (
                 <button

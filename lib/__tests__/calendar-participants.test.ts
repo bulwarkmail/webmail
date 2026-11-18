@@ -329,6 +329,7 @@ describe('getParticipantList', () => {
       email: 'alice@example.com',
       status: 'accepted',
       isOrganizer: true,
+      optional: false,
     });
     expect(list.find(p => p.id === 'att1')).toEqual({
       id: 'att1',
@@ -336,6 +337,7 @@ describe('getParticipantList', () => {
       email: 'bob@example.com',
       status: 'needs-action',
       isOrganizer: false,
+      optional: false,
     });
   });
 

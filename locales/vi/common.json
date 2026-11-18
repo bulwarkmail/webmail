@@ -817,7 +817,8 @@
       "event_status_tentative": "Tạm thời",
       "event_status_cancelled": "Đã hủy",
       "expand": "Hiện chi tiết",
-      "collapse": "Ẩn chi tiết"
+      "collapse": "Ẩn chi tiết",
+      "optional_role": "Bạn là người tham dự không bắt buộc"
     },
     "send": "Gửi",
     "more": "Thêm",
@@ -5008,7 +5009,9 @@
       "you_attendee": "Bạn là người tham dự",
       "no_participants": "Không có người tham gia",
       "limit_warning": "Nhiều hơn {max, plural, one {# người tham gia} other {# người tham gia}}, bao gồm cả người tổ chức: máy chủ có thể từ chối lưu sự kiện này. Quản trị viên có thể tăng giới hạn.",
-      "count": "{count, plural, one {# người tham gia} other {# người tham gia}}"
+      "count": "{count, plural, one {# người tham gia} other {# người tham gia}}",
+      "optional": "Không bắt buộc",
+      "optional_role": "không bắt buộc"
     },
     "recurrence": {
       "title": "Lặp lại",
@@ -5674,7 +5677,8 @@
     "unknown_note": "Bulwark chỉ thấy giờ bận trong các lịch được chia sẻ với bạn. Với những người này, nó không phân biệt được rảnh hay chưa chia sẻ.",
     "directory_off": "Bulwark không thể tra cứu người trên máy chủ này. Quản trị viên có thể bật truy vấn thư mục trong Stalwart.",
     "not_looked_up": "Không tra cứu được địa chỉ này",
-    "found": "Số khung giờ trống tìm thấy: {count}"
+    "found": "Số khung giờ trống tìm thấy: {count}",
+    "optional_ignored": "Giờ bận của người tham dự không bắt buộc không được tính."
   },
   "share_notifications": {
     "someone": "Ai đó",

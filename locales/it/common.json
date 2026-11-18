@@ -790,7 +790,8 @@
       "event_status_tentative": "Provvisorio",
       "event_status_cancelled": "Annullato",
       "collapse": "Nascondi dettagli",
-      "expand": "Mostra dettagli"
+      "expand": "Mostra dettagli",
+      "optional_role": "La tua partecipazione è facoltativa"
     },
     "previous": "Precedente",
     "next": "Successivo",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Sei un partecipante",
       "no_participants": "Nessun partecipante",
       "limit_warning": "Più di {max, plural, one {# partecipante} other {# partecipanti}}, organizzatore incluso: il server potrebbe rifiutarsi di salvare questo evento. Un amministratore può aumentare il limite.",
-      "count": "{count, plural, one {# partecipante} other {# partecipanti}}"
+      "count": "{count, plural, one {# partecipante} other {# partecipanti}}",
+      "optional": "Facoltativo",
+      "optional_role": "facoltativo"
     },
     "recurrence": {
       "title": "Ricorrenza",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark vede gli orari occupati solo nei calendari condivisi con te. Per queste persone non può distinguere libero da non condiviso.",
     "directory_off": "Bulwark non può cercare persone su questo server. L’amministratore può attivare le query della rubrica in Stalwart.",
     "not_looked_up": "Impossibile cercare questo indirizzo",
-    "found": "Orari liberi trovati: {count}"
+    "found": "Orari liberi trovati: {count}",
+    "optional_ignored": "Gli orari occupati dei partecipanti facoltativi non contano."
   },
   "share_notifications": {
     "someone": "Qualcuno",

@@ -790,7 +790,8 @@
       "event_status_tentative": "Vorläufig",
       "event_status_cancelled": "Abgesagt",
       "collapse": "Details ausblenden",
-      "expand": "Details anzeigen"
+      "expand": "Details anzeigen",
+      "optional_role": "Ihre Teilnahme ist optional"
     },
     "previous": "Zurück",
     "next": "Weiter",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Sie sind ein Teilnehmer",
       "no_participants": "Keine Teilnehmer",
       "limit_warning": "Mehr als {max, plural, one {# Teilnehmer} other {# Teilnehmer}}, den Organisator mitgezählt: Der Server lehnt das Speichern dieses Termins möglicherweise ab. Ihr Administrator kann das Limit erhöhen.",
-      "count": "{count, plural, one {# Teilnehmer} other {# Teilnehmer}}"
+      "count": "{count, plural, one {# Teilnehmer} other {# Teilnehmer}}",
+      "optional": "Optional",
+      "optional_role": "optional"
     },
     "recurrence": {
       "title": "Wiederholung",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark sieht belegte Zeiten nur in Kalendern, die für Sie freigegeben sind. Bei diesen Personen kann es „frei“ nicht von „nicht freigegeben“ unterscheiden.",
     "directory_off": "Bulwark kann auf diesem Server keine Personen nachschlagen. Ihre Administration kann Verzeichnisabfragen in Stalwart einschalten.",
     "not_looked_up": "Adresse nicht gefunden",
-    "found": "Freie Zeiten gefunden: {count}"
+    "found": "Freie Zeiten gefunden: {count}",
+    "optional_ignored": "Belegte Zeiten optionaler Teilnehmer zählen nicht."
   },
   "share_notifications": {
     "someone": "Jemand",

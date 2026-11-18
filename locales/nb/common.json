@@ -817,7 +817,8 @@
       "event_status_tentative": "Foreløpig",
       "event_status_cancelled": "Avlyst",
       "expand": "Vis detaljer",
-      "collapse": "Skjul detaljer"
+      "collapse": "Skjul detaljer",
+      "optional_role": "Deltakelsen din er valgfri"
     },
     "send": "Send",
     "more": "mer",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Du er deltaker",
       "no_participants": "Ingen deltakere",
       "limit_warning": "Mer enn {max, plural, one {# deltaker} other {# deltakere}}, arrangøren medregnet: serveren kan nekte å lagre denne hendelsen. En administrator kan øke grensen.",
-      "count": "{count, plural, one {# deltaker} other {# deltakere}}"
+      "count": "{count, plural, one {# deltaker} other {# deltakere}}",
+      "optional": "Valgfri",
+      "optional_role": "valgfri"
     },
     "recurrence": {
       "title": "Gjentakelse",
@@ -5662,7 +5665,8 @@
     "unknown_note": "Bulwark ser bare opptatte tider i kalendere som er delt med deg. For disse personene kan den ikke skille ledig fra ikke delt.",
     "directory_off": "Bulwark kan ikke slå opp personer på denne serveren. Administratoren kan slå på katalogspørringer i Stalwart.",
     "not_looked_up": "Adressen kunne ikke slås opp",
-    "found": "Ledige tidspunkter funnet: {count}"
+    "found": "Ledige tidspunkter funnet: {count}",
+    "optional_ignored": "Opptatte tider for valgfrie deltakere telles ikke med."
   },
   "share_notifications": {
     "someone": "Noen",

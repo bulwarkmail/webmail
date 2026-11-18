@@ -720,7 +720,8 @@
       "event_status_cancelled": "בוטל",
       "organizer_label": "מוארגן על ידי",
       "expand": "הצג פרטים",
-      "collapse": "הסתר פרטים"
+      "collapse": "הסתר פרטים",
+      "optional_role": "ההשתתפות שלך אופציונלית"
     },
     "send": "שלח",
     "more": "יותר",
@@ -4865,7 +4866,9 @@
       "no_participants": "אין משתתפים",
       "limit_warning": "יותר מ-{max, plural, one {# משתתף} other {# משתתפים}}, כולל המארגן: ייתכן שהשרת יסרב לשמור את האירוע. מנהל המערכת יכול להגדיל את המגבלה.",
       "count": "{count, plural, one {משתתף אחד} other {# משתתפים}}",
-      "edit": "ערוך"
+      "edit": "ערוך",
+      "optional": "אופציונלי",
+      "optional_role": "אופציונלי"
     },
     "recurrence": {
       "title": "הישנות",
@@ -6113,7 +6116,8 @@
     "unknown_note": "Bulwark רואה זמנים תפוסים רק ביומנים ששותפו איתך. אצל האנשים האלה הוא לא יכול להבדיל בין פנוי ללא משותף.",
     "directory_off": "Bulwark לא יכול לחפש אנשים בשרת הזה. מנהל המערכת יכול להפעיל שאילתות ספרייה ב-Stalwart.",
     "not_looked_up": "לא ניתן היה לחפש את הכתובת",
-    "found": "זמנים פנויים שנמצאו: {count}"
+    "found": "זמנים פנויים שנמצאו: {count}",
+    "optional_ignored": "זמנים תפוסים של משתתפים אופציונליים לא נלקחים בחשבון."
   },
   "share_notifications": {
     "someone": "מישהו",

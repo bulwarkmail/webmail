@@ -817,7 +817,8 @@
       "event_status_tentative": "Provizoriu",
       "event_status_cancelled": "Anulat",
       "expand": "Afișați detalii",
-      "collapse": "Ascunde detaliile"
+      "collapse": "Ascunde detaliile",
+      "optional_role": "Participarea ta este opțională"
     },
     "send": "Trimite",
     "more": "mai mult",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Sunteți participant",
       "no_participants": "Nu există participanți",
       "limit_warning": "Mai mult de {max, plural, one {# participant} few {# participanți} other {# de participanți}}, inclusiv organizatorul: serverul poate refuza salvarea acestui eveniment. Un administrator poate mări limita.",
-      "count": "{count, plural, one {# participant} few {# participanți} other {# de participanți}}"
+      "count": "{count, plural, one {# participant} few {# participanți} other {# de participanți}}",
+      "optional": "Opțional",
+      "optional_role": "opțional"
     },
     "recurrence": {
       "title": "Recurență",
@@ -5662,7 +5665,8 @@
     "unknown_note": "Bulwark vede orele ocupate doar în calendarele partajate cu dvs. Pentru aceste persoane nu poate deosebi liber de nepartajat.",
     "directory_off": "Bulwark nu poate căuta persoane pe acest server. Administratorul poate activa interogările de director în Stalwart.",
     "not_looked_up": "Adresa nu a putut fi căutată",
-    "found": "Ore libere găsite: {count}"
+    "found": "Ore libere găsite: {count}",
+    "optional_ignored": "Orele ocupate ale participanților opționali nu contează."
   },
   "share_notifications": {
     "someone": "Cineva",

@@ -817,7 +817,8 @@
       "event_status_tentative": "Előzetes",
       "event_status_cancelled": "Lemondva",
       "expand": "Részletek mutatása",
-      "collapse": "Részletek elrejtése"
+      "collapse": "Részletek elrejtése",
+      "optional_role": "A részvétele nem kötelező"
     },
     "send": "Küldés",
     "more": "további",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Résztvevő vagy",
       "no_participants": "Nincs résztvevő",
       "limit_warning": "Több mint {max, plural, one {# résztvevő} other {# résztvevő}}, a szervezőt is beleértve: a szerver elutasíthatja az esemény mentését. A rendszergazda megemelheti a korlátot.",
-      "count": "{count, plural, one {# résztvevő} other {# résztvevő}}"
+      "count": "{count, plural, one {# résztvevő} other {# résztvevő}}",
+      "optional": "Nem kötelező",
+      "optional_role": "nem kötelező"
     },
     "recurrence": {
       "title": "Ismétlődés",
@@ -5662,7 +5665,8 @@
     "unknown_note": "A Bulwark csak az Önnel megosztott naptárakban látja a foglalt időket. Ezeknél a személyeknél nem tudja megkülönböztetni a szabadot a nem megosztottól.",
     "directory_off": "A Bulwark ezen a szerveren nem tud személyeket keresni. A rendszergazda a Stalwartban bekapcsolhatja a címtár-lekérdezéseket.",
     "not_looked_up": "A cím nem kereshető",
-    "found": "Talált szabad időpontok: {count}"
+    "found": "Talált szabad időpontok: {count}",
+    "optional_ignored": "A nem kötelező résztvevők foglalt idejei nem számítanak."
   },
   "share_notifications": {
     "someone": "Valaki",

@@ -128,6 +128,19 @@ describe.each(occurrences)('changing every occurrence from one of them on Stalwa
     }
   });
 
+  // #1753: made optional in the editor, the attendee is optional in every occurrence.
+  it('makes an attendee optional in the series, keeping the answers', () => {
+    const occurrence = make();
+    const updates = seriesUpdatesFromOccurrence(
+      occurrence, series(version), editorUpdates(occurrence),
+      editorOn(occurrence, { attendees: [{ name: '', email: ATTENDEE, optional: true }] }), context,
+    );
+
+    const b = Object.values(updates.participants ?? {}).find((p) => p.calendarAddress === `mailto:${ATTENDEE}`);
+    expect(b?.roles).toEqual({ attendee: true, optional: true });
+    expect(statusOf(updates.participants, ATTENDEE)).toBe('accepted');
+  });
+
   it('moves the series from its own start by as much as the occurrence moved, and asks again', () => {
     const occurrence = make();
     const start = getEventStartDate(occurrence);

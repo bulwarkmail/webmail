@@ -792,7 +792,8 @@
       "event_status_tentative": "Wstępne",
       "event_status_cancelled": "Anulowane",
       "collapse": "Ukryj szczegóły",
-      "expand": "Pokaż szczegóły"
+      "expand": "Pokaż szczegóły",
+      "optional_role": "Twoja obecność jest opcjonalna"
     },
     "send": "Wyślij",
     "more": "więcej",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Jesteś uczestnikiem",
       "no_participants": "Brak uczestników",
       "limit_warning": "Ponad {max, plural, one {# uczestnika} few {# uczestników} many {# uczestników} other {# uczestnika}} łącznie z organizatorem: serwer może odmówić zapisania tego wydarzenia. Administrator może zwiększyć limit.",
-      "count": "{count, plural, one {# uczestnik} other {# uczestników}}"
+      "count": "{count, plural, one {# uczestnik} other {# uczestników}}",
+      "optional": "Opcjonalny",
+      "optional_role": "opcjonalny"
     },
     "recurrence": {
       "title": "Powtarzanie",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark widzi zajęte terminy tylko w kalendarzach udostępnionych Tobie. U tych osób nie odróżni wolnego czasu od braku udostępnienia.",
     "directory_off": "Bulwark nie może wyszukiwać osób na tym serwerze. Administrator może włączyć zapytania do katalogu w Stalwart.",
     "not_looked_up": "Nie udało się wyszukać adresu",
-    "found": "Znalezione wolne terminy: {count}"
+    "found": "Znalezione wolne terminy: {count}",
+    "optional_ignored": "Zajęte terminy opcjonalnych uczestników nie są brane pod uwagę."
   },
   "share_notifications": {
     "someone": "Ktoś",

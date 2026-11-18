@@ -8,6 +8,8 @@ export interface ParticipantInfo {
   email: string;
   status: CalendarParticipant['participationStatus'];
   isOrganizer: boolean;
+  /** An attendee whose presence is not required (JSCalendar role `optional`, iCalendar OPT-PARTICIPANT). */
+  optional: boolean;
 }
 
 export interface StatusCounts {
@@ -193,6 +195,7 @@ export function getParticipantList(event: CalendarEvent, options?: ParticipantLi
     if (existing) {
       if (!existing.name && p.name) existing.name = p.name;
       if (isOrganizer) existing.isOrganizer = true;
+      if (p.roles?.optional) existing.optional = true;
       existing.status = betterStatus(existing.status, p.participationStatus);
       continue;
     }
@@ -203,6 +206,7 @@ export function getParticipantList(event: CalendarEvent, options?: ParticipantLi
       email,
       status: p.participationStatus || 'needs-action',
       isOrganizer,
+      optional: !!p.roles?.optional,
     };
     if (key) byEmail.set(key, entry);
     list.push(entry);
@@ -218,6 +222,7 @@ export function getParticipantList(event: CalendarEvent, options?: ParticipantLi
     if (entry.isOrganizer && entry.status === 'needs-action') {
       entry.status = 'accepted';
     }
+    if (entry.isOrganizer) entry.optional = false;
   }
   return list;
 }
@@ -322,18 +327,18 @@ export function participantsAskedAgain(
 
 /**
  * An event's participants by address (lowercased): the id each was first
- * listed under, and its answer - a real one over a missing or needs-action
- * one when an address is listed twice (see getParticipantList).
+ * listed under, its roles, and its answer - a real one over a missing or
+ * needs-action one when an address is listed twice (see getParticipantList).
  */
 function participantsByAddress(
   participants: CalendarEvent['participants'] | null | undefined,
-): Map<string, { id: string; status: ParticipationStatus | undefined }> {
-  const known = new Map<string, { id: string; status: ParticipationStatus | undefined }>();
+): Map<string, { id: string; status: ParticipationStatus | undefined; roles: Record<string, boolean> | undefined }> {
+  const known = new Map<string, { id: string; status: ParticipationStatus | undefined; roles: Record<string, boolean> | undefined }>();
   for (const [id, p] of Object.entries(participants ?? {})) {
     const key = getParticipantEmail(p).trim().toLowerCase();
     if (!key) continue;
     const seen = known.get(key);
-    if (!seen) known.set(key, { id, status: p.participationStatus });
+    if (!seen) known.set(key, { id, status: p.participationStatus, roles: p.roles });
     else if ((!seen.status || seen.status === 'needs-action') && p.participationStatus) seen.status = p.participationStatus;
   }
   return known;
@@ -347,10 +352,13 @@ function participantsByAddress(
  * a recurrence override pointing at a participant id that is gone. With
  * `askAgain` every attendee but the organizer answers anew (needs-action),
  * but at the user's own addresses, `userEmails` (keptAnswersOf).
+ *
+ * An attendee is required unless marked `optional`. Roles the editor does
+ * not show (chair, informational, contact; set in another client) stay.
  */
 export function buildParticipantMap(
   organizer: { name: string; email: string },
-  attendees: { name: string; email: string }[],
+  attendees: { name: string; email: string; optional?: boolean }[],
   existing?: CalendarEvent['participants'] | null,
   options: { askAgain?: boolean; userEmails?: string[] } = {},
 ): Record<string, Partial<CalendarParticipant>> {
@@ -397,12 +405,14 @@ export function buildParticipantMap(
     if (!key || seen.has(key)) return;
     seen.add(key);
 
+    const kept = Object.fromEntries(Object.entries(known.get(key)?.roles ?? {})
+      .filter(([role, on]) => on && role !== 'owner' && role !== 'optional'));
     participants[idFor(key)] = {
       '@type': 'Participant',
       ...named(a.name),
       email,
       calendarAddress: `mailto:${email}`,
-      roles: { attendee: true },
+      roles: { ...kept, attendee: true, ...(a.optional ? { optional: true } : {}) },
       participationStatus: (options.askAgain && !own.has(key) ? undefined : known.get(key)?.status) ?? 'needs-action',
       scheduleAgent: 'server',
       expectReply: true,
@@ -502,7 +512,7 @@ export interface ParticipantSaveContext {
  */
 export function participantFieldsToSave(
   event: CalendarEvent | null | undefined,
-  attendees: { name: string; email: string }[],
+  attendees: { name: string; email: string; optional?: boolean }[],
   context: ParticipantSaveContext,
 ): Partial<Pick<CalendarEvent, 'participants' | 'organizerCalendarAddress' | 'replyTo'>> {
   const { userEmail, resolveName } = context;

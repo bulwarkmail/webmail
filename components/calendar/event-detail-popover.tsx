@@ -623,6 +623,11 @@ export function EventDetailPopover({
                           ({t("participants.organizer_role")})
                         </span>
                       )}
+                      {p.optional && (
+                        <span className="text-muted-foreground ms-1">
+                          ({t("participants.optional_role")})
+                        </span>
+                      )}
                     </span>
                     <ParticipantStatusBadge status={p.status} className="text-[0.625rem]" />
                   </div>

@@ -790,7 +790,8 @@
       "event_status_tentative": "仮",
       "event_status_cancelled": "キャンセル済み",
       "collapse": "詳細を非表示",
-      "expand": "詳細を表示"
+      "expand": "詳細を表示",
+      "optional_role": "あなたの参加は任意です"
     },
     "previous": "前へ",
     "next": "次へ",
@@ -4996,7 +4997,9 @@
       "you_attendee": "あなたは参加者です",
       "no_participants": "参加者なし",
       "limit_warning": "参加者が主催者を含めて{max, plural, other {#人}}を超えています。サーバーがこの予定の保存を拒否する可能性があります。管理者が上限を引き上げることができます。",
-      "count": "{count}人の参加者"
+      "count": "{count}人の参加者",
+      "optional": "任意",
+      "optional_role": "任意"
     },
     "recurrence": {
       "title": "繰り返し",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark が予定ありの時間を確認できるのは、共有されたカレンダーだけです。これらの人については、空いているのか共有されていないのか区別できません。",
     "directory_off": "Bulwark はこのサーバーで人を検索できません。管理者は Stalwart でディレクトリ照会をオンにできます。",
     "not_looked_up": "このアドレスを検索できません",
-    "found": "見つかった空き時間：{count}"
+    "found": "見つかった空き時間：{count}",
+    "optional_ignored": "任意の参加者の予定ありの時間は考慮しません。"
   },
   "share_notifications": {
     "someone": "誰か",

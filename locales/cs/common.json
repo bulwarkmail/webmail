@@ -792,7 +792,8 @@
       "event_status_tentative": "Nezávazně",
       "event_status_cancelled": "Zrušeno",
       "expand": "Zobrazit podrobnosti",
-      "collapse": "Skrýt podrobnosti"
+      "collapse": "Skrýt podrobnosti",
+      "optional_role": "Vaše účast je nepovinná"
     },
     "send": "Odeslat",
     "more": "více",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Jste účastníkem",
       "no_participants": "Žádní účastníci",
       "limit_warning": "Více než {max, plural, one {# účastník} few {# účastníci} many {# účastníka} other {# účastníků}} včetně organizátora: server může uložení této události odmítnout. Správce může limit zvýšit.",
-      "count": "{count, plural, one {1 účastník} few {# účastníci} other {# účastníků}}"
+      "count": "{count, plural, one {1 účastník} few {# účastníci} other {# účastníků}}",
+      "optional": "Nepovinný",
+      "optional_role": "nepovinný"
     },
     "recurrence": {
       "title": "Opakování",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark vidí obsazené časy jen v kalendářích, které s vámi někdo sdílí. U těchto lidí nerozliší volno od nesdíleného kalendáře.",
     "directory_off": "Bulwark na tomto serveru nemůže vyhledávat lidi. Správce může ve Stalwartu zapnout dotazy do adresáře.",
     "not_looked_up": "Adresu nelze vyhledat",
-    "found": "Nalezené volné časy: {count}"
+    "found": "Nalezené volné časy: {count}",
+    "optional_ignored": "Obsazené časy nepovinných účastníků se nepočítají."
   },
   "share_notifications": {
     "someone": "Někdo",

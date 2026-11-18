@@ -817,7 +817,8 @@
       "event_status_tentative": "مبدئي",
       "event_status_cancelled": "ملغى",
       "expand": "إظهار التفاصيل",
-      "collapse": "إخفاء التفاصيل"
+      "collapse": "إخفاء التفاصيل",
+      "optional_role": "حضورك اختياري"
     },
     "send": "إرسال",
     "more": "المزيد",
@@ -4996,7 +4997,9 @@
       "you_attendee": "أنت أحد الحاضرين",
       "no_participants": "لا يوجد مشاركون",
       "limit_warning": "أكثر من {max, plural, zero {# مشارك} one {مشارك واحد} two {مشاركَين} few {# مشاركين} many {# مشاركًا} other {# مشارك}}، بمن فيهم المنظّم: قد يرفض الخادم حفظ هذا الحدث. يمكن للمسؤول رفع هذا الحد.",
-      "count": "{count, plural, one {# مشارك} other {# مشاركين}}"
+      "count": "{count, plural, one {# مشارك} other {# مشاركين}}",
+      "optional": "اختياري",
+      "optional_role": "اختياري"
     },
     "recurrence": {
       "title": "التكرار",
@@ -5662,7 +5665,8 @@
     "unknown_note": "يرى Bulwark أوقات الانشغال فقط في التقويمات المشتركة معك. لهؤلاء الأشخاص لا يمكنه التمييز بين متاح وغير مشترك.",
     "directory_off": "لا يستطيع Bulwark البحث عن الأشخاص على هذا الخادم. يمكن لمسؤولك تفعيل استعلامات الدليل في Stalwart.",
     "not_looked_up": "تعذّر العثور على هذا العنوان",
-    "found": "الأوقات المتاحة التي وُجدت: {count}"
+    "found": "الأوقات المتاحة التي وُجدت: {count}",
+    "optional_ignored": "لا تُحتسب أوقات انشغال الحضور الاختياريين."
   },
   "share_notifications": {
     "someone": "شخص ما",

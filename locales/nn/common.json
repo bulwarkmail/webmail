@@ -817,7 +817,8 @@
       "event_status_tentative": "Førebels",
       "event_status_cancelled": "Avlyst",
       "expand": "Vis detaljar",
-      "collapse": "Gøym detaljar"
+      "collapse": "Gøym detaljar",
+      "optional_role": "Deltakinga di er valfri"
     },
     "send": "Send",
     "more": "meir",
@@ -5004,7 +5005,9 @@
       "you_attendee": "Du er deltakar",
       "no_participants": "Ingen deltakarar",
       "limit_warning": "Fleire enn {max, plural, one {# deltakar} other {# deltakarar}}, medrekna arrangøren: tenaren kan nekte å lagre denne hendinga. Ein administrator kan auke grensa.",
-      "count": "{count, plural, one {# deltakar} other {# deltakarar}}"
+      "count": "{count, plural, one {# deltakar} other {# deltakarar}}",
+      "optional": "Valfri",
+      "optional_role": "valfri"
     },
     "recurrence": {
       "title": "Gjentaking",
@@ -5670,7 +5673,8 @@
     "unknown_note": "Bulwark ser berre opptekne tider i kalendrar som er delte med deg. For desse personane kan han ikkje skilje ledig frå ikkje delt.",
     "directory_off": "Bulwark kan ikkje slå opp folk på denne tenaren. Administratoren din kan slå på katalogspørringar i Stalwart.",
     "not_looked_up": "Klarte ikkje slå opp denne adressa",
-    "found": "Ledige tider funne: {count}"
+    "found": "Ledige tider funne: {count}",
+    "optional_ignored": "Opptekne tider for valfrie deltakarar vert ikkje rekna med."
   },
   "share_notifications": {
     "someone": "Nokon",

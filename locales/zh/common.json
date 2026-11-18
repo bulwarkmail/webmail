@@ -792,7 +792,8 @@
       "event_status_tentative": "暂定",
       "event_status_cancelled": "已取消",
       "collapse": "隐藏详情",
-      "expand": "显示详情"
+      "expand": "显示详情",
+      "optional_role": "您是可选参与者"
     },
     "send": "发送",
     "more": "更多",
@@ -4996,7 +4997,9 @@
       "you_attendee": "您是与会者",
       "no_participants": "没有参加者",
       "limit_warning": "参与者（含组织者）超过 {max, plural, other {# 位}}：服务器可能会拒绝保存此活动。管理员可以提高此限制。",
-      "count": "{count, plural, one {# 位参与者} other {# 位参与者}}"
+      "count": "{count, plural, one {# 位参与者} other {# 位参与者}}",
+      "optional": "可选",
+      "optional_role": "可选"
     },
     "recurrence": {
       "title": "重复",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark 只能看到与你共享的日历中的忙碌时间。对这些人，它无法区分有空和未共享。",
     "directory_off": "Bulwark 无法在此服务器上查找用户。管理员可以在 Stalwart 中开启目录查询。",
     "not_looked_up": "无法查找此地址",
-    "found": "找到的空闲时间：{count}"
+    "found": "找到的空闲时间：{count}",
+    "optional_ignored": "不计入可选参与者的忙碌时间。"
   },
   "share_notifications": {
     "someone": "有人",

@@ -790,7 +790,8 @@
       "event_status_tentative": "Provisoire",
       "event_status_cancelled": "Annulé",
       "collapse": "Masquer les détails",
-      "expand": "Afficher les détails"
+      "expand": "Afficher les détails",
+      "optional_role": "Votre présence est facultative"
     },
     "previous": "Précédent",
     "next": "Suivant",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Vous êtes un participant",
       "no_participants": "Aucun participant",
       "limit_warning": "Plus de {max, plural, one {# participant} other {# participants}}, organisateur compris : le serveur risque de refuser d'enregistrer cet événement. Un administrateur peut relever la limite.",
-      "count": "{count, plural, one {# participant} other {# participants}}"
+      "count": "{count, plural, one {# participant} other {# participants}}",
+      "optional": "Facultatif",
+      "optional_role": "facultatif"
     },
     "recurrence": {
       "title": "Récurrence",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark ne voit les disponibilités que dans les calendriers partagés avec vous. Pour ces personnes, il ne peut pas distinguer « libre » de « non partagé ».",
     "directory_off": "Bulwark ne peut pas rechercher de personnes sur ce serveur. Votre administrateur peut activer les requêtes d’annuaire dans Stalwart.",
     "not_looked_up": "Adresse introuvable",
-    "found": "Créneaux libres trouvés : {count}"
+    "found": "Créneaux libres trouvés : {count}",
+    "optional_ignored": "Les créneaux occupés des participants facultatifs ne comptent pas."
   },
   "share_notifications": {
     "someone": "Quelqu'un",

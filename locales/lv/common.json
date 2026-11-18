@@ -792,7 +792,8 @@
       "event_status_tentative": "Pagaidām",
       "event_status_cancelled": "Atcelts",
       "collapse": "Paslēpt detaļas",
-      "expand": "Rādīt detaļas"
+      "expand": "Rādīt detaļas",
+      "optional_role": "Jūsu dalība nav obligāta"
     },
     "send": "Sūtīt",
     "more": "vairāk",
@@ -4995,7 +4996,9 @@
       "you_attendee": "Jūs esat dalībnieks",
       "no_participants": "Nav dalībnieku",
       "limit_warning": "Vairāk nekā {max, plural, one {# dalībnieks} other {# dalībnieki}}, ieskaitot organizatoru: serveris var atteikties saglabāt šo pasākumu. Administrators var palielināt ierobežojumu.",
-      "count": "{count, plural, one {# dalībnieks} other {# dalībnieki}}"
+      "count": "{count, plural, one {# dalībnieks} other {# dalībnieki}}",
+      "optional": "Neobligāts",
+      "optional_role": "neobligāts"
     },
     "recurrence": {
       "title": "Atkārtošana",
@@ -6301,7 +6304,8 @@
     "unknown_note": "Bulwark redz aizņemtos laikus tikai kalendāros, kas kopīgoti ar jums. Šiem cilvēkiem tas nevar atšķirt brīvu laiku no nekopīgota kalendāra.",
     "directory_off": "Bulwark šajā serverī nevar meklēt cilvēkus. Administrators var ieslēgt direktorija vaicājumus Stalwart.",
     "not_looked_up": "Šo adresi neizdevās atrast",
-    "found": "Atrasti brīvi laiki: {count}"
+    "found": "Atrasti brīvi laiki: {count}",
+    "optional_ignored": "Neobligāto dalībnieku aizņemtie laiki netiek ņemti vērā."
   },
   "share_notifications": {
     "someone": "Kāds",

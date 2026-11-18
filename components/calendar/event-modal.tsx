@@ -597,11 +597,11 @@ export function EventModal({
     // organizer too, and the user isn't a guest of it.
     if (!event) {
       const mine = new Set(currentUserEmails.map((e) => e.toLowerCase()));
-      return existingParticipants.reduce<{ name: string; email: string }[]>((acc, p) => {
+      return existingParticipants.reduce<EditorAttendee[]>((acc, p) => {
         const key = p.email.trim().toLowerCase();
         if (!key || mine.has(key)) return acc;
         mine.add(key);
-        acc.push({ name: p.name, email: p.email.trim() });
+        acc.push({ name: p.name, email: p.email.trim(), ...(p.optional ? { optional: true } : {}) });
         return acc;
       }, []);
     }
@@ -618,11 +618,11 @@ export function EventModal({
     }
     return existingParticipants
       .filter(p => !p.isOrganizer)
-      .reduce<{ name: string; email: string }[]>((acc, p) => {
+      .reduce<EditorAttendee[]>((acc, p) => {
         const key = p.email.trim().toLowerCase();
         if (!key || excluded.has(key)) return acc;
         excluded.add(key);
-        acc.push({ name: p.name, email: p.email.trim() });
+        acc.push({ name: p.name, email: p.email.trim(), ...(p.optional ? { optional: true } : {}) });
         return acc;
       }, []);
   });
@@ -896,6 +896,16 @@ export function EventModal({
 
   const handleRemoveAttendee = useCallback((email: string) => {
     setAttendees(prev => prev.filter(a => a.email.toLowerCase() !== email.toLowerCase()));
+  }, []);
+
+  // Required by default; an optional attendee is told so and doesn't
+  // block a time in Suggest times.
+  const handleToggleOptional = useCallback((email: string) => {
+    setAttendees(prev => prev.map((a) => {
+      if (a.email.toLowerCase() !== email.toLowerCase()) return a;
+      if (a.optional) return { name: a.name, email: a.email };
+      return { ...a, optional: true };
+    }));
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -1373,6 +1383,9 @@ export function EventModal({
                           {p.isOrganizer && (
                             <span className="text-muted-foreground ms-1">({t("participants.organizer_role")})</span>
                           )}
+                          {p.optional && (
+                            <span className="text-muted-foreground ms-1">({t("participants.optional_role")})</span>
+                          )}
                         </span>
                         <ParticipantStatusBadge status={p.status} />
                       </div>
@@ -1800,6 +1813,7 @@ export function EventModal({
               participants={attendees}
               onAdd={handleAddAttendee}
               onRemove={handleRemoveAttendee}
+              onToggleOptional={handleToggleOptional}
               disabled={!userIsOrganizer}
             />
             {/* Only a warning: 0.16 advertises the limit without enforcing

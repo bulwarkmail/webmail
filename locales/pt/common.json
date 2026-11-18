@@ -790,7 +790,8 @@
       "event_status_tentative": "Provisório",
       "event_status_cancelled": "Cancelado",
       "collapse": "Ocultar detalhes",
-      "expand": "Mostrar detalhes"
+      "expand": "Mostrar detalhes",
+      "optional_role": "Sua presença é opcional"
     },
     "previous": "Anterior",
     "next": "Próximo",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Você é um participante",
       "no_participants": "Sem participantes",
       "limit_warning": "Mais de {max, plural, one {# participante} other {# participantes}}, incluindo o organizador: o servidor pode se recusar a salvar este evento. Um administrador pode aumentar o limite.",
-      "count": "{count, plural, one {# participante} other {# participantes}}"
+      "count": "{count, plural, one {# participante} other {# participantes}}",
+      "optional": "Opcional",
+      "optional_role": "opcional"
     },
     "recurrence": {
       "title": "Recorrência",
@@ -6301,7 +6304,8 @@
     "unknown_note": "O Bulwark só vê horários ocupados nos calendários compartilhados com você. Para estas pessoas, não consegue distinguir livre de não compartilhado.",
     "directory_off": "O Bulwark não consegue procurar pessoas neste servidor. O administrador pode ativar as consultas ao diretório no Stalwart.",
     "not_looked_up": "Não foi possível procurar este endereço",
-    "found": "Horários livres encontrados: {count}"
+    "found": "Horários livres encontrados: {count}",
+    "optional_ignored": "Os horários ocupados dos participantes opcionais não contam."
   },
   "share_notifications": {
     "someone": "Alguém",

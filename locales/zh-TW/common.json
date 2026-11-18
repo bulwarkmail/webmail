@@ -817,7 +817,8 @@
       "event_status_tentative": "暫定",
       "event_status_cancelled": "已取消",
       "expand": "顯示詳細資料",
-      "collapse": "隱藏詳細資料"
+      "collapse": "隱藏詳細資料",
+      "optional_role": "您是選擇性與會者"
     },
     "send": "傳送",
     "more": "更多",
@@ -4996,7 +4997,9 @@
       "you_attendee": "您是與會者",
       "no_participants": "沒有參與者",
       "limit_warning": "參與者（含主辦人）超過 {max, plural, other {# 位}}：伺服器可能會拒絕儲存此活動。管理員可以提高此限制。",
-      "count": "{count, plural, one {# 位參與者} other {# 位參與者}}"
+      "count": "{count, plural, one {# 位參與者} other {# 位參與者}}",
+      "optional": "選擇性",
+      "optional_role": "選擇性"
     },
     "recurrence": {
       "title": "重複",
@@ -5662,7 +5665,8 @@
     "unknown_note": "Bulwark 只能看到與你共用的行事曆中的忙碌時間。對這些人，它無法區分有空和未共用。",
     "directory_off": "Bulwark 無法在此伺服器上查詢使用者。管理員可以在 Stalwart 中開啟目錄查詢。",
     "not_looked_up": "無法查詢此地址",
-    "found": "找到的空閒時間：{count}"
+    "found": "找到的空閒時間：{count}",
+    "optional_ignored": "不計入選擇性與會者的忙碌時間。"
   },
   "share_notifications": {
     "someone": "有人",

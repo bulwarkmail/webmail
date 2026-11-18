@@ -792,7 +792,8 @@
       "event_status_tentative": "Belirsiz",
       "event_status_cancelled": "İptal edildi",
       "expand": "Ayrıntıları göster",
-      "collapse": "Ayrıntıları gizle"
+      "collapse": "Ayrıntıları gizle",
+      "optional_role": "Katılımınız isteğe bağlı"
     },
     "send": "Gönder",
     "more": "daha fazla",
@@ -4996,7 +4997,9 @@
       "you_attendee": "Siz bir katılımcısınız",
       "no_participants": "Katılımcı yok",
       "limit_warning": "Organizatör dahil {max, plural, one {# katılımcıdan} other {# katılımcıdan}} fazla: sunucu bu etkinliği kaydetmeyi reddedebilir. Bir yönetici bu sınırı yükseltebilir.",
-      "count": "{count, plural, one {# katılımcı} other {# katılımcı}}"
+      "count": "{count, plural, one {# katılımcı} other {# katılımcı}}",
+      "optional": "İsteğe bağlı",
+      "optional_role": "isteğe bağlı"
     },
     "recurrence": {
       "title": "Yineleme",
@@ -5662,7 +5665,8 @@
     "unknown_note": "Bulwark meşgul saatleri yalnızca sizinle paylaşılan takvimlerde görür. Bu kişiler için boş olmayı paylaşılmamaktan ayıramaz.",
     "directory_off": "Bulwark bu sunucuda kişi arayamıyor. Yöneticiniz Stalwart’ta dizin sorgularını açabilir.",
     "not_looked_up": "Bu adres aranamadı",
-    "found": "Bulunan boş saatler: {count}"
+    "found": "Bulunan boş saatler: {count}",
+    "optional_ignored": "İsteğe bağlı katılımcıların meşgul saatleri sayılmaz."
   },
   "share_notifications": {
     "someone": "Birisi",

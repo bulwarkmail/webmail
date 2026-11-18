@@ -817,7 +817,8 @@
       "event_status_tentative": "Tentative",
       "event_status_cancelled": "Cancelled",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "optional_role": "You are an optional attendee"
     },
     "send": "Send",
     "more": "more",
@@ -4996,7 +4997,9 @@
       "you_attendee": "You are an attendee",
       "no_participants": "No participants",
       "limit_warning": "More than {max, plural, one {# participant} other {# participants}}, including the organizer: the server may refuse to save this event. An administrator can raise the limit.",
-      "count": "{count, plural, one {# participant} other {# participants}}"
+      "count": "{count, plural, one {# participant} other {# participants}}",
+      "optional": "Optional",
+      "optional_role": "optional"
     },
     "recurrence": {
       "title": "Recurrence",
@@ -5662,7 +5665,8 @@
     "unknown_note": "Bulwark only sees busy times in calendars shared with you. For these people it can’t tell free from not shared.",
     "directory_off": "Bulwark can’t look up people on this server. Your administrator can turn on directory queries in Stalwart.",
     "not_looked_up": "Couldn’t look up this address",
-    "found": "Free times found: {count}"
+    "found": "Free times found: {count}",
+    "optional_ignored": "Optional attendees' busy times don't count."
   },
   "share_notifications": {
     "someone": "Someone",
