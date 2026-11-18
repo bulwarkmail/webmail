@@ -181,7 +181,7 @@ describe('PluginSearchResults', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('holds the block\'s place with placeholder rows while a plugin takes longer, then fills it', () => {
+  it('holds the block\'s place at its share with placeholder rows while a plugin takes longer, then fills it', () => {
     vi.useFakeTimers();
     useEmailStore.setState({ searchQuery: 'resolution', externalSearchResults: [], externalSearchPending: ['crm'] });
     const { container } = render(<PluginSearchResults surface="search-results" />);
@@ -190,14 +190,18 @@ describe('PluginSearchResults', () => {
     act(() => vi.advanceTimersByTime(PENDING_GRACE_MS));
     const waiting = screen.getByRole('region', { name: 'Searching for more results…' });
     expect(waiting).toHaveAttribute('aria-busy', 'true');
-    const block = container.querySelector('[data-plugin-surface]');
-    expect(block).toHaveClass('h-48');
+    const block = container.querySelector<HTMLElement>('[data-plugin-surface]')!;
+    const share = `max(${MIN_HEIGHT}px, ${DEFAULT_SHARE * 100}%)`;
+    expect(block.style.height).toBe(share);
 
     act(() => useEmailStore.setState({ externalSearchResults: [result('crm', 'a', 'CRM')], externalSearchPending: [] }));
     expect(screen.queryByRole('region', { name: 'Searching for more results…' })).toBeNull();
     expect(screen.getByRole('region', { name: 'CRM' })).toHaveTextContent('Title a');
-    // The same height as while it waited: the list below does not move again.
-    expect(container.querySelector('[data-plugin-surface]')).toHaveClass('h-48');
+    // The share is now the most it takes, and no height of its own is left
+    // that a drag of its edge could not get past.
+    expect(block.style.height).toBe('');
+    expect(block.style.maxHeight).toBe(share);
+    expect(block).not.toHaveClass('h-48');
   });
 
   it('shows the entries of a plugin that answered beside the one still searching', () => {
@@ -225,7 +229,7 @@ describe('PluginSearchResults', () => {
     act(() => useEmailStore.setState({ searchQuery: 'two', externalSearchResults: [], externalSearchPending: ['crm'] }));
     act(() => useEmailStore.setState({ externalSearchResults: [result('crm', 'c', 'CRM')], externalSearchPending: [] }));
 
-    expect(container.querySelector('[data-plugin-surface]')).not.toHaveClass('h-48');
+    expect(container.querySelector<HTMLElement>('[data-plugin-surface]')!.style.height).toBe('');
   });
 });
 
@@ -283,6 +287,96 @@ describe('PluginSearchResults height', () => {
     fireEvent.pointerMove(document, { pointerId: 1, clientY: 0, buttons: 1 });
     expect(block(container).style.maxHeight).toBe(capped(`${(MIN_HEIGHT / LIST) * 100}%`));
     fireEvent.pointerUp(document, { pointerId: 1 });
+  });
+
+  it('follows a drag down and up after a plugin that took longer answered', () => {
+    vi.useFakeTimers();
+    useEmailStore.setState({ externalSearchResults: [], externalSearchPending: ['crm'] });
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    act(() => vi.advanceTimersByTime(PENDING_GRACE_MS));
+    act(() => useEmailStore.setState({ externalSearchResults: [result('crm', 'a', 'CRM')], externalSearchPending: [] }));
+
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 200 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 700, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('70%'));
+    expect(block(container).style.height).toBe('');
+
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 100, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('10%'));
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.100');
+  });
+
+  it('follows a drag while it still waits, as its height', () => {
+    vi.useFakeTimers();
+    useEmailStore.setState({ externalSearchResults: [], externalSearchPending: ['crm'] });
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    act(() => vi.advanceTimersByTime(PENDING_GRACE_MS));
+
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 200 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 500, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.height).toBe(capped('50%'));
+  });
+
+  it('grows no further than its entries need, and keeps that', () => {
+    // Its entries are 300 px high and it had 20 % of the list: the edge stops at 300 px.
+    localStorage.setItem('pluginSearchResultsShare', '0.2');
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(300);
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 200 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 800, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('30%'));
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.300');
+  });
+
+  it('keeps a larger share when a search with few results is dragged down', () => {
+    // Two entries, 120 px, in a block that may take 60 %: nothing to grow into.
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(120);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120);
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 120 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 170, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('60%'));
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+  });
+
+  it('keeps a larger share when a drag on a search with few results comes back to where it began', () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(120);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120);
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 120 });
+    // Sideways only, then down and back: the edge never left the entries' end.
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 120, clientX: 40, buttons: 1 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 150, buttons: 1 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 120, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+  });
+
+  it('keeps a larger share when a search with few results gets an arrow key', async () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(120);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120);
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    await act(async () => {});
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+  });
+
+  it('shrinks below its entries when dragged up', () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(300);
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 300 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 200, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('20%'));
   });
 
   it('takes the default again on a double click', () => {
