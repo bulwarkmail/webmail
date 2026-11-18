@@ -53,7 +53,7 @@
     "@opentelemetry/resources": "3.1.1",
     "@opentelemetry/sdk-trace": "3.1.1",
     "@prometheus-io/client": "0.16.1",
-    "@tabler/icons-react": "^3.50.0",
+    "@tabler/icons-react": "^3.52.0",
     "@tanstack/react-virtual": "^3.14.26",
     "@tiptap/extension-color": "^3.33.0",
     "@tiptap/extension-heading": "^3.33.0",
