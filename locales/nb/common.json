@@ -5678,6 +5678,23 @@
     "found": "Ledige tidspunkter funnet: {count}",
     "optional_ignored": "Opptatte tider for valgfrie deltakere telles ikke med."
   },
+  "scheduling_assistant": {
+    "open": "Tilgjengelighet…",
+    "title": "Tilgjengelighet",
+    "description": "Klikk i rutenettet eller dra hendelsen for å flytte den. Dra i slutten for å endre varigheten.",
+    "previous_day": "Forrige dag",
+    "next_day": "Neste dag",
+    "you": "Deg",
+    "everyone": "Alle deltakere",
+    "optional": "Valgfri",
+    "event": "Hendelse: {time}",
+    "keyboard_hint": "Piltastene flytter hendelsen 15 minutter. Med Shift endrer de varigheten.",
+    "use_time": "Bruk dette tidspunktet",
+    "loading": "Henter opptatte tider…",
+    "outside_hours": "Utenfor arbeidstiden",
+    "everyone_free": "Alle ledige",
+    "not_checked": "Ukjent"
+  },
   "share_notifications": {
     "someone": "Noen",
     "shared": "{name} har delt {kind} «{object}» med deg",

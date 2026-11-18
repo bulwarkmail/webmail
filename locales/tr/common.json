@@ -5678,6 +5678,23 @@
     "found": "Bulunan boş saatler: {count}",
     "optional_ignored": "İsteğe bağlı katılımcıların meşgul saatleri sayılmaz."
   },
+  "scheduling_assistant": {
+    "open": "Uygunluk…",
+    "title": "Uygunluk",
+    "description": "Etkinliği taşımak için ızgaraya tıklayın veya sürükleyin. Süreyi değiştirmek için sonunu sürükleyin.",
+    "previous_day": "Önceki gün",
+    "next_day": "Sonraki gün",
+    "you": "Siz",
+    "everyone": "Tüm katılımcılar",
+    "optional": "İsteğe bağlı",
+    "event": "Etkinlik: {time}",
+    "keyboard_hint": "Ok tuşları etkinliği 15 dakika kaydırır. Shift ile süresini değiştirir.",
+    "use_time": "Bu saati kullan",
+    "loading": "Dolu saatler yükleniyor…",
+    "outside_hours": "Çalışma saatleri dışında",
+    "everyone_free": "Herkes müsait",
+    "not_checked": "Bilinmiyor"
+  },
   "share_notifications": {
     "someone": "Birisi",
     "shared": "{name}, \"{object}\" {kind} sizinle paylaştı",

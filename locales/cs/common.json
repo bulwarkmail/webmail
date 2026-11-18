@@ -6317,6 +6317,23 @@
     "found": "Nalezené volné časy: {count}",
     "optional_ignored": "Obsazené časy nepovinných účastníků se nepočítají."
   },
+  "scheduling_assistant": {
+    "open": "Dostupnost…",
+    "title": "Dostupnost",
+    "description": "Klikněte do mřížky nebo událost přetáhněte, abyste ji přesunuli. Přetažením konce změníte délku.",
+    "previous_day": "Předchozí den",
+    "next_day": "Další den",
+    "you": "Vy",
+    "everyone": "Všichni účastníci",
+    "optional": "Volitelný",
+    "event": "Událost: {time}",
+    "keyboard_hint": "Šipky posouvají událost o 15 minut. S klávesou Shift mění její délku.",
+    "use_time": "Použít tento čas",
+    "loading": "Načítání obsazených časů…",
+    "outside_hours": "Mimo pracovní dobu",
+    "everyone_free": "Všichni volní",
+    "not_checked": "Neznámé"
+  },
   "share_notifications": {
     "someone": "Někdo",
     "shared": "{name} s vámi sdílí {kind} „{object}“",

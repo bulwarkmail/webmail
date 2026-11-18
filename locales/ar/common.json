@@ -5678,6 +5678,23 @@
     "found": "الأوقات المتاحة التي وُجدت: {count}",
     "optional_ignored": "لا تُحتسب أوقات انشغال الحضور الاختياريين."
   },
+  "scheduling_assistant": {
+    "open": "التوفر…",
+    "title": "التوفر",
+    "description": "انقر على الشبكة أو اسحب الحدث لنقله. اسحب نهايته لتغيير المدة.",
+    "previous_day": "اليوم السابق",
+    "next_day": "اليوم التالي",
+    "you": "أنت",
+    "everyone": "جميع الحضور",
+    "optional": "اختياري",
+    "event": "الحدث: {time}",
+    "keyboard_hint": "تنقل مفاتيح الأسهم الحدث 15 دقيقة. ومع Shift تغيّر مدته.",
+    "use_time": "استخدام هذا الوقت",
+    "loading": "جارٍ تحميل أوقات الانشغال…",
+    "outside_hours": "خارج ساعات العمل",
+    "everyone_free": "الجميع متاحون",
+    "not_checked": "غير معروف"
+  },
   "share_notifications": {
     "someone": "شخص ما",
     "shared": "شارك {name} معك {kind} \"{object}\"",

@@ -5678,6 +5678,23 @@
     "found": "Talált szabad időpontok: {count}",
     "optional_ignored": "A nem kötelező résztvevők foglalt idejei nem számítanak."
   },
+  "scheduling_assistant": {
+    "open": "Elérhetőség…",
+    "title": "Elérhetőség",
+    "description": "Kattintson a rácsra, vagy húzza az eseményt az áthelyezéshez. A végét húzva módosíthatja a hosszát.",
+    "previous_day": "Előző nap",
+    "next_day": "Következő nap",
+    "you": "Ön",
+    "everyone": "Minden résztvevő",
+    "optional": "Nem kötelező",
+    "event": "Esemény: {time}",
+    "keyboard_hint": "A nyílbillentyűk 15 perccel mozgatják az eseményt. Shifttel a hosszát módosítják.",
+    "use_time": "Ez az időpont legyen",
+    "loading": "Foglalt idők betöltése…",
+    "outside_hours": "Munkaidőn kívül",
+    "everyone_free": "Mindenki szabad",
+    "not_checked": "Ismeretlen"
+  },
   "share_notifications": {
     "someone": "Valaki",
     "shared": "{name} megosztotta veled a(z) {kind} „{object}” elemet",

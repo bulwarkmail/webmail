@@ -6317,6 +6317,23 @@
     "found": "Znalezione wolne terminy: {count}",
     "optional_ignored": "Zajęte terminy opcjonalnych uczestników nie są brane pod uwagę."
   },
+  "scheduling_assistant": {
+    "open": "Dostępność…",
+    "title": "Dostępność",
+    "description": "Kliknij siatkę lub przeciągnij wydarzenie, aby je przenieść. Przeciągnij jego koniec, aby zmienić czas trwania.",
+    "previous_day": "Poprzedni dzień",
+    "next_day": "Następny dzień",
+    "you": "Ty",
+    "everyone": "Wszyscy uczestnicy",
+    "optional": "Opcjonalny",
+    "event": "Wydarzenie: {time}",
+    "keyboard_hint": "Strzałki przesuwają wydarzenie o 15 minut. Z klawiszem Shift zmieniają czas trwania.",
+    "use_time": "Użyj tego terminu",
+    "loading": "Wczytywanie zajętych terminów…",
+    "outside_hours": "Poza godzinami pracy",
+    "everyone_free": "Wszyscy wolni",
+    "not_checked": "Nieznane"
+  },
   "share_notifications": {
     "someone": "Ktoś",
     "shared": "{name} udostępnił(a) Ci {kind} „{object}”",

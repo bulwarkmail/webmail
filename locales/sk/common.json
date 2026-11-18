@@ -5678,6 +5678,23 @@
     "found": "Nájdené voľné časy: {count}",
     "optional_ignored": "Obsadené časy nepovinných účastníkov sa nepočítajú."
   },
+  "scheduling_assistant": {
+    "open": "Dostupnosť…",
+    "title": "Dostupnosť",
+    "description": "Kliknite do mriežky alebo udalosť potiahnite, aby ste ju presunuli. Potiahnutím konca zmeníte dĺžku.",
+    "previous_day": "Predchádzajúci deň",
+    "next_day": "Nasledujúci deň",
+    "you": "Vy",
+    "everyone": "Všetci účastníci",
+    "optional": "Voliteľný",
+    "event": "Udalosť: {time}",
+    "keyboard_hint": "Šípky posúvajú udalosť o 15 minút. S klávesom Shift menia jej dĺžku.",
+    "use_time": "Použiť tento čas",
+    "loading": "Načítavajú sa obsadené časy…",
+    "outside_hours": "Mimo pracovného času",
+    "everyone_free": "Všetci voľní",
+    "not_checked": "Neznáme"
+  },
   "share_notifications": {
     "someone": "Niekto",
     "shared": "{name} s vami zdieľa {kind} „{object}“",

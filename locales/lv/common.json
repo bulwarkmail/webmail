@@ -6317,6 +6317,23 @@
     "found": "Atrasti brīvi laiki: {count}",
     "optional_ignored": "Neobligāto dalībnieku aizņemtie laiki netiek ņemti vērā."
   },
+  "scheduling_assistant": {
+    "open": "Pieejamība…",
+    "title": "Pieejamība",
+    "description": "Noklikšķiniet režģī vai velciet notikumu, lai to pārvietotu. Velciet tā beigas, lai mainītu ilgumu.",
+    "previous_day": "Iepriekšējā diena",
+    "next_day": "Nākamā diena",
+    "you": "Jūs",
+    "everyone": "Visi dalībnieki",
+    "optional": "Neobligāts",
+    "event": "Notikums: {time}",
+    "keyboard_hint": "Bulttaustiņi pārvieto notikumu par 15 minūtēm. Ar Shift tie maina ilgumu.",
+    "use_time": "Izmantot šo laiku",
+    "loading": "Ielādē aizņemtos laikus…",
+    "outside_hours": "Ārpus darba laika",
+    "everyone_free": "Visi brīvi",
+    "not_checked": "Nezināms"
+  },
   "share_notifications": {
     "someone": "Kāds",
     "shared": "{name} kopīgoja ar jums {kind} “{object}”",

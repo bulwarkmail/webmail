@@ -5678,6 +5678,23 @@
     "found": "Horaris lliures trobats: {count}",
     "optional_ignored": "No es tenen en compte les hores ocupades dels assistents opcionals."
   },
+  "scheduling_assistant": {
+    "open": "Disponibilitat…",
+    "title": "Disponibilitat",
+    "description": "Feu clic a la quadrícula o arrossegueu l’esdeveniment per moure’l. Arrossegueu-ne el final per canviar la durada.",
+    "previous_day": "Dia anterior",
+    "next_day": "Dia següent",
+    "you": "Vós",
+    "everyone": "Tots els assistents",
+    "optional": "Opcional",
+    "event": "Esdeveniment: {time}",
+    "keyboard_hint": "Les fletxes mouen l’esdeveniment 15 minuts. Amb Maj en canvien la durada.",
+    "use_time": "Utilitza aquesta hora",
+    "loading": "S’estan carregant les hores ocupades…",
+    "outside_hours": "Fora de l’horari laboral",
+    "everyone_free": "Tothom lliure",
+    "not_checked": "Desconegut"
+  },
   "share_notifications": {
     "someone": "Algú",
     "shared": "{name} ha compartit amb tu {kind} \"{object}\"",

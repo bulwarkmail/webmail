@@ -6317,6 +6317,23 @@
     "found": "Orari liberi trovati: {count}",
     "optional_ignored": "Gli orari occupati dei partecipanti facoltativi non contano."
   },
+  "scheduling_assistant": {
+    "open": "Disponibilità…",
+    "title": "Disponibilità",
+    "description": "Fai clic sulla griglia o trascina l’evento per spostarlo. Trascina la fine per cambiare la durata.",
+    "previous_day": "Giorno precedente",
+    "next_day": "Giorno successivo",
+    "you": "Tu",
+    "everyone": "Tutti i partecipanti",
+    "optional": "Facoltativo",
+    "event": "Evento: {time}",
+    "keyboard_hint": "Le frecce spostano l’evento di 15 minuti. Con Maiusc ne cambiano la durata.",
+    "use_time": "Usa questo orario",
+    "loading": "Caricamento degli orari occupati…",
+    "outside_hours": "Fuori orario di lavoro",
+    "everyone_free": "Tutti liberi",
+    "not_checked": "Sconosciuto"
+  },
   "share_notifications": {
     "someone": "Qualcuno",
     "shared": "{name} ha condiviso con te {kind} \"{object}\"",

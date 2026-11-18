@@ -5678,6 +5678,23 @@
     "found": "Leitud vabu aegu: {count}",
     "optional_ignored": "Valikuliste osalejate hõivatud aegu ei arvestata."
   },
+  "scheduling_assistant": {
+    "open": "Saadavus…",
+    "title": "Saadavus",
+    "description": "Klõpsake ruudustikul või lohistage sündmust, et seda liigutada. Lohistage selle lõppu, et kestust muuta.",
+    "previous_day": "Eelmine päev",
+    "next_day": "Järgmine päev",
+    "you": "Teie",
+    "everyone": "Kõik osalejad",
+    "optional": "Valikuline",
+    "event": "Sündmus: {time}",
+    "keyboard_hint": "Nooleklahvid liigutavad sündmust 15 minuti kaupa. Koos Shiftiga muudavad nad kestust.",
+    "use_time": "Kasuta seda aega",
+    "loading": "Hõivatud aegade laadimine…",
+    "outside_hours": "Väljaspool tööaega",
+    "everyone_free": "Kõik vabad",
+    "not_checked": "Teadmata"
+  },
   "share_notifications": {
     "someone": "Keegi",
     "shared": "{name} jagas sinuga {kind} \"{object}\"",

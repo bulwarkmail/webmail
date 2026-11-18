@@ -5678,6 +5678,23 @@
     "found": "Ledige tidspunkter fundet: {count}",
     "optional_ignored": "Valgfrie deltageres optagede tider tæller ikke med."
   },
+  "scheduling_assistant": {
+    "open": "Tilgængelighed…",
+    "title": "Tilgængelighed",
+    "description": "Klik i gitteret, eller træk begivenheden for at flytte den. Træk i slutningen for at ændre varigheden.",
+    "previous_day": "Forrige dag",
+    "next_day": "Næste dag",
+    "you": "Dig",
+    "everyone": "Alle deltagere",
+    "optional": "Valgfri",
+    "event": "Begivenhed: {time}",
+    "keyboard_hint": "Piletasterne flytter begivenheden 15 minutter. Med Skift ændrer de varigheden.",
+    "use_time": "Brug dette tidspunkt",
+    "loading": "Henter optagede tider…",
+    "outside_hours": "Uden for arbejdstiden",
+    "everyone_free": "Alle ledige",
+    "not_checked": "Ukendt"
+  },
   "share_notifications": {
     "someone": "Nogen",
     "shared": "{name} har delt {kind} \"{object}\" med dig",

@@ -5686,6 +5686,23 @@
     "found": "Ledige tider funne: {count}",
     "optional_ignored": "Opptekne tider for valfrie deltakarar vert ikkje rekna med."
   },
+  "scheduling_assistant": {
+    "open": "Tilgjenge…",
+    "title": "Tilgjenge",
+    "description": "Klikk i rutenettet eller dra hendinga for å flytte henne. Dra i slutten for å endre lengda.",
+    "previous_day": "Førre dag",
+    "next_day": "Neste dag",
+    "you": "Deg",
+    "everyone": "Alle deltakarar",
+    "optional": "Valfri",
+    "event": "Hending: {time}",
+    "keyboard_hint": "Piltastane flyttar hendinga 15 minutt. Med Shift endrar dei lengda.",
+    "use_time": "Bruk dette tidspunktet",
+    "loading": "Hentar opptekne tider…",
+    "outside_hours": "Utanfor arbeidstida",
+    "everyone_free": "Alle ledige",
+    "not_checked": "Ukjend"
+  },
   "share_notifications": {
     "someone": "Nokon",
     "shared": "{name} delte {kind} «{object}» med deg",

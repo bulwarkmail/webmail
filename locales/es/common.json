@@ -6317,6 +6317,23 @@
     "found": "Horarios libres encontrados: {count}",
     "optional_ignored": "No se tienen en cuenta las horas ocupadas de los participantes opcionales."
   },
+  "scheduling_assistant": {
+    "open": "Disponibilidad…",
+    "title": "Disponibilidad",
+    "description": "Haz clic en la cuadrícula o arrastra el evento para moverlo. Arrastra su final para cambiar la duración.",
+    "previous_day": "Día anterior",
+    "next_day": "Día siguiente",
+    "you": "Tú",
+    "everyone": "Todos los asistentes",
+    "optional": "Opcional",
+    "event": "Evento: {time}",
+    "keyboard_hint": "Las flechas mueven el evento 15 minutos. Con Mayús cambian su duración.",
+    "use_time": "Usar esta hora",
+    "loading": "Cargando horas ocupadas…",
+    "outside_hours": "Fuera del horario laboral",
+    "everyone_free": "Todos libres",
+    "not_checked": "Desconocido"
+  },
   "share_notifications": {
     "someone": "Alguien",
     "shared": "{name} ha compartido contigo {kind} \"{object}\"",

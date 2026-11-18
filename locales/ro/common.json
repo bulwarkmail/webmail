@@ -5678,6 +5678,23 @@
     "found": "Ore libere găsite: {count}",
     "optional_ignored": "Orele ocupate ale participanților opționali nu contează."
   },
+  "scheduling_assistant": {
+    "open": "Disponibilitate…",
+    "title": "Disponibilitate",
+    "description": "Dați clic pe grilă sau trageți evenimentul pentru a-l muta. Trageți de sfârșitul lui pentru a schimba durata.",
+    "previous_day": "Ziua anterioară",
+    "next_day": "Ziua următoare",
+    "you": "Dvs.",
+    "everyone": "Toți participanții",
+    "optional": "Opțional",
+    "event": "Eveniment: {time}",
+    "keyboard_hint": "Săgețile mută evenimentul cu 15 minute. Cu Shift schimbă durata.",
+    "use_time": "Folosește această oră",
+    "loading": "Se încarcă orele ocupate…",
+    "outside_hours": "În afara programului de lucru",
+    "everyone_free": "Toți liberi",
+    "not_checked": "Necunoscut"
+  },
   "share_notifications": {
     "someone": "Cineva",
     "shared": "{name} a partajat cu tine {kind} „{object}”",

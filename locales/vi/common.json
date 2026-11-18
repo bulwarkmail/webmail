@@ -5690,6 +5690,23 @@
     "found": "Số khung giờ trống tìm thấy: {count}",
     "optional_ignored": "Giờ bận của người tham dự không bắt buộc không được tính."
   },
+  "scheduling_assistant": {
+    "open": "Lịch rảnh…",
+    "title": "Lịch rảnh",
+    "description": "Bấm vào lưới hoặc kéo sự kiện để di chuyển. Kéo phần cuối để đổi thời lượng.",
+    "previous_day": "Ngày trước",
+    "next_day": "Ngày sau",
+    "you": "Bạn",
+    "everyone": "Tất cả người tham dự",
+    "optional": "Không bắt buộc",
+    "event": "Sự kiện: {time}",
+    "keyboard_hint": "Phím mũi tên dời sự kiện 15 phút. Kèm Shift thì đổi thời lượng.",
+    "use_time": "Dùng giờ này",
+    "loading": "Đang tải giờ bận…",
+    "outside_hours": "Ngoài giờ làm việc",
+    "everyone_free": "Mọi người đều rảnh",
+    "not_checked": "Không rõ"
+  },
   "share_notifications": {
     "someone": "Ai đó",
     "shared": "{name} đã chia sẻ {kind} \"{object}\" với bạn",

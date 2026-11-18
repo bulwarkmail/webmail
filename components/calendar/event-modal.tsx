@@ -29,6 +29,7 @@ import { createRecurrenceRule, sameRecurrenceRules } from "@/lib/recurrence-rule
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
 import { ParticipantAvailability } from "./participant-availability";
 import { FindATime } from "./find-a-time";
+import { SchedulingAssistant } from "./scheduling-assistant";
 import { AnswerBars, useAccountOwner, useAnswerView } from "./answer-bars";
 import type { AnswerTarget } from "@/lib/calendar-delegate";
 import {
@@ -1918,6 +1919,15 @@ export function EventModal({
             />
             {userIsOrganizer && !allDay && (
               <FindATime
+                attendees={attendees}
+                start={availabilityWindow.start}
+                end={availabilityWindow.end}
+                onPick={handlePickSlot}
+                savedWindow={savedWindow}
+              />
+            )}
+            {userIsOrganizer && !allDay && (
+              <SchedulingAssistant
                 attendees={attendees}
                 start={availabilityWindow.start}
                 end={availabilityWindow.end}

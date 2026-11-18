@@ -6317,6 +6317,23 @@
     "found": "Freie Zeiten gefunden: {count}",
     "optional_ignored": "Belegte Zeiten optionaler Teilnehmer zählen nicht."
   },
+  "scheduling_assistant": {
+    "open": "Verfügbarkeit…",
+    "title": "Verfügbarkeit",
+    "description": "Klicken Sie in das Raster oder ziehen Sie den Termin, um ihn zu verschieben. Ziehen Sie sein Ende, um die Dauer zu ändern.",
+    "previous_day": "Vorheriger Tag",
+    "next_day": "Nächster Tag",
+    "you": "Sie",
+    "everyone": "Alle Teilnehmer",
+    "optional": "Optional",
+    "event": "Termin: {time}",
+    "keyboard_hint": "Die Pfeiltasten verschieben den Termin um 15 Minuten. Mit Umschalt ändern sie die Dauer.",
+    "use_time": "Diese Zeit übernehmen",
+    "loading": "Belegte Zeiten werden geladen…",
+    "outside_hours": "Außerhalb der Arbeitszeit",
+    "everyone_free": "Alle frei",
+    "not_checked": "Unbekannt"
+  },
   "share_notifications": {
     "someone": "Jemand",
     "shared": "{name} hat {kind} „{object}“ mit Ihnen geteilt",

@@ -6317,6 +6317,23 @@
     "found": "Créneaux libres trouvés : {count}",
     "optional_ignored": "Les créneaux occupés des participants facultatifs ne comptent pas."
   },
+  "scheduling_assistant": {
+    "open": "Disponibilité…",
+    "title": "Disponibilité",
+    "description": "Cliquez dans la grille ou faites glisser l’événement pour le déplacer. Faites glisser sa fin pour changer la durée.",
+    "previous_day": "Jour précédent",
+    "next_day": "Jour suivant",
+    "you": "Vous",
+    "everyone": "Tous les participants",
+    "optional": "Facultatif",
+    "event": "Événement : {time}",
+    "keyboard_hint": "Les flèches déplacent l’événement de 15 minutes. Avec Maj, elles changent sa durée.",
+    "use_time": "Utiliser cet horaire",
+    "loading": "Chargement des heures occupées…",
+    "outside_hours": "Hors des heures de travail",
+    "everyone_free": "Tout le monde est libre",
+    "not_checked": "Inconnu"
+  },
   "share_notifications": {
     "someone": "Quelqu'un",
     "shared": "{name} a partagé {kind} « {object} » avec vous",

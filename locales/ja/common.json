@@ -6317,6 +6317,23 @@
     "found": "見つかった空き時間：{count}",
     "optional_ignored": "任意の参加者の予定ありの時間は考慮しません。"
   },
+  "scheduling_assistant": {
+    "open": "空き状況…",
+    "title": "空き状況",
+    "description": "グリッドをクリックするか予定をドラッグして移動します。終わりの端をドラッグすると長さを変えられます。",
+    "previous_day": "前の日",
+    "next_day": "次の日",
+    "you": "あなた",
+    "everyone": "すべての参加者",
+    "optional": "任意",
+    "event": "予定: {time}",
+    "keyboard_hint": "矢印キーで予定を15分ずつ移動します。Shiftキーと一緒に押すと長さを変えます。",
+    "use_time": "この時間にする",
+    "loading": "予定ありの時間を読み込み中…",
+    "outside_hours": "勤務時間外",
+    "everyone_free": "全員空き",
+    "not_checked": "不明"
+  },
   "share_notifications": {
     "someone": "誰か",
     "shared": "{name} さんが{kind}「{object}」を共有しました",

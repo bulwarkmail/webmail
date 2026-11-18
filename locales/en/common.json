@@ -5678,6 +5678,23 @@
     "found": "Free times found: {count}",
     "optional_ignored": "Optional attendees' busy times don't count."
   },
+  "scheduling_assistant": {
+    "open": "Availability…",
+    "title": "Availability",
+    "description": "Click the grid or drag the event to move it. Drag its end to change the length.",
+    "previous_day": "Previous day",
+    "next_day": "Next day",
+    "you": "You",
+    "everyone": "All attendees",
+    "optional": "Optional",
+    "event": "Event: {time}",
+    "keyboard_hint": "The arrow keys move the event by 15 minutes. With Shift they change its length.",
+    "use_time": "Use this time",
+    "loading": "Loading busy times…",
+    "outside_hours": "Outside working hours",
+    "everyone_free": "Everyone free",
+    "not_checked": "Unknown"
+  },
   "share_notifications": {
     "someone": "Someone",
     "shared": "{name} shared the {kind} \"{object}\" with you",

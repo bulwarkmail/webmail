@@ -6129,6 +6129,23 @@
     "found": "זמנים פנויים שנמצאו: {count}",
     "optional_ignored": "זמנים תפוסים של משתתפים אופציונליים לא נלקחים בחשבון."
   },
+  "scheduling_assistant": {
+    "open": "זמינות…",
+    "title": "זמינות",
+    "description": "לחצו על הרשת או גררו את האירוע כדי להזיז אותו. גררו את סופו כדי לשנות את המשך.",
+    "previous_day": "היום הקודם",
+    "next_day": "היום הבא",
+    "you": "אתה",
+    "everyone": "כל המשתתפים",
+    "optional": "רשות",
+    "event": "אירוע: {time}",
+    "keyboard_hint": "מקשי החיצים מזיזים את האירוע ב־15 דקות. עם Shift הם משנים את המשך.",
+    "use_time": "להשתמש בזמן הזה",
+    "loading": "טוען זמנים תפוסים…",
+    "outside_hours": "מחוץ לשעות העבודה",
+    "everyone_free": "כולם פנויים",
+    "not_checked": "לא ידוע"
+  },
   "share_notifications": {
     "someone": "מישהו",
     "shared": "{name} שיתף/ה איתך את {kind} \"{object}\"",

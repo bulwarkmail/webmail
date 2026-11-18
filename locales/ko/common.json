@@ -6317,6 +6317,23 @@
     "found": "찾은 빈 시간: {count}",
     "optional_ignored": "선택 참석자의 바쁜 시간은 고려하지 않아요."
   },
+  "scheduling_assistant": {
+    "open": "참석 가능 여부…",
+    "title": "참석 가능 여부",
+    "description": "그리드를 클릭하거나 일정을 끌어서 옮기세요. 끝부분을 끌면 길이가 바뀝니다.",
+    "previous_day": "이전 날",
+    "next_day": "다음 날",
+    "you": "나",
+    "everyone": "모든 참석자",
+    "optional": "선택",
+    "event": "일정: {time}",
+    "keyboard_hint": "화살표 키로 일정을 15분씩 옮깁니다. Shift와 함께 누르면 길이가 바뀝니다.",
+    "use_time": "이 시간 사용",
+    "loading": "바쁜 시간을 불러오는 중…",
+    "outside_hours": "근무 시간 외",
+    "everyone_free": "모두 가능",
+    "not_checked": "알 수 없음"
+  },
   "share_notifications": {
     "someone": "누군가",
     "shared": "{name}님이 {kind} \"{object}\"을(를) 공유했습니다",

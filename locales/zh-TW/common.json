@@ -5678,6 +5678,23 @@
     "found": "找到的空閒時間：{count}",
     "optional_ignored": "不計入選擇性與會者的忙碌時間。"
   },
+  "scheduling_assistant": {
+    "open": "空閒狀態…",
+    "title": "空閒狀態",
+    "description": "點選格線或拖曳活動即可移動。拖曳其結尾可變更時長。",
+    "previous_day": "前一天",
+    "next_day": "後一天",
+    "you": "你",
+    "everyone": "所有參與者",
+    "optional": "選擇性",
+    "event": "活動：{time}",
+    "keyboard_hint": "方向鍵每次將活動移動 15 分鐘。按住 Shift 則變更時長。",
+    "use_time": "使用此時間",
+    "loading": "正在載入忙碌時間…",
+    "outside_hours": "工作時間以外",
+    "everyone_free": "所有人都有空",
+    "not_checked": "不明"
+  },
   "share_notifications": {
     "someone": "有人",
     "shared": "{name} 與您共用了{kind}「{object}」",

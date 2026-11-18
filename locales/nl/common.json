@@ -6317,6 +6317,23 @@
     "found": "Vrije tijden gevonden: {count}",
     "optional_ignored": "Bezette tijden van optionele deelnemers tellen niet mee."
   },
+  "scheduling_assistant": {
+    "open": "Beschikbaarheid…",
+    "title": "Beschikbaarheid",
+    "description": "Klik in het raster of sleep de afspraak om hem te verplaatsen. Sleep het einde om de duur te wijzigen.",
+    "previous_day": "Vorige dag",
+    "next_day": "Volgende dag",
+    "you": "Jij",
+    "everyone": "Alle deelnemers",
+    "optional": "Optioneel",
+    "event": "Afspraak: {time}",
+    "keyboard_hint": "De pijltjestoetsen verplaatsen de afspraak 15 minuten. Met Shift wijzigen ze de duur.",
+    "use_time": "Deze tijd gebruiken",
+    "loading": "Bezette tijden laden…",
+    "outside_hours": "Buiten werktijd",
+    "everyone_free": "Iedereen vrij",
+    "not_checked": "Onbekend"
+  },
   "share_notifications": {
     "someone": "Iemand",
     "shared": "{name} heeft {kind} \"{object}\" met je gedeeld",

@@ -46,7 +46,7 @@ interface Day {
   day: number;
 }
 
-function workingDaySet(value: unknown): Set<number> {
+export function workingDaySet(value: unknown): Set<number> {
   const days = Array.isArray(value) ? value.filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6) : [];
   return new Set(days.length > 0 ? days : DEFAULT_WORKING_DAYS);
 }

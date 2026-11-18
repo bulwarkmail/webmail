@@ -6317,6 +6317,23 @@
     "found": "找到的空闲时间：{count}",
     "optional_ignored": "不计入可选参与者的忙碌时间。"
   },
+  "scheduling_assistant": {
+    "open": "空闲情况…",
+    "title": "空闲情况",
+    "description": "点击网格或拖动日程即可移动。拖动其末端可更改时长。",
+    "previous_day": "前一天",
+    "next_day": "后一天",
+    "you": "你",
+    "everyone": "所有参与者",
+    "optional": "可选",
+    "event": "日程：{time}",
+    "keyboard_hint": "方向键每次将日程移动 15 分钟。按住 Shift 则更改时长。",
+    "use_time": "使用此时间",
+    "loading": "正在加载忙碌时间…",
+    "outside_hours": "工作时间以外",
+    "everyone_free": "所有人都有空",
+    "not_checked": "未知"
+  },
   "share_notifications": {
     "someone": "有人",
     "shared": "{name} 与您共享了{kind}“{object}”",
