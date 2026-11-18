@@ -33,6 +33,8 @@ export const flatFieldsCSS = `
   --color-sidebar-accent-foreground: #18181b;
   --color-selection: #f4f4f5;
   --color-selection-foreground: #18181b;
+  --color-list-section: #f4f4f5;
+  --color-list-section-foreground: #18181b;
   --color-border: #dddde1;
   --color-input: #7f7f87;
   --color-ring: #c01f46;
@@ -96,6 +98,8 @@ export const flatFieldsCSS = `
   --color-sidebar-accent-foreground: #f2f2f3;
   --color-selection: #2a2a2e;
   --color-selection-foreground: #f2f2f3;
+  --color-list-section: #1f1f22;
+  --color-list-section-foreground: #f2f2f3;
   --color-border: #36363b;
   --color-input: #85858d;
   --color-ring: #ff91a8;

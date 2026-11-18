@@ -260,6 +260,7 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
     --color-destructive: #b91c1c;
     --color-accent-foreground: #1e3a8a;
     --color-selection-foreground: #1e3a8a;
+    --color-list-section-foreground: #000000;
     --color-popover-foreground: #000000;
     --color-card-foreground: #000000;
     --color-sidebar-foreground: #000000;
@@ -278,6 +279,7 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
     --color-destructive: #fca5a5;
     --color-accent-foreground: #dbeafe;
     --color-selection-foreground: #dbeafe;
+    --color-list-section-foreground: #ffffff;
     --color-popover-foreground: #ffffff;
     --color-card-foreground: #ffffff;
     --color-sidebar-foreground: #ffffff;
@@ -307,6 +309,7 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
   --color-destructive: #b91c1c;
   --color-accent-foreground: #1e3a8a;
   --color-selection-foreground: #1e3a8a;
+  --color-list-section-foreground: #000000;
   --color-popover-foreground: #000000;
   --color-card-foreground: #000000;
   --color-sidebar-foreground: #000000;
@@ -325,6 +328,7 @@ html.dark[data-contrast="more"] {
   --color-destructive: #fca5a5;
   --color-accent-foreground: #dbeafe;
   --color-selection-foreground: #dbeafe;
+  --color-list-section-foreground: #ffffff;
   --color-popover-foreground: #ffffff;
   --color-card-foreground: #ffffff;
   --color-sidebar-foreground: #ffffff;

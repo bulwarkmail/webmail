@@ -44,5 +44,13 @@ describe('host-theme', () => {
       expect(snapshot.vars['--color-background']).toBe('#0a0a0a');
       expect(snapshot.fontFamily).toBeTruthy();
     });
+
+    it('passes the list section header colors on to plugins', () => {
+      document.documentElement.style.setProperty('--color-list-section', '#1f1f1f');
+      document.documentElement.style.setProperty('--color-list-section-foreground', '#e5e5e5');
+      const snapshot = snapshotHostTheme();
+      expect(snapshot.vars['--color-list-section']).toBe('#1f1f1f');
+      expect(snapshot.vars['--color-list-section-foreground']).toBe('#e5e5e5');
+    });
   });
 });

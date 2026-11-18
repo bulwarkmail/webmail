@@ -17,19 +17,19 @@ export function MvListSectionHeader({ title, collapsed, onToggle, shown, total }
   const t = useTranslations("email_list");
   const Chevron = collapsed ? ChevronDown : ChevronUp;
   return (
-    <div className="flex h-12 items-center border-b border-border px-2" data-mv-list-section="">
+    <div className="flex h-12 items-center border-b border-border bg-list-section px-2" data-mv-list-section="">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={!collapsed}
-        className="flex min-w-0 items-center gap-3 rounded-full py-1.5 ps-2 pe-3 text-base font-medium text-foreground hover:bg-muted"
+        className="flex min-w-0 items-center gap-3 rounded-full py-1.5 ps-2 pe-3 text-base font-medium text-list-section-foreground hover:bg-[color-mix(in_srgb,var(--color-list-section-foreground)_10%,var(--color-list-section))]"
       >
-        <Chevron className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <Chevron className="h-4 w-4 shrink-0" />
         <span className="truncate">{title}</span>
       </button>
       <div className="flex-1" />
       {shown > 0 && (
-        <span className="shrink-0 pe-3 text-xs tabular-nums text-muted-foreground">
+        <span className="shrink-0 pe-3 text-xs tabular-nums text-list-section-foreground">
           {t("conversations_range", { from: 1, to: shown, total: Math.max(total, shown) })}
         </span>
       )}

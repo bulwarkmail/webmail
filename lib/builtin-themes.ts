@@ -35,6 +35,8 @@ const quiCSS = `
   --color-info-foreground: #ffffff;
   --color-selection: #dbeafe;
   --color-selection-foreground: #1d4ed8;
+  --color-list-section: #ececee;
+  --color-list-section-foreground: #27272a;
   --color-unread: #3b82f6;
   --color-chart-1: #3b82f6;
   --color-chart-2: #22c55e;
@@ -75,6 +77,8 @@ const quiCSS = `
   --color-info-foreground: #ffffff;
   --color-selection: rgba(59, 130, 246, 0.25);
   --color-selection-foreground: #93c5fd;
+  --color-list-section: #202024;
+  --color-list-section-foreground: #e4e4e7;
   --color-unread: #60a5fa;
   --color-chart-1: #60a5fa;
   --color-chart-2: #4ade80;
@@ -117,6 +121,8 @@ const nordCSS = `
   --color-info-foreground: #eceff4;
   --color-selection: #d8dee9;
   --color-selection-foreground: #456285;
+  --color-list-section: #e5e9f0;
+  --color-list-section-foreground: #2e3440;
   --color-unread: #5e81ac;
   --color-chart-1: #5e81ac;
   --color-chart-2: #a3be8c;
@@ -157,6 +163,8 @@ const nordCSS = `
   --color-info-foreground: #2e3440;
   --color-selection: rgba(136, 192, 208, 0.2);
   --color-selection-foreground: #98c9d6;
+  --color-list-section: #343b49;
+  --color-list-section-foreground: #e5e9f0;
   --color-unread: #88c0d0;
   --color-chart-1: #88c0d0;
   --color-chart-2: #a3be8c;
@@ -199,6 +207,8 @@ const catppuccinCSS = `
   --color-info-foreground: #eff1f5;
   --color-selection: #dce0e8;
   --color-selection-foreground: #7e28ee;
+  --color-list-section: #e6e9ef;
+  --color-list-section-foreground: #4c4f69;
   --color-unread: #8839ef;
   --color-chart-1: #8839ef;
   --color-chart-2: #40a02b;
@@ -239,6 +249,8 @@ const catppuccinCSS = `
   --color-info-foreground: #1e1e2e;
   --color-selection: rgba(203, 166, 247, 0.2);
   --color-selection-foreground: #cba6f7;
+  --color-list-section: #282839;
+  --color-list-section-foreground: #cdd6f4;
   --color-unread: #cba6f7;
   --color-chart-1: #cba6f7;
   --color-chart-2: #a6e3a1;
@@ -281,6 +293,8 @@ const solarizedCSS = `
   --color-info-foreground: #fdf6e3;
   --color-selection: #eee8d5;
   --color-selection-foreground: #1d6ca2;
+  --color-list-section: #f4eddb;
+  --color-list-section-foreground: #073642;
   --color-unread: #268bd2;
   --color-chart-1: #268bd2;
   --color-chart-2: #859900;
@@ -321,6 +335,8 @@ const solarizedCSS = `
   --color-info-foreground: #002b36;
   --color-selection: rgba(38, 139, 210, 0.2);
   --color-selection-foreground: #60ace2;
+  --color-list-section: #0a3a47;
+  --color-list-section-foreground: #b4c0c0;
   --color-unread: #268bd2;
   --color-chart-1: #268bd2;
   --color-chart-2: #859900;
@@ -371,6 +387,8 @@ const elasticCSS = `
   --color-info-foreground: #ffffff;
   --color-selection: #ebf8ff;
   --color-selection-foreground: #27353a;
+  --color-list-section: #eef1f3;
+  --color-list-section-foreground: #27353a;
   --color-unread: #a37a00;
   --color-chart-1: #37beff;
   --color-chart-2: #41b849;
@@ -417,6 +435,8 @@ const elasticCSS = `
   --color-info-foreground: #ffffff;
   --color-selection: #374549;
   --color-selection-foreground: #37beff;
+  --color-list-section: #283235;
+  --color-list-section-foreground: #c5d1d3;
   --color-unread: #b88a00;
   --color-chart-1: #37beff;
   --color-chart-2: #41b849;
@@ -682,6 +702,8 @@ const auroraCSS = `
   --color-info-foreground: #ffffff;
   --color-selection: rgba(109, 92, 255, 0.14);
   --color-selection-foreground: #4338ca;
+  --color-list-section: #dfe3f5;
+  --color-list-section-foreground: #14162e;
   --color-unread: #6d5cff;
   --color-chart-1: #6d5cff;
   --color-chart-2: #06b6d4;
@@ -722,6 +744,8 @@ const auroraCSS = `
   --color-info-foreground: #04222a;
   --color-selection: rgba(139, 123, 255, 0.22);
   --color-selection-foreground: #c4bbff;
+  --color-list-section: #161830;
+  --color-list-section-foreground: #eef0ff;
   --color-unread: #8b7bff;
   --color-chart-1: #8b7bff;
   --color-chart-2: #22d3ee;

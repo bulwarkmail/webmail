@@ -61,6 +61,8 @@ const THEME_TOKENS: readonly string[] = [
   '--color-selection',
   '--color-selection-foreground',
   '--color-unread',
+  '--color-list-section',
+  '--color-list-section-foreground',
   '--color-chart-1',
   '--color-chart-2',
   '--color-chart-3',

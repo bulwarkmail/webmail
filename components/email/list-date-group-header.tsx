@@ -16,12 +16,12 @@ interface ListDateGroupHeaderProps {
 export function ListDateGroupHeader({ title, collapsed, onToggle }: ListDateGroupHeaderProps) {
   const Chevron = collapsed ? ChevronRight : ChevronDown;
   return (
-    <div className="flex h-9 items-center border-b border-border px-2" data-list-date-group="">
+    <div className="flex h-9 items-center border-b border-border bg-list-section px-2" data-list-date-group="">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={!collapsed}
-        className="flex min-w-0 items-center gap-2 rounded-md py-1 ps-2 pe-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="flex min-w-0 items-center gap-2 rounded-md py-1 ps-2 pe-3 text-sm font-medium text-list-section-foreground hover:bg-[color-mix(in_srgb,var(--color-list-section-foreground)_10%,var(--color-list-section))]"
       >
         <Chevron className={cn("h-4 w-4 shrink-0", collapsed && "rtl:rotate-180")} />
         <span className="truncate">{title}</span>

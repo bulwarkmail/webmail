@@ -50,6 +50,8 @@
   --color-selection: var(--color-selection);
   --color-selection-foreground: var(--color-selection-foreground);
   --color-unread: var(--color-unread);
+  --color-list-section: var(--color-list-section);
+  --color-list-section-foreground: var(--color-list-section-foreground);
   --color-chart-1: var(--color-chart-1);
   --color-chart-2: var(--color-chart-2);
   --color-chart-3: var(--color-chart-3);

@@ -4,7 +4,7 @@
  * Checks the token pairs the app draws text with: body and muted text on the
  * grounds they sit on, labels on primary and destructive fills, primary text
  * (links, tinted badges) on the page and on its own 10% tint, and the
- * selection and accent pairs.
+ * selection and accent pairs, and the message list's section headers.
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
@@ -71,6 +71,14 @@ describe.each(themes)('%s (%s)', (_id, _mode, t) => {
   it('selection and accent text reach 4.5:1 on their grounds', () => {
     expect(ratio(t['selection-foreground'], t.selection, page)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(t['accent-foreground'], t.accent, page)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('list section header text reaches 4.5:1 on its ground', () => {
+    expect(ratio(t['list-section-foreground'], t['list-section'], page)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('the list section header ground differs from the page', () => {
+    expect(solid(t['list-section'], page)).not.toEqual(solid(page));
   });
 
   it('the focus ring reaches 3:1 on the page', () => {

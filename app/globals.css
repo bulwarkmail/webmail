@@ -91,6 +91,10 @@
   /* Unread indicator */
   --color-unread: var(--brand-primary, #3b82f6);
 
+  /* List section headers */
+  --color-list-section: #eef2f6;
+  --color-list-section-foreground: #334155;
+
   /* Chart colors */
   --color-chart-1: #3b82f6;
   --color-chart-2: #22c55e;
@@ -168,6 +172,10 @@
 
   /* Unread indicator */
   --color-unread: var(--brand-dark-primary, #60a5fa);
+
+  /* List section headers */
+  --color-list-section: #1f1f1f;
+  --color-list-section-foreground: #e5e5e5;
 
   /* Chart colors */
   --color-chart-1: #60a5fa;
