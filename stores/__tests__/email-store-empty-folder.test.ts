@@ -104,6 +104,52 @@ describe('emptyMailbox', () => {
     expect(client.moveMailboxContents).not.toHaveBeenCalled();
   });
 
+  it('refreshes shared Trash counts after navigating to another folder in the same account', async () => {
+    const auth = useAuthStore.getState();
+    const trash = makeMailbox({
+      id: 'owner-x:x-trash', originalId: 'x-trash', role: 'trash', isShared: true, accountId: 'owner-x',
+      totalEmails: 3, unreadEmails: 2, totalThreads: 3, unreadThreads: 2,
+    });
+    const opened = makeMailbox({ id: 'owner-x:x-lists', originalId: 'x-lists', isShared: true, accountId: 'owner-x' });
+    const reader: Email = {
+      id: 'opened-message', threadId: 'opened-thread', mailboxIds: { [opened.id]: true }, keywords: {},
+      receivedAt: '2026-11-18T08:00:00Z', size: 1, hasAttachment: false,
+    };
+    const rows = [reader];
+    const authoritativeCounts = { totalEmails: 1, unreadEmails: 1, totalThreads: 1, unreadThreads: 1 };
+    const getMailboxes = vi.fn().mockResolvedValue([{ ...trash, id: 'x-trash', ...authoritativeCounts }]);
+    const destroy = Promise.withResolvers<number>();
+    const partial = new IncompleteDeleteError({
+      destroyedIds: ['destroyed-message'], notDestroyed: { 'refused-message': { type: 'forbidden' } },
+      unknownIds: [], unattemptedIds: [],
+    }, new Error('Trash refused one message'));
+    Object.assign(client, { getMailboxes });
+    vi.mocked(client.emptyMailbox).mockReturnValueOnce(destroy.promise);
+
+    useAuthStore.setState({ client, activeAccountId: 'a' });
+    useEmailStore.setState({ selectedMailbox: trash.id, mailboxes: [trash, opened] });
+    const completion = useEmailStore.getState().emptyMailbox(client, trash.id);
+    try {
+      expect(client.emptyMailbox).toHaveBeenCalledExactlyOnceWith('x-trash', 'owner-x');
+      useEmailStore.getState().selectMailbox(opened.id);
+      useEmailStore.setState({ emails: rows, selectedEmail: reader });
+
+      const rejected = expect(completion).rejects.toBe(partial);
+      destroy.reject(partial);
+      await rejected;
+
+      const state = useEmailStore.getState();
+      expect(state.selectedMailbox).toBe(opened.id);
+      expect(state.emails).toBe(rows);
+      expect(state.selectedEmail).toBe(reader);
+      expect(state.mailboxes).toEqual([{ ...trash, ...authoritativeCounts }, opened]);
+      expect(getMailboxes).toHaveBeenCalledExactlyOnceWith('owner-x');
+    } finally {
+      destroy.resolve(0);
+      useAuthStore.setState(auth, true);
+    }
+  });
+
   it('keeps the new account’s list load intact when a partial Empty Trash finishes', async () => {
     const auth = useAuthStore.getState();
     const counters = Promise.withResolvers<Mailbox[]>();

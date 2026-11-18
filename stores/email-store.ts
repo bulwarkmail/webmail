@@ -8679,13 +8679,19 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       } else {
         const actionClient = resolveActionClient(client);
         const isCurrentView = captureEmailListView();
+        const viewingId = get().viewingAccountId;
+        const authClient = useAuthStore.getState().client;
+        const ownsCounters = () => currentStoreEpoch() === epoch
+          && get().viewingAccountId === viewingId
+          && useAuthStore.getState().client === authClient
+          && viewedClient(client) === actionClient;
         try {
           await actionClient.emptyMailbox(jmapMailboxId, accountId);
         } catch (error) {
-          if (error instanceof IncompleteDeleteError && mailbox && isCurrentView()) {
-            // A refused or unacknowledged destroy must leave its message accessible.
-            const destroyed = new Set(error.destroyedIds);
-            if (get().selectedMailbox === mailboxId) {
+          if (error instanceof IncompleteDeleteError && mailbox) {
+            if (isCurrentView() && get().selectedMailbox === mailboxId) {
+              // A refused or unacknowledged destroy must leave its message accessible.
+              const destroyed = new Set(error.destroyedIds);
               const wasDestroyed = (email: Email) => destroyed.has(email.id) && emailInMailbox(email, mailbox);
               set((state) => {
                 const selectedEmailKeys = new Set(state.selectedEmailKeys);
@@ -8710,12 +8716,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
               });
               if (!get().emails.length && get().hasMoreEmails) await get().refreshCurrentMailbox(client);
             }
-            // Only the owning account can supply authoritative unread and thread counts.
-            const fresh = await actionClient.getMailboxes(accountId).catch(() => []);
-            const counts = fresh.find(mb => mb.id === jmapMailboxId);
-            if (counts && isCurrentView()) {
-              const { totalEmails, unreadEmails, totalThreads, unreadThreads } = counts;
-              updateMailboxes(mb => mb.id === mailboxId ? { ...mb, totalEmails, unreadEmails, totalThreads, unreadThreads } : mb);
+            // The sidebar still needs the owning account's counts after folder navigation.
+            if (ownsCounters()) {
+              const fresh = await actionClient.getMailboxes(accountId).catch(() => []);
+              const counts = fresh.find(mb => mb.id === jmapMailboxId);
+              if (counts && ownsCounters()) {
+                const { totalEmails, unreadEmails, totalThreads, unreadThreads } = counts;
+                updateMailboxes(mb => mb.id === mailboxId ? { ...mb, totalEmails, unreadEmails, totalThreads, unreadThreads } : mb);
+              }
             }
           }
           throw error;
