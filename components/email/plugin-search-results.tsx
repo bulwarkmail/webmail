@@ -189,6 +189,7 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
   const openEmail = useEmailStore((s) => s.selectedEmail);
   const query = useEmailStore((s) => s.searchQuery);
   const filters = useEmailStore((s) => s.searchFilters);
+  const scope = useEmailStore((s) => s.searchMailboxId);
   const searching = useEmailStore((s) => !!s.searchQuery.trim() || !isFilterEmpty(s.searchFilters));
   const pending = useEmailStore((s) => s.externalSearchPending.length > 0);
   const plugins = usePluginStore((s) => s.plugins);
@@ -199,12 +200,12 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [compact, setCompact] = useState(readCompact);
   const [share, setShare] = useState<number | null>(readShare);
-  // For the search it was chosen in: another query or other filters, and one
-  // begun after this one was left, start with the shares.
+  // For the search it was chosen in: another query, other filters or another
+  // folder scope, and one begun after this one was left, start with the shares.
   const [whole, setWhole] = useState<Whole | null>(null);
-  const [search, setSearch] = useState({ query, filters });
-  if (search.query !== query || search.filters !== filters) {
-    setSearch({ query, filters });
+  const [search, setSearch] = useState({ query, filters, scope });
+  if (search.query !== query || search.filters !== filters || search.scope !== scope) {
+    setSearch({ query, filters, scope });
     setWhole(null);
   }
   // The latest share, for the end of a drag to keep.

@@ -365,6 +365,16 @@ describe('PluginSearchResults sections', () => {
     expect(messages()).toHaveAttribute('aria-pressed', 'false');
   });
 
+  it('starts the search in another folder with the shares, query and filters the same', () => {
+    useEmailStore.setState({ searchMailboxId: 'inbox' });
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    expect(messages()).toHaveAttribute('aria-pressed', 'true');
+
+    act(() => useEmailStore.setState({ searchMailboxId: 'archive' }));
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('keeps the whole height and the share through a slip of the hand on the handle, and a key outward', async () => {
     localStorage.setItem('pluginSearchResultsShare', '0.6');
     render(<PluginSearchResults surface="search-results" />);
