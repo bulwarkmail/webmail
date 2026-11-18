@@ -247,4 +247,19 @@ describe('ResizeHandle', () => {
       expect(onResize).not.toHaveBeenCalled();
     });
   });
+
+  it('shows what it is given in place of its line, and still drags', () => {
+    const onResize = vi.fn();
+    const { getByRole } = render(
+      <ResizeHandle orientation="horizontal" onResize={onResize}>
+        <span>grip</span>
+      </ResizeHandle>,
+    );
+    const handle = getByRole('separator');
+    expect(handle).toHaveTextContent('grip');
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 1, clientY: 100 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 101, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(onResize).toHaveBeenCalledWith(1);
+  });
 });
