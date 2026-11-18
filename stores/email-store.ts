@@ -8635,17 +8635,33 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   emptyMailbox: async (client, mailboxId): Promise<boolean> => {
+    const epoch = currentStoreEpoch();
     const emptied = resolveActionMailboxes().find(mb => mb.id === mailboxId);
     if (emailHooks.onBeforeMailboxEmpty.size > 0
       && !(await emailHooks.onBeforeMailboxEmpty.intercept({ mailboxId, role: emptied?.role ?? null }))) {
       return false;
     }
+    if (currentStoreEpoch() !== epoch) return false;
     try {
       set({ isLoading: true, error: null });
       const mailboxes = resolveActionMailboxes();
       const mailbox = mailboxes.find(mb => mb.id === mailboxId);
       const accountId = mailbox?.isShared ? mailbox.accountId : undefined;
       const jmapMailboxId = mailbox?.originalId || mailboxId;
+
+      const updateMailboxes = (update: (mb: Mailbox) => Mailbox) => {
+        const viewingId = get().viewingAccountId;
+        if (viewingId) {
+          set((state) => ({
+            accountMailboxes: {
+              ...state.accountMailboxes,
+              [viewingId]: (state.accountMailboxes[viewingId] ?? []).map(update),
+            },
+          }));
+        } else {
+          set({ mailboxes: get().mailboxes.map(update) });
+        }
+      };
 
       let trashMailbox: Mailbox | undefined;
       let markAsRead = false;
@@ -8661,8 +8677,52 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           markAsRead,
         );
       } else {
-        await resolveActionClient(client).emptyMailbox(jmapMailboxId, accountId);
+        const actionClient = resolveActionClient(client);
+        const isCurrentView = captureEmailListView();
+        try {
+          await actionClient.emptyMailbox(jmapMailboxId, accountId);
+        } catch (error) {
+          if (error instanceof IncompleteDeleteError && mailbox && isCurrentView()) {
+            // A refused or unacknowledged destroy must leave its message accessible.
+            const destroyed = new Set(error.destroyedIds);
+            if (get().selectedMailbox === mailboxId) {
+              const wasDestroyed = (email: Email) => destroyed.has(email.id) && emailInMailbox(email, mailbox);
+              set((state) => {
+                const selectedEmailKeys = new Set(state.selectedEmailKeys);
+                const keep = (email: Email) => {
+                  if (!wasDestroyed(email)) return true;
+                  selectedEmailKeys.delete(emailKeyFor(email));
+                  return false;
+                };
+                const emails = state.emails.filter(keep);
+                const threadEmailsCache = new Map(state.threadEmailsCache);
+                for (const [key, members] of state.threadEmailsCache) {
+                  const remaining = members.filter(keep);
+                  if (remaining.length !== members.length) threadEmailsCache.set(key, remaining);
+                }
+                return {
+                  emails,
+                  selectedEmailKeys,
+                  threadEmailsCache,
+                  selectedEmail: state.selectedEmail && wasDestroyed(state.selectedEmail) ? null : state.selectedEmail,
+                  totalEmails: Math.max(emails.length, state.totalEmails - (state.emails.length - emails.length)),
+                };
+              });
+              if (!get().emails.length && get().hasMoreEmails) await get().refreshCurrentMailbox(client);
+            }
+            // Only the owning account can supply authoritative unread and thread counts.
+            const fresh = await actionClient.getMailboxes(accountId).catch(() => []);
+            const counts = fresh.find(mb => mb.id === jmapMailboxId);
+            if (counts && isCurrentView()) {
+              const { totalEmails, unreadEmails, totalThreads, unreadThreads } = counts;
+              updateMailboxes(mb => mb.id === mailboxId ? { ...mb, totalEmails, unreadEmails, totalThreads, unreadThreads } : mb);
+            }
+          }
+          throw error;
+        }
       }
+
+      if (currentStoreEpoch() !== epoch) return false;
 
       // Clear emails from local state if we're viewing this mailbox
       const currentMailbox = get().selectedMailbox;
@@ -8686,24 +8746,16 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return mb;
       };
 
-      const viewingId = get().viewingAccountId;
-      if (viewingId) {
-        set((state) => ({
-          accountMailboxes: {
-            ...state.accountMailboxes,
-            [viewingId]: (state.accountMailboxes[viewingId] ?? []).map(updateCounters),
-          },
-        }));
-      } else {
-        set({ mailboxes: get().mailboxes.map(updateCounters) });
-      }
+      updateMailboxes(updateCounters);
       set({ isLoading: false });
       void emailHooks.onMailboxEmpty.emit({ mailboxId, role: mailbox?.role ?? null, count: mailbox?.totalEmails ?? 0 });
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to empty folder',
-        isLoading: false,
-      });
+      if (currentStoreEpoch() === epoch) {
+        set({
+          error: error instanceof Error ? error.message : 'Failed to empty folder',
+          isLoading: false,
+        });
+      }
       throw error;
     }
     return true;

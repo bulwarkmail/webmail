@@ -119,6 +119,20 @@ describe('JMAPClient.emptyMailbox', () => {
     expect(server.requests).toEqual([500]);
   });
 
+  it('rejects an HTTP-success response when the mailbox query was refused', async () => {
+    const client = await connectedClient();
+    fetchSpy.mockResolvedValue(jsonResponse({ methodResponses: [
+      ['error', { type: 'accountNotFound', description: 'Mailbox owner is unavailable' }, '0'],
+      ['error', { type: 'invalidResultReference' }, '1'],
+    ] }));
+
+    await expect(client.emptyMailbox('mailbox-1', 'owner')).rejects.toMatchObject({
+      message: 'Mailbox owner is unavailable',
+      jmapType: 'accountNotFound',
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('returns zero without extra requests for an already empty mailbox', async () => {
     const client = await connectedClient();
     const server = makeMailboxServer({ count: 0 });

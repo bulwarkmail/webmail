@@ -1,9 +1,10 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { JMAPClient } from '@/lib/jmap/client';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useToastStore } from '@/stores/toast-store';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { EmailList } from '../email-list';
 
@@ -32,16 +33,29 @@ function mailbox(id: string, name: string, role: string): Mailbox {
     myRights: { mayReadItems: true, mayAddItems: true, mayRemoveItems: true } } as Mailbox;
 }
 
-function show(selected: string) {
+function LiveEmailList() {
+  const emails = useEmailStore(state => state.emails);
+  return <EmailList emails={emails} />;
+}
+
+function show(selected: string, withRefusedMessage = false) {
   const emails = [{ id: 'm1', threadId: 't1', blobId: 'b1', mailboxIds: { [selected]: true }, keywords: {}, subject: 'Hello',
     receivedAt: '2026-10-01T00:00:00Z', from: [{ email: 'someone@example.org' }], size: 1, hasAttachment: false } as Email];
+  const refused = withRefusedMessage
+    ? { ...emails[0], id: 'kept', threadId: 'kept', subject: 'Kept message', keywords: { $seen: true } }
+    : null;
+  if (refused) emails.push(refused);
+  const trash = mailbox('trash', 'Deleted Items', 'trash');
+  if (refused) Object.assign(trash, { totalEmails: 2, unreadEmails: 1, totalThreads: 2, unreadThreads: 1 });
   useEmailStore.setState({
     emails,
-    mailboxes: [mailbox('junk', 'Junk', 'junk'), mailbox('trash', 'Deleted Items', 'trash')],
+    selectedEmail: refused,
+    mailboxes: [mailbox('junk', 'Junk', 'junk'), trash],
     selectedMailbox: selected,
-    totalEmails: 1,
+    totalEmails: emails.length,
   });
-  return render(<EmailList emails={emails} />);
+  render(<LiveEmailList />);
+  return trash;
 }
 
 beforeEach(() => {
@@ -83,4 +97,49 @@ describe('EmailList empty-folder button', () => {
     show('junk');
     expect(screen.getByRole('button', { name: 'mail_p2_folders.empty_spam' })).toBeTruthy();
   });
+});
+
+it('reports a partially refused Empty Trash and lets the user retry the remaining mail', async () => {
+  const trash = show('trash', true);
+  const remaining = new Set(['m1', 'kept']);
+  const destroy = vi.fn(() => {
+    const ids = [...remaining];
+    const accepted = remaining.has('m1') ? ['m1'] : ids;
+    accepted.forEach(id => remaining.delete(id));
+    return [
+      ['Email/query', { ids }, '0'],
+      ['Email/set', { destroyed: accepted, notDestroyed: remaining.size ? { kept: { type: 'forbidden' } } : null }, '1'],
+    ];
+  });
+  vi.mocked(fetch).mockImplementation(async (_url, init) => {
+    const { methodCalls } = JSON.parse(String(init?.body));
+    return Response.json({ methodResponses: methodCalls[0][0] === 'Email/query' ? destroy() : [
+      ['Mailbox/get', { list: [{ ...trash, totalEmails: remaining.size, unreadEmails: 0, totalThreads: remaining.size, unreadThreads: 0 }] }, '0'],
+    ] });
+  });
+
+  const emptyTrash = 'mail_p2_folders.empty_trash';
+  const confirm = () => {
+    fireEvent.click(screen.getByRole('button', { name: emptyTrash }));
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: emptyTrash }));
+  };
+  useToastStore.getState().clearToasts();
+  try {
+    confirm();
+    await waitFor(() => expect(destroy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(useEmailStore.getState().isLoading).toBe(false));
+    expect([...remaining]).toEqual(['kept']);
+    expect(useEmailStore.getState().emails.map(email => email.id)).toEqual(['kept']);
+    expect(useEmailStore.getState().selectedEmail?.id).toBe('kept');
+    expect(useEmailStore.getState().mailboxes[1]).toMatchObject({ totalEmails: 1, unreadEmails: 0 });
+    expect(useToastStore.getState().toasts).toMatchObject([{ type: 'error', title: 'mailbox_context_menu.toast_error_empty' }]);
+
+    await waitFor(() => expect(screen.getByRole('button', { name: emptyTrash })).toBeEnabled());
+    confirm();
+    await waitFor(() => expect(useEmailStore.getState().emails).toEqual([]));
+    expect(destroy).toHaveBeenCalledTimes(2);
+    expect(remaining.size).toBe(0);
+  } finally {
+    useToastStore.getState().clearToasts();
+  }
 });
