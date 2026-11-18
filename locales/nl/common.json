@@ -2300,6 +2300,10 @@
         "seconds": "{seconds} seconden",
         "unsupported": "Het huidige account meldt geen ondersteuning voor vertraagd verzenden. De instelling blijft opgeslagen voor andere accounts."
       },
+      "mark_read_on_reply": {
+        "label": "Als gelezen markeren wanneer ik antwoord of doorstuur",
+        "description": "Een bericht dat u beantwoordt of doorstuurt, wordt als gelezen gemarkeerd, ook als berichten bij openen nooit als gelezen worden gemarkeerd."
+      },
       "return_to_list_after_action": {
         "label": "Terug naar lijst na verwijderen, archiveren, verplaatsen of markeren als ongelezen",
         "description": "Na het verwijderen, archiveren, verplaatsen, als spam melden of als ongelezen markeren van het geopende bericht terugkeren naar de berichtenlijst in plaats van het volgende bericht te openen."

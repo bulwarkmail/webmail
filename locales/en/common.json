@@ -2303,6 +2303,10 @@
         "seconds": "{seconds} seconds",
         "unsupported": "The current account does not advertise delayed-send support. The setting is still saved for other accounts."
       },
+      "mark_read_on_reply": {
+        "label": "Mark as read after replying or forwarding",
+        "description": "A message you reply to or forward is marked as read, also when messages are never marked as read on opening."
+      },
       "return_to_list_after_action": {
         "label": "Return to list after delete, archive, move or mark unread",
         "description": "After deleting, archiving, moving, reporting as spam or marking the open message unread, go back to the message list instead of opening the next message."

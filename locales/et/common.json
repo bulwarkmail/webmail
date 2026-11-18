@@ -2303,6 +2303,10 @@
         "seconds": "{seconds} sekundit",
         "unsupported": "Praegune konto ei toeta viivitatud saatmist. Seade salvestatakse siiski teiste kontode jaoks."
       },
+      "mark_read_on_reply": {
+        "label": "Märgi loetuks, kui vastan või edastan",
+        "description": "Kiri, millele vastad või mille edastad, märgitakse loetuks ka siis, kui kirju avamisel kunagi loetuks ei märgita."
+      },
       "return_to_list_after_action": {
         "label": "Naase loendisse pärast kustutamist, arhiveerimist, liigutamist või lugemata märkimist",
         "description": "Pärast avatud kirja kustutamist, arhiveerimist, liigutamist, rämpspostiks märkimist või lugemata märkimist naase kirjade loendisse, selle asemel et avada järgmine kiri."

@@ -6312,8 +6312,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // $mdnsent). Same routing, same reason: an unrouted write against the
     // reaching client's primary account is a silent no-op on a shared/group
     // message. Best-effort by contract - callers treat a failure as non-fatal.
+    // Replying to or forwarding a message reads it too, in the same Email/set,
+    // unless the user turned that off; "Mark as read" only covers opening (#1756).
+    const alsoRead = (keyword === '$answered' || keyword === '$forwarded')
+      && useSettingsStore.getState().markReadOnReply !== false;
+    const added = alsoRead ? [keyword, '$seen'] : [keyword];
     if (emailHooks.onBeforeEmailKeywordChange.size > 0
-      && !(await emailHooks.onBeforeEmailKeywordChange.intercept({ emailIds: [emailId], added: [keyword], removed: [] }))) {
+      && !(await emailHooks.onBeforeEmailKeywordChange.intercept({ emailIds: [emailId], added, removed: [] }))) {
       return;
     }
     // A source says where the message is: its login's client, or the caller's
@@ -6328,8 +6333,41 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     } else if (source) target = { client, accountId: source.accountId };
     else target = resolveKeywordActionContext(emailId, client);
     const { client: actionClient, accountId } = target;
-    await actionClient.setKeyword(emailId, keyword, accountId);
-    void emailHooks.onEmailKeywordChange.emit({ emailIds: [emailId], added: [keyword], removed: [] });
+    if (!alsoRead) {
+      await actionClient.setKeyword(emailId, keyword, accountId);
+      void emailHooks.onEmailKeywordChange.emit({ emailIds: [emailId], added, removed: [] });
+      return;
+    }
+    const epoch = currentStoreEpoch();
+    await actionClient.batchUpdateKeywords([emailId], { [keywordPointer(keyword)]: true, [keywordPointer('$seen')]: true }, accountId);
+    // The listed row and the unread counters follow, as when the message is
+    // marked read. Only a row that is surely this message: by its login when
+    // the source names one, else the one id in the list. The write is done;
+    // a login gone meanwhile leaves the row to the next refresh.
+    if (currentStoreEpoch() === epoch) try {
+      const state = get();
+      let row: Email | undefined;
+      let rowKey: string | undefined;
+      let rowSource: EmailActionSource | undefined;
+      if (source?.clientAccountId) {
+        rowSource = { clientAccountId: source.clientAccountId, accountId: source.accountId };
+        const context = resolveSourceActionContext(rowSource, emailId);
+        row = context.row ?? (state.selectedEmail && context.isTarget(state.selectedEmail) ? state.selectedEmail : undefined);
+      } else {
+        const rows = [...state.emails, ...(state.selectedEmail ? [state.selectedEmail] : [])].filter((e) => e.id === emailId);
+        if (new Set(rows.map(emailKeyFor)).size === 1) {
+          row = rows[0];
+          rowKey = emailKeyFor(row);
+        }
+      }
+      if (row) {
+        get().setEmailKeywordsLocal(emailId, { ...row.keywords, [keyword]: true, $seen: true }, rowKey, rowSource);
+        if (!row.keywords?.$seen) refillAfterKeywordChange(get, client, ['$seen']);
+      }
+    } catch (error) {
+      console.warn('Replied message not updated in the list:', error);
+    }
+    void emailHooks.onEmailKeywordChange.emit({ emailIds: [emailId], added, removed: [] });
   },
 
   setEmailKeywords: async (client, emailId, keywords, emailKey): Promise<boolean> => {

@@ -830,6 +830,7 @@ interface SettingsState extends AccessibilitySettings {
 
   // Email Behavior
   markAsReadDelay: number; // milliseconds (0 = instant, -1 = never)
+  markReadOnReply: boolean; // Replying to or forwarding a message also marks it read, whatever markAsReadDelay says (#1756)
   deleteAction: DeleteAction;
   permanentlyDeleteJunk: boolean; // Permanently delete emails from junk/spam instead of moving to trash
   confirmBulkDelete: boolean; // Ask before moving several selected emails to Trash (permanent deletes always ask)
@@ -1224,6 +1225,7 @@ const DEFAULT_SETTINGS = {
 
   // Email Behavior
   markAsReadDelay: 0, // Instant
+  markReadOnReply: true,
   deleteAction: 'trash' as DeleteAction,
   permanentlyDeleteJunk: false,
   confirmBulkDelete: true,
@@ -1842,6 +1844,7 @@ export const useSettingsStore = create<SettingsState>()(
           firstDayOfWeek: state.firstDayOfWeek,
           timeZone: state.timeZone,
           markAsReadDelay: state.markAsReadDelay,
+          markReadOnReply: state.markReadOnReply,
           deleteAction: state.deleteAction,
           returnToListAfterAction: state.returnToListAfterAction,
           confirmBulkDelete: state.confirmBulkDelete,

@@ -2303,6 +2303,10 @@
         "seconds": "{seconds} sekúnd",
         "unsupported": "Aktuálny účet neoznamuje podporu oneskoreného odoslania."
       },
+      "mark_read_on_reply": {
+        "label": "Označiť ako prečítané, keď odpoviem alebo prepošlem",
+        "description": "Správa, na ktorú odpoviete alebo ktorú prepošlete, sa označí ako prečítaná, aj keď sa správy pri otvorení nikdy neoznačujú ako prečítané."
+      },
       "return_to_list_after_action": {
         "label": "Vrátiť sa na zoznam po odstránení, archivovaní, presunutí alebo označení ako neprečítané",
         "description": "Po odstránení, archivovaní, presunutí, nahlásení ako spam alebo označení otvorenej správy ako neprečítanej sa vrátiť na zoznam správ."

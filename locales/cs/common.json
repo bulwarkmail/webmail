@@ -2300,6 +2300,10 @@
         "seconds": "{seconds} sekund",
         "unsupported": "Aktuální účet neoznamuje podporu odloženého odeslání. Nastavení zůstane uloženo pro jiné účty."
       },
+      "mark_read_on_reply": {
+        "label": "Označit jako přečtené, když odpovím nebo přepošlu",
+        "description": "Zpráva, na kterou odpovíte nebo kterou přepošlete, se označí jako přečtená, i když se zprávy při otevření nikdy neoznačují jako přečtené."
+      },
       "return_to_list_after_action": {
         "label": "Návrat do seznamu po smazání, archivaci, přesunutí nebo označení jako nepřečtené",
         "description": "Po smazání, archivaci, přesunutí, nahlášení jako spam nebo označení otevřené zprávy jako nepřečtené se vrátit do seznamu zpráv místo otevření následující zprávy."

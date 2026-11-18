@@ -2300,6 +2300,10 @@
         "seconds": "{seconds} segundos",
         "unsupported": "A conta atual não anuncia suporte a envio atrasado. A configuração continuará salva para outras contas."
       },
+      "mark_read_on_reply": {
+        "label": "Marcar como lida ao responder ou encaminhar",
+        "description": "Uma mensagem que você responde ou encaminha é marcada como lida, mesmo quando as mensagens nunca são marcadas como lidas ao abrir."
+      },
       "return_to_list_after_action": {
         "label": "Voltar à lista após excluir, arquivar, mover ou marcar como não lida",
         "description": "Depois de excluir, arquivar, mover, denunciar como spam ou marcar como não lida a mensagem aberta, voltar à lista de mensagens em vez de abrir a próxima mensagem."

@@ -2450,7 +2450,12 @@ export async function dispatchApiCall(
     case 'email.archive': return doEmailArchive(plugin.id, args[0]);
     case 'email.forward': return doEmailForward(plugin, args[0], args[1], {
       confirm: (input) => awaitDialog({ pluginId: plugin.id, kind: 'confirm', ...input }),
-      markForwarded: (emailId, accountId) => doEmailUpdateKeywords(emailId, { $forwarded: true }, accountId),
+      // Read too, as when the user forwards it (#1756).
+      markForwarded: (emailId, accountId) => doEmailUpdateKeywords(
+        emailId,
+        useSettingsStore.getState().markReadOnReply !== false ? { $forwarded: true, $seen: true } : { $forwarded: true },
+        accountId,
+      ),
     });
 
     case 'compose.open': return doComposeOpen(plugin, args[0]);

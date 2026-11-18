@@ -264,6 +264,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   ],
   reading: [
     { label: 'settings.email_behavior.mark_read.label' },
+    { label: 'settings.email_behavior.mark_read_on_reply.label' },
     { label: 'settings.email_behavior.return_to_list_after_action.label' },
     { label: 'settings.reading_page.sections.display' },
     { label: 'settings.email_behavior.message_spacing.label' },

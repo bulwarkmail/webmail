@@ -2303,6 +2303,10 @@
         "seconds": "{seconds} segons",
         "unsupported": "El compte actual no indica compatibilitat amb l'enviament retardat. La configuració es continua desant per a altres comptes."
       },
+      "mark_read_on_reply": {
+        "label": "Marca com a llegit quan responc o reenvio",
+        "description": "Un missatge que respons o reenvies es marca com a llegit, també quan els missatges no es marquen mai com a llegits en obrir-los."
+      },
       "return_to_list_after_action": {
         "label": "Torna a la llista després de suprimir, arxivar, moure o marcar com a no llegit",
         "description": "Després de suprimir, arxivar, moure, denunciar com a brossa o marcar com a no llegit el missatge obert, torna a la llista de missatges en lloc d'obrir el següent."

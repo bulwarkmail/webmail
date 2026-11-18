@@ -25,6 +25,7 @@ export function ReadingSettings() {
 
   const {
     markAsReadDelay,
+    markReadOnReply,
     mailAttachmentAction,
     hideInlineImageAttachments,
     attachmentImagePreviewsEnabled,
@@ -50,6 +51,14 @@ export function ReadingSettings() {
           />
         </SettingItem>
         )}
+
+        <SettingItem label={t('mark_read_on_reply.label')} description={t('mark_read_on_reply.description')}>
+          <ToggleSwitch
+            checked={markReadOnReply}
+            onChange={(checked) => updateSetting('markReadOnReply', checked)}
+            testId="settings-mark-read-on-reply"
+          />
+        </SettingItem>
 
         <SettingItem
           label={t('return_to_list_after_action.label')}

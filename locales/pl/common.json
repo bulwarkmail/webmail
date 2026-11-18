@@ -2300,6 +2300,10 @@
         "seconds": "{seconds} sekund",
         "unsupported": "Bieżące konto nie zgłasza obsługi opóźnionej wysyłki. Ustawienie pozostanie zapisane dla innych kont."
       },
+      "mark_read_on_reply": {
+        "label": "Oznacz jako przeczytane, gdy odpowiadam lub przekazuję",
+        "description": "Wiadomość, na którą odpowiadasz lub którą przekazujesz, zostaje oznaczona jako przeczytana, także gdy wiadomości nigdy nie są oznaczane jako przeczytane po otwarciu."
+      },
       "return_to_list_after_action": {
         "label": "Powrót do listy po usunięciu, zarchiwizowaniu, przeniesieniu lub oznaczeniu jako nieprzeczytane",
         "description": "Po usunięciu, zarchiwizowaniu, przeniesieniu, zgłoszeniu jako spam lub oznaczeniu otwartej wiadomości jako nieprzeczytanej wróć do listy wiadomości zamiast otwierać następną."

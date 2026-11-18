@@ -140,8 +140,9 @@ afterEach(() => {
 
 describe('a reply to a message of the group\'s Inbox', () => {
   it('flags the group\'s message as answered after the own Inbox, with its own message of that id, was opened', async () => {
-    const setKeyword = vi.fn().mockResolvedValue(undefined);
-    client.setKeyword = setKeyword;
+    // $answered goes with $seen in one Email/set (#1756).
+    const batchUpdateKeywords = vi.fn().mockResolvedValue(undefined);
+    client.batchUpdateKeywords = batchUpdateKeywords;
     const sendEmail = vi.fn().mockResolvedValue({ scheduled: false });
     const unstamped = { ...groupMessage, sourceClientAccountId: undefined, sourceAccountId: undefined } as Email;
     useEmailStore.setState({ selectedMailbox: 'ce:a', selectedKeyword: null, emails: [unstamped], selectedEmail: unstamped, sendEmail } as never);
@@ -154,8 +155,8 @@ describe('a reply to a message of the group\'s Inbox', () => {
     act(() => { useEmailStore.setState({ selectedMailbox: 'a', emails: [ownMessage], selectedEmail: null } as never); });
     fireEvent.click(send);
 
-    await waitFor(() => expect(setKeyword).toHaveBeenCalled());
-    expect(setKeyword).toHaveBeenCalledWith('eaaaaab', '$answered', 'ce');
+    await waitFor(() => expect(batchUpdateKeywords).toHaveBeenCalled());
+    expect(batchUpdateKeywords).toHaveBeenCalledWith(['eaaaaab'], { 'keywords/$answered': true, 'keywords/$seen': true }, 'ce');
   });
 });
 

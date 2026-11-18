@@ -2303,6 +2303,10 @@
         "seconds": "{seconds} másodperc",
         "unsupported": "A jelenlegi fiók nem támogatja a késleltetett küldést. A beállítás más fiókokhoz elmentésre kerül."
       },
+      "mark_read_on_reply": {
+        "label": "Olvasottnak jelölés válaszkor vagy továbbításkor",
+        "description": "A megválaszolt vagy továbbított üzenet olvasottként lesz megjelölve akkor is, ha az üzenetek megnyitáskor soha nem lesznek olvasottak."
+      },
       "return_to_list_after_action": {
         "label": "Visszatérés a listához törlés, archiválás, áthelyezés vagy olvasatlanként jelölés után",
         "description": "A megnyitott üzenet törlése, archiválása, áthelyezése, spamként jelentése vagy olvasatlanként való megjelölése után visszatérés az üzenetlistához a következő üzenet megnyitása helyett."

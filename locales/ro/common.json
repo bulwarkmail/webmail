@@ -2303,6 +2303,10 @@
         "seconds": "{seconds} secunde",
         "unsupported": "Contul curent nu indică faptul că acceptă trimiterea amânată. Setarea este totuși salvată pentru alte conturi."
       },
+      "mark_read_on_reply": {
+        "label": "Marchează ca citit când răspund sau redirecționez",
+        "description": "Un mesaj la care răspundeți sau pe care îl redirecționați este marcat ca citit, chiar și când mesajele nu sunt niciodată marcate ca citite la deschidere."
+      },
       "return_to_list_after_action": {
         "label": "Revenire la listă după ștergere, arhivare, mutare sau marcare ca necitit",
         "description": "După ștergerea, arhivarea, mutarea, raportarea ca spam sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."

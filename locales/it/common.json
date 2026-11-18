@@ -2300,6 +2300,10 @@
         "seconds": "{seconds} secondi",
         "unsupported": "L’account corrente non dichiara il supporto all’invio ritardato. L’impostazione resta salvata per altri account."
       },
+      "mark_read_on_reply": {
+        "label": "Segna come letto quando rispondo o inoltro",
+        "description": "Un messaggio a cui rispondi o che inoltri viene segnato come letto, anche quando i messaggi non vengono mai segnati come letti all'apertura."
+      },
       "return_to_list_after_action": {
         "label": "Torna all'elenco dopo l'eliminazione, l'archiviazione, lo spostamento o il contrassegno come non letto",
         "description": "Dopo aver eliminato, archiviato, spostato, segnalato come spam o segnato come non letto il messaggio aperto, torna all'elenco dei messaggi invece di aprire il messaggio successivo."

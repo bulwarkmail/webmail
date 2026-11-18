@@ -2300,6 +2300,10 @@
         "seconds": "{seconds} Sekunden",
         "unsupported": "Das aktuelle Konto meldet keine Unterstützung für verzögertes Senden. Die Einstellung bleibt für andere Konten gespeichert."
       },
+      "mark_read_on_reply": {
+        "label": "Als gelesen markieren, wenn ich antworte oder weiterleite",
+        "description": "Eine Nachricht, auf die Sie antworten oder die Sie weiterleiten, wird als gelesen markiert, auch wenn Nachrichten beim Öffnen nie als gelesen markiert werden."
+      },
       "return_to_list_after_action": {
         "label": "Nach Löschen, Archivieren, Verschieben oder Ungelesen-Markieren zur Liste zurückkehren",
         "description": "Nach dem Löschen, Archivieren, Verschieben, Als-Spam-Melden oder Als-ungelesen-Markieren der geöffneten E-Mail zurück zur Liste, statt die nächste E-Mail zu öffnen."

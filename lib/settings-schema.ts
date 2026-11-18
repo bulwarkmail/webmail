@@ -255,6 +255,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   // --- Reading ---
   choice('markAsReadDelay', 'reading', `${EB}mark_read.label`,
     opts(`${EB}mark_read.`, [0, 3000, 5000, -1], { 0: 'instant', 3000: 'delay_3s', 5000: 'delay_5s', '-1': 'never' })),
+  bool('markReadOnReply', 'reading', `${EB}mark_read_on_reply.label`),
   bool('returnToListAfterAction', 'reading', `${EB}return_to_list_after_action.label`),
   choice('messageSpacing', 'reading', `${EB}message_spacing.label`, opts(`${EB}message_spacing.`, ['auto', 'always', 'edge'])),
   bool('emailAlwaysLightMode', 'reading', `${EB}always_light_mode.label`),

@@ -2311,6 +2311,10 @@
         "seconds": "{seconds} sekund",
         "unsupported": "Den noverande kontoen oppgir ikkje støtte for forseinka sending. Innstillinga vert likevel lagra for andre kontoar."
       },
+      "mark_read_on_reply": {
+        "label": "Merk som lese når eg svarar eller vidaresender",
+        "description": "Ei melding du svarar på eller vidaresender, vert merkt som lesen, også når meldingar aldri vert merkte som lesne ved opning."
+      },
       "return_to_list_after_action": {
         "label": "Gå tilbake til lista etter sletting, arkivering, flytting eller merking som ulesen",
         "description": "Etter at du slettar, arkiverer, flyttar, rapporterer som søppelpost eller merkjer den opne meldinga som ulesen, går du tilbake til meldingslista i staden for å opne neste melding."

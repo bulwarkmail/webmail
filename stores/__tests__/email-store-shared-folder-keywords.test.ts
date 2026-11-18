@@ -165,7 +165,8 @@ describe('non-unified shared-folder keyword routing', () => {
   it('markEmailKeyword writes $answered to the OWNER account', async () => {
     await useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered');
 
-    expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$answered', 'owner-x');
+    // With $seen in the same Email/set, as "Mark as read after replying or forwarding" is on (#1756).
+    expect(activeClient.batchUpdateKeywords).toHaveBeenCalledWith(['e1'], { 'keywords/$answered': true, 'keywords/$seen': true }, 'owner-x');
   });
 
   it('markEmailKeyword writes to the login and account the reply started from, not a namesake in the open folder', async () => {
@@ -178,7 +179,7 @@ describe('non-unified shared-folder keyword routing', () => {
 
     await useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered', { clientAccountId: 'account-a', accountId: 'owner-x' });
 
-    expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$answered', 'owner-x');
+    expect(activeClient.batchUpdateKeywords).toHaveBeenCalledWith(['e1'], { 'keywords/$answered': true, 'keywords/$seen': true }, 'owner-x');
   });
 
   it('markEmailKeyword with a source that names only an account writes there, not to the listed row with the id', async () => {

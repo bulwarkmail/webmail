@@ -2315,6 +2315,10 @@
         "seconds": "{seconds} giây",
         "unsupported": "Tài khoản hiện tại không hỗ trợ gửi thư trễ. Cài đặt này vẫn được lưu cho các tài khoản khác."
       },
+      "mark_read_on_reply": {
+        "label": "Đánh dấu đã đọc khi tôi trả lời hoặc chuyển tiếp",
+        "description": "Thư bạn trả lời hoặc chuyển tiếp sẽ được đánh dấu đã đọc, kể cả khi thư không bao giờ được đánh dấu đã đọc lúc mở."
+      },
       "return_to_list_after_action": {
         "label": "Quay lại danh sách sau khi xóa hoặc đánh dấu chưa đọc",
         "description": "Sau khi xóa thư đang mở hoặc đánh dấu thư là chưa đọc, quay lại danh sách thư thay vì mở thư tiếp theo."

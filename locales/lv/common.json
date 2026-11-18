@@ -2300,6 +2300,10 @@
         "seconds": "{seconds} sekundes",
         "unsupported": "Pašreizējais konts neziņo par aizturētas sūtīšanas atbalstu. Iestatījums joprojām tiks saglabāts citiem kontiem."
       },
+      "mark_read_on_reply": {
+        "label": "Atzīmēt kā izlasītu, kad atbildu vai pārsūtu",
+        "description": "Ziņojums, uz kuru atbildat vai kuru pārsūtāt, tiek atzīmēts kā izlasīts arī tad, ja ziņojumi atverot nekad netiek atzīmēti kā izlasīti."
+      },
       "return_to_list_after_action": {
         "label": "Atgriezties sarakstā pēc dzēšanas, arhivēšanas, pārvietošanas vai atzīmēšanas kā nelasītu",
         "description": "Pēc atvērtā ziņojuma dzēšanas, arhivēšanas, pārvietošanas, atzīmēšanas kā mēstules vai atzīmēšanas kā nelasīta atgriezieties ziņojumu sarakstā, nevis atveriet nākamo ziņojumu."
