@@ -408,3 +408,19 @@ export async function imageBlobUrl(blob: Blob, type?: string): Promise<string> {
   const inert = inertBlobType(declared);
   return URL.createObjectURL(blob.type === inert ? blob : blob.slice(0, blob.size, inert));
 }
+
+/**
+ * An image as a data: URL, typed like imageBlobUrl() types it: for a document
+ * that must not depend on a blob: URL of this page, such as a printout
+ * (lib/print-file.ts). An SVG in an <img> stays a picture.
+ */
+export function imageDataUrl(blob: Blob, type?: string): Promise<string> {
+  const declared = type || blob.type;
+  const inert = isSvgType(declared) ? SVG_MIME_TYPE : inertBlobType(declared);
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob.type === inert ? blob : blob.slice(0, blob.size, inert));
+  });
+}

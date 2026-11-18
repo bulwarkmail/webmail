@@ -4,21 +4,23 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Paperclip, Download } from "@/components/icons";
 import { saveBlobAs } from "@/lib/download-guard";
-import { emailIframeCsp, sanitizeEmailBodyForIframe } from "@/lib/email-sanitization";
-import { turnOffLinks } from "@/lib/phishing-links";
+import { emailIframeCsp, sanitizeEmailBodyForIframe, sanitizeEmailHtml } from "@/lib/email-sanitization";
+import { turnOffLinks, type LinksOffText } from "@/lib/phishing-links";
 import { formatDateTime } from "@/lib/utils";
 import { stripBidiControls } from "@/lib/bidi";
 import { isFilePreviewable } from "@/lib/file-preview";
-import { useSettingsStore } from "@/stores/settings-store";
+import { useSettingsStore, type TimeFormat } from "@/stores/settings-store";
+import type { MessagePrintFields } from "@/components/email/message-print";
 import { useRemoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
 import { ROW_ITEM_ATTR, ROW_MORE_ATTR, useFirstRowLimit } from "@/hooks/use-first-row-limit";
 
 // A parsed message/rfc822 (.eml), as produced by postal-mime. Only the fields
-// this preview renders are typed.
+// this preview renders or prints are typed.
 export type ParsedEml = {
   subject?: string;
   from?: { name?: string; address?: string };
   to?: Array<{ name?: string; address?: string }>;
+  cc?: Array<{ name?: string; address?: string }>;
   date?: string;
   html?: string;
   text?: string;
@@ -210,4 +212,35 @@ export function EmlPreview({ message, onOpenAttachment, linksOff, downloadsOff =
       )}
     </div>
   );
+}
+
+/**
+ * An attached message as it prints (printMessageInWindow): the header the
+ * preview shows, Cc when there is one, the attachments' names, and the body
+ * re-sanitized for a printout without iframe isolation, like the reader's
+ * (message-print-fields.ts). Text fields are unescaped.
+ */
+export function emlPrintFields(message: ParsedEml, options: {
+  /** What the preview's header calls a message without a subject. */
+  fallbackSubject: string;
+  unknownSender: string;
+  timeFormat: TimeFormat;
+  /** Attached to a message reported as phishing: its links are off. */
+  linksOff?: LinksOffText;
+}): MessagePrintFields {
+  const html = message.html ? sanitizeEmailHtml(message.html) : null;
+  const plain = html === null;
+  const bodyHtml = html !== null
+    ? (options.linksOff ? turnOffLinks(html, options.linksOff) : html)
+    : escapeHtml(message.text ?? "");
+  return {
+    subject: message.subject?.trim() || options.fallbackSubject,
+    sender: formatAddress(message.from) || options.unknownSender,
+    to: (message.to ?? []).map(formatAddress).filter(Boolean).join(", "),
+    cc: (message.cc ?? []).map(formatAddress).filter(Boolean).join(", "),
+    date: message.date ? formatDateTime(message.date, options.timeFormat, { weekday: "short", year: "numeric", month: "short", day: "numeric" }) : "",
+    attachments: (message.attachments ?? []).map((att) => (att.filename ? stripBidiControls(att.filename) : "attachment")).join(", "),
+    bodyHtml,
+    plain,
+  };
 }
