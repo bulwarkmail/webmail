@@ -50,6 +50,15 @@ export interface ReachableInput {
    * admin page (credentials with an originKey; lib/outgoing-hosts.ts).
    */
   plugins?: { name: string; origins: string[] }[];
+  /**
+   * Admin > Mailbox migration: the source servers (IMAP and ManageSieve as
+   * host:port, CalDAV/CardDAV as URLs) and whether users may enter any
+   * server ("Let users enter any server").
+   */
+  migration?: {
+    sources: { name: string; imap: { host: string; port: number }; sieve?: { host: string; port: number }; caldavUrl?: string; carddavUrl?: string }[];
+    userEntered: boolean;
+  };
 }
 
 const BRANDING_KEYS = [
@@ -57,7 +66,7 @@ const BRANDING_KEYS = [
   'appLogoLightUrl', 'appLogoDarkUrl', 'loginLogoLightUrl', 'loginLogoDarkUrl',
 ] as const;
 
-export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_RELAY_BASE_URL, plugins = [] }: ReachableInput): ReachableHost[] {
+export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_RELAY_BASE_URL, plugins = [], migration }: ReachableInput): ReachableHost[] {
   const out: ReachableHost[] = [];
   const seen = new Set<string>();
   const add = (kind: string, url: unknown, setIn: string, side: ReachableHost['side'], note?: string) => {
@@ -103,6 +112,21 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
   for (const plugin of plugins) {
     for (const origin of plugin.origins) add(`Plugin ${plugin.name}`, origin, "The plugin's admin page", 'server');
   }
+  // Mailbox migration sources: this server copies from them. IMAP and
+  // ManageSieve aren't http, so they have no origin for the CSP.
+  for (const source of migration?.sources ?? []) {
+    const setIn = `Mailbox migration > Source servers (${source.name})`;
+    for (const socket of [source.imap, source.sieve]) {
+      if (!socket) continue;
+      const host = `${socket.host.includes(':') ? `[${socket.host}]` : socket.host}:${socket.port}`.toLowerCase();
+      const key = `Migration source|${host}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ kind: 'Migration source', host, setIn, side: 'server' });
+    }
+    add('Migration source', source.caldavUrl, setIn, 'server');
+    add('Migration source', source.carddavUrl, setIn, 'server');
+  }
   for (const app of policy.defaultSidebarApps ?? []) add('Sidebar app', app?.url, `Features and settings > Default sidebar apps (${app?.name ?? ''})`, 'browser');
   add('Document editor (WOPI)', get('wopiClientUrl'), 'WOPI_CLIENT_URL', 'both');
   add('Translation (LibreTranslate)', env.LIBRETRANSLATE_URL, 'LIBRETRANSLATE_URL', 'server');
@@ -123,6 +147,9 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
   }
   if (policy.features?.calendarEnabled !== false) {
     out.push({ kind: 'Calendar subscriptions', host: USER_ENTERED, setIn: 'Users, in Calendar', side: 'server' });
+  }
+  if (migration?.userEntered) {
+    out.push({ kind: 'Migration source users enter', host: USER_ENTERED, setIn: 'Mailbox migration > Options', side: 'server' });
   }
   return out;
 }

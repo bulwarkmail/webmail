@@ -10,6 +10,7 @@ import { adminEnteredOrigins } from '@/lib/plugin-secrets/proxy';
 import type { CredentialSpec } from '@/lib/plugin-secrets/credentials';
 import { OUTGOING_HOSTS } from '@/lib/admin/outgoing-hosts-registry';
 import { logger } from '@/lib/logger';
+import { loadOptions, loadSources } from '@/lib/migration/store';
 
 /**
  * GET /api/admin/outgoing-hosts - the "no third-party traffic" switch with
@@ -39,6 +40,12 @@ export async function GET(request: NextRequest) {
         .flatMap((spec) => (spec.origin ? [new URL(spec.origin).host] : [])))],
     })));
 
+    const [migrationSources, migrationOptions] = await Promise.all([
+      loadSources().catch(() => []),
+      loadOptions().catch(() => null),
+    ]);
+    const migration = { sources: migrationSources, userEntered: migrationOptions?.allowUserServers === true };
+
     return NextResponse.json(
       {
         noThirdPartyTraffic: state.on,
@@ -48,7 +55,7 @@ export async function GET(request: NextRequest) {
         readOnly: isConfigReadOnly(),
         envLocked: state.source === 'env',
         builtIn: OUTGOING_HOSTS,
-        reachable: listReachableHosts({ get: (key) => configManager.get(key), policy, env: process.env, plugins: pluginHosts }),
+        reachable: listReachableHosts({ get: (key) => configManager.get(key), policy, env: process.env, plugins: pluginHosts, migration }),
         networkPlugins: enabled
           .filter((plugin) => pluginDeclaresNetwork(plugin) && !pluginAllowedInMode(plugin))
           .map((plugin) => ({ id: plugin.id, name: plugin.name })),

@@ -303,6 +303,33 @@ function lookupChecked(hostname: string, privateHost?: string): Promise<string> 
   });
 }
 
+/**
+ * Resolve a host name for a raw socket (IMAP, ManageSieve) and return the
+ * one address it may connect to, checked the way {@link fetchPublicUrl}
+ * checks: a blocked name or an answer with a blocked address throws
+ * {@link BlockedAddressError}. With `allowPrivateHost` (an address the
+ * admin entered) an intranet name may resolve to an intranet address;
+ * loopback, link-local and metadata addresses stay refused for it too.
+ *
+ * Connect to the returned address, not the name, and pass the name as the
+ * TLS `servername`: the socket then can't be pointed elsewhere by a DNS
+ * answer that changes between this check and the connect.
+ */
+export async function resolveCheckedAddress(
+  hostname: string,
+  options: { allowPrivateHost?: boolean } = {},
+): Promise<{ address: string; family: number }> {
+  const host = normalizeHostname(hostname);
+  const privateHost = options.allowPrivateHost && isIntranetHostName(host) ? host : undefined;
+  const look = privateHost ? lookupAllowing(privateHost) : guardedLookup;
+  return new Promise((resolve, reject) => {
+    look(host, {}, (err, address, family) => {
+      if (err) reject(err);
+      else resolve({ address: address as string, family: family ?? (isIP(address as string) || 4) });
+    });
+  });
+}
+
 const proxiedDispatchers = new Map<string, Dispatcher>();
 
 /**

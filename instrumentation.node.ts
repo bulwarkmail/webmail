@@ -131,6 +131,9 @@ migrateLegacyAdminLayout()
     // BULWARK_UPDATE_CHECK=off or override the endpoint with
     // BULWARK_UPDATE_CHECK_URL.
     const versionCheck = await import("./lib/version-check");
+    // Mailbox migrations (Admin > Mailbox migration, Settings > Backup &
+    // import): copies from an old server that go on after the browser closes.
+    const { migrationJob } = await import("./lib/migration/job");
     // All run on one replica of the deployment, the scheduler leader
     // (#1066); a single instance always leads.
     const { startSchedulerLeader } = await import("./lib/scheduler-leader");
@@ -138,6 +141,7 @@ migrateLegacyAdminLayout()
       { name: "telemetry", start: startScheduler, stop: stopScheduler },
       { name: "telemetry-errors", start: instantErrors.startInstantErrors, stop: instantErrors.stopInstantErrors },
       { name: "version-check", start: versionCheck.startScheduler, stop: versionCheck.stopScheduler },
+      migrationJob,
     ]);
     if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === "1") {
       (await import("./lib/desktop/server-links")).installDesktopServerLinks();
