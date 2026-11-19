@@ -1370,7 +1370,16 @@ export interface AlmostSavedDraft{
     identityId?: string,
     fromEmail?: string,
     draftId?: string,
-    attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
+    attachments?: Array<{
+      blobId: string;
+      name: string;
+      type: string;
+      size: number;
+      disposition?: 'attachment' | 'inline';
+      cid?: string;
+      /** Opaque ID for this save. Preserve it when returning an existing attachment. */
+      draftAttachmentId?: string;
+    }>,
     fromName?: string,
     htmlBody?: string
 }

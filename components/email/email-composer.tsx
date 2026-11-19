@@ -328,7 +328,7 @@ export interface ComposerDraftData {
    * File). Without these the composer starts with zero attachments and the
    * next save/send rebuilds the draft without them - silent data loss (#849).
    */
-  attachments?: Array<{ blobId: string; name?: string; type?: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string; editBlocked?: boolean }>;
+  attachments?: Array<{ blobId: string; name?: string; type?: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string; sourceJmapAccountId?: string; editBlocked?: boolean }>;
   /** The send options picked so far; absent, the defaults. Carried to another window. */
   requestReadReceipt?: boolean;
   requestDsn?: boolean;
@@ -603,6 +603,8 @@ type ComposerAttachment = {
   // on a forward - the message may go out through another account, which
   // cannot resolve them. See rehomeForeignBlobs.
   sourceAccountId?: string;
+  // JMAP owner of a forwarded part within that login.
+  sourceJmapAccountId?: string;
   // From a message marked as phishing: stays out of the desktop app's Edit.
   editBlocked?: boolean;
   name: string;
@@ -1259,6 +1261,7 @@ export function EmailComposer({
           // A forward stashed before its first save still holds the original
           // account's blobs: keep the tag so they are copied before saving.
           ...(att.sourceAccountId ? { sourceAccountId: att.sourceAccountId } : {}),
+          ...(att.sourceJmapAccountId ? { sourceJmapAccountId: att.sourceJmapAccountId } : {}),
           ...(att.editBlocked ? { editBlocked: true } : {}),
           fromDraftPart: true,
         }));
@@ -1269,6 +1272,12 @@ export function EmailComposer({
       // Covers parts the type/disposition test below misses - Foxmail embeds
       // inline images as octet-stream with no inline disposition (#543).
       const embeddedCids = collectInlineImageCids(body);
+      const sourceLogin = replyTo.sourceClientAccountId ?? sourceAccountId ?? undefined;
+      const auth = useAuthStore.getState();
+      const sourceOwner = replyTo.sourceAccountId ?? (replyTo.sourceClientAccountId
+        ? (auth.getClientForAccount(replyTo.sourceClientAccountId)
+          ?? (replyTo.sourceClientAccountId === activeAccountId ? auth.client : undefined))?.getAccountId?.()
+        : undefined);
       return replyTo.attachments
         // Skip inline cid-referenced images - they're embedded in the forwarded HTML body
         // (matches the viewer's hideInlineImageAttachments logic). att.cid may still
@@ -1287,7 +1296,10 @@ export function EmailComposer({
           type: att.type || 'application/octet-stream',
           size: att.size,
           blobId: att.blobId,
-          sourceAccountId: att.sourceAccountId ?? sourceAccountId ?? undefined,
+          sourceAccountId: att.sourceAccountId ?? sourceLogin,
+          sourceJmapAccountId: !att.sourceAccountId || att.sourceAccountId === sourceLogin
+            ? sourceOwner
+            : undefined,
           ...(replyTo.phishingMarked ? { editBlocked: true } : {}),
         }));
     }
@@ -1502,30 +1514,44 @@ export function EmailComposer({
   // Login that owns the blobs uploaded through `composerClient`.
   const composerAccountId = currentIdentityParts.localAccountId ?? activeAccountId ?? undefined;
 
-  // Forwarded attachments and quoted inline images reference part blobs of the
-  // original message, which only the account that holds it can resolve. When
-  // the message goes out through another account - a From picked by hand from
-  // another account's identities - those blobs are copied over first, or
-  // Email/set fails with blobNotFound. Blob/copy cannot do it: every login is
-  // its own JMAP session. Each part is copied once; later saves reuse it.
+  const attachmentBlobKey = ({ sourceAccountId, sourceJmapAccountId, blobId }: ComposerAttachment) =>
+    JSON.stringify([sourceAccountId, sourceJmapAccountId, blobId]);
+
+  // The original message's blobs are scoped to its login and JMAP owner.
+  // Copy into the destination before Email/set and remember where the copy lives.
   // Quoted inline images are only used at send time, so they are copied only
   // when `inlineCids` names the ones the body still shows.
-  const rehomeForeignBlobs = async (inlineCids?: ReadonlySet<string>): Promise<void> => {
+  const rehomeForeignBlobs = async (
+    targetAccountId?: string,
+    inlineCids?: ReadonlySet<string>,
+    copiedBlobIds?: Map<string, string>,
+  ): Promise<void> => {
     const target = composerClient;
     if (!target || !composerAccountId) return;
-    const isForeign = (owner?: string) => !!owner && owner !== composerAccountId;
-    const copyBlob = async (part: { blobId: string; name: string; type: string; sourceAccountId?: string }) => {
-      const source = useAuthStore.getState().getClientForAccount(part.sourceAccountId!);
+    const isForeign = (login?: string) => !!login && login !== composerAccountId;
+    const copyBlob = async (part: { blobId: string; name: string; type: string; sourceAccountId?: string; sourceJmapAccountId?: string }) => {
+      const source = isForeign(part.sourceAccountId)
+        ? useAuthStore.getState().getClientForAccount(part.sourceAccountId!)
+        : target;
       if (!source) throw new Error(`No connected client for account ${part.sourceAccountId}`);
-      const buffer = await source.fetchBlobArrayBuffer(part.blobId, part.name, part.type);
-      const { blobId } = await target.uploadBlob(new File([buffer], part.name, { type: part.type }));
+      const owner = part.sourceJmapAccountId;
+      const buffer = owner
+        ? await source.fetchBlobArrayBuffer(part.blobId, part.name, part.type, owner)
+        : await source.fetchBlobArrayBuffer(part.blobId, part.name, part.type);
+      const file = new File([buffer], part.name, { type: part.type });
+      const { blobId } = owner && targetAccountId
+        ? await target.uploadBlob(file, targetAccountId)
+        : await target.uploadBlob(file);
       return blobId;
     };
 
     for (const att of [...attachmentsRef.current]) {
-      if (!att.blobId || att.uploading || !isForeign(att.sourceAccountId)) continue;
+      if (!att.blobId || att.uploading) continue;
+      const owner = att.sourceJmapAccountId;
+      if (!isForeign(att.sourceAccountId) && (!owner || owner === targetAccountId)) continue;
       const blobId = await copyBlob({ ...att, blobId: att.blobId });
-      const copied = { ...att, blobId, sourceAccountId: composerAccountId };
+      const copied = { ...att, blobId, sourceAccountId: composerAccountId, sourceJmapAccountId: owner ? targetAccountId : undefined };
+      copiedBlobIds?.set(attachmentBlobKey(att), blobId);
       // Recorded part by part, so a failure further on does not copy this one
       // again on the retry. Ref first, synchronously: callers read
       // attachmentsRef right after.
@@ -2095,7 +2121,7 @@ export function EmailComposer({
   // snapshot (pro tab move, unmount save) carries them across a remount
   // instead of silently dropping them (#849). In-flight/failed uploads have
   // no server blob yet, so only their absence can be recorded.
-  const snapshotAttachments = () => attachments
+  const snapshotAttachments = (list = attachments) => list
     .filter(att => att.blobId && !att.uploading && !att.error)
     .map(att => ({
       blobId: att.blobId!,
@@ -2105,6 +2131,7 @@ export function EmailComposer({
       ...(att.cid ? { cid: att.cid } : {}),
       ...(att.disposition ? { disposition: att.disposition } : {}),
       ...(att.sourceAccountId ? { sourceAccountId: att.sourceAccountId } : {}),
+      ...(att.sourceJmapAccountId ? { sourceJmapAccountId: att.sourceJmapAccountId } : {}),
     }));
 
   // Keep a ref to current state for the unmount save
@@ -2239,6 +2266,7 @@ export function EmailComposer({
   const snapshotStateRef = useRef<() => ComposerDraftData>(() => { throw new Error('Not mounted'); });
   snapshotStateRef.current = () => ({
     ...stateRef.current,
+    attachments: snapshotAttachments(attachmentsRef.current),
     draftAccountId: draftAccountIdRef.current,
     mode,
     replyTo,
@@ -3318,21 +3346,22 @@ export function EmailComposer({
   const draftHasContent = (toAddresses: string[]) =>
     !!toAddresses.length || !!subject || !!(plainTextMode ? body.trim() : htmlToPlainText(body).trim());
 
-  // What a saved draft holds, as of now. No awaits: a closing window has none to spare.
-  const draftContent = () => {
-    // Prepare attachments for draft. cid/disposition ride along so inline
-    // parts of a re-opened draft keep matching the body's cid: references.
-    const uploadedAttachments = attachmentsRef.current
-      .filter(att => att.blobId && !att.uploading)
-      .map(att => ({
-        blobId: att.blobId!,
-        name: att.name,
-        type: att.type,
-        size: att.size,
-        ...(att.cid ? { cid: att.cid } : {}),
-        ...(att.disposition ? { disposition: att.disposition } : {}),
-      }));
+  const draftAttachmentSources = () => attachmentsRef.current
+    .filter((att): att is ComposerAttachment & { blobId: string } => !!att.blobId && !att.uploading);
 
+  // cid/disposition keep restored inline parts matched to the body's references.
+  const draftAttachments = (sources = draftAttachmentSources()) => sources
+    .map(att => ({
+      blobId: att.blobId,
+      name: att.name,
+      type: att.type,
+      size: att.size,
+      ...(att.cid ? { cid: att.cid } : {}),
+      ...(att.disposition ? { disposition: att.disposition } : {}),
+    }));
+
+  // What a saved draft holds, as of now. No awaits: a closing window has none to spare.
+  const draftContent = (attachmentSources = draftAttachmentSources()) => {
     // A draft has to carry the signature just like a sent mail does. It is
     // otherwise only appended at send time, so every body the signature was
     // never embedded into - a reply/forward with the default "below quote"
@@ -3353,7 +3382,7 @@ export function EmailComposer({
           : appendPlainTextSignature(body, signatureIdentity, { separator: signatureSeparatorEnabled }))
       : htmlToPlainText(draftHtmlBody!, imageAltText);
 
-    return { uploadedAttachments, draftHtmlBody, draftTextBody };
+    return { uploadedAttachments: draftAttachments(attachmentSources), draftHtmlBody, draftTextBody };
   };
 
   // Get the selected identity or primary identity
@@ -3420,14 +3449,9 @@ export function EmailComposer({
       return null;
     }
 
-    try {
-      await rehomeForeignBlobs();
-    } catch (error) {
-      // The save below then fails with blobNotFound and reports it.
-      debug.warn('email', 'Failed to copy forwarded parts to the sending account:', error);
-    }
-
-    const { uploadedAttachments, draftHtmlBody, draftTextBody } = draftContent();
+    const attachmentSources = draftAttachmentSources();
+    const { uploadedAttachments, draftHtmlBody, draftTextBody } = draftContent(attachmentSources);
+    const { fromEmail, fromName } = draftSender();
 
     // Create a hash of current data to compare with last saved. Hashing the
     // composed bodies (not the raw editor body) means a signature that changed
@@ -3438,7 +3462,7 @@ export function EmailComposer({
     // draft version (below), and hashing them would mark each save dirty
     // again - an endless save loop. Name+type+size identifies an attachment
     // for change detection.
-    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments.map(({ name, type, size, cid }) => ({ name, type, size, cid })), identityId: selectedIdentityId, subAddressTag, priority, tags: [...selectedTagIds].sort() });
+    const currentData = JSON.stringify({ to: toAddresses, cc: ccAddresses, bcc: bccAddresses, subject, body: draftHtmlBody ?? draftTextBody, attachments: uploadedAttachments.map(({ name, type, size, cid }) => ({ name, type, size, cid })), identityId: selectedIdentityId, fromEmail, subAddressTag, priority, tags: [...selectedTagIds].sort() });
 
     // Only save if data has changed
     if (currentData === lastSavedDataRef.current) {
@@ -3448,13 +3472,14 @@ export function EmailComposer({
 
     setSaveStatus('saving');
 
-    const { fromEmail, fromName } = draftSender();
-
     try {
       const previousDraftId = draftIdRef.current;
       const previousDraftAccountId = draftAccountIdRef.current;
       const previousDraftLogin = draftLocalAccountIdRef.current;
       const savingLogin = loginFor(currentIdentityParts.localAccountId);
+      const hookAttachmentSources = emailHooks.onBeforeDraftAutoSave.size > 0
+        ? new Map<string, ComposerAttachment>()
+        : undefined;
       let savedDraft : AlmostSavedDraft = {
        to: toAddresses,
         // Save an empty subject as empty. A "(No Subject)" placeholder here
@@ -3467,11 +3492,17 @@ export function EmailComposer({
         identityId: currentIdentityRawId,
         fromEmail,
         draftId: previousDraftId || undefined,
-        attachments: uploadedAttachments,
+        attachments: hookAttachmentSources
+          ? uploadedAttachments.map((att, index) => {
+              const draftAttachmentId = generateUUID();
+              hookAttachmentSources.set(draftAttachmentId, attachmentSources[index]);
+              return { ...att, draftAttachmentId };
+            })
+          : uploadedAttachments,
         fromName,
         htmlBody: draftHtmlBody
       }
-      if (emailHooks.onBeforeDraftAutoSave.size > 0) {
+      if (hookAttachmentSources) {
         const outcome = await emailHooks.onBeforeDraftAutoSave.interceptWithValue(
           savedDraft,
           (result) => (result && typeof result === 'object' ? result as typeof savedDraft : undefined),
@@ -3498,6 +3529,34 @@ export function EmailComposer({
       const draftAccountId = composerClient.resolveSendAccountId
         ? await composerClient.resolveSendAccountId(savedDraft.fromEmail)
         : undefined;
+      const copiedBlobIds = hookAttachmentSources ? new Map<string, string>() : undefined;
+      try {
+        await rehomeForeignBlobs(draftAccountId ?? composerClient.getAccountId?.(), undefined, copiedBlobIds);
+      } catch (error) {
+        // The save below then fails with blobNotFound and reports it.
+        debug.warn('email', 'Failed to copy forwarded parts to the sending account:', error);
+      }
+      const savedAttachments = hookAttachmentSources && copiedBlobIds
+        ? savedDraft.attachments?.map(({ draftAttachmentId, ...att }) => {
+            if (!copiedBlobIds.size) return att;
+            const source = draftAttachmentId ? hookAttachmentSources.get(draftAttachmentId) : undefined;
+            if (source) {
+              const copied = source.blobId === att.blobId ? copiedBlobIds.get(attachmentBlobKey(source)) : undefined;
+              return copied ? { ...att, blobId: copied } : att;
+            }
+
+            // Older hooks may rebuild the attachment without its ID. Only
+            // use the raw blob ID if the possible sources agree on the result.
+            const resolvedBlobIds = new Set(attachmentSources
+              .filter(part => part.blobId === att.blobId)
+              .map(part => copiedBlobIds.get(attachmentBlobKey(part)) ?? part.blobId));
+            if (resolvedBlobIds.size > 1) {
+              throw new Error('Draft hooks must preserve draftAttachmentId for attachments with the same blob ID across accounts');
+            }
+            const [blobId = att.blobId] = resolvedBlobIds;
+            return { ...att, blobId };
+          })
+        : draftAttachments();
       const savedDraftId = await composerClient.createDraft(
         savedDraft.to,
         savedDraft.subject,
@@ -3507,7 +3566,7 @@ export function EmailComposer({
         savedDraft.identityId,
         savedDraft.fromEmail,
         replacedElsewhere ? undefined : savedDraft.draftId,
-        savedDraft.attachments,
+        savedAttachments,
         savedDraft.fromName,
         savedDraft.htmlBody,
         replyThreadingHeaders?.inReplyTo,
@@ -3544,11 +3603,10 @@ export function EmailComposer({
       // a message written for longer failed to save or send with
       // blobNotFound (#1243).
       // A part lives as long as its draft version does.
-      const savedBlobIds = new Set(uploadedAttachments.map(att => att.blobId));
       // The name each part was saved under: a chip renamed while the save ran
       // still matches its part.
-      const savedNames = new Map(uploadedAttachments.map(att => [att.blobId, att.name]));
-      if (savedBlobIds.size) {
+      const savedNames = new Map(savedAttachments?.map(att => [att.blobId, att.name]));
+      if (savedNames.size) {
         try {
           const freshDraft = await composerClient.getEmail(savedDraftId, draftAccountId);
           const freshParts = (freshDraft?.attachments ?? []).filter(p => !!p.blobId);
@@ -3557,7 +3615,7 @@ export function EmailComposer({
               const claimed = new Set<number>();
               return list.map(att => {
                 // Uploads that finished during the save are not in this version.
-                if (!att.blobId || att.uploading || !savedBlobIds.has(att.blobId)) return att;
+                if (!att.blobId || att.uploading || !savedNames.has(att.blobId)) return att;
                 const savedName = savedNames.get(att.blobId) ?? att.name;
                 const idx = freshParts.findIndex((p, i) =>
                   !claimed.has(i) && (p.name || unnamedAttachmentName(p.type)) === savedName && p.size === att.size);
@@ -4541,7 +4599,10 @@ export function EmailComposer({
     // that holds the original message.
     try {
       const inlineCids = plainTextMode ? undefined : bodyInlineCids(body);
-      await rehomeForeignBlobs(inlineCids);
+      const targetAccountId = attachmentsRef.current.some(att => att.sourceJmapAccountId)
+        ? (await composerClient?.resolveSendAccountId?.(fromEmail)) ?? composerClient?.getAccountId?.()
+        : undefined;
+      await rehomeForeignBlobs(targetAccountId, inlineCids);
       if (inlineCids?.size) await refreshStaleInlineUploads(inlineCids);
     } catch (error) {
       // Nothing was sent; the composer and its draft stay as they are.
@@ -4579,8 +4640,8 @@ export function EmailComposer({
       // after waiting for required checks that are still starting, and only
       // while a plugin listens.
       const sendClient = composerClientRef.current;
-      const readBlob =(blobId: string, name: string, type: string, bytes: number) => (sendClient
-        ? sendClient.fetchBlobArrayBuffer(blobId, name, type, undefined, bytes)
+      const readBlob = (blobId: string, name: string, type: string, bytes: number, accountId?: string) => (sendClient
+        ? sendClient.fetchBlobArrayBuffer(blobId, name, type, accountId, bytes)
         : Promise.reject(new Error('No client')));
       // What is checked is what goes: a file added while the check waits or
       // asks isn't sent with this message.
@@ -4600,7 +4661,7 @@ export function EmailComposer({
         attachments: await inspectAttachments([
             ...sentAttachments.map(a => ({
               name: a.name, type: a.type, size: a.size, blobId: a.blobId, file: a.file,
-              load: (bytes: number) => readBlob(a.blobId!, a.name, a.type, bytes),
+              load: (bytes: number) => readBlob(a.blobId!, a.name, a.type, bytes, a.sourceJmapAccountId),
             })),
             ...inlineAttachments.map(a => ({
               name: a.name, type: a.type, size: a.size, blobId: a.blobId, inline: true,

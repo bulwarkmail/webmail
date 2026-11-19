@@ -389,7 +389,11 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const forwardMessage = useCallback((target: Email) => {
     openComposeTab({
       mode: 'forward',
-      replyTo: buildReplyContext(target, writeSource),
+      replyTo: {
+        ...buildReplyContext(target, writeSource),
+        sourceAccountId: target.sourceAccountId ?? writeSource.accountId,
+        sourceClientAccountId: replyLogin(target, writeSource),
+      },
       sourceEmailId: target.id,
       sourceEmailSource: writeSource,
       title: buildForwardSubject(target.subject || t('email_composer.new_message'), t('email_composer.prefix.forward')),
