@@ -1427,17 +1427,19 @@ const mediaType = (type: string | undefined): string => (type ?? '').split(';')[
 /**
  * Whether a scheduled message is S/MIME as a whole, which a cancelled send
  * can't bring back as a draft: the plugin has to sign or encrypt it again.
+ * The message's own type decides, as in the S/MIME plugin, which builds
+ * and reads S/MIME at the top level only:
  *
  * - encrypted or opaque signed: the message itself is application/pkcs7-mime;
- * - detached signed: a multipart/signed part holds a pkcs7 signature part,
- *   wherever it stands in the message;
+ * - detached signed: the message itself is multipart/signed and holds a
+ *   pkcs7 signature part;
  * - without a body structure from the server: every attachment listed is
  *   pkcs7-mime.
  *
- * A pkcs7 type on an attachment decides nothing: a certificate chain
- * (.p7b), the smime.p7s of a forwarded signed message or a .p7m file sent
- * along are ordinary attachments of an ordinary message, which "Cancel and
- * edit" has to restore, not delete.
+ * A pkcs7 type further down decides nothing: a certificate chain (.p7b),
+ * the smime.p7s of a forwarded signed message, a .p7m file sent along or a
+ * signed part inside another multipart belong to an ordinary message,
+ * which "Cancel and edit" has to restore, not delete.
  */
 export function isSmimeEmail(email: Pick<Email, 'bodyStructure' | 'attachments'>): boolean {
   const root = email.bodyStructure;
@@ -1446,12 +1448,8 @@ export function isSmimeEmail(email: Pick<Email, 'bodyStructure' | 'attachments'>
     return attachments.length > 0 && attachments.every((att) => PKCS7_MIME.has(mediaType(att.type)));
   }
   if (PKCS7_MIME.has(mediaType(root.type))) return true;
-  const signed = (part: NonNullable<Email['bodyStructure']>): boolean => {
-    const subParts = part.subParts ?? [];
-    if (mediaType(part.type) === 'multipart/signed' && subParts.some((sub) => PKCS7_SIGNATURE.has(mediaType(sub.type)))) return true;
-    return subParts.some(signed);
-  };
-  return signed(root);
+  return mediaType(root.type) === 'multipart/signed'
+    && (root.subParts ?? []).some((sub) => PKCS7_SIGNATURE.has(mediaType(sub.type)));
 }
 
 /**

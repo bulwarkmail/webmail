@@ -32,11 +32,6 @@ describe('an S/MIME message', () => {
     expect(isSmimeEmail(mail(part('multipart/signed', [body, part(type, undefined, 'smime.p7s')])))).toBe(true);
   });
 
-  it('is one with the signed part further down, as a list or gateway wraps it', () => {
-    const signed = part('multipart/signed', [body, part('application/pkcs7-signature')]);
-    expect(isSmimeEmail(mail(part('multipart/mixed', [signed, part('text/plain')])))).toBe(true);
-  });
-
   it('is one the server gave no body structure for, when all it lists is pkcs7-mime', () => {
     expect(isSmimeEmail(mail(undefined, [{ type: 'application/pkcs7-mime', name: 'smime.p7m' }]))).toBe(true);
     expect(isSmimeEmail(mail(undefined, [{ type: 'application/x-pkcs7-mime' }]))).toBe(true);
@@ -62,6 +57,14 @@ describe('an ordinary message', () => {
   it('stays one with a pkcs7 signature part outside any multipart/signed', () => {
     const structure = part('multipart/mixed', [part('multipart/related', [body, part('application/pkcs7-signature')])]);
     expect(isSmimeEmail(mail(structure))).toBe(false);
+  });
+
+  // The S/MIME plugin sends and reads S/MIME at the top level only; a signed
+  // part further down is one part of a message that can come back as a draft.
+  it('stays one with a signed part inside another multipart', () => {
+    const signed = part('multipart/signed', [body, part('application/pkcs7-signature')]);
+    expect(isSmimeEmail(mail(part('multipart/mixed', [signed, part('text/plain')])))).toBe(false);
+    expect(isSmimeEmail(mail(part('multipart/mixed', [part('text/plain'), part('multipart/related', [signed])])))).toBe(false);
   });
 
   it('stays one when multipart/signed holds another kind of signature', () => {
