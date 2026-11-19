@@ -17,6 +17,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/stores/toast-store';
 import { DebugSettings } from './debug-settings';
 import { MailBackupSettings } from '@/components/mail-transfer/mail-backup-settings';
+import { MailboxMigrationSettings } from '@/components/mail-transfer/mailbox-migration-settings';
 import { productName } from '@/lib/product-name';
 import { isDesktopApp } from '@/lib/desktop/bridge';
 import { IS_LITE } from '@/lib/lite';
@@ -241,6 +242,7 @@ export function AboutDataSettings() {
       </SettingsSection>
 
       <MailBackupSettings />
+      <MailboxMigrationSettings />
     </div>
   );
 }
