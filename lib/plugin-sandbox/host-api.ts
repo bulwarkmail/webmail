@@ -4,7 +4,8 @@
 
 import type { AppInfoView, InstalledPlugin, Permission } from '../plugin-types';
 import { labelRawSend } from '@/lib/outgoing/classification-raw';
-import { completesComposeTakeover } from '@/lib/outgoing/compose-takeover';
+import { completesComposeTakeover, composeTakeoverOptions } from '@/lib/outgoing/compose-takeover';
+import { withTakeoverHeaders } from '@/lib/outgoing/takeover-headers';
 import { getOutboxHooks } from '@/lib/offline/outbox-hooks';
 import { fetchConfig } from '@/hooks/use-config';
 import { IS_LITE } from '../lite';
@@ -907,7 +908,10 @@ async function doJmapSendRaw(
   // The classification label goes into the top-level header block, outside
   // what the plugin signed or encrypted (lib/outgoing/classification-raw.ts).
   const labelled = labelRawSend(copy, identityId, opts?.labelToken);
-  const blob = new Blob([labelled.buffer as ArrayBuffer], { type: 'message/rfc822' });
+  // So do the Reply-To, read receipt and priority of the composer send this
+  // completes: the plugin isn't told about them (lib/outgoing/takeover-headers.ts).
+  const complete = withTakeoverHeaders(labelled, composeTakeoverOptions(pluginId, identityId));
+  const blob = new Blob([complete.buffer as ArrayBuffer], { type: 'message/rfc822' });
   return useEmailStore.getState().sendRawEmail(
     client,
     blob,
@@ -945,7 +949,8 @@ async function doJmapSubmitRaw(
   const copy = new Uint8Array(view.byteLength);
   copy.set(view);
   const labelled = labelRawSend(copy, identityId, opts?.labelToken);
-  const blob = new Blob([labelled.buffer as ArrayBuffer], { type: 'message/rfc822' });
+  const complete = withTakeoverHeaders(labelled, composeTakeoverOptions(pluginId, identityId));
+  const blob = new Blob([complete.buffer as ArrayBuffer], { type: 'message/rfc822' });
 
   // Completing the composer's send while offline: kept in the outbox (#523).
   const outbox = completesComposeTakeover(pluginId, identityId) ? getOutboxHooks() : null;

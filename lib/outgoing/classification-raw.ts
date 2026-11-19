@@ -91,7 +91,7 @@ function linesFor(policy: LabelsPolicy, identityId: string, token: string | unde
 }
 
 /** Where the header block of raw message bytes ends, and its line break. */
-function headerEnd(bytes: Uint8Array): { end: number; eol: string } | null {
+export function headerEnd(bytes: Uint8Array): { end: number; eol: string } | null {
   for (let i = 0; i < bytes.length - 1; i++) {
     if (bytes[i] === 0x0d && bytes[i + 1] === 0x0a && bytes[i + 2] === 0x0d && bytes[i + 3] === 0x0a) return { end: i, eol: '\r\n' };
     if (bytes[i] === 0x0a && bytes[i + 1] === 0x0a) return { end: i, eol: '\n' };
