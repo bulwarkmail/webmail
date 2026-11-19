@@ -1420,21 +1420,38 @@ export function prunableSubmissionIds(
     .map((submission) => submission.id);
 }
 
-function isSmimeEmail(email: Email): boolean {
-  const types: string[] = [];
-  const collect = (part: Email['bodyStructure']): void => {
-    if (!part) return;
-    if (part.type) types.push(part.type.toLowerCase());
-    part.subParts?.forEach(collect);
+const PKCS7_MIME = new Set(['application/pkcs7-mime', 'application/x-pkcs7-mime']);
+const PKCS7_SIGNATURE = new Set(['application/pkcs7-signature', 'application/x-pkcs7-signature']);
+const mediaType = (type: string | undefined): string => (type ?? '').split(';')[0].trim().toLowerCase();
+
+/**
+ * Whether a scheduled message is S/MIME as a whole, which a cancelled send
+ * can't bring back as a draft: the plugin has to sign or encrypt it again.
+ *
+ * - encrypted or opaque signed: the message itself is application/pkcs7-mime;
+ * - detached signed: a multipart/signed part holds a pkcs7 signature part,
+ *   wherever it stands in the message;
+ * - without a body structure from the server: every attachment listed is
+ *   pkcs7-mime.
+ *
+ * A pkcs7 type on an attachment decides nothing: a certificate chain
+ * (.p7b), the smime.p7s of a forwarded signed message or a .p7m file sent
+ * along are ordinary attachments of an ordinary message, which "Cancel and
+ * edit" has to restore, not delete.
+ */
+export function isSmimeEmail(email: Pick<Email, 'bodyStructure' | 'attachments'>): boolean {
+  const root = email.bodyStructure;
+  if (!root) {
+    const attachments = email.attachments ?? [];
+    return attachments.length > 0 && attachments.every((att) => PKCS7_MIME.has(mediaType(att.type)));
+  }
+  if (PKCS7_MIME.has(mediaType(root.type))) return true;
+  const signed = (part: NonNullable<Email['bodyStructure']>): boolean => {
+    const subParts = part.subParts ?? [];
+    if (mediaType(part.type) === 'multipart/signed' && subParts.some((sub) => PKCS7_SIGNATURE.has(mediaType(sub.type)))) return true;
+    return subParts.some(signed);
   };
-  collect(email.bodyStructure);
-  email.attachments?.forEach(att => types.push((att.type || '').toLowerCase()));
-  return types.some(type =>
-    type.includes('pkcs7') ||
-    type.includes('x-pkcs7') ||
-    type === 'application/pkcs7-mime' ||
-    type === 'application/pkcs7-signature'
-  );
+  return signed(root);
 }
 
 /**
