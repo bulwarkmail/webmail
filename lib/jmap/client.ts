@@ -21,6 +21,8 @@ import { keywordPointer, pointerToken } from "./patch-pointer";
 import { FirstTouchGate } from "./first-touch-gate";
 import { debug } from "@/lib/debug";
 import { normalizeCalendarEventLike, normalizeStalwartPropertyNames, parseDurationSeconds } from "@/lib/calendar-event-normalization";
+import { readParsedCalendarEvents } from "@/lib/calendar/import-event";
+import { SIEVE_USING, sieveScriptSetArgs, uploadedBlobId } from "@/lib/sieve/script-set";
 import { SYNTHETIC_ID_PROBE, RECURRENCE_BASE_PROPERTIES, hydrateRecurrenceInstances, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
 import { isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-component-detection";
 import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName, fetchCalendarCollectionComponents, davComponentsFor } from "@/lib/webdav/calendar-collection";
@@ -7549,7 +7551,7 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private sieveUsing(): string[] {
-    return ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:sieve"];
+    return [...SIEVE_USING];
   }
 
   /**
@@ -7657,26 +7659,14 @@ export class JMAPClient implements IJMAPClient {
       throw new Error(`Failed to upload sieve script: ${response.status} - ${errorText.substring(0, 200)}`);
     }
 
-    const result = await response.json();
-    if (result.blobId) return result.blobId;
-    const blobInfo = result[targetAccountId];
-    if (blobInfo?.blobId) return blobInfo.blobId;
-    throw new Error('Invalid upload response: blobId not found');
+    return uploadedBlobId(await response.json(), targetAccountId);
   }
 
   async createSieveScript(name: string, content: string, activate?: boolean, accountId?: string): Promise<SieveScript> {
     const targetAccountId = accountId || this.getSieveAccountId();
     const blobId = await this.uploadSieveBlob(content, targetAccountId);
 
-    const setArgs: Record<string, unknown> = {
-      accountId: targetAccountId,
-      create: {
-        "new-script": { name, blobId }
-      },
-    };
-    if (activate) {
-      setArgs.onSuccessActivateScript = "#new-script";
-    }
+    const setArgs = sieveScriptSetArgs({ accountId: targetAccountId, creationId: "new-script", name, blobId, activate: !!activate });
 
     const response = await this.request([
       ["SieveScript/set", setArgs, "0"]
@@ -10343,22 +10333,7 @@ export class JMAPClient implements IJMAPClient {
     if (response.methodResponses?.[0]?.[0] === "CalendarEvent/parse") {
       const result = response.methodResponses[0][1];
       debug.log('calendar', '[CalendarEvent/parse] raw result:', result);
-
-      if (result.notParsable && result.notParsable.includes(blobId)) {
-        throw new Error("Invalid calendar file format");
-      }
-
-      if (result.notFound && result.notFound.includes(blobId)) {
-        throw new Error("Uploaded file not found");
-      }
-
-      const parsed = result.parsed?.[blobId];
-      if (parsed) {
-        return (Array.isArray(parsed) ? parsed : [parsed])
-          .map((event) => normalizeCalendarEventLike(event as Partial<CalendarEvent>));
-      }
-
-      return [];
+      return readParsedCalendarEvents(result, blobId);
     }
 
     throw new Error("Failed to parse calendar file");

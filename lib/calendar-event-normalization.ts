@@ -54,6 +54,14 @@ export function parseDuration(duration: string | undefined): number {
   return totalMinutes;
 }
 
+/** An all-day event's duration in whole days, rounded up, at least one. */
+export function normalizeAllDayDuration(duration: string | undefined): string | undefined {
+  if (!duration) return undefined;
+  const totalMinutes = parseDuration(duration);
+  const totalDays = Math.max(1, Math.ceil(totalMinutes / (24 * 60)));
+  return `P${totalDays}D`;
+}
+
 export function normalizeAllDayDurationValue(duration: string | undefined): string | undefined {
   const totalSeconds = parseDurationSeconds(duration);
   if (totalSeconds === null || totalSeconds < 86400 || totalSeconds % 86400 !== 0) {
