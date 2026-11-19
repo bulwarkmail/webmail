@@ -27,4 +27,15 @@ describe('MvSearchForm', () => {
     fireEvent.click(screen.getByLabelText('unread'));
     expect(onChange).toHaveBeenCalledWith({ isUnread: null });
   });
+
+  it('ticks No tags on and off', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<MvSearchForm filters={DEFAULT_SEARCH_FILTERS} onChange={onChange} onSearch={() => {}} onClear={() => {}} />);
+    fireEvent.click(screen.getByLabelText('no_tags'));
+    expect(onChange).toHaveBeenLastCalledWith({ untagged: true });
+    rerender(<MvSearchForm filters={{ ...DEFAULT_SEARCH_FILTERS, untagged: true }} onChange={onChange} onSearch={() => {}} onClear={() => {}} />);
+    expect((screen.getByLabelText('no_tags') as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(screen.getByLabelText('no_tags'));
+    expect(onChange).toHaveBeenLastCalledWith({ untagged: false });
+  });
 });

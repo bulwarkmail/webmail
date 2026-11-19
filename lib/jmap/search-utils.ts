@@ -12,6 +12,12 @@ export interface SearchFilters {
   minSizeKb: string;
   maxSizeKb: string;
   /**
+   * Only messages without a tag. The tag ids to leave out come from the
+   * caller (see buildJMAPFilter): JMAP can't ask for "no keyword with this
+   * prefix".
+   */
+  untagged: boolean;
+  /**
    * A raw JMAP Email filter a plugin ran via `api.search.run` (#1024). ANDed
    * into the search like the fields above and cleared with them.
    */
@@ -37,6 +43,7 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   isStarred: null,
   minSizeKb: "",
   maxSizeKb: "",
+  untagged: false,
   pluginFilter: null,
 };
 
@@ -171,10 +178,28 @@ export function textFilter(raw: string, property: SearchTextProperty = "text"): 
   return conditions.length === 1 ? conditions[0] : { operator: "AND", conditions };
 }
 
+// The tag keyword prefixes, current and legacy (KEYWORD_PREFIX and
+// KEYWORD_PREFIX_LEGACY in lib/thread-utils.ts).
+const TAG_KEYWORD_PREFIXES = ["$label:", "$color:"] as const;
+
+/**
+ * One `notKeyword` per tag id and prefix: JMAP has no condition for "no
+ * keyword starting with", so leaving out tagged mail means naming every tag.
+ * No ids, no conditions.
+ */
+export function untaggedConditions(tagIds: readonly string[]): Record<string, string>[] {
+  return tagIds.flatMap((id) => TAG_KEYWORD_PREFIXES.map((prefix) => ({ notKeyword: `${prefix}${id}` })));
+}
+
+/**
+ * `tagIds` are the tags the "No tags" filter (`untagged`) leaves out, see
+ * knownTagIds in lib/known-tag-ids.ts. Without them it adds no condition.
+ */
 export function buildJMAPFilter(
   textQuery: string,
   filters: SearchFilters,
-  mailboxId?: string
+  mailboxId?: string,
+  tagIds: readonly string[] = []
 ): Record<string, unknown> {
   const conditions: Record<string, unknown>[] = [];
 
@@ -244,6 +269,10 @@ export function buildJMAPFilter(
     conditions.push({ maxSize });
   }
 
+  if (filters.untagged) {
+    conditions.push(...untaggedConditions(tagIds));
+  }
+
   if (filters.pluginFilter) {
     conditions.push(filters.pluginFilter.filter);
   }
@@ -291,6 +320,7 @@ export function isFilterEmpty(filters: SearchFilters): boolean {
     filters.isStarred === null &&
     sizeFilterBytes(filters.minSizeKb) === null &&
     sizeFilterBytes(filters.maxSizeKb) === null &&
+    !filters.untagged &&
     !filters.pluginFilter
   );
 }
@@ -308,6 +338,7 @@ export function activeFilterCount(filters: SearchFilters): number {
   if (filters.isStarred !== null) count++;
   if (sizeFilterBytes(filters.minSizeKb) !== null) count++;
   if (sizeFilterBytes(filters.maxSizeKb) !== null) count++;
+  if (filters.untagged) count++;
   if (filters.pluginFilter) count++;
   return count;
 }

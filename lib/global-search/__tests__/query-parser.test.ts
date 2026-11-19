@@ -78,6 +78,16 @@ describe('parseSearchQuery', () => {
     expect(parsed.hasOperators).toBe(false);
   });
 
+  it('is:untagged and has:notag ask for mail without a tag', () => {
+    for (const query of ['is:untagged x', 'has:notag x', 'has:notags x', 'IS:Untagged x']) {
+      const parsed = parseSearchQuery(query);
+      expect(parsed.mail.untagged).toBe(true);
+      expect(parsed.text).toBe('x');
+      expect(parsed.hasOperators).toBe(true);
+    }
+    expect(parseSearchQuery('x').mail.untagged).toBe(false);
+  });
+
   it('is:anything lifts the trash/junk exclusion', () => {
     expect(parseSearchQuery('is:anything x').includeTrashAndJunk).toBe(true);
     expect(parseSearchQuery('x').includeTrashAndJunk).toBe(false);

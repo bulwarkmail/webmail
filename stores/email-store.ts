@@ -17,6 +17,7 @@ import { isMailboxMuted } from "@/lib/notification-mutes";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { orderKeywords, placeHeldRows, sanitizeSortLevels, type HeldKeywords, type SortLevel } from "@/lib/message-list-order";
 import { SearchFilters, DEFAULT_SEARCH_FILTERS, buildJMAPFilter, isFilterEmpty, textFilter } from "@/lib/jmap/search-utils";
+import { knownTagIds } from "@/lib/known-tag-ids";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { scheduleAutoMarkAsRead } from "@/lib/mark-as-read-delay";
 import { allowEmailMove, createMailboxWithHooks, emitEmailMove, idsFromSelectionKeys, keywordChangeLists, mailboxToView, quotaToView } from "@/lib/plugin-mail-hooks";
@@ -4379,12 +4380,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const hasFilters = !isFilterEmpty(searchFilters);
         const result = crossView
           ? (hasFilters
-              ? await advancedSearchCrossViewEmails(built, crossView, buildJMAPFilter(searchQuery, searchFilters, undefined), emailsPerPage, 0)
+              ? await advancedSearchCrossViewEmails(built, crossView, buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds()), emailsPerPage, 0)
               : searchQuery
                 ? await searchCrossViewEmails(built, crossView, searchQuery, emailsPerPage, 0)
                 : await fetchCrossViewEmails(built, crossView, emailsPerPage, 0))
           : (hasFilters
-              ? await advancedSearchUnifiedEmails(built, unifiedRole!, (mb) => buildJMAPFilter(searchQuery, searchFilters, mb), emailsPerPage, 0)
+              ? await advancedSearchUnifiedEmails(built, unifiedRole!, (mb) => buildJMAPFilter(searchQuery, searchFilters, mb, knownTagIds()), emailsPerPage, 0)
               : searchQuery
                 ? await searchUnifiedEmails(built, unifiedRole!, searchQuery, emailsPerPage, 0)
                 : await fetchUnifiedEmails(built, unifiedRole!, emailsPerPage, 0, getMessageListOrderFor(unifiedRole)));
@@ -4426,7 +4427,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // narrowed and whole depending on which path last ran.
         const { searchQuery: tagQuery, searchFilters: tagFilters } = get();
         const tagFilter = !isFilterEmpty(tagFilters)
-          ? buildJMAPFilter(tagQuery, tagFilters, undefined)
+          ? buildJMAPFilter(tagQuery, tagFilters, undefined, knownTagIds())
           : tagQuery
             ? textFilter(tagQuery)
             : undefined;
@@ -4628,7 +4629,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const built = await buildUnifiedAccountClients({ includeGroup });
         const hasFilters = !isFilterEmpty(get().searchFilters);
         const result = hasFilters
-          ? await advancedSearchCrossViewEmails(built, crossView, buildJMAPFilter(searchQuery, get().searchFilters, undefined), emailsPerPage, position)
+          ? await advancedSearchCrossViewEmails(built, crossView, buildJMAPFilter(searchQuery, get().searchFilters, undefined, knownTagIds()), emailsPerPage, position)
           : searchQuery
             ? await searchCrossViewEmails(built, crossView, searchQuery, emailsPerPage, position)
             : await fetchCrossViewEmails(built, crossView, emailsPerPage, position);
@@ -4671,7 +4672,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           ? await advancedSearchUnifiedEmails(
               built,
               unifiedRole,
-              (mailboxId) => buildJMAPFilter(searchQuery, searchFilters, mailboxId),
+              (mailboxId) => buildJMAPFilter(searchQuery, searchFilters, mailboxId, knownTagIds()),
               emailsPerPage,
               position,
             )
@@ -4729,7 +4730,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         result = await fetchTagEmails(
           built, `$label:${selectedKeyword}`, emailsPerPage, positionsByAccount(emails), getMessageListOrderFor(null),
           hasFilters
-            ? buildJMAPFilter(searchQuery, searchFilters, undefined)
+            ? buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds())
             : textFilter(searchQuery),
         );
         if (!isCurrentView()) return;
@@ -4744,7 +4745,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           const built = tagViewAccounts(client);
           const scope = acrossAccountsSearchOptions(searchMailboxId);
           result = hasFilters
-            ? await advancedSearchAcrossAccounts(built, buildJMAPFilter(searchQuery, searchFilters, undefined), emailsPerPage, positionsByAccount(emails), scope)
+            ? await advancedSearchAcrossAccounts(built, buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds()), emailsPerPage, positionsByAccount(emails), scope)
             : await searchAcrossAccounts(built, searchQuery, emailsPerPage, positionsByAccount(emails), scope);
           if (!isCurrentView()) return;
           set({ unifiedErrors: result.errors });
@@ -4755,7 +4756,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           const accountId = mailbox?.isShared ? mailbox.accountId : undefined;
 
           if (hasFilters) {
-            const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
+            const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId, knownTagIds());
             result = await effectiveClient.advancedSearchEmails(filter, accountId, emailsPerPage, position);
           } else {
             result = await effectiveClient.searchEmails(searchQuery, jmapMailboxId, accountId, emailsPerPage, position);
@@ -6127,7 +6128,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // Cross views apply the advanced filter (text + fields) on top of the
         // view membership; an empty filter degrades to a plain membership query.
         result = await advancedSearchCrossViewEmails(
-          built, crossView, buildJMAPFilter(searchQuery, searchFilters, undefined), emailsPerPage, 0,
+          built, crossView, buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds()), emailsPerPage, 0,
         );
         unifiedErrors = result.errors;
 
@@ -6138,7 +6139,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         result = await advancedSearchUnifiedEmails(
           built,
           unifiedRole,
-          (mailboxId) => buildJMAPFilter(searchQuery, searchFilters, mailboxId),
+          (mailboxId) => buildJMAPFilter(searchQuery, searchFilters, mailboxId, knownTagIds()),
           emailsPerPage,
           0,
         );
@@ -6149,7 +6150,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const built = tagViewAccounts(client);
         result = await fetchTagEmails(
           built, `$label:${selectedKeyword}`, emailsPerPage, 0, getMessageListOrderFor(null),
-          buildJMAPFilter(searchQuery, searchFilters, undefined),
+          buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds()),
         );
         unifiedErrors = result.errors;
 
@@ -6158,7 +6159,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // a filter that carries no inMailbox clause (#1082).
         const built = tagViewAccounts(client);
         result = await advancedSearchAcrossAccounts(
-          built, buildJMAPFilter(searchQuery, searchFilters, undefined), emailsPerPage, 0,
+          built, buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds()), emailsPerPage, 0,
           { ...acrossAccountsSearchOptions(searchMailboxId), deferSnippets: true },
         );
         unifiedErrors = result.errors;
@@ -6168,7 +6169,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const jmapMailboxId = mailbox?.originalId || searchMailboxId;
         accountId = mailbox?.isShared ? mailbox.accountId : undefined;
 
-        const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId);
+        const filter = buildJMAPFilter(searchQuery, searchFilters, jmapMailboxId, knownTagIds());
         result = withSnippetBatches(await resolveActionClient(client).advancedSearchEmails(filter, accountId, emailsPerPage, 0, { deferSnippets: true }));
       }
 
@@ -7754,7 +7755,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
         result = hasFilters
-          ? await advancedSearchCrossViewEmails(built, crossView, buildJMAPFilter(searchQuery, searchFilters, undefined), emailsPerPage, 0)
+          ? await advancedSearchCrossViewEmails(built, crossView, buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds()), emailsPerPage, 0)
           : searchQuery
             ? await searchCrossViewEmails(built, crossView, searchQuery, emailsPerPage, 0)
             : await fetchCrossViewEmails(built, crossView, emailsPerPage, 0);
@@ -7763,7 +7764,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
         result = hasFilters
-          ? await advancedSearchUnifiedEmails(built, unifiedRole, (mailboxId) => buildJMAPFilter(searchQuery, searchFilters, mailboxId), emailsPerPage, 0)
+          ? await advancedSearchUnifiedEmails(built, unifiedRole, (mailboxId) => buildJMAPFilter(searchQuery, searchFilters, mailboxId, knownTagIds()), emailsPerPage, 0)
           : searchQuery
             ? await searchUnifiedEmails(built, unifiedRole, searchQuery, emailsPerPage, 0)
             : await fetchUnifiedEmails(built, unifiedRole, emailsPerPage, 0, getMessageListOrderFor(unifiedRole));
@@ -7786,7 +7787,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           result = await fetchTagEmails(
             built, `$label:${selectedKeyword}`, emailsPerPage, 0, getMessageListOrderFor(null),
             hasFilters
-              ? buildJMAPFilter(searchQuery, searchFilters, undefined)
+              ? buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds())
               : searchQuery
                 ? textFilter(searchQuery)
                 : undefined,
@@ -7801,13 +7802,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             // search ran, so a change in a group account reaches the list (#1082).
             const built = tagViewAccounts(client);
             result = await advancedSearchAcrossAccounts(
-              built, buildJMAPFilter(searchQuery, searchFilters, undefined), emailsPerPage, 0,
+              built, buildJMAPFilter(searchQuery, searchFilters, undefined, knownTagIds()), emailsPerPage, 0,
               acrossAccountsSearchOptions(searchMailboxId),
             );
             unifiedErrors = result.errors;
           } else {
             const scopeMailbox = mailboxes.find(mb => mb.id === searchMailboxId);
-            const filter = buildJMAPFilter(searchQuery, searchFilters, scopeMailbox?.originalId || searchMailboxId);
+            const filter = buildJMAPFilter(searchQuery, searchFilters, scopeMailbox?.originalId || searchMailboxId, knownTagIds());
             const scopeAccountId = scopeMailbox?.isShared ? scopeMailbox.accountId : undefined;
             result = await effectiveClient.advancedSearchEmails(filter, scopeAccountId, emailsPerPage, 0);
           }
