@@ -5,7 +5,7 @@
 import type { AppInfoView, InstalledPlugin, Permission } from '../plugin-types';
 import { labelRawSend } from '@/lib/outgoing/classification-raw';
 import { completesComposeTakeover, composeTakeoverOptions } from '@/lib/outgoing/compose-takeover';
-import { withTakeoverHeaders } from '@/lib/outgoing/takeover-headers';
+import { takeoverSubmission, withTakeoverHeaders } from '@/lib/outgoing/takeover-headers';
 import { getOutboxHooks } from '@/lib/offline/outbox-hooks';
 import { fetchConfig } from '@/hooks/use-config';
 import { IS_LITE } from '../lite';
@@ -910,7 +910,9 @@ async function doJmapSendRaw(
   const labelled = labelRawSend(copy, identityId, opts?.labelToken);
   // So do the Reply-To, read receipt and priority of the composer send this
   // completes: the plugin isn't told about them (lib/outgoing/takeover-headers.ts).
-  const complete = withTakeoverHeaders(labelled, composeTakeoverOptions(pluginId, identityId));
+  const takeover = composeTakeoverOptions(pluginId, identityId);
+  const complete = withTakeoverHeaders(labelled, takeover);
+  const submission = takeoverSubmission(takeover);
   const blob = new Blob([complete.buffer as ArrayBuffer], { type: 'message/rfc822' });
   return useEmailStore.getState().sendRawEmail(
     client,
@@ -918,8 +920,9 @@ async function doJmapSendRaw(
     identityId,
     opts?.delayedUntil,
     opts?.envelopeRecipients,
-    // Completing the composer's send: offline mode may keep it (#523).
-    { outbox: completesComposeTakeover(pluginId, identityId) },
+    // Completing the composer's send: offline mode may keep it (#523). Its
+    // delivery notifications and required TLS go to the server with it.
+    { outbox: completesComposeTakeover(pluginId, identityId), ...(submission ? { submission } : {}) },
   );
 }
 
@@ -949,13 +952,15 @@ async function doJmapSubmitRaw(
   const copy = new Uint8Array(view.byteLength);
   copy.set(view);
   const labelled = labelRawSend(copy, identityId, opts?.labelToken);
-  const complete = withTakeoverHeaders(labelled, composeTakeoverOptions(pluginId, identityId));
+  const takeover = composeTakeoverOptions(pluginId, identityId);
+  const complete = withTakeoverHeaders(labelled, takeover);
+  const submission = takeoverSubmission(takeover);
   const blob = new Blob([complete.buffer as ArrayBuffer], { type: 'message/rfc822' });
 
   // Completing the composer's send while offline: kept in the outbox (#523).
   const outbox = completesComposeTakeover(pluginId, identityId) ? getOutboxHooks() : null;
   if (outbox?.shouldQueue(client)) {
-    return outbox.queueRaw(client, blob, { identityId, delayedUntil: opts?.delayedUntil, envelopeRecipients: opts?.envelopeRecipients, submitOnly: true });
+    return outbox.queueRaw(client, blob, { identityId, delayedUntil: opts?.delayedUntil, envelopeRecipients: opts?.envelopeRecipients, submitOnly: true, ...(submission ? { submission } : {}) });
   }
 
   return client.submitRawEmail(
@@ -963,6 +968,8 @@ async function doJmapSubmitRaw(
     identityId,
     opts?.delayedUntil,
     opts?.envelopeRecipients,
+    undefined,
+    submission,
   );
 }
 

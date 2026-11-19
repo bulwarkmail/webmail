@@ -20,7 +20,10 @@ import { stripCrossAccountIdentityPrefix } from '@/hooks/use-pro-multi-account-i
 import { pluginRunsTakeOver } from '@/lib/plugin-hooks';
 import type { MessagePriority } from '@/lib/message-priority';
 
-/** What the composer's own send writes into the header, and a takeover's send gets too. */
+/**
+ * What the composer's own send writes into the header or asks of the mail
+ * server, and a takeover's send gets too.
+ */
 export interface TakeoverSendOptions {
   /** The sending identity's Reply-To addresses. */
   replyTo?: ReadonlyArray<{ name?: string | null; email: string }> | null;
@@ -28,6 +31,10 @@ export interface TakeoverSendOptions {
   readReceiptTo?: string;
   /** High or low; normal writes nothing. */
   priority?: MessagePriority;
+  /** Ask the next hops for delivery status notifications (RFC 3461). */
+  requestDsn?: boolean;
+  /** Refuse relaying over an unencrypted hop (RFC 8689). */
+  requireTls?: boolean;
 }
 
 interface Takeover {

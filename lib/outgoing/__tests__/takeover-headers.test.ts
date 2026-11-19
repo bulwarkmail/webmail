@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { takeoverHeaderFields, withTakeoverHeaders } from '../takeover-headers';
+import { takeoverHeaderFields, takeoverSubmission, withTakeoverHeaders } from '../takeover-headers';
 
 // What the composer's own send writes into the header and a crypto plugin's
 // send lacked: Reply-To, the read receipt request and the priority. The host
@@ -136,5 +136,23 @@ describe('the raw message', () => {
     expect(lines.length).toBeGreaterThan(1);
     for (const line of lines) expect(line.length).toBeLessThanOrEqual(78);
     expect(lines.join('').replace(/, /g, ',').replace(/,/g, ', ')).toBe(`Reply-To: ${replyTo.map((r) => `Team number ${r.email.slice(5, 6)} <${r.email}>`).join(', ')}`);
+  });
+});
+
+describe('what the send asks of the mail server', () => {
+  it('is nothing without delivery notifications or required TLS', () => {
+    expect(takeoverSubmission(null)).toBeUndefined();
+    expect(takeoverSubmission({ priority: 'high' })).toBeUndefined();
+    expect(takeoverSubmission({ requestDsn: false, requireTls: false })).toBeUndefined();
+  });
+
+  it('carries each of the two that is set', () => {
+    expect(takeoverSubmission({ requestDsn: true })).toEqual({ requestDsn: true });
+    expect(takeoverSubmission({ requireTls: true })).toEqual({ requireTls: true });
+    expect(takeoverSubmission({ requestDsn: true, requireTls: true, priority: 'low' })).toEqual({ requestDsn: true, requireTls: true });
+  });
+
+  it('writes neither into the header', () => {
+    expect(takeoverHeaderFields({ requestDsn: true, requireTls: true })).toEqual([]);
   });
 });

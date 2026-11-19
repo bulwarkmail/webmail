@@ -54,6 +54,16 @@ export function takeoverHeaderFields(options: TakeoverSendOptions | null | undef
   return fields;
 }
 
+/**
+ * What the send asks of the mail server, for the raw send paths: delivery
+ * notifications and required TLS, as the composer's own send passes them
+ * on. Undefined when it asks for neither.
+ */
+export function takeoverSubmission(options: TakeoverSendOptions | null | undefined): { requestDsn?: boolean; requireTls?: boolean } | undefined {
+  if (!options?.requestDsn && !options?.requireTls) return undefined;
+  return { ...(options.requestDsn ? { requestDsn: true } : {}), ...(options.requireTls ? { requireTls: true } : {}) };
+}
+
 /** One field as header lines, folded between addresses so no line passes 78 characters where it can be helped. */
 function fieldLines(name: string, value: string): string[] {
   const lines: string[] = [];

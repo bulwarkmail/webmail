@@ -96,4 +96,28 @@ describe('the composer\'s header options on a plugin\'s raw send', () => {
     endComposeTakeover(token);
     expect(await (sendRawEmail.mock.calls[0][1] as Blob).text()).toBe(RAW);
   });
+
+  it('hands delivery notifications and required TLS on with sendRaw', async () => {
+    const token = beginComposeTakeover('id-a', { requestDsn: true, requireTls: true });
+    await duringTakeover('jmap.sendRaw');
+    endComposeTakeover(token);
+    expect(sendRawEmail.mock.calls[0][5]).toEqual({ outbox: true, submission: { requestDsn: true, requireTls: true } });
+    expect(await (sendRawEmail.mock.calls[0][1] as Blob).text()).toBe(RAW);
+  });
+
+  it('hands them on with submitRaw', async () => {
+    const token = beginComposeTakeover('id-a', { requestDsn: true });
+    await duringTakeover('jmap.submitRaw');
+    endComposeTakeover(token);
+    expect(submitRawEmail.mock.calls[0].slice(1)).toEqual(['id-a', undefined, undefined, undefined, { requestDsn: true }]);
+  });
+
+  it('asks the server for nothing more when the composer set neither', async () => {
+    const token = beginComposeTakeover('id-a', OPTIONS);
+    await duringTakeover('jmap.sendRaw');
+    await duringTakeover('jmap.submitRaw');
+    endComposeTakeover(token);
+    expect(sendRawEmail.mock.calls[0][5]).toEqual({ outbox: true });
+    expect(submitRawEmail.mock.calls[0][5]).toBeUndefined();
+  });
 });

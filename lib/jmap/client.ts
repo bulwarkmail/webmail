@@ -12508,6 +12508,8 @@ export class JMAPClient implements IJMAPClient {
     envelopeRecipients?: string[],
     /** The offline outbox found this message's copy on the server: submit that one. */
     existingCopyId?: string,
+    /** Delivery notifications and required TLS, as the composer set them for the send a plugin completes. */
+    submission?: Pick<SubmissionSendOptions, 'requestDsn' | 'requireTls'>,
   ): Promise<SendEmailResult> {
     const holdForSeconds = delayedUntil ? this.validateDelayedUntil(delayedUntil) : undefined;
     // Upload the raw message
@@ -12519,7 +12521,7 @@ export class JMAPClient implements IJMAPClient {
     const importMailboxId = draftMailboxId || sentMailboxId;
     const identities = await this.beforeSubmission(() => this.getIdentities());
     const identity = identities.find(item => item.id === identityId);
-    const envelope = createDelayedSubmissionEnvelope(identity?.email || this.username, holdForSeconds, envelopeRecipients);
+    const envelope = createDelayedSubmissionEnvelope(identity?.email || this.username, holdForSeconds, envelopeRecipients, submission);
     // These raw/S-MIME paths submit through the primary submission account, so
     // report that as the owning account rather than leaving it unset.
     const submissionAccountId = this.getSubmissionAccountId();
@@ -12580,6 +12582,8 @@ export class JMAPClient implements IJMAPClient {
     envelopeRecipients?: string[],
     /** The offline outbox found this message's copy on the server: submit that one. */
     existingCopyId?: string,
+    /** As on sendRawEmail. */
+    submission?: Pick<SubmissionSendOptions, 'requestDsn' | 'requireTls'>,
   ): Promise<SendEmailResult> {
     const mailboxes = await this.beforeSubmission(() => this.getMailboxes());
     const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
@@ -12594,7 +12598,7 @@ export class JMAPClient implements IJMAPClient {
 
     const identities = await this.beforeSubmission(() => this.getIdentities());
     const identity = identities.find(item => item.id === identityId);
-    const envelope = createDelayedSubmissionEnvelope(identity?.email || this.username, holdForSeconds, envelopeRecipients);
+    const envelope = createDelayedSubmissionEnvelope(identity?.email || this.username, holdForSeconds, envelopeRecipients, submission);
     const submissionAccountId = this.getSubmissionAccountId();
 
     //Temporarily import the raw email into Drafts to satisfy JMAP's requirement that an EmailSubmission references an existing Email.
