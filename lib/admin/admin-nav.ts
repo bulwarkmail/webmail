@@ -27,6 +27,7 @@ export const ADMIN_PAGE_IDS = [
   'org-calendars',
   'org-notices',
   'org-devices',
+  'migration',
   'plugins',
   'themes',
   'marketplace',
@@ -246,6 +247,18 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
       { id: 'devices', title: 'Downloads, printing and notifications', keywords: 'download attachment export print watermark install prompt push sender subject' },
       { id: 'offline', title: 'Offline mode', keywords: 'offline cache device keep mail outbox' },
       { id: 'registered', title: 'Registered devices', keywords: 'device registry wipe remote lost stolen laptop remove desktop app browser' },
+    ],
+  },
+  {
+    id: 'migration',
+    label: 'Mailbox migration',
+    description: 'Move mailboxes, calendars, contacts and filters from another server',
+    group: 'organisation',
+    keywords: 'migration migrate move import imap caldav carddav managesieve sieve open-xchange ox kopano dovecot old server csv bulk delta',
+    sections: [
+      { id: 'sources', title: 'Source servers', keywords: 'imap caldav carddav managesieve host port tls starttls admin login master user test' },
+      { id: 'migrations', title: 'Migrations', keywords: 'new migration csv accounts progress report copy new items delta cancel finish' },
+      { id: 'options', title: 'Options', keywords: 'accounts at the same time concurrency forget passwords days users enter any server self-service' },
     ],
   },
   {

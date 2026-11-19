@@ -5,6 +5,7 @@
  */
 import {
   Activity,
+  ArrowLeftRight,
   ArrowUpCircle,
   Bell,
   Building2,
@@ -46,6 +47,7 @@ export const ADMIN_PAGE_ICONS: Record<AdminPageId, AppIcon> = {
   'org-calendars': CalendarDays,
   'org-notices': Bell,
   'org-devices': Smartphone,
+  migration: ArrowLeftRight,
   plugins: Puzzle,
   themes: SwatchBook,
   marketplace: Store,
