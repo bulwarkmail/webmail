@@ -7085,7 +7085,7 @@
         "body": "Preposiela správy z vášho účtu aj s prílohami bez otvorenia editora. Pred prvým preposlaním na každú adresu sa vás opýta."
       },
       "ui_notices": {
-        "title": "Zobrazovať upozornenia",
+        "title": "Zobrazovať vlastné panely upozornení",
         "body": "Zobraziť vlastný malý panel dole na obrazovke, kde sa zobrazujú správy aplikácie, napríklad pri prichádzajúcom hovore. Neblokuje stránku, môžete ďalej písať a môžete ho zavrieť. Každé upozornenie uvádza názov doplnku."
       },
       "ui_notifications": {

@@ -7085,7 +7085,7 @@
         "body": "Üzeneteket továbbít a fiókodból a mellékleteikkel együtt, a szerkesztő megnyitása nélkül. Minden címre az első továbbítás előtt megkérdez."
       },
       "ui_notices": {
-        "title": "Értesítések megjelenítése",
+        "title": "Saját értesítőpanelek megjelenítése",
         "body": "Saját kis panel megjelenítése a képernyő alján, ahol az alkalmazás üzenetei is megjelennek, például bejövő hívásnál. Nem zárolja az oldalt, tovább gépelhet és bezárhatja. Mindegyik megnevezi a bővítményt."
       },
       "ui_notifications": {

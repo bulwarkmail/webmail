@@ -28,4 +28,16 @@ describe('permission texts', () => {
     });
     expect(missing).toEqual([]);
   });
+
+  // The consent dialog lists them by title: two alike read as one.
+  it.each(langs)('gives every permission a title of its own in %s', (lang) => {
+    const strings = JSON.parse(readFileSync(path.join(LOCALES, lang, 'common.json'), 'utf8'));
+    const texts = strings.plugins?.permissions ?? {};
+    const byTitle = new Map<string, string[]>();
+    for (const p of shown) {
+      const title = texts[permissionKey(p)]?.title?.trim().toLowerCase();
+      if (title) byTitle.set(title, [...(byTitle.get(title) ?? []), p]);
+    }
+    expect([...byTitle.values()].filter((perms) => perms.length > 1)).toEqual([]);
+  });
 });

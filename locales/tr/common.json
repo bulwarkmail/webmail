@@ -7085,7 +7085,7 @@
         "body": "Hesabınızdaki iletileri ekleriyle birlikte, düzenleyiciyi açmadan iletir. Her adrese ilk iletmeden önce size sorulur."
       },
       "ui_notices": {
-        "title": "Bildirim göster",
+        "title": "Bildirim panelleri göster",
         "body": "Ekranın altında, uygulamanın mesajlarının göründüğü yerde kendine ait küçük bir panel gösterir; örneğin gelen bir arama için. Sayfayı engellemez, yazmaya devam edebilir ve kapatabilirsiniz. Her biri eklentinin adını belirtir."
       },
       "ui_notifications": {
