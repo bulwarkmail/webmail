@@ -36,6 +36,7 @@ import {
   type NoteKind,
 } from '@/lib/team-mailboxes/note-format';
 import type { TeamRef } from '@/lib/team-mailboxes/team';
+import { SEEN_METADATA_KEY, decodeSeen, encodeSeen, isUnseen, markThreadSeen, type SeenMap } from '@/lib/team-mailboxes/seen';
 
 export const NOTES_WINDOW_DAYS = 90;
 export const NOTES_INDEX_CAP = 2000;
@@ -81,7 +82,7 @@ export interface TeamState {
 
 export interface ConversationMessage {
   id: string;
-  messageId?: readonly string[] | null;
+  messageId?: readonly string[] | string | null;
   threadId?: string | null;
   subject?: string | null;
   receivedAt?: string | null;
@@ -89,9 +90,11 @@ export interface ConversationMessage {
 
 interface TeamMailboxStore {
   teams: Record<string, TeamState>;
+  /** Per login: which notes the user has seen, per team account (lib/team-mailboxes/seen.ts). */
+  seen: Record<string, SeenMap>;
 }
 
-export const useTeamMailboxStore = create<TeamMailboxStore>()(() => ({ teams: {} }));
+export const useTeamMailboxStore = create<TeamMailboxStore>()(() => ({ teams: {}, seen: {} }));
 
 // ── Runtime per team, outside React state ─────────────────────────────
 
@@ -207,7 +210,11 @@ export function ensureTeamLoaded(ref: TeamRef, client: IJMAPClient): Promise<voi
       },
     },
   }));
-  runtime.loading = enqueue(ref.key, () => loadIndex(ref, client)).finally(() => { runtime.loading = null; });
+  runtime.loading = enqueue(ref.key, async () => {
+    await ensureSeenLoaded(ref, client);
+    ensureBaseline(ref);
+    await loadIndex(ref, client);
+  }).finally(() => { runtime.loading = null; });
   return runtime.loading;
 }
 
@@ -674,11 +681,131 @@ function undoDelete(key: string, note: NoteEntry): Promise<boolean> {
   });
 }
 
+// ── Seen notes (the dot on list rows) ─────────────────────────────────
+
+const SEEN_WRITE_GAP_MS = 60_000;
+const seenLogins = new Map<string, { client: IJMAPClient; loading: Promise<void> | null; lastWrite: number; timer: ReturnType<typeof setTimeout> | null }>();
+const seenStorageKey = (loginId: string) => `bulwark-team-seen:${loginId}`;
+
+function privateMetadata(client: IJMAPClient): boolean {
+  return !!client.advertisesPrivateBulwarkMetadata?.() && !!client.getBulwarkMetadata && !!client.setBulwarkMetadata;
+}
+
+/** Reads the login's seen map once: private Inbox metadata where the server has it, else this device. */
+function ensureSeenLoaded(ref: TeamRef, client: IJMAPClient): Promise<void> {
+  const known = seenLogins.get(ref.loginId);
+  if (known) return known.loading ?? Promise.resolve();
+  const entry = { client, loading: null as Promise<void> | null, lastWrite: 0, timer: null as ReturnType<typeof setTimeout> | null };
+  seenLogins.set(ref.loginId, entry);
+  entry.loading = (async () => {
+    let map: SeenMap = {};
+    try {
+      if (privateMetadata(client)) {
+        const entries = await client.getBulwarkMetadata!(undefined, { private: true });
+        map = decodeSeen(entries?.[SEEN_METADATA_KEY]);
+      } else {
+        map = decodeSeen(JSON.parse(localStorage.getItem(seenStorageKey(ref.loginId)) ?? 'null'));
+      }
+    } catch (error) {
+      debug.warn('team-mailboxes', 'Reading seen notes failed:', error);
+    }
+    useTeamMailboxStore.setState((s) => ({ seen: { ...s.seen, [ref.loginId]: { ...map, ...(s.seen[ref.loginId] ?? {}) } } }));
+  })().finally(() => { entry.loading = null; });
+  return entry.loading;
+}
+
+/** The first visit to a team mailbox: older notes count as seen. */
+function ensureBaseline(ref: TeamRef): void {
+  const map = useTeamMailboxStore.getState().seen[ref.loginId] ?? {};
+  if (map[ref.accountId]) return;
+  setSeen(ref.loginId, { ...map, [ref.accountId]: { baseline: Date.now(), threads: {} } });
+}
+
+function setSeen(loginId: string, map: SeenMap): void {
+  useTeamMailboxStore.setState((s) => ({ seen: { ...s.seen, [loginId]: map } }));
+  scheduleSeenWrite(loginId);
+}
+
+/** At most one write a minute: a private metadata write changes the user's Inbox state. */
+function scheduleSeenWrite(loginId: string): void {
+  const entry = seenLogins.get(loginId);
+  if (!entry || entry.timer) return;
+  const wait = Math.max(0, entry.lastWrite + SEEN_WRITE_GAP_MS - Date.now());
+  entry.timer = setTimeout(() => {
+    entry.timer = null;
+    void flushSeen(loginId);
+  }, wait);
+}
+
+export async function flushSeen(loginId: string): Promise<void> {
+  const entry = seenLogins.get(loginId);
+  const map = useTeamMailboxStore.getState().seen[loginId];
+  if (!entry || !map) return;
+  entry.lastWrite = Date.now();
+  const value = encodeSeen(map);
+  try {
+    if (privateMetadata(entry.client)) await entry.client.setBulwarkMetadata!(undefined, SEEN_METADATA_KEY, value, { private: true });
+    else localStorage.setItem(seenStorageKey(loginId), JSON.stringify(value));
+  } catch (error) {
+    debug.warn('team-mailboxes', 'Saving seen notes failed:', error);
+    try { localStorage.setItem(seenStorageKey(loginId), JSON.stringify(value)); } catch { /* storage full or blocked */ }
+  }
+}
+
+/** The conversation is on screen: its notes up to now are seen. */
+export function markConversationSeen(key: string, threadIds: readonly string[]): void {
+  const t = team(key);
+  if (!t) return;
+  const { loginId, accountId } = t.ref;
+  let map = useTeamMailboxStore.getState().seen[loginId] ?? {};
+  const before = map;
+  for (const threadId of threadIds) {
+    const newest = Object.values(t.notes).reduce((max, n) => (n.threadId === threadId && n.kind === 'note' ? Math.max(max, n.at) : max), 0);
+    if (newest > 0) map = markThreadSeen(map, accountId, threadId, newest);
+  }
+  if (map !== before) setSeen(loginId, map);
+}
+
+const rowInfoCache = new WeakMap<TeamState, { seen: SeenMap | undefined; byThread: Map<string, { count: number; newestOther: number }>; byKey: Map<string, number> }>();
+
+/**
+ * For a list row: how many notes its conversation has (timeline entries
+ * don't count) and whether one by someone else is new to the user.
+ */
+export function rowNotesInfo(t: TeamState, threadId: string | null | undefined, key?: string): { count: number; unseen: boolean } {
+  const seenMap = useTeamMailboxStore.getState().seen[t.ref.loginId];
+  let cached = rowInfoCache.get(t);
+  if (!cached || cached.seen !== seenMap) {
+    const byThread = new Map<string, { count: number; newestOther: number }>();
+    const byKey = new Map<string, number>();
+    const own = t.author?.email ?? '';
+    for (const n of Object.values(t.notes)) {
+      if (n.kind !== 'note') continue;
+      if (n.threadId) {
+        const row = byThread.get(n.threadId) ?? { count: 0, newestOther: 0 };
+        row.count += 1;
+        if (n.author.email !== own) row.newestOther = Math.max(row.newestOther, n.at);
+        byThread.set(n.threadId, row);
+      } else {
+        byKey.set(n.key, (byKey.get(n.key) ?? 0) + 1);
+      }
+    }
+    cached = { seen: seenMap, byThread, byKey };
+    rowInfoCache.set(t, cached);
+  }
+  const row = threadId ? cached.byThread.get(threadId) : undefined;
+  const count = (row?.count ?? 0) + (key ? cached.byKey.get(key) ?? 0 : 0);
+  const unseen = !!row && !!threadId && row.newestOther > 0 && isUnseen(seenMap?.[t.ref.accountId], threadId, row.newestOther);
+  return { count, unseen };
+}
+
 /** For tests: forget every team. */
 export function resetTeamMailboxStore(): void {
   runtimes.clear();
   arrivalListeners.clear();
+  for (const entry of seenLogins.values()) if (entry.timer) clearTimeout(entry.timer);
+  seenLogins.clear();
   unsubscribePush?.();
   unsubscribePush = null;
-  useTeamMailboxStore.setState({ teams: {} });
+  useTeamMailboxStore.setState({ teams: {}, seen: {} });
 }

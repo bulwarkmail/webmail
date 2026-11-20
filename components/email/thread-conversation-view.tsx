@@ -91,6 +91,7 @@ import { usePhishingMarked } from "@/hooks/use-phishing-report";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
 import { NO_SAVE_MEDIA_CSS, blockMediaSaving } from "@/lib/device-frame";
+import { NotesAfter, NotesSummaryLine, TeamNoteArea, TeamNotesProvider } from "@/components/team-mailboxes/team-conversation";
 
 export type ConversationAttachmentHandler = (
   blobId: string, name: string, type: string | undefined, source: EmailBlobContext,
@@ -311,6 +312,7 @@ export function ThreadConversationView({
   }
 
   return (
+    <TeamNotesProvider email={thread.latestEmail} messages={ordered}>
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div data-plugin-list-avoid="" className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
@@ -332,6 +334,7 @@ export function ThreadConversationView({
       {/* Email Cards */}
       <div className="flex-1 overflow-y-auto">
         <PluginSlot name="thread-summary" className="w-full" extraProps={threadSummaryProps} />
+        <NotesSummaryLine />
         <div ref={cardsRef} className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
           {ordered.map((email) => {
             const draft = !!email.keywords?.$draft;
@@ -357,13 +360,16 @@ export function ThreadConversationView({
               onMarkAsRead={onMarkAsRead}
               mailboxRole={mailboxRole}
             />
+            <NotesAfter emailId={email.id} className="pt-3" />
             </div>
             );
           })}
+          <TeamNoteArea messages={ordered} className="pb-2" />
         </div>
       </div>
       {focusedPrint && !focusedPrint.noPrint && <MessagePrint fields={focusedPrint.fields} />}
     </div>
+    </TeamNotesProvider>
   );
 }
 

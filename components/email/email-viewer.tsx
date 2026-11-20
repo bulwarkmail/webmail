@@ -160,6 +160,8 @@ import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
+import { NotesAfter, NotesSummaryLine, TeamNoteArea, TeamNotesProvider, useHasNotesAfter } from "@/components/team-mailboxes/team-conversation";
+import { requestNoteField, useTeamOf } from "@/components/team-mailboxes/use-team";
 import { ReceivedLabelChip } from "./received-label-chip";
 import { ImportanceChip } from "./importance-chip";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
@@ -232,6 +234,8 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
   '10': 'open_window',
   '11': 'extra:view_mode',
   '12': 'extra:fullscreen',
+  // Team mailboxes only (lib/team-mailboxes).
+  '13': 'extra:team_note',
 };
 /**
  * The reader toolbar's buttons that stay: Reply (1), Reply all (2), Forward
@@ -1158,13 +1162,20 @@ export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun,
 }) {
   const tPane = useTranslations('conversation_pane');
   const [showAll, setShowAll] = useState(false);
+  // Team notes sit after the message they follow, and never fold away.
+  const hasNotesAfter = useHasNotesAfter();
   if (emails.length === 0) return null;
   const isExpanded = (e: Email) => !!renderExpanded && !!expandedIds?.has(e.id);
-  const renderOne = (e: Email) => isExpanded(e)
-    ? <Fragment key={e.id}>{renderExpanded!(e)}</Fragment>
-    : <MvConversationCard key={e.id} email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} shortDates={shortDates} />;
+  const renderOne = (e: Email) => (
+    <Fragment key={e.id}>
+      {isExpanded(e)
+        ? renderExpanded!(e)
+        : <MvConversationCard email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} shortDates={shortDates} />}
+      <NotesAfter emailId={e.id} />
+    </Fragment>
+  );
   const middle = emails.slice(1, -1);
-  if (!collapseLongRun || showAll || emails.length <= 3 || middle.some(isExpanded)) {
+  if (!collapseLongRun || showAll || emails.length <= 3 || middle.some(isExpanded) || middle.some((e) => hasNotesAfter(e.id))) {
     return <>{emails.map(renderOne)}</>;
   }
   return (
@@ -1657,6 +1668,14 @@ export function EmailViewer({
   const mvBefore = mvOpenIndex > 0 ? mvConversation!.slice(0, mvOpenIndex) : [];
   const mvAfter = mvOpenIndex >= 0 ? mvConversation!.slice(mvOpenIndex + 1) : [];
   const mvConversationIds = mvOpenIndex >= 0 ? mvConversation!.map((e) => e.id).join(',') : '';
+  // Team mailboxes: the notes of the conversation on screen (or of the single message).
+  const teamOfEmail = useTeamOf(email);
+  const tTeam = useTranslations('team_mailboxes');
+  const teamMessages = useMemo(
+    () => (mvOpenIndex >= 0 ? mvConversation! : email ? [email] : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- by ids
+    [mvConversationIds, email?.id, mvOpenIndex >= 0],
+  );
   const threadSummaryProps = useMemo(
     () => ({ threadId: email?.threadId ?? null, emailIds: mvConversationIds ? mvConversationIds.split(',') : [], deviceType: isMobile ? 'mobile' : isCompact ? 'tablet' : 'desktop' }),
     [email?.threadId, mvConversationIds, isMobile, isCompact],
@@ -4474,7 +4493,10 @@ export function EmailViewer({
   );
   // `top` is the row above the message row; by default the one holding only
   // the panel button (none without a panel or on a phone).
+  // In the same provider as the loaded reader below, so React keeps the row
+  // (and the side panel's frame) from no message to a message and back.
   const shell = (content: React.ReactNode, top: React.ReactNode = toggleOnlyToolbar) => (
+    <TeamNotesProvider email={null} messages={teamMessages}>
     <div
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
@@ -4490,6 +4512,7 @@ export function EmailViewer({
         {null}
       </div>
     </div>
+    </TeamNotesProvider>
   );
 
   // Show loading skeleton while email is being fetched: the page skeleton's
@@ -4670,6 +4693,10 @@ export function EmailViewer({
     omit: savedFile ? new Set([...readerMenuOmit, ...SAVED_FILE_OMIT]) : readerMenuOmit,
     ...(savedFile ? { rules: false } : {}),
     views: readerViews,
+    // Team mailboxes: Note opens the field at the end of the conversation.
+    ...(teamOfEmail
+      ? { extras: [{ kind: 'item' as const, key: 'extra:team_note' as const, icon: StickyNote, label: tTeam('note'), run: () => requestNoteField(email.id) }] }
+      : {}),
   };
 
   // Shared toolbar items used by both 'top' and 'below-subject' positions
@@ -4800,6 +4827,21 @@ export function EmailViewer({
           <Forward className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
+        {teamOfEmail && email && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => requestNoteField(email.id)}
+            data-overflow-item
+            data-overflow-priority="13"
+            className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+            title={tTeam('note')}
+            data-team-note-toolbar=""
+          >
+            <StickyNote className="w-4 h-4" />
+            {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{tTeam('note')}</span>}
+          </Button>
+        )}
         </>)}
         <PluginSlot name="toolbar-actions" />
         {/* Phones get these in the More panel. */}
@@ -5193,6 +5235,7 @@ export function EmailViewer({
   );
 
   return (
+    <TeamNotesProvider email={email} messages={teamMessages}>
     <div
       ref={setViewerRootEl}
       data-tour="email-viewer"
@@ -5469,6 +5512,8 @@ export function EmailViewer({
       {mvOpenIndex >= 0 && (
         <PluginSlot name="thread-summary" className="w-full" extraProps={threadSummaryProps} />
       )}
+      {/* Team mailboxes: "3 notes · Mabel: …", once above the conversation or the message. */}
+      <NotesSummaryLine />
 
       {/* Mountain View: the conversation's earlier messages, folded. */}
       {mvBefore.length > 0 && (
@@ -6086,12 +6131,18 @@ export function EmailViewer({
           {/* Where the open message ends: a reply docked under it scrolls to here. */}
           <div data-open-message-end="" aria-hidden="true" />
 
+          {/* Team notes written after the open message, before the next one. */}
+          <NotesAfter emailId={email.id} />
+
           {/* Mountain View: the conversation's later messages, folded. */}
           {mvAfter.length > 0 && (
             <div className="mt-4 border-b border-border bg-background" data-mv-conversation-after="">
               <MvConversationRun emails={mvAfter} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} />
             </div>
           )}
+
+          {/* Team mailboxes: the Note button and field, at the conversation's newest end. */}
+          {!isDraft && !isScheduled && <TeamNoteArea messages={teamMessages} />}
 
           {/* Mountain View: a reply being written in place. */}
           {mvViewer && mvInlineComposer && (
@@ -6338,6 +6389,16 @@ export function EmailViewer({
             <Forward className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
           </button>
+          {teamOfEmail && email && (
+            <button
+              onClick={() => requestNoteField(email.id)}
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
+              data-team-note-bar=""
+            >
+              <StickyNote className="w-5 h-5" />
+              <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{tTeam('note')}</span>
+            </button>
+          )}
           </>)}
           <button
             onClick={onNavigateNext}
@@ -6403,5 +6464,6 @@ export function EmailViewer({
     </>
     </div>
     </div>
+    </TeamNotesProvider>
   );
 }

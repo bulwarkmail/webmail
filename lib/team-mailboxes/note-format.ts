@@ -86,8 +86,10 @@ export function stripAngles(value: string): string {
  * The key notes about this message use: its Message-ID, or
  * `jmap:<accountId>/<emailId>` when it has none.
  */
-export function noteKeyFor(email: { id: string; messageId?: readonly string[] | null }, accountId: string): string {
-  const first = email.messageId?.find((id) => typeof id === 'string' && id.trim());
+export function noteKeyFor(email: { id: string; messageId?: readonly string[] | string | null }, accountId: string): string {
+  // The server sends an array; some store types call it a string.
+  const ids = Array.isArray(email.messageId) ? email.messageId : [email.messageId];
+  const first = ids.find((id): id is string => typeof id === 'string' && !!id.trim());
   return first ? stripAngles(first) : `jmap:${accountId}/${email.id}`;
 }
 

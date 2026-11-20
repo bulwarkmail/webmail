@@ -84,6 +84,11 @@
   --color-info: #3b82f6;
   --color-info-foreground: #ffffff;
 
+  /* Team notes: internal notes between the messages, clearly not mail */
+  --color-note: #fef9c3;
+  --color-note-foreground: #422006;
+  --color-note-border: #eab308;
+
   /* Selection states */
   --color-selection: var(--brand-accent, #dbeafe);
   --color-selection-foreground: var(--brand-accent-foreground, #1e40af);
@@ -161,6 +166,10 @@
   --color-warning-foreground: #ffffff;
   --color-info: #60a5fa;
   --color-info-foreground: #ffffff;
+
+  --color-note: #2b250f;
+  --color-note-foreground: #fef3c7;
+  --color-note-border: #a16207;
 
   /* Selection states */
   --color-selection: rgba(59, 130, 246, 0.25);
