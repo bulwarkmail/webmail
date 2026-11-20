@@ -2005,6 +2005,7 @@ function LoginPageContent() {
                       ref={inputRef}
                       id="username"
                       type="text"
+                      dir="ltr"
                       value={formData.username}
                       onChange={handleUsernameChange}
                       onFocus={handleUsernameFocus}
@@ -2118,6 +2119,7 @@ function LoginPageContent() {
                       ref={passwordInputRef}
                       id="password"
                       type={showPassword ? "text" : "password"}
+                      dir="ltr"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="pe-10 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
@@ -2233,6 +2235,7 @@ function LoginPageContent() {
                       ref={totpInputRef}
                       id="totp"
                       type="text"
+                      dir="ltr"
                       inputMode="numeric"
                       maxLength={6}
                       value={totpCode}
