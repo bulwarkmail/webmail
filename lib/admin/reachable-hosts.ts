@@ -104,6 +104,11 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
     for (const origin of plugin.origins) add(`Plugin ${plugin.name}`, origin, "The plugin's admin page", 'server');
   }
   for (const app of policy.defaultSidebarApps ?? []) add('Sidebar app', app?.url, `Features and settings > Default sidebar apps (${app?.name ?? ''})`, 'browser');
+  for (const scope of policy.scopes ?? []) {
+    for (const app of scope?.policy?.defaultSidebarApps ?? []) {
+      add('Sidebar app', app?.url, `Features and settings > Default sidebar apps, ${scope.label} (${app?.name ?? ''})`, 'browser');
+    }
+  }
   add('Document editor (WOPI)', get('wopiClientUrl'), 'WOPI_CLIENT_URL', 'both');
   add('Translation (LibreTranslate)', env.LIBRETRANSLATE_URL, 'LIBRETRANSLATE_URL', 'server');
   // Only when an admin set it; browsers and this server send error reports there.

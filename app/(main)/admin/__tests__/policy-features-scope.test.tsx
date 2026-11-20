@@ -82,6 +82,33 @@ describe('Features and settings', () => {
     expect(rowSwitch('Account list backup')).toBeDisabled();
   });
 
+  // #1806
+  it('gives one scope its own default sidebar apps', async () => {
+    stored.defaultSidebarApps = [{ id: 'admin-app-intranet', name: 'Intranet', url: 'https://intranet.example.com', icon: 'Globe', openMode: 'tab', showOnMobile: false }];
+    render(<PolicyPage />);
+    await waitFor(() => expect(features()).toBeTruthy());
+    const section = document.querySelector<HTMLElement>('[data-settings-section="sidebar-apps"]')!;
+    fireEvent.click(within(within(section).getByRole('group', { name: 'Applies to' })).getByRole('button', { name: 'Sales' }));
+    expect(within(section).queryByDisplayValue('Intranet')).toBeNull();
+    expect(within(section).getByText(/From Everyone: 1 app\./)).toBeTruthy();
+
+    fireEvent.click(within(section).getByRole('button', { name: 'Set apps for this scope' }));
+    expect(within(section).getByDisplayValue('Intranet')).toBeTruthy();
+    fireEvent.click(within(section).getByRole('button', { name: 'Add app' }));
+    const names = within(section).getAllByLabelText('Name');
+    fireEvent.change(names[1], { target: { value: 'CRM' } });
+    fireEvent.change(within(section).getAllByLabelText('URL')[1], { target: { value: 'https://crm.sales.example' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+    await waitFor(() => expect(puts).toHaveLength(1));
+    const saved = puts[0] as { defaultSidebarApps: Array<{ name: string }>; scopes: Array<{ policy: { defaultSidebarApps?: Array<{ name: string; url: string }> } }> };
+    expect(saved.defaultSidebarApps.map((a) => a.name)).toEqual(['Intranet']);
+    expect(saved.scopes[0].policy.defaultSidebarApps?.map((a) => [a.name, a.url])).toEqual([
+      ['Intranet', 'https://intranet.example.com'],
+      ['CRM', 'https://crm.sales.example'],
+    ]);
+  });
+
   it('uses sentence case and plain words for the features', async () => {
     render(<PolicyPage />);
     await waitFor(() => expect(features()).toBeTruthy());

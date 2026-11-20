@@ -9,7 +9,7 @@
  * locales/en/common.json and the defaults against the settings store.
  */
 
-import { DEFAULT_FEATURE_GATES, type FeatureGates, type SettingRestriction, type SettingsPolicy } from './types';
+import { DEFAULT_FEATURE_GATES, type AdminSidebarApp, type FeatureGates, type SettingRestriction, type SettingsPolicy } from './types';
 import { RESTRICTION_KEYS } from './restriction-keys';
 import {
   ACCESSIBILITY_DEFAULTS,
@@ -406,6 +406,30 @@ export function withDefaultAt(policy: SettingsPolicy, scopeId: string, key: stri
   const target = scope ? (scope.policy.defaults ??= {}) : (next.defaults = { ...(next.defaults ?? {}) });
   if (value === undefined) delete target[key];
   else target[key] = value;
+  return next;
+}
+
+/**
+ * The default sidebar apps at the scope (#1806): its own list, which
+ * replaces Everyone's, or Everyone's.
+ */
+export function sidebarAppsAt(policy: SettingsPolicy, scopeId: string): ScopedValue<AdminSidebarApp[]> {
+  const everyone = policy.defaultSidebarApps ?? [];
+  const own = scopeOf(policy, scopeId)?.policy.defaultSidebarApps;
+  if (scopeId === EVERYONE_SCOPE) return { value: everyone, own: true, everyone };
+  return own ? { value: own, own: true, everyone } : { value: everyone, own: false, everyone };
+}
+
+/** The policy with the scope's default sidebar apps set; `undefined` in a scope means Everyone's again. */
+export function withSidebarAppsAt(policy: SettingsPolicy, scopeId: string, apps: AdminSidebarApp[] | undefined): SettingsPolicy {
+  const next = clonePolicy(policy);
+  const scope = scopeOf(next, scopeId);
+  if (!scope) {
+    next.defaultSidebarApps = apps ?? [];
+    return next;
+  }
+  if (apps === undefined) delete scope.policy.defaultSidebarApps;
+  else scope.policy.defaultSidebarApps = apps;
   return next;
 }
 

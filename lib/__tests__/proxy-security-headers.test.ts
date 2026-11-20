@@ -327,3 +327,24 @@ describe('Permissions-Policy for the operator\'s sidebar apps', () => {
       .toBe('camera=(), microphone=(), geolocation=(), payment=()');
   });
 });
+
+// #1806: which scope a page is for isn't known to the proxy, so a scope's own
+// inline apps are allowed in the headers as Everyone's are.
+describe("a scope's own sidebar apps", () => {
+  afterEach(() => {
+    vi.mocked(configManager.getPolicy).mockImplementation(() => ({ features: { pluginsEnabled: false } }) as never);
+  });
+
+  const crm = { id: 'admin-app-crm', name: 'CRM', url: 'https://crm.org-a.test/app', icon: 'Globe', openMode: 'inline', showOnMobile: false, allow: ['microphone'] };
+
+  it('can be framed and granted what the admin allowed', async () => {
+    vi.mocked(configManager.getPolicy).mockImplementation(() => ({
+      features: {},
+      defaultSidebarApps: [],
+      scopes: [{ id: 'org-a', label: 'Org A', match: { domains: ['org-a.test'] }, policy: { defaultSidebarApps: [crm] } }],
+    }) as never);
+    const res = await load('/en/mail');
+    expect(/frame-src [^;]*/.exec(res.headers.get('content-security-policy') ?? '')?.[0]).toContain('https://crm.org-a.test');
+    expect(res.headers.get('permissions-policy')).toBe('camera=(), microphone=(self "https://crm.org-a.test"), geolocation=(), payment=()');
+  });
+});

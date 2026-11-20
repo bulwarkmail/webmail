@@ -11,6 +11,7 @@ import {
 } from "./lib/security/app-frame-origins";
 import { configManager } from "./lib/admin/config-manager";
 import { managedAppOriginsWith } from "./lib/sidebar-apps";
+import { defaultSidebarAppLists } from "./lib/admin/policy-scopes";
 import { isNoThirdPartyTrafficOn } from "./lib/admin/third-party-mode";
 import { listReachableHosts, noThirdPartyCspSources } from "./lib/admin/reachable-hosts";
 import { getWopiEditorOrigins } from "./lib/wopi/discovery";
@@ -435,8 +436,10 @@ export async function proxy(request: NextRequest) {
   // Apps the operator pins for everyone (#931) are known server-side, so their
   // origins go straight into the header - no cookie handshake, and no reload
   // the first time a user opens one. They survive the gate above, which only
-  // governs the apps users add themselves.
-  const managedAppFrameOrigins = inlineAppFrameOrigins(policy.defaultSidebarApps);
+  // governs the apps users add themselves. A scope's own apps (#1806) count
+  // too: which scope the page is for isn't known here.
+  const managedAppLists = defaultSidebarAppLists(policy);
+  const managedAppFrameOrigins = managedAppLists.flatMap((apps) => inlineAppFrameOrigins(apps));
 
   // WOPI document editor (#425): the editor is launched by POSTing the access
   // token into an iframe on its origin, so that origin must be allowed in both
@@ -553,7 +556,7 @@ export async function proxy(request: NextRequest) {
   // widen this header; a frame gets a feature only while this document has it
   // too, so `self` comes with it.
   const mediaAllowlist = (feature: "camera" | "microphone") => {
-    const origins = managedAppOriginsWith(policy.defaultSidebarApps, feature);
+    const origins = [...new Set(managedAppLists.flatMap((apps) => managedAppOriginsWith(apps, feature)))];
     return origins.length > 0 ? ["self", ...origins.map((origin) => `"${origin}"`)].join(" ") : "";
   };
   response.headers.set(
