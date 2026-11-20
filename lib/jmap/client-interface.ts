@@ -237,6 +237,14 @@ export interface IJMAPClient {
    * the account's folders were fetched.
    */
   hiddenMailboxIds?(accountId?: string): string[];
+
+  // ── Team notes (lib/team-mailboxes); never answered from the device ──
+  queryTeamNotes?(accountId: string, filter: Record<string, unknown>, options: { limit: number; position?: number; properties: readonly string[] }): Promise<{ ids: string[]; list: Array<Record<string, unknown>>; total?: number; state?: string }>;
+  getTeamNotes?(accountId: string, ids: readonly string[], properties: readonly string[], options?: { text?: boolean }): Promise<{ list: Array<Record<string, unknown>>; state?: string; notFound: string[] }>;
+  createTeamNote?(accountId: string, email: Record<string, unknown>): Promise<{ id: string; threadId?: string }>;
+  destroyTeamNote?(accountId: string, id: string): Promise<void>;
+  createTeamNotesFolder?(accountId: string, name: string, shareWith: Record<string, MailboxRights> | null): Promise<string>;
+  setMailboxShareWith?(mailboxId: string, shareWith: Record<string, MailboxRights>, accountId?: string): Promise<void>;
   /**
    * getAllMailboxes plus the Mailbox collection state per account, so the
    * store can resolve a later push with Mailbox/changes (RFC 8620 §5.2)

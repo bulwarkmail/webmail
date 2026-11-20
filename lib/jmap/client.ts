@@ -8884,6 +8884,127 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  // ── Team notes (lib/team-mailboxes) ──────────────────────────────
+  // Always the server's word (networkOnly): notes are never kept on the
+  // device, so an offline answer would wrongly say "no notes".
+
+  /** Email/query of team notes, newest first, and Email/get of the page, in one request. */
+  async queryTeamNotes(
+    accountId: string,
+    filter: Record<string, unknown>,
+    options: { limit: number; position?: number; properties: readonly string[] },
+  ): Promise<{ ids: string[]; list: Array<Record<string, unknown>>; total?: number; state?: string }> {
+    const response = await this.request([
+      ["Email/query", {
+        accountId, filter, sort: [{ property: "receivedAt", isAscending: false }],
+        position: options.position ?? 0, limit: options.limit, calculateTotal: true,
+      }, "q"],
+      ["Email/get", {
+        accountId, "#ids": { resultOf: "q", name: "Email/query", path: "/ids" }, properties: [...options.properties],
+      }, "g"],
+    ], undefined, { networkOnly: true });
+    const [qName, query] = response.methodResponses?.[0] ?? [];
+    const [gName, get] = response.methodResponses?.[1] ?? [];
+    if (qName !== "Email/query") throw jmapError("Failed to load notes", query as JmapErrorInfo);
+    if (gName !== "Email/get") throw jmapError("Failed to load notes", get as JmapErrorInfo);
+    const q = query as { ids?: string[]; total?: number };
+    const g = get as { list?: Array<Record<string, unknown>>; state?: string };
+    return { ids: q.ids ?? [], list: g.list ?? [], total: q.total, state: g.state };
+  }
+
+  /** Email/get of team notes by id; with `text`, their plain text too. */
+  async getTeamNotes(
+    accountId: string,
+    ids: readonly string[],
+    properties: readonly string[],
+    options: { text?: boolean } = {},
+  ): Promise<{ list: Array<Record<string, unknown>>; state?: string; notFound: string[] }> {
+    const list: Array<Record<string, unknown>> = [];
+    const notFound: string[] = [];
+    let state: string | undefined;
+    // No ids still asks once: the answer's state is a baseline for Email/changes.
+    const batches = ids.length > 0 ? batched([...ids], this.getMaxObjectsInGet()) : [[]];
+    for (const batch of batches) {
+      const response = await this.request([
+        ["Email/get", {
+          accountId, ids: batch,
+          properties: [...properties, ...(options.text ? ["textBody", "bodyValues"] : [])],
+          ...(options.text ? { fetchTextBodyValues: true, maxBodyValueBytes: 65536 } : {}),
+        }, "g"],
+      ], undefined, { networkOnly: true });
+      const [name, result] = response.methodResponses?.[0] ?? [];
+      if (name !== "Email/get") throw jmapError("Failed to load notes", result as JmapErrorInfo);
+      const r = result as { list?: Array<Record<string, unknown>>; state?: string; notFound?: string[] };
+      list.push(...(r.list ?? []));
+      notFound.push(...(r.notFound ?? []));
+      state = r.state ?? state;
+    }
+    return { list, state, notFound };
+  }
+
+  /**
+   * Creates one note (lib/team-mailboxes/note-format.ts buildNoteEmail).
+   * Throws a JmapError whose type says why (forbidden, overQuota, ...).
+   */
+  async createTeamNote(accountId: string, email: Record<string, unknown>): Promise<{ id: string; threadId?: string }> {
+    const response = await this.request([
+      ["Email/set", { accountId, create: { note: email } }, "0"],
+    ], undefined, { networkOnly: true });
+    const [name, result] = response.methodResponses?.[0] ?? [];
+    if (name !== "Email/set") throw jmapError("Failed to save the note", result as JmapErrorInfo);
+    const set = result as { created?: Record<string, { id: string; threadId?: string }>; notCreated?: Record<string, JmapErrorInfo> };
+    const created = set.created?.note;
+    if (!created) throw jmapError("Failed to save the note", set.notCreated?.note ?? null);
+    return { id: created.id, threadId: created.threadId };
+  }
+
+  /** Destroys one note for good (never to Trash). */
+  async destroyTeamNote(accountId: string, id: string): Promise<void> {
+    const response = await this.request([
+      ["Email/set", { accountId, destroy: [id] }, "0"],
+    ], undefined, { networkOnly: true });
+    const [name, result] = response.methodResponses?.[0] ?? [];
+    if (name !== "Email/set") throw jmapError("Failed to delete the note", result as JmapErrorInfo);
+    const set = result as { destroyed?: string[]; notDestroyed?: Record<string, JmapErrorInfo> };
+    if (!set.destroyed?.includes(id)) throw jmapError("Failed to delete the note", set.notDestroyed?.[id] ?? null);
+  }
+
+  /**
+   * Creates the "Team notes" folder at the root of a group account,
+   * unsubscribed (IMAP clients that show only subscribed folders hide it),
+   * then gives it the Inbox's sharing so whoever reads the team mailbox reads
+   * its notes. Returns the new folder's raw id. A sharing failure doesn't
+   * undo the folder.
+   */
+  async createTeamNotesFolder(accountId: string, name: string, shareWith: Record<string, MailboxRights> | null): Promise<string> {
+    const response = await this.request([
+      ["Mailbox/set", { accountId, create: { notes: { name, isSubscribed: false } } }, "0"],
+    ], undefined, { networkOnly: true });
+    const [method, result] = response.methodResponses?.[0] ?? [];
+    if (method !== "Mailbox/set") throw jmapError("Failed to create the notes folder", result as JmapErrorInfo);
+    const set = result as { created?: Record<string, { id: string }>; notCreated?: Record<string, JmapErrorInfo> };
+    const id = set.created?.notes?.id;
+    if (!id) throw jmapError("Failed to create the notes folder", set.notCreated?.notes ?? null);
+    this.hiddenFolders.add(accountId, [id]);
+    if (shareWith && Object.keys(shareWith).length > 0) {
+      await this.setMailboxShareWith(id, shareWith, accountId).catch((error) => {
+        debug.warn('jmap', 'Could not share the team notes folder like the Inbox:', error);
+      });
+    }
+    return id;
+  }
+
+  /** Replaces a folder's whole `shareWith`. */
+  async setMailboxShareWith(mailboxId: string, shareWith: Record<string, MailboxRights>, accountId?: string): Promise<void> {
+    const response = await this.request([
+      ["Mailbox/set", { accountId: accountId || this.accountId, update: { [mailboxId]: { shareWith } } }, "0"],
+    ], ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", JMAPClient.MAIL_SHARE_CAPABILITY], { networkOnly: true });
+    const [method, result] = response.methodResponses?.[0] ?? [];
+    if (method !== "Mailbox/set") throw jmapError("Failed to update folder share", result as JmapErrorInfo);
+    const set = result as { notUpdated?: Record<string, JmapErrorInfo> };
+    if (set.notUpdated?.[mailboxId]) throw jmapError("Failed to update folder share", set.notUpdated[mailboxId]);
+  }
+
   // ── Sharing many items at once (the Delegates page) ──────────────
 
   /**

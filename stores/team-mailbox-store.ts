@@ -1,0 +1,684 @@
+/**
+ * Team notes per team mailbox (lib/team-mailboxes/team.ts): the index the
+ * conversation, the line above the message and the list rows read, kept
+ * current from the server.
+ *
+ * - Loaded on first use of a team mailbox: the notes of the last 90 days,
+ *   newest first, at most 2,000, without their text (lib/team-mailboxes/
+ *   note-format.ts NOTE_INDEX_PROPERTIES). `windowStart` says how far back
+ *   the index reaches; a conversation older than that looks its notes up by
+ *   subject (Stalwart doesn't index custom headers by default, so a header
+ *   query finds nothing; local-data/team-mailboxes-facts.md §2).
+ * - Text is loaded per conversation when it opens.
+ * - Kept current from Email/changes against the store's own baseline on
+ *   every push for the group account (never a pushed state as baseline).
+ * - Writes go to the team's own login and JMAP account, always the server's
+ *   word (no offline answers). A note that couldn't be saved stays pending
+ *   with the reason, for the field's error and Retry.
+ */
+
+import { create } from 'zustand';
+import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import type { Identity, MailboxRights, StateChange } from '@/lib/jmap/types';
+import { jmapErrorType } from '@/lib/jmap/jmap-error';
+import { subscribePushStateChanges } from '@/lib/push-events';
+import { debug } from '@/lib/debug';
+import { NOTE_KEYWORD, TEAM_NOTES_FOLDER_NAME, isTeamNotesFolder } from '@/lib/team-mailboxes/hidden-folders';
+import {
+  NOTES_KEYWORD,
+  NOTE_INDEX_PROPERTIES,
+  buildNoteEmail,
+  isOwnNote,
+  mentionKeyword,
+  parseNote,
+  type NoteAuthor,
+  type NoteEntry,
+  type NoteKind,
+} from '@/lib/team-mailboxes/note-format';
+import type { TeamRef } from '@/lib/team-mailboxes/team';
+
+export const NOTES_WINDOW_DAYS = 90;
+export const NOTES_INDEX_CAP = 2000;
+const PAGE = 500;
+/** Most candidates an older-notes lookup reads before it gives up. */
+export const LOOKUP_CAP = 5000;
+
+export type TeamStatus = 'loading' | 'ready' | 'error' | 'offline';
+export type NoteSaveError = 'failed' | 'forbidden' | 'overQuota' | 'offline';
+
+export interface PendingNote {
+  localId: string;
+  key: string;
+  threadId: string | null;
+  text: string;
+  mentions: string[];
+  at: number;
+  status: 'sending' | 'error';
+  error?: NoteSaveError;
+}
+
+/** What a conversation's notes are: loading, there, or couldn't be loaded. */
+export type ConversationStatus = 'loading' | 'ready' | 'error' | 'offline';
+
+export interface TeamState {
+  ref: TeamRef;
+  status: TeamStatus;
+  /** Raw ids of the "Team notes" folders (normally one). */
+  folderIds: string[];
+  /** Whether this user can write notes here; null until known. */
+  canWrite: boolean | null;
+  /** The person notes are written as (never the group's address). */
+  author: NoteAuthor | null;
+  /** The index reaches back to here (ms); older notes are looked up on demand. */
+  windowStart: number;
+  notes: Record<string, NoteEntry>;
+  pending: Record<string, PendingNote>;
+  /** Per conversation (its sorted thread ids and keys, joined). */
+  conversations: Record<string, ConversationStatus>;
+  /** Bumped on every change, for memoised selectors. */
+  version: number;
+}
+
+export interface ConversationMessage {
+  id: string;
+  messageId?: readonly string[] | null;
+  threadId?: string | null;
+  subject?: string | null;
+  receivedAt?: string | null;
+}
+
+interface TeamMailboxStore {
+  teams: Record<string, TeamState>;
+}
+
+export const useTeamMailboxStore = create<TeamMailboxStore>()(() => ({ teams: {} }));
+
+// ── Runtime per team, outside React state ─────────────────────────────
+
+interface Runtime {
+  client: IJMAPClient;
+  baseline: string | null;
+  queue: Promise<unknown>;
+  loading: Promise<void> | null;
+}
+const runtimes = new Map<string, Runtime>();
+type ArrivalListener = (ref: TeamRef, client: IJMAPClient, notes: NoteEntry[]) => void;
+const arrivalListeners = new Set<ArrivalListener>();
+let unsubscribePush: (() => void) | null = null;
+
+/** Notes that arrived from someone else's write (push), for the mention watcher and live announcements. */
+export function onNotesArrived(listener: ArrivalListener): () => void {
+  arrivalListeners.add(listener);
+  return () => { arrivalListeners.delete(listener); };
+}
+
+function patchTeam(key: string, patch: (team: TeamState) => Partial<TeamState>): void {
+  useTeamMailboxStore.setState((state) => {
+    const team = state.teams[key];
+    if (!team) return state;
+    return { teams: { ...state.teams, [key]: { ...team, ...patch(team), version: team.version + 1 } } };
+  });
+}
+
+function team(key: string): TeamState | undefined {
+  return useTeamMailboxStore.getState().teams[key];
+}
+
+/** Runs `task` after everything queued for this team, so writes and syncs don't interleave. */
+function enqueue<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const runtime = runtimes.get(key);
+  if (!runtime) return Promise.reject(new Error('No such team'));
+  const run = runtime.queue.then(task, task);
+  runtime.queue = run.catch(() => undefined);
+  return run;
+}
+
+function isOffline(error: unknown): boolean {
+  return (error as { name?: string } | null)?.name === 'OfflineUnavailableError';
+}
+
+function saveError(error: unknown): NoteSaveError {
+  if (isOffline(error)) return 'offline';
+  const type = jmapErrorType(error);
+  if (type === 'forbidden') return 'forbidden';
+  if (type === 'overQuota') return 'overQuota';
+  return 'failed';
+}
+
+function folderFilter(folderIds: readonly string[]): Record<string, unknown> {
+  return folderIds.length === 1
+    ? { inMailbox: folderIds[0] }
+    : { operator: 'OR', conditions: folderIds.map((id) => ({ inMailbox: id })) };
+}
+
+function withNotes(team: TeamState, entries: NoteEntry[]): Record<string, NoteEntry> {
+  const notes = { ...team.notes };
+  for (const entry of entries) {
+    const previous = notes[entry.id];
+    // Text loaded before stays: the index never carries it.
+    notes[entry.id] = previous?.text !== undefined && entry.text === undefined
+      ? { ...entry, text: previous.text, truncated: previous.truncated }
+      : entry;
+  }
+  return notes;
+}
+
+// ── Loading ───────────────────────────────────────────────────────────
+
+/** The person this login writes as: the identity with the login's address, else the address. */
+async function resolveAuthor(client: IJMAPClient): Promise<NoteAuthor> {
+  const login = client.getUsername().trim().toLowerCase();
+  const identities: Identity[] = await client.getIdentities().catch(() => []);
+  const own = identities.find((i) => i.email?.toLowerCase() === login);
+  return { name: own?.name?.trim() ?? '', email: login };
+}
+
+async function findFolders(client: IJMAPClient, accountId: string): Promise<{ ids: string[]; rights: MailboxRights | null; anyCreate: boolean }> {
+  const all = await client.getMailboxes(accountId, { includeHidden: true });
+  const notes = all
+    .filter((m) => isTeamNotesFolder({ name: m.name, parentId: m.parentId, role: m.role }, false))
+    .sort((a, b) => (a.originalId ?? a.id).localeCompare(b.originalId ?? b.id));
+  return {
+    ids: notes.map((m) => m.originalId ?? m.id),
+    rights: notes[0]?.myRights ?? null,
+    anyCreate: all.some((m) => m.myRights?.mayCreateChild),
+  };
+}
+
+/**
+ * Loads a team's index once (later calls wait for the same load). Safe to
+ * call on every render path that shows a team mailbox.
+ */
+export function ensureTeamLoaded(ref: TeamRef, client: IJMAPClient): Promise<void> {
+  ensurePushSubscription();
+  const existing = runtimes.get(ref.key);
+  if (existing && existing.client === client) {
+    return existing.loading ?? Promise.resolve();
+  }
+  const runtime: Runtime = { client, baseline: null, queue: Promise.resolve(), loading: null };
+  runtimes.set(ref.key, runtime);
+  useTeamMailboxStore.setState((state) => ({
+    teams: {
+      ...state.teams,
+      [ref.key]: {
+        ref, status: 'loading', folderIds: [], canWrite: null, author: null,
+        windowStart: Date.now() - NOTES_WINDOW_DAYS * 86_400_000,
+        notes: {}, pending: {}, conversations: {}, version: 0,
+      },
+    },
+  }));
+  runtime.loading = enqueue(ref.key, () => loadIndex(ref, client)).finally(() => { runtime.loading = null; });
+  return runtime.loading;
+}
+
+/** Loads the index again (Retry after "Notes couldn't be loaded"). */
+export function reloadTeam(key: string): Promise<void> {
+  const runtime = runtimes.get(key);
+  const current = team(key);
+  if (!runtime || !current) return Promise.resolve();
+  patchTeam(key, () => ({ status: 'loading', conversations: {} }));
+  runtime.loading = enqueue(key, () => loadIndex(current.ref, runtime.client)).finally(() => { runtime.loading = null; });
+  return runtime.loading;
+}
+
+async function loadIndex(ref: TeamRef, client: IJMAPClient): Promise<void> {
+  const runtime = runtimes.get(ref.key);
+  try {
+    const [author, folders] = await Promise.all([resolveAuthor(client), findFolders(client, ref.accountId)]);
+    const canWrite = folders.ids.length > 0
+      ? folders.rights?.mayAddItems === true
+      : folders.anyCreate && client.getAccountInfo(ref.accountId)?.isReadOnly !== true;
+    let windowStart = Date.now() - NOTES_WINDOW_DAYS * 86_400_000;
+    const entries: NoteEntry[] = [];
+    let baseline: string | null = null;
+    if (folders.ids.length > 0 && client.queryTeamNotes) {
+      const filter = { operator: 'AND', conditions: [folderFilter(folders.ids), { after: new Date(windowStart).toISOString() }] };
+      for (let position = 0; position < NOTES_INDEX_CAP; position += PAGE) {
+        const page = await client.queryTeamNotes(ref.accountId, filter, { limit: PAGE, position, properties: NOTE_INDEX_PROPERTIES });
+        if (baseline === null) baseline = page.state ?? null;
+        for (const raw of page.list) {
+          const entry = parseNote(raw);
+          if (entry) entries.push(entry);
+        }
+        if (page.ids.length < PAGE) break;
+        // The cap is reached: the index covers what it holds, the rest is looked up.
+        if (position + PAGE >= NOTES_INDEX_CAP) {
+          const oldest = entries.reduce((min, e) => Math.min(min, e.at), Number.POSITIVE_INFINITY);
+          if (Number.isFinite(oldest)) windowStart = Math.max(windowStart, oldest);
+        }
+      }
+    } else if (client.getTeamNotes) {
+      // No folder yet: only the state, so the first note anyone writes arrives as a change.
+      baseline = (await client.getTeamNotes(ref.accountId, [], ['id'])).state ?? null;
+    }
+    if (runtime) runtime.baseline = baseline;
+    patchTeam(ref.key, (t) => ({
+      status: 'ready', author, canWrite, folderIds: folders.ids, windowStart,
+      notes: withNotes({ ...t, notes: {} }, entries), conversations: {},
+    }));
+  } catch (error) {
+    debug.warn('team-mailboxes', `Loading notes of ${ref.accountId} failed:`, error);
+    patchTeam(ref.key, () => ({ status: isOffline(error) ? 'offline' : 'error' }));
+  }
+}
+
+// ── Live updates ──────────────────────────────────────────────────────
+
+function ensurePushSubscription(): void {
+  if (unsubscribePush) return;
+  unsubscribePush = subscribePushStateChanges((change, client) => onPush(change, client));
+}
+
+function onPush(change: StateChange, client: IJMAPClient): void {
+  for (const [key, runtime] of runtimes) {
+    if (runtime.client !== client) continue;
+    const current = team(key);
+    if (!current || current.status !== 'ready') continue;
+    if (!change.changed[current.ref.accountId]?.Email) continue;
+    void enqueue(key, () => applyChanges(key)).catch((error) => debug.warn('team-mailboxes', 'Note sync failed:', error));
+  }
+}
+
+/** Email/changes since the team's baseline: new, changed and deleted notes. */
+export async function applyChanges(key: string): Promise<void> {
+  const runtime = runtimes.get(key);
+  const current = team(key);
+  if (!runtime || !current) return;
+  const { client } = runtime;
+  if (!client.getEmailChanges || !client.getTeamNotes) return;
+  const { accountId } = current.ref;
+  if (!runtime.baseline) return reloadIndexQuietly(key);
+  const created: string[] = [];
+  const changed: string[] = [];
+  const destroyed: string[] = [];
+  let since = runtime.baseline;
+  for (let round = 0; round < 20; round += 1) {
+    const delta = await client.getEmailChanges(since, accountId, 500);
+    if (!delta) return reloadIndexQuietly(key);
+    created.push(...delta.created);
+    changed.push(...delta.updated);
+    destroyed.push(...delta.destroyed);
+    since = delta.newState;
+    if (!delta.hasMoreChanges) break;
+  }
+  const ids = [...new Set([...created, ...changed])];
+  const fetched = ids.length > 0 ? (await client.getTeamNotes(accountId, ids, NOTE_INDEX_PROPERTIES)).list : [];
+  const latest = team(key);
+  if (!latest) return;
+  const folderIds = new Set(latest.folderIds);
+  const arrived: NoteEntry[] = [];
+  const kept: NoteEntry[] = [];
+  const leftFolder: string[] = [];
+  for (const raw of fetched) {
+    const keywords = raw.keywords as Record<string, boolean> | undefined;
+    const boxes = Object.keys((raw.mailboxIds as Record<string, boolean> | undefined) ?? {});
+    const inNotes = boxes.some((id) => folderIds.has(id)) || keywords?.[NOTE_KEYWORD] === true;
+    if (!inNotes) {
+      if (latest.notes[raw.id as string]) leftFolder.push(raw.id as string);
+      continue;
+    }
+    // A folder another member just created.
+    for (const id of boxes) folderIds.add(id);
+    const entry = parseNote(raw);
+    if (!entry) continue;
+    kept.push(entry);
+    if (created.includes(entry.id) && !latest.notes[entry.id]) arrived.push(entry);
+  }
+  runtime.baseline = since;
+  const gone = new Set([...destroyed, ...leftFolder]);
+  patchTeam(key, (t) => {
+    const notes = withNotes(t, kept);
+    for (const id of gone) delete notes[id];
+    return { notes, folderIds: [...folderIds].sort() };
+  });
+  // Text of new notes, so an open conversation shows them in full at once.
+  if (arrived.length > 0) {
+    await loadTexts(key, arrived.map((n) => n.id)).catch(() => undefined);
+    const withText = arrived.map((n) => team(key)?.notes[n.id] ?? n);
+    for (const listener of [...arrivalListeners]) {
+      try {
+        listener(latest.ref, client, withText);
+      } catch (error) {
+        debug.warn('team-mailboxes', 'Note listener failed:', error);
+      }
+    }
+  }
+}
+
+async function reloadIndexQuietly(key: string): Promise<void> {
+  const runtime = runtimes.get(key);
+  const current = team(key);
+  if (!runtime || !current) return;
+  await loadIndex(current.ref, runtime.client);
+}
+
+async function loadTexts(key: string, ids: readonly string[]): Promise<void> {
+  const runtime = runtimes.get(key);
+  const current = team(key);
+  if (!runtime || !current || ids.length === 0 || !runtime.client.getTeamNotes) return;
+  const { list } = await runtime.client.getTeamNotes(current.ref.accountId, ids, NOTE_INDEX_PROPERTIES, { text: true });
+  const entries = list.map(parseNote).filter((e): e is NoteEntry => !!e);
+  patchTeam(key, (t) => ({ notes: withNotes(t, entries) }));
+}
+
+// ── Conversations ─────────────────────────────────────────────────────
+
+export function conversationKeyOf(keys: readonly string[], threadIds: readonly string[]): string {
+  return [...new Set(threadIds)].sort().join(' ') + '|' + [...new Set(keys)].sort().join(' ');
+}
+
+/** "Re: Fwd: Offer" → "Offer": the words a subject search matches on. */
+export function baseSubject(subject: string | null | undefined): string {
+  let s = (subject ?? '').trim();
+  for (;;) {
+    const next = s.replace(/^\s*(re|fw|fwd|aw|wg|sv|vs|antw|rif|tr|r)\s*(\[\d+\])?\s*:\s*/i, '');
+    if (next === s) break;
+    s = next;
+  }
+  return s.trim();
+}
+
+/**
+ * Makes sure everything about these messages is loaded: notes older than the
+ * index window (looked up by subject), and the text of every note. Messages
+ * are the conversation's (or the single message's).
+ */
+export function loadConversation(key: string, messages: readonly ConversationMessage[], keys: readonly string[]): Promise<void> {
+  const current = team(key);
+  if (!current) return Promise.resolve();
+  const threadIds = messages.map((m) => m.threadId).filter((t): t is string => !!t);
+  const convKey = conversationKeyOf(keys, threadIds);
+  const status = current.conversations[convKey];
+  if (status === 'ready' || status === 'loading') return Promise.resolve();
+  patchTeam(key, (t) => ({ conversations: { ...t.conversations, [convKey]: 'loading' } }));
+  return enqueue(key, async () => {
+    try {
+      const t = team(key);
+      if (!t) return;
+      const oldest = messages.reduce((min, m) => Math.min(min, Date.parse(m.receivedAt ?? '') || Date.now()), Date.now());
+      if (oldest < t.windowStart && t.folderIds.length > 0) await lookUpOlder(key, messages, keys, threadIds);
+      const after = team(key);
+      if (!after) return;
+      const missing = notesOf(after, keys, threadIds).filter((n) => n.text === undefined).map((n) => n.id);
+      await loadTexts(key, missing);
+      patchTeam(key, (x) => ({ conversations: { ...x.conversations, [convKey]: 'ready' } }));
+    } catch (error) {
+      patchTeam(key, (x) => ({ conversations: { ...x.conversations, [convKey]: isOffline(error) ? 'offline' : 'error' } }));
+    }
+  });
+}
+
+/** Retry for "Notes couldn't be loaded" in one conversation. */
+export function retryConversation(key: string, messages: readonly ConversationMessage[], keys: readonly string[]): Promise<void> {
+  const threadIds = messages.map((m) => m.threadId).filter((t): t is string => !!t);
+  const convKey = conversationKeyOf(keys, threadIds);
+  patchTeam(key, (t) => {
+    const conversations = { ...t.conversations };
+    delete conversations[convKey];
+    return { conversations };
+  });
+  return loadConversation(key, messages, keys);
+}
+
+async function lookUpOlder(key: string, messages: readonly ConversationMessage[], keys: readonly string[], threadIds: readonly string[]): Promise<void> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t || !runtime.client.queryTeamNotes) return;
+  const wanted = new Set(keys);
+  const threads = new Set(threadIds);
+  const subjects = [...new Set(messages.map((m) => baseSubject(m.subject)))];
+  const before = new Date(t.windowStart).toISOString();
+  const found: NoteEntry[] = [];
+  for (const subject of subjects) {
+    const conditions: Record<string, unknown>[] = [folderFilter(t.folderIds), { before }];
+    if (subject) conditions.push({ subject });
+    const filter = { operator: 'AND', conditions };
+    let read = 0;
+    for (let position = 0; ; position += PAGE) {
+      if (read >= LOOKUP_CAP) throw new Error('Too many notes to look through');
+      const page = await runtime.client.queryTeamNotes(t.ref.accountId, filter, { limit: PAGE, position, properties: NOTE_INDEX_PROPERTIES });
+      read += page.ids.length;
+      for (const raw of page.list) {
+        const entry = parseNote(raw);
+        if (entry && (wanted.has(entry.key) || (entry.threadId && threads.has(entry.threadId)))) found.push(entry);
+      }
+      if (page.ids.length < PAGE) break;
+    }
+  }
+  if (found.length > 0) patchTeam(key, (x) => ({ notes: withNotes(x, found) }));
+}
+
+/** The notes (and timeline entries) of a conversation, oldest first. */
+export function notesOf(t: TeamState, keys: readonly string[], threadIds: readonly string[]): NoteEntry[] {
+  const keySet = new Set(keys);
+  const threadSet = new Set(threadIds);
+  return Object.values(t.notes)
+    .filter((n) => keySet.has(n.key) || (!!n.threadId && threadSet.has(n.threadId)))
+    .sort((a, b) => a.at - b.at || a.id.localeCompare(b.id));
+}
+
+/** Notes still being sent, or that couldn't be saved, for these messages. */
+export function pendingOf(t: TeamState, keys: readonly string[]): PendingNote[] {
+  const keySet = new Set(keys);
+  return Object.values(t.pending).filter((p) => keySet.has(p.key)).sort((a, b) => a.at - b.at);
+}
+
+// ── Writing ───────────────────────────────────────────────────────────
+
+export interface NoteTarget {
+  /** The message the note is about: its id in the group account. */
+  emailId: string;
+  key: string;
+  threadId: string | null;
+  subject: string | null | undefined;
+}
+
+async function ensureFolder(key: string): Promise<string> {
+  const runtime = runtimes.get(key)!;
+  const t = team(key)!;
+  if (t.folderIds.length > 0) return t.folderIds[0];
+  const { client } = runtime;
+  // Someone may have made it since the index loaded.
+  const again = await findFolders(client, t.ref.accountId);
+  if (again.ids.length > 0) {
+    patchTeam(key, () => ({ folderIds: again.ids }));
+    return again.ids[0];
+  }
+  if (!client.createTeamNotesFolder) throw new Error('This client cannot write notes');
+  const all = await client.getMailboxes(t.ref.accountId);
+  const inbox = all.find((m) => m.role === 'inbox');
+  const shareWith = inbox && client.getMailboxShareWith
+    ? await client.getMailboxShareWith(inbox.originalId ?? inbox.id, t.ref.accountId).catch(() => null)
+    : null;
+  try {
+    const id = await client.createTeamNotesFolder(t.ref.accountId, TEAM_NOTES_FOLDER_NAME, shareWith);
+    patchTeam(key, () => ({ folderIds: [id] }));
+    return id;
+  } catch (error) {
+    // Two members writing the first note at once: the other one made it.
+    if (jmapErrorType(error) === 'alreadyExists' || jmapErrorType(error) === 'invalidProperties') {
+      const made = await findFolders(client, t.ref.accountId);
+      if (made.ids.length > 0) {
+        patchTeam(key, () => ({ folderIds: made.ids }));
+        return made.ids[0];
+      }
+    }
+    throw error;
+  }
+}
+
+/**
+ * Writes a note (kind `note`) or a timeline entry. A note shows at once as
+ * pending; on failure it stays pending with the reason (and `canWrite`
+ * turns false on `forbidden`). Resolves with the created note's id, or null
+ * when it couldn't be saved.
+ */
+export function writeNote(
+  key: string,
+  target: NoteTarget,
+  input: { kind?: NoteKind; text?: string; mentions?: readonly string[]; localId?: string },
+): Promise<string | null> {
+  const kind = input.kind ?? 'note';
+  const localId = input.localId ?? `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const mentions = kind === 'note' ? [...new Set((input.mentions ?? []).map((m) => m.toLowerCase()))] : [...(input.mentions ?? [])];
+  if (kind === 'note') {
+    patchTeam(key, (t) => ({
+      pending: {
+        ...t.pending,
+        [localId]: { localId, key: target.key, threadId: target.threadId, text: input.text ?? '', mentions, at: Date.now(), status: 'sending' },
+      },
+    }));
+  }
+  return enqueue(key, async () => {
+    const runtime = runtimes.get(key);
+    const t = team(key);
+    if (!runtime || !t?.author || !runtime.client.createTeamNote) throw new Error('Team not loaded');
+    try {
+      const mailboxId = await ensureFolder(key);
+      const { email, messageId } = buildNoteEmail({
+        mailboxId, author: t.author, groupAddress: t.ref.groupAddress, subject: target.subject,
+        key: target.key, threadId: target.threadId, kind, mentions, text: input.text,
+      });
+      const { id } = await runtime.client.createTeamNote(t.ref.accountId, email);
+      const entry: NoteEntry = {
+        id, messageId, key: target.key, threadId: target.threadId, kind, author: t.author, at: Date.now(),
+        mentions, text: kind === 'note' ? (input.text ?? '').trim() : '', subject: target.subject ?? '',
+      };
+      patchTeam(key, (x) => {
+        const pending = { ...x.pending };
+        delete pending[localId];
+        return { pending, notes: withNotes(x, [entry]), canWrite: true };
+      });
+      if (kind === 'note') void markOriginal(key, target.emailId, mentions);
+      return id;
+    } catch (error) {
+      const reason = saveError(error);
+      debug.warn('team-mailboxes', `Saving a ${kind} failed (${reason}):`, error);
+      patchTeam(key, (x) => ({
+        ...(reason === 'forbidden' ? { canWrite: false } : {}),
+        pending: kind === 'note'
+          ? { ...x.pending, [localId]: { ...x.pending[localId], status: 'error', error: reason } }
+          : x.pending,
+      }));
+      return null;
+    }
+  });
+}
+
+/** Retry for a note that couldn't be saved: same text, same place in the list. */
+export function retryNote(key: string, localId: string, target: NoteTarget): Promise<string | null> {
+  const p = team(key)?.pending[localId];
+  if (!p) return Promise.resolve(null);
+  return writeNote(key, target, { kind: 'note', text: p.text, mentions: p.mentions, localId });
+}
+
+/** Drops a failed note (its text went back into the field). */
+export function discardPending(key: string, localId: string): void {
+  patchTeam(key, (t) => {
+    const pending = { ...t.pending };
+    delete pending[localId];
+    return { pending };
+  });
+}
+
+/**
+ * The keywords on the message itself that the With notes and Mentions me
+ * filters read. Best effort: a failure never fails the note, and opening the
+ * conversation repairs them (repairOriginalKeywords).
+ */
+async function markOriginal(key: string, emailId: string, mentions: readonly string[]): Promise<void> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t) return;
+  const patch: Record<string, boolean> = { [NOTES_KEYWORD]: true };
+  for (const id of mentions) patch[mentionKeyword(id)] = true;
+  await runtime.client.batchUpdateKeywords([emailId], patch, t.ref.accountId)
+    .catch((error) => debug.warn('team-mailboxes', 'Marking the message as having notes failed:', error));
+}
+
+/**
+ * Brings the filter keywords of the conversation's messages in line with
+ * their notes (both ways), once the conversation's notes are complete.
+ * `messages` carry their keywords. Only where the user may set keywords.
+ */
+export async function repairOriginalKeywords(
+  key: string,
+  messages: ReadonlyArray<{ id: string; key: string; keywords?: Record<string, boolean> }>,
+): Promise<void> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t || t.status !== 'ready') return;
+  for (const message of messages) {
+    const notes = Object.values(t.notes).filter((n) => n.key === message.key && n.kind === 'note');
+    const want: Record<string, boolean> = {};
+    if (notes.length > 0) want[NOTES_KEYWORD] = true;
+    for (const n of notes) for (const id of n.mentions) want[mentionKeyword(id)] = true;
+    const have = Object.keys(message.keywords ?? {}).filter((k) => k === NOTES_KEYWORD || k.startsWith('$bulwark-mention-'));
+    const patch: Record<string, boolean | null> = {};
+    for (const k of Object.keys(want)) if (!message.keywords?.[k]) patch[k] = true;
+    for (const k of have) if (!want[k]) patch[k] = null;
+    if (Object.keys(patch).length === 0) continue;
+    await runtime.client.batchUpdateKeywords([message.id], patch, t.ref.accountId)
+      .catch((error) => debug.warn('team-mailboxes', 'Repairing note keywords failed:', error));
+  }
+}
+
+/**
+ * Deletes the user's own note for good. Someone else's note is refused here,
+ * not only by hiding the button. Resolves with an undo that writes it back
+ * with the same Message-ID and time, or null when the delete failed (the
+ * note is back in the list then).
+ */
+export function deleteNote(key: string, noteId: string): Promise<(() => Promise<boolean>) | null> {
+  const t = team(key);
+  const note = t?.notes[noteId];
+  if (!t || !note || note.kind !== 'note' || !isOwnNote(note, t.author?.email)) return Promise.resolve(null);
+  patchTeam(key, (x) => {
+    const notes = { ...x.notes };
+    delete notes[noteId];
+    return { notes };
+  });
+  return enqueue(key, async () => {
+    const runtime = runtimes.get(key);
+    if (!runtime?.client.destroyTeamNote) return null;
+    try {
+      await runtime.client.destroyTeamNote(t.ref.accountId, noteId);
+    } catch (error) {
+      debug.warn('team-mailboxes', 'Deleting a note failed:', error);
+      patchTeam(key, (x) => ({ notes: withNotes(x, [note]) }));
+      return null;
+    }
+    return () => undoDelete(key, note);
+  });
+}
+
+function undoDelete(key: string, note: NoteEntry): Promise<boolean> {
+  return enqueue(key, async () => {
+    const runtime = runtimes.get(key);
+    const t = team(key);
+    if (!runtime || !t?.author || !runtime.client.createTeamNote) return false;
+    try {
+      const mailboxId = await ensureFolder(key);
+      const { email } = buildNoteEmail({
+        mailboxId, author: t.author, groupAddress: t.ref.groupAddress, subject: note.subject,
+        key: note.key, threadId: note.threadId, kind: note.kind, mentions: note.mentions, text: note.text,
+        messageId: note.messageId ?? undefined, receivedAt: new Date(note.at).toISOString(),
+      });
+      const { id } = await runtime.client.createTeamNote(t.ref.accountId, email);
+      patchTeam(key, (x) => ({ notes: withNotes(x, [{ ...note, id }]) }));
+      return true;
+    } catch (error) {
+      debug.warn('team-mailboxes', 'Bringing a note back failed:', error);
+      return false;
+    }
+  });
+}
+
+/** For tests: forget every team. */
+export function resetTeamMailboxStore(): void {
+  runtimes.clear();
+  arrivalListeners.clear();
+  unsubscribePush?.();
+  unsubscribePush = null;
+  useTeamMailboxStore.setState({ teams: {} });
+}
