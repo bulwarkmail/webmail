@@ -1,5 +1,151 @@
 # Changelog
 
+## 1.21.3 (2026-11-20)
+
+1.21.3 has a new rule dialog that shows what a rule catches and can apply it to existing mail, dark mode for HTML mail that follows the theme, and an availability grid for meetings. Compose floats over the message list, replying marks a message as read, and settings sync with the mobile app. The sender check now trusts only the receiving Stalwart; admins with a filtering gateway can list it under Admin > Server > Sender check.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@svenblum](https://github.com/svenblum)
+- [@systemflair](https://github.com/systemflair)
+- Anonymous
+
+**Monthly**
+
+- [@Balestrino](https://github.com/Balestrino)
+- [@comexos](https://github.com/comexos)
+- [@Monarobase](https://github.com/Monarobase)
+- [@Focus-On-Agency](https://github.com/Focus-On-Agency)
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Security
+
+- **Sender check**: The sender check, sender logos, invitation trust and booking cards use the Authentication-Results header only when the receiving Stalwart wrote it. Headers other servers wrote, often the sender's own, give no verdict: no warning and no pass. To use the results of another server, such as a filtering gateway in front of Stalwart, Gmail or an IMAP server behind legacy-proxy, list it under "Trusted mail servers" in Admin > Server > Sender check, or in `TRUSTED_AUTHSERV_IDS`. Its results count only when they are the newest in the message (#1740, thanks @honzup; #1590, thanks @guisea)
+- **Server**: The request bodies the server holds in memory at once are capped by `REQUEST_BODY_BUDGET_MB` (128 by default, 0 for no cap). Past the cap a request is answered 503 before its body is read, so connections that start a large upload and never finish it can no longer use up the server's memory. Bodies up to 64 KB don't count (#1717, thanks @kah-ja)
+- **Admin**: Signing out of the webmail ends the admin session that was opened through it (#1718, thanks @snvakula)
+
+### Changes
+
+- **Compose**: On a computer, Compose floats over the bottom corner of the message list and folds to a round button while the list scrolls. Settings > Appearance > Compose button puts it back at the top of the folder sidebar, or at the top of the navigation rail, where it opens the composer from the other apps too. Phones, Pro and Mountain View keep their own buttons
+- **Mail**: A message you reply to or forward is marked as read, also when messages are never marked as read on opening. Turn this off with "Mark as read after replying or forwarding" in Settings > Reading (#1756, thanks @chutescarabee7)
+- **Calendar**: New all-day events start as free and timed ones as busy, also from the quick editor (#1684, thanks @chutescarabee7)
+- **Docker**: The image runs on Node 26, and the Lite image on nginx 1.31
+
+### Features
+
+- **Filters**: The rule dialog reads as one sentence ("If all of these conditions apply"), with numbered conditions and a checklist of actions that each carry their own folder, tags or address. While you type, it counts and lists the mail the rule already matches. On save, Apply to runs the rule on the Inbox or the message's folder, or on all received mail. It never forwards or rejects old mail, asks before a rule that discards moves mail to Trash, and leaves out Sent, Drafts, Trash and Spam. Run rules in the folder menu works the same way (#1737, thanks @l4kr)
+- **Filters**: Rules can check Delivered to, the address the mail server delivered the message to. Such rules work on new mail only (#726, thanks @Laurendus)
+- **Filters**: "Add <sender> to a rule" in the message menu adds the sender to a rule that lists senders or matches any of its conditions (#1713, thanks @maicardi)
+- **Mail**: Dark mode puts HTML mail on the theme's own colours instead of a fixed near-black. Bright brand colours are dimmed in their hue, text is adjusted until it is readable, and dark logos are turned light where possible. A sender's dark card or table-built signature keeps its look (#1725, thanks @l4kr; #1722, thanks @kiskaserver)
+- **Mail**: With Reading width set to about 80 characters, the open message sits in a centred card as wide as the text, also in Mountain View conversations (#1690, thanks @l4kr)
+- **Mail**: Mail and files that you delete, archive, move or restore fade out where they were while the rows below close up, and come back on Undo. Reduce motion turns this off (#1734, thanks @l4kr)
+- **Mail**: Received mail marked as important shows "High importance" in the list and the reader, and mail marked as unimportant shows "Low importance" (#1809, thanks @chutescarabee7)
+- **Mail**: A conversation where you started a reply shows Draft in the list (#1798, thanks @chutescarabee7)
+- **Mail**: Edit as new opens a sent message in the composer as a new message, with its sender, recipients, subject, text and attachments (#1781, thanks @muelli)
+- **Mail**: Tagging a conversation from its row tags every message in it (#460, thanks @amas01)
+- **Mail**: "No tags" in the search filters, or `is:untagged` in global search, finds mail without tags
+- **Mail**: "Show tags in the list" in Settings > Message list hides the tag badges in the list (#1657, thanks @tobiasge)
+- **Mail**: Compact and extra compact rows show only the paperclip for attachments, so they stay on one line (#1706, thanks @mmomjian)
+- **Mail**: "Unread messages shown" in Settings > Message list sets how many messages, from 5 to 50, the Unread first inbox shows above the rest, and Newer unread and Older unread page through them (#1705, thanks @mmomjian; #1791, thanks @chutescarabee7)
+- **Mail**: "Double-click a message" in Settings > Reading can open a message in a new window (#1814, thanks @chutescarabee7)
+- **Mail**: "Find emails from" is in the message list menu in every layout (#1645, thanks @vasilueff)
+- **Mail**: A quote followed by more reply text or a signature can be folded with ••• too (#1765, thanks @pcatapan)
+- **Folders**: A folder you created has "Empty folder…" in its menu. It moves every message in it to the Trash, or deletes them for good if you chose permanent deletion (#1785, thanks @IntExCZ)
+- **Folders**: "Empty trash (all accounts)" also empties the Trash of shared accounts you may delete from, and names the shared accounts it empties and the ones it keeps (#1738, thanks @skug67)
+- **Folders**: All Trash and All Junk show no count when no account's Trash or Junk shows one (#1691, thanks @mmomjian)
+- **Tags**: "Sort A–Z" in Settings > Tags puts the tags in alphabetical order once (#1075, thanks @BlackAlpha700)
+- **Compose**: File in folder in the composer of a reply or forward moves the reply and the message it answers to the folder you pick once it is sent
+- **Compose**: "Quoted text in replies" in Settings > Composing opens replies with the quoted text expanded (#1800, thanks @chutescarabee7)
+- **Compose**: Tab goes from the recipient fields straight to the text when the subject is already filled (#1801, thanks @chutescarabee7)
+- **Compose**: On wide screens, Contacts, Cc and Bcc sit next to the To field (#1758, thanks @soringabrielalbu)
+- **Compose**: Tables pasted from Excel and WPS keep their cell colours, fonts and column widths, also in the sent mail, and stay readable in the dark composer. The table menu has a Cell background colour, and Toggle header row works on pasted tables (#1580, thanks @ibayue)
+- **Compose**: A mailto: link with In-Reply-To and References keeps the reply in its thread (#1732, thanks @fred-bloggs)
+- **Compose**: The attachment reminder knows more German phrasings (#1672, thanks @chodid)
+- **Uploads**: An upload the server refused because of too many uploads says so and when to try again (#1782, thanks @mirlos-ab)
+- **Files**: The file and attachment preview prints images, text, Markdown, HTML attachments and attached messages, not only PDFs
+- **Calendar**: The event editor sets Show as (Busy or Free) and Visibility (Public, Private or Hidden), which decides what people you share the calendar with see (#1712, thanks @mmomjian)
+- **Calendar**: Availability… in the event editor shows the attendees' busy times side by side, and the event can be dragged and resized on that grid. Attendees can be marked required or optional, and optional attendees' busy times don't count (#1751, #1753, thanks @chutescarabee7)
+- **Calendar**: An event in someone else's calendar can be organised on behalf of its owner (#1761, thanks @chutescarabee7)
+- **Calendar**: Dragging or resizing an event with attendees asks first. The organizer moves it and notifies the attendees; an attendee moves only their own copy (#1752, thanks @chutescarabee7)
+- **Calendar**: The event editor can be expanded into a large dialog (#1757, thanks @soringabrielalbu), warns when the event overlaps another one (#1685, thanks @chutescarabee7) and can give a single event its own colour (#1668, thanks @jothoma1)
+- **Calendar**: Month, week and day tiles show the event's location (#1686, thanks @chutescarabee7). The event popover shows the whole description, and the description field in the editor is taller (#1777, thanks @chutescarabee7)
+- **Calendar**: "Copy to calendar…" copies an event from a subscribed or read-only calendar into one of your own (#1513, thanks @sandrobraendli)
+- **Tasks**: "Tasks as their own app" in Settings > Calendar gives tasks an icon in the app bar, with All, Pending, Overdue, Completed and the task lists in its sidebar. It is off by default (#1698, thanks @madsmh)
+- **Tasks**: A task with a due date can repeat daily, weekly, monthly, yearly or by a custom rule (#1647, thanks @sanitz)
+- **Contacts**: The contact form suggests organisation names you already use (#1697, thanks @spysz), and a phone number can have a custom type (#1807, thanks @rajil)
+- **Settings sync**: With settings sync on, settings sync with the Bulwark mobile app through the account's private Inbox metadata, on servers that offer it. A setting changed in the app shows up in the webmail and the other way round. Admin defaults and locked settings still apply, and when the account replaces settings you picked in this browser, a toast offers to keep this browser's
+- **Notifications**: The installed app's badge updates on a push while the app is closed (#1516, thanks @palodno-arch)
+- **Admin**: Default sidebar apps can be set per domain or group in Admin > Features and settings. A scope's list replaces Everyone's (#1806, thanks @cameronchittick)
+- **Login**: With "Forgot password URL" in Admin > Branding, or `LOGIN_FORGOT_PASSWORD_URL`, the login page shows a "Forgot your password?" link under the password field (#1763, thanks @christopherq)
+- **Plugins**: `ui.showNotice` shows one of the plugin's frames as a notice in the toasts' stack, with the plugin's name and a close button. It needs the new `ui:notices` permission (#1815, thanks @HOLOEYE-JZ)
+- **Plugins**: A search with plugin results reads as two sections with their own headings. A click on a heading gives that section the whole height, and the edge between them drags both ways (#1775, #1776, thanks @HOLOEYE-JZ)
+- **Plugins**: The plugins' side panel opens beside a plugin page too (#1648, thanks @HOLOEYE-JZ)
+- **Plugins**: Plugins can pick the From identity of replies and quick replies (#1694, thanks @Kaan88), read the size of the Unread section, and use the archive-restore icon (#1741, thanks @mmomjian)
+
+### Fixes
+
+- **Notifications**: Saving a draft no longer sends a "New mail" push notification on Stalwart 1.0.3 and later, and a push that names no new mail stays silent when its preview fails (#1650, thanks @arnauda-gh)
+- **Sign-in**: An access token that ran out, for example while the app was in the background, is renewed before the next request or upload goes out. A burst of refused requests could get the address banned at the mail server (#1720, thanks @mmomjian; #1723, thanks @wmcparla)
+- **Sign-in**: When the mail server refuses a sign-in before checking the two-step code, the login page says so instead of calling the code wrong (#1750, thanks @yusren)
+- **Settings sync**: Settings sync works for users who sign in with an alias (#1643, thanks @zachary-sunforge)
+- **Identities**: A newly added account no longer takes another account's default sender (#1644, thanks @soringabrielalbu), and a new message starts from the primary identity when "Reply from the address it was sent to" is on (#1711, thanks @svenblum)
+- **Settings**: Adding a public key and turning on encryption at rest work on Stalwart 1.0.2 and later, and the key in use is named in your language (#1708, thanks @iarsslen)
+- **Compose**: "Search the server" in recipient suggestions searches the Sent folder of the account you write from (#1728, thanks @lucamzanon)
+- **Compose**: + Variable in the template dialog shows its list (#1642, thanks @mmomjian), and the attachment reminder ignores the signature (#1812, thanks @VasilisNtovolos)
+- **Compose**: Forwarding from a shared mailbox keeps the attachments and inline images (#1794, thanks @VasilisNtovolos)
+- **S/MIME and PGP**: Signed and encrypted mail keeps Reply-To, the read receipt request, priority, delivery notifications and required TLS (#1805, thanks @kah-ja). A scheduled message with a certificate or signature file attached is no longer taken for S/MIME, so Cancel and edit brings it back as a draft (#1804, thanks @kah-ja)
+- **PGP**: Keys published through WKD are looked up at the address the standard gives, so keys from providers such as proton.me are found (#1774, thanks @rafiwicht)
+- **Mail**: Marking a conversation read or unread from its row marks every message in it (#1683, thanks @chutescarabee7)
+- **Mail**: Refresh updates the list in place instead of blanking it (#1716, thanks @mmomjian), and switching folders shows placeholder rows instead of a spinner
+- **Mail**: The reader and the conversation show when a message arrived, as the list does (#1699, thanks @Area128)
+- **Mail**: The address menu closes on a click outside it or when another message opens (#1646, thanks @vasilueff)
+- **Mail**: A meeting reply shows as a reply, without the sender warning, the answer buttons or the update number (#1688, thanks @fridahjelm; #1755, #1816, thanks @chutescarabee7), and the invitation banner is reset when you open another message (#1811, thanks @VasilisNtovolos)
+- **Mail**: Marking many messages as read updates the open message, keeps its error message after you move on, and stays with the account it started in (#1656, #1689, thanks @VasilisNtovolos). Undoing a tag change brings the folders' unread counts back (#1700, thanks @VasilisNtovolos)
+- **Mail**: The conversation view no longer pads every table cell, so table-built signatures and newsletters keep their spacing (#1722, thanks @kiskaserver)
+- **Mail**: Swiping a mail row holds the list still on touch screens (#1747, thanks @l4kr)
+- **Trash**: Mail selected in the unified Trash is deleted for good instead of moved to the Trash again (#1738, thanks @skug67). Empty Trash keeps going past a message the server refuses, keeps the messages it didn't delete, and updates the counts (#1773, thanks @VasilisNtovolos)
+- **Shared mailboxes**: Scheduled is listed once (#495, thanks @vancanhuit)
+- **Mountain View**: The cursor moves to the row ticked last and stands out from ticked rows in the light theme, an open message's subject has no scroll bar, an agenda event's card opens where it was clicked, an unfolded conversation message shows the same recipients line and details as the open one, and the total message count setting is hidden, as it did nothing there (#1701, #1702, #1704, #1715, #1744, #1692, thanks @mmomjian)
+- **Keyboard**: Shortcuts follow the letter a key types on Colemak, Dvorak and AZERTY, also Option+Shift shortcuts on a Mac (#1714, #1719, thanks @zaakiy)
+- **Filters**: Body conditions do what they say: "does not contain" no longer acts on mail that contains the text, and "starts with", "ends with" and "matches" no longer act as "contains". Rules saved before are written correctly the next time any rule is saved (#1735, thanks @l4kr)
+- **Filters**: Rules on List-Unsubscribe and other headers that aren't text can be applied to existing messages (#1710, thanks @svenblum)
+- **Calendar**: An event's location reaches the guests' calendars (#1674, thanks @KishenG)
+- **Calendar**: A group's calendar is listed once when two signed-in logins are members of the group (#1676, thanks @alyyousuf7)
+- **Calendar**: Invitations in a shared calendar show and are answered as its owner (#1760, thanks @chutescarabee7)
+- **Calendar**: An occurrence moved to another day shows at its new time (#1746, thanks @andrzejwp)
+- **Calendar**: Events on earlier days stay in the top row of the month view next to a new event (#1759, thanks @Aclz). The calendar stays on the same days when you go back to its Pro tab (#1762, thanks @chutescarabee7), the view picked in one tab stays with other tabs open (#1727, thanks @jothoma1), and hidden calendars and the view are kept when an expired session signs back in (#1790, thanks @chutescarabee7)
+- **Contacts**: Deleting a contact removes it from other cards' related contacts, and a related contact that no longer exists can be removed (#1707, thanks @spysz). A birthday stored as a timestamp shows on its own day west of UTC (#1726, thanks @wmcparla)
+- **Themes**: The admin's default theme applies to new users also when it arrives after sign-in, and the login fields read left to right in right-to-left languages (#689, thanks @xhzeem)
+- **iPhone and iPad**: A file iOS can't preview, such as the ZIP from Download all, goes to the share sheet, where Save to Files works (#1742, thanks @shukiv)
+- **Plugins**: The Translate plugin reaches the translation service again (#1786, thanks @cameronchittick)
+- **Offline**: Offline start works from a page the server redirected to its language, and the release image tags without a language suffix no longer pick up the build that puts the language in URLs (#1626, thanks @chodid)
+- **Docker**: The image build gives Next a 4 GB heap, so it builds on machines with 8 GB of memory (#1510, thanks @alyyousuf7)
+- **Translations**: Portuguese is consistent Brazilian Portuguese (#1739, thanks @ArraisFilho)
+
 ## 1.21.2 (2026-11-13)
 
 1.21.2 has the fixes from a security review of sign-in, multi-account actions, plugin installs, themes and the deploy files. Admins should read Breaking Changes before updating: a shared store needs a password, the repository's compose file publishes port 3000 on 127.0.0.1 only, and single sign-on with several sign-in servers checks each provider's issuer. The release can also group the message list under date headers such as Today, Yesterday and Last week, lets you rename an attachment before you send it or save it, and gives tags any colour. Shared accounts can be put in any order in the sidebar, the desktop app can keep more than 2 GB of attachments offline, and repeating tasks show on every day they are due in the calendar. Admins can pick the tags new users start with, name mail accounts that get into the admin dashboard like a Stalwart admin, and keep the account directory to the organisation's own domains.
