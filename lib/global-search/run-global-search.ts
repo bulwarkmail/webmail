@@ -36,7 +36,7 @@ export function hasRemoteQuery(parsed: ParsedQuery, kind: SearchKind): boolean {
   if (kind !== 'mail') return false;
   const { mail } = parsed;
   return Boolean(mail.from || mail.to || mail.subject || mail.body
-    || mail.hasAttachment !== null || mail.isUnread !== null || mail.isStarred !== null
+    || mail.hasAttachment !== null || mail.isUnread !== null || mail.isStarred !== null || mail.untagged
     || mail.dateAfter || mail.dateBefore || parsed.mailboxRole);
 }
 
