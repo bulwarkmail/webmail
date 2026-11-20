@@ -31,18 +31,21 @@ interface EmailEntry {
 }
 
 // `feature` is one of PHONE_FEATURES, "", PHONE_LABEL for a phone with its
-// own label (X-ABLabel), or a feature the form has no option for.
+// own label (X-ABLabel on Android, "Custom…" in the select), or a feature the
+// form has no option for. `label` is the custom label's text.
 interface PhoneEntry {
   key?: string;
   number: string;
   context: string;
   feature: string;
+  label: string;
 }
 
 const CONTEXTS = ["work", "private"];
-const PHONE_FEATURES = ["voice", "mobile", "fax", "pager", "video", "text"];
 /** The phone type select's value for a phone's own label. No feature starts with "#". */
 const PHONE_LABEL = "#label";
+/** The phone types the select offers. */
+const PHONE_FEATURES = ["voice", "mobile", "fax", "pager", "video", "text", PHONE_LABEL];
 
 /** The context a row shows: work or private, else the card's own as stored. */
 function contextOf(contexts: Record<string, boolean> | undefined): string {
@@ -435,6 +438,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, allOrganizatio
         number: p.number,
         context: contextOf(p.contexts),
         feature: phoneTypeOf(p),
+        label: p.label?.trim() ? p.label : "",
       }));
     }
     return [];
@@ -688,15 +692,18 @@ export function ContactForm({ contact, addressBooks, allKeywords, allOrganizatio
     }));
 
     const validPhones = phones.filter(p => p.number.trim());
-    // The phone's features and label stay as stored until another type is picked.
+    // The phone's features and label stay as stored until another type is
+    // picked. A custom type saves the typed text as the phone's label.
     const phonesMap = entriesToSave<PhoneEntry, PhoneValue>(validPhones, initialRows.phones, contact?.phones, "p", (row, previous, before) => {
       const typeKept = !!before && before.feature === row.feature;
+      const custom = row.feature === PHONE_LABEL;
+      const labelKept = typeKept && (!custom || before.label === row.label);
       return compact({
         ...previous,
         number: row.number.trim(),
         contexts: contextsToSave(row.context, previous?.contexts, before),
-        features: typeKept ? previous?.features : row.feature && row.feature !== PHONE_LABEL ? { [row.feature]: true } : undefined,
-        label: typeKept ? previous?.label : undefined,
+        features: typeKept ? previous?.features : row.feature && !custom ? { [row.feature]: true } : undefined,
+        label: labelKept ? previous?.label : custom ? row.label.trim() || undefined : undefined,
       });
     });
 
@@ -1136,8 +1143,22 @@ export function ContactForm({ contact, addressBooks, allKeywords, allOrganizatio
                     <option value="pager">{t("phone_pager")}</option>
                     <option value="video">{t("phone_video")}</option>
                     <option value="text">{t("phone_text")}</option>
-                    {storedOption(initialPhone?.feature, PHONE_FEATURES, initialPhone?.feature === PHONE_LABEL ? contact?.phones?.[initialPhone.key!]?.label : undefined)}
+                    <option value={PHONE_LABEL}>{t("phone_custom")}</option>
+                    {storedOption(initialPhone?.feature, PHONE_FEATURES)}
                   </Select>
+                  {entry.feature === PHONE_LABEL && (
+                    <Input
+                      value={entry.label}
+                      onChange={(e) => {
+                        const next = [...phones];
+                        next[i] = { ...next[i], label: e.target.value };
+                        setPhones(next);
+                      }}
+                      placeholder={t("phone_custom_placeholder")}
+                      aria-label={t("phone_custom_label")}
+                      className="w-32"
+                    />
+                  )}
                   <Select
                     value={entry.context}
                     onChange={(e) => {
@@ -1158,7 +1179,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, allOrganizatio
                 </div>
                 );
               })}
-              <Button type="button" variant="ghost" size="sm" onClick={() => setPhones([...phones, { number: "", context: "", feature: "" }])} className="text-xs">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setPhones([...phones, { number: "", context: "", feature: "", label: "" }])} className="text-xs">
                 <Plus className="w-3 h-3 me-1" />
                 {t("add_phone")}
               </Button>
