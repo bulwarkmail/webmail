@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Folder, Loader2, Paperclip, RefreshCw, Star } from "@/components/icons";
+import { TeamRowBadges } from "@/components/team-mailboxes/team-row-badges";
 import { cn, cleanPreview, formatDate } from "@/lib/utils";
 import { emailListDate } from "@/lib/email-date";
 import { localizeMailboxName } from "@/lib/mailbox-label";
@@ -586,6 +587,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
                     <span className={cn("min-w-0 flex-1 truncate text-sm", isUnread ? "font-medium" : "text-muted-foreground")}>
                       {email.subject || '—'}
                     </span>
+                    {jmapAccountId && <TeamRowBadges email={{ ...email, sourceClientAccountId: clientLogin ?? undefined, sourceAccountId: jmapAccountId }} />}
                     {email.hasAttachment && (
                       <Paperclip className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
                     )}

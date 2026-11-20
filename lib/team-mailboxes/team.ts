@@ -13,7 +13,7 @@
 
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { SettingsPolicy } from '@/lib/admin/types';
-import { mailAccountKind } from '@/lib/plugin-sandbox/account-kind';
+import { useConfirmedGroups } from '@/lib/plugin-sandbox/account-kind';
 import { teamMailboxesOn } from './policy';
 
 export interface TeamRef {
@@ -33,8 +33,10 @@ export function teamKey(loginId: string, accountId: string): string {
 
 /**
  * The team for `accountId` reached through `client` (login `loginId`), or
- * null when it isn't a team mailbox with the feature on. Synchronous: until
- * the server confirmed the account as a group it says null, and asks.
+ * null when it isn't a team mailbox with the feature on. Synchronous and
+ * safe during render: until the server confirmed the account as a group
+ * (confirmGroups in lib/plugin-sandbox/account-kind.ts, which the caller
+ * starts outside render) it says null.
  */
 export function teamFor(
   client: IJMAPClient | null | undefined,
@@ -42,8 +44,9 @@ export function teamFor(
   accountId: string | null | undefined,
   rawPolicy: SettingsPolicy | null | undefined,
 ): TeamRef | null {
-  if (!client || !loginId || !accountId) return null;
-  if (mailAccountKind(client, accountId) !== 'group') return null;
+  if (!client || !loginId || !accountId || accountId === client.getAccountId()) return null;
+  if (client.getAccountInfo?.(accountId)?.isPersonal) return null;
+  if (!useConfirmedGroups.getState().groups.get(client)?.has(accountId)) return null;
   const groupAddress = client.getAccountInfo?.(accountId)?.name?.trim().toLowerCase();
   if (!groupAddress) return null;
   if (!teamMailboxesOn(rawPolicy, client.getUsername(), groupAddress)) return null;

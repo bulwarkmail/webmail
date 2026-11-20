@@ -13,7 +13,7 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { resolveEmailBlobContext, useEmailStore } from '@/stores/email-store';
-import { useConfirmedGroups } from '@/lib/plugin-sandbox/account-kind';
+import { confirmGroups, useConfirmedGroups } from '@/lib/plugin-sandbox/account-kind';
 import { teamFor, type TeamRef } from '@/lib/team-mailboxes/team';
 import { noteKeyFor, type NoteEntry } from '@/lib/team-mailboxes/note-format';
 import {
@@ -32,6 +32,18 @@ export interface TeamContext {
   client: IJMAPClient;
 }
 
+/**
+ * The login and account a message is read through. Never throws: a badge or
+ * a button must not take a list row or the reader down.
+ */
+function safeContext(email: NonNullable<Stamped>, authClient: IJMAPClient | null): { client: IJMAPClient | null; accountId?: string; clientAccountId?: string } | null {
+  try {
+    return resolveEmailBlobContext(email, authClient);
+  } catch {
+    return null;
+  }
+}
+
 /** The team mailbox a message belongs to (login + account), or null. Starts loading its notes. */
 export function useTeamOf(email: Stamped): TeamContext | null {
   const authClient = useAuthStore((s) => s.client);
@@ -42,17 +54,27 @@ export function useTeamOf(email: Stamped): TeamContext | null {
   const viewingAccountId = useEmailStore((s) => s.viewingAccountId);
   const source = email?.sourceClientAccountId ?? '';
   const owner = email?.sourceAccountId ?? '';
-  const context = useMemo(() => {
-    void groupsRevision; void selectedMailbox; void viewingAccountId;
-    if (!email) return null;
-    const { client, accountId, clientAccountId } = resolveEmailBlobContext(email, authClient);
-    const ref = teamFor(client, clientAccountId, accountId, rawPolicy);
-    return ref && client ? { ref, client } : null;
+  const resolved = useMemo(() => {
+    void selectedMailbox; void viewingAccountId;
+    return email ? safeContext(email, authClient) : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by the stamps, not the object
-  }, [source, owner, !!email, authClient, rawPolicy, groupsRevision, selectedMailbox, viewingAccountId]);
+  }, [source, owner, !!email, authClient, selectedMailbox, viewingAccountId]);
+  const context = useMemo(() => {
+    void groupsRevision;
+    if (!resolved) return null;
+    const ref = teamFor(resolved.client, resolved.clientAccountId, resolved.accountId, rawPolicy);
+    return ref && resolved.client ? { ref, client: resolved.client } : null;
+  }, [resolved, rawPolicy, groupsRevision]);
   useEffect(() => {
     if (context) void ensureTeamLoaded(context.ref, context.client);
   }, [context]);
+  // Ask the server which accounts are groups, outside render (the answer
+  // re-renders through groupsRevision). Only for an account that isn't the
+  // login's own: personal mail asks nothing.
+  const stampedClient = resolved?.accountId && resolved.client && resolved.accountId !== resolved.client.getAccountId() ? resolved.client : null;
+  useEffect(() => {
+    if (stampedClient && !useConfirmedGroups.getState().groups.get(stampedClient)) void confirmGroups(stampedClient);
+  }, [stampedClient]);
   return context;
 }
 
