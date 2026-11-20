@@ -62,6 +62,9 @@ describe('fileDocument', () => {
     expect(doc).toContain('<h1>Title</h1><blockquote>q</blockquote>');
     expect(doc).toMatch(/h1 \{[^}]+\}/);
     expect(doc).toMatch(/blockquote \{[^}]+\}/);
+    // The preview marks numbered items with Tailwind's class, which the printout lacks.
+    expect(doc).toContain('li.list-decimal { list-style-type: decimal; }');
+    expect(doc).toContain('margin-inline-start: 24px;');
   });
 
   it('gives an HTML attachment the CSP its remote content setting asks for', () => {

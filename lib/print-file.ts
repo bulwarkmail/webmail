@@ -44,7 +44,8 @@ const KIND_CSS: Record<PrintableFile['kind'], string> = {
   h2 { font-size: 20px; margin: 20px 0 8px; }
   h3 { font-size: 17px; margin: 16px 0 8px; }
   p { margin: 4px 0; }
-  li { margin: 2px 0 2px 24px; }
+  li { margin: 2px 0; margin-inline-start: 24px; }
+  li.list-decimal { list-style-type: decimal; }
   blockquote { margin: 8px 0; padding-inline-start: 16px; border-inline-start: 4px solid #ccc; color: #444; font-style: italic; }
   code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #f2f2f2; padding: 1px 4px; border-radius: 3px; }
   pre { background: #f2f2f2; padding: 12px; border-radius: 4px; white-space: pre-wrap; word-break: break-word; }
