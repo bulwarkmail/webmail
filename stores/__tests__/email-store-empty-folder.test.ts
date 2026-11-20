@@ -208,6 +208,40 @@ describe('emptyMailbox', () => {
     }
   });
 
+  // #1785: a folder of your own emptied into the trash, partly.
+  it('drops the moved rows and refreshes both counts when the server refuses some', async () => {
+    const row = (id: string): Email => ({
+      id, threadId: `t-${id}`, mailboxIds: { news: true }, keywords: {},
+      receivedAt: '2026-11-18T08:00:00Z', size: 1, hasAttachment: false,
+    });
+    const moved = row('moved');
+    const refused = row('refused');
+    const partial = new IncompleteDeleteError({
+      destroyedIds: ['moved'], notDestroyed: { refused: { type: 'forbidden' } }, unknownIds: [], unattemptedIds: [],
+    }, new Error('one refused'));
+    const fresh = [
+      { ...makeMailbox({ id: 'news' }), totalEmails: 1, unreadEmails: 1, totalThreads: 1, unreadThreads: 1 },
+      { ...makeMailbox({ id: 'trash', role: 'trash' }), totalEmails: 14, unreadEmails: 5, totalThreads: 14, unreadThreads: 5 },
+    ];
+    const getMailboxes = vi.fn().mockResolvedValue(fresh);
+    Object.assign(client, { getMailboxes });
+    vi.mocked(client.moveMailboxContents).mockRejectedValueOnce(partial);
+    const auth = useAuthStore.getState();
+    useAuthStore.setState({ client, activeAccountId: 'a' });
+    useEmailStore.setState({ emails: [moved, refused], selectedEmail: moved, totalEmails: 2 });
+    try {
+      await expect(useEmailStore.getState().emptyMailbox(client, 'news')).rejects.toBe(partial);
+
+      const state = useEmailStore.getState();
+      expect(state.emails.map(e => e.id)).toEqual(['refused']);
+      expect(state.selectedEmail).toBeNull();
+      expect(counts('news')).toEqual({ total: 1, unread: 1 });
+      expect(counts('trash')).toEqual({ total: 14, unread: 5 });
+    } finally {
+      useAuthStore.setState(auth, true);
+    }
+  });
+
   it('destroys when the user chose permanent deletion', async () => {
     useSettingsStore.setState({ deleteAction: 'permanent' } as never);
 

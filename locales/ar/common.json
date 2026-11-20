@@ -4129,6 +4129,12 @@
     "empty_spam": "إفراغ البريد العشوائي",
     "empty_trash_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في المهملات نهائيًا؟ لا يمكن التراجع عن ذلك.",
     "empty_spam_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في البريد العشوائي نهائيًا؟ لا يمكن التراجع عن ذلك.",
+    "empty_folder": "إفراغ المجلد…",
+    "empty_folder_title": "إفراغ {folder}؟",
+    "empty_folder_confirm_trash": "نقل {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في {folder} إلى المهملات؟",
+    "empty_folder_confirm_delete": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في {folder} نهائيًا؟ لا يمكن التراجع عن ذلك.",
+    "empty_folder_move": "نقل إلى المهملات",
+    "empty_folder_delete": "حذف نهائيًا",
     "title_all_accounts": "{name} ({count}، {total} في كل الحسابات)",
     "title_all_accounts_only": "{name} ({total} في كل الحسابات)"
   },

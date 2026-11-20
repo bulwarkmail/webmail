@@ -176,7 +176,7 @@ describe('JMAPClient.emptyMailbox', () => {
  * Email/query returns one page of the ids still in the source, Email/set moves
  * the ids in its `update` (or refuses them all with `updateFails`).
  */
-function makeMoveServer(opts: { count: number; updateFails?: boolean }) {
+function makeMoveServer(opts: { count: number; updateFails?: boolean; refuseIds?: string[] }) {
   let remaining = Array.from({ length: opts.count }, (_, i) => `email-${i}`);
   const queries: number[] = [];
   const updates: Array<Record<string, unknown>> = [];
@@ -197,9 +197,12 @@ function makeMoveServer(opts: { count: number; updateFails?: boolean }) {
       const notUpdated = Object.fromEntries(ids.map(id => [id, { type: 'forbidden' }]));
       return jsonResponse({ methodResponses: [['Email/set', { notUpdated }, '0']] });
     }
-    remaining = remaining.filter(id => !ids.includes(id));
-    const updated = Object.fromEntries(ids.map(id => [id, null]));
-    return jsonResponse({ methodResponses: [['Email/set', { updated }, '0']] });
+    const refused = ids.filter(id => opts.refuseIds?.includes(id));
+    const moved = ids.filter(id => !refused.includes(id));
+    remaining = remaining.filter(id => !moved.includes(id));
+    const updated = Object.fromEntries(moved.map(id => [id, null]));
+    const notUpdated = refused.length > 0 ? Object.fromEntries(refused.map(id => [id, { type: 'forbidden' }])) : undefined;
+    return jsonResponse({ methodResponses: [['Email/set', { updated, ...(notUpdated ? { notUpdated } : {}) }, '0']] });
   };
 
   return { handler, queries, updates, remainingCount: () => remaining.length };
@@ -254,6 +257,22 @@ describe('JMAPClient.moveMailboxContents', () => {
 
     await expect(client.moveMailboxContents('mailbox-1', 'trash-1')).rejects.toThrow();
     expect(server.queries).toEqual([500]);
+  });
+
+  // #1785, as Empty Trash does since #1773: one refused message keeps only itself.
+  it('moves the rest past a message the server refuses, and reports what moved', async () => {
+    const client = await connectedClient();
+    const server = makeMoveServer({ count: 1200, refuseIds: ['email-0'] });
+    fetchSpy.mockImplementation(server.handler as never);
+
+    const error = await client.moveMailboxContents('mailbox-1', 'trash-1').catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(IncompleteDeleteError);
+    const partial = error as IncompleteDeleteError;
+    expect(partial.destroyedIds).toHaveLength(1199);
+    expect(partial.destroyedIds).not.toContain('email-0');
+    expect(Object.keys(partial.notDestroyed)).toEqual(['email-0']);
+    expect(server.remainingCount()).toBe(1);
   });
 
   it('returns zero after one query for an already empty mailbox', async () => {

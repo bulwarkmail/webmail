@@ -4129,6 +4129,12 @@
     "empty_spam": "Spam leeren",
     "empty_trash_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Papierkorb endgültig löschen? Das lässt sich nicht rückgängig machen.",
     "empty_spam_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Spam endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "empty_folder": "Ordner leeren…",
+    "empty_folder_title": "{folder} leeren?",
+    "empty_folder_confirm_trash": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} in {folder} in den Papierkorb verschieben?",
+    "empty_folder_confirm_delete": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} in {folder} endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "empty_folder_move": "In den Papierkorb",
+    "empty_folder_delete": "Endgültig löschen",
     "title_all_accounts": "{name} ({count}, {total} in allen Konten)",
     "title_all_accounts_only": "{name} ({total} in allen Konten)"
   },

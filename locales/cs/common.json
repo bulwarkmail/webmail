@@ -4129,6 +4129,12 @@
     "empty_spam": "Vyprázdnit spam",
     "empty_trash_confirm": "Trvale smazat {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} v koši? Nelze to vrátit zpět.",
     "empty_spam_confirm": "Trvale smazat {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} ve spamu? Nelze to vrátit zpět.",
+    "empty_folder": "Vyprázdnit složku…",
+    "empty_folder_title": "Vyprázdnit {folder}?",
+    "empty_folder_confirm_trash": "Přesunout {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} ze složky {folder} do koše?",
+    "empty_folder_confirm_delete": "Trvale smazat {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} ve složce {folder}? Nelze to vrátit zpět.",
+    "empty_folder_move": "Přesunout do koše",
+    "empty_folder_delete": "Trvale smazat",
     "title_all_accounts": "{name} ({count}, {total} ve všech účtech)",
     "title_all_accounts_only": "{name} ({total} ve všech účtech)"
   },

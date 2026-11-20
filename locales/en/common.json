@@ -4129,6 +4129,12 @@
     "empty_spam": "Empty Spam",
     "empty_trash_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Trash forever? You can't undo this.",
     "empty_spam_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Spam forever? You can't undo this.",
+    "empty_folder": "Empty folder…",
+    "empty_folder_title": "Empty {folder}?",
+    "empty_folder_confirm_trash": "Move {count, plural, one {the message} other {all # messages}} in {folder} to the Trash?",
+    "empty_folder_confirm_delete": "Delete {count, plural, one {the message} other {all # messages}} in {folder} forever? You can't undo this.",
+    "empty_folder_move": "Move to Trash",
+    "empty_folder_delete": "Delete forever",
     "title_all_accounts": "{name} ({count}, {total} in all accounts)",
     "title_all_accounts_only": "{name} ({total} in all accounts)"
   },

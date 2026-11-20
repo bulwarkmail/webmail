@@ -317,6 +317,9 @@ export function MailboxContextMenu({
   const isSystem =
     !!mailbox.role &&
     ["inbox", "sent", "drafts", "trash", "junk", "archive"].includes(mailbox.role);
+  // A folder of the user's own empties into the Trash, after a confirm
+  // (#1785). The Inbox and the other system folders keep their menus short.
+  const emptiesToTrash = !isSystem && mailbox.role !== "scheduled";
   const canRename = mailbox.myRights?.mayRename !== false && !isSystem;
   const canDelete = mailbox.myRights?.mayDelete !== false && !isSystem;
   const canCreateChild = mailbox.myRights?.mayCreateChild !== false;
@@ -454,6 +457,16 @@ export function MailboxContextMenu({
           disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems || offline}
           destructive
           testId="mailbox-empty"
+        />
+      )}
+      {emptiesToTrash && (
+        <ContextMenuItem
+          icon={FolderX}
+          label={tP2("empty_folder")}
+          onClick={() => handleAction(() => onEmptyFolder?.(mailbox.id))}
+          disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems || offline}
+          destructive
+          testId="mailbox-empty-folder"
         />
       )}
       {!isSystem && (

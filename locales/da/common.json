@@ -4129,6 +4129,12 @@
     "empty_spam": "Tøm spam",
     "empty_trash_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i papirkurven for altid? Det kan ikke fortrydes.",
     "empty_spam_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i spam for altid? Det kan ikke fortrydes.",
+    "empty_folder": "Tøm mappe…",
+    "empty_folder_title": "Tøm {folder}?",
+    "empty_folder_confirm_trash": "Flyt {count, plural, one {beskeden} other {alle # beskeder}} i {folder} til papirkurven?",
+    "empty_folder_confirm_delete": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i {folder} for altid? Det kan ikke fortrydes.",
+    "empty_folder_move": "Flyt til papirkurven",
+    "empty_folder_delete": "Slet for altid",
     "title_all_accounts": "{name} ({count}, {total} i alle konti)",
     "title_all_accounts_only": "{name} ({total} i alle konti)"
   },

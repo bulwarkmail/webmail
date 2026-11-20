@@ -4922,9 +4922,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const mailbox = mailboxes.find(mb => mb.id === mailboxId);
     if (!mailbox) return;
 
-    // "Empty Trash", with how many messages go (p2-14).
+    // "Empty Trash", with how many messages go (p2-14); any other folder
+    // by its name too (#1785).
     const epoch = currentStoreEpoch();
-    const prompt = emptyFolderPrompt(mailbox, emptyFolderMovesToTrash(mailbox));
+    const folderName = localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`));
+    const prompt = emptyFolderPrompt(mailbox, emptyFolderMovesToTrash(mailbox), folderName);
     const confirmed = await confirmDialog({
       title: tCtxMenu(prompt.title),
       message: tCtxMenu(prompt.message, prompt.values),

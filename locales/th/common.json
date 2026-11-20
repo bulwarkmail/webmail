@@ -1137,6 +1137,12 @@
     "empty_spam": "ล้างสแปม",
     "empty_trash_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในถังขยะอย่างถาวรไหม ย้อนกลับไม่ได้",
     "empty_spam_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในสแปมอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "empty_folder": "ล้างโฟลเดอร์…",
+    "empty_folder_title": "ล้าง {folder} ไหม",
+    "empty_folder_confirm_trash": "ย้ายข้อความ{count, plural, other {ทั้ง # ฉบับ}}ใน {folder} ไปที่ถังขยะไหม",
+    "empty_folder_confirm_delete": "ลบข้อความ{count, plural, other {ทั้ง # ฉบับ}}ใน {folder} อย่างถาวรไหม ย้อนกลับไม่ได้",
+    "empty_folder_move": "ย้ายไปที่ถังขยะ",
+    "empty_folder_delete": "ลบถาวร",
     "title_all_accounts": "{name} ({count}, {total} ในทุกบัญชี)",
     "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
   },

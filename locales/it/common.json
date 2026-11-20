@@ -4129,6 +4129,12 @@
     "empty_spam": "Svuota spam",
     "empty_trash_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nel cestino? Non si può annullare.",
     "empty_spam_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nello spam? Non si può annullare.",
+    "empty_folder": "Svuota cartella…",
+    "empty_folder_title": "Svuotare {folder}?",
+    "empty_folder_confirm_trash": "Spostare {count, plural, one {il messaggio} other {tutti i # messaggi}} di {folder} nel cestino?",
+    "empty_folder_confirm_delete": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} di {folder}? Non si può annullare.",
+    "empty_folder_move": "Sposta nel cestino",
+    "empty_folder_delete": "Elimina per sempre",
     "title_all_accounts": "{name} ({count}, {total} in tutti gli account)",
     "title_all_accounts_only": "{name} ({total} in tutti gli account)"
   },

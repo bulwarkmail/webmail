@@ -4129,6 +4129,12 @@
     "empty_spam": "Esvaziar spam",
     "empty_trash_confirm": "Excluir permanentemente {count, plural, one {a mensagem} other {as # mensagens}} da Lixeira? Não é possível desfazer.",
     "empty_spam_confirm": "Excluir permanentemente {count, plural, one {a mensagem} other {as # mensagens}} do Spam? Não é possível desfazer.",
+    "empty_folder": "Esvaziar pasta…",
+    "empty_folder_title": "Esvaziar {folder}?",
+    "empty_folder_confirm_trash": "Mover {count, plural, one {a mensagem} other {as # mensagens}} de {folder} para a Lixeira?",
+    "empty_folder_confirm_delete": "Excluir permanentemente {count, plural, one {a mensagem} other {as # mensagens}} de {folder}? Não é possível desfazer.",
+    "empty_folder_move": "Mover para a Lixeira",
+    "empty_folder_delete": "Excluir permanentemente",
     "title_all_accounts": "{name} ({count}, {total} em todas as contas)",
     "title_all_accounts_only": "{name} ({total} em todas as contas)"
   },

@@ -4129,6 +4129,12 @@
     "empty_spam": "Vider le spam",
     "empty_trash_confirm": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} de la corbeille ? Impossible de revenir en arrière.",
     "empty_spam_confirm": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} du spam ? Impossible de revenir en arrière.",
+    "empty_folder": "Vider le dossier…",
+    "empty_folder_title": "Vider {folder} ?",
+    "empty_folder_confirm_trash": "Déplacer {count, plural, one {le message} other {les # messages}} de {folder} dans la corbeille ?",
+    "empty_folder_confirm_delete": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} de {folder} ? Impossible de revenir en arrière.",
+    "empty_folder_move": "Déplacer dans la corbeille",
+    "empty_folder_delete": "Supprimer définitivement",
     "title_all_accounts": "{name} ({count}, {total} dans tous les comptes)",
     "title_all_accounts_only": "{name} ({total} dans tous les comptes)"
   },

@@ -4129,6 +4129,12 @@
     "empty_spam": "Spam ürítése",
     "empty_trash_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a kukából? Ez nem vonható vissza.",
     "empty_spam_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a spamből? Ez nem vonható vissza.",
+    "empty_folder": "Mappa ürítése…",
+    "empty_folder_title": "Kiüríti a(z) {folder} mappát?",
+    "empty_folder_confirm_trash": "Áthelyezi {count, plural, one {az üzenetet} other {mind a # üzenetet}} a(z) {folder} mappából a kukába?",
+    "empty_folder_confirm_delete": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a(z) {folder} mappából? Ez nem vonható vissza.",
+    "empty_folder_move": "Áthelyezés a kukába",
+    "empty_folder_delete": "Végleges törlés",
     "title_all_accounts": "{name} ({count}, {total} az összes fiókban)",
     "title_all_accounts_only": "{name} ({total} az összes fiókban)"
   },

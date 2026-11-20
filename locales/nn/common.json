@@ -4137,6 +4137,12 @@
     "empty_spam": "Tøm søppelpost",
     "empty_trash_confirm": "Slette {count, plural, one {meldinga} other {alle # meldingane}} i papirkorga for alltid? Du kan ikkje angre dette.",
     "empty_spam_confirm": "Slette {count, plural, one {meldinga} other {alle # meldingane}} i søppelposten for alltid? Du kan ikkje angre dette.",
+    "empty_folder": "Tøm mappe…",
+    "empty_folder_title": "Tømme {folder}?",
+    "empty_folder_confirm_trash": "Flytte {count, plural, one {meldinga} other {alle # meldingane}} i {folder} til papirkorga?",
+    "empty_folder_confirm_delete": "Slette {count, plural, one {meldinga} other {alle # meldingane}} i {folder} for alltid? Du kan ikkje angre dette.",
+    "empty_folder_move": "Flytt til papirkorga",
+    "empty_folder_delete": "Slett for alltid",
     "title_all_accounts": "{name} ({count}, {total} i alle kontoar)",
     "title_all_accounts_only": "{name} ({total} i alle kontoar)"
   },

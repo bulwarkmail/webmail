@@ -4129,6 +4129,12 @@
     "empty_spam": "Очистити спам",
     "empty_trash_confirm": "Видалити {count, plural, =1 {лист} one {усі # лист} few {усі # листи} many {усі # листів} other {усі # листа}} в кошику назавжди? Це не можна скасувати.",
     "empty_spam_confirm": "Видалити {count, plural, =1 {лист} one {усі # лист} few {усі # листи} many {усі # листів} other {усі # листа}} у спамі назавжди? Це не можна скасувати.",
+    "empty_folder": "Очистити папку…",
+    "empty_folder_title": "Очистити «{folder}»?",
+    "empty_folder_confirm_trash": "Перемістити {count, plural, =1 {лист} one {усі # лист} few {усі # листи} many {усі # листів} other {усі # листа}} з папки «{folder}» до кошика?",
+    "empty_folder_confirm_delete": "Видалити {count, plural, =1 {лист} one {усі # лист} few {усі # листи} many {усі # листів} other {усі # листа}} у папці «{folder}» назавжди? Це не можна скасувати.",
+    "empty_folder_move": "Перемістити до кошика",
+    "empty_folder_delete": "Видалити назавжди",
     "title_all_accounts": "{name} ({count}, {total} в усіх акаунтах)",
     "title_all_accounts_only": "{name} ({total} в усіх акаунтах)"
   },

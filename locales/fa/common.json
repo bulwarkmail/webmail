@@ -4129,6 +4129,12 @@
     "empty_spam": "خالی کردن هرزنامه",
     "empty_trash_confirm": "{count, plural, one {پیام} other {همه # پیام}} زباله‌دان برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست.",
     "empty_spam_confirm": "{count, plural, one {پیام} other {همه # پیام}} هرزنامه برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست.",
+    "empty_folder": "خالی کردن پوشه…",
+    "empty_folder_title": "{folder} خالی شود؟",
+    "empty_folder_confirm_trash": "{count, plural, one {پیام} other {همه # پیام}} {folder} به زباله‌دان منتقل شود؟",
+    "empty_folder_confirm_delete": "{count, plural, one {پیام} other {همه # پیام}} {folder} برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست.",
+    "empty_folder_move": "انتقال به زباله‌دان",
+    "empty_folder_delete": "حذف برای همیشه",
     "title_all_accounts": "{name} ({count}، {total} در همه حساب‌ها)",
     "title_all_accounts_only": "{name} ({total} در همه حساب‌ها)"
   },

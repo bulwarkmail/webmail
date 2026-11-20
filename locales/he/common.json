@@ -5986,6 +5986,12 @@
     "empty_spam": "ריקון הספאם",
     "empty_trash_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} באשפה? אי אפשר לבטל את זה.",
     "empty_spam_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} בספאם? אי אפשר לבטל את זה.",
+    "empty_folder": "ריקון התיקייה…",
+    "empty_folder_title": "לרוקן את {folder}?",
+    "empty_folder_confirm_trash": "להעביר {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} מהתיקייה {folder} לאשפה?",
+    "empty_folder_confirm_delete": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} בתיקייה {folder}? אי אפשר לבטל את זה.",
+    "empty_folder_move": "העברה לאשפה",
+    "empty_folder_delete": "מחיקה לצמיתות",
     "title_all_accounts": "{name} ({count}, {total} בכל החשבונות)",
     "title_all_accounts_only": "{name} ({total} בכל החשבונות)"
   },

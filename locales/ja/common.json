@@ -4129,6 +4129,12 @@
     "empty_spam": "迷惑メールを空にする",
     "empty_trash_confirm": "ゴミ箱の{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
     "empty_spam_confirm": "迷惑メールの{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
+    "empty_folder": "フォルダーを空にする…",
+    "empty_folder_title": "{folder} を空にしますか？",
+    "empty_folder_confirm_trash": "{folder} の{count, plural, other {# 件のメッセージ}}をすべてゴミ箱に移動しますか？",
+    "empty_folder_confirm_delete": "{folder} の{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
+    "empty_folder_move": "ゴミ箱に移動",
+    "empty_folder_delete": "完全に削除",
     "title_all_accounts": "{name} ({count}、すべてのアカウントで {total})",
     "title_all_accounts_only": "{name} (すべてのアカウントで {total})"
   },

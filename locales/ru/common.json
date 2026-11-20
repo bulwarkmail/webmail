@@ -4129,6 +4129,12 @@
     "empty_spam": "Очистить спам",
     "empty_trash_confirm": "Удалить {count, plural, =1 {письмо} one {все # письмо} few {все # письма} many {все # писем} other {все # письма}} в корзине навсегда? Это нельзя отменить.",
     "empty_spam_confirm": "Удалить {count, plural, =1 {письмо} one {все # письмо} few {все # письма} many {все # писем} other {все # письма}} в спаме навсегда? Это нельзя отменить.",
+    "empty_folder": "Очистить папку…",
+    "empty_folder_title": "Очистить «{folder}»?",
+    "empty_folder_confirm_trash": "Переместить {count, plural, =1 {письмо} one {все # письмо} few {все # письма} many {все # писем} other {все # письма}} из папки «{folder}» в корзину?",
+    "empty_folder_confirm_delete": "Удалить {count, plural, =1 {письмо} one {все # письмо} few {все # письма} many {все # писем} other {все # письма}} в папке «{folder}» навсегда? Это нельзя отменить.",
+    "empty_folder_move": "Переместить в корзину",
+    "empty_folder_delete": "Удалить навсегда",
     "title_all_accounts": "{name} ({count}, {total} во всех аккаунтах)",
     "title_all_accounts_only": "{name} ({total} во всех аккаунтах)"
   },

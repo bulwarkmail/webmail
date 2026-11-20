@@ -4141,6 +4141,12 @@
     "empty_spam": "Άδειασμα Ανεπιθύμητων",
     "empty_trash_confirm": "Να διαγραφούν οριστικά {count, plural, one {το μήνυμα} other {και τα # μηνύματα}} από τον Κάδο; Η ενέργεια δεν μπορεί να αναιρεθεί.",
     "empty_spam_confirm": "Να διαγραφούν οριστικά {count, plural, one {το μήνυμα} other {και τα # μηνύματα}} από τα Ανεπιθύμητα; Η ενέργεια δεν μπορεί να αναιρεθεί.",
+    "empty_folder": "Άδειασμα φακέλου…",
+    "empty_folder_title": "Άδειασμα του {folder};",
+    "empty_folder_confirm_trash": "Να μετακινηθούν {count, plural, one {το μήνυμα} other {και τα # μηνύματα}} του {folder} στον Κάδο;",
+    "empty_folder_confirm_delete": "Να διαγραφούν οριστικά {count, plural, one {το μήνυμα} other {και τα # μηνύματα}} του {folder}; Η ενέργεια δεν μπορεί να αναιρεθεί.",
+    "empty_folder_move": "Μετακίνηση στον Κάδο",
+    "empty_folder_delete": "Οριστική διαγραφή",
     "title_all_accounts": "{name} ({count}, {total} σε όλους τους λογαριασμούς)",
     "title_all_accounts_only": "{name} ({total} σε όλους τους λογαριασμούς)"
   },

@@ -4129,6 +4129,12 @@
     "empty_spam": "Tühjenda rämpspost",
     "empty_trash_confirm": "Kas kustutada prügikastist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
     "empty_spam_confirm": "Kas kustutada rämpspostist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
+    "empty_folder": "Tühjenda kaust…",
+    "empty_folder_title": "Kas tühjendada {folder}?",
+    "empty_folder_confirm_trash": "Kas teisaldada kaustast {folder} {count, plural, one {kiri} other {kõik # kirja}} prügikasti?",
+    "empty_folder_confirm_delete": "Kas kustutada kaustast {folder} {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
+    "empty_folder_move": "Teisalda prügikasti",
+    "empty_folder_delete": "Kustuta jäädavalt",
     "title_all_accounts": "{name} ({count}, {total} kõigil kontodel)",
     "title_all_accounts_only": "{name} ({total} kõigil kontodel)"
   },

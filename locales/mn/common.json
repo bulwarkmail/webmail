@@ -4129,6 +4129,12 @@
     "empty_spam": "Спамыг хоослох",
     "empty_trash_confirm": "Хогийн саван дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
     "empty_spam_confirm": "Спам дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
+    "empty_folder": "Хавтас хоослох…",
+    "empty_folder_title": "{folder}-г хоослох уу?",
+    "empty_folder_confirm_trash": "{folder} дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} хогийн сав руу зөөх үү?",
+    "empty_folder_confirm_delete": "{folder} дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
+    "empty_folder_move": "Хогийн сав руу зөөх",
+    "empty_folder_delete": "Бүрмөсөн устгах",
     "title_all_accounts": "{name} ({count}, бүх бүртгэлд {total})",
     "title_all_accounts_only": "{name} (бүх бүртгэлд {total})"
   },

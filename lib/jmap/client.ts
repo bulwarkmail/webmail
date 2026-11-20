@@ -4624,37 +4624,70 @@ export class JMAPClient implements IJMAPClient {
     const batchSize = Math.min(500, this.getMaxObjectsInGet(), this.getMaxObjectsInSet());
     const patch: Record<string, unknown> = { mailboxIds: { [toMailboxId]: true } };
     if (markAsRead) patch["keywords/$seen"] = true;
-    let totalMoved = 0;
+    const movedIds: string[] = [];
+    const notMoved: Record<string, JmapErrorInfo> = {};
+    let refusal: unknown;
 
     // Moved emails leave the folder, so the next query returns the next page.
     // `update` is keyed by id and cannot take a result reference, hence the
-    // separate query per batch.
-    while (true) {
-      const queryResponse = await this.request([
-        ["Email/query", {
-          accountId: targetAccountId,
-          filter: { inMailbox: fromMailboxId },
-          limit: batchSize,
-        }, "0"],
-      ]);
-      const ids: string[] = queryResponse.methodResponses?.[0]?.[1]?.ids || [];
-      if (ids.length === 0) break;
+    // separate query per batch. As in emptyMailbox, messages the server
+    // refuses stay and come back in the next page: keep going while a page
+    // moves something, and report what moved (IncompleteDeleteError), so one
+    // refused message doesn't keep the rest of the folder.
+    try {
+      while (true) {
+        const queryResponse = await this.request([
+          ["Email/query", {
+            accountId: targetAccountId,
+            filter: { inMailbox: fromMailboxId },
+            limit: batchSize,
+          }, "0"],
+        ]);
+        const ids: string[] = queryResponse.methodResponses?.[0]?.[1]?.ids || [];
+        if (ids.length === 0) break;
 
-      // A refused update leaves the ids in the folder, and the next query
-      // would return them again forever.
-      const setResponse = await this.request([
-        ["Email/set", {
-          accountId: targetAccountId,
-          update: Object.fromEntries(ids.map(id => [id, patch])),
-        }, "0"],
-      ]);
-      this.assertEmailSetSucceeded(setResponse, 'move the folder contents');
-
-      totalMoved += ids.length;
-      if (ids.length < batchSize) break;
+        const setResponse = await this.request([
+          ["Email/set", {
+            accountId: targetAccountId,
+            update: Object.fromEntries(ids.map(id => [id, patch])),
+          }, "0"],
+        ]);
+        const [setName, result] = setResponse.methodResponses?.[0] ?? [];
+        const updated: Record<string, unknown> = (setName === "Email/set" && result?.updated) || {};
+        const refused: Record<string, JmapErrorInfo> = (setName === "Email/set" && result?.notUpdated) || {};
+        let movedNow = 0;
+        let unconfirmed = setName !== "Email/set";
+        for (const id of ids) {
+          if (Object.hasOwn(refused, id)) {
+            notMoved[id] = refused[id];
+          } else if (Object.hasOwn(updated, id)) {
+            delete notMoved[id];
+            movedIds.push(id);
+            movedNow++;
+          } else {
+            unconfirmed = true;
+          }
+        }
+        if (unconfirmed) {
+          this.assertEmailSetSucceeded(setResponse, 'move the folder contents');
+          throw new Error('Failed to move the folder contents');
+        }
+        try {
+          this.assertEmailSetSucceeded(setResponse, 'move the folder contents');
+        } catch (error) {
+          refusal = error;
+        }
+        if (ids.length < batchSize || movedNow === 0) break;
+      }
+    } catch (error) {
+      if (movedIds.length === 0) throw error;
+      throw new IncompleteDeleteError({ destroyedIds: movedIds, notDestroyed: notMoved, unknownIds: [], unattemptedIds: [] }, error);
     }
-
-    return totalMoved;
+    if (refusal) {
+      if (movedIds.length === 0) throw refusal;
+      throw new IncompleteDeleteError({ destroyedIds: movedIds, notDestroyed: notMoved, unknownIds: [], unattemptedIds: [] }, refusal);
+    }
+    return movedIds.length;
   }
 
   async markMailboxAsRead(mailboxId: string, accountId?: string): Promise<number> {

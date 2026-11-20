@@ -8794,64 +8794,71 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // The user asked to move to trash, not permanently delete.
         if (!trashMailbox) throw new Error('Trash mailbox not found - cannot move emails to trash');
         markAsRead = useSettingsStore.getState().deleteAction === 'trash-and-read';
-        await resolveActionClient(client).moveMailboxContents(
-          jmapMailboxId,
-          trashMailbox.originalId || trashMailbox.id,
-          accountId,
-          markAsRead,
-        );
-      } else {
-        const actionClient = resolveActionClient(client);
-        const isCurrentView = captureEmailListView();
-        const viewingId = get().viewingAccountId;
-        const authClient = useAuthStore.getState().client;
-        const ownsCounters = () => currentStoreEpoch() === epoch
-          && get().viewingAccountId === viewingId
-          && useAuthStore.getState().client === authClient
-          && viewedClient(client) === actionClient;
-        try {
+      }
+      const actionClient = resolveActionClient(client);
+      const isCurrentView = captureEmailListView();
+      const viewingId = get().viewingAccountId;
+      const authClient = useAuthStore.getState().client;
+      const ownsCounters = () => currentStoreEpoch() === epoch
+        && get().viewingAccountId === viewingId
+        && useAuthStore.getState().client === authClient
+        && viewedClient(client) === actionClient;
+      try {
+        if (trashMailbox) {
+          await actionClient.moveMailboxContents(
+            jmapMailboxId,
+            trashMailbox.originalId || trashMailbox.id,
+            accountId,
+            markAsRead,
+          );
+        } else {
           await actionClient.emptyMailbox(jmapMailboxId, accountId);
-        } catch (error) {
-          if (error instanceof IncompleteDeleteError && mailbox) {
-            if (isCurrentView() && get().selectedMailbox === mailboxId) {
-              // A refused or unacknowledged destroy must leave its message accessible.
-              const destroyed = new Set(error.destroyedIds);
-              const wasDestroyed = (email: Email) => destroyed.has(email.id) && emailInMailbox(email, mailbox);
-              set((state) => {
-                const selectedEmailKeys = new Set(state.selectedEmailKeys);
-                const keep = (email: Email) => {
-                  if (!wasDestroyed(email)) return true;
-                  selectedEmailKeys.delete(emailKeyFor(email));
-                  return false;
-                };
-                const emails = state.emails.filter(keep);
-                const threadEmailsCache = new Map(state.threadEmailsCache);
-                for (const [key, members] of state.threadEmailsCache) {
-                  const remaining = members.filter(keep);
-                  if (remaining.length !== members.length) threadEmailsCache.set(key, remaining);
-                }
-                return {
-                  emails,
-                  selectedEmailKeys,
-                  threadEmailsCache,
-                  selectedEmail: state.selectedEmail && wasDestroyed(state.selectedEmail) ? null : state.selectedEmail,
-                  totalEmails: Math.max(emails.length, state.totalEmails - (state.emails.length - emails.length)),
-                };
-              });
-              if (!get().emails.length && get().hasMoreEmails) await get().refreshCurrentMailbox(client);
-            }
-            // The sidebar still needs the owning account's counts after folder navigation.
+        }
+      } catch (error) {
+        // Part of the folder went (destroyed, or moved to the trash) before
+        // the server refused the rest (#1773, #1785).
+        if (error instanceof IncompleteDeleteError && mailbox) {
+          if (isCurrentView() && get().selectedMailbox === mailboxId) {
+            // A refused or unacknowledged destroy must leave its message accessible.
+            const destroyed = new Set(error.destroyedIds);
+            const wasDestroyed = (email: Email) => destroyed.has(email.id) && emailInMailbox(email, mailbox);
+            set((state) => {
+              const selectedEmailKeys = new Set(state.selectedEmailKeys);
+              const keep = (email: Email) => {
+                if (!wasDestroyed(email)) return true;
+                selectedEmailKeys.delete(emailKeyFor(email));
+                return false;
+              };
+              const emails = state.emails.filter(keep);
+              const threadEmailsCache = new Map(state.threadEmailsCache);
+              for (const [key, members] of state.threadEmailsCache) {
+                const remaining = members.filter(keep);
+                if (remaining.length !== members.length) threadEmailsCache.set(key, remaining);
+              }
+              return {
+                emails,
+                selectedEmailKeys,
+                threadEmailsCache,
+                selectedEmail: state.selectedEmail && wasDestroyed(state.selectedEmail) ? null : state.selectedEmail,
+                totalEmails: Math.max(emails.length, state.totalEmails - (state.emails.length - emails.length)),
+              };
+            });
+            if (!get().emails.length && get().hasMoreEmails) await get().refreshCurrentMailbox(client);
+          }
+          // The sidebar still needs the owning account's counts after folder navigation.
+          if (ownsCounters()) {
+            const fresh = await actionClient.getMailboxes(accountId).catch(() => []);
             if (ownsCounters()) {
-              const fresh = await actionClient.getMailboxes(accountId).catch(() => []);
-              const counts = fresh.find(mb => mb.id === jmapMailboxId);
-              if (counts && ownsCounters()) {
+              for (const changed of [mailbox, trashMailbox]) {
+                const counts = changed && fresh.find(mb => mb.id === (changed.originalId || changed.id));
+                if (!changed || !counts) continue;
                 const { totalEmails, unreadEmails, totalThreads, unreadThreads } = counts;
-                updateMailboxes(mb => mb.id === mailboxId ? { ...mb, totalEmails, unreadEmails, totalThreads, unreadThreads } : mb);
+                updateMailboxes(mb => mb.id === changed.id ? { ...mb, totalEmails, unreadEmails, totalThreads, unreadThreads } : mb);
               }
             }
           }
-          throw error;
         }
+        throw error;
       }
 
       if (currentStoreEpoch() !== epoch) return false;

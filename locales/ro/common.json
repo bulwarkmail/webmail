@@ -4129,6 +4129,12 @@
     "empty_spam": "Golește spamul",
     "empty_trash_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi? Nu se poate anula.",
     "empty_spam_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din spam? Nu se poate anula.",
+    "empty_folder": "Golește dosarul…",
+    "empty_folder_title": "Goliți {folder}?",
+    "empty_folder_confirm_trash": "Mutați {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din {folder} în coșul de gunoi?",
+    "empty_folder_confirm_delete": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din {folder}? Nu se poate anula.",
+    "empty_folder_move": "Mută în coșul de gunoi",
+    "empty_folder_delete": "Șterge definitiv",
     "title_all_accounts": "{name} ({count}, {total} în toate conturile)",
     "title_all_accounts_only": "{name} ({total} în toate conturile)"
   },

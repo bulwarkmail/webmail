@@ -4129,6 +4129,12 @@
     "empty_spam": "Buida el correu brossa",
     "empty_trash_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de la paperera? No es pot desfer.",
     "empty_spam_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} del correu brossa? No es pot desfer.",
+    "empty_folder": "Buida la carpeta…",
+    "empty_folder_title": "Vols buidar {folder}?",
+    "empty_folder_confirm_trash": "Vols moure {count, plural, one {el missatge} other {els # missatges}} de {folder} a la paperera?",
+    "empty_folder_confirm_delete": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de {folder}? No es pot desfer.",
+    "empty_folder_move": "Mou a la paperera",
+    "empty_folder_delete": "Suprimeix per sempre",
     "title_all_accounts": "{name} ({count}, {total} a tots els comptes)",
     "title_all_accounts_only": "{name} ({total} a tots els comptes)"
   },

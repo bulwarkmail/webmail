@@ -4129,6 +4129,12 @@
     "empty_spam": "Spam klasörünü boşalt",
     "empty_trash_confirm": "Çöp Kutusundaki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
     "empty_spam_confirm": "Spam klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "empty_folder": "Klasörü boşalt…",
+    "empty_folder_title": "{folder} boşaltılsın mı?",
+    "empty_folder_confirm_trash": "{folder} klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} Çöp Kutusuna taşınsın mı?",
+    "empty_folder_confirm_delete": "{folder} klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "empty_folder_move": "Çöp Kutusuna taşı",
+    "empty_folder_delete": "Kalıcı olarak sil",
     "title_all_accounts": "{name} ({count}, tüm hesaplarda {total})",
     "title_all_accounts_only": "{name} (tüm hesaplarda {total})"
   },

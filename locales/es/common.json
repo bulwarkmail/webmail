@@ -4129,6 +4129,12 @@
     "empty_spam": "Vaciar spam",
     "empty_trash_confirm": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de la papelera? No se puede deshacer.",
     "empty_spam_confirm": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de spam? No se puede deshacer.",
+    "empty_folder": "Vaciar carpeta…",
+    "empty_folder_title": "¿Vaciar {folder}?",
+    "empty_folder_confirm_trash": "¿Mover {count, plural, one {el mensaje} other {los # mensajes}} de {folder} a la papelera?",
+    "empty_folder_confirm_delete": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de {folder}? No se puede deshacer.",
+    "empty_folder_move": "Mover a la papelera",
+    "empty_folder_delete": "Eliminar para siempre",
     "title_all_accounts": "{name} ({count}, {total} en todas las cuentas)",
     "title_all_accounts_only": "{name} ({total} en todas las cuentas)"
   },
