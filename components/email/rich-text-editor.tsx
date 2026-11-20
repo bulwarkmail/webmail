@@ -507,6 +507,8 @@ export function RichTextEditor({
   textCheck: textCheckHandlers,
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
+  // Read once when the editor is built: a reply opens with the quote as set.
+  const replyQuoteExpanded = useSettingsStore((st) => st.replyQuoteDisplay === 'expanded');
   const tComposer = useTranslations("email_composer");
   const tUx = useTranslations("compose_ux");
   const tQuote = useTranslations("email_viewer");
@@ -590,7 +592,7 @@ export function RichTextEditor({
       // Quoted/forwarded original email body - held verbatim as an atomic
       // node so layout-heavy HTML survives 1:1 (see quoted-html.ts).
       QuotedHtml,
-      ReplyQuoteCollapse.configure({ show: tQuote("show_quoted_text"), hide: tQuote("hide_quoted_text") }),
+      ReplyQuoteCollapse.configure({ show: tQuote("show_quoted_text"), hide: tQuote("hide_quoted_text"), expanded: replyQuoteExpanded }),
       // Identity signature - held verbatim as a non-editable atomic node so
       // rich/branded signatures keep their inline styling in the editor and
       // in the sent mail (see signature-block.ts). Double-click unlocks it

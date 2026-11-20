@@ -2156,6 +2156,12 @@
         "label": "Hurtigsvar",
         "description": "Vis feltet for hurtigsvar under meldinger."
       },
+      "reply_quote": {
+        "label": "Sitert tekst i svar",
+        "description": "Sammenslått skjuler de siterte meldingene bak •••. Utvidet viser dem i sin helhet når du åpner et svar.",
+        "collapsed": "Sammenslått",
+        "expanded": "Utvidet"
+      },
       "auto_select_reply_identity": {
         "label": "Svar fra mottatt adresse",
         "description": "Når du svarer, send fra adressen meldingen ble sendt til."

@@ -2136,6 +2136,12 @@
         "label": "クイック返信",
         "description": "メッセージの下にクイック返信欄を表示します。"
       },
+      "reply_quote": {
+        "label": "返信の引用テキスト",
+        "description": "折りたたむ: 引用されたメッセージを ••• の後ろに隠します。展開する: 返信を開いたときに全文を表示します。",
+        "collapsed": "折りたたむ",
+        "expanded": "展開する"
+      },
       "auto_select_reply_identity": {
         "label": "返信元アドレスを自動選択",
         "description": "返信するとき、メッセージが送られてきたアドレスから送信します。"

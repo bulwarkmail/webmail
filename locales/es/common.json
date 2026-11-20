@@ -2136,6 +2136,12 @@
         "label": "Respuesta rápida",
         "description": "Mostrar el cuadro de respuesta rápida debajo de los mensajes."
       },
+      "reply_quote": {
+        "label": "Texto citado en las respuestas",
+        "description": "Contraído oculta los mensajes citados tras •••. Expandido los muestra completos al abrir una respuesta.",
+        "collapsed": "Contraído",
+        "expanded": "Expandido"
+      },
       "auto_select_reply_identity": {
         "label": "Seleccionar dirección de respuesta automáticamente",
         "description": "Al responder, enviar desde la dirección a la que se envió el mensaje."

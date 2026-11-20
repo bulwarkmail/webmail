@@ -281,6 +281,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('rtlEditingSupport', 'composing', `${EB}rtl_editing.label`),
   bool('replyUnderMessage', 'composing', `${EB}reply_under_message.label`),
   bool('quickReplyEnabled', 'composing', `${EB}quick_reply.label`),
+  choice('replyQuoteDisplay', 'composing', `${EB}reply_quote.label`,
+    opts(`${EB}reply_quote.`, ['collapsed', 'expanded'])),
   bool('autoSelectReplyIdentity', 'composing', 'compose_words.reply_from_received.label'),
   // The page shows it only while the composer may rewrite From.
   choice('replyIdentityMatch', 'composing', `${EB}reply_identity_match.label`,

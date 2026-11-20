@@ -2156,6 +2156,12 @@
         "label": "Kiirvastus",
         "description": "Näita kiirvastuse kasti kirjade all."
       },
+      "reply_quote": {
+        "label": "Tsiteeritud tekst vastustes",
+        "description": "Ahendatud peidab tsiteeritud kirjad ••• taha. Laiendatud näitab neid vastuse avamisel tervikuna.",
+        "collapsed": "Ahendatud",
+        "expanded": "Laiendatud"
+      },
       "auto_select_reply_identity": {
         "label": "Vasta kirja saanud aadressilt",
         "description": "Vastamisel saada aadressilt, kuhu kiri saadeti."

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore, undoSendOptions } from '@/stores/settings-store';
-import type { MentionAddsRecipientTo, ReplyIdentityMatch, SendDelaySeconds } from '@/stores/settings-store';
+import type { MentionAddsRecipientTo, ReplyIdentityMatch, ReplyQuoteDisplay, SendDelaySeconds } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
@@ -29,6 +29,7 @@ export function ComposingSettings() {
 
   const {
     quickReplyEnabled,
+    replyQuoteDisplay,
     replyUnderMessage,
     interfaceLayout,
     autoSelectReplyIdentity,
@@ -111,6 +112,17 @@ export function ComposingSettings() {
           <ToggleSwitch
             checked={quickReplyEnabled}
             onChange={(checked) => updateSetting('quickReplyEnabled', checked)}
+          />
+        </SettingItem>
+
+        <SettingItem label={t('reply_quote.label')} description={t('reply_quote.description')}>
+          <Select
+            value={replyQuoteDisplay}
+            onChange={(value) => updateSetting('replyQuoteDisplay', value as ReplyQuoteDisplay)}
+            options={[
+              { value: 'collapsed', label: t('reply_quote.collapsed') },
+              { value: 'expanded', label: t('reply_quote.expanded') },
+            ]}
           />
         </SettingItem>
 

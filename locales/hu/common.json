@@ -2156,6 +2156,12 @@
         "label": "Gyors válasz",
         "description": "A gyors válasz mező megjelenítése az üzenetek alatt."
       },
+      "reply_quote": {
+        "label": "Idézett szöveg a válaszokban",
+        "description": "Összecsukva az idézett üzenetek a ••• mögött maradnak. Kibontva teljes egészében látszanak, amikor megnyit egy választ.",
+        "collapsed": "Összecsukva",
+        "expanded": "Kibontva"
+      },
       "auto_select_reply_identity": {
         "label": "Válasz a fogadott címről",
         "description": "Válaszkor arról a címről küldjön, amelyre az üzenet érkezett."

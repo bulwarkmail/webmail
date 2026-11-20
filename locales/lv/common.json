@@ -2136,6 +2136,12 @@
         "label": "Ātrā atbilde",
         "description": "Rādīt ātrās atbildes lauku zem ziņojumiem."
       },
+      "reply_quote": {
+        "label": "Citētais teksts atbildēs",
+        "description": "Sakļauts paslēpj citētās ziņas aiz •••. Izvērsts parāda tās pilnībā, kad atverat atbildi.",
+        "collapsed": "Sakļauts",
+        "expanded": "Izvērsts"
+      },
       "auto_select_reply_identity": {
         "label": "Automātiski izvēlēties atbildes adresi",
         "description": "Atbildot sūtīt no adreses, uz kuru vēstule tika nosūtīta."

@@ -2156,6 +2156,12 @@
         "label": "Hurtigt svar",
         "description": "Vis feltet til hurtigt svar under beskeder."
       },
+      "reply_quote": {
+        "label": "Citeret tekst i svar",
+        "description": "Foldet sammen skjuler de citerede beskeder bag •••. Foldet ud viser dem helt, når du åbner et svar.",
+        "collapsed": "Foldet sammen",
+        "expanded": "Foldet ud"
+      },
       "auto_select_reply_identity": {
         "label": "Svar fra modtaget adresse",
         "description": "Når du svarer, send fra den adresse, beskeden blev sendt til."

@@ -295,6 +295,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.composing_page.sections.replying' },
     { label: 'settings.email_behavior.reply_under_message.label', when: 'notMountainView' },
     { label: 'settings.email_behavior.quick_reply.label' },
+    { label: 'settings.email_behavior.reply_quote.label' },
     { label: 'compose_words.reply_from_received.label' },
     { label: 'settings.email_behavior.signature_position.label' },
     { label: 'settings.email_behavior.signature_new_mail.label' },

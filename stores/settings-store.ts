@@ -523,6 +523,10 @@ export type MvInboxType = 'default' | 'unread-first';
 export type DeleteAction = 'trash' | 'trash-and-read' | 'permanent';
 export type ReplyMode = 'reply' | 'replyAll';
 export type SignaturePosition = 'above_quote' | 'below_quote';
+/** Whether the quoted messages in a reply start folded behind ••• (#1800). */
+export type ReplyQuoteDisplay = 'collapsed' | 'expanded';
+export const isReplyQuoteDisplay = (value: unknown): value is ReplyQuoteDisplay =>
+  value === 'collapsed' || value === 'expanded';
 export type ReplyIdentityMatch = 'exact' | 'domain';
 /** How to handle an incoming Disposition-Notification-To (read-receipt) request. */
 export type ReadReceiptResponse = 'ask' | 'always' | 'never';
@@ -882,6 +886,7 @@ interface SettingsState extends AccessibilitySettings {
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
   sendDelaySeconds: SendDelaySeconds;
   signaturePosition: SignaturePosition; // Position of the signature relative to quoted text in replies/forwards
+  replyQuoteDisplay: ReplyQuoteDisplay; // Quoted text in a reply starts folded or shown in full
   signatureNewMailEnabled: boolean; // Insert the signature automatically in new messages
   signatureReplyForwardEnabled: boolean; // Insert the signature automatically in replies and forwards
   signatureSeparatorEnabled: boolean; // Prefix the signature with the RFC 3676 "-- " delimiter
@@ -1270,6 +1275,7 @@ const DEFAULT_SETTINGS = {
   // Undo send is on out of the box, as in other mail apps (v13).
   sendDelaySeconds: 5 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
+  replyQuoteDisplay: 'collapsed' as ReplyQuoteDisplay,
   // On, as before the toggles existed: saved settings and server copies
   // from older builds lack these keys and fall back to this default.
   signatureNewMailEnabled: true,
@@ -1555,6 +1561,7 @@ function isAllowedPolicyValue(key: string, value: unknown, restriction?: Setting
   if (key === 'messageListOrderScope' && value !== 'inbox' && value !== 'all') return false;
   if (key === 'searchDefaultScope' && !isSearchDefaultScope(value)) return false;
   if (key === 'composePlacement' && !isComposePlacement(value)) return false;
+  if (key === 'replyQuoteDisplay' && !isReplyQuoteDisplay(value)) return false;
   if (key === 'calendarMonthTimedEvents' && !MONTH_TIMED_EVENT_STYLES.includes(value as MonthTimedEventStyle)) return false;
   if (!isAllowedAccessibilityValue(key, value)) return false;
   if (restriction && typeof restriction === 'object') {
@@ -1887,6 +1894,7 @@ export const useSettingsStore = create<SettingsState>()(
           subAddressDelimiter: state.subAddressDelimiter,
           sendDelaySeconds: state.sendDelaySeconds,
           signaturePosition: state.signaturePosition,
+          replyQuoteDisplay: state.replyQuoteDisplay,
           signatureNewMailEnabled: state.signatureNewMailEnabled,
           signatureReplyForwardEnabled: state.signatureReplyForwardEnabled,
           signatureSeparatorEnabled: state.signatureSeparatorEnabled,
@@ -2217,6 +2225,9 @@ export const useSettingsStore = create<SettingsState>()(
                 return;
               }
               if (key === 'composePlacement' && !isComposePlacement(settings[key])) {
+                return;
+              }
+              if (key === 'replyQuoteDisplay' && !isReplyQuoteDisplay(settings[key])) {
                 return;
               }
               if (key === 'searchDefaultScope' && !isSearchDefaultScope(settings[key])) {

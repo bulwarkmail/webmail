@@ -2156,6 +2156,12 @@
         "label": "Quick reply",
         "description": "Show the quick reply box below messages."
       },
+      "reply_quote": {
+        "label": "Quoted text in replies",
+        "description": "Collapsed hides the quoted messages behind •••. Expanded shows them in full when you open a reply.",
+        "collapsed": "Collapsed",
+        "expanded": "Expanded"
+      },
       "auto_select_reply_identity": {
         "label": "Reply from the address it was sent to",
         "description": "When replying, send from the address the message was originally sent to."

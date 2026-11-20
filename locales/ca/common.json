@@ -2156,6 +2156,12 @@
         "label": "Resposta ràpida",
         "description": "Mostra el quadre de resposta ràpida sota els missatges."
       },
+      "reply_quote": {
+        "label": "Text citat a les respostes",
+        "description": "Replegat amaga els missatges citats darrere de •••. Desplegat els mostra sencers quan obres una resposta.",
+        "collapsed": "Replegat",
+        "expanded": "Desplegat"
+      },
       "auto_select_reply_identity": {
         "label": "Respon des de l'adreça de recepció",
         "description": "En respondre, envia des de l’adreça a la qual es va enviar el missatge."

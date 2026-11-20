@@ -2153,6 +2153,12 @@
         "label": "Schnellantwort",
         "description": "Das Feld für die Schnellantwort unter Nachrichten anzeigen."
       },
+      "reply_quote": {
+        "label": "Zitierter Text in Antworten",
+        "description": "Eingeklappt verbirgt die zitierten Nachrichten hinter •••. Ausgeklappt zeigt sie vollständig, wenn Sie eine Antwort öffnen.",
+        "collapsed": "Eingeklappt",
+        "expanded": "Ausgeklappt"
+      },
       "auto_select_reply_identity": {
         "label": "Antwortadresse automatisch wählen",
         "description": "Beim Antworten von der Adresse senden, an die die E-Mail ursprünglich ging."

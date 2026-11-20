@@ -2153,6 +2153,12 @@
         "label": "快速回复",
         "description": "在邮件下方显示快速回复框。"
       },
+      "reply_quote": {
+        "label": "回复中的引用文本",
+        "description": "折叠：将引用的邮件隐藏在 ••• 后面。展开：打开回复时完整显示。",
+        "collapsed": "折叠",
+        "expanded": "展开"
+      },
       "auto_select_reply_identity": {
         "label": "自动选择回复地址",
         "description": "回复时，从邮件发送到的地址发出。"

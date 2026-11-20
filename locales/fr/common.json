@@ -2136,6 +2136,12 @@
         "label": "Réponse rapide",
         "description": "Afficher la zone de réponse rapide sous les messages."
       },
+      "reply_quote": {
+        "label": "Texte cité dans les réponses",
+        "description": "Réduit masque les messages cités derrière •••. Développé les affiche en entier à l'ouverture d'une réponse.",
+        "collapsed": "Réduit",
+        "expanded": "Développé"
+      },
       "auto_select_reply_identity": {
         "label": "Sélection automatique de l'adresse de réponse",
         "description": "Lors d’une réponse, envoyer depuis l’adresse à laquelle le message a été envoyé."

@@ -2153,6 +2153,12 @@
         "label": "Hızlı yanıt",
         "description": "İletilerin altında hızlı yanıt kutusunu göster."
       },
+      "reply_quote": {
+        "label": "Yanıtlarda alıntılanan metin",
+        "description": "Daraltılmış, alıntılanan iletileri ••• arkasına gizler. Genişletilmiş, bir yanıtı açtığınızda bunları tam olarak gösterir.",
+        "collapsed": "Daraltılmış",
+        "expanded": "Genişletilmiş"
+      },
       "auto_select_reply_identity": {
         "label": "Yanıt Adresini Otomatik Seç",
         "description": "Yanıtlarken, iletinin gönderildiği adresten gönder."

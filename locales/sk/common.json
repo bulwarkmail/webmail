@@ -2156,6 +2156,12 @@
         "label": "Rýchla odpoveď",
         "description": "Zobraziť pole na rýchlu odpoveď pod správami."
       },
+      "reply_quote": {
+        "label": "Citovaný text v odpovediach",
+        "description": "Zbalené skryje citované správy za •••. Rozbalené ich pri otvorení odpovede zobrazí celé.",
+        "collapsed": "Zbalené",
+        "expanded": "Rozbalené"
+      },
       "auto_select_reply_identity": {
         "label": "Odpovedať z prijatej adresy",
         "description": "Pri odpovedaní odoslať z adresy, na ktorú bola správa poslaná."

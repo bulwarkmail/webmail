@@ -2156,6 +2156,12 @@
         "label": "Răspuns rapid",
         "description": "Afișează caseta de răspuns rapid sub mesaje."
       },
+      "reply_quote": {
+        "label": "Textul citat în răspunsuri",
+        "description": "Restrâns ascunde mesajele citate în spatele •••. Extins le afișează complet când deschideți un răspuns.",
+        "collapsed": "Restrâns",
+        "expanded": "Extins"
+      },
       "auto_select_reply_identity": {
         "label": "Răspunde de la adresa de la care a fost primit mesajul",
         "description": "Când răspundeți, trimiteți de la adresa la care a fost trimis mesajul."

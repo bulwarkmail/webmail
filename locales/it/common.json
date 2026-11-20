@@ -2136,6 +2136,12 @@
         "label": "Risposta rapida",
         "description": "Mostra la casella di risposta rapida sotto i messaggi."
       },
+      "reply_quote": {
+        "label": "Testo citato nelle risposte",
+        "description": "Compresso nasconde i messaggi citati dietro •••. Espanso li mostra per intero quando apri una risposta.",
+        "collapsed": "Compresso",
+        "expanded": "Espanso"
+      },
       "auto_select_reply_identity": {
         "label": "Seleziona automaticamente l'indirizzo di risposta",
         "description": "Quando rispondi, invia dall’indirizzo a cui è stato inviato il messaggio."

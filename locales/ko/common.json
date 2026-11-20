@@ -2153,6 +2153,12 @@
         "label": "빠른 답장",
         "description": "메시지 아래에 빠른 답장 상자를 표시합니다."
       },
+      "reply_quote": {
+        "label": "답장의 인용 텍스트",
+        "description": "접기: 인용된 메시지를 ••• 뒤에 숨깁니다. 펼치기: 답장을 열 때 전체를 표시합니다.",
+        "collapsed": "접기",
+        "expanded": "펼치기"
+      },
       "auto_select_reply_identity": {
         "label": "답장 시 보내는 사람 자동 선택",
         "description": "답장할 때 메시지를 받은 주소로 보내요."

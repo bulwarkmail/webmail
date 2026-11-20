@@ -2156,6 +2156,12 @@
         "label": "快速回覆",
         "description": "在郵件下方顯示快速回覆框。"
       },
+      "reply_quote": {
+        "label": "回覆中的引用文字",
+        "description": "摺疊：將引用的郵件隱藏在 ••• 後面。展開：開啟回覆時完整顯示。",
+        "collapsed": "摺疊",
+        "expanded": "展開"
+      },
       "auto_select_reply_identity": {
         "label": "使用收件地址回覆",
         "description": "回覆時，從郵件寄達的地址寄出。"

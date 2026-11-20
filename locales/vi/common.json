@@ -2168,6 +2168,12 @@
         "label": "Trả lời nhanh",
         "description": "Hiển thị khung trả lời nhanh bên dưới thư."
       },
+      "reply_quote": {
+        "label": "Văn bản trích dẫn trong thư trả lời",
+        "description": "Thu gọn ẩn các thư được trích dẫn sau •••. Mở rộng hiển thị đầy đủ khi bạn mở thư trả lời.",
+        "collapsed": "Thu gọn",
+        "expanded": "Mở rộng"
+      },
       "auto_select_reply_identity": {
         "label": "Trả lời bằng địa chỉ nhận thư",
         "description": "Khi trả lời, gửi từ địa chỉ mà thư đã được gửi đến."

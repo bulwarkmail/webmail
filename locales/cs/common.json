@@ -2153,6 +2153,12 @@
         "label": "Rychlá odpověď",
         "description": "Zobrazit pole pro rychlou odpověď pod zprávami."
       },
+      "reply_quote": {
+        "label": "Citovaný text v odpovědích",
+        "description": "Sbaleno skryje citované zprávy za •••. Rozbaleno je při otevření odpovědi zobrazí celé.",
+        "collapsed": "Sbaleno",
+        "expanded": "Rozbaleno"
+      },
       "auto_select_reply_identity": {
         "label": "Automaticky vybírat adresu pro odpověď",
         "description": "Při odpovídání odeslat z adresy, na kterou byla zpráva poslána."

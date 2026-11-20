@@ -2164,6 +2164,12 @@
         "label": "Raskt svar",
         "description": "Vis boksen for raskt svar under meldingane."
       },
+      "reply_quote": {
+        "label": "Sitert tekst i svar",
+        "description": "Samanslått gøymer dei siterte meldingane bak •••. Utvida viser dei heilt når du opnar eit svar.",
+        "collapsed": "Samanslått",
+        "expanded": "Utvida"
+      },
       "auto_select_reply_identity": {
         "label": "Svar frå adressa meldinga vart sendt til",
         "description": "Når du svarar, sender du frå adressa meldinga opphavleg vart sendt til."

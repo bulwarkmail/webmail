@@ -2136,6 +2136,12 @@
         "label": "Snel antwoorden",
         "description": "Het vak voor snel antwoorden onder berichten tonen."
       },
+      "reply_quote": {
+        "label": "Geciteerde tekst in antwoorden",
+        "description": "Ingeklapt verbergt de geciteerde berichten achter •••. Uitgeklapt toont ze volledig als u een antwoord opent.",
+        "collapsed": "Ingeklapt",
+        "expanded": "Uitgeklapt"
+      },
       "auto_select_reply_identity": {
         "label": "Antwoordadres automatisch selecteren",
         "description": "Bij beantwoorden verzenden vanaf het adres waarnaar het bericht is gestuurd."

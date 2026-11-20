@@ -2136,6 +2136,12 @@
         "label": "Resposta rápida",
         "description": "Mostrar a caixa de resposta rápida abaixo das mensagens."
       },
+      "reply_quote": {
+        "label": "Texto citado nas respostas",
+        "description": "Recolhido oculta as mensagens citadas atrás de •••. Expandido as mostra por completo quando você abre uma resposta.",
+        "collapsed": "Recolhido",
+        "expanded": "Expandido"
+      },
       "auto_select_reply_identity": {
         "label": "Responder do endereço que recebeu a mensagem",
         "description": "Ao responder, enviar do endereço para o qual a mensagem foi enviada."

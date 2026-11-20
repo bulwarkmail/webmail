@@ -37,7 +37,8 @@ export function markReplyQuoteHeader(html: string): string {
 }
 
 interface QuoteRange { from: number; to: number }
-interface QuoteState { expanded: Set<number> }
+/** Quotes the user opened or closed against the starting state, by start position. */
+interface QuoteState { toggled: Set<number>; startExpanded: boolean }
 const quoteKey = new PluginKey<QuoteState>('replyQuoteCollapse');
 
 function quoteRanges(doc: PMNode): QuoteRange[] {
@@ -61,9 +62,14 @@ function quoteRanges(doc: PMNode): QuoteRange[] {
 
 const isSignature = (node: PMNode) => node.type.name === 'signatureBlock' || Boolean(node.attrs['data-signature-block']);
 
+function isOpen(state: EditorState, from: number): boolean {
+  const quote = quoteKey.getState(state);
+  if (!quote) return false;
+  return quote.startExpanded !== quote.toggled.has(from);
+}
+
 function collapsedRanges(state: EditorState): QuoteRange[] {
-  const expanded = quoteKey.getState(state)?.expanded ?? new Set<number>();
-  return quoteRanges(state.doc).filter((range) => !expanded.has(range.from));
+  return quoteRanges(state.doc).filter((range) => !isOpen(state, range.from));
 }
 
 /**
@@ -138,11 +144,12 @@ function clickInGapAboveQuote(state: EditorState, pos: number, end: number): boo
 }
 
 /** Visibility is a view decoration, never a document edit or an undo step. */
-export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string }>({
+export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string; expanded: boolean }>({
   name: 'replyQuoteCollapse',
 
   addOptions() {
-    return { show: 'Show quoted text', hide: 'Hide quoted text' };
+    // expanded: every quote starts open (the "Quoted text in replies" setting, #1800).
+    return { show: 'Show quoted text', hide: 'Hide quoted text', expanded: false };
   },
 
   addGlobalAttributes() {
@@ -160,28 +167,32 @@ export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string 
 
   addProseMirrorPlugins() {
     const labels = this.options;
+    const startExpanded = Boolean(this.options.expanded);
     return [new Plugin<QuoteState>({
       key: quoteKey,
       state: {
-        init: () => ({ expanded: new Set<number>() }),
+        init: () => ({ toggled: new Set<number>(), startExpanded }),
         apply: (tr, previous) => {
-          const expanded = new Set<number>();
-          for (const pos of previous.expanded) {
+          const toggled = new Set<number>();
+          for (const pos of previous.toggled) {
             const mapped = tr.mapping.mapResult(pos);
-            if (!mapped.deleted) expanded.add(mapped.pos);
+            if (!mapped.deleted) toggled.add(mapped.pos);
           }
+          const setOpen = (from: number, open: boolean) => {
+            if (open === startExpanded) toggled.delete(from);
+            else toggled.add(from);
+          };
           const toggle = tr.getMeta(quoteKey) as { from: number; expanded: boolean } | undefined;
           if (toggle) {
-            if (toggle.expanded) expanded.add(toggle.from);
-            else expanded.delete(toggle.from);
+            setOpen(toggle.from, toggle.expanded);
           } else if (tr.selectionSet) {
             // Arrow keys, Find and editor commands must not leave the caret
             // inside invisible text. Revealing it changes no message content.
             for (const range of quoteRanges(tr.doc)) {
-              if (tr.selection.from < range.to && tr.selection.to > range.from) expanded.add(range.from);
+              if (tr.selection.from < range.to && tr.selection.to > range.from) setOpen(range.from, true);
             }
           }
-          return { expanded };
+          return { toggled, startExpanded };
         },
       },
       props: {
@@ -215,10 +226,9 @@ export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string 
           return true;
         },
         decorations(state) {
-          const expanded = quoteKey.getState(state)?.expanded ?? new Set<number>();
           const decorations: Decoration[] = [];
           for (const range of quoteRanges(state.doc)) {
-            const open = expanded.has(range.from);
+            const open = isOpen(state, range.from);
             decorations.push(Decoration.widget(range.from, (view) => {
               const button = document.createElement('button');
               button.type = 'button';

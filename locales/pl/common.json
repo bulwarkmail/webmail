@@ -2153,6 +2153,12 @@
         "label": "Szybka odpowiedź",
         "description": "Pokazuj pole szybkiej odpowiedzi pod wiadomościami."
       },
+      "reply_quote": {
+        "label": "Cytowany tekst w odpowiedziach",
+        "description": "Zwinięty ukrywa cytowane wiadomości za •••. Rozwinięty pokazuje je w całości po otwarciu odpowiedzi.",
+        "collapsed": "Zwinięty",
+        "expanded": "Rozwinięty"
+      },
       "auto_select_reply_identity": {
         "label": "Automatycznie wybieraj adres odpowiedzi",
         "description": "Przy odpowiadaniu wysyłaj z adresu, na który wysłano wiadomość."
