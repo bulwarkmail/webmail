@@ -845,7 +845,9 @@ function buildCoreApi(manifest: PluginManifest) {
        *  The host draws a line with the plugin's name and a close button
        *  over it; `title` is read out, not shown. `height` fixes the frame's
        *  height in px (40-400) and the plugin's root fills it; without it the
-       *  frame takes its content's height, up to 400 px. The frame gets
+       *  frame takes its content's height, up to 400 px. On a short screen
+       *  the host gives each notice less, so all notices up fit, and what
+       *  doesn't fit scrolls. The frame gets
        *  `extraProps` and `noticeId`, and may open a dialog (openDialog),
        *  which stands above it. At most 3 per plugin: a fourth closes the
        *  oldest. It stays until closeNotice, the user's close button, or the

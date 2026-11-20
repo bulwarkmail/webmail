@@ -10,6 +10,7 @@
 
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { dismissNotice, notices, subscribeNotices, type NoticeRequest } from '@/lib/plugin-sandbox/notices';
+import { MAX_NOTICE_HEIGHT } from '@/lib/plugin-sandbox/slot-layout';
 import { useToastStore } from '@/stores/toast-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import type { SlotName } from '@/lib/plugin-types';
@@ -17,15 +18,36 @@ import { PluginIframeSlot } from './plugin-iframe-slot';
 
 const NONE: readonly NoticeRequest[] = [];
 
+/** rem the stack keeps free of notices: its margins and room for a toast of the app's. */
+const STACK_ROOM_REM = 6;
+/** rem a notice takes beside its frame: the line with the plugin's name, the borders and the gap to the next. */
+const NOTICE_CHROME_REM = 2.5;
+
+/**
+ * The most a notice's frame takes: MAX_NOTICE_HEIGHT, and on a short screen
+ * less, so that all `count` notices up fit on the screen with their close
+ * buttons. Also for a notice that names another of the plugin's slots, whose
+ * frame could otherwise grow to that slot's limit.
+ */
+export function noticeFrameLimit(count: number): string {
+  const n = Math.max(1, count);
+  return `min(${MAX_NOTICE_HEIGHT}px, calc((100dvh - ${STACK_ROOM_REM}rem) / ${n} - ${NOTICE_CHROME_REM}rem))`;
+}
+
+const noticeCount = () => notices().length;
+const oneNotice = () => 1;
+
 /** The plugin's frame in a notice: `height` fixes it and the frame fills it, else it takes its content's height. */
 export function PluginNoticeFrame({ notice }: { notice: NoticeRequest }) {
   const extraProps = useMemo(() => ({ ...notice.extraProps, noticeId: notice.id }), [notice]);
+  const limit = noticeFrameLimit(useSyncExternalStore(subscribeNotices, noticeCount, oneNotice));
   return (
     <div
       data-plugin-notice={notice.pluginId}
       data-plugin-slot={notice.slot}
-      className={notice.height !== undefined ? 'flex flex-col overflow-hidden' : undefined}
-      style={notice.height !== undefined ? { height: notice.height } : undefined}
+      // What doesn't fit scrolls, so a frame cut down on a short screen keeps its buttons in reach.
+      className={notice.height !== undefined ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'}
+      style={notice.height !== undefined ? { height: `min(${notice.height}px, ${limit})` } : { maxHeight: limit }}
     >
       <PluginIframeSlot
         pluginId={notice.pluginId}

@@ -10,7 +10,7 @@ vi.mock('@/lib/plugin-sandbox/host-theme', () => ({ snapshotHostTheme: () => ({}
 const announce = vi.fn();
 vi.mock('@/lib/announce', () => ({ announce: (...args: unknown[]) => announce(...args) }));
 
-const { PluginNoticeHost } = await import('../plugin-notice-host');
+const { PluginNoticeHost, noticeFrameLimit } = await import('../plugin-notice-host');
 const { ToastContainer } = await import('@/components/ui/toast');
 const { useToastStore } = await import('@/stores/toast-store');
 const registry = await import('@/lib/plugin-sandbox/registry');
@@ -55,6 +55,13 @@ function Stack() {
       <ToastContainer toasts={toasts} onClose={removeToast} />
     </>
   );
+}
+
+/** A style value as the browser keeps it, to compare with an element's. */
+function css(prop: 'height' | 'maxHeight', value: string): string {
+  const probe = document.createElement('div');
+  probe.style[prop] = value;
+  return probe.style[prop];
 }
 
 const noticeCards = () => Array.from(document.querySelectorAll<HTMLElement>('[data-toast-container] .toast-item'));
@@ -134,10 +141,34 @@ describe('api.ui.showNotice', () => {
     render(<Stack />);
     await act(async () => { await frame().call(p, 'ui.showNotice', { height: 9999 }); });
     const box = document.querySelector<HTMLElement>('[data-plugin-notice="crm"]')!;
-    expect(box.style.height).toBe('400px');
+    expect(box.style.height).toBe(css('height', `min(400px, ${noticeFrameLimit(1)})`));
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
     expect((createSlotInstance.mock.calls[0][0] as { fill?: boolean }).fill).toBe(true);
     await expect(frame().call(p, 'ui.showNotice', { height: 'tall' })).rejects.toThrow('height must be a number');
+  });
+
+  it('keeps a notice in another of the plugin\'s slots to a notice\'s height', async () => {
+    const p = plugin('crm', 'CRM');
+    render(<Stack />);
+    await act(async () => { await frame().call(p, 'ui.showNotice', { slot: 'plugin-dialog' }); });
+    const box = document.querySelector<HTMLElement>('[data-plugin-notice="crm"]')!;
+    expect(box.style.maxHeight).toBe(css('maxHeight', noticeFrameLimit(1)));
+    expect(box.style.maxHeight).toContain('min(400px,');
+    expect(box).toHaveClass('overflow-y-auto');
+  });
+
+  it('shares the screen\'s height among the notices up, so all of them fit', async () => {
+    const p = plugin('crm', 'CRM');
+    const other = plugin('other', 'Other');
+    render(<Stack />);
+    await act(async () => { await frame().call(p, 'ui.showNotice', { height: 300 }); });
+    await act(async () => { await frame().call(other, 'ui.showNotice', {}); });
+    await act(async () => { await frame().call(other, 'ui.showNotice', {}); });
+    const boxes = Array.from(document.querySelectorAll<HTMLElement>('[data-plugin-notice]'));
+    expect(boxes).toHaveLength(3);
+    expect(boxes[0].style.height).toBe(css('height', `min(300px, ${noticeFrameLimit(3)})`));
+    expect(boxes[1].style.maxHeight).toBe(css('maxHeight', noticeFrameLimit(3)));
+    expect(css('maxHeight', noticeFrameLimit(3))).not.toBe(css('maxHeight', noticeFrameLimit(1)));
   });
 
   it('takes another of the plugin\'s own slots, but none it doesn\'t offer', async () => {
