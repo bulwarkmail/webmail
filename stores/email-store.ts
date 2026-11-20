@@ -28,6 +28,9 @@ import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PRE
 import { provideSearchResults, type ProvidedSearchResult } from "@/lib/plugin-search-results";
 import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, resolveJmapTarget, unifiedEmptyTargets, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { withoutHiddenFolders } from "@/lib/team-mailboxes/hidden-folders";
+import { activeTeamFilterCondition, useTeamListFilter } from "@/lib/team-mailboxes/list-filter";
+import { teamFor } from "@/lib/team-mailboxes/team";
+import { usePolicyStore } from "@/stores/policy-store";
 import { defaultSearchScopeFor, isAllFoldersSearchScope, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { useAuthStore } from "@/stores/auth-store";
 import { pathNamesMailFolder } from "@/lib/deep-links";
@@ -1119,6 +1122,19 @@ function pluginListFilter(mailbox: Mailbox | undefined): Record<string, unknown>
   return activeListFilterCondition(pluginFilterFolder(mailbox));
 }
 
+/**
+ * The team mailbox filter (Open, Assigned to me, Mentions me, With notes,
+ * lib/team-mailboxes/list-filter.ts) picked in this folder's team, if any.
+ */
+function teamListFilter(mailbox: Mailbox | undefined): Record<string, unknown> | null {
+  if (!mailbox?.isShared || !mailbox.accountId || !useTeamListFilter.getState().active) return null;
+  const auth = useAuthStore.getState();
+  const loginId = useEmailStore.getState().viewingAccountId ?? auth.activeAccountId;
+  const client = loginId ? auth.getClientForAccount(loginId) ?? auth.client : auth.client;
+  const ref = teamFor(client, loginId, mailbox.accountId, usePolicyStore.getState().rawPolicy);
+  return ref && client ? activeTeamFilterCondition(ref.key, client.getAccountId().toLowerCase()) : null;
+}
+
 /** A folder as the plugins' list filters see it: its role and its account's kind. */
 function pluginFilterFolder(mailbox: Mailbox): ListFilterFolder {
   const auth = useAuthStore.getState();
@@ -1140,7 +1156,8 @@ function folderListFilter(
   s: Pick<EmailStore, 'selectedKeyword' | 'searchQuery' | 'searchFilters' | 'isUnifiedView'>,
 ): Record<string, unknown> | null {
   const categoryFilter = useMessageListTabsStore.getState().getCategoryFilter(mailbox?.role);
-  return andFilters(andFilters(categoryFilter, pluginListFilter(mailbox)), unreadFirstFor(mailbox, s) ? READ_FILTER : null);
+  const withPlugins = andFilters(andFilters(categoryFilter, pluginListFilter(mailbox)), teamListFilter(mailbox));
+  return andFilters(withPlugins, unreadFirstFor(mailbox, s) ? READ_FILTER : null);
 }
 
 interface LoadedUnreadSection { emails: Email[]; total: number; position: number }

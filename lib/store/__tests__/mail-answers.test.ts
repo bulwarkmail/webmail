@@ -236,6 +236,17 @@ describe('Email/query filters and sorts', () => {
     expect(await ids(engine, { sort: newest })).toEqual(['c', 'b', 'a']);
   });
 
+  it('finds every message of a conversation where one of them has the keyword (team mailbox filters)', async () => {
+    const server = new FakeJmapMail({ mailboxes: [{ id: 'inbox', name: 'Inbox', role: 'inbox' }, { id: 'sent', name: 'Sent', role: 'sent' }] });
+    server.addEmail({ id: 'q', threadId: 't1', mailboxIds: { inbox: true }, keywords: {}, receivedAt: '2026-10-01T00:00:00Z' });
+    server.addEmail({ id: 'r', threadId: 't1', mailboxIds: { sent: true }, keywords: { '$bulwark-notes': true }, receivedAt: '2026-10-02T00:00:00Z' });
+    server.addEmail({ id: 's', threadId: 't2', mailboxIds: { inbox: true }, keywords: {}, receivedAt: '2026-10-03T00:00:00Z' });
+    const { engine } = engineFor(server);
+    await engine.requestSync();
+    const filter = { operator: 'AND', conditions: [{ inMailbox: 'inbox' }, { someInThreadHaveKeyword: '$bulwark-notes' }] };
+    expect(await ids(engine, { filter, sort: [{ property: 'receivedAt', isAscending: false }] })).toEqual(['q']);
+  });
+
   it('sorts by every level the list offers', async () => {
     const engine = await seeded();
     const sorted = (sort: unknown[]) => ids(engine, { sort });

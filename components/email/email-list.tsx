@@ -72,6 +72,8 @@ import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { normalizeAddress } from "@/lib/filters/quick-rules";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { PluginListFilters, useFolderListFiltered } from "./plugin-list-filters";
+import { TeamListFilters } from "@/components/team-mailboxes/team-list-filters";
+import { useTeamListFilter } from "@/lib/team-mailboxes/list-filter";
 import { PluginActions, useFolderAccountKind } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
 import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
@@ -793,7 +795,8 @@ export function EmailList({
   const folderAccountKind = useFolderAccountKind();
   // A filter chip or a category tab on: the folder itself may well have mail.
   const pluginFilterOn = useFolderListFiltered(effectiveMailboxRole ?? null, folderAccountKind);
-  const listNarrowed = pluginFilterOn || useMessageListTabsStore.getState().getCategoryFilter(effectiveMailboxRole) !== null;
+  const teamFilterOn = useTeamListFilter((s) => s.active !== null);
+  const listNarrowed = pluginFilterOn || teamFilterOn || useMessageListTabsStore.getState().getCategoryFilter(effectiveMailboxRole) !== null;
   // "Remove from this folder" (#615): offered for a selection only when every
   // selected message is also in another folder.
   const removeFromFolder = useRemoveFromFolder();
@@ -1661,6 +1664,14 @@ export function EmailList({
         <PluginListFilters
           mailboxRole={effectiveMailboxRole ?? null}
           accountKind={folderAccountKind}
+          onChange={() => { clearSelection(); if (client) void useEmailStore.getState().fetchEmails(client); }}
+        />
+      )}
+      {/* Team mailboxes: Open, Assigned to me, Mentions me, With notes. */}
+      {!isSearching && !selectedKeyword && !isUnifiedView && !isScheduledView && selectedMailbox && (
+        <TeamListFilters
+          loginId={useEmailStore.getState().viewingAccountId ?? useAuthStore.getState().activeAccountId}
+          accountId={mailboxes.find((m) => m.id === selectedMailbox)?.isShared ? mailboxes.find((m) => m.id === selectedMailbox)?.accountId : undefined}
           onChange={() => { clearSelection(); if (client) void useEmailStore.getState().fetchEmails(client); }}
         />
       )}
