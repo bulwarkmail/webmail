@@ -1240,6 +1240,18 @@ export function EmailComposer({
   // errors and returns null - the same value it returns for an empty draft -
   // so this is the only way to distinguish the two.
   const saveFailedRef = useRef(false);
+  // Where the original message's parts live: the login that holds it and,
+  // within that login, the JMAP account that owns it (a shared mailbox's
+  // owner). Forwarded attachments and quoted inline images both read from it.
+  const quotedPartsSource = (): { login?: string; owner?: string } => {
+    const login = replyTo?.sourceClientAccountId ?? sourceAccountId ?? undefined;
+    if (replyTo?.sourceAccountId) return { login, owner: replyTo.sourceAccountId };
+    if (!replyTo?.sourceClientAccountId) return { login };
+    const auth = useAuthStore.getState();
+    const loginClient = auth.getClientForAccount(replyTo.sourceClientAccountId)
+      ?? (replyTo.sourceClientAccountId === activeAccountId ? auth.client : undefined);
+    return { login, owner: loginClient?.getAccountId?.() };
+  };
   const [attachments, setAttachments] = useState<ComposerAttachment[]>(() => {
     // A re-opened draft (or a compose tab restored from saved state) brings
     // its existing server-side attachments along as blobId references. They
@@ -1272,12 +1284,7 @@ export function EmailComposer({
       // Covers parts the type/disposition test below misses - Foxmail embeds
       // inline images as octet-stream with no inline disposition (#543).
       const embeddedCids = collectInlineImageCids(body);
-      const sourceLogin = replyTo.sourceClientAccountId ?? sourceAccountId ?? undefined;
-      const auth = useAuthStore.getState();
-      const sourceOwner = replyTo.sourceAccountId ?? (replyTo.sourceClientAccountId
-        ? (auth.getClientForAccount(replyTo.sourceClientAccountId)
-          ?? (replyTo.sourceClientAccountId === activeAccountId ? auth.client : undefined))?.getAccountId?.()
-        : undefined);
+      const { login: sourceLogin, owner: sourceOwner } = quotedPartsSource();
       return replyTo.attachments
         // Skip inline cid-referenced images - they're embedded in the forwarded HTML body
         // (matches the viewer's hideInlineImageAttachments logic). att.cid may still
@@ -1307,7 +1314,7 @@ export function EmailComposer({
   });
   // uploadedAt is set for images uploaded from this composer, whose blobId
   // expires (see refreshStaleInlineUploads).
-  const inlineImagesRef = useRef<Array<{ cid: string; blobId: string; type: string; name: string; size: number; dataUrl: string; sourceAccountId?: string; uploadedAt?: number }>>([]);
+  const inlineImagesRef = useRef<Array<{ cid: string; blobId: string; type: string; name: string; size: number; dataUrl: string; sourceAccountId?: string; sourceJmapAccountId?: string; uploadedAt?: number }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [validationErrors, setValidationErrors] = useState<{ to?: boolean; body?: boolean }>({});
   const [shakeField, setShakeField] = useState<string | null>(null);
@@ -1562,9 +1569,12 @@ export function EmailComposer({
 
     if (!inlineCids?.size) return;
     for (const entry of inlineImagesRef.current) {
-      if (!inlineCids.has(entry.cid) || !isForeign(entry.sourceAccountId)) continue;
+      if (!inlineCids.has(entry.cid)) continue;
+      const owner = entry.sourceJmapAccountId;
+      if (!isForeign(entry.sourceAccountId) && (!owner || owner === targetAccountId)) continue;
       entry.blobId = await copyBlob(entry);
       entry.sourceAccountId = composerAccountId;
+      entry.sourceJmapAccountId = owner ? targetAccountId : undefined;
     }
   };
 
@@ -1917,8 +1927,9 @@ export function EmailComposer({
     if (mode !== 'reply' && mode !== 'replyAll' && mode !== 'forward') return;
     // The quoted parts live on the account that holds the original message,
     // which is not necessarily the one this message goes out through.
-    const originClient = (sourceAccountId && sourceAccountId !== composerAccountId
-      ? useAuthStore.getState().getClientForAccount(sourceAccountId)
+    const { login: originLogin, owner: originOwner } = quotedPartsSource();
+    const originClient = (originLogin && originLogin !== composerAccountId
+      ? useAuthStore.getState().getClientForAccount(originLogin)
       : undefined) ?? composerClient;
     if (!originClient || !replyTo?.attachments?.length) return;
 
@@ -1953,7 +1964,8 @@ export function EmailComposer({
         name: att.name || 'inline',
         size: att.size,
         dataUrl: '',
-        sourceAccountId: sourceAccountId ?? undefined,
+        sourceAccountId: originLogin,
+        sourceJmapAccountId: originOwner,
       });
     }
 
@@ -1962,11 +1974,9 @@ export function EmailComposer({
       const updates = new Map<string, string>();
       for (const att of inlineAtts) {
         try {
-          const buffer = await originClient.fetchBlobArrayBuffer(
-            att.blobId,
-            att.name || 'inline',
-            att.type,
-          );
+          const buffer = originOwner
+            ? await originClient.fetchBlobArrayBuffer(att.blobId, att.name || 'inline', att.type, originOwner)
+            : await originClient.fetchBlobArrayBuffer(att.blobId, att.name || 'inline', att.type);
           if (cancelled) return;
           // Trust a declared image/* type; otherwise sniff the magic bytes so
           // an octet-stream-embedded image still gets a renderable data URL
@@ -4592,6 +4602,7 @@ export function EmailComposer({
     try {
       const inlineCids = plainTextMode ? undefined : bodyInlineCids(body);
       const targetAccountId = attachmentsRef.current.some(att => att.sourceJmapAccountId)
+        || inlineImagesRef.current.some(entry => inlineCids?.has(entry.cid) && entry.sourceJmapAccountId)
         ? (await composerClient?.resolveSendAccountId?.(fromEmail)) ?? composerClient?.getAccountId?.()
         : undefined;
       await rehomeForeignBlobs(targetAccountId, inlineCids);

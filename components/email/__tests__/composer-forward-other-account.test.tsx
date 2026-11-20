@@ -538,7 +538,7 @@ describe('forwarding a message held by another account', () => {
     );
   });
 
-  it('review probe: keeps local and foreign attachments with the same id distinct with a draft hook', async () => {
+  it('keeps local and foreign attachments with the same id distinct with a draft hook', async () => {
     draftHook.enabled = true;
     multi.allIdentities = [ACTIVE_IDENTITY];
     const { activeClient, sourceClient } = mockClients();

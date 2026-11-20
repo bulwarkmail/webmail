@@ -286,4 +286,60 @@ describe('reply/forward inline image cid normalization', () => {
       expect.objectContaining({ blobId: 'blob-1', cid: 'logo123@sender' }),
     ]);
   });
+
+  // A message in a shared mailbox belongs to another JMAP account of the same
+  // login: its inline images are read from that owner and copied into the
+  // account the forward goes out through, as its attachments are (#1794).
+  it('reads a quoted inline image from the shared owner and copies it to the sending account', async () => {
+    const fetchBlobArrayBuffer = vi.fn().mockResolvedValue(PNG_MAGIC);
+    const uploadBlob = vi.fn().mockResolvedValue({ blobId: 'blob-copied' });
+    useAuthStore.setState({
+      activeAccountId: 'acct-me' as never,
+      client: {
+        fetchBlobArrayBuffer,
+        uploadBlob,
+        getAccountId: () => 'me-primary',
+        resolveSendAccountId: async () => 'me-primary',
+        hasDelayedSend: () => false,
+        supportsPrincipals: () => false,
+        getMaxDelayedSend: () => 0,
+      } as never,
+    });
+    const onSend = vi.fn();
+
+    try {
+      render(
+        <EmailComposer
+          mode="forward"
+          onSend={onSend}
+          replyTo={{
+            from: [{ email: 'sender@example.com', name: 'Sender' }],
+            subject: 'Hello',
+            htmlBody: '<p>Hi</p><img src="cid:logo123@sender">',
+            quoteHeaderHtml: 'Forwarded message',
+            sourceAccountId: 'shared-owner',
+            attachments: [
+              { blobId: 'blob-1', name: 'logo.png', type: 'image/png', size: 100, cid: '<logo123@sender>' },
+            ],
+          }}
+          onClose={vi.fn()}
+        />
+      );
+
+      await waitFor(() => expect(fetchBlobArrayBuffer).toHaveBeenCalledWith('blob-1', 'logo.png', 'image/png', 'shared-owner'));
+      fireEvent.paste(screen.getByPlaceholderText('to_placeholder'), {
+        clipboardData: { getData: () => 'bob@example.com;' },
+      });
+      fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+      await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+
+      expect(uploadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(File), 'me-primary');
+      const sent = onSend.mock.calls[0][0] as { attachments?: Array<{ cid?: string; blobId: string }> };
+      expect(sent.attachments).toEqual([
+        expect.objectContaining({ blobId: 'blob-copied', cid: 'logo123@sender' }),
+      ]);
+    } finally {
+      useAuthStore.setState({ activeAccountId: null });
+    }
+  });
 });
