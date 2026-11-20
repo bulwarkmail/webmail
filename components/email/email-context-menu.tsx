@@ -30,6 +30,7 @@ import { useConnectionState } from "@/hooks/use-connection-state";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
 import { RulesContextList, RulesContextSubMenu } from "./rules-menu";
+import { useTeamActions } from "@/components/team-mailboxes/team-actions";
 
 interface Position {
   x: number;
@@ -244,6 +245,9 @@ export function EmailContextMenu({
   const tagScope = useEmailTagScope(email);
   const showBatchActions = isMultiSelect && selectedCount > 1;
   const isScheduled = email.isScheduled === true;
+  // Team mailboxes: Assign to me, Assign to…, Unassign, Mark done, Reopen for
+  // the one message a row's menu is about (the reader's ⋮ gets them from the reader).
+  const teamEntries = useTeamActions(rowMenu && !showBatchActions && !isScheduled ? email : null);
   // "Remove from this folder" needs one open folder and messages that are
   // also in another one; for a selection, every selected message must be.
   const folderToLeave = useEmailStore(removalFolder);
@@ -346,7 +350,7 @@ export function EmailContextMenu({
     onMoveToInbox: onMoveToInbox ?? (inboxTo ? () => onMoveToMailbox?.(inboxTo.id) : undefined),
     omit,
     views,
-    extras,
+    extras: teamEntries.length > 0 ? [...(extras ?? []), ...teamEntries] : extras,
   });
 
   // Stable, so the Rules entry does not re-resolve its account every render.

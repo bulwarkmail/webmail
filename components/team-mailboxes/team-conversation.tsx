@@ -38,6 +38,7 @@ import {
 import { isOwnNote } from '@/lib/team-mailboxes/note-format';
 import { NoteCard, PendingNoteCard, TeamOnlyLine, TimelineLine, displayName } from './note-cards';
 import { NoteField, type NoteFieldHandle } from './note-field';
+import { useTeamPeople } from '@/hooks/use-team-people';
 import {
   conversationKeys,
   useConversationNotes,
@@ -82,11 +83,14 @@ export function useTeamNotesAction(): { available: boolean; openField: (emailId?
 }
 
 /** A note's assignee and similar ids → names, from the notes' authors until the names list is in. */
-function useNameOf(notes: NoteEntry[], selfId: string | null, selfName: string | null): (id: string) => string | null {
+function useNameOf(context: TeamContext | null, selfName: string | null): (id: string) => string | null {
+  const people = useTeamPeople(context?.ref ?? null, context?.client ?? null);
+  const selfId = context?.client.getAccountId().toLowerCase() ?? null;
   return useCallback((id: string) => {
     if (selfId && id === selfId && selfName) return selfName;
-    return null;
-  }, [selfId, selfName]);
+    const person = people.byId(id);
+    return person?.name || person?.email || null;
+  }, [selfId, selfName, people]);
 }
 
 export function TeamNotesProvider({ email, messages, children }: {
@@ -200,7 +204,7 @@ function useTeamNotesValue(context: TeamContext | null, team: TeamState | undefi
   }, [key, keys, threadIds, t]);
 
   const selfName = team?.author ? displayName(team.author) : null;
-  const nameOf = useNameOf(notes, context?.client.getAccountId() ?? null, selfName);
+  const nameOf = useNameOf(context, selfName);
   const target: Message | undefined = ordered.find((m) => m.id === targetId) ?? ordered[ordered.length - 1];
   return useMemo<TeamNotesValue | null>(() => (context && team ? {
     context, team, slots, firstSlot, notes, fieldOpen, openField, closeField, target, highlightNoteId, nameOf, announcement,

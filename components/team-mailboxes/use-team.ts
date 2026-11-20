@@ -15,6 +15,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { resolveEmailBlobContext, useEmailStore } from '@/stores/email-store';
 import { confirmGroups, useConfirmedGroups } from '@/lib/plugin-sandbox/account-kind';
 import { teamFor, type TeamRef } from '@/lib/team-mailboxes/team';
+import { registerSelf } from '@/lib/team-mailboxes/names';
 import { noteKeyFor, type NoteEntry } from '@/lib/team-mailboxes/note-format';
 import {
   ensureTeamLoaded,
@@ -66,7 +67,11 @@ export function useTeamOf(email: Stamped): TeamContext | null {
     return ref && resolved.client ? { ref, client: resolved.client } : null;
   }, [resolved, rawPolicy, groupsRevision]);
   useEffect(() => {
-    if (context) void ensureTeamLoaded(context.ref, context.client);
+    if (!context) return;
+    void ensureTeamLoaded(context.ref, context.client);
+    // The first visit puts the user on the team's names list, so the others
+    // can pick them in Assign to… and @ before anyone assigned them anything.
+    void registerSelf(context.ref, context.client);
   }, [context]);
   // Ask the server which accounts are groups, outside render (the answer
   // re-renders through groupsRevision). Only for an account that isn't the

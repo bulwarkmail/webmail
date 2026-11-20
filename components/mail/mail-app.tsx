@@ -89,6 +89,7 @@ import { createMailPushListener } from "@/lib/mail-push-listener";
 import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBatchEmailAction, setConversationTagsWithUndo, setSelectionStarredWithUndo, toastWithUndo, undoKeywordAction, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { ShareNotificationToaster } from "@/components/layout/share-notification-toaster";
+import { TeamAssignDialogHost } from "@/components/team-mailboxes/team-actions";
 import { CalendarEventNotificationToaster } from "@/components/layout/calendar-event-notification-toaster";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin, canEnterLoginInPlace } from '@/stores/auth-store';
 import { useRouter } from '@/i18n/navigation';
@@ -7489,6 +7490,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
         <ShareNotificationToaster client={client} />
+        <TeamAssignDialogHost />
         <CalendarEventNotificationToaster client={client} />
         {floatingComposer && <MvComposeWindow>{composerNode}</MvComposeWindow>}
       </div>

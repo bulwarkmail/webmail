@@ -10,7 +10,7 @@ const ref: TeamRef = { key: 'login|g', loginId: 'login', accountId: 'g', groupAd
 let inTeam = true;
 vi.mock('../use-team', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../use-team')>()),
-  useTeamOf: () => (inTeam ? { ref, client: {} } : null),
+  useTeamOf: () => (inTeam ? { ref, client: { getUsername: () => 'tm-alice@example.org', getAccountId: () => 'ha', supportsBulwarkMetadata: () => false } } : null),
 }));
 
 const { useTeamMailboxStore, markConversationSeen } = await import('@/stores/team-mailbox-store');
@@ -34,7 +34,7 @@ function seed(notes: NoteEntry[], baselineMinute = 0, seenThreads: Record<string
   });
 }
 
-const row = { id: 'e1', threadId: 't1', messageId: undefined, sourceClientAccountId: 'login', sourceAccountId: 'g' };
+const row = { id: 'e1', threadId: 't1', messageId: undefined, keywords: {} as Record<string, boolean>, sourceClientAccountId: 'login', sourceAccountId: 'g' };
 const badge = () => document.querySelector('[data-team-row-notes]') as HTMLElement | null;
 
 afterEach(() => {
@@ -63,6 +63,14 @@ describe('team row badges', () => {
     seed([note('old', 50), note('mine', 300, alice)], 100);
     render(<TeamRowBadges email={row} />);
     expect(badge()?.hasAttribute('data-team-row-unseen')).toBe(false);
+  });
+
+  it('shows who has the message and the Done mark, from its keywords', () => {
+    seed([]);
+    render(<TeamRowBadges email={{ ...row, keywords: { '$assigned:ha': true, $done: true } }} />);
+    expect(document.body.textContent).toContain('chip_me');
+    expect(document.body.textContent).toContain('done');
+    expect(badge()).toBeNull();
   });
 
   it('shows nothing for a conversation without notes or outside a team mailbox', () => {

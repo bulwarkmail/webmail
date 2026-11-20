@@ -359,7 +359,9 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
     const omit = o.omit;
     list = list.filter((entry) => entry.kind === "separator" || !omit.has(entry.key));
   }
-  if (o.extras && o.extras.length > 0) list = [...list, SEPARATOR, ...o.extras];
+  // The host's entries leave out what its toolbar already shows, like the message's own.
+  const extras = (o.extras ?? []).filter((entry) => entry.kind === "separator" || !o.omit?.has(entry.key));
+  if (extras.length > 0) list = [...list, SEPARATOR, ...extras];
   return tidySeparators(list);
 }
 
@@ -376,6 +378,9 @@ export const ROW_MENU_KEYS: ReadonlySet<MessageActionKey> = new Set<MessageActio
   "read", "star", "tag",
   "spam",
   "open_window",
+  // Team mailboxes (components/team-mailboxes): one click from the menu.
+  "extra:team_note",
+  "extra:team_assign_me", "extra:team_assign_to", "extra:team_unassign", "extra:team_done", "extra:team_reopen",
 ]);
 
 /**
