@@ -82,7 +82,7 @@
     "next": "^16.4.3",
     "next-intl": "^4.13.3",
     "otpauth": "^9.5.2",
-    "pdfjs-dist": "^6.4.299",
+    "pdfjs-dist": "^6.5.438",
     "postal-mime": "^4.1.4",
     "pst-extractor": "1.12.0",
     "qrcode": "^1.5.4",
