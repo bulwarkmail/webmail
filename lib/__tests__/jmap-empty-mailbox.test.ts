@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { JMAPClient } from '../jmap/client';
+import { IncompleteDeleteError } from '../jmap/delete-error';
 
 function makeSession() {
   return {
@@ -117,6 +118,31 @@ describe('JMAPClient.emptyMailbox', () => {
 
     await expect(client.emptyMailbox('mailbox-1')).rejects.toThrow();
     expect(server.requests).toEqual([500]);
+  });
+
+  it('deletes the rest of the folder when the server refuses one message', async () => {
+    const client = await connectedClient();
+    let remaining = Array.from({ length: 1200 }, (_, i) => `email-${i}`);
+    fetchSpy.mockImplementation((async (_url: string, init: RequestInit) => {
+      const [, queryArgs] = JSON.parse(init.body as string).methodCalls[0];
+      const page = remaining.slice(0, queryArgs.limit);
+      const destroyed = page.filter((id) => id !== 'email-0');
+      remaining = remaining.filter((id) => !destroyed.includes(id));
+      return jsonResponse({ methodResponses: [
+        ['Email/query', { ids: page }, '0'],
+        ['Email/set', {
+          destroyed,
+          notDestroyed: page.includes('email-0') ? { 'email-0': { type: 'forbidden', description: 'Message is on hold' } } : {},
+        }, '1'],
+      ] });
+    }) as never);
+
+    const error = await client.emptyMailbox('mailbox-1').catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(IncompleteDeleteError);
+    expect((error as IncompleteDeleteError).destroyedIds).toHaveLength(1199);
+    expect(Object.keys((error as IncompleteDeleteError).notDestroyed)).toEqual(['email-0']);
+    expect(remaining).toEqual(['email-0']);
   });
 
   it('rejects an HTTP-success response when the mailbox query was refused', async () => {

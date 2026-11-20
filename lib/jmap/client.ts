@@ -4466,14 +4466,17 @@ export class JMAPClient implements IJMAPClient {
     const targetAccountId = accountId || this.accountId;
     const batchSize = Math.min(500, this.getMaxObjectsInSet());
     const destroyedIds: string[] = [];
-    let notDestroyed: Record<string, JmapErrorInfo> = {};
+    const notDestroyed: Record<string, JmapErrorInfo> = {};
     let unknownIds: string[] = [];
+    let refusal: unknown;
 
     // A short page is the tail only after every destroy in it was confirmed.
     // Email/query can omit total, so a full page always needs another query.
+    // Messages the server refuses stay in the folder and come back in the next
+    // page: keep going while a page deletes something, so one refused message
+    // doesn't keep the rest of the folder.
     try {
       while (true) {
-        notDestroyed = {};
         unknownIds = [];
         const response = await this.request([
           ["Email/query", {
@@ -4490,24 +4493,41 @@ export class JMAPClient implements IJMAPClient {
         const [queryName, query] = response.methodResponses?.find(([, , tag]) => tag === "0") ?? [];
         const [setName, result] = response.methodResponses?.find(([, , tag]) => tag === "1") ?? [];
         const ids: string[] | undefined = queryName === "Email/query" && Array.isArray(query?.ids) ? query.ids : undefined;
-        if (setName === "Email/set") notDestroyed = result?.notDestroyed ?? {};
+        const refused: Record<string, JmapErrorInfo> = (setName === "Email/set" && result?.notDestroyed) || {};
         const destroyed = new Set<string>(setName === "Email/set" && Array.isArray(result?.destroyed) ? result.destroyed : []);
+        let destroyedNow = 0;
         for (const id of ids ?? []) {
-          if (Object.hasOwn(notDestroyed, id)) continue;
-          if (destroyed.has(id)) destroyedIds.push(id);
-          else unknownIds.push(id);
+          if (Object.hasOwn(refused, id)) {
+            notDestroyed[id] = refused[id];
+          } else if (destroyed.has(id)) {
+            delete notDestroyed[id];
+            destroyedIds.push(id);
+            destroyedNow++;
+          } else {
+            unknownIds.push(id);
+          }
         }
-        assertSetSucceeded(response, 'Failed to empty folder');
         if (!ids || setName !== "Email/set" || unknownIds.length > 0) {
+          assertSetSucceeded(response, 'Failed to empty folder');
           throw new Error('Failed to empty folder');
         }
-        if (ids.length < batchSize) return destroyedIds.length;
+        try {
+          assertSetSucceeded(response, 'Failed to empty folder');
+        } catch (error) {
+          refusal = error;
+        }
+        if (ids.length < batchSize || destroyedNow === 0) break;
       }
     } catch (error) {
       if (destroyedIds.length === 0) throw error;
       // The current page's ids are unavailable if its response was lost.
       throw new IncompleteDeleteError({ destroyedIds, notDestroyed, unknownIds, unattemptedIds: [] }, error);
     }
+    if (refusal) {
+      if (destroyedIds.length === 0) throw refusal;
+      throw new IncompleteDeleteError({ destroyedIds, notDestroyed, unknownIds: [], unattemptedIds: [] }, refusal);
+    }
+    return destroyedIds.length;
   }
 
   async moveMailboxContents(
