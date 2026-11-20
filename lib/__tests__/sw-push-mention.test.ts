@@ -11,12 +11,13 @@ const SW_SOURCE = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
 
 type Shown = { title: string; options: Record<string, unknown>; closed: boolean };
 
-function loadWorker(preview: (url: URL) => Record<string, unknown>, stored: { labels?: Record<string, string> } = {}) {
+function loadWorker(preview: (url: URL) => Record<string, unknown>, stored: { labels?: Record<string, string>; locked?: boolean } = {}) {
   const listeners = new Map<string, (event: unknown) => void>();
   const shown: Shown[] = [];
   const shade = new Map<string, Shown>();
   const cacheStore = new Map<string, string>();
   if (stored.labels) cacheStore.set('https://mail.example.com/__push-state/actions', JSON.stringify({ labels: stored.labels }));
+  if (stored.locked) cacheStore.set('https://mail.example.com/__push-state/app-lock', JSON.stringify({ state: 'locked' }));
   let opened: string | undefined;
   const self = {
     location: { href: 'https://mail.example.com/sw.js', origin: 'https://mail.example.com' },
@@ -119,6 +120,33 @@ describe('a mention of you in a team note', () => {
     await push(stateChange);
     expect(shade.get('mention-g:n1')?.title).toBe('Mabel mentioned you in “Offer for the Mulberry project”');
     expect(shade.get('bulwark-mail:g')?.title).toBe('Client (bob@example.org)');
+  });
+});
+
+describe('while the app lock hides content', () => {
+  it('asks with locked=1 and says only that you were mentioned', async () => {
+    // Whatever the answer holds, the worker names nobody and nothing.
+    const { push, shown, fetchMock } = loadWorker(() => ({ skip: true, mention: MENTION, slot: 0 }), { locked: true });
+    await push(noteDelivery);
+    expect(String(fetchMock.mock.calls[0][0])).toContain('locked=1');
+    expect(visible(shown).map((n) => n.title)).toEqual(['You were mentioned in a team mailbox']);
+    expect(JSON.stringify(shown)).not.toMatch(/Mabel|Mulberry/);
+  });
+
+  it('stays silent for a note that mentions someone else', async () => {
+    const { push, shown } = loadWorker(() => ({ skip: true, redacted: true, slot: 0 }), { locked: true });
+    await push(stateChange);
+    expect(shown.length).toBeGreaterThan(0);
+    expect(visible(shown)).toEqual([]);
+  });
+
+  it('tells of mail as before: "New mail", nothing from the answer', async () => {
+    const { push, shown } = loadWorker(() => ({
+      unreadTotal: 1, slot: 0, email: { id: 'm1', threadId: 't-m1', from: [{ name: 'Client' }], subject: 'New order' },
+    }), { locked: true });
+    await push(stateChange);
+    expect(visible(shown).map((n) => n.title)).toEqual(['New mail (bob@example.org)']);
+    expect(JSON.stringify(shown)).not.toMatch(/Client|New order/);
   });
 });
 

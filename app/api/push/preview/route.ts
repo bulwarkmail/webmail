@@ -413,7 +413,11 @@ export async function GET(request: NextRequest) {
     // login's scopes (worked out from its own session): the message's
     // sender, subject and text are never read, so they can't reach the
     // notification, the push service or the lock screen. Unknown counts as on.
-    const redacted = await serverDevicePolicy({
+    // `locked=1`: the app lock hides content on this device. The worker still
+    // asks, so a team note can stay silent or say only "you were mentioned",
+    // and the answer is the one this policy gives.
+    const locked = request.nextUrl.searchParams.get('locked') === '1';
+    const redacted = locked || await serverDevicePolicy({
       serverUrl: target.serverUrl,
       authHeader,
       username: target.username,
@@ -570,7 +574,9 @@ export async function GET(request: NextRequest) {
     if (delivered && isNote(delivered)) {
       const mentioned = mentionIn(delivered, principalId, redacted);
       if (!mentioned) return NextResponse.json({ skip: true }, { headers });
+      // `skip` too: whatever else the worker makes of it, this is no mail.
       return NextResponse.json({
+        skip: true,
         mention: await findMessage(mentioned),
         ...(redacted ? { redacted: true } : {}),
         ...withSlot,

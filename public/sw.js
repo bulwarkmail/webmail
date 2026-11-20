@@ -697,15 +697,18 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // No login in this browser could read the account, not even after the route
   // renewed its token: signed out, or the sign-in can't be renewed from here.
   let previewSignedOut = false;
-  // Locked: not a word about the message, so it isn't even looked up.
+  // Locked: not a word about the message. The route is still asked, with
+  // `locked=1` so it reads and sends nothing but ids: whether a team note woke
+  // us is all this worker takes from it then.
   const lockHidesContent = await appLockHidesContent();
-  if (!lockHidesContent) try {
+  try {
     const query = new URLSearchParams();
     if (accountId) query.set("accountId", accountId);
     // The relay record's label is the login that registered. Account and message
     // ids repeat across logins, and this tells them apart.
     if (accountLabel) query.set("login", accountLabel);
     if (freshIds.length > 0) query.set("emailId", freshIds[freshIds.length - 1]);
+    if (lockHidesContent) query.set("locked", "1");
     const qs = query.toString();
     const previewUrl = `${BASE_PATH}/api/push/preview${qs ? `?${qs}` : ""}`;
     // A notification shown more than 30 s after the push counts as a silent
@@ -750,6 +753,36 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
     previewOk = false;
   }
 
+  // A team note (app/api/push/preview): one that mentions this login is told
+  // once, under a tag of its own; any other note has nothing to say. Each
+  // note wakes every member of the team on some servers.
+  const mention = previewOk && preview && preview.mention && typeof preview.mention.noteId === "string" && preview.mention.noteId
+    ? preview.mention
+    : null;
+  let mentionShown = false;
+  if (mention && !notified.includes(mention.noteId)) {
+    const noteSlot = Number.isInteger(preview.slot) ? preview.slot : undefined;
+    const noteLogin = typeof preview.login === "string" ? preview.login : undefined;
+    await showMention(mention, !!preview.redacted || lockHidesContent, accountId, accountLabel, noteSlot, noteLogin);
+    notified = notified.concat([mention.noteId]);
+    await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
+    mentionShown = true;
+  }
+  // Nothing more to say: a push has to end in a notification, and the mention was one.
+  const quiet = () => (mentionShown ? Promise.resolve() : showWithoutAlert(groupTag));
+  if (previewOk && preview && preview.skip === true) {
+    if (freshIds.length > 0 && !mentionShown) await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
+    await quiet();
+    return;
+  }
+  // Locked, mail is told of as it was before the worker asked: "New mail", with
+  // nothing from the answer.
+  if (lockHidesContent) {
+    preview = null;
+    previewOk = false;
+    previewSignedOut = false;
+  }
+
   const email = preview && preview.email ? preview.email : null;
   const unreadTotal = preview && typeof preview.unreadTotal === "number"
     ? preview.unreadTotal
@@ -765,27 +798,6 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // open to do it (#1516).
   if (previewOk && preview && typeof preview.inboxUnread === "number") {
     await queueAppBadgeStep(() => appBadgeFromPush(accountId, accountLabel, preview.inboxUnread));
-  }
-
-  // A team note (app/api/push/preview): one that mentions this login is told
-  // once, under a tag of its own; any other note has nothing to say. Each
-  // note wakes every member of the team on some servers.
-  const mention = previewOk && preview && preview.mention && typeof preview.mention.noteId === "string" && preview.mention.noteId
-    ? preview.mention
-    : null;
-  let mentionShown = false;
-  if (mention && !notified.includes(mention.noteId)) {
-    await showMention(mention, !!preview.redacted, accountId, accountLabel, slot, login);
-    notified = notified.concat([mention.noteId]);
-    await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
-    mentionShown = true;
-  }
-  // Nothing more to say: a push has to end in a notification, and the mention was one.
-  const quiet = () => (mentionShown ? Promise.resolve() : showWithoutAlert(groupTag));
-  if (previewOk && preview && preview.skip === true) {
-    if (freshIds.length > 0 && !mentionShown) await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
-    await quiet();
-    return;
   }
 
   // Push subscription is scoped to EmailDelivery, but stragglers from the

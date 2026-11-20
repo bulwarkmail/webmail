@@ -77,11 +77,11 @@ function mockJmap() {
   });
 }
 
-async function callRoute(accountId: string, emailId: string | null = null) {
+async function callRoute(accountId: string, emailId: string | null = null, extra: Record<string, string> = {}) {
   const { GET } = await import('@/app/api/push/preview/route');
   const request = {
     headers: new Headers(),
-    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? emailId : null) } },
+    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? emailId : extra[k] ?? null) } },
   };
   const res = (await GET(request as unknown as Parameters<typeof GET>[0])) as unknown as {
     status: number;
@@ -384,7 +384,7 @@ describe('push preview for team notes', () => {
   describe('a push that names the note', () => {
     it('tells the member it mentions, and opens the message it is about', async () => {
       store.push(note('n1', { mentions: ['a', 'b'] }));
-      expect(await callRoute('g', 'n1')).toEqual({ status: 200, body: { mention: MENTION, slot: 0, login: expect.any(String) } });
+      expect(await callRoute('g', 'n1')).toEqual({ status: 200, body: { skip: true, mention: MENTION, slot: 0, login: expect.any(String) } });
     });
 
     it("opens the conversation's newest message when none has the Message-ID", async () => {
@@ -414,7 +414,7 @@ describe('push preview for team notes', () => {
       store.push(note('n1'));
       const { body } = await callRoute('g', 'n1');
       const { from: _from, subject: _subject, ...withoutContent } = MENTION;
-      expect(body).toEqual({ mention: withoutContent, redacted: true, slot: 0, login: expect.any(String) });
+      expect(body).toEqual({ skip: true, mention: withoutContent, redacted: true, slot: 0, login: expect.any(String) });
       expect(JSON.stringify(body)).not.toMatch(/Mabel|Mulberry|signed copy/);
       for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
     });
@@ -464,6 +464,18 @@ describe('push preview for team notes', () => {
       const { body } = await callRoute('g');
       expect(body.mention).toEqual({ noteId: 'n1', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer' });
       expect(JSON.stringify(body)).not.toMatch(/Mabel|Mulberry|signed copy/);
+      for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
+    });
+  });
+
+  describe('while the app lock hides content (locked=1)', () => {
+    it('answers as under "Push without sender and subject": ids only, for notes and mail', async () => {
+      store.push(note('n1'), mail('new', { age: 10_000 }));
+      const named = (await callRoute('g', 'n1', { locked: '1' })).body;
+      expect(named).toMatchObject({ skip: true, redacted: true, mention: { noteId: 'n1', emailId: 'offer' } });
+      const mailAnswer = (await callRoute('g', 'new', { locked: '1' })).body;
+      expect(mailAnswer).toMatchObject({ redacted: true, email: { id: 'new', threadId: 't-new' } });
+      expect(JSON.stringify([named, mailAnswer])).not.toMatch(/Mabel|Mulberry|signed copy|Client|Mail new|Text of/);
       for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
     });
   });
