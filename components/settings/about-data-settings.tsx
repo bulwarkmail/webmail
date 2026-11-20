@@ -242,7 +242,7 @@ export function AboutDataSettings() {
       </SettingsSection>
 
       <MailBackupSettings />
-      <MailboxMigrationSettings />
+      {!IS_LITE && <MailboxMigrationSettings />}
     </div>
   );
 }

@@ -126,6 +126,10 @@ export const LITE_API_STRING_ALLOWLIST = [
   // Return from an impersonation (#1538): lib/impersonation/return-client.ts
   // skips every call in Lite, which has no impersonation.
   "/api/auth/impersonate/return",
+  // Settings > Move from another server: not rendered in Lite, which has no
+  // server to run the copy on (components/settings/about-data-settings.tsx).
+  "/api/migration",
+  "/api/migration/report",
   "/api/auth/totp-token-exchange",
   "/api/auth/session",
   "/api/auth/verify",

@@ -46,6 +46,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'lib/auth/bearer-identity.ts#goodTokens', class: 'cache', why: 'bearer tokens that checked out, by HMAC, until they end or for an hour, capped at 5000; another replica checks again' },
   { site: 'lib/auth/bearer-identity.ts#refusedBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/client-address.ts#NOT_A_CLIENT', class: 'per-process', why: 'a constant address list built once' },
+  { site: 'lib/migration/folder-roles.ts#NAME_TO_ROLE', class: 'per-process', why: 'a constant table of folder names to roles, built once' },
   { site: 'lib/auth/handoff-store.ts#createBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/handoff-store.ts#redeemBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/handoff-store.ts#desktopParkBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
