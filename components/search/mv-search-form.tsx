@@ -32,12 +32,13 @@ export function MvSearchForm({ filters, onChange, onSearch, onClear, folderSelec
     </label>
   );
 
-  const check = (label: string, value: boolean | null, key: "hasAttachment" | "isStarred" | "isUnread") => (
+  const check = (label: string, value: boolean | null, key: "hasAttachment" | "isStarred" | "isUnread" | "untagged") => (
     <label className="inline-flex items-center gap-3 text-sm text-foreground cursor-pointer">
       <input
         type="checkbox"
         checked={value === true}
-        onChange={(e) => onChange({ [key]: e.target.checked ? true : null })}
+        // `untagged` is a plain yes/no; the others are unset when unchecked.
+        onChange={(e) => onChange({ [key]: e.target.checked ? true : key === "untagged" ? false : null })}
         className="h-4 w-4 rounded-sm accent-[var(--color-primary)]"
       />
       {label}
@@ -93,6 +94,7 @@ export function MvSearchForm({ filters, onChange, onSearch, onClear, folderSelec
         {check(t("has_attachment_check"), filters.hasAttachment, "hasAttachment")}
         {check(t("starred"), filters.isStarred, "isStarred")}
         {check(t("unread"), filters.isUnread, "isUnread")}
+        {check(t("no_tags"), filters.untagged, "untagged")}
       </div>
 
       <div className="flex items-center justify-end gap-2 pb-2">

@@ -432,6 +432,7 @@ describe('buildJMAPFilter', () => {
         isStarred: true,
         minSizeKb: '',
         maxSizeKb: '',
+        untagged: false,
       };
       const result = buildJMAPFilter('money', filters, 'mb-1') as {
         operator: string;
@@ -545,7 +546,45 @@ describe('activeFilterCount', () => {
       isStarred: true,
       minSizeKb: '',
       maxSizeKb: '',
+      untagged: false,
     })).toBe(9);
+  });
+});
+
+describe('untagged filter', () => {
+  const untagged: SearchFilters = { ...DEFAULT_SEARCH_FILTERS, untagged: true };
+  const notTagged = [
+    { notKeyword: '$label:work' },
+    { notKeyword: '$color:work' },
+    { notKeyword: '$label:red' },
+    { notKeyword: '$color:red' },
+  ];
+
+  it('leaves out every known tag under both prefixes, ANDed with the rest', () => {
+    expect(buildJMAPFilter('report', { ...untagged, isUnread: true }, 'mb-1', ['work', 'red'])).toEqual({
+      operator: 'AND',
+      conditions: [{ text: 'report' }, { notKeyword: '$seen' }, ...notTagged, { inMailbox: 'mb-1' }],
+    });
+  });
+
+  it('is the AND of the tag conditions alone', () => {
+    expect(buildJMAPFilter('', untagged, undefined, ['work', 'red'])).toEqual({ operator: 'AND', conditions: notTagged });
+  });
+
+  it('adds nothing without known tags', () => {
+    expect(buildJMAPFilter('', untagged, 'mb-1', [])).toEqual({ inMailbox: 'mb-1' });
+    expect(buildJMAPFilter('', untagged)).toEqual({});
+    expect(buildJMAPFilter('report', untagged, undefined, [])).toEqual({ text: 'report' });
+  });
+
+  it('adds nothing when off, even with known tags', () => {
+    expect(buildJMAPFilter('', DEFAULT_SEARCH_FILTERS, 'mb-1', ['work'])).toEqual({ inMailbox: 'mb-1' });
+  });
+
+  it('counts as an active filter', () => {
+    expect(isFilterEmpty(untagged)).toBe(false);
+    expect(activeFilterCount(untagged)).toBe(1);
+    expect(activeFilterCount({ ...untagged, isStarred: true })).toBe(2);
   });
 });
 

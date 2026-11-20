@@ -141,6 +141,25 @@ describe('mail provider', () => {
     expect(emailMatchesFilters(email as never, parseSearchQuery('after:2026-06-01'))).toBe(false);
   });
 
+  it('is:untagged leaves out every defined tag, on the server and in the cache', async () => {
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    useSettingsStore.setState({ emailKeywords: [{ id: 'work' }] } as never);
+    try {
+      const boxes = [mailbox('in', 'inbox')];
+      expect(mailFilterFor(parseSearchQuery('report is:untagged'), entry(boxes) as never)).toEqual({
+        operator: 'AND',
+        conditions: [{ text: 'report' }, { notKeyword: '$label:work' }, { notKeyword: '$color:work' }],
+      });
+      const email = (keywords: Record<string, boolean>) => ({ id: 'm1', subject: 'x', keywords, mailboxIds: {} }) as never;
+      const untagged = parseSearchQuery('is:untagged');
+      expect(emailMatchesFilters(email({ $seen: true }), untagged)).toBe(true);
+      expect(emailMatchesFilters(email({ '$label:Work': true }), untagged)).toBe(false);
+      expect(emailMatchesFilters(email({ '$color:work': true }), untagged)).toBe(false);
+    } finally {
+      useSettingsStore.setState({ emailKeywords: undefined } as never);
+    }
+  });
+
   it('stamps local hits with login + owner and never returns another login’s cache rows', () => {
     emailState.emails = [
       { id: 'm1', subject: 'Report A', receivedAt: '2026-01-01T00:00:00Z', keywords: {}, mailboxIds: {}, sourceClientAccountId: 'login-a', sourceAccountId: 'jmap-a', sourceFolder: 'Inbox' },

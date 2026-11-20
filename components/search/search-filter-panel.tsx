@@ -2,7 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Check, Mail, MailOpen, Paperclip, RotateCcw, Star } from "@/components/icons";
+import { Check, Mail, MailOpen, Paperclip, RotateCcw, Star, Tag } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { activeFilterCount, type SearchFilters } from "@/lib/jmap/search-utils";
@@ -127,6 +127,12 @@ export function SearchFilterPanel({ filters, onChange, onClearAll, onDone, folde
           label={filters.hasAttachment === false ? t("no_attachment") : t("has_attachment")}
           on={filters.hasAttachment !== null}
           onClick={() => onChange({ hasAttachment: filters.hasAttachment === null ? true : null }, "now")}
+        />
+        <Chip
+          icon={<Tag className="w-3.5 h-3.5" />}
+          label={t("no_tags")}
+          on={filters.untagged}
+          onClick={() => onChange({ untagged: !filters.untagged }, "now")}
         />
       </div>
 
