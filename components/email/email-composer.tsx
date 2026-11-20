@@ -2488,6 +2488,20 @@ export function EmailComposer({
     }
   }, [plainTextMode]);
 
+  // Tab out of To, Cc or Bcc goes to the subject, or straight to the body
+  // when the subject is already filled (a reply, a forward, or typed) (#1801).
+  const subjectFilledRef = useRef(false);
+  subjectFilledRef.current = subject.trim() !== '';
+  const focusAfterRecipients = useCallback(() => {
+    if (subjectFilledRef.current) focusBody();
+    else focusSubject();
+  }, [focusBody, focusSubject]);
+  // Cc still steps to Bcc when that field is open.
+  const focusAfterCc = useCallback(() => {
+    if (showBcc && bccInputRef.current) bccInputRef.current.focus();
+    else focusAfterRecipients();
+  }, [showBcc, focusAfterRecipients]);
+
   // The fields sit pinned above the body's own scroll container only while
   // the pane leaves the body enough height under them. In a short pane
   // (reading pane at the bottom on a laptop, a phone in landscape) the body
@@ -6066,7 +6080,7 @@ export function EmailComposer({
               autocompleteResultsQuery={autoResultsQuery}
               validationError={validationErrors.to}
               validationMessage={t('validation.recipient_required')}
-              onTab={focusSubject}
+              onTab={focusAfterRecipients}
               onMoveChip={handleMoveChip}
               narrowInput={dockCompact}
               // On a wide screen the field stops at a readable width, so
@@ -6203,6 +6217,7 @@ export function EmailComposer({
                 isSearchingServer={isSearchingServer}
                 serverSearchQuery={autoQuery}
                 autocompleteResultsQuery={autoResultsQuery}
+                onTab={focusAfterCc}
                 onMoveChip={handleMoveChip}
               />
             </div>
@@ -6234,6 +6249,7 @@ export function EmailComposer({
                 isSearchingServer={isSearchingServer}
                 serverSearchQuery={autoQuery}
                 autocompleteResultsQuery={autoResultsQuery}
+                onTab={focusAfterRecipients}
                 onMoveChip={handleMoveChip}
               />
             </div>
@@ -7433,9 +7449,11 @@ export function RecipientChipInput({
     if (commitOnKey) {
       if (e.key !== 'Tab') e.preventDefault();
       commitCurrentInput();
-      if (e.key === 'Tab' && onTab) {
+      if (e.key === 'Tab' && !e.shiftKey && onTab) {
         e.preventDefault();
         setTimeout(() => onTab(), 0);
+      } else if (e.key === 'Tab' && e.shiftKey) {
+        // Shift+Tab keeps the browser's move to the previous field.
       } else {
         setTimeout(() => inputRef.current?.focus(), 0);
       }
