@@ -21,7 +21,7 @@ import { isOwnNote, type NoteEntry } from '@/lib/team-mailboxes/note-format';
 import type { TeamRef } from '@/lib/team-mailboxes/team';
 import { useAccountStore } from '@/stores/account-store';
 import { useSettingsStore } from '@/stores/settings-store';
-import { onNotesArrived } from '@/stores/team-mailbox-store';
+import { onMention } from '@/lib/team-mailboxes/mention-watcher';
 
 export interface MentionLabels {
   /** "Mabel mentioned you in “Offer”". */
@@ -36,7 +36,7 @@ const TOLD_LIMIT = 500;
 const told: string[] = [];
 
 /** The message a note is about, in the team's account, for the click. */
-async function messageOf(client: IJMAPClient, ref: TeamRef, note: NoteEntry): Promise<string | undefined> {
+export async function messageOfNote(client: IJMAPClient, ref: TeamRef, note: NoteEntry): Promise<string | undefined> {
   const own = `jmap:${ref.accountId}/`;
   if (note.key.startsWith(own)) return note.key.slice(own.length) || undefined;
   if (!note.threadId) return undefined;
@@ -85,7 +85,7 @@ export async function notifyDesktopMention(ref: TeamRef, client: IJMAPClient, no
     note: note.id,
     ...(entry ? { slot: entry.cookieSlot, login: await loginFingerprint(entry.serverUrl, entry.username) } : {}),
   };
-  const emailId = await messageOf(client, ref, note);
+  const emailId = await messageOfNote(client, ref, note);
   if (emailId) context.emailId = emailId;
   try {
     const result = await os.notify({
@@ -106,14 +106,16 @@ export async function notifyDesktopMention(ref: TeamRef, client: IJMAPClient, no
   }
 }
 
-/** Mentions in notes the team notes store reports, for as long as the handle lives. */
+/**
+ * Mentions of the user the mention watcher reports (lib/team-mailboxes/
+ * mention-watcher.ts, every team mailbox from sign-in on), for as long as
+ * the handle lives.
+ */
 export function startMentionNotifications(labels: () => MentionLabels | null): () => void {
-  return onNotesArrived((ref, client, notes) => {
+  return onMention(({ ref, client, note }) => {
     const current = labels();
     if (!current) return;
-    for (const note of notes) {
-      void notifyDesktopMention(ref, client, note, current);
-    }
+    void notifyDesktopMention(ref, client, note, current);
   });
 }
 

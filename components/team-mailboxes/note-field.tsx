@@ -12,6 +12,8 @@ const SHOW_COUNT_BELOW = 200;
 
 export interface NoteFieldHandle {
   focus: () => void;
+  /** Puts the caret here (after an @ name was put in). */
+  setCaret: (at: number) => void;
 }
 
 interface NoteFieldProps {
@@ -41,7 +43,16 @@ export const NoteField = forwardRef<NoteFieldHandle, NoteFieldProps>(function No
   const area = useRef<HTMLTextAreaElement>(null);
   const counterId = useId();
   const fieldId = useId();
-  useImperativeHandle(ref, () => ({ focus: () => area.current?.focus() }), []);
+  useImperativeHandle(ref, () => ({
+    focus: () => area.current?.focus(),
+    setCaret: (at: number) => {
+      // After React has put the new text in.
+      requestAnimationFrame(() => {
+        area.current?.focus();
+        area.current?.setSelectionRange(at, at);
+      });
+    },
+  }), []);
   const { left, over } = noteLength(value.trim());
   const empty = value.trim().length === 0;
 

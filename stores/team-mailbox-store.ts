@@ -871,7 +871,7 @@ const SEEN_WRITE_GAP_MS = 60_000;
 const seenLogins = new Map<string, { client: IJMAPClient; loading: Promise<void> | null; lastWrite: number; timer: ReturnType<typeof setTimeout> | null }>();
 const seenStorageKey = (loginId: string) => `bulwark-team-seen:${loginId}`;
 
-function privateMetadata(client: IJMAPClient): boolean {
+function hasOwnSeenStore(client: IJMAPClient): boolean {
   return !!client.advertisesPrivateBulwarkMetadata?.() && !!client.getBulwarkMetadata && !!client.setBulwarkMetadata;
 }
 
@@ -884,7 +884,7 @@ function ensureSeenLoaded(ref: TeamRef, client: IJMAPClient): Promise<void> {
   entry.loading = (async () => {
     let map: SeenMap = {};
     try {
-      if (privateMetadata(client)) {
+      if (hasOwnSeenStore(client)) {
         const entries = await client.getBulwarkMetadata!(undefined, { private: true });
         map = decodeSeen(entries?.[SEEN_METADATA_KEY]);
       } else {
@@ -928,7 +928,7 @@ export async function flushSeen(loginId: string): Promise<void> {
   entry.lastWrite = Date.now();
   const value = encodeSeen(map);
   try {
-    if (privateMetadata(entry.client)) await entry.client.setBulwarkMetadata!(undefined, SEEN_METADATA_KEY, value, { private: true });
+    if (hasOwnSeenStore(entry.client)) await entry.client.setBulwarkMetadata!(undefined, SEEN_METADATA_KEY, value, { private: true });
     else localStorage.setItem(seenStorageKey(loginId), JSON.stringify(value));
   } catch (error) {
     debug.warn('team-mailboxes', 'Saving seen notes failed:', error);

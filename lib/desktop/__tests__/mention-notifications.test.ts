@@ -19,10 +19,10 @@ vi.mock('@/stores/auth-store', () => ({
   useAuthStore: { getState: () => ({ isAuthenticated: true, activeAccountId: 'bob@one' }), subscribe: () => () => {} },
 }));
 
-type Listener = (ref: TeamRef, client: IJMAPClient, notes: NoteEntry[]) => void;
+type Listener = (event: { ref: TeamRef; client: IJMAPClient; note: NoteEntry }) => void;
 const arrivals = vi.hoisted(() => ({ listeners: new Set<Listener>() }));
-vi.mock('@/stores/team-mailbox-store', () => ({
-  onNotesArrived: (listener: Listener) => {
+vi.mock('@/lib/team-mailboxes/mention-watcher', () => ({
+  onMention: (listener: Listener) => {
     arrivals.listeners.add(listener);
     return () => arrivals.listeners.delete(listener);
   },
@@ -159,7 +159,7 @@ describe('a mention in a team note', () => {
     expect(await notifyDesktopMention(REF, client, note(), LABELS)).toBe(false);
   });
 
-  it('comes from the notes the team store reports, while mail notifications run', async () => {
+  it('comes from the mentions the watcher reports, while mail notifications run', async () => {
     const { startMailNotifications } = await import('../mail-notifications');
     const labels = {
       newMail: 'new_mail', newMailCount: (count: number) => `count:${count}`, noSubject: 'no_subject', archive: null,
@@ -167,7 +167,10 @@ describe('a mention in a team note', () => {
       mention: LABELS,
     };
     const mail = startMailNotifications(labels);
-    for (const listener of arrivals.listeners) listener(REF, client, [note({ mentions: ['carol'] }), note({ id: 'n2' })]);
+    for (const listener of arrivals.listeners) {
+      listener({ ref: REF, client, note: note({ mentions: ['carol'] }) });
+      listener({ ref: REF, client, note: note({ id: 'n2' }) });
+    }
     await vi.waitFor(() => expect(shown).toHaveLength(1));
     expect(shown[0].id).toBe('mention:bob@one|g/n2');
     mail.stop();

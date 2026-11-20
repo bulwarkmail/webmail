@@ -144,8 +144,30 @@ describe('the note field', () => {
     expect(again.value).toBe('my job');
     await act(async () => { fireEvent.keyDown(again, { key: 'Enter' }); });
     // About the newest message of the conversation.
-    expect(writeNote).toHaveBeenCalledWith(ref.key, expect.objectContaining({ emailId: 'm2', key: 'm2@client.example', threadId: 't1' }), { text: 'my job' });
+    expect(writeNote).toHaveBeenCalledWith(ref.key, expect.objectContaining({ emailId: 'm2', key: 'm2@client.example', threadId: 't1' }), { text: 'my job', mentions: [] });
     expect(again.value).toBe('');
+  });
+
+  it('offers the team after @, picks by keyboard, and stores the picked person as a mention', async () => {
+    const { useTeamNamesStore } = await import('@/lib/team-mailboxes/names');
+    useTeamNamesStore.setState({ lists: { [ref.key]: { hv: { name: 'Bob Baker', email: 'tm-bob@example.org' }, hw: { name: 'Carol Cooper', email: 'tm-carol@example.org' } } }, directory: {} });
+    seed([]);
+    render(<Conversation />);
+    fireEvent.click(screen.getByRole('button', { name: 'note' }));
+    const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
+    fireEvent.change(field, { target: { value: 'ask @ca' } });
+    field.setSelectionRange(7, 7);
+    fireEvent.keyUp(field, { key: 'a' });
+    const list = screen.getByRole('listbox', { name: 'mention_list' });
+    expect(list.textContent).toContain('Carol Cooper');
+    expect(field.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(field.value).toBe('ask @Carol Cooper ');
+    expect(writeNote).not.toHaveBeenCalled();
+    fireEvent.change(field, { target: { value: 'ask @Carol Cooper please' } });
+    await act(async () => { fireEvent.keyDown(field, { key: 'Enter' }); });
+    expect(writeNote).toHaveBeenCalledWith(ref.key, expect.anything(), { text: 'ask @Carol Cooper please', mentions: ['hw'] });
+    useTeamNamesStore.setState({ lists: {}, directory: {} });
   });
 
   it('never sends while an input method is composing', () => {

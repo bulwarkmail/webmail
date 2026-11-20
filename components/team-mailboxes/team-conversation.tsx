@@ -39,6 +39,8 @@ import { isOwnNote } from '@/lib/team-mailboxes/note-format';
 import { NoteCard, PendingNoteCard, TeamOnlyLine, TimelineLine, displayName } from './note-cards';
 import { NoteField, type NoteFieldHandle } from './note-field';
 import { useTeamPeople } from '@/hooks/use-team-people';
+import { mentionsIn } from '@/lib/team-mailboxes/mentions';
+import { useMentionPicker } from './mention-picker';
 import {
   conversationKeys,
   useConversationNotes,
@@ -300,6 +302,21 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
   const key = value?.context.ref.key ?? '';
   const convKey = value ? conversationKeyOf(conversationKeys(messages, value.context.ref.accountId).keys, conversationKeys(messages, value.context.ref.accountId).threadIds) : '';
   const draft = drafts[convKey] ?? '';
+  // @ mentions: the team's people (the same people Assign to… offers).
+  const people = useTeamPeople(value?.context.ref ?? null, value?.context.client ?? null);
+  const candidates = useMemo(
+    () => people.people.filter((p) => !!p.id).map((p) => ({ id: p.id as string, name: p.name ?? '', email: p.email ?? '' })),
+    [people.people],
+  );
+  const mention = useMentionPicker({
+    people: candidates,
+    selfId: value?.context.client.getAccountId().toLowerCase() ?? null,
+    text: draft,
+    setText: (text, caret) => {
+      setDrafts((d) => ({ ...d, [convKey]: text }));
+      field.current?.setCaret(caret);
+    },
+  });
   const fieldOpen = value?.fieldOpen ?? false;
   useEffect(() => {
     if (!fieldOpen) return;
@@ -317,10 +334,13 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
     const text = draft.trim();
     const target = value.target;
     if (!text || !target) return;
+    // Only people still named in the text, and only people of the team.
+    const mentions = mentionsIn(text, mention.picked, new Set(candidates.map((c) => c.id.toLowerCase())));
     setDrafts((d) => ({ ...d, [convKey]: '' }));
+    mention.reset();
     void writeNote(key, {
       emailId: target.id, key: noteKeyFor(target, value.context.ref.accountId), threadId: target.threadId ?? null, subject: target.subject,
-    }, { text });
+    }, { text, mentions });
     field.current?.focus();
   };
   const close = () => value.closeField();
@@ -358,7 +378,11 @@ export function TeamNoteArea({ className, messages }: { className?: string; mess
           onChange={(text) => setDrafts((d) => ({ ...d, [convKey]: text }))}
           onSubmit={send}
           onClose={close}
-        />
+          onKeyDownFirst={mention.onKeyDown}
+          textareaProps={mention.fieldProps}
+        >
+          {mention.list}
+        </NoteField>
       )}
     </div>
   );

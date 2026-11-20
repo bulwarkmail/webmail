@@ -90,6 +90,8 @@ import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBa
 import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { ShareNotificationToaster } from "@/components/layout/share-notification-toaster";
 import { TeamAssignDialogHost } from "@/components/team-mailboxes/team-actions";
+import { TeamMentionHost } from "@/components/team-mailboxes/team-mention-host";
+import { requestNoteFocus } from "@/components/team-mailboxes/use-team";
 import { CalendarEventNotificationToaster } from "@/components/layout/calendar-event-notification-toaster";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin, canEnterLoginInPlace } from '@/stores/auth-store';
 import { useRouter } from '@/i18n/navigation';
@@ -2528,6 +2530,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const loginId = useAuthStore.getState().activeAccountId ?? undefined;
         // A notification's Reply: the tab opens its composer once it has the message.
         if (link.reply) requestTabReply(link.id, opts?.replyText ?? await consumePendingReplyText(link.id));
+        // A mention's notification: the conversation shows that note.
+        if (link.note) requestNoteFocus(link.id, link.note);
         useProTabStore.getState().openEmailTab({
           accountId: link.ownerAccountId ?? '',
           ...(loginId ? { clientAccountId: loginId } : {}),
@@ -2572,6 +2576,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           useEmailStore.setState({ selectedEmail: email });
         }
         await showInOwningFolder(activeClient, email, owner);
+        // A mention's notification: the conversation shows that note.
+        if (link.note) requestNoteFocus(email.id, link.note);
         if (link.fullscreen && !isMobile) {
           // The owning-folder branch above may have skipped selecting (the
           // folder was already current) - fullscreen needs the message open.
@@ -7491,6 +7497,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         )}
         <ShareNotificationToaster client={client} />
         <TeamAssignDialogHost />
+        <TeamMentionHost />
         <CalendarEventNotificationToaster client={client} />
         {floatingComposer && <MvComposeWindow>{composerNode}</MvComposeWindow>}
       </div>
