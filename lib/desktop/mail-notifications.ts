@@ -14,6 +14,7 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import type { DesktopOsNotification } from '@/lib/desktop/types';
 import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { startNewMailWatch, type NewMail, type NewMailWatch } from '@/lib/desktop/new-mail';
+import { startMentionNotifications, type MentionLabels } from '@/lib/desktop/mention-notifications';
 import { setStoreCreatedListener } from '@/lib/desktop/system-events';
 import { devicesForAccount } from '@/lib/device-policy';
 import { playNotificationSound } from '@/lib/notification-sound';
@@ -39,6 +40,8 @@ export interface MailNotificationLabels {
   replyPlaceholder: string;
   /** The button that copies the code from a sign-in mail. */
   copyCode: (code: string) => string;
+  /** A mention of the user in a team note; without these, mentions aren't told. */
+  mention?: MentionLabels;
 }
 
 /** What a toast's button hands back, possibly after the app restarted. */
@@ -52,6 +55,8 @@ export interface MailNotificationContext {
   editedFile?: boolean;
   /** Not mail: a draft thrown away in a composer window, for Undo (lib/popout/discarded-undo.ts). */
   discardedDraft?: string;
+  /** A mention: the team note in the message's conversation to open at. */
+  note?: string;
 }
 
 /** True where this module plays the new-mail sound, so useNewMailAlerts doesn't as well. */
@@ -201,6 +206,8 @@ export function startMailNotifications(initial: MailNotificationLabels): MailNot
     batch.push(...mail);
     timer ??= setTimeout(flush, MAIL_BATCH_MS);
   });
+  // Team notes are never new mail (new-mail.ts); a note that mentions the user is told on its own.
+  const stopMentions = startMentionNotifications(() => labels.mention ?? null);
 
   const handle: MailNotifications = {
     ...watch,
@@ -209,6 +216,7 @@ export function startMailNotifications(initial: MailNotificationLabels): MailNot
     },
     stop() {
       watch.stop();
+      stopMentions();
       if (timer) clearTimeout(timer);
       timer = null;
       setStoreCreatedListener(null);
