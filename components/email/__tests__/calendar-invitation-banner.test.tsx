@@ -576,6 +576,28 @@ describe('CalendarInvitationBanner', () => {
     expect(screen.queryByText(/^You accepted/)).not.toBeInTheDocument();
   });
 
+  it('does not carry an RSVP over when the reader opens a different invitation', async () => {
+    const participants = {
+      attendee: { '@type': 'Participant', email: 'user@example.com', roles: { attendee: true }, participationStatus: 'needs-action' },
+    };
+    const first = { id: 'event-1', uid: 'uid-1', title: 'First meeting', start: '2026-03-20T09:00:00Z', participants };
+    const second = { id: 'event-2', uid: 'uid-2', title: 'Second meeting', start: '2026-03-21T09:00:00Z', participants };
+    mocks.calendarState.events = [first, second];
+    mocks.clientMock.parseCalendarEvents.mockResolvedValueOnce([first]).mockResolvedValueOnce([second]);
+    mocks.clientMock.getCalendarEvent.mockResolvedValue(first);
+    mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+    const { rerender } = render(<CalendarInvitationBanner email={makeEmail()} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Accept' }));
+    expect(await screen.findByText(/^You accepted/)).toBeInTheDocument();
+
+    rerender(<CalendarInvitationBanner email={makeEmail({ id: 'email-2' })} />);
+    expect(await screen.findByRole('heading', { name: 'Second meeting' })).toBeInTheDocument();
+    expect(screen.queryByText(/^You accepted/)).not.toBeInTheDocument();
+    expect(screen.getByText('request_info')).toBeInTheDocument();
+    expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the invitation summary visible after importing', async () => {
     mocks.calendarState.importEvents.mockResolvedValue(1);
     mocks.clientMock.parseCalendarEvents.mockResolvedValue([
