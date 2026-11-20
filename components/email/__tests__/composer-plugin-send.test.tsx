@@ -2,6 +2,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
+import { composeTakeoverOptions } from '@/lib/outgoing/compose-takeover';
+import { useIdentityStore } from '@/stores/identity-store';
 
 const hoisted = vi.hoisted(() => ({
   takeOver: vi.fn(),
@@ -162,6 +164,8 @@ vi.mock('@/lib/plugin-hooks', () => ({
     onComposeSend: { takeOver: hoisted.takeOver },
     onTransformOutgoingEmail: { transform: hoisted.transform },
   },
+  // Every raw send in these tests comes from the plugin running the takeover.
+  pluginRunsTakeOver: () => true,
   contactHooks: {
     search: { call: async () => [] },
     onProvideRecipientSuggestions: { transform: async (initial: unknown) => initial },
@@ -292,5 +296,52 @@ describe('composer send taken over by a plugin (#1207)', () => {
 
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
     expect(onSend.mock.calls[0][0].keywords).toEqual(['akte-01/2026', '$flagged', '$label:clients']);
+  });
+});
+
+// #1805: a plugin that takes the send over builds the MIME itself, so the
+// host adds what the composer set to the plugin's raw send. The composer
+// registers it with the takeover.
+describe('send options a plugin takeover carries', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("hands the identity's Reply-To, the read receipt, the priority, DSN and required TLS to the plugin's raw send", async () => {
+    const identities = useIdentityStore.getState().identities;
+    useIdentityStore.setState({
+      identities: identities.map((identity) => identity.id === 'id-me'
+        ? { ...identity, replyTo: [{ name: 'Team', email: 'team@example.com' }] }
+        : identity),
+    });
+    let seen: ReturnType<typeof composeTakeoverOptions> = null;
+    hoisted.takeOver.mockImplementation(async () => {
+      seen = composeTakeoverOptions('smime', 'id-me');
+      return 'handled';
+    });
+    try {
+      const onClose = vi.fn();
+      render(
+        <EmailComposer
+          initialData={{ ...DRAFT, requestReadReceipt: true, requestDsn: true, requireTls: true, priority: 'high' }}
+          onSend={vi.fn()}
+          onClose={onClose}
+        />,
+      );
+      fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    } finally {
+      useIdentityStore.setState({ identities });
+    }
+
+    expect(seen).toEqual({
+      replyTo: [{ name: 'Team', email: 'team@example.com' }],
+      readReceiptTo: 'me@example.com',
+      priority: 'high',
+      requestDsn: true,
+      requireTls: true,
+    });
+    // Closed with the send: a later raw send completes nothing.
+    expect(composeTakeoverOptions('smime', 'id-me')).toBeNull();
   });
 });
