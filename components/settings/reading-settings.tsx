@@ -8,6 +8,9 @@ import { PrivacyLinkRow } from './privacy-settings';
 import { ChevronRight } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useReturnToListAfterAction } from '@/hooks/use-return-to-list';
+import { usePopoutsAvailable } from '@/hooks/use-popouts-available';
+import { hasDesktopWindows } from '@/lib/popout/support';
+import type { MessageDoubleClick } from '@/stores/settings-store';
 
 /**
  * The Reading page: the open message. Opening it, how its body is drawn,
@@ -22,10 +25,15 @@ export function ReadingSettings() {
   // As it applies in this layout: left alone, it follows the layout.
   const returnToList = useReturnToListAfterAction();
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
+  // Only where a message can open in a window of its own; the desktop app
+  // has its own switch under its window settings (#1814).
+  const messagePopouts = usePopoutsAvailable('message');
+  const offerDoubleClick = messagePopouts && !hasDesktopWindows() && !isSettingHidden('messageDoubleClick');
 
   const {
     markAsReadDelay,
     markReadOnReply,
+    messageDoubleClick,
     mailAttachmentAction,
     hideInlineImageAttachments,
     attachmentImagePreviewsEnabled,
@@ -59,6 +67,19 @@ export function ReadingSettings() {
             testId="settings-mark-read-on-reply"
           />
         </SettingItem>
+
+        {offerDoubleClick && (
+        <SettingItem label={t('message_double_click.label')} description={t('message_double_click.description')} locked={isSettingLocked('messageDoubleClick')}>
+          <Select
+            value={messageDoubleClick}
+            onChange={(value) => updateSetting('messageDoubleClick', value as MessageDoubleClick)}
+            options={[
+              { value: 'reading-pane', label: t('message_double_click.reading_pane') },
+              { value: 'new-window', label: t('message_double_click.new_window') },
+            ]}
+          />
+        </SettingItem>
+        )}
 
         <SettingItem
           label={t('return_to_list_after_action.label')}

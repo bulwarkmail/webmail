@@ -65,6 +65,7 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
     defaultValue: false,
   },
   { key: 'markAsReadDelay', label: 'Mark as Read Delay', category: 'Email', type: 'number', page: 'policy', defaultValue: 0 },
+  { key: 'messageDoubleClick', label: 'Double-click a Message', description: 'Open in reading pane, or open in a new window where the app can open messages in their own window (installed app). The desktop app keeps its own setting.', category: 'Email', type: 'enum', allowedValues: ['reading-pane', 'new-window'], page: 'policy', defaultValue: 'reading-pane' },
   { key: 'deleteAction', label: 'Delete Action', category: 'Email', type: 'enum', allowedValues: ['trash', 'trash-and-read', 'permanent'], page: 'policy', defaultValue: 'trash' },
   { key: 'showPreview', label: 'Show Preview', category: 'Email', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'showAttachmentChips', label: 'Show Attachments in List', category: 'Email', type: 'boolean', page: 'policy', defaultValue: true },

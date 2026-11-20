@@ -2321,6 +2321,12 @@
         "label": "Marcar como leído al responder o reenviar",
         "description": "Un mensaje que respondes o reenvías se marca como leído, también cuando los mensajes nunca se marcan como leídos al abrirlos."
       },
+      "message_double_click": {
+        "label": "Doble clic en un mensaje",
+        "description": "Qué hace un doble clic en un mensaje de la lista.",
+        "reading_pane": "Abrir en el panel de lectura",
+        "new_window": "Abrir en una ventana nueva"
+      },
       "return_to_list_after_action": {
         "label": "Volver a la lista tras eliminar, archivar, mover o marcar como no leído",
         "description": "Después de eliminar, archivar, mover, reportar como spam o marcar como no leído el mensaje abierto, volver a la lista de mensajes en lugar de abrir el mensaje siguiente."

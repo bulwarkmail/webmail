@@ -2324,6 +2324,12 @@
         "label": "Marchează ca citit când răspund sau redirecționez",
         "description": "Un mesaj la care răspundeți sau pe care îl redirecționați este marcat ca citit, chiar și când mesajele nu sunt niciodată marcate ca citite la deschidere."
       },
+      "message_double_click": {
+        "label": "Dublu clic pe un mesaj",
+        "description": "Ce face un dublu clic pe un mesaj din listă.",
+        "reading_pane": "Deschide în panoul de citire",
+        "new_window": "Deschide într-o fereastră nouă"
+      },
       "return_to_list_after_action": {
         "label": "Revenire la listă după ștergere, arhivare, mutare sau marcare ca necitit",
         "description": "După ștergerea, arhivarea, mutarea, raportarea ca spam sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."

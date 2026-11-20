@@ -2321,6 +2321,12 @@
         "label": "Marcar como lida ao responder ou encaminhar",
         "description": "Uma mensagem que você responde ou encaminha é marcada como lida, mesmo quando as mensagens nunca são marcadas como lidas ao abrir."
       },
+      "message_double_click": {
+        "label": "Clique duplo em uma mensagem",
+        "description": "O que um clique duplo em uma mensagem da lista faz.",
+        "reading_pane": "Abrir no painel de leitura",
+        "new_window": "Abrir em uma nova janela"
+      },
       "return_to_list_after_action": {
         "label": "Voltar à lista após excluir, arquivar, mover ou marcar como não lida",
         "description": "Depois de excluir, arquivar, mover, denunciar como spam ou marcar como não lida a mensagem aberta, voltar à lista de mensagens em vez de abrir a próxima mensagem."

@@ -2324,6 +2324,12 @@
         "label": "Merk som lest når jeg svarer eller videresender",
         "description": "En melding du svarer på eller videresender, merkes som lest, også når meldinger aldri merkes som lest ved åpning."
       },
+      "message_double_click": {
+        "label": "Dobbeltklikk på en melding",
+        "description": "Hva et dobbeltklikk på en melding i listen gjør.",
+        "reading_pane": "Åpne i leseruten",
+        "new_window": "Åpne i et nytt vindu"
+      },
       "return_to_list_after_action": {
         "label": "Gå tilbake til listen etter sletting, arkivering, flytting eller merking som ulest",
         "description": "Gå tilbake til meldingslisten i stedet for å åpne neste melding etter at du har slettet, arkivert, flyttet eller rapportert den åpne meldingen som søppelpost eller merket den som ulest."

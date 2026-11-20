@@ -2324,6 +2324,12 @@
         "label": "Märgi loetuks, kui vastan või edastan",
         "description": "Kiri, millele vastad või mille edastad, märgitakse loetuks ka siis, kui kirju avamisel kunagi loetuks ei märgita."
       },
+      "message_double_click": {
+        "label": "Topeltklõps kirjal",
+        "description": "Mida teeb topeltklõps loendis oleval kirjal.",
+        "reading_pane": "Ava lugemispaanil",
+        "new_window": "Ava uues aknas"
+      },
       "return_to_list_after_action": {
         "label": "Naase loendisse pärast kustutamist, arhiveerimist, liigutamist või lugemata märkimist",
         "description": "Pärast avatud kirja kustutamist, arhiveerimist, liigutamist, rämpspostiks märkimist või lugemata märkimist naase kirjade loendisse, selle asemel et avada järgmine kiri."

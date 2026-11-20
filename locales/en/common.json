@@ -2324,6 +2324,12 @@
         "label": "Mark as read after replying or forwarding",
         "description": "A message you reply to or forward is marked as read, also when messages are never marked as read on opening."
       },
+      "message_double_click": {
+        "label": "Double-click a message",
+        "description": "What a double-click on a message in the list does.",
+        "reading_pane": "Open in reading pane",
+        "new_window": "Open in a new window"
+      },
       "return_to_list_after_action": {
         "label": "Return to list after delete, archive, move or mark unread",
         "description": "After deleting, archiving, moving, reporting as spam or marking the open message unread, go back to the message list instead of opening the next message."

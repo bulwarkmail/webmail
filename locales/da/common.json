@@ -2324,6 +2324,12 @@
         "label": "Markér som læst, når jeg svarer eller videresender",
         "description": "En besked, du svarer på eller videresender, markeres som læst, også når beskeder aldrig markeres som læst ved åbning."
       },
+      "message_double_click": {
+        "label": "Dobbeltklik på en besked",
+        "description": "Hvad et dobbeltklik på en besked i listen gør.",
+        "reading_pane": "Åbn i læseruden",
+        "new_window": "Åbn i et nyt vindue"
+      },
       "return_to_list_after_action": {
         "label": "Vend tilbage til listen efter sletning, arkivering, flytning eller markering som ulæst",
         "description": "Efter sletning, arkivering, flytning, rapportering som spam eller markering af den åbne besked som ulæst vendes der tilbage til beskedlisten i stedet for at åbne den næste besked."

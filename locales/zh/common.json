@@ -2321,6 +2321,12 @@
         "label": "回复或转发时标为已读",
         "description": "你回复或转发的邮件会标为已读，即使设置为打开邮件时从不标为已读。"
       },
+      "message_double_click": {
+        "label": "双击邮件",
+        "description": "在列表中双击邮件时的操作。",
+        "reading_pane": "在阅读窗格中打开",
+        "new_window": "在新窗口中打开"
+      },
       "return_to_list_after_action": {
         "label": "删除、归档、移动或标记为未读后返回列表",
         "description": "删除、归档、移动打开的邮件、举报为垃圾邮件或将其标记为未读后，返回邮件列表而不是打开下一封邮件。"

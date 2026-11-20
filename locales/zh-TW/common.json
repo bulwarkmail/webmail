@@ -2324,6 +2324,12 @@
         "label": "回覆或轉寄時標為已讀",
         "description": "你回覆或轉寄的郵件會標為已讀，即使設定為開啟郵件時從不標為已讀。"
       },
+      "message_double_click": {
+        "label": "按兩下郵件",
+        "description": "在清單中按兩下郵件時的動作。",
+        "reading_pane": "在閱讀窗格中開啟",
+        "new_window": "在新視窗中開啟"
+      },
       "return_to_list_after_action": {
         "label": "刪除、封存、移動或標示為未讀後回到清單",
         "description": "刪除、封存、移動開啟的郵件、回報為垃圾郵件或標示為未讀後，回到郵件清單，而不是開啟下一封郵件。"

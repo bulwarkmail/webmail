@@ -2332,6 +2332,12 @@
         "label": "Merk som lese når eg svarar eller vidaresender",
         "description": "Ei melding du svarar på eller vidaresender, vert merkt som lesen, også når meldingar aldri vert merkte som lesne ved opning."
       },
+      "message_double_click": {
+        "label": "Dobbeltklikk på ei melding",
+        "description": "Kva eit dobbeltklikk på ei melding i lista gjer.",
+        "reading_pane": "Opne i leseruta",
+        "new_window": "Opne i eit nytt vindauge"
+      },
       "return_to_list_after_action": {
         "label": "Gå tilbake til lista etter sletting, arkivering, flytting eller merking som ulesen",
         "description": "Etter at du slettar, arkiverer, flyttar, rapporterer som søppelpost eller merkjer den opne meldinga som ulesen, går du tilbake til meldingslista i staden for å opne neste melding."

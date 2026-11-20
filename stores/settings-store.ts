@@ -518,6 +518,10 @@ export type Density = 'extra-compact' | 'compact' | 'regular' | 'comfortable';
  * docked compose window) that keeps the theme's icons, type and palette.
  */
 export type InterfaceLayout = 'default' | 'mountain-view';
+
+/** A double-click on a message in the list (#1814): the reading pane as a click, or a window of its own. */
+export const MESSAGE_DOUBLE_CLICK = ['reading-pane', 'new-window'] as const;
+export type MessageDoubleClick = typeof MESSAGE_DOUBLE_CLICK[number];
 // Mountain View's inbox: Gmail's "Default" or "Unread first" (lib/unread-first.ts).
 export type MvInboxType = 'default' | 'unread-first';
 export type DeleteAction = 'trash' | 'trash-and-read' | 'permanent';
@@ -838,6 +842,7 @@ interface SettingsState extends AccessibilitySettings {
   deleteAction: DeleteAction;
   permanentlyDeleteJunk: boolean; // Permanently delete emails from junk/spam instead of moving to trash
   confirmBulkDelete: boolean; // Ask before moving several selected emails to Trash (permanent deletes always ask)
+  messageDoubleClick: MessageDoubleClick; // What a double-click on a list row does where messages can open in their own window (#1814)
   returnToListAfterAction: boolean; // After delete / archive / move / spam / mark-unread in an open message, return to the list instead of opening the next message
   clearSearchOnFolderChange: boolean; // Reset the search query + advanced filters when switching folders, instead of re-running the search in the newly selected folder (#553 keeps it applied when this is off)
   searchDefaultScope: SearchDefaultScope; // Where a new search looks: all folders, or only the open one (#1485)
@@ -1234,6 +1239,7 @@ const DEFAULT_SETTINGS = {
   deleteAction: 'trash' as DeleteAction,
   permanentlyDeleteJunk: false,
   confirmBulkDelete: true,
+  messageDoubleClick: 'reading-pane' as MessageDoubleClick,
   returnToListAfterAction: true,
   clearSearchOnFolderChange: false,
   searchDefaultScope: 'all' as SearchDefaultScope,
@@ -1562,6 +1568,7 @@ function isAllowedPolicyValue(key: string, value: unknown, restriction?: Setting
   if (key === 'searchDefaultScope' && !isSearchDefaultScope(value)) return false;
   if (key === 'composePlacement' && !isComposePlacement(value)) return false;
   if (key === 'replyQuoteDisplay' && !isReplyQuoteDisplay(value)) return false;
+  if (key === 'messageDoubleClick' && !MESSAGE_DOUBLE_CLICK.includes(value as MessageDoubleClick)) return false;
   if (key === 'calendarMonthTimedEvents' && !MONTH_TIMED_EVENT_STYLES.includes(value as MonthTimedEventStyle)) return false;
   if (!isAllowedAccessibilityValue(key, value)) return false;
   if (restriction && typeof restriction === 'object') {
@@ -1854,6 +1861,7 @@ export const useSettingsStore = create<SettingsState>()(
           markReadOnReply: state.markReadOnReply,
           deleteAction: state.deleteAction,
           returnToListAfterAction: state.returnToListAfterAction,
+          messageDoubleClick: state.messageDoubleClick,
           confirmBulkDelete: state.confirmBulkDelete,
           permanentlyDeleteJunk: state.permanentlyDeleteJunk,
           clearSearchOnFolderChange: state.clearSearchOnFolderChange,

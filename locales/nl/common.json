@@ -2321,6 +2321,12 @@
         "label": "Als gelezen markeren wanneer ik antwoord of doorstuur",
         "description": "Een bericht dat u beantwoordt of doorstuurt, wordt als gelezen gemarkeerd, ook als berichten bij openen nooit als gelezen worden gemarkeerd."
       },
+      "message_double_click": {
+        "label": "Dubbelklikken op een bericht",
+        "description": "Wat dubbelklikken op een bericht in de lijst doet.",
+        "reading_pane": "Openen in het leesvenster",
+        "new_window": "Openen in een nieuw venster"
+      },
       "return_to_list_after_action": {
         "label": "Terug naar lijst na verwijderen, archiveren, verplaatsen of markeren als ongelezen",
         "description": "Na het verwijderen, archiveren, verplaatsen, als spam melden of als ongelezen markeren van het geopende bericht terugkeren naar de berichtenlijst in plaats van het volgende bericht te openen."

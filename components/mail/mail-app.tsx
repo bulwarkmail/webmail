@@ -110,6 +110,7 @@ import { guardOfflineMailChanges } from "@/lib/offline-key-guard";
 import { useDesktopCommands } from "@/lib/desktop/commands";
 import { useDesktopPrefs } from "@/lib/desktop/preferences";
 import { hasDesktopWindows, popoutsAvailable } from "@/lib/popout/support";
+import { doubleClickOpensWindow } from "@/lib/popout/double-click";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { composerDataForEditAsNew, composerDataFromDraft, withReplyAllRecipients } from "@/lib/draft-composer-data";
 import { ownReplyAddresses } from "@/lib/reply-recipients";
@@ -3020,7 +3021,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showComposer, composerSessionId, isEmbedded]);
 
-  const desktopDoubleClick = useDesktopPrefs().openOnDoubleClick && hasDesktopWindows() && !isMobile && !!openEmailInWindow;
+  // The desktop app has its own switch; elsewhere it is the Reading setting (#1814).
+  const desktopOpenOnDoubleClick = useDesktopPrefs().openOnDoubleClick;
+  const messageDoubleClick = useSettingsStore((state) => state.messageDoubleClick);
+  const windowDoubleClick = doubleClickOpensWindow({
+    canOpenWindow: !!openEmailInWindow, isMobile, desktopApp: hasDesktopWindows(),
+    desktopOpenOnDoubleClick, messageDoubleClick,
+  });
   // Text from a closing pop-out that couldn't be saved: the "Continue draft"
   // slot, once it is free.
   useEffect(() => {
@@ -6953,7 +6960,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 } : handleEmailSelect}
                 onOpenSearchResult={handleEmailSelect}
                 onEmailPrefetch={handleEmailPrefetch}
-                onEmailDoubleClick={!isEmbedded ? (desktopDoubleClick ? (email) => {
+                onEmailDoubleClick={!isEmbedded ? (windowDoubleClick ? (email) => {
                   // A draft goes back in the composer, as it does from a single click.
                   if (email.keywords?.$draft) void handleEditDraft(email);
                   else openEmailInWindow?.(email);

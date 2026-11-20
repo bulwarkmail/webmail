@@ -16,6 +16,18 @@ import en from '@/locales/en/common.json';
 
 vi.unmock('next-intl');
 vi.mock('@/components/plugins/plugin-iframe-slot', () => ({ PluginIframeSlot: () => null }));
+// The messagePopouts variant: an installed app, where a message can open in a window of its own.
+const popouts = vi.hoisted(() => ({ on: false }));
+vi.mock('@/hooks/use-popouts-available', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/use-popouts-available')>();
+  return {
+    ...actual,
+    usePopoutsAvailable: (kind?: 'compose' | 'message') => {
+      const real = actual.usePopoutsAvailable(kind);
+      return (popouts.on && kind === 'message') || real;
+    },
+  };
+});
 // Recover deleted items asks the server first; here it has the feature.
 vi.mock('@/hooks/use-deleted-items-recovery', async () => {
   const { useAuthStore } = await import('@/stores/auth-store');
@@ -170,6 +182,7 @@ describe('settings search index', () => {
         window.matchMedia = ((q: string) => ({ ...realMatchMedia(q), matches: q.includes('coarse') })) as typeof window.matchMedia;
       },
       mountainView: () => { useSettingsStore.setState({ interfaceLayout: 'mountain-view' } as never); },
+      messagePopouts: () => { popouts.on = true; },
       multiAccount: () => {
         useAccountStore.setState({ accounts: [
           { id: 'a', label: 'A', email: 'a@example.com', username: 'a@example.com', serverUrl: 'https://x', isDefault: true },
@@ -184,6 +197,7 @@ describe('settings search index', () => {
     useAccountStore.setState(accountsInitial, true);
     window.matchMedia = realMatchMedia;
     window.bulwarkDesktop = undefined;
+    popouts.on = false;
     useFilesSyncStore.getState().reset();
     apply();
     out[variant] = {};

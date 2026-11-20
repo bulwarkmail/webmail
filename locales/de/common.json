@@ -2321,6 +2321,12 @@
         "label": "Als gelesen markieren, wenn ich antworte oder weiterleite",
         "description": "Eine Nachricht, auf die Sie antworten oder die Sie weiterleiten, wird als gelesen markiert, auch wenn Nachrichten beim Öffnen nie als gelesen markiert werden."
       },
+      "message_double_click": {
+        "label": "Doppelklick auf eine Nachricht",
+        "description": "Was ein Doppelklick auf eine Nachricht in der Liste tut.",
+        "reading_pane": "Im Lesebereich öffnen",
+        "new_window": "In neuem Fenster öffnen"
+      },
       "return_to_list_after_action": {
         "label": "Nach Löschen, Archivieren, Verschieben oder Ungelesen-Markieren zur Liste zurückkehren",
         "description": "Nach dem Löschen, Archivieren, Verschieben, Als-Spam-Melden oder Als-ungelesen-Markieren der geöffneten E-Mail zurück zur Liste, statt die nächste E-Mail zu öffnen."

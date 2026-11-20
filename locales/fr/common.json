@@ -2321,6 +2321,12 @@
         "label": "Marquer comme lu quand je réponds ou transfère",
         "description": "Un message auquel vous répondez ou que vous transférez est marqué comme lu, même quand les messages ne sont jamais marqués comme lus à l'ouverture."
       },
+      "message_double_click": {
+        "label": "Double-clic sur un message",
+        "description": "Ce que fait un double-clic sur un message de la liste.",
+        "reading_pane": "Ouvrir dans le volet de lecture",
+        "new_window": "Ouvrir dans une nouvelle fenêtre"
+      },
       "return_to_list_after_action": {
         "label": "Revenir à la liste après suppression, archivage, déplacement ou marquage comme non lu",
         "description": "Après avoir supprimé, archivé, déplacé, signalé comme spam ou marqué comme non lu le message ouvert, revenir à la liste des messages au lieu d'ouvrir le message suivant."

@@ -53,7 +53,9 @@ export type SettingsSearchCondition =
   /** In the desktop app where its own menu bar can be pinned (not macOS). */
   | 'desktopMenuBar'
   /** In a browser, not the desktop app. */
-  | 'browser';
+  | 'browser'
+  /** Messages can open in a window of their own (an installed app), outside the desktop app, which has its own switch. */
+  | 'messagePopouts';
 
 export interface SettingsSearchEntry {
   /**
@@ -265,6 +267,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   reading: [
     { label: 'settings.email_behavior.mark_read.label' },
     { label: 'settings.email_behavior.mark_read_on_reply.label' },
+    { label: 'settings.email_behavior.message_double_click.label', when: 'messagePopouts' },
     { label: 'settings.email_behavior.return_to_list_after_action.label' },
     { label: 'settings.reading_page.sections.display' },
     { label: 'settings.email_behavior.message_spacing.label' },

@@ -2321,6 +2321,12 @@
         "label": "Yanıtladığımda veya ilettiğimde okundu olarak işaretle",
         "description": "Yanıtladığınız veya ilettiğiniz bir ileti, iletiler açıldığında hiç okundu olarak işaretlenmese bile okundu olarak işaretlenir."
       },
+      "message_double_click": {
+        "label": "İletiye çift tıklama",
+        "description": "Listedeki bir iletiye çift tıklamanın ne yapacağı.",
+        "reading_pane": "Okuma bölmesinde aç",
+        "new_window": "Yeni pencerede aç"
+      },
       "return_to_list_after_action": {
         "label": "Silme, arşivleme, taşıma veya okunmadı olarak işaretlemeden sonra listeye dön",
         "description": "Açık iletiyi sildikten, arşivledikten, taşıdıktan, spam olarak bildirdikten veya okunmadı olarak işaretledikten sonra, sonraki iletiyi açmak yerine ileti listesine dön."
