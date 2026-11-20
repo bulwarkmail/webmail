@@ -60,10 +60,8 @@ export const PENDING_GRACE_MS = 300;
 
 /**
  * Whether the block holds its place for this search: a plugin asked had not
- * answered after PENDING_GRACE_MS. Kept once the answers came, until the next
- * search asks again, so the block keeps its height and the list below does
- * not move a second time. A plugin that answers at once (one that does not
- * search for this query) shows nothing.
+ * answered after PENDING_GRACE_MS. A plugin that answers at once (one that
+ * does not search for this query) shows nothing.
  */
 function useHeldPlace(pending: boolean): boolean {
   const [held, setHeld] = useState(false);
@@ -163,11 +161,12 @@ interface PluginSearchResultsProps {
  * Results from elsewhere for the search that is running (CRM hits, chat
  * messages, ...), above its message list. Renders nothing outside a search or
  * without entries. While a plugin takes longer than PENDING_GRACE_MS the block
- * shows at a fixed height with placeholder rows, which its entries then fill,
- * so the list moves once, with its own results, not when a slow plugin
- * answers. Its lower edge drags: the block grows up to MAX_SHARE of the list
- * (never past its entries) and keeps that share for later searches; a double
- * click gives it DEFAULT_SHARE again. A toggle at the first heading shows one
+ * shows at its share of the list with placeholder rows, which its entries then
+ * fill, so the list moves once, with its own results, and not again when a
+ * slow plugin answers with entries enough for that height (fewer give the
+ * messages the room back). Its lower edge drags, up and down: the block takes
+ * up to MAX_SHARE of the list (never more than its entries need) and keeps
+ * that share for later searches (a search with few results leaves it as it was); a double click gives it DEFAULT_SHARE again. A toggle at the first heading shows one
  * line per entry (score, title, from, date; the snippet in its tooltip and
  * under the entry open in the reader), kept as the share is. A click on an entry naming a message the user reaches opens it; any
  * other goes back to the plugin that gave the entry.
@@ -188,6 +187,8 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
   // The latest share, for the end of a drag to keep.
   const shareRef = useRef(share);
   const dragStart = useRef(0);
+  // The share as a drag found it, in px of the list.
+  const shareStart = useRef(0);
   const blockRef = useRef<HTMLDivElement>(null);
 
   const groups = useMemo(
@@ -196,6 +197,8 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
   );
 
   const waiting = pending && held;
+  // The share as a height the list's own height is counted in, never below MIN_HEIGHT.
+  const limit = `max(${MIN_HEIGHT}px, ${(share ?? DEFAULT_SHARE) * 100}%)`;
   const shown = searching && (groups.length > 0 || waiting);
   const box = useBox(blockRef, shown);
   if (!shown) return null;
@@ -220,8 +223,11 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
       <div
         ref={blockRef}
         data-plugin-surface={surface}
-        className={cn("flex-shrink-0 overflow-y-auto bg-muted/30", held && "h-48")}
-        style={{ maxHeight: `max(${MIN_HEIGHT}px, ${(share ?? DEFAULT_SHARE) * 100}%)` }}
+        className="flex-shrink-0 overflow-y-auto bg-muted/30"
+        // Waiting, the block is as high as its share, whatever it holds yet;
+        // with its answers the share is the most it takes. Never a height of
+        // its own beside the share: the edge could then only be dragged below it.
+        style={waiting ? { height: limit } : { maxHeight: limit }}
       >
         {groups.map((group, index) => {
           const open = !collapsed.has(group.id);
@@ -329,11 +335,24 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
         value={box.height}
         min={MIN_HEIGHT}
         max={most}
-        onResizeStart={() => { dragStart.current = blockRef.current?.offsetHeight ?? box.height; }}
+        onResizeStart={() => {
+          const el = blockRef.current;
+          dragStart.current = el?.offsetHeight ?? box.height;
+          shareStart.current = (shareRef.current ?? DEFAULT_SHARE) * (el?.parentElement?.clientHeight ?? box.list);
+        }}
         onResize={(delta) => {
-          const list = blockRef.current?.parentElement?.clientHeight ?? box.list;
-          if (list <= 0) return;
-          const next = Math.max(MIN_HEIGHT, Math.min(list * MAX_SHARE, dragStart.current + delta));
+          const el = blockRef.current;
+          const list = el?.parentElement?.clientHeight ?? box.list;
+          // A press that moves nowhere changes nothing.
+          if (list <= 0 || delta === 0) return;
+          const limit = list * MAX_SHARE;
+          let next = Math.max(MIN_HEIGHT, Math.min(limit, dragStart.current + delta));
+          // The block shows no more than its entries need. Past them the
+          // edge stays where it is and so does the share, unless the entries
+          // need more than it gave: a search with few results must not
+          // shrink the share kept for the next one. Waiting, it has none yet.
+          const entries = waiting ? 0 : el?.scrollHeight ?? 0;
+          if (entries > 0 && next >= entries) next = Math.max(entries, Math.min(limit, shareStart.current));
           shareRef.current = next / list;
           setShare(shareRef.current);
         }}
