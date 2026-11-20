@@ -159,12 +159,8 @@ export function isTimedEventFullDayOnDate(event: CalendarEvent, day: Date): bool
   return bounds?.startMinutes === 0 && bounds?.endMinutes === 1440;
 }
 
-export function normalizeAllDayDuration(duration: string | undefined): string | undefined {
-  if (!duration) return undefined;
-  const totalMinutes = parseDuration(duration);
-  const totalDays = Math.max(1, Math.ceil(totalMinutes / (24 * 60)));
-  return `P${totalDays}D`;
-}
+// With the other duration helpers, so server code can use it without the settings store.
+export { normalizeAllDayDuration } from "@/lib/calendar-event-normalization";
 
 export function buildAllDayDuration(start: Date, inclusiveEnd: Date): string {
   const dayCount = Math.max(1, differenceInCalendarDays(startOfDay(inclusiveEnd), startOfDay(start)) + 1);

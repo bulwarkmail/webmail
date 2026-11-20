@@ -4,7 +4,8 @@ import { mergeOnWriteStorage } from '@/lib/merge-on-write-storage';
 import type { CalendarEventUpdateOptions, IJMAPClient } from '@/lib/jmap/client-interface';
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarParticipantIdentity, CalendarRights, CreateCalendarOptions } from '@/lib/jmap/types';
 import { debug } from '@/lib/debug';
-import { getEventStartDate, normalizeAllDayDuration } from '@/lib/calendar-utils';
+import { getEventStartDate } from '@/lib/calendar-utils';
+import { dropDuplicateUids, prepareImportedEvent } from '@/lib/calendar/import-event';
 import { displayNow } from '@/lib/timezone';
 import { parseDuration } from '@/lib/calendar-event-normalization';
 import { sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
@@ -2573,17 +2574,7 @@ async function importEventsUnhooked(
   client = resolveAccountClient(client, cal?.localAccountId);
 
   // Drop within-file UID duplicates first (first occurrence wins).
-  // CalendarEvent/parse already merges master + RECURRENCE-ID overrides
-  // into one object, so anything still sharing a UID here is a corrupt
-  // feed - creating both either fails ("UID already exists") or stores
-  // two events under one UID, depending on the Stalwart version.
-  const seenUids = new Set<string>();
-  let eventsToProcess = events.filter((e) => {
-    if (!e.uid) return true;
-    if (seenUids.has(e.uid)) return false;
-    seenUids.add(e.uid);
-    return true;
-  });
+  let eventsToProcess = dropDuplicateUids(events);
 
   // Deduplicate UIDs: Stalwart enforces UID uniqueness across all calendars.
   // - Events already in the target calendar → skip (true duplicates)
@@ -2646,84 +2637,7 @@ async function importEventsUnhooked(
   }
 
   // Prepare all events for batch creation
-  const prepared: Partial<CalendarEvent>[] = [];
-  for (const event of eventsToProcess) {
-    const src = sanitizeOutgoingCalendarEventData(event as Partial<CalendarEvent>);
-    let cleanParticipants: Record<string, CalendarParticipant> | null = null;
-    if (src.participants) {
-      cleanParticipants = {};
-      for (const [key, p] of Object.entries(src.participants)) {
-        const participant: Record<string, unknown> = {
-          '@type': 'Participant',
-          name: p.name,
-          email: p.email,
-          // calendarAddress carries the scheduling address in jscalendarbis
-          // (Stalwart); sendTo is retired there, so it only serves as a
-          // fallback source for events parsed from legacy RFC 8984 data.
-          calendarAddress: p.calendarAddress || p.sendTo?.imip,
-          description: p.description,
-          kind: p.kind,
-          roles: p.roles,
-          participationStatus: p.participationStatus,
-          participationComment: p.participationComment,
-          expectReply: p.expectReply,
-          scheduleAgent: p.scheduleAgent,
-          scheduleForceSend: p.scheduleForceSend,
-          scheduleId: p.scheduleId,
-          delegatedTo: p.delegatedTo,
-          delegatedFrom: p.delegatedFrom,
-          memberOf: p.memberOf,
-          locationId: p.locationId,
-          language: p.language,
-          links: p.links,
-        };
-        Object.keys(participant).forEach(k => {
-          if (participant[k] === undefined || participant[k] === null) delete participant[k];
-        });
-        cleanParticipants[key] = participant as unknown as CalendarParticipant;
-      }
-    }
-
-    const data: Partial<CalendarEvent> = {
-      calendarIds: { [realCalendarId]: true },
-      uid: src.uid,
-      title: src.title,
-      description: src.description,
-      descriptionContentType: src.descriptionContentType,
-      start: src.start,
-      // CalendarEvent/parse drops a DTEND equal to DTSTART; without an
-      // explicit zero duration Stalwart stores the event ending at
-      // 23:59:59 of its start day. (#837)
-      duration: src.showWithoutTime ? normalizeAllDayDuration(src.duration) : (src.duration || 'PT0S'),
-      timeZone: src.showWithoutTime ? null : src.timeZone,
-      showWithoutTime: src.showWithoutTime,
-      status: src.status,
-      freeBusyStatus: src.freeBusyStatus,
-      privacy: src.privacy,
-      color: src.color,
-      keywords: src.keywords,
-      categories: src.categories,
-      locale: src.locale,
-      // Stalwart derives the iCalendar ORGANIZER solely from
-      // organizerCalendarAddress (replyTo is retired in jscalendarbis);
-      // dropping it here would strip the ORGANIZER from imported invites
-      // and break RSVP replies afterwards.
-      organizerCalendarAddress: src.organizerCalendarAddress || src.replyTo?.imip,
-      locations: src.locations,
-      virtualLocations: src.virtualLocations,
-      links: src.links,
-      recurrenceRules: src.recurrenceRules,
-      recurrenceOverrides: src.recurrenceOverrides,
-      excludedRecurrenceRules: src.excludedRecurrenceRules,
-      alerts: src.alerts,
-      participants: cleanParticipants,
-    };
-    Object.keys(data).forEach(k => {
-      const v = (data as Record<string, unknown>)[k];
-      if (v === undefined || v === null) delete (data as Record<string, unknown>)[k];
-    });
-    prepared.push(data);
-  }
+  const prepared = eventsToProcess.map((event) => prepareImportedEvent(event, realCalendarId));
 
   if (prepared.length === 0) return linked;
 

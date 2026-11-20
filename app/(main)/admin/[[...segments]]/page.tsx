@@ -18,6 +18,7 @@ import { OrgProofreadingPage } from '../_pages/org-proofreading';
 import { OrgCalendarsPage } from '../_pages/org-calendars';
 import { OrgNoticesPage } from '../_pages/org-notices';
 import { OrgDevicesPage } from '../_pages/org-devices';
+import { MigrationPage } from '../_pages/migration';
 import { PluginsPage } from '../_pages/plugins';
 import { ThemesPage } from '../_pages/themes';
 import { MarketplacePage } from '../_pages/marketplace';
@@ -62,6 +63,7 @@ export default function AdminPage() {
     case 'org-calendars': return <OrgCalendarsPage />;
     case 'org-notices': return <OrgNoticesPage />;
     case 'org-devices': return <OrgDevicesPage />;
+    case 'migration': return <MigrationPage />;
     case 'plugins': return detail ? <ExtensionDetailPage key={detail} kind="plugin" id={detail} /> : <PluginsPage />;
     case 'themes': return detail ? <ExtensionDetailPage key={detail} kind="theme" id={detail} /> : <ThemesPage />;
     case 'marketplace': return detail ? <MarketplaceDetailPage key={detail} slug={detail} /> : <MarketplacePage />;

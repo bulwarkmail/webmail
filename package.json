@@ -76,6 +76,7 @@
     "date-fns": "^4.4.0",
     "dompurify": "^3.4.12",
     "fflate": "0.8.3",
+    "imapflow": "^2.12.1",
     "ioredis": "^5.11.1",
     "jalaali-js": "^2.0.1",
     "jszip": "^3.10.2",
