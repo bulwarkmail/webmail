@@ -4861,8 +4861,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         toast.success(tCtxMenu('mailbox_context_menu.toast_emptied_all'));
       }
       // The badge on All Trash comes from the cached folder lists, which
-      // still hold the old totals.
-      if (emptied.length > 0) {
+      // still hold the old totals. An account that failed may have lost part
+      // of its Trash before the server refused the rest.
+      if (emptied.length > 0 || errors.size > 0) {
         invalidateUnifiedMailboxes();
         void buildPopulatedUnifiedAccounts().then(refreshUnifiedCounts).catch(() => {});
       }

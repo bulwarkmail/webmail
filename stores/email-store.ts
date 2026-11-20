@@ -8971,6 +8971,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // awaiting, so concurrent iterations racing on the same closure variable
     // clobber each other's contribution instead of adding to it.
     const emptied: UnifiedAccountClient[] = [];
+    const sourceKey = (clientAccountId?: string, jmapAccountId?: string) => `${clientAccountId}\u0000${jmapAccountId}`;
+    const partlyEmptied = new Map<string, Set<string>>();
     const counts = await Promise.all(targets.map(async ({ account, mailbox }): Promise<number> => {
       try {
         const { jmapMailboxId, jmapAccountId } = resolveJmapTarget(account, mailbox);
@@ -9001,6 +9003,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return count;
       } catch (err) {
         errors.set(account.accountId, err instanceof Error ? err.message : String(err));
+        // The server deleted part of this Trash before it refused the rest.
+        if (err instanceof IncompleteDeleteError) {
+          partlyEmptied.set(sourceKey(account.clientAccountId, account.jmapAccountId), new Set(err.destroyedIds));
+          return err.destroyedIds.length;
+        }
         return 0;
       }
     }));
@@ -9009,10 +9016,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // Take out of the open list only what was deleted. A failed or vetoed
     // account's messages, and a shared owner's, are still on the server.
     const { isUnifiedView, unifiedRole } = get();
-    if (isUnifiedView && unifiedRole === role && emptied.length > 0) {
-      const sourceKey = (clientAccountId?: string, jmapAccountId?: string) => `${clientAccountId}\u0000${jmapAccountId}`;
+    if (isUnifiedView && unifiedRole === role && (emptied.length > 0 || partlyEmptied.size > 0)) {
       const gone = new Set(emptied.map((a) => sourceKey(a.clientAccountId, a.jmapAccountId)));
-      const isGone = (email: Email) => gone.has(sourceKey(email.sourceClientAccountId, email.sourceAccountId));
+      const isGone = (email: Email) => {
+        const key = sourceKey(email.sourceClientAccountId, email.sourceAccountId);
+        return gone.has(key) || partlyEmptied.get(key)?.has(email.id) === true;
+      };
       set((state) => {
         const emails = state.emails.filter((email) => !isGone(email));
         const totalEmails = Math.max(0, state.totalEmails - total);
