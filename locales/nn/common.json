@@ -7120,6 +7120,10 @@
         "title": "Vidareformidle e-posten din",
         "body": "Vidareformidle meldingar frå kontoen din med vedlegg, utan å opne komponeraren. Du vert bedt før den første vidareformidlinga til kvar adresse."
       },
+      "ui_notices": {
+        "title": "Vise varsel",
+        "body": "Vise eit eige lite panel nedst på skjermen, der meldingane frå appen kjem, til dømes ved ein innkomande samtale. Det blokkerer ikkje sida, du kan skrive vidare og lukke det. Kvart varsel nemner programtillegget."
+      },
       "ui_notifications": {
         "title": "Vis varsel",
         "body": "Vis varsel på eininga di, eller i appen om du ikkje har late det vere. Kvar einskild viser kva plugin det er. Pluginen ser òg meldingane som appen viser deg."

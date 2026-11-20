@@ -7084,6 +7084,10 @@
         "title": "Leveleid továbbítása",
         "body": "Üzeneteket továbbít a fiókodból a mellékleteikkel együtt, a szerkesztő megnyitása nélkül. Minden címre az első továbbítás előtt megkérdez."
       },
+      "ui_notices": {
+        "title": "Értesítések megjelenítése",
+        "body": "Saját kis panel megjelenítése a képernyő alján, ahol az alkalmazás üzenetei is megjelennek, például bejövő hívásnál. Nem zárolja az oldalt, tovább gépelhet és bezárhatja. Mindegyik megnevezi a bővítményt."
+      },
       "ui_notifications": {
         "title": "Értesítések megjelenítése",
         "body": "Értesítéseket jelenít meg az eszközödön, vagy az alkalmazásban, ha nem engedélyezted őket. Mindegyiken szerepel a bővítmény neve. A bővítmény az alkalmazás által megjelenített értesítéseket is látja."

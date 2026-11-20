@@ -33,6 +33,9 @@ export const MAX_TOP_BANNER_HEIGHT = 120;
 /** Banners in the reader and over the message list, so the message or the list stays in reach. */
 export const MAX_BANNER_HEIGHT = 400;
 
+/** A plugin's notice in the toasts' stack (api.ui.showNotice), so the page stays in sight. */
+export const MAX_NOTICE_HEIGHT = 400;
+
 /** Slots with a lower limit than MAX_SLOT_HEIGHT. */
 const SLOT_HEIGHT_LIMITS: Partial<Record<SlotName, number>> = {
   'app-top-banner': MAX_TOP_BANNER_HEIGHT,
@@ -41,6 +44,7 @@ const SLOT_HEIGHT_LIMITS: Partial<Record<SlotName, number>> = {
   'email-banner': MAX_BANNER_HEIGHT,
   'reader-above-quote': MAX_BANNER_HEIGHT,
   'message-list-header': MAX_BANNER_HEIGHT,
+  'plugin-notice': MAX_NOTICE_HEIGHT,
 };
 
 /** Tallest the frame of `slot` gets. */
@@ -79,7 +83,7 @@ export function clampSlotWidth(width: unknown): number | null {
  * can pin controls at the bottom, like a chat input. Elsewhere a frame grows
  * with its content.
  */
-export const FILLABLE_SLOTS: readonly string[] = ['composer-sidebar', 'composer-sidebar-right', 'email-detail-sidebar', 'side-panel', 'app-side-panel', 'app-page', 'calendar-task-view', 'plugin-dialog'];
+export const FILLABLE_SLOTS: readonly string[] = ['composer-sidebar', 'composer-sidebar-right', 'email-detail-sidebar', 'side-panel', 'app-side-panel', 'app-page', 'calendar-task-view', 'plugin-dialog', 'plugin-notice'];
 
 export function isFillableSlot(slot: string): boolean {
   return FILLABLE_SLOTS.includes(slot);

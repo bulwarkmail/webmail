@@ -7084,6 +7084,10 @@
         "title": "Přeposílat vaši poštu",
         "body": "Přeposílá zprávy z vašeho účtu i s přílohami, aniž by otevřel editor. Před prvním přeposláním na každou adresu se vás zeptá."
       },
+      "ui_notices": {
+        "title": "Zobrazovat upozornění",
+        "body": "Zobrazit vlastní malý panel dole na obrazovce, kde se objevují zprávy aplikace, například při příchozím hovoru. Neblokuje stránku, můžete dál psát a můžete ho zavřít. Každé upozornění uvádí název pluginu."
+      },
       "ui_notifications": {
         "title": "Zobrazovat oznámení",
         "body": "Zobrazuje oznámení ve vašem zařízení, nebo v aplikaci, pokud jste je nepovolili. Každé uvádí název pluginu. Plugin také vidí upozornění, která vám aplikace zobrazuje."

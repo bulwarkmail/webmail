@@ -7084,6 +7084,10 @@
         "title": "Postanızı iletme",
         "body": "Hesabınızdaki iletileri ekleriyle birlikte, düzenleyiciyi açmadan iletir. Her adrese ilk iletmeden önce size sorulur."
       },
+      "ui_notices": {
+        "title": "Bildirim göster",
+        "body": "Ekranın altında, uygulamanın mesajlarının göründüğü yerde kendine ait küçük bir panel gösterir; örneğin gelen bir arama için. Sayfayı engellemez, yazmaya devam edebilir ve kapatabilirsiniz. Her biri eklentinin adını belirtir."
+      },
       "ui_notifications": {
         "title": "Bildirim gösterme",
         "body": "Cihazınızda bildirim gösterme ya da bildirimlere izin vermediyseniz uygulama içinde gösterme. Her bildirimde eklentinin adı yer alır. Eklenti, uygulamanın size gösterdiği bildirimleri de görür."

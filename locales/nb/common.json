@@ -7084,6 +7084,10 @@
         "title": "Videresende e-posten din",
         "body": "Videresende meldinger fra kontoen din med vedlegg, uten å åpne redigeringsvinduet. Du blir spurt før første videresending til hver adresse."
       },
+      "ui_notices": {
+        "title": "Vise varsler",
+        "body": "Vise et eget lite panel nederst på skjermen, der appens meldinger vises, for eksempel ved en innkommende samtale. Det blokkerer ikke siden, du kan skrive videre og lukke det. Hvert varsel navngir programtillegget."
+      },
       "ui_notifications": {
         "title": "Vise varsler",
         "body": "Vise varsler på enheten din, eller i appen hvis du ikke har tillatt dem. Hvert varsel viser navnet på tillegget. Tillegget ser også meldingene appen viser deg."

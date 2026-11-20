@@ -7084,6 +7084,10 @@
         "title": "Redirecționarea mesajelor dvs.",
         "body": "Redirecționează mesaje din contul dvs. împreună cu atașamentele, fără a deschide editorul. Sunteți întrebat înainte de prima redirecționare către fiecare adresă."
       },
+      "ui_notices": {
+        "title": "Afișare notificări",
+        "body": "Afișează un mic panou propriu în partea de jos a ecranului, unde apar mesajele aplicației, de exemplu pentru un apel primit. Nu blochează pagina, puteți continua să scrieți și îl puteți închide. Fiecare numește pluginul."
+      },
       "ui_notifications": {
         "title": "Afișarea notificărilor",
         "body": "Afișează notificări pe dispozitiv sau în aplicație, dacă nu le-ați permis. Fiecare indică numele pluginului. Pluginul vede și notificările pe care vi le afișează aplicația."

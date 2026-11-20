@@ -7112,6 +7112,10 @@
         "title": "Sinu kirjade edasisaatmine",
         "body": "Saadab sinu konto kirju koos manustega edasi ilma koostajat avamata. Enne esimest edasisaatmist igale aadressile küsitakse sinult luba."
       },
+      "ui_notices": {
+        "title": "Teadete kuvamine",
+        "body": "Kuvada ekraani allservas oma väike paneel, kus ilmuvad ka rakenduse teated, näiteks sissetuleva kõne korral. See ei blokeeri lehte, saate edasi kirjutada ja selle sulgeda. Igaüks nimetab pistikprogrammi."
+      },
       "ui_notifications": {
         "title": "Näita märguandeid",
         "body": "Näidata märguandeid sinu seadmes või rakenduses, kui pole neid lubanud. Iga märguanne nimetab pistikprogrammi. Pistikprogramm näeb ka teateid, mida rakendus sulle näitab."

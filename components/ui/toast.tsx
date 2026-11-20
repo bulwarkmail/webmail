@@ -64,6 +64,13 @@ export interface Toast {
    */
   pluginId?: string;
   pluginName?: string;
+  /**
+   * A body of its own in place of the icon, title and message, such as a
+   * plugin's notice (api.ui.showNotice). The toast draws a line over it with
+   * the plugin's name and the close button, shown at all times; the title is
+   * only read out.
+   */
+  content?: React.ReactNode;
 }
 
 interface ToastProps {
@@ -238,13 +245,39 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     </button>
   );
 
+  const closeButton = (
+    <button
+      type="button"
+      data-toast-close=""
+      aria-label={tCommon("close")}
+      title={tCommon("close")}
+      onClick={(e) => {
+        e.stopPropagation();
+        dismissByUser();
+      }}
+      className={cn(
+        "flex-shrink-0 p-1 rounded-md transition-all",
+        TOUCH_HIT_AREA,
+        "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
+        // Phones swipe a toast away instead; a body of its own may take the
+        // swipe for itself, so that one keeps its button.
+        toast.content === undefined && "max-sm:hidden",
+        toast.content !== undefined || !toast.duration || toast.duration <= 0
+          ? "opacity-100"
+          : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
+      )}
+    >
+      <X className="w-3.5 h-3.5" />
+    </button>
+  );
+
   return (
     <div
       className={cn(
-        "toast-item group relative flex items-start gap-2.5 w-[360px] max-w-[calc(100vw-2.5rem)] rounded-md",
+        "toast-item group relative flex w-[360px] max-w-[calc(100vw-2.5rem)] rounded-md",
         "bg-popover text-popover-foreground border border-border",
         "shadow-[0_6px_16px_rgb(0,0,0,0.1)] dark:shadow-[0_6px_16px_rgb(0,0,0,0.4)]",
-        "overflow-hidden pt-3 pe-2.5 pb-3.5 ps-3.5",
+        toast.content !== undefined ? "flex-col overflow-hidden" : "items-start gap-2.5 overflow-hidden pt-3 pe-2.5 pb-3.5 ps-3.5",
         // Phone: as wide as the screen allows (the container keeps 12px).
         "max-sm:w-full max-sm:max-w-none touch-pan-y rtl:[--toast-slide:-1]",
         exiting ? "toast-exit" : "toast-enter",
@@ -285,6 +318,19 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
         }
       }}
     >
+      {toast.content !== undefined ? (
+        <>
+          <div data-toast-header="" className="flex items-center gap-1 border-b border-border ps-3 pe-1 py-0.5">
+            <p id={titleId} className="sr-only">{toast.title}</p>
+            <p className="flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground" data-toast-source="">
+              <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{tPlugin("from_plugin", { name: toast.pluginName || toast.pluginId || "" })}</span>
+            </p>
+            {closeButton}
+          </div>
+          <div data-toast-content="" className="min-w-0">{toast.content}</div>
+        </>
+      ) : (<>
       {/* Icon */}
       {toast.icon !== undefined ? (
         toast.icon
@@ -329,26 +375,8 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
 
       {/* Close button. Phones swipe the toast away instead. A toast that stays
           until closed shows it all the time: that's the only way it goes. */}
-      <button
-        type="button"
-        data-toast-close=""
-        aria-label={tCommon("close")}
-        title={tCommon("close")}
-        onClick={(e) => {
-          e.stopPropagation();
-          dismissByUser();
-        }}
-        className={cn(
-          "flex-shrink-0 p-1 rounded-md transition-all max-sm:hidden",
-          TOUCH_HIT_AREA,
-          "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
-          !toast.duration || toast.duration <= 0
-            ? "opacity-100"
-            : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
-        )}
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
+      {closeButton}
+      </>)}
 
       {/* Progress line: the same line as the countdown, filled by the work done */}
       {isProgress && (

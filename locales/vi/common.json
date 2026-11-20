@@ -7124,6 +7124,10 @@
         "title": "Chuyển tiếp thư của bạn",
         "body": "Chuyển tiếp thư từ tài khoản của bạn cùng tệp đính kèm mà không mở khung soạn thư. Plugin sẽ hỏi trước khi chuyển tiếp lần đầu đến từng địa chỉ."
       },
+      "ui_notices": {
+        "title": "Hiển thị thông báo",
+        "body": "Hiển thị một bảng nhỏ của riêng nó ở cuối màn hình, nơi các tin nhắn của ứng dụng xuất hiện, ví dụ khi có cuộc gọi đến. Nó không chặn trang, bạn có thể tiếp tục gõ và đóng nó. Mỗi thông báo đều nêu tên plugin."
+      },
       "ui_notifications": {
         "title": "Hiển thị thông báo",
         "body": "Hiển thị thông báo trên thiết bị, hoặc trong ứng dụng nếu bạn chưa cấp quyền thông báo. Mỗi thông báo đều ghi tên plugin. Plugin cũng thấy các thông báo mà ứng dụng hiển thị cho bạn."

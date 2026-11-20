@@ -7084,6 +7084,10 @@
         "title": "Transférer vos e-mails",
         "body": "Transférer des messages de votre compte avec leurs pièces jointes, sans ouvrir l'éditeur. Vous êtes consulté avant le premier transfert vers chaque adresse."
       },
+      "ui_notices": {
+        "title": "Afficher des avis",
+        "body": "Afficher un petit panneau en bas de l'écran, là où apparaissent les messages de l'application, par exemple pour un appel entrant. Il ne bloque pas la page, vous pouvez continuer à taper et le fermer. Chacun indique le nom du plugin."
+      },
       "ui_notifications": {
         "title": "Afficher des notifications",
         "body": "Afficher des notifications sur votre appareil, ou dans l'application si vous ne les avez pas autorisées. Chacune indique le nom du plugin. Le plugin voit aussi les notifications que l'application vous affiche."

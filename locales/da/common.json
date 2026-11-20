@@ -7084,6 +7084,10 @@
         "title": "Videresende din post",
         "body": "Videresende beskeder fra din konto med vedhæftninger uden at åbne editoren. Du bliver spurgt før første videresendelse til hver adresse."
       },
+      "ui_notices": {
+        "title": "Vise meddelelser",
+        "body": "Vise sit eget lille panel nederst på skærmen, hvor appens beskeder vises, for eksempel ved et indgående opkald. Det blokerer ikke siden, du kan skrive videre og lukke det. Hver meddelelse nævner plugin'et."
+      },
       "ui_notifications": {
         "title": "Vise notifikationer",
         "body": "Vise notifikationer på din enhed eller i appen, hvis du ikke har tilladt dem. Hver af dem nævner pluginets navn. Pluginet ser også de beskeder, appen viser dig."

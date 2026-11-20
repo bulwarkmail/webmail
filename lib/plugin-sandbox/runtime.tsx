@@ -839,6 +839,24 @@ function buildCoreApi(manifest: PluginManifest) {
        *  fills it, for a chat whose input stays at the bottom. */
       openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger'; fill?: boolean }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
+      /** Shows one of this plugin's OWN slots ('plugin-notice' unless `slot`
+       *  names another) as a notice in the toasts' stack at the bottom end
+       *  corner: no backdrop, never takes the focus, the page stays usable.
+       *  The host draws a line with the plugin's name and a close button
+       *  over it; `title` is read out, not shown. `height` fixes the frame's
+       *  height in px (40-400) and the plugin's root fills it; without it the
+       *  frame takes its content's height, up to 400 px. The frame gets
+       *  `extraProps` and `noticeId`, and may open a dialog (openDialog),
+       *  which stands above it. At most 3 per plugin: a fourth closes the
+       *  oldest. It stays until closeNotice, the user's close button, or the
+       *  frame that showed it going (show it from the background to keep it
+       *  while the plugin runs). Resolves to the notice's id. Needs
+       *  `ui:notices`. */
+      showNotice: (opts: { slot?: string; extraProps?: Record<string, unknown>; title?: string; height?: number }) =>
+        callApi('ui.showNotice', [opts]) as Promise<string>,
+      /** Closes one of this plugin's notices, from any of its frames; one
+       *  already closed is ignored. Needs `ui:notices`. */
+      closeNotice: (id: string) => callApi('ui.closeNotice', [id]) as Promise<void>,
       /** Re-runs the onRenderEmailBody hook for the open message (e.g. after a
        *  crypto plugin unlocks a key) so its body re-renders without a reload. */
       rerenderEmail: () => callApi('ui.rerenderEmail', []) as Promise<void>,

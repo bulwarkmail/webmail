@@ -34,6 +34,7 @@ import { clearPluginListFilters } from './list-filters';
 import { clearPluginPages } from './pages';
 import { clearSectionTitle } from './section-titles';
 import { clearSidePanel } from './side-panels';
+import { closeNoticesFor } from './notices';
 import { closePluginFilesOf } from './file-viewer';
 import { cancelPluginProxyRequests } from './proxy-client';
 import { cancelConnectFor } from './connect-dialog';
@@ -509,6 +510,7 @@ export function unloadSandboxedPlugin(pluginId: string): void {
   clearPluginPages(pluginId);
   clearSectionTitle(pluginId);
   clearSidePanel(pluginId);
+  closeNoticesFor(pluginId);
   closePluginFilesOf(pluginId);
   cancelPluginProxyRequests(pluginId);
   cancelConnectFor(pluginId);

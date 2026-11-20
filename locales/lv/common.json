@@ -7084,6 +7084,10 @@
         "title": "Pārsūtīt jūsu pastu",
         "body": "Pārsūtīt vēstules no jūsu konta kopā ar pielikumiem, neatverot redaktoru. Pirms pirmās pārsūtīšanas uz katru adresi jums tiek jautāts."
       },
+      "ui_notices": {
+        "title": "Rādīt paziņojumus",
+        "body": "Rādīt savu nelielu paneli ekrāna apakšā, kur parādās lietotnes ziņojumi, piemēram, ienākoša zvana gadījumā. Tas nebloķē lapu, varat turpināt rakstīt un to aizvērt. Katrā ir norādīts spraudņa nosaukums."
+      },
       "ui_notifications": {
         "title": "Rādīt paziņojumus",
         "body": "Rādīt paziņojumus jūsu ierīcē vai lietotnē, ja neesat tos atļāvis. Katrā ir spraudņa nosaukums. Spraudnis redz arī paziņojumus, ko jums rāda lietotne."
