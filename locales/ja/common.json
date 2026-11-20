@@ -1107,6 +1107,12 @@
     "option_priority_high": "高",
     "option_priority_normal": "標準",
     "option_priority_low": "低",
+    "file_in": "フォルダーに整理",
+    "file_in_chosen": "{folder} に整理",
+    "file_in_hint": "送信後、このメッセージと返信元のメッセージをこのフォルダーに移動します",
+    "file_in_none": "整理しない",
+    "file_in_failed": "送信しましたが、{folder} に整理できませんでした。",
+    "file_in_reply_elsewhere": "元のメッセージを {folder} に移動しました。返信は別のアカウントから送信されたため、送信済みに残ります。",
     "validation": {
       "recipient_required": "送信するには宛先を追加してください",
       "body_required": "メッセージを入力するかファイルを添付してください",

@@ -1110,6 +1110,12 @@
     "option_priority_high": "Magas",
     "option_priority_normal": "Normál",
     "option_priority_low": "Alacsony",
+    "file_in": "Iktatás mappába",
+    "file_in_chosen": "Iktatás ide: {folder}",
+    "file_in_hint": "Küldés után az üzenete és a megválaszolt levél ebbe a mappába kerül",
+    "file_in_none": "Ne iktassa",
+    "file_in_failed": "Elküldve, de nem sikerült ide iktatni: {folder}.",
+    "file_in_reply_elsewhere": "Az eredeti áthelyezve ide: {folder}. A válasz az Elküldöttek között marad, mert másik fiókból ment ki.",
     "validation": {
       "recipient_required": "Adj meg egy címzettet a küldéshez",
       "body_required": "Írj üzenetet vagy csatolj fájlt",

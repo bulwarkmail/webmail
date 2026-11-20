@@ -1544,6 +1544,12 @@
     "option_priority_high": "ความสำคัญสูง",
     "option_priority_normal": "ปกติ",
     "option_priority_low": "ความสำคัญต่ำ",
+    "file_in": "จัดเก็บในโฟลเดอร์",
+    "file_in_chosen": "จัดเก็บใน {folder}",
+    "file_in_hint": "หลังส่ง ข้อความของคุณและข้อความที่คุณตอบกลับจะไปอยู่ในโฟลเดอร์นี้",
+    "file_in_none": "ไม่จัดเก็บ",
+    "file_in_failed": "ส่งแล้ว แต่จัดเก็บใน {folder} ไม่ได้",
+    "file_in_reply_elsewhere": "ย้ายต้นฉบับไปที่ {folder} แล้ว คำตอบยังอยู่ในรายการที่ส่ง เพราะส่งจากบัญชีอื่น",
     "validation": {
       "recipient_required": "กรุณาระบุผู้รับก่อนส่ง",
       "body_required": "กรุณาเขียนข้อความหรือแนบไฟล์",

@@ -1110,6 +1110,12 @@
     "option_priority_high": "Alta",
     "option_priority_normal": "Normal",
     "option_priority_low": "Baixa",
+    "file_in": "Arxiva a una carpeta",
+    "file_in_chosen": "Arxiva a {folder}",
+    "file_in_hint": "Un cop enviat, el teu missatge i el que respons van a aquesta carpeta",
+    "file_in_none": "No arxivis",
+    "file_in_failed": "Enviat, però no s'ha pogut arxivar a {folder}.",
+    "file_in_reply_elsewhere": "Original mogut a {folder}. La resposta es queda a Enviats, perquè ha sortit d'un altre compte.",
     "validation": {
       "recipient_required": "Afegiu un destinatari per enviar",
       "body_required": "Escriviu un missatge o adjunteu un fitxer",

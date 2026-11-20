@@ -1110,6 +1110,12 @@
     "option_priority_high": "Yüksek",
     "option_priority_normal": "Normal",
     "option_priority_low": "Düşük",
+    "file_in": "Klasöre kaldır",
+    "file_in_chosen": "{folder} klasörüne kaldır",
+    "file_in_hint": "Gönderildikten sonra iletiniz ve yanıtladığınız ileti bu klasöre taşınır",
+    "file_in_none": "Kaldırma",
+    "file_in_failed": "Gönderildi, ancak {folder} klasörüne kaldırılamadı.",
+    "file_in_reply_elsewhere": "Orijinal {folder} klasörüne taşındı. Yanıtınız başka bir hesaptan gittiği için Gönderilenler'de kalıyor.",
     "validation": {
       "recipient_required": "Göndermek için bir alıcı ekleyin",
       "body_required": "Bir ileti yazın veya dosya ekleyin",

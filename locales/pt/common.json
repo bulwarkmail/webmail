@@ -1107,6 +1107,12 @@
     "option_priority_high": "Alta",
     "option_priority_normal": "Normal",
     "option_priority_low": "Baixa",
+    "file_in": "Arquivar em pasta",
+    "file_in_chosen": "Arquivar em {folder}",
+    "file_in_hint": "Depois de enviada, a sua mensagem e a que está a responder vão para esta pasta",
+    "file_in_none": "Não arquivar",
+    "file_in_failed": "Enviado, mas não foi possível arquivar em {folder}.",
+    "file_in_reply_elsewhere": "Original movido para {folder}. A sua resposta fica em Enviados, porque saiu de outra conta.",
     "validation": {
       "recipient_required": "Adicione um destinatário para enviar",
       "body_required": "Escreva uma mensagem ou anexe um arquivo",

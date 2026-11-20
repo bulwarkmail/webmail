@@ -1107,6 +1107,12 @@
     "option_priority_high": "Hoch",
     "option_priority_normal": "Normal",
     "option_priority_low": "Niedrig",
+    "file_in": "In Ordner ablegen",
+    "file_in_chosen": "Ablegen in {folder}",
+    "file_in_hint": "Nach dem Senden kommen Ihre Nachricht und die beantwortete Nachricht in diesen Ordner",
+    "file_in_none": "Nicht ablegen",
+    "file_in_failed": "Gesendet, konnte aber nicht in {folder} abgelegt werden.",
+    "file_in_reply_elsewhere": "Original nach {folder} verschoben. Ihre Antwort bleibt in Gesendet, da sie von einem anderen Konto verschickt wurde.",
     "validation": {
       "recipient_required": "Fügen Sie einen Empfänger hinzu, um zu senden",
       "body_required": "Nachricht schreiben oder Datei anhängen",

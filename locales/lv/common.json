@@ -1107,6 +1107,12 @@
     "option_priority_high": "Augsta",
     "option_priority_normal": "Parasta",
     "option_priority_low": "Zema",
+    "file_in": "Ievietot mapē",
+    "file_in_chosen": "Ievietot mapē {folder}",
+    "file_in_hint": "Pēc nosūtīšanas jūsu ziņojums un tas, uz kuru atbildat, nonāks šajā mapē",
+    "file_in_none": "Neievietot",
+    "file_in_failed": "Nosūtīts, bet neizdevās ievietot mapē {folder}.",
+    "file_in_reply_elsewhere": "Oriģināls pārvietots uz {folder}. Atbilde paliek mapē Nosūtītie, jo tā tika nosūtīta no cita konta.",
     "validation": {
       "recipient_required": "Norādiet vismaz vienu saņēmēju",
       "body_required": "Ierakstiet ziņojumu vai pievienojiet failu",

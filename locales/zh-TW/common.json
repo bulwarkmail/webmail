@@ -1110,6 +1110,12 @@
     "option_priority_high": "高",
     "option_priority_normal": "一般",
     "option_priority_low": "低",
+    "file_in": "歸檔到資料夾",
+    "file_in_chosen": "歸檔到 {folder}",
+    "file_in_hint": "傳送後，您的郵件和所回覆的郵件會移到此資料夾",
+    "file_in_none": "不歸檔",
+    "file_in_failed": "已傳送，但無法歸檔到 {folder}。",
+    "file_in_reply_elsewhere": "原始郵件已移到 {folder}。回覆是從其他帳號寄出的，因此保留在寄件備份中。",
     "validation": {
       "recipient_required": "請新增收件者",
       "body_required": "請輸入郵件內容或新增附件",

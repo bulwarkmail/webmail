@@ -1107,6 +1107,12 @@
     "option_priority_high": "Haute",
     "option_priority_normal": "Normale",
     "option_priority_low": "Basse",
+    "file_in": "Classer dans un dossier",
+    "file_in_chosen": "Classer dans {folder}",
+    "file_in_hint": "Après l'envoi, votre message et celui auquel vous répondez vont dans ce dossier",
+    "file_in_none": "Ne pas classer",
+    "file_in_failed": "Envoyé, mais impossible de le classer dans {folder}.",
+    "file_in_reply_elsewhere": "Original déplacé vers {folder}. Votre réponse reste dans Envoyés, car elle est partie d'un autre compte.",
     "validation": {
       "recipient_required": "Ajoutez un destinataire pour envoyer",
       "body_required": "Rédigez un message ou joignez un fichier",

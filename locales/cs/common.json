@@ -1107,6 +1107,12 @@
     "option_priority_high": "Vysoká",
     "option_priority_normal": "Normální",
     "option_priority_low": "Nízká",
+    "file_in": "Založit do složky",
+    "file_in_chosen": "Založit do {folder}",
+    "file_in_hint": "Po odeslání se vaše zpráva i ta, na kterou odpovídáte, přesunou do této složky",
+    "file_in_none": "Nezakládat",
+    "file_in_failed": "Odesláno, ale nepodařilo se založit do {folder}.",
+    "file_in_reply_elsewhere": "Originál přesunut do {folder}. Odpověď zůstává v Odeslaných, protože odešla z jiného účtu.",
     "validation": {
       "recipient_required": "Chcete-li zprávu odeslat, přidejte příjemce",
       "body_required": "Napište zprávu nebo připojte soubor",

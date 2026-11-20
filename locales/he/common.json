@@ -1033,6 +1033,12 @@
     "option_priority_high": "גבוהה",
     "option_priority_normal": "רגילה",
     "option_priority_low": "נמוכה",
+    "file_in": "תיוק בתיקייה",
+    "file_in_chosen": "תיוק ב-{folder}",
+    "file_in_hint": "לאחר השליחה, ההודעה שלך וההודעה שעליה ענית יעברו לתיקייה זו",
+    "file_in_none": "ללא תיוק",
+    "file_in_failed": "נשלח, אך לא ניתן היה לתייק ב-{folder}.",
+    "file_in_reply_elsewhere": "ההודעה המקורית הועברה ל-{folder}. התשובה נשארת בפריטים שנשלחו, כי נשלחה מחשבון אחר.",
     "validation": {
       "recipient_required": "הוסף נמען לשליחה",
       "body_required": "כתוב הודעה או צרף קובץ",

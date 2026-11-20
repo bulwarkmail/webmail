@@ -1107,6 +1107,12 @@
     "option_priority_high": "Hoog",
     "option_priority_normal": "Normaal",
     "option_priority_low": "Laag",
+    "file_in": "In map opbergen",
+    "file_in_chosen": "Opbergen in {folder}",
+    "file_in_hint": "Na verzenden gaan je bericht en het bericht waarop je antwoordt naar deze map",
+    "file_in_none": "Niet opbergen",
+    "file_in_failed": "Verzonden, maar opbergen in {folder} is mislukt.",
+    "file_in_reply_elsewhere": "Origineel verplaatst naar {folder}. Je antwoord blijft in Verzonden, omdat het vanaf een ander account is verstuurd.",
     "validation": {
       "recipient_required": "Voeg een ontvanger toe om te verzenden",
       "body_required": "Schrijf een bericht of voeg een bestand toe",

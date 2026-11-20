@@ -1107,6 +1107,12 @@
     "option_priority_high": "Alta",
     "option_priority_normal": "Normale",
     "option_priority_low": "Bassa",
+    "file_in": "Archivia in cartella",
+    "file_in_chosen": "Archivia in {folder}",
+    "file_in_hint": "Dopo l'invio, il tuo messaggio e quello a cui rispondi finiscono in questa cartella",
+    "file_in_none": "Non archiviare",
+    "file_in_failed": "Inviato, ma non è stato possibile archiviarlo in {folder}.",
+    "file_in_reply_elsewhere": "Originale spostato in {folder}. La risposta resta in Inviati, perché è partita da un altro account.",
     "validation": {
       "recipient_required": "Aggiungi un destinatario per inviare",
       "body_required": "Scrivi un messaggio o allega un file",

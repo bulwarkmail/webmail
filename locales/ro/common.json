@@ -1110,6 +1110,12 @@
     "option_priority_high": "Ridicată",
     "option_priority_normal": "Normală",
     "option_priority_low": "Scăzută",
+    "file_in": "Arhivează în dosar",
+    "file_in_chosen": "Arhivează în {folder}",
+    "file_in_hint": "După trimitere, mesajul tău și cel la care răspunzi ajung în acest dosar",
+    "file_in_none": "Nu arhiva",
+    "file_in_failed": "Trimis, dar nu a putut fi arhivat în {folder}.",
+    "file_in_reply_elsewhere": "Originalul a fost mutat în {folder}. Răspunsul rămâne în Trimise, deoarece a plecat din alt cont.",
     "validation": {
       "recipient_required": "Adăugați un destinatar căruia să îi trimiteți mesajul",
       "body_required": "Scrieți un mesaj sau atașați un fișier",

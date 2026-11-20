@@ -4448,6 +4448,16 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  async addEmailToMailbox(emailId: string, mailboxId: string, accountId?: string): Promise<void> {
+    const response = await this.request([
+      ["Email/set", {
+        accountId: accountId || this.accountId,
+        update: { [emailId]: { [`mailboxIds/${pointerToken(mailboxId)}`]: true } },
+      }, "0"],
+    ]);
+    assertSetSucceeded(response, 'Failed to add to folder');
+  }
+
   async removeEmailsFromMailbox(emailIds: string[], mailboxId: string, accountId?: string): Promise<void> {
     if (emailIds.length === 0) return;
     // A pointer patch, not a full mailboxIds replacement: the other mailboxes

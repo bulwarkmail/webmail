@@ -920,6 +920,12 @@ export class DemoJMAPClient implements IJMAPClient {
     this.recalcMailboxCounts();
   }
 
+  async addEmailToMailbox(emailId: string, mailboxId: string): Promise<void> {
+    const email = this.data.emails.find(e => e.id === emailId);
+    if (email) email.mailboxIds = { ...email.mailboxIds, [mailboxId]: true };
+    this.recalcMailboxCounts();
+  }
+
   async removeEmailsFromMailbox(emailIds: string[], mailboxId: string): Promise<void> {
     for (const email of this.data.emails) {
       if (!emailIds.includes(email.id) || !email.mailboxIds[mailboxId]) continue;

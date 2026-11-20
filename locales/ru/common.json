@@ -1107,6 +1107,12 @@
     "option_priority_high": "Высокая",
     "option_priority_normal": "Обычная",
     "option_priority_low": "Низкая",
+    "file_in": "Положить в папку",
+    "file_in_chosen": "Положить в {folder}",
+    "file_in_hint": "После отправки ваше письмо и письмо, на которое вы отвечаете, попадут в эту папку",
+    "file_in_none": "Не перемещать",
+    "file_in_failed": "Отправлено, но положить в {folder} не удалось.",
+    "file_in_reply_elsewhere": "Оригинал перемещён в {folder}. Ответ остаётся в «Отправленных», так как ушёл с другого аккаунта.",
     "validation": {
       "recipient_required": "Укажите получателя для отправки",
       "body_required": "Напишите сообщение или прикрепите файл",

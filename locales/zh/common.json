@@ -1107,6 +1107,12 @@
     "option_priority_high": "高",
     "option_priority_normal": "普通",
     "option_priority_low": "低",
+    "file_in": "归档到文件夹",
+    "file_in_chosen": "归档到 {folder}",
+    "file_in_hint": "发送后，你的邮件和所回复的邮件会移到此文件夹",
+    "file_in_none": "不归档",
+    "file_in_failed": "已发送，但无法归档到 {folder}。",
+    "file_in_reply_elsewhere": "原邮件已移到 {folder}。回复是从其他账户发出的，因此保留在已发送中。",
     "validation": {
       "recipient_required": "请添加收件人",
       "body_required": "请输入邮件内容或添加附件",

@@ -1110,6 +1110,12 @@
     "option_priority_high": "Өндөр",
     "option_priority_normal": "Энгийн",
     "option_priority_low": "Бага",
+    "file_in": "Хавтсанд хадгалах",
+    "file_in_chosen": "{folder}-д хадгалах",
+    "file_in_hint": "Илгээсний дараа таны захидал болон хариулж буй захидал энэ хавтас руу орно",
+    "file_in_none": "Хадгалахгүй",
+    "file_in_failed": "Илгээсэн ч {folder}-д хадгалж чадсангүй.",
+    "file_in_reply_elsewhere": "Эх захидлыг {folder} руу зөөлөө. Хариу өөр бүртгэлээс илгээгдсэн тул Илгээсэн хэсэгт үлдэнэ.",
     "validation": {
       "recipient_required": "Илгээхийн тулд хүлээн авагч нэмэх",
       "body_required": "Мессеж бичих эсвэл файл хавсаргах",

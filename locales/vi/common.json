@@ -1111,6 +1111,12 @@
     "option_priority_high": "Cao",
     "option_priority_normal": "Bình thường",
     "option_priority_low": "Thấp",
+    "file_in": "Lưu vào thư mục",
+    "file_in_chosen": "Lưu vào {folder}",
+    "file_in_hint": "Sau khi gửi, thư của bạn và thư bạn trả lời sẽ chuyển vào thư mục này",
+    "file_in_none": "Không lưu",
+    "file_in_failed": "Đã gửi, nhưng không thể lưu vào {folder}.",
+    "file_in_reply_elsewhere": "Đã chuyển thư gốc vào {folder}. Thư trả lời vẫn ở mục Đã gửi vì được gửi từ tài khoản khác.",
     "validation": {
       "recipient_required": "Thêm người nhận để gửi",
       "body_required": "Viết nội dung thư hoặc đính kèm tệp",

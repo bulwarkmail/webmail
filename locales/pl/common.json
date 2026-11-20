@@ -1107,6 +1107,12 @@
     "option_priority_high": "Wysoki",
     "option_priority_normal": "Normalny",
     "option_priority_low": "Niski",
+    "file_in": "Zachowaj w folderze",
+    "file_in_chosen": "Zachowaj w {folder}",
+    "file_in_hint": "Po wysłaniu Twoja wiadomość i ta, na którą odpowiadasz, trafią do tego folderu",
+    "file_in_none": "Nie przenoś",
+    "file_in_failed": "Wysłano, ale nie udało się zapisać w {folder}.",
+    "file_in_reply_elsewhere": "Oryginał przeniesiono do {folder}. Odpowiedź zostaje w Wysłanych, bo wyszła z innego konta.",
     "validation": {
       "recipient_required": "Dodaj odbiorcę, aby wysłać",
       "body_required": "Napisz wiadomość lub załącz plik",

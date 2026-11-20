@@ -1110,6 +1110,12 @@
     "option_priority_high": "Høy",
     "option_priority_normal": "Normal",
     "option_priority_low": "Lav",
+    "file_in": "Arkiver i mappe",
+    "file_in_chosen": "Arkiver i {folder}",
+    "file_in_hint": "Når den er sendt, havner meldingen din og den du svarer på, i denne mappen",
+    "file_in_none": "Ikke arkiver",
+    "file_in_failed": "Sendt, men kunne ikke arkiveres i {folder}.",
+    "file_in_reply_elsewhere": "Originalen er flyttet til {folder}. Svaret ditt blir liggende i Sendt, siden det ble sendt fra en annen konto.",
     "validation": {
       "recipient_required": "Legg til minst én mottaker før du sender",
       "body_required": "Skriv en melding eller legg ved en fil",

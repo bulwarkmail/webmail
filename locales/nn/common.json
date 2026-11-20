@@ -1111,6 +1111,12 @@
     "option_priority_high": "Høg",
     "option_priority_normal": "Normal",
     "option_priority_low": "Låg",
+    "file_in": "Arkiver i mappe",
+    "file_in_chosen": "Arkiver i {folder}",
+    "file_in_hint": "Når ho er send, hamnar meldinga di og den du svarar på, i denne mappa",
+    "file_in_none": "Ikkje arkiver",
+    "file_in_failed": "Sendt, men kunne ikkje arkiverast i {folder}.",
+    "file_in_reply_elsewhere": "Originalen er flytta til {folder}. Svaret ditt blir liggjande i Sendt, sidan det vart sendt frå ein annan konto.",
     "validation": {
       "recipient_required": "Legg til ein mottakar for å sende",
       "body_required": "Skriv ei melding eller legg ved ei fil",

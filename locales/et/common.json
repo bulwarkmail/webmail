@@ -1111,6 +1111,12 @@
     "option_priority_high": "Kõrge",
     "option_priority_normal": "Tavaline",
     "option_priority_low": "Madal",
+    "file_in": "Pane kausta",
+    "file_in_chosen": "Pane kausta {folder}",
+    "file_in_hint": "Pärast saatmist lähevad sinu kiri ja kiri, millele vastad, sellesse kausta",
+    "file_in_none": "Ära pane kausta",
+    "file_in_failed": "Saadetud, kuid kausta {folder} panemine ebaõnnestus.",
+    "file_in_reply_elsewhere": "Algne kiri teisaldati kausta {folder}. Vastus jääb kausta Saadetud, sest see saadeti teiselt kontolt.",
     "validation": {
       "recipient_required": "Saatmiseks lisa saaja",
       "body_required": "Kirjuta sõnum või lisa fail",

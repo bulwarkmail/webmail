@@ -76,6 +76,7 @@ import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type Dr
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { toast } from "@/stores/toast-store";
+import { fileReplyWithOriginal, fileWithOriginalTargets } from "@/lib/outgoing/file-with-original";
 import { currentStoreEpoch } from "@/lib/store-epoch";
 import { discardWithUndo } from "@/lib/compose/draft-close-toast";
 import { findReplyDraft, threadDrafts } from "@/lib/reply-drafts";
@@ -2895,6 +2896,23 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const answeredEmailId = handedOffToSession ? handedOffToSession.emailId : composerSourceEmail?.id;
   const answeredEmailSource = handedOffToSession ? handedOffToSession.source : composerSource;
 
+  // "File in folder" (lib/outgoing/file-with-original.ts): the folders of
+  // the answered message's account, offered in a reply or forward.
+  const fileInOwnFolders = useEmailStore((state) => state.mailboxes);
+  const fileInLoginFolders = useEmailStore((state) => state.accountMailboxes);
+  const composerFileMode = pendingDraft?.mode ?? composerMode;
+  const composerFileTargets = useMemo(() => {
+    if (!answeredEmailId || !(composerFileMode === 'reply' || composerFileMode === 'replyAll' || composerFileMode === 'forward')) return undefined;
+    const login = answeredEmailSource?.clientAccountId;
+    const offered = moveFoldersFor([{ sourceClientAccountId: login }]);
+    if (offered.unavailable) return undefined;
+    const sourceClient = login ? loginClientOf(login) : client;
+    if (!sourceClient) return undefined;
+    return fileWithOriginalTargets(offered.mailboxes, answeredEmailSource?.accountId, sourceClient.getAccountId());
+    // The folder lists are read through moveFoldersFor; listed so a change shows.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answeredEmailId, answeredEmailSource, composerFileMode, client, fileInOwnFolders, fileInLoginFolders]);
+
   const popoutsOn = usePopoutsAvailable();
 
   // What the composer answers: the draft's own, or the message it was opened on.
@@ -3063,6 +3081,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     labelHeaders?: Record<string, string>;
     composerId?: string;
     keywords?: string[];
+    fileInMailboxId?: string;
   }, composerState?: ComposerDraftData) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
     if (!client) return false;
@@ -3163,11 +3182,52 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           debug.error(`Failed to set ${keyword} keyword:`, e);
         }
       };
+      // "File in folder": the reply goes into the folder too, and the
+      // original moves there. Like the flag, only once the message has gone.
+      const fileFolder = data.fileInMailboxId ? composerFileTargets?.find(m => m.id === data.fileInMailboxId) : undefined;
+      const fileWithOriginal = async () => {
+        if (!fileFolder || !originalEmailId) return;
+        const auth = useAuthStore.getState();
+        const originalLogin = answeredSource?.clientAccountId ?? auth.activeAccountId ?? undefined;
+        const originalClient = answeredSource?.clientAccountId ? loginClientOf(answeredSource.clientAccountId) : client;
+        if (!originalClient) return;
+        const originalAccountId = answeredSource?.accountId && answeredSource.accountId !== originalClient.getAccountId()
+          ? answeredSource.accountId : undefined;
+        const sendLogin = data.localAccountId ?? auth.activeAccountId ?? undefined;
+        const sourceRow = composerSourceEmail?.id === originalEmailId ? composerSourceEmail : null;
+        const filed = await fileReplyWithOriginal({
+          folder: fileFolder,
+          client: originalClient,
+          accountId: originalAccountId,
+          reply: result.emailId ? { id: result.emailId, accountId: result.emailAccountId, sameLogin: sendLogin === originalLogin } : undefined,
+          moveOriginal: async () => {
+            const store = useEmailStore.getState();
+            const key = sourceRow ? emailKeyFor(sourceRow) : undefined;
+            // In the list on screen: moved like any other move, so the row goes
+            // and plugins hear of it. Otherwise straight by its id.
+            if (store.emails.some(e => (key ? emailKeyFor(e) === key : e.id === originalEmailId))) {
+              return store.moveToMailboxCrossAware(client, originalEmailId, fileFolder.id, key);
+            }
+            await originalClient.moveEmail(originalEmailId, fileFolder.originalId ?? fileFolder.id, originalAccountId);
+            return true;
+          },
+        });
+        const folderName = getMailboxPath(fileFolder, composerFileTargets ?? []);
+        if (!filed.originalMoved || (result.emailId && !filed.replyFiled && !filed.replyElsewhere)) {
+          toast.warning(t('email_composer.file_in_failed', { folder: folderName }));
+        } else if (filed.replyElsewhere) {
+          toast.info(t('email_composer.file_in_reply_elsewhere', { folder: folderName }));
+        }
+      };
+      const answerAndFile = async () => {
+        await markAnswered();
+        await fileWithOriginal();
+      };
       const held = holdSend(result, {
-        answer: markAnswered,
+        answer: answerAndFile,
         origin: composerState ? { kind: 'composer', state: composerState, sourceEmailId: originalEmailId } : undefined,
       });
-      if (!held) await markAnswered();
+      if (!held) await answerAndFile();
       if (effectiveMode === 'reply' || effectiveMode === 'replyAll') {
         const replied = composerSourceEmail?.id === originalEmailId ? composerSourceEmail : null;
         echoSentReply(replied, {
@@ -6245,6 +6305,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           void (composerSourceEmail.id === selectedEmail?.id ? handleForward() : handleConversationForward(composerSourceEmail));
         } : undefined}
         sourceEmailId={answeredEmailId}
+        fileTargets={composerFileTargets}
         onSaveState={(data) => {
           // A composer whose session another one has replaced: its state
           // belongs to no composer on screen. Taken as the new session's,

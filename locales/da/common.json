@@ -1109,6 +1109,12 @@
     "option_priority_high": "Høj",
     "option_priority_normal": "Normal",
     "option_priority_low": "Lav",
+    "file_in": "Arkivér i mappe",
+    "file_in_chosen": "Arkivér i {folder}",
+    "file_in_hint": "Når den er sendt, kommer din besked og den, du svarer på, i denne mappe",
+    "file_in_none": "Arkivér ikke",
+    "file_in_failed": "Sendt, men kunne ikke arkiveres i {folder}.",
+    "file_in_reply_elsewhere": "Originalen er flyttet til {folder}. Dit svar bliver i Sendt, da det blev sendt fra en anden konto.",
     "validation": {
       "recipient_required": "Tilføj en modtager for at sende",
       "body_required": "Skriv en besked eller vedhæft en fil",

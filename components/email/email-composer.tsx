@@ -59,6 +59,7 @@ import { tagScopeOf } from "@/hooks/use-account-tags";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { ComposerHeaderPluginActions } from "@/components/email/composer-header-plugin-actions";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
+import { ComposerFileInMenu } from "@/components/email/composer-file-in-menu";
 import { ComposerBarCompactContext } from "@/components/email/composer-bar-labels";
 import { ReplyTypeMenu, type ReplyKind } from "@/components/email/reply-type-menu";
 import { useReplyDock } from "@/components/mail/reply-dock";
@@ -125,7 +126,7 @@ import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
 import { offlineActive, offlineAllowed } from "@/lib/offline/offline-mode";
 import { useBrowserOnline } from "@/hooks/use-browser-online";
 import { appPath, buildSettingsPath } from "@/lib/deep-links";
-import type { FileNode, Identity } from "@/lib/jmap/types";
+import type { FileNode, Identity, Mailbox } from "@/lib/jmap/types";
 import { resolveComposerFrom } from "@/lib/composer-identity";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
@@ -333,6 +334,8 @@ export interface ComposerDraftData {
   requestReadReceipt?: boolean;
   requestDsn?: boolean;
   requireTls?: boolean;
+  /** "File in folder": the folder (an id from `fileTargets`) the reply and its original go to once sent. */
+  fileInMailboxId?: string;
   /** When set, overrides the header From: and the envelope MAIL FROM, where the server allows it. */
   fromOverrideEmail?: string;
   fromOverrideName?: string;
@@ -426,6 +429,8 @@ interface EmailComposerProps {
     composerId?: string;
     /** Keywords plugins set for the Sent copy (lib/outgoing/outgoing-keywords.ts). */
     keywords?: string[];
+    /** "File in folder": file the message and the original it answers in this folder (an id from `fileTargets`). */
+    fileInMailboxId?: string;
   },
   /** The composer as it was at Send, to bring it back as it was after Undo send (mail-p2-8). */
   state?: ComposerDraftData,
@@ -534,6 +539,11 @@ interface EmailComposerProps {
   sessionKey?: string;
   /** Id of the message being replied to or forwarded, for onComposerOpen. */
   sourceEmailId?: string;
+  /**
+   * Folders the reply and the message it answers can be filed in once sent
+   * (lib/outgoing/file-with-original.ts). Absent or empty: no "File in folder".
+   */
+  fileTargets?: Mailbox[];
   /**
    * Files to attach when the composer opens, from a share or a launch (see
    * lib/launch-handoff.ts). They go through the same checks as a picked file.
@@ -699,6 +709,7 @@ export function EmailComposer({
   prefill,
   sessionKey,
   sourceEmailId,
+  fileTargets,
   mode = 'compose',
   composeFromAccountEmail,
   replyTo
@@ -1204,6 +1215,10 @@ export function EmailComposer({
   // extension (RFC 8621 §1.3 submissionExtensions).
   const [requestDsn, setRequestDsn] = useState(initialData?.requestDsn ?? false);
   const [requireTls, setRequireTls] = useState(initialData?.requireTls ?? false);
+  // "File in folder": only a folder the host still offers counts.
+  const [fileInPick, setFileInMailboxId] = useState<string | null>(initialData?.fileInMailboxId ?? null);
+  const fileInFolder = fileInPick ? fileTargets?.find((m) => m.id === fileInPick) : undefined;
+  const fileInMailboxId = fileInFolder?.id;
   // Message priority (#970): normal writes no header at all.
   const [priority, setPriority] = useState<MessagePriority>(initialData?.priority ?? 'normal');
   const priorityRef = useRef(priority);
@@ -2290,6 +2305,7 @@ export function EmailComposer({
     requestReadReceipt,
     requestDsn,
     requireTls,
+    ...(fileInMailboxId ? { fileInMailboxId } : {}),
   });
 
   useEffect(() => {
@@ -4888,6 +4904,7 @@ export function EmailComposer({
           delayedUntil: effectiveDelayedUntil,
           composerId: pluginComposerIdRef.current ?? undefined,
           ...(outgoingKeywords.length > 0 ? { keywords: outgoingKeywords } : {}),
+          ...(fileInMailboxId ? { fileInMailboxId } : {}),
         }, handedToHost);
         if (outcome === false) {
           // The host sent nothing (no connection, or the login of the From
@@ -6654,6 +6671,9 @@ export function EmailComposer({
                   )}
                 </>}
               </ComposerToolbarMenu>
+            )}
+            {fileTargets && fileTargets.length > 0 && (
+              <ComposerFileInMenu folders={fileTargets} value={fileInMailboxId} onChange={setFileInMailboxId} />
             )}
             {/* Sign/encrypt controls are contributed by crypto plugins via the
                 composer-toolbar slot (rendered below). */}

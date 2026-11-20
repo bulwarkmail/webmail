@@ -1111,6 +1111,12 @@
     "option_priority_high": "High",
     "option_priority_normal": "Normal",
     "option_priority_low": "Low",
+    "file_in": "File in folder",
+    "file_in_chosen": "File in {folder}",
+    "file_in_hint": "Once sent, your message and the one you're answering go to this folder",
+    "file_in_none": "Don't file",
+    "file_in_failed": "Sent, but it couldn't be filed in {folder}.",
+    "file_in_reply_elsewhere": "Moved the original to {folder}. Your reply stays in Sent, as it went out from another account.",
     "validation": {
       "recipient_required": "Add a recipient to send",
       "body_required": "Write a message or attach a file",

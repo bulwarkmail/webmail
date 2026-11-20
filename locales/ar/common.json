@@ -1110,6 +1110,12 @@
     "option_priority_high": "عالية",
     "option_priority_normal": "عادية",
     "option_priority_low": "منخفضة",
+    "file_in": "حفظ في مجلد",
+    "file_in_chosen": "حفظ في {folder}",
+    "file_in_hint": "بعد الإرسال، تنتقل رسالتك والرسالة التي ترد عليها إلى هذا المجلد",
+    "file_in_none": "بدون حفظ",
+    "file_in_failed": "تم الإرسال، لكن تعذّر الحفظ في {folder}.",
+    "file_in_reply_elsewhere": "نُقلت الرسالة الأصلية إلى {folder}. يبقى ردك في المرسلة لأنه أُرسل من حساب آخر.",
     "validation": {
       "recipient_required": "أضف مستلمًا للإرسال",
       "body_required": "اكتب رسالة أو أرفق ملفًا",

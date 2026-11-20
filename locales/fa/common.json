@@ -1110,6 +1110,12 @@
     "option_priority_high": "بالا",
     "option_priority_normal": "عادی",
     "option_priority_low": "پایین",
+    "file_in": "بایگانی در پوشه",
+    "file_in_chosen": "بایگانی در {folder}",
+    "file_in_hint": "پس از ارسال، پیام شما و پیامی که به آن پاسخ می‌دهید به این پوشه می‌روند",
+    "file_in_none": "بایگانی نشود",
+    "file_in_failed": "ارسال شد، اما بایگانی در {folder} ممکن نشد.",
+    "file_in_reply_elsewhere": "پیام اصلی به {folder} منتقل شد. پاسخ شما در ارسال‌شده‌ها می‌ماند، چون از حساب دیگری ارسال شد.",
     "validation": {
       "recipient_required": "یک گیرنده اضافه کنید",
       "body_required": "پیامی بنویسید یا فایلی پیوست کنید",

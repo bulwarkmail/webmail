@@ -1107,6 +1107,12 @@
     "option_priority_high": "높음",
     "option_priority_normal": "보통",
     "option_priority_low": "낮음",
+    "file_in": "폴더에 보관",
+    "file_in_chosen": "{folder}에 보관",
+    "file_in_hint": "보낸 후 이 메시지와 답장한 원본 메시지가 이 폴더로 이동합니다",
+    "file_in_none": "보관 안 함",
+    "file_in_failed": "보냈지만 {folder}에 보관하지 못했습니다.",
+    "file_in_reply_elsewhere": "원본을 {folder}(으)로 옮겼습니다. 답장은 다른 계정에서 보냈기 때문에 보낸편지함에 남습니다.",
     "validation": {
       "recipient_required": "보내려면 받는 사람을 추가해 주세요",
       "body_required": "메시지를 작성하거나 파일을 첨부해 주세요",

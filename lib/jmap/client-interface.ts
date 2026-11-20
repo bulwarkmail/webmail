@@ -410,6 +410,11 @@ export interface IJMAPClient {
   ): Promise<void>;
   moveEmail(emailId: string, toMailboxId: string, accountId?: string): Promise<void>;
   /**
+   * Put a message in one more mailbox and leave it in the ones it is in (a
+   * `mailboxIds/<id>: true` patch).
+   */
+  addEmailToMailbox(emailId: string, mailboxId: string, accountId?: string): Promise<void>;
+  /**
    * Take messages out of one mailbox and leave every other mailbox they are
    * in alone (a `mailboxIds/<id>: null` patch). A message must stay in at
    * least one mailbox, so the server refuses this for a message only in it.
