@@ -28,6 +28,8 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'identity-storage',
   'contact-storage',
   'calendar-storage',
+  // A sign-out that keeps the local data writes it again after this cleanup (stores/calendar-store.ts).
+  'calendar-kept-view',
   'calendar-notification-storage',
   'calendar-alert-claims',
   // Open tabs name messages and their subjects.

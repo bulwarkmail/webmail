@@ -2486,6 +2486,74 @@ export const useCalendarStore = create<CalendarStore>()(
 );
 
 /**
+ * The calendar's view choices of an account whose session ran out (#1790). A
+ * sign-out that keeps the local data removes calendar-storage with the rest;
+ * when the same account signs in again, as an automatic SSO sign-in does right
+ * away, it gets its hidden calendars and its view back, and the day it was on
+ * when that's still today. Any other account signing in drops them.
+ */
+const KEPT_VIEW_KEY = 'calendar-kept-view';
+
+interface KeptCalendarView {
+  account: string;
+  day: string;
+  selectedCalendarIds: string[];
+  calendarSelectionChosen: boolean;
+  knownCalendarIds: string[] | null;
+  hiddenTaskListIds: string[];
+  viewMode: CalendarViewMode;
+  selectedDate: string;
+}
+
+/** What setCalendarViewAside saves: read before the stores are cleared. */
+export function readCalendarView(account: string): KeptCalendarView {
+  const state = useCalendarStore.getState();
+  return {
+    account,
+    day: format(displayNow(), 'yyyy-MM-dd'),
+    selectedCalendarIds: [...state.selectedCalendarIds],
+    calendarSelectionChosen: state.calendarSelectionChosen,
+    knownCalendarIds: state.knownCalendarIds ? [...state.knownCalendarIds] : null,
+    hiddenTaskListIds: [...state.hiddenTaskListIds],
+    viewMode: state.viewMode,
+    selectedDate: state.selectedDate.toISOString(),
+  };
+}
+
+/** Keep `view` for its account's next sign-in. Runs after the sign-out's cleanup, which removes it otherwise. */
+export function setCalendarViewAside(view: KeptCalendarView): void {
+  try {
+    localStorage.setItem(KEPT_VIEW_KEY, JSON.stringify(view));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** At a sign-in: give `account` back what its last sign-out kept, and forget it either way. */
+export function restoreCalendarViewSetAside(account: string): void {
+  let kept: Partial<KeptCalendarView> | null = null;
+  try {
+    const text = localStorage.getItem(KEPT_VIEW_KEY);
+    localStorage.removeItem(KEPT_VIEW_KEY);
+    kept = text ? JSON.parse(text) as Partial<KeptCalendarView> : null;
+  } catch {
+    return;
+  }
+  if (!kept || kept.account !== account) return;
+  const ids = (value: unknown): string[] | null => Array.isArray(value) && value.every((id) => typeof id === 'string') ? value : null;
+  const date = typeof kept.selectedDate === 'string' ? new Date(kept.selectedDate) : null;
+  const sameDay = kept.day === format(displayNow(), 'yyyy-MM-dd') && date && !Number.isNaN(date.getTime());
+  useCalendarStore.setState({
+    selectedCalendarIds: ids(kept.selectedCalendarIds) ?? [],
+    calendarSelectionChosen: kept.calendarSelectionChosen === true,
+    knownCalendarIds: ids(kept.knownCalendarIds),
+    hiddenTaskListIds: ids(kept.hiddenTaskListIds) ?? [],
+    viewMode: getSafeCalendarViewMode(kept.viewMode),
+    ...(sameDay ? { selectedDate: date } : {}),
+  });
+}
+
+/**
  * Imports events into a calendar without the plugin import hooks. The
  * store's importEvents wraps it with them; a subscription refresh calls it
  * directly, since syncing a feed is not the user importing a file.

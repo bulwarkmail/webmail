@@ -6,7 +6,7 @@ import { useIdentityStore } from './identity-store';
 import { setClientLookup } from './client-registry';
 import { forgetLoginContacts, useContactStore } from './contact-store';
 import { useVacationStore } from './vacation-store';
-import { forgetLoginCalendars, subscriptionOwner, useCalendarStore } from './calendar-store';
+import { forgetLoginCalendars, readCalendarView, restoreCalendarViewSetAside, setCalendarViewAside, subscriptionOwner, useCalendarStore } from './calendar-store';
 import { forgetLoginTasks } from './task-store';
 import { useFilterStore } from './filter-store';
 import { useSettingsStore } from './settings-store';
@@ -1681,7 +1681,10 @@ async function startLocalCopyClient(accountId: string, serverUrl: string, userna
 // While device-only clients get replaced, restoring goes straight to the server.
 let skipLocalCopy = false;
 
-function performFullLogout(set: (state: Partial<AuthState>) => void, options: SignOutCleanupOptions = {}): void {
+function performFullLogout(set: (state: Partial<AuthState>) => void, options: SignOutCleanupOptions & { activeAccountId?: string | null } = {}): void {
+  // A session that ran out comes back with the next sign-in, mostly to the
+  // same account: its calendar view waits for it (#1790).
+  const keptCalendarView = options.keepLocalStore && options.activeAccountId ? readCalendarView(options.activeAccountId) : null;
   useSettingsStore.getState().disableSync();
   // With settings sync on, the local settings and templates are a copy of the
   // signed-out account's server file. Left in place, the next account to sign
@@ -1723,6 +1726,7 @@ function performFullLogout(set: (state: Partial<AuthState>) => void, options: Si
   // A dropped account's data outlives anyone else's sign-out. The account that
   // signed out takes its own along when it leaves the registry.
   purgeSignedOutData({ keepLocalStore: options.keepLocalStore || Object.keys(readEvicted()).length > 0 });
+  if (keptCalendarView) setCalendarViewAside(keptCalendarView);
   // Other tabs still hold the accounts' mail in memory.
   broadcastSignOut();
 }
@@ -1736,6 +1740,7 @@ export const LOGOUT_HOOK_BUDGET_MS = 2000;
 
 function notifySignedIn(state: { activeAccountId: string | null; username: string | null }): void {
   if (!state.activeAccountId) return;
+  restoreCalendarViewSetAside(state.activeAccountId);
   // The organisation's maximum session length counts from a sign-in, never
   // from a restore, and from the server's time when it said.
   const slot = useAccountStore.getState().getAccountById(state.activeAccountId)?.cookieSlot;
@@ -2925,7 +2930,7 @@ export const useAuthStore = create<AuthState>()(
           ...droppedAccounts.map((dropped) => clearSlotCredentials(dropped.cookieSlot ?? 0, dropped.authMode === 'oauth')),
         ]);
 
-        performFullLogout(set, { keepLocalStore: keepLocalData });
+        performFullLogout(set, { keepLocalStore: keepLocalData, activeAccountId: accountId });
 
         notifyParent('sso:logout');
 
@@ -3009,7 +3014,7 @@ export const useAuthStore = create<AuthState>()(
         // Credentials are cleared before the page state - see logout().
         const endSessionUrl = await cleanup;
 
-        performFullLogout(set, { keepLocalStore: keepLocalData });
+        performFullLogout(set, { keepLocalStore: keepLocalData, activeAccountId: get().activeAccountId });
 
         // Clear all accounts from registry
         for (const account of allAccounts) {
