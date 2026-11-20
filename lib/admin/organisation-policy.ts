@@ -188,6 +188,13 @@ export interface OrganisationPolicy {
     /** A group address that gets free/busy access to every user's default calendar; '' is off. */
     freeBusyGroup: string;
   };
+  teamMailboxes: {
+    /**
+     * Notes and assignment in team mailboxes (Stalwart group accounts). Read
+     * per group: lib/team-mailboxes/policy.ts resolves it for one group only.
+     */
+    enabled: boolean;
+  };
 }
 
 export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
@@ -209,6 +216,7 @@ export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
     wipeOnForcedSignOut: false,
   },
   calendars: { feeds: [], freeBusyGroup: '' },
+  teamMailboxes: { enabled: false },
 };
 
 /** Sections a scope replaces as a whole instead of per leaf. */
@@ -556,6 +564,9 @@ export function sanitizeOrganisationPartial(raw: unknown): DeepPartial<Organisat
 
   const cal = section('calendars');
   if (cal) assign('calendars', { feeds: sanitizeFeeds(cal.feeds), freeBusyGroup: email(cal.freeBusyGroup) });
+
+  const team = section('teamMailboxes');
+  if (team) assign('teamMailboxes', { enabled: bool(team.enabled) });
 
   return out;
 }
