@@ -1285,6 +1285,44 @@ describe('CalendarInvitationBanner', () => {
     )).toBeInTheDocument());
   });
 
+  // A Google Calendar RSVP as Stalwart hands it over: JMAP drops the
+  // method=REPLY parameter from both calendar parts, and the attendee's
+  // ROLE=REQ-PARTICIPANT parses to roles { required } with no attendee role,
+  // so only CalendarEvent/parse's method says it is a reply (#1816).
+  it('shows a Google reply to the organizer as the answer, without RSVP or sender warning (#1816)', async () => {
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([{
+      uid: 'uid-1816', title: 'Planning', start: '2026-12-01T10:00:00', timeZone: 'Etc/UTC', duration: 'PT1H',
+      method: 'reply',
+      organizerCalendarAddress: 'mailto:user@example.com',
+      participants: {
+        att: { '@type': 'Participant', name: 'Attendee', kind: 'individual', calendarAddress: 'mailto:attendee@example.com', roles: { required: true }, participationStatus: 'accepted' },
+        org: { '@type': 'Participant', name: 'Organizer', calendarAddress: 'mailto:user@example.com', roles: { owner: true } },
+      },
+    }]);
+    const googleReply = (id: string, from: string) => makeEmail({
+      id, from: [{ email: from }],
+      attachments: [
+        { partId: '3', blobId: `blob-${id}`, size: 900, type: 'text/calendar', name: null as unknown as string },
+        { partId: '4', blobId: `blob-${id}-ics`, size: 900, type: 'application/ics', name: 'invite.ics' },
+      ],
+    });
+
+    const { unmount } = render(<CalendarInvitationBanner email={googleReply('email-1816', 'attendee@example.com')} />);
+    await waitFor(() => expect(screen.getByText('Attendee responded Accepted.')).toBeInTheDocument());
+    expect(screen.getByText('response_info_organizer')).toBeInTheDocument();
+    expect(screen.queryByText('request_info')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Accept' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Decline' })).toBeNull();
+    expect(screen.queryByText(/was sent from/)).toBeNull();
+    unmount();
+
+    // Someone else answering for that attendee still gets the warning.
+    render(<CalendarInvitationBanner email={googleReply('email-1816b', 'mallory@evil.example')} />);
+    await waitFor(() => expect(screen.getByText(
+      'This response was sent from mallory@evil.example, while the attendee answering in the calendar data is attendee@example.com, and the message could not be verified.',
+    )).toBeInTheDocument());
+  });
+
   it('shows no update number on a reply, only who answered and how (#1755)', async () => {
     const event = (sequence: number) => ({
       uid: 'uid-16', title: 'Sync', start: '2026-03-27T09:00:00Z', duration: 'PT1H', sequence,
