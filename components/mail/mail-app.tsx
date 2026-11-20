@@ -76,6 +76,7 @@ import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type Dr
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { toast } from "@/stores/toast-store";
+import { currentStoreEpoch } from "@/lib/store-epoch";
 import { discardWithUndo } from "@/lib/compose/draft-close-toast";
 import { findReplyDraft, threadDrafts } from "@/lib/reply-drafts";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast } from "@/lib/send-failure-message";
@@ -4806,6 +4807,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!mailbox) return;
 
     // "Empty Trash", with how many messages go (p2-14).
+    const epoch = currentStoreEpoch();
     const prompt = emptyFolderPrompt(mailbox, emptyFolderMovesToTrash(mailbox));
     const confirmed = await confirmDialog({
       title: tCtxMenu(prompt.title),
@@ -4813,12 +4815,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       confirmText: tCtxMenu(prompt.confirm),
       variant: "destructive",
     });
-    if (!confirmed) return;
+    if (!confirmed || currentStoreEpoch() !== epoch) return;
 
     try {
-      if (await emptyMailbox(client, mailboxId)) toast.success(tCtxMenu('mailbox_context_menu.toast_emptied'));
+      const emptied = await emptyMailbox(client, mailboxId);
+      if (emptied && currentStoreEpoch() === epoch) toast.success(tCtxMenu('mailbox_context_menu.toast_emptied'));
     } catch {
-      toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty'));
+      if (currentStoreEpoch() === epoch) toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty'));
     }
   };
 

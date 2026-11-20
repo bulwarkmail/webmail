@@ -28,6 +28,7 @@ import { useChooseMoveFolder } from "./move-to-dialog";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { getMailboxPath } from "@/lib/utils";
 import { emptyFolderLabelKey, emptyFolderPrompt } from "@/lib/empty-folder-text";
+import { currentStoreEpoch } from "@/lib/store-epoch";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { useAccountStore } from "@/stores/account-store";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
@@ -1151,6 +1152,7 @@ export function EmailList({
     if (!client || isProcessing || !currentMailbox) return;
 
     // "Empty Trash" / "Empty Spam" with the count, as the folder menu asks (mail-p3-5).
+    const epoch = currentStoreEpoch();
     const prompt = emptyFolderPrompt(currentMailbox, false);
     const confirmed = await confirmDialog({
       title: tRoot(prompt.title),
@@ -1158,11 +1160,13 @@ export function EmailList({
       confirmText: tRoot(prompt.confirm),
       variant: "destructive",
     });
-    if (!confirmed) return;
+    if (!confirmed || currentStoreEpoch() !== epoch) return;
 
     setIsProcessing(true);
     try {
       await emptyMailbox(client, currentMailbox.id);
+    } catch {
+      if (currentStoreEpoch() === epoch) toast.error(tRoot('mailbox_context_menu.toast_error_empty'));
     } finally {
       later(() => setIsProcessing(false), 500);
     }

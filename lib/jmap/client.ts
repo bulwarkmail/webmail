@@ -4465,43 +4465,49 @@ export class JMAPClient implements IJMAPClient {
   async emptyMailbox(mailboxId: string, accountId?: string): Promise<number> {
     const targetAccountId = accountId || this.accountId;
     const batchSize = Math.min(500, this.getMaxObjectsInSet());
-    let totalDestroyed = 0;
+    const destroyedIds: string[] = [];
+    let notDestroyed: Record<string, JmapErrorInfo> = {};
+    let unknownIds: string[] = [];
 
-    // Destroy in batches until the mailbox is empty. Never gate the loop on
-    // Email/query's `total`: it is only guaranteed when `calculateTotal` is
-    // requested, and Stalwart omits it otherwise, which used to stop the loop
-    // after the first batch and leave folders with >500 emails mostly intact.
-    while (true) {
-      const response = await this.request([
-        ["Email/query", {
-          accountId: targetAccountId,
-          filter: { inMailbox: mailboxId },
-          limit: batchSize,
-        }, "0"],
-        ["Email/set", {
-          accountId: targetAccountId,
-          "#destroy": { resultOf: "0", name: "Email/query", path: "/ids" },
-        }, "1"],
-      ]);
+    // A short page is the tail only after every destroy in it was confirmed.
+    // Email/query can omit total, so a full page always needs another query.
+    try {
+      while (true) {
+        notDestroyed = {};
+        unknownIds = [];
+        const response = await this.request([
+          ["Email/query", {
+            accountId: targetAccountId,
+            filter: { inMailbox: mailboxId },
+            limit: batchSize,
+          }, "0"],
+          ["Email/set", {
+            accountId: targetAccountId,
+            "#destroy": { resultOf: "0", name: "Email/query", path: "/ids" },
+          }, "1"],
+        ]);
 
-      const queryResult = response.methodResponses?.[0]?.[1];
-      const setResult = response.methodResponses?.[1]?.[1];
-      const found: string[] = queryResult?.ids || [];
-      const destroyed = setResult?.destroyed?.length || 0;
-      totalDestroyed += destroyed;
-
-      if (found.length === 0) break;
-      // The server refused everything in this batch (missing permission,
-      // immutable mail): say so, instead of reporting the folder as emptied.
-      if (destroyed === 0) {
+        const [queryName, query] = response.methodResponses?.find(([, , tag]) => tag === "0") ?? [];
+        const [setName, result] = response.methodResponses?.find(([, , tag]) => tag === "1") ?? [];
+        const ids: string[] | undefined = queryName === "Email/query" && Array.isArray(query?.ids) ? query.ids : undefined;
+        if (setName === "Email/set") notDestroyed = result?.notDestroyed ?? {};
+        const destroyed = new Set<string>(setName === "Email/set" && Array.isArray(result?.destroyed) ? result.destroyed : []);
+        for (const id of ids ?? []) {
+          if (Object.hasOwn(notDestroyed, id)) continue;
+          if (destroyed.has(id)) destroyedIds.push(id);
+          else unknownIds.push(id);
+        }
         assertSetSucceeded(response, 'Failed to empty folder');
-        throw new Error('Failed to empty folder');
+        if (!ids || setName !== "Email/set" || unknownIds.length > 0) {
+          throw new Error('Failed to empty folder');
+        }
+        if (ids.length < batchSize) return destroyedIds.length;
       }
-      // A short page means we just handled the tail of the mailbox.
-      if (found.length < batchSize) break;
+    } catch (error) {
+      if (destroyedIds.length === 0) throw error;
+      // The current page's ids are unavailable if its response was lost.
+      throw new IncompleteDeleteError({ destroyedIds, notDestroyed, unknownIds, unattemptedIds: [] }, error);
     }
-
-    return totalDestroyed;
   }
 
   async moveMailboxContents(
