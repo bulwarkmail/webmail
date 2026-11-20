@@ -27,6 +27,7 @@ import { resolveThreadRoute } from "@/lib/thread-routing";
 import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { provideSearchResults, type ProvidedSearchResult } from "@/lib/plugin-search-results";
 import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, resolveJmapTarget, unifiedEmptyTargets, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
+import { withoutHiddenFolders } from "@/lib/team-mailboxes/hidden-folders";
 import { defaultSearchScopeFor, isAllFoldersSearchScope, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { useAuthStore } from "@/stores/auth-store";
 import { pathNamesMailFolder } from "@/lib/deep-links";
@@ -7614,18 +7615,26 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (since === pushedState) continue;
 
       const delta = await client.getMailboxChanges(since, acct);
+      if (!delta) return false;
+      // The team notes folder isn't in the list (lib/team-mailboxes/
+      // hidden-folders.ts). Every note written changes its counters; without
+      // this each note would look like an unknown folder and refetch every
+      // folder tree.
+      const hidden = new Set(client.hiddenMailboxIds?.(acct) ?? []);
+      const updated = delta.updated.filter((id) => !hidden.has(id));
+      const destroyed = delta.destroyed.filter((id) => !hidden.has(id));
       // Folders created or destroyed change the tree shape (parents,
       // selection validity, auto-created role folders) - let fetchMailboxes
       // handle that path as before.
-      if (!delta || delta.hasMoreChanges || delta.created.length > 0 || delta.destroyed.length > 0) {
+      if (delta.hasMoreChanges || delta.created.length > 0 || destroyed.length > 0) {
         return false;
       }
-      if (delta.updated.length > 0) {
-        const fresh = await client.getMailboxesByIds(delta.updated, acct);
+      if (updated.length > 0) {
+        const fresh = await client.getMailboxesByIds(updated, acct);
         const freshById = new Map(fresh.map((mb) => [mb.originalId ?? mb.id, mb]));
         // An updated folder we don't have (or that vanished between the two
         // calls) means the local list is out of step - fall back.
-        for (const id of delta.updated) {
+        for (const id of updated) {
           const known = mailboxes.some((mb) => mb.accountId === acct && (mb.originalId ?? mb.id) === id);
           if (!known || !freshById.has(id)) return false;
         }
@@ -9776,18 +9785,21 @@ if (typeof window !== 'undefined') {
         snap.mailboxes.length > 0
       ) {
         const snapMailbox = typeof snap.selectedMailbox === 'string' ? snap.selectedMailbox : '';
+        // A snapshot written by an older build may still list the team notes
+        // folder; it never reaches the store.
+        const snapMailboxes = withoutHiddenFolders(snap.mailboxes as Mailbox[]);
         // The snapshot holds the last plain folder that was open, which may be
         // Trash from a session that ended in a unified view. Only a reload of
         // a folder link continues there; opening the app starts in the
         // account's own inbox, and rows cached for another folder are dropped.
-        const ownInbox = (snap.mailboxes as Mailbox[]).find(m => m.role === 'inbox' && !m.isShared);
+        const ownInbox = snapMailboxes.find(m => m.role === 'inbox' && !m.isShared);
         const selectedMailbox = pathNamesMailFolder(window.location.pathname) || !ownInbox
           ? snapMailbox
           : ownInbox.id;
         useEmailStore.setState({
-          mailboxes: snap.mailboxes,
+          mailboxes: snapMailboxes,
           selectedMailbox,
-          searchMailboxId: currentSearchScopeDefault(snap.mailboxes, selectedMailbox),
+          searchMailboxId: currentSearchScopeDefault(snapMailboxes, selectedMailbox),
           ...(selectedMailbox === snapMailbox && Array.isArray(snap.emails) && snap.emails.length > 0
             ? {
                 emails: snap.emails,

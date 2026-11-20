@@ -238,7 +238,7 @@ describe('searchCrossViewEmails', () => {
     const [filter] = advancedSearchEmails.mock.calls[0];
     expect(filter).toEqual({
       operator: 'AND',
-      conditions: [{ text: 'invoice' }, { inMailboxOtherThan: ['trash', 'junk'] }],
+      conditions: [{ text: 'invoice' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['trash', 'junk'] }],
     });
     expect(result.emails.map((e) => e.sourceFolder)).toEqual(['sent']);
   });
@@ -294,7 +294,7 @@ describe('advancedSearchCrossViewEmails', () => {
     expect(accountId).toBe('owner-1');
     expect(filter).toEqual({
       operator: 'AND',
-      conditions: [{ from: 'bob' }, { inMailboxOtherThan: ['orig-trash'] }],
+      conditions: [{ from: 'bob' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['orig-trash'] }],
     });
   });
 

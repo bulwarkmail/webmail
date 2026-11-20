@@ -101,6 +101,20 @@ describe('full sync', () => {
     await engine.requestSync();
     expect(db.all('SELECT id FROM email').map((r) => r.id)).toEqual(['new']);
   });
+
+  it('never keeps a team note, in the full listing or from changes', async () => {
+    const server = new FakeJmap();
+    server.addEmail({ id: 'mail' });
+    server.addEmail({ id: 'note-1', keywords: { $seen: true, '$bulwark-note': true } });
+    const db = openMemoryStore();
+    await engineFor(server, db).requestSync();
+    expect(db.all('SELECT id FROM email').map((r) => r.id)).toEqual(['mail']);
+
+    server.addEmail({ id: 'note-2', keywords: { $seen: true, '$bulwark-note': true } });
+    server.addEmail({ id: 'mail-2' });
+    await engineFor(server, db).requestSync();
+    expect(db.all('SELECT id FROM email ORDER BY id').map((r) => r.id)).toEqual(['mail', 'mail-2']);
+  });
 });
 
 describe('persisted state', () => {

@@ -46,7 +46,8 @@ export function startExport(input: StartExportInput): void {
     try {
       folders = input.mailboxId
         ? [{ mailboxId: input.mailboxId, path: [] }]
-        : folderTree(await client.getMailboxes(input.accountId));
+        // The whole mailbox, team notes included: they are part of it.
+        : folderTree(await client.getMailboxes(input.accountId, { includeHidden: true }));
     } catch (error) {
       await input.sink.abort().catch(() => {});
       useMailTransferStore.getState().updateProgress({

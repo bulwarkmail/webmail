@@ -223,8 +223,20 @@ export interface IJMAPClient {
   getQuota(): Promise<StorageQuota | null>;
 
   // ── Mailboxes ─────────────────────────────────────────────────
-  getMailboxes(accountId?: string): Promise<Mailbox[]>;
+  /**
+   * One account's folders. The team notes folder of a team mailbox is left
+   * out (lib/team-mailboxes/hidden-folders.ts) unless `includeHidden` is set:
+   * only export, import and the team notes store ask for it.
+   */
+  getMailboxes(accountId?: string, options?: { includeHidden?: boolean }): Promise<Mailbox[]>;
+  /** Every account's folders, without the team notes folders. */
   getAllMailboxes(): Promise<Mailbox[]>;
+  /**
+   * Raw JMAP ids of the folders left out of the lists for this account
+   * (default: the primary account), for queries without a folder. Known once
+   * the account's folders were fetched.
+   */
+  hiddenMailboxIds?(accountId?: string): string[];
   /**
    * getAllMailboxes plus the Mailbox collection state per account, so the
    * store can resolve a later push with Mailbox/changes (RFC 8620 §5.2)

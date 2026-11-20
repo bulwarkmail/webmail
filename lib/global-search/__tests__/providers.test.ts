@@ -95,9 +95,10 @@ describe('mail provider', () => {
   it('excludes Trash and Junk by default and lifts the exclusion for is:anything', () => {
     const boxes = [mailbox('in', 'inbox'), mailbox('tr', 'trash'), mailbox('ju', 'junk')];
     const filter = mailFilterFor(parseSearchQuery('report'), entry(boxes) as never);
-    expect(filter).toEqual({ operator: 'AND', conditions: [{ text: 'report' }, { inMailboxOtherThan: ['tr', 'ju'] }] });
+    expect(filter).toEqual({ operator: 'AND', conditions: [{ text: 'report' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['tr', 'ju'] }] });
+    // is:anything lifts Trash and Junk, never the team notes.
     const anything = mailFilterFor(parseSearchQuery('report is:anything'), entry(boxes) as never);
-    expect(anything).toEqual({ text: 'report' });
+    expect(anything).toEqual({ operator: 'AND', conditions: [{ text: 'report' }, { notKeyword: '$bulwark-note' }] });
   });
 
   it('searches only the role folder for in:trash, using originalId on shared entries', () => {
@@ -114,7 +115,7 @@ describe('mail provider', () => {
       operator: 'AND',
       conditions: [
         { text: '"annual report"' }, { text: '2024' }, { text: '"draft"' },
-        { inMailboxOtherThan: ['tr', 'ju'] },
+        { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['tr', 'ju'] },
       ],
     });
     const trash = mailFilterFor(parseSearchQuery('in:trash "annual report" budg*'), entry(boxes) as never);
@@ -148,7 +149,7 @@ describe('mail provider', () => {
       const boxes = [mailbox('in', 'inbox')];
       expect(mailFilterFor(parseSearchQuery('report is:untagged'), entry(boxes) as never)).toEqual({
         operator: 'AND',
-        conditions: [{ text: 'report' }, { notKeyword: '$label:work' }, { notKeyword: '$color:work' }],
+        conditions: [{ text: 'report' }, { notKeyword: '$label:work' }, { notKeyword: '$color:work' }, { notKeyword: '$bulwark-note' }],
       });
       const email = (keywords: Record<string, boolean>) => ({ id: 'm1', subject: 'x', keywords, mailboxIds: {} }) as never;
       const untagged = parseSearchQuery('is:untagged');
@@ -181,8 +182,8 @@ describe('mail provider', () => {
     ]);
     const result = await mailProvider.remote(parseSearchQuery('zebra'), account('login-a'), { limit: 25, signal });
     expect(buildUnifiedAccountClients).toHaveBeenCalledWith({ includeGroup: true, scopeToClientAccountId: 'login-a' });
-    // The stub login has no trash/junk role folders, so no exclusion is added.
-    expect(advancedSearchEmails).toHaveBeenCalledWith({ text: 'zebra' }, undefined, 25, 0, { palette: true });
+    // The stub login has no trash/junk role folders: only the team notes are left out.
+    expect(advancedSearchEmails).toHaveBeenCalledWith({ operator: 'AND', conditions: [{ text: 'zebra' }, { notKeyword: '$bulwark-note' }] }, undefined, 25, 0, { palette: true });
     expect(result.hasMore).toBe(true);
     expect(result.hits[0]).toMatchObject({
       id: 'm9', localAccountId: 'login-a', jmapAccountId: 'jmap-a', source: 'remote', subtitle: 'Inbox',

@@ -32,6 +32,7 @@ import { buildDemoEml, demoEmlBlobId, demoEmlEmailId } from './demo-eml';
 import { stripMessageIdBrackets } from '@/lib/email-threading';
 import type { MessagePriority } from '@/lib/message-priority';
 import { outgoingKeywordMap } from '@/lib/outgoing/outgoing-keywords';
+import { splitHiddenFolders } from '@/lib/team-mailboxes/hidden-folders';
 
 // Fixture blobs with real bytes behind them, served from public/demo/ (see
 // fixtures/assets.ts for the list and the licences). Any other blob id falls
@@ -456,11 +457,17 @@ export class DemoJMAPClient implements IJMAPClient {
 
   // ── Mailboxes ─────────────────────────────────────────────────
 
-  async getMailboxes(accountId?: string): Promise<Mailbox[]> {
+  async getMailboxes(accountId?: string, options?: { includeHidden?: boolean }): Promise<Mailbox[]> {
     if (accountId && accountId !== this.data.accountId) {
-      return [...(this.data.sharedMailboxes[accountId]?.mailboxes ?? [])];
+      const all = this.data.sharedMailboxes[accountId]?.mailboxes ?? [];
+      return options?.includeHidden ? [...all] : splitHiddenFolders(all, false).visible;
     }
     return [...this.data.mailboxes];
+  }
+
+  hiddenMailboxIds(accountId?: string): string[] {
+    if (!accountId || accountId === this.data.accountId) return [];
+    return splitHiddenFolders(this.data.sharedMailboxes[accountId]?.mailboxes ?? [], false).hiddenIds;
   }
 
   /**
@@ -471,7 +478,7 @@ export class DemoJMAPClient implements IJMAPClient {
    */
   async getAllMailboxes(): Promise<Mailbox[]> {
     const shared = Object.entries(this.data.sharedMailboxes).flatMap(([accountId, { name, mailboxes }]) =>
-      mailboxes.map((mb) => ({
+      splitHiddenFolders(mailboxes, false).visible.map((mb) => ({
         ...mb,
         id: `${accountId}:${mb.id}`,
         originalId: mb.id,

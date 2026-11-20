@@ -65,6 +65,7 @@ import { draftLabelProperty } from "@/lib/classification/labels";
 import { attachmentParts, HTML_PART_ID, relatedBodyStructure, repointAttachments, TEXT_PART_ID, type OutgoingBodyPart, type SavedPart } from "./outgoing-body";
 import { addBodyMediaToAttachments } from "./body-media-attachments";
 import { isThreadingMessageId } from "@/lib/email-threading";
+import { HiddenFolderRegistry, splitHiddenFolders } from "@/lib/team-mailboxes/hidden-folders";
 
 // Cap for the follow-up Email/get issued when a displayed body part comes
 // back truncated at the normal 256000-byte limit (see refetchTruncatedBodyValues
@@ -2765,7 +2766,18 @@ export class JMAPClient implements IJMAPClient {
     return { methodResponses: [["Mailbox/get", { list: mailboxes, state: mailboxState }, "0"]] };
   }
 
-  async getMailboxes(accountId?: string): Promise<Mailbox[]> {
+  /**
+   * Raw ids of the team notes folders left out of the folder lists, per JMAP
+   * account (lib/team-mailboxes/hidden-folders.ts). Queries without a folder
+   * exclude them.
+   */
+  private hiddenFolders = new HiddenFolderRegistry();
+
+  hiddenMailboxIds(accountId?: string): string[] {
+    return this.hiddenFolders.ids(accountId || this.accountId);
+  }
+
+  async getMailboxes(accountId?: string, options?: { includeHidden?: boolean }): Promise<Mailbox[]> {
     const acctId = accountId || this.accountId;
     try {
       const calls: JMAPMethodCall[] = [
@@ -2779,7 +2791,10 @@ export class JMAPClient implements IJMAPClient {
       getOfflineHooks()?.record(this, calls, response);
 
       if (response.methodResponses?.[0]?.[0] === "Mailbox/get") {
-        const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
+        const allMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
+        const { visible, hiddenIds } = splitHiddenFolders(allMailboxes, acctId === this.accountId);
+        this.hiddenFolders.setAll(acctId, hiddenIds);
+        const rawMailboxes = options?.includeHidden ? allMailboxes : visible;
 
         debug.log('jmap', `[JMAP Mailbox] getMailboxes returned ${rawMailboxes.length} mailboxes for account ${acctId}`);
 
@@ -2878,7 +2893,10 @@ export class JMAPClient implements IJMAPClient {
               [["Mailbox/get", { accountId, properties: MAILBOX_PROPERTIES }, "0"]],
               { methodResponses: [["Mailbox/get", match[1], "0"]] },
             );
-            const rawMailboxes = (match[1].list || []) as JMAPMailbox[];
+            const { visible: rawMailboxes, hiddenIds } = splitHiddenFolders(
+              (match[1].list || []) as JMAPMailbox[], accountId === this.accountId,
+            );
+            this.hiddenFolders.setAll(accountId, hiddenIds);
             const mailboxState = (match[1] as { state?: unknown }).state;
             if (typeof mailboxState === 'string') {
               states[accountId] = mailboxState;
@@ -2975,8 +2993,11 @@ export class JMAPClient implements IJMAPClient {
       if (response.methodResponses?.[0]?.[0] !== "Mailbox/get") {
         throw new Error('Unexpected response format');
       }
-      const rawMailboxes = (response.methodResponses[0][1].list || []) as JMAPMailbox[];
-      mailboxes.push(...rawMailboxes.map((mb) => this.mapRawMailbox(mb, acctId)));
+      const { visible, hiddenIds } = splitHiddenFolders(
+        (response.methodResponses[0][1].list || []) as JMAPMailbox[], acctId === this.accountId,
+      );
+      this.hiddenFolders.add(acctId, hiddenIds);
+      mailboxes.push(...visible.map((mb) => this.mapRawMailbox(mb, acctId)));
     }
     return mailboxes;
   }

@@ -14,6 +14,7 @@ import type { Email, Mailbox } from '@/lib/jmap/types';
 import { isMailboxMuted } from '@/lib/notification-mutes';
 import { subscribePushStateChanges } from '@/lib/push-events';
 import { useSettingsStore } from '@/stores/settings-store';
+import { NOTE_KEYWORD } from '@/lib/team-mailboxes/hidden-folders';
 
 export interface NewMail {
   client: IJMAPClient;
@@ -37,6 +38,9 @@ function mailboxIdsOf(email: Email): string[] {
 /** The folder a new message counts for, or null if it stays silent. */
 export function notifyingMailbox(email: Email, accountId: string, ownAccountId: string, mailboxes: readonly Mailbox[], now = Date.now()): Mailbox | null {
   if (email.keywords?.$seen || email.keywords?.$draft) return null;
+  // A team note is never new mail (its folder is hidden too; this holds even
+  // before the folder list knows it).
+  if (email.keywords?.[NOTE_KEYWORD]) return null;
   const received = email.receivedAt ? new Date(email.receivedAt).getTime() : now;
   if (now - received > NEWEST_AGE_MS) return null;
   const { notificationMutes, pushNotifyInboxOnly } = useSettingsStore.getState();

@@ -5,7 +5,7 @@ import { andFilters, buildJMAPFilter } from '@/lib/jmap/search-utils';
 import { knownTagIds } from '@/lib/known-tag-ids';
 import { getEmailTagIds } from '@/lib/thread-utils';
 import type { Email, Mailbox } from '@/lib/jmap/types';
-import { findMailboxByRole, jmapMailboxIdOf, resolveSourceFolderName, trashAndJunkExclusion, type UnifiedAccountClient } from '@/lib/unified-mailbox';
+import { findMailboxByRole, jmapMailboxIdOf, resolveSourceFolderName, withFolderlessExclusion, type UnifiedAccountClient } from '@/lib/unified-mailbox';
 import { buildUnifiedAccountClients, useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 
@@ -86,8 +86,8 @@ export function mailFilterFor(parsed: ParsedQuery, entry: UnifiedAccountClient):
     const mailbox = findMailboxByRole(entry.mailboxes, parsed.mailboxRole);
     return mailbox ? andFilters(base, { inMailbox: jmapMailboxIdOf(entry, mailbox) }) : base;
   }
-  if (parsed.includeTrashAndJunk) return base;
-  return andFilters(base, trashAndJunkExclusion(entry));
+  // `is:anything` lifts Trash and Junk, never the team notes.
+  return withFolderlessExclusion(base, entry, !parsed.includeTrashAndJunk);
 }
 
 export const mailProvider: SearchProvider = {
