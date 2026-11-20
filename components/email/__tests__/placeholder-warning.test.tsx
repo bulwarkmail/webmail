@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
+import { useIdentityStore } from '@/stores/identity-store';
 import { useSettingsStore } from '@/stores/settings-store';
 
 // The UI language whose fill-in words t.raw hands the composer.
@@ -193,11 +194,6 @@ vi.mock('@/lib/email-sanitization', () => ({
 vi.mock('@/lib/email-threading', () => ({
   computeReplyThreadingHeaders: () => ({ inReplyTo: [], references: [] }),
 }));
-vi.mock('@/lib/signature-utils', () => ({
-  appendPlainTextSignature: (body: string) => body,
-  getPlainTextSignature: () => '',
-  plainTextBodyWithoutSignature: (body: string) => body,
-}));
 vi.mock('@/lib/sub-addressing', () => ({ generateSubAddress: () => '' }));
 vi.mock('@/lib/debug', () => ({ debug: { log: () => {}, warn: () => {}, error: () => {} } }));
 vi.mock('@/components/email/quoted-html', () => ({
@@ -366,6 +362,32 @@ describe('composer placeholder warning', () => {
 
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
     expect(screen.queryByText('placeholder_warning.title')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['HTML', false],
+    ['plain text', true],
+  ] as const)('ignores attachment keywords in the %s signature', async (_format, plainTextMode) => {
+    useSettingsStore.setState({ attachmentReminderEnabled: true, attachmentReminderKeywords: ['attachments'] });
+    const signature = 'Any attachments are confidential.';
+    const { identities } = useIdentityStore.getState();
+    useIdentityStore.setState({ identities: identities.map(identity => ({ ...identity, textSignature: signature })) });
+    try {
+      const body = plainTextMode
+        ? `Thanks!\n\n-- \n${signature}`
+        : `<p>Thanks!</p><div data-signature-block-node="">${signature}</div>`;
+      const onSend = vi.fn();
+      render(<EmailComposer initialData={{ ...DRAFT_WITH_PLACEHOLDER, body, plainTextMode }} onSend={onSend} />);
+
+      fireEvent.click(sendButton());
+
+      await waitFor(() => expect(onSend.mock.calls.length || screen.queryByRole('alertdialog')).toBeTruthy());
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(onSend).toHaveBeenCalledTimes(1);
+      expect(onSend.mock.calls[0][0].body).toContain(signature);
+    } finally {
+      useIdentityStore.setState({ identities });
+    }
   });
 
   it('uses the fill-in words of the UI language', async () => {

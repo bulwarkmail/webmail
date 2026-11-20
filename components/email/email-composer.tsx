@@ -4353,17 +4353,20 @@ export function EmailComposer({
         warnings.push({ kind: 'text' });
       }
 
+      const checkMissingAttachment = attachmentReminderEnabled
+        && !attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
+      // Both warnings look at the words the user wrote, without the signature
+      // or quoted messages, which can contain keywords unrelated to this send.
+      const bodyText = placeholderWarningEnabled || checkMissingAttachment
+        ? extractUserAuthoredText(
+            plainTextMode ? plainTextBodyWithoutSignature(body, signatureIdentity) : stripEmbeddedSignatureHtml(body),
+            { plainTextMode, forwardedSeparator: tQuote('forwarded_separator') },
+          )
+        : '';
+
       // Unfilled placeholders: template fields left as {{name}}, fill-ins like
-      // [TIME] from AI drafts, and markers like TODO. The signature is left
-      // out, or a placeholder in it would stop every message.
+      // [TIME] from AI drafts, and markers like TODO.
       if (placeholderWarningEnabled) {
-        const authored = plainTextMode
-          ? plainTextBodyWithoutSignature(body, signatureIdentity)
-          : stripEmbeddedSignatureHtml(body);
-        const bodyText = extractUserAuthoredText(authored, {
-          plainTextMode,
-          forwardedSeparator: tQuote('forwarded_separator'),
-        });
         // The fill-in words of the UI language, and of English: AI drafts and
         // templates are often English whatever the UI language is.
         const found = findUnfilledPlaceholders(subject, bodyText, [
@@ -4375,21 +4378,10 @@ export function EmailComposer({
         }
       }
 
-      // Attachment reminder check
-      if (attachmentReminderEnabled) {
-        const hasAttachments = attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
-        if (!hasAttachments) {
-          // Scan only the user-authored text: the quoted original of a
-          // reply/forward often mentions an attachment itself, which used to fire
-          // the reminder even when the user typed no keyword and added nothing (#570).
-          const bodyText = extractUserAuthoredText(body, {
-            plainTextMode,
-            forwardedSeparator: tQuote('forwarded_separator'),
-          });
-          const searchText = `${subject} ${bodyText}`.toLowerCase();
-          const matched = attachmentReminderKeywords.find(kw => searchText.includes(kw.toLowerCase()));
-          if (matched) warnings.push({ kind: 'attachment', keyword: matched });
-        }
+      if (checkMissingAttachment) {
+        const searchText = `${subject} ${bodyText}`.toLowerCase();
+        const matched = attachmentReminderKeywords.find(kw => searchText.includes(kw.toLowerCase()));
+        if (matched) warnings.push({ kind: 'attachment', keyword: matched });
       }
 
       // Open proofreading issues, when a checker asked for the warning (the
