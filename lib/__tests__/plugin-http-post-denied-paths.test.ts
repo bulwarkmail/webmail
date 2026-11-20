@@ -61,10 +61,28 @@ describe('plugin http.post denied paths', () => {
   });
 
   it('still reaches a plugin sidecar route', async () => {
-    // /api/translate used to be the example here; it is a third-party relay
-    // with the user's cookies and is denied now like the other app routes.
     await dispatchApiCall(plugin(['/api/my-plugin/translate']), 'http.post', ['/api/my-plugin/translate', { text: 'hi' }]);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  // The released Translate plugin (1.5.2) posts here with
+  // apiPostPaths: ["/api/translate"]; every translation failed with
+  // "Path /api/translate is not available to plugins" (#1786).
+  it('lets a plugin that lists the translation route post to it', async () => {
+    const res = await dispatchApiCall(plugin(['/api/translate']), 'http.post', [
+      '/api/translate',
+      { text: 'hallo', target: 'en', source: 'auto', provider: 'mymemory' },
+    ]);
+    expect(res).toMatchObject({ ok: true, status: 200 });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(String(fetchSpy.mock.calls[0][0])).toContain('/api/translate');
+  });
+
+  it('keeps the translation route closed to a plugin that does not list it', async () => {
+    await expect(
+      dispatchApiCall(plugin(['/api/my-plugin/']), 'http.post', ['/api/translate', { text: 'hallo' }]),
+    ).rejects.toThrow(/not in plugin apiPostPaths allowlist/);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('reaches a route that only shares a prefix with a denied one', async () => {

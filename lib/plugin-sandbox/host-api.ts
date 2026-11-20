@@ -550,6 +550,13 @@ function isApiPostPathAllowed(path: string, allowlist: readonly string[]): boole
  * WebDAV, CalDAV), change sign-in, admin or plugin state, or belong to the
  * setup wizard. A plugin talks to its own sidecar routes instead.
  *
+ * The translation route is not on the list: the Translate plugin posts to it
+ * by name in its `apiPostPaths`, which the admin sees and accepts at install.
+ * It returns only the translation of the text the plugin sends, goes to a
+ * fixed upstream (MyMemory, or the admin's LibreTranslate) and honours the
+ * no-third-party mode, so it hands the plugin no user data and no reach the
+ * admin didn't accept.
+ *
  * Listed by their segment under `/api/`, not as `/api/...` strings: the Lite
  * build reads every such string in a client chunk as an endpoint the browser
  * calls and refuses the ones it has no stand-in for (scripts/lite/verify.mjs).
@@ -560,9 +567,9 @@ const PLUGIN_POST_DENIED_ROUTES = new Set([
   'admin',
   'auth',
   'caldav',
-  // The user's agenda, a server-side fetch of any URL, and a third-party
-  // relay: each is data or reach a plugin gets only through its own
-  // permission-gated API, not through a POST with the user's cookies.
+  // The user's agenda and a server-side fetch of any URL: each is data or
+  // reach a plugin gets only through its own permission-gated API, not
+  // through a POST with the user's cookies.
   'calendar-agenda',
   'dev-jmap',
   'fetch-ical',
@@ -576,7 +583,6 @@ const PLUGIN_POST_DENIED_ROUTES = new Set([
   'settings',
   'setup',
   'system',
-  'translate',
   'webdav',
   'wopi',
 ]);
