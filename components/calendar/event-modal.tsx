@@ -2001,9 +2001,9 @@ export function EventModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("form.description")}
-              rows={3}
+              rows={expanded ? 12 : 6}
               maxLength={10000}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-hidden"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus:outline-hidden"
             />
           </div>
 

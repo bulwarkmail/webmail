@@ -130,6 +130,33 @@ export function formatDurationDisplay(minutes: number, locale: string): string {
   return `${unit(h, "hour")} ${unit(m, "minute")}`;
 }
 
+/**
+ * The description, cut to a few lines with a toggle when it is longer. Runs
+ * of blank lines (common in forwarded meeting invitations) show as one.
+ */
+function EventDescription({ text, showMore, showLess }: { text: string; showMore: string; showLess: string }) {
+  const shown = useMemo(() => text.replace(/\n[ \t]*(\n[ \t]*)+\n/g, "\n\n"), [text]);
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && !expanded) setOverflows(el.scrollHeight > el.clientHeight + 1);
+  }, [shown, expanded]);
+  return (
+    <div className="min-w-0 flex-1">
+      <p ref={ref} dir="auto" className={cn("text-sm text-muted-foreground whitespace-pre-line break-words", !expanded && "line-clamp-8")}>
+        <LinkifiedText text={shown} />
+      </p>
+      {(overflows || expanded) && (
+        <button type="button" onClick={() => setExpanded(v => !v)} aria-expanded={expanded} className="mt-1 text-xs font-medium text-primary hover:underline">
+          {expanded ? showLess : showMore}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function getRecurrenceLabel(event: CalendarEvent, t: ReturnType<typeof useTranslations>, locale: string): string | null {
   if (!event.recurrenceRules?.length) return null;
   return buildRecurrenceSummary(event.recurrenceRules[0], t, locale);
@@ -670,9 +697,7 @@ export function EventDetailPopover({
         {description && (
           <div className="flex items-start gap-2.5">
             <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <p dir="auto" className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3 break-words">
-              <LinkifiedText text={description} />
-            </p>
+            <EventDescription text={description} showMore={t("events.show_more")} showLess={t("events.show_less")} />
           </div>
         )}
 
