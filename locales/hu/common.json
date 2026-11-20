@@ -7457,6 +7457,10 @@
     "action_reply": "Válasz",
     "reply_placeholder": "Válasz írása"
   },
+  "team_push": {
+    "mentioned_you": "{name} megemlítette Önt: „{subject}”",
+    "mentioned_hidden": "Megemlítették Önt egy csapatpostafiókban"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Hozzáadás a naptárhoz",
     "update_in_calendar": "Frissítés a naptárban",

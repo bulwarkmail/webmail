@@ -7457,6 +7457,10 @@
     "action_reply": "Svar",
     "reply_placeholder": "Skriv et svar"
   },
+  "team_push": {
+    "mentioned_you": "{name} nevnte deg i «{subject}»",
+    "mentioned_hidden": "Du ble nevnt i en teampostkasse"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Legg til i kalenderen",
     "update_in_calendar": "Oppdater i kalenderen",

@@ -7469,6 +7469,10 @@
     "action_reply": "Απάντηση",
     "reply_placeholder": "Γράψτε μια απάντηση"
   },
+  "team_push": {
+    "mentioned_you": "{name} σας ανέφερε στο «{subject}»",
+    "mentioned_hidden": "Σας ανέφεραν σε ένα ομαδικό γραμματοκιβώτιο"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Προσθήκη στο ημερολόγιο",
     "update_in_calendar": "Ενημέρωση στο ημερολόγιο",

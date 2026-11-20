@@ -7457,6 +7457,10 @@
     "action_reply": "返信",
     "reply_placeholder": "返信を入力"
   },
+  "team_push": {
+    "mentioned_you": "{name}さんが「{subject}」であなたをメンションしました",
+    "mentioned_hidden": "チームのメールボックスでメンションされました"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "カレンダーに追加",
     "update_in_calendar": "カレンダーを更新",

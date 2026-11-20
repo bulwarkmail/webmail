@@ -7457,6 +7457,10 @@
     "action_reply": "Respon",
     "reply_placeholder": "Escriu una resposta"
   },
+  "team_push": {
+    "mentioned_you": "{name} t’ha esmentat a «{subject}»",
+    "mentioned_hidden": "T’han esmentat en una bústia d’equip"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Afegeix al calendari",
     "update_in_calendar": "Actualitza al calendari",

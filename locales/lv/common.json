@@ -7457,6 +7457,10 @@
     "action_reply": "Atbildēt",
     "reply_placeholder": "Rakstiet atbildi"
   },
+  "team_push": {
+    "mentioned_you": "{name} jūs pieminēja: “{subject}”",
+    "mentioned_hidden": "Jūs pieminēja komandas pastkastē"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Pievienot kalendāram",
     "update_in_calendar": "Atjaunināt kalendārā",

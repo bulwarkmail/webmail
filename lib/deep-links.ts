@@ -137,7 +137,11 @@ const ALIASED_ROLES = new Set(['inbox', 'sent', 'drafts', 'trash', 'archive', 'j
  */
 export type MailDeepLink =
   | { kind: 'folder'; ref: string; accountId?: string; slot?: number; ownerAccountId?: string }
-  | { kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean; ownerAccountId?: string; reply?: boolean }
+  | {
+    kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean; ownerAccountId?: string; reply?: boolean;
+    /** A team note in the message's conversation to show (a mention's notification). */
+    note?: string;
+  }
   | { kind: 'thread'; id: string; accountId?: string; slot?: number; ownerAccountId?: string };
 
 export interface MailLinkState {
@@ -289,12 +293,14 @@ export function parseMailPath(
   // `?reply=1`, a notification's Reply: opens the reply composer once. Only
   // opens it: nothing a link says can send or change mail.
   const reply = search?.get('reply') === '1' || undefined;
+  // `?note=<id>`, a mention's notification: the conversation opens at that note.
+  const note = search?.get('note') || undefined;
   const [kind, value] = segments;
 
   if (kind && value) {
     const id = decodeSegment(value);
     if (id) {
-      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId, ...(reply ? { reply } : {}) };
+      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId, ...(reply ? { reply } : {}), ...(note ? { note } : {}) };
       if (kind === 'thread') return { kind: 'thread', id, accountId, slot, ownerAccountId };
       if (kind === 'folder') return { kind: 'folder', ref: id, accountId, slot, ownerAccountId };
     }

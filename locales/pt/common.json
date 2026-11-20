@@ -7457,6 +7457,10 @@
     "action_reply": "Responder",
     "reply_placeholder": "Escreva uma resposta"
   },
+  "team_push": {
+    "mentioned_you": "{name} mencionou você em “{subject}”",
+    "mentioned_hidden": "Você foi mencionado em uma caixa de correio da equipe"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Adicionar ao calendário",
     "update_in_calendar": "Atualizar no calendário",

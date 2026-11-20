@@ -62,7 +62,11 @@ describe('the mirror for the worker', () => {
       archiveEnabled: true,
       archiveMode: 'month',
       pluginsMayVeto: false,
-      labels: { archive: 'action_archive', markRead: 'action_mark_read', reply: 'action_reply', replyPlaceholder: 'reply_placeholder' },
+      labels: {
+        archive: 'action_archive', markRead: 'action_mark_read', reply: 'action_reply', replyPlaceholder: 'reply_placeholder',
+        // The titles of a team note's mention.
+        mentionedYou: 'mentioned_you', mentionedHidden: 'mentioned_hidden',
+      },
     });
   });
 

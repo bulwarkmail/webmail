@@ -7465,6 +7465,10 @@
     "action_reply": "ตอบกลับ",
     "reply_placeholder": "เขียนคำตอบ"
   },
+  "team_push": {
+    "mentioned_you": "{name} กล่าวถึงคุณใน “{subject}”",
+    "mentioned_hidden": "มีคนกล่าวถึงคุณในกล่องจดหมายของทีม"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "เพิ่มลงในปฏิทิน",
     "update_in_calendar": "อัปเดตในปฏิทิน",

@@ -7457,6 +7457,10 @@
     "action_reply": "Хариулах",
     "reply_placeholder": "Хариу бичих"
   },
+  "team_push": {
+    "mentioned_you": "{name} таныг «{subject}»-д дурдлаа",
+    "mentioned_hidden": "Таныг багийн шуудангийн хайрцагт дурдлаа"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Хуанлид нэмэх",
     "update_in_calendar": "Хуанлид шинэчлэх",

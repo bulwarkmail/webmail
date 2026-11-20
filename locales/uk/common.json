@@ -7457,6 +7457,10 @@
     "action_reply": "Відповісти",
     "reply_placeholder": "Напишіть відповідь"
   },
+  "team_push": {
+    "mentioned_you": "{name} згадує вас у «{subject}»",
+    "mentioned_hidden": "Вас згадали в командній поштовій скриньці"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Додати в календар",
     "update_in_calendar": "Оновити в календарі",

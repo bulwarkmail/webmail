@@ -7457,6 +7457,10 @@
     "action_reply": "Odpovědět",
     "reply_placeholder": "Napište odpověď"
   },
+  "team_push": {
+    "mentioned_you": "Zmínka od {name} v „{subject}“",
+    "mentioned_hidden": "Někdo vás zmínil v týmové schránce"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Přidat do kalendáře",
     "update_in_calendar": "Aktualizovat v kalendáři",

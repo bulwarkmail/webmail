@@ -7457,6 +7457,10 @@
     "action_reply": "Vasta",
     "reply_placeholder": "Kirjuta vastus"
   },
+  "team_push": {
+    "mentioned_you": "{name} mainis sind: „{subject}“",
+    "mentioned_hidden": "Sind mainiti meeskonna postkastis"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Lisa kalendrisse",
     "update_in_calendar": "Uuenda kalendris",

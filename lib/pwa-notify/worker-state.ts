@@ -11,7 +11,16 @@ export interface NotificationActionPrefs {
   archiveMode: 'single' | 'year' | 'month';
   /** An enabled plugin may stop or watch these actions: the worker leaves the route alone. */
   pluginsMayVeto: boolean;
-  labels: { archive: string; markRead: string; reply: string; replyPlaceholder: string };
+  labels: {
+    archive: string;
+    markRead: string;
+    reply: string;
+    replyPlaceholder: string;
+    /** A team note's mention: "{name}" and "{subject}" are left for the worker to fill in. */
+    mentionedYou?: string;
+    /** The same without sender and subject. */
+    mentionedHidden?: string;
+  };
 }
 
 const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
