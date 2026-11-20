@@ -122,6 +122,7 @@ export {
   IconArrowForwardUp as Forward,
   IconWorld as Globe,
   IconGridDots as Grid3x3,
+  IconGripHorizontal as GripHorizontal,
   IconGripVertical as GripVertical,
   IconHandStop as Hand,
   IconServer2 as HardDrive,
