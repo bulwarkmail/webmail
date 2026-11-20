@@ -69,9 +69,10 @@ export async function notifyDesktopMention(ref: TeamRef, client: IJMAPClient, no
   const settings = useSettingsStore.getState();
   if (!settings.emailNotificationsEnabled || settings.doNotDisturb) return false;
   if (isAccountMuted(settings.notificationMutes, ref.accountId)) return false;
-  const toldKey = `${ref.key}|${note.id}`;
-  if (told.includes(toldKey)) return false;
-  told.push(toldKey);
+  // By Message-ID too: Undo brings a deleted note back with a new id and the same one.
+  const toldKeys = [`${ref.key}|${note.id}`, ...(note.messageId ? [`${ref.key}|<${note.messageId}>`] : [])];
+  if (toldKeys.some((key) => told.includes(key))) return false;
+  told.push(...toldKeys);
   if (told.length > TOLD_LIMIT) told.splice(0, told.length - TOLD_LIMIT);
 
   const entry = useAccountStore.getState().accounts.find((account) => account.id === ref.loginId);

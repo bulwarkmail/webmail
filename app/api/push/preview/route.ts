@@ -33,11 +33,16 @@ export const dynamic = 'force-dynamic';
 const MENTION_LOOKBACK_MS = 60 * 60_000;
 
 /** What says a message is a note and whom it mentions; nothing about its author or topic. */
-const NOTE_PROPERTIES = ['keywords', H.kind, H.mentions, H.for, H.thread];
+const NOTE_PROPERTIES = ['keywords', 'messageId', H.kind, H.mentions, H.for, H.thread];
 
 /** "You were mentioned": the note, and the message it is about. */
 interface NoteMention {
   noteId: string;
+  /**
+   * The note's own Message-ID: Undo brings a deleted note back with a new id
+   * and the same Message-ID, and the service worker tells it once by either.
+   */
+  messageId?: string;
   /** The conversation the note is about, in this account. */
   threadId?: string;
   /** Message-ID of the message it is about (or `jmap:<account>/<id>`). */
@@ -76,6 +81,8 @@ function mentionIn(raw: RawEmail, principalId: string, redacted: boolean, own: r
   // Mentioning yourself tells nobody. Without the sender read (the policy), the server checks it.
   if (own.includes(textValue(sender?.email)?.toLowerCase() ?? '')) return null;
   const mention: NoteMention = { noteId, forKey };
+  const messageId = Array.isArray(raw.messageId) && typeof raw.messageId[0] === 'string' ? stripAngles(raw.messageId[0]) : '';
+  if (messageId) mention.messageId = messageId;
   const threadId = textValue(raw[H.thread]);
   if (threadId) mention.threadId = threadId;
   if (!redacted) {

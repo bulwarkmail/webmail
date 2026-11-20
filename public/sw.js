@@ -760,11 +760,15 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
     ? preview.mention
     : null;
   let mentionShown = false;
-  if (mention && !notified.includes(mention.noteId)) {
+  // Undo brings a deleted note back with a new id and the same Message-ID.
+  const mentionKeys = mention
+    ? [mention.noteId].concat(typeof mention.messageId === "string" && mention.messageId ? [`note:${mention.messageId}`] : [])
+    : [];
+  if (mention && !mentionKeys.some((key) => notified.includes(key))) {
     const noteSlot = Number.isInteger(preview.slot) ? preview.slot : undefined;
     const noteLogin = typeof preview.login === "string" ? preview.login : undefined;
     await showMention(mention, !!preview.redacted || lockHidesContent, accountId, accountLabel, noteSlot, noteLogin);
-    notified = notified.concat([mention.noteId]);
+    notified = notified.concat(mentionKeys);
     await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
     mentionShown = true;
   }

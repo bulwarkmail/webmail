@@ -129,6 +129,13 @@ describe('a mention in a team note', () => {
     expect(shown).toHaveLength(1);
   });
 
+  it('is not told again when Undo brings the note back under a new id', async () => {
+    const { notifyDesktopMention } = await import('../mention-notifications');
+    await notifyDesktopMention(REF, client, note(), LABELS);
+    expect(await notifyDesktopMention(REF, client, note({ id: 'n1-again' }), LABELS)).toBe(false);
+    expect(shown).toHaveLength(1);
+  });
+
   it('follows mail notifications off and Do not disturb', async () => {
     const { notifyDesktopMention } = await import('../mention-notifications');
     const { useSettingsStore } = await import('@/stores/settings-store');

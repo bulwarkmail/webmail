@@ -63,7 +63,7 @@ function loadWorker(preview: (url: URL) => Record<string, unknown>, stored: { la
   return { push, click, shown, shade, fetchMock };
 }
 
-const MENTION = { noteId: 'n1', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer', from: 'Mabel', subject: 'Offer for the Mulberry project' };
+const MENTION = { noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer', from: 'Mabel', subject: 'Offer for the Mulberry project' };
 const noteDelivery = { kind: 'jmap-email-push', accountLabel: 'bob@example.org', accountId: 'g', emailIds: ['n1'] };
 const stateChange = { kind: 'jmap-state-change', accountLabel: 'bob@example.org', accountId: 'g', emailIds: [], changed: { g: { EmailDelivery: 's1', Email: 's1' } } };
 /** What stays on screen, and sounds. */
@@ -110,6 +110,15 @@ describe('a mention of you in a team note', () => {
     await push(stateChange);
     await push(stateChange);
     expect(visible(shown).map((n) => n.title)).toEqual(['Mabel mentioned you in “Offer for the Mulberry project”']);
+  });
+
+  it('is not told again when Undo brings the note back under a new id', async () => {
+    let answer: Record<string, unknown> = { skip: true, mention: MENTION, slot: 0 };
+    const { push, shown } = loadWorker(() => answer);
+    await push(stateChange);
+    answer = { skip: true, mention: { ...MENTION, noteId: 'n1-again' }, slot: 0 };
+    await push(stateChange);
+    expect(visible(shown)).toHaveLength(1);
   });
 
   it('comes with the mail that arrived alongside it', async () => {

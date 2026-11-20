@@ -369,7 +369,7 @@ function mail(id: string, opts: { account?: string; age?: number; seen?: boolean
 }
 
 const MENTION = {
-  noteId: 'n1', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer',
+  noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer',
   from: 'Mabel', subject: 'Offer for the Mulberry project',
 };
 
@@ -478,7 +478,7 @@ describe('push preview for team notes', () => {
       devicePolicy.current = { ...DEFAULT_POLICY, organisation: { devices: { pushWithoutContent: true } } };
       store.push(note('n1'));
       const { body } = await callRoute('g');
-      expect(body.mention).toEqual({ noteId: 'n1', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer' });
+      expect(body.mention).toEqual({ noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer' });
       expect(JSON.stringify(body)).not.toMatch(/Mabel|Mulberry|signed copy/);
       for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
     });
