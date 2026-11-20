@@ -23,6 +23,7 @@ import type { Identity, MailboxRights, StateChange } from '@/lib/jmap/types';
 import { jmapErrorType } from '@/lib/jmap/jmap-error';
 import { subscribePushStateChanges } from '@/lib/push-events';
 import { debug } from '@/lib/debug';
+import { keywordPointer } from '@/lib/jmap/patch-pointer';
 import { NOTE_KEYWORD, TEAM_NOTES_FOLDER_NAME, isTeamNotesFolder } from '@/lib/team-mailboxes/hidden-folders';
 import {
   NOTES_KEYWORD,
@@ -597,8 +598,9 @@ async function markOriginal(key: string, emailId: string, mentions: readonly str
   const runtime = runtimes.get(key);
   const t = team(key);
   if (!runtime || !t) return;
-  const patch: Record<string, boolean> = { [NOTES_KEYWORD]: true };
-  for (const id of mentions) patch[mentionKeyword(id)] = true;
+  // Patch paths, not keyword names: batchUpdateKeywords sends them as is.
+  const patch: Record<string, boolean> = { [keywordPointer(NOTES_KEYWORD)]: true };
+  for (const id of mentions) patch[keywordPointer(mentionKeyword(id))] = true;
   await runtime.client.batchUpdateKeywords([emailId], patch, t.ref.accountId)
     .catch((error) => debug.warn('team-mailboxes', 'Marking the message as having notes failed:', error));
 }
@@ -622,8 +624,8 @@ export async function repairOriginalKeywords(
     for (const n of notes) for (const id of n.mentions) want[mentionKeyword(id)] = true;
     const have = Object.keys(message.keywords ?? {}).filter((k) => k === NOTES_KEYWORD || k.startsWith('$bulwark-mention-'));
     const patch: Record<string, boolean | null> = {};
-    for (const k of Object.keys(want)) if (!message.keywords?.[k]) patch[k] = true;
-    for (const k of have) if (!want[k]) patch[k] = null;
+    for (const k of Object.keys(want)) if (!message.keywords?.[k]) patch[keywordPointer(k)] = true;
+    for (const k of have) if (!want[k]) patch[keywordPointer(k)] = null;
     if (Object.keys(patch).length === 0) continue;
     await runtime.client.batchUpdateKeywords([message.id], patch, t.ref.accountId)
       .catch((error) => debug.warn('team-mailboxes', 'Repairing note keywords failed:', error));

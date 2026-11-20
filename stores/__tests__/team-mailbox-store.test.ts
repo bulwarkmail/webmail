@@ -12,6 +12,7 @@ import {
   notesOf,
   onNotesArrived,
   pendingOf,
+  repairOriginalKeywords,
   resetTeamMailboxStore,
   retryNote,
   useTeamMailboxStore,
@@ -98,7 +99,7 @@ describe('writing notes', () => {
     expect(team().notes[id!]).toMatchObject({ text: 'waiting for Mabel', mentions: ['hv'], kind: 'note' });
     expect(pendingOf(team(), [target.key])).toEqual([]);
     await vi.waitFor(() => expect(server.keywordPatches).toEqual([
-      { ids: ['mail-1'], patch: { '$bulwark-notes': true, '$bulwark-mention-hv': true } },
+      { ids: ['mail-1'], patch: { 'keywords/$bulwark-notes': true, 'keywords/$bulwark-mention-hv': true } },
     ]));
   });
 
@@ -194,6 +195,25 @@ describe('a conversation', () => {
   it('strips reply prefixes for the subject lookup', () => {
     expect(baseSubject('Re: AW: Fwd: Offer')).toBe('Offer');
     expect(baseSubject('Offer: the details')).toBe('Offer: the details');
+  });
+});
+
+describe('the filter keywords on the message', () => {
+  it('adds what its notes need and removes what no note backs any more', async () => {
+    const server = new FakeTeamServer();
+    server.addNotesFolder();
+    bobNote(server, target.key, 'ask @mabel', { mentions: ['hw'] });
+    await ensureTeamLoaded(ref, server.client());
+
+    await repairOriginalKeywords(ref.key, [
+      { id: 'mail-1', key: target.key, keywords: { $seen: true } },
+      { id: 'mail-2', key: 'gone@x', keywords: { '$bulwark-notes': true, '$bulwark-mention-hv': true } },
+    ]);
+
+    expect(server.keywordPatches).toEqual([
+      { ids: ['mail-1'], patch: { 'keywords/$bulwark-notes': true, 'keywords/$bulwark-mention-hw': true } },
+      { ids: ['mail-2'], patch: { 'keywords/$bulwark-notes': null, 'keywords/$bulwark-mention-hv': null } },
+    ]);
   });
 });
 
