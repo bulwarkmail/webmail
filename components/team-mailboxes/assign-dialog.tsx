@@ -49,6 +49,8 @@ export function AssignDialog({ isOpen, onClose, onPick, team, client }: AssignDi
   const people = useTeamPeople(team, client);
   const [text, setText] = useState("");
   const [found, setFound] = useState<TeamPerson[]>([]);
+  // A directory search under way: "No one found." waits for its answer.
+  const [searching, setSearching] = useState(false);
   const [active, setActive] = useState(0);
   const listRef = useRef<HTMLUListElement>(null);
   const baseId = useId();
@@ -67,12 +69,16 @@ export function AssignDialog({ isOpen, onClose, onPick, team, client }: AssignDi
   useEffect(() => {
     if (!isOpen || query.length < MIN_DIRECTORY_SEARCH) {
       setFound([]);
+      setSearching(false);
       return undefined;
     }
     let live = true;
+    setSearching(true);
     const timer = setTimeout(() => {
       void searchDirectory(client, query).then((matches) => {
         if (live) setFound(matches);
+      }).finally(() => {
+        if (live) setSearching(false);
       });
     }, DIRECTORY_SEARCH_DELAY_MS);
     return () => {
@@ -121,7 +127,7 @@ export function AssignDialog({ isOpen, onClose, onPick, team, client }: AssignDi
     if (event.nativeEvent.isComposing) return;
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActive(Math.min(current + 1, listed.length - 1));
+      setActive(Math.max(0, Math.min(current + 1, listed.length - 1)));
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setActive(Math.max(current - 1, 0));
@@ -156,7 +162,7 @@ export function AssignDialog({ isOpen, onClose, onPick, team, client }: AssignDi
         id={searchId}
         type="text"
         role="combobox"
-        aria-expanded={true}
+        aria-expanded={listed.length > 0}
         aria-controls={listed.length > 0 ? listId : undefined}
         aria-autocomplete="list"
         aria-activedescendant={activeId}
@@ -196,7 +202,7 @@ export function AssignDialog({ isOpen, onClose, onPick, team, client }: AssignDi
                   index === current ? "bg-muted" : ""
                 )}
               >
-                <Avatar name={person.name} email={person.email} size="sm" />
+                <span aria-hidden="true" className="shrink-0"><Avatar name={person.name} email={person.email} size="sm" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2 min-w-0">
                     <span className="truncate text-sm font-medium text-foreground">{person.name || person.email}</span>
@@ -211,8 +217,8 @@ export function AssignDialog({ isOpen, onClose, onPick, team, client }: AssignDi
           })}
         </ul>
       ) : (
-        <p role="status" className="mt-3 text-sm text-muted-foreground">
-          {t("no_one_found")}
+        <p role="status" className="mt-3 min-h-5 text-sm text-muted-foreground">
+          {searching ? null : t("no_one_found")}
         </p>
       )}
     </Dialog>

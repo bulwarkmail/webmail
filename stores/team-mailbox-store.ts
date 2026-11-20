@@ -689,10 +689,15 @@ async function changeAssignment(
       debug.warn('team-mailboxes', `The ${kind} line couldn't be written; the change stands:`, error);
       return null;
     });
-  const undo = async () => {
-    await client.batchUpdateKeywords([email.id], pointerPatch(reversePatch(patch)), accountId);
-    const entryId = await timeline;
-    if (entryId) await removeTimelineEntry(key, entryId, target, oppositeEntry(kind, before));
+  // One-shot: the toast's Undo and Ctrl+Z may both reach it.
+  let undoing: Promise<void> | null = null;
+  const undo = () => {
+    undoing ??= (async () => {
+      await client.batchUpdateKeywords([email.id], pointerPatch(reversePatch(patch)), accountId);
+      const entryId = await timeline;
+      if (entryId) await removeTimelineEntry(key, entryId, target, oppositeEntry(kind, before));
+    })();
+    return undoing;
   };
   return { kind, changed: true, assignee, keywords: patchedKeywords(email.keywords, patch), patch, undo, timeline };
 }
@@ -710,6 +715,8 @@ function removeTimelineEntry(key: string, entryId: string, target: NoteTarget, o
       return { notes };
     });
   }).catch(async (error) => {
+    // Already gone (someone else removed it): nothing to put right.
+    if (jmapErrorType(error) === 'notFound') return;
     debug.warn('team-mailboxes', 'Removing a timeline line after an undo failed:', error);
     await writeNote(key, target, opposite).catch(() => null);
   });

@@ -127,6 +127,24 @@ describe('Assign to…', () => {
     expect(screen.getByRole('status')).toHaveTextContent('no_one_found');
   });
 
+  it('picks the first directory match with Enter after the arrow keys were used on an empty list', async () => {
+    vi.useFakeTimers();
+    vi.mocked(scope.loadScopedPrincipalDirectory).mockResolvedValue({
+      principals: [{ id: 'cx', type: 'individual', name: 'xavier', description: 'Xavier Xu', email: 'xavier@example.org' }],
+      status: 'ok',
+    });
+    const { onPick } = openDialog();
+    const field = screen.getByRole('combobox');
+    fireEvent.change(field, { target: { value: 'xav' } });
+    // Waiting for the directory: no "No one found." yet.
+    expect(screen.getByRole('status')).not.toHaveTextContent('no_one_found');
+    fireEvent.keyDown(field, { key: 'ArrowDown' });
+    await act(async () => { await vi.advanceTimersByTimeAsync(DIRECTORY_SEARCH_DELAY_MS + 50); });
+    expect(field).toHaveAttribute('aria-activedescendant', screen.getAllByRole('option')[0].id);
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 'cx' }));
+  });
+
   it('adds directory matches from 3 characters, after a pause', async () => {
     vi.useFakeTimers();
     vi.mocked(scope.loadScopedPrincipalDirectory).mockResolvedValue({

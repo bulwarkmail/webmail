@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { TeamRef } from '@/lib/team-mailboxes/team';
 import { resetTeamNames } from '@/lib/team-mailboxes/names';
+import { jmapError } from '@/lib/jmap/jmap-error';
 import {
   assign,
   assignToMe,
@@ -177,6 +178,27 @@ describe('undo', () => {
     await result.timeline;
     await result.undo();
     expect(entries()).toEqual([{ kind: 'assigned', mentions: ['cj'] }, { kind: 'assigned', mentions: ['ci'] }]);
+  });
+
+  it('undoes once, however often Undo is pressed (toast and Ctrl+Z)', async () => {
+    const { server } = await loaded();
+    const result = await markDone(ref.key, email);
+    await result.timeline;
+    await Promise.all([result.undo(), result.undo()]);
+    await result.undo();
+    expect(server.keywordPatches).toHaveLength(2);
+    expect(entries()).toEqual([]);
+  });
+
+  it('writes no opposite line when the line is already gone', async () => {
+    const server = new FakeTeamServer();
+    const client = server.client();
+    client.destroyTeamNote = vi.fn(async () => { throw jmapError('gone', { type: 'notFound' }); });
+    await loaded(server, client);
+    const result = await markDone(ref.key, email);
+    await result.timeline;
+    await result.undo();
+    expect(entries().map((e) => e.kind)).toEqual(['done']);
   });
 
   it('rejects when the keywords can\'t be written back', async () => {
