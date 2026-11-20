@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "查找来自 {name} 的邮件"
   },
+  "team_assign": {
+    "dialog_title": "分配给",
+    "search_label": "姓名或地址",
+    "you": "你",
+    "people": "成员",
+    "no_one_found": "未找到任何人。",
+    "cancel": "取消"
+  },
   "menuMove": {
     "filter_placeholder": "查找文件夹",
     "recent": "最近使用",

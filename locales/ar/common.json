@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "البحث عن رسائل من {name}"
   },
+  "team_assign": {
+    "dialog_title": "تعيين إلى",
+    "search_label": "الاسم أو العنوان",
+    "you": "أنت",
+    "people": "الأشخاص",
+    "no_one_found": "لم يُعثر على أحد.",
+    "cancel": "إلغاء"
+  },
   "menuMove": {
     "filter_placeholder": "ابحث عن مجلد",
     "recent": "الأخيرة",

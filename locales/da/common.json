@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Find e-mails fra {name}"
   },
+  "team_assign": {
+    "dialog_title": "Tildel til",
+    "search_label": "Navn eller adresse",
+    "you": "Dig",
+    "people": "Personer",
+    "no_one_found": "Ingen fundet.",
+    "cancel": "Annuller"
+  },
   "menuMove": {
     "filter_placeholder": "Find en mappe",
     "recent": "Seneste",

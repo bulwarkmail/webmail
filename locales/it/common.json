@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Trova email da {name}"
   },
+  "team_assign": {
+    "dialog_title": "Assegna a",
+    "search_label": "Nome o indirizzo",
+    "you": "Tu",
+    "people": "Persone",
+    "no_one_found": "Nessuno trovato.",
+    "cancel": "Annulla"
+  },
   "menuMove": {
     "filter_placeholder": "Cerca una cartella",
     "recent": "Recenti",

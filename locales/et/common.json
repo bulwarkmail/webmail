@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Leia kirjad saatjalt {name}"
   },
+  "team_assign": {
+    "dialog_title": "Määra",
+    "search_label": "Nimi või aadress",
+    "you": "Teie",
+    "people": "Inimesed",
+    "no_one_found": "Kedagi ei leitud.",
+    "cancel": "Tühista"
+  },
   "menuMove": {
     "filter_placeholder": "Otsi kausta",
     "recent": "Viimati kasutatud",

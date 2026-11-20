@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Знайти листи від {name}"
   },
+  "team_assign": {
+    "dialog_title": "Призначити",
+    "search_label": "Ім'я або адреса",
+    "you": "Ви",
+    "people": "Люди",
+    "no_one_found": "Нікого не знайдено.",
+    "cancel": "Скасувати"
+  },
   "menuMove": {
     "filter_placeholder": "Знайти папку",
     "recent": "Нещодавні",

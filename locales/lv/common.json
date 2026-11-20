@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Atrast e-pastus no {name}"
   },
+  "team_assign": {
+    "dialog_title": "Piešķirt",
+    "search_label": "Vārds vai adrese",
+    "you": "Jūs",
+    "people": "Personas",
+    "no_one_found": "Neviens netika atrasts.",
+    "cancel": "Atcelt"
+  },
   "menuMove": {
     "filter_placeholder": "Meklēt mapi",
     "recent": "Nesen izmantotās",

@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Rechercher les e-mails de {name}"
   },
+  "team_assign": {
+    "dialog_title": "Attribuer à",
+    "search_label": "Nom ou adresse",
+    "you": "Vous",
+    "people": "Personnes",
+    "no_one_found": "Personne n'a été trouvé.",
+    "cancel": "Annuler"
+  },
   "menuMove": {
     "filter_placeholder": "Rechercher un dossier",
     "recent": "Récents",

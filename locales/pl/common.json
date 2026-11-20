@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Znajdź e-maile od {name}"
   },
+  "team_assign": {
+    "dialog_title": "Przypisz do",
+    "search_label": "Nazwa lub adres",
+    "you": "Ty",
+    "people": "Osoby",
+    "no_one_found": "Nikogo nie znaleziono.",
+    "cancel": "Anuluj"
+  },
   "menuMove": {
     "filter_placeholder": "Znajdź folder",
     "recent": "Ostatnie",

@@ -1067,6 +1067,14 @@
     },
     "find_emails_from": "ค้นหาอีเมลจาก {name}"
   },
+  "team_assign": {
+    "dialog_title": "มอบหมายให้",
+    "search_label": "ชื่อหรือที่อยู่",
+    "you": "คุณ",
+    "people": "บุคคล",
+    "no_one_found": "ไม่พบใคร",
+    "cancel": "ยกเลิก"
+  },
   "menuMove": {
     "filter_placeholder": "ค้นหาโฟลเดอร์",
     "recent": "ล่าสุด",

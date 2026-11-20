@@ -4077,6 +4077,14 @@
     },
     "find_emails_from": "Finn e-post frå {name}"
   },
+  "team_assign": {
+    "dialog_title": "Tildel til",
+    "search_label": "Namn eller adresse",
+    "you": "Deg",
+    "people": "Personar",
+    "no_one_found": "Fann ingen.",
+    "cancel": "Avbryt"
+  },
   "menuMove": {
     "filter_placeholder": "Finn ei mappe",
     "recent": "Nyleg",

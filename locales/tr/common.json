@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "{name} adlı kişiden gelen e-postaları bul"
   },
+  "team_assign": {
+    "dialog_title": "Ata",
+    "search_label": "Ad veya adres",
+    "you": "Siz",
+    "people": "Kişiler",
+    "no_one_found": "Kimse bulunamadı.",
+    "cancel": "İptal"
+  },
   "menuMove": {
     "filter_placeholder": "Klasör bul",
     "recent": "Son kullanılanlar",

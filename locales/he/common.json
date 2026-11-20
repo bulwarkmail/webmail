@@ -4014,6 +4014,14 @@
     },
     "find_emails_from": "חיפוש הודעות מ{name}"
   },
+  "team_assign": {
+    "dialog_title": "הקצאה אל",
+    "search_label": "שם או כתובת",
+    "you": "את/ה",
+    "people": "אנשים",
+    "no_one_found": "לא נמצא אף אחד.",
+    "cancel": "ביטול"
+  },
   "menuMove": {
     "filter_placeholder": "חיפוש תיקייה",
     "recent": "אחרונות",

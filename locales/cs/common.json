@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Najít e-maily od {name}"
   },
+  "team_assign": {
+    "dialog_title": "Přiřadit",
+    "search_label": "Jméno nebo adresa",
+    "you": "Vy",
+    "people": "Lidé",
+    "no_one_found": "Nikdo nebyl nalezen.",
+    "cancel": "Zrušit"
+  },
   "menuMove": {
     "filter_placeholder": "Najít složku",
     "recent": "Nedávné",

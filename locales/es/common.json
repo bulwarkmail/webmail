@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Buscar correos de {name}"
   },
+  "team_assign": {
+    "dialog_title": "Asignar a",
+    "search_label": "Nombre o dirección",
+    "you": "Tú",
+    "people": "Personas",
+    "no_one_found": "No se ha encontrado a nadie.",
+    "cancel": "Cancelar"
+  },
   "menuMove": {
     "filter_placeholder": "Buscar una carpeta",
     "recent": "Recientes",

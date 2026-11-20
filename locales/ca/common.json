@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Cerca correus de {name}"
   },
+  "team_assign": {
+    "dialog_title": "Assigna a",
+    "search_label": "Nom o adreça",
+    "you": "Vós",
+    "people": "Persones",
+    "no_one_found": "No s'ha trobat ningú.",
+    "cancel": "Cancel·la"
+  },
   "menuMove": {
     "filter_placeholder": "Cerca una carpeta",
     "recent": "Recents",

@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "{name}-с ирсэн имэйлүүдийг хайх"
   },
+  "team_assign": {
+    "dialog_title": "Хариуцуулах",
+    "search_label": "Нэр эсвэл хаяг",
+    "you": "Та",
+    "people": "Хүмүүс",
+    "no_one_found": "Хэн ч олдсонгүй.",
+    "cancel": "Цуцлах"
+  },
   "menuMove": {
     "filter_placeholder": "Хавтас хайх",
     "recent": "Сүүлд ашигласан",

@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "{name}님이 보낸 이메일 찾기"
   },
+  "team_assign": {
+    "dialog_title": "담당자 지정",
+    "search_label": "이름 또는 주소",
+    "you": "나",
+    "people": "사람",
+    "no_one_found": "아무도 찾지 못했습니다.",
+    "cancel": "취소"
+  },
   "menuMove": {
     "filter_placeholder": "폴더 찾기",
     "recent": "최근",

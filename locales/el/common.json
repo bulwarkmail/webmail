@@ -4081,6 +4081,14 @@
     },
     "find_emails_from": "Εύρεση μηνυμάτων από {name}"
   },
+  "team_assign": {
+    "dialog_title": "Ανάθεση σε",
+    "search_label": "Όνομα ή διεύθυνση",
+    "you": "Εσείς",
+    "people": "Άτομα",
+    "no_one_found": "Δεν βρέθηκε κανείς.",
+    "cancel": "Ακύρωση"
+  },
   "menuMove": {
     "filter_placeholder": "Εύρεση φακέλου",
     "recent": "Πρόσφατοι",

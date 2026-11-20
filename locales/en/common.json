@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Find emails from {name}"
   },
+  "team_assign": {
+    "dialog_title": "Assign to",
+    "search_label": "Name or address",
+    "you": "You",
+    "people": "People",
+    "no_one_found": "No one found.",
+    "cancel": "Cancel"
+  },
   "menuMove": {
     "filter_placeholder": "Find a folder",
     "recent": "Recent",

@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Найти письма от {name}"
   },
+  "team_assign": {
+    "dialog_title": "Назначить",
+    "search_label": "Имя или адрес",
+    "you": "Вы",
+    "people": "Люди",
+    "no_one_found": "Никого не найдено.",
+    "cancel": "Отмена"
+  },
   "menuMove": {
     "filter_placeholder": "Найти папку",
     "recent": "Недавние",

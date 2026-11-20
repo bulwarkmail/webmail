@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "{name} からのメールを検索"
   },
+  "team_assign": {
+    "dialog_title": "割り当て先",
+    "search_label": "名前またはアドレス",
+    "you": "あなた",
+    "people": "メンバー",
+    "no_one_found": "見つかりませんでした。",
+    "cancel": "キャンセル"
+  },
   "menuMove": {
     "filter_placeholder": "フォルダーを検索",
     "recent": "最近使用",

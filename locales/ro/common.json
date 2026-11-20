@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Găsește e-mailurile de la {name}"
   },
+  "team_assign": {
+    "dialog_title": "Atribuire către",
+    "search_label": "Nume sau adresă",
+    "you": "Tu",
+    "people": "Persoane",
+    "no_one_found": "Nu a fost găsit nimeni.",
+    "cancel": "Anulează"
+  },
   "menuMove": {
     "filter_placeholder": "Caută un folder",
     "recent": "Recente",

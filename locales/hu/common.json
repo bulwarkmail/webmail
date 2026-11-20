@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "{name} e-mailjeinek keresése"
   },
+  "team_assign": {
+    "dialog_title": "Hozzárendelés",
+    "search_label": "Név vagy cím",
+    "you": "Ön",
+    "people": "Személyek",
+    "no_one_found": "Senki sem található.",
+    "cancel": "Mégse"
+  },
   "menuMove": {
     "filter_placeholder": "Mappa keresése",
     "recent": "Legutóbbiak",

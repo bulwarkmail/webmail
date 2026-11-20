@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "یافتن ایمیل‌های {name}"
   },
+  "team_assign": {
+    "dialog_title": "واگذاری به",
+    "search_label": "نام یا نشانی",
+    "you": "شما",
+    "people": "افراد",
+    "no_one_found": "کسی پیدا نشد.",
+    "cancel": "انصراف"
+  },
   "menuMove": {
     "filter_placeholder": "یافتن پوشه",
     "recent": "اخیر",

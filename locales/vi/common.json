@@ -4081,6 +4081,14 @@
     },
     "find_emails_from": "Tìm email từ {name}"
   },
+  "team_assign": {
+    "dialog_title": "Giao cho",
+    "search_label": "Tên hoặc địa chỉ",
+    "you": "Bạn",
+    "people": "Mọi người",
+    "no_one_found": "Không tìm thấy ai.",
+    "cancel": "Hủy"
+  },
   "menuMove": {
     "filter_placeholder": "Tìm thư mục",
     "recent": "Gần đây",

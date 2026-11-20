@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "Finn e-poster fra {name}"
   },
+  "team_assign": {
+    "dialog_title": "Tildel til",
+    "search_label": "Navn eller adresse",
+    "you": "Deg",
+    "people": "Personer",
+    "no_one_found": "Fant ingen.",
+    "cancel": "Avbryt"
+  },
   "menuMove": {
     "filter_placeholder": "Finn en mappe",
     "recent": "Nylig brukt",

@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "尋找來自 {name} 的郵件"
   },
+  "team_assign": {
+    "dialog_title": "指派給",
+    "search_label": "名稱或地址",
+    "you": "你",
+    "people": "成員",
+    "no_one_found": "找不到任何人。",
+    "cancel": "取消"
+  },
   "menuMove": {
     "filter_placeholder": "尋找資料夾",
     "recent": "最近使用",

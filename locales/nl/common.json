@@ -4069,6 +4069,14 @@
     },
     "find_emails_from": "E-mails van {name} zoeken"
   },
+  "team_assign": {
+    "dialog_title": "Toewijzen aan",
+    "search_label": "Naam of adres",
+    "you": "Jij",
+    "people": "Personen",
+    "no_one_found": "Niemand gevonden.",
+    "cancel": "Annuleren"
+  },
   "menuMove": {
     "filter_placeholder": "Map zoeken",
     "recent": "Recent",
