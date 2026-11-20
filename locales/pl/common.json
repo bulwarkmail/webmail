@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Nieprzeczytane",
       "everything_else": "Wszystkie pozostałe",
-      "unread_empty": "Przeczytano wszystkie wiadomości w odebranych."
+      "unread_empty": "Przeczytano wszystkie wiadomości w odebranych.",
+      "unread_newer": "Nowsze nieprzeczytane",
+      "unread_older": "Starsze nieprzeczytane"
     },
     "columns": {
       "from": "Od",

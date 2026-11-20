@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Da leggere",
       "everything_else": "Tutto il resto",
-      "unread_empty": "Hai letto tutti i messaggi della posta in arrivo."
+      "unread_empty": "Hai letto tutti i messaggi della posta in arrivo.",
+      "unread_newer": "Non letti più recenti",
+      "unread_older": "Non letti meno recenti"
     },
     "columns": {
       "from": "Da",

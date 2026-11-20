@@ -353,7 +353,9 @@
     "sections": {
       "unread": "未読",
       "everything_else": "その他すべて",
-      "unread_empty": "受信トレイのメッセージをすべて読みました。"
+      "unread_empty": "受信トレイのメッセージをすべて読みました。",
+      "unread_newer": "新しい未読",
+      "unread_older": "古い未読"
     },
     "columns": {
       "from": "差出人",

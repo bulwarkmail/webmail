@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Ulesne",
       "everything_else": "Alt anna",
-      "unread_empty": "Du har lese alle meldingane i innboksen."
+      "unread_empty": "Du har lese alle meldingane i innboksen.",
+      "unread_newer": "Nyare ulesne",
+      "unread_older": "Eldre ulesne"
     },
     "columns": {
       "from": "Frå",

@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Unread",
       "everything_else": "Everything else",
-      "unread_empty": "You've read all the messages in your inbox."
+      "unread_empty": "You've read all the messages in your inbox.",
+      "unread_newer": "Newer unread",
+      "unread_older": "Older unread"
     },
     "columns": {
       "from": "From",

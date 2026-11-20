@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Ongelezen",
       "everything_else": "Al het andere",
-      "unread_empty": "Je hebt alle berichten in je inbox gelezen."
+      "unread_empty": "Je hebt alle berichten in je inbox gelezen.",
+      "unread_newer": "Nieuwere ongelezen",
+      "unread_older": "Oudere ongelezen"
     },
     "columns": {
       "from": "Van",

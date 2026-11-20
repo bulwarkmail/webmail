@@ -353,7 +353,9 @@
     "sections": {
       "unread": "未讀",
       "everything_else": "其他所有郵件",
-      "unread_empty": "您已讀完收件匣中的所有郵件。"
+      "unread_empty": "您已讀完收件匣中的所有郵件。",
+      "unread_newer": "較新的未讀郵件",
+      "unread_older": "較舊的未讀郵件"
     },
     "columns": {
       "from": "寄件者",

@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Ungelesen",
       "everything_else": "Alles andere",
-      "unread_empty": "Sie haben alle Nachrichten im Posteingang gelesen."
+      "unread_empty": "Sie haben alle Nachrichten im Posteingang gelesen.",
+      "unread_newer": "Neuere ungelesene",
+      "unread_older": "Ältere ungelesene"
     },
     "columns": {
       "from": "Von",

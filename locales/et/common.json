@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Lugemata",
       "everything_else": "Kõik muu",
-      "unread_empty": "Oled kõik postkasti kirjad läbi lugenud."
+      "unread_empty": "Oled kõik postkasti kirjad läbi lugenud.",
+      "unread_newer": "Uuemad lugemata",
+      "unread_older": "Vanemad lugemata"
     },
     "columns": {
       "from": "Saatja",

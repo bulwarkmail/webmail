@@ -353,7 +353,9 @@
     "sections": {
       "unread": "읽지 않음",
       "everything_else": "기타 모든 메일",
-      "unread_empty": "받은편지함의 메일을 모두 읽었습니다."
+      "unread_empty": "받은편지함의 메일을 모두 읽었습니다.",
+      "unread_newer": "더 최근의 읽지 않은 메일",
+      "unread_older": "더 오래된 읽지 않은 메일"
     },
     "columns": {
       "from": "보낸 사람",

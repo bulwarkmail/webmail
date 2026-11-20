@@ -40,6 +40,29 @@ export interface UnreadSection {
   ids: Set<string>;
   /** How many unread messages the folder has in all. */
   total: number;
+  /** Where in the folder's unread mail the section starts; 0 (or missing) is the newest (#1791). */
+  position?: number;
+}
+
+/**
+ * Where the section starts after a step to newer or older unread mail, or
+ * null when there is nothing that way.
+ */
+export function unreadSectionStep(
+  section: Pick<UnreadSection, 'position' | 'total'>,
+  size: number,
+  direction: 'newer' | 'older',
+): number | null {
+  const position = section.position ?? 0;
+  if (direction === 'newer') return position > 0 ? Math.max(0, position - size) : null;
+  return position + size < section.total ? position + size : null;
+}
+
+/** A start that still has unread mail after the folder's unread count fell: the last page, else 0. */
+export function clampUnreadSectionPosition(position: number, total: number, size: number): number {
+  if (position <= 0 || total <= 0) return 0;
+  if (position < total) return position;
+  return Math.floor((total - 1) / size) * size;
 }
 
 export interface UnreadFirstView {

@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Непрочитані",
       "everything_else": "Усе інше",
-      "unread_empty": "Ви прочитали всі листи у вхідних."
+      "unread_empty": "Ви прочитали всі листи у вхідних.",
+      "unread_newer": "Новіші непрочитані",
+      "unread_older": "Старіші непрочитані"
     },
     "columns": {
       "from": "Від",

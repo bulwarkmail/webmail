@@ -353,7 +353,9 @@
     "sections": {
       "unread": "未读",
       "everything_else": "其他所有邮件",
-      "unread_empty": "您已读完收件箱中的所有邮件。"
+      "unread_empty": "您已读完收件箱中的所有邮件。",
+      "unread_newer": "较新的未读邮件",
+      "unread_older": "较早的未读邮件"
     },
     "columns": {
       "from": "发件人",

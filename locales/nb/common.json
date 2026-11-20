@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Uleste",
       "everything_else": "Alt annet",
-      "unread_empty": "Du har lest alle meldingene i innboksen."
+      "unread_empty": "Du har lest alle meldingene i innboksen.",
+      "unread_newer": "Nyere uleste",
+      "unread_older": "Eldre uleste"
     },
     "columns": {
       "from": "Fra",

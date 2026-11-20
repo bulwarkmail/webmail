@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Ulæste",
       "everything_else": "Alt andet",
-      "unread_empty": "Du har læst alle beskeder i indbakken."
+      "unread_empty": "Du har læst alle beskeder i indbakken.",
+      "unread_newer": "Nyere ulæste",
+      "unread_older": "Ældre ulæste"
     },
     "columns": {
       "from": "Fra",

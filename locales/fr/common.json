@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Non lus",
       "everything_else": "Tout le reste",
-      "unread_empty": "Vous avez lu tous les messages de votre boîte de réception."
+      "unread_empty": "Vous avez lu tous les messages de votre boîte de réception.",
+      "unread_newer": "Non lus plus récents",
+      "unread_older": "Non lus plus anciens"
     },
     "columns": {
       "from": "De",

@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Chưa đọc",
       "everything_else": "Các thư còn lại",
-      "unread_empty": "Bạn đã đọc tất cả thư trong hộp thư đến của mình."
+      "unread_empty": "Bạn đã đọc tất cả thư trong hộp thư đến của mình.",
+      "unread_newer": "Thư chưa đọc mới hơn",
+      "unread_older": "Thư chưa đọc cũ hơn"
     },
     "columns": {
       "from": "Từ",

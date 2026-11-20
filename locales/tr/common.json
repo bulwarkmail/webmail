@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Okunmamış",
       "everything_else": "Diğer her şey",
-      "unread_empty": "Gelen kutusundaki tüm iletileri okudunuz."
+      "unread_empty": "Gelen kutusundaki tüm iletileri okudunuz.",
+      "unread_newer": "Daha yeni okunmamışlar",
+      "unread_older": "Daha eski okunmamışlar"
     },
     "columns": {
       "from": "Kimden",

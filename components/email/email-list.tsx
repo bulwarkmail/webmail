@@ -75,7 +75,7 @@ import { PluginListFilters, useFolderListFiltered } from "./plugin-list-filters"
 import { PluginActions, useFolderAccountKind } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
 import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
-import { unreadSectionRowCount } from "@/lib/unread-first";
+import { unreadSectionRowCount, unreadSectionSize, unreadSectionStep } from "@/lib/unread-first";
 import type { OpenableEmail } from "@/lib/plugin-sandbox/open-email";
 import { MvListSectionHeader } from "./mv-list-section-header";
 import { ListDateGroupHeader, LIST_DATE_GROUP_HEADER_HEIGHT } from "./list-date-group-header";
@@ -391,6 +391,19 @@ export function EmailList({
   const unreadCollapsed = useSettingsStore((state) => state.mvUnreadSectionCollapsed);
   const restCollapsed = useSettingsStore((state) => state.mvEverythingElseCollapsed);
   const updateSetting = useSettingsStore((state) => state.updateSetting);
+  // Paging through the Unread section (#1791): the arrows next to its count.
+  const unreadPageSize = useSettingsStore((state) => unreadSectionSize(state.mvUnreadSectionSize));
+  const pageUnreadSection = useEmailStore((state) => state.pageUnreadSection);
+  const unreadPaging = useMemo(() => {
+    if (!unreadSection || !client) return null;
+    const newer = unreadSectionStep(unreadSection, unreadPageSize, 'newer') !== null;
+    const older = unreadSectionStep(unreadSection, unreadPageSize, 'older') !== null;
+    if (!newer && !older) return null;
+    return {
+      onNewer: newer ? () => pageUnreadSection(client, 'newer') : undefined,
+      onOlder: older ? () => pageUnreadSection(client, 'older') : undefined,
+    };
+  }, [unreadSection, unreadPageSize, client, pageUnreadSection]);
   const sections = useMemo(() => {
     if (!unreadSection) return null;
     const unread: ThreadGroup[] = [];
@@ -1369,6 +1382,10 @@ export function EmailList({
               onToggle={() => updateSetting('mvUnreadSectionCollapsed', !unreadCollapsed)}
               shown={sectionRowCount}
               total={unreadSection.total}
+              position={unreadSection.position ?? 0}
+              paged={!!unreadPaging}
+              onNewer={unreadPaging?.onNewer}
+              onOlder={unreadPaging?.onOlder}
             />
           ) : (
             <MvListSectionHeader

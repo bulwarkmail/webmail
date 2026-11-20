@@ -46,6 +46,7 @@ import { useOfflineStore } from "@/lib/offline/state";
 import {
   READ_FILTER, UNREAD_FILTER, andFilters, unreadSectionSize, isUnreadFirstView, mergeUnreadSection,
   openSectionRows, sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
+  unreadSectionStep, clampUnreadSectionPosition,
 } from "@/lib/unread-first";
 
 type ScheduledSubmissionMetadata = {
@@ -683,6 +684,8 @@ interface EmailStore {
    */
   applyMailboxDelta: (client: IJMAPClient, changed: StateChange['changed']) => Promise<boolean>;
   refreshCurrentMailbox: (client: IJMAPClient) => Promise<void>;
+  /** Shows the next newer or older page of the "Unread first" inbox's Unread section (#1791). */
+  pageUnreadSection: (client: IJMAPClient, direction: 'newer' | 'older') => Promise<void>;
   handleNewEmailNotification: (email: Email) => void;
   clearNewEmailNotification: () => void;
 
@@ -1139,23 +1142,34 @@ function folderListFilter(
   return andFilters(andFilters(categoryFilter, pluginListFilter(mailbox)), unreadFirstFor(mailbox, s) ? READ_FILTER : null);
 }
 
-/** The newest unread mail of the folder, for the "Unread first" inbox. */
-async function loadUnreadSection(client: IJMAPClient, mailbox: Mailbox, get: StoreGet): Promise<{ emails: Email[]; total: number }> {
+interface LoadedUnreadSection { emails: Email[]; total: number; position: number }
+
+/**
+ * The folder's unread mail for the "Unread first" inbox: the newest page, or
+ * the page from `position` on when the user paged to older unread mail.
+ */
+async function loadUnreadSection(client: IJMAPClient, mailbox: Mailbox, get: StoreGet, position = 0): Promise<LoadedUnreadSection> {
   const effectiveClient = resolveActionClient(client);
   const accountId = mailbox.isShared ? mailbox.accountId : undefined;
   const categoryFilter = andFilters(useMessageListTabsStore.getState().getCategoryFilter(mailbox.role), pluginListFilter(mailbox));
-  const result = await effectiveClient.getEmails(
+  const load = (from: number) => effectiveClient.getEmails(
     mailbox.originalId || mailbox.id,
     accountId,
     unreadSectionSize(useSettingsStore.getState().mvUnreadSectionSize),
-    0,
+    from,
     undefined,
     true,
     andFilters(categoryFilter, UNREAD_FILTER) ?? undefined,
     [],
   );
+  let result = await load(position);
+  // Read or moved mail can leave an older page empty: show the last one there is.
+  if (position > 0 && result.emails.length === 0) {
+    position = clampUnreadSectionPosition(position, result.total, unreadSectionSize(useSettingsStore.getState().mvUnreadSectionSize));
+    result = await load(position);
+  }
   const emails = await emailHooks.onEmailsFetched.transform(result.emails);
-  return { emails: annotateScheduledEmails(emails, get().scheduledSubmissionByEmailId), total: result.total };
+  return { emails: annotateScheduledEmails(emails, get().scheduledSubmissionByEmailId), total: result.total, position };
 }
 
 function notifyNewInboxMail(client: IJMAPClient, mailbox: Mailbox, email: Email, get: StoreGet) {
@@ -1168,10 +1182,10 @@ function notifyNewInboxMail(client: IJMAPClient, mailbox: Mailbox, email: Email,
   if (!muted) get().handleNewEmailNotification(email);
 }
 
-function applyUnreadSection(get: StoreGet, set: StoreSet, mailboxId: string, loaded: { emails: Email[]; total: number }) {
+function applyUnreadSection(get: StoreGet, set: StoreSet, mailboxId: string, loaded: LoadedUnreadSection) {
   const { emails, unreadSection, selectedEmail } = get();
   const merged = mergeUnreadSection(emails, unreadSection, loaded.emails, selectedEmail ? threadKeyFor(selectedEmail) : null);
-  set({ emails: merged.emails, unreadSection: { mailboxId, ids: merged.ids, total: loaded.total } });
+  set({ emails: merged.emails, unreadSection: { mailboxId, ids: merged.ids, total: loaded.total, position: loaded.position } });
 }
 
 /**
@@ -8131,10 +8145,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // The Unread section is loaded again too; new mail lands there.
       if (mailbox && !selectedKeyword && unreadFirstFor(mailbox, get())) {
-        const loaded = await loadUnreadSection(client, mailbox, get);
+        // The page of unread mail the user went to stays (#1791).
+        const shown = get().unreadSection;
+        const loaded = await loadUnreadSection(client, mailbox, get, shown?.mailboxId === selectedMailbox ? shown.position ?? 0 : 0);
         if (!isCurrentView()) return;
         const listed = new Set(get().emails.map(e => e.id));
-        const newest = loaded.emails.find(e => !e.keywords?.['$pinned']);
+        // Only the first page holds the newest mail.
+        const newest = loaded.position === 0 ? loaded.emails.find(e => !e.keywords?.['$pinned']) : undefined;
         if (newest && !listed.has(newest.id) && loaded.total > (get().unreadSection?.total ?? 0)) {
           notifyNewInboxMail(client, mailbox, newest, get);
         }
@@ -8145,6 +8162,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Don't set error state for background refreshes to avoid disrupting the UI
     }
   }),
+
+  pageUnreadSection: async (client, direction) => {
+    const { unreadSection, selectedMailbox, mailboxes } = get();
+    const mailbox = mailboxes.find((mb) => mb.id === selectedMailbox);
+    if (!unreadSection || !mailbox || unreadSection.mailboxId !== selectedMailbox) return;
+    const position = unreadSectionStep(unreadSection, unreadSectionSize(useSettingsStore.getState().mvUnreadSectionSize), direction);
+    if (position === null) return;
+    const loaded = await loadUnreadSection(client, mailbox, get, position);
+    // Gone to another folder or view meanwhile.
+    if (get().selectedMailbox !== selectedMailbox || get().unreadSection?.mailboxId !== selectedMailbox) return;
+    applyUnreadSection(get, set, selectedMailbox, loaded);
+  },
 
   handleNewEmailNotification: (email) => {
     // Set the new email notification state

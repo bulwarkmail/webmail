@@ -297,7 +297,9 @@
     "sections": {
       "unread": "לא נקראו",
       "everything_else": "כל השאר",
-      "unread_empty": "קראת את כל ההודעות בתיבת הדואר הנכנס."
+      "unread_empty": "קראת את כל ההודעות בתיבת הדואר הנכנס.",
+      "unread_newer": "שלא נקראו, חדשות יותר",
+      "unread_older": "שלא נקראו, ישנות יותר"
     },
     "columns": {
       "from": "מאת",

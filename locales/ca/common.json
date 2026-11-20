@@ -353,7 +353,9 @@
     "sections": {
       "unread": "No llegits",
       "everything_else": "Tota la resta",
-      "unread_empty": "Has llegit tots els missatges de la safata d'entrada."
+      "unread_empty": "Has llegit tots els missatges de la safata d'entrada.",
+      "unread_newer": "Sense llegir més recents",
+      "unread_older": "Sense llegir més antics"
     },
     "columns": {
       "from": "De",

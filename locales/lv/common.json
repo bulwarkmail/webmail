@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Nelasītie",
       "everything_else": "Viss pārējais",
-      "unread_empty": "Jūs esat izlasījis visus iesūtnes ziņojumus."
+      "unread_empty": "Jūs esat izlasījis visus iesūtnes ziņojumus.",
+      "unread_newer": "Jaunākas nelasītās",
+      "unread_older": "Vecākas nelasītās"
     },
     "columns": {
       "from": "No",

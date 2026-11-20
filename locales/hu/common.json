@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Olvasatlan",
       "everything_else": "Minden más",
-      "unread_empty": "A beérkezett üzenetek mappában minden üzenetet elolvastál."
+      "unread_empty": "A beérkezett üzenetek mappában minden üzenetet elolvastál.",
+      "unread_newer": "Újabb olvasatlanok",
+      "unread_older": "Régebbi olvasatlanok"
     },
     "columns": {
       "from": "Feladó",

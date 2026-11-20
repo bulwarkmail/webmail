@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Necitite",
       "everything_else": "Toate celelalte",
-      "unread_empty": "Ai citit toate mesajele din inbox."
+      "unread_empty": "Ai citit toate mesajele din inbox.",
+      "unread_newer": "Necitite mai noi",
+      "unread_older": "Necitite mai vechi"
     },
     "columns": {
       "from": "De la",

@@ -101,6 +101,38 @@ describe('the "Unread first" inbox list', () => {
     expect(container.querySelectorAll('[data-mv-list-section]')).toHaveLength(2);
   });
 
+  it('pages through the Unread section with arrows next to its count (#1791)', async () => {
+    const { useAuthStore } = await import('@/stores/auth-store');
+    const client = {};
+    useAuthStore.setState({ client } as never);
+    const pageUnreadSection = vi.fn(async () => {});
+    useSettingsStore.setState({ mvUnreadSectionSize: 5 });
+    useEmailStore.setState({ pageUnreadSection, unreadSection: { mailboxId: 'inbox', ids: new Set(['U2', 'U1']), total: 7, position: 5 } });
+    try {
+      const { container } = render(<EmailList emails={EMAILS} />);
+      const header = container.querySelector('[data-mv-list-section]')!;
+      expect(header.textContent).toContain('conversations_range');
+      const newer = header.querySelector('button[aria-label="sections.unread_newer"]') as HTMLButtonElement;
+      const older = header.querySelector('button[aria-label="sections.unread_older"]') as HTMLButtonElement;
+      // From 6 on, 2 of 7 shown: back to newer mail, nothing older.
+      expect(newer.disabled).toBe(false);
+      expect(older.disabled).toBe(true);
+      await act(async () => newer.click());
+      expect(pageUnreadSection).toHaveBeenCalledWith(client, 'newer');
+      // Everything else pages by scrolling, as before.
+      const rest = container.querySelectorAll('[data-mv-list-section]')[1];
+      expect(rest.querySelector('button[aria-label="sections.unread_older"]')).toBeNull();
+    } finally {
+      useAuthStore.setState({ client: null } as never);
+    }
+  });
+
+  it('has no arrows while all unread mail fits in the section', () => {
+    useEmailStore.setState({ unreadSection: { mailboxId: 'inbox', ids: new Set(['U2', 'U1']), total: 2 } });
+    const { container } = render(<EmailList emails={EMAILS} />);
+    expect(container.querySelector('button[aria-label="sections.unread_older"]')).toBeNull();
+  });
+
   it('is one list sorted by date in the default inbox', () => {
     useSettingsStore.setState({ mvInboxType: 'default' });
     const { container } = render(<EmailList emails={EMAILS} />);

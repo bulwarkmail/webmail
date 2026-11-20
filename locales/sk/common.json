@@ -353,7 +353,9 @@
     "sections": {
       "unread": "Neprečítané",
       "everything_else": "Všetko ostatné",
-      "unread_empty": "Prečítali ste všetky správy v doručenej pošte."
+      "unread_empty": "Prečítali ste všetky správy v doručenej pošte.",
+      "unread_newer": "Novšie neprečítané",
+      "unread_older": "Staršie neprečítané"
     },
     "columns": {
       "from": "Od",
