@@ -131,11 +131,12 @@ describe('searching inside a tag view narrows the tag', () => {
     await useEmailStore.getState().refreshCurrentMailbox(client);
 
     expect(useEmailStore.getState().emails.map(e => e.id).sort()).toEqual(['grp-1', 'own-1']);
-    for (const f of filtersOf(client)) expect(f).toBeUndefined();
+    // Only the team notes are left out.
+    for (const f of filtersOf(client)) expect(f).toEqual({ notKeyword: '$bulwark-note' });
   });
 
   it('sends quoted phrases and prefixes as conditions of their own on every tag-view path', async () => {
-    const expected = { operator: 'AND', conditions: [{ text: '"invoice team"' }, { text: 'inv*' }] };
+    const expected = { operator: 'AND', conditions: [{ text: '"invoice team"' }, { text: 'inv*' }, { notKeyword: '$bulwark-note' }] };
     const steps: Array<() => Promise<void>> = [
       () => useEmailStore.getState().searchEmails(client, '"invoice team" inv*'),
       () => useEmailStore.getState().fetchEmails(client, ownInbox.id),

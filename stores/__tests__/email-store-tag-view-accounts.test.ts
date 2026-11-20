@@ -15,6 +15,8 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
 const label = 'work';
 const keyword = `$label:${label}`;
+// Every folder-less query leaves the team notes out.
+const NOT_A_NOTE = { notKeyword: '$bulwark-note' };
 
 const ownInbox = { id: 'inbox', name: 'Inbox', role: 'inbox', isShared: false } as Mailbox;
 const ownArchive = { id: 'archive', name: 'Archive', role: 'archive', isShared: false } as Mailbox;
@@ -108,8 +110,8 @@ describe('tag view across the own and group accounts (#1038)', () => {
     expect(state.hasMoreEmails).toBe(false);
     expect(state.emailListSync).toBeNull();
     // One keyword query per account, none constrained to a folder.
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true, undefined, []);
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, undefined, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true, NOT_A_NOTE, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, NOT_A_NOTE, []);
   });
 
   it('lists the group account only for a tag picked from its shared tags', async () => {
@@ -120,7 +122,7 @@ describe('tag view across the own and group accounts (#1038)', () => {
 
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['grp-1']);
     expect(client.getEmails).toHaveBeenCalledTimes(1);
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, undefined, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, NOT_A_NOTE, []);
 
     // A tag from the own list spans every account again.
     useEmailStore.getState().selectKeyword(label);
@@ -175,8 +177,8 @@ describe('tag view across the own and group accounts (#1038)', () => {
     await useEmailStore.getState().loadMoreEmails(client);
 
     // Each account continues after its own rows, not at the merged length.
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 2, 2, keyword, true, undefined, []);
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 2, 1, keyword, true, undefined, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 2, 2, keyword, true, NOT_A_NOTE, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 2, 1, keyword, true, NOT_A_NOTE, []);
     expect(useEmailStore.getState().hasMoreEmails).toBe(false);
   });
 
@@ -190,8 +192,8 @@ describe('tag view across the own and group accounts (#1038)', () => {
       '@type': 'StateChange', changed: { group: { Email: '2' } },
     }, client);
 
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true, undefined, []);
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, undefined, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true, NOT_A_NOTE, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, NOT_A_NOTE, []);
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['own-1', 'grp-1', 'own-2', 'own-3']);
   });
 

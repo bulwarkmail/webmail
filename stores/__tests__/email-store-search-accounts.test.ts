@@ -19,6 +19,10 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 // views (#1038), and the hits carry their source stamps so opening and
 // acting on them routes to the owning account.
 
+// Every folder-less query leaves the team notes out, in every scope.
+const NOT_A_NOTE = { notKeyword: '$bulwark-note' };
+const textNotANote = (text: string) => ({ operator: 'AND', conditions: [{ text }, NOT_A_NOTE] });
+
 const ownInbox = { id: 'inbox', name: 'Inbox', role: 'inbox', isShared: false } as Mailbox;
 const ownSent = { id: 'sent', name: 'Sent', role: 'sent', isShared: false } as Mailbox;
 const groupInbox = {
@@ -108,10 +112,11 @@ describe('"All folders" search across the own and group accounts (#1082)', () =>
     expect(state.emails.map(e => e.id)).toEqual(['grp-1', 'grp-2']);
     expect(state.totalEmails).toBe(2);
     expect(state.hasMoreEmails).toBe(false);
-    // One folder-less query per account.
-    expect(client.searchEmails).toHaveBeenCalledTimes(2);
-    expect(client.searchEmails).toHaveBeenCalledWith('acesso', undefined, undefined, 50, 0, { deferSnippets: true });
-    expect(client.searchEmails).toHaveBeenCalledWith('acesso', undefined, 'group', 50, 0, { deferSnippets: true });
+    // One folder-less query per account, leaving the team notes out.
+    expect(client.searchEmails).not.toHaveBeenCalled();
+    expect(client.advancedSearchEmails).toHaveBeenCalledTimes(2);
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(textNotANote('acesso'), undefined, 50, 0, { deferSnippets: true });
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(textNotANote('acesso'), 'group', 50, 0, { deferSnippets: true });
   });
 
   it('merges own and group hits newest first and stamps each with its source', async () => {
@@ -139,7 +144,7 @@ describe('"All folders" search across the own and group accounts (#1082)', () =>
     for (const [filter] of calls) {
       expect(filter).toEqual({
         operator: 'AND',
-        conditions: [{ text: 'acesso' }, { from: 'sender@example.com' }],
+        conditions: [{ text: 'acesso' }, { from: 'sender@example.com' }, NOT_A_NOTE],
       });
     }
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['grp-1', 'grp-2']);
@@ -158,7 +163,7 @@ describe('"All folders" search across the own and group accounts (#1082)', () =>
     for (const [filter] of calls) {
       expect(filter).toEqual({
         operator: 'AND',
-        conditions: [{ text: '"acesso negado"' }, { text: '2026' }, { from: 'sender@example.com' }],
+        conditions: [{ text: '"acesso negado"' }, { text: '2026' }, { from: 'sender@example.com' }, NOT_A_NOTE],
       });
     }
   });
@@ -177,8 +182,9 @@ describe('"All folders" search across the own and group accounts (#1082)', () =>
 
     await useEmailStore.getState().searchEmails(client, 'fatura');
 
-    expect(client.searchEmails).toHaveBeenCalledTimes(1);
-    expect(client.searchEmails).toHaveBeenCalledWith('fatura', undefined, undefined, 50, 0, { deferSnippets: true });
+    expect(client.searchEmails).not.toHaveBeenCalled();
+    expect(client.advancedSearchEmails).toHaveBeenCalledTimes(1);
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(textNotANote('fatura'), undefined, 50, 0, { deferSnippets: true });
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['own-1', 'own-2']);
   });
 
@@ -191,8 +197,8 @@ describe('"All folders" search across the own and group accounts (#1082)', () =>
     await useEmailStore.getState().loadMoreEmails(client);
 
     // Each account continues after its own rows, not at the merged length.
-    expect(client.searchEmails).toHaveBeenCalledWith('a', undefined, undefined, 1, 1);
-    expect(client.searchEmails).toHaveBeenCalledWith('a', undefined, 'group', 1, 1);
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(textNotANote('a'), undefined, 1, 1);
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(textNotANote('a'), 'group', 1, 1);
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['own-1', 'grp-1', 'own-2', 'grp-2']);
     expect(useEmailStore.getState().hasMoreEmails).toBe(false);
   });
@@ -268,8 +274,8 @@ describe('Spam and Trash in the folder-less search scopes', () => {
 
     expect(client.searchEmails).not.toHaveBeenCalled();
     expect(client.advancedSearchEmails.mock.calls.map(([filter, accountId]) => [accountId, filter])).toEqual([
-      [undefined, { operator: 'AND', conditions: [{ text: 'acesso' }, { inMailboxOtherThan: ['trash', 'junk'] }] }],
-      ['group', { operator: 'AND', conditions: [{ text: 'acesso' }, { inMailboxOtherThan: ['trash'] }] }],
+      [undefined, { operator: 'AND', conditions: [{ text: 'acesso' }, NOT_A_NOTE, { inMailboxOtherThan: ['trash', 'junk'] }] }],
+      ['group', { operator: 'AND', conditions: [{ text: 'acesso' }, NOT_A_NOTE, { inMailboxOtherThan: ['trash'] }] }],
     ]);
     expect(useEmailStore.getState().emails.map(e => e.id)).toEqual(['grp-1', 'grp-2']);
   });
@@ -298,11 +304,12 @@ describe('Spam and Trash in the folder-less search scopes', () => {
 
     await useEmailStore.getState().searchEmails(client, 'acesso');
 
-    expect(client.advancedSearchEmails).not.toHaveBeenCalled();
-    expect(client.searchEmails).toHaveBeenCalledWith('acesso', undefined, undefined, 50, 0, { deferSnippets: true });
-    expect(client.searchEmails).toHaveBeenCalledWith('acesso', undefined, 'group', 50, 0, { deferSnippets: true });
+    // Only the team notes are left out.
+    expect(client.searchEmails).not.toHaveBeenCalled();
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(textNotANote('acesso'), undefined, 50, 0, { deferSnippets: true });
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(textNotANote('acesso'), 'group', 50, 0, { deferSnippets: true });
 
-    client.searchEmails.mockClear();
+    client.advancedSearchEmails.mockClear();
     useEmailStore.setState({ searchFilters: { ...DEFAULT_SEARCH_FILTERS, from: 'sender@example.com' } });
     await useEmailStore.getState().advancedSearch(client);
     expect(exclusionsSent()).toEqual([[undefined, undefined], ['group', undefined]]);

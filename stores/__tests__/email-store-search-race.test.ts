@@ -49,11 +49,12 @@ describe('quick search staleness', () => {
 
     client = {
       // Hand back a promise per call that the test settles by hand, so the
-      // responses can be made to arrive out of order.
-      searchEmails: vi.fn().mockImplementation(
+      // responses can be made to arrive out of order. Quick search goes through
+      // the filtered search, which leaves the team notes out.
+      searchEmails: vi.fn().mockResolvedValue({ emails: [], hasMore: false, total: 0 }),
+      advancedSearchEmails: vi.fn().mockImplementation(
         () => new Promise((resolve, reject) => { pending.push({ resolve, reject }); })
       ),
-      advancedSearchEmails: vi.fn().mockResolvedValue({ emails: [], hasMore: false, total: 0 }),
       getSomeEmails: vi.fn().mockResolvedValue([]),
       getAccountId: () => 'me',
     } as unknown as IJMAPClient;
@@ -87,7 +88,7 @@ describe('quick search staleness', () => {
     // Keystroke 2 goes out before the first came back.
     const second = useEmailStore.getState().searchEmails(client, 'qeti@smartchoice.ge');
 
-    expect(client.searchEmails).toHaveBeenCalledTimes(2);
+    expect(client.advancedSearchEmails).toHaveBeenCalledTimes(2);
 
     // The newer query legitimately matches nothing.
     pending[1].resolve({ emails: [], hasMore: false, total: 0 });

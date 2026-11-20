@@ -118,8 +118,10 @@ describe('label views during refresh and navigation', () => {
     useEmailStore.setState({ selectedMailbox: sharedInbox.id, mailboxes: [inbox, sharedInbox] });
     const client = clientFor([email('voice')]);
     await useEmailStore.getState().refreshCurrentMailbox(client);
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 2, 0, keyword, true, undefined, []);
-    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'owner', 2, 0, keyword, true, undefined, []);
+    // Without the team notes, which never show under a tag.
+    const notANote = { notKeyword: '$bulwark-note' };
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, undefined, 2, 0, keyword, true, notANote, []);
+    expect(client.getEmails).toHaveBeenCalledWith(undefined, 'owner', 2, 0, keyword, true, notANote, []);
   });
 
   it('uses the tag list order instead of the previous inbox order', async () => {
