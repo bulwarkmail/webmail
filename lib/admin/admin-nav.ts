@@ -24,6 +24,7 @@ export const ADMIN_PAGE_IDS = [
   'org-sharing',
   'org-labels',
   'org-proofreading',
+  'org-team-mailboxes',
   'org-calendars',
   'org-notices',
   'org-devices',
@@ -211,6 +212,16 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     keywords: 'proofreading spelling grammar spell check languagetool writing language mandatory required',
     sections: [
       { id: 'proofreading', title: 'Proofreading', keywords: 'checker plugin required lock language force' },
+    ],
+  },
+  {
+    id: 'org-team-mailboxes',
+    label: 'Team mailboxes',
+    description: 'Notes and assignment in mailboxes a group shares',
+    group: 'organisation',
+    keywords: 'team mailbox group shared info support notes note assign assignment done mention collaborate',
+    sections: [
+      { id: 'team-mailboxes', title: 'Team mailboxes', keywords: 'notes assignment group shared mailbox' },
     ],
   },
   {

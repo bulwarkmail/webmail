@@ -26,6 +26,7 @@ import {
   SwatchBook,
   Tag,
   SpellCheck,
+  Users,
   type AppIcon,
 } from '@/components/icons';
 import type { AdminPageDef, AdminPageId } from '@/lib/admin/admin-nav';
@@ -43,6 +44,7 @@ export const ADMIN_PAGE_ICONS: Record<AdminPageId, AppIcon> = {
   'org-sharing': Share2,
   'org-labels': Tag,
   'org-proofreading': SpellCheck,
+  'org-team-mailboxes': Users,
   'org-calendars': CalendarDays,
   'org-notices': Bell,
   'org-devices': Smartphone,
