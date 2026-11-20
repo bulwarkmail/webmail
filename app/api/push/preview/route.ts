@@ -66,23 +66,39 @@ function isNote(raw: RawEmail): boolean {
  * `note` mentions anyone: an `assigned` entry names its assignee in the same
  * header, and that is no mention.
  */
-function mentionIn(raw: RawEmail, principalId: string, redacted: boolean): NoteMention | null {
+function mentionIn(raw: RawEmail, principalId: string, redacted: boolean, own: readonly string[]): NoteMention | null {
   if (textValue(raw[H.kind])?.toLowerCase() !== 'note') return null;
   if (!parseMentions(raw[H.mentions]).includes(principalId)) return null;
   const noteId = textValue(raw.id);
   const forKey = stripAngles(textValue(raw[H.for]) ?? '');
   if (!noteId || !forKey) return null;
+  const sender = Array.isArray(raw.from) ? (raw.from[0] as { name?: unknown; email?: unknown } | undefined) : undefined;
+  // Mentioning yourself tells nobody. Without the sender read (the policy), the server checks it.
+  if (own.includes(textValue(sender?.email)?.toLowerCase() ?? '')) return null;
   const mention: NoteMention = { noteId, forKey };
   const threadId = textValue(raw[H.thread]);
   if (threadId) mention.threadId = threadId;
   if (!redacted) {
-    const sender = Array.isArray(raw.from) ? (raw.from[0] as { name?: unknown; email?: unknown } | undefined) : undefined;
     const from = textValue(sender?.name) ?? textValue(sender?.email);
     if (from) mention.from = from;
     const subject = typeof raw.subject === 'string' ? raw.subject.replace(/^\s*Note:\s?/, '').trim() : '';
     if (subject) mention.subject = subject;
   }
   return mention;
+}
+
+/**
+ * The addresses a note by this login is written from: the login's own
+ * (lib/team-mailboxes/note-format.ts writes From as the login address).
+ * Only real addresses, since a `from` filter matches words too.
+ */
+function ownAddresses(target: { username: string; accountName?: string }): string[] {
+  return [...new Set([target.username, target.accountName].map((a) => (a ?? '').trim().toLowerCase()).filter((a) => a.includes('@')))];
+}
+
+/** "Not written by this login", as a server-side condition: nothing about the sender is read. */
+function notFrom(own: readonly string[]): Record<string, unknown>[] {
+  return own.length > 0 ? [{ operator: 'NOT', conditions: own.map((address) => ({ from: address })) }] : [];
 }
 
 /** A message that isn't a note goes back as before, without what was read to tell. */
@@ -99,12 +115,15 @@ function withoutNoteProperties<T extends object>(email: T): T {
  * which of them came last. Times are the server's, so a push that arrives
  * late still compares the same.
  */
-function noteLookups(accountId: string, principalId: string, inboxId: string | undefined, redacted: boolean, now: number): unknown[] {
+function noteLookups(accountId: string, principalId: string, own: readonly string[], inboxId: string | undefined, redacted: boolean, now: number): unknown[] {
   const since = (ms: number) => new Date(now - ms).toISOString();
   const calls: unknown[] = [
     ['Email/query', {
       accountId,
-      filter: { operator: 'AND', conditions: [{ hasKeyword: NOTE_KEYWORD }, { hasKeyword: mentionKeyword(principalId) }, { after: since(MENTION_LOOKBACK_MS) }] },
+      filter: {
+        operator: 'AND',
+        conditions: [{ hasKeyword: NOTE_KEYWORD }, { hasKeyword: mentionKeyword(principalId) }, { after: since(MENTION_LOOKBACK_MS) }, ...notFrom(own)],
+      },
       sort: [{ property: 'receivedAt', isAscending: false }],
       limit: 1,
     }, 'mq'],
@@ -434,6 +453,8 @@ export async function GET(request: NextRequest) {
     // account is searched for a fresh note that mentions this login.
     const principalId = target.principalId.toLowerCase();
     const lookForNotes = !requestedEmailId && accountId.toLowerCase() !== principalId;
+    // A note this login wrote never tells it of itself.
+    const own = ownAddresses(target);
 
     if (!inboxId && !requestedEmailId && !lookForNotes) {
       return NextResponse.json({
@@ -491,7 +512,7 @@ export async function GET(request: NextRequest) {
       ]);
     }
     // Not part of the mail answer: when these fail, the push is told about as before.
-    const noteCalls: unknown[] = lookForNotes ? noteLookups(accountId, principalId, inboxId, redacted, Date.now()) : [];
+    const noteCalls: unknown[] = lookForNotes ? noteLookups(accountId, principalId, own, inboxId, redacted, Date.now()) : [];
     const requestBody = {
       using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
       methodCalls: [...methodCalls, ...noteCalls],
@@ -560,20 +581,33 @@ export async function GET(request: NextRequest) {
     const headers = { 'Cache-Control': 'no-store' };
     const login = async () => (target.slot !== undefined ? { login: await loginFingerprint(target.serverUrl, target.username) } : {});
     const withSlot = target.slot !== undefined ? { slot: target.slot } : {};
-    const findMessage = (mention: NoteMention) => messageOfNote(mention, accountId, async (calls) => {
+    const jmap = async (calls: unknown[]): Promise<MethodResponse[]> => {
       const res = await fetchJmapServer(apiUrl, {
         method: 'POST',
         headers: { Authorization: authHeader, 'Content-Type': 'application/json', ...forwarded },
         body: JSON.stringify({ using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'], methodCalls: calls }),
       }, trusted);
       if (!res.ok) return [];
-      return ((await readJsonCapped(res, UPSTREAM_JSON_MAX_BYTES)) as { methodResponses?: [string, Record<string, unknown>, string][] }).methodResponses ?? [];
-    });
+      return ((await readJsonCapped(res, UPSTREAM_JSON_MAX_BYTES)) as { methodResponses?: MethodResponse[] }).methodResponses ?? [];
+    };
+    const findMessage = (mention: NoteMention) => messageOfNote(mention, accountId, jmap);
 
     // A team note that arrived: only the members it mentions hear of it, and
     // nobody hears of it as mail.
     if (delivered && isNote(delivered)) {
-      const mentioned = mentionIn(delivered, principalId, redacted);
+      let mentioned = mentionIn(delivered, principalId, redacted, own);
+      // The sender wasn't read (the policy): ask the server whether this login
+      // wrote it. Each note is a thread of its own (no In-Reply-To or References).
+      if (mentioned && redacted && own.length > 0 && delivered.threadId) {
+        const answer = await jmap([['Email/query', {
+          accountId,
+          filter: { operator: 'AND', conditions: [{ inThread: delivered.threadId }, { hasKeyword: NOTE_KEYWORD }, ...notFrom(own)] },
+          limit: 1,
+        }, 'own']]).catch(() => []);
+        const ids = answer.find(([name, , id]) => name === 'Email/query' && id === 'own')?.[1]?.ids;
+        // Can't tell: told, as a mention is worth more than a stray one.
+        if (Array.isArray(ids) && !ids.includes(delivered.id)) mentioned = null;
+      }
       if (!mentioned) return NextResponse.json({ skip: true }, { headers });
       // `skip` too: whatever else the worker makes of it, this is no mail.
       return NextResponse.json({
@@ -593,7 +627,7 @@ export async function GET(request: NextRequest) {
     if (lookForNotes) {
       const mentionList = resultOf('Email/get', 'mg')?.list;
       const found = Array.isArray(mentionList) ? (mentionList[0] as Record<string, unknown> | undefined) : undefined;
-      const candidate = found && isNote(found) ? mentionIn(found, principalId, redacted) : null;
+      const candidate = found && isNote(found) ? mentionIn(found, principalId, redacted, own) : null;
       if (candidate) mention = await findMessage(candidate);
       // A note newer than anything in the Inbox: nothing came there since.
       // Either lookup failing leaves the answer as it was (the mail).

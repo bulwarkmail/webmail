@@ -22,9 +22,11 @@ vi.mock('@/lib/logger', () => ({
 
 vi.mock('@/lib/account-utils', () => ({ MAX_ACCOUNT_SLOTS: 2 }));
 
+// The login's user name; left out unless a test needs it.
+const loginName = vi.hoisted(() => ({ current: undefined as string | undefined }));
 vi.mock('@/lib/stalwart/auth-context', () => {
   const read = (_store: unknown, slot: number) =>
-    slot === 0 ? { serverUrl: 'https://mail.example.com/', authHeader: 'Bearer tok' } : null;
+    slot === 0 ? { serverUrl: 'https://mail.example.com/', authHeader: 'Bearer tok', username: loginName.current } : null;
   return { readStalwartAuthContextFromStore: read, readCurrentStalwartAuthContext: async (store: unknown, slot: number) => read(store, slot) };
 });
 
@@ -281,7 +283,14 @@ let sent: Call[][] = [];
 
 function matches(email: Stored, filter: Record<string, unknown>): boolean {
   if (filter.operator === 'AND') return (filter.conditions as Record<string, unknown>[]).every((c) => matches(email, c));
+  if (filter.operator === 'NOT') return !(filter.conditions as Record<string, unknown>[]).some((c) => matches(email, c));
   if ('inMailbox' in filter) return email.mailboxIds[filter.inMailbox as string] === true;
+  if ('inThread' in filter) return email.threadId === filter.inThread;
+  if ('from' in filter) {
+    const wanted = String(filter.from).toLowerCase();
+    return ((email.from as { name?: string; email?: string }[] | undefined) ?? [])
+      .some((a) => `${a.name ?? ''} ${a.email ?? ''}`.toLowerCase().includes(wanted));
+  }
   if ('hasKeyword' in filter) return email.keywords[filter.hasKeyword as string] === true;
   if ('notKeyword' in filter) return email.keywords[filter.notKeyword as string] !== true;
   if ('after' in filter) return Date.parse(email.receivedAt) > Date.parse(filter.after as string);
@@ -371,6 +380,7 @@ describe('push preview for team notes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     devicePolicy.current = null;
+    loginName.current = undefined;
     // The message the notes are about, a later reply in its conversation, and an old unread mail.
     store = [
       mail('offer', { messageId: 'offer@client.example', threadId: 'T1', seen: true }),
@@ -471,6 +481,36 @@ describe('push preview for team notes', () => {
       expect(body.mention).toEqual({ noteId: 'n1', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer' });
       expect(JSON.stringify(body)).not.toMatch(/Mabel|Mulberry|signed copy/);
       for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
+    });
+  });
+
+  describe('a note the user wrote, mentioning themselves', () => {
+    const own = (id: string, opts: { age?: number } = {}) => ({ ...note(id, opts), from: [{ name: 'Me', email: 'Me@Example.com' }] });
+    const redact = () => { devicePolicy.current = { ...DEFAULT_POLICY, organisation: { devices: { pushWithoutContent: true } } }; };
+
+    beforeEach(() => { loginName.current = 'me@example.com'; });
+
+    it('tells them nothing when the push names it', async () => {
+      store.push(own('n1'));
+      expect((await callRoute('g', 'n1')).body).toEqual({ skip: true });
+    });
+
+    it('tells them nothing under "Push without sender and subject", where the sender is not read', async () => {
+      redact();
+      store.push(own('n1'));
+      expect((await callRoute('g', 'n1')).body).toEqual({ skip: true });
+      for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
+    });
+
+    it('still tells of a mention by someone else under that policy', async () => {
+      redact();
+      store.push(note('n1'));
+      expect((await callRoute('g', 'n1')).body).toMatchObject({ skip: true, mention: { noteId: 'n1' } });
+    });
+
+    it('passes over it in a state change, for an older mention by someone else', async () => {
+      store.push(note('n0', { age: 20 * 60_000 }), own('n1', { age: 60_000 }));
+      expect((await callRoute('g')).body).toMatchObject({ skip: true, mention: { noteId: 'n0' } });
     });
   });
 
