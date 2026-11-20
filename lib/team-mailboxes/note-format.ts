@@ -43,6 +43,9 @@ const H_THREAD = 'header:X-Bulwark-Note-Thread:asText';
 const H_KIND = 'header:X-Bulwark-Note-Kind:asText';
 const H_MENTIONS = 'header:X-Bulwark-Note-Mentions:asText';
 
+/** The note headers as Email/get properties (the push preview reads them without the rest). */
+export const NOTE_HEADER_PROPERTIES = { for: H_FOR, thread: H_THREAD, kind: H_KIND, mentions: H_MENTIONS } as const;
+
 /** What the index reads of a note: no body, no preview (megabytes for a big team). */
 export const NOTE_INDEX_PROPERTIES = [
   'id', 'receivedAt', 'from', 'keywords', 'mailboxIds', 'messageId', 'subject', H_FOR, H_THREAD, H_KIND, H_MENTIONS,

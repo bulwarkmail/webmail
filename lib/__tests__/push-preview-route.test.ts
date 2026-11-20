@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { endlessResponse } from './helpers/endless-body';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
+import { DEFAULT_POLICY } from '@/lib/admin/types';
 
 vi.mock('next/server', () => ({
   NextResponse: {
@@ -41,10 +42,12 @@ vi.mock('@/lib/security/url-guard', () => ({
   DisallowedUrlError: class DisallowedUrlError extends Error {},
 }));
 
-// The route reads the device policy (Organisation > Devices); none is set here.
+// The route reads the device policy (Organisation > Devices); none is set
+// here, except where a test says so.
+const devicePolicy = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }));
 vi.mock('@/lib/admin/config-manager', async () => {
   const { DEFAULT_POLICY } = await import('@/lib/admin/types');
-  return { configManager: { ensureLoaded: async () => {}, getPolicy: () => DEFAULT_POLICY } };
+  return { configManager: { ensureLoaded: async () => {}, getPolicy: () => devicePolicy.current ?? DEFAULT_POLICY } };
 });
 
 function jsonResponse(data: unknown) {
@@ -257,4 +260,231 @@ it('answers 502 instead of buffering a mailbox answer that never ends', async ()
 
   expect((await callRoute('a')).status).toBe(502);
   expect(endless.pulled()).toBeLessThan(10);
+});
+
+
+// ── Team notes ───────────────────────────────────────────────────────────
+// A note in a group account wakes every member's push (Stalwart 0.16 sends a
+// plain state change for it). Only the members it mentions hear of it; for
+// everyone else it is nothing, and never mail.
+
+type Stored = Record<string, unknown> & {
+  id: string; accountId: string; receivedAt: string;
+  mailboxIds: Record<string, boolean>; keywords: Record<string, boolean>;
+};
+type Call = [string, Record<string, unknown>, string];
+
+const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
+let store: Stored[] = [];
+let threads: Record<string, string[]> = {};
+let sent: Call[][] = [];
+
+function matches(email: Stored, filter: Record<string, unknown>): boolean {
+  if (filter.operator === 'AND') return (filter.conditions as Record<string, unknown>[]).every((c) => matches(email, c));
+  if ('inMailbox' in filter) return email.mailboxIds[filter.inMailbox as string] === true;
+  if ('hasKeyword' in filter) return email.keywords[filter.hasKeyword as string] === true;
+  if ('notKeyword' in filter) return email.keywords[filter.notKeyword as string] !== true;
+  if ('after' in filter) return Date.parse(email.receivedAt) > Date.parse(filter.after as string);
+  throw new Error(`Filter not known to the fake: ${JSON.stringify(filter)}`);
+}
+
+function mockTeamServer() {
+  sent = [];
+  fetchJmapServer.mockImplementation(async (url: string, init?: { body?: string }) => {
+    if (url.endsWith('/.well-known/jmap')) return jsonResponse(SESSION);
+    const calls = (JSON.parse(init?.body ?? '{}') as { methodCalls: Call[] }).methodCalls;
+    sent.push(calls);
+    const results = new Map<string, Record<string, unknown>>();
+    const refIds = (ref: { resultOf: string; path: string }): string[] => {
+      const result = results.get(ref.resultOf);
+      if (ref.path === '/ids') return (result?.ids as string[]) ?? [];
+      if (ref.path === '/list/*/emailIds') return ((result?.list as { emailIds: string[] }[]) ?? []).flatMap((t) => t.emailIds);
+      throw new Error(`Path not known to the fake: ${ref.path}`);
+    };
+    const methodResponses = calls.map(([name, args, id]) => {
+      let result: Record<string, unknown>;
+      if (name === 'Mailbox/query') {
+        result = { ids: ['inbox'] };
+      } else if (name === 'Email/query') {
+        const found = store
+          .filter((e) => e.accountId === args.accountId && matches(e, args.filter as Record<string, unknown>))
+          .sort((x, y) => Date.parse(y.receivedAt) - Date.parse(x.receivedAt));
+        result = { ids: found.slice(0, (args.limit as number) ?? 100).map((e) => e.id), ...(args.calculateTotal ? { total: found.length } : {}) };
+      } else if (name === 'Email/get') {
+        const ids = (args.ids as string[]) ?? refIds(args['#ids'] as { resultOf: string; path: string });
+        const properties = args.properties as string[];
+        result = {
+          list: ids
+            .map((wanted) => store.find((e) => e.id === wanted && e.accountId === args.accountId))
+            .filter((e): e is Stored => !!e)
+            .map((e) => Object.fromEntries(properties.filter((p) => p in e).map((p) => [p, e[p]]))),
+        };
+      } else if (name === 'Thread/get') {
+        result = { list: (args.ids as string[]).filter((t) => threads[t]).map((t) => ({ id: t, emailIds: threads[t] })) };
+      } else {
+        throw new Error(`Method not known to the fake: ${name}`);
+      }
+      results.set(id, result);
+      return [name, result, id];
+    });
+    return jsonResponse({ methodResponses });
+  });
+}
+
+function note(id: string, opts: { kind?: string; mentions?: string[]; age?: number } = {}): Stored {
+  const mentions = opts.mentions ?? ['a'];
+  const kind = opts.kind ?? 'note';
+  const keywords: Record<string, boolean> = { $seen: true, '$bulwark-note': true };
+  for (const m of mentions) keywords[`$bulwark-mention-${m}`] = true;
+  return {
+    id, accountId: 'g', threadId: `own-${id}`, receivedAt: ago(opts.age ?? 20_000),
+    mailboxIds: { notes: true }, keywords,
+    from: [{ name: 'Mabel', email: 'mabel@example.com' }],
+    subject: 'Note: Offer for the Mulberry project',
+    preview: 'Waiting for the signed copy',
+    messageId: [`${id}@notes.bulwark.invalid`],
+    'header:X-Bulwark-Note-For:asText': ' <offer@client.example>',
+    'header:X-Bulwark-Note-Thread:asText': 'T1',
+    'header:X-Bulwark-Note-Kind:asText': kind,
+    'header:X-Bulwark-Note-Mentions:asText': mentions.join(', '),
+  };
+}
+
+function mail(id: string, opts: { account?: string; age?: number; seen?: boolean; messageId?: string; threadId?: string } = {}): Stored {
+  return {
+    id, accountId: opts.account ?? 'g', threadId: opts.threadId ?? `t-${id}`, receivedAt: ago(opts.age ?? 2 * 86_400_000),
+    mailboxIds: { inbox: true }, keywords: opts.seen ? { $seen: true } : {},
+    from: [{ name: 'Client', email: 'client@example.com' }], subject: `Mail ${id}`, preview: `Text of ${id}`,
+    messageId: [opts.messageId ?? `${id}@client.example`],
+  };
+}
+
+const MENTION = {
+  noteId: 'n1', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer',
+  from: 'Mabel', subject: 'Offer for the Mulberry project',
+};
+
+const emailGets = () => sent.flat().filter(([name]) => name === 'Email/get').map(([, args]) => args.properties as string[]);
+const contentProperties = (properties: string[]) => properties.filter((p) => ['from', 'subject', 'preview'].includes(p));
+
+describe('push preview for team notes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    devicePolicy.current = null;
+    // The message the notes are about, a later reply in its conversation, and an old unread mail.
+    store = [
+      mail('offer', { messageId: 'offer@client.example', threadId: 'T1', seen: true }),
+      mail('reply', { threadId: 'T1', seen: true, age: 86_400_000 }),
+      mail('old-unread'),
+    ];
+    threads = { T1: ['offer', 'reply'] };
+    mockTeamServer();
+  });
+
+  describe('a push that names the note', () => {
+    it('tells the member it mentions, and opens the message it is about', async () => {
+      store.push(note('n1', { mentions: ['a', 'b'] }));
+      expect(await callRoute('g', 'n1')).toEqual({ status: 200, body: { mention: MENTION, slot: 0, login: expect.any(String) } });
+    });
+
+    it("opens the conversation's newest message when none has the Message-ID", async () => {
+      store = store.filter((e) => e.id !== 'offer');
+      threads = { T1: ['reply'] };
+      store.push(note('n1'));
+      expect((await callRoute('g', 'n1')).body.mention).toMatchObject({ noteId: 'n1', emailId: 'reply' });
+    });
+
+    it("is nothing for a member it doesn't mention", async () => {
+      store.push(note('n1', { mentions: ['b'] }));
+      expect(await callRoute('g', 'n1')).toEqual({ status: 200, body: { skip: true } });
+    });
+
+    it('takes the exact id: "ab" is not "a"', async () => {
+      store.push(note('n1', { mentions: ['ab', 'ba'] }));
+      expect((await callRoute('g', 'n1')).body).toEqual({ skip: true });
+    });
+
+    it('is nothing for a timeline entry, even one that names the user', async () => {
+      store.push(note('n1', { kind: 'assigned', mentions: ['a'] }));
+      expect((await callRoute('g', 'n1')).body).toEqual({ skip: true });
+    });
+
+    it('leaves out sender and subject under "Push without sender and subject"', async () => {
+      devicePolicy.current = { ...DEFAULT_POLICY, organisation: { devices: { pushWithoutContent: true } } };
+      store.push(note('n1'));
+      const { body } = await callRoute('g', 'n1');
+      const { from: _from, subject: _subject, ...withoutContent } = MENTION;
+      expect(body).toEqual({ mention: withoutContent, redacted: true, slot: 0, login: expect.any(String) });
+      expect(JSON.stringify(body)).not.toMatch(/Mabel|Mulberry|signed copy/);
+      for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
+    });
+  });
+
+  describe('a state change (no message named)', () => {
+    it('answers the newest fresh note that mentions the user, then the mail as before', async () => {
+      store.push(note('n0', { age: 5 * 60_000 }), note('n1', { age: 3 * 60_000 }), note('other', { mentions: ['b'], age: 2 * 60_000 }));
+      const { body } = await callRoute('g');
+      expect(body).toMatchObject({ mention: MENTION, email: { id: 'old-unread' }, unreadTotal: 1, slot: 0 });
+    });
+
+    it('answers skip instead of an old unread mail when a note just woke it', async () => {
+      store.push(note('n1', { mentions: ['b'] }));
+      expect(await callRoute('g')).toEqual({ status: 200, body: { skip: true, slot: 0 } });
+    });
+
+    it('answers skip with the mention when the note that woke it mentions the user', async () => {
+      store.push(note('n1'));
+      expect((await callRoute('g')).body).toEqual({ skip: true, mention: MENTION, slot: 0, login: expect.any(String) });
+    });
+
+    it('still tells of mail that came with the note', async () => {
+      store.push(note('n1', { mentions: ['b'] }), mail('new', { age: 10_000 }));
+      const { body } = await callRoute('g');
+      expect(body).toMatchObject({ email: { id: 'new' }, unreadTotal: 2 });
+      expect(body.skip).toBeUndefined();
+    });
+
+    it('never mentions anyone for a timeline entry', async () => {
+      store.push(note('n1', { kind: 'assigned', mentions: ['a'], age: 3 * 60_000 }));
+      const { body } = await callRoute('g');
+      expect(body.mention).toBeUndefined();
+      expect(body.email).toMatchObject({ id: 'old-unread' });
+    });
+
+    it("doesn't go back further than ten minutes", async () => {
+      store.push(note('n1', { age: 11 * 60_000 }));
+      const { body } = await callRoute('g');
+      expect(body.mention).toBeUndefined();
+      expect(body.email).toMatchObject({ id: 'old-unread' });
+    });
+
+    it('leaves out sender and subject under "Push without sender and subject"', async () => {
+      devicePolicy.current = { ...DEFAULT_POLICY, organisation: { devices: { pushWithoutContent: true } } };
+      store.push(note('n1'));
+      const { body } = await callRoute('g');
+      expect(body.mention).toEqual({ noteId: 'n1', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer' });
+      expect(JSON.stringify(body)).not.toMatch(/Mabel|Mulberry|signed copy/);
+      for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
+    });
+  });
+
+  describe('mail', () => {
+    it('answers a named message as before, without what told it from a note', async () => {
+      store.push(mail('new', { age: 10_000 }));
+      const { body } = await callRoute('g', 'new');
+      expect(body).toEqual({
+        email: { id: 'new', threadId: 't-new', from: [{ name: 'Client', email: 'client@example.com' }], subject: 'Mail new', preview: 'Text of new', receivedAt: expect.any(String) },
+        unreadTotal: 2, inboxUnread: 2, slot: 0, login: expect.any(String),
+      });
+    });
+
+    it("looks for no notes in the user's own account, and never offers one from the Inbox", async () => {
+      store.push(mail('mine', { account: 'a', age: 10_000 }));
+      const { body } = await callRoute('a');
+      expect(body).toMatchObject({ email: { id: 'mine' }, unreadTotal: 1 });
+      expect(body.mention).toBeUndefined();
+      const queries = sent.flat().filter(([name]) => name === 'Email/query').map(([, args]) => args.filter);
+      expect(queries).toEqual([{ operator: 'AND', conditions: [{ inMailbox: 'inbox' }, { notKeyword: '$seen' }, { notKeyword: '$bulwark-note' }] }]);
+    });
+  });
 });
