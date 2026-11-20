@@ -2005,7 +2005,10 @@ function LoginPageContent() {
                       ref={inputRef}
                       id="username"
                       type="text"
+                      // Addresses read left to right; in RTL the text stays at the
+                      // side the label starts.
                       dir="ltr"
+                      className="rtl:text-right"
                       value={formData.username}
                       onChange={handleUsernameChange}
                       onFocus={handleUsernameFocus}
@@ -2122,7 +2125,7 @@ function LoginPageContent() {
                       dir="ltr"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pe-10 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
+                      className="pe-10 rtl:pe-3 rtl:ps-10 rtl:text-right aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
                       placeholder={t("password_placeholder")}
                       required={!liteSsoRequired && !signInWithToken}
                       autoComplete="current-password"
@@ -2192,9 +2195,10 @@ function LoginPageContent() {
                       ref={tokenInputRef}
                       id="access-token"
                       type="password"
+                      dir="ltr"
                       value={accessToken}
                       onChange={(e) => setAccessToken(e.target.value)}
-                      className="font-mono"
+                      className="font-mono rtl:text-right"
                       placeholder={t("token_placeholder")}
                       required
                       autoComplete="off"
