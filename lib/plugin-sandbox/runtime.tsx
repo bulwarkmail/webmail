@@ -842,6 +842,8 @@ function buildCoreApi(manifest: PluginManifest) {
       /** Shows one of this plugin's OWN slots ('plugin-notice' unless `slot`
        *  names another) as a notice in the toasts' stack at the bottom end
        *  corner: no backdrop, never takes the focus, the page stays usable.
+       *  Don't focus a field in it by script: in its first 2 s the host
+       *  gives the focus back to where the user had it.
        *  The host draws a line with the plugin's name and a close button
        *  over it; `title` is read out, not shown. `height` fixes the frame's
        *  height in px (40-400) and the plugin's root fills it; without it the

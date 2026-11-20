@@ -10,7 +10,7 @@ vi.mock('@/lib/plugin-sandbox/host-theme', () => ({ snapshotHostTheme: () => ({}
 const announce = vi.fn();
 vi.mock('@/lib/announce', () => ({ announce: (...args: unknown[]) => announce(...args) }));
 
-const { PluginNoticeHost, noticeFrameLimit } = await import('../plugin-notice-host');
+const { PluginNoticeHost, noticeFrameLimit, NOTICE_FOCUS_GUARD_MS } = await import('../plugin-notice-host');
 const { ToastContainer } = await import('@/components/ui/toast');
 const { useToastStore } = await import('@/stores/toast-store');
 const registry = await import('@/lib/plugin-sandbox/registry');
@@ -121,6 +121,49 @@ describe('api.ui.showNotice', () => {
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
     expect(document.activeElement).toBe(input);
     expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+  });
+
+  it('takes the focus back when the frame takes it as the notice comes up', async () => {
+    const p = plugin('crm', 'CRM');
+    render(<><input aria-label="Search" /><Stack /></>);
+    const input = screen.getByRole('textbox', { name: 'Search' });
+    input.focus();
+    await act(async () => { await frame().call(p, 'ui.showNotice', { title: 'Call' }); });
+    // The frame's field with autofocus, as the frame draws it.
+    const field = document.createElement('input');
+    document.querySelector('[data-plugin-notice="crm"]')!.appendChild(field);
+    act(() => { field.focus(); });
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('lets the user into the notice: by the pointer, from its close button, and once it has come up', async () => {
+    vi.useFakeTimers();
+    try {
+      const p = plugin('crm', 'CRM');
+      render(<><input aria-label="Search" /><Stack /></>);
+      const input = screen.getByRole('textbox', { name: 'Search' });
+      await act(async () => { await frame().call(p, 'ui.showNotice', { title: 'Call' }); });
+      const box = document.querySelector<HTMLElement>('[data-plugin-notice="crm"]')!;
+      const field = document.createElement('input');
+      box.appendChild(field);
+
+      input.focus();
+      fireEvent.pointerEnter(box);
+      act(() => { field.focus(); });
+      expect(document.activeElement).toBe(field);
+      fireEvent.pointerLeave(box);
+
+      act(() => { noticeCards()[0].querySelector<HTMLElement>('[data-toast-close]')!.focus(); });
+      act(() => { field.focus(); });
+      expect(document.activeElement).toBe(field);
+
+      input.focus();
+      act(() => { vi.advanceTimersByTime(NOTICE_FOCUS_GUARD_MS); });
+      act(() => { field.focus(); });
+      expect(document.activeElement).toBe(field);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('lets the notice\'s frame open a dialog, which stands above the stack', async () => {
