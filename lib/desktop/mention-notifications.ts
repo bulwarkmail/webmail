@@ -89,8 +89,9 @@ export async function notifyDesktopMention(ref: TeamRef, client: IJMAPClient, no
   if (emailId) context.emailId = emailId;
   try {
     const result = await os.notify({
-      id: `mention:${ref.accountId}/${note.id}`,
-      group: `mention:${ref.accountId}`,
+      // Ids repeat across accounts and logins; the team's key names both.
+      id: `mention:${ref.key}/${note.id}`,
+      group: `mention:${ref.key}`,
       title: hidden || !subject ? labels.mentionedHidden : labels.mentionedYou(name, subject),
       body: '',
       context: JSON.stringify(context),

@@ -75,7 +75,7 @@ describe('a mention of you in a team note', () => {
     await push(noteDelivery);
     expect(shown).toHaveLength(1);
     expect(shown[0].title).toBe('Mabel mentioned you in “Offer for the Mulberry project”');
-    expect(shown[0].options.tag).toBe('mention-g:n1');
+    expect(shown[0].options.tag).toBe('mention-bob@example.org:g:n1');
     expect(shown[0].options.body).toBe('bob@example.org');
     expect(shade.has('bulwark-mail:g')).toBe(false);
     expect(await click(shown[0])).toBe('/mail/message/offer?slot=0&owner=g&note=n1');
@@ -112,6 +112,13 @@ describe('a mention of you in a team note', () => {
     expect(visible(shown).map((n) => n.title)).toEqual(['Mabel mentioned you in “Offer for the Mulberry project”']);
   });
 
+  it('keeps two logins apart when their account and note ids are the same', async () => {
+    const { push, shade } = loadWorker(() => ({ skip: true, mention: MENTION, slot: 0 }));
+    await push(stateChange);
+    await push({ ...stateChange, accountLabel: 'bob@other.example' });
+    expect([...shade.keys()].sort()).toEqual(['mention-bob@example.org:g:n1', 'mention-bob@other.example:g:n1']);
+  });
+
   it('is not told again when Undo brings the note back under a new id', async () => {
     let answer: Record<string, unknown> = { skip: true, mention: MENTION, slot: 0 };
     const { push, shown } = loadWorker(() => answer);
@@ -127,7 +134,7 @@ describe('a mention of you in a team note', () => {
       email: { id: 'm1', threadId: 't-m1', from: [{ name: 'Client' }], subject: 'New order' },
     }));
     await push(stateChange);
-    expect(shade.get('mention-g:n1')?.title).toBe('Mabel mentioned you in “Offer for the Mulberry project”');
+    expect(shade.get('mention-bob@example.org:g:n1')?.title).toBe('Mabel mentioned you in “Offer for the Mulberry project”');
     expect(shade.get('bulwark-mail:g')?.title).toBe('Client (bob@example.org)');
   });
 });

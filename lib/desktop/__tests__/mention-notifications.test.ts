@@ -88,7 +88,7 @@ describe('a mention in a team note', () => {
     const { notifyDesktopMention } = await import('../mention-notifications');
     expect(await notifyDesktopMention(REF, client, note(), LABELS)).toBe(true);
     expect(shown).toHaveLength(1);
-    expect(shown[0]).toMatchObject({ title: 'Mabel mentioned you in “Offer for the Mulberry project”', body: '', id: 'mention:g/n1' });
+    expect(shown[0]).toMatchObject({ title: 'Mabel mentioned you in “Offer for the Mulberry project”', body: '', id: 'mention:bob@one|g/n1' });
     expect(JSON.parse(shown[0].context)).toEqual({
       accountId: 'g', threadId: 'T1', note: 'n1', emailId: 'offer', slot: 2,
       login: await loginFingerprint('https://one.example', 'bob@example.org'),
@@ -129,6 +129,13 @@ describe('a mention in a team note', () => {
     expect(shown).toHaveLength(1);
   });
 
+  it('keeps two logins apart when their account and note ids are the same', async () => {
+    const { notifyDesktopMention } = await import('../mention-notifications');
+    await notifyDesktopMention(REF, client, note(), LABELS);
+    await notifyDesktopMention({ ...REF, key: 'bob@two|g', loginId: 'bob@two' }, client, note(), LABELS);
+    expect(new Set(shown.map((n) => n.id)).size).toBe(2);
+  });
+
   it('is not told again when Undo brings the note back under a new id', async () => {
     const { notifyDesktopMention } = await import('../mention-notifications');
     await notifyDesktopMention(REF, client, note(), LABELS);
@@ -162,7 +169,7 @@ describe('a mention in a team note', () => {
     const mail = startMailNotifications(labels);
     for (const listener of arrivals.listeners) listener(REF, client, [note({ mentions: ['carol'] }), note({ id: 'n2' })]);
     await vi.waitFor(() => expect(shown).toHaveLength(1));
-    expect(shown[0].id).toBe('mention:g/n2');
+    expect(shown[0].id).toBe('mention:bob@one|g/n2');
     mail.stop();
     expect(arrivals.listeners.size).toBe(0);
   });

@@ -911,8 +911,8 @@ async function showMention(mention, redacted, accountId, accountLabel, slot, log
   await self.registration.showNotification(title, {
     // Which login, as a mail notification's title says it.
     body: accountLabel || "",
-    // Ids repeat across accounts.
-    tag: `mention-${accountId || "default"}:${mention.noteId}`,
+    // Ids repeat across accounts and logins.
+    tag: `mention-${accountLabel || "default"}:${accountId || "default"}:${mention.noteId}`,
     icon: `${BASE_PATH}/api/pwa-icon/192`,
     badge: `${BASE_PATH}/api/pwa-icon/192`,
     data: {
