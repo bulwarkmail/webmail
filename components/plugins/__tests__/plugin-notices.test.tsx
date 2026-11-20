@@ -100,7 +100,8 @@ describe('api.ui.showNotice', () => {
     // The host's own line: the plugin's name and the close button; the title only read out.
     expect(card.querySelector('[data-toast-header] [data-toast-source]')).toHaveTextContent('from_plugin');
     expect(card).toHaveAccessibleName('Incoming call');
-    expect(announce).toHaveBeenCalledWith('Incoming call', { assertive: false });
+    // Read out with whose it is ("From the plugin CRM"), as the line over the frame says.
+    expect(announce).toHaveBeenCalledWith('Incoming call. from_plugin', { assertive: false });
     expect(card.querySelector('[data-toast-header] [data-toast-close]')).toHaveClass('opacity-100');
     expect(card.querySelector('[data-toast-close]')).not.toHaveClass('max-sm:hidden');
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
@@ -121,6 +122,14 @@ describe('api.ui.showNotice', () => {
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
     expect(document.activeElement).toBe(input);
     expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+  });
+
+  it('reads out the plugin\'s name alone for a notice without a title', async () => {
+    const p = plugin('crm', 'CRM');
+    render(<Stack />);
+    await act(async () => { await frame().call(p, 'ui.showNotice', {}); });
+    // The plugin store doesn't list it here, so its name is its id.
+    expect(announce).toHaveBeenCalledWith('crm', { assertive: false });
   });
 
   it('takes the focus back when the frame takes it as the notice comes up', async () => {

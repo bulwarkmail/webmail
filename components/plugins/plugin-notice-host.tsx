@@ -10,6 +10,7 @@
 // opens (api.ui.openDialog) stands above the stack.
 
 import { type RefObject, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useTranslations } from 'next-intl';
 import { dismissNotice, notices, subscribeNotices, type NoticeRequest } from '@/lib/plugin-sandbox/notices';
 import { MAX_NOTICE_HEIGHT } from '@/lib/plugin-sandbox/slot-layout';
 import { useToastStore } from '@/stores/toast-store';
@@ -124,6 +125,7 @@ export function PluginNoticeHost(): null {
   const list = useSyncExternalStore(subscribeNotices, notices, () => NONE);
   // Notice id → the id of the toast that shows it.
   const toastIds = useRef(new Map<string, string>());
+  const t = useTranslations('plugins.dialog');
 
   useEffect(() => {
     const store = useToastStore.getState();
@@ -145,6 +147,9 @@ export function PluginNoticeHost(): null {
         duration: 0,
         pluginId: notice.pluginId,
         pluginName,
+        // The title is the plugin's text and never shown: a screen reader
+        // hears whose it is, as the line over the frame says.
+        ...(notice.title ? { srHint: t('from_plugin', { name: pluginName }) } : {}),
         content: <PluginNoticeFrame notice={notice} />,
         // The user's close button: the toast goes with its own animation.
         onDismiss: () => {
@@ -154,7 +159,7 @@ export function PluginNoticeHost(): null {
       });
       ids.set(notice.id, toastId);
     }
-  }, [list]);
+  }, [list, t]);
 
   useEffect(() => {
     const ids = toastIds.current;
