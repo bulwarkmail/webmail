@@ -25,7 +25,8 @@ async function storeWord(caches: FakeCaches, word: Record<string, unknown>): Pro
 function setup(caches: FakeCaches, clients: Array<{ id: string }> = []) {
   const fetchMock = vi.fn(async (_input: unknown, _init?: RequestInit) => new Response(JSON.stringify(PREVIEW), { status: 200 }));
   const worker = loadWorker({ buildId: 'b', caches, clients, fetch: fetchMock });
-  const previews = () => fetchMock.mock.calls.filter(([input]) => String(input).includes('/api/push/preview'));
+  // Locked, the worker asks only with locked=1, which reads and returns ids alone.
+  const previews = () => fetchMock.mock.calls.filter(([input]) => String(input).includes('/api/push/preview') && !String(input).includes('locked=1'));
   let pushes = 0;
   const push = () => worker.dispatch('push', { data: { json: () => ({ kind: 'jmap-email-push', accountId: 'a', emailIds: [`e${++pushes}`] }) } });
   return { worker, previews, push };

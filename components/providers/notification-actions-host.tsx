@@ -31,6 +31,10 @@ export function NotificationActionsHost() {
   const markRead = t('action_mark_read');
   const reply = t('action_reply');
   const replyPlaceholder = t('reply_placeholder');
+  const tTeam = useTranslations('team_push');
+  // The worker fills in the name and subject itself.
+  const mentionedYou = tTeam('mentioned_you', { name: '{name}', subject: '{subject}' });
+  const mentionedHidden = tTeam('mentioned_hidden');
 
   // Signing out deletes the worker's store, so signing in writes it again.
   useEffect(() => {
@@ -39,9 +43,9 @@ export function NotificationActionsHost() {
       archiveEnabled,
       archiveMode,
       pluginsMayVeto: mayVeto,
-      labels: { archive, markRead, reply, replyPlaceholder },
+      labels: { archive, markRead, reply, replyPlaceholder, mentionedYou, mentionedHidden },
     });
-  }, [isAuthenticated, archiveEnabled, archiveMode, mayVeto, archive, markRead, reply, replyPlaceholder]);
+  }, [isAuthenticated, archiveEnabled, archiveMode, mayVeto, archive, markRead, reply, replyPlaceholder, mentionedYou, mentionedHidden]);
 
   // Email notifications off or do not disturb on, for the login on screen: the
   // worker shows nothing for that login's mail. The label a push carries is this

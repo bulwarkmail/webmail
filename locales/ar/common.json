@@ -7522,6 +7522,10 @@
     "action_reply": "رد",
     "reply_placeholder": "اكتب ردًا"
   },
+  "team_push": {
+    "mentioned_you": "ذكرك {name} في «{subject}»",
+    "mentioned_hidden": "تم ذكرك في صندوق بريد فريق"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "إضافة إلى التقويم",
     "update_in_calendar": "تحديث في التقويم",

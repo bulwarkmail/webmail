@@ -7522,6 +7522,10 @@
     "action_reply": "Beantwoorden",
     "reply_placeholder": "Schrijf een antwoord"
   },
+  "team_push": {
+    "mentioned_you": "{name} heeft je genoemd in “{subject}”",
+    "mentioned_hidden": "Je bent genoemd in een teammailbox"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Toevoegen aan agenda",
     "update_in_calendar": "Bijwerken in agenda",

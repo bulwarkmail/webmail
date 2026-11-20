@@ -7522,6 +7522,10 @@
     "action_reply": "답장",
     "reply_placeholder": "답장 쓰기"
   },
+  "team_push": {
+    "mentioned_you": "{name}님이 “{subject}”에서 회원님을 언급했습니다",
+    "mentioned_hidden": "팀 메일함에서 회원님이 언급되었습니다"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "캘린더에 추가",
     "update_in_calendar": "캘린더에서 업데이트",

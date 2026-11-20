@@ -7522,6 +7522,10 @@
     "action_reply": "Répondre",
     "reply_placeholder": "Écrire une réponse"
   },
+  "team_push": {
+    "mentioned_you": "{name} vous a mentionné dans « {subject} »",
+    "mentioned_hidden": "Vous avez été mentionné dans une boîte aux lettres d’équipe"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Ajouter au calendrier",
     "update_in_calendar": "Mettre à jour dans le calendrier",

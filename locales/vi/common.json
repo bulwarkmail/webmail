@@ -7534,6 +7534,10 @@
     "action_reply": "Trả lời",
     "reply_placeholder": "Viết trả lời"
   },
+  "team_push": {
+    "mentioned_you": "{name} đã nhắc đến bạn trong “{subject}”",
+    "mentioned_hidden": "Bạn được nhắc đến trong một hộp thư nhóm"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Thêm vào lịch",
     "update_in_calendar": "Cập nhật trong lịch",

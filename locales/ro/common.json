@@ -7522,6 +7522,10 @@
     "action_reply": "Răspunde",
     "reply_placeholder": "Scrieți un răspuns"
   },
+  "team_push": {
+    "mentioned_you": "{name} v-a menționat în „{subject}”",
+    "mentioned_hidden": "Ați fost menționat într-o căsuță poștală de echipă"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Adaugă în calendar",
     "update_in_calendar": "Actualizează în calendar",

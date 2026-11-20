@@ -84,7 +84,12 @@ async function openFromNotification(context: MailNotificationContext, env: OsCom
   await whenSignedIn();
   const known = await stillThatLogin(context);
   if (known && context.emailId) {
-    openMailLink({ kind: 'message', id: context.emailId, slot: context.slot, ownerAccountId: context.accountId, ...(reply ? { reply: true } : {}) }, reply ? { replyText: reply.text } : undefined, env.leaveFor);
+    openMailLink({
+      kind: 'message', id: context.emailId, slot: context.slot, ownerAccountId: context.accountId,
+      ...(reply ? { reply: true } : {}),
+      // A mention: the conversation opens at the note.
+      ...(typeof context.note === 'string' && context.note ? { note: context.note } : {}),
+    }, reply ? { replyText: reply.text } : undefined, env.leaveFor);
     return;
   }
   if (reply?.text) env.notifyReplyLost();

@@ -7522,6 +7522,10 @@
     "action_reply": "Odpowiedz",
     "reply_placeholder": "Napisz odpowiedź"
   },
+  "team_push": {
+    "mentioned_you": "{name} wspomina o Tobie w „{subject}”",
+    "mentioned_hidden": "Ktoś wspomniał o Tobie w skrzynce zespołu"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Dodaj do kalendarza",
     "update_in_calendar": "Zaktualizuj w kalendarzu",

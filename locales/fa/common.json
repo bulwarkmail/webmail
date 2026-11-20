@@ -7522,6 +7522,10 @@
     "action_reply": "پاسخ",
     "reply_placeholder": "پاسخ بنویسید"
   },
+  "team_push": {
+    "mentioned_you": "{name} در «{subject}» از شما نام برد",
+    "mentioned_hidden": "در یک صندوق پستی تیمی از شما نام برده شد"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "افزودن به تقویم",
     "update_in_calendar": "به‌روزرسانی در تقویم",

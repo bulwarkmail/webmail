@@ -7522,6 +7522,10 @@
     "action_reply": "Yanıtla",
     "reply_placeholder": "Yanıt yazın"
   },
+  "team_push": {
+    "mentioned_you": "{name} “{subject}” içinde sizden bahsetti",
+    "mentioned_hidden": "Bir ekip posta kutusunda sizden bahsedildi"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Takvime ekle",
     "update_in_calendar": "Takvimde güncelle",

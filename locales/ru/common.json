@@ -7522,6 +7522,10 @@
     "action_reply": "Ответить",
     "reply_placeholder": "Напишите ответ"
   },
+  "team_push": {
+    "mentioned_you": "{name} упоминает вас в «{subject}»",
+    "mentioned_hidden": "Вас упомянули в командном почтовом ящике"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Добавить в календарь",
     "update_in_calendar": "Обновить в календаре",

@@ -7522,6 +7522,10 @@
     "action_reply": "回复",
     "reply_placeholder": "撰写回复"
   },
+  "team_push": {
+    "mentioned_you": "{name} 在“{subject}”中提到了你",
+    "mentioned_hidden": "有人在团队邮箱中提到了你"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "添加到日历",
     "update_in_calendar": "在日历中更新",

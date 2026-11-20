@@ -34,7 +34,8 @@ function setup() {
       navigator: { locks: { query: async () => ({ held: [...holders].map((clientId) => ({ name: HOLDER, mode: 'exclusive', clientId })), pending: [] }) } },
     },
   });
-  const previews = () => fetchMock.mock.calls.filter(([input]) => String(input).includes('/api/push/preview'));
+  // Locked, the worker asks only with locked=1, which reads and returns ids alone.
+  const previews = () => fetchMock.mock.calls.filter(([input]) => String(input).includes('/api/push/preview') && !String(input).includes('locked=1'));
   let pushes = 0;
   // Each push names a new message, so none counts as already announced.
   const push = () => worker.dispatch('push', { data: { json: () => ({ kind: 'jmap-email-push', accountId: 'a', emailIds: [`e${++pushes}`] }) } });

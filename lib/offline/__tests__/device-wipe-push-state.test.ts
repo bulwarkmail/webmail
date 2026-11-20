@@ -106,6 +106,14 @@ function worker(clients: Array<{ id: string }>) {
   return { ...loaded, fetchMock };
 }
 
+/**
+ * Requests that could bring back what a message says. Locked, the worker asks
+ * the preview only with locked=1, which reads and returns ids alone.
+ */
+function contentLookups(fetchMock: ReturnType<typeof vi.fn>): unknown[] {
+  return fetchMock.mock.calls.filter(([input]) => !String(input).includes('locked=1'));
+}
+
 /** What the page tells the service worker from here on. */
 function pageMessages(): Array<Record<string, unknown>> {
   const posted: Array<Record<string, unknown>> = [];
@@ -129,7 +137,7 @@ describe('an admin wipe of one login, with another staying under the app lock', 
     clients.length = 0;
     await sw.dispatch('push', { data: { json: () => pushForBob } });
     expect(JSON.stringify(sw.shown)).not.toContain('Secret');
-    expect(sw.fetchMock).not.toHaveBeenCalled();
+    expect(contentLookups(sw.fetchMock)).toEqual([]);
   });
 
   it('still says nothing after the other login was wiped from the device', async () => {
@@ -146,7 +154,7 @@ describe('an admin wipe of one login, with another staying under the app lock', 
     clients.length = 0;
     await sw.dispatch('push', { data: { json: () => pushForBob } });
     expect(JSON.stringify(sw.shown)).not.toContain('Secret');
-    expect(sw.fetchMock).not.toHaveBeenCalled();
+    expect(contentLookups(sw.fetchMock)).toEqual([]);
   });
 
   it("keeps the staying login's do not disturb", async () => {
@@ -220,7 +228,7 @@ describe("what a wipe of one login takes from the worker's store", () => {
     // The lock screen is still up in the app's tab.
     await sw.dispatch('push', { data: { json: () => pushForBob } });
     expect(JSON.stringify(sw.shown)).not.toContain('Secret');
-    expect(sw.fetchMock).not.toHaveBeenCalled();
+    expect(contentLookups(sw.fetchMock)).toEqual([]);
   });
 });
 

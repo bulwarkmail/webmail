@@ -7523,6 +7523,10 @@
     "action_reply": "השב",
     "reply_placeholder": "כתיבת תשובה"
   },
+  "team_push": {
+    "mentioned_you": "{name} הזכיר אותך ב־„{subject}”",
+    "mentioned_hidden": "הזכירו אותך בתיבת דואר של צוות"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "הוסף ליומן",
     "update_in_calendar": "עדכן ביומן",
