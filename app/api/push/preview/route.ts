@@ -25,10 +25,12 @@ export const dynamic = 'force-dynamic';
 
 // ── Team notes (lib/team-mailboxes/note-format.ts) ─────────────────────────
 
-/** How far back a push without a message id looks for a note that mentions the login. */
-const MENTION_LOOKBACK_MS = 10 * 60_000;
-/** A note this fresh, with no Inbox mail as fresh, is what woke the push. */
-const NOTE_WAKE_MS = 60_000;
+/**
+ * How far back a push without a message id looks for a note that mentions the
+ * login: as long as the relay keeps a push (its TTL). The service worker tells
+ * each note once.
+ */
+const MENTION_LOOKBACK_MS = 60 * 60_000;
 
 /** What says a message is a note and whom it mentions; nothing about its author or topic. */
 const NOTE_PROPERTIES = ['keywords', H.kind, H.mentions, H.for, H.thread];
@@ -92,9 +94,10 @@ function withoutNoteProperties<T extends object>(email: T): T {
 
 /**
  * For a push without a message id in a group account: the newest note of the
- * last ten minutes that mentions this login (the service worker announces
- * each note once), whether any note came in the last minute, and whether any
- * Inbox mail did.
+ * last hour that mentions this login (the service worker announces each note
+ * once), and the newest note and the newest Inbox message, whose times say
+ * which of them came last. Times are the server's, so a push that arrives
+ * late still compares the same.
  */
 function noteLookups(accountId: string, principalId: string, inboxId: string | undefined, redacted: boolean, now: number): unknown[] {
   const since = (ms: number) => new Date(now - ms).toISOString();
@@ -110,20 +113,18 @@ function noteLookups(accountId: string, principalId: string, inboxId: string | u
       '#ids': { resultOf: 'mq', name: 'Email/query', path: '/ids' },
       properties: [...(redacted ? ['id', 'receivedAt'] : ['id', 'receivedAt', 'from', 'subject']), ...NOTE_PROPERTIES],
     }, 'mg'],
-    ['Email/query', {
-      accountId,
-      filter: { operator: 'AND', conditions: [{ hasKeyword: NOTE_KEYWORD }, { after: since(NOTE_WAKE_MS) }] },
-      limit: 1,
-    }, 'nq'],
+    ...newestOf(accountId, { hasKeyword: NOTE_KEYWORD }, 'n'),
+    ...(inboxId ? newestOf(accountId, { inMailbox: inboxId }, 'i') : []),
   ];
-  if (inboxId) {
-    calls.push(['Email/query', {
-      accountId,
-      filter: { operator: 'AND', conditions: [{ inMailbox: inboxId }, { after: since(NOTE_WAKE_MS) }] },
-      limit: 1,
-    }, 'iq']);
-  }
   return calls;
+}
+
+/** The newest message matching `filter`, with its time only: `<prefix>q` and `<prefix>g`. */
+function newestOf(accountId: string, filter: Record<string, unknown>, prefix: string): unknown[] {
+  return [
+    ['Email/query', { accountId, filter, sort: [{ property: 'receivedAt', isAscending: false }], limit: 1 }, `${prefix}q`],
+    ['Email/get', { accountId, '#ids': { resultOf: `${prefix}q`, name: 'Email/query', path: '/ids' }, properties: ['id', 'receivedAt'] }, `${prefix}g`],
+  ];
 }
 
 /**
@@ -594,9 +595,17 @@ export async function GET(request: NextRequest) {
       const found = Array.isArray(mentionList) ? (mentionList[0] as Record<string, unknown> | undefined) : undefined;
       const candidate = found && isNote(found) ? mentionIn(found, principalId, redacted) : null;
       if (candidate) mention = await findMessage(candidate);
-      const recentNotes = resultOf('Email/query', 'nq')?.ids;
-      const recentMail = inboxId ? resultOf('Email/query', 'iq')?.ids : [];
-      noteWokeUs = Array.isArray(recentNotes) && recentNotes.length > 0 && Array.isArray(recentMail) && recentMail.length === 0;
+      // A note newer than anything in the Inbox: nothing came there since.
+      // Either lookup failing leaves the answer as it was (the mail).
+      const newestAt = (prefix: string): number | null | undefined => {
+        const list = resultOf('Email/get', `${prefix}g`)?.list;
+        if (!Array.isArray(list)) return undefined;
+        const at = Date.parse(String((list[0] as { receivedAt?: unknown } | undefined)?.receivedAt ?? ''));
+        return Number.isFinite(at) ? at : null;
+      };
+      const noteAt = newestAt('n');
+      const mailAt = inboxId ? newestAt('i') : null;
+      noteWokeUs = typeof noteAt === 'number' && mailAt !== undefined && (mailAt === null || noteAt > mailAt);
     }
     // A note woke us and no mail came with it: the Inbox's newest unread
     // message is old news, so it isn't offered.

@@ -421,10 +421,18 @@ describe('push preview for team notes', () => {
   });
 
   describe('a state change (no message named)', () => {
-    it('answers the newest fresh note that mentions the user, then the mail as before', async () => {
-      store.push(note('n0', { age: 5 * 60_000 }), note('n1', { age: 3 * 60_000 }), note('other', { mentions: ['b'], age: 2 * 60_000 }));
+    it('answers the newest note of the last hour that mentions the user, then the mail as before', async () => {
+      store.push(note('n0', { age: 40 * 60_000 }), note('n1', { age: 30 * 60_000 }), note('other', { mentions: ['b'], age: 20 * 60_000 }));
+      store.push(mail('new', { age: 60_000 }));
       const { body } = await callRoute('g');
-      expect(body).toMatchObject({ mention: MENTION, email: { id: 'old-unread' }, unreadTotal: 1, slot: 0 });
+      expect(body).toMatchObject({ mention: MENTION, email: { id: 'new' }, unreadTotal: 2, slot: 0 });
+      expect(body.skip).toBeUndefined();
+    });
+
+    it('answers skip for a push that comes late, as long as no mail is newer than the note', async () => {
+      // Doze, a relay retry or a skewed clock: the note is minutes old by now.
+      store.push(note('n1', { mentions: ['b'], age: 20 * 60_000 }), mail('older', { age: 25 * 60_000 }));
+      expect((await callRoute('g')).body).toEqual({ skip: true, slot: 0 });
     });
 
     it('answers skip instead of an old unread mail when a note just woke it', async () => {
@@ -446,16 +454,14 @@ describe('push preview for team notes', () => {
 
     it('never mentions anyone for a timeline entry', async () => {
       store.push(note('n1', { kind: 'assigned', mentions: ['a'], age: 3 * 60_000 }));
-      const { body } = await callRoute('g');
-      expect(body.mention).toBeUndefined();
-      expect(body.email).toMatchObject({ id: 'old-unread' });
+      expect((await callRoute('g')).body).toEqual({ skip: true, slot: 0 });
     });
 
-    it("doesn't go back further than ten minutes", async () => {
-      store.push(note('n1', { age: 11 * 60_000 }));
+    it("doesn't go back further than an hour", async () => {
+      store.push(note('n1', { age: 61 * 60_000 }), mail('new', { age: 60_000 }));
       const { body } = await callRoute('g');
       expect(body.mention).toBeUndefined();
-      expect(body.email).toMatchObject({ id: 'old-unread' });
+      expect(body.email).toMatchObject({ id: 'new' });
     });
 
     it('leaves out sender and subject under "Push without sender and subject"', async () => {
