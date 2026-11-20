@@ -1799,6 +1799,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // This makes the Pro composer behave like Thunderbird's pop-out window.
   useEffect(() => {
     if (!isEmbedded || !showComposer) return;
+    const selectedSource = selectedEmail ? emailWriteSource(selectedEmail, client) : null;
     // pendingDraft.replyTo, when set, was built by the opener (e.g.
     // handleForwardAsAttachment) with intent that must survive the hop into
     // the Pro tab - mirrors the same precedence the non-embedded render path
@@ -1821,6 +1822,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // The login that holds the message, so the reply defaults to that
       // account's identity (#1104). Same resolution as the invitation banner.
       accountId: selectedEmail.sourceClientAccountId ?? viewingAccountId ?? undefined,
+      ...(composerMode === 'forward' ? {
+        sourceAccountId: selectedSource?.accountId,
+        sourceClientAccountId: selectedSource?.clientAccountId,
+      } : {}),
       attachments: selectedEmail.attachments,
       messageId: selectedEmail.messageId,
       inReplyTo: selectedEmail.inReplyTo,
@@ -1853,7 +1858,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       initialFiles: composerInitialFiles,
       // A composer handed over answers its own message, not the one selected in the list.
       sourceEmailId: handedOff ? handedOff.emailId ?? null : selectedEmail?.id ?? null,
-      sourceEmailSource: handedOff ? handedOff.source ?? null : selectedEmail ? emailWriteSource(selectedEmail, client) : null,
+      sourceEmailSource: handedOff ? handedOff.source ?? null : selectedSource,
       title,
     });
 
@@ -2907,8 +2912,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // The login that holds the message, so the reply
     // defaults to that account's identity (#1104).
     accountId: composerSourceEmail.sourceClientAccountId ?? viewingAccountId ?? undefined,
-    sourceAccountId: composerSourceEmail.sourceAccountId,
-    sourceClientAccountId: composerSourceEmail.sourceClientAccountId,
+    sourceAccountId: composerSourceEmail.sourceAccountId ?? (composerMode === 'forward' ? composerSource?.accountId : undefined),
+    sourceClientAccountId: composerSourceEmail.sourceClientAccountId ?? (composerMode === 'forward' ? composerSource?.clientAccountId : undefined),
     attachments: composerSourceEmail.attachments,
     messageId: composerSourceEmail.messageId,
     inReplyTo: composerSourceEmail.inReplyTo,

@@ -112,10 +112,14 @@ describe('compose actions of a Pro message view', () => {
     expect(composeFrom(action).accountId).toBe('login-b');
   });
 
-  it.each(ACTIONS)('%s of a shared folder of another login names the login, not the owner', async (action) => {
+  it.each(ACTIONS)('%s of a shared folder of another login names the login', async (action) => {
     await open({ clientAccountId: 'login-b', accountId: 'jmap-team' });
 
-    expect(composeFrom(action).accountId).toBe('login-b');
+    const replyTo = composeFrom(action);
+    expect(replyTo.accountId).toBe('login-b');
+    if (action === 'onForward') {
+      expect(replyTo).toMatchObject({ sourceClientAccountId: 'login-b', sourceAccountId: 'jmap-team' });
+    }
   });
 
   it.each(ACTIONS)('%s of the active login names the active login', async (action) => {

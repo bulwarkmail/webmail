@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { useAuthStore } from '@/stores/auth-store';
+import type { AlmostSavedDraft } from '@/lib/plugin-types';
 
 // A forward carries the original message's attachments as part blobIds of the
 // account that holds it. When the forward goes out through another account -
@@ -142,6 +143,11 @@ vi.mock('@/stores/toast-store', () => ({
   toast: { info: () => {}, error: () => {}, success: () => {} },
 }));
 
+const draftHook = vi.hoisted(() => ({
+  enabled: false,
+  transform: (draft: AlmostSavedDraft) => draft,
+}));
+
 vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
@@ -158,7 +164,10 @@ vi.mock('@/lib/plugin-hooks', () => ({
     getRecipientSuggestions: { call: async () => [] },
     onRecipientChipsChange: { transform: async (chips: unknown) => chips },
     onDraftChange: { emit: () => {} },
-    onBeforeDraftAutoSave: { transform: async (draft: unknown) => draft },
+    onBeforeDraftAutoSave: {
+      get size() { return draftHook.enabled ? 1 : 0; },
+      interceptWithValue: async (draft: AlmostSavedDraft) => ({ allowed: true, value: draftHook.transform(draft) }),
+    },
     onBeforeEmailSend: { intercept: async () => true, interceptOutcome: async () => 'allowed' },
     onComposeSend: { takeOver: async () => 'default' },
     onTransformOutgoingEmail: { transform: async (email: unknown) => email },
@@ -200,6 +209,8 @@ const SOURCE_IDENTITY = { id: 'acct-src::id-src', email: 'me@other.example', nam
 
 function draftClient(prefix: string) {
   return {
+    getAccountId: () => `${prefix}-primary`,
+    resolveSendAccountId: vi.fn().mockResolvedValue(`${prefix}-primary`),
     uploadBlob: vi.fn().mockResolvedValue({ blobId: 'blob-copied' }),
     fetchBlobArrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(5)),
     createDraft: vi.fn()
@@ -224,11 +235,11 @@ function mockClients() {
   return { activeClient, sourceClient };
 }
 
-async function forwardAndAutosave(accountId?: string) {
+async function forwardAndAutosave(accountId?: string, jmapOwner?: string, sourceLogin = jmapOwner ? accountId : undefined) {
   render(
     <EmailComposer
       mode="forward"
-      replyTo={{ subject: 'Scans', accountId, attachments: [SCAN] }}
+      replyTo={{ subject: 'Scans', accountId, sourceClientAccountId: sourceLogin, sourceAccountId: jmapOwner, attachments: [SCAN] }}
       onClose={vi.fn()}
     />,
   );
@@ -244,6 +255,8 @@ describe('forwarding a message held by another account', () => {
   });
 
   afterEach(() => {
+    draftHook.enabled = false;
+    draftHook.transform = draft => draft;
     vi.useRealTimers();
     useAuthStore.setState({
       client: null,
@@ -418,6 +431,148 @@ describe('forwarding a message held by another account', () => {
     expect(activeClient.uploadBlob).not.toHaveBeenCalled();
     expect(activeClient.createDraft.mock.calls[0][8]).toEqual([
       { blobId: 'blob-src', name: 'scan.pdf', type: 'application/pdf', size: 5 },
+    ]);
+  });
+
+  it('copies an attachment from a delegated JMAP owner into the active login draft account', async () => {
+    multi.allIdentities = [ACTIVE_IDENTITY];
+    const { activeClient, sourceClient } = mockClients();
+    const owner = 'shared-owner';
+    await forwardAndAutosave('acct-active', owner);
+
+    expect.soft(activeClient.fetchBlobArrayBuffer).toHaveBeenCalledExactlyOnceWith(
+      SCAN.blobId, SCAN.name, SCAN.type, owner,
+    );
+    expect.soft(sourceClient.fetchBlobArrayBuffer).not.toHaveBeenCalled();
+    expect.soft(activeClient.uploadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(File), 'active-primary');
+    expect.soft(activeClient.createDraft.mock.calls[0]?.[8]).toEqual([
+      { ...SCAN, blobId: 'blob-copied' },
+    ]);
+  });
+
+  it('copies from the source primary into the resolved group draft account and reuses the saved part', async () => {
+    multi.allIdentities = [ACTIVE_IDENTITY];
+    const { activeClient } = mockClients();
+    activeClient.resolveSendAccountId.mockResolvedValue('group-drafts');
+    activeClient.getEmail.mockResolvedValue({ attachments: [{ ...SCAN, blobId: 'saved-part' }] });
+    await forwardAndAutosave('acct-active', undefined, 'acct-active');
+
+    expect(activeClient.fetchBlobArrayBuffer).toHaveBeenCalledExactlyOnceWith(
+      SCAN.blobId, SCAN.name, SCAN.type, 'active-primary',
+    );
+    expect(activeClient.uploadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(File), 'group-drafts');
+    expect(activeClient.createDraft.mock.calls[0][8]).toEqual([{ ...SCAN, blobId: 'blob-copied' }]);
+    expect(activeClient.createDraft.mock.calls[0][13]).toMatchObject({ accountId: 'group-drafts' });
+    expect(activeClient.getEmail).toHaveBeenCalledWith('active-draft-1', 'group-drafts');
+
+    fireEvent.change(screen.getByDisplayValue('Scans for you'), { target: { value: 'Scans, again' } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+
+    expect(activeClient.fetchBlobArrayBuffer).toHaveBeenCalledTimes(1);
+    expect(activeClient.uploadBlob).toHaveBeenCalledTimes(1);
+    expect(activeClient.createDraft.mock.calls[1][8]).toEqual([{ ...SCAN, blobId: 'saved-part' }]);
+  });
+
+  it.each([
+    { login: 'acct-active', copy: false },
+    { login: 'acct-src', copy: true },
+  ])('compares the login as well as the resolved JMAP owner ($login)', async ({ login, copy }) => {
+    multi.allIdentities = [ACTIVE_IDENTITY];
+    const { activeClient, sourceClient } = mockClients();
+    activeClient.resolveSendAccountId.mockResolvedValue('shared-owner');
+    await forwardAndAutosave(login, 'shared-owner');
+
+    expect(activeClient.fetchBlobArrayBuffer).not.toHaveBeenCalled();
+    if (copy) {
+      expect(sourceClient.fetchBlobArrayBuffer).toHaveBeenCalledExactlyOnceWith(
+        SCAN.blobId, SCAN.name, SCAN.type, 'shared-owner',
+      );
+      expect(activeClient.uploadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(File), 'shared-owner');
+    } else {
+      expect(sourceClient.fetchBlobArrayBuffer).not.toHaveBeenCalled();
+      expect(activeClient.uploadBlob).not.toHaveBeenCalled();
+    }
+    expect(activeClient.createDraft.mock.calls[0][8]).toEqual([
+      { ...SCAN, blobId: copy ? 'blob-copied' : SCAN.blobId },
+    ]);
+  });
+
+  it('sends a restored forward using the saved source owner and resolved outgoing owner', async () => {
+    multi.allIdentities = [ACTIVE_IDENTITY];
+    const { activeClient } = mockClients();
+    activeClient.resolveSendAccountId.mockResolvedValue('group-send');
+    const onSaveState = vi.fn();
+    const onSend = vi.fn();
+    const original = render(
+      <EmailComposer
+        mode="forward"
+        replyTo={{ subject: 'Scans', sourceClientAccountId: 'acct-active', sourceAccountId: 'shared-owner', attachments: [SCAN] }}
+        onSaveState={onSaveState}
+      />,
+    );
+    fireEvent.change(screen.getByPlaceholderText('to_placeholder'), { target: { value: 'friend@example.com' } });
+    original.unmount();
+
+    const savedState = onSaveState.mock.calls[0][0];
+    expect(savedState.attachments).toEqual([
+      { ...SCAN, sourceAccountId: 'acct-active', sourceJmapAccountId: 'shared-owner' },
+    ]);
+
+    // Exercise Send's copy even when there is no autosave to flush.
+    render(<EmailComposer initialData={{ ...savedState, unsaved: false }} onSend={onSend} />);
+    fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+
+    expect(activeClient.createDraft).not.toHaveBeenCalled();
+    expect(activeClient.resolveSendAccountId).toHaveBeenCalledWith(ACTIVE_IDENTITY.email);
+    expect(activeClient.fetchBlobArrayBuffer.mock.calls).toEqual([
+      [SCAN.blobId, SCAN.name, SCAN.type, 'shared-owner'],
+      ['blob-copied', SCAN.name, SCAN.type, 'group-send', expect.any(Number)],
+    ]);
+    expect(activeClient.uploadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(File), 'group-send');
+    expect(onSend).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ attachments: [{ ...SCAN, blobId: 'blob-copied' }] }),
+      expect.objectContaining({
+        attachments: [{ ...SCAN, blobId: 'blob-copied', sourceAccountId: 'acct-active', sourceJmapAccountId: 'group-send' }],
+      }),
+    );
+  });
+
+  it('review probe: keeps local and foreign attachments with the same id distinct with a draft hook', async () => {
+    draftHook.enabled = true;
+    multi.allIdentities = [ACTIVE_IDENTITY];
+    const { activeClient, sourceClient } = mockClients();
+    const local = { ...SCAN, name: 'local.pdf' };
+    const foreign = { ...SCAN, name: 'foreign.pdf' };
+    render(<EmailComposer mode="forward" replyTo={{
+      subject: 'Files', attachments: [local, { ...foreign, sourceAccountId: 'acct-src' }],
+    }} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByDisplayValue(/Files/), { target: { value: 'Forwarded files' } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+
+    expect(sourceClient.fetchBlobArrayBuffer).toHaveBeenCalledExactlyOnceWith(foreign.blobId, foreign.name, foreign.type);
+    expect(activeClient.uploadBlob).toHaveBeenCalledTimes(1);
+    expect(activeClient.createDraft.mock.calls[0][8]).toEqual([
+      local, { ...foreign, blobId: 'blob-copied' },
+    ]);
+  });
+
+  it('preserves the source of identical-looking attachments cloned and reordered by a draft hook', async () => {
+    draftHook.enabled = true;
+    draftHook.transform = draft => ({
+      ...draft,
+      attachments: structuredClone(draft.attachments)?.reverse(),
+    });
+    multi.allIdentities = [ACTIVE_IDENTITY];
+    const { activeClient } = mockClients();
+    render(<EmailComposer mode="forward" replyTo={{
+      subject: 'Files', attachments: [SCAN, { ...SCAN, sourceAccountId: 'acct-src' }],
+    }} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByDisplayValue(/Files/), { target: { value: 'Forwarded files' } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+
+    expect(activeClient.createDraft.mock.calls[0][8]).toEqual([
+      { ...SCAN, blobId: 'blob-copied' }, SCAN,
     ]);
   });
 });

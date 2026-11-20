@@ -44,6 +44,8 @@ export interface ProReplyContext {
   htmlBody?: string;
   receivedAt?: string;
   accountId?: string;
+  sourceAccountId?: string;
+  sourceClientAccountId?: string;
   /** The original carries the phishing mark. */
   phishingMarked?: boolean;
   attachments?: Array<{
