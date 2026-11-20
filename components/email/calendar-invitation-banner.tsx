@@ -63,6 +63,7 @@ import { cachedIdentitiesForAccount } from '@/hooks/use-pro-multi-account-identi
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { resolveTimeZone } from '@/lib/timezone';
 import { buildRecurrenceSummary } from '@/components/calendar/recurrence-editor';
+import { emailKeyFor } from '@/lib/thread-utils';
 
 interface InvitationChangeItem {
   label: string;
@@ -396,6 +397,12 @@ interface CalendarInvitationBannerProps {
 type BannerState = 'loading' | 'parsed' | 'rsvp-sent' | 'imported' | 'error';
 
 export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProps) {
+  // The reader stays mounted when switching messages. Keep the banner's
+  // local RSVP and UI state tied to its invitation message.
+  return <MessageInvitationBanner key={emailKeyFor(email)} email={email} />;
+}
+
+function MessageInvitationBanner({ email }: CalendarInvitationBannerProps) {
   const shownName = useCollectionNames();
   const t = useTranslations('email_viewer.calendar_invitation');
   const tEvent = useTranslations('ux_pim_event');
