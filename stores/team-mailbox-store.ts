@@ -24,6 +24,16 @@ import { jmapErrorType } from '@/lib/jmap/jmap-error';
 import { subscribePushStateChanges } from '@/lib/push-events';
 import { debug } from '@/lib/debug';
 import { keywordPointer } from '@/lib/jmap/patch-pointer';
+import {
+  assignChanges,
+  assigneesOf,
+  doneChanges,
+  reopenChanges,
+  reversePatch,
+  unassignChanges,
+  type KeywordPatch,
+} from '@/lib/team-mailboxes/keywords';
+import { addToTeamNames, useTeamNamesStore, type Person } from '@/lib/team-mailboxes/names';
 import { NOTE_KEYWORD, TEAM_NOTES_FOLDER_NAME, isTeamNotesFolder } from '@/lib/team-mailboxes/hidden-folders';
 import {
   NOTES_KEYWORD,
@@ -31,6 +41,7 @@ import {
   buildNoteEmail,
   isOwnNote,
   mentionKeyword,
+  noteKeyFor,
   parseNote,
   type NoteAuthor,
   type NoteEntry,
@@ -587,6 +598,177 @@ export function discardPending(key: string, localId: string): void {
     delete pending[localId];
     return { pending };
   });
+}
+
+// ── Assignment ────────────────────────────────────────────────────────
+
+/** The message an assignment is about, in the group account, with the keywords it has now. */
+export interface AssignableEmail {
+  id: string;
+  messageId?: readonly string[] | null;
+  threadId?: string | null;
+  subject?: string | null;
+  keywords?: Readonly<Record<string, boolean>> | null;
+}
+
+export type AssignmentKind = 'assigned' | 'unassigned' | 'done' | 'reopened';
+
+export interface AssignmentResult {
+  kind: AssignmentKind;
+  /** False when the message already was that way: nothing was written, there is nothing to undo. */
+  changed: boolean;
+  /** For `assigned`: who has it now, for the toast ("Assigned to you" when `me`). `name` is '' when unknown. */
+  assignee?: { id: string; name: string; me: boolean };
+  /** The message's keywords after the change, for the caller's row. */
+  keywords: Record<string, boolean>;
+  /** The keyword change written (keyword → true, or null for removed). */
+  patch: KeywordPatch;
+  /**
+   * Takes the change back: the keywords as they were, and the timeline
+   * entry removed (or, if it can't be, the opposite entry written). Rejects
+   * when the keywords can't be written back.
+   */
+  undo: () => Promise<void>;
+  /** The timeline entry's id once written; null when it couldn't be (the change stands). */
+  timeline: Promise<string | null>;
+}
+
+function pointerPatch(patch: KeywordPatch): Record<string, boolean | null> {
+  return Object.fromEntries(Object.entries(patch).map(([keyword, value]) => [keywordPointer(keyword), value]));
+}
+
+function patchedKeywords(keywords: AssignableEmail['keywords'], patch: KeywordPatch): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  for (const [keyword, on] of Object.entries(keywords ?? {})) {
+    if (on && !(keyword.toLowerCase() in patch)) out[keyword] = true;
+  }
+  for (const [keyword, value] of Object.entries(patch)) if (value === true) out[keyword] = true;
+  return out;
+}
+
+/** A name for a principal id from what the team knows: the names list, the directory, the user. */
+function knownPerson(t: TeamState, client: IJMAPClient, id: string): Person | null {
+  const names = useTeamNamesStore.getState();
+  const listed = names.lists[t.ref.key]?.[id] ?? names.directory[t.ref.loginId]?.[id];
+  if (listed) return listed;
+  if (id === client.getAccountId().toLowerCase() && t.author) return { name: t.author.name || t.author.email, email: t.author.email };
+  return null;
+}
+
+/** The timeline entry that says the opposite, for an undo whose entry couldn't be removed. */
+function oppositeEntry(kind: AssignmentKind, before: readonly string[]): { kind: AssignmentKind; mentions: string[] } {
+  switch (kind) {
+    case 'assigned':
+    case 'unassigned':
+      return before[0] ? { kind: 'assigned', mentions: [before[0]] } : { kind: 'unassigned', mentions: [] };
+    case 'done':
+      return { kind: 'reopened', mentions: [] };
+    case 'reopened':
+      return { kind: 'done', mentions: [] };
+  }
+}
+
+/**
+ * One keyword write on the message in the team's own account (rejects when
+ * it fails, for "Couldn't change the message. Try again."), then the
+ * timeline entry, which never fails the change.
+ */
+async function changeAssignment(
+  key: string,
+  email: AssignableEmail,
+  kind: AssignmentKind,
+  patch: KeywordPatch,
+  assignee?: AssignmentResult['assignee'],
+): Promise<AssignmentResult> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t) throw new Error('Team not loaded');
+  const { client } = runtime;
+  const { accountId } = t.ref;
+  if (Object.keys(patch).length === 0) {
+    return { kind, changed: false, assignee, keywords: patchedKeywords(email.keywords, {}), patch, undo: async () => {}, timeline: Promise.resolve(null) };
+  }
+  await client.batchUpdateKeywords([email.id], pointerPatch(patch), accountId);
+  const before = assigneesOf(email.keywords);
+  const target: NoteTarget = { emailId: email.id, key: noteKeyFor(email, accountId), threadId: email.threadId ?? null, subject: email.subject };
+  const timeline = writeNote(key, target, { kind, mentions: kind === 'assigned' && assignee ? [assignee.id] : [] })
+    .catch((error) => {
+      debug.warn('team-mailboxes', `The ${kind} line couldn't be written; the change stands:`, error);
+      return null;
+    });
+  // One-shot: the toast's Undo and Ctrl+Z may both reach it.
+  let undoing: Promise<void> | null = null;
+  const undo = () => {
+    undoing ??= (async () => {
+      await client.batchUpdateKeywords([email.id], pointerPatch(reversePatch(patch)), accountId);
+      const entryId = await timeline;
+      if (entryId) await removeTimelineEntry(key, entryId, target, oppositeEntry(kind, before));
+    })();
+    return undoing;
+  };
+  return { kind, changed: true, assignee, keywords: patchedKeywords(email.keywords, patch), patch, undo, timeline };
+}
+
+/** Removes a timeline entry after an undo; where that fails, writes the opposite entry so the timeline still tells the truth. */
+function removeTimelineEntry(key: string, entryId: string, target: NoteTarget, opposite: { kind: AssignmentKind; mentions: string[] }): Promise<void> {
+  return enqueue(key, async () => {
+    const runtime = runtimes.get(key);
+    const t = team(key);
+    if (!runtime?.client.destroyTeamNote || !t) throw new Error('Team not loaded');
+    await runtime.client.destroyTeamNote(t.ref.accountId, entryId);
+    patchTeam(key, (x) => {
+      const notes = { ...x.notes };
+      delete notes[entryId];
+      return { notes };
+    });
+  }).catch(async (error) => {
+    // Already gone (someone else removed it): nothing to put right.
+    if (jmapErrorType(error) === 'notFound') return;
+    debug.warn('team-mailboxes', 'Removing a timeline line after an undo failed:', error);
+    await writeNote(key, target, opposite).catch(() => null);
+  });
+}
+
+/**
+ * Assigns the message to `principalId` and nobody else. `person` (from the
+ * Assign to dialog) names them; the assignee and the user go into the
+ * team's names list, best effort.
+ */
+export async function assign(key: string, email: AssignableEmail, principalId: string, person?: Person | null): Promise<AssignmentResult> {
+  const runtime = runtimes.get(key);
+  const t = team(key);
+  if (!runtime || !t) throw new Error('Team not loaded');
+  const { client } = runtime;
+  const id = principalId.toLowerCase();
+  const selfId = client.getAccountId().toLowerCase();
+  const me = id === selfId;
+  const who = person?.name || person?.email ? person : knownPerson(t, client, id);
+  const result = await changeAssignment(key, email, 'assigned', assignChanges(email.keywords, id), { id, name: who?.name || who?.email || '', me });
+  const additions: Record<string, Person> = {};
+  const self = knownPerson(t, client, selfId);
+  if (self) additions[selfId] = self;
+  if (who && !me) additions[id] = { name: who.name || who.email, email: who.email };
+  if (Object.keys(additions).length > 0) void addToTeamNames(t.ref, client, additions);
+  return result;
+}
+
+/** Assign to me: the user's principal id is their primary account id. */
+export function assignToMe(key: string, email: AssignableEmail): Promise<AssignmentResult> {
+  const runtime = runtimes.get(key);
+  if (!runtime) return Promise.reject(new Error('Team not loaded'));
+  return assign(key, email, runtime.client.getAccountId());
+}
+
+export function unassign(key: string, email: AssignableEmail): Promise<AssignmentResult> {
+  return changeAssignment(key, email, 'unassigned', unassignChanges(email.keywords));
+}
+
+export function markDone(key: string, email: AssignableEmail): Promise<AssignmentResult> {
+  return changeAssignment(key, email, 'done', doneChanges(email.keywords));
+}
+
+export function reopen(key: string, email: AssignableEmail): Promise<AssignmentResult> {
+  return changeAssignment(key, email, 'reopened', reopenChanges(email.keywords));
 }
 
 /**
