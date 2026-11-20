@@ -4024,6 +4024,7 @@
     "items_selected": "已選取 {count} 封郵件",
     "forward_as_attachments": "以附件形式轉寄",
     "edit_draft": "編輯草稿",
+    "edit_as_new": "以新郵件編輯",
     "cancel_scheduled_send": "取消傳送",
     "reschedule_send": "重新排程",
     "cancel_and_edit": "取消並編輯",

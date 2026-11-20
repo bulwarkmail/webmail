@@ -4024,6 +4024,7 @@
     "items_selected": "{count} писем выбрано",
     "forward_as_attachments": "Переслать как вложения",
     "edit_draft": "Редактировать черновик",
+    "edit_as_new": "Изменить как новое",
     "cancel_scheduled_send": "Отменить отправку",
     "reschedule_send": "Перенести",
     "cancel_and_edit": "Отменить и изменить",

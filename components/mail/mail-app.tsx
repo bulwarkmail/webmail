@@ -111,7 +111,7 @@ import { useDesktopCommands } from "@/lib/desktop/commands";
 import { useDesktopPrefs } from "@/lib/desktop/preferences";
 import { hasDesktopWindows, popoutsAvailable } from "@/lib/popout/support";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
-import { composerDataFromDraft, withReplyAllRecipients } from "@/lib/draft-composer-data";
+import { composerDataForEditAsNew, composerDataFromDraft, withReplyAllRecipients } from "@/lib/draft-composer-data";
 import { ownReplyAddresses } from "@/lib/reply-recipients";
 import { useUndoShortcut } from "@/hooks/use-undo-shortcut";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
@@ -3516,6 +3516,57 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     setComposerMode('compose');
     setShowComposer(true);
     if (isMobile) setActiveView('viewer');
+  };
+
+  // "Edit as new" on a sent message (#1781): a new composer filled in as the
+  // message went out. The sent message stays as it is.
+  const handleEditAsNew = async (email: Email) => {
+    if (!client) return;
+    await closeOpenComposer();
+    const { localAccountId, accountId } = resolveDraftSource(email, {
+      aggregate: isAggregateListView(),
+      mailbox: viewMailboxes.find(mb => mb.id === selectedMailbox),
+      viewingAccountId,
+      activeAccountId,
+    });
+    const sentClient = localAccountId ? loginClientOf(localAccountId) : client;
+    if (!sentClient) {
+      toast.error(t('notifications.not_connected'));
+      return;
+    }
+    // The list has no body, Bcc or attachment parts.
+    let sent = email;
+    if (!sent.bodyValues) {
+      const full = await sentClient.getEmail(sent.id, accountId);
+      if (!full) return;
+      sent = { ...full, sourceClientAccountId: email.sourceClientAccountId, sourceAccountId: email.sourceAccountId };
+    }
+    const composerIdentities = multiAccountIdentities.enabled
+      ? multiAccountIdentities.allIdentities
+      : identities;
+    const opened = composerDataForEditAsNew(sent, {
+      accountId,
+      localAccountId,
+      identities: composerIdentities,
+      noSubject: t('email_composer.no_subject'),
+    });
+    const recipients = (list: typeof sent.to) => (list ?? []).map(a => a.email).filter(Boolean);
+    if (!(await withComposeGate('compose', {
+      to: recipients(sent.to),
+      cc: recipients(sent.cc),
+      subject: opened.subject,
+      body: getDraftComposerBody(sent).bodyText,
+    }, () => {}))) return;
+    setComposerSessionId(composerSessionRef.current + 1);
+    setResumedReplySession(null);
+    setPendingDraft(opened);
+    setComposerMode('compose');
+    setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
+  };
+
+  const reportEditAsNewFailure = (error: unknown) => {
+    console.error('Opening the sent message as a new one failed:', error);
   };
 
   /** When a scheduled message goes out, as the user reads times, if known. */
@@ -6992,6 +7043,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onEditDraft={(email) => {
                   handleEditDraft(email);
                 }}
+                onEditAsNew={(email) => { void handleEditAsNew(email).catch(reportEditAsNewFailure); }}
                 className="flex-1 min-h-0"
               />
             </ErrorBoundary>
@@ -7281,6 +7333,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onOpenInWindow={!isEmbedded && !isMobile && openEmailInWindow && selectedEmail ? () => openEmailInWindow(selectedEmail) : undefined}
                     isFullscreen={fullscreenReading}
                     onEditDraft={handleEditDraft}
+                    onEditAsNew={selectedEmail ? () => { void handleEditAsNew(selectedEmail).catch(reportEditAsNewFailure); } : undefined}
                     onCancelScheduledForEdit={async () => {
                       if (!client || !selectedEmail) return;
                       // The button does not wait for this; report here.

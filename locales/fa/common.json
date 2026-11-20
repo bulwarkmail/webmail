@@ -4024,6 +4024,7 @@
     "items_selected": "{count} ایمیل انتخاب شده",
     "forward_as_attachments": "ارسال به‌عنوان پیوست‌ها",
     "edit_draft": "ویرایش پیش‌نویس",
+    "edit_as_new": "ویرایش به‌عنوان پیام جدید",
     "cancel_scheduled_send": "لغو ارسال",
     "reschedule_send": "باززمان‌بندی",
     "cancel_and_edit": "لغو و ویرایش",

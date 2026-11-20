@@ -3969,6 +3969,7 @@
     "items_selected": "נבחרו הודעות דוא\"ל מסוג{count}",
     "forward_as_attachments": "העבר כקבצים מצורפים",
     "edit_draft": "ערוך טיוטה",
+    "edit_as_new": "ערוך כהודעה חדשה",
     "cancel_scheduled_send": "ביטול שליחה",
     "reschedule_send": "תזמן מחדש",
     "cancel_and_edit": "בטל וערוך",

@@ -37,6 +37,7 @@ import {
   Copy,
   Search,
   Pencil,
+  FilePen,
   Filter,
   Download,
   Save,
@@ -57,6 +58,7 @@ export type MessageActionKey =
   | "cancel_and_edit"
   | "cancel_send"
   | "edit_draft"
+  | "edit_as_new"
   | "reply"
   | "reply_all"
   | "forward"
@@ -127,6 +129,8 @@ export interface MessageActionOptions {
   onForward?: () => void;
   onForwardAsAttachment?: () => void;
   onEditDraft?: () => void;
+  /** In Sent: a new message filled in as this one went out (#1781). */
+  onEditAsNew?: () => void;
   onArchive?: () => void;
   onDelete?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -253,6 +257,10 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       item("forward_as_attachment", Paperclip, tViewer("forward_as_attachment"), o.onForwardAsAttachment, {
         disabled: !o.onForwardAsAttachment || !email.blobId,
       }),
+      // Sent mail: send it again, changed (#1781).
+      ...(o.onEditAsNew && o.currentMailboxRole === "sent" && !isDraft
+        ? [item("edit_as_new", FilePen, t("edit_as_new"), o.onEditAsNew, { testId: "ctx-edit-as-new" })]
+        : []),
       SEPARATOR,
     ];
     // Permalinks (#733). The conversation entry only when the message
@@ -363,7 +371,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
  */
 export const ROW_MENU_KEYS: ReadonlySet<MessageActionKey> = new Set<MessageActionKey>([
   "reschedule", "cancel_and_edit", "cancel_send", "edit_draft",
-  "reply", "reply_all", "forward",
+  "reply", "reply_all", "forward", "edit_as_new",
   "restore", "archive", "delete", "move",
   "read", "star", "tag",
   "spam",

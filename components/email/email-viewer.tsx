@@ -347,6 +347,8 @@ export interface EmailViewerProps {
    */
   replyDraft?: { preview?: string; onEdit: () => void; onDiscard: () => void } | null;
   onEditDraft?: () => void;
+  /** In Sent: a new message filled in as this one went out (#1781). */
+  onEditAsNew?: () => void;
   onCancelScheduledForEdit?: () => void;
   /** Stop a scheduled message from going out; it goes back to Drafts. */
   onCancelScheduledSend?: () => void;
@@ -1288,6 +1290,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, moveHeading, selected
       onForward={options.onForward}
       onForwardAsAttachment={options.onForwardAsAttachment}
       onEditDraft={options.onEditDraft}
+      onEditAsNew={options.onEditAsNew}
       onArchive={options.onArchive}
       onMoveToInbox={options.onMoveToInbox}
       onDelete={options.onDelete}
@@ -1501,6 +1504,7 @@ export function EmailViewer({
   replyComposerOpen,
   replyDraft,
   onEditDraft,
+  onEditAsNew,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
@@ -4641,6 +4645,7 @@ export function EmailViewer({
     onForward,
     onForwardAsAttachment,
     onEditDraft,
+    onEditAsNew,
     onArchive,
     onDelete,
     onMarkAsRead: (read) => onMarkAsRead?.(email.id, read),

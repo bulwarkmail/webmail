@@ -4024,6 +4024,7 @@
     "items_selected": "{count}개의 메일 선택됨",
     "forward_as_attachments": "첨부 파일로 전달",
     "edit_draft": "임시보관 메일 수정",
+    "edit_as_new": "새 메일로 수정",
     "cancel_scheduled_send": "보내기 취소",
     "reschedule_send": "다시 예약",
     "cancel_and_edit": "취소하고 편집",

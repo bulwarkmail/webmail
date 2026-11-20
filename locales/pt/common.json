@@ -4024,6 +4024,7 @@
     "items_selected": "{count} e-mails selecionados",
     "forward_as_attachments": "Encaminhar como anexos",
     "edit_draft": "Editar rascunho",
+    "edit_as_new": "Editar como nova",
     "cancel_scheduled_send": "Cancelar envio",
     "reschedule_send": "Reprogramar",
     "cancel_and_edit": "Cancelar e editar",

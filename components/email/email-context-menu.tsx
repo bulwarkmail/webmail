@@ -95,6 +95,7 @@ interface EmailContextMenuProps {
   onMarkAsSpam?: () => void;
   onUndoSpam?: () => void;
   onEditDraft?: () => void;
+  onEditAsNew?: () => void;
   onCancelScheduledForEdit?: () => void;
   onCancelScheduledSend?: () => void;
   onRescheduleScheduled?: () => void;
@@ -210,6 +211,7 @@ export function EmailContextMenu({
   onBatchUndoSpam,
   onBatchForwardAsAttachment,
   onEditDraft,
+  onEditAsNew,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
@@ -323,6 +325,7 @@ export function EmailContextMenu({
     onForward,
     onForwardAsAttachment,
     onEditDraft,
+    onEditAsNew,
     onArchive,
     onDelete,
     onMarkAsRead,

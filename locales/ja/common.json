@@ -4024,6 +4024,7 @@
     "items_selected": "{count}件のメールを選択",
     "forward_as_attachments": "添付ファイルとして転送",
     "edit_draft": "下書きを編集",
+    "edit_as_new": "新規として編集",
     "cancel_scheduled_send": "送信をキャンセル",
     "reschedule_send": "再予約",
     "cancel_and_edit": "キャンセルして編集",

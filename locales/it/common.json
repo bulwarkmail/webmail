@@ -4024,6 +4024,7 @@
     "items_selected": "{count} messaggi selezionati",
     "forward_as_attachments": "Inoltra come allegati",
     "edit_draft": "Modifica bozza",
+    "edit_as_new": "Modifica come nuovo",
     "cancel_scheduled_send": "Annulla invio",
     "reschedule_send": "Riprogramma",
     "cancel_and_edit": "Annulla e modifica",

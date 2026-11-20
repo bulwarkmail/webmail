@@ -4036,6 +4036,7 @@
     "items_selected": "Επιλέχθηκαν {count} μηνύματα",
     "forward_as_attachments": "Προώθηση ως συνημμένων",
     "edit_draft": "Επεξεργασία πρόχειρου",
+    "edit_as_new": "Επεξεργασία ως νέο",
     "cancel_scheduled_send": "Ακύρωση αποστολής",
     "reschedule_send": "Επαναπρογραμματισμός",
     "cancel_and_edit": "Ακύρωση και επεξεργασία",

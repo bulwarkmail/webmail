@@ -1032,6 +1032,7 @@
     "items_selected": "เลือกแล้ว {count} ฉบับ",
     "forward_as_attachments": "ส่งต่อเป็นไฟล์แนบ",
     "edit_draft": "แก้ไขร่างจดหมาย",
+    "edit_as_new": "แก้ไขเป็นข้อความใหม่",
     "cancel_scheduled_send": "ยกเลิกการส่ง",
     "reschedule_send": "เปลี่ยนเวลาส่งใหม่",
     "cancel_and_edit": "ยกเลิกและแก้ไข",

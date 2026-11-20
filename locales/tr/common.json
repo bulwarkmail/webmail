@@ -4024,6 +4024,7 @@
     "items_selected": "{count} e-posta seçildi",
     "forward_as_attachments": "Ek olarak ilet",
     "edit_draft": "Taslağı Düzenle",
+    "edit_as_new": "Yeni olarak düzenle",
     "cancel_scheduled_send": "Göndermeyi iptal et",
     "reschedule_send": "Yeniden zamanla",
     "cancel_and_edit": "İptal et ve düzenle",

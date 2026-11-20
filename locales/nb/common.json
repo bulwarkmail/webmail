@@ -4024,6 +4024,7 @@
     "items_selected": "Valgt: {count}",
     "forward_as_attachments": "Videresend som vedlegg",
     "edit_draft": "Rediger utkast",
+    "edit_as_new": "Rediger som ny",
     "cancel_scheduled_send": "Avbryt sending",
     "reschedule_send": "Planlegg på nytt",
     "cancel_and_edit": "Avbryt og rediger",

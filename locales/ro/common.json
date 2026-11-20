@@ -4024,6 +4024,7 @@
     "items_selected": "{count} e-mailuri selectate",
     "forward_as_attachments": "Redirecționează ca atașamente",
     "edit_draft": "Editează schița",
+    "edit_as_new": "Editează ca mesaj nou",
     "cancel_scheduled_send": "Anulează trimiterea",
     "reschedule_send": "Reprogramare",
     "cancel_and_edit": "Anulează și editează",

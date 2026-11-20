@@ -4024,6 +4024,7 @@
     "items_selected": "{count} vēstules atlasītas",
     "forward_as_attachments": "Pārsūtīt kā pielikumiem",
     "edit_draft": "Rediģēt melnrakstu",
+    "edit_as_new": "Rediģēt kā jaunu",
     "cancel_scheduled_send": "Atcelt sūtīšanu",
     "reschedule_send": "Pārplānot",
     "cancel_and_edit": "Atcelt un rediģēt",

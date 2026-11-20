@@ -4024,6 +4024,7 @@
     "items_selected": "{count} correus seleccionats",
     "forward_as_attachments": "Reenvia com a fitxers adjunts",
     "edit_draft": "Edita l'esborrany",
+    "edit_as_new": "Edita com a missatge nou",
     "cancel_scheduled_send": "Cancel·la l'enviament",
     "reschedule_send": "Reprograma",
     "cancel_and_edit": "Cancel·la i edita",

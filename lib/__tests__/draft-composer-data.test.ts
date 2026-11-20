@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { composerDataFromDraft, withReplyAllRecipients } from '../draft-composer-data';
+import { composerDataForEditAsNew, composerDataFromDraft, withReplyAllRecipients } from '../draft-composer-data';
 import type { Email } from '../jmap/types';
 
 const DRAFT = {
@@ -47,5 +47,53 @@ describe('withReplyAllRecipients', () => {
     const data = withReplyAllRecipients(open(draft), MESSAGE, ['me@example.org']);
     expect(data.to).toBe('b@example.org, carol@example.org');
     expect(data.cc).toBe('');
+  });
+});
+
+// #1781: "Edit as new" on a sent message.
+describe('composerDataForEditAsNew', () => {
+  const SENT = {
+    id: 's1', threadId: 't1', mailboxIds: { sent: true }, keywords: { $seen: true, work: true },
+    inReplyTo: ['m1@example.org'], references: ['m0@example.org', 'm1@example.org'],
+    from: [{ name: 'Me', email: 'me@example.org' }],
+    to: [{ name: 'Wrong Person', email: 'wrong@example.org' }],
+    cc: [{ email: 'cc@example.org' }],
+    bcc: [{ name: 'Boss', email: 'boss@example.org' }],
+    subject: 'Re: Plans', receivedAt: '2026-11-01T11:00:00Z', size: 10, hasAttachment: true,
+    textBody: [{ partId: '1', type: 'text/plain' }], htmlBody: [], bodyValues: { '1': { value: 'See the file.' } },
+    attachments: [{ partId: '2', blobId: 'blob-2', name: 'plan.pdf', type: 'application/pdf', size: 1234, disposition: 'attachment' }],
+  } as unknown as Email;
+  const identities = [
+    { id: 'id-other', name: 'Other', email: 'other@example.org' },
+    { id: 'id-me', name: 'Me', email: 'me@example.org' },
+  ] as never;
+
+  it('fills a new message as the original went out', () => {
+    const data = composerDataForEditAsNew(SENT, { identities, noSubject: '(no subject)' });
+    expect(data.selectedIdentityId).toBe('id-me');
+    expect(data.to).toBe('Wrong Person <wrong@example.org>');
+    expect(data.cc).toBe('cc@example.org');
+    expect(data.bcc).toBe('Boss <boss@example.org>');
+    expect(data.showBcc).toBe(true);
+    expect(data.subject).toBe('Re: Plans');
+    expect(data.body).toContain('See the file.');
+    expect(data.attachments).toEqual([
+      expect.objectContaining({ blobId: 'blob-2', name: 'plan.pdf', type: 'application/pdf', size: 1234 }),
+    ]);
+  });
+
+  it('is neither the sent message nor a reply to it', () => {
+    const data = composerDataForEditAsNew(SENT, { identities, noSubject: '(no subject)' });
+    expect(data.draftId).toBeNull();
+    expect(data.draftAccountId).toBeUndefined();
+    expect(data.inReplyTo).toBeUndefined();
+    expect(data.references).toBeUndefined();
+    expect(data.mode).toBe('compose');
+    expect(data.kind).toBeUndefined();
+  });
+
+  it('marks the attachments with the login and account they live in, to be copied when sent from another', () => {
+    const data = composerDataForEditAsNew(SENT, { identities, noSubject: '(no subject)', localAccountId: 'login-2', accountId: 'shared-acc' });
+    expect(data.attachments?.[0]).toEqual(expect.objectContaining({ sourceAccountId: 'login-2', sourceJmapAccountId: 'shared-acc' }));
   });
 });

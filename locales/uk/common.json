@@ -4024,6 +4024,7 @@
     "items_selected": "Вибрано електронних листів: {count}",
     "forward_as_attachments": "Переслати як вкладення",
     "edit_draft": "Редагувати чернетку",
+    "edit_as_new": "Редагувати як новий",
     "cancel_scheduled_send": "Скасувати надсилання",
     "reschedule_send": "Перенести",
     "cancel_and_edit": "Скасувати й редагувати",

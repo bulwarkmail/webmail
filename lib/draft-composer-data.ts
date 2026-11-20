@@ -107,3 +107,35 @@ export function composerDataFromDraft(
       })),
   };
 }
+
+/**
+ * "Edit as new" on a sent message (#1781): a new message filled in as the
+ * original went out (From, recipients, subject, body, attachments). It is
+ * neither the sent message, which must stay as it is (no draft id), nor a
+ * reply to it (no In-Reply-To or References). The attachments still point at
+ * the sent message's parts; the composer copies them when it saves through
+ * another login or account (rehomeForeignBlobs), and to the draft's own
+ * parts after the first save.
+ */
+export function composerDataForEditAsNew(
+  sent: Email,
+  source: DraftSource & { identities: Identity[]; noSubject: string },
+): ComposerDraftData {
+  const data = composerDataFromDraft(sent, source);
+  return {
+    ...data,
+    draftId: null,
+    draftAccountId: undefined,
+    draftLocalAccountId: undefined,
+    inReplyTo: undefined,
+    references: undefined,
+    kind: undefined,
+    // Tags are the copy in Sent's, not part of what was sent.
+    tags: undefined,
+    attachments: data.attachments?.map((attachment) => ({
+      ...attachment,
+      ...(source.localAccountId ? { sourceAccountId: source.localAccountId } : {}),
+      ...(source.accountId ? { sourceJmapAccountId: source.accountId } : {}),
+    })),
+  };
+}

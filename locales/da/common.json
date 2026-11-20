@@ -4024,6 +4024,7 @@
     "items_selected": "{count} e-mails valgt",
     "forward_as_attachments": "Videresend som vedhæftede filer",
     "edit_draft": "Redigér kladde",
+    "edit_as_new": "Redigér som ny",
     "cancel_scheduled_send": "Annuller afsendelse",
     "reschedule_send": "Planlæg om",
     "cancel_and_edit": "Annuller og redigér",

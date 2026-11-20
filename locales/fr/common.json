@@ -4024,6 +4024,7 @@
     "items_selected": "{count} emails sélectionnés",
     "forward_as_attachments": "Transférer en pièces jointes",
     "edit_draft": "Modifier le brouillon",
+    "edit_as_new": "Modifier comme nouveau",
     "cancel_scheduled_send": "Annuler l’envoi",
     "reschedule_send": "Replanifier",
     "cancel_and_edit": "Annuler et modifier",

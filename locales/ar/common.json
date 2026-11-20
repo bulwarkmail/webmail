@@ -4024,6 +4024,7 @@
     "items_selected": "{count} رسالة محددة",
     "forward_as_attachments": "إعادة التوجيه كمرفقات",
     "edit_draft": "تعديل المسودة",
+    "edit_as_new": "تعديل كرسالة جديدة",
     "cancel_scheduled_send": "إلغاء الإرسال",
     "reschedule_send": "إعادة الجدولة",
     "cancel_and_edit": "إلغاء والتعديل",

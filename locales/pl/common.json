@@ -4024,6 +4024,7 @@
     "items_selected": "{count} zaznaczonych wiadomości",
     "forward_as_attachments": "Prześlij dalej jako załączniki",
     "edit_draft": "Edytuj szkic",
+    "edit_as_new": "Edytuj jako nową",
     "cancel_scheduled_send": "Anuluj wysyłkę",
     "reschedule_send": "Przełóż",
     "cancel_and_edit": "Anuluj i edytuj",

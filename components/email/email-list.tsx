@@ -141,6 +141,8 @@ interface EmailListProps {
   onOpenAttachment?: (email: Email, attachment: Attachment) => void;
   loadAttachments?: LoadListAttachments;
   onEditDraft?: (email: Email) => void;
+  /** In Sent: a new message filled in as this one went out (#1781). */
+  onEditAsNew?: (email: Email) => void;
   isScheduledView?: boolean;
   onLoadMoreScheduled?: () => void;
   onCancelScheduledForEdit?: (email: Email) => void | Promise<void>;
@@ -237,6 +239,7 @@ export function EmailList({
   loadAttachments,
   onMoveToMailbox,
   onEditDraft,
+  onEditAsNew,
   isScheduledView = false,
   hideBatchToolbar = false,
   onLoadMoreScheduled,
@@ -1868,6 +1871,7 @@ export function EmailList({
           onMarkAsSpam={() => onMarkAsSpam?.(contextMenuEmail!)}
           onUndoSpam={() => onUndoSpam?.(contextMenuEmail!)}
           onEditDraft={() => onEditDraft?.(contextMenuEmail!)}
+          onEditAsNew={onEditAsNew ? () => onEditAsNew(contextMenuEmail!) : undefined}
           onCancelScheduledForEdit={onCancelScheduledForEdit ? () => onCancelScheduledForEdit(contextMenuEmail!) : undefined}
           onCancelScheduledSend={onCancelScheduledSend ? () => void onCancelScheduledSend(contextMenuEmail!) : undefined}
           onRescheduleScheduled={onRescheduleScheduled ? () => onRescheduleScheduled(contextMenuEmail!) : undefined}

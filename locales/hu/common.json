@@ -4024,6 +4024,7 @@
     "items_selected": "{count} e-mail kijelölve",
     "forward_as_attachments": "Továbbítás mellékletként",
     "edit_draft": "Piszkozat szerkesztése",
+    "edit_as_new": "Szerkesztés új üzenetként",
     "cancel_scheduled_send": "Küldés megszakítása",
     "reschedule_send": "Átütemezés",
     "cancel_and_edit": "Mégse és szerkesztés",

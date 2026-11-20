@@ -4024,6 +4024,7 @@
     "items_selected": "{count} vybraných e-mailov",
     "forward_as_attachments": "Preposlať ako prílohy",
     "edit_draft": "Upraviť koncept",
+    "edit_as_new": "Upraviť ako novú",
     "cancel_scheduled_send": "Zrušiť odoslanie",
     "reschedule_send": "Prenaplánovať",
     "cancel_and_edit": "Zrušiť a upraviť",

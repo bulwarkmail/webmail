@@ -4024,6 +4024,7 @@
     "items_selected": "{count} e-kirja valitud",
     "forward_as_attachments": "Edasta manustena",
     "edit_draft": "Muuda mustandit",
+    "edit_as_new": "Muuda uue kirjana",
     "cancel_scheduled_send": "Tühista saatmine",
     "reschedule_send": "Muuda ajastust",
     "cancel_and_edit": "Tühista ja muuda",
