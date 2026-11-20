@@ -353,6 +353,16 @@ describe('servers users enter', () => {
     expect(opened.mail.at(-1)!.allowPrivateHost).toBe(false);
   });
 
+  it('are tested only for an account on this deployment\'s mail server', async () => {
+    await saveOptions({ concurrency: 2, forgetAfterDays: 30, allowUserServers: true });
+    const elsewhere = { ...user, serverUrl: 'https://mail.elsewhere.example', trusted: false };
+    await expect(service.userTestSource(elsewhere, { sourceId: 'other', custom: custom(), username: 'someone', password: 'guess' }))
+      .rejects.toMatchObject({ code: 'untrusted' });
+    expect(opened.mail).toHaveLength(0);
+    expect(await service.userTestSource(user, { sourceId: 'other', custom: custom(), username: 'alice', password: 'x' }))
+      .toEqual([{ protocol: 'imap', ok: true }]);
+  });
+
   it('get no more passes once the admin turns the option off', async () => {
     await saveOptions({ concurrency: 2, forgetAfterDays: 30, allowUserServers: true });
     await start(custom());

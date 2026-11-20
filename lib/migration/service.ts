@@ -670,7 +670,17 @@ async function checkPublicHosts(endpoints: SourceEndpoints): Promise<void> {
   }
 }
 
+/**
+ * Only an account on this deployment's own mail server may have the server
+ * reach other servers: a sign-in to a server the user picked could
+ * otherwise try logins anywhere, with as many accounts as it makes.
+ */
+function requireTrusted(user: MigrationUser): void {
+  if (!user.trusted) throw new MigrationRequestError('Moving a mailbox needs an account on this deployment\'s mail server.', 403, 'untrusted');
+}
+
 export async function userTestSource(user: MigrationUser, raw: unknown): Promise<TestOutcome[]> {
+  requireTrusted(user);
   const input = (raw ?? {}) as Record<string, unknown>;
   const { endpoints, custom } = await userSource(input);
   const username = str(input.username, 320);
@@ -710,7 +720,7 @@ function parseAppPassword(raw: unknown): { id: string; secret: string; expiresAt
 
 /** Start a self-service migration into the signed-in user's own account. The target comes from the session alone. */
 export async function startUserMigration(user: MigrationUser, raw: unknown): Promise<PublicMigration> {
-  if (!user.trusted) throw new MigrationRequestError('Moving a mailbox needs an account on this deployment\'s mail server.', 403, 'untrusted');
+  requireTrusted(user);
   const input = (raw ?? {}) as Record<string, unknown>;
   const appPassword = parseAppPassword(input.appPassword);
   if (!appPassword) throw new MigrationRequestError('Invalid app password.', 400);
