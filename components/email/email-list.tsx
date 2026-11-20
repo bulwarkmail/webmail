@@ -289,6 +289,7 @@ export function EmailList({
     autoMarkExpandedThreadAsRead,
     collapseAllThreads,
     threadEmailCounts,
+    draftThreads,
     searchFilters,
     setSearchFilters,
     clearSearchFilters,
@@ -319,6 +320,7 @@ export function EmailList({
     autoMarkExpandedThreadAsRead: state.autoMarkExpandedThreadAsRead,
     collapseAllThreads: state.collapseAllThreads,
     threadEmailCounts: state.threadEmailCounts,
+    draftThreads: state.draftThreads,
     searchFilters: state.searchFilters,
     setSearchFilters: state.setSearchFilters,
     clearSearchFilters: state.clearSearchFilters,
@@ -337,6 +339,12 @@ export function EmailList({
     ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
   // Spam is pointless on your own outgoing mail, as in the context menu.
   const spamApplicable = spamApplicableIn(effectiveMailboxRole);
+  // Conversations with a reply saved as a draft (#1798). Not in Drafts,
+  // whose rows are the drafts.
+  const replyDraftThreadIds = useMemo(
+    () => (effectiveMailboxRole === 'drafts' ? new Set<string>() : new Set(draftThreads.values())),
+    [draftThreads, effectiveMailboxRole],
+  );
 
   // The folder the rows on screen were fetched for, taken when the rows
   // change. A click on another folder changes the selection at once while
@@ -1409,6 +1417,7 @@ export function EmailList({
           onOpenAttachment={rowHandlers.onOpenAttachment}
           loadAttachments={loadAttachments}
           listFolder={listFolder}
+          hasReplyDraft={replyDraftThreadIds.has(thread.latestEmail.threadId) && !thread.latestEmail.keywords?.$draft}
         />}
       </>
     );

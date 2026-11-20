@@ -1023,6 +1023,43 @@ function threadCountsFrom(methodResponse: unknown): Record<string, number> | und
   return counts;
 }
 
+/**
+ * How many of the account's drafts a list page reads the conversations of
+ * (#1798). A draft beyond them leaves its row without the "Draft" marker.
+ */
+export const DRAFT_THREADS_LIMIT = 200;
+
+/**
+ * Draft id -> thread id from the Email/get chained onto a list request
+ * (#1798); undefined when the server did not answer it.
+ */
+function draftThreadsFrom(methodResponses: unknown[] | undefined): Record<string, string> | undefined {
+  const answer = methodResponses?.find((r) => Array.isArray(r) && r[2] === "draftThreads") as [string, { list?: Email[] }] | undefined;
+  if (!answer || answer[0] !== "Email/get" || !Array.isArray(answer[1]?.list)) return undefined;
+  const threads: Record<string, string> = {};
+  for (const draft of answer[1].list) {
+    if (typeof draft.id === "string" && typeof draft.threadId === "string") threads[draft.id] = draft.threadId;
+  }
+  return threads;
+}
+
+/** The calls that read the account's drafts and their conversations (#1798). */
+function draftThreadCalls(accountId: string): JMAPMethodCall[] {
+  return [
+    ["Email/query", {
+      accountId,
+      filter: { hasKeyword: "$draft" },
+      sort: [{ property: "receivedAt", isAscending: false }],
+      limit: DRAFT_THREADS_LIMIT,
+    }, "draftIds"],
+    ["Email/get", {
+      accountId,
+      "#ids": { resultOf: "draftIds", name: "Email/query", path: "/ids" },
+      properties: ["id", "threadId"],
+    }, "draftThreads"],
+  ];
+}
+
 function computeHasMore(position: number, emailCount: number, total: number, limit: number): boolean {
   if (total > 0) return (position + emailCount) < total;
   return emailCount === limit;
@@ -3166,7 +3203,7 @@ export class JMAPClient implements IJMAPClient {
   // Throws when the page cannot be read. Answering with an empty page made a
   // failed refresh empty the list, and callers could not tell it from an
   // empty folder.
-  async getEmails(mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, hasKeyword?: string, pinnedFirst?: boolean, extraFilter?: Record<string, unknown>, order: SortLevel[] = []): Promise<{ emails: Email[], hasMore: boolean, total: number, state?: string, threadCounts?: Record<string, number> }> {
+  async getEmails(mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, hasKeyword?: string, pinnedFirst?: boolean, extraFilter?: Record<string, unknown>, order: SortLevel[] = []): Promise<{ emails: Email[], hasMore: boolean, total: number, state?: string, threadCounts?: Record<string, number>, draftThreads?: Record<string, string> }> {
     const targetAccountId = accountId || this.accountId;
     const simple: { inMailbox?: string; hasKeyword?: string } = {};
     if (mailboxId) {
@@ -3196,6 +3233,9 @@ export class JMAPClient implements IJMAPClient {
     const built = rider
       ? { sort: buildEmailSort(order, { pinnedFirst, polarity: rider.guess }), keywordSortSupported: true }
       : await this.buildListSort(targetAccountId, pinnedFirst === true, order);
+    // The drafts' conversations ride along only where the server takes the
+    // calls: the list, the drafts' two and the sort probe's.
+    const withDraftThreads = this.getMaxCallsInRequest() >= 5 + (rider?.calls.length ?? 0);
     const query = (sort: ReturnType<typeof buildEmailSort>, extra: JMAPMethodCall[] = []) => this.request([
       ["Email/query", {
         accountId: targetAccountId,
@@ -3217,6 +3257,10 @@ export class JMAPClient implements IJMAPClient {
         accountId: targetAccountId,
         "#ids": { resultOf: "1", name: "Email/get", path: "/list/*/threadId" },
       }, "2"],
+      // The conversations the account's drafts belong to, for the list's
+      // "Draft" marker (#1798): one keyword query for the whole page, its
+      // size bounded by the number of drafts, in the same round trip.
+      ...(withDraftThreads ? draftThreadCalls(targetAccountId) : []),
       ...extra,
     ]);
 
@@ -3279,10 +3323,20 @@ export class JMAPClient implements IJMAPClient {
       // The Email collection state this page was read at; the store keeps
       // it so a later push can be applied with Email/changes.
       const state = typeof getResponse.state === 'string' ? getResponse.state : undefined;
-      return { emails, hasMore, total, state, threadCounts: threadCountsFrom(response.methodResponses?.[2]) };
+      return {
+        emails, hasMore, total, state,
+        threadCounts: threadCountsFrom(response.methodResponses?.[2]),
+        draftThreads: draftThreadsFrom(response.methodResponses),
+      };
     }
 
     throw new Error(methodErrorMessage(response, 'Failed to get emails'));
+  }
+
+  /** The account's drafts and their conversations (#1798), for a list shown without reading a page. */
+  async getDraftThreads(accountId?: string): Promise<Record<string, string> | undefined> {
+    const response = await this.request(draftThreadCalls(accountId || this.accountId));
+    return draftThreadsFrom(response.methodResponses);
   }
 
   async getEmailsInMailbox(mailboxId: string): Promise<Email[]> {

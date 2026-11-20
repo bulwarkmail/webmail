@@ -176,7 +176,7 @@ describe('JMAPClient list ordering', () => {
 
     // The first list used to wait a round trip for the probe.
     expect(sent).toHaveLength(1);
-    expect(sent[0].map(call => call[2])).toEqual(['0', '1', '2', 'asc', 'desc', 'get']);
+    expect(sent[0].map(call => call[2])).toEqual(['0', '1', '2', 'draftIds', 'draftThreads', 'asc', 'desc', 'get']);
   });
 
   it('probes on its own when the server takes too few calls per request', async () => {

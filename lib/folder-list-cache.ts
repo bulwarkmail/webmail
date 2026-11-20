@@ -22,6 +22,8 @@ export interface FolderList {
   sync?: { state: string; accountId: string; mailboxId: string } | null;
   /** Conversation sizes of the rows, which a folder switch clears. */
   threadEmailCounts?: Map<string, number>;
+  /** The account's drafts by conversation, for the rows' "Draft" (#1798). */
+  draftThreads?: Map<string, string>;
 }
 
 /** Folders remembered per tab; the oldest visited is dropped first. */

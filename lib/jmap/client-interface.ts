@@ -289,7 +289,9 @@ export interface IJMAPClient {
    * A page of a view. `threadCounts` (message count per thread id) comes with
    * the page when the server answers the Thread/get chained onto it.
    */
-  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string, pinnedFirst?: boolean, extraFilter?: Record<string, unknown>, order?: SortLevel[]): Promise<{ emails: Email[]; hasMore: boolean; total: number; state?: string; threadCounts?: Record<string, number> }>;
+  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string, pinnedFirst?: boolean, extraFilter?: Record<string, unknown>, order?: SortLevel[]): Promise<{ emails: Email[]; hasMore: boolean; total: number; state?: string; threadCounts?: Record<string, number>; draftThreads?: Record<string, string> }>;
+  /** Draft id -> thread id for the account's drafts (#1798). */
+  getDraftThreads?(accountId?: string): Promise<Record<string, string> | undefined>;
   /**
    * Sort properties the account's server advertises for Email/query
    * (`emailQuerySortOptions` in the mail capability, RFC 8621 §1.3), or null

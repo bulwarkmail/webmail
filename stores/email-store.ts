@@ -318,6 +318,13 @@ interface EmailStore {
   isLoadingThread: string | null;
   // Full thread email counts (from Thread/get across all folders)
   threadEmailCounts: Map<string, number>;
+  /**
+   * The account's drafts and the conversations they are in (draft id ->
+   * bare thread id), read with the folder's page and kept up by its
+   * Email/changes: rows of those conversations show "Draft" (#1798). Empty
+   * in the views that are not one folder's list.
+   */
+  draftThreads: Map<string, string>;
 
   // Keyword/tag filter
   selectedKeyword: string | null;
@@ -1228,8 +1235,9 @@ async function applyEmailDeltaNow(client: IJMAPClient, newState: string | null, 
   // notification fires as before.
   const candidates = [...delta.created, ...delta.updated.filter((id) => !listIds.has(id))];
   if (candidates.length > EMAIL_DELTA_MAX_CANDIDATES) return false;
+  let arrived: Email[] = [];
   if (candidates.length > 0) {
-    const arrived = await effectiveClient.getSomeEmails(candidates, accountArg);
+    arrived = await effectiveClient.getSomeEmails(candidates, accountArg);
     if (!isCurrentView()) return true;
     if (arrived.some((e) => e.mailboxIds?.[sync.mailboxId])) return false;
   }
@@ -1237,6 +1245,10 @@ async function applyEmailDeltaNow(client: IJMAPClient, newState: string | null, 
   const removed = new Set(destroyedInList);
   const updatedEmails = updatedInList.length > 0 ? await effectiveClient.getSomeEmails(updatedInList, accountArg) : [];
   if (!isCurrentView()) return true;
+  // A reply saved, sent or thrown away elsewhere in the account: the rows'
+  // "Draft" markers follow (#1798).
+  const draftThreads = withDraftChanges(get().draftThreads, [...arrived, ...updatedEmails], delta.destroyed);
+  if (draftThreads) set({ draftThreads });
   const updatedById = new Map(updatedEmails.map((e) => [e.id, e]));
   // Another client changed the read/star/tag state a keyword order (#718)
   // sorts on: the row may now belong past the loaded part of the list and an
@@ -1870,6 +1882,7 @@ function folderListState(s: EmailStore): FolderList {
     hasMoreEmails: s.hasMoreEmails,
     sync: s.emailListSync,
     threadEmailCounts: s.threadEmailCounts,
+    draftThreads: s.draftThreads,
   };
 }
 
@@ -1907,6 +1920,36 @@ function threadCountsPatch(
     if (count !== undefined) merged.set(threadKeyFor(email), count);
   }
   return { threadEmailCounts: merged };
+}
+
+/** The drafts' conversations a page brought along (#1798); nothing when it brought none. */
+function draftThreadsPatch(
+  draftThreads: Record<string, string> | undefined,
+): { draftThreads: Map<string, string> } | Record<string, never> {
+  return draftThreads ? { draftThreads: new Map(Object.entries(draftThreads)) } : {};
+}
+
+/**
+ * `current` after an Email/changes delta (#1798): `seen` are the changed
+ * messages as read now, `destroyed` the ids gone. Null when no draft came,
+ * went or moved to another conversation.
+ */
+export function withDraftChanges(
+  current: ReadonlyMap<string, string>,
+  seen: readonly Pick<Email, 'id' | 'threadId' | 'keywords'>[],
+  destroyed: readonly string[],
+): Map<string, string> | null {
+  let next: Map<string, string> | null = null;
+  const edit = () => (next ??= new Map(current));
+  for (const id of destroyed) if (current.has(id)) edit().delete(id);
+  for (const email of seen) {
+    if (email.keywords?.$draft && email.threadId) {
+      if (current.get(email.id) !== email.threadId) edit().set(email.id, email.threadId);
+    } else if (current.has(email.id)) {
+      edit().delete(email.id);
+    }
+  }
+  return next;
 }
 
 function captureEmailListView(): () => boolean {
@@ -3843,6 +3886,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   threadEmailsCache: new Map(),
   isLoadingThread: null,
   threadEmailCounts: new Map(),
+  draftThreads: new Map(),
 
   // Keyword/tag filter
   selectedKeyword: null,
@@ -3952,6 +3996,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     expandedThreadIds: new Set(),
     threadEmailsCache: new Map(),
     threadEmailCounts: new Map(),
+    draftThreads: new Map(),
     isLoadingThread: null,
     // Account folders are always real folders; like selectMailbox, leave any
     // unified view so a pending unified fetch or refresh can't take it over (#1102).
@@ -4049,6 +4094,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     expandedThreadIds: new Set(),
     threadEmailsCache: new Map(),
     threadEmailCounts: new Map(),
+    draftThreads: new Map(),
     viewToken: state.viewToken + 1,
     isUnifiedView: false,
     unifiedRole: null,
@@ -4107,6 +4153,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       expandedThreadIds: new Set(),
       threadEmailsCache: new Map(),
       threadEmailCounts: new Map(),
+      draftThreads: new Map(),
       isLoadingThread: null,
       viewToken: state.viewToken + 1,
       isUnifiedView: false,
@@ -4507,6 +4554,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           // a push delta, and the catch-up below, start from it.
           emailListSync: remembered.sync?.mailboxId === targetMailboxId ? remembered.sync : null,
           threadEmailCounts: remembered.threadEmailCounts ?? new Map(),
+          draftThreads: remembered.draftThreads ?? new Map(),
           threadEmailsCache: new Map(),
           expandedThreadIds: new Set(),
           isLoadingThread: null,
@@ -4543,6 +4591,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           rememberFolderList(listKey, folderListState(get()), emailsPerPage);
           // The boot snapshot carries no conversation sizes.
           if (get().threadEmailCounts.size === 0) void get().fetchThreadEmailCounts(client);
+          // Nor the drafts' conversations (#1798).
+          if (!remembered?.draftThreads && effectiveClient.getDraftThreads) {
+            void effectiveClient.getDraftThreads(accountId).then((drafts) => {
+              if (drafts && isCurrentView()) set(draftThreadsPatch(drafts));
+            }).catch(() => {});
+          }
           return;
         }
       }
@@ -4572,6 +4626,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           : null;
       const threadCounts = threadCountsPatch(enrichedEmails, result.threadCounts, get().threadEmailCounts);
       set({
+        ...draftThreadsPatch(result.draftThreads),
         emails: annotateScheduledEmails(enrichedEmails, get().scheduledSubmissionByEmailId),
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
@@ -4838,6 +4893,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
         ...threadCounts,
+        ...draftThreadsPatch('draftThreads' in result ? result.draftThreads : undefined),
         isLoadingMore: false
       });
       // Thread counts for the new rows, unless the page brought them along.
@@ -7838,7 +7894,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         }
       }
       if (!isCurrentView()) return;
-      set({ emailListSync: syncAfterRefresh });
+      set({ emailListSync: syncAfterRefresh, ...draftThreadsPatch('draftThreads' in result ? result.draftThreads : undefined) });
 
       // Rows that left the list while the query was out were deleted, moved
       // or filed away meanwhile, and the server may have answered before that
@@ -8868,6 +8924,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       error: null,
       isUnifiedView: true,
       unifiedRole: role,
+      // Several accounts: no folder page brings drafts along (#1798).
+      draftThreads: new Map(),
       crossView: null,
       selectedKeyword: null,
       selectedKeywordAccountId: null,
@@ -9049,6 +9107,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       isUnifiedView: true,
       unifiedRole: null,
       crossView: view,
+      // Several accounts: no folder page brings drafts along (#1798).
+      draftThreads: new Map(),
       selectedKeyword: null,
       selectedKeywordAccountId: null,
       retainedInViewIds: new Set(),
