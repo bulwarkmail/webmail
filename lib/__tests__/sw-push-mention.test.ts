@@ -63,7 +63,7 @@ function loadWorker(preview: (url: URL) => Record<string, unknown>, stored: { la
   return { push, click, shown, shade, fetchMock };
 }
 
-const MENTION = { noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer', from: 'Mabel', subject: 'Offer for the Mulberry project' };
+const MENTION = { noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', emailId: 'offer', from: 'Mabel', subject: 'Offer for the Mulberry project' };
 const noteDelivery = { kind: 'jmap-email-push', accountLabel: 'bob@example.org', accountId: 'g', emailIds: ['n1'] };
 const stateChange = { kind: 'jmap-state-change', accountLabel: 'bob@example.org', accountId: 'g', emailIds: [], changed: { g: { EmailDelivery: 's1', Email: 's1' } } };
 /** What stays on screen, and sounds. */

@@ -369,7 +369,7 @@ function mail(id: string, opts: { account?: string; age?: number; seen?: boolean
 }
 
 const MENTION = {
-  noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer',
+  noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', emailId: 'offer',
   from: 'Mabel', subject: 'Offer for the Mulberry project',
 };
 
@@ -402,6 +402,12 @@ describe('push preview for team notes', () => {
       threads = { T1: ['reply'] };
       store.push(note('n1'));
       expect((await callRoute('g', 'n1')).body.mention).toMatchObject({ noteId: 'n1', emailId: 'reply' });
+    });
+
+    it('never names the Message-ID of the message it is about', async () => {
+      store.push(note('n1'));
+      expect(JSON.stringify((await callRoute('g', 'n1')).body)).not.toContain('offer@client.example');
+      expect(JSON.stringify((await callRoute('g')).body)).not.toContain('offer@client.example');
     });
 
     it("is nothing for a member it doesn't mention", async () => {
@@ -478,7 +484,7 @@ describe('push preview for team notes', () => {
       devicePolicy.current = { ...DEFAULT_POLICY, organisation: { devices: { pushWithoutContent: true } } };
       store.push(note('n1'));
       const { body } = await callRoute('g');
-      expect(body.mention).toEqual({ noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', forKey: 'offer@client.example', emailId: 'offer' });
+      expect(body.mention).toEqual({ noteId: 'n1', messageId: 'n1@notes.bulwark.invalid', threadId: 'T1', emailId: 'offer' });
       expect(JSON.stringify(body)).not.toMatch(/Mabel|Mulberry|signed copy/);
       for (const properties of emailGets()) expect(contentProperties(properties)).toEqual([]);
     });

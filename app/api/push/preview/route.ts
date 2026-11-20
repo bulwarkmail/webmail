@@ -55,6 +55,9 @@ interface NoteMention {
   subject?: string;
 }
 
+/** The mention as the service worker gets it. */
+type MentionAnswer = Omit<NoteMention, 'forKey'>;
+
 type RawEmail = Record<string, unknown>;
 type MethodResponse = [string, Record<string, unknown>, string];
 
@@ -597,7 +600,11 @@ export async function GET(request: NextRequest) {
       if (!res.ok) return [];
       return ((await readJsonCapped(res, UPSTREAM_JSON_MAX_BYTES)) as { methodResponses?: MethodResponse[] }).methodResponses ?? [];
     };
-    const findMessage = (mention: NoteMention) => messageOfNote(mention, accountId, jmap);
+    // What goes back: never the Message-ID of the message the note is about.
+    const findMessage = async (mention: NoteMention): Promise<MentionAnswer> => {
+      const { forKey: _forKey, ...answer } = await messageOfNote(mention, accountId, jmap);
+      return answer;
+    };
 
     // A team note that arrived: only the members it mentions hear of it, and
     // nobody hears of it as mail.
@@ -629,7 +636,7 @@ export async function GET(request: NextRequest) {
 
     // No message named (a state change): the newest note of the last minutes
     // that mentions this login, and whether a note rather than mail woke us.
-    let mention: NoteMention | null = null;
+    let mention: MentionAnswer | null = null;
     let noteWokeUs = false;
     if (lookForNotes) {
       const mentionList = resultOf('Email/get', 'mg')?.list;
