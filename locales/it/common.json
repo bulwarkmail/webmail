@@ -7084,6 +7084,10 @@
         "title": "Inoltrare la tua posta",
         "body": "Inoltrare messaggi dal tuo account con i loro allegati, senza aprire l'editor. Ti viene chiesto prima del primo inoltro a ciascun indirizzo."
       },
+      "ui_notices": {
+        "title": "Mostrare avvisi",
+        "body": "Mostrare un piccolo pannello proprio in basso sullo schermo, dove compaiono i messaggi dell'app, ad esempio per una chiamata in arrivo. Non blocca la pagina, puoi continuare a scrivere e chiuderlo. Ognuno indica il nome del plugin."
+      },
       "ui_notifications": {
         "title": "Mostrare notifiche",
         "body": "Mostrare notifiche sul tuo dispositivo, o nell'app se non le hai consentite. Ognuna indica il nome del plugin. Il plugin vede anche gli avvisi che l'app ti mostra."

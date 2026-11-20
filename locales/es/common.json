@@ -7084,6 +7084,10 @@
         "title": "Reenviar tu correo",
         "body": "Reenviar mensajes de tu cuenta con sus adjuntos, sin abrir el editor. Se te pregunta antes del primer reenvío a cada dirección."
       },
+      "ui_notices": {
+        "title": "Mostrar avisos",
+        "body": "Mostrar un pequeño panel propio en la parte inferior de la pantalla, donde aparecen los mensajes de la aplicación, por ejemplo para una llamada entrante. No bloquea la página, puede seguir escribiendo y cerrarlo. Cada uno indica el nombre del plugin."
+      },
       "ui_notifications": {
         "title": "Mostrar notificaciones",
         "body": "Mostrar notificaciones en tu dispositivo, o dentro de la aplicación si no las has permitido. Cada una indica el nombre del complemento. El complemento también ve los avisos que la aplicación te muestra."

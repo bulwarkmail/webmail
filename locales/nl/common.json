@@ -7084,6 +7084,10 @@
         "title": "Je e-mail doorsturen",
         "body": "Berichten uit je account met hun bijlagen doorsturen, zonder de editor te openen. Voor de eerste keer doorsturen naar een adres wordt het je gevraagd."
       },
+      "ui_notices": {
+        "title": "Meldingen tonen",
+        "body": "Een klein eigen paneel onderaan het scherm tonen, waar ook de berichten van de app verschijnen, bijvoorbeeld bij een inkomend gesprek. Het blokkeert de pagina niet, u kunt verder typen en het sluiten. Elke melding noemt de plug-in."
+      },
       "ui_notifications": {
         "title": "Meldingen tonen",
         "body": "Meldingen op je apparaat tonen, of in de app als je ze niet hebt toegestaan. Elke melding noemt de naam van de plug-in. De plug-in ziet ook de meldingen die de app je toont."

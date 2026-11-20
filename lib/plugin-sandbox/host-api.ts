@@ -77,6 +77,7 @@ import { doNotificationsShow } from './host-api-notify';
 import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAccounts, doUserGetSelf } from './host-api-account';
 import { setSectionTitle } from './section-titles';
 import { setSidePanel } from './side-panels';
+import { closeNotice, showNotice } from './notices';
 import { requestPanel } from './panel-requests';
 import { requestPageNavigation } from './page-navigation';
 import { requestCalendarView } from './calendar-navigation';
@@ -221,6 +222,10 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'ui.alert': null,
   'ui.prompt': null,
   'ui.openDialog': null,
+  // One of the plugin's frames in the toasts' stack, without taking the
+  // focus; at most a few at a time.
+  'ui.showNotice': 'ui:notices',
+  'ui.closeNotice': 'ui:notices',
   'ui.rerenderEmail': null,
   'ui.rerenderFetchedEmails': null,
   'ui.openExternalUrl': null,
@@ -2324,6 +2329,8 @@ export async function dispatchApiCall(
         anchor: opts.anchor === 'trigger' ? triggerAnchor() ?? undefined : undefined,
       });
     }
+    case 'ui.showNotice': return showNotice(plugin, args[0], opts?.toastSignal);
+    case 'ui.closeNotice': closeNotice(plugin.id, args[0]); return undefined;
     case 'ui.rerenderEmail': {
       // Re-run the onRenderEmailBody hook for the currently open message. Used
       // by crypto plugins after they change decryption state (e.g. an S/MIME key

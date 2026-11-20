@@ -51,9 +51,13 @@ export const useToastStore = create<ToastStore>((set, get) => ({
       toasts: [...state.toasts, newToast],
     }));
     announce(toastAnnouncement(newToast), { assertive: toast.type === "error" });
-    void toastHooks.onToastShow.emit({
-      id, type: toast.type, title: toast.title, message: toast.message ?? "",
-    });
+    // A plugin's notice (a toast with a body of its own) is that plugin's
+    // business: other plugins hear neither its title nor that it went.
+    if (toast.content === undefined) {
+      void toastHooks.onToastShow.emit({
+        id, type: toast.type, title: toast.title, message: toast.message ?? "",
+      });
+    }
     // Errors and warnings stay in the bell's list after the toast is gone,
     // with the plugin that asked for one.
     if (toast.type === "error" || toast.type === "warning") {
@@ -72,11 +76,12 @@ export const useToastStore = create<ToastStore>((set, get) => ({
   },
 
   removeToast: (id) => {
-    if (!get().toasts.some((t) => t.id === id)) return;
+    const gone = get().toasts.find((t) => t.id === id);
+    if (!gone) return;
     set((state) => ({
       toasts: state.toasts.filter((toast) => toast.id !== id),
     }));
-    void toastHooks.onToastDismiss.emit({ id });
+    if (gone.content === undefined) void toastHooks.onToastDismiss.emit({ id });
   },
 
   clearToasts: () => {

@@ -29,4 +29,17 @@ describe('toast hooks', () => {
 
     expect(dismissed).not.toHaveBeenCalled();
   });
+
+  it('keeps a toast with a body of its own (a plugin\'s notice) from other plugins', () => {
+    const shown = vi.fn();
+    const dismissed = vi.fn();
+    toastHooks.onToastShow.register('t', shown);
+    toastHooks.onToastDismiss.register('t', dismissed);
+
+    const id = useToastStore.getState().addToast({ type: 'info', title: 'Call from Ada', duration: 0, content: 'frame' });
+    useToastStore.getState().removeToast(id);
+
+    expect(shown).not.toHaveBeenCalled();
+    expect(dismissed).not.toHaveBeenCalled();
+  });
 });

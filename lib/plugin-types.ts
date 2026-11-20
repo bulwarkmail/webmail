@@ -1737,6 +1737,9 @@ export const ALL_PERMISSIONS = [
   // Show a system notification, or a toast when the user hasn't allowed them
   // (api.notifications.show), and see the app's own toasts (onToastShow).
   'ui:notifications',
+  // Show one of the plugin's frames in the toasts' stack, for something to
+  // notice while working, such as a call (api.ui.showNotice).
+  'ui:notices',
   // See every web link the user opens, with its text, and stop it or open
   // another address instead (onBeforeExternalLink).
   'links:check',

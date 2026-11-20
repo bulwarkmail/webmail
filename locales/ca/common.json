@@ -7084,6 +7084,10 @@
         "title": "Reenviar el vostre correu",
         "body": "Reenviar missatges del vostre compte amb els adjunts, sense obrir l'editor. Se us pregunta abans del primer reenviament a cada adreça."
       },
+      "ui_notices": {
+        "title": "Mostrar avisos",
+        "body": "Mostrar un petit tauler propi a la part inferior de la pantalla, on apareixen els missatges de l'aplicació, per exemple per a una trucada entrant. No bloqueja la pàgina, podeu continuar escrivint i tancar-lo. Cadascun indica el nom del connector."
+      },
       "ui_notifications": {
         "title": "Mostrar notificacions",
         "body": "Mostrar notificacions al dispositiu, o dins l'aplicació si no les heu permeses. Cadascuna indica el nom del connector. El connector també veu els avisos que l'aplicació us mostra."

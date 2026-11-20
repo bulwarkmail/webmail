@@ -7084,6 +7084,10 @@
         "title": "Encaminhar seus e-mails",
         "body": "Encaminhar mensagens da sua conta com os anexos, sem abrir o editor. Você é consultado antes do primeiro encaminhamento para cada endereço."
       },
+      "ui_notices": {
+        "title": "Mostrar avisos",
+        "body": "Mostrar um pequeno painel próprio na parte inferior do ecrã, onde aparecem as mensagens da aplicação, por exemplo para uma chamada recebida. Não bloqueia a página, pode continuar a escrever e fechá-lo. Cada um indica o nome do plugin."
+      },
       "ui_notifications": {
         "title": "Mostrar notificações",
         "body": "Mostrar notificações no seu dispositivo, ou dentro do aplicativo se você não as permitiu. Cada uma indica o nome do plugin. O plugin também vê os avisos que o aplicativo mostra para você."

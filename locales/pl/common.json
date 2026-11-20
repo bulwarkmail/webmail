@@ -7084,6 +7084,10 @@
         "title": "Przekazywanie Twojej poczty",
         "body": "Przekazuje wiadomości z Twojego konta razem z załącznikami, bez otwierania edytora. Przed pierwszym przekazaniem na każdy adres zostaniesz zapytany."
       },
+      "ui_notices": {
+        "title": "Wyświetlać powiadomienia",
+        "body": "Wyświetlać własny mały panel u dołu ekranu, tam gdzie pojawiają się komunikaty aplikacji, na przykład przy połączeniu przychodzącym. Nie blokuje strony, możesz dalej pisać i możesz go zamknąć. Każde podaje nazwę wtyczki."
+      },
       "ui_notifications": {
         "title": "Wyświetlanie powiadomień",
         "body": "Wyświetla powiadomienia na urządzeniu lub w aplikacji, jeśli ich nie zezwolono. Każde podaje nazwę wtyczki. Wtyczka widzi też komunikaty, które wyświetla aplikacja."

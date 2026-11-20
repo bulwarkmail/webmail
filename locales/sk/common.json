@@ -7084,6 +7084,10 @@
         "title": "Preposielať vašu poštu",
         "body": "Preposiela správy z vášho účtu aj s prílohami bez otvorenia editora. Pred prvým preposlaním na každú adresu sa vás opýta."
       },
+      "ui_notices": {
+        "title": "Zobrazovať upozornenia",
+        "body": "Zobraziť vlastný malý panel dole na obrazovke, kde sa zobrazujú správy aplikácie, napríklad pri prichádzajúcom hovore. Neblokuje stránku, môžete ďalej písať a môžete ho zavrieť. Každé upozornenie uvádza názov doplnku."
+      },
       "ui_notifications": {
         "title": "Zobrazovať upozornenia",
         "body": "Zobrazuje upozornenia vo vašom zariadení alebo v aplikácii, ak ste ich nepovolili. Každé uvádza názov doplnku. Doplnok tiež vidí upozornenia, ktoré vám aplikácia zobrazuje."

@@ -7112,6 +7112,10 @@
         "title": "Forward your mail",
         "body": "Forward messages from your account with their attachments, without opening the composer. You are asked before the first forward to each address."
       },
+      "ui_notices": {
+        "title": "Show notices",
+        "body": "Show a small panel of its own at the bottom of the screen, where the app's messages appear, for example for an incoming call. It doesn't block the page, you can keep typing, and you can close it. Each one names the plugin."
+      },
       "ui_notifications": {
         "title": "Show notifications",
         "body": "Show notifications on your device, or in the app if you haven't allowed them. Each one names the plugin. It also sees the notices the app shows you."
