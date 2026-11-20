@@ -381,6 +381,8 @@
     "replied": "Beantwortet",
     "forwarded": "Weitergeleitet",
     "has_attachment": "Mit Anhang",
+    "high_importance": "Hohe Wichtigkeit",
+    "low_importance": "Niedrige Wichtigkeit",
     "conversations_range": "{from}–{to, number} von {total, number}",
     "conversations_count": "{count} von {total} Unterhaltungen",
     "conversations_count_plus": "{count}+ Unterhaltungen",

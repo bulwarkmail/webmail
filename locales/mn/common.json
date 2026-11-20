@@ -381,6 +381,8 @@
     "replied": "Хариулсан",
     "forwarded": "Дамжуулсан",
     "has_attachment": "Хавсралттай",
+    "high_importance": "Өндөр ач холбогдолтой",
+    "low_importance": "Бага ач холбогдолтой",
     "conversations_range": "{from}–{to, number} / {total, number}",
     "conversations_count": "{total} харилцан ярианы {count}",
     "conversations_count_plus": "{count}+ харилцан яриа",

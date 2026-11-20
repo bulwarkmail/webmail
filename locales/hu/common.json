@@ -381,6 +381,8 @@
     "replied": "Megválaszolva",
     "forwarded": "Továbbítva",
     "has_attachment": "Melléklettel",
+    "high_importance": "Magas fontosság",
+    "low_importance": "Alacsony fontosság",
     "conversations_range": "{from}–{to, number} / {total, number}",
     "conversations_count": "{count} / {total} beszélgetés",
     "conversations_count_plus": "{count}+ beszélgetés",

@@ -19,6 +19,7 @@ export const MAIL_USING = ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:ma
 export const EMAIL_LIST_PROPERTIES = [
   'id', 'threadId', 'mailboxIds', 'keywords', 'size', 'receivedAt', 'sentAt', 'from', 'to', 'cc',
   'subject', 'preview', 'hasAttachment', 'blobId', 'header:Authentication-Results:all',
+  'header:X-Priority:asText', 'header:Importance:asText',
 ];
 
 /** What opening a message asks for, past the list properties. */

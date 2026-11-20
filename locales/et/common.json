@@ -381,6 +381,8 @@
     "replied": "Vastatud",
     "forwarded": "Edastatud",
     "has_attachment": "Sisaldab manust",
+    "high_importance": "Kõrge tähtsus",
+    "low_importance": "Madal tähtsus",
     "conversations_range": "{from}–{to, number} / {total, number}",
     "conversations_count": "{count} vestlust {total}-st",
     "conversations_count_plus": "{count}+ vestlust",

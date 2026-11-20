@@ -63,6 +63,8 @@ export interface Email {
   inReplyTo?: string[];
   references?: string[];
   headers?: Record<string, string | string[]>;
+  /** High or low priority from X-Priority / Importance, set by list fetches (lib/message-priority.ts). */
+  priority?: 'high' | 'low';
   // Security headers parsed
   authenticationResults?: AuthenticationResults;
   /** See authenticationResultsOnReceipt (lib/email-headers.ts); set by the full message fetch. */

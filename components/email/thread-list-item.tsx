@@ -5,6 +5,7 @@ import { spamApplicableIn } from "@/lib/spam-applicable";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { rowA11yProps, rowLabel } from "./list-a11y";
 import { emailListDate } from "@/lib/email-date";
+import { emailPriority, type MessagePriority } from "@/lib/message-priority";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ import type { Attachment } from "@/lib/jmap/types";
 import { densityShowsAttachmentChips } from "@/lib/density";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
-import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert, MoreHorizontal } from "@/components/icons";
+import { ArrowDown, Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert, MoreHorizontal } from "@/components/icons";
 import type { AppIcon } from "@/components/icons";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { useShallow } from "zustand/react/shallow";
@@ -352,6 +353,30 @@ function StatusIcon({ icon: Icon, label, className }: { icon: AppIcon; label: st
   );
 }
 
+/** The high/low priority mark of a received message (#1809); nothing for normal. */
+function PriorityMark({ priority, label }: { priority: MessagePriority; label: string }) {
+  if (priority === 'high') {
+    return (
+      <>
+        <span aria-hidden="true" data-priority-mark="high" className="inline-block w-2 text-center text-sm font-bold leading-none text-destructive">!</span>
+        <span className="sr-only">{label}</span>
+      </>
+    );
+  }
+  if (priority === 'low') return <StatusIcon icon={ArrowDown} label={label} className="w-3.5 h-3.5 text-muted-foreground/70" />;
+  return null;
+}
+
+/** The priority a conversation row shows: high if any message is, else the latest message's. */
+export function threadPriority(emails: readonly Email[], latest: Email): MessagePriority {
+  if (emails.some((email) => emailPriority(email) === 'high')) return 'high';
+  return emailPriority(latest) === 'low' ? 'low' : 'normal';
+}
+
+function priorityLabel(priority: MessagePriority, tStatus: (key: string) => string): string | false {
+  return priority === 'high' ? tStatus('high_importance') : priority === 'low' ? tStatus('low_importance') : false;
+}
+
 function describeAccount(label: string | undefined, account: AccountEntry | undefined): string | undefined {
   const address = account?.email || account?.username;
   if (!label) return address;
@@ -521,6 +546,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const isAnswered = email.keywords?.$answered;
     const isForwarded = email.keywords?.$forwarded;
     const showPaperclip = useListHasAttachment(email, loadAttachments);
+    const priority = emailPriority(email);
     // The role, not the folder list: the list is a new array on every
     // count update, and subscribing to it re-rendered every row for each.
     const { mailboxId: selectedMailbox, role: currentMailboxRole } = useRowFolder(listFolder);
@@ -674,6 +700,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     // The row's name for screen readers, in the order people scan a row.
     const a11yLabel = rowLabel([
       isUnread && t('unread'),
+      priorityLabel(priority, tStatus),
       sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown,
       hasReplyDraft && tStatus('draft'),
       email.subject || tNoSubject,
@@ -932,6 +959,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
+                  <PriorityMark priority={priority} label={priorityLabel(priority, tStatus) || ''} />
                   {isPinned && <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />}
                   {isStarred && !mvRow && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                   {isAnswered && !isForwarded && !mvRow && <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -997,6 +1025,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       </span>
                   )}
                     <div className="flex shrink-0 items-center gap-1.5">
+                      <PriorityMark priority={priority} label={priorityLabel(priority, tStatus) || ''} />
                       {isPinned && (
                         <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                       )}
@@ -1207,6 +1236,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     // Only the latest email's parts are loaded; an older one with the flag keeps the paperclip.
     const latestHasAttachment = useListHasAttachment(latestEmail, loadAttachments);
     const hasAttachment = latestHasAttachment || thread.emails.some((e) => e !== latestEmail && e.hasAttachment);
+    const priority = threadPriority(thread.emails, latestEmail);
     // One line per row where the list has the full width; stacked on phones.
     const { oneLine: oneLineRow, columns } = useListRowShape();
     // Mountain View leads its rows with a checkbox and a clickable star
@@ -1439,6 +1469,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
     const threadSubject = latestEmail.subject || tNoSubject;
     const a11yLabel = rowLabel([
       hasUnread && tEmailViewer('unread'),
+      priorityLabel(priority, tStatus),
       displayNames.join(', '),
       hasReplyDraft && tStatus('draft'),
       threadSubject,
@@ -1743,6 +1774,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                         title={t('messages_tooltip', { count: emailCount })}
                       />
                     )}
+                    <PriorityMark priority={priority} label={priorityLabel(priority, tStatus) || ''} />
                     {hasPinned && <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />}
                     {hasStarred && !mvRow && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
                     {hasAnswered && !hasForwarded && !mvRow && <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -1821,6 +1853,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                         title={t('messages_tooltip', { count: emailCount })}
                       />
                       <div className="flex shrink-0 items-center gap-1.5">
+                        <PriorityMark priority={priority} label={priorityLabel(priority, tStatus) || ''} />
                         {hasPinned && (
                           <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                         )}

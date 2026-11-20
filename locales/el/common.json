@@ -381,6 +381,8 @@
     "replied": "Απαντήθηκε",
     "forwarded": "Προωθήθηκε",
     "has_attachment": "Έχει συνημμένο",
+    "high_importance": "Υψηλή σημασία",
+    "low_importance": "Χαμηλή σημασία",
     "conversations_range": "{from}–{to, number} από {total, number}",
     "conversations_count": "{count} από {total} συνομιλίες",
     "conversations_count_plus": "{count}+ συνομιλίες",

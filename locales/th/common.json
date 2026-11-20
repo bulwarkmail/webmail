@@ -881,6 +881,8 @@
     "replied": "ตอบกลับแล้ว",
     "forwarded": "ส่งต่อแล้ว",
     "has_attachment": "มีไฟล์แนบ",
+    "high_importance": "ความสำคัญสูง",
+    "low_importance": "ความสำคัญต่ำ",
     "conversations_range": "{from}–{to, number} จาก {total, number}",
     "conversations_count": "{count} จาก {total} การสนทนา",
     "conversations_count_plus": "{count}+ การสนทนา",

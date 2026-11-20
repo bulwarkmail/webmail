@@ -381,6 +381,8 @@
     "replied": "Atbildēts",
     "forwarded": "Pārsūtīts",
     "has_attachment": "Ar pielikumu",
+    "high_importance": "Augsta svarīguma pakāpe",
+    "low_importance": "Zema svarīguma pakāpe",
     "conversations_range": "{from}–{to, number} no {total, number}",
     "conversations_count": "{count} no {total} sarunām",
     "conversations_count_plus": "{count}+ sarunas",

@@ -17,6 +17,7 @@ import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { attachmentIcon } from "./attachment-chips";
 import { ExternalSenderChip } from "./external-sender-chip";
 import { ReceivedLabelChip } from "./received-label-chip";
+import { ImportanceChip } from "./importance-chip";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
@@ -507,6 +508,7 @@ function EmailCard({
             </span>
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} interactive={false} />
             <ReceivedLabelChip email={email} />
+            <ImportanceChip email={email} />
             {isDraft && (
               <span data-testid="conversation-draft-label" className="text-xs font-medium text-destructive shrink-0">
                 {t('email_list.draft')}

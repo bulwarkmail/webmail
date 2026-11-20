@@ -53,3 +53,37 @@ export function messagePriorityFromHeaders(headers: Record<string, string | stri
   if (importance === 'low') return 'low';
   return 'normal';
 }
+
+/**
+ * The two headers a list fetch asks for so rows can show a received
+ * message's priority (#1809). Stalwart answers header properties from the
+ * stored headers, not the message blob.
+ */
+export const LIST_PRIORITY_PROPERTIES = ['header:X-Priority:asText', 'header:Importance:asText'] as const;
+
+/**
+ * Turns the list properties above on an Email/get row into `priority` (set
+ * only when high or low) and drops the raw properties.
+ */
+export function applyListPriority(record: Record<string, unknown>): void {
+  const headers: Record<string, string> = {};
+  const xPriority = record['header:X-Priority:asText'];
+  const importance = record['header:Importance:asText'];
+  if (typeof xPriority === 'string') headers['X-Priority'] = xPriority;
+  if (typeof importance === 'string') headers.Importance = importance;
+  delete record['header:X-Priority:asText'];
+  delete record['header:Importance:asText'];
+  const priority = messagePriorityFromHeaders(headers);
+  if (priority !== 'normal') record.priority = priority;
+}
+
+/**
+ * A received message's priority: from its full headers once the message is
+ * open, else from what the list fetch found.
+ */
+export function emailPriority(email: { headers?: Record<string, string | string[]>; priority?: 'high' | 'low' }): MessagePriority {
+  if (email.headers && typeof email.headers === 'object' && !Array.isArray(email.headers)) {
+    return messagePriorityFromHeaders(email.headers);
+  }
+  return email.priority ?? 'normal';
+}

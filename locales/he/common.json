@@ -325,6 +325,8 @@
     "replied": "נענה",
     "forwarded": "הועבר",
     "has_attachment": "כולל קובץ מצורף",
+    "high_importance": "חשיבות גבוהה",
+    "low_importance": "חשיבות נמוכה",
     "conversations_range": "{from}–{to, number} מתוך {total, number}",
     "conversations_count": "{count}מתוך שיחות{total}",
     "conversations_count_plus": "{count}+ שיחות",

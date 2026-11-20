@@ -381,6 +381,8 @@
     "replied": "Đã trả lời",
     "forwarded": "Đã chuyển tiếp",
     "has_attachment": "Có tệp đính kèm",
+    "high_importance": "Mức quan trọng cao",
+    "low_importance": "Mức quan trọng thấp",
     "conversations_range": "{from}–{to, number} trong số {total, number}",
     "conversations_count": "{count} trong số {total} cuộc trò chuyện",
     "conversations_count_plus": "{count}+ cuộc trò chuyện",

@@ -381,6 +381,8 @@
     "replied": "Отвечено",
     "forwarded": "Переслано",
     "has_attachment": "С вложением",
+    "high_importance": "Высокая важность",
+    "low_importance": "Низкая важность",
     "conversations_range": "{from}–{to, number} из {total, number}",
     "conversations_count": "{count} из {total} бесед",
     "conversations_count_plus": "{count}+ бесед",

@@ -7,6 +7,7 @@ import { IncompleteDeleteError } from "./delete-error";
 import { downloadAllowed, saveBlobAs, type DownloadKind } from "@/lib/download-guard";
 import { ArchiveEmailsError } from "./archive-error";
 import { generateUUID } from '@/lib/utils';
+import { applyListPriority, LIST_PRIORITY_PROPERTIES } from '@/lib/message-priority';
 import { isStandInId, standInsIn, withRealIds, withStandInsBack } from './stand-in-ids';
 import { isLocalBlobId } from '@/lib/store/outbox/items';
 import { UNDO_HOLD_MARGIN_SECONDS, undoDelaySeconds } from '@/lib/outgoing/undo-delay';
@@ -537,6 +538,8 @@ const EMAIL_LIST_PROPERTIES = [
   "header:Authentication-Results:all",
   // Whose those results are: only the receiving server's count (#1740).
   "header:Received:all",
+  // X-Priority and Importance, for the high/low priority mark on rows (#1809).
+  ...LIST_PRIORITY_PROPERTIES,
 ] as const;
 
 function headerStrings(raw: unknown): string[] | undefined {
@@ -551,11 +554,13 @@ function headerStrings(raw: unknown): string[] | undefined {
  * topAuthenticationResultsOnReceipt); the rest, and all of a message from an
  * imported file, are left out and marked authenticationResultsIgnored. A row
  * without the Received lines (the offline store keeps only what it synced)
- * is judged by its results alone, as before.
+ * is judged by its results alone, as before. The priority headers become
+ * `priority` (applyListPriority).
  */
 function applyListAuthenticationResults(emails: Email[]): Email[] {
   for (const email of emails) {
     const record = email as unknown as Record<string, unknown>;
+    applyListPriority(record);
     const headers = headerStrings(record["header:Authentication-Results:all"]);
     const received = headerStrings(record["header:Received:all"]);
     delete record["header:Authentication-Results:all"];
