@@ -358,6 +358,32 @@ describe('JMAPClient raw sends envelope recipients (#1206)', () => {
     });
   });
 
+  it('sendRawEmail asks for delivery notifications and required TLS when the composer did', async () => {
+    const { requests } = mockServer();
+
+    await rawClient().sendRawEmail(new Blob(['raw']), 'identity-1', 'mb-sent', 'mb-drafts', undefined,
+      ['to@example.net', 'bcc@example.net'], undefined, { requestDsn: true, requireTls: true });
+
+    expect(submissionCreate(requests).envelope).toEqual({
+      mailFrom: { email: 'user@example.com', parameters: { REQUIRETLS: null, RET: 'HDRS' } },
+      rcptTo: [
+        { email: 'to@example.net', parameters: { NOTIFY: 'SUCCESS,FAILURE,DELAY' } },
+        { email: 'bcc@example.net', parameters: { NOTIFY: 'SUCCESS,FAILURE,DELAY' } },
+      ],
+    });
+  });
+
+  it('submitRawEmail asks for delivery notifications when the composer did', async () => {
+    const { requests } = mockServer();
+
+    await rawClient().submitRawEmail(new Blob(['raw']), 'identity-1', undefined, ['to@example.net'], undefined, { requestDsn: true });
+
+    expect(submissionCreate(requests).envelope).toEqual({
+      mailFrom: { email: 'user@example.com', parameters: { RET: 'HDRS' } },
+      rcptTo: [{ email: 'to@example.net', parameters: { NOTIFY: 'SUCCESS,FAILURE,DELAY' } }],
+    });
+  });
+
   it('leaves the envelope to the server without recipients or parameters', async () => {
     const { requests } = mockServer();
 

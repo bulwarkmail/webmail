@@ -7,7 +7,7 @@ import { create } from "zustand";
 import { Email, Mailbox, StateChange, ScheduledEmail, SendEmailResult, isUnifiedMailboxId, isCrossViewId } from "@/lib/jmap/types";
 import type { UnifiedMailboxRole, CrossView } from "@/lib/jmap/types";
 import type { HeldSendCounts } from "@/lib/held-send";
-import type { IJMAPClient, SearchEmailsResult } from "@/lib/jmap/client-interface";
+import type { IJMAPClient, RawSubmissionOptions, SearchEmailsResult } from "@/lib/jmap/client-interface";
 import { jmapErrorFailedIds } from "@/lib/jmap/jmap-error";
 import type { MessagePriority } from "@/lib/message-priority";
 import { withSearchSnippets, type DeferredSnippetBatch } from "@/lib/search-snippet";
@@ -495,7 +495,7 @@ interface EmailStore {
    * mode may keep in its outbox while the server can't be reached (#523).
    */
   sendEmail: (client: IJMAPClient, to: string[], subject: string, body: string, cc?: string[], bcc?: string[], identityId?: string, fromEmail?: string, draftId?: string, fromName?: string, htmlBody?: string, attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>, inReplyTo?: string[], references?: string[], delayedUntil?: string, envelopeMailFrom?: string, options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; headers?: Record<string, string>; labelHeaders?: Record<string, string>; localAccountId?: string; draftAccountId?: string; outbox?: boolean; keywords?: string[] }) => Promise<SendEmailResult>;
-  sendRawEmail: (client: IJMAPClient, rawMimeBlob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], options?: { outbox?: boolean }) => Promise<SendEmailResult>;
+  sendRawEmail: (client: IJMAPClient, rawMimeBlob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], options?: { outbox?: boolean; submission?: RawSubmissionOptions }) => Promise<SendEmailResult>;
   /**
    * `emailKey` (emailKeyFor of the row) picks the right row when the id
    * repeats across accounts. `source`: a message read outside the list
@@ -4971,7 +4971,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // A plugin's send completing the composer's (S/MIME, PGP): signed and
     // encrypted with the user present, so the finished message can wait.
     const outbox = options?.outbox ? getOutboxHooks() : null;
-    if (outbox?.shouldQueue(client)) return outbox.queueRaw(client, rawMimeBlob, { identityId, delayedUntil, envelopeRecipients });
+    if (outbox?.shouldQueue(client)) return outbox.queueRaw(client, rawMimeBlob, { identityId, delayedUntil, envelopeRecipients, ...(options?.submission ? { submission: options.submission } : {}) });
     // Not isLoading, as in sendEmail.
     set({ error: null });
     try {
@@ -4979,7 +4979,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const sentMailbox = mailboxes.find(mb => mb.role === 'sent');
       if (!sentMailbox) throw new Error('No sent mailbox found');
       const draftsMailbox = mailboxes.find(mb => mb.role === 'drafts');
-      const result = await client.sendRawEmail(rawMimeBlob, identityId, sentMailbox.id, draftsMailbox?.id, delayedUntil, envelopeRecipients);
+      const result = await client.sendRawEmail(rawMimeBlob, identityId, sentMailbox.id, draftsMailbox?.id, delayedUntil, envelopeRecipients, undefined, options?.submission);
       void client.pruneEmailSubmissions();
       set({
         pendingUndoSend: result.scheduled && result.emailSubmissionId && result.sendAt

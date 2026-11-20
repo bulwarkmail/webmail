@@ -136,7 +136,7 @@ async function sendEntry(account: string, client: JMAPClient, entry: OutboxEntry
     const file = await heldFile(account, item.blobId);
     if (!file) throw new OutboxPrepError('file_missing');
     const delayed = item.delayedUntil && Date.parse(item.delayedUntil) - Date.now() > MIN_HOLD_MS ? item.delayedUntil : undefined;
-    if (item.submitOnly) return client.submitRawEmail(file, item.identityId, delayed, item.envelopeRecipients, entry.copyId);
+    if (item.submitOnly) return client.submitRawEmail(file, item.identityId, delayed, item.envelopeRecipients, entry.copyId, item.submission);
     let mailboxes;
     try {
       mailboxes = await client.getMailboxes();
@@ -147,7 +147,7 @@ async function sendEntry(account: string, client: JMAPClient, entry: OutboxEntry
     const sent = mailboxes.find((m) => m.role === 'sent');
     if (!sent) throw new OutboxPrepError('no_sent_mailbox');
     const drafts = mailboxes.find((m) => m.role === 'drafts');
-    return client.sendRawEmail(file, item.identityId, sent.id, drafts?.id, delayed, item.envelopeRecipients, entry.copyId);
+    return client.sendRawEmail(file, item.identityId, sent.id, drafts?.id, delayed, item.envelopeRecipients, entry.copyId, item.submission);
   }
   const args = [...item.args];
   const attachments = args[10];

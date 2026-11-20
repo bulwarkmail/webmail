@@ -4735,7 +4735,16 @@ export function EmailComposer({
         ],
       };
       let pluginOutcome: Awaited<ReturnType<typeof emailHooks.onComposeSend.takeOver>>;
-      const composeTakeover = beginComposeTakeover(currentIdentity?.id ?? '');
+      // What this send would write into the header or ask of the server
+      // itself; the plugin builds the MIME and isn't told
+      // (lib/outgoing/takeover-headers.ts).
+      const composeTakeover = beginComposeTakeover(currentIdentity?.id ?? '', {
+        replyTo: currentIdentity?.replyTo,
+        readReceiptTo: requestReadReceipt ? fromEmail || currentIdentity?.email : undefined,
+        priority: priority !== 'normal' ? priority : undefined,
+        requestDsn: requestDsn || undefined,
+        requireTls: requireTls || undefined,
+      });
       try {
         pluginOutcome = await emailHooks.onComposeSend.takeOver(composeSendRequest);
       } finally {
