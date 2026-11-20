@@ -1308,6 +1308,10 @@
       "plain_text": "[Pilt: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Liiga palju üleslaadimisi. Proovige uuesti {minutes, plural, one {# minuti} other {# minuti}} pärast.",
+    "retry_later": "Liiga palju üleslaadimisi. Proovige hiljem uuesti."
+  },
   "attachment_rename": {
     "rename": "Nimeta ümber",
     "rename_named": "Nimeta {name} ümber",

@@ -1767,6 +1767,10 @@
       "plain_text": "[รูปภาพ: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "อัปโหลดมากเกินไป ลองอีกครั้งใน {minutes, plural, other {# นาที}}",
+    "retry_later": "อัปโหลดมากเกินไป ลองอีกครั้งในภายหลัง"
+  },
   "attachment_rename": {
     "rename": "เปลี่ยนชื่อ",
     "rename_named": "เปลี่ยนชื่อ {name}",

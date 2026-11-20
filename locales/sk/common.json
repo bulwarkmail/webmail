@@ -1308,6 +1308,10 @@
       "plain_text": "[Obrázok: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Príliš veľa nahrávaní. Skúste to znova o {minutes, plural, one {# minútu} few {# minúty} many {# minúty} other {# minút}}.",
+    "retry_later": "Príliš veľa nahrávaní. Skúste to znova neskôr."
+  },
   "attachment_rename": {
     "rename": "Premenovať",
     "rename_named": "Premenovať {name}",

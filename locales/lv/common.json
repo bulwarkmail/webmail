@@ -1308,6 +1308,10 @@
       "plain_text": "[Attēls: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Pārāk daudz augšupielāžu. Mēģiniet vēlreiz pēc {minutes, plural, zero {# minūtēm} one {# minūtes} other {# minūtēm}}.",
+    "retry_later": "Pārāk daudz augšupielāžu. Mēģiniet vēlreiz vēlāk."
+  },
   "attachment_rename": {
     "rename": "Pārdēvēt",
     "rename_named": "Pārdēvēt {name}",

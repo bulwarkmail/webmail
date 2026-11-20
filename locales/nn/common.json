@@ -1316,6 +1316,10 @@
       "plain_text": "[Bilete: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "For mange opplastingar. Prøv igjen om {minutes, plural, one {# minutt} other {# minutt}}.",
+    "retry_later": "For mange opplastingar. Prøv igjen seinare."
+  },
   "attachment_rename": {
     "rename": "Gi nytt namn",
     "rename_named": "Gi {name} nytt namn",

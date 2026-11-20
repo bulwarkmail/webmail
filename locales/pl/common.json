@@ -1308,6 +1308,10 @@
       "plain_text": "[Obraz: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Zbyt wiele przesłanych plików. Spróbuj ponownie za {minutes, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}.",
+    "retry_later": "Zbyt wiele przesłanych plików. Spróbuj ponownie później."
+  },
   "attachment_rename": {
     "rename": "Zmień nazwę",
     "rename_named": "Zmień nazwę {name}",

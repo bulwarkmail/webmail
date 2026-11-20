@@ -1308,6 +1308,10 @@
       "plain_text": "[이미지: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "업로드가 너무 많습니다. {minutes, plural, other {#분}} 후에 다시 시도하세요.",
+    "retry_later": "업로드가 너무 많습니다. 나중에 다시 시도하세요."
+  },
   "attachment_rename": {
     "rename": "이름 바꾸기",
     "rename_named": "{name} 이름 바꾸기",

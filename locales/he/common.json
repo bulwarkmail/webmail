@@ -1252,6 +1252,10 @@
       "plain_text": "[תמונה: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "יותר מדי העלאות. נסו שוב בעוד {minutes, plural, one {דקה אחת} two {שתי דקות} other {# דקות}}.",
+    "retry_later": "יותר מדי העלאות. נסו שוב מאוחר יותר."
+  },
   "attachment_rename": {
     "rename": "שנה שם",
     "rename_named": "שנה את השם של {name}",

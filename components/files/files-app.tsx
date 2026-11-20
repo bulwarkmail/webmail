@@ -17,6 +17,7 @@ import { isInternalDrag } from "@/components/files/file-item-parts";
 import { isTrashLocation } from "@/lib/files-trash";
 import { departing, namesOfNode } from "@/lib/file-list-motion";
 import { fileErrorKind, isPartialCopy } from "@/lib/file-errors";
+import { useUploadRateLimitText } from "@/hooks/use-upload-rate-limit-text";
 import { toast } from "@/stores/toast-store";
 import { cn, formatFileSize } from "@/lib/utils";
 import { NavigationRail } from "@/components/layout/navigation-rail";
@@ -364,6 +365,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   // What the server said went wrong, as the second line under an action's
   // own error message; undefined when it said nothing specific.
+  const rateLimitText = useUploadRateLimitText();
   const serverReason = useCallback((err: unknown): string | undefined => {
     switch (fileErrorKind(err)) {
       case "overQuota": return t("error_over_quota");
@@ -371,9 +373,10 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       case "invalidName": return t("error_invalid_name");
       case "forbidden": return t("error_forbidden");
       case "tooLarge": return t("error_too_large");
+      case "rateLimited": return rateLimitText(err);
       default: return undefined;
     }
-  }, [t]);
+  }, [t, rateLimitText]);
   // A copy that stopped part-way and could not all be taken back says so too.
   const failureReason = useCallback((err: unknown): string | undefined => {
     const reason = serverReason(err);
@@ -392,7 +395,9 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     if (report.failed.length === 0) return;
     const names = report.failed.slice(0, 3).map((f) => f.name).join(", ")
       + (report.failed.length > 3 ? ", …" : "");
-    const reason = failureReason(report.failed[0].error);
+    // Too many uploads explains every file after it, so it is the one named.
+    const shown = report.failed.find((f) => fileErrorKind(f.error) === "rateLimited") ?? report.failed[0];
+    const reason = failureReason(shown.error);
     toast.error(t("upload_failed", { count: report.failed.length }), reason ? `${names}: ${reason}` : names);
   }, [t, tPc, failureReason]);
 

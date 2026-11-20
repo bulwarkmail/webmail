@@ -1308,6 +1308,10 @@
       "plain_text": "[Bilde: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "For mange opplastinger. Prøv igjen om {minutes, plural, one {# minutt} other {# minutter}}.",
+    "retry_later": "For mange opplastinger. Prøv igjen senere."
+  },
   "attachment_rename": {
     "rename": "Gi nytt navn",
     "rename_named": "Gi {name} nytt navn",

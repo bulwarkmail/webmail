@@ -221,6 +221,7 @@ import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
 import { setComposerFileTarget } from "@/lib/desktop/window-files";
 import { useComposerEdits } from "@/hooks/use-composer-edits";
+import { useUploadRateLimitText } from "@/hooks/use-upload-rate-limit-text";
 
 // A Pro tab, message or folder dragged across a composer tab is on its way to
 // the pane or the split edge: those drags belong to the shell. There is no shell
@@ -721,6 +722,7 @@ export function EmailComposer({
   const tWindows = useTranslations('pwaWindows');
   const tQuote = useTranslations('quote_header');
   const tViewer = useTranslations('email_viewer');
+  const uploadRateLimitText = useUploadRateLimitText();
   const tClassification = useTranslations('classification');
   const tEdit = useTranslations('desktopEdit');
   const tFiles = useTranslations('files');
@@ -2772,10 +2774,12 @@ export function EmailComposer({
       return { src: dataUrl, cid };
     } catch (error) {
       debug.error(`Failed to upload inline image ${file.name}:`, error);
-      toast.error(t('upload_failed', { filename: file.name }));
+      const reason = uploadRateLimitText(error);
+      if (reason) toast.error(t('upload_failed', { filename: file.name }), reason);
+      else toast.error(t('upload_failed', { filename: file.name }));
       return null;
     }
-  }, [client, t, tNotifications]);
+  }, [client, t, tNotifications, uploadRateLimitText]);
 
   const handleTemplateSelect = useCallback(async (template: EmailTemplate, filledValues: Record<string, string>) => {
     let filledSubject = Object.keys(filledValues).length > 0
@@ -3072,7 +3076,10 @@ export function EmailComposer({
         if (controller?.signal.aborted) continue;
         debug.error(`Failed to upload ${file.name}:`, error);
         // The error toast reads itself out (components/ui/toast.tsx).
-        toast.error(t('upload_failed', { filename: file.name }));
+        // Too many uploads says so, with when to try again.
+        const reason = uploadRateLimitText(error);
+        if (reason) toast.error(t('upload_failed', { filename: file.name }), reason);
+        else toast.error(t('upload_failed', { filename: file.name }));
 
         setAttachments(prev =>
           prev.map(att =>
@@ -3083,7 +3090,7 @@ export function EmailComposer({
         );
       }
     }
-  }, [client, t, tNotifications]);
+  }, [client, t, tNotifications, uploadRateLimitText]);
 
   useEffect(() => {
     if (!client || !initialFiles || initialFiles.length === 0 || attachedInitialFiles.has(initialFiles)) return;

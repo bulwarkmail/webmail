@@ -1308,6 +1308,10 @@
       "plain_text": "[Görsel: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Çok fazla yükleme. {minutes, plural, one {# dakika} other {# dakika}} sonra yeniden deneyin.",
+    "retry_later": "Çok fazla yükleme. Daha sonra yeniden deneyin."
+  },
   "attachment_rename": {
     "rename": "Yeniden adlandır",
     "rename_named": "{name} dosyasını yeniden adlandır",

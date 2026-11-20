@@ -34,6 +34,7 @@ import { fileNodeDepth } from "./filenode-depth";
 import { contactFromWire, contactToWire } from "./contact-wire";
 import { SchedulingDeniedError } from "./scheduling-error";
 import { jmapError, jmapErrorFailedIds, jmapErrorType, jmapSetError, type JmapError, type JmapErrorInfo } from "./jmap-error";
+import { markUploadRefused, uploadRefusedError } from "./upload-errors";
 import { isServerSetKeyword } from "./server-keywords";
 import { PrincipalsRequestError } from "./principals-error";
 import { buildShareSetCalls, failAll, parseShareTargets, readShareSetResults, SET_METHOD, type ShareChange, type ShareChangeResult, type ShareTarget } from "./share-batch";
@@ -231,10 +232,16 @@ function reportMethodErrors(methodCalls: JMAPMethodCall[], response: JMAPRespons
 
 export class RateLimitError extends Error {
   retryAfterMs: number;
-  constructor(retryAfterMs: number) {
+  /**
+   * The answer's Retry-After as sent (null without one); undefined when no
+   * request went out because the client was still waiting from an earlier 429.
+   */
+  retryAfterHeader?: string | null;
+  constructor(retryAfterMs: number, retryAfterHeader?: string | null) {
     super('Rate limited by server');
     this.name = 'RateLimitError';
     this.retryAfterMs = retryAfterMs;
+    this.retryAfterHeader = retryAfterHeader;
   }
 }
 
@@ -2105,7 +2112,7 @@ export class JMAPClient implements IJMAPClient {
     if (response.status === 429) {
       const retryAfterMs = JMAPClient.parseRetryAfter(response);
       if (!opts?.transfer) this.setRateLimited(retryAfterMs);
-      throw new RateLimitError(retryAfterMs);
+      throw new RateLimitError(retryAfterMs, response.headers.get('Retry-After'));
     }
 
     // Only the session and the API URL: an upload or a download may be refused
@@ -6856,7 +6863,8 @@ export class JMAPClient implements IJMAPClient {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(xhr.responseText);
         } else {
-          reject(new Error(`Failed to upload file: ${xhr.status} - ${xhr.responseText}`));
+          // Retry-After only counts for 429: too many uploads.
+          reject(uploadRefusedError(xhr.status, xhr.responseText, xhr.status === 429 ? xhr.getResponseHeader('Retry-After') : null));
         }
       });
       xhr.onerror = () => settle(() => reject(new Error('Upload network error')));
@@ -6936,10 +6944,16 @@ export class JMAPClient implements IJMAPClient {
           method: 'POST',
           headers: { 'Content-Type': file.type || 'application/octet-stream' },
           body: file,
-        }, { timeoutMs: JMAPClient.TRANSFER_TIMEOUT_MS });
+        }, { timeoutMs: JMAPClient.TRANSFER_TIMEOUT_MS }).catch((error: unknown) => {
+          // The server answered this upload with 429: too many uploads.
+          if (error instanceof RateLimitError && error.retryAfterHeader !== undefined) {
+            markUploadRefused(error, 429, error.retryAfterHeader);
+          }
+          throw error;
+        });
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Failed to upload file: ${response.status} - ${errorText}`);
+          throw uploadRefusedError(response.status, errorText, response.headers.get('Retry-After'));
         }
         responseText = await response.text();
       }

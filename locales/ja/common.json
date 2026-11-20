@@ -1308,6 +1308,10 @@
       "plain_text": "[画像: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "アップロードが多すぎます。{minutes, plural, other {#分}}後にもう一度お試しください。",
+    "retry_later": "アップロードが多すぎます。しばらくしてからもう一度お試しください。"
+  },
   "attachment_rename": {
     "rename": "名前を変更",
     "rename_named": "{name} の名前を変更",

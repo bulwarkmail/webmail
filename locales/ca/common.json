@@ -1308,6 +1308,10 @@
       "plain_text": "[Imatge: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Massa pujades. Torneu-ho a provar d'aquí a {minutes, plural, one {# minut} other {# minuts}}.",
+    "retry_later": "Massa pujades. Torneu-ho a provar més tard."
+  },
   "attachment_rename": {
     "rename": "Canvia el nom",
     "rename_named": "Canvia el nom de {name}",

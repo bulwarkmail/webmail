@@ -1308,6 +1308,10 @@
       "plain_text": "[Imagen: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Demasiadas subidas. Inténtalo de nuevo en {minutes, plural, one {# minuto} other {# minutos}}.",
+    "retry_later": "Demasiadas subidas. Inténtalo de nuevo más tarde."
+  },
   "attachment_rename": {
     "rename": "Cambiar nombre",
     "rename_named": "Cambiar el nombre de {name}",

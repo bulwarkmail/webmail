@@ -1308,6 +1308,10 @@
       "plain_text": "[Afbeelding: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Te veel uploads. Probeer het over {minutes, plural, one {# minuut} other {# minuten}} opnieuw.",
+    "retry_later": "Te veel uploads. Probeer het later opnieuw."
+  },
   "attachment_rename": {
     "rename": "Naam wijzigen",
     "rename_named": "Naam van {name} wijzigen",

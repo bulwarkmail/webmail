@@ -1308,6 +1308,10 @@
       "plain_text": "[Obrázek: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Příliš mnoho nahrávání. Zkuste to znovu za {minutes, plural, one {# minutu} few {# minuty} many {# minuty} other {# minut}}.",
+    "retry_later": "Příliš mnoho nahrávání. Zkuste to znovu později."
+  },
   "attachment_rename": {
     "rename": "Přejmenovat",
     "rename_named": "Přejmenovat {name}",

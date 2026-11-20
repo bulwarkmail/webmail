@@ -1308,6 +1308,10 @@
       "plain_text": "[图片：{alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "上传次数过多。请在 {minutes, plural, other {# 分钟}}后重试。",
+    "retry_later": "上传次数过多。请稍后重试。"
+  },
   "attachment_rename": {
     "rename": "重命名",
     "rename_named": "重命名 {name}",

@@ -1308,6 +1308,10 @@
       "plain_text": "[Imagine: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Prea multe încărcări. Încercați din nou peste {minutes, plural, one {# minut} few {# minute} other {# de minute}}.",
+    "retry_later": "Prea multe încărcări. Încercați din nou mai târziu."
+  },
   "attachment_rename": {
     "rename": "Redenumește",
     "rename_named": "Redenumește {name}",

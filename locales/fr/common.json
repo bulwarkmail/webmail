@@ -1308,6 +1308,10 @@
       "plain_text": "[Image : {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Trop d'envois de fichiers. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
+    "retry_later": "Trop d'envois de fichiers. Réessayez plus tard."
+  },
   "attachment_rename": {
     "rename": "Renommer",
     "rename_named": "Renommer {name}",

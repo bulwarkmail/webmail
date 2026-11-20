@@ -1320,6 +1320,10 @@
       "plain_text": "[Hình ảnh: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Quá nhiều lượt tải lên. Hãy thử lại sau {minutes, plural, other {# phút}}.",
+    "retry_later": "Quá nhiều lượt tải lên. Hãy thử lại sau."
+  },
   "attachment_rename": {
     "rename": "Đổi tên",
     "rename_named": "Đổi tên {name}",

@@ -1308,6 +1308,10 @@
       "plain_text": "[Зураг: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Хэт олон байршуулалт. {minutes, plural, one {# минутын} other {# минутын}} дараа дахин оролдоно уу.",
+    "retry_later": "Хэт олон байршуулалт. Дараа дахин оролдоно уу."
+  },
   "attachment_rename": {
     "rename": "Нэр солих",
     "rename_named": "{name}-н нэрийг солих",

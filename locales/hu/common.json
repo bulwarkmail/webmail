@@ -1308,6 +1308,10 @@
       "plain_text": "[Kép: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Túl sok feltöltés. Próbálja újra {minutes, plural, one {# perc} other {# perc}} múlva.",
+    "retry_later": "Túl sok feltöltés. Próbálja újra később."
+  },
   "attachment_rename": {
     "rename": "Átnevezés",
     "rename_named": "{name} átnevezése",

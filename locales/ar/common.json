@@ -1308,6 +1308,10 @@
       "plain_text": "[صورة: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "عمليات رفع كثيرة جدًا. حاول مرة أخرى بعد {minutes, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}.",
+    "retry_later": "عمليات رفع كثيرة جدًا. حاول مرة أخرى لاحقًا."
+  },
   "attachment_rename": {
     "rename": "إعادة التسمية",
     "rename_named": "إعادة تسمية {name}",

@@ -1308,6 +1308,10 @@
       "plain_text": "[Billede: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "For mange uploads. Prøv igen om {minutes, plural, one {# minut} other {# minutter}}.",
+    "retry_later": "For mange uploads. Prøv igen senere."
+  },
   "attachment_rename": {
     "rename": "Omdøb",
     "rename_named": "Omdøb {name}",

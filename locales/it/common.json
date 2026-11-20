@@ -1308,6 +1308,10 @@
       "plain_text": "[Immagine: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Troppi caricamenti. Riprova tra {minutes, plural, one {# minuto} other {# minuti}}.",
+    "retry_later": "Troppi caricamenti. Riprova più tardi."
+  },
   "attachment_rename": {
     "rename": "Rinomina",
     "rename_named": "Rinomina {name}",

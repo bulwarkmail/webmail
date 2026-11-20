@@ -1308,6 +1308,10 @@
       "plain_text": "[Зображення: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Забагато завантажень. Спробуйте ще раз через {minutes, plural, one {# хвилину} few {# хвилини} many {# хвилин} other {# хвилини}}.",
+    "retry_later": "Забагато завантажень. Спробуйте ще раз пізніше."
+  },
   "attachment_rename": {
     "rename": "Перейменувати",
     "rename_named": "Перейменувати {name}",

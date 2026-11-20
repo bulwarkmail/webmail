@@ -1308,6 +1308,10 @@
       "plain_text": "[Imagem: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Demasiados carregamentos. Tente novamente dentro de {minutes, plural, one {# minuto} other {# minutos}}.",
+    "retry_later": "Demasiados carregamentos. Tente novamente mais tarde."
+  },
   "attachment_rename": {
     "rename": "Renomear",
     "rename_named": "Renomear {name}",

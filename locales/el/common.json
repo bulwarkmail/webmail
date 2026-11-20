@@ -1320,6 +1320,10 @@
       "plain_text": "[Εικόνα: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Πάρα πολλές μεταφορτώσεις. Δοκιμάστε ξανά σε {minutes, plural, one {# λεπτό} other {# λεπτά}}.",
+    "retry_later": "Πάρα πολλές μεταφορτώσεις. Δοκιμάστε ξανά αργότερα."
+  },
   "attachment_rename": {
     "rename": "Μετονομασία",
     "rename_named": "Μετονομασία {name}",

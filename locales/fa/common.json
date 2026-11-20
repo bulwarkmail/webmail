@@ -1308,6 +1308,10 @@
       "plain_text": "[تصویر: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "تعداد بارگذاری‌ها بیش از حد است. {minutes, plural, one {# دقیقه} other {# دقیقه}} دیگر دوباره امتحان کنید.",
+    "retry_later": "تعداد بارگذاری‌ها بیش از حد است. بعداً دوباره امتحان کنید."
+  },
   "attachment_rename": {
     "rename": "تغییر نام",
     "rename_named": "تغییر نام {name}",
