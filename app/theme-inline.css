@@ -47,6 +47,9 @@
   --color-warning-foreground: var(--color-warning-foreground);
   --color-info: var(--color-info);
   --color-info-foreground: var(--color-info-foreground);
+  --color-note: var(--color-note);
+  --color-note-foreground: var(--color-note-foreground);
+  --color-note-border: var(--color-note-border);
   --color-selection: var(--color-selection);
   --color-selection-foreground: var(--color-selection-foreground);
   --color-unread: var(--color-unread);
