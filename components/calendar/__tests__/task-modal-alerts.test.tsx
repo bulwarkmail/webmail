@@ -68,6 +68,18 @@ describe('TaskModal alert preservation (#504)', () => {
     expect(patch.alerts!['a-abs'].trigger).toMatchObject({ '@type': 'AbsoluteTrigger' });
   });
 
+  it('counts a changed alert from the due date, the end of a task', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<TaskModal task={makeTask()} calendars={calendars} onSave={onSave} onClose={vi.fn()} />);
+
+    fireEvent.change(screen.getByDisplayValue('tasks.alert_15min'), { target: { value: '30' } });
+    fireEvent.click(screen.getByText('tasks.save'));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    const patch = onSave.mock.calls[0][0] as Partial<CalendarTask>;
+    expect(patch.alerts!['a-15'].trigger).toEqual({ '@type': 'OffsetTrigger', offset: '-PT30M', relativeTo: 'end' });
+  });
+
   it('removes only the displayed alert when set to none', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(<TaskModal task={makeTask()} calendars={calendars} onSave={onSave} onClose={vi.fn()} />);

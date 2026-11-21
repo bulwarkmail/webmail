@@ -259,7 +259,10 @@ export function TaskModal({
           const offset = alertOption === "at_time" ? "PT0S" : `-PT${alertOption}M`;
           merged[editedKey] = {
             "@type": "Alert",
-            trigger: { "@type": "OffsetTrigger", offset, relativeTo: "start" },
+            // Before the task is due: RFC 8984 "end" of a Task is its due,
+            // TRIGGER;RELATED=END in iCalendar. "start" leaves a client
+            // without a reference when the task has no start.
+            trigger: { "@type": "OffsetTrigger", offset, relativeTo: "end" },
             action: "display",
             acknowledged: null,
             relatedTo: null,
