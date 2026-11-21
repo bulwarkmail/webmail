@@ -44,7 +44,13 @@ export const NoteField = forwardRef<NoteFieldHandle, NoteFieldProps>(function No
   const counterId = useId();
   const fieldId = useId();
   useImperativeHandle(ref, () => ({
-    focus: () => area.current?.focus(),
+    // A kept draft goes on where it stopped: the caret at its end.
+    focus: () => {
+      const el = area.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    },
     setCaret: (at: number) => {
       // After React has put the new text in.
       requestAnimationFrame(() => {

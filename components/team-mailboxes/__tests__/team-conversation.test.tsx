@@ -175,6 +175,18 @@ describe('the note field', () => {
     useTeamNamesStore.setState({ lists: {}, directory: {} });
   });
 
+  it('puts the caret after a kept draft when the field is focused again', async () => {
+    const { NoteField } = await import('../note-field');
+    const { createRef } = await import('react');
+    const handle = createRef<import('../note-field').NoteFieldHandle>();
+    render(<NoteField ref={handle} value="half written" onChange={() => {}} onSubmit={() => {}} onClose={() => {}} />);
+    const field = screen.getByLabelText('field_label') as HTMLTextAreaElement;
+    field.setSelectionRange(0, 0);
+    act(() => handle.current!.focus());
+    expect(document.activeElement).toBe(field);
+    expect(field.selectionStart).toBe('half written'.length);
+  });
+
   it('never sends while an input method is composing', () => {
     seed([]);
     render(<Conversation />);
