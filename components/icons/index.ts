@@ -266,6 +266,7 @@ export {
   IconLockOpen as Unlock,
   IconUpload as Upload,
   IconUser as User,
+  IconUserCheck as UserCheck,
   IconUserCircle as UserCircle,
   IconUserMinus as UserMinus,
   IconUserEdit as UserPen,

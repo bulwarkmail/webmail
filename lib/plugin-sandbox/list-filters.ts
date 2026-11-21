@@ -9,6 +9,7 @@
 import type { MailAccountKind } from './account-kind';
 import { MAIL_ACCOUNT_KINDS } from './account-kind';
 import { PLUGIN_ICON_RE } from './actions';
+import { teamInboxHandedOver } from '@/lib/team-mailboxes/host-flag';
 
 export interface PluginListFilter {
   id: string;
@@ -183,6 +184,9 @@ export interface ListFilterFolder {
 }
 
 export function listFilterApplies(filter: PluginListFilter, folder: ListFilterFolder): boolean {
+  // Team inbox's filters, while Bulwark's own team mailboxes offer them.
+  const pluginId = (filter as { pluginId?: string }).pluginId;
+  if (pluginId && teamInboxHandedOver(pluginId)) return false;
   if (filter.mailboxRoles && !filter.mailboxRoles.includes(folder.role ?? '')) return false;
   if (filter.accounts && (!folder.accountKind || !filter.accounts.includes(folder.accountKind))) return false;
   return true;

@@ -80,10 +80,13 @@ describe('search folder scope (#788)', () => {
     await useEmailStore.getState().searchEmails(client, 'invoice');
 
     // No mailbox id -> the JMAP client omits the inMailbox constraint; the
-    // shared folder's owner is asked as well (#1082).
-    expect(client.searchEmails).toHaveBeenCalledTimes(2);
-    expect(client.searchEmails).toHaveBeenCalledWith('invoice', undefined, undefined, 50, 0, { deferSnippets: true });
-    expect(client.searchEmails).toHaveBeenCalledWith('invoice', undefined, 'owner-x', 50, 0, { deferSnippets: true });
+    // shared folder's owner is asked as well (#1082). Only the team notes are
+    // left out.
+    const notANote = { operator: 'AND', conditions: [{ text: 'invoice' }, { notKeyword: '$bulwark-note' }] };
+    expect(client.searchEmails).not.toHaveBeenCalled();
+    expect(client.advancedSearchEmails).toHaveBeenCalledTimes(2);
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(notANote, undefined, 50, 0, { deferSnippets: true });
+    expect(client.advancedSearchEmails).toHaveBeenCalledWith(notANote, 'owner-x', 50, 0, { deferSnippets: true });
   });
 
   it('advanced search from within a folder does not add an inMailbox condition', async () => {
@@ -94,7 +97,7 @@ describe('search folder scope (#788)', () => {
     const calls = (client.advancedSearchEmails as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
     for (const [filter] of calls) {
-      expect(filter).toEqual({ from: 'bob@example.com' });
+      expect(filter).toEqual({ operator: 'AND', conditions: [{ from: 'bob@example.com' }, { notKeyword: '$bulwark-note' }] });
       expect(JSON.stringify(filter)).not.toContain('inMailbox');
     }
     expect(calls.map(([, accountId]) => accountId)).toEqual([undefined, 'owner-x']);

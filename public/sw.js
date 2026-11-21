@@ -671,7 +671,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // state-change path, a junk delivery wakes us while an unread message we
   // already announced is still sitting in the Inbox - without this we would
   // re-buzz for that old message.
-  const notified = await readNotifiedIds(accountId, accountLabel);
+  let notified = await readNotifiedIds(accountId, accountLabel);
   const freshIds = emailIds.filter((id) => !notified.includes(id));
   const groupTag = "bulwark-mail:" + (accountId || "default");
   if (emailIds.length > 0 && freshIds.length === 0) {
@@ -697,15 +697,18 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // No login in this browser could read the account, not even after the route
   // renewed its token: signed out, or the sign-in can't be renewed from here.
   let previewSignedOut = false;
-  // Locked: not a word about the message, so it isn't even looked up.
+  // Locked: not a word about the message. The route is still asked, with
+  // `locked=1` so it reads and sends nothing but ids: whether a team note woke
+  // us is all this worker takes from it then.
   const lockHidesContent = await appLockHidesContent();
-  if (!lockHidesContent) try {
+  try {
     const query = new URLSearchParams();
     if (accountId) query.set("accountId", accountId);
     // The relay record's label is the login that registered. Account and message
     // ids repeat across logins, and this tells them apart.
     if (accountLabel) query.set("login", accountLabel);
     if (freshIds.length > 0) query.set("emailId", freshIds[freshIds.length - 1]);
+    if (lockHidesContent) query.set("locked", "1");
     const qs = query.toString();
     const previewUrl = `${BASE_PATH}/api/push/preview${qs ? `?${qs}` : ""}`;
     // A notification shown more than 30 s after the push counts as a silent
@@ -750,6 +753,40 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
     previewOk = false;
   }
 
+  // A team note (app/api/push/preview): one that mentions this login is told
+  // once, under a tag of its own; any other note has nothing to say. Each
+  // note wakes every member of the team on some servers.
+  const mention = previewOk && preview && preview.mention && typeof preview.mention.noteId === "string" && preview.mention.noteId
+    ? preview.mention
+    : null;
+  let mentionShown = false;
+  // Undo brings a deleted note back with a new id and the same Message-ID.
+  const mentionKeys = mention
+    ? [mention.noteId].concat(typeof mention.messageId === "string" && mention.messageId ? [`note:${mention.messageId}`] : [])
+    : [];
+  if (mention && !mentionKeys.some((key) => notified.includes(key))) {
+    const noteSlot = Number.isInteger(preview.slot) ? preview.slot : undefined;
+    const noteLogin = typeof preview.login === "string" ? preview.login : undefined;
+    await showMention(mention, !!preview.redacted || lockHidesContent, accountId, accountLabel, noteSlot, noteLogin);
+    notified = notified.concat(mentionKeys);
+    await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
+    mentionShown = true;
+  }
+  // Nothing more to say: a push has to end in a notification, and the mention was one.
+  const quiet = () => (mentionShown ? Promise.resolve() : showWithoutAlert(groupTag));
+  if (previewOk && preview && preview.skip === true) {
+    if (freshIds.length > 0 && !mentionShown) await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
+    await quiet();
+    return;
+  }
+  // Locked, mail is told of as it was before the worker asked: "New mail", with
+  // nothing from the answer.
+  if (lockHidesContent) {
+    preview = null;
+    previewOk = false;
+    previewSignedOut = false;
+  }
+
   const email = preview && preview.email ? preview.email : null;
   const unreadTotal = preview && typeof preview.unreadTotal === "number"
     ? preview.unreadTotal
@@ -774,7 +811,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // failed (network/auth/server down) we cannot tell, so fall through to the
   // generic "New mail" toast rather than miss a real delivery.
   if (previewOk && !email && unreadTotal === 0) {
-    await showWithoutAlert(groupTag);
+    await quiet();
     return;
   }
 
@@ -782,7 +819,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // message is one we already announced, so whatever woke us was not new
   // Inbox mail - typically a delivery into Junk or a Sieve-filed folder.
   if (emailIds.length === 0 && previewOk && email && notified.includes(email.id)) {
-    await showWithoutAlert(groupTag);
+    await quiet();
     return;
   }
 
@@ -856,6 +893,41 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
 }
 
 const NOTIFICATION_IDS_LIMIT = 100;
+
+/**
+ * "Mabel mentioned you in <subject>", or under "Push without sender and subject"
+ * (or with either missing) "You were mentioned in a team mailbox". Not part of
+ * the account's mail notification: a tag per note, and a click that opens the
+ * message the note is about, at the note.
+ */
+async function showMention(mention, redacted, accountId, accountLabel, slot, login) {
+  const { labels } = await readNotificationActionPrefs();
+  const from = typeof mention.from === "string" ? mention.from : "";
+  const subject = typeof mention.subject === "string" ? mention.subject : "";
+  const title = redacted || !from || !subject
+    ? labels.mentionedHidden
+    : labels.mentionedYou.replace(/\{(name|subject)\}/g, (_, key) => (key === "name" ? from : subject));
+  const audible = (await soundPreference()) && !(await withinQuietWindow(accountId));
+  await self.registration.showNotification(title, {
+    // Which login, as a mail notification's title says it.
+    body: accountLabel || "",
+    // Ids repeat across accounts and logins.
+    tag: `mention-${accountLabel || "default"}:${accountId || "default"}:${mention.noteId}`,
+    icon: `${BASE_PATH}/api/pwa-icon/192`,
+    badge: `${BASE_PATH}/api/pwa-icon/192`,
+    data: {
+      kind: "mention",
+      noteId: mention.noteId,
+      emailId: typeof mention.emailId === "string" ? mention.emailId : undefined,
+      threadId: typeof mention.threadId === "string" ? mention.threadId : undefined,
+      accountId,
+      slot,
+      login,
+    },
+    renotify: audible,
+    silent: !audible,
+  });
+}
 
 /** The messages the account's notification on screen stands for. */
 async function idsOnScreen(groupTag) {
@@ -1038,7 +1110,7 @@ async function closeMailNotifications() {
     const shown = await self.registration.getNotifications();
     for (const notification of shown) {
       const tag = typeof notification.tag === "string" ? notification.tag : "";
-      if (tag.startsWith("bulwark-mail:") || tag.startsWith("calendar-reminder:")) notification.close();
+      if (tag.startsWith("bulwark-mail:") || tag.startsWith("calendar-reminder:") || tag.startsWith("mention-")) notification.close();
     }
   } catch (_) {
     // Nothing more a worker can do.
@@ -1557,9 +1629,17 @@ function buildClickUrl(data, reply) {
   if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
   if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);
   if (reply) params.set("reply", "1");
+  // A mention: the conversation opens at the note.
+  if (data.kind === "mention" && typeof data.noteId === "string" && data.noteId) params.set("note", data.noteId);
   // Not params.size: Safari before 17 (iOS 16.4+ web push) lacks it.
   const qs = params.toString();
   const targetQuery = qs ? `?${qs}` : "";
+  if (data.kind === "mention") {
+    // Without the message (its conversation wasn't found), the team's Inbox.
+    return typeof data.emailId === "string" && data.emailId
+      ? `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}${targetQuery}`
+      : `${BASE_PATH}/mail/folder/inbox${targetQuery}`;
+  }
   if (data.kind === "email" && data.emailId) {
     // Permalink (#733). Under NEXT_PUBLIC_LOCALE_PREFIX=always the proxy
     // redirects this to the localised path; the worker has no locale to add.
@@ -1663,6 +1743,9 @@ async function readNotificationActionPrefs() {
       markRead: labels.markRead || "Mark as read",
       reply: labels.reply || "Reply",
       replyPlaceholder: labels.replyPlaceholder || "Write a reply",
+      // Team notes: "{name}" and "{subject}" are filled in here.
+      mentionedYou: labels.mentionedYou || "{name} mentioned you in “{subject}”",
+      mentionedHidden: labels.mentionedHidden || "You were mentioned in a team mailbox",
     },
   };
 }

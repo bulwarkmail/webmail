@@ -40,6 +40,7 @@ import { ThreadEmailItem } from "./thread-email-item";
 import { EmailHoverActions } from "./email-hover-actions";
 import { SearchSnippetText } from "./search-snippet-text";
 import { PluginRowBadges } from "./plugin-row-badges";
+import { TeamRowBadges } from "@/components/team-mailboxes/team-row-badges";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { useBrandDomain } from "@/hooks/use-brand-domain";
@@ -949,6 +950,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
                     </span>
                     <PluginRowBadges key={emailKeyFor(email)} email={email} className={mvRow ? "ms-2" : undefined} />
+                    <TeamRowBadges email={email} />
                     {(previewSnippet || inlinePreview) && (
                       <span dir="auto" className="min-w-0 flex-1 shrink-[9999] truncate text-muted-foreground">
                         {/* Gmail runs the snippet on from the subject after a dash. */}
@@ -1097,6 +1099,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
                   </span>
                   <PluginRowBadges key={emailKeyFor(email)} email={email} />
+                  <TeamRowBadges email={email} />
                 </div>
 
                 {showPreview && density !== 'extra-compact' && density !== 'compact' && (
@@ -1757,6 +1760,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                         <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (latestEmail.subject || tNoSubject)}</bdi>
                       </span>
                       <PluginRowBadges email={latestEmail} className={mvRow ? "ms-2" : undefined} />
+                      <TeamRowBadges email={latestEmail} />
                       {(previewSnippet || inlinePreview) && (
                         <span dir="auto" className="min-w-0 flex-1 shrink-[9999] truncate text-muted-foreground">
                           {mvRow && '\u00a0-\u00a0'}
@@ -1923,6 +1927,7 @@ const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
                       <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (latestEmail.subject || tNoSubject)}</bdi>
                     </span>
                     <PluginRowBadges email={latestEmail} />
+                    <TeamRowBadges email={latestEmail} />
                   </div>
 
                   {showPreview && density !== 'extra-compact' && density !== 'compact' && (

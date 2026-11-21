@@ -72,6 +72,12 @@ describe('a full sign-out and what the next person in this tab finds', () => {
     for (const key of ['webdav-recent-files', 'webdav-favorites', 'webdav-last-path']) expect([key, localStorage.getItem(key)]).toEqual([key, null]);
   });
 
+  it('takes which team notes each login has seen, kept here where the server could not', async () => {
+    localStorage.setItem('bulwark-team-seen:login-1', JSON.stringify({ v: 1, a: { g: {} } }));
+    await signOut();
+    expect(localStorage.getItem('bulwark-team-seen:login-1')).toBeNull();
+  });
+
   it('closes the notifications still on screen with a sender and subject, or an event', async () => {
     await signOut();
     await vi.waitFor(() => {

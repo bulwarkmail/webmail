@@ -179,6 +179,13 @@ describe('email boot snapshot folder', { timeout: 30_000 }, () => {
     expect(useEmailStore.getState().hasMoreEmails).toBe(true);
   });
 
+  // An older build may have written the team notes folder of a group account.
+  it('never brings back a team notes folder', async () => {
+    const notes = { id: 'g:notes', name: 'Team notes', isShared: true };
+    const state = await boot('/', { mailboxes: [...FOLDERS, notes], selectedMailbox: 'm-inbox' });
+    expect(state.mailboxes.map((m) => m.id)).toEqual(['m-inbox', 'm-trash', 'shared-inbox']);
+  });
+
   it('keeps the snapshot folder when the account has no inbox of its own', async () => {
     const state = await boot('/', { mailboxes: FOLDERS.slice(1), selectedMailbox: 'm-trash', emails: TRASH_ROWS });
     expect(state.selectedMailbox).toBe('m-trash');

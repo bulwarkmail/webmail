@@ -319,6 +319,19 @@ describe('Mailbox/changes delta sync', () => {
     expect(client.getAllMailboxesWithState).not.toHaveBeenCalled();
   });
 
+  it('ignores the team notes folder, so writing a note refetches no folder tree', async () => {
+    const client = Object.assign(makeClient({
+      getMailboxChanges: vi.fn(async () => delta({ oldState: 'm1', newState: 'm2', updated: ['notes'] })),
+    }), { hiddenMailboxIds: (accountId?: string) => (accountId === 'acc' ? ['notes'] : []) });
+
+    await useEmailStore.getState().handleStateChange(push({ acc: { Mailbox: 'm2' } }), client);
+
+    expect(client.getMailboxesByIds).not.toHaveBeenCalled();
+    expect(client.getAllMailboxesWithState).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().mailboxSyncStates).toEqual({ acc: 'm2' });
+    expect(useEmailStore.getState().mailboxes.map((m) => m.id)).toEqual(['inbox', 'sent']);
+  });
+
   it('refetches the whole tree when a folder was created or destroyed', async () => {
     const client = makeClient({
       getMailboxChanges: vi.fn(async () => delta({ oldState: 'm1', newState: 'm2', created: ['new'] })),

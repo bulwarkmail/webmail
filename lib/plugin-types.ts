@@ -1058,6 +1058,13 @@ export interface HostFeaturesView extends AssistantHostFeatures {
    * those with `email:render-takeover`. Absent on webmails that ignore the field.
    */
   blockExternalContent?: boolean;
+  /**
+   * Bulwark 1.22 and later: notes and assignment in team mailboxes are on
+   * (organisation.teamMailboxes) for a team mailbox of the signed-in account.
+   * The team-inbox plugin does nothing while it is true; the host also hides
+   * an older copy's buttons, filters and row badges then.
+   */
+  teamMailboxes?: boolean;
 }
 
 /** One setting `api.app.searchSettings` found, in the user's language. */

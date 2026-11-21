@@ -20,7 +20,7 @@ import {
 import { assistantFeatures } from '@/lib/plugin-sandbox/assistant';
 
 /** The AI assistant's flags (lib/plugin-sandbox/assistant) come on top, as `plugin` sees them; their own tests check them. */
-const withAssistant = (core: Record<string, boolean>, plugin?: never) => ({ ...core, ...assistantFeatures(plugin) });
+const withAssistant = (core: Record<string, boolean>, plugin?: never) => ({ ...core, ...assistantFeatures(plugin), teamMailboxes: false });
 
 function setExternalMail(patch: Partial<typeof DEFAULT_ORGANISATION_POLICY.externalMail>) {
   usePolicyStore.setState({

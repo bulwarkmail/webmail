@@ -223,8 +223,28 @@ export interface IJMAPClient {
   getQuota(): Promise<StorageQuota | null>;
 
   // ── Mailboxes ─────────────────────────────────────────────────
-  getMailboxes(accountId?: string): Promise<Mailbox[]>;
+  /**
+   * One account's folders. The team notes folder of a team mailbox is left
+   * out (lib/team-mailboxes/hidden-folders.ts) unless `includeHidden` is set:
+   * only export, import and the team notes store ask for it.
+   */
+  getMailboxes(accountId?: string, options?: { includeHidden?: boolean }): Promise<Mailbox[]>;
+  /** Every account's folders, without the team notes folders. */
   getAllMailboxes(): Promise<Mailbox[]>;
+  /**
+   * Raw JMAP ids of the folders left out of the lists for this account
+   * (default: the primary account), for queries without a folder. Known once
+   * the account's folders were fetched.
+   */
+  hiddenMailboxIds?(accountId?: string): string[];
+
+  // ── Team notes (lib/team-mailboxes); never answered from the device ──
+  queryTeamNotes?(accountId: string, filter: Record<string, unknown>, options: { limit: number; position?: number; properties: readonly string[] }): Promise<{ ids: string[]; list: Array<Record<string, unknown>>; total?: number; state?: string }>;
+  getTeamNotes?(accountId: string, ids: readonly string[], properties: readonly string[], options?: { text?: boolean }): Promise<{ list: Array<Record<string, unknown>>; state?: string; notFound: string[] }>;
+  createTeamNote?(accountId: string, email: Record<string, unknown>): Promise<{ id: string; threadId?: string }>;
+  destroyTeamNote?(accountId: string, id: string): Promise<void>;
+  createTeamNotesFolder?(accountId: string, name: string, shareWith: Record<string, MailboxRights> | null): Promise<string>;
+  setMailboxShareWith?(mailboxId: string, shareWith: Record<string, MailboxRights>, accountId?: string): Promise<void>;
   /**
    * getAllMailboxes plus the Mailbox collection state per account, so the
    * store can resolve a later push with Mailbox/changes (RFC 8620 §5.2)

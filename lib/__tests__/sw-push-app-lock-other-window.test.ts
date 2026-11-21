@@ -69,7 +69,8 @@ async function setup(opts: { caches?: FakeCaches; locks?: boolean; notifications
     },
   });
   const posts = () => fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST');
-  const previews = () => fetchMock.mock.calls.filter(([input]) => String(input).includes('/api/push/preview'));
+  // Locked, the worker asks only with locked=1, which reads and returns ids alone.
+  const previews = () => fetchMock.mock.calls.filter(([input]) => String(input).includes('/api/push/preview') && !String(input).includes('locked=1'));
   return { worker, caches, clients, holders, fetchMock, posts, previews, openWindow };
 }
 

@@ -5,7 +5,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import { resetConfirmedGroups } from '@/lib/plugin-sandbox/account-kind';
+import { resetConfirmedGroups, useConfirmedGroups } from '@/lib/plugin-sandbox/account-kind';
+import { DEFAULT_POLICY } from '@/lib/admin/types';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { resetActions, setActionDispatcher, setPluginActions } from '@/lib/plugin-sandbox/actions';
 
@@ -102,6 +103,32 @@ describe('actions for team mailboxes', () => {
         target={{ accountKind: 'personal', keywords: [] }} />,
     );
     expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
+  });
+
+  it("drops team inbox's buttons while Bulwark's own team mailboxes are on", () => {
+    const client = {
+      getAccountId: () => 'ci',
+      getUsername: () => 'tm-alice@example.org',
+      getAccountInfo: (id: string) => (id === 'ch' ? { name: 'tm-team@example.org', isPersonal: false, isReadOnly: false, accountCapabilities: {} } : null),
+    } as unknown as IJMAPClient;
+    const groups = new WeakMap<object, ReadonlySet<string>>();
+    groups.set(client, new Set(['ch']));
+    useConfirmedGroups.setState({ groups, revision: 1 });
+    useAuthStore.setState({ client, activeAccountId: 'login' } as never);
+    act(() => {
+      setPluginActions('team-inbox', 'Team inbox', 'message-row-actions', TEAM_ACTIONS);
+      setPluginActions('other', 'Other', 'message-row-actions', [{ id: 'x', label: 'Other action' }]);
+    });
+    const target = { accountId: 'ch', accountKind: 'group' as const, keywords: [] };
+    render(<PluginActions surface="message-row-actions" context={{ emailId: 'm1' }} variant="menu" target={target} />);
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Assign to me', 'Mark done', 'Other action']);
+
+    act(() => usePolicyStore.setState({ rawPolicy: { ...DEFAULT_POLICY, organisation: { teamMailboxes: { enabled: true } } } as never }));
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Other action']);
+
+    usePolicyStore.setState({ rawPolicy: DEFAULT_POLICY as never });
+    useAuthStore.setState({ client: null, activeAccountId: null } as never);
+    resetConfirmedGroups();
   });
 
   it("hides them where the surface isn't about a message", () => {

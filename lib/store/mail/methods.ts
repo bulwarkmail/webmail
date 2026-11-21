@@ -69,6 +69,13 @@ function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null,
         conditions.push(`NOT EXISTS (SELECT 1 FROM email_keyword k WHERE k.email_rowid = ${rowid} AND k.keyword = ?)`);
         params.push(keywordKey(String(value)));
         break;
+      case 'someInThreadHaveKeyword':
+        // A message of the same conversation (thread, in the same account) carries it:
+        // the team mailboxes' With notes and Mentions me filters.
+        conditions.push(`EXISTS (SELECT 1 FROM email t JOIN email_keyword k ON k.email_rowid = t.rowid
+          WHERE t.jmap = e.jmap AND t.thread_id = e.thread_id AND k.keyword = ?)`);
+        params.push(keywordKey(String(value)));
+        break;
       case 'after':
         conditions.push(`${receivedAt} >= ?`);
         params.push(Date.parse(String(value)) || 0);

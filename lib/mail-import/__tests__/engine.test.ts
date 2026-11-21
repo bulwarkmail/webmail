@@ -379,6 +379,16 @@ describe('runImport', () => {
     await expect(folders.resolve(['Bandeja de entrada'])).resolves.toBe('in');
   });
 
+  it('brings an exported "Team notes" back into the existing hidden folder', async () => {
+    const all = [mailbox('in', 'Inbox', { role: 'inbox' }), mailbox('notes', 'Team notes')];
+    const getMailboxes = vi.fn(async (_id?: string, options?: { includeHidden?: boolean }) =>
+      (options?.includeHidden ? all : all.filter((m) => m.name !== 'Team notes')));
+    const createMailbox = vi.fn();
+    const folders = new FolderResolver({ getMailboxes, createMailbox } as unknown as IJMAPClient, 'team', null);
+    await expect(folders.resolve(['Team notes'])).resolves.toBe('notes');
+    expect(createMailbox).not.toHaveBeenCalled();
+  });
+
   it('reads the hour window and the quota from the server', () => {
     expect(uploadWindowEnd(Date.UTC(2026, 10, 1, 13, 20))).toBe(Date.UTC(2026, 10, 1, 14, 0));
     expect(quotaFrom('You have exceeded the blob upload quota of 1000 files or 50000000 bytes.')).toEqual({ files: 1000, bytes: 50000000 });

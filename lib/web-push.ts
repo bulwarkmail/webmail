@@ -15,6 +15,7 @@ import { noThirdPartyTraffic } from '@/lib/third-party-mode';
 import { IS_LITE } from '@/lib/lite';
 import { serviceWorkerUrl, SW_SCOPE } from '@/lib/app-update';
 import { forgetRelayRegistration, keepRelayRegistration, readRelayRegistrations } from '@/lib/pwa-notify/worker-state';
+import { NOTE_KEYWORD } from '@/lib/team-mailboxes/hidden-folders';
 import {
   EMPTY_NOTIFICATION_MUTES,
   isAccountMuted,
@@ -225,7 +226,10 @@ export async function buildEmailPushConfig(
     // Settings for folders that no longer exist are left out.
     const existing = mailboxIdsByAccount.get(accountId) ?? new Set<string>();
     const overrides = mailboxOverridesForAccount(mutes, accountId);
-    const conditions: Record<string, unknown>[] = [{ notKeyword: '$junk' }];
+    // Team notes (lib/team-mailboxes/hidden-folders.ts) are never pushed as
+    // mail. Stalwart only applies this to delivered mail today; a note
+    // written by another client through IMAP or Email/import reaches it too.
+    const conditions: Record<string, unknown>[] = [{ notKeyword: '$junk' }, { notKeyword: NOTE_KEYWORD }];
     if (inboxOnly) {
       const inboxId = inboxByAccount.get(accountId);
       // The primary account always has an Inbox; missing it means its

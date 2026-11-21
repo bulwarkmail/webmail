@@ -201,7 +201,9 @@ export class FolderResolver {
   ) {}
 
   private async list(): Promise<Mailbox[]> {
-    if (!this.mailboxes) this.mailboxes = await this.client.getMailboxes(this.accountId);
+    // Team notes included, so an export's "Team notes" goes back into the
+    // existing folder instead of a second one.
+    if (!this.mailboxes) this.mailboxes = await this.client.getMailboxes(this.accountId, { includeHidden: true });
     return this.mailboxes;
   }
 

@@ -78,8 +78,12 @@ const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-e
 /** What's the accounts' but isn't the local store's: a wipe of one account that leaves others signed in takes these too. */
 export const ACCOUNT_STORAGE_KEYS = SIGNED_OUT_STORAGE_KEYS.filter((key) => !LOCAL_STORE_KEYS.has(key));
 
-/** The WebDAV area's favourites, recent files and last folder: file names and paths an older version kept. */
-export const SIGNED_OUT_STORAGE_PREFIXES = ['webdav-'];
+/**
+ * The WebDAV area's favourites, recent files and last folder: file names and
+ * paths an older version kept. Which team notes a login has seen, where the
+ * server can't keep that (stores/team-mailbox-store.ts).
+ */
+export const SIGNED_OUT_STORAGE_PREFIXES = ['webdav-', 'bulwark-team-seen:'];
 
 /**
  * This tab's sessionStorage, which outlives the navigation to the login page: a

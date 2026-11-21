@@ -124,6 +124,11 @@ describe('which new messages notify', () => {
     expect(notifyingMailbox(email('c', { mailboxIds: { out: true } }), 'acc', 'acc', MAILBOXES)).toBeNull();
   });
 
+  it('never a team note, even unread in a folder that notifies', async () => {
+    const { notifyingMailbox } = await import('../new-mail');
+    expect(notifyingMailbox(email('a', { keywords: { '$bulwark-note': true } }), 'acc', 'acc', MAILBOXES)).toBeNull();
+  });
+
   it('a muted folder or account stays silent', async () => {
     const { notifyingMailbox } = await import('../new-mail');
     const { useSettingsStore } = await import('@/stores/settings-store');

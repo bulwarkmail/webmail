@@ -71,7 +71,7 @@ const EXPECTED_EMAIL_PUSH: Record<string, EmailPushConfig> = {
   [ACCOUNT_ID]: {
     filter: {
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: [JUNK_ID] }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: [JUNK_ID] }],
     },
     properties: ['id', 'threadId'],
     urgency: 'high',
@@ -79,7 +79,7 @@ const EXPECTED_EMAIL_PUSH: Record<string, EmailPushConfig> = {
   [GROUP_ACCOUNT_ID]: {
     filter: {
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: [GROUP_JUNK_ID] }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: [GROUP_JUNK_ID] }],
     },
     properties: ['id', 'threadId'],
     urgency: 'high',
@@ -1451,7 +1451,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
         ...EXPECTED_EMAIL_PUSH[ACCOUNT_ID],
         filter: {
           operator: 'AND',
-          conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: ['mb-junk-deleted'] }],
+          conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['mb-junk-deleted'] }],
         },
       },
     };
@@ -1507,11 +1507,11 @@ describe('buildEmailPushConfig inbox-only mode', () => {
 
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-inbox' }],
     });
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-group-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-group-inbox' }],
     });
   });
 
@@ -1538,11 +1538,11 @@ describe('buildEmailPushConfig inbox-only mode', () => {
 
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-inbox' }],
     });
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { hasKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { hasKeyword: '$junk' }],
     });
   });
 
@@ -1567,7 +1567,7 @@ describe('buildEmailPushConfig inbox-only mode', () => {
     expect(Object.keys(config).sort()).toEqual([ACCOUNT_ID, GROUP_ACCOUNT_ID].sort());
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }],
     });
   });
 });
@@ -1967,7 +1967,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
 
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: [JUNK_ID, 'mb-archive'].sort() }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: [JUNK_ID, 'mb-archive'].sort() }],
     });
     // Another account's folders are untouched.
     expect(config[GROUP_ACCOUNT_ID]).toEqual(EXPECTED_EMAIL_PUSH[GROUP_ACCOUNT_ID]);
@@ -1980,7 +1980,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
 
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { hasKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { hasKeyword: '$junk' }],
     });
     expect(config[ACCOUNT_ID]).toEqual(EXPECTED_EMAIL_PUSH[ACCOUNT_ID]);
   });
@@ -1991,7 +1991,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
     const one = await buildEmailPushConfig(client, false, mutes([ACCOUNT_ID], { [`${ACCOUNT_ID}/mb-archive`]: false }));
     expect(one[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-archive' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-archive' }],
     });
 
     const two = await buildEmailPushConfig(client, false, mutes([ACCOUNT_ID], {
@@ -2004,6 +2004,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
       operator: 'AND',
       conditions: [
         { notKeyword: '$junk' },
+        { notKeyword: '$bulwark-note' },
         { operator: 'OR', conditions: [{ inMailbox: 'mb-archive' }, { inMailbox: 'mb-inbox' }] },
       ],
     });
@@ -2016,11 +2017,11 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
 
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { hasKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { hasKeyword: '$junk' }],
     });
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-inbox' }],
     });
   });
 
