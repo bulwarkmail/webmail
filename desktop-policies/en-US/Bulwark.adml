@@ -79,6 +79,8 @@
       <string id="FilesFolderSyncEnabled_Explain">When enabled or not configured, people can keep a folder on the computer and a folder in Files the same, in both directions. When disabled, this is not offered and folders that sync now stop. The files in those folders stay where they are.</string>
       <string id="FilesDriveLetter">Drive letter for Files</string>
       <string id="FilesDriveLetter_Explain">Windows only. A letter from D to Z gives the Files drive that letter for every user, and they can&apos;t change it. Enter none to never give it a letter. When not configured, people choose under Settings, and there is no letter until they do. A value the app can&apos;t read counts as none.</string>
+      <string id="ComposeInNewWindow">Write messages in a new window</string>
+      <string id="ComposeInNewWindow_Explain">When enabled, every new message, reply, forward and draft opens in a window of its own instead of inside the main window. When disabled, they open inside the main window, and &quot;Open in new window&quot; still moves one out. Forced, the setting is locked. As a recommendation, it is the starting value of the setting under Settings, which people can change. When not configured, the setting is off until the user turns it on.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Address of the Bulwark server</label></textBox></presentation>

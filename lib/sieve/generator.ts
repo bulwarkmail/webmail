@@ -74,8 +74,37 @@ function generateCondition(condition: FilterCondition): string {
   const values = toValueList(value);
 
   if (field === 'body') {
-    const matchType = comparator === 'is' ? ':is' : comparator === 'regex' ? ':regex' : ':contains';
-    return `body ${matchType} ${formatStringArg(values)}`;
+    switch (comparator) {
+      case 'not_contains':
+        return `not body :contains ${formatStringArg(values)}`;
+      case 'is':
+        return `body :is ${formatStringArg(values)}`;
+      case 'not_is':
+        return `not body :is ${formatStringArg(values)}`;
+      case 'starts_with':
+        return `body :matches ${formatStringArg(values, (v) => `${v}*`)}`;
+      case 'ends_with':
+        return `body :matches ${formatStringArg(values, (v) => `*${v}`)}`;
+      case 'matches':
+        return `body :matches ${formatStringArg(values)}`;
+      case 'regex':
+        return `body :regex ${formatStringArg(values)}`;
+      default:
+        return `body :contains ${formatStringArg(values)}`;
+    }
+  }
+
+  if (field === 'delivered_to') {
+    // RFC 5228 §5.4: the envelope recipient, which a To or Cc header does
+    // not have to name (Bcc, lists, aliases).
+    switch (comparator) {
+      case 'address_is':
+        return `envelope :is "to" ${formatStringArg(values)}`;
+      case 'domain_is':
+        return `envelope :domain :is "to" ${formatStringArg(values)}`;
+      default:
+        return `envelope :contains "to" ${formatStringArg(values)}`;
+    }
   }
 
   if (field === 'attachment') {
@@ -222,6 +251,7 @@ function computeRequires(
     for (const condition of rule.conditions) {
       if (condition.field === 'body') extensions.add('body');
       if (condition.field === 'attachment') extensions.add('mime');
+      if (condition.field === 'delivered_to') extensions.add('envelope');
       if (usesRegex(condition)) extensions.add('regex');
     }
     for (const action of rule.actions) {
@@ -347,10 +377,11 @@ export function generateScript(
   // good, the auto-reply goes to everyone. It leaves version 2 alone. A
   // forward that is off only loses its remembered address that way, so it
   // stays version 1: the native app still edits version 1 only. A regex
-  // condition would come back from those as a plain "contains".
+  // condition would come back from those as a plain "contains", and one on
+  // "Delivered to" would make their save fail.
   if (
     metadata.rules.some(hasPeriod) ||
-    metadata.rules.some(r => r.conditions.some(usesRegex)) ||
+    metadata.rules.some(r => r.conditions.some(c => usesRegex(c) || c.field === 'delivered_to')) ||
     metadata.vacationForward?.enabled ||
     metadata.vacationAudience
   ) {

@@ -7,7 +7,7 @@ const MAX_LIST_ENTRY_LENGTH = 100;
  * have not chosen themselves. policy.json is written by hand and the server
  * does not know the client's settings, so only the shape is checked here: a
  * plain object of plain values (boolean, finite number, string) or short
- * lists of strings (#1564). The client checks each key and value against its
+ * lists of strings (#1564), and the tag list (#1612). The client checks each key and value against its
  * own settings before applying it (adminPolicyPatch in
  * stores/settings-store.ts).
  */
@@ -28,7 +28,27 @@ export function sanitizePolicyDefaults(raw: unknown): Record<string, unknown> {
       value.every((entry) => typeof entry === 'string' && entry.length <= MAX_LIST_ENTRY_LENGTH)
     ) {
       out[key] = [...value];
+    } else if (key === 'emailKeywords') {
+      const keywords = sanitizeKeywordList(value);
+      if (keywords) out[key] = keywords;
     }
+  }
+  return out;
+}
+
+/**
+ * `defaults.emailKeywords`: short list of tags, each reduced to its id,
+ * label and colour, all short strings. Null when it isn't one.
+ */
+function sanitizeKeywordList(value: unknown): { id: string; label: string; color: string }[] | null {
+  if (!Array.isArray(value) || value.length > MAX_LIST_ENTRIES) return null;
+  const out: { id: string; label: string; color: string }[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+    const { id, label, color } = entry as Record<string, unknown>;
+    const short = (v: unknown): v is string => typeof v === 'string' && v.length <= MAX_LIST_ENTRY_LENGTH;
+    if (!short(id) || !short(label) || !short(color)) return null;
+    out.push({ id, label, color });
   }
   return out;
 }

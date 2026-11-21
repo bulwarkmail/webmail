@@ -10,6 +10,7 @@ export class UploadXHR {
   responseType = '';
   responseText = '';
   status = 0;
+  responseHeaders: Record<string, string> = {};
   body: File | null = null;
   upload = { onprogress: null as ((event: ProgressEvent) => void) | null };
   onload: (() => void) | null = null;
@@ -21,6 +22,7 @@ export class UploadXHR {
   constructor() { UploadXHR.instances.push(this); }
   open(method: string, url: string) { this.method = method; this.url = url; }
   setRequestHeader(name: string, value: string) { this.headers[name] = value; }
+  getResponseHeader(name: string): string | null { return this.responseHeaders[name.toLowerCase()] ?? null; }
   send(body: File) { this.body = body; }
   abort = vi.fn(() => {
     // Native abort emits no abort event before send or after DONE.
@@ -29,10 +31,11 @@ export class UploadXHR {
   progress(loaded: number, total = this.body?.size ?? 0, lengthComputable = true) {
     this.upload.onprogress?.(new ProgressEvent('progress', { loaded, total, lengthComputable }));
   }
-  load(status = 201, text = JSON.stringify({ blobId: `blob-${this.body?.name}`, size: this.body?.size, type: this.body?.type })) {
+  load(status = 201, text = JSON.stringify({ blobId: `blob-${this.body?.name}`, size: this.body?.size, type: this.body?.type }), headers: Record<string, string> = {}) {
     this.done = true;
     this.status = status;
     this.responseText = text;
+    this.responseHeaders = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
     this.onload?.();
   }
   error() { this.done = true; this.onerror?.(); }

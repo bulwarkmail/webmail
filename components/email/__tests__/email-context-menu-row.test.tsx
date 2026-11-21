@@ -94,6 +94,17 @@ describe("a row's right-click menu", () => {
     expect(within(more).getByText('pin')).toBeTruthy();
   });
 
+  // #1645: it was only in Mountain View's menu.
+  it('finds the mail from the sender, under More actions', () => {
+    const onFindFromSender = vi.fn();
+    renderMenu({ onFindFromSender });
+    expect(screen.queryByTestId('ctx-find-from')).toBeNull();
+    fireEvent.click(screen.getByTestId('ctx-more'));
+    const more = screen.getByRole('menu', { name: 'more_actions' });
+    fireEvent.click(within(more).getByTestId('ctx-find-from'));
+    expect(onFindFromSender).toHaveBeenCalledTimes(1);
+  });
+
   it('shows Not spam at the top in Spam', () => {
     renderMenu({ selectedMailbox: 'junk', currentMailboxRole: 'junk', email: { ...email, mailboxIds: { junk: true } } as Email });
     expect(topLevel()).toContain('not_spam');

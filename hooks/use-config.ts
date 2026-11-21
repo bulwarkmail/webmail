@@ -8,6 +8,7 @@ import { IS_LITE, IS_LITE_STALWART, LITE_CONFIG_PATH, withLiteBuildId } from '@/
 import { applyLiteConfig, liteStalwartDefaults } from '@/lib/lite-config';
 import { isConfigData } from '@/lib/config-validation';
 import { setNoThirdPartyTraffic } from '@/lib/third-party-mode';
+import { setTrustedAuthservIds } from '@/lib/trusted-authserv';
 import { configureErrorReporting, type ClientSettings } from '@/lib/error-reporting/client';
 
 export interface ConfigData {
@@ -35,6 +36,7 @@ export interface ConfigData {
   loginPrivacyPolicyUrl: string;
   loginWebsiteUrl: string;
   loginUsernamePlaceholder: string;
+  loginForgotPasswordUrl: string;
   loginLogoMaxHeight: string;
   loginLogoMaxWidth: string;
   loginShowHeading: boolean;
@@ -43,6 +45,8 @@ export interface ConfigData {
   loginShowTokenLogin: boolean;
   desktopBrowserSignIn: boolean;
   loginShowRememberMe: boolean;
+  /** An unticked "Remember me" lasts until the browser closes (BROWSER_SESSION_SIGN_IN, with SESSION_SECRET). */
+  browserSessionSignIn: boolean;
   loginShowVersion: boolean;
   demoMode: boolean;
   autoSsoEnabled: boolean;
@@ -63,6 +67,8 @@ export interface ConfigData {
   accountManagementLabel: string;
   /** Stay off every built-in outside host (#903; lib/outgoing-hosts.ts). */
   noThirdPartyTraffic: boolean;
+  /** Mail servers whose Authentication-Results count besides the receiving Stalwart's (lib/trusted-authserv.ts). Absent from servers before it existed. */
+  trustedAuthservIds?: string[];
   /** Lite only: whether sign-out revokes the refresh token (#1388). The server build decides in its token route. */
   oauthRevokeOnSignOut?: boolean;
   /** Server build only; Lite reads it from policy.json (stores/policy-store.ts). */
@@ -153,6 +159,7 @@ export async function fetchConfig(): Promise<ConfigData> {
     .then((data) => {
       configCache = data;
       setNoThirdPartyTraffic(data.noThirdPartyTraffic === true);
+      setTrustedAuthservIds(data.trustedAuthservIds);
       // Lite configures error reporting from policy.json instead.
       if (!IS_LITE) configureErrorReporting(data.errorReporting ?? null);
       // Fetch admin policy alongside config (non-blocking)
@@ -201,6 +208,7 @@ function configState(data: ConfigData): AppConfig {
       loginPrivacyPolicyUrl: data.loginPrivacyPolicyUrl,
       loginWebsiteUrl: data.loginWebsiteUrl,
       loginUsernamePlaceholder: data.loginUsernamePlaceholder,
+      loginForgotPasswordUrl: data.loginForgotPasswordUrl,
       loginLogoMaxHeight: data.loginLogoMaxHeight,
       loginLogoMaxWidth: data.loginLogoMaxWidth,
       loginShowHeading: data.loginShowHeading,
@@ -209,6 +217,7 @@ function configState(data: ConfigData): AppConfig {
       loginShowTokenLogin: data.loginShowTokenLogin,
       desktopBrowserSignIn: data.desktopBrowserSignIn,
       loginShowRememberMe: data.loginShowRememberMe,
+      browserSessionSignIn: data.browserSessionSignIn,
       loginShowVersion: data.loginShowVersion,
       demoMode: data.demoMode,
       autoSsoEnabled: data.autoSsoEnabled,
@@ -270,6 +279,7 @@ export function useConfig(): AppConfig {
     loginPrivacyPolicyUrl: configCache?.loginPrivacyPolicyUrl || '',
     loginWebsiteUrl: configCache?.loginWebsiteUrl || '',
     loginUsernamePlaceholder: configCache?.loginUsernamePlaceholder || '',
+    loginForgotPasswordUrl: configCache?.loginForgotPasswordUrl || '',
     loginLogoMaxHeight: configCache?.loginLogoMaxHeight || '',
     loginLogoMaxWidth: configCache?.loginLogoMaxWidth || '',
     loginShowHeading: configCache?.loginShowHeading ?? true,
@@ -278,6 +288,7 @@ export function useConfig(): AppConfig {
     loginShowTokenLogin: configCache?.loginShowTokenLogin ?? false,
     desktopBrowserSignIn: configCache?.desktopBrowserSignIn ?? true,
     loginShowRememberMe: configCache?.loginShowRememberMe ?? false,
+    browserSessionSignIn: configCache?.browserSessionSignIn ?? false,
     loginShowVersion: configCache?.loginShowVersion ?? true,
     demoMode: configCache?.demoMode || false,
     autoSsoEnabled: configCache?.autoSsoEnabled || false,

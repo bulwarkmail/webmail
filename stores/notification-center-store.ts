@@ -1,9 +1,11 @@
 import { create } from 'zustand';
+import { onFullSignOut } from '@/lib/sign-out-cleanup';
 import { generateUUID } from '@/lib/utils';
 
 // The in-app notification list behind the bell: what plugins showed with
 // api.notifications.show and the app's own error and warning toasts. Kept in
-// this browser only (localStorage), the last MAX_ENTRIES of them.
+// this browser only (localStorage), the last MAX_ENTRIES of them, until
+// everyone signs out.
 
 export const MAX_ENTRIES = 50;
 const STORAGE_KEY = 'notification-center';
@@ -129,3 +131,6 @@ export function recordNotification(input: CenterEntryInput): void {
 export function reloadNotificationCenter(): void {
   useNotificationCenterStore.setState({ entries: load() });
 }
+
+// Once everyone has signed out, the next person in this tab finds an empty list.
+onFullSignOut(() => useNotificationCenterStore.getState().clear());

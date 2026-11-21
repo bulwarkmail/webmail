@@ -118,7 +118,11 @@ function SendingWithUndo({ held, onUndone, onGone }: {
   const undo = async () => {
     const auth = useAuthStore.getState();
     // Never another login: the submission id names another submission there.
-    const client = held.localAccountId ? auth.getClientForAccount(held.localAccountId) : auth.client;
+    // The window's own login is the auth store's client while the login
+    // table has no entry for it.
+    const client = held.localAccountId
+      ? auth.getClientForAccount(held.localAccountId) ?? (held.localAccountId === auth.activeAccountId ? auth.client : null)
+      : auth.client;
     if (!client) {
       toast.error(tViewer("undo_send_signed_out"));
       return;
@@ -366,9 +370,17 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
   const [sending, setSending] = useState(false);
   const sendFromWindow = useCallback(async (data: SendData) => {
     if (!client) return false;
+    const auth = useAuthStore.getState();
     const sendClient = data.localAccountId
-      ? (useAuthStore.getState().getClientForAccount(data.localAccountId) ?? client)
+      ? auth.getClientForAccount(data.localAccountId) ?? (data.localAccountId === auth.activeAccountId ? client : undefined)
       : client;
+    // The login the From address belongs to has no client: nothing leaves
+    // through another login, which would send it as its own user. The
+    // composer keeps the message.
+    if (!sendClient) {
+      toast.error(t("notifications.error_sending"), t("notifications.not_connected"));
+      return false;
+    }
     const emailStore = useEmailStore.getState();
     // A send that fails goes to the composer, which stays open with the text.
     const result = await emailStore.sendEmail(
@@ -435,7 +447,10 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
     if (!client) return false;
     if (!data.delayedUntil) setSending(true);
     try {
-      return await sendFromWindow(data);
+      const sent = await sendFromWindow(data);
+      // Nothing went: the composer comes back with the text.
+      if (sent === false) setSending(false);
+      return sent;
     } catch (error) {
       setSending(false);
       throw error;

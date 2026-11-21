@@ -97,6 +97,33 @@ describe('right-click on an address in a message header', () => {
     expect(onSearch).toHaveBeenCalledWith({ from: 'sam@example.org' });
   });
 
+  // #1646: the menu stayed open until Escape, a scroll or an item.
+  it('closes on a click outside it', async () => {
+    render(<><RecipientPopover name="Sam Lee" email="sam@example.org" /><p>Subject</p></>);
+    rightClickSender();
+    expect(screen.getByRole('menu')).toBeTruthy();
+    // The hook starts listening a tick after the menu opened.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    fireEvent.mouseDown(screen.getByText('Subject'));
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('stays open on a click inside it', async () => {
+    render(<RecipientPopover name="Sam Lee" email="sam@example.org" />);
+    rightClickSender();
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    fireEvent.mouseDown(screen.getByTestId('address-menu-copy'));
+    expect(screen.getByRole('menu')).toBeTruthy();
+  });
+
+  it('closes when the reader shows another sender in its place', () => {
+    const { rerender } = render(<RecipientPopover name="Sam Lee" email="sam@example.org" />);
+    rightClickSender();
+    expect(screen.getByRole('menu')).toBeTruthy();
+    rerender(<RecipientPopover name="GitHub" email="noreply@github.com" />);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
   it('leaves out the search where there is no mail page (a message window)', () => {
     render(<RecipientPopover name="Sam Lee" email="sam@example.org" />);
     rightClickSender();

@@ -17,6 +17,12 @@ describe('applyLiteConfig (config.json for the static build)', () => {
     expect(config.oauthRevokeOnSignOut).toBe(true);
   });
 
+  it('reads the trusted mail servers as a list or a comma-separated string', () => {
+    expect(applyLiteConfig({}).trustedAuthservIds).toEqual([]);
+    expect(applyLiteConfig({ trustedAuthservIds: 'MX.Google.com, gw.example.com' }).trustedAuthservIds).toEqual(['mx.google.com', 'gw.example.com']);
+    expect(applyLiteConfig({ trustedAuthservIds: ['mx.google.com', '*.example.com', 3] }).trustedAuthservIds).toEqual(['mx.google.com']);
+  });
+
   it('lets config.json keep refresh tokens valid on sign-out (#1388)', () => {
     expect(applyLiteConfig({ oauthRevokeOnSignOut: false }).oauthRevokeOnSignOut).toBe(false);
     expect(applyLiteConfig({ oauthRevokeOnSignOut: 'no' }).oauthRevokeOnSignOut).toBe(true);
@@ -86,6 +92,15 @@ describe('applyLiteConfig (config.json for the static build)', () => {
       expect(applyLiteConfig({ accountManagementUrl: value }).accountManagementUrl).toBe('');
     }
     expect(applyLiteConfig({ accountManagementLabel: 'Security' }).accountManagementLabel).toBe('Security');
+  });
+
+  it('keeps a forgot password link only as an http(s) URL', () => {
+    expect(applyLiteConfig({}).loginForgotPasswordUrl).toBe('');
+    expect(applyLiteConfig({ loginForgotPasswordUrl: 'https://account.acme.example/forgot' }).loginForgotPasswordUrl)
+      .toBe('https://account.acme.example/forgot');
+    for (const value of ['javascript:alert(1)', '/forgot', 'account.acme.example/forgot', 42]) {
+      expect(applyLiteConfig({ loginForgotPasswordUrl: value }).loginForgotPasswordUrl).toBe('');
+    }
   });
 
   it('reads the accessibility and help links and drops other schemes', () => {

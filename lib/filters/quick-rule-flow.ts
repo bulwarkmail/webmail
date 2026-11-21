@@ -5,7 +5,8 @@ import { keywordPointer, pointerToken } from '@/lib/jmap/patch-pointer';
 import { toast } from '@/stores/toast-store';
 import type { ToastAction } from '@/components/ui/toast';
 import { useAuthStore } from '@/stores/auth-store';
-import { useEmailStore, type BatchActionTarget } from '@/stores/email-store';
+import { resolveEmailBlobContext, useEmailStore, type BatchActionTarget } from '@/stores/email-store';
+import { emailKeyFor } from '@/lib/thread-utils';
 import { useFilterStore } from '@/stores/filter-store';
 import { emailHooks } from '@/lib/plugin-hooks';
 import { createMailboxWithHooks } from '@/lib/plugin-mail-hooks';
@@ -20,13 +21,17 @@ import {
   type FiltersChange,
 } from './account-filters';
 import {
+  addSendersToRule,
   applyQuickRule,
   buildPresetRule,
   insertRuleAtTop,
+  isBulwarkRule,
   replaceOrInsertRule,
+  takesSenders,
   type QuickRuleOutcome,
   type QuickRulePreset,
   type QuickRuleSubject,
+  type RuleSender,
   type Translate,
 } from './quick-rules';
 import {
@@ -38,6 +43,7 @@ import {
   type RetroPlan,
 } from './retroactive';
 import type { QuickRuleTarget } from './quick-rule-target';
+import { applyRuleToScope, planRuleForScope, trashedBy, type ApplyScope } from './rule-scope';
 
 /** Translators for the namespaces the flow speaks in. */
 export interface QuickRuleText {
@@ -160,10 +166,15 @@ export async function executePlan(target: QuickRuleTarget, plan: RetroPlan): Pro
           return false;
         }
         await target.client.batchUpdateKeywords(step.ids, { [keywordPointer(step.keyword)]: true }, target.accountId);
-        const listed = new Map(store().emails.map(e => [e.id, e]));
-        for (const id of step.ids) {
-          const email = listed.get(id);
-          if (email) store().setEmailKeywordsLocal(id, { ...email.keywords, [step.keyword]: true });
+        // The rows of the rule's account in the list on screen, each by its
+        // own key: a row of another account or login with one of the ids is
+        // another message and keeps its keywords.
+        const ids = new Set(step.ids);
+        for (const row of store().emails) {
+          if (!ids.has(row.id)) continue;
+          const where = resolveEmailBlobContext(row, viewClient);
+          if (where.client !== target.client || (where.accountId ?? target.client.getAccountId()) !== target.accountId) continue;
+          store().setEmailKeywordsLocal(row.id, { ...row.keywords, [step.keyword]: true }, emailKeyFor(row));
         }
         void emailHooks.onEmailKeywordChange.emit(change);
         break;
@@ -215,8 +226,10 @@ async function applyAndReport(
 
 /**
  * Run a saved rule over the mail already in a folder, from the folder's
- * context menu. A progress toast stays up while the server is asked which
- * messages match and the changes are made.
+ * context menu, the way "Apply to" in the rule dialog does (rule-scope.ts).
+ * A progress toast stays up while the server is asked which messages match
+ * and the changes are made; a rule that discards asks before it moves
+ * anything to Trash.
  */
 export async function runRuleOnFolder(
   target: QuickRuleTarget,
@@ -225,15 +238,70 @@ export async function runRuleOnFolder(
   folderName: string,
   text: QuickRuleText,
 ): Promise<void> {
-  const progressId = toast.progress(text.menu('rules.running', { name: rule.name, folder: folderName }), { progress: null });
+  const running = text.menu('rules.running', { name: rule.name, folder: folderName });
+  let progressId = toast.progress(running, { progress: null });
   try {
-    const count = await applyRuleToExisting(target, rule, mailboxId);
+    const plan = await planRuleForScope(target, rule, 'folder', mailboxId);
+    const trashed = trashedBy(plan, target.mailboxes);
+    if (trashed > 0) {
+      toast.dismiss(progressId);
+      if (!(await useQuickRuleStore.getState().askTrash(trashed))) return;
+      progressId = toast.progress(running, { progress: null });
+    }
+    const done = await executePlan(target, plan);
     toast.dismiss(progressId);
-    if (count !== null) toast.success(text.notifications('rule_applied', { count }), { message: rule.name });
+    if (done) toast.success(text.notifications('rule_applied', { count: plan.ids.length }), { message: rule.name });
   } catch (error) {
     toast.dismiss(progressId);
     toast.error(text.notifications('rule_apply_failed'), error instanceof Error ? error.message : undefined);
   }
+}
+
+/**
+ * Open an existing editable rule with the selected sender(s) already added.
+ * The rule is re-read from the server at selection time; nothing is saved
+ * until the user confirms in the normal rule editor.
+ */
+export async function openRuleWithSenders(
+  target: QuickRuleTarget,
+  ruleId: string,
+  senders: RuleSender[],
+  sourceMailboxId: string | null,
+  text: QuickRuleText,
+): Promise<void> {
+  let filters: Awaited<ReturnType<typeof readAccountFilters>>;
+  try {
+    filters = await readAccountFilters(target.client, target.sieveAccountId);
+  } catch (error) {
+    toast.error(text.menu('rules.load_failed'), error instanceof Error ? error.message : undefined);
+    return;
+  }
+  if (filters.parsed.isOpaque) {
+    reportWriteError(new OpaqueFiltersError(), target, text);
+    return;
+  }
+  const current = filters.parsed.rules.find(rule => rule.id === ruleId);
+  if (!current || !isBulwarkRule(current)) {
+    toast.error(text.menu('rules.load_failed'));
+    return;
+  }
+  // Changed since the menu listed it.
+  if (!takesSenders(current)) {
+    toast.info(text.menu('rules.no_rule_fits'));
+    return;
+  }
+  const result = addSendersToRule(current, senders);
+  if (result.added.length === 0) {
+    toast.info(text.menu('rules.sender_already_present'));
+    return;
+  }
+  useQuickRuleStore.getState().openEditor({
+    mode: 'edit',
+    target,
+    rule: result.rule,
+    suggestions: [],
+    sourceMailboxId,
+  });
 }
 
 /**
@@ -349,7 +417,7 @@ export async function runPresetRule(params: {
 export async function saveEditorRule(
   editor: QuickRuleEditor,
   rule: FilterRule,
-  applyToExisting: boolean,
+  applyToExisting: boolean | ApplyScope,
   text: QuickRuleText,
 ): Promise<void> {
   const { target, sourceMailboxId } = editor;
@@ -371,9 +439,11 @@ export async function saveEditorRule(
   }
 
   let applied: number | null = null;
-  if (applyToExisting) {
+  if (applyToExisting && applyToExisting !== 'new') {
     try {
-      applied = await applyRuleToExisting(target, rule, sourceMailboxId);
+      applied = typeof applyToExisting === 'string'
+        ? await applyRuleToScope(target, rule, applyToExisting, sourceMailboxId)
+        : await applyRuleToExisting(target, rule, sourceMailboxId);
     } catch (error) {
       toast.error(text.notifications('rule_apply_failed'), error instanceof Error ? error.message : undefined);
     }

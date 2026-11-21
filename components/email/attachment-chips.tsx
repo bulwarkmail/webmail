@@ -190,11 +190,14 @@ export function useListHasAttachment(email: Email, load?: LoadListAttachments): 
 /**
  * Whether a list row will draw a chip row for this email, counting the room
  * it holds while the parts load. Lets the list estimate a row's height
- * before it has measured it.
+ * before it has measured it. Once the parts are in, they decide: a mail
+ * whose only parts are inline images draws no chips.
  */
 export function listRowShowsChips(email: Email, load?: LoadListAttachments): boolean {
   if (email.attachments) return realAttachments(email.attachments).length > 0;
-  return !!load && !!email.hasAttachment;
+  if (!load || !email.hasAttachment) return false;
+  const loaded = load.peek?.(email);
+  return loaded ? realAttachments(loaded).length > 0 : true;
 }
 
 interface ListAttachmentChipsProps extends Omit<AttachmentChipsProps, "attachments"> {

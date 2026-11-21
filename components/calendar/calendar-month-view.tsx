@@ -26,6 +26,7 @@ import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import type { MoveEventHandler } from "@/hooks/use-time-grid-interactions";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
+import { useReplyEmailsFor } from "@/hooks/use-reply-emails";
 import { isInMonthRange, useMonthRangeSelect, type MonthRange } from "@/hooks/use-month-range-select";
 import { announce } from "@/lib/announce";
 
@@ -197,6 +198,7 @@ export function CalendarMonthView({
   const describeError = useCalendarErrorMessage();
   // An event of another signed-in login is read with that login's addresses.
   const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
+  const replyEmailsFor = useReplyEmailsFor(currentUserEmails ?? []);
   const showTimeInMonthView = useSettingsStore((state) => state.showTimeInMonthView);
   const timedStyle = useSettingsStore((state) => state.calendarMonthTimedEvents);
   // On mobile the month view collapses events to dots unless the user opted
@@ -254,7 +256,16 @@ export function CalendarMonthView({
     return map;
   }, [events]);
 
-  const tasksByDate = useMemo(() => groupTasksByDueDay(tasks), [tasks]);
+  const monthRange = useMemo(() => {
+    if (!weeks.length || !weeks[0]?.length) return undefined;
+    const lastWeek = weeks[weeks.length - 1];
+    return {
+      start: weeks[0][0],
+      end: lastWeek[lastWeek.length - 1],
+    };
+  }, [weeks]);
+
+  const tasksByDate = useMemo(() => groupTasksByDueDay(tasks, monthRange), [tasks, monthRange]);
 
   // Phones have room for one letter per weekday: the language's own short
   // form, not the first letters of the name ("اث" for Monday in Arabic).
@@ -696,7 +707,7 @@ export function CalendarMonthView({
                         const calId = getPrimaryCalendarId(ev);
                         const cal = calId ? calendarMap.get(calId) : undefined;
                         const evColor = paint(ev.color || cal?.color || "#3b82f6");
-                        const inactive = ev.status === "cancelled" || isDeclinedByUser(ev, userEmailsFor(ev));
+                        const inactive = ev.status === "cancelled" || isDeclinedByUser(ev, replyEmailsFor(ev, cal));
                         return (
                           <span
                             key={ev.id}
@@ -710,7 +721,7 @@ export function CalendarMonthView({
                         const calId = Object.keys(task.calendarIds).find((id) => calendarMap.has(id));
                         return (
                           <span
-                            key={`task-${task.id}`}
+                            key={`task-${task.id}-${task.due ?? dayIndex}`}
                             data-calendar-task={task.id}
                             className={cn("w-1.5 h-1.5 rounded-full border", task.progress === "completed" && "opacity-40")}
                             style={{ borderColor: paint((calId && calendarMap.get(calId)?.color) || "#3b82f6") }}
@@ -908,7 +919,7 @@ function MonthCellEntries({
         const calId = Object.keys(task.calendarIds).find((id) => calendarMap.has(id));
         return (
           <div
-            key={`task-${task.id}`}
+            key={`task-${task.id}-${task.due ?? dayIndex}`}
             className="absolute z-10 px-0.5"
             style={place(dayEventRows[dayIndex] + taskIndex)}
             {...own}

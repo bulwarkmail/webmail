@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
-import { getMetadata, getRequiredConfig } from '@/lib/oauth/token-exchange';
+import { discoverSignIn, getRequiredConfig } from '@/lib/oauth/token-exchange';
+import { loggableError } from '@/lib/oauth/answer-summary';
 
 /**
  * Same-origin OAuth metadata (discovery) proxy.
@@ -34,7 +35,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const metadata = await getMetadata(serverId);
+    // The login page builds the authorize URL from this, and the mobile app
+    // compares its issuer with the configured issuer URL: the same rule as
+    // a sign-in here (signInIssuerRule).
+    const { metadata, refusal } = await discoverSignIn(serverId);
+    // A provider naming another issuer is a setting the admin has to fix, not
+    // an outage: the page says so (discovery logged it once already).
+    if (refusal === 'issuer_mismatch') {
+      return NextResponse.json({ error: 'issuer_mismatch' }, { status: 502 });
+    }
     if (!metadata?.authorization_endpoint || !metadata.token_endpoint) {
       logger.warn('OAuth metadata discovery returned no usable endpoints', { discoveryUrl });
       return NextResponse.json({ error: 'OAuth discovery failed' }, { status: 502 });
@@ -45,9 +54,7 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'private, max-age=600' },
     });
   } catch (error) {
-    logger.error('OAuth metadata discovery error', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.error('OAuth metadata discovery error', { error: loggableError(error) });
     return NextResponse.json({ error: 'OAuth discovery failed' }, { status: 502 });
   }
 }

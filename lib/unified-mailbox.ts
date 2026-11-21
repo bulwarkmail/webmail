@@ -3,6 +3,7 @@ import { CROSS_EXCLUDED_ROLES } from '@/lib/jmap/types';
 import type { IJMAPClient, SearchEmailsResult, SearchRequestOptions } from '@/lib/jmap/client-interface';
 import type { DeferredSnippetBatch } from '@/lib/search-snippet';
 import { andFilters, textConditions, textFilter } from '@/lib/jmap/search-utils';
+import { NOTE_KEYWORD } from '@/lib/team-mailboxes/hidden-folders';
 import { compareEmails, type SortLevel } from '@/lib/message-list-order';
 
 export interface UnifiedAccountClient {
@@ -98,6 +99,54 @@ export function findMailboxByRole(
   return mailboxes.find((m) => m.role === role);
 }
 
+/** The ids of the folders a unified role's row counts, one per account that has one. */
+export function unifiedRoleMailboxIds(
+  accounts: readonly Pick<UnifiedAccountClient, 'mailboxes'>[],
+  role: UnifiedMailboxRole,
+): string[] {
+  return accounts.flatMap((account) => findMailboxByRole(account.mailboxes, role)?.id ?? []);
+}
+
+/**
+ * The folders "Empty trash (all accounts)" empties for `role`: each of the
+ * user's own logins' folder, and a group or delegated account's folder when
+ * the user may delete from it (mayRemoveItems). A shared folder in a login's
+ * own list is left to that account's own entry. `kept` are the shared
+ * accounts with such a folder that the user may not delete from. (#1738)
+ */
+export function unifiedEmptyTargets(
+  accounts: UnifiedAccountClient[],
+  role: UnifiedMailboxRole,
+): { targets: { account: UnifiedAccountClient; mailbox: Mailbox }[]; kept: UnifiedAccountClient[] } {
+  const targets: { account: UnifiedAccountClient; mailbox: Mailbox }[] = [];
+  const kept: UnifiedAccountClient[] = [];
+  for (const account of accounts) {
+    const mailbox = account.isShared
+      ? findMailboxByRole(account.mailboxes, role)
+      : account.mailboxes.find((m) => m.role === role && !m.isShared);
+    if (!mailbox) continue;
+    if (account.isShared && mailbox.myRights?.mayRemoveItems !== true) kept.push(account);
+    else targets.push({ account, mailbox });
+  }
+  return { targets, kept };
+}
+
+/**
+ * What the "Empty trash (all accounts)" dialog says: how many messages go,
+ * and which shared accounts it empties and which it keeps.
+ */
+export function unifiedEmptySummary(
+  accounts: UnifiedAccountClient[],
+  role: UnifiedMailboxRole,
+): { count: number; shared: string[]; kept: string[] } {
+  const { targets, kept } = unifiedEmptyTargets(accounts, role);
+  return {
+    count: targets.reduce((sum, { mailbox }) => sum + (mailbox.totalEmails ?? 0), 0),
+    shared: targets.filter(({ account }) => account.isShared).map(({ account }) => account.accountLabel),
+    kept: kept.map((account) => account.accountLabel),
+  };
+}
+
 /** The id a JMAP request names this entry's mailbox by (the owner's raw id for shared entries). */
 export function jmapMailboxIdOf(account: UnifiedAccountClient, mailbox: Mailbox): string {
   return account.isShared ? (mailbox.originalId ?? mailbox.id) : mailbox.id;
@@ -110,6 +159,27 @@ export function jmapMailboxIdOf(account: UnifiedAccountClient, mailbox: Mailbox)
 export function trashAndJunkExclusion(account: UnifiedAccountClient): Record<string, unknown> | null {
   const ids = trashAndJunkIds(account);
   return ids.length > 0 ? { inMailboxOtherThan: ids } : null;
+}
+
+/**
+ * A query without a folder (search, tag views, "All mail" search, global
+ * search) for this account: `filter` AND never a team note
+ * (lib/team-mailboxes/hidden-folders.ts), AND not in Trash or Junk when
+ * asked (the search panel's default scope). The notes are always left out:
+ * their folder is never listed, so nothing a user picks can include it.
+ * One `inMailboxOtherThan` carries both the hidden folders and Trash/Junk.
+ */
+export function withFolderlessExclusion(
+  filter: Record<string, unknown>,
+  account: UnifiedAccountClient,
+  excludeTrashAndJunk: boolean,
+): Record<string, unknown> {
+  const out = andFilters(filter, { notKeyword: NOTE_KEYWORD });
+  const ids = [
+    ...(account.client.hiddenMailboxIds?.(account.jmapAccountId) ?? []),
+    ...(excludeTrashAndJunk ? trashAndJunkIds(account) : []),
+  ];
+  return ids.length > 0 ? andFilters(out, { inMailboxOtherThan: ids }) : out;
 }
 
 /** The JMAP ids of an account's Trash and Junk folders (those it has). */
@@ -600,10 +670,10 @@ export async function fetchTagEmails(
   return fanOutAccountQuery(
     accounts,
     (account, jmapAccountId) => {
-      const filter = andFilters(extraFilter ?? {}, trashAndJunkExclusion(account));
+      const filter = withFolderlessExclusion(extraFilter ?? {}, account, true);
       return account.client.getEmails(
         undefined, jmapAccountId, limit, positionFor(position, account), keyword, true,
-        Object.keys(filter).length > 0 ? filter : undefined, order,
+        filter, order,
       );
     },
     compareEmails(order, { pinnedFirst: true }),
@@ -638,15 +708,13 @@ export async function searchAcrossAccounts(
 ): Promise<UnifiedFetchResult> {
   return fanOutAccountQuery(
     accounts,
-    (account, jmapAccountId) => {
-      const exclusion = options.excludeTrashAndJunk ? trashAndJunkExclusion(account) : null;
-      return exclusion
-        ? account.client.advancedSearchEmails(
-            andFilters(textFilter(query), exclusion), jmapAccountId, limit, positionFor(position, account),
-            ...searchRequestOptions(options),
-          )
-        : account.client.searchEmails(query, undefined, jmapAccountId, limit, positionFor(position, account), ...searchRequestOptions(options));
-    },
+    // Always the filtered form: even "All folders" leaves the team notes out.
+    // searchEmails(query) sends textFilter(query) the same way.
+    (account, jmapAccountId) => account.client.advancedSearchEmails(
+      withFolderlessExclusion(textFilter(query), account, options.excludeTrashAndJunk === true),
+      jmapAccountId, limit, positionFor(position, account),
+      ...searchRequestOptions(options),
+    ),
     newestFirst,
   );
 }
@@ -665,7 +733,7 @@ export async function advancedSearchAcrossAccounts(
   return fanOutAccountQuery(
     accounts,
     (account, jmapAccountId) => account.client.advancedSearchEmails(
-      options.excludeTrashAndJunk ? andFilters(filter, trashAndJunkExclusion(account)) : filter,
+      withFolderlessExclusion(filter, account, options.excludeTrashAndJunk === true),
       jmapAccountId,
       limit,
       positionFor(position, account),

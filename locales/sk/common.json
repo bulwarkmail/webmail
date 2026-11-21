@@ -6,6 +6,7 @@
     "username_placeholder": "pouzivatel@example.com",
     "password_label": "Heslo",
     "password_placeholder": "Zadajte heslo",
+    "forgot_password": "Zabudli ste heslo?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server bol vybratý podľa domény vášho e-mailu.",
     "sign_in": "Prihlásiť sa",
@@ -22,7 +23,9 @@
       "totp_required": "Je vyžadovaný kód dvojfaktorového overenia. Zadajte kód nižšie.",
       "totp_invalid": "Neplatný overovací kód. Skontrolujte svoju overovaciu aplikáciu a skúste znova.",
       "oauth_discovery_failed": "SSO je povolené, ale poskytovateľa identity sa nepodarilo dosiahnuť. Skontrolujte konfiguráciu OAuth.",
-      "token_exchange_failed": "Heslo a kód boli prijaté, ale poštový server odmietol pre túto aplikáciu spustiť reláciu. Požiadajte správcu o kontrolu nastavení klienta OAuth."
+      "oauth_issuer_mismatch": "Prihlásenie cez tohto poskytovateľa nie je správne nastavené. Správca musí nastaviť jeho adresu vydavateľa (issuer).",
+      "token_exchange_failed": "Heslo a kód boli prijaté, ale poštový server odmietol pre túto aplikáciu spustiť reláciu. Požiadajte správcu o kontrolu nastavení klienta OAuth.",
+      "login_refused": "Poštový server odmietol toto prihlásenie skôr, ako overil váš kód. Požiadajte správcu, aby skontroloval nastavenia klienta OAuth."
     },
     "show_password": "Zobraziť heslo",
     "hide_password": "Skryť heslo",
@@ -158,6 +161,7 @@
     "settings": "Nastavenia",
     "admin": "Administrácia",
     "files": "Súbory",
+    "tasks": "Úlohy",
     "loading_mailboxes": "Načítavanie schránok...",
     "push_connected": "Aktualizácie v reálnom čase sú aktívne",
     "push_disconnected": "Aktualizácie v reálnom čase sú neaktívne",
@@ -338,10 +342,20 @@
     "show_on_mobile": "Zobraziť na mobile"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Dnes",
+      "yesterday": "Včera",
+      "last_week": "Minulý týždeň",
+      "last_month": "Minulý mesiac",
+      "older": "Staršie"
+    },
+    "group_by_date": "Zoskupiť podľa dátumu",
     "sections": {
       "unread": "Neprečítané",
       "everything_else": "Všetko ostatné",
-      "unread_empty": "Prečítali ste všetky správy v doručenej pošte."
+      "unread_empty": "Prečítali ste všetky správy v doručenej pošte.",
+      "unread_newer": "Novšie neprečítané",
+      "unread_older": "Staršie neprečítané"
     },
     "columns": {
       "from": "Od",
@@ -369,6 +383,8 @@
     "replied": "Zodpovedané",
     "forwarded": "Preposlané",
     "has_attachment": "Obsahuje prílohu",
+    "high_importance": "Vysoká dôležitosť",
+    "low_importance": "Nízka dôležitosť",
     "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konverzácií",
     "conversations_count_plus": "{count}+ konverzácií",
@@ -805,7 +821,8 @@
       "event_status_tentative": "Nezaväzne",
       "event_status_cancelled": "Zrušené",
       "expand": "Zobraziť podrobnosti",
-      "collapse": "Skryť podrobnosti"
+      "collapse": "Skryť podrobnosti",
+      "optional_role": "Vaša účasť je nepovinná"
     },
     "send": "Odoslať",
     "more": "viac",
@@ -956,6 +973,50 @@
     "restore_to": "Presunúť späť do priečinka {folder}",
     "delete_forever": "Odstrániť natrvalo"
   },
+  "team_mailboxes": {
+    "note": "Poznámka",
+    "add_note": "Pridať poznámku",
+    "field_label": "Poznámka",
+    "placeholder": "Napíšte poznámku pre svoj tím",
+    "chars_left": "{count, plural, one {Zostáva # znak} few {Zostávajú # znaky} many {Zostáva # znaku} other {Zostáva # znakov}}",
+    "too_long": "{count, plural, one {O # znak dlhšie} few {O # znaky dlhšie} many {O # znaku dlhšie} other {O # znakov dlhšie}}",
+    "sending": "Odosiela sa…",
+    "save_failed": "Poznámku sa nepodarilo uložiť.",
+    "retry": "Skúsiť znova",
+    "full": "Táto schránka je plná. Obráťte sa na správcu.",
+    "read_only": "Do tejto schránky nemožno ukladať poznámky. Obráťte sa na správcu.",
+    "read_only_member": "Poznámky tu môžete čítať, ale nie písať.",
+    "offline": "Ste offline. Poznámky budete môcť písať, keď budete znova online.",
+    "team_only": "Vidí to iba váš tím",
+    "list_label": "Poznámky",
+    "delete": "Odstrániť poznámku",
+    "note_from": "Poznámka od {name}, {time}",
+    "new_note_from": "Nová poznámka od {name}",
+    "deleted": "Poznámka odstránená",
+    "undo": "Späť",
+    "delete_failed": "Poznámku sa nepodarilo odstrániť.",
+    "load_failed": "Poznámky sa nepodarilo načítať.",
+    "timeline_assigned": "{name} to pridelil(a) {assignee}",
+    "timeline_took": "{name} to prevzal(a)",
+    "timeline_unassigned": "{name} zrušil(a) pridelenie",
+    "timeline_unassigned_person": "{name} zrušil(a) pridelenie pre {assignee}",
+    "timeline_left": "{name} už na tom nepracuje",
+    "timeline_done": "{name} to označil(a) ako hotové",
+    "timeline_reopened": "{name} to znova otvoril(a)",
+    "someone": "členovi tímu",
+    "summary_count": "{count, plural, one {# poznámka} few {# poznámky} many {# poznámky} other {# poznámok}}",
+    "summary_latest": "{name}: {text}",
+    "row_count_new": "{count, plural, one {# poznámka, nová} few {# poznámky, nové} many {# poznámky, nové} other {# poznámok, nové}}",
+    "filter_label": "Filter",
+    "filter_open": "Otvorené",
+    "filter_mine": "Pridelené mne",
+    "filter_mentions": "Spomínajú ma",
+    "filter_notes": "S poznámkami",
+    "mention_list": "Ľudia v tomto tíme",
+    "mentioned_you": "{name} vás spomenul(a) v „{subject}“",
+    "mentioned_you_hidden": "Boli ste spomenutí v tímovej schránke",
+    "show": "Zobraziť"
+  },
   "mail_p3_actions": {
     "move_to_inbox": "Presunúť do Doručených",
     "delete_forever_title": "Odstrániť túto správu natrvalo?",
@@ -1084,6 +1145,7 @@
     "templates_menu": "Šablóny",
     "insert_template": "Vložiť šablónu…",
     "options": "Možnosti",
+    "tags": "Štítky",
     "option_plain_text": "Obyčajný text",
     "option_plain_text_hint": "Odoslať bez formátovania",
     "option_read_receipt": "Vyžiadať potvrdenie o prečítaní",
@@ -1096,6 +1158,12 @@
     "option_priority_high": "Vysoká",
     "option_priority_normal": "Normálna",
     "option_priority_low": "Nízka",
+    "file_in": "Založiť do priečinka",
+    "file_in_chosen": "Založiť do {folder}",
+    "file_in_hint": "Po odoslaní sa vaša správa aj tá, na ktorú odpovedáte, presunú do tohto priečinka",
+    "file_in_none": "Nezakladať",
+    "file_in_failed": "Odoslané, ale nepodarilo sa založiť do {folder}.",
+    "file_in_reply_elsewhere": "Originál presunutý do {folder}. Odpoveď zostáva v Odoslaných, pretože odišla z iného účtu.",
     "validation": {
       "recipient_required": "Pridajte príjemcu na odoslanie",
       "body_required": "Napíšte správu alebo priložte súbor",
@@ -1218,6 +1286,7 @@
       "clear_formatting": "Vymazať formátovanie",
       "undo": "Späť",
       "redo": "Znova",
+      "cell_background": "Pozadie bunky",
       "add_row_above": "Pridať riadok nad",
       "add_row_below": "Pridať riadok pod",
       "add_column_before": "Pridať stĺpec pred",
@@ -1283,6 +1352,18 @@
       "plain_text": "[Obrázok: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Príliš veľa nahrávaní. Skúste to znova o {minutes, plural, one {# minútu} few {# minúty} many {# minúty} other {# minút}}.",
+    "retry_later": "Príliš veľa nahrávaní. Skúste to znova neskôr."
+  },
+  "attachment_rename": {
+    "rename": "Premenovať",
+    "rename_named": "Premenovať {name}",
+    "rename_menu": "Premenovať…",
+    "rename_title": "Premenovať prílohu",
+    "rename_invalid_chars": "Názvy súborov nesmú obsahovať / ani \\ ani riadiace znaky",
+    "rename_too_long": "Tento názov je príliš dlhý"
+  },
   "compose_ux": {
     "draft_discarded": "Koncept zahodený",
     "undo": "Späť",
@@ -1315,6 +1396,7 @@
     "success": "Úspešne",
     "cancel": "Zrušiť",
     "save": "Uložiť",
+    "ready_to_save": "Pripravené na uloženie",
     "delete": "Odstrániť",
     "edit": "Upraviť",
     "close": "Zavrieť",
@@ -1711,6 +1793,13 @@
         "label": "Prepínač účtov hore v postrannom paneli",
         "description": "Zobrazí prepínač účtov nad priečinkami a okrúhle tlačidlo Napísať nad zoznamom správ. Po vypnutí bude tlačidlo Napísať nad priečinkami."
       },
+      "compose_placement": {
+        "label": "Tlačidlo Napísať",
+        "description": "Kde je tlačidlo Napísať na počítači. V telefóne je vždy nad zoznamom správ.",
+        "floating": "Nad zoznamom správ",
+        "sidebar": "Hore v paneli priečinkov",
+        "rail": "Hore na navigačnej lište"
+      },
       "show_rail_account_list": {
         "label": "Zobraziť avatáry účtov na navigačnej lište",
         "description": "Zobrazovať jednotlivé ikony účtov v dolnej časti navigačnej lišty pre rýchle prepínanie."
@@ -1800,12 +1889,19 @@
       "title": "E-mailové štítky",
       "description": "Vytvorte štítky na triedenie správ. Štítky sa ukladajú so správami na serveri.",
       "add_keyword": "Pridať štítok",
+      "sort_az": "Zoradiť A–Z",
+      "sorted": "Štítky zoradené A–Z",
+      "empty": "Zatiaľ nemáte žiadne štítky.",
       "label_field": "Zobrazovaný názov",
       "label_placeholder": "napr. Práca, Osobné, Naliehavé",
       "id_field": "ID štítku",
       "id_placeholder": "napr. praca, osobne",
       "color_field": "Farba",
-      "id_exists": "Toto ID štítku už existuje",
+      "custom_color": "Vlastná farba",
+      "color_code": "Kód farby",
+      "pick_custom_color": "Vybrať vlastnú farbu",
+      "invalid_color": "Zadajte kód farby, napríklad #1a73e8.",
+      "name_exists": "Štítok s týmto názvom už existuje",
       "edit": "Upraviť štítok",
       "delete": "Odstrániť štítok",
       "edit_tag": "Upraviť {name}",
@@ -1985,9 +2081,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Typ doručenej pošty",
-        "description": "„Najprv neprečítané“ zobrazí 25 najnovších neprečítaných správ v sekcii nad zvyškom doručenej pošty",
+        "description": "„Najprv neprečítané“ zobrazí najnovšie neprečítané správy v sekcii nad zvyškom doručenej pošty",
         "default": "Predvolené",
         "unread_first": "Najprv neprečítané"
+      },
+      "unread_section_size": {
+        "label": "Zobrazené neprečítané správy",
+        "description": "Koľko najnovších neprečítaných správ zobrazí sekcia „Najprv neprečítané“",
+        "5": "5 správ",
+        "10": "10 správ",
+        "15": "15 správ",
+        "20": "20 správ",
+        "25": "25 správ",
+        "50": "50 správ"
       },
       "clear_search_on_folder_change": {
         "label": "Vymazať hľadanie pri prepnutí priečinka",
@@ -2082,13 +2188,31 @@
         "label": "Zobrazovať overovacie kódy",
         "description": "Ponúkať kód z prihlasovacích a potvrdzovacích e-mailov na skopírovanie jedným kliknutím, v zozname počas jedného dňa a v správe"
       },
+      "show_attachment_chips": {
+        "label": "Zobraziť prílohy v zozname",
+        "description": "Zobrazovať priložené súbory pod každou správou, aby sa dali otvoriť priamo zo zoznamu. Ikona spinky sa zobrazuje vždy."
+      },
+      "show_tag_chips": {
+        "label": "Zobraziť štítky v zozname",
+        "description": "Zobrazovať štítky vedľa odosielateľa alebo predmetu v zozname správ"
+      },
       "plain_text_mode": {
         "label": "Iba prostý text",
         "description": "Zakázať editor formátovaného textu a odosielať všetky e-maily iba ako prostý text"
       },
+      "reply_under_message": {
+        "label": "Odpovede pod správou",
+        "description": "Odpoveď alebo preposlanie sa otvorí pod svojou správou, ktorá nad ňou zostane čitateľná. Keď je vypnuté, zaberie celý panel čítania ako nová správa."
+      },
       "quick_reply": {
         "label": "Rýchla odpoveď",
         "description": "Zobraziť pole na rýchlu odpoveď pod správami."
+      },
+      "reply_quote": {
+        "label": "Citovaný text v odpovediach",
+        "description": "Zbalené skryje citované správy za •••. Rozbalené ich pri otvorení odpovede zobrazí celé.",
+        "collapsed": "Zbalené",
+        "expanded": "Rozbalené"
       },
       "auto_select_reply_identity": {
         "label": "Odpovedať z prijatej adresy",
@@ -2244,6 +2368,16 @@
         "seconds": "{seconds} sekúnd",
         "unsupported": "Aktuálny účet neoznamuje podporu oneskoreného odoslania."
       },
+      "mark_read_on_reply": {
+        "label": "Označiť ako prečítané, keď odpoviem alebo prepošlem",
+        "description": "Správa, na ktorú odpoviete alebo ktorú prepošlete, sa označí ako prečítaná, aj keď sa správy pri otvorení nikdy neoznačujú ako prečítané."
+      },
+      "message_double_click": {
+        "label": "Dvojklik na správu",
+        "description": "Čo urobí dvojklik na správu v zozname.",
+        "reading_pane": "Otvoriť na table čítania",
+        "new_window": "Otvoriť v novom okne"
+      },
       "return_to_list_after_action": {
         "label": "Vrátiť sa na zoznam po odstránení, archivovaní, presunutí alebo označení ako neprečítané",
         "description": "Po odstránení, archivovaní, presunutí, nahlásení ako spam alebo označení otvorenej správy ako neprečítanej sa vrátiť na zoznam správ."
@@ -2267,6 +2401,10 @@
       "rtl_editing": {
         "label": "Podpora písania sprava doľava",
         "description": "Pridá do panela nástrojov editora tlačidlo smeru textu, ktorým možno odseky nastaviť zľava doprava alebo sprava doľava"
+      },
+      "group_by_date": {
+        "label": "Zoskupiť podľa dátumu",
+        "description": "Zobrazí správy pod hlavičkami dátumu, ako Dnes, Včera a Minulý týždeň. Platí len vtedy, keď je zoznam zoradený podľa dátumu."
       },
       "group_conversations": {
         "label": "Zoskupovať správy podľa konverzácie",
@@ -2372,6 +2510,57 @@
       "managing": "Správa: {name}"
     },
     "security": {
+      "masked_addresses": {
+        "address": "Adresa",
+        "description_column": "Popis",
+        "website_column": "Web",
+        "state": "Stav",
+        "actions": "Akcie",
+        "no_description": "Bez popisu",
+        "edit": "Upraviť",
+        "close": "Zavrieť",
+        "pagination": "Stránky maskovaných adries",
+        "page": "Strana {page} z {pages}",
+        "previous": "Predchádzajúca",
+        "next": "Ďalšia",
+        "delete": "Odstrániť",
+        "delete_title": "Natrvalo odstrániť maskovanú adresu?",
+        "delete_warning": "Odstrániť {address}? Túto akciu nie je možné vrátiť späť. Pošta odoslaná na túto adresu už nebude doručená.",
+        "delete_confirm": "Natrvalo odstrániť",
+        "cancel": "Zrušiť",
+        "deleted": "Adresa bola natrvalo odstránená.",
+        "deleted_refresh_failed": "Odstránenie bolo potvrdené, ale zoznam sa nepodarilo obnoviť. Obnovte ho, aby sa načítal aktuálny zoznam.",
+        "delete_forbidden": "Vaša aktuálna relácia nemá povolenie odstraňovať maskované adresy. Ostatné povolené akcie zostávajú dostupné.",
+        "delete_failed": "Adresa nebola odstránená. Skôr ako to skúsite znova, obnovte zoznam.",
+        "delete_unconfirmed": "Odstránenie sa nepodarilo potvrdiť. Nebude sa opakovať. Pred ďalším odstraňovaním obnovte zoznam a skontrolujte adresu.",
+        "title": "Maskované adresy",
+        "intro": "Prijímajte poštu bez toho, aby ste zdieľali svoju hlavnú adresu. Vypnutá adresa odmieta novú poštu. Z týchto adries nie je možné poštu odosielať.",
+        "loading": "Načítavajú sa maskované adresy…",
+        "count": "{count, plural, one {# adresa} few {# adresy} many {# adresy} other {# adries}}",
+        "empty": "Zatiaľ žiadne maskované adresy.",
+        "website": "Web (voliteľné)",
+        "description": "Popis (voliteľné)",
+        "no_website": "Neuvedené",
+        "enabled": "Zapnutá",
+        "disabled": "Vypnutá",
+        "enable": "Zapnúť",
+        "disable": "Vypnúť",
+        "copy": "Kopírovať",
+        "copied": "Adresa bola skopírovaná.",
+        "copy_failed": "Kopírovanie zlyhalo. Označte a skopírujte adresu vyššie.",
+        "save": "Uložiť popis",
+        "create": "Vytvoriť maskovanú adresu",
+        "refresh": "Obnoviť",
+        "saved": "Zmena bola uložená.",
+        "forbidden": "Vaša aktuálna relácia nemá povolenie zobraziť maskované adresy.",
+        "unavailable": "Maskované adresy nie sú pre tento účet alebo server k dispozícii.",
+        "load_failed": "Úplný zoznam adries sa nepodarilo načítať. Obnovte ho a skúste to znova.",
+        "save_failed": "Zmenu sa nepodarilo potvrdiť. Skôr ako to skúsite znova, obnovte zoznam.",
+        "create_forbidden": "Server v tejto relácii nepovolil vytvoriť maskovanú adresu.",
+        "update_forbidden": "Server v tejto relácii nepovolil upravovať maskované adresy. Adresy môžete naďalej kopírovať.",
+        "over_quota": "Dosiahli ste kvótu maskovaných adries na serveri. Vypnuté adresy sa do limitu môžu stále započítavať.",
+        "rate_limit": "Dosiahli ste limit servera na vytváranie adries. Skúste to neskôr."
+      },
       "title": "Zabezpečenie účtu",
       "description": "Správa hesla, dvojfaktorového overenia a nastavení zabezpečenia",
       "detecting": "Zisťovanie možností servera...",
@@ -2472,6 +2661,7 @@
         "enable_tooltip": "Zapnúť šifrovanie týmto kľúčom",
         "configure_title": "Zapnúť šifrovanie týmto kľúčom",
         "enable_button": "Zapnúť",
+        "in_use": "Používa sa",
         "disable_tooltip": "Vypnúť šifrovanie",
         "disable_title": "Vypnúť šifrovanie uložených dát?",
         "disable_message": "Nová pošta sa odteraz ukladá bez šifrovania.",
@@ -2714,7 +2904,9 @@
       },
       "settings_sync": {
         "label": "Synchronizácia nastavení",
-        "description": "Synchronizovať nastavenia medzi prehliadačmi a zariadeniami"
+        "description": "Synchronizovať nastavenia medzi prehliadačmi a zariadeniami",
+        "replaced": "{count, plural, one {# nastavenie v tomto prehliadači sa teraz riadi} few {# nastavenia v tomto prehliadači sa teraz riadia} other {# nastavení v tomto prehliadači sa teraz riadi}} vaším účtom.",
+        "keep_mine": "Použiť nastavenia tohto prehliadača"
       },
       "sender_favicons": {
         "label": "Favikony odosielateľov",
@@ -2899,16 +3091,12 @@
       "loading": "Načítavanie filtrov...",
       "not_supported": "Váš poštový server nepodporuje e-mailové filtre.",
       "rule_name": "Názov pravidla",
-      "rule_name_placeholder": "napr. Triediť newslettery",
       "match_all": "Splňuje všetky podmienky",
       "match_any": "Splňuje ktorúkoľvek podmienku",
       "conditions": "Podmienky",
       "add_condition": "Pridať podmienku",
       "actions": "Akcie",
-      "add_action": "Pridať akciu",
       "remove_condition": "Odobrať podmienku",
-      "remove_action": "Odobrať akciu",
-      "stop_processing": "Ďalšie pravidlá nepoužívať",
       "include_spam": "Presúvať aj správy označené ako spam",
       "attachment_type_placeholder": "napr. pdf, doc, jpg",
       "value_placeholder_multi": "Hodnota (viac oddelených čiarkami)",
@@ -2918,6 +3106,7 @@
         "from": "Od",
         "to": "Komu",
         "cc": "Kópia",
+        "delivered_to": "Doručené na",
         "subject": "Predmet",
         "header": "Vlastná hlavička",
         "size": "Veľkosť",
@@ -2967,7 +3156,6 @@
       "condition_value": "Hodnota podmienky",
       "header_placeholder": "napr. X-Mailing-List",
       "size_bytes": "Veľkosť v bajtoch",
-      "size_placeholder": "napr. 1000000",
       "system_managed": "Pravidlo spravované systémom",
       "opaque_warning": "Tento skript bol upravený mimo vizuálneho sprievodcu. K dispozícii je iba priama úprava Sieve.",
       "open_sieve_editor": "Otvoriť textový editor Sieve",
@@ -2990,7 +3178,6 @@
       "reset_warning": "Tým zahodíte aktuálny skript a začnete odznova.",
       "reset_title": "Obnoviť vizuálny editor?",
       "confirm_reset": "Resetovať",
-      "validation_empty_name": "Názov pravidla je povinný",
       "validation_empty_conditions": "Je potrebná aspoň jedna podmienka s hodnotou",
       "validation_empty_actions": "Je potrebná aspoň jedna akcia",
       "validation_action_folder": "Vyberte priečinok pre túto akciu",
@@ -3041,8 +3228,6 @@
       "suggest_cc": "Kópia {address}",
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
-      "apply_existing": "Použiť aj na správy, ktoré už sú v tomto priečinku",
-      "apply_existing_unsupported": "Na existujúce správy možno použiť len pravidlá, ktoré kontrolujú odosielateľa, príjemcov, predmet alebo hlavičky a ktoré presúvajú, kopírujú, označujú ako prečítané, hviezdičkou alebo štítkom.",
       "period_title": "Časové obdobie",
       "period_start": "Dátum začiatku",
       "period_end": "Dátum ukončenia",
@@ -3051,13 +3236,46 @@
       "period_hint": "Platí pre správy, ktoré prídu v tomto období. Prázdne pole ponechá daný koniec otvorený.",
       "validation_period_empty": "Zadajte dátum začiatku alebo ukončenia obdobia",
       "validation_period_invalid": "Zadajte pre obdobie platný dátum aj s časom alebo pole nechajte prázdne",
-      "apply_existing_period": "Pravidlo s obdobím pôsobí len na správy, ktoré v ňom prídu, preto ho nemožno použiť na existujúce správy.",
-      "apply_existing_in": "Použiť aj na správy, ktoré už sú v priečinku {folder}",
-      "apply_existing_count": "{count, plural, one {Použiť aj na # správu, ktorá už je v priečinku {folder}} few {Použiť aj na # správy, ktoré už sú v priečinku {folder}} many {Použiť aj na # správy, ktoré už sú v priečinku {folder}} other {Použiť aj na # správ, ktoré už sú v priečinku {folder}}}",
-      "apply_existing_none": "Tomuto pravidlu zatiaľ nezodpovedá žiadna správa v priečinku {folder}.",
       "period_status_scheduled": "naplánované",
       "period_status_active": "aktívne",
-      "period_status_expired": "uplynulo"
+      "period_status_expired": "uplynulo",
+      "editor": {
+        "if": "Ak platí",
+        "match_all": "každá",
+        "match_any": "ktorákoľvek",
+        "of_conditions": "z týchto podmienok",
+        "match_type": "Ktoré podmienky musia platiť",
+        "condition_number": "Podmienka {number}",
+        "comparison": "Porovnanie",
+        "size_unit": "Jednotka",
+        "has_attachment": "Má prílohu",
+        "attachment_type": "Príloha typu",
+        "size_units": {
+          "bytes": "bajtov",
+          "kb": "kB",
+          "mb": "MB"
+        },
+        "continue_rules": "Pokračovať ďalšími pravidlami",
+        "skip_rule": "Preskočiť toto pravidlo",
+        "matching": "{count, plural, =0 {Žiadna správa nezodpovedá} one {Zodpovedá # správa} few {Zodpovedajú # správy} many {Zodpovedá # správy} other {Zodpovedá # správ}}",
+        "matching_partial": "{count, plural, =0 {Žiadna nedávna správa nezodpovedá} other {Zodpovedá #+ správ}}",
+        "checking": "Hľadá sa zodpovedajúca pošta…",
+        "tags": "Štítky",
+        "attachment_type_invalid": "Zadajte príponu súboru, napríklad pdf",
+        "action_conflict": "Zahodiť a Odmietnuť sa nedajú kombinovať s Presunúť, Kopírovať ani Ponechať, ani navzájom",
+        "apply_to": "Použiť na",
+        "apply_new": "Len novú poštu",
+        "apply_folder": "Novú poštu a {folder}",
+        "apply_folder_count": "Novú poštu a {folder} ({count})",
+        "apply_all": "Novú aj všetku poštu",
+        "apply_all_count": "Novú aj všetku poštu ({count})",
+        "applying": "Používa sa „{name}“…",
+        "trash_title": "Presunúť existujúcu poštu do koša?",
+        "trash_confirm": "{count, plural, one {Tým sa presunie # existujúca správa do koša.} few {Tým sa presunú # existujúce správy do koša.} many {Tým sa presunie # existujúcej správy do koša.} other {Tým sa presunie # existujúcich správ do koša.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Tým sa presunie do koša každá existujúca správa, ktorej pravidlo zodpovedá.} other {Tým sa presunie #+ existujúcich správ do koša.}}",
+        "trash_button": "Uložiť a presunúť do koša",
+        "delivered_to_new_only": "Toto pravidlo platí len pre novú poštu. Doručená pošta si neuchováva adresu, na ktorú bola doručená."
+      }
     },
     "templates": {
       "title": "E-mailové šablóny",
@@ -3343,7 +3561,8 @@
         "description": "Rámik okolo tlačidla, odkazu alebo poľa, na ktorom je klávesnica.",
         "normal": "Normálny",
         "thick": "Hrubý",
-        "extra": "Veľmi hrubý"
+        "extra": "Veľmi hrubý",
+        "off": "Vypnuté"
       },
       "focus_always": {
         "label": "Vždy zobrazovať zameranie",
@@ -3863,6 +4082,7 @@
     "items_selected": "{count} vybraných e-mailov",
     "forward_as_attachments": "Preposlať ako prílohy",
     "edit_draft": "Upraviť koncept",
+    "edit_as_new": "Upraviť ako novú",
     "cancel_scheduled_send": "Zrušiť odoslanie",
     "reschedule_send": "Prenaplánovať",
     "cancel_and_edit": "Zrušiť a upraviť",
@@ -3877,6 +4097,9 @@
       "block": "{count, plural, one {Blokovať odosielateľa} few {Blokovať # odosielateľov} many {Blokovať # odosielateľa} other {Blokovať # odosielateľov}}",
       "no_junk": "Tento účet nemá priečinok nevyžiadanej pošty",
       "create": "Vytvoriť pravidlo…",
+      "add_sender_to_rule": "Pridať do pravidla: {sender}",
+      "sender_already_present": "Už je v tomto pravidle",
+      "no_rule_fits": "Žiadne pravidlo, kam pridať",
       "manage": "Spravovať pravidlá",
       "senders_count": "{count, plural, one {# odosielateľa} few {# odosielateľov} many {# odosielateľa} other {# odosielateľov}}",
       "cross_account": "Vyberte správy z jedného účtu",
@@ -3885,9 +4108,41 @@
       "load_failed": "Pravidlá sa nepodarilo načítať",
       "none": "Zatiaľ žiadne pravidlá",
       "new_mail_only": "Len pre nové správy",
+      "cannot_run": "Na existujúce správy možno použiť len pravidlá, ktoré presúvajú, kopírujú, označujú ako prečítané, hviezdičkou alebo štítkom alebo zahadzujú, a len ak nekontrolujú telo správy, „Doručené na“ ani regulárny výraz.",
       "running": "Spúšťa sa „{name}“ v priečinku {folder}…"
     },
     "find_emails_from": "Nájsť e-maily od {name}"
+  },
+  "team_assign": {
+    "dialog_title": "Priradiť",
+    "search_label": "Meno alebo adresa",
+    "you": "Vy",
+    "people": "Ľudia",
+    "no_one_found": "Nikto sa nenašiel.",
+    "cancel": "Zrušiť",
+    "chip_me": "Ja",
+    "chip_assigned": "Priradené",
+    "chip_more": "{name} +{count}",
+    "assigned_to": "Priradené: {name}",
+    "assigned_to_you": "Priradené vám",
+    "assigned_unknown": "Priradené členovi tímu",
+    "done": "Hotovo",
+    "marked_done": "Označené ako hotové",
+    "no_longer_assigned": "Už nie je priradené",
+    "reopened": "Znova otvorené",
+    "change_failed": "Správu sa nepodarilo zmeniť. Skúste to znova.",
+    "assign_to_me": "Priradiť mne",
+    "assign_to": "Priradiť…",
+    "unassign": "Zrušiť priradenie",
+    "mark_done": "Označiť ako hotové",
+    "reopen": "Znova otvoriť",
+    "unassign_me": "Zrušiť moje priradenie",
+    "save": "Uložiť",
+    "assignees_changed": "Priradenie zmenené",
+    "unassigned_person": "{name} už nie je priradený(á)",
+    "add_assignee": "Priradiť",
+    "remove_assignee": "Zrušiť priradenie: {name}",
+    "assignees_label": "Priradené"
   },
   "menuMove": {
     "filter_placeholder": "Nájsť priečinok",
@@ -3910,6 +4165,8 @@
     "delete_folder": "Zmazať priečinok",
     "refresh": "Obnoviť",
     "hide_shared_account": "Skryť z bočného panela",
+    "move_shared_account_up": "Posunúť nahor",
+    "move_shared_account_down": "Posunúť nadol",
     "mute_notifications": "Stlmiť upozornenia",
     "unmute_notifications": "Zapnúť upozornenia",
     "mute_account_notifications": "Stlmiť upozornenia tohto účtu",
@@ -3919,6 +4176,8 @@
     "mark_all_confirm_message": "Označiť každú neprečítanú správu vo vašom osobnom účte ako prečítanú?",
     "empty_all_confirm_title": "Vyprázdniť kôš pre všetky účty",
     "empty_all_confirm_message": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v koši všetkých vašich účtov? Nedá sa to vrátiť späť.",
+    "empty_all_confirm_shared": "Týka sa to aj zdieľaných účtov {accounts}.",
+    "empty_all_confirm_kept": "Kôš účtu {accounts} zostane, ako je, pretože v ňom nemôžete mazať.",
     "toast_emptied_all": "Kôš bol vyprázdnený vo všetkých účtoch",
     "toast_error_empty_all_partial": "Kôš bol vyprázdnený, no pri niektorých účtoch to zlyhalo",
     "toast_error_empty_all": "Vyprázdnenie koša zlyhalo",
@@ -3955,6 +4214,12 @@
     "empty_spam": "Vyprázdniť spam",
     "empty_trash_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v koši? Nedá sa to vrátiť späť.",
     "empty_spam_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v spame? Nedá sa to vrátiť späť.",
+    "empty_folder": "Vyprázdniť priečinok…",
+    "empty_folder_title": "Vyprázdniť {folder}?",
+    "empty_folder_confirm_trash": "Presunúť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} z priečinka {folder} do koša?",
+    "empty_folder_confirm_delete": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v priečinku {folder}? Nedá sa to vrátiť späť.",
+    "empty_folder_move": "Presunúť do koša",
+    "empty_folder_delete": "Natrvalo odstrániť",
     "title_all_accounts": "{name} ({count}, {total} vo všetkých účtoch)",
     "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
   },
@@ -4044,7 +4309,7 @@
     "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Zobrazí prepínač účtov nad priečinkami a pod ním tlačidlo Napísať. Po vypnutí bude na jeho mieste tlačidlo Napísať."
+    "sidebar_account_switcher_description": "Zobrazí prepínač účtov nad priečinkami. Po vypnutí prepínate účty avatarom na navigačnej lište."
   },
   "mail_p2_conv": {
     "show_message": "Zobraziť správu",
@@ -4415,6 +4680,8 @@
       "role_label": "Rola",
       "language_label": "Jazyk",
       "related_default_label": "Súvisiace",
+      "related_unknown": "Neznámy kontakt",
+      "related_remove": "Odstrániť zo súvisiacich kontaktov",
       "more_actions": "Viac akcií",
       "age_years": "{count, plural, one {1 rok} other {# rokov}}",
       "years_since": "{count, plural, one {1 rok} other {# rokov}}"
@@ -4460,6 +4727,9 @@
       "phone_pager": "Pager",
       "phone_video": "Video",
       "phone_text": "SMS",
+      "phone_custom": "Vlastný…",
+      "phone_custom_label": "Vlastný typ",
+      "phone_custom_placeholder": "napr. Auto",
       "organization": "Organizácia",
       "organization_placeholder": "Názov spoločnosti",
       "department": "Oddelenie",
@@ -4781,9 +5051,27 @@
       "end_time": "Čas ukončenia",
       "all_day_event": "Celodenná udalosť",
       "calendar_select": "Kalendár",
+      "show_as": "Zobraziť ako",
+      "show_as_busy": "Zaneprázdnený",
+      "show_as_free": "Voľno",
+      "shown_free": "Zobrazené ako voľno",
+      "visibility": "Viditeľnosť",
+      "visibility_public": "Verejné",
+      "visibility_private": "Súkromné",
+      "visibility_secret": "Skryté",
+      "visibility_hint_public": "Ľudia, s ktorými zdieľate kalendár, vidia podrobnosti.",
+      "visibility_hint_private": "Ľudia, s ktorými zdieľate kalendár, vidia len čas.",
+      "visibility_hint_secret": "Ľudia, s ktorými zdieľate kalendár, udalosť nevidia a čas zostane voľný.",
+      "visibility_series": "Platí pre všetky opakovania.",
+      "color_calendar": "Použiť farbu kalendára",
+      "overlap": "Prekrýva sa s {title} ({details})",
+      "overlap_plain": "Prekrýva sa s {title}",
+      "overlap_more": "A ďalšie: {count}",
       "save": "Uložiť",
       "cancel": "Zrušiť",
-      "color": "Farba"
+      "color": "Farba",
+      "expand": "Zväčšiť",
+      "restore_size": "Obnoviť veľkosť"
     },
     "participants": {
       "availability": {
@@ -4822,7 +5110,9 @@
       "you_attendee": "Ste účastníkom",
       "no_participants": "Žiadni účastníci",
       "limit_warning": "Viac ako {max, plural, one {# účastník} few {# účastníci} many {# účastníka} other {# účastníkov}} vrátane organizátora: server môže odmietnuť uloženie tejto udalosti. Správca môže limit zvýšiť.",
-      "count": "{count, plural, one {# účastník} other {# účastníkov}}"
+      "count": "{count, plural, one {# účastník} other {# účastníkov}}",
+      "optional": "Nepovinný",
+      "optional_role": "nepovinný"
     },
     "recurrence": {
       "title": "Opakovanie",
@@ -4966,6 +5256,8 @@
       "enable_tasks_desc": "Zobrazovať zobrazenie úloh v kalendári",
       "show_tasks_on_calendar": "Zobraziť úlohy v kalendári",
       "show_tasks_on_calendar_desc": "Zobrazovať úlohy v mesačnom, týždennom a dennom zobrazení kalendára",
+      "show_tasks_app": "Úlohy ako samostatná aplikácia",
+      "show_tasks_app_desc": "Úlohy majú vlastnú ikonu na lište aplikácií namiesto zobrazenia v kalendári",
       "hover_preview": "Náhľad udalosti po prejdení",
       "hover_preview_desc": "Zobrazovať vyskakovacie okno s podrobnosťami pri najetí myšou na udalosti v kalendári",
       "hover_preview_instant": "Okamžite",
@@ -5276,7 +5568,13 @@
       "results": "{count, plural, one {Nájdená # udalosť} few {Nájdené # udalosti} many {Nájdenej # udalosti} other {Nájdených # udalostí}}"
     },
     "mini_has_events": "má udalosti",
-    "mini_week_number": "Týždeň {week}"
+    "mini_week_number": "Týždeň {week}",
+    "move_confirm_organizer_title": "Presunúť „{title}“ na {when}?",
+    "move_confirm_organizer_message": "Účastníci dostanú aktualizáciu a budú požiadaní, aby nový čas prijali.",
+    "move_confirm_organizer_confirm": "Presunúť a oznámiť",
+    "move_confirm_attendee_title": "Presunúť „{title}“ len vo vašom kalendári?",
+    "move_confirm_attendee_message": "Nie ste organizátor. Pre organizátora a ostatných účastníkov zostane stretnutie v pôvodnom čase a ďalšia aktualizácia od organizátora vašu zmenu prepíše.",
+    "move_confirm_attendee_confirm": "Presunúť moju kópiu"
   },
   "ux_pim_calendar": {
     "task_lists": "Zoznamy úloh",
@@ -5303,7 +5601,12 @@
     "task_list_not_in_calendar": "{name} (zoznam úloh, v kalendári sa nezobrazuje)",
     "copy_to_account": "Kopírovať do {address}",
     "copied_to_account": "Skopírované do {address}",
-    "delete_original": "Odstrániť originál"
+    "delete_original": "Odstrániť originál",
+    "copy_to_calendar": "Kopírovať do kalendára…",
+    "copy_to_calendar_title": "Kopírovať do kalendára",
+    "copy_to_calendar_hint": "Kópia je vaša vlastná udalosť. Zmeny originálu ju nezmenia.",
+    "copy_button": "Kopírovať",
+    "copied_to_calendar": "Skopírované do {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Táto zmena vyžaduje pripojenie k serveru. Zatiaľ zmeňte iba túto udalosť alebo to skúste znova, keď budete online."
@@ -5370,7 +5673,9 @@
     "answer_for": "Odpovedať za: {name}",
     "no_write": "Vidíte pozvánky používateľa {name}, ale nemôžete za neho odpovedať. Požiadajte o prístup na úpravy.",
     "also_invited": "Ste pozvaní aj vy a tento server nerozlíši vašu odpoveď od odpovede používateľa {name}. Na túto musí odpovedať {name}.",
-    "answered_by": "Odpovedal(a): {who}"
+    "answered_by": "Odpovedal(a): {who}",
+    "organizer_owner": "{name} (odoslané vami)",
+    "organizer_me": "Vy"
   },
   "free_busy_share": {
     "button": "Zdieľať môj voľný čas so skupinou {group}",
@@ -5481,7 +5786,25 @@
     "unknown_note": "Bulwark vidí obsadené časy len v kalendároch, ktoré s vami niekto zdieľa. Pri týchto ľuďoch nerozlíši voľno od nezdieľaného kalendára.",
     "directory_off": "Bulwark na tomto serveri nemôže vyhľadávať ľudí. Správca môže v Stalwarte zapnúť dopyty do adresára.",
     "not_looked_up": "Adresu sa nepodarilo vyhľadať",
-    "found": "Nájdené voľné časy: {count}"
+    "found": "Nájdené voľné časy: {count}",
+    "optional_ignored": "Obsadené časy nepovinných účastníkov sa nepočítajú."
+  },
+  "scheduling_assistant": {
+    "open": "Dostupnosť…",
+    "title": "Dostupnosť",
+    "description": "Kliknite do mriežky alebo udalosť potiahnite, aby ste ju presunuli. Potiahnutím konca zmeníte dĺžku.",
+    "previous_day": "Predchádzajúci deň",
+    "next_day": "Nasledujúci deň",
+    "you": "Vy",
+    "everyone": "Všetci účastníci",
+    "optional": "Voliteľný",
+    "event": "Udalosť: {time}",
+    "keyboard_hint": "Šípky posúvajú udalosť o 15 minút. S klávesom Shift menia jej dĺžku.",
+    "use_time": "Použiť tento čas",
+    "loading": "Načítavajú sa obsadené časy…",
+    "outside_hours": "Mimo pracovného času",
+    "everyone_free": "Všetci voľní",
+    "not_checked": "Neznáme"
   },
   "share_notifications": {
     "someone": "Niekto",
@@ -5652,6 +5975,7 @@
     "search": "Hľadať",
     "not_starred": "Bez hviezdičky",
     "no_attachment": "Bez príloh",
+    "no_tags": "Bez štítkov",
     "any_time": "Kedykoľvek",
     "past_week": "Posledný týždeň",
     "past_month": "Posledný mesiac",
@@ -6060,6 +6384,13 @@
   "unified_mailbox": {
     "search_unavailable": "Vyhľadávanie nie je v zjednotenom zobrazení k dispozícii"
   },
+  "account_routing": {
+    "group_members_one_account": "Skupina môže obsahovať iba kontakty z jedného účtu.",
+    "link_names_no_account": "Tento odkaz neuvádza, v ktorom účte je správa, preto sa neotvoril.",
+    "group_member_gone": "Jeden z vybraných kontaktov už neexistuje. Vyberte členov znova.",
+    "invitation_other_account": "Táto pozvánka je v inom účte. Prepnite na ten účet, ak na ňu chcete odpovedať alebo ju pridať do kalendára.",
+    "tab_names_no_account": "Táto karta bola uložená bez svojho účtu, preto sa neotvorila. Zatvorte ju a otvorte znova z účtu, ku ktorému patrí."
+  },
   "mail_import": {
     "menu_import": "Importovať poštu…",
     "settings_label": "Importovať poštu",
@@ -6392,6 +6723,9 @@
     "attachments_description": "Prílohy uchovaných správ a súbory, ktoré uchovávate offline, spolu až {total}. Najstaršie sa odstránia ako prvé.",
     "total_locked": "Vaša organizácia povoľuje najviac {size} príloh a súborov.",
     "attachment_cap_label": "Najväčšia uchovávaná príloha",
+    "total_cap_label": "Celková veľkosť uchovaných príloh",
+    "total_cap_unlimited": "Bez obmedzenia",
+    "attachments_description_unlimited": "Prílohy uchovaných správ a súbory, ktoré uchovávate offline, bez obmedzenia ich celkovej veľkosti.",
     "usage_mail": "Správy a index vyhľadávania",
     "usage_attachments": "Prílohy",
     "usage_calendar": "Kalendár",
@@ -6734,6 +7068,10 @@
         "title": "Odhlásiť vás",
         "body": "Môže vás odhlásiť z webmailu."
       },
+      "auth_impersonation_return": {
+        "title": "Vrátiť vás do vášho účtu",
+        "body": "Keď správca otvorí schránku cez zosobnenie, ukončiť túto reláciu a znova vás prihlásiť do účtu, z ktorého začala."
+      },
       "account_read": {
         "title": "Vidieť vaše účty",
         "body": "Vidí účty, ktoré ste pridali, vrátane ich adries a serverov, a ktoré poštové účty sú tímové schránky."
@@ -6749,6 +7087,10 @@
       "http_fetch": {
         "title": "Pripájať sa k iným webom",
         "body": "Odosiela požiadavky na tieto weby. Čokoľvek, čo doplnok môže čítať, tam môže byť odoslané:"
+      },
+      "links_check": {
+        "title": "Kontrolovať odkazy, ktoré otvárate",
+        "body": "Vidí každý webový odkaz, ktorý otvoríte, aj s jeho textom, a môže ho zastaviť alebo namiesto neho otvoriť inú adresu."
       },
       "admin_config": {
         "title": "Čítať nastavenia od správcu",
@@ -6854,9 +7196,13 @@
         "title": "Preposielať vašu poštu",
         "body": "Preposiela správy z vášho účtu aj s prílohami bez otvorenia editora. Pred prvým preposlaním na každú adresu sa vás opýta."
       },
+      "ui_notices": {
+        "title": "Zobrazovať vlastné panely upozornení",
+        "body": "Zobraziť vlastný malý panel dole na obrazovke, kde sa zobrazujú správy aplikácie, napríklad pri prichádzajúcom hovore. Neblokuje stránku, môžete ďalej písať a môžete ho zavrieť. Každé upozornenie uvádza názov doplnku."
+      },
       "ui_notifications": {
         "title": "Zobrazovať upozornenia",
-        "body": "Zobrazuje upozornenia vo vašom zariadení alebo v aplikácii, ak ste ich nepovolili. Každé uvádza názov doplnku."
+        "body": "Zobrazuje upozornenia vo vašom zariadení alebo v aplikácii, ak ste ich nepovolili. Každé uvádza názov doplnku. Doplnok tiež vidí upozornenia, ktoré vám aplikácia zobrazuje."
       },
       "ui_message_list": {
         "title": "Pridávať obsah do zoznamu správ",
@@ -7006,6 +7352,14 @@
     "not_available_title": "Táto stránka nie je k dispozícii",
     "not_available_description": "Doplnok, ktorý ju pridal, je vypnutý alebo už nie je nainštalovaný.",
     "back_to_mail": "Späť na poštu"
+  },
+  "plugin_surfaces": {
+    "dropdown_list": "Zoznam od doplnku {name}",
+    "dropdown_list_labelled": "{label}, zoznam od doplnku {name}",
+    "oauth_failed": "Služba nedokončila prihlásenie. Zatvorte toto okno a skúste to znova.",
+    "banners_more": "Ďalšie bannery ({count}): {names}",
+    "banners_fewer": "Menej bannerov",
+    "opened_by_plugin": "Otvorené doplnkom {name}"
   },
   "command_palette": {
     "title": "Paleta príkazov",
@@ -7178,6 +7532,10 @@
     "action_reply": "Odpovedať",
     "reply_placeholder": "Napíšte odpoveď"
   },
+  "team_push": {
+    "mentioned_you": "{name} vás spomína v „{subject}“",
+    "mentioned_hidden": "Niekto vás spomenul v tímovej schránke"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Pridať do kalendára",
     "update_in_calendar": "Aktualizovať v kalendári",
@@ -7208,6 +7566,14 @@
       "added_from": "Pridané z e-mailu od {domain}",
       "added_from_subject": "Pridané z e-mailu „{subject}“ od {domain}"
     }
+  },
+  "sender_trust": {
+    "cancel_not_organizer": "Toto zrušenie bolo odoslané od {sender}, ale organizátorom udalosti vo vašom kalendári je {organizer}. Zrušiť ju môže iba organizátor. Ak tejto správe dôverujete, odstráňte ju sami.",
+    "cancel_unverified": "Nepodarilo sa overiť, že toto zrušenie pochádza od organizátora. Ak tejto správe dôverujete, odstráňte udalosť sami.",
+    "card_sender": "od {domain}",
+    "card_sender_title": "Táto správa prešla kontrolou odosielateľa na poštovom serveri pre {domain}.",
+    "outside_link": "Iná stránka",
+    "outside_link_title": "Tento odkaz vedie na {host}, mimo {domain}, doménu odosielateľa."
   },
   "proofreading": {
     "kind": {
@@ -7303,6 +7669,8 @@
       "title": "Okná aplikácie",
       "double_click_label": "Otvárať správy v novom okne dvojitým kliknutím",
       "double_click_description": "Jedným kliknutím sa správa stále otvorí vedľa zoznamu.",
+      "compose_window_label": "Vždy písať správy v novom okne",
+      "compose_window_description": "Nové správy, odpovede, preposlania a koncepty sa otvárajú vo vlastnom okne namiesto hlavného okna.",
       "restore_label": "Pri spustení znova otvoriť okná",
       "restore_description": "Okná správ a konceptov otvorené pri ukončení sa vrátia."
     },
@@ -7710,6 +8078,8 @@
     "start_at_login_description": "Aplikácia sa po prihlásení spustí sama.",
     "start_minimized_label": "Spustiť v oblasti oznámení",
     "start_minimized_description": "Po prihlásení sa neotvorí žiadne okno. Otvorte ju ikonou v oblasti oznámení.",
+    "reopen_after_restart_label": "Znova otvoriť po reštarte",
+    "reopen_after_restart_description": "Ak je aplikácia otvorená, keď sa počítač reštartuje alebo sa odhlásite, po prihlásení sa znova otvorí na rovnakom priečinku, správe alebo stránke.",
     "attention_label": "Pri novej pošte blikať na paneli úloh",
     "attention_mac_label": "Pri novej pošte poskakovať ikonou v Docku",
     "attention_description": "Len keď aplikácia nie je v popredí.",
@@ -8207,5 +8577,13 @@
   "selectionView": {
     "starred": "Označené hviezdičkou",
     "unstarred": "Hviezdička odstránená"
+  },
+  "impersonation": {
+    "return_notice": "Schránku {mailbox} ste otvorili cez zosobnenie.",
+    "return_button": "Späť na môj účet"
+  },
+  "admin_access": {
+    "label": "Superpoužívatelia tohto servera môžu otvoriť administráciu",
+    "help": "Superpoužívatelia tohto servera sa prihlasujú do administrácie bez hesla správcu, rovnako ako tí z hlavného servera JMAP. Zapnite to len pre server, ktorý sami prevádzkujete."
   }
 }

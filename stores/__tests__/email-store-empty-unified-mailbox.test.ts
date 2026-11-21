@@ -3,6 +3,7 @@ import { useEmailStore } from '../email-store';
 import { useAuthStore } from '../auth-store';
 import { clearAllHooks, emailHooks } from '@/lib/plugin-hooks';
 import type { Mailbox } from '@/lib/jmap/types';
+import { IncompleteDeleteError } from '@/lib/jmap/delete-error';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { UnifiedAccountClient } from '@/lib/unified-mailbox';
 
@@ -94,18 +95,20 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
   });
 
   // With "include group accounts" the unified scope also lists group and
-  // delegated owners. Their Trash is someone else's and must stay as it is.
-  it('leaves a group or delegated owner’s Trash alone', async () => {
+  // delegated owners. Their Trash is emptied too where the user may delete
+  // from it, through the login that reaches it, and kept where not (#1738).
+  it('empties a group or delegated owner’s Trash the user may delete from, and keeps the rest', async () => {
     const client = makeClient(vi.fn().mockResolvedValue(1));
+    const readOnly = { ...makeMailbox().myRights, mayRemoveItems: false };
 
     const accounts: UnifiedAccountClient[] = [
       {
         accountId: 'account-a',
         accountLabel: 'A',
         client,
-        // A shared Trash in a login's own list is passed over too.
+        // A shared Trash in a login's own list is left to the owner's entry.
         mailboxes: [
-          makeMailbox({ id: 'owner-y:y-trash', originalId: 'y-trash', isShared: true, accountId: 'owner-y' }),
+          makeMailbox({ id: 'owner-x:x-trash', originalId: 'x-trash', isShared: true, accountId: 'owner-x' }),
           makeMailbox({ id: 'a-trash' }),
         ],
         clientAccountId: 'account-a',
@@ -120,13 +123,22 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
         jmapAccountId: 'owner-x',
         isShared: true,
       },
+      {
+        accountId: 'owner-y',
+        accountLabel: 'Owner Y',
+        client,
+        mailboxes: [makeMailbox({ id: 'owner-y:y-trash', originalId: 'y-trash', isShared: true, accountId: 'owner-y', myRights: readOnly })],
+        clientAccountId: 'account-a',
+        jmapAccountId: 'owner-y',
+        isShared: true,
+      },
     ];
 
-    const { total } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
+    const { total, emptied } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
 
-    expect(client.emptyMailbox).toHaveBeenCalledTimes(1);
-    expect(client.emptyMailbox).toHaveBeenCalledWith('a-trash', undefined);
-    expect(total).toBe(1);
+    expect(vi.mocked(client.emptyMailbox).mock.calls).toEqual([['a-trash', undefined], ['x-trash', 'owner-x']]);
+    expect(emptied).toEqual(['account-a', 'owner-x']);
+    expect(total).toBe(2);
   });
 
   it('collects a per-account failure instead of aborting the whole batch', async () => {
@@ -290,6 +302,42 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
     expect(s.selectedEmail?.id).toBe('a1');
     expect(s.totalEmails).toBe(2);
     expect(s.hasMoreEmails).toBe(true);
+  });
+
+  it('takes out of the open list what a partly refused account did delete', async () => {
+    const partial = new IncompleteDeleteError(
+      { destroyedIds: ['a1'], notDestroyed: { a2: { type: 'forbidden' } }, unknownIds: [], unattemptedIds: [] },
+      new Error('refused'),
+    );
+    const clientA = makeClient(vi.fn().mockRejectedValue(partial));
+    const deleted = { id: 'a1', sourceClientAccountId: 'account-a', sourceAccountId: 'account-a' };
+    const refused = { id: 'a2', sourceClientAccountId: 'account-a', sourceAccountId: 'account-a' };
+    useEmailStore.setState({
+      isUnifiedView: true,
+      unifiedRole: 'trash',
+      emails: [deleted, refused] as never,
+      selectedEmail: deleted as never,
+      totalEmails: 2,
+      hasMoreEmails: false,
+    });
+
+    const accounts: UnifiedAccountClient[] = [{
+      accountId: 'account-a',
+      accountLabel: 'A',
+      client: clientA,
+      mailboxes: [makeMailbox({ id: 'a-trash' })],
+      clientAccountId: 'account-a',
+      jmapAccountId: 'account-a',
+    }];
+
+    const { emptied, errors } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
+
+    const s = useEmailStore.getState();
+    expect(emptied).toEqual([]);
+    expect(errors.has('account-a')).toBe(true);
+    expect(s.emails.map((e) => e.id)).toEqual(['a2']);
+    expect(s.selectedEmail).toBeNull();
+    expect(s.totalEmails).toBe(1);
   });
 
   it('does not invent a folder list for a login that had none', async () => {

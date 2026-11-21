@@ -13,6 +13,7 @@ import {
 } from '@/lib/admin/domain-branding';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
 import { browserErrorSettings } from '@/lib/error-reporting/settings';
+import { parseTrustedAuthservIds } from '@/lib/trusted-authserv';
 
 /**
  * Runtime configuration endpoint
@@ -86,6 +87,7 @@ export async function GET(request: NextRequest) {
       loginPrivacyPolicyUrl: branded<string>('loginPrivacyPolicyUrl', ''),
       loginWebsiteUrl: branded<string>('loginWebsiteUrl', ''),
       loginUsernamePlaceholder: branded<string>('loginUsernamePlaceholder', ''),
+      loginForgotPasswordUrl: httpUrlOrEmpty(branded<string>('loginForgotPasswordUrl', '')),
       loginLogoMaxHeight: configManager.get<string>('loginLogoMaxHeight', ''),
       loginLogoMaxWidth: configManager.get<string>('loginLogoMaxWidth', ''),
       loginShowHeading: configManager.get<boolean>('loginShowHeading', true),
@@ -94,6 +96,8 @@ export async function GET(request: NextRequest) {
       loginShowTokenLogin: configManager.get<boolean>('loginShowTokenLogin', false),
       desktopBrowserSignIn: configManager.get<boolean>('desktopBrowserSignIn', true),
       loginShowRememberMe: configManager.get<boolean>('loginShowRememberMe', false),
+      // Session cookies hold the unticked sign-in, sealed like a remembered one.
+      browserSessionSignIn: configManager.get<boolean>('browserSessionSignIn', false) && hasSessionSecret(),
       loginShowVersion: configManager.get<boolean>('loginShowVersion', true),
       demoMode: configManager.get<boolean>('demoMode', false),
       allowCustomJmapEndpoint: configManager.get<boolean>('allowCustomJmapEndpoint', false),
@@ -114,6 +118,8 @@ export async function GET(request: NextRequest) {
       signLanguageUrl: httpUrlOrEmpty(branded<string>('signLanguageUrl', '')),
       accountManagementUrl: httpUrlOrPathOrEmpty(configManager.get<string>('accountManagementUrl', '')),
       accountManagementLabel: configManager.get<string>('accountManagementLabel', ''),
+      // Whose Authentication-Results the sender check acts on (lib/trusted-authserv.ts).
+      trustedAuthservIds: parseTrustedAuthservIds(configManager.get<string>('trustedAuthservIds', '')),
       // Browser-side switches of lib/outgoing-hosts.ts read this (#903).
       noThirdPartyTraffic: await isNoThirdPartyTrafficOn(),
       // Error reporting (lib/error-reporting/client.ts): off unless a DSN is

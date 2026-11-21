@@ -30,6 +30,7 @@ import { useConnectionState } from "@/hooks/use-connection-state";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
 import { RulesContextList, RulesContextSubMenu } from "./rules-menu";
+import { useTeamActions } from "@/components/team-mailboxes/team-actions";
 
 interface Position {
   x: number;
@@ -47,11 +48,20 @@ export interface CopyTargetAccount {
 
 interface EmailContextMenuProps {
   email: Email;
+  /** A conversation row's unread state: unread while any of its messages is. */
+  unread?: boolean;
+  /** A conversation row's tags: every tag any of its messages has. */
+  tagIds?: string[];
   position: Position;
   isOpen: boolean;
   onClose: () => void;
   menuRef: React.RefObject<HTMLDivElement | null>;
+  /** The folders Move offers: those of the login the message (or the selection) is in (moveFoldersFor). */
   mailboxes: Mailbox[];
+  /** Whose folders `mailboxes` are, when not the active login's: shown above them (moveFoldersFor's `owner`). */
+  moveHeading?: string;
+  /** Why Move is not offered, where those folders can't be had: Move shows, unavailable, with it. */
+  moveUnavailableHint?: string;
   selectedMailbox: string;
   currentMailboxRole?: string;
   isMultiSelect?: boolean;
@@ -86,6 +96,7 @@ interface EmailContextMenuProps {
   onMarkAsSpam?: () => void;
   onUndoSpam?: () => void;
   onEditDraft?: () => void;
+  onEditAsNew?: () => void;
   onCancelScheduledForEdit?: () => void;
   onCancelScheduledSend?: () => void;
   onRescheduleScheduled?: () => void;
@@ -158,9 +169,13 @@ export function EmailContextMenu({
   email,
   position,
   isOpen,
+  unread,
+  tagIds,
   onClose,
   menuRef,
   mailboxes,
+  moveHeading,
+  moveUnavailableHint,
   selectedMailbox,
   currentMailboxRole,
   isMultiSelect = false,
@@ -197,6 +212,7 @@ export function EmailContextMenu({
   onBatchUndoSpam,
   onBatchForwardAsAttachment,
   onEditDraft,
+  onEditAsNew,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
@@ -223,12 +239,15 @@ export function EmailContextMenu({
   // copies to another account always need the server.
   const { offline, canChangeMail } = useConnectionState();
   const tMenu = useTranslations("menuAudit");
-  const isUnread = !email.keywords?.$seen;
-  const currentTagIds = getEmailTagIds(email.keywords);
+  const isUnread = unread ?? !email.keywords?.$seen;
+  const currentTagIds = tagIds ?? getEmailTagIds(email.keywords);
   // The row's account names its tags; a selection uses batchTagScope.
   const tagScope = useEmailTagScope(email);
   const showBatchActions = isMultiSelect && selectedCount > 1;
   const isScheduled = email.isScheduled === true;
+  // Team mailboxes: Assign to me, Assign to…, Unassign, Mark done, Reopen for
+  // the one message a row's menu is about (the reader's ⋮ gets them from the reader).
+  const teamEntries = useTeamActions(rowMenu && !showBatchActions && !isScheduled ? email : null);
   // "Remove from this folder" needs one open folder and messages that are
   // also in another one; for a selection, every selected message must be.
   const folderToLeave = useEmailStore(removalFolder);
@@ -246,6 +265,7 @@ export function EmailContextMenu({
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox),
     emails: movedEmails,
+    heading: moveHeading,
   });
   const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
   const chooseMoveFolder = useChooseMoveFolder();
@@ -298,8 +318,10 @@ export function EmailContextMenu({
   // the phone panel show.
   const singleEntries = useMessageActionList({
     email,
+    unread,
     currentMailboxRole,
     canMove: canMoveAnywhere,
+    moveUnavailableHint,
     canRemoveFromFolder: canRemove,
     canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
     onReply,
@@ -307,6 +329,7 @@ export function EmailContextMenu({
     onForward,
     onForwardAsAttachment,
     onEditDraft,
+    onEditAsNew,
     onArchive,
     onDelete,
     onMarkAsRead,
@@ -327,7 +350,7 @@ export function EmailContextMenu({
     onMoveToInbox: onMoveToInbox ?? (inboxTo ? () => onMoveToMailbox?.(inboxTo.id) : undefined),
     omit,
     views,
-    extras,
+    extras: teamEntries.length > 0 ? [...(extras ?? []), ...teamEntries] : extras,
   });
 
   // Stable, so the Rules entry does not re-resolve its account every render.
@@ -375,6 +398,7 @@ export function EmailContextMenu({
     emails: showBatchActions ? (batchEmails?.length ? batchEmails : [email]) : [],
     currentMailboxRole,
     canMove: canMoveAnywhere,
+    moveUnavailableHint,
     canRemoveFromFolder: canRemove,
     canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
     canTag: !!onBatchToggleTag,
@@ -393,8 +417,8 @@ export function EmailContextMenu({
     switch (entry.key) {
       case "move":
         return (
-          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId} disabled={!canChangeMail}>
-            {renderMoveList(batch ? onBatchMoveToMailbox : onMoveToMailbox)}
+          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId} disabled={!canChangeMail || entry.disabled} hint={entry.hint}>
+            {!entry.disabled && renderMoveList(batch ? onBatchMoveToMailbox : onMoveToMailbox)}
           </ContextMenuSubMenu>
         );
       case "copy_to_account":

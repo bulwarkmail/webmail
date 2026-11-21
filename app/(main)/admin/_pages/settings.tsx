@@ -34,8 +34,9 @@ export function SettingsPage() {
     fetchConfig();
   }, []);
 
+  // Only the first load shows the skeleton: swapping the page out after a
+  // save would throw away the scroll position.
   async function fetchConfig() {
-    setLoading(true);
     try {
       const res = await apiFetch('/api/admin/config');
       if (!res.ok) throw new Error();
@@ -138,6 +139,7 @@ export function SettingsPage() {
           <ConfigToggleItem label="Show 2FA code option" term="two_factor" description="Show the &quot;I have a 2FA code&quot; toggle on the login form. Turn off when two-factor authentication is handled by an external identity provider. Accounts that require a code still get the field." configKey="loginShowTotp" value={currentValue('loginShowTotp') as boolean} source={config.loginShowTotp?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show access token sign-in" term="access_token" description="Offer signing in with an access token instead of a password. For JMAP servers that authenticate API tokens as Bearer tokens, such as Fastmail, which accepts no passwords over JMAP." configKey="loginShowTokenLogin" value={currentValue('loginShowTokenLogin') as boolean} source={config.loginShowTokenLogin?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show remember me" description="Let people choose whether to stay signed in. Off (the default) remembers every sign-in. Either way this needs SESSION_SECRET to be set." configKey="loginShowRememberMe" value={currentValue('loginShowRememberMe') as boolean} source={config.loginShowRememberMe?.source} onChange={handleChange} onRevert={handleRevert} />
+          <ConfigToggleItem label="Keep unticked sign-ins until the browser closes" description="With the remember me box shown, a sign-in made with it unticked survives reloads and new tabs and ends when the browser closes. Off (the default) ends it at the next reload. Needs SESSION_SECRET." configKey="browserSessionSignIn" value={currentValue('browserSessionSignIn') as boolean} source={config.browserSessionSignIn?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show heading" description="Show the application name below the login logo" configKey="loginShowHeading" value={currentValue('loginShowHeading') as boolean} source={config.loginShowHeading?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Show subtitle" description="Show the subtitle below the login heading" configKey="loginShowSubtitle" value={currentValue('loginShowSubtitle') as boolean} source={config.loginShowSubtitle?.source} onChange={handleChange} onRevert={handleRevert} />
         </SettingsSection>
@@ -180,6 +182,13 @@ export function SettingsPage() {
 
         <SettingsSection id="bimi" title="Brand logos">
           <ConfigToggleItem label="Require a mark certificate" description="Senders that publish a BIMI record and enforce DMARC get their logo as the sender icon. Off shows a logo that only the sender's DNS record backs, as Yahoo does. On shows only logos backed by a Verified Mark or Common Mark Certificate, as Gmail and Apple Mail do, so a lookalike domain can't put up someone else's logo." configKey="bimiRequireCertificate" value={currentValue('bimiRequireCertificate') as boolean} source={config.bimiRequireCertificate?.source} onChange={handleChange} onRevert={handleRevert} />
+        </SettingsSection>
+
+        <SettingsSection id="sender-check" title="Sender check">
+          <ConfigTextItem label="Trusted mail servers" description="Hostnames, separated by commas, whose sender checks (the Authentication-Results header) Bulwark may show besides your Stalwart's own: another JMAP server, Gmail or an IMAP server behind legacy-proxy (mx.google.com), or a filtering gateway in front of Stalwart. Each must match the name the server writes at the start of that header exactly." configKey="trustedAuthservIds" value={currentValue('trustedAuthservIds') as string} source={config.trustedAuthservIds?.source} onChange={handleChange} onRevert={handleRevert} placeholder="mx.google.com, gateway.example.com" mono wide />
+          <ConfigNote>
+            A listed server&apos;s results only count when they are the newest in the message and no server outside the list handled the message after them, so a sender can&apos;t write them in. Mail from an imported file never gets a verdict. For a gateway, Stalwart must not add its own results to what the gateway relays, or those come first: in Stalwart&apos;s SMTP DATA Stage settings, under Add Headers, make Authentication-Results false for the gateway&apos;s addresses (<code className="text-[0.6875rem] bg-muted px-1 py-0.5 rounded">remote_ip</code>), and keep it on for everyone else or let only the gateway reach port 25.
+          </ConfigNote>
         </SettingsSection>
 
         <SettingsSection id="logging" title="Logging">

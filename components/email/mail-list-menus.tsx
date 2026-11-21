@@ -104,13 +104,37 @@ export function MailSortSubMenu({ folderRole, onPicked }: { folderRole: string |
   );
 }
 
+/**
+ * "Group by date" for the list's ⋮: date headers while the list runs by
+ * date. Nothing when policy hides the setting.
+ */
+export function MailGroupByDateItem({ onPicked }: { onPicked: () => void }) {
+  const t = useTranslations("email_list");
+  const checked = useSettingsStore((s) => s.groupListByDate);
+  const hidden = usePolicyStore((s) => s.isSettingHidden("groupListByDate"));
+  const locked = usePolicyStore((s) => s.isSettingLocked("groupListByDate"));
+  if (hidden) return null;
+  return (
+    <ContextMenuCheckItem
+      label={t("group_by_date")}
+      checked={checked}
+      disabled={locked}
+      testId="mail-group-by-date"
+      onClick={() => {
+        onPicked();
+        useSettingsStore.getState().updateSetting("groupListByDate", !checked);
+      }}
+    />
+  );
+}
+
 /** A checkable entry of the Sort menu, as in Files'. */
 function SortItem({ label, checked, onClick, testId }: { label: string; checked: boolean; onClick: () => void; testId?: string }) {
   return <ContextMenuCheckItem kind="radio" label={label} checked={checked} onClick={onClick} testId={testId} />;
 }
 
 /**
- * The list header's ⋮: Refresh, Sort and what the Mountain View list ⋮
+ * The list header's ⋮: Refresh, Sort, Group by date and what the Mountain View list ⋮
  * offers for the folder (MAIL-29). On the phone the folder entries sit in
  * the header's ⋮.
  */
@@ -167,6 +191,7 @@ export const MailFolderMenu = memo(function MailFolderMenu({
           />
         )}
         <MailSortSubMenu folderRole={folderRole} onPicked={menu.closeContextMenu} />
+        <MailGroupByDateItem onPicked={menu.closeContextMenu} />
         <ContextMenuSeparator />
         <MailFolderMenuItems
           onMarkFolderRead={onMarkFolderRead}

@@ -11,6 +11,7 @@ import {
   Accessibility,
   Bell,
   CalendarEvent,
+  ListTodo,
   Folder,
   Grid3x3,
   Keyboard,
@@ -23,13 +24,13 @@ import {
   Users,
 } from "@/components/icons";
 import { cn } from "@/lib/cn";
-import { Bar, Circle, SkeletonRegion, type SkeletonSurface } from "./kit";
+import { Bar, Block, Circle, SkeletonRegion, type SkeletonSurface } from "./kit";
 import { LoginSkeleton } from "./login-skeleton";
 import { ProFrameSkeleton } from "./pro-skeleton";
 import { PRO_SURFACES, type BootSurface } from "@/lib/boot-skeleton/surfaces";
 import { ServerMarkup } from "./server-markup";
 
-export type RailApp = "mail" | "calendar" | "contacts" | "files" | "settings";
+export type RailApp = "mail" | "calendar" | "tasks" | "contacts" | "files" | "settings";
 
 /** A rail item drawn as current: an app, or the admin panel (NavigationRail adminActive). */
 export type RailActive = RailApp | "admin";
@@ -40,9 +41,14 @@ export type RailLabels = Partial<Record<RailApp | "admin", string>>;
 const RAIL_BORDER = { borderRight: "1px solid rgba(128, 128, 128, 0.3)" } as const;
 const DIVIDER = { borderColor: "rgba(128, 128, 128, 0.3)" } as const;
 
-/** Hidden when the last session's rail didn't show the app (bulwark-boot-hints). */
-const APP_HIDE: Record<"calendar" | "contacts" | "files", string> = {
+/**
+ * Hidden when the last session's rail didn't show the app (bulwark-boot-hints).
+ * Tasks are an app of their own only when the user chose that, so they show
+ * only when the last rail had them.
+ */
+const APP_HIDE: Record<"calendar" | "tasks" | "contacts" | "files", string> = {
   calendar: "boot-no-calendar:hidden",
+  tasks: "hidden boot-rail-tasks:flex",
   contacts: "boot-no-contacts:hidden",
   files: "boot-no-files:hidden",
 };
@@ -50,6 +56,7 @@ const APP_HIDE: Record<"calendar" | "contacts" | "files", string> = {
 const APPS = [
   { id: "mail", icon: Mail },
   { id: "calendar", icon: CalendarEvent },
+  { id: "tasks", icon: ListTodo },
   { id: "contacts", icon: Users },
   { id: "files", icon: Folder },
 ] as const;
@@ -79,13 +86,21 @@ export function RailSkeleton({
     <div aria-hidden="true" className={cn("w-14 bg-secondary flex-col flex-shrink-0", className)} style={RAIL_BORDER}>
       <div className="flex flex-col h-full items-center">
         <div className="flex flex-col flex-1 min-h-0 items-center gap-1 py-3 px-1">
+          {/* Compose at the top of the rail (composePlacement "rail"); not on
+              the Pro shell's rail or the admin panel's. */}
+          {search || active === "admin" ? null : (
+            <span className="hidden boot-compose-rail:flex flex-col items-center gap-1">
+              <Block className="w-10 h-10 rounded-xl" />
+              <span className="w-8 my-1 border-t" style={DIVIDER} />
+            </span>
+          )}
           {search ? (
             <span className={item(false)}>
               <Search className="w-[18px] h-[18px] flex-shrink-0" />
             </span>
           ) : null}
           {APPS.map(({ id, icon: Icon }) => (
-            <span key={id} data-sk-rail={id} className={cn(item(active === id), id !== "mail" && APP_HIDE[id])}>
+            <span key={id} data-sk-rail={id} className={cn(item(active === id), id !== "mail" && !(id === "tasks" && active === id) && APP_HIDE[id])}>
               <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", active === id && "text-primary")} />
             </span>
           ))}
@@ -159,7 +174,7 @@ export function BottomBarSkeleton({
           className={cn(
             "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
             active === id ? "text-primary" : "text-muted-foreground",
-            (id === "calendar" || id === "contacts" || id === "files") && APP_HIDE[id],
+            (id === "calendar" || id === "contacts" || id === "files" || (id === "tasks" && active !== id)) && APP_HIDE[id],
           )}
         >
           <span className={cn("relative", active === id && "mv:min-w-14 mv:rounded-full mv:bg-primary/15 mv:px-4 mv:py-[3px]")}>

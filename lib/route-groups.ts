@@ -19,7 +19,7 @@ export const API_GROUPS: readonly string[] = [
 
 /** The page areas under app/(main)/[locale], plus the pages outside it. */
 export const PAGE_AREAS: readonly string[] = [
-  'apps', 'auth', 'calendar', 'contacts', 'files', 'login', 'mail', 'plugins', 'popout', 'pro', 'settings',
+  'apps', 'auth', 'calendar', 'tasks', 'contacts', 'files', 'login', 'mail', 'plugins', 'popout', 'pro', 'settings',
   'admin', 'setup', 'connector', 'protocol', 'plugin-sandbox', 'plugin-sandbox-privileged',
 ];
 

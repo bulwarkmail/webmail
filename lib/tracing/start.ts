@@ -1,16 +1,17 @@
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { detectResources, envDetector, resourceFromAttributes } from '@opentelemetry/resources';
 import {
   BatchSpanProcessor,
-  NodeTracerProvider,
   SimpleSpanProcessor,
+  TracerProvider,
   type ReadableSpan,
   type Span,
   type SpanExporter,
   type SpanProcessor,
-} from '@opentelemetry/sdk-trace-node';
-import type { Context } from '@opentelemetry/api';
+} from '@opentelemetry/sdk-trace';
+import { context, propagation, trace, type Context } from '@opentelemetry/api';
 import { markTracingActive } from './config';
 import { scrubAttributes, scrubSpanName, type Attributes } from './scrub';
 
@@ -52,17 +53,27 @@ export class ScrubbingSpanProcessor implements SpanProcessor {
   }
 }
 
-export function createProvider(exporter: SpanExporter, batch = true): NodeTracerProvider {
+export function createProvider(exporter: SpanExporter, batch = true): TracerProvider {
   const resource = resourceFromAttributes({
     'service.name': process.env.OTEL_SERVICE_NAME?.trim() || 'bulwark-webmail',
     'service.version': process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0',
   }).merge(detectResources({ detectors: [envDetector] }));
-  const inner: SpanProcessor = batch ? new BatchSpanProcessor(exporter) : new SimpleSpanProcessor(exporter);
-  return new NodeTracerProvider({ resource, spanProcessors: [new ScrubbingSpanProcessor(inner)] });
+  const inner: SpanProcessor = batch ? new BatchSpanProcessor({ exporter }) : new SimpleSpanProcessor({ exporter });
+  return new TracerProvider({ resource, spanProcessors: [new ScrubbingSpanProcessor(inner)] });
+}
+
+/**
+ * Makes the provider the global one, with a context manager so spans started
+ * inside a span become its children, and W3C trace context for outgoing
+ * calls (traceparent).
+ */
+export function registerProvider(provider: TracerProvider): void {
+  context.setGlobalContextManager(new AsyncLocalStorageContextManager().enable());
+  propagation.setGlobalPropagator(new W3CTraceContextPropagator());
+  trace.setGlobalTracerProvider(provider);
 }
 
 export function startTracing(): void {
-  const provider = createProvider(new OTLPTraceExporter());
-  provider.register({ propagator: new W3CTraceContextPropagator() });
+  registerProvider(createProvider(new OTLPTraceExporter()));
   markTracingActive();
 }

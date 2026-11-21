@@ -12,6 +12,7 @@ export interface RawSendOptions {
   delayedUntil?: string;
   envelopeRecipients?: string[];
   submitOnly?: boolean;
+  submission?: { requestDsn?: boolean; requireTls?: boolean };
 }
 
 export interface OutboxHooks {

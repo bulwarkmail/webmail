@@ -32,6 +32,7 @@ const OTHER_DEVICE = '11111111222222223333333344444444';
 const DEVICE_KEY = `bulwark.push.deviceClientId.v1.${ACCOUNT_ID}`;
 const SUB_KEY = `bulwark.push.subscriptionId.v1.${ACCOUNT_ID}`;
 const REFUSED_KEY = `bulwark.push.emailPushRefused.v1.${ACCOUNT_ID}`;
+const EMPTY_TYPES_TRIED_KEY = `bulwark.push.emptyTypesTried.v1.${ACCOUNT_ID}`;
 
 function sub(
   id: string,
@@ -70,7 +71,7 @@ const EXPECTED_EMAIL_PUSH: Record<string, EmailPushConfig> = {
   [ACCOUNT_ID]: {
     filter: {
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: [JUNK_ID] }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: [JUNK_ID] }],
     },
     properties: ['id', 'threadId'],
     urgency: 'high',
@@ -78,7 +79,7 @@ const EXPECTED_EMAIL_PUSH: Record<string, EmailPushConfig> = {
   [GROUP_ACCOUNT_ID]: {
     filter: {
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: [GROUP_JUNK_ID] }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: [GROUP_JUNK_ID] }],
     },
     properties: ['id', 'threadId'],
     urgency: 'high',
@@ -290,6 +291,9 @@ function installFetch(activeByDevice: Record<string, boolean | 'unknown'>) {
 
 beforeEach(() => {
   localStorage.clear();
+  // This browser already tried the empty types list, so an existing
+  // subscription is refreshed, not replaced. The replacement has its own tests.
+  localStorage.setItem(EMPTY_TYPES_TRIED_KEY, '1');
   resetWebPushResyncState();
   installPushBrowser();
 });
@@ -1304,7 +1308,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
 
     expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
     const params = (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(params.types).toEqual(['EmailDelivery']);
+    expect(params.types).toEqual([]);
     expect(params.emailPush).toEqual(EXPECTED_EMAIL_PUSH);
   });
 
@@ -1317,6 +1321,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
 
     const params = (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(params).not.toHaveProperty('emailPush');
+    expect(params.types).toEqual(['EmailDelivery']);
     expect(client.getAllMailboxes).not.toHaveBeenCalled();
   });
 
@@ -1336,6 +1341,107 @@ describe('enableWebPush delivery filter (emailPush)', () => {
     );
   });
 
+  it('replaces a subscription made with EmailDelivery by one with an empty types list, once (#1650)', async () => {
+    localStorage.removeItem(EMPTY_TYPES_TRIED_KEY);
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient(
+      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: ['EmailDelivery'] })],
+      { emailPushCapability: true },
+    );
+    installFetch({});
+
+    const result = await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(result.subscriptionId).toBe('push-new');
+    expect(createCalls(client)[0]).toMatchObject({ types: [], emailPush: EXPECTED_EMAIL_PUSH });
+    expect(client.destroyed).toEqual(['push-old']);
+
+    // Where the server gave it EmailDelivery back (before Stalwart 1.0.3), it stays.
+    const again = makeClient(
+      [sub('push-new', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: ['EmailDelivery'] })],
+      { emailPushCapability: true },
+    );
+    await enableWebPush({ client: again, relayBaseUrl: RELAY, inboxOnly: false });
+    expect(again.createPushSubscription).not.toHaveBeenCalled();
+    expect(again.destroyed).toEqual([]);
+  });
+
+  it('never empties the types list with an update, which silences Stalwart before 1.0.3 (#1650)', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient(
+      [sub('push-old', THIS_DEVICE, { types: ['EmailDelivery'], expires: new Date(Date.now() + 60_000).toISOString() })],
+      { emailPushCapability: true },
+    );
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    const patches = updateCalls(client) as Array<{ types?: string[] }>;
+    expect(patches.length).toBeGreaterThan(0);
+    for (const patch of patches) expect(patch.types).not.toEqual([]);
+  });
+
+  it('keeps an empty types list the server kept on a refresh', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient(
+      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: [], expires: new Date(Date.now() + 60_000).toISOString() })],
+      { emailPushCapability: true },
+    );
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(client.updatePushSubscription).toHaveBeenCalledTimes(1);
+    expect(updateCalls(client)[0]).not.toHaveProperty('types');
+  });
+
+  it('sets EmailDelivery when the server filled the empty list with every type, as Stalwart before 1.0.3 does (#1650)', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    const client = makeClient([], { emailPushCapability: true });
+    (client.listPushSubscriptions as ReturnType<typeof vi.fn>).mockImplementation(async () =>
+      (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls.length > 0
+        ? [sub('push-new', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: ['Email', 'EmailDelivery', 'Mailbox', 'Thread'] })]
+        : []);
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(createCalls(client)[0]).toMatchObject({ types: [] });
+    expect(client.updatePushSubscription).toHaveBeenLastCalledWith('push-new', { types: ['EmailDelivery'] });
+  });
+
+  it('leaves an empty list the server kept as it is after creating', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    const client = makeClient([], { emailPushCapability: true });
+    (client.listPushSubscriptions as ReturnType<typeof vi.fn>).mockImplementation(async () =>
+      (client.createPushSubscription as ReturnType<typeof vi.fn>).mock.calls.length > 0
+        ? [sub('push-new', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: [] })]
+        : []);
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('keeps EmailDelivery when the server took a narrower map than the one built', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    // Stalwart 0.16 refuses the group in the map; its mail still has to come.
+    const client = makeClient([], { emailPushCapability: true, members: [ACCOUNT_ID] });
+    installFetch({});
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    const calls = createCalls(client) as Array<{ types: string[]; emailPush?: Record<string, EmailPushConfig> }>;
+    expect(calls[0].types).toEqual([]);
+    const accepted = calls[calls.length - 1];
+    expect(mapKeys(accepted.emailPush)).toEqual([ACCOUNT_ID]);
+    expect(accepted.types).toEqual(['EmailDelivery']);
+  });
+
   it('re-syncs a filter whose Junk mailbox id went stale', async () => {
     localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
     localStorage.setItem(SUB_KEY, 'push-old');
@@ -1345,12 +1451,12 @@ describe('enableWebPush delivery filter (emailPush)', () => {
         ...EXPECTED_EMAIL_PUSH[ACCOUNT_ID],
         filter: {
           operator: 'AND',
-          conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: ['mb-junk-deleted'] }],
+          conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['mb-junk-deleted'] }],
         },
       },
     };
     const client = makeClient(
-      [sub('push-old', THIS_DEVICE, { emailPush: stale })],
+      [sub('push-old', THIS_DEVICE, { emailPush: stale, types: [] })],
       { emailPushCapability: true },
     );
     installFetch({});
@@ -1374,7 +1480,7 @@ describe('enableWebPush delivery filter (emailPush)', () => {
       filter: stored[ACCOUNT_ID].filter,
     };
     const client = makeClient(
-      [sub('push-old', THIS_DEVICE, { emailPush: stored })],
+      [sub('push-old', THIS_DEVICE, { emailPush: stored, types: [] })],
       { emailPushCapability: true },
     );
     installFetch({});
@@ -1401,11 +1507,11 @@ describe('buildEmailPushConfig inbox-only mode', () => {
 
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-inbox' }],
     });
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-group-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-group-inbox' }],
     });
   });
 
@@ -1432,11 +1538,11 @@ describe('buildEmailPushConfig inbox-only mode', () => {
 
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-inbox' }],
     });
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { hasKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { hasKeyword: '$junk' }],
     });
   });
 
@@ -1461,7 +1567,7 @@ describe('buildEmailPushConfig inbox-only mode', () => {
     expect(Object.keys(config).sort()).toEqual([ACCOUNT_ID, GROUP_ACCOUNT_ID].sort());
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }],
     });
   });
 });
@@ -1530,7 +1636,7 @@ describe('enableWebPush with a mailbox shared by ACL', () => {
     localStorage.setItem(SUB_KEY, 'push-old');
     localStorage.setItem(REFUSED_KEY, JSON.stringify([ACL_ACCOUNT_ID]));
     const client = makeClient(
-      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH })],
+      [sub('push-old', THIS_DEVICE, { emailPush: EXPECTED_EMAIL_PUSH, types: [] })],
       { emailPushCapability: true, accounts: SESSION_0_16 },
     );
 
@@ -1861,7 +1967,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
 
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailboxOtherThan: [JUNK_ID, 'mb-archive'].sort() }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: [JUNK_ID, 'mb-archive'].sort() }],
     });
     // Another account's folders are untouched.
     expect(config[GROUP_ACCOUNT_ID]).toEqual(EXPECTED_EMAIL_PUSH[GROUP_ACCOUNT_ID]);
@@ -1874,7 +1980,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
 
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { hasKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { hasKeyword: '$junk' }],
     });
     expect(config[ACCOUNT_ID]).toEqual(EXPECTED_EMAIL_PUSH[ACCOUNT_ID]);
   });
@@ -1885,7 +1991,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
     const one = await buildEmailPushConfig(client, false, mutes([ACCOUNT_ID], { [`${ACCOUNT_ID}/mb-archive`]: false }));
     expect(one[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-archive' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-archive' }],
     });
 
     const two = await buildEmailPushConfig(client, false, mutes([ACCOUNT_ID], {
@@ -1898,6 +2004,7 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
       operator: 'AND',
       conditions: [
         { notKeyword: '$junk' },
+        { notKeyword: '$bulwark-note' },
         { operator: 'OR', conditions: [{ inMailbox: 'mb-archive' }, { inMailbox: 'mb-inbox' }] },
       ],
     });
@@ -1910,11 +2017,11 @@ describe('buildEmailPushConfig with muted folders and accounts', () => {
 
     expect(config[GROUP_ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { hasKeyword: '$junk' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { hasKeyword: '$junk' }],
     });
     expect(config[ACCOUNT_ID].filter).toEqual({
       operator: 'AND',
-      conditions: [{ notKeyword: '$junk' }, { inMailbox: 'mb-inbox' }],
+      conditions: [{ notKeyword: '$junk' }, { notKeyword: '$bulwark-note' }, { inMailbox: 'mb-inbox' }],
     });
   });
 

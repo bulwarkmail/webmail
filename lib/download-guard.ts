@@ -11,6 +11,8 @@
  * is never refused here, only handing them out.
  */
 
+import { downloadNameForType } from '@/lib/file-preview';
+
 /** What is being handed out: an attachment or file (noDownloads), or mail (noExport). */
 export type DownloadKind = 'attachment' | 'file' | 'export';
 
@@ -52,29 +54,153 @@ export function downloadAllowed(kind: DownloadKind, subject?: DownloadSubject): 
   return allowed;
 }
 
+/** The type of every object URL a download is saved from. */
+const DOWNLOAD_BLOB_TYPE = 'application/octet-stream';
+
+/**
+ * The event the app listens for when iOS wants a fresh tap before it opens
+ * the share sheet (components/share-sheet-host.tsx), with a ShareNeedsTapDetail.
+ */
+export const SHARE_NEEDS_TAP_EVENT = 'bulwark:share-needs-tap';
+
+/** The file waiting for a tap, and what saveBlobAs() was asked for, so the tap can be checked again. */
+export interface ShareNeedsTapDetail {
+  file: File;
+  kind: DownloadKind;
+  subject?: DownloadSubject;
+}
+
+/** An iPhone or iPad, the latter also when it asks for desktop sites and calls itself a Mac. */
+export function isAppleMobile(
+  nav: Pick<Navigator, 'userAgent' | 'platform' | 'maxTouchPoints'> | undefined = typeof navigator === 'undefined' ? undefined : navigator,
+): boolean {
+  if (!nav) return false;
+  if (/iPhone|iPad|iPod/.test(nav.userAgent ?? '')) return true;
+  return nav.platform === 'MacIntel' && (nav.maxTouchPoints ?? 0) > 1;
+}
+
+/** Extensions iOS shows in its download preview: PDF, pictures, audio and video, text, Office and iWork files. */
+const IOS_PREVIEWABLE_EXT = new Set([
+  'pdf', 'jpg', 'jpeg', 'png', 'gif', 'heic', 'heif', 'webp', 'bmp', 'tif', 'tiff',
+  'mp4', 'mov', 'm4v', 'mp3', 'm4a', 'wav', 'aac',
+  'txt', 'csv', 'rtf',
+  'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pages', 'numbers', 'key',
+]);
+
+/** Whether iOS can show this file in its download preview, by its type or its name. */
+export function iosCanPreview(filename: string, type?: string): boolean {
+  const mime = (type || '').toLowerCase().split(';')[0].trim();
+  if (mime === 'application/pdf' || /^(image|video|audio)\//.test(mime) || mime === 'text/plain' || mime === 'text/csv') return true;
+  const dot = filename.lastIndexOf('.');
+  return dot >= 0 && IOS_PREVIEWABLE_EXT.has(filename.slice(dot + 1).toLowerCase());
+}
+
+function errorName(err: unknown): string {
+  return err && typeof err === 'object' && 'name' in err ? String((err as { name: unknown }).name) : '';
+}
+
+type SaveOptions = { kind: DownloadKind; subject?: DownloadSubject; revokeAfterMs?: number; share?: boolean };
+
+/**
+ * On an iPhone or iPad, a blob: download opens in a preview window, and
+ * above all in a web app on the home screen, there is nothing else. What iOS
+ * can preview is fine there. An archive (a "Download all" zip) or an unknown
+ * type comes up as a blank page with a file icon and no way to keep it. Such
+ * a file goes to the share sheet instead, where "Save to Files" works. True
+ * when it went there; false leaves it to the <a download>.
+ *
+ * The share sheet opens only straight after a tap. When fetching or zipping
+ * took longer (NotAllowedError), SHARE_NEEDS_TAP_EVENT asks the app for one.
+ * Any other failure saves the file through the <a download> after all.
+ */
+function shareOnAppleMobile(blob: Blob, filename: string, options: SaveOptions): boolean {
+  if (typeof navigator === 'undefined' || !isAppleMobile() || iosCanPreview(filename, blob.type)) return false;
+  if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false;
+  const file = new File([blob], filename, { type: blob.type || DOWNLOAD_BLOB_TYPE });
+  if (!navigator.canShare({ files: [file] })) return false;
+  navigator.share({ files: [file] }).catch((err: unknown) => {
+    const why = errorName(err);
+    if (why === 'AbortError') return; // the sheet was closed
+    if (why === 'NotAllowedError' && typeof window !== 'undefined') {
+      const detail: ShareNeedsTapDetail = { file, kind: options.kind, subject: options.subject };
+      window.dispatchEvent(new CustomEvent(SHARE_NEEDS_TAP_EVENT, { detail }));
+      return;
+    }
+    saveBlobAs(blob, filename, { ...options, share: false });
+  });
+  return true;
+}
+
+/**
+ * The tap SHARE_NEEDS_TAP_EVENT asked for (the Save button in
+ * ShareSheetHost). The device policy is asked again, as it may have changed
+ * while the file waited; then the share sheet, and the <a download> if the
+ * sheet fails.
+ */
+export function shareAfterTap(detail: ShareNeedsTapDetail): void {
+  if (!downloadAllowed(detail.kind, detail.subject)) return;
+  const fallBack = () => { saveBlobAs(detail.file, detail.file.name, { kind: detail.kind, subject: detail.subject, share: false }); };
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+    fallBack();
+    return;
+  }
+  navigator.share({ files: [detail.file] }).catch((err: unknown) => {
+    if (errorName(err) !== 'AbortError') fallBack();
+  });
+}
+
+/**
+ * Whether the browser may start a download long after the click: WebKit
+ * (Safari, and every browser on iOS), the first time only after its "Allow
+ * downloads" prompt. Chromium (also the desktop app) and Firefox start it
+ * from a task the click queues, which runs once the page's current task is
+ * done; Firefox loses the download when the URL is revoked before that.
+ */
+function downloadMayStartLater(): boolean {
+  const agent = typeof navigator === 'undefined' ? '' : navigator.userAgent ?? '';
+  return /AppleWebKit/.test(agent) && !/Chrome\/|Chromium\/|Edg\//.test(agent);
+}
+
 /**
  * Saves `blob` (or an object URL) as `filename` through an `<a download>`.
  * False, and nothing saved, when a device policy forbids it.
+ *
+ * A Blob is saved from an object URL of its own typed
+ * application/octet-stream, whatever type the Blob carries. While that URL
+ * lives it can be loaded on its own (the browser's downloads list keeps it as
+ * the file's address), and a browser that ignores `download` opens it in the
+ * tab: either way the browser saves the file again rather than showing it as
+ * a document of the webmail origin. The file keeps its name, which is what
+ * the operating system opens it by; a name without an extension gets the
+ * one of the Blob's type when that type is on the inline-safe list
+ * (downloadNameForType() in lib/file-preview.ts). The URL is never revoked
+ * in the click's own task: it goes in a zero timeout, or after a minute in a
+ * browser that may start the download later. `revokeAfterMs` sets another
+ * delay, 0 being the zero timeout. An object URL passed in is the caller's
+ * and keeps its type, its name and its lifetime.
  */
 export function saveBlobAs(
   data: Blob | string,
   filename: string,
-  options: { kind: DownloadKind; subject?: DownloadSubject; revokeAfterMs?: number },
+  options: SaveOptions,
 ): boolean {
   if (!downloadAllowed(options.kind, options.subject)) return false;
   if (typeof document === 'undefined') return false;
-  const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+  if (typeof data !== 'string' && options.share !== false
+    && shareOnAppleMobile(data, downloadNameForType(filename, data.type), options)) return true;
+  const url = typeof data === 'string'
+    ? data
+    : URL.createObjectURL(data.type === DOWNLOAD_BLOB_TYPE ? data : data.slice(0, data.size, DOWNLOAD_BLOB_TYPE));
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = filename;
+  anchor.download = typeof data === 'string' ? filename : downloadNameForType(filename, data.type);
   anchor.rel = 'noopener';
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  // 0 revokes at once (the click has started the download by then).
   if (typeof data !== 'string') {
-    if (options.revokeAfterMs === 0) URL.revokeObjectURL(url);
-    else setTimeout(() => URL.revokeObjectURL(url), options.revokeAfterMs ?? 60_000);
+    const revokeAfterMs = options.revokeAfterMs ?? (downloadMayStartLater() ? 60_000 : 0);
+    setTimeout(() => URL.revokeObjectURL(url), revokeAfterMs);
   }
   return true;
 }

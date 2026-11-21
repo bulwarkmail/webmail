@@ -8,7 +8,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { useFilterStore } from '@/stores/filter-store';
 import { useToastStore } from '@/stores/toast-store';
 import { useQuickRuleStore } from '@/stores/quick-rule-store';
-import { executePlan, runPresetRule, saveEditorRule, type QuickRuleText } from '../quick-rule-flow';
+import { executePlan, openRuleWithSenders, runPresetRule, saveEditorRule, type QuickRuleText } from '../quick-rule-flow';
 import { emailHooks } from '@/lib/plugin-hooks';
 import type { QuickRuleTarget } from '../quick-rule-target';
 import { collectSenders, sharedDomain, type QuickRuleSubject } from '../quick-rules';
@@ -192,6 +192,45 @@ describe('quick rules from a message', () => {
     expect(lastToast().tertiaryAction).toBeUndefined();
   });
 
+  it('opens the latest editable rule with the new sender prefilled and does not save yet', async () => {
+    accountB = mockSieveAccount('b', [{ name: 'filters', content: generateScript([rule('first')]), isActive: true }]);
+    await openRuleWithSenders(
+      targetFor(accountB, 'b'),
+      'first',
+      [{ email: 'bob@acme.com' }],
+      'inbox',
+      text,
+    );
+
+    expect(accountB.writes()).toBe(0);
+    expect(useQuickRuleStore.getState().editor).toMatchObject({
+      mode: 'edit',
+      rule: {
+        id: 'first',
+        conditions: [{
+          field: 'from',
+          comparator: 'address_is',
+          value: ['anna@acme.com', 'bob@acme.com'],
+        }],
+      },
+    });
+  });
+
+  it('does not open a rule that came to need all of several conditions after the menu listed it', async () => {
+    const both = rule('first', {
+      conditions: [
+        { field: 'subject', comparator: 'contains', value: 'invoice' },
+        { field: 'to', comparator: 'contains', value: 'billing@' },
+      ],
+    });
+    accountB = mockSieveAccount('b', [{ name: 'filters', content: generateScript([both]), isActive: true }]);
+    useQuickRuleStore.setState({ editor: null } as never);
+    await openRuleWithSenders(targetFor(accountB, 'b'), 'first', [{ email: 'bob@acme.com' }], 'inbox', text);
+
+    expect(useQuickRuleStore.getState().editor).toBeNull();
+    expect(lastToast().title).toBe('rules.no_rule_fits');
+  });
+
   it('saves "Create rule…" as built, at the top, without merging', async () => {
     accountB = mockSieveAccount('b', [{ name: 'filters', content: generateScript([rule('first')]), isActive: true }]);
     const target = targetFor(accountB, 'b');
@@ -246,6 +285,33 @@ describe('running a rule over existing mail', () => {
       expect(batchMoveToMailbox).not.toHaveBeenCalled();
     } finally {
       emailHooks.onBeforeEmailKeywordChange.removePlugin('t');
+    }
+  });
+
+  // The tag is written to the rule's account. In a list that mixes logins a
+  // row of another login can have the same id: it is another message and
+  // must not be shown with the tag.
+  it('shows the tag on the listed row of the rule\'s account only, not on another login\'s row with the same id', async () => {
+    const account = mockSieveAccount('a');
+    const other = mockSieveAccount('b');
+    account.client.batchUpdateKeywords = vi.fn(async () => {});
+    const ofA = { id: 'e1', keywords: {}, mailboxIds: { inbox: true }, sourceClientAccountId: 'login-a', sourceAccountId: 'a' };
+    const ofB = { id: 'e1', keywords: {}, mailboxIds: { inbox: true }, sourceClientAccountId: 'login-b', sourceAccountId: 'b' };
+    const before = { auth: useAuthStore.getState(), email: useEmailStore.getState() };
+    useAuthStore.setState({
+      client: account.client, activeAccountId: 'login-a',
+      getClientForAccount: ((id: string) => (id === 'login-a' ? account.client : id === 'login-b' ? other.client : undefined)) as never,
+    } as never);
+    // Login b's row is listed first.
+    useEmailStore.setState({ isUnifiedView: true, viewingAccountId: null, emails: [ofB, ofA] } as never);
+    try {
+      await executePlan(targetFor(account, 'a'), { ids: ['e1'], steps: [{ kind: 'keyword', ids: ['e1'], keyword: '$label:work' }] });
+      const rows = useEmailStore.getState().emails;
+      expect(rows.find((row) => row.sourceClientAccountId === 'login-a')?.keywords).toEqual({ '$label:work': true });
+      expect(rows.find((row) => row.sourceClientAccountId === 'login-b')?.keywords).toEqual({});
+    } finally {
+      useAuthStore.setState(before.auth);
+      useEmailStore.setState(before.email);
     }
   });
 });

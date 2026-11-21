@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CalendarEvent,
+  ListTodo,
   Folder,
   Grid3x3,
   Users,
@@ -142,6 +143,10 @@ export function MvTopBar({
   const client = useAuthStore((s) => s.client);
   const { supportsCalendar } = useCalendarStore(useShallow((state) => ({ supportsCalendar: state.supportsCalendar })));
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled("calendarEnabled"));
+  // Tasks as their own app (#1698), as the rail has them.
+  const tasksAppChosen = useSettingsStore((s) => s.enableCalendarTasks && s.showTasksApp);
+  const tasksPolicyEnabled = usePolicyStore((s) => s.isFeatureEnabled("calendarTasksEnabled"));
+  const tasksAppShown = tasksAppChosen && tasksPolicyEnabled;
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled("contactsEnabled"));
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled("filesEnabled"));
   // The same gate the navigation rail puts on its "add app" button.
@@ -184,6 +189,9 @@ export function MvTopBar({
     ...(supportsCalendar && calendarEnabled
       ? [{ id: "calendar", icon: CalendarEvent, label: t("calendar"), href: "/calendar" }]
       : []),
+    ...(supportsCalendar && calendarEnabled && tasksAppShown
+      ? [{ id: "tasks", icon: ListTodo, label: t("tasks"), href: "/tasks" }]
+      : []),
     ...((client?.supportsContacts() ?? false) && contactsEnabled
       ? [{ id: "contacts", icon: Users, label: t("contacts"), href: "/contacts" }]
       : []),
@@ -204,6 +212,7 @@ export function MvTopBar({
     <header
       className="mv-topbar flex items-center h-16 gap-2 ps-1 pe-4 shrink-0 bg-[var(--mv-canvas)]"
       data-mv-topbar=""
+      data-plugin-list-avoid=""
     >
       {/* Brand block: occupies the sidebar's own column width */}
       <div className={cn("flex items-center gap-1 shrink-0", !showMenuButton && "ps-3")}>

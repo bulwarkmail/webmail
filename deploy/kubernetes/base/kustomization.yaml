@@ -11,6 +11,7 @@ resources:
   - namespace.yaml
   - valkey.yaml
   - bulwark.yaml
+  - network-policy.yaml
 
 configMapGenerator:
   - name: bulwark-env

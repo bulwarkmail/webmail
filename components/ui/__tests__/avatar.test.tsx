@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Avatar } from '../avatar';
 import { useAuthStore } from '@/stores/auth-store';
 import { useContactStore } from '@/stores/contact-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useFaviconRefreshStore } from '@/stores/favicon-refresh-store';
 import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import type { ContactCard } from '@/lib/jmap/types';
@@ -20,9 +21,74 @@ describe('Avatar', () => {
     expect(container.textContent).toBe('AL');
   });
 
-  it('renders single letter from email when no name', () => {
+  describe('Han-character names', () => {
+    // Unspaced Han names carry surname + given name in one string, so the
+    // Western rule would show the surname and half the given name; the
+    // given name itself is what reads naturally.
+    it('shows the given name of a three-character name', () => {
+      const { container } = render(<Avatar name="王阳明" />);
+      expect(container.textContent).toBe('阳明');
+    });
+
+    it('shows both characters of a two-character name', () => {
+      const { container } = render(<Avatar name="陈阳" />);
+      expect(container.textContent).toBe('陈阳');
+    });
+
+    it('skips a compound surname', () => {
+      const { container } = render(<Avatar name="司马光" />);
+      expect(container.textContent).toBe('光');
+      const { container: compoundLong } = render(<Avatar name="欧阳阳明" />);
+      expect(compoundLong.textContent).toBe('阳明');
+    });
+
+    it('joins spaced Han segments before taking the given name', () => {
+      const { container } = render(<Avatar name="王 阳明" />);
+      expect(container.textContent).toBe('阳明');
+    });
+
+    it('keeps the Western rule for mixed or non-Han names', () => {
+      const { container } = render(<Avatar name="Zhang San" />);
+      expect(container.textContent).toBe('ZS');
+      // Not every character is Han, so this is not a Han name; the Western
+      // first-letter-of-each-word rule applies (王 has no uppercase).
+      const { container: mixed } = render(<Avatar name="Kevin 王" />);
+      expect(mixed.textContent).toBe('K王');
+    });
+
+    it('falls back to the Western rule for 4+ characters without a compound surname', () => {
+      // A 4-character Han string's surname/given-name split is not guessable
+      // (Japanese kanji names are 1+3 or 2+2), so slicing at a fixed point
+      // would produce a cross-boundary pair like 田太 - neither 山田 the
+      // surname nor 太郎 the given name. The plain leading characters are
+      // the safer display.
+      const { container } = render(<Avatar name="山田太郎" />);
+      expect(container.textContent).toBe('山田');
+      const { container: longer } = render(<Avatar name="亚历山大大帝" />);
+      expect(longer.textContent).toBe('亚历');
+    });
+
+    it('keeps the Han path for a 4-character name with a compound surname', () => {
+      const { container } = render(<Avatar name="欧阳阳明" />);
+      expect(container.textContent).toBe('阳明');
+    });
+
+    it('pins the known 3-character trade-off: a 2+1 Japanese name slices cross-boundary', () => {
+      // Chinese 1+2 is the dominant 3-character shape (this rule's reason to
+      // exist) and Japanese 1+2 (林太郎 → 太郎) cuts the same way, but
+      // Japanese 2+1 (田中実) cannot be told apart from Chinese 1+2 without a
+      // surname dictionary. The majority case wins; this test documents the
+      // accepted output rather than blessing it.
+      const { container } = render(<Avatar name="田中実" />);
+      expect(container.textContent).toBe('中実');
+    });
+  });
+
+  it('reads the part before the @ as a name when there is no name', () => {
     const { container } = render(<Avatar email="bob@example.com" />);
-    expect(container.textContent).toBe('B');
+    expect(container.textContent).toBe('BO');
+    const { container: dotted } = render(<Avatar email="max.mustermann@example.com" />);
+    expect(dotted.textContent).toBe('MM');
   });
 
   it('renders "?" when no name or email', () => {
@@ -36,6 +102,41 @@ describe('Avatar', () => {
     const colorA = (a.firstChild as HTMLElement).style.backgroundColor;
     const colorB = (b.firstChild as HTMLElement).style.backgroundColor;
     expect(colorA).toBe(colorB);
+  });
+
+  describe('one look per person', () => {
+    const look = (el: Element) => {
+      const div = (el as HTMLElement).firstElementChild as HTMLElement;
+      return { text: div.textContent, color: div.style.backgroundColor };
+    };
+
+    afterEach(() => {
+      useAccountStore.setState({ accounts: [] });
+    });
+
+    it('shows the same letters and colour whether the address comes as the name or the email', () => {
+      // The message header passes no name, the contact card passes the address as the name.
+      const header = look(render(<Avatar email="xaver@litzlbauer.de" disableImages />).container);
+      const card = look(render(<Avatar name="xaver@litzlbauer.de" email="xaver@litzlbauer.de" disableImages />).container);
+      const nameOnly = look(render(<Avatar name="Xaver@Litzlbauer.de" disableImages />).container);
+      expect(card).toEqual(header);
+      expect(nameOnly).toEqual(header);
+    });
+
+    it('keeps the colour of an address whether or not the name is known', () => {
+      const named = look(render(<Avatar name="Xaver Litzlbauer" email="xaver@litzlbauer.de" disableImages />).container);
+      const bare = look(render(<Avatar email="Xaver@litzlbauer.de" disableImages />).container);
+      expect(named.color).toBe(bare.color);
+      // Another address does get another colour.
+      const other = look(render(<Avatar email="bob@example.com" disableImages />).container);
+      expect(other.color).not.toBe(bare.color);
+    });
+
+    it('gives a signed-in account its account colour everywhere', () => {
+      useAccountStore.setState({ accounts: [{ email: 'me@example.com', username: 'me', avatarColor: '#0d9488' } as never] });
+      const { container } = render(<Avatar name="Me" email="ME@example.com" disableImages />);
+      expect((container.firstElementChild as HTMLElement).style.backgroundColor).toBe('rgb(13, 148, 136)');
+    });
   });
 
   describe('contact photos', () => {

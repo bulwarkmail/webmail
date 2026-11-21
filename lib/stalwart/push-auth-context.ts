@@ -4,7 +4,7 @@ import { decryptSession, sessionAuthHeader } from '@/lib/auth/crypto';
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor } from '@/lib/auth/session-age';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { readImpersonationConfig } from '@/lib/impersonation/master-config';
-import { readStalwartAuthContextFromStore, type StalwartAuthContext } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext, type StalwartAuthContext } from '@/lib/stalwart/auth-context';
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
@@ -33,7 +33,7 @@ export async function limitsOnlyAPageEnforces(): Promise<boolean> {
  * notifications stay generic and its buttons open the app.
  */
 export async function readPushAuthContext(cookieStore: CookieStore, slot: number): Promise<StalwartAuthContext | null> {
-  const context = readStalwartAuthContextFromStore(cookieStore, slot);
+  const context = await readCurrentStalwartAuthContext(cookieStore, slot);
   if (context) return context;
   const token = cookieStore.get(sessionCookieName(slot))?.value;
   if (!token) return null;
@@ -48,5 +48,10 @@ export async function readPushAuthContext(cookieStore: CookieStore, slot: number
   const signedInAt = credentials.signedInAt ?? await limitsEnforcedSince();
   const maxHours = await maxSessionHoursFor(credentials.username.split('%', 1)[0]);
   if (isPastMaxAge(signedInAt, maxHours)) return null;
-  return { serverUrl: credentials.serverUrl, username: credentials.username, authHeader: sessionAuthHeader(credentials) };
+  return {
+    serverUrl: credentials.serverUrl,
+    username: credentials.username,
+    authHeader: sessionAuthHeader(credentials),
+    ...(credentials.accountName ? { accountName: credentials.accountName } : {}),
+  };
 }

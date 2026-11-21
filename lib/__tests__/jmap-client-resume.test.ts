@@ -40,6 +40,7 @@ async function fixture(accountIds = ['A']) {
         }])),
         primaryAccounts: { 'urn:ietf:params:jmap:mail': 'A' },
         apiUrl: `${SERVER}/jmap/`,
+        downloadUrl: `${SERVER}/download/{accountId}/{blobId}/{name}`,
         eventSourceUrl: `${SERVER}/events?types={types}&ping={ping}&closeafter={closeafter}`,
       });
     }

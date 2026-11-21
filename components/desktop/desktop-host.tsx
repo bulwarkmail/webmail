@@ -32,9 +32,10 @@ import { showFirstStartNotice } from "@/lib/first-start-notices";
 import { openMailImport } from "@/stores/mail-transfer-store";
 import { askAndChangeConnection } from "@/lib/desktop/change-connection";
 
-/** The part of the app a path shows, for the menus: Calendar has its own View lines, and no Message menu. */
+/** The part of the app a path shows, for the menus: Calendar has its own View lines, and no Message menu. Tasks count as Calendar. */
 export function desktopSectionOf(pathname: string): "mail" | "calendar" | "contacts" | "files" | "settings" {
   const first = pathname.split("/").filter(Boolean)[0] ?? "";
+  if (first === "tasks") return "calendar";
   if (first === "calendar" || first === "contacts" || first === "files" || first === "settings") return first;
   return "mail";
 }

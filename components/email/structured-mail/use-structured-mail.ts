@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Email } from '@/lib/jmap/types';
 import {
   loadAirportZones,
+  mayContainStructuredData,
   mergeCandidates,
   needsAirportZones,
   readStructuredMailDetailed,
@@ -43,10 +44,17 @@ async function resolveAll(cards: StructuredCard[]): Promise<StructuredCard[]> {
 export function useStructuredMail(email: Email | null | undefined, blobSource?: EmailBlobContext): StructuredCard[] {
   const enabled = useStructuredMailEnabled();
   const client = useAuthStore((state) => state.client);
-  const trusted = useMemo(() => !!email && enabled && getStructuredMailTrust(email).trusted, [email, enabled]);
   const html = email ? structuredHtmlPart(email)?.value : undefined;
   // An HTML part whose text hasn't loaded yet may still hold booking markup.
   const htmlPending = html === undefined && !!email?.htmlBody?.some((part) => part.type === 'text/html');
+  // A message with no booking markup and no attachment for a card source has
+  // no card to show, so the trust check is not run for it.
+  const mayHaveCards = (html !== undefined && mayContainStructuredData(html)) || htmlPending
+    || (Array.isArray(email?.attachments) && email.attachments.length > 0);
+  const trusted = useMemo(
+    () => !!email && enabled && mayHaveCards && getStructuredMailTrust(email).trusted,
+    [email, enabled, mayHaveCards],
+  );
 
   const { cards: markup, hadBookingMarkup } = useMemo(() => {
     if (!trusted || !email || !html) return { cards: [] as StructuredCard[], hadBookingMarkup: false };

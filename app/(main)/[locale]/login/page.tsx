@@ -31,7 +31,7 @@ import { AlertCircle, ArrowBigUpDash, Loader2, X, Info, Eye, EyeOff, LogIn, Sun,
 import { type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { DEFAULT_OAUTH_SCOPES, withProviderDataScopes } from "@/lib/oauth/scopes";
-import { addOauthResource } from "@/lib/oauth/resource";
+import { addOauthResource, normalizeOauthResource } from "@/lib/oauth/resource";
 import { useUpdateStore, selectBanner } from "@/stores/update-store";
 import { offersOwnOAuth, type PublicJmapServerEntry } from "@/lib/admin/jmap-servers";
 import { IS_LITE, getLiteInjectedClientId } from "@/lib/lite";
@@ -271,7 +271,7 @@ function LoginPageContent() {
   usePrefetchMailView(!isMobileHandoff);
   const { login, loginWithToken, loginDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const { theme, setTheme, initializeTheme } = useThemeStore(useShallow((s) => ({ theme: s.theme, setTheme: s.setTheme, initializeTheme: s.initializeTheme })));
-  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthPasswordFallbackEnabled, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint: configAllowsCustomEndpoint, jmapServers: configuredServers, jmapServerAutoPickByDomain } = useConfig();
+  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthPasswordFallbackEnabled, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginForgotPasswordUrl, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint: configAllowsCustomEndpoint, jmapServers: configuredServers, jmapServerAutoPickByDomain } = useConfig();
   // The device's OS policy narrows what the server offers. A forced Bulwark server hides
   // the field for a server of one's own, unless that field is the only way to sign in there.
   const allowCustomJmapEndpoint = configAllowsCustomEndpoint && (customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl);
@@ -402,6 +402,9 @@ function LoginPageContent() {
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [oauthMetadata, setOauthMetadata] = useState<OAuthMetadata | null>(null);
   const [oauthDiscoveryDone, setOauthDiscoveryDone] = useState(false);
+  // The server refused the provider's metadata for naming another issuer: a
+  // setting the admin has to fix, not an outage.
+  const [oauthIssuerMismatch, setOauthIssuerMismatch] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
 
@@ -788,6 +791,7 @@ function LoginPageContent() {
     if (!serverOauthEnabled || !serverUrl) return;
     setOauthDiscoveryDone(false);
     setOauthMetadata(null);
+    setOauthIssuerMismatch(false);
     const controller = new AbortController();
     // Discover via our own origin rather than fetching the IdP's /.well-known/*
     // documents directly from the browser. A direct cross-origin discovery
@@ -797,9 +801,14 @@ function LoginPageContent() {
     // side where CORS does not apply.
     const query = selectedServer?.id ? `?server_id=${encodeURIComponent(selectedServer.id)}` : "";
     apiFetch(`/api/auth/oauth/metadata${query}`, { signal: controller.signal })
-      .then(async (res) => (res.ok ? ((await res.json()) as OAuthMetadata) : null))
-      .then((metadata) => {
+      .then(async (res) => {
+        if (res.ok) return { metadata: (await res.json()) as OAuthMetadata, issuerMismatch: false };
+        const body = (await res.json().catch(() => null)) as { error?: unknown } | null;
+        return { metadata: null, issuerMismatch: body?.error === "issuer_mismatch" };
+      })
+      .then(({ metadata, issuerMismatch }) => {
         setOauthMetadata(metadata);
+        setOauthIssuerMismatch(issuerMismatch);
         setOauthDiscoveryDone(true);
       })
       .catch((err) => {
@@ -1191,7 +1200,9 @@ function LoginPageContent() {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("client_id", clientId);
     authUrl.searchParams.set("redirect_uri", redirectUri);
-    authUrl.searchParams.set("scope", withProviderDataScopes(oauthScopes || DEFAULT_OAUTH_SCOPES, metadata.scopes_supported));
+    // As addOauthResource below: the resource goes to the global provider only.
+    const forResource = !server && !!normalizeOauthResource(oauthResource);
+    authUrl.searchParams.set("scope", withProviderDataScopes(oauthScopes || DEFAULT_OAUTH_SCOPES, metadata.scopes_supported, forResource));
     authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("code_challenge", challenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
@@ -1947,7 +1958,7 @@ function LoginPageContent() {
                   </div>
                   <div className="flex-1 min-w-0 self-center">
                     <p className="text-sm text-warning leading-relaxed">
-                      {t("error.oauth_discovery_failed")}
+                      {oauthIssuerMismatch ? t("error.oauth_issuer_mismatch") : t("error.oauth_discovery_failed")}
                     </p>
                   </div>
                 </div>
@@ -1994,6 +2005,10 @@ function LoginPageContent() {
                       ref={inputRef}
                       id="username"
                       type="text"
+                      // Addresses read left to right; in RTL the text stays at the
+                      // side the label starts.
+                      dir="ltr"
+                      className="rtl:text-right"
                       value={formData.username}
                       onChange={handleUsernameChange}
                       onFocus={handleUsernameFocus}
@@ -2107,9 +2122,10 @@ function LoginPageContent() {
                       ref={passwordInputRef}
                       id="password"
                       type={showPassword ? "text" : "password"}
+                      dir="ltr"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pe-10 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
+                      className="pe-10 rtl:pe-3 rtl:ps-10 rtl:text-right aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
                       placeholder={t("password_placeholder")}
                       required={!liteSsoRequired && !signInWithToken}
                       autoComplete="current-password"
@@ -2152,6 +2168,22 @@ function LoginPageContent() {
                       </>
                     )}
                   </p>
+                  {/* Where the operator's users reset a password. The config
+                      route only serves http(s); checked again for a config
+                      from elsewhere (Lite). */}
+                  {/^https?:\/\//i.test(loginForgotPasswordUrl) && (
+                    <p className="text-end">
+                      <a
+                        href={loginForgotPasswordUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="login-forgot-password"
+                        className="text-xs text-muted-foreground hover:text-foreground hover:underline underline-offset-2 transition-colors"
+                      >
+                        {t("forgot_password")}
+                      </a>
+                    </p>
+                  )}
                 </div>
 
                 {signInWithToken && (
@@ -2163,9 +2195,10 @@ function LoginPageContent() {
                       ref={tokenInputRef}
                       id="access-token"
                       type="password"
+                      dir="ltr"
                       value={accessToken}
                       onChange={(e) => setAccessToken(e.target.value)}
-                      className="font-mono"
+                      className="font-mono rtl:text-right"
                       placeholder={t("token_placeholder")}
                       required
                       autoComplete="off"
@@ -2206,6 +2239,7 @@ function LoginPageContent() {
                       ref={totpInputRef}
                       id="totp"
                       type="text"
+                      dir="ltr"
                       inputMode="numeric"
                       maxLength={6}
                       value={totpCode}
@@ -2312,7 +2346,7 @@ function LoginPageContent() {
                   </div>
                   <div className="flex-1 min-w-0 self-center">
                     <p className="text-sm text-warning leading-relaxed">
-                      {t("error.oauth_discovery_failed")}
+                      {oauthIssuerMismatch && !liteOAuthFailed ? t("error.oauth_issuer_mismatch") : t("error.oauth_discovery_failed")}
                     </p>
                   </div>
                 </div>
@@ -2334,7 +2368,7 @@ function LoginPageContent() {
                     message: tP3("connection.message"),
                     confirm: tP3("connection.confirm"),
                     cancel: tCommonP3("cancel"),
-                  });
+                  }, "org");
                 }}
               >
                 {tP3("connection.org_link")}

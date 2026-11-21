@@ -746,4 +746,20 @@ describe('a send held for undo', () => {
     const sent = heard.find((message) => message.type === 'sent') as Extract<PopoutMessage, { type: 'sent' }> | undefined;
     expect(sent?.notice.pendingUndoSend?.submissionId).toBe('sub1');
   });
+
+  // The From address belongs to a login without a client here: nothing may
+  // leave through the window's login, and the composer keeps the message.
+  it.each([undefined, new Date(Date.now() + 3_600_000).toISOString()])('sends nothing from the identity of a login that has no client (send later: %s)', async (delayedUntil) => {
+    sendAt = new Date(Date.now() + 5000).toISOString();
+    window.history.replaceState(null, '', '/en/popout/compose?draft=d0&account=alice');
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Before sending'));
+    let outcome: unknown;
+    await act(async () => { outcome = await (composer as unknown as Sending).onSend({ ...DATA, localAccountId: 'gone', delayedUntil }); });
+    expect(outcome).toBe(false);
+    expect(useEmailStore.getState().sendEmail).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('popout-sending')).toBeNull();
+    expect(screen.getByTestId('composer').closest('.hidden')).toBeNull();
+    expect(closeSelf).not.toHaveBeenCalled();
+  });
 });

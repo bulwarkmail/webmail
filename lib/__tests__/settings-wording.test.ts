@@ -19,7 +19,7 @@ function titleCaseWords(value: string): string[] {
     const parts = word.split('-');
     return i === 0 ? parts.slice(1) : parts;
   });
-  return words.filter((w) => /^[A-Z]/.test(w) && !PROPER.test(w.replace(/[(),.]/g, '')));
+  return words.filter((w) => /^[A-Z]/.test(w) && !PROPER.test(w.replace(/[(),.?!]/g, '')));
 }
 
 describe('settings wording', () => {

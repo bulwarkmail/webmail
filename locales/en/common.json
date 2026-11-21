@@ -6,6 +6,7 @@
     "username_placeholder": "user@example.com",
     "password_label": "Password",
     "password_placeholder": "Enter your password",
+    "forgot_password": "Forgot your password?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server selected from your email domain.",
     "sign_in": "Sign in",
@@ -22,7 +23,9 @@
       "totp_required": "A two-factor authentication code is required. Please enter your code below.",
       "totp_invalid": "Invalid authentication code. Please check your authenticator app and try again.",
       "oauth_discovery_failed": "SSO is enabled but the identity provider could not be reached. Check your OAuth configuration.",
-      "token_exchange_failed": "Your password and code were accepted, but the mail server refused to start a session for this app. Ask your administrator to check its OAuth client settings."
+      "oauth_issuer_mismatch": "Sign-in with this provider is not set up correctly. The administrator has to set its issuer address.",
+      "token_exchange_failed": "Your password and code were accepted, but the mail server refused to start a session for this app. Ask your administrator to check its OAuth client settings.",
+      "login_refused": "The mail server refused this sign-in before checking your code. Ask your administrator to check its OAuth client settings."
     },
     "show_password": "Show password",
     "hide_password": "Hide password",
@@ -157,6 +160,7 @@
     "settings": "Settings",
     "admin": "Admin",
     "files": "Files",
+    "tasks": "Tasks",
     "loading_mailboxes": "Loading mailboxes...",
     "push_connected": "Real-time updates active",
     "push_disconnected": "Real-time updates inactive",
@@ -338,10 +342,20 @@
     "show_on_mobile": "Show on mobile"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last_week": "Last week",
+      "last_month": "Last month",
+      "older": "Older"
+    },
+    "group_by_date": "Group by date",
     "sections": {
       "unread": "Unread",
       "everything_else": "Everything else",
-      "unread_empty": "You've read all the messages in your inbox."
+      "unread_empty": "You've read all the messages in your inbox.",
+      "unread_newer": "Newer unread",
+      "unread_older": "Older unread"
     },
     "columns": {
       "from": "From",
@@ -369,6 +383,8 @@
     "replied": "Replied",
     "forwarded": "Forwarded",
     "has_attachment": "Has attachment",
+    "high_importance": "High importance",
+    "low_importance": "Low importance",
     "conversations_range": "{from}–{to, number} of {total, number}",
     "conversations_count": "{count} of {total} conversations",
     "conversations_count_plus": "{count}+ conversations",
@@ -805,7 +821,8 @@
       "event_status_tentative": "Tentative",
       "event_status_cancelled": "Cancelled",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "optional_role": "You are an optional attendee"
     },
     "send": "Send",
     "more": "more",
@@ -956,6 +973,50 @@
     "restore_to": "Move back to {folder}",
     "delete_forever": "Delete forever"
   },
+  "team_mailboxes": {
+    "note": "Note",
+    "add_note": "Add note",
+    "field_label": "Note",
+    "placeholder": "Write a note for your team",
+    "chars_left": "{count, plural, one {# character left} other {# characters left}}",
+    "too_long": "{count, plural, one {Too long by # character} other {Too long by # characters}}",
+    "sending": "Sending…",
+    "save_failed": "Couldn’t save the note.",
+    "retry": "Retry",
+    "full": "This mailbox is full. Ask your admin.",
+    "read_only": "Notes can’t be saved in this mailbox. Ask your admin.",
+    "read_only_member": "You can read notes here but not write them.",
+    "offline": "You’re offline. Notes can be written when you’re back online.",
+    "team_only": "Only your team sees this",
+    "list_label": "Notes",
+    "delete": "Delete note",
+    "note_from": "Note from {name}, {time}",
+    "new_note_from": "New note from {name}",
+    "deleted": "Note deleted",
+    "undo": "Undo",
+    "delete_failed": "Couldn’t delete the note.",
+    "load_failed": "Notes couldn’t be loaded.",
+    "timeline_assigned": "{name} assigned this to {assignee}",
+    "timeline_took": "{name} took this",
+    "timeline_unassigned": "{name} unassigned this",
+    "timeline_unassigned_person": "{name} took {assignee} off this",
+    "timeline_left": "{name} is no longer on this",
+    "timeline_done": "{name} marked this done",
+    "timeline_reopened": "{name} reopened this",
+    "someone": "a team member",
+    "summary_count": "{count, plural, one {# note} other {# notes}}",
+    "summary_latest": "{name}: {text}",
+    "row_count_new": "{count, plural, one {# note, new} other {# notes, new}}",
+    "filter_label": "Filter",
+    "filter_open": "Open",
+    "filter_mine": "Assigned to me",
+    "filter_mentions": "Mentions me",
+    "filter_notes": "With notes",
+    "mention_list": "People in this team",
+    "mentioned_you": "{name} mentioned you in “{subject}”",
+    "mentioned_you_hidden": "You were mentioned in a team mailbox",
+    "show": "Show"
+  },
   "mail_p3_actions": {
     "move_to_inbox": "Move to Inbox",
     "delete_forever_title": "Delete this message forever?",
@@ -1085,6 +1146,7 @@
     "templates_menu": "Templates",
     "insert_template": "Insert template…",
     "options": "Options",
+    "tags": "Tags",
     "option_plain_text": "Plain text",
     "option_plain_text_hint": "Send without formatting",
     "option_read_receipt": "Request read receipt",
@@ -1097,6 +1159,12 @@
     "option_priority_high": "High",
     "option_priority_normal": "Normal",
     "option_priority_low": "Low",
+    "file_in": "File in folder",
+    "file_in_chosen": "File in {folder}",
+    "file_in_hint": "Once sent, your message and the one you're answering go to this folder",
+    "file_in_none": "Don't file",
+    "file_in_failed": "Sent, but it couldn't be filed in {folder}.",
+    "file_in_reply_elsewhere": "Moved the original to {folder}. Your reply stays in Sent, as it went out from another account.",
     "validation": {
       "recipient_required": "Add a recipient to send",
       "body_required": "Write a message or attach a file",
@@ -1220,6 +1288,7 @@
       "clear_formatting": "Clear formatting",
       "undo": "Undo",
       "redo": "Redo",
+      "cell_background": "Cell background",
       "add_row_above": "Add row above",
       "add_row_below": "Add row below",
       "add_column_before": "Add column before",
@@ -1283,6 +1352,18 @@
       "plain_text": "[Image: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Too many uploads. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+    "retry_later": "Too many uploads. Try again later."
+  },
+  "attachment_rename": {
+    "rename": "Rename",
+    "rename_named": "Rename {name}",
+    "rename_menu": "Rename…",
+    "rename_title": "Rename attachment",
+    "rename_invalid_chars": "File names can't contain / or \\ or control characters",
+    "rename_too_long": "This name is too long"
+  },
   "compose_ux": {
     "draft_discarded": "Draft discarded",
     "undo": "Undo",
@@ -1315,6 +1396,7 @@
     "success": "Success",
     "cancel": "Cancel",
     "save": "Save",
+    "ready_to_save": "Ready to save",
     "delete": "Delete",
     "edit": "Edit",
     "close": "Close",
@@ -1711,6 +1793,13 @@
         "label": "Account switcher at the top of the sidebar",
         "description": "Show the account switcher above the folders and the round Compose button over the message list. Turn this off to put Compose above the folders instead."
       },
+      "compose_placement": {
+        "label": "Compose button",
+        "description": "Where the Compose button sits on a computer. Phones always show it over the message list.",
+        "floating": "Over the message list",
+        "sidebar": "Top of the folder sidebar",
+        "rail": "Top of the navigation rail"
+      },
       "show_rail_account_list": {
         "label": "Show account avatars on the navigation rail",
         "description": "Display individual account circles at the bottom of the navigation rail for quick switching, with a sign-out button below."
@@ -1800,12 +1889,19 @@
       "title": "Email tags",
       "description": "Make tags to sort your messages. The tags are saved with your messages on the server.",
       "add_keyword": "New tag",
+      "sort_az": "Sort A–Z",
+      "sorted": "Tags sorted A–Z",
+      "empty": "No tags yet.",
       "label_field": "Display name",
       "label_placeholder": "e.g. Work, Personal, Urgent",
       "id_field": "Tag ID",
       "id_placeholder": "e.g. work, personal",
       "color_field": "Color",
-      "id_exists": "This tag ID already exists",
+      "custom_color": "Custom color",
+      "color_code": "Color code",
+      "pick_custom_color": "Pick a custom color",
+      "invalid_color": "Use a color code like #1a73e8.",
+      "name_exists": "A tag with this name already exists",
       "edit": "Edit tag",
       "delete": "Delete tag",
       "edit_tag": "Edit {name}",
@@ -1985,9 +2081,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Inbox type",
-        "description": "Unread first shows your 25 newest unread messages in a section above the rest of the inbox",
+        "description": "Unread first shows your newest unread messages in a section above the rest of the inbox",
         "default": "Default",
         "unread_first": "Unread first"
+      },
+      "unread_section_size": {
+        "label": "Unread messages shown",
+        "description": "How many of your newest unread messages the Unread first section shows",
+        "5": "5 messages",
+        "10": "10 messages",
+        "15": "15 messages",
+        "20": "20 messages",
+        "25": "25 messages",
+        "50": "50 messages"
       },
       "clear_search_on_folder_change": {
         "label": "Clear search when switching folders",
@@ -2082,13 +2188,31 @@
         "label": "Show verification codes",
         "description": "Offer the code from sign-in and confirmation emails for one-click copying, in the list for a day and in the message"
       },
+      "show_attachment_chips": {
+        "label": "Show attachments in the list",
+        "description": "Show attached files under each message, to open them from the list. Compact and extra compact rows show only the paperclip."
+      },
+      "show_tag_chips": {
+        "label": "Show tags in the list",
+        "description": "Show tag badges next to the sender or subject in the message list"
+      },
       "plain_text_mode": {
         "label": "Plain text only",
         "description": "Disable the rich text editor and send all emails as plain text only, including replies and forwards"
       },
+      "reply_under_message": {
+        "label": "Replies under the message",
+        "description": "A reply or forward opens under its message, which stays readable above it. When off, it takes the whole reading pane, like a new message."
+      },
       "quick_reply": {
         "label": "Quick reply",
         "description": "Show the quick reply box below messages."
+      },
+      "reply_quote": {
+        "label": "Quoted text in replies",
+        "description": "Collapsed hides the quoted messages behind •••. Expanded shows them in full when you open a reply.",
+        "collapsed": "Collapsed",
+        "expanded": "Expanded"
       },
       "auto_select_reply_identity": {
         "label": "Reply from the address it was sent to",
@@ -2244,6 +2368,16 @@
         "seconds": "{seconds} seconds",
         "unsupported": "The current account does not advertise delayed-send support. The setting is still saved for other accounts."
       },
+      "mark_read_on_reply": {
+        "label": "Mark as read after replying or forwarding",
+        "description": "A message you reply to or forward is marked as read, also when messages are never marked as read on opening."
+      },
+      "message_double_click": {
+        "label": "Double-click a message",
+        "description": "What a double-click on a message in the list does.",
+        "reading_pane": "Open in reading pane",
+        "new_window": "Open in a new window"
+      },
       "return_to_list_after_action": {
         "label": "Return to list after delete, archive, move or mark unread",
         "description": "After deleting, archiving, moving, reporting as spam or marking the open message unread, go back to the message list instead of opening the next message."
@@ -2267,6 +2401,10 @@
       "rtl_editing": {
         "label": "Right-to-left editing support",
         "description": "Adds a direction button to the composer toolbar so you can set paragraphs left-to-right or right-to-left"
+      },
+      "group_by_date": {
+        "label": "Group by date",
+        "description": "Show messages under date headers such as Today, Yesterday and Last week. Only applies while the list is sorted by date."
       },
       "group_conversations": {
         "label": "Group messages by conversation",
@@ -2372,6 +2510,57 @@
       "managing": "Managing: {name}"
     },
     "security": {
+      "masked_addresses": {
+        "address": "Address",
+        "description_column": "Description",
+        "website_column": "Website",
+        "state": "State",
+        "actions": "Actions",
+        "no_description": "No description",
+        "edit": "Edit",
+        "close": "Close",
+        "pagination": "Masked address pages",
+        "page": "Page {page} of {pages}",
+        "previous": "Previous",
+        "next": "Next",
+        "delete": "Delete",
+        "delete_title": "Permanently delete masked address?",
+        "delete_warning": "Delete {address}? This cannot be undone. Mail sent to this address will no longer be delivered.",
+        "delete_confirm": "Delete permanently",
+        "cancel": "Cancel",
+        "deleted": "Address permanently deleted.",
+        "deleted_refresh_failed": "Deletion confirmed, but the list could not be refreshed. Refresh to load the current list.",
+        "delete_forbidden": "Your current session is not allowed to delete masked addresses. Other permitted actions remain available.",
+        "delete_failed": "The address was not deleted. Refresh the list before trying again.",
+        "delete_unconfirmed": "Deletion could not be confirmed. It will not be retried. Refresh the list to check the address before any further deletion.",
+        "title": "Masked addresses",
+        "intro": "Receive mail without sharing your main address. Disabling an address rejects new mail to it. These addresses cannot be used to send mail.",
+        "loading": "Loading masked addresses…",
+        "count": "{count, plural, one {# address} other {# addresses}}",
+        "empty": "No masked addresses yet.",
+        "website": "Website (optional)",
+        "description": "Description (optional)",
+        "no_website": "Not specified",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "enable": "Enable",
+        "disable": "Disable",
+        "copy": "Copy",
+        "copied": "Address copied.",
+        "copy_failed": "Could not copy. Select and copy the address above.",
+        "save": "Save description",
+        "create": "Create masked address",
+        "refresh": "Refresh",
+        "saved": "Change saved.",
+        "forbidden": "Your current session is not allowed to list masked addresses.",
+        "unavailable": "Masked addresses aren't available for this account or server.",
+        "load_failed": "Could not load the complete address list. Refresh to try again.",
+        "save_failed": "The change could not be confirmed. Refresh the list before trying again.",
+        "create_forbidden": "The server did not allow creating a masked address with this session.",
+        "update_forbidden": "The server did not allow editing masked addresses with this session. You can still copy addresses.",
+        "over_quota": "The server's masked address quota has been reached. Disabled addresses may still count towards the limit.",
+        "rate_limit": "The server's creation rate limit has been reached. Try again later."
+      },
       "title": "Account security",
       "description": "Manage your password, two-factor authentication, and security settings",
       "detecting": "Detecting server capabilities...",
@@ -2472,6 +2661,7 @@
         "enable_tooltip": "Enable encryption with this key",
         "configure_title": "Enable encryption with this key",
         "enable_button": "Enable",
+        "in_use": "In use",
         "disable_tooltip": "Disable encryption",
         "disable_title": "Turn off encryption at rest?",
         "disable_message": "New mail is stored without encryption from now on.",
@@ -2714,7 +2904,9 @@
       },
       "settings_sync": {
         "label": "Settings sync",
-        "description": "Sync your settings across browsers and devices"
+        "description": "Sync your settings across browsers and devices",
+        "replaced": "{count, plural, one {# setting in this browser now follows} other {# settings in this browser now follow}} your account.",
+        "keep_mine": "Use this browser's"
       },
       "sender_favicons": {
         "label": "Sender favicons",
@@ -2899,16 +3091,12 @@
       "loading": "Loading filters...",
       "not_supported": "Your mail server does not support email filters.",
       "rule_name": "Rule name",
-      "rule_name_placeholder": "e.g., Sort newsletters",
       "match_all": "Match all conditions",
       "match_any": "Match any condition",
       "conditions": "Conditions",
       "add_condition": "Add condition",
       "actions": "Actions",
-      "add_action": "Add action",
       "remove_condition": "Remove condition",
-      "remove_action": "Remove action",
-      "stop_processing": "Don't apply later rules",
       "include_spam": "Also move messages marked as spam",
       "attachment_type_placeholder": "e.g. pdf, doc, jpg",
       "value_placeholder_multi": "Value (multiple separated by commas)",
@@ -2918,6 +3106,7 @@
         "from": "From",
         "to": "To",
         "cc": "Cc",
+        "delivered_to": "Delivered to",
         "subject": "Subject",
         "header": "Custom header",
         "size": "Size",
@@ -2967,7 +3156,6 @@
       "condition_value": "Condition value",
       "header_placeholder": "e.g., X-Mailing-List",
       "size_bytes": "Size in bytes",
-      "size_placeholder": "e.g., 1000000",
       "system_managed": "System-managed rule",
       "opaque_warning": "This script was edited outside the visual builder. Only raw Sieve editing is available.",
       "open_sieve_editor": "Open raw Sieve editor",
@@ -2990,7 +3178,6 @@
       "reset_warning": "This will discard the current script and start fresh.",
       "reset_title": "Reset to the visual builder?",
       "confirm_reset": "Reset",
-      "validation_empty_name": "Rule name is required",
       "validation_empty_conditions": "At least one condition with a value is required",
       "validation_empty_actions": "At least one action is required",
       "validation_action_folder": "Select a folder for this action",
@@ -3041,8 +3228,6 @@
       "suggest_cc": "Cc {address}",
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
-      "apply_existing": "Also apply to existing messages in this folder",
-      "apply_existing_unsupported": "Only rules that check the sender, recipients, subject or headers, and that move, copy, mark as read, star or tag, can run on existing messages.",
       "period_title": "Date range",
       "period_start": "Start date",
       "period_end": "End date",
@@ -3051,13 +3236,46 @@
       "period_hint": "Applies to messages that arrive during this period. Leave a field empty to keep that end open.",
       "validation_period_empty": "Enter a start or end date for the period",
       "validation_period_invalid": "Enter a valid date with a time for the period, or leave the field empty",
-      "apply_existing_period": "A rule with a period acts only on messages that arrive within it, so it cannot run on existing messages.",
-      "apply_existing_in": "Also apply to the messages already in {folder}",
-      "apply_existing_count": "{count, plural, one {Also apply to the # message already in {folder}} other {Also apply to the # messages already in {folder}}}",
-      "apply_existing_none": "No message in {folder} matches this rule yet.",
       "period_status_scheduled": "scheduled",
       "period_status_active": "active",
-      "period_status_expired": "expired"
+      "period_status_expired": "expired",
+      "editor": {
+        "if": "If",
+        "match_all": "all",
+        "match_any": "any",
+        "of_conditions": "of these conditions apply",
+        "match_type": "Which conditions must apply",
+        "condition_number": "Condition {number}",
+        "comparison": "Comparison",
+        "size_unit": "Unit",
+        "has_attachment": "Has an attachment",
+        "attachment_type": "Attachment of type",
+        "size_units": {
+          "bytes": "bytes",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Continue to apply other rules",
+        "skip_rule": "Skip this rule",
+        "matching": "{count, plural, =0 {No messages match} one {# message matches} other {# messages match}}",
+        "matching_partial": "{count, plural, =0 {No recent messages match} other {#+ messages match}}",
+        "checking": "Looking for matching mail…",
+        "tags": "Tags",
+        "attachment_type_invalid": "Enter a file extension, such as pdf",
+        "action_conflict": "Discard and Reject cannot be combined with Move, Copy or Keep, or with each other",
+        "apply_to": "Apply to",
+        "apply_new": "New mail only",
+        "apply_folder": "New mail and {folder}",
+        "apply_folder_count": "New mail and {folder} ({count})",
+        "apply_all": "New mail and all mail",
+        "apply_all_count": "New mail and all mail ({count})",
+        "applying": "Applying “{name}”…",
+        "trash_title": "Move existing mail to Trash?",
+        "trash_confirm": "{count, plural, one {This moves # existing message to Trash.} other {This moves # existing messages to Trash.}}",
+        "trash_confirm_partial": "{count, plural, =0 {This moves every existing message the rule matches to Trash.} other {This moves #+ existing messages to Trash.}}",
+        "trash_button": "Save and move to Trash",
+        "delivered_to_new_only": "This rule works on new mail only. Delivered mail doesn't keep the address it was delivered to."
+      }
     },
     "templates": {
       "title": "Email templates",
@@ -3343,7 +3561,8 @@
         "description": "The outline around the button, link or field the keyboard is on.",
         "normal": "Normal",
         "thick": "Thick",
-        "extra": "Extra thick"
+        "extra": "Extra thick",
+        "off": "Off"
       },
       "focus_always": {
         "label": "Always show focus",
@@ -3863,6 +4082,7 @@
     "items_selected": "{count} emails selected",
     "forward_as_attachments": "Forward as attachments",
     "edit_draft": "Edit draft",
+    "edit_as_new": "Edit as new",
     "cancel_scheduled_send": "Cancel send",
     "reschedule_send": "Reschedule",
     "cancel_and_edit": "Cancel and edit",
@@ -3877,6 +4097,9 @@
       "block": "{count, plural, one {Block sender} other {Block # senders}}",
       "no_junk": "This account has no Junk folder",
       "create": "Create rule…",
+      "add_sender_to_rule": "Add {sender} to a rule",
+      "sender_already_present": "Already in this rule",
+      "no_rule_fits": "No rules to add to",
       "manage": "Manage rules",
       "senders_count": "{count, plural, one {# sender} other {# senders}}",
       "cross_account": "Select messages from one account",
@@ -3885,9 +4108,41 @@
       "load_failed": "Could not load the rules",
       "none": "No rules yet",
       "new_mail_only": "Only for new messages",
+      "cannot_run": "Only rules that move, copy, mark as read, star, tag or discard can run on existing messages, and only if they don't check the body, Delivered to or a regular expression.",
       "running": "Running \"{name}\" on {folder}…"
     },
     "find_emails_from": "Find emails from {name}"
+  },
+  "team_assign": {
+    "dialog_title": "Assign to",
+    "search_label": "Name or address",
+    "you": "You",
+    "people": "People",
+    "no_one_found": "No one found.",
+    "cancel": "Cancel",
+    "chip_me": "Me",
+    "chip_assigned": "Assigned",
+    "chip_more": "{name} +{count}",
+    "assigned_to": "Assigned to {name}",
+    "assigned_to_you": "Assigned to you",
+    "assigned_unknown": "Assigned to a team member",
+    "done": "Done",
+    "marked_done": "Marked done",
+    "no_longer_assigned": "No longer assigned",
+    "reopened": "Reopened",
+    "change_failed": "Couldn't change the message. Try again.",
+    "assign_to_me": "Assign to me",
+    "assign_to": "Assign to…",
+    "unassign": "Unassign",
+    "mark_done": "Mark done",
+    "reopen": "Reopen",
+    "unassign_me": "Unassign me",
+    "save": "Save",
+    "assignees_changed": "Assignees changed",
+    "unassigned_person": "{name} is no longer assigned",
+    "add_assignee": "Assign",
+    "remove_assignee": "Unassign {name}",
+    "assignees_label": "Assigned to"
   },
   "menuMove": {
     "filter_placeholder": "Find a folder",
@@ -3910,6 +4165,8 @@
     "delete_folder": "Delete folder",
     "refresh": "Refresh",
     "hide_shared_account": "Hide from sidebar",
+    "move_shared_account_up": "Move up",
+    "move_shared_account_down": "Move down",
     "mute_notifications": "Mute notifications",
     "unmute_notifications": "Unmute notifications",
     "mute_account_notifications": "Mute notifications for this account",
@@ -3919,6 +4176,8 @@
     "mark_all_confirm_message": "Mark every unread message in your personal account as read?",
     "empty_all_confirm_title": "Empty trash for all accounts",
     "empty_all_confirm_message": "Delete {count, plural, one {the message} other {all # messages}} in the Trash of all your accounts forever? You can't undo this.",
+    "empty_all_confirm_shared": "This includes the shared accounts {accounts}.",
+    "empty_all_confirm_kept": "The Trash of {accounts} stays as it is, because you can't delete there.",
     "toast_emptied_all": "Trash emptied across all accounts",
     "toast_error_empty_all_partial": "Trash emptied, but some accounts failed",
     "toast_error_empty_all": "Failed to empty trash",
@@ -3955,6 +4214,12 @@
     "empty_spam": "Empty Spam",
     "empty_trash_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Trash forever? You can't undo this.",
     "empty_spam_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Spam forever? You can't undo this.",
+    "empty_folder": "Empty folder…",
+    "empty_folder_title": "Empty {folder}?",
+    "empty_folder_confirm_trash": "Move {count, plural, one {the message} other {all # messages}} in {folder} to the Trash?",
+    "empty_folder_confirm_delete": "Delete {count, plural, one {the message} other {all # messages}} in {folder} forever? You can't undo this.",
+    "empty_folder_move": "Move to Trash",
+    "empty_folder_delete": "Delete forever",
     "title_all_accounts": "{name} ({count}, {total} in all accounts)",
     "title_all_accounts_only": "{name} ({total} in all accounts)"
   },
@@ -4044,7 +4309,7 @@
     "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Show the account switcher above the folders, with Compose under it. Turn this off to put Compose in its place."
+    "sidebar_account_switcher_description": "Show the account switcher above the folders. Turn this off to switch accounts with your avatar on the navigation rail."
   },
   "mail_p2_conv": {
     "show_message": "Show the message",
@@ -4415,6 +4680,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "Unknown contact",
+      "related_remove": "Remove from related contacts",
       "more_actions": "More actions",
       "age_years": "{count, plural, one {1 year old} other {# years old}}",
       "years_since": "{count, plural, one {1 year} other {# years}}"
@@ -4460,6 +4727,9 @@
       "phone_pager": "Pager",
       "phone_video": "Video",
       "phone_text": "Text",
+      "phone_custom": "Custom…",
+      "phone_custom_label": "Custom type",
+      "phone_custom_placeholder": "e.g., Car",
       "organization": "Organization",
       "organization_placeholder": "Company name",
       "department": "Department",
@@ -4781,9 +5051,27 @@
       "end_time": "End time",
       "all_day_event": "All-day event",
       "calendar_select": "Calendar",
+      "show_as": "Show as",
+      "show_as_busy": "Busy",
+      "show_as_free": "Free",
+      "shown_free": "Shown as free",
+      "visibility": "Visibility",
+      "visibility_public": "Public",
+      "visibility_private": "Private",
+      "visibility_secret": "Hidden",
+      "visibility_hint_public": "People you share the calendar with see the details.",
+      "visibility_hint_private": "People you share the calendar with see only the time.",
+      "visibility_hint_secret": "People you share the calendar with don't see the event, and it doesn't block the time.",
+      "visibility_series": "Applies to every occurrence.",
+      "color_calendar": "Use calendar color",
+      "overlap": "Overlaps with {title} ({details})",
+      "overlap_plain": "Overlaps with {title}",
+      "overlap_more": "And {count} more",
       "save": "Save",
       "cancel": "Cancel",
-      "color": "Color"
+      "color": "Color",
+      "expand": "Expand",
+      "restore_size": "Restore"
     },
     "participants": {
       "availability": {
@@ -4822,7 +5110,9 @@
       "you_attendee": "You are an attendee",
       "no_participants": "No participants",
       "limit_warning": "More than {max, plural, one {# participant} other {# participants}}, including the organizer: the server may refuse to save this event. An administrator can raise the limit.",
-      "count": "{count, plural, one {# participant} other {# participants}}"
+      "count": "{count, plural, one {# participant} other {# participants}}",
+      "optional": "Optional",
+      "optional_role": "optional"
     },
     "recurrence": {
       "title": "Recurrence",
@@ -4966,6 +5256,8 @@
       "enable_tasks_desc": "Show a tasks view in the calendar for managing to-dos",
       "show_tasks_on_calendar": "Show tasks on calendar",
       "show_tasks_on_calendar_desc": "Display tasks on the month, week and day calendar views",
+      "show_tasks_app": "Tasks as their own app",
+      "show_tasks_app_desc": "Give tasks their own icon in the app bar instead of a view in the calendar",
       "hover_preview": "Event hover preview",
       "hover_preview_desc": "Show a detail popover when hovering over calendar events",
       "hover_preview_instant": "Instant",
@@ -5276,7 +5568,13 @@
       "results": "{count, plural, one {# event found} other {# events found}}"
     },
     "mini_has_events": "has events",
-    "mini_week_number": "Week {week}"
+    "mini_week_number": "Week {week}",
+    "move_confirm_organizer_title": "Move \"{title}\" to {when}?",
+    "move_confirm_organizer_message": "The attendees get an update and are asked to accept the new time.",
+    "move_confirm_organizer_confirm": "Move and notify",
+    "move_confirm_attendee_title": "Move \"{title}\" in your calendar only?",
+    "move_confirm_attendee_message": "You aren't the organizer. The meeting keeps its time for the organizer and the other attendees, and the organizer's next update overwrites your change.",
+    "move_confirm_attendee_confirm": "Move my copy"
   },
   "ux_pim_calendar": {
     "task_lists": "Task lists",
@@ -5303,7 +5601,12 @@
     "task_list_not_in_calendar": "{name} (task list, not shown in the calendar)",
     "copy_to_account": "Copy to {address}",
     "copied_to_account": "Copied to {address}",
-    "delete_original": "Delete original"
+    "delete_original": "Delete original",
+    "copy_to_calendar": "Copy to calendar…",
+    "copy_to_calendar_title": "Copy to calendar",
+    "copy_to_calendar_hint": "The copy is your own event. Later changes to the original don't reach it.",
+    "copy_button": "Copy",
+    "copied_to_calendar": "Copied to {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "This change needs a connection to the server. Change only this event for now, or try again when you're back online."
@@ -5370,7 +5673,9 @@
     "answer_for": "Answer for {name}",
     "no_write": "You can see {name}’s invitations but can’t answer for them. Ask them for edit access.",
     "also_invited": "You’re invited too, and this server can’t tell your answer from {name}’s. {name} has to answer this one.",
-    "answered_by": "Answered by {who}"
+    "answered_by": "Answered by {who}",
+    "organizer_owner": "{name} (sent by you)",
+    "organizer_me": "You"
   },
   "free_busy_share": {
     "button": "Share my free/busy with {group}",
@@ -5481,7 +5786,25 @@
     "unknown_note": "Bulwark only sees busy times in calendars shared with you. For these people it can’t tell free from not shared.",
     "directory_off": "Bulwark can’t look up people on this server. Your administrator can turn on directory queries in Stalwart.",
     "not_looked_up": "Couldn’t look up this address",
-    "found": "Free times found: {count}"
+    "found": "Free times found: {count}",
+    "optional_ignored": "Optional attendees' busy times don't count."
+  },
+  "scheduling_assistant": {
+    "open": "Availability…",
+    "title": "Availability",
+    "description": "Click the grid or drag the event to move it. Drag its end to change the length.",
+    "previous_day": "Previous day",
+    "next_day": "Next day",
+    "you": "You",
+    "everyone": "All attendees",
+    "optional": "Optional",
+    "event": "Event: {time}",
+    "keyboard_hint": "The arrow keys move the event by 15 minutes. With Shift they change its length.",
+    "use_time": "Use this time",
+    "loading": "Loading busy times…",
+    "outside_hours": "Outside working hours",
+    "everyone_free": "Everyone free",
+    "not_checked": "Unknown"
   },
   "share_notifications": {
     "someone": "Someone",
@@ -5652,6 +5975,7 @@
     "search": "Search",
     "not_starred": "Not starred",
     "no_attachment": "No attachments",
+    "no_tags": "No tags",
     "any_time": "Any time",
     "past_week": "Past week",
     "past_month": "Past month",
@@ -6060,6 +6384,13 @@
   "unified_mailbox": {
     "search_unavailable": "Search is not available in the unified view"
   },
+  "account_routing": {
+    "group_members_one_account": "A group can only hold contacts from one account.",
+    "link_names_no_account": "This link doesn't say which account the message is in, so it wasn't opened.",
+    "group_member_gone": "One of the chosen contacts no longer exists. Choose the members again.",
+    "invitation_other_account": "This invitation is in another account. Switch to that account to answer it or add it to a calendar.",
+    "tab_names_no_account": "This tab was saved without its account, so it wasn't opened. Close it and open it again from the account it belongs to."
+  },
   "mail_import": {
     "menu_import": "Import mail…",
     "settings_label": "Import mail",
@@ -6392,6 +6723,9 @@
     "attachments_description": "Attachments of kept messages and the files you keep offline, up to {total} in all. The oldest go first.",
     "total_locked": "Your organisation allows {size} of attachments and files at most.",
     "attachment_cap_label": "Largest attachment to keep",
+    "total_cap_label": "Total size of kept attachments",
+    "total_cap_unlimited": "No limit",
+    "attachments_description_unlimited": "Attachments of kept messages and the files you keep offline, with no limit on their total.",
     "usage_mail": "Messages and search index",
     "usage_attachments": "Attachments",
     "usage_calendar": "Calendar",
@@ -6734,6 +7068,10 @@
         "title": "Sign you out",
         "body": "Sign you out of the webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Take you back to your own account",
+        "body": "After an administrator opened a mailbox through impersonation, end that session and sign back in to the account it started from."
+      },
       "account_read": {
         "title": "See your accounts",
         "body": "See the accounts you added with their addresses and servers, and which mail accounts are team mailboxes."
@@ -6749,6 +7087,10 @@
       "http_fetch": {
         "title": "Connect to other websites",
         "body": "Send requests to these sites. Anything the plugin can read may be sent there:"
+      },
+      "links_check": {
+        "title": "Check the links you open",
+        "body": "See every web link you open, with its text, and stop it or open another address instead."
       },
       "admin_config": {
         "title": "Read its settings from your administrator",
@@ -6882,9 +7224,13 @@
         "title": "Forward your mail",
         "body": "Forward messages from your account with their attachments, without opening the composer. You are asked before the first forward to each address."
       },
+      "ui_notices": {
+        "title": "Show notice panels",
+        "body": "Show a small panel of its own at the bottom of the screen, where the app's messages appear, for example for an incoming call. It doesn't block the page, you can keep typing, and you can close it. Each one names the plugin."
+      },
       "ui_notifications": {
         "title": "Show notifications",
-        "body": "Show notifications on your device, or in the app if you haven't allowed them. Each one names the plugin."
+        "body": "Show notifications on your device, or in the app if you haven't allowed them. Each one names the plugin. It also sees the notices the app shows you."
       }
     },
     "forward_approval": {
@@ -7006,6 +7352,14 @@
     "not_available_title": "This page is not available",
     "not_available_description": "The plugin that added it is turned off or no longer installed.",
     "back_to_mail": "Back to mail"
+  },
+  "plugin_surfaces": {
+    "dropdown_list": "List from the plugin {name}",
+    "dropdown_list_labelled": "{label}, list from the plugin {name}",
+    "oauth_failed": "The service did not complete the sign-in. Close this window and try again.",
+    "banners_more": "More banners ({count}): {names}",
+    "banners_fewer": "Fewer banners",
+    "opened_by_plugin": "Opened by the plugin {name}"
   },
   "command_palette": {
     "title": "Command palette",
@@ -7178,6 +7532,10 @@
     "action_reply": "Reply",
     "reply_placeholder": "Write a reply"
   },
+  "team_push": {
+    "mentioned_you": "{name} mentioned you in “{subject}”",
+    "mentioned_hidden": "You were mentioned in a team mailbox"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Add to calendar",
     "update_in_calendar": "Update in calendar",
@@ -7208,6 +7566,14 @@
       "added_from": "Added from a mail from {domain}",
       "added_from_subject": "Added from the mail “{subject}” from {domain}"
     }
+  },
+  "sender_trust": {
+    "cancel_not_organizer": "This cancellation was sent from {sender}, but the event in your calendar is organized by {organizer}. Only the organizer can cancel it. Remove it yourself if you trust this message.",
+    "cancel_unverified": "This cancellation could not be verified as coming from the organizer. Remove the event yourself if you trust this message.",
+    "card_sender": "from {domain}",
+    "card_sender_title": "This message passed the mail server's sender check for {domain}.",
+    "outside_link": "Other site",
+    "outside_link_title": "This link leads to {host}, outside {domain}, the sender's domain."
   },
   "proofreading": {
     "kind": {
@@ -7303,6 +7669,8 @@
       "title": "App windows",
       "double_click_label": "Open messages in a new window on double-click",
       "double_click_description": "A single click still opens the message next to the list.",
+      "compose_window_label": "Always write messages in a new window",
+      "compose_window_description": "New messages, replies, forwards and drafts open in a window of their own instead of in the main window.",
       "restore_label": "Reopen windows at start",
       "restore_description": "Message and draft windows that were open when you quit come back."
     },
@@ -7710,6 +8078,8 @@
     "start_at_login_description": "The app starts by itself when you sign in.",
     "start_minimized_label": "Start in the tray",
     "start_minimized_description": "No window opens at sign-in. Use the tray icon to open it.",
+    "reopen_after_restart_label": "Open again after a restart",
+    "reopen_after_restart_description": "If the app is open when the computer restarts or you sign out, it opens again when you sign back in, on the same folder, message or page.",
     "attention_label": "Flash the taskbar on new mail",
     "attention_mac_label": "Bounce the Dock icon on new mail",
     "attention_description": "Only when the app is not in front.",
@@ -8207,5 +8577,13 @@
   "selectionView": {
     "starred": "Starred",
     "unstarred": "Star removed"
+  },
+  "impersonation": {
+    "return_notice": "You opened {mailbox} through impersonation.",
+    "return_button": "Return to my account"
+  },
+  "admin_access": {
+    "label": "This server’s superusers may open the admin dashboard",
+    "help": "Superusers of this server sign in to the admin dashboard without the admin password, like those of the main JMAP server. Turn this on only for a server you run yourself."
   }
 }

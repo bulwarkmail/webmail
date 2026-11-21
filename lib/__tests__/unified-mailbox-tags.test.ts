@@ -47,8 +47,9 @@ describe('fetchTagEmails', () => {
 
     const result = await fetchTagEmails([own, group], keyword, 50, 0);
 
-    expect(ownGet).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true, undefined, []);
-    expect(groupGet).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, undefined, []);
+    // The team notes never show under a tag either.
+    expect(ownGet).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true, { notKeyword: '$bulwark-note' }, []);
+    expect(groupGet).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true, { notKeyword: '$bulwark-note' }, []);
     expect(result.emails.map((e) => e.id)).toEqual(['grp-1', 'own-1']);
     expect(result.total).toBe(5);
     expect(result.hasMore).toBe(true);
@@ -89,8 +90,8 @@ describe('fetchTagEmails', () => {
     const get = vi.fn(async () => ({ emails: [], total: 0, hasMore: false }));
     await fetchTagEmails([makeAccount({ accountId: 'login' }, get), makeAccount({ accountId: 'g', isShared: true }, get)],
       keyword, 25, 50, order);
-    expect(get).toHaveBeenNthCalledWith(1, undefined, undefined, 25, 50, keyword, true, undefined, order);
-    expect(get).toHaveBeenNthCalledWith(2, undefined, 'g', 25, 50, keyword, true, undefined, order);
+    expect(get).toHaveBeenNthCalledWith(1, undefined, undefined, 25, 50, keyword, true, { notKeyword: '$bulwark-note' }, order);
+    expect(get).toHaveBeenNthCalledWith(2, undefined, 'g', 25, 50, keyword, true, { notKeyword: '$bulwark-note' }, order);
   });
 
   it("leaves each account's Trash and Junk out, ANDed with a search filter (#1156)", async () => {
@@ -107,13 +108,13 @@ describe('fetchTagEmails', () => {
     await fetchTagEmails([own, group], keyword, 50, 0, [], { text: 'invoice' });
 
     expect(ownGet).toHaveBeenCalledWith(undefined, undefined, 50, 0, keyword, true,
-      { operator: 'AND', conditions: [{ text: 'invoice' }, { inMailboxOtherThan: ['trash', 'junk'] }] }, []);
+      { operator: 'AND', conditions: [{ text: 'invoice' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['trash', 'junk'] }] }, []);
     expect(groupGet).toHaveBeenCalledWith(undefined, 'group', 50, 0, keyword, true,
-      { operator: 'AND', conditions: [{ text: 'invoice' }, { inMailboxOtherThan: ['g-trash'] }] }, []);
+      { operator: 'AND', conditions: [{ text: 'invoice' }, { notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['g-trash'] }] }, []);
 
     await fetchTagEmails([own], keyword, 50, 0);
     expect(ownGet).toHaveBeenLastCalledWith(undefined, undefined, 50, 0, keyword, true,
-      { inMailboxOtherThan: ['trash', 'junk'] }, []);
+      { operator: 'AND', conditions: [{ notKeyword: '$bulwark-note' }, { inMailboxOtherThan: ['trash', 'junk'] }] }, []);
   });
 
   it('keeps the other accounts when one fails and reports the failure', async () => {

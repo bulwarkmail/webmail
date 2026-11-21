@@ -24,7 +24,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { clearAllStores } from '@/lib/account-state-manager';
 
 it('drops an auth-info answer that arrives after the stores were cleared', async () => {
-  useAuthStore.setState({ client: { getAccountId: () => 'acc-a' } as never });
+  useAuthStore.setState({ client: {
+    getAccountId: () => 'acc-a',
+    hasAccountCapability: (cap: string) => cap === 'urn:stalwart:jmap',
+  } as never });
   const pending = useAccountSecurityStore.getState().fetchAuthInfo();
 
   clearAllStores(); // switch to another account

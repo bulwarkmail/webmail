@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
-import { DEFAULT_SCOPE } from '@/lib/store/area';
+import { DEFAULT_SCOPE, NO_TOTAL_LIMIT } from '@/lib/store/area';
 import {
   attachmentCapOptions,
   effectiveScope,
@@ -8,6 +8,7 @@ import {
   offlineDefaultOn,
   olderThanCap,
   platformDefault,
+  totalCapOptions,
   userChoiceFor,
   windowOptions,
 } from '../scope';
@@ -15,8 +16,9 @@ import { offlineScopeFor, useOfflineStore } from '../state';
 
 const NO_LIMITS = DEFAULT_ORGANISATION_POLICY.devices;
 const MB = 1024 * 1024;
-const BROWSER = { on: false, scope: DEFAULT_SCOPE };
-const DESKTOP = { on: true, scope: DEFAULT_SCOPE };
+const GB = 1024 * MB;
+const BROWSER = { on: false, desktop: false, scope: DEFAULT_SCOPE };
+const DESKTOP = { on: true, desktop: true, scope: DEFAULT_SCOPE };
 
 describe('effectiveScope', () => {
   it('the default when nothing else says', () => {
@@ -110,11 +112,53 @@ describe('the OfflineEnabled policy of the desktop app', () => {
   });
 });
 
+describe('the total for attachments and files', () => {
+  it('is 2 GB on both until the user picks one', () => {
+    expect(effectiveScope('a', null, NO_LIMITS, BROWSER).scope.maxTotalBytes).toBe(2 * GB);
+    expect(effectiveScope('a', null, NO_LIMITS, DESKTOP).scope.maxTotalBytes).toBe(2 * GB);
+  });
+
+  it('takes the user\'s choice', () => {
+    expect(effectiveScope('a', { maxTotalBytes: GB }, NO_LIMITS, BROWSER).scope.maxTotalBytes).toBe(GB);
+    expect(effectiveScope('a', { maxTotalBytes: 25 * GB }, NO_LIMITS, DESKTOP).scope.maxTotalBytes).toBe(25 * GB);
+    expect(effectiveScope('a', { maxTotalBytes: null }, NO_LIMITS, DESKTOP).scope.maxTotalBytes).toBe(NO_TOTAL_LIMIT);
+  });
+
+  it('is never more than 2 GB in a browser, whatever was stored', () => {
+    expect(effectiveScope('a', { maxTotalBytes: 25 * GB }, NO_LIMITS, BROWSER).scope.maxTotalBytes).toBe(2 * GB);
+    expect(effectiveScope('a', { maxTotalBytes: null }, NO_LIMITS, BROWSER).scope.maxTotalBytes).toBe(2 * GB);
+  });
+
+  it('is lowered by the policy, no limit too', () => {
+    const policy = { ...NO_LIMITS, offlineMaxTotalMb: 3000 };
+    expect(effectiveScope('a', { maxTotalBytes: 10 * GB }, policy, DESKTOP)).toMatchObject({ scope: { maxTotalBytes: 3000 * MB }, locked: { maxTotal: true } });
+    expect(effectiveScope('a', { maxTotalBytes: null }, policy, DESKTOP).scope.maxTotalBytes).toBe(3000 * MB);
+    expect(effectiveScope('a', { maxTotalBytes: GB }, policy, DESKTOP).scope.maxTotalBytes).toBe(GB);
+  });
+
+  it('tells the platform default apart by the bridge', () => {
+    expect(platformDefault().desktop).toBe(false);
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
+    try {
+      expect(platformDefault().desktop).toBe(true);
+    } finally {
+      delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    }
+  });
+});
+
 describe('the seam for what a user chose', () => {
   it('reads bulwark-offline-scope over the defaults, without the switch', () => {
     localStorage.setItem('bulwark-offline-scope', JSON.stringify({ acc: { on: true, days: 30 } }));
     expect(offlineScopeFor('acc')).toEqual({ ...DEFAULT_SCOPE, days: 30 });
     expect(offlineScopeFor('other')).toEqual(DEFAULT_SCOPE);
+    localStorage.removeItem('bulwark-offline-scope');
+  });
+
+  it('reads a stored no limit as a number, never null', () => {
+    localStorage.setItem('bulwark-offline-scope', JSON.stringify({ acc: { maxTotalBytes: null }, mid: { maxTotalBytes: 5 * GB } }));
+    expect(offlineScopeFor('acc')).toEqual({ ...DEFAULT_SCOPE, maxTotalBytes: NO_TOTAL_LIMIT });
+    expect(offlineScopeFor('mid').maxTotalBytes).toBe(5 * GB);
     localStorage.removeItem('bulwark-offline-scope');
   });
 });
@@ -150,6 +194,18 @@ describe('what the page offers', () => {
     expect(windowOptions(7)).toEqual([7]);
     expect(attachmentCapOptions(0)).toEqual([5, 25, 100, 500]);
     expect(attachmentCapOptions(10)).toEqual([5, 10]);
+  });
+
+  it('totals per platform, and under a cap', () => {
+    expect(totalCapOptions(0, false)).toEqual([1024, 2048]);
+    expect(totalCapOptions(0, true)).toEqual([1024, 2048, 5120, 10240, 25600, null]);
+    expect(totalCapOptions(3000, true)).toEqual([1024, 2048, 3000]);
+    expect(totalCapOptions(25600, true)).toEqual([1024, 2048, 5120, 10240, 25600]);
+    expect(totalCapOptions(500, true)).toEqual([500]);
+    expect(totalCapOptions(1500, false)).toEqual([1024, 1500]);
+    expect(totalCapOptions(2048, false)).toEqual([1024, 2048]);
+    // A cap never raises what a browser offers.
+    expect(totalCapOptions(5000, false)).toEqual([1024, 2048]);
   });
 });
 

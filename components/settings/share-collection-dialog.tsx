@@ -9,7 +9,7 @@ import { Dialog } from "@/components/ui/dialog";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Principal, PrincipalDirectoryStatus } from "@/lib/jmap/types";
 import { detectPreset, presetRights, type AnyRights, type RolePreset, type ShareKind } from "@/lib/jmap/share-rights";
-import { loadPrincipalDirectory } from "@/lib/jmap/principal-directory";
+import { loadScopedPrincipalDirectory } from "@/lib/directory-scope";
 import { toast } from "@/stores/toast-store";
 import { useRestriction } from "@/hooks/use-restriction";
 import { allowedLevels } from "@/lib/delegation/delegation";
@@ -51,7 +51,7 @@ export function ShareCollectionDialog({
   useEffect(() => {
     let cancelled = false;
     setLoadingPrincipals(true);
-    void loadPrincipalDirectory(client).then(({ principals, status, directoryQueriesOff }) => {
+    void loadScopedPrincipalDirectory(client).then(({ principals, status, directoryQueriesOff }) => {
       if (cancelled) return;
       setAllPrincipals(principals);
       setDirectoryStatus(status);

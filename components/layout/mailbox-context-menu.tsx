@@ -28,6 +28,8 @@ import {
   Bell,
   BellOff,
   RotateCcw,
+  ArrowUp,
+  ArrowDown,
 } from "@/components/icons";
 import { FolderRulesSubMenu } from "@/components/email/rules-menu";
 import { openMailExport } from "@/stores/mail-transfer-store";
@@ -139,6 +141,11 @@ interface MailboxContextMenuProps {
   onRefresh?: () => void;
   /** Hide a shared account's mail folders from the sidebar (#1228). */
   onHideSharedAccount?: (accountId: string) => void;
+  /** Move a shared account one place up or down among the visible ones. */
+  sharedAccountOrder?: {
+    canMove: (accountId: string, direction: "up" | "down") => boolean;
+    move: (accountId: string, direction: "up" | "down") => void;
+  };
   /** Omitted when muting has no effect (no emailPush filter on the server). */
   notifications?: MailboxNotificationActions;
 }
@@ -163,6 +170,7 @@ export function MailboxContextMenu({
   onImportEmail,
   onRefresh,
   onHideSharedAccount,
+  sharedAccountOrder,
   notifications,
 }: MailboxContextMenuProps) {
   const t = useTranslations("mailbox_context_menu");
@@ -185,7 +193,7 @@ export function MailboxContextMenu({
 
   if (!target) return null;
 
-  // An account's notifications and, for a shared one, hiding it: on the
+  // An account's notifications and, for a shared one, moving and hiding it: on the
   // account's heading, and on a compact shared mailbox's row.
   const accountItems = (accountId?: string) => (
     <>
@@ -214,6 +222,22 @@ export function MailboxContextMenu({
       {accountId && onHideSharedAccount && (
         <>
           <ContextMenuSeparator />
+          {sharedAccountOrder?.canMove(accountId, "up") && (
+            <ContextMenuItem
+              icon={ArrowUp}
+              label={t("move_shared_account_up")}
+              onClick={() => handleAction(() => sharedAccountOrder.move(accountId, "up"))}
+              testId="mailbox-move-shared-account-up"
+            />
+          )}
+          {sharedAccountOrder?.canMove(accountId, "down") && (
+            <ContextMenuItem
+              icon={ArrowDown}
+              label={t("move_shared_account_down")}
+              onClick={() => handleAction(() => sharedAccountOrder.move(accountId, "down"))}
+              testId="mailbox-move-shared-account-down"
+            />
+          )}
           <ContextMenuItem
             icon={EyeOff}
             label={t("hide_shared_account")}
@@ -293,6 +317,9 @@ export function MailboxContextMenu({
   const isSystem =
     !!mailbox.role &&
     ["inbox", "sent", "drafts", "trash", "junk", "archive"].includes(mailbox.role);
+  // A folder of the user's own empties into the Trash, after a confirm
+  // (#1785). The Inbox and the other system folders keep their menus short.
+  const emptiesToTrash = !isSystem && mailbox.role !== "scheduled";
   const canRename = mailbox.myRights?.mayRename !== false && !isSystem;
   const canDelete = mailbox.myRights?.mayDelete !== false && !isSystem;
   const canCreateChild = mailbox.myRights?.mayCreateChild !== false;
@@ -430,6 +457,16 @@ export function MailboxContextMenu({
           disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems || offline}
           destructive
           testId="mailbox-empty"
+        />
+      )}
+      {emptiesToTrash && (
+        <ContextMenuItem
+          icon={FolderX}
+          label={tP2("empty_folder")}
+          onClick={() => handleAction(() => onEmptyFolder?.(mailbox.id))}
+          disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems || offline}
+          destructive
+          testId="mailbox-empty-folder"
         />
       )}
       {!isSystem && (

@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Calendar, CalendarEvent } from '@/lib/jmap/types';
+import type { Calendar, CalendarEvent, CalendarTask } from '@/lib/jmap/types';
 import { useSettingsStore } from '@/stores/settings-store';
 
 vi.mock('next-intl', () => ({
@@ -68,6 +68,21 @@ describe('CalendarPrint', () => {
     // Five weeks leave room for six lines a day: five entries and the link.
     expect(more).toEqual(['events.more{"count":3}']);
     expect(root.textContent).toContain('quiet');
+  });
+
+  const weekly = {
+    id: 'bins', '@type': 'Task', uid: 'bins', title: 'Put out the bins', due: '2026-10-05T00:00:00', showWithoutTime: true,
+    progress: 'needs-action', calendarIds: { work: true }, recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' }],
+  } as unknown as CalendarTask;
+  const timesPrinted = (root: HTMLElement) => (root.textContent?.match(/Put out the bins/g) ?? []).length;
+
+  it('prints a repeating task on each day of the month it is due', () => {
+    // 5, 12, 19 and 26 October.
+    expect(timesPrinted(renderPrint({ gridTasks: [weekly] }))).toBe(4);
+  });
+
+  it('prints a repeating task in a week after the one it started in', () => {
+    expect(timesPrinted(renderPrint({ viewMode: 'week', gridTasks: [weekly] }))).toBe(1);
   });
 
   it('prints the week on screen from its first day, the all-day row above the hours', () => {

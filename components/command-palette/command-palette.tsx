@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl";
 import {
   CalendarEvent,
+  ListTodo,
   Folder,
   Users,
   Keyboard,
@@ -38,7 +39,7 @@ import { COMMAND_PALETTE_OPEN_EVENT, KEYBOARD_SHORTCUTS_OPEN_EVENT, parkAppComma
 import { commandMatches, useRegisteredCommandGroups } from "@/lib/command-registry";
 import { shortcutAlternatives } from "@/lib/shortcut-keys";
 import { toUnicodeEmail } from "@/lib/idn";
-import { isEditableEventTarget, isKeyboardLayerOpen } from "@/lib/keyboard";
+import { isEditableEventTarget, isKeyboardLayerOpen, shortcutKey } from "@/lib/keyboard";
 import { isSingleKeyHint, isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -86,8 +87,7 @@ export function CommandPaletteHost() {
     if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
-      // event.code: the K key on any keyboard layout, Latin or not.
-      if (event.code !== "KeyK" && event.key.toLowerCase() !== "k") return;
+      if (shortcutKey(event) !== "k") return;
       if (isEditableEventTarget(event)) return;
       event.preventDefault();
       setOpen((v) => !v);
@@ -112,7 +112,7 @@ export function CommandPaletteHost() {
     if (!isAuthenticated) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
-      const question = event.key === "?" || (event.code === "Slash" && event.shiftKey);
+      const question = shortcutKey(event) === "?";
       if (!question || isEditableEventTarget(event) || isContextMenuOpen()) return;
       // Another dialog, a menu or a popup is open: the key belongs to it.
       if (event.defaultPrevented || isKeyboardLayerOpen()) return;
@@ -169,6 +169,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
   const touch = useMediaQuery("(pointer: coarse)");
   // With single-key shortcuts off, "r" or "#" does nothing: no hint for it.
   const singleKeys = useSettingsStore((s) => s.singleKeyShortcuts !== false);
+  const tasksAppShown = useSettingsStore((s) => s.enableCalendarTasks && s.showTasksApp);
   const hintKeys = (shortcut: string) => shortcutAlternatives(shortcut).filter((key) => singleKeys || !isSingleKeyHint(key));
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -200,6 +201,9 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
     list.push({ id: "go-mail", group: navigation, icon: Mail, label: t("go_to", { name: tSidebar("mail") }), run: go("/") });
     if (supportsCalendar && isFeatureEnabled("calendarEnabled")) {
       list.push({ id: "go-calendar", group: navigation, icon: CalendarEvent, label: t("go_to", { name: tSidebar("calendar") }), run: go("/calendar") });
+      if (tasksAppShown && isFeatureEnabled("calendarTasksEnabled")) {
+        list.push({ id: "go-tasks", group: navigation, icon: ListTodo, label: t("go_to", { name: tSidebar("tasks") }), run: go("/tasks") });
+      }
     }
     if ((client?.supportsContacts?.() ?? false) && isFeatureEnabled("contactsEnabled")) {
       list.push({ id: "go-contacts", group: navigation, icon: Users, label: t("go_to", { name: tSidebar("contacts") }), run: go("/contacts") });
@@ -284,7 +288,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
       });
     }
     return list;
-  }, [client, supportsCalendar, isFeatureEnabled, colorModeLocked, resolvedTheme, pluginActions, pluginPages, registeredGroups, accounts, activeAccountId, router, pathname, t, tSidebar, tGlobalSearch, onShowShortcuts, touch]);
+  }, [client, supportsCalendar, isFeatureEnabled, tasksAppShown, colorModeLocked, resolvedTheme, pluginActions, pluginPages, registeredGroups, accounts, activeAccountId, router, pathname, t, tSidebar, tGlobalSearch, onShowShortcuts, touch]);
 
   const needle = query.trim();
   const visible = needle
@@ -325,7 +329,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
     } else if (event.key === "Enter") {
       event.preventDefault();
       if (activeIndex >= 0) runCommand(visible[activeIndex]);
-    } else if ((event.ctrlKey || event.metaKey) && (event.code === "KeyK" || event.key.toLowerCase() === "k")) {
+    } else if ((event.ctrlKey || event.metaKey) && shortcutKey(event) === "k") {
       event.preventDefault();
       onClose();
     }

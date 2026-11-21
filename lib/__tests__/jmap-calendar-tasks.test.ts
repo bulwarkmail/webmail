@@ -222,6 +222,30 @@ describe('JMAPClient task operations (#958)', () => {
     await client.updateCalendarTask('task-1', modalPayload(null));
     expect(sentTask('update', 'task-1').due).toBeNull();
   });
+
+  // An RRULE needs a DTSTART (RFC 5545), and servers drop a task's
+  // recurrenceRule without a `start`, silently. A new recurring task the form
+  // sends with a due only starts at that due.
+  const weekly = { recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' } as never] };
+  it('createCalendarTask anchors a new recurring task without start at its due, so the server keeps the rule', async () => {
+    await client.createCalendarTask({ ...modalPayload('2026-11-10'), ...weekly });
+    expect(sentTask('create', 'new-task')).toMatchObject({ start: '2026-11-10T00:00:00', due: '2026-11-10T00:00:00', recurrenceRule: { frequency: 'weekly' } });
+  });
+
+  it('updateCalendarTask does not invent a start when the patch has no start', async () => {
+    await client.updateCalendarTask('task-1', { ...modalPayload('2026-11-10'), ...weekly });
+    expect(sentTask('update', 'task-1')).not.toHaveProperty('start');
+  });
+
+  it('gives a task without recurrence no start', async () => {
+    await client.createCalendarTask(modalPayload('2026-11-10'));
+    expect(sentTask('create', 'new-task')).not.toHaveProperty('start');
+  });
+
+  it('keeps a start the recurring task already has', async () => {
+    await client.updateCalendarTask('task-1', { ...modalPayload('2026-11-10T09:00:00'), start: '2026-11-03T09:00:00', ...weekly });
+    expect(sentTask('update', 'task-1').start).toBe('2026-11-03T09:00:00');
+  });
 });
 
 describe('JMAPClient tasks in shared calendars (#1204)', () => {

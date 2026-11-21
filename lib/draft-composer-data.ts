@@ -6,6 +6,7 @@ import { messagePriorityFromHeaders } from '@/lib/message-priority';
 import { reopenedLabelChoice } from '@/lib/outgoing/classification';
 import { formatRecipient, parseRecipientList } from '@/lib/email-composer-utils';
 import { buildReplyRecipients, type ReplySource } from '@/lib/reply-recipients';
+import { getEmailTagIds } from '@/lib/thread-utils';
 
 /**
  * Reply all on a message whose reply draft is resumed: the draft keeps what
@@ -87,6 +88,7 @@ export function composerDataFromDraft(
     inReplyTo: draft.inReplyTo ?? undefined,
     references: draft.references ?? undefined,
     priority: messagePriorityFromHeaders(draft.headers),
+    tags: getEmailTagIds(draft.keywords),
     // A sent message brought back (Undo, Cancel and edit) has no draft
     // marker: its SIO-Label says which label it went out with.
     classification: reopenedLabelChoice(draft.headers, localAccountId),
@@ -103,5 +105,37 @@ export function composerDataFromDraft(
         cid: a.cid,
         disposition: a.disposition,
       })),
+  };
+}
+
+/**
+ * "Edit as new" on a sent message (#1781): a new message filled in as the
+ * original went out (From, recipients, subject, body, attachments). It is
+ * neither the sent message, which must stay as it is (no draft id), nor a
+ * reply to it (no In-Reply-To or References). The attachments still point at
+ * the sent message's parts; the composer copies them when it saves through
+ * another login or account (rehomeForeignBlobs), and to the draft's own
+ * parts after the first save.
+ */
+export function composerDataForEditAsNew(
+  sent: Email,
+  source: DraftSource & { identities: Identity[]; noSubject: string },
+): ComposerDraftData {
+  const data = composerDataFromDraft(sent, source);
+  return {
+    ...data,
+    draftId: null,
+    draftAccountId: undefined,
+    draftLocalAccountId: undefined,
+    inReplyTo: undefined,
+    references: undefined,
+    kind: undefined,
+    // Tags are the copy in Sent's, not part of what was sent.
+    tags: undefined,
+    attachments: data.attachments?.map((attachment) => ({
+      ...attachment,
+      ...(source.localAccountId ? { sourceAccountId: source.localAccountId } : {}),
+      ...(source.accountId ? { sourceJmapAccountId: source.accountId } : {}),
+    })),
   };
 }

@@ -65,7 +65,7 @@ const TRUST_KEY = Symbol.for('bulwark.desktop.trustedJmapOrigins');
 const LAN_SERVER = 'http://192.168.1.5:8080';
 
 function loginRequest(serverUrl: string): unknown {
-  const headers = new Headers({ 'sec-fetch-site': 'same-origin', host: 'app.bulwark.localhost' });
+  const headers = new Headers({ 'sec-fetch-site': 'same-origin', host: 'app.bulwark.localhost', 'content-type': 'application/json' });
   return {
     method: 'POST',
     headers,

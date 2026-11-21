@@ -169,4 +169,14 @@ describe('sendEmail: keywords on the created message', () => {
     await createClient().sendEmail(['bob@example.com'], 'Mahnung', 'Hallo', undefined, undefined, 'identity-1', 'user@example.com');
     expect(sent(captured).email.keywords).toEqual({ $seen: true, $draft: true });
   });
+
+  it('createDraft puts the composer\'s tags on the draft, beside the host\'s own', async () => {
+    const captured = mockFlow();
+    await createClient().createDraft(['bob@example.com'], 'Mahnung', 'Hallo', undefined, undefined, 'identity-1', 'user@example.com',
+      undefined, undefined, undefined, undefined, undefined, undefined,
+      { accountId: 'account-1', keywords: ['$label:work', '$answered'] });
+    const create = captured.flatMap((r) => r.methodCalls).find((c) => c[0] === 'Email/set' && c[1].create)!;
+    const draft = Object.values(create[1].create as Record<string, Record<string, unknown>>)[0];
+    expect(draft.keywords).toEqual({ '$label:work': true, $seen: true, $draft: true });
+  });
 });

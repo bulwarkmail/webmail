@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
@@ -12,6 +12,7 @@ import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 
 // Reply in the standard layout on a computer: the composer docks under the
 // message it answers, which stays on screen above it, as in Gmail and Outlook.
+// With Replies under the message off it takes the pane, as a new message does.
 
 const device = vi.hoisted(() => ({ current: { isMobile: false, isTablet: false, isDesktop: true } }));
 const stub = vi.hoisted(() => ({ requestClose: null as null | ((afterClose?: () => void) => void) }));
@@ -110,7 +111,7 @@ beforeEach(() => {
     getClientForAccount: () => client as never,
     getAllConnectedClients: () => new Map([['login-a', client]]) as never,
   });
-  useSettingsStore.setState({ enableUnifiedMailbox: false, interfaceLayout: 'default', mailLayout: 'split' } as never);
+  useSettingsStore.setState({ enableUnifiedMailbox: false, interfaceLayout: 'default', mailLayout: 'split', replyUnderMessage: true } as never);
   useEmailStore.setState({
     emails: [MESSAGE], selectedEmail: MESSAGE, selectedMailbox: 'inbox', selectedKeyword: null, mailboxes: [inbox],
     viewingAccountId: null, accountMailboxes: {}, isUnifiedView: false, unifiedRole: null,
@@ -155,5 +156,39 @@ describe('a reply in the standard layout', () => {
     fireEvent.click(screen.getByText('stub compose'));
     await screen.findByText('stub composer');
     expect(screen.queryByTestId('viewer')).toBeNull();
+  });
+
+  for (const action of ['stub reply', 'stub forward']) {
+    it(`takes the whole pane with Replies under the message off (${action})`, async () => {
+      useSettingsStore.setState({ replyUnderMessage: false } as never);
+      render(<MailApp />);
+      fireEvent.click(await screen.findByText(action));
+      const composer = await screen.findByText('stub composer');
+      expect(composer.closest('[data-reply-dock]')).toBeNull();
+      expect(screen.queryByTestId('viewer')).toBeNull();
+    });
+  }
+
+  // Moving an open reply would mount its composer anew.
+  it('keeps an open reply docked when the setting is turned off', async () => {
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub reply'));
+    const composer = await screen.findByText('stub composer');
+    expect(composer.closest('[data-reply-dock]')).not.toBeNull();
+    act(() => useSettingsStore.setState({ replyUnderMessage: false } as never));
+    expect(screen.getByText('stub composer')).toBe(composer);
+    expect(composer.closest('[data-reply-dock]')).not.toBeNull();
+  });
+
+  // Settings Sync can turn it on from another device while a reply is open.
+  it('keeps an open reply in the pane when the setting is turned on', async () => {
+    useSettingsStore.setState({ replyUnderMessage: false } as never);
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub reply'));
+    const composer = await screen.findByText('stub composer');
+    expect(composer.closest('[data-reply-dock]')).toBeNull();
+    act(() => useSettingsStore.setState({ replyUnderMessage: true } as never));
+    expect(screen.getByText('stub composer')).toBe(composer);
+    expect(composer.closest('[data-reply-dock]')).toBeNull();
   });
 });

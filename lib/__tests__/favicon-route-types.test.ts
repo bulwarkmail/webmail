@@ -2,9 +2,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// /api/favicon answers on the webmail origin without authentication and used
-// to pass the upstream Content-Type through: an SVG or HTML "favicon" opened
-// on its own would run script as the webmail.
+// /api/favicon answers on the webmail origin and used to pass the upstream
+// Content-Type through: an SVG or HTML "favicon" opened on its own would run
+// script as the webmail.
+
+// The session check /api/plugins uses: the mail view's requests are signed in.
+vi.mock('@/lib/auth/instance-details', () => ({ canSeeInstanceDetails: vi.fn(async () => true) }));
 
 afterEach(() => {
   vi.unstubAllGlobals();

@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { CalendarInvitationBanner } from '../calendar-invitation-banner';
 import type { Email } from '@/lib/jmap/types';
 import { jmapSetError } from '@/lib/jmap/jmap-error';
@@ -68,10 +68,14 @@ const mocks = vi.hoisted(() => {
     Object.assign(calendarState, nextState);
   };
 
+  // The organisation's domains for the message's account (external-sender-chip).
+  const internalMail = { domains: [] as string[], askedFor: [] as Array<string | null | undefined> };
+
   return {
     pushMock,
     clientMock,
     sourceClientMock,
+    internalMail,
     authState,
     emailState,
     settingsState,
@@ -145,6 +149,13 @@ vi.mock('@/i18n/navigation', () => ({
 
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: (selector: (state: typeof mocks.authState) => unknown) => selector(mocks.authState),
+}));
+
+vi.mock('@/components/email/external-sender-chip', () => ({
+  useInternalMailDomains: (accountId?: string | null) => {
+    mocks.internalMail.askedFor.push(accountId);
+    return mocks.internalMail.domains;
+  },
 }));
 
 vi.mock('@/stores/email-store', () => ({
@@ -290,6 +301,101 @@ describe('CalendarInvitationBanner', () => {
     expect(mocks.sourceClientMock.parseCalendarEvents).not.toHaveBeenCalled();
   });
 
+  // #1753: ROLE=OPT-PARTICIPANT arrives as roles.optional on the user's entry.
+  it.each([
+    ['optional', { attendee: true, optional: true }, true],
+    ['required', { attendee: true }, false],
+  ])('tells a %s attendee whether they are optional', async (_label, roles, shown) => {
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([{
+      uid: 'uid-opt', title: 'Quarterly review', start: '2026-03-22T14:00:00Z',
+      participants: {
+        organizer: { '@type': 'Participant', email: 'boss@example.com', roles: { owner: true }, participationStatus: 'accepted' },
+        me: { '@type': 'Participant', email: 'user@example.com', roles, participationStatus: 'needs-action' },
+      },
+    }]);
+
+    render(<CalendarInvitationBanner email={makeEmail()} />);
+
+    await waitFor(() => expect(screen.getByText('Quarterly review')).toBeInTheDocument());
+    expect(screen.queryByTestId('invitation-optional') !== null).toBe(shown);
+  });
+
+  // The calendar on screen is the active login's. An invitation in another
+  // login's message is shown, and nothing for it touches that calendar: the
+  // event belongs in the calendar of the login that was invited.
+  describe('an invitation in a message of another login', () => {
+    const invite = [{
+      uid: 'uid-other',
+      title: 'Invite in account B',
+      start: '2026-03-22T14:00:00Z',
+      participants: {
+        organizer: { '@type': 'Participant', email: 'boss@example.com', roles: { owner: true }, participationStatus: 'accepted' },
+        attendee: { '@type': 'Participant', email: 'user@example.com', roles: { attendee: true }, participationStatus: 'needs-action' },
+      },
+    }];
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+    it('offers no answer and no import, and says where to do it', async () => {
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail({ sourceClientAccountId: 'login-b', sourceAccountId: 'jmap-b' })} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+      await settle();
+
+      expect(screen.getByText('invitation_other_account')).toBeInTheDocument();
+      expect(screen.queryByText('Accept')).toBeNull();
+      expect(screen.queryByText('Decline')).toBeNull();
+      expect(screen.queryByText('Add to calendar')).toBeNull();
+      expect(screen.queryByText('View in calendar')).toBeNull();
+      expect(mocks.clientMock.queryCalendarEvents).not.toHaveBeenCalled();
+      expect(mocks.clientMock.getCalendarEvent).not.toHaveBeenCalled();
+      expect(mocks.calendarState.rsvpEvent).not.toHaveBeenCalled();
+      expect(mocks.calendarState.importEvents).not.toHaveBeenCalled();
+    });
+
+    it('the same for a message of a login browsed in the sidebar', async () => {
+      mocks.emailState.viewingAccountId = 'login-b';
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail()} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+      await settle();
+
+      expect(screen.getByText('invitation_other_account')).toBeInTheDocument();
+      expect(screen.queryByText('Accept')).toBeNull();
+      expect(mocks.clientMock.queryCalendarEvents).not.toHaveBeenCalled();
+    });
+
+    it('does not take the active login\'s event with the same uid for its own', async () => {
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      mocks.calendarState.events = [{ id: 'ev-a', uid: 'uid-other', title: 'Invite in account B', calendarIds: { 'cal-1': true }, participants: invite[0].participants }];
+      render(<CalendarInvitationBanner email={makeEmail({ sourceClientAccountId: 'login-b', sourceAccountId: 'jmap-b' })} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+      await settle();
+
+      expect(screen.queryByText('Already in your calendar')).toBeNull();
+      expect(mocks.calendarState.updateEvent).not.toHaveBeenCalled();
+      expect(mocks.calendarState.deleteEvent).not.toHaveBeenCalled();
+    });
+
+    it('whose login is not connected is not parsed through the active login', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail({ sourceClientAccountId: 'login-gone', sourceAccountId: 'jmap-gone' })} />);
+      await settle();
+
+      expect(mocks.clientMock.parseCalendarEvents).not.toHaveBeenCalled();
+      expect(mocks.clientMock.queryCalendarEvents).not.toHaveBeenCalled();
+      expect(screen.queryByText('Accept')).toBeNull();
+    });
+
+    it('control: the active login\'s own invitation still offers the answers', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={makeEmail()} />);
+      await screen.findByRole('heading', { name: 'Invite in account B' });
+
+      expect(await screen.findByText('Accept')).toBeInTheDocument();
+      expect(screen.queryByText('invitation_other_account')).toBeNull();
+    });
+  });
+
   it('surfaces the underlying error when parsing fails', async () => {
     mocks.clientMock.parseCalendarEvents.mockRejectedValue(new Error('Failed to parse calendar file'));
 
@@ -340,6 +446,45 @@ describe('CalendarInvitationBanner', () => {
     });
 
     expect(screen.queryByText(/sent from/i)).not.toBeInTheDocument();
+  });
+
+  // #1593: one server, several domains. Mail between them carries no
+  // Authentication-Results header, as mail within one domain doesn't.
+  describe('an invitation from another of the organisation\'s domains', () => {
+    const invite = [{
+      uid: 'uid-sister',
+      title: 'Sister Domain Sync',
+      start: '2026-03-22T14:00:00Z',
+      organizerCalendarAddress: 'mailto:alice@sister.example',
+      participants: {
+        organizer: { '@type': 'Participant', calendarAddress: 'mailto:alice@sister.example', name: 'Alice', roles: { owner: true }, participationStatus: 'accepted' },
+        attendee: { '@type': 'Participant', email: 'user@example.com', name: 'User', roles: { attendee: true }, participationStatus: 'needs-action' },
+      },
+    }];
+    const email = () => makeEmail({ id: 'email-sister', from: [{ email: 'alice@sister.example', name: 'Alice' }], sourceClientAccountId: 'login-b' });
+
+    afterEach(() => {
+      mocks.internalMail.domains = [];
+      mocks.internalMail.askedFor = [];
+    });
+
+    it('cautions while the admin has not listed the domain', async () => {
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={email()} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Sister Domain Sync' })).toBeInTheDocument());
+      expect(screen.getByText('authentication_missing_info')).toBeInTheDocument();
+    });
+
+    it('shows no caution once the domain is listed, for the account the message is in', async () => {
+      mocks.internalMail.domains = ['example.com', 'sister.example'];
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue(invite);
+      mocks.sourceClientMock.parseCalendarEvents.mockResolvedValue(invite);
+      render(<CalendarInvitationBanner email={email()} />);
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Sister Domain Sync' })).toBeInTheDocument());
+      expect(screen.queryByText('authentication_missing_info')).not.toBeInTheDocument();
+      expect(mocks.internalMail.askedFor).toContain('login-b');
+    });
   });
 
   it('shows existing event status, current response, and view-in-calendar action', async () => {
@@ -429,6 +574,28 @@ describe('CalendarInvitationBanner', () => {
       expect(screen.getByText('request_info')).toBeInTheDocument();
     });
     expect(screen.queryByText(/^You accepted/)).not.toBeInTheDocument();
+  });
+
+  it('does not carry an RSVP over when the reader opens a different invitation', async () => {
+    const participants = {
+      attendee: { '@type': 'Participant', email: 'user@example.com', roles: { attendee: true }, participationStatus: 'needs-action' },
+    };
+    const first = { id: 'event-1', uid: 'uid-1', title: 'First meeting', start: '2026-03-20T09:00:00Z', participants };
+    const second = { id: 'event-2', uid: 'uid-2', title: 'Second meeting', start: '2026-03-21T09:00:00Z', participants };
+    mocks.calendarState.events = [first, second];
+    mocks.clientMock.parseCalendarEvents.mockResolvedValueOnce([first]).mockResolvedValueOnce([second]);
+    mocks.clientMock.getCalendarEvent.mockResolvedValue(first);
+    mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+    const { rerender } = render(<CalendarInvitationBanner email={makeEmail()} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Accept' }));
+    expect(await screen.findByText(/^You accepted/)).toBeInTheDocument();
+
+    rerender(<CalendarInvitationBanner email={makeEmail({ id: 'email-2' })} />);
+    expect(await screen.findByRole('heading', { name: 'Second meeting' })).toBeInTheDocument();
+    expect(screen.queryByText(/^You accepted/)).not.toBeInTheDocument();
+    expect(screen.getByText('request_info')).toBeInTheDocument();
+    expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the invitation summary visible after importing', async () => {
@@ -1118,6 +1285,69 @@ describe('CalendarInvitationBanner', () => {
     )).toBeInTheDocument());
   });
 
+  // A Google Calendar RSVP as Stalwart hands it over: JMAP drops the
+  // method=REPLY parameter from both calendar parts, and the attendee's
+  // ROLE=REQ-PARTICIPANT parses to roles { required } with no attendee role,
+  // so only CalendarEvent/parse's method says it is a reply (#1816).
+  it('shows a Google reply to the organizer as the answer, without RSVP or sender warning (#1816)', async () => {
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([{
+      uid: 'uid-1816', title: 'Planning', start: '2026-12-01T10:00:00', timeZone: 'Etc/UTC', duration: 'PT1H',
+      method: 'reply',
+      organizerCalendarAddress: 'mailto:user@example.com',
+      participants: {
+        att: { '@type': 'Participant', name: 'Attendee', kind: 'individual', calendarAddress: 'mailto:attendee@example.com', roles: { required: true }, participationStatus: 'accepted' },
+        org: { '@type': 'Participant', name: 'Organizer', calendarAddress: 'mailto:user@example.com', roles: { owner: true } },
+      },
+    }]);
+    const googleReply = (id: string, from: string) => makeEmail({
+      id, from: [{ email: from }],
+      attachments: [
+        { partId: '3', blobId: `blob-${id}`, size: 900, type: 'text/calendar', name: null as unknown as string },
+        { partId: '4', blobId: `blob-${id}-ics`, size: 900, type: 'application/ics', name: 'invite.ics' },
+      ],
+    });
+
+    const { unmount } = render(<CalendarInvitationBanner email={googleReply('email-1816', 'attendee@example.com')} />);
+    await waitFor(() => expect(screen.getByText('Attendee responded Accepted.')).toBeInTheDocument());
+    expect(screen.getByText('response_info_organizer')).toBeInTheDocument();
+    expect(screen.queryByText('request_info')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Accept' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Decline' })).toBeNull();
+    expect(screen.queryByText(/was sent from/)).toBeNull();
+    unmount();
+
+    // Someone else answering for that attendee still gets the warning.
+    render(<CalendarInvitationBanner email={googleReply('email-1816b', 'mallory@evil.example')} />);
+    await waitFor(() => expect(screen.getByText(
+      'This response was sent from mallory@evil.example, while the attendee answering in the calendar data is attendee@example.com, and the message could not be verified.',
+    )).toBeInTheDocument());
+  });
+
+  it('shows no update number on a reply, only who answered and how (#1755)', async () => {
+    const event = (sequence: number) => ({
+      uid: 'uid-16', title: 'Sync', start: '2026-03-27T09:00:00Z', duration: 'PT1H', sequence,
+      organizerCalendarAddress: 'mailto:user@example.com',
+      participants: {
+        a: { '@type': 'Participant', calendarAddress: 'mailto:user@example.com', roles: { owner: true, attendee: true }, participationStatus: 'accepted' },
+        b: { '@type': 'Participant', name: 'Alice', calendarAddress: 'mailto:alice@example.com', roles: { attendee: true }, participationStatus: 'accepted' },
+      },
+    });
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([event(1)]);
+    const { unmount } = render(<CalendarInvitationBanner email={makeEmail({
+      id: 'email-16', from: [{ email: 'alice@example.com' }],
+      attachments: [{ partId: '1', blobId: 'blob-16', size: 256, type: 'text/calendar; method=REPLY', name: 'reply.ics' }],
+    })} />);
+    await waitFor(() => expect(screen.getByText('Alice responded Accepted.')).toBeInTheDocument());
+    expect(screen.queryByText('event_updated')).toBeNull();
+    unmount();
+
+    // An updated invitation still says so.
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([event(2)]);
+    render(<CalendarInvitationBanner email={makeEmail({ id: 'email-17', from: [{ email: 'user@example.com' }] })} />);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Sync' })).toBeInTheDocument());
+    expect(screen.getByText('event_updated')).toBeInTheDocument();
+  });
+
   it('lets a proposal from an attendee Stalwart lists by calendar address be applied', async () => {
     mocks.calendarState.updateEvent = vi.fn().mockResolvedValue(true);
     // As 0.16 and 1.0 store and parse them: mailto: calendar addresses, no email.
@@ -1388,6 +1618,98 @@ describe('CalendarInvitationBanner', () => {
       await screen.findByRole('heading', { name: 'Planning' });
       await waitFor(() => expect(mocks.clientMock.queryCalendarEvents).toHaveBeenCalledWith({ uid: 'uid-c' }));
       expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+      expect(screen.queryByText('cancel_not_organizer')).not.toBeInTheDocument();
+    });
+
+    // A cancellation removes a meeting with one click. The organizer named
+    // inside its calendar data is the sender's own text, so the organizer of
+    // the stored meeting has to be the sender, however well the sender's own
+    // domain authenticates.
+    describe('from someone other than the organizer', () => {
+      /** What the server reports for a sender whose own domain is set up properly. */
+      const passesFor = (domain: string) => ({
+        spf: { result: 'pass', domain },
+        dkim: { result: 'pass', domain },
+        dmarc: { result: 'pass', domain, policy: 'reject' },
+      }) as Email['authenticationResults'];
+
+      /** Lets the removal plan arrive before looking for the button. */
+      async function planned() {
+        await screen.findByRole('heading', { name: 'Planning' });
+        await waitFor(() => expect(mocks.clientMock.queryCalendarEvents).toHaveBeenCalledWith({ uid: 'uid-c' }));
+        await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+      }
+
+      it("offers the removal for the organizer's own, authenticated cancellation", async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent()]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({ authenticationResults: passesFor('example.com'), authenticationResultsOnReceipt: true })} />);
+
+        expect(await screen.findByText('remove_from_calendar')).toBeInTheDocument();
+        expect(screen.queryByText('cancel_not_organizer')).not.toBeInTheDocument();
+      });
+
+      it('does not offer it to an outside sender who passes authentication for a domain of their own', async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent()]);
+        mocks.calendarState.events = [storedEvent()];
+
+        render(<CalendarInvitationBanner email={cancelEmail({
+          from: [{ email: 'mallory@evil.example', name: 'Sender' }],
+          authenticationResults: passesFor('evil.example'),
+          authenticationResultsOnReceipt: true,
+        })} />);
+
+        await planned();
+        expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+        expect(screen.getByText('cancel_not_organizer')).toBeInTheDocument();
+        expect(mocks.calendarState.deleteEvent).not.toHaveBeenCalled();
+      });
+
+      it('does not offer it to an attendee who names themselves the organizer of the cancellation', async () => {
+        const carol = {
+          '@type': 'Participant', email: 'carol@example.com', calendarAddress: 'mailto:carol@example.com',
+          roles: { attendee: true }, participationStatus: 'accepted',
+        };
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel({
+          organizerCalendarAddress: 'mailto:carol@example.com',
+          participants: { organizer: { ...carol, roles: { owner: true } }, me: ME },
+        })]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent({ participants: { organizer: ORGANIZER, me: ME, carol } })]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({ from: [{ email: 'carol@example.com', name: 'Carol' }] })} />);
+
+        await planned();
+        expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+        expect(screen.getByText('cancel_not_organizer')).toBeInTheDocument();
+      });
+
+      it("matches the organizer's address in another letter case and with a mailto: prefix", async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent({
+          organizerCalendarAddress: 'mailto:BOSS@example.com',
+          participants: { organizer: { ...ORGANIZER, email: undefined, calendarAddress: 'MAILTO:Boss@Example.com' }, me: ME },
+        })]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({ from: [{ email: 'Boss@Example.COM', name: 'Boss' }] })} />);
+
+        expect(await screen.findByText('remove_from_calendar')).toBeInTheDocument();
+      });
+
+      it("does not offer it for the organizer's address when the results header was not written on receipt", async () => {
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([parsedCancel()]);
+        mocks.clientMock.queryCalendarEvents.mockResolvedValue([storedEvent()]);
+
+        render(<CalendarInvitationBanner email={cancelEmail({
+          authenticationResults: passesFor('example.com'),
+          authenticationResultsOnReceipt: false,
+        })} />);
+
+        await planned();
+        expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
+        expect(screen.getByText('cancel_unverified')).toBeInTheDocument();
+      });
     });
   });
 

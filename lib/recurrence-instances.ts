@@ -120,6 +120,25 @@ export function baseEventStoreId(instance: EventIdentity): string | null {
 }
 
 /**
+ * The store id of the event with raw id `rawId` in the same login and account
+ * as `event`: `event`'s namespace prefix in front of it. An occurrence the
+ * browser expanded is `<base event's store id>:<recurrence id>`, and its base
+ * event is addressed by the first part. Null when `rawId` can't be placed
+ * there; the event's id then says nothing about where `rawId` lives.
+ */
+export function storeIdBeside(
+  event: Pick<CalendarEvent, 'id' | 'recurrenceId' | 'recurrenceRules'> & Partial<Pick<CalendarEvent, 'originalId' | 'baseEventId'>>,
+  rawId: string,
+): string | null {
+  const own = event.originalId ?? event.id;
+  if (isBrowserExpandedOccurrence(event)) {
+    const suffix = `:${event.recurrenceId}`;
+    return own === rawId && event.id.endsWith(suffix) ? event.id.slice(0, event.id.length - suffix.length) : null;
+  }
+  return event.id.endsWith(own) ? event.id.slice(0, event.id.length - own.length) + rawId : null;
+}
+
+/**
  * Whether a `CalendarEvent/set` failure is a pre-0.16.20 server refusing a
  * synthetic id ("Updating/Deleting synthetic ids is not yet supported.").
  */
@@ -399,10 +418,19 @@ function collapseDuplicateInstances(
     const override = group.reduce((a, b) => (score(b) > score(a) ? b : a));
     const series = group.find((instance) => instance !== override) ?? first;
     const merged: Record<string, unknown> = { ...series };
-    for (const k of new Set(patchKeys.map(firstPointerSegment))) {
+    const touched = new Set(patchKeys.map(firstPointerSegment));
+    for (const k of touched) {
       merged[k] = k === 'participants'
         ? mergeOverrideParticipants(series.participants, override.participants)
         : (override as unknown as Record<string, unknown>)[k];
+    }
+    // utcStart/utcEnd are computed by the server, so an override never lists
+    // them; when it moves the occurrence (start, duration or zone), the
+    // series' instants are stale and the grid, which places events by
+    // utcStart, would draw the moved occurrence at its original slot.
+    if (['start', 'duration', 'timeZone', 'showWithoutTime'].some((k) => touched.has(k))) {
+      merged.utcStart = override.utcStart;
+      merged.utcEnd = override.utcEnd;
     }
     return merged as unknown as CalendarEvent;
   };

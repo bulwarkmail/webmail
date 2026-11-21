@@ -15,7 +15,7 @@ import { threadKeyFor } from '@/lib/thread-utils';
 import { useToastStore } from '@/stores/toast-store';
 import { ToastContainer } from '@/components/ui/toast';
 
-const device = vi.hoisted(() => ({ mobile: false }));
+const { device, captureComposer } = vi.hoisted(() => ({ device: { mobile: false }, captureComposer: vi.fn() }));
 
 // Keep the real MailApp selection/download handlers and EmailViewer. Stub
 // unrelated shell UI and bootstrap requests so no server is contacted.
@@ -25,7 +25,12 @@ vi.mock('next/dynamic', () => ({ default: (load: () => Promise<React.ComponentTy
     return <Suspense fallback={null}><Component {...props} /></Suspense>;
   };
 } }));
-vi.mock('@/components/email/email-composer', () => ({ EmailComposer: () => null }));
+vi.mock('@/components/email/email-composer', () => ({
+  EmailComposer: (props: unknown) => {
+    captureComposer(props);
+    return null;
+  },
+}));
 vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }));
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
@@ -42,7 +47,8 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail' }) })
 vi.mock('@/hooks/use-identity-sync', () => ({ useIdentitySync: () => {} }));
 vi.mock('@/hooks/use-pro-multi-account-identities', () => ({
   useProMultiAccountIdentities: () => [],
-  cachedIdentitiesForAccount: () => undefined,
+  // Fetched already, as the mocked hook leaves them: a sender's avatar asks for no identities here.
+  cachedIdentitiesForAccount: () => [],
 }));
 vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMailboxes: () => {} }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
@@ -304,6 +310,43 @@ describe('standard mail attachment download feedback', () => {
 });
 
 describe('standard mail UI blob routing', () => {
+  it('passes the shared JMAP owner separately from the login when forwarding from Unified Inbox', async () => {
+    captureComposer.mockClear();
+    const owner = 'nrichmond';
+    const login = 'login-primary';
+    const stub = message({ bodyValues: undefined, accountId: owner, accountLabel: 'Richmond', sourceClientAccountId: login, sourceAccountId: owner });
+    useEmailStore.setState({ emails: [stub], selectedEmail: null, isUnifiedView: true, selectedMailbox: '' });
+    render(<MailApp />);
+    fireEvent.click(screen.getByText('Select 0'));
+    await waitFor(() => expect(primary.getEmail).toHaveBeenCalledWith('email', owner));
+    await waitFor(() => expect(useEmailStore.getState().selectedEmail?.bodyValues).toBeDefined());
+
+    fireEvent.click((await screen.findAllByRole('button', { name: 'forward' }))[0]);
+    await waitFor(() => expect(captureComposer).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'forward',
+      replyTo: expect.objectContaining({
+        accountId: login,
+        sourceClientAccountId: login,
+        sourceAccountId: owner,
+        attachments: [expect.objectContaining({ blobId: 'same-blob' })],
+      }),
+    })));
+  });
+
+  it('resolves the owner when forwarding an unstamped message from a shared folder', async () => {
+    captureComposer.mockClear();
+    render(<MailApp />);
+
+    fireEvent.click((await screen.findAllByRole('button', { name: 'forward' }))[0]);
+    await waitFor(() => expect(captureComposer).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'forward',
+      replyTo: expect.objectContaining({
+        sourceClientAccountId: 'login-primary',
+        sourceAccountId: 'nrichmond',
+      }),
+    })));
+  });
+
   it.each([sharedMailbox.id, primaryMailbox.id])('uses the session downloadUrl for %s', async (mailboxId) => {
     const fetchMock = vi.mocked(fetch);
     const realClient = await connectDownloadClient('https://mail.example.com', 'test-login', 'postal12345');
@@ -774,7 +817,9 @@ async function openProMessage(route: typeof proRoutes[number], action: ProBlobAc
     accountMailboxes: { 'login-primary': [primaryMailbox, sharedMailbox], 'login-other': [primaryMailbox, sharedMailbox] },
   });
   if (route.unified || route.emailTab) {
-    render(<ProEmailTabBody tabId="reader" data={{ accountId: route.owner, clientAccountId: route.emailTab ? 'login-other' : undefined, emailId: full.id, mailboxId: '__unified_inbox__', title: full.subject! }} />);
+    // The unified list opens a row's tab with the login the row names, as
+    // the list's open handler does.
+    render(<ProEmailTabBody tabId="reader" data={{ accountId: route.owner, clientAccountId: 'login-other', emailId: full.id, mailboxId: '__unified_inbox__', title: full.subject! }} />);
   } else {
     const mailbox = route.owner === 'nrichmond' ? sharedMailbox : primaryMailbox;
     vi.spyOn(origin, 'getEmails').mockResolvedValue({ emails: [full], total: 1, hasMore: false });
@@ -856,7 +901,7 @@ describe('Pro blob routing', () => {
     vi.spyOn(b, 'getEmail').mockImplementation(() => new Promise(resolve => { finish = resolve; }));
     const wrongClient = vi.spyOn(a, 'getEmail');
     useEmailStore.setState({ emails: [message({ sourceClientAccountId: 'login-other', sourceAccountId: 'nrichmond' })], selectedEmail: null, isUnifiedView: true });
-    render(<ProEmailTabBody tabId="reader" data={{ accountId: 'nrichmond', emailId: 'email', mailboxId: null, title: 'Loading' }} />);
+    render(<ProEmailTabBody tabId="reader" data={{ accountId: 'nrichmond', clientAccountId: 'login-other', emailId: 'email', mailboxId: null, title: 'Loading' }} />);
     await waitFor(() => expect(b.getEmail).toHaveBeenCalledWith('email', 'nrichmond'));
     act(() => {
       useEmailStore.setState({ emails: [], selectedEmail: message({ id: 'unrelated' }), isUnifiedView: false, selectedMailbox: 'inbox' });

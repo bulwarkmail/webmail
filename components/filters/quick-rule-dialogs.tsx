@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { FilterRuleModal } from "@/components/filters/filter-rule-modal";
+import { RuleEditor } from "@/components/filters/rule-editor";
+import { NOT_RECEIVED, previewRule } from "@/lib/filters/rule-preview";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useQuickRuleText } from "@/components/email/rules-menu";
 import { useQuickRuleStore } from "@/stores/quick-rule-store";
 import { readAccountFilters } from "@/lib/filters/account-filters";
@@ -15,7 +18,8 @@ import { supportsRegex } from "@/lib/sieve/regex";
 /**
  * Draws what a rule made from a message opens: the rule editor ("Create
  * rule…", or "Edit rule" from a toast) and the folder-name prompt of "New
- * folder…". Mounted by QuickRuleHost while one of them is open.
+ * folder…", and the Trash question of "Run rules" on a folder. Mounted by
+ * QuickRuleHost while one of them is open.
  */
 export function QuickRuleDialogs() {
   const text = useQuickRuleText();
@@ -26,6 +30,14 @@ export function QuickRuleDialogs() {
   const newFolder = useQuickRuleStore((s) => s.newFolder);
   const closeEditor = useQuickRuleStore((s) => s.closeEditor);
   const closeNewFolder = useQuickRuleStore((s) => s.closeNewFolder);
+  const trashQuestion = useQuickRuleStore((s) => s.trashQuestion);
+  const answerTrash = useQuickRuleStore((s) => s.answerTrash);
+  const tFilters = useTranslations("settings.filters");
+  const tDelete = useTranslations("settings.email_behavior.delete_action");
+  const tSidebar = useTranslations("sidebar");
+  // "New mail and <folder>" is offered for the message's folder, unless that
+  // is one whose mail a rule never sorts (Sent, Drafts, Trash, Spam).
+  const sourceFolder = editor?.target.mailboxes.find((m) => m.id === editor.sourceMailboxId);
 
   // Where the rule runs among the account's rules, for the server's redirect
   // limit: "Create rule…" puts it first, an edit keeps it in place (one no
@@ -52,12 +64,16 @@ export function QuickRuleDialogs() {
   return (
     <>
       {editor && (
-        <FilterRuleModal
+        <RuleEditor
           key={`${editor.mode}:${editor.rule.id}`}
+          previewMatches={(r, o) => previewRule(editor.target, r, { ...o, folderId: editor.sourceMailboxId ?? undefined })}
           rule={editor.mode === "edit" ? editor.rule : undefined}
           initialRule={editor.mode === "prefill" ? editor.rule : undefined}
           suggestions={editor.suggestions}
-          offerApplyToExisting={editor.mode === "prefill" && !!editor.sourceMailboxId}
+          offerApplyToExisting={editor.mode === "prefill"}
+          applyExistingFolder={sourceFolder && !NOT_RECEIVED.has(sourceFolder.role ?? "")
+            ? localizeMailboxName(sourceFolder.role, sourceFolder.name, (k) => tSidebar(`mailboxes.${k}`))
+            : undefined}
           mailboxes={editor.target.mailboxes}
           maxRedirects={editor.target.client.getSieveCapabilities(editor.target.sieveAccountId)?.maxNumberRedirects}
           forwardsBefore={forwards.before}
@@ -66,7 +82,7 @@ export function QuickRuleDialogs() {
           regexSupported={supportsRegex(editor.target.client.getSieveCapabilities(editor.target.sieveAccountId)?.sieveExtensions)}
           onSave={(rule, options) => {
             closeEditor();
-            void saveEditorRule(editor, rule, options?.applyToExisting ?? false, text);
+            void saveEditorRule(editor, rule, options?.applyTo ?? "new", text);
           }}
           onClose={closeEditor}
         />
@@ -82,6 +98,16 @@ export function QuickRuleDialogs() {
         title={tFolderTitle("new_folder_title")}
         message={tFolderMenu("prompt_new_folder")}
         placeholder={tFolderMenu("placeholder_folder_name")}
+      />
+      <ConfirmDialog
+        isOpen={!!trashQuestion}
+        onClose={() => answerTrash(false)}
+        onConfirm={() => answerTrash(true)}
+        title={tFilters("editor.trash_title")}
+        message={tFilters("editor.trash_confirm", { count: trashQuestion?.count ?? 0 })}
+        confirmText={tDelete("trash")}
+        cancelText={tFilters("cancel")}
+        variant="destructive"
       />
     </>
   );

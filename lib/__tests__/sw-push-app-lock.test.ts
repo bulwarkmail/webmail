@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { FakeCaches, loadWorker } from './sw-harness';
 
 // App lock: while locked a notification names no sender and no subject, and the
-// worker doesn't even ask the server for them. It can't hear a browser closing, so
+// worker asks the server for ids alone (locked=1). It can't hear a browser closing, so
 // "unlocked" only counts with a window open.
 
 const PREVIEW = { unreadTotal: 1, slot: 0, email: { id: 'e1', threadId: 't1', subject: 'Secret subject', from: [{ name: 'Secret sender', email: 's@example.org' }] } };
@@ -14,6 +14,10 @@ function setup(clients: Array<{ id: string }>, notifications: Array<Record<strin
   return { worker, fetchMock };
 }
 
+// Locked, the worker asks only with locked=1, which reads and returns ids alone.
+const unlockedAsks = (fetchMock: ReturnType<typeof vi.fn>) =>
+  fetchMock.mock.calls.map(([input]) => String(input)).filter((url) => !url.includes('locked=1'));
+
 describe('a push while the app lock is on', () => {
   it('names the sender with no lock at all', async () => {
     const { worker, fetchMock } = setup([]);
@@ -22,11 +26,11 @@ describe('a push while the app lock is on', () => {
     expect(worker.shown[0].title).toContain('Secret sender');
   });
 
-  it('says nothing about the message while locked, and asks nothing', async () => {
+  it('says nothing about the message while locked, and asks for ids alone', async () => {
     const { worker, fetchMock } = setup([{ id: 'c' }]);
     await worker.dispatch('message', { data: { type: 'app-lock', state: 'locked' } });
     await worker.dispatch('push', { data: { json: () => delivery } });
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(unlockedAsks(fetchMock)).toEqual([]);
     expect(JSON.stringify(worker.shown)).not.toContain('Secret');
     expect(worker.shown[0].title).toBe('New mail');
   });
@@ -43,7 +47,7 @@ describe('a push while the app lock is on', () => {
     const { worker, fetchMock } = setup([]);
     await worker.dispatch('message', { data: { type: 'app-lock', state: 'unlocked' } });
     await worker.dispatch('push', { data: { json: () => delivery } });
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(unlockedAsks(fetchMock)).toEqual([]);
     expect(JSON.stringify(worker.shown)).not.toContain('Secret');
   });
 

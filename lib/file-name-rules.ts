@@ -79,6 +79,19 @@ export function fileNameProblem(name: string, rules: FileNameRules | null): File
   return null;
 }
 
+/**
+ * What makes a name unusable as a file name anywhere, with no server rules
+ * involved: a path separator, a control character, or more than 255
+ * characters. For names the user picks for a copy, such as a renamed attachment.
+ */
+export function plainFileNameProblem(name: string): FileNameProblem | null {
+  if ([...name].length > DEFAULT_MAX_NAME_BYTES) return { kind: 'tooLong' };
+  const bad = [...new Set([...name].filter(c => c === '/' || c === '\\'))];
+  if (bad.length) return { kind: 'chars', chars: bad.join(' ') };
+  if ([...name].some(isControlChar)) return { kind: 'control' };
+  return null;
+}
+
 /** The longest start of `text` that fits in `maxBytes` of UTF-8, whole characters only. */
 function cutToBytes(text: string, maxBytes: number): string {
   let out = '';

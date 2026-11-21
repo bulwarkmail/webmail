@@ -75,7 +75,7 @@ function serve(bytes: Uint8Array, headers: Record<string, string>) {
     // The version lookup before the download; the listing names the hash of
     // the bytes that are then served, so only the signature decides here.
     if (u.includes('/versions/') && !u.endsWith('/bundle')) {
-      return Response.json({ data: { version: '1.0.0', channel: 'stable', yanked: null, minAppVersion: null, maxAppVersion: null, sha256: createHash('sha256').update(bytes).digest('hex') } });
+      return Response.json({ data: { version: '1.0.0', channel: 'stable', yanked: null, minAppVersion: null, maxAppVersion: null, permissions: MANIFEST.permissions, sha256: createHash('sha256').update(bytes).digest('hex') } });
     }
     return new Response(bytes.slice().buffer as ArrayBuffer, { headers });
   }));

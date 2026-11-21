@@ -2,13 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ContactCard, AddressBook, AddressBookRights, ContactName, ContactMedia } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import { loadPrincipalDirectory } from '@/lib/jmap/principal-directory';
+import { loadScopedPrincipalDirectory } from '@/lib/directory-scope';
 import { generateUUID } from '@/lib/utils';
 import { debug } from '@/lib/debug';
 import { calendarHooks, contactHooks, settingsHooks } from '@/lib/plugin-hooks';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { useSettingsStore } from './settings-store';
 import { getClientByLocalAccountId } from './client-registry';
+import { usePolicyStore } from './policy-store';
 import { sanitizeDisplayName, splitMailbox } from '@/lib/rfc5322-mailbox';
 import { inlineContactMedia, writeContactWithNewPhoto, type ContactSaveOptions } from '@/lib/contact-media';
 import { contactToView } from '@/lib/plugin-projection';
@@ -17,6 +18,7 @@ import { PartialAccountsError, partialAccounts, withFailedAccountsKept } from '@
 import type { Principal } from '@/lib/jmap/types';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { planGroupMoves, type MergePlan } from '@/lib/contacts/merge';
+import { planRelatedToCleanup } from '@/lib/contact-related';
 
 /** What a merge changed, to put it back with Undo. */
 export interface MergeUndo {
@@ -180,11 +182,36 @@ function prefixContactsWithLocalAccount(
  * Lookup goes through `client-registry` (not a direct auth-store import)
  * to avoid a top-level cycle: auth-store already imports this module to
  * bootstrap feature stores after login.
+ *
+ * Throws "Not connected" when that login has no client: card and address
+ * book ids repeat across accounts, so through another login the same id is
+ * another card.
  */
 function resolveAccountClient<T extends IJMAPClient>(active: T, localAccountId?: string): T {
   if (!localAccountId) return active;
   const lookup = getClientByLocalAccountId(localAccountId) as T | undefined;
-  return lookup ?? active;
+  if (!lookup) throw new Error('Not connected');
+  return lookup;
+}
+
+/** A contact group would hold cards of two logins; it is not created. */
+export class MixedGroupAccountsError extends Error {
+  constructor() {
+    super('Group members belong to different accounts');
+    this.name = 'MixedGroupAccountsError';
+  }
+}
+
+/**
+ * A member picked for a group is no longer listed (deleted, or its login
+ * signed out, while the form was open). Its id names no card here, so it
+ * can't say which login the group goes to: nothing is written.
+ */
+export class GroupMemberGoneError extends Error {
+  constructor() {
+    super('A group member is no longer listed');
+    this.name = 'GroupMemberGoneError';
+  }
 }
 
 function stripLocalAccountPrefix(id: string, localAccountId?: string): string {
@@ -374,6 +401,27 @@ export const TRUSTED_SENDERS_BOOK_NAME = 'Trusted Senders';
 
 /** In-flight trusted senders load, shared by all callers to keep it single-flight. */
 let trustedSendersLoadPromise: Promise<void> | null = null;
+
+// The store's `sentMailboxId` is the Sent folder of the account in view, and
+// `sentMailboxOwner` the client it came from. A message composed from another
+// account's identity searches through that account's client, where the id
+// means nothing (the Gmail bridge rejects it: "Invalid Gmail object id"), so
+// such a client looks its own Sent folder up once.
+let sentMailboxOwner: IJMAPClient | null = null;
+const sentMailboxByClient = new WeakMap<IJMAPClient, Promise<string | null>>();
+
+function sentMailboxOf(client: IJMAPClient): Promise<string | null> {
+  let pending = sentMailboxByClient.get(client);
+  if (!pending) {
+    pending = client.getMailboxes().then(
+      (mailboxes) => mailboxes.find((m) => m.role === 'sent' && !m.isShared)?.id ?? null,
+    );
+    // A failed lookup is retried on the next search instead of sticking.
+    pending.catch(() => sentMailboxByClient.delete(client));
+    sentMailboxByClient.set(client, pending);
+  }
+  return pending;
+}
 
 /** Every e-mail address held by the given contacts, lowercased and de-duplicated. */
 export function collectContactEmails(contacts: ContactCard[]): string[] {
@@ -576,7 +624,12 @@ interface ContactStore {
   getGroups: () => ContactCard[];
   getIndividuals: () => ContactCard[];
   getGroupMembers: (groupId: string) => ContactCard[];
-  createGroup: (client: IJMAPClient | null, name: string, memberIds: string[]) => Promise<void>;
+  /**
+   * Created in the login of its members; members of two logins are refused
+   * (MixedGroupAccountsError). `localAccountId`: the login for a group
+   * without members, where the list holds several logins' cards.
+   */
+  createGroup: (client: IJMAPClient | null, name: string, memberIds: string[], localAccountId?: string) => Promise<void>;
   updateGroup: (client: IJMAPClient | null, groupId: string, name: string) => Promise<void>;
   addMembersToGroup: (client: IJMAPClient | null, groupId: string, memberIds: string[]) => Promise<void>;
   removeMembersFromGroup: (client: IJMAPClient | null, groupId: string, memberIds: string[]) => Promise<void>;
@@ -587,7 +640,8 @@ interface ContactStore {
   selectAllContacts: (ids: string[]) => void;
   clearSelection: () => void;
   /** false when a plugin stopped it (the plugin tells the user why). */
-  bulkDeleteContacts: (client: IJMAPClient | null, ids: string[]) => Promise<boolean>;
+  /** `replacementUid`: other cards' relations to the deleted cards move to this card (merging duplicates). */
+  bulkDeleteContacts: (client: IJMAPClient | null, ids: string[], replacementUid?: string) => Promise<boolean>;
   bulkAddToGroup: (client: IJMAPClient | null, groupId: string, contactIds: string[]) => Promise<void>;
   moveContactToAddressBook: (client: IJMAPClient, contactIds: string[], addressBook: AddressBook) => Promise<void>;
   createAddressBook: (client: IJMAPClient, name: string) => Promise<AddressBook>;
@@ -703,6 +757,30 @@ export const useContactStore = create<ContactStore>()(
         });
       }
 
+      // Other cards' relatedTo entries naming deleted cards are taken out, or
+      // pointed at `replacementUid` when duplicates were merged into it, so
+      // they don't list a contact that is gone (#1707). `before` is the list
+      // from before the delete. A card that fails to save keeps its entries;
+      // the delete stands either way.
+      async function cleanRelatedTo(client: IJMAPClient | null, before: ContactCard[], deletedIds: Set<string>, replacementUid?: string): Promise<void> {
+        if (deletedIds.size === 0) return;
+        const plan = planRelatedToCleanup(before, deletedIds, get().addressBooks, replacementUid);
+        const sync = !!client && get().supportsSync;
+        await Promise.all(plan.map(async ({ contact, relatedTo }) => {
+          if (sync) {
+            try {
+              const originalId = contact.originalId || stripLocalAccountPrefix(contact.id, contact.localAccountId);
+              const accountId = contact.isShared ? contact.accountId : undefined;
+              await resolveAccountClient(client!, contact.localAccountId).updateContact(originalId, { relatedTo }, accountId);
+            } catch (error) {
+              console.error(`Failed to update the related contacts of ${contact.id}:`, error);
+              return;
+            }
+          }
+          set((state) => ({ contacts: state.contacts.map(c => c.id === contact.id ? { ...c, relatedTo } : c) }));
+        }));
+      }
+
       return ({
       contacts: [],
       addressBooks: [],
@@ -772,8 +850,11 @@ export const useContactStore = create<ContactStore>()(
         const epoch = currentStoreEpoch();
         set({ directoryStatus: 'loading' });
         try {
-          // Shared with the share dialog and free/busy (loadPrincipalDirectory).
-          const { principals, status } = await loadPrincipalDirectory(client);
+          // The public policy from before the sign-in carries no directory rules.
+          await usePolicyStore.getState().refreshIfPartial();
+          // Shared with the share dialog and free/busy, narrowed by the admin
+          // policy's directory rules (lib/directory-scope.ts).
+          const { principals, status } = await loadScopedPrincipalDirectory(client);
           if (currentStoreEpoch() !== epoch) return;
           if (status === 'error') throw new PrincipalsRequestError(null);
           if (status !== 'ok') debug.log('contacts', `Directory listing is ${status}; autocomplete offers ${principals.length} principals`);
@@ -989,14 +1070,16 @@ export const useContactStore = create<ContactStore>()(
           const accountId = contact?.isShared ? contact.accountId : undefined;
           client = resolveAccountClient(client, contact?.localAccountId);
           await client.deleteContact(originalId, accountId);
+          const before = get().contacts;
+          const removedIds = new Set([id]);
           set((state) => {
-            const removedIds = new Set([id]);
             const cleaned = cleanGroupMembers(state.contacts, removedIds);
             return {
               contacts: cleaned.filter(c => c.id !== id),
               selectedContactId: state.selectedContactId === id ? null : state.selectedContactId,
             };
           });
+          await cleanRelatedTo(client, before, removedIds);
           void contactHooks.onAfterContactDelete.emit({ contactIds: [id] });
           notifyBirthdayCalendarIfEnabled();
           return true;
@@ -1030,14 +1113,16 @@ export const useContactStore = create<ContactStore>()(
 
       deleteLocalContact: async (id) => {
         if (!(await contactHooks.onBeforeContactDelete.intercept({ contactIds: [id] }))) return false;
+        const before = get().contacts;
+        const removedIds = new Set([id]);
         set((state) => {
-          const removedIds = new Set([id]);
           const cleaned = cleanGroupMembers(state.contacts, removedIds);
           return {
             contacts: cleaned.filter(c => c.id !== id),
             selectedContactId: state.selectedContactId === id ? null : state.selectedContactId,
           };
         });
+        await cleanRelatedTo(null, before, removedIds);
         void contactHooks.onAfterContactDelete.emit({ contactIds: [id] });
         notifyBirthdayCalendarIfEnabled();
         return true;
@@ -1179,14 +1264,23 @@ export const useContactStore = create<ContactStore>()(
         });
       },
 
-      createGroup: async (client, name, memberIds) => {
+      createGroup: async (client, name, memberIds, localAccountId) => {
         const { contacts } = get();
         const members: Record<string, boolean> = {};
+        // The login the group goes to: its members' (their uids name cards of
+        // that login only), else the one the caller names. On a server every
+        // member must be a listed card; a local group keeps the ids it gets.
+        const syncing = !!client && get().supportsSync;
+        if (syncing && memberIds.some(id => !contacts.some(c => c.id === id))) throw new GroupMemberGoneError();
+        const logins = new Set<string | undefined>();
         memberIds.forEach(id => {
           const contact = contacts.find(c => c.id === id);
+          logins.add(contact?.localAccountId);
           const key = contact?.uid || id;
           members[key] = true;
         });
+        if (logins.size > 1) throw new MixedGroupAccountsError();
+        const login = logins.size === 1 ? [...logins][0] : localAccountId;
 
         const groupData: Partial<ContactCard> = {
           kind: 'group',
@@ -1198,9 +1292,11 @@ export const useContactStore = create<ContactStore>()(
 
         let groupId: string;
         if (client && get().supportsSync) {
-          const created = await client.createContact(groupData);
-          set((state) => ({ contacts: [...state.contacts, created] }));
-          groupId = created.id;
+          const created = await resolveAccountClient(client, login).createContact(groupData);
+          // Under the id the listings give it, as createContact keeps a card.
+          const stored = login ? prefixContactsWithLocalAccount([created], login)[0] : created;
+          set((state) => ({ contacts: [...state.contacts, stored] }));
+          groupId = stored.id;
         } else {
           const localGroup: ContactCard = {
             id: `local-${generateUUID()}`,
@@ -1238,6 +1334,15 @@ export const useContactStore = create<ContactStore>()(
 
         const newMembers = { ...group.members };
         const added: string[] = [];
+        // On a server every new member must be a listed card.
+        if (client && get().supportsSync && memberIds.some(id => !contacts.some(c => c.id === id))) {
+          throw new GroupMemberGoneError();
+        }
+        // Member uids name cards of the group's own login only.
+        if (memberIds.some(id => {
+          const contact = contacts.find(c => c.id === id);
+          return !!contact && contact.localAccountId !== group.localAccountId;
+        })) throw new MixedGroupAccountsError();
         memberIds.forEach(id => {
           const contact = contacts.find(c => c.id === id);
           const key = contact?.uid || contact?.originalId || id;
@@ -1354,7 +1459,7 @@ export const useContactStore = create<ContactStore>()(
 
       clearSelection: () => set({ selectedContactIds: new Set<string>(), lastSelectedContactId: null }),
 
-      bulkDeleteContacts: async (client, ids) => {
+      bulkDeleteContacts: async (client, ids, replacementUid) => {
         if (ids.length === 0) return true;
         if (!(await contactHooks.onBeforeContactDelete.intercept({ contactIds: [...ids] }))) return false;
         set({ error: null });
@@ -1378,6 +1483,7 @@ export const useContactStore = create<ContactStore>()(
           }
         }
 
+        const before = get().contacts;
         set((state) => {
           const cleaned = cleanGroupMembers(state.contacts, deletedIds);
           return {
@@ -1386,6 +1492,7 @@ export const useContactStore = create<ContactStore>()(
             selectedContactIds: new Set<string>(),
           };
         });
+        await cleanRelatedTo(client, before, deletedIds, replacementUid);
         if (deletedIds.size > 0) {
           void contactHooks.onAfterContactDelete.emit({ contactIds: ids.filter(id => deletedIds.has(id)) });
           notifyBirthdayCalendarIfEnabled();
@@ -1632,7 +1739,10 @@ export const useContactStore = create<ContactStore>()(
       },
 
       loadRecentRecipients: async (client, sentMailboxId) => {
-        if (sentMailboxId) set({ sentMailboxId });
+        if (sentMailboxId) {
+          set({ sentMailboxId });
+          sentMailboxOwner = client;
+        }
         if (get().recentRecipientsLoaded || !sentMailboxId) return;
         // One read of the Sent folder at a time: callers retry whenever the
         // folder list changes, which it does several times while signing in.
@@ -1664,10 +1774,14 @@ export const useContactStore = create<ContactStore>()(
       },
 
       searchRecipients: async (client, query) => {
-        const { sentMailboxId } = get();
         const q = query.trim();
-        if (!sentMailboxId || q.length < 1) return [];
+        if (q.length < 1) return [];
         try {
+          // The account in view searches at once: no lookup before the request.
+          const sentMailboxId = !sentMailboxOwner || client === sentMailboxOwner
+            ? get().sentMailboxId
+            : await sentMailboxOf(client);
+          if (!sentMailboxId) return [];
           return await client.searchSentRecipients(q, sentMailboxId);
         } catch (error) {
           debug.error('Recipient server search failed:', error);
@@ -1817,6 +1931,10 @@ export const useContactStore = create<ContactStore>()(
         // The book the cards landed in, as the server filed the first one.
         let addressBookId = '';
         const book = targetBookId ? get().addressBooks.find(b => b.id === targetBookId) : undefined;
+        // A chosen book that is no longer listed (its login was signed out
+        // while the import was open) takes nothing: the cards do not go into
+        // another account's default book instead.
+        if (client && supportsSync && targetBookId && !book) throw new Error('Address book not found');
         // The chosen book as the server knows it, and the login and account it belongs to.
         const target = book ? resolveRawAddressBookIds({ [book.id]: true }, get().addressBooks) : undefined;
 
@@ -1902,7 +2020,7 @@ export const useContactStore = create<ContactStore>()(
           console.error('Failed to move group members while merging:', error);
           return { keepId: keep.id, before, others: [], groups, incomplete: true };
         }
-        await get().bulkDeleteContacts(sync ? client : null, others.map(o => o.id));
+        await get().bulkDeleteContacts(sync ? client : null, others.map(o => o.id), keep.uid);
         // A failed delete, or a plugin that stopped it, leaves cards in place:
         // Undo must not create those again.
         const left = new Set(get().contacts.map(c => c.id));
@@ -1987,5 +2105,25 @@ useContactStore.subscribe((state, prev) => {
   if (sameIdSet(next, prev.selectedContactIds ?? new Set<string>())) return;
   void contactHooks.onContactSelectionChange.emit({ contactIds: [...next] });
 });
+
+/**
+ * Drops the cards and address books of login `localAccountId` (the Pro shell
+ * lists every login's): it was removed, or has no client for longer, so
+ * nothing done to them could reach its server.
+ */
+export function forgetLoginContacts(localAccountId: string): void {
+  const ofLogin = (item: { localAccountId?: string }) => item.localAccountId === localAccountId;
+  const state = useContactStore.getState();
+  if (!state.contacts.some(ofLogin) && !state.addressBooks.some(ofLogin)) return;
+  useContactStore.setState((s) => {
+    const gone = new Set(s.contacts.filter(ofLogin).map((contact) => contact.id));
+    return {
+      contacts: s.contacts.filter((contact) => !ofLogin(contact)),
+      addressBooks: s.addressBooks.filter((book) => !ofLogin(book)),
+      selectedContactId: s.selectedContactId && gone.has(s.selectedContactId) ? null : s.selectedContactId,
+      selectedContactIds: new Set([...s.selectedContactIds].filter((id) => !gone.has(id))),
+    };
+  });
+}
 
 export type { ContactName };

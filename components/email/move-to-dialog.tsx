@@ -6,12 +6,23 @@ import { create } from "zustand";
 import { Dialog } from "@/components/ui/dialog";
 import type { Email, Mailbox } from "@/lib/jmap/types";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { useMoveFolders, useMoveUnavailableHint } from "@/hooks/use-move-folders";
+import { toast } from "@/stores/toast-store";
 import { MoveFolderList, useMoveMenu } from "./move-target-list";
 
 interface MoveDialogRequest {
   /** The messages to move. */
   emails: Email[];
   onMove: (mailboxId: string) => void;
+  /**
+   * The folders the asking Move menu listed, and the folder it was in, where
+   * they aren't the host's: a Pro folder tab's reader files within its own
+   * account, whatever Mail shows.
+   */
+  mailboxes?: Mailbox[];
+  selectedMailbox?: string;
+  /** With `mailboxes`: whose folders they are, when not the active login's. */
+  heading?: string;
 }
 
 interface MoveDialogState {
@@ -44,6 +55,8 @@ interface MoveToDialogProps {
   emails: Email[];
   mailboxes: Mailbox[];
   selectedMailbox: string;
+  /** Whose folders `mailboxes` are, when not the active login's: shown above them. */
+  heading?: string;
   onClose: () => void;
   onMove: (mailboxId: string) => void;
 }
@@ -53,12 +66,13 @@ interface MoveToDialogProps {
  * dialog with a filter field. From the command palette, the Message menu and
  * "Choose folder…" in a long Move menu.
  */
-export function MoveToDialog({ emails, mailboxes, selectedMailbox, onClose, onMove }: MoveToDialogProps) {
+export function MoveToDialog({ emails, mailboxes, selectedMailbox, heading, onClose, onMove }: MoveToDialogProps) {
   const t = useTranslations("context_menu");
   const model = useMoveMenu(mailboxes, {
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(emails[0], mailboxes, selectedMailbox),
     emails,
+    heading,
   });
   return (
     <Dialog isOpen={emails.length > 0} onClose={onClose} title={t("move_to_dialog")} bodyClassName="px-2" size="sm">
@@ -77,22 +91,42 @@ export function MoveToDialog({ emails, mailboxes, selectedMailbox, onClose, onMo
   );
 }
 
-/** Shows the dialog a Move menu asked for. Mounted once, where the mail is. */
-export function MoveToDialogHost({ mailboxes, selectedMailbox }: { mailboxes: Mailbox[]; selectedMailbox: string }) {
+/**
+ * Shows the dialog a Move menu asked for. Mounted once, where the mail is.
+ * Without folders of its own, the request gets the folders of the login its
+ * messages are in (moveFoldersFor); where there are none to offer (several
+ * logins, or that login's list can't be had) it says why instead.
+ */
+export function MoveToDialogHost({ selectedMailbox }: { selectedMailbox: string }) {
   const request = useMoveDialogStore((s) => s.request);
   const close = useMoveDialogStore((s) => s.close);
+  const tNotifications = useTranslations("notifications");
+  const hint = useMoveUnavailableHint();
+  const offered = useMoveFolders(request?.emails ?? NO_EMAILS);
+  const refused = !!request && !request.mailboxes && !!offered.unavailable;
   useEffect(() => {
     useMoveDialogStore.setState((s) => ({ hosts: s.hosts + 1 }));
     return () => useMoveDialogStore.setState((s) => ({ hosts: s.hosts - 1, request: s.hosts <= 1 ? null : s.request }));
   }, []);
-  if (!request) return null;
+  const reason = offered.unavailable;
+  useEffect(() => {
+    if (!refused) return;
+    toast.error(tNotifications("move_failed"), hint(reason));
+    close();
+    // Once per refused request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refused]);
+  if (!request || refused) return null;
   return (
     <MoveToDialog
       emails={request.emails}
-      mailboxes={mailboxes}
-      selectedMailbox={selectedMailbox}
+      mailboxes={request.mailboxes ?? offered.mailboxes}
+      selectedMailbox={request.mailboxes ? request.selectedMailbox ?? "" : selectedMailbox}
+      heading={request.mailboxes ? request.heading : offered.owner}
       onClose={close}
       onMove={request.onMove}
     />
   );
 }
+
+const NO_EMAILS: Email[] = [];

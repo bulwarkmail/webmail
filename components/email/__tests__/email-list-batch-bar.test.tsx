@@ -50,6 +50,15 @@ describe('selection bar', () => {
     await waitFor(() => expect(batchMarkAsSpam).toHaveBeenCalledWith(expect.anything(), ['one', 'two']));
   });
 
+  it('deletes for good in the unified Trash, whose id names no folder (#1738)', async () => {
+    const batchDelete = vi.fn().mockResolvedValue(true);
+    useEmailStore.setState({ batchDelete, isUnifiedView: true, unifiedRole: 'trash', selectedMailbox: '__unified_trash__' });
+    render(<EmailList emails={useEmailStore.getState().emails} />);
+    fireEvent.click(screen.getByTestId('batch-delete'));
+    fireEvent.click(await screen.findByRole('button', { name: 'reader_actions.delete_forever' }));
+    await waitFor(() => expect(batchDelete).toHaveBeenCalledWith(expect.anything(), true));
+  });
+
   it('counts conversations in its toasts, as its title does (mail-18)', async () => {
     const { toast } = await import('@/stores/toast-store');
     const batchArchive = vi.fn().mockResolvedValue(true);

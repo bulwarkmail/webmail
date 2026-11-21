@@ -31,7 +31,8 @@ describe('plugin config saved at the same time', () => {
     expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
     const expected = Object.fromEntries(keys.map((key, i) => [key, i]));
     expect(await config.getPluginConfig('cloud-sync')).toEqual(expected);
-    expect(JSON.parse(await readFile(path.join(dir, 'plugin-config', 'cloud-sync.json'), 'utf-8'))).toEqual(expected);
+    // The file also lists which of its keys hold secrets: none here.
+    expect(JSON.parse(await readFile(path.join(dir, 'plugin-config', 'cloud-sync.json'), 'utf-8'))).toEqual({ ...expected, $secret: [] });
   });
 
   it('keeps the other keys when one is deleted while another is set', async () => {

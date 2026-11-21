@@ -6,6 +6,7 @@ import {
   validateTemplateName,
   getAutoFilledPlaceholders,
   getPlaceholdersFromTemplate,
+  getPlaceholderDefaults,
   isBuiltInPlaceholder,
   filterTemplates,
   exportTemplates,
@@ -61,6 +62,9 @@ describe('extractPlaceholders', () => {
   it('handles underscored names', () => {
     expect(extractPlaceholders('{{first_name}} {{last_name}}')).toEqual(['first_name', 'last_name']);
   });
+  it('extracts the name of a placeholder with a default', () => {
+    expect(extractPlaceholders('From {{time:15:00}} for {{guests:2}}, {{time}}')).toEqual(['time', 'guests']);
+  });
 });
 
 describe('substitutePlaceholders', () => {
@@ -101,6 +105,13 @@ describe('substitutePlaceholders', () => {
   it('handles no placeholders in text', () => {
     expect(substitutePlaceholders('No placeholders', { name: 'test' })).toBe('No placeholders');
   });
+  it('replaces a placeholder with a default by the value', () => {
+    expect(substitutePlaceholders('At {{time:15:00}}, again {{time}}', { time: '17:00' })).toBe('At 17:00, again 17:00');
+  });
+
+  it('leaves a placeholder with a default as it is without a value', () => {
+    expect(substitutePlaceholders('At {{time:15:00}}', {})).toBe('At {{time:15:00}}');
+  });
 });
 
 describe('hasUnresolvedPlaceholders', () => {
@@ -110,6 +121,10 @@ describe('hasUnresolvedPlaceholders', () => {
 
   it('returns false when no placeholders', () => {
     expect(hasUnresolvedPlaceholders('Hello world')).toBe(false);
+  });
+
+  it('returns true for a placeholder with a default', () => {
+    expect(hasUnresolvedPlaceholders('Hello {{name:Ada}}')).toBe(true);
   });
 
   it('returns false for empty string', () => {
@@ -194,6 +209,60 @@ describe('getPlaceholdersFromTemplate', () => {
       body: '{{name}} again',
     });
     expect(getPlaceholdersFromTemplate(tpl)).toEqual(['name']);
+  });
+});
+
+describe('getPlaceholderDefaults', () => {
+  it('returns the first default of each placeholder, subject first', () => {
+    const tpl = makeTemplate({
+      subject: 'Stay from {{arrival:Sat 13 Feb}}',
+      body: '{{greeting}}, see you {{arrival:Sun 14 Feb}} at {{time:15:00}} with {{guests}} {{guests:2}}',
+    });
+    expect(getPlaceholderDefaults(tpl)).toEqual(new Map([['arrival', 'Sat 13 Feb'], ['time', '15:00'], ['guests', '2']]));
+  });
+
+  it('decodes the default in an HTML body, not in a plain one', () => {
+    expect(getPlaceholderDefaults(makeTemplate({ body: '<p>{{company:Smith &amp; Co}}</p>', isHTML: true })))
+      .toEqual(new Map([['company', 'Smith & Co']]));
+    expect(getPlaceholderDefaults(makeTemplate({ body: '{{company:Smith &amp; Co}}' })))
+      .toEqual(new Map([['company', 'Smith &amp; Co']]));
+  });
+
+  it('takes no default across a tag or a line break', () => {
+    expect(getPlaceholderDefaults(makeTemplate({ body: '<p>{{name:<b>Ada</b>}}</p>', isHTML: true }))).toEqual(new Map());
+    expect(getPlaceholderDefaults(makeTemplate({ body: '{{name:Ada\nLovelace}}' }))).toEqual(new Map());
+  });
+
+  // The composer substitutes the kept default like a typed value.
+  it('gives an HTML body\'s default back escaped when it is substituted', () => {
+    const tpl = makeTemplate({ body: '<p>{{name:&lt;img src=x onerror=alert(1)&gt;}}</p>', isHTML: true });
+    const name = getPlaceholderDefaults(tpl).get('name')!;
+    expect(substitutePlaceholders(tpl.body, { name }, { html: true })).toBe('<p>&lt;img src=x onerror=alert(1)&gt;</p>');
+  });
+
+  it('takes a default with an address in a subject or a plain body', () => {
+    const tpl = makeTemplate({
+      subject: 'For {{contact:Jane <jane@x.com>}}',
+      body: 'Copy {{cc:Bob <bob@x.com>}}',
+    });
+    expect(getPlaceholdersFromTemplate(tpl)).toEqual(['contact', 'cc']);
+    expect(getPlaceholderDefaults(tpl)).toEqual(new Map([['contact', 'Jane <jane@x.com>'], ['cc', 'Bob <bob@x.com>']]));
+    expect(substitutePlaceholders(tpl.subject, { contact: 'Jane <jane@x.com>' })).toBe('For Jane <jane@x.com>');
+  });
+
+  it('still stops a default at a tag in an HTML body when the subject has an address', () => {
+    const tpl = makeTemplate({
+      subject: 'For {{contact:Jane <jane@x.com>}}',
+      body: '<p>{{name:<b>Ada</b>}}</p>',
+      isHTML: true,
+    });
+    expect(getPlaceholdersFromTemplate(tpl)).toEqual(['contact']);
+    expect(getPlaceholderDefaults(tpl)).toEqual(new Map([['contact', 'Jane <jane@x.com>']]));
+    expect(substitutePlaceholders(tpl.body, { name: 'x' }, { html: true })).toBe(tpl.body);
+  });
+
+  it('keeps an empty default', () => {
+    expect(getPlaceholderDefaults(makeTemplate({ body: '{{reason:}} {{note}}' }))).toEqual(new Map([['reason', '']]));
   });
 });
 

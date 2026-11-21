@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getClientIP } from '@/lib/admin/session';
 import { checkInDevice, DEVICE_ID_RE, DEVICE_SECRET_RE, REGISTER_PER_HOUR, registerDevice, TooManyDevicesError } from '@/lib/devices/registry';
@@ -61,8 +62,11 @@ export async function POST(request: NextRequest) {
 
     const creds = await getStalwartCredentials(request);
     if (!creds) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_STORE });
+    // Per account, not per address: one hour-long counter per signed-in
+    // account, so nobody can fill the counter store by changing addresses.
+    const account = createHash('sha256').update(`${creds.serverUrl}\n${creds.accountName}`).digest('base64url');
     const newRows = await getStore().counters.reserve([
-      { key: `device-register:${getClientIP(request)}`, max: REGISTER_PER_HOUR, windowMs: 60 * 60 * 1000 },
+      { key: `device-register:${account}`, max: REGISTER_PER_HOUR, windowMs: 60 * 60 * 1000 },
     ]).catch(() => ({ ok: true }));
     if (!newRows.ok) return NextResponse.json({ error: 'rate limited' }, { status: 429, headers: NO_STORE });
     const created = await registerDevice(creds.accountName, creds.serverUrl, info);

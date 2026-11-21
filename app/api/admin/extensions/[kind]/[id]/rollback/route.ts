@@ -5,19 +5,39 @@ import { logger } from '@/lib/logger';
 import { HistoryError, readHistoryEntry } from '@/lib/admin/extension-history';
 import { getPlugin, getTheme, savePlugin, saveTheme } from '@/lib/admin/plugin-registry';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
+import { getPluginConfig, sealPluginSecrets } from '@/lib/admin/plugin-config';
+import { CREDENTIAL_HEADER_NAMES, unlistedCredentialHeaders } from '@/lib/plugin-secrets/credentials';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { EXTENSION_ID_RE } from '@/lib/extension-package';
 import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
+import {
+  anyGrants,
+  compactGrants,
+  describeReachAdded,
+  grantsAdded,
+  grantsOf,
+  judgeAnswer,
+  unexpectedMessage,
+  withSealedSettings,
+  type Grants,
+} from '@/lib/admin/extension-grants';
 
 /**
  * POST /api/admin/extensions/[kind]/[id]/rollback
- * Body: { version: string }
+ * Body: { version: string, acceptPermissions?: string[], acceptGrants?: object }
  *
  * Puts a previously installed version back from the server's own copy
  * (lib/admin/extension-history.ts). The directory is not involved, so this
  * works offline and for versions the directory has since withdrawn. The
  * extension keeps whether it is enabled or forced; only the code and the
  * manifest-derived fields go back to what that version had.
+ *
+ * A kept version that may do more than the installed one (permissions,
+ * hosts, POST paths, frame origins, credential servers, which stored secret
+ * a credential sends where, a setting that stops being a secret, the
+ * privileged tier, a theme's skin) is refused
+ * with 409 and `grantsAdded` until the request accepts it, the same question
+ * an update asks (lib/admin/extension-grants.ts).
  */
 export async function POST(
   request: NextRequest,
@@ -45,6 +65,30 @@ export async function POST(
     }
 
     const now = new Date().toISOString();
+    /**
+     * The 409 for a kept version that brings back more than is installed, unless the
+     * request accepted each addition as listed (and nothing else that wasn't installed).
+     */
+    const question = (added: Grants, seen: Grants, installed: string) => {
+      const answer = judgeAnswer(added, seen, body ?? {});
+      if (answer.settled) return null;
+      return NextResponse.json(
+        {
+          error: answer.unexpected
+            ? unexpectedMessage(answer.unexpected)
+            : [
+                `Version ${version} may do more than the installed ${installed}.`,
+                ...(added.permissions.length > 0 ? [`Permissions it brings back: ${added.permissions.join(', ')}.`] : []),
+                ...describeReachAdded(added),
+              ].join(' '),
+          permissionsAdded: added.permissions,
+          grantsAdded: added,
+          compared: 'rollback',
+          ...(answer.unexpected ? { unexpected: answer.unexpected } : {}),
+        },
+        { status: 409 },
+      );
+    };
 
     if (kind === 'plugin') {
       const current = await getPlugin(id);
@@ -53,6 +97,26 @@ export async function POST(
         return NextResponse.json({ error: `Version ${version} is already installed` }, { status: 409 });
       }
       const kept = await readHistoryEntry('plugin', id, version);
+      // A kept version goes back as it was stored, so what an install checks
+      // about a credential's header has to hold for it here.
+      const headers = unlistedCredentialHeaders(kept.entry.credentials);
+      if (headers.length > 0) {
+        return NextResponse.json(
+          {
+            error: `Version ${version} puts a credential into the request header ${headers.map((h) => `"${h}"`).join(', ')}, `
+              + `which is not a header a credential may use (${CREDENTIAL_HEADER_NAMES.join(', ')}). It can't be put back.`,
+          },
+          { status: 400 },
+        );
+      }
+      // The stored settings are put in order first, so a setting whose stored
+      // value is a secret counts as one even when the installed version no
+      // longer declares it.
+      await sealPluginSecrets(id, current);
+      const installed = withSealedSettings(grantsOf(current), await getPluginConfig(id));
+      const added = grantsAdded(installed, grantsOf(kept.entry));
+      const asked = question(added, installed, current.version);
+      if (asked) return asked;
       const plugin = {
         ...kept.entry,
         id,
@@ -62,9 +126,15 @@ export async function POST(
         installedAt: current.installedAt,
         updatedAt: now,
       };
+      // What is stored keeps its standing through the save: a secret stays one
+      // whatever the kept version declares for its key.
+      await sealPluginSecrets(id, current);
       await savePlugin(plugin, kept.code);
       invalidateFrameOriginsCache();
-      await auditLog('plugin.rollback', { id, from: current.version, to: version }, ip);
+      await auditLog('plugin.rollback', {
+        id, from: current.version, to: version,
+        ...(anyGrants(added) ? { accepted: compactGrants(added) } : {}),
+      }, ip);
       const saved = await getPlugin(id);
       return NextResponse.json({ success: true, plugin: saved ?? plugin });
     }
@@ -75,6 +145,10 @@ export async function POST(
       return NextResponse.json({ error: `Version ${version} is already installed` }, { status: 409 });
     }
     const kept = await readHistoryEntry('theme', id, version);
+    const installed = grantsOf(current);
+    const added = grantsAdded(installed, { skin: kept.skin !== null });
+    const asked = question(added, installed, current.version);
+    if (asked) return asked;
     const theme = {
       ...kept.entry,
       id,
@@ -84,7 +158,10 @@ export async function POST(
       updatedAt: now,
     };
     await saveTheme(theme, kept.css, kept.skin);
-    await auditLog('theme.rollback', { id, from: current.version, to: version }, ip);
+    await auditLog('theme.rollback', {
+      id, from: current.version, to: version,
+      ...(anyGrants(added) ? { accepted: compactGrants(added) } : {}),
+    }, ip);
     const saved = await getTheme(id);
     return NextResponse.json({ success: true, theme: saved ?? theme });
   } catch (error) {

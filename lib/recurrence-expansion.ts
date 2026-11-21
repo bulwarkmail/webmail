@@ -428,7 +428,7 @@ function addImplicitByX(
 // ---------------------------------------------------------------------------
 // §3.3.3.1 - Generate occurrence dates
 // ---------------------------------------------------------------------------
-function generateDates(
+export function generateDates(
   eventStart: Date,
   rawRule: CalendarRecurrenceRule,
   rangeStart: Date,
@@ -512,6 +512,21 @@ function generateDates(
   }
 
   return dates;
+}
+
+/**
+ * Next date a recurring item will fall on after its start or due date,
+ * looking ahead up to ten years. Null when the rule produces no further
+ * occurrences (e.g. an exhausted count or an until in the past).
+ */
+export function getNextRecurrenceDate(
+  startOrDueDate: Date,
+  rule: CalendarRecurrenceRule,
+): Date | null {
+  const rangeStart = new Date(startOrDueDate.getTime() + 1000);
+  const rangeEnd = addYears(startOrDueDate, 10);
+  const dates = generateDates(startOrDueDate, rule, rangeStart, rangeEnd, false);
+  return dates.length > 0 ? dates[0] : null;
 }
 
 // ---------------------------------------------------------------------------

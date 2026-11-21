@@ -46,7 +46,8 @@ describe('AppShellSkeleton under the Pro interface', () => {
     const shell = pro?.querySelector('[data-pro-shell]');
     const rail = shell?.firstElementChild;
     expect(classes(rail)).toEqual(expect.arrayContaining(['w-14', 'flex']));
-    expect(rail?.querySelectorAll('[data-sk-rail]')).toHaveLength(5);
+    // Mail, Calendar, Tasks (shown when the last rail had them), Contacts, Files, Settings.
+    expect(rail?.querySelectorAll('[data-sk-rail]')).toHaveLength(6);
     const panes = pro?.querySelectorAll('[data-sk-pro-pane]') ?? [];
     expect([...panes].map((p) => p.getAttribute('data-sk-pro-pane'))).toEqual(['main', 'split']);
     for (const pane of panes) {
@@ -84,7 +85,7 @@ describe('ProSkeleton', () => {
     for (const pane of container.querySelectorAll('[data-sk-pro-pane]')) {
       const body = pane.children[1];
       expect([...body.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual([
-        'mail', 'calendar', 'contacts', 'files', 'settings', 'other',
+        'mail', 'calendar', 'tasks', 'contacts', 'files', 'settings', 'other',
       ]);
     }
   });

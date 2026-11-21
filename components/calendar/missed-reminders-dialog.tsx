@@ -16,6 +16,7 @@ export function MissedRemindersDialog() {
   const tWording = useTranslations("uxs_wording");
   const locale = useLocale();
   const timeZone = useSettingsStore((s) => s.timeZone);
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const account = useMissedReminders((s) => s.account);
   const alerts = useMissedReminders((s) => s.alerts);
   const close = useMissedReminders((s) => s.close);
@@ -23,7 +24,7 @@ export function MissedRemindersDialog() {
 
   if (!account || alerts.length === 0) return null;
 
-  const format = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: reminderTimeZone(timeZone) });
+  const format = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", hour12: timeFormat === "12h", timeZone: reminderTimeZone(timeZone) });
   const finish = () => {
     dismissReminders(account, alerts.map((alert) => alert.key));
     close();

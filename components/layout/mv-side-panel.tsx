@@ -39,8 +39,10 @@ const HOUR_PX = 48;
  * Mountain View's side panel: the strip of app icons down the right edge
  * that Gmail has, each opening a narrow panel next to the mail - today's
  * calendar, the task list, the address book - without leaving the inbox.
+ * `pluginsOnly` leaves the apps' panels out (a plugin page: they act on
+ * the mail view, which isn't there) and keeps the plugins' side panels.
  */
-export function MvSidePanel() {
+export function MvSidePanel({ pluginsOnly = false }: { pluginsOnly?: boolean } = {}) {
   const t = useTranslations("sidebar");
   const client = useAuthStore((s) => s.client);
   const supportsCalendar = useCalendarStore((s) => s.supportsCalendar);
@@ -61,8 +63,8 @@ export function MvSidePanel() {
     plugins.choose(pluginId);
   };
 
-  const showCalendar = supportsCalendar && calendarEnabled;
-  const showContacts = (client?.supportsContacts() ?? false) && contactsEnabled;
+  const showCalendar = !pluginsOnly && supportsCalendar && calendarEnabled;
+  const showContacts = !pluginsOnly && (client?.supportsContacts() ?? false) && contactsEnabled;
   const showTasks = showCalendar && tasksEnabled;
 
   const buttons: Array<{ id: MvSidePanelId; label: string; icon: typeof CalendarIcon; color: string }> = [

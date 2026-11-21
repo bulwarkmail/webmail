@@ -93,7 +93,7 @@ function stubUpstream(impl?: (url: string, body: string) => Response) {
 function request(method: string, params: Record<string, string> = {}, body?: unknown): unknown {
   return {
     method,
-    headers: new Headers({ 'sec-fetch-site': 'same-origin' }),
+    headers: new Headers({ 'sec-fetch-site': 'same-origin', ...(body !== undefined ? { 'content-type': 'application/json' } : {}) }),
     nextUrl: { searchParams: new URLSearchParams(params), basePath: '' },
     json: async () => body,
   };

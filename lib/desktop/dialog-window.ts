@@ -65,12 +65,18 @@ const COLOUR_VARS: Record<DesktopDialogWindowColour, string> = {
 /** What Chromium computes an sRGB colour to. */
 const RGB = /^rgba?\((\d{1,3}), (\d{1,3}), (\d{1,3})(?:, ([\d.]+))?\)$/;
 
-/** One colour as rgb()/rgba(), whatever the theme wrote it as (hex, hsl, oklch, color-mix). */
-function resolveColour(probe: HTMLElement, value: string): string | undefined {
-  probe.style.color = '';
+/**
+ * One colour as rgb()/rgba(), whatever the theme wrote it as (hex, hsl, oklch, color-mix).
+ * Each on an element of its own: Electron 45 on Windows keeps an element's first computed
+ * colour, so a shared one gave every colour the first's, white text on a white card.
+ */
+function resolveColour(container: HTMLElement, value: string): string | undefined {
+  const probe = document.createElement('div');
   probe.style.color = value;
   if (!probe.style.color) return undefined;
+  container.append(probe);
   const computed = getComputedStyle(probe).color.trim();
+  probe.remove();
   const rgb = RGB.exec(computed);
   if (rgb) {
     const [r, g, b, a] = rgb.slice(1).map((n) => (n === undefined ? undefined : Number(n)));

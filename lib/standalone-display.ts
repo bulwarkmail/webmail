@@ -9,6 +9,7 @@
  */
 
 import { downloadAllowedQuietly, type DownloadSubject } from "@/lib/download-guard";
+import { isInlineSafeBlob } from "@/lib/file-preview";
 
 type StandaloneNavigator = Navigator & { standalone?: boolean };
 
@@ -29,13 +30,27 @@ export function canOpenUrlInNewWindow(url: string): boolean {
   return !url.startsWith("blob:") || !isStandaloneDisplayMode();
 }
 
+function isBlobUrl(url: string): boolean {
+  try {
+    return new URL(url, window.location.href).protocol === "blob:";
+  } catch {
+    // Not a URL a window could load either: treated like a blob: URL nobody vouches for.
+    return true;
+  }
+}
+
 /**
  * Opens a preview URL in a new window when that window can load it. Returns
  * false without opening anything when it cannot, so the caller shows the
  * file in-app (or downloads it) instead of leaving the user a dead window.
+ *
+ * A blob: URL opens as a document of the webmail origin, so it opens only
+ * together with `blob`, the Blob it was made from, and only when that Blob's
+ * type is on the inline-safe list of lib/file-preview.ts.
  */
-export function openPreviewInNewWindow(url: string, subject?: DownloadSubject): boolean {
+export function openPreviewInNewWindow(url: string, subject?: DownloadSubject, blob?: Blob): boolean {
   if (!canOpenUrlInNewWindow(url)) return false;
+  if (isBlobUrl(url) && !(blob && isInlineSafeBlob(blob))) return false;
   // A file in a tab of its own can be saved from there: the same device
   // policy as a download. Refused, the caller previews it in the app.
   if (!downloadAllowedQuietly('attachment', subject)) return false;

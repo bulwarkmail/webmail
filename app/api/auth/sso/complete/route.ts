@@ -16,8 +16,11 @@ import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oaut
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { storeIdToken } from '@/lib/oauth/end-session';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { writeSignInStamp } from '@/lib/auth/session-age';
+import { callbackIssuerAccepted } from '@/lib/oauth/discovery';
+import { loggableError } from '@/lib/oauth/answer-summary';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
@@ -67,10 +70,12 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   const cookieStore = await cookies();
 
   try {
-    const { code, state, slot: bodySlot } = await request.json();
+    const { code, state, slot: bodySlot, iss } = await request.json();
 
     if (!code || !state) {
       return NextResponse.json({ error: 'Missing code or state' }, { status: 400 });
@@ -137,6 +142,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid SSO session data' }, { status: 400 });
     }
 
+    // RFC 9207: a code answered by another issuer than the one this sign-in
+    // was sent to is refused before the code or the verifier goes anywhere.
+    // The callback page passes `iss` on; a missing one is refused when the
+    // provider says it always sends it. /start records the issuer of metadata
+    // that passes the sign-in rule (signInIssuerRule), and the code goes only
+    // to such metadata's token endpoint.
+    if (!callbackIssuerAccepted(iss, pending.issuer, pending.iss_required === true)) {
+      logger.warn('SSO complete: the answer came from another issuer than the one asked');
+      cookieStore.delete(SSO_PENDING_COOKIE);
+      return NextResponse.json({ error: 'Issuer mismatch' }, { status: 400 });
+    }
+
     // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri, pendingServerId);
     const signedInAt = Date.now();
@@ -152,8 +169,9 @@ export async function POST(request: NextRequest) {
         // Without "Remember me" the sign-in ends with the browser session.
         const options = getSignInCookieOptions(remember);
         cookieStore.set(cookieName, tokens.refresh_token, options);
-        // A sign-in: the maximum session length counts from here (lib/auth/session-age.ts).
-        writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token }, options);
+        // A sign-in: the maximum session length counts from here (lib/auth/session-age.ts),
+        // and the token is renewed and revoked only at this server.
+        writeSignInStamp(cookieStore, slot, { signedInAt, refreshToken: tokens.refresh_token, serverId: pendingServerId }, options);
       }
       const serverCookieName = refreshTokenServerCookieName(slot);
       if (pendingServerId) {
@@ -255,7 +273,7 @@ export async function POST(request: NextRequest) {
     cookieStore.delete(SSO_PENDING_COOKIE);
     // The mobile hand-off can't be parked without the shared store.
     if (isStoreUnavailable(error)) return storeUnavailableResponse();
-    logger.error('SSO complete error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('SSO complete error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Token exchange failed' }, { status: 401 });
   }
 }

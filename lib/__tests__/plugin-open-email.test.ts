@@ -154,6 +154,22 @@ describe('ui.openEmail', () => {
       ]);
     });
 
+    it('names the login of the active login\'s own message too while several logins are in the account list', async () => {
+      const { useAccountStore } = await import('@/stores/account-store');
+      const before = useAccountStore.getState().accounts;
+      useAccountStore.setState({ accounts: [{ id: 'login-1' }, { id: 'login-2' }] as never });
+      try {
+        await dispatchApiCall(plugin(), 'ui.openEmail', [{ id: 'm1' }]);
+        await dispatchApiCall(plugin(), 'ui.openEmail', [{ id: 'g1', accountId: 'group-1' }]);
+        expect(assign.mock.calls.map(([href]) => href)).toEqual([
+          '/mail/message/m1?account=login-1',
+          '/mail/message/g1?account=login-1&owner=group-1',
+        ]);
+      } finally {
+        useAccountStore.setState({ accounts: before });
+      }
+    });
+
     it('loads a link at most five times a minute', async () => {
       for (let i = 0; i < 5; i++) await dispatchApiCall(plugin(), 'ui.openEmail', [{ id: 'm1' }]);
       await expect(dispatchApiCall(plugin(), 'ui.openEmail', [{ id: 'm1' }])).rejects.toThrow(/at most 5 times a minute/);

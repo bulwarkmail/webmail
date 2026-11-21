@@ -10,6 +10,7 @@
 import type { SyncContext, Syncer } from '../area';
 import { deleteObject, putObject } from '../engine/core-schema';
 import { runChangesLoop } from '../engine/changes';
+import { NOTE_KEYWORD } from '@/lib/team-mailboxes/hidden-folders';
 import { JmapMethodError, responseFor, type MethodCall } from '../engine/transport';
 import {
   deleteEmail,
@@ -36,7 +37,18 @@ function windowFilter(ctx: SyncContext): Record<string, unknown> | undefined {
   return { after: new Date(ctx.now() - ctx.scope.days * 86_400_000).toISOString() };
 }
 
+/**
+ * Team notes (lib/team-mailboxes/hidden-folders.ts) are never kept on the
+ * device: Bulwark doesn't show them as mail, and the notes view reads them
+ * from the server. Checked where messages are stored, so every sync path
+ * (full list, sweep, changes) leaves them out.
+ */
+function isNote(email: EmailObject): boolean {
+  return Boolean((email.keywords as Record<string, boolean> | undefined)?.[NOTE_KEYWORD]);
+}
+
 function inWindow(ctx: SyncContext, email: EmailObject): boolean {
+  if (isNote(email)) return false;
   if (ctx.scope.days === null) return true;
   return (Date.parse(String(email.receivedAt)) || 0) >= ctx.now() - ctx.scope.days * 86_400_000;
 }
@@ -184,7 +196,7 @@ async function runFullList(ctx: SyncContext, jmap: string, start: ListCursor): P
     }
     cursor.position += got;
     ctx.db.transaction(() => {
-      for (const list of lists) for (const email of ctx.overlay(jmap, 'Email', list)) upsertEmail(ctx.db, jmap, email, cursor.gen);
+      for (const list of lists) for (const email of ctx.overlay(jmap, 'Email', list.filter((e) => !isNote(e)))) upsertEmail(ctx.db, jmap, email, cursor.gen);
       ctx.setSyncState(jmap, 'Email', { cursor: { ...cursor } });
     });
     ctx.emit({ type: 'progress', account: ctx.account, area: 'mail', phase: 'list', done: cursor.position, total });

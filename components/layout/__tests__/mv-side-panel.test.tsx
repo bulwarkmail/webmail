@@ -29,6 +29,14 @@ describe('MvSidePanel', () => {
     expect(screen.getByRole('button', { name: 'mv_tasks' })).toBeInTheDocument();
   });
 
+  it('leaves the apps out with pluginsOnly', () => {
+    useSettingsStore.setState({ enableCalendarTasks: true } as never);
+    const { container } = render(<MvSidePanel pluginsOnly />);
+    expect(screen.queryByRole('button', { name: 'calendar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'mv_tasks' })).toBeNull();
+    expect(container.firstChild).toBeNull();
+  });
+
   it('draws nothing without any app to show', () => {
     useCalendarStore.setState({ supportsCalendar: false } as never);
     const { container } = render(<MvSidePanel />);

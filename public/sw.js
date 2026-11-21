@@ -62,7 +62,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches(), sweepHandoffsOnActivate()]));
+  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches(), sweepHandoffsOnActivate(), queueAppLockStep(assumeAppLockOnAtTakeover)]));
 });
 
 // ---- Offline mode (#523): the app shell ----
@@ -244,10 +244,31 @@ async function precacheShell(urls, buildId) {
       try {
         const url = new URL(u, self.location.origin);
         if (url.origin !== self.location.origin) return;
-        const key = appPagePath(url) !== null && !staticPath(url) ? documentKey(url) : url.href;
+        const page = appPagePath(url) !== null && !staticPath(url);
+        const key = page ? documentKey(url) : url.href;
         if (await cache.match(key)) return;
         const response = await fetch(url.href, { credentials: "same-origin" });
-        if (response.ok && response.type === "basic" && !response.redirected) await cache.put(key, response);
+        if (!response.ok || response.type !== "basic") return;
+        if (!response.redirected) {
+          await cache.put(key, response);
+          return;
+        }
+        // A page that redirects to another page of the app (the locale
+        // prefix: /mail to /en/mail with NEXT_PUBLIC_LOCALE_PREFIX=always):
+        // keep that page under its own address and the redirect under this
+        // one, so an offline start at /mail lands there as it would online.
+        const target = new URL(response.url);
+        if (!page || target.origin !== self.location.origin || appPagePath(target) === null || staticPath(target)) return;
+        if (documentKey(target) === key) return;
+        // The fetched response is marked redirected, and a browser fails a
+        // navigation answered with one (net::ERR_FAILED): keep a fresh copy.
+        const kept = new Response(await response.blob(), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        });
+        await cache.put(documentKey(target), kept);
+        await cache.put(key, Response.redirect(target.href, 302));
       } catch (_) {
         // Fetched again when the page asks next time.
       }
@@ -509,7 +530,8 @@ self.addEventListener("message", (event) => {
     return;
   }
   if (data.type === "app-lock") {
-    event.waitUntil(writeAppLockState(data.state));
+    const clientId = event.source && event.source.id;
+    event.waitUntil(queueAppLockStep(() => writeAppLockState(data.state, clientId, data.at)));
     return;
   }
   if (data.type === "offline-shell") {
@@ -612,6 +634,14 @@ async function handlePush(event) {
   const withNewMail = emailIds.length > 0 || !changed
     ? []
     : Object.keys(changed).filter((id) => changed[id] && typeof changed[id] === "object" && "EmailDelivery" in changed[id]);
+  // A state change that names no EmailDelivery is not new mail: a subscription
+  // the server filled in with every type (Stalwart before 1.0.3, #1650), or an
+  // older one with broader types. A failed preview would turn it into a
+  // generic "New mail" that rings, so it doesn't get that far.
+  if (changed && emailIds.length === 0 && withNewMail.length === 0) {
+    await showWithoutAlert("bulwark-mail:" + (named || "default"));
+    return;
+  }
   // Previews still on their way after their notification was shown.
   const lingering = [];
   // Side by side: each has its own preview deadline, and Safari wants the
@@ -641,7 +671,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // state-change path, a junk delivery wakes us while an unread message we
   // already announced is still sitting in the Inbox - without this we would
   // re-buzz for that old message.
-  const notified = await readNotifiedIds(accountId);
+  let notified = await readNotifiedIds(accountId, accountLabel);
   const freshIds = emailIds.filter((id) => !notified.includes(id));
   const groupTag = "bulwark-mail:" + (accountId || "default");
   if (emailIds.length > 0 && freshIds.length === 0) {
@@ -652,7 +682,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // Email notifications off, or do not disturb on: a browser still wants a
   // notification for the push, so one comes and goes with nothing on it.
   if (!(await showPreference(accountLabel))) {
-    if (freshIds.length > 0) await writeNotifiedIds(accountId, notified.concat(freshIds));
+    if (freshIds.length > 0) await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
     await showWithoutAlert(groupTag);
     return;
   }
@@ -667,15 +697,18 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // No login in this browser could read the account, not even after the route
   // renewed its token: signed out, or the sign-in can't be renewed from here.
   let previewSignedOut = false;
-  // Locked: not a word about the message, so it isn't even looked up.
+  // Locked: not a word about the message. The route is still asked, with
+  // `locked=1` so it reads and sends nothing but ids: whether a team note woke
+  // us is all this worker takes from it then.
   const lockHidesContent = await appLockHidesContent();
-  if (!lockHidesContent) try {
+  try {
     const query = new URLSearchParams();
     if (accountId) query.set("accountId", accountId);
     // The relay record's label is the login that registered. Account and message
     // ids repeat across logins, and this tells them apart.
     if (accountLabel) query.set("login", accountLabel);
     if (freshIds.length > 0) query.set("emailId", freshIds[freshIds.length - 1]);
+    if (lockHidesContent) query.set("locked", "1");
     const qs = query.toString();
     const previewUrl = `${BASE_PATH}/api/push/preview${qs ? `?${qs}` : ""}`;
     // A notification shown more than 30 s after the push counts as a silent
@@ -720,6 +753,40 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
     previewOk = false;
   }
 
+  // A team note (app/api/push/preview): one that mentions this login is told
+  // once, under a tag of its own; any other note has nothing to say. Each
+  // note wakes every member of the team on some servers.
+  const mention = previewOk && preview && preview.mention && typeof preview.mention.noteId === "string" && preview.mention.noteId
+    ? preview.mention
+    : null;
+  let mentionShown = false;
+  // Undo brings a deleted note back with a new id and the same Message-ID.
+  const mentionKeys = mention
+    ? [mention.noteId].concat(typeof mention.messageId === "string" && mention.messageId ? [`note:${mention.messageId}`] : [])
+    : [];
+  if (mention && !mentionKeys.some((key) => notified.includes(key))) {
+    const noteSlot = Number.isInteger(preview.slot) ? preview.slot : undefined;
+    const noteLogin = typeof preview.login === "string" ? preview.login : undefined;
+    await showMention(mention, !!preview.redacted || lockHidesContent, accountId, accountLabel, noteSlot, noteLogin);
+    notified = notified.concat(mentionKeys);
+    await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
+    mentionShown = true;
+  }
+  // Nothing more to say: a push has to end in a notification, and the mention was one.
+  const quiet = () => (mentionShown ? Promise.resolve() : showWithoutAlert(groupTag));
+  if (previewOk && preview && preview.skip === true) {
+    if (freshIds.length > 0 && !mentionShown) await writeNotifiedIds(accountId, accountLabel, notified.concat(freshIds));
+    await quiet();
+    return;
+  }
+  // Locked, mail is told of as it was before the worker asked: "New mail", with
+  // nothing from the answer.
+  if (lockHidesContent) {
+    preview = null;
+    previewOk = false;
+    previewSignedOut = false;
+  }
+
   const email = preview && preview.email ? preview.email : null;
   const unreadTotal = preview && typeof preview.unreadTotal === "number"
     ? preview.unreadTotal
@@ -731,6 +798,12 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // notification must not land on whoever signed into the slot since.
   const login = preview && typeof preview.login === "string" ? preview.login : undefined;
 
+  // The installed app's icon follows this account's Inbox while no window is
+  // open to do it (#1516).
+  if (previewOk && preview && typeof preview.inboxUnread === "number") {
+    await queueAppBadgeStep(() => appBadgeFromPush(accountId, accountLabel, preview.inboxUnread));
+  }
+
   // Push subscription is scoped to EmailDelivery, but stragglers from the
   // older broader-types subscription, marking-as-read races and verification
   // pings can still wake us with no actual unread mail. When the preview API
@@ -738,7 +811,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // failed (network/auth/server down) we cannot tell, so fall through to the
   // generic "New mail" toast rather than miss a real delivery.
   if (previewOk && !email && unreadTotal === 0) {
-    await showWithoutAlert(groupTag);
+    await quiet();
     return;
   }
 
@@ -746,7 +819,7 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   // message is one we already announced, so whatever woke us was not new
   // Inbox mail - typically a delivery into Junk or a Sieve-filed folder.
   if (emailIds.length === 0 && previewOk && email && notified.includes(email.id)) {
-    await showWithoutAlert(groupTag);
+    await quiet();
     return;
   }
 
@@ -815,11 +888,46 @@ async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) 
   });
 
   if (announced.length > 0) {
-    await writeNotifiedIds(accountId, notified.concat(announced));
+    await writeNotifiedIds(accountId, accountLabel, notified.concat(announced));
   }
 }
 
 const NOTIFICATION_IDS_LIMIT = 100;
+
+/**
+ * "Mabel mentioned you in <subject>", or under "Push without sender and subject"
+ * (or with either missing) "You were mentioned in a team mailbox". Not part of
+ * the account's mail notification: a tag per note, and a click that opens the
+ * message the note is about, at the note.
+ */
+async function showMention(mention, redacted, accountId, accountLabel, slot, login) {
+  const { labels } = await readNotificationActionPrefs();
+  const from = typeof mention.from === "string" ? mention.from : "";
+  const subject = typeof mention.subject === "string" ? mention.subject : "";
+  const title = redacted || !from || !subject
+    ? labels.mentionedHidden
+    : labels.mentionedYou.replace(/\{(name|subject)\}/g, (_, key) => (key === "name" ? from : subject));
+  const audible = (await soundPreference()) && !(await withinQuietWindow(accountId));
+  await self.registration.showNotification(title, {
+    // Which login, as a mail notification's title says it.
+    body: accountLabel || "",
+    // Ids repeat across accounts and logins.
+    tag: `mention-${accountLabel || "default"}:${accountId || "default"}:${mention.noteId}`,
+    icon: `${BASE_PATH}/api/pwa-icon/192`,
+    badge: `${BASE_PATH}/api/pwa-icon/192`,
+    data: {
+      kind: "mention",
+      noteId: mention.noteId,
+      emailId: typeof mention.emailId === "string" ? mention.emailId : undefined,
+      threadId: typeof mention.threadId === "string" ? mention.threadId : undefined,
+      accountId,
+      slot,
+      login,
+    },
+    renotify: audible,
+    silent: !audible,
+  });
+}
 
 /** The messages the account's notification on screen stands for. */
 async function idsOnScreen(groupTag) {
@@ -863,11 +971,14 @@ async function showWithoutAlert(groupTag) {
   }
   try {
     if (existing) {
-      await showWithActions(existing.title, {
+      // Shown before a lock the worker didn't hear: again, it says nothing about the message.
+      const hidden = await appLockHidesContent();
+      const data = existing.data || {};
+      await showWithActions(hidden ? "New mail" : existing.title, {
         ...options,
         tag: groupTag,
-        body: existing.body,
-        data: existing.data,
+        body: hidden ? "You have new mail" : existing.body,
+        data: hidden ? { kind: "mail-list", accountId: data.accountId, slot: data.slot, ids: data.ids } : existing.data,
       });
       return;
     }
@@ -892,46 +1003,196 @@ async function showWithoutAlert(groupTag) {
 const QUIET_WINDOW_MS = 30_000;
 
 // ---- App lock: while locked a notification says nothing about the message ----
+//
+// Message content and buttons only when the worker can tell the app is unlocked
+// now. Whatever it can't tell counts as locked.
+
+/** The Web Lock the tab with the lock key holds for as long as it lives (lib/app-lock/state.ts). */
+const APP_LOCK_HOLDER = "bulwark-app-lock-holder";
+/**
+ * Set while the last word from a page was that the lock is on. Not in the push state, which
+ * a sign-out deletes: with that state gone the lock counts as on until a page says "off".
+ */
+const APP_LOCK_ON_KEY = "/__bulwark/app-lock-on";
 
 function appLockStateKey() {
   return `${self.location.origin}${BASE_PATH}/__push-state/app-lock`;
 }
 
-async function writeAppLockState(state) {
+async function rememberAppLockOn(on) {
+  try {
+    const cache = await caches.open(SW_STATE_CACHE);
+    if (on) await cache.put(APP_LOCK_ON_KEY, new Response(JSON.stringify({ on: true }), { headers: { "Content-Type": "application/json" } }));
+    else await cache.delete(APP_LOCK_ON_KEY);
+  } catch (_) {
+    // The state itself is kept; only its loss would go unnoticed.
+  }
+}
+
+async function appLockWasOn() {
+  const cache = await caches.open(SW_STATE_CACHE);
+  return !!(await cache.match(APP_LOCK_ON_KEY));
+}
+
+/**
+ * A worker that takes over has heard no page yet, and the stored word may come from the
+ * worker before it. Unless that word is "off", the lock counts as on should the word be
+ * deleted before a page speaks (a page of an older version deletes the whole store when
+ * it wipes one login). Pages tell a worker that takes over their word at once
+ * (lib/app-lock/controller.ts), and a page with the lock off says "off".
+ */
+async function assumeAppLockOnAtTakeover() {
+  const stored = await readAppLockState().catch(() => null);
+  if (!stored || stored.state !== "off") await rememberAppLockOn(true);
+}
+
+async function readAppLockState() {
   const cache = await caches.open(PUSH_STATE_CACHE);
-  await cache.put(appLockStateKey(), new Response(JSON.stringify({ state }), { headers: { "Content-Type": "application/json" } }));
+  const res = await cache.match(appLockStateKey());
+  return res ? await res.json() : null;
+}
+
+// The pages' words on the lock are applied one at a time, in the order they came: a
+// write that reads the store first must not land after one that came behind it.
+let appLockSteps = Promise.resolve();
+
+function queueAppLockStep(step) {
+  const run = appLockSteps.then(step);
+  appLockSteps = run.catch(() => {});
+  return run;
+}
+
+/**
+ * Whether a page's word may replace what's stored. Pages stamp each word with the time
+ * they sent it (`at`), and one sent before what's stored came too late. A lock always
+ * applies: it only makes things more locked. A word without a stamp (from an older
+ * page) can't be placed after a stamped one.
+ */
+function appLockWordApplies(state, at, before) {
+  if (state === "locked" || !before) return true;
+  const beforeAt = typeof before.at === "number" ? before.at : null;
+  if (beforeAt === null) return true;
+  if (at === null || at < beforeAt) return false;
+  return at > beforeAt || before.state !== "locked";
+}
+
+/**
+ * What a page said, kept across the worker's restarts. With "unlocked" go the tabs
+ * that said so since the lock last came, those of them still open: one of them has
+ * to be there for it to count.
+ */
+async function writeAppLockState(state, clientId, sentAt) {
+  const at = typeof sentAt === "number" && Number.isFinite(sentAt) ? sentAt : null;
+  const before = await readAppLockState().catch(() => null);
+  if (!appLockWordApplies(state, at, before)) return;
+  const record = { state };
+  const beforeAt = before && typeof before.at === "number" ? before.at : null;
+  if (at !== null || beforeAt !== null) record.at = Math.max(at === null ? -Infinity : at, beforeAt === null ? -Infinity : beforeAt);
+  if (state === "unlocked") {
+    const said = before && before.state === "unlocked" && Array.isArray(before.clients) ? before.clients : [];
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const openIds = new Set(open.map((client) => client.id));
+    record.clients = said.filter((id) => openIds.has(id));
+    if (typeof clientId === "string" && clientId && !record.clients.includes(clientId)) record.clients.push(clientId);
+  }
+  const cache = await caches.open(PUSH_STATE_CACHE);
+  await cache.put(appLockStateKey(), new Response(JSON.stringify(record), { headers: { "Content-Type": "application/json" } }));
+  await rememberAppLockOn(state !== "off");
   if (state === "locked") await closeMailNotifications();
 }
 
-/** What's on screen from before the lock names senders and subjects. */
+/**
+ * What's on screen from before the lock names senders and subjects, or an event's
+ * title. Only the prompt to bring a mailto window forward says nothing of either.
+ */
 async function closeMailNotifications() {
   try {
     const shown = await self.registration.getNotifications();
     for (const notification of shown) {
-      if (typeof notification.tag === "string" && notification.tag.startsWith("bulwark-mail:")) notification.close();
+      const tag = typeof notification.tag === "string" ? notification.tag : "";
+      if (tag.startsWith("bulwark-mail:") || tag.startsWith("calendar-reminder:") || tag.startsWith("mention-")) notification.close();
     }
   } catch (_) {
     // Nothing more a worker can do.
   }
 }
 
+/** Whether a tab holds the lock key now: what the page asks too (lib/app-lock/controller.ts holderAlive). */
+async function appLockKeyHeld() {
+  const locks = typeof navigator !== "undefined" && navigator ? navigator.locks : null;
+  // A worker without Web Locks can't tell: locked.
+  if (!locks || typeof locks.query !== "function") return false;
+  const snapshot = await locks.query();
+  const held = snapshot && Array.isArray(snapshot.held) ? snapshot.held : [];
+  return held.some((lock) => lock && lock.name === APP_LOCK_HOLDER);
+}
+
 /**
- * The page says "locked" when it locks. It can't say so when the browser just closes, so
- * "unlocked" only counts with a window open: the key is in a window's memory or nowhere.
+ * The page says "locked" when it locks. It can't say so when its tab or the browser
+ * closes, so a stored "unlocked" counts only while a tab holds the lock key and one
+ * of the tabs that said "unlocked" is open. Any other window of the origin (a
+ * picture, an attachment) runs no lock and counts for nothing. Pages say "off" too, so
+ * nothing stored means no page has said anything since the state was deleted: locked if
+ * the lock was on before.
  */
 async function appLockHidesContent() {
   try {
-    const cache = await caches.open(PUSH_STATE_CACHE);
-    const res = await cache.match(appLockStateKey());
-    const stored = res ? await res.json() : null;
-    if (!stored || stored.state === "off") return false;
+    const stored = await readAppLockState();
+    if (!stored) return await appLockWasOn();
+    if (stored.state === "off") return false;
     if (stored.state !== "unlocked") return true;
+    if (!(await appLockKeyHeld())) return true;
+    const said = Array.isArray(stored.clients) ? stored.clients : [];
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    return windows.length === 0;
+    return !windows.some((client) => said.includes(client.id));
   } catch (_) {
     // Can't tell: a generic notification loses little.
     return true;
   }
+}
+
+// ---- App badge (#1516) ----
+//
+// The page badges the installed app's icon with the unread count of the
+// inboxes it counts (components/favicon-badge.tsx) and leaves that number
+// here, with each login's share in it and the badge setting
+// (lib/app-badge-worker.ts). With no window open, a push for one of those
+// logins' own account replaces that login's share with its Inbox's unread
+// count now. Anything the page didn't count (another login while "count every
+// account" is off, a shared account, two logins with one user name) leaves
+// the badge as it is.
+
+function appBadgeKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/app-badge`;
+}
+
+let appBadgeSteps = Promise.resolve();
+
+// One push can name several accounts; their updates must not overwrite each other.
+function queueAppBadgeStep(step) {
+  const run = appBadgeSteps.then(step);
+  appBadgeSteps = run.catch(() => {});
+  return run.catch(() => {});
+}
+
+async function appBadgeFromPush(accountId, accountLabel, inboxUnread) {
+  const nav = self.navigator;
+  if (!accountLabel || !nav || typeof nav.setAppBadge !== "function") return;
+  if (!Number.isInteger(inboxUnread) || inboxUnread < 0) return;
+  // An open window badges the icon itself, from counts it keeps live.
+  const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  if (open.length > 0) return;
+  const cache = await caches.open(PUSH_STATE_CACHE);
+  const res = await cache.match(appBadgeKey());
+  const state = res ? await res.json() : null;
+  if (!state || state.enabled !== true || !Number.isInteger(state.total)) return;
+  const entry = state.logins && state.logins[accountLabel];
+  if (!entry || entry.accountId !== accountId || !Number.isInteger(entry.unread)) return;
+  const total = Math.max(0, state.total - entry.unread + inboxUnread);
+  const next = { ...state, total, logins: { ...state.logins, [accountLabel]: { ...entry, unread: inboxUnread } } };
+  await cache.put(appBadgeKey(), new Response(JSON.stringify(next), { headers: { "Content-Type": "application/json" } }));
+  if (total > 0) await nav.setAppBadge(total);
+  else if (typeof nav.clearAppBadge === "function") await nav.clearAppBadge();
 }
 
 function lastAlertKey() {
@@ -997,21 +1258,28 @@ async function withinQuietWindow(accountId) {
   return false;
 }
 
-// Per-account list of message ids we have already shown a notification for.
+// Per login and account, the message ids we have already shown a notification for.
 // Service workers have no localStorage; the Cache API is the cheapest durable
 // store that survives the worker being killed between pushes. Failures are
 // swallowed - dedupe is a nicety, delivering the notification is not.
 const PUSH_STATE_CACHE = "bulwark-push-state-v1";
 const NOTIFIED_IDS_LIMIT = 200;
 
-function notifiedIdsKey(accountId) {
-  return `${self.location.origin}${BASE_PATH}/__push-state/notified/${encodeURIComponent(accountId || "default")}`;
+/**
+ * Account ids repeat across servers, so the list goes under the login the push names
+ * (its label, the user name), and a wipe of one login takes its own lists only
+ * (lib/offline/device-wipe.ts). A push without a label keeps the list per account.
+ */
+function notifiedIdsKey(accountId, login) {
+  const account = encodeURIComponent(accountId || "default");
+  const owner = login ? `${encodeURIComponent(login)}/` : "";
+  return `${self.location.origin}${BASE_PATH}/__push-state/notified/${owner}${account}`;
 }
 
-async function readNotifiedIds(accountId) {
+async function readNotifiedIds(accountId, login) {
   try {
     const cache = await caches.open(PUSH_STATE_CACHE);
-    const res = await cache.match(notifiedIdsKey(accountId));
+    const res = await cache.match(notifiedIdsKey(accountId, login));
     if (!res) return [];
     const data = await res.json();
     return Array.isArray(data.ids) ? data.ids.filter((id) => typeof id === "string") : [];
@@ -1020,12 +1288,12 @@ async function readNotifiedIds(accountId) {
   }
 }
 
-async function writeNotifiedIds(accountId, ids) {
+async function writeNotifiedIds(accountId, login, ids) {
   try {
     const cache = await caches.open(PUSH_STATE_CACHE);
     const unique = Array.from(new Set(ids)).slice(-NOTIFIED_IDS_LIMIT);
     await cache.put(
-      notifiedIdsKey(accountId),
+      notifiedIdsKey(accountId, login),
       new Response(JSON.stringify({ ids: unique }), {
         headers: { "Content-Type": "application/json" },
       }),
@@ -1343,16 +1611,35 @@ function getReusableClientScore(state) {
 function buildClickUrl(data, reply) {
   if (!data) return `${BASE_PATH}/`;
   if (data.kind === "calendar-reminder") {
-    // The page's address, with its language. Only ever a path on this origin.
-    return typeof data.url === "string" && /^\/(?!\/)/.test(data.url) ? data.url : `${BASE_PATH}/calendar`;
+    // The page's address, with its language. Only ever a path on this origin: the address
+    // is resolved as a browser would, and opened only when it stays here.
+    const calendar = `${BASE_PATH}/calendar`;
+    if (typeof data.url !== "string" || !data.url) return calendar;
+    let target;
+    try {
+      target = new URL(data.url, self.location.origin);
+    } catch (_) {
+      return calendar;
+    }
+    // A path starting with two slashes would name another host once opened.
+    if (target.origin !== self.location.origin || target.pathname.startsWith("//")) return calendar;
+    return target.pathname + target.search + target.hash;
   }
   const params = new URLSearchParams();
   if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
   if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);
   if (reply) params.set("reply", "1");
+  // A mention: the conversation opens at the note.
+  if (data.kind === "mention" && typeof data.noteId === "string" && data.noteId) params.set("note", data.noteId);
   // Not params.size: Safari before 17 (iOS 16.4+ web push) lacks it.
   const qs = params.toString();
   const targetQuery = qs ? `?${qs}` : "";
+  if (data.kind === "mention") {
+    // Without the message (its conversation wasn't found), the team's Inbox.
+    return typeof data.emailId === "string" && data.emailId
+      ? `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}${targetQuery}`
+      : `${BASE_PATH}/mail/folder/inbox${targetQuery}`;
+  }
   if (data.kind === "email" && data.emailId) {
     // Permalink (#733). Under NEXT_PUBLIC_LOCALE_PREFIX=always the proxy
     // redirects this to the localised path; the worker has no locale to add.
@@ -1456,6 +1743,9 @@ async function readNotificationActionPrefs() {
       markRead: labels.markRead || "Mark as read",
       reply: labels.reply || "Reply",
       replyPlaceholder: labels.replyPlaceholder || "Write a reply",
+      // Team notes: "{name}" and "{subject}" are filled in here.
+      mentionedYou: labels.mentionedYou || "{name} mentioned you in “{subject}”",
+      mentionedHidden: labels.mentionedHidden || "You were mentioned in a team mailbox",
     },
   };
 }
@@ -1469,11 +1759,12 @@ function inlineReplySupported() {
   return typeof NotificationEvent !== "undefined" && "reply" in NotificationEvent.prototype;
 }
 
-/** The buttons for a notification. Only one message, with its login known, gets any. */
+/** The buttons for a notification. Only one message, with its login known, gets any, and none while locked. */
 async function notificationActions(data) {
   if (!data || data.kind !== "email" || !data.emailId || !data.accountId || !data.login) return [];
   const max = maxNotificationActions();
   if (max < 1) return [];
+  if (await appLockHidesContent()) return [];
   const prefs = await readNotificationActionPrefs();
   const offered = {
     "mark-read": { action: "mark-read", title: prefs.labels.markRead },
@@ -1564,13 +1855,16 @@ async function askOpenClients(message, allClients) {
   return { result: silentHolder ? "failed" : "declined", client: null };
 }
 
-/** Keeps a typed reply for the page the click is about to open; it's not for a URL. */
-async function keepPendingReply(emailId, text) {
+/**
+ * Keeps a typed reply for the page the click is about to open; it's not for a URL. With
+ * the notification's login, so a wipe of that login takes it (lib/offline/device-wipe.ts).
+ */
+async function keepPendingReply(emailId, text, login) {
   try {
     const cache = await caches.open(PUSH_STATE_CACHE);
     await cache.put(
       pendingReplyKey(),
-      new Response(JSON.stringify({ emailId, text, at: Date.now() }), {
+      new Response(JSON.stringify({ emailId, text, login: typeof login === "string" ? login : undefined, at: Date.now() }), {
         headers: { "Content-Type": "application/json" },
       }),
     );
@@ -1638,7 +1932,7 @@ async function runNotificationAction(action, data, reply, allClients) {
     return true;
   }
   if (action === "reply") {
-    if (text) await keepPendingReply(data.emailId, text);
+    if (text) await keepPendingReply(data.emailId, text, data.login);
     return false;
   }
   // A tab with this login tried and failed, or stayed silent: the route won't

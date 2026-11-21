@@ -84,6 +84,11 @@
   --color-info: #3b82f6;
   --color-info-foreground: #ffffff;
 
+  /* Team notes: internal notes between the messages, clearly not mail */
+  --color-note: #fef9c3;
+  --color-note-foreground: #422006;
+  --color-note-border: #eab308;
+
   /* Selection states */
   --color-selection: var(--brand-accent, #dbeafe);
   --color-selection-foreground: var(--brand-accent-foreground, #1e40af);
@@ -161,6 +166,10 @@
   --color-warning-foreground: #ffffff;
   --color-info: #60a5fa;
   --color-info-foreground: #ffffff;
+
+  --color-note: #2b250f;
+  --color-note-foreground: #fafafa;
+  --color-note-border: #a16207;
 
   /* Selection states */
   --color-selection: rgba(59, 130, 246, 0.25);
@@ -735,8 +744,12 @@ html[data-window-controls] [data-pane-strip] {
   align-items: flex-end;
 }
 
+/*
+ * As far as the traffic lights reach into the row, which lib/window-controls-overlay.ts
+ * sets on each: a row right of the rail needs only the part past the rail.
+ */
 html[data-window-controls] [data-window-row-left] {
-  padding-left: calc(var(--titlebar-left-inset) + 0.5rem) !important;
+  padding-left: calc(var(--window-row-left-inset, var(--titlebar-left-inset)) + 0.5rem) !important;
 }
 
 /*
@@ -1282,6 +1295,14 @@ html[data-window-controls-left] [data-window-rail] {
   overflow: hidden;
 }
 
+/* A pasted spreadsheet table keeps its source grid (fixed layout with
+   colgroup widths, see components/email/table-paste.ts), which can add up
+   to more than the composer's width. Scroll the wrapper instead of letting
+   the table stick out of the compose pane. */
+.tiptap .tableWrapper {
+  overflow-x: auto;
+}
+
 .tiptap table td,
 .tiptap table th {
   border: 1px solid var(--color-border);
@@ -1291,11 +1312,19 @@ html[data-window-controls-left] [data-window-rail] {
   min-width: 1em;
 }
 
+/* The theme look for header cells. !important because every th carries the
+   sent mail's light grey header look inline, which would glare in the dark
+   composer. A header cell with its own background (set from the table menu
+   or pasted from a spreadsheet) is marked data-cell-background in the
+   editor (table-paste.ts) and keeps its colours. */
 .tiptap table th {
-  background-color: var(--color-muted) !important;
-  color: var(--color-foreground) !important;
   font-weight: 600;
   text-align: left;
+}
+
+.tiptap table th:not([data-cell-background]) {
+  background-color: var(--color-muted) !important;
+  color: var(--color-foreground) !important;
 }
 
 .tiptap table p {
@@ -1553,7 +1582,10 @@ html[data-window-controls-left] [data-window-rail] {
 
 /* Message rows: read mail sits on a faint tint and unread on the plain card,
    a ticked row takes the selection colour, and the row under the pointer
-   lifts on a shadow instead of changing colour. */
+   lifts on a shadow instead of changing colour. The keyboard cursor (j / k)
+   fills the row with the accent in the dark theme; in the light one accent
+   and selection colour are both pale blue, so the cursor keeps the row's own
+   colour and gets a bar on its leading edge instead, as Gmail's does (#1702). */
 [data-interface-layout="mountain-view"] [data-mv-row] {
   background-color: var(--mv-row-read);
   box-shadow: none;
@@ -1564,8 +1596,18 @@ html[data-window-controls-left] [data-window-rail] {
 [data-interface-layout="mountain-view"] [data-mv-row][data-checked] {
   background-color: var(--mv-nav-selected);
 }
-[data-interface-layout="mountain-view"] [data-mv-row][aria-current="true"] {
+[data-interface-layout="mountain-view"].dark [data-mv-row][aria-current="true"] {
   background-color: var(--color-accent);
+}
+[data-interface-layout="mountain-view"]:not(.dark) [data-mv-row][aria-current="true"]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 4px;
+  background-color: var(--color-primary);
+  z-index: 20;
+  pointer-events: none;
 }
 [data-interface-layout="mountain-view"] [data-mv-row]:hover {
   z-index: 1;

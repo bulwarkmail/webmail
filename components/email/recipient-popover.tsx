@@ -263,7 +263,7 @@ export function RecipientPopover({ name, email, displayLabel, label, onViewConta
   const [anchor, setAnchor] = useState<CardAnchor | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const shownEmail = useOwnDomainAddress()(email);
-  const addressMenu = useAddressContextMenu(onViewContact);
+  const addressMenu = useAddressContextMenu(email, onViewContact);
 
   const handleToggle = () => {
     if (anchor) {

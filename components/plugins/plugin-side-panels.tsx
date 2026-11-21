@@ -11,7 +11,8 @@ import { sidePanelLooks, subscribeSidePanels } from '@/lib/plugin-sandbox/side-p
 import { cn } from '@/lib/utils';
 import { PluginIframeSlot } from './plugin-iframe-slot';
 
-// The `side-panel` slot: one panel per plugin beside the mail, opened from
+// The `side-panel` slot: one panel per plugin beside the mail and beside a
+// plugin's pages (plugin-page-app.tsx), opened from
 // its button in the rail at the right edge. Mountain View puts the buttons
 // in its own side panel's rail (mv-side-panel.tsx); the default layout
 // shows PluginSidePanel. At most one panel is open; which one is

@@ -97,10 +97,23 @@ export function readSharedTags(value: unknown): StoredSharedTags {
   return { entries, extra: {}, patchable: false };
 }
 
-/** One tag as the app shows it; an unknown color shows grey but stays stored. */
+/**
+ * A stored color this version can draw: a palette key, or `#` and six hex
+ * digits (any case, returned lowercase). Null for anything else.
+ */
+export function knownSharedTagColor(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  if (KEYWORD_PALETTE[value]) return value;
+  return /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : null;
+}
+
+/**
+ * One tag as the app shows it. A palette key or a `#rrggbb` color is kept
+ * (lowercased); any other color shows grey but stays stored.
+ */
 function definitionOf(id: string, entry: Record<string, unknown>): KeywordDefinition {
   const label = typeof entry.label === 'string' ? entry.label.trim().slice(0, MAX_SHARED_TAG_LABEL) : '';
-  const color = typeof entry.color === 'string' && KEYWORD_PALETTE[entry.color] ? entry.color : FALLBACK_KEYWORD_COLOR;
+  const color = knownSharedTagColor(entry.color) ?? FALLBACK_KEYWORD_COLOR;
   const definition: KeywordDefinition = { id, label: label || id, color };
   if (typeof entry.visibility === 'string' && (VISIBILITIES as readonly string[]).includes(entry.visibility)) {
     definition.visibility = entry.visibility as KeywordVisibility;

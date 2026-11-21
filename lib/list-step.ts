@@ -37,3 +37,18 @@ export function stepListEmail(
     : Math.min(order.length - 1, Math.max(0, at + direction));
   return byKey.get(order[target].key) ?? null;
 }
+
+/**
+ * The messages the list's rows show, in `emails`' order: a message under a
+ * folded list header (a collapsed date group, a folded "Unread first"
+ * section) has no row, so j / k pass it by. Without rows, all of them.
+ */
+export function shownListEmails(emails: readonly Email[], rows?: readonly ListStepRow[] | null): readonly Email[] {
+  if (!rows) return emails;
+  const shown = new Set<string>();
+  for (const row of rows) {
+    shown.add(row.key);
+    for (const member of row.members) shown.add(member);
+  }
+  return emails.filter((e) => shown.has(emailKeyFor(e)));
+}

@@ -26,6 +26,13 @@ describe("mailtoComposerDraft", () => {
     expect(mailtoComposerDraft(base, false)).not.toHaveProperty("linkParams");
   });
 
+  it("carries a link's In-Reply-To and References as the threading headers (#1732)", () => {
+    const draft = mailtoComposerDraft({ ...base, inReplyTo: ["p@x.org"], references: ["r@x.org", "p@x.org"] }, false);
+    expect(draft.inReplyTo).toEqual(["p@x.org"]);
+    expect(draft.references).toEqual(["r@x.org", "p@x.org"]);
+    expect(mailtoComposerDraft(base, false)).not.toHaveProperty("inReplyTo");
+  });
+
   it("carries a plugin's uploaded attachments", () => {
     const attachments = [{ blobId: "b1", name: "a.pdf", type: "application/pdf", size: 10 }];
     expect(mailtoComposerDraft({ ...base, attachments }, false).attachments).toEqual(attachments);

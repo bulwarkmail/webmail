@@ -2,7 +2,11 @@ services:
   webmail:
     image: ghcr.io/bulwarkmail/webmail:latest
     ports:
-      - "3000:3000"
+      # This machine only, for a reverse proxy on it (see the docs, "Reverse
+      # proxy"). To reach Bulwark from other machines over plain HTTP, write
+      # "3000:3000"; without a proxy in front, sign-in limits then go by
+      # whatever address a client puts in X-Forwarded-For.
+      - "127.0.0.1:3000:3000"
     environment:
       - HOSTNAME=0.0.0.0 # Use "::" for IPv6
       - PORT=3000

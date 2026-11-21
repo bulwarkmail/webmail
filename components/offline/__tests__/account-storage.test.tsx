@@ -62,6 +62,7 @@ beforeEach(() => {
 
 afterEach(() => { setStoreBackend(null); });
 
+const totalSelect = () => screen.getByTestId('offline-total-cap').querySelector('select') as HTMLSelectElement;
 const windowSelect = () => screen.getByText('window_label').closest('[data-search-label]')!.querySelector('select') as HTMLSelectElement;
 
 describe('what an account keeps', () => {
@@ -109,10 +110,53 @@ describe('what an account keeps', () => {
     expect(offline.chooseScope).toHaveBeenCalledWith('acc', { maxAttachmentBytes: 5 * 1024 * 1024 });
   });
 
-  it('says when the total is set by the organisation', () => {
+  it('says when the total is set by the organisation, once', () => {
     setDevices({ offlineMaxTotalMb: 100 });
     render(<OfflineSettings />);
+    // With attachments on, the locked select says it.
+    expect(screen.queryByTestId('offline-total-locked')).toBeNull();
+    expect(totalSelect().value).toBe('100');
+    expect(screen.getByTestId('offline-total-cap').closest('[inert]')).not.toBeNull();
+    cleanup();
+    useOfflineStore.setState({ choices: { acc: { on: true, attachments: false } } });
+    render(<OfflineSettings />);
+    expect(screen.queryByTestId('offline-total-cap')).toBeNull();
     expect(screen.getByTestId('offline-total-locked').textContent).toContain('total_locked');
+  });
+
+  it('offers 1 and 2 GB for the total in a browser, 2 GB first, and hands the choice on', () => {
+    render(<OfflineSettings />);
+    expect([...totalSelect().options].map((o) => o.textContent)).toEqual(['1 GB', '2 GB']);
+    expect(totalSelect().value).toBe('2048');
+    expect(screen.getByText('attachments_description')).toBeInTheDocument();
+    fireEvent.change(totalSelect(), { target: { value: '1024' } });
+    expect(offline.chooseScope).toHaveBeenCalledWith('acc', { maxTotalBytes: 1024 ** 3 });
+  });
+
+  // A browser stops at 2 GB anyway: a higher cap takes nothing away.
+  it('names no organisation for a cap above what a browser offers', () => {
+    setDevices({ offlineMaxTotalMb: 5000 });
+    render(<OfflineSettings />);
+    expect([...totalSelect().options].map((o) => o.value)).toEqual(['1024', '2048']);
+    expect(within(screen.getByTestId('offline-total-cap')).queryByText('org_locked')).toBeNull();
+    cleanup();
+    useOfflineStore.setState({ choices: { acc: { on: true, attachments: false } } });
+    render(<OfflineSettings />);
+    expect(screen.queryByTestId('offline-total-locked')).toBeNull();
+  });
+
+  it('uses a stored no limit as 2 GB in a browser', () => {
+    useOfflineStore.setState({ choices: { acc: { on: true, maxTotalBytes: null } } });
+    render(<OfflineSettings />);
+    expect(totalSelect().value).toBe('2048');
+    expect(screen.queryByText('attachments_description_unlimited')).toBeNull();
+  });
+
+  it('hides the total with attachments off', () => {
+    useOfflineStore.setState({ choices: { acc: { on: true, attachments: false } } });
+    render(<OfflineSettings />);
+    expect(screen.queryByText('total_cap_label')).toBeNull();
+    expect(screen.queryByTestId('offline-total-cap')).toBeNull();
   });
 
   it('locks the switch when the desktop policy forces it', () => {
@@ -342,6 +386,39 @@ describe('in the desktop app', () => {
     (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
     render(<OfflineSettings />);
     expect(screen.getAllByTestId('offline-warning').map((node) => node.textContent)).toEqual(['warning_desktop']);
+  });
+});
+
+describe('the total in the desktop app', () => {
+  beforeEach(() => { (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 }; });
+  afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+
+  it('goes higher, up to no limit, with 2 GB first', () => {
+    render(<OfflineSettings />);
+    expect([...totalSelect().options].map((o) => o.textContent)).toEqual(['1 GB', '2 GB', '5 GB', '10 GB', '25 GB', 'total_cap_unlimited']);
+    expect(totalSelect().value).toBe('2048');
+    fireEvent.change(totalSelect(), { target: { value: '5120' } });
+    expect(offline.chooseScope).toHaveBeenCalledWith('acc', { maxTotalBytes: 5 * 1024 ** 3 });
+    fireEvent.change(totalSelect(), { target: { value: 'all' } });
+    expect(offline.chooseScope).toHaveBeenCalledWith('acc', { maxTotalBytes: null });
+  });
+
+  it('with no limit, the attachments line names no total', () => {
+    useOfflineStore.setState({ choices: { acc: { on: true, maxTotalBytes: null } } });
+    render(<OfflineSettings />);
+    expect(totalSelect().value).toBe('all');
+    expect(screen.getByText('attachments_description_unlimited')).toBeInTheDocument();
+    expect(screen.queryByText('attachments_description')).toBeNull();
+  });
+
+  it('under a cap offers what fits and the cap, without no limit, and says who set it', () => {
+    setDevices({ offlineMaxTotalMb: 3000 });
+    useOfflineStore.setState({ choices: { acc: { on: true, maxTotalBytes: null } } });
+    render(<OfflineSettings />);
+    expect([...totalSelect().options].map((o) => o.value)).toEqual(['1024', '2048', '3000']);
+    expect(totalSelect().value).toBe('3000');
+    expect(within(screen.getByTestId('offline-total-cap')).getByText('org_locked')).toBeInTheDocument();
+    expect(screen.queryByTestId('offline-total-locked')).toBeNull();
   });
 });
 

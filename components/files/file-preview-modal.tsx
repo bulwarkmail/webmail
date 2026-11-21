@@ -7,10 +7,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { PreviewShell, useBackdropClose, type PreviewNeighbours } from "@/components/files/preview-shell";
 import { IconButton } from "@/components/ui/icon-button";
 import { ZoomableImage } from "@/components/files/zoomable-image";
-import { getFilePreviewKind, imageBlobUrl, isMimeTypeSafeForInlinePreview, previewBlobType } from "@/lib/file-preview";
+import { getFilePreviewKind, imageBlobUrl, imageDataUrl, isInlineSafeBlob, previewBlobType, toInertBlob } from "@/lib/file-preview";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { EmlPreview, type EmlAttachment, type ParsedEml } from "@/components/files/eml-preview";
+import { EmlPreview, emlPrintFields, type EmlAttachment, type ParsedEml } from "@/components/files/eml-preview";
 import { FilePreviewPluginSection } from "@/components/files/file-preview-plugin-section";
 import { canOpenUrlInNewWindow } from "@/lib/standalone-display";
 import { saveBlobAs } from "@/lib/download-guard";
@@ -27,6 +27,9 @@ import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { useRemoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
 import { printPdfUrl } from "@/lib/print-pdf";
+import { printFile } from "@/lib/print-file";
+import { printMessageInWindow } from "@/components/email/message-print-window";
+import { printLabels } from "@/components/email/conversation-print";
 
 /**
  * An HTML attachment as a document for a fully locked frame (sandbox="",
@@ -39,9 +42,17 @@ import { printPdfUrl } from "@/lib/print-pdf";
  * stopped its remote images and meta refreshes.
  */
 export function htmlAttachmentDocument(html: string, blockRemote: boolean, linksOff?: LinksOffText): string {
+  return htmlAttachmentFrameDocument(htmlAttachmentBody(html, blockRemote, linksOff), blockRemote);
+}
+
+/** The sanitised body of htmlAttachmentDocument: what the preview shows and Print prints. */
+function htmlAttachmentBody(html: string, blockRemote: boolean, linksOff?: LinksOffText): string {
   const clean = sanitizeEmailBodyForIframe(html, blockRemote).html;
   // An attachment of a message reported as phishing: its links are off too.
-  const body = linksOff ? turnOffLinks(clean, linksOff) : clean;
+  return linksOff ? turnOffLinks(clean, linksOff) : clean;
+}
+
+function htmlAttachmentFrameDocument(body: string, blockRemote: boolean): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(blockRemote)}"><meta name="referrer" content="no-referrer"></head><body>${body}</body></html>`;
 }
 
@@ -90,9 +101,14 @@ interface FilePreviewModalProps {
    * printing off.
    */
   autoPrint?: boolean;
+  /**
+   * Who opened the file, when it wasn't the user: shown under the name
+   * ("Opened by the plugin X", for a file a plugin opened or printed).
+   */
+  source?: string;
 }
 
-function SimpleMarkdown({ content }: { content: string }) {
+function SimpleMarkdown({ content, containerRef }: { content: string; containerRef?: React.Ref<HTMLDivElement> }) {
   const lines = content.split("\n");
   const elements: React.ReactNode[] = [];
 
@@ -134,7 +150,7 @@ function SimpleMarkdown({ content }: { content: string }) {
     }
   }
 
-  return <div className="prose prose-sm dark:prose-invert max-w-none">{elements}</div>;
+  return <div ref={containerRef} className="prose prose-sm dark:prose-invert max-w-none">{elements}</div>;
 }
 
 function processInline(text: string): React.ReactNode {
@@ -183,9 +199,11 @@ function processInline(text: string): React.ReactNode {
   return parts.length === 1 ? parts[0] : <>{parts}</>;
 }
 
-export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction, autoPrint }: FilePreviewModalProps) {
+export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction, autoPrint, source }: FilePreviewModalProps) {
   const t = useTranslations("files");
   const tCommon = useTranslations("common");
+  const tViewer = useTranslations("email_viewer");
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
   // No downloads: no download button, no new tab, no save from the
   // browser's own PDF viewer or media controls. No printing: the PDF goes
   // through pdf.js, which has no print button. The preview itself stays.
@@ -205,10 +223,11 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   const [error, setError] = useState(false);
   const [resolvedFileType, setResolvedFileType] = useState(() => getFilePreviewKind(name));
   const [pdfInlineSupported, setPdfInlineSupported] = useState(true);
-  // Whether the resolved blob MIME is inert enough to open as a top-level
-  // navigation. Blob URLs inherit our origin, so opening a script-bearing type
-  // (text/html, image/svg+xml, ...) in a new tab would execute it in-origin.
-  const [canOpenInNewTab, setCanOpenInNewTab] = useState(false);
+  // The Blob behind objectUrl when it may open as a top-level navigation.
+  // Blob URLs inherit our origin, so opening a script-bearing type
+  // (text/html, image/svg+xml, ...) in a new tab would execute it in-origin;
+  // only a Blob typed from the inline-safe list opens (isInlineSafeBlob).
+  const [newTabBlob, setNewTabBlob] = useState<Blob | null>(null);
   const [emlContent, setEmlContent] = useState<ParsedEml | null>(null);
   const [emlBlob, setEmlBlob] = useState<Blob | null>(null);
   // The PDF blob itself, kept alongside its object URL: the pdf.js mobile
@@ -216,7 +235,12 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   // connect-src (#871). The URL is still what the <iframe> and the
   // open-in-new-tab fallback use.
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [htmlDoc, setHtmlDoc] = useState<string | null>(null);
+  // The sanitised body of an HTML attachment, which the preview's frame shows and Print prints.
+  const [htmlBody, setHtmlBody] = useState<string | null>(null);
+  // The image as its viewer shows it, for Print to make a data: URL of.
+  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+  // The rendered Markdown, which Print takes as it stands.
+  const markdownRef = useRef<HTMLDivElement>(null);
   // Always blocked with no third-party traffic (#903), while an
   // organisation locks "block" in any signed-in account (the attachment's
   // account isn't known here), and until the policy is known.
@@ -258,6 +282,15 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   // phones, which have no PDF viewer to print from, nor where the
   // organisation turns printing off.
   const canPrintPdf = fileType === "pdf" && pdfInlineSupported && !devices.noPrint;
+  // The other kinds print as a page of their own (lib/print-file.ts), an
+  // attached message like one from the reader; on phones too. Not audio or
+  // video.
+  const canPrintFile = !devices.noPrint && (
+    (fileType === "image" && !!imageBlob)
+    || ((fileType === "text" || fileType === "markdown") && content !== null)
+    || (fileType === "html" && htmlBody !== null)
+    || (fileType === "eml" && !!emlContent)
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -265,11 +298,12 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
 
     setContent(null);
     setObjectUrl(null);
-    setCanOpenInNewTab(false);
+    setNewTabBlob(null);
     setEmlContent(null);
     setEmlBlob(null);
     setPdfBlob(null);
-    setHtmlDoc(null);
+    setHtmlBody(null);
+    setImageBlob(null);
     setLoading(true);
     setError(false);
     setResolvedFileType(getFilePreviewKind(name));
@@ -290,7 +324,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
           // Sanitised text in a srcdoc frame, like the .eml preview; never a
           // blob: URL of the sender's bytes (see htmlAttachmentDocument).
           const text = await blob.text();
-          if (!cancelled) setHtmlDoc(htmlAttachmentDocument(text, blockRemote, linksOffText));
+          if (!cancelled) setHtmlBody(htmlAttachmentBody(text, blockRemote, linksOffText));
         } else if (previewType === "eml") {
           // Parse the embedded message (postal-mime, dynamic-imported so it
           // stays off the bundle) and render it like an email via EmlPreview.
@@ -307,20 +341,25 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
           const typedBlob = blob.type !== effectiveType
             ? new Blob([blob], { type: effectiveType })
             : blob;
+          // What a blob: URL is made from: a type from the inline-safe list
+          // or octet-stream, whatever the file declared.
+          const urlBlob = toInertBlob(typedBlob);
           // "Open image in new tab" loads the <img> URL as a document of its
           // own, so an image gets one that stays inert there: a sender's SVG
           // must not run script as the webmail origin (GHSA-xvjh-v9c6-qcvc).
           const url = previewType === "image"
             ? await imageBlobUrl(typedBlob)
-            : URL.createObjectURL(typedBlob);
+            : URL.createObjectURL(urlBlob);
           if (cancelled) {
             URL.revokeObjectURL(url);
             return;
           }
           revokeUrl = url;
           setObjectUrl(url);
-          setCanOpenInNewTab(isMimeTypeSafeForInlinePreview(effectiveType));
-          if (previewType === "pdf") setPdfBlob(typedBlob);
+          // imageBlobUrl() mints the same type as urlBlob, or a data: URL for SVG.
+          setNewTabBlob(url.startsWith("blob:") && isInlineSafeBlob(urlBlob) ? urlBlob : null);
+          if (previewType === "pdf") setPdfBlob(urlBlob);
+          if (previewType === "image") setImageBlob(typedBlob);
         }
       } catch {
         if (!cancelled) setError(true);
@@ -365,8 +404,8 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   useEffect(() => {
     if (!autoPrint || autoPrinted.current || loading || error || !objectUrl || !canPrintPdf) return;
     autoPrinted.current = true;
-    void printPdfUrl(objectUrl);
-  }, [autoPrint, loading, error, objectUrl, canPrintPdf]);
+    void printPdfUrl(objectUrl, undefined, pdfBlob);
+  }, [autoPrint, loading, error, objectUrl, canPrintPdf, pdfBlob]);
 
   // In place of this frame, not on top of it: one frame at a time takes
   // Escape and the arrows. This one keeps its state and its Back entry.
@@ -395,12 +434,36 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
     void onDownload();
   };
 
+  const printPreviewed = async () => {
+    if (fileType === "eml" && emlContent) {
+      printMessageInWindow(
+        emlPrintFields(emlContent, { fallbackSubject: emlSubject ?? name, unknownSender: tViewer("unknown_sender"), timeFormat, linksOff: linksOffText }),
+        { externalBlocked: blockRemote, watermark, labels: printLabels(tViewer) },
+      );
+    } else if (fileType === "image" && imageBlob) {
+      let src: string;
+      try {
+        src = await imageDataUrl(imageBlob);
+      } catch {
+        return;
+      }
+      await printFile(name, { kind: "image", src }, watermark);
+    } else if (fileType === "text" && content !== null) {
+      await printFile(name, { kind: "text", text: content }, watermark);
+    } else if (fileType === "markdown" && markdownRef.current) {
+      await printFile(name, { kind: "markdown", html: markdownRef.current.innerHTML }, watermark);
+    } else if (fileType === "html" && htmlBody !== null) {
+      await printFile(name, { kind: "html", html: htmlBody, blockRemote }, watermark);
+    }
+  };
+
   return (
     <PreviewShell
       name={emlSubject ?? name}
       onClose={onClose}
       onDownload={downloadsOff ? undefined : download}
       neighbours={neighbours}
+      source={source}
       // An installed app hands the new window to the system browser, which
       // cannot load our blob: URL (#865): no dead button there.
       actions={(
@@ -411,12 +474,17 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
             </Button>
           )}
           {objectUrl && canPrintPdf && !loading && !error && (
-            <IconButton label={tCommon("print")} onClick={() => { void printPdfUrl(objectUrl); }} data-testid="preview-print">
+            <IconButton label={tCommon("print")} onClick={() => { void printPdfUrl(objectUrl, undefined, pdfBlob); }} data-testid="preview-print">
               <Printer />
             </IconButton>
           )}
-          {objectUrl && canOpenInNewTab && !downloadsOff && canOpenUrlInNewWindow(objectUrl) && (
-            <IconButton label={t("open_in_new_tab")} onClick={() => window.open(objectUrl, "_blank", "noopener,noreferrer")}>
+          {canPrintFile && !loading && !error && (
+            <IconButton label={tCommon("print")} onClick={() => { void printPreviewed(); }} data-testid="preview-print">
+              <Printer />
+            </IconButton>
+          )}
+          {objectUrl && newTabBlob && isInlineSafeBlob(newTabBlob) && !downloadsOff && canOpenUrlInNewWindow(objectUrl) && (
+            <IconButton label={t("open_in_new_tab")} onClick={() => { if (isInlineSafeBlob(newTabBlob)) window.open(objectUrl, "_blank", "noopener,noreferrer"); }}>
               <ExternalLink />
             </IconButton>
           )}
@@ -445,7 +513,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
             className="bg-background rounded-lg p-6 max-w-4xl w-full max-h-full overflow-auto text-sm"
             onClick={(e) => e.stopPropagation()}
           >
-            <SimpleMarkdown content={content} />
+            <SimpleMarkdown content={content} containerRef={markdownRef} />
           </div>
         )}
 
@@ -459,9 +527,9 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
           </div>
         )}
 
-        {!loading && !error && fileType === "html" && htmlDoc && (
+        {!loading && !error && fileType === "html" && htmlBody !== null && (
           <iframe
-            srcDoc={htmlDoc}
+            srcDoc={htmlAttachmentFrameDocument(htmlBody, blockRemote)}
             sandbox=""
             className="w-full max-w-5xl h-full rounded-lg bg-white"
             title={name}

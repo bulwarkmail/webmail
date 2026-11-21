@@ -4,6 +4,8 @@ import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { discoverOAuth } from '@/lib/oauth/discovery';
 import { DEFAULT_OAUTH_SCOPES, withProviderDataScopes } from '@/lib/oauth/scopes';
 import { getDiscoveryValidator } from '@/lib/oauth/token-exchange';
+import { discoveryBase, signInIssuerRule } from '@/lib/oauth/sign-in-servers';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { resolveCustomUpstream } from '@/lib/oauth/custom-upstream';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 
@@ -62,7 +64,7 @@ async function registerClient(endpoint: string, scope: string): Promise<{ client
       if (clientId) return { clientId, useScheme: true };
     }
   } catch (error) {
-    logger.warn('Desktop OAuth: client registration failed', { error: error instanceof Error ? error.message : String(error) });
+    logger.warn('Desktop OAuth: client registration failed', { error: loggableError(error) });
   }
   return { clientId: FALLBACK_CLIENT_ID, useScheme: false };
 }
@@ -85,7 +87,14 @@ export async function POST(request: NextRequest) {
     const upstream = await resolveCustomUpstream(serverUrl, FALLBACK_CLIENT_ID);
     if (!upstream) return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
 
-    const metadata = await discoverOAuth(upstream.serverUrl, { validateEndpoint: getDiscoveryValidator(upstream.serverUrl) });
+    // The app checks the callback's `iss` against the issuer named here, so
+    // the metadata must pass the sign-in rule (signInIssuerRule; the desktop
+    // build's typed servers make it the strict one). Discovery runs against
+    // the same base as the code exchange for this server (getRequiredConfig).
+    const metadata = await discoverOAuth(discoveryBase(upstream.serverUrl), {
+      validateEndpoint: getDiscoveryValidator(upstream.serverUrl),
+      issuerRule: signInIssuerRule(),
+    });
     if (!metadata) return NextResponse.json({ error: 'no_oauth' }, { status: 404 });
 
     const scope = withProviderDataScopes(DEFAULT_OAUTH_SCOPES, metadata.scopes_supported);
@@ -102,7 +111,7 @@ export async function POST(request: NextRequest) {
       ...(useScheme ? { use_scheme: true } : {}),
     });
   } catch (error) {
-    logger.error('Desktop OAuth discovery failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Desktop OAuth discovery failed', { error: loggableError(error) });
     return NextResponse.json({ error: 'discovery_failed' }, { status: 503 });
   }
 }

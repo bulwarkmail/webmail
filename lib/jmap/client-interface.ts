@@ -11,6 +11,12 @@ import type { SearchSnippetResult } from "@/lib/search-snippet";
 import type { StorageQuota } from "@/lib/quota";
 import type { MessagePriority } from "@/lib/message-priority";
 
+/** What a raw send asks of the mail server beyond its recipients (see SubmissionSendOptions in client.ts). */
+export interface RawSubmissionOptions {
+  requestDsn?: boolean;
+  requireTls?: boolean;
+}
+
 /** What `migrateKeyword` managed to do. */
 export interface KeywordMigration {
   /** Messages now carrying the new keyword. */
@@ -119,7 +125,7 @@ export interface IJMAPClient {
   // ── Session / auth accessors ──────────────────────────────────
   getServerUrl(): string;
   getAuthHeader(): string;
-  updateAccessToken(token: string): void;
+  updateAccessToken(token: string, expiresIn?: number): void;
   upgradeToBearer(accessToken: string, onRefresh?: () => Promise<string | null>): void;
   enableTotpReauth(basePassword: string, callback: () => Promise<string | null>): void;
   updateBasicAuth(newPassword: string): void;
@@ -217,8 +223,28 @@ export interface IJMAPClient {
   getQuota(): Promise<StorageQuota | null>;
 
   // ── Mailboxes ─────────────────────────────────────────────────
-  getMailboxes(accountId?: string): Promise<Mailbox[]>;
+  /**
+   * One account's folders. The team notes folder of a team mailbox is left
+   * out (lib/team-mailboxes/hidden-folders.ts) unless `includeHidden` is set:
+   * only export, import and the team notes store ask for it.
+   */
+  getMailboxes(accountId?: string, options?: { includeHidden?: boolean }): Promise<Mailbox[]>;
+  /** Every account's folders, without the team notes folders. */
   getAllMailboxes(): Promise<Mailbox[]>;
+  /**
+   * Raw JMAP ids of the folders left out of the lists for this account
+   * (default: the primary account), for queries without a folder. Known once
+   * the account's folders were fetched.
+   */
+  hiddenMailboxIds?(accountId?: string): string[];
+
+  // ── Team notes (lib/team-mailboxes); never answered from the device ──
+  queryTeamNotes?(accountId: string, filter: Record<string, unknown>, options: { limit: number; position?: number; properties: readonly string[] }): Promise<{ ids: string[]; list: Array<Record<string, unknown>>; total?: number; state?: string }>;
+  getTeamNotes?(accountId: string, ids: readonly string[], properties: readonly string[], options?: { text?: boolean }): Promise<{ list: Array<Record<string, unknown>>; state?: string; notFound: string[] }>;
+  createTeamNote?(accountId: string, email: Record<string, unknown>): Promise<{ id: string; threadId?: string }>;
+  destroyTeamNote?(accountId: string, id: string): Promise<void>;
+  createTeamNotesFolder?(accountId: string, name: string, shareWith: Record<string, MailboxRights> | null): Promise<string>;
+  setMailboxShareWith?(mailboxId: string, shareWith: Record<string, MailboxRights>, accountId?: string): Promise<void>;
   /**
    * getAllMailboxes plus the Mailbox collection state per account, so the
    * store can resolve a later push with Mailbox/changes (RFC 8620 §5.2)
@@ -283,7 +309,9 @@ export interface IJMAPClient {
    * A page of a view. `threadCounts` (message count per thread id) comes with
    * the page when the server answers the Thread/get chained onto it.
    */
-  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string, pinnedFirst?: boolean, extraFilter?: Record<string, unknown>, order?: SortLevel[]): Promise<{ emails: Email[]; hasMore: boolean; total: number; state?: string; threadCounts?: Record<string, number> }>;
+  getEmails(mailboxId?: string, accountId?: string, limit?: number, position?: number, hasKeyword?: string, pinnedFirst?: boolean, extraFilter?: Record<string, unknown>, order?: SortLevel[]): Promise<{ emails: Email[]; hasMore: boolean; total: number; state?: string; threadCounts?: Record<string, number>; draftThreads?: Record<string, string> }>;
+  /** Draft id -> thread id for the account's drafts (#1798). */
+  getDraftThreads?(accountId?: string): Promise<Record<string, string> | undefined>;
   /**
    * Sort properties the account's server advertises for Email/query
    * (`emailQuerySortOptions` in the mail capability, RFC 8621 §1.3), or null
@@ -404,6 +432,11 @@ export interface IJMAPClient {
   ): Promise<void>;
   moveEmail(emailId: string, toMailboxId: string, accountId?: string): Promise<void>;
   /**
+   * Put a message in one more mailbox and leave it in the ones it is in (a
+   * `mailboxIds/<id>: true` patch).
+   */
+  addEmailToMailbox(emailId: string, mailboxId: string, accountId?: string): Promise<void>;
+  /**
    * Take messages out of one mailbox and leave every other mailbox they are
    * in alone (a `mailboxIds/<id>: null` patch). A message must stay in at
    * least one mailbox, so the server refuses this for a message only in it.
@@ -455,7 +488,7 @@ export interface IJMAPClient {
      * `classification`: the label choice (an id, null for none) kept in
      * X-Bulwark-Label.
      */
-    options?: { priority?: MessagePriority; accountId?: string; previousDraftAccountId?: string; classification?: string | null },
+    options?: { priority?: MessagePriority; accountId?: string; previousDraftAccountId?: string; classification?: string | null; keywords?: string[] },
   ): Promise<string>;
 
   /**
@@ -517,8 +550,8 @@ export interface IJMAPClient {
     humanText?: string;
   }): Promise<void>;
 
-  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
-  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
+  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string, submission?: RawSubmissionOptions): Promise<SendEmailResult>;
+  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string, submission?: RawSubmissionOptions): Promise<SendEmailResult>;
   getScheduledEmails(limit?: number, position?: number): Promise<{ emails: ScheduledEmail[]; hasMore: boolean; total: number; totalByAccount?: Record<string, number>; nextPosition: number }>;
   /** Cancels a pending submission, then destroys its record. */
   cancelEmailSubmission(submissionId: string, accountId?: string): Promise<void>;
@@ -689,6 +722,8 @@ export interface IJMAPClient {
   setBulwarkMetadata?(accountId: string | undefined, key: string, value: unknown, options?: { private?: boolean }): Promise<void>;
   advertisesBulwarkMetadata?(accountId?: string): boolean;
   patchBulwarkMetadata?(accountId: string | undefined, key: string, patches: Array<{ path: string[]; value: unknown }>): Promise<{ newState?: string }>;
+  advertisesPrivateBulwarkMetadata?(accountId?: string): boolean;
+  updateBulwarkMetadata?(accountId: string | undefined, changes: Array<{ key: string; member?: string; value: unknown }>, options?: { private?: boolean }): Promise<{ newState?: string }>;
   setCalendarShare(calendarId: string, principalId: string, rights: CalendarRights | null, targetAccountId?: string): Promise<void>;
   setAddressBookShare(addressBookId: string, principalId: string, rights: AddressBookRights | null, targetAccountId?: string): Promise<void>;
   setFileNodeShare(fileNodeId: string, principalId: string, rights: FileNodeRights | null, targetAccountId?: string): Promise<void>;

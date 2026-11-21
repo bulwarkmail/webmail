@@ -90,6 +90,17 @@ describe('admin policy defaults (#1248)', () => {
     expect(settings().sendDelaySeconds).toBe(5);
   });
 
+  it('presets quoted text in replies to expanded, and refuses other values (#1800)', () => {
+    expect(settings().replyQuoteDisplay).toBe('collapsed');
+    loadPolicy({ defaults: { replyQuoteDisplay: 'open' } });
+    expect(settings().replyQuoteDisplay).toBe('collapsed');
+    loadPolicy({ defaults: { replyQuoteDisplay: 'expanded' } });
+    expect(settings().replyQuoteDisplay).toBe('expanded');
+    settings().updateSetting('replyQuoteDisplay', 'collapsed');
+    loadPolicy({ defaults: { replyQuoteDisplay: 'expanded' } });
+    expect(settings().replyQuoteDisplay).toBe('collapsed');
+  });
+
   it('presets the hover actions, a list setting (#1564)', () => {
     loadPolicy({ defaults: { hoverActions: ['delete', 'star', 'markRead', 'archive', 'tag', 'spam'] } });
     expect(settings().hoverActions).toEqual(['delete', 'star', 'markRead', 'archive', 'tag', 'spam']);

@@ -6,7 +6,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import type { HoverAction } from "@/stores/settings-store";
 import { cn } from "@/lib/utils";
 import { Trash2, Star, Mail, MailOpen, Archive, Inbox, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
-import { useEmailStore } from "@/stores/email-store";
+import { mailboxesInView, useEmailStore } from "@/stores/email-store";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useArchiveActionEnabled, withoutArchiveIfOff } from "@/lib/archive-gate";
 import { useTranslations } from "next-intl";
@@ -18,9 +18,17 @@ import { useEmailTagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { PluginActions, useMessageActionTarget, usePluginActions, useRowActionTarget } from "@/components/plugins/plugin-actions";
 import { usePluginRowBadges } from "@/components/email/plugin-row-badges";
+import { useTeamActions } from "@/components/team-mailboxes/team-actions";
 
 interface EmailHoverActionsProps {
   email: Email;
+  /**
+   * Whether the row counts as unread, when that isn't the message's own state:
+   * a conversation row is unread while any of its messages is.
+   */
+  unread?: boolean;
+  /** A conversation row's tags: every tag any of its messages has. */
+  tagIds?: string[];
   backgroundClassName?: string;
   onToggleStar?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -144,6 +152,8 @@ function reserveRowRoom(actions: HTMLDivElement | null): (() => void) | void {
 
 export function EmailHoverActions({
   email,
+  unread,
+  tagIds,
   backgroundClassName = "bg-muted",
   onToggleStar,
   onMarkAsRead,
@@ -171,8 +181,9 @@ export function EmailHoverActions({
   const t = useTranslations("context_menu");
   const tP3 = useTranslations("mail_p3_actions");
   // In Archive the archive button brings mail back to the Inbox, as the row
-  // menu's entry in its place does (mail-p3-4).
-  const archiveMovesToInbox = useEmailStore((state) => !!archiveInboxTarget(state.mailboxes, state.selectedMailbox));
+  // menu's entry in its place does (mail-p3-4). The folder on screen is one
+  // of the browsed login's (mailboxesInView), as Archive itself decides.
+  const archiveMovesToInbox = useEmailStore((state) => !!archiveInboxTarget(mailboxesInView(state), state.selectedMailbox));
   const isMobile = useIsMobile();
   // Buttons plugins add to the row (message-row-actions), after the app's own.
   // The row's badges too, for actions shown by a plugin's badge (hasBadge).
@@ -181,6 +192,9 @@ export function EmailHoverActions({
     mailboxRole, accountKind: pluginTarget.accountKind, keywords: pluginTarget.keywords, badges: pluginTarget.badges,
   }).length;
   const pluginContext = useMemo(() => ({ emailId: email.id }), [email.id]);
+  // Team mailboxes: Assign to me, Assign to…, Unassign, Mark done / Reopen, always
+  // there in a team mailbox's rows (no setting), after the configured buttons.
+  const teamEntries = useTeamActions(email);
 
   // The tag quick-action opens the same picker the context menu and the reading
   // pane use. It is portalled to the body because every row sits inside a
@@ -190,13 +204,13 @@ export function EmailHoverActions({
   const tagMenu = useContextMenu<null>();
   const tagPickerOpen = tagMenu.contextMenu.isOpen;
 
-  const isUnread = !email.keywords?.$seen;
+  const isUnread = unread ?? !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
-  const currentTagIds = getEmailTagIds(email.keywords);
+  const currentTagIds = tagIds ?? getEmailTagIds(email.keywords);
   const hoverBackgroundClassName = backgroundClassName;
 
   if (isMobile) return null;
-  if (hoverActions.length === 0 && pluginActionCount === 0) return null;
+  if (hoverActions.length === 0 && pluginActionCount === 0 && teamEntries.length === 0) return null;
 
   const handleAction = (e: React.MouseEvent, action: HoverAction) => {
     e.stopPropagation();
@@ -282,6 +296,30 @@ export function EmailHoverActions({
       </button>
     );
   });
+  if (teamEntries.length > 0) {
+    actionButtons.push(
+      // Like the plugin buttons: in a narrow row the row's menu has them.
+      <div key="team-actions" className="hidden @[20rem]/mail-row:flex flex-nowrap gap-0.5" data-team-hover-actions="">
+        {teamEntries.map((entry) => entry.kind === "item" && (
+          <button
+            key={entry.key}
+            type="button"
+            data-testid={`hover-${entry.testId}`}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); entry.run(); }}
+            onDoubleClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+            title={entry.label}
+            aria-label={entry.label}
+            className={cn(
+              "transition-colors duration-100 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10",
+              mountainView ? "p-2 rounded-full hover:text-foreground" : "p-1.5 rounded-md hover:text-foreground",
+            )}
+          >
+            <entry.icon className={mountainView ? "w-5 h-5" : "w-4 h-4"} />
+          </button>
+        ))}
+      </div>,
+    );
+  }
   if (pluginActionCount > 0) {
     actionButtons.push(
       // In a narrow list the row's menu has these: all of them in a row would

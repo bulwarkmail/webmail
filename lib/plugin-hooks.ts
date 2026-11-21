@@ -735,6 +735,9 @@ export const identityHooks = {
   onIdentityDelete: new HookBus(),
   onIdentitySelect: new HookBus(),
   onSignatureRender: new HookBus(),
+  // Asked when a reply, reply-all, forward or quick reply picks its From:
+  // a handler returns an identity id (lib/plugin-reply-identity.ts).
+  onSelectReplyIdentity: new HookBus(),
 };
 
 // §7.8 Filter Hooks

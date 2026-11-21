@@ -1,0 +1,51 @@
+# Who may connect to the pods. The store holds the admin config, the admin
+# sign-in and the plugins every user runs, so only the webmail's pods reach
+# it; without this policy any pod in the cluster could, and the password
+# would be all that keeps it out.
+#
+# A NetworkPolicy needs a network plugin that enforces it (Calico, Cilium,
+# kind's default and most managed clusters do). On one that doesn't, it is
+# accepted and does nothing: check with your cluster's documentation.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: valkey
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: valkey
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: bulwark
+      ports:
+        - protocol: TCP
+          port: 6379
+
+# The webmail's pods: requests on 3000 only from the ingress controller, so
+# nothing else in the cluster reaches them past it (sign-in limits count the
+# address the proxy in front reports). Which namespace the controller runs in
+# depends on the cluster, so this one is an example: set the namespace and add
+# it to an overlay of your own (or uncomment it here). The kubelet's probes
+# come from the node and are not affected; `kubectl port-forward` isn't either.
+#
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: bulwark
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app.kubernetes.io/name: bulwark
+#   policyTypes: [Ingress]
+#   ingress:
+#     - from:
+#         - namespaceSelector:
+#             matchLabels:
+#               kubernetes.io/metadata.name: ingress-nginx
+#       ports:
+#         - protocol: TCP
+#           port: 3000

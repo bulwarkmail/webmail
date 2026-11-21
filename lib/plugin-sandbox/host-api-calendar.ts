@@ -32,7 +32,7 @@ import { pluginHasPermission } from './permissions';
 import { eventToView, taskToView } from '../plugin-projection';
 import { expandRecurringEvents } from '../recurrence-expansion';
 import { buildParticipantMap } from '../calendar-participants';
-import { parseDurationSeconds } from '../calendar-event-normalization';
+import { locationsWithName, parseDurationSeconds } from '../calendar-event-normalization';
 import { parseAlertOffset, withOwnAlertIds } from '../calendar-alerts';
 import { plainDescriptionFields } from '../calendar-description';
 import { patchPath } from '../jmap/patch-object';
@@ -432,16 +432,6 @@ function recurrenceOf(value: unknown, method: string): CalendarEvent['recurrence
   return [createRecurrenceRule(r.frequency as CalendarRecurrenceRule['frequency'], overrides)];
 }
 
-function locationsOf(location: string): CalendarEvent['locations'] {
-  if (!location) return null;
-  return {
-    loc1: {
-      '@type': 'Location', name: location, description: null, locationTypes: null,
-      coordinates: null, timeZone: null, links: null, relativeTo: null,
-    },
-  } as CalendarEvent['locations'];
-}
-
 /** Attendees as stored on the event, with the user as organizer. No invitations are sent. */
 function participantsOf(value: unknown, method: string): Pick<CalendarEvent, 'participants' | 'organizerCalendarAddress'> {
   if (!Array.isArray(value)) throw new Error(`${method}: participants must be an array`);
@@ -499,7 +489,7 @@ export async function doCalendarCreateEvent(input: unknown, pluginId = 'unknown'
   }
   if (data.location !== undefined) {
     const location = readString(data.location, method, 'location', MAX_LOCATION, { trim: true });
-    if (location) event.locations = locationsOf(location);
+    if (location) event.locations = locationsWithName(location);
   }
   if (data.participants !== undefined) {
     const p = participantsOf(data.participants, method);
@@ -527,9 +517,7 @@ export async function doCalendarUpdateEvent(id: unknown, patch: unknown): Promis
   if (data.description !== undefined) {
     updates.description = readString(data.description, method, 'description', MAX_DESCRIPTION, { trim: true });
   }
-  if (data.location !== undefined) {
-    updates.locations = locationsOf(readString(data.location, method, 'location', MAX_LOCATION, { trim: true }));
-  }
+  const location = data.location !== undefined ? readString(data.location, method, 'location', MAX_LOCATION, { trim: true }) : undefined;
   if (data.participants !== undefined) Object.assign(updates, participantsOf(data.participants, method));
   if (data.repeat !== undefined) updates.recurrenceRules = recurrenceOf(data.repeat, method);
 
@@ -540,6 +528,8 @@ export async function doCalendarUpdateEvent(id: unknown, patch: unknown): Promis
   const existing = await eventForMutation(client, method, eventId);
   // A plugin writes plain text, also over an HTML description.
   if (updates.description !== undefined) Object.assign(updates, plainDescriptionFields(existing, updates.description));
+  // The location keeps the members it had besides its name.
+  if (location !== undefined) updates.locations = location ? locationsWithName(location, existing.locations) : null;
 
   const timeKeys = ['start', 'end', 'duration', 'timeZone', 'isAllDay'] as const;
   if (timeKeys.some((k) => data[k] !== undefined)) {
@@ -570,7 +560,7 @@ export async function doCalendarDeleteEvent(id: unknown): Promise<void> {
 // ─── Tasks ────────────────────────────────────────────────────
 
 const TASK_FIELDS = [
-  'title', 'description', 'due', 'priority', 'calendarId', 'alerts', 'links', 'relatedTo',
+  'title', 'description', 'due', 'priority', 'calendarId', 'alerts', 'links', 'relatedTo', 'keywords',
 ] as const;
 /** Most alerts a plugin may give a task. */
 export const MAX_PLUGIN_TASK_ALERTS = 5;
@@ -578,6 +568,8 @@ export const MAX_PLUGIN_TASK_ALERTS = 5;
 export const MAX_PLUGIN_TASK_LINKS = 10;
 /** Most relations a plugin may give a task. */
 export const MAX_PLUGIN_TASK_RELATIONS = 10;
+/** Most keywords a plugin may give a task. */
+export const MAX_PLUGIN_TASK_KEYWORDS = 10;
 const MAX_HREF = 2048;
 const MAX_LINK_TITLE = 500;
 const MAX_RELATED_UID = 998;
@@ -595,7 +587,7 @@ const RELATED_UID_RE = /^(?:<[!-;=?-~]+>|[!-;=?-~]+)$/;
 const CONTROL_RE = /\p{Cc}/u;
 
 /** The maps a plugin edits on a task, each keyed as JSCalendar keys it. */
-const TASK_MAPS = ['alerts', 'links', 'relatedTo'] as const;
+const TASK_MAPS = ['alerts', 'links', 'relatedTo', 'keywords'] as const;
 type TaskMap = typeof TASK_MAPS[number];
 
 /**
@@ -753,10 +745,20 @@ function relatedToOf(value: unknown, method: string): MapChange<CalendarRelation
     });
 }
 
+/** A task's keywords: `{ keyword: true }` sets one, null removes it. */
+function keywordsOf(value: unknown, method: string): MapChange<true> {
+  return readMapChange(value, method, 'keywords', MAX_PLUGIN_TASK_KEYWORDS, (k) => MEMBER_ID_RE.test(k),
+    '1-64 letters, digits or . _ -', (entry, field) => {
+      if (entry !== true) throw new Error(`${method}: ${field} must be true, or null to remove it`);
+      return true;
+    });
+}
+
 interface TaskMapChanges {
   alerts?: MapChange<CalendarEventAlert>;
   links?: MapChange<CalendarLink>;
   relatedTo?: MapChange<CalendarRelation>;
+  keywords?: MapChange<true>;
 }
 
 /** The plugin's map changes, read and checked before anything is asked of the server. */
@@ -765,6 +767,7 @@ function mapChangesOf(data: Record<string, unknown>, method: string): TaskMapCha
   if (data.alerts !== undefined) changes.alerts = alertsOf(data.alerts, method);
   if (data.links !== undefined) changes.links = linksOf(data.links, method);
   if (data.relatedTo !== undefined) changes.relatedTo = relatedToOf(data.relatedTo, method);
+  if (data.keywords !== undefined) changes.keywords = keywordsOf(data.keywords, method);
   return changes;
 }
 
@@ -814,6 +817,7 @@ function updateMaps(method: string, task: CalendarTask, changes: TaskMapChanges)
     alerts: MAX_PLUGIN_TASK_ALERTS,
     links: MAX_PLUGIN_TASK_LINKS,
     relatedTo: MAX_PLUGIN_TASK_RELATIONS,
+    keywords: MAX_PLUGIN_TASK_KEYWORDS,
   };
   for (const name of TASK_MAPS) {
     const change = changes[name] as MapChange<unknown> | undefined;
@@ -879,11 +883,26 @@ function isDone(task: CalendarTask): boolean {
 
 export async function doTasksList(options: unknown): Promise<TaskView[]> {
   const method = 'tasks.list';
-  const opts = readObject(options, method, 'options', ['includeCompleted'], true);
+  const opts = readObject(options, method, 'options', ['includeCompleted', 'calendarIds'], true);
   const includeCompleted = opts.includeCompleted === undefined
     ? false
     : readBoolean(opts.includeCompleted, method, 'includeCompleted');
-  const tasks = await sessionClient(method).getCalendarTasks();
+  // Without calendarIds every calendar of every account the user may read
+  // is listed, and Stalwart has no filter for tasks: each object comes,
+  // events too. A plugin that wants only some task lists names them.
+  let calendarIds: string[] | undefined;
+  if (opts.calendarIds !== undefined) {
+    if (!Array.isArray(opts.calendarIds) || opts.calendarIds.length === 0 || opts.calendarIds.length > 100) {
+      throw new Error(`${method}: calendarIds must be an array of 1 to 100 ids`);
+    }
+    const named = opts.calendarIds.map((id, i) => readId(id, method, `calendarIds[${i}]`));
+    // The birthday calendar comes from listCalendars but holds no tasks and
+    // isn't on the server. An empty list would mean every calendar to the
+    // client, so a call that names only it gets no tasks.
+    calendarIds = [...new Set(named)].filter((id) => id !== BIRTHDAY_CALENDAR_ID);
+    if (calendarIds.length === 0) return [];
+  }
+  const tasks = await sessionClient(method).getCalendarTasks(calendarIds);
   return tasks
     .filter((t) => includeCompleted || !isDone(t))
     .slice(0, MAX_PLUGIN_TASKS)
@@ -919,7 +938,7 @@ async function requireTask(client: IJMAPClient, method: string, id: string): Pro
 }
 
 /**
- * The task with its alerts, links and relations as the server
+ * The task with its alerts, links, relations and keywords as the server
  * holds them now: the store's copy may be older, and a map the task seems
  * not to have is written whole, which would drop what the server gained.
  */
@@ -931,6 +950,7 @@ async function withServerMaps(client: IJMAPClient, task: CalendarTask): Promise<
     alerts: server.alerts ?? null,
     links: server.links ?? null,
     relatedTo: server.relatedTo ?? null,
+    keywords: server.keywords ?? null,
     useDefaultAlerts: server.useDefaultAlerts,
   };
 }

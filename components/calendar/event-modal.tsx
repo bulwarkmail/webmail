@@ -1,23 +1,26 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, useId } from "react";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "@/stores/toast-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TimeField } from "@/components/ui/time-field";
 import { LinkifiedText } from "@/components/ui/linkified-text";
-import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical } from "@/components/icons";
+import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical, Lock, Maximize2, Minimize2 } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
 import { descriptionAsText, isHtmlDescription, plainDescriptionFields } from "@/lib/calendar-description";
+import { locationsWithName } from "@/lib/calendar-event-normalization";
 import { ParticipantStatusBadge } from "./rsvp-buttons";
-import { format, parseISO, addHours, isSameDay } from "date-fns";
+import { format, parseISO, addDays, addHours, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
 import { AlertListEditor, AlertSummary, formatEventAlertsLabel } from "./alert-list-editor";
 import { alertRowToOffset, describeAlert, getCalendarDefaultAlerts, newAlertRow, withOwnAlertIds, type AlertAction, type AlertRow as EditableAlertRow, type AlertUnit } from "@/lib/calendar-alerts";
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
-import { parseDuration, getEventColor } from "./event-card";
+import { parseDuration, getEventColor, sanitizeColor } from "./event-card";
+import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";
 import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
 import { TimeZonePicker } from "@/components/settings/time-zone-picker";
@@ -26,7 +29,8 @@ import { createRecurrenceRule, sameRecurrenceRules } from "@/lib/recurrence-rule
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
 import { ParticipantAvailability } from "./participant-availability";
 import { FindATime } from "./find-a-time";
-import { AnswerBars, useAnswerView } from "./answer-bars";
+import { SchedulingAssistant } from "./scheduling-assistant";
+import { AnswerBars, useAccountOwner, useAnswerView } from "./answer-bars";
 import type { AnswerTarget } from "@/lib/calendar-delegate";
 import {
   eventOrganizer,
@@ -34,6 +38,7 @@ import {
   getParticipantList,
   getStatusCounts,
   participantFieldsToSave,
+  type OrganizerOnBehalf,
   userOrganizes,
 } from "@/lib/calendar-participants";
 import { canUserRsvp, getEventEditability } from "@/lib/calendar-editability";
@@ -41,14 +46,18 @@ import { eventTargets, preferredTarget } from "@/lib/calendar-targets";
 import { CalendarSelect } from "@/components/calendar/calendar-select";
 import { useAccountStore } from "@/stores/account-store";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { changesWhen, type EditorAttendee, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { linkCallback } from "@/lib/plugin-sandbox/slot-callbacks";
 import { useSettingsStore } from "@/stores/settings-store";
-import { generateUUID } from "@/lib/utils";
+import { cn, generateUUID } from "@/lib/utils";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
+import { findOverlappingEvents } from "@/lib/calendar-overlaps";
 import { confirmInvitationRecipients } from "@/lib/outgoing/external-recipients";
 import {
   calendarFormHooks,
@@ -110,6 +119,14 @@ interface EventModalProps {
   /** The server's maxParticipantsPerEvent, for a warning; null when not advertised. */
   maxParticipants?: number | null;
   isMobile?: boolean;
+  /**
+   * The desktop sheet shows as a large dialog (#1757); onToggleExpand
+   * switches it, and without it there is no button.
+   */
+  expanded?: boolean;
+  onToggleExpand?: () => void;
+  /** The events loaded in the calendar: the form says which of them share its time (#1685). */
+  overlapEvents?: CalendarEvent[];
 }
 
 /**
@@ -125,18 +142,41 @@ export function shiftedEnd(oldStart: Date, oldEnd: Date, newStart: Date): Date |
   return new Date(newStart.getTime() + durationMs);
 }
 
+/** What the editor's Show as and Visibility fields hold. */
+export interface EventVisibilityChoice {
+  freeBusyStatus: CalendarEvent["freeBusyStatus"];
+  /** Undefined when the field isn't offered: only the calendar's owner sets privacy. */
+  privacy?: CalendarEvent["privacy"];
+}
+
 /**
- * Status, free/busy and privacy for a save. The editor has no controls for
- * them, so only a new event gets them (the defaults) and an edit keeps what
- * the event has. Every edit used to reset them to confirmed, busy and public,
- * and Stalwart 1.0 refuses an edit of one occurrence whose privacy differs
- * from its series'. Pure, for testing.
+ * Status, free/busy and privacy for a save. A new event is confirmed and
+ * gets what the editor holds. An edit sends free/busy and privacy only when
+ * the user changed them, and never the status, which the editor has no
+ * field for: Stalwart 1.0 refuses an edit of one occurrence whose privacy
+ * differs from its series', and an event without CLASS has no privacy at
+ * all. Pure, for testing.
  */
 export function savedStatusFields(
   event: CalendarEvent | null | undefined,
+  choice: EventVisibilityChoice = { freeBusyStatus: "busy", privacy: "public" },
 ): Partial<Pick<CalendarEvent, "status" | "freeBusyStatus" | "privacy">> {
-  if (event) return {};
-  return { status: "confirmed", freeBusyStatus: "busy", privacy: "public" };
+  if (!event) {
+    return { status: "confirmed", freeBusyStatus: choice.freeBusyStatus, privacy: choice.privacy ?? "public" };
+  }
+  const fields: Partial<Pick<CalendarEvent, "freeBusyStatus" | "privacy">> = {};
+  if (choice.freeBusyStatus !== (event.freeBusyStatus ?? "busy")) fields.freeBusyStatus = choice.freeBusyStatus;
+  if (choice.privacy && choice.privacy !== (event.privacy ?? "public")) fields.privacy = choice.privacy;
+  return fields;
+}
+
+/**
+ * What Show as starts at for a new event: an all-day one (a holiday, a
+ * birthday, a trip) doesn't block the day, a timed one does, as in Outlook
+ * and Google Calendar (#1684). Pure, for testing.
+ */
+export function defaultShowAs(allDay: boolean): CalendarEvent["freeBusyStatus"] {
+  return allDay ? "free" : "busy";
 }
 
 function formatDateInput(d: Date): string {
@@ -279,6 +319,9 @@ export function EventModal({
   isSubscriptionCalendar,
   maxParticipants = null,
   isMobile = false,
+  expanded = false,
+  onToggleExpand,
+  overlapEvents,
 }: EventModalProps) {
   const t = useTranslations("calendar");
   const paint = useCvdColor();
@@ -287,6 +330,7 @@ export function EventModal({
   const labelFor = (key: string) => `${labelIdBase}-${key}`;
   const tCommon = useTranslations("common");
   const tEvent = useTranslations("ux_pim_event");
+  const tDelegate = useTranslations("calendar_delegate");
   const shownName = useCollectionNames();
   // The header's close goes to its start when the window's own close is at its end.
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
@@ -410,6 +454,19 @@ export function EventModal({
   const [endDate, setEndDate] = useState(formatDateInput(initialEndWall));
   const [endTime, setEndTime] = useState(formatTimeInput(initialEndWall));
   const [allDay, setAllDay] = useState(seed?.showWithoutTime || defaultAllDay || false);
+  // A new all-day event starts as free, a timed one as busy (#1684), until
+  // the user picks one under Show as.
+  const [freeBusyStatus, setFreeBusyStatus] = useState<CalendarEvent["freeBusyStatus"]>(
+    () => (seed ? seed.freeBusyStatus ?? "busy" : defaultShowAs(!!defaultAllDay)),
+  );
+  const showAsPickedRef = useRef(false);
+  const handleAllDayChange = (next: boolean) => {
+    setAllDay(next);
+    if (!seed && !showAsPickedRef.current) setFreeBusyStatus(defaultShowAs(next));
+  };
+  const [privacy, setPrivacy] = useState<CalendarEvent["privacy"]>(seed?.privacy ?? "public");
+  // The event's own colour; null paints it in its calendar's (#1668).
+  const [color, setColor] = useState<string | null>(seed?.color || null);
   // The zone the fields are on: none for an all-day event.
   const fieldZone = allDay ? null : timeZone;
   // The form's times on the user's clock, beside another zone's.
@@ -466,6 +523,9 @@ export function EventModal({
       .filter(c => !eventLogin.known || c.localAccountId === eventLogin.login),
     [calendars, isSubscriptionCalendar, eventLogin]
   );
+  // Only the calendar's owner sets an event's privacy (Stalwart answers a
+  // sharee's change with forbidden), so a shared calendar offers no field.
+  const privacyEditable = calendars.find((c) => c.id === calendarId)?.isShared !== true;
   const [recurrence, setRecurrence] = useState<RecurrenceOption>(() => {
     if (!seed?.recurrenceRules?.length) return "none";
     const rule = seed.recurrenceRules[0];
@@ -549,11 +609,11 @@ export function EventModal({
     // organizer too, and the user isn't a guest of it.
     if (!event) {
       const mine = new Set(currentUserEmails.map((e) => e.toLowerCase()));
-      return existingParticipants.reduce<{ name: string; email: string }[]>((acc, p) => {
+      return existingParticipants.reduce<EditorAttendee[]>((acc, p) => {
         const key = p.email.trim().toLowerCase();
         if (!key || mine.has(key)) return acc;
         mine.add(key);
-        acc.push({ name: p.name, email: p.email.trim() });
+        acc.push({ name: p.name, email: p.email.trim(), ...(p.optional ? { optional: true } : {}) });
         return acc;
       }, []);
     }
@@ -570,16 +630,49 @@ export function EventModal({
     }
     return existingParticipants
       .filter(p => !p.isOrganizer)
-      .reduce<{ name: string; email: string }[]>((acc, p) => {
+      .reduce<EditorAttendee[]>((acc, p) => {
         const key = p.email.trim().toLowerCase();
         if (!key || excluded.has(key)) return acc;
         excluded.add(key);
-        acc.push({ name: p.name, email: p.email.trim() });
+        acc.push({ name: p.name, email: p.email.trim(), ...(p.optional ? { optional: true } : {}) });
         return acc;
       }, []);
   });
   const [attendees, setAttendees] = useState<EditorAttendee[]>(initialAttendees);
   const [sendInvitations, setSendInvitations] = useState(true);
+
+  // In another person's or a group's calendar the user may write to, the
+  // user organizes for its owner (#1761): the owner is the organizer and the
+  // user's address goes in sentBy, as a delegate answers for them (#634).
+  const authClient = useAuthStore((s) => s.client);
+  const targetCalendar = calendars.find((c) => c.id === calendarId);
+  const targetShared = !!targetCalendar?.isShared && !!targetCalendar.myRights?.mayWriteAll;
+  const calendarOwner = useAccountOwner(authClient, targetShared ? targetCalendar?.accountId ?? null : null, targetCalendar?.accountName);
+  const ownerOrganizer = useMemo<OrganizerOnBehalf | null>(() => {
+    if (!targetShared || !calendarOwner) return null;
+    const mine = new Set(currentUserEmails.map((e) => e.trim().toLowerCase()));
+    // A person's own calendar seen through a share of their own: nothing to choose.
+    if (!calendarOwner.isGroup && calendarOwner.emails.some((e) => mine.has(e))) return null;
+    const delegate = currentUserEmails[0]?.trim();
+    return {
+      name: calendarOwner.name,
+      email: calendarOwner.emails[0],
+      ...(!calendarOwner.isGroup && delegate ? { sentBy: `mailto:${delegate}` } : {}),
+    };
+  }, [targetShared, calendarOwner, currentUserEmails]);
+  // Only an event without an organizer gets one: an existing meeting keeps its own.
+  const eventHasOrganizer = !!event && !!eventOrganizer(event);
+  const [organizeAsOwner, setOrganizeAsOwner] = useState(true);
+  const offerOrganizerChoice = !!ownerOrganizer && !eventHasOrganizer && userIsOrganizer && attendees.length > 0;
+  // The organizer the save writes for someone else: the owner picked above,
+  // or the owner who already organizes the event (its sentBy follows the
+  // user who changes it).
+  const organizerOnBehalf = useMemo<OrganizerOnBehalf | undefined>(() => {
+    if (!ownerOrganizer) return undefined;
+    if (!eventHasOrganizer) return organizeAsOwner ? ownerOrganizer : undefined;
+    const current = eventOrganizer(event!)?.email.trim().toLowerCase();
+    return current && calendarOwner?.emails.includes(current) ? { ...ownerOrganizer, email: eventOrganizer(event!)!.email } : undefined;
+  }, [ownerOrganizer, eventHasOrganizer, organizeAsOwner, event, calendarOwner]);
   const participantInputRef = useRef<ParticipantInputHandle>(null);
 
   // What the form holds against what it opened with: a form with changes
@@ -587,8 +680,10 @@ export function EventModal({
   const formState = useMemo(() => ({
     title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
+    freeBusyStatus, privacy, color,
   }), [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
-    calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations]);
+    calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
+    freeBusyStatus, privacy, color]);
   const [initialForm] = useState(formState);
   const isDirty = mode === "edit" && JSON.stringify(formState) !== JSON.stringify(initialForm);
   useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
@@ -602,6 +697,7 @@ export function EventModal({
     setCalendarId(f.calendarId); setRecurrence(f.recurrence); setCustomRule(f.customRule); setShowRecurrenceEditor(false);
     setUseDefaultAlerts(f.useDefaultAlerts); setAlertRows(f.alertRows); setPreservedAlerts(f.preservedAlerts); setRefreshDefaults(false);
     setAttendees(f.attendees); setSendInvitations(f.sendInvitations);
+    setFreeBusyStatus(f.freeBusyStatus); setPrivacy(f.privacy); setColor(f.color); showAsPickedRef.current = false;
   }, [initialForm]);
 
   const { dialogProps: discardDialogProps, confirm: confirmDiscard } = useConfirmDialog();
@@ -696,6 +792,52 @@ export function EventModal({
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
   }, [title, description, startDate, startTime, endDate, endTime, allDay, location, virtualLocation, calendarId, event?.uid, attendees]);
+
+  // Loaded events that share the form's time (#1685): a notice, not a
+  // block. A free event takes no time, so it overlaps nothing.
+  const userEmailsForEvent = useEventUserEmails(currentUserEmails);
+  const overlaps = useMemo(() => {
+    if (mode !== "edit" || freeBusyStatus === "free" || !overlapEvents?.length) return [];
+    let window: { start: Date; end: Date; allDay: boolean };
+    if (allDay) {
+      const start = new Date(`${startDate}T00:00:00`);
+      const last = new Date(`${endDate}T00:00:00`);
+      window = { start, end: addDays(last < start ? start : last, 1), allDay: true };
+    } else {
+      // The fields are a wall clock in the form's zone, as for the grid preview.
+      const start = zoneWallToDisplay(new Date(`${startDate}T${startTime || "00:00"}:00`), fieldZone);
+      const end = zoneWallToDisplay(new Date(`${endDate}T${endTime || "00:00"}:00`), fieldZone);
+      window = { start, end: end < start ? addHours(start, 1) : end, allDay: false };
+    }
+    return findOverlappingEvents(window, overlapEvents, { excludeUid: event?.uid, userEmailsFor: userEmailsForEvent });
+  }, [mode, freeBusyStatus, overlapEvents, allDay, startDate, startTime, endDate, endTime, fieldZone, event?.uid, userEmailsForEvent]);
+  const overlapWarnings = useMemo<ConflictWarning[]>(() => {
+    const formDay = new Date(`${startDate}T00:00:00`);
+    const time = (d: Date) => format(d, timeDisplayFmt);
+    const shown: ConflictWarning[] = overlaps.slice(0, 3).map((other) => {
+      const details: string[] = [];
+      if (!other.showWithoutTime) {
+        const start = getEventStartDate(other);
+        const day = isSameDay(start, formDay) ? "" : `${new Intl.DateTimeFormat(locale, { weekday: "short" }).format(start)} `;
+        details.push(`${day}${time(start)}–${time(getEventEndDate(other))}`);
+      }
+      const otherCalendar = calendars.find((c) => other.calendarIds?.[c.id]);
+      if (otherCalendar) details.push(shownName.calendar(otherCalendar));
+      const otherTitle = other.title || t("events.no_title");
+      return {
+        key: `overlap:${other.id}`,
+        severity: "warning",
+        message: details.length > 0
+          ? t("form.overlap", { title: otherTitle, details: details.join(", ") })
+          : t("form.overlap_plain", { title: otherTitle }),
+      };
+    });
+    if (overlaps.length > 3) {
+      shown.push({ key: "overlap:more", severity: "warning", message: t("form.overlap_more", { count: overlaps.length - 3 }) });
+    }
+    return shown;
+  }, [overlaps, startDate, timeDisplayFmt, locale, calendars, shownName, t]);
+  const conflictWarnings = useMemo(() => [...overlapWarnings, ...pluginConflictWarnings], [overlapWarnings, pluginConflictWarnings]);
 
   // Plugins hear about an existing event opened for reading once per event,
   // and about the form each time it opens (new event, or view -> edit).
@@ -801,6 +943,16 @@ export function EventModal({
     setAttendees(prev => prev.filter(a => a.email.toLowerCase() !== email.toLowerCase()));
   }, []);
 
+  // Required by default; an optional attendee is told so and doesn't
+  // block a time in Suggest times.
+  const handleToggleOptional = useCallback((email: string) => {
+    setAttendees(prev => prev.map((a) => {
+      if (a.email.toLowerCase() !== email.toLowerCase()) return a;
+      if (a.optional) return { name: a.name, email: a.email };
+      return { ...a, optional: true };
+    }));
+  }, []);
+
   const handleSave = useCallback(async () => {
     // No title is fine, as in the quick editor: the screen says "(No title)" (pim-p3-12).
     const trimmedTitle = title.trim();
@@ -870,8 +1022,10 @@ export function EventModal({
       timeZone: allDay ? null : timeZone,
       showWithoutTime: allDay,
       calendarIds: { [calendarId]: true },
-      ...savedStatusFields(event),
+      ...savedStatusFields(event, { freeBusyStatus, privacy: privacyEditable ? privacy : undefined }),
     };
+    // Sent only when it changed; null goes back to the calendar's colour.
+    if (event ? color !== (event.color || null) : !!color) data.color = color;
 
     // On an existing event the empty string is how a description gets cleared, but
     // sending it on creation writes a `DESCRIPTION:` with nothing after it — which
@@ -892,18 +1046,7 @@ export function EventModal({
     }
 
     if (location.trim()) {
-      data.locations = {
-        loc1: {
-          "@type": "Location",
-          name: location.trim(),
-          description: null,
-          locationTypes: null,
-          coordinates: null,
-          timeZone: null,
-          links: null,
-          relativeTo: null,
-        },
-      };
+      data.locations = locationsWithName(location.trim(), seed?.locations);
     } else if (event && event.locations && Object.keys(event.locations).length > 0) {
       data.locations = null;
     }
@@ -963,6 +1106,7 @@ export function EventModal({
       Object.assign(data, participantFieldsToSave(event, effectiveAttendees, {
         userEmail: currentUserEmails[0],
         userEmails: currentUserEmails,
+        organizer: organizerOnBehalf,
         resolveName: resolveContactName,
         rescheduled: !!event && (changesWhen(event, when) || timeZoneChanged || (ruleChanged && !event.recurrenceId)),
       }));
@@ -1029,12 +1173,13 @@ export function EventModal({
         when,
         ruleChanged,
         ...(timeZoneChanged ? { timeZoneChanged } : {}),
+        ...(organizerOnBehalf ? { organizer: organizerOnBehalf } : {}),
       });
     } finally {
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, freeBusyStatus, privacy, privacyEditable, color, currentUserEmails, userIsOrganizer, organizerOnBehalf, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1060,8 +1205,10 @@ export function EventModal({
     (): HTMLElement | null => (mode === "edit" ? titleRef.current : primaryRef.current),
     [mode],
   );
-  // Full screen on the phone: a modal that holds the focus.
-  const modalRef = useFocusTrap({ isActive: !!isMobile, initialFocus: initialFocusTarget });
+  // Full screen on the phone, or expanded on a wide screen: a modal that
+  // holds the focus.
+  const isModal = !!isMobile || expanded;
+  const modalRef = useFocusTrap({ isActive: isModal, initialFocus: initialFocusTarget });
 
   // Beside the grid on wide screens: the focus moves in on open and with
   // each switch between summary and form, and goes back on close.
@@ -1078,10 +1225,19 @@ export function EventModal({
     };
   }, [isMobile]);
 
+  const saveRef = useRef(handleSave);
+  useLayoutEffect(() => {
+    saveRef.current = handleSave;
+  });
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (askingRef.current) return;
+        // Expanded first goes back to the sheet, as the composer's full screen does.
+        if (expanded && onToggleExpand) {
+          onToggleExpand();
+          return;
+        }
         if (mode === "edit" && isEdit) {
           backToView();
         } else {
@@ -1090,14 +1246,29 @@ export function EventModal({
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        if (canEditBody) handleSave();
+        // A time field hands on its typed time on this Enter, and React
+        // renders it in a microtask queued before this one: save after that,
+        // not with the time from before it.
+        if (canEditBody) queueMicrotask(() => void saveRef.current());
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [requestClose, backToView, handleSave, canEditBody, mode, isEdit]);
+  }, [requestClose, backToView, canEditBody, mode, isEdit, expanded, onToggleExpand]);
 
   const hasParticipants = attendees.length > 0 || (event?.participants && Object.keys(event.participants).length > 0);
+
+  // Wide screens only: the phone's editor fills the screen already.
+  const expandButton = onToggleExpand && !isMobile ? (
+    <IconButton
+      label={expanded ? t("form.restore_size") : t("form.expand")}
+      onClick={onToggleExpand}
+      className="flex-shrink-0 text-muted-foreground"
+      data-testid="event-editor-expand"
+    >
+      {expanded ? <Minimize2 /> : <Maximize2 />}
+    </IconButton>
+  ) : null;
 
   // View mode: read-only display of event details with Edit button. An
   // invitation the user can only answer is shown by the same view, with a
@@ -1129,9 +1300,10 @@ export function EventModal({
         <X />
       </IconButton>
     );
+    const viewExpand = expandButton && <span className="mt-0.5 flex-shrink-0">{expandButton}</span>;
 
     return (
-      <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
+      <div ref={modalRef} role="dialog" aria-modal={isModal || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
         {/* Color accent bar */}
         <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: color }} />
 
@@ -1152,6 +1324,7 @@ export function EventModal({
               <MoreVertical />
             </IconButton>
           )}
+          {viewExpand}
           {!closeFirst && viewClose}
         </div>
 
@@ -1278,6 +1451,9 @@ export function EventModal({
                           {p.isOrganizer && (
                             <span className="text-muted-foreground ms-1">({t("participants.organizer_role")})</span>
                           )}
+                          {p.optional && (
+                            <span className="text-muted-foreground ms-1">({t("participants.optional_role")})</span>
+                          )}
                         </span>
                         <ParticipantStatusBadge status={p.status} />
                       </div>
@@ -1292,6 +1468,22 @@ export function EventModal({
               <div className="flex items-start gap-2.5">
                 <Repeat className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <span className="text-sm text-foreground">{recurrenceLabel}</span>
+              </div>
+            )}
+
+            {/* Show as free, private or hidden */}
+            {(event.freeBusyStatus === "free" || (event.privacy && event.privacy !== "public")) && (
+              <div className="flex items-start gap-2.5" data-testid="event-visibility">
+                {event.privacy && event.privacy !== "public"
+                  ? <Lock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  : <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />}
+                <span className="text-sm text-foreground">
+                  {[
+                    event.freeBusyStatus === "free" ? t("form.shown_free") : null,
+                    event.privacy === "private" ? t("form.visibility_private") : null,
+                    event.privacy === "secret" ? t("form.visibility_secret") : null,
+                  ].filter(Boolean).join(" · ")}
+                </span>
               </div>
             )}
 
@@ -1361,12 +1553,13 @@ export function EventModal({
   );
 
   return (
-    <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
+    <div ref={modalRef} role="dialog" aria-modal={isModal || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
       <div ref={setHeader} data-window-top-row="" className="flex items-center gap-2 px-6 py-4 border-b border-border flex-shrink-0">
         {closeFirst && editClose}
         <h2 className="min-w-0 flex-1 text-lg font-semibold">
           {isEdit ? t("events.edit") : t("events.create")}
         </h2>
+        {expandButton}
         {!closeFirst && editClose}
       </div>
 
@@ -1389,7 +1582,7 @@ export function EventModal({
               type="checkbox"
               id="allDay"
               checked={allDay}
-              onChange={(e) => setAllDay(e.target.checked)}
+              onChange={(e) => handleAllDayChange(e.target.checked)}
               className="rounded border-input"
             />
             <label htmlFor="allDay" className="text-sm">{t("form.all_day_event")}</label>
@@ -1409,11 +1602,10 @@ export function EventModal({
             {!allDay && (
               <div>
                 <label htmlFor={labelFor("start_time")} className="text-sm font-medium mb-1 block">{t("form.start_time")}</label>
-                <input
+                <TimeField
                   id={labelFor("start_time")}
-                  type="time"
                   value={startTime}
-                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  onChange={handleStartTimeChange}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
                 />
               </div>
@@ -1431,11 +1623,10 @@ export function EventModal({
             {!allDay && (
               <div>
                 <label htmlFor={labelFor("end_time")} className="text-sm font-medium mb-1 block">{t("form.end_time")}</label>
-                <input
+                <TimeField
                   id={labelFor("end_time")}
-                  type="time"
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
+                  onChange={setEndTime}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
                 />
               </div>
@@ -1479,9 +1670,9 @@ export function EventModal({
             </div>
           )}
 
-          {pluginConflictWarnings.length > 0 && (
-            <div className="space-y-1.5">
-              {pluginConflictWarnings.map(w => (
+          {conflictWarnings.length > 0 && (
+            <div className="space-y-1.5" data-testid="event-conflict-warnings">
+              {conflictWarnings.map(w => (
                 <div
                   key={w.key}
                   className={
@@ -1562,6 +1753,70 @@ export function EventModal({
             </div>
           )}
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor={labelFor("show_as")} className="text-sm font-medium mb-1 block">{t("form.show_as")}</label>
+              <select
+                id={labelFor("show_as")}
+                value={freeBusyStatus}
+                onChange={(e) => { showAsPickedRef.current = true; setFreeBusyStatus(e.target.value as CalendarEvent["freeBusyStatus"]); }}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+              >
+                <option value="busy">{t("form.show_as_busy")}</option>
+                <option value="free">{t("form.show_as_free")}</option>
+              </select>
+            </div>
+            {privacyEditable && (
+              <div>
+                <label htmlFor={labelFor("visibility")} className="text-sm font-medium mb-1 block">{t("form.visibility")}</label>
+                <select
+                  id={labelFor("visibility")}
+                  value={privacy}
+                  onChange={(e) => setPrivacy(e.target.value as CalendarEvent["privacy"])}
+                  aria-describedby={labelFor("visibility_hint")}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                >
+                  <option value="public">{t("form.visibility_public")}</option>
+                  <option value="private">{t("form.visibility_private")}</option>
+                  <option value="secret">{t("form.visibility_secret")}</option>
+                </select>
+              </div>
+            )}
+            {privacyEditable && (
+              <p id={labelFor("visibility_hint")} className="sm:col-span-2 -mt-1 text-xs text-muted-foreground">
+                {privacy === "secret" ? t("form.visibility_hint_secret")
+                  : privacy === "private" ? t("form.visibility_hint_private")
+                  : t("form.visibility_hint_public")}
+                {recurrence !== "none" && <> {t("form.visibility_series")}</>}
+              </p>
+            )}
+          </div>
+
+          {/* The event's own colour, or its calendar's (#1668). */}
+          <div>
+            <span id={labelFor("color")} className="text-sm font-medium mb-1 block">{t("form.color")}</span>
+            <div role="group" aria-labelledby={labelFor("color")} className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <button
+                type="button"
+                onClick={() => setColor(null)}
+                aria-pressed={color === null}
+                data-testid="event-color-calendar"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border border-input px-2 py-1 text-sm hover:bg-muted transition-colors",
+                  color === null && "ring-2 ring-offset-1 ring-offset-background ring-foreground",
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: paint(sanitizeColor(calendars.find((c) => c.id === calendarId)?.color)) }}
+                />
+                {t("form.color_calendar")}
+              </button>
+              <CalendarColorPicker value={color ?? ""} onChange={setColor} allowCustom />
+            </div>
+          </div>
+
           <div>
             <label htmlFor={labelFor("location")} className="text-sm font-medium mb-1 block">{t("form.location")}</label>
             <Input
@@ -1604,7 +1859,10 @@ export function EventModal({
                   uid: event?.uid,
                   attendees: attendees.map((a) => a.email),
                 },
-                setVirtualLocation,
+                // The plugin's frame calls this with whatever it sends: only an
+                // http(s) link that fits the field goes in; anything else is
+                // ignored, and the plugin is answered false.
+                setVirtualLocation: linkCallback(setVirtualLocation, 2000),
               }}
             />
           </div>
@@ -1624,8 +1882,27 @@ export function EventModal({
               participants={attendees}
               onAdd={handleAddAttendee}
               onRemove={handleRemoveAttendee}
+              onToggleOptional={handleToggleOptional}
               disabled={!userIsOrganizer}
             />
+            {offerOrganizerChoice && ownerOrganizer && (
+              <div className="mt-2">
+                <label htmlFor={labelFor("organizer")} className="text-sm font-medium mb-1 block">{t("participants.organizer")}</label>
+                <select
+                  id={labelFor("organizer")}
+                  value={organizeAsOwner ? "owner" : "me"}
+                  onChange={(e) => setOrganizeAsOwner(e.target.value === "owner")}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                >
+                  <option value="owner">
+                    {ownerOrganizer.sentBy
+                      ? tDelegate("organizer_owner", { name: ownerOrganizer.name })
+                      : ownerOrganizer.name}
+                  </option>
+                  <option value="me">{tDelegate("organizer_me")}</option>
+                </select>
+              </div>
+            )}
             {/* Only a warning: 0.16 advertises the limit without enforcing
                 it, Stalwart 1.0 refuses to save more participants - the
                 organizer entry a save adds counts too. */}
@@ -1642,6 +1919,15 @@ export function EventModal({
             />
             {userIsOrganizer && !allDay && (
               <FindATime
+                attendees={attendees}
+                start={availabilityWindow.start}
+                end={availabilityWindow.end}
+                onPick={handlePickSlot}
+                savedWindow={savedWindow}
+              />
+            )}
+            {userIsOrganizer && !allDay && (
+              <SchedulingAssistant
                 attendees={attendees}
                 start={availabilityWindow.start}
                 end={availabilityWindow.end}
@@ -1715,9 +2001,9 @@ export function EventModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("form.description")}
-              rows={3}
+              rows={expanded ? 12 : 6}
               maxLength={10000}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-hidden"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus:outline-hidden"
             />
           </div>
 

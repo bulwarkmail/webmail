@@ -35,6 +35,22 @@ describe('SearchFilterPanel', () => {
     expect(onChange).toHaveBeenLastCalledWith({ isStarred: null }, 'now');
   });
 
+  it('turns No tags on and off', () => {
+    const { onChange } = renderPanel();
+    const chip = screen.getByRole('button', { name: 'no_tags' });
+    expect(chip.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(chip);
+    expect(onChange).toHaveBeenLastCalledWith({ untagged: true }, 'now');
+  });
+
+  it('shows an active No tags chip as pressed and turns it off', () => {
+    const { onChange } = renderPanel({ untagged: true });
+    const chip = screen.getByRole('button', { name: 'no_tags' });
+    expect(chip.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(chip);
+    expect(onChange).toHaveBeenLastCalledWith({ untagged: false }, 'now');
+  });
+
   it('shows every field at once, and debounces the text ones', () => {
     const { onChange } = renderPanel();
     fireEvent.change(screen.getByLabelText('from'), { target: { value: 'alice' } });

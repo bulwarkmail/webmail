@@ -113,7 +113,8 @@ describe('slot sizing', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(onResize).toHaveBeenCalledTimes(1);
-    expect(inst.iframe.style.height).toBe('2000px');
+    // The reader's banners stop at 400 px (slot-layout.ts).
+    expect(inst.iframe.style.height).toBe('400px');
   });
 
   it('sizes a toolbar slot to the width of its content', async () => {

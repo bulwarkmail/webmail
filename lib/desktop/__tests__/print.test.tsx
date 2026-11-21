@@ -125,6 +125,18 @@ describe('a PDF', () => {
     expect(document.querySelector('iframe')).toBeNull();
   });
 
+  it('goes as its Blob where there is one, without fetching the blob: URL the CSP blocks', async () => {
+    const preview = vi.fn<Preview>(async () => 'printed');
+    setBridge(preview);
+    const fetching = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+    const { printPdfUrl } = await import('@/lib/print-pdf');
+    expect(await printPdfUrl('blob:https://mail.example/pdf-3', 'Akte.pdf', new Blob([new Uint8Array([37, 80, 68, 70])], { type: 'application/pdf' }))).toBe(true);
+    expect(fetching).not.toHaveBeenCalled();
+    const request = preview.mock.calls[0][0] as { source: string; data: Uint8Array; title: string };
+    expect(request).toMatchObject({ source: 'pdf', title: 'Akte.pdf' });
+    expect(Array.from(request.data)).toEqual([37, 80, 68, 70]);
+  });
+
   it('answers false when printing is off and the shell refused', async () => {
     setBridge(vi.fn<Preview>(async () => 'refused'));
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(new Uint8Array([1])));

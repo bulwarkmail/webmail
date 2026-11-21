@@ -59,4 +59,10 @@ describe('icon tables', () => {
     expect(iconForName('tabler:zzz')).toBe(iconForName('tabler:zzz'));
     expect(iconForName('')).toBeUndefined();
   });
+
+  it('bundles the icons plugins use in the reader, under their own Tabler names', () => {
+    // Paperless marks its upload action with archive-restore.
+    expect(iconForName('archive')).toBe(icons.IconArchive);
+    expect(iconForName('archive-restore')).toBe(icons.IconArchiveRestore);
+  });
 });

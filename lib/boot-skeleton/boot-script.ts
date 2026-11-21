@@ -157,7 +157,7 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
     seg = [surface];
   } else if (first === '' || first === 'mail') surface = 'mail';
   else if (first === 'admin') surface = seg[1] === 'login' ? 'admin-login' : 'admin';
-  else if (['calendar', 'contacts', 'files', 'apps', 'settings', 'pro', 'login', 'setup'].indexOf(first) !== -1) surface = first;
+  else if (['calendar', 'tasks', 'contacts', 'files', 'apps', 'settings', 'pro', 'login', 'setup'].indexOf(first) !== -1) surface = first;
   mark('surface', surface);
   mark('via', via);
 
@@ -177,9 +177,14 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
   var mailLayout = s.mailLayout === 'focus' || s.mailLayout === 'horizontal' ? s.mailLayout : 'split';
   if (layout === 'mountain-view' || s.simpleMode === true) mailLayout = 'focus';
   mark('mail-layout', mailLayout);
-  // Compose at the head of the folder sidebar in place of the account
-  // switcher (sidebarAccountSwitcher off); otherwise it sits under it.
-  mark('sidebar-compose', s.sidebarAccountSwitcher === false ? 'on' : null);
+  // Where Compose sits on a desktop (composePlacement): floating over the
+  // list, at the top of the folder sidebar or of the app rail. Mountain View
+  // has its own button in the folder column.
+  var compose = s.composePlacement === 'sidebar' || s.composePlacement === 'rail' ? s.composePlacement : 'floating';
+  mark('compose', layout === 'mountain-view' ? null : compose);
+  // In the sidebar, Compose takes the account switcher's place when that is
+  // turned off; otherwise it sits under it.
+  mark('sidebar-compose', compose === 'sidebar' && s.sidebarAccountSwitcher === false ? 'on' : null);
 
   var desktop = false;
   // The desktop layout, compact included (PHONE_BELOW in hooks/use-media-query).

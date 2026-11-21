@@ -17,7 +17,7 @@ import type { AppSurface } from '@/lib/deep-links';
  * still opens the linked item and restores the URL.
  */
 
-const SURFACES: readonly AppSurface[] = ['mail', 'calendar', 'contacts', 'files', 'settings'];
+const SURFACES: readonly AppSurface[] = ['mail', 'calendar', 'tasks', 'contacts', 'files', 'settings'];
 
 function stripPrefix(pathname: string, prefix: string): string {
   if (prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`))) {

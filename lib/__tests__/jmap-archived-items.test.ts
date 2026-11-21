@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { JMAPClient } from '../jmap/client';
 import { jmapErrorType } from '../jmap/jmap-error';
-import { ACCOUNT, LICENSE_REFUSAL, archivedEmail, bigArchive, fakeArchiveServer } from '../recovery/__tests__/fixtures';
+import { ACCOUNT, LICENSE_REFUSAL, archivedEmail as fixtureEmail, bigArchive, fakeArchiveServer } from '../recovery/__tests__/fixtures';
+
+// The client drops items whose archivedUntil has passed by the real clock, so
+// these items stay kept for a month from whenever the test runs.
+const archivedEmail = (id: string, fields: Partial<Record<string, unknown>> = {}) =>
+  fixtureEmail(id, { archivedUntil: new Date(Date.now() + 30 * 86_400_000).toISOString(), ...fields });
 
 type Call = [string, Record<string, unknown>, string];
 type Body = { using: string[]; methodCalls: Call[] };

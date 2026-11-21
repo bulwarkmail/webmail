@@ -2,6 +2,7 @@ import type { BootSurface } from "@/lib/boot-skeleton/surfaces";
 import type { RailLabels } from "./shell";
 import { MailSkeleton } from "./mail-skeleton";
 import { CalendarSkeleton } from "./calendar-skeleton";
+import { TasksSkeleton } from "./tasks-skeleton";
 import { ContactsSkeleton } from "./contacts-skeleton";
 import { FilesSkeleton } from "./files-skeleton";
 import { PluginPageSkeleton } from "./plugin-page-skeleton";
@@ -28,6 +29,8 @@ export function RouteSkeleton({ surface, label, labels }: RouteSkeletonProps) {
       return <MailSkeleton label={label} labels={labels} />;
     case "calendar":
       return <CalendarSkeleton label={label} labels={labels} />;
+    case "tasks":
+      return <TasksSkeleton label={label} labels={labels} />;
     case "contacts":
       return <ContactsSkeleton label={label} labels={labels} />;
     case "files":

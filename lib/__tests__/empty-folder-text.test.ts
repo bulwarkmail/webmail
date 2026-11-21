@@ -21,7 +21,17 @@ describe('emptyFolderPrompt', () => {
     expect(prompt.values).toEqual({ count: 3 });
   });
 
-  it('keeps the old wording for other folders', () => {
+  it('names any other folder and counts its messages (#1785)', () => {
+    expect(emptyFolderPrompt({ role: null, totalEmails: 7 }, true, 'Receipts')).toEqual({
+      title: 'mail_p2_folders.empty_folder_title',
+      message: 'mail_p2_folders.empty_folder_confirm_trash',
+      values: { folder: 'Receipts', count: 7 },
+      confirm: 'mail_p2_folders.empty_folder_move',
+    });
+    expect(emptyFolderPrompt({ role: null, totalEmails: 7 }, false, 'Receipts').message).toBe('mail_p2_folders.empty_folder_confirm_delete');
+  });
+
+  it('keeps the old wording for other folders without a name', () => {
     expect(emptyFolderPrompt({ role: null, totalEmails: 3 }, true).message).toBe('email_list.empty_folder.confirm_message_trash');
     expect(emptyFolderLabelKey('inbox')).toBeNull();
   });

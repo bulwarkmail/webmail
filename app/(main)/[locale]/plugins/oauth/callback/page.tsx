@@ -37,9 +37,22 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+/**
+ * The error codes the card may name: those of an authorization response in
+ * RFC 6749 section 4.1.2.1 and OpenID Connect Core section 3.1.2.6.
+ */
+const OAUTH_ERROR_CODES: ReadonlySet<string> = new Set([
+  "invalid_request", "unauthorized_client", "access_denied", "unsupported_response_type",
+  "invalid_scope", "server_error", "temporarily_unavailable",
+  "interaction_required", "login_required", "account_selection_required", "consent_required",
+  "invalid_request_uri", "invalid_request_object", "request_not_supported",
+  "request_uri_not_supported", "registration_not_supported",
+]);
+
 function PluginOAuthCallbackInner() {
   const searchParams = useSearchParams();
   const t = useTranslations("plugins");
+  const tSurfaces = useTranslations("plugin_surfaces");
   const [status, setStatus] = useState<"waiting" | "ok" | "error">("waiting");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -61,10 +74,15 @@ function PluginOAuthCallbackInner() {
         error_description: errorDescription ?? undefined,
         receivedAt: Date.now(),
       };
+      // The card names `error` only when it is one of the defined codes; any
+      // other value gets the page's own sentence, and error_description is
+      // never shown. The plugin still gets both as the provider sent them.
       errorMessageText =
         errorParam === "access_denied"
           ? t("oauth_callback.denied")
-          : t("oauth_callback.failed_detail", { error: errorParam });
+          : OAUTH_ERROR_CODES.has(errorParam)
+            ? t("oauth_callback.failed_detail", { error: errorParam })
+            : tSurfaces("oauth_failed");
     } else if (!code || !state) {
       payload = { state: state ?? undefined, error: "invalid_request", receivedAt: Date.now() };
       errorMessageText = t("oauth_callback.missing_params");
@@ -106,7 +124,7 @@ function PluginOAuthCallbackInner() {
       setStatus("error");
       setErrorMessage(t("oauth_callback.delivery_failed"));
     }
-  }, [searchParams, t]);
+  }, [searchParams, t, tSurfaces]);
 
   return (
     <OAuthStatusCard

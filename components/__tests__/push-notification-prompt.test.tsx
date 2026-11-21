@@ -7,6 +7,8 @@ import { useUIStore } from "@/stores/ui-store";
 
 const mocks = vi.hoisted(() => ({
   pathname: "/en",
+  appName: "Webmail",
+  translate: vi.fn((key: string, _values?: Record<string, unknown>) => key),
   enabled: false,
   supported: true,
   enableWebPush: vi.fn(),
@@ -44,6 +46,14 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mocks.pathname,
+}));
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => mocks.translate,
+}));
+
+vi.mock("@/hooks/use-config", () => ({
+  useConfig: () => ({ appName: mocks.appName }),
 }));
 
 vi.mock("@/stores/auth-store", () => ({
@@ -104,6 +114,8 @@ describe("PushNotificationPrompt", () => {
     vi.useFakeTimers();
     localStorage.clear();
     mocks.pathname = "/en";
+    mocks.appName = "Webmail";
+    mocks.translate.mockClear();
     mocks.supported = true;
     mocks.enabled = false;
     mocks.authState.client = { getAccountId: () => "account-1" };
@@ -141,6 +153,21 @@ describe("PushNotificationPrompt", () => {
 
     expect(screen.getByText("title")).toBeInTheDocument();
     expect(mocks.isWebPushEnabled).toHaveBeenCalledWith("account-1");
+  });
+
+  it("names the app in the title with the configured APP_NAME", async () => {
+    mocks.appName = "Acme Mail";
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    expect(mocks.translate).toHaveBeenCalledWith("title", { appName: "Acme Mail" });
+  });
+
+  it("names the app Bulwark in the title on a stock install", async () => {
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    expect(mocks.translate).toHaveBeenCalledWith("title", { appName: "Bulwark" });
   });
 
   it("enables push through the existing web-push flow", async () => {

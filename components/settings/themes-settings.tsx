@@ -71,7 +71,7 @@ export function ThemesSettings({ embedded }: { embedded?: boolean } = {}) {
 
   useEffect(() => {
     if (forcedThemeId && activeThemeId !== forcedThemeId) {
-      activateTheme(forcedThemeId);
+      activateTheme(forcedThemeId, { chosen: false });
     }
   }, [activeThemeId, activateTheme, forcedThemeId]);
 
@@ -80,7 +80,7 @@ export function ThemesSettings({ embedded }: { embedded?: boolean } = {}) {
     if (activeThemeId) {
       const activeTheme = installedThemes.find(t => t.id === activeThemeId);
       if (activeTheme && isThemeDisabled(activeThemeId, !!activeTheme.builtIn)) {
-        activateTheme(forcedThemeId ?? null);
+        activateTheme(forcedThemeId ?? null, { chosen: false });
       }
     }
   }, [activeThemeId, activateTheme, forcedThemeId, installedThemes, isThemeDisabled]);

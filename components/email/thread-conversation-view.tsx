@@ -7,7 +7,7 @@ import { EMAIL_SANITIZE_CONFIG, TRANSPARENT_BLOCKED_PIXEL, blockExternalResource
 import { gateLinkClick, linkCheckActive, linkText, resolveExternalLink } from "@/lib/plugin-hook-result";
 import { stripBidiControls } from "@/lib/bidi";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
 import { VerificationCodeChip } from "./verification-code-chip";
@@ -17,6 +17,7 @@ import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { attachmentIcon } from "./attachment-chips";
 import { ExternalSenderChip } from "./external-sender-chip";
 import { ReceivedLabelChip } from "./received-label-chip";
+import { ImportanceChip } from "./importance-chip";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
@@ -27,12 +28,12 @@ import { htmlToReadableText } from "@/lib/html-to-readable-text";
 import { pauseAnimatedImages } from "@/lib/animated-images";
 import { applyMailTextSize, mailFitOptions } from "@/lib/mail-reading";
 import { useMailReading } from "@/hooks/use-mail-reading";
-import { DARK_PENDING_CLASS, applyEmailDarkMode, emailDarkModeCss } from "@/lib/email-dark-mode";
+import { DARK_PENDING_CLASS, EMAIL_DARK_CANVAS, applyEmailDarkMode, emailDarkModeCss, readSurfaceColor } from "@/lib/email-dark-mode";
 import { useThemeStore } from "@/stores/theme-store";
 import { useShallow } from "zustand/react/shallow";
 import { Avatar } from "@/components/ui/avatar";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
-import { brandIndicatorDomain } from "@/lib/email-headers";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
@@ -90,6 +91,8 @@ import { usePhishingMarked } from "@/hooks/use-phishing-report";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
 import { NO_SAVE_MEDIA_CSS, blockMediaSaving } from "@/lib/device-frame";
+import { NotesAfter, NotesSummaryLine, TeamNoteArea, TeamNotesProvider } from "@/components/team-mailboxes/team-conversation";
+import { TeamAssigneeLine } from "@/components/team-mailboxes/team-actions";
 
 export type ConversationAttachmentHandler = (
   blobId: string, name: string, type: string | undefined, source: EmailBlobContext,
@@ -310,9 +313,10 @@ export function ThreadConversationView({
   }
 
   return (
+    <TeamNotesProvider email={thread.latestEmail} messages={ordered}>
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
+      <div data-plugin-list-avoid="" className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
         <IconButton size="icon-lg" className="-ms-2 flex-shrink-0" onClick={onBack} label={t('email_viewer.back_to_list')}>
           <ArrowLeft />
         </IconButton>
@@ -324,6 +328,8 @@ export function ThreadConversationView({
           <p className="truncate text-xs sm:text-sm text-muted-foreground">
             {t("threads.messages_count", { count: emails.length })}
           </p>
+          {/* Team mailboxes: who has the conversation's newest message, Assign and Done. */}
+          <TeamAssigneeLine email={thread.latestEmail} className="mt-1" />
         </div>
         {actions && <ConversationHeaderActions email={thread.latestEmail} actions={actions} />}
       </div>
@@ -331,6 +337,7 @@ export function ThreadConversationView({
       {/* Email Cards */}
       <div className="flex-1 overflow-y-auto">
         <PluginSlot name="thread-summary" className="w-full" extraProps={threadSummaryProps} />
+        <NotesSummaryLine />
         <div ref={cardsRef} className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
           {ordered.map((email) => {
             const draft = !!email.keywords?.$draft;
@@ -356,13 +363,16 @@ export function ThreadConversationView({
               onMarkAsRead={onMarkAsRead}
               mailboxRole={mailboxRole}
             />
+            <NotesAfter emailId={email.id} className="pt-3" />
             </div>
             );
           })}
+          <TeamNoteArea messages={ordered} className="pb-2" />
         </div>
       </div>
       {focusedPrint && !focusedPrint.noPrint && <MessagePrint fields={focusedPrint.fields} />}
     </div>
+    </TeamNotesProvider>
   );
 }
 
@@ -452,6 +462,7 @@ function EmailCard({
   const readerActions = usePluginActions("reader-actions", { mailboxRole: mailboxRole ?? null, ...targetFilter(plugin.actionTarget, undefined) });
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const formatAddress = useOwnDomainAddress();
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
@@ -477,6 +488,7 @@ function EmailCard({
       <button
         onClick={onToggleExpanded}
         aria-expanded={isExpanded}
+        data-plugin-list-avoid=""
         className={cn(
           "w-full flex items-start text-start transition-colors",
           !isExpanded && "hover:bg-muted/50"
@@ -490,7 +502,7 @@ function EmailCard({
             size="md"
             className="flex-shrink-0"
             senderWarning={senderWarning}
-            brandDomain={brandIndicatorDomain(email)}
+            brandDomain={brandDomain}
           />
         )}
         <div className="flex-1 min-w-0">
@@ -505,6 +517,7 @@ function EmailCard({
             </span>
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} interactive={false} />
             <ReceivedLabelChip email={email} />
+            <ImportanceChip email={email} />
             {isDraft && (
               <span data-testid="conversation-draft-label" className="text-xs font-medium text-destructive shrink-0">
                 {t('email_list.draft')}
@@ -530,7 +543,7 @@ function EmailCard({
                 {formatScheduledSendAt(email.scheduledSendAt, timeFormat)}
               </span>
             ) : (
-              formatDate(emailDisplayDate(email))
+              formatDate(emailListDate(email))
             )}
           </div>
           {!isExpanded && density !== 'extra-compact' && (
@@ -574,7 +587,7 @@ function EmailCard({
           {/* Action Buttons; plugin reader actions behind a "more" button, as
               in the single reader's More panel on phones. Long names (Arabic
               "Reply all") wrap to a second line instead of being cut. */}
-          <div className="px-4 pb-4 flex flex-wrap gap-2">
+          <div className="px-4 pb-4 flex flex-wrap gap-2" data-conversation-message-actions="" data-plugin-list-avoid="">
             {onEditDraft && (
               <Button
                 variant="outline"
@@ -678,6 +691,21 @@ interface ConversationEmailBodyProps {
   /** Padding around the body; the phone card's density padding by default. */
   bodyStyle?: React.CSSProperties;
   className?: string;
+  /** Shown inside the reader's message card, whose colour mail in the app's colours takes. */
+  onCard?: boolean;
+}
+
+/**
+ * The attachments a conversation message shows under its body. Parts the
+ * body embeds via cid: stay out while the user hides inline images, and the
+ * report parts of a bounce or read receipt never show. Shown as plain text,
+ * the body embeds nothing, not even the images declared inline.
+ */
+export function conversationVisibleAttachments(email: Email, hideInlineImageAttachments: boolean, plainText: boolean) {
+  const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
+  if (!hideInlineImageAttachments) return attachments;
+  const bodyCids = collectReferencedCids(plainText ? null : getRenderableHtmlBody(email));
+  return attachments.filter(att => !isEmbeddedInBody(att, bodyCids, attachments, { plainText }));
 }
 
 /**
@@ -694,10 +722,12 @@ export function ConversationEmailBody({
   blobSource,
   bodyStyle,
   className,
+  onCard = false,
 }: ConversationEmailBodyProps) {
   const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email.sourceClientAccountId);
   const t = useTranslations();
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const activeThemeId = useThemeStore((state) => state.activeThemeId);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
   // The device policies of the message's own account (Organisation > Devices).
   const devices = useDevicePolicy(email);
@@ -708,7 +738,7 @@ export function ConversationEmailBody({
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
   const emailAlwaysLightMode = useSettingsStore((state) => state.emailAlwaysLightMode);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
-  const reading = useMailReading();
+  const reading = useMailReading({ wide: onCard });
   // No dark recolouring in a forced-colours mode: the browser maps the mail
   // to the user's colours itself.
   const isDark = resolvedTheme === 'dark' && !emailAlwaysLightMode && !reading.forcedColors && !reading.overrideStyles;
@@ -922,16 +952,12 @@ export function ConversationEmailBody({
     [shownContent, phishingMarked, tPhishing],
   );
 
-  // Parts the body embeds via cid: stay out of the attachment row while the
-  // user hides inline images - the desktop viewer's rule, shared through
-  // lib/attachment-visibility.ts so the two views cannot drift apart. The
-  // report parts of a bounce or read receipt never show.
-  const visibleAttachments = useMemo(() => {
-    const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
-    if (!hideInlineImageAttachments) return attachments;
-    const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
-    return attachments.filter(att => !isEmbeddedInBody(att, bodyCids));
-  }, [email, hideInlineImageAttachments]);
+  // The desktop viewer's rule, shared through lib/attachment-visibility.ts so
+  // the two views cannot drift apart.
+  const visibleAttachments = useMemo(
+    () => conversationVisibleAttachments(email, hideInlineImageAttachments, mailViewMode === 'plain'),
+    [email, hideInlineImageAttachments, mailViewMode],
+  );
   const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
   const attachmentRow = useFirstRowLimit(visibleAttachments.length, !attachmentsExpanded);
   const attachmentLimit = attachmentsExpanded ? null : attachmentRow.limit;
@@ -956,7 +982,7 @@ export function ConversationEmailBody({
     // for whatever the DOM walk above cannot see.
     const csp = emailIframeCsp(!allowExternal, appFontSources ? appFontSources.split(' ') : []);
     // Colours are rewritten after load (applyEmailDarkMode in handleIframeLoad).
-    return `<!DOCTYPE html><html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${isDark ? DARK_PENDING_CLASS : ''}"><head>
+    return `<!DOCTYPE html><html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${isDark ? DARK_PENDING_CLASS : ''}"${isDark ? ` data-surface="${encodeURIComponent(activeThemeId ?? '')}"` : ''}><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${csp}">
@@ -967,7 +993,7 @@ export function ConversationEmailBody({
      on a phone fitEmailBodyWidth() shrinks it to the screen first, so the pan is
      only left for content too wide to stay legible when scaled. */
   html { overflow: hidden; }
-  body { overflow-x: auto; overflow-y: hidden; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: #ffffff; word-wrap: break-word; overflow-wrap: break-word; }
+  body { overflow-x: auto; overflow-y: hidden; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: ${isDark ? 'transparent' : '#ffffff'}; word-wrap: break-word; overflow-wrap: break-word; }
   /* Only force the cap on images that set no width of their own: an
      !important 100% also overrides a sender's inline max-width, and an
      image sized by max-width + max-height + width:100% then grows to
@@ -984,11 +1010,14 @@ export function ConversationEmailBody({
   table:not([style*="max-width"]) { max-width: 100% !important; }
   table[style*="max-width"] { max-width: 100%; }
   table { table-layout: auto; overflow-wrap: break-word; }
-  td, th { word-break: break-word; padding: 0.5rem; }
+  /* Same as the message viewer: no padding of our own, which would beat the
+     mail's cellpadding="0" and space out table-built signatures, and
+     break-word so a column keeps its words whole. */
+  td, th { overflow-wrap: break-word; }
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${isDark ? emailDarkModeCss() : ''}
 </style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${emailContent.html}${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
-  }, [emailContent.isHtml, emailContent.html, allowExternal, isDark, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
+  }, [emailContent.isHtml, emailContent.html, allowExternal, isDark, activeThemeId, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
   useLayoutEffect(() => { setHtmlBodyEl(null); }, [emailIframeSrcDoc]);
   // One object per body: React writes innerHTML again whenever this object
   // changes, dropping whatever was mounted in the body.
@@ -1003,12 +1032,12 @@ export function ConversationEmailBody({
     try {
       const doc = iframe.contentDocument;
       if (!doc?.body) return;
-      // Collapse the quoted original of a reply behind a "•••" toggle (#480),
-      // before the first resize so the height reflects the collapsed body.
+      // Set up the quoted-text toggle before the first resize, and remeasure
+      // after each user toggle.
       setupQuoteCollapse(doc, {
         show: t('email_viewer.show_quoted_text'),
         hide: t('email_viewer.hide_quoted_text'),
-      });
+      }, () => resize());
       // Text size and minimum size, before the first resize.
       applyMailTextSize(doc, {
         factor: reading.textFactor,
@@ -1020,7 +1049,9 @@ export function ConversationEmailBody({
       if (reading.pauseImages) {
         pauseAnimatedImages(doc, { play: t('email_viewer.play_animation'), pause: t('email_viewer.pause_animation') });
       }
-      if (isDark) applyEmailDarkMode(doc, { remoteContentAllowed: allowExternal });
+      if (isDark) {
+        applyEmailDarkMode(doc, { remoteContentAllowed: allowExternal, canvas: readSurfaceColor(iframe, EMAIL_DARK_CANVAS) });
+      }
       const resize = () => {
         // Fit desktop-width mail to the screen before measuring: the transform
         // leaves the layout height untouched, so scale the box by hand.
@@ -1256,7 +1287,7 @@ export function ConversationEmailBody({
             title={frameTitle}
             className="w-full border-0 block"
             scrolling="no"
-            style={{ minHeight: '60px' }}
+            style={{ minHeight: '60px', colorScheme: 'light' }}
             onLoad={handleIframeLoad}
           />
         ) : (
@@ -1274,7 +1305,7 @@ export function ConversationEmailBody({
               "[&_table]:border-collapse [&_td]:p-2 [&_th]:p-2",
               "[&_img]:max-w-full [&_img]:h-auto"
             )}
-            style={{ whiteSpace: 'pre-wrap', ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }), fontSize: reading.plainFontSize(13), ...(reading.comfortableWidth && { maxWidth: '80ch' }) }}
+            style={{ whiteSpace: 'pre-wrap', ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }), fontSize: reading.plainFontSize(13), ...(reading.comfortableWidth && { maxWidth: '80ch', marginInline: 'auto' }) }}
             data-plugin-source="email-body"
             data-email-id={email.id}
             onContextMenu={(e) => selectionMenu.onElementContextMenu(e, email.id)}

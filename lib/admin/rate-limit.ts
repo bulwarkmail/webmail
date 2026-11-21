@@ -29,6 +29,14 @@ const GLOBAL_MAX_ATTEMPTS = 50;
 
 const GLOBAL_KEY = 'admin-login:all';
 
+/**
+ * Audit lines for refused (rate-limited) sign-ins: one per client and
+ * window, and at most this many per window in all, so a flood of refused
+ * attempts from rotating addresses writes a handful of lines instead of
+ * rotating the admin's real entries out of the log.
+ */
+const BLOCKED_LOG_MAX = 10;
+
 export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
@@ -51,6 +59,19 @@ export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
   ], Date.now());
   if (!result.ok) return { allowed: false, remaining: 0, retryAfterMs: result.retryAfterMs };
   return { allowed: true, remaining: MAX_ATTEMPTS - result.counts[0], retryAfterMs: 0 };
+}
+
+/**
+ * Whether the refusal of a rate-limited sign-in by `client` (an address, or
+ * `device:<id>`) gets an audit line: true for its first refusal in the
+ * window while fewer than BLOCKED_LOG_MAX were written in all.
+ */
+export async function claimBlockedAuditLine(client: string): Promise<boolean> {
+  const result = await getStore().counters.reserve([
+    { key: `admin-login:blocked-logged:${keyPart(client)}`, max: 1, windowMs: WINDOW_MS },
+    { key: 'admin-login:blocked-logged:all', max: BLOCKED_LOG_MAX, windowMs: WINDOW_MS },
+  ], Date.now());
+  return result.ok;
 }
 
 /**

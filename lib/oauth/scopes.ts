@@ -45,13 +45,22 @@ export function withStalwartScopes(list: string, granted: readonly string[]): st
  * scopes it doesn't list are dropped and every data scope it lists is added;
  * any other provider gets `scopes` unchanged. Stalwart's own scopes are kept
  * when configured and listed, never added (see {@link STALWART_SCOPE_FULL}).
+ *
+ * `forResource`: the request names the mail server as its resource (RFC
+ * 8707, lib/oauth/resource.ts). A provider that grants scopes per API, such
+ * as Pocket ID, lists only its own scopes in `scopes_supported`, never the
+ * API's, so the configured Stalwart scopes are sent to it as they are
+ * (#1583).
  */
-export function withProviderDataScopes(scopes: string, supported: unknown): string {
+export function withProviderDataScopes(scopes: string, supported: unknown, forResource = false): string {
   // Stalwart's own scopes go only to a provider that lists them: the configured
   // list is shared by every server, and another provider may refuse a scope it
-  // doesn't know.
+  // doesn't know. The resource is only ever sent to the global provider, the
+  // one the admin configured these scopes and that resource for.
   const listed: unknown[] = Array.isArray(supported) ? supported : [];
-  scopes = scopes.split(/\s+/).filter((s) => s && (!STALWART_SCOPES.includes(s) || listed.includes(s))).join(' ');
+  scopes = scopes.split(/\s+/)
+    .filter((s) => s && (forResource || !STALWART_SCOPES.includes(s) || listed.includes(s)))
+    .join(' ');
   if (!Array.isArray(supported)) return scopes;
   const data = supported.filter((s): s is string => typeof s === 'string' && s.startsWith(DATA_SCOPE_PREFIX));
   if (data.length === 0) return scopes;

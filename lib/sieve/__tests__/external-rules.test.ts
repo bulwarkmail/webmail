@@ -18,6 +18,39 @@ function makeBulwarkRule(overrides: Partial<FilterRule> = {}): FilterRule {
   };
 }
 
+describe('body tests in a script without metadata', () => {
+  const read = (test: string) => parseScript(`require ["body", "fileinto"];\n\n# rule:[Body]\nif ${test} {\n    fileinto "Elsewhere";\n}\n`);
+
+  it('reads "not body :contains" as "does not contain", not as "contains"', () => {
+    expect(read('not body :contains "unsubscribe"').rules[0].conditions[0])
+      .toEqual({ field: 'body', comparator: 'not_contains', value: 'unsubscribe' });
+  });
+
+  it('reads the other body comparisons as the tests they are', () => {
+    const condition = (test: string) => read(test).rules[0].conditions[0];
+    expect(condition('not body :is "x"')).toEqual({ field: 'body', comparator: 'not_is', value: 'x' });
+    expect(condition('body :matches "x*"')).toEqual({ field: 'body', comparator: 'starts_with', value: 'x' });
+    expect(condition('body :matches "*x"')).toEqual({ field: 'body', comparator: 'ends_with', value: 'x' });
+    expect(condition('body :matches "a*b"')).toEqual({ field: 'body', comparator: 'matches', value: 'a*b' });
+  });
+
+  it('does not read a negated pattern test as its opposite', () => {
+    for (const test of ['not body :matches "x*"', 'not body :regex "x"', 'not header :matches "Subject" "x*"']) {
+      const conditions = read(test).rules[0]?.conditions ?? [];
+      expect(conditions.some((c) => c.comparator === 'starts_with' || c.comparator === 'regex'), test).toBe(false);
+    }
+  });
+
+  it('reads back every body comparison the generator writes', () => {
+    const comparators = ['contains', 'not_contains', 'is', 'not_is', 'starts_with', 'ends_with', 'matches'] as const;
+    for (const comparator of comparators) {
+      const rule = makeBulwarkRule({ conditions: [{ field: 'body', comparator, value: 'x' }] });
+      const withoutMetadata = generateScript([rule]).replace(/\/\* @metadata:begin[\s\S]*?@metadata:end \*\/\n?/, '');
+      expect(parseScript(withoutMetadata).rules[0]?.conditions, comparator).toEqual(rule.conditions);
+    }
+  });
+});
+
 describe('external rule preservation (issue #201)', () => {
   describe('parser - external rule recognition', () => {
     it('parses a Roundcube-style rule with "# rule:[Name]" comment', () => {

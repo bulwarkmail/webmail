@@ -16,6 +16,7 @@ import {
   participantFieldsToSave,
   participantsAskedAgain,
   userOrganizes,
+  type OrganizerOnBehalf,
   type ParticipantSaveContext,
 } from '@/lib/calendar-participants';
 import {
@@ -45,6 +46,8 @@ import { debug } from '@/lib/debug';
 export interface EditorAttendee {
   name: string;
   email: string;
+  /** Not required to attend (JSCalendar role `optional`). */
+  optional?: boolean;
 }
 
 /** When an event happens in the editor: display dates, the last day of an all-day event. */
@@ -64,6 +67,8 @@ export interface EventEditorState {
   ruleChanged?: boolean;
   /** The user picked another time zone: the times in the editor are on that zone's clock. */
   timeZoneChanged?: boolean;
+  /** The calendar owner the user organizes for as a delegate (#1761). */
+  organizer?: OrganizerOnBehalf;
 }
 
 /**
@@ -431,13 +436,14 @@ function changesNothing(entry: OverrideEntry, key: string, series: Partial<Calen
 function attendeesOf(event: CalendarEvent): EditorAttendee[] {
   return getParticipantList(event)
     .filter((p) => !p.isOrganizer && p.email.trim())
-    .map((p) => ({ name: p.name, email: p.email.trim() }));
+    .map((p) => ({ name: p.name, email: p.email.trim(), ...(p.optional ? { optional: true } : {}) }));
 }
 
 /**
  * The series' participants after the editor changed one occurrence's: the
  * series' own, with the attendees the user added in the editor or removed
- * from it. Nothing when neither happened and the series does not move -
+ * from it, and those the user made optional or required. Nothing when none
+ * of that happened and the series does not move -
  * the series keeps its participants and their answers as they are - and
  * nothing when someone else organizes the series.
  */
@@ -453,8 +459,17 @@ function seriesParticipants(
   const after = new Set(editor.attendees.map((a) => key(a.email)));
   const added = editor.attendees.filter((a) => !before.has(key(a.email)));
   const removed = new Set([...before].filter((address) => !after.has(address)));
-  if (added.length === 0 && removed.size === 0 && !context.rescheduled) return {};
-  const attendees = [...attendeesOf(master).filter((a) => !removed.has(key(a.email))), ...added];
+  const wasOptional = new Map(editor.initialAttendees.map((a) => [key(a.email), !!a.optional]));
+  const toggled = new Map(editor.attendees
+    .filter((a) => wasOptional.has(key(a.email)) && wasOptional.get(key(a.email)) !== !!a.optional)
+    .map((a) => [key(a.email), !!a.optional]));
+  if (added.length === 0 && removed.size === 0 && toggled.size === 0 && !context.rescheduled) return {};
+  const attendees = [
+    ...attendeesOf(master)
+      .filter((a) => !removed.has(key(a.email)))
+      .map((a) => (toggled.has(key(a.email)) ? { ...a, optional: toggled.get(key(a.email)) } : a)),
+    ...added,
+  ];
   return participantFieldsToSave(master, attendees, context);
 }
 
@@ -579,7 +594,7 @@ export function seriesUpdatesFromOccurrence(
   const when = seriesWhen(occurrence, master, updates, editor.when, editor.timeZoneChanged);
   Object.assign(series, when);
   const rescheduled = Object.keys(when).length > 0 || !!editor.ruleChanged;
-  const participants = seriesParticipants(master, editor, { ...context, rescheduled });
+  const participants = seriesParticipants(master, editor, { ...context, organizer: editor.organizer, rescheduled });
   Object.assign(series, participants);
   const overrides = seriesOverrides(occurrence, master, series, {
     ruleChanged: !!editor.ruleChanged,
@@ -1044,6 +1059,15 @@ export async function saveOccurrenceEdit(
   const { event, updates, sendScheduling } = edit;
   switch (scope) {
     case 'this': {
+      // Privacy is the whole series': Stalwart 1.0 refuses one occurrence
+      // whose privacy differs from its series'. The series takes it first,
+      // so the occurrence's write then carries its series' value.
+      if (updates.privacy !== undefined && updates.privacy !== (event.privacy ?? 'public')) {
+        const master = await findMasterEvent(event);
+        if (master && (master.privacy ?? 'public') !== updates.privacy) {
+          if (stopped(await updateEvent(client, master.id, { privacy: updates.privacy }, false))) return 'stopped';
+        }
+      }
       if (isServerRecurrenceInstance(event) || isBrowserExpandedOccurrence(event)) {
         // The store writes one occurrence through its own (synthetic) id, or
         // as a recurrence override on the base event it was expanded from.

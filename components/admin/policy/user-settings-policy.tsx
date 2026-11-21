@@ -9,10 +9,12 @@ import { AdminLink } from '@/components/admin/admin-link';
 import { inputClass, RevertButton } from '@/components/admin/config-items';
 import { chipClass, scopeMatchSummary } from '@/components/admin/org/org-page';
 import { EVERYONE, useOrgScopeStore } from '@/components/admin/org/use-org-policy-draft';
+import { TagDefaults } from '@/components/admin/policy/tag-defaults';
 import type { SettingRestriction, SettingsPolicy } from '@/lib/admin/types';
 import { restrictionKeysForPage, type RestrictionKeyDef } from '@/lib/admin/restriction-keys';
 import {
   PRESETTABLE_SETTINGS,
+  TAGS_DEFAULT_KEY,
   defaultAt,
   describeSettingValue,
   effectiveDefault,
@@ -331,7 +333,7 @@ function OtherDefaults({ policy, scopeId, onChange }: { policy: SettingsPolicy; 
   const add = () => {
     const name = key.trim();
     if (!KEY_RE.test(name)) { setError('Enter the setting\'s key as it appears in a settings export, such as "dateFormat".'); return; }
-    if (presettableSetting(name)) { setError('This setting has its own row above.'); return; }
+    if (presettableSetting(name) || name === TAGS_DEFAULT_KEY) { setError('This setting has its own row above.'); return; }
     setError(null);
     onChange((p) => withDefaultAt(p, scopeId, name, parseFreeSettingValue(text)));
     setKey('');
@@ -416,6 +418,7 @@ export function PolicyDefaultsSection({ policy, onChange }: SectionProps) {
           </div>
         );
       })}
+      <TagDefaults policy={policy} scopeId={scopeId} onChange={onChange} />
       <OtherDefaults policy={policy} scopeId={scopeId} onChange={onChange} />
     </SettingsSection>
   );

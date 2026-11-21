@@ -46,3 +46,14 @@ export function getAttachmentDisplayName(name: string | null | undefined, mimeTy
   if (name) return stripBidiControls(name);
   return unnamedAttachmentName(mimeType);
 }
+
+/**
+ * A file name split before its extension, for renaming without changing the
+ * type: "report.pdf" → ["report", ".pdf"], "archive.tar.gz" → ["archive.tar", ".gz"].
+ * A name with no extension ("README", ".bashrc", "name.") comes back whole.
+ */
+export function splitAttachmentName(name: string): [stem: string, ext: string] {
+  const dot = name.lastIndexOf('.');
+  if (dot > 0 && dot < name.length - 1) return [name.slice(0, dot), name.slice(dot)];
+  return [name, ''];
+}

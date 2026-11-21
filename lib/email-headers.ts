@@ -1,5 +1,7 @@
 import { AuthenticationResults } from './jmap/types';
 import { parseUnsubscribeUrls } from './validation';
+import { toAsciiDomain } from './idn';
+import { trustedAuthservIds } from './trusted-authserv';
 
 type SpfResult = 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror';
 type SpfEntry = NonNullable<NonNullable<AuthenticationResults['spf']>['all']>[number];
@@ -166,13 +168,125 @@ export function getSenderVerification(
 const SUBMISSION_PROTOCOL_RE = /\bwith\s+(?:UTF8)?(?:E?SMTP|LMTP)S?A\b/i;
 
 /**
- * Whether the topmost Authentication-Results header looks like it was
- * written by a server that received the message, rather than by whoever
- * composed it. A receiving server writes its Received line first and its
- * Authentication-Results below it (Stalwart and Gmail both do), so: a
- * Received header must sit above the topmost Authentication-Results, and the
- * nearest one must not record an authenticated submission. Takes the headers
- * in message order.
+ * The host a Received line names as Stalwart's: Stalwart writes
+ * `by <hostname> (Stalwart SMTP) with ...` for mail it takes in over SMTP
+ * and for what its Sieve scripts generate, and the same hostname opens its
+ * Authentication-Results header. Nothing but `with <protocol> id <id>` and
+ * the date follow that clause, so it must end the line: a HELO name or an
+ * envelope address that another server copies into its own line can spell
+ * the same words, but never in the place of that server's id and date.
+ * Lower case, without a trailing dot.
+ */
+const STALWART_RECEIVED_RE = /\bby\s+([^\s;()]+)\s+\(Stalwart SMTP\)\s+with\s+[a-z0-9]+\s+id\s+[a-z0-9]+\s*(?:;[^;]*)?$/i;
+
+function stalwartReceivedHost(value: string): string | undefined {
+  const host = STALWART_RECEIVED_RE.exec(value)?.[1];
+  return host ? host.toLowerCase().replace(/\.$/, '') : undefined;
+}
+
+/**
+ * The authserv-id an Authentication-Results header opens with (RFC 8601
+ * 2.2), lower case and without a version. Undefined when the header opens
+ * with a result instead, as some Microsoft 365 hops write it.
+ */
+export function authservId(value: string | undefined): string | undefined {
+  const first = value ? splitResinfo(value)[0] : undefined;
+  if (!first || METHOD_RE.test(first)) return undefined;
+  const id = first.split(/\s+/)[0].replace(/^"(.*)"$/, '$1').toLowerCase().replace(/\.$/, '');
+  return id && !id.includes('=') ? id : undefined;
+}
+
+/**
+ * Whether a Received line, the topmost of a message, records Stalwart taking
+ * the message in from outside, and names the host the given
+ * Authentication-Results header was written by.
+ */
+function receivedByAuthservHost(received: string, results: string | undefined): boolean {
+  if (SUBMISSION_PROTOCOL_RE.test(received)) return false;
+  const host = stalwartReceivedHost(received);
+  return host !== undefined && host === authservId(results);
+}
+
+/**
+ * What a Received line says of itself, with its comments and its date left
+ * out (a HELO name, a reverse DNS name or an ASN name in a comment can spell
+ * anything): whether it has a `from` clause, which a server writes when it
+ * takes a message in from another one (RFC 5321 4.4), and the host its `by`
+ * clause names, lower case and without a trailing dot.
+ */
+function receivedClauses(value: string): { from: boolean; by?: string } {
+  const end = value.lastIndexOf(';');
+  let text = end >= 0 ? value.slice(0, end) : value;
+  for (let previous = ''; previous !== text;) {
+    previous = text;
+    text = text.replace(/\([^()]*\)/g, ' ');
+  }
+  const by = /(?:^|\s)by\s+([^\s;]+)/i.exec(text)?.[1];
+  return {
+    from: /^\s*from\s/i.test(text),
+    by: by ? by.toLowerCase().replace(/\.$/, '') : undefined,
+  };
+}
+
+/**
+ * Whether a Received line above a trusted server's Authentication-Results
+ * was written after that server checked the message, on its way into this
+ * mailbox: by the receiving Stalwart (`ownHost`, the one whose line is on
+ * top), by a server in the trusted list, or as a handoff inside a server
+ * that names no other server it came from (Gmail's own top lines read
+ * `by 2002:a05:... with SMTP id ...`). Any server outside the list that
+ * took the message in from another one writes a `from` clause with its own
+ * name after `by`, and below it the sender may have written anything. An
+ * authenticated submission never counts.
+ */
+function trustedHop(received: string, trusted: ReadonlySet<string>, ownHost: string | undefined): boolean {
+  if (SUBMISSION_PROTOCOL_RE.test(received)) return false;
+  const stalwart = stalwartReceivedHost(received);
+  if (stalwart !== undefined && (stalwart === ownHost || trusted.has(stalwart))) return true;
+  const { from, by } = receivedClauses(received);
+  if (!from) return true;
+  return by !== undefined && trusted.has(by);
+}
+
+/**
+ * Whether results with these Received lines above them (in message order)
+ * count: the receiving Stalwart's own, or those of a server in the trusted
+ * list with only trusted hops (trustedHop) above them.
+ */
+function resultsOnReceipt(above: readonly string[], results: string, trusted: readonly string[]): boolean {
+  if (above.length === 0) return false;
+  if (above.every((line) => receivedByAuthservHost(line, results))) return true;
+  const id = authservId(results);
+  const list = new Set(trusted);
+  if (id === undefined || !list.has(id)) return false;
+  const ownHost = stalwartReceivedHost(above[0]);
+  return above.every((line) => trustedHop(line, list, ownHost));
+}
+
+/**
+ * Whether the topmost Authentication-Results header was written by the
+ * server that received the message into this mailbox. RFC 8601 (sections 5
+ * and 7.1) lets a reader act only on results from an authserv-id it
+ * trusts: anyone can write this header into a message, the sender's own
+ * servers do on internal hops, and a mailbox filled over IMAP or from a
+ * relay that writes none holds only such headers. Without a configured
+ * list, the one id this client can trust is the receiving Stalwart's, which
+ * writes its Received line on top of the message and its
+ * Authentication-Results right below it, both with its hostname. So: every
+ * Received line above the topmost Authentication-Results must be Stalwart's
+ * for one and the same host (a Sieve redirect adds a second one), not an
+ * authenticated submission, and the header's authserv-id must be that host.
+ * Mail another server took in has that server's Received line on top, which
+ * the sender can't put anything above. Takes the headers in message order.
+ *
+ * The admin can trust more servers (TRUSTED_AUTHSERV_IDS,
+ * lib/trusted-authserv.ts): another JMAP server, a mailbox behind
+ * legacy-proxy, a filtering gateway that relays to Stalwart. Their results
+ * count when they are the topmost Authentication-Results, the authserv-id
+ * is in the list and every Received line above them is a trusted hop
+ * (trustedHop): a header with a listed name below a server outside the list
+ * may be the sender's own. A gateway's results are only topmost when
+ * Stalwart writes none of its own for what the gateway relays.
  *
  * This only catches a forged header on its own. Stalwart (0.16 and 1.0)
  * keeps both headers when a signed-in user writes them into a mail they
@@ -180,31 +294,135 @@ const SUBMISSION_PROTOCOL_RE = /\bwith\s+(?:UTF8)?(?:E?SMTP|LMTP)S?A\b/i;
  * followed by a forged "dkim=pass" arrives exactly like mail from outside.
  * Only the server can tell them apart.
  */
-export function authenticationResultsOnReceipt(headers: readonly { name: string; value: string }[]): boolean {
+export function authenticationResultsOnReceipt(
+  headers: readonly { name: string; value: string }[],
+  trusted: readonly string[] = trustedAuthservIds(),
+): boolean {
   const index = headers.findIndex((header) => header.name.toLowerCase() === 'authentication-results');
   if (index < 0) return false;
-  for (let i = index - 1; i >= 0; i--) {
-    if (headers[i].name.toLowerCase() !== 'received') continue;
-    return !SUBMISSION_PROTOCOL_RE.test(headers[i].value);
-  }
-  return false;
+  const above = headers.slice(0, index)
+    .filter((header) => header.name.toLowerCase() === 'received')
+    .map((header) => header.value);
+  return resultsOnReceipt(above, headers[index].value, trusted);
+}
+
+/**
+ * The same check for a list row, which gets each header's instances apart
+ * (`header:Received:all`, `header:Authentication-Results:all`, both in
+ * message order) and so can't see which comes first: the topmost Received
+ * line must be the receiving Stalwart's, for the host the topmost
+ * Authentication-Results header names, or a trusted hop (trustedHop) when
+ * that header's authserv-id is in the trusted list. A forged header that
+ * passes this can only take a warning off the row, which a header the check
+ * turns down does too.
+ */
+export function topAuthenticationResultsOnReceipt(
+  received: readonly string[],
+  results: readonly string[],
+  trusted: readonly string[] = trustedAuthservIds(),
+): boolean {
+  return received.length > 0 && results.length > 0 && resultsOnReceipt(received.slice(0, 1), results[0], trusted);
+}
+
+/**
+ * The keyword the mail import sets on every message it puts into the
+ * mailbox from a file (lib/mail-import). The server stores such a message
+ * as the file has it, Received and Authentication-Results lines included,
+ * and never checked it itself.
+ */
+export const IMPORTED_KEYWORD = '$imported';
+
+/** Whether the message came into the mailbox from an imported file (IMPORTED_KEYWORD). */
+export function isImportedMessage(email: { keywords?: Record<string, boolean> | null } | undefined): boolean {
+  return email?.keywords?.[IMPORTED_KEYWORD] === true;
+}
+
+/** The headers of a message when they are the list in message order (as Email/get returns `headers`). */
+function headersInOrder(headers: unknown): { name: string; value: string }[] | undefined {
+  if (!Array.isArray(headers)) return undefined;
+  return headers.every((header) => typeof header?.name === 'string' && typeof header?.value === 'string')
+    ? headers as { name: string; value: string }[]
+    : undefined;
+}
+
+/**
+ * What the message itself shows about its results: true or false from the
+ * flag the full fetch sets (authenticationResultsOnReceipt), else from the
+ * headers in message order when it carries them (a conversation's messages
+ * do), else undefined: nothing to go by (a list row, a search result).
+ */
+export function authenticationResultsEvidence(
+  email: { authenticationResultsOnReceipt?: unknown; headers?: unknown } | undefined,
+): boolean | undefined {
+  if (!email) return undefined;
+  if (email.authenticationResultsOnReceipt !== undefined) return email.authenticationResultsOnReceipt === true;
+  const headers = headersInOrder(email.headers);
+  return headers ? authenticationResultsOnReceipt(headers) : undefined;
+}
+
+/**
+ * Whether a pass in the message's Authentication-Results may earn it
+ * anything. Only on evidence that the results were written on receipt
+ * (authenticationResultsEvidence): without it the answer is no, and it is
+ * always no for a message from an imported file, whose headers this server
+ * never wrote. The sender logo, the invitation trust and the booking cards
+ * all ask this.
+ */
+export function authenticationResultsUsable(
+  email: {
+    authenticationResultsOnReceipt?: boolean;
+    keywords?: Record<string, boolean> | null;
+    headers?: unknown;
+  } | undefined,
+): boolean {
+  if (!email || isImportedMessage(email)) return false;
+  return authenticationResultsEvidence(email) === true;
 }
 
 /**
  * The From domain whose BIMI logo this message may show, or undefined. BIMI
  * needs a DMARC pass for the very domain in From: an aligned SPF or DKIM
  * pass without a DMARC verdict isn't enough, and neither is a pass that the
- * receiving server recorded for another header.from. Whether the domain
- * enforces DMARC and publishes a logo is /api/bimi's to find out.
+ * receiving server recorded for another header.from, or one in a header that
+ * was not written on receipt (authenticationResultsUsable). Whether the
+ * domain enforces DMARC and publishes a logo is /api/bimi's to find out.
+ *
+ * Mail a signed-in user handed in to the same server never gets a DMARC
+ * verdict: Stalwart writes Authentication-Results only on what arrives from
+ * outside. It does not compare the From header of a submission with the
+ * user's addresses, so a user of the same server can write any From. A
+ * message with no such header at all still counts when its From domain is
+ * one of `internalDomains`, the organisation's own (lib/external-mail.ts
+ * internalDomains, in ASCII form; a domain covers its subdomains). The same
+ * domain's mail from outside carries the header and still needs the pass,
+ * and so does one whose headers were all left out as not this server's
+ * (authenticationResultsIgnored). A message from an imported file was not
+ * handed in here and earns nothing.
  */
 export function brandIndicatorDomain(
-  email: { from?: { email?: string | null }[] | null; authenticationResults?: AuthenticationResults } | undefined,
+  email: {
+    from?: { email?: string | null }[] | null;
+    authenticationResults?: AuthenticationResults;
+    authenticationResultsOnReceipt?: boolean;
+    authenticationResultsIgnored?: boolean;
+    keywords?: Record<string, boolean> | null;
+    headers?: unknown;
+  } | undefined,
+  internalDomains: readonly string[] = [],
 ): string | undefined {
   const auth = email?.authenticationResults;
   const fromEmail = email?.from?.[0]?.email ?? undefined;
-  if (!auth?.dmarc || auth.dmarc.result !== 'pass' || !fromEmail) return undefined;
+  if (!fromEmail) return undefined;
   const domain = domainOf(fromEmail);
-  if (!domain || isAuthenticationSpoofed(auth)) return undefined;
+  if (!domain) return undefined;
+  if (isImportedMessage(email)) return undefined;
+  if (!auth) {
+    if (email?.authenticationResultsIgnored) return undefined;
+    const ascii = toAsciiDomain(domain) ?? domain;
+    return internalDomains.some((entry) => ascii === entry || ascii.endsWith(`.${entry}`)) ? domain : undefined;
+  }
+  if (!authenticationResultsUsable(email)) return undefined;
+  if (auth.dmarc?.result !== 'pass' || isAuthenticationSpoofed(auth)) return undefined;
   const checked = auth.dmarc.domain ? domainOf(`@${auth.dmarc.domain}`) : domain;
   return checked === domain ? domain : undefined;
 }

@@ -101,6 +101,7 @@ import { useDesktopCommands } from '@/lib/desktop/commands';
 import { menuBarAvailable } from '@/lib/desktop/menu-bar';
 import { useAccountStore } from '@/stores/account-store';
 import { useMediaQuery, atLeast, PHONE_BELOW } from '@/hooks/use-media-query';
+import { usePopoutsAvailable } from '@/hooks/use-popouts-available';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useDesktopWindowName } from '@/lib/desktop/window-name';
@@ -379,6 +380,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const touchScreen = useMediaQuery('(pointer: coarse)');
   const mountainViewLayout = useSettingsStore((s) => s.interfaceLayout === 'mountain-view');
   const multiAccount = useAccountStore((s) => s.accounts.length > 0);
+  const messagePopouts = usePopoutsAvailable('message');
   const { tabSearchHaystacks, tabSubResults } = useMemo(() => {
     const haystacks: Partial<Record<Tab, string>> = {};
     const subs: Partial<Record<Tab, SubResult[]>> = {};
@@ -387,6 +389,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       if (!archiveActionEnabled && ARCHIVE_ACTION_SEARCH_PATHS.has(entry.label)) return false;
       if (entry.when === 'touch') return touchScreen;
       if (entry.when === 'mountainView') return mountainViewLayout;
+      if (entry.when === 'notMountainView') return !mountainViewLayout;
       if (entry.when === 'multiAccount') return multiAccount;
       // The desktop app's own rows (settings-p2-5), and the browser's that it hides.
       const desktop = getDesktopBridge();
@@ -395,6 +398,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       if (entry.when === 'desktopNotMac') return !!desktop && desktop.platform !== 'darwin';
       if (entry.when === 'desktopMenuBar') return menuBarAvailable();
       if (entry.when === 'browser') return !desktop;
+      if (entry.when === 'messagePopouts') return messagePopouts && !desktop;
       return true;
     };
     for (const tabId of Object.keys(tabSearchEntries) as Tab[]) {
@@ -457,7 +461,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       ];
     }
     return { tabSearchHaystacks: haystacks, tabSubResults: subs };
-  }, [messages, installedPlugins, installedThemes, sidebarAppsList, archiveActionEnabled, appName, touchScreen, mountainViewLayout, multiAccount]);
+  }, [messages, installedPlugins, installedThemes, sidebarAppsList, archiveActionEnabled, appName, touchScreen, mountainViewLayout, multiAccount, messagePopouts]);
 
   // Sidebar resize state
   const [settingsSidebarWidth, setSettingsSidebarWidth] = useState(() => {
@@ -1048,7 +1052,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           </div>
 
           {/* A key per page: a page opens at its top, not at the scroll offset of the one before. */}
-          <AppMain key={effectiveActiveTab} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto p-4">
+          <AppMain key={effectiveActiveTab} embedded={isEmbedded} label={activeTabLabel} className="relative flex-1 overflow-y-auto p-4">
             {renderTabContent()}
           </AppMain>
 
@@ -1086,7 +1090,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           onScroll={(e) => { mobileListScrollTop.current = e.currentTarget.scrollTop; }}
           embedded={isEmbedded}
           label={t('title')}
-          className="flex-1 overflow-y-auto"
+          className="relative flex-1 overflow-y-auto"
           data-tour="settings-tabs"
         >
           <div className="px-4 pt-3 pb-1">
@@ -1185,7 +1189,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
   // Desktop layout
   const settingsMain = (
-      <AppMain key={effectiveActiveTab} ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
+      <AppMain key={effectiveActiveTab} ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="relative flex-1 overflow-y-auto">
         <div className={effectiveActiveTab.startsWith(PLUGIN_PAGE_PREFIX) ? "px-6 py-6" : "max-w-3xl mx-auto px-6 py-6"}>
           {/* The page's heading for screen readers; the sidebar shows which
               page is open (the phone header has a visible one). */}

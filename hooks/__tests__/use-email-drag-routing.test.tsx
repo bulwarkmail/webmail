@@ -189,7 +189,8 @@ describe('message drag blob routing', () => {
     expect(payload.get('DownloadURL')).toMatch(/^message\/rfc822:Hello world.eml:blob:/);
     expect(payload.get('application/x-email-ids')).toBe('["same-id"]');
     expect(payload.get('text/plain')).toBe('Hello world');
-    expect(payload.get('text/uri-list')).toContain('/mail/message/same-id?view=fullscreen');
+    // The link names its login, so the Pro shell opens it too.
+    expect(payload.get('text/uri-list')).toMatch(/\/mail\/message\/same-id\?account=[^&]+&view=fullscreen/);
     expect(startDrag).toHaveBeenLastCalledWith([email], 'inbox');
   });
 

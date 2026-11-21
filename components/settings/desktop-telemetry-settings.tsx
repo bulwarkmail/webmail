@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopCrashFile, DesktopCrashSendResult, DesktopPrivacyState } from "@/lib/desktop/types";
 import { toast } from "@/stores/toast-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
 
 const SEND_ERROR: Record<Exclude<DesktopCrashSendResult, { ok: true }>["reason"], string | null> = {
@@ -27,6 +28,7 @@ const SEND_ERROR: Record<Exclude<DesktopCrashSendResult, { ok: true }>["reason"]
 export function DesktopTelemetrySettings() {
   const t = useTranslations("desktopTelemetry");
   const format = useFormatter();
+  const hour12 = useSettingsStore((s) => s.timeFormat) === "12h";
   const bridge = getDesktopBridge();
   const privacy = bridge?.privacy;
   const [state, setState] = useState<DesktopPrivacyState | null>(null);
@@ -154,7 +156,7 @@ export function DesktopTelemetrySettings() {
         <SettingItem
           key={crash.id}
           nested
-          label={format.dateTime(new Date(crash.createdAt), { dateStyle: "medium", timeStyle: "short" })}
+          label={format.dateTime(new Date(crash.createdAt), { dateStyle: "medium", timeStyle: "short", hour12 })}
           description={t("file_size", { size: Math.max(1, Math.round(crash.bytes / 1024)) })}
         >
           <Button

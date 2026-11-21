@@ -349,4 +349,25 @@ describe('calendar-utils all-day handling', () => {
       continuesAfter: true,
     });
   });
+
+  it('keeps one-day events on the top row next to a just-created event on a later day (#1759)', () => {
+    const week = Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2026, 10, 9 + i)));
+    const day = (id: string, date: string) => makeEvent({ id, uid: id, start: `${date}T00:00:00`, duration: 'P1D' });
+    const events = [day('a', '2026-11-09'), day('b', '2026-11-10'), day('new', '2026-11-11')];
+
+    const rows = Object.fromEntries(buildWeekSegments(events, week, 'new').map((s) => [s.event.id, s.row]));
+
+    expect(rows).toEqual({ a: 0, b: 0, new: 0 });
+  });
+
+  it('still gives a just-created event the top row when its day is taken', () => {
+    const week = Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2026, 10, 9 + i)));
+    const long = makeEvent({ id: 'long', uid: 'long', start: '2026-11-09T00:00:00', duration: 'P3D' });
+    const later = makeEvent({ id: 'later', uid: 'later', start: '2026-11-12T00:00:00', duration: 'P1D' });
+    const created = makeEvent({ id: 'new', uid: 'new', start: '2026-11-10T00:00:00', duration: 'P1D' });
+
+    const rows = Object.fromEntries(buildWeekSegments([long, later, created], week, 'new').map((s) => [s.event.id, s.row]));
+
+    expect(rows).toEqual({ new: 0, long: 1, later: 0 });
+  });
 });

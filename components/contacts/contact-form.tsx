@@ -16,6 +16,7 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import type { ContactCard, ContactOnlineService, ContactAnniversary, ContactPersonalInfo, AddressBook, AnniversaryDate, PartialDate, ContactAddress, ContactMedia } from "@/lib/jmap/types";
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
+import { matchOrganizationNames } from "@/lib/contacts/organization-names";
 
 // Each row of a list field keeps the `key` of the card's entry it was read
 // from, so Save can send an entry the user didn't touch back unchanged.
@@ -30,18 +31,21 @@ interface EmailEntry {
 }
 
 // `feature` is one of PHONE_FEATURES, "", PHONE_LABEL for a phone with its
-// own label (X-ABLabel), or a feature the form has no option for.
+// own label (X-ABLabel on Android, "Custom…" in the select), or a feature the
+// form has no option for. `label` is the custom label's text.
 interface PhoneEntry {
   key?: string;
   number: string;
   context: string;
   feature: string;
+  label: string;
 }
 
 const CONTEXTS = ["work", "private"];
-const PHONE_FEATURES = ["voice", "mobile", "fax", "pager", "video", "text"];
 /** The phone type select's value for a phone's own label. No feature starts with "#". */
 const PHONE_LABEL = "#label";
+/** The phone types the select offers. */
+const PHONE_FEATURES = ["voice", "mobile", "fax", "pager", "video", "text", PHONE_LABEL];
 
 /** The context a row shows: work or private, else the card's own as stored. */
 function contextOf(contexts: Record<string, boolean> | undefined): string {
@@ -101,6 +105,8 @@ interface ContactFormProps {
   contact?: ContactCard | null;
   addressBooks?: AddressBook[];
   allKeywords?: string[];
+  /** Organization names the loaded cards use, offered while typing one. */
+  allOrganizations?: string[];
   defaultAddressBookId?: string;
   /** Prefills the create form (ignored when `contact` is set). */
   prefill?: { email?: string; name?: string };
@@ -327,7 +333,7 @@ function Select({ value, onChange, children, className, id, "aria-label": ariaLa
   );
 }
 
-export function ContactForm({ contact, addressBooks, allKeywords, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
+export function ContactForm({ contact, addressBooks, allKeywords, allOrganizations, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("contacts.form");
   const tx = useTranslations("ux_pim_contact");
@@ -432,6 +438,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
         number: p.number,
         context: contextOf(p.contexts),
         feature: phoneTypeOf(p),
+        label: p.label?.trim() ? p.label : "",
       }));
     }
     return [];
@@ -657,6 +664,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving || photoUploading) return;
     setError(null);
 
     // An organization name identifies the card just as well as a personal name.
@@ -684,15 +692,18 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     }));
 
     const validPhones = phones.filter(p => p.number.trim());
-    // The phone's features and label stay as stored until another type is picked.
+    // The phone's features and label stay as stored until another type is
+    // picked. A custom type saves the typed text as the phone's label.
     const phonesMap = entriesToSave<PhoneEntry, PhoneValue>(validPhones, initialRows.phones, contact?.phones, "p", (row, previous, before) => {
       const typeKept = !!before && before.feature === row.feature;
+      const custom = row.feature === PHONE_LABEL;
+      const labelKept = typeKept && (!custom || before.label === row.label);
       return compact({
         ...previous,
         number: row.number.trim(),
         contexts: contextsToSave(row.context, previous?.contexts, before),
-        features: typeKept ? previous?.features : row.feature && row.feature !== PHONE_LABEL ? { [row.feature]: true } : undefined,
-        label: typeKept ? previous?.label : undefined,
+        features: typeKept ? previous?.features : row.feature && !custom ? { [row.feature]: true } : undefined,
+        label: labelKept ? previous?.label : custom ? row.label.trim() || undefined : undefined,
       });
     });
 
@@ -878,7 +889,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
         {!closeFirst && close}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* Native disabled semantics cover fields, row actions and open category menus. */}
+      <fieldset disabled={isSaving} className="flex-1 min-w-0 overflow-y-auto">
         <div className="@container px-6 py-4 max-w-3xl">
           {error && (
             <div role="alert" className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md mb-4">
@@ -1131,8 +1143,22 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     <option value="pager">{t("phone_pager")}</option>
                     <option value="video">{t("phone_video")}</option>
                     <option value="text">{t("phone_text")}</option>
-                    {storedOption(initialPhone?.feature, PHONE_FEATURES, initialPhone?.feature === PHONE_LABEL ? contact?.phones?.[initialPhone.key!]?.label : undefined)}
+                    <option value={PHONE_LABEL}>{t("phone_custom")}</option>
+                    {storedOption(initialPhone?.feature, PHONE_FEATURES)}
                   </Select>
+                  {entry.feature === PHONE_LABEL && (
+                    <Input
+                      value={entry.label}
+                      onChange={(e) => {
+                        const next = [...phones];
+                        next[i] = { ...next[i], label: e.target.value };
+                        setPhones(next);
+                      }}
+                      placeholder={t("phone_custom_placeholder")}
+                      aria-label={t("phone_custom_label")}
+                      className="w-32"
+                    />
+                  )}
                   <Select
                     value={entry.context}
                     onChange={(e) => {
@@ -1153,7 +1179,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 </div>
                 );
               })}
-              <Button type="button" variant="ghost" size="sm" onClick={() => setPhones([...phones, { number: "", context: "", feature: "" }])} className="text-xs">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setPhones([...phones, { number: "", context: "", feature: "", label: "" }])} className="text-xs">
                 <Plus className="w-3 h-3 me-1" />
                 {t("add_phone")}
               </Button>
@@ -1167,7 +1193,13 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
               {!isOrg && (
                 <div>
                   <label htmlFor={fieldId("organization")} className="text-xs text-muted-foreground mb-1 block">{t("organization")}</label>
-                  <Input id={fieldId("organization")} value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder={t("organization_placeholder")} />
+                  <OrganizationInput
+                    id={fieldId("organization")}
+                    value={organization}
+                    onChange={setOrganization}
+                    names={allOrganizations ?? []}
+                    placeholder={t("organization_placeholder")}
+                  />
                 </div>
               )}
               <div>
@@ -1431,18 +1463,117 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           </div>
         </div>
-      </div>
+      </fieldset>
 
       {/* Toasts sit above Save and Cancel, not on them. */}
       <div ref={footerRef} className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border flex-shrink-0">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
           {t("cancel")}
         </Button>
-        <Button type="submit" disabled={isSaving}>
+        {/* A photo read/resize must finish before its value can be submitted. */}
+        <Button type="submit" disabled={isSaving || photoUploading}>
           {isSaving ? (isEditing ? t("updating") : t("creating")) : t("save")}
         </Button>
       </div>
     </form>
+  );
+}
+
+/**
+ * The Organization field, offering the organization names other cards use as
+ * the user types (case-insensitive, anywhere in the name). Picking one takes
+ * its spelling; any other name can still be typed. (#1697)
+ */
+function OrganizationInput({
+  id,
+  value,
+  onChange,
+  names,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  names: readonly string[];
+  placeholder: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const listId = useId();
+  const suggestions = useMemo(() => matchOrganizationNames(names, value), [names, value]);
+  const open = isOpen && suggestions.length > 0;
+  const activeIndex = active < suggestions.length ? active : -1;
+
+  const pick = (name: string) => {
+    onChange(name);
+    setIsOpen(false);
+    setActive(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (e.key === "ArrowDown" && suggestions.length > 0) { e.preventDefault(); setIsOpen(true); setActive(0); }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((activeIndex + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(activeIndex <= 0 ? suggestions.length - 1 : activeIndex - 1);
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      pick(suggestions[activeIndex]);
+    } else if (e.key === "Escape") {
+      // Closes the list only, not the form around it.
+      e.stopPropagation();
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setIsOpen(true); setActive(-1); }}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setIsOpen(false)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        autoComplete="off"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        aria-activedescendant={open && activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
+      />
+      {open && (
+        <div
+          id={listId}
+          role="listbox"
+          className="absolute start-0 end-0 top-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-md z-50 max-h-48 overflow-y-auto py-1"
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {suggestions.map((name, index) => (
+            <div
+              key={name}
+              id={`${listId}-${index}`}
+              role="option"
+              aria-selected={index === activeIndex}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-accent pointer-coarse:min-h-11",
+                index === activeIndex && "bg-accent",
+              )}
+              onClick={() => pick(name)}
+            >
+              <Building className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="min-w-0 truncate">{name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

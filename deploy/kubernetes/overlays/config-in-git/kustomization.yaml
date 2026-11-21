@@ -7,6 +7,11 @@
 #
 # To start from your current policy, use "Export policy.json" on the admin
 # console's Domains and groups page.
+#
+# A ConfigMap is not a Secret: anyone who may read ConfigMaps in the namespace
+# reads config.json. Keep "oauthClientSecret" out of it. Set
+# OAUTH_CLIENT_SECRET on the Deployment from a Secret instead (secretKeyRef),
+# or mount the Secret as a file and put its path in "oauthClientSecretFile".
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

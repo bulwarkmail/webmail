@@ -114,7 +114,8 @@ describe('api.email.forward', () => {
       { blobId: 'pdf-1', name: 'invoice.pdf', type: 'application/pdf', size: 5000, disposition: 'attachment' },
       { blobId: 'xml-1', name: 'xrechnung.xml', type: 'application/xml', size: 3000, disposition: 'attachment' },
     ]);
-    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['E1'], { 'keywords/$forwarded': true }, undefined);
+    // Forwarded and read, as when the user forwards it (#1756).
+    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['E1'], { 'keywords/$forwarded': true, 'keywords/$seen': true }, undefined);
     expect(forwardApprovals('e-invoice')).toEqual(['buchhaltung@firma.example']);
 
     // The next forward there goes out without a question.
@@ -177,7 +178,19 @@ describe('api.email.forward', () => {
     expect(client.getEmail).toHaveBeenCalledWith('E1', 'team');
     expect(client.copyBlobs).toHaveBeenCalledWith('team', ['pdf-1', 'xml-1'], 'own');
     expect(sendEmail.mock.calls[0][11].map((a: { blobId: string }) => a.blobId)).toEqual(['copy-pdf-1', 'copy-xml-1']);
-    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['E1'], { 'keywords/$forwarded': true }, 'team');
+    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['E1'], { 'keywords/$forwarded': true, 'keywords/$seen': true }, 'team');
+  });
+
+  it('leaves the original unread with "Mark as read after replying or forwarding" off (#1756)', async () => {
+    useSettingsStore.setState({ markReadOnReply: false });
+    try {
+      const pending = call(FORWARDER, 'email.forward', 'E1', { to: ['books@example.com'] });
+      await answerDialog(true);
+      await pending;
+      expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['E1'], { 'keywords/$forwarded': true }, undefined);
+    } finally {
+      useSettingsStore.setState({ markReadOnReply: true });
+    }
   });
 
   it('holds the forward for the undo delay like any other send', async () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Email } from '@/lib/jmap/types';
-import { stepListEmail } from '../list-step';
+import { shownListEmails, stepListEmail } from '../list-step';
 
 const mail = (id: string) => ({ id, threadId: `t-${id}` }) as Email;
 const emails = [mail('a'), mail('b'), mail('c'), mail('d')];
@@ -30,5 +30,17 @@ describe('stepListEmail', () => {
   });
   it('is empty for an empty list', () => {
     expect(stepListEmail([], 'a', 1)).toBeNull();
+  });
+});
+
+describe('shownListEmails', () => {
+  it('leaves out the messages no row shows, such as a folded group', () => {
+    // c and d sit in a folded group: the list has no rows for them.
+    const rows = [{ key: 'b', members: ['b', 'a'] }];
+    expect(shownListEmails(emails, rows).map((e) => e.id)).toEqual(['a', 'b']);
+    expect(ids(stepListEmail(shownListEmails(emails, rows), 'b', 1))).toBe('b');
+  });
+  it('keeps them all without rows', () => {
+    expect(shownListEmails(emails, null)).toBe(emails);
   });
 });

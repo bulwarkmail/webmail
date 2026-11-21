@@ -75,9 +75,10 @@ function openToken(token: string, aad: Buffer): unknown {
 
 /**
  * Create an encrypted admin session token, in session generation
- * `generation` (see getAdminSessionGeneration).
+ * `generation` (see getAdminSessionGeneration). `slot` is the cookie slot of
+ * the Stalwart login that opened it, if one did.
  */
-export function createAdminSession(generation = 0): string {
+export function createAdminSession(generation = 0, slot?: number): string {
   const now = Math.floor(Date.now() / 1000);
   const payload: AdminSessionPayload = {
     role: 'admin',
@@ -85,6 +86,7 @@ export function createAdminSession(generation = 0): string {
     exp: now + getSessionTTL(),
     sid: randomBytes(16).toString('base64url'),
     gen: generation,
+    ...(slot === undefined ? {} : { slot }),
   };
   return sealToken(payload, ADMIN_SESSION_AAD);
 }
@@ -184,8 +186,8 @@ export async function requireAdminAuth(request: Request): Promise<{ payload: Adm
  * both, as it does for the mailbox cookies: a TLS proxy that does not send
  * X-Forwarded-Proto would otherwise make the request look like plain HTTP.
  */
-export async function setAdminSessionCookie(request?: Request): Promise<void> {
-  const token = createAdminSession(await getAdminSessionGeneration());
+export async function setAdminSessionCookie(request?: Request, options: { slot?: number } = {}): Promise<void> {
+  const token = createAdminSession(await getAdminSessionGeneration(), options.slot);
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
@@ -256,13 +258,38 @@ export async function setAdminDeviceCookie(request?: Request): Promise<void> {
 
 /**
  * Clear the admin session cookie and sign its token out, so a copy of the
- * cookie stops working too.
+ * cookie stops working too. Resolves to true when a session that was still
+ * signed in was signed out; false when there was none, or only one that had
+ * expired or was signed out before (nothing for the audit log).
  */
-export async function clearAdminSessionCookie(): Promise<void> {
+export async function clearAdminSessionCookie(): Promise<boolean> {
+  return endAdminSession(() => true);
+}
+
+/**
+ * Sign out the admin session the Stalwart login in one of `slots` opened,
+ * when the webmail signs that login out: the dashboard came with the login,
+ * so it ends with it (#1718). A session opened with the admin password, or
+ * by a login in another slot, is left alone. Resolves like
+ * clearAdminSessionCookie.
+ */
+export async function endAdminSessionOfSlots(slots: readonly number[]): Promise<boolean> {
+  return endAdminSession((payload) => payload.slot !== undefined && slots.includes(payload.slot));
+}
+
+async function endAdminSession(applies: (payload: AdminSessionPayload) => boolean): Promise<boolean> {
   const cookieStore = await cookies();
-  const payload = verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? '');
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? '';
+  const payload = verifyAdminSession(token);
+  if (payload && !applies(payload)) return false;
   cookieStore.delete(ADMIN_SESSION_COOKIE);
-  if (!payload) return;
+  if (!payload) return false;
+  try {
+    if (!(await verifyCurrentAdminSession(token))) return false;
+  } catch (error) {
+    // Can't tell whether it was signed out before: sign it out (again) below.
+    if (!isStoreUnavailable(error)) throw error;
+  }
   try {
     await revokeAdminSession(payload.sid, payload.exp);
   } catch (error) {
@@ -274,6 +301,7 @@ export async function clearAdminSessionCookie(): Promise<void> {
     // the cookie would work again until it expires, so the caller is told.
     if (isStoreUnavailable(error)) throw error;
   }
+  return true;
 }
 
 /**

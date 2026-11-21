@@ -148,6 +148,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
     onIdentitySelect: { size: 0, emit: async () => {} },
+    onSelectReplyIdentity: { size: 0 },
   },
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },

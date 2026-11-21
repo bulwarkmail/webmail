@@ -165,10 +165,14 @@ describe('reconcileSelectedIds with unloaded accounts', () => {
 describe('raw selected ids when the merged list loads', () => {
   it("map onto the active login's calendars", async () => {
     useCalendarStore.setState({ calendars: [], selectedCalendarIds: ['b', 'ca:b'], knownCalendarIds: null });
-    const list = () => clientReturning({ calendars: [cal({ id: 'b', accountId: 'x' }), cal({ id: 'ca:b', accountId: 'ca', isShared: true })] });
+    // The same account ids on both: two servers.
+    const list = (server: string) => Object.assign(
+      clientReturning({ calendars: [cal({ id: 'b', accountId: 'x' }), cal({ id: 'ca:b', accountId: 'ca', isShared: true })] }),
+      { getServerUrl: () => server },
+    );
 
     await useCalendarStore.getState().fetchAllAccountsCalendars(
-      [{ localAccountId: 'A@h', client: list() }, { localAccountId: 'B@h', client: list() }],
+      [{ localAccountId: 'A@h', client: list('https://one.example') }, { localAccountId: 'B@h', client: list('https://two.example') }],
       'B@h',
     );
 

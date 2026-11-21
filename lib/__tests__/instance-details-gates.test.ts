@@ -26,6 +26,8 @@ const POLICY = {
   pushRelayUrl: 'https://relay.corp.example',
   pushRelayUrlLocked: true,
   defaultSidebarApps: [{ id: 'wiki', name: 'Wiki', url: 'https://wiki.corp.example' }],
+  directorySameDomainOnly: true,
+  directoryHiddenLocalparts: ['spamtrap'],
 };
 vi.mock('@/lib/admin/config-manager', () => ({
   configManager: {
@@ -119,6 +121,7 @@ describe('endpoints for visitors who are not signed in', () => {
     expect(body.themePolicy).toEqual(POLICY.themePolicy);
     expect(body).toMatchObject({
       forceEnabledPlugins: [], approvedPlugins: [], pushRelays: [], pushRelayUrl: '', defaultSidebarApps: [],
+      directorySameDomainOnly: false, directoryHiddenLocalparts: [],
     });
 
     gate.signedIn = true;

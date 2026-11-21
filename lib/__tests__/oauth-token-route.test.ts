@@ -79,7 +79,8 @@ beforeEach(async () => {
 function mockRequest(params: Record<string, string> = {}, method = 'PUT', body?: unknown): unknown {
   return {
     method,
-    headers: { get: () => null },
+    // The app sends its bodies as JSON.
+    headers: { get: (name: string) => (body !== undefined && name.toLowerCase() === 'content-type' ? 'application/json' : null) },
     nextUrl: { searchParams: { get: (k: string) => params[k] ?? null }, basePath: '' },
     json: async () => body,
   };

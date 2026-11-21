@@ -30,9 +30,24 @@ export interface ParsedMailto {
    * composer is open (lib/plugin-link-params.ts). Not part of the message.
    */
   linkParams?: LinkParams;
+  /**
+   * The link's In-Reply-To and References header fields (RFC 6068 §2), as
+   * bare message ids without the angle brackets, as JMAP keeps them. Only
+   * well-formed ids, at most MAX_IN_REPLY_TO and MAX_REFERENCES of them.
+   */
+  inReplyTo?: string[];
+  references?: string[];
 }
 
 const MAX_RECIPIENTS = 200;
+const MAX_IN_REPLY_TO = 10;
+const MAX_REFERENCES = 100;
+const MAX_MESSAGE_ID_LENGTH = 250;
+// RFC 5322 §3.6.4 msg-id without the obsolete forms: dot-atom-text "@"
+// (dot-atom-text / no-fold-literal), in angle brackets.
+const ATEXT = "[A-Za-z0-9!#$%&'*+\\-/=?^_`{|}~]";
+const DOT_ATOM = `${ATEXT}+(?:\\.${ATEXT}+)*`;
+const MESSAGE_ID = new RegExp(`^<(${DOT_ATOM}@(?:${DOT_ATOM}|\\[[\\x21-\\x5a\\x5e-\\x7e]*\\]))>$`);
 const MAX_SUBJECT_LENGTH = 998;
 const MAX_BODY_LENGTH = 64 * 1024;
 // eslint-disable-next-line no-control-regex
@@ -58,6 +73,26 @@ export function cleanMailtoSubject(value: string): string {
 /** A body from outside the app: line breaks kept, other control characters gone, limited in length. */
 export function cleanMailtoBody(value: string): string {
   return stripBodyControlChars(value).slice(0, MAX_BODY_LENGTH);
+}
+
+/**
+ * The well-formed message ids in a header field from a link, without their
+ * angle brackets. Anything else (a bare id, white space or control characters
+ * in one, an overlong one) is left out. Duplicates count once.
+ */
+function messageIds(value: string): string[] {
+  const ids: string[] = [];
+  for (const [token] of value.slice(0, MAX_BODY_LENGTH).matchAll(/<[^<>]*>/g)) {
+    if (token.length > MAX_MESSAGE_ID_LENGTH + 2) continue;
+    const id = MESSAGE_ID.exec(token)?.[1];
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
+/** At most `max` ids, keeping the first (the thread's start) and the latest ones. */
+function capIds(ids: string[], max: number): string[] {
+  return ids.length <= max ? ids : [ids[0], ...ids.slice(ids.length - (max - 1))];
 }
 
 function splitRecipients(value: string): string[] {
@@ -142,6 +177,11 @@ export function parseMailto(raw: string): ParsedMailto | null {
   const bcc = splitRecipients(getQueryValue(searchParams, "bcc")).slice(0, remainingAfterCc);
 
   const linkParams = linkParamsFrom(searchParams.map(({ key, value }) => [key, value] as const));
+  // A reply's References end with the message it answers (RFC 5322 §3.6.4),
+  // so the In-Reply-To ids join a link's References, or stand in for them.
+  const inReplyTo = messageIds(getQueryValue(searchParams, "in-reply-to")).slice(0, MAX_IN_REPLY_TO);
+  const linkReferences = messageIds(getQueryValue(searchParams, "references"));
+  const references = capIds([...linkReferences, ...inReplyTo.filter(id => !linkReferences.includes(id))], MAX_REFERENCES);
   return {
     to,
     cc,
@@ -149,6 +189,8 @@ export function parseMailto(raw: string): ParsedMailto | null {
     subject: cleanMailtoSubject(getQueryValue(searchParams, "subject")),
     body: cleanMailtoBody(getQueryValue(searchParams, "body")),
     ...(linkParams ? { linkParams } : {}),
+    ...(inReplyTo.length ? { inReplyTo } : {}),
+    ...(references.length ? { references } : {}),
   };
 }
 
@@ -165,6 +207,8 @@ export function formatMailto(fields: Pick<ParsedMailto, "to"> & Partial<Omit<Par
   add("bcc", fields.bcc?.join(","));
   add("subject", fields.subject);
   add("body", fields.body);
+  add("in-reply-to", fields.inReplyTo?.map(id => `<${id}>`).join(" "));
+  add("references", fields.references?.map(id => `<${id}>`).join(" "));
   const to = fields.to.map(encodeURIComponent).join(",");
   return `mailto:${to}${params.length ? `?${params.join("&")}` : ""}`;
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
+import { useSettingsStore } from '@/stores/settings-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { deleteOutboxEntry, retryOutboxEntry } from '@/lib/offline/flush';
 // Offline mode loads with its first use here, not with the banner.
@@ -32,6 +33,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
   const pathname = usePathname();
   const localDrafts = useOfflineStore((s) => s.localDrafts);
   const format = useFormatter();
+  const hour12 = useSettingsStore((s) => s.timeFormat) === '12h';
   const rows = useOfflineStore((s) => s.outbox);
   const changes = useOfflineStore((s) => s.pendingChanges);
   const conflicts = useOfflineStore((s) => s.conflicts);
@@ -112,7 +114,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
                   {several && <> · {accounts.find((a) => a.id === row.account)?.label ?? row.account}</>}
                 </p>
                 <p className={row.status === 'failed' || row.status === 'uncertain' || row.status === 'held' ? 'text-xs text-destructive [overflow-wrap:anywhere]' : 'text-xs text-muted-foreground'}>
-                  {status(row)} · {format.dateTime(row.createdAt, { dateStyle: 'short', timeStyle: 'short' })}
+                  {status(row)} · {format.dateTime(row.createdAt, { dateStyle: 'short', timeStyle: 'short', hour12 })}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
@@ -136,7 +138,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{draft.subject || t('no_subject')}</p>
                   <p className={draft.status === 'refused' ? 'text-xs text-destructive [overflow-wrap:anywhere]' : 'text-xs text-muted-foreground'}>
-                    {draftStatus(draft)} · {format.dateTime(draft.createdAt, { dateStyle: 'short', timeStyle: 'short' })}
+                    {draftStatus(draft)} · {format.dateTime(draft.createdAt, { dateStyle: 'short', timeStyle: 'short', hour12 })}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
@@ -162,7 +164,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{conflict.summary.subject || t('no_subject')}</p>
                   <p className="text-xs text-destructive [overflow-wrap:anywhere]">
-                    {conflictText(conflict)} · {format.dateTime(conflict.createdAt, { dateStyle: 'short', timeStyle: 'short' })}
+                    {conflictText(conflict)} · {format.dateTime(conflict.createdAt, { dateStyle: 'short', timeStyle: 'short', hour12 })}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
@@ -177,7 +179,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
                     {tStorage(conflict.area === 'calendar' ? 'conflict_calendar' : 'conflict_contacts')}: {conflict.title || t('no_subject')}
                   </p>
                   <p className="text-xs text-destructive [overflow-wrap:anywhere]">
-                    {areaConflictText(conflict)} · {format.dateTime(conflict.createdAt, { dateStyle: 'short', timeStyle: 'short' })}
+                    {areaConflictText(conflict)} · {format.dateTime(conflict.createdAt, { dateStyle: 'short', timeStyle: 'short', hour12 })}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">

@@ -3,6 +3,7 @@ import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
 import { httpOrMailtoOrEmpty, httpUrlOrEmpty, httpUrlOrPathOrEmpty } from '@/lib/config-validation';
 import { parseNoThirdPartyValue } from '@/lib/third-party-mode';
+import { parseTrustedAuthservIds } from '@/lib/trusted-authserv';
 import { sanitizeOrganisationPolicy } from '@/lib/admin/organisation-policy';
 import { sanitizeRestrictions, sanitizeScopes } from '@/lib/admin/policy-scopes';
 
@@ -84,6 +85,7 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     loginPrivacyPolicyUrl: str(input.loginPrivacyPolicyUrl, ''),
     loginWebsiteUrl: str(input.loginWebsiteUrl, ''),
     loginUsernamePlaceholder: str(input.loginUsernamePlaceholder, ''),
+    loginForgotPasswordUrl: httpUrlOrEmpty(input.loginForgotPasswordUrl),
     loginLogoMaxHeight: str(input.loginLogoMaxHeight, ''),
     loginLogoMaxWidth: str(input.loginLogoMaxWidth, ''),
     loginShowHeading: bool(input.loginShowHeading, true),
@@ -92,6 +94,8 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     loginShowTokenLogin: bool(input.loginShowTokenLogin, false),
     desktopBrowserSignIn: false,
     loginShowRememberMe: bool(input.loginShowRememberMe, false),
+    // Lite keeps an unticked sign-in in the tab's sessionStorage instead.
+    browserSessionSignIn: false,
     loginShowVersion: bool(input.loginShowVersion, true),
     demoMode: bool(input.demoMode, false),
     allowCustomJmapEndpoint: bool(input.allowCustomJmapEndpoint, jmapServerUrl === '' && jmapServers.length === 0),
@@ -110,6 +114,8 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     accountManagementLabel: str(input.accountManagementLabel, ''),
     // Same browser-side switches as the server build (lib/outgoing-hosts.ts).
     noThirdPartyTraffic: parseNoThirdPartyValue(input.noThirdPartyTraffic),
+    // A list or a comma-separated string, as TRUSTED_AUTHSERV_IDS takes it.
+    trustedAuthservIds: parseTrustedAuthservIds(input.trustedAuthservIds),
     oauthRevokeOnSignOut: bool(input.oauthRevokeOnSignOut, true),
     ...LITE_FORCED_FLAGS,
   };

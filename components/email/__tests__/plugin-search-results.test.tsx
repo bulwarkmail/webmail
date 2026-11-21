@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
@@ -9,12 +9,13 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import { useSettingsStore } from '@/stores/settings-store';
-import { DEFAULT_SHARE, MAX_SHARE, MIN_HEIGHT, PENDING_GRACE_MS, PluginSearchResults } from '../plugin-search-results';
+import { DEFAULT_SHARE, MAX_SHARE, MIN_HEIGHT, PENDING_GRACE_MS, PluginSearchResults, SNAP_PX, WHOLE_SLACK_PX } from '../plugin-search-results';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) => {
     if (key === 'more_results_searching') return 'Searching for more results…';
     if (key === 'plugin_result_score') return `${values?.count} of 5`;
+    if (key === 'collapse' || key === 'expand') return `${key} ${JSON.stringify(values)}`;
     return key;
   },
 }));
@@ -157,16 +158,26 @@ describe('PluginSearchResults', () => {
     expect(screen.getByRole('button', { name: /Title b/ })).toHaveAttribute('aria-current', 'true');
   });
 
-  it('folds a group', () => {
-    useEmailStore.setState({ searchQuery: 'resolution', externalSearchResults: [result('crm', 'a', 'CRM')] });
+  it('folds a group by its chevron when several plugins answered', () => {
+    useEmailStore.setState({
+      searchQuery: 'resolution',
+      externalSearchResults: [result('crm', 'a', 'CRM'), result('chat', 'b')],
+    });
     render(<PluginSearchResults surface="search-results" />);
 
-    const heading = screen.getByRole('button', { name: /^CRM/ });
-    expect(heading).toHaveAttribute('aria-expanded', 'true');
-    fireEvent.click(heading);
+    const chevron = within(screen.getByRole('region', { name: 'CRM' })).getByRole('button', { name: 'collapse {"name":"CRM"}' });
+    expect(chevron).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(chevron);
 
     expect(screen.queryByText('Title a')).toBeNull();
-    expect(heading).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Title b')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'expand {"name":"CRM"}' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('has no fold for the one group of a single plugin', () => {
+    useEmailStore.setState({ searchQuery: 'resolution', externalSearchResults: [result('crm', 'a', 'CRM')] });
+    render(<PluginSearchResults surface="search-results" />);
+    expect(screen.queryByRole('button', { name: /^(collapse|expand) / })).toBeNull();
   });
 
   it('says nothing about a plugin that answers within the grace', () => {
@@ -181,7 +192,7 @@ describe('PluginSearchResults', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('holds the block\'s place with placeholder rows while a plugin takes longer, then fills it', () => {
+  it('holds the block\'s place at its share with placeholder rows while a plugin takes longer, then fills it', () => {
     vi.useFakeTimers();
     useEmailStore.setState({ searchQuery: 'resolution', externalSearchResults: [], externalSearchPending: ['crm'] });
     const { container } = render(<PluginSearchResults surface="search-results" />);
@@ -190,14 +201,18 @@ describe('PluginSearchResults', () => {
     act(() => vi.advanceTimersByTime(PENDING_GRACE_MS));
     const waiting = screen.getByRole('region', { name: 'Searching for more results…' });
     expect(waiting).toHaveAttribute('aria-busy', 'true');
-    const block = container.querySelector('[data-plugin-surface]');
-    expect(block).toHaveClass('h-48');
+    const block = container.querySelector<HTMLElement>('[data-plugin-surface]')!;
+    const share = `max(${MIN_HEIGHT}px, ${DEFAULT_SHARE * 100}%)`;
+    expect(block.style.height).toBe(share);
 
     act(() => useEmailStore.setState({ externalSearchResults: [result('crm', 'a', 'CRM')], externalSearchPending: [] }));
     expect(screen.queryByRole('region', { name: 'Searching for more results…' })).toBeNull();
     expect(screen.getByRole('region', { name: 'CRM' })).toHaveTextContent('Title a');
-    // The same height as while it waited: the list below does not move again.
-    expect(container.querySelector('[data-plugin-surface]')).toHaveClass('h-48');
+    // The share is now the most it takes, and no height of its own is left
+    // that a drag of its edge could not get past.
+    expect(block.style.height).toBe('');
+    expect(block.style.maxHeight).toBe(share);
+    expect(block).not.toHaveClass('h-48');
   });
 
   it('shows the entries of a plugin that answered beside the one still searching', () => {
@@ -225,7 +240,252 @@ describe('PluginSearchResults', () => {
     act(() => useEmailStore.setState({ searchQuery: 'two', externalSearchResults: [], externalSearchPending: ['crm'] }));
     act(() => useEmailStore.setState({ externalSearchResults: [result('crm', 'c', 'CRM')], externalSearchPending: [] }));
 
-    expect(container.querySelector('[data-plugin-surface]')).not.toHaveClass('h-48');
+    expect(container.querySelector<HTMLElement>('[data-plugin-surface]')!.style.height).toBe('');
+  });
+});
+
+// The search as two sections: the plugins' results under their heading, the
+// messages under theirs, in the row that is also the edge to drag. A click on
+// a heading gives its section the whole height, a second one the shares back.
+describe('PluginSearchResults sections', () => {
+  const LIST = 1000;
+  let blockHeight = 200;
+  let entriesHeight = 0;
+
+  beforeEach(() => {
+    localStorage.clear();
+    blockHeight = 200;
+    entriesHeight = 0;
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(LIST);
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(() => blockHeight);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(() => entriesHeight);
+    useEmailStore.setState({ searchQuery: 'resolution', externalSearchResults: [result('crm', 'a', 'CRM')] });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  const block = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-plugin-surface]')!;
+  const capped = (share: string) => `max(${MIN_HEIGHT}px, ${share})`;
+  const handle = () => screen.getByRole('separator', { name: 'resize_plugin_results' });
+  const messages = () => screen.getByRole('button', { name: 'listbox_label' });
+  const heading = () => screen.getByRole('button', { name: /^CRM/ });
+  const drag = (from: number, to: number) => {
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: from });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: to, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+  };
+
+  it('heads the messages only while plugins have results', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+
+    act(() => useEmailStore.setState({ externalSearchResults: [] }));
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('shares the list half and half until the edge is dragged', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    expect(DEFAULT_SHARE).toBe(0.5);
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
+  });
+
+  it('gives the plugins\' results the whole height on a click on their heading, the shares back on the next', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(heading());
+    expect(heading()).toHaveAttribute('aria-pressed', 'true');
+    // No share caps the block, and it may shrink to what the list has.
+    expect(block(container).style.maxHeight).toBe('');
+    expect(block(container)).toHaveClass('shrink', 'min-h-0');
+    expect(screen.getByText('Title a')).toBeInTheDocument();
+
+    fireEvent.click(heading());
+    expect(heading()).toHaveAttribute('aria-pressed', 'false');
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
+    expect(block(container)).toHaveClass('flex-shrink-0');
+  });
+
+  it('gives the messages the whole height on a click on their heading: the results down to their heading', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    expect(messages()).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('Title a')).toBeNull();
+    expect(heading()).toBeInTheDocument();
+    expect(block(container).style.maxHeight).toBe('');
+
+    fireEvent.click(messages());
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Title a')).toBeInTheDocument();
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
+  });
+
+  it('goes from one section\'s whole height straight to the other\'s', () => {
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    fireEvent.click(heading());
+    expect(heading()).toHaveAttribute('aria-pressed', 'true');
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Title a')).toBeInTheDocument();
+
+    fireEvent.click(messages());
+    expect(heading()).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByText('Title a')).toBeNull();
+  });
+
+  it('starts the next search with the shares, and keeps nothing of the whole height', () => {
+    const { unmount } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    expect(localStorage.length).toBe(0);
+
+    act(() => useEmailStore.setState({ searchQuery: 'budget', externalSearchResults: [result('crm', 'b', 'CRM')] }));
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Title b')).toBeInTheDocument();
+    unmount();
+
+    render(<PluginSearchResults surface="search-results" />);
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('starts the same search with the shares when it is run again after it was left', () => {
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+
+    act(() => useEmailStore.setState({ searchQuery: '', externalSearchResults: [] }));
+    act(() => useEmailStore.setState({ searchQuery: 'resolution', externalSearchResults: [result('crm', 'a', 'CRM')] }));
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Title a')).toBeInTheDocument();
+  });
+
+  it('starts a search by other filters with the shares, the query the same', () => {
+    useEmailStore.setState({ searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS, from: 'bob@x.test' } });
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    expect(messages()).toHaveAttribute('aria-pressed', 'true');
+
+    act(() => useEmailStore.setState({ searchFilters: { ...DEFAULT_SEARCH_FILTERS, from: 'eve@x.test' } }));
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('starts the search in another folder with the shares, query and filters the same', () => {
+    useEmailStore.setState({ searchMailboxId: 'inbox' });
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    expect(messages()).toHaveAttribute('aria-pressed', 'true');
+
+    act(() => useEmailStore.setState({ searchMailboxId: 'archive' }));
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('keeps the whole height and the share through a slip of the hand on the handle, and a key outward', async () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    blockHeight = 30;
+    drag(30, 30 + WHOLE_SLACK_PX - 1);
+    drag(30, 0);
+    fireEvent.keyDown(handle(), { key: 'ArrowUp' });
+    await act(async () => {});
+    expect(messages()).toHaveAttribute('aria-pressed', 'true');
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+
+    fireEvent.click(heading());
+    blockHeight = 950;
+    drag(950, 950 - WHOLE_SLACK_PX + 1);
+    drag(950, 990);
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    await act(async () => {});
+    expect(heading()).toHaveAttribute('aria-pressed', 'true');
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+  });
+
+  it('says the results have the whole height only while they do: not while another plugin is waited for', () => {
+    vi.useFakeTimers();
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(heading());
+    act(() => useEmailStore.setState({ externalSearchPending: ['chat'] }));
+    act(() => { vi.advanceTimersByTime(PENDING_GRACE_MS); });
+    expect(block(container).style.height).toBe(capped('50%'));
+    expect(heading()).toHaveAttribute('aria-pressed', 'false');
+
+    act(() => useEmailStore.setState({ externalSearchPending: [] }));
+    expect(heading()).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('ends the whole height with a drag that follows the pointer from the first move', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(heading());
+    // With the whole height the block is 950 px of the 1000 px list.
+    blockHeight = 950;
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 950 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 946, buttons: 1 });
+    // From the most a share gives (850 px), not from 950: four pixels up, no jump.
+    expect(block(container).style.maxHeight).toBe(capped('84.6%'));
+    expect(heading()).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.pointerUp(document, { pointerId: 1 });
+  });
+
+  it('opens the results again with a drag down from the messages\' whole height, however short', () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.4');
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    // Down to its heading the block is 30 px high, and shows no entries to measure.
+    blockHeight = 30;
+    entriesHeight = 30;
+    drag(30, 130);
+    expect(messages()).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Title a')).toBeInTheDocument();
+    expect(block(container).style.maxHeight).toBe(capped('13%'));
+  });
+
+  it('snaps a drag to half the list, from below and from above', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 200 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 500 - SNAP_PX, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 500 - SNAP_PX - 1, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped(`${50 - (SNAP_PX + 1) / 10}%`));
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 500 + SNAP_PX, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 500 + SNAP_PX + 1, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped(`${50 + (SNAP_PX + 1) / 10}%`));
+    fireEvent.pointerUp(document, { pointerId: 1 });
+  });
+
+  it('gets past half with the arrow keys', async () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    blockHeight = 495;
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    await act(async () => {});
+    // 505 px is within the snap: half.
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
+    blockHeight = 500;
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    await act(async () => {});
+    expect(block(container).style.maxHeight).toBe(capped('51%'));
+  });
+
+  it('takes the default share again on a double click of the handle', () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.7');
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(heading());
+    fireEvent.doubleClick(handle());
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
+    expect(heading()).toHaveAttribute('aria-pressed', 'false');
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBeNull();
+  });
+
+  it('keeps the handle\'s value within its limits whatever height the block has', () => {
+    render(<PluginSearchResults surface="search-results" />);
+    blockHeight = 30;
+    fireEvent.click(messages());
+    expect(Number(handle().getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(MIN_HEIGHT);
+  });
+
+  it('keeps the chevrons away while the messages have the whole height', () => {
+    useEmailStore.setState({ externalSearchResults: [result('crm', 'a', 'CRM'), result('chat', 'b')] });
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(messages());
+    expect(screen.queryByRole('button', { name: /^(collapse|expand) / })).toBeNull();
+    expect(screen.queryByText('Title b')).toBeNull();
   });
 });
 
@@ -283,6 +543,96 @@ describe('PluginSearchResults height', () => {
     fireEvent.pointerMove(document, { pointerId: 1, clientY: 0, buttons: 1 });
     expect(block(container).style.maxHeight).toBe(capped(`${(MIN_HEIGHT / LIST) * 100}%`));
     fireEvent.pointerUp(document, { pointerId: 1 });
+  });
+
+  it('follows a drag down and up after a plugin that took longer answered', () => {
+    vi.useFakeTimers();
+    useEmailStore.setState({ externalSearchResults: [], externalSearchPending: ['crm'] });
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    act(() => vi.advanceTimersByTime(PENDING_GRACE_MS));
+    act(() => useEmailStore.setState({ externalSearchResults: [result('crm', 'a', 'CRM')], externalSearchPending: [] }));
+
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 200 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 700, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('70%'));
+    expect(block(container).style.height).toBe('');
+
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 100, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('10%'));
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.100');
+  });
+
+  it('follows a drag while it still waits, as its height', () => {
+    vi.useFakeTimers();
+    useEmailStore.setState({ externalSearchResults: [], externalSearchPending: ['crm'] });
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    act(() => vi.advanceTimersByTime(PENDING_GRACE_MS));
+
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 200 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 500, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.height).toBe(capped('50%'));
+  });
+
+  it('grows no further than its entries need, and keeps that', () => {
+    // Its entries are 300 px high and it had 20 % of the list: the edge stops at 300 px.
+    localStorage.setItem('pluginSearchResultsShare', '0.2');
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(300);
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 200 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 800, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('30%'));
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.300');
+  });
+
+  it('keeps a larger share when a search with few results is dragged down', () => {
+    // Two entries, 120 px, in a block that may take 60 %: nothing to grow into.
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(120);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120);
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 120 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 170, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('60%'));
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+  });
+
+  it('keeps a larger share when a drag on a search with few results comes back to where it began', () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(120);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120);
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 120 });
+    // Sideways only, then down and back: the edge never left the entries' end.
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 120, clientX: 40, buttons: 1 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 150, buttons: 1 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 120, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+  });
+
+  it('keeps a larger share when a search with few results gets an arrow key', async () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(120);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120);
+    render(<PluginSearchResults surface="search-results" />);
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    await act(async () => {});
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBe('0.600');
+  });
+
+  it('shrinks below its entries when dragged up', () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.6');
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(300);
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 300 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 200, buttons: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(block(container).style.maxHeight).toBe(capped('20%'));
   });
 
   it('takes the default again on a double click', () => {

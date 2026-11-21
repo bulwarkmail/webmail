@@ -16,6 +16,8 @@ interface UseDisplayHoursOptions {
   /** The sticky header above the hour rows, whose height the rows don't get. */
   headerRef?: RefObject<HTMLElement | null>;
   revealAt?: RevealTime | null;
+  /** True while the pane is hidden (an inactive Pro tab): its height is then not measured (#1762). */
+  isHidden?: () => boolean;
 }
 
 /** Room above an hour line for the label centred on it, in pixels. */
@@ -40,7 +42,7 @@ export function fillHourHeight(min: number, available: number, hourCount: number
  * place when the range or the row height changes underneath it. Rows fill
  * the pane when the hours are fewer than it has room for.
  */
-export function useDisplayHours({ scrollRef, minHourHeight, headerRef, revealAt }: UseDisplayHoursOptions) {
+export function useDisplayHours({ scrollRef, minHourHeight, headerRef, revealAt, isHidden }: UseDisplayHoursOptions) {
   const limitHours = useSettingsStore((s) => s.calendarLimitHours);
   const startHour = useSettingsStore((s) => s.calendarDayStartHour);
   const endHour = useSettingsStore((s) => s.calendarDayEndHour);
@@ -59,6 +61,7 @@ export function useDisplayHours({ scrollRef, minHourHeight, headerRef, revealAt 
     const root = scrollRef.current;
     if (!root) return;
     const measure = () => {
+      if (isHidden?.()) return;
       const headerHeight = headerRef?.current?.offsetHeight ?? 0;
       setAvailable(Math.max(0, root.clientHeight - headerHeight));
       // Where an event's title sticks while its block runs above the visible
@@ -71,7 +74,7 @@ export function useDisplayHours({ scrollRef, minHourHeight, headerRef, revealAt 
     observer.observe(root);
     if (headerRef?.current) observer.observe(headerRef.current);
     return () => observer.disconnect();
-  }, [scrollRef, headerRef]);
+  }, [scrollRef, headerRef, isHidden]);
   const hourHeight = fillHourHeight(minHourHeight, available, hourCount);
 
   // Opens an hour before now, once. Rows of any other height than the

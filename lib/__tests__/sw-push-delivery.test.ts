@@ -80,10 +80,30 @@ describe('a state-change push naming several accounts', () => {
     expect(previews.map((url) => url.searchParams.get('accountId'))).toEqual(['me']);
   });
 
-  it('still shows something for a ping without new mail in it', async () => {
-    const { push, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }));
-    await push(stateChange({ me: { Mailbox: 's1' } }));
-    expect(previews.map((url) => url.searchParams.get('accountId'))).toEqual(['me']);
+  it('answers a ping without new mail in it quietly, without looking anything up', async () => {
+    const shown: Array<{ title: string; options: Record<string, unknown> }> = [];
+    const { push, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), {
+      registration: {
+        showNotification: async (title: string, options: Record<string, unknown>) => { shown.push({ title, options }); },
+      },
+    });
+    await push(stateChange({ me: { Mailbox: 's1', Email: 's1', Thread: 's1' } }));
+    expect(previews).toEqual([]);
+    // Every push still ends in a notification, or Safari drops the subscription.
+    expect(shown).toHaveLength(1);
+    expect(shown[0].options).toMatchObject({ silent: true, renotify: false });
+  });
+
+  it('does not ring a generic "New mail" for a ping without new mail when the preview would fail (#1650)', async () => {
+    const shown: Array<{ title: string; options: Record<string, unknown> }> = [];
+    const { push } = loadWorker(() => { throw new Error('preview down'); }, {
+      registration: {
+        showNotification: async (title: string, options: Record<string, unknown>) => { shown.push({ title, options }); },
+      },
+    });
+    await push(stateChange({ me: { Email: 's1', Mailbox: 's1' } }));
+    expect(shown.length).toBeGreaterThan(0);
+    for (const n of shown) expect(n.options).toMatchObject({ silent: true });
   });
 });
 

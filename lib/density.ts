@@ -66,3 +66,12 @@ export const MOUNTAIN_VIEW_DENSITY: Record<Density, DensityVars> = {
 export function densityVarsFor(density: Density, layout: InterfaceLayout): DensityVars {
   return (layout === 'mountain-view' ? MOUNTAIN_VIEW_DENSITY : DEFAULT_DENSITY)[density];
 }
+
+/**
+ * Whether list rows draw the attachment chips. Compact and extra-compact rows
+ * keep one line, as in Gmail: the paperclip next to the date marks the
+ * attachment, and the chips come back at regular and comfortable (#1706).
+ */
+export function densityShowsAttachmentChips(density: Density): boolean {
+  return density === 'regular' || density === 'comfortable';
+}

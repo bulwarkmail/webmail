@@ -15,10 +15,17 @@ vi.mock('@/lib/filters/quick-rule-target', () => ({
 }));
 
 const runPresetRule = vi.fn(async () => {});
+const openRuleWithSenders = vi.fn(async () => {});
 vi.mock('@/lib/filters/quick-rule-flow', () => ({
   runPresetRule: (...args: unknown[]) => runPresetRule(...(args as [])),
+  openRuleWithSenders: (...args: unknown[]) => openRuleWithSenders(...(args as [])),
   ensureFiltersStatus: () => {},
   openFilterSettings: async () => {},
+}));
+
+const readAccountFilters = vi.fn(async () => ({ parsed: { isOpaque: false, rules: [] } }));
+vi.mock('@/lib/filters/account-filters', () => ({
+  readAccountFilters: (...args: unknown[]) => readAccountFilters(...(args as [])),
 }));
 
 const { RulesContextSubMenu } = await import('../rules-menu');
@@ -68,9 +75,57 @@ describe('Rules entry of the message menu', () => {
   beforeEach(() => {
     targets.clear();
     runPresetRule.mockClear();
+    openRuleWithSenders.mockClear();
+    readAccountFilters.mockReset();
+    readAccountFilters.mockResolvedValue({ parsed: { isOpaque: false, rules: [] } });
     useAuthStore.setState({ client } as never);
     useFilterStore.setState({ selectedAccountId: 'a', isSupported: true, isLoading: false, error: null, isOpaque: false });
     useSettingsStore.setState({ emailKeywords: [{ id: 'work', label: 'Work', color: 'blue' }] } as never);
+  });
+
+  it('offers editable existing rules and opens the selected one with the message sender', async () => {
+    const t = target();
+    targets.set('e1', t);
+    const existing = {
+      id: 'existing',
+      name: 'Newsletters',
+      enabled: true,
+      matchType: 'all',
+      conditions: [{ field: 'subject', comparator: 'contains', value: 'weekly' }],
+      actions: [{ type: 'mark_read' }],
+      stopProcessing: false,
+    };
+    readAccountFilters.mockResolvedValue({
+      parsed: {
+        isOpaque: false,
+        rules: [
+          existing,
+          { ...existing, id: 'external', name: 'External', origin: 'external' },
+          // Needs both: a From condition added here would narrow it to Anna's mail.
+          {
+            ...existing,
+            id: 'both',
+            name: 'Both',
+            conditions: [...existing.conditions, { field: 'to', comparator: 'contains', value: 'team@' }],
+          },
+        ],
+      },
+    } as never);
+    renderMenu(email('e1'));
+    openRules();
+    expect(screen.getByTestId('rules:add-sender').getAttribute('title')).toBe('anna@acme.com');
+    fireEvent.mouseEnter(screen.getByTestId('rules:add-sender').parentElement!);
+    const item = await screen.findByTestId('rules:add-sender:existing');
+    expect(screen.queryByTestId('rules:add-sender:external')).toBeNull();
+    expect(screen.queryByTestId('rules:add-sender:both')).toBeNull();
+    fireEvent.click(item);
+    expect(openRuleWithSenders).toHaveBeenCalledWith(
+      t,
+      'existing',
+      [{ email: 'anna@acme.com', name: 'Anna Schmidt' }],
+      'inbox',
+      expect.any(Object),
+    );
   });
 
   it('is hidden for an account without Sieve', () => {

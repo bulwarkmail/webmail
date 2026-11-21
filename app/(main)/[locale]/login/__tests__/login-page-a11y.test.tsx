@@ -178,4 +178,19 @@ describe('login form accessibility', () => {
     expect(useLocaleStore.getState().locale).toBe('de');
     expect(signedOutChoices()).toContain('locale');
   }, 30_000);
+
+  // #689: in Arabic, Hebrew or Persian the page is right to left, but an
+  // address, a password and a code read left to right.
+  it('keeps the sign-in fields left to right, with the password clear of its toggle', async () => {
+    const username = await renderForm();
+    fireEvent.click(screen.getByRole('button', { name: 'totp_toggle' }));
+    const password = screen.getByLabelText('password_label');
+    for (const field of [username, password, screen.getByLabelText('totp_label')]) {
+      expect(field).toHaveAttribute('dir', 'ltr');
+    }
+    // The toggle sits at the page's end, the left in RTL; the field's own
+    // padding follows its ltr direction, so the RTL side needs its own.
+    expect(screen.getByRole('button', { name: 'show_password' }).className).toContain('end-3');
+    expect(password.className).toContain('rtl:ps-10');
+  }, 30_000);
 });

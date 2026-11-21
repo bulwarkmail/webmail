@@ -17,6 +17,8 @@ import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import { bumpStoreEpoch } from '@/lib/store-epoch';
 import { useAccountSecurityStore } from '@/stores/account-security-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { resetTeamMailboxStore } from '@/stores/team-mailbox-store';
+import { clearTeamListFilter } from '@/lib/team-mailboxes/list-filter';
 
 // Minimal snapshot shapes - we only capture what we need
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,6 +85,7 @@ export function snapshotAccount(accountId: string): void {
     identity: {
       identities: [...identityState.identities],
       preferredPrimaryId: identityState.preferredPrimaryId,
+      preferredPrimaryAccountId: identityState.preferredPrimaryAccountId,
     },
     vacation: {
       isEnabled: vacationState.isEnabled,
@@ -172,15 +175,19 @@ export function clearAllStores(): void {
   // from the mail view, then navigate to Files). Clearing centrally makes the
   // reset happen on every switch path, not just the one the component observes.
   useFileStore.getState().clearClient();
+  // Team notes are per login: their texts, the seen marks and the chosen
+  // team filter go with the account (they load again on the next visit).
+  resetTeamMailboxStore();
+  clearTeamListFilter();
 }
 
 /**
  * Drops what the mail list still shows of a login that was signed out while
  * another one stays active: the login's folder, when the Pro sidebar had it
  * open (`viewingAccountId`), for the active login's Inbox, and the login's
- * rows of a list that mixes accounts. Without the login's client every
- * action on those rows fell back to the active login's, where the same ids
- * name other messages: deleting them deleted the active login's mail.
+ * rows, its open message and its open conversations in a list that mixes
+ * accounts. Without the login's client nothing done to them could reach its
+ * server, and through any other login the same ids name other messages.
  */
 export function forgetAccountRows(accountId: string, activeClient: IJMAPClient | null): void {
   const state = useEmailStore.getState();
@@ -192,12 +199,16 @@ export function forgetAccountRows(accountId: string, activeClient: IJMAPClient |
     return;
   }
   const gone = (email: { sourceClientAccountId?: string } | null) => email?.sourceClientAccountId === accountId;
-  if (!state.emails.some(gone) && !gone(state.selectedEmail)) return;
+  // emailKeyFor and threadKeyFor: "<login>/<account>:<id>".
+  const goneKey = (key: string) => key.startsWith(`${accountId}/`);
+  const openThreads = [...state.expandedThreadIds, ...state.threadEmailsCache.keys()];
+  if (!state.emails.some(gone) && !gone(state.selectedEmail) && !openThreads.some(goneKey)) return;
   useEmailStore.setState((s) => ({
     emails: s.emails.filter((email) => !gone(email)),
     selectedEmail: gone(s.selectedEmail) ? null : s.selectedEmail,
-    // emailKeyFor: "<login>/<account>:<id>".
-    selectedEmailKeys: new Set([...s.selectedEmailKeys].filter((key) => !key.startsWith(`${accountId}/`))),
+    selectedEmailKeys: new Set([...s.selectedEmailKeys].filter((key) => !goneKey(key))),
+    expandedThreadIds: new Set([...s.expandedThreadIds].filter((key) => !goneKey(key))),
+    threadEmailsCache: new Map([...s.threadEmailsCache].filter(([key]) => !goneKey(key))),
   }));
 }
 

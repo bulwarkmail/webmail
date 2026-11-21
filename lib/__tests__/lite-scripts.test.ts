@@ -702,16 +702,22 @@ describe('Stalwart target: the entry document', () => {
   // Stalwart sends no security headers for an Application: the entry carries
   // its own policy and refuses to run in another origin's frame.
   it('carries a CSP ahead of its script and refuses foreign frames', () => {
-    const csp = buildStalwartEntryCsp();
-    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    // No inline script runs but the entry's own, allowed by its hash: the
+    // shells it writes in load their scripts as files.
+    const hashes = inlineScriptHashes(html);
+    expect(hashes).toHaveLength(1);
+    const csp = buildStalwartEntryCsp(hashes);
+    expect(csp).toContain(`script-src 'self' ${hashes[0]};`);
+    expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'self'");
     expect(csp).not.toContain('frame-ancestors'); // ignored in a <meta>
     const meta = `<meta http-equiv="Content-Security-Policy" content="${csp}" />`;
     expect(html.indexOf(meta)).toBeGreaterThan(-1);
     expect(html.indexOf(meta)).toBeLessThan(html.indexOf('<script>'));
-    expect(html).toContain('window.top.location.origin !== location.origin');
-    expect(html).toMatch(/if \(foreignFrame\) return fail\(/);
+    // Every frame above counts (isForeignFrame), not only the top one.
+    expect(html).toContain('w.parent.location.origin !== win.location.origin');
+    expect(html).toMatch(/if \(isForeignFrame\(window, ""\)\) return fail\(/);
   });
 
   it('survives both Stalwart rewrites, including the pre-0.16.19 replace-all', () => {
@@ -776,6 +782,24 @@ describe('Stalwart target: the entry document', () => {
     expect(readme).toMatch(/The next restart,\s+`UpdateApps` or reload of the Applications \(the other nodes of a cluster\s+reload them after `UpdateApps`\) downloads `resourceUrl` again and mounts the\s+bundle once that works\./);
     expect(readme).toMatch(/On every version, a restart after the cached copy\s+has expired/);
     expect(readme).toMatch(/check that `resourceUrl` downloads before running\s+`UpdateApps`/);
+  });
+
+  it('says that tokens are sealed and what shares the origin, with the headers a proxy should send', () => {
+    const readme = buildStalwartReadme({ version: '1.10.0', commit: 'abc1234', locales: ['en'], buildId: 'b' });
+    const security = readme.slice(readme.indexOf('## Security'), readme.indexOf('## Branding'));
+    expect(security).toContain('`/dav/`');
+    expect(security).toContain('`/jmap/download/`');
+    expect(security).toMatch(/```\nContent-Security-Policy: sandbox\nX-Content-Type-Options: nosniff\n```/);
+    expect(security).toMatch(/stored sealed/);
+    expect(security).toMatch(/must not limit `script-src`/);
+    expect(security).toMatch(/static zip on a host name of\s+its own is the safer choice/);
+    expect(readme).toMatch(/Either way it is stored sealed/);
+
+    const statics = buildReadme({ version: '1.10.0', commit: 'abc1234', basePath: '', locales: ['en'] });
+    expect(statics).not.toContain('a plain token');
+    expect(statics).not.toMatch(/Both are readable by\s+any script/);
+    expect(statics).toMatch(/Tokens are stored sealed/);
+    expect(statics).toMatch(/a host name of its\s+own/);
   });
 
   it('names the web admin action, asks for HTTPS and keeps single sign-on off the missing list', () => {

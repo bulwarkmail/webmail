@@ -11,12 +11,24 @@ import { slotSpec } from '../plugin-slot-catalog';
 export const ALWAYS_ASK_USER: ReadonlySet<string> = new Set(['keystore']);
 
 /**
+ * Permissions a released plugin needs but whose manifest predates them. The
+ * External Link Warning plugin checks links through onBeforeExternalLink,
+ * and its 2.0.0 manifest declares only `http:proxy`: without `links:check`
+ * links would open unchecked. Granted only while an admin installed it, and
+ * only until a release declares the permission itself.
+ */
+const PREDATING_MANIFESTS: ReadonlyMap<string, readonly Permission[]> = new Map([
+  ['external-link-warning', ['links:check']],
+]);
+
+/**
  * Whether `plugin` may use `perm`: the manifest must declare it, and an
  * admin must have installed the plugin (managed) or the user must have
  * granted it in the consent dialog. Implicit permissions always pass.
  */
 export function pluginHasPermission(plugin: InstalledPlugin, perm: Permission): boolean {
   if ((IMPLICIT_PERMISSIONS as readonly string[]).includes(perm)) return true;
+  if (plugin.managed && PREDATING_MANIFESTS.get(plugin.id)?.includes(perm)) return true;
   if (!plugin.permissions.includes(perm)) return false;
   // Defense-in-depth: even if the manifest declares a permission, the host
   // refuses it unless an admin has marked the plugin as managed, or the user

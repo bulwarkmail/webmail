@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { appendFile, mkdir, open, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { assertDocId, assertKey, assertName, toBuffer, versionOf } from './keys';
+import { StoreUnavailableError } from './types';
 import type {
   AppendLog,
   CollectionOptions,
@@ -34,7 +35,11 @@ import type {
 interface LocalState {
   kv: Map<string, { value: string; expiresAt: number }>;
   kvSets: number;
+  /** No kv entry expires before this (a lower bound), so a full map needn't be scanned before then. */
+  kvNextExpiry: number;
   counters: Map<string, { count: number; resetAt: number }>;
+  /** The same for counters. */
+  counterNextExpiry: number;
   queues: Map<string, Promise<unknown>>;
   pruned: Map<string, number>;
   leases: Map<string, { holder: string; expiresAt: number }>;
@@ -43,7 +48,17 @@ interface LocalState {
 }
 
 const STATE_KEY = Symbol.for('bulwark.sharedStore.local');
+/**
+ * At most this many counters and kv entries are held. Expired ones are
+ * dropped to make room; a live one never is, so a flood of new keys can't
+ * make the store forget a limit that was reached (the admin sign-in ceiling
+ * across all clients, say). With no room left, a new counter is refused,
+ * which its caller reads as "limit reached", and a new kv entry fails with
+ * StoreUnavailableError, which callers already treat as "can't be done right
+ * now". Both make room again as entries expire.
+ */
 const MAX_COUNTERS = 50_000;
+const MAX_KV_ENTRIES = 50_000;
 
 function state(): LocalState {
   const g = globalThis as typeof globalThis & { [STATE_KEY]?: LocalState };
@@ -51,7 +66,9 @@ function state(): LocalState {
     g[STATE_KEY] = {
       kv: new Map(),
       kvSets: 0,
+      kvNextExpiry: Infinity,
       counters: new Map(),
+      counterNextExpiry: Infinity,
       queues: new Map(),
       pruned: new Map(),
       leases: new Map(),
@@ -90,15 +107,32 @@ function kvLive(key: string, now = Date.now()): { value: string; expiresAt: numb
   return entry;
 }
 
+/** Drop the expired kv entries; returns the earliest expiry left. */
+function kvDropExpired(now: number): number {
+  let next = Infinity;
+  for (const [key, entry] of state().kv) {
+    if (entry.expiresAt <= now) state().kv.delete(key);
+    else if (entry.expiresAt < next) next = entry.expiresAt;
+  }
+  return next;
+}
+
 function kvSweep(): void {
   const s = state();
   if (++s.kvSets % 1000 !== 0) return;
-  const now = Date.now();
-  for (const [key, entry] of s.kv) if (entry.expiresAt <= now) s.kv.delete(key);
+  s.kvNextExpiry = kvDropExpired(Date.now());
 }
 
 function kvWrite(key: string, value: string, ttlMs: number | undefined): void {
-  state().kv.set(key, { value, expiresAt: ttlMs && ttlMs > 0 ? Date.now() + ttlMs : Infinity });
+  const s = state();
+  const now = Date.now();
+  if (!s.kv.has(key) && s.kv.size >= MAX_KV_ENTRIES) {
+    if (now >= s.kvNextExpiry) s.kvNextExpiry = kvDropExpired(now);
+    if (s.kv.size >= MAX_KV_ENTRIES) throw new StoreUnavailableError('The local store is full');
+  }
+  const expiresAt = ttlMs && ttlMs > 0 ? now + ttlMs : Infinity;
+  s.kv.set(key, { value, expiresAt });
+  if (expiresAt < s.kvNextExpiry) s.kvNextExpiry = expiresAt;
   kvSweep();
 }
 
@@ -144,17 +178,32 @@ function counterLive(key: string, now: number): { count: number; resetAt: number
   return entry;
 }
 
-function counterPrune(now: number): void {
-  const counters = state().counters;
-  if (counters.size < MAX_COUNTERS) return;
-  for (const [key, entry] of counters) if (entry.resetAt <= now) counters.delete(key);
-  // Still full of live windows: drop the oldest.
-  while (counters.size >= MAX_COUNTERS) {
-    const oldest = counters.keys().next().value;
-    if (oldest === undefined) break;
-    counters.delete(oldest);
+/**
+ * Whether `newKeys` more counters fit, after dropping expired ones. Live
+ * counters are never dropped (see MAX_COUNTERS).
+ */
+function counterRoom(newKeys: number, now: number): boolean {
+  const s = state();
+  if (s.counters.size + newKeys <= MAX_COUNTERS) return true;
+  // Nothing has expired yet: skip the scan, so a full store costs nothing per request.
+  if (now < s.counterNextExpiry) return false;
+  let next = Infinity;
+  for (const [key, entry] of s.counters) {
+    if (entry.resetAt <= now) s.counters.delete(key);
+    else if (entry.resetAt < next) next = entry.resetAt;
   }
+  s.counterNextExpiry = next;
+  return s.counters.size + newKeys <= MAX_COUNTERS;
 }
+
+function counterSet(key: string, entry: { count: number; resetAt: number }): void {
+  const s = state();
+  s.counters.set(key, entry);
+  if (entry.resetAt < s.counterNextExpiry) s.counterNextExpiry = entry.resetAt;
+}
+
+/** A counter the store had no room for: more than any limit, never stored. */
+const NO_ROOM = Number.MAX_SAFE_INTEGER;
 
 const counters: CounterStore = {
   async reserve(limits: CounterLimit[], now = Date.now()): Promise<ReserveResult> {
@@ -171,12 +220,17 @@ const counters: CounterStore = {
         retryAfterMs = Math.max(retryAfterMs, entry.resetAt - now);
       }
     });
-    if (!ok) return { ok, retryAfterMs, counts: current.map((e) => e?.count ?? 0), resetAts: current.map((e) => e?.resetAt ?? 0) };
-    counterPrune(now);
+    const refused = () => ({ ok: false, retryAfterMs, counts: current.map((e) => e?.count ?? 0), resetAts: current.map((e) => e?.resetAt ?? 0) });
+    if (!ok) return refused();
+    const newKeys = new Set(limits.map((limit) => limit.key).filter((key) => !state().counters.has(key))).size;
+    if (newKeys > 0 && !counterRoom(newKeys, now)) {
+      retryAfterMs = Math.max(1, state().counterNextExpiry - now);
+      return refused();
+    }
     const after = limits.map((limit, i) => {
       const entry = current[i] ?? { count: 0, resetAt: now + limit.windowMs };
       entry.count++;
-      state().counters.set(limit.key, entry);
+      counterSet(limit.key, entry);
       return entry;
     });
     return { ok, retryAfterMs: 0, counts: after.map((e) => e.count), resetAts: after.map((e) => e.resetAt) };
@@ -192,10 +246,10 @@ const counters: CounterStore = {
   },
   async hit(key, windowMs, now = Date.now()) {
     assertKey(key);
-    counterPrune(now);
+    if (!state().counters.has(key) && !counterRoom(1, now)) return { count: NO_ROOM, resetAt: now + windowMs };
     const entry = counterLive(key, now) ?? { count: 0, resetAt: now + windowMs };
     entry.count++;
-    state().counters.set(key, entry);
+    counterSet(key, entry);
     return { count: entry.count, resetAt: entry.resetAt };
   },
   async get(key, now = Date.now()) {

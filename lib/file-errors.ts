@@ -1,10 +1,12 @@
 import { jmapError, jmapErrorProperties, jmapErrorType, type JmapError } from '@/lib/jmap/jmap-error';
+import { uploadRateLimit } from '@/lib/jmap/upload-errors';
 
 /**
  * Why a FileNode write failed, from the SetError the JMAP client threw
  * (see jmapError), for the Files toasts to explain under their own title.
+ * `rateLimited` is an upload refused with HTTP 429 (see uploadRateLimit).
  */
-export type FileErrorKind = 'overQuota' | 'tooDeep' | 'invalidName' | 'forbidden' | 'tooLarge';
+export type FileErrorKind = 'overQuota' | 'tooDeep' | 'invalidName' | 'forbidden' | 'tooLarge' | 'rateLimited';
 
 // Stalwart 1.0's description for a node past maxFileNodeDepth.
 const TOO_DEEP = 'Maximum folder depth exceeded.';
@@ -37,6 +39,7 @@ export function isPartialCopy(error: unknown): boolean {
 }
 
 export function fileErrorKind(error: unknown): FileErrorKind | null {
+  if (uploadRateLimit(error)) return 'rateLimited';
   switch (jmapErrorType(error)) {
     // Stalwart 1.0, once an administrator limits files or folders per account.
     case 'overQuota':

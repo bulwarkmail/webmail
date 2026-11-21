@@ -288,7 +288,8 @@ describe("Delete, from the desktop app's toast", () => {
   it('goes through the store when the message is in the list, with its hooks and the Delete setting', async () => {
     listed = [{ id: 'e1' }];
     expect(await run({ action: 'delete' })).toEqual(['accepted', 'done']);
-    expect(deleteEmail).toHaveBeenCalledWith(clients['alice@one'], 'e1');
+    // Named by its login and account: a listed row of another account can have its id.
+    expect(deleteEmail).toHaveBeenCalledWith(clients['alice@one'], 'e1', false, undefined, expect.objectContaining({ clientAccountId: 'alice@one', accountId: 'a' }));
     expect(clients['alice@one'].batchMoveEmails).not.toHaveBeenCalled();
   });
 

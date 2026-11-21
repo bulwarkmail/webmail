@@ -111,13 +111,14 @@ export const LoginServerField = forwardRef<HTMLInputElement, LoginServerFieldPro
           ref={ref}
           id="jmap-endpoint"
           type="text"
+          dir="ltr"
           inputMode="url"
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
+          className="rtl:text-right aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
           placeholder={t("server_placeholder")}
           aria-invalid={error ? true : undefined}
           aria-describedby={[error ? errorId : null, notFound || changing ? hintId : null].filter(Boolean).join(" ") || undefined}

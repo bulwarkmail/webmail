@@ -36,7 +36,8 @@ describe('list requests', () => {
     await client.getSomeEmails(['m1']);
     await client.getEmails('inbox');
     expect(gets.length).toBeGreaterThanOrEqual(2);
-    for (const args of gets) {
+    // The drafts' conversations (#1798) are read with ids and thread ids only.
+    for (const args of gets.filter((g) => String(g.properties) !== 'id,threadId')) {
       expect(args.properties).not.toContain('attachments');
       expect(args.properties).toContain('blobId');
       expect(args.properties).toContain('hasAttachment');

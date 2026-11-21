@@ -34,12 +34,22 @@ describe('the schema', () => {
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
       'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'BrowserSignIn', 'WipeOfflineData',
       'OpenWithEnabled', 'DeveloperToolsAvailability', 'RecentFilesInAttach', 'FilesDriveEnabled', 'FilesFolderSyncEnabled', 'FilesDriveLetter',
+      'ComposeInNewWindow',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
       expect(title.en && title.de && description.en && description.de, key).toBeTruthy();
       expect(description.en, key).not.toBe(description.de);
     }
+  });
+});
+
+describe('writing messages in a new window', () => {
+  it('is off when not set, takes a recommendation, and the page sees whether it is forced', () => {
+    expect(resolvePolicies(layers({})).ComposeInNewWindow).toMatchObject({ value: false, locked: false, source: 'default' });
+    expect(resolvePolicies(layers({ recommendedUser: { ComposeInNewWindow: 1 } })).ComposeInNewWindow).toMatchObject({ value: true, locked: false });
+    const page = pagePolicySnapshot(resolvePolicies(layers({ forcedMachine: { ComposeInNewWindow: 1 } })));
+    expect(page.ComposeInNewWindow).toMatchObject({ value: true, locked: true });
   });
 });
 

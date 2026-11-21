@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, Sparkles } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
-import { DEFAULT_OAUTH_SCOPES, STALWART_SCOPE_FULL } from '@/lib/oauth/scopes';
+import { DEFAULT_OAUTH_SCOPES } from '@/lib/oauth/scopes';
+import { oauthSetupSuccessMessage } from '@/lib/admin/oauth-setup-message';
+import { isStalwartApiKey } from '@/lib/stalwart/api-key';
 import { SettingsSection, SettingItem, SectionNav } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
@@ -16,6 +18,9 @@ import { withEdit } from '@/lib/admin/edits';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { ConfigTextItem, ConfigToggleItem, ConfigSelectItem, inputClass } from '@/components/admin/config-items';
 import { cn } from '@/lib/utils';
+import type { AdminAccountEntry } from '@/lib/admin/admin-accounts';
+import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
+import { AdminAccountsSection, type AdminAccountServerOption } from './_admin-accounts-section';
 
 interface ConfigEntry {
   // Sensitive keys (sessionSecret, oauthClientSecret) come back with
@@ -57,8 +62,9 @@ export function AuthPage() {
     return () => window.removeEventListener('focus', checkSignIn);
   }, []);
 
+  // Only the first load shows the skeleton: swapping the page out after a
+  // save would throw away the scroll position.
   async function fetchConfig() {
-    setLoading(true);
     try {
       const res = await apiFetch('/api/admin/config');
       if (!res.ok) throw new Error();
@@ -117,16 +123,46 @@ export function AuthPage() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [setupOrigin, setSetupOrigin] = useState('');
   const [setupIssuer, setSetupIssuer] = useState('');
+  const [setupIssuerDiscovered, setSetupIssuerDiscovered] = useState(false);
+  const setupIssuerTyped = useRef(false);
   const [setupOauthOnly, setSetupOauthOnly] = useState(false);
+  // A Stalwart admin's own sign-in, asked for when no mail account is signed
+  // in here or Stalwart refused the session's token (1.0.3 and later, #1611).
+  // Sent with this one request and never kept beyond the open dialog.
+  const [setupNeedsCredential, setSetupNeedsCredential] = useState(false);
+  const [setupUsername, setSetupUsername] = useState('');
+  const [setupSecret, setSetupSecret] = useState('');
 
   function openSetupDialog() {
     if (typeof window === 'undefined') return;
     const origin = window.location.origin;
     const jmapUrl = (currentValue('jmapServerUrl') as string | undefined)?.replace(/\/+$/, '') || '';
+    const guess = jmapUrl || origin;
     setSetupOrigin(origin);
-    setSetupIssuer(jmapUrl || origin);
+    setSetupIssuer(guess);
+    setSetupIssuerDiscovered(false);
+    setupIssuerTyped.current = false;
+    // Stalwart's public URL can be another host than the JMAP URL; its
+    // discovery document names the issuer. Replaces the guess unless the
+    // admin has typed over it by then.
+    apiFetch('/api/admin/oauth/setup?discover=issuer')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (typeof data?.issuerUrl !== 'string' || setupIssuerTyped.current) return;
+        setSetupIssuer(data.issuerUrl);
+        setSetupIssuerDiscovered(true);
+      })
+      .catch(() => {});
     setSetupOauthOnly(currentValue('oauthOnly') === true);
+    setSetupNeedsCredential(setupSignIn?.signedIn === false);
+    setSetupUsername(setupSignIn?.username ?? '');
+    setSetupSecret('');
     setSetupOpen(true);
+  }
+
+  function closeSetupDialog() {
+    setSetupSecret('');
+    setSetupOpen(false);
   }
 
   async function handleAutoSetup() {
@@ -140,25 +176,17 @@ export function AuthPage() {
           origin: setupOrigin.trim().replace(/\/+$/, ''),
           issuerUrl: setupIssuer.trim().replace(/\/+$/, ''),
           oauthOnly: setupOauthOnly,
+          ...(setupNeedsCredential && setupSecret
+            ? { stalwartUsername: setupUsername.trim(), stalwartSecret: setupSecret }
+            : {}),
         }),
       });
       const data = await res.json();
+      if (data.needsAdminCredential) setSetupNeedsCredential(true);
       if (res.ok) {
-        const mobile = data.mobileClient === 'created' || data.mobileClient === 'updated'
-          ? ` Bulwark Mobile client ${data.mobileClient} (${data.mobileClientId}, ${data.mobileRedirectUri}).`
-          : data.mobileClient === 'failed'
-            ? ` Stalwart refused the Bulwark Mobile client (${data.mobileClientId}); the app registers its own instead, without access to account settings.`
-            : '';
-        const scopes: string[] = Array.isArray(data.stalwartScopes) ? data.stalwartScopes : [];
-        const limited = scopes.length > 0 && !scopes.includes(STALWART_SCOPE_FULL)
-          ? ' Only a Stalwart superuser can allow full access, so the client got security and settings access; the admin panel stays out of reach through SSO.'
-          : '';
-        setMessage({
-          type: 'success',
-          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}${limited}`,
-        });
+        setMessage({ type: 'success', text: oauthSetupSuccessMessage(data) });
         setEdits({});
-        setSetupOpen(false);
+        closeSetupDialog();
         await fetchConfig();
       } else {
         const detail = data.detail ? ` (${typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail).slice(0, 200)})` : '';
@@ -173,6 +201,18 @@ export function AuthPage() {
 
   const setupOriginValid = /^https?:\/\/[^/]+$/.test(setupOrigin.trim().replace(/\/+$/, ''));
   const setupIssuerValid = /^https?:\/\/[^/]+$/.test(setupIssuer.trim().replace(/\/+$/, ''));
+  // An API key names its account; a password needs the username with it.
+  const setupCredentialReady = !setupNeedsCredential
+    || (setupSecret.length > 0 && (isStalwartApiKey(setupSecret) || setupUsername.trim().length > 0));
+
+  // The mail servers an admin account entry can be tied to.
+  const adminAccountServers: AdminAccountServerOption[] = [];
+  const globalServerUrl = typeof config.jmapServerUrl?.value === 'string' ? config.jmapServerUrl.value.trim() : '';
+  if (globalServerUrl) adminAccountServers.push({ url: globalServerUrl, label: globalServerUrl });
+  for (const server of Array.isArray(config.jmapServers?.value) ? config.jmapServers.value as JmapServerEntry[] : []) {
+    if (!server?.url || adminAccountServers.some((s) => s.url === server.url)) continue;
+    adminAccountServers.push({ url: server.url, label: server.label || server.url });
+  }
 
   const hasEdits = Object.keys(edits).length > 0;
 
@@ -195,14 +235,14 @@ export function AuthPage() {
           Escape and an outside click close it unless setup is running. */}
       <Dialog
         isOpen={setupOpen}
-        onClose={() => { if (!setupRunning) setSetupOpen(false); }}
+        onClose={() => { if (!setupRunning) closeSetupDialog(); }}
         preventOutsideClose={setupRunning}
         showClose={!setupRunning}
         title="Auto-configure OAuth"
         description="Verify the URLs below before continuing. The webmail and Stalwart can live on different domains."
         footer={
           <>
-            <Button type="button" variant="outline" size="sm" onClick={() => setSetupOpen(false)} disabled={setupRunning}>
+            <Button type="button" variant="outline" size="sm" onClick={closeSetupDialog} disabled={setupRunning}>
               Cancel
             </Button>
             <Button
@@ -210,7 +250,7 @@ export function AuthPage() {
               size="sm"
               className="gap-2"
               onClick={handleAutoSetup}
-              disabled={setupRunning || !setupOriginValid || !setupIssuerValid}
+              disabled={setupRunning || !setupOriginValid || !setupIssuerValid || !setupCredentialReady}
             >
               {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Sparkles className="w-4 h-4" aria-hidden="true" />}
               {setupRunning ? 'Configuring…' : 'Configure'}
@@ -233,7 +273,7 @@ export function AuthPage() {
               className={cn(inputClass, 'w-full')}
             />
             <p className="text-[0.6875rem] text-muted-foreground mt-1">
-              Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}{(process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '')}/&lt;locale&gt;/auth/callback</code>) on Stalwart.
+              Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}{(process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '')}/&lt;locale&gt;/auth/callback</code>) on Stalwart, and <code>/login</code> as the page signing out returns to.
             </p>
             {!setupOriginValid && setupOrigin.length > 0 && (
               <p className="text-[0.6875rem] text-destructive mt-1">Must be like https://host with no path.</p>
@@ -247,13 +287,20 @@ export function AuthPage() {
               id="setup-issuer"
               type="url"
               value={setupIssuer}
-              onChange={(e) => setSetupIssuer(e.target.value)}
+              onChange={(e) => {
+                setupIssuerTyped.current = true;
+                setSetupIssuerDiscovered(false);
+                setSetupIssuer(e.target.value);
+              }}
               disabled={setupRunning}
               placeholder="https://mail.example.com"
               className={cn(inputClass, 'w-full')}
             />
             <p className="text-[0.6875rem] text-muted-foreground mt-1">
-              Where Stalwart serves <code>/.well-known/oauth-authorization-server</code>. Saved as <code>OAUTH_ISSUER_URL</code>. Pre-filled from your JMAP server URL.
+              Where Stalwart serves <code>/.well-known/oauth-authorization-server</code>. Saved as <code>OAUTH_ISSUER_URL</code>.{' '}
+              {setupIssuerDiscovered
+                ? 'Pre-filled with the issuer your Stalwart server names in its discovery document.'
+                : 'Pre-filled from your JMAP server URL.'}
             </p>
             {!setupIssuerValid && setupIssuer.length > 0 && (
               <p className="text-[0.6875rem] text-destructive mt-1">Must be like https://host with no path.</p>
@@ -269,6 +316,51 @@ export function AuthPage() {
             />
             Also enable “OAuth only” (hide password login)
           </label>
+          {setupNeedsCredential && (
+            <div className="space-y-3 rounded-md border border-border p-3">
+              <div>
+                <p className="text-xs font-medium text-foreground">Stalwart admin sign-in</p>
+                <p className="text-[0.6875rem] text-muted-foreground mt-1">
+                  {setupSignIn?.signedIn === false
+                    ? 'No mail account is signed in to this webmail in this browser, so the setup signs in to Stalwart as an admin instead.'
+                    : 'Since Stalwart 1.0.3 the webmail session can’t manage OAuth clients, so the setup signs in to Stalwart once as an admin.'}
+                  {' '}Sent only to your configured Stalwart server for this setup, and not stored.
+                </p>
+              </div>
+              <div>
+                <label htmlFor="setup-stalwart-username" className="block text-xs font-medium text-foreground mb-1">
+                  Stalwart username
+                </label>
+                <input
+                  id="setup-stalwart-username"
+                  type="text"
+                  autoComplete="username"
+                  value={setupUsername}
+                  onChange={(e) => setSetupUsername(e.target.value)}
+                  disabled={setupRunning}
+                  placeholder="admin@example.com"
+                  className={cn(inputClass, 'w-full')}
+                />
+              </div>
+              <div>
+                <label htmlFor="setup-stalwart-secret" className="block text-xs font-medium text-foreground mb-1">
+                  Password, app password or API key
+                </label>
+                <input
+                  id="setup-stalwart-secret"
+                  type="password"
+                  autoComplete="current-password"
+                  value={setupSecret}
+                  onChange={(e) => setSetupSecret(e.target.value)}
+                  disabled={setupRunning}
+                  className={cn(inputClass, 'w-full')}
+                />
+                <p className="text-[0.6875rem] text-muted-foreground mt-1">
+                  With two-factor authentication on, the password alone won’t work: create an app password in Stalwart under <code>/account</code> &gt; Credentials, use it here, and delete it after the setup. An API key works too and needs no username.
+                </p>
+              </div>
+            </div>
+          )}
           <p className="text-[0.6875rem] text-muted-foreground">
             On Stalwart 1.0 this also registers a client for Bulwark Mobile: <code>bulwark-mobile</code>, no secret, redirect URI <code>org.bulwarkmail.mobile:/auth/callback</code>.
           </p>
@@ -284,7 +376,7 @@ export function AuthPage() {
             description="Registers an OAuth client on the connected Stalwart server, generates a client secret, and saves the settings here. Requires your Stalwart account to have admin permissions."
           >
             <div className="flex flex-col items-start gap-1 sm:items-end">
-              <Button type="button" size="sm" className="gap-2" onClick={openSetupDialog} disabled={setupRunning || configReadOnly || setupSignIn?.signedIn === false}>
+              <Button type="button" size="sm" className="gap-2" onClick={openSetupDialog} disabled={setupRunning || configReadOnly}>
                 {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 {setupRunning ? 'Configuring…' : 'Set up with Stalwart'}
               </Button>
@@ -295,9 +387,9 @@ export function AuthPage() {
               )}
               {!configReadOnly && setupSignIn?.signedIn === false && (
                 <p className="max-w-xs text-xs text-muted-foreground sm:text-end">
-                  Only works while you are signed in to{' '}
+                  No mail account is signed in to{' '}
                   <a href="/" target="_blank" rel="noopener" className="text-primary hover:underline">this webmail</a>
-                  {' '}with a Stalwart admin account in this browser. A login to the Stalwart web admin does not count.
+                  {' '}in this browser, so the setup asks for a Stalwart admin sign-in.
                 </p>
               )}
               {!configReadOnly && setupSignIn?.signedIn && setupSignIn.username && (
@@ -322,7 +414,7 @@ export function AuthPage() {
           <ConfigToggleItem label="End provider session on sign-out" description="Signing out of an SSO account also signs out of the identity provider, when it advertises an end_session_endpoint or a logout URL is set below. Turn off if the provider is shared with apps that should stay signed in." configKey="oauthEndSession" value={currentValue('oauthEndSession') as boolean} source={config.oauthEndSession?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="Revoke tokens on sign-out" description="Signing out asks the identity provider to revoke Bulwark's refresh token. On Stalwart 1.0 this also removes Bulwark from the user's connected applications, so the next sign-in asks for consent again. Turn off to keep the consent; the token then stays valid at the provider until it expires." configKey="oauthRevokeOnSignOut" value={currentValue('oauthRevokeOnSignOut') as boolean} source={config.oauthRevokeOnSignOut?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Provider logout URL" description="For providers whose discovery has no end_session_endpoint, such as Stalwart. Used instead of the discovered endpoint when set, with the same parameters. Must be https. Applies to the global OAuth settings; servers in the server list set their own." configKey="oauthEndSessionUrl" value={currentValue('oauthEndSessionUrl') as string} source={config.oauthEndSessionUrl?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://auth.example.com/logout" wide />
-          <ConfigTextItem label="Post-logout redirect URI" description="Where the provider sends users after signing them out. Register it with the provider as a post-logout redirect URI first, or it will refuse the logout. Leave blank to stay on the provider's signed-out page." configKey="oauthPostLogoutRedirectUri" value={currentValue('oauthPostLogoutRedirectUri') as string} source={config.oauthPostLogoutRedirectUri?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://mail.example.com/en/login" wide />
+          <ConfigTextItem label="Post-logout redirect URI" description="Where the provider sends users after signing them out. Register it with the provider as a post-logout redirect URI first, or it will refuse the logout. Leave blank to stay on the provider's signed-out page. Set up with Stalwart registers and fills in this webmail's login page when it is empty." configKey="oauthPostLogoutRedirectUri" value={currentValue('oauthPostLogoutRedirectUri') as string} source={config.oauthPostLogoutRedirectUri?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://mail.example.com/en/login" wide />
         </SettingsSection>
 
         <SettingsSection id="admin-access" title="Admin access">
@@ -339,6 +431,14 @@ export function AuthPage() {
             ]}
             onChange={handleChange}
             onRevert={handleRevert}
+          />
+          <AdminAccountsSection
+            value={Array.isArray(currentValue('adminAccounts')) ? currentValue('adminAccounts') as AdminAccountEntry[] : []}
+            source={config.adminAccounts?.source}
+            servers={adminAccountServers}
+            mode={String(currentValue('stalwartAdminAccess') ?? 'auto')}
+            onChange={(next) => handleChange('adminAccounts', next)}
+            onRevert={() => handleRevert('adminAccounts')}
           />
         </SettingsSection>
 

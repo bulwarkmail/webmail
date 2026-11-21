@@ -67,11 +67,48 @@ describe('folder menu of Trash and Spam', () => {
     expect(items).toContain('mute_notifications');
   });
 
-  it('a folder of your own: rename and delete, no Empty', () => {
+  it('a folder of your own: rename, Empty folder… into the Trash, and delete last', () => {
     const items = labels(box('family', null));
     expect(items).toContain('rename');
-    expect(items[items.length - 1]).toBe('delete_folder');
-    for (const gone of ['empty_folder', 'empty_folder_generic', 'empty_trash', 'empty_spam']) expect(items).not.toContain(gone);
+    expect(items.slice(-2)).toEqual(['empty_folder', 'delete_folder']);
+    for (const gone of ['empty_folder_generic', 'empty_trash', 'empty_spam']) expect(items).not.toContain(gone);
+  });
+
+  it.each(['sent', 'drafts', 'archive'])('%s: no Empty folder…', (role) => {
+    expect(labels(box(role, role))).not.toContain('empty_folder');
+  });
+});
+
+// #1785: "Empty folder…" on a folder of the user's own.
+describe('Empty folder… on a folder of your own', () => {
+  const entry = () => screen.getByTestId('mailbox-empty-folder') as HTMLButtonElement;
+
+  it('empties through the same handler as Empty Trash', () => {
+    const onEmptyFolder = vi.fn();
+    render(
+      <MailboxContextMenu
+        target={{ kind: 'mailbox', mailbox: box('family', null), hasChildren: false }}
+        position={{ x: 0, y: 0 }}
+        isOpen
+        onClose={vi.fn()}
+        menuRef={{ current: null }}
+        mailboxes={[box('family', null)]}
+        onEmptyFolder={onEmptyFolder}
+      />,
+    );
+    entry().click();
+    expect(onEmptyFolder).toHaveBeenCalledWith('family');
+  });
+
+  it('is greyed out for an empty folder and a shared one you may not delete in', () => {
+    labels({ ...box('family', null), totalEmails: 0 } as Mailbox);
+    expect(entry().disabled).toBe(true);
+    cleanup();
+    labels({ ...box('team', null), isShared: true, myRights: { mayRemoveItems: false } } as unknown as Mailbox);
+    expect(entry().disabled).toBe(true);
+    cleanup();
+    labels({ ...box('team', null), isShared: true, myRights: { mayRemoveItems: true } } as unknown as Mailbox);
+    expect(entry().disabled).toBe(false);
   });
 });
 

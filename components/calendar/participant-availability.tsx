@@ -6,13 +6,14 @@ import { Loader2 } from "@/components/icons";
 import { useAuthStore } from "@/stores/auth-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { BusyPeriod, Principal } from "@/lib/jmap/types";
-import { loadPrincipalDirectory } from "@/lib/jmap/principal-directory";
+import { loadScopedPrincipalDirectory } from "@/lib/directory-scope";
 import { checkAvailabilityAccess, knownAvailabilityAccess, lookUpAvailability, revokeAvailabilityAccess } from "@/lib/jmap/free-busy";
 import { cn } from "@/lib/utils";
 
 interface Attendee {
   name: string;
   email: string;
+  optional?: boolean;
 }
 
 /**
@@ -69,7 +70,7 @@ export interface AttendeeDirectory {
  * say so with `forbidden` on the lookup.
  */
 export async function loadAttendeeDirectory(client: IJMAPClient): Promise<AttendeeDirectory> {
-  const directory = await loadPrincipalDirectory(client);
+  const directory = await loadScopedPrincipalDirectory(client);
   const byEmail = new Map<string, Principal>();
   for (const p of directory.principals) {
     if (p.email) byEmail.set(p.email.toLowerCase(), p);
@@ -124,6 +125,7 @@ async function lookUpStatuses(
  */
 export function ParticipantAvailability({ attendees, start, end }: ParticipantAvailabilityProps) {
   const t = useTranslations("calendar.participants.availability");
+  const tParticipants = useTranslations("calendar.participants");
   const tFind = useTranslations("find_time");
   const client = useAuthStore((s) => s.client);
   const supported = !!client?.supportsAvailability?.() && !!client.getPrincipalsAvailability;
@@ -199,19 +201,23 @@ export function ParticipantAvailability({ attendees, start, end }: ParticipantAv
       <ul className="mt-1.5 space-y-0.5" aria-label={t("title")} data-testid="participant-availability">
         {attendees.map((a) => {
           const status = statuses[a.email.trim().toLowerCase()] ?? "checking";
+          // An optional attendee's busy time doesn't block the slot: muted, not red.
           return (
             <li key={a.email} className="flex items-center gap-2 text-xs">
               <span
                 className={cn(
                   "inline-block h-2 w-2 shrink-0 rounded-full",
                   status === "free" && "bg-success",
-                  status === "busy" && "bg-destructive",
-                  status === "tentative" && "bg-warning",
+                  status === "busy" && (a.optional ? "bg-destructive/40" : "bg-destructive"),
+                  status === "tentative" && (a.optional ? "bg-warning/40" : "bg-warning"),
                   (status === "no_busy_times" || status === "unknown" || status === "not_looked_up" || status === "error" || status === "checking") && "bg-muted-foreground/40",
                 )}
                 aria-hidden="true"
               />
-              <span className="min-w-0 truncate text-foreground/90" title={a.email}>{a.name || a.email}</span>
+              <span className="min-w-0 truncate text-foreground/90" title={a.email}>
+                {a.name || a.email}
+                {a.optional && <span className="ms-1 text-muted-foreground">({tParticipants("optional_role")})</span>}
+              </span>
               <span className="ms-auto flex shrink-0 items-center gap-1 text-muted-foreground">
                 {status === "checking" && <Loader2 className="h-3 w-3 animate-spin" />}
                 {status === "not_looked_up" ? tFind("not_looked_up") : t(status)}

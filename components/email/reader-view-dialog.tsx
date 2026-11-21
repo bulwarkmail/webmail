@@ -83,7 +83,7 @@ export function ReaderViewDialog({ isOpen, onClose, title, description, html, la
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
             textAlign: 'start',
-            ...(reading.comfortableWidth && { maxWidth: '80ch' }),
+            ...(reading.comfortableWidth && { maxWidth: '80ch', marginInline: 'auto' }),
           }}
           data-testid="reader-view-body"
           // Links open through the plugins' link check, as in the message.

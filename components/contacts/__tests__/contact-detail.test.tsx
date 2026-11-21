@@ -73,6 +73,80 @@ describe('ContactDetail', () => {
     expect(screen.getByText('form.context_work, x-hq')).toBeInTheDocument();
   });
 
+  // #1578: relatedTo is keyed by the related card's uid, which is no name.
+  describe('related contacts', () => {
+    const jane: ContactCard = { id: '2', uid: 'urn:uuid:0C8B2B6E-1D0F-4F0E-9B1E-3D1A5C7E9F00', addressBookIds: {}, name: { full: 'Jane Doe' } };
+    const company: ContactCard = {
+      ...contact,
+      kind: 'org',
+      relatedTo: {
+        '0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00': { relation: { contact: true } },
+        'Max Mustermann': { relation: { 'x-assistant': true } },
+      },
+    };
+
+    afterEach(() => {
+      useContactStore.setState({ contacts: [], supportsSync: false, contactsLoaded: false });
+    });
+
+    it('shows the related card by name, and opens it', () => {
+      useContactStore.setState({ contacts: [company, jane] });
+      const onOpenContact = vi.fn();
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onOpenContact={onOpenContact} />);
+
+      expect(screen.queryByText('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00')).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Jane Doe' }));
+      expect(onOpenContact).toHaveBeenCalledExactlyOnceWith('2');
+    });
+
+    it('shows a value no card has as it is stored', () => {
+      useContactStore.setState({ contacts: [company] });
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onOpenContact={vi.fn()} />);
+
+      expect(screen.getByText('Max Mustermann')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Max Mustermann' })).toBeNull();
+    });
+
+    // #1707: the uid of a deleted card.
+    it('shows a uid no card has as an unknown contact that can be removed', () => {
+      useContactStore.setState({ contacts: [company], supportsSync: true, contactsLoaded: true });
+      const onRemoveRelated = vi.fn();
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onOpenContact={vi.fn()} onRemoveRelated={onRemoveRelated} />);
+
+      expect(screen.queryByText('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00')).toBeNull();
+      expect(screen.getByText('detail.related_unknown')).toHaveAttribute('title', '0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00');
+      const remove = screen.getAllByRole('button', { name: 'detail.related_remove' });
+      expect(remove).toHaveLength(1);
+      fireEvent.click(remove[0]);
+      expect(onRemoveRelated).toHaveBeenCalledExactlyOnceWith('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00');
+    });
+
+    it('offers no remove on a read-only card', () => {
+      useContactStore.setState({ contacts: [company], supportsSync: true, contactsLoaded: true });
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onRemoveRelated={vi.fn()} readOnly />);
+
+      expect(screen.getByText('detail.related_unknown')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'detail.related_remove' })).toBeNull();
+    });
+
+    it('shows the uid as stored while the contacts are still loading', () => {
+      useContactStore.setState({ contacts: [company], supportsSync: true, contactsLoaded: false });
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onRemoveRelated={vi.fn()} />);
+
+      expect(screen.getByText('0c8b2b6e-1d0f-4f0e-9b1e-3d1a5c7e9f00')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'detail.related_remove' })).toBeNull();
+    });
+
+    it('takes the card of the same account when two accounts have one with that uid', () => {
+      const elsewhere: ContactCard = { ...jane, id: 'other::2', localAccountId: 'other', name: { full: 'Someone Else' } };
+      useContactStore.setState({ contacts: [elsewhere, company, jane] });
+      render(<ContactDetail contact={company} onEdit={vi.fn()} onDelete={vi.fn()} onOpenContact={vi.fn()} />);
+
+      expect(screen.getByRole('button', { name: 'Jane Doe' })).toBeInTheDocument();
+      expect(screen.queryByText('Someone Else')).toBeNull();
+    });
+  });
+
   it('displays organization name', () => {
     render(<ContactDetail contact={contact} onEdit={vi.fn()} onDelete={vi.fn()} />);
     const matches = screen.getAllByText('Acme Corp');

@@ -127,7 +127,8 @@ export function VersionPage() {
     );
   }
 
-  if (loading || !data) {
+  // A refresh after a check keeps the page, and with it the scroll position.
+  if (!data) {
     return (
       <div>
         {header}

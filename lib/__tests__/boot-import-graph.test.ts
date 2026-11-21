@@ -127,7 +127,7 @@ describe('what a cold start imports', () => {
       'components/keyboard-shortcuts-modal.tsx',
       'components/global-search/global-search-palette.tsx',
       'components/filters/quick-rule-dialogs.tsx',
-      'components/filters/filter-rule-modal.tsx',
+      'components/filters/rule-editor.tsx',
       'components/layout/sidebar-apps-modal.tsx',
       'components/email/schedule-send-dialog.tsx',
       'components/layout/mailbox-share-dialog.tsx',

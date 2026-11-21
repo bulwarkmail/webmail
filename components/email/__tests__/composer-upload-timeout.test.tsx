@@ -140,6 +140,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
     onIdentitySelect: { size: 0, emit: async () => {} },
+    onSelectReplyIdentity: { size: 0 },
   },
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },
@@ -258,14 +259,15 @@ afterEach(async () => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
-  useAuthStore.setState({ client: null });
+  useAuthStore.setState({ client: null, getClientForAccount: (() => undefined) as never });
 });
 
 describe('composer XHR inactivity recovery', () => {
   it.each([0, 10])('releases stalled A after %i uploaded bytes, starts B, and permits removing/re-adding A', async loaded => {
     const client = uploadClient();
     const upload = vi.spyOn(client, 'uploadBlob');
-    useAuthStore.setState({ client: client as never });
+    // The login that owns the From identity is connected: uploads go through it.
+    useAuthStore.setState({ client: client as never, getClientForAccount: ((id: string) => (id === 'acct-2' ? client : undefined)) as never });
     render(<EmailComposer
       initialData={{ to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false,
         selectedIdentityId: 'acct-2::id-other', subAddressTag: '', mode: 'compose', draftId: null }}
@@ -322,5 +324,24 @@ describe('composer XHR inactivity recovery', () => {
     expect(emailHooks.onAfterAttachmentUpload.emit).toHaveBeenCalledTimes(2);
     expect(UploadXHR.instances).toHaveLength(3);
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+// #1782: a file refused for too many uploads says so under the toast's title.
+describe('composer upload refused with 429', () => {
+  it('names the limit in the toast', async () => {
+    const client = uploadClient();
+    useAuthStore.setState({ client: client as never, getClientForAccount: ((id: string) => (id === 'acct-2' ? client : undefined)) as never });
+    render(<EmailComposer
+      initialData={{ to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false,
+        selectedIdentityId: 'acct-2::id-other', subAddressTag: '', mode: 'compose', draftId: null }}
+      onClose={vi.fn()}
+    />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await select(input, [file('A.txt')]);
+    act(() => UploadXHR.instances[0].load(429, 'quota exhausted', { 'Retry-After': '1505' }));
+    await advance();
+    expect(toast.error).toHaveBeenCalledExactlyOnceWith('upload_failed', 'retry_in');
+    expect(within(chip('A.txt')).getByText('attachment_upload_failed')).toBeTruthy();
   });
 });

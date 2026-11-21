@@ -11,7 +11,9 @@
       "totp_required": "Tài khoản của bạn cần thêm một mã để đăng nhập. Hãy mở ứng dụng xác thực và nhập mã gồm 6 chữ số bên dưới.",
       "totp_invalid": "Mã này không đúng hoặc đã hết hạn. Hãy nhập mã hiện đang hiển thị trong ứng dụng xác thực.",
       "oauth_discovery_failed": "Hiện không thể đăng nhập thông qua tổ chức của bạn. Hãy thử lại sau hoặc liên hệ quản trị viên.",
-      "token_exchange_failed": "Mật khẩu và mã của bạn đúng nhưng máy chủ thư không cho phép ứng dụng này truy cập. Hãy nhờ quản trị viên kiểm tra cài đặt đăng nhập cho ứng dụng này."
+      "oauth_issuer_mismatch": "Đăng nhập thông qua tổ chức của bạn chưa được thiết lập đúng. Hãy báo cho quản trị viên.",
+      "token_exchange_failed": "Mật khẩu và mã của bạn đúng nhưng máy chủ thư không cho phép ứng dụng này truy cập. Hãy nhờ quản trị viên kiểm tra cài đặt đăng nhập cho ứng dụng này.",
+      "login_refused": "Máy chủ thư không cho ứng dụng này đăng nhập. Máy chủ chưa kiểm tra mã của bạn. Hãy nhờ quản trị viên kiểm tra cài đặt đăng nhập cho ứng dụng này."
     },
     "token_hint": "Một số nhà cung cấp thư cho phép dùng mã truy cập thay cho mật khẩu. Hãy tạo mã trong cài đặt của nhà cung cấp thư, sao chép rồi dán vào đây.",
     "config_error": {
@@ -155,6 +157,10 @@
       "hide_account_switcher": {
         "description": "Ẩn danh sách tài khoản phía trên danh sách thư mục. Bạn vẫn có thể đổi tài khoản ở cuối thanh bên trái."
       },
+      "compose_placement": {
+        "description": "Vị trí nút viết thư mới trên máy tính. Trên điện thoại, nút luôn nằm trên danh sách thư.",
+        "rail": "Đầu thanh bên trái"
+      },
       "show_rail_account_list": {
         "label": "Hiển thị tài khoản của bạn trên thanh bên trái",
         "description": "Hiển thị một hình tròn cho mỗi tài khoản ở cuối thanh bên trái để bạn đổi tài khoản nhanh chóng. Nút đăng xuất nằm bên dưới."
@@ -255,7 +261,7 @@
     },
     "email_behavior": {
       "inbox_type": {
-        "description": "Với tùy chọn \"Chưa đọc trước\", 25 thư chưa đọc mới nhất sẽ xuất hiện ở đầu Hộp thư đến"
+        "description": "Với tùy chọn \"Chưa đọc trước\", các thư chưa đọc mới nhất sẽ xuất hiện ở đầu Hộp thư đến"
       },
       "clear_search_on_folder_change": {
         "description": "Khi mở thư mục khác, tìm kiếm sẽ kết thúc và bạn thấy toàn bộ thư mục. Khi tắt tùy chọn này, tìm kiếm sẽ tiếp tục trong thư mục mới."
@@ -613,7 +619,6 @@
       "not_supported": "Máy chủ thư không hỗ trợ quy tắc lọc.",
       "match_all": "Tất cả điều kiện phải đúng",
       "match_any": "Chỉ cần một điều kiện đúng",
-      "stop_processing": "Không kiểm tra các quy tắc phía dưới quy tắc này",
       "value_placeholder_multi": "Giá trị (phân tách nhiều giá trị bằng dấu phẩy)",
       "condition_fields": {
         "header": "Trường tiêu đề khác",
@@ -644,11 +649,9 @@
         "validation_failed": "Không thể kiểm tra mã. Hãy thử lại."
       },
       "managed_by_tooltip": "Do {source} quản lý. Hãy thay đổi trong ứng dụng đó hoặc chỉnh sửa quy tắc bằng mã.",
-      "apply_existing_unsupported": "Chỉ một số quy tắc có thể áp dụng cho thư hiện có: quy tắc kiểm tra người gửi, người nhận, tiêu đề thư hoặc trường tiêu đề, đồng thời thực hiện thao tác di chuyển, sao chép, đánh dấu đã đọc, gắn dấu sao hoặc gắn thẻ.",
       "validation_period_order": "Ngày kết thúc phải sau ngày bắt đầu",
       "period_hint": "Quy tắc áp dụng cho thư đến trong khoảng thời gian này. Để trống một trường nếu không giới hạn thời điểm bắt đầu hoặc kết thúc.",
-      "validation_period_invalid": "Nhập ngày kèm giờ hoặc để trống trường",
-      "apply_existing_period": "Quy tắc có giới hạn thời gian chỉ áp dụng cho thư đến trong khoảng đó nên không thể áp dụng cho các thư hiện có."
+      "validation_period_invalid": "Nhập ngày kèm giờ hoặc để trống trường"
     },
     "templates": {
       "description": "Lưu những thư bạn thường soạn để dùng lại. Mẫu thư có thể chứa các chỗ trống để bạn điền mỗi lần sử dụng.",
@@ -764,5 +767,8 @@
   },
   "global_search": {
     "account_error": "Không thể tìm kiếm trong {account}"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Hiển thị danh sách tài khoản phía trên các thư mục. Tắt để đổi tài khoản bằng ảnh của bạn trên thanh bên trái."
   }
 }

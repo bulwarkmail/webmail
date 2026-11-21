@@ -71,13 +71,17 @@ export function previewDesktopPage(title?: string): Promise<DesktopPrintPreviewO
   return bridge ? preview(bridge, { source: 'page', title: title ?? document.title }) : null;
 }
 
-/** A PDF (a blob: URL of this page) in the shell's preview. Null without one. */
-export async function previewDesktopPdf(url: string, title?: string): Promise<DesktopPrintPreviewOutcome | null> {
+/**
+ * A PDF in the shell's preview: its Blob, or a blob: URL of this page. Null without one.
+ * Pass the Blob where there is one: the CSP's connect-src keeps a blob: URL from being
+ * fetched (#871).
+ */
+export async function previewDesktopPdf(pdf: string | Blob, title?: string): Promise<DesktopPrintPreviewOutcome | null> {
   const bridge = printBridge();
   if (!bridge) return null;
   let data: Uint8Array;
   try {
-    data = new Uint8Array(await (await fetch(url)).arrayBuffer());
+    data = new Uint8Array(await (typeof pdf === 'string' ? await fetch(pdf) : pdf).arrayBuffer());
   } catch {
     return 'failed';
   }

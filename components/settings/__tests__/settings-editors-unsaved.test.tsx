@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FilterRuleModal } from '@/components/filters/filter-rule-modal';
+import { RuleEditor } from '@/components/filters/rule-editor';
 import { SieveEditorModal } from '@/components/filters/sieve-editor-modal';
 import { IdentityManagerModal } from '@/components/identity/identity-manager-modal';
 import { useAuthStore } from '@/stores/auth-store';
@@ -34,7 +34,7 @@ function pressEscape() {
 describe('filter rule dialog', () => {
   it('closes on Escape without asking while nothing was typed', async () => {
     const onClose = vi.fn();
-    render(<FilterRuleModal mailboxes={[]} onSave={vi.fn()} onClose={onClose} />);
+    render(<RuleEditor mailboxes={[]} onSave={vi.fn()} onClose={onClose} />);
     pressEscape();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(screen.queryByRole('button', { name: 'discard' })).toBeNull();
@@ -42,8 +42,8 @@ describe('filter rule dialog', () => {
 
   it('ignores a click outside and asks before Escape drops a typed name', async () => {
     const onClose = vi.fn();
-    render(<FilterRuleModal mailboxes={[]} onSave={vi.fn()} onClose={onClose} />);
-    fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'Newsletters' } });
+    render(<RuleEditor mailboxes={[]} onSave={vi.fn()} onClose={onClose} />);
+    fireEvent.change(screen.getByLabelText('rule_name'), { target: { value: 'Newsletters' } });
 
     clickOutside();
     expect(onClose).not.toHaveBeenCalled();
@@ -60,7 +60,7 @@ describe('filter rule dialog', () => {
   });
 
   it('renders in a portal on body', () => {
-    const { container } = render(<FilterRuleModal mailboxes={[]} onSave={vi.fn()} onClose={vi.fn()} />);
+    const { container } = render(<RuleEditor mailboxes={[]} onSave={vi.fn()} onClose={vi.fn()} />);
     expect(container.querySelector('[role="dialog"]')).toBeNull();
     expect(screen.getByRole('dialog').closest('body')).toBe(document.body);
   });

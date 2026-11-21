@@ -169,5 +169,17 @@ export function reserveLoginAttempt(client: string, now: number = Date.now()): P
   return loginBudget.reserve(client, now);
 }
 
+/**
+ * The admin OAuth setup can sign in to Stalwart with a Stalwart admin's own
+ * password or API key (#1611), which makes it a password oracle for anyone
+ * with admin access to the webmail. Signed-in admins only, so the ceiling
+ * across all clients locks nobody but them out.
+ */
+const adminSignInBudget = createFailureBudget({ name: 'admin-stalwart-sign-in', clientMax: CLIENT_MAX_FAILURES, globalMax: 20 });
+
+export function reserveAdminSignInAttempt(client: string, now: number = Date.now()): Promise<BudgetRefund | null> {
+  return adminSignInBudget.reserve(client, now);
+}
+
 /** Seconds a client over budget is told to wait (Retry-After). */
 export const LOGIN_BUDGET_RETRY_AFTER_SECONDS = Math.ceil(WINDOW_MS / 1000);

@@ -25,9 +25,9 @@ const ReplyParagraph = Paragraph.extend({
 });
 let editor: Editor | undefined;
 
-function mount(html = `<p>My response</p>${HEADER}${QUOTE}`) {
+function mount(html = `<p>My response</p>${HEADER}${QUOTE}`, { expanded = false } = {}) {
   editor = new Editor({
-    extensions: [StarterKit.configure({ paragraph: false }), ReplyParagraph, QuotedHtml, SignatureBlock, ReplyQuoteCollapse],
+    extensions: [StarterKit.configure({ paragraph: false }), ReplyParagraph, QuotedHtml, SignatureBlock, ReplyQuoteCollapse.configure({ expanded })],
     content: html,
   });
   // Settle StarterKit's trailing paragraph before comparing message data.
@@ -256,6 +256,37 @@ describe('a click in a reply with a folded quote', () => {
 
   it('has no end of text in a body with neither quote nor signature', () => {
     const e = mount('<p>Just text</p>');
+    expect(userTextEnd(e.state)).toBeNull();
+  });
+});
+
+describe('reply quote visibility with "Quoted text in replies: Expanded" (#1800)', () => {
+  it('starts with the quote open and still folds and unfolds it', () => {
+    const e = mount(undefined, { expanded: true });
+    const saved = serializeEditorContent(e);
+    expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle()).toHaveAccessibleName('Hide quoted text');
+    expect(quote()).not.toHaveAttribute('data-reply-quote-collapsed');
+    expect(e.view.dom.querySelector('[data-reply-quote-collapsed]')).toBeNull();
+    toggle().click();
+    expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+    expect(quote()).toHaveAttribute('data-reply-quote-collapsed', 'true');
+    toggle().click();
+    expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+    expect(serializeEditorContent(e)).toBe(saved);
+  });
+
+  it('opens every quote level, also when the reply is filled in after the editor starts', () => {
+    const e = mount('<p></p>', { expanded: true });
+    e.commands.setContent(`<p>Response</p>${HEADER}<blockquote>Second</blockquote><p></p>${HEADER}${QUOTE}`);
+    const toggles = e.view.dom.querySelectorAll('[data-reply-quote-toggle]');
+    expect(toggles).toHaveLength(2);
+    toggles.forEach((button) => expect(button).toHaveAttribute('aria-expanded', 'true'));
+    expect(e.view.dom.querySelector('[data-reply-quote-collapsed]')).toBeNull();
+  });
+
+  it('treats the open quote as visible text when placing the caret', () => {
+    const e = mount(undefined, { expanded: true });
     expect(userTextEnd(e.state)).toBeNull();
   });
 });

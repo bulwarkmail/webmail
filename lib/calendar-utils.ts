@@ -66,16 +66,27 @@ export function packWeekSegments(rawSegments: CalendarWeekSegment[], firstId?: s
     return (left.event.title || "").localeCompare(right.event.title || "");
   });
 
+  // The others come in order of their first day, so a row is free for one
+  // when the row's last end lies before it. The pinned event is placed out
+  // of that order: check its days separately, so the days before it on its
+  // row stay usable (#1759).
   const rowEndIndices: number[] = [];
+  const pinned: { row: number; start: number; end: number }[] = [];
   return rawSegments.map((segment) => {
-    const segmentEndIndex = segment.startIndex + segment.span - 1;
-    let row = rowEndIndices.findIndex((endIndex) => endIndex < segment.startIndex);
+    const start = segment.startIndex;
+    const end = start + segment.span - 1;
+    const isPinned = !!firstId && segment.event.id === firstId;
+    let row = isPinned
+      ? -1
+      : rowEndIndices.findIndex((endIndex, index) => endIndex < start
+        && !pinned.some((span) => span.row === index && span.start <= end && span.end >= start));
     if (row === -1) {
       row = rowEndIndices.length;
-      rowEndIndices.push(segmentEndIndex);
+      rowEndIndices.push(isPinned ? -1 : end);
     } else {
-      rowEndIndices[row] = segmentEndIndex;
+      rowEndIndices[row] = end;
     }
+    if (isPinned) pinned.push({ row, start, end });
     return { ...segment, row };
   });
 }

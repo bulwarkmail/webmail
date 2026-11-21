@@ -288,6 +288,52 @@ export function isBulwarkRule(rule: FilterRule): boolean {
 }
 
 /**
+ * Whether another sender can go into the rule so that it then also matches
+ * that sender's mail: the rule has a list of exact senders to extend, or a
+ * From condition can be added as one more alternative. A rule that needs
+ * all of several conditions can't take one, since a From condition added
+ * there would narrow it to that sender's mail instead.
+ */
+export function takesSenders(rule: FilterRule): boolean {
+  if (rule.conditions.some(isSenderCondition)) return true;
+  return rule.conditions.length > 0 && (rule.matchType === 'any' || rule.conditions.length === 1);
+}
+
+/**
+ * Add one or more senders to a rule without changing what it does for the
+ * mail it matched before. An exact From-address condition is extended as an
+ * OR-list; without one, a From condition is added as an alternative (a rule
+ * with a single condition becomes "any", which means the same for that
+ * condition). A rule that can't take senders (takesSenders) stays as it is.
+ */
+export function addSendersToRule(
+  rule: FilterRule,
+  senders: RuleSender[],
+): { rule: FilterRule; added: string[] } {
+  const addresses = [...new Set(senders
+    .map(sender => normalizeAddress(sender.email))
+    .filter(address => address.includes('@')))];
+  if (addresses.length === 0 || !takesSenders(rule)) return { rule, added: [] };
+
+  const known = new Set(rule.conditions.filter(isSenderCondition)
+    .flatMap(condition => valueList(condition.value))
+    .map(address => address.toLowerCase()));
+  const added = addresses.filter(address => !known.has(address));
+  if (added.length === 0) return { rule, added };
+
+  const existingIndex = rule.conditions.findIndex(isSenderCondition);
+  const value = (values: string[]) => values.length === 1 ? values[0] : values;
+  const conditions = [...rule.conditions];
+  if (existingIndex >= 0) {
+    const existing = valueList(conditions[existingIndex].value);
+    conditions[existingIndex] = { ...conditions[existingIndex], value: value([...existing, ...added]) };
+    return { rule: { ...rule, conditions }, added };
+  }
+  conditions.push({ field: 'from', comparator: 'address_is', value: value(added) });
+  return { rule: { ...rule, matchType: 'any', conditions }, added };
+}
+
+/**
  * New rules made from a message go first, so an older, broader rule does not
  * catch the mail before them. The generator writes the vacation block and the
  * external/opaque blocks where they always go, so the front of the list is

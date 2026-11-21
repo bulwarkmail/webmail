@@ -21,6 +21,7 @@ import { ContactImportDialog } from "@/components/contacts/contact-import-dialog
 import { ContactMergeDialog } from "@/components/contacts/contact-merge-dialog";
 import { ContactDuplicatesView } from "@/components/contacts/contact-duplicates-view";
 import { findDuplicateGroups, ownerKey, planMerge, type MergePlan } from "@/lib/contacts/merge";
+import { collectOrganizationNames } from "@/lib/contacts/organization-names";
 import { AddressBookPickerDialog } from "@/components/contacts/address-book-picker-dialog";
 import { DirectoryBrowser, directoryKey, filterDirectory } from "@/components/contacts/directory-browser";
 import { DirectoryEntryDetail } from "@/components/contacts/directory-entry-detail";
@@ -116,6 +117,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const tShell = useTranslations("shell");
   const tMerge = useTranslations("ux_pim_cimport");
   const tPc = useTranslations("ux_p3_pim_pc");
+  const tRouting = useTranslations("account_routing");
   const exportBusy = useContactExportBusy();
   useDocumentTitle(tSidebar("contacts"));
   useDesktopWindowName(tSidebar("contacts"), { withAccount: true });
@@ -455,6 +457,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
     return Array.from(kws).sort((a, b) => a.localeCompare(b));
   }, [individuals]);
+  const allOrganizations = useMemo(() => collectOrganizationNames(individuals, locale), [individuals, locale]);
 
   // Contacts to display based on active category
   const displayedContacts = useMemo(() => {
@@ -645,6 +648,20 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     clearSelection();
     setView("detail");
   };
+
+  // Takes one entry out of the card's Related Contacts, leaving the others.
+  const handleRemoveRelated = useCallback(async (contact: ContactCard, key: string) => {
+    const rest = { ...(contact.relatedTo ?? {}) };
+    delete rest[key];
+    const relatedTo = Object.keys(rest).length > 0 ? rest : undefined;
+    try {
+      if (supportsSync && client) await updateContact(client, contact.id, { relatedTo });
+      else await updateLocalContact(contact.id, { relatedTo });
+    } catch (error) {
+      console.error('Failed to remove the related contact:', error);
+      toast.error(t("toast.error_update"));
+    }
+  }, [supportsSync, client, updateContact, updateLocalContact, t]);
 
   const handleCreateNew = () => {
     setSelectedContact(null);
@@ -988,23 +1005,32 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
 
   const handleSaveGroup = useCallback(async (name: string, memberIds: string[]) => {
     const jmapClient = supportsSync && client ? client : null;
+    // A group holds listed cards of one login only; the form shows why it refuses.
+    const sayWhy = (error: unknown): never => {
+      if (error instanceof Error && error.name === 'MixedGroupAccountsError') throw new Error(tRouting("group_members_one_account"));
+      if (error instanceof Error && error.name === 'GroupMemberGoneError') throw new Error(tRouting("group_member_gone"));
+      throw error;
+    };
     if (view === "group-edit" && selectedGroup) {
       await updateGroup(jmapClient, selectedGroup.id, name);
       // Use resolved member contact IDs for diff, not raw urn:uuid: keys
       const currentIds = selectedGroupMembers.map(m => m.id);
       const toAdd = memberIds.filter(id => !currentIds.includes(id));
       const toRemove = currentIds.filter(id => !memberIds.includes(id));
-      if (toAdd.length > 0) await addMembersToGroup(jmapClient, selectedGroup.id, toAdd);
+      if (toAdd.length > 0) await addMembersToGroup(jmapClient, selectedGroup.id, toAdd).catch(sayWhy);
       if (toRemove.length > 0) await removeMembersFromGroup(jmapClient, selectedGroup.id, toRemove);
       toast.success(t("toast.updated"));
       setView("group-detail");
     } else {
-      await createGroup(jmapClient, name, memberIds);
+      // With several logins listed, a group without members goes to the
+      // active one; one with members goes to theirs.
+      const login = multiAccountEnabled ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
+      await createGroup(jmapClient, name, memberIds, login).catch(sayWhy);
       toast.success(t("toast.created"));
       clearSelection();
       setView("list");
     }
-  }, [view, selectedGroup, selectedGroupMembers, supportsSync, client, createGroup, updateGroup, addMembersToGroup, removeMembersFromGroup, clearSelection, t]);
+  }, [view, selectedGroup, selectedGroupMembers, supportsSync, client, createGroup, updateGroup, addMembersToGroup, removeMembersFromGroup, clearSelection, t, tRouting, multiAccountEnabled]);
 
   const handleRemoveGroupMember = async (memberId: string) => {
     if (!selectedGroup) return;
@@ -1133,7 +1159,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
     switch (view) {
       case "create":
-        return <ContactForm addressBooks={addressBooks} allKeywords={allKeywords} defaultAddressBookId={defaultBookIdForCreate} prefill={createPrefill} onSave={handleSaveNew} onCancel={guard(handleCancel)} onDirtyChange={setEditorDirty} />;
+        return <ContactForm addressBooks={addressBooks} allKeywords={allKeywords} allOrganizations={allOrganizations} defaultAddressBookId={defaultBookIdForCreate} prefill={createPrefill} onSave={handleSaveNew} onCancel={guard(handleCancel)} onDirtyChange={setEditorDirty} />;
 
       case "edit":
         if (!selectedContact) return null;
@@ -1142,6 +1168,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             contact={selectedContact}
             addressBooks={addressBooks}
             allKeywords={allKeywords}
+            allOrganizations={allOrganizations}
             onSave={handleSaveEdit}
             onCancel={guard(handleCancel)}
             onDirtyChange={setEditorDirty}
@@ -1277,6 +1304,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             }
             onMoveTo={selectedContact && canMoveContacts ? () => handleMoveContacts([selectedContact.id]) : undefined}
             onPrint={selectedContact && !printOff ? () => { void printContact(selectedContact); } : undefined}
+            onOpenContact={handleSelectContact}
+            onRemoveRelated={selectedContact ? (key) => { void handleRemoveRelated(selectedContact, key); } : undefined}
             isMobile={isMobile}
             readOnly={selectedContact ? isContactReadOnly(selectedContact) : false}
           />

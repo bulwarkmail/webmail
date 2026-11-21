@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import type { AnniversaryDate, ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactSortName, hasContactPhoto } from "@/stores/contact-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { isAppShortcutBlocked } from "@/lib/keyboard";
+import { isAppShortcutBlocked, shortcutKey } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useDesktopCommands } from "@/lib/desktop/commands";
 import { ContactRowsSkeleton } from "@/components/boot-skeleton/contacts-skeleton";
@@ -81,7 +81,7 @@ function getAnniversaryMonth(date: AnniversaryDate): number | null {
   if ("month" in date && date.month) return date.month;
   if ("utc" in date && date.utc) {
     const d = new Date(date.utc);
-    return isNaN(d.getTime()) ? null : d.getMonth() + 1;
+    return isNaN(d.getTime()) ? null : d.getUTCMonth() + 1;
   }
   return null;
 }
@@ -367,7 +367,7 @@ export function ContactList({
     } else if (e.key === " " && contact) {
       e.preventDefault();
       onToggleSelection(contact.id);
-    } else if (mod && e.code === "KeyA") {
+    } else if (mod && shortcutKey(e) === "a") {
       e.preventDefault();
       onSelectAll(sortedIds);
     } else if ((e.key === "Delete" || e.key === "Backspace") && !e.altKey) {

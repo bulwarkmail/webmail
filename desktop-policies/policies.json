@@ -35,6 +35,7 @@
   "FilesDriveEnabled": true,
   "FilesFolderSyncEnabled": true,
   "FilesDriveLetter": "none",
+  "ComposeInNewWindow": true,
   "Recommended": {
     "UpdateChannel": "stable"
   }

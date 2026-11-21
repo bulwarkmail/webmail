@@ -27,7 +27,7 @@ const makeMailbox = (overrides: Partial<Mailbox> = {}): Mailbox => ({
 
 /**
  * Builds a full-path map from a mailbox tree, matching the logic
- * used in FilterRuleModal for sieve fileinto folder paths.
+ * used in RuleEditor for sieve fileinto folder paths.
  */
 function buildMailboxPathMap(tree: MailboxNode[]): Map<string, string> {
   const pathMap = new Map<string, string>();

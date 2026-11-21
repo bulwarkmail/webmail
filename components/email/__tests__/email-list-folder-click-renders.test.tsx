@@ -23,7 +23,7 @@ vi.mock('@/components/ui/avatar', () => ({ Avatar: () => null }));
 vi.mock('@/stores/auth-store', async () => {
   const { create } = await import('zustand');
   return {
-    useAuthStore: create(() => ({ client: null, identities: [], username: null, activeAccountId: 'acct-1' })),
+    useAuthStore: create(() => ({ client: null, identities: [], username: null, activeAccountId: 'acct-1', getClientForAccount: () => undefined })),
   };
 });
 vi.mock('@/stores/account-store', () => {

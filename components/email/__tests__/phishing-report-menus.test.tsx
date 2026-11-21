@@ -91,10 +91,10 @@ describe('several accounts', () => {
     expect(usePhishingReportStore.getState().pending?.addresses).toEqual(['soc@example.org', 'abuse@other.example']);
   });
 
-  it('a Pro tab stamps a message of another login or a shared account with where it came from', () => {
+  it('a Pro tab stamps its message with where it came from, the active login\'s own messages too', () => {
     useAuthStore.setState({ activeAccountId: 'acct-a' } as never);
     const own = { getAccountId: () => 'jmap-a' };
-    expect(stampProSource(email, { client: own as never }, undefined)).toBe(email);
+    expect(stampProSource(email, { client: own as never }, undefined)).toMatchObject({ sourceClientAccountId: 'acct-a', sourceAccountId: 'jmap-a' });
     expect(stampProSource(email, { client: own as never, accountId: 'jmap-team' }, undefined)).toMatchObject({ sourceClientAccountId: 'acct-a', sourceAccountId: 'jmap-team' });
     expect(stampProSource(email, { client: { getAccountId: () => 'jmap-b' } as never }, 'acct-b')).toMatchObject({ sourceClientAccountId: 'acct-b', sourceAccountId: 'jmap-b' });
   });

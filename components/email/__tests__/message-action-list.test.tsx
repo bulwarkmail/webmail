@@ -243,3 +243,65 @@ describe('Print from the row', () => {
     expect(usePrintRequestStore.getState().request?.key).toBe('someone-else');
   });
 });
+
+// #1781: Edit as new, for sent mail only.
+describe('Edit as new', () => {
+  const labels = (role: string | undefined, onEditAsNew?: () => void, keywords: Record<string, boolean> = { $seen: true }) => {
+    const { result } = renderHook(() => useMessageActionList({
+      email: { ...email, keywords } as Email,
+      currentMailboxRole: role,
+      onReply: () => {},
+      onEditAsNew,
+    }));
+    return result.current.map((entry) => (entry.kind === 'separator' ? '|' : entry.label));
+  };
+
+  it('follows Forward in Sent and runs the handler', () => {
+    const onEditAsNew = vi.fn();
+    const { result } = renderHook(() => useMessageActionList({ email, currentMailboxRole: 'sent', onEditAsNew }));
+    const entries = result.current.filter((entry) => entry.kind === 'item');
+    const keys = entries.map((entry) => (entry.kind === 'item' ? entry.key : ''));
+    expect(keys.indexOf('edit_as_new')).toBe(keys.indexOf('forward_as_attachment') + 1);
+    const entry = entries.find((e) => e.kind === 'item' && e.key === 'edit_as_new');
+    if (entry?.kind === 'item') entry.run();
+    expect(onEditAsNew).toHaveBeenCalledTimes(1);
+  });
+
+  it('is not offered outside Sent, for a draft, or without a handler', () => {
+    expect(labels('sent', vi.fn())).toContain('edit_as_new');
+    expect(labels('inbox', vi.fn())).not.toContain('edit_as_new');
+    expect(labels(undefined, vi.fn())).not.toContain('edit_as_new');
+    expect(labels('sent', vi.fn(), { $draft: true })).not.toContain('edit_as_new');
+    expect(labels('sent')).not.toContain('edit_as_new');
+  });
+
+  it("is in the row menu's top level in Sent", () => {
+    const onEditAsNew = vi.fn();
+    const onClose = vi.fn();
+    render(
+      <EmailContextMenu
+        email={{ ...email, mailboxIds: { sent: true } } as Email}
+        position={{ x: 10, y: 10 }}
+        isOpen
+        onClose={onClose}
+        menuRef={{ current: null }}
+        mailboxes={[...mailboxes, { id: 'sent', name: 'Sent', role: 'sent', parentId: null, myRights: { mayAddItems: true } } as unknown as Mailbox]}
+        selectedMailbox="sent"
+        currentMailboxRole="sent"
+        onEditAsNew={onEditAsNew}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('ctx-edit-as-new'));
+    expect(onEditAsNew).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("is in the reader's ⋮ in Sent", () => {
+    const onEditAsNew = vi.fn();
+    renderViewer({ currentMailboxRole: 'sent', onEditAsNew });
+    fireEvent.click(screen.getByRole('button', { name: 'more_actions' }));
+    const menu = screen.getByRole('menu', { name: 'more_actions' });
+    fireEvent.click(within(menu).getByTestId('ctx-edit-as-new'));
+    expect(onEditAsNew).toHaveBeenCalledTimes(1);
+  });
+});

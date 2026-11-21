@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState, useCallback, useRef, useId } from "react";
+import { shortcutKey } from "@/lib/keyboard";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Loader2 } from "@/components/icons";
+import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Loader2, Puzzle } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
 import { useContextMenuOpen } from "@/components/ui/context-menu";
@@ -56,6 +57,20 @@ export interface Toast {
    * to undo." for a toast whose Undo has a shortcut.
    */
   srHint?: string;
+  /**
+   * A plugin asked for the toast (api.toast.*): the toast names it in a line
+   * of its own under the text, which the plugin's text can't reach. The name
+   * is kept with the toast, so it still shows once the plugin is turned off.
+   */
+  pluginId?: string;
+  pluginName?: string;
+  /**
+   * A body of its own in place of the icon, title and message, such as a
+   * plugin's notice (api.ui.showNotice). The toast draws a line over it with
+   * the plugin's name and the close button, shown at all times; the title is
+   * only read out.
+   */
+  content?: React.ReactNode;
 }
 
 interface ToastProps {
@@ -74,7 +89,7 @@ interface ToastProps {
  * reached without tabbing through the page. Listed in lib/keyboard-shortcuts.
  */
 export function isFocusToastShortcut(e: KeyboardEvent): boolean {
-  return e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === "KeyN";
+  return e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && shortcutKey(e) === "n";
 }
 
 /** A modal dialog is open: keys and focus belong to it. */
@@ -110,6 +125,7 @@ const SWIPE_DISMISS_DISTANCE = 72;
 
 export function ToastItem({ toast, onClose, held = false, stackHovered = false, onFocusLost }: ToastProps) {
   const tCommon = useTranslations("common");
+  const tPlugin = useTranslations("plugins.dialog");
   const Icon = icons[toast.type];
   const [exiting, setExiting] = useState(false);
   // Swipe to dismiss (touch only): how far it is dragged, and where it flew off to.
@@ -229,13 +245,39 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
     </button>
   );
 
+  const closeButton = (
+    <button
+      type="button"
+      data-toast-close=""
+      aria-label={tCommon("close")}
+      title={tCommon("close")}
+      onClick={(e) => {
+        e.stopPropagation();
+        dismissByUser();
+      }}
+      className={cn(
+        "flex-shrink-0 p-1 rounded-md transition-all",
+        TOUCH_HIT_AREA,
+        "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
+        // Phones swipe a toast away instead; a body of its own may take the
+        // swipe for itself, so that one keeps its button.
+        toast.content === undefined && "max-sm:hidden",
+        toast.content !== undefined || !toast.duration || toast.duration <= 0
+          ? "opacity-100"
+          : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
+      )}
+    >
+      <X className="w-3.5 h-3.5" />
+    </button>
+  );
+
   return (
     <div
       className={cn(
-        "toast-item group relative flex items-start gap-2.5 w-[360px] max-w-[calc(100vw-2.5rem)] rounded-md",
+        "toast-item group relative flex w-[360px] max-w-[calc(100vw-2.5rem)] rounded-md",
         "bg-popover text-popover-foreground border border-border",
         "shadow-[0_6px_16px_rgb(0,0,0,0.1)] dark:shadow-[0_6px_16px_rgb(0,0,0,0.4)]",
-        "overflow-hidden pt-3 pe-2.5 pb-3.5 ps-3.5",
+        toast.content !== undefined ? "flex-col overflow-hidden" : "items-start gap-2.5 overflow-hidden pt-3 pe-2.5 pb-3.5 ps-3.5",
         // Phone: as wide as the screen allows (the container keeps 12px).
         "max-sm:w-full max-sm:max-w-none touch-pan-y rtl:[--toast-slide:-1]",
         exiting ? "toast-exit" : "toast-enter",
@@ -276,6 +318,19 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
         }
       }}
     >
+      {toast.content !== undefined ? (
+        <>
+          <div data-toast-header="" className="flex items-center gap-1 border-b border-border ps-3 pe-1 py-0.5">
+            <p id={titleId} className="sr-only">{toast.title}</p>
+            <p className="flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground" data-toast-source="">
+              <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{tPlugin("from_plugin", { name: toast.pluginName || toast.pluginId || "" })}</span>
+            </p>
+            {closeButton}
+          </div>
+          <div data-toast-content="" className="min-w-0">{toast.content}</div>
+        </>
+      ) : (<>
       {/* Icon */}
       {toast.icon !== undefined ? (
         toast.icon
@@ -285,51 +340,43 @@ export function ToastItem({ toast, onClose, held = false, stackHovered = false, 
         <Icon className={cn("w-[18px] h-[18px] flex-shrink-0 mt-px", iconStyles[toast.type])} />
       )}
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 pt-px">
-        <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug">{toast.title}</p>
-        {toast.message && (
-          <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug">{toast.message}</p>
-        )}
-        {toast.tertiaryAction && (
-          <div className="flex flex-wrap items-center gap-1 mt-1.5 -ms-1.5">
-            {actionButton(toast.tertiaryAction)}
+      {/* Content, with the actions next to it while the text keeps a readable
+          width. Longer labels (other languages) take the line below instead
+          of squeezing the text to a word per line. */}
+      <div data-toast-body="" className="flex-1 min-w-0 flex flex-wrap items-start gap-x-4 gap-y-1.5">
+        <div className="flex-1 min-w-[6rem] pt-px">
+          <p id={titleId} className="text-[0.84375rem] font-medium text-foreground leading-snug">{toast.title}</p>
+          {toast.message && (
+            <p className="text-[0.78125rem] mt-0.5 text-muted-foreground leading-snug">{toast.message}</p>
+          )}
+          {toast.pluginId && (
+            <p className="mt-1 flex items-center gap-1 text-[0.6875rem] text-muted-foreground" data-toast-source="">
+              <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{tPlugin("from_plugin", { name: toast.pluginName || toast.pluginId })}</span>
+            </p>
+          )}
+          {toast.tertiaryAction && (
+            <div className="flex flex-wrap items-center gap-1 mt-1.5 -ms-1.5">
+              {actionButton(toast.tertiaryAction)}
+              {toast.secondaryAction && actionButton(toast.secondaryAction)}
+              {toast.action && actionButton(toast.action)}
+              {toast.extraActions?.map((action) => <span key={action.label} className="contents">{actionButton(action)}</span>)}
+            </div>
+          )}
+        </div>
+
+        {!toast.tertiaryAction && (toast.action || toast.secondaryAction) && (
+          <div data-toast-actions="" className="flex flex-wrap items-center gap-1 max-w-full -ms-1.5">
             {toast.secondaryAction && actionButton(toast.secondaryAction)}
             {toast.action && actionButton(toast.action)}
-            {toast.extraActions?.map((action) => <span key={action.label} className="contents">{actionButton(action)}</span>)}
           </div>
         )}
       </div>
 
-      {!toast.tertiaryAction && (toast.action || toast.secondaryAction) && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {toast.secondaryAction && actionButton(toast.secondaryAction)}
-          {toast.action && actionButton(toast.action)}
-        </div>
-      )}
-
       {/* Close button. Phones swipe the toast away instead. A toast that stays
           until closed shows it all the time: that's the only way it goes. */}
-      <button
-        type="button"
-        data-toast-close=""
-        aria-label={tCommon("close")}
-        title={tCommon("close")}
-        onClick={(e) => {
-          e.stopPropagation();
-          dismissByUser();
-        }}
-        className={cn(
-          "flex-shrink-0 p-1 rounded-md transition-all max-sm:hidden",
-          TOUCH_HIT_AREA,
-          "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
-          !toast.duration || toast.duration <= 0
-            ? "opacity-100"
-            : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
-        )}
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
+      {closeButton}
+      </>)}
 
       {/* Progress line: the same line as the countdown, filled by the work done */}
       {isProgress && (

@@ -7,7 +7,8 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
 }));
 
-import { SharedTagSettings, maySetSharedTags } from '../shared-tag-settings';
+import { SharedTagSettings } from '../shared-tag-settings';
+import { maySetSharedTags } from '@/hooks/use-account-tags';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -89,6 +90,29 @@ describe('SharedTagSettings', () => {
       { path: ['tags', 'waiting'], value: { label: 'Waiting', color: 'blue' } },
     ]));
     expect(await screen.findByText('Waiting')).toBeInTheDocument();
+  });
+
+  // #1613: a name with no Latin letters or digits had no id, so Save stayed off.
+  it('adds a shared tag named in Cyrillic under a valid keyword id', async () => {
+    render(<SharedTagSettings />);
+    expect(await screen.findByText('Urgent')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('add'));
+    fireEvent.change(screen.getByLabelText('name'), { target: { value: 'Работа' } });
+    fireEvent.click(screen.getByText('save'));
+    await waitFor(() => expect(client.patchBulwarkMetadata).toHaveBeenCalled());
+    const [[, , patches]] = client.patchBulwarkMetadata.mock.calls;
+    expect(patches).toHaveLength(1);
+    expect(patches[0].path[1]).toMatch(/^tag-[0-9a-z]+$/);
+    expect(patches[0].value).toEqual({ label: 'Работа', color: 'blue' });
+  });
+
+  it('refuses a second shared tag with the same name', async () => {
+    render(<SharedTagSettings />);
+    expect(await screen.findByText('Urgent')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('add'));
+    fireEvent.change(screen.getByLabelText('name'), { target: { value: 'urgent' } });
+    expect(screen.getByText('exists')).toBeInTheDocument();
+    expect(screen.getByText('save').closest('button')).toBeDisabled();
   });
 
   it('names the buttons after their tag and puts focus back on the edit button after saving', async () => {
@@ -179,6 +203,70 @@ describe('SharedTagSettings', () => {
     await waitFor(() => expect(client.patchBulwarkMetadata).toHaveBeenCalledWith('team', 'tags', [
       { path: ['tags', 'waiting-for-customer'], value: { label: 'Customer', color: expect.any(String) } },
     ]));
+  });
+});
+
+describe('SharedTagSettings custom colors', () => {
+  it('sends a typed code as color: #rrggbb', async () => {
+    render(<SharedTagSettings />);
+    expect(await screen.findByText('Urgent')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('add'));
+    fireEvent.change(screen.getByLabelText('name'), { target: { value: 'Waiting' } });
+    fireEvent.change(screen.getByTestId('tag-color-hex'), { target: { value: '#1A73E8' } });
+    fireEvent.click(screen.getByText('save'));
+    await waitFor(() => expect(client.patchBulwarkMetadata).toHaveBeenCalledWith('team', 'tags', [
+      { path: ['tags', 'waiting'], value: { label: 'Waiting', color: '#1a73e8' } },
+    ]));
+  });
+
+  it('opens a tag stored with a hex color with the code filled in, lowercased', async () => {
+    stored = { tags: { urgent: { label: 'Urgent', color: '#1A73E8' } } };
+    render(<SharedTagSettings />);
+    fireEvent.click(await screen.findByLabelText('edit_tag:Urgent'));
+    expect(screen.getByTestId('tag-color-hex')).toHaveValue('#1a73e8');
+    expect(screen.getByTestId('tag-color-native')).toHaveValue('#1a73e8');
+  });
+
+  it('sends no color when a tag with a hex color is only renamed', async () => {
+    stored = { tags: { urgent: { label: 'Urgent', color: '#1A73E8' } } };
+    render(<SharedTagSettings />);
+    fireEvent.click(await screen.findByLabelText('edit_tag:Urgent'));
+    fireEvent.change(screen.getByLabelText('name'), { target: { value: 'Later' } });
+    fireEvent.click(screen.getByText('save'));
+    // The stored value as it was, not the form's lowercased copy.
+    await waitFor(() => expect(client.patchBulwarkMetadata).toHaveBeenCalledWith('team', 'tags', [
+      { path: ['tags', 'urgent'], value: { label: 'Later', color: '#1A73E8' } },
+    ]));
+  });
+
+  it('sends a hex picked for an existing tag', async () => {
+    render(<SharedTagSettings />);
+    fireEvent.click(await screen.findByLabelText('edit_tag:Urgent'));
+    fireEvent.change(screen.getByTestId('tag-color-native'), { target: { value: '#00aa00' } });
+    expect(screen.getByTestId('tag-color-hex')).toHaveValue('#00aa00');
+    fireEvent.click(screen.getByText('save'));
+    await waitFor(() => expect(client.patchBulwarkMetadata).toHaveBeenCalledWith('team', 'tags', [
+      { path: ['tags', 'urgent'], value: { label: 'Urgent', color: '#00aa00' } },
+    ]));
+  });
+
+  it('refuses an incomplete code and disables Save', async () => {
+    render(<SharedTagSettings />);
+    fireEvent.click(await screen.findByLabelText('edit_tag:Urgent'));
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '#12' } });
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('invalid_color')).toBeInTheDocument();
+    expect(screen.getByText('save').closest('button')).toBeDisabled();
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(client.patchBulwarkMetadata).not.toHaveBeenCalled();
+  });
+
+  it('cancels with Escape in the code field', async () => {
+    render(<SharedTagSettings />);
+    fireEvent.click(await screen.findByLabelText('edit_tag:Urgent'));
+    fireEvent.keyDown(screen.getByTestId('tag-color-hex'), { key: 'Escape' });
+    expect(screen.queryByTestId('shared-tag-form')).toBeNull();
   });
 });
 

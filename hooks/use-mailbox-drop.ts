@@ -3,7 +3,7 @@
 import { useCallback, useState, DragEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Mailbox, Email } from "@/lib/jmap/types";
-import { useEmailStore, isAggregateListView, restoreBatchesFor, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, isAggregateListView, mailboxesInView, restoreBatchesFor, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
 import { useShallow } from "zustand/react/shallow";
 import { emailKeyFor } from "@/lib/thread-utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -175,7 +175,9 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
         //      no atomic Email/set across accounts, even via the same client.
         //   2. Destination is a primary mailbox on a different connected local
         //      account than the source — the historical multi-account case.
-        const sourceMb = useEmailStore.getState().mailboxes.find(mb => mb.id === sourceMailboxId);
+        // The folder on screen, in the list of the login on screen (the
+        // browsed one's): the same id is another folder in the active login's.
+        const sourceMb = mailboxesInView(useEmailStore.getState()).find(mb => mb.id === sourceMailboxId);
         const sourceJmapAccountId = sourceMb?.accountId;
         const destJmapAccountId = mailbox.accountId;
         const sourceAccountIds = Array.from(bySource.keys());

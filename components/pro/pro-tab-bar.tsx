@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type WheelEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, Search, X, type AppIcon } from "@/components/icons";
+import { Mail, Calendar, ListTodo, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, Search, X, type AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useRestoredTabTitles } from "@/hooks/use-restored-tab-titles";
 import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId } from "@/stores/pro-tab-store";
@@ -39,6 +39,7 @@ interface ProTabBarProps {
 const TAB_ICONS: Record<ProTabKind, AppIcon> = {
   mail: Mail,
   calendar: Calendar,
+  tasks: ListTodo,
   contacts: BookUser,
   files: HardDrive,
   settings: Settings,

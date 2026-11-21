@@ -58,6 +58,12 @@ export interface MoveMenuModel {
   recent: MoveMenuNode[];
   /** Pickable folders in the own account. */
   targetCount: number;
+  /**
+   * Whose folders these are, when they aren't the active login's: that
+   * login's address (moveFoldersFor's `owner`), shown above them. Two logins'
+   * "Inbox" look the same otherwise.
+   */
+  heading?: string;
 }
 
 export interface MoveMenuOptions {

@@ -83,6 +83,8 @@ describe('drag and drop hooks', () => {
       moveEmailsToMailbox: vi.fn().mockResolvedValue(true),
       refreshCurrentMailbox: vi.fn().mockResolvedValue(undefined),
       setEmailKeywords: vi.fn().mockResolvedValue(true),
+      // The tag drop writes each dragged row through its own login and account.
+      patchEmailKeywords: vi.fn().mockResolvedValue(true),
       fetchEmails: vi.fn().mockResolvedValue(undefined),
       fetchTagCounts: vi.fn(),
       clearSelection: vi.fn(),
@@ -149,7 +151,7 @@ describe('drag and drop hooks', () => {
   });
 
   it('says nothing was tagged when a plugin stops it', async () => {
-    useEmailStore.setState({ setEmailKeywords: vi.fn().mockResolvedValue(false) } as never);
+    useEmailStore.setState({ setEmailKeywords: vi.fn().mockResolvedValue(false), patchEmailKeywords: vi.fn().mockResolvedValue(false) } as never);
     const tagged = listen(dragDropHooks.onTagDrop);
     const onSuccess = vi.fn();
     const { result } = renderHook(

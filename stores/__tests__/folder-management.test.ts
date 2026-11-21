@@ -214,6 +214,25 @@ describe('email-store folder management', () => {
       expect(client.updateMailbox).toHaveBeenCalledWith('custom-1', { role: 'trash' }, undefined);
     });
 
+    // The old holder's role is already cleared when the second update fails.
+    it('shows the folders as the server has them when the role cannot be set', async () => {
+      const afterFailure = useEmailStore.getState().mailboxes.map(mb =>
+        mb.id === 'trash-1' ? { ...mb, role: undefined } : mb
+      );
+      const client = makeMockClient({
+        getAllMailboxes: vi.fn().mockResolvedValue(afterFailure),
+        updateMailbox: vi.fn()
+          .mockResolvedValueOnce(undefined)
+          .mockRejectedValueOnce(new Error('Update mailbox failed: forbidden')),
+      });
+
+      await expect(useEmailStore.getState().setMailboxRole(client, 'custom-1', 'trash')).rejects.toThrow('forbidden');
+
+      expect(client.getAllMailboxes).toHaveBeenCalled();
+      expect(useEmailStore.getState().mailboxes.find(mb => mb.id === 'trash-1')?.role).toBeUndefined();
+      expect(useEmailStore.getState().error).toBe('Update mailbox failed: forbidden');
+    });
+
     it('should clear role from a mailbox when role is null', async () => {
       const newMailboxes = useEmailStore.getState().mailboxes.map(mb =>
         mb.id === 'trash-1' ? { ...mb, role: undefined } : mb

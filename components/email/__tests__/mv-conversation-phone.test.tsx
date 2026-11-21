@@ -93,11 +93,12 @@ describe('Mountain View conversation on the phone (#1224)', () => {
     fireEvent.click(screen.getByText('Sender 1'));
     expect(container.querySelector('[data-mv-conversation-details]')).toBeNull();
 
-    fireEvent.click(container.querySelector('[data-mv-conversation-details-toggle]')!);
+    fireEvent.click(container.querySelector('[data-mv-conversation-expanded] [data-message-details-toggle]')!);
     const details = container.querySelector('[data-mv-conversation-details]') as HTMLElement;
     expect(details).not.toBeNull();
-    expect(details.textContent).toContain('Carol <carol@example.com>');
-    expect(details.textContent).toContain('Dave <dave@example.com>');
+    // The open message's details panel names each recipient, the address is in its card.
+    expect(details.textContent).toContain('Carol');
+    expect(details.textContent).toContain('Dave');
     // The toggle does not fold the message it sits in.
     expect(cardIds(container)).toEqual(['m1']);
     expect(container.querySelector('[data-mv-conversation-expanded]')).not.toBeNull();

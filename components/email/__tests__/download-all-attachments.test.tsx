@@ -28,7 +28,7 @@ vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/hooks/use-plugin-slot-offers', () => ({ usePluginSlotOffers: () => [] }));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail' }) }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
-vi.mock('@/components/email/external-sender-chip', () => ({ ExternalSenderChip: () => null }));
+vi.mock('@/components/email/external-sender-chip', () => ({ ExternalSenderChip: () => null, useInternalMailDomains: () => [] }));
 
 const { EmailViewer } = await import('../email-viewer');
 const initialAuth = useAuthStore.getState();
@@ -180,7 +180,8 @@ async function openViewer(route: Route = 'secondary-stamped', parts = attachment
     expect(downloads).toEqual([{ href: 'blob:download-all', name: 'attachments_Download test.zip', connected: true, notifications: 0 }]);
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
     const blob = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob;
-    expect(blob.type).toBe('application/zip');
+    // Every download is saved from a URL typed octet-stream; the name ends in .zip.
+    expect(blob.type).toBe('application/octet-stream');
     const zip = await JSZip.loadAsync(await readBlob(blob), { checkCRC32: true });
     expect(Object.keys(zip.files)).toEqual(names);
     for (let i = 0; i < names.length; i++) {
@@ -219,6 +220,18 @@ describe('Download all attachments', () => {
     p.assertRequests(['blob-a', 'blob-b']);
     expect(useToastStore.getState().toasts).toEqual([]);
     await p.assertZip(['report.txt', 'data.bin'], [alpha, beta]);
+  });
+
+  it('names a renamed attachment in the ZIP as the user typed it', async () => {
+    const p = await openViewer('primary');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Rename report.txt' })[0]);
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Rename attachment' }), { target: { value: 'Q3 Summary' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Rename Q3 Summary.txt' }).length).toBeGreaterThan(0));
+    p.success(); p.click();
+    await waitFor(() => expect(p.downloads).toHaveLength(1));
+    await p.finish();
+    await p.assertZip(['Q3 Summary.txt', 'data.bin'], [alpha, beta]);
   });
 
   it('preserves distinct bytes when attachment names collide', async () => {
@@ -362,10 +375,10 @@ describe('Save all attachments to a folder', () => {
     await openViewer();
     const save = saveButton();
     expect(save.getAttribute('aria-label')).toBe(en.pwaWindows.save_all_to_folder);
-    expect(save.querySelector('span')?.className).toContain('hidden @xl:inline');
+    expect(save.querySelector('span')?.className).toContain('hidden @md:inline');
     const download = screen.getAllByTitle('Download all')[0];
     expect(download.getAttribute('aria-label')).toBe('Download all');
-    expect(download.querySelector('span')?.className).toContain('hidden @xl:inline');
+    expect(download.querySelector('span')?.className).toContain('hidden @md:inline');
     expect(screen.getAllByTestId('reader-attachments')[0].className).toContain('@container');
   });
 

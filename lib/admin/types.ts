@@ -35,6 +35,12 @@ export interface AdminSessionPayload {
   sid: string;
   /** AdminStateData.sessionGeneration it was issued in. */
   gen: number;
+  /**
+   * Cookie slot of the Stalwart admin login that opened it without the admin
+   * password. Signing that login out of the webmail ends it. Absent for a
+   * session opened with the admin password.
+   */
+  slot?: number;
 }
 
 export interface SettingRestriction {
@@ -222,6 +228,20 @@ export interface SettingsPolicy {
    * a client works with has none.
    */
   scopes?: PolicyScope[];
+  /**
+   * Show only accounts in the domains of the signed-in account's addresses,
+   * aliases included, wherever Bulwark lists the server's accounts: contacts
+   * directory, recipient suggestions, sharing, delegation, free/busy and the
+   * plugins' lookups (lib/directory-scope.ts). It narrows what Bulwark shows,
+   * not what the server answers. Stalwart reports an account's name as its
+   * address, so accounts named without a domain are left out.
+   */
+  directorySameDomainOnly?: boolean;
+  /**
+   * Account names (the part before the @) left out of those lists for
+   * everyone, such as noreply. Lowercase; sanitized on policy load and save.
+   */
+  directoryHiddenLocalparts?: string[];
 }
 
 /** Set to `public` on a policy answered with the pre-login subset. */
@@ -245,6 +265,8 @@ export const DEFAULT_POLICY: SettingsPolicy = {
   pushRelayUrl: '',
   pushRelayUrlLocked: false,
   defaultSidebarApps: [],
+  directorySameDomainOnly: false,
+  directoryHiddenLocalparts: [],
 };
 
 export interface AuditEntry {
@@ -255,7 +277,7 @@ export interface AuditEntry {
 }
 
 /** Config keys that map to environment variables */
-export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: string; fileKey?: string; type: 'string' | 'boolean' | 'url' | 'enum' | 'json'; defaultValue: unknown; enumValues?: string[] }> = {
+export const CONFIG_ENV_MAP: Record<string, { envVar?: string; fileEnvVar?: string; fileKey?: string; type: 'string' | 'boolean' | 'url' | 'enum' | 'json'; defaultValue: unknown; enumValues?: string[] }> = {
   appName: { envVar: 'APP_NAME', type: 'string', defaultValue: 'Webmail' },
   appShortName: { envVar: 'APP_SHORT_NAME', type: 'string', defaultValue: '' },
   appDescription: { envVar: 'APP_DESCRIPTION', type: 'string', defaultValue: '' },
@@ -285,6 +307,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // Placeholder of the email field on the login page, e.g. the company's own
   // address format. Empty uses the translation (login.username_placeholder).
   loginUsernamePlaceholder: { envVar: 'LOGIN_USERNAME_PLACEHOLDER', type: 'string', defaultValue: '' },
+  // Where users reset a forgotten password, e.g. the provider's account
+  // portal. The login page links there under the password field. Empty
+  // shows no link. Only http(s) URLs are used.
+  loginForgotPasswordUrl: { envVar: 'LOGIN_FORGOT_PASSWORD_URL', type: 'url', defaultValue: '' },
   // Where users get the source of the build they are running (AGPL-3.0 §13).
   // Operators of a modified build point it at their fork; the About card then
   // links there instead of the upstream repository (#1161). Empty = upstream.
@@ -336,6 +362,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // Show the "Remember me" box on the login form. Off (the default) remembers
   // every sign-in, as long as a SESSION_SECRET makes that possible.
   loginShowRememberMe: { envVar: 'LOGIN_SHOW_REMEMBER_ME', type: 'boolean', defaultValue: false },
+  // A sign-in made with "Remember me" unticked lasts until the browser closes
+  // (session cookies) instead of ending at the next reload or new tab. Needs
+  // SESSION_SECRET, like remembering does.
+  browserSessionSignIn: { envVar: 'BROWSER_SESSION_SIGN_IN', type: 'boolean', defaultValue: false },
   // Show the build version in the login footer. Off keeps the exact version
   // from being disclosed to unauthenticated visitors.
   loginShowVersion: { envVar: 'LOGIN_SHOW_VERSION', type: 'boolean', defaultValue: true },
@@ -390,6 +420,11 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // "password" and "off" require an admin password to be configured, or the
   // dashboard would become unreachable.
   stalwartAdminAccess: { envVar: 'STALWART_ADMIN_ACCESS', type: 'enum', defaultValue: 'auto', enumValues: ['auto', 'password', 'off'] },
+  // Mail accounts, each on one configured server, that get what a Stalwart
+  // superuser gets under stalwartAdminAccess: [{ serverUrl, account }]. Set
+  // only in the dashboard, so it has no environment variable
+  // (lib/admin/admin-accounts.ts).
+  adminAccounts: { type: 'json', defaultValue: [] },
   jmapServers: { envVar: 'JMAP_SERVERS', type: 'json', defaultValue: [] },
   jmapServerAutoPickByDomain: { envVar: 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', type: 'boolean', defaultValue: false },
   domainBranding: { envVar: 'DOMAIN_BRANDING', type: 'json', defaultValue: [] },
@@ -434,6 +469,11 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // sender's DNS record and an enforcing DMARC policy; on also requires a
   // valid Verified Mark or Common Mark Certificate, as Gmail and Apple Mail do.
   bimiRequireCertificate: { envVar: 'BIMI_REQUIRE_CERTIFICATE', type: 'boolean', defaultValue: false },
+  // Hostnames, comma-separated, whose Authentication-Results the sender check
+  // acts on besides the receiving Stalwart's (lib/trusted-authserv.ts): other
+  // JMAP servers, mailboxes behind legacy-proxy, a filtering gateway. Exact
+  // match, no wildcards. Empty = only the receiving Stalwart's (#1740).
+  trustedAuthservIds: { envVar: 'TRUSTED_AUTHSERV_IDS', type: 'string', defaultValue: '' },
   // WOPI document editing (#425). `wopiClientUrl` is the editor's base URL
   // (Collabora Online / OnlyOffice / EuroOffice, ...); discovery is fetched
   // from `<url>/hosting/discovery` unless the URL already carries a path.

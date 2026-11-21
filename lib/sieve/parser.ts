@@ -497,13 +497,29 @@ function parseAtom(raw: string): FilterCondition | null {
     return { field, comparator: part === ':domain' ? 'domain_is' : 'address_is', value };
   }
 
+  // `envelope "to"` as the generator writes "Delivered to": `:is` on the
+  // whole address, `:domain :is`, or `:contains`. The address part and the
+  // match type may come in either order. Another envelope part (from), the
+  // local part, a negation or another match type stay opaque.
+  m = /^envelope\s+(?:(:all|:domain)\s+)?:(is|contains)\s+(?:(:all|:domain)\s+)?"((?:[^"\\]|\\.)*)"\s+([\s\S]+)$/.exec(s);
+  if (m) {
+    const [, partBefore, tag, partAfter, envelopePart, rawTail] = m;
+    if (negated || (partBefore && partAfter)) return null;
+    if (unescapeSieveString(envelopePart).toLowerCase() !== 'to') return null;
+    const value = parseValueTail(rawTail);
+    if (value === null) return null;
+    const domain = (partBefore ?? partAfter) === ':domain';
+    if (tag === 'contains') return domain ? null : { field: 'delivered_to', comparator: 'contains', value };
+    return { field: 'delivered_to', comparator: domain ? 'domain_is' : 'address_is', value };
+  }
+
   m = /^header\s+:(contains|is|matches|regex)\s+"((?:[^"\\]|\\.)*)"\s+([\s\S]+)$/.exec(s);
   if (m) {
     const [, tag, headerName, rawTail] = m;
     const value = parseValueTail(rawTail);
     if (value === null) return null;
-    // The builder has no "does not match regex".
-    if (tag === 'regex' && negated) return null;
+    // The builder has no "does not match regex" or "does not match the pattern".
+    if ((tag === 'regex' || tag === 'matches') && negated) return null;
     const { field, headerName: customHeaderName } = normalizeHeaderName(unescapeSieveString(headerName));
 
     let comparator: FilterComparator;
@@ -528,12 +544,17 @@ function parseAtom(raw: string): FilterCondition | null {
     return cond;
   }
 
-  m = /^body\s+:(contains|is|regex)\s+([\s\S]+)$/.exec(s);
+  m = /^body\s+:(contains|is|matches|regex)\s+([\s\S]+)$/.exec(s);
   if (m) {
-    const value = parseValueTail(m[2]);
+    const [, tag, rawTail] = m;
+    const value = parseValueTail(rawTail);
     if (value === null) return null;
-    const comparator = m[1] === 'is' ? 'is' : m[1] === 'regex' ? 'regex' : 'contains';
-    return { field: 'body', comparator, value };
+    if ((tag === 'regex' || tag === 'matches') && negated) return null;
+    if (tag === 'contains') return { field: 'body', comparator: negated ? 'not_contains' : 'contains', value };
+    if (tag === 'is') return { field: 'body', comparator: negated ? 'not_is' : 'is', value };
+    if (tag === 'regex') return { field: 'body', comparator: 'regex', value };
+    const classified = classifyMatches(value);
+    return { field: 'body', comparator: classified.comparator, value: classified.stripped };
   }
 
   m = /^size\s+:(over|under)\s+(\d+)$/.exec(s);

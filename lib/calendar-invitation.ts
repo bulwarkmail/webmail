@@ -1,6 +1,6 @@
 import type { Email, Attachment, CalendarEvent, CalendarParticipant, EmailBodyPart } from '@/lib/jmap/types';
 import { normalizeCalendarEventLike } from '@/lib/calendar-event-normalization';
-import { hasAlignedAuthenticationPass } from '@/lib/email-headers';
+import { authenticationResultsUsable, hasAlignedAuthenticationPass, isImportedMessage } from '@/lib/email-headers';
 import { fromWallClock, getTimeZoneOffsetMs, isValidTimeZone, parseLocalDateTime, type WallClock } from '@/lib/timezone';
 import { applyOverridePatch } from '@/lib/recurrence-instances';
 
@@ -99,7 +99,7 @@ function extractMethodFromContentType(value?: string | null): InvitationMethod {
  * VCALENDAR data as a reliable fallback.
  */
 export function extractMethodFromRawIcs(rawText: string): InvitationMethod {
-  const match = rawText.match(/^METHOD:(\S+)/m);
+  const match = rawText.match(/^METHOD(?:;[^:\r\n]*)?:[ \t]*([A-Za-z-]+)/im);
   return match ? normalizeInvitationMethod(match[1]) : 'unknown';
 }
 
@@ -206,14 +206,50 @@ function getOrganizerEmail(event: Partial<CalendarEvent>): string | null {
   return null;
 }
 
+/** The organizer of a stored event: its ORGANIZER address first, as the server keeps it. */
+function storedEventOrganizer(event: Partial<CalendarEvent>): string | null {
+  return normalizeEmailAddress(event.organizerCalendarAddress) ?? getOrganizerEmail(event);
+}
+
+/**
+ * Whether the message's From address is the organizer of every one of
+ * `events`, the stored copies a cancellation would remove. Only the
+ * organizer cancels a meeting (RFC 5546 3.2.5), and the organizer named
+ * inside the cancellation is the sender's own text, so the stored events
+ * decide. An event without an organizer has nobody who could cancel it.
+ */
+export function isFromOrganizerOf(
+  events: readonly Partial<CalendarEvent>[],
+  email: Pick<Email, 'from'> | undefined,
+): boolean {
+  const sender = getPrimaryAddressEmail(email?.from);
+  return !!sender && events.length > 0 && events.every((event) => storedEventOrganizer(event) === sender);
+}
+
+/** The organizer of the first of `events` that names one, for the notice that names both addresses. */
+export function storedOrganizerEmail(events: readonly Partial<CalendarEvent>[]): string | null {
+  for (const event of events) {
+    const organizer = storedEventOrganizer(event);
+    if (organizer) return organizer;
+  }
+  return null;
+}
+
+/** What the trust assessment reads of the message. */
+type TrustEmail = Pick<Email, 'from' | 'authenticationResults' | 'authenticationResultsOnReceipt'> & Partial<Pick<Email, 'keywords' | 'headers' | 'authenticationResultsIgnored'>>;
+
 /**
  * Whether the server's checks tie the message to its From domain. Only an
  * aligned pass counts: a sender passes SPF for their own envelope domain, or
  * signs with their own DKIM key, and still writes the organizer's address in
  * From. With no DMARC policy on that domain the verdict is `dmarc=none`, and
- * the bare `spf=pass` made the forged invitation look trusted.
+ * the bare `spf=pass` made the forged invitation look trusted. A pass counts
+ * only when the message shows its results were written on receipt, and never
+ * for a message from an imported file, as for the booking cards
+ * (authenticationResultsUsable).
  */
-function hasVerifiedAuthentication(email?: Pick<Email, 'from' | 'authenticationResults'>): boolean {
+function hasVerifiedAuthentication(email?: TrustEmail): boolean {
+  if (!authenticationResultsUsable(email)) return false;
   return hasAlignedAuthenticationPass(email?.authenticationResults, getPrimaryAddressEmail(email?.from) ?? undefined);
 }
 
@@ -372,16 +408,35 @@ export function findCalendarAttachment(email: Email): Attachment | null {
   return null;
 }
 
+/**
+ * The iTIP method of an invitation message. The method the sender stated wins:
+ * the MIME part's method parameter, then the .ics METHOD (as CalendarEvent/parse
+ * reports it, or read from the raw file). Only without one is it guessed from
+ * the participants, which misreads a reply whose attendee has no roles, as
+ * Stalwart sends it (#1688).
+ */
 export function getInvitationMethod(
   event: Partial<CalendarEvent>,
   options?: {
     email?: Pick<Email, 'headers' | 'attachments' | 'textBody' | 'htmlBody'>;
     attachment?: Pick<Attachment, 'type'> | null;
+    /** The raw .ics text, for its METHOD line. */
+    rawIcs?: string | null;
   }
 ): InvitationMethod {
   const explicitMethod = getMethodFromEmail(options?.email, options?.attachment);
   if (explicitMethod !== 'unknown') {
     return explicitMethod;
+  }
+
+  const parsedMethod = normalizeInvitationMethod(event.method);
+  if (parsedMethod !== 'unknown') {
+    return parsedMethod;
+  }
+
+  const rawMethod = options?.rawIcs ? extractMethodFromRawIcs(options.rawIcs) : 'unknown';
+  if (rawMethod !== 'unknown') {
+    return rawMethod;
   }
 
   if (event.status === 'cancelled') {
@@ -409,12 +464,24 @@ export function getInvitationMethod(
  * the reader's domains that carries no Authentication-Results header at all
  * was handed in by a signed-in user rather than received from outside:
  * Stalwart adds the header to everything that arrives on port 25 (#1374).
+ *
+ * `internalMailDomains` are the organisation's other domains, as the
+ * "External" sender chip counts them (lib/external-mail.ts internalDomains,
+ * in ASCII form; a domain covers its subdomains): a server that hosts
+ * several domains hands mail between them over the same way (#1593). The
+ * missing header stays the condition, so a listed domain hosted elsewhere,
+ * whose mail arrives on port 25, is still checked. A message with a header
+ * that was not written on receipt, or one left out as another server's
+ * (authenticationResultsIgnored), is not internal, and its pass does not
+ * verify it (hasVerifiedAuthentication). Neither is a message from an
+ * imported file: it was not handed in here.
  */
 export function getInvitationTrustAssessment(
   event: Partial<CalendarEvent>,
-  email?: Pick<Email, 'from' | 'replyTo' | 'authenticationResults'>,
+  email?: TrustEmail & Pick<Email, 'replyTo'>,
   method: InvitationMethod = getInvitationMethod(event),
-  ownAddresses: string[] = []
+  ownAddresses: string[] = [],
+  internalMailDomains: readonly string[] = []
 ): InvitationTrustAssessment {
   const organizerEmail = getOrganizerEmail(event);
   const senderEmail = getPrimaryAddressEmail(email?.from) || getPrimaryAddressEmail(email?.replyTo);
@@ -427,8 +494,9 @@ export function getInvitationTrustAssessment(
   const authenticationFailure = hasAuthenticationFailure(email, verifiedAuthentication);
   const senderMismatch = Boolean(senderEmail && expectedEmail && senderEmail !== expectedEmail);
   const senderDomain = senderEmail?.split('@').pop();
-  const internal = Boolean(email && !email.authenticationResults && senderDomain
-    && ownAddresses.some((address) => address.toLowerCase().split('@').pop() === senderDomain));
+  const internal = Boolean(email && !email.authenticationResults && !email.authenticationResultsIgnored && !isImportedMessage(email) && senderDomain
+    && (ownAddresses.some((address) => address.toLowerCase().split('@').pop() === senderDomain)
+      || internalMailDomains.some((domain) => senderDomain === domain || senderDomain.endsWith(`.${domain}`))));
   const expectsAuthenticatedTransport = method !== 'unknown' && !internal;
   const addresses = { senderEmail, organizerEmail, attendeeEmail };
 

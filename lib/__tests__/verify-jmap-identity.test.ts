@@ -36,6 +36,21 @@ function basic(user: string, pass: string): string {
   return `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}`;
 }
 
+const SUBMISSION = 'urn:ietf:params:jmap:submission';
+
+/**
+ * An `Identity/get` answer the way Stalwart gives it: without the submission
+ * capability in `using`, the call fails with `unknownMethod` (#1643).
+ */
+function identityResponse(init: RequestInit | undefined, accountId: string, emails: string[]) {
+  const request = JSON.parse(String(init?.body)) as { using?: string[] };
+  if (!request.using?.includes(SUBMISSION)) {
+    return json({ methodResponses: [['error', { type: 'unknownMethod' }, '0']] });
+  }
+  const list = emails.map((email, i) => ({ id: `i${i}`, email }));
+  return json({ methodResponses: [['Identity/get', { accountId, list }, '0']] });
+}
+
 async function load() {
   return import('@/lib/auth/verify-jmap-auth');
 }
@@ -140,6 +155,7 @@ describe('verifyJmapIdentity', () => {
     const body = JSON.parse((guardedFetch.mock.calls[1][1] as { body: string }).body);
     expect(body.methodCalls[0][0]).toBe('Identity/get');
     expect(body.methodCalls[0][1]).toEqual({ accountId: 'c', ids: null });
+    expect(body.using).toContain(SUBMISSION);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -167,6 +183,29 @@ describe('verifyJmapIdentity', () => {
       verifyJmapIdentity('https://mail.internal', 'Bearer tok', 'alice@example.org', { trusted: true }),
     ).rejects.toMatchObject({ status: 403 });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts an identity of the account and rejects any other address, on a server that requires the submission capability', async () => {
+    // An OIDC login registers under the primary identity's e-mail, which may
+    // be an alias of the canonical login (#1643).
+    const session = {
+      apiUrl: 'https://mail.internal/jmap/',
+      username: 'owner@example.org',
+      primaryAccounts: { 'urn:ietf:params:jmap:mail': 'c' },
+      accounts: {},
+    };
+    fetchSpy.mockImplementation(async (url: RequestInfo | URL, init?: RequestInit) => (
+      String(url).endsWith('/.well-known/jmap')
+        ? json(session)
+        : identityResponse(init, 'c', ['owner@example.org', 'alias@example.org'])
+    ));
+    const { verifyJmapIdentity } = await load();
+    await expect(verifyJmapIdentity('https://mail.internal', 'Bearer tok', 'alias@example.org', { trusted: true }))
+      .resolves.toBe('https://mail.internal');
+    await expect(verifyJmapIdentity('https://mail.internal', 'Bearer tok', 'mallory@example.org', { trusted: true }))
+      .rejects.toMatchObject({ status: 403 });
+    await expect(verifyJmapIdentity('https://mail.internal', 'Bearer tok', 'owner@example.org', { trusted: true }))
+      .resolves.toBe('https://mail.internal');
   });
 
   it('treats a malformed Identity/get response as a failure, not as a match', async () => {

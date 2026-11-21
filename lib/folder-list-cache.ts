@@ -22,6 +22,8 @@ export interface FolderList {
   sync?: { state: string; accountId: string; mailboxId: string } | null;
   /** Conversation sizes of the rows, which a folder switch clears. */
   threadEmailCounts?: Map<string, number>;
+  /** The account's drafts by conversation, for the rows' "Draft" (#1798). */
+  draftThreads?: Map<string, string>;
 }
 
 /** Folders remembered per tab; the oldest visited is dropped first. */
@@ -65,6 +67,7 @@ export function rememberFolderList(key: string, list: FolderList, pageSize: numb
     hasMoreEmails: list.hasMoreEmails || list.emails.length > pageSize,
     sync: list.sync ?? null,
     threadEmailCounts: list.threadEmailCounts,
+    draftThreads: list.draftThreads,
   });
   while (lists.size > MAX_FOLDERS) {
     const oldest = lists.keys().next().value;

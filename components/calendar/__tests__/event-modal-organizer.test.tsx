@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventModal } from '../event-modal';
 import type { Calendar, CalendarEvent, CalendarParticipant } from '@/lib/jmap/types';
@@ -141,7 +141,7 @@ describe.each<['0.16' | '1.0']>([['0.16'], ['1.0']])('EventModal answers after a
     return onSave.mock.calls[0][0] as Partial<CalendarEvent>;
   }
   const moveStartTo = (time: string) => (container: HTMLElement) => {
-    const [startTime] = container.querySelectorAll('input[type="time"]');
+    const startTime = within(container).getByLabelText('form.start_time');
     fireEvent.change(startTime, { target: { value: time } });
   };
   const statuses = (data: Partial<CalendarEvent>) => Object.fromEntries(
@@ -291,7 +291,7 @@ describe.each<['0.16' | '1.0']>([['0.16'], ['1.0']])('EventModal on the owner\'s
   // (live on 0.16.23).
   it('asks the other attendees again when the user moves it, and keeps the user\'s answer', async () => {
     const { data } = await saveAs(inShared('userc@example.org', true), (container) => {
-      const [startTime] = container.querySelectorAll('input[type="time"]');
+      const startTime = within(container).getByLabelText('form.start_time');
       fireEvent.change(startTime, { target: { value: '11:00' } });
     });
 

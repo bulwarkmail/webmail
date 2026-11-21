@@ -3,6 +3,7 @@ import { MboxSplitter, envelopeDate, readHeaderBlock, type MboxMessage } from ".
 import { mboxState, withoutStateHeaders } from "./mbox-status";
 import { EXPORT_ENVELOPE_SENDER } from "@/lib/mail-export/mbox-writer";
 import { listZipEntries, readZipEntry, streamZipEntry } from "./zip-reader";
+import { IMPORTED_KEYWORD } from "@/lib/email-headers";
 
 /**
  * What the import reads from each file: messages with their folder, state and
@@ -112,6 +113,15 @@ export async function sniffFormat(file: Blob & { name?: string }): Promise<Impor
   return "eml";
 }
 
+/**
+ * The keywords a message is uploaded with: its state from the file, and
+ * always IMPORTED_KEYWORD, whatever the file says. The reader builds no trust
+ * on the Received and Authentication-Results lines of such a message.
+ */
+export function importedKeywords(fromFile: Record<string, true>): Record<string, true> {
+  return { ...fromFile, [IMPORTED_KEYWORD]: true };
+}
+
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw new DOMException("Import cancelled", "AbortError");
 }
@@ -159,7 +169,7 @@ export async function* emlSource(file: File, options: SourceOptions): ItemSource
     data: file.slice(0, file.size, MIME),
     size: file.size,
     // Thunderbird writes X-Mozilla-Status into the .eml files it saves; none means read, as before.
-    keywords: mboxState(head.split(/\r?\n\r?\n/, 1)[0]).keywords,
+    keywords: importedKeywords(mboxState(head.split(/\r?\n\r?\n/, 1)[0]).keywords),
     receivedAt: dateFromHeaderBlock(head),
     label: emlLabel(file.name),
   };
@@ -200,7 +210,7 @@ function mboxItem(message: MboxMessage, index: number, folder: string[]): Import
     folder,
     data: new Blob(parts as BlobPart[], { type: MIME }),
     size: parts.reduce((n, p) => n + p.length, 0),
-    keywords: state.keywords,
+    keywords: importedKeywords(state.keywords),
     receivedAt: arrivalTime(message.fromLine, headers),
     label: subject,
   };
@@ -280,7 +290,7 @@ function maildirItem(bytes: Uint8Array, index: number, folder: string[]): Import
     folder,
     data: new Blob(parts as BlobPart[], { type: MIME }),
     size: parts.reduce((n, p) => n + p.length, 0),
-    keywords: state.keywords,
+    keywords: importedKeywords(state.keywords),
     receivedAt: arrivalTime(fromLine, headers),
     label: subject,
   };
@@ -374,7 +384,7 @@ export async function* zipSource(file: File, options: SourceOptions): ItemSource
           folder: zipFolder(entry.name, false),
           data: new Blob([bytes as BlobPart], { type: MIME }),
           size: bytes.length,
-          keywords: mboxState(head.split(/\r?\n\r?\n/, 1)[0]).keywords,
+          keywords: importedKeywords(mboxState(head.split(/\r?\n\r?\n/, 1)[0]).keywords),
           receivedAt: dateFromHeaderBlock(head),
           label: emlLabel(entry.name),
         };

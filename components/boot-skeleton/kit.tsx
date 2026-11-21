@@ -14,6 +14,7 @@ import { cn } from "@/lib/cn";
 export type SkeletonSurface =
   | "mail"
   | "calendar"
+  | "tasks"
   | "contacts"
   | "files"
   | "apps"

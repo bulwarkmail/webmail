@@ -159,6 +159,16 @@ describe('a sideways scroll in Day view (pim-p3-9)', () => {
   });
 });
 
+describe('an address with a view (#1727)', () => {
+  it('shows the view of /calendar/<view>/<date> without replacing the picked one', async () => {
+    setUp([makeEvent()], 'week');
+    expect(JSON.parse(localStorage.getItem('calendar-storage')!).state.viewMode).toBe('week');
+    render(<CalendarApp linkSegments={['month', '2026-10-12']} />);
+    await waitFor(() => expect(useCalendarStore.getState().viewMode).toBe('month'));
+    expect(JSON.parse(localStorage.getItem('calendar-storage')!).state.viewMode).toBe('week');
+  });
+});
+
 describe('an event without a title (pim-p3-12)', () => {
   it('saves from the full editor too, with an empty title', async () => {
     renderApp();

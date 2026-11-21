@@ -14,6 +14,7 @@ import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-label
 const SURFACE_TO_TAB: Record<AppSurface, ProAppTabKind> = {
   mail: 'mail',
   calendar: 'calendar',
+  tasks: 'tasks',
   contacts: 'contacts',
   files: 'files',
   settings: 'settings',

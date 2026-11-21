@@ -62,7 +62,7 @@ describe('the "Unread first" inbox', () => {
     useSettingsStore.setState({
       emailsPerPage: 25, messageListOrder: [], messageListOrderScope: 'inbox',
       notificationMutes: { accounts: [], mailboxes: {} },
-      interfaceLayout: 'mountain-view', mvInboxType: 'unread-first',
+      interfaceLayout: 'mountain-view', mvInboxType: 'unread-first', mvUnreadSectionSize: 25,
     });
     useEmailStore.setState({
       ...useEmailStore.getInitialState(),
@@ -83,6 +83,27 @@ describe('the "Unread first" inbox', () => {
     expect(state.emails.slice(3).every((e) => e.keywords.$seen)).toBe(true);
     expect(state.totalEmails).toBe(30);
     expect(state.hasMoreEmails).toBe(true);
+  });
+
+  it('shows as many unread messages as set in Settings (#1705)', async () => {
+    const rows: Email[] = [];
+    for (let i = 0; i < 40; i++) rows.push(email(`m${i}`, 100 - i, i >= 12));
+    const c = server(rows);
+    useSettingsStore.setState({ mvUnreadSectionSize: 10 });
+
+    await useEmailStore.getState().fetchEmails(c, 'inbox');
+
+    const state = useEmailStore.getState();
+    expect([...state.unreadSection!.ids]).toEqual(Array.from({ length: 10 }, (_, i) => `m${i}`));
+    expect(state.unreadSection!.total).toBe(12);
+    expect(state.emails.slice(10).every((e) => e.keywords.$seen)).toBe(true);
+  });
+
+  it('keeps the size Settings offers when an import brings another one', () => {
+    useSettingsStore.getState().importSettings(JSON.stringify({ mvUnreadSectionSize: 15 }));
+    expect(useSettingsStore.getState().mvUnreadSectionSize).toBe(15);
+    useSettingsStore.getState().importSettings(JSON.stringify({ mvUnreadSectionSize: 1000 }));
+    expect(useSettingsStore.getState().mvUnreadSectionSize).toBe(15);
   });
 
   it('pages the read mail from where it got to, not counting the section', async () => {
@@ -211,6 +232,70 @@ describe('the "Unread first" inbox', () => {
 
     expect(ids()[0]).toBe('new');
     expect(useEmailStore.getState().newEmailNotification?.id).toBe('new');
+  });
+
+  describe('paging the Unread section (#1791)', () => {
+    // 12 unread (m0-m11) above 28 read, 5 to a page.
+    function manyUnread(): Email[] {
+      const rows: Email[] = [];
+      for (let i = 0; i < 40; i++) rows.push(email(`m${i}`, 100 - i, i >= 12));
+      return rows;
+    }
+    const sectionIds = () => {
+      const { emails, unreadSection } = useEmailStore.getState();
+      return emails.filter((e) => unreadSection!.ids.has(e.id)).map((e) => e.id);
+    };
+
+    beforeEach(() => useSettingsStore.setState({ mvUnreadSectionSize: 5 }));
+
+    it('goes to older unread mail and back', async () => {
+      const c = server(manyUnread());
+      await useEmailStore.getState().fetchEmails(c, 'inbox');
+      expect(sectionIds()).toEqual(['m0', 'm1', 'm2', 'm3', 'm4']);
+
+      await useEmailStore.getState().pageUnreadSection(c, 'older');
+      expect(sectionIds()).toEqual(['m5', 'm6', 'm7', 'm8', 'm9']);
+      expect(useEmailStore.getState().unreadSection!.position).toBe(5);
+      // The read mail below stays as it was.
+      expect(useEmailStore.getState().emails.slice(5).every((e) => e.keywords.$seen)).toBe(true);
+
+      await useEmailStore.getState().pageUnreadSection(c, 'older');
+      expect(sectionIds()).toEqual(['m10', 'm11']);
+
+      const calls = c.getEmails.mock.calls.length;
+      await useEmailStore.getState().pageUnreadSection(c, 'older');
+      expect(c.getEmails.mock.calls.length).toBe(calls);
+
+      await useEmailStore.getState().pageUnreadSection(c, 'newer');
+      expect(sectionIds()).toEqual(['m5', 'm6', 'm7', 'm8', 'm9']);
+    });
+
+    it('keeps the page through a refresh, and falls back when it runs out', async () => {
+      const rows = manyUnread();
+      const c = server(rows);
+      await useEmailStore.getState().fetchEmails(c, 'inbox');
+      await useEmailStore.getState().pageUnreadSection(c, 'older');
+      await useEmailStore.getState().pageUnreadSection(c, 'older');
+
+      await useEmailStore.getState().refreshCurrentMailbox(c);
+      expect(sectionIds()).toEqual(['m10', 'm11']);
+
+      // Read elsewhere: the last page left is the one from 5 on.
+      for (const id of ['m10', 'm11']) rows.find((e) => e.id === id)!.keywords = { $seen: true };
+      await useEmailStore.getState().refreshCurrentMailbox(c);
+      expect(sectionIds()).toEqual(['m5', 'm6', 'm7', 'm8', 'm9']);
+      expect(useEmailStore.getState().unreadSection!.position).toBe(5);
+    });
+
+    it('starts at the newest unread mail when the inbox opens again', async () => {
+      const c = server(manyUnread());
+      await useEmailStore.getState().fetchEmails(c, 'inbox');
+      await useEmailStore.getState().pageUnreadSection(c, 'older');
+
+      await useEmailStore.getState().fetchEmails(c, 'inbox');
+      expect(sectionIds()).toEqual(['m0', 'm1', 'm2', 'm3', 'm4']);
+      expect(useEmailStore.getState().unreadSection!.position ?? 0).toBe(0);
+    });
   });
 
   it('is the plain inbox with the default inbox type', async () => {

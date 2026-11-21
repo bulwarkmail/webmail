@@ -2,6 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/stores/settings-store";
 
 /**
  * Keeps the focus in the dialog when its buttons change under it: Import or
@@ -47,9 +48,10 @@ export function serverMegabytes(bytes: number): string {
   return `${Math.round(bytes / 1_000_000)} MB`;
 }
 
-/** "14:00", or a date and time when the moment isn't today. */
+/** "14:00", or a date and time when the moment isn't today; in the app's 12- or 24-hour setting. */
 export function formatClock(ms: number, locale: string, now = Date.now()): string {
   const date = new Date(ms);
   const sameDay = new Date(now).toDateString() === date.toDateString();
-  return new Intl.DateTimeFormat(locale, sameDay ? { hour: "2-digit", minute: "2-digit" } : { dateStyle: "medium", timeStyle: "short" }).format(date);
+  const hour12 = useSettingsStore.getState().timeFormat === "12h";
+  return new Intl.DateTimeFormat(locale, sameDay ? { hour: "2-digit", minute: "2-digit", hour12 } : { dateStyle: "medium", timeStyle: "short", hour12 }).format(date);
 }

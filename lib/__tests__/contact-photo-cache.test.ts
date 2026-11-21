@@ -238,6 +238,25 @@ describe('contact photo cache', () => {
     expect(shown.type).toBe('application/octet-stream');
   });
 
+  it('gives a blob: URL only a type from the inline-safe list, never the media type as served', async () => {
+    // The download answers with the card's mediaType, which another user wrote.
+    // A browser reads a Blob type like a Content-Type header: after a comma the last type counts.
+    const served: Record<string, string> = {
+      '|list': 'image/gif,text/html',
+      '|spaced': 'image/gif, text/html',
+      '|svg-list': 'image/png,image/svg+xml',
+      '|svg-junk': 'image/svg+xml x',
+      '|params': 'IMAGE/JPEG; name=photo.jpg',
+    };
+    for (const [key, type] of Object.entries(served)) {
+      requestContactPhoto(key, () => Promise.resolve(new Blob(['GIF89a'], { type })));
+    }
+    await flush();
+
+    const shown = createObjectURL.mock.calls.map((call: unknown[]) => (call[0] as Blob).type).sort();
+    expect(shown).toEqual(['application/octet-stream', 'application/octet-stream', 'application/octet-stream', 'application/octet-stream', 'image/jpeg']);
+  });
+
   it('evicts the least recently used photo past 300 and revokes its URL', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
     const load = async (count: number, offset = 0) => {

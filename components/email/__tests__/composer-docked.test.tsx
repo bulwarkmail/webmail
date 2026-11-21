@@ -148,6 +148,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
     onIdentitySelect: { size: 0, emit: async () => {} },
+    onSelectReplyIdentity: { size: 0 },
   },
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },
@@ -312,6 +313,27 @@ describe('a reply docked under its message', () => {
   it('lets the To input get narrow beside its chips', () => {
     render(<EmailComposer initialData={DATA} docked />);
     expect(screen.getByRole('combobox', { name: 'to:' }).className).toMatch(/(^|\s)min-w-12(\s|$)/);
+  });
+
+  // #1758: on a wide screen the To field stops at a readable width, so
+  // Contacts, Cc and Bcc come right after it instead of at the far edge.
+  const capped = (el: Element | null) => !!el && el.className.split(/\s+/).includes('max-w-[40rem]');
+  const toField = () => screen.getByRole('combobox', { name: 'to:' }).closest('[data-recipient-field]')!.parentElement;
+
+  it('keeps Cc and Bcc next to the To field in the full composer', () => {
+    render(<EmailComposer initialData={DATA} />);
+    expect(capped(toField())).toBe(true);
+    const row = screen.getByTestId('composer-to');
+    const cc = within(row).getByRole('button', { name: 'Cc' });
+    expect(toField()!.compareDocumentPosition(cc) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // A click in the space after the buttons still goes to the address input.
+    fireEvent.click(row);
+    expect(screen.getByRole('combobox', { name: 'to:' })).toHaveFocus();
+  });
+
+  it('leaves the docked To row as it was', () => {
+    render(<EmailComposer initialData={DATA} docked />);
+    expect(capped(toField())).toBe(false);
   });
 
   it('keeps every line when not docked', () => {

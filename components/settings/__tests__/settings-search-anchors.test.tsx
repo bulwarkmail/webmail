@@ -16,6 +16,18 @@ import en from '@/locales/en/common.json';
 
 vi.unmock('next-intl');
 vi.mock('@/components/plugins/plugin-iframe-slot', () => ({ PluginIframeSlot: () => null }));
+// The messagePopouts variant: an installed app, where a message can open in a window of its own.
+const popouts = vi.hoisted(() => ({ on: false }));
+vi.mock('@/hooks/use-popouts-available', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/use-popouts-available')>();
+  return {
+    ...actual,
+    usePopoutsAvailable: (kind?: 'compose' | 'message') => {
+      const real = actual.usePopoutsAvailable(kind);
+      return (popouts.on && kind === 'message') || real;
+    },
+  };
+});
 // Recover deleted items asks the server first; here it has the feature.
 vi.mock('@/hooks/use-deleted-items-recovery', async () => {
   const { useAuthStore } = await import('@/stores/auth-store');
@@ -75,6 +87,8 @@ const pages = {
 const OVERRIDES: Record<string, () => unknown> = {
   getAccountId: () => 'acc', getSieveAccountId: () => 'acc', getUsername: () => 'user@example.com',
   getSharedAccounts: () => [], getSieveAccounts: () => [], getSieveCapabilities: () => null,
+  // The calendar page keeps it in its store for the next variant; null broke that page there.
+  getParticipantIdentities: () => [],
   hasAccountCapability: () => false, supportsCalendars: () => true, supportsPrincipals: () => true, supportsFiles: () => true, hasDelayedSend: () => true,
   // Sharing and Recover deleted items read these on open.
   getShareTargets: async () => ({ targets: [], failed: [] }), listPrincipals: async () => ({ principals: [], status: 'ok' }),
@@ -93,7 +107,7 @@ const DESKTOP_BRIDGE = {
   os: {
     getStatus: async () => ({
       settings: {
-        closeToTray: false, startAtLogin: false, startMinimized: false, attentionOnNewMail: false,
+        closeToTray: false, startAtLogin: false, startMinimized: false, reopenAfterRestart: false, attentionOnNewMail: false,
         quietHoursEnabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00', showShortcut: null,
       },
       pausedUntil: null,
@@ -168,6 +182,7 @@ describe('settings search index', () => {
         window.matchMedia = ((q: string) => ({ ...realMatchMedia(q), matches: q.includes('coarse') })) as typeof window.matchMedia;
       },
       mountainView: () => { useSettingsStore.setState({ interfaceLayout: 'mountain-view' } as never); },
+      messagePopouts: () => { popouts.on = true; },
       multiAccount: () => {
         useAccountStore.setState({ accounts: [
           { id: 'a', label: 'A', email: 'a@example.com', username: 'a@example.com', serverUrl: 'https://x', isDefault: true },
@@ -182,6 +197,7 @@ describe('settings search index', () => {
     useAccountStore.setState(accountsInitial, true);
     window.matchMedia = realMatchMedia;
     window.bulwarkDesktop = undefined;
+    popouts.on = false;
     useFilesSyncStore.getState().reset();
     apply();
     out[variant] = {};
@@ -234,7 +250,7 @@ describe('settings search index', () => {
         // Rows that name the app show the stock name, as the index does.
         const text = withAppName(getByPath(en, entry.label), 'Bulwark') as string;
         // The desktop app's rows are all drawn in the Windows variant; a Mac row there is the Dock's.
-        const variantName = entry.when?.startsWith('desktop') ? 'desktop' : entry.when === 'browser' ? 'base' : (entry.when ?? 'base');
+        const variantName = entry.when?.startsWith('desktop') ? 'desktop' : entry.when === 'browser' || entry.when === 'notMountainView' ? 'base' : (entry.when ?? 'base');
         if (entry.when === 'desktopMac') continue;
         const variant = out[variantName];
         const parts = TAB_PAGES[tab].map((page) => variant[page]);
@@ -253,6 +269,19 @@ describe('settings search index', () => {
       for (const entry of entries.filter((e) => e.when === 'browser')) {
         const text = withAppName(getByPath(en, entry.label), 'Bulwark') as string;
         if (TAB_PAGES[tab].some((page) => out.desktop[page].on.includes(text))) problems.push(`${tab}: ${entry.label} is drawn in the desktop app`);
+      }
+    }
+    // The search offers a row without a condition in Mountain View too, so
+    // that layout draws it; one it hides says notMountainView instead.
+    for (const [tab, entries] of Object.entries(tabSearchEntries)) {
+      const parts = TAB_PAGES[tab].map((page) => out.mountainView[page]);
+      const errors = parts.filter((part) => part.error).map((part) => part.error);
+      if (errors.length) { problems.push(`${tab} in Mountain View: ${errors.join('; ')}`); continue; }
+      for (const entry of entries.filter((e) => !e.when || e.when === 'notMountainView')) {
+        const text = withAppName(getByPath(en, entry.label), 'Bulwark') as string;
+        const drawn = parts.some((part) => part.on.includes(text));
+        if (!entry.when && !drawn) problems.push(`${tab}: ${entry.label} isn't drawn in Mountain View but has no condition`);
+        if (entry.when === 'notMountainView' && drawn) problems.push(`${tab}: ${entry.label} is drawn in Mountain View`);
       }
     }
     // Every section a page draws has an entry, so searching its name finds it.

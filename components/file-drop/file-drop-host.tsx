@@ -28,6 +28,7 @@ import {
   type FileDropZone,
   type FileDropZoneId,
 } from "@/lib/file-drop/zones";
+import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { isOfflineNow, useOfflineStore } from "@/lib/offline/state";
 import { isPopoutPath } from "@/lib/popout/window-role";
@@ -45,13 +46,23 @@ import { cn } from "@/lib/utils";
 const FLUSH_BEFORE_LEAVING_MS = 5000;
 const NAMES_SHOWN = 3;
 
-/** Where a dropped .eml could go: the real folder in view on the mail screen, if new mail may go in. */
-function importFolder(pathname: string, translate: (key: string) => string): { id: string; name: string; accountId?: string; role?: string | null } | null {
+/**
+ * Where a dropped .eml could go: the real folder in view on the mail screen,
+ * if new mail may go in. It is a folder of the login browsed (another
+ * login's in the Pro sidebar, else the active one), found in that login's
+ * folder list and written through that login's client: the same folder id is
+ * another folder in any other login. None while that login has no client.
+ */
+function importFolder(pathname: string, translate: (key: string) => string): { id: string; name: string; accountId?: string; role?: string | null; client: IJMAPClient } | null {
   if (matchSurface(pathname)?.surface !== "mail") return null;
-  const { selectedMailbox, mailboxes } = useEmailStore.getState();
-  const mailbox = mailboxes.find((entry) => entry.id === selectedMailbox);
+  const { selectedMailbox, mailboxes, accountMailboxes, viewingAccountId } = useEmailStore.getState();
+  const auth = useAuthStore.getState();
+  const otherLogin = viewingAccountId && viewingAccountId !== auth.activeAccountId ? viewingAccountId : null;
+  const client = otherLogin ? auth.getClientForAccount(otherLogin) : auth.client;
+  if (!client) return null;
+  const mailbox = (otherLogin ? accountMailboxes[otherLogin] ?? [] : mailboxes).find((entry) => entry.id === selectedMailbox);
   if (!mailbox || mailbox.isShared || mailbox.myRights?.mayAddItems === false) return null;
-  return { id: mailbox.id, name: localizeMailboxName(mailbox.role, mailbox.name, translate), accountId: mailbox.accountId, role: mailbox.role };
+  return { id: mailbox.id, name: localizeMailboxName(mailbox.role, mailbox.name, translate), accountId: mailbox.accountId, role: mailbox.role, client };
 }
 
 /** Whatever would stop a drop now. A dialog of its own (an import, a picker) keeps its own drop zone. */
@@ -146,12 +157,12 @@ export function FileDropHost() {
       if (ctx.current.pathname !== path) ctx.current.router.push(path);
     },
     importMessages: async (files) => {
-      const client = useAuthStore.getState().client;
-      if (!client || !folder) return;
+      if (!folder) return;
       let done = 0;
       for (const file of files) {
         try {
-          await client.importRawEmail(file, { [folder.id]: true }, importKeywords(folder.role), folder.accountId);
+          // Through the login the folder was found in (importFolder).
+          await folder.client.importRawEmail(file, { [folder.id]: true }, importKeywords(folder.role), folder.accountId);
           done += 1;
         } catch (error) {
           console.error("Importing a dropped message failed:", error);

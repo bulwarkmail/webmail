@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Mail, CalendarEvent, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility } from "@/components/icons";
+import { Mail, CalendarEvent, ListTodo, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility, PenSquare } from "@/components/icons";
 import { openAccessibilityPanel } from "@/components/accessibility/accessibility-quick-panel";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";
@@ -38,6 +38,10 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 import { writeRailHints, type RailHint } from "@/lib/boot-skeleton/hints";
 import { usePrefetchAfterStart } from "@/hooks/use-prefetch-after-start";
+import { savePendingMailto } from "@/lib/protocol-handlers/session";
+
+/** The built-in apps and Settings, as the rail and its host name them. */
+export type RailItemId = 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings';
 
 interface NavItem {
   id: string;
@@ -78,13 +82,13 @@ interface NavigationRailProps {
    * Pro interface to open the route as a tab instead. The visual rail is
    * unchanged.
    */
-  onNavigate?: (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => boolean | void;
+  onNavigate?: (itemId: RailItemId) => boolean | void;
   /**
    * When `onNavigate` is in use, this controls which nav item the rail
    * highlights as active (since the URL alone no longer reflects the
    * active app).
    */
-  activeItemId?: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings' | null;
+  activeItemId?: RailItemId | null;
   /**
    * The admin panel's own rail: shows the Admin entry as the current one,
    * for password admins too, who are not Stalwart admins.
@@ -95,6 +99,12 @@ interface NavigationRailProps {
    * palette (#641) instead of navigating anywhere.
    */
   onOpenSearch?: () => void;
+  /**
+   * Opens the composer from the rail's Compose button, which the rail shows
+   * when Compose is set to sit there. The mail page passes it; other pages
+   * leave it out, and the button goes to the mail page and opens it there.
+   */
+  onCompose?: () => void;
 }
 
 function StorageQuotaCircle({ quota, usagePercent }: { quota: StorageQuota; usagePercent: number }) {
@@ -238,6 +248,7 @@ export function NavigationRail({
   onNavigate,
   activeItemId,
   onOpenSearch,
+  onCompose,
   adminActive = false,
 }: NavigationRailProps) {
   const t = useTranslations("sidebar");
@@ -272,10 +283,28 @@ export function NavigationRail({
   const showAccessibilityButton = useSettingsStore((s) => s.showAccessibilityButton);
   const simpleMode = useSettingsStore((s) => s.simpleMode);
   const mountainView = useSettingsStore((s) => s.interfaceLayout === 'mountain-view');
+  // Compose at the top of the rail (Settings > Appearance > Compose button).
+  // Not on the Pro shell's rail, whose panes have their own button, or the
+  // admin panel's.
+  const composeOnRail = useSettingsStore((s) => s.composePlacement === 'rail') && !mountainView && !onNavigate && !adminActive;
+  const handleRailCompose = useCallback(() => {
+    if (onCompose) {
+      onCompose();
+      return;
+    }
+    // The mail page opens a pending in-app draft when it mounts.
+    savePendingMailto({ to: [], cc: [], bcc: [], subject: "", body: "", inApp: true });
+    router.push("/");
+  }, [onCompose, router]);
   const sidebarAppsEnabled = usePolicyStore((s) => s.isFeatureEnabled('sidebarAppsEnabled'));
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
+  // Tasks as their own app (#1698): an entry of their own after the calendar.
+  const tasksPolicyEnabled = usePolicyStore((s) => s.isFeatureEnabled('calendarTasksEnabled'));
+  const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
+  const showTasksApp = useSettingsStore((s) => s.showTasksApp);
+  const tasksAppHidden = !supportsCalendar || !calendarEnabled || !tasksPolicyEnabled || !enableCalendarTasks || !showTasksApp;
   // Operator-provided apps (#931) plus the user's own; the gate above only
   // removes the user's, so a pinned set still shows when custom apps are off.
   const visibleSidebarApps = useResolvedSidebarApps();
@@ -319,6 +348,7 @@ export function NavigationRail({
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
     { id: "calendar", icon: CalendarEvent, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
+    { id: "tasks", icon: ListTodo, labelKey: "tasks", href: "/tasks", hidden: tasksAppHidden },
     { id: "contacts", icon: Users, labelKey: "contacts", href: "/contacts", hidden: !supportsContacts || !contactsEnabled },
     { id: "files", icon: Folder, labelKey: "files", href: "/files", hidden: !supportsFiles || !filesEnabled },
   ];
@@ -346,7 +376,7 @@ export function NavigationRail({
     writeRailHints(items);
     // navItems is rebuilt every render; its inputs are listed instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, supportsCalendar, calendarEnabled, supportsContacts, contactsEnabled, supportsFiles, filesEnabled, sidebarAppsEnabled, !!onManageApps, isStalwartAdmin, showAccessibilityButton, quotaShown]);
+  }, [client, supportsCalendar, calendarEnabled, tasksAppHidden, supportsContacts, contactsEnabled, supportsFiles, filesEnabled, sidebarAppsEnabled, !!onManageApps, isStalwartAdmin, showAccessibilityButton, quotaShown]);
 
   const getIsActive = (href: string, itemId: string) => {
     if (activeAppId) return false;
@@ -360,7 +390,7 @@ export function NavigationRail({
     return pathname.startsWith(href);
   };
 
-  const handleNavClick = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') =>
+  const handleNavClick = (itemId: RailItemId) =>
     (e: React.MouseEvent) => {
       if (interceptLeave(e)) return;
       if (onNavigate) {
@@ -412,7 +442,7 @@ export function NavigationRail({
               prefetch={prefetchLinks}
               key={item.id}
               href={item.href}
-              onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
+              onClick={handleNavClick(item.id as RailItemId)}
               data-tour={`nav-${item.id}`}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
@@ -578,6 +608,9 @@ export function NavigationRail({
 
   return (
     <div
+      // The whole column, logo included: on macOS it makes room for the traffic
+      // lights at its top (app/globals.css).
+      data-window-rail=""
       className={cn(
         // On a short window (a phone on its side) the whole rail scrolls: the
         // pinned group at the bottom left the apps room for two icons.
@@ -600,7 +633,6 @@ export function NavigationRail({
       })()}
 
       <nav
-        data-window-rail=""
         className={cn(
           "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden [@media(max-height:32rem)]:flex-none [@media(max-height:32rem)]:overflow-visible",
           collapsed ? "items-center gap-1 py-3 px-1" : "gap-0.5 py-2 px-2",
@@ -608,6 +640,31 @@ export function NavigationRail({
         role="navigation"
         aria-label={t("nav_label")}
       >
+        {composeOnRail && (
+          <>
+            <button
+              type="button"
+              onClick={handleRailCompose}
+              data-rail-compose=""
+              data-tour="compose-button"
+              className={cn(
+                "flex items-center gap-2.5 shrink-0 rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors duration-150",
+                collapsed ? "justify-center w-10 h-10" : "px-2.5 h-10 text-sm font-medium",
+                "tap:min-h-[44px]",
+              )}
+              aria-label={t("compose")}
+              title={t("compose_hint")}
+            >
+              <PenSquare className="w-[18px] h-[18px] flex-shrink-0" />
+              {!collapsed && <span className="truncate">{t("compose")}</span>}
+            </button>
+            <div
+              aria-hidden="true"
+              className={cn("border-t shrink-0", collapsed ? "w-8 mx-auto my-1" : "mx-2 my-1")}
+              style={{ borderColor: 'rgba(128, 128, 128, 0.3)' }}
+            />
+          </>
+        )}
         {onOpenSearch && (
           <button
             type="button"
@@ -634,7 +691,7 @@ export function NavigationRail({
               prefetch={prefetchLinks}
               key={item.id}
               href={item.href}
-              onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
+              onClick={handleNavClick(item.id as RailItemId)}
               data-tour={`nav-${item.id}`}
               className={cn(
                 "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",

@@ -35,9 +35,9 @@ const MANAGED_ENV = [
   'SESSION_SECRET_FILE', 'SETTINGS_SYNC_ENABLED', 'STALWART_FEATURES', 'DEV_MOCK_JMAP',
   'FAVICON_URL', 'APP_LOGO_LIGHT_URL', 'APP_LOGO_DARK_URL', 'LOGIN_COMPANY_NAME',
   'LOGIN_IMPRINT_URL', 'LOGIN_PRIVACY_POLICY_URL', 'LOGIN_WEBSITE_URL', 'DOMAIN_BRANDING',
-  'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL', 'LOGIN_SHOW_REMEMBER_ME',
+  'JMAP_SERVERS', 'JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'SOURCE_CODE_URL', 'LOGIN_SHOW_REMEMBER_ME', 'BROWSER_SESSION_SIGN_IN',
   'ACCESSIBILITY_STATEMENT_URL', 'ACCESSIBILITY_FEEDBACK_URL', 'HELP_URL', 'EASY_READ_URL', 'SIGN_LANGUAGE_URL',
-  'LOGIN_USERNAME_PLACEHOLDER',
+  'LOGIN_USERNAME_PLACEHOLDER', 'TRUSTED_AUTHSERV_IDS', 'LOGIN_FORGOT_PASSWORD_URL',
 ] as const;
 
 describe('config API route', () => {
@@ -120,6 +120,12 @@ describe('config API route', () => {
 
     vi.stubEnv('JMAP_SERVER_AUTO_PICK_BY_DOMAIN', 'true');
     expect((await getConfig()).jmapServers[0].domains).toEqual(['acme.example']);
+  });
+
+  it('hands the trusted mail servers to the browser as a list of hostnames', async () => {
+    expect((await getConfig()).trustedAuthservIds).toEqual([]);
+    vi.stubEnv('TRUSTED_AUTHSERV_IDS', ' MX.Google.com., gateway.example.com,*.example.net mx.google.com');
+    expect((await getConfig()).trustedAuthservIds).toEqual(['mx.google.com', 'gateway.example.com']);
   });
 
   it('should use runtime env vars over defaults', async () => {
@@ -215,6 +221,16 @@ describe('config API route', () => {
     expect(config.signLanguageUrl).toBe('');
   });
 
+  it('serves the forgot password link only as an http(s) URL', async () => {
+    expect((await getConfig()).loginForgotPasswordUrl).toBe('');
+
+    vi.stubEnv('LOGIN_FORGOT_PASSWORD_URL', 'https://account.acme.com/forgot');
+    expect((await getConfig()).loginForgotPasswordUrl).toBe('https://account.acme.com/forgot');
+
+    vi.stubEnv('LOGIN_FORGOT_PASSWORD_URL', 'javascript:alert(1)');
+    expect((await getConfig()).loginForgotPasswordUrl).toBe('');
+  });
+
   it('leaves the accessibility and help links empty when unset', async () => {
     const config = await getConfig();
 
@@ -257,6 +273,17 @@ describe('config API route', () => {
 
     vi.stubEnv('LOGIN_SHOW_REMEMBER_ME', 'true');
     expect((await getConfig()).loginShowRememberMe).toBe(true);
+  });
+
+  it('keeps unticked sign-ins until the browser closes only with BROWSER_SESSION_SIGN_IN and SESSION_SECRET', async () => {
+    expect((await getConfig()).browserSessionSignIn).toBe(false);
+
+    vi.stubEnv('BROWSER_SESSION_SIGN_IN', 'true');
+    // Nothing can seal the cookie without a secret.
+    expect((await getConfig()).browserSessionSignIn).toBe(false);
+
+    vi.stubEnv('SESSION_SECRET', 'test-secret');
+    expect((await getConfig()).browserSessionSignIn).toBe(true);
   });
 
   it('should enable settingsSync only when both SESSION_SECRET and SETTINGS_SYNC_ENABLED are set', async () => {
@@ -338,6 +365,18 @@ describe('config API route', () => {
 
       expect((await getConfig({ host: 'mail1.example.com' })).loginUsernamePlaceholder).toBe('name@one.example');
       expect((await getConfig({ host: 'other.example.com' })).loginUsernamePlaceholder).toBe('name@default.example');
+    });
+
+    it('overrides the forgot password link per domain, as an http(s) URL only', async () => {
+      vi.stubEnv('LOGIN_FORGOT_PASSWORD_URL', 'https://default.example/forgot');
+      vi.stubEnv('DOMAIN_BRANDING', JSON.stringify([
+        { host: 'mail1.example.com', loginForgotPasswordUrl: 'https://one.example/forgot' },
+        { host: 'mail2.example.com', loginForgotPasswordUrl: 'javascript:alert(1)' },
+      ]));
+
+      expect((await getConfig({ host: 'mail1.example.com' })).loginForgotPasswordUrl).toBe('https://one.example/forgot');
+      expect((await getConfig({ host: 'mail2.example.com' })).loginForgotPasswordUrl).toBe('');
+      expect((await getConfig({ host: 'other.example.com' })).loginForgotPasswordUrl).toBe('https://default.example/forgot');
     });
 
     it('falls through to the global value when the host has no entry', async () => {

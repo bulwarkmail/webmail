@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { shortcutKey } from '@/lib/keyboard';
 import { useTranslations } from 'next-intl';
 import { usePathname } from '@/i18n/navigation';
 import { Accessibility } from '@/components/icons';
@@ -19,11 +20,11 @@ export function openAccessibilityPanel(): void {
 }
 
 /**
- * Alt+Shift+A, by physical key so it works on every keyboard layout. A
- * modifier shortcut, so it stays on when single-key shortcuts are off.
+ * Alt+Shift+A, on any keyboard layout (see shortcutKey). A modifier
+ * shortcut, so it stays on when single-key shortcuts are off.
  */
 export function isAccessibilityPanelShortcut(event: KeyboardEvent): boolean {
-  return event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && event.code === 'KeyA';
+  return event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && shortcutKey(event) === 'a';
 }
 
 /**

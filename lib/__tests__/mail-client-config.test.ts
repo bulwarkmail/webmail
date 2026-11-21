@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fetchMailClientConfig, mailClientConfigUrl, parseMailClientConfig } from '../mail-client-config';
 
-// The autoconfig document Stalwart 1.0 serves (VM 106, 2026-11-04), cut down.
+// The autoconfig document Stalwart 1.0 serves, cut down. It writes the
+// %EMAILADDRESS% placeholder as the username whatever address it was asked
+// for (crates/common/src/network/autoconfig/legacy_autoconfig.rs).
 const STALWART = `<?xml version="1.0" encoding="UTF-8"?>
 <clientConfig version="1.1">
 	<emailProvider id="example.org">
@@ -10,39 +12,54 @@ const STALWART = `<?xml version="1.0" encoding="UTF-8"?>
 			<hostname>mail.example.org</hostname>
 			<port>993</port>
 			<socketType>SSL</socketType>
-			<username>me@example.org</username>
+			<username>%EMAILADDRESS%</username>
 			<authentication>password-cleartext</authentication>
 		</incomingServer>
 		<incomingServer type="pop3">
 			<hostname>mail.example.org</hostname>
 			<port>995</port>
 			<socketType>SSL</socketType>
+			<username>%EMAILADDRESS%</username>
 		</incomingServer>
 		<outgoingServer type="smtp">
 			<hostname>mail.example.org</hostname>
 			<port>465</port>
 			<socketType>SSL</socketType>
-			<username>me@example.org</username>
+			<username>%EMAILADDRESS%</username>
 		</outgoingServer>
 	</emailProvider>
 	<calendar type="caldav">
-		<username>me@example.org</username>
+		<username>%EMAILADDRESS%</username>
 		<serverURL>https://mail.example.org/dav/cal</serverURL>
 	</calendar>
 	<addressBook type="carddav">
+		<username>%EMAILADDRESS%</username>
 		<serverURL>https://mail.example.org/dav/card</serverURL>
 	</addressBook>
 </clientConfig>`;
 
 describe('parseMailClientConfig', () => {
   it('reads IMAP, SMTP, CalDAV and CardDAV from a Stalwart document', () => {
-    expect(parseMailClientConfig(STALWART)).toEqual({
+    expect(parseMailClientConfig(STALWART, 'me@example.org')).toEqual({
       username: 'me@example.org',
       imap: { hostname: 'mail.example.org', port: 993, security: 'ssl' },
       smtp: { hostname: 'mail.example.org', port: 465, security: 'ssl' },
       caldav: 'https://mail.example.org/dav/cal',
       carddav: 'https://mail.example.org/dav/card',
     });
+  });
+
+  it('fills the username placeholders from the address it was asked for (#1633)', () => {
+    const xml = (username: string) => STALWART.replace(/%EMAILADDRESS%/g, username);
+    expect(parseMailClientConfig(xml('%EMAILADDRESS%'), 'me@example.org')?.username).toBe('me@example.org');
+    expect(parseMailClientConfig(xml('%EMAILLOCALPART%'), 'me@example.org')?.username).toBe('me');
+    expect(parseMailClientConfig(xml('%EMAILLOCALPART%@%EMAILDOMAIN%'), 'me@example.org')?.username).toBe('me@example.org');
+  });
+
+  it('leaves out a username it cannot fill, so the panel shows the sign-in name', () => {
+    const config = parseMailClientConfig(STALWART);
+    expect(config?.username).toBeUndefined();
+    expect(config?.imap?.port).toBe(993);
   });
 
   it('tells STARTTLS and no encryption apart', () => {
@@ -76,6 +93,7 @@ describe('fetchMailClientConfig', () => {
     );
     expect(fetchImpl.mock.calls[0][1]).toMatchObject({ credentials: 'omit' });
     expect(config?.imap?.port).toBe(993);
+    expect(config?.username).toBe('me@example.org');
   });
 
   it('gives null on an error answer, a network failure or a name without @', async () => {

@@ -91,6 +91,17 @@ describe('WKD lookup', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
+
+  it('tries the advanced, direct and fallback URLs in order', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 404 }));
+    expect(await doGetPublicKeyFromWKD('Joe.Doe@example.org')).toMatchObject({ status: 'NOT_FOUND' });
+    expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual([
+      'https://openpgpkey.example.org/.well-known/openpgpkey/example.org/hu/iy9q119eutrkn8s1mk4r39qejnbu3n5q?l=Joe.Doe',
+      'https://example.org/.well-known/openpgpkey/hu/iy9q119eutrkn8s1mk4r39qejnbu3n5q?l=Joe.Doe',
+      'https://openpgpkey.example.org/.well-known/openpgpkey/hu/iy9q119eutrkn8s1mk4r39qejnbu3n5q?l=Joe.Doe',
+    ]);
+    fetchSpy.mockRestore();
+  });
 });
 
 describe('WKD hash', () => {

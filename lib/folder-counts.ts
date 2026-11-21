@@ -14,6 +14,20 @@ export function isFolderCountMode(value: unknown): value is FolderCountMode {
 }
 
 /**
+ * The counter of a row that adds up several folders, such as the unified
+ * "All Trash": the setting all of them have, or none (the default) when
+ * they differ or one has no setting (#1691).
+ */
+export function commonFolderCountMode(
+  modes: Readonly<Record<string, FolderCountMode | string>> | undefined,
+  mailboxIds: readonly string[],
+): FolderCountMode | undefined {
+  const first = mailboxIds.length > 0 ? modes?.[mailboxIds[0]] : undefined;
+  if (!isFolderCountMode(first)) return undefined;
+  return mailboxIds.every((id) => modes?.[id] === first) ? first : undefined;
+}
+
+/**
  * Which counts a sidebar row shows. A zero means that count is not shown.
  * Mountain View shows one number per row, so there at most one of the two is
  * non-zero: the unread count, or the total for Drafts (a draft is never

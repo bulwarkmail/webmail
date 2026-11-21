@@ -76,6 +76,20 @@ describe('fetchJmapServer with a stored credential', () => {
     expect(upstream).toHaveBeenCalledTimes(1);
   });
 
+  it('leaves a credential typed in for one request out of the budget', async () => {
+    // An admin who fixes the account in Stalwart and retries the same
+    // password must reach Stalwart, and a run of wrong ones must not get
+    // every user's stored credential refused here.
+    const init = { headers: { Authorization: basic('typed') } };
+    for (let i = 0; i < 25; i++) {
+      const res = await fetchJmapServer('https://mail.example/.well-known/jmap', init, true, { storedCredential: false });
+      expect(res.status).toBe(401);
+    }
+    expect(upstream).toHaveBeenCalledTimes(25);
+    expect(await isStoredCredentialRefused(basic('typed'))).toBe(false);
+    expect(await isStoredCredentialRefused(basic('someone-else'))).toBe(false);
+  });
+
   it('keeps asking for a credential that works', async () => {
     upstream.mockImplementation(async () => new Response('{}', { status: 200 }));
     const init = { headers: { Authorization: basic('good') } };

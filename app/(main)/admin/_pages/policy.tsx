@@ -26,7 +26,7 @@ import { Badge } from '@/components/admin/badge';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { inputClass } from '@/components/admin/config-items';
 import { InheritLine, LockedSettingsSection, PolicyDefaultsSection, ScopePicker, useScopeId } from '@/components/admin/policy/user-settings-policy';
-import { EVERYONE_SCOPE, featureAt, withFeatureAt } from '@/lib/admin/policy-settings';
+import { EVERYONE_SCOPE, featureAt, sidebarAppsAt, withFeatureAt, withSidebarAppsAt } from '@/lib/admin/policy-settings';
 import { GLOBAL_ONLY_FEATURES } from '@/lib/admin/policy-scopes';
 
 // `allMailViewEnabled` is deprecated (folded into `crossAllViewEnabled`, normalized
@@ -64,6 +64,10 @@ const PAGE = adminPageDef('policy');
 
 const fieldLabelClass = 'mb-1 block text-[0.6875rem] font-medium text-muted-foreground';
 const cardClass = 'rounded-md border border-border bg-muted/30 p-3';
+
+function describeAppCount(apps: AdminSidebarApp[]): string {
+  return apps.length === 0 ? 'no apps' : apps.length === 1 ? '1 app' : `${apps.length} apps`;
+}
 
 /** Mirrors the sanitizer's URL rule so the admin sees the drop before saving. */
 function isValidDefaultAppUrl(raw: string): boolean {
@@ -153,58 +157,57 @@ export function PolicyPage() {
     setMessage(null);
   }
 
-  function updateDefaultApp(index: number, patch: Partial<AdminSidebarApp>) {
-    setPolicy(prev => ({
-      ...prev,
-      defaultSidebarApps: (prev.defaultSidebarApps ?? []).map((app, i) => (i === index ? { ...app, ...patch } : app)),
-    }));
+  function toggleDirectorySameDomain() {
+    setPolicy(prev => ({ ...prev, directorySameDomainOnly: !prev.directorySameDomainOnly }));
     setDirty(true);
     setMessage(null);
+  }
+
+  function setDirectoryHiddenLocalparts(value: string) {
+    // Kept as typed; saving trims, lowercases and drops the empty entries.
+    setPolicy(prev => ({ ...prev, directoryHiddenLocalparts: value.split(',') }));
+    setDirty(true);
+    setMessage(null);
+  }
+
+  /** The default apps of Everyone or the picked scope; a scope's own list replaces Everyone's (#1806). */
+  function changeDefaultApps(change: (apps: AdminSidebarApp[]) => AdminSidebarApp[] | undefined) {
+    setPolicy(prev => withSidebarAppsAt(prev, scopeId, change(sidebarAppsAt(prev, scopeId).value)));
+    setDirty(true);
+    setMessage(null);
+  }
+
+  function updateDefaultApp(index: number, patch: Partial<AdminSidebarApp>) {
+    changeDefaultApps(apps => apps.map((app, i) => (i === index ? { ...app, ...patch } : app)));
   }
 
   function addDefaultApp() {
-    setPolicy(prev => {
-      const apps = prev.defaultSidebarApps ?? [];
-      if (apps.length >= MAX_DEFAULT_SIDEBAR_APPS) return prev;
-      return {
-        ...prev,
-        defaultSidebarApps: [
-          ...apps,
-          {
-            id: `${DEFAULT_SIDEBAR_APP_ID_PREFIX}${generateUUID()}`,
-            name: '',
-            url: '',
-            icon: 'Globe',
-            openMode: 'tab' as const,
-            showOnMobile: false,
-          },
-        ],
-      };
-    });
-    setDirty(true);
-    setMessage(null);
+    changeDefaultApps(apps => apps.length >= MAX_DEFAULT_SIDEBAR_APPS ? apps : [
+      ...apps,
+      {
+        id: `${DEFAULT_SIDEBAR_APP_ID_PREFIX}${generateUUID()}`,
+        name: '',
+        url: '',
+        icon: 'Globe',
+        openMode: 'tab' as const,
+        showOnMobile: false,
+      },
+    ]);
   }
 
   function removeDefaultApp(index: number) {
-    setPolicy(prev => ({
-      ...prev,
-      defaultSidebarApps: (prev.defaultSidebarApps ?? []).filter((_, i) => i !== index),
-    }));
-    setDirty(true);
-    setMessage(null);
+    changeDefaultApps(apps => apps.filter((_, i) => i !== index));
   }
 
   /** Rail order follows this list, so admins need to be able to reorder it. */
   function moveDefaultApp(index: number, delta: number) {
-    setPolicy(prev => {
-      const apps = [...(prev.defaultSidebarApps ?? [])];
+    changeDefaultApps(apps => {
       const target = index + delta;
-      if (target < 0 || target >= apps.length) return prev;
-      [apps[index], apps[target]] = [apps[target], apps[index]];
-      return { ...prev, defaultSidebarApps: apps };
+      if (target < 0 || target >= apps.length) return apps;
+      const next = [...apps];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
     });
-    setDirty(true);
-    setMessage(null);
   }
 
   /** Locks and defaults, for Everyone or a scope (components/admin/policy). */
@@ -257,7 +260,9 @@ export function PolicyPage() {
   useAdminUnsavedChanges('policy', dirty);
 
   const defaultRelayUrl = resolveDefaultRelayUrl(policy);
-  const defaultSidebarApps = policy.defaultSidebarApps ?? [];
+  const sidebarApps = sidebarAppsAt(policy, scopeId);
+  const defaultSidebarApps = sidebarApps.value;
+  const appsEditable = !scoped || sidebarApps.own;
 
   return (
     <div>
@@ -409,10 +414,58 @@ export function PolicyPage() {
           </SettingsSection>
 
           <SettingsSection
+            id="recipient-directory"
+            title="Recipient directory"
+            description="Which server accounts people see in Bulwark: the contacts directory, recipient suggestions, sharing, delegation and free/busy. Stalwart itself still lists every account to a client that asks for them."
+          >
+            <SettingItem label="Own domains only" description="Show only accounts in the domains of the signed-in account's addresses, aliases included. Accounts whose name isn't an address (name@domain) are left out.">
+              <ToggleSwitch checked={!!policy.directorySameDomainOnly} onChange={toggleDirectorySameDomain} />
+            </SettingItem>
+            <SettingItem label="Hidden accounts" description="Account names before the @, separated by commas, hidden from everyone. For function accounts such as noreply.">
+              <input
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                value={(policy.directoryHiddenLocalparts ?? []).join(',')}
+                onChange={(e) => setDirectoryHiddenLocalparts(e.target.value)}
+                placeholder="noreply, spam"
+                aria-label="Hidden accounts"
+                className={cn(inputClass, 'w-full min-w-0 sm:w-64')}
+              />
+            </SettingItem>
+          </SettingsSection>
+
+          <SettingsSection
             id="sidebar-apps"
             title="Default sidebar apps"
-            description="Apps every user gets in the navigation rail without configuring anything. They appear above the user's own apps and cannot be edited or removed by users. Independent of the Sidebar apps feature above, which only covers apps users add themselves. Applies to everyone."
+            description="Apps every user gets in the navigation rail without configuring anything. They appear above the user's own apps and cannot be edited or removed by users. Independent of the Sidebar apps feature above, which only covers apps users add themselves."
           >
+            <ScopePicker policy={policy} scopeId={scopeId} onPick={setScopeId} />
+            {scoped && (
+              <div className="flex flex-wrap items-center gap-2" data-testid="sidebar-apps-scope">
+                {sidebarApps.own ? (
+                  <>
+                    <Badge tone="accent">set</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      These apps replace Everyone&apos;s ({describeAppCount(sidebarApps.everyone)}) for this scope.
+                    </span>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={() => changeDefaultApps(() => undefined)}>
+                      Use Everyone&apos;s apps
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs text-muted-foreground">
+                      From Everyone: {describeAppCount(sidebarApps.everyone)}. Apps set here start as a copy of Everyone&apos;s and replace them for this scope.
+                    </span>
+                    <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => changeDefaultApps(apps => [...apps])}>
+                      Set apps for this scope
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+            {appsEditable && (<>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <span className="text-sm font-medium text-foreground">Apps</span>
@@ -573,6 +626,7 @@ export function PolicyPage() {
                 </div>
               );
             })}
+            </>)}
           </SettingsSection>
 
           <LockedSettingsSection policy={policy} onChange={changePolicy} />

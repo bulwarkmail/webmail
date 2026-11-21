@@ -84,9 +84,10 @@ beforeEach(() => {
   a = client('a'); b = client('b'); clients = new Map([['a', a], ['b', b]]);
   requests = []; serverMailboxes = new Map();
   refresh = vi.fn<typeof initialStore.refreshCurrentMailbox>().mockResolvedValue(undefined);
-  // "Move to" offers the active login's folders: a message of another login
-  // or account goes there across accounts (crossAccountMoveEmails has tests
-  // of its own), since `dest` names another folder, or none, in its account.
+  // "Move to" offers the folders of the login the selection is in, and only
+  // for a selection of one login. A message of another account of that login
+  // goes there across accounts (crossAccountMoveEmails has tests of its own),
+  // since `dest` names another folder, or none, in its account.
   cross = vi.fn<typeof initialStore.crossAccountMoveEmails>().mockResolvedValue(true);
   vi.stubGlobal('fetch', vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body)) as { methodCalls: Array<[string, SetArgs, string]> };
@@ -129,34 +130,34 @@ afterEach(() => {
 });
 
 describe('bulk Move authenticated-client routing', () => {
-  it('keeps colliding owner IDs on their own logins, leaving an unselected namesake alone', async () => {
+  it('moves nothing for a selection of two logins, and leaves an unselected namesake alone', async () => {
     const selectedA = email('a', 'p'), namesakeA = email('a', 'q'), selectedB = email('b', 'q');
     select([selectedA, namesakeA, selectedB], [selectedA, selectedB]);
     serverMailboxes.set(serverKey('a', 'owner', 'q'), { inbox: true });
 
-    expect(await useEmailStore.getState().batchMoveToMailbox(a, 'dest')).toBe(true);
+    expect(await useEmailStore.getState().batchMoveToMailbox(a, 'dest')).toBe(false);
 
-    expectRequests([['a', 'owner', ['p']]]);
-    expect(crossMoves()).toEqual([['b', ['q'], 'owner']]);
-    expect(serverMailboxes.get(serverKey('a', 'owner', 'p'))).toEqual({ dest: true });
+    expectRequests([]);
+    expect(cross).not.toHaveBeenCalled();
     expect(serverMailboxes.get(serverKey('a', 'owner', 'q'))).toEqual({ inbox: true });
-    expect(useEmailStore.getState().emails).not.toContain(selectedA);
-    expect(useEmailStore.getState().emails).toContain(namesakeA);
+    expect(useEmailStore.getState().emails).toEqual([selectedA, namesakeA, selectedB]);
+    expect(useEmailStore.getState().error).toMatch(/several accounts/);
   });
 
-  it('sends equal selected email IDs separately for each login', async () => {
+  it('moves nothing for equal ids selected in two logins', async () => {
     select([email('a', 'same'), email('b', 'same')]);
-    expect(await useEmailStore.getState().batchMoveToMailbox(a, 'dest')).toBe(true);
-    expectRequests([['a', 'owner', ['same']]]);
-    expect(crossMoves()).toEqual([['b', ['same'], 'owner']]);
+    expect(await useEmailStore.getState().batchMoveToMailbox(a, 'dest')).toBe(false);
+    expectRequests([]);
+    expect(cross).not.toHaveBeenCalled();
   });
 
-  it('moves only the selected login\'s copy when another login has the same ID', async () => {
+  it('moves only the selected login\'s copy, in that login\'s folder, when another login has the same ID', async () => {
+    useEmailStore.setState({ accountMailboxes: { b: [mailbox('inbox'), mailbox('dest')] } });
     const other = email('a', 'same'), selected = email('b', 'same');
     select([other, selected], [selected]);
     await useEmailStore.getState().batchMoveToMailbox(a, 'dest');
-    expectRequests([]);
-    expect(crossMoves()).toEqual([['b', ['same'], 'owner']]);
+    expectRequests([['b', 'owner', ['same']]]);
+    expect(cross).not.toHaveBeenCalled();
     expect(useEmailStore.getState().emails).toContain(other);
   });
 
@@ -199,20 +200,26 @@ describe('bulk Move authenticated-client routing', () => {
   });
 
   it('routes selected expanded-thread members without moving an unselected list namesake', async () => {
+    useEmailStore.setState({ accountMailboxes: { b: [mailbox('inbox'), mailbox('dest')] } });
     const other = email('a', 'same'), member = email('b', 'same');
     select([other], [member]);
     useEmailStore.setState({ threadEmailsCache: new Map([[threadKeyFor(member), [member]]]) });
     await useEmailStore.getState().batchMoveToMailbox(a, 'dest');
-    expectRequests([]);
-    expect(crossMoves()).toEqual([['b', ['same'], 'owner']]);
+    expectRequests([['b', 'owner', ['same']]]);
+    expect(cross).not.toHaveBeenCalled();
     expect(useEmailStore.getState().emails).toEqual([other]);
   });
 
   it('leaves a disconnected login\'s rows alone instead of using another login', async () => {
     clients.delete('b');
-    const moved = email('a', 'p'), stranded = email('b', 'q');
-    select([moved, stranded]);
-    await expectNotConnected(stranded, moved);
+    useEmailStore.setState({ accountMailboxes: { b: [mailbox('inbox'), mailbox('dest')] } });
+    const listedA = email('a', 'p'), stranded = email('b', 'q');
+    select([listedA, stranded], [stranded]);
+    expect(await useEmailStore.getState().batchMoveToMailbox(a, 'dest')).toBe(false);
+    expectRequests([]);
+    expect(cross).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().emails).toEqual([listedA, stranded]);
+    expect([...useEmailStore.getState().selectedEmailKeys]).toEqual([emailKeyFor(stranded)]);
   });
 
   it('rejects an owner stamp without a reaching login instead of using the active client', async () => {

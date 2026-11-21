@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { configManager } from '@/lib/admin/config-manager';
 import { getPasswordLoginScope } from '@/lib/oauth/tokens';
 import { loginClientAddress } from '@/lib/auth/client-address';
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ code }, { headers: NO_STORE });
   } catch (error) {
     if (isStoreUnavailable(error)) return storeUnavailableResponse(NO_STORE);
-    logger.error('Desktop hand-off park error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Desktop hand-off park error', { error: loggableError(error) });
     return answer('Internal server error', 500);
   }
 }

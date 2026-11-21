@@ -49,6 +49,32 @@ describe('toast layout', () => {
     expect(close).toHaveClass('max-sm:hidden');
   });
 
+  // #1599: in Russian "Send now" and "Undo send" took the whole width and
+  // left the text a word per line. The buttons sit in a wrapping row with
+  // the text, which keeps a minimum width, so long labels take the next line.
+  it('lets the buttons of a two-button toast wrap under the text', () => {
+    render(<Toasts />);
+    act(() => {
+      useToastStore.getState().addToast({
+        type: 'success',
+        title: 'Отправка через 5 с',
+        action: { label: 'Отменить отправку', onClick: () => {} },
+        secondaryAction: { label: 'Отправить сейчас', onClick: () => {} },
+      });
+    });
+    const el = card('Отправка через 5 с');
+    const body = el.querySelector('[data-toast-body]') as HTMLElement;
+    const actions = el.querySelector('[data-toast-actions]') as HTMLElement;
+    expect(body).toHaveClass('flex', 'flex-wrap', 'min-w-0');
+    expect(actions.parentElement).toBe(body);
+    expect(actions).not.toHaveClass('flex-shrink-0');
+    expect(actions).toHaveClass('flex-wrap', 'max-w-full');
+    const text = screen.getByText('Отправка через 5 с').parentElement as HTMLElement;
+    expect(text.parentElement).toBe(body);
+    expect(text).toHaveClass('flex-1', 'min-w-[6rem]');
+    expect(Array.from(actions.querySelectorAll('button')).map((b) => b.textContent)).toEqual(['Отправить сейчас', 'Отменить отправку']);
+  });
+
   it('is dismissed by a sideways swipe on a touch screen', () => {
     const onDismiss = vi.fn();
     render(<Toasts />);

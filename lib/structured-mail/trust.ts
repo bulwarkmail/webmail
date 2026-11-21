@@ -6,9 +6,10 @@
  * TypeScript on the Email shape; the admin gate is checked by the caller.
  */
 import {
-  authenticationResultsOnReceipt,
+  authenticationResultsUsable,
   getSenderVerification,
   hasAlignedAuthenticationPass,
+  isImportedMessage,
 } from '@/lib/email-headers';
 import type { Email, EmailBodyPart } from '@/lib/jmap/types';
 import { hasForwardPrefix } from '@/lib/subject-prefix';
@@ -16,6 +17,7 @@ import { hasForwardPrefix } from '@/lib/subject-prefix';
 export type UntrustedReason =
   | 'no_authentication_results'
   | 'not_written_on_receipt'
+  | 'imported'
   | 'sender'
   | 'sender_not_verified'
   | 'personal_mailbox'
@@ -25,7 +27,8 @@ export type UntrustedReason =
 
 export type StructuredMailTrust = { trusted: true } | { trusted: false; reason: UntrustedReason };
 
-export type TrustInput = Pick<Email, 'from' | 'subject' | 'authenticationResults' | 'authenticationResultsOnReceipt' | 'headers' | 'htmlBody' | 'textBody' | 'bodyValues' | 'bodyStructure'>;
+export type TrustInput = Pick<Email, 'from' | 'subject' | 'authenticationResults' | 'authenticationResultsOnReceipt' | 'headers' | 'htmlBody' | 'textBody' | 'bodyValues' | 'bodyStructure'>
+  & Partial<Pick<Email, 'keywords'>>;
 
 /**
  * Personal mailbox providers. A booking mail from one of these is someone
@@ -45,27 +48,63 @@ export function isPersonalMailboxDomain(domain: string): boolean {
   return PERSONAL_MAILBOX_DOMAINS.includes(d) || PERSONAL_MAILBOX_FAMILIES.test(d);
 }
 
-/** Separator lines mail clients put above a forwarded message. */
-const FORWARD_SEPARATOR_RE = new RegExp([
+/**
+ * Separator lines mail clients put above a forwarded message, lower case,
+ * with single spaces. Every pattern below reads one line at a time and
+ * each pattern starts with fixed text, so the cost of the forward check
+ * grows with the length of the body, never with its square.
+ */
+const FORWARD_MARKERS = [
   'forwarded message', 'begin forwarded message', 'original message', 'weitergeleitete nachricht',
   'ursprüngliche nachricht', 'message transféré', 'message d\'origine', 'mensaje reenviado', 'mensaje original',
   'messaggio inoltrato', 'messaggio originale', 'doorgestuurd bericht', 'oorspronkelijk bericht', 'mensagem encaminhada',
-].map((s) => `-{2,}\\s*${s}\\s*-{2,}|^\\s*${s}:?\\s*$`).join('|'), 'im');
+];
+const MARKER_ALTERNATIVES = FORWARD_MARKERS.join('|');
+/** "---------- Forwarded message ----------" anywhere in a line (runs of dashes are cut to two first). */
+const DASHED_MARKER_RE = new RegExp(`-- ?(?:${MARKER_ALTERNATIVES}) ?--`);
+/** "Begin forwarded message:" as a line of its own. */
+const MARKER_LINE_RE = new RegExp(`^(?:${MARKER_ALTERNATIVES}):?$`);
 
 /** Outlook's forward header block: From / Sent / To ... Subject, in a few languages. */
-const OUTLOOK_HEADER_RE = /^\s*(?:from|von|de|da|van|od):[^\n]*\n\s*(?:sent|gesendet|envoyé|inviato|enviado|verzonden|wysłano):[^\n]*\n(?:[^\n]*\n){0,3}\s*(?:subject|betreff|objet|oggetto|asunto|onderwerp|temat):/im;
+const OUTLOOK_FROM_RE = /^(?:from|von|de|da|van|od):/;
+const OUTLOOK_SENT_RE = /^(?:sent|gesendet|envoyé|inviato|enviado|verzonden|wysłano):/;
+const OUTLOOK_SUBJECT_RE = /^(?:subject|betreff|objet|oggetto|asunto|onderwerp|temat):/;
+/** Lines the Outlook block may hold between Sent and Subject (To, Cc, ...). */
+const OUTLOOK_LINES_BEFORE_SUBJECT = 3;
 
+const LINE_BREAK_RE = /\r\n?|\n/;
+
+/**
+ * The text of an HTML part, a line per block. Script and style elements go
+ * first, an unclosed one to the end of the part, so it is passed over once.
+ * Tags are matched with `[^<>]`: a `<` without its `>` is given up at the
+ * next `<` instead of after a scan to the end of the part.
+ */
 function htmlToLines(html: string): string {
   return html
-    .replace(/<(?:script|style)[\s\S]*?<\/(?:script|style)>/gi, ' ')
-    .replace(/<(?:br|\/p|\/div|\/tr|\/li|\/h\d|\/td)\b[^>]*>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/[ \t]+/g, ' ');
+    .replace(/<(script|style)\b[^<>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, ' ')
+    .replace(/<(?:br|\/p|\/div|\/tr|\/li|\/h\d|\/td)\b[^<>]*>/gi, '\n')
+    .replace(/<[^<>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ');
+}
+
+/** A line as the markers are written: lower case, single spaces, runs of dashes cut to two. */
+function normalizeLine(line: string): string {
+  return line.toLowerCase().replace(/\s+/g, ' ').replace(/-{2,}/g, '--').trim();
 }
 
 function looksForwarded(text: string): boolean {
-  return FORWARD_SEPARATOR_RE.test(text) || OUTLOOK_HEADER_RE.test(text);
+  const lines = text.split(LINE_BREAK_RE).map(normalizeLine).filter((line) => line !== '');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (DASHED_MARKER_RE.test(line) || MARKER_LINE_RE.test(line)) return true;
+    if (!OUTLOOK_FROM_RE.test(line) || !OUTLOOK_SENT_RE.test(lines[i + 1] ?? '')) continue;
+    const last = Math.min(lines.length - 1, i + 2 + OUTLOOK_LINES_BEFORE_SUBJECT);
+    for (let j = i + 2; j <= last; j++) {
+      if (OUTLOOK_SUBJECT_RE.test(lines[j])) return true;
+    }
+  }
+  return false;
 }
 
 function partValue(email: TrustInput, part: EmailBodyPart | undefined): { value: string; truncated: boolean } | undefined {
@@ -97,17 +136,15 @@ function insideAttachedMessage(root: EmailBodyPart | undefined, partId: string |
   return walk(root, false) ?? false;
 }
 
-function headerList(headers: TrustInput['headers']): { name: string; value: string }[] | undefined {
-  return Array.isArray(headers) ? (headers as unknown as { name: string; value: string }[]) : undefined;
-}
-
 export function getStructuredMailTrust(email: TrustInput): StructuredMailTrust {
   const auth = email.authenticationResults;
   if (!auth) return { trusted: false, reason: 'no_authentication_results' };
+  // A message from an imported file carries the lines some other server, or
+  // the file's author, wrote; this server never checked it.
+  if (isImportedMessage(email)) return { trusted: false, reason: 'imported' };
 
-  const list = headerList(email.headers);
-  const onReceipt = email.authenticationResultsOnReceipt ?? (list ? authenticationResultsOnReceipt(list) : false);
-  if (!onReceipt) return { trusted: false, reason: 'not_written_on_receipt' };
+  // The flag of the full fetch, else the headers in message order; nothing to go by is a no.
+  if (!authenticationResultsUsable(email)) return { trusted: false, reason: 'not_written_on_receipt' };
 
   const senders = email.from ?? [];
   const from = senders[0]?.email ?? '';

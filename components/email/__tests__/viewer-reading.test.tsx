@@ -15,9 +15,9 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
   useFormatter: () => ({ dateTime: (d: Date | string) => String(d), relativeTime: (d: Date | string) => String(d), number: (n: number) => String(n) }),
 }));
-const media = vi.hoisted(() => ({ matches: new Set<string>() }));
+const media = vi.hoisted(() => ({ matches: new Set<string>(), phone: false }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: false, isTablet: false, isDesktop: true }),
+  useDeviceDetection: () => ({ isMobile: media.phone, isTablet: false, isDesktop: !media.phone }),
   useMediaQuery: (query: string) => media.matches.has(query),
   useIsMobile: () => false,
   useIsDesktop: () => true,
@@ -35,7 +35,20 @@ class NoopResizeObserver {
 }
 vi.stubGlobal('ResizeObserver', NoopResizeObserver);
 
+const darkPass = vi.hoisted(() => ({ calls: [] as Array<{ canvas?: unknown }> }));
+vi.mock('@/lib/email-dark-mode', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@/lib/email-dark-mode')>();
+  return {
+    ...real,
+    applyEmailDarkMode: (doc: Document, options: { canvas?: unknown }) => {
+      darkPass.calls.push(options);
+      real.applyEmailDarkMode(doc, options as never);
+    },
+  };
+});
+
 const { EmailViewer } = await import('../email-viewer');
+const { ConversationEmailBody } = await import('../thread-conversation-view');
 const { useSettingsStore } = await import('@/stores/settings-store');
 const { ACCESSIBILITY_DEFAULTS } = await import('@/lib/accessibility-settings');
 const { useThemeStore } = await import('@/stores/theme-store');
@@ -73,8 +86,9 @@ async function show(email: Email) {
 beforeEach(() => {
   clearAllHooks();
   media.matches.clear();
+  media.phone = false;
   useSettingsStore.setState({ ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', emailAlwaysLightMode: false } as never);
-  useThemeStore.setState({ resolvedTheme: 'light' });
+  useThemeStore.setState({ resolvedTheme: 'light', activeThemeId: null });
 });
 
 describe('message body frame', () => {
@@ -159,6 +173,81 @@ describe('forced colours', () => {
   });
 });
 
+describe('mail on the theme surface', () => {
+  const frame = (container: HTMLElement) => container.querySelector('iframe')!.getAttribute('srcdoc')!;
+  const wrapper = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-reader-body]')!;
+
+  it('paints no canvas of its own in dark mode, so the reader surface shows behind the mail', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(frame(container)).toContain('background: transparent');
+    expect(frame(container)).not.toContain('background: #ffffff');
+  });
+
+  it('keeps the white page of a mail in a light theme', async () => {
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(frame(container)).toContain('background: #ffffff');
+    expect(frame(container)).not.toContain('background: transparent');
+  });
+
+  it('sits on the theme surface in dark mode, not on a fixed grey', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(wrapper(container).style.backgroundColor).toBe('');
+    expect(wrapper(container).className).toContain('bg-background');
+  });
+
+  it('gives a mail shown dark in a light theme the dark surface of that theme', async () => {
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    act(() => { screen.getByTitle('view_in_dark_mode').click(); });
+    expect(wrapper(container).classList).toContain('dark');
+    expect(wrapper(container).classList).toContain('bg-background');
+    expect(wrapper(container).style.backgroundColor).toBe('');
+  });
+
+  it('leaves the light surface alone when the mail is not shown dark', async () => {
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    expect(wrapper(container).classList).not.toContain('dark');
+  });
+
+  const loadFrame = async (container: HTMLElement) => {
+    const iframe = container.querySelector('iframe')!;
+    const host = document.createElement('iframe');
+    document.body.appendChild(host);
+    const doc = host.contentDocument!;
+    doc.body.innerHTML = '<p>Some <b>formatted</b> text</p>';
+    Object.defineProperty(doc, 'URL', { value: 'about:srcdoc' });
+    Object.defineProperty(iframe, 'contentDocument', { get: () => doc });
+    darkPass.calls.length = 0;
+    await act(async () => { iframe.dispatchEvent(new Event('load')); });
+    return darkPass.calls;
+  };
+
+  it('hands the dark pass the colour of the surface behind the frame', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    wrapper(container).style.backgroundColor = 'rgb(46, 52, 64)';
+    const calls = await loadFrame(container);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].canvas).toEqual({ r: 46, g: 52, b: 64, a: 1 });
+  });
+
+  it('falls back to a dark canvas when nothing behind the frame is painted', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    const calls = await loadFrame(container);
+    expect(calls[0].canvas).toEqual({ r: 20, g: 20, b: 20, a: 1 });
+  });
+
+  it('rebuilds the dark frame for another theme', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark', activeThemeId: null });
+    const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
+    const before = frame(container);
+    await act(async () => { useThemeStore.setState({ activeThemeId: 'builtin-nord' }); });
+    expect(frame(container)).not.toBe(before);
+  });
+});
+
 describe('reduce motion inside the mail', () => {
   const html = '<style>@keyframes spin{to{transform:rotate(1turn)}} .s{animation:spin 1s infinite}</style><p class="s">Spinning <b>text</b></p>';
   const srcdoc = async () => (await show(message({ html }))).container.querySelector('iframe')!.getAttribute('srcdoc')!;
@@ -214,21 +303,133 @@ describe('mail in the app font and colours', () => {
 });
 
 describe('reading width', () => {
-  it('keeps HTML mail to about 80 characters a line when comfortable', async () => {
+  it('keeps HTML mail to about 80 characters a line, centred, when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
-    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('body{max-width:80ch!important}');
+    expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('body{max-width:80ch!important;margin-inline:auto!important}');
   });
 
-  it('keeps plain text to about 80 characters a line when comfortable', async () => {
+  it('keeps plain text to about 80 characters a line, centred, when comfortable', async () => {
     useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
     await show(message({ text: 'Plain words here' }));
-    expect((screen.getByText('Plain words here').closest('.email-content-text') as HTMLElement).style.maxWidth).toBe('80ch');
+    const body = screen.getByText('Plain words here').closest('.email-content-text') as HTMLElement;
+    expect(body.style.maxWidth).toBe('80ch');
+    expect(body.style.marginInline).toBe('auto');
+  });
+
+  it('centres the reader view text at about 80 characters a line when comfortable', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    await show(message({ html: '<p>Read this in peace.</p>' }));
+    await act(async () => { screen.getByRole('button', { name: 'more_actions' }).click(); });
+    const readerItem = screen.getAllByRole('menuitem').find((el) => el.textContent?.includes('reader_view'))!;
+    await act(async () => { readerItem.click(); });
+    const body = screen.getByTestId('reader-view-body');
+    expect(body.style.maxWidth).toBe('80ch');
+    expect(body.style.marginInline).toBe('auto');
   });
 
   it('uses the full width by default', async () => {
     const { container } = await show(message({ html: '<p>Some <b>formatted</b> text</p>' }));
     expect(container.querySelector('iframe')!.getAttribute('srcdoc')).not.toContain('80ch');
+  });
+});
+
+describe('message card', () => {
+  const card = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-reading-card]');
+
+  it('frames the message in a card on the pane when the reading width is about 80 characters', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    const frame = card(container)!;
+    expect(frame).not.toBeNull();
+    // The card holds the whole message: sender header and body.
+    expect(frame.contains(container.querySelector('iframe'))).toBe(true);
+    expect(frame).toHaveTextContent('Alice');
+    // Its look comes from the theme: surface, border and corner tokens.
+    expect(frame).toHaveClass('bg-card', 'border', 'border-border', 'rounded-xl');
+    // Centred, and no wider than the 80-character column it frames.
+    expect(frame).toHaveClass('mx-auto', 'max-w-(--reading-card-width)');
+    expect(frame.style.getPropertyValue('--reading-card-width')).toBe('calc(0.875rem * 44 + 2.5rem)');
+  });
+
+  it('puts the mail body on the card surface, also in dark mode', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    // Inside the card the page colour is the card colour, so the sections and
+    // the element that hosts the mail paint the card's surface...
+    expect(card(container)!.className).toContain('[--color-background:var(--color-card)]');
+    const host = container.querySelector<HTMLElement>('[data-reader-body]')!;
+    expect(host).toHaveClass('bg-background');
+    // ...and no fixed colour paints over it.
+    expect(host.style.backgroundColor).toBe('');
+  });
+
+  it('paints mail shown in the app colours with the card colour, not the page colour', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable', mailOverrideStyles: 'always' } as never);
+    document.documentElement.style.setProperty('--color-background', '#0a0a0a');
+    document.documentElement.style.setProperty('--color-card', '#141414');
+    try {
+      const { container } = await show(message({ html: '<p>Some text</p>' }));
+      expect(container.querySelector('iframe')!.getAttribute('srcdoc')).toContain('html{background:#141414!important}');
+      // The mail paints the card colour itself; painting it again behind the
+      // mail would show where the card colour is translucent (Aurora Glass).
+      expect(container.querySelector('[data-reader-body]')).toHaveClass('bg-transparent');
+    } finally {
+      document.documentElement.style.removeProperty('--color-background');
+      document.documentElement.style.removeProperty('--color-card');
+    }
+  });
+
+  it('leaves a full-width message on the pane as it was', async () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    expect(card(container)).toBeNull();
+    const pane = container.querySelector<HTMLElement>('[data-reader-scroll]')!;
+    expect(pane.className).toBe('flex-1 overflow-auto overscroll-contain bg-muted/30');
+    const wrapper = pane.firstElementChild as HTMLElement;
+    expect(wrapper.className).toBe('min-h-full flex flex-col');
+    expect(wrapper.getAttribute('style')).toBeNull();
+    const body = container.querySelector<HTMLElement>('[data-reader-body]')!;
+    expect(body.style.backgroundColor).toBe('');
+    expect(body).toHaveClass('bg-background');
+  });
+
+  it('draws no card on a phone, where the column already fills the screen', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    media.phone = true;
+    const { container } = await show(message({ html: '<p>Some text</p>' }));
+    expect(card(container)).toBeNull();
+    const pane = container.querySelector<HTMLElement>('[data-reader-scroll]')!;
+    expect(pane).not.toHaveClass('px-4');
+    expect(pane.firstElementChild!.className).toBe('min-h-full flex flex-col');
+  });
+
+  it('makes room in Mountain View for the bodies indented under the sender', async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable', interfaceLayout: 'mountain-view' } as never);
+    try {
+      const { container } = await show(message({ html: '<p>Some text</p>' }));
+      expect(card(container)!.style.getPropertyValue('--reading-card-width')).toBe('calc(calc(0.875rem * 44 + 2.5rem) + 4rem)');
+    } finally {
+      useSettingsStore.setState({ interfaceLayout: 'default' } as never);
+    }
+  });
+
+  it("paints a conversation message in the app's colours with the card colour inside the card", async () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable', mailOverrideStyles: 'always' } as never);
+    document.documentElement.style.setProperty('--color-background', '#0a0a0a');
+    document.documentElement.style.setProperty('--color-card', '#141414');
+    try {
+      const body = (onCard: boolean) => render(
+        <ConversationEmailBody email={message({ html: '<p>Earlier</p>' })} allowExternal={false} onAllowExternal={() => {}} onCard={onCard} />,
+      ).container.querySelector('iframe')!.getAttribute('srcdoc');
+      expect(body(true)).toContain('html{background:#141414!important}');
+      // The phone's conversation view has no card: the page colour.
+      expect(body(false)).toContain('html{background:#0a0a0a!important}');
+    } finally {
+      document.documentElement.style.removeProperty('--color-background');
+      document.documentElement.style.removeProperty('--color-card');
+    }
   });
 });
 

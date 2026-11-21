@@ -16,6 +16,7 @@ import { getMaxAccounts, accountRowText, accountSharesAddress } from '@/lib/acco
 import { formatFileSize, cn } from '@/lib/utils';
 import { toUnicodeDomain, toUnicodeEmail } from '@/lib/idn';
 import { IS_LITE } from '@/lib/lite';
+import { liteSignInMethod } from '@/lib/auth/lite-tokens';
 import { usePolicyStore } from '@/stores/policy-store';
 import { AccountArchiveSettings } from './account-archive-settings';
 import { SignOutRow } from './sign-out-row';
@@ -70,6 +71,9 @@ export function AccountSettings() {
   const draggedIndexRef = useRef<number | null>(null);
 
   const quotaPercentage = quota && quota.total > 0 ? Math.min(Math.round((quota.used / quota.total) * 100), 100) : 0;
+  // Every Lite sign-in ends as a token session (authMode 'oauth'): a password
+  // one is still a password sign-in to the person who typed it.
+  const signedInWithPassword = IS_LITE && authMode === 'oauth' && !!account && liteSignInMethod(account.cookieSlot) === 'password';
   // Shown when there is no identity to edit: the name the app knows.
   const displayName = primaryIdentity?.name || account?.displayName || (isDemoMode ? 'Nora Lindqvist' : undefined);
   const email = primaryIdentity?.email || account?.email || username;
@@ -165,7 +169,7 @@ export function AccountSettings() {
         <SettingItem label={t('auth_method_label')}>
           <div className="flex flex-col items-end gap-1 text-end">
             <span className="text-sm text-foreground">
-              {authMode === 'oauth'
+              {authMode === 'oauth' && !signedInWithPassword
                 ? t('auth_method_oauth')
                 : authMode === 'token' ? t('auth_method_token') : t('auth_method_basic')}
             </span>

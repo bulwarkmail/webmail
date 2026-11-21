@@ -6,6 +6,7 @@
     "username_placeholder": "user@example.com",
     "password_label": "Mật khẩu",
     "password_placeholder": "Nhập mật khẩu của bạn",
+    "forgot_password": "Bạn quên mật khẩu?",
     "jmap_server_label": "Máy chủ",
     "jmap_server_auto_picked": "Máy chủ được chọn từ miền email của bạn.",
     "sign_in": "Đăng nhập",
@@ -22,7 +23,9 @@
       "totp_required": "Cần có mã xác thực hai yếu tố. Vui lòng nhập mã của bạn dưới đây.",
       "totp_invalid": "Mã xác thực không hợp lệ. Vui lòng kiểm tra ứng dụng xác thực của bạn và thử lại.",
       "oauth_discovery_failed": "SSO đã được bật nhưng không thể liên lạc được với nhà cung cấp danh tính. Kiểm tra cấu hình OAuth của bạn.",
-      "token_exchange_failed": "Mật khẩu và mã của bạn đã được chấp nhận nhưng máy chủ thư từ chối bắt đầu phiên cho ứng dụng này. Yêu cầu quản trị viên của bạn kiểm tra cài đặt ứng dụng khách OAuth của nó."
+      "oauth_issuer_mismatch": "Đăng nhập qua nhà cung cấp này chưa được thiết lập đúng. Quản trị viên cần đặt địa chỉ issuer của nhà cung cấp.",
+      "token_exchange_failed": "Mật khẩu và mã của bạn đã được chấp nhận nhưng máy chủ thư từ chối bắt đầu phiên cho ứng dụng này. Yêu cầu quản trị viên của bạn kiểm tra cài đặt ứng dụng khách OAuth của nó.",
+      "login_refused": "Máy chủ thư đã từ chối lần đăng nhập này trước khi kiểm tra mã của bạn. Hãy nhờ quản trị viên kiểm tra cài đặt ứng dụng khách OAuth."
     },
     "show_password": "Hiển thị mật khẩu",
     "hide_password": "Ẩn mật khẩu",
@@ -157,6 +160,7 @@
     "settings": "Cài đặt",
     "admin": "Quản trị",
     "files": "Tệp",
+    "tasks": "Công việc",
     "loading_mailboxes": "Đang tải hộp thư...",
     "push_connected": "Cập nhật theo thời gian thực đang hoạt động",
     "push_disconnected": "Cập nhật thời gian thực không hoạt động",
@@ -338,10 +342,20 @@
     "show_on_mobile": "Hiển thị trên thiết bị di động"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "last_week": "Tuần trước",
+      "last_month": "Tháng trước",
+      "older": "Cũ hơn"
+    },
+    "group_by_date": "Nhóm theo ngày",
     "sections": {
       "unread": "Chưa đọc",
       "everything_else": "Các thư còn lại",
-      "unread_empty": "Bạn đã đọc tất cả thư trong hộp thư đến của mình."
+      "unread_empty": "Bạn đã đọc tất cả thư trong hộp thư đến của mình.",
+      "unread_newer": "Thư chưa đọc mới hơn",
+      "unread_older": "Thư chưa đọc cũ hơn"
     },
     "columns": {
       "from": "Từ",
@@ -369,6 +383,8 @@
     "replied": "Đã trả lời",
     "forwarded": "Đã chuyển tiếp",
     "has_attachment": "Có tệp đính kèm",
+    "high_importance": "Mức quan trọng cao",
+    "low_importance": "Mức quan trọng thấp",
     "conversations_range": "{from}–{to, number} trong số {total, number}",
     "conversations_count": "{count} trong số {total} cuộc trò chuyện",
     "conversations_count_plus": "{count}+ cuộc trò chuyện",
@@ -805,7 +821,8 @@
       "event_status_tentative": "Tạm thời",
       "event_status_cancelled": "Đã hủy",
       "expand": "Hiện chi tiết",
-      "collapse": "Ẩn chi tiết"
+      "collapse": "Ẩn chi tiết",
+      "optional_role": "Bạn là người tham dự không bắt buộc"
     },
     "send": "Gửi",
     "more": "Thêm",
@@ -956,6 +973,50 @@
     "restore_to": "Chuyển lại vào {folder}",
     "delete_forever": "Xóa vĩnh viễn"
   },
+  "team_mailboxes": {
+    "note": "Ghi chú",
+    "add_note": "Thêm ghi chú",
+    "field_label": "Ghi chú",
+    "placeholder": "Viết ghi chú cho nhóm của bạn",
+    "chars_left": "{count, plural, other {Còn # ký tự}}",
+    "too_long": "{count, plural, other {Quá # ký tự}}",
+    "sending": "Đang gửi…",
+    "save_failed": "Không lưu được ghi chú.",
+    "retry": "Thử lại",
+    "full": "Hộp thư này đã đầy. Hãy hỏi quản trị viên.",
+    "read_only": "Không thể lưu ghi chú trong hộp thư này. Hãy hỏi quản trị viên.",
+    "read_only_member": "Bạn có thể đọc ghi chú ở đây nhưng không thể viết.",
+    "offline": "Bạn đang ngoại tuyến. Bạn có thể viết ghi chú khi trực tuyến trở lại.",
+    "team_only": "Chỉ nhóm của bạn thấy nội dung này",
+    "list_label": "Ghi chú",
+    "delete": "Xóa ghi chú",
+    "note_from": "Ghi chú của {name}, {time}",
+    "new_note_from": "Ghi chú mới của {name}",
+    "deleted": "Đã xóa ghi chú",
+    "undo": "Hoàn tác",
+    "delete_failed": "Không xóa được ghi chú.",
+    "load_failed": "Không tải được ghi chú.",
+    "timeline_assigned": "{name} đã giao việc này cho {assignee}",
+    "timeline_took": "{name} đã nhận việc này",
+    "timeline_unassigned": "{name} đã bỏ giao việc",
+    "timeline_unassigned_person": "{name} đã bỏ giao việc cho {assignee}",
+    "timeline_left": "{name} không còn phụ trách việc này",
+    "timeline_done": "{name} đã đánh dấu là xong",
+    "timeline_reopened": "{name} đã mở lại việc này",
+    "someone": "một thành viên nhóm",
+    "summary_count": "{count, plural, other {# ghi chú}}",
+    "summary_latest": "{name}: {text}",
+    "row_count_new": "{count, plural, other {# ghi chú, có ghi chú mới}}",
+    "filter_label": "Bộ lọc",
+    "filter_open": "Chưa xong",
+    "filter_mine": "Giao cho tôi",
+    "filter_mentions": "Nhắc đến tôi",
+    "filter_notes": "Có ghi chú",
+    "mention_list": "Thành viên trong nhóm này",
+    "mentioned_you": "{name} đã nhắc đến bạn trong “{subject}”",
+    "mentioned_you_hidden": "Bạn được nhắc đến trong hộp thư của nhóm",
+    "show": "Hiện"
+  },
   "mail_p3_actions": {
     "move_to_inbox": "Chuyển vào Hộp thư đến",
     "delete_forever_title": "Xóa vĩnh viễn thư này?",
@@ -1085,6 +1146,7 @@
     "templates_menu": "Mẫu",
     "insert_template": "Chèn mẫu…",
     "options": "Tùy chọn",
+    "tags": "Thẻ",
     "option_plain_text": "Văn bản thuần",
     "option_plain_text_hint": "Gửi không kèm định dạng",
     "option_read_receipt": "Yêu cầu xác nhận đã đọc",
@@ -1097,6 +1159,12 @@
     "option_priority_high": "Cao",
     "option_priority_normal": "Bình thường",
     "option_priority_low": "Thấp",
+    "file_in": "Lưu vào thư mục",
+    "file_in_chosen": "Lưu vào {folder}",
+    "file_in_hint": "Sau khi gửi, thư của bạn và thư bạn trả lời sẽ chuyển vào thư mục này",
+    "file_in_none": "Không lưu",
+    "file_in_failed": "Đã gửi, nhưng không thể lưu vào {folder}.",
+    "file_in_reply_elsewhere": "Đã chuyển thư gốc vào {folder}. Thư trả lời vẫn ở mục Đã gửi vì được gửi từ tài khoản khác.",
     "validation": {
       "recipient_required": "Thêm người nhận để gửi",
       "body_required": "Viết nội dung thư hoặc đính kèm tệp",
@@ -1232,6 +1300,7 @@
       "clear_formatting": "Xóa định dạng",
       "undo": "Hoàn tác",
       "redo": "Làm lại",
+      "cell_background": "Nền ô",
       "add_row_above": "Thêm hàng ở trên",
       "add_row_below": "Thêm hàng bên dưới",
       "add_column_before": "Thêm cột trước",
@@ -1295,6 +1364,18 @@
       "plain_text": "[Hình ảnh: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Quá nhiều lượt tải lên. Hãy thử lại sau {minutes, plural, other {# phút}}.",
+    "retry_later": "Quá nhiều lượt tải lên. Hãy thử lại sau."
+  },
+  "attachment_rename": {
+    "rename": "Đổi tên",
+    "rename_named": "Đổi tên {name}",
+    "rename_menu": "Đổi tên…",
+    "rename_title": "Đổi tên tệp đính kèm",
+    "rename_invalid_chars": "Tên tệp không được chứa / hoặc \\ hoặc ký tự điều khiển",
+    "rename_too_long": "Tên này quá dài"
+  },
   "compose_ux": {
     "draft_discarded": "Đã hủy bản nháp",
     "undo": "Hoàn tác",
@@ -1327,6 +1408,7 @@
     "success": "Thành công",
     "cancel": "Hủy",
     "save": "Lưu",
+    "ready_to_save": "Sẵn sàng để lưu",
     "delete": "Xóa",
     "edit": "Chỉnh sửa",
     "close": "Đóng",
@@ -1723,6 +1805,13 @@
         "label": "Bộ chuyển tài khoản ở đầu thanh bên",
         "description": "Hiện bộ chuyển tài khoản phía trên các thư mục và nút Soạn thư hình tròn trên danh sách thư. Tắt tùy chọn này để đặt Soạn thư phía trên các thư mục."
       },
+      "compose_placement": {
+        "label": "Nút Soạn thư",
+        "description": "Vị trí nút Soạn thư trên máy tính. Trên điện thoại, nút luôn nằm trên danh sách thư.",
+        "floating": "Trên danh sách thư",
+        "sidebar": "Đầu thanh thư mục",
+        "rail": "Đầu thanh điều hướng"
+      },
       "show_rail_account_list": {
         "label": "Hiển thị ảnh đại diện tài khoản trên thanh điều hướng",
         "description": "Hiển thị ảnh đại diện từng tài khoản ở cuối thanh điều hướng để chuyển nhanh, cùng nút đăng xuất bên dưới."
@@ -1812,12 +1901,19 @@
       "title": "Nhãn thư",
       "description": "Tạo thẻ để sắp xếp thư. Các thẻ được lưu cùng thư trên máy chủ.",
       "add_keyword": "Nhãn mới",
+      "sort_az": "Sắp xếp A–Z",
+      "sorted": "Đã sắp xếp nhãn A–Z",
+      "empty": "Chưa có nhãn nào.",
       "label_field": "Tên hiển thị",
       "label_placeholder": "Ví dụ: Công việc, Cá nhân, Khẩn cấp",
       "id_field": "Mã nhãn",
       "id_placeholder": "Ví dụ: cong-viec, ca-nhan",
       "color_field": "Màu",
-      "id_exists": "Mã nhãn này đã tồn tại",
+      "custom_color": "Màu tùy chỉnh",
+      "color_code": "Mã màu",
+      "pick_custom_color": "Chọn màu tùy chỉnh",
+      "invalid_color": "Hãy dùng mã màu như #1a73e8.",
+      "name_exists": "Thẻ có tên này đã tồn tại",
       "edit": "Sửa nhãn",
       "delete": "Xóa nhãn",
       "edit_tag": "Sửa {name}",
@@ -1997,9 +2093,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Kiểu Hộp thư đến",
-        "description": "Chưa đọc trước sẽ hiển thị 25 thư chưa đọc mới nhất trong một mục phía trên các thư còn lại.",
+        "description": "Chưa đọc trước sẽ hiển thị các thư chưa đọc mới nhất trong một mục phía trên các thư còn lại.",
         "default": "Mặc định",
         "unread_first": "Chưa đọc trước"
+      },
+      "unread_section_size": {
+        "label": "Số thư chưa đọc hiển thị",
+        "description": "Số thư chưa đọc mới nhất hiển thị trong mục Chưa đọc trước",
+        "5": "5 thư",
+        "10": "10 thư",
+        "15": "15 thư",
+        "20": "20 thư",
+        "25": "25 thư",
+        "50": "50 thư"
       },
       "clear_search_on_folder_change": {
         "label": "Xóa tìm kiếm khi chuyển thư mục",
@@ -2094,13 +2200,31 @@
         "label": "Hiển thị mã xác minh",
         "description": "Cho phép sao chép mã trong thư đăng nhập và xác nhận chỉ bằng một lần nhấn; mã hiển thị trong danh sách một ngày và cả trong thư"
       },
+      "show_attachment_chips": {
+        "label": "Hiện tệp đính kèm trong danh sách",
+        "description": "Hiện các tệp đính kèm bên dưới mỗi thư để mở ngay từ danh sách. Biểu tượng kẹp giấy vẫn hiển thị trong mọi trường hợp."
+      },
+      "show_tag_chips": {
+        "label": "Hiển thị nhãn trong danh sách",
+        "description": "Hiển thị huy hiệu nhãn bên cạnh người gửi hoặc chủ đề trong danh sách thư"
+      },
       "plain_text_mode": {
         "label": "Chỉ dùng văn bản thuần",
         "description": "Tắt trình soạn thảo văn bản đa dạng thức và chỉ gửi thư dưới dạng văn bản thuần, kể cả thư trả lời và chuyển tiếp"
       },
+      "reply_under_message": {
+        "label": "Mở thư trả lời bên dưới thư",
+        "description": "Thư trả lời hoặc chuyển tiếp mở bên dưới thư gốc, thư gốc vẫn đọc được ở phía trên. Khi tắt, nó chiếm toàn bộ ngăn đọc, giống như thư mới."
+      },
       "quick_reply": {
         "label": "Trả lời nhanh",
         "description": "Hiển thị khung trả lời nhanh bên dưới thư."
+      },
+      "reply_quote": {
+        "label": "Văn bản trích dẫn trong thư trả lời",
+        "description": "Thu gọn ẩn các thư được trích dẫn sau •••. Mở rộng hiển thị đầy đủ khi bạn mở thư trả lời.",
+        "collapsed": "Thu gọn",
+        "expanded": "Mở rộng"
       },
       "auto_select_reply_identity": {
         "label": "Trả lời bằng địa chỉ nhận thư",
@@ -2256,6 +2380,16 @@
         "seconds": "{seconds} giây",
         "unsupported": "Tài khoản hiện tại không hỗ trợ gửi thư trễ. Cài đặt này vẫn được lưu cho các tài khoản khác."
       },
+      "mark_read_on_reply": {
+        "label": "Đánh dấu đã đọc khi tôi trả lời hoặc chuyển tiếp",
+        "description": "Thư bạn trả lời hoặc chuyển tiếp sẽ được đánh dấu đã đọc, kể cả khi thư không bao giờ được đánh dấu đã đọc lúc mở."
+      },
+      "message_double_click": {
+        "label": "Nhấp đúp vào thư",
+        "description": "Điều xảy ra khi nhấp đúp vào một thư trong danh sách.",
+        "reading_pane": "Mở trong ngăn đọc",
+        "new_window": "Mở trong cửa sổ mới"
+      },
       "return_to_list_after_action": {
         "label": "Quay lại danh sách sau khi xóa hoặc đánh dấu chưa đọc",
         "description": "Sau khi xóa thư đang mở hoặc đánh dấu thư là chưa đọc, quay lại danh sách thư thay vì mở thư tiếp theo."
@@ -2279,6 +2413,10 @@
       "rtl_editing": {
         "label": "Hỗ trợ soạn thảo từ phải sang trái",
         "description": "Thêm nút chọn hướng vào thanh công cụ soạn thư để đặt hướng đoạn văn từ trái sang phải hoặc từ phải sang trái"
+      },
+      "group_by_date": {
+        "label": "Nhóm theo ngày",
+        "description": "Hiển thị thư dưới các tiêu đề ngày như Hôm nay, Hôm qua và Tuần trước. Chỉ áp dụng khi danh sách được sắp xếp theo ngày."
       },
       "group_conversations": {
         "label": "Nhóm thư theo cuộc trò chuyện",
@@ -2384,6 +2522,57 @@
       "managing": "Quản lý: {name}"
     },
     "security": {
+      "masked_addresses": {
+        "address": "Địa chỉ",
+        "description_column": "Mô tả",
+        "website_column": "Trang web",
+        "state": "Trạng thái",
+        "actions": "Thao tác",
+        "no_description": "Không có mô tả",
+        "edit": "Sửa",
+        "close": "Đóng",
+        "pagination": "Các trang địa chỉ ẩn danh",
+        "page": "Trang {page}/{pages}",
+        "previous": "Trước",
+        "next": "Tiếp",
+        "delete": "Xóa",
+        "delete_title": "Xóa vĩnh viễn địa chỉ ẩn danh?",
+        "delete_warning": "Xóa {address}? Không thể hoàn tác thao tác này. Thư gửi đến địa chỉ này sẽ không được chuyển nữa.",
+        "delete_confirm": "Xóa vĩnh viễn",
+        "cancel": "Hủy",
+        "deleted": "Đã xóa vĩnh viễn địa chỉ.",
+        "deleted_refresh_failed": "Đã xác nhận xóa, nhưng không thể làm mới danh sách. Hãy làm mới để tải danh sách hiện tại.",
+        "delete_forbidden": "Phiên hiện tại của bạn không được phép xóa địa chỉ ẩn danh. Các thao tác được phép khác vẫn khả dụng.",
+        "delete_failed": "Địa chỉ chưa bị xóa. Hãy làm mới danh sách trước khi thử lại.",
+        "delete_unconfirmed": "Không thể xác nhận việc xóa và sẽ không thử lại. Hãy làm mới danh sách để kiểm tra địa chỉ trước khi xóa thêm.",
+        "title": "Địa chỉ ẩn danh",
+        "intro": "Nhận thư mà không cần chia sẻ địa chỉ chính của bạn. Khi tắt một địa chỉ, thư mới gửi đến địa chỉ đó sẽ bị từ chối. Không thể dùng các địa chỉ này để gửi thư.",
+        "loading": "Đang tải địa chỉ ẩn danh…",
+        "count": "{count, plural, other {# địa chỉ}}",
+        "empty": "Chưa có địa chỉ ẩn danh nào.",
+        "website": "Trang web (tùy chọn)",
+        "description": "Mô tả (tùy chọn)",
+        "no_website": "Chưa chỉ định",
+        "enabled": "Đã bật",
+        "disabled": "Đã tắt",
+        "enable": "Bật",
+        "disable": "Tắt",
+        "copy": "Sao chép",
+        "copied": "Đã sao chép địa chỉ.",
+        "copy_failed": "Không thể sao chép. Hãy chọn và sao chép địa chỉ ở trên.",
+        "save": "Lưu mô tả",
+        "create": "Tạo địa chỉ ẩn danh",
+        "refresh": "Làm mới",
+        "saved": "Đã lưu thay đổi.",
+        "forbidden": "Phiên hiện tại của bạn không được phép liệt kê địa chỉ ẩn danh.",
+        "unavailable": "Địa chỉ ẩn danh không khả dụng cho tài khoản hoặc máy chủ này.",
+        "load_failed": "Không thể tải toàn bộ danh sách địa chỉ. Hãy làm mới để thử lại.",
+        "save_failed": "Không thể xác nhận thay đổi. Hãy làm mới danh sách trước khi thử lại.",
+        "create_forbidden": "Máy chủ không cho phép tạo địa chỉ ẩn danh bằng phiên này.",
+        "update_forbidden": "Máy chủ không cho phép sửa địa chỉ ẩn danh bằng phiên này. Bạn vẫn có thể sao chép địa chỉ.",
+        "over_quota": "Đã đạt hạn mức địa chỉ ẩn danh của máy chủ. Các địa chỉ đã tắt có thể vẫn được tính vào giới hạn.",
+        "rate_limit": "Đã đạt giới hạn tốc độ tạo của máy chủ. Hãy thử lại sau."
+      },
       "title": "Bảo mật tài khoản",
       "description": "Quản lý mật khẩu, xác thực hai yếu tố và cài đặt bảo mật của bạn",
       "detecting": "Đang phát hiện khả năng của máy chủ...",
@@ -2484,6 +2673,7 @@
         "enable_tooltip": "Kích hoạt mã hóa bằng khóa này",
         "configure_title": "Kích hoạt mã hóa bằng khóa này",
         "enable_button": "Bật",
+        "in_use": "Đang dùng",
         "disable_tooltip": "Tắt mã hóa",
         "disable_title": "Tắt tính năng mã hóa khi lưu trữ?",
         "disable_message": "Thư mới được lưu trữ mà không cần mã hóa kể từ bây giờ.",
@@ -2726,7 +2916,9 @@
       },
       "settings_sync": {
         "label": "Đồng bộ hóa cài đặt",
-        "description": "Đồng bộ hóa cài đặt của bạn trên các trình duyệt và thiết bị"
+        "description": "Đồng bộ hóa cài đặt của bạn trên các trình duyệt và thiết bị",
+        "replaced": "{count, plural, other {# cài đặt trong trình duyệt này}} giờ theo tài khoản của bạn.",
+        "keep_mine": "Dùng cài đặt của trình duyệt này"
       },
       "sender_favicons": {
         "label": "Favicon người gửi",
@@ -2911,16 +3103,12 @@
       "loading": "Đang tải bộ lọc...",
       "not_supported": "Máy chủ thư của bạn không hỗ trợ bộ lọc email.",
       "rule_name": "Tên quy tắc",
-      "rule_name_placeholder": "Ví dụ: Sắp xếp các bản tin",
       "match_all": "Tất cả điều kiện phải đúng",
       "match_any": "Chỉ cần một điều kiện đúng",
       "conditions": "Điều kiện",
       "add_condition": "Thêm điều kiện",
       "actions": "Thao tác",
-      "add_action": "Thêm hành động",
       "remove_condition": "Xóa điều kiện",
-      "remove_action": "Xóa hành động",
-      "stop_processing": "Không áp dụng các quy tắc sau",
       "include_spam": "Đồng thời di chuyển các thư bị đánh dấu là thư rác",
       "attachment_type_placeholder": "Ví dụ: pdf, doc, jpg",
       "value_placeholder_multi": "Giá trị (phân tách nhiều giá trị bằng dấu phẩy)",
@@ -2930,6 +3118,7 @@
         "from": "Từ",
         "to": "Đến",
         "cc": "Cc",
+        "delivered_to": "Đã gửi tới",
         "subject": "Tiêu đề",
         "header": "Trường tiêu đề tùy chỉnh",
         "size": "Kích thước",
@@ -2979,7 +3168,6 @@
       "condition_value": "Giá trị điều kiện",
       "header_placeholder": "Ví dụ: X-Mailing-List",
       "size_bytes": "Kích thước tính bằng byte",
-      "size_placeholder": "Ví dụ: 1000000",
       "system_managed": "Quy tắc do hệ thống quản lý",
       "opaque_warning": "Tập lệnh này đã được chỉnh sửa bên ngoài trình tạo quy tắc trực quan. Chỉ có thể chỉnh sửa trực tiếp mã Sieve.",
       "open_sieve_editor": "Mở trình chỉnh sửa mã Sieve",
@@ -3002,7 +3190,6 @@
       "reset_warning": "Điều này sẽ loại bỏ tập lệnh hiện tại và bắt đầu mới.",
       "reset_title": "Đặt lại về trình tạo quy tắc trực quan?",
       "confirm_reset": "Đặt lại",
-      "validation_empty_name": "Tên quy tắc là bắt buộc",
       "validation_empty_conditions": "Cần có ít nhất một điều kiện có giá trị",
       "validation_empty_actions": "Cần có ít nhất một hành động",
       "validation_action_folder": "Chọn một thư mục cho hành động này",
@@ -3053,8 +3240,6 @@
       "suggest_cc": "Cc {address}",
       "suggest_list": "Id danh sách",
       "suggest_domain": "@{domain}",
-      "apply_existing": "Cũng áp dụng cho các thư hiện có trong thư mục này",
-      "apply_existing_unsupported": "Chỉ có thể chạy trên thư hiện có các quy tắc kiểm tra người gửi, người nhận, tiêu đề thư hoặc trường tiêu đề, đồng thời thực hiện thao tác di chuyển, sao chép, đánh dấu đã đọc, gắn dấu sao hoặc gắn thẻ.",
       "period_title": "Phạm vi ngày",
       "period_start": "Ngày bắt đầu",
       "period_end": "Ngày kết thúc",
@@ -3063,13 +3248,46 @@
       "period_hint": "Áp dụng cho thư đến trong khoảng thời gian này. Để trống một trường để không giới hạn đầu mốc tương ứng.",
       "validation_period_empty": "Nhập ngày bắt đầu hoặc ngày kết thúc cho khoảng thời gian",
       "validation_period_invalid": "Nhập ngày hợp lệ cùng với thời gian trong khoảng thời gian hoặc để trống trường",
-      "apply_existing_period": "Quy tắc có giới hạn thời gian chỉ áp dụng cho thư đến trong khoảng đó, nên không thể chạy trên các thư hiện có.",
-      "apply_existing_in": "Áp dụng cả cho các thư đã có trong {folder}",
-      "apply_existing_count": "{count, plural, other {Áp dụng cả cho # thư đã có trong {folder}}}",
-      "apply_existing_none": "Chưa có thư nào trong {folder} khớp với quy tắc này.",
       "period_status_scheduled": "Theo lịch trình",
       "period_status_active": "Hoạt động",
-      "period_status_expired": "Hết hạn"
+      "period_status_expired": "Hết hạn",
+      "editor": {
+        "if": "Nếu đúng với",
+        "match_all": "tất cả",
+        "match_any": "một trong các",
+        "of_conditions": "điều kiện này",
+        "match_type": "Những điều kiện cần đúng",
+        "condition_number": "Điều kiện {number}",
+        "comparison": "So sánh",
+        "size_unit": "Đơn vị",
+        "has_attachment": "Có tệp đính kèm",
+        "attachment_type": "Tệp đính kèm loại",
+        "size_units": {
+          "bytes": "byte",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Tiếp tục áp dụng các quy tắc khác",
+        "skip_rule": "Bỏ qua quy tắc này",
+        "matching": "{count, plural, =0 {Không có thư nào khớp} other {# thư khớp}}",
+        "matching_partial": "{count, plural, =0 {Không có thư gần đây nào khớp} other {#+ thư khớp}}",
+        "checking": "Đang tìm thư khớp…",
+        "tags": "Thẻ",
+        "attachment_type_invalid": "Nhập phần mở rộng tệp, ví dụ pdf",
+        "action_conflict": "Không thể kết hợp Hủy và Từ chối với Di chuyển, Sao chép hoặc Giữ, cũng như với nhau",
+        "apply_to": "Áp dụng cho",
+        "apply_new": "Chỉ thư mới",
+        "apply_folder": "Thư mới và {folder}",
+        "apply_folder_count": "Thư mới và {folder} ({count})",
+        "apply_all": "Thư mới và tất cả thư",
+        "apply_all_count": "Thư mới và tất cả thư ({count})",
+        "applying": "Đang áp dụng “{name}”…",
+        "trash_title": "Chuyển thư hiện có vào Thùng rác?",
+        "trash_confirm": "{count, plural, other {Thao tác này chuyển # thư hiện có vào Thùng rác.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Thao tác này chuyển mọi thư hiện có khớp với quy tắc vào Thùng rác.} other {Thao tác này chuyển #+ thư hiện có vào Thùng rác.}}",
+        "trash_button": "Lưu và chuyển vào Thùng rác",
+        "delivered_to_new_only": "Quy tắc này chỉ áp dụng cho thư mới. Thư đã gửi tới không giữ lại địa chỉ mà nó được gửi tới."
+      }
     },
     "templates": {
       "title": "Mẫu email",
@@ -3355,7 +3573,8 @@
         "description": "Đường viền quanh nút, liên kết hoặc trường đang nhận thao tác bàn phím.",
         "normal": "Bình thường",
         "thick": "Dày",
-        "extra": "Cực dày"
+        "extra": "Cực dày",
+        "off": "Tắt"
       },
       "focus_always": {
         "label": "Luôn hiển thị tiêu điểm",
@@ -3875,6 +4094,7 @@
     "items_selected": "{count} email đã chọn",
     "forward_as_attachments": "Chuyển tiếp dưới dạng tệp đính kèm",
     "edit_draft": "Chỉnh sửa bản nháp",
+    "edit_as_new": "Chỉnh sửa thành thư mới",
     "cancel_scheduled_send": "Hủy gửi",
     "reschedule_send": "Lên lịch lại",
     "cancel_and_edit": "Hủy và chỉnh sửa",
@@ -3889,6 +4109,9 @@
       "block": "{count, plural, one {Chặn người gửi} other {Chặn # người gửi}}",
       "no_junk": "Tài khoản này không có thư mục Thư rác",
       "create": "Tạo quy tắc…",
+      "add_sender_to_rule": "Thêm {sender} vào quy tắc",
+      "sender_already_present": "Đã có trong quy tắc này",
+      "no_rule_fits": "Không có quy tắc nào để thêm vào",
       "manage": "Quản lý quy tắc",
       "senders_count": "{count, plural, one {# người gửi} other {# người gửi}}",
       "cross_account": "Chọn thư từ một tài khoản",
@@ -3897,9 +4120,41 @@
       "load_failed": "Không thể tải quy tắc",
       "none": "Chưa có quy tắc nào",
       "new_mail_only": "Chỉ dành cho thư mới",
+      "cannot_run": "Chỉ có thể chạy trên thư hiện có các quy tắc di chuyển, sao chép, đánh dấu đã đọc, gắn dấu sao, gắn thẻ hoặc hủy, và chỉ khi chúng không kiểm tra nội dung thư, \"Đã gửi tới\" hay biểu thức chính quy.",
       "running": "Đang chạy \"{name}\" trên {folder}…"
     },
     "find_emails_from": "Tìm email từ {name}"
+  },
+  "team_assign": {
+    "dialog_title": "Giao cho",
+    "search_label": "Tên hoặc địa chỉ",
+    "you": "Bạn",
+    "people": "Mọi người",
+    "no_one_found": "Không tìm thấy ai.",
+    "cancel": "Hủy",
+    "chip_me": "Tôi",
+    "chip_assigned": "Đã giao",
+    "chip_more": "{name} +{count}",
+    "assigned_to": "Đã giao cho {name}",
+    "assigned_to_you": "Đã giao cho bạn",
+    "assigned_unknown": "Đã giao cho một thành viên trong nhóm",
+    "done": "Xong",
+    "marked_done": "Đã đánh dấu xong",
+    "no_longer_assigned": "Không còn được giao",
+    "reopened": "Đã mở lại",
+    "change_failed": "Không thể thay đổi thư. Hãy thử lại.",
+    "assign_to_me": "Giao cho tôi",
+    "assign_to": "Giao cho…",
+    "unassign": "Bỏ giao",
+    "mark_done": "Đánh dấu xong",
+    "reopen": "Mở lại",
+    "unassign_me": "Bỏ giao cho tôi",
+    "save": "Lưu",
+    "assignees_changed": "Đã thay đổi người được giao",
+    "unassigned_person": "{name} không còn được giao",
+    "add_assignee": "Giao",
+    "remove_assignee": "Bỏ giao cho {name}",
+    "assignees_label": "Đã giao cho"
   },
   "menuMove": {
     "filter_placeholder": "Tìm thư mục",
@@ -3922,6 +4177,8 @@
     "delete_folder": "Xóa thư mục",
     "refresh": "Làm mới",
     "hide_shared_account": "Ẩn khỏi thanh bên",
+    "move_shared_account_up": "Di chuyển lên",
+    "move_shared_account_down": "Di chuyển xuống",
     "mute_notifications": "Tắt tiếng thông báo",
     "unmute_notifications": "Bật tiếng thông báo",
     "mute_account_notifications": "Ẩn thông báo cho tài khoản này",
@@ -3931,6 +4188,8 @@
     "mark_all_confirm_message": "Đánh dấu mọi thư chưa đọc trong tài khoản cá nhân của bạn là đã đọc?",
     "empty_all_confirm_title": "Dọn sạch Thùng rác của tất cả tài khoản",
     "empty_all_confirm_message": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thùng rác của mọi tài khoản của bạn? Không thể hoàn tác.",
+    "empty_all_confirm_shared": "Bao gồm cả các tài khoản được chia sẻ {accounts}.",
+    "empty_all_confirm_kept": "Thùng rác của {accounts} được giữ nguyên vì bạn không có quyền xóa ở đó.",
     "toast_emptied_all": "Đã dọn sạch Thùng rác trên tất cả tài khoản",
     "toast_error_empty_all_partial": "Đã dọn Thùng rác, nhưng một số tài khoản bị lỗi",
     "toast_error_empty_all": "Không thể dọn sạch Thùng rác",
@@ -3967,6 +4226,12 @@
     "empty_spam": "Dọn sạch Thư rác",
     "empty_trash_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thùng rác? Không thể hoàn tác.",
     "empty_spam_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thư rác? Không thể hoàn tác.",
+    "empty_folder": "Làm trống thư mục…",
+    "empty_folder_title": "Làm trống {folder}?",
+    "empty_folder_confirm_trash": "Chuyển {count, plural, other {tất cả # thư}} trong {folder} vào Thùng rác?",
+    "empty_folder_confirm_delete": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong {folder}? Không thể hoàn tác.",
+    "empty_folder_move": "Chuyển vào Thùng rác",
+    "empty_folder_delete": "Xóa vĩnh viễn",
     "title_all_accounts": "{name} ({count}, {total} trong mọi tài khoản)",
     "title_all_accounts_only": "{name} ({total} trong mọi tài khoản)"
   },
@@ -4056,7 +4321,7 @@
     "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Hiện bộ chuyển tài khoản phía trên các thư mục, với Soạn thư bên dưới. Tắt tùy chọn này để đặt Soạn thư vào chỗ của nó."
+    "sidebar_account_switcher_description": "Hiển thị bộ chuyển tài khoản phía trên các thư mục. Tắt để chuyển tài khoản bằng ảnh đại diện trên thanh điều hướng."
   },
   "mail_p2_conv": {
     "show_message": "Hiện thư",
@@ -4427,6 +4692,8 @@
       "role_label": "Vai trò",
       "language_label": "Ngôn ngữ",
       "related_default_label": "Liên quan",
+      "related_unknown": "Liên hệ không xác định",
+      "related_remove": "Xóa khỏi danh bạ liên quan",
       "more_actions": "Thêm hành động",
       "age_years": "{count, plural, one {1 tuổi} other {# tuổi}}",
       "years_since": "{count, plural, one {1 năm} other {# năm}}"
@@ -4472,6 +4739,9 @@
       "phone_pager": "Máy nhắn tin",
       "phone_video": "Video",
       "phone_text": "Văn bản",
+      "phone_custom": "Tùy chỉnh…",
+      "phone_custom_label": "Loại tùy chỉnh",
+      "phone_custom_placeholder": "vd: Xe hơi",
       "organization": "Tổ chức",
       "organization_placeholder": "Tên công ty",
       "department": "Phòng ban",
@@ -4793,9 +5063,27 @@
       "end_time": "Thời gian kết thúc",
       "all_day_event": "Sự kiện cả ngày",
       "calendar_select": "Lịch",
+      "show_as": "Hiển thị là",
+      "show_as_busy": "Bận",
+      "show_as_free": "Rảnh",
+      "shown_free": "Hiển thị là rảnh",
+      "visibility": "Chế độ hiển thị",
+      "visibility_public": "Công khai",
+      "visibility_private": "Riêng tư",
+      "visibility_secret": "Ẩn",
+      "visibility_hint_public": "Những người bạn chia sẻ lịch sẽ thấy chi tiết.",
+      "visibility_hint_private": "Những người bạn chia sẻ lịch chỉ thấy thời gian.",
+      "visibility_hint_secret": "Những người bạn chia sẻ lịch sẽ không thấy sự kiện, và thời gian vẫn trống.",
+      "visibility_series": "Áp dụng cho mọi lần lặp lại.",
+      "color_calendar": "Dùng màu của lịch",
+      "overlap": "Trùng với {title} ({details})",
+      "overlap_plain": "Trùng với {title}",
+      "overlap_more": "Và {count} sự kiện khác",
       "save": "Lưu",
       "cancel": "Hủy",
-      "color": "Màu sắc"
+      "color": "Màu sắc",
+      "expand": "Mở rộng",
+      "restore_size": "Khôi phục kích thước"
     },
     "participants": {
       "availability": {
@@ -4834,7 +5122,9 @@
       "you_attendee": "Bạn là người tham dự",
       "no_participants": "Không có người tham gia",
       "limit_warning": "Nhiều hơn {max, plural, one {# người tham gia} other {# người tham gia}}, bao gồm cả người tổ chức: máy chủ có thể từ chối lưu sự kiện này. Quản trị viên có thể tăng giới hạn.",
-      "count": "{count, plural, one {# người tham gia} other {# người tham gia}}"
+      "count": "{count, plural, one {# người tham gia} other {# người tham gia}}",
+      "optional": "Không bắt buộc",
+      "optional_role": "không bắt buộc"
     },
     "recurrence": {
       "title": "Lặp lại",
@@ -4978,6 +5268,8 @@
       "enable_tasks_desc": "Hiển thị chế độ xem công việc trong lịch để quản lý việc cần làm",
       "show_tasks_on_calendar": "Hiển thị công việc trên lịch",
       "show_tasks_on_calendar_desc": "Hiển thị công việc trên dạng xem lịch tháng, tuần, ngày",
+      "show_tasks_app": "Công việc thành ứng dụng riêng",
+      "show_tasks_app_desc": "Công việc có biểu tượng riêng trên thanh ứng dụng thay vì một chế độ xem trong lịch",
       "hover_preview": "Xem trước sự kiện khi di chuột",
       "hover_preview_desc": "Hiển thị cửa sổ bật lên chi tiết khi di chuột qua các sự kiện lịch",
       "hover_preview_instant": "Ngay lập tức",
@@ -5288,7 +5580,13 @@
       "results": "{count, plural, one {# sự kiện được tìm thấy} other {Đã tìm thấy # sự kiện}}"
     },
     "mini_has_events": "Có sự kiện",
-    "mini_week_number": "Tuần {week}"
+    "mini_week_number": "Tuần {week}",
+    "move_confirm_organizer_title": "Chuyển \"{title}\" sang {when}?",
+    "move_confirm_organizer_message": "Người tham dự sẽ nhận được bản cập nhật và được yêu cầu chấp nhận thời gian mới.",
+    "move_confirm_organizer_confirm": "Chuyển và thông báo",
+    "move_confirm_attendee_title": "Chỉ chuyển \"{title}\" trong lịch của bạn?",
+    "move_confirm_attendee_message": "Bạn không phải người tổ chức. Với người tổ chức và những người tham dự khác, cuộc họp vẫn giữ thời gian cũ, và lần cập nhật tiếp theo của người tổ chức sẽ ghi đè thay đổi của bạn.",
+    "move_confirm_attendee_confirm": "Chuyển bản của tôi"
   },
   "ux_pim_calendar": {
     "task_lists": "Danh sách công việc",
@@ -5315,7 +5613,12 @@
     "task_list_not_in_calendar": "{name} (danh sách việc cần làm, không hiện trong lịch)",
     "copy_to_account": "Sao chép sang {address}",
     "copied_to_account": "Đã sao chép sang {address}",
-    "delete_original": "Xóa bản gốc"
+    "delete_original": "Xóa bản gốc",
+    "copy_to_calendar": "Sao chép vào lịch…",
+    "copy_to_calendar_title": "Sao chép vào lịch",
+    "copy_to_calendar_hint": "Bản sao là sự kiện của riêng bạn. Thay đổi ở bản gốc không ảnh hưởng đến nó.",
+    "copy_button": "Sao chép",
+    "copied_to_calendar": "Đã sao chép vào {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
@@ -5382,7 +5685,9 @@
     "answer_for": "Trả lời thay {name}",
     "no_write": "Bạn xem được lời mời của {name} nhưng không thể trả lời thay. Hãy xin quyền chỉnh sửa.",
     "also_invited": "Bạn cũng được mời, và máy chủ này không phân biệt được câu trả lời của bạn với của {name}. {name} phải tự trả lời lời mời này.",
-    "answered_by": "Đã được {who} trả lời"
+    "answered_by": "Đã được {who} trả lời",
+    "organizer_owner": "{name} (do bạn gửi)",
+    "organizer_me": "Bạn"
   },
   "free_busy_share": {
     "button": "Chia sẻ lịch rảnh/bận của tôi với {group}",
@@ -5493,7 +5798,25 @@
     "unknown_note": "Bulwark chỉ thấy giờ bận trong các lịch được chia sẻ với bạn. Với những người này, nó không phân biệt được rảnh hay chưa chia sẻ.",
     "directory_off": "Bulwark không thể tra cứu người trên máy chủ này. Quản trị viên có thể bật truy vấn thư mục trong Stalwart.",
     "not_looked_up": "Không tra cứu được địa chỉ này",
-    "found": "Số khung giờ trống tìm thấy: {count}"
+    "found": "Số khung giờ trống tìm thấy: {count}",
+    "optional_ignored": "Giờ bận của người tham dự không bắt buộc không được tính."
+  },
+  "scheduling_assistant": {
+    "open": "Lịch rảnh…",
+    "title": "Lịch rảnh",
+    "description": "Bấm vào lưới hoặc kéo sự kiện để di chuyển. Kéo phần cuối để đổi thời lượng.",
+    "previous_day": "Ngày trước",
+    "next_day": "Ngày sau",
+    "you": "Bạn",
+    "everyone": "Tất cả người tham dự",
+    "optional": "Không bắt buộc",
+    "event": "Sự kiện: {time}",
+    "keyboard_hint": "Phím mũi tên dời sự kiện 15 phút. Kèm Shift thì đổi thời lượng.",
+    "use_time": "Dùng giờ này",
+    "loading": "Đang tải giờ bận…",
+    "outside_hours": "Ngoài giờ làm việc",
+    "everyone_free": "Mọi người đều rảnh",
+    "not_checked": "Không rõ"
   },
   "share_notifications": {
     "someone": "Ai đó",
@@ -5664,6 +5987,7 @@
     "search": "Tìm kiếm",
     "not_starred": "Không được gắn dấu sao",
     "no_attachment": "Không có tệp đính kèm",
+    "no_tags": "Không có thẻ",
     "any_time": "Bất cứ lúc nào",
     "past_week": "Tuần trước",
     "past_month": "Tháng trước",
@@ -6072,6 +6396,13 @@
   "unified_mailbox": {
     "search_unavailable": "Tìm kiếm không có sẵn trong chế độ xem hợp nhất"
   },
+  "account_routing": {
+    "group_members_one_account": "Một nhóm chỉ có thể chứa danh bạ của một tài khoản.",
+    "link_names_no_account": "Liên kết này không cho biết thư nằm trong tài khoản nào nên không được mở.",
+    "group_member_gone": "Một trong các liên hệ đã chọn không còn tồn tại. Hãy chọn lại thành viên.",
+    "invitation_other_account": "Lời mời này nằm trong tài khoản khác. Chuyển sang tài khoản đó để trả lời hoặc thêm vào lịch.",
+    "tab_names_no_account": "Thẻ này được lưu mà không kèm tài khoản nên không được mở. Hãy đóng thẻ và mở lại từ tài khoản chứa nó."
+  },
   "mail_import": {
     "menu_import": "Nhập thư…",
     "settings_label": "Nhập thư",
@@ -6404,6 +6735,9 @@
     "attachments_description": "Tệp đính kèm của các thư được giữ và các tệp bạn giữ ngoại tuyến, tối đa {total} tổng cộng. Tệp cũ nhất sẽ bị xóa trước.",
     "total_locked": "Tổ chức của bạn chỉ cho phép tối đa {size} tệp đính kèm và tệp.",
     "attachment_cap_label": "Tệp đính kèm lớn nhất được giữ",
+    "total_cap_label": "Tổng dung lượng tệp đính kèm được giữ",
+    "total_cap_unlimited": "Không giới hạn",
+    "attachments_description_unlimited": "Tệp đính kèm của thư được giữ và các tệp bạn giữ ngoại tuyến, không giới hạn tổng dung lượng.",
     "usage_mail": "Thư và chỉ mục tìm kiếm",
     "usage_attachments": "Tệp đính kèm",
     "usage_calendar": "Lịch",
@@ -6746,6 +7080,10 @@
         "title": "Đăng xuất bạn",
         "body": "Đăng xuất bạn khỏi webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Đưa bạn về tài khoản của mình",
+        "body": "Sau khi quản trị viên mở một hộp thư bằng cách mạo danh, kết thúc phiên đó và đăng nhập lại vào tài khoản đã bắt đầu nó."
+      },
       "account_read": {
         "title": "Xem tài khoản của bạn",
         "body": "Xem các tài khoản bạn đã thêm cùng với địa chỉ và máy chủ của họ cũng như tài khoản thư nào là hộp thư của nhóm."
@@ -6761,6 +7099,10 @@
       "http_fetch": {
         "title": "Kết nối với các trang web khác",
         "body": "Gửi yêu cầu đến các trang web này. Mọi thứ plugin có thể đọc đều có thể được gửi ở đó:"
+      },
+      "links_check": {
+        "title": "Kiểm tra các liên kết bạn mở",
+        "body": "Xem mọi liên kết web bạn mở cùng văn bản của nó, và chặn liên kết đó hoặc mở một địa chỉ khác thay thế."
       },
       "admin_config": {
         "title": "Đọc cài đặt plugin từ quản trị viên",
@@ -6894,9 +7236,13 @@
         "title": "Chuyển tiếp thư của bạn",
         "body": "Chuyển tiếp thư từ tài khoản của bạn cùng tệp đính kèm mà không mở khung soạn thư. Plugin sẽ hỏi trước khi chuyển tiếp lần đầu đến từng địa chỉ."
       },
+      "ui_notices": {
+        "title": "Hiển thị khung thông báo",
+        "body": "Hiển thị một bảng nhỏ của riêng nó ở cuối màn hình, nơi các tin nhắn của ứng dụng xuất hiện, ví dụ khi có cuộc gọi đến. Nó không chặn trang, bạn có thể tiếp tục gõ và đóng nó. Mỗi thông báo đều nêu tên plugin."
+      },
       "ui_notifications": {
         "title": "Hiển thị thông báo",
-        "body": "Hiển thị thông báo trên thiết bị, hoặc trong ứng dụng nếu bạn chưa cấp quyền thông báo. Mỗi thông báo đều ghi tên plugin."
+        "body": "Hiển thị thông báo trên thiết bị, hoặc trong ứng dụng nếu bạn chưa cấp quyền thông báo. Mỗi thông báo đều ghi tên plugin. Plugin cũng thấy các thông báo mà ứng dụng hiển thị cho bạn."
       }
     },
     "forward_approval": {
@@ -7018,6 +7364,14 @@
     "not_available_title": "Trang này không có sẵn",
     "not_available_description": "Plugin đã thêm nó đã bị tắt hoặc không còn được cài đặt.",
     "back_to_mail": "Quay lại thư"
+  },
+  "plugin_surfaces": {
+    "dropdown_list": "Danh sách từ plugin {name}",
+    "dropdown_list_labelled": "{label}, danh sách từ plugin {name}",
+    "oauth_failed": "Dịch vụ chưa hoàn tất đăng nhập. Hãy đóng cửa sổ này và thử lại.",
+    "banners_more": "Thêm biểu ngữ ({count}): {names}",
+    "banners_fewer": "Bớt biểu ngữ",
+    "opened_by_plugin": "Được mở bởi plugin {name}"
   },
   "command_palette": {
     "title": "Bảng lệnh",
@@ -7190,6 +7544,10 @@
     "action_reply": "Trả lời",
     "reply_placeholder": "Viết trả lời"
   },
+  "team_push": {
+    "mentioned_you": "{name} đã nhắc đến bạn trong “{subject}”",
+    "mentioned_hidden": "Bạn được nhắc đến trong một hộp thư nhóm"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Thêm vào lịch",
     "update_in_calendar": "Cập nhật trong lịch",
@@ -7220,6 +7578,14 @@
       "added_from": "Được thêm từ một thư của {domain}",
       "added_from_subject": "Được thêm từ thư “{subject}” của {domain}"
     }
+  },
+  "sender_trust": {
+    "cancel_not_organizer": "Thông báo hủy này được gửi từ {sender}, nhưng người tổ chức sự kiện này trong lịch của bạn là {organizer}. Chỉ người tổ chức mới có thể hủy sự kiện. Hãy tự xóa nếu bạn tin tưởng thư này.",
+    "cancel_unverified": "Không thể xác minh thông báo hủy này đến từ người tổ chức. Hãy tự xóa sự kiện nếu bạn tin tưởng thư này.",
+    "card_sender": "từ {domain}",
+    "card_sender_title": "Thư này đã vượt qua bước kiểm tra người gửi của máy chủ thư cho {domain}.",
+    "outside_link": "Trang khác",
+    "outside_link_title": "Liên kết này dẫn tới {host}, nằm ngoài {domain}, tên miền của người gửi."
   },
   "proofreading": {
     "kind": {
@@ -7315,6 +7681,8 @@
       "title": "Cửa sổ ứng dụng",
       "double_click_label": "Mở thư trong cửa sổ mới khi nhấp đúp",
       "double_click_description": "Nhấp một lần vẫn mở thư bên cạnh danh sách.",
+      "compose_window_label": "Luôn soạn thư trong cửa sổ mới",
+      "compose_window_description": "Thư mới, thư trả lời, thư chuyển tiếp và bản nháp mở trong cửa sổ riêng thay vì trong cửa sổ chính.",
       "restore_label": "Mở lại cửa sổ khi khởi động",
       "restore_description": "Các cửa sổ thư và bản nháp đang mở khi thoát sẽ trở lại."
     },
@@ -7722,6 +8090,8 @@
     "start_at_login_description": "Ứng dụng tự khởi động khi bạn đăng nhập.",
     "start_minimized_label": "Khởi động ở khay hệ thống",
     "start_minimized_description": "Không có cửa sổ nào mở khi đăng nhập. Mở bằng biểu tượng ở khay hệ thống.",
+    "reopen_after_restart_label": "Mở lại sau khi khởi động lại",
+    "reopen_after_restart_description": "Nếu ứng dụng đang mở khi máy tính khởi động lại hoặc bạn đăng xuất, ứng dụng sẽ mở lại khi bạn đăng nhập, tại cùng thư mục, thư hoặc trang.",
     "attention_label": "Nhấp nháy thanh tác vụ khi có thư mới",
     "attention_mac_label": "Làm biểu tượng Dock nảy khi có thư mới",
     "attention_description": "Chỉ khi ứng dụng không ở phía trước.",
@@ -8219,5 +8589,13 @@
   "selectionView": {
     "starred": "Đã gắn dấu sao",
     "unstarred": "Đã bỏ dấu sao"
+  },
+  "impersonation": {
+    "return_notice": "Bạn đã mở {mailbox} bằng cách mạo danh.",
+    "return_button": "Quay lại tài khoản của tôi"
+  },
+  "admin_access": {
+    "label": "Siêu người dùng của máy chủ này có thể mở bảng điều khiển quản trị",
+    "help": "Siêu người dùng của máy chủ này đăng nhập vào bảng điều khiển quản trị mà không cần mật khẩu quản trị, giống như siêu người dùng của máy chủ JMAP chính. Chỉ bật cho máy chủ do chính bạn vận hành."
   }
 }

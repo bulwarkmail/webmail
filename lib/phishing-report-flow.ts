@@ -82,7 +82,18 @@ export async function reportEmailsAsPhishing(emails: Email[]): Promise<PhishingR
       continue;
     }
     if (!outcome.addresses.includes(setup.address)) outcome.addresses.push(setup.address);
-    const { client, accountId } = resolveEmailActionContext(email, active);
+    // The message's own login and account: its stamps (a Pro tab stamps the
+    // message it shows), else the folder it is listed in. A login without a
+    // client fails here: its ids name other messages through any other one.
+    let route: ReturnType<typeof resolveEmailActionContext>;
+    try {
+      route = resolveEmailActionContext(email, active);
+    } catch (error) {
+      debug.error('Phishing report failed:', error);
+      outcome.failed.push(email);
+      continue;
+    }
+    const { client, accountId } = route;
     try {
       if (setup.format === 'arf' && !buildArf) buildArf = await loadArfBuilder();
       await sendPhishingReport(email, { client, sourceAccountId: accountId ?? client.getAccountId(), setup, buildArf });

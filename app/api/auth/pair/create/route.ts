@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { createPairingCode, isGrantAvailable, stashGrant } from '@/lib/auth/pairing-store';
 import { pairingOwner, readPairReauthFromStore, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { mintGrantWithPassword } from '@/lib/auth/pair-grant';
 import { appAcceptsServerUrl } from '@/lib/auth/pair-bundle';
 import { pairAttemptKey, reservePairStepUp, settlePairStepUp } from '@/lib/auth/pair-attempts';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { configManager } from '@/lib/admin/config-manager';
 import { findServerByUrl, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 
 // Desktop side of "Link mobile app". Returns a one-time pairing code for the
@@ -83,7 +85,7 @@ const STEP_UP_ERRORS = {
 
 // The answer stands; a count that couldn't be settled stays a failure (the safe side).
 function settleFailed(error: unknown): void {
-  logger.warn('Pair step-up attempt not settled', { error: error instanceof Error ? error.message : 'Unknown error' });
+  logger.warn('Pair step-up attempt not settled', { error: loggableError(error) });
 }
 
 export async function POST(request: NextRequest) {
@@ -91,6 +93,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   try {
     // The step-up proof, the session context and the phone's sealed refresh
     // token are all encrypted under SESSION_SECRET.
@@ -113,7 +117,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'impersonation' }, { status: 403 });
     }
 
-    const context = readStalwartAuthContextFromStore(cookieStore, slot);
+    const context = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (!context) {
       return NextResponse.json({ error: 'not_signed_in' }, { status: 401 });
     }
@@ -180,7 +184,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Attempts can't be counted, nor grants kept, without the shared store.
     if (isStoreUnavailable(error)) return storeUnavailableResponse({ 'Cache-Control': 'no-store' });
-    logger.error('Pair create error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Pair create error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

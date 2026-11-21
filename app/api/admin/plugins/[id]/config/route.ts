@@ -6,6 +6,7 @@ import { requireAdminAuth } from '@/lib/admin/session';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
+import { adminSettings, declarationOf, isOrdinarySetting, ordinarySettings } from '@/lib/plugin-secrets/sealed';
 
 /** Resolve a plugin from the persisted registry first, then PLUGIN_DEV_DIR. */
 async function resolvePlugin(id: string) {
@@ -22,6 +23,9 @@ async function resolvePlugin(id: string) {
  *   `type: 'secret'` in the plugin's configSchema.
  * - Authenticated mailbox users (the plugin running in their browser)
  *   receive only non-secret fields.
+ * - A value that was stored as a secret is never among the non-secret
+ *   fields, whatever the installed version declares for its key; the
+ *   setting then reads as unset until an admin enters a new value.
  * - Anonymous callers are rejected so unauthenticated visitors cannot
  *   enumerate plugin secrets.
  */
@@ -57,20 +61,12 @@ export async function GET(
 
     const config = await getPluginConfig(id);
 
-    let response: Record<string, unknown>;
-    if (isAdmin) {
-      response = config;
-    } else {
-      response = {};
-      const schema = plugin.configSchema;
-      if (schema) {
-        for (const [key, value] of Object.entries(config)) {
-          const field = schema[key];
-          if (!field || field.type === 'secret') continue;
-          response[key] = value;
-        }
-      }
-    }
+    // A value stored as a secret stays one whatever the installed version
+    // declares for its key: users never get it, and the admin's page only
+    // while the field is still a secret (lib/plugin-secrets/sealed.ts).
+    const response = isAdmin
+      ? adminSettings(config, plugin.configSchema)
+      : ordinarySettings(config, plugin.configSchema);
 
     return NextResponse.json(response, {
       headers: { 'Cache-Control': 'no-store' },
@@ -130,7 +126,11 @@ export async function PUT(
       );
     }
 
-    await setPluginConfig(id, body.key, body.value);
+    // Stored with how the field is declared now: plain only into a field of
+    // an ordinary kind, a secret otherwise, and it stays what it was stored as
+    // when a later version declares the key differently.
+    const kind = isOrdinarySetting(declarationOf(plugin.configSchema, body.key)) ? 'plain' : 'secret';
+    await setPluginConfig(id, body.key, body.value, kind);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const readOnly = configReadOnlyResponse(error);

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { decryptSession } from '@/lib/auth/crypto';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readCurrentStalwartAuthContext, rememberedSessionPastMaxAge } from '@/lib/stalwart/auth-context';
 import { updateUserSettings, loadUserSettings, deleteUserSettings } from '@/lib/settings-sync';
 import { configManager } from '@/lib/admin/config-manager';
 import { resolvePolicy } from '@/lib/admin/policy-scopes';
@@ -97,7 +97,8 @@ async function verifyIdentity(username: string, serverUrl: string): Promise<stri
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
     // The context cookie first: it is the one that knows the account name,
     // and every sign-in path that writes the session cookie writes it too.
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
+    // Neither counts once its session is past the maximum session length.
+    const ctx = await readCurrentStalwartAuthContext(cookieStore, slot);
     if (ctx && ctx.username === username && normalizeUrl(ctx.serverUrl) === normalizedServerUrl) {
       return ctx.accountName ?? username;
     }
@@ -111,6 +112,7 @@ async function verifyIdentity(username: string, serverUrl: string): Promise<stri
       const session = decryptSession(token);
       if (session && session.username === username && normalizeUrl(session.serverUrl) === normalizedServerUrl) {
         if ('token' in session && session.token && !username.includes('@')) continue;
+        if (await rememberedSessionPastMaxAge(session)) continue;
         return username;
       }
     }

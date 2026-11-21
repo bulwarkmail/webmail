@@ -150,6 +150,19 @@ describe('clearAllStores', () => {
     expect(f.pathStack).toEqual([{ id: null, name: '' }]);
     expect(f.supportsFiles).toBeNull();
   });
+
+  it('forgets the team notes and the team filter of the outgoing login', async () => {
+    const { useTeamMailboxStore } = await import('@/stores/team-mailbox-store');
+    const { useTeamListFilter, toggleTeamListFilter } = await import('@/lib/team-mailboxes/list-filter');
+    useTeamMailboxStore.setState({ teams: { 'A|g': { notes: { n1: { text: 'secret' } } } as never }, seen: { A: {} } });
+    toggleTeamListFilter('A|g', 'mine');
+
+    clearAllStores();
+
+    expect(useTeamMailboxStore.getState().teams).toEqual({});
+    expect(useTeamMailboxStore.getState().seen).toEqual({});
+    expect(useTeamListFilter.getState().active).toBeNull();
+  });
 });
 
 describe('evictAccount / evictAll', () => {

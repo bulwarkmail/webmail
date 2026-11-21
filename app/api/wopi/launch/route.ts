@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { loginClientAddress } from '@/lib/auth/client-address';
+import { limitsEnforcedSince } from '@/lib/auth/session-age';
 import { fetchJmapSession, type JmapSessionDocument } from '@/lib/stalwart/jmap-api';
 import { getWopiActions, buildWopiActionUrl } from '@/lib/wopi/discovery';
 import { getWopiFileNode, probeBlob, shareeSavesNeedRename } from '@/lib/wopi/files';
@@ -135,6 +137,10 @@ export async function POST(request: NextRequest) {
       // Signing out of this slot in this browser revokes the token.
       bid: wopiBrowserBinding(await cookies()),
       slot: creds.slot,
+      // The token ends with the session (lib/wopi/request.ts). A sign-in with
+      // no recorded time counts from when the limits were first enforced, as
+      // its context does.
+      signedInAt: creds.signedInAt ?? await limitsEnforcedSince(),
     };
     const wopiSrc = `${hostBase}/api/wopi/files/${wopiDocumentId(tokenPayload)}`;
     const { token, expiresAt } = mintWopiToken(tokenPayload);
@@ -146,9 +152,7 @@ export async function POST(request: NextRequest) {
       readOnly: !editable,
     });
   } catch (error) {
-    logger.error('WOPI launch failed', {
-      error: error instanceof Error ? error.message : 'Unknown',
-    });
+    logger.error('WOPI launch failed', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -57,6 +57,30 @@ describe('withProviderDataScopes', () => {
       .not.toEqual(expect.arrayContaining([expect.stringMatching(/^urn:stalwart:/)]));
   });
 
+  // Pocket ID grants an API's scopes per resource and lists only its own in
+  // scopes_supported (#1583).
+  describe('a request that names the mail server as its resource', () => {
+    const POCKET_ID = ['openid', 'profile', 'email', 'groups', 'offline_access'];
+    const MAIL = 'urn:ietf:params:oauth:scope:mail';
+
+    it('sends the configured Stalwart scopes although the provider does not list them', () => {
+      expect(withProviderDataScopes(`openid email profile ${MAIL} ${SECURITY} ${SETTINGS} ${FULL}`, POCKET_ID, true))
+        .toBe(`openid email profile ${MAIL} ${SECURITY} ${SETTINGS} ${FULL}`);
+      expect(withProviderDataScopes(`openid ${FULL}`, undefined, true)).toBe(`openid ${FULL}`);
+    });
+
+    it('still drops them without a resource', () => {
+      expect(withProviderDataScopes(`openid email profile ${MAIL} ${SECURITY} ${SETTINGS} ${FULL}`, POCKET_ID))
+        .toBe(`openid email profile ${MAIL}`);
+    });
+
+    it('adds none that is not configured', () => {
+      expect(withProviderDataScopes('openid email profile', POCKET_ID, true)).toBe('openid email profile');
+      expect(withProviderDataScopes('openid email profile', STALWART_1_0_3, true).split(' '))
+        .not.toEqual(expect.arrayContaining([expect.stringMatching(/^urn:stalwart:/)]));
+    });
+  });
+
   it('asks for a configured Stalwart scope only where the provider lists it', () => {
     expect(withProviderDataScopes(`openid ${FULL}`, STALWART_1_0_3).split(' ')).toContain(FULL);
     expect(withProviderDataScopes(`openid ${FULL}`, STALWART_1_0).split(' ')).not.toContain(FULL);

@@ -36,13 +36,19 @@ type MoveMenuEmails = Array<Pick<Email, "mailboxIds" | "sourceAccountId">>;
 /** The Move list for these messages, with this device's recent folders. */
 export function useMoveMenu(
   mailboxes: Mailbox[],
-  opts: { currentMailboxId?: string | null; ownerAccountId?: string; emails?: MoveMenuEmails },
+  opts: {
+    currentMailboxId?: string | null;
+    ownerAccountId?: string;
+    emails?: MoveMenuEmails;
+    /** Whose folders these are, when not the active login's (MoveMenuModel.heading). */
+    heading?: string;
+  },
 ): MoveMenuModel {
   const locale = useLocale();
-  const { currentMailboxId, ownerAccountId, emails } = opts;
+  const { currentMailboxId, ownerAccountId, emails, heading } = opts;
   return useMemo(
-    () => buildMoveMenu(mailboxes, { currentMailboxId, ownerAccountId, emails, locale, recentIds: readRecentMoveTargets }),
-    [mailboxes, currentMailboxId, ownerAccountId, emails, locale],
+    () => ({ ...buildMoveMenu(mailboxes, { currentMailboxId, ownerAccountId, emails, locale, recentIds: readRecentMoveTargets }), heading }),
+    [mailboxes, currentMailboxId, ownerAccountId, emails, locale, heading],
   );
 }
 
@@ -209,6 +215,16 @@ export function MoveFolderList({
               data-testid="move-filter"
             />
           </div>
+        </div>
+      )}
+
+      {model.heading && (
+        <div data-move-heading="">
+          {panel ? (
+            <div className="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground truncate" dir="auto" title={model.heading}>{model.heading}</div>
+          ) : (
+            <ContextMenuHeader>{model.heading}</ContextMenuHeader>
+          )}
         </div>
       )}
 

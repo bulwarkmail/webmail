@@ -31,8 +31,19 @@ const SLOT_FLAGS: Record<string, 'externalSenderLabel' | 'externalRecipientWarni
   'email-banner': 'externalSenderLabel',
 };
 
+/** The team-inbox plugin, retired in favour of organisation.teamMailboxes. */
+export const TEAM_INBOX_PLUGIN_ID = 'team-inbox';
+
+/**
+ * Team inbox's parts that are hooks: its row badges. Its buttons and list
+ * filters are dropped where they are listed (components/plugins/plugin-actions.tsx,
+ * list-filters.ts).
+ */
+const TEAM_INBOX_HOOKS = new Set(['onEmailListItemRender']);
+
 /** True when core does this plugin hook's job with these features, so the host skips it. */
 export function hookHandedOver(pluginId: string, hookName: string, features: HostFeaturesView): boolean {
+  if (pluginId === TEAM_INBOX_PLUGIN_ID) return TEAM_INBOX_HOOKS.has(hookName) && features.teamMailboxes === true;
   const flag = HOOK_FLAGS[hookName];
   return pluginId === EXTERNAL_MAIL_WARNING_PLUGIN_ID && !!flag && features[flag];
 }

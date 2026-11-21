@@ -715,12 +715,40 @@ describe('ContactForm keeps what was not edited', () => {
       expect(phones).toEqual({ p0: { number: '+49 151 56', contexts: { car: true } } });
     });
 
-    it('shows a custom label in the type select and keeps it when the number changes', async () => {
+    it('shows a custom label as a custom type with its text and keeps it when the number changes', async () => {
       const phones = await saveAfter({ p0: { number: '+49 151 34', label: 'Car', features: { voice: true } } }, () => {
-        expect(phoneSelects('+49 151 34').type.selectedOptions[0].textContent).toBe('Car');
+        expect(phoneSelects('+49 151 34').type.selectedOptions[0].textContent).toBe('phone_custom');
+        expect(screen.getByLabelText('phone_custom_label')).toHaveValue('Car');
         fireEvent.change(screen.getByDisplayValue('+49 151 34'), { target: { value: '+49 151 56' } });
       });
       expect(phones).toEqual({ p0: { number: '+49 151 56', label: 'Car', features: { voice: true } } });
+    });
+
+    // #1807
+    it('saves a custom type typed for a phone as its label', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', features: { mobile: true } } }, () => {
+        expect(screen.queryByLabelText('phone_custom_label')).toBeNull();
+        fireEvent.change(phoneSelects('+49 151 34').type, { target: { value: '#label' } });
+        fireEvent.change(screen.getByLabelText('phone_custom_label'), { target: { value: ' Boat ' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 34', label: 'Boat' } });
+    });
+
+    it('saves an edited custom label and keeps the features beside it', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', label: 'Car', features: { voice: true } } }, () => {
+        fireEvent.change(screen.getByLabelText('phone_custom_label'), { target: { value: 'Boat' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 34', label: 'Boat', features: { voice: true } } });
+    });
+
+    it('gives a new phone a custom type', async () => {
+      const phones = await saveAfter({}, () => {
+        fireEvent.click(screen.getByText('add_phone'));
+        fireEvent.change(screen.getByLabelText('phone'), { target: { value: '+49 30 9' } });
+        fireEvent.change(phoneSelects('+49 30 9').type, { target: { value: '#label' } });
+        fireEvent.change(screen.getByLabelText('phone_custom_label'), { target: { value: 'Holiday home' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 30 9', label: 'Holiday home' } });
     });
 
     it('drops the label once another type is picked', async () => {

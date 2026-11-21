@@ -4,13 +4,14 @@
 // allowlist (lib.mjs). Exit 1 with a readable list otherwise.
 //
 // The Stalwart target additionally checks the entry document (both literals
-// Stalwart rewrites, exactly once; nothing root-absolute), the zip layout and
-// its size against Stalwart's 100 MB limit.
+// Stalwart rewrites, exactly once; nothing root-absolute; a policy that runs
+// no inline script but its own), every other page (no inline script, the same
+// policy), the zip layout and its size against Stalwart's 100 MB limit.
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
-  LITE_PENDING_PATH_KEY, STALWART_EXCLUDED_FILES, STALWART_MAX_BUNDLE_BYTES, STALWART_SAFE_BUNDLE_BYTES, STALWART_ZIP_NAME,
-  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, inlineScriptHashes, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartZipEntryProblems, unexpectedApiStrings, unexpectedEngineFiles,
+  LITE_PENDING_PATH_KEY, STALWART_BOOT_FILE, STALWART_EXCLUDED_FILES, STALWART_MAX_BUNDLE_BYTES, STALWART_SAFE_BUNDLE_BYTES, STALWART_SCRIPT_DIR, STALWART_ZIP_NAME,
+  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, frameGuardProblems, inlineScriptHashes, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartShellProblems, stalwartZipEntryProblems, unexpectedApiStrings, unexpectedEngineFiles,
 } from "./lib.mjs";
 
 const repoRoot = resolveRepoRoot(import.meta.url);
@@ -44,7 +45,7 @@ export function verifyExport({ root = repoRoot, target, safeBundleBytes = STALWA
   }
 
   const required = resolvedTarget === "stalwart"
-    ? ["index.html", "config.json", "policy.json", "manifest.json", "LITE-README.md", "lite-build.json"]
+    ? ["index.html", "config.json", "policy.json", "manifest.json", "LITE-README.md", "lite-build.json", STALWART_BOOT_FILE]
     // connector.json is the static target only: the Stalwart bundle is served
     // without custom headers, so a connector's cross-origin probe could not
     // read it anyway (it falls back to adding the instance unverified).
@@ -75,6 +76,8 @@ export function verifyExport({ root = repoRoot, target, safeBundleBytes = STALWA
         else if (inlineScriptHashes(html).some((hash) => !policy.includes(hash))) {
           problems.push(`out/${locale}/${surface}/index.html has an inline script its policy does not allow`);
         }
+        // A <meta> can't carry frame-ancestors: the page refuses foreign frames itself.
+        for (const p of frameGuardProblems(html)) problems.push(`out/${locale}/${surface}/index.html ${p}; run postbuild`);
       }
     }
   }
@@ -91,6 +94,18 @@ export function verifyExport({ root = repoRoot, target, safeBundleBytes = STALWA
   if (resolvedTarget === "stalwart") {
     const entry = join(outDir, "index.html");
     if (existsSync(entry)) problems.push(...stalwartEntryProblems(readFileSync(entry, "utf8")).map((p) => `out/${p}`));
+    // The entry's policy stays on the document a shell is written into: a
+    // shell must not need inline script, and carries the policy itself.
+    const shipped = existsSync(outDir) ? collectZipEntries(outDir) : [];
+    const names = new Set(shipped.map(({ name }) => name));
+    for (const { name, data } of shipped) {
+      if (!name.endsWith(".html") || name === "index.html" || name.startsWith("_next/")) continue;
+      const html = data.toString("utf8");
+      for (const p of stalwartShellProblems(html)) problems.push(`out/${name} ${p}`);
+      for (const [, src] of html.matchAll(/<script\b[^>]*\bsrc="\/([^"?#]+)/gi)) {
+        if (src.startsWith(`${STALWART_SCRIPT_DIR}/`) && !names.has(src)) problems.push(`out/${name} loads /${src}, which is missing`);
+      }
+    }
     for (const file of STALWART_EXCLUDED_FILES) {
       if (existsSync(join(outDir, file))) problems.push(`out/${file} belongs to the static-host target`);
     }

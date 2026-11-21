@@ -42,7 +42,7 @@ vi.mock('@/lib/desktop/browser-sign-in', () => ({
   runInstanceBrowserSignIn: vi.fn(),
 }));
 
-const changeConnection = vi.hoisted(() => ({ available: true, ask: vi.fn(async (_text: object) => false) }));
+const changeConnection = vi.hoisted(() => ({ available: true, ask: vi.fn(async (_text: object, _page?: string) => false) }));
 vi.mock('@/lib/desktop/change-connection', () => ({
   changeConnectionAvailable: () => changeConnection.available,
   askAndChangeConnection: changeConnection.ask,
@@ -154,7 +154,8 @@ describe('the organisation link', () => {
     const link = await screen.findByTestId('login-use-organisation', {}, { timeout: 10000 });
     expect(link).toHaveTextContent('connection.org_link');
     fireEvent.click(link);
-    expect(changeConnection.ask).toHaveBeenCalledWith(expect.objectContaining({ title: 'connection.title', confirm: 'connection.confirm' }));
+    // The restart opens on the organisation's web address, not the email address (desktop#5).
+    expect(changeConnection.ask).toHaveBeenCalledWith(expect.objectContaining({ title: 'connection.title', confirm: 'connection.confirm' }), 'org');
   }, 30_000);
 
   it('is not there when the shell cannot change the connection (a policy forces it, an older shell)', async () => {

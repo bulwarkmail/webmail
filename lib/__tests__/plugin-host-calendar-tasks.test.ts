@@ -322,6 +322,24 @@ describe('api.tasks', () => {
     await expect(call(READ, 'tasks.list', { includeCompleted: 'yes' })).rejects.toThrow(/true or false/);
   });
 
+  it('lists only the calendars named by calendarIds', async () => {
+    await call(READ, 'tasks.list');
+    expect(client.getCalendarTasks).toHaveBeenLastCalledWith(undefined);
+    await call(READ, 'tasks.list', { calendarIds: ['c1', 'shared:c2'] });
+    expect(client.getCalendarTasks).toHaveBeenLastCalledWith(['c1', 'shared:c2']);
+    await expect(call(READ, 'tasks.list', { calendarIds: [] })).rejects.toThrow(/1 to 100 ids/);
+    await expect(call(READ, 'tasks.list', { calendarIds: 'c1' })).rejects.toThrow(/1 to 100 ids/);
+    await expect(call(READ, 'tasks.list', { calendarIds: [7] })).rejects.toThrow(/calendarIds\[0\]/);
+  });
+
+  it('never asks the server for the birthday calendar, and reads nothing when it is the only one named', async () => {
+    await call(READ, 'tasks.list', { calendarIds: ['c1', BIRTHDAY_CALENDAR_ID, 'c1'] });
+    expect(client.getCalendarTasks).toHaveBeenLastCalledWith(['c1']);
+    client.getCalendarTasks.mockClear();
+    await expect(call(READ, 'tasks.list', { calendarIds: [BIRTHDAY_CALENDAR_ID] })).resolves.toEqual([]);
+    expect(client.getCalendarTasks).not.toHaveBeenCalled();
+  });
+
   it('needs tasks:read and tasks:write', async () => {
     await expect(call(NONE, 'tasks.list')).rejects.toThrow(/lacks permission "tasks:read"/);
     await expect(call(READ, 'tasks.create', { title: 'x' })).rejects.toThrow(/lacks permission "tasks:write"/);
@@ -681,5 +699,44 @@ describe('api.tasks links and relations', () => {
     await call(WRITE, 'tasks.update', 't1', { links: { mail: { href: 'https://mail.example/m1' } } });
     expect(updates()[0]).toEqual({ 'links/mail': link('https://mail.example/m1') });
     expect(Object.keys(useTaskStore.getState().tasks[0].links ?? {})).toEqual(['att', 'mail']);
+  });
+});
+
+describe('api.tasks keywords', () => {
+  const updates = () => client.updateCalendarTask.mock.calls.map((c) => c[1] as Record<string, unknown>);
+
+  it('creates a task with keywords and returns them', async () => {
+    await call(WRITE, 'tasks.create', { title: 'Call back', keywords: { 'follow-up': true } });
+    expect(client.createCalendarTask).toHaveBeenCalledWith(expect.objectContaining({
+      keywords: { 'follow-up': true },
+    }));
+    client.getCalendarTasks.mockResolvedValue([task({ keywords: { 'follow-up': true, other: true } })]);
+    expect(await call(READ, 'tasks.get', 't1')).toEqual(expect.objectContaining({
+      keywords: ['follow-up', 'other'],
+    }));
+  });
+
+  it('refuses bad keywords', async () => {
+    const create = (over: Record<string, unknown>) => call(WRITE, 'tasks.create', { title: 'x', ...over });
+    await expect(create({ keywords: { 'has space': true } })).rejects.toThrow(/1-64 letters/);
+    await expect(create({ keywords: { k: 'yes' } })).rejects.toThrow(/must be true/);
+    await expect(create({ keywords: ['k'] })).rejects.toThrow(/object keyed by id/);
+    const eleven = Object.fromEntries(Array.from({ length: 11 }, (_, i) => [`k${i}`, true]));
+    await expect(create({ keywords: eleven })).rejects.toThrow(/at most 10 entries/);
+    expect(client.createCalendarTask).not.toHaveBeenCalled();
+  });
+
+  it('merges by key with patch paths, keeping keywords another app wrote', async () => {
+    useTaskStore.setState({ tasks: [task({ keywords: null })] });
+    await call(WRITE, 'tasks.update', 't1', { keywords: { 'follow-up': true } });
+    // No keywords yet: written whole.
+    expect(updates()[0]).toEqual({ keywords: { 'follow-up': true } });
+
+    useTaskStore.setState({ tasks: [task({ keywords: { theirs: true, old: true } })] });
+    client.getCalendarEvent.mockImplementation(async (id: string) => (id === 't1'
+      ? { id: 't1', links: null, alerts: null, relatedTo: null, keywords: { theirs: true, old: true } }
+      : null));
+    await call(WRITE, 'tasks.update', 't1', { keywords: { 'follow-up': true, old: null } });
+    expect(updates()[1]).toEqual({ 'keywords/follow-up': true, 'keywords/old': null });
   });
 });

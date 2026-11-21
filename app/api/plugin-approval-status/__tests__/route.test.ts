@@ -7,7 +7,8 @@ import JSZip from 'jszip';
 
 vi.mock('next/headers', () => ({ cookies: async () => ({ get: () => undefined }) }));
 vi.mock('@/lib/stalwart/auth-context', () => ({
-  readStalwartAuthContextFromStore: (_store: unknown, slot: number) => (slot === 0 ? { username: currentUser } : null),
+  readCurrentStalwartAuthContext: async (_store: unknown, slot: number) => (slot === 0 ? { username: currentUser } : null),
+  rememberedSessionPastMaxAge: async () => false,
 }));
 vi.mock('@/lib/security/same-origin', () => ({ rejectCrossOriginRequest: () => null }));
 

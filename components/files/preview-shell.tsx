@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Download, X } from "@/components/icons";
+import { ChevronLeft, ChevronRight, Download, Puzzle, X } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
@@ -43,6 +43,12 @@ interface PreviewShellProps {
   neighbours?: PreviewNeighbours;
   /** Click on the dark area around the content closes the preview. */
   closeOnBackdrop?: boolean;
+  /**
+   * Who opened the file, when it wasn't the user ("Opened by the plugin X"):
+   * a line of its own under the name, which stays on one line, so a long name
+   * can't push it out of view.
+   */
+  source?: string;
   children: ReactNode;
 }
 
@@ -51,8 +57,9 @@ interface PreviewShellProps {
  * same dim backdrop, a header with the name, Download and Close, ←/→ to the
  * previous and next file of the folder, Escape to close.
  */
-export function PreviewShell({ name, onClose, onDownload, actions, neighbours, closeOnBackdrop = true, children }: PreviewShellProps) {
+export function PreviewShell({ name, onClose, onDownload, actions, neighbours, closeOnBackdrop = true, source, children }: PreviewShellProps) {
   const t = useTranslations("files");
+  const sourceId = useId();
   const closeFromBackdrop = useBackdropClose(onClose);
   // Tab stays in the preview and the focus goes back to the file that was
   // opened when it closes. Escape is the listener below.
@@ -110,6 +117,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       role="dialog"
       aria-modal="true"
       aria-label={name}
+      aria-describedby={source ? sourceId : undefined}
       className="fixed inset-0 z-50 flex flex-col bg-black/80"
       onClick={closeOnBackdrop ? closeFromBackdrop : undefined}
     >
@@ -122,7 +130,17 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
         onClick={(e) => e.stopPropagation()}
       >
         {closeFirst && close}
-        <h3 className="text-sm font-medium truncate" title={name}>{name}</h3>
+        {source ? (
+          <div className="min-w-0">
+            <h3 className="text-sm font-medium truncate" title={name}>{name}</h3>
+            <p id={sourceId} className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground" data-preview-source="">
+              <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="truncate">{source}</span>
+            </p>
+          </div>
+        ) : (
+          <h3 className="text-sm font-medium truncate" title={name}>{name}</h3>
+        )}
         <div className="flex items-center gap-1 shrink-0 ms-auto">
           {neighbours && (
             <>

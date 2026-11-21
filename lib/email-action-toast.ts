@@ -1,5 +1,5 @@
 import { toast } from "@/stores/toast-store";
-import { useEmailStore, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, resolveEmailActionContext, resolveSelectedEmails, type EmailRestoreBatch, type CrossAccountMoveReceipt } from "@/stores/email-store";
 import type { ToastAction } from "@/components/ui/toast";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Email } from "@/lib/jmap/types";
@@ -7,6 +7,7 @@ import { linkUndoToast, recordUndo, runUndo } from "@/lib/undo-history";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { emailKeyFor, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { announce } from "@/lib/announce";
+import { currentStoreEpoch } from "@/lib/store-epoch";
 
 /** How long a toast with Undo stays, so there is time to reach the button. */
 export const UNDO_TOAST_DURATION = 8000;
@@ -129,11 +130,15 @@ export async function markSelectionReadWithUndo(
   read: boolean,
   words: { success: string; error: string; labels: UndoLabels },
 ): Promise<void> {
+  const epoch = currentStoreEpoch();
   const points = keywordRestorePoints(resolveSelectedEmails(useEmailStore.getState()), ["$seen"], { $seen: read });
   await runBatchEmailAction(() => useEmailStore.getState().batchMarkAsRead(client, read), {
     success: words.success,
     error: words.error,
     undo: undoKeywordAction(client, points, words.labels),
+    // Switched to another account meanwhile: its error is not this action's
+    // outcome, and Undo would act on the other account's list.
+    isCurrent: () => currentStoreEpoch() === epoch,
   });
 }
 
@@ -153,6 +158,49 @@ export async function setSelectionTagWithUndo(
   const points = keywordRestorePoints(resolveSelectedEmails(useEmailStore.getState()), names)
     .filter((p) => names.some((name) => p.changes[name]) !== add);
   const done = await useEmailStore.getState().batchSetTag(client, tagId, add);
+  if (done && points.length > 0) {
+    recordQuietUndo(words.describe(points.length), undoKeywordAction(client, points, words.labels));
+  }
+  return done;
+}
+
+/**
+ * Puts tags on every message of a conversation row or takes them off
+ * (batchSetTag with these messages as its target; rejects when a write
+ * fails), and keeps one Undo for Ctrl+Z. Each tag is one Email/set per
+ * account the messages live in, routed as a single message's tag change.
+ * The messages the change leaves alone are not put back.
+ */
+export async function setConversationTagsWithUndo(
+  client: IJMAPClient,
+  emails: Email[],
+  tagIds: string[],
+  add: boolean,
+  words: { describe: (count: number) => string; labels: UndoLabels },
+): Promise<boolean> {
+  if (emails.length === 0 || tagIds.length === 0) return true;
+  const names = tagIds.flatMap(tagKeywords);
+  const has = (changes: Record<string, boolean>, tagId: string) => tagKeywords(tagId).some((name) => changes[name]);
+  const points = keywordRestorePoints(emails, names)
+    .filter((p) => tagIds.some((tagId) => has(p.changes, tagId) !== add));
+
+  const groups = new Map<IJMAPClient, Map<string | undefined, Email[]>>();
+  for (const email of emails) {
+    const { client: actionClient, accountId } = resolveEmailActionContext(email, client);
+    const byAccount = groups.get(actionClient) ?? new Map<string | undefined, Email[]>();
+    groups.set(actionClient, byAccount);
+    byAccount.set(accountId, [...(byAccount.get(accountId) ?? []), email]);
+  }
+
+  let done = true;
+  for (const tagId of tagIds) {
+    for (const [actionClient, byAccount] of groups) {
+      for (const [accountId, group] of byAccount) {
+        const target = { emailIds: group.map((e) => e.id), client: actionClient, accountId, emails: group };
+        if (!(await useEmailStore.getState().batchSetTag(client, tagId, add, target))) done = false;
+      }
+    }
+  }
   if (done && points.length > 0) {
     recordQuietUndo(words.describe(points.length), undoKeywordAction(client, points, words.labels));
   }
@@ -244,7 +292,7 @@ export function toastWithUndo(title: string, undo: UndoToastAction | undefined, 
  */
 export async function runBatchEmailAction(
   run: () => Promise<boolean | void>,
-  messages: { success?: string; error: string; describeError?: (error: unknown) => string | undefined; undo?: ToastAction },
+  messages: { success?: string; error: string; describeError?: (error: unknown) => string | undefined; undo?: ToastAction; isCurrent?: () => boolean },
 ): Promise<void> {
   // An error left over from an earlier action is not this action's outcome.
   useEmailStore.setState({ error: null });
@@ -252,11 +300,14 @@ export async function runBatchEmailAction(
   try {
     ran = await run();
   } catch (error) {
+    if (messages.isCurrent?.() === false) return;
     console.error(messages.error, error);
     const detail = messages.describeError?.(error) ?? (error instanceof Error ? error.message : undefined);
     toast.error(messages.error, detail);
     return;
   }
+  // `isCurrent` false: the view this action ran in is gone, so is its feedback.
+  if (messages.isCurrent?.() === false) return;
   const storeError = useEmailStore.getState().error;
   if (storeError) {
     toast.error(messages.error, storeError);

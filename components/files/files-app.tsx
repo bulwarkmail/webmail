@@ -15,7 +15,9 @@ import { filesDropTarget, hasQueuedFilesUpload, setFilesDropTarget, subscribeQue
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
 import { isInternalDrag } from "@/components/files/file-item-parts";
 import { isTrashLocation } from "@/lib/files-trash";
+import { departing, namesOfNode } from "@/lib/file-list-motion";
 import { fileErrorKind, isPartialCopy } from "@/lib/file-errors";
+import { useUploadRateLimitText } from "@/hooks/use-upload-rate-limit-text";
 import { toast } from "@/stores/toast-store";
 import { cn, formatFileSize } from "@/lib/utils";
 import { NavigationRail } from "@/components/layout/navigation-rail";
@@ -36,7 +38,7 @@ import { WopiEditor } from "@/components/files/wopi-editor";
 import { UploadConflictDialog, type UploadConflictQuestion } from "@/components/files/upload-conflict-dialog";
 import { FileNoPreview } from "@/components/files/file-no-preview";
 import { sharedNodeLink } from "@/components/files/share-message";
-import { loadPrincipalDirectory } from "@/lib/jmap/principal-directory";
+import { loadScopedPrincipalDirectory } from "@/lib/directory-scope";
 import { savePendingMailto } from "@/lib/protocol-handlers/session";
 import { formatRecipient } from "@/lib/email-composer-utils";
 import { useRouter } from "@/i18n/navigation";
@@ -363,6 +365,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   // What the server said went wrong, as the second line under an action's
   // own error message; undefined when it said nothing specific.
+  const rateLimitText = useUploadRateLimitText();
   const serverReason = useCallback((err: unknown): string | undefined => {
     switch (fileErrorKind(err)) {
       case "overQuota": return t("error_over_quota");
@@ -370,9 +373,10 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       case "invalidName": return t("error_invalid_name");
       case "forbidden": return t("error_forbidden");
       case "tooLarge": return t("error_too_large");
+      case "rateLimited": return rateLimitText(err);
       default: return undefined;
     }
-  }, [t]);
+  }, [t, rateLimitText]);
   // A copy that stopped part-way and could not all be taken back says so too.
   const failureReason = useCallback((err: unknown): string | undefined => {
     const reason = serverReason(err);
@@ -391,7 +395,9 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     if (report.failed.length === 0) return;
     const names = report.failed.slice(0, 3).map((f) => f.name).join(", ")
       + (report.failed.length > 3 ? ", …" : "");
-    const reason = failureReason(report.failed[0].error);
+    // Too many uploads explains every file after it, so it is the one named.
+    const shown = report.failed.find((f) => fileErrorKind(f.error) === "rateLimited") ?? report.failed[0];
+    const reason = failureReason(shown.error);
     toast.error(t("upload_failed", { count: report.failed.length }), reason ? `${names}: ${reason}` : names);
   }, [t, tPc, failureReason]);
 
@@ -484,7 +490,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       });
       if (!confirmed) return;
       try {
-        const count = await purgeResources(names);
+        const count = await departing(names, () => purgeResources(names));
         if (count > 0) toast.success(t("deleted_forever", { count }));
       } catch (err) {
         console.error("Failed to delete:", err);
@@ -494,7 +500,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (deletesToTrash(currentParentIdForDelete)) {
       try {
-        const count = await trashResources(names);
+        const count = await departing(names, () => trashResources(names));
         if (count > 0) {
           toast.success(t("moved_to_trash", { count }), {
             action: { label: t("undo"), onClick: handleUndo },
@@ -516,7 +522,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     });
     if (!confirmed) return;
     try {
-      if (names.length === 1 ? !await deleteResource(names[0]) : !await deleteResources(names)) return;
+      if (!await departing(names, () => names.length === 1 ? deleteResource(names[0]) : deleteResources(names))) return;
       toast.success(t("deleted_forever", { count: names.length }));
     } catch (err) {
       console.error("Failed to delete:", err);
@@ -528,7 +534,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const handleRestore = useCallback(async (names: string[]) => {
     try {
-      const count = await restoreResources(names);
+      const count = await departing(names, () => restoreResources(names));
       if (count > 0) toast.success(t("restored", { count }));
     } catch (err) {
       console.error("Failed to restore:", err);
@@ -647,7 +653,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const handleMoveTo = useCallback(async (names: string[], targetId: string | null) => {
     try {
-      if (!await moveToFolderId(names, targetId)) return;
+      if (!await departing(names, () => moveToFolderId(names, targetId))) return;
       toast.success(t("move_success", { count: names.length }), {
         action: { label: t("undo"), onClick: handleUndo },
       });
@@ -659,7 +665,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const handleMoveNode = useCallback(async (id: string, targetId: string | null) => {
     try {
-      if (!await moveNode(id, targetId)) return;
+      if (!await departing(namesOfNode(id), () => moveNode(id, targetId))) return;
       toast.success(t("move_success", { count: 1 }), {
         action: { label: t("undo"), onClick: handleUndo },
       });
@@ -773,7 +779,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     // A folder of the own drive goes to the trash; one of a shared drive is gone for good.
     if (deletesToTrash(id)) {
       try {
-        if (!await trashNode(id)) return;
+        if (!await departing(namesOfNode(id), () => trashNode(id))) return;
         toast.success(t("moved_to_trash", { count: 1 }), {
           action: { label: t("undo"), onClick: handleUndo },
         });
@@ -791,7 +797,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     });
     if (!confirmed) return;
     try {
-      if (!await deleteNode(id)) return;
+      if (!await departing(namesOfNode(id), () => deleteNode(id))) return;
       toast.success(t("deleted_forever", { count: 1 }));
     } catch (err) {
       console.error("Failed to delete:", err);
@@ -894,7 +900,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const router = useRouter();
   const handleShared = useCallback((resource: FileResource, principalId: string) => {
     if (!storeClient || !filesAccountId) return;
-    void loadPrincipalDirectory(storeClient).then(({ principals }) => {
+    void loadScopedPrincipalDirectory(storeClient).then(({ principals }) => {
       const person = principals.find((p) => p.id === principalId);
       const email = person?.email?.trim();
       if (!person || !email) return;

@@ -8,7 +8,7 @@ import { Check, ChevronDown, ChevronRight, Globe, ListTodo, MoreVertical, Pencil
 import { cn, formatDateTime } from "@/lib/utils";
 import type { Calendar } from "@/lib/jmap/types";
 import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";
-import { useCalendarStore } from "@/stores/calendar-store";
+import { useCalendarStore, type CalendarViewMode } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
 import { useAccountStore } from "@/stores/account-store";
@@ -77,6 +77,10 @@ interface CalendarSidebarPanelProps {
    * by their `localAccountId` and the active account is shown first.
    */
   multiAccountMode?: boolean;
+  /** The view on screen; the calendar's stored view unless given (the Tasks app shows its list whatever that is). */
+  viewMode?: CalendarViewMode;
+  /** The "Tasks" entry that opens the task list (off when Tasks is an app of its own). */
+  showTasksEntry?: boolean;
 }
 
 export function CalendarSidebarPanel({
@@ -94,6 +98,8 @@ export function CalendarSidebarPanel({
   onEditSubscription,
   client,
   multiAccountMode,
+  viewMode: viewModeProp,
+  showTasksEntry = true,
 }: CalendarSidebarPanelProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("calendar");
@@ -113,13 +119,15 @@ export function CalendarSidebarPanel({
   const removeICalSubscription = useCalendarStore((s) => s.removeICalSubscription);
   const setDefaultCalendar = useCalendarStore((s) => s.setDefaultCalendar);
   const updateCalendar = useCalendarStore((s) => s.updateCalendar);
-  const viewMode = useCalendarStore((s) => s.viewMode);
+  const storedViewMode = useCalendarStore((s) => s.viewMode);
+  const viewMode = viewModeProp ?? storedViewMode;
   const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
   const toggleTaskListVisibility = useCalendarStore((s) => s.toggleTaskListVisibility);
   const [renaming, setRenaming] = useState<Calendar | null>(null);
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
+  const showTasksOnCalendar = useSettingsStore((s) => s.showTasksOnCalendar);
   const tasks = useTaskStore((s) => s.tasks);
   const setViewMode = useCalendarStore((s) => s.setViewMode);
 
@@ -290,10 +298,20 @@ export function CalendarSidebarPanel({
   };
 
   // The tasks view lists task lists, each with its own tick (pim-1): a
-  // task-only list never shows in the grid, so the grid's selection can't
-  // say which tasks to list.
+  // task-only list is never among the grid's selected calendars, so that
+  // selection can't say which tasks to list. The calendar views list the
+  // task-only lists below the calendars with the same tick, which also
+  // steers their tasks on the grid; a calendar holding tasks keeps its
+  // calendar tick there. The agenda draws no tasks, so it lists none.
   const inTasksView = enableCalendarTasks && viewMode === 'tasks';
-  const taskLists = useMemo(() => (inTasksView ? taskListsOf(calendars, tasks) : []), [inTasksView, calendars, tasks]);
+  const tasksOnGrid = enableCalendarTasks && showTasksOnCalendar && viewMode !== 'agenda';
+  const taskLists = useMemo(
+    () => {
+      if (inTasksView) return taskListsOf(calendars, tasks);
+      return tasksOnGrid ? calendars.filter(c => c.isTasksOnly) : [];
+    },
+    [inTasksView, tasksOnGrid, calendars, tasks],
+  );
   const accountLabel = (localAccountId: string) => {
     const acct = localAccounts.find(a => a.id === localAccountId);
     return accountAddress(acct) || localAccountId;
@@ -317,6 +335,23 @@ export function CalendarSidebarPanel({
       toast.error(tMgmt('error_default'));
     }
   };
+
+  const renderTaskListsSection = () => (
+    <div data-testid="task-lists-section">
+      {renderSectionHeader('__task_lists__', tUx('task_lists'))}
+      {!collapsedAccountGroups.has('__task_lists__') && taskListGroups.map((group) => (
+        <div key={group.key} className={cn(group.label && "mt-1")}>
+          {group.label && (
+            <div className="ps-5 pe-3 py-0.5 text-[0.6875rem] font-medium text-muted-foreground flex items-center gap-1">
+              <User className="w-3 h-3" aria-hidden="true" />
+              <span className="truncate">{accountLabel(group.label)}</span>
+            </div>
+          )}
+          {group.lists.map((cal) => renderCalendarItem(cal, true))}
+        </div>
+      ))}
+    </div>
+  );
 
   if (calendars.length === 0 && !onSubscribe) return null;
 
@@ -569,7 +604,7 @@ export function CalendarSidebarPanel({
 
   return (
     <div className="mt-4">
-      {enableCalendarTasks && (
+      {enableCalendarTasks && showTasksEntry && (
         <button
           onClick={() => setViewMode('tasks')}
           className="flex items-center gap-2 w-full px-3 mb-2 min-h-8 pointer-coarse:min-h-11 text-sm text-foreground hover:bg-muted transition-colors"
@@ -586,20 +621,7 @@ export function CalendarSidebarPanel({
         </button>
       )}
       {inTasksView ? (
-        <div data-testid="task-lists-section">
-          {renderSectionHeader('__task_lists__', tUx('task_lists'))}
-          {!collapsedAccountGroups.has('__task_lists__') && taskListGroups.map((group) => (
-            <div key={group.key} className={cn(group.label && "mt-1")}>
-              {group.label && (
-                <div className="ps-5 pe-3 py-0.5 text-[0.6875rem] font-medium text-muted-foreground flex items-center gap-1">
-                  <User className="w-3 h-3" aria-hidden="true" />
-                  <span className="truncate">{accountLabel(group.label)}</span>
-                </div>
-              )}
-              {group.lists.map((cal) => renderCalendarItem(cal, true))}
-            </div>
-          ))}
-        </div>
+        renderTaskListsSection()
       ) : multiAccountMode && localAccountGroups.length > 0 ? (
         <>
           {localAccountGroups.map((group, idx) => {
@@ -702,6 +724,7 @@ export function CalendarSidebarPanel({
           )}
         </>
       )}
+      {!inTasksView && taskLists.length > 0 && <div className="mt-3">{renderTaskListsSection()}</div>}
 
       {renderCalendarMenu()}
       <ConfirmDialog {...confirmDialogProps} />

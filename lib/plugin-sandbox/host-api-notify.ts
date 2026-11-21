@@ -23,8 +23,15 @@ export const MAX_NOTIFICATION_ACTION_LABEL = 40;
 const MAX_ACTION_URL = 2048;
 const TAG_RE = /^[A-Za-z0-9._:-]{1,64}$/;
 
+/** Marks and controls that change the direction of the text around them. */
+const DIRECTION_MARKS = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
+
+/**
+ * A plugin's text as one line the host can show: line breaks and other
+ * control characters become spaces, direction marks go.
+ */
 // eslint-disable-next-line no-control-regex -- line breaks and other control characters become spaces
-const oneLine = (text: string) => text.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim();
+export const oneLine = (text: string) => text.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(DIRECTION_MARKS, '').trim();
 
 /**
  * Show a notification from a plugin. Resolves to 'system' when the browser

@@ -5,12 +5,17 @@
 #
 #   docker build -f Dockerfile.lite -t bulwark-lite .
 
+# Base images by digest, so a build gets the image that was reviewed; the
+# Dependabot docker entry moves the digest when the tag gets a new image.
+#
 # The export is plain files, so it is built once on the build host's
 # architecture, whatever the target platform is.
-FROM --platform=$BUILDPLATFORM node:24-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Lite never runs @sentry/cli; its install script would fail on build hosts
+# without a binary for them (linux s390x, ppc64le, riscv64).
+RUN SENTRYCLI_SKIP_DOWNLOAD=1 npm ci
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # scripts/lite/prepare.mjs deletes the server-only trees in place; this layer
@@ -32,7 +37,7 @@ ARG GIT_COMMIT=unknown
 RUN LITE_TARGET=static NEXT_PUBLIC_BASE_PATH= npm run build:lite && \
     node scripts/lite/container.mjs /image
 
-FROM nginxinc/nginx-unprivileged:1.30-alpine-slim
+FROM nginxinc/nginx-unprivileged:1.31-alpine-slim@sha256:a8cb0f33d51fa107c96fd2bd3a71aaf564ec131e9d2bdf8700944f0ed8b170d7
 
 LABEL org.opencontainers.image.title="Bulwark Webmail Lite"
 LABEL org.opencontainers.image.description="Bulwark Webmail as static files behind nginx; talks to the JMAP server straight from the browser"

@@ -2,7 +2,7 @@
 
 import { type RefObject, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, List, Loader2, Rows3 } from "@/components/icons";
+import { ChevronDown, ChevronRight, GripHorizontal, List, Loader2, Rows3 } from "@/components/icons";
 import { SearchSnippetText } from "@/components/email/search-snippet-text";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { cn, formatDate } from "@/lib/utils";
@@ -60,10 +60,8 @@ export const PENDING_GRACE_MS = 300;
 
 /**
  * Whether the block holds its place for this search: a plugin asked had not
- * answered after PENDING_GRACE_MS. Kept once the answers came, until the next
- * search asks again, so the block keeps its height and the list below does
- * not move a second time. A plugin that answers at once (one that does not
- * search for this query) shows nothing.
+ * answered after PENDING_GRACE_MS. A plugin that answers at once (one that
+ * does not search for this query) shows nothing.
  */
 function useHeldPlace(pending: boolean): boolean {
   const [held, setHeld] = useState(false);
@@ -76,13 +74,20 @@ function useHeldPlace(pending: boolean): boolean {
   return held;
 }
 
-/** The block's share of the list's height until the user drags its edge. */
-export const DEFAULT_SHARE = 0.4;
+/** The block's share of the list's height until the user drags its edge: half, the messages the other half. */
+export const DEFAULT_SHARE = 0.5;
 /** The most of the list's height the block may take; the messages below keep the rest. */
 export const MAX_SHARE = 0.85;
 /** px: the block never gets lower than a group heading and one entry. */
 export const MIN_HEIGHT = 64;
+/** px around half the list within which a drag takes half. Less than a key's step, so the arrows get past it. */
+export const SNAP_PX = 8;
+/** px a pointer may move on the edge of a section that has the whole height before that counts as a drag. */
+export const WHOLE_SLACK_PX = 4;
 const SHARE_KEY = "pluginSearchResultsShare";
+
+/** The section that has the list's whole height, the other one down to its heading. */
+type Whole = "plugins" | "messages";
 
 /** The share the user dragged the block to, or null for DEFAULT_SHARE. */
 function readShare(): number | null {
@@ -163,11 +168,18 @@ interface PluginSearchResultsProps {
  * Results from elsewhere for the search that is running (CRM hits, chat
  * messages, ...), above its message list. Renders nothing outside a search or
  * without entries. While a plugin takes longer than PENDING_GRACE_MS the block
- * shows at a fixed height with placeholder rows, which its entries then fill,
- * so the list moves once, with its own results, not when a slow plugin
- * answers. Its lower edge drags: the block grows up to MAX_SHARE of the list
- * (never past its entries) and keeps that share for later searches; a double
- * click gives it DEFAULT_SHARE again. A toggle at the first heading shows one
+ * shows at its share of the list with placeholder rows, which its entries then
+ * fill, so the list moves once, with its own results, and not again when a
+ * slow plugin answers with entries enough for that height (fewer give the
+ * messages the room back). Its lower edge drags, up and down: the block takes
+ * up to MAX_SHARE of the list (never more than its entries need) and keeps
+ * that share for later searches (a search with few results leaves it as it
+ * was); a double click gives it DEFAULT_SHARE again, and a drag snaps to half
+ * the list. The edge is the heading of the messages below, so the search
+ * reads as two sections. A click on a section's heading gives it the whole
+ * height and leaves the other its heading, a second click gives both their
+ * shares back; that lasts for this search only. Groups of several plugins
+ * each fold by a chevron of their own. A toggle at the first heading shows one
  * line per entry (score, title, from, date; the snippet in its tooltip and
  * under the entry open in the reader), kept as the share is. A click on an entry naming a message the user reaches opens it; any
  * other goes back to the plugin that gave the entry.
@@ -176,18 +188,31 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
   const results = useEmailStore((s) => s.externalSearchResults);
   const openEmail = useEmailStore((s) => s.selectedEmail);
   const query = useEmailStore((s) => s.searchQuery);
+  const filters = useEmailStore((s) => s.searchFilters);
+  const scope = useEmailStore((s) => s.searchMailboxId);
   const searching = useEmailStore((s) => !!s.searchQuery.trim() || !isFilterEmpty(s.searchFilters));
   const pending = useEmailStore((s) => s.externalSearchPending.length > 0);
   const plugins = usePluginStore((s) => s.plugins);
   const held = useHeldPlace(pending);
   const t = useTranslations('email_list');
+  const tFold = useTranslations('settings.folders');
   const idPrefix = useId();
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [compact, setCompact] = useState(readCompact);
   const [share, setShare] = useState<number | null>(readShare);
+  // For the search it was chosen in: another query, other filters or another
+  // folder scope, and one begun after this one was left, start with the shares.
+  const [whole, setWhole] = useState<Whole | null>(null);
+  const [search, setSearch] = useState({ query, filters, scope });
+  if (search.query !== query || search.filters !== filters || search.scope !== scope) {
+    setSearch({ query, filters, scope });
+    setWhole(null);
+  }
   // The latest share, for the end of a drag to keep.
   const shareRef = useRef(share);
   const dragStart = useRef(0);
+  // The share as a drag found it, in px of the list.
+  const shareStart = useRef(0);
   const blockRef = useRef<HTMLDivElement>(null);
 
   const groups = useMemo(
@@ -196,6 +221,8 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
   );
 
   const waiting = pending && held;
+  // The share as a height the list's own height is counted in, never below MIN_HEIGHT.
+  const limit = `max(${MIN_HEIGHT}px, ${(share ?? DEFAULT_SHARE) * 100}%)`;
   const shown = searching && (groups.length > 0 || waiting);
   const box = useBox(blockRef, shown);
   if (!shown) return null;
@@ -206,6 +233,11 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
     if (reachable) onOpenEmail?.(reachable);
     else void runPluginAction(r.pluginId, surface, r.key, { query });
   };
+
+  const give = (section: Whole) => setWhole(whole === section ? null : section);
+  // One group needs no fold: the messages' heading gives them its room.
+  const many = groups.length > 1;
+  const pluginsWhole = whole === "plugins" && !waiting;
 
   const toggle = (id: string) =>
     setCollapsed((prev) => {
@@ -220,23 +252,43 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
       <div
         ref={blockRef}
         data-plugin-surface={surface}
-        className={cn("flex-shrink-0 overflow-y-auto bg-muted/30", held && "h-48")}
-        style={{ maxHeight: `max(${MIN_HEIGHT}px, ${(share ?? DEFAULT_SHARE) * 100}%)` }}
+        // With the whole height the block takes what its entries need and
+        // shrinks to what the list has; the messages keep the rest, if any.
+        className={cn("overflow-y-auto bg-muted/30", pluginsWhole ? "min-h-0 shrink" : "flex-shrink-0")}
+        // Waiting, the block is as high as its share, whatever it holds yet;
+        // with its answers the share is the most it takes. Never a height of
+        // its own beside the share: the edge could then only be dragged below it.
+        // The share does not count while either section has the whole height.
+        style={whole === "messages" || pluginsWhole ? undefined : waiting ? { height: limit } : { maxHeight: limit }}
       >
         {groups.map((group, index) => {
-          const open = !collapsed.has(group.id);
+          const open = whole !== "messages" && !(many && collapsed.has(group.id));
           const listId = `${idPrefix}-${index}`;
           return (
             <section key={group.id} aria-label={group.heading}>
               <div className="flex items-center">
+                {many && whole !== "messages" && (
+                  <button
+                    type="button"
+                    onClick={() => toggle(group.id)}
+                    aria-expanded={open}
+                    aria-controls={listId}
+                    aria-label={tFold(open ? 'collapse' : 'expand', { name: group.heading })}
+                    className="ms-1.5 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => toggle(group.id)}
-                  aria-expanded={open}
-                  aria-controls={listId}
-                  className="flex min-w-0 flex-1 items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                  onClick={() => give("plugins")}
+                  aria-pressed={pluginsWhole}
+                  className={cn(
+                    "flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pe-3 text-xs font-semibold text-muted-foreground hover:text-foreground",
+                    many && whole !== "messages" ? "ps-1" : "ps-3",
+                    pluginsWhole && "text-foreground",
+                  )}
                 >
-                  {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                   <span className="truncate">{group.heading}</span>
                   <span className="font-normal">({group.results.length})</span>
                 </button>
@@ -310,7 +362,7 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               <span className="truncate">{t('more_results_searching')}</span>
             </div>
-            {[0, 1, 2].map((row) => (
+            {whole !== "messages" && [0, 1, 2].map((row) => (
               <div key={row} className="flex flex-col gap-1.5 px-3 py-2" aria-hidden="true">
                 <div className="h-3 w-3/5 animate-pulse rounded bg-muted" />
                 <div className="h-2.5 w-4/5 animate-pulse rounded bg-muted" />
@@ -319,27 +371,74 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
           </section>
         )}
       </div>
-      {/* The block's lower edge: drag it, or use the arrow keys; a double click gives the default back. */}
-      <ResizeHandle
-        orientation="horizontal"
-        testId="plugin-search-results-resize"
-        // A line as thin as the border it takes the place of; the handle's own hit area stays.
-        className="h-px my-0"
-        label={t('resize_plugin_results')}
-        value={box.height}
-        min={MIN_HEIGHT}
-        max={most}
-        onResizeStart={() => { dragStart.current = blockRef.current?.offsetHeight ?? box.height; }}
-        onResize={(delta) => {
-          const list = blockRef.current?.parentElement?.clientHeight ?? box.list;
-          if (list <= 0) return;
-          const next = Math.max(MIN_HEIGHT, Math.min(list * MAX_SHARE, dragStart.current + delta));
-          shareRef.current = next / list;
-          setShare(shareRef.current);
-        }}
-        onResizeEnd={() => writeShare(shareRef.current)}
-        onDoubleClick={() => { shareRef.current = null; setShare(null); writeShare(null); }}
-      />
+      {/*
+        The messages' heading, and the block's lower edge. The heading is a
+        button of its own; the rest of the row is the handle: drag it, or use
+        the arrow keys; a double click gives the default share back.
+      */}
+      <div className="flex flex-shrink-0 items-stretch border-y border-border bg-muted/30">
+        <button
+          type="button"
+          onClick={() => give("messages")}
+          aria-pressed={whole === "messages"}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground",
+            whole === "messages" && "text-foreground",
+          )}
+        >
+          {t('listbox_label')}
+        </button>
+        <ResizeHandle
+          orientation="horizontal"
+          testId="plugin-search-results-resize"
+          // The row's free part, with a grip, in place of a line.
+          className="my-0 flex h-auto flex-1 items-center justify-end bg-transparent px-3 text-muted-foreground"
+          label={t('resize_plugin_results')}
+          // With the whole height or down to its headings the block is outside its limits.
+          value={Math.max(MIN_HEIGHT, Math.min(most, box.height))}
+          min={MIN_HEIGHT}
+          max={most}
+          onResizeStart={() => {
+            const el = blockRef.current;
+            const list = el?.parentElement?.clientHeight ?? box.list;
+            // From the whole height the edge starts at the most a share gives, so it follows the pointer at once.
+            dragStart.current = Math.min(el?.offsetHeight ?? box.height, list > 0 ? list * MAX_SHARE : Infinity);
+            shareStart.current = (shareRef.current ?? DEFAULT_SHARE) * list;
+          }}
+          onResize={(delta) => {
+            const el = blockRef.current;
+            const list = el?.parentElement?.clientHeight ?? box.list;
+            // A press that moves nowhere changes nothing.
+            if (list <= 0 || delta === 0) return;
+            if (whole) {
+              // A section with the whole height has its edge at the end: only
+              // a move back into the list is a drag, and not a slip of the
+              // hand on a click. Else the share kept would be lost unseen.
+              const inward = whole === "messages" ? delta : -delta;
+              if (inward < WHOLE_SLACK_PX) return;
+            }
+            const limit = list * MAX_SHARE;
+            let next = Math.max(MIN_HEIGHT, Math.min(limit, dragStart.current + delta));
+            const half = list / 2;
+            if (Math.abs(next - half) <= SNAP_PX) next = half;
+            // The block shows no more than its entries need. Past them the
+            // edge stays where it is and so does the share, unless the entries
+            // need more than it gave: a search with few results must not
+            // shrink the share kept for the next one. Waiting, or down to its
+            // headings, it shows none to measure.
+            const entries = waiting || whole === "messages" ? 0 : el?.scrollHeight ?? 0;
+            if (entries > 0 && next >= entries) next = Math.max(entries, Math.min(limit, shareStart.current));
+            // A drag is a choice of its own: neither section has the whole height any more.
+            if (whole) setWhole(null);
+            shareRef.current = next / list;
+            setShare(shareRef.current);
+          }}
+          onResizeEnd={() => writeShare(shareRef.current)}
+          onDoubleClick={() => { shareRef.current = null; setShare(null); writeShare(null); setWhole(null); }}
+        >
+          <GripHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+        </ResizeHandle>
+      </div>
     </>
   );
 }

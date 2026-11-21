@@ -13,6 +13,7 @@ import { observeUpstream } from '@/lib/metrics/upstream';
 import { authHeaderFor, credentialOrigin, privateProxyOrigins, type CredentialInject, type CredentialSpec } from './credentials';
 import { getUserCredential, setUserCredentialSecret, userKey, type VaultUser } from './vault';
 import { declaredUserCredential } from './known-plugins';
+import { declarationOf, settingForServer } from './sealed';
 import { isStoredDataUnavailable } from '@/lib/stored-data-errors';
 import { credentialAllowedInMode } from '@/lib/outgoing-hosts';
 
@@ -90,13 +91,17 @@ export async function resolveCredential(user: VaultUser, pluginId: string, crede
   }
   if (!plugin || !plugin.enabled || !spec || spec.scope !== 'admin') return null;
   const config = await getPluginConfig(pluginId);
-  const secret = config[spec.secretKey];
-  const origin = spec.origin ?? credentialOrigin(spec.originKey ? config[spec.originKey] : undefined);
+  // A value stored as a secret is used only where this version declares
+  // its field `secret`; anywhere else the setting counts as unset.
+  const setting = (key: string | undefined) =>
+    (key ? settingForServer(config[key], declarationOf(plugin.configSchema, key)) : undefined);
+  const secret = setting(spec.secretKey);
+  const origin = spec.origin ?? credentialOrigin(setting(spec.originKey));
   // A credential that adds nothing (a keyless service such as a local Ollama)
   // needs only its server.
   const needsSecret = spec.inject.type !== 'none';
   if (!origin || (needsSecret && (typeof secret !== 'string' || !secret))) return null;
-  const username = spec.usernameKey ? config[spec.usernameKey] : undefined;
+  const username = setting(spec.usernameKey);
   return {
     origin, inject: spec.inject, secret: typeof secret === 'string' && secret ? secret : undefined,
     username: typeof username === 'string' ? username : undefined,
@@ -149,10 +154,10 @@ export async function adminEnteredOrigins(pluginId: string): Promise<string[]> {
 export function adminEnteredOrigin(
   spec: CredentialSpec | undefined,
   config: Record<string, unknown>,
-  schema: Record<string, { default?: unknown }> | undefined,
+  schema: Record<string, { default?: unknown; type?: string }> | undefined,
 ): string | null {
   if (!spec || spec.scope !== 'admin' || !credentialAllowedInMode(spec) || !spec.originKey) return null;
-  const value = config[spec.originKey];
+  const value = settingForServer(config[spec.originKey], declarationOf(schema, spec.originKey));
   const origin = credentialOrigin(value);
   if (!origin) return null;
   const fallback = credentialOrigin(schema?.[spec.originKey]?.default);

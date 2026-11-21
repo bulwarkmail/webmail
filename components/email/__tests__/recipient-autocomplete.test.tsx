@@ -8,7 +8,8 @@ import { EmailComposer } from '../email-composer';
 
 vi.mock('@/components/email/rich-text-editor', () => ({
   RichTextEditor: ({ onChange }: { onChange?: (html: string) => void }) => (
-    React.createElement('div', { 'data-testid': 'rich-text-editor', onClick: () => onChange?.('') })
+    // .ProseMirror and tabIndex so focusing the body can be checked.
+    React.createElement('div', { 'data-testid': 'rich-text-editor', className: 'ProseMirror', tabIndex: 0, onClick: () => onChange?.('') })
   ),
 }));
 
@@ -140,6 +141,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
     onIdentitySelect: { size: 0, emit: async () => {} },
+    onSelectReplyIdentity: { size: 0 },
   },
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },
@@ -281,5 +283,76 @@ describe('recipient autocomplete', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(screen.getByTitle('User C <userc@example.org>')).toBeInTheDocument();
+  });
+});
+
+describe('Tab out of the recipient fields (#1801)', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  const body = () => screen.getByTestId('rich-text-editor');
+  const subjectInput = () => screen.getByLabelText('subject_label') as HTMLInputElement;
+  const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
+
+  it('goes to the subject while it is empty', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    toInput().focus();
+    fireEvent.keyDown(toInput(), { key: 'Tab' });
+    expect(document.activeElement).toBe(subjectInput());
+  });
+
+  it('goes to the body when the subject is already filled', () => {
+    render(<EmailComposer initialData={{ ...EMPTY_DATA, subject: 'Re: Plans' }} />);
+    toInput().focus();
+    fireEvent.keyDown(toInput(), { key: 'Tab' });
+    expect(document.activeElement).toBe(body());
+  });
+
+  it('goes to the body once a subject was typed', () => {
+    render(<EmailComposer initialData={EMPTY_DATA} />);
+    type(subjectInput(), 'Plans');
+    toInput().focus();
+    fireEvent.keyDown(toInput(), { key: 'Tab' });
+    expect(document.activeElement).toBe(body());
+  });
+
+  it('goes from Cc to an open Bcc, and from Bcc to the body', () => {
+    render(<EmailComposer initialData={{ ...EMPTY_DATA, subject: 'Re: Plans' }} />);
+    const cc = screen.getByPlaceholderText('cc_placeholder') as HTMLInputElement;
+    const bcc = screen.getByPlaceholderText('bcc_placeholder') as HTMLInputElement;
+    cc.focus();
+    fireEvent.keyDown(cc, { key: 'Tab' });
+    expect(document.activeElement).toBe(bcc);
+    fireEvent.keyDown(bcc, { key: 'Tab' });
+    expect(document.activeElement).toBe(body());
+  });
+
+  it('goes from Cc to the body when Bcc is closed', () => {
+    render(<EmailComposer initialData={{ ...EMPTY_DATA, subject: 'Re: Plans', showBcc: false }} />);
+    const cc = screen.getByPlaceholderText('cc_placeholder') as HTMLInputElement;
+    cc.focus();
+    fireEvent.keyDown(cc, { key: 'Tab' });
+    expect(document.activeElement).toBe(body());
+  });
+
+  it('adds a typed address on Tab and then goes to the body', async () => {
+    render(<EmailComposer initialData={{ ...EMPTY_DATA, subject: 'Re: Plans' }} />);
+    toInput().focus();
+    type(toInput(), 'someone@example.org');
+    fireEvent.keyDown(toInput(), { key: 'Tab' });
+    await flush();
+    expect(screen.getByText('someone@example.org')).toBeInTheDocument();
+    expect(document.activeElement).toBe(body());
+  });
+
+  it('leaves Shift+Tab to the browser after adding a typed address', async () => {
+    render(<EmailComposer initialData={{ ...EMPTY_DATA, subject: 'Re: Plans' }} />);
+    toInput().focus();
+    type(toInput(), 'someone@example.org');
+    const event = fireEvent.keyDown(toInput(), { key: 'Tab', shiftKey: true });
+    await flush();
+    expect(event).toBe(true); // default not prevented
+    expect(screen.getByText('someone@example.org')).toBeInTheDocument();
+    expect(document.activeElement).not.toBe(body());
+    expect(document.activeElement).not.toBe(subjectInput());
   });
 });

@@ -195,6 +195,14 @@ describe('mail paths', () => {
     expect(parseMailPath(['thread', 't1'], new URLSearchParams('reply=1'))).not.toHaveProperty('reply');
   });
 
+  it("reads a mention's note on a message link, and only there", () => {
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('slot=0&owner=g&note=n1'))).toEqual({
+      kind: 'message', id: 'm1', slot: 0, ownerAccountId: 'g', note: 'n1',
+    });
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('note='))).not.toHaveProperty('note');
+    expect(parseMailPath(['folder', 'inbox'], new URLSearchParams('note=n1'))).not.toHaveProperty('note');
+  });
+
   it('reads the fullscreen marker on message links', () => {
     expect(parseMailPath(['message', 'm1'], new URLSearchParams('view=fullscreen'))).toEqual({
       kind: 'message',
@@ -404,6 +412,11 @@ describe('matchSurface', () => {
     expect(matchSurface('/de/calendar/day/2026-08-06'))
       .toEqual({ surface: 'calendar', segments: ['day', '2026-08-06'] });
     expect(matchSurface('/de')).toEqual({ surface: 'mail', segments: [] });
+  });
+
+  it('maps /tasks to the Tasks app (#1698), not to the calendar', () => {
+    expect(matchSurface('/tasks')).toEqual({ surface: 'tasks', segments: [] });
+    expect(matchSurface('/de/tasks')).toEqual({ surface: 'tasks', segments: [] });
   });
 
   it('strips query and hash', () => {

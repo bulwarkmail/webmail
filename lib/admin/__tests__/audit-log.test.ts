@@ -66,10 +66,28 @@ describe('audit log on one instance', () => {
     expect((await readFile(statePath('audit.log.1'), 'utf-8')).endsWith('"ip":"203.0.113.1"}\n')).toBe(true);
     expect(await readFile(statePath('audit.log.2'), 'utf-8')).toBe('one\n');
     expect(await readFile(statePath('audit.log.3'), 'utf-8')).toBe('two\n');
-    expect(await readAuditLog()).toEqual({ entries: [], total: 0 });
+    // The entry moved to audit.log.1 and is still shown.
+    expect((await readAuditLog()).entries.map((e) => e.action)).toEqual(['admin.login']);
 
     await auditLog('admin.logout', {}, '203.0.113.1');
-    expect((await readAuditLog()).entries.map((e) => e.action)).toEqual(['admin.logout']);
+    expect((await readAuditLog()).entries.map((e) => e.action)).toEqual(['admin.logout', 'admin.login']);
+  });
+
+  it('shows the entries of the rotated files too, newest first, with the filter and pages', async () => {
+    await mkdir(path.join(dir, 'state'), { recursive: true });
+    const line = (action: string, n: number) => `${JSON.stringify({ ts: `2026-11-0${n}T00:00:00.000Z`, action, detail: { n }, ip: '203.0.113.1' })}\n`;
+    await writeFile(statePath('audit.log.3'), line('config.update', 1));
+    await writeFile(statePath('audit.log.2'), line('admin.login_failed', 2));
+    await writeFile(statePath('audit.log.1'), line('config.update', 3) + line('admin.login_failed', 4));
+    await auditLog('admin.login', {}, '203.0.113.1');
+
+    const all = await readAuditLog();
+    expect(all.total).toBe(5);
+    expect(all.entries.map((e) => e.action)).toEqual(['admin.login', 'admin.login_failed', 'config.update', 'admin.login_failed', 'config.update']);
+    const changes = await readAuditLog(1, 50, 'config.update');
+    expect(changes.entries.map((e) => (e.detail as { n: number }).n)).toEqual([3, 1]);
+    const second = await readAuditLog(2, 2);
+    expect(second.entries.map((e) => e.action)).toEqual(['config.update', 'admin.login_failed']);
   });
 });
 

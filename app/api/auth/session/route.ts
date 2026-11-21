@@ -1,33 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { loggableError } from '@/lib/oauth/answer-summary';
 import { encryptSession, decryptSession, sessionAuthHeader, type SessionCredentials } from '@/lib/auth/crypto';
 import { SESSION_COOKIE_MAX_AGE, sessionCookieName } from '@/lib/auth/session-cookie';
-import { getCookieOptions } from '@/lib/oauth/cookie-config';
+import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import {
   clearStalwartAuthContextInStore,
+  readStalwartAuthContextFromStore,
   setStalwartAuthContextInStore,
+  wopiSignInOf,
 } from '@/lib/stalwart/auth-context';
+import { accountSlotFromBody } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { rejectNonJsonBody } from '@/app/api/auth/json-request';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
 import { readImpersonationConfig } from '@/lib/impersonation/master-config';
-import { revokeImpersonationCredential } from '@/lib/impersonation/app-password';
+import { revokeImpersonationGrant } from '@/lib/impersonation/revoke-grant';
+import { discardRestore } from '@/lib/impersonation/restore';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
-import { revokeWopiTokens } from '@/lib/wopi/revocation';
+import { revokeWopiTokens, type WopiSignIn } from '@/lib/wopi/revocation';
 import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, SESSION_TOO_OLD } from '@/lib/auth/session-age';
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
+import { endAdminSessionOfSlots, getClientIP } from '@/lib/admin/session';
+import { auditLog } from '@/lib/admin/audit';
 
-function sessionCookieOptions() {
+/**
+ * A remembered session keeps its cookie for 30 days. One signed in with
+ * "Remember me" unticked (BROWSER_SESSION_SIGN_IN) gets no expiry, so the
+ * browser drops it when its session ends.
+ */
+function sessionCookieOptions(remember = true) {
+  if (!remember) return getSignInCookieOptions(false);
   return {
     ...getCookieOptions(),
     maxAge: SESSION_COOKIE_MAX_AGE,
@@ -43,29 +57,6 @@ function sessionCookieOptions() {
 function holdsMasterPassword(credentials: SessionCredentials): boolean {
   const config = readImpersonationConfig();
   return !!config && credentials.password === config.masterPassword;
-}
-
-async function revokeImpersonationGrant(
-  cookieStore: Awaited<ReturnType<typeof cookies>>,
-): Promise<void> {
-  const grant = openImpersonationGrant(cookieStore.get(IMPERSONATION_GRANT_COOKIE)?.value);
-  cookieStore.delete(IMPERSONATION_GRANT_COOKIE);
-  const config = readImpersonationConfig();
-  if (!grant || !config) return;
-  try {
-    await revokeImpersonationCredential({
-      serverUrl: grant.serverUrl,
-      mailbox: grant.mailbox,
-      masterUser: config.masterUser,
-      masterPassword: config.masterPassword,
-      id: grant.credentialId,
-    });
-  } catch (error) {
-    // The app password still expires on its own; sign-out must not fail.
-    logger.warn('Impersonation credential revocation failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
 }
 
 /**
@@ -97,7 +88,8 @@ function getSlot(request: NextRequest): number {
  * recorded counts as signed in when the server first enforced the limits,
  * a fixed time, so a kept copy of it runs out like any other. Returns the
  * sign-in time, or the limit when the session is too old: its cookies are
- * cleared then.
+ * cleared then, and the office editors it opened in this browser stop
+ * working.
  */
 async function checkSessionAge(
   cookieStore: Awaited<ReturnType<typeof cookies>>,
@@ -108,11 +100,81 @@ async function checkSessionAge(
   // An impersonation login is `target%master`; the policy is the target's.
   const maxHours = await maxSessionHoursFor(credentials.username.split('%', 1)[0]);
   if (isPastMaxAge(signedInAt, maxHours)) {
+    await revokeWopiTokens(cookieStore, slot, [{ username: credentials.username, signedInAt }]);
     cookieStore.delete(sessionCookieName(slot));
     clearStalwartAuthContextInStore(cookieStore, slot);
     return { maxHours };
   }
   return { signedInAt };
+}
+
+/**
+ * The account a restored context names, as the sign-in's context did
+ * (per-user data such as synced settings is keyed on it): the one the
+ * sign-in sealed into the remembered session, or, for a cookie from before
+ * it was kept, the slot's context when that holds the same credential and
+ * names one. A password, or a token login with a full address, proves the
+ * name it claims. A token login that claimed a bare local part and has
+ * neither is `unknown`: the restore asks nobody, and writes no context.
+ */
+function restoredAccount(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  slot: number,
+  credentials: SessionCredentials,
+): { accountName: string | undefined } | 'unknown' {
+  if (credentials.accountName) return { accountName: credentials.accountName };
+  const context = readStalwartAuthContextFromStore(cookieStore, slot);
+  if (context?.accountName && context.authHeader === sessionAuthHeader(credentials)
+    && context.username === credentials.username && context.serverUrl === credentials.serverUrl) {
+    return { accountName: context.accountName };
+  }
+  if (credentials.token === undefined || credentials.username.includes('@')) return { accountName: undefined };
+  return 'unknown';
+}
+
+/**
+ * Write the slot's context from its remembered session, with every field the
+ * sign-in's context had: server, login, credential, the account where it
+ * differs from the login (restoredAccount), and, through the writer, the
+ * session's sign-in time. With the account unknown the slot is left without
+ * a context: the page posts it to /api/auth/stalwart-context right after the
+ * restore, which resolves the account at the mail server through the login
+ * budget, and until then nothing keys per-user data on the bare name.
+ */
+function restoreContext(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  slot: number,
+  credentials: SessionCredentials,
+): void {
+  const account = restoredAccount(cookieStore, slot, credentials);
+  if (account === 'unknown') {
+    // A context already here names no account either (else it would have been taken).
+    clearStalwartAuthContextInStore(cookieStore, slot);
+    return;
+  }
+  const { accountName } = account;
+  setStalwartAuthContextInStore(cookieStore, slot, {
+    serverUrl: credentials.serverUrl,
+    username: credentials.username,
+    authHeader: sessionAuthHeader(credentials),
+    ...(accountName && accountName !== credentials.username ? { accountName } : {}),
+  });
+}
+
+/**
+ * The sign-ins `slots` hold, from their contexts and remembered sessions,
+ * with the times the office editor launch records for them.
+ */
+async function signInsIn(cookieStore: Awaited<ReturnType<typeof cookies>>, slots: number[]): Promise<WopiSignIn[]> {
+  const signIns: WopiSignIn[] = [];
+  for (const slot of slots) {
+    const fromContext = await wopiSignInOf(cookieStore, slot);
+    if (fromContext) signIns.push(fromContext);
+    const token = cookieStore.get(sessionCookieName(slot))?.value;
+    const remembered = token ? decryptSession(token) : null;
+    if (remembered) signIns.push({ username: remembered.username, signedInAt: remembered.signedInAt ?? await limitsEnforcedSince() });
+  }
+  return signIns;
 }
 
 function sessionTooOld(maxHours: number) {
@@ -127,6 +189,8 @@ export async function POST(request: NextRequest) {
   // so a cross-site top-level POST would otherwise reach this handler.
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  const notJson = rejectNonJsonBody(request);
+  if (notJson) return notJson;
   let upstreamUrl = '';
   let upstreamTrusted = false;
   try {
@@ -138,7 +202,9 @@ export async function POST(request: NextRequest) {
 
     // A password signs in with Basic auth, an access token (token login) with
     // Bearer: exactly one of them.
-    const { serverUrl, username, password, token: accessToken, slot: bodySlot } = await request.json();
+    // `remember: false` asks for a cookie that ends with the browser session;
+    // clients that send no flag get the 30-day cookie.
+    const { serverUrl, username, password, token: accessToken, slot: bodySlot, remember } = await request.json();
     if (!serverUrl || !username || typeof (password || accessToken) !== 'string' || !!password === !!accessToken) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -174,7 +240,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'JMAP server not configured' }, { status: 500 });
     }
 
-    const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : getSlot(request);
+    const slot = accountSlotFromBody(bodySlot) ?? getSlot(request);
     const cookieName = sessionCookieName(slot);
     const authHeader = accessToken
       ? `Bearer ${accessToken}`
@@ -214,11 +280,16 @@ export async function POST(request: NextRequest) {
       throw error;
     }
     await refund();
-    // A remembered sign-in starts the maximum session length.
+    // A sign-in kept here starts the maximum session length.
     const signedInAt = Date.now();
-    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt);
+    // The resolved account goes into the remembered session too, also when it
+    // is the login itself, so a restore names it as this sign-in does. So
+    // does the lifetime asked for: a cookie put back later (returning from an
+    // impersonation) keeps it.
+    const remembered = remember !== false;
+    const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt, accountName, remembered);
     const cookieStore = await cookies();
-    cookieStore.set(cookieName, token, sessionCookieOptions());
+    cookieStore.set(cookieName, token, sessionCookieOptions(remembered));
     setStalwartAuthContextInStore(cookieStore, slot, {
       serverUrl: normalizedServerUrl,
       username,
@@ -242,7 +313,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.error('Session store error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session store error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -268,11 +339,7 @@ export async function GET(request: NextRequest) {
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 
-    setStalwartAuthContextInStore(cookieStore, slot, {
-      serverUrl: credentials.serverUrl,
-      username: credentials.username,
-      authHeader: sessionAuthHeader(credentials),
-    });
+    restoreContext(cookieStore, slot, credentials);
 
     // Only return non-sensitive fields. Use PUT to retrieve full credentials.
     const { serverUrl, username } = credentials;
@@ -282,7 +349,7 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } },
     );
   } catch (error) {
-    logger.error('Session read error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session read error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -327,20 +394,34 @@ export async function PUT(request: NextRequest) {
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 
-    setStalwartAuthContextInStore(cookieStore, slot, {
-      serverUrl: credentials.serverUrl,
-      username: credentials.username,
-      authHeader: sessionAuthHeader(credentials),
-    });
+    restoreContext(cookieStore, slot, credentials);
 
     // The browser counts the maximum session length from the server's time.
+    // The account name and the sealed lifetime stay on the server, as before
+    // they were kept.
     const impersonated = isImpersonationSession(cookieStore, slot, credentials);
-    return NextResponse.json({ ...credentials, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
+    const { accountName: _accountName, remember: _remember, ...shared } = credentials;
+    return NextResponse.json({ ...shared, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (error) {
-    logger.error('Session read error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session read error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * End the admin dashboard session a Stalwart admin login in `slots` opened
+ * (#1718). The webmail sign-out goes ahead when the sign-out can't be stored:
+ * the cookie is gone from this browser either way.
+ */
+async function endAdminSessionOf(request: NextRequest, slots: number[]): Promise<void> {
+  try {
+    if (await endAdminSessionOfSlots(slots)) {
+      await auditLog('admin.logout', { reason: 'webmail_sign_out' }, getClientIP(request));
+    }
+  } catch (error) {
+    logger.warn('Could not sign the admin session out with the webmail sign-out', { error: loggableError(error) });
   }
 }
 
@@ -352,8 +433,11 @@ export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const all = request.nextUrl.searchParams.get('all') === 'true';
-    // Office editors opened from here stop working with the session.
-    await revokeWopiTokens(cookieStore, all ? 'all' : getSlot(request));
+    // Office editors opened from here stop working with the session, and so
+    // do those of the sign-ins it holds, wherever they were opened.
+    const slots = all ? Array.from({ length: MAX_ACCOUNT_SLOTS }, (_, i) => i) : [getSlot(request)];
+    await revokeWopiTokens(cookieStore, all ? 'all' : slots[0], await signInsIn(cookieStore, slots));
+    await endAdminSessionOf(request, slots);
 
     if (all) {
       // Delete all session cookies across every slot.
@@ -362,6 +446,7 @@ export async function DELETE(request: NextRequest) {
         clearStalwartAuthContextInStore(cookieStore, i);
       }
       await revokeImpersonationGrant(cookieStore);
+      await discardRestore(cookieStore);
       // A phone that already paired keeps its own sign-in; a QR still on
       // screen stops working.
       await clearPairReauthInStore(cookieStore);
@@ -369,13 +454,17 @@ export async function DELETE(request: NextRequest) {
       const slot = getSlot(request);
       cookieStore.delete(sessionCookieName(slot));
       clearStalwartAuthContextInStore(cookieStore, slot);
-      if (slot === 0) await revokeImpersonationGrant(cookieStore);
+      if (slot === 0) {
+        await revokeImpersonationGrant(cookieStore);
+        // Signing out of the impersonation gives up the way back too.
+        await discardRestore(cookieStore);
+      }
       await clearPairReauthInStore(cookieStore, slot);
     }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    logger.error('Session clear error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Session clear error', { error: loggableError(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

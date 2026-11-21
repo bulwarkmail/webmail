@@ -29,7 +29,11 @@ vi.mock('@/lib/security/same-origin', () => ({ rejectCrossOriginRequest: () => n
 const bimiResolve = vi.hoisted(() => vi.fn(async (_domain: string) => null));
 vi.mock('@/lib/bimi/lookup', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/bimi/lookup')>()),
-  bimiResolver: () => ({ resolve: bimiResolve, clear: () => {} }),
+  bimiResolver: () => ({
+    resolve: bimiResolve,
+    answer: async (domain: string) => ({ indicator: await bimiResolve(domain), deferred: false }),
+    clear: () => {},
+  }),
 }));
 
 import { configManager } from '@/lib/admin/config-manager';

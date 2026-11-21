@@ -9,7 +9,10 @@ import type { SearchKind } from '@/lib/global-search/types';
  *   account:<label|email>             restrict to one login
  *   from: to: subject:                mail filters (1:1 onto SearchFilters)
  *   has:attachment                    mail
- *   is:unread|read|starred|anything   mail (`anything` includes Trash/Junk)
+ *   has:notag|notags                  mail without a tag (same as is:untagged)
+ *   is:unread|read|starred|unstarred  mail
+ *   is:untagged                       mail without a tag
+ *   is:anything                       mail, including Trash/Junk
  *   after:YYYY-MM-DD before:YYYY-MM-DD mail + calendar date bounds
  *   "quoted phrase"                   kept as a phrase for the server
  *
@@ -165,6 +168,7 @@ export function parseSearchQuery(raw: string): ParsedQuery {
         break;
       case 'has':
         if (lower === 'attachment' || lower === 'attachments' || lower === 'file') mail.hasAttachment = true;
+        else if (lower === 'notag' || lower === 'notags') mail.untagged = true;
         else consumed = false;
         break;
       case 'is':
@@ -172,6 +176,7 @@ export function parseSearchQuery(raw: string): ParsedQuery {
         else if (lower === 'read') mail.isUnread = false;
         else if (lower === 'starred' || lower === 'flagged') mail.isStarred = true;
         else if (lower === 'unstarred') mail.isStarred = false;
+        else if (lower === 'untagged') mail.untagged = true;
         else if (lower === 'anything' || lower === 'any') includeTrashAndJunk = true;
         else consumed = false;
         break;

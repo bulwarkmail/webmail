@@ -55,10 +55,10 @@ describe('message links and the account that owns the message', () => {
     expect(c.getEmail).toHaveBeenCalledWith('e1', undefined);
   });
 
-  it('names the owner of a row in a shared folder, and none for the own one', () => {
-    expect(emailLinkSource(row('e1', 'inbox'))).toEqual({ ownerAccountId: null, loginId: null });
+  it('names the owner of a row in a shared folder, none for the own one, and the login of both', () => {
+    expect(emailLinkSource(row('e1', 'inbox'))).toEqual({ ownerAccountId: null, loginId: 'alice@example.org' });
     useEmailStore.setState({ selectedMailbox: 'grp:inbox' });
-    expect(emailLinkSource(row('e1', 'grp:inbox'))).toEqual({ ownerAccountId: 'grp', loginId: null });
+    expect(emailLinkSource(row('e1', 'grp:inbox'))).toEqual({ ownerAccountId: 'grp', loginId: 'alice@example.org' });
   });
 
   it('names the account and login a stamped row of a merged view comes from', () => {

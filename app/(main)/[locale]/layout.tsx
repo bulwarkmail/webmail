@@ -15,6 +15,7 @@ import { ProtocolLaunchHandlerProvider } from "@/components/protocol/protocol-la
 import { ProInterfaceRedirect } from "@/components/pro/pro-interface-redirect";
 import { ImpersonationReconciler } from "@/components/impersonation/impersonation-reconciler";
 import { PluginDialogHost } from "@/components/plugins/plugin-dialog-host";
+import { PluginNoticeHost } from "@/components/plugins/plugin-notice-host";
 import { PluginFileViewerHost } from "@/components/plugins/plugin-file-viewer-host";
 import { ExternalRecipientConfirmHost } from "@/components/email/external-recipient-confirm";
 import { PhishingReportHost } from "@/components/email/phishing-report-host";
@@ -33,6 +34,7 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
+import { ShareSheetHost } from "@/components/share-sheet-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { SessionTimeoutGuard } from "@/components/session/session-timeout-guard";
 import { AccountTemplateSync } from "@/components/templates/account-template-sync";
@@ -42,6 +44,7 @@ import { WindowSyncHost } from "@/components/popout/window-sync-host";
 import {
   DeferredDesktopHost,
   DeferredAccountArchiveRestorePrompt,
+  DeferredSettingsSyncOffer,
   DeferredDesktopOsHost,
   DeferredEditedFilesHost,
   DeferredFileDropHost,
@@ -124,6 +127,7 @@ export default async function LocaleLayout({
                   {children}
                   <DeferredFileDropHost />
                   <PluginDialogHost />
+                  <PluginNoticeHost />
                   {!IS_LITE && <PluginFileViewerHost />}
                   <ExternalRecipientConfirmHost />
                   <PhishingReportHost />
@@ -149,10 +153,12 @@ export default async function LocaleLayout({
                   {!IS_LITE && <DeferredOfflineHost />}
                   {!IS_LITE && <DeferredNotificationActionsHost />}
                   <DevicePolicyHost />
+                  <ShareSheetHost />
                   <MainWindowOnly>
                     <PushNotificationPrompt />
                     {/* Lite is a static bundle: no server keeps an archive there. */}
                     {!IS_LITE && <DeferredAccountArchiveRestorePrompt />}
+                    {!IS_LITE && <DeferredSettingsSyncOffer />}
                   </MainWindowOnly>
                 </ProtocolLaunchHandlerProvider>
               </TourProvider>

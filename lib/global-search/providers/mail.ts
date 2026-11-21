@@ -2,8 +2,10 @@ import { matchesTerms, type ParsedQuery } from '@/lib/global-search/query-parser
 import { getActiveLocalAccountId, indexAccounts } from '@/lib/global-search/accounts';
 import type { MailHit, SearchAccount, SearchProvider } from '@/lib/global-search/types';
 import { andFilters, buildJMAPFilter } from '@/lib/jmap/search-utils';
+import { knownTagIds } from '@/lib/known-tag-ids';
+import { getEmailTagIds } from '@/lib/thread-utils';
 import type { Email, Mailbox } from '@/lib/jmap/types';
-import { findMailboxByRole, jmapMailboxIdOf, resolveSourceFolderName, trashAndJunkExclusion, type UnifiedAccountClient } from '@/lib/unified-mailbox';
+import { findMailboxByRole, jmapMailboxIdOf, resolveSourceFolderName, withFolderlessExclusion, type UnifiedAccountClient } from '@/lib/unified-mailbox';
 import { buildUnifiedAccountClients, useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 
@@ -25,6 +27,14 @@ function includesCi(haystack: string[], needle: string): boolean {
   return haystack.some((h) => h.toLowerCase().includes(n));
 }
 
+/** Whether a message carries a defined tag: what `is:untagged` leaves out on the server. */
+function hasKnownTag(email: Email): boolean {
+  const ids = getEmailTagIds(email.keywords);
+  if (ids.length === 0) return false;
+  const known = new Set(knownTagIds().map((id) => id.toLowerCase()));
+  return ids.some((id) => known.has(id.toLowerCase()));
+}
+
 /** The structured operators, applied to an already-loaded message. */
 export function emailMatchesFilters(email: Email, parsed: ParsedQuery): boolean {
   const { mail } = parsed;
@@ -34,6 +44,7 @@ export function emailMatchesFilters(email: Email, parsed: ParsedQuery): boolean 
   if (mail.hasAttachment !== null && Boolean(email.hasAttachment) !== mail.hasAttachment) return false;
   if (mail.isUnread !== null && Boolean(email.keywords?.$seen) === mail.isUnread) return false;
   if (mail.isStarred !== null && Boolean(email.keywords?.$flagged) !== mail.isStarred) return false;
+  if (mail.untagged && hasKnownTag(email)) return false;
   const day = email.receivedAt?.slice(0, 10) ?? '';
   if (mail.dateAfter && day < mail.dateAfter) return false;
   if (mail.dateBefore && day > mail.dateBefore) return false;
@@ -70,13 +81,13 @@ type JmapFilter = Record<string, unknown>;
  * exclusion. Servers without those role folders just search everything.
  */
 export function mailFilterFor(parsed: ParsedQuery, entry: UnifiedAccountClient): JmapFilter {
-  const base = buildJMAPFilter(parsed.text, parsed.mail);
+  const base = buildJMAPFilter(parsed.text, parsed.mail, undefined, knownTagIds());
   if (parsed.mailboxRole) {
     const mailbox = findMailboxByRole(entry.mailboxes, parsed.mailboxRole);
     return mailbox ? andFilters(base, { inMailbox: jmapMailboxIdOf(entry, mailbox) }) : base;
   }
-  if (parsed.includeTrashAndJunk) return base;
-  return andFilters(base, trashAndJunkExclusion(entry));
+  // `is:anything` lifts Trash and Junk, never the team notes.
+  return withFolderlessExclusion(base, entry, !parsed.includeTrashAndJunk);
 }
 
 export const mailProvider: SearchProvider = {

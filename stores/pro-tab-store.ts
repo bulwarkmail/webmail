@@ -5,9 +5,11 @@ import type { ComposePrefill } from '@/lib/plugin-compose-gate';
 import type { EmailWriteSource } from '@/stores/email-store';
 import type { SearchScope } from '@/lib/global-search/query-parser';
 import { useOfflineStore } from '@/lib/offline/state';
+import { openComposerInWindow } from '@/lib/popout/compose-in-window';
+import type { ComposePopoutPayload } from '@/lib/popout/compose-payload';
 
 export type ProTabKind =
-  | 'mail' | 'calendar' | 'contacts' | 'files' | 'settings'
+  | 'mail' | 'calendar' | 'tasks' | 'contacts' | 'files' | 'settings'
   | 'compose' | 'email' | 'folder' | 'search';
 
 export type ProAppTabKind = Exclude<ProTabKind, 'compose' | 'email' | 'folder' | 'search'>;
@@ -42,6 +44,8 @@ export interface ProReplyContext {
   htmlBody?: string;
   receivedAt?: string;
   accountId?: string;
+  sourceAccountId?: string;
+  sourceClientAccountId?: string;
   /** The original carries the phishing mark. */
   phishingMarked?: boolean;
   attachments?: Array<{
@@ -76,6 +80,20 @@ export interface ProComposeTabData {
   title: string;
 }
 
+/** What a composer window starts from: the same as a compose tab. */
+function composePayloadOf(data: ProComposeTabData): ComposePopoutPayload {
+  return {
+    mode: data.mode,
+    replyTo: data.replyTo,
+    initialDraftText: data.initialDraftText,
+    initialData: data.initialData ?? null,
+    prefill: data.prefill ?? null,
+    ...(data.initialFiles?.length ? { initialFiles: data.initialFiles } : {}),
+    sourceEmailId: data.sourceEmailId ?? null,
+    sourceEmailSource: data.sourceEmailSource ?? null,
+  };
+}
+
 export interface ProEmailTabData {
   accountId: string;
   emailId: string;
@@ -83,18 +101,20 @@ export interface ProEmailTabData {
   title: string;
   /**
    * Connected-account id (login) whose client fetches this email, with
-   * `accountId` the JMAP account there; unset = the active account. Set for
-   * a list row and a hit from another login (global search) - bare email ids
-   * are ambiguous across logins (#847).
+   * `accountId` the JMAP account there. Every opener names it - bare email
+   * ids are ambiguous across logins (#847). Unset only in a tab kept from a
+   * version that wrote none: it belongs to the only login there is, or to
+   * none (components/pro/pro-tab-login.ts).
    */
   clientAccountId?: string;
 }
 
 export interface ProFolderTabData {
   /**
-   * Connected-account id the folder belongs to (multi-account sidebar
-   * groups); null = the active account. Used to resolve the JMAP client the
-   * folder tab fetches through.
+   * Connected-account id (login) the folder belongs to, whose client the
+   * folder tab fetches through. Named when the tab is opened, the active
+   * login too. Null only in a tab kept from a version that wrote none for
+   * the active login (see ProEmailTabData.clientAccountId).
    */
   accountId: string | null;
   mailboxId: string;
@@ -175,7 +195,10 @@ export interface ProTabCoreState {
 
 interface ProTabState extends ProTabCoreState {
   openTab: (kind: ProAppTabKind) => string;
+  /** A compose tab, or a window of its own with "Always write messages in a new window": then ''. */
   openComposeTab: (data: ProComposeTabData) => string;
+  /** A compose tab, whatever that setting says. */
+  openComposeTabHere: (data: ProComposeTabData) => string;
   openEmailTab: (data: ProEmailTabData, opts?: OpenEmailTabOptions) => string;
   /**
    * Open a mailbox in its own tab (sidebar folder dragged onto a tab strip
@@ -221,12 +244,18 @@ interface ProTabState extends ProTabCoreState {
   collapseSplit: () => void;
 
   updateTabTitle: (id: string, title: string) => void;
+  /**
+   * Writes `login` into a message or folder tab that names none (one kept
+   * from before tabs named their login). A tab that names one keeps it.
+   */
+  nameTabLogin: (id: string, login: string) => void;
   updateComposeDraft: (id: string, draft: ComposerDraftData) => void;
 }
 
 const TAB_BLUEPRINTS: Record<ProAppTabKind, { labelKey: string }> = {
   mail:     { labelKey: 'mail' },
   calendar: { labelKey: 'calendar' },
+  tasks:    { labelKey: 'tasks' },
   contacts: { labelKey: 'contacts' },
   files:    { labelKey: 'files' },
   settings: { labelKey: 'settings' },
@@ -455,6 +484,14 @@ export const useProTabStore = create<ProTabState>()(
         },
 
         openComposeTab: (data) => {
+          // "Always write messages in a new window": the window instead of a tab, and the
+          // tab after all when the window doesn't show it.
+          const addTab = () => get().openComposeTabHere(data);
+          if (openComposerInWindow(composePayloadOf(data), { notShown: addTab })) return '';
+          return addTab();
+        },
+
+        openComposeTabHere: (data) => {
           const newTab: ProTab = {
             id: makeId(),
             kind: 'compose',
@@ -719,6 +756,21 @@ export const useProTabStore = create<ProTabState>()(
             tabs: get().tabs.map((tab) => (tab.id === id
               ? { ...tab, title, ...(tab.emailData ? { emailData: { ...tab.emailData, title } } : {}) }
               : tab)),
+          });
+        },
+
+        nameTabLogin: (id, login) => {
+          const tab = get().tabs.find((candidate) => candidate.id === id);
+          if (!tab || !login) return;
+          const unnamedEmail = tab.kind === 'email' && !!tab.emailData && !tab.emailData.clientAccountId;
+          const unnamedFolder = tab.kind === 'folder' && !!tab.folderData && !tab.folderData.accountId;
+          if (!unnamedEmail && !unnamedFolder) return;
+          set({
+            tabs: get().tabs.map((candidate) => {
+              if (candidate.id !== id) return candidate;
+              if (unnamedEmail) return { ...candidate, emailData: { ...candidate.emailData!, clientAccountId: login } };
+              return { ...candidate, folderData: { ...candidate.folderData!, accountId: login } };
+            }),
           });
         },
 

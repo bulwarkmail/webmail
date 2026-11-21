@@ -4,16 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Loader2, Pencil, Plus, Trash2, Users, X } from "@/components/icons";
 import { TagBadge } from "@/components/email/tag-badge";
-import { useAccountTags, TagScopeContext, clientForLogin, type TagScope } from "@/hooks/use-account-tags";
+import { useAccountTags, useInboxRights, maySetSharedTags, TagScopeContext, clientForLogin, type TagScope } from "@/hooks/use-account-tags";
 import { useRestriction } from "@/hooks/use-restriction";
 import { MetadataTooLargeError } from "@/lib/jmap/bulwark-metadata";
-import type { MailboxRights } from "@/lib/jmap/types";
-import { composeKeywordId, MAX_KEYWORD_ID_LENGTH } from "@/lib/keyword-nesting";
-import { MAX_SHARED_TAG_LABEL, groupAccountTags, type SharedTagChange } from "@/lib/shared-tags";
+import { chooseKeywordId, isKeywordNameTaken, MAX_KEYWORD_ID_LENGTH } from "@/lib/keyword-nesting";
+import { MAX_SHARED_TAG_LABEL, groupAccountTags, knownSharedTagColor, type SharedTagChange } from "@/lib/shared-tags";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
-import { KEYWORD_PALETTE, useSettingsStore, type KeywordDefinition } from "@/stores/settings-store";
+import { useSettingsStore, type KeywordDefinition } from "@/stores/settings-store";
 import { SharedTagsSaveDeferredError, saveSharedTags, sharedTagsKey, useSharedTagsStore } from "@/stores/shared-tags-store";
 import { toast } from "@/stores/toast-store";
 import { toUnicodeEmail } from "@/lib/idn";
@@ -21,38 +20,10 @@ import { KeywordColorPicker } from "./keyword-settings";
 import { OrgLockedNote } from "./org-locked-note";
 import { SettingsSection } from "./settings-section";
 
-/** Whether the rights on a group's Inbox let the user change its metadata. */
-export function maySetSharedTags(rights: Partial<MailboxRights> | null | undefined): boolean {
-  if (!rights) return false;
-  // Stalwart 1.0 names the right; a server that doesn't counts renaming.
-  return typeof rights.maySetMetadata === "boolean" ? rights.maySetMetadata : rights.mayRename === true;
-}
-
-/**
- * The user's rights on the Inbox of a confirmed group account, from the
- * folder list or asked once. Nothing is asked for any other account.
- */
-function useInboxRights(scope: TagScope, enabled: boolean): Partial<MailboxRights> | null | undefined {
-  const fromStore = useEmailStore((state) =>
-    state.mailboxes.find((mailbox) => mailbox.accountId === scope.accountId && mailbox.role === "inbox")?.myRights);
-  const [fetched, setFetched] = useState<Partial<MailboxRights> | null | undefined>(undefined);
-  useEffect(() => {
-    if (!enabled || fromStore) return;
-    let cancelled = false;
-    const client = clientForLogin(scope.loginId) as unknown as { getMailboxes?: (accountId?: string) => Promise<Array<{ role?: string; myRights?: MailboxRights }>> } | null;
-    if (!client?.getMailboxes) return;
-    client.getMailboxes(scope.accountId)
-      .then((mailboxes) => { if (!cancelled) setFetched(mailboxes.find((m) => m.role === "inbox")?.myRights ?? null); })
-      .catch(() => { if (!cancelled) setFetched(null); });
-    return () => { cancelled = true; };
-  }, [enabled, fromStore, scope.loginId, scope.accountId]);
-  return enabled ? fromStore ?? fetched : undefined;
-}
-
 function SharedTagForm({
   initial,
   fixedId,
-  takenIds,
+  taken,
   saving,
   onSave,
   onCancel,
@@ -60,7 +31,8 @@ function SharedTagForm({
   initial?: KeywordDefinition;
   /** The id stays: an existing tag or one found on messages. */
   fixedId?: string;
-  takenIds: string[];
+  /** The account's other tags, whose ids and names a new tag can't have. */
+  taken: KeywordDefinition[];
   saving: boolean;
   /** `color` only when it was picked (or the tag is new), so a color this version doesn't know survives a rename. */
   onSave: (id: string, value: { label: string; color?: string }) => void;
@@ -70,13 +42,18 @@ function SharedTagForm({
   const [label, setLabel] = useState(initial?.label ?? "");
   const [color, setColor] = useState(initial?.color ?? "blue");
   const [colorPicked, setColorPicked] = useState(false);
-  const id = fixedId ?? composeKeywordId(null, label);
-  const duplicate = !fixedId && id.length > 0 && takenIds.includes(id.toLowerCase());
+  const id = fixedId ?? chooseKeywordId(null, label, taken.map((tag) => tag.id));
+  const duplicate = !fixedId && isKeywordNameTaken(taken, null, label);
   const tooLong = !fixedId && id.length > MAX_KEYWORD_ID_LENGTH;
-  const valid = label.trim().length > 0 && id.length > 0 && !duplicate && !tooLong;
+  const [colorInvalid, setColorInvalid] = useState(false);
+  const valid = label.trim().length > 0 && id.length > 0 && !duplicate && !tooLong && !colorInvalid;
   const keepsColor = !!initial && !colorPicked;
   const save = () => {
     if (valid && !saving) onSave(id, keepsColor ? { label: label.trim() } : { label: label.trim(), color });
+  };
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") save();
+    if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
   };
 
   return (
@@ -92,10 +69,7 @@ function SharedTagForm({
           onChange={(e) => setLabel(e.target.value)}
           maxLength={MAX_SHARED_TAG_LABEL}
           autoFocus
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
-            if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-          }}
+          onKeyDown={onKeyDown}
           className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-hidden"
         />
         {duplicate && <p className="mt-1 text-xs text-destructive">{t("exists")}</p>}
@@ -103,7 +77,13 @@ function SharedTagForm({
       </div>
       <div>
         <p className="mb-1.5 text-xs font-medium text-muted-foreground">{t("color")}</p>
-        <KeywordColorPicker value={color} onChange={(next) => { setColor(next); setColorPicked(true); }} />
+        <KeywordColorPicker
+          value={color}
+          onChange={(next) => { setColor(next); setColorPicked(true); }}
+          allowCustom
+          onInvalidChange={setColorInvalid}
+          onCodeKeyDown={onKeyDown}
+        />
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2">
         <button
@@ -159,7 +139,7 @@ function SharedAccountTagEditor({ scope, name }: { scope: TagScope; name: string
     const found = new Set(discoveredIds);
     return { shared: entry.tags, discovered: definitions.filter((tag) => found.has(tag.id)) };
   }, [status, entry, nested]);
-  const takenIds = useMemo(() => [...shared, ...discovered].map((tag) => tag.id.toLowerCase()), [shared, discovered]);
+  const taken = useMemo(() => [...shared, ...discovered], [shared, discovered]);
 
   // Back to the row's edit button once a change is saved.
   useEffect(() => {
@@ -222,13 +202,13 @@ function SharedAccountTagEditor({ scope, name }: { scope: TagScope; name: string
     if (editing && editing.id === tag.id) {
       const raw = entry?.stored?.entries[tag.id];
       // The form shows the stored color when this version knows it.
-      const initial = { ...tag, color: typeof raw?.color === "string" && KEYWORD_PALETTE[raw.color] ? raw.color : tag.color };
+      const initial = { ...tag, color: knownSharedTagColor(raw?.color) ?? tag.color };
       return (
         <SharedTagForm
           key={tag.id}
           initial={initial}
           fixedId={tag.id}
-          takenIds={takenIds}
+          taken={taken}
           saving={saving}
           onCancel={() => { setEditing(null); setFocusId(tag.id); }}
           onSave={async (id, value) => {
@@ -317,7 +297,7 @@ function SharedAccountTagEditor({ scope, name }: { scope: TagScope; name: string
           </p>
         ) : editing && !editing.id ? (
           <SharedTagForm
-            takenIds={takenIds}
+            taken={taken}
             saving={saving}
             onCancel={() => setEditing(null)}
             onSave={async (id, value) => { if (await save({ id, value })) { setEditing(null); setFocusId(id); } }}

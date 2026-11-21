@@ -9,7 +9,7 @@
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { CalendarEvent, CalendarParticipant, Email } from '@/lib/jmap/types';
 import {
-  extractMethodFromRawIcs, findCalendarAttachment, findParticipantByEmails, getInvitationMethod,
+  findCalendarAttachment, findParticipantByEmails, getInvitationMethod,
   type InvitationMethod,
 } from '@/lib/calendar-invitation';
 
@@ -152,7 +152,6 @@ export async function readOwnInvitation(client: IJMAPClient, email: Email): Prom
   ]);
   const parsedEvent = events[0];
   if (!parsedEvent) return null;
-  let method = getInvitationMethod(parsedEvent, { email, attachment });
-  if (method === 'unknown' && rawText) method = extractMethodFromRawIcs(rawText);
+  const method = getInvitationMethod(parsedEvent, { email, attachment, rawIcs: rawText });
   return { parsedEvent, method };
 }

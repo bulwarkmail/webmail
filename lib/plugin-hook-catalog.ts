@@ -83,7 +83,7 @@ export const HOOK_CATALOG = {
   onBeforeReply: H('mail-read', 'intercept', 'email:read', 'ReplyContext', 'when Reply is chosen, before the composer opens'),
   onBeforeReplyAll: H('mail-read', 'intercept', 'email:read', 'ReplyContext', 'when Reply all is chosen, before the composer opens'),
   onBeforeForward: H('mail-read', 'intercept', 'email:read', 'ReplyContext', 'when Forward is chosen, before the composer opens'),
-  onBeforeExternalLink: H('mail-read', 'intercept', 'ui:observe', 'ExternalLinkContext', 'when a link is opened (mail, reader view, events, contacts, notifications, the unsubscribe link, links other plugins open); return false to stop it or { href } to change it'),
+  onBeforeExternalLink: H('mail-read', 'intercept', 'links:check', 'ExternalLinkContext', 'when a link is opened (mail, reader view, events, contacts, notifications, the unsubscribe link, links other plugins open); return false to stop it or { href } to change it'),
   onAvatarResolve: H('mail-read', 'transform', 'email:read', 'string | null (avatar URL), { email, name }', 'when a sender avatar is needed'),
 
   // ─── Mail: composing ───────────────────────────────────────
@@ -249,6 +249,7 @@ export const HOOK_CATALOG = {
   onIdentityDelete: H('identities', 'observer', 'identity:read', '{ identityId }', 'after an identity was deleted'),
   onIdentitySelect: H('identities', 'observer', 'identity:read', 'IdentityView', 'when another From identity is chosen in the composer'),
   onSignatureRender: H('identities', 'transform', 'identity:read', '{ html, text }, { identityId }', 'when a signature is inserted into the composer'),
+  onSelectReplyIdentity: H('identities', 'transform', 'email:send', 'ReplyIdentityContext', 'when a reply, reply-all, forward or quick reply picks its From identity; return the id of one of the listed identities to send from it, or nothing to keep Bulwark\'s pick. A From the user picked by hand wins'),
 
   // ─── Filters ───────────────────────────────────────────────
   onFiltersLoaded: H('filters', 'observer', 'filters:read', 'FilterRuleView[]', 'after filter rules were loaded'),
@@ -301,8 +302,9 @@ export const HOOK_CATALOG = {
   onLocaleChange: H('theme', 'observer', 'ui:observe', '{ locale }', 'after the app language changed'),
 
   // ─── Notifications ─────────────────────────────────────────
-  onToastShow: H('notifications', 'observer', 'ui:observe', '{ id, type, title, message }', 'when the app shows a toast'),
-  onToastDismiss: H('notifications', 'observer', 'ui:observe', '{ id }', 'when a toast is dismissed'),
+  // A toast's text carries what it is about (a reminder's event title, another plugin's message).
+  onToastShow: H('notifications', 'observer', 'ui:notifications', '{ id, type, title, message }', 'when the app shows a toast'),
+  onToastDismiss: H('notifications', 'observer', 'ui:notifications', '{ id }', 'when a toast is dismissed'),
   onNotificationClick: H('notifications', 'observer', 'ui:notifications', '{ tag }', 'when a notification the plugin showed, or one from the app, is clicked'),
 
   // ─── App lifecycle ─────────────────────────────────────────

@@ -14,8 +14,9 @@ import { isPluginPostDenied } from '@/lib/plugin-sandbox/host-api';
 // `/api/plugin-proxy?plugin=<other>&credential=<id>` injects another
 // plugin's connected account or admin key into a request and hands the
 // answer back, and `/api/plugin-secrets` re-points or deletes them. The
-// agenda, fetch-ical and translate routes gave data and reach the plugin's
-// own permissions would not. A manifest entry of the bare `/api/` prefix
+// agenda and fetch-ical routes gave data and reach the plugin's own
+// permissions would not. The translation route is open to a plugin that
+// lists it, which is how the Translate plugin works (#1786). A manifest entry of the bare `/api/` prefix
 // also passed validation and allowed every route at once.
 
 describe('routes no plugin may POST to', () => {
@@ -24,7 +25,6 @@ describe('routes no plugin may POST to', () => {
     '/api/plugin-secrets',
     '/api/calendar-agenda',
     '/api/fetch-ical',
-    '/api/translate',
     '/api/account-archive',
     '/api/%70lugin-proxy',
     '/api//plugin-secrets',
@@ -36,6 +36,10 @@ describe('routes no plugin may POST to', () => {
 
   it('leaves a plugin sidecar route alone', () => {
     expect(isPluginPostDenied('/api/my-plugin/webhook')).toBe(false);
+  });
+
+  it('leaves the translation route to the plugin allowlist', () => {
+    expect(isPluginPostDenied('/api/translate')).toBe(false);
   });
 });
 

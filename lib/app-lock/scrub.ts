@@ -6,8 +6,11 @@
 
 import { openSealedLocal, sealDraft, sealLocal } from './vault';
 
-/** Subjects and senders: a list snapshot for a fast start, and the Pro tabs' names. */
-const LOCAL_KEYS = ['email-snapshot', 'pro-tabs'];
+/**
+ * Subjects and senders: a list snapshot for a fast start, and the Pro tabs' names. And which
+ * opened messages passed the sender check (lib/receipt-answers.ts), by login, account and blob id.
+ */
+const LOCAL_KEYS = ['email-snapshot', 'pro-tabs', 'bulwark-receipt-checked'];
 /** People's names, and what notices said. Nothing fetches these back, so they wait sealed for the unlock. */
 const SEALED_LOCAL_KEYS = ['contact-storage', 'notification-center'];
 const SESSION_KEYS = ['bulwark-offline-lost'];

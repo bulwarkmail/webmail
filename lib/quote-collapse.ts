@@ -2,7 +2,9 @@
  * Quote collapsing for the email viewer (issue #480).
  *
  * When a reply carries the original message as a trailing quote, hide it by
- * default and inject a Gmail-style "•••" pill that toggles it. Runs against
+ * default and inject a Gmail-style "•••" pill that toggles it. An explicit
+ * quote container followed by other content starts expanded, with a manual
+ * toggle, so interleaved replies stay visible on open. Runs against
  * the live iframe DOM from the parent frame AFTER sanitization, so the
  * injected button and its click listener are not subject to the sanitizer or
  * the iframe's script-blocking CSP (parent-attached DOM listeners still fire).
@@ -75,6 +77,8 @@ function hasVisibleContent(body: HTMLElement, marker: Element, side: 'before' | 
     if (rel & Node.DOCUMENT_POSITION_CONTAINED_BY) continue;
     if (!(rel & positionBit)) continue;
     if (node.nodeType === Node.TEXT_NODE) {
+      // The reader appends its own stylesheet to body; CSS is not mail text.
+      if (node.parentElement?.tagName === 'STYLE') continue;
       if ((node.nodeValue || '').trim() !== '') return true;
     } else if ((node as Element).tagName === 'IMG') {
       // An image counts as content (image-only replies exist), but not the
@@ -99,6 +103,7 @@ function onlyQuotesAfter(body: HTMLElement, marker: Element): boolean {
     const rel = marker.compareDocumentPosition(node);
     if (rel & Node.DOCUMENT_POSITION_CONTAINED_BY) continue;
     if (!(rel & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+    if (node.nodeType === Node.TEXT_NODE && node.parentElement?.tagName === 'STYLE') continue;
     const visible = node.nodeType === Node.TEXT_NODE
       ? (node.nodeValue || '').trim() !== ''
       : (node as Element).tagName === 'IMG' && !(node as Element).hasAttribute('data-blocked-src');
@@ -159,16 +164,17 @@ function collectSeparatorRange(body: HTMLElement, marker: Element): HTMLElement[
 }
 
 /**
- * Detect a trailing quoted original in `doc` and collapse it behind a "•••"
- * toggle button. No-op (returns false) when no marker is found, when the
- * quote IS the whole message (nothing visible before it - collapsing would
- * render the mail as a lone button), or - for container markers - when
- * visible content follows the quote (interleaved/bottom-posted reply, where
- * hiding "the rest" would swallow real content).
+ * Detect a quoted original in `doc` and add a "•••" toggle button. Trailing
+ * quotes collapse by default; explicit containers followed by other content
+ * start expanded and only fold on the user's click. No-op when no marker is
+ * found, when the quote IS the whole message, or when a bare-blockquote
+ * fallback has content after it and its boundary is less certain.
  *
- * Idempotent per document. Returns true when a quote was collapsed.
+ * `onToggle` runs after each user toggle so the reader can resize its frame,
+ * even when the document's scroll height is still pinned to the old viewport.
+ * Idempotent per document. Returns true when a quote toggle was initialized.
  */
-export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels): boolean {
+export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels, onToggle?: () => void): boolean {
   const body = doc.body;
   if (!body || body.querySelector(`[${QUOTE_TOGGLE_ATTR}]`)) return false;
 
@@ -176,14 +182,21 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels): 
   if (!marker) return false;
 
   let isSeparator = SEPARATOR_SELECTORS.some((sel) => marker.matches(sel));
+  let initiallyExpanded = false;
 
   // Never collapse the entire message down to just the toggle.
   if (!hasVisibleContent(body, marker, 'before')) return false;
   if (!isSeparator && hasVisibleContent(body, marker, 'after')) {
-    // Interleaved reply: real content after the quote container - leave as is.
-    if (!onlyQuotesAfter(body, marker)) return false;
-    // More quote follows: fold the whole run from here to the end.
-    isSeparator = true;
+    if (onlyQuotesAfter(body, marker)) {
+      // More quote follows: fold the whole run from here to the end.
+      isSeparator = true;
+    } else if (CONTAINER_SELECTORS.some((sel) => marker.matches(sel))) {
+      // A reply or signature follows an explicit container. Keep everything
+      // visible on open, but let the user fold just that container.
+      initiallyExpanded = true;
+    } else {
+      return false;
+    }
   }
 
   const hidden = isSeparator
@@ -193,9 +206,10 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels): 
   const button = doc.createElement('button');
   button.type = 'button';
   button.setAttribute(QUOTE_TOGGLE_ATTR, '');
-  button.setAttribute('aria-expanded', 'false');
-  button.setAttribute('aria-label', labels.show);
-  button.title = labels.show;
+  button.setAttribute('aria-expanded', String(initiallyExpanded));
+  const initialLabel = initiallyExpanded ? labels.hide : labels.show;
+  button.setAttribute('aria-label', initialLabel);
+  button.title = initialLabel;
   button.textContent = '•••';
   // Inline styles only: the iframe has no app CSS, and style-src allows
   // inline. Neutral grays read fine after the dark-mode invert filter too.
@@ -207,7 +221,7 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels): 
   button.addEventListener('mouseleave', () => { button.style.background = '#e3e6ea'; });
 
   marker.parentNode?.insertBefore(button, marker);
-  hidden.forEach(hideElement);
+  if (!initiallyExpanded) hidden.forEach(hideElement);
 
   button.addEventListener('click', () => {
     const expanded = button.getAttribute('aria-expanded') === 'true';
@@ -223,6 +237,7 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels): 
     const label = expanded ? labels.show : labels.hide;
     button.setAttribute('aria-label', label);
     button.title = label;
+    onToggle?.();
   });
 
   return true;

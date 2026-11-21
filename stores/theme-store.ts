@@ -54,6 +54,11 @@ interface ThemeState {
   // Custom theme system
   installedThemes: InstalledTheme[];
   activeThemeId: string | null; // null = built-in default
+  /**
+   * The user picked `activeThemeId` themselves, Default included. Until they
+   * do, the theme policy's defaultThemeId applies.
+   */
+  themeChoiceMade: boolean;
 
   /** `chosen: false` sets a mode the user did not pick (a synced one they never chose). */
   setTheme: (theme: Theme, opts?: { chosen?: boolean }) => void;
@@ -61,15 +66,22 @@ interface ThemeState {
   initializeTheme: () => void;
   /** Applies the theme policy's color mode; runs whenever the policy changes. */
   applyColorModePolicy: () => void;
+  /**
+   * Switches to the theme policy's defaultThemeId while the user has not
+   * picked a theme. Runs when the policy changes and after the server
+   * themes are installed.
+   */
+  applyThemePolicyDefault: () => void;
 
   // Custom theme management
   installTheme: (file: File) => Promise<{ success: boolean; error?: string; warnings?: string[] }>;
   uninstallTheme: (id: string) => void;
-  activateTheme: (id: string | null) => void;
+  /** `chosen: false` switches without counting it as the user's pick (an admin forcing or disabling a theme). */
+  activateTheme: (id: string | null, opts?: { chosen?: boolean }) => void;
   syncServerThemes: () => Promise<void>;
 }
 
-type PersistedThemeState = Pick<ThemeState, 'theme' | 'themeChosen' | 'activeThemeId' | 'installedThemes'>;
+type PersistedThemeState = Pick<ThemeState, 'theme' | 'themeChosen' | 'activeThemeId' | 'themeChoiceMade' | 'installedThemes'>;
 
 const getSystemTheme = (): 'light' | 'dark' => {
   if (typeof window === 'undefined') return 'light';
@@ -109,6 +121,7 @@ export const useThemeStore = create<ThemeState>()(
       hydrated: false,
       installedThemes: [...BUILTIN_THEMES],
       activeThemeId: null,
+      themeChoiceMade: false,
 
       setTheme: (requested, opts) => {
         const themeChosen = opts?.chosen ?? true;
@@ -137,8 +150,34 @@ export const useThemeStore = create<ThemeState>()(
         if (policyColorMode(theme, themeChosen) !== theme) get().setTheme(theme, { chosen: themeChosen });
       },
 
+      applyThemePolicyDefault: () => {
+        const { hydrated, themeChoiceMade, activeThemeId, installedThemes } = get();
+        // Before rehydration the persisted choice is not known yet.
+        if (!hydrated || themeChoiceMade) return;
+        if (getForcedThemeId(installedThemes)) return;
+        const defaultId = usePolicyStore.getState().policy.themePolicy?.defaultThemeId;
+        if (!defaultId || activeThemeId === defaultId) return;
+        // An admin theme arrives with syncServerThemes, which calls this again.
+        const t = installedThemes.find(it => it.id === defaultId);
+        if (!t) return;
+        if (t.css) {
+          set({ activeThemeId: defaultId });
+          applyCustomThemeCSS(t, get().resolvedTheme);
+          return;
+        }
+        pluginStorage.getThemeCSS(defaultId).then(css => {
+          if (!css || get().themeChoiceMade || get().activeThemeId !== activeThemeId) return;
+          const withCss = { ...t, css };
+          set(state => ({
+            activeThemeId: defaultId,
+            installedThemes: state.installedThemes.map(it => it.id === defaultId ? withCss : it),
+          }));
+          applyCustomThemeCSS(withCss, get().resolvedTheme);
+        });
+      },
+
       initializeTheme: () => {
-        const { theme, activeThemeId, installedThemes } = get();
+        const { theme, activeThemeId, installedThemes, themeChoiceMade } = get();
         const resolvedTheme = theme === 'system' ? getSystemTheme() : theme;
         applyTheme(resolvedTheme);
         set({ resolvedTheme, hydrated: true });
@@ -146,7 +185,7 @@ export const useThemeStore = create<ThemeState>()(
         // Determine effective theme: forced theme > user choice > policy default > none
         const forcedThemeId = getForcedThemeId(installedThemes);
         let effectiveThemeId = forcedThemeId ?? activeThemeId;
-        if (!effectiveThemeId) {
+        if (!effectiveThemeId && !themeChoiceMade) {
           const policyState = usePolicyStore.getState();
           const tp = policyState.policy.themePolicy;
           if (tp?.defaultThemeId) {
@@ -323,8 +362,9 @@ export const useThemeStore = create<ThemeState>()(
         });
       },
 
-      activateTheme: (id: string | null) => {
+      activateTheme: (id: string | null, opts) => {
         const { installedThemes, resolvedTheme } = get();
+        const themeChoiceMade = (opts?.chosen ?? true) || get().themeChoiceMade;
         const forcedThemeId = getForcedThemeId(installedThemes);
 
         if (forcedThemeId && id !== forcedThemeId) {
@@ -339,7 +379,7 @@ export const useThemeStore = create<ThemeState>()(
         if (id === null) {
           removeThemeCSS();
           removeThemeSkinCSS();
-          set({ activeThemeId: null });
+          set({ activeThemeId: null, themeChoiceMade });
           return;
         }
 
@@ -359,12 +399,12 @@ export const useThemeStore = create<ThemeState>()(
               ),
             }));
           });
-          set({ activeThemeId: id });
+          set({ activeThemeId: id, themeChoiceMade });
           return;
         }
 
         applyCustomThemeCSS(theme, resolvedTheme);
-        set({ activeThemeId: id });
+        set({ activeThemeId: id, themeChoiceMade });
       },
 
       syncServerThemes: async () => {
@@ -422,6 +462,10 @@ export const useThemeStore = create<ThemeState>()(
                     installedThemes: [...state.installedThemes, theme],
                   };
                 });
+                // The policy default named it before it was installed.
+                if (get().activeThemeId === st.id) {
+                  applyCustomThemeCSS(theme, get().resolvedTheme);
+                }
 
               } else if (!local.builtIn) {
                 let css = local.css;
@@ -507,6 +551,7 @@ export const useThemeStore = create<ThemeState>()(
                 set({ activeThemeId: forcedThemeId });
               }
             }
+            get().applyThemePolicyDefault();
           } catch {
             console.warn('[theme-store] Server theme sync failed');
           }
@@ -521,11 +566,12 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'theme-storage',
-      version: 1,
+      version: 2,
       partialize: (state): PersistedThemeState => ({
         theme: state.theme,
         themeChosen: state.themeChosen,
         activeThemeId: state.activeThemeId,
+        themeChoiceMade: state.themeChoiceMade,
         // Store theme metadata but NOT full CSS / skin (those go in IndexedDB)
         installedThemes: state.installedThemes.map(t => ({
           ...t,
@@ -536,9 +582,12 @@ export const useThemeStore = create<ThemeState>()(
       }),
       // v1: themeChosen (#1280). Earlier builds did not record it, so a mode
       // other than the built-in default is taken as chosen.
+      // v2: themeChoiceMade (#689). Earlier builds did not record it, so a
+      // theme other than Default is taken as chosen.
       migrate: (persisted, version) => {
         const state = persisted as PersistedThemeState;
         if (version < 1) state.themeChosen = state.theme !== 'system';
+        if (version < 2) state.themeChoiceMade = !!state.activeThemeId;
         return state;
       },
       onRehydrateStorage: () => {
@@ -693,9 +742,13 @@ async function downloadThemeAsset(theme: ServerThemeInfo, kind: 'css' | 'skin'):
   }
 }
 // The policy arrives after this store has rehydrated (and again in full once
-// signed in), so its color mode applies whenever it changes (#1280).
+// signed in), so its color mode (#1280) and default theme (#689) apply
+// whenever it changes.
 usePolicyStore.subscribe((state, prev) => {
-  if (state.policy !== prev.policy) useThemeStore.getState().applyColorModePolicy();
+  if (state.policy !== prev.policy) {
+    useThemeStore.getState().applyColorModePolicy();
+    useThemeStore.getState().applyThemePolicyDefault();
+  }
 });
 
 // Plugins hear about every change of scheme or theme, whichever path made it

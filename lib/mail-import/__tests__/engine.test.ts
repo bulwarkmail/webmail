@@ -119,7 +119,7 @@ describe('runImport', () => {
     // Uploads go to the user's own account: one in the shared account can't be imported there.
     expect(new Set(fake.uploadAccounts)).toEqual(new Set(['acc-own']));
     expect(fake.imported.every((e) => e.mailboxIds.target)).toBe(true);
-    expect(fake.imported.map((e) => e.keywords)).toEqual([{ $seen: true }, { $flagged: true }, { $seen: true }]);
+    expect(fake.imported.map((e) => e.keywords)).toEqual([{ $seen: true, $imported: true }, { $flagged: true, $imported: true }, { $seen: true, $imported: true }]);
     expect(fake.imported[0].receivedAt).toBe('2020-05-05T10:00:00Z');
     // The envelope line is gone; Email/import would keep it as a broken header.
     expect(fake.imported[0].text.startsWith('Subject: m0\n')).toBe(true);
@@ -131,7 +131,7 @@ describe('runImport', () => {
     await runImport(options(fake.client, [file(raw)]));
     expect(fake.imported[0].receivedAt).toBe('2021-01-02T03:04:05Z');
     expect(fake.imported[0].text).toBe('Subject: s\nDate: Tue, 5 May 2020 10:00:00 +0000\n\nbody\n');
-    expect(fake.imported[0].keywords).toEqual({ $seen: true });
+    expect(fake.imported[0].keywords).toEqual({ $seen: true, $imported: true });
   });
 
   it('reads Thunderbird state headers in .eml files, and imports a plain .eml as read like before', async () => {
@@ -139,7 +139,7 @@ describe('runImport', () => {
     const unread = new File(['X-Mozilla-Status: 0004\r\nSubject: u\r\n\r\nStatus: R in the body\r\n'], 'u.eml');
     const plain = new File(['Subject: p\r\n\r\nbody\r\n'], 'p.eml');
     await runImport(options(fake.client, [unread, plain]));
-    expect(fake.imported.map((e) => e.keywords)).toEqual([{ $flagged: true }, { $seen: true }]);
+    expect(fake.imported.map((e) => e.keywords)).toEqual([{ $flagged: true, $imported: true }, { $seen: true, $imported: true }]);
   });
 
   it('dates a Thunderbird message by its Date header, not by when it was copied into the folder', async () => {
@@ -377,6 +377,16 @@ describe('runImport', () => {
     // Names in the languages Outlook ships most often.
     await expect(folders.resolve(['Éléments supprimés'])).resolves.toBe('bin');
     await expect(folders.resolve(['Bandeja de entrada'])).resolves.toBe('in');
+  });
+
+  it('brings an exported "Team notes" back into the existing hidden folder', async () => {
+    const all = [mailbox('in', 'Inbox', { role: 'inbox' }), mailbox('notes', 'Team notes')];
+    const getMailboxes = vi.fn(async (_id?: string, options?: { includeHidden?: boolean }) =>
+      (options?.includeHidden ? all : all.filter((m) => m.name !== 'Team notes')));
+    const createMailbox = vi.fn();
+    const folders = new FolderResolver({ getMailboxes, createMailbox } as unknown as IJMAPClient, 'team', null);
+    await expect(folders.resolve(['Team notes'])).resolves.toBe('notes');
+    expect(createMailbox).not.toHaveBeenCalled();
   });
 
   it('reads the hour window and the quota from the server', () => {

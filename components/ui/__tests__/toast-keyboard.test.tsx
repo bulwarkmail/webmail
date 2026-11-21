@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastContainer } from '../toast';
 import { toast, useToastStore } from '@/stores/toast-store';
+import { resetKeyboardLayout } from '@/lib/keyboard';
 
 function Toasts() {
   const toasts = useToastStore((s) => s.toasts);
@@ -71,6 +72,16 @@ describe('toasts and the keyboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(onClick).toHaveBeenCalled();
     expect(document.activeElement).toBe(before);
+  });
+
+  it('takes Option+Shift+N from the key that types N on Colemak (#1719)', () => {
+    render(<Toasts />);
+    act(() => { toast.success('Email deleted', { action: { label: 'Undo', onClick: vi.fn() } }); });
+    // Typed n on the key a US keyboard has J on; with Option it types no letter.
+    fireEvent.keyDown(window, { key: 'n', code: 'KeyJ' });
+    fireEvent.keyDown(window, { key: 'Dead', code: 'KeyJ', altKey: true, shiftKey: true });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Undo' }));
+    resetKeyboardLayout();
   });
 
   it('closes the focused toast with Escape without the page hearing it', () => {

@@ -11,7 +11,9 @@
       "totp_required": "Your account needs a second code to sign in. Open your authenticator app and type the 6-digit code below.",
       "totp_invalid": "This code is wrong or too old. Type the code your authenticator app shows right now.",
       "oauth_discovery_failed": "Sign-in through your organisation does not work right now. Try again later or ask your administrator.",
-      "token_exchange_failed": "Your password and code are correct, but the mail server did not let this app in. Ask your administrator to check the sign-in settings for this app."
+      "oauth_issuer_mismatch": "Sign-in through your organisation is not set up correctly. Ask your administrator to fix it.",
+      "token_exchange_failed": "Your password and code are correct, but the mail server did not let this app in. Ask your administrator to check the sign-in settings for this app.",
+      "login_refused": "The mail server did not let this app sign you in. It did not check your code. Ask your administrator to check the sign-in settings for this app."
     },
     "token_hint": "Some mail providers give you a token instead of a password. Create one in your mail provider's settings, copy it, and paste it here.",
     "config_error": {
@@ -155,6 +157,10 @@
       "hide_account_switcher": {
         "description": "Hide the account list at the top of the folder list. You can still change accounts at the bottom of the left bar."
       },
+      "compose_placement": {
+        "description": "Where the button to write a new message is on a computer. On a phone it is always over the message list.",
+        "rail": "Top of the left bar"
+      },
       "show_rail_account_list": {
         "label": "Show your accounts in the left bar",
         "description": "Show a circle for each account at the bottom of the left bar, so you can change accounts quickly. A button to sign out is below them."
@@ -255,7 +261,7 @@
     },
     "email_behavior": {
       "inbox_type": {
-        "description": "With \"Unread first\", your 25 newest unread messages are shown at the top of the inbox"
+        "description": "With \"Unread first\", your newest unread messages are shown at the top of the inbox"
       },
       "clear_search_on_folder_change": {
         "description": "When you open another folder, your search ends and you see the whole folder. When this is off, the search continues in the new folder."
@@ -613,7 +619,6 @@
       "not_supported": "Your mail server can't use filter rules.",
       "match_all": "All conditions must be true",
       "match_any": "One condition is enough",
-      "stop_processing": "Don't check the rules below this one",
       "value_placeholder_multi": "Value (put commas between several)",
       "condition_fields": {
         "header": "Other header line",
@@ -644,11 +649,9 @@
         "validation_failed": "The code could not be checked. Try again."
       },
       "managed_by_tooltip": "{source} manages this. Change it in that app, or edit the rules as code.",
-      "apply_existing_unsupported": "Only some rules can also run on messages that are already here: rules that check the sender, recipients, subject or header lines, and that move, copy, mark as read, star or tag.",
       "validation_period_order": "The end date must come after the start date",
       "period_hint": "The rule works for messages that arrive in this time. Leave a field empty if there is no start or no end.",
-      "validation_period_invalid": "Enter a date with a time, or leave the field empty",
-      "apply_existing_period": "A rule with a time period only works for messages that arrive in that time. So it can't run on messages that are already here."
+      "validation_period_invalid": "Enter a date with a time, or leave the field empty"
     },
     "templates": {
       "description": "Save messages you write often and use them again. They can have gaps that you fill in each time.",
@@ -764,5 +767,8 @@
   },
   "global_search": {
     "account_error": "{account} could not be searched"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Show the account list above the folders. Turn this off to change accounts with your picture in the left bar."
   }
 }

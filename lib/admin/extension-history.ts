@@ -42,6 +42,22 @@ export type ExtensionKind = 'plugin' | 'theme';
 /** How many previous versions are kept per extension. */
 export const KEEP = 5;
 
+/**
+ * What a marketplace install keeps in the registry entry about the version it
+ * installed: whether the directory had withdrawn it (`null`: it had not). A
+ * rollback works without the directory, so this is what the way back knows.
+ */
+export interface InstallRecord {
+  yanked?: { at: string; reason: string | null } | null;
+}
+
+/**
+ * Whether the directory had withdrawn a kept version when it was installed:
+ * `{ reason }` if it had, `'unknown'` for a marketplace copy kept before
+ * installs recorded it, nothing if it had not or for an upload.
+ */
+export type Withdrawal = { reason: string | null } | 'unknown';
+
 export interface HistoryEntry {
   version: string;
   /** When this version was replaced, not when it was installed. */
@@ -51,6 +67,13 @@ export interface HistoryEntry {
   source?: ServerPlugin['source'];
   /** The kept version's changelog, when it came from the marketplace with one. */
   changelog?: string;
+  withdrawn?: Withdrawal;
+}
+
+function withdrawalOf(entry: (ServerPlugin | ServerTheme) & InstallRecord): Withdrawal | undefined {
+  if (entry.source?.kind === 'upload') return undefined;
+  if (!('yanked' in entry)) return 'unknown';
+  return entry.yanked ? { reason: typeof entry.yanked.reason === 'string' ? entry.yanked.reason : null } : undefined;
 }
 
 const SAFE_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
@@ -179,25 +202,35 @@ async function prune(kind: ExtensionKind, id: string): Promise<void> {
 
 /**
  * What the admin lists say about the kept versions: the versions, most
- * recently replaced first, and the changelog of each that has one.
+ * recently replaced first, the changelog of each that has one, and which
+ * the directory had withdrawn (or may have) when they were installed.
  */
-export function keptVersions(history: HistoryEntry[]): { previousVersions: string[]; previousChangelogs: Record<string, string> } {
+export function keptVersions(history: HistoryEntry[]): {
+  previousVersions: string[];
+  previousChangelogs: Record<string, string>;
+  previousWithdrawn: Record<string, Withdrawal>;
+} {
   return {
     previousVersions: history.map((h) => h.version),
     previousChangelogs: Object.fromEntries(history.filter((h) => h.changelog).map((h) => [h.version, h.changelog!])),
+    previousWithdrawn: Object.fromEntries(history.filter((h) => h.withdrawn).map((h) => [h.version, h.withdrawn!])),
   };
 }
 
 /** The versions kept for an extension, most recently replaced first. */
 export async function listHistory(kind: ExtensionKind, id: string): Promise<HistoryEntry[]> {
   if (!SAFE_ID_RE.test(id)) return [];
-  return (await readAll(kind, id)).map(({ version, savedAt, contentHash, source, entry }) => ({
-    version,
-    savedAt,
-    contentHash,
-    ...(source ? { source } : {}),
-    ...(typeof entry.changelog === 'string' ? { changelog: entry.changelog } : {}),
-  }));
+  return (await readAll(kind, id)).map(({ version, savedAt, contentHash, source, entry }) => {
+    const withdrawn = withdrawalOf(entry);
+    return {
+      version,
+      savedAt,
+      contentHash,
+      ...(source ? { source } : {}),
+      ...(typeof entry.changelog === 'string' ? { changelog: entry.changelog } : {}),
+      ...(withdrawn ? { withdrawn } : {}),
+    };
+  });
 }
 
 /**

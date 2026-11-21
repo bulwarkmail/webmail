@@ -9,7 +9,7 @@
  * locales/en/common.json and the defaults against the settings store.
  */
 
-import { DEFAULT_FEATURE_GATES, type FeatureGates, type SettingRestriction, type SettingsPolicy } from './types';
+import { DEFAULT_FEATURE_GATES, type AdminSidebarApp, type FeatureGates, type SettingRestriction, type SettingsPolicy } from './types';
 import { RESTRICTION_KEYS } from './restriction-keys';
 import {
   ACCESSIBILITY_DEFAULTS,
@@ -22,6 +22,19 @@ import {
 } from '@/lib/accessibility-settings';
 
 export type PolicySettingValue = boolean | number | string;
+
+/** One tag of `defaults.emailKeywords` (#1612). */
+export interface PolicyKeyword {
+  id: string;
+  label: string;
+  color: string;
+}
+
+/** What `policy.defaults` holds for a key: a plain value, or the tag list. */
+export type PolicyDefaultValue = PolicySettingValue | PolicyKeyword[];
+
+/** The tags new users start with; edited in their own block, never locked. */
+export const TAGS_DEFAULT_KEY = 'emailKeywords';
 
 export interface PolicySettingOption {
   value: PolicySettingValue;
@@ -127,7 +140,7 @@ export const ACCESSIBILITY_POLICY_SETTINGS: readonly PresettableSetting[] = [
     { key: 'singleKeyShortcuts', label: 'Single-key shortcuts', type: 'boolean', labelKey: `${A}.single_key_shortcuts.label` },
     {
       key: 'focusRing', label: 'Focus outline', type: 'enum', labelKey: `${A}.focus_ring.label`,
-      options: [{ value: 'normal', label: 'Normal' }, { value: 'thick', label: 'Thick' }, { value: 'extra', label: 'Extra thick' }],
+      options: [{ value: 'off', label: 'Off' }, { value: 'normal', label: 'Normal' }, { value: 'thick', label: 'Thick' }, { value: 'extra', label: 'Extra thick' }],
     },
     { key: 'focusAlwaysVisible', label: 'Always show focus', type: 'boolean', labelKey: `${A}.focus_always.label` },
   ]),
@@ -387,7 +400,7 @@ export function defaultAt(policy: SettingsPolicy, scopeId: string, key: string):
 }
 
 /** The policy with `key` preset to `value` at the scope; `undefined` removes the preset. */
-export function withDefaultAt(policy: SettingsPolicy, scopeId: string, key: string, value: PolicySettingValue | undefined): SettingsPolicy {
+export function withDefaultAt(policy: SettingsPolicy, scopeId: string, key: string, value: PolicyDefaultValue | undefined): SettingsPolicy {
   const next = clonePolicy(policy);
   const scope = scopeOf(next, scopeId);
   const target = scope ? (scope.policy.defaults ??= {}) : (next.defaults = { ...(next.defaults ?? {}) });
@@ -396,11 +409,35 @@ export function withDefaultAt(policy: SettingsPolicy, scopeId: string, key: stri
   return next;
 }
 
-/** Keys preset at the scope (its own, not Everyone's) that the editor has no row for. */
+/**
+ * The default sidebar apps at the scope (#1806): its own list, which
+ * replaces Everyone's, or Everyone's.
+ */
+export function sidebarAppsAt(policy: SettingsPolicy, scopeId: string): ScopedValue<AdminSidebarApp[]> {
+  const everyone = policy.defaultSidebarApps ?? [];
+  const own = scopeOf(policy, scopeId)?.policy.defaultSidebarApps;
+  if (scopeId === EVERYONE_SCOPE) return { value: everyone, own: true, everyone };
+  return own ? { value: own, own: true, everyone } : { value: everyone, own: false, everyone };
+}
+
+/** The policy with the scope's default sidebar apps set; `undefined` in a scope means Everyone's again. */
+export function withSidebarAppsAt(policy: SettingsPolicy, scopeId: string, apps: AdminSidebarApp[] | undefined): SettingsPolicy {
+  const next = clonePolicy(policy);
+  const scope = scopeOf(next, scopeId);
+  if (!scope) {
+    next.defaultSidebarApps = apps ?? [];
+    return next;
+  }
+  if (apps === undefined) delete scope.policy.defaultSidebarApps;
+  else scope.policy.defaultSidebarApps = apps;
+  return next;
+}
+
+/** Keys preset at the scope (its own, not Everyone's) that the editor has no row or block for. */
 export function otherDefaultKeys(policy: SettingsPolicy, scopeId: string): string[] {
   const scope = scopeOf(policy, scopeId);
   const defaults = scope ? scope.policy.defaults ?? {} : policy.defaults ?? {};
-  return Object.keys(defaults).filter((key) => !BY_KEY.has(key));
+  return Object.keys(defaults).filter((key) => !BY_KEY.has(key) && key !== TAGS_DEFAULT_KEY);
 }
 
 /**

@@ -13,6 +13,7 @@ import {
   isServerRecurrenceInstance,
   isSyntheticIdMutationUnsupported,
   resolveOverrideKey,
+  storeIdBeside,
   withNewOverrideDetails,
   withoutOverrideSeriesKeys,
 } from '../recurrence-instances';
@@ -79,6 +80,20 @@ describe('baseEventStoreId', () => {
   it('is null for anything that is not an expanded occurrence', () => {
     expect(baseEventStoreId({ id: 'b', baseEventId: 'b' })).toBeNull();
     expect(baseEventStoreId({ id: 'b:2026-09-08T10:00:00', originalId: 'b' })).toBeNull();
+  });
+});
+
+describe('storeIdBeside', () => {
+  it('puts another raw id under the namespace of an event', () => {
+    expect(storeIdBeside({ id: 'A@h::x', originalId: 'x', recurrenceId: '2026-09-08T10:00:00', recurrenceRules: null }, 'b')).toBe('A@h::b');
+    expect(storeIdBeside({ id: 'A@h::acct:x', originalId: 'x', recurrenceId: null, recurrenceRules: null }, 'b')).toBe('A@h::acct:b');
+    expect(storeIdBeside({ id: 'x', recurrenceId: null, recurrenceRules: null }, 'b')).toBe('b');
+  });
+
+  it('gives an occurrence the browser expanded its own base event\'s store id, and no other', () => {
+    const occurrence = { id: 'A@h::b:2026-09-08T10:00:00', originalId: 'b', recurrenceId: '2026-09-08T10:00:00', recurrenceRules: dailyRule };
+    expect(storeIdBeside(occurrence, 'b')).toBe('A@h::b');
+    expect(storeIdBeside(occurrence, 'other')).toBeNull();
   });
 });
 
@@ -637,6 +652,43 @@ describe('hydrateRecurrenceInstances with an occurrence listed twice', () => {
       expect(rest).toEqual([]);
       expect(merged.participants?.att.participationStatus).toBe('declined');
       expect(merged.participants?.org.participationStatus).toBe('accepted');
+    }
+  });
+
+  it('takes the instants of an occurrence the organizer moved to another day', () => {
+    // Stalwart 0.16.27 lists an occurrence the organizer moved from 2 to 16
+    // March twice under one id: the series' occurrence and the moved one.
+    // The override lists start, not the server-computed utcStart/utcEnd the
+    // grid places events by.
+    const original = instance({
+      start: '2026-03-02T10:00:00', recurrenceId: '2026-03-02T10:00:00', timeZone: 'Europe/Warsaw',
+      utcStart: '2026-03-02T09:00:00Z', utcEnd: '2026-03-02T10:00:00Z',
+    } as Partial<CalendarEvent>);
+    const moved = instance({
+      start: '2026-03-16T10:00:00', recurrenceId: '2026-03-02T10:00:00', timeZone: 'Europe/Warsaw', sequence: 1,
+      utcStart: '2026-03-16T09:00:00Z', utcEnd: '2026-03-16T10:00:00Z',
+    } as Partial<CalendarEvent>);
+    const movedBases = new Map<string, Partial<CalendarEvent>>([['b', {
+      id: 'b', duration: 'PT1H', timeZone: 'Europe/Warsaw',
+      recurrenceOverrides: { '2026-03-02T10:00:00': { start: '2026-03-16T10:00:00', sequence: 1 } as Partial<CalendarEvent> },
+    }]]);
+    for (const order of [[original, moved], [moved, original]]) {
+      const [merged, ...rest] = hydrateRecurrenceInstances(order, movedBases);
+      expect(rest).toEqual([]);
+      expect(merged.start).toBe('2026-03-16T10:00:00');
+      expect(merged.utcStart).toBe('2026-03-16T09:00:00Z');
+      expect(merged.utcEnd).toBe('2026-03-16T10:00:00Z');
+    }
+  });
+
+  it('keeps the series instants when the override does not move the occurrence', () => {
+    // The reply stub's own end comes from the server's wrong one-day
+    // duration; its patch only answers for an attendee.
+    const stubWithOwnEnd = { ...stub, utcEnd: '2026-09-09T08:00:00Z' } as CalendarEvent;
+    for (const order of [[series, stubWithOwnEnd], [stubWithOwnEnd, series]]) {
+      const [merged] = hydrateRecurrenceInstances(order, bases);
+      expect(merged.utcStart).toBe(series.utcStart);
+      expect(merged.utcEnd).toBe(series.utcEnd);
     }
   });
 });

@@ -69,6 +69,21 @@ export function browserSignInAvailable(): boolean {
   return !IS_LITE && !!claimBrowserSignIn() && desktopPolicyValue('BrowserSignIn') === true;
 }
 
+/**
+ * A plugin's OAuth sign-in in a window of the desktop app (instance mode), so the callback
+ * page reaches this page's storage. False where the shell can't (a browser, standalone, an
+ * older shell): the caller opens it as a link then.
+ */
+export async function openPluginSignInInApp(url: string): Promise<boolean> {
+  const open = claimBrowserSignIn()?.pluginSignIn;
+  if (typeof open !== 'function') return false;
+  try {
+    return (await open(url)) === true;
+  } catch {
+    return false;
+  }
+}
+
 /** The Cancel button, and leaving the page. */
 export function cancelBrowserSignIn(): void {
   if (currentFlow) controls?.cancel(currentFlow);

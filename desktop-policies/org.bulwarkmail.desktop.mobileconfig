@@ -81,6 +81,8 @@
       <true/>
       <key>FilesDriveLetter</key>
       <string>none</string>
+      <key>ComposeInNewWindow</key>
+      <true/>
       <key>Recommended</key>
       <dict>
         <key>UpdateChannel</key>

@@ -399,6 +399,8 @@ function mintEditableToken(accountId: string, fileId: string, uploadAccountId?: 
   const payload = {
     serverUrl: SERVER, authHeader: 'Basic dXNlcjpwYXNz', username: 'user@example.com',
     accountId, fileId, kind: 'file' as const, canWrite: true, origin: ORIGIN,
+    // Every token names its session's sign-in time.
+    signedInAt: Date.now(),
     ...(uploadAccountId ? { uploadAccountId } : {}),
   };
   const documentId = wopiDocumentId(payload);

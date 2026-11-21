@@ -53,6 +53,13 @@ describe('email-store moveToMailboxCrossAware', () => {
     email.accountId = 'local-A';
     crossSpy = vi.fn().mockResolvedValue(undefined);
     moveSpy = vi.fn().mockResolvedValue(undefined);
+    // The login browsed is the active one: its folders are `mailboxes`.
+    const loginA = { getAccountId: () => 'jmap-A', getServerUrl: () => 'https://a.example' };
+    useAuthStore.setState({
+      activeAccountId: 'local-A', client: loginA as never,
+      getClientForAccount: ((id: string) => (id === 'local-A' ? loginA : undefined)) as never,
+      getAllConnectedClients: (() => new Map([['local-A', loginA]])) as never,
+    } as never);
     useEmailStore.setState({
       emails: [email],
       mailboxes: [ownInbox, ownArchive, sharedTeamA],

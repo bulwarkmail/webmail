@@ -48,6 +48,15 @@ export function plainBodyFontSize(basePx: number, mailTextScale: number, fontSiz
 }
 
 /**
+ * Widest the message card gets with the reading width at about 80
+ * characters: the 80-character column at the mail's text size (a character
+ * of the body fonts is about 0.55em, so 44em) and its gutters, 1.25rem a side.
+ */
+export function readingCardWidth(mailTextScale: number, fontSize: FontSize, minPx: number): string {
+  return `calc(${plainBodyFontSize(MAIL_BASE_FONT_PX, mailTextScale, fontSize, minPx)} * 44 + 2.5rem)`;
+}
+
+/**
  * One element's text size after scaling by `factor` and raising it to the
  * minimum. A line height in px grows by the same ratio, so the enlarged text
  * doesn't overlap the next line; "normal" (null) needs nothing.
@@ -200,7 +209,9 @@ export function mailOverrideCss(o: MailOverride): string {
   // Everything that holds text; images and media keep their own look.
   const text = 'body *:not(svg,svg *,img,picture,video,canvas)';
   const parts = [
-    `html,body{background:${bg}!important;color:${fg}!important}`,
+    // The colour on <html> only: on both, a translucent one (a theme's card
+    // colour) would be painted twice.
+    `html{background:${bg}!important}body{background:transparent!important}html,body{color:${fg}!important}`,
     `body{font-family:${font}!important;font-size:${bodySize}!important;line-height:${LINE_HEIGHT[o.lineSpacing]}!important}`,
     // Sizes follow the body, headings keep a step above it.
     `${text}{font-family:inherit!important;font-size:1em!important;line-height:inherit!important;color:${fg}!important;background-color:transparent!important;background-image:none!important;text-shadow:none!important}`,
@@ -229,7 +240,7 @@ export function mailFrameCss(options: MailFrameCssOptions): string {
   if (options.fontFaceCss) parts.push(options.fontFaceCss);
   if (options.reduceMotion) parts.push(MAIL_REDUCED_MOTION_CSS);
   if (options.underlineLinks) parts.push('a[href]{text-decoration-line:underline!important}');
-  if (options.comfortableWidth) parts.push('body{max-width:80ch!important}');
+  if (options.comfortableWidth) parts.push('body{max-width:80ch!important;margin-inline:auto!important}');
   if (options.override) parts.push(mailOverrideCss(options.override));
   return parts.join('\n');
 }

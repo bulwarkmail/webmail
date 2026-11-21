@@ -7,6 +7,8 @@ import { ShieldAlert } from "@/components/icons";
 import { getLuminance, parseColor } from "@/lib/color-transform";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore, getContactPhotoIndex, type ContactPhotoRef } from "@/stores/contact-store";
+import { useAccountStore } from "@/stores/account-store";
+import { generateAvatarColor } from "@/lib/account-utils";
 import { useConfig } from "@/hooks/use-config";
 import { useContactPhotoSrc } from "@/hooks/use-contact-photo";
 import { avatarHooks } from "@/lib/plugin-hooks";
@@ -88,6 +90,99 @@ function emailHash(email: string): number {
     hash = email.charCodeAt(i) + ((hash << 5) - hash);
   }
   return Math.abs(hash);
+}
+
+// An unspaced Han-character name is usually surname + given name. Compound
+// surnames take two characters, so the given name of 司马光 starts at the
+// third character, not the second.
+const HAN_CHAR = /\p{Script=Han}/u;
+const COMPOUND_SURNAMES = new Set([
+  "欧阳", "司马", "上官", "诸葛", "东方", "独孤", "南宫", "万俟", "闻人",
+  "夏侯", "令狐", "尉迟", "公孙", "长孙", "慕容", "司徒", "司空", "皇甫",
+  "宇文", "呼延", "端木", "申屠", "公冶", "太叔", "西门", "鲜于", "闾丘",
+  "轩辕", "百里", "拓跋", "澹台", "谷梁",
+]);
+
+/**
+ * The given-name initials of a Han-script name: Chinese names are written
+ * without spaces, so the Western "first letters of the words" rule
+ * degenerates to the first two characters of the whole string - the surname
+ * plus one character of the given name (王阳明 showed 王阳). What reads
+ * naturally there is the given name instead: 王阳明 → 阳明, 陈阳 → 陈阳,
+ * 司马光 → 光. Only a name made entirely of Han characters takes this path;
+ * anything mixed, Latin, or kana keeps the Western rule.
+ *
+ * Accepted lengths: 2 (the whole name), 3 (surname + 2-char given name),
+ * and 4 only with a known compound surname. Anything longer falls back to
+ * the Western rule: the surname/given-name split of a 4+ character Han
+ * string is not guessable (Japanese 山田太郎 is 1+3, 高桥和也 is 2+2), so
+ * slicing at any fixed point produces a cross-boundary pair that is
+ * neither a name nor a surname - worse than the plain leading characters.
+ *
+ * Known trade-off at 3 characters: Chinese 1+2 is the dominant shape this
+ * rule exists for, and Japanese 1+2 (林太郎 → 太郎) cuts the same way, but
+ * a Japanese 2+1 name (田中実) slices to 中実, a cross-boundary pair.
+ * Script alone cannot tell the languages apart, and a surname dictionary
+ * is out of scope, so the majority case wins.
+ * Korean names in Hangul are NOT Han script (김 is \p{Script=Hangul}) and
+ * never take this path; they keep the Western rule.
+ */
+function hanGivenName(name: string): string | null {
+  const compact = name.replace(/\s+/g, "");
+  if (compact.length < 2) return null;
+  for (const ch of compact) {
+    if (!HAN_CHAR.test(ch)) return null;
+  }
+  if (compact.length === 2) return compact;
+  const compound = COMPOUND_SURNAMES.has(compact.slice(0, 2));
+  if (compact.length === 3) return compound ? compact.slice(2, 3) : compact.slice(1, 3);
+  if (compact.length === 4 && compound) return compact.slice(2, 4);
+  return null;
+}
+
+// A display name that is only an address, as many headers and contacts have.
+function isAddress(value: string): boolean {
+  const v = value.trim();
+  return v.includes("@") && !/\s/.test(v);
+}
+
+/**
+ * The letters shown when an avatar has no picture. Every avatar in the app
+ * takes them from here, so one person gets the same letters everywhere,
+ * whether a place knows only their address or passes the address as the name.
+ * A name gives its first and last word's first letters, or the first two
+ * letters of a single word. Without a real name, the part of the address
+ * before the @ is read as one, split at dots, dashes, underscores and plus
+ * signs: "max.mustermann@" gives "MM", "xaver@" gives "XA".
+ */
+export function avatarInitials(name?: string, email?: string): string {
+  const realName = name && !isAddress(name) ? name.trim() : "";
+  const address = (email?.trim() || (name && isAddress(name) ? name.trim() : ""));
+  const source = realName || (address.split("@")[0] ?? "").split(/[._+-]+/).filter(Boolean).join(" ");
+  if (!source) return "?";
+  const han = hanGivenName(source);
+  if (han) return han;
+  const parts = source
+    .split(/\s+/)
+    .map((p) => p.replace(/^[^\p{L}\p{N}]+/u, ""))
+    .filter((p) => p.length > 0);
+  if (parts.length >= 2) {
+    return `${Array.from(parts[0])[0]}${Array.from(parts[parts.length - 1])[0]}`.toUpperCase();
+  }
+  if (parts.length === 1) {
+    return Array.from(parts[0]).slice(0, 2).join("").toUpperCase();
+  }
+  return Array.from(source).slice(0, 2).join("").toUpperCase();
+}
+
+/**
+ * The background behind the initials: picked from the address, so a person
+ * has one colour whether or not a place knows their name. Only without an
+ * address does the name pick it.
+ */
+export function avatarColor(name?: string, email?: string): string {
+  const key = email?.trim().toLowerCase() || (name && isAddress(name) ? name.trim().toLowerCase() : name?.trim()) || "";
+  return generateAvatarColor(key);
 }
 
 // Dev-only: common first names to infer gender for demo portrait selection
@@ -196,6 +291,12 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
   const senderFavicons = useSettingsStore((s) => s.senderFavicons);
   const faviconRefreshedAt = useFaviconRefreshStore((s) => s.refreshedAt);
   const contacts = useContactStore((s) => s.contacts);
+  // A signed-in account's own address keeps the colour it has in the account switcher.
+  const accountColor = useAccountStore((s) => {
+    const key = email?.trim().toLowerCase();
+    if (!key) return undefined;
+    return s.accounts.find((a) => (a.email || a.username || "").trim().toLowerCase() === key)?.avatarColor;
+  });
   const { devMode } = useConfig();
   // Re-render when the config arrives: until then nothing outside is asked (#903).
   useNoThirdPartyTraffic();
@@ -234,36 +335,6 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
   const faviconDomain = domain ? getRootDomain(domain) : undefined;
   const domainFailed = faviconDomain ? failedFaviconDomains.has(faviconDomain) : false;
 
-  const getInitials = () => {
-    if (name) {
-      const parts = name
-        .trim()
-        .split(/\s+/)
-        .map((p) => p.replace(/^[^\p{L}\p{N}]+/u, ""))
-        .filter((p) => p.length > 0);
-      if (parts.length >= 2) {
-        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-      }
-      if (parts.length === 1) {
-        return parts[0].slice(0, 2).toUpperCase();
-      }
-      return name.slice(0, 2).toUpperCase();
-    }
-    if (email) {
-      return email[0].toUpperCase();
-    }
-    return "?";
-  };
-
-  const getBackgroundColor = () => {
-    const str = name || email || "";
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 70%, 50%)`;
-  };
 
   const sizeClasses = {
     sm: "w-8 h-8 text-xs",
@@ -320,7 +391,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
     }
   }, [imgSrc, pluginAvatar, faviconDomain, resolvedContactPhoto, brandSrc, brandDomain, customAvatar, profilePic, setFailedBrand, setImgError, setPluginAvatarFailed]);
 
-  const initialsBackground = fallbackColor ?? getBackgroundColor();
+  const initialsBackground = fallbackColor ?? accountColor ?? avatarColor(name, email);
 
   if (senderWarning) {
     return (
@@ -369,7 +440,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
           }}
         />
       ) : (
-        getInitials()
+        avatarInitials(name, email)
       )}
     </div>
   );

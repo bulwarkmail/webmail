@@ -1,6 +1,6 @@
 import type { Email } from "@/lib/jmap/types";
 import { sanitizeEmailHtml } from "@/lib/email-sanitization";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { formatDateTime, formatFileSize } from "@/lib/utils";
 import type { InvitationPrint } from "@/lib/print/invitation-print";
@@ -40,7 +40,7 @@ export function buildMessagePrintFields(source: MessagePrintSource): MessagePrin
     sender: sender?.name ? `${sender.name} <${sender.email}>` : sender?.email || source.unknownSender,
     to: email.to?.map(formatRecipient).join(', ') || '',
     cc: email.cc?.map(formatRecipient).join(', ') || '',
-    date: formatDateTime(emailDisplayDate(email), source.timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
+    date: formatDateTime(emailListDate(email), source.timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
     // The reader's list: inline images stay in the body, not here.
     attachments: source.attachments
       .map((a) => `${getAttachmentDisplayName(a.name ?? undefined, a.type ?? undefined)} (${formatFileSize(a.size ?? 0)})`)

@@ -57,7 +57,7 @@ afterEach(() => {
 function typeNewRule() {
   render(<FilterSettings />);
   fireEvent.click(screen.getByText('add_rule'));
-  const name = screen.getByPlaceholderText('rule_name_placeholder');
+  const name = screen.getByLabelText('rule_name');
   name.focus();
   fireEvent.change(name, { target: { value: 'News' } });
   return name;
@@ -93,7 +93,7 @@ describe('typing in a dialog on the filter page while things happen in the backg
     act(() => useFilterStore.setState({ isLoading: true }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     act(() => useFilterStore.setState({ isLoading: false }));
-    expect(screen.getByPlaceholderText('rule_name_placeholder')).toHaveValue('News');
+    expect(screen.getByLabelText('rule_name')).toHaveValue('News');
   });
 
   it('keeps the Sieve editor and what was typed through a reload of the filters', () => {
@@ -109,7 +109,7 @@ describe('typing in a dialog on the filter page while things happen in the backg
   it('keeps the rule dialog through a reload that fails', () => {
     typeNewRule();
     act(() => useFilterStore.setState({ error: 'offline' }));
-    expect(screen.getByPlaceholderText('rule_name_placeholder')).toHaveValue('News');
+    expect(screen.getByLabelText('rule_name')).toHaveValue('News');
   });
 
   it('still shows the loading state when no dialog is open', () => {

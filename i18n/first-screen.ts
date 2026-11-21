@@ -32,6 +32,8 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
   'proofreading.shortcuts',
   'settings.appearance.theme',
   'sharing.no_match',
+  // Team mailboxes: the mention notifier and the list's assign actions make their labels up front.
+  'team_assign.change_failed', 'team_mailboxes.undo', 'team_push.mentioned_hidden', 'team_push.mentioned_you',
   'tour.take_a_tour',
 ];
 
@@ -43,6 +45,8 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
  */
 export const READER_FIRST_SCREEN_MESSAGES: readonly string[] = [
   'compose_words', 'deep_link', 'email_viewer', 'mail_p2_conv', 'mail_p3_actions', 'reader_actions',
+  // The rename button on the reader's attachment chips.
+  'attachment_rename.rename', 'attachment_rename.rename_named', 'attachment_rename.rename_title',
 ];
 
 /** Whether `pathname` opens a message or conversation in the mail view. */

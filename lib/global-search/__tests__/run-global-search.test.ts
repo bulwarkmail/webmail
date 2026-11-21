@@ -36,6 +36,8 @@ describe('hasRemoteQuery', () => {
     expect(hasRemoteQuery(parseSearchQuery('is:unread'), 'mail')).toBe(true);
     expect(hasRemoteQuery(parseSearchQuery('is:unread'), 'contacts')).toBe(false);
     expect(hasRemoteQuery(parseSearchQuery('in:trash'), 'mail')).toBe(true);
+    expect(hasRemoteQuery(parseSearchQuery('is:untagged'), 'mail')).toBe(true);
+    expect(hasRemoteQuery(parseSearchQuery('has:notag'), 'mail')).toBe(true);
     expect(hasRemoteQuery(parseSearchQuery('bob'), 'files')).toBe(true);
     expect(hasRemoteQuery(parseSearchQuery(''), 'mail')).toBe(false);
   });

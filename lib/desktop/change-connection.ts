@@ -22,8 +22,12 @@ export function changeConnectionAvailable(): boolean {
   return typeof getDesktopBridge()?.menu?.changeConnection === 'function';
 }
 
-/** Asks, then restarts. False when the answer was no, or nothing could ask. */
-export async function askAndChangeConnection(text: ChangeConnectionText): Promise<boolean> {
+/**
+ * Asks, then restarts. False when the answer was no, or nothing could ask. `page` 'org':
+ * the first screen opens on the organisation's web address instead of the email address,
+ * for "Use my organisation's Bulwark instead" (desktop#5).
+ */
+export async function askAndChangeConnection(text: ChangeConnectionText, page?: 'org'): Promise<boolean> {
   const change = getDesktopBridge()?.menu?.changeConnection;
   if (typeof change !== 'function') return false;
   const asked = askInWindow({
@@ -36,5 +40,5 @@ export async function askAndChangeConnection(text: ChangeConnectionText): Promis
   const answer = await asked.answer;
   if (!answer || answer === 'failed' || !('button' in answer) || answer.button !== 1) return false;
   markWelcomeTipsSeen();
-  return change();
+  return page ? change(page) : change();
 }

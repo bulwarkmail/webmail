@@ -11,7 +11,7 @@ afterEach(() => {
   while (disposers.length) disposers.pop()!();
 });
 
-function press(key: string, mods: Partial<Pick<KeyboardEvent, 'ctrlKey' | 'shiftKey' | 'altKey' | 'metaKey'>> = {}) {
+function press(key: string, mods: Partial<Pick<KeyboardEvent, 'ctrlKey' | 'shiftKey' | 'altKey' | 'metaKey' | 'code'>> = {}) {
   const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...mods });
   const outer = vi.fn();
   document.body.addEventListener('keydown', outer);
@@ -51,6 +51,22 @@ describe('plugin keyboard shortcuts', () => {
 
     expect(plugin.invokeHook).toHaveBeenCalledWith('shortcut:new', []);
     expect(result.reachedApp).toBe(true);
+  });
+
+  // #1714: Colemak types j on the key a US keyboard has Y on, and n on its J.
+  it('matches the letter the key types, not its US place', () => {
+    const plugin = instance('notes');
+    disposers.push(registerShortcuts(plugin, [{ id: 'new', keys: 'Alt+J', label: 'New note' }]));
+
+    press('n', { altKey: true, code: 'KeyJ' });
+    expect(plugin.invokeHook).not.toHaveBeenCalled();
+
+    press('j', { altKey: true, code: 'KeyY' });
+    expect(plugin.invokeHook).toHaveBeenCalledTimes(1);
+
+    // macOS: Option + J types ∆, so the place counts.
+    press('∆', { altKey: true, code: 'KeyJ' });
+    expect(plugin.invokeHook).toHaveBeenCalledTimes(2);
   });
 
   it('keeps the first plugin that claimed a combo', async () => {

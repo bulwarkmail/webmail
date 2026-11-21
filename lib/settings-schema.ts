@@ -26,6 +26,8 @@ import {
   UNLOCKABLE_SETTING_KEYS,
 } from '@/lib/accessibility-settings';
 import { locales } from '@/i18n/routing';
+import { UNREAD_SECTION_SIZES } from '@/lib/unread-first';
+import { COMPOSE_PLACEMENTS } from '@/lib/compose-placement';
 
 /** Which store holds the setting. */
 export type SettingsStoreName = 'settings' | 'theme' | 'locale' | 'calendar';
@@ -172,6 +174,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('colorfulSidebarIcons', 'appearance', `${AP}colorful_sidebar_icons.label`),
   bool('showFolderTotalCount', 'appearance', `${AP}show_folder_total_count.label`),
   bool('sidebarAccountSwitcher', 'appearance', `${AP}sidebar_account_switcher.label`),
+  choice('composePlacement', 'appearance', `${AP}compose_placement.label`,
+    opts(`${AP}compose_placement.`, COMPOSE_PLACEMENTS)),
   bool('showRailAccountList', 'appearance', `${AP}show_rail_account_list.label`),
   bool('proInterface', 'appearance', `${AP}pro_interface.label`),
   bool('enableUnifiedMailbox', 'appearance', `${AP}unified_mailbox.label`),
@@ -203,10 +207,13 @@ const ENTRIES: SettingSchemaEntry[] = [
 
   // --- Message list ---
   bool('disableThreading', 'message_list', `${EB}group_conversations.label`, { inverted: true }),
+  bool('groupListByDate', 'message_list', `${EB}group_by_date.label`),
   bool('showPreview', 'message_list', `${EB}show_preview.label`),
   bool('listColumns', 'message_list', `${EB}list_columns.label`),
   choice('mvInboxType', 'message_list', `${EB}inbox_type.label`,
     opts(`${EB}inbox_type.`, ['default', 'unread-first'], { 'unread-first': 'unread_first' })),
+  choice('mvUnreadSectionSize', 'message_list', `${EB}unread_section_size.label`,
+    opts(`${EB}unread_section_size.`, UNREAD_SECTION_SIZES)),
   // A switch on the page: on = every folder.
   choice('messageListOrderScope', 'message_list', `${AP}message_list_order.scope.label`, [
     { value: 'inbox', label: OFF_LABEL },
@@ -214,6 +221,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   ]),
   bool('tintListRowsByTag', 'message_list', `${AP}tint_list_rows.label`),
   bool('showVerificationCodes', 'message_list', `${EB}show_verification_codes.label`),
+  bool('showAttachmentChips', 'message_list', `${EB}show_attachment_chips.label`),
+  bool('showTagChips', 'message_list', `${EB}show_tag_chips.label`),
   // Both make the server fetch the sender's domain: the assistant may only switch them off.
   bool('senderFavicons', 'privacy', 'settings.advanced.sender_favicons.label', { thirdParty: true, only: false }),
   bool('showAvatarsInJunk', 'privacy', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true, only: false }),
@@ -246,6 +255,9 @@ const ENTRIES: SettingSchemaEntry[] = [
   // --- Reading ---
   choice('markAsReadDelay', 'reading', `${EB}mark_read.label`,
     opts(`${EB}mark_read.`, [0, 3000, 5000, -1], { 0: 'instant', 3000: 'delay_3s', 5000: 'delay_5s', '-1': 'never' })),
+  bool('markReadOnReply', 'reading', `${EB}mark_read_on_reply.label`),
+  choice('messageDoubleClick', 'reading', `${EB}message_double_click.label`,
+    opts(`${EB}message_double_click.`, ['reading-pane', 'new-window'], { 'reading-pane': 'reading_pane', 'new-window': 'new_window' })),
   bool('returnToListAfterAction', 'reading', `${EB}return_to_list_after_action.label`),
   choice('messageSpacing', 'reading', `${EB}message_spacing.label`, opts(`${EB}message_spacing.`, ['auto', 'always', 'edge'])),
   bool('emailAlwaysLightMode', 'reading', `${EB}always_light_mode.label`),
@@ -269,7 +281,10 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('mentionAddsRecipientTo', 'composing', `${EB}mention_adds_recipient.label`,
     opts(`${EB}mention_adds_recipient.`, ['to', 'cc', 'off'])),
   bool('rtlEditingSupport', 'composing', `${EB}rtl_editing.label`),
+  bool('replyUnderMessage', 'composing', `${EB}reply_under_message.label`),
   bool('quickReplyEnabled', 'composing', `${EB}quick_reply.label`),
+  choice('replyQuoteDisplay', 'composing', `${EB}reply_quote.label`,
+    opts(`${EB}reply_quote.`, ['collapsed', 'expanded'])),
   bool('autoSelectReplyIdentity', 'composing', 'compose_words.reply_from_received.label'),
   // The page shows it only while the composer may rewrite From.
   choice('replyIdentityMatch', 'composing', `${EB}reply_identity_match.label`,
@@ -334,6 +349,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('showBirthdayCalendar', 'calendar', `${CAL}show_birthday_calendar`),
   bool('enableCalendarTasks', 'calendar', `${CAL}enable_tasks`, { gate: 'calendarTasksEnabled' }),
   bool('showTasksOnCalendar', 'calendar', `${CAL}show_tasks_on_calendar`, { gate: 'calendarTasksEnabled' }),
+  bool('showTasksApp', 'calendar', `${CAL}show_tasks_app`, { gate: 'calendarTasksEnabled' }),
 
   // --- Contacts ---
   bool('groupContactsByLetter', 'contacts', 'settings.contacts.group_by_letter_label'),
@@ -427,10 +443,10 @@ export const DENIED_SETTINGS: readonly string[] = [
   // A browser voice id the model can't know.
   'readAloudVoice',
   // Maps and lists keyed by server ids.
-  'allMailFolderIds', 'hiddenSharedMailAccounts', 'notificationMutes', 'hiddenCompanyCalendars', 'sharedCalendarColors',
+  'allMailFolderIds', 'hiddenSharedMailAccounts', 'sharedMailAccountOrder', 'notificationMutes', 'hiddenCompanyCalendars', 'sharedCalendarColors',
   'folderIcons', 'folderCountModes', 'preferredIdentityIds',
   // App bookkeeping and UI state, not preferences.
-  'onboardingCompleted', 'tourCompleted', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',
+  'onboardingCompleted', 'tourCompleted', 'emailKeywordsChoiceTracked', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',
   'vacationCalendarBlocks', 'explicitSettings', 'proofreadingNoticeSeen',
   // Security, debugging and sync.
   'sessionTimeout', 'debugMode', 'debugCategories', 'settingsSyncDisabled',

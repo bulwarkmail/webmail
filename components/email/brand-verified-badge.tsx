@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { BadgeCheck } from '@/components/icons';
 import { cn } from '@/lib/utils';
@@ -34,7 +35,9 @@ function fetchInfo(domain: string): Promise<BimiInfo> {
  * in DNS gets none: anyone can do that for a lookalike domain.
  *
  * `domain` comes from brandIndicatorDomain (the message passed DMARC for it).
- * A tap opens a line naming who the logo is verified for and by whom.
+ * A tap opens a line naming who the logo is verified for and by whom. That
+ * line floats on the page, because the badge sits inside the sender line,
+ * which clips anything below its one row.
  */
 export function BrandVerifiedBadge({ domain, className }: { domain?: string; className?: string }) {
   const t = useTranslations('email_viewer.brand_logo');
@@ -42,9 +45,26 @@ export function BrandVerifiedBadge({ domain, className }: { domain?: string; cla
   useNoThirdPartyTraffic();
   const enabled = !!domain && !IS_LITE && senderFavicons && senderFaviconsAllowed();
   const [info, setInfo] = useState<{ domain: string; info: BimiInfo } | null>(null);
-  const [open, setOpen] = useState(false);
+  // Where the open line goes, from the badge's place on screen; null is closed.
+  const [placement, setPlacement] = useState<CSSProperties | null>(null);
+  const open = placement !== null;
   const wrapRef = useRef<HTMLSpanElement>(null);
+  const popoverRef = useRef<HTMLSpanElement>(null);
   const popoverId = useId();
+
+  const close = () => setPlacement(null);
+  const toggle = () => {
+    if (open) return close();
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const rtl = !!wrapRef.current && getComputedStyle(wrapRef.current).direction === 'rtl';
+    const room = rtl ? rect.right - 8 : window.innerWidth - rect.left - 8;
+    setPlacement({
+      top: rect.bottom + 4,
+      ...(rtl ? { right: window.innerWidth - rect.right } : { left: rect.left }),
+      maxWidth: `min(16rem, ${Math.max(room, 160)}px)`,
+    });
+  };
 
   useEffect(() => {
     if (!enabled || !domain) return;
@@ -57,14 +77,22 @@ export function BrandVerifiedBadge({ domain, className }: { domain?: string; cla
 
   useEffect(() => {
     if (!open) return;
-    const close = (e: Event) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    const closeOutside = (e: Event) => {
+      const target = e.target as Node;
+      if (wrapRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+      setPlacement(null);
     };
-    document.addEventListener('pointerdown', close);
-    document.addEventListener('focusin', close);
+    // The line is pinned to where the badge was, so it goes when the page moves.
+    const closeNow = () => setPlacement(null);
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('focusin', closeOutside);
+    document.addEventListener('scroll', closeNow, true);
+    window.addEventListener('resize', closeNow);
     return () => {
-      document.removeEventListener('pointerdown', close);
-      document.removeEventListener('focusin', close);
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('focusin', closeOutside);
+      document.removeEventListener('scroll', closeNow, true);
+      window.removeEventListener('resize', closeNow);
     };
   }, [open]);
 
@@ -77,7 +105,7 @@ export function BrandVerifiedBadge({ domain, className }: { domain?: string; cla
     : t('verified', { organization });
 
   return (
-    <span ref={wrapRef} className={cn('relative inline-flex flex-shrink-0', className)}>
+    <span ref={wrapRef} className={cn('inline-flex flex-shrink-0', className)}>
       <button
         type="button"
         data-brand-verified=""
@@ -87,26 +115,33 @@ export function BrandVerifiedBadge({ domain, className }: { domain?: string; cla
         aria-controls={open ? popoverId : undefined}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => !v);
+          toggle();
         }}
         onKeyDown={(e) => {
           if (e.key === 'Escape' && open) {
             e.stopPropagation();
-            setOpen(false);
+            close();
           }
         }}
         className="inline-flex items-center rounded-full text-primary hover:opacity-80 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         <BadgeCheck className="h-4 w-4" aria-hidden="true" />
       </button>
-      {open && (
+      {placement && createPortal(
         <span
+          ref={popoverRef}
           id={popoverId}
           role="status"
-          className="absolute start-0 top-full z-30 mt-1 w-max max-w-[16rem] whitespace-normal rounded-md border border-border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md"
+          data-brand-verified-popover=""
+          // React passes clicks up through the portal to the header, which
+          // would fold the message.
+          onClick={(e) => e.stopPropagation()}
+          style={placement}
+          className="fixed z-50 w-max whitespace-normal rounded-md border border-border bg-popover px-2.5 py-1.5 text-start text-xs font-normal text-popover-foreground shadow-md"
         >
           {description}
-        </span>
+        </span>,
+        document.body,
       )}
     </span>
   );

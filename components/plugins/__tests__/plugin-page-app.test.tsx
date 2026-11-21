@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InstalledPlugin } from '@/lib/plugin-types';
 
@@ -16,6 +16,9 @@ vi.mock('@/components/layout/navigation-rail', () => ({
 }));
 vi.mock('@/components/plugins/app-top-banner-slot', () => ({ AppTopBannerSlot: () => null }));
 vi.mock('@/components/layout/sidebar-apps-modal', () => ({ SidebarAppsModal: () => null }));
+let mountainView = false;
+vi.mock('@/hooks/use-mountain-view-shell', () => ({ useMountainViewShell: () => mountainView }));
+vi.mock('@/components/layout/mv-top-bar', () => ({ MvTopBar: () => null }));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail' }) }));
 vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
@@ -27,13 +30,18 @@ const { PluginPageApp } = await import('../plugin-page-app');
 const registry = await import('@/lib/plugin-sandbox/registry');
 const pages = await import('@/lib/plugin-sandbox/pages');
 const { useAuthStore } = await import('@/stores/auth-store');
+const { useCalendarStore } = await import('@/stores/calendar-store');
 const { usePluginStore } = await import('@/stores/plugin-store');
 const { isFillableSlot } = await import('@/lib/plugin-sandbox/slot-layout');
+const { dispatchApiCall } = await import('@/lib/plugin-sandbox/host-api');
+const { clearSidePanel } = await import('@/lib/plugin-sandbox/side-panels');
+const { PluginSidePanel } = await import('../plugin-side-panels');
 
 function activate(id: string, slots: string[], fill = false) {
+  const permissions = ['ui:app-page', 'ui:sidebar-widget'];
   const plugin: InstalledPlugin = {
     id, name: 'Kanban', version: '1.0.0', author: '', description: '', type: 'ui-extension',
-    permissions: ['ui:app-page'], grantedPermissions: ['ui:app-page'], entrypoint: 'index.js',
+    permissions, grantedPermissions: permissions, entrypoint: 'index.js',
     enabled: true, status: 'running', settings: {},
   };
   registry.register({
@@ -42,15 +50,21 @@ function activate(id: string, slots: string[], fill = false) {
     slotOffers: slots.map((name) => ({ name: name as never, order: 100, hasShouldShow: false, fill })),
     hookDisposables: [],
   });
+  return plugin;
 }
 
 beforeEach(() => {
   createSlotInstance.mockClear();
+  localStorage.clear();
+  mountainView = false;
   useAuthStore.setState({ isAuthenticated: true, isLoading: false, client: {} as never });
   usePluginStore.setState({ initialized: true, initializePlugins: vi.fn().mockResolvedValue(undefined) });
 });
 afterEach(() => {
-  for (const p of registry.all()) registry.deregister(p.plugin.id);
+  for (const p of registry.all()) {
+    clearSidePanel(p.plugin.id);
+    registry.deregister(p.plugin.id);
+  }
   pages.resetPages();
 });
 
@@ -116,5 +130,76 @@ describe('plugin pages', () => {
     render(<PluginPageApp linkSegments={['kanban', 'other']} />);
 
     expect(screen.getByText('not_available_title')).toBeInTheDocument();
+  });
+});
+
+// The side-panel slot beside a plugin page, as beside the mail (the
+// follow-ups plugin's "Upcoming for me" opened from a toolbar button).
+describe('plugin side panels on a plugin page', () => {
+  function showPage() {
+    const plugin = activate('kanban', ['app-page', 'side-panel'], true);
+    act(() => pages.setPluginPages('kanban', 'Kanban', [{ id: 'board', title: 'Board' }]));
+    return plugin;
+  }
+
+  it('answers togglePanel("side-panel") and draws the panel beside the page, which narrows', async () => {
+    const plugin = showPage();
+    const { container } = render(<PluginPageApp linkSegments={['kanban', 'board']} />);
+    await act(async () => { await dispatchApiCall(plugin, 'ui.setSidePanel', [{ title: 'Upcoming for me', icon: 'flag', rail: false }]); });
+    expect(container.querySelector('[data-plugin-side-panel]')).toBeNull();
+
+    let answer: unknown;
+    await act(async () => { answer = await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'toggle']); });
+    expect(answer).toBe(true);
+    const panel = screen.getByRole('complementary', { name: 'Upcoming for me' });
+    expect(panel).toHaveClass('w-[300px]', 'shrink-0');
+    // Beside the page's column, in the same row: the page gives up the width.
+    const page = container.querySelector('[data-plugin-page="kanban/board"]')!;
+    const row = panel.parentElement!;
+    expect(row).toHaveClass('flex');
+    expect(row.contains(page)).toBe(true);
+    expect(page.contains(panel)).toBe(false);
+    expect(Array.from(row.children).indexOf(panel)).toBeGreaterThan(0);
+    await waitFor(() => expect(createSlotInstance.mock.calls.some((c) => (c[0] as { slot: string }).slot === 'side-panel')).toBe(true));
+
+    await act(async () => { answer = await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'toggle']); });
+    expect(answer).toBe(false);
+    expect(container.querySelector('[data-plugin-side-panel]')).toBeNull();
+  });
+
+  it('keeps one open state with the mail view, both ways', async () => {
+    const plugin = showPage();
+    // Opened beside the mail (the mail view's PluginSidePanel) ...
+    const mail = render(<PluginSidePanel />);
+    await act(async () => { await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open']); });
+    mail.unmount();
+
+    // ... it stays open on the plugin page ...
+    const onPage = render(<PluginPageApp linkSegments={['kanban', 'board']} />);
+    expect(onPage.container.querySelector('[data-plugin-side-panel="kanban"]')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    expect(onPage.container.querySelector('[data-plugin-side-panel]')).toBeNull();
+    onPage.unmount();
+
+    // ... and closed there, it is closed back in the mail.
+    const back = render(<PluginSidePanel />);
+    expect(back.container.querySelector('[data-plugin-side-panel]')).toBeNull();
+  });
+
+  it('puts it in Mountain View\'s side panel beside the card, without the apps\' panels', async () => {
+    mountainView = true;
+    useAuthStore.setState({ client: { supportsContacts: () => true } as never });
+    useCalendarStore.setState({ supportsCalendar: true } as never);
+    const plugin = showPage();
+    const { container } = render(<PluginPageApp linkSegments={['kanban', 'board']} />);
+    // Mountain View's own panels act on the mail view, which a plugin page hasn't got.
+    expect(container.querySelector('[data-mv-side-rail] button[aria-label="calendar"]')).toBeNull();
+    expect(container.querySelector('[data-mv-side-rail] button[aria-label="contacts"]')).toBeNull();
+    await act(async () => { await dispatchApiCall(plugin, 'ui.setPanel', ['side-panel', 'open']); });
+    const panel = container.querySelector('[data-plugin-side-panel="kanban"]')!;
+    expect(panel).not.toBeNull();
+    const card = container.querySelector('[data-mv-card]')!;
+    expect(card.contains(panel)).toBe(false);
+    expect(card.parentElement).toBe(panel.parentElement);
   });
 });

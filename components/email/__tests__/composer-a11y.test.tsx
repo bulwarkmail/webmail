@@ -2,6 +2,8 @@ import { render, screen, fireEvent, waitFor, act, within } from '@testing-librar
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
+import { parseMailto } from '@/lib/protocol-handlers/mailto';
+import { mailtoComposerDraft } from '@/components/mail/mailto-draft';
 
 // Accessibility of the composer: named fields, keyboard-reachable chips,
 // announcements, uploads, the send confirmation and the default font.
@@ -149,6 +151,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
     onIdentitySelect: { size: 0, emit: async () => {} },
+    onSelectReplyIdentity: { size: 0 },
   },
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },
@@ -253,10 +256,16 @@ describe('recipient fields (SR-06, CV-02)', () => {
     expect(screen.getByRole('list', { name: 'to:' })).toBeInTheDocument();
   });
 
-  // compose-p2-18: the ring outside the input was cut by the field's scroller.
-  it("draws the To field's keyboard focus ring inside it", () => {
-    render(<EmailComposer initialData={DRAFT} />);
-    expect(screen.getByRole('combobox', { name: 'to:' })).toHaveClass('focus-inset');
+  // The focus outline goes round the whole field (app/accessibility.css keys
+  // on data-recipient-field). Round the input alone it was cut by the field's
+  // scroller (compose-p2-18), and drawn inside the input it lay on the text.
+  it('marks the chips and the input as one field for the focus outline', () => {
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'Anna Berg <anna@example.com>' }} />);
+    const input = screen.getByRole('combobox', { name: 'to:' });
+    const field = input.closest('[data-recipient-field]');
+    expect(field).not.toBeNull();
+    expect(field!.contains(screen.getByRole('list', { name: 'to:' }))).toBe(true);
+    expect(input).not.toHaveClass('focus-inset');
   });
 
   it('labels the subject field', () => {
@@ -558,5 +567,16 @@ describe('alt text in the plain-text part (MA-02)', () => {
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
     const sent = onSend.mock.calls[0][0] as { body: string };
     expect(sent.body).toBe('Results image_alt.plain_text:Sales chart');
+  });
+});
+
+describe('a mailto: link that answers a message (#1732)', () => {
+  it('sends with its In-Reply-To and References', async () => {
+    const parsed = parseMailto('mailto:bob@example.com?subject=Re%3A%20test&body=Hi&in-reply-to=%3Cabc%40example.org%3E');
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={mailtoComposerDraft(parsed!, false)} onSend={onSend} />);
+    fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend.mock.calls[0][0]).toMatchObject({ inReplyTo: ['abc@example.org'], references: ['abc@example.org'] });
   });
 });

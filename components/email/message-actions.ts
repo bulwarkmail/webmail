@@ -37,6 +37,7 @@ import {
   Copy,
   Search,
   Pencil,
+  FilePen,
   Filter,
   Download,
   Save,
@@ -57,6 +58,7 @@ export type MessageActionKey =
   | "cancel_and_edit"
   | "cancel_send"
   | "edit_draft"
+  | "edit_as_new"
   | "reply"
   | "reply_all"
   | "forward"
@@ -92,14 +94,30 @@ export type MessageActionEntry =
       destructive?: boolean;
       testId?: string;
     }
-  | { kind: "submenu"; key: MessageSubmenuKey; icon: Icon; label: string; testId?: string }
+  | {
+      kind: "submenu";
+      key: MessageSubmenuKey;
+      icon: Icon;
+      label: string;
+      testId?: string;
+      /** Shown but not offered; `hint` says why (Move where the folders can't be had). */
+      disabled?: boolean;
+      hint?: string;
+    }
   | { kind: "separator" };
 
 export interface MessageActionOptions {
   email: Email;
+  /**
+   * Whether the row counts as unread, when that isn't the message's own state:
+   * a conversation row is unread while any of its messages is.
+   */
+  unread?: boolean;
   currentMailboxRole?: string;
   /** Folders to move to exist and the host can move. */
   canMove?: boolean;
+  /** Without canMove: Move shows, not offered, with this as the reason (moveFoldersFor). */
+  moveUnavailableHint?: string;
   /** The message is also in another folder and the list shows one folder. */
   canRemoveFromFolder?: boolean;
   /** Another connected account can take a copy. */
@@ -111,6 +129,8 @@ export interface MessageActionOptions {
   onForward?: () => void;
   onForwardAsAttachment?: () => void;
   onEditDraft?: () => void;
+  /** In Sent: a new message filled in as this one went out (#1781). */
+  onEditAsNew?: () => void;
   onArchive?: () => void;
   onDelete?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -179,7 +199,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   // the message's account. It sends mail, so it opens a confirm first.
   const phishing = usePhishingReport([email], o.currentMailboxRole);
 
-  const isUnread = !email.keywords?.$seen;
+  const isUnread = o.unread ?? !email.keywords?.$seen;
   const isStarred = !!email.keywords?.$flagged;
   const isPinned = email.keywords?.["$pinned"] === true;
   const isDraft = email.keywords?.["$draft"] === true;
@@ -237,6 +257,10 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       item("forward_as_attachment", Paperclip, tViewer("forward_as_attachment"), o.onForwardAsAttachment, {
         disabled: !o.onForwardAsAttachment || !email.blobId,
       }),
+      // Sent mail: send it again, changed (#1781).
+      ...(o.onEditAsNew && o.currentMailboxRole === "sent" && !isDraft
+        ? [item("edit_as_new", FilePen, t("edit_as_new"), o.onEditAsNew, { testId: "ctx-edit-as-new" })]
+        : []),
       SEPARATOR,
     ];
     // Permalinks (#733). The conversation entry only when the message
@@ -265,7 +289,11 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       testId: isUnread ? "ctx-mark-read" : "ctx-mark-unread",
     });
     const move: MessageActionEntry[] = [
-      ...(o.canMove ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" } as const] : []),
+      ...(o.canMove
+        ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" } as const]
+        : o.moveUnavailableHint
+          ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to", disabled: true, hint: o.moveUnavailableHint } as const]
+          : []),
       ...(o.canRemoveFromFolder && o.onRemoveFromFolder
         ? [item("remove_from_folder", FolderX, t("remove_from_folder"), o.onRemoveFromFolder, { testId: "ctx-remove-from-folder" })]
         : []),
@@ -320,7 +348,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
           ...draft, ...replies, ...restore, ...archive, del, SEPARATOR,
           ...move, ...copy, ...rules, SEPARATOR,
           read, star, ...pin, tag, SEPARATOR,
-          ...spam, ...reportPhishing, SEPARATOR,
+          ...spam, ...reportPhishing, ...find, SEPARATOR,
           ...openWindow, ...links, SEPARATOR,
           ...views, SEPARATOR,
           ...file,
@@ -331,7 +359,9 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
     const omit = o.omit;
     list = list.filter((entry) => entry.kind === "separator" || !omit.has(entry.key));
   }
-  if (o.extras && o.extras.length > 0) list = [...list, SEPARATOR, ...o.extras];
+  // The host's entries leave out what its toolbar already shows, like the message's own.
+  const extras = (o.extras ?? []).filter((entry) => entry.kind === "separator" || !o.omit?.has(entry.key));
+  if (extras.length > 0) list = [...list, SEPARATOR, ...extras];
   return tidySeparators(list);
 }
 
@@ -343,11 +373,14 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
  */
 export const ROW_MENU_KEYS: ReadonlySet<MessageActionKey> = new Set<MessageActionKey>([
   "reschedule", "cancel_and_edit", "cancel_send", "edit_draft",
-  "reply", "reply_all", "forward",
+  "reply", "reply_all", "forward", "edit_as_new",
   "restore", "archive", "delete", "move",
   "read", "star", "tag",
   "spam",
   "open_window",
+  // Team mailboxes (components/team-mailboxes): one click from the menu.
+  "extra:team_note",
+  "extra:team_assign_me", "extra:team_assign_to", "extra:team_unassign", "extra:team_done", "extra:team_reopen",
 ]);
 
 /**
@@ -390,6 +423,8 @@ export interface SelectionActionOptions {
   emails: Email[];
   currentMailboxRole?: string;
   canMove?: boolean;
+  /** Without canMove: Move shows, not offered, with this as the reason (moveFoldersFor). */
+  moveUnavailableHint?: string;
   canRemoveFromFolder?: boolean;
   canCopyToAccount?: boolean;
   /** Offer the Tag submenu. */
@@ -444,7 +479,11 @@ export function useSelectionActionList(o: SelectionActionOptions): { top: Messag
     destructive: !mountainView,
     testId: "ctx-delete",
   });
-  const move: MessageActionEntry[] = o.canMove ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" }] : [];
+  const move: MessageActionEntry[] = o.canMove
+    ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" }]
+    : o.moveUnavailableHint
+      ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to", disabled: true, hint: o.moveUnavailableHint }]
+      : [];
   // A selection of read and unread mail gets both.
   const read = [
     ...(someUnread ? [item("read", MailOpen, t("mark_read"), () => o.onMarkAsRead?.(true), { testId: "ctx-mark-read" })] : []),

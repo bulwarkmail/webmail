@@ -27,7 +27,7 @@ const STRIP_BORDER: CSSProperties = { borderBottom: LINE };
 const DIVIDER: CSSProperties = { borderInlineStart: LINE };
 /** Most tabs a strip draws; the boot script caps its count to match. */
 const MAX_TABS = 8;
-const BODIES: BootSurface[] = ["mail", "calendar", "contacts", "files", "settings"];
+const BODIES: BootSurface[] = ["mail", "calendar", "tasks", "contacts", "files", "settings"];
 
 /** ProTabBar: up to eight tabs, shown by CSS from the stored count. */
 function TabStripSkeleton() {

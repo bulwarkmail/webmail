@@ -1,15 +1,17 @@
 /**
- * Which server minted a slot's refresh token, for the desktop build.
+ * Which server minted a slot's refresh token, when it is one the user typed.
  *
  * The token routes know a server only through `jmap_rts`, the id of an entry in
- * `jmapServers`, and otherwise fall back to the configured server. A standalone
- * desktop app has neither: every account is a server the user typed. So refresh,
- * revocation and sign-out would throw "OAuth misconfigured", and the account
- * would first look unreachable and then be signed out.
+ * `jmapServers`, and otherwise fall back to the configured server. A sign-in to
+ * a server that is neither (allowCustomJmapEndpoint, and every account of a
+ * standalone desktop app) records that server here, so refresh, revocation and
+ * sign-out go there and nowhere else: never to the configured server, and never
+ * with its client secret.
  *
  * The record is sealed so only this server can have written it. Whether the
  * address may be reached isn't stored: it is checked again on every read, by
- * the same rule as the sign-in routes.
+ * the same rule as the sign-in routes. Outside the desktop build that includes
+ * allowCustomJmapEndpoint still being on for a server that isn't configured.
  */
 
 import type { cookies } from 'next/headers';
@@ -18,6 +20,7 @@ import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-server
 import { decryptPayload, encryptPayload } from '@/lib/auth/crypto';
 import { getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { mailServerRefusedByDevicePolicy } from '@/lib/desktop/server-policy';
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
@@ -46,6 +49,7 @@ async function checkedUpstream(serverUrl: unknown, clientId: unknown): Promise<C
   await configManager.ensureLoaded();
   const servers = parseJmapServers(configManager.get<unknown>('jmapServers', []));
   const trusted = resolveTrustedJmapUrl(serverUrl, configManager.get<string>('jmapServerUrl', ''), servers) !== null;
+  if (!trusted && !IS_DESKTOP_BUILD && !configManager.get<boolean>('allowCustomJmapEndpoint', false)) return null;
   if (!trusted && !(await isPublicHttpUrl(serverUrl))) return null;
   return { serverUrl: serverUrl.replace(/\/+$/, ''), clientId, trusted };
 }

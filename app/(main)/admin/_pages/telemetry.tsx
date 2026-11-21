@@ -159,7 +159,8 @@ export function TelemetryPage() {
     );
   }
 
-  if (loading || !status) {
+  // A refresh after a save keeps the page, and with it the scroll position.
+  if (!status) {
     return (
       <div>
         {header}

@@ -111,6 +111,16 @@ describe('ui.setActions', () => {
     }
   });
 
+  it('takes pressed as true or false', () => {
+    expect(checkActions([{ id: 'x', label: 'X', pressed: true }])[0].pressed).toBe(true);
+    // false is kept: the button is a toggle that is off.
+    expect(checkActions([{ id: 'x', label: 'X', pressed: false }])[0].pressed).toBe(false);
+    expect(checkActions([{ id: 'x', label: 'X' }])[0]).not.toHaveProperty('pressed');
+    for (const pressed of [1, 'true', null]) {
+      expect(() => checkActions([{ id: 'x', label: 'X', pressed }])).toThrow(/pressed must be true or false/);
+    }
+  });
+
   it('sends a click to the plugin with only the context it may see', async () => {
     const invokeHook = vi.fn().mockResolvedValue(undefined);
     const p = plugin({ permissions: ['ui:message-list'] });

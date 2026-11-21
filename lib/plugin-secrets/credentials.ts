@@ -52,12 +52,38 @@ export type CredentialSpec = AdminCredentialSpec | UserCredentialSpec;
 export const MAX_CREDENTIALS_PER_PLUGIN = 8;
 export const CREDENTIAL_ID_RE = /^[a-z][a-z0-9-]{0,39}$/;
 
-/** Headers a credential may not set: the proxy or the transport owns them. */
-const RESERVED_HEADERS = new Set([
-  'host', 'cookie', 'content-length', 'content-type', 'transfer-encoding', 'connection',
-  'origin', 'referer', 'forwarded', 'te', 'upgrade', 'keep-alive', 'proxy-authorization',
-]);
+/**
+ * The request headers a credential may put its secret into: `Authorization`
+ * and the API-key headers of the services the official plugins talk to,
+ * none of which the proxy hands back to a plugin. A name is letters, digits
+ * and hyphens, compared without regard to case. A service with another
+ * header gets its name added here.
+ */
+export const CREDENTIAL_HEADER_NAMES: readonly string[] = [
+  'Authorization', 'X-API-Key', 'X-Goog-Api-Key', 'DHL-API-Key', '17token', 'secretkey',
+];
+const CREDENTIAL_HEADERS = new Set(CREDENTIAL_HEADER_NAMES.map((name) => name.toLowerCase()));
+/** What a header name looks like at all. */
 const HEADER_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
+
+/** Whether a credential may put its secret into the request header `name`. */
+export function isCredentialHeader(name: unknown): name is string {
+  return typeof name === 'string' && HEADER_NAME_RE.test(name) && CREDENTIAL_HEADERS.has(name.toLowerCase());
+}
+
+/**
+ * The header names in a `credentials` block that are outside the list, for
+ * a block that was stored before the list existed (a kept version).
+ */
+export function unlistedCredentialHeaders(credentials: unknown): string[] {
+  if (!credentials || typeof credentials !== 'object' || Array.isArray(credentials)) return [];
+  const out = new Set<string>();
+  for (const spec of Object.values(credentials as Record<string, unknown>)) {
+    const inject = (spec as { inject?: { type?: unknown; name?: unknown } } | null)?.inject;
+    if (inject?.type === 'header' && !isCredentialHeader(inject.name)) out.add(String(inject.name));
+  }
+  return [...out];
+}
 
 /**
  * The origin (scheme + host + port) of a URL, or null. https only, except
@@ -106,8 +132,7 @@ export function checkInject(value: unknown): CredentialInject | null {
     case 'basic':
       return { type: v.type };
     case 'header': {
-      if (typeof v.name !== 'string' || !HEADER_NAME_RE.test(v.name)) return null;
-      if (RESERVED_HEADERS.has(v.name.toLowerCase())) return null;
+      if (!isCredentialHeader(v.name)) return null;
       if (v.prefix !== undefined && (typeof v.prefix !== 'string' || v.prefix.length > 32 || /[\r\n]/.test(v.prefix))) return null;
       return { type: 'header', name: v.name, ...(typeof v.prefix === 'string' ? { prefix: v.prefix } : {}) };
     }
@@ -141,7 +166,16 @@ export function checkCredentials(
     const c = raw as Record<string, unknown>;
     if (typeof c.label !== 'string' || !c.label.trim() || c.label.length > 80) { errors.push(`${where}.label is required (max 80 characters)`); continue; }
     const inject = checkInject(c.inject);
-    if (!inject) { errors.push(`${where}.inject is invalid`); continue; }
+    if (!inject) {
+      const asked = c.inject as { type?: unknown; name?: unknown } | null | undefined;
+      // Name the header when it is one, so the admin and the author see what to change.
+      const named = asked && typeof asked === 'object' && asked.type === 'header'
+        && typeof asked.name === 'string' && HEADER_NAME_RE.test(asked.name) && !isCredentialHeader(asked.name);
+      errors.push(named
+        ? `${where}.inject is invalid: "${asked.name}" is not a header a credential may use (${CREDENTIAL_HEADER_NAMES.join(', ')})`
+        : `${where}.inject is invalid`);
+      continue;
+    }
     let fixedOrigin: string | undefined;
     if (c.origin !== undefined) {
       const origin = credentialOrigin(c.origin);
@@ -181,7 +215,13 @@ export function checkCredentials(
   return { credentials: errors.length ? undefined : out, errors };
 }
 
-/** The header to add for a secret, or null when the credential adds none. */
+/**
+ * The header to add for a secret, or null when the credential adds none: it
+ * has no secret, it is of the `none` kind, or it names a header outside the
+ * list. The last one holds for a credential that was stored before the list
+ * existed (an installed plugin, an account a user connected): its request
+ * goes out without the secret, and the service answers as it does to anyone.
+ */
 export function authHeaderFor(
   inject: CredentialInject,
   secret: string | undefined,
@@ -194,6 +234,7 @@ export function authHeaderFor(
     case 'basic':
       return ['authorization', `Basic ${Buffer.from(`${username ?? ''}:${secret}`, 'utf8').toString('base64')}`];
     case 'header':
+      if (!isCredentialHeader(inject.name)) return null;
       return [inject.name.toLowerCase(), `${inject.prefix ?? ''}${secret}`];
   }
 }

@@ -32,7 +32,7 @@ vi.mock('@/components/email/email-composer', () => ({
     </button>
   ),
 }));
-// A desktop has Compose in the folder sidebar (mail-13, mail-p3-11).
+// Compose set to the folder sidebar (beforeEach), so it is the one button.
 vi.mock('@/components/layout/sidebar', () => ({
   Sidebar: ({ onCompose }: { onCompose?: () => void }) => <button type="button" onClick={onCompose}>sidebar.compose</button>,
 }));
@@ -81,7 +81,7 @@ beforeEach(() => {
     getClientForAccount: () => client as never,
     getAllConnectedClients: () => new Map([['login', client]]) as never,
   });
-  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', sendDelaySeconds: 30 } as never);
+  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', sendDelaySeconds: 30, composePlacement: 'sidebar' } as never);
   cancelUndoSend.mockReset();
   sendEmail.mockReset();
   clearAllHooks();

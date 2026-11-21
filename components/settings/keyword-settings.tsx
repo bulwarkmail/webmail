@@ -2,7 +2,7 @@
 
 import { MoveButtons } from "@/components/ui/move-buttons";
 import React, { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "@/stores/toast-store";
 import {
   useSettingsStore,
@@ -16,7 +16,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useFilterStore } from "@/stores/filter-store";
 import { SettingsSection, SettingItem, ToggleSwitch, Select, AdvancedOnly } from './settings-section';
-import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search } from "@/components/icons";
+import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search, ArrowDownAZ } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
@@ -24,24 +24,51 @@ import { KEYWORD_PREFIX } from "@/lib/thread-utils";
 import { findUnrecognizedKeywords, type UnrecognizedKeyword } from "@/lib/keyword-discovery";
 import {
   buildKeywordTree,
-  composeKeywordId,
+  chooseKeywordId,
   getParentKeywordId,
   hasChildKeywords,
   isKeywordDescendant,
+  isKeywordNameTaken,
   type KeywordNode,
   MAX_KEYWORD_ID_LENGTH,
+  sortKeywordsByName,
 } from "@/lib/keyword-nesting";
 import { formatKeyword } from "@/lib/keyword-format";
 import { TagBadge } from "@/components/email/tag-badge";
+import { isHexTagColor, parseHexColor } from "@/lib/tag-hex-color";
 
-/** Lighter, base and darker shade of each hue, one row per shade. */
+/**
+ * Lighter, base and darker shade of each hue, one row per shade. With
+ * `allowCustom`, a row under them takes any colour as a code or from the
+ * browser's colour dialog.
+ */
 export function KeywordColorPicker({
   value,
   onChange,
+  allowCustom = false,
+  onInvalidChange,
+  onCodeKeyDown,
 }: {
   value: string;
   onChange: (color: string) => void;
+  allowCustom?: boolean;
+  /** Whether the code field holds something that isn't a colour code, so the form can refuse to save. */
+  onInvalidChange?: (invalid: boolean) => void;
+  /** Keys in the code field, so Enter and Escape act as in the form's name field. */
+  onCodeKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
+  const t = useTranslations("settings.keywords");
+  const isHex = isHexTagColor(value);
+  // What the user typed, kept as typed until blur; empty for a palette colour.
+  const [code, setCode] = useState(isHex ? value : "");
+  // A native colour input can't be empty, so it keeps its last colour.
+  const [nativeValue, setNativeValue] = useState(isHex ? value : "#000000");
+  const invalid = code.trim().length > 0 && parseHexColor(code) === null;
+
+  useEffect(() => {
+    onInvalidChange?.(invalid);
+  }, [invalid, onInvalidChange]);
+
   return (
     <div className="space-y-1.5">
       {KEYWORD_PALETTE_ROWS.map((row, index) => (
@@ -50,7 +77,10 @@ export function KeywordColorPicker({
             <button
               key={colorKey}
               type="button"
-              onClick={() => onChange(colorKey)}
+              onClick={() => {
+                setCode("");
+                onChange(colorKey);
+              }}
               className={cn(
                 "w-6 h-6 rounded-full transition-transform hover:scale-110 focus-visible:outline-hidden",
                 KEYWORD_PALETTE[colorKey].dot,
@@ -61,6 +91,56 @@ export function KeywordColorPicker({
           ))}
         </div>
       ))}
+      {allowCustom && (
+        <div className="pt-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t("custom_color")}</span>
+            <input
+              type="color"
+              aria-label={t("pick_custom_color")}
+              data-testid="tag-color-native"
+              value={isHex ? value : nativeValue}
+              onChange={(e) => {
+                const hex = parseHexColor(e.target.value);
+                if (!hex) return;
+                setNativeValue(hex);
+                setCode(hex);
+                onChange(hex);
+              }}
+              className="h-8 w-10 shrink-0 cursor-pointer rounded-md border border-border bg-background p-0.5"
+            />
+            <input
+              type="text"
+              aria-label={t("color_code")}
+              aria-invalid={invalid || undefined}
+              data-testid="tag-color-hex"
+              placeholder="#1a73e8"
+              spellCheck={false}
+              autoComplete="off"
+              maxLength={7}
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                const hex = parseHexColor(e.target.value);
+                if (hex) {
+                  setNativeValue(hex);
+                  onChange(hex);
+                }
+              }}
+              onBlur={() => {
+                const hex = parseHexColor(code);
+                if (hex) setCode(hex);
+              }}
+              onKeyDown={onCodeKeyDown}
+              className={cn(
+                "w-28 px-2.5 py-1.5 text-sm font-mono rounded-md border bg-background focus:outline-hidden",
+                invalid ? "border-destructive" : "border-border",
+              )}
+            />
+          </div>
+          {invalid && <p className="text-xs text-destructive mt-1">{t("invalid_color")}</p>}
+        </div>
+      )}
     </div>
   );
 }
@@ -183,13 +263,23 @@ function KeywordEditForm({
   // tag that has children and allow the color to change.
   const isLocked = !!initial && hasChildKeywords(initial.id, keywords);
 
-  const normalizedId = isLocked && initial ? initial.id : composeKeywordId(parentId || null, label);
-  const isDuplicate = normalizedId.length > 0 && existingIds.includes(normalizedId);
+  // A name with no slug of its own (Cyrillic, Greek, CJK...) or one whose
+  // slug another tag has still gets an id; only the same name twice under
+  // one parent is refused, and only when the name or parent changes, so two
+  // same-named tags from before can still get a new colour.
+  // An edit that keeps the parent and the slug of the name (a colour, case
+  // or punctuation change) keeps the id, so no mail or filter is rewritten.
+  const normalizedId = isLocked && initial
+    ? initial.id
+    : chooseKeywordId(parentId || null, label, existingIds, initial?.id, initial ? initial.label ?? "" : undefined);
+  const keepsPlace = !!initial && label.trim() === (initial.label ?? "").trim() && (parentId || null) === getParentKeywordId(initial.id);
+  const isDuplicate = !isLocked && !keepsPlace && isKeywordNameTaken(keywords, parentId || null, label, initial?.id);
   // Only a new or changed id has to fit: a longer one that predates the limit
   // is already on the messages, and an edit that keeps it, such as a colour
   // change, leaves it as it is.
   const isTooLong = normalizedId.length > MAX_KEYWORD_ID_LENGTH && normalizedId !== initial?.id;
-  const isValid = normalizedId.length > 0 && label.trim().length > 0 && !isDuplicate && !isTooLong;
+  const [colorInvalid, setColorInvalid] = useState(false);
+  const isValid = normalizedId.length > 0 && label.trim().length > 0 && !isDuplicate && !isTooLong && !colorInvalid;
 
   // Every tag is a candidate parent except the one being edited and anything
   // already below it, which would detach the branch from its own root.
@@ -210,6 +300,16 @@ function KeywordEditForm({
       return;
     }
     onSave({ id: normalizedId, label: label.trim(), color });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSave();
+    // Like folders, calendars and address books: Escape cancels.
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      onCancel();
+    }
   };
 
   return (
@@ -243,15 +343,7 @@ function KeywordEditForm({
           placeholder={t("label_placeholder")}
           autoFocus
           maxLength={30}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSave();
-            // Like folders, calendars and address books: Escape cancels.
-            if (e.key === "Escape") {
-              e.preventDefault();
-              e.stopPropagation();
-              onCancel();
-            }
-          }}
+          onKeyDown={handleKeyDown}
         />
         {nestedTags && normalizedId.length > 0 && (
           <p className="text-xs text-muted-foreground font-mono mt-1 break-all">
@@ -262,7 +354,7 @@ function KeywordEditForm({
           <p className="text-xs text-muted-foreground mt-1">{t("has_children_locked")}</p>
         )}
         {isDuplicate && (
-          <p className="text-xs text-destructive mt-1">{t("id_exists")}</p>
+          <p className="text-xs text-destructive mt-1">{t("name_exists")}</p>
         )}
         {isTooLong && (
           <p className="text-xs text-destructive mt-1">
@@ -274,7 +366,13 @@ function KeywordEditForm({
         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
           {t("color_field")}
         </label>
-        <KeywordColorPicker value={color} onChange={setColor} />
+        <KeywordColorPicker
+          value={color}
+          onChange={setColor}
+          allowCustom
+          onInvalidChange={setColorInvalid}
+          onCodeKeyDown={handleKeyDown}
+        />
       </div>
       <div className="flex items-center gap-2 justify-end">
         <button
@@ -532,6 +630,7 @@ function UnrecognizedKeywords() {
 export function KeywordSettings() {
   const t = useTranslations("settings.keywords");
   const tNotifications = useTranslations("notifications");
+  const locale = useLocale();
   const { emailKeywords, nestedTags, addKeyword, updateKeyword, renameKeyword, removeKeyword, reorderKeywords, updateSetting } =
     useSettingsStore();
   const { client } = useAuthStore();
@@ -664,6 +763,27 @@ export function KeywordSettings() {
     });
   };
 
+  // A one-off sort: the result is the manual order from then on, so dragging
+  // and the move buttons go on working, and Undo puts the old order back.
+  const sortedKeywords = sortKeywordsByName(emailKeywords, locale);
+  const alreadySorted = sortedKeywords.every((keyword, index) => keyword === emailKeywords[index]);
+  const handleSort = () => {
+    const before = useSettingsStore.getState().emailKeywords.map((k) => k.id);
+    reorderKeywords(sortKeywordsByName(useSettingsStore.getState().emailKeywords, locale));
+    toast.success(t("sorted"), {
+      action: {
+        label: tNotifications("rule_undo"),
+        onClick: () => {
+          // Tags added or deleted since stay as they are now.
+          const now = useSettingsStore.getState().emailKeywords;
+          const rank = new Map(before.map((id, index) => [id, index]));
+          const position = (id: string) => rank.get(id) ?? before.length;
+          reorderKeywords([...now].sort((a, b) => position(a.id) - position(b.id)));
+        },
+      },
+    });
+  };
+
   const handleVisibilityChange = (id: string, visibility: KeywordVisibility) => {
     updateKeyword(id, { visibility });
   };
@@ -683,6 +803,9 @@ export function KeywordSettings() {
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             {t("migrating")}
           </div>
+        )}
+        {emailKeywords.length === 0 && !isAdding && (
+          <p className="text-sm text-muted-foreground">{t("empty")}</p>
         )}
         {emailKeywords.map((keyword, index) =>
           editingId === keyword.id ? (
@@ -728,7 +851,7 @@ export function KeywordSettings() {
             onCancel={() => setIsAdding(false)}
           />
         ) : (
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button
               variant="outline"
               size="sm"
@@ -741,6 +864,19 @@ export function KeywordSettings() {
               <Plus />
               {t("add_keyword")}
             </Button>
+            {emailKeywords.length > 1 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSort}
+                disabled={alreadySorted}
+                className="text-muted-foreground hover:text-foreground"
+                data-testid="tags-sort-az"
+              >
+                <ArrowDownAZ />
+                {t("sort_az")}
+              </Button>
+            )}
           </div>
         )}
       </div>

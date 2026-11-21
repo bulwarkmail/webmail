@@ -37,6 +37,16 @@ describe('accessibility quick panel', () => {
     expect(await screen.findByTestId('accessibility-panel')).toBeTruthy();
   });
 
+  // With the focus outline off this is the way back, so it keeps the outline here.
+  it('keeps the focus outline on its controls', async () => {
+    render(<AccessibilityQuickPanelHost />);
+    pressAltShiftA();
+    const panel = await screen.findByTestId('accessibility-panel');
+    const kept = screen.getByRole('button', { name: 'settings.accessibility.focus_ring.off' }).closest('[data-keep-focus-outline]');
+    expect(kept).not.toBeNull();
+    expect(panel.contains(kept)).toBe(true);
+  });
+
   it('matches the physical key, not the character a layout produces', () => {
     expect(isAccessibilityPanelShortcut(new KeyboardEvent('keydown', { key: 'Å', code: 'KeyA', altKey: true, shiftKey: true }))).toBe(true);
     expect(isAccessibilityPanelShortcut(new KeyboardEvent('keydown', { key: 'a', code: 'KeyA', altKey: true }))).toBe(false);

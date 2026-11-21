@@ -12,6 +12,7 @@ import type { InstalledPlugin } from '../plugin-types';
 import { useAccountStore } from '@/stores/account-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { resolveEmailBlobContext } from '@/stores/email-store';
+import { directoryScopeFor, inDirectoryScope, principalAddress } from '@/lib/directory-scope';
 import { isValidMetadataKey, MetadataTooLargeError, metadataValueBytes } from '../jmap/bulwark-metadata';
 import { confirmGroups, mailAccountKind, type MailAccountKind } from './account-kind';
 import { readObject, readString, sessionClient, withinRate } from './host-api-input';
@@ -142,6 +143,18 @@ async function loadDirectory(client: IJMAPClient, accountId: string): Promise<Di
         complete = true;
       }
     }
+    // The admin policy's directory rules apply here as in the app's own lists
+    // (loadScopedPrincipalDirectory): a list they can't be applied to comes
+    // back empty and incomplete, and isn't kept for the next lookup.
+    let scoped = true;
+    try {
+      const scope = await directoryScopeFor(client, principals);
+      if (scope) principals = principals.filter((p) => inDirectoryScope(principalAddress(p), scope));
+    } catch {
+      principals = [];
+      complete = false;
+      scoped = false;
+    }
     const entry: DirectoryCache = {
       at: Date.now(),
       complete,
@@ -149,9 +162,10 @@ async function loadDirectory(client: IJMAPClient, accountId: string): Promise<Di
         id: p.id,
         type: typeof p.type === 'string' ? p.type : 'individual',
         name: (p.description || p.name || p.email || p.id).trim(),
-        email: (p.email || (p.name?.includes('@') ? p.name : '') || '').trim().toLowerCase(),
+        email: principalAddress(p).toLowerCase(),
       })),
     };
+    if (!scoped) return entry;
     let byAccount = directories.get(client);
     if (!byAccount) {
       byAccount = new Map();

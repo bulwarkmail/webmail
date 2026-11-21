@@ -143,3 +143,32 @@ describe('openHit for mail in the Pro shell', () => {
     );
   });
 });
+
+// The standard layout opens a hit by its address. With several logins signed
+// in an address that names no login opens nothing, so the hit's address
+// names its login then.
+describe('openHit for mail in the standard layout', () => {
+  const mailHit: MailHit = {
+    kind: 'mail', localAccountId: 'login-a', jmapAccountId: 'c', id: 'eaaaaab', accountLabel: 'A', title: 'Hello',
+    subtitle: 'Inbox', date: T, source: 'remote', snippet: null, email: { id: 'eaaaaab' } as MailHit['email'],
+  };
+
+  it('names the hit\'s login while two logins are signed in', async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    const before = useAccountStore.getState().accounts;
+    useAccountStore.setState({ accounts: [{ id: 'login-a' }, { id: 'login-b' }] as never });
+    try {
+      const navigate = vi.fn();
+      await openHit(mailHit, { proShell: false, navigate });
+      expect(navigate).toHaveBeenCalledWith(appPath('/mail/message/eaaaaab?account=login-a&owner=c'));
+    } finally {
+      useAccountStore.setState({ accounts: before });
+    }
+  });
+
+  it('keeps the address as it was for a single login', async () => {
+    const navigate = vi.fn();
+    await openHit(mailHit, { proShell: false, navigate });
+    expect(navigate).toHaveBeenCalledWith(appPath('/mail/message/eaaaaab?owner=c'));
+  });
+});

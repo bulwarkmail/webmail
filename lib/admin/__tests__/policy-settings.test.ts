@@ -111,6 +111,7 @@ describe('the lock list (lib/admin/restriction-keys.ts)', () => {
       searchDefaultScope: ['all', 'folder'],
       defaultReplyMode: ['reply', 'replyAll'],
       replyIdentityMatch: ['exact', 'domain'],
+      messageDoubleClick: ['reading-pane', 'new-window'],
     };
     for (const def of policyKeys.filter((d) => d.type === 'enum')) {
       expect(new Set(def.allowedValues), def.key).toEqual(new Set(expected[def.key]));

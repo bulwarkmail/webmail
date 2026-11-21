@@ -195,3 +195,28 @@ describe('useKeyboardShortcuts: Ctrl+A', () => {
     unmount();
   });
 });
+
+// #1714: shortcuts follow the letter the key types, not its US place.
+describe('useKeyboardShortcuts: keyboard layouts', () => {
+  const setup = () => {
+    const onArchive = vi.fn();
+    const onForward = vi.fn();
+    renderHook(() => useKeyboardShortcuts({ emails: [], selectedEmailId: 'e1', handlers: { onArchive, onForward } }));
+    return { onArchive, onForward };
+  };
+  const press = (key: string, code: string) =>
+    document.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true }));
+
+  it('archives with the key that types e on Colemak', () => {
+    const { onArchive, onForward } = setup();
+    press('e', 'KeyF');
+    expect(onArchive).toHaveBeenCalledTimes(1);
+    expect(onForward).not.toHaveBeenCalled();
+  });
+
+  it('keeps the US place on a Cyrillic layout', () => {
+    const { onArchive } = setup();
+    press('у', 'KeyE');
+    expect(onArchive).toHaveBeenCalledTimes(1);
+  });
+});

@@ -34,7 +34,7 @@ import { eventToView } from "@/lib/plugin-projection";
 import { ParticipantStatusBadge } from "./rsvp-buttons";
 import { AnswerBars, useAnswerView } from "./answer-bars";
 import type { AnswerTarget } from "@/lib/calendar-delegate";
-import { isEditableEventTarget } from "@/lib/keyboard";
+import { isEditableEventTarget, shortcutKey } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
@@ -128,6 +128,33 @@ export function formatDurationDisplay(minutes: number, locale: string): string {
   if (h === 0) return unit(m, "minute");
   if (m === 0) return unit(h, "hour");
   return `${unit(h, "hour")} ${unit(m, "minute")}`;
+}
+
+/**
+ * The description, cut to a few lines with a toggle when it is longer. Runs
+ * of blank lines (common in forwarded meeting invitations) show as one.
+ */
+function EventDescription({ text, showMore, showLess }: { text: string; showMore: string; showLess: string }) {
+  const shown = useMemo(() => text.replace(/\n[ \t]*(\n[ \t]*)+\n/g, "\n\n"), [text]);
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && !expanded) setOverflows(el.scrollHeight > el.clientHeight + 1);
+  }, [shown, expanded]);
+  return (
+    <div className="min-w-0 flex-1">
+      <p ref={ref} dir="auto" className={cn("text-sm text-muted-foreground whitespace-pre-line break-words", !expanded && "line-clamp-8")}>
+        <LinkifiedText text={shown} />
+      </p>
+      {(overflows || expanded) && (
+        <button type="button" onClick={() => setExpanded(v => !v)} aria-expanded={expanded} className="mt-1 text-xs font-medium text-primary hover:underline">
+          {expanded ? showLess : showMore}
+        </button>
+      )}
+    </div>
+  );
 }
 
 function getRecurrenceLabel(event: CalendarEvent, t: ReturnType<typeof useTranslations>, locale: string): string | null {
@@ -324,7 +351,7 @@ export function EventDetailPopover({
       if (isEditableEventTarget(e)) return;
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       if (isSingleKeyShortcutOff(e)) return;
-      if (e.code === "KeyE" && !noteExpanded && canEditBody) {
+      if (shortcutKey(e) === "e" && !noteExpanded && canEditBody) {
         e.preventDefault();
         onEdit();
       }
@@ -335,6 +362,9 @@ export function EventDetailPopover({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element | null;
+      const el = target instanceof Element ? target : (target as unknown as Node | null)?.parentElement ?? null;
+      if (el?.closest?.('[role="menu"]')) return;
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -442,6 +472,7 @@ export function EventDetailPopover({
           onClick={onMore ?? onDuplicate}
           className={HEADER_BUTTON}
           label={onMore ? t("toolbar.more") : t("events.duplicate")}
+          aria-haspopup={onMore ? "menu" : undefined}
         >
           {onMore ? <MoreVertical className="w-4 h-4" /> : <CopyPlus className="w-4 h-4" />}
         </IconButton>
@@ -619,6 +650,11 @@ export function EventDetailPopover({
                           ({t("participants.organizer_role")})
                         </span>
                       )}
+                      {p.optional && (
+                        <span className="text-muted-foreground ms-1">
+                          ({t("participants.optional_role")})
+                        </span>
+                      )}
                     </span>
                     <ParticipantStatusBadge status={p.status} className="text-[0.625rem]" />
                   </div>
@@ -661,9 +697,7 @@ export function EventDetailPopover({
         {description && (
           <div className="flex items-start gap-2.5">
             <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <p dir="auto" className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3 break-words">
-              <LinkifiedText text={description} />
-            </p>
+            <EventDescription text={description} showMore={t("events.show_more")} showLess={t("events.show_less")} />
           </div>
         )}
 

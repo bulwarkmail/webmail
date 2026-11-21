@@ -35,6 +35,7 @@ const exchangeCodeForTokens = vi.fn();
 vi.mock('@/lib/oauth/token-exchange', () => ({
   exchangeCodeForTokens: (...args: unknown[]) => exchangeCodeForTokens(...args),
   getTokenEndpoint: async () => 'https://idp.example.net/token',
+  getMetadata: async () => ({ authorization_endpoint: 'https://idp.example.net/authorize', token_endpoint: 'https://idp.example.net/token' }),
   getRequiredConfig: () => ({ clientId: 'webmail', serverUrl: 'https://mail.example.org', discoveryUrl: 'https://idp.example.net' }),
   hasClientSecret: () => false,
   getDiscoveryValidator: () => undefined,
@@ -44,7 +45,7 @@ vi.mock('@/lib/oauth/token-exchange', () => ({
 }));
 vi.mock('@/lib/oauth/discovery', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  discoverOAuth: async () => ({ authorization_endpoint: 'https://idp.example.net/authorize', token_endpoint: 'https://idp.example.net/token' }),
+  discoverOAuth: async () => ({ issuer: 'https://idp.example.net', authorization_endpoint: 'https://idp.example.net/authorize', token_endpoint: 'https://idp.example.net/token' }),
 }));
 
 import { POST as exchange, PUT as renew } from '@/app/api/auth/token/route';
@@ -90,6 +91,23 @@ describe('browser code exchange', () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({ access_token: 'at2', refresh_token: 'rt2', expires_in: 3600 })));
     try {
       const res = await renew(new NextRequest('https://webmail.example/api/auth/token?slot=0&force=true&remember=false', {
+        method: 'PUT',
+        headers: { 'sec-fetch-site': 'same-origin' },
+      }));
+      expect(res.status).toBe(200);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(jar.get('jmap_rt')?.value).toBe('rt2');
+    expect(maxAge('jmap_rt')).toBeUndefined();
+    expect(maxAge('jmap_signed_in')).toBeUndefined();
+  });
+
+  it('keeps it a browser-session cookie when the renewal names no choice: the sign-in recorded it', async () => {
+    await exchange(post('/api/auth/token', { ...code, remember: false }));
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ access_token: 'at2', refresh_token: 'rt2', expires_in: 3600 })));
+    try {
+      const res = await renew(new NextRequest('https://webmail.example/api/auth/token?slot=0&force=true', {
         method: 'PUT',
         headers: { 'sec-fetch-site': 'same-origin' },
       }));

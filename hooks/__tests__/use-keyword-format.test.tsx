@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useKeywordFormat } from '../use-keyword-format';
 import { useSettingsStore, KEYWORD_PALETTE, type KeywordDefinition } from '@/stores/settings-store';
 import { suggestKeywordColor } from '@/lib/keyword-discovery';
+import { CVD_CLASSES } from '@/lib/cvd-palette';
 
 const TAGS: KeywordDefinition[] = [
   { id: 'work', label: 'Work', color: 'blue' },
@@ -74,6 +75,35 @@ describe('useKeywordFormat', () => {
 
     it('derives a hue for a definition whose colour is not in the palette', () => {
       useSettingsStore.setState({ emailKeywords: [{ id: 'odd', label: 'Odd', color: 'chartreuse' }] });
+      const { result } = renderHook(() => useKeywordFormat());
+
+      expect(result.current.tagColor('odd')).toBe(KEYWORD_PALETTE[suggestKeywordColor('odd')]);
+    });
+
+    it('draws a custom #rrggbb through classes of its own, not the suggested colour', () => {
+      useSettingsStore.setState({ emailKeywords: [{ id: 'odd', label: 'Odd', color: '#1a73e8' }] });
+      const { result } = renderHook(() => useKeywordFormat());
+
+      const color = result.current.tagColor('odd');
+      expect(color).not.toBe(KEYWORD_PALETTE[suggestKeywordColor('odd')]);
+      expect(color.dot).toBe('tag-hex-1a73e8-dot');
+      expect(color.fill).toBe('tag-hex-1a73e8-fill');
+      expect(color.rowTint).toBe('tag-hex-1a73e8-rowtint');
+    });
+
+    it('draws a custom #rrggbb in the nearest colour-blind-safe colour while that setting is on', () => {
+      useSettingsStore.setState({ emailKeywords: [{ id: 'odd', label: 'Odd', color: '#1a73e8' }], colorBlindPalette: true });
+      try {
+        const { result } = renderHook(() => useKeywordFormat());
+        expect(result.current.tagColor('odd')).toBe(CVD_CLASSES.blue);
+        expect(useSettingsStore.getState().emailKeywords[0].color).toBe('#1a73e8');
+      } finally {
+        useSettingsStore.setState({ colorBlindPalette: false });
+      }
+    });
+
+    it('treats a hex colour that is not lowercase #rrggbb as unknown', () => {
+      useSettingsStore.setState({ emailKeywords: [{ id: 'odd', label: 'Odd', color: '#ABC' }] });
       const { result } = renderHook(() => useKeywordFormat());
 
       expect(result.current.tagColor('odd')).toBe(KEYWORD_PALETTE[suggestKeywordColor('odd')]);

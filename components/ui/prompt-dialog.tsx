@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { firstStrongDirection } from "@/lib/bidi";
 
 interface PromptDialogProps {
   isOpen: boolean;
@@ -25,6 +27,12 @@ interface PromptDialogProps {
   selectBaseName?: boolean;
   /** A third button at the start of the footer, e.g. "Remove link"; closes the dialog. */
   extraAction?: { label: string; onClick: () => void };
+  /**
+   * Fixed text after the field, such as a file's extension. It can't be
+   * edited, `validate` sees it after the value, and `onSubmit` gets the
+   * value alone: the caller adds it back.
+   */
+  suffix?: string;
 }
 
 /** The selection range for a name: all of it, or the part before the extension. */
@@ -48,6 +56,7 @@ export function PromptDialog({
   validate,
   selectBaseName = false,
   extraAction,
+  suffix = "",
 }: PromptDialogProps) {
   const t = useTranslations("confirm_dialog");
   const id = useId();
@@ -71,7 +80,7 @@ export function PromptDialog({
   const resolvedConfirmText = confirmText || t("confirm");
   const resolvedCancelText = cancelText || t("cancel");
   const trimmed = value.trim();
-  const error = trimmed.length > 0 && validate ? validate(trimmed) : null;
+  const error = trimmed.length > 0 && validate ? validate(trimmed + suffix) : null;
   const canSubmit = trimmed.length > 0 && !error;
   const errorId = `${id}-error`;
 
@@ -121,17 +130,26 @@ export function PromptDialog({
         </>
       }
     >
-      <Input
-        aria-label={title}
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        className={error ? "mt-4 border-destructive focus-visible:border-destructive" : "mt-4"}
-      />
+      {/* With a suffix, the row runs the way the name reads, so an extension
+          follows a Latin name on its right even in an RTL interface. */}
+      <div className="mt-4 flex items-center gap-2" dir={suffix ? firstStrongDirection(value) ?? undefined : undefined} data-testid="prompt-row">
+        <Input
+          aria-label={title}
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={placeholder}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className={cn("min-w-0 flex-1", error && "border-destructive focus-visible:border-destructive")}
+        />
+        {suffix && (
+          <span className="max-w-[50%] shrink-0 truncate text-sm text-muted-foreground" dir="auto" data-testid="prompt-suffix">
+            {suffix}
+          </span>
+        )}
+      </div>
       {error && (
         <p id={errorId} role="alert" className="mt-1.5 text-xs text-destructive">
           {error}

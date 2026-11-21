@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch, getPathPrefix, toRouterPath } from "@/lib/browser-navigation";
 import { buildSettingsPath } from "@/lib/deep-links";
 import { LITE_OAUTH_AVAILABLE, getLiteOAuthRedirectUri } from "@/lib/auth/lite-oauth";
+import { IS_LITE } from "@/lib/lite";
 import { AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
@@ -56,6 +57,16 @@ function OAuthCallbackInner() {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const errorParam = searchParams.get("error");
+    // RFC 9207: the issuer that answered, passed on so the server can refuse a
+    // code from another one than the sign-in was sent to.
+    const iss = searchParams.get("iss");
+
+    // An authorization answer names each of these once (RFC 6749 section
+    // 4.1.2, RFC 9207); an address that repeats one is not taken.
+    if (["code", "state", "iss"].some((name) => searchParams.getAll(name).length > 1)) {
+      setError("token_exchange_failed");
+      return;
+    }
 
     if (errorParam) {
       setError(errorParam === "access_denied" ? "access_denied" : "token_exchange_failed");
@@ -87,7 +98,7 @@ function OAuthCallbackInner() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ code, state }),
+            body: JSON.stringify({ code, state, ...(iss ? { iss } : {}) }),
           });
           if (!res.ok) {
             setError("token_exchange_failed");
@@ -110,6 +121,14 @@ function OAuthCallbackInner() {
     }
 
     const savedState = sessionStorage.getItem("oauth_state");
+
+    // Back from the app lands here again, with the code the sign-in already
+    // spent. Lite has no server-side flow to try it with: while that sign-in
+    // is on, go on to the app instead of saying the sign-in did not work.
+    if (!savedState && IS_LITE && useAuthStore.getState().isAuthenticated) {
+      router.replace(toRouterPath(`${getPathPrefix(params.locale as string)}/${params.locale}`));
+      return;
+    }
 
     if (savedState) {
       // Classic flow - sessionStorage has the PKCE state (same-tab OAuth)
@@ -134,7 +153,7 @@ function OAuthCallbackInner() {
         ? getLiteOAuthRedirectUri()
         : `${window.location.origin}${prefix}/${params.locale}/auth/callback`;
 
-      loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId)
+      loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId, iss ?? undefined)
         .then((success) => {
           if (success) {
             sessionStorage.removeItem("oauth_state");
@@ -150,7 +169,9 @@ function OAuthCallbackInner() {
                 redirectTo = saved;
               }
             } catch { /* sessionStorage may be unavailable */ }
-            router.push(toRouterPath(redirectTo));
+            // The code is spent: the callback address leaves the history, so
+            // Back does not come here to try it again.
+            router.replace(toRouterPath(redirectTo));
           } else {
             setError("token_exchange_failed");
           }
@@ -181,7 +202,7 @@ function OAuthCallbackInner() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
-              body: JSON.stringify({ code, state }),
+              body: JSON.stringify({ code, state, ...(iss ? { iss } : {}) }),
             });
             if (!res.ok) {
               setError("token_exchange_failed");
@@ -257,7 +278,7 @@ function OAuthCallbackInner() {
       }
 
       const ssoPrefix = getPathPrefix(params.locale as string);
-      loginWithServerSso(code, state)
+      loginWithServerSso(code, state, iss ?? undefined)
         .then((success) => {
           if (success) {
             let redirectTo = `${ssoPrefix}/${params.locale}`;
@@ -268,7 +289,7 @@ function OAuthCallbackInner() {
                 redirectTo = saved;
               }
             } catch { /* sessionStorage may be unavailable */ }
-            router.push(toRouterPath(redirectTo));
+            router.replace(toRouterPath(redirectTo));
           } else {
             setError("token_exchange_failed");
           }

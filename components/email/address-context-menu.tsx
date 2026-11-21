@@ -4,7 +4,7 @@
 // it, keep it as a contact, find the mail it sent. In the desktop app the
 // menu shows natively (components/ui/context-menu).
 
-import type { MouseEvent, ReactNode } from "react";
+import { useEffect, type MouseEvent, type ReactNode, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, type ContextMenuPosition } from "@/components/ui/context-menu";
 import { Copy, ExternalLink, Search, Send, UserPlus } from "@/components/icons";
@@ -26,6 +26,8 @@ interface AddressContextMenuProps {
   isOpen: boolean;
   position: ContextMenuPosition;
   onClose: () => void;
+  /** The menu's element, for the hook that closes it on a click outside. */
+  menuRef?: RefObject<HTMLDivElement | null>;
   /** Shows a saved contact; without it a saved address offers nothing more. */
   onViewContact?: (contact: ContactCard | null, email: string) => void;
 }
@@ -35,7 +37,7 @@ function contactFor(contacts: ContactCard[], email: string): ContactCard | undef
   return contacts.find((c) => c.emails && Object.values(c.emails).some((e) => e.address.toLowerCase() === wanted));
 }
 
-export function AddressContextMenu({ address, isOpen, position, onClose, onViewContact }: AddressContextMenuProps) {
+export function AddressContextMenu({ address, isOpen, position, onClose, menuRef, onViewContact }: AddressContextMenuProps) {
   const t = useTranslations();
   const contacts = useContactStore((s) => s.contacts);
   if (!address) return null;
@@ -66,7 +68,7 @@ export function AddressContextMenu({ address, isOpen, position, onClose, onViewC
   };
 
   return (
-    <ContextMenu isOpen={isOpen} position={position} onClose={onClose} label={name || email}>
+    <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose} label={name || email}>
       <ContextMenuItem icon={Copy} label={t("desktopUi.context.copy_address")} onClick={run(() => void copy())} testId="address-menu-copy" />
       <ContextMenuItem icon={Send} label={t("email_composer.new_message")} onClick={run(write)} testId="address-menu-write" />
       {contact ? (
@@ -96,12 +98,17 @@ export function AddressContextMenu({ address, isOpen, position, onClose, onViewC
   );
 }
 
-/** A right-click menu for one address, for the element that shows it. */
-export function useAddressContextMenu(onViewContact?: (contact: ContactCard | null, email: string) => void): {
+/**
+ * A right-click menu for one address, for the element that shows `email`.
+ * The reader keeps that element when it opens another message, so the menu
+ * closes when the address changes.
+ */
+export function useAddressContextMenu(email: string, onViewContact?: (contact: ContactCard | null, email: string) => void): {
   onContextMenu: (e: MouseEvent, address: MenuAddress) => void;
   menu: ReactNode;
 } {
-  const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu<MenuAddress>();
+  const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<MenuAddress>();
+  useEffect(() => closeContextMenu(), [email, closeContextMenu]);
   return {
     onContextMenu: (e, address) => {
       e.preventDefault();
@@ -114,6 +121,7 @@ export function useAddressContextMenu(onViewContact?: (contact: ContactCard | nu
         isOpen={contextMenu.isOpen}
         position={contextMenu.position}
         onClose={closeContextMenu}
+        menuRef={menuRef}
         onViewContact={onViewContact}
       />
     ),
@@ -122,7 +130,7 @@ export function useAddressContextMenu(onViewContact?: (contact: ContactCard | nu
 
 /** An address as text, with the address menu on a right-click. */
 export function AddressText({ name, email, onViewContact }: MenuAddress & { onViewContact?: (contact: ContactCard | null, email: string) => void }) {
-  const { onContextMenu, menu } = useAddressContextMenu(onViewContact);
+  const { onContextMenu, menu } = useAddressContextMenu(email, onViewContact);
   return (
     <>
       <span onContextMenu={(e) => onContextMenu(e, { name, email })}>{email}</span>

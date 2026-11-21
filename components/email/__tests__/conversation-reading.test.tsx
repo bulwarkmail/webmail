@@ -18,6 +18,7 @@ vi.mock('@/hooks/use-own-domain-address', () => ({ useOwnDomainAddress: () => ()
 const { ThreadConversationView } = await import('@/components/email/thread-conversation-view');
 const { useSettingsStore } = await import('@/stores/settings-store');
 const { ACCESSIBILITY_DEFAULTS } = await import('@/lib/accessibility-settings');
+const { useThemeStore } = await import('@/stores/theme-store');
 
 function mail(id: string, extra: Record<string, unknown> = {}) {
   return {
@@ -42,7 +43,41 @@ function show(emails: ReturnType<typeof mail>[]) {
 }
 
 beforeEach(() => {
-  useSettingsStore.setState({ ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium' } as never);
+  useSettingsStore.setState({ ...ACCESSIBILITY_DEFAULTS, fontSize: 'medium', emailAlwaysLightMode: false } as never);
+  useThemeStore.setState({ resolvedTheme: 'light', activeThemeId: null });
+});
+
+describe('conversation message surface', () => {
+  const srcdoc = (container: HTMLElement) => container.querySelector('iframe')!.getAttribute('srcdoc')!;
+
+  it('lets the card show behind a mail shown dark', () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container } = show([mail('a')]);
+    expect(srcdoc(container)).toContain('background: transparent');
+  });
+
+  it('keeps the white page of a mail in a light theme', () => {
+    const { container } = show([mail('a')]);
+    expect(srcdoc(container)).toContain('background: #ffffff');
+    expect(srcdoc(container)).not.toContain('background: transparent');
+  });
+
+  it('gives a mail kept light in the dark theme a white page, not the dark card', () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    useSettingsStore.setState({ emailAlwaysLightMode: true } as never);
+    const { container } = show([mail('a')]);
+    expect(srcdoc(container)).toContain('background: #ffffff');
+  });
+
+  it('rebuilds the dark frame for another theme', () => {
+    useThemeStore.setState({ resolvedTheme: 'dark' });
+    const { container, rerender } = show([mail('a')]);
+    const before = srcdoc(container);
+    useThemeStore.setState({ activeThemeId: 'builtin-nord' });
+    const latest = mail('a');
+    rerender(<ThreadConversationView thread={{ threadId: 't1', emails: [latest], latestEmail: latest } as never} emails={[latest] as never} onBack={() => {}} />);
+    expect(srcdoc(container)).not.toBe(before);
+  });
 });
 
 describe('conversation message frames', () => {
@@ -77,6 +112,14 @@ describe('conversation message text size', () => {
     show([mail('a', { htmlBody: [], textBody: [{ partId: '1', type: 'text/plain' }], bodyValues: { '1': { value: 'just text' } } })]);
     const body = screen.getByText('just text').closest('[data-plugin-source="email-body"]') as HTMLElement;
     expect(body.style.fontSize).toMatch(/0\.8125rem \* 2|1\.625rem/);
+  });
+
+  it('plain text is centred at about 80 characters a line when the reading width is comfortable', () => {
+    useSettingsStore.setState({ readingWidth: 'comfortable' } as never);
+    show([mail('a', { htmlBody: [], textBody: [{ partId: '1', type: 'text/plain' }], bodyValues: { '1': { value: 'just text' } } })]);
+    const body = screen.getByText('just text').closest('[data-plugin-source="email-body"]') as HTMLElement;
+    expect(body.style.maxWidth).toBe('80ch');
+    expect(body.style.marginInline).toBe('auto');
   });
 });
 

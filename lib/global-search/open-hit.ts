@@ -8,6 +8,7 @@ import {
   sharedFilesSearch,
 } from '@/lib/deep-links';
 import type { GlobalSearchHit } from '@/lib/global-search/types';
+import { severalLogins } from '@/lib/sole-login';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFileStore } from '@/stores/file-store';
 import { useProTabStore, type ProPaneId } from '@/stores/pro-tab-store';
@@ -99,7 +100,10 @@ export async function openHit(hit: GlobalSearchHit, options: OpenHitOptions): Pr
       // A group or shared account's hit names its account: ids repeat (#1351).
       const own = auth.getClientForAccount(hit.localAccountId)?.getAccountId();
       const ownerAccountId = hit.jmapAccountId && hit.jmapAccountId !== own ? hit.jmapAccountId : null;
-      navigate?.(appPath(buildMailPath({ mailboxId: null, emailId: hit.id, threadId: null, ownerAccountId })));
+      // With several logins signed in the address names the hit's login
+      // too, now the active one: one that names none opens nothing then.
+      const loginId = severalLogins() ? hit.localAccountId : null;
+      navigate?.(appPath(buildMailPath({ mailboxId: null, emailId: hit.id, threadId: null, loginId, ownerAccountId })));
       return;
     }
     case 'contacts':

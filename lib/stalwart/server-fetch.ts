@@ -16,16 +16,11 @@
  */
 
 import { configManager } from '@/lib/admin/config-manager';
-import { logger } from '@/lib/logger';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
 import { observeUpstream } from '@/lib/metrics/upstream';
 import { desktopRedirectRefused } from '@/lib/desktop/server-redirect';
-import {
-  isStoredCredentialRefused,
-  recordStoredCredentialStatus,
-  refusedCredentialResponse,
-} from '@/lib/stalwart/stored-credential-budget';
+import { acquireStoredCredential, refusedCredentialResponse } from '@/lib/stalwart/stored-credential-budget';
 
 const MAX_REDIRECTS = 5;
 /** Deadline for one upstream request when the caller sets none. */
@@ -43,6 +38,14 @@ export async function isTrustedJmapServerUrl(serverUrl: string): Promise<boolean
 }
 
 export type ServerFetchInit = RequestInit & { duplex?: 'half' };
+
+export interface JmapServerFetchOptions {
+  /**
+   * False when the Authorization header is not a stored credential but one
+   * typed in for this request: it then skips the stored-credential budget.
+   */
+  storedCredential?: boolean;
+}
 
 function headersToRecord(init: HeadersInit | undefined): Record<string, string> {
   const out: Record<string, string> = {};
@@ -66,22 +69,33 @@ function headersToRecord(init: HeadersInit | undefined): Record<string, string> 
  *
  * A credential the server refused is not sent again for a while; the call
  * gets a 401 without a request (lib/stalwart/stored-credential-budget.ts).
+ * Requests that overlap are held to that too: while one request with an
+ * unproven credential is out, the others with it wait for its answer
+ * (acquireStoredCredential). That budget is for credentials replayed from a
+ * context cookie. A caller sending one that was typed in for this request
+ * passes `{ storedCredential: false }` and rate-limits it itself.
  */
 export async function fetchJmapServer(
   url: string,
   givenInit: ServerFetchInit = {},
   trusted: boolean | undefined,
+  options: JmapServerFetchOptions = {},
 ): Promise<Response> {
-  const authHeader = new Headers(givenInit.headers).get('authorization');
-  if (authHeader && (await isStoredCredentialRefused(authHeader))) return refusedCredentialResponse();
-  // With tracing on, Stalwart gets the trace context and its spans join ours.
-  const response = await observeUpstream('stalwart', (trace) => fetchUnbudgeted(url, withTraceHeaders(givenInit, trace), trusted));
-  // Not awaited: this process's copy is updated at once, the shared write follows.
-  if (authHeader) {
-    void recordStoredCredentialStatus(authHeader, response.status).catch((error) => {
-      logger.warn('Stored credential status not recorded', { error: error instanceof Error ? error.message : 'Unknown error' });
-    });
+  if (options.storedCredential === false) {
+    return observeUpstream('stalwart', (trace) => fetchUnbudgeted(url, withTraceHeaders(givenInit, trace), trusted));
   }
+  const authHeader = new Headers(givenInit.headers).get('authorization');
+  const pass = authHeader ? await acquireStoredCredential(authHeader) : null;
+  if (authHeader && !pass) return refusedCredentialResponse();
+  let response: Response;
+  try {
+    // With tracing on, Stalwart gets the trace context and its spans join ours.
+    response = await observeUpstream('stalwart', (trace) => fetchUnbudgeted(url, withTraceHeaders(givenInit, trace), trusted));
+  } catch (error) {
+    pass?.failed();
+    throw error;
+  }
+  pass?.answered(response.status);
   return response;
 }
 

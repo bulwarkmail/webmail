@@ -18,6 +18,8 @@ import { FreeBusyShareButton } from "./free-busy-share-button";
 interface Attendee {
   name: string;
   email: string;
+  /** An optional attendee's busy time doesn't block a slot, so it isn't looked up. */
+  optional?: boolean;
 }
 
 /** Why an attendee's calendar was left out of the search. */
@@ -50,8 +52,9 @@ export function visibleCalendarOwners(calendars: Pick<Calendar, "isShared" | "ac
 }
 
 /**
- * Look up everyone Bulwark can and search the free slots. One availability
- * call per attendee it can resolve plus one for the organiser, over the whole
+ * Look up everyone Bulwark can and search the free slots; optional
+ * attendees don't count and aren't looked up. One availability call per
+ * required attendee it can resolve plus one for the organiser, over the whole
  * search window; refused up front when that would go over what is left of
  * Stalwart 1.0's 100 calls a minute.
  */
@@ -76,7 +79,7 @@ export async function suggestTimes(
   const directory = await loadAttendeeDirectory(client);
   const own = client.getUsername()?.trim().toLowerCase() ?? "";
   const ownId = directory.byEmail.get(own)?.id ?? client.getAccountId();
-  const people = input.attendees.filter((a) => a.email.trim().toLowerCase() !== own);
+  const people = input.attendees.filter((a) => !a.optional && a.email.trim().toLowerCase() !== own);
   const notChecked: SuggestionResult["notChecked"] = [];
   const ids = new Map<string, string>();
   let directoryQueriesOff = false;
@@ -172,7 +175,8 @@ export function FindATime({ attendees, start, end, onPick, savedWindow }: FindAT
 
   const supported = !!client?.supportsAvailability?.() && !!client.getPrincipalsAvailability;
   const durationMs = start && end ? end.getTime() - start.getTime() : 0;
-  const attendeesKey = attendees.map((a) => a.email.toLowerCase()).join(",");
+  const attendeesKey = attendees.map((a) => `${a.email.toLowerCase()}${a.optional ? "?" : ""}`).join(",");
+  const anyOptional = attendees.some((a) => a.optional);
   // A new set of people or a new length is a new question.
   useEffect(() => {
     seq.current++;
@@ -293,6 +297,9 @@ export function FindATime({ attendees, start, end, onPick, savedWindow }: FindAT
                 })}
               </ul>
             </>
+          )}
+          {!busy && result && anyOptional && (
+            <p className="mt-2 text-muted-foreground" data-testid="find-a-time-optional">{t("optional_ignored")}</p>
           )}
           {!busy && result && result.notChecked.length > 0 && (
             <div className="mt-2 text-muted-foreground" data-testid="find-a-time-not-checked">

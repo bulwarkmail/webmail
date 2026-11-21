@@ -4,6 +4,7 @@ import { KeywordSettings } from '../keyword-settings';
 import { useSettingsStore, DEFAULT_KEYWORDS } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
+import { useFilterStore } from '@/stores/filter-store';
 
 // Mock SettingsSection to just render children, keeping the real controls
 vi.mock('../settings-section', async (importOriginal) => ({
@@ -49,6 +50,19 @@ describe('KeywordSettings', () => {
     expect(ids.slice(0, 2)).toEqual([second, first]);
   });
 
+  // #1612: new accounts start with no tags.
+  it('says there are no tags yet and still lets the user make one', () => {
+    useSettingsStore.setState({ emailKeywords: [] });
+    render(<KeywordSettings />);
+    expect(screen.getByText('empty')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('add_keyword'));
+    expect(screen.queryByText('empty')).toBeNull();
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: 'Work' } });
+    fireEvent.click(screen.getByText('add'));
+    expect(useSettingsStore.getState().emailKeywords).toEqual([{ id: 'work', label: 'Work', color: 'blue' }]);
+    expect(screen.queryByText('empty')).toBeNull();
+  });
+
   it('renders add keyword button', () => {
     render(<KeywordSettings />);
     expect(screen.getByText('add_keyword')).toBeInTheDocument();
@@ -77,15 +91,16 @@ describe('KeywordSettings', () => {
     expect(keywords[keywords.length - 1].id).toBe('important');
   });
 
-  it('prevents adding keyword with duplicate id', () => {
+  it('prevents adding a tag with a name that is already used', () => {
     render(<KeywordSettings />);
     fireEvent.click(screen.getByText('add_keyword'));
 
     const input = screen.getByPlaceholderText('label_placeholder');
-    fireEvent.change(input, { target: { value: 'Red' } });
+    fireEvent.change(input, { target: { value: 'red' } });
 
     // Should show duplicate warning
-    expect(screen.getByText('id_exists')).toBeInTheDocument();
+    expect(screen.getByText('name_exists')).toBeInTheDocument();
+    expect(screen.getByText('add')).toBeDisabled();
   });
 
   it('cancels add form when cancel clicked', () => {
@@ -435,5 +450,220 @@ describe('KeywordSettings editing', () => {
 
     expect(screen.queryByDisplayValue('Changed')).toBeNull();
     expect(useSettingsStore.getState().emailKeywords[0].label).toBe(DEFAULT_KEYWORDS[0].label);
+  });
+});
+
+// #1613: the id is a slug of the name, and a name with no Latin letters or
+// digits has none, so Save stayed disabled without a word.
+describe('KeywordSettings names in other scripts', () => {
+  const migrateKeyword = vi.fn();
+  const renameKeywordInFilters = vi.fn();
+
+  beforeEach(() => {
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], nestedTags: false });
+    migrateKeyword.mockReset();
+    renameKeywordInFilters.mockReset().mockResolvedValue({ changed: 0, unhandled: 0 });
+    useFilterStore.setState({ renameKeywordInFilters } as never);
+    useAuthStore.setState({ client: { migrateKeyword, getTagCounts: vi.fn().mockResolvedValue({}) } as never });
+  });
+
+  const addTag = (name: string) => {
+    fireEvent.click(screen.getByText('add_keyword'));
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: name } });
+    fireEvent.click(screen.getByText('add'));
+  };
+
+  it('adds a tag named in Cyrillic under a valid keyword id', () => {
+    render(<KeywordSettings />);
+    addTag('Работа');
+
+    const added = useSettingsStore.getState().emailKeywords.at(-1);
+    expect(added?.label).toBe('Работа');
+    expect(added?.id).toMatch(/^tag-[0-9a-z]+$/);
+  });
+
+  it('adds two names whose slugs are the same as two tags', () => {
+    render(<KeywordSettings />);
+    addTag('Банк 1');
+    addTag('Счета 1');
+
+    const keywords = useSettingsStore.getState().emailKeywords;
+    expect(keywords).toHaveLength(DEFAULT_KEYWORDS.length + 2);
+    const [bank, bills] = keywords.slice(-2);
+    expect(bank).toMatchObject({ label: 'Банк 1', id: '1' });
+    expect(bills.label).toBe('Счета 1');
+    expect(bills.id).not.toBe('1');
+  });
+
+  it('renames a tag to a Cyrillic name without changing its id', async () => {
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getAllByTitle('edit')[0]);
+    fireEvent.change(screen.getByDisplayValue('Red'), { target: { value: 'Красный' } });
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() =>
+      expect(useSettingsStore.getState().emailKeywords.find((k) => k.id === 'red')?.label).toBe('Красный'),
+    );
+    expect(migrateKeyword).not.toHaveBeenCalled();
+  });
+
+  // "Счета 1" got a generated id because "Банк 1" had `1`. With "Банк 1"
+  // gone, a colour change must not move it to `1`: that rewrites all its
+  // mail and filters, and the mail "Банк 1" left behind would join it.
+  it('keeps the id of a tag when only its colour changes', async () => {
+    render(<KeywordSettings />);
+    addTag('Банк 1');
+    addTag('Счета 1');
+    const billsId = useSettingsStore.getState().emailKeywords.at(-1)!.id;
+    expect(billsId).not.toBe('1');
+    useSettingsStore.setState({ emailKeywords: useSettingsStore.getState().emailKeywords.filter((k) => k.id !== '1') });
+
+    fireEvent.click(screen.getAllByTitle('edit').at(-1)!);
+    fireEvent.click(screen.getByLabelText('green'));
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() =>
+      expect(useSettingsStore.getState().emailKeywords.find((k) => k.label === 'Счета 1')?.color).toBe('green'),
+    );
+    expect(useSettingsStore.getState().emailKeywords.find((k) => k.label === 'Счета 1')?.id).toBe(billsId);
+    expect(migrateKeyword).not.toHaveBeenCalled();
+    expect(renameKeywordInFilters).not.toHaveBeenCalled();
+  });
+
+  it('keeps the id of a plugin tag when its name changes only in case', async () => {
+    useSettingsStore.setState({ emailKeywords: [{ id: 'from-plugin', label: 'invoices', color: 'blue' }] });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByTitle('edit'));
+    fireEvent.change(screen.getByDisplayValue('invoices'), { target: { value: 'Invoices' } });
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() => expect(useSettingsStore.getState().emailKeywords[0].label).toBe('Invoices'));
+    expect(useSettingsStore.getState().emailKeywords[0].id).toBe('from-plugin');
+    expect(migrateKeyword).not.toHaveBeenCalled();
+  });
+
+  it('still moves the mail when a tag is renamed to another slug', async () => {
+    migrateKeyword.mockResolvedValue({ refused: 0 });
+    useSettingsStore.setState({ emailKeywords: [{ id: 'from-plugin', label: 'invoices', color: 'blue' }] });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByTitle('edit'));
+    fireEvent.change(screen.getByDisplayValue('invoices'), { target: { value: 'Bills' } });
+    fireEvent.click(screen.getByText('save'));
+
+    await waitFor(() => expect(migrateKeyword).toHaveBeenCalledWith('$label:from-plugin', '$label:bills'));
+  });
+
+  it('nests a tag with a Cyrillic name under its parent', () => {
+    useSettingsStore.setState({ emailKeywords: [{ id: 'work', label: 'Work', color: 'blue' }], nestedTags: true });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByText('add_keyword'));
+    fireEvent.change(screen.getByLabelText('parent_field'), { target: { value: 'work' } });
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: 'Клиенты' } });
+    fireEvent.click(screen.getByText('add'));
+
+    expect(useSettingsStore.getState().emailKeywords.at(-1)?.id).toMatch(/^work\/tag-[0-9a-z]+$/);
+  });
+});
+
+describe('KeywordSettings custom colors', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], nestedTags: false });
+  });
+
+  const openAddForm = (name = 'Custom') => {
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByText('add_keyword'));
+    fireEvent.change(screen.getByPlaceholderText('label_placeholder'), { target: { value: name } });
+  };
+  const added = () => useSettingsStore.getState().emailKeywords.find((k) => k.id === 'custom');
+
+  it('shows a custom color row with a native picker and a code field', () => {
+    openAddForm();
+    expect(screen.getByText('custom_color')).toBeInTheDocument();
+    expect(screen.getByTestId('tag-color-native')).toHaveAttribute('aria-label', 'pick_custom_color');
+    expect(screen.getByTestId('tag-color-hex')).toHaveAttribute('aria-label', 'color_code');
+  });
+
+  it('stores a typed code as lowercase #rrggbb', () => {
+    openAddForm();
+    fireEvent.change(screen.getByTestId('tag-color-hex'), { target: { value: '#1A73E8' } });
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('#1a73e8');
+  });
+
+  it('expands a three-digit code, and shows it in full after blur', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '0a0' } });
+    expect(field).toHaveValue('0a0');
+    fireEvent.blur(field);
+    expect(field).toHaveValue('#00aa00');
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('#00aa00');
+  });
+
+  it('saves with Enter in the code field', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '#123456' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(added()?.color).toBe('#123456');
+  });
+
+  it('refuses an incomplete code and disables Add', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '#12' } });
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('invalid_color')).toBeInTheDocument();
+    expect(screen.getByText('add').closest('button')).toBeDisabled();
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(added()).toBeUndefined();
+
+    // An empty field is no error.
+    fireEvent.change(field, { target: { value: '' } });
+    expect(field).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByText('invalid_color')).toBeNull();
+    expect(screen.getByText('add').closest('button')).toBeEnabled();
+  });
+
+  it('fills the code field from the native picker', () => {
+    openAddForm();
+    fireEvent.change(screen.getByTestId('tag-color-native'), { target: { value: '#ff8800' } });
+    expect(screen.getByTestId('tag-color-hex')).toHaveValue('#ff8800');
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('#ff8800');
+  });
+
+  it('goes back to a palette color and clears the code field when a swatch is clicked', () => {
+    openAddForm();
+    const field = screen.getByTestId('tag-color-hex');
+    fireEvent.change(field, { target: { value: '#1a73e8' } });
+    fireEvent.click(screen.getByRole('button', { name: 'teal' }));
+    expect(field).toHaveValue('');
+    fireEvent.click(screen.getByText('add'));
+    expect(added()?.color).toBe('teal');
+  });
+
+  it('opens a tag with a hex color with the code in both inputs and no swatch ringed', () => {
+    useSettingsStore.setState({ emailKeywords: [{ id: 'custom', label: 'Custom', color: '#1a73e8' }] });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByTitle('edit'));
+    expect(screen.getByTestId('tag-color-hex')).toHaveValue('#1a73e8');
+    expect(screen.getByTestId('tag-color-native')).toHaveValue('#1a73e8');
+    expect(document.querySelector('.ring-2')).toBeNull();
+  });
+
+  it('offers no custom row on a tag found on messages', async () => {
+    const discoverKeywords = vi.fn().mockResolvedValue({ keywords: { '$label:q3-invoices': 7 }, scanned: 9, total: 9, complete: true });
+    useAuthStore.setState({ client: { discoverKeywords, getTagCounts: vi.fn().mockResolvedValue({}) } as never });
+    render(<KeywordSettings />);
+    fireEvent.click(screen.getByText('unrecognized.scan'));
+    await screen.findByDisplayValue('Q3 Invoices');
+    fireEvent.click(screen.getByRole('button', { name: 'color_field' }));
+    expect(screen.getByRole('button', { name: 'teal' })).toBeInTheDocument();
+    expect(screen.queryByTestId('tag-color-hex')).toBeNull();
+    expect(screen.queryByTestId('tag-color-native')).toBeNull();
+    useAuthStore.setState({ client: null });
   });
 });

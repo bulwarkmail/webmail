@@ -24,6 +24,7 @@ export const ADMIN_PAGE_IDS = [
   'org-sharing',
   'org-labels',
   'org-proofreading',
+  'org-team-mailboxes',
   'org-calendars',
   'org-notices',
   'org-devices',
@@ -87,6 +88,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
       { id: 'servers', title: 'JMAP servers', keywords: 'multi server domain auto pick list' },
       { id: 'wopi', title: 'Document editing', keywords: 'wopi collabora onlyoffice office files host url' },
       { id: 'bimi', title: 'Brand logos', keywords: 'bimi vmc cmc mark certificate sender logo icon dmarc' },
+      { id: 'sender-check', title: 'Sender check', keywords: 'trusted mail servers authserv authentication results unverified sender gateway spf dkim dmarc legacy proxy gmail' },
       { id: 'logging', title: 'Logging', keywords: 'log level format json text debug' },
       { id: 'sync', title: 'Settings sync', keywords: 'session secret devices' },
     ],
@@ -100,7 +102,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     sections: [
       { id: 'oauth', title: 'OAuth / OpenID Connect', keywords: 'client id secret issuer scopes private endpoints auto configure stalwart' },
       { id: 'sso', title: 'Single sign-on', keywords: 'auto sso redirect end session logout provider post-logout' },
-      { id: 'admin-access', title: 'Admin access', keywords: 'stalwart admin dashboard password automatic' },
+      { id: 'admin-access', title: 'Admin access', keywords: 'stalwart admin dashboard password automatic additional admin accounts mail accounts list' },
       { id: 'session', title: 'Session and security', keywords: 'cookie samesite frame ancestors parent origin embed' },
     ],
   },
@@ -126,6 +128,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     sections: [
       { id: 'features', title: 'Features', keywords: 'calendar contacts files smime templates keywords sidebar apps unified mailbox archive custom from debug export' },
       { id: 'push-relays', title: 'Push relays', keywords: 'notifications relay url default lock' },
+      { id: 'recipient-directory', title: 'Recipient directory', keywords: 'directory accounts own domains hidden noreply suggestions sharing delegation free busy' },
       { id: 'sidebar-apps', title: 'Default sidebar apps', keywords: 'apps rail intranet inline tab icon' },
       { id: 'restrictions', title: 'Locked settings', keywords: 'restrict hide lock font size density layout delete action reply mode session timeout notifications debug' },
     ],
@@ -209,6 +212,16 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     keywords: 'proofreading spelling grammar spell check languagetool writing language mandatory required',
     sections: [
       { id: 'proofreading', title: 'Proofreading', keywords: 'checker plugin required lock language force' },
+    ],
+  },
+  {
+    id: 'org-team-mailboxes',
+    label: 'Team mailboxes',
+    description: 'Notes and assignment in mailboxes a group shares',
+    group: 'organisation',
+    keywords: 'team mailbox group shared info support notes note assign assignment done mention collaborate',
+    sections: [
+      { id: 'team-mailboxes', title: 'Team mailboxes', keywords: 'notes assignment group shared mailbox' },
     ],
   },
   {

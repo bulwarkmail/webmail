@@ -45,6 +45,12 @@ export const ROW_ATTRIBUTE = 'data-window-row';
 export const ROW_RIGHT_ATTRIBUTE = 'data-window-row-right';
 export const ROW_LEFT_ATTRIBUTE = 'data-window-row-left';
 /**
+ * How far the traffic lights reach into that row, from its own left edge. A row
+ * right of the rail already starts that far in, so the window's inset would count
+ * the rail twice.
+ */
+export const ROW_LEFT_VAR = '--window-row-left-inset';
+/**
  * The end of this row or pane head, where its own close usually goes, is at the
  * window's controls: a close there would read as a second one for the window, so
  * it goes to the other end (hooks/use-close-beside-controls.ts).
@@ -181,6 +187,7 @@ export function markWindowRows(area: TitlebarArea, doc: Document = document): HT
       el.removeAttribute(ROW_ATTRIBUTE);
       el.removeAttribute(ROW_RIGHT_ATTRIBUTE);
       el.removeAttribute(ROW_LEFT_ATTRIBUTE);
+      setRowLeftInset(el, null);
       el.removeAttribute(CLOSE_MOVES_ATTRIBUTE);
       continue;
     }
@@ -190,6 +197,7 @@ export function markWindowRows(area: TitlebarArea, doc: Document = document): HT
     el.toggleAttribute(ROW_ATTRIBUTE, atTop);
     el.toggleAttribute(ROW_RIGHT_ATTRIBUTE, onRight);
     el.toggleAttribute(ROW_LEFT_ATTRIBUTE, onLeft);
+    setRowLeftInset(el, onLeft ? Math.round(left - rect.left) : null);
     el.toggleAttribute(CLOSE_MOVES_ATTRIBUTE, rtl ? onLeft : onRight);
   }
   for (const el of Array.from(doc.querySelectorAll<HTMLElement>(`[${PANE_HEAD_ATTRIBUTE}]`))) {
@@ -198,6 +206,17 @@ export function markWindowRows(area: TitlebarArea, doc: Document = document): HT
     el.toggleAttribute(CLOSE_MOVES_ATTRIBUTE, near && (rtl ? left > 0 && rect.left < left : right > 0 && rect.right > viewportWidth - right));
   }
   return [...seen];
+}
+
+/**
+ * Writes only a change: watchWindowRows watches the style attribute, so writing the
+ * same value again would run another pass, and that one another.
+ */
+function setRowLeftInset(el: HTMLElement, inset: number | null): void {
+  const value = inset === null ? '' : `${Math.max(0, inset)}px`;
+  if (el.style.getPropertyValue(ROW_LEFT_VAR) === value) return;
+  if (value) el.style.setProperty(ROW_LEFT_VAR, value);
+  else el.style.removeProperty(ROW_LEFT_VAR);
 }
 
 /** Inside something scrolled away from its top: a row passing under, not a toolbar. */

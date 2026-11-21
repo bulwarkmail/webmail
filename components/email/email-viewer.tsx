@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
+import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId, type CSSProperties } from "react";
 import { spamApplicableIn } from "@/lib/spam-applicable";
-import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
-import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
+import { Email, ContactCard, Identity, Mailbox } from "@/lib/jmap/types";
+import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE, renamedAttachmentFilename } from "@/lib/download-filename";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
@@ -31,7 +31,7 @@ import { measureEmailFrameHeight } from "@/lib/email-frame-height";
 import { createFrameSizer } from "@/lib/email-frame-sizer";
 import { forwardFrameKeys } from "@/lib/email-frame-keys";
 import { addAddressToContacts } from "@/lib/contacts/add-from-address";
-import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
+import { DARK_PENDING_CLASS, EMAIL_DARK_CANVAS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, readSurfaceColor, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth, type FitOptions } from "@/lib/email-fit-width";
 import { hasFullBleedCanvas } from "@/lib/email-full-bleed";
 import { withBasePath } from "@/lib/browser-navigation";
@@ -59,26 +59,30 @@ import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/p
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope, quickReplyRecipients } from "@/lib/outgoing/quick-reply-envelope";
-import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview, generateUUID } from "@/lib/utils";
+import { cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview, generateUUID } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { planToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { emailInMailbox, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
 import { TagPicker } from "./tag-picker";
 import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useAccountTags, useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds, emailKeyFor } from "@/lib/thread-utils";
-import { getSecurityStatus, extractListHeaders, getSenderVerification, brandIndicatorDomain } from "@/lib/email-headers";
+import { extractListHeaders } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
-import type { EmailReadView, ExternalLinkContext } from "@/lib/plugin-types";
+import { askReplyIdentity, hasReplyIdentityPlugins } from "@/lib/plugin-reply-identity";
+import { deliveryAddresses } from "@/lib/reply-identity";
+import { toUnicodeEmail } from "@/lib/idn";
+import type { ExternalLinkContext } from "@/lib/plugin-types";
 import { ViewSourceDialog } from "./view-source-dialog";
 import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
 import { useChooseMoveFolder } from "./move-to-dialog";
 import { SaveToFilesDialog, type SaveableAttachment } from "./save-to-files-dialog";
+import { RenameAttachmentDialog } from "./rename-attachment-dialog";
 import { usePolicyStore } from "@/stores/policy-store";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
 import {
@@ -104,14 +108,10 @@ import {
   Image,
   Tag,
   X,
-  Check,
-  AlertTriangle,
-  Minus,
   ShieldCheck,
   ShieldAlert,
   Undo,
   Copy,
-  Brain,
   Keyboard,
   Phone,
   Building,
@@ -153,25 +153,28 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
-import { useEmailStore, resolveEmailBlobContext, emailWriteSource, bulkDeleteIsPermanent, type EmailBlobContext } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, bulkDeleteIsPermanent, type EmailBlobContext } from "@/stores/email-store";
 import { trashRestoreTarget } from "@/lib/trash-restore-target";
 import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
 import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
+import { NotesAfter, NotesSummaryLine, TeamNoteArea, TeamNotesProvider, useHasNotesAfter } from "@/components/team-mailboxes/team-conversation";
+import { requestNoteField, useTeamOf, useTeamState } from "@/components/team-mailboxes/use-team";
+import { TeamAssigneeLine, useTeamActions } from "@/components/team-mailboxes/team-actions";
 import { ReceivedLabelChip } from "./received-label-chip";
+import { ImportanceChip } from "./importance-chip";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
 import { CalendarInvitationBanner } from "./calendar-invitation-banner";
 import { ReadReceiptBanner } from "./read-receipt-banner";
-import { stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
+import { cachedIdentitiesForAccount, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover, RecipientCardPopover, type CardAnchor } from "./recipient-popover";
 import { SenderNameLine } from "./sender-name-line";
 import { AddressText } from "./address-context-menu";
-import { BreakableAddress } from "@/components/ui/breakable-address";
 import { mentionFromLink } from "@/lib/recipient-mentions";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
@@ -192,7 +195,7 @@ import { VerificationCodeChip } from "./verification-code-chip";
 import { StructuredMailCards } from "./structured-mail/structured-mail-cards";
 import { BookingCalendarActions } from "./structured-mail/booking-calendar-actions";
 import { useStructuredMail } from "./structured-mail/use-structured-mail";
-import { ConversationEmailBody, type ConversationAttachmentHandler, useConversationExternalContent, useMarkReadWhenShown } from "./thread-conversation-view";
+import { ConversationEmailBody, type ConversationAttachmentHandler, useConversationExternalContent, useMarkReadWhenShown, conversationVisibleAttachments } from "./thread-conversation-view";
 import type { TnefAttachment } from "@/lib/tnef";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { PluginActions, useMessageActionTarget, type MessageActionTarget } from "@/components/plugins/plugin-actions";
@@ -211,7 +214,9 @@ import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useRemoteContentBlockedByOrg, useRemoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { useBrandDomain } from "@/hooks/use-brand-domain";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
+import { MessageDetailsPanel, MessageRecipientsLine, senderCheckText } from "./message-details";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
 type MoreMenuSub = MessageSubmenuKey;
@@ -230,6 +235,9 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
   '10': 'open_window',
   '11': 'extra:view_mode',
   '12': 'extra:fullscreen',
+  // Team mailboxes only (lib/team-mailboxes). Assignment and Done sit in
+  // the line under the subject, and in the ⋮ menu.
+  '13': 'extra:team_note',
 };
 /**
  * The reader toolbar's buttons that stay: Reply (1), Reply all (2), Forward
@@ -248,6 +256,9 @@ const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
 // (a new {} each time drew the whole reader once more after its body came).
 // The resets on a new message go through useQuietState for the same reason.
 const NO_URLS: Record<string, string> = {};
+/** Attachment names the user changed, by attachment id, for the message they were changed in. */
+interface AttachmentRenames { emailId: string | undefined; names: Record<string, string> }
+const NO_RENAMES: AttachmentRenames = { emailId: undefined, names: {} };
 /** What a message from a file can't do: it is in no folder and has no address in the app. */
 const SAVED_FILE_OMIT: readonly MessageActionKey[] = [
   'edit_draft', 'forward_as_attachment', 'restore', 'archive', 'delete', 'remove_from_folder',
@@ -279,12 +290,21 @@ export interface EmailViewerProps {
   onDownloadAttachment?: (blobId: string, name: string, type?: string, forceDownload?: boolean, source?: EmailBlobContext) => void;
   /** Resolves false when nothing was sent (the user went back), so the text stays. */
   /** `composerId`: the id plugins know the quick reply by, for its send checks. */
-  onQuickReply?: (body: string, extra?: { composerId?: string }) => Promise<boolean | void>;
+  /** `identityId`: the identity a plugin picked for it (onSelectReplyIdentity). */
+  onQuickReply?: (body: string, extra?: { composerId?: string; identityId?: string }) => Promise<boolean | void>;
   /** Keeps the typed quick reply as a draft before an automatic sign-out (lib/compose-flush-registry.ts). */
-  onSaveQuickReplyDraft?: (body: string) => Promise<void>;
+  onSaveQuickReplyDraft?: (body: string, extra?: { identityId?: string }) => Promise<void>;
   onMarkAsSpam?: () => void;
   onUndoSpam?: () => void;
   onMoveToMailbox?: (mailboxId: string) => void;
+  /**
+   * Why the message can't be moved from here, when the host offers no Move
+   * (its login's folders can't be had, see moveFoldersFor): Move shows,
+   * unavailable, with this as its hint.
+   */
+  moveUnavailableHint?: string;
+  /** Whose folders `mailboxes` are, when not the active login's: Move shows it above them (moveFoldersFor's `owner`). */
+  moveHeading?: string;
   /**
    * Take the message out of the open folder only (#615). Passed only when
    * the message is also in another folder.
@@ -334,6 +354,8 @@ export interface EmailViewerProps {
    */
   replyDraft?: { preview?: string; onEdit: () => void; onDiscard: () => void } | null;
   onEditDraft?: () => void;
+  /** In Sent: a new message filled in as this one went out (#1781). */
+  onEditAsNew?: () => void;
   onCancelScheduledForEdit?: () => void;
   /** Stop a scheduled message from going out; it goes back to Drafts. */
   onCancelScheduledSend?: () => void;
@@ -478,40 +500,19 @@ interface EffectiveAttachment {
   cid?: string;
   decryptedAttachment?: PostalMimeAttachment;
   tnefData?: Uint8Array;
+  /** The user renamed it in this reader: `name` is theirs, saved as typed. */
+  renamed?: boolean;
+}
+
+/** The name a saved copy of an attachment gets in a zip or a folder. */
+function attachmentCopyName(attachment: EffectiveAttachment): string {
+  if (attachment.renamed && attachment.name) return renamedAttachmentFilename(attachment.name);
+  return getAttachmentDisplayName(attachment.name, attachment.type);
 }
 
 function getPostalMimeAttachmentSize(attachment: PostalMimeAttachment): number {
   const bytes = getAttachmentContentBytes(attachment);
   return bytes?.byteLength ?? 0;
-}
-
-// Helper to render clickable recipient elements with popovers
-function renderClickableRecipients(
-  recipients: Array<{ name?: string; email: string }>,
-  currentUserEmail: string | undefined,
-  t: (key: string, params?: Record<string, string | number>) => string,
-  onViewContact?: (contact: ContactCard | null, email: string) => void,
-  maxVisible: number = 2
-) {
-  const visible = recipients.slice(0, maxVisible);
-  return visible.map((r, index) => {
-    const isMe = currentUserEmail &&
-      (r.email.toLowerCase() === currentUserEmail.toLowerCase() ||
-       r.email.toLowerCase().startsWith(currentUserEmail.toLowerCase().split('@')[0] + '+'));
-
-    return (
-      <span key={r.email + index} className="inline-flex items-center">
-        <RecipientPopover
-          name={r.name}
-          email={r.email}
-          displayLabel={isMe ? t('recipient_me') : undefined}
-          onViewContact={onViewContact}
-          className="text-sm"
-        />
-        {index < visible.length - 1 && <span className="text-muted-foreground">,</span>}
-      </span>
-    );
-  });
 }
 
 // Contact sidebar panel that slides in from the right on desktop
@@ -894,16 +895,18 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
   const tSidebar = useTranslations('sidebar');
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const unread = !email.keywords?.$seen;
   return (
     <button
       type="button"
       onClick={() => onOpen?.(email)}
       data-mv-conversation-card=""
+      data-plugin-list-avoid=""
       data-email-id={email.id}
       className={cn("w-full flex items-start py-3 border-t border-border text-start hover:bg-muted/40 transition-colors", compact ? "gap-3 px-4" : "gap-4 px-6")}
     >
-      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
+      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandDomain} />
       <span className="flex-1 min-w-0">
         <span className="flex items-baseline gap-2">
           <span dir="auto" className={cn("text-sm truncate", unread ? "font-bold" : "font-semibold")}>
@@ -915,7 +918,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
               {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
             </span>
           )}
-          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
+          <ConversationDate date={emailListDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
         </span>
         <span className="block text-sm text-muted-foreground truncate">{cleanPreview(email.preview)}</span>
       </span>
@@ -927,39 +930,6 @@ function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: 
 function isInteractiveClick(target: EventTarget | null, container: HTMLElement): boolean {
   const el = target instanceof Element ? target.closest('button, a, input, textarea, select, [role="button"], [role="menuitem"]') : null;
   return !!el && el !== container && container.contains(el);
-}
-
-/**
- * The sender, recipients, dates and ids of an unfolded conversation message,
- * as the open message's details panel lists them.
- */
-function MvConversationDetails({ email, timeFormat, className }: { email: Email; timeFormat: '12h' | '24h'; className?: string }) {
-  const t = useTranslations('email_viewer');
-  const addresses = (list?: { name?: string | null; email?: string | null }[]) =>
-    (list ?? []).map((a) => (a.name && a.email ? `${a.name} <${a.email}>` : a.email || a.name || '')).join(', ');
-  const fullDate = (iso: string) =>
-    formatDateTime(iso, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const rows: [string, string | undefined][] = [
-    [t('from'), addresses(email.from)],
-    [t('reply_to_label').replace(':', ''), addresses(email.replyTo)],
-    [t('to'), addresses(email.to)],
-    [t('cc'), addresses(email.cc)],
-    [t('bcc'), addresses(email.bcc)],
-    [t('details.sent'), email.sentAt ? fullDate(email.sentAt) : undefined],
-    [t('details.received'), fullDate(email.receivedAt)],
-    [t('subject'), email.subject],
-    [t('headers.message_id'), email.messageId],
-  ];
-  return (
-    <dl className={cn("grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 pb-3 text-xs", className)} data-mv-conversation-details="">
-      {rows.filter(([, value]) => value).map(([label, value]) => (
-        <Fragment key={label}>
-          <dt className="text-muted-foreground">{label}</dt>
-          <dd className="text-foreground min-w-0 break-words">{value}</dd>
-        </Fragment>
-      ))}
-    </dl>
-  );
 }
 
 /**
@@ -980,10 +950,17 @@ export function MvExpandedConversationCard({
   blobSource,
   compact,
   shortDates,
+  onCard,
+  currentUserEmail,
+  onViewContact,
 }: {
   email: Email;
   timeFormat: '12h' | '24h';
+  currentUserEmail?: string;
+  onViewContact?: (contact: ContactCard | null, email: string) => void;
   compact?: boolean;
+  /** Inside the reader's message card (reading width about 80 characters). */
+  onCard?: boolean;
   /** The default layout's short date instead of Gmail's long one. */
   shortDates?: boolean;
   onCollapse: (email: Email) => void;
@@ -1001,8 +978,20 @@ export function MvExpandedConversationCard({
   const externalContent = useConversationExternalContent();
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
+  const brandDomain = useBrandDomain(email);
   const hasBody = !!email.bodyValues;
   const [showDetails, setShowDetails] = useState(false);
+  // The details panel, as the open message has it (#1744).
+  const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
+  const mailViewMode = useSettingsStore((state) => state.mailViewMode);
+  const client = useAuthStore((state) => state.client);
+  const hasDetailsSlotOffers = usePluginSlotOffers('email-details-section').length > 0;
+  const pluginEmailView = useMemo(
+    () => (showDetails && hasDetailsSlotOffers
+      ? { ...emailToReadView(email), ...readability(!blobSource || blobSource.client === client) }
+      : null),
+    [showDetails, hasDetailsSlotOffers, email, blobSource, client],
+  );
   const loadRequested = useRef(false);
   useEffect(() => {
     if (hasBody || loadRequested.current || !onLoadBody) return;
@@ -1039,15 +1028,17 @@ export function MvExpandedConversationCard({
           }
         }}
         data-mv-conversation-header=""
+        data-plugin-list-avoid=""
         className={cn("flex items-start pt-3 pb-2 cursor-pointer", compact ? "gap-3 px-4" : "gap-4 px-6")}
       >
-        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
+        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandDomain} />
         <span className="flex-1 min-w-0">
           <span className="flex items-baseline gap-2">
             <SenderNameLine
               className="text-sm font-semibold"
               name={sender?.name || sender?.email || ''}
               address={compact ? null : sender?.email}
+              badge={<BrandVerifiedBadge domain={brandDomain} />}
             />
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6875rem] font-medium bg-primary/10 text-primary shrink-0">
@@ -1055,25 +1046,19 @@ export function MvExpandedConversationCard({
                 {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
               </span>
             )}
-            <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <ReceivedLabelChip email={email} className="self-center" />
-            <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
+            <ImportanceChip email={email} className="self-center" />
+            <ConversationDate date={emailListDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
           </span>
-          <button
-            type="button"
-            onClick={() => setShowDetails((v) => !v)}
-            aria-expanded={showDetails}
-            data-mv-conversation-details-toggle=""
-            className="flex items-center gap-0.5 max-w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span className="truncate">
-              {email.to && email.to.length > 0
-                ? `${t('to')} ${email.to.map((a) => a.name || a.email).join(', ')}`
-                : t(showDetails ? 'hide_details' : 'show_details')}
-            </span>
-            {showDetails ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
-          </button>
+          <MessageRecipientsLine
+            email={email}
+            currentUserEmail={currentUserEmail}
+            onViewContact={onViewContact}
+            expanded={showDetails}
+            onToggle={() => setShowDetails((v) => !v)}
+            phone={compact}
+          />
         </span>
         {(showReplies || onPrint) && (
           <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
@@ -1122,7 +1107,22 @@ export function MvExpandedConversationCard({
           </span>
         </div>
       )}
-      {showDetails && <MvConversationDetails email={email} timeFormat={timeFormat} className={compact ? "px-4" : "ps-[80px] pe-6"} />}
+      {showDetails && (
+        <div data-mv-conversation-details="">
+          <MessageDetailsPanel
+            email={email}
+            timeFormat={timeFormat}
+            currentUserEmail={currentUserEmail}
+            onViewContact={onViewContact}
+            brandDomain={brandDomain}
+            attachments={conversationVisibleAttachments(email, hideInlineImageAttachments, mailViewMode === 'plain')}
+            listHeaders={email.headers ? extractListHeaders(email.headers) : null}
+            pluginEmailView={pluginEmailView}
+            hasPluginSection={hasDetailsSlotOffers}
+            className={compact ? "px-4" : "ps-[80px] pe-6"}
+          />
+        </div>
+      )}
       {hasBody ? (
         <ConversationEmailBody
           email={email}
@@ -1133,6 +1133,7 @@ export function MvExpandedConversationCard({
           blobSource={blobSource}
           className={cn("pb-4", compact ? "px-4" : "ps-[80px] pe-6")}
           bodyStyle={{ paddingBlock: '0.25rem 0.5rem' }}
+          onCard={onCard}
         />
       ) : (
         <div className={cn("pb-4 pt-1 space-y-2 animate-pulse", compact ? "px-4" : "ps-[80px] pe-6")} data-mv-conversation-loading="">
@@ -1163,13 +1164,20 @@ export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun,
 }) {
   const tPane = useTranslations('conversation_pane');
   const [showAll, setShowAll] = useState(false);
+  // Team notes sit after the message they follow, and never fold away.
+  const hasNotesAfter = useHasNotesAfter();
   if (emails.length === 0) return null;
   const isExpanded = (e: Email) => !!renderExpanded && !!expandedIds?.has(e.id);
-  const renderOne = (e: Email) => isExpanded(e)
-    ? <Fragment key={e.id}>{renderExpanded!(e)}</Fragment>
-    : <MvConversationCard key={e.id} email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} shortDates={shortDates} />;
+  const renderOne = (e: Email) => (
+    <Fragment key={e.id}>
+      {isExpanded(e)
+        ? renderExpanded!(e)
+        : <MvConversationCard email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} shortDates={shortDates} />}
+      <NotesAfter emailId={e.id} />
+    </Fragment>
+  );
   const middle = emails.slice(1, -1);
-  if (!collapseLongRun || showAll || emails.length <= 3 || middle.some(isExpanded)) {
+  if (!collapseLongRun || showAll || emails.length <= 3 || middle.some(isExpanded) || middle.some((e) => hasNotesAfter(e.id))) {
     return <>{emails.map(renderOne)}</>;
   }
   return (
@@ -1232,15 +1240,6 @@ function MvPager({
   );
 }
 
-/**
- * The plugin slot under one "more details" category. Props are memoised so
- * re-renders of the viewer don't post them to the plugin again.
- */
-function DetailsCategorySlot({ email, category }: { email: EmailReadView | null; category: string | null }) {
-  const props = useMemo(() => ({ email, category }), [email, category]);
-  return <PluginSlot name="email-details-section" className="mt-2 empty:mt-0" extraProps={props} />;
-}
-
 /** Narrowest the message may get next to a plugin panel before the panel collapses. */
 const MIN_READER_WIDTH = 480;
 const NO_BODY_SELECTION = { text: '' };
@@ -1275,6 +1274,8 @@ interface ReaderMoreMenuProps {
   options: MessageActionOptions;
   label: string;
   mailboxes: Mailbox[];
+  /** Whose folders `mailboxes` are, when not the active login's. */
+  moveHeading?: string;
   selectedMailbox: string;
   onMoveToMailbox?: (mailboxId: string) => void;
   onSetTag?: (tagId: string | null) => void;
@@ -1283,7 +1284,7 @@ interface ReaderMoreMenuProps {
 }
 
 /** The reader's ⋮ on a desktop: the row's context menu, anchored to the button (R6). */
-function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMoveToMailbox, onSetTag, pluginEntries }: ReaderMoreMenuProps) {
+function ReaderMoreMenu({ menu, options, label, mailboxes, moveHeading, selectedMailbox, onMoveToMailbox, onSetTag, pluginEntries }: ReaderMoreMenuProps) {
   const { email } = options;
   const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
   return (
@@ -1295,6 +1296,8 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       menuRef={menu.menuRef}
       label={label}
       mailboxes={mailboxes}
+      moveHeading={moveHeading}
+      moveUnavailableHint={options.moveUnavailableHint}
       selectedMailbox={selectedMailbox}
       currentMailboxRole={options.currentMailboxRole}
       onReply={options.onReply}
@@ -1302,6 +1305,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       onForward={options.onForward}
       onForwardAsAttachment={options.onForwardAsAttachment}
       onEditDraft={options.onEditDraft}
+      onEditAsNew={options.onEditAsNew}
       onArchive={options.onArchive}
       onMoveToInbox={options.onMoveToInbox}
       onDelete={options.onDelete}
@@ -1431,10 +1435,14 @@ function ReaderMorePanelBody({
               aria-haspopup="menu"
               data-testid={entry.key === 'rules' ? 'viewer-rules' : `panel-${entry.key}`}
               onClick={() => openSub(entry.key)}
-              className={PANEL_ROW_CLASS}
+              disabled={entry.disabled}
+              className={cn(PANEL_ROW_CLASS, entry.disabled && "opacity-50")}
             >
               <Icon className="w-5 h-5" />
-              <span className="flex-1">{entry.label}</span>
+              <span className="flex-1">
+                {entry.label}
+                {entry.hint && <span className="block text-xs text-muted-foreground">{entry.hint}</span>}
+              </span>
               {entry.key === 'tag' && currentTagIds.length > 0 && (
                 <span className="flex -space-x-1 me-1" aria-hidden>
                   {sortedTagIds.slice(0, 3).map((tagId) => (
@@ -1490,6 +1498,8 @@ export function EmailViewer({
   onMarkAsSpam,
   onUndoSpam,
   onMoveToMailbox,
+  moveUnavailableHint,
+  moveHeading,
   onRemoveFromFolder,
   onTogglePinned,
   onBack,
@@ -1509,6 +1519,7 @@ export function EmailViewer({
   replyComposerOpen,
   replyDraft,
   onEditDraft,
+  onEditAsNew,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
@@ -1546,6 +1557,7 @@ export function EmailViewer({
   // The policy of the message's own account: in the unified inbox or a Pro
   // tab that may be another signed-in account than the active one.
   const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email?.sourceClientAccountId);
+  const brandDomain = useBrandDomain(email);
   // Also true while the policy is still loading: trust can't unblock yet.
   const remoteHeldBack = useRemoteContentHeldBack(email?.sourceClientAccountId);
   const tThirdParty = useTranslations('third_party');
@@ -1658,6 +1670,20 @@ export function EmailViewer({
   const mvBefore = mvOpenIndex > 0 ? mvConversation!.slice(0, mvOpenIndex) : [];
   const mvAfter = mvOpenIndex >= 0 ? mvConversation!.slice(mvOpenIndex + 1) : [];
   const mvConversationIds = mvOpenIndex >= 0 ? mvConversation!.map((e) => e.id).join(',') : '';
+  // Team mailboxes: the notes of the conversation on screen (or of the single message).
+  const teamOfEmail = useTeamOf(email);
+  // A member who may only read gets no Note button anywhere (until the team
+  // has loaded it counts as allowed).
+  const teamOfEmailState = useTeamState(teamOfEmail?.ref.key);
+  const teamNoteAllowed = !!teamOfEmail && teamOfEmailState?.canWrite !== false
+    && teamOfEmail.client.getAccountInfo?.(teamOfEmail.ref.accountId)?.isReadOnly !== true;
+  const teamActions = useTeamActions(email && !email.isScheduled && !email.keywords?.$draft ? email : null);
+  const tTeam = useTranslations('team_mailboxes');
+  const teamMessages = useMemo(
+    () => (mvOpenIndex >= 0 ? mvConversation! : email ? [email] : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- by ids
+    [mvConversationIds, email?.id, mvOpenIndex >= 0],
+  );
   const threadSummaryProps = useMemo(
     () => ({ threadId: email?.threadId ?? null, emailIds: mvConversationIds ? mvConversationIds.split(',') : [], deviceType: isMobile ? 'mobile' : isCompact ? 'tablet' : 'desktop' }),
     [email?.threadId, mvConversationIds, isMobile, isCompact],
@@ -1754,6 +1780,10 @@ export function EmailViewer({
         : blobSource ?? resolveEmailBlobContext(target, client)}
       onDownloadAttachment={(blobId, name, type, source) => onDownloadAttachment?.(blobId, name, type, false, source)}
       compact={mvMobileViewer}
+      // Called by the conversation run while it renders, after `readingCard` is set.
+      onCard={readingCard}
+      currentUserEmail={currentUserEmail}
+      onViewContact={handleViewContactSidebar}
     />
   );
   // Mountain View's toolbars are icon-only, on the phone as on the desktop.
@@ -1779,10 +1809,21 @@ export function EmailViewer({
   // inline images, export and attachment drag-out. Other viewer hosts keep
   // their existing fallback routing.
   const isUnifiedView = useEmailStore((s) => s.isUnifiedView);
+  // A stamped message's parts come through its own login only: the same blob
+  // id is another file in any other login.
   const legacyBlobClient = useMemo(() => {
     const scid = isUnifiedView ? email?.sourceClientAccountId : undefined;
-    return (scid ? useAuthStore.getState().getClientForAccount(scid) : null) ?? client;
-  }, [isUnifiedView, email?.sourceClientAccountId, client]);
+    if (!scid) return client;
+    return useAuthStore.getState().getClientForAccount(scid) ?? (scid === activeAccountId ? client : null);
+  }, [isUnifiedView, email?.sourceClientAccountId, client, activeAccountId]);
+  // Where the open message is: what the host says (a Pro tab, a message
+  // window, the Mail tab's reader), else its stamps or the login browsed.
+  // What the reader sends or notes for the message (a read receipt and its
+  // flag, the unsubscribe mail) goes through that login. No client there
+  // means the login is not connected, and nothing goes out.
+  const messageSource = email ? blobSource ?? resolveEmailBlobContext(email, client) : null;
+  const messageSourceRef = useRef(messageSource);
+  messageSourceRef.current = messageSource;
   const legacyBlobAccountId = isUnifiedView ? email?.sourceAccountId : undefined;
   const blobClient = blobSource ? blobSource.client : legacyBlobClient;
   const blobAccountId = blobSource ? blobSource.accountId : legacyBlobAccountId;
@@ -1799,15 +1840,13 @@ export function EmailViewer({
   // subscriber; sendEmail resolves the identity (with its own fallback to
   // the account default) from the address we pass.
   const handleSendMailtoUnsubscribe = async (fields: { to: string[]; subject?: string; body?: string }) => {
-    const sendClient = (email?.sourceClientAccountId
-      ? useAuthStore.getState().getClientForAccount(email.sourceClientAccountId)
-      : undefined) ?? client;
+    const sendClient = messageSourceRef.current?.client;
     if (!sendClient) throw new Error(tNotifications('not_connected'));
 
     const recipientAddresses = [...(email?.to ?? []), ...(email?.cc ?? [])].map(r => r.email?.toLowerCase());
-    // In unified views the owning account's identities are not loaded here -
-    // pass nothing and let its client fall back to its default identity.
-    const fromIdentity = email?.sourceClientAccountId
+    // Another login's identities are not loaded here - pass nothing and let
+    // its client fall back to its default identity.
+    const fromIdentity = sendClient !== client
       ? undefined
       : identities.find(i => i.email && recipientAddresses.includes(i.email.toLowerCase()));
 
@@ -1837,6 +1876,7 @@ export function EmailViewer({
     }
   }, [onRescheduleScheduled, t, tComposer, scheduledSendAt, timeFormat]);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const activeThemeId = useThemeStore((state) => state.activeThemeId);
   const { startTour } = useTour();
   // The details panel belongs to the message it was opened on: the next
   // message opens without it (mail-7).
@@ -1848,7 +1888,6 @@ export function EmailViewer({
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [imageThumbUrls, setImageThumbUrls] = useQuietState<Record<string, string>>(NO_URLS);
   const [allowExternalContent, setAllowExternalContent] = useState(false);
-  const [hasBlockedContent, setHasBlockedContent] = useQuietState(false);
   const [cidBlobUrls, setCidBlobUrls] = useQuietState<Record<string, string>>(NO_URLS);
   // blob: URL -> the cid: part behind it, so a click on a link the body points
   // at a part can be routed through the attachment preview/download gate
@@ -1883,10 +1922,32 @@ export function EmailViewer({
   const quickReplyPlaceholder = quickReplyNames
     ? tWords('quick_reply_to', { names: quickReplyNames })
     : t('quick_reply_placeholder');
+  // The quick reply's message and account, for the plugin pick below and
+  // the plugin actions' id.
+  const quickReplyKey = email ? JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId]) : '';
+  // The identity a plugin picked for this quick reply (onSelectReplyIdentity),
+  // asked once the user starts on it, once per message and account.
+  const [quickReplyPluginIdentity, setQuickReplyPluginIdentity] = useState<{ key: string; id: string | null } | null>(null);
+  const quickReplyPluginIdentityId = quickReplyPluginIdentity?.key === quickReplyKey ? quickReplyPluginIdentity.id : null;
+  const quickReplyStarted = quickReplyEnabled && (isQuickReplyFocused || quickReplyText.length > 0);
+  const quickReplyAskedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!quickReplyStarted || !email || quickReplyAskedRef.current === quickReplyKey) return;
+    if (!hasReplyIdentityPlugins()) return;
+    quickReplyAskedRef.current = quickReplyKey;
+    const key = quickReplyKey;
+    const deliveredTo = deliveryAddresses(email.headers);
+    void askReplyIdentity({
+      mode: 'quick-reply',
+      source: { ...email, deliveredTo },
+      identities,
+      identityId: quickReplyEnvelope(email, identities).sendingIdentity?.id ?? null,
+    }).then((id) => setQuickReplyPluginIdentity({ key, id })).catch(() => {});
+  }, [quickReplyStarted, quickReplyKey, email, identities]);
   /** The recipients and identity the quick reply would be sent with. */
   const quickMetadata = (): ComposerMetadata => {
     if (!email) return { subject: '', to: [], attachments: [] };
-    const envelope = quickReplyEnvelope(email, identities);
+    const envelope = quickReplyEnvelope(email, identities, quickReplyPluginIdentityId);
     return {
       subject: email.subject ?? '', to: envelope.recipients, attachments: [],
       identityId: envelope.sendingIdentity?.id,
@@ -1897,36 +1958,43 @@ export function EmailViewer({
   // The id plugins know the quick reply by: its actions' clicks and its send
   // checks (OutgoingEmail.composerId) carry the same one. A new one per
   // message and account, as the actions' key below.
-  const quickReplyKey = email ? JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId]) : '';
   // eslint-disable-next-line react-hooks/exhaustive-deps -- a new id per message and account
   const quickReplyComposerId = useMemo(() => generateUUID(), [quickReplyKey]);
   // The quick reply's Send button shows once it is focused or has text.
-  useComposingSurface(quickReplyEnabled && (isQuickReplyFocused || quickReplyText.length > 0));
+  useComposingSurface(quickReplyStarted);
+  // The address the quick reply goes out from, shown under the box when
+  // there is more than one to choose from.
+  const quickReplyFrom = email && identities.length > 1
+    ? quickReplyEnvelope(email, identities, quickReplyPluginIdentityId).sendingIdentity
+    : undefined;
   // An automatic sign-out keeps typed quick-reply text as a draft; text on
   // its way out as a reply needs none. A reply still waiting on the
   // "Send outside your organisation?" question hasn't gone out: the question
   // is answered with Back and the text kept as a draft.
-  const quickReplyDraftRef = useRef({ text: quickReplyText, sending: isSendingQuickReply, save: onSaveQuickReplyDraft });
-  quickReplyDraftRef.current = { text: quickReplyText, sending: isSendingQuickReply, save: onSaveQuickReplyDraft };
+  const quickReplyDraftRef = useRef({ text: quickReplyText, sending: isSendingQuickReply, save: onSaveQuickReplyDraft, identityId: quickReplyPluginIdentityId });
+  quickReplyDraftRef.current = { text: quickReplyText, sending: isSendingQuickReply, save: onSaveQuickReplyDraft, identityId: quickReplyPluginIdentityId };
   const hasQuickReplyDraft = quickReplyText.trim().length > 0 && !!onSaveQuickReplyDraft;
   useEffect(() => {
     if (!hasQuickReplyDraft) return;
     return registerComposeFlush(async () => {
-      const { text, sending, save } = quickReplyDraftRef.current;
+      const { text, sending, save, identityId } = quickReplyDraftRef.current;
       if (!text.trim() || !save) return;
       if (sending) {
         const confirm = useExternalRecipientConfirmStore.getState();
         if (!confirm.pending) return;
         confirm.cancelAll();
       }
-      await save(text);
+      await (identityId ? save(text, { identityId }) : save(text));
     });
   }, [hasQuickReplyDraft]);
   const handleSendQuickReply = async () => {
     if (!quickReplyText.trim() || !onQuickReply || isSendingQuickReply) return;
     setIsSendingQuickReply(true);
     try {
-      const sent = await onQuickReply(quickReplyText, { composerId: quickReplyComposerId });
+      const sent = await onQuickReply(quickReplyText, {
+        composerId: quickReplyComposerId,
+        ...(quickReplyPluginIdentityId ? { identityId: quickReplyPluginIdentityId } : {}),
+      });
       // Back on a pre-send question keeps what the user typed.
       if (sent !== false) {
         setQuickReplyText("");
@@ -2224,6 +2292,7 @@ export function EmailViewer({
     currentMailboxId: selectedMailbox,
     ownerAccountId: moveOwnerAccountId,
     emails: moveEmails,
+    heading: moveHeading,
   });
   const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
   const chooseMoveFolder = useChooseMoveFolder();
@@ -2579,7 +2648,6 @@ export function EmailViewer({
   useEffect(() => {
     // 'allow' = always allow, 'block' = always block, 'ask' = user decides per email
     setAllowExternalContent(externalContentPolicy === 'allow');
-    setHasBlockedContent(false);
     setQuickReplyText("");
     setIsQuickReplyFocused(false);
     setShowSourceModal(false);
@@ -2968,6 +3036,12 @@ export function EmailViewer({
     };
   }, [client, blobClient, blobAccountId, email?.id, pluginRenderedAttachments, email?.attachments, setCidBlobUrls]);
 
+  // HTML mail as plain text: Settings > Accessibility for every message, or
+  // the reader's per-message switch.
+  const mailViewMode = useSettingsStore((state) => state.mailViewMode);
+  const [plainViewOverride, setPlainViewOverride] = useQuietState<boolean | null>(null);
+  const plainView = plainViewOverride ?? mailViewMode === 'plain';
+
   const effectiveAttachments = useMemo<EffectiveAttachment[]>(() => {
     if (pluginRenderedAttachments.length > 0) {
       const pluginCids = collectReferencedCids(hideInlineImageAttachments ? pluginRenderedHtml : null);
@@ -2991,10 +3065,11 @@ export function EmailViewer({
     const hasCalInvitation = calendarInvitationParsingEnabled && !!email && !!findCalendarAttachment(email);
     // Parts the rendered body embeds via cid: must not double as chips. The
     // scan reads the same HTML the body renders from (null when the message
-    // renders as plain text: nothing embedded, nothing hidden), so a part only
-    // recognisable by its reference - octet-stream, no disposition, no name -
-    // is caught as well (see lib/attachment-visibility.ts).
-    const bodyCids = collectReferencedCids(hideInlineImageAttachments && email ? getRenderableHtmlBody(email) : null);
+    // renders as plain text, or is shown as plain text: nothing embedded,
+    // nothing hidden), so a part only recognisable by its reference -
+    // octet-stream, no disposition, no name - is caught as well (see
+    // lib/attachment-visibility.ts).
+    const bodyCids = collectReferencedCids(hideInlineImageAttachments && email && !plainView ? getRenderableHtmlBody(email) : null);
     const jmapAttachments = (email?.attachments ?? [])
       // Hide winmail.dat when we have successfully extracted TNEF content or attachments
       .filter(att => !(tnefHtml || tnefText || tnefAttachments.length > 0) || !isTnefAttachment(att.name, att.type))
@@ -3004,9 +3079,9 @@ export function EmailViewer({
       // Hide calendar MIME parts (text/calendar, application/ics) when the invitation
       // banner is shown - prevents raw ICS files appearing as spurious attachments.
       .filter(att => !hasCalInvitation || !isCalendarMimeType(att.type))
-      // Hide body-embedded parts when the user has opted to keep them out of
-      // the attachment list (default on).
-      .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids)))
+      // Hide body-embedded parts, and attached copies of them, when the user
+      // has opted to keep them out of the attachment list (default on).
+      .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids, email?.attachments, { plainText: plainView })))
       // Hide machine-readable report parts (MDN read-receipts, DSN bounce
       // reports). These are required MIME parts, not real user attachments.
       .filter(att => !isReportPart(att.type))
@@ -3045,7 +3120,31 @@ export function EmailViewer({
     // the whole `email` object would rebuild the attachment list — and its
     // downstream layout measurement — on every email field change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
+  }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments, plainView]);
+
+  // Renamed attachments, for saving copies under another name. Only here:
+  // the message stays as it is, and another message (or this one opened
+  // again) shows the original names.
+  const [attachmentRenames, setAttachmentRenames] = useQuietState<AttachmentRenames>(NO_RENAMES);
+  useEffect(() => { setAttachmentRenames(NO_RENAMES); }, [email?.id, setAttachmentRenames]);
+  const [renameTarget, setRenameTarget] = useState<EffectiveAttachment | null>(null);
+  const listedAttachments = useMemo<EffectiveAttachment[]>(() => {
+    // Not yet reset for a new message: none of its names were changed.
+    if (attachmentRenames.emailId !== email?.id) return effectiveAttachments;
+    const { names } = attachmentRenames;
+    return effectiveAttachments.map((attachment) =>
+      names[attachment.id] !== undefined ? { ...attachment, name: names[attachment.id], renamed: true } : attachment);
+  }, [effectiveAttachments, attachmentRenames, email?.id]);
+  const renameAttachment = useCallback((attachment: EffectiveAttachment, name: string) => {
+    const original = effectiveAttachments.find((a) => a.id === attachment.id);
+    setAttachmentRenames((prev) => {
+      const names = { ...(prev.emailId === email?.id ? prev.names : {}) };
+      // Back to its own name: the download template applies again.
+      if (original && name === getAttachmentDisplayName(original.name, original.type)) delete names[attachment.id];
+      else names[attachment.id] = name;
+      return { emailId: email?.id, names };
+    });
+  }, [effectiveAttachments, email?.id, setAttachmentRenames]);
 
   // Whether external resources must be blocked for the message on screen.
   // Shared by every body path - the message's own HTML, TNEF, unwrapped
@@ -3101,14 +3200,13 @@ export function EmailViewer({
         const { html: cleanHtml, blockedExternalContent } =
           sanitizeEmailBodyForIframe(htmlContent, shouldBlockExternal);
 
-        // Update blocked content state
-        if (blockedExternalContent && !hasBlockedContent) {
-          setHasBlockedContent(true);
-        }
-
         return {
           html: cleanHtml,
           isHtml: true,
+          // Drives the "blocked" banner. Part of the result, not state set
+          // here: a reset effect on a new message ran after this and hid the
+          // banner when the body was already loaded (#1639).
+          blockedContent: blockedExternalContent,
           hasStyleTag: /<style[\s>]/i.test(htmlContent),
           // Drives the strict iframe CSP: when we're in blocking mode the
           // iframe forbids external img/media/font fetches entirely, so any
@@ -3162,7 +3260,6 @@ export function EmailViewer({
     // "Load images" / "Trust sender" buttons (both flip allowExternalContent)
     // intentionally trigger a fresh srcDoc - `shouldBlockExternal` carries that
     // change in, and re-reads the trust selectors on the way.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, shouldBlockExternal, cidBlobUrls, t]);
 
   // Override email content with S/MIME decrypted content when available
@@ -3179,12 +3276,10 @@ export function EmailViewer({
     const renderHtml = (html: string) => {
       const { html: cleanHtml, blockedExternalContent } =
         sanitizeEmailBodyForIframe(html, shouldBlockExternal);
-      if (blockedExternalContent && !hasBlockedContent) {
-        setHasBlockedContent(true);
-      }
       return {
         html: cleanHtml,
         isHtml: true,
+        blockedContent: blockedExternalContent,
         hasStyleTag: /<style[\s>]/i.test(html),
         externalBlocked: shouldBlockExternal,
       };
@@ -3210,18 +3305,13 @@ export function EmailViewer({
       return { html: plainToHtml(embeddedEmailText), isHtml: false, hasStyleTag: false, externalBlocked: false };
     }
     return emailContent;
-    // `hasBlockedContent` is only read to avoid a redundant setState; including
-    // it would re-run the whole sanitize pass the moment the banner appears.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cidBlobUrls, emailContent, shouldBlockExternal, pluginRenderedHtml, pluginRenderedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText, t]);
+  // The sanitizer held back external content of the body shown (the banner).
+  const hasBlockedContent = decodedEmailContent.blockedContent === true;
 
-  // HTML mail as plain text: Settings > Accessibility for every message, or
-  // the reader's per-message switch. The message's own text/plain part when
-  // it has one, otherwise a readable conversion that keeps link targets and
-  // image alt text.
-  const mailViewMode = useSettingsStore((state) => state.mailViewMode);
-  const [plainViewOverride, setPlainViewOverride] = useQuietState<boolean | null>(null);
-  const plainView = plainViewOverride ?? mailViewMode === 'plain';
+  // HTML mail as plain text (mailViewMode / plainViewOverride above): the
+  // message's own text/plain part when it has one, otherwise a readable
+  // conversion that keeps link targets and image alt text.
   const hasHtmlBody = decodedEmailContent.isHtml;
   // The decoded body as plain text: the text part, else the HTML converted.
   const readableText = useCallback(() => {
@@ -3256,6 +3346,8 @@ export function EmailViewer({
 
   const resolveAttachmentName = useCallback(
     (attachment: EffectiveAttachment) => {
+      // The user typed this name: no template, no transforms.
+      if (attachment.renamed && attachment.name) return renamedAttachmentFilename(attachment.name);
       const fallback = attachment.name || 'download';
       if (!email) return fallback;
       return attachmentDownloadFilename(email, { name: attachment.name, type: attachment.type }, attachmentFilenameOptions) || fallback;
@@ -3295,20 +3387,23 @@ export function EmailViewer({
         attachment.tnefData.byteOffset,
         attachment.tnefData.byteOffset + attachment.tnefData.byteLength,
       ) as ArrayBuffer;
-      const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
-      const objectUrl = URL.createObjectURL(blob);
+      // The MIME tag inside winmail.dat is free text: the Blob gets the
+      // inline-safe list's own type or octet-stream, never the tag itself.
+      const blob = new Blob([buffer], { type: inertBlobType(attachment.type) });
 
       if (opensPreview) {
+        const objectUrl = URL.createObjectURL(blob);
         const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
-        if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl, email)) {
+        const previewUrl = transformed.previewUrl || objectUrl;
+        if (!openPreviewInNewWindow(previewUrl, email, previewUrl === objectUrl ? blob : undefined)) {
           setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
         }
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
       } else if (downloadAllowed('attachment', email)) {
         emailHooks.onAttachmentDownload.emit(info);
-        saveBlobAs(objectUrl, downloadName, { kind: 'attachment', subject: email });
+        // A download gets an object URL of its own (lib/download-guard.ts).
+        saveBlobAs(blob, downloadName, { kind: 'attachment', subject: email });
       }
-
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
       return;
     }
 
@@ -3322,20 +3417,21 @@ export function EmailViewer({
     }
 
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-    const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
-    const objectUrl = URL.createObjectURL(blob);
+    // A part of an attached or decrypted message: its type is the sender's text.
+    const blob = new Blob([buffer], { type: inertBlobType(attachment.type) });
 
     if (opensPreview) {
+      const objectUrl = URL.createObjectURL(blob);
       const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
-      if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl, email)) {
+      const previewUrl = transformed.previewUrl || objectUrl;
+      if (!openPreviewInNewWindow(previewUrl, email, previewUrl === objectUrl ? blob : undefined)) {
         setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
       }
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } else if (downloadAllowed('attachment', email)) {
       emailHooks.onAttachmentDownload.emit(info);
-      saveBlobAs(objectUrl, downloadName, { kind: 'attachment', subject: email });
+      saveBlobAs(blob, downloadName, { kind: 'attachment', subject: email });
     }
-
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }, [mailAttachmentAction, downloadsOff, onDownloadAttachment, email, resolveAttachmentName]);
 
   const handleEffectiveAttachmentDownload = useCallback((attachment: EffectiveAttachment) => {
@@ -3391,7 +3487,7 @@ export function EmailViewer({
   // Individual failures are skipped so a single bad blob doesn't sink the
   // whole archive.
   const handleDownloadAllAttachments = useCallback(async () => {
-    if (isDownloadingAll || effectiveAttachments.length === 0) return;
+    if (isDownloadingAll || listedAttachments.length === 0) return;
     if (!downloadAllowed('attachment', email)) return;
     setIsDownloadingAll(true);
     try {
@@ -3401,8 +3497,8 @@ export function EmailViewer({
       const uniqueName = createUniqueNamer();
 
       let added = 0;
-      for (const attachment of effectiveAttachments) {
-        const entryName = uniqueName(getAttachmentDisplayName(attachment.name, attachment.type));
+      for (const attachment of listedAttachments) {
+        const entryName = uniqueName(attachmentCopyName(attachment));
         try {
           const content = await readAttachmentContent(attachment, entryName);
           if (content) {
@@ -3422,7 +3518,7 @@ export function EmailViewer({
       const zipBlob = await zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
       // The policy may have changed while the attachments were fetched.
       if (!saveBlobAs(zipBlob, attachmentsBundleFilename(email), { kind: 'attachment', subject: email })) return;
-      const omitted = effectiveAttachments.length - added;
+      const omitted = listedAttachments.length - added;
       if (omitted > 0) toast.warning(t('download_all_partial', { count: omitted }));
     } catch (error) {
       console.error('Failed to download attachments:', error);
@@ -3430,13 +3526,13 @@ export function EmailViewer({
     } finally {
       setIsDownloadingAll(false);
     }
-  }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, email, t, tFiles]);
+  }, [isDownloadingAll, listedAttachments, readAttachmentContent, email, t, tFiles]);
 
   // Save every attachment into a folder the user picks. These writes don't
   // pass saveBlobAs, so the device policy is asked here: before the picker,
   // and before each file. A browser that refuses the picker gets the zip.
   const handleSaveAllToFolder = useCallback(async () => {
-    if (isDownloadingAll || effectiveAttachments.length === 0) return;
+    if (isDownloadingAll || listedAttachments.length === 0) return;
     if (!downloadAllowed('attachment', email)) return;
     let folder: FolderHandle;
     try {
@@ -3449,8 +3545,8 @@ export function EmailViewer({
     try {
       const result = await saveFilesToFolder(
         folder,
-        effectiveAttachments.map((attachment) => {
-          const name = getAttachmentDisplayName(attachment.name, attachment.type);
+        listedAttachments.map((attachment) => {
+          const name = attachmentCopyName(attachment);
           return { name, read: () => readAttachmentContent(attachment, name) };
         }),
         () => downloadAllowed('attachment', email),
@@ -3466,7 +3562,7 @@ export function EmailViewer({
     } finally {
       setIsDownloadingAll(false);
     }
-  }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, handleDownloadAllAttachments, email, tWindows]);
+  }, [isDownloadingAll, listedAttachments, readAttachmentContent, handleDownloadAllAttachments, email, tWindows]);
 
   // What the attachment bar and the attachment cards share.
   const desktopClipboard = getDesktopBridge()?.clipboard;
@@ -3474,7 +3570,7 @@ export function EmailViewer({
   const editAccount = editAccountOf(email);
   const { canEdit: canEditAttachment, edit: editAttachment } = useEditAttachment(editAccount);
   const readerAttachmentProps = {
-    attachments: effectiveAttachments,
+    attachments: listedAttachments,
     thumbUrls: imageThumbUrls,
     opensPreview: (attachment: EffectiveAttachment) => isAttachmentPreviewable(attachment) && (mailAttachmentAction === 'preview' || downloadsOff),
     onOpen: handleEffectiveAttachmentOpen,
@@ -3506,6 +3602,8 @@ export function EmailViewer({
     downloadsOff,
     // Save to Files would get around the policy: Files downloads are off too, but the copy would stay.
     onSaveToFiles: canSaveToFiles && !downloadsOff ? setSaveToFilesTarget : undefined,
+    // The name only matters for a copy, and there are none to save.
+    onRename: downloadsOff ? undefined : setRenameTarget,
     pluginMenu: (attachment: EffectiveAttachment) => <AttachmentPluginMenu emailId={email?.id} attachment={attachment} className="p-2 rounded-md" />,
     renderItem: (attachment: EffectiveAttachment, tile: (drag: AttachmentDragProps) => React.ReactNode) => (
       <DraggableAttachmentChip attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive && !downloadsOff} downloadName={resolveAttachmentName(attachment)}>
@@ -3598,7 +3696,7 @@ export function EmailViewer({
   // Text size, minimum size and the other reading settings for the body. A
   // ref for the iframe setup, which runs from observers wired once per
   // document; the srcDoc changes with frameKey, so a new setting rebuilds it.
-  const reading = useMailReading();
+  const reading = useMailReading({ wide: !isMobile });
   const readingRef = useRef(reading);
   readingRef.current = reading;
   fitBodyToWidthRef.current = mailFitOptions(isMobile, reading.fitWidth);
@@ -3611,6 +3709,9 @@ export function EmailViewer({
   // inline colours written by our pass would only fight it. With the mail
   // shown in the app's own colours there is nothing left to recolour either.
   const recolorDark = isDark && !reading.forcedColors && !reading.overrideStyles;
+  // With lines of about 80 characters the message reads as a card on the
+  // pane, as wide as that column. Not on a phone: the column fills it anyway.
+  const readingCard = reading.card;
   const appFontSources = reading.fontSources.join(' ');
 
   // The body's language (Content-Language or the HTML's own lang), so a
@@ -3663,7 +3764,7 @@ export function EmailViewer({
     const iframeCsp = emailIframeCsp(effectiveEmailContent.externalBlocked, appFontSources ? appFontSources.split(' ') : []);
 
     return `<!DOCTYPE html>
-<html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${recolorDark ? DARK_PENDING_CLASS : ''}" style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html${bodyLanguage ? ` lang="${bodyLanguage}"` : ''} data-reading="${reading.frameKey}" class="${recolorDark ? DARK_PENDING_CLASS : ''}"${recolorDark ? ` data-surface="${encodeURIComponent(activeThemeId ?? '')}"` : ''} style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${iframeCsp}">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="x-dns-prefetch-control" content="off">
@@ -3692,7 +3793,7 @@ export function EmailViewer({
      verification email rendered as a logo-only 150px strip). Neutralise the
      full-height trick on any element so the body grows to its content. */
   [style*="height:100%"], [style*="height: 100%"] { height: auto !important; }
-  body { margin: 0; padding: ${bodyPadding}; overflow-x: auto; overflow-y: hidden; height: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: #ffffff; word-wrap: break-word; overflow-wrap: break-word; }
+  body { margin: 0; padding: ${bodyPadding}; overflow-x: auto; overflow-y: hidden; height: auto !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.875rem; line-height: 1.6; color: #1a1a1a; background: ${recolorDark ? 'transparent' : '#ffffff'}; word-wrap: break-word; overflow-wrap: break-word; }
   @media (max-width: 640px) { body { padding-left: ${mobileBodyPaddingX}; padding-right: ${mobileBodyPaddingX}; } }
   /* Only force the cap on images that set no width of their own: an
      !important 100% also overrides a sender's inline max-width, and an
@@ -3717,7 +3818,7 @@ export function EmailViewer({
   ${wordHtmlCSS}
   ${darkModeCSS}
 </style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${resolveColorSchemeMedia(effectiveEmailContent.html, recolorDark)}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}body{overflow-y:hidden!important}</style>${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
-  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, recolorDark, emailHasNativeDarkMode, messageSpacing, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
+  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, recolorDark, activeThemeId, emailHasNativeDarkMode, messageSpacing, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
   // toggling allowExternalContent (both "Load images" and "Trust sender" set
@@ -3851,7 +3952,7 @@ export function EmailViewer({
       && isFilePreviewable(part.name, part.type)
       && isMimeTypeSafeForInlinePreview(part.type);
     if (opensPreview || (part && downloadsOffRef.current && isFilePreviewable(part.name, part.type) && isMimeTypeSafeForInlinePreview(part.type))) {
-      if (!openPreviewInNewWindow(href, guardEmailRef.current)) {
+      if (!openPreviewInNewWindow(href, guardEmailRef.current, part.blob)) {
         setInAppPreview({ name: part.name, downloadName: part.name, blob: part.blob, contentType: part.type || part.blob.type });
       }
       return;
@@ -3871,13 +3972,13 @@ export function EmailViewer({
       if (initializedDocRef.current === doc) return;
       initializedDocRef.current = doc;
       {
-        // Collapse the quoted original of a reply behind a "•••" toggle
-        // (#480). Before the height wiring, so the initial measurement
-        // already reflects the collapsed body.
+        // Set up the quoted-text toggle before the first height measurement.
+        // Force a new measurement on clicks: folding can leave scrollHeight
+        // pinned to the old viewport, which the size cache would skip.
         setupQuoteCollapse(doc, {
           show: t('show_quoted_text'),
           hide: t('hide_quoted_text'),
-        });
+        }, () => applyHeight(true));
 
         // Text size and minimum size (Settings > Accessibility), before the
         // height wiring so the first measurement is already at the new size.
@@ -3899,7 +4000,10 @@ export function EmailViewer({
         // toggle is converted too. Reads the mail's computed colours and
         // un-hides the body when done.
         if (recolorDark) {
-          applyEmailDarkMode(doc, { remoteContentAllowed: !effectiveEmailContent.externalBlocked });
+          applyEmailDarkMode(doc, {
+            remoteContentAllowed: !effectiveEmailContent.externalBlocked,
+            canvas: readSurfaceColor(iframe, EMAIL_DARK_CANVAS),
+          });
         }
 
         // Auto-resize iframe to fit content
@@ -4202,15 +4306,26 @@ export function EmailViewer({
     return addr || null;
   }, [email?.headers]);
 
+  // A receipt belongs to the login and account the message is in
+  // (messageSource): it goes out through that login, from one of its
+  // identities, and is noted on that message. No client there: no receipt.
+  const receiptClient = messageSource?.client ?? null;
+  const receiptFromActiveLogin = !!receiptClient && receiptClient === client;
+
   // The identity whose address received the original message — the MDN is sent
-  // "from" that address. Falls back to the primary identity.
-  const receiptIdentity = useMemo(() => {
-    if (!identities?.length) return null;
+  // "from" that address. Falls back to that login's primary identity.
+  const pickReceiptIdentity = useCallback((list: readonly Identity[] | null | undefined): Identity | null => {
+    if (!list?.length) return null;
     const recipients = [...(email?.to || []), ...(email?.cc || [])]
       .map(r => r.email?.toLowerCase())
       .filter(Boolean);
-    return identities.find(i => recipients.includes(i.email?.toLowerCase())) || identities[0];
-  }, [identities, email?.to, email?.cc]);
+    return list.find(i => recipients.includes(i.email?.toLowerCase())) || list[0];
+  }, [email?.to, email?.cc]);
+  // The auth store holds the active login's identities only.
+  const receiptIdentity = useMemo(
+    () => (receiptFromActiveLogin ? pickReceiptIdentity(identities) : null),
+    [receiptFromActiveLogin, pickReceiptIdentity, identities],
+  );
 
   const mdnAlreadyHandled = email?.keywords?.['$mdnsent'] === true;
   const [mdnHandledLocally, setMdnHandledLocally] = useQuietState(false);
@@ -4229,25 +4344,48 @@ export function EmailViewer({
     readReceiptResponse !== 'never' &&
     inReceiptEligibleFolder &&
     !isDraft &&
-    !!receiptIdentity;
+    // Another login's identities are read when the receipt is sent.
+    (receiptFromActiveLogin ? !!receiptIdentity : !!receiptClient);
+  // "Always send" is the active login's setting. A message of another login
+  // asks instead.
+  const askForReadReceipt = readReceiptResponse === 'ask'
+    || (readReceiptResponse === 'always' && !receiptFromActiveLogin);
 
   const sendReadReceiptNow = useCallback(async (automatic: boolean) => {
-    if (!client || !email || !readReceiptRequestedBy || !receiptIdentity) return;
     // Taken now: another folder may be open once the receipt is out.
-    const source = blobSource ?? emailWriteSource(email, client);
-    const { rawId } = stripCrossAccountIdentityPrefix(receiptIdentity.id);
+    const source = messageSourceRef.current;
+    const sendClient = source?.client;
+    if (!sendClient || !source || !email || !readReceiptRequestedBy) return;
+    let identity = receiptIdentity;
+    if (sendClient !== client) {
+      // The message's own login: its identities as last read, else asked now.
+      let ofLogin: Identity[] | undefined = source.clientAccountId
+        ? cachedIdentitiesForAccount(source.clientAccountId)
+        : undefined;
+      if (!ofLogin && typeof sendClient.getIdentities === 'function') {
+        ofLogin = await sendClient.getIdentities().catch(() => undefined);
+      }
+      identity = pickReceiptIdentity(ofLogin);
+    }
+    if (!identity) {
+      // No address of that login to send it from: nothing goes out, and never
+      // from another login's address.
+      if (!automatic) toast.error(t('read_receipt.send_failed'), { message: tNotifications('not_connected') });
+      throw new Error('No identity to send the read receipt from');
+    }
+    const { rawId } = stripCrossAccountIdentityPrefix(identity.id);
     try {
-      await client.sendReadReceipt({
+      await sendClient.sendReadReceipt({
         to: readReceiptRequestedBy,
-        fromEmail: receiptIdentity.email,
-        fromName: receiptIdentity.name,
-        identityId: rawId ?? receiptIdentity.id,
+        fromEmail: identity.email,
+        fromName: identity.name,
+        identityId: rawId ?? identity.id,
         originalMessageId: email.messageId,
         originalSubject: email.subject,
-        originalRecipient: receiptIdentity.email,
+        originalRecipient: identity.email,
         automatic,
         subject: t('read_receipt.mdn_subject', { subject: email.subject || '' }),
-        humanText: t('read_receipt.mdn_body', { recipient: receiptIdentity.email }),
+        humanText: t('read_receipt.mdn_body', { recipient: identity.email }),
       });
     } catch (err) {
       // Surface the failure instead of silently resetting the banner so we can
@@ -4261,21 +4399,22 @@ export function EmailViewer({
     // The receipt is out. Failing to flag that must not read as a failed
     // send, nor let the "always" mode send it again.
     try {
-      await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', source);
+      await useEmailStore.getState().markEmailKeyword(sendClient, email.id, '$mdnsent', source);
     } catch (err) {
       console.error('Read receipt sent, but setting $MDNSent failed:', err);
       setMdnHandledLocally(true);
     }
-  }, [client, email, blobSource, readReceiptRequestedBy, receiptIdentity, t, tComposer, setMdnHandledLocally]);
+  }, [client, email, readReceiptRequestedBy, receiptIdentity, pickReceiptIdentity, t, tComposer, tNotifications, setMdnHandledLocally]);
 
   const ignoreReadReceipt = useCallback(async () => {
     setMdnHandledLocally(true);
-    if (client && email) {
+    const source = messageSourceRef.current;
+    if (source?.client && email) {
       // $MDNSent is the RFC 3503 flag every IMAP/JMAP client honours, so the
       // request is suppressed everywhere - not just locally.
-      try { await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', blobSource ?? emailWriteSource(email, client)); } catch { /* best effort */ }
+      try { await useEmailStore.getState().markEmailKeyword(source.client, email.id, '$mdnsent', source); } catch { /* best effort */ }
     }
-  }, [client, email, blobSource, setMdnHandledLocally]);
+  }, [email, setMdnHandledLocally]);
 
   // "always" mode: auto-send the MDN once when the message is opened. A
   // failure is not retried while the message stays open: the attempt itself
@@ -4288,7 +4427,7 @@ export function EmailViewer({
     if (autoMdnRef.current !== email?.id) autoMdnRef.current = null;
   }, [email?.id]);
   useEffect(() => {
-    if (readReceiptResponse !== 'always' || noAutomaticActions) return;
+    if (readReceiptResponse !== 'always' || noAutomaticActions || askForReadReceipt) return;
     if (!shouldOfferReadReceipt || !email) return;
     if (autoMdnRef.current === email.id) return;
     autoMdnRef.current = email.id;
@@ -4296,7 +4435,7 @@ export function EmailViewer({
     // email is already captured via email?.id and sendReadReceiptNow (which
     // depends on `email`); the autoMdnRef guard prevents a double send.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readReceiptResponse, shouldOfferReadReceipt, email?.id, sendReadReceiptNow]);
+  }, [readReceiptResponse, askForReadReceipt, shouldOfferReadReceipt, email?.id, sendReadReceiptNow]);
 
   // The toolbar row with only the panel button: over the empty or loading
   // reader, and on top when the user put the toolbar below the subject. Same
@@ -4362,7 +4501,10 @@ export function EmailViewer({
   );
   // `top` is the row above the message row; by default the one holding only
   // the panel button (none without a panel or on a phone).
+  // In the same provider as the loaded reader below, so React keeps the row
+  // (and the side panel's frame) from no message to a message and back.
   const shell = (content: React.ReactNode, top: React.ReactNode = toggleOnlyToolbar) => (
+    <TeamNotesProvider email={null} messages={teamMessages}>
     <div
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
@@ -4378,6 +4520,7 @@ export function EmailViewer({
         {null}
       </div>
     </div>
+    </TeamNotesProvider>
   );
 
   // Show loading skeleton while email is being fetched: the page skeleton's
@@ -4468,19 +4611,7 @@ export function EmailViewer({
   }
 
   const sender = email.from?.[0];
-  const senderVerification = getSenderVerification(email.authenticationResults, sender?.email);
-  const senderVerificationLabel = senderVerification?.status === 'failed'
-    ? t('sender_check.failed_label')
-    : t('sender_check.unverified_label');
-  const senderVerificationMessage = !senderVerification
-    ? ''
-    : senderVerification.status === 'failed'
-      ? senderVerification.sentFrom
-        ? t('sender_check.failed_sent_from', { domain: senderVerification.domain, host: senderVerification.sentFrom })
-        : t('sender_check.failed', { domain: senderVerification.domain })
-      : senderVerification.sentFrom
-        ? t('sender_check.unverified_sent_from', { domain: senderVerification.domain, host: senderVerification.sentFrom })
-        : t('sender_check.unverified', { domain: senderVerification.domain });
+  const { verification: senderVerification, label: senderVerificationLabel, message: senderVerificationMessage } = senderCheckText(email, t);
   const isStarred = email.keywords?.$flagged;
   const isUnread = !email.keywords?.$seen;
   const isImportant = email.keywords?.["$important"];
@@ -4540,12 +4671,14 @@ export function EmailViewer({
     email,
     currentMailboxRole,
     canMove: canMoveAnywhere && !!onMoveToMailbox,
+    moveUnavailableHint: onMoveToMailbox ? undefined : moveUnavailableHint,
     canRemoveFromFolder: !!onRemoveFromFolder,
     onReply: onReply ? () => onReply() : undefined,
     onReplyAll,
     onForward,
     onForwardAsAttachment,
     onEditDraft,
+    onEditAsNew,
     onArchive,
     onDelete,
     onMarkAsRead: (read) => onMarkAsRead?.(email.id, read),
@@ -4568,6 +4701,10 @@ export function EmailViewer({
     omit: savedFile ? new Set([...readerMenuOmit, ...SAVED_FILE_OMIT]) : readerMenuOmit,
     ...(savedFile ? { rules: false } : {}),
     views: readerViews,
+    // Team mailboxes: Note opens the field at the end of the conversation.
+    ...(teamOfEmail
+      ? { extras: [...(teamNoteAllowed ? [{ kind: 'item' as const, key: 'extra:team_note' as const, icon: StickyNote, label: tTeam('note'), run: () => requestNoteField(email.id) }] : []), ...teamActions] }
+      : {}),
   };
 
   // Shared toolbar items used by both 'top' and 'below-subject' positions
@@ -4698,6 +4835,21 @@ export function EmailViewer({
           <Forward className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
+        {teamNoteAllowed && email && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => requestNoteField(email.id)}
+            data-overflow-item
+            data-overflow-priority="13"
+            className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+            title={tTeam('note')}
+            data-team-note-toolbar=""
+          >
+            <StickyNote className="w-4 h-4" />
+            {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{tTeam('note')}</span>}
+          </Button>
+        )}
         </>)}
         <PluginSlot name="toolbar-actions" />
         {/* Phones get these in the More panel. */}
@@ -4816,10 +4968,27 @@ export function EmailViewer({
                 <MoveFolderList
                   model={moveModel}
                   onPick={(mailboxId) => { onMoveToMailbox(mailboxId); closeMoveMenu(); }}
-                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox }); } : undefined}
+                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox, mailboxes, selectedMailbox, heading: moveHeading }); } : undefined}
                 />
               </div>
             </ContextMenu>
+          </div>
+        )}
+        {/* Move, unavailable: the host says why (moveUnavailableHint) */}
+        {!onMoveToMailbox && moveUnavailableHint && (
+          <div data-overflow-item data-overflow-priority="5" className={cn("relative", mvViewer && "order-6")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+              title={moveUnavailableHint}
+              aria-label={`${t('move_to')}. ${moveUnavailableHint}`}
+              data-testid="reader-move-unavailable"
+            >
+              <FolderInput className="w-4 h-4" />
+              {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
+            </Button>
           </div>
         )}
         {/* Tag Picker - hidden on mobile, overflows to More menu */}
@@ -5015,6 +5184,7 @@ export function EmailViewer({
               options={readerActionOptions}
               label={t('more_actions')}
               mailboxes={mailboxes}
+              moveHeading={moveHeading}
               selectedMailbox={selectedMailbox}
               onMoveToMailbox={onMoveToMailbox}
               onSetTag={onSetTag ? (tagId) => onSetTag(email.id, tagId) : undefined}
@@ -5050,6 +5220,7 @@ export function EmailViewer({
   const topToolbar = (
     <div
       data-viewer-top-toolbar={liftToolbar ? "full-width" : "column"}
+      data-plugin-list-avoid=""
       className={cn(
         "bg-background flex-shrink-0",
         !mvViewer && "border-b border-border",
@@ -5072,6 +5243,7 @@ export function EmailViewer({
   );
 
   return (
+    <TeamNotesProvider email={email} messages={teamMessages}>
     <div
       ref={setViewerRootEl}
       data-tour="email-viewer"
@@ -5181,7 +5353,7 @@ export function EmailViewer({
       <PluginSlot name="reader-header" className="w-full bg-background" extraProps={pluginEmailProps} />
 
       {/* === SUBJECT BLOCK === data-reader-subject: a reply that takes the pane covers it and shows the subject in its bar. */}
-      <div data-reader-subject="" className={cn(
+      <div data-reader-subject="" data-plugin-list-avoid="" className={cn(
         "bg-background",
         !mvViewer && "border-b border-border",
         toolbarPosition === 'below-subject' && "max-desk:sticky max-desk:top-0 max-desk:z-10"
@@ -5208,7 +5380,10 @@ export function EmailViewer({
                     blocks below are h3 and h4, so no level is skipped. */}
                 <h2 dir="auto" className={cn(
                   // The header stays while the message scrolls: a very long subject scrolls by itself.
-                  "text-foreground break-words min-w-0 max-h-[35dvh] overflow-y-auto",
+                  // The padding, taken back by the margin, holds the font's ascent and descent where
+                  // they reach past the line height (Segoe UI at Mountain View's 22/28), which
+                  // otherwise put a scroll bar beside every one-line subject (#1704).
+                  "text-foreground break-words min-w-0 max-h-[35dvh] overflow-y-auto py-1 -my-1",
                   mvViewer ? "text-[1.375rem] leading-7 font-normal" : "text-lg lg:text-xl font-bold tracking-tight"
                 )}>
                   {email.subject || t('no_subject')}
@@ -5247,6 +5422,8 @@ export function EmailViewer({
                   <VerificationCodeChip code={verificationCode} className="py-1 text-sm" />
                 </div>
               )}
+              {/* Team mailboxes: who has the message, Assign and Done. */}
+              {!isDraft && !isScheduled && <TeamAssigneeLine email={email} className="mt-1.5" />}
               {sortedTagIds.length > 0 && (
                 <div ref={headerTagsRef} className="mt-1.5 flex flex-wrap items-center gap-1">
                   {sortedTagIds.map((tagId) => (
@@ -5305,7 +5482,7 @@ export function EmailViewer({
                 in the details. */}
             <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && !inConversation && "sm:block")}>
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
-                {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                {formatDateTime(emailListDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
             </div>
           </div>
@@ -5316,7 +5493,7 @@ export function EmailViewer({
       {toolbarPosition === 'below-subject' && (
         <div className="bg-background border-b border-border">
           <div className="px-2 sm:px-4 lg:px-6 py-1 sm:py-1.5">
-            <div ref={toolbarRef} className="@container/reader-toolbar flex items-center justify-between gap-0.5 sm:gap-2">
+            <div ref={toolbarRef} data-plugin-list-avoid="" className="@container/reader-toolbar flex items-center justify-between gap-0.5 sm:gap-2">
               {renderToolbarItems(false)}
             </div>
           </div>
@@ -5326,13 +5503,27 @@ export function EmailViewer({
       {/* Email Content Area. Mountain View reads the conversation on one plain
           sheet, so the reply buttons under the message sit on the page colour
           rather than on a tinted strip. */}
-      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
-      <div className="min-h-full flex flex-col">
+      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0", readingCard && "px-4")}>
+      {/* The card takes its surface, border, corners and shadow from the
+          theme. Inside it the page colour is the card colour, so the
+          message's sections and the element hosting the mail body are
+          painted in the card colour too: the colour a dark mail's canvas
+          has to match. */}
+      <div
+        className={cn("min-h-full flex flex-col", readingCard && "min-h-0 max-w-(--reading-card-width) mx-auto my-4 overflow-clip rounded-xl border border-border bg-card shadow-sm [--color-background:var(--color-card)]")}
+        // Mountain View indents the bodies under the sender's name (60px for
+        // the open message, 80px for the others); the card makes room for it
+        // so their lines still hold about 80 characters.
+        style={readingCard ? { '--reading-card-width': mvViewer ? `calc(${reading.cardWidth} + 4rem)` : reading.cardWidth } as CSSProperties : undefined}
+        data-reading-card={readingCard ? "" : undefined}
+      >
 
       {/* Above the messages of the open conversation. */}
       {mvOpenIndex >= 0 && (
         <PluginSlot name="thread-summary" className="w-full" extraProps={threadSummaryProps} />
       )}
+      {/* Team mailboxes: "3 notes · Mabel: …", once above the conversation or the message. */}
+      <NotesSummaryLine />
 
       {/* Mountain View: the conversation's earlier messages, folded. */}
       {mvBefore.length > 0 && (
@@ -5361,6 +5552,7 @@ export function EmailViewer({
         className={cn("hidden desk:block bg-background px-6", !mvViewer && "border-b border-border", (mvViewer || conversationPane) && mvBefore.length > 0 && "border-t border-border", mvOpenIndex >= 0 && "cursor-pointer")}
         style={mvViewer ? { paddingBlock: '0.75rem 0.5rem' } : { paddingBlock: 'var(--density-header-py)' }}
         data-mv-open-header={mvOpenIndex >= 0 ? "" : undefined}
+        data-plugin-list-avoid=""
         onClick={mvOpenIndex >= 0 ? (e) => {
           // In a conversation, a click on the sender line folds the open
           // message, as Gmail does; its buttons and links keep their own job.
@@ -5381,7 +5573,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
-                brandDomain={brandIndicatorDomain(email)}
+                brandDomain={brandDomain}
               />
             </button>
 
@@ -5409,20 +5601,24 @@ export function EmailViewer({
                         addressNode={inConversation && sender.name
                           ? <AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />
                           : undefined}
+                        badge={<BrandVerifiedBadge domain={brandDomain} />}
                       />
                     ) : sender?.email ? (
-                      <RecipientPopover
-                        name={sender?.name}
-                        email={sender.email}
-                        onViewContact={handleViewContactSidebar}
-                        className="font-semibold text-start"
-                      />
+                      <>
+                        <RecipientPopover
+                          name={sender?.name}
+                          email={sender.email}
+                          onViewContact={handleViewContactSidebar}
+                          className="font-semibold text-start"
+                        />
+                        <BrandVerifiedBadge domain={brandDomain} />
+                      </>
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
                     )}
-                    <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                     <ReceivedLabelChip email={email} />
+                    <ImportanceChip email={email} />
                     <EmailIdentityBadge email={email} identities={identities} />
                     {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
                       <UnsubscribeBanner
@@ -5440,7 +5636,7 @@ export function EmailViewer({
                     {(mvViewer || inConversation) && (
                       <span className="ms-auto ps-2 flex items-center gap-1 -my-2 -me-2" data-mv-sender-actions="">
                         <span className="me-1" data-mv-sender-date="">
-                          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={mvViewer ? 'mv' : 'short'} className="" />
+                          <ConversationDate date={emailListDate(email)} timeFormat={timeFormat} variant={mvViewer ? 'mv' : 'short'} className="" />
                         </span>
                         {mvViewer && !savedFile && (<button
                           type="button"
@@ -5500,63 +5696,13 @@ export function EmailViewer({
               </div>
 
               {/* Row 2: Recipients + Show details */}
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                {email.to && email.to.length > 0 && (
-                  <>
-                    <span>{t('recipient_to_prefix')}</span>
-                    {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
-                    {email.to.length > 2 && (
-                      <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
-                        className="text-primary hover:underline text-sm"
-                      >
-                        {t('more_count', { count: email.to.length - 2 })}
-                      </button>
-                    )}
-                  </>
-                )}
-                {email.cc && email.cc.length > 0 && (
-                  <>
-                    <span className="text-muted-foreground">|</span>
-                    <span>{t('cc')}:</span>
-                    {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
-                    {email.cc.length > 2 && (
-                      <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
-                        className="text-primary hover:underline text-sm"
-                      >
-                        {t('more_count', { count: email.cc.length - 2 })}
-                      </button>
-                    )}
-                  </>
-                )}
-                {email.bcc && email.bcc.length > 0 && (
-                  <>
-                    <span className="text-muted-foreground">|</span>
-                    <span>{t('bcc')}:</span>
-                    {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar)}
-                    {email.bcc.length > 2 && (
-                      <span className="text-muted-foreground">+{email.bcc.length - 2}</span>
-                    )}
-                  </>
-                )}
-                <button
-                  onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1 whitespace-nowrap"
-                >
-                  {showFullHeaders ? (
-                    <>
-                      <ChevronUp className="w-3 h-3" />
-                      {t('hide_details')}
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="w-3 h-3" />
-                      {t('show_details')}
-                    </>
-                  )}
-                </button>
-              </div>
+              <MessageRecipientsLine
+                email={email}
+                currentUserEmail={currentUserEmail}
+                onViewContact={handleViewContactSidebar}
+                expanded={showFullHeaders}
+                onToggle={() => setShowFullHeaders(!showFullHeaders)}
+              />
 
 
               </div>
@@ -5569,6 +5715,7 @@ export function EmailViewer({
           className={cn("desk:hidden bg-background border-b border-border px-4", mvOpenIndex >= 0 && "cursor-pointer", mvOpenIndex >= 0 && mvBefore.length > 0 && "border-t")}
           style={{ paddingBlock: 'var(--density-header-py)' }}
           data-mv-open-header-mobile={mvOpenIndex >= 0 ? "" : undefined}
+          data-plugin-list-avoid=""
           onClick={mvOpenIndex >= 0 ? (e) => {
             if (isInteractiveClick(e.target, e.currentTarget)) return;
             if (window.getSelection()?.toString()) return;
@@ -5587,7 +5734,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
-                brandDomain={brandIndicatorDomain(email)}
+                brandDomain={brandDomain}
               />
             </button>
             <div className="flex-1 min-w-0">
@@ -5603,9 +5750,10 @@ export function EmailViewer({
                 ) : (
                   <span className="text-sm font-semibold text-foreground">{t('unknown_sender')}</span>
                 )}
-                <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
+                <BrandVerifiedBadge domain={brandDomain} />
                 <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                 <ReceivedLabelChip email={email} />
+                <ImportanceChip email={email} />
                 <EmailIdentityBadge email={email} identities={identities} />
                 {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
                   <UnsubscribeBanner
@@ -5626,60 +5774,21 @@ export function EmailViewer({
                 <div className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
               )}
               {/* Row 2: Recipients */}
-              <div className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
-                {email.to && email.to.length > 0 && (
-                  <>
-                    <span>→ {t('recipient_to_prefix')}</span>
-                    {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
-                    {email.to.length > 2 && (
-                      <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
-                        className="text-primary hover:underline text-sm"
-                      >
-                        {t('more_count', { count: email.to.length - 2 })}
-                      </button>
-                    )}
-                  </>
-                )}
-                {email.cc && email.cc.length > 0 && (
-                  <>
-                    <span className="text-muted-foreground">|</span>
-                    <span>{t('cc')}:</span>
-                    {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar)}
-                    {email.cc.length > 2 && (
-                      <button
-                        onClick={() => setShowFullHeaders(!showFullHeaders)}
-                        className="text-primary hover:underline text-sm"
-                      >
-                        {t('more_count', { count: email.cc.length - 2 })}
-                      </button>
-                    )}
-                  </>
-                )}
-                <button
-                  onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1 whitespace-nowrap"
-                >
-                  {showFullHeaders ? (
-                    <>
-                      <ChevronUp className="w-3 h-3" />
-                      {t('hide_details')}
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="w-3 h-3" />
-                      {t('show_details')}
-                    </>
-                  )}
-                </button>
-              </div>
+              <MessageRecipientsLine
+                email={email}
+                currentUserEmail={currentUserEmail}
+                onViewContact={handleViewContactSidebar}
+                expanded={showFullHeaders}
+                onToggle={() => setShowFullHeaders(!showFullHeaders)}
+                phone
+              />
             </div>
             {/* Date/time on the right (mobile); the size is in the details */}
             <div className="sm:hidden flex-shrink-0 text-end ms-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {mvMobileViewer
-                  ? formatDate(emailDisplayDate(email))
-                  : formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                  ? formatDate(emailListDate(email))
+                  : formatDateTime(emailListDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
             </div>
             {/* Mountain View phone: reply from the top of the message, not
@@ -5714,386 +5823,26 @@ export function EmailViewer({
         <PluginSlot name="reader-below-subject" className="w-full bg-background" extraProps={pluginEmailProps} />
 
         {/* Expandable Details (shared across mobile/tablet/desktop) */}
-        {showFullHeaders && (() => {
-          const translateAuthResult = (result?: string) => {
-            const r = (result || '').toLowerCase();
-            switch (r) {
-              case 'pass': return t('authentication.result.pass');
-              case 'fail': return t('authentication.result.fail');
-              case 'softfail': return t('authentication.result.softfail');
-              case 'neutral': return t('authentication.result.neutral');
-              case 'permerror': return t('authentication.result.permerror');
-              case 'temperror': return t('authentication.result.temperror');
-              case 'none': return t('authentication.result.none');
-              default: return result || '';
-            }
-          };
-          const replyToDifferent = !!email.replyTo?.length &&
-            (!email.from || email.replyTo[0].email !== email.from[0]?.email);
-          // Received before it was sent means a wrong clock somewhere, not a
-          // delivery time (mail-29).
-          const deliveryDeltaMs = email.sentAt && email.receivedAt
-            ? new Date(email.receivedAt).getTime() - new Date(email.sentAt).getTime()
-            : 0;
-          const formatDelta = (diff: number) => {
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(minutes / 60);
-            const days = Math.floor(hours / 24);
-            const dayUnit = days > 1 ? t('time.days') : t('time.day');
-            const hourUnit = (hours % 24) > 1 ? t('time.hours') : t('time.hour');
-            const minuteUnit = (minutes % 60) > 1 ? t('time.minutes') : t('time.minute');
-            const minuteUnitSingle = minutes > 1 ? t('time.minutes') : t('time.minute');
-            if (days > 0) return `${days} ${dayUnit} ${hours % 24} ${hourUnit}`;
-            if (hours > 0) return `${hours} ${hourUnit} ${minutes % 60} ${minuteUnit}`;
-            return `${minutes} ${minuteUnitSingle}`;
-          };
-          const fullDate = (iso?: string) => iso
-            ? formatDateTime(iso, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', second: '2-digit', timeZoneName: 'short' })
-            : '-';
-          // A long date wraps over three lines in the narrow column: the short one
-          // shows, the full one is on hover.
-          const shownDate = (iso?: string) => iso
-            ? <time dateTime={iso} title={fullDate(iso)}>{formatDateTime(iso, timeFormat, { year: 'numeric', month: 'short', day: 'numeric' })}</time>
-            : '-';
-          const auth = email.authenticationResults;
-          const totalAttachmentSize = effectiveAttachments.reduce((s, a) => s + (a.size || 0), 0);
-          const topMimeType = email.bodyStructure?.type;
-          const SectionHeader = ({ children }: { children: React.ReactNode }) => (
-            <div className="text-[0.6875rem] font-semibold text-muted-foreground mb-1.5">
-              {children}
-            </div>
-          );
-          const Row = ({ label, children, mono }: { label: string; children: React.ReactNode; mono?: boolean }) => (
-            <>
-              <dt className="text-muted-foreground text-xs @sm:pt-1">{label}</dt>
-              <dd className={cn(
-                "text-sm text-foreground min-w-0 break-words",
-                mono && "font-mono text-xs",
-              )}>{children}</dd>
-            </>
-          );
-          const AuthChip = ({ name, result, extra, tooltip }: { name: string; result?: string; extra?: React.ReactNode; tooltip?: string }) => {
-            if (!result) return null;
-            const status = getSecurityStatus(result);
-            const Icon = status.icon === 'check' ? Check
-              : status.icon === 'x' ? X
-              : status.icon === 'alert' ? AlertTriangle
-              : Minus;
-            return (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs max-w-full min-w-0",
-                  tooltip && "cursor-help",
-                  status.icon === 'check' && "bg-green-500/[0.07] border-green-500/30",
-                  status.icon === 'x' && "bg-red-500/[0.07] border-red-500/30",
-                  status.icon === 'alert' && "bg-amber-500/[0.07] border-amber-500/30",
-                  status.icon === 'minus' && "bg-muted/40 border-border",
-                )}
-                title={tooltip}
-              >
-                <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", status.color)} />
-                <span className="font-medium text-foreground whitespace-nowrap">{name}</span>
-                <span className={cn("text-[0.6875rem] whitespace-nowrap", status.color)}>
-                  {translateAuthResult(result)}
-                </span>
-                {extra && (
-                  <>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-muted-foreground truncate min-w-0" title={typeof extra === 'string' ? extra : undefined}>{extra}</span>
-                  </>
-                )}
-              </span>
-            );
-          };
-
-          const hasIdentifiers = !!(email.messageId || email.inReplyTo?.length || email.references?.length || email.threadId);
-          const hasListInfo = !!(listHeaders?.listId || listHeaders?.listUnsubscribe || listHeaders?.listHelp || listHeaders?.listPost);
-          const hasAuthSection = !!(auth?.spf || auth?.dkim || auth?.dmarc || auth?.iprev || email.spamScore !== undefined || email.spamLLM);
-
-          // Lets a plugin add rows under an existing category. The plugin's
-          // own `shouldShow({ email, category })` decides which category it
-          // appears under (or `category === null` for the new bottom section).
-          // A component defined here would be a new type on every render and
-          // remount the plugin's iframe each time, so it lives outside.
-          const categorySlot = (category: string) => (
-            <DetailsCategorySlot email={pluginEmailView} category={category} />
-          );
-
-          return (
-            <div className="@container bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
-              <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-10 gap-y-5">
-                <section className="min-w-0">
-                  <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
-                  <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
-                    <Row label={t('from')}>
-                      <div className="flex flex-wrap items-center gap-1">
-                        <RecipientPopover
-                          name={sender?.name}
-                          email={sender?.email || ''}
-                          label={sender?.name && sender?.email ? (
-                            <>
-                              <bdi className="block">{sender.name}</bdi>
-                              <bdi className="block text-muted-foreground" title={sender.email}>
-                                <BreakableAddress text={sender.email} />
-                              </bdi>
-                            </>
-                          ) : undefined}
-                          onViewContact={handleViewContactSidebar}
-                          className="text-sm text-start"
-                        />
-                        <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
-                        <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
-                        <ReceivedLabelChip email={email} />
-                        {senderVerification && (
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-xs whitespace-nowrap cursor-help",
-                              senderVerification.status === 'failed'
-                                ? "bg-red-500/[0.07] border-red-500/30 text-red-700 dark:text-red-400"
-                                : "bg-amber-500/[0.07] border-amber-500/30 text-amber-700 dark:text-amber-400",
-                            )}
-                            title={senderVerificationMessage}
-                          >
-                            <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-                            {senderVerificationLabel}
-                          </span>
-                        )}
-                      </div>
-                    </Row>
-                    {replyToDifferent && (
-                      <Row label={t('reply_to_label').replace(':', '')}>
-                        <div className="flex flex-wrap items-center gap-1">
-                          {email.replyTo!.map((r, i) => (
-                            <RecipientPopover key={r.email + i} name={r.name} email={r.email} onViewContact={handleViewContactSidebar} className="text-sm" />
-                          ))}
-                        </div>
-                      </Row>
-                    )}
-                    {email.to && email.to.length > 0 && (
-                      <Row label={t('to')}>
-                        <div className="flex flex-wrap items-center gap-1">
-                          {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar, 100)}
-                        </div>
-                      </Row>
-                    )}
-                    {email.cc && email.cc.length > 0 && (
-                      <Row label={t('cc')}>
-                        <div className="flex flex-wrap items-center gap-1">
-                          {renderClickableRecipients(email.cc, currentUserEmail, t, handleViewContactSidebar, 100)}
-                        </div>
-                      </Row>
-                    )}
-                    {email.bcc && email.bcc.length > 0 && (
-                      <Row label={t('bcc')}>
-                        <div className="flex flex-wrap items-center gap-1">
-                          {renderClickableRecipients(email.bcc, currentUserEmail, t, handleViewContactSidebar, 100)}
-                        </div>
-                      </Row>
-                    )}
-                    {email.sentAt && (
-                      <Row label={t('details.sent')}>{shownDate(email.sentAt)}</Row>
-                    )}
-                    <Row label={t('details.received')}>
-                      {shownDate(email.receivedAt)}
-                      {deliveryDeltaMs > 60000 && (
-                        <span className="text-muted-foreground"> · {formatDelta(deliveryDeltaMs)} {t('details.delivery_time').toLowerCase()}</span>
-                      )}
-                    </Row>
-                  </dl>
-                  {categorySlot("recipients_routing")}
-                </section>
-
-                {hasAuthSection && (
-                  <section className="min-w-0">
-                    <SectionHeader>{t('details.authentication_security')}</SectionHeader>
-                    <div className="flex flex-wrap gap-1.5">
-                      {auth?.spf && (() => {
-                        // When multiple identities (HELO + MAIL FROM) were
-                        // evaluated, list each result in the tooltip for full
-                        // transparency; the chip itself shows the most severe.
-                        const breakdown = auth.spf.all && auth.spf.all.length > 1
-                          ? auth.spf.all
-                              .map((r) => {
-                                const label = r.identity === 'mailfrom' ? 'MAIL FROM' : r.identity === 'helo' ? 'HELO' : 'SPF';
-                                return `${label}: ${translateAuthResult(r.result)}${r.domain ? ` (${r.domain})` : ''}`;
-                              })
-                              .join('\n')
-                          : null;
-                        return (
-                          <AuthChip
-                            name="SPF"
-                            result={auth.spf.result}
-                            extra={auth.spf.domain}
-                            tooltip={breakdown ? `${t('authentication.tooltip_spf')}\n\n${breakdown}` : t('authentication.tooltip_spf')}
-                          />
-                        );
-                      })()}
-                      {auth?.dkim && (
-                        <AuthChip name="DKIM" result={auth.dkim.result} extra={auth.dkim.domain} tooltip={t('authentication.tooltip_dkim')} />
-                      )}
-                      {auth?.dmarc && (
-                        <AuthChip name="DMARC" result={auth.dmarc.result} extra={auth.dmarc.policy ? `${t('authentication.policy').toLowerCase()}: ${auth.dmarc.policy}` : undefined} tooltip={t('authentication.tooltip_dmarc')} />
-                      )}
-                      {auth?.iprev && (
-                        <AuthChip name={t('details.iprev')} result={auth.iprev.result} extra={auth.iprev.ip} />
-                      )}
-                      {email.spamScore !== undefined && (
-                        <span className={cn(
-                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs max-w-full min-w-0",
-                          email.spamScore > 5 ? "bg-red-500/[0.07] border-red-500/30" :
-                          email.spamScore > 2 ? "bg-amber-500/[0.07] border-amber-500/30" :
-                          "bg-green-500/[0.07] border-green-500/30",
-                        )}>
-                          <Shield className={cn(
-                            "w-3.5 h-3.5",
-                            email.spamScore > 5 ? "text-red-700 dark:text-red-400" :
-                            email.spamScore > 2 ? "text-amber-700 dark:text-amber-400" :
-                            "text-green-700 dark:text-green-400",
-                          )} />
-                          <span className="font-medium text-foreground">{t('authentication.spam_score')}</span>
-                          <span className={cn(
-                            "text-[0.6875rem]",
-                            email.spamScore > 5 ? "text-red-700 dark:text-red-400" :
-                            email.spamScore > 2 ? "text-amber-700 dark:text-amber-400" :
-                            "text-green-700 dark:text-green-400",
-                          )}>
-                            {email.spamScore.toFixed(1)}
-                          </span>
-                          {email.spamStatus && (
-                            <>
-                              <span className="text-muted-foreground">·</span>
-                              <span className="text-muted-foreground truncate min-w-0" title={email.spamStatus}>{email.spamStatus}</span>
-                            </>
-                          )}
-                        </span>
-                      )}
-                    </div>
-                    {email.spamLLM && (
-                      <div className="mt-2 flex items-start gap-2 text-sm">
-                        {email.spamLLM.verdict === 'LEGITIMATE' ? <Brain className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-700 dark:text-green-400" /> :
-                         email.spamLLM.verdict === 'SPAM' ? <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-700 dark:text-red-400" /> :
-                         <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-700 dark:text-amber-400" />}
-                        <div className="min-w-0">
-                          <span className={cn(
-                            "font-medium",
-                            email.spamLLM.verdict === 'LEGITIMATE' ? "text-green-700 dark:text-green-400" :
-                            email.spamLLM.verdict === 'SPAM' ? "text-red-700 dark:text-red-400" :
-                            "text-amber-700 dark:text-amber-400",
-                          )}>
-                            {email.spamLLM.verdict}
-                          </span>
-                          <span className="text-muted-foreground"> · {email.spamLLM.explanation}</span>
-                        </div>
-                      </div>
-                    )}
-                    {categorySlot("authentication_security")}
-                  </section>
-                )}
-
-                {hasIdentifiers && (
-                  <section className="min-w-0">
-                    <SectionHeader>{t('details.identifiers_threading')}</SectionHeader>
-                    <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
-                      {email.messageId && (
-                        <Row label={t('headers.message_id')} mono><BreakableAddress text={email.messageId} /></Row>
-                      )}
-                      {email.inReplyTo && email.inReplyTo.length > 0 && (
-                        <Row label={t('details.in_reply_to')} mono>
-                          <div className="space-y-0.5">
-                            {email.inReplyTo.map((id, i) => <div key={i} className="break-all">{id}</div>)}
-                          </div>
-                        </Row>
-                      )}
-                      {email.references && email.references.length > 0 && (
-                        <Row label={t('details.references')}>
-                          <details className="group">
-                            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors list-none flex items-center gap-1">
-                              <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
-                              {t(email.references.length === 1 ? 'previous_messages' : 'previous_messages_plural', { count: email.references.length })}
-                            </summary>
-                            <div className="mt-1 space-y-0.5 font-mono text-xs">
-                              {email.references.map((id, i) => <div key={i} className="break-all">{id}</div>)}
-                            </div>
-                          </details>
-                        </Row>
-                      )}
-                      {email.threadId && (
-                        <Row label={t('details.thread_id')} mono>{email.threadId}</Row>
-                      )}
-                    </dl>
-                    {categorySlot("identifiers_threading")}
-                  </section>
-                )}
-
-                <section className="min-w-0">
-                  <SectionHeader>{t('details.message_properties')}</SectionHeader>
-                  <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
-                    {email.subject !== undefined && (
-                      <Row label={t('subject')}>{email.subject || <span className="italic text-muted-foreground">{t('details.no_subject')}</span>}</Row>
-                    )}
-                    <Row label={t('details.size')}>
-                      <bdi>{formatFileSize(email.size)}</bdi>
-                      {topMimeType && (
-                        <span className="text-muted-foreground"> · <span className="font-mono text-xs">{topMimeType}</span></span>
-                      )}
-                    </Row>
-                    {effectiveAttachments.length > 0 && (
-                      <Row label={t('attachments')}>
-                        {t('attachments_count', { count: effectiveAttachments.length })} · {formatFileSize(totalAttachmentSize)}
-                      </Row>
-                    )}
-                    {email.accountLabel && (
-                      <Row label={t('details.account')}>{email.accountLabel}</Row>
-                    )}
-                  </dl>
-                  {categorySlot("message_properties")}
-                </section>
-
-                {hasListInfo && (
-                  <section className="@3xl:col-span-2 min-w-0">
-                    <SectionHeader>{t('details.mailing_list')}</SectionHeader>
-                    <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
-                      {listHeaders?.listId && (
-                        <Row label={t('details.list_id')} mono>{listHeaders.listId}</Row>
-                      )}
-                      {listHeaders?.listUnsubscribe?.preferred && (
-                        <Row label={t('details.list_unsubscribe')}>
-                          <span className="break-all">
-                            {listHeaders.listUnsubscribe.preferred === 'http'
-                              ? listHeaders.listUnsubscribe.http
-                              : listHeaders.listUnsubscribe.mailto}
-                          </span>
-                        </Row>
-                      )}
-                      {listHeaders?.listHelp && (
-                        <Row label={t('details.list_help')}><span className="break-all">{listHeaders.listHelp}</span></Row>
-                      )}
-                      {listHeaders?.listPost && (
-                        <Row label={t('details.list_post')}><span className="break-all">{listHeaders.listPost}</span></Row>
-                      )}
-                    </dl>
-                    {categorySlot("mailing_list")}
-                  </section>
-                )}
-
-                {/* Plugin-supplied category. Plugins whose shouldShow accepts
-                    `category === null` render their own titled section here. */}
-                {hasDetailsSlotOffers && (
-                  <section className="@3xl:col-span-2 min-w-0">
-                    <DetailsCategorySlot email={pluginEmailView} category={null} />
-                  </section>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+        {showFullHeaders && (
+          <MessageDetailsPanel
+            email={email}
+            timeFormat={timeFormat}
+            currentUserEmail={currentUserEmail}
+            onViewContact={handleViewContactSidebar}
+            brandDomain={brandDomain}
+            attachments={effectiveAttachments}
+            listHeaders={listHeaders}
+            pluginEmailView={pluginEmailView}
+            hasPluginSection={hasDetailsSlotOffers}
+          />
+        )}
 
         {/* === SECURITY WARNINGS: right under the header, before the
             attachments, so the warning is read before a file is opened: a
             sender the server's checks don't back, a message reported as
             phishing, and the plugins' banners (S/MIME and PGP verdicts). === */}
         {senderVerification && (
-          <div className="border-b border-border bg-muted/30 isolate" data-reader-security-warnings="">
+          <div className="border-b border-border bg-muted/30 isolate" data-reader-security-warnings="" data-plugin-list-avoid="">
             <div className="px-6 py-1.5">
               <div className="flex items-start gap-3 py-1" data-testid="sender-check-warning">
                 <div className={cn(
@@ -6189,9 +5938,9 @@ export function EmailViewer({
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
         {((!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
           hasCalendarInvitation ||
-          (readReceiptResponse === 'ask' && shouldOfferReadReceipt) ||
+          (askForReadReceipt && shouldOfferReadReceipt) ||
           structuredCards.length > 0) && (
-          <div className="border-b border-border bg-muted/30 isolate">
+          <div className="border-b border-border bg-muted/30 isolate" data-reader-notices="" data-plugin-list-avoid="">
             <div className="px-6 py-1.5">
               <div className="flex flex-col gap-3 isolate">
                 {/* External Content Controls */}
@@ -6253,7 +6002,7 @@ export function EmailViewer({
 
 
                 {/* Read-receipt (MDN) request banner — only in "ask" mode */}
-                {readReceiptResponse === 'ask' && shouldOfferReadReceipt && readReceiptRequestedBy && (
+                {askForReadReceipt && shouldOfferReadReceipt && readReceiptRequestedBy && (
                   <div className="py-1">
                     <ReadReceiptBanner
                       requestedBy={readReceiptRequestedBy}
@@ -6298,9 +6047,12 @@ export function EmailViewer({
             (mvOpenFolded || mvAwaitingConversation) && "hidden",
             // Mountain View indents the body under the sender's name, as Gmail does.
             mvViewer && "lg:ps-[60px]",
-            !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background"
-          )}
-          style={isDark ? { backgroundColor: '#121212' } : undefined}>
+            !isDark && resolvedTheme === 'dark' ? "bg-white email-content-light" : "bg-background",
+            // Mail in the app's colours paints the card colour itself; painted
+            // twice, a translucent card colour would show darker behind it.
+            readingCard && reading.overrideStyles && effectiveEmailContent.isHtml && "bg-transparent",
+            isDark && resolvedTheme !== 'dark' && "dark"
+          )}>
             <ReadAloudBar state={readAloud.state} onPause={readAloud.pause} onResume={readAloud.resume} onStop={readAloud.stop} />
             <Watermark text={watermark} />
             {readingMaskOn && !isBodyLoading && (
@@ -6367,7 +6119,7 @@ export function EmailViewer({
                 style={{
                   ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }),
                   fontSize: reading.plainFontSize(14),
-                  ...(reading.comfortableWidth && { maxWidth: '80ch' }),
+                  ...(reading.comfortableWidth && { maxWidth: '80ch', marginInline: 'auto' }),
                   lineHeight: '1.6',
                   wordBreak: 'break-word',
                   whiteSpace: 'pre-wrap',
@@ -6389,12 +6141,18 @@ export function EmailViewer({
           {/* Where the open message ends: a reply docked under it scrolls to here. */}
           <div data-open-message-end="" aria-hidden="true" />
 
+          {/* Team notes written after the open message, before the next one. */}
+          <NotesAfter emailId={email.id} />
+
           {/* Mountain View: the conversation's later messages, folded. */}
           {mvAfter.length > 0 && (
             <div className="mt-4 border-b border-border bg-background" data-mv-conversation-after="">
               <MvConversationRun emails={mvAfter} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} />
             </div>
           )}
+
+          {/* Team mailboxes: the Note button and field, at the conversation's newest end. */}
+          {!isDraft && !isScheduled && <TeamNoteArea messages={teamMessages} />}
 
           {/* Mountain View: a reply being written in place. */}
           {mvViewer && mvInlineComposer && (
@@ -6485,6 +6243,11 @@ export function EmailViewer({
                   {/* Action buttons - show when focused or has text */}
                   {(isQuickReplyFocused || quickReplyText) && (
                     <div className="flex flex-wrap items-center justify-end gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                      {quickReplyFrom?.email && (
+                        <span data-testid="quick-reply-from" dir="auto" className="me-auto min-w-0 truncate text-xs text-muted-foreground">
+                          {tComposer('from')}: <span dir="ltr">{quickReplyFrom.name ? `${quickReplyFrom.name} <${toUnicodeEmail(quickReplyFrom.email)}>` : toUnicodeEmail(quickReplyFrom.email)}</span>
+                        </span>
+                      )}
                       <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <Button
                           variant="ghost"
@@ -6562,6 +6325,12 @@ export function EmailViewer({
         />
       )}
 
+      <RenameAttachmentDialog
+        isOpen={renameTarget !== null}
+        name={renameTarget ? getAttachmentDisplayName(renameTarget.name, renameTarget.type) : ''}
+        onClose={() => setRenameTarget(null)}
+        onRename={(name) => { if (renameTarget) renameAttachment(renameTarget, name); }}
+      />
       {canSaveToFiles && client && saveToFilesTarget && (
         <SaveToFilesDialog attachment={saveToFilesTarget} client={client} blobAccountId={blobAccountId} onClose={() => setSaveToFilesTarget(null)} />
       )}
@@ -6581,7 +6350,7 @@ export function EmailViewer({
         viewport `sm:hidden` guard would otherwise hide it there, and
         `fixed` would span the whole app instead of the pane). */}
     {isMobile && !mvMobileViewer && (
-      <nav ref={bottomBarRef} className={cn(
+      <nav ref={bottomBarRef} data-plugin-list-avoid="" className={cn(
         "z-50 bg-background border-t border-border overflow-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
         isPaneScoped ? "absolute bottom-0 inset-x-0" : "fixed bottom-0 inset-x-0 sm:hidden",
       )}>
@@ -6630,6 +6399,16 @@ export function EmailViewer({
             <Forward className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
           </button>
+          {teamNoteAllowed && email && (
+            <button
+              onClick={() => requestNoteField(email.id)}
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
+              data-team-note-bar=""
+            >
+              <StickyNote className="w-5 h-5" />
+              <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{tTeam('note')}</span>
+            </button>
+          )}
           </>)}
           <button
             onClick={onNavigateNext}
@@ -6695,5 +6474,6 @@ export function EmailViewer({
     </>
     </div>
     </div>
+    </TeamNotesProvider>
   );
 }

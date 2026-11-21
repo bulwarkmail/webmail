@@ -23,22 +23,31 @@ const notificationsOf = (t: Translate): Translate => (key, values) => t(`notific
 
 /** A move this window made, with logins in place of clients, so another window can undo it. */
 export function movedNotice(kind: MoveKind, batches: EmailRestoreBatch[] | null): PopoutMovedNotice {
-  const clients = [...useAuthStore.getState().getAllConnectedClients()];
+  const auth = useAuthStore.getState();
+  const clients = [...auth.getAllConnectedClients()];
   return {
     kind,
     batches: (batches ?? []).map((batch) => ({
-      login: clients.find(([, client]) => client === batch.client)?.[0] ?? null,
+      login: clients.find(([, client]) => client === batch.client)?.[0]
+        ?? (batch.client === auth.client ? auth.activeAccountId : null),
       accountId: batch.accountId,
       points: batch.points,
     })),
   };
 }
 
-/** A notice's restore batches, through this window's own connections. */
+/**
+ * A notice's restore batches, each through this window's client of the login
+ * it names. A batch whose login has no client here, or that names none, is
+ * not restored: through any other login its message and folder ids name
+ * other messages and folders.
+ */
 export function restoreBatchesFromNotice(notice: PopoutMovedNotice): EmailRestoreBatch[] {
   const auth = useAuthStore.getState();
   return notice.batches.flatMap((batch) => {
-    const client = (batch.login ? auth.getClientForAccount(batch.login) : undefined) ?? auth.client;
+    const client = batch.login
+      ? auth.getClientForAccount(batch.login) ?? (batch.login === auth.activeAccountId ? auth.client : null)
+      : null;
     return client && batch.points.length > 0 ? [{ client, accountId: batch.accountId, points: batch.points }] : [];
   });
 }

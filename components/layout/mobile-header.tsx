@@ -80,6 +80,7 @@ export function MobileHeader({
   return (
     <header
       data-mobile-mail-header=""
+      data-plugin-list-avoid=""
       className={cn(
         "flex items-center justify-between h-14 shrink-0",
         mountainView

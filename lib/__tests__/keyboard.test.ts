@@ -1,6 +1,6 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 
-import { isEditableEventTarget } from '../keyboard';
+import { isEditableEventTarget, readKeyboardLayoutMap, resetKeyboardLayout, shortcutKey } from '../keyboard';
 
 // Regression tests for #654: global single-key shortcuts fired while the user
 // was editing inside the QuotedHtml shadow-DOM island, because the shadow
@@ -76,5 +76,79 @@ describe('isEditableEventTarget', () => {
     shadow.appendChild(inner);
 
     expect(dispatchAndCheck(inner).editable).toBe(false);
+  });
+});
+
+// #1714: a shortcut is the key the user types. Colemak types "e" on the key
+// a US keyboard has F on; that is "e", not "f".
+describe('shortcutKey', () => {
+  const press = (key: string, code: string, shiftKey = false) => ({ key, code, shiftKey });
+
+  it('takes the typed letter on Latin layouts', () => {
+    expect(shortcutKey(press('e', 'KeyF'))).toBe('e'); // Colemak
+    expect(shortcutKey(press('a', 'KeyQ'))).toBe('a'); // AZERTY
+    expect(shortcutKey(press('R', 'KeyO', true))).toBe('r'); // Dvorak, Shift
+  });
+
+  it('takes the typed sign, wherever the layout has it', () => {
+    expect(shortcutKey(press('/', 'Period', true))).toBe('/'); // AZERTY Shift + :
+    expect(shortcutKey(press('!', 'Slash'))).toBe('!'); // AZERTY
+    expect(shortcutKey(press('?', 'Slash', true))).toBe('?');
+  });
+
+  it('falls back to the US place where the layout types no Latin character', () => {
+    expect(shortcutKey(press('у', 'KeyE'))).toBe('e'); // Russian
+    expect(shortcutKey(press('ε', 'KeyE'))).toBe('e'); // Greek
+    expect(shortcutKey(press('ק', 'KeyE'))).toBe('e'); // Hebrew
+    expect(shortcutKey(press('Å', 'KeyA', true))).toBe('a'); // macOS Option + Shift + A
+    expect(shortcutKey(press('Dead', 'KeyE'))).toBe('e'); // macOS Option + E
+    expect(shortcutKey(press('№', 'Digit3', true))).toBe('#'); // Russian Shift + 3
+  });
+
+  it('keeps named keys', () => {
+    expect(shortcutKey(press('ArrowDown', 'ArrowDown'))).toBe('arrowdown');
+    expect(shortcutKey(press('Delete', 'Delete'))).toBe('delete');
+  });
+});
+
+// #1719: a Mac's Option layer types no letter, so the key's place stood in,
+// which on Colemak is another letter: Option+Shift+N went by the US N key.
+describe('shortcutKey with the Option layer on a non-QWERTY layout', () => {
+  afterEach(() => { resetKeyboardLayout(); vi.unstubAllGlobals(); });
+  const option = (key: string, code: string) => ({ key, code, shiftKey: true });
+
+  it('takes the letter the key typed when last pressed without a modifier', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', code: 'KeyJ' })); // Colemak
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'K', code: 'KeyN', shiftKey: true }));
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('n');
+    expect(shortcutKey(option('˜', 'KeyN'))).toBe('k');
+  });
+
+  it('learns nothing from a press with Option, Ctrl or ⌘, or from a dead key', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', code: 'KeyJ', altKey: true }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', code: 'KeyJ', metaKey: true }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Dead', code: 'KeyJ' }));
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('j');
+  });
+
+  it('goes back to the US place once the key types a non-Latin letter', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', code: 'KeyJ' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'о', code: 'KeyJ' })); // switched to Russian
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('j');
+  });
+
+  it('reads the layout from the browser where it has a layout map', async () => {
+    vi.stubGlobal('navigator', { ...navigator, keyboard: {
+      getLayoutMap: async () => new Map([['KeyJ', 'n'], ['KeyE', 'f'], ['KeyK', 'л']]),
+    } });
+    await readKeyboardLayoutMap();
+    expect(shortcutKey(option('Dead', 'KeyJ'))).toBe('n');
+    expect(shortcutKey(option('´', 'KeyE'))).toBe('f');
+    expect(shortcutKey(option('Dead', 'KeyK'))).toBe('k');
+  });
+
+  it('still takes the typed letter first', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', code: 'KeyJ' }));
+    expect(shortcutKey(option('J', 'KeyJ'))).toBe('j');
   });
 });

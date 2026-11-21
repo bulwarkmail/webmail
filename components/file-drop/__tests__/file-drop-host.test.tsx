@@ -316,3 +316,73 @@ describe('the same choices without a drag', () => {
     expect(await screen.findByTestId('file-drop-choice')).toBeTruthy();
   });
 });
+
+// "Import into <folder>" for a dropped .eml: the folder on screen is a folder
+// of the login browsed. With another login's Inbox open in the Pro sidebar
+// the message goes into that Inbox, through that login, and not into the
+// active login's folder with the same id.
+describe('an .eml dropped on the folder in view', () => {
+  const eml = new File(['Subject: note\r\n\r\nhello'], 'note.eml', { type: 'message/rfc822' });
+  const inbox = (accountId: string) => ({ id: 'a', name: 'Inbox', role: 'inbox', accountId, myRights: { mayAddItems: true } });
+  const loginClient = () => ({
+    supportsFiles: () => false, supportsContacts: () => false, getMaxSizeUpload: () => 0, getMaxSizeAttachmentsPerEmail: () => 0,
+    importRawEmail: vi.fn(async (_file: File, _mailboxIds: Record<string, boolean>, _keywords?: unknown, _accountId?: string) => 'new-id'),
+  });
+  let active: ReturnType<typeof loginClient>;
+  let other: ReturnType<typeof loginClient>;
+  let connected: Map<string, ReturnType<typeof loginClient>>;
+  let emailStore: typeof import('@/stores/email-store').useEmailStore;
+  let before: ReturnType<typeof emailStore.getState>;
+
+  beforeEach(async () => {
+    emailStore = (await import('@/stores/email-store')).useEmailStore;
+    before = emailStore.getState();
+    active = loginClient();
+    other = loginClient();
+    connected = new Map([['login-a', active], ['login-b', other]]);
+    useAuthStore.setState({
+      isAuthenticated: true, activeAccountId: 'login-a', client: active as never,
+      getClientForAccount: ((id: string) => connected.get(id)) as never,
+    });
+    emailStore.setState({
+      selectedMailbox: 'a', viewingAccountId: 'login-b',
+      mailboxes: [inbox('ee')], accountMailboxes: { 'login-b': [inbox('ef')] },
+    } as never);
+    hoisted.pathname.current = '/mail/folder/inbox';
+  });
+  afterEach(() => {
+    emailStore.setState(before);
+    useAuthStore.setState({ activeAccountId: null, getClientForAccount: (() => undefined) as never });
+  });
+
+  const dropOnImport = async () => {
+    render(<FileDropHost />);
+    dragIn([eml]);
+    fireEvent.drop(zone('import-eml'), { dataTransfer: transfer([eml]) });
+    await flush();
+    await flush();
+  };
+
+  it('of another login goes into that login\'s folder, through that login', async () => {
+    await dropOnImport();
+    expect(other.importRawEmail).toHaveBeenCalledTimes(1);
+    expect(other.importRawEmail.mock.calls[0].slice(1, 4)).toEqual([{ a: true }, expect.anything(), 'ef']);
+    expect(active.importRawEmail).not.toHaveBeenCalled();
+  });
+
+  it('of another login that has no client is not offered, and nothing goes to the active login', async () => {
+    connected.delete('login-b');
+    render(<FileDropHost />);
+    dragIn([eml]);
+    expect(document.querySelector('[data-drop-zone="import-eml"]')).toBeNull();
+    expect(active.importRawEmail).not.toHaveBeenCalled();
+  });
+
+  it('of the active login goes into its own folder, as before', async () => {
+    emailStore.setState({ viewingAccountId: null } as never);
+    await dropOnImport();
+    expect(active.importRawEmail).toHaveBeenCalledTimes(1);
+    expect(active.importRawEmail.mock.calls[0][3]).toBe('ee');
+    expect(other.importRawEmail).not.toHaveBeenCalled();
+  });
+});

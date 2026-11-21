@@ -11,7 +11,9 @@
       "totp_required": "Ihr Konto braucht zur Anmeldung einen zweiten Code. Öffnen Sie Ihre Authenticator-App und geben Sie unten den 6-stelligen Code ein.",
       "totp_invalid": "Dieser Code ist falsch oder zu alt. Geben Sie den Code ein, den Ihre Authenticator-App gerade anzeigt.",
       "oauth_discovery_failed": "Die Anmeldung über Ihre Organisation funktioniert gerade nicht. Versuchen Sie es später noch einmal oder fragen Sie Ihre Administration.",
-      "token_exchange_failed": "Passwort und Code sind richtig, aber der Mailserver hat diese App nicht hereingelassen. Bitten Sie Ihre Administration, die Anmelde-Einstellungen für diese App zu prüfen."
+      "oauth_issuer_mismatch": "Die Anmeldung über Ihre Organisation ist nicht richtig eingerichtet. Bitte sagen Sie Ihrer Administration Bescheid.",
+      "token_exchange_failed": "Passwort und Code sind richtig, aber der Mailserver hat diese App nicht hereingelassen. Bitten Sie Ihre Administration, die Anmelde-Einstellungen für diese App zu prüfen.",
+      "login_refused": "Der Mailserver hat diese App nicht hereingelassen. Ihren Code hat er nicht geprüft. Bitten Sie Ihre Administration, die Anmelde-Einstellungen für diese App zu prüfen."
     },
     "token_hint": "Manche Mailanbieter geben Ihnen ein Token statt eines Passworts. Erstellen Sie es in den Einstellungen Ihres Mailanbieters, kopieren Sie es und fügen Sie es hier ein.",
     "config_error": {
@@ -154,6 +156,10 @@
       "hide_account_switcher": {
         "description": "Die Kontoauswahl oben in der Ordnerliste ausblenden. Sie können das Konto weiterhin unten in der linken Leiste wechseln."
       },
+      "compose_placement": {
+        "description": "Wo der Knopf für eine neue Nachricht auf einem Computer ist. Auf dem Handy ist er immer über der Nachrichtenliste.",
+        "rail": "Oben in der linken Leiste"
+      },
       "show_rail_account_list": {
         "label": "Ihre Konten in der linken Leiste zeigen",
         "description": "Unten in der linken Leiste für jedes Konto einen Kreis zeigen, damit Sie schnell wechseln können. Darunter ist ein Knopf zum Abmelden."
@@ -254,7 +260,7 @@
     },
     "email_behavior": {
       "inbox_type": {
-        "description": "Bei „Ungelesene zuerst“ stehen Ihre 25 neuesten ungelesenen E-Mails oben im Posteingang"
+        "description": "Bei „Ungelesene zuerst“ stehen Ihre neuesten ungelesenen E-Mails oben im Posteingang"
       },
       "clear_search_on_folder_change": {
         "description": "Wenn Sie einen anderen Ordner öffnen, endet Ihre Suche und Sie sehen den ganzen Ordner. Ist das aus, sucht die Suche im neuen Ordner weiter."
@@ -610,7 +616,6 @@
       "not_supported": "Ihr Mailserver kann keine Filterregeln nutzen.",
       "match_all": "Alle Bedingungen müssen zutreffen",
       "match_any": "Eine Bedingung genügt",
-      "stop_processing": "Die Regeln darunter nicht mehr prüfen",
       "condition_fields": {
         "header": "Andere Kopfzeile",
         "body": "Text der E-Mail"
@@ -640,10 +645,8 @@
         "validation_failed": "Der Code konnte nicht geprüft werden. Versuchen Sie es noch einmal."
       },
       "managed_by_tooltip": "{source} verwaltet das. Ändern Sie es in dieser App oder bearbeiten Sie die Regeln als Code.",
-      "apply_existing_unsupported": "Nur manche Regeln können auch für E-Mails laufen, die schon da sind: Regeln, die Absender, Empfänger, Betreff oder Kopfzeilen prüfen und die verschieben, kopieren, als gelesen markieren, mit Stern markieren oder mit Label versehen.",
       "period_hint": "Die Regel gilt für E-Mails, die in dieser Zeit ankommen. Lassen Sie ein Feld leer, wenn es keinen Start oder kein Ende gibt.",
-      "validation_period_invalid": "Geben Sie ein Datum mit Uhrzeit ein oder lassen Sie das Feld leer",
-      "apply_existing_period": "Eine Regel mit Zeitraum gilt nur für E-Mails, die in dieser Zeit ankommen. Deshalb kann sie nicht für E-Mails laufen, die schon da sind."
+      "validation_period_invalid": "Geben Sie ein Datum mit Uhrzeit ein oder lassen Sie das Feld leer"
     },
     "templates": {
       "description": "Speichern Sie E-Mails, die Sie oft schreiben, und nutzen Sie sie wieder. Sie können Lücken haben, die Sie jedes Mal ausfüllen.",
@@ -756,5 +759,8 @@
   },
   "recover_deleted": {
     "load_failed": "Gelöschte E-Mails konnten nicht geladen werden. Versuchen Sie es noch einmal."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Die Kontoliste über den Ordnern zeigen. Ausgeschaltet wechseln Sie das Konto über Ihr Bild in der linken Leiste."
   }
 }

@@ -74,7 +74,7 @@ describe('the same markup under each Authentication-Results verdict', () => {
   });
 
   it('accepts a DKIM pass from a subdomain of the From domain (Uber signs as ibt.uber.com)', () => {
-    const ar = 'mx.google.com; dkim=pass header.i=@ibt.shop.example header.s=smtp3; spf=pass smtp.mailfrom=bounces@ibt.shop.example; dmarc=pass header.from=shop.example';
+    const ar = 'mx.example.org; dkim=pass header.i=@ibt.shop.example header.s=smtp3; spf=pass smtp.mailfrom=bounces@ibt.shop.example; dmarc=pass header.from=shop.example';
     expect(reason(mail({ ar }))).toBe('trusted');
   });
 });
@@ -110,7 +110,7 @@ describe('authenticationResultsOnReceipt', () => {
     ])).toBe(true);
   });
 
-  it('accepts the header order Gmail writes', () => {
+  it('refuses the headers Gmail wrote on a message synced in from there', () => {
     expect(authenticationResultsOnReceipt([
       { name: 'Delivered-To', value: 'someone@gmail.com' },
       { name: 'Received', value: 'by 2002:a05:6a10:1b4a:b0:5b1:2::1 with SMTP id 10csp1;' },
@@ -120,7 +120,7 @@ describe('authenticationResultsOnReceipt', () => {
       { name: 'Received', value: 'from mail.shop.example (mail.shop.example. [192.0.2.1]) by mx.google.com with ESMTPS id 2' },
       { name: 'Received-SPF', value: 'pass' },
       { name: 'Authentication-Results', value: 'mx.google.com; dkim=pass header.i=@shop.example' },
-    ])).toBe(true);
+    ])).toBe(false);
   });
 
   it('refuses headers above every Received, after a submission hop, or with no Received at all', () => {

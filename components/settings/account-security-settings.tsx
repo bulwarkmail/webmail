@@ -10,7 +10,7 @@ import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SettingsSection, SettingItem, ToggleSwitch, AdvancedOnly } from './settings-section';
-import { useAccountSecurityStore, type AppPasswordInfo, type ApiKeyInfo, type AppCredentialInput } from '@/stores/account-security-store';
+import { useAccountSecurityStore, isLegacyEncryptionType, type AppPasswordInfo, type ApiKeyInfo, type AppCredentialInput } from '@/stores/account-security-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
 import { apiFetch, getPathPrefix } from '@/lib/browser-navigation';
@@ -26,6 +26,7 @@ import { TermInfo } from '@/components/ui/term';
 import { IconButton } from '@/components/ui/icon-button';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { MailAppsSetup } from './mail-apps-setup';
+import { MaskedAddressesSection } from './masked-addresses-section';
 
 /** Ids that tie a visible label to its field: labelFor("key"). */
 function useLabelIds() {
@@ -785,18 +786,22 @@ function PublicKeysSection() {
         <form onSubmit={handleEnableEncryptionSubmit} className="p-3 bg-muted border border-border rounded-md space-y-3">
           <h5 className="text-xs font-semibold text-foreground">{t('encryption.configure_title')}</h5>
           
-          <div>
-            <label htmlFor={labelFor("algorithm_label")} className="text-xs text-muted-foreground mb-1 block">{t('encryption.algorithm_label')}</label>
-            <select
-              id={labelFor("algorithm_label")}
-              value={selectedAlgorithm}
-              onChange={(e) => setSelectedAlgorithm(e.target.value as 'Aes128' | 'Aes256')}
-              className="w-full text-xs px-3 py-1.5 rounded-md border border-border bg-background focus:outline-hidden"
-            >
-              <option value="Aes256">AES-256</option>
-              <option value="Aes128">AES-128</option>
-            </select>
-          </div>
+          {/* Only Stalwart 1.0.0 and 1.0.1 let the account pick a cipher; later
+              versions take it from the key and refuse Aes128 / Aes256. */}
+          {isLegacyEncryptionType(encryptionConfig.type) && (
+            <div>
+              <label htmlFor={labelFor("algorithm_label")} className="text-xs text-muted-foreground mb-1 block">{t('encryption.algorithm_label')}</label>
+              <select
+                id={labelFor("algorithm_label")}
+                value={selectedAlgorithm}
+                onChange={(e) => setSelectedAlgorithm(e.target.value as 'Aes128' | 'Aes256')}
+                className="w-full text-xs px-3 py-1.5 rounded-md border border-border bg-background focus:outline-hidden"
+              >
+                <option value="Aes256">AES-256</option>
+                <option value="Aes128">AES-128</option>
+              </select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground">
@@ -850,7 +855,11 @@ function PublicKeysSection() {
                     <span className="text-sm font-medium text-foreground truncate">{key.description || key.id}</span>
                     {isEncryptedWithThisKey && (
                       <span className="text-[0.625rem] bg-green-500/10 text-green-600 dark:text-green-400 font-medium px-1.5 py-0.5 rounded border border-green-500/20">
-                        {encryptionConfig.type}
+                        {encryptionConfig.type === 'Aes128'
+                          ? 'AES-128'
+                          : encryptionConfig.type === 'Aes256'
+                            ? 'AES-256'
+                            : t('encryption.in_use')}
                       </span>
                     )}
                   </div>
@@ -1534,6 +1543,8 @@ export function AccountSecuritySettings() {
           </AdvancedOnly>
         </div>
       </SettingsSection>
+
+      <MaskedAddressesSection />
 
       <SettingsSection id="encryption" title={t('sections.encryption')} advanced>
         <PublicKeysSection />

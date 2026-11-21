@@ -11,6 +11,9 @@ import { dialogSurfacesAvailable, openDialogSurface, type DialogSurface } from "
  */
 export const DialogSurfaceContext = createContext<DialogSurface | null>(null);
 
+/** True inside the shared Dialog (dialog.tsx): a menu opened there is drawn above it. */
+export const InDialogContext = createContext(false);
+
 export function useDialogSurfaceContext(): DialogSurface | null {
   return useContext(DialogSurfaceContext);
 }

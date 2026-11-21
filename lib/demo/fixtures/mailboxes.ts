@@ -58,6 +58,8 @@ export const SMB = {
   inbox: 'demo-support-inbox',
   sent: 'demo-support-sent',
   resolved: 'demo-support-resolved',
+  // Where the team's notes live (fixtures/team-notes.ts); Bulwark never lists it.
+  notes: 'demo-support-team-notes',
 } as const;
 
 export function createDemoSupportMailboxes(): Mailbox[] {
@@ -65,6 +67,7 @@ export function createDemoSupportMailboxes(): Mailbox[] {
     system(SMB.inbox, 'Inbox', 'inbox', 1),
     system(SMB.sent, 'Sent', 'sent', 2),
     custom(SMB.resolved, 'Resolved', 10),
+    { ...custom(SMB.notes, 'Team notes', 90), isSubscribed: false },
   ];
 }
 

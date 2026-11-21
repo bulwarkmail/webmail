@@ -22,6 +22,8 @@ export interface RawSendItem {
   envelopeRecipients?: string[];
   /** submitRaw: no copy in Sent. */
   submitOnly?: boolean;
+  /** Delivery notifications and required TLS, as the composer set them. */
+  submission?: { requestDsn?: boolean; requireTls?: boolean };
 }
 
 export type SendItem = EmailSendItem | RawSendItem;

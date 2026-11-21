@@ -6,6 +6,7 @@
     "username_placeholder": "gebruiker@voorbeeld.nl",
     "password_label": "Wachtwoord",
     "password_placeholder": "Voer je wachtwoord in",
+    "forgot_password": "Wachtwoord vergeten?",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server geselecteerd op basis van je e-maildomein.",
     "sign_in": "Aanmelden",
@@ -22,7 +23,9 @@
       "totp_required": "Een tweefactorauthenticatiecode is vereist. Voer uw code hieronder in.",
       "totp_invalid": "Ongeldige authenticatiecode. Controleer uw authenticator-app.",
       "oauth_discovery_failed": "SSO is ingeschakeld maar de identiteitsprovider is niet bereikbaar. Controleer uw OAuth-configuratie.",
-      "token_exchange_failed": "Uw wachtwoord en code zijn geaccepteerd, maar de mailserver weigerde een sessie voor deze app te starten. Vraag uw beheerder de OAuth-clientinstellingen te controleren."
+      "oauth_issuer_mismatch": "Aanmelden via deze provider is niet goed ingesteld. De beheerder moet het issuer-adres van de provider instellen.",
+      "token_exchange_failed": "Uw wachtwoord en code zijn geaccepteerd, maar de mailserver weigerde een sessie voor deze app te starten. Vraag uw beheerder de OAuth-clientinstellingen te controleren.",
+      "login_refused": "De mailserver weigerde deze aanmelding voordat uw code werd gecontroleerd. Vraag uw beheerder de OAuth-clientinstellingen te controleren."
     },
     "show_password": "Wachtwoord tonen",
     "hide_password": "Wachtwoord verbergen",
@@ -157,6 +160,7 @@
     "settings": "Instellingen",
     "admin": "Admin",
     "files": "Bestanden",
+    "tasks": "Taken",
     "loading_mailboxes": "Mappen laden...",
     "push_connected": "Real-time updates actief",
     "push_disconnected": "Real-time updates inactief",
@@ -338,10 +342,20 @@
     "show_on_mobile": "Weergeven op mobiel"
   },
   "email_list": {
+    "date_groups": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "last_week": "Vorige week",
+      "last_month": "Vorige maand",
+      "older": "Ouder"
+    },
+    "group_by_date": "Groeperen op datum",
     "sections": {
       "unread": "Ongelezen",
       "everything_else": "Al het andere",
-      "unread_empty": "Je hebt alle berichten in je inbox gelezen."
+      "unread_empty": "Je hebt alle berichten in je inbox gelezen.",
+      "unread_newer": "Nieuwere ongelezen",
+      "unread_older": "Oudere ongelezen"
     },
     "columns": {
       "from": "Van",
@@ -369,6 +383,8 @@
     "replied": "Beantwoord",
     "forwarded": "Doorgestuurd",
     "has_attachment": "Met bijlage",
+    "high_importance": "Hoge urgentie",
+    "low_importance": "Lage urgentie",
     "conversations_range": "{from}–{to, number} van {total, number}",
     "conversations_count": "{count} van {total} gesprekken",
     "conversations_count_plus": "{count}+ gesprekken",
@@ -778,7 +794,8 @@
       "event_status_tentative": "Voorlopig",
       "event_status_cancelled": "Geannuleerd",
       "collapse": "Details verbergen",
-      "expand": "Details tonen"
+      "expand": "Details tonen",
+      "optional_role": "Je aanwezigheid is optioneel"
     },
     "previous": "Vorige",
     "next": "Volgende",
@@ -956,6 +973,50 @@
     "restore_to": "Terugzetten naar {folder}",
     "delete_forever": "Definitief verwijderen"
   },
+  "team_mailboxes": {
+    "note": "Notitie",
+    "add_note": "Notitie toevoegen",
+    "field_label": "Notitie",
+    "placeholder": "Schrijf een notitie voor je team",
+    "chars_left": "{count, plural, one {Nog # teken} other {Nog # tekens}}",
+    "too_long": "{count, plural, one {# teken te lang} other {# tekens te lang}}",
+    "sending": "Bezig met verzenden…",
+    "save_failed": "De notitie kon niet worden opgeslagen.",
+    "retry": "Opnieuw",
+    "full": "Deze mailbox is vol. Vraag het je beheerder.",
+    "read_only": "In deze mailbox kunnen geen notities worden opgeslagen. Vraag het je beheerder.",
+    "read_only_member": "Je kunt hier notities lezen, maar niet schrijven.",
+    "offline": "Je bent offline. Notities kun je weer schrijven zodra je online bent.",
+    "team_only": "Alleen je team ziet dit",
+    "list_label": "Notities",
+    "delete": "Notitie verwijderen",
+    "note_from": "Notitie van {name}, {time}",
+    "new_note_from": "Nieuwe notitie van {name}",
+    "deleted": "Notitie verwijderd",
+    "undo": "Ongedaan maken",
+    "delete_failed": "De notitie kon niet worden verwijderd.",
+    "load_failed": "De notities konden niet worden geladen.",
+    "timeline_assigned": "{name} heeft dit toegewezen aan {assignee}",
+    "timeline_took": "{name} heeft dit opgepakt",
+    "timeline_unassigned": "{name} heeft de toewijzing opgeheven",
+    "timeline_unassigned_person": "{name} heeft de toewijzing aan {assignee} opgeheven",
+    "timeline_left": "{name} doet dit niet meer",
+    "timeline_done": "{name} heeft dit als afgehandeld gemarkeerd",
+    "timeline_reopened": "{name} heeft dit heropend",
+    "someone": "een teamlid",
+    "summary_count": "{count, plural, one {# notitie} other {# notities}}",
+    "summary_latest": "{name}: {text}",
+    "row_count_new": "{count, plural, one {# notitie, nieuw} other {# notities, nieuw}}",
+    "filter_label": "Filter",
+    "filter_open": "Open",
+    "filter_mine": "Aan mij toegewezen",
+    "filter_mentions": "Noemt mij",
+    "filter_notes": "Met notities",
+    "mention_list": "Mensen in dit team",
+    "mentioned_you": "{name} noemde je in ‘{subject}’",
+    "mentioned_you_hidden": "Je bent genoemd in een teammailbox",
+    "show": "Tonen"
+  },
   "mail_p3_actions": {
     "move_to_inbox": "Naar Postvak IN",
     "delete_forever_title": "Dit bericht definitief verwijderen?",
@@ -1081,6 +1142,7 @@
     "templates_menu": "Sjablonen",
     "insert_template": "Sjabloon invoegen…",
     "options": "Opties",
+    "tags": "Labels",
     "option_plain_text": "Platte tekst",
     "option_plain_text_hint": "Verzenden zonder opmaak",
     "option_read_receipt": "Leesbevestiging vragen",
@@ -1093,6 +1155,12 @@
     "option_priority_high": "Hoog",
     "option_priority_normal": "Normaal",
     "option_priority_low": "Laag",
+    "file_in": "In map opbergen",
+    "file_in_chosen": "Opbergen in {folder}",
+    "file_in_hint": "Na verzenden gaan je bericht en het bericht waarop je antwoordt naar deze map",
+    "file_in_none": "Niet opbergen",
+    "file_in_failed": "Verzonden, maar opbergen in {folder} is mislukt.",
+    "file_in_reply_elsewhere": "Origineel verplaatst naar {folder}. Je antwoord blijft in Verzonden, omdat het vanaf een ander account is verstuurd.",
     "validation": {
       "recipient_required": "Voeg een ontvanger toe om te verzenden",
       "body_required": "Schrijf een bericht of voeg een bestand toe",
@@ -1218,6 +1286,7 @@
       "clear_formatting": "Opmaak wissen",
       "undo": "Ongedaan maken",
       "redo": "Opnieuw",
+      "cell_background": "Celachtergrond",
       "add_row_above": "Rij erboven toevoegen",
       "add_row_below": "Rij eronder toevoegen",
       "add_column_before": "Kolom ervoor toevoegen",
@@ -1283,6 +1352,18 @@
       "plain_text": "[Afbeelding: {alt}]"
     }
   },
+  "upload_rate_limit": {
+    "retry_in": "Te veel uploads. Probeer het over {minutes, plural, one {# minuut} other {# minuten}} opnieuw.",
+    "retry_later": "Te veel uploads. Probeer het later opnieuw."
+  },
+  "attachment_rename": {
+    "rename": "Naam wijzigen",
+    "rename_named": "Naam van {name} wijzigen",
+    "rename_menu": "Naam wijzigen…",
+    "rename_title": "Naam van bijlage wijzigen",
+    "rename_invalid_chars": "Bestandsnamen mogen geen / of \\ of stuurtekens bevatten",
+    "rename_too_long": "Deze naam is te lang"
+  },
   "compose_ux": {
     "draft_discarded": "Concept verwijderd",
     "undo": "Ongedaan maken",
@@ -1315,6 +1396,7 @@
     "success": "Geslaagd",
     "cancel": "Annuleren",
     "save": "Opslaan",
+    "ready_to_save": "Klaar om op te slaan",
     "delete": "Verwijderen",
     "edit": "Bewerken",
     "close": "Sluiten",
@@ -1708,6 +1790,13 @@
         "label": "Accountwisselaar boven in de zijbalk",
         "description": "Toont de accountwisselaar boven de mappen en de ronde knop Nieuw bericht boven de berichtenlijst. Zet dit uit om Nieuw bericht in plaats daarvan boven de mappen te zetten."
       },
+      "compose_placement": {
+        "label": "Knop Nieuw bericht",
+        "description": "Waar de knop Nieuw bericht op een computer staat. Op de telefoon staat hij altijd boven de berichtenlijst.",
+        "floating": "Boven de berichtenlijst",
+        "sidebar": "Boven in de mappenbalk",
+        "rail": "Boven in de navigatiebalk"
+      },
       "show_rail_account_list": {
         "label": "Accountavatars tonen op navigatiebalk",
         "description": "Toon individuele accountcirkels onderaan de navigatiebalk voor snel wisselen, met een afmeldknop eronder."
@@ -1797,12 +1886,19 @@
       "title": "E-maillabels",
       "description": "Maak labels om uw berichten te ordenen. De labels worden met uw berichten op de server opgeslagen.",
       "add_keyword": "Label toevoegen",
+      "sort_az": "Sorteren A–Z",
+      "sorted": "Labels gesorteerd van A tot Z",
+      "empty": "Nog geen labels.",
       "label_field": "Weergavenaam",
       "label_placeholder": "bijv. Werk, Persoonlijk, Urgent",
       "id_field": "Label-ID",
       "id_placeholder": "bijv. werk, persoonlijk",
       "color_field": "Kleur",
-      "id_exists": "Deze label-ID bestaat al",
+      "custom_color": "Eigen kleur",
+      "color_code": "Kleurcode",
+      "pick_custom_color": "Kies een eigen kleur",
+      "invalid_color": "Gebruik een kleurcode zoals #1a73e8.",
+      "name_exists": "Er bestaat al een label met deze naam",
       "edit": "Label bewerken",
       "delete": "Label verwijderen",
       "edit_tag": "{name} bewerken",
@@ -1982,9 +2078,19 @@
     "email_behavior": {
       "inbox_type": {
         "label": "Type inbox",
-        "description": "'Ongelezen eerst' toont je 25 nieuwste ongelezen berichten in een sectie boven de rest van de inbox",
+        "description": "'Ongelezen eerst' toont je nieuwste ongelezen berichten in een sectie boven de rest van de inbox",
         "default": "Standaard",
         "unread_first": "Ongelezen eerst"
+      },
+      "unread_section_size": {
+        "label": "Getoonde ongelezen berichten",
+        "description": "Hoeveel van je nieuwste ongelezen berichten de sectie 'Ongelezen eerst' toont",
+        "5": "5 berichten",
+        "10": "10 berichten",
+        "15": "15 berichten",
+        "20": "20 berichten",
+        "25": "25 berichten",
+        "50": "50 berichten"
       },
       "clear_search_on_folder_change": {
         "label": "Zoekopdracht wissen bij wisselen van map",
@@ -2074,9 +2180,19 @@
         "label": "Alleen platte tekst",
         "description": "Schakel de rich text-editor uit en verzend alle e-mails alleen als platte tekst, inclusief antwoorden en doorgestuurde berichten"
       },
+      "reply_under_message": {
+        "label": "Antwoorden onder het bericht",
+        "description": "Een antwoord of doorgestuurd bericht opent onder het bijbehorende bericht, dat erboven leesbaar blijft. Als dit uit staat, neemt het het hele leesvenster in, zoals een nieuw bericht."
+      },
       "quick_reply": {
         "label": "Snel antwoorden",
         "description": "Het vak voor snel antwoorden onder berichten tonen."
+      },
+      "reply_quote": {
+        "label": "Geciteerde tekst in antwoorden",
+        "description": "Ingeklapt verbergt de geciteerde berichten achter •••. Uitgeklapt toont ze volledig als u een antwoord opent.",
+        "collapsed": "Ingeklapt",
+        "expanded": "Uitgeklapt"
       },
       "auto_select_reply_identity": {
         "label": "Antwoordadres automatisch selecteren",
@@ -2121,6 +2237,14 @@
       "show_verification_codes": {
         "label": "Verificatiecodes tonen",
         "description": "De code uit aanmeld- en bevestigingsmails aanbieden om met één klik te kopiëren, een dag lang in de lijst en in het bericht"
+      },
+      "show_attachment_chips": {
+        "label": "Bijlagen in de lijst tonen",
+        "description": "Bijgevoegde bestanden onder elk bericht tonen, zodat je ze direct vanuit de lijst kunt openen. De paperclip blijft hoe dan ook zichtbaar."
+      },
+      "show_tag_chips": {
+        "label": "Labels in de lijst tonen",
+        "description": "Labels naast de afzender of het onderwerp in de berichtenlijst tonen"
       },
       "attachment_click_action": {
         "label": "Actie bij klikken op bijlagen",
@@ -2241,6 +2365,16 @@
         "seconds": "{seconds} seconden",
         "unsupported": "Het huidige account meldt geen ondersteuning voor vertraagd verzenden. De instelling blijft opgeslagen voor andere accounts."
       },
+      "mark_read_on_reply": {
+        "label": "Als gelezen markeren wanneer ik antwoord of doorstuur",
+        "description": "Een bericht dat u beantwoordt of doorstuurt, wordt als gelezen gemarkeerd, ook als berichten bij openen nooit als gelezen worden gemarkeerd."
+      },
+      "message_double_click": {
+        "label": "Dubbelklikken op een bericht",
+        "description": "Wat dubbelklikken op een bericht in de lijst doet.",
+        "reading_pane": "Openen in het leesvenster",
+        "new_window": "Openen in een nieuw venster"
+      },
       "return_to_list_after_action": {
         "label": "Terug naar lijst na verwijderen, archiveren, verplaatsen of markeren als ongelezen",
         "description": "Na het verwijderen, archiveren, verplaatsen, als spam melden of als ongelezen markeren van het geopende bericht terugkeren naar de berichtenlijst in plaats van het volgende bericht te openen."
@@ -2264,6 +2398,10 @@
       "rtl_editing": {
         "label": "Ondersteuning voor rechts-naar-links bewerken",
         "description": "Voegt een richtingsknop toe aan de werkbalk van de editor waarmee alinea's links-naar-rechts of rechts-naar-links kunnen worden ingesteld"
+      },
+      "group_by_date": {
+        "label": "Groeperen op datum",
+        "description": "Toon berichten onder datumkoppen zoals Vandaag, Gisteren en Vorige week. Geldt alleen als de lijst op datum is gesorteerd."
       },
       "group_conversations": {
         "label": "Berichten groeperen per gesprek",
@@ -2365,6 +2503,57 @@
       }
     },
     "security": {
+      "masked_addresses": {
+        "address": "Adres",
+        "description_column": "Beschrijving",
+        "website_column": "Website",
+        "state": "Status",
+        "actions": "Acties",
+        "no_description": "Geen beschrijving",
+        "edit": "Bewerken",
+        "close": "Sluiten",
+        "pagination": "Pagina's met gemaskeerde adressen",
+        "page": "Pagina {page} van {pages}",
+        "previous": "Vorige",
+        "next": "Volgende",
+        "delete": "Verwijderen",
+        "delete_title": "Gemaskeerd adres definitief verwijderen?",
+        "delete_warning": "{address} verwijderen? Dit kan niet ongedaan worden gemaakt. E-mail naar dit adres wordt niet meer bezorgd.",
+        "delete_confirm": "Definitief verwijderen",
+        "cancel": "Annuleren",
+        "deleted": "Adres definitief verwijderd.",
+        "deleted_refresh_failed": "Verwijdering bevestigd, maar de lijst kon niet worden vernieuwd. Vernieuw om de actuele lijst te laden.",
+        "delete_forbidden": "Uw huidige sessie mag geen gemaskeerde adressen verwijderen. Andere toegestane acties blijven beschikbaar.",
+        "delete_failed": "Het adres is niet verwijderd. Vernieuw de lijst voordat u het opnieuw probeert.",
+        "delete_unconfirmed": "De verwijdering kon niet worden bevestigd en wordt niet opnieuw geprobeerd. Vernieuw de lijst en controleer het adres voordat u verder iets verwijdert.",
+        "title": "Gemaskeerde adressen",
+        "intro": "Ontvang e-mail zonder uw hoofdadres te delen. Als u een adres uitschakelt, wordt nieuwe e-mail naar dat adres geweigerd. Met deze adressen kunt u geen e-mail versturen.",
+        "loading": "Gemaskeerde adressen laden…",
+        "count": "{count, plural, one {# adres} other {# adressen}}",
+        "empty": "Nog geen gemaskeerde adressen.",
+        "website": "Website (optioneel)",
+        "description": "Beschrijving (optioneel)",
+        "no_website": "Niet opgegeven",
+        "enabled": "Ingeschakeld",
+        "disabled": "Uitgeschakeld",
+        "enable": "Inschakelen",
+        "disable": "Uitschakelen",
+        "copy": "Kopiëren",
+        "copied": "Adres gekopieerd.",
+        "copy_failed": "Kopiëren mislukt. Selecteer en kopieer het adres hierboven.",
+        "save": "Beschrijving opslaan",
+        "create": "Gemaskeerd adres maken",
+        "refresh": "Vernieuwen",
+        "saved": "Wijziging opgeslagen.",
+        "forbidden": "Uw huidige sessie mag geen gemaskeerde adressen weergeven.",
+        "unavailable": "Gemaskeerde adressen zijn niet beschikbaar voor dit account of deze server.",
+        "load_failed": "De volledige adreslijst kon niet worden geladen. Vernieuw om het opnieuw te proberen.",
+        "save_failed": "De wijziging kon niet worden bevestigd. Vernieuw de lijst voordat u het opnieuw probeert.",
+        "create_forbidden": "De server stond niet toe dat met deze sessie een gemaskeerd adres werd gemaakt.",
+        "update_forbidden": "De server stond niet toe dat met deze sessie gemaskeerde adressen werden bewerkt. U kunt adressen nog wel kopiëren.",
+        "over_quota": "Het quotum voor gemaskeerde adressen op de server is bereikt. Uitgeschakelde adressen kunnen nog meetellen voor de limiet.",
+        "rate_limit": "De aanmaaklimiet van de server is bereikt. Probeer het later opnieuw."
+      },
       "title": "Accountbeveiliging",
       "description": "Beheer uw wachtwoord, tweefactorauthenticatie en beveiligingsinstellingen",
       "detecting": "Servermogelijkheden worden gedetecteerd...",
@@ -2465,6 +2654,7 @@
         "enable_tooltip": "Versleuteling met deze sleutel inschakelen",
         "configure_title": "Versleuteling met deze sleutel inschakelen",
         "enable_button": "Inschakelen",
+        "in_use": "In gebruik",
         "disable_tooltip": "Versleuteling uitschakelen",
         "disable_title": "Versleuteling in rust uitschakelen?",
         "disable_message": "Nieuwe e-mail wordt vanaf nu onversleuteld opgeslagen.",
@@ -2707,7 +2897,9 @@
       },
       "settings_sync": {
         "label": "Instellingen synchroniseren",
-        "description": "Synchroniseer uw instellingen tussen browsers en apparaten"
+        "description": "Synchroniseer uw instellingen tussen browsers en apparaten",
+        "replaced": "{count, plural, one {# instelling in deze browser volgt} other {# instellingen in deze browser volgen}} nu je account.",
+        "keep_mine": "Die van deze browser gebruiken"
       },
       "sender_favicons": {
         "label": "Afzender-favicons",
@@ -2892,16 +3084,12 @@
       "loading": "Filters laden...",
       "not_supported": "Uw mailserver ondersteunt geen e-mailfilters.",
       "rule_name": "Regelnaam",
-      "rule_name_placeholder": "bijv. Nieuwsbrieven sorteren",
       "match_all": "Aan alle voorwaarden voldoen",
       "match_any": "Aan een van de voorwaarden voldoen",
       "conditions": "Voorwaarden",
       "add_condition": "Voorwaarde toevoegen",
       "actions": "Acties",
-      "add_action": "Actie toevoegen",
       "remove_condition": "Voorwaarde verwijderen",
-      "remove_action": "Actie verwijderen",
-      "stop_processing": "Latere regels niet toepassen",
       "include_spam": "Ook berichten verplaatsen die als spam zijn gemarkeerd",
       "attachment_type_placeholder": "bijv. pdf, doc, jpg",
       "value_placeholder_multi": "Waarde (meerdere met komma's gescheiden)",
@@ -2911,6 +3099,7 @@
         "from": "Van",
         "to": "Aan",
         "cc": "Cc",
+        "delivered_to": "Afgeleverd aan",
         "subject": "Onderwerp",
         "header": "Aangepaste header",
         "size": "Grootte",
@@ -2960,7 +3149,6 @@
       "condition_value": "Waarde van de voorwaarde",
       "header_placeholder": "bijv. X-Mailing-List",
       "size_bytes": "Grootte in bytes",
-      "size_placeholder": "bijv. 1000000",
       "system_managed": "Systeembeheerde regel",
       "opaque_warning": "Dit script is buiten de visuele builder bewerkt. Alleen Sieve-scriptbewerking is beschikbaar.",
       "open_sieve_editor": "Sieve-scripteditor openen",
@@ -2983,7 +3171,6 @@
       "reset_warning": "Dit verwijdert het huidige script en begint opnieuw.",
       "reset_title": "Terugzetten naar de visuele editor?",
       "confirm_reset": "Terugzetten",
-      "validation_empty_name": "Regelnaam is verplicht",
       "validation_empty_conditions": "Minstens één voorwaarde met een waarde is vereist",
       "validation_empty_actions": "Minstens één actie is vereist",
       "validation_action_folder": "Kies een map voor deze actie",
@@ -3034,8 +3221,6 @@
       "suggest_cc": "Cc {address}",
       "suggest_list": "List-Id",
       "suggest_domain": "@{domain}",
-      "apply_existing": "Ook toepassen op berichten die al in deze map staan",
-      "apply_existing_unsupported": "Alleen regels die de afzender, ontvangers, het onderwerp of headers controleren, en die verplaatsen, kopiëren, als gelezen markeren, een ster geven of labelen, kunnen op bestaande berichten worden toegepast.",
       "period_title": "Periode",
       "period_start": "Startdatum",
       "period_end": "Einddatum",
@@ -3044,13 +3229,46 @@
       "period_hint": "Geldt voor berichten die in deze periode binnenkomen. Laat een veld leeg om die kant open te laten.",
       "validation_period_empty": "Vul een start- of einddatum voor de periode in",
       "validation_period_invalid": "Vul voor de periode een geldige datum met tijd in, of laat het veld leeg",
-      "apply_existing_period": "Een regel met een periode werkt alleen op berichten die binnen die periode binnenkomen en kan dus niet op bestaande berichten worden toegepast.",
-      "apply_existing_in": "Ook toepassen op de berichten die al in {folder} staan",
-      "apply_existing_count": "{count, plural, one {Ook toepassen op het # bericht dat al in {folder} staat} other {Ook toepassen op de # berichten die al in {folder} staan}}",
-      "apply_existing_none": "Nog geen bericht in {folder} past bij deze regel.",
       "period_status_scheduled": "gepland",
       "period_status_active": "actief",
-      "period_status_expired": "verlopen"
+      "period_status_expired": "verlopen",
+      "editor": {
+        "if": "Als",
+        "match_all": "elke",
+        "match_any": "een",
+        "of_conditions": "van deze voorwaarden klopt",
+        "match_type": "Welke voorwaarden moeten kloppen",
+        "condition_number": "Voorwaarde {number}",
+        "comparison": "Vergelijking",
+        "size_unit": "Eenheid",
+        "has_attachment": "Heeft een bijlage",
+        "attachment_type": "Bijlage van type",
+        "size_units": {
+          "bytes": "bytes",
+          "kb": "KB",
+          "mb": "MB"
+        },
+        "continue_rules": "Andere regels blijven toepassen",
+        "skip_rule": "Deze regel overslaan",
+        "matching": "{count, plural, =0 {Geen berichten komen overeen} one {# bericht komt overeen} other {# berichten komen overeen}}",
+        "matching_partial": "{count, plural, =0 {Geen recente berichten komen overeen} other {#+ berichten komen overeen}}",
+        "checking": "Overeenkomende berichten zoeken…",
+        "tags": "Labels",
+        "attachment_type_invalid": "Vul een bestandsextensie in, bijvoorbeeld pdf",
+        "action_conflict": "Stilletjes verwijderen en Afwijzen gaan niet samen met Verplaatsen, Kopiëren of Houden, en ook niet met elkaar",
+        "apply_to": "Toepassen op",
+        "apply_new": "Alleen nieuwe e-mail",
+        "apply_folder": "Nieuwe e-mail en {folder}",
+        "apply_folder_count": "Nieuwe e-mail en {folder} ({count})",
+        "apply_all": "Nieuwe en alle e-mail",
+        "apply_all_count": "Nieuwe en alle e-mail ({count})",
+        "applying": "‘{name}’ wordt toegepast…",
+        "trash_title": "Bestaande e-mail naar de prullenbak verplaatsen?",
+        "trash_confirm": "{count, plural, one {Hiermee gaat # bestaand bericht naar de prullenbak.} other {Hiermee gaan # bestaande berichten naar de prullenbak.}}",
+        "trash_confirm_partial": "{count, plural, =0 {Hiermee gaat elk bestaand bericht waarop de regel past naar de prullenbak.} other {Hiermee gaan #+ bestaande berichten naar de prullenbak.}}",
+        "trash_button": "Opslaan en naar prullenbak verplaatsen",
+        "delivered_to_new_only": "Deze regel werkt alleen voor nieuwe e-mail. Afgeleverde e-mail bewaart het adres niet waaraan hij is afgeleverd."
+      }
     },
     "templates": {
       "title": "E-mailsjablonen",
@@ -3343,7 +3561,8 @@
         "description": "De rand rond de knop, link of het veld waar het toetsenbord op staat.",
         "normal": "Normaal",
         "thick": "Dik",
-        "extra": "Extra dik"
+        "extra": "Extra dik",
+        "off": "Uit"
       },
       "focus_always": {
         "label": "Focus altijd tonen",
@@ -3863,6 +4082,7 @@
     "items_selected": "{count} e-mails geselecteerd",
     "forward_as_attachments": "Doorsturen als bijlagen",
     "edit_draft": "Concept bewerken",
+    "edit_as_new": "Bewerken als nieuw",
     "cancel_scheduled_send": "Verzenden annuleren",
     "reschedule_send": "Opnieuw plannen",
     "cancel_and_edit": "Annuleren en bewerken",
@@ -3877,6 +4097,9 @@
       "block": "{count, plural, one {Afzender blokkeren} other {# afzenders blokkeren}}",
       "no_junk": "Dit account heeft geen map Ongewenst",
       "create": "Regel maken…",
+      "add_sender_to_rule": "{sender} aan een regel toevoegen",
+      "sender_already_present": "Staat al in deze regel",
+      "no_rule_fits": "Geen regels om aan toe te voegen",
       "manage": "Regels beheren",
       "senders_count": "{count, plural, one {# afzender} other {# afzenders}}",
       "cross_account": "Selecteer berichten uit één account",
@@ -3885,9 +4108,41 @@
       "load_failed": "De regels konden niet worden geladen",
       "none": "Nog geen regels",
       "new_mail_only": "Alleen voor nieuwe berichten",
+      "cannot_run": "Alleen regels die verplaatsen, kopiëren, als gelezen markeren, een ster geven, labelen of verwijderen kunnen op bestaande berichten worden toegepast, en alleen als ze de inhoud, 'Afgeleverd aan' of een reguliere expressie niet controleren.",
       "running": "\"{name}\" wordt uitgevoerd op {folder}…"
     },
     "find_emails_from": "E-mails van {name} zoeken"
+  },
+  "team_assign": {
+    "dialog_title": "Toewijzen aan",
+    "search_label": "Naam of adres",
+    "you": "Jij",
+    "people": "Personen",
+    "no_one_found": "Niemand gevonden.",
+    "cancel": "Annuleren",
+    "chip_me": "Ik",
+    "chip_assigned": "Toegewezen",
+    "chip_more": "{name} +{count}",
+    "assigned_to": "Toegewezen aan {name}",
+    "assigned_to_you": "Aan jou toegewezen",
+    "assigned_unknown": "Toegewezen aan een teamlid",
+    "done": "Klaar",
+    "marked_done": "Gemarkeerd als klaar",
+    "no_longer_assigned": "Niet meer toegewezen",
+    "reopened": "Heropend",
+    "change_failed": "Kon het bericht niet wijzigen. Probeer het opnieuw.",
+    "assign_to_me": "Aan mij toewijzen",
+    "assign_to": "Toewijzen aan…",
+    "unassign": "Toewijzing opheffen",
+    "mark_done": "Markeren als klaar",
+    "reopen": "Heropenen",
+    "unassign_me": "Mijn toewijzing opheffen",
+    "save": "Opslaan",
+    "assignees_changed": "Toewijzing gewijzigd",
+    "unassigned_person": "{name} is niet meer toegewezen",
+    "add_assignee": "Toewijzen",
+    "remove_assignee": "Toewijzing aan {name} opheffen",
+    "assignees_label": "Toegewezen aan"
   },
   "menuMove": {
     "filter_placeholder": "Map zoeken",
@@ -3910,6 +4165,8 @@
     "delete_folder": "Map verwijderen",
     "refresh": "Vernieuwen",
     "hide_shared_account": "Verbergen in zijbalk",
+    "move_shared_account_up": "Omhoog verplaatsen",
+    "move_shared_account_down": "Omlaag verplaatsen",
     "mute_notifications": "Meldingen dempen",
     "unmute_notifications": "Meldingen inschakelen",
     "mute_account_notifications": "Meldingen voor dit account dempen",
@@ -3919,6 +4176,8 @@
     "mark_all_confirm_message": "Alle ongelezen berichten in uw persoonlijke account als gelezen markeren?",
     "empty_all_confirm_title": "Prullenbak legen voor alle accounts",
     "empty_all_confirm_message": "{count, plural, one {Het bericht} other {Alle # berichten}} in de prullenbak van al je accounts definitief verwijderen? Dit kan niet ongedaan worden.",
+    "empty_all_confirm_shared": "Dit geldt ook voor de gedeelde accounts {accounts}.",
+    "empty_all_confirm_kept": "De prullenbak van {accounts} blijft zoals hij is, omdat je daar niet mag verwijderen.",
     "toast_emptied_all": "Prullenbak geleegd voor alle accounts",
     "toast_error_empty_all_partial": "Prullenbak geleegd, maar sommige accounts zijn mislukt",
     "toast_error_empty_all": "Prullenbak legen mislukt",
@@ -3955,6 +4214,12 @@
     "empty_spam": "Spam legen",
     "empty_trash_confirm": "{count, plural, one {Het bericht} other {Alle # berichten}} in de prullenbak definitief verwijderen? Dit kan niet ongedaan worden.",
     "empty_spam_confirm": "{count, plural, one {Het bericht} other {Alle # berichten}} in spam definitief verwijderen? Dit kan niet ongedaan worden.",
+    "empty_folder": "Map leegmaken…",
+    "empty_folder_title": "{folder} leegmaken?",
+    "empty_folder_confirm_trash": "{count, plural, one {Het bericht} other {Alle # berichten}} in {folder} naar de prullenbak verplaatsen?",
+    "empty_folder_confirm_delete": "{count, plural, one {Het bericht} other {Alle # berichten}} in {folder} definitief verwijderen? Dit kan niet ongedaan worden.",
+    "empty_folder_move": "Naar prullenbak",
+    "empty_folder_delete": "Definitief verwijderen",
     "title_all_accounts": "{name} ({count}, {total} in alle accounts)",
     "title_all_accounts_only": "{name} ({total} in alle accounts)"
   },
@@ -4044,7 +4309,7 @@
     "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "Toont de accountwisselaar boven de mappen, met Nieuw bericht eronder. Zet dit uit om Nieuw bericht op die plek te zetten."
+    "sidebar_account_switcher_description": "Toont de accountwisselaar boven de mappen. Zet dit uit om van account te wisselen met je avatar in de navigatiebalk."
   },
   "mail_p2_conv": {
     "show_message": "Bericht tonen",
@@ -4413,6 +4678,8 @@
       "role_label": "Role",
       "language_label": "Language",
       "related_default_label": "Related",
+      "related_unknown": "Onbekend contact",
+      "related_remove": "Verwijderen uit gerelateerde contacten",
       "more_actions": "Meer acties",
       "age_years": "{count, plural, one {1 jaar} other {# jaar}}",
       "years_since": "{count, plural, one {1 jaar geleden} other {# jaar geleden}}"
@@ -4458,6 +4725,9 @@
       "phone_pager": "Pieper",
       "phone_video": "Video",
       "phone_text": "SMS",
+      "phone_custom": "Aangepast…",
+      "phone_custom_label": "Eigen type",
+      "phone_custom_placeholder": "bijv. Auto",
       "organization": "Organisatie",
       "organization_placeholder": "Bedrijfsnaam",
       "department": "Afdeling",
@@ -4781,9 +5051,27 @@
       "end_time": "Eindtijd",
       "all_day_event": "Hele dag evenement",
       "calendar_select": "Agenda",
+      "show_as": "Weergeven als",
+      "show_as_busy": "Bezet",
+      "show_as_free": "Vrij",
+      "shown_free": "Weergegeven als vrij",
+      "visibility": "Zichtbaarheid",
+      "visibility_public": "Openbaar",
+      "visibility_private": "Privé",
+      "visibility_secret": "Verborgen",
+      "visibility_hint_public": "Mensen met wie je de agenda deelt, zien de details.",
+      "visibility_hint_private": "Mensen met wie je de agenda deelt, zien alleen de tijd.",
+      "visibility_hint_secret": "Mensen met wie je de agenda deelt, zien de afspraak niet, en de tijd blijft vrij.",
+      "visibility_series": "Geldt voor alle herhalingen.",
+      "color_calendar": "Kleur van de agenda gebruiken",
+      "overlap": "Overlapt met {title} ({details})",
+      "overlap_plain": "Overlapt met {title}",
+      "overlap_more": "En nog {count}",
       "save": "Opslaan",
       "cancel": "Annuleren",
-      "color": "Kleur"
+      "color": "Kleur",
+      "expand": "Vergroten",
+      "restore_size": "Oorspronkelijke grootte"
     },
     "participants": {
       "availability": {
@@ -4822,7 +5110,9 @@
       "you_attendee": "Je bent een deelnemer",
       "no_participants": "Geen deelnemers",
       "limit_warning": "Meer dan {max, plural, one {# deelnemer} other {# deelnemers}}, de organisator meegeteld: de server kan weigeren dit evenement op te slaan. Een beheerder kan de limiet verhogen.",
-      "count": "{count, plural, one {# deelnemer} other {# deelnemers}}"
+      "count": "{count, plural, one {# deelnemer} other {# deelnemers}}",
+      "optional": "Optioneel",
+      "optional_role": "optioneel"
     },
     "recurrence": {
       "title": "Herhaling",
@@ -4966,6 +5256,8 @@
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",
       "show_tasks_on_calendar_desc": "Taken tonen in de maand-, week- en dagweergave van de agenda",
+      "show_tasks_app": "Taken als eigen app",
+      "show_tasks_app_desc": "Taken krijgen een eigen pictogram in de appbalk in plaats van een weergave in de agenda",
       "hover_preview": "Voorvertoning bij hover",
       "hover_preview_desc": "Toon een detailpopover bij het hoveren over agenda-evenementen",
       "hover_preview_instant": "Direct",
@@ -5276,7 +5568,13 @@
       "results": "{count, plural, one {# afspraak gevonden} other {# afspraken gevonden}}"
     },
     "mini_has_events": "heeft afspraken",
-    "mini_week_number": "Week {week}"
+    "mini_week_number": "Week {week}",
+    "move_confirm_organizer_title": "\"{title}\" verplaatsen naar {when}?",
+    "move_confirm_organizer_message": "De deelnemers krijgen een update en worden gevraagd de nieuwe tijd te accepteren.",
+    "move_confirm_organizer_confirm": "Verplaatsen en melden",
+    "move_confirm_attendee_title": "\"{title}\" alleen in je eigen agenda verplaatsen?",
+    "move_confirm_attendee_message": "Je bent niet de organisator. Voor de organisator en de andere deelnemers blijft de vergadering op dezelfde tijd, en de volgende update van de organisator overschrijft je wijziging.",
+    "move_confirm_attendee_confirm": "Mijn kopie verplaatsen"
   },
   "ux_pim_calendar": {
     "task_lists": "Takenlijsten",
@@ -5303,7 +5601,12 @@
     "task_list_not_in_calendar": "{name} (takenlijst, niet zichtbaar in de agenda)",
     "copy_to_account": "Kopiëren naar {address}",
     "copied_to_account": "Gekopieerd naar {address}",
-    "delete_original": "Origineel verwijderen"
+    "delete_original": "Origineel verwijderen",
+    "copy_to_calendar": "Kopiëren naar agenda…",
+    "copy_to_calendar_title": "Kopiëren naar agenda",
+    "copy_to_calendar_hint": "De kopie is je eigen afspraak. Wijzigingen in het origineel veranderen haar niet.",
+    "copy_button": "Kopiëren",
+    "copied_to_calendar": "Gekopieerd naar {calendar}"
   },
   "calendar_offline": {
     "split_needs_server": "Voor deze wijziging is een verbinding met de server nodig. Wijzig voorlopig alleen deze afspraak, of probeer het opnieuw zodra je weer online bent."
@@ -5383,6 +5686,7 @@
     "search": "Zoeken",
     "not_starred": "Zonder ster",
     "no_attachment": "Zonder bijlagen",
+    "no_tags": "Zonder labels",
     "any_time": "Altijd",
     "past_week": "Afgelopen week",
     "past_month": "Afgelopen maand",
@@ -5791,6 +6095,13 @@
   "unified_mailbox": {
     "search_unavailable": "Zoeken is niet beschikbaar in de gecombineerde weergave"
   },
+  "account_routing": {
+    "group_members_one_account": "Een groep kan alleen contacten van één account bevatten.",
+    "link_names_no_account": "Deze link zegt niet in welk account het bericht staat, dus is hij niet geopend.",
+    "group_member_gone": "Een van de gekozen contacten bestaat niet meer. Kies de leden opnieuw.",
+    "invitation_other_account": "Deze uitnodiging staat in een ander account. Schakel over naar dat account om erop te antwoorden of haar aan een agenda toe te voegen.",
+    "tab_names_no_account": "Dit tabblad is zonder zijn account opgeslagen, dus is het niet geopend. Sluit het en open het opnieuw vanuit het account waar het bij hoort."
+  },
   "mail_import": {
     "menu_import": "E-mail importeren…",
     "settings_label": "E-mail importeren",
@@ -6002,7 +6313,9 @@
     "answer_for": "Antwoorden namens {name}",
     "no_write": "Je ziet de uitnodigingen van {name}, maar kunt er niet namens hen op antwoorden. Vraag om bewerkrechten.",
     "also_invited": "Je bent zelf ook uitgenodigd en deze server kan jouw antwoord niet onderscheiden van dat van {name}. {name} moet deze zelf beantwoorden.",
-    "answered_by": "Beantwoord door {who}"
+    "answered_by": "Beantwoord door {who}",
+    "organizer_owner": "{name} (verzonden door jou)",
+    "organizer_me": "Jij"
   },
   "free_busy_share": {
     "button": "Mijn vrij/bezet delen met {group}",
@@ -6113,7 +6426,25 @@
     "unknown_note": "Bulwark ziet bezette tijden alleen in agenda’s die met je zijn gedeeld. Bij deze mensen kan het vrij niet onderscheiden van niet gedeeld.",
     "directory_off": "Bulwark kan op deze server geen mensen opzoeken. Je beheerder kan directoryquery’s aanzetten in Stalwart.",
     "not_looked_up": "Dit adres kon niet worden opgezocht",
-    "found": "Vrije tijden gevonden: {count}"
+    "found": "Vrije tijden gevonden: {count}",
+    "optional_ignored": "Bezette tijden van optionele deelnemers tellen niet mee."
+  },
+  "scheduling_assistant": {
+    "open": "Beschikbaarheid…",
+    "title": "Beschikbaarheid",
+    "description": "Klik in het raster of sleep de afspraak om hem te verplaatsen. Sleep het einde om de duur te wijzigen.",
+    "previous_day": "Vorige dag",
+    "next_day": "Volgende dag",
+    "you": "Jij",
+    "everyone": "Alle deelnemers",
+    "optional": "Optioneel",
+    "event": "Afspraak: {time}",
+    "keyboard_hint": "De pijltjestoetsen verplaatsen de afspraak 15 minuten. Met Shift wijzigen ze de duur.",
+    "use_time": "Deze tijd gebruiken",
+    "loading": "Bezette tijden laden…",
+    "outside_hours": "Buiten werktijd",
+    "everyone_free": "Iedereen vrij",
+    "not_checked": "Onbekend"
   },
   "share_notifications": {
     "someone": "Iemand",
@@ -6392,6 +6723,9 @@
     "attachments_description": "Bijlagen van bewaarde berichten en de bestanden die je offline bewaart, samen maximaal {total}. De oudste gaan eerst weg.",
     "total_locked": "Je organisatie staat maximaal {size} aan bijlagen en bestanden toe.",
     "attachment_cap_label": "Grootste bijlage om te bewaren",
+    "total_cap_label": "Totale grootte van bewaarde bijlagen",
+    "total_cap_unlimited": "Geen limiet",
+    "attachments_description_unlimited": "Bijlagen van bewaarde berichten en de bestanden die je offline bewaart, zonder limiet op het totaal.",
     "usage_mail": "Berichten en zoekindex",
     "usage_attachments": "Bijlagen",
     "usage_calendar": "Agenda",
@@ -6734,6 +7068,10 @@
         "title": "Je afmelden",
         "body": "Je afmelden bij de webmail."
       },
+      "auth_impersonation_return": {
+        "title": "Je terugbrengen naar je eigen account",
+        "body": "Nadat een beheerder een mailbox via impersonatie heeft geopend, die sessie beëindigen en opnieuw inloggen op het account waar die begon."
+      },
       "account_read": {
         "title": "Je accounts zien",
         "body": "De accounts zien die je hebt toegevoegd, met hun adressen en servers, en welke e-mailaccounts teampostvakken zijn."
@@ -6749,6 +7087,10 @@
       "http_fetch": {
         "title": "Verbinding maken met andere websites",
         "body": "Verzoeken naar deze sites sturen. Alles wat de plug-in kan lezen, kan daarheen worden gestuurd:"
+      },
+      "links_check": {
+        "title": "Links controleren die je opent",
+        "body": "Elke weblink zien die je opent, met de tekst ervan, en die tegenhouden of in plaats daarvan een ander adres openen."
       },
       "admin_config": {
         "title": "Zijn instellingen van je beheerder lezen",
@@ -6854,9 +7196,13 @@
         "title": "Je e-mail doorsturen",
         "body": "Berichten uit je account met hun bijlagen doorsturen, zonder de editor te openen. Voor de eerste keer doorsturen naar een adres wordt het je gevraagd."
       },
+      "ui_notices": {
+        "title": "Eigen meldingsvensters tonen",
+        "body": "Een klein eigen paneel onderaan het scherm tonen, waar ook de berichten van de app verschijnen, bijvoorbeeld bij een inkomend gesprek. Het blokkeert de pagina niet, u kunt verder typen en het sluiten. Elke melding noemt de plug-in."
+      },
       "ui_notifications": {
         "title": "Meldingen tonen",
-        "body": "Meldingen op je apparaat tonen, of in de app als je ze niet hebt toegestaan. Elke melding noemt de naam van de plug-in."
+        "body": "Meldingen op je apparaat tonen, of in de app als je ze niet hebt toegestaan. Elke melding noemt de naam van de plug-in. De plug-in ziet ook de meldingen die de app je toont."
       },
       "ui_message_list": {
         "title": "Toevoegen aan de berichtenlijst",
@@ -7006,6 +7352,14 @@
     "not_available_title": "Deze pagina is niet beschikbaar",
     "not_available_description": "De plug-in die hem heeft toegevoegd, staat uit of is niet meer geïnstalleerd.",
     "back_to_mail": "Terug naar mail"
+  },
+  "plugin_surfaces": {
+    "dropdown_list": "Lijst van de plug-in {name}",
+    "dropdown_list_labelled": "{label}, lijst van de plug-in {name}",
+    "oauth_failed": "De dienst heeft het aanmelden niet afgerond. Sluit dit venster en probeer het opnieuw.",
+    "banners_more": "Meer banners ({count}): {names}",
+    "banners_fewer": "Minder banners",
+    "opened_by_plugin": "Geopend door de plug-in {name}"
   },
   "command_palette": {
     "title": "Opdrachtenpalet",
@@ -7178,6 +7532,10 @@
     "action_reply": "Beantwoorden",
     "reply_placeholder": "Schrijf een antwoord"
   },
+  "team_push": {
+    "mentioned_you": "{name} heeft je genoemd in “{subject}”",
+    "mentioned_hidden": "Je bent genoemd in een teammailbox"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Toevoegen aan agenda",
     "update_in_calendar": "Bijwerken in agenda",
@@ -7208,6 +7566,14 @@
       "added_from": "Toegevoegd vanuit een e-mail van {domain}",
       "added_from_subject": "Toegevoegd vanuit de e-mail ‘{subject}’ van {domain}"
     }
+  },
+  "sender_trust": {
+    "cancel_not_organizer": "Deze annulering is verzonden vanaf {sender}, maar de organisator van dit evenement in je agenda is {organizer}. Alleen de organisator kan het annuleren. Verwijder het zelf als je dit bericht vertrouwt.",
+    "cancel_unverified": "Er kon niet worden bevestigd dat deze annulering van de organisator komt. Verwijder het evenement zelf als je dit bericht vertrouwt.",
+    "card_sender": "van {domain}",
+    "card_sender_title": "Dit bericht heeft de afzendercontrole van de mailserver voor {domain} doorstaan.",
+    "outside_link": "Andere site",
+    "outside_link_title": "Deze link gaat naar {host}, buiten {domain}, het domein van de afzender."
   },
   "proofreading": {
     "kind": {
@@ -7303,6 +7669,8 @@
       "title": "Vensters van de app",
       "double_click_label": "Berichten openen in een nieuw venster met dubbelklikken",
       "double_click_description": "Eén klik opent het bericht nog steeds naast de lijst.",
+      "compose_window_label": "Berichten altijd in een nieuw venster schrijven",
+      "compose_window_description": "Nieuwe berichten, antwoorden, doorgestuurde berichten en concepten openen in een eigen venster in plaats van in het hoofdvenster.",
       "restore_label": "Vensters opnieuw openen bij het starten",
       "restore_description": "Bericht- en conceptvensters die open waren bij het afsluiten, komen terug."
     },
@@ -7710,6 +8078,8 @@
     "start_at_login_description": "De app start vanzelf als je je aanmeldt.",
     "start_minimized_label": "Starten in het systeemvak",
     "start_minimized_description": "Bij het aanmelden opent geen venster. Open de app met het pictogram in het systeemvak.",
+    "reopen_after_restart_label": "Opnieuw openen na een herstart",
+    "reopen_after_restart_description": "Als de app open is wanneer de computer opnieuw opstart of je je afmeldt, opent hij weer wanneer je je aanmeldt, in dezelfde map, hetzelfde bericht of dezelfde pagina.",
     "attention_label": "Taakbalk laten knipperen bij nieuwe mail",
     "attention_mac_label": "Dock-pictogram laten stuiteren bij nieuwe mail",
     "attention_description": "Alleen als de app niet vooraan staat.",
@@ -8207,5 +8577,13 @@
   "selectionView": {
     "starred": "Met ster gemarkeerd",
     "unstarred": "Ster verwijderd"
+  },
+  "impersonation": {
+    "return_notice": "Je hebt {mailbox} geopend via impersonatie.",
+    "return_button": "Terug naar mijn account"
+  },
+  "admin_access": {
+    "label": "Superusers van deze server mogen het beheerdashboard openen",
+    "help": "Superusers van deze server melden zich aan bij het beheerdashboard zonder het beheerderswachtwoord, net als die van de hoofd-JMAP-server. Zet dit alleen aan voor een server die je zelf beheert."
   }
 }

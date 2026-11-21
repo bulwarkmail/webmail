@@ -545,6 +545,64 @@ describe('CalendarApp dragging', () => {
     await waitFor(() => expect(store.updateEvent).toHaveBeenCalledTimes(2));
     expect(store.updateEvent.mock.calls[1][2]).toMatchObject({ start: '2026-10-12T10:00:00', duration: 'PT1H' });
   });
+
+  // #1752: a drag of a meeting either goes out to its attendees or moves
+  // only the user's copy; both are asked first.
+  const person = (address: string, roles: Record<string, boolean>) => ({
+    '@type': 'Participant', email: address, calendarAddress: `mailto:${address}`, roles, participationStatus: 'accepted',
+  });
+  const meeting = (organizer: string, own: boolean) => makeEvent({
+    organizerCalendarAddress: `mailto:${organizer}`,
+    isOrigin: own,
+    participants: {
+      o: person(organizer, { owner: true }),
+      a: person('bob@example.org', { attendee: true }),
+    } as never,
+  });
+
+  it('asks the organizer before the move goes out to the attendees', async () => {
+    const event = meeting('me@example.com', true);
+    setUp([event], 'month');
+    renderApp();
+
+    dropOnMonthDay(/October 14, 2026/, event);
+    const ask = await screen.findByRole('alertdialog', { name: 'move_confirm_organizer_title' });
+    expect(within(ask).getByText('move_confirm_organizer_message')).toBeInTheDocument();
+    fireEvent.click(within(ask).getByRole('button', { name: 'cancel' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog', { name: 'move_confirm_organizer_title' })).toBeNull());
+    expect(store.updateEvent).not.toHaveBeenCalled();
+
+    dropOnMonthDay(/October 14, 2026/, event);
+    fireEvent.click(within(await screen.findByRole('alertdialog', { name: 'move_confirm_organizer_title' }))
+      .getByRole('button', { name: 'move_confirm_organizer_confirm' }));
+    await waitFor(() => expect(store.updateEvent).toHaveBeenCalledTimes(1));
+    expect(store.updateEvent.mock.calls[0][2]).toMatchObject({ start: '2026-10-14T10:00:00' });
+    expect(store.updateEvent.mock.calls[0][3]).toBe(true);
+  });
+
+  it('tells an attendee that only their copy moves', async () => {
+    const event = meeting('boss@example.org', false);
+    setUp([event], 'month');
+    renderApp();
+
+    dropOnMonthDay(/October 14, 2026/, event);
+    const ask = await screen.findByRole('alertdialog', { name: 'move_confirm_attendee_title' });
+    expect(within(ask).getByText('move_confirm_attendee_message')).toBeInTheDocument();
+    fireEvent.click(within(ask).getByRole('button', { name: 'move_confirm_attendee_confirm' }));
+    await waitFor(() => expect(store.updateEvent).toHaveBeenCalledTimes(1));
+    expect(store.updateEvent.mock.calls[0][3]).toBeUndefined();
+  });
+
+  it('says it in the scope question of a series, not in a second dialog', async () => {
+    const series = { ...meeting('me@example.com', true), recurrenceRules: weekly.recurrenceRules } as CalendarEvent;
+    setUp([series], 'month');
+    renderApp();
+
+    dropOnMonthDay(/October 14, 2026/, series);
+    const scope = await screen.findByRole('dialog', { name: 'edit_title' });
+    expect(within(scope).getByText('move_confirm_organizer_message')).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog', { name: 'move_confirm_organizer_title' })).toBeNull();
+  });
 });
 
 describe('CalendarApp task feedback', () => {
@@ -610,6 +668,8 @@ describe('CalendarApp quick editor', () => {
     fireEvent.click(save);
     await waitFor(() => expect(store.createEvent).toHaveBeenCalledTimes(1));
     expect(store.createEvent.mock.calls[0][1]).toMatchObject({ title: '', showWithoutTime: false });
+    // A timed event blocks its time (#1684).
+    expect(store.createEvent.mock.calls[0][1].freeBusyStatus).toBe('busy');
   });
 });
 
@@ -627,6 +687,8 @@ describe('CalendarApp creating in the month view', () => {
     expect(store.createEvent.mock.calls[0][1]).toMatchObject({
       title: 'Holiday', start: '2026-10-15T00:00:00', duration: 'P1D', showWithoutTime: true,
     });
+    // An all-day event starts as free, as in the full editor (#1684).
+    expect(store.createEvent.mock.calls[0][1].freeBusyStatus).toBe('free');
   });
 
   // Usability report 2026-11-04: a drag over the month's days did nothing.
@@ -745,6 +807,35 @@ describe('CalendarApp event menu', () => {
     fireEvent.contextMenu(screen.getAllByRole('button', { name: /Standup/ })[0], { clientX: 50, clientY: 50 });
     fireEvent.click(await screen.findByRole('menuitem', { name: 'events.edit' }));
     expect(await screen.findByPlaceholderText('form.title')).toHaveValue('Standup');
+  });
+
+  it('keeps the event info popup open when opening its three-dot menu in month view', async () => {
+    renderApp();
+    const card = screen.getAllByRole('button', { name: /Standup/ })[0];
+    fireEvent.click(card);
+    const popup = await screen.findByRole('dialog', { name: 'Standup' });
+    expect(popup).toBeInTheDocument();
+
+    const moreButton = within(popup).getByRole('button', { name: 'toolbar.more' });
+    fireEvent.click(moreButton);
+
+    expect(await screen.findByRole('menuitem', { name: 'events.export_ics' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Standup' })).toBeInTheDocument();
+  });
+
+  it('keeps the event info popup open when copying title from the three-dot menu', async () => {
+    renderApp();
+    const card = screen.getAllByRole('button', { name: /Standup/ })[0];
+    fireEvent.click(card);
+    const popup = await screen.findByRole('dialog', { name: 'Standup' });
+    const moreButton = within(popup).getByRole('button', { name: 'toolbar.more' });
+    fireEvent.click(moreButton);
+
+    const copyTitle = await screen.findByRole('menuitem', { name: 'events.copy_title' });
+    fireEvent.click(copyTitle);
+
+    expect(screen.queryByRole('menuitem', { name: 'events.copy_title' })).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Standup' })).toBeInTheDocument();
   });
 });
 
@@ -876,7 +967,7 @@ describe('CalendarApp after saving', () => {
       expect(screen.queryAllByRole('button', { name: /01:00$/ })).toHaveLength(0);
       fireEvent.keyDown(document.body, { key: 'n', code: 'KeyN' });
       fireEvent.change(screen.getByPlaceholderText('form.title'), { target: { value: 'Night train' } });
-      fireEvent.change(document.querySelector('input[type="time"]')!, { target: { value: '01:00' } });
+      fireEvent.change(screen.getByLabelText('form.start_time'), { target: { value: '01:00' } });
       fireEvent.click(screen.getByRole('button', { name: 'form.save' }));
       await waitFor(() => expect(store.createEvent).toHaveBeenCalled());
       await waitFor(() => expect(screen.getAllByRole('button', { name: /01:00$/ }).length).toBeGreaterThan(0));
@@ -925,6 +1016,32 @@ describe('CalendarApp day view tasks', () => {
       expect(screen.getByRole('heading', { name: 'tasks.edit' })).toBeInTheDocument();
     } finally {
       useSettingsStore.setState({ showTasksOnCalendar: false } as never);
+    }
+  });
+
+  // A task-only list is never among the selected calendars: its tasks follow
+  // the task list tick instead.
+  it.each([
+    [[], true],
+    [['todo'], false],
+  ])('draws the tasks of a task-only list by its task list tick (hidden: %j)', async (hiddenTaskListIds, shown) => {
+    setUp([], 'day');
+    const todo = { ...calendars[0], id: 'todo', name: 'To-do', isTasksOnly: true, isDefault: false };
+    const task = { id: 't2', '@type': 'Task', title: 'Water plants', calendarIds: { todo: true }, progress: 'needs-action', priority: 0, due: '2026-10-12', showWithoutTime: true } as never;
+    useCalendarStore.setState({ calendars: [...calendars, todo], hiddenTaskListIds } as never);
+    useSettingsStore.setState({ showTasksOnCalendar: true } as never);
+    useTaskStore.setState({ tasks: [task] } as never);
+    client.getCalendarTasks.mockResolvedValue([task]);
+    try {
+      renderApp();
+      if (shown) {
+        await waitFor(() => expect(document.querySelector('[data-calendar-task="t2"]')).not.toBeNull());
+      } else {
+        expect(document.querySelector('[data-calendar-task="t2"]')).toBeNull();
+      }
+    } finally {
+      useSettingsStore.setState({ showTasksOnCalendar: false } as never);
+      useCalendarStore.setState({ hiddenTaskListIds: [] } as never);
     }
   });
 });

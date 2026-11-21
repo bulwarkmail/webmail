@@ -25,6 +25,30 @@ describe('sanitizePolicyDefaults (#1248)', () => {
     })).toEqual({});
   });
 
+  it('keeps a tag list with only the id, label and colour of each tag (#1612)', () => {
+    expect(sanitizePolicyDefaults({
+      emailKeywords: [
+        { id: 'work', label: 'Work', color: 'blue', visibility: 'hide', addedBy: 'plugin', extra: { x: 1 } },
+        { id: 'red', label: 'Red', color: 'red' },
+      ],
+    })).toEqual({
+      emailKeywords: [
+        { id: 'work', label: 'Work', color: 'blue' },
+        { id: 'red', label: 'Red', color: 'red' },
+      ],
+    });
+    expect(sanitizePolicyDefaults({ emailKeywords: [] })).toEqual({ emailKeywords: [] });
+  });
+
+  it('drops a tag list with a malformed or long tag, or too many tags', () => {
+    const tag = { id: 'work', label: 'Work', color: 'blue' };
+    expect(sanitizePolicyDefaults({ emailKeywords: [tag, { id: 'x', label: 'X' }] })).toEqual({});
+    expect(sanitizePolicyDefaults({ emailKeywords: [{ ...tag, label: 7 }] })).toEqual({});
+    expect(sanitizePolicyDefaults({ emailKeywords: [{ ...tag, id: 'x'.repeat(101) }] })).toEqual({});
+    expect(sanitizePolicyDefaults({ emailKeywords: [tag, null] })).toEqual({});
+    expect(sanitizePolicyDefaults({ emailKeywords: Array.from({ length: 51 }, (_, i) => ({ ...tag, id: `t${i}` })) })).toEqual({});
+  });
+
   it('drops prototype keys', () => {
     const out = sanitizePolicyDefaults(JSON.parse('{"__proto__": "x", "constructor": "y", "ok": true}'));
     expect(Object.keys(out)).toEqual(['ok']);

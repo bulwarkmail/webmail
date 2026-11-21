@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { type ReactNode, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,8 @@ interface ResizeHandleProps {
   onResize: (delta: number) => void;
   onResizeEnd?: () => void;
   onDoubleClick?: () => void;
+  /** A grip or the like, for a handle that is more than a line; its box is the caller's className. */
+  children?: ReactNode;
   orientation?: "vertical" | "horizontal";
   className?: string;
   /** Stable hook for tests (not user-visible). */
@@ -41,7 +43,7 @@ const PANE_LABEL_KEYS: Record<ResizePane, string> = {
   sidePanel: "resize_side_panel",
 };
 
-export function ResizeHandle({ onResizeStart, onResize, onResizeEnd, onDoubleClick, orientation = "vertical", className, testId, pane, label, value, min, max }: ResizeHandleProps) {
+export function ResizeHandle({ onResizeStart, onResize, onResizeEnd, onDoubleClick, children, orientation = "vertical", className, testId, pane, label, value, min, max }: ResizeHandleProps) {
   const t = useTranslations("shell");
   const handleRef = useRef<HTMLDivElement>(null);
   // Id of the pointer that started the drag, or null when idle. Only that
@@ -176,7 +178,7 @@ export function ResizeHandle({ onResizeStart, onResize, onResizeEnd, onDoubleCli
         className
       )}
     >
-      <div className={cn("absolute", isHorizontal ? "inset-x-0 -top-1 -bottom-1" : "inset-y-0 -left-1 -right-1")} />
+      {children ?? <div className={cn("absolute", isHorizontal ? "inset-x-0 -top-1 -bottom-1" : "inset-y-0 -left-1 -right-1")} />}
     </div>
   );
 }

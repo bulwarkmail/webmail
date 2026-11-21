@@ -49,13 +49,13 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { shellControls } from '@/lib/app-lock/shell';
 import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
-import { isAppLockedNow } from '@/lib/app-lock/state';
+import { isAppLockedNow, readAppLockFile } from '@/lib/app-lock/state';
 import { clearSealed, VAULT_DB } from '@/lib/app-lock/vault';
 import { clearRescuedDrafts } from '@/lib/popout/rescued-drafts';
 import { isPopoutWindow } from '@/lib/popout/window-role';
-import { shownNotifications } from '@/lib/notifications/shown';
 import { PUSH_STATE_CACHE } from '@/lib/push-preferences';
-import { ACCOUNT_STORAGE_KEYS, onBeforeSignOut } from '@/lib/sign-out-cleanup';
+import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
+import { ACCOUNT_STORAGE_KEYS, closeShownNotifications, onBeforeSignOut, SIGNED_OUT_STORAGE_PREFIXES } from '@/lib/sign-out-cleanup';
 import {
   checkInWithInstance,
   registerWithInstance,
@@ -93,7 +93,7 @@ import { forgetEvictedSecrets } from './evicted-secrets';
 // Offline mode itself only when a wipe runs: the check that runs on every start
 // (startDeviceWipe) doesn't need it, and it's a big module.
 const offlineMode = () => import('./offline-mode');
-import { clearEvicted, forgetMailSnapshot, isEvicted, readEvicted, serverKey, useOfflineStore } from './state';
+import { clearEvicted, forgetMailSnapshot, isEvicted, readEvicted, readEvictedOwners, serverKey, useOfflineStore } from './state';
 import { runWipeCleaners } from './wipe-registry';
 import { forgetLocalImportOf } from '@/lib/desktop/local-import';
 
@@ -129,23 +129,18 @@ const APP_DATABASES = new Set([
 const KNOWN_PLUGIN_DATABASES = ['smime-plugin-store', 'bulwark-openpgp', 'smime-capability-probe', 'openpgp-capability-probe'];
 
 /**
- * What every account shared and can't be told apart by account, on top of what a
- * full sign-out removes. `template-storage` is here though a sign-out keeps it:
- * with settings sync off it's the user's own work and only here, which is why a
- * sign-out leaves it, but a template can hold anything, and a device told to remove
- * everything keeps no text. The question before a wipe from settings names it.
+ * What a sign-out keeps on purpose and a wipe takes. Anything of a user's belongs on the
+ * sign-out's list (lib/sign-out-cleanup.ts), and comes here from there. `template-storage`:
+ * with settings sync off it's the user's own work and only here, which is why a sign-out
+ * leaves it, but a template can hold anything, and a device told to remove everything keeps
+ * no text. The question before a wipe from settings names it. `webmail_usernames`: the
+ * login form's suggestions.
  */
-const SHARED_LOCAL_KEYS = [
-  ...ACCOUNT_STORAGE_KEYS,
-  'notification-center',
-  'plugin-oauth-states',
-  'webmail_usernames',
-  'global-search',
-  'favicon-refresh',
-  'template-storage',
-];
-/** The WebDAV area's favourites, recent files and last folder. */
-const SHARED_LOCAL_PREFIXES = ['webdav-'];
+const KEPT_BY_SIGN_OUT = ['webmail_usernames', 'template-storage'];
+
+/** What every account shared and can't be told apart by account. */
+export const SHARED_LOCAL_KEYS = [...ACCOUNT_STORAGE_KEYS, ...KEPT_BY_SIGN_OUT];
+export const SHARED_LOCAL_PREFIXES = SIGNED_OUT_STORAGE_PREFIXES;
 
 const running = new Map<string, Promise<void>>();
 
@@ -266,13 +261,6 @@ async function pushRegistration(): Promise<ServiceWorkerRegistration | null> {
   return (await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => null)) ?? null;
 }
 
-/** A sender and a subject can sit on screen long after the mail is gone. */
-async function closeShownNotifications(): Promise<void> {
-  const registration = await pushRegistration();
-  if (!registration?.getNotifications) return;
-  for (const notification of await shownNotifications(registration) ?? []) notification.close();
-}
-
 /** The subscription is the browser's, shared by every account on this origin. */
 async function endWebPushIfNobodyLeft(): Promise<void> {
   if (useAccountStore.getState().accounts.length > 0) return;
@@ -298,8 +286,111 @@ async function scrubAccount(account: string): Promise<boolean> {
   return complete;
 }
 
-/** Everything accounts share, or that can't be told apart by account. */
-async function scrubShared(): Promise<void> {
+interface LeavingLogin {
+  username: string;
+  serverUrl: string;
+}
+
+/**
+ * Who an account was, also when it's no longer in the account store (dropped after a
+ * refused login, its row wiped later): what the eviction kept, else its id, which is
+ * `username@host` (lib/account-utils.ts generateAccountId).
+ */
+function leavingLoginOf(account: string): LeavingLogin | undefined {
+  const entry = useAccountStore.getState().getAccountById(account);
+  if (entry) return { username: entry.username, serverUrl: entry.serverUrl };
+  const owner = readEvictedOwners()[account];
+  if (owner?.username && owner.serverUrl) return owner;
+  const at = account.lastIndexOf('@');
+  if (at <= 0 || at === account.length - 1) return undefined;
+  return { username: account.slice(0, at), serverUrl: `https://${account.slice(at + 1)}` };
+}
+
+/**
+ * The service worker's store (public/sw.js). All of it when nobody stays. With others
+ * staying, only what was the leaving login's: its do not disturb answer, its relay
+ * registrations and its lists of announced messages (under its user name, the label its
+ * pushes carry), a reply typed on one of its notifications and its place in the tabs'
+ * login lists (under its fingerprint), and when an alert last rang. The app lock's state,
+ * the settings and the others' entries stay: their notifications go by them. Lists kept
+ * per account id alone (before they were per login) stay too: account ids repeat across
+ * servers, so they can't be told apart.
+ */
+async function scrubPushState(account: string | null, leaving: LeavingLogin | undefined): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  const staying = account === null ? [] : useAccountStore.getState().accounts.filter((entry) => entry.id !== account);
+  if (staying.length === 0) {
+    await caches.delete(PUSH_STATE_CACHE);
+    return;
+  }
+  if (!leaving || !(await caches.has(PUSH_STATE_CACHE))) return;
+  const cache = await caches.open(PUSH_STATE_CACHE);
+  const requests = await cache.keys();
+  const pathOf = (request: Request) => new URL(request.url).pathname;
+  const find = (path: string) => requests.find((request) => pathOf(request).endsWith(`/__push-state/${path}`));
+  const readObject = async (request: Request | undefined): Promise<Record<string, unknown> | null> => {
+    const value: unknown = request ? await (await cache.match(request))?.json().catch(() => null) : null;
+    return value && typeof value === 'object' ? value as Record<string, unknown> : null;
+  };
+  const write = (request: Request, value: unknown) => cache.put(request, new Response(JSON.stringify(value), { headers: { 'Content-Type': 'application/json' } }));
+
+  // When an alert last rang, and for which account: the next one rings either way.
+  const lastAlert = find('last-alert');
+  if (lastAlert) await cache.delete(lastAlert);
+
+  // The fingerprint names server and user (lib/pwa-notify/login-fingerprint.ts).
+  const fingerprint = await loginFingerprint(leaving.serverUrl, leaving.username);
+  const replyKey = find('pending-reply');
+  const reply = await readObject(replyKey);
+  // One kept by an older worker names no login.
+  if (replyKey && (!reply || typeof reply.login !== 'string' || reply.login === fingerprint)) await cache.delete(replyKey);
+  const tabsKey = find('client-logins');
+  const tabs = await readObject(tabsKey);
+  if (tabsKey && tabs) {
+    const next = Object.fromEntries(Object.entries(tabs).map(([tab, held]) => [tab, Array.isArray(held) ? held.filter((login) => login !== fingerprint) : held]));
+    await write(tabsKey, next);
+  }
+
+  // A push names its login by the user name (lib/web-push.ts). Logins that share one share these entries.
+  const name = leaving.username;
+  if (staying.some((entry) => entry.username === name)) return;
+  const quietKey = find('quiet-logins');
+  const quiet = await readObject(quietKey);
+  if (quietKey && quiet && name in quiet) {
+    delete quiet[name];
+    await write(quietKey, quiet);
+  }
+  const relayKey = find('relay-registrations');
+  const relays = await readObject(relayKey);
+  const entries = (relays?.entries && typeof relays.entries === 'object' ? relays.entries : {}) as Record<string, { accountLabel?: unknown } | null>;
+  const accountIds = Object.keys(entries).filter((id) => entries[id]?.accountLabel === name);
+  if (relayKey && relays && accountIds.length > 0) {
+    for (const id of accountIds) delete entries[id];
+    await write(relayKey, relays);
+  }
+  const ownLists = `/__push-state/notified/${encodeURIComponent(name)}/`;
+  for (const request of requests) {
+    if (pathOf(request).includes(ownLists)) await cache.delete(request);
+  }
+}
+
+/** The service worker hears the lock's state again from this page, as at each start (lib/app-lock/controller.ts). */
+function tellWorkerAppLock(): void {
+  const message = { type: 'app-lock', state: !readAppLockFile().on ? 'off' : isAppLockedNow() ? 'locked' : 'unlocked', at: Date.now() };
+  try {
+    const worker = navigator.serviceWorker;
+    if (worker?.controller) worker.controller.postMessage(message);
+    else void worker?.ready.then((registration) => registration.active?.postMessage(message)).catch(() => {});
+  } catch {
+    // No service worker, no push notifications. The next page start tells it.
+  }
+}
+
+/**
+ * Everything accounts share, or that can't be told apart by account. `account`: the one a
+ * wipe of one account takes, null for everyone.
+ */
+async function scrubShared(account: string | null, leaving?: LeavingLogin): Promise<void> {
   await clearShellFiles().catch(() => {});
   // Before clearAllCheckpoints takes the job records: they're how the shell's paths get named.
   await forgetLocalImportOf('all').catch(() => {});
@@ -319,7 +410,7 @@ async function scrubShared(): Promise<void> {
   const { useNotificationCenterStore } = await import('@/stores/notification-center-store');
   useNotificationCenterStore.getState().clear();
   await closeShownNotifications().catch(() => {});
-  if (typeof caches !== 'undefined') await caches.delete(PUSH_STATE_CACHE).catch(() => {});
+  await scrubPushState(account, leaving).catch(() => {});
   removeLocalKeys(SHARED_LOCAL_KEYS, SHARED_LOCAL_PREFIXES);
 }
 
@@ -450,6 +541,7 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   }
   tellOtherWindows(account, 'start');
   (await offlineMode()).registerOfflineHooks();
+  const leaving = leavingLoginOf(account);
 
   const ownOnly = reason === 'rejected' || reason === 'session';
   const unsent = await (await offlineMode()).unsentForWipe(account);
@@ -470,7 +562,7 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   dropRefusedLogin(account);
   // A copy a program still holds: tried again at the next start, like the store.
   if (!(await scrubAccount(account).catch(() => true))) deleted = false;
-  if (!ownOnly) await scrubShared().catch(() => {});
+  if (!ownOnly) await scrubShared(account, leaving).catch(() => {});
 
   await deleteDeviceRecord(account).catch(() => {});
   await putRowsBack(records, account);
@@ -485,6 +577,7 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
     await signOutAccount(account);
     await endWebPushIfNobodyLeft().catch(() => {});
   }
+  tellWorkerAppLock();
   if (deleted) clearWipePending(account);
   tellOtherWindows(account, 'end');
   if (deleted && nobodyLeft && shellControls()?.finishLocalWipe) {
@@ -549,7 +642,7 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   const cleaned = await runWipeCleaners(null);
   await forgetPluginAccounts(null).catch(() => {});
   clearAllPluginStorage();
-  await scrubShared().catch(() => {});
+  await scrubShared(null).catch(() => {});
   let deleted = cleaned;
   await (await offlineMode()).wipeEverything().catch(() => { deleted = false; });
   for (const account of Object.keys(readEvicted())) clearEvicted(account);
@@ -560,6 +653,7 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   await forgetLockIfNobodyStays(null).catch(() => {});
   await useAuthStore.getState().logoutAll({ endProviderSession: false });
   await endWebPushIfNobodyLeft().catch(() => {});
+  tellWorkerAppLock();
   if (deleted) clearWipePending(WHOLE_DEVICE);
   tellOtherWindows(null, 'end');
   if (deleted) await finishInMain();

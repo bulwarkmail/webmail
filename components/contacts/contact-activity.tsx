@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { Avatar } from "@/components/ui/avatar";
 import { cleanPreview } from "@/lib/utils";
 import { emailDisplayDate } from "@/lib/email-date";
@@ -94,6 +95,7 @@ export function ContactActivity({ contact }: ContactActivityProps) {
   const selectEmail = useEmailStore((s) => s.selectEmail);
   const setSelectedEventId = useCalendarStore((s) => s.setSelectedEventId);
   const setSelectedDate = useCalendarStore((s) => s.setSelectedDate);
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
 
   const [emails, setEmails] = useState<Email[] | null>(null);
   const [events, setEvents] = useState<CalendarEvent[] | null>(null);
@@ -198,7 +200,8 @@ export function ContactActivity({ contact }: ContactActivityProps) {
     if (event.showWithoutTime) return t("all_day");
     const d = new Date(event.start);
     if (isNaN(d.getTime())) return "";
-    return format.dateTime(d, { hour: "numeric", minute: "2-digit" });
+    // The app's 12- or 24-hour setting, not the language's own (#1616).
+    return format.dateTime(d, { hour: "numeric", minute: "2-digit", hour12: timeFormat === "12h" });
   };
 
   const formatEventDateHeader = (isoDate: string) => {

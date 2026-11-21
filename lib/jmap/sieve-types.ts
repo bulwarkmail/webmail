@@ -18,6 +18,11 @@ export interface SieveCapabilities {
 export type FilterConditionField =
   | 'from' | 'to' | 'cc' | 'subject' | 'header' | 'size' | 'body'
   | 'attachment'
+  // The address the server delivers to (the envelope recipient, RCPT TO),
+  // also for Bcc and list mail. Sieve `envelope "to"`; the comparators are
+  // address_is, domain_is and contains. Delivered mail does not keep it, so
+  // these rules act on new mail only.
+  | 'delivered_to'
   // Every message (Sieve `true`): no value, and always the comparator 'any'.
   | 'all';
 
@@ -148,8 +153,8 @@ export interface VacationAudience {
 
 export interface FilterMetadata {
   /**
-   * 2 once a rule has a period or the vacation's forwarding or recipients are
-   * stored. Older builds only take version 1 as their own and would write
+   * 2 once a rule has a period, a regex or a "Delivered to" condition, or the
+   * vacation's forwarding or recipients are stored. Older builds only take version 1 as their own and would write
    * such a script back without these fields; anything else they leave alone.
    */
   version: 1 | 2;

@@ -646,6 +646,13 @@ export interface TaskInput {
    * update as `alerts` is.
    */
   relatedTo?: Record<string, TaskRelationInput | null> | null;
+  /**
+   * Keywords (1-64 of `A-Z a-z 0-9 . _ -`): `true` sets one, null removes
+   * it. A task holds at most 10, counting every keyword on it, those
+   * another app wrote too. Merged by key on update as `alerts` is; keywords
+   * another app wrote stay unless named with null.
+   */
+  keywords?: Record<string, true | null> | null;
 }
 
 /**
@@ -727,6 +734,32 @@ export interface IdentityView {
   bcc: string | null;
   htmlSignature: string;
   textSignature: string;
+}
+
+/**
+ * Passed to onSelectReplyIdentity handlers when a reply, reply-all, forward
+ * or quick reply picks the identity it is sent from. A handler returns the id
+ * of one of `identities` to send from it, or nothing to keep Bulwark's pick.
+ * A From the user chose by hand always wins over the plugin's.
+ */
+export interface ReplyIdentityContext {
+  mode: 'reply' | 'reply-all' | 'forward' | 'quick-reply';
+  /** The message being answered or forwarded. */
+  email: {
+    id?: string;
+    from: { name: string; email: string }[];
+    to: { name: string; email: string }[];
+    cc: { name: string; email: string }[];
+    /** Only on messages the user sent. */
+    bcc: { name: string; email: string }[];
+    subject: string;
+    /** Addresses from Delivered-To, X-Original-To and similar headers. */
+    deliveredTo: string[];
+  };
+  /** The identities the reply can be sent from. */
+  identities: { id: string; name: string; email: string }[];
+  /** Bulwark's own pick, or a previous handler's; null when it would use the default identity. */
+  identityId: string | null;
 }
 
 export interface TaskView {
@@ -1025,6 +1058,13 @@ export interface HostFeaturesView extends AssistantHostFeatures {
    * those with `email:render-takeover`. Absent on webmails that ignore the field.
    */
   blockExternalContent?: boolean;
+  /**
+   * Bulwark 1.22 and later: notes and assignment in team mailboxes are on
+   * (organisation.teamMailboxes) for a team mailbox of the signed-in account.
+   * The team-inbox plugin does nothing while it is true; the host also hides
+   * an older copy's buttons, filters and row badges then.
+   */
+  teamMailboxes?: boolean;
 }
 
 /** One setting `api.app.searchSettings` found, in the user's language. */
@@ -1337,7 +1377,16 @@ export interface AlmostSavedDraft{
     identityId?: string,
     fromEmail?: string,
     draftId?: string,
-    attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>,
+    attachments?: Array<{
+      blobId: string;
+      name: string;
+      type: string;
+      size: number;
+      disposition?: 'attachment' | 'inline';
+      cid?: string;
+      /** Opaque ID for this save. Preserve it when returning an existing attachment. */
+      draftAttachmentId?: string;
+    }>,
     fromName?: string,
     htmlBody?: string
 }
@@ -1679,6 +1728,12 @@ export const ALL_PERMISSIONS = [
   'security:read',
   'auth:observe',
   'auth:emit',
+  // End an impersonation handoff and sign back in to the account that
+  // started it (api.user.returnToOwnAccount, the app-top-banner slot's
+  // `canReturn`). A plugin with it and an app-top-banner banner draws the
+  // button, and the core strip steps back. Declare it in
+  // optionalPermissions: older webmails don't know it.
+  'auth:impersonation-return',
   'account:read',
   // Look people up in the server's directory (api.user.findPeople).
   'directory:read',
@@ -1687,8 +1742,14 @@ export const ALL_PERMISSIONS = [
   'ui:email-details',
   'ui:download-file',
   // Show a system notification, or a toast when the user hasn't allowed them
-  // (api.notifications.show).
+  // (api.notifications.show), and see the app's own toasts (onToastShow).
   'ui:notifications',
+  // Show one of the plugin's frames in the toasts' stack, for something to
+  // notice while working, such as a call (api.ui.showNotice).
+  'ui:notices',
+  // See every web link the user opens, with its text, and stop it or open
+  // another address instead (onBeforeExternalLink).
+  'links:check',
   // Register native message-list category tabs (Gmail-style inbox tabs).
   'ui:message-list-tabs',
   'ui:composer-toolbar', 'ui:composer-sidebar',
@@ -1744,6 +1805,11 @@ export const DISALLOWED_CSS_PATTERNS = [
   /url\s*\(\s*(?!['"]?\s*#)/i,
   // Takes plain strings, so it loads remote images without any url().
   /image-set\s*\(/i,
+  // image("…") and src("…") take the address as a plain string too (CSS
+  // Images 4, Values 4). cross-fade() and element() name no address of their
+  // own; what they wrap goes through these same patterns.
+  /\bimage\s*\(/i,
+  /\bsrc\s*\(/i,
   /expression\s*\(/i,
   /javascript\s*:/i,
   /-moz-binding/i,

@@ -6,6 +6,7 @@ import { advancedSearchAcrossAccounts, searchAcrossAccounts, type UnifiedAccount
 // The "All folders" search scope spans the login's own account and every
 // group/shared account it reaches: one folder-less query per account, the
 // pages merged newest first and every hit stamped with its source (#1082).
+// Every scope leaves the team notes out (lib/team-mailboxes/hidden-folders.ts).
 
 const mb = (id: string, name: string, originalId?: string): Mailbox =>
   ({ id, name, role: 'inbox', unreadEmails: 0, totalEmails: 0, originalId } as unknown as Mailbox);
@@ -34,6 +35,7 @@ const makeAccount = (
   ...over,
 });
 
+const NOT_A_NOTE = { notKeyword: '$bulwark-note' };
 const ownMailboxes = [mb('inbox', 'Inbox')];
 const groupMailboxes = [mb('group:g-inbox', 'Abrir Chamados', 'g-inbox')];
 
@@ -41,16 +43,17 @@ describe('searchAcrossAccounts', () => {
   it('asks every account without a folder constraint and merges newest first', async () => {
     const ownSearch = vi.fn(async () => page([email('own-1', '2026-09-10T00:00:00Z', 'inbox')]));
     const groupSearch = vi.fn(async () => page([email('grp-1', '2026-09-12T00:00:00Z', 'group:g-inbox')], 7, true));
-    const own = makeAccount({ accountId: 'login', jmapAccountId: 'me', mailboxes: ownMailboxes }, { searchEmails: ownSearch });
+    const own = makeAccount({ accountId: 'login', jmapAccountId: 'me', mailboxes: ownMailboxes }, { advancedSearchEmails: ownSearch });
     const group = makeAccount(
       { accountId: 'group', isShared: true, accountLabel: 'Team', mailboxes: groupMailboxes },
-      { searchEmails: groupSearch },
+      { advancedSearchEmails: groupSearch },
     );
 
     const result = await searchAcrossAccounts([own, group], 'acesso', 50, 0);
 
-    expect(ownSearch).toHaveBeenCalledWith('acesso', undefined, undefined, 50, 0);
-    expect(groupSearch).toHaveBeenCalledWith('acesso', undefined, 'group', 50, 0);
+    // Team notes are never searched, not even in "All folders".
+    expect(ownSearch).toHaveBeenCalledWith({ operator: 'AND', conditions: [{ text: 'acesso' }, NOT_A_NOTE] }, undefined, 50, 0);
+    expect(groupSearch).toHaveBeenCalledWith({ operator: 'AND', conditions: [{ text: 'acesso' }, NOT_A_NOTE] }, 'group', 50, 0);
     expect(result.emails.map((e) => e.id)).toEqual(['grp-1', 'own-1']);
     expect(result.total).toBe(8);
     expect(result.hasMore).toBe(true);
@@ -59,10 +62,10 @@ describe('searchAcrossAccounts', () => {
 
   it('stamps each hit with its source account and folder so opening it routes to the owner', async () => {
     const own = makeAccount({ accountId: 'login', jmapAccountId: 'me', mailboxes: ownMailboxes },
-      { searchEmails: vi.fn(async () => page([email('own-1', '2026-09-10T00:00:00Z', 'inbox')])) });
+      { advancedSearchEmails: vi.fn(async () => page([email('own-1', '2026-09-10T00:00:00Z', 'inbox')])) });
     const group = makeAccount(
       { accountId: 'group', isShared: true, accountLabel: 'Team', mailboxes: groupMailboxes },
-      { searchEmails: vi.fn(async () => page([email('grp-1', '2026-09-12T00:00:00Z', 'group:g-inbox')])) },
+      { advancedSearchEmails: vi.fn(async () => page([email('grp-1', '2026-09-12T00:00:00Z', 'group:g-inbox')])) },
     );
 
     const { emails } = await searchAcrossAccounts([own, group], 'x', 50, 0);
@@ -81,9 +84,9 @@ describe('searchAcrossAccounts', () => {
 
   it('keeps the other accounts\' hits and records the failure when one account fails', async () => {
     const own = makeAccount({ accountId: 'login', jmapAccountId: 'me' },
-      { searchEmails: vi.fn(async () => { throw new Error('boom'); }) });
+      { advancedSearchEmails: vi.fn(async () => { throw new Error('boom'); }) });
     const group = makeAccount({ accountId: 'group', isShared: true },
-      { searchEmails: vi.fn(async () => page([email('grp-1', '2026-09-12T00:00:00Z', 'group:g-inbox')])) });
+      { advancedSearchEmails: vi.fn(async () => page([email('grp-1', '2026-09-12T00:00:00Z', 'group:g-inbox')])) });
 
     const result = await searchAcrossAccounts([own, group], 'x', 50, 0);
 
@@ -94,28 +97,45 @@ describe('searchAcrossAccounts', () => {
   it('leaves each account\'s Trash and Junk out when asked, by the owner\'s raw ids', async () => {
     const ownAdvanced = vi.fn(async () => page([]));
     const groupAdvanced = vi.fn(async () => page([]));
-    const plainSearch = vi.fn(async () => page([]));
+    const bareAdvanced = vi.fn(async () => page([]));
     const own = makeAccount(
       { accountId: 'login', jmapAccountId: 'me', mailboxes: [...ownMailboxes, roleMb('trash', 'trash'), roleMb('junk', 'junk')] },
-      { advancedSearchEmails: ownAdvanced, searchEmails: plainSearch },
+      { advancedSearchEmails: ownAdvanced },
     );
     const group = makeAccount(
       { accountId: 'group', isShared: true, mailboxes: [...groupMailboxes, roleMb('group:g-trash', 'trash', 'g-trash')] },
-      { advancedSearchEmails: groupAdvanced, searchEmails: plainSearch },
+      { advancedSearchEmails: groupAdvanced },
     );
-    // No Trash or Junk to leave out: the plain text search.
-    const bare = makeAccount({ accountId: 'bare', isShared: true, mailboxes: [] }, { searchEmails: plainSearch });
+    // No Trash or Junk to leave out: only the team notes.
+    const bare = makeAccount({ accountId: 'bare', isShared: true, mailboxes: [] }, { advancedSearchEmails: bareAdvanced });
 
     await searchAcrossAccounts([own, group, bare], ' acesso ', 50, 0, { excludeTrashAndJunk: true });
 
     expect(ownAdvanced).toHaveBeenCalledWith(
-      { operator: 'AND', conditions: [{ text: 'acesso' }, { inMailboxOtherThan: ['trash', 'junk'] }] }, undefined, 50, 0,
+      { operator: 'AND', conditions: [{ text: 'acesso' }, NOT_A_NOTE, { inMailboxOtherThan: ['trash', 'junk'] }] }, undefined, 50, 0,
     );
     expect(groupAdvanced).toHaveBeenCalledWith(
-      { operator: 'AND', conditions: [{ text: 'acesso' }, { inMailboxOtherThan: ['g-trash'] }] }, 'group', 50, 0,
+      { operator: 'AND', conditions: [{ text: 'acesso' }, NOT_A_NOTE, { inMailboxOtherThan: ['g-trash'] }] }, 'group', 50, 0,
     );
-    expect(plainSearch).toHaveBeenCalledTimes(1);
-    expect(plainSearch).toHaveBeenCalledWith(' acesso ', undefined, 'bare', 50, 0);
+    expect(bareAdvanced).toHaveBeenCalledWith({ operator: 'AND', conditions: [{ text: 'acesso' }, NOT_A_NOTE] }, 'bare', 50, 0);
+  });
+
+  it('leaves the team notes folder out by its raw id in every scope', async () => {
+    const search = vi.fn(async () => page([]));
+    const hiddenMailboxIds = vi.fn((accountId?: string) => (accountId === 'group' ? ['g-notes'] : []));
+    const group = makeAccount(
+      { accountId: 'group', isShared: true, mailboxes: [...groupMailboxes, roleMb('group:g-trash', 'trash', 'g-trash')] },
+      { advancedSearchEmails: search, hiddenMailboxIds },
+    );
+
+    await searchAcrossAccounts([group], 'x', 50, 0);
+    await searchAcrossAccounts([group], 'x', 50, 0, { excludeTrashAndJunk: true });
+
+    expect(search).toHaveBeenNthCalledWith(1,
+      { operator: 'AND', conditions: [{ text: 'x' }, NOT_A_NOTE, { inMailboxOtherThan: ['g-notes'] }] }, 'group', 50, 0);
+    expect(search).toHaveBeenNthCalledWith(2,
+      { operator: 'AND', conditions: [{ text: 'x' }, NOT_A_NOTE, { inMailboxOtherThan: ['g-notes', 'g-trash'] }] }, 'group', 50, 0);
+    expect(hiddenMailboxIds).toHaveBeenCalledWith('group');
   });
 });
 
@@ -123,19 +143,20 @@ describe('deferred snippets across accounts', () => {
   it("asks every account to defer and hands back each account's snippets under its id", async () => {
     const ownSearch = vi.fn(async () => ({ ...page([email('a', '2026-09-10T00:00:00Z', 'inbox')]), snippets: Promise.resolve([{ emailId: 'a', subject: '<mark>own</mark>' }]) }));
     const groupSearch = vi.fn(async () => ({ ...page([email('a', '2026-09-12T00:00:00Z', 'group:g-inbox')]), snippets: Promise.resolve(undefined) }));
-    const own = makeAccount({ accountId: 'login', jmapAccountId: 'me', mailboxes: ownMailboxes }, { searchEmails: ownSearch });
-    const group = makeAccount({ accountId: 'group', isShared: true, mailboxes: groupMailboxes }, { searchEmails: groupSearch });
+    const own = makeAccount({ accountId: 'login', jmapAccountId: 'me', mailboxes: ownMailboxes }, { advancedSearchEmails: ownSearch });
+    const group = makeAccount({ accountId: 'group', isShared: true, mailboxes: groupMailboxes }, { advancedSearchEmails: groupSearch });
 
     const result = await searchAcrossAccounts([own, group], 'x', 50, 0, { deferSnippets: true });
 
-    expect(ownSearch).toHaveBeenCalledWith('x', undefined, undefined, 50, 0, { deferSnippets: true });
-    expect(groupSearch).toHaveBeenCalledWith('x', undefined, 'group', 50, 0, { deferSnippets: true });
+    const notNotes = { operator: 'AND', conditions: [{ text: 'x' }, NOT_A_NOTE] };
+    expect(ownSearch).toHaveBeenCalledWith(notNotes, undefined, 50, 0, { deferSnippets: true });
+    expect(groupSearch).toHaveBeenCalledWith(notNotes, 'group', 50, 0, { deferSnippets: true });
     // A failed or empty snippet request of one account drops out.
     expect(await result.snippets).toEqual([{ accountId: 'login', list: [{ emailId: 'a', subject: '<mark>own</mark>' }] }]);
   });
 
   it('carries no snippets when no account deferred any', async () => {
-    const own = makeAccount({ accountId: 'login' }, { searchEmails: vi.fn(async () => page([])) });
+    const own = makeAccount({ accountId: 'login' }, { advancedSearchEmails: vi.fn(async () => page([])) });
     const result = await searchAcrossAccounts([own], 'x', 50, 0);
     expect(result.snippets).toBeUndefined();
   });
@@ -151,8 +172,9 @@ describe('advancedSearchAcrossAccounts', () => {
 
     const result = await advancedSearchAcrossAccounts([own, group], filter, 25, 50);
 
-    expect(ownSearch).toHaveBeenCalledWith(filter, undefined, 25, 50);
-    expect(groupSearch).toHaveBeenCalledWith(filter, 'group', 25, 50);
+    const withoutNotes = { operator: 'AND', conditions: [...filter.conditions, NOT_A_NOTE] };
+    expect(ownSearch).toHaveBeenCalledWith(withoutNotes, undefined, 25, 50);
+    expect(groupSearch).toHaveBeenCalledWith(withoutNotes, 'group', 25, 50);
     expect(result.emails.map((e) => e.id)).toEqual(['grp-1', 'own-1']);
     expect(result.emails[0]).toMatchObject({ sourceAccountId: 'group', sourceFolder: 'Abrir Chamados' });
   });
@@ -170,8 +192,8 @@ describe('advancedSearchAcrossAccounts', () => {
 
     expect(search).toHaveBeenNthCalledWith(1, {
       operator: 'AND',
-      conditions: [{ text: 'acesso' }, { from: 'bob@example.com' }, { inMailboxOtherThan: ['junk'] }],
+      conditions: [{ text: 'acesso' }, { from: 'bob@example.com' }, NOT_A_NOTE, { inMailboxOtherThan: ['junk'] }],
     }, undefined, 25, 0);
-    expect(search).toHaveBeenNthCalledWith(2, filter, undefined, 25, 0);
+    expect(search).toHaveBeenNthCalledWith(2, { operator: 'AND', conditions: [...filter.conditions, NOT_A_NOTE] }, undefined, 25, 0);
   });
 });

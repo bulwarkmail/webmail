@@ -15,6 +15,7 @@ import { noThirdPartyTraffic } from '@/lib/third-party-mode';
 import { IS_LITE } from '@/lib/lite';
 import { serviceWorkerUrl, SW_SCOPE } from '@/lib/app-update';
 import { forgetRelayRegistration, keepRelayRegistration, readRelayRegistrations } from '@/lib/pwa-notify/worker-state';
+import { NOTE_KEYWORD } from '@/lib/team-mailboxes/hidden-folders';
 import {
   EMPTY_NOTIFICATION_MUTES,
   isAccountMuted,
@@ -78,6 +79,49 @@ const SUBSCRIPTION_REFRESH_THRESHOLD_DAYS = 7;
 // system notifications, so we keep them out of the push subscription.
 // In-app sync uses a separate StateChange channel and is unaffected.
 const PUSH_TYPES = ['EmailDelivery'] as const;
+
+// With a delivery filter, new mail comes as EmailPush items, and Stalwart 1.0.3
+// and later send those whatever `types` says. Saving a draft is an Email/set,
+// which bumps the EmailDelivery state, and that goes out as a plain
+// StateChange: with EmailDelivery in `types` every autosave woke the device
+// (#1650). A subscription created with an empty list gets no StateChange at
+// all on 1.0.3 and later.
+//
+// Before 1.0.3 the empty list means something else: on create the server fills
+// in every type, and emptied by an update it drops the EmailPush items too, so
+// nothing would come. The session doesn't say which version answers. So the
+// list goes out empty only on create, is read back, and is set to
+// EmailDelivery when the server filled it in. An update never empties it.
+//
+// Subscriptions made before this have EmailDelivery and are replaced once per
+// browser and account; this key says the empty list was tried here.
+const EMPTY_TYPES_TRIED_PREFIX = 'bulwark.push.emptyTypesTried.v1.';
+
+function emptyTypesTriedKey(accountId: string): string {
+  return EMPTY_TYPES_TRIED_PREFIX + accountId;
+}
+
+// The types a refresh keeps: an empty list only where the server kept it empty
+// on create and the filter is still wanted.
+function refreshTypes(
+  current: readonly string[] | null | undefined,
+  desiredEmailPush: Record<string, EmailPushConfig> | null,
+): readonly string[] {
+  return desiredEmailPush !== null && Array.isArray(current) && current.length === 0 ? [] : PUSH_TYPES;
+}
+
+// Before 1.0.3 the empty list comes back as every type: narrow it to the
+// deliveries at once. Should that fail, the next refresh does it.
+async function narrowFilledInTypes(client: IJMAPClient, id: string): Promise<void> {
+  try {
+    const stored = (await client.listPushSubscriptions()).find((s) => s.id === id);
+    if (stored && Array.isArray(stored.types) && stored.types.length > 0 && !sameTypes(stored.types, PUSH_TYPES)) {
+      await client.updatePushSubscription(id, { types: [...PUSH_TYPES] });
+    }
+  } catch {
+    // Left for the next refresh.
+  }
+}
 
 // draft-ietf-jmap-emailpush (Stalwart >= 0.16.16). `EmailDelivery` alone
 // still fires for every ingested message - including spam the server files
@@ -182,7 +226,10 @@ export async function buildEmailPushConfig(
     // Settings for folders that no longer exist are left out.
     const existing = mailboxIdsByAccount.get(accountId) ?? new Set<string>();
     const overrides = mailboxOverridesForAccount(mutes, accountId);
-    const conditions: Record<string, unknown>[] = [{ notKeyword: '$junk' }];
+    // Team notes (lib/team-mailboxes/hidden-folders.ts) are never pushed as
+    // mail. Stalwart only applies this to delivered mail today; a note
+    // written by another client through IMAP or Email/import reaches it too.
+    const conditions: Record<string, unknown>[] = [{ notKeyword: '$junk' }, { notKeyword: NOTE_KEYWORD }];
     if (inboxOnly) {
       const inboxId = inboxByAccount.get(accountId);
       // The primary account always has an Inbox; missing it means its
@@ -745,7 +792,8 @@ async function refreshSubscriptionExpires(
   // null when the server has no emailPush support - leave the property alone.
   desiredEmailPush: Record<string, EmailPushConfig> | null,
 ): Promise<false | { emailPush: Record<string, EmailPushConfig> | null }> {
-  const typesNeedUpdate = !sameTypes(sub.types, PUSH_TYPES);
+  const desiredTypes = refreshTypes(sub.types, desiredEmailPush);
+  const typesNeedUpdate = !sameTypes(sub.types, desiredTypes);
   // Also re-sync the delivery filter: a subscription created before this
   // client learned about emailPush has none, and the Junk mailbox id can
   // change under us.
@@ -758,7 +806,7 @@ async function refreshSubscriptionExpires(
   const patch: { expires?: string; types?: string[] } = {
     expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS),
   };
-  if (typesNeedUpdate) patch.types = [...PUSH_TYPES];
+  if (typesNeedUpdate) patch.types = [...desiredTypes];
   try {
     const { emailPush } = await writeWithEmailPush(
       client,
@@ -915,7 +963,11 @@ async function enableWebPushForThisTab(
     // one, which may be another device's.
     const match = existingSubs.find((s) => s.id === storedServerId && s.deviceClientId === deviceClientId);
     if (match) {
-      if (!params.forceRecreate) {
+      // Made with EmailDelivery before the empty list was tried in this browser.
+      const emptyTypesUntried = emailPush !== null
+        && sameTypes(match.types, PUSH_TYPES)
+        && !localStorage.getItem(emptyTypesTriedKey(accountId));
+      if (!params.forceRecreate && !emptyTypesUntried) {
         const refreshed = await refreshSubscriptionExpires(params.client, match, emailPush);
         if (refreshed) {
           rememberRefusedEmailPushAccounts(accountId, refusedBefore, emailPush, refreshed.emailPush);
@@ -924,9 +976,9 @@ async function enableWebPushForThisTab(
           return { subscriptionId: storedServerId };
         }
       }
-      // The server refused the refresh, or the caller asked for a fresh
-      // record: create a replacement below and destroy this one once the
-      // replacement is verified.
+      // The server refused the refresh, the caller asked for a fresh record,
+      // or the record still has EmailDelivery: create a replacement below and
+      // destroy this one once the replacement is verified.
       replacedServerId = storedServerId;
     }
     // When the server no longer has it (expired, or revoked elsewhere), the
@@ -961,11 +1013,16 @@ async function enableWebPushForThisTab(
     }
   }
 
+  // Empty only when the filter covers every account the subscription fans out
+  // to: one left out of the map gets its mail as an EmailDelivery state change.
+  const typesFor = (filter: Record<string, EmailPushConfig> | null): string[] =>
+    emailPush !== null && filter === emailPush && refusedBefore.length === 0 ? [] : [...PUSH_TYPES];
+  if (emailPush !== null) localStorage.setItem(emptyTypesTriedKey(accountId), '1');
   const create = () => writeWithEmailPush(params.client, emailPush, (filter) =>
     params.client.createPushSubscription({
       deviceClientId,
       url: buildRelayUrl(relayBaseUrl, `/api/push/jmap/${encodeURIComponent(deviceClientId)}`),
-      types: [...PUSH_TYPES],
+      types: typesFor(filter),
       expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS),
       ...(filter ? { emailPush: filter } : {}),
     }),
@@ -999,6 +1056,7 @@ async function enableWebPushForThisTab(
     await params.client.destroyPushSubscription(serverAssignedId).catch(() => undefined);
     throw err;
   }
+  if (typesFor(created.emailPush).length === 0) await narrowFilledInTypes(params.client, serverAssignedId);
   const previousRelay = localStorage.getItem(relayBaseKey(accountId));
   localStorage.setItem(subIdKey, serverAssignedId);
   localStorage.setItem(relayBaseKey(accountId), relayBaseUrl);

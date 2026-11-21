@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ComponentType, type DragEvent } from "react";
+import { shortcutKey } from "@/lib/keyboard";
 import { useTranslations } from "next-intl";
-import { NavigationRail } from "@/components/layout/navigation-rail";
+import { NavigationRail, type RailItemId } from "@/components/layout/navigation-rail";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
@@ -13,6 +14,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
 import { EmbeddedContext } from "@/hooks/use-is-embedded";
 import { OrgAnnouncement } from "@/components/org/org-announcement";
+import { ImpersonationReturnBar } from "@/components/impersonation/impersonation-return-bar";
 import { PaneSizeContext } from "@/hooks/use-pane-size";
 import { PaneIdContext, ProTabFocusContext } from "@/hooks/use-pane-context";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
@@ -21,6 +23,8 @@ import { GlobalSearchPalette } from "@/components/global-search/global-search-pa
 import { SearchTabBody } from "@/components/global-search/search-tab-body";
 import { useGlobalSearchStore } from "@/stores/global-search-store";
 import { ProTabBar } from "@/components/pro/pro-tab-bar";
+import { droppedEmailTabs, droppedFolderTab, emailTabPath, mailTabPath } from "@/components/pro/pro-tab-address";
+import { tabLogin } from "@/components/pro/pro-tab-login";
 import {
   PRO_TAB_DRAG_MIME,
   EMAIL_IDS_DRAG_MIME,
@@ -55,9 +59,15 @@ const DESKTOP_MIN_WIDTH = PHONE_BELOW;
 // Each surface renders the same component the standard routes do. Deep links
 // reach them through the handoff ProInterfaceRedirect parks (#733), not as
 // props - Pro tabs have no route of their own.
+// The Tasks app is the calendar's task surface (#1698).
+function TasksApp() {
+  return <CalendarApp surface="tasks" />;
+}
+
 const APP_TAB_COMPONENTS: Partial<Record<ProTabKind, ComponentType>> = {
   mail: MailApp,
   calendar: CalendarApp,
+  tasks: TasksApp,
   contacts: ContactsApp,
   files: FilesApp,
   settings: SettingsApp,
@@ -93,25 +103,12 @@ function openDroppedEmails(
   fallbackTitle: string,
 ) {
   const { setSplitSide, openEmailTab } = useProTabStore.getState();
-  const known = useEmailStore.getState().emails;
-  const targets = emailIds
-    .map((id) => known.find((e) => e.id === id))
-    .filter((e): e is NonNullable<typeof e> => !!e)
-    .slice(0, 10);
+  // Each with the login and account its row was listed from (droppedEmailTabs).
+  const targets = droppedEmailTabs(emailIds, fallbackTitle).slice(0, 10);
   if (targets.length === 0) return;
   if (side) setSplitSide(side);
   const reuseReader = targets.length === 1;
-  for (const email of targets) {
-    openEmailTab(
-      {
-        accountId: email.accountId ?? '',
-        emailId: email.id,
-        mailboxId: null,
-        title: email.subject?.trim() || fallbackTitle,
-      },
-      { pane, reuseReader },
-    );
-  }
+  for (const data of targets) openEmailTab(data, { pane, reuseReader });
 }
 
 /** Open a dragged sidebar folder as a folder tab in `pane`. */
@@ -121,11 +118,11 @@ function openDroppedFolder(
   side: ProSplitSide | undefined,
 ) {
   const { setSplitSide, openFolderTab } = useProTabStore.getState();
+  // With its login named, the active one's too (droppedFolderTab).
+  const data = droppedFolderTab(payload);
+  if (!data) return;
   if (side) setSplitSide(side);
-  openFolderTab(
-    { accountId: payload.accountId, mailboxId: payload.mailboxId, title: payload.name },
-    { pane },
-  );
+  openFolderTab(data, { pane });
 }
 
 interface PaneProps {
@@ -268,7 +265,7 @@ export default function ProHome() {
       const { tabs: allTabs, focusedPaneId: pane, activeTabId, activeSplitTabId } = useProTabStore.getState();
       const focusedId = pane === 'split' ? activeSplitTabId : activeTabId;
       const kind = allTabs.find((tab) => tab.id === focusedId)?.kind;
-      const surface = kind === 'calendar' || kind === 'contacts' || kind === 'files' || kind === 'settings'
+      const surface = kind === 'calendar' || kind === 'tasks' || kind === 'contacts' || kind === 'files' || kind === 'settings'
         ? `/${kind}`
         : '/';
       if (!proInterface) {
@@ -302,28 +299,32 @@ export default function ProHome() {
   // own, more precise paths via useDeepLinkUrl gated on ProTabFocusContext.
   // replaceState only, and ProInterfaceRedirect doesn't observe it - a reload
   // of the shown URL goes through the redirect's handoff and restores the view.
+  // A message is named with its login and account (pro-tab-address), so a
+  // reload opens that message or nothing.
   const selectedMailbox = useEmailStore((s) => s.selectedMailbox);
-  const selectedEmailId = useEmailStore((s) => s.selectedEmail?.id ?? null);
+  const selectedEmail = useEmailStore((s) => s.selectedEmail);
+  const viewingAccountId = useEmailStore((s) => s.viewingAccountId);
+  const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const accountMailboxes = useEmailStore((s) => s.accountMailboxes);
   const reflectedPath = useMemo(() => {
     if (!isAuthenticated || !client || !focusedActiveTab) return null;
     switch (focusedActiveTab.kind) {
       case 'mail':
-        return appPath(buildMailPath(
-          { mailboxId: selectedMailbox || null, emailId: selectedEmailId, threadId: null },
-          mailboxes,
-        ));
+        return appPath(mailTabPath(selectedMailbox || null, selectedEmail, mailboxes));
       case 'email':
-        return focusedActiveTab.emailData
-          ? appPath(buildMailPath({ mailboxId: null, emailId: focusedActiveTab.emailData.emailId, threadId: null }))
-          : null;
+        return focusedActiveTab.emailData ? appPath(emailTabPath(focusedActiveTab.emailData)) : null;
       case 'folder': {
         const data = focusedActiveTab.folderData;
         if (!data) return null;
-        const list = data.accountId ? accountMailboxes[data.accountId] ?? [] : mailboxes;
+        // The folder's login: the store's own list while it is the active
+        // one, else the list kept for it. A tab that names none and has
+        // several logins to choose from has no address of its own.
+        const login = tabLogin(data.accountId);
+        if (!login) return appPath('/pro');
+        const list = login === activeAccountId ? mailboxes : accountMailboxes[login] ?? [];
         const path = appPath(buildMailPath({ mailboxId: data.mailboxId, emailId: null, threadId: null }, list));
-        return data.accountId ? `${path}?account=${encodeURIComponent(data.accountId)}` : path;
+        return `${path}?account=${encodeURIComponent(login)}`;
       }
       case 'compose':
       case 'search':
@@ -334,19 +335,21 @@ export default function ProHome() {
       default:
         return null;
     }
-  }, [isAuthenticated, client, focusedActiveTab, selectedMailbox, selectedEmailId, mailboxes, accountMailboxes]);
+    // viewingAccountId and activeAccountId: the login an open message is named with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, client, focusedActiveTab, selectedMailbox, selectedEmail, viewingAccountId, activeAccountId, mailboxes, accountMailboxes]);
   useDeepLinkUrl(reflectedPath);
 
   // Global search shortcuts: Ctrl/⌘+K toggles the palette, Ctrl+Shift+F
-  // opens it (features doc §"Focus global search"). Window-level and keyed on
-  // event.code so they fire from inside inputs and on non-Latin layouts.
+  // opens it (features doc §"Focus global search"). Window-level so they fire
+  // from inside inputs; shortcutKey keeps them on non-Latin layouts.
   useEffect(() => {
     const onSearchShortcut = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-      if (event.code === 'KeyK' && !event.shiftKey) {
+      if (shortcutKey(event) === 'k' && !event.shiftKey) {
         event.preventDefault();
         useGlobalSearchStore.getState().togglePalette();
-      } else if (event.code === 'KeyF' && event.shiftKey) {
+      } else if (shortcutKey(event) === 'f' && event.shiftKey) {
         event.preventDefault();
         useGlobalSearchStore.getState().openPalette();
       }
@@ -361,14 +364,14 @@ export default function ProHome() {
   const loadingTitle = t('common.loading');
   useEffect(() => onOpenEmail(proEmailTabOpener(loadingTitle)), [loadingTitle]);
 
-  const handleRailNavigate = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => {
+  const handleRailNavigate = (itemId: RailItemId) => {
     openTab(itemId);
     return true;
   };
 
-  const railActiveItemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings' | null =
+  const railActiveItemId: RailItemId | null =
     focusedActiveTab && (
-      focusedActiveTab.kind === 'mail' || focusedActiveTab.kind === 'calendar'
+      focusedActiveTab.kind === 'mail' || focusedActiveTab.kind === 'calendar' || focusedActiveTab.kind === 'tasks'
       || focusedActiveTab.kind === 'contacts' || focusedActiveTab.kind === 'files'
       || focusedActiveTab.kind === 'settings'
     ) ? focusedActiveTab.kind : null;
@@ -552,6 +555,7 @@ export default function ProHome() {
       <div data-pro-shell="" className="flex flex-col h-dvh bg-background overflow-hidden pt-[var(--app-top-inset)]">
         {/* Once for the whole shell: email and folder tabs have no app strip, and split panes would show it twice. */}
         <OrgAnnouncement />
+        <ImpersonationReturnBar />
         <div className="flex flex-1 overflow-hidden">
           {/* Leftmost Navigation Rail - identical to the standard layout */}
           <div

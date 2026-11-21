@@ -7,13 +7,14 @@
  * the global one with every matching scope applied on top: domain scopes
  * first, then group scopes, each in list order, the later value winning per
  * key. Features, restrictions and defaults merge per key; the organisation
- * settings per leaf (see mergeOrganisation).
+ * settings per leaf (see mergeOrganisation). A scope's own list of default
+ * sidebar apps replaces Everyone's, as its tag list does.
  *
  * Pure functions: the policy store resolves for the active account, the
  * admin panel's effective-policy view and the tests use the same code.
  */
 
-import type { FeatureGates, SettingRestriction, SettingsPolicy } from './types';
+import type { AdminSidebarApp, FeatureGates, SettingRestriction, SettingsPolicy } from './types';
 import { DEFAULT_FEATURE_GATES } from './types';
 import {
   DEFAULT_ORGANISATION_POLICY,
@@ -24,12 +25,18 @@ import {
   type OrganisationPolicy,
 } from './organisation-policy';
 import { sanitizePolicyDefaults } from './policy-defaults';
+import { sanitizeDefaultSidebarApps } from '@/lib/sidebar-apps';
 
 export interface PolicyScopeOverrides {
   features?: Partial<FeatureGates>;
   restrictions?: Record<string, SettingRestriction>;
   defaults?: Record<string, unknown>;
   organisation?: DeepPartial<OrganisationPolicy>;
+  /**
+   * The scope's default sidebar apps (#1806), in place of Everyone's; an
+   * empty list means none. Without it the scope gets Everyone's.
+   */
+  defaultSidebarApps?: AdminSidebarApp[];
 }
 
 export interface PolicyScope {
@@ -162,6 +169,9 @@ export function sanitizeScopes(raw: unknown): PolicyScope[] {
         restrictions: sanitizeRestrictions(policy.restrictions),
         defaults: sanitizePolicyDefaults(policy.defaults),
         organisation: sanitizeOrganisationPartial(policy.organisation),
+        ...(Array.isArray(policy.defaultSidebarApps)
+          ? { defaultSidebarApps: sanitizeDefaultSidebarApps(policy.defaultSidebarApps) }
+          : {}),
       },
     });
     if (out.length >= MAX_SCOPES) break;
@@ -251,6 +261,8 @@ export function resolvePolicy(policy: SettingsPolicy, subject: PolicySubject | n
   let restrictions = { ...(policy.restrictions ?? {}) };
   let defaults = { ...(policy.defaults ?? {}) };
   let org = organisation;
+  let sidebarApps = policy.defaultSidebarApps;
+  if (sidebarApps?.length) sources.defaultSidebarApps = 'global';
   for (const scope of matched) {
     const o = scope.policy;
     features = { ...features, ...(o.features ?? {}) };
@@ -261,11 +273,31 @@ export function resolvePolicy(policy: SettingsPolicy, subject: PolicySubject | n
     recordSources(sources, 'restrictions', o.restrictions ?? {}, scope.id, () => false);
     recordSources(sources, 'defaults', o.defaults ?? {}, scope.id, () => false);
     recordSources(sources, 'organisation', organisationLeaves(o.organisation ?? {}), scope.id, () => false);
+    if (o.defaultSidebarApps) {
+      sidebarApps = o.defaultSidebarApps;
+      sources.defaultSidebarApps = scope.id;
+    }
   }
 
-  const effective: SettingsPolicy = { ...policy, features, restrictions, defaults, organisation: org };
+  const effective: SettingsPolicy = {
+    ...policy, features, restrictions, defaults, organisation: org,
+    ...(sidebarApps !== undefined ? { defaultSidebarApps: sidebarApps } : {}),
+  };
   delete effective.scopes;
   return { policy: effective, matched: matched.map((scope) => scope.id), sources };
+}
+
+/**
+ * Everyone's default sidebar apps and each scope's own list. The server
+ * can't tell whose page it is answering, so the CSP and Permissions-Policy
+ * allow the inline apps of all of them.
+ */
+export function defaultSidebarAppLists(policy: Pick<SettingsPolicy, 'defaultSidebarApps' | 'scopes'>): AdminSidebarApp[][] {
+  const lists = [policy.defaultSidebarApps ?? []];
+  for (const scope of policy.scopes ?? []) {
+    if (Array.isArray(scope?.policy?.defaultSidebarApps)) lists.push(scope.policy.defaultSidebarApps);
+  }
+  return lists;
 }
 
 /**

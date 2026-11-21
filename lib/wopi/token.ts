@@ -58,6 +58,18 @@ export interface WopiTokenPayload {
    */
   bid?: string;
   slot?: number;
+  /**
+   * When the session that opened the editor signed in (ms). The token is
+   * refused once that session is past the organisation's maximum length
+   * (see lib/wopi/request.ts) or ends (lib/wopi/revocation.ts).
+   */
+  signedInAt?: number;
+  /**
+   * Set by mintWopiToken on every token, which must then name its sign-in
+   * time. Tokens minted by versions that recorded no sign-in time lack both
+   * (lib/wopi/request.ts).
+   */
+  timed?: true;
   /** Expiry, ms since epoch. */
   exp: number;
 }
@@ -95,9 +107,9 @@ export function wopiDocumentId(
     .slice(0, 32);
 }
 
-export function mintWopiToken(payload: Omit<WopiTokenPayload, 'exp'>): { token: string; expiresAt: number } {
+export function mintWopiToken(payload: Omit<WopiTokenPayload, 'exp' | 'timed'>): { token: string; expiresAt: number } {
   const expiresAt = Date.now() + WOPI_TOKEN_TTL_MS;
-  const token = toBase64Url(encryptPayload({ v: 1, t: 'wopi', ...payload, exp: expiresAt }, 'wopi-token'));
+  const token = toBase64Url(encryptPayload({ v: 1, t: 'wopi', ...payload, timed: true, exp: expiresAt }, 'wopi-token'));
   return { token, expiresAt };
 }
 
@@ -121,6 +133,8 @@ export function verifyWopiToken(token: string | null, documentId: string): WopiT
   if (p.kind !== undefined && p.kind !== 'file' && p.kind !== 'attachment') return null;
   if (p.bid !== undefined && typeof p.bid !== 'string') return null;
   if (p.slot !== undefined && typeof p.slot !== 'number') return null;
+  if (p.signedInAt !== undefined && (typeof p.signedInAt !== 'number' || !Number.isFinite(p.signedInAt))) return null;
+  if (p.timed !== undefined && p.timed !== true) return null;
   if (p.postMessageOrigin !== undefined && typeof p.postMessageOrigin !== 'string') return null;
   if (p.uploadAccountId !== undefined && (typeof p.uploadAccountId !== 'string' || !p.uploadAccountId)) return null;
   if (wopiDocumentId(p) !== documentId) return null;

@@ -25,8 +25,12 @@ export interface QuickReplyEnvelope {
  * offers: this surface is a bare text box with no From row, so a rewritten
  * From would be applied with nothing on screen to show it - or to correct
  * it.
+ *
+ * `pluginIdentityId`: the identity a plugin picked (onSelectReplyIdentity,
+ * lib/plugin-reply-identity.ts), shown under the box. It wins when it is
+ * one of `identities`.
  */
-export function quickReplyEnvelope(email: ReplySource, identities: Identity[]): QuickReplyEnvelope {
+export function quickReplyEnvelope(email: ReplySource, identities: Identity[], pluginIdentityId?: string | null): QuickReplyEnvelope {
   const ownIdentityEmails = identities.map((i) => i.email).filter(Boolean);
   const replySource = { from: email.from, replyToAddresses: email.replyTo, to: email.to, cc: email.cc };
   const recipients = quickReplyRecipients(email, identities).map((r) => r.email);
@@ -40,7 +44,10 @@ export function quickReplyEnvelope(email: ReplySource, identities: Identity[]): 
     bcc: email.bcc,
     deliveredTo: deliveryAddresses(email.headers),
   });
-  const sendingIdentity = (sendingIdentityId ? identities.find((i) => i.id === sendingIdentityId) : undefined) || primaryIdentity;
+  const pluginIdentity = pluginIdentityId ? identities.find((i) => i.id === pluginIdentityId) : undefined;
+  const sendingIdentity = pluginIdentity
+    || (sendingIdentityId ? identities.find((i) => i.id === sendingIdentityId) : undefined)
+    || primaryIdentity;
   return { recipients, sendingIdentity, primaryIdentity };
 }
 
@@ -67,9 +74,11 @@ export async function saveQuickReplyDraft(input: {
   identities: Identity[];
   body: string;
   replyPrefix: string;
+  /** The identity a plugin picked for the quick reply, see quickReplyEnvelope. */
+  pluginIdentityId?: string | null;
 }): Promise<void> {
   const { client, email, identities, body, replyPrefix } = input;
-  const { recipients, sendingIdentity } = quickReplyEnvelope(email, identities);
+  const { recipients, sendingIdentity } = quickReplyEnvelope(email, identities, input.pluginIdentityId);
   const threading = computeReplyThreadingHeaders({ messageId: email.messageId, references: email.references });
   await client.createDraft(
     recipients,
