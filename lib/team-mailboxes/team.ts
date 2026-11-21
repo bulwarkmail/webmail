@@ -49,6 +49,6 @@ export function teamFor(
   if (!useConfirmedGroups.getState().groups.get(client)?.has(accountId)) return null;
   const groupAddress = client.getAccountInfo?.(accountId)?.name?.trim().toLowerCase();
   if (!groupAddress) return null;
-  if (!teamMailboxesOn(rawPolicy, client.getUsername(), groupAddress)) return null;
+  if (!teamMailboxesOn(rawPolicy, client.getUsername?.() ?? '', groupAddress)) return null;
   return { key: teamKey(loginId, accountId), loginId, accountId, groupAddress };
 }

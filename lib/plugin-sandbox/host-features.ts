@@ -15,6 +15,8 @@ import type { HostFeaturesView, InstalledPlugin } from '../plugin-types';
 import { assistantFeatures } from './assistant';
 import { keystoreFeature } from './host-api-keystore';
 import { pluginHasPermission } from './permissions';
+import { useConfirmedGroups } from './account-kind';
+import { anyTeamMailboxOn } from '@/lib/team-mailboxes/host-flag';
 import { EXTERNAL_MAIL_WARNING_PLUGIN_ID, hookHandedOver, hostFeaturesFor, slotHandedOver } from './handover';
 
 export { EXTERNAL_MAIL_WARNING_PLUGIN_ID, hostFeaturesFor };
@@ -26,6 +28,8 @@ export function snapshotHostFeatures(plugin?: InstalledPlugin): HostFeaturesView
     ...assistantFeatures(plugin),
     ...keystoreFeature(plugin),
     ...(plugin && pluginHasPermission(plugin, 'email:render-takeover') ? { blockExternalContent: true } : {}),
+    // Bulwark's own notes and assignment in team mailboxes (organisation.teamMailboxes).
+    teamMailboxes: anyTeamMailboxOn(),
   };
 }
 
@@ -61,4 +65,6 @@ export function watchHostFeatures(onChange: (features: HostFeaturesView) => void
   subscribeThirdPartyMode(check);
   // Flags that depend on the server (Files) change with the signed-in session.
   useAuthStore.subscribe((state, previous) => { if (state.client !== previous.client) check(); });
+  // Team mailboxes are known once the server said which accounts are groups.
+  useConfirmedGroups.subscribe(check);
 }

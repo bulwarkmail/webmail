@@ -21,13 +21,19 @@ import type { Email } from '@/lib/jmap/types';
 import type { EmailListBadge } from '@/lib/plugin-types';
 import { useAuthStore } from '@/stores/auth-store';
 import { resolveEmailBlobContext, useEmailStore } from '@/stores/email-store';
+import { usePolicyStore } from '@/stores/policy-store';
+import { teamInboxHandedOver } from '@/lib/team-mailboxes/host-flag';
 
 const EMPTY: RegisteredAction[] = [];
 
 /** The actions plugins declared for a surface, filtered by folder role, MIME type, account and keywords. */
 export function usePluginActions(surface: string, filter: ActionFilter = {}) {
   const all = useSyncExternalStore(subscribeActions, () => actionsFor(surface), () => EMPTY);
-  return all.filter((a) => actionApplies(a, filter));
+  // Team inbox's buttons go while Bulwark's own team mailboxes do the job;
+  // the policy and the server's group answer decide, so follow both.
+  useConfirmedGroups((s) => s.revision);
+  usePolicyStore((s) => s.rawPolicy);
+  return all.filter((a) => actionApplies(a, filter) && !teamInboxHandedOver(a.pluginId));
 }
 
 /** The message an action surface is about: its account and keywords. */
