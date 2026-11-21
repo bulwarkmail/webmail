@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const apiFetch = vi.fn();
@@ -15,12 +15,18 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: appName.valu
 
 import { PluginConnectDialog } from '../plugin-connect-dialog';
 import { originFromInput, requestConnect, type ConnectResult } from '@/lib/plugin-sandbox/connect-dialog';
+import { useAuthStore } from '@/stores/auth-store';
 
 beforeEach(() => {
   apiFetch.mockReset();
   apiFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
   appName.value = 'Webmail';
 });
+afterEach(() => { vi.useRealTimers(); });
+
+const TEAM_PERMISSIONS = [
+  'authenticate', 'jmapCalendarEventGet', 'jmapCalendarEventUpdate', 'jmapPrincipalGetAvailability', 'jmapQuotaGet', 'jmapSieveSet',
+];
 
 function open(mode: 'password' | 'signin' = 'password') {
   let result: Promise<ConnectResult>;
@@ -63,6 +69,65 @@ describe('connect dialog', () => {
 
     await expect(result).resolves.toEqual({ connected: false, origin: 'https://cloud.example.org' });
     expect(JSON.parse(apiFetch.mock.calls[0][1].body)).not.toHaveProperty('secret');
+  });
+
+  it('asks nothing for an app password the server makes, and names it', async () => {
+    vi.useFakeTimers();
+    useAuthStore.setState({ username: 'alice@example.org', serverUrl: 'https://mail.example.org/' });
+    render(<PluginConnectDialog />);
+    let result: Promise<ConnectResult>;
+    act(() => {
+      result = requestConnect({
+        pluginId: 'team-calendar', pluginName: 'Teamkalender', credentialId: 'stalwart', mode: 'appPassword',
+        spec: {
+          label: 'Stalwart', scope: 'user', inject: { type: 'basic' },
+          appPassword: { permissions: TEAM_PERMISSIONS },
+        },
+      });
+    });
+
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(document.querySelector('input')).toBeNull();
+    expect(screen.getByText(/intro_app_password /)).toHaveTextContent('"account":"alice@example.org","description":"Plugin: Teamkalender"');
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'right_filters', 'right_calendars_change', 'right_directory', 'right_other {"names":"jmapQuotaGet"}',
+    ]);
+    // Agreed to with one click: Cancel has the focus, and Connect waits half a second.
+    expect(screen.getByRole('button', { name: 'cancel' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'connect' })).toBeDisabled();
+    act(() => { vi.advanceTimersByTime(499); });
+    expect(screen.getByRole('button', { name: 'connect' })).toBeDisabled();
+    act(() => { vi.advanceTimersByTime(1); });
+    fireEvent.click(screen.getByRole('button', { name: 'connect' }));
+
+    await expect(result!).resolves.toEqual({ connected: true, origin: 'https://mail.example.org' });
+    expect(JSON.parse(apiFetch.mock.calls[0][1].body)).toEqual({
+      pluginId: 'team-calendar', credentialId: 'stalwart', label: 'Stalwart', appPassword: true, permissions: TEAM_PERMISSIONS,
+    });
+  });
+
+  // The wait is per dialog: the one after an agreed one starts off again.
+  it('makes Connect wait anew for the next app password', async () => {
+    vi.useFakeTimers();
+    render(<PluginConnectDialog />);
+    const ask = () => requestConnect({
+      pluginId: 'team-calendar', pluginName: 'Teamkalender', credentialId: 'stalwart', mode: 'appPassword',
+      spec: { label: 'Stalwart', scope: 'user', inject: { type: 'basic' }, appPassword: { permissions: TEAM_PERMISSIONS } },
+    });
+    let first: Promise<ConnectResult>;
+    act(() => { first = ask(); });
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(screen.getByRole('button', { name: 'connect' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+    await expect(first!).resolves.toEqual({ connected: false });
+
+    let second: Promise<ConnectResult>;
+    act(() => { second = ask(); });
+    expect(screen.getByRole('button', { name: 'connect' })).toBeDisabled();
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(screen.getByRole('button', { name: 'connect' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+    await expect(second!).resolves.toEqual({ connected: false });
   });
 
   it('names the app as configured, and Bulwark on a stock install', async () => {

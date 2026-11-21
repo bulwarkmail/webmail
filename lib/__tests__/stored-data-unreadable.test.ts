@@ -52,7 +52,7 @@ vi.mock('@/lib/stalwart/credentials', () => ({
   getStalwartCredentials: async () => ({ username: USER, accountName: USER, serverUrl: SERVER, authHeader: 'x' }),
 }));
 vi.mock('@/lib/plugin-secrets/known-plugins', () => ({
-  declaredUserCredential: async () => ({ scope: 'user', label: 'Nextcloud', inject: { type: 'basic' } }),
+  declaringPlugin: async () => ({ name: 'Nextcloud', spec: { scope: 'user', label: 'Nextcloud', inject: { type: 'basic' } } }),
 }));
 
 let dataDir: string;

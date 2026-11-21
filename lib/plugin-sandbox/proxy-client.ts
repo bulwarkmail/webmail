@@ -269,7 +269,7 @@ export async function proxyConnect(plugin: InstalledPlugin, args: unknown[]): Pr
   const { id, spec } = credentialSpec(plugin, args[0]);
   if (spec.scope !== 'user') throw new Error(`"${id}" is set up by the administrator`);
   const opts = (args[1] && typeof args[1] === 'object' ? args[1] : {}) as Record<string, unknown>;
-  const mode = opts.mode === 'signin' ? 'signin' : 'password';
+  const mode = spec.appPassword ? 'appPassword' : opts.mode === 'signin' ? 'signin' : 'password';
   return requestConnect({
     pluginId: plugin.id,
     pluginName: plugin.name,

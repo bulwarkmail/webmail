@@ -1,19 +1,25 @@
 'use client';
 
-import { useEffect, useId, useState, useSyncExternalStore } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { KeyRound } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { useConfig } from '@/hooks/use-config';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { productName } from '@/lib/product-name';
+import { appPasswordDescription, appPasswordRights, type RightArea } from '@/lib/plugin-secrets/app-password-permissions';
+import { useAuthStore } from '@/stores/auth-store';
 import {
   currentConnect,
   originFromInput,
   saveCredential,
   subscribeConnect,
+  type SaveCredentialInput,
 } from '@/lib/plugin-sandbox/connect-dialog';
 import { ModalWindow } from '@/components/ui/dialog-surface';
+
+/** How long Connect stays off after an app password's dialog opens. */
+const CONSENT_DELAY_MS = 500;
 
 /**
  * The host's own "Connect account" dialog (see lib/plugin-sandbox/connect-dialog.ts).
@@ -24,12 +30,24 @@ export function PluginConnectDialog() {
   const request = useSyncExternalStore(subscribeConnect, currentConnect, () => null);
   const t = useTranslations('plugins.connect');
   const appName = productName(useConfig().appName);
+  const account = useAuthStore((s) => s.username) ?? '';
+  const serverUrl = useAuthStore((s) => s.serverUrl);
   const titleId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const [server, setServer] = useState('');
   const [username, setUsername] = useState('');
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [armedFor, setArmedFor] = useState<string | null>(null);
+
+  // An app password is agreed to with one click: Connect waits a moment, so
+  // a click or Enter meant for the page behind does not agree.
+  useEffect(() => {
+    if (!request || request.mode !== 'appPassword') return;
+    const timer = setTimeout(() => setArmedFor(request.id), CONSENT_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [request]);
 
   useEffect(() => {
     setServer(request?.suggestedOrigin ?? '');
@@ -48,54 +66,79 @@ export function PluginConnectDialog() {
     return () => window.removeEventListener('keydown', onKey);
   }, [request]);
 
-  // Tab stays in the dialog, the first field takes the focus, and the focus
-  // goes back to where it was when the dialog closes. (Escape is the
-  // listener above.)
+  // Tab stays in the dialog, the first field takes the focus (Cancel when
+  // there is none: an app password is only agreed to), and the focus goes
+  // back to where it was when the dialog closes. (Escape is the listener
+  // above.)
   const panelRef = useFocusTrap({
     isActive: !!request,
     restoreFocus: true,
-    initialFocus: () => panelRef.current?.querySelector<HTMLElement>('input:not(:disabled)'),
+    initialFocus: () => panelRef.current?.querySelector<HTMLElement>('input:not(:disabled)') ?? cancelRef.current,
   });
 
   if (!request) return null;
 
   const { spec, mode, pluginName } = request;
-  const fixedOrigin = spec.origin;
+  // The server makes an app password on the account the user is signed in
+  // to: nothing to type, and that account's server is the origin.
+  const appPassword = mode === 'appPassword';
+  const fixedOrigin = spec.origin ?? (appPassword && serverUrl ? originFromInput(serverUrl) ?? undefined : undefined);
   const needsUsername = mode === 'password' && spec.inject.type === 'basic';
   const needsSecret = mode === 'password' && spec.inject.type !== 'none';
   const origin = fixedOrigin ?? originFromInput(server);
-  const canSubmit = !!origin && (!needsSecret || !!secret) && (!needsUsername || !!username.trim()) && !saving;
+  // What the app password may do, as the manifest lists it: the user agrees
+  // to exactly that, and the server is sent it to compare with its own.
+  const shownPermissions = appPassword && Array.isArray(spec.appPassword?.permissions) ? spec.appPassword.permissions : [];
+  const rights = shownPermissions.length > 0 ? appPasswordRights(shownPermissions) : null;
+  const canSubmit = (!appPassword || armedFor === request.id) && (appPassword || !!origin) && (!needsSecret || !!secret) && (!needsUsername || !!username.trim()) && !saving;
 
   const submit = async () => {
-    if (!origin) {
+    const base = { pluginId: request.pluginId, credentialId: request.credentialId, label: spec.label };
+    const input: SaveCredentialInput | null = appPassword
+      ? { ...base, appPassword: true, permissions: shownPermissions }
+      : origin
+        ? {
+          ...base,
+          origin,
+          inject: spec.inject,
+          ...(needsUsername ? { username: username.trim() } : {}),
+          ...(needsSecret ? { secret } : {}),
+        }
+        : null;
+    if (!input) {
       setError(t('error_server'));
       return;
     }
     setSaving(true);
     setError(null);
-    const failure = await saveCredential({
-      pluginId: request.pluginId,
-      credentialId: request.credentialId,
-      label: spec.label,
-      origin,
-      inject: spec.inject,
-      ...(needsUsername ? { username: username.trim() } : {}),
-      ...(needsSecret ? { secret } : {}),
-    });
+    const failure = await saveCredential(input);
     setSaving(false);
     if (failure) {
       setError(t('error_save', { error: failure }));
       return;
     }
-    request.resolve({ connected: mode === 'password', origin });
+    request.resolve({ connected: mode !== 'signin', ...(origin ? { origin } : {}) });
   };
 
+  const rightText = (area: RightArea, access: 'read' | 'change'): string => {
+    switch (area) {
+      case 'mail': return access === 'read' ? t('right_mail_read') : t('right_mail_change');
+      case 'filters': return t('right_filters');
+      case 'send': return t('right_send');
+      case 'calendars': return access === 'read' ? t('right_calendars_read') : t('right_calendars_change');
+      case 'contacts': return access === 'read' ? t('right_contacts_read') : t('right_contacts_change');
+      case 'files': return access === 'read' ? t('right_files_read') : t('right_files_change');
+      case 'directory': return t('right_directory');
+    }
+  };
   const host = origin ? new URL(origin).host : null;
-  const intro = mode === 'signin'
-    ? t('intro_signin', { name: pluginName, label: spec.label, appName })
-    : host
-      ? t('intro_password', { name: pluginName, label: spec.label, host, appName })
-      : t('intro_password_any', { name: pluginName, label: spec.label, appName });
+  const intro = appPassword
+    ? t('intro_app_password', { name: pluginName, account, description: appPasswordDescription(pluginName), appName })
+    : mode === 'signin'
+      ? t('intro_signin', { name: pluginName, label: spec.label, appName })
+      : host
+        ? t('intro_password', { name: pluginName, label: spec.label, host, appName })
+        : t('intro_password_any', { name: pluginName, label: spec.label, appName });
 
   return (
     <ModalWindow title={t('title', { label: spec.label })} onClose={() => request.resolve({ connected: false })}>
@@ -122,8 +165,17 @@ export function PluginConnectDialog() {
               <h2 id={titleId} className="text-lg font-semibold text-foreground">{t('title', { label: spec.label })}</h2>
             </div>
             <p className="mb-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{intro}</p>
+            {rights && (
+              <div className="mb-4 text-sm">
+                <p className="mb-1 font-medium text-foreground">{t('rights_heading')}</p>
+                <ul className="list-disc space-y-0.5 ps-5 text-muted-foreground [overflow-wrap:anywhere]">
+                  {rights.areas.map(({ area, access }) => <li key={area}>{rightText(area, access)}</li>)}
+                  {rights.other.length > 0 && <li>{t('right_other', { names: rights.other.join(', ') })}</li>}
+                </ul>
+              </div>
+            )}
             <div className="mb-4 flex flex-col gap-3">
-              {!fixedOrigin && (
+              {!fixedOrigin && !appPassword && (
                 <label className="flex flex-col gap-1">
                   <span className="text-xs font-medium">{t('server')}</span>
                   {/* Not type="url": the browser would refuse "cloud.example.com"
@@ -167,7 +219,7 @@ export function PluginConnectDialog() {
               {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => request.resolve({ connected: false })}>{t('cancel')}</Button>
+              <Button ref={cancelRef} type="button" variant="outline" onClick={() => request.resolve({ connected: false })}>{t('cancel')}</Button>
               <Button type="submit" disabled={!canSubmit}>
                 {saving ? t('saving') : mode === 'signin' ? t('continue') : t('connect')}
               </Button>
